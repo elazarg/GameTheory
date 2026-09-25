@@ -60,21 +60,16 @@ same-player update reflection is machine-refuted.
 | Measure | EXP-045 result |
 |---|---|
 | authored experiment size | 395 nonblank lines; 37 declarations including hostile fixtures |
-| focused build | 1,721 jobs |
 | imported stable root | `GameTheory.Core.Mixed` only |
 | transformation structures added | 0 |
 | stored capabilities added | 0 |
-| source trust/audit tokens | 0 placeholders, native decisions, direct updates, transports, `HEq`, tactic `change`, `Fintype.ofFinite`, or `open Classical` |
-| axiom profile | `propext`, `Classical.choice`, `Quot.sound` only |
 | deviation transport | Nash and CE are both iff theorems; CE response maps are conjugated in both directions |
 | mixed lifting | exact equality of actual play laws for the heterogeneous player swap |
 | probability reuse | exact forward and inverse dependent-product laws live together in `GameTheory.Math.Probability.FinDist`; the forward law replaces the MAID-local proof |
 
-EXP-106 promotes one theorem to `GameTheory.Core.Approximate`, with stable
-FOSG and MAID consumers and a separate negative test. The combined four-target
-build completes in 1,738 jobs warning-free. It adds no transformation
-structure, equilibrium predicate, stored capability, or equality-transport
-surface.
+EXP-106 places direct approximate transfer in `Core.Approximate`, with FOSG
+and MAID consumers and a negative control. The theorem adds no transformation
+structure, equilibrium predicate, stored capability, or equality transport.
 
 ## Kill condition
 
@@ -96,10 +91,10 @@ evaluation laws and inverse profile laws. Nash invariance is public for both
 operations. Correlated-equilibrium invariance is public for strategy
 equivalence, where the proof explicitly conjugates the response map.
 
-Adopt game-free forward and inverse `FinDist.pi` reindexing laws in the
-probability layer. Mixed extension consumes the inverse orientation; MAID
-serialization consumes the forward orientation and must retire its local
-proof.
+Adopt game-free forward and inverse `independentProduct` reindexing laws in
+`Math.Probability.Product`. Mixed extension consumes the inverse orientation;
+MAID serialization consumes the forward orientation. Both use the same PMF
+construction and its shared proof.
 
 Do not add `FormHom`, `FormEquiv`, `PayoffLawHom`, `PayoffLawEquiv`, or a
 generic equilibrium-transport certificate. A future noninvertible
@@ -115,13 +110,6 @@ preserves the same real epsilon. This permission does not extend to a bundled
 transformation, certificate hierarchy, or an inference from profile/payoff
 equivalence without update reflection.
 
-Promotion is complete. `GameTheory.Core.Transform` contains 246 nonblank lines
-and `GameTheory.Tests.Transform` contains 67. The focused regression target
-builds in 1,722 jobs. MAID now calls `FinDist.pi_reindex` rather than owning a
-local probability proof. Phase 2 source audits pass with zero added transport,
-direct updates, placeholders, custom axioms, unbucketed files, or opaque
-carrier fixtures. Core reaches all six transformation probes; the probability
-root reaches both reindexing laws while rejecting `GameForm` and `IsNash`.
-Phase 3 records exactly one MAID use of the shared theorem. The full project
-build completes in 3,355 jobs, and the promoted flagship axioms remain
-`propext`, `Classical.choice`, and `Quot.sound`.
+`Core.Transform` owns the transformations; MAID consumes the shared
+probability reindexing law instead of proving its own. Probability reindexing
+must remain independent of `GameForm` and `IsNash`.

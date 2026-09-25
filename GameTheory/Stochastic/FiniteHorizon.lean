@@ -68,30 +68,45 @@ theorem horizonForm_play (initial : G.State) [∀ i, Nonempty (G.Action i)]
 /-- Expected finite-horizon average payoff, transparently evaluated by the
 canonical expected-utility function. -/
 abbrev finiteAveragePayoff (initial : G.State) [∀ i, Nonempty (G.Action i)]
-    (horizon : ℕ) (profile : G.BehaviorProfile initial) (who : ι) : ℝ :=
+    (horizon : ℕ) (profile : G.BehaviorProfile initial) (who : ι)
+    (hintegrable : UtilityIntegrable (G.horizonUtility initial horizon) who
+      ((G.horizonForm initial horizon).play profile)) : ℝ :=
   expectedUtility (G.horizonUtility initial horizon) who
-    ((G.horizonForm initial horizon).play profile)
+    ((G.horizonForm initial horizon).play profile) hintegrable
 
 /-- The utility-game bundle has exactly the named finite-horizon evaluation. -/
 @[simp]
 theorem horizonGame_expectedUtility (initial : G.State)
     [∀ i, Nonempty (G.Action i)] (horizon : ℕ)
-    (profile : G.BehaviorProfile initial) (who : ι) :
+    (profile : G.BehaviorProfile initial) (who : ι)
+    (hintegrable : UtilityIntegrable (G.horizonGame initial horizon).utility who
+      ((G.horizonGame initial horizon).form.play profile)) :
     expectedUtility (G.horizonGame initial horizon).utility who
-        ((G.horizonGame initial horizon).form.play profile) =
-      G.finiteAveragePayoff initial horizon profile who :=
+        ((G.horizonGame initial horizon).form.play profile) hintegrable =
+      G.finiteAveragePayoff initial horizon profile who hintegrable :=
   rfl
+
+/-- The empty average is integrable under the zero-horizon history law. -/
+theorem horizonUtilityIntegrable_zero (initial : G.State)
+    [∀ i, Nonempty (G.Action i)] (profile : G.BehaviorProfile initial)
+    (who : ι) :
+    UtilityIntegrable (G.horizonUtility initial 0) who
+      ((G.horizonForm initial 0).play profile) := by
+  rw [G.horizonForm_play]
+  unfold InformationModel.runBehavioral InformationModel.runBehavioralFrom
+  rw [ExecutionProtocol.runRandomizedFor_zero]
+  exact payoffIntegrable_pure _ _
 
 /-- With no transitions, every profile's expected average payoff is zero. -/
 @[simp]
 theorem finiteAveragePayoff_zero (initial : G.State)
     [∀ i, Nonempty (G.Action i)] (profile : G.BehaviorProfile initial)
     (who : ι) :
-    G.finiteAveragePayoff initial 0 profile who = 0 := by
-  rw [finiteAveragePayoff, horizonForm_play]
-  unfold InformationModel.runBehavioral InformationModel.runBehavioralFrom
-  rw [ExecutionProtocol.runRandomizedFor_zero, expectedUtility_pure]
-  simp [horizonUtility, historyAverageUtility]
+    G.finiteAveragePayoff initial 0 profile who
+      (G.horizonUtilityIntegrable_zero initial profile who) = 0 := by
+  simp [finiteAveragePayoff,
+    InformationModel.runBehavioral, InformationModel.runBehavioralFrom,
+    horizonUtility, historyAverageUtility]
 
 end Game
 

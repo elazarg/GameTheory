@@ -24,22 +24,22 @@ def signature : GameSignature Unit where
 @[reducible]
 def form : GameForm Unit where
   sig := signature
-  play _ := FinDist.pure ()
+  play _ := PMF.pure ()
 
 @[reducible]
 def game : UtilityGame Unit where
   form := form
   utility _ _ := 0
 
-def fairCoin : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure false) (FinDist.pure true)
+def fairCoin : PMF Bool :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure false) (PMF.pure true)
 
 @[reducible]
 def monitoring : game.PublicMonitoring where
   Signal := Bool
   signalLaw profile :=
-    if profile () then FinDist.pure true else fairCoin
+    if profile () then PMF.pure true else fairCoin
 
 /-- Initially play `false`; thereafter play the first observed public signal. -/
 def monitoredProfile : monitoring.MonitoredProfile
@@ -47,25 +47,27 @@ def monitoredProfile : monitoring.MonitoredProfile
   | _, _ + 1, history => history 0
 
 @[simp]
-theorem fairCoin_prob_false : fairCoin.prob false = 1 / 2 := by
-  rw [fairCoin, FinDist.prob_mix]
-  norm_num [FinDist.prob_pure_eq_ite]
+theorem fairCoin_prob_false : fairCoin false = 1 / 2 := by
+  norm_num [fairCoin, mix_apply]
+  rw [one_div, ENNReal.ofReal_inv_of_pos (by norm_num : (0 : ℝ) < 2)]
+  norm_num
 
 @[simp]
-theorem fairCoin_prob_true : fairCoin.prob true = 1 / 2 := by
-  rw [fairCoin, FinDist.prob_mix]
-  norm_num [FinDist.prob_pure_eq_ite]
+theorem fairCoin_prob_true : fairCoin true = 1 / 2 := by
+  norm_num [fairCoin, mix_apply]
+  rw [one_div, ENNReal.ofReal_inv_of_pos (by norm_num : (0 : ℝ) < 2)]
+  norm_num
 
 /-- The initial public signal is genuinely stochastic. -/
 theorem initialSignal_not_deterministic :
-    fairCoin ≠ FinDist.pure false ∧ fairCoin ≠ FinDist.pure true := by
+    fairCoin ≠ PMF.pure false ∧ fairCoin ≠ PMF.pure true := by
   constructor
   · intro h
-    have := congrArg (fun law : FinDist Bool => law.prob true) h
-    norm_num [FinDist.prob_pure_eq_ite] at this
+    have := congrArg (fun law : PMF Bool => law true) h
+    simp [fairCoin_prob_true] at this
   · intro h
-    have := congrArg (fun law : FinDist Bool => law.prob false) h
-    norm_num [FinDist.prob_pure_eq_ite] at this
+    have := congrArg (fun law : PMF Bool => law false) h
+    simp [fairCoin_prob_false] at this
 
 theorem initialSignalLaw :
     monitoring.signalLaw
@@ -89,7 +91,7 @@ theorem signalLaw_after_true :
         (fun i =>
           (monitoring.afterSignal monitoredProfile true) i 0
             (fun k => k.elim0)) =
-      FinDist.pure true :=
+      PMF.pure true :=
   rfl
 
 /-- The generic bind-first law specializes to the noisy, history-dependent

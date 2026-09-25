@@ -82,21 +82,40 @@ def LocalUtilityFactorsAt
     (semantics : Semantics diagram) (policy : pruning.ReducedPolicy)
     (owner : Player) (target : DecisionSite diagram owner) : Prop :=
   ∃ contextLaw :
-      FinDist (Config diagram (diagram.observedParents target.1)),
+      PMF (Config diagram (diagram.observedParents target.1)),
     ∃ continuation :
         Config diagram (pruning.kept target.1) →
           diagram.Value target.1 → ℝ,
-      ∀ replacement : OwnerPolicy diagram owner,
-        expectedUtility
+      (∀ replacement : OwnerPolicy diagram owner,
+        ∃ hplay : UtilityIntegrable
             (fun assignment who => semantics.utility who assignment)
             owner
             ((nativeBehavioralGameForm semantics).play
               (Profile.update (pruning.expandPolicy policy)
-                owner replacement)) =
-          (fullJoint contextLaw
-            (Config.restrict (pruning.kept_sub_observed target.1))
-            (replacement target)).expect fun result =>
-              continuation result.1 result.2
+                owner replacement)),
+          ∃ hjoint : PayoffIntegrable
+            (fullJoint contextLaw
+              (Config.restrict (pruning.kept_sub_observed target.1))
+              (replacement target))
+            (fun result => continuation result.1 result.2),
+            expectedUtility
+                (fun assignment who => semantics.utility who assignment)
+                owner
+                ((nativeBehavioralGameForm semantics).play
+                  (Profile.update (pruning.expandPolicy policy)
+                    owner replacement)) hplay =
+              expect (fullJoint contextLaw
+                (Config.restrict (pruning.kept_sub_observed target.1))
+                (replacement target))
+                (fun result => continuation result.1 result.2) hjoint) ∧
+      (∀ (other : Player), other ≠ owner →
+        ∀ replacement : OwnerPolicy diagram other,
+          UtilityIntegrable
+            (fun assignment who => semantics.utility who assignment)
+            other
+            ((nativeBehavioralGameForm semantics).play
+              (Profile.update (pruning.expandPolicy policy)
+                other replacement)))
 
 /-- Turn one reduced rule into the target owner's complete reduced policy when
 that owner has no other decision site. -/
@@ -104,7 +123,7 @@ def reducedOwnerPolicyOfUniqueSite (pruning : Pruning diagram)
     (owner : Player) (target : DecisionSite diagram owner)
     (hunique : ∀ site : DecisionSite diagram owner, site = target)
     (kernel : Config diagram (pruning.kept target.1) →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     pruning.ReducedOwnerPolicy owner :=
   fun site observed => by
     have hsite := hunique site
@@ -117,7 +136,7 @@ theorem reducedOwnerPolicyOfUniqueSite_target
     (target : DecisionSite diagram owner)
     (hunique : ∀ site : DecisionSite diagram owner, site = target)
     (kernel : Config diagram (pruning.kept target.1) →
-      FinDist (diagram.Value target.1))
+      PMF (diagram.Value target.1))
     (observed : Config diagram (pruning.kept target.1)) :
     reducedOwnerPolicyOfUniqueSite pruning owner target hunique kernel
         target observed =
@@ -144,7 +163,7 @@ theorem coversFullDeviationsAt_of_localUtilityFactorsAt
     (shape : IsSingleSitePruningAt pruning owner target)
     (hfactor : LocalUtilityFactorsAt pruning semantics policy owner target) :
     pruning.CoversFullDeviationsAt semantics policy := by
-  obtain ⟨contextLaw, continuation, hutility⟩ := hfactor
+  obtain ⟨contextLaw, continuation, hutility, hother⟩ := hfactor
   intro deviator fullReplacement
   by_cases hdeviator : deviator = owner
   · subst deviator
@@ -153,7 +172,7 @@ theorem coversFullDeviationsAt_of_localUtilityFactorsAt
           Config diagram (pruning.kept target.1) :=
       Config.restrict (pruning.kept_sub_observed target.1)
     let averaged : Config diagram (pruning.kept target.1) →
-        FinDist (diagram.Value target.1) :=
+        PMF (diagram.Value target.1) :=
       averagedKernel contextLaw keep (fullReplacement target)
     let reducedReplacement : pruning.ReducedOwnerPolicy owner :=
       reducedOwnerPolicyOfUniqueSite pruning owner target
@@ -168,15 +187,50 @@ theorem coversFullDeviationsAt_of_localUtilityFactorsAt
       unfold Pruning.expandOwnerPolicy
       dsimp only [reducedReplacement]
       rw [reducedOwnerPolicyOfUniqueSite_target]
-    have hfull := hutility fullReplacement
-    have hreduced := hutility
+    obtain ⟨hfullPlay, hfullJoint, hfullEq⟩ := hutility fullReplacement
+    obtain ⟨hredPlay, hredJoint, hredEq⟩ := hutility
       (pruning.expandOwnerPolicy owner reducedReplacement)
     have hjoint := fullJoint_eq_fullJoint_averagedKernel
       contextLaw keep (fullReplacement target)
-    rw [hexpandedTarget] at hreduced
-    exact le_of_eq <| hfull.trans <|
-      (congrArg (fun law => law.expect fun result =>
-        continuation result.1 result.2) hjoint).trans hreduced.symm
+    have hredLaw :
+        fullJoint contextLaw keep
+            (pruning.expandOwnerPolicy owner reducedReplacement target) =
+          fullJoint contextLaw keep
+            (fun context => averaged (keep context)) :=
+      congrArg (fullJoint contextLaw keep) hexpandedTarget
+    have hredJoint' : PayoffIntegrable
+        (fullJoint contextLaw keep
+          (fun context => averaged (keep context)))
+        (fun result => continuation result.1 result.2) :=
+      payoffIntegrable_congr_law hredLaw hredJoint
+    refine ⟨hredPlay, hfullPlay, le_of_eq ?_⟩
+    calc
+      expectedUtility
+          (fun assignment who => semantics.utility who assignment)
+          owner
+          ((nativeBehavioralGameForm semantics).play
+            (Profile.update (pruning.expandPolicy policy)
+              owner fullReplacement)) hfullPlay =
+          expect (fullJoint contextLaw keep (fullReplacement target))
+            (fun result => continuation result.1 result.2) hfullJoint := hfullEq
+      _ = expect (fullJoint contextLaw keep
+            (fun context => averaged (keep context)))
+            (fun result => continuation result.1 result.2) hredJoint' :=
+        expect_congr_law hjoint _ hfullJoint hredJoint'
+      _ = expectedUtility
+            (fun assignment who => semantics.utility who assignment)
+            owner
+            ((nativeBehavioralGameForm semantics).play
+              (Profile.update (pruning.expandPolicy policy) owner
+                (pruning.expandOwnerPolicy owner reducedReplacement)))
+            hredPlay := by
+        calc
+          _ = expect (fullJoint contextLaw keep
+                (pruning.expandOwnerPolicy owner reducedReplacement target))
+                (fun result => continuation result.1 result.2)
+                hredJoint :=
+            (expect_congr_law hredLaw _ hredJoint hredJoint').symm
+          _ = _ := hredEq.symm
   · have hkept : ∀ site : DecisionSite diagram deviator,
         pruning.kept site.1 = diagram.observedParents site.1 :=
       shape.kept_eq_observed_of_ne hdeviator
@@ -186,5 +240,7 @@ theorem coversFullDeviationsAt_of_localUtilityFactorsAt
     refine ⟨reducedReplacement, ?_⟩
     rw [euPreference_apply, reducedNativeGameForm_play,
       pruning.expandPolicy_update, hexpand]
+    have hguard := hother deviator hdeviator fullReplacement
+    exact ⟨hguard, hguard, le_refl _⟩
 
 end GameTheory.Experimental.PostArchitecture.MAIDLocalReduction

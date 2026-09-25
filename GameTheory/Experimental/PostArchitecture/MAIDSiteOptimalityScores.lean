@@ -36,9 +36,9 @@ theorem replaceSiteRule_commute_of_ne [DecidableEq Node]
     (first second : DecisionSite diagram owner)
     (hneq : first ≠ second)
     (firstRule : Config diagram (diagram.observedParents first.1) →
-      FinDist (diagram.Value first.1))
+      PMF (diagram.Value first.1))
     (secondRule : Config diagram (diagram.observedParents second.1) →
-      FinDist (diagram.Value second.1)) :
+      PMF (diagram.Value second.1)) :
     replaceSiteRule (replaceSiteRule policy first firstRule)
         second secondRule =
       replaceSiteRule (replaceSiteRule policy second secondRule)
@@ -60,7 +60,7 @@ theorem replaceSiteRule_congr_of_eq_off_target [DecidableEq Node]
     {owner : Player} (first second : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1))
+      PMF (diagram.Value target.1))
     (hagree : ∀ site, site ≠ target → first site = second site) :
     replaceSiteRule first target rule =
       replaceSiteRule second target rule := by
@@ -76,7 +76,7 @@ theorem siteReplacementLaw_congr_of_eq_off_target
     (owner : Player) (first second : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1))
+      PMF (diagram.Value target.1))
     (hagree : ∀ site, site ≠ target → first site = second site) :
     siteReplacementLaw semantics base owner first target rule =
       siteReplacementLaw semantics base owner second target rule := by
@@ -92,7 +92,7 @@ theorem siteReplacementLaw_context_marginal_eq
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     (siteReplacementLaw semantics base owner replacement target rule).map
         (fun assignment => Assignment.restrict diagram assignment
           (diagram.observedParents target.1)) =
@@ -104,34 +104,38 @@ theorem siteReplacementLaw_context_marginal_eq
     (siteReplacementLaw semantics base owner replacement target rule).map
         (fun assignment => Assignment.restrict diagram assignment
           (diagram.observedParents target.1)) =
-      FinDist.map Prod.fst
+      PMF.map Prod.fst
         ((siteReplacementLaw semantics base owner replacement target rule).map
           (fun assignment =>
             (Assignment.restrict diagram assignment
               (diagram.observedParents target.1), assignment target.1))) := by
-          rw [FinDist.map_comp]
+          rw [PMF.map_comp]
           rfl
     _ = (siteReplacementContextLawAt topological semantics base owner
         replacement target).contextLaw.bind fun context =>
-          FinDist.map Prod.fst ((rule context).map fun action =>
+          PMF.map Prod.fst ((rule context).map fun action =>
             (context, action)) := by
-          rw [hjoint, FinDist.map_bind]
+          rw [hjoint, PMF.map_bind]
     _ = (siteReplacementContextLawAt topological semantics base owner
         replacement target).contextLaw := by
-          simp only [FinDist.map_comp]
+          simp only [PMF.map_comp]
           calc
             (siteReplacementContextLawAt topological semantics base owner
                 replacement target).contextLaw.bind (fun context =>
-                  FinDist.map (Prod.fst ∘ fun action => (context, action))
+                  PMF.map (Prod.fst ∘ fun action => (context, action))
                     (rule context)) =
                 (siteReplacementContextLawAt topological semantics base owner
                   replacement target).contextLaw.bind (fun context =>
-                    FinDist.pure context) := by
-              apply FinDist.bind_congr
+                    PMF.pure context) := by
+              apply bind_congr_on_support
               intro context _
-              simp [Function.comp_def, FinDist.map_const]
+              have hfun :
+                  (Prod.fst ∘ fun action : diagram.Value target.1 =>
+                    (context, action)) =
+                    Function.const (diagram.Value target.1) context := rfl
+              rw [hfun, PMF.map_const]
             _ = (siteReplacementContextLawAt topological semantics base owner
-                replacement target).contextLaw := FinDist.bind_pure _
+                replacement target).contextLaw := PMF.bind_pure _
 
 /-! ## Zero-mass support facts -/
 
@@ -139,18 +143,18 @@ theorem joint_mass_eq_zero_of_fullAction_mass_eq_zero_at
     {Ω : Type*} {Context Action Term : Type*}
     [DecidableEq (Context × Action)]
     [DecidableEq ((Context × Action) × Term)]
-    (law : FinDist Ω) (fullAction : Ω → Context × Action)
+    (law : PMF Ω) (fullAction : Ω → Context × Action)
     (term : Ω → Term) (fullValue : Context × Action)
     (termValue : Term)
-    (hzero : (law.map fullAction).prob fullValue = 0) :
-    (law.map fun omega => (fullAction omega, term omega)).prob
+    (hzero : (law.map fullAction) fullValue = 0) :
+    (law.map fun omega => (fullAction omega, term omega))
         (fullValue, termValue) = 0 := by
-  apply FinDist.prob_eq_zero_iff.mpr
+  apply (PMF.apply_eq_zero_iff _ _).mpr
   intro hjoint
-  rw [FinDist.support_map] at hjoint
+  rw [PMF.support_map] at hjoint
   obtain ⟨omega, homega, hvalue⟩ := hjoint
-  apply (FinDist.prob_eq_zero_iff.mp hzero)
-  rw [FinDist.support_map]
+  apply (PMF.apply_eq_zero_iff _ _).mp hzero
+  rw [PMF.support_map]
   exact ⟨omega, homega, congrArg Prod.fst hvalue⟩
 
 /-! ## Unnormalised term scores -/
@@ -161,20 +165,21 @@ def siteRuleTermScore
     (semantics : Semantics diagram) (base : Policy diagram)
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
-    (rule : FullContext target → FinDist (diagram.Value target.1))
+    (rule : FullContext target → PMF (diagram.Value target.1))
     (view : UtilityView semantics) (term : view.UtilitySite owner)
     [Fintype (TermConfig view term)]
     (context : FullContext target)
     (action : diagram.Value target.1) : ℝ :=
   ∑ termValue : TermConfig view term,
-    ((siteReplacementLaw semantics base owner replacement target rule).map
+    (((siteReplacementLaw semantics base owner replacement target rule).map
       (fun assignment =>
         (Assignment.restrict diagram assignment
             (diagram.observedParents target.1),
           (assignment target.1,
             Assignment.restrict diagram assignment
-              (view.term term).parents)))).prob
-      (context, (action, termValue)) * (view.term term).payoff termValue
+              (view.term term).parents))))
+      (context, (action, termValue))).toReal *
+      (view.term term).payoff termValue
 
 def siteRuleContextActionScore
     [DecidableEq Player] [Fintype Node] [DecidableEq Node]
@@ -182,7 +187,7 @@ def siteRuleContextActionScore
     (semantics : Semantics diagram) (base : Policy diagram)
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
-    (rule : FullContext target → FinDist (diagram.Value target.1))
+    (rule : FullContext target → PMF (diagram.Value target.1))
     (view : UtilityView semantics)
     [∀ term : view.UtilitySite owner, Fintype (TermConfig view term)]
     (context : FullContext target)
@@ -193,48 +198,59 @@ def siteRuleContextActionScore
 
 theorem expect_eq_sum_joint_fibres
     {Ω X Y : Type*} [Fintype Ω] [Fintype X] [Fintype Y]
-    (law : FinDist Ω) (first : Ω → X) (second : Ω → Y)
+    (law : PMF Ω) (first : Ω → X) (second : Ω → Y)
     (value : Y → ℝ) :
-    law.expect (fun omega => value (second omega)) =
+    expect law (fun omega => value (second omega))
+      (payoffIntegrable_of_finite _ _) =
       ∑ firstValue : X, ∑ secondValue : Y,
-        (law.map (fun omega => (first omega, second omega))).prob
-          (firstValue, secondValue) * value secondValue := by
+        ((law.map (fun omega => (first omega, second omega)))
+          (firstValue, secondValue)).toReal * value secondValue := by
   calc
-    law.expect (fun omega => value (second omega)) =
-        (law.map (fun omega => (first omega, second omega))).expect
-          (fun pair => value pair.2) := by
-      rw [FinDist.expect_map]
+    expect law (fun omega => value (second omega))
+        (payoffIntegrable_of_finite _ _) =
+        expect (law.map (fun omega => (first omega, second omega)))
+          (fun pair => value pair.2) (payoffIntegrable_of_finite _ _) := by
+      symm
+      simpa only [Function.comp_def] using
+        (expect_map (fun omega => (first omega, second omega)) law
+          (fun pair => value pair.2)
+          (payoffIntegrable_of_finite _ _)
+          (payoffIntegrable_of_finite _ _))
     _ = ∑ pair : X × Y,
-        (law.map (fun omega => (first omega, second omega))).prob pair *
-          value pair.2 := FinDist.expect_eq_sum _ _
+        ((law.map (fun omega => (first omega, second omega))) pair).toReal *
+          value pair.2 := expect_eq_sum _ _ _
     _ = ∑ firstValue : X, ∑ secondValue : Y,
-        (law.map (fun omega => (first omega, second omega))).prob
-          (firstValue, secondValue) * value secondValue := by
+        ((law.map (fun omega => (first omega, second omega)))
+          (firstValue, secondValue)).toReal * value secondValue := by
       rw [← Finset.univ_product_univ, Finset.sum_product]
 
 theorem expect_eq_sum_joint_triples
     {Ω X Y Z : Type*} [Fintype Ω] [Fintype X] [Fintype Y] [Fintype Z]
-    (law : FinDist Ω) (first : Ω → X) (second : Ω → Y)
+    (law : PMF Ω) (first : Ω → X) (second : Ω → Y)
     (third : Ω → Z) (value : Z → ℝ) :
-    law.expect (fun omega => value (third omega)) =
+    expect law (fun omega => value (third omega))
+      (payoffIntegrable_of_finite _ _) =
       ∑ firstValue : X, ∑ secondValue : Y, ∑ thirdValue : Z,
-        (law.map (fun omega =>
-          (first omega, (second omega, third omega)))).prob
-            (firstValue, (secondValue, thirdValue)) * value thirdValue := by
+        ((law.map (fun omega =>
+          (first omega, (second omega, third omega))))
+            (firstValue, (secondValue, thirdValue))).toReal *
+              value thirdValue := by
   calc
-    law.expect (fun omega => value (third omega)) =
+    expect law (fun omega => value (third omega))
+        (payoffIntegrable_of_finite _ _) =
         ∑ firstValue : X, ∑ pair : Y × Z,
-          (law.map (fun omega =>
-            (first omega, (second omega, third omega)))).prob
-              (firstValue, pair) * value pair.2 := by
+          ((law.map (fun omega =>
+            (first omega, (second omega, third omega))))
+              (firstValue, pair)).toReal * value pair.2 := by
       simpa using
         (expect_eq_sum_joint_fibres law first
           (fun omega => (second omega, third omega))
           (fun pair => value pair.2))
     _ = ∑ firstValue : X, ∑ secondValue : Y, ∑ thirdValue : Z,
-        (law.map (fun omega =>
-          (first omega, (second omega, third omega)))).prob
-            (firstValue, (secondValue, thirdValue)) * value thirdValue := by
+        ((law.map (fun omega =>
+          (first omega, (second omega, third omega))))
+            (firstValue, (secondValue, thirdValue))).toReal *
+              value thirdValue := by
       apply Finset.sum_congr rfl
       intro firstValue _
       rw [← Finset.univ_product_univ, Finset.sum_product]
@@ -250,31 +266,39 @@ theorem siteRuleExpectedUtility_eq_sum_context_action
     [Fintype (FullContext target)]
     (view : UtilityView semantics)
     [∀ term : view.UtilitySite owner, Fintype (TermConfig view term)]
-    (rule : FullContext target → FinDist (diagram.Value target.1)) :
-    siteRuleExpectedUtility semantics base owner replacement target rule =
+    (rule : FullContext target → PMF (diagram.Value target.1)) :
+    siteRuleExpectedUtility semantics base owner replacement target rule
+      (siteReplacementLaw_integrable_of_finite semantics base owner
+        replacement target rule) =
       ∑ context : FullContext target, ∑ action : diagram.Value target.1,
         siteRuleContextActionScore semantics base owner replacement target
           rule view context action := by
   unfold siteRuleExpectedUtility expectedUtility
   calc
-    (siteReplacementLaw semantics base owner replacement target rule).expect
-        (fun assignment => semantics.utility owner assignment) =
-      (siteReplacementLaw semantics base owner replacement target rule).expect
+    expect (siteReplacementLaw semantics base owner replacement target rule)
+        (fun assignment => semantics.utility owner assignment)
+        (payoffIntegrable_of_finite _ _) =
+      expect (siteReplacementLaw semantics base owner replacement target rule)
         (fun assignment => ∑ term : view.UtilitySite owner,
           (view.term term).payoff
             (Assignment.restrict diagram assignment
-              (view.term term).parents)) := by
-      apply FinDist.expect_congr
+              (view.term term).parents)) (payoffIntegrable_of_finite _ _) := by
+      apply expect_congr_on_support
       intro assignment _
       simpa [UtilityView.term, UtilityTerm.value] using
         view.utility_eq_sum owner assignment
     _ = ∑ term : view.UtilitySite owner,
-        (siteReplacementLaw semantics base owner replacement target rule).expect
+        expect (siteReplacementLaw semantics base owner replacement target rule)
           (fun assignment =>
             (view.term term).payoff
               (Assignment.restrict diagram assignment
-                (view.term term).parents)) :=
-      (FinDist.expect_sum_comm _ _).symm
+                (view.term term).parents))
+          (payoffIntegrable_of_finite _ _) := by
+      simpa only [] using expect_sum
+        (siteReplacementLaw semantics base owner replacement target rule)
+        (fun term assignment => (view.term term).payoff
+          (Assignment.restrict diagram assignment (view.term term).parents))
+        (fun _ => payoffIntegrable_of_finite _ _)
     _ = ∑ term : view.UtilitySite owner,
         ∑ fullValue : FullContext target,
           ∑ action : diagram.Value target.1,

@@ -13,13 +13,11 @@ assignment law has the factor product below as its point mass before graphical
 separation can imply a probabilistic statement.
 -/
 
-import GameTheory.Math.Probability.FinDist
+import Mathlib.Probability.ProbabilityMassFunction.Monad
 
 noncomputable section
 
 namespace GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
-
-open GameTheory.Math.Probability
 
 universe uNode uValue
 
@@ -35,7 +33,7 @@ abbrev ParentConfiguration (parents : Node → Finset Node) (node : Node) :=
 /-- One normalized finite-support kernel at every node. -/
 abbrev LocalKernels (parents : Node → Finset Node) :=
   (node : Node) → ParentConfiguration Value parents node →
-    FinDist (Value node)
+    PMF (Value node)
 
 /-- Read the parent configuration of a node from a complete assignment. -/
 def parentConfiguration (parents : Node → Finset Node)
@@ -47,8 +45,8 @@ def parentConfiguration (parents : Node → Finset Node)
 def localFactor (parents : Node → Finset Node)
     (kernels : LocalKernels Value parents)
     (assignment : Assignment Value) (node : Node) : ℝ :=
-  (kernels node (parentConfiguration Value parents assignment node)).prob
-    (assignment node)
+  kernels node (parentConfiguration Value parents assignment node)
+    (assignment node) |>.toReal
 
 /-- Product of the local factor masses indexed by a finite node set. -/
 def factorProduct (parents : Node → Finset Node)

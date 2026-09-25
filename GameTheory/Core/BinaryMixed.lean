@@ -29,13 +29,17 @@ structure MatchingPenniesLike (F : GameForm (Fin 2))
   /-- The positive magnitude of the payoff. -/
   scale : ℝ
   scale_pos : 0 < scale
+  /-- Every actual pure action profile has defined utility for both players. -/
+  integrable : GameForm.HasIntegrableUtility F utility
   payoff_zero : ∀ bits : Fin 2 → Bool,
     expectedUtility utility 0
-        (F.play (fun i => action i (bits i))) =
+        (F.play (fun i => action i (bits i)))
+        (integrable 0 (fun i => action i (bits i))) =
       if bits 0 = bits 1 then scale else -scale
   payoff_one : ∀ bits : Fin 2 → Bool,
     expectedUtility utility 1
-        (F.play (fun i => action i (bits i))) =
+        (F.play (fun i => action i (bits i)))
+        (integrable 1 (fun i => action i (bits i))) =
       -(if bits 0 = bits 1 then scale else -scale)
 
 namespace MatchingPenniesLike
@@ -52,13 +56,15 @@ def encodeProfile (pureProfile : Profile F.sig) : Fin 2 → Bool :=
   fun i => (h.action i).symm (pureProfile i)
 
 theorem expectedUtility_profile_zero (bits : Fin 2 → Bool) :
-    expectedUtility utility 0 (F.play (h.profile bits)) =
+    expectedUtility utility 0 (F.play (h.profile bits))
+      (h.integrable 0 (h.profile bits)) =
       if bits 0 = bits 1 then h.scale else -h.scale := by
   unfold profile
   exact h.payoff_zero bits
 
 theorem expectedUtility_profile_one (bits : Fin 2 → Bool) :
-    expectedUtility utility 1 (F.play (h.profile bits)) =
+    expectedUtility utility 1 (F.play (h.profile bits))
+      (h.integrable 1 (h.profile bits)) =
       -(if bits 0 = bits 1 then h.scale else -h.scale) := by
   unfold profile
   exact h.payoff_one bits
@@ -75,42 +81,54 @@ theorem encodeProfile_profile (bits : Fin 2 → Bool) :
   funext i
   simp [profile, encodeProfile]
 
+/-- Mixed-play utility is integrable because each binary action carrier is finite. -/
+theorem mixedUtilityIntegrable (h : F.MatchingPenniesLike utility)
+    (mixedProfile : Profile F.sig.mixed)
+    (who : Fin 2) : UtilityIntegrable utility who (F.mixed.play mixedProfile) := by
+  have hfinite : ∀ i, Finite (F.sig.Strategy i) := fun i =>
+    Finite.of_equiv Bool (h.action i)
+  have hmix : GameForm.HasIntegrableUtility F.mixed utility :=
+    @GameForm.HasIntegrableUtility.mixed_of_finite (Fin 2) inferInstance
+      F utility h.integrable hfinite
+  exact hmix who mixedProfile
+
 /-- The canonical fair mixed profile supplied by the two Boolean labels. -/
 def fairProfile : Profile F.sig.mixed :=
-  fun i => FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure (h.action i true)) (FinDist.pure (h.action i false))
+  fun i => mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure (h.action i true)) (PMF.pure (h.action i false))
 
 @[simp]
 theorem fairProfile_prob_action (who : Fin 2) (bit : Bool) :
-    (h.fairProfile who).prob (h.action who bit) = (1 / 2 : ℝ) := by
-  classical
+    ((h.fairProfile who) (h.action who bit)).toReal = (1 / 2 : ℝ) := by
+  have hne : h.action who true ≠ h.action who false := fun heq =>
+    Bool.noConfusion ((h.action who).injective heq)
   cases bit
-  · simp [fairProfile, FinDist.prob_pure_of_ne]
+  · simp [fairProfile, mix_apply, PMF.pure_apply, Ne.symm hne]
     norm_num
-  · simp [fairProfile, FinDist.prob_pure_of_ne]
+  · simp [fairProfile, mix_apply, PMF.pure_apply, hne]
 
 /-- Probability assigned to the action labeled `true`. -/
 def probTrue (mixedProfile : Profile F.sig.mixed) (who : Fin 2) : ℝ :=
-  (mixedProfile who).prob (h.action who true)
+  ((mixedProfile who) (h.action who true)).toReal
 
 @[simp]
 theorem probTrue_fairProfile (who : Fin 2) :
     h.probTrue h.fairProfile who = (1 / 2 : ℝ) := by
-  simp [probTrue]
+  simpa only [probTrue] using h.fairProfile_prob_action who true
 
 theorem probTrue_nonneg (mixedProfile : Profile F.sig.mixed) (who : Fin 2) :
     0 ≤ h.probTrue mixedProfile who :=
-  FinDist.prob_nonneg _ _
+  ENNReal.toReal_nonneg
 
 theorem probTrue_le_one (mixedProfile : Profile F.sig.mixed) (who : Fin 2) :
     h.probTrue mixedProfile who ≤ 1 :=
-  FinDist.prob_le_one _ _
+  ENNReal.toReal_mono ENNReal.one_ne_top (PMF.coe_le_one _ _)
 
 @[simp]
 theorem probTrue_update_pure_true (mixedProfile : Profile F.sig.mixed)
     (who : Fin 2) :
     h.probTrue
-        (Profile.update mixedProfile who (FinDist.pure (h.action who true))) who = 1 := by
+        (Profile.update mixedProfile who (PMF.pure (h.action who true))) who = 1 := by
   classical
   simp [probTrue]
 
@@ -118,26 +136,26 @@ theorem probTrue_update_pure_true (mixedProfile : Profile F.sig.mixed)
 theorem probTrue_update_pure_false (mixedProfile : Profile F.sig.mixed)
     (who : Fin 2) :
     h.probTrue
-        (Profile.update mixedProfile who (FinDist.pure (h.action who false))) who = 0 := by
-  rw [probTrue, Profile.update_same, FinDist.prob_pure_of_ne]
-  exact fun heq => Bool.noConfusion ((h.action who).injective heq)
+        (Profile.update mixedProfile who (PMF.pure (h.action who false))) who = 0 := by
+  simp [probTrue, Profile.update_same, PMF.pure_apply,
+    (h.action who).injective.eq_iff]
 
 @[simp]
 theorem probTrue_update_of_ne (mixedProfile : Profile F.sig.mixed)
-    {who other : Fin 2} (replacement : FinDist (F.sig.Strategy who))
+    {who other : Fin 2} (replacement : PMF (F.sig.Strategy who))
     (hne : other ≠ who) :
     h.probTrue (Profile.update mixedProfile who replacement) other =
       h.probTrue mixedProfile other := by
   simp [probTrue, hne]
 
 private theorem probTrue_update_zero_one (mixedProfile : Profile F.sig.mixed)
-    (replacement : FinDist (F.sig.Strategy 0)) :
+    (replacement : PMF (F.sig.Strategy 0)) :
     h.probTrue (Profile.update mixedProfile 0 replacement) 1 =
       h.probTrue mixedProfile 1 :=
   h.probTrue_update_of_ne mixedProfile replacement (by decide)
 
 private theorem probTrue_update_one_zero (mixedProfile : Profile F.sig.mixed)
-    (replacement : FinDist (F.sig.Strategy 1)) :
+    (replacement : PMF (F.sig.Strategy 1)) :
     h.probTrue (Profile.update mixedProfile 1 replacement) 0 =
       h.probTrue mixedProfile 0 :=
   h.probTrue_update_of_ne mixedProfile replacement (by decide)
@@ -154,62 +172,107 @@ private theorem boolProfiles :
 
 private theorem prob_encoded (mixedProfile : Profile F.sig.mixed)
     (who : Fin 2) (bit : Bool) :
-    ((mixedProfile who).map (h.action who).symm).prob bit =
-      (mixedProfile who).prob (h.action who bit) := by
+    (((mixedProfile who).map (h.action who).symm) bit).toReal =
+      ((mixedProfile who) (h.action who bit)).toReal := by
   classical
-  simpa using FinDist.prob_map_of_injective
-    (h.action who).symm (h.action who).symm.injective
-    (mixedProfile who) (h.action who bit)
+  rw [PMF.map_apply]
+  rw [tsum_eq_single (h.action who bit)]
+  · simp
+  · intro a ha
+    have hne : bit ≠ (h.action who).symm a := by
+      intro heq
+      apply ha
+      calc
+        a = h.action who ((h.action who).symm a) := by simp
+        _ = h.action who bit := congrArg (h.action who) heq.symm
+    simp [hne]
 
 private theorem probFalse (mixedProfile : Profile F.sig.mixed) (who : Fin 2) :
-    (mixedProfile who).prob (h.action who false) =
+    ((mixedProfile who) (h.action who false)).toReal =
       1 - h.probTrue mixedProfile who := by
-  have htotal := FinDist.sum_prob ((mixedProfile who).map (h.action who).symm)
-  rw [Fintype.sum_bool, h.prob_encoded, h.prob_encoded] at htotal
+  have htotal :
+      ((((mixedProfile who).map (h.action who).symm) false).toReal +
+        (((mixedProfile who).map (h.action who).symm) true).toReal) = 1 := by
+    have hsum := ENNReal.tsum_toReal_eq
+      (fun bit : Bool => PMF.apply_ne_top ((mixedProfile who).map (h.action who).symm) bit)
+    rw [PMF.tsum_coe] at hsum
+    simpa [tsum_fintype, Fintype.sum_bool, add_comm] using hsum.symm
+  rw [h.prob_encoded, h.prob_encoded] at htotal
   unfold probTrue
   linarith
 
 private theorem mixedExpectedUtility_eq_sum
     (mixedProfile : Profile F.sig.mixed) (who : Fin 2) :
-    expectedUtility utility who (F.mixed.play mixedProfile) =
+    expectedUtility utility who (F.mixed.play mixedProfile)
+        (mixedUtilityIntegrable h mixedProfile who) =
       ∑ bits : Fin 2 → Bool,
-        (∏ i, (mixedProfile i).prob (h.action i (bits i))) *
-          expectedUtility utility who (F.play (h.profile bits)) := by
-  let encoded : Fin 2 → FinDist Bool :=
+        (∏ i, ((mixedProfile i) (h.action i (bits i))).toReal) *
+          expectedUtility utility who (F.play (h.profile bits))
+            (h.integrable who (h.profile bits)) := by
+  let encoded : Fin 2 → PMF Bool :=
     fun i => (mixedProfile i).map (h.action i).symm
-  have hpi :
-      FinDist.pi encoded =
-        (FinDist.pi mixedProfile).map h.encodeProfile := by
-    exact FinDist.pi_map (fun i => (h.action i).symm) mixedProfile
+  let μ := independentProduct mixedProfile
+  let ν := independentProduct encoded
+  let value : (Fin 2 → Bool) → ℝ := fun bits =>
+    expectedUtility utility who (F.play (h.profile bits))
+      (h.integrable who (h.profile bits))
+  have hmap : μ.map h.encodeProfile = ν := by
+    show (independentProduct mixedProfile).map
+      (fun pureProfile i => (h.action i).symm (pureProfile i)) = _
+    simpa [ν, encoded] using
+      independentProduct_map mixedProfile (fun i => (h.action i).symm)
+  have hcond : ∀ pureProfile, UtilityIntegrable utility who (F.play pureProfile) :=
+    fun pureProfile => h.integrable who pureProfile
+  have houter : PayoffIntegrable μ (fun pureProfile =>
+      expectedUtility utility who (F.play pureProfile) (hcond pureProfile)) := by
+    simpa only [expectedUtility, UtilityIntegrable] using
+      payoffIntegrable_bind_conditionalExpectation μ F.play
+        (fun outcome => utility outcome who)
+        (mixedUtilityIntegrable h mixedProfile who) hcond
+  have hvalue : ∀ pureProfile,
+      expectedUtility utility who (F.play pureProfile) (hcond pureProfile) =
+        value (h.encodeProfile pureProfile) := by
+    intro pureProfile
+    simp [value, h.profile_encodeProfile]
+  have hpull : PayoffIntegrable μ (value ∘ h.encodeProfile) :=
+    payoffIntegrable_congr_on_support
+      (fun profile _ => hvalue profile) houter
+  have hmapped : PayoffIntegrable (μ.map h.encodeProfile) value :=
+    (payoffIntegrable_map_iff h.encodeProfile μ value).2 hpull
+  have hmass (bits : Fin 2 → Bool) :
+      (ν bits).toReal = ∏ i, ((mixedProfile i) (h.action i (bits i))).toReal := by
+    rw [independentProduct_apply, ENNReal.toReal_prod]
+    apply Finset.prod_congr rfl
+    intro i _
+    exact prob_encoded h mixedProfile i (bits i)
   calc
-    expectedUtility utility who (F.mixed.play mixedProfile) =
-        (FinDist.pi mixedProfile).expect fun pureProfile =>
-          expectedUtility utility who (F.play pureProfile) := by
-      rw [GameForm.mixed_play, expectedUtility_bind]
-    _ = ((FinDist.pi mixedProfile).map h.encodeProfile).expect fun bits =>
-          expectedUtility utility who (F.play (h.profile bits)) := by
-      rw [FinDist.expect_map]
-      apply FinDist.expect_congr
-      intro pureProfile _
-      rw [h.profile_encodeProfile]
-    _ = (FinDist.pi encoded).expect fun bits =>
-          expectedUtility utility who (F.play (h.profile bits)) := by
-      rw [hpi]
+    expectedUtility utility who (F.mixed.play mixedProfile)
+        (mixedUtilityIntegrable h mixedProfile who) =
+        expect μ (fun pureProfile =>
+          expectedUtility utility who (F.play pureProfile) (hcond pureProfile)) houter := by
+      exact expectedUtility_bind utility who μ F.play
+        (mixedUtilityIntegrable h mixedProfile who) hcond
+    _ = expect (μ.map h.encodeProfile) value hmapped := by
+      calc
+        _ = expect μ (value ∘ h.encodeProfile) hpull :=
+          expect_congr_on_support (fun profile _ => hvalue profile) houter hpull
+        _ = expect (μ.map h.encodeProfile) value hmapped :=
+          (expect_map h.encodeProfile μ value hpull hmapped).symm
+    _ = expect ν value (payoffIntegrable_congr_law hmap hmapped) :=
+      expect_congr_law hmap value hmapped
+        (payoffIntegrable_congr_law hmap hmapped)
     _ = ∑ bits : Fin 2 → Bool,
-          (∏ i, (mixedProfile i).prob (h.action i (bits i))) *
-            expectedUtility utility who (F.play (h.profile bits)) := by
-      rw [FinDist.expect_eq_sum]
+          (∏ i, ((mixedProfile i) (h.action i (bits i))).toReal) * value bits := by
+      rw [expect_eq_sum]
       apply Finset.sum_congr rfl
       intro bits _
-      rw [FinDist.prob_pi]
-      congr 2
-      funext i
-      exact h.prob_encoded mixedProfile i (bits i)
+      rw [hmass]
 
 /-- Expected utility of player zero as a polynomial in the two `true`
 probabilities. -/
 theorem mixedExpectedUtility_zero (mixedProfile : Profile F.sig.mixed) :
-    expectedUtility utility 0 (F.mixed.play mixedProfile) =
+    expectedUtility utility 0 (F.mixed.play mixedProfile)
+        (mixedUtilityIntegrable h mixedProfile 0) =
       h.scale * ((2 * h.probTrue mixedProfile 0 - 1) *
         (2 * h.probTrue mixedProfile 1 - 1)) := by
   rw [h.mixedExpectedUtility_eq_sum, boolProfiles,
@@ -227,7 +290,8 @@ theorem mixedExpectedUtility_zero (mixedProfile : Profile F.sig.mixed) :
 /-- Expected utility of player one is the negative of player zero's
 Matching Pennies polynomial. -/
 theorem mixedExpectedUtility_one (mixedProfile : Profile F.sig.mixed) :
-    expectedUtility utility 1 (F.mixed.play mixedProfile) =
+    expectedUtility utility 1 (F.mixed.play mixedProfile)
+        (mixedUtilityIntegrable h mixedProfile 1) =
       -h.scale * ((2 * h.probTrue mixedProfile 0 - 1) *
         (2 * h.probTrue mixedProfile 1 - 1)) := by
   rw [h.mixedExpectedUtility_eq_sum, boolProfiles,
@@ -249,13 +313,42 @@ theorem isNash_iff_half (mixedProfile : Profile F.sig.mixed) :
     IsNash F.mixed (euPreference utility) mixedProfile ↔
       h.probTrue mixedProfile 0 = (1 / 2 : ℝ) ∧
         h.probTrue mixedProfile 1 = (1 / 2 : ℝ) := by
+  have hdev : ∀ who (replacement : PMF (F.sig.Strategy who)),
+      UtilityIntegrable utility who
+        (F.mixed.play (Profile.update mixedProfile who replacement)) := by
+    intro who replacement
+    exact mixedUtilityIntegrable h (Profile.update mixedProfile who replacement) who
+  have hnash_iff := isNash_mixed_iff (F := F) (utility := utility)
+    mixedProfile hdev
   constructor
   · intro hnash
-    rw [isNash_mixed_iff] at hnash
-    have h0t := hnash 0 (h.action 0 true)
-    have h0f := hnash 0 (h.action 0 false)
-    have h1t := hnash 1 (h.action 1 true)
-    have h1f := hnash 1 (h.action 1 false)
+    rw [hnash_iff] at hnash
+    have hbase0 := mixedUtilityIntegrable h mixedProfile 0
+    have hbase1 := mixedUtilityIntegrable h mixedProfile 1
+    have hdev0t := mixedUtilityIntegrable h
+      (Profile.update mixedProfile 0 (PMF.pure (h.action 0 true))) 0
+    have hdev0f := mixedUtilityIntegrable h
+      (Profile.update mixedProfile 0 (PMF.pure (h.action 0 false))) 0
+    have hdev1t := mixedUtilityIntegrable h
+      (Profile.update mixedProfile 1 (PMF.pure (h.action 1 true))) 1
+    have hdev1f := mixedUtilityIntegrable h
+      (Profile.update mixedProfile 1 (PMF.pure (h.action 1 false))) 1
+    have h0t := (euPreference_iff utility 0 (F.mixed.play mixedProfile)
+      (F.mixed.play (Profile.update mixedProfile 0
+        (PMF.pure (h.action 0 true)))) hbase0 hdev0t).1
+      (hnash 0 (h.action 0 true))
+    have h0f := (euPreference_iff utility 0 (F.mixed.play mixedProfile)
+      (F.mixed.play (Profile.update mixedProfile 0
+        (PMF.pure (h.action 0 false)))) hbase0 hdev0f).1
+      (hnash 0 (h.action 0 false))
+    have h1t := (euPreference_iff utility 1 (F.mixed.play mixedProfile)
+      (F.mixed.play (Profile.update mixedProfile 1
+        (PMF.pure (h.action 1 true)))) hbase1 hdev1t).1
+      (hnash 1 (h.action 1 true))
+    have h1f := (euPreference_iff utility 1 (F.mixed.play mixedProfile)
+      (F.mixed.play (Profile.update mixedProfile 1
+        (PMF.pure (h.action 1 false)))) hbase1 hdev1f).1
+      (hnash 1 (h.action 1 false))
     rw [h.mixedExpectedUtility_zero, h.mixedExpectedUtility_zero] at h0t h0f
     rw [h.mixedExpectedUtility_one, h.mixedExpectedUtility_one] at h1t h1f
     simp only [h.probTrue_update_pure_true, h.probTrue_update_pure_false,
@@ -266,18 +359,50 @@ theorem isNash_iff_half (mixedProfile : Profile F.sig.mixed) :
     have hq1 := h.probTrue_le_one mixedProfile 1
     constructor <;> nlinarith [h.scale_pos]
   · rintro ⟨hp, hq⟩
-    rw [isNash_mixed_iff]
+    rw [hnash_iff]
     intro who replacement
     obtain ⟨bit, rfl⟩ := (h.action who).surjective replacement
     by_cases hwho : who = 0
     · subst who
-      cases bit <;>
-        rw [h.mixedExpectedUtility_zero, h.mixedExpectedUtility_zero] <;>
+      cases bit
+      · apply (euPreference_iff utility 0 (F.mixed.play mixedProfile)
+          (F.mixed.play (Profile.update mixedProfile 0
+            (PMF.pure (h.action 0 false))))
+          (mixedUtilityIntegrable h mixedProfile 0)
+          (mixedUtilityIntegrable h
+            (Profile.update mixedProfile 0
+              (PMF.pure (h.action 0 false))) 0)).2
+        rw [h.mixedExpectedUtility_zero, h.mixedExpectedUtility_zero]
+        simp [hp, hq]
+      · apply (euPreference_iff utility 0 (F.mixed.play mixedProfile)
+          (F.mixed.play (Profile.update mixedProfile 0
+            (PMF.pure (h.action 0 true))))
+          (mixedUtilityIntegrable h mixedProfile 0)
+          (mixedUtilityIntegrable h
+            (Profile.update mixedProfile 0
+              (PMF.pure (h.action 0 true))) 0)).2
+        rw [h.mixedExpectedUtility_zero, h.mixedExpectedUtility_zero]
         simp [hp, hq]
     · have hwho' : who = 1 := Fin.eq_one_of_ne_zero who hwho
       subst who
-      cases bit <;>
-        rw [h.mixedExpectedUtility_one, h.mixedExpectedUtility_one] <;>
+      cases bit
+      · apply (euPreference_iff utility 1 (F.mixed.play mixedProfile)
+          (F.mixed.play (Profile.update mixedProfile 1
+            (PMF.pure (h.action 1 false))))
+          (mixedUtilityIntegrable h mixedProfile 1)
+          (mixedUtilityIntegrable h
+            (Profile.update mixedProfile 1
+              (PMF.pure (h.action 1 false))) 1)).2
+        rw [h.mixedExpectedUtility_one, h.mixedExpectedUtility_one]
+        simp [hp, hq]
+      · apply (euPreference_iff utility 1 (F.mixed.play mixedProfile)
+          (F.mixed.play (Profile.update mixedProfile 1
+            (PMF.pure (h.action 1 true))))
+          (mixedUtilityIntegrable h mixedProfile 1)
+          (mixedUtilityIntegrable h
+            (Profile.update mixedProfile 1
+              (PMF.pure (h.action 1 true))) 1)).2
+        rw [h.mixedExpectedUtility_one, h.mixedExpectedUtility_one]
         simp [hp, hq]
 
 end MatchingPenniesLike

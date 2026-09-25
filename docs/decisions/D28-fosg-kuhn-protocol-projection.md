@@ -2,7 +2,7 @@
 
 - **Status:** adopted
 - **Date:** 2026-08-02
-- **Experiment IDs:** EXP-057, EXP-115
+- **Experiment IDs:** EXP-057, EXP-115, EXP-126, EXP-127
 
 ## Decision / question
 
@@ -41,9 +41,12 @@ stronger recall hypothesis.
 
 EXP-115 adds a post-decision hostile slice with `Nat` information states. Its
 two-round behavioral support reaches two distinct decision sites, yet the
-Protocol theorem constructs a finite-support mixed witness for the complete
-bounded history law without ambient information-state finiteness. The FOSG
-leaf inherits that generalized whole-profile theorem directly.
+bounded history law has a discrete mixed realization without ambient
+information-state finiteness. The fixture also has finitely supported local
+choices, which permits a finitely supported mixed witness. Under D62 these
+are separate facts: finitely many relevant sites allow a PMF product, while
+finite local supports make that product finitely supported. The FOSG leaf
+inherits the canonical whole-profile realization theorem directly.
 
 This slice matters because the same execution supports failure and success:
 recall is owned by observation design, not by an FOSG-native runner or a stored
@@ -59,12 +62,6 @@ property of the transition graph.
 | bounded forward assumptions | EXP-115 removes `Fintype` and `DecidableEq` on ambient information states from whole-profile history/outcome laws; full-product and unilateral surfaces remain finite |
 | retained law | equality of canonical `FinDist ExecutionProtocol.History` laws, plus arbitrary `FinDist.map` outcome projections |
 | removed machinery | `ObsModelCore`, PMF product bridges, native execution states, history-machine conversion, semantic step invariant hierarchy, strategy lifts, list-chain/`SeenBefore` coefficient induction |
-| pinned dispositions | 13 adapt / 7 subsumed / 19 retired; L-FOSG becomes 372/776 reviewed with 404 queued |
-| focused build | FOSG Kuhn leaf and hostile witness build as a 1,724-job target |
-| source hazards | no placeholders, raw updates, transports, `Fintype.ofFinite`, EFG/utility imports, PMF compatibility layer, or custom axioms |
-| axiom profile | `propext`, `Classical.choice`, and `Quot.sound` only |
-| boundary audit | syntax root rejects 3/3 solution/Kuhn probes; opt-in leaf reaches 5/5 named results and rejects EFG 1/1; Phase 3 `VERIFIED=1` |
-| full integration | full build 3,415 jobs; Phase 2 static, Phase 3 full reachability, and coverage audits `VERIFIED=1` |
 
 ## Kill conditions and result
 
@@ -90,10 +87,14 @@ the mature EFG-facing vocabulary where the mathematics is genuinely shared,
 without importing EFG or routing simultaneous FOSGs through single-mover
 syntax.
 
-For bounded whole-profile laws, that projection now uses the EXP-115
-profile/horizon-local finite-support witness and permits infinite ambient
-information carriers. It does not redefine the full-product `toMixed`
-operation or claim a finiteness-free counterfactual/unilateral theorem.
+For bounded whole-profile laws, the discrete forward projection requires an
+explicit finite cover of the profile's reachable decision sites and permits
+infinite ambient information carriers. A finite horizon alone does not supply
+that cover when chance has infinite support. The sampled local laws may have
+infinite support; finite support of the mixed witness is an additional property
+when the local laws provide it. Full-product `toMixed` retains its finite
+information-index premise. Cover-free infinite policy sampling belongs to the
+separate measure construction, not to another FOSG runner.
 
 The old native execution and marginal layers are adapted, subsumed, or retired
 row by row.  A named serialization comparison from simultaneous FOSG to EFG is

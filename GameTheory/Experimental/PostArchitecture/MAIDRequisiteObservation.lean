@@ -305,9 +305,9 @@ def semantics : Semantics model where
   defaultValue _ := false
   chanceLaw node hchance _ := by
     cases node with
-    | signal => exact GameTheory.Math.Probability.FinDist.pure false
+    | signal => exact PMF.pure false
     | decision => simp at hchance
-    | reward => exact GameTheory.Math.Probability.FinDist.pure false
+    | reward => exact PMF.pure false
   utility _ assignment := if assignment .reward then 1 else 0
 
 def rewardTerm : UtilityTerm model where
@@ -461,9 +461,9 @@ def semantics : Semantics model where
   defaultValue _ := false
   chanceLaw node hchance _ := by
     cases node with
-    | signal => exact GameTheory.Math.Probability.FinDist.pure false
+    | signal => exact PMF.pure false
     | decision => simp at hchance
-    | reward => exact GameTheory.Math.Probability.FinDist.pure false
+    | reward => exact PMF.pure false
   utility _ assignment := if assignment .reward then 1 else 0
 
 def rewardTerm : UtilityTerm model where
@@ -571,9 +571,9 @@ def semantics : Semantics Nonrequisite.model where
   defaultValue _ := false
   chanceLaw node hchance _ := by
     cases node with
-    | signal => exact GameTheory.Math.Probability.FinDist.pure false
+    | signal => exact PMF.pure false
     | decision => simp at hchance
-    | reward => exact GameTheory.Math.Probability.FinDist.pure false
+    | reward => exact PMF.pure false
   utility _ assignment := score (assignment .reward) + score (assignment .signal)
 
 def rewardTerm : UtilityTerm Nonrequisite.model where

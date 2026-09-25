@@ -68,14 +68,25 @@ theorem exists_sequentialEquilibriumWithin
   obtain ⟨assessment, subseq, hsubseq, hstrategy, hconvergence⟩ :=
     M.exists_subseq_behavioralAssessmentConvergesPointwise sequence
   let repair (n : ℕ) (i : ι) (alternative : M.BehavioralPolicy i) :
-      M.BehavioralPolicy i := fun info =>
-    FinDist.mix (weight (subseq n)) (hpositive (subseq n)).le (hone (subseq n))
-      FinDist.uniformOfFintype (alternative info)
+    M.BehavioralPolicy i := fun info =>
+    mix (weight (subseq n)) (hpositive (subseq n)).le (hone (subseq n))
+      (PMF.uniformOfFintype _) (alternative info)
   have hrepair (i : ι) (alternative : M.BehavioralPolicy i) (info : M.InfoState i) :
-      FinDistConvergesPointwise (fun n => repair n i alternative info) (alternative info) :=
-    finDistConvergesPointwise_mix_zero (fun n => weight (subseq n))
+      PMFConvergesPointwise (fun n => repair n i alternative info) (alternative info) :=
+    pmfConvergesPointwise_mix_zero (fun n => weight (subseq n))
       (fun n => (hpositive (subseq n)).le) (fun n => hone (subseq n))
       (hzero.comp hsubseq.tendsto_atTop) _ _
+  have hlocalFinite (n : ℕ) (i : ι) (site : M.InformationSite i)
+      (law : PMF (M.Choice i site.1))
+      (hlaw : law ∈ M.uniformTrembleLaws (weight n)
+        (hpositive n).le (hone n) i site.1) :
+      ((sequence n).continuationContext site (payoff i) (fuel + 1)).value
+          (((sequence n).strategy i).withLaw site.1 law)
+            (payoffIntegrable_of_finite _ _) ≤
+        ((sequence n).continuationContext site (payoff i) (fuel + 1)).value
+          ((sequence n).strategy i) (payoffIntegrable_of_finite _ _) := by
+    obtain ⟨_halt, _hbase, hle⟩ := hlocal n i site law hlaw
+    exact hle
   refine ⟨assessment, ?_, ?_⟩
   · apply BehavioralAssessment.isSequentiallyRationalWithin_of_converging_deviations
       hstrategy (fun i site => hconvergence.belief i site) repair hrepair payoff (fuel + 1)
@@ -84,7 +95,7 @@ theorem exists_sequentialEquilibriumWithin
       (sequence (subseq n)) (hfull (subseq n)) (hbayes (subseq n))
       (fun i info law => law ∈ M.uniformTrembleLaws
         (weight (subseq n)) (hpositive (subseq n)).le (hone (subseq n)) i info)
-      (hfeasible (subseq n)) payoff hbound (hlocal (subseq n)) who site
+      (hfeasible (subseq n)) payoff hbound (hlocalFinite (subseq n)) who site
     intro info
     exact ⟨alternative info, rfl⟩
   · exact hconvergence.isSequentiallyConsistent

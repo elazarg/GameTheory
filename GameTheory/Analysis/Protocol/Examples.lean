@@ -42,24 +42,20 @@ theorem trembleWeight_le_one (n : ℕ) :
   (trembleWeight_lt_one n).le
 
 /-- Play `true` only with the vanishing tremble probability. -/
-def tremblingLaw (n : ℕ) : FinDist Bool :=
-  FinDist.mix (trembleWeight n)
+def tremblingLaw (n : ℕ) : PMF Bool :=
+  mix (trembleWeight n)
     (trembleWeight_nonneg n) (trembleWeight_le_one n)
-    (FinDist.pure true) (FinDist.pure false)
+    (PMF.pure true) (PMF.pure false)
 
 /-- Every approximant genuinely uses both actions. -/
 theorem tremblingLaw_fullSupport (n : ℕ) :
-    (tremblingLaw n).FullSupport := by
+    FullSupport (tremblingLaw n) := by
   intro value
-  rw [← FinDist.prob_pos_iff]
-  rw [tremblingLaw, FinDist.prob_mix]
   cases value
-  · rw [FinDist.prob_pure_of_ne (by decide),
-      FinDist.prob_pure_self]
-    simpa using sub_pos.mpr (trembleWeight_lt_one n)
-  · rw [FinDist.prob_pure_self,
-      FinDist.prob_pure_of_ne (by decide)]
-    simpa using trembleWeight_pos n
+  · exact mem_support_mix_right _ _ _ (trembleWeight_lt_one n)
+      ((PMF.mem_support_pure_iff _ _).mpr rfl)
+  · exact mem_support_mix_left _ _ _ (trembleWeight_pos n)
+      ((PMF.mem_support_pure_iff _ _).mpr rfl)
 
 theorem trembleWeight_tendsto_zero :
     Tendsto trembleWeight atTop (nhds 0) := by
@@ -73,25 +69,14 @@ theorem trembleWeight_tendsto_zero :
 
 /-- The fully mixed laws converge pointwise to pure `false`. -/
 theorem tremblingLaw_tendsto_pureFalse :
-    FinDistConvergesPointwise tremblingLaw (FinDist.pure false) := by
-  intro value
-  simp only [tremblingLaw, FinDist.prob_mix]
-  cases value
-  · simp only [
-      FinDist.prob_pure_of_ne (a := false) (b := true) (by decide),
-      FinDist.prob_pure_self, mul_zero, zero_add, mul_one]
-    simpa using
-      (tendsto_const_nhds.sub trembleWeight_tendsto_zero :
-        Tendsto (fun n => 1 - trembleWeight n) atTop (nhds (1 - 0)))
-  · simp only [FinDist.prob_pure_self,
-      FinDist.prob_pure_of_ne (a := true) (b := false) (by decide),
-      mul_one, mul_zero, add_zero]
-    exact trembleWeight_tendsto_zero
+    PMFConvergesPointwise tremblingLaw (PMF.pure false) :=
+  pmfConvergesPointwise_mix_zero trembleWeight trembleWeight_nonneg
+    trembleWeight_le_one trembleWeight_tendsto_zero _ _
 
 /-- The limit itself is not fully mixed. -/
 theorem pureFalse_not_fullSupport :
-    ¬ (FinDist.pure false).FullSupport := by
+    ¬ FullSupport (PMF.pure false) := by
   intro hfull
-  exact (by simp : true ∉ (FinDist.pure false).support) (hfull true)
+  exact (by simp : true ∉ (PMF.pure false).support) (hfull true)
 
 end GameTheory.Analysis.Protocol.Examples

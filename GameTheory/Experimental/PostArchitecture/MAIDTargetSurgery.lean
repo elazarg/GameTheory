@@ -39,7 +39,7 @@ def constantActionOwnerPolicy {owner : Player}
   fun site _ => by
     have hsite := hunique site
     subst site
-    exact FinDist.pure action
+    exact PMF.pure action
 
 @[simp]
 theorem constantActionOwnerPolicy_apply {owner : Player}
@@ -47,7 +47,7 @@ theorem constantActionOwnerPolicy_apply {owner : Player}
     (hunique : ∀ site : DecisionSite diagram owner, site = target)
     (action : diagram.Value target.1) (context : FullContext target) :
     constantActionOwnerPolicy target hunique action target context =
-      FinDist.pure action := by
+      PMF.pure action := by
   rfl
 
 /-- Replacing the unique target owner changes only the target draw: the prefix
@@ -76,11 +76,11 @@ theorem assignmentRun_target_surgery_eq
     target hunique before htargetBefore replacement (base owner) initial]
   rw [Profile.update_eq_self
     (sig := nativeBehavioralSignature diagram) base owner]
-  apply FinDist.bind_congr
+  apply bind_congr_on_support
   intro state _
   simp only [assignmentRun]
   unfold assignmentStep
-  rw [FinDist.bind_map]
+  rw [PMF.bind_map]
   have htargetLaw :
       assignmentNodeLaw semantics
           (Profile.update (sig := nativeBehavioralSignature diagram)
@@ -105,7 +105,7 @@ theorem assignmentRun_target_surgery_eq
       cases hsite
       rfl
   rw [htargetLaw]
-  apply FinDist.bind_congr
+  apply bind_congr_on_support
   intro action _
   calc
     assignmentRun semantics
@@ -137,31 +137,20 @@ def contextActionTermProjection (view : UtilityView semantics)
       Assignment.restrict diagram assignment (view.term term).parents))
 
 private theorem prob_bind_eq_chosen_mul
-    {Action Output : Type*} (law : FinDist Action)
-    (continuation : Action → FinDist Output)
+    {Action Output : Type*} (law : PMF Action)
+    (continuation : Action → PMF Output)
     (chosen : Action) (output : Output)
     (hoffTarget : ∀ action ∈ law.support, action ≠ chosen →
-      (continuation action).prob output = 0) :
-    (law.bind continuation).prob output =
-      law.prob chosen * (continuation chosen).prob output := by
+      (continuation action) output = 0) :
+    (law.bind continuation) output =
+      law chosen * (continuation chosen) output := by
   classical
-  rw [FinDist.prob_bind, FinDist.expect_eq_sum_support]
-  by_cases hchosen : chosen ∈ law.support
-  · rw [Finset.sum_eq_single chosen]
-    · intro action haction hne
-      rw [hoffTarget action (FinDist.mem_supportFinset.mp haction) hne,
-        mul_zero]
-    · intro hnot
-      exact absurd (FinDist.mem_supportFinset.mpr hchosen) hnot
-  · rw [FinDist.prob_eq_zero_iff.mpr hchosen, zero_mul]
-    apply Finset.sum_eq_zero
-    intro action haction
-    have hsupport := FinDist.mem_supportFinset.mp haction
-    have hne : action ≠ chosen := by
-      intro heq
-      subst action
-      exact hchosen hsupport
-    rw [hoffTarget action hsupport hne, mul_zero]
+  rw [PMF.bind_apply]
+  apply tsum_eq_single chosen
+  intro action hne
+  by_cases haction : action ∈ law.support
+  · rw [hoffTarget action haction hne, mul_zero]
+  · rw [(PMF.apply_eq_zero_iff law action).mpr haction, zero_mul]
 
 private theorem suffix_prob_eq_zero_of_action_ne
     [DecidableEq Node]
@@ -174,11 +163,11 @@ private theorem suffix_prob_eq_zero_of_action_ne
     (hne : chosen ≠ queried) :
     ((assignmentRun semantics base after
         (ToEFG.Stage.Assignment.setOne state ⟨target.1, chosen⟩)).map
-      (contextActionTermProjection view target term)).prob
+      (contextActionTermProjection view target term))
         (context, (queried, termConfig)) = 0 := by
-  apply FinDist.prob_eq_zero_iff.mpr
+  apply (PMF.apply_eq_zero_iff _ _).mpr
   intro houtput
-  rw [FinDist.support_map] at houtput
+  rw [PMF.support_map] at houtput
   obtain ⟨result, hresult, hprojection⟩ := houtput
   have hpreserved := assignmentRun_support_preserves_of_not_mem
     semantics base after
@@ -204,11 +193,11 @@ private theorem suffix_prob_eq_zero_of_context_ne
       (diagram.observedParents target.1) ≠ context) :
     ((assignmentRun semantics base after
         (ToEFG.Stage.Assignment.setOne state ⟨target.1, chosen⟩)).map
-      (contextActionTermProjection view target term)).prob
+      (contextActionTermProjection view target term))
         (context, (queried, termConfig)) = 0 := by
-  apply FinDist.prob_eq_zero_iff.mpr
+  apply (PMF.apply_eq_zero_iff _ _).mpr
   intro houtput
-  rw [FinDist.support_map] at houtput
+  rw [PMF.support_map] at houtput
   obtain ⟨result, hresult, hprojection⟩ := houtput
   have hsuffix :
       Assignment.restrict diagram result
@@ -254,12 +243,12 @@ theorem replacementLaw_contextActionTerm_prob_eq_kernel_mul_constant
     (context : FullContext target) (action : diagram.Value target.1)
     (termConfig : TermConfig view term) :
     ((replacementLaw pruning semantics policy owner replacement).map
-      (contextActionTermProjection view target term)).prob
+      (contextActionTermProjection view target term))
         (context, (action, termConfig)) =
-      (replacement target context).prob action *
+      (replacement target context) action *
         ((replacementLaw pruning semantics policy owner
           (constantActionOwnerPolicy target hunique action)).map
-            (contextActionTermProjection view target term)).prob
+            (contextActionTermProjection view target term))
           (context, (action, termConfig)) := by
   let topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents :=
     (GameTheory.Math.DAG.topologicalOrder_of_acyclic diagram.acyclic).some
@@ -308,7 +297,7 @@ theorem replacementLaw_contextActionTerm_prob_eq_kernel_mul_constant
           base owner replacement), horder]
     rw [assignmentRun_target_surgery_eq semantics base owner target hunique
       before after htargetBefore htargetAfter replacement]
-    simp only [FinDist.map_bind]
+    simp only [PMF.map_bind]
   have hconstant :
       (replacementLaw pruning semantics policy owner
           (constantActionOwnerPolicy target hunique action)).map
@@ -327,15 +316,12 @@ theorem replacementLaw_contextActionTerm_prob_eq_kernel_mul_constant
     rw [assignmentRun_target_surgery_eq semantics base owner target hunique
       before after htargetBefore htargetAfter
         (constantActionOwnerPolicy target hunique action)]
-    simp only [FinDist.map_bind, constantActionOwnerPolicy_apply,
-      FinDist.pure_bind]
+    simp only [PMF.map_bind, constantActionOwnerPolicy_apply,
+      PMF.pure_bind]
   rw [hreplacement, hconstant]
-  rw [FinDist.prob_bind]
-  rw [FinDist.prob_bind
-    (assignmentRun semantics base before semantics.defaultValue)]
-  rw [← FinDist.expect_smul]
-  apply FinDist.expect_congr
-  intro state _
+  rw [PMF.bind_apply, PMF.bind_apply, ← ENNReal.tsum_mul_left]
+  apply tsum_congr
+  intro state
   by_cases hcontext : Assignment.restrict diagram state
       (diagram.observedParents target.1) = context
   · have hfactor := prob_bind_eq_chosen_mul
@@ -350,7 +336,9 @@ theorem replacementLaw_contextActionTerm_prob_eq_kernel_mul_constant
         intro chosen _ hne
         exact suffix_prob_eq_zero_of_action_ne semantics base target view term
           after htargetAfter state chosen action context termConfig hne)
-    simpa only [hcontext] using hfactor
+    rw [hfactor]
+    simp only [hcontext]
+    ac_rfl
   · have hconstantZero := suffix_prob_eq_zero_of_context_ne semantics base
       target view term after hobservedAfter state action action context
       termConfig hcontext
@@ -361,21 +349,27 @@ theorem replacementLaw_contextActionTerm_prob_eq_kernel_mul_constant
             (assignmentRun semantics base after
               (ToEFG.Stage.Assignment.setOne state
                 ⟨target.1, chosen⟩)).map
-              (contextActionTermProjection view target term)).prob
+              (contextActionTermProjection view target term))
             (context, (action, termConfig)) = 0 := by
-      rw [FinDist.prob_bind]
-      have hbranches :
-          (fun chosen =>
+      rw [PMF.bind_apply]
+      calc
+        (∑' chosen,
+          (replacement target
+            (Assignment.restrict diagram state
+              (diagram.observedParents target.1))) chosen *
             ((assignmentRun semantics base after
               (ToEFG.Stage.Assignment.setOne state
                 ⟨target.1, chosen⟩)).map
-              (contextActionTermProjection view target term)).prob
-                (context, (action, termConfig))) = fun _ => 0 := by
-        funext chosen
-        exact suffix_prob_eq_zero_of_context_ne semantics base target view
-          term after hobservedAfter state chosen action context termConfig
-            hcontext
-      rw [hbranches, FinDist.expect_const]
-    rw [harbitraryZero, hconstantZero, mul_zero]
+              (contextActionTermProjection view target term))
+                (context, (action, termConfig))) =
+            ∑' chosen : diagram.Value target.1, 0 := by
+          apply tsum_congr
+          intro chosen
+          rw [suffix_prob_eq_zero_of_context_ne semantics base target view
+            term after hobservedAfter state chosen action context termConfig
+              hcontext]
+          simp
+        _ = 0 := by simp
+    simp [harbitraryZero, hconstantZero]
 
 end GameTheory.Experimental.PostArchitecture.MAIDTargetSurgery

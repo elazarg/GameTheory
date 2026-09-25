@@ -37,9 +37,14 @@ theorem isεHorizonNash_iff [DecidableEq ι] (initial : G.State)
     (profile : G.BehaviorProfile initial) :
     G.IsεHorizonNash initial horizon epsilon profile ↔
       ∀ who (deviation : (G.perfectMonitoring initial).BehavioralPolicy who),
-        G.finiteAveragePayoff initial horizon
-              (Profile.update profile who deviation) who ≤
-          G.finiteAveragePayoff initial horizon profile who + epsilon := by
+        ∃ hprofile : UtilityIntegrable (G.horizonUtility initial horizon) who
+            ((G.horizonForm initial horizon).play profile),
+          ∃ hdeviation : UtilityIntegrable (G.horizonUtility initial horizon) who
+              ((G.horizonForm initial horizon).play
+                (Profile.update profile who deviation)),
+            G.finiteAveragePayoff initial horizon
+                (Profile.update profile who deviation) who hdeviation ≤
+              G.finiteAveragePayoff initial horizon profile who hprofile + epsilon := by
   exact isεNash_iff (F := G.horizonForm initial horizon)
     (utility := G.horizonUtility initial horizon)
 
@@ -69,7 +74,10 @@ def IsUniformEquilibriumPayoff [DecidableEq ι] (initial : G.State)
       ∀ horizon, threshold ≤ horizon →
         G.IsεHorizonNash initial horizon epsilon profile ∧
           ∀ who,
-            |G.finiteAveragePayoff initial horizon profile who - value who| ≤ epsilon
+            ∃ hprofile : UtilityIntegrable (G.horizonUtility initial horizon) who
+                ((G.horizonForm initial horizon).play profile),
+              |G.finiteAveragePayoff initial horizon profile who hprofile -
+                value who| ≤ epsilon
 
 theorem IsUniformεEquilibrium.mono [DecidableEq ι] {initial : G.State}
     [∀ i, Nonempty (G.Action i)] {epsilon epsilon' : ℝ}
@@ -91,10 +99,16 @@ def HasUniformDeviationCapConstructor [DecidableEq ι] (initial : G.State)
     ∃ (profile : G.BehaviorProfile initial) (threshold : ℕ),
       ∀ horizon, threshold ≤ horizon →
         (∀ who,
-          |G.finiteAveragePayoff initial horizon profile who - value who| ≤ delta) ∧
+          ∃ hprofile : UtilityIntegrable (G.horizonUtility initial horizon) who
+              ((G.horizonForm initial horizon).play profile),
+            |G.finiteAveragePayoff initial horizon profile who hprofile -
+              value who| ≤ delta) ∧
         ∀ who (deviation : (G.perfectMonitoring initial).BehavioralPolicy who),
-          G.finiteAveragePayoff initial horizon
-              (Profile.update profile who deviation) who ≤ value who + delta
+          ∃ hdeviation : UtilityIntegrable (G.horizonUtility initial horizon) who
+              ((G.horizonForm initial horizon).play
+                (Profile.update profile who deviation)),
+            G.finiteAveragePayoff initial horizon
+              (Profile.update profile who deviation) who hdeviation ≤ value who + delta
 
 /-- A uniform deviation-cap constructor yields the semantic uniform-payoff
 property. -/
@@ -110,11 +124,14 @@ theorem isUniformEquilibriumPayoff_of_deviation_caps [DecidableEq ι]
   constructor
   · rw [G.isεHorizonNash_iff]
     intro who deviation
-    have hlower := (abs_le.mp (honPath who)).1
-    have hupper := hdeviation who deviation
+    obtain ⟨hprofile, hclose⟩ := honPath who
+    obtain ⟨hdeviation, hupper⟩ := hdeviation who deviation
+    refine ⟨hprofile, hdeviation, ?_⟩
+    have hlower := (abs_le.mp hclose).1
     linarith
   · intro who
-    exact (honPath who).trans (by linarith)
+    obtain ⟨hprofile, hclose⟩ := honPath who
+    exact ⟨hprofile, hclose.trans (by linarith)⟩
 
 /-- The deviation-cap constructor is equivalent to the semantic uniform
 equilibrium-payoff property. -/
@@ -131,11 +148,15 @@ theorem hasUniformDeviationCapConstructor_iff [DecidableEq ι]
     obtain ⟨hnash, honPath⟩ := hprofile horizon hhorizon
     constructor
     · intro who
-      exact (honPath who).trans (by linarith)
+      obtain ⟨hprofile, hclose⟩ := honPath who
+      exact ⟨hprofile, hclose.trans (by linarith)⟩
     · intro who deviation
-      have hdeviation := (G.isεHorizonNash_iff initial horizon (delta / 2) profile).mp
-        hnash who deviation
-      have honUpper := (abs_le.mp (honPath who)).2
+      obtain ⟨hprofile, hclose⟩ := honPath who
+      obtain ⟨_, hdeviation, hle⟩ :=
+        (G.isεHorizonNash_iff initial horizon (delta / 2) profile).mp
+          hnash who deviation
+      refine ⟨hdeviation, ?_⟩
+      have honUpper := (abs_le.mp hclose).2
       linarith
 
 end Game

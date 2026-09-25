@@ -57,7 +57,7 @@ def truthfulReports (types : ∀ i, M.Ty i) :
 /-- Compile a prior and direct mechanism to the accepted Bayesian-game
 semantics. Reports are actions; payoff uses true types separately. -/
 @[reducible]
-def toBayesianGame (prior : FinDist (∀ i, M.Ty i)) :
+def toBayesianGame (prior : PMF (∀ i, M.Ty i)) :
     BayesianGame ι where
   Ty := M.Ty
   Act := M.Report
@@ -66,13 +66,13 @@ def toBayesianGame (prior : FinDist (∀ i, M.Ty i)) :
     M.utility types (M.choose reports) who
 
 /-- The contingent plan that reports truthfully at every own type. -/
-def truthfulPlan (prior : FinDist (∀ i, M.Ty i)) :
+def truthfulPlan (prior : PMF (∀ i, M.Ty i)) :
     Profile (M.toBayesianGame prior).signature :=
   fun i ownType => M.truth i ownType
 
 omit [DecidableEq ι] in
 @[simp]
-theorem actionsOf_truthfulPlan (prior : FinDist (∀ i, M.Ty i))
+theorem actionsOf_truthfulPlan (prior : PMF (∀ i, M.Ty i))
     (types : ∀ i, M.Ty i) :
     (M.toBayesianGame prior).actionsOf (M.truthfulPlan prior) types =
       M.truthfulReports types :=
@@ -81,7 +81,7 @@ theorem actionsOf_truthfulPlan (prior : FinDist (∀ i, M.Ty i))
 /-- Updating the truthful contingent plan realizes the corresponding update
 of the truthful report profile. -/
 theorem actionsOf_update_truthfulPlan
-    (prior : FinDist (∀ i, M.Ty i)) (who : ι)
+    (prior : PMF (∀ i, M.Ty i)) (who : ι)
     (deviation : M.Ty who → M.Report who)
     (types : ∀ i, M.Ty i) :
     (M.toBayesianGame prior).actionsOf

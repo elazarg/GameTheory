@@ -1,7 +1,7 @@
 /-
 # Mixed profiles as a product of standard simplices
 
-Finite-law/simplex correspondence is provided by
+Finite-carrier PMF/simplex correspondence is provided by
 `GameTheory.Math.Probability.Simplex`. This module presents mixed profiles as a
 product of simplices over a game signature.
 -/
@@ -50,32 +50,32 @@ theorem isCompact_mixedPolytope : IsCompact (mixedPolytope sig) :=
   isCompact_univ_pi fun i => isCompact_simplexWeights (sig.Strategy i)
 
 /-- The probability vectors of a mixed profile. -/
-def probs (μ : Profile sig.mixed) : Profile sig.weights := fun i => (μ i).prob
+def probs (μ : Profile sig.mixed) : Profile sig.weights := fun i action => (μ i action).toReal
 
 theorem probs_mem_mixedPolytope (μ : Profile sig.mixed) : probs sig μ ∈ mixedPolytope sig :=
-  (mem_mixedPolytope sig).2 fun i => (μ i).prob_mem_simplexWeights
+  (mem_mixedPolytope sig).2 fun i => PMF.toReal_mem_simplexWeights (μ i)
 
 /-- And back: a point of the polytope is the probability vectors of a unique
 mixed profile. -/
 def ofPolytope {x : Profile sig.weights} (hx : x ∈ mixedPolytope sig) : Profile sig.mixed :=
-  fun i => FinDist.ofSimplex ((mem_mixedPolytope sig).1 hx i)
+  fun i => PMF.ofSimplex ((mem_mixedPolytope sig).1 hx i)
 
 @[simp]
 theorem probs_ofPolytope {x : Profile sig.weights} (hx : x ∈ mixedPolytope sig) :
     probs sig (ofPolytope sig hx) = x := by
   funext i
-  exact FinDist.prob_ofSimplex _
+  exact PMF.ofSimplex_toReal _
 
 @[simp]
 theorem ofPolytope_probs (μ : Profile sig.mixed) :
     ofPolytope sig (probs_mem_mixedPolytope sig μ) = μ := by
   funext i
-  exact FinDist.ofSimplex_prob (μ i)
+  exact PMF.ofSimplex_toReal_weights (μ i)
 
 /-- If every player has a strategy, the mixed-profile polytope is inhabited. -/
 theorem mixedPolytope_nonempty [∀ i, Nonempty (sig.Strategy i)] :
     (mixedPolytope sig).Nonempty :=
-  ⟨probs sig fun i => FinDist.pure (Classical.arbitrary (sig.Strategy i)),
+  ⟨probs sig fun i => PMF.pure (Classical.arbitrary (sig.Strategy i)),
     probs_mem_mixedPolytope sig _⟩
 
 end GameTheory

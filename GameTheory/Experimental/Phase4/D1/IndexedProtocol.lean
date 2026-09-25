@@ -42,7 +42,7 @@ structure IndexedProtocol (ι : Type uι) (State : Type us) (Action : ι → Typ
   step : (state : State) →
     { joint : ∀ i, Option (Action i) //
       ¬ terminal state ∧ IsLegalJoint (active state) (available state) joint } →
-    FinDist State
+    PMF State
   /-- Every non-terminal state has something legal to do. -/
   progress : ∀ state, ¬ terminal state →
     ∃ joint, IsLegalJoint (active state) (available state) joint
@@ -62,10 +62,10 @@ def Chooser : Type _ :=
 
 open Classical in
 /-- The fuelled runner, exactly as before. -/
-def runFor (chooser : E.Chooser) : ℕ → State → FinDist State
-  | 0, state => FinDist.pure state
+def runFor (chooser : E.Chooser) : ℕ → State → PMF State
+  | 0, state => PMF.pure state
   | fuel + 1, state =>
-    if hterm : E.terminal state then FinDist.pure state
+    if hterm : E.terminal state then PMF.pure state
     else (E.step state (chooser state hterm)).bind (runFor chooser fuel)
 
 /-- Histories, as data, indexed by the state reached. -/
@@ -104,8 +104,8 @@ def walk : IndexedProtocol Unit Spot (fun _ => Step) where
   terminal state := state = .done
   step state _ :=
     match state with
-    | .start => FinDist.pure .done
-    | .done => FinDist.pure .done
+    | .start => PMF.pure .done
+    | .done => PMF.pure .done
   progress := by
     rintro state hterm
     by_cases hstart : state = Spot.start
@@ -136,6 +136,6 @@ theorem trace_state_cases : ∀ {state : Spot} (_ : walk.Trace state),
   | start => exact Or.inl rfl
   | extend prior joint isLegal realized _ =>
     rcases source_eq_start isLegal with rfl
-    exact Or.inr (FinDist.mem_support_pure.mp realized)
+    exact Or.inr ((PMF.mem_support_pure_iff _ _).mp realized)
 
 end GameTheory.Experimental.Phase4.D1

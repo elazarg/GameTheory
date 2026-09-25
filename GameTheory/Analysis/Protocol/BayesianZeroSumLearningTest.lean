@@ -22,13 +22,13 @@ open GameTheory.Protocol.InformationModel
 open GameTheory.Analysis.Approachability
 open GameTheory.Math.Approachability GameTheory.Math.OrthantProjection
 
-def fairBit : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure false) (FinDist.pure true)
+def fairBit : PMF Bool :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure false) (PMF.pure true)
 
 def typeProfile (ty : Bool) : Fin 2 → Bool := fun _ => ty
 
-def commonPrior : FinDist (Fin 2 → Bool) :=
+def commonPrior : PMF (Fin 2 → Bool) :=
   fairBit.map typeProfile
 
 def stagePayoff (row col : Bool) : ℝ :=
@@ -82,12 +82,12 @@ local instance infoFintype (who : Fin 2) :
   Fintype.ofEquiv (Option (Option Bool)) (viewEquiv who).symm
 
 theorem mem_support_fairBit (ty : Bool) : ty ∈ fairBit.support := by
-  apply FinDist.prob_pos_iff.mp
-  cases ty <;> norm_num [fairBit, FinDist.prob_pure_eq_ite]
+  rw [PMF.mem_support_iff]
+  cases ty <;> norm_num [fairBit, mix_apply, PMF.pure_apply]
 
 theorem mem_support_commonPrior (ty : Bool) :
     typeProfile ty ∈ commonPrior.support := by
-  rw [commonPrior, FinDist.support_map]
+  rw [commonPrior, PMF.support_map]
   exact ⟨ty, mem_support_fairBit ty, rfl⟩
 
 theorem initial_not_terminal : ¬execution.terminal (.initial) := by simp
@@ -105,7 +105,7 @@ theorem typed_mem_support (ty : Bool) :
         ⟨execution.noop, initial_noop_legal⟩).support := by
   show Languages.Bayesian.State.typed (B := game) (typeProfile ty) ∈
     (commonPrior.map (Languages.Bayesian.State.typed (B := game))).support
-  rw [FinDist.support_map]
+  rw [PMF.support_map]
   exact ⟨typeProfile ty, mem_support_commonPrior ty, rfl⟩
 
 def typedHistory (ty : Bool) : execution.History :=
@@ -157,6 +157,23 @@ theorem choice_eq_some_actionOfChoice (who : Fin 2) (ty : Bool)
     choice.1 = some (actionOfChoice who ty choice) :=
   Classical.choose_spec (exists_action_eq who ty choice)
 
+/-- The simultaneous legal move represented by a complete tuple of local
+choices at the realized type. -/
+def typedJointOfDraws (ty : Bool)
+    (draws : (who : Fin 2) → LocalChoice who ty) :
+    { choices : ∀ who, Option (game.Act who) //
+      execution.Legal (.typed (typeProfile ty)) choices } :=
+  ⟨fun who => (draws who).1,
+    execution.legal_of_legalOption (by simp) (fun who => by
+      rw [choice_eq_some_actionOfChoice who ty (draws who)]
+      exact ⟨trivial, Set.mem_univ _⟩)⟩
+
+theorem typedJointOfDraws_apply (ty : Bool)
+    (draws : (who : Fin 2) → LocalChoice who ty) (who : Fin 2) :
+    (typedJointOfDraws ty draws).1 who =
+      some (actionOfChoice who ty (draws who)) :=
+  choice_eq_some_actionOfChoice who ty (draws who)
+
 def choiceEquiv (who : Fin 2) (ty : Bool) :
     LocalChoice who ty ≃ Bool where
   toFun := actionOfChoice who ty
@@ -197,7 +214,7 @@ theorem initial_not_mem_step
       (execution.step state ⟨joint, hlegal⟩).support := by
   cases state with
   | initial =>
-      rw [FinDist.support_map]
+      rw [PMF.support_map]
       rintro ⟨types, _, heq⟩
       cases heq
   | typed types => simp
@@ -224,12 +241,12 @@ theorem typed_predecessor
       have hrealized : Languages.Bayesian.State.typed types ∈
           (commonPrior.map
             (Languages.Bayesian.State.typed (B := game))).support := realized
-      rw [FinDist.support_map] at hrealized
+      rw [PMF.support_map] at hrealized
       obtain ⟨sourceTypes, hsource, heq⟩ := hrealized
       cases heq
       exact ⟨rfl, rfl, hsource⟩
   | typed priorTypes =>
-      rw [FinDist.mem_support_pure] at realized
+      rw [PMF.mem_support_pure_iff] at realized
       cases realized
   | finished priorTypes priorActions =>
       exact False.elim (hlegal.1 trivial)
@@ -237,7 +254,7 @@ theorem typed_predecessor
 theorem mem_support_commonPrior_eq_typeProfile {types : Fin 2 → Bool}
     (hmem : types ∈ commonPrior.support) :
     ∃ ty, types = typeProfile ty := by
-  rw [commonPrior, FinDist.support_map] at hmem
+  rw [commonPrior, PMF.support_map] at hmem
   obtain ⟨ty, _, heq⟩ := hmem
   exact ⟨ty, heq.symm⟩
 
@@ -345,10 +362,234 @@ def terminalPayoff (history : execution.History) (who : Fin 2) : ℝ :=
   | .finished types actions => game.payoff types actions who
   | _ => 0
 
+def statePayoff (state : Languages.Bayesian.State game) (who : Fin 2) : ℝ :=
+  match state with
+  | .finished types actions => game.payoff types actions who
+  | _ => 0
+
+theorem terminalPayoff_eq_statePayoff (history : execution.History)
+    (who : Fin 2) :
+    terminalPayoff history who = statePayoff history.state who := rfl
+
+theorem statePayoff_bound (who : Fin 2)
+    (state : Languages.Bayesian.State game) :
+    |statePayoff state who| ≤ 1 := by
+  cases state with
+  | initial => norm_num [statePayoff]
+  | typed types => norm_num [statePayoff]
+  | finished types actions =>
+      fin_cases who <;>
+        cases hrow : actions 0 <;>
+        cases hcol : actions 1 <;>
+        norm_num [statePayoff, game, stagePayoff, hrow, hcol]
+
 theorem terminalPayoff_zeroSum (history : execution.History) :
     terminalPayoff history 1 = -terminalPayoff history 0 := by
   rcases history with ⟨state, trace⟩
   cases state <;> simp [terminalPayoff]
+
+theorem terminalPayoff_bound (who : Fin 2) (history : execution.History) :
+    |terminalPayoff history who| ≤ 1 := by
+  rcases history with ⟨state, trace⟩
+  cases state with
+  | initial => norm_num [terminalPayoff]
+  | typed types => norm_num [terminalPayoff]
+  | finished types actions =>
+      fin_cases who <;>
+        cases hrow : actions 0 <;>
+        cases hcol : actions 1 <;>
+        norm_num [terminalPayoff, game, stagePayoff, hrow, hcol]
+
+theorem terminalPayoff_integrable (who : Fin 2)
+    (law : PMF execution.History) :
+    PayoffIntegrable law (fun history => terminalPayoff history who) :=
+  payoffIntegrable_of_bounded law _ (terminalPayoff_bound who)
+
+/-- A realized all-some move from a typed history has the specified terminal
+payoff, independently of the trace's proof fields. -/
+theorem terminalPayoff_typed_step (ty : Bool)
+    (joint : { choices : ∀ i, Option (game.Act i) //
+      execution.Legal (.typed (typeProfile ty)) choices })
+    (actions : ∀ i, game.Act i)
+    (hjoint : ∀ i, joint.1 i = some (actions i))
+    {target : Languages.Bayesian.State game}
+    (realized : target ∈
+      (execution.step (.typed (typeProfile ty)) joint).support)
+    (who : Fin 2) :
+    terminalPayoff ((typedHistory ty).extend joint.2 realized) who =
+      game.payoff (typeProfile ty) actions who := by
+  have hstep := Languages.Bayesian.execution_step_typed_of_actions
+    game (typeProfile ty) joint actions hjoint
+  rw [hstep, PMF.mem_support_pure_iff] at realized
+  subst target
+  rfl
+
+def typedStepLaw
+    (strategy : (who : Fin 2) → information.BehavioralPolicy who)
+    (ty : Bool) : PMF execution.History :=
+  (information.behavioralJoint strategy (typedHistory ty).trace
+    (by simp [typedHistory])).bind fun draw =>
+      (execution.step (typedHistory ty).state draw).bindOnSupport
+        fun _ realized => information.runBehavioralFrom strategy 0
+          ((typedHistory ty).extend draw.2 realized)
+
+theorem runBehavioralFrom_typed_one
+    (strategy : (who : Fin 2) → information.BehavioralPolicy who)
+    (ty : Bool) :
+    information.runBehavioralFrom strategy 1 (typedHistory ty) =
+      typedStepLaw strategy ty := by
+  exact information.runBehavioralFrom_succ_of_not_terminal strategy 0
+    (by simp [typedHistory])
+
+/-- Forgetting the trace after one typed step leaves the ordinary joint-step
+state law. This normalization does not inspect a dependent history trace. -/
+theorem typedStepLaw_map_state
+    (strategy : (who : Fin 2) → information.BehavioralPolicy who)
+    (ty : Bool) :
+    (typedStepLaw strategy ty).map ExecutionProtocol.History.state =
+      (information.behavioralJoint strategy (typedHistory ty).trace
+        (by simp [typedHistory])).bind
+        (execution.step (typedHistory ty).state) := by
+  unfold typedStepLaw
+  rw [PMF.map_bind]
+  apply bind_congr_on_support
+  intro joint _
+  rw [map_bindOnSupport]
+  calc
+    _ = (execution.step (typedHistory ty).state joint).bind PMF.pure := by
+      apply bindOnSupport_eq_bind_of_eq_on_support
+      intro target realized
+      simp only [InformationModel.runBehavioralFrom,
+        ExecutionProtocol.runRandomizedFor_zero, PMF.pure_map,
+        ExecutionProtocol.History.extend_state]
+    _ = _ := PMF.bind_pure _
+
+/-- The one-step continuation payoff factors through the trace-free state
+law, with integrability certified against each actual law. -/
+theorem terminalPayoff_expect_typedStepLaw
+    (strategy : (who : Fin 2) → information.BehavioralPolicy who)
+    (ty : Bool) (who : Fin 2) :
+    expect (typedStepLaw strategy ty)
+        (fun history => terminalPayoff history who)
+        (terminalPayoff_integrable who _) =
+      expect ((information.behavioralJoint strategy (typedHistory ty).trace
+          (by simp [typedHistory])).bind
+          (execution.step (typedHistory ty).state))
+        (fun state => statePayoff state who)
+        (payoffIntegrable_of_bounded _ _ (statePayoff_bound who)) := by
+  calc
+    _ = expect ((typedStepLaw strategy ty).map ExecutionProtocol.History.state)
+          (fun state => statePayoff state who)
+          (payoffIntegrable_of_bounded _ _ (statePayoff_bound who)) := by
+        symm
+        simpa only [Function.comp_def, terminalPayoff_eq_statePayoff] using
+          (expect_map ExecutionProtocol.History.state (typedStepLaw strategy ty)
+            (fun state => statePayoff state who)
+            (terminalPayoff_integrable who _)
+            (payoffIntegrable_of_bounded _ _ (statePayoff_bound who)))
+    _ = _ := expect_congr_law (typedStepLaw_map_state strategy ty)
+      (fun state => statePayoff state who)
+      (payoffIntegrable_of_bounded _ _ (statePayoff_bound who))
+      (payoffIntegrable_of_bounded _ _ (statePayoff_bound who))
+
+/-- Each complete typed draw has the exact deterministic stage payoff. -/
+theorem typedJoint_statePayoff_value (ty : Bool)
+    (draws : (player : Fin 2) → LocalChoice player ty)
+    (who : Fin 2) :
+    expect (execution.step (.typed (typeProfile ty))
+        (typedJointOfDraws ty draws))
+      (fun state => statePayoff state who)
+      (payoffIntegrable_of_bounded _ _ (statePayoff_bound who)) =
+    game.payoff (typeProfile ty)
+      (fun player => actionOfChoice player ty (draws player)) who := by
+  rw [Languages.Bayesian.execution_step_typed_of_actions game
+    (typeProfile ty) (typedJointOfDraws ty draws)
+      (fun player => actionOfChoice player ty (draws player))
+      (typedJointOfDraws_apply ty draws)]
+  exact expect_pure _ _ _
+
+/-- At a typed history, the behavioral joint is the independent product of
+the two local choice laws, mapped to their legal simultaneous move. -/
+theorem behavioralJoint_typed
+    (strategy : (player : Fin 2) → information.BehavioralPolicy player)
+    (ty : Bool) :
+    information.behavioralJoint strategy (typedHistory ty).trace
+        (by simp [typedHistory]) =
+      PMF.map (typedJointOfDraws ty)
+        (independentProduct fun player => strategy player (.acting ty)) := by
+  unfold InformationModel.behavioralJoint
+  have hlaws :
+      (fun player => strategy player
+        (information.infoOf player (typedHistory ty).trace)) =
+        (fun player => strategy player (.acting ty)) := by
+    funext player
+    rfl
+  rw [hlaws]
+  congr 1
+
+set_option backward.isDefEq.respectTransparency false in
+/-- At either realized type, the one-step continuation value is the exact
+stage payoff integrated over the two independent local choice laws. -/
+theorem typedStepLaw_value_product
+    (strategy : (player : Fin 2) → information.BehavioralPolicy player)
+    (ty : Bool) (who : Fin 2) :
+    expect (typedStepLaw strategy ty)
+        (fun history => terminalPayoff history who)
+        (terminalPayoff_integrable who _) =
+      expect (independentProduct fun player => strategy player (.acting ty))
+        (fun draws => game.payoff (typeProfile ty)
+          (fun player => actionOfChoice player ty (draws player)) who)
+        (payoffIntegrable_of_finite _ _) := by
+  let drawLaw := independentProduct fun player => strategy player (.acting ty)
+  let stepLaw := PMF.map (typedJointOfDraws ty) drawLaw
+  let payoffOnState := fun state => statePayoff state who
+  have hlaw :
+      (information.behavioralJoint strategy (typedHistory ty).trace
+        (by simp [typedHistory])).bind
+          (execution.step (typedHistory ty).state) =
+        stepLaw.bind (execution.step (typedHistory ty).state) :=
+    congrArg (fun law => law.bind (execution.step (typedHistory ty).state))
+      (behavioralJoint_typed strategy ty)
+  calc
+    _ = expect ((information.behavioralJoint strategy (typedHistory ty).trace
+          (by simp [typedHistory])).bind
+          (execution.step (typedHistory ty).state)) payoffOnState
+        (payoffIntegrable_of_bounded _ _ (statePayoff_bound who)) :=
+      terminalPayoff_expect_typedStepLaw strategy ty who
+    _ = expect (stepLaw.bind (execution.step (typedHistory ty).state))
+        payoffOnState
+        (payoffIntegrable_of_bounded _ _ (statePayoff_bound who)) :=
+      expect_congr_law hlaw payoffOnState
+        (payoffIntegrable_of_bounded _ _ (statePayoff_bound who))
+        (payoffIntegrable_of_bounded _ _ (statePayoff_bound who))
+    _ = expect drawLaw
+        (fun draws => game.payoff (typeProfile ty)
+          (fun player => actionOfChoice player ty (draws player)) who)
+        (payoffIntegrable_of_finite _ _) := by
+      dsimp only [stepLaw, payoffOnState]
+      rw [expect_bind_tower_bounded _ _ _ (by norm_num)
+        (statePayoff_bound who)]
+      rw [expect_map _ _ _ (payoffIntegrable_of_finite _ _) _]
+      apply expect_congr_on_support
+      intro draws _
+      simpa only [Function.comp_def, payoffOnState, typedHistory_state] using
+        (typedJoint_statePayoff_value ty draws who)
+
+theorem localRegretsIntegrable
+    (strategy : (who : Fin 2) → information.BehavioralPolicy who)
+    (who : Fin 2) (ty : Bool) :
+    information.LocalCounterfactualRegretsIntegrable strategy who
+      (site who ty) (fun history => terminalPayoff history who) 1 := by
+  constructor
+  · intro choice history _
+    exact terminalPayoff_integrable who _
+  · intro history _
+    exact terminalPayoff_integrable who _
+
+/-- This finite fixture integrates every strategic payoff against its actual law. -/
+def finiteExpect {α : Type*} [Fintype α] (law : PMF α)
+    (payoff : α → ℝ) : ℝ :=
+  expect law payoff (payoffIntegrable_of_finite law payoff)
 
 structure LearningState where
   rowFalse : EuclideanSpace ℝ (LocalChoice 0 false)
@@ -367,9 +608,9 @@ def averageOfState (state : LearningState) :
 def policyOfState (state : LearningState) (who : Fin 2) :
     information.BehavioralPolicy who := fun view =>
   match view with
-  | .waiting => FinDist.pure ⟨none, by simp [Languages.Bayesian.menu]⟩
+  | .waiting => PMF.pure ⟨none, by simp [Languages.Bayesian.menu]⟩
   | .acting ty => regretMatch (averageOfState state who ty)
-  | .done => FinDist.pure ⟨none, by simp [Languages.Bayesian.menu]⟩
+  | .done => PMF.pure ⟨none, by simp [Languages.Bayesian.menu]⟩
 
 def strategyOfState (state : LearningState) :
     (who : Fin 2) → information.BehavioralPolicy who :=
@@ -385,6 +626,7 @@ def instantaneous (state : LearningState) (who : Fin 2) (ty : Bool) :
     EuclideanSpace ℝ (LocalChoice who ty) :=
   localCounterfactualRegretVector information (strategyOfState state) who
     (site who ty) (fun history => terminalPayoff history who) 1
+      (localRegretsIntegrable (strategyOfState state) who ty)
 
 /-- All four local sites update simultaneously by the same Cesaro recurrence
 used in the canonical D46 average. -/
@@ -402,7 +644,7 @@ def learningState : ℕ → LearningState
           (1 / ((n : ℝ) + 1)) • instantaneous current 1 true⟩
 
 def localStrategyOf (who : Fin 2) (ty : Bool)
-    (law : FinDist (LocalChoice who ty))
+    (law : PMF (LocalChoice who ty))
     (state : LearningState) :
     (player : Fin 2) → information.BehavioralPolicy player :=
   strategyWithLocalLaw information (strategyOfState state) who
@@ -431,28 +673,36 @@ def localUtility (who : Fin 2) (ty : Bool)
     (choice : LocalChoice who ty) (state : LearningState) : ℝ :=
   information.counterfactualActionUtility (strategyOfState state) who
     (site who ty) (fun history => terminalPayoff history who) 1 choice
+      ((localRegretsIntegrable (strategyOfState state) who ty).1 choice)
 
 theorem local_realization (who : Fin 2) (ty : Bool)
-    (law : FinDist (LocalChoice who ty)) (state : LearningState) :
+    (law : PMF (LocalChoice who ty)) (state : LearningState) :
     localCounterfactualRegretVector information
         (localStrategyOf who ty law state) who (site who ty)
-          (localPayoffOf who ty state) 1 =
-      regretPayoff (localUtility who ty) law state := by
+          (localPayoffOf who ty state) 1
+          (localRegretsIntegrable (localStrategyOf who ty law state) who ty) =
+      regretPayoff (localUtility who ty) law state
+        (payoffIntegrable_of_finite _ _) := by
   have h := information.localCounterfactualRegretVector_strategyWithLocalLaw
     information_actsOnce (strategyOfState state) who (site who ty)
       (site_allNonterminal who ty) law
       (fun history => terminalPayoff history who) 0 state
+      (localRegretsIntegrable (localStrategyOf who ty law state) who ty)
+      (localRegretsIntegrable (strategyOfState state) who ty).1
   calc
     _ = localCounterfactualRegretVector information
         (strategyWithLocalLaw information (strategyOfState state) who
           (site who ty) law)
-        who (site who ty) (fun history => terminalPayoff history who) 1 := rfl
+        who (site who ty) (fun history => terminalPayoff history who) 1
+        (localRegretsIntegrable _ who ty) := rfl
     _ = regretPayoff
         (fun choice (_current : LearningState) =>
           information.counterfactualActionUtility (strategyOfState state) who
-            (site who ty) (fun history => terminalPayoff history who) 1 choice)
-        law state := h
-    _ = regretPayoff (localUtility who ty) law state := by
+            (site who ty) (fun history => terminalPayoff history who) 1 choice
+            ((localRegretsIntegrable (strategyOfState state) who ty).1 choice))
+        law state (payoffIntegrable_of_finite _ _) := h
+    _ = regretPayoff (localUtility who ty) law state
+          (payoffIntegrable_of_finite _ _) := by
       ext choice
       rfl
 
@@ -460,6 +710,8 @@ def localAverage (who : Fin 2) (ty : Bool) (round : ℕ) :
     EuclideanSpace ℝ (LocalChoice who ty) :=
   counterfactualRegretMatchAverage information who (site who ty)
     (localStrategyOf who ty) (localPayoffOf who ty) 1
+      (fun law state => localRegretsIntegrable
+        (localStrategyOf who ty law state) who ty)
       (scheduleEnvironment who ty) round
 
 theorem localAverage_succ (who : Fin 2) (ty : Bool) (round : ℕ) :
@@ -469,7 +721,8 @@ theorem localAverage_succ (who : Fin 2) (ty : Bool) (round : ℕ) :
           localCounterfactualRegretVector information
             (localStrategyOf who ty
               (regretMatch (localAverage who ty round)) (learningState round))
-            who (site who ty) (fun history => terminalPayoff history who) 1 :=
+            who (site who ty) (fun history => terminalPayoff history who) 1
+              (localRegretsIntegrable _ who ty) :=
   rfl
 
 /-- The explicit four-coordinate recurrence is exactly the family of D46
@@ -489,36 +742,32 @@ theorem typeProfile_injective : Function.Injective typeProfile := by
   exact congrFun heq 0
 
 theorem commonPrior_prob_typeProfile (ty : Bool) :
-    commonPrior.prob (typeProfile ty) = 1 / 2 := by
+    commonPrior (typeProfile ty) = 1 / 2 := by
   rw [commonPrior,
-    FinDist.prob_map_of_injective typeProfile typeProfile_injective]
-  cases ty <;> norm_num [fairBit, FinDist.prob_pure_eq_ite]
+    pmf_map_apply_of_injective fairBit typeProfile_injective]
+  have hhalf : ENNReal.ofReal (1 / 2 : ℝ) = (1 / 2 : ENNReal) := by
+    rw [ENNReal.ofReal_div_of_pos (show (0 : ℝ) < 2 by norm_num)]
+    norm_num
+  cases ty <;> norm_num [fairBit, mix_apply, PMF.pure_apply, hhalf]
 
 theorem initial_step_prob_typed (ty : Bool) :
-    (execution.step (.initial) ⟨execution.noop, initial_noop_legal⟩).prob
+    (execution.step (.initial) ⟨execution.noop, initial_noop_legal⟩)
         (.typed (typeProfile ty)) = 1 / 2 := by
-  show (commonPrior.map (Languages.Bayesian.State.typed (B := game))).prob
+  show (commonPrior.map (Languages.Bayesian.State.typed (B := game)))
       (.typed (typeProfile ty)) = 1 / 2
-  rw [FinDist.prob_map_of_injective]
+  rw [pmf_map_apply_of_injective]
   · exact commonPrior_prob_typeProfile ty
   · intro first second heq
     exact Languages.Bayesian.State.typed.inj heq
 
 theorem initial_noop_choice_prob (state : LearningState) (other : Fin 2) :
     ((strategyOfState state other)
-        (information.infoOf other ExecutionProtocol.Trace.start)).prob
+        (information.infoOf other ExecutionProtocol.Trace.start))
       (choicesOfLegal information ExecutionProtocol.Trace.start
         ⟨execution.noop, initial_noop_legal⟩ other) = 1 := by
-  simp [strategyOfState, policyOfState, choicesOfLegal,
+  dsimp only [strategyOfState, policyOfState, choicesOfLegal,
     InfoSignals.infoOf, Languages.Bayesian.signals]
-  rw [FinDist.prob_pure_eq_ite]
-  split
-  · rfl
-  · rename_i hne
-    exfalso
-    apply hne
-    apply Subtype.ext
-    rfl
+  exact PMF.pure_apply_self _
 
 theorem opponentsStepProb_initial_noop (state : LearningState) (who : Fin 2) :
     opponentsStepProb information (strategyOfState state) who
@@ -528,7 +777,7 @@ theorem opponentsStepProb_initial_noop (state : LearningState) (who : Fin 2) :
   unfold opponentsStepProb
   apply Finset.prod_eq_one
   intro other hother
-  exact initial_noop_choice_prob state other
+  exact congrArg ENNReal.toReal (initial_noop_choice_prob state other)
 
 theorem counterfactualReach_typedHistory (state : LearningState)
     (who : Fin 2) (ty : Bool) :
@@ -555,24 +804,12 @@ theorem behavioralContinuationValue_mem_Icc
     (who : Fin 2) (alternative : information.BehavioralPolicy who)
     (fuel : ℕ) (history : execution.History) :
     information.behavioralContinuationValue strategy who alternative
-        (fun final => terminalPayoff final who) fuel history ∈
+        (fun final => terminalPayoff final who) fuel history
+        (terminalPayoff_integrable who _) ∈
       Set.Icc (-1 : ℝ) 1 := by
   unfold InformationModel.behavioralContinuationValue
-  constructor
-  · have h := FinDist.expect_mono
-      (μ := information.runBehavioralFrom
-        (Profile.update (sig := information.behavioralSignature)
-          strategy who alternative) fuel history)
-      (u := fun _history : execution.History => (-1 : ℝ))
-      (v := fun final => terminalPayoff final who)
-      (fun final _ => (terminalPayoff_mem_Icc final who).1)
-    simpa using h
-  · exact FinDist.expect_le_of_forall
-      (information.runBehavioralFrom
-        (Profile.update (sig := information.behavioralSignature)
-          strategy who alternative) fuel history)
-      (fun final => terminalPayoff final who) 1
-      (fun final _ => (terminalPayoff_mem_Icc final who).2)
+  exact abs_le.mp (expect_abs_le_of_bounded (by norm_num)
+    (terminalPayoff_bound who) (terminalPayoff_integrable who _))
 
 theorem localUtility_mem_Icc (who : Fin 2) (ty : Bool)
     (choice : LocalChoice who ty) (state : LearningState) :
@@ -580,9 +817,9 @@ theorem localUtility_mem_Icc (who : Fin 2) (ty : Bool)
   unfold localUtility counterfactualActionUtility
     counterfactualContinuationValue
   rw [Fintype.sum_unique]
-  rw [informationHistory_eq_typedHistory who ty
-    (default : information.InformationHistory who (site who ty).1)]
-  rw [counterfactualReach_typedHistory]
+  dsimp only [default, informationHistoryUnique]
+  simp only [counterfactualReach_typedHistory, dite_eq_left
+    (by norm_num : (1 / 2 : ℝ) ≠ 0)]
   have hcontinuation := behavioralContinuationValue_mem_Icc
     (strategyOfState state) who
       ((strategyOfState state who).commit (site who ty).1 choice) 1
@@ -590,8 +827,9 @@ theorem localUtility_mem_Icc (who : Fin 2) (ty : Bool)
   constructor <;> nlinarith [hcontinuation.1, hcontinuation.2]
 
 theorem local_regretPayoff_norm_le (who : Fin 2) (ty : Bool)
-    (law : FinDist (LocalChoice who ty)) (state : LearningState) :
-    ‖regretPayoff (localUtility who ty) law state‖ ≤
+    (law : PMF (LocalChoice who ty)) (state : LearningState) :
+    ‖regretPayoff (localUtility who ty) law state
+      (payoffIntegrable_of_finite _ _)‖ ≤
       (Fintype.card (LocalChoice who ty) : ℝ) := by
   have h := regretPayoff_norm_le_card_mul_width (localUtility who ty)
     (lo := -(1 / 2)) (hi := 1 / 2) (localUtility_mem_Icc who ty) law state
@@ -605,224 +843,224 @@ theorem local_approaches (who : Fin 2) (ty : Bool) :
   simpa only [localAverage, counterfactualRegretMatchAverage] using
     counterfactualRegretMatch_approaches information who (site who ty)
       (localUtility who ty) (localStrategyOf who ty) (localPayoffOf who ty) 1
+      (fun law state => localRegretsIntegrable
+        (localStrategyOf who ty law state) who ty)
       (local_realization who ty) (bound := Fintype.card (LocalChoice who ty))
       (by positivity) (local_regretPayoff_norm_le who ty)
       (scheduleEnvironment who ty)
 
 def learnedLaw (who : Fin 2) (ty : Bool) (round : ℕ) :
-    FinDist (LocalChoice who ty) :=
+    PMF (LocalChoice who ty) :=
   regretMatch (localAverage who ty round)
 
 def currentLaw (state : LearningState) (who : Fin 2) (ty : Bool) :
-    FinDist (LocalChoice who ty) :=
+    PMF (LocalChoice who ty) :=
   regretMatch (averageOfState state who ty)
+
+def rowCommitted (state : LearningState) (ty : Bool)
+    (choice : LocalChoice 0 ty) :
+    (player : Fin 2) → information.BehavioralPolicy player :=
+  Profile.update (sig := information.behavioralSignature)
+    (strategyOfState state) 0
+    ((strategyOfState state 0).commit (.acting ty) choice)
+
+theorem rowCommitted_first (state : LearningState) (ty : Bool)
+    (choice : LocalChoice 0 ty) :
+    rowCommitted state ty choice 0 (.acting ty) = PMF.pure choice := by
+  simp only [rowCommitted, Profile.update_same, BehavioralPolicy.commit_self]
+
+theorem rowCommitted_second (state : LearningState) (ty : Bool)
+    (choice : LocalChoice 0 ty) :
+    rowCommitted state ty choice 1 (.acting ty) = currentLaw state 1 ty := by
+  simp [rowCommitted, strategyOfState, policyOfState, currentLaw]
+
+theorem rowCommitted_product_value (state : LearningState) (ty : Bool)
+    (choice : LocalChoice 0 ty) :
+    expect (independentProduct fun player =>
+        rowCommitted state ty choice player (.acting ty))
+      (fun draws => game.payoff (typeProfile ty)
+        (fun player => actionOfChoice player ty (draws player)) 0)
+      (payoffIntegrable_of_finite _ _) =
+    finiteExpect (currentLaw state 1 ty) (fun other =>
+      stagePayoff (actionOfChoice 0 ty choice)
+        (actionOfChoice 1 ty other)) := by
+  let p := independentProduct fun player =>
+    rowCommitted state ty choice player (.acting ty)
+  have hrow (draws : (player : Fin 2) → LocalChoice player ty)
+      (hd : draws ∈ p.support) : draws 0 = choice := by
+    have hcoord := (independentProduct_support_iff _ draws).mp hd 0
+    rw [rowCommitted_first, PMF.mem_support_pure_iff] at hcoord
+    exact hcoord
+  calc
+    _ = expect p (fun draws =>
+        stagePayoff (actionOfChoice 0 ty choice)
+          (actionOfChoice 1 ty (draws 1)))
+        (payoffIntegrable_of_finite _ _) := by
+      apply expect_congr_on_support
+      intro draws hd
+      simp [hrow draws hd]
+    _ = expect (p.map fun draws => draws 1)
+        (fun other => stagePayoff (actionOfChoice 0 ty choice)
+          (actionOfChoice 1 ty other))
+        (payoffIntegrable_of_finite _ _) := by
+      symm
+      simpa only [Function.comp_def] using
+        (expect_map (fun draws => draws 1) p
+          (fun other => stagePayoff (actionOfChoice 0 ty choice)
+            (actionOfChoice 1 ty other))
+          (payoffIntegrable_of_finite _ _)
+          (payoffIntegrable_of_finite _ _))
+    _ = _ := by
+      dsimp only [p, finiteExpect]
+      rw [independentProduct_map_eval, rowCommitted_second]
+
+theorem rowContinuation_value (state : LearningState) (ty : Bool)
+    (choice : LocalChoice 0 ty) :
+    expect (information.runBehavioralFrom
+        (rowCommitted state ty choice) 1 (typedHistory ty))
+      (fun history => terminalPayoff history 0)
+      (terminalPayoff_integrable 0 _) =
+    finiteExpect (currentLaw state 1 ty) (fun other =>
+      stagePayoff (actionOfChoice 0 ty choice)
+        (actionOfChoice 1 ty other)) := by
+  calc
+    _ = expect (typedStepLaw (rowCommitted state ty choice) ty)
+          (fun history => terminalPayoff history 0)
+          (terminalPayoff_integrable 0 _) :=
+      expect_congr_law
+        (runBehavioralFrom_typed_one (rowCommitted state ty choice) ty)
+        (fun history => terminalPayoff history 0)
+        (terminalPayoff_integrable 0 _) (terminalPayoff_integrable 0 _)
+    _ = expect (independentProduct fun player =>
+          rowCommitted state ty choice player (.acting ty))
+        (fun draws => game.payoff (typeProfile ty)
+          (fun player => actionOfChoice player ty (draws player)) 0)
+        (payoffIntegrable_of_finite _ _) :=
+      typedStepLaw_value_product (rowCommitted state ty choice) ty 0
+    _ = _ := rowCommitted_product_value state ty choice
+
+def columnCommitted (state : LearningState) (ty : Bool)
+    (choice : LocalChoice 1 ty) :
+    (player : Fin 2) → information.BehavioralPolicy player :=
+  Profile.update (sig := information.behavioralSignature)
+    (strategyOfState state) 1
+    ((strategyOfState state 1).commit (.acting ty) choice)
+
+theorem columnCommitted_first (state : LearningState) (ty : Bool)
+    (choice : LocalChoice 1 ty) :
+    columnCommitted state ty choice 0 (.acting ty) = currentLaw state 0 ty := by
+  simp [columnCommitted, strategyOfState, policyOfState, currentLaw]
+
+theorem columnCommitted_second (state : LearningState) (ty : Bool)
+    (choice : LocalChoice 1 ty) :
+    columnCommitted state ty choice 1 (.acting ty) = PMF.pure choice := by
+  simp only [columnCommitted, Profile.update_same, BehavioralPolicy.commit_self]
+
+theorem columnCommitted_product_value (state : LearningState) (ty : Bool)
+    (choice : LocalChoice 1 ty) :
+    expect (independentProduct fun player =>
+        columnCommitted state ty choice player (.acting ty))
+      (fun draws => game.payoff (typeProfile ty)
+        (fun player => actionOfChoice player ty (draws player)) 1)
+      (payoffIntegrable_of_finite _ _) =
+    -finiteExpect (currentLaw state 0 ty) (fun other =>
+      stagePayoff (actionOfChoice 0 ty other)
+        (actionOfChoice 1 ty choice)) := by
+  let p := independentProduct fun player =>
+    columnCommitted state ty choice player (.acting ty)
+  have hcolumn (draws : (player : Fin 2) → LocalChoice player ty)
+      (hd : draws ∈ p.support) : draws 1 = choice := by
+    have hcoord := (independentProduct_support_iff _ draws).mp hd 1
+    rw [columnCommitted_second, PMF.mem_support_pure_iff] at hcoord
+    exact hcoord
+  calc
+    _ = expect p (fun draws =>
+        -stagePayoff (actionOfChoice 0 ty (draws 0))
+          (actionOfChoice 1 ty choice))
+        (payoffIntegrable_of_finite _ _) := by
+      apply expect_congr_on_support
+      intro draws hd
+      simp [hcolumn draws hd]
+    _ = expect (p.map fun draws => draws 0)
+        (fun other => -stagePayoff (actionOfChoice 0 ty other)
+          (actionOfChoice 1 ty choice))
+        (payoffIntegrable_of_finite _ _) := by
+      symm
+      simpa only [Function.comp_def] using
+        (expect_map (fun draws => draws 0) p
+          (fun other => -stagePayoff (actionOfChoice 0 ty other)
+            (actionOfChoice 1 ty choice))
+          (payoffIntegrable_of_finite _ _)
+          (payoffIntegrable_of_finite _ _))
+    _ = expect (currentLaw state 0 ty)
+        (fun other => -stagePayoff (actionOfChoice 0 ty other)
+          (actionOfChoice 1 ty choice))
+        (payoffIntegrable_of_finite _ _) := by
+      dsimp only [p]
+      rw [independentProduct_map_eval, columnCommitted_first]
+    _ = _ := by
+      simpa only [finiteExpect] using
+        (expect_neg (payoffIntegrable_of_finite (currentLaw state 0 ty)
+          (fun other => stagePayoff (actionOfChoice 0 ty other)
+            (actionOfChoice 1 ty choice))))
+
+theorem columnContinuation_value (state : LearningState) (ty : Bool)
+    (choice : LocalChoice 1 ty) :
+    expect (information.runBehavioralFrom
+        (columnCommitted state ty choice) 1 (typedHistory ty))
+      (fun history => terminalPayoff history 1)
+      (terminalPayoff_integrable 1 _) =
+    -finiteExpect (currentLaw state 0 ty) (fun other =>
+      stagePayoff (actionOfChoice 0 ty other)
+        (actionOfChoice 1 ty choice)) := by
+  calc
+    _ = expect (typedStepLaw (columnCommitted state ty choice) ty)
+          (fun history => terminalPayoff history 1)
+          (terminalPayoff_integrable 1 _) :=
+      expect_congr_law
+        (runBehavioralFrom_typed_one (columnCommitted state ty choice) ty)
+        (fun history => terminalPayoff history 1)
+        (terminalPayoff_integrable 1 _) (terminalPayoff_integrable 1 _)
+    _ = expect (independentProduct fun player =>
+          columnCommitted state ty choice player (.acting ty))
+        (fun draws => game.payoff (typeProfile ty)
+          (fun player => actionOfChoice player ty (draws player)) 1)
+        (payoffIntegrable_of_finite _ _) :=
+      typedStepLaw_value_product (columnCommitted state ty choice) ty 1
+    _ = _ := columnCommitted_product_value state ty choice
 
 theorem localUtility_row_eq (ty : Bool) (choice : LocalChoice 0 ty)
     (state : LearningState) :
     localUtility 0 ty choice state =
-      (1 / 2) * (currentLaw state 1 ty).expect (fun other =>
+      (1 / 2) * finiteExpect (currentLaw state 1 ty) (fun other =>
         stagePayoff (actionOfChoice 0 ty choice)
           (actionOfChoice 1 ty other)) := by
-  cases ty
-  ·
-    unfold localUtility counterfactualActionUtility
-      counterfactualContinuationValue
-    rw [Fintype.sum_unique]
-    rw [informationHistory_eq_typedHistory 0 false
-      (default : information.InformationHistory 0 (site 0 false).1)]
-    rw [counterfactualReach_typedHistory]
-    have hinfo (player : Fin 2) :
-        information.infoOf player (typedHistory false).trace =
-          (show information.InfoState player from .acting false) := by
-      rw [Languages.Bayesian.infoOf_eq_viewOfState]
-      rfl
-    unfold behavioralContinuationValue
-    rw [information.runBehavioralFrom_succ_of_not_terminal _ 0]
-    · rw [FinDist.expect_bind]
-      unfold InformationModel.behavioralJoint
-      unfold strategyOfState
-      dsimp [InfoSignals.infoOf, Languages.Bayesian.signals,
-        Languages.Bayesian.phaseOfState, Languages.Bayesian.privateSignal,
-        typedHistory, typeProfile]
-      rw [FinDist.expect_map, FinDist.pi_eq_map_product 0]
-      rw [FinDist.expect_map]
-      unfold FinDist.product
-      rw [FinDist.expect_bind]
-      have hmarginal :
-          (FinDist.pi fun j : {j : Fin 2 // j ≠ 0} =>
-              Profile.update (sig := information.behavioralSignature)
-                (policyOfState state) 0
-                ((policyOfState state 0).commit (.acting false) choice)
-                j.1 (.acting false)).map
-              (fun draws => draws ⟨1, by decide⟩) =
-            currentLaw state 1 false := by
-        rw [FinDist.map_apply_pi]
-        simp [currentLaw, policyOfState, Profile.update_of_ne]
-      simp [Profile.update_same, InformationModel.runBehavioralFrom,
-        ExecutionProtocol.runRandomizedFor_zero, terminalPayoff,
-        choice_eq_some_actionOfChoice]
-      rw [← hmarginal, FinDist.expect_map]
-    · simp [typedHistory]
-  ·
-    unfold localUtility counterfactualActionUtility
-      counterfactualContinuationValue
-    rw [Fintype.sum_unique]
-    rw [informationHistory_eq_typedHistory 0 true
-      (default : information.InformationHistory 0 (site 0 true).1)]
-    rw [counterfactualReach_typedHistory]
-    have hinfo (player : Fin 2) :
-        information.infoOf player (typedHistory true).trace =
-          (show information.InfoState player from .acting true) := by
-      rw [Languages.Bayesian.infoOf_eq_viewOfState]
-      rfl
-    unfold behavioralContinuationValue
-    rw [information.runBehavioralFrom_succ_of_not_terminal _ 0]
-    · rw [FinDist.expect_bind]
-      unfold InformationModel.behavioralJoint
-      unfold strategyOfState
-      dsimp [InfoSignals.infoOf, Languages.Bayesian.signals,
-        Languages.Bayesian.phaseOfState, Languages.Bayesian.privateSignal,
-        typedHistory, typeProfile]
-      rw [FinDist.expect_map, FinDist.pi_eq_map_product 0]
-      rw [FinDist.expect_map]
-      unfold FinDist.product
-      rw [FinDist.expect_bind]
-      have hmarginal :
-          (FinDist.pi fun j : {j : Fin 2 // j ≠ 0} =>
-              Profile.update (sig := information.behavioralSignature)
-                (policyOfState state) 0
-                ((policyOfState state 0).commit (.acting true) choice)
-                j.1 (.acting true)).map
-              (fun draws => draws ⟨1, by decide⟩) =
-            currentLaw state 1 true := by
-        rw [FinDist.map_apply_pi]
-        simp [currentLaw, policyOfState, Profile.update_of_ne]
-      simp [Profile.update_same, InformationModel.runBehavioralFrom,
-        ExecutionProtocol.runRandomizedFor_zero, terminalPayoff,
-        choice_eq_some_actionOfChoice]
-      rw [← hmarginal, FinDist.expect_map]
-    · simp [typedHistory]
-
+  unfold localUtility counterfactualActionUtility
+    counterfactualContinuationValue
+  rw [Fintype.sum_unique]
+  dsimp only [default, informationHistoryUnique]
+  simp only [counterfactualReach_typedHistory, dite_eq_left
+    (by norm_num : (1 / 2 : ℝ) ≠ 0)]
+  unfold behavioralContinuationValue
+  simpa only [rowCommitted] using
+    congrArg (fun value : ℝ => (1 / 2 : ℝ) * value)
+      (rowContinuation_value state ty choice)
 theorem localUtility_column_eq (ty : Bool) (choice : LocalChoice 1 ty)
     (state : LearningState) :
     localUtility 1 ty choice state =
-      -(1 / 2) * (currentLaw state 0 ty).expect (fun other =>
+      -(1 / 2) * finiteExpect (currentLaw state 0 ty) (fun other =>
         stagePayoff (actionOfChoice 0 ty other)
           (actionOfChoice 1 ty choice)) := by
-  cases ty
-  ·
-    unfold localUtility counterfactualActionUtility
-      counterfactualContinuationValue
-    rw [Fintype.sum_unique]
-    rw [informationHistory_eq_typedHistory 1 false
-      (default : information.InformationHistory 1 (site 1 false).1)]
-    rw [counterfactualReach_typedHistory]
-    unfold behavioralContinuationValue
-    rw [information.runBehavioralFrom_succ_of_not_terminal _ 0]
-    · rw [FinDist.expect_bind]
-      unfold InformationModel.behavioralJoint
-      unfold strategyOfState
-      dsimp [InfoSignals.infoOf, Languages.Bayesian.signals,
-        Languages.Bayesian.phaseOfState, Languages.Bayesian.privateSignal,
-        typedHistory, typeProfile]
-      rw [FinDist.expect_map, FinDist.pi_eq_map_product 1]
-      rw [FinDist.expect_map]
-      unfold FinDist.product
-      rw [FinDist.expect_bind]
-      have hmarginal :
-          (FinDist.pi fun j : {j : Fin 2 // j ≠ 1} =>
-              Profile.update (sig := information.behavioralSignature)
-                (policyOfState state) 1
-                ((policyOfState state 1).commit (.acting false) choice)
-                j.1 (.acting false)).map
-              (fun draws => draws ⟨0, by decide⟩) =
-            currentLaw state 0 false := by
-        rw [FinDist.map_apply_pi]
-        simp [currentLaw, policyOfState, Profile.update_of_ne]
-      simp [Profile.update_same, InformationModel.runBehavioralFrom,
-        ExecutionProtocol.runRandomizedFor_zero, terminalPayoff,
-        choice_eq_some_actionOfChoice]
-      rw [← hmarginal, FinDist.expect_map]
-      let μ : FinDist ((j : {j : Fin 2 // j ≠ 1}) →
-          LocalChoice j.1 false) :=
-        FinDist.pi fun j =>
-          Profile.update (sig := information.behavioralSignature)
-            (policyOfState state) 1
-            ((policyOfState state 1).commit (.acting false) choice)
-            j.1 (.acting false)
-      let f : ((j : {j : Fin 2 // j ≠ 1}) → LocalChoice j.1 false) → ℝ :=
-        fun draws => stagePayoff
-          (actionOfChoice 0 false (draws ⟨0, by decide⟩))
-          (actionOfChoice 1 false choice)
-      have hneg : μ.expect (fun draws => -f draws) = -μ.expect f := by
-        calc
-          _ = μ.expect (fun draws => (-1 : ℝ) * f draws) := by
-            apply FinDist.expect_congr
-            intro draws _
-            ring
-          _ = (-1 : ℝ) * μ.expect f := FinDist.expect_smul (-1) μ f
-          _ = _ := by ring
-      dsimp only [μ, f] at hneg
-      rw [hneg]
-      ring
-    · simp [typedHistory]
-  ·
-    unfold localUtility counterfactualActionUtility
-      counterfactualContinuationValue
-    rw [Fintype.sum_unique]
-    rw [informationHistory_eq_typedHistory 1 true
-      (default : information.InformationHistory 1 (site 1 true).1)]
-    rw [counterfactualReach_typedHistory]
-    unfold behavioralContinuationValue
-    rw [information.runBehavioralFrom_succ_of_not_terminal _ 0]
-    · rw [FinDist.expect_bind]
-      unfold InformationModel.behavioralJoint
-      unfold strategyOfState
-      dsimp [InfoSignals.infoOf, Languages.Bayesian.signals,
-        Languages.Bayesian.phaseOfState, Languages.Bayesian.privateSignal,
-        typedHistory, typeProfile]
-      rw [FinDist.expect_map, FinDist.pi_eq_map_product 1]
-      rw [FinDist.expect_map]
-      unfold FinDist.product
-      rw [FinDist.expect_bind]
-      have hmarginal :
-          (FinDist.pi fun j : {j : Fin 2 // j ≠ 1} =>
-              Profile.update (sig := information.behavioralSignature)
-                (policyOfState state) 1
-                ((policyOfState state 1).commit (.acting true) choice)
-                j.1 (.acting true)).map
-              (fun draws => draws ⟨0, by decide⟩) =
-            currentLaw state 0 true := by
-        rw [FinDist.map_apply_pi]
-        simp [currentLaw, policyOfState, Profile.update_of_ne]
-      simp [Profile.update_same, InformationModel.runBehavioralFrom,
-        ExecutionProtocol.runRandomizedFor_zero, terminalPayoff,
-        choice_eq_some_actionOfChoice]
-      rw [← hmarginal, FinDist.expect_map]
-      let μ : FinDist ((j : {j : Fin 2 // j ≠ 1}) →
-          LocalChoice j.1 true) :=
-        FinDist.pi fun j =>
-          Profile.update (sig := information.behavioralSignature)
-            (policyOfState state) 1
-            ((policyOfState state 1).commit (.acting true) choice)
-            j.1 (.acting true)
-      let f : ((j : {j : Fin 2 // j ≠ 1}) → LocalChoice j.1 true) → ℝ :=
-        fun draws => stagePayoff
-          (actionOfChoice 0 true (draws ⟨0, by decide⟩))
-          (actionOfChoice 1 true choice)
-      have hneg : μ.expect (fun draws => -f draws) = -μ.expect f := by
-        calc
-          _ = μ.expect (fun draws => (-1 : ℝ) * f draws) := by
-            apply FinDist.expect_congr
-            intro draws _
-            ring
-          _ = (-1 : ℝ) * μ.expect f := FinDist.expect_smul (-1) μ f
-          _ = _ := by ring
-      dsimp only [μ, f] at hneg
-      rw [hneg]
-      ring
-    · simp [typedHistory]
-
+  unfold localUtility counterfactualActionUtility
+    counterfactualContinuationValue
+  rw [Fintype.sum_unique]
+  dsimp only [default, informationHistoryUnique]
+  simp only [counterfactualReach_typedHistory, dite_eq_left
+    (by norm_num : (1 / 2 : ℝ) ≠ 0)]
+  unfold behavioralContinuationValue
+  have hvalue := columnContinuation_value state ty choice
+  simpa only [columnCommitted, mul_neg, neg_mul] using
+    congrArg (fun value : ℝ => (1 / 2 : ℝ) * value) hvalue
 theorem learnedLaw_eq_current (who : Fin 2) (ty : Bool) (round : ℕ) :
     learnedLaw who ty round =
       currentLaw (learningState round) who ty := by
@@ -834,9 +1072,24 @@ player's two positive-probability type sites. -/
 abbrev ContingentChoice (who : Fin 2) :=
   (ty : Bool) → LocalChoice who ty
 
+local instance contingentChoiceFintype (who : Fin 2) :
+    Fintype (ContingentChoice who) := by
+  unfold ContingentChoice
+  infer_instance
+
+local instance matrixStrategyFintype (who : Fin 2) :
+    Fintype ((MatrixGame.form
+      (ContingentChoice 0) (ContingentChoice 1)).sig.Strategy who) := by
+  induction who using Fin.cases with
+  | zero => exact contingentChoiceFintype 0
+  | succ next =>
+      induction next using Fin.cases with
+      | zero => exact contingentChoiceFintype 1
+      | succ impossible => exact impossible.elim0
+
 def contingentLaw (who : Fin 2) (round : ℕ) :
-    FinDist (ContingentChoice who) :=
-  FinDist.pi fun ty => learnedLaw who ty round
+    PMF (ContingentChoice who) :=
+  independentProduct fun ty => learnedLaw who ty round
 
 def actionPlan (who : Fin 2) (choices : ContingentChoice who) : Bool → Bool :=
   fun ty => actionOfChoice who ty (choices ty)
@@ -857,28 +1110,38 @@ theorem matrixPayoff_eq_direct_expectedUtility
     (row : ContingentChoice 0) (col : ContingentChoice 1) :
     matrixPayoff row col =
       expectedUtility game.utility 0
-        (game.toForm.play (planProfile row col)) := by
-  rw [BayesianGame.toForm_play, expectedUtility, FinDist.expect_map]
+        (game.toForm.play (planProfile row col))
+        (payoffIntegrable_of_finite _ _) := by
+  rw [BayesianGame.toForm_play]
+  unfold expectedUtility
+  rw [expect_map _ _ _ (payoffIntegrable_of_finite _ _)
+    (payoffIntegrable_of_finite _ _)]
   unfold matrixPayoff
   simp only [game, BayesianGame.utility]
   unfold commonPrior fairBit
-  rw [FinDist.expect_map]
-  rw [FinDist.expect_mix, FinDist.expect_pure, FinDist.expect_pure]
+  rw [expect_map _ _ _ (payoffIntegrable_of_finite _ _)
+    (payoffIntegrable_of_finite _ _)]
+  rw [expect_mix _ _ _ _ _ _
+    (payoffIntegrable_of_finite _ _)
+    (payoffIntegrable_of_finite _ _), expect_pure, expect_pure]
   simp [planProfile, BayesianGame.actionsOf, typeProfile, stagePayoff]
   ring_nf
 
 def localGain (who : Fin 2) (ty : Bool) (deviation : LocalChoice who ty)
     (round : ℕ) : ℝ :=
   localUtility who ty deviation (learningState round) -
-    (learnedLaw who ty round).expect fun current =>
-      localUtility who ty current (learningState round)
+    finiteExpect (learnedLaw who ty round) (fun current =>
+      localUtility who ty current (learningState round))
 
 theorem localVector_coordinate_eq_gain (who : Fin 2) (ty : Bool)
     (deviation : LocalChoice who ty) (round : ℕ) :
     (localCounterfactualRegretVector information
       (localStrategyOf who ty (learnedLaw who ty round)
         (learningState round))
-      who (site who ty) (localPayoffOf who ty (learningState round)) 1).ofLp
+      who (site who ty) (localPayoffOf who ty (learningState round)) 1
+      (localRegretsIntegrable
+        (localStrategyOf who ty (learnedLaw who ty round)
+          (learningState round)) who ty)).ofLp
         deviation = localGain who ty deviation round := by
   rw [local_realization, regretPayoff_ofLp]
   rfl
@@ -900,7 +1163,9 @@ theorem contingentGain_positiveAverage_tendsto_zero (who : Fin 2) :
   apply counterfactualRegretMatches_positiveRootGains_tendsto_zero
     information (fun _ : Bool => LearningState) who (site who)
     (fun ty => localStrategyOf who ty) (fun ty => localPayoffOf who ty)
-    (fun _ => 1) (fun _ round => learningState round) (contingentGain who)
+    (fun _ => 1) (fun _ round => learningState round)
+    (fun ty law current => localRegretsIntegrable
+      (localStrategyOf who ty law current) who ty) (contingentGain who)
     (fun _ _ => 1) (fun _ _ => by exact ⟨by norm_num, by norm_num⟩)
     (fun deviation ty => deviation ty)
   · intro deviation round
@@ -920,67 +1185,134 @@ theorem contingentLaw_marginal (who : Fin 2) (ty : Bool) (round : ℕ) :
     (contingentLaw who round).map (fun choices => choices ty) =
       learnedLaw who ty round := by
   unfold contingentLaw
-  rw [FinDist.map_apply_pi]
+  exact independentProduct_map_eval _ ty
 
 theorem expectedPayoff_pureRow_eq_sum_localUtility
     (row : ContingentChoice 0) (round : ℕ) :
-    MatrixGame.expectedPayoff matrixPayoff (FinDist.pure row)
+    MatrixGame.expectedPayoffOfFinite matrixPayoff (PMF.pure row)
         (contingentLaw 1 round) =
       ∑ ty : Bool, localUtility 0 ty (row ty) (learningState round) := by
-  rw [MatrixGame.expectedPayoff_pure_row]
+  unfold MatrixGame.expectedPayoffOfFinite
+  rw [MatrixGame.expectedPayoff_pure_row matrixPayoff row
+    (contingentLaw 1 round) (payoffIntegrable_of_finite _ _)]
   unfold matrixPayoff
-  rw [FinDist.expect_add, FinDist.expect_smul, FinDist.expect_smul,
+  rw [expect_add (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _),
+    expect_const_mul (payoffIntegrable_of_finite _ _),
+    expect_const_mul (payoffIntegrable_of_finite _ _),
     Fintype.sum_bool, localUtility_row_eq, localUtility_row_eq,
     ← learnedLaw_eq_current, ← learnedLaw_eq_current]
+  unfold finiteExpect
   rw [← contingentLaw_marginal 1 false round,
     ← contingentLaw_marginal 1 true round,
-    FinDist.expect_map, FinDist.expect_map]
-  simp only [actionPlan]
+    expect_map _ _ _ (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _),
+    expect_map _ _ _ (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _)]
+  dsimp only [Function.comp_def, actionPlan]
   ring
 
 theorem expectedPayoff_pureColumn_eq_neg_sum_localUtility
     (col : ContingentChoice 1) (round : ℕ) :
-    MatrixGame.expectedPayoff matrixPayoff (contingentLaw 0 round)
-        (FinDist.pure col) =
+    MatrixGame.expectedPayoffOfFinite matrixPayoff (contingentLaw 0 round)
+        (PMF.pure col) =
       -(∑ ty : Bool, localUtility 1 ty (col ty) (learningState round)) := by
-  rw [MatrixGame.expectedPayoff_pure_column]
+  unfold MatrixGame.expectedPayoffOfFinite
+  rw [MatrixGame.expectedPayoff_pure_column matrixPayoff
+    (contingentLaw 0 round) col (payoffIntegrable_of_finite _ _)]
   unfold matrixPayoff
-  rw [FinDist.expect_add, FinDist.expect_smul, FinDist.expect_smul,
+  rw [expect_add (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _),
+    expect_const_mul (payoffIntegrable_of_finite _ _),
+    expect_const_mul (payoffIntegrable_of_finite _ _),
     Fintype.sum_bool, localUtility_column_eq, localUtility_column_eq,
     ← learnedLaw_eq_current, ← learnedLaw_eq_current]
+  unfold finiteExpect
   rw [← contingentLaw_marginal 0 false round,
     ← contingentLaw_marginal 0 true round,
-    FinDist.expect_map, FinDist.expect_map]
-  simp only [actionPlan]
+    expect_map _ _ _ (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _),
+    expect_map _ _ _ (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _)]
+  dsimp only [Function.comp_def, actionPlan]
   ring_nf
 
 theorem expectedPayoff_current_eq_sum_expectedLocalUtility (round : ℕ) :
-    MatrixGame.expectedPayoff matrixPayoff
+    MatrixGame.expectedPayoffOfFinite matrixPayoff
         (contingentLaw 0 round) (contingentLaw 1 round) =
-      ∑ ty : Bool, (learnedLaw 0 ty round).expect fun current =>
-        localUtility 0 ty current (learningState round) := by
-  rw [MatrixGame.expectedPayoff_eq_expect_rows]
-  simp_rw [expectedPayoff_pureRow_eq_sum_localUtility]
+      ∑ ty : Bool, finiteExpect (learnedLaw 0 ty round) (fun current =>
+        localUtility 0 ty current (learningState round)) := by
+  unfold MatrixGame.expectedPayoffOfFinite
+  obtain ⟨houter, hrows⟩ := MatrixGame.expectedPayoff_eq_expect_rows
+    matrixPayoff (contingentLaw 0 round) (contingentLaw 1 round)
+      (payoffIntegrable_of_finite _ _)
+      (fun _ => payoffIntegrable_of_finite _ _)
+  rw [hrows]
+  have hpure (current : ContingentChoice 0) :
+      expect (contingentLaw 1 round) (matrixPayoff current)
+          (payoffIntegrable_of_finite _ _) =
+        ∑ ty : Bool, localUtility 0 ty (current ty)
+          (learningState round) := by
+    have h := expectedPayoff_pureRow_eq_sum_localUtility current round
+    unfold MatrixGame.expectedPayoffOfFinite at h
+    rw [MatrixGame.expectedPayoff_pure_row matrixPayoff current
+      (contingentLaw 1 round) (payoffIntegrable_of_finite _ _)] at h
+    exact h
+  simp_rw [hpure]
   simp_rw [Fintype.sum_bool]
-  rw [FinDist.expect_add]
+  rw [expect_add (payoffIntegrable_of_finite _ _)
+    (payoffIntegrable_of_finite _ _)]
+  unfold finiteExpect
   rw [← contingentLaw_marginal 0 false round,
     ← contingentLaw_marginal 0 true round,
-    FinDist.expect_map, FinDist.expect_map]
+    expect_map _ _ _ (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _),
+    expect_map _ _ _ (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _)]
+  dsimp only [Function.comp_def]
 
 def mixedRoundProfile (round : ℕ) :
     Profile (MatrixGame.form (ContingentChoice 0) (ContingentChoice 1)).sig.mixed :=
   MatrixGame.mixedProfile (contingentLaw 0 round) (contingentLaw 1 round)
 
 def roundLaw (round : ℕ) :
-    FinDist (Profile
+    PMF (Profile
       (MatrixGame.form (ContingentChoice 0) (ContingentChoice 1)).sig) :=
-  FinDist.pi (mixedRoundProfile round)
+  independentProduct (mixedRoundProfile round)
+
+/-- The contingent matrix has finite carriers, so both actual regret laws
+admit the required payoff integrations. -/
+noncomputable def matrixRegret
+    (law : PMF (Profile (MatrixGame.utilityGame matrixPayoff).form.sig))
+    (who : Fin 2)
+    (replacement :
+      (MatrixGame.utilityGame matrixPayoff).form.sig.Strategy who) : ℝ :=
+  (MatrixGame.utilityGame matrixPayoff).externalRegret law who replacement
+    (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
+
+theorem matrixRegret_pi
+    (mixed : Profile (MatrixGame.utilityGame matrixPayoff).form.sig.mixed)
+    (who : Fin 2)
+    (replacement :
+      (MatrixGame.utilityGame matrixPayoff).form.sig.Strategy who) :
+    matrixRegret (independentProduct mixed) who replacement =
+      expectedUtility (MatrixGame.utilityGame matrixPayoff).utility who
+          ((MatrixGame.utilityGame matrixPayoff).form.mixed.play
+            (Profile.update mixed who (PMF.pure replacement)))
+          (payoffIntegrable_of_finite _ _) -
+        expectedUtility (MatrixGame.utilityGame matrixPayoff).utility who
+          ((MatrixGame.utilityGame matrixPayoff).form.mixed.play mixed)
+          (payoffIntegrable_of_finite _ _) := by
+  simpa only [matrixRegret] using
+    (MatrixGame.utilityGame matrixPayoff).externalRegret_pi
+      mixed who replacement
+      (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
 
 theorem rowExternalRegret_roundLaw_eq_contingentGain
     (row : ContingentChoice 0) (round : ℕ) :
-    (MatrixGame.utilityGame matrixPayoff).externalRegret
+    matrixRegret
         (roundLaw round) 0 row = contingentGain 0 row round := by
-  rw [roundLaw, (MatrixGame.utilityGame matrixPayoff).externalRegret_pi]
+  rw [roundLaw, matrixRegret_pi]
   unfold mixedRoundProfile
   rw [MatrixGame.mixedProfile_update_zero,
     MatrixGame.expectedUtility_zero_mixedProfile,
@@ -988,8 +1320,8 @@ theorem rowExternalRegret_roundLaw_eq_contingentGain
   calc
     _ = (∑ ty : Bool,
           localUtility 0 ty (row ty) (learningState round)) -
-        (∑ ty : Bool, (learnedLaw 0 ty round).expect fun current =>
-          localUtility 0 ty current (learningState round)) :=
+        (∑ ty : Bool, finiteExpect (learnedLaw 0 ty round) (fun current =>
+          localUtility 0 ty current (learningState round))) :=
       congrArg₂ (fun first second : ℝ => first - second)
         (expectedPayoff_pureRow_eq_sum_localUtility row round)
         (expectedPayoff_current_eq_sum_expectedLocalUtility round)
@@ -999,57 +1331,64 @@ theorem rowExternalRegret_roundLaw_eq_contingentGain
 
 theorem columnExternalRegret_roundLaw_eq_contingentGain
     (col : ContingentChoice 1) (round : ℕ) :
-    (MatrixGame.utilityGame matrixPayoff).externalRegret
+    matrixRegret
         (roundLaw round) 1 col = contingentGain 1 col round := by
-  rw [roundLaw, (MatrixGame.utilityGame matrixPayoff).externalRegret_pi]
+  rw [roundLaw, matrixRegret_pi]
   unfold mixedRoundProfile
   rw [MatrixGame.mixedProfile_update_one,
-    MatrixGame.expectedUtility_one_mixedProfile,
-    MatrixGame.expectedUtility_one_mixedProfile]
+    MatrixGame.expectedUtility_one_mixedProfile matrixPayoff
+      (contingentLaw 0 round) (PMF.pure col)
+      (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _),
+    MatrixGame.expectedUtility_one_mixedProfile matrixPayoff
+      (contingentLaw 0 round) (contingentLaw 1 round)
+      (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)]
   calc
     _ = -(-(∑ ty : Bool,
           localUtility 1 ty (col ty) (learningState round))) -
-        -(MatrixGame.expectedPayoff matrixPayoff
+        -(MatrixGame.expectedPayoffOfFinite matrixPayoff
           (contingentLaw 0 round) (contingentLaw 1 round)) :=
       congrArg₂ (fun first second : ℝ => -first - -second)
         (expectedPayoff_pureColumn_eq_neg_sum_localUtility col round) rfl
     _ = (∑ ty : Bool,
           localUtility 1 ty (col ty) (learningState round)) -
-        (∑ ty : Bool, (learnedLaw 1 ty round).expect fun current =>
-          localUtility 1 ty current (learningState round)) := by
+        (∑ ty : Bool, finiteExpect (learnedLaw 1 ty round) (fun current =>
+          localUtility 1 ty current (learningState round))) := by
       have hzeroSumCurrent :
-          MatrixGame.expectedPayoff matrixPayoff
+          MatrixGame.expectedPayoffOfFinite matrixPayoff
               (contingentLaw 0 round) (contingentLaw 1 round) =
-            -(∑ ty : Bool, (learnedLaw 1 ty round).expect fun current =>
-              localUtility 1 ty current (learningState round)) := by
-        rw [MatrixGame.expectedPayoff_eq_expect_columns]
-        simp_rw [expectedPayoff_pureColumn_eq_neg_sum_localUtility]
-        simp_rw [Fintype.sum_bool]
-        calc
-          _ = (contingentLaw 1 round).expect (fun current =>
-              (-1 : ℝ) *
-                (localUtility 1 true (current true) (learningState round) +
-                  localUtility 1 false (current false)
-                    (learningState round))) := by
-            apply FinDist.expect_congr
-            intro current _
-            ring
-          _ = (-1 : ℝ) * (contingentLaw 1 round).expect (fun current =>
-                localUtility 1 true (current true) (learningState round) +
-                  localUtility 1 false (current false)
-                    (learningState round)) :=
-            FinDist.expect_smul (-1) _ _
-          _ = -((contingentLaw 1 round).expect (fun current =>
-                localUtility 1 true (current true) (learningState round)) +
-              (contingentLaw 1 round).expect (fun current =>
-                localUtility 1 false (current false)
-                  (learningState round))) := by
-            rw [FinDist.expect_add]
-            ring
-          _ = _ := by
-            rw [← contingentLaw_marginal 1 false round,
-              ← contingentLaw_marginal 1 true round,
-              FinDist.expect_map, FinDist.expect_map]
+            -(∑ ty : Bool, finiteExpect (learnedLaw 1 ty round) (fun current =>
+              localUtility 1 ty current (learningState round))) := by
+        unfold MatrixGame.expectedPayoffOfFinite
+        obtain ⟨houter, hcols⟩ := MatrixGame.expectedPayoff_eq_expect_columns
+          matrixPayoff (contingentLaw 0 round) (contingentLaw 1 round)
+            (payoffIntegrable_of_finite _ _)
+            (fun _ => payoffIntegrable_of_finite _ _)
+        rw [hcols]
+        have hpure (current : ContingentChoice 1) :
+            expect (contingentLaw 0 round)
+                (fun currentRow => matrixPayoff currentRow current)
+                (payoffIntegrable_of_finite _ _) =
+              -(∑ ty : Bool, localUtility 1 ty (current ty)
+                (learningState round)) := by
+          have h := expectedPayoff_pureColumn_eq_neg_sum_localUtility
+            current round
+          unfold MatrixGame.expectedPayoffOfFinite at h
+          rw [MatrixGame.expectedPayoff_pure_column matrixPayoff
+            (contingentLaw 0 round) current
+            (payoffIntegrable_of_finite _ _)] at h
+          exact h
+        simp_rw [hpure, Fintype.sum_bool]
+        rw [expect_neg (payoffIntegrable_of_finite _ _),
+          expect_add (payoffIntegrable_of_finite _ _)
+            (payoffIntegrable_of_finite _ _)]
+        unfold finiteExpect
+        rw [← contingentLaw_marginal 1 false round,
+          ← contingentLaw_marginal 1 true round,
+          expect_map _ _ _ (payoffIntegrable_of_finite _ _)
+            (payoffIntegrable_of_finite _ _),
+          expect_map _ _ _ (payoffIntegrable_of_finite _ _)
+            (payoffIntegrable_of_finite _ _)]
+        dsimp only [Function.comp_def]
       rw [hzeroSumCurrent]
       ring
     _ = _ := by
@@ -1057,20 +1396,33 @@ theorem columnExternalRegret_roundLaw_eq_contingentGain
       rw [Finset.sum_sub_distrib]
 
 def finRoundLaw {T : ℕ} (round : Fin T) :
-    FinDist (Profile
+    PMF (Profile
       (MatrixGame.form (ContingentChoice 0) (ContingentChoice 1)).sig) :=
   roundLaw round
 
 def averageLaw (t : ℕ) :
-    FinDist (Profile
+    PMF (Profile
       (MatrixGame.form (ContingentChoice 0) (ContingentChoice 1)).sig) :=
   (MatrixGame.form (ContingentChoice 0) (ContingentChoice 1)).timeAverage
     (finRoundLaw (T := t + 1))
 
+theorem matrixRegret_timeAverage (t : ℕ) (who : Fin 2)
+    (replacement :
+      (MatrixGame.utilityGame matrixPayoff).form.sig.Strategy who) :
+    matrixRegret (averageLaw t) who replacement =
+      (∑ round : Fin (t + 1),
+        matrixRegret (roundLaw round) who replacement) / (t + 1) := by
+  unfold matrixRegret averageLaw
+  simpa only [finRoundLaw, Nat.cast_add, Nat.cast_one] using
+    (MatrixGame.utilityGame matrixPayoff).externalRegret_timeAverage
+      (finRoundLaw (T := t + 1)) who replacement
+      (fun _ => payoffIntegrable_of_finite _ _)
+      (fun _ => payoffIntegrable_of_finite _ _)
+
 theorem rowExternalRegret_average_tendsto_zero (row : ContingentChoice 0) :
     Tendsto
       (fun t => max
-        ((MatrixGame.utilityGame matrixPayoff).externalRegret
+        (matrixRegret
           (averageLaw t) 0 row) 0)
       atTop (nhds 0) := by
   have hshift := (contingentGain_positiveAverage_tendsto_zero 0 row).comp
@@ -1078,12 +1430,10 @@ theorem rowExternalRegret_average_tendsto_zero (row : ContingentChoice 0) :
   apply hshift.congr
   intro t
   apply congrArg (fun value : ℝ => max value 0)
-  rw [averageLaw,
-    (MatrixGame.utilityGame matrixPayoff).externalRegret_timeAverage]
-  simp only [finRoundLaw]
+  rw [matrixRegret_timeAverage]
   have hsum :
       (∑ round : Fin (t + 1),
-        (MatrixGame.utilityGame matrixPayoff).externalRegret
+        matrixRegret
           (roundLaw round) 0 row) =
         ∑ round : Fin (t + 1), contingentGain 0 row round := by
     apply Finset.sum_congr rfl
@@ -1092,11 +1442,12 @@ theorem rowExternalRegret_average_tendsto_zero (row : ContingentChoice 0) :
   rw [hsum]
   rw [Fin.sum_univ_eq_sum_range
     (fun round => contingentGain 0 row round) (t + 1)]
+  simp only [Nat.cast_add, Nat.cast_one]
 
 theorem columnExternalRegret_average_tendsto_zero (col : ContingentChoice 1) :
     Tendsto
       (fun t => max
-        ((MatrixGame.utilityGame matrixPayoff).externalRegret
+        (matrixRegret
           (averageLaw t) 1 col) 0)
       atTop (nhds 0) := by
   have hshift := (contingentGain_positiveAverage_tendsto_zero 1 col).comp
@@ -1104,12 +1455,10 @@ theorem columnExternalRegret_average_tendsto_zero (col : ContingentChoice 1) :
   apply hshift.congr
   intro t
   apply congrArg (fun value : ℝ => max value 0)
-  rw [averageLaw,
-    (MatrixGame.utilityGame matrixPayoff).externalRegret_timeAverage]
-  simp only [finRoundLaw]
+  rw [matrixRegret_timeAverage]
   have hsum :
       (∑ round : Fin (t + 1),
-        (MatrixGame.utilityGame matrixPayoff).externalRegret
+        matrixRegret
           (roundLaw round) 1 col) =
         ∑ round : Fin (t + 1), contingentGain 1 col round := by
     apply Finset.sum_congr rfl
@@ -1118,15 +1467,16 @@ theorem columnExternalRegret_average_tendsto_zero (col : ContingentChoice 1) :
   rw [hsum]
   rw [Fin.sum_univ_eq_sum_range
     (fun round => contingentGain 1 col round) (t + 1)]
+  simp only [Nat.cast_add, Nat.cast_one]
 
 def rowRegretBound (t : ℕ) : ℝ :=
   ∑ row : ContingentChoice 0,
-    max ((MatrixGame.utilityGame matrixPayoff).externalRegret
+    max (matrixRegret
       (averageLaw t) 0 row) 0
 
 def columnRegretBound (t : ℕ) : ℝ :=
   ∑ col : ContingentChoice 1,
-    max ((MatrixGame.utilityGame matrixPayoff).externalRegret
+    max (matrixRegret
       (averageLaw t) 1 col) 0
 
 theorem rowRegretBound_tendsto_zero :
@@ -1143,7 +1493,7 @@ theorem columnRegretBound_tendsto_zero :
 
 theorem externalRegret_le_rowRegretBound (t : ℕ)
     (row : ContingentChoice 0) :
-    (MatrixGame.utilityGame matrixPayoff).externalRegret
+    matrixRegret
         (averageLaw t) 0 row ≤ rowRegretBound t := by
   apply le_trans (le_max_left _ 0)
   exact Finset.single_le_sum
@@ -1151,7 +1501,7 @@ theorem externalRegret_le_rowRegretBound (t : ℕ)
 
 theorem externalRegret_le_columnRegretBound (t : ℕ)
     (col : ContingentChoice 1) :
-    (MatrixGame.utilityGame matrixPayoff).externalRegret
+    matrixRegret
         (averageLaw t) 1 col ≤ columnRegretBound t := by
   apply le_trans (le_max_left _ 0)
   exact Finset.single_le_sum
@@ -1170,8 +1520,13 @@ theorem empiricalMarginals_isεNash (t : ℕ) :
         (MatrixGame.columnMarginal (averageLaw t))) :=
   MatrixGame.marginalProfile_isεNash_of_externalRegret_le
     matrixPayoff (averageLaw t)
+      (payoffIntegrable_of_finite _ _)
+      (fun _ => payoffIntegrable_of_finite _ _)
+      (fun _ => payoffIntegrable_of_finite _ _)
       (externalRegret_le_rowRegretBound t)
       (externalRegret_le_columnRegretBound t)
+      (fun _ => payoffIntegrable_of_finite _ _)
+      (fun _ => payoffIntegrable_of_finite _ _)
 
 theorem empiricalNashTolerance_tendsto_zero :
     Tendsto (fun t => rowRegretBound t + columnRegretBound t)
@@ -1197,7 +1552,7 @@ theorem fallbackChoice_eq_choiceOfAction (who : Fin 2) (ty : Bool) :
   exact choice_eq_some_actionOfChoice who ty (fallbackChoice who ty)
 
 theorem learnedLaw_zero (who : Fin 2) (ty : Bool) :
-    learnedLaw who ty 0 = FinDist.pure (fallbackChoice who ty) := by
+    learnedLaw who ty 0 = PMF.pure (fallbackChoice who ty) := by
   simp [learnedLaw, localAverage, counterfactualRegretMatchAverage,
     avgVec, regretMatch, fallbackChoice]
 
@@ -1205,14 +1560,13 @@ theorem initial_type_saddleGain_eq_one (ty : Bool) :
     localGain 0 ty (improvingRowChoice ty) 0 +
       localGain 1 ty (improvingColumnChoice ty) 0 = 1 := by
   unfold localGain
-  rw [learnedLaw_zero, learnedLaw_zero,
-    FinDist.expect_pure, FinDist.expect_pure]
+  rw [learnedLaw_zero, learnedLaw_zero]
+  simp only [finiteExpect, expect_pure]
   rw [localUtility_row_eq, localUtility_row_eq,
     localUtility_column_eq, localUtility_column_eq]
   rw [← learnedLaw_eq_current, ← learnedLaw_eq_current,
-    learnedLaw_zero, learnedLaw_zero,
-    FinDist.expect_pure, FinDist.expect_pure,
-    FinDist.expect_pure, FinDist.expect_pure]
+    learnedLaw_zero, learnedLaw_zero]
+  simp only [finiteExpect, expect_pure]
   rw [fallbackChoice_eq_choiceOfAction, fallbackChoice_eq_choiceOfAction]
   simp [improvingRowChoice, improvingColumnChoice, fallbackAction,
     stagePayoff]
@@ -1232,14 +1586,21 @@ def improvingColumnPlan : ContingentChoice 1 := improvingColumnChoice
 gaps add to two. The four local laws therefore cannot all remain at their
 arbitrary fallback point masses. -/
 theorem initial_saddleGap_eq_two :
-    MatrixGame.expectedPayoff matrixPayoff
-          (FinDist.pure improvingRowPlan)
+    MatrixGame.expectedPayoffOfFinite matrixPayoff
+          (PMF.pure improvingRowPlan)
           (MatrixGame.columnMarginal (roundLaw 0)) -
-        MatrixGame.expectedPayoff matrixPayoff
+        MatrixGame.expectedPayoffOfFinite matrixPayoff
           (MatrixGame.rowMarginal (roundLaw 0))
-          (FinDist.pure improvingColumnPlan) = 2 := by
-  rw [MatrixGame.saddleGap_eq_externalRegret_add,
-    rowExternalRegret_roundLaw_eq_contingentGain,
+          (PMF.pure improvingColumnPlan) = 2 := by
+  have hgap := MatrixGame.saddleGap_eq_externalRegret_add
+    matrixPayoff (roundLaw 0) improvingRowPlan improvingColumnPlan
+      (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _)
+  rw [hgap]
+  show matrixRegret (roundLaw 0) 0 improvingRowPlan +
+    matrixRegret (roundLaw 0) 1 improvingColumnPlan = 2
+  rw [rowExternalRegret_roundLaw_eq_contingentGain,
     columnExternalRegret_roundLaw_eq_contingentGain]
   unfold contingentGain improvingRowPlan improvingColumnPlan
   rw [Fintype.sum_bool, Fintype.sum_bool]
@@ -1261,7 +1622,7 @@ theorem localAverage_one_coordinate_eq_gain (who : Fin 2) (ty : Bool)
 theorem learnedLaw_one_prob_pos_of_gain_pos (who : Fin 2) (ty : Bool)
     (deviation : LocalChoice who ty)
     (hgain : 0 < localGain who ty deviation 0) :
-    0 < (learnedLaw who ty 1).prob deviation := by
+    0 < learnedLaw who ty 1 deviation := by
   have hcoordinate : 0 < (localAverage who ty 1).ofLp deviation := by
     rw [localAverage_one_coordinate_eq_gain]
     exact hgain
@@ -1273,13 +1634,15 @@ theorem learnedLaw_one_prob_pos_of_gain_pos (who : Fin 2) (ty : Bool)
         (Finset.mem_univ deviation)
     rw [max_eq_left hcoordinate.le] at hle
     exact lt_of_lt_of_le hcoordinate hle
-  rw [learnedLaw, regretMatch, dite_eq_left hsum, FinDist.prob_ofWeights]
+  rw [learnedLaw, regretMatch, dite_eq_left hsum, PMF.ofFintype_apply]
+  apply ENNReal.ofReal_pos.mpr
   exact div_pos (by rw [max_eq_left hcoordinate.le]; exact hcoordinate) hsum
 
 theorem localGain_fallback_zero (who : Fin 2) (ty : Bool) :
     localGain who ty (fallbackChoice who ty) 0 = 0 := by
   unfold localGain
-  rw [learnedLaw_zero, FinDist.expect_pure]
+  rw [learnedLaw_zero]
+  simp only [finiteExpect, expect_pure]
   ring
 
 theorem learnedLaw_one_ne_zero_of_gain_pos (who : Fin 2) (ty : Bool)
@@ -1293,8 +1656,8 @@ theorem learnedLaw_one_ne_zero_of_gain_pos (who : Fin 2) (ty : Bool)
     exact (lt_irrefl 0) hgain
   intro hlaw
   have hprob := learnedLaw_one_prob_pos_of_gain_pos who ty deviation hgain
-  rw [hlaw, learnedLaw_zero, FinDist.prob_pure_of_ne hne] at hprob
-  exact (lt_irrefl 0) hprob
+  rw [hlaw, learnedLaw_zero] at hprob
+  simp [PMF.pure_apply, hne] at hprob
 
 /-- At each positive-probability type, at least one player's next local law
 leaves its arbitrary fallback. This is the hostile nonconstant-dynamics

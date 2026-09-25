@@ -19,6 +19,7 @@ open GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
 open GameTheory.Experimental.PostArchitecture.FiniteBNLatentSum
 open GameTheory.Experimental.PostArchitecture.FiniteBNMarginalization
 open GameTheory.Experimental.PostArchitecture.FiniteBNRetainedSum
+open GameTheory.Experimental.PostArchitecture.DependentAssignmentEnumeration
 
 universe uPlayer uNode uValue
 
@@ -47,41 +48,35 @@ theorem fillConfiguration_of_mem [DecidableEq Node] (nodes : Finset Node)
 /-- A point mass of the restriction pushforward is the corresponding cylinder
 mass.  The fallback assignment supplies values only outside `nodes`; every
 finite law supplies such an assignment through its nonempty support. -/
-theorem restrictLaw_prob_eq_cylinderMass
+theorem restrictLaw_mass_eq_cylinderMass
     [DecidableEq Node]
-    (law : FinDist (Assignment diagram)) (nodes : Finset Node)
+    (law : PMF (Assignment diagram)) (nodes : Finset Node)
     (fallback : Assignment diagram) (configuration : Config diagram nodes) :
-    (FinDist.map
-        (fun assignment => Assignment.restrict diagram assignment nodes)
-        law).prob configuration =
+    ((law.map
+        (fun assignment => Assignment.restrict diagram assignment nodes)).toOuterMeasure
+        {configuration}).toReal =
       cylinderMass diagram.Value law nodes
         (fillConfiguration nodes fallback configuration) := by
   classical
-  rw [FinDist.prob_map, cylinderMass,
-    ← FinDist.expect_indicator_eq_probOf]
-  apply FinDist.expect_congr
-  intro assignment _
-  apply if_congr
-  · simp only [Set.mem_ofPred_eq]
+  rw [PMF.toOuterMeasure_map_apply]
+  unfold cylinderMass
+  have hset :
+      (fun assignment : Assignment diagram =>
+        Assignment.restrict diagram assignment nodes) ⁻¹' {configuration} =
+        {assignment | AgreeOn diagram.Value nodes assignment
+          (fillConfiguration nodes fallback configuration)} := by
+    ext assignment
+    simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_ofPred_eq]
     constructor
     · intro heq node hnode
-      calc
-        assignment node =
-            Assignment.restrict diagram assignment nodes ⟨node, hnode⟩ := rfl
-        _ = configuration ⟨node, hnode⟩ := congrFun heq.symm ⟨node, hnode⟩
-        _ = fillConfiguration nodes fallback configuration node := by
-          symm
-          exact fillConfiguration_of_mem nodes fallback configuration hnode
+      rw [fillConfiguration_of_mem nodes fallback configuration hnode]
+      exact congrFun heq ⟨node, hnode⟩
     · intro hagrees
       funext node
-      calc
-        configuration node =
-            fillConfiguration nodes fallback configuration node.1 := by
-          symm
-          exact fillConfiguration_of_mem nodes fallback configuration node.2
-        _ = assignment node.1 := (hagrees node.1 node.2).symm
-  · rfl
-  · rfl
+      have h := hagrees node.1 node.2
+      simpa only [Assignment.restrict,
+        fillConfiguration_of_mem nodes fallback configuration node.2] using h
+  rw [hset]
 
 /-- Two factorizing laws have the same retained-coordinate marginal whenever
 the retained set is parent-closed and their kernels agree there.  No
@@ -90,7 +85,7 @@ theorem restrictLaw_eq_of_factorizes_of_kernels_eqOn
     [Fintype Node] [DecidableEq Node]
     [∀ node, Fintype (diagram.Value node)]
     [∀ node, DecidableEq (diagram.Value node)]
-    (firstLaw secondLaw : FinDist (Assignment diagram))
+    (firstLaw secondLaw : PMF (Assignment diagram))
     (parents : Node → Finset Node)
     (topological : GameTheory.Math.DAG.TopologicalOrder parents)
     (firstKernels secondKernels : LocalKernels diagram.Value parents)
@@ -99,13 +94,13 @@ theorem restrictLaw_eq_of_factorizes_of_kernels_eqOn
     (retained : Finset Node) (hclosed : ParentClosed parents retained)
     (hkernels : ∀ node ∈ retained,
       firstKernels node = secondKernels node) :
-    FinDist.map
+    PMF.map
         (fun assignment => Assignment.restrict diagram assignment retained)
         firstLaw =
-      FinDist.map
+      PMF.map
         (fun assignment => Assignment.restrict diagram assignment retained)
         secondLaw := by
-  apply FinDist.ext_of_prob
+  apply PMF.ext
   intro configuration
   let fallback := firstLaw.support_nonempty.choose
   let witness :=
@@ -117,13 +112,32 @@ theorem restrictLaw_eq_of_factorizes_of_kernels_eqOn
     apply Finset.prod_congr rfl
     intro node hnode
     rw [hkernels node hnode]
-  calc
-    (FinDist.map
+  have hfirstMass :
+      (PMF.map
         (fun assignment => Assignment.restrict diagram assignment retained)
-        firstLaw).prob configuration =
-        cylinderMass diagram.Value firstLaw retained witness := by
-      exact restrictLaw_prob_eq_cylinderMass firstLaw retained fallback
-        configuration
+        firstLaw configuration).toReal =
+      cylinderMass diagram.Value firstLaw retained witness := by
+    simpa only [PMF.toOuterMeasure_apply_singleton] using
+      restrictLaw_mass_eq_cylinderMass firstLaw retained fallback configuration
+  have hsecondMass :
+      (PMF.map
+        (fun assignment => Assignment.restrict diagram assignment retained)
+        secondLaw configuration).toReal =
+      cylinderMass diagram.Value secondLaw retained witness := by
+    simpa only [PMF.toOuterMeasure_apply_singleton] using
+      restrictLaw_mass_eq_cylinderMass secondLaw retained fallback configuration
+  apply (ENNReal.toReal_eq_toReal_iff'
+    (PMF.map
+      (fun assignment => Assignment.restrict diagram assignment retained)
+      firstLaw |>.apply_ne_top configuration)
+    (PMF.map
+      (fun assignment => Assignment.restrict diagram assignment retained)
+      secondLaw |>.apply_ne_top configuration)).mp
+  calc
+    (PMF.map
+      (fun assignment => Assignment.restrict diagram assignment retained)
+      firstLaw configuration).toReal =
+        cylinderMass diagram.Value firstLaw retained witness := hfirstMass
     _ = factorProduct diagram.Value parents firstKernels retained witness :=
       cylinderMass_eq_factorProduct_of_parentClosed diagram.Value firstLaw
         parents topological firstKernels hfirst retained witness hclosed
@@ -132,11 +146,8 @@ theorem restrictLaw_eq_of_factorizes_of_kernels_eqOn
     _ = cylinderMass diagram.Value secondLaw retained witness :=
       (cylinderMass_eq_factorProduct_of_parentClosed diagram.Value secondLaw
         parents topological secondKernels hsecond retained witness hclosed).symm
-    _ = (FinDist.map
-        (fun assignment => Assignment.restrict diagram assignment retained)
-        secondLaw).prob configuration := by
-      symm
-      exact restrictLaw_prob_eq_cylinderMass secondLaw retained fallback
-        configuration
+    _ = (PMF.map
+      (fun assignment => Assignment.restrict diagram assignment retained)
+      secondLaw configuration).toReal := hsecondMass.symm
 
 end GameTheory.Experimental.PostArchitecture.FiniteBNKernelInvariance

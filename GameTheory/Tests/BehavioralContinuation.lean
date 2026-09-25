@@ -26,7 +26,7 @@ private theorem terminal_of_step {state target : source.execution.State}
     source.execution.terminal target := by
   cases state with
   | initial =>
-      have reached := FinDist.mem_support_pure.mp realized
+      rw [PMF.mem_support_pure_iff] at realized
       subst target
       trivial
   | finished actions => exact (joint.2.1 trivial).elim
@@ -59,10 +59,26 @@ theorem simultaneous_behavioral_perfect :
   · exact allTrue_isNash
   · rw [isNash_iff]
     intro who replacement
-    show (source.information.runBehavioralFrom _ 1 history).expect _ ≤
-      (source.information.runBehavioralFrom _ 1 history).expect _
-    rw [source.information.runBehavioralFrom_of_terminal _ _ terminal,
-      source.information.runBehavioralFrom_of_terminal _ _ terminal]
+    have hpreferred := sourceUtility_integrable
+      (source.information.runBehavioralFrom (behavioralProfile allTrueActions)
+        1 history) who
+    have halternative := sourceUtility_integrable
+      (source.information.runBehavioralFrom
+        (Profile.update (behavioralProfile allTrueActions) who replacement)
+        1 history) who
+    refine ⟨hpreferred, halternative, ?_⟩
+    have hpreferredLaw := source.information.runBehavioralFrom_of_terminal
+      (behavioralProfile allTrueActions) 1 terminal
+    have halternativeLaw := source.information.runBehavioralFrom_of_terminal
+      (Profile.update (behavioralProfile allTrueActions) who replacement) 1 terminal
+    have hpure : UtilityIntegrable sourceUtility who (PMF.pure history) :=
+      payoffIntegrable_pure history (fun outcome => sourceUtility outcome who)
+    have hpreferredValue := expectedUtility_congr_law sourceUtility who
+      hpreferredLaw hpreferred hpure
+    have halternativeValue := expectedUtility_congr_law sourceUtility who
+      halternativeLaw halternative hpure
+    rw [expectedUtility_pure] at hpreferredValue halternativeValue
+    rw [hpreferredValue, halternativeValue]
 
 /-- The all-false profile has a profitable unilateral replacement at the
 initial proper root, so the behavioral SPE predicate rejects it. -/
@@ -87,7 +103,7 @@ private theorem simultaneous_terminates : source.execution.WellFoundedPlay := by
   obtain ⟨joint, legal, realized⟩ := successor
   cases state with
   | initial =>
-      have reached := FinDist.mem_support_pure.mp realized
+      rw [PMF.mem_support_pure_iff] at realized
       subst target
       exact Nat.zero_lt_one
   | finished actions => exact (legal.1 trivial).elim
@@ -117,9 +133,22 @@ theorem simultaneous_shared_transfer :
   · intro history proper
     refine ⟨history, proper, rfl, ?_⟩
     intro who replacement
-    refine ⟨FinDist.pure replacement, ?_⟩
-    simp only [FinDist.pure_bind]
+    refine ⟨PMF.pure replacement, ?_⟩
+    simp only [PMF.pure_bind]
     rfl
+  · intro history proper who replacement
+    have hprofile :
+        Profile.map (sig := source.information.behavioralSignature)
+          (target := source.information.behavioralSignature)
+          (fun _ strategy => strategy) (behavioralProfile allTrueActions) =
+            behavioralProfile allTrueActions := by
+      funext player
+      rfl
+    have hguard := sourceUtility_integrable
+      (source.information.runBehavioralFrom
+        (Profile.update (behavioralProfile allTrueActions) who replacement)
+        1 history) who
+    simpa only [hprofile, Function.id_def] using hguard
   · exact simultaneous_behavioral_perfect
 
 /-- Honest compiled laws also use the shared reflection theorem at every
@@ -155,8 +184,8 @@ theorem random_profile_perfect :
     model.IsSingleMoverBehavioralSubgamePerfect single bounded profile (fun _ _ => 0) := by
   rw [model.isSingleMoverBehavioralSubgamePerfect_iff single bounded]
   intro history _ who replacement
-  simp only [FinDist.expect_const]
-  exact le_rfl
+  refine ⟨payoffIntegrable_zero _, payoffIntegrable_zero _, ?_⟩
+  simp [expectedUtility, expect_constant]
 
 theorem bounded_four : protocol.BoundedHorizon 4 := by
   intro state trace enough

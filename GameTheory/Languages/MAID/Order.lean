@@ -28,7 +28,7 @@ def assignmentNodeLaw
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (assignment : GameTheory.Languages.MAID.Assignment diagram)
-    (node : Node) : FinDist (diagram.Value node) := by
+    (node : Node) : PMF (diagram.Value node) := by
   match hkind : diagram.kind node with
   | .chance =>
       exact semantics.chanceLaw node hkind
@@ -44,8 +44,8 @@ def assignmentStep [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (assignment : GameTheory.Languages.MAID.Assignment diagram)
-    (node : Node) : FinDist (GameTheory.Languages.MAID.Assignment diagram) :=
-  FinDist.map
+    (node : Node) : PMF (GameTheory.Languages.MAID.Assignment diagram) :=
+  PMF.map
     (fun value =>
       Stage.Assignment.setOne assignment ⟨node, value⟩)
     (assignmentNodeLaw semantics policy assignment node)
@@ -129,26 +129,28 @@ theorem assignmentStep_comm [DecidableEq Node]
         (fun afterSecond =>
           assignmentStep semantics policy afterSecond first) := by
   unfold assignmentStep
-  rw [FinDist.bind_map, FinDist.bind_map]
+  rw [PMF.bind_map, PMF.bind_map]
+  simp only [Function.comp_def]
   simp_rw [assignmentNodeLaw_setOne_of_not_parent semantics policy
     assignment _ hfirstSecond]
   simp_rw [assignmentNodeLaw_setOne_of_not_parent semantics policy
     assignment _ hsecondFirst]
-  simp_rw [FinDist.map_eq_bind]
-  rw [FinDist.bind_comm]
-  apply FinDist.bind_congr
+  simp_rw [← PMF.bind_pure_comp]
+  rw [PMF.bind_comm]
+  apply bind_congr_on_support
   intro secondValue _
-  apply FinDist.bind_congr
+  apply bind_congr_on_support
   intro firstValue _
-  rw [setOne_comm assignment firstValue secondValue hne]
+  simp only [Function.comp_def]
+  exact congrArg PMF.pure (setOne_comm assignment firstValue secondValue hne)
 
 /-- Sequentially execute a node list on a typed assignment. -/
 def assignmentRun [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram) :
     List Node → GameTheory.Languages.MAID.Assignment diagram →
-      FinDist (GameTheory.Languages.MAID.Assignment diagram)
-  | [], assignment => FinDist.pure assignment
+      PMF (GameTheory.Languages.MAID.Assignment diagram)
+  | [], assignment => PMF.pure assignment
   | node :: rest, assignment =>
       (assignmentStep semantics policy assignment node).bind
         (assignmentRun semantics policy rest)
@@ -171,12 +173,12 @@ theorem assignmentRun_swap_adjacent [DecidableEq Node]
   induction before generalizing assignment with
   | nil =>
       simp only [List.nil_append, assignmentRun]
-      rw [← FinDist.bind_bind, ← FinDist.bind_bind,
+      rw [← PMF.bind_bind, ← PMF.bind_bind,
         assignmentStep_comm semantics policy assignment first second
           hne hfirstSecond hsecondFirst]
   | cons node rest ih =>
       simp only [List.cons_append, assignmentRun]
-      apply FinDist.bind_congr
+      apply bind_congr_on_support
       intro afterNode _
       exact ih afterNode
 
@@ -217,7 +219,7 @@ theorem assignmentRun_move_left [DecidableEq Node]
             (fun afterOther =>
               assignmentRun semantics policy
                 (node :: rest ++ after) afterOther) := by
-            apply FinDist.bind_congr
+            apply bind_congr_on_support
             intro afterOther _
             exact ih hrest afterOther
         _ =
@@ -320,7 +322,7 @@ theorem assignmentRun_eq_of_perm
           assignmentRun semantics policy
             (node :: rest) assignment := by
             simp only [assignmentRun]
-            apply FinDist.bind_congr
+            apply bind_congr_on_support
             intro afterNode _
             exact (ih (before ++ after) hrestPerm hrestNodup
               hrestOrder hremainingOrder afterNode).symm
@@ -426,17 +428,17 @@ theorem map_assignment_serialStep
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length) :
-    FinDist.map (Stage.assignment topological semantics)
+    PMF.map (Stage.assignment topological semantics)
         (serialStep topological semantics policy state hpending) =
       assignmentStep semantics policy
         (state.assignment topological semantics)
         (state.pendingNode topological hpending) := by
   unfold serialStep assignmentStep
-  rw [FinDist.map_comp,
+  rw [PMF.map_comp,
     serialNodeLaw_eq_assignmentNodeLaw topological semantics policy
       state hpending]
   apply congrArg (fun f =>
-    FinDist.map f
+    PMF.map f
       (assignmentNodeLaw semantics policy
         (state.assignment topological semantics)
         (state.pendingNode topological hpending)))
@@ -453,7 +455,7 @@ theorem map_assignment_serialRun
     (policy : GameTheory.Languages.MAID.Policy diagram) :
     ∀ (fuel : ℕ) (state : Stage diagram topological),
       (topological.order.drop state.path.length).length = fuel →
-      FinDist.map (Stage.assignment topological semantics)
+      PMF.map (Stage.assignment topological semantics)
           (serialRun topological semantics policy fuel state) =
         assignmentRun semantics policy
           (topological.order.drop state.path.length)
@@ -465,7 +467,7 @@ theorem map_assignment_serialRun
       have hempty :
           topological.order.drop state.path.length = [] :=
         List.length_eq_zero_iff.mp hremaining
-      rw [serialRun, FinDist.map_pure, hempty, assignmentRun]
+      rw [serialRun, PMF.pure_map, hempty, assignmentRun]
   | succ fuel ih =>
       intro state hremaining
       have hterminal :
@@ -486,14 +488,15 @@ theorem map_assignment_serialRun
             (state.path.length + 1)).length = fuel := by
         simp only [List.length_drop] at hremaining ⊢
         omega
-      rw [serialRun, dite_eq_right hterminal, FinDist.map_bind,
+      rw [serialRun, dite_eq_right hterminal, PMF.map_bind,
         hdrop, assignmentRun]
       unfold serialStep assignmentStep
-      rw [FinDist.bind_map, FinDist.bind_map,
+      rw [PMF.bind_map, PMF.bind_map,
         serialNodeLaw_eq_assignmentNodeLaw topological semantics
           policy state hpending]
-      apply FinDist.bind_congr
+      apply bind_congr_on_support
       intro value _
+      simp only [Function.comp_def]
       rw [ih (state.advance topological hpending value)]
       · simp only [Stage.advance_length]
         rw [assignment_advance topological semantics state hpending value]
@@ -507,10 +510,10 @@ theorem serialRun_topological_order_independent
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (first second :
       GameTheory.Math.DAG.TopologicalOrder diagram.parents) :
-    FinDist.map (Stage.assignment first semantics)
+    PMF.map (Stage.assignment first semantics)
         (serialRun first semantics policy first.order.length
           (Stage.initial first)) =
-      FinDist.map (Stage.assignment second semantics)
+      PMF.map (Stage.assignment second semantics)
         (serialRun second semantics policy second.order.length
           (Stage.initial second)) := by
   rw [map_assignment_serialRun first semantics policy
@@ -540,7 +543,7 @@ theorem behavioralJoint_eq_serialJointLaw
   have hpending :
       state.path.length < topological.order.length :=
     (state.not_terminal_iff topological).mp hterminal
-  apply FinDist.map_injective
+  apply pmf_map_injective
     (f := fun joint => joint.1) Subtype.val_injective
   let node := state.pendingNode topological hpending
   match hkind : diagram.kind node with
@@ -551,11 +554,11 @@ theorem behavioralJoint_eq_serialJointLaw
         trace hterminal
         (inactive_of_pending_chance topological state
           hpending hkind),
-        FinDist.map_pure]
+        PMF.pure_map]
       unfold serialJointLaw
       dsimp only
       split
-      next => rw [FinDist.map_pure]
+      next => rw [PMF.pure_map]
       next owner hdecision =>
         rw [hkind] at hdecision
         contradiction
@@ -571,7 +574,7 @@ theorem behavioralJoint_eq_serialJointLaw
         (information topological semantics)
         (behavioralProfile topological semantics policy)
         trace hterminal owner hunique,
-        FinDist.map_comp]
+        PMF.map_comp]
       let jointOfOption :
           Option (Action diagram owner) →
             (other : Player) → Option (Action diagram other) :=
@@ -609,11 +612,11 @@ theorem behavioralJoint_eq_serialJointLaw
         · subst other
           rfl
         · simp [jointOfOption, howner]
-      rw [hfactor, ← FinDist.map_comp]
+      rw [hfactor, ← PMF.map_comp]
       have hinfoAction :=
         congrArg
           (fun view =>
-            FinDist.map (fun choice => choice.1)
+            PMF.map (fun choice => choice.1)
               (behavioralPolicy topological semantics policy owner view))
           (infoOf_eq_viewOf topological semantics owner trace)
       rw [show behavioralProfile topological semantics policy owner =
@@ -627,8 +630,8 @@ theorem behavioralJoint_eq_serialJointLaw
         viewOf_eq_acting topological semantics owner state
           (pending_eq_some topological hpending) hkind
       rw [hview, behavioralPolicy, ownerBehavioralPolicy.eq_def,
-        FinDist.map_comp,
-        FinDist.map_comp]
+        PMF.map_comp,
+        PMF.map_comp]
       unfold serialJointLaw
       dsimp only
       split
@@ -640,7 +643,7 @@ theorem behavioralJoint_eq_serialJointLaw
           GameTheory.Languages.MAID.NodeKind.decision.inj
             (hdecision.symm.trans hkind)
         subst activeOwner
-        rw [FinDist.map_comp]
+        rw [PMF.map_comp]
         congr 1
 
 /-- One actual behavioral step of the compiled EFG is one serialized source
@@ -677,7 +680,7 @@ theorem map_state_runBehavioralFrom_eq_serialRun
     (policy : GameTheory.Languages.MAID.Policy diagram) :
     ∀ (fuel : ℕ)
       (history : (execution topological semantics).History),
-      FinDist.map ExecutionProtocol.History.state
+      PMF.map ExecutionProtocol.History.state
           ((information topological semantics).runBehavioralFrom
             (behavioralProfile topological semantics policy)
             fuel history) =
@@ -688,7 +691,7 @@ theorem map_state_runBehavioralFrom_eq_serialRun
       intro history
       rw [InformationModel.runBehavioralFrom,
         ExecutionProtocol.runRandomizedFor_zero, serialRun,
-        FinDist.map_pure]
+        PMF.pure_map]
   | succ fuel ih =>
       intro history
       by_cases hterminal :
@@ -698,14 +701,14 @@ theorem map_state_runBehavioralFrom_eq_serialRun
               topological.order.length := hterminal
         rw [InformationModel.runBehavioralFrom,
           ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterminal,
-          FinDist.map_pure, serialRun, dite_eq_left hpath]
+          PMF.pure_map, serialRun, dite_eq_left hpath]
       · have hpath :
             history.state.path.length ≠
               topological.order.length := hterminal
         rw [InformationModel.runBehavioralFrom_succ_of_not_terminal
             (information topological semantics)
             (behavioralProfile topological semantics policy) fuel hterminal,
-          FinDist.map_bind, serialRun, dite_eq_right hpath]
+          PMF.map_bind, serialRun, dite_eq_right hpath]
         calc
           _ =
               ((information topological semantics).behavioralJoint
@@ -715,10 +718,10 @@ theorem map_state_runBehavioralFrom_eq_serialRun
                   ((execution topological semantics).step
                     history.state draw).bind
                     (serialRun topological semantics policy fuel)) := by
-              apply FinDist.bind_congr
+              apply bind_congr_on_support
               intro draw _
-              rw [FinDist.map_bindOnSupport]
-              exact FinDist.bindOnSupport_eq_bind_of_eq_on_support
+              rw [map_bindOnSupport]
+              exact bindOnSupport_eq_bind_of_eq_on_support _
                 fun _ realized => ih (history.extend draw.2 realized)
           _ =
               (((information topological semantics).behavioralJoint
@@ -728,7 +731,7 @@ theorem map_state_runBehavioralFrom_eq_serialRun
                     (execution topological semantics).step
                       history.state draw)).bind
                 (serialRun topological semantics policy fuel) := by
-              rw [FinDist.bind_bind]
+              rw [PMF.bind_bind]
           _ =
               (serialStep topological semantics policy history.state
                 ((history.state.not_terminal_iff topological).mp
@@ -745,13 +748,13 @@ theorem behavioralRun_topological_order_independent
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (first second :
       GameTheory.Math.DAG.TopologicalOrder diagram.parents) :
-    FinDist.map
+    PMF.map
         (fun history =>
           Stage.assignment first semantics history.state)
         ((information first semantics).runBehavioral
           (behavioralProfile first semantics policy)
           first.order.length) =
-      FinDist.map
+      PMF.map
         (fun history =>
           Stage.assignment second semantics history.state)
         ((information second semantics).runBehavioral
@@ -761,26 +764,26 @@ theorem behavioralRun_topological_order_independent
     map_state_runBehavioralFrom_eq_serialRun first semantics
       policy first.order.length (execution first semantics).initHistory
   have hfirstAssignment :=
-    congrArg (FinDist.map (Stage.assignment first semantics))
+    congrArg (PMF.map (Stage.assignment first semantics))
       hfirstState
-  rw [FinDist.map_comp] at hfirstAssignment
+  rw [PMF.map_comp] at hfirstAssignment
   have hsecondState :=
     map_state_runBehavioralFrom_eq_serialRun second semantics
       policy second.order.length (execution second semantics).initHistory
   have hsecondAssignment :=
-    congrArg (FinDist.map (Stage.assignment second semantics))
+    congrArg (PMF.map (Stage.assignment second semantics))
       hsecondState
-  rw [FinDist.map_comp] at hsecondAssignment
+  rw [PMF.map_comp] at hsecondAssignment
   calc
     _ =
-        FinDist.map (Stage.assignment first semantics)
+        PMF.map (Stage.assignment first semantics)
           (serialRun first semantics policy first.order.length
             (Stage.initial first)) := by
       simpa [
         GameTheory.Protocol.InformationModel.runBehavioral,
         Function.comp_def] using hfirstAssignment
     _ =
-        FinDist.map (Stage.assignment second semantics)
+        PMF.map (Stage.assignment second semantics)
           (serialRun second semantics policy second.order.length
             (Stage.initial second)) :=
       serialRun_topological_order_independent semantics policy

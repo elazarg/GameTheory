@@ -59,6 +59,7 @@ fields. `InformationModel extends InfoSignals` keeps that a private detail:
 
 import GameTheory.Protocol.Randomized
 import GameTheory.Core.Signature
+import GameTheory.Math.Probability.Product
 
 noncomputable section
 
@@ -535,11 +536,11 @@ def historyChooser (policies : (i : ι) → M.Policy i) : E.HistoryChooser :=
   fun h hterm => ⟨M.jointAt policies h.trace, M.jointAt_legal policies h.trace hterm⟩
 
 /-- The law over histories a profile induces from a given history. -/
-def runFrom (policies : (i : ι) → M.Policy i) (fuel : ℕ) (h : E.History) : FinDist E.History :=
+def runFrom (policies : (i : ι) → M.Policy i) (fuel : ℕ) (h : E.History) : PMF E.History :=
   E.runHistoryFor (M.historyChooser policies) fuel h
 
 /-- The law over histories a profile induces from the start of play. -/
-def run (policies : (i : ι) → M.Policy i) (fuel : ℕ) : FinDist E.History :=
+def run (policies : (i : ι) → M.Policy i) (fuel : ℕ) : PMF E.History :=
   M.runFrom policies fuel E.initHistory
 
 /-- Only the actions a profile takes matter, not the certificates witnessing
@@ -578,7 +579,7 @@ theorem runFrom_congr_of_act_eq {first second : (i : ι) → M.Policy i} :
       rw [runFrom, runFrom,
         ExecutionProtocol.runHistoryFor_succ_of_not_terminal _ fuel hterm,
         ExecutionProtocol.runHistoryFor_succ_of_not_terminal _ fuel hterm, hhere]
-      refine FinDist.bindOnSupport_congr fun target realized => ?_
+      refine bindOnSupport_congr _ fun target realized => ?_
       exact ih _ fun h' hreach hterm' i => hagree h' (.step _ _ realized hreach) hterm' i
 
 /-! ### Acting twice, and what forbids it
@@ -692,7 +693,7 @@ committed by its single draw. -/
 This is transparent for the same reason as `Policy`: coordinatewise product
 constructions should inherit the canonical dependent-function API. -/
 abbrev BehavioralPolicy (i : ι) : Type _ :=
-  (info : M.InfoState i) → FinDist (M.Choice i info)
+  (info : M.InfoState i) → PMF (M.Choice i info)
 
 /-- The signature for local randomization at information states. It has the
 same history outcomes as the pure-policy strategic form. -/
@@ -701,13 +702,13 @@ abbrev behavioralSignature : GameSignature ι where
   Outcome := E.History
 
 /-- Global randomization: one law over deterministic policies. -/
-abbrev MixedPolicy (i : ι) : Type _ := FinDist (M.Policy i)
+abbrev MixedPolicy (i : ι) : Type _ := PMF (M.Policy i)
 
 variable {M} in
 /-- A deterministic policy read as a behavioral one that never really
 randomizes. -/
 def Policy.toBehavioral {i : ι} (policy : M.Policy i) : M.BehavioralPolicy i :=
-  fun info => FinDist.pure (policy info)
+  fun info => PMF.pure (policy info)
 
 /-- Hence any two behavioral policies agree there. -/
 theorem behavioral_eq_of_not_active {i : ι} (first second : M.BehavioralPolicy i)
@@ -716,8 +717,8 @@ theorem behavioral_eq_of_not_active {i : ι} (first second : M.BehavioralPolicy 
   have := M.subsingleton_choice_of_not_active trace hinactive
   obtain ⟨choice⟩ : Nonempty (M.Choice i (M.infoOf i trace)) :=
     ⟨⟨none, (M.menu_adequate i trace none).mpr hinactive⟩⟩
-  rw [FinDist.eq_pure_of_subsingleton (first (M.infoOf i trace)) choice,
-    FinDist.eq_pure_of_subsingleton (second (M.infoOf i trace)) choice]
+  rw [eq_pure_of_subsingleton (first (M.infoOf i trace)) choice,
+    eq_pure_of_subsingleton (second (M.infoOf i trace)) choice]
 
 section Profiles
 
@@ -730,12 +731,12 @@ action legal, so randomizing needs no legality argument the deterministic case
 did not already have. -/
 def behavioralJoint (policies : (i : ι) → M.BehavioralPolicy i) {state : E.State}
     (trace : Trace E state) (hterm : ¬ E.terminal state) :
-    FinDist { joint : ∀ i, Option (E.Action i) // E.Legal state joint } :=
-  FinDist.map
+    PMF { joint : ∀ i, Option (E.Action i) // E.Legal state joint } :=
+  PMF.map
     (fun draws => ⟨fun i => (draws i).1,
       ExecutionProtocol.legal_of_legalOption hterm fun i =>
         (M.menu_adequate i trace (draws i).1).mp (draws i).2⟩)
-    (FinDist.pi fun i => policies i (M.infoOf i trace))
+    (independentProduct fun i => policies i (M.infoOf i trace))
 
 /-- Behavioral profiles that agree at one information history induce the same
 local joint-action law there.  This is the one-step congruence used by the
@@ -745,7 +746,7 @@ theorem behavioralJoint_congr {first second : (i : ι) → M.BehavioralPolicy i}
     (hagree : ∀ i, first i (M.infoOf i trace) = second i (M.infoOf i trace)) :
     M.behavioralJoint first trace hterm = M.behavioralJoint second trace hterm := by
   rw [behavioralJoint, behavioralJoint]
-  exact congrArg _ (congrArg FinDist.pi (funext hagree))
+  exact congrArg _ (congrArg independentProduct (funext hagree))
 
 /-- A legal joint action belongs to the behavioral joint support whenever each
 of its local choices belongs to the corresponding behavioral support. -/
@@ -765,8 +766,10 @@ theorem mem_support_behavioralJoint
   let draws : (i : ι) → M.Choice i (M.infoOf i trace) :=
     fun i => ⟨joint i, (M.menu_adequate i trace (joint i)).mpr
       (E.legalOption_of_legal isLegal i)⟩
-  rw [behavioralJoint, FinDist.support_map]
-  refine ⟨draws, FinDist.mem_support_pi.mpr ?_, ?_⟩
+  rw [behavioralJoint, PMF.support_map]
+  refine ⟨draws,
+    (independentProduct_support_iff
+      (fun i => policies i (M.infoOf i trace)) draws).mpr ?_, ?_⟩
   · exact hsupport
   · apply Subtype.ext
     rfl
@@ -784,7 +787,7 @@ theorem behavioralJoint_eq_pure_of_no_active
     (hterminal : ¬ E.terminal state)
     (hinactive : ∀ i, ¬ E.active state i) :
     M.behavioralJoint policies trace hterminal =
-      FinDist.pure
+      PMF.pure
         ⟨fun _ => none,
           ExecutionProtocol.legal_of_legalOption hterminal
             hinactive⟩ := by
@@ -794,13 +797,13 @@ theorem behavioralJoint_eq_pure_of_no_active
       (hinactive i)⟩
   have hpolicy (i : ι) :
       policies i (M.infoOf i trace) =
-        FinDist.pure (idle i) := by
+        PMF.pure (idle i) := by
     have : Subsingleton (M.Choice i (M.infoOf i trace)) :=
       M.subsingleton_choice_of_not_active trace (hinactive i)
-    exact FinDist.eq_pure_of_subsingleton _ (idle i)
+    exact eq_pure_of_subsingleton _ (idle i)
   unfold behavioralJoint
   simp_rw [hpolicy]
-  rw [FinDist.pi_pure, FinDist.map_pure]
+  rw [independentProduct_pure, PMF.pure_map]
 
 /-- If at most one player can act, the behavioral product is that player's
 local law embedded in the only possibly active joint coordinate. -/
@@ -811,7 +814,7 @@ theorem behavioralJoint_eq_map_of_at_most_one_active
     (active : ι)
     (hunique : ∀ i, E.active state i → i = active) :
     M.behavioralJoint policies trace hterminal =
-      FinDist.map
+      PMF.map
         (fun choice : M.Choice active (M.infoOf active trace) =>
           ⟨E.singletonJoint active choice.1,
             ExecutionProtocol.legal_of_legalOption hterminal
@@ -828,40 +831,54 @@ theorem behavioralJoint_eq_map_of_at_most_one_active
                     dite_false, LegalOption]
                     using hinactive⟩)
         (policies active (M.infoOf active trace)) := by
-  let idle :
-      (other : {other : ι // other ≠ active}) →
-        M.Choice other.1 (M.infoOf other.1 trace) :=
-    fun other => ⟨none,
-      (M.menu_adequate other.1 trace none).mpr <| by
+  let embed : M.Choice active (M.infoOf active trace) →
+      { joint : ∀ i, Option (E.Action i) // E.Legal state joint } :=
+    fun choice =>
+      ⟨E.singletonJoint active choice.1,
+        ExecutionProtocol.legal_of_legalOption hterminal fun other => by
+          by_cases howner : other = active
+          · subst other
+            simpa using (M.menu_adequate active trace choice.1).mp choice.2
+          · have hinactive : ¬ E.active state other := by
+              intro hother
+              exact howner (hunique other hother)
+            simpa only [ExecutionProtocol.singletonJoint, howner,
+              dite_false, LegalOption] using hinactive⟩
+  let assemble : ((i : ι) → M.Choice i (M.infoOf i trace)) →
+      { joint : ∀ i, Option (E.Action i) // E.Legal state joint } :=
+    fun draws => ⟨fun i => (draws i).1,
+      ExecutionProtocol.legal_of_legalOption hterminal fun i =>
+        (M.menu_adequate i trace (draws i).1).mp (draws i).2⟩
+  have hcollapse (draws : (i : ι) → M.Choice i (M.infoOf i trace)) :
+      assemble draws = embed (draws active) := by
+    apply Subtype.ext
+    funext other
+    by_cases howner : other = active
+    · subst other
+      simp [assemble, embed, ExecutionProtocol.singletonJoint]
+    · have hinactive : ¬ E.active state other := by
         intro hother
-        exact other.2 (hunique other.1 hother)⟩
-  have hpolicy (other : {other : ι // other ≠ active}) :
-      policies other.1 (M.infoOf other.1 trace) =
-        FinDist.pure (idle other) := by
-    have hinactive : ¬ E.active state other.1 := by
-      intro hother
-      exact other.2 (hunique other.1 hother)
-    have :
-        Subsingleton
-          (M.Choice other.1 (M.infoOf other.1 trace)) :=
-      M.subsingleton_choice_of_not_active trace hinactive
-    exact FinDist.eq_pure_of_subsingleton _ (idle other)
-  unfold behavioralJoint
-  rw [FinDist.pi_eq_map_product active, FinDist.map_comp]
-  simp_rw [hpolicy]
-  rw [FinDist.pi_pure]
-  unfold FinDist.product
-  simp only [FinDist.map_eq_bind,
-    FinDist.bind_bind, FinDist.pure_bind]
-  apply FinDist.bind_congr
-  intro choice _
-  apply congrArg FinDist.pure
-  apply Subtype.ext
-  funext other
-  by_cases howner : other = active
-  · subst other
-    simp
-  · simp [howner, idle]
+        exact howner (hunique other hother)
+      have hnone := LegalOption.eq_none_of_inactive (draws other).1
+        ((M.menu_adequate other trace (draws other).1).mp (draws other).2)
+        hinactive
+      simp [assemble, embed, ExecutionProtocol.singletonJoint, howner, hnone]
+  have hfunctions : assemble = embed ∘ (fun draws => draws active) := by
+    funext draws
+    exact hcollapse draws
+  calc
+    M.behavioralJoint policies trace hterminal =
+        PMF.map assemble
+          (independentProduct fun i => policies i (M.infoOf i trace)) := rfl
+    _ = PMF.map (embed ∘ fun draws => draws active)
+          (independentProduct fun i => policies i (M.infoOf i trace)) := by
+      rw [hfunctions]
+    _ = PMF.map embed
+          ((independentProduct fun i => policies i (M.infoOf i trace)).map
+            (fun draws => draws active)) := (PMF.map_comp _ _ _).symm
+    _ = PMF.map embed (policies active (M.infoOf active trace)) := by
+      rw [independentProduct_map_eval]
+    _ = _ := rfl
 
 end SingleMoverBehavioralJoint
 
@@ -871,7 +888,7 @@ def randomizedChooser (policies : (i : ι) → M.BehavioralPolicy i) : E.Randomi
 
 /-- The law over histories a behavioral profile induces from a given history. -/
 def runBehavioralFrom (policies : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) (h : E.History) :
-    FinDist E.History :=
+    PMF E.History :=
   E.runRandomizedFor (M.randomizedChooser policies) fuel h
 
 /-- Behavioral play started from a terminal history is absorbed there for
@@ -880,7 +897,7 @@ every fuel amount. -/
 theorem runBehavioralFrom_of_terminal
     (policies : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) {h : E.History}
     (hterm : E.terminal h.state) :
-    M.runBehavioralFrom policies fuel h = FinDist.pure h :=
+    M.runBehavioralFrom policies fuel h = PMF.pure h :=
   E.runRandomizedFor_of_terminal (M.randomizedChooser policies) fuel hterm
 
 /-- One nonterminal behavioral step first draws the information-local joint
@@ -896,7 +913,7 @@ theorem runBehavioralFrom_succ_of_not_terminal
   E.runRandomizedFor_succ_of_not_terminal (M.randomizedChooser policies) fuel hterm
 
 /-- The law over histories a behavioral profile induces from the start. -/
-def runBehavioral (policies : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) : FinDist E.History :=
+def runBehavioral (policies : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) : PMF E.History :=
   M.runBehavioralFrom policies fuel E.initHistory
 
 /-- A behavioral profile with full local support reaches every semantically
@@ -926,9 +943,9 @@ theorem exists_mem_support_runBehavioralFrom_of_reachesWithin
       have hnext :
           next ∈ (M.runBehavioralFrom policies 1 history).support := by
         rw [M.runBehavioralFrom_succ_of_not_terminal policies 0 hterm,
-          FinDist.support_bind]
+          PMF.support_bind]
         refine Set.mem_iUnion₂.mpr ⟨⟨joint, isLegal⟩, hdraw, ?_⟩
-        rw [FinDist.support_bindOnSupport]
+        rw [PMF.support_bindOnSupport]
         refine Set.mem_iUnion₂.mpr ⟨reached, realized, ?_⟩
         simp [next, runBehavioralFrom]
       refine ⟨1 + elapsed, by omega, ?_⟩
@@ -937,7 +954,7 @@ theorem exists_mem_support_runBehavioralFrom_of_reachesWithin
             (M.runBehavioralFrom policies elapsed) from
         E.runRandomizedFor_add (M.randomizedChooser policies)
           1 elapsed history,
-        FinDist.support_bind]
+        PMF.support_bind]
       exact Set.mem_iUnion₂.mpr ⟨next, hnext, hlater⟩
 
 /-- Behavioral play composes across adjacent fuel blocks. -/
@@ -970,7 +987,7 @@ theorem runBehavioralFrom_bound_add
     M.runBehavioralFrom profile (bound + extra) start =
       M.runBehavioralFrom profile bound start := by
   rw [M.runBehavioralFrom_add]
-  refine Eq.trans (FinDist.bind_congr fun next hnext => ?_) (FinDist.bind_pure _)
+  refine Eq.trans (bind_congr_on_support _ fun next hnext => ?_) (PMF.bind_pure _)
   exact M.runBehavioralFrom_of_terminal profile extra
     (M.runBehavioralFrom_terminal_of_bound profile hbound start next hnext)
 
@@ -996,10 +1013,10 @@ theorem runBehavioralFrom_congr {first second : (i : ι) → M.BehavioralPolicy 
         M.behavioralJoint_congr h.trace hterm fun i => hagree h (.refl _ _) hterm i
       rw [M.runBehavioralFrom_succ_of_not_terminal first fuel hterm,
         M.runBehavioralFrom_succ_of_not_terminal second fuel hterm, hhere]
-      refine FinDist.bind_congr fun draw _ => FinDist.bindOnSupport_congr fun target realized => ?_
+      refine bind_congr_on_support _ fun draw _ => bindOnSupport_congr _ fun target realized => ?_
       exact ih _ fun h' hreach hterm' i => hagree h' (.step _ _ realized hreach) hterm' i
 
-/-- Behavioral runner congruence on the finite supports actually exposed by one
+/-- Behavioral runner congruence on the supports actually exposed by one
 bounded run. Unlike `runBehavioralFrom_congr`, this does not quantify over every
 legally reachable counterfactual history. -/
 theorem runBehavioralFrom_congr_on_support
@@ -1032,8 +1049,8 @@ theorem runBehavioralFrom_congr_on_support
         rw [M.runBehavioralFrom_succ_of_not_terminal first fuel hterm,
           M.runBehavioralFrom_succ_of_not_terminal second fuel hterm,
           hhere]
-        refine FinDist.bind_congr fun draw hdraw =>
-          FinDist.bindOnSupport_congr fun target realized => ?_
+        refine bind_congr_on_support _ fun draw hdraw =>
+          bindOnSupport_congr _ fun target realized => ?_
         let next := start.extend draw.2 realized
         have hdrawFirst :
             draw ∈ (M.behavioralJoint first start.trace hterm).support := by
@@ -1042,27 +1059,27 @@ theorem runBehavioralFrom_congr_on_support
         have hnext :
             next ∈ (M.runBehavioralFrom first 1 start).support := by
           rw [M.runBehavioralFrom_succ_of_not_terminal first 0 hterm,
-            FinDist.support_bind]
+            PMF.support_bind]
           refine Set.mem_iUnion₂.mpr ⟨draw, hdrawFirst, ?_⟩
-          rw [FinDist.support_bindOnSupport]
+          rw [PMF.support_bindOnSupport]
           refine Set.mem_iUnion₂.mpr ⟨target, realized, ?_⟩
           simp [next, runBehavioralFrom]
         apply ih next
         intro elapsed helapsed later hlater hlaterTerm i
         apply hagree (1 + elapsed) (by omega) later
         rw [M.runBehavioralFrom_add first 1 elapsed start,
-          FinDist.support_bind]
+          PMF.support_bind]
         exact Set.mem_iUnion₂.mpr ⟨next, hnext, hlater⟩
         exact hlaterTerm
 
 /-- The law a mixed profile induces: draw a deterministic profile once, then
 play it. The single draw is the whole difference from the behavioral case. -/
 def runMixedFrom (mixed : (i : ι) → M.MixedPolicy i) (fuel : ℕ) (h : E.History) :
-    FinDist E.History :=
-  (FinDist.pi mixed).bind fun policies => M.runFrom policies fuel h
+    PMF E.History :=
+  (independentProduct mixed).bind fun policies => M.runFrom policies fuel h
 
 /-- The law a mixed profile induces from the start. -/
-def runMixed (mixed : (i : ι) → M.MixedPolicy i) (fuel : ℕ) : FinDist E.History :=
+def runMixed (mixed : (i : ι) → M.MixedPolicy i) (fuel : ℕ) : PMF E.History :=
   M.runMixedFrom mixed fuel E.initHistory
 
 /-- **Behavioral play extends deterministic play.** Reading a deterministic
@@ -1075,7 +1092,7 @@ theorem runBehavioralFrom_toBehavioral (policies : (i : ι) → M.Policy i)
       (M.historyChooser policies).toRandomized := by
     funext h' hterm
     rw [randomizedChooser, behavioralJoint, ExecutionProtocol.HistoryChooser.toRandomized]
-    simp only [Policy.toBehavioral, FinDist.pi_pure, FinDist.map_pure]
+    simp only [Policy.toBehavioral, independentProduct_pure, PMF.pure_map]
     rfl
   rw [runBehavioralFrom, hchooser, runFrom, ExecutionProtocol.runRandomizedFor_toRandomized]
 
@@ -1083,1129 +1100,10 @@ theorem runBehavioralFrom_toBehavioral (policies : (i : ι) → M.Policy i)
 other route. -/
 theorem runMixedFrom_pure (policies : (i : ι) → M.Policy i)
     (fuel : ℕ) (h : E.History) :
-    M.runMixedFrom (fun i => FinDist.pure (policies i)) fuel h = M.runFrom policies fuel h := by
-  rw [runMixedFrom, FinDist.pi_pure, FinDist.pure_bind]
+    M.runMixedFrom (fun i => PMF.pure (policies i)) fuel h = M.runFrom policies fuel h := by
+  rw [runMixedFrom, independentProduct_pure, PMF.pure_bind]
 
 end Profiles
-
-/-! ### Reading a single draw back as local randomization
-
-A mixed policy answers an information state once, so the local law it induces
-there is the law of that answer *given* that the draw could have brought play to
-that information state. The condition is a statement about the player's own
-record, and recall is what makes that record a function of the information state
-rather than of a particular history in it. -/
-
-open Classical in
-/-- The record a player's own moves leave at an information state, read off some
-history that produces it. Which history is read does not matter under recall,
-which is the theorem below; without recall this is merely some choice. -/
-noncomputable def recordAt (i : ι) (info : M.InfoState i) :
-    List (M.InfoState i × E.Action i) :=
-  if hreached : ∃ h : E.History, M.infoOf i h.trace = info then
-    M.ownPlay i (Classical.choose hreached).trace
-  else []
-
-/-- **What recall is for.** With it, the record at an information state is the
-record along *every* history that produces it, so the arbitrary choice above is
-no choice at all. -/
-theorem recordAt_eq_ownPlay (hrecall : M.PerfectRecall) (i : ι) (h : E.History) :
-    M.recordAt i (M.infoOf i h.trace) = M.ownPlay i h.trace := by
-  have hreached : ∃ g : E.History, M.infoOf i g.trace = M.infoOf i h.trace := ⟨h, rfl⟩
-  rw [recordAt, dite_eq_left hreached]
-  exact hrecall i _ _ (Classical.choose_spec hreached)
-
-/-- The pure policies whose own choices match a record of past moves. -/
-def Consistent (i : ι) (record : List (M.InfoState i × E.Action i)) : Set (M.Policy i) :=
-  { policy | ∀ step ∈ record, (policy step.1).1 = some step.2 }
-
-/-- The pure policies that could have brought play to an information state. -/
-def ConsistentAt (i : ι) (info : M.InfoState i) : Set (M.Policy i) :=
-  M.Consistent i (M.recordAt i info)
-
-/-- **What the recall direction actually needs.** Two histories a player cannot
-tell apart constrain its policy the same way.
-
-This is weaker than recall, and the gap is not an artefact: recall compares the
-*records* two histories leave, while nothing downstream reads a record except
-through the set of policies it rules out. A player that forgets the order of its
-own past moves, or how many times it repeated one, still constrains its policy
-identically — so it fails recall and satisfies this. -/
-def ConstrainsAlike : Prop :=
-  ∀ (i : ι) {first second : E.State} (traceFirst : Trace E first) (traceSecond : Trace E second),
-    M.infoOf i traceFirst = M.infoOf i traceSecond →
-      M.Consistent i (M.ownPlay i traceFirst) = M.Consistent i (M.ownPlay i traceSecond)
-
-variable {M} in
-/-- Recall is the special case that compares the records themselves. -/
-theorem constrainsAlike_of_perfectRecall (hrecall : M.PerfectRecall) : M.ConstrainsAlike := by
-  intro i _ _ traceFirst traceSecond hinfo
-  rw [hrecall i traceFirst traceSecond hinfo]
-
-variable {M} in
-/-- **And the gap is real.** Records differing only in the order of a player's
-own moves rule out the same policies, so a player that forgets the order fails
-recall and still constrains alike. -/
-theorem consistent_eq_of_perm {i : ι} {first second : List (M.InfoState i × E.Action i)}
-    (hperm : first.Perm second) : M.Consistent i first = M.Consistent i second := by
-  ext policy
-  exact ⟨fun hpolicy step hstep => hpolicy step (hperm.mem_iff.mpr hstep),
-    fun hpolicy step hstep => hpolicy step (hperm.mem_iff.mp hstep)⟩
-
-variable {M} in
-/-- Under it, the constraint attached to an information state is the constraint
-along every history producing it — which is all the argument ever asks of the
-arbitrary choice inside `recordAt`. -/
-theorem consistentAt_eq_consistent_ownPlay (hconstrain : M.ConstrainsAlike) (i : ι)
-    (h : E.History) :
-    M.ConsistentAt i (M.infoOf i h.trace) = M.Consistent i (M.ownPlay i h.trace) := by
-  have hreached : ∃ g : E.History, M.infoOf i g.trace = M.infoOf i h.trace := ⟨h, rfl⟩
-  rw [ConsistentAt, recordAt, dite_eq_left hreached]
-  exact hconstrain i _ _ (Classical.choose_spec hreached)
-
-/-- A longer record is a stronger constraint. -/
-theorem consistent_subset_of_isSuffix {i : ι}
-    {shorter longer : List (M.InfoState i × E.Action i)} (hsuffix : shorter <:+ longer) :
-    M.Consistent i longer ⊆ M.Consistent i shorter :=
-  fun _ hpolicy step hstep => hpolicy step (hsuffix.subset hstep)
-
-/-- **What a step commits the player to, for the rest of play.** Having answered
-one information state, every policy still consistent with any later history
-answers it the same way. -/
-theorem consistentAt_subset_of_step (hconstrain : M.ConstrainsAlike) (i : ι) {h : E.History}
-    {joint : ∀ j, Option (E.Action j)} (isLegal : E.Legal h.state joint)
-    {target : E.State} (realized : target ∈ (E.step h.state ⟨joint, isLegal⟩).support)
-    {action : E.Action i} (hjoint : joint i = some action)
-    {fuel : ℕ} {later : E.History}
-    (hreach : ExecutionProtocol.ReachesWithin E fuel (h.extend isLegal realized) later) :
-    M.ConsistentAt i (M.infoOf i later.trace) ⊆
-      { policy : M.Policy i | (policy (M.infoOf i h.trace)).1 = some action } := by
-  intro policy hpolicy
-  have hstep : (M.infoOf i h.trace, action) ∈
-      M.ownPlay i (h.extend isLegal realized).trace := by
-    show _ ∈ M.ownPlay i (Trace.extend _ joint isLegal realized)
-    rw [InfoSignals.ownPlay_extend, hjoint]
-    exact List.mem_cons_self
-  rw [M.consistentAt_eq_consistent_ownPlay hconstrain i later] at hpolicy
-  exact hpolicy _ ((M.ownPlay_isSuffix_of_reachesWithin i hreach).subset hstep)
-
-variable {M} in
-open Classical in
-/-- A mixed policy read as a behavioral one: at each information state, the law
-of the action it prescribes there, conditioned on the policies that could have
-brought play to that information state.
-
-Where no such policy has positive mass the conditioning is undefined, and the
-reading falls back on a policy supplied for the purpose. A policy is the right
-thing to fall back on: it already chooses legally at every information state,
-including ones no history produces, where the menu law says nothing and the menu
-could otherwise be empty.
-
-The fallback is a parameter rather than a canonical choice because it must be
-*stable*: an argument that conditions the law as play advances compares the
-readings of a law and of that law conditioned, and a fallback read off the law's
-own support would move when the support shrinks. Holding one fixed says the
-reading is determined up to its behaviour where play never goes. -/
-noncomputable def MixedPolicy.toBehavioralWith {i : ι} (mixed : M.MixedPolicy i)
-    (fallback : M.Policy i) : M.BehavioralPolicy i := fun info =>
-  if hreachable : ∃ policy ∈ M.ConsistentAt i info, policy ∈ mixed.support then
-    FinDist.map (fun policy => policy info) (mixed.condOn (M.ConsistentAt i info) hreachable)
-  else FinDist.pure (fallback info)
-
-variable {M} in
-/-- The reading with nothing supplied: fall back on a policy the law itself gives
-mass to. -/
-noncomputable def MixedPolicy.toBehavioral {i : ι} (mixed : M.MixedPolicy i) :
-    M.BehavioralPolicy i :=
-  mixed.toBehavioralWith mixed.support_nonempty.choose
-
-variable {M} in
-/-- The degenerate case: a single draw that is not really random reads back as
-the policy it draws. Both branches give that answer, so nothing here depends on
-whether the information state was reachable at all. -/
-theorem MixedPolicy.toBehavioral_pure {i : ι} (policy : M.Policy i) :
-    MixedPolicy.toBehavioral (M := M) (FinDist.pure policy) = policy.toBehavioral := by
-  classical
-  funext info
-  rw [MixedPolicy.toBehavioral, MixedPolicy.toBehavioralWith]
-  split
-  · rw [FinDist.condOn_pure, FinDist.map_pure]
-    rfl
-  · have hchosen := (FinDist.pure policy : M.MixedPolicy i).support_nonempty.choose_spec
-    rw [FinDist.mem_support_pure] at hchosen
-    rw [hchosen]
-    rfl
-
-variable {M} in
-/-- Reading a deterministic policy with that same policy as the zero-mass
-fallback recovers its pointwise deterministic behavioral policy. -/
-theorem MixedPolicy.toBehavioralWith_pure_self {i : ι}
-    (policy : M.Policy i) :
-    MixedPolicy.toBehavioralWith (M := M) (FinDist.pure policy) policy =
-      policy.toBehavioral := by
-  classical
-  funext info
-  rw [MixedPolicy.toBehavioralWith]
-  split
-  · rw [FinDist.condOn_pure, FinDist.map_pure]
-    rfl
-  · rfl
-
-variable {M} in
-/-- A behavioral policy as a mixed one: draw the action for every information
-state in advance, independently. Whether the two laws agree is exactly the
-question above, and this construction is where it is asked.
-
-Scope: this draws for *every* information state, so it asks the player's
-information states to be finite in number. Use `BehavioralPolicy.toMixedOn`
-when only a supplied finite set should be predrawn, or the existential bounded
-runner theorems below when the ambient information carrier may be infinite. -/
-def BehavioralPolicy.toMixed {i : ι} [Fintype (M.InfoState i)]
-    (policy : M.BehavioralPolicy i) : M.MixedPolicy i :=
-  FinDist.pi policy
-
-variable {M} in
-/-- Predraw a behavioral policy on a supplied finite set of information states.
-The fallback supplies a deterministic answer everywhere else. Unlike
-`toMixed`, this operation does not require the ambient information-state
-carrier to be finite. -/
-def BehavioralPolicy.toMixedOn {i : ι} [DecidableEq (M.InfoState i)]
-    (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
-    (fallback : M.Policy i) : M.MixedPolicy i :=
-  FinDist.runDependent policy sites.toList fallback
-
-variable {M} in
-/-- The behavioral profile that has committed to one choice at one information
-state and is unchanged elsewhere.
-
-It is built from the same coordinate decomposition the product factorization
-uses, rather than by updating a dependent function pointwise. That is not only
-tidier: updating pointwise would transport a value along an equality of
-information states, and this layer keeps such transports out. -/
-def BehavioralPolicy.commit {i : ι} [DecidableEq (M.InfoState i)]
-    (policy : M.BehavioralPolicy i) (info : M.InfoState i) (choice : M.Choice i info) :
-    M.BehavioralPolicy i :=
-  (Equiv.piSplitAt info fun w => FinDist (M.Choice i w)).symm
-    (FinDist.pure choice, fun w => policy w.1)
-
-variable {M} in
-/-- The behavioral profile using a supplied law at one information state and
-the original laws everywhere else.  Like `commit`, this uses the coordinate
-split rather than a dependent pointwise update. -/
-def BehavioralPolicy.withLaw {i : ι} [DecidableEq (M.InfoState i)]
-    (policy : M.BehavioralPolicy i) (info : M.InfoState i)
-    (law : FinDist (M.Choice i info)) : M.BehavioralPolicy i :=
-  (Equiv.piSplitAt info fun w => FinDist (M.Choice i w)).symm
-    (law, fun w => policy w.1)
-
-variable {M} in
-@[simp]
-theorem BehavioralPolicy.commit_self {i : ι} [DecidableEq (M.InfoState i)]
-    (policy : M.BehavioralPolicy i) (info : M.InfoState i) (choice : M.Choice i info) :
-    policy.commit info choice info = FinDist.pure choice := by
-  simp [commit]
-
-variable {M} in
-@[simp]
-theorem BehavioralPolicy.commit_of_ne {i : ι} [DecidableEq (M.InfoState i)]
-    (policy : M.BehavioralPolicy i) (info : M.InfoState i) (choice : M.Choice i info)
-    {other : M.InfoState i} (hne : other ≠ info) :
-    policy.commit info choice other = policy other := by
-  simp [commit, hne]
-
-variable {M} in
-@[simp]
-theorem BehavioralPolicy.withLaw_self {i : ι} [DecidableEq (M.InfoState i)]
-    (policy : M.BehavioralPolicy i) (info : M.InfoState i)
-    (law : FinDist (M.Choice i info)) :
-    policy.withLaw info law info = law := by
-  simp [withLaw]
-
-variable {M} in
-@[simp]
-theorem BehavioralPolicy.withLaw_of_ne {i : ι} [DecidableEq (M.InfoState i)]
-    (policy : M.BehavioralPolicy i) (info : M.InfoState i)
-    (law : FinDist (M.Choice i info))
-    {other : M.InfoState i} (hne : other ≠ info) :
-    policy.withLaw info law other = policy other := by
-  simp [withLaw, hne]
-
-variable {M} in
-/-- Reinstalling a behavioral policy's own local law changes nothing. -/
-theorem BehavioralPolicy.withLaw_eq_self {i : ι}
-    [DecidableEq (M.InfoState i)]
-    (policy : M.BehavioralPolicy i) (info : M.InfoState i) :
-    policy.withLaw info (policy info) = policy := by
-  funext other
-  by_cases hsame : other = info
-  · subst other
-    rw [BehavioralPolicy.withLaw_self]
-  · rw [BehavioralPolicy.withLaw_of_ne _ _ _ hsame]
-
-variable {M} in
-/-- A pure commitment at an information state forgets whichever law had just
-been installed at that same state. -/
-theorem BehavioralPolicy.withLaw_commit {i : ι}
-    [DecidableEq (M.InfoState i)]
-    (policy : M.BehavioralPolicy i) (info : M.InfoState i)
-    (law : FinDist (M.Choice i info)) (choice : M.Choice i info) :
-    (policy.withLaw info law).commit info choice =
-      policy.commit info choice := by
-  funext other
-  by_cases hsame : other = info
-  · subst other
-    rw [BehavioralPolicy.commit_self, BehavioralPolicy.commit_self]
-  · rw [BehavioralPolicy.commit_of_ne _ _ _ hsame,
-      BehavioralPolicy.commit_of_ne _ _ _ hsame,
-      BehavioralPolicy.withLaw_of_ne _ _ _ hsame]
-
-variable {M} in
-/-- **Committing keeps the profile mixed.** Re-extending the rest of a drawn
-policy with a fixed choice at one information state is again the mixed reading
-of a behavioral profile — the one that has committed there.
-
-This is what lets an induction over play stay on full profiles: a coordinate
-already consulted becomes a point mass rather than disappearing from the index,
-and point masses need no bookkeeping. -/
-theorem BehavioralPolicy.toMixed_commit {i : ι} [Fintype (M.InfoState i)]
-    [DecidableEq (M.InfoState i)] (policy : M.BehavioralPolicy i) (info : M.InfoState i)
-    (choice : M.Choice i info) :
-    (policy.commit info choice).toMixed =
-      FinDist.map
-        (fun rest => (Equiv.piSplitAt info fun w => M.Choice i w).symm (choice, rest))
-        (FinDist.pi fun w : {w // w ≠ info} => policy w.1) := by
-  rw [toMixed, FinDist.pi_eq_map_product info,
-    show (fun w : {w // w ≠ info} => policy.commit info choice w.1) =
-      (fun w : {w // w ≠ info} => policy w.1) from
-        funext fun w => policy.commit_of_ne info choice w.2,
-    commit_self, FinDist.product, FinDist.pure_bind, FinDist.map_comp]
-  rfl
-
-variable {M} in
-/-- The construction is the right one in the degenerate case: a deterministic
-policy, randomized nowhere, comes back as the point mass at itself. -/
-theorem Policy.toBehavioral_toMixed {i : ι} [Fintype (M.InfoState i)]
-    (policy : M.Policy i) :
-    policy.toBehavioral.toMixed = FinDist.pure policy :=
-  FinDist.pi_pure policy
-
-/-! ## When the two randomizations agree
-
-Drawing at each information state and drawing once over policies give the same
-law exactly when the single draw is never asked to answer twice. The proof
-follows play: at each step the drawn policy is factored at the information
-states about to be consulted, its first factor is matched against the local
-draw, and the rest is re-read as a mixed profile that has committed there. The
-commitment is then invisible, because the coordinate is never consulted again —
-or, where the player does not move, because there was nothing to choose. -/
-
-/-- Reassembling a policy from its value at one information state and its values
-elsewhere returns that value there. -/
-theorem piSplitAt_symm_self {i : ι} [DecidableEq (M.InfoState i)] (info : M.InfoState i)
-    (q : M.Choice i info × ∀ w : {w // w ≠ info}, M.Choice i w.1) :
-    (Equiv.piSplitAt info fun w => M.Choice i w).symm q info = q.1 := by
-  simp
-
-/-- Unfolding one step of deterministic play against a chooser value already
-known. Naming the value keeps the rewrite out of the dependent position it would
-otherwise land in. -/
-theorem runFrom_succ_of_chooser_eq (policies : (i : ι) → M.Policy i) {h : E.History}
-    (hterm : ¬ E.terminal h.state)
-    (chosen : { joint : ∀ i, Option (E.Action i) // E.Legal h.state joint })
-    (hchosen : M.historyChooser policies h hterm = chosen) (fuel : ℕ) :
-    M.runFrom policies (fuel + 1) h =
-      (E.step h.state chosen).bindOnSupport fun _ realized =>
-        M.runFrom policies fuel (h.extend chosen.2 realized) := by
-  subst hchosen
-  rw [runFrom, ExecutionProtocol.runHistoryFor_succ_of_not_terminal _ fuel hterm]
-  rfl
-
-/-- A commitment made at one step is invisible from the next one on: either the
-player never meets that information state again while moving, or it does not
-move there and had nothing to choose. -/
-theorem commit_agree_of_actsOnce [∀ i, DecidableEq (M.InfoState i)]
-    (hactsOnce : M.ActsOnceWhereItMatters)
-    (β : (i : ι) → M.BehavioralPolicy i) {h : E.History}
-    (draw : (i : ι) → M.Choice i (M.infoOf i h.trace))
-    {joint : ∀ i, Option (E.Action i)} (isLegal : E.Legal h.state joint)
-    {target : E.State} (realized : target ∈ (E.step h.state ⟨joint, isLegal⟩).support)
-    {fuel : ℕ} (later : E.History)
-    (hreach : ExecutionProtocol.ReachesWithin E fuel (h.extend isLegal realized) later)
-    (hlater : ¬ E.terminal later.state) (i : ι) :
-    (β i).commit (M.infoOf i h.trace) (draw i) (M.infoOf i later.trace) =
-      β i (M.infoOf i later.trace) := by
-  by_cases hne : M.infoOf i later.trace ≠ M.infoOf i h.trace
-  · exact BehavioralPolicy.commit_of_ne _ _ _ hne
-  push Not at hne
-  by_cases hactiveLater : E.active later.state i
-  · by_cases hactiveHere : E.active h.state i
-    · have hdisj : M.infoOf i later.trace ≠ M.infoOf i h.trace ∨
-          Subsingleton (M.Choice i (M.infoOf i h.trace)) := by
-        obtain ⟨laterJoint, hlaterJoint⟩ := E.progress later.state hlater
-        have hlaterLegal : E.Legal later.state laterJoint := ⟨hlater, hlaterJoint⟩
-        obtain ⟨laterTarget, hlaterRealized⟩ :=
-          (E.step later.state ⟨laterJoint, hlaterLegal⟩).support_nonempty
-        obtain ⟨_, hsome⟩ := LegalOption.exists_eq_some_of_active (joint i)
-          (ExecutionProtocol.legalOption_of_legal isLegal i) hactiveHere
-        obtain ⟨_, hlaterSome⟩ := LegalOption.exists_eq_some_of_active (laterJoint i)
-          (ExecutionProtocol.legalOption_of_legal hlaterLegal i) hactiveLater
-        exact M.infoOf_ne_or_subsingleton_of_actsOnce hactsOnce i isLegal realized
-          (by rw [hsome]; rfl) hreach hlaterLegal hlaterRealized (by rw [hlaterSome]; rfl)
-      rcases hdisj with hne' | hsubsingleton
-      · exact absurd hne hne'
-      · rw [hne, BehavioralPolicy.commit_self]
-        exact (FinDist.eq_pure_of_subsingleton _ (draw i)).symm
-    · have : Subsingleton (M.Choice i (M.infoOf i h.trace)) :=
-        M.subsingleton_choice_of_not_active h.trace hactiveHere
-      rw [hne, BehavioralPolicy.commit_self]
-      exact (FinDist.eq_pure_of_subsingleton _ (draw i)).symm
-  · exact M.behavioral_eq_of_not_active _ _ later.trace hactiveLater
-
-/-! ### Finite partial predrawing -/
-
-/-- A finite family of information sites covers every legal history that can
-be reached from `start` within the supplied fuel. Unlike the support-local
-construction below, this premise is independent of a particular policy and
-therefore remains valid under unilateral deviations. -/
-def CoversInformationSitesFrom
-    (sites : (i : ι) → Finset (M.InfoState i))
-    (fuel : ℕ) (start : E.History) : Prop :=
-  ∀ later, E.ReachesWithin fuel start later →
-    ¬ E.terminal later.state → ∀ i,
-      M.infoOf i later.trace ∈ sites i
-
-/-- Counterfactual finite-site coverage from the canonical initial history. -/
-def CoversInformationSites
-    (sites : (i : ι) → Finset (M.InfoState i)) (fuel : ℕ) : Prop :=
-  M.CoversInformationSitesFrom sites fuel E.initHistory
-
-/-- Separate the draw at one information state from the remaining finite table. -/
-theorem toMixedOn_factor {i : ι} [DecidableEq (M.InfoState i)]
-    (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
-    (fallback : M.Policy i)
-    (hfinite : ∀ info, info ∉ sites →
-      policy info = FinDist.pure (fallback info))
-    (info : M.InfoState i) :
-    policy.toMixedOn sites fallback =
-      FinDist.map
-        (fun pair => FinDist.DependentAssignment.setOne pair.2
-          ⟨info, pair.1⟩)
-        (FinDist.product (policy info)
-          (policy.toMixedOn (sites.erase info) fallback)) := by
-  by_cases hinfo : info ∈ sites
-  · exact FinDist.runDependent_factor_of_mem policy sites fallback info hinfo
-  · exact FinDist.runDependent_factor_of_not_mem policy sites fallback info hinfo
-      (hfinite info hinfo)
-
-/-- Committing a choice commutes with predrawing the other information states. -/
-theorem toMixedOn_commit_erase {i : ι}
-    [DecidableEq (M.InfoState i)]
-    (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
-    (fallback : M.Policy i) (info : M.InfoState i)
-    (choice : M.Choice i info) :
-    FinDist.map
-        (fun rest => FinDist.DependentAssignment.setOne rest ⟨info, choice⟩)
-        (policy.toMixedOn (sites.erase info) fallback) =
-      (policy.commit info choice).toMixedOn (sites.erase info)
-        (FinDist.DependentAssignment.setOne fallback ⟨info, choice⟩) := by
-  have hnot : info ∉ (sites.erase info).toList := by simp
-  rw [BehavioralPolicy.toMixedOn, BehavioralPolicy.toMixedOn,
-    ← FinDist.runDependent_setOne_of_not_mem policy _ fallback info choice hnot]
-  apply FinDist.runDependent_congr_laws
-  intro other hother
-  apply (BehavioralPolicy.commit_of_ne policy info choice ?_).symm
-  intro heq
-  subst other
-  exact hnot hother
-
-/-- After committing one choice, randomness is confined to the remaining sites. -/
-theorem commit_finiteSupport {i : ι}
-    [DecidableEq (M.InfoState i)]
-    (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
-    (fallback : M.Policy i)
-    (hfinite : ∀ other, other ∉ sites →
-      policy other = FinDist.pure (fallback other))
-    (info : M.InfoState i) (choice : M.Choice i info) :
-    ∀ other, other ∉ sites.erase info →
-      policy.commit info choice other =
-        FinDist.pure
-          (FinDist.DependentAssignment.setOne fallback ⟨info, choice⟩ other) := by
-  intro other hother
-  by_cases heq : other = info
-  · subst other
-    rw [BehavioralPolicy.commit_self,
-      FinDist.DependentAssignment.setOne_apply_self]
-  · rw [BehavioralPolicy.commit_of_ne _ _ _ heq,
-      FinDist.DependentAssignment.setOne_apply_of_ne _ _ heq]
-    apply hfinite
-    intro hmem
-    exact hother (Finset.mem_erase.mpr ⟨heq, hmem⟩)
-
-section FiniteSupportEquivalence
-
-variable [Fintype ι] [∀ i, DecidableEq (M.InfoState i)]
-
-/-- Finite predrawing induces the same bounded history law as behavioral play
-when all off-list local laws are already deterministic. This is the explicit
-finite-site counterpart of `runMixedFrom_toMixed`. -/
-theorem runMixedFrom_toMixedOn (hactsOnce : M.ActsOnceWhereItMatters) :
-    ∀ (fuel : ℕ) (policy : (i : ι) → M.BehavioralPolicy i)
-      (sites : (i : ι) → Finset (M.InfoState i))
-      (fallback : (i : ι) → M.Policy i) (history : E.History),
-      (∀ i info, info ∉ sites i →
-        policy i info = FinDist.pure (fallback i info)) →
-      M.runMixedFrom
-          (fun i => (policy i).toMixedOn (sites i) (fallback i))
-          fuel history =
-        M.runBehavioralFrom policy fuel history := by
-  intro fuel
-  induction fuel with
-  | zero =>
-      intro policy sites fallback history _
-      exact FinDist.bind_const _ _
-  | succ fuel ih =>
-      intro policy sites fallback history hfinite
-      by_cases hterm : E.terminal history.state
-      · rw [runMixedFrom, runBehavioralFrom,
-          ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterm]
-        refine Eq.trans (FinDist.bind_congr fun policies _ => ?_)
-          (FinDist.bind_const _ _)
-        rw [runFrom, ExecutionProtocol.runHistoryFor_of_terminal _ _ hterm]
-      · set info : (i : ι) → M.InfoState i :=
-          fun i => M.infoOf i history.trace with hinfo
-        set remaining : (i : ι) → Finset (M.InfoState i) :=
-          fun i => (sites i).erase (info i) with hremaining
-        set assemble : (i : ι) →
-            M.Choice i (info i) × M.Policy i → M.Policy i :=
-          fun i pair =>
-            FinDist.DependentAssignment.setOne pair.2 ⟨info i, pair.1⟩
-          with hassemble
-        set elsewhere : (i : ι) → M.MixedPolicy i :=
-          fun i => (policy i).toMixedOn (remaining i) (fallback i)
-          with helsewhere
-        have hfactor :
-            (FinDist.pi fun i =>
-              (policy i).toMixedOn (sites i) (fallback i)) =
-              FinDist.map
-                (fun pair i => assemble i (pair.1 i, pair.2 i))
-                (FinDist.product
-                  (FinDist.pi fun i => policy i (info i))
-                  (FinDist.pi elsewhere)) := by
-          rw [show (fun i =>
-                (policy i).toMixedOn (sites i) (fallback i)) =
-              (fun i => FinDist.map (assemble i)
-                (FinDist.product (policy i (info i)) (elsewhere i))) from
-            funext fun i => toMixedOn_factor M (policy i) (sites i)
-              (fallback i) (hfinite i) (info i),
-            FinDist.pi_map, FinDist.pi_product, FinDist.map_comp]
-          rfl
-        rw [runMixedFrom, hfactor, FinDist.bind_map,
-          FinDist.product, FinDist.bind_bind,
-          M.runBehavioralFrom_succ_of_not_terminal policy fuel hterm,
-          behavioralJoint, FinDist.bind_map]
-        refine FinDist.bind_congr fun draw _ => ?_
-        rw [FinDist.bind_map]
-        let chosen :
-            { joint : (i : ι) → Option (E.Action i) //
-              E.Legal history.state joint } :=
-          ⟨fun i => (draw i).1,
-            ExecutionProtocol.legal_of_legalOption hterm fun i =>
-              (M.menu_adequate i history.trace (draw i).1).mp
-                (draw i).2⟩
-        let predrawn : ((i : ι) → M.Policy i) → (i : ι) → M.Policy i :=
-          fun rest i => assemble i (draw i, rest i)
-        have hchosen : ∀ rest : (i : ι) → M.Policy i,
-            M.historyChooser (predrawn rest) history hterm = chosen := by
-          intro rest
-          refine Subtype.ext (funext fun i => ?_)
-          show (predrawn rest i (info i)).1 = (draw i).1
-          simp [predrawn, assemble]
-        rw [show (fun rest =>
-              M.runFrom (predrawn rest) (fuel + 1) history) =
-            (fun rest =>
-              (E.step history.state chosen).bindOnSupport fun _ realized =>
-                M.runFrom (predrawn rest) fuel
-                  (history.extend chosen.2 realized)) from
-          funext fun rest =>
-            M.runFrom_succ_of_chooser_eq
-              (predrawn rest) hterm chosen (hchosen rest) fuel,
-          FinDist.bind_bindOnSupport_comm]
-        refine FinDist.bindOnSupport_congr fun target realized => ?_
-        let committed : (i : ι) → M.BehavioralPolicy i :=
-          fun i => (policy i).commit (info i) (draw i)
-        let committedFallback : (i : ι) → M.Policy i :=
-          fun i => FinDist.DependentAssignment.setOne (fallback i)
-            ⟨info i, draw i⟩
-        rw [show (FinDist.pi elsewhere).bind (fun rest =>
-              M.runFrom (predrawn rest) fuel _) =
-            M.runMixedFrom
-              (fun i => (committed i).toMixedOn (remaining i)
-                (committedFallback i)) fuel _ from by
-          rw [runMixedFrom,
-            show (fun i => (committed i).toMixedOn (remaining i)
-                (committedFallback i)) =
-              (fun i => FinDist.map
-                (fun rest => assemble i (draw i, rest)) (elsewhere i)) from
-              funext fun i => (toMixedOn_commit_erase M (policy i)
-                (sites i) (fallback i) (info i) (draw i)).symm,
-            FinDist.pi_map, FinDist.bind_map],
-          ih committed remaining committedFallback _
-            (fun i => commit_finiteSupport M (policy i) (sites i)
-              (fallback i) (hfinite i) (info i) (draw i))]
-        refine M.runBehavioralFrom_congr fuel _ fun later hreach hlater i => ?_
-        exact M.commit_agree_of_actsOnce hactsOnce policy draw _ realized
-          later hreach hlater i
-
-end FiniteSupportEquivalence
-
-/-- Select one legal fallback choice from every local behavioral support. -/
-noncomputable def BehavioralPolicy.supportFallback {i : ι}
-    (policy : M.BehavioralPolicy i) : M.Policy i :=
-  fun info => (policy info).support_nonempty.choose
-
-/-- Retain randomization on the supplied sites and use a deterministic fallback
-elsewhere. This is the behavioral policy underlying `toMixedWithin`. -/
-noncomputable def BehavioralPolicy.restrictRandomization {i : ι}
-    (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
-    (fallback : M.Policy i) : M.BehavioralPolicy i := by
-  classical
-  exact fun info =>
-    if info ∈ sites then policy info else FinDist.pure (fallback info)
-
-/-- Assemble a total policy from draws on finitely many information states and
-a deterministic fallback elsewhere. -/
-noncomputable def Policy.assembleWithin {i : ι} (fallback : M.Policy i)
-    (sites : Finset (M.InfoState i))
-    (draws : (info : sites) → M.Choice i info) : M.Policy i := by
-  classical
-  exact FinDist.DependentAssignment.resolve fallback sites draws
-
-variable {M} in
-/-- Predraw exactly the supplied finite sites after making the behavioral law
-deterministic at every omitted coordinate. The fallback is observable only
-outside the covered sites. -/
-noncomputable def BehavioralPolicy.toMixedWithin {i : ι}
-    (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
-    (fallback : M.Policy i) : M.MixedPolicy i := by
-  classical
-  exact (BehavioralPolicy.restrictRandomization M policy sites fallback).toMixedOn
-    sites fallback
-
-/-- Finite-site predrawing is the independent finite coordinate law mapped
-through the canonical total-policy assembly. -/
-theorem BehavioralPolicy.toMixedWithin_eq_map_pi {i : ι}
-    (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
-    (fallback : M.Policy i) :
-    policy.toMixedWithin sites fallback =
-      FinDist.map (Policy.assembleWithin M fallback sites)
-        (FinDist.pi fun info : sites => policy info) := by
-  classical
-  unfold BehavioralPolicy.toMixedWithin BehavioralPolicy.toMixedOn
-    Policy.assembleWithin
-  rw [FinDist.runDependent_eq_pi_subtype _ sites.toList
-      sites.nodup_toList fallback,
-    sites.toList_toFinset]
-  have hlaws :
-      (fun info : sites =>
-        BehavioralPolicy.restrictRandomization M policy sites fallback info) =
-      (fun info : sites => policy info) := by
-    funext info
-    simp [BehavioralPolicy.restrictRandomization, info.2]
-  rw [hlaws]
-
-/-- Finite-site predrawing sends a deterministic behavioral policy back to
-the point mass at that same total policy when it is also used as fallback. -/
-theorem Policy.toBehavioral_toMixedWithin {i : ι}
-    (policy : M.Policy i) (sites : Finset (M.InfoState i)) :
-    policy.toBehavioral.toMixedWithin sites policy = FinDist.pure policy := by
-  classical
-  have hrestrict :
-      BehavioralPolicy.restrictRandomization M policy.toBehavioral
-          sites policy =
-        policy.toBehavioral := by
-    funext info
-    simp [BehavioralPolicy.restrictRandomization, Policy.toBehavioral]
-  rw [BehavioralPolicy.toMixedWithin, hrestrict,
-    BehavioralPolicy.toMixedOn]
-  exact FinDist.runDependent_pure policy sites.toList
-
-/-- Explicit counterfactual site coverage turns finite predrawing into a fixed
-mixed witness valid for every behavioral profile, not merely for the support
-of one selected profile. -/
-theorem runMixedFrom_toMixedWithin [Fintype ι]
-    (hactsOnce : M.ActsOnceWhereItMatters)
-    (sites : (i : ι) → Finset (M.InfoState i))
-    (policy : (i : ι) → M.BehavioralPolicy i)
-    (fallback : (i : ι) → M.Policy i) (fuel : ℕ)
-    (start : E.History)
-    (hcover : M.CoversInformationSitesFrom sites fuel start) :
-    M.runMixedFrom
-        (fun i => (policy i).toMixedWithin (sites i) (fallback i))
-        fuel start =
-      M.runBehavioralFrom policy fuel start := by
-  classical
-  let finitePolicy : (i : ι) → M.BehavioralPolicy i :=
-    fun i => BehavioralPolicy.restrictRandomization M (policy i)
-      (sites i) (fallback i)
-  have hfinite : ∀ i info, info ∉ sites i →
-      finitePolicy i info = FinDist.pure (fallback i info) := by
-    intro i info hinfo
-    simp [finitePolicy, BehavioralPolicy.restrictRandomization, hinfo]
-  refine (M.runMixedFrom_toMixedOn hactsOnce fuel finitePolicy
-    sites fallback start hfinite).trans ?_
-  apply M.runBehavioralFrom_congr
-  intro later hreach hterm i
-  have hmem := hcover later hreach hterm i
-  simp [finitePolicy, BehavioralPolicy.restrictRandomization, hmem]
-
-/-- Initial-history form of counterfactual finite-site realization. -/
-theorem runMixed_toMixedWithin [Fintype ι]
-    (hactsOnce : M.ActsOnceWhereItMatters)
-    (sites : (i : ι) → Finset (M.InfoState i))
-    (policy : (i : ι) → M.BehavioralPolicy i)
-    (fallback : (i : ι) → M.Policy i) (fuel : ℕ)
-    (hcover : M.CoversInformationSites sites fuel) :
-    M.runMixed
-        (fun i => (policy i).toMixedWithin (sites i) (fallback i)) fuel =
-      M.runBehavioral policy fuel :=
-  M.runMixedFrom_toMixedWithin hactsOnce sites policy fallback fuel
-    E.initHistory hcover
-
-/-- The finite information sites exposed by every intermediate support of one
-bounded behavioral run. -/
-noncomputable def behavioralSupportSitesFrom [Fintype ι]
-    (policy : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ)
-    (start : E.History) (i : ι) : Finset (M.InfoState i) := by
-  classical
-  exact (Finset.range (fuel + 1)).biUnion fun elapsed =>
-    (M.runBehavioralFrom policy elapsed start).supportFinset.image
-      (fun later => M.infoOf i later.trace)
-
-theorem mem_behavioralSupportSitesFrom [Fintype ι]
-    (policy : (i : ι) → M.BehavioralPolicy i) (fuel elapsed : ℕ)
-    (helapsed : elapsed ≤ fuel) (start later : E.History)
-    (hlater : later ∈ (M.runBehavioralFrom policy elapsed start).support)
-    (i : ι) :
-    M.infoOf i later.trace ∈
-      behavioralSupportSitesFrom M policy fuel start i := by
-  classical
-  rw [behavioralSupportSitesFrom]
-  apply Finset.mem_biUnion.mpr
-  refine ⟨elapsed, Finset.mem_range.mpr (by omega), ?_⟩
-  apply Finset.mem_image.mpr
-  exact ⟨later, FinDist.mem_supportFinset.mpr hlater, rfl⟩
-
-/-- The support sites of a locally full-support behavioral profile cover every
-legal counterfactual history through the same bounded horizon. -/
-theorem behavioralSupportSitesFrom_covers_of_fullSupport [Fintype ι]
-    (policy : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ)
-    (start : E.History)
-    (hfull : ∀ i info (choice : M.Choice i info),
-      choice ∈ (policy i info).support) :
-    M.CoversInformationSitesFrom
-      (behavioralSupportSitesFrom M policy fuel start) fuel start := by
-  intro later hreach _ i
-  obtain ⟨elapsed, helapsed, hlater⟩ :=
-    M.exists_mem_support_runBehavioralFrom_of_reachesWithin
-      policy hfull hreach
-  exact mem_behavioralSupportSitesFrom M policy fuel elapsed helapsed
-    start later hlater i
-
-/-- **Bounded behavioral-to-mixed realization without ambient information
-finiteness.** Only the information states in the finite supports of this
-profile's bounded run are predrawn. The witness is profile- and horizon-local;
-use the full `BehavioralPolicy.toMixed` construction when one fixed mixed
-policy must cover every counterfactual context. -/
-theorem exists_mixed_runMixedFrom_eq_runBehavioralFrom [Fintype ι]
-    (hactsOnce : M.ActsOnceWhereItMatters)
-    (policy : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ)
-    (start : E.History) :
-    ∃ mixed : (i : ι) → M.MixedPolicy i,
-      M.runMixedFrom mixed fuel start =
-        M.runBehavioralFrom policy fuel start := by
-  classical
-  let sites : (i : ι) → Finset (M.InfoState i) :=
-    fun i => behavioralSupportSitesFrom M policy fuel start i
-  let fallback : (i : ι) → M.Policy i :=
-    fun i => (policy i).supportFallback
-  let finitePolicy : (i : ι) → M.BehavioralPolicy i :=
-    fun i => BehavioralPolicy.restrictRandomization M (policy i)
-      (sites i) (fallback i)
-  let mixed : (i : ι) → M.MixedPolicy i :=
-    fun i => (finitePolicy i).toMixedOn (sites i) (fallback i)
-  refine ⟨mixed, ?_⟩
-  have hfinite : ∀ i info, info ∉ sites i →
-      finitePolicy i info = FinDist.pure (fallback i info) := by
-    intro i info hinfo
-    simp [finitePolicy, BehavioralPolicy.restrictRandomization, hinfo]
-  have hpredraw := M.runMixedFrom_toMixedOn hactsOnce fuel finitePolicy
-    sites fallback start hfinite
-  refine hpredraw.trans ?_
-  apply (M.runBehavioralFrom_congr_on_support fuel start ?_).symm
-  intro elapsed helapsed later hlater _ i
-  have hmem : M.infoOf i later.trace ∈ sites i :=
-    mem_behavioralSupportSitesFrom M policy fuel elapsed helapsed start later
-      hlater i
-  simp [finitePolicy, BehavioralPolicy.restrictRandomization, hmem]
-
-/-- The from-start form of bounded finite-support behavioral realization. -/
-theorem exists_mixed_runMixed_eq_runBehavioral [Fintype ι]
-    (hactsOnce : M.ActsOnceWhereItMatters)
-    (policy : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) :
-    ∃ mixed : (i : ι) → M.MixedPolicy i,
-      M.runMixed mixed fuel = M.runBehavioral policy fuel :=
-  M.exists_mixed_runMixedFrom_eq_runBehavioralFrom
-    hactsOnce policy fuel E.initHistory
-
-section Equivalence
-
-variable [Fintype ι] [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)]
-
-/-- **The equivalence.** With no player ever asked to act twice at one
-information state, randomizing locally and randomizing once over policies induce
-the same law over histories. -/
-theorem runMixedFrom_toMixed (hactsOnce : M.ActsOnceWhereItMatters) :
-    ∀ (fuel : ℕ) (β : (i : ι) → M.BehavioralPolicy i) (h : E.History),
-      M.runMixedFrom (fun i => (β i).toMixed) fuel h = M.runBehavioralFrom β fuel h := by
-  intro fuel
-  induction fuel with
-  | zero => intro β h; exact FinDist.bind_const _ _
-  | succ fuel ih =>
-    intro β h
-    by_cases hterm : E.terminal h.state
-    · rw [runMixedFrom, runBehavioralFrom,
-        ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterm]
-      refine Eq.trans (FinDist.bind_congr fun policies _ => ?_) (FinDist.bind_const _ _)
-      rw [runFrom, ExecutionProtocol.runHistoryFor_of_terminal _ _ hterm]
-    · -- The information states about to be consulted, and the two halves of a
-      -- drawn policy: its value there, and its values everywhere else.
-      set info : (i : ι) → M.InfoState i := fun i => M.infoOf i h.trace with hinfo
-      set assemble : (i : ι) →
-          M.Choice i (info i) × (∀ w : {w // w ≠ info i}, M.Choice i w.1) → M.Policy i :=
-        fun i q => (Equiv.piSplitAt (info i) fun w => M.Choice i w).symm q with hassemble
-      set elsewhere : (i : ι) → FinDist (∀ w : {w // w ≠ info i}, M.Choice i w.1) :=
-        fun i => FinDist.pi fun w => β i w.1 with helsewhere
-      have hfactor : (FinDist.pi fun i => (β i).toMixed) =
-          FinDist.map (fun q i => assemble i (q.1 i, q.2 i))
-            (FinDist.product (FinDist.pi fun i => β i (info i)) (FinDist.pi elsewhere)) := by
-        rw [show (fun i => (β i).toMixed) =
-            (fun i => FinDist.map (assemble i)
-              (FinDist.product (β i (info i)) (elsewhere i))) from
-          funext fun i => FinDist.pi_eq_map_product (info i) (β i),
-          FinDist.pi_map, FinDist.pi_product, FinDist.map_comp]
-        rfl
-      rw [runMixedFrom, hfactor, FinDist.bind_map, FinDist.product, FinDist.bind_bind,
-        M.runBehavioralFrom_succ_of_not_terminal _ fuel hterm,
-        behavioralJoint, FinDist.bind_map]
-      refine FinDist.bind_congr fun draw _ => ?_
-      rw [FinDist.bind_map]
-      -- Both sides now take the same joint action.
-      have hchosen : ∀ rest : ∀ i, ∀ w : {w // w ≠ info i}, M.Choice i w.1,
-          M.historyChooser (fun i => assemble i (draw i, rest i)) h hterm =
-            ⟨fun i => (draw i).1,
-              ExecutionProtocol.legal_of_legalOption hterm fun i =>
-                (M.menu_adequate i h.trace (draw i).1).mp (draw i).2⟩ := by
-        intro rest
-        refine Subtype.ext (funext fun i => ?_)
-        show ((Equiv.piSplitAt (info i) fun w => M.Choice i w).symm (draw i, rest i)
-            (info i)).1 = (draw i).1
-        rw [piSplitAt_symm_self]
-      rw [show (fun rest => M.runFrom (fun i => assemble i (draw i, rest i)) (fuel + 1) h) =
-          (fun rest =>
-            (E.step h.state ⟨fun i => (draw i).1, _⟩).bindOnSupport fun _ realized =>
-              M.runFrom (fun i => assemble i (draw i, rest i)) fuel
-                (h.extend (ExecutionProtocol.legal_of_legalOption hterm fun i =>
-                  (M.menu_adequate i h.trace (draw i).1).mp (draw i).2) realized)) from
-        funext fun rest =>
-          M.runFrom_succ_of_chooser_eq _ hterm _ (hchosen rest) fuel,
-        FinDist.bind_bindOnSupport_comm]
-      refine FinDist.bindOnSupport_congr fun target realized => ?_
-      -- The rest of the drawn policy is again a mixed profile: the committed one.
-      rw [show (FinDist.pi elsewhere).bind (fun rest =>
-            M.runFrom (fun i => assemble i (draw i, rest i)) fuel _) =
-          M.runMixedFrom (fun i => ((β i).commit (info i) (draw i)).toMixed) fuel _ from by
-        rw [runMixedFrom,
-          show (fun i => ((β i).commit (info i) (draw i)).toMixed) =
-              (fun i => FinDist.map (fun rr => assemble i (draw i, rr)) (elsewhere i)) from
-            funext fun i => BehavioralPolicy.toMixed_commit (β i) (info i) (draw i),
-          FinDist.pi_map, FinDist.bind_map],
-        ih (fun i => (β i).commit (info i) (draw i)) _]
-      refine M.runBehavioralFrom_congr fuel _ fun later hreach hlater i => ?_
-      exact M.commit_agree_of_actsOnce hactsOnce β draw _ realized later hreach hlater i
-
-/-- The from-start form: the two randomizations induce the same law over plays.
-This is the shape a statement about a whole game quotes. -/
-theorem runMixed_toMixed (hactsOnce : M.ActsOnceWhereItMatters)
-    (β : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) :
-    M.runMixed (fun i => (β i).toMixed) fuel = M.runBehavioral β fuel :=
-  M.runMixedFrom_toMixed hactsOnce fuel β E.initHistory
-
-/-- And hence the same law over the states play reaches, which is the shape an
-outcome-level statement quotes. Nothing is lost by forgetting the history here,
-because the laws agreed on histories in the first place. -/
-theorem map_state_runMixed_toMixed (hactsOnce : M.ActsOnceWhereItMatters)
-    (β : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) :
-    FinDist.map ExecutionProtocol.History.state (M.runMixed (fun i => (β i).toMixed) fuel) =
-      FinDist.map ExecutionProtocol.History.state (M.runBehavioral β fuel) :=
-  congrArg _ (M.runMixed_toMixed hactsOnce β fuel)
-
-end Equivalence
-
-/-! ## When a single draw is local randomization
-
-Reading a mixed profile back as a behavioral one preserves the law it induces,
-provided every player recalls its own play. The induction follows play: at each
-step the single draw is disintegrated along the joint action it prescribes, the
-observed part matches the behavioral draw exactly, and the remainder is the
-profile conditioned on having answered that way. What is conditioned stays
-conditioned, and the tower property makes the accumulated conditioning invisible
-to the behavioral reading. -/
-
-/-- Where every drawn policy could already have brought play here, the
-behavioral reading is the plain marginal. -/
-theorem toBehavioralWith_eq_map_of_support_subset {i : ι} (mixed : M.MixedPolicy i)
-    (fallback : M.Policy i) (info : M.InfoState i)
-    (hsub : mixed.support ⊆ M.ConsistentAt i info) :
-    mixed.toBehavioralWith fallback info = FinDist.map (fun policy => policy info) mixed := by
-  classical
-  obtain ⟨policy, hpolicy⟩ := mixed.support_nonempty
-  rw [MixedPolicy.toBehavioralWith, dite_eq_left ⟨policy, hsub hpolicy, hpolicy⟩,
-    FinDist.condOn_of_support_subset _ _ _ hsub]
-
-section Recall
-
-variable [Fintype ι] [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)]
-
-/-- The joint answer a drawn profile gives at a history. -/
-def answerAt (h : E.History) (policies : (i : ι) → M.Policy i) :
-    (i : ι) → M.Choice i (M.infoOf i h.trace) := fun i => policies i (M.infoOf i h.trace)
-
-/-- The policies that answer a history the way `answer` does, player by
-player. -/
-def AnsweredBy (h : E.History) (answer : (i : ι) → M.Choice i (M.infoOf i h.trace)) (i : ι) :
-    Set (M.Policy i) :=
-  { policy | policy (M.infoOf i h.trace) = answer i }
-
-omit [Fintype ι] [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)] in
-theorem answerAt_preimage_eq (h : E.History)
-    (answer : (i : ι) → M.Choice i (M.infoOf i h.trace)) :
-    M.answerAt h ⁻¹' {answer} = { p | ∀ i, p i ∈ M.AnsweredBy h answer i } := by
-  ext policies
-  simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_ofPred_eq, answerAt,
-    AnsweredBy, funext_iff]
-
-omit [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)] in
-/-- **The single draw splits by player.** Conditioning a profile on the answer it
-gave is conditioning each player's draw on its own answer, because nothing
-couples the players. -/
-theorem condOn_answerAt (mixed : (i : ι) → M.MixedPolicy i) (h : E.History)
-    (answer : (i : ι) → M.Choice i (M.infoOf i h.trace))
-    (hjoint : ∃ p ∈ M.answerAt h ⁻¹' {answer}, p ∈ (FinDist.pi mixed).support)
-    (hcoord : ∀ i, ∃ q ∈ M.AnsweredBy h answer i, q ∈ (mixed i).support) :
-    (FinDist.pi mixed).condOn (M.answerAt h ⁻¹' {answer}) hjoint =
-      FinDist.pi fun i => (mixed i).condOn (M.AnsweredBy h answer i) (hcoord i) := by
-  have hset := M.answerAt_preimage_eq h answer
-  rw [FinDist.condOn_congr _ hset _ (by rw [← hset]; exact hjoint)]
-  exact FinDist.condOn_pi mixed (M.AnsweredBy h answer) hcoord _
-
-omit [Fintype ι] [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)] in
-/-- **A commitment is invisible to the reading afterwards.** Conditioning on the
-answer a step gave changes neither branch at any later reachable history: where
-consistent mass exists it survives the conditioning and the double conditioning
-collapses, and where it does not, both readings fall back on the same policy. -/
-theorem toBehavioralWith_condOn_answered (hconstrain : M.ConstrainsAlike) (i : ι) {h : E.History}
-    {answer : (j : ι) → M.Choice j (M.infoOf j h.trace)}
-    {joint : ∀ j, Option (E.Action j)} (isLegal : E.Legal h.state joint)
-    (hanswer : ∀ j, joint j = (answer j).1)
-    {target : E.State} (realized : target ∈ (E.step h.state ⟨joint, isLegal⟩).support)
-    {action : E.Action i} (hact : joint i = some action)
-    {fuel : ℕ} {later : E.History}
-    (hreach : ExecutionProtocol.ReachesWithin E fuel (h.extend isLegal realized) later)
-    (mixed : M.MixedPolicy i) (fallback : M.Policy i)
-    (hmass : ∃ q ∈ M.AnsweredBy h answer i, q ∈ mixed.support) :
-    MixedPolicy.toBehavioralWith (M := M) (mixed.condOn (M.AnsweredBy h answer i) hmass)
-        fallback (M.infoOf i later.trace) =
-      mixed.toBehavioralWith fallback (M.infoOf i later.trace) := by
-  classical
-  have hnarrow : M.ConsistentAt i (M.infoOf i later.trace) ⊆ M.AnsweredBy h answer i := by
-    intro policy hpolicy
-    refine Subtype.ext ?_
-    rw [M.consistentAt_subset_of_step hconstrain i isLegal realized hact hreach hpolicy,
-      ← hanswer i, hact]
-  simp only [MixedPolicy.toBehavioralWith]
-  by_cases hex : ∃ policy ∈ M.ConsistentAt i (M.infoOf i later.trace), policy ∈ mixed.support
-  · obtain ⟨policy, hpolicy, hmem⟩ := hex
-    have hcond : ∃ p ∈ M.ConsistentAt i (M.infoOf i later.trace),
-        p ∈ (mixed.condOn (M.AnsweredBy h answer i) hmass).support :=
-      ⟨policy, hpolicy, FinDist.mem_support_condOn _ _ _ (hnarrow hpolicy) hmem⟩
-    rw [dite_eq_left hcond, dite_eq_left ⟨policy, hpolicy, hmem⟩,
-      FinDist.condOn_condOn mixed hmass ⟨policy, hpolicy, hmem⟩
-        (Set.inter_subset_left.trans hnarrow) hcond]
-  · have hcond : ¬ ∃ p ∈ M.ConsistentAt i (M.infoOf i later.trace),
-        p ∈ (mixed.condOn (M.AnsweredBy h answer i) hmass).support := by
-      rintro ⟨p, hp, hmem⟩
-      exact hex ⟨p, hp, (FinDist.support_condOn _ _ hmass hmem).2⟩
-    rw [dite_eq_right hcond, dite_eq_right hex]
-
-omit [Fintype ι] [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)] in
-/-- Conditioning on the answer changes nothing for a player that did not move:
-its menu there was a single option, so every policy answered the same way. -/
-theorem condOn_answeredBy_eq_self (i : ι) {h : E.History}
-    {answer : (j : ι) → M.Choice j (M.infoOf j h.trace)}
-    (hlegal : E.Legal h.state fun j => (answer j).1) (hidle : (answer i).1 = none)
-    (mixed : M.MixedPolicy i) (hmass : ∃ q ∈ M.AnsweredBy h answer i, q ∈ mixed.support) :
-    mixed.condOn (M.AnsweredBy h answer i) hmass = mixed := by
-  have hinactive : ¬ E.active h.state i := by
-    have hopt := ExecutionProtocol.legalOption_of_legal hlegal i
-    rw [hidle] at hopt
-    exact hopt
-  have := M.subsingleton_choice_of_not_active h.trace hinactive
-  exact FinDist.condOn_of_support_subset _ _ _ fun q _ => Subsingleton.elim _ _
-
-omit [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)] in
-/-- **The equivalence, in the direction that needs recall.** Where every player
-recalls its own play, drawing a whole policy once induces the same law as
-randomizing afresh at each information state.
-
-The hypothesis is that the draw could already have brought play to where it
-starts, which at the start of play is no hypothesis at all. -/
-theorem runMixedFrom_toBehavioralWith (hconstrain : M.ConstrainsAlike)
-    (fallback : (i : ι) → M.Policy i) :
-    ∀ (fuel : ℕ) (mixed : (i : ι) → M.MixedPolicy i) (h : E.History),
-      (∀ i, (mixed i).support ⊆ M.ConsistentAt i (M.infoOf i h.trace)) →
-      M.runMixedFrom mixed fuel h =
-        M.runBehavioralFrom (fun i => (mixed i).toBehavioralWith (fallback i)) fuel h := by
-  classical
-  intro fuel
-  induction fuel with
-  | zero => intro mixed h _; exact FinDist.bind_const _ _
-  | succ fuel ih =>
-    intro mixed h hsub
-    by_cases hterm : E.terminal h.state
-    · rw [runMixedFrom, runBehavioralFrom,
-        ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterm]
-      refine Eq.trans (FinDist.bind_congr fun policies _ => ?_) (FinDist.bind_const _ _)
-      rw [runFrom, ExecutionProtocol.runHistoryFor_of_terminal _ _ hterm]
-    · have hdraw : (FinDist.pi fun i =>
-            (mixed i).toBehavioralWith (fallback i) (M.infoOf i h.trace)) =
-          FinDist.map (M.answerAt h) (FinDist.pi mixed) := by
-        rw [show (fun i => (mixed i).toBehavioralWith (fallback i) (M.infoOf i h.trace)) =
-            (fun i => FinDist.map (fun policy => policy (M.infoOf i h.trace)) (mixed i)) from
-          funext fun i =>
-            M.toBehavioralWith_eq_map_of_support_subset (mixed i) (fallback i) _ (hsub i),
-          FinDist.pi_map]
-        rfl
-      conv_lhs => rw [runMixedFrom,
-        FinDist.eq_bind_condOnFibre (FinDist.pi mixed) (M.answerAt h), FinDist.bind_bind,
-        FinDist.bind_map]
-      rw [M.runBehavioralFrom_succ_of_not_terminal _ fuel hterm, behavioralJoint, hdraw]
-      conv_rhs => rw [FinDist.map_comp, FinDist.bind_map]
-      refine FinDist.bind_congr fun p hp => ?_
-      have hfib : ∃ q ∈ M.answerAt h ⁻¹' {M.answerAt h p}, q ∈ (FinDist.pi mixed).support :=
-        ⟨p, rfl, hp⟩
-      have hcoord : ∀ i, ∃ q ∈ M.AnsweredBy h (M.answerAt h p) i, q ∈ (mixed i).support :=
-        fun i => ⟨p i, rfl, FinDist.mem_support_pi.mp hp i⟩
-      have hlegal : E.Legal h.state (fun i => ((M.answerAt h p) i).1) :=
-        ExecutionProtocol.legal_of_legalOption hterm fun i =>
-          (M.menu_adequate i h.trace ((M.answerAt h p) i).1).mp ((M.answerAt h p) i).2
-      rw [FinDist.condOnFibre, dite_eq_left hfib,
-        M.condOn_answerAt mixed h (M.answerAt h p) hfib hcoord]
-      have hstep : (FinDist.pi fun i =>
-            (mixed i).condOn (M.AnsweredBy h (M.answerAt h p) i) (hcoord i)).bind
-              (fun q => M.runFrom q (fuel + 1) h) =
-          (FinDist.pi fun i =>
-            (mixed i).condOn (M.AnsweredBy h (M.answerAt h p) i) (hcoord i)).bind
-              (fun q => (E.step h.state ⟨fun i => ((M.answerAt h p) i).1, hlegal⟩).bindOnSupport
-                fun _ realized => M.runFrom q fuel (h.extend hlegal realized)) :=
-        FinDist.bind_congr fun q hq =>
-          M.runFrom_succ_of_chooser_eq q hterm ⟨_, hlegal⟩
-            (Subtype.ext (funext fun i => by
-              show ((q i) (M.infoOf i h.trace)).1 = _
-              rw [(FinDist.support_condOn _ _ (hcoord i)
-                (FinDist.mem_support_pi.mp hq i)).1])) fuel
-      rw [hstep, FinDist.bind_bindOnSupport_comm]
-      · refine FinDist.bindOnSupport_congr fun reached realized => ?_
-        have hsub' : ∀ i,
-            ((mixed i).condOn (M.AnsweredBy h (M.answerAt h p) i) (hcoord i)).support ⊆
-              M.ConsistentAt i (M.infoOf i (h.extend hlegal realized : E.History).trace) := by
-          intro i q hq
-          obtain ⟨hqanswer, hqmixed⟩ := FinDist.support_condOn _ _ (hcoord i) hq
-          have hprior := hsub i hqmixed
-          rw [M.consistentAt_eq_consistent_ownPlay hconstrain i] at hprior ⊢
-          intro step hstep
-          rw [show M.ownPlay i (h.extend hlegal realized : E.History).trace =
-              M.ownPlay i (Trace.extend h.trace (fun j => ((M.answerAt h p) j).1) hlegal realized)
-              from rfl, InfoSignals.ownPlay_extend] at hstep
-          revert hstep
-          cases hcase : ((M.answerAt h p) i).1 with
-          | none => exact fun hstep => hprior step hstep
-          | some action =>
-            intro hstep
-            rcases List.mem_cons.mp hstep with hhead | htail
-            · subst hhead
-              show (q (M.infoOf i h.trace)).1 = _
-              rw [hqanswer, hcase]
-            · exact hprior step htail
-        rw [show (FinDist.pi fun i =>
-                (mixed i).condOn (M.AnsweredBy h (M.answerAt h p) i) (hcoord i)).bind
-              (fun r => M.runFrom r fuel (h.extend hlegal realized)) =
-            M.runMixedFrom
-              (fun i => (mixed i).condOn (M.AnsweredBy h (M.answerAt h p) i) (hcoord i)) fuel
-              (h.extend hlegal realized) from rfl,
-          ih _ _ hsub']
-        refine M.runBehavioralFrom_congr fuel _ fun later hreach _ i => ?_
-        cases hcase : ((M.answerAt h p) i).1 with
-        | none => rw [M.condOn_answeredBy_eq_self i hlegal hcase (mixed i) (hcoord i)]
-        | some action =>
-          exact M.toBehavioralWith_condOn_answered hconstrain i hlegal (fun _ => rfl) realized
-            hcase hreach (mixed i) (fallback i) (hcoord i)
-
-omit [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)] in
-/-- **From the start of play**, where the hypothesis is no hypothesis: nobody
-has moved yet, so every policy is still possible. -/
-theorem runMixed_toBehavioralWith (hconstrain : M.ConstrainsAlike)
-    (fallback : (i : ι) → M.Policy i) (fuel : ℕ) (mixed : (i : ι) → M.MixedPolicy i) :
-    M.runMixed mixed fuel =
-      M.runBehavioral (fun i => (mixed i).toBehavioralWith (fallback i)) fuel := by
-  refine M.runMixedFrom_toBehavioralWith hconstrain fallback fuel mixed E.initHistory
-    fun i q _ => ?_
-  rw [M.consistentAt_eq_consistent_ownPlay hconstrain i,
-    show M.ownPlay i (E.initHistory : E.History).trace = [] from rfl]
-  exact fun step hstep => absurd hstep (by simp)
-
-/-! ## The two randomizations describe the same laws
-
-Each direction carries its own condition, and they are genuinely different
-conditions. Turning local randomization into a single draw asks only that no
-player be consulted twice where the choice matters; going back asks each player
-to recall its own play. Neither implies the other. -/
-
-omit [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)] in
-/-- The reading with nothing supplied satisfies the theorem too: the fallback is
-fixed across the induction whatever it is, and a law's own support witness is
-one such choice. So the parameter is an internal device, not part of the
-result. -/
-theorem runMixed_toBehavioral (hconstrain : M.ConstrainsAlike) (fuel : ℕ)
-    (mixed : (i : ι) → M.MixedPolicy i) :
-    M.runMixed mixed fuel = M.runBehavioral (fun i => (mixed i).toBehavioral) fuel :=
-  M.runMixed_toBehavioralWith hconstrain (fun i => (mixed i).support_nonempty.choose) fuel mixed
-
-omit [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)] in
-/-- **The two randomizations describe the same laws over plays.** Every law a
-profile of locally randomizing players induces is induced by a single draw over
-policies, and conversely. -/
-theorem runBehavioral_image_eq_runMixed_image (hactsOnce : M.ActsOnceWhereItMatters)
-    (hconstrain : M.ConstrainsAlike) (fuel : ℕ) :
-    { law | ∃ β : (i : ι) → M.BehavioralPolicy i, M.runBehavioral β fuel = law } =
-      { law | ∃ mixed : (i : ι) → M.MixedPolicy i, M.runMixed mixed fuel = law } := by
-  ext law
-  constructor
-  · rintro ⟨β, rfl⟩
-    exact M.exists_mixed_runMixed_eq_runBehavioral hactsOnce β fuel
-  · rintro ⟨mixed, rfl⟩
-    exact ⟨fun i => (mixed i).toBehavioral, (M.runMixed_toBehavioral hconstrain fuel mixed).symm⟩
-
-end Recall
 
 /-! ## Information sets and beliefs
 
@@ -2232,14 +1130,14 @@ theorem legalOption_of_mem_menu {i : ι} (info : M.InfoState i) {state : E.State
   obtain ⟨trace, rfl⟩ := hstate
   exact M.menu_adequate i trace choice
 
-/-- A belief at an information state is a finite-support law on the states that
+/-- A belief at an information state is a PMF on the states that
 information state leaves open. -/
-def BeliefOn (i : ι) (info : M.InfoState i) (belief : FinDist E.State) : Prop :=
+def BeliefOn (i : ι) (info : M.InfoState i) (belief : PMF E.State) : Prop :=
   belief.support ⊆ M.InfoSet i info
 
 /-- Sequential feasibility: a policy's action is legal at every state a
 supported belief considers possible. The policy still never saw one. -/
-theorem legalOption_of_beliefOn {i : ι} {info : M.InfoState i} {belief : FinDist E.State}
+theorem legalOption_of_beliefOn {i : ι} {info : M.InfoState i} {belief : PMF E.State}
     (hbelief : M.BeliefOn i info belief) (policy : M.Policy i) {state : E.State}
     (hstate : state ∈ belief.support) :
     LegalOption E state i (policy.act info) :=

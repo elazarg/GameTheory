@@ -19,6 +19,7 @@ deliberately *not* instances of this predicate.
 
 import GameTheory.Core.Form
 import GameTheory.Core.Preference
+import GameTheory.Math.Probability.Support
 
 noncomputable section
 
@@ -40,7 +41,7 @@ structure DeviationScheme (sig : GameSignature ι) (Deviator : Type ud) where
   /-- How a deviation rewrites the group's own recommendation. The argument type
   contains no nonmember coordinate. -/
   actLocal : ∀ who, Dev who →
-    Subprofile sig (members who) → FinDist (Subprofile sig (members who))
+    Subprofile sig (members who) → PMF (Subprofile sig (members who))
 
 namespace DeviationScheme
 
@@ -67,8 +68,8 @@ variable [DecidableEq ι]
 
 /-- Lift a deviation to profile laws. This is the only place where a deviation
 meets the status-quo law, and it does so linearly through `bind`. -/
-def apply (D : DeviationScheme sig Deviator) (statusQuo : FinDist (Profile sig))
-    (who : Deviator) (d : D.Dev who) : FinDist (Profile sig) :=
+def apply (D : DeviationScheme sig Deviator) (statusQuo : PMF (Profile sig))
+    (who : Deviator) (d : D.Dev who) : PMF (Profile sig) :=
   statusQuo.bind fun profile =>
     (D.actLocal who d (Profile.restrict (D.members who) profile)).map fun replacement =>
       Profile.override (D.members who) replacement profile
@@ -76,25 +77,25 @@ def apply (D : DeviationScheme sig Deviator) (statusQuo : FinDist (Profile sig))
 @[simp]
 theorem apply_pure (D : DeviationScheme sig Deviator) (profile : Profile sig)
     (who : Deviator) (d : D.Dev who) :
-    D.apply (FinDist.pure profile) who d =
+    D.apply (PMF.pure profile) who d =
       (D.actLocal who d (Profile.restrict (D.members who) profile)).map fun replacement =>
         Profile.override (D.members who) replacement profile :=
-  FinDist.pure_bind ..
+  PMF.pure_bind ..
 
-theorem apply_bind (D : DeviationScheme sig Deviator) {α : Type*} (μ : FinDist α)
-    (f : α → FinDist (Profile sig)) (who : Deviator) (d : D.Dev who) :
+theorem apply_bind (D : DeviationScheme sig Deviator) {α : Type*} (μ : PMF α)
+    (f : α → PMF (Profile sig)) (who : Deviator) (d : D.Dev who) :
     D.apply (μ.bind f) who d = μ.bind fun a => D.apply (f a) who d :=
-  FinDist.bind_bind ..
+  PMF.bind_bind ..
 
 /-- Every profile a deviation can produce agrees with some status-quo profile
 off the deviating group. Nonmember coordinates are therefore untouched in the
 *result*, not merely in the deviation's argument. -/
 theorem exists_agree_off_members (D : DeviationScheme sig Deviator)
-    (statusQuo : FinDist (Profile sig)) (who : Deviator) (d : D.Dev who)
+    (statusQuo : PMF (Profile sig)) (who : Deviator) (d : D.Dev who)
     {deviated : Profile sig} (hmem : deviated ∈ (D.apply statusQuo who d).support) :
     ∃ profile ∈ statusQuo.support,
       ∀ j ∉ D.members who, deviated j = profile j := by
-  simp only [apply, FinDist.support_bind, FinDist.support_map, Set.mem_iUnion,
+  simp only [apply, PMF.support_bind, PMF.support_map, Set.mem_iUnion,
     Set.mem_image] at hmem
   obtain ⟨profile, hprofile, replacement, -, rfl⟩ := hmem
   exact ⟨profile, hprofile, fun j hj => Profile.override_of_not_mem _ _ _ hj⟩
@@ -120,7 +121,7 @@ CCE, CE, and strong Nash are choices of `statusQuo` and `D`, not new logical
 definitions. -/
 def IsEquilibrium [DecidableEq ι] {Deviator : Type ud} (F : GameForm ι)
     (weaklyPrefers : WeakPreference Deviator F.sig.Outcome)
-    (statusQuo : FinDist (Profile F.sig))
+    (statusQuo : PMF (Profile F.sig))
     (D : DeviationScheme F.sig Deviator) : Prop :=
   ∀ who d,
     weaklyPrefers who (F.outcomeLaw statusQuo) (F.outcomeLaw (D.apply statusQuo who d))
@@ -128,7 +129,7 @@ def IsEquilibrium [DecidableEq ι] {Deviator : Type ud} (F : GameForm ι)
 namespace IsEquilibrium
 
 variable [DecidableEq ι] {Deviator : Type ud} {Deviator' : Type ud'} {F : GameForm ι}
-variable {statusQuo : FinDist (Profile F.sig)}
+variable {statusQuo : PMF (Profile F.sig)}
 
 /-- Equilibrium against a larger deviation scheme implies equilibrium against
 any scheme mapping into it. -/

@@ -69,7 +69,7 @@ def semantics : Semantics diagram where
   defaultValue _ := false
   chanceLaw node hchance _ := by
     cases node with
-    | signal => exact FinDist.pure true
+    | signal => exact PMF.pure true
     | decision => simp at hchance
   utility _ assignment := if assignment .decision then 1 else 0
 
@@ -86,7 +86,7 @@ def observedConfig (value : Bool) :
 
 /-- A reduced policy can choose a constant without receiving the signal. -/
 def reducedChoose (value : Bool) : pruning.ReducedPolicy :=
-  fun _ _ _ => FinDist.pure value
+  fun _ _ _ => PMF.pure value
 
 def fullChoose (value : Bool) : Policy diagram :=
   pruning.expandPolicy (reducedChoose value)
@@ -135,7 +135,7 @@ def signalSensitive : Policy diagram :=
         have hkind := site.2
         simp [diagram, hnode] at hkind
     | .decision =>
-        FinDist.pure (observed ⟨.signal, by
+        PMF.pure (observed ⟨.signal, by
           simp [diagram, observedParents, hnode]⟩)
 
 /-- The removed observation is semantically live in the full policy domain. -/
@@ -145,8 +145,8 @@ theorem signalSensitive_reads_signal :
   simp only [signalSensitive, decisionSite, observedConfig]
   intro hequal
   have hprob := congrArg
-    (fun law : FinDist Bool => law.prob false) hequal
-  norm_num [FinDist.prob_pure_eq_ite] at hprob
+    (fun law : PMF Bool => law false) hequal
+  norm_num [PMF.pure_apply] at hprob
 
 /-- Consequently no reduced policy expands to the signal-sensitive policy. -/
 theorem pruning_does_not_represent_signalSensitive :

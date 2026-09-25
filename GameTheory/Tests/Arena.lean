@@ -53,10 +53,10 @@ def mergingArena : ExecutionProtocol Unit where
     match state with
     | .start =>
         match joint.1 () with
-        | some .goLeft => FinDist.pure .lft
-        | some .goRight => FinDist.pure .rgt
-        | none => FinDist.pure .lft
-    | _ => FinDist.pure .merged
+        | some .goLeft => PMF.pure .lft
+        | some .goRight => PMF.pure .rgt
+        | none => PMF.pure .lft
+    | _ => PMF.pure .merged
   progress := by
     rintro state hterm
     by_cases hactive : state = Spot.start
@@ -77,19 +77,19 @@ theorem legal_rgt : mergingArena.Legal .rgt mergingArena.noop :=
 
 theorem realized_lft :
     Spot.lft ∈ (mergingArena.step .start ⟨_, legal_goLeft⟩).support :=
-  FinDist.mem_support_pure.2 rfl
+  by simp
 
 theorem realized_rgt :
     Spot.rgt ∈ (mergingArena.step .start ⟨_, legal_goRight⟩).support :=
-  FinDist.mem_support_pure.2 rfl
+  by simp
 
 theorem realized_merged_of_lft :
     Spot.merged ∈ (mergingArena.step .lft ⟨_, legal_lft⟩).support :=
-  FinDist.mem_support_pure.2 rfl
+  by simp
 
 theorem realized_merged_of_rgt :
     Spot.merged ∈ (mergingArena.step .rgt ⟨_, legal_rgt⟩).support :=
-  FinDist.mem_support_pure.2 rfl
+  by simp
 
 /-- Reaching `merged` through the left branch. -/
 def traceViaLeft : Trace mergingArena .merged :=
@@ -139,7 +139,7 @@ def cyclicArena : ExecutionProtocol Unit where
   active _ _ := False
   available _ _ := Set.univ
   terminal _ := False
-  step _ _ := FinDist.pure .loop
+  step _ _ := PMF.pure .loop
   progress := fun _ _ => ⟨fun _ => none, fun _ h => h⟩
 
 theorem legal_loop : cyclicArena.Legal .loop cyclicArena.noop :=
@@ -147,7 +147,7 @@ theorem legal_loop : cyclicArena.Legal .loop cyclicArena.noop :=
 
 theorem realized_loop :
     Cycle.loop ∈ (cyclicArena.step .loop ⟨_, legal_loop⟩).support :=
-  FinDist.mem_support_pure.2 rfl
+  by simp
 
 /-- A history that goes round the loop `count` times. -/
 def loopTrace : (count : ℕ) → Trace cyclicArena .loop

@@ -2,7 +2,7 @@
 
 - **Status:** adopted and promoted
 - **Date:** 2026-08-20
-- **Experiment IDs:** EXP-119; builds on EXP-116, EXP-117, and EXP-118
+- **Experiment IDs:** EXP-119 and EXP-136; builds on EXP-116–118
 
 ## Decision / question
 
@@ -45,7 +45,7 @@ policy while the focal player uses the correlated total-policy law. Both
 directions consume every finite prefix and a bounded nonconstant discounted
 payoff.
 
-## Measurements
+## Original finite-law evidence
 
 Restricting a behavioral policy's infinite product law to any finite site set
 and converting the marginal back to `FinDist` is exactly the established
@@ -63,6 +63,26 @@ laws and summable normalized discounted consequences follow without another
 runner or equilibrium predicate.
 
 Build, audit, source-hazard, and axiom measurements are recorded in EXP-119.
+
+## General PMF boundary
+
+The measure-level hybrid theorems require no finite global site cover.
+For each target history, its queried coordinates and their own records form
+a finite internal marginal. Target-local versions of the mixed roundtrip
+and unilateral lemmas identify its mass. The normalized behavioral PMF then
+supplies countable support for the full measure equality.
+
+Only the internal proof marginal depends on the target history. The quantified
+behavioral deviation or arbitrary focal measure remains unchanged, as do the
+opponents, the fixed fallback, and the horizon-independent conditional reading.
+Local choices are countable with measurable singletons; histories only need
+a measurable space for the law equality. Real payoff consequences additionally
+require the actual integration and discounted-series certificates.
+
+EXP-136 supplies the general reverse infinite-chance/nonatomic gate and recovers
+both original hybrid consumers through these canonical theorems. Discrete PMF
+predrawing still requires an actual finite-site certificate; a bounded horizon
+with infinite chance branching does not supply one.
 
 ## Evidence from existing libraries
 

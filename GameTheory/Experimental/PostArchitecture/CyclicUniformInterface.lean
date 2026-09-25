@@ -9,7 +9,6 @@ subgame perfection.
 -/
 
 import GameTheory.Stochastic.History
-import GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayMeasure
 
 noncomputable section
 
@@ -19,7 +18,6 @@ namespace GameTheory.Stochastic.Game
 
 open GameTheory.Math.Probability
 open GameTheory.Protocol.InformationModel
-open GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayMeasure.Game
 
 variable {ι : Type uι} (G : Game.{uι, us, ua} ι)
 
@@ -30,7 +28,7 @@ of the ordinary initial-phase predicate, not a coercion from it. -/
 def IsAllPhaseUniformεEquilibrium [Fintype ι] [DecidableEq ι]
     (initial : G.State) [∀ i, Nonempty (G.Action i)]
     (epsilon : ℝ) (profile : G.BehaviorProfile initial) : Prop :=
-  ∀ history : CanonicalHistory G initial,
+  ∀ history : (G.toExecution initial).History,
     G.IsUniformεEquilibrium history.state epsilon
       (G.afterPublicHistory (restart := history.state) profile
         (G.publicHistoryOfTrace initial history.trace))
@@ -73,8 +71,8 @@ private theorem behavioralPolicy_subsingleton
   let choice : (G.perfectMonitoring initial).Choice who info :=
     ⟨some (Classical.choice (inferInstance : Nonempty (G.Action who))),
       by simp [Game.activeMenu]⟩
-  rw [FinDist.eq_pure_of_subsingleton (first info) choice,
-    FinDist.eq_pure_of_subsingleton (second info) choice]
+  rw [eq_pure_of_subsingleton (first info) choice,
+    eq_pure_of_subsingleton (second info) choice]
 
 private theorem unitAction_profile_update_eq
     (G : Game ι) (initial : G.State)
@@ -96,14 +94,33 @@ theorem isUniformεEquilibrium_of_unitAction
     [∀ i, Nonempty (G.Action i)]
     [∀ i, Subsingleton (G.Action i)]
     (profile : G.BehaviorProfile initial) {epsilon : ℝ}
-    (hepsilon : 0 ≤ epsilon) :
+    (hepsilon : 0 ≤ epsilon)
+    (hintegrable : ∀ horizon who,
+      UtilityIntegrable (G.horizonUtility initial horizon) who
+        ((G.horizonForm initial horizon).play profile)) :
     G.IsUniformεEquilibrium initial epsilon profile := by
   unfold IsUniformεEquilibrium Math.EventuallyAtAll
   refine ⟨0, fun horizon _ => ?_⟩
   show G.IsεHorizonNash initial horizon epsilon profile
   rw [G.isεHorizonNash_iff]
   intro who replacement
-  rw [unitAction_profile_update_eq G initial profile who replacement]
+  have hprofile := unitAction_profile_update_eq G initial profile who replacement
+  let hbase := hintegrable horizon who
+  have hlaw :
+      (G.horizonForm initial horizon).play
+          (Profile.update profile who replacement) =
+        (G.horizonForm initial horizon).play profile :=
+    congrArg (G.horizonForm initial horizon).play hprofile
+  have hdeviation : UtilityIntegrable (G.horizonUtility initial horizon) who
+      ((G.horizonForm initial horizon).play (Profile.update profile who replacement)) :=
+    payoffIntegrable_congr_law hlaw.symm hbase
+  refine ⟨hbase, hdeviation, ?_⟩
+  show expectedUtility (G.horizonUtility initial horizon) who
+      ((G.horizonForm initial horizon).play (Profile.update profile who replacement))
+      hdeviation ≤
+    expectedUtility (G.horizonUtility initial horizon) who
+      ((G.horizonForm initial horizon).play profile) hbase + epsilon
+  rw [expectedUtility_congr_law _ _ hlaw hdeviation hbase]
   linarith
 
 /-- The cyclic unit-action game used as the positive witness. Its state loops
@@ -113,7 +130,7 @@ eventual finite-horizon uniformity predicate. -/
 def unitCycle : Game Unit where
   State := Unit
   Action := fun _ => Unit
-  transition _ _ := FinDist.pure ()
+  transition _ _ := PMF.pure ()
   stageUtility _ _ _ := 0
 
 local instance unitCycleActionNonempty :
@@ -122,10 +139,33 @@ local instance unitCycleActionNonempty :
 
 theorem unitCycle_allPhase_uniform (epsilon : ℝ) (hepsilon : 0 ≤ epsilon) :
     (unitCycle : Game Unit).IsAllPhaseUniformεEquilibrium () epsilon
-      (fun _ => fun _ => FinDist.pure ⟨some (), by simp [Game.activeMenu]⟩) := by
+      (fun _ => fun _ => PMF.pure ⟨some (), by simp [Game.activeMenu]⟩) := by
   unfold IsAllPhaseUniformεEquilibrium
-  intro history
+  intro phase
   apply isUniformεEquilibrium_of_unitAction
-  exact hepsilon
+  · exact hepsilon
+  · intro horizon who
+    apply payoffIntegrable_of_bounded _ _ (C := 1)
+    intro outcome
+    have hsum (initial : Unit) : ∀ {state},
+        (trace : (unitCycle.toExecution initial).Trace state) →
+          trace.valueSum (fun _ => (0 : ℝ)) = 0 := by
+      intro state trace
+      induction trace with
+      | start => rfl
+      | extend prior joint isLegal realized ih =>
+          simp [Protocol.ExecutionProtocol.Trace.valueSum_extend, ih]
+    have hzero :
+        Game.horizonUtility unitCycle phase.state horizon outcome who = 0 := by
+      by_cases hz : horizon = 0
+      · simp [Game.horizonUtility, Game.historyAverageUtility, Game.eventUtility,
+          unitCycle, hz]
+      · have hsumValue : outcome.valueSum (fun _ => (0 : ℝ)) = 0 := by
+          show outcome.trace.valueSum (fun _ => (0 : ℝ)) = 0
+          exact hsum phase.state outcome.trace
+        simpa [Game.horizonUtility, Game.historyAverageUtility, Game.eventUtility,
+          unitCycle, hz] using hsumValue
+    rw [hzero]
+    norm_num
 
 end GameTheory.Stochastic.Game

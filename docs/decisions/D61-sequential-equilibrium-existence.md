@@ -82,7 +82,6 @@ for transport, forbidden imports, placeholders, and custom axioms remain.
 existing imports; existence is an explicit additional import. This amends
 [D12](D12-dependency-boundaries.md), not the stable syntax dependency direction.
 
-The full warning-as-error build passed with 4,163 jobs. EXP-121 records the
-final source, reachability, linter, and axiom checks and their commands. The
-existence theorem is nonconstructive; no equilibrium algorithm, infinite-game
-existence, or payoff-correspondence refinement result is claimed.
+The existence theorem is nonconstructive. It gives no equilibrium algorithm,
+infinite-game existence result, or payoff-correspondence refinement. EXP-121
+records the validation evidence and reproduction commands.

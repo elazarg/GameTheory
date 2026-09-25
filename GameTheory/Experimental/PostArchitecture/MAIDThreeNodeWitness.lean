@@ -40,6 +40,7 @@ Read that section before concluding anything from the theorems.
 -/
 
 import GameTheory.Protocol.Information
+import GameTheory.Math.Probability.ExpectationMixture
 
 noncomputable section
 
@@ -123,7 +124,7 @@ structure Diagram where
   /-- The decision node's alphabet. -/
   Plan : Type
   /-- The chance node's law. It has no parents, so this is unconditional. -/
-  forecastLaw : FinDist Forecast
+  forecastLaw : PMF Forecast
   /-- The utility node's table, read off its two parents. -/
   payoff : Forecast → Plan → ℝ
   /-- A decision node's alphabet is nonempty. Native MAID syntax leaves this
@@ -246,13 +247,13 @@ a step the protocol forbids. -/
 def transition (D : Diagram) : (state : Stage D) →
     { joint : (agent : Agent) → Option (actionOf D agent) //
       ¬ isTerminal D state ∧ IsLegalJoint (isActive D state) (availableAt D state) joint } →
-    FinDist (Stage D)
-  | .start, _ => FinDist.map Stage.forecastKnown D.forecastLaw
+    PMF (Stage D)
+  | .start, _ => PMF.map Stage.forecastKnown D.forecastLaw
   | .forecastKnown forecast, cert =>
-      FinDist.pure (.planChosen forecast
+      PMF.pure (.planChosen forecast
         (decisionValue (cert.1 .planner) (plan_choice_ne_none cert.2.2)))
   | .planChosen forecast plan, _ =>
-      FinDist.pure (.resolved forecast plan (D.payoff forecast plan))
+      PMF.pure (.resolved forecast plan (D.payoff forecast plan))
   | .resolved _ _ _, cert => (cert.2.1 rfl).elim
 
 /-- The joint action in which the planner plays `plan` and the sponsor passes. -/
@@ -341,14 +342,14 @@ theorem step_init (D : Diagram)
     (cert : { joint : (agent : Agent) → Option ((protocol D).Action agent) //
       (protocol D).Legal (protocol D).init joint }) :
     (protocol D).step (protocol D).init cert =
-      FinDist.map Stage.forecastKnown D.forecastLaw := rfl
+      PMF.map Stage.forecastKnown D.forecastLaw := rfl
 
 /-- The utility node's step: a point mass on the value of its table. -/
 theorem step_planChosen (D : Diagram) (forecast : D.Forecast) (plan : D.Plan)
     (cert : { joint : (agent : Agent) → Option ((protocol D).Action agent) //
       (protocol D).Legal (Stage.planChosen forecast plan) joint }) :
     (protocol D).step (Stage.planChosen forecast plan) cert =
-      FinDist.pure (Stage.resolved forecast plan (D.payoff forecast plan)) := rfl
+      PMF.pure (Stage.resolved forecast plan (D.payoff forecast plan)) := rfl
 
 /-! ### Chance, and the no-op
 
@@ -366,7 +367,7 @@ theorem init_isChance (D : Diagram) : (protocol D).IsChance (protocol D).init :=
 dummy probability data appears anywhere. -/
 theorem chanceLaw_init (D : Diagram) :
     (protocol D).chanceLaw (init_isChance D) =
-      FinDist.map Stage.forecastKnown D.forecastLaw := rfl
+      PMF.map Stage.forecastKnown D.forecastLaw := rfl
 
 /-- **A cost, recorded.** The utility node is *also* a chance state by the
 protocol's definition, since `IsChance` means only "play continues and nobody
@@ -380,7 +381,7 @@ theorem planChosen_isChance (D : Diagram) (forecast : D.Forecast) (plan : D.Plan
 but the law: this one is a point mass. -/
 theorem chanceLaw_planChosen (D : Diagram) (forecast : D.Forecast) (plan : D.Plan) :
     (protocol D).chanceLaw (planChosen_isChance D forecast plan) =
-      FinDist.pure (Stage.resolved forecast plan (D.payoff forecast plan)) := rfl
+      PMF.pure (Stage.resolved forecast plan (D.payoff forecast plan)) := rfl
 
 /-- **No fake actions.** Wherever the decision node is not pending, the *only*
 legal joint action is the canonical no-op. Both the chance node and the utility
@@ -610,8 +611,8 @@ The compiled run law reproduces the diagram's intended outcome law. -/
 /-- The outcome law the diagram intends: draw the chance node, apply the
 decision rule to the parent it observes, evaluate the utility table. This is
 written from the syntax alone — no state, step, fuel, or trace occurs in it. -/
-def intendedOutcome (D : Diagram) (rule : D.Forecast → D.Plan) : FinDist (Stage D) :=
-  FinDist.map (fun forecast =>
+def intendedOutcome (D : Diagram) (rule : D.Forecast → D.Plan) : PMF (Stage D) :=
+  PMF.map (fun forecast =>
       Stage.resolved forecast (rule forecast) (D.payoff forecast (rule forecast)))
     D.forecastLaw
 
@@ -621,7 +622,7 @@ theorem step_forecastKnown_chooser (D : Diagram)
     (protocol D).step (Stage.forecastKnown forecast)
         (chooserOf D policy (Stage.forecastKnown forecast)
           (forecastKnown_not_terminal D forecast)) =
-      FinDist.pure (Stage.planChosen forecast (ruleOf D policy forecast)) := rfl
+      PMF.pure (Stage.planChosen forecast (ruleOf D policy forecast)) := rfl
 
 /-- **The evaluation fact.** Three steps — one per node — take the compiled
 protocol from its initial state to the diagram's intended outcome law. -/
@@ -631,26 +632,26 @@ theorem runFor_eq_intendedOutcome (D : Diagram)
       intendedOutcome D (ruleOf D policy) := by
   have hcont : ∀ forecast : D.Forecast,
       (protocol D).runFor (chooserOf D policy) 2 (Stage.forecastKnown forecast) =
-        FinDist.pure (Stage.resolved forecast (ruleOf D policy forecast)
+        PMF.pure (Stage.resolved forecast (ruleOf D policy forecast)
           (D.payoff forecast (ruleOf D policy forecast))) := by
     intro forecast
     rw [ExecutionProtocol.runFor_succ_of_not_terminal (chooserOf D policy) 1
         (forecastKnown_not_terminal D forecast),
-      step_forecastKnown_chooser D policy forecast, FinDist.pure_bind,
+      step_forecastKnown_chooser D policy forecast, PMF.pure_bind,
       ExecutionProtocol.runFor_succ_of_not_terminal (chooserOf D policy) 0
         (planChosen_not_terminal D forecast (ruleOf D policy forecast)),
-      step_planChosen, FinDist.pure_bind, ExecutionProtocol.runFor_zero]
+      step_planChosen, PMF.pure_bind, ExecutionProtocol.runFor_zero]
   rw [ExecutionProtocol.runFor_succ_of_not_terminal (chooserOf D policy) 2
-      (init_not_terminal D), step_init, FinDist.bind_map, intendedOutcome,
-    FinDist.map_eq_bind]
-  exact FinDist.bind_congr fun forecast _ => hcont forecast
+      (init_not_terminal D), step_init, PMF.bind_map, intendedOutcome,
+    ← PMF.bind_pure_comp]
+  exact bind_congr_on_support _ fun forecast _ => hcont forecast
 
 /-- The run stops within three steps, so the fuelled runner is a total
 evaluator here. -/
 theorem stopsWithin_three (D : Diagram) (policy : (model D).Policy Agent.planner) :
     (protocol D).StopsWithin (chooserOf D policy) 3 (protocol D).init := by
   intro reached hreached
-  rw [runFor_eq_intendedOutcome, intendedOutcome, FinDist.support_map] at hreached
+  rw [runFor_eq_intendedOutcome, intendedOutcome, PMF.support_map] at hreached
   obtain ⟨forecast, _, rfl⟩ := hreached
   exact resolved_terminal D forecast (ruleOf D policy forecast) _
 
@@ -663,17 +664,39 @@ theorem runFor_eq_intendedOutcome_of_le (D : Diagram)
   rw [ExecutionProtocol.runFor_eq_of_stopsWithin_le (stopsWithin_three D policy) hfuel]
   exact runFor_eq_intendedOutcome D policy
 
+/-- A forecast-integrable payoff remains integrable after compilation. -/
+theorem payoffIntegrable_runFor (D : Diagram)
+    (policy : (model D).Policy Agent.planner)
+    (hforecast : PayoffIntegrable D.forecastLaw
+      (fun forecast => D.payoff forecast (ruleOf D policy forecast))) :
+    PayoffIntegrable
+      ((protocol D).runFor (chooserOf D policy) 3 (protocol D).init)
+      Stage.payoffValue := by
+  rw [runFor_eq_intendedOutcome, intendedOutcome]
+  exact (payoffIntegrable_map_iff _ _ _).mpr hforecast
+
 /-- **The MAID's expected-utility semantics**, recovered from the run law. The
 protocol carries no payoff of its own; the utility node's value is an
 observable on states, and its expectation under the run law is the diagram's
 expected utility. -/
 theorem expect_payoffValue_runFor (D : Diagram)
-    (policy : (model D).Policy Agent.planner) :
-    ((protocol D).runFor (chooserOf D policy) 3 (protocol D).init).expect
-        Stage.payoffValue =
-      D.forecastLaw.expect fun forecast => D.payoff forecast (ruleOf D policy forecast) := by
-  rw [runFor_eq_intendedOutcome, intendedOutcome, FinDist.expect_map]
-  rfl
+    (policy : (model D).Policy Agent.planner)
+    (hforecast : PayoffIntegrable D.forecastLaw
+      (fun forecast => D.payoff forecast (ruleOf D policy forecast))) :
+    expect ((protocol D).runFor (chooserOf D policy) 3 (protocol D).init)
+        Stage.payoffValue (payoffIntegrable_runFor D policy hforecast) =
+      expect D.forecastLaw
+        (fun forecast => D.payoff forecast (ruleOf D policy forecast))
+        hforecast := by
+  have hmap : PayoffIntegrable
+      (intendedOutcome D (ruleOf D policy)) Stage.payoffValue := by
+    exact (payoffIntegrable_map_iff _ _ _).mpr hforecast
+  calc
+    _ = expect (intendedOutcome D (ruleOf D policy)) Stage.payoffValue
+        hmap := expect_congr_law (runFor_eq_intendedOutcome D policy)
+          Stage.payoffValue (payoffIntegrable_runFor D policy hforecast) hmap
+    _ = _ := by
+      exact expect_map _ _ _ _ _
 
 /-! ## A concrete diagram
 
@@ -688,6 +711,12 @@ inductive Sky
     shine
   deriving DecidableEq
 
+instance : Fintype Sky where
+  elems := {.rain, .shine}
+  complete := by
+    intro value
+    cases value <;> simp
+
 /-- The decision node's alphabet. -/
 inductive Venue
   | /-- Hold it inside. -/
@@ -696,9 +725,15 @@ inductive Venue
     outdoors
   deriving DecidableEq
 
+instance : Fintype Venue where
+  elems := {.indoors, .outdoors}
+  complete := by
+    intro value
+    cases value <;> simp
+
 /-- The chance node's law: rain with probability one third. -/
-def skyLaw : FinDist Sky :=
-  FinDist.mix (1 / 3) (by norm_num) (by norm_num) (FinDist.pure .rain) (FinDist.pure .shine)
+def skyLaw : PMF Sky :=
+  mix (1 / 3) (by norm_num) (by norm_num) (PMF.pure .rain) (PMF.pure .shine)
 
 /-- The utility node's table: the sponsor is scored one exactly when the venue
 matches the weather. -/
@@ -753,25 +788,46 @@ theorem ruleOf_responsiveRule (sky : Sky) :
 
 /-- The expectation of any observable under the chance node's law. -/
 theorem expect_skyLaw (score : Sky → ℝ) :
-    skyLaw.expect score = 1 / 3 * score .rain + (1 - 1 / 3) * score .shine := by
-  rw [skyLaw, FinDist.expect_mix, FinDist.expect_pure, FinDist.expect_pure]
+    expect skyLaw score (payoffIntegrable_of_finite _ _) =
+      1 / 3 * score .rain + (1 - 1 / 3) * score .shine := by
+  have hleft : PayoffIntegrable (PMF.pure Sky.rain) score :=
+    payoffIntegrable_pure _ _
+  have hright : PayoffIntegrable (PMF.pure Sky.shine) score :=
+    payoffIntegrable_pure _ _
+  have hmix := expect_mix (1 / 3) (by norm_num) (by norm_num)
+    (PMF.pure Sky.rain) (PMF.pure Sky.shine) score hleft hright
+  simpa only [skyLaw, expect_pure] using hmix
+
+/-- The three-step picnic outcome law integrates its stage payoff. -/
+theorem picnicRunIntegrable
+    (policy : (model picnic).Policy Agent.planner) :
+    PayoffIntegrable
+      ((protocol picnic).runFor (chooserOf picnic policy) 3
+        (protocol picnic).init) Stage.payoffValue :=
+  payoffIntegrable_runFor picnic policy (payoffIntegrable_of_finite _ _)
 
 theorem expect_constant_indoors :
-    ((protocol picnic).runFor (chooserOf picnic (constantRule .indoors)) 3
-      (protocol picnic).init).expect Stage.payoffValue = 1 / 3 := by
-  rw [expect_payoffValue_runFor, expect_skyLaw]
+    expect ((protocol picnic).runFor (chooserOf picnic (constantRule .indoors)) 3
+      (protocol picnic).init) Stage.payoffValue
+      (picnicRunIntegrable (constantRule .indoors)) = 1 / 3 := by
+  rw [expect_payoffValue_runFor picnic _ (payoffIntegrable_of_finite _ _),
+    expect_skyLaw]
   norm_num [ruleOf_constantRule, picnic_payoff, picnicPayoff]
 
 theorem expect_constant_outdoors :
-    ((protocol picnic).runFor (chooserOf picnic (constantRule .outdoors)) 3
-      (protocol picnic).init).expect Stage.payoffValue = 2 / 3 := by
-  rw [expect_payoffValue_runFor, expect_skyLaw]
+    expect ((protocol picnic).runFor (chooserOf picnic (constantRule .outdoors)) 3
+      (protocol picnic).init) Stage.payoffValue
+      (picnicRunIntegrable (constantRule .outdoors)) = 2 / 3 := by
+  rw [expect_payoffValue_runFor picnic _ (payoffIntegrable_of_finite _ _),
+    expect_skyLaw]
   norm_num [ruleOf_constantRule, picnic_payoff, picnicPayoff]
 
 theorem expect_responsive :
-    ((protocol picnic).runFor (chooserOf picnic responsiveRule) 3
-      (protocol picnic).init).expect Stage.payoffValue = 1 := by
-  rw [expect_payoffValue_runFor, expect_skyLaw]
+    expect ((protocol picnic).runFor (chooserOf picnic responsiveRule) 3
+      (protocol picnic).init) Stage.payoffValue
+      (picnicRunIntegrable responsiveRule) = 1 := by
+  rw [expect_payoffValue_runFor picnic _ (payoffIntegrable_of_finite _ _),
+    expect_skyLaw]
   norm_num [ruleOf_responsiveRule, responsiveVenue, picnic_payoff, picnicPayoff]
 
 /-! ## The discriminating probes
@@ -791,7 +847,9 @@ theorem outcome_law_depends_on_decision :
       (protocol picnic).runFor (chooserOf picnic (constantRule .outdoors)) 3
         (protocol picnic).init := by
   intro hequal
-  have hscore := congrArg (fun law => FinDist.expect law Stage.payoffValue) hequal
+  have hscore := expect_congr_law hequal Stage.payoffValue
+    (picnicRunIntegrable (constantRule .indoors))
+    (picnicRunIntegrable (constantRule .outdoors))
   rw [expect_constant_indoors, expect_constant_outdoors] at hscore
   norm_num at hscore
 
@@ -804,7 +862,9 @@ theorem outcome_law_depends_on_observation (venue : Venue) :
       (protocol picnic).runFor (chooserOf picnic (constantRule venue)) 3
         (protocol picnic).init := by
   intro hequal
-  have hscore := congrArg (fun law => FinDist.expect law Stage.payoffValue) hequal
+  have hscore := expect_congr_law hequal Stage.payoffValue
+    (picnicRunIntegrable responsiveRule)
+    (picnicRunIntegrable (constantRule venue))
   rw [expect_responsive] at hscore
   cases venue with
   | indoors => rw [expect_constant_indoors] at hscore; norm_num at hscore
@@ -819,11 +879,14 @@ theorem responsiveRule_not_constant :
 
 /-- **Probe 4.** The chance node is nondegenerate: both of its values carry
 mass, so the diagram is not secretly deterministic. -/
-theorem skyLaw_rain : skyLaw.prob .rain = 1 / 3 := by
-  simp [skyLaw, FinDist.prob_pure_eq_ite]
+theorem skyLaw_rain : skyLaw .rain = 1 / 3 := by
+  simp [skyLaw, mix_apply, PMF.pure_apply]
 
-theorem skyLaw_shine : skyLaw.prob .shine = 2 / 3 := by
-  simp [skyLaw, FinDist.prob_pure_eq_ite]
+theorem skyLaw_shine : skyLaw .shine = 2 / 3 := by
+  simp [skyLaw, mix_apply, PMF.pure_apply]
+  have htwo : (1 - (3 : ℝ)⁻¹) = 2 / 3 := by norm_num
+  rw [htwo]
+  rw [ENNReal.ofReal_div_of_pos (by norm_num : (0 : ℝ) < 3)]
   norm_num
 
 /-- **Probe 5.** The planner's view is a view: it does not see the utility

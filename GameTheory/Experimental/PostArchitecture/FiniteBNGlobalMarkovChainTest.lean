@@ -70,9 +70,9 @@ instance valueDecidableEq (node : Node) : DecidableEq (model.Value node) := by
   | middle => exact inferInstanceAs (DecidableEq (Fin 3))
   | right => exact inferInstanceAs (DecidableEq Bool)
 
-def fairBool : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure false) (FinDist.pure true)
+def fairBool : PMF Bool :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure false) (PMF.pure true)
 
 def encode : Bool → Fin 3
   | false => 0
@@ -90,10 +90,10 @@ def semantics : Semantics model where
     cases node with
     | left => exact fairBool
     | middle =>
-        exact FinDist.pure
+        exact PMF.pure
           (encode (configuration ⟨.left, by simp [model, Chain.parents]⟩))
     | right =>
-        exact FinDist.pure
+        exact PMF.pure
           (decode (configuration ⟨.middle, by simp [model, Chain.parents]⟩))
   utility _ _ := 0
 
@@ -102,7 +102,7 @@ def policy : Profile (nativeBehavioralSignature model) := by
   rcases site with ⟨node, hdecision⟩
   cases node <;> simp [model] at hdecision
 
-def law : FinDist (Assignment model) :=
+def law : PMF (Assignment model) :=
   (nativeBehavioralGameForm semantics).play policy
 
 theorem effectiveParents_eq : effectiveParents model = Chain.parents := by
@@ -130,16 +130,17 @@ theorem arbitrary_config_cross_product
     (firstConfiguration : Config model queryFirst)
     (secondConfiguration : Config model querySecond)
     (evidenceConfiguration : Config model Chain.middleEvidence) :
-    law.probOf
+    (law.toOuterMeasure
           (tripleCylinder queryFirst querySecond Chain.middleEvidence
-            firstConfiguration secondConfiguration evidenceConfiguration) *
-        law.probOf (cylinder Chain.middleEvidence evidenceConfiguration) =
-      law.probOf
+            firstConfiguration secondConfiguration evidenceConfiguration)).toReal *
+        (law.toOuterMeasure
+          (cylinder Chain.middleEvidence evidenceConfiguration)).toReal =
+      (law.toOuterMeasure
           (pairCylinder queryFirst Chain.middleEvidence
-            firstConfiguration evidenceConfiguration) *
-        law.probOf
+            firstConfiguration evidenceConfiguration)).toReal *
+        (law.toOuterMeasure
           (pairCylinder querySecond Chain.middleEvidence
-            secondConfiguration evidenceConfiguration) := by
+            secondConfiguration evidenceConfiguration)).toReal := by
   exact (coordinatesConditionallyIndependent_iff_cylinders law
     queryFirst querySecond Chain.middleEvidence).mp
       endpoints_independent_given_middle _ _ _

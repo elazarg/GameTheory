@@ -133,9 +133,13 @@ def SurvivesAllPureEliminationRounds (who : ι)
 replacement strictly lowers the deviator's expected utility. -/
 def IsStrictNash (F : GameForm ι) (utility : F.sig.Outcome → ι → ℝ)
     (profile : Profile F.sig) : Prop :=
-  ∀ who replacement, replacement ≠ profile who →
-    expectedUtility utility who (F.play (Profile.update profile who replacement)) <
-      expectedUtility utility who (F.play profile)
+  ∀ who, ∃ hbase : UtilityIntegrable utility who (F.play profile),
+    ∀ replacement, replacement ≠ profile who →
+      ∃ hdeviation : UtilityIntegrable utility who
+          (F.play (Profile.update profile who replacement)),
+        expectedUtility utility who
+          (F.play (Profile.update profile who replacement)) hdeviation <
+          expectedUtility utility who (F.play profile) hbase
 
 /-- A strict unilateral expected-utility improvement from `source` to `target`.
 The target equation keeps the relation tied to the canonical profile operation. -/
@@ -143,7 +147,10 @@ def ImprovingStep (F : GameForm ι) (utility : F.sig.Outcome → ι → ℝ)
     (source target : Profile F.sig) : Prop :=
   ∃ who replacement,
     target = Profile.update source who replacement ∧
-      expectedUtility utility who (F.play source) < expectedUtility utility who (F.play target)
+      ∃ hsource : UtilityIntegrable utility who (F.play source),
+        ∃ htarget : UtilityIntegrable utility who (F.play target),
+          expectedUtility utility who (F.play source) hsource <
+            expectedUtility utility who (F.play target) htarget
 
 /-- From every profile, some finite path of strict unilateral improvements
 reaches a Nash profile. This is a response-graph property; potential functions
@@ -187,7 +194,10 @@ theorem mem_pureSurvivors_of_le {earlier later : ℕ} (hround : earlier ≤ late
 
 /-- Failure of expected-utility Nash exhibits an improving step. -/
 theorem not_isNash_iff_exists_improvingStep {F : GameForm ι}
-    {utility : F.sig.Outcome → ι → ℝ} {profile : Profile F.sig} :
+    {utility : F.sig.Outcome → ι → ℝ} {profile : Profile F.sig}
+    (hbase : ∀ who, UtilityIntegrable utility who (F.play profile))
+    (hdeviation : ∀ who replacement, UtilityIntegrable utility who
+      (F.play (Profile.update profile who replacement))) :
     ¬ IsNash F (euPreference utility) profile ↔
       ∃ target, ImprovingStep F utility profile target := by
   constructor
@@ -195,11 +205,25 @@ theorem not_isNash_iff_exists_improvingStep {F : GameForm ι}
     rw [isNash_iff] at hnash
     push Not at hnash
     obtain ⟨who, replacement, hnot⟩ := hnash
-    refine ⟨Profile.update profile who replacement, who, replacement, rfl, ?_⟩
-    exact lt_of_not_ge hnot
-  · rintro ⟨target, who, replacement, htarget, himprove⟩ hnash
+    refine ⟨Profile.update profile who replacement, who, replacement, rfl,
+      hbase who, hdeviation who replacement, ?_⟩
+    apply lt_of_not_ge
+    intro hle
+    exact hnot ((euPreference_iff utility who (F.play profile)
+      (F.play (Profile.update profile who replacement))
+      (hbase who) (hdeviation who replacement)).2 hle)
+  · rintro ⟨target, who, replacement, htarget, hsource, htargetInt, himprove⟩ hnash
     subst target
-    exact (not_lt_of_ge ((isNash_iff profile).1 hnash who replacement)) himprove
+    have hle := (euPreference_iff utility who (F.play profile)
+      (F.play (Profile.update profile who replacement))
+      (hbase who) (hdeviation who replacement)).mp
+        ((isNash_iff profile).1 hnash who replacement)
+    have himprove' : expectedUtility utility who (F.play profile) (hbase who) <
+        expectedUtility utility who
+          (F.play (Profile.update profile who replacement))
+          (hdeviation who replacement) := by
+      simpa only [expectedUtility] using himprove
+    exact (not_lt_of_ge hle) himprove'
 
 /-- A Nash equilibrium is exactly a profile of mutual best responses. -/
 theorem isNash_iff_isBestResponse (profile : Profile F.sig) :
@@ -302,11 +326,19 @@ theorem IsDominantProfile.isNash {profile : Profile F.sig}
 
 /-- A profile of strictly dominant strategies is Nash. -/
 theorem isNash_of_forall_isStrictDominant
-    (hrefl : Preference.Reflexive weaklyPrefers) {profile : Profile F.sig}
+    {profile : Profile F.sig}
+    (hincumbent : ∀ who,
+      weaklyPrefers who (F.play profile) (F.play profile))
     (hstrict : ∀ who,
       IsStrictDominant F weaklyPrefers who (profile who)) :
-    IsNash F weaklyPrefers profile :=
-  IsDominantProfile.isNash (fun who => (hstrict who).toDominant hrefl)
+    IsNash F weaklyPrefers profile := by
+  rw [isNash_iff]
+  intro who replacement
+  by_cases heq : replacement = profile who
+  · subst replacement
+    simpa only [Profile.update_eq_self] using hincumbent who
+  · simpa only [Profile.update_eq_self] using
+      (hstrict who replacement heq profile (fun _ => Set.mem_univ _)).1
 
 /-- Any Nash profile equals a supplied profile of strictly dominant
 strategies. -/
@@ -542,7 +574,8 @@ utility when every player's canonical expected utility reaches that player's
 reservation level. -/
 def IsIndividuallyRational (utility : F.sig.Outcome → ι → ℝ)
     (reservation : ι → ℝ) (profile : Profile F.sig) : Prop :=
-  ∀ player, reservation player ≤ expectedUtility utility player (F.play profile)
+  ∀ player, ∃ h : UtilityIntegrable utility player (F.play profile),
+    reservation player ≤ expectedUtility utility player (F.play profile) h
 
 variable (F weaklyPrefers) in
 /-- `better` Pareto-dominates `worse`: nobody is worse off and somebody is
@@ -563,7 +596,9 @@ theorem IsIndividuallyRational.mono {utility : F.sig.Outcome → ι → ℝ}
     (hir : IsIndividuallyRational F utility reservation profile)
     (hle : ∀ player, reservation' player ≤ reservation player) :
     IsIndividuallyRational F utility reservation' profile :=
-  fun player => (hle player).trans (hir player)
+  fun player => by
+    obtain ⟨hint, hvalue⟩ := hir player
+    exact ⟨hint, (hle player).trans hvalue⟩
 
 omit [DecidableEq ι] in
 /-- A Pareto improvement preserves individual rationality. -/
@@ -573,7 +608,13 @@ theorem IsIndividuallyRational.of_paretoDominates
     (hdom : ParetoDominates F (euPreference utility) better worse)
     (hir : IsIndividuallyRational F utility reservation worse) :
     IsIndividuallyRational F utility reservation better :=
-  fun player => (hir player).trans (hdom.1 player)
+  fun player => by
+    obtain ⟨hworse, hir⟩ := hir player
+    obtain ⟨hbetter, hother, hdom⟩ := hdom.1 player
+    have hdom' : expectedUtility utility player (F.play worse) hworse ≤
+        expectedUtility utility player (F.play better) hbetter := by
+      simpa only [expectedUtility] using hdom
+    exact ⟨hbetter, hir.trans hdom'⟩
 
 omit [DecidableEq ι] in
 /-- Meeting two reservation vectors implies meeting their pointwise maximum. -/
@@ -583,7 +624,15 @@ theorem IsIndividuallyRational.sup {utility : F.sig.Outcome → ι → ℝ}
     (hsecond : IsIndividuallyRational F utility second profile) :
     IsIndividuallyRational F utility
       (fun player => max (first player) (second player)) profile :=
-  fun player => max_le (hfirst player) (hsecond player)
+  fun player => by
+    obtain ⟨hint₁, hfirst⟩ := hfirst player
+    obtain ⟨hint₂, hsecond⟩ := hsecond player
+    have hint : UtilityIntegrable utility player (F.play profile) := hint₁
+    have hfirst' : first player ≤ expectedUtility utility player (F.play profile) hint := by
+      simpa only [expectedUtility] using hfirst
+    have hsecond' : second player ≤ expectedUtility utility player (F.play profile) hint := by
+      simpa only [expectedUtility] using hsecond
+    exact ⟨hint, max_le hfirst' hsecond'⟩
 
 omit [DecidableEq ι] in
 theorem ParetoDominates.irrefl (profile : Profile F.sig) :

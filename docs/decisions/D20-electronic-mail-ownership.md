@@ -2,7 +2,7 @@
 
 - **Status:** adopted and promoted
 - **Date:** 2026-07-30
-- **Experiment IDs:** EXP-048
+- **Experiment IDs:** EXP-048, EXP-135
 
 ## Decision / question
 
@@ -27,7 +27,7 @@ the single-equilibrium architecture.
 
 ## Representative hostile slice
 
-EXP-048 recovers the three endpoint worlds, private views, action plan,
+The original EXP-048 slice recovers the three endpoint worlds, private views, action plan,
 epistemic partitions, and coordinated-attack payoff. A single uniform
 `FinDist EmailWorld` is pushed forward to the type-profile prior of the
 canonical `BayesianGame` and used directly by the canonical epistemic
@@ -44,15 +44,11 @@ The slice proves both sides of the Electronic Mail lesson:
 
 | Measure | EXP-048 result |
 |---|---|
-| authored experiment | 212 nonblank lines; 24 declarations |
 | authored imports | Bayesian equilibrium, approximate epistemics, `linarith`, `norm_num` |
-| focused build | 1,725 jobs |
 | probability representation | one canonical `FinDist EmailWorld` |
 | equilibrium surface | ordinary `IsNash` and `euPreference` |
 | deviation representation | canonical `Profile.update` |
 | Protocol / Analysis imports | none |
-| source hazards | zero placeholders, native decisions, direct updates, transports, `HEq`, `Fintype.ofFinite`, `open Classical`, or custom axioms |
-| axiom profile | `propext`, `Classical.choice`, `Quot.sound` only |
 
 ## Kill condition
 
@@ -70,6 +66,13 @@ only the concrete example imports both. The informal number of email rounds
 does not by itself force Protocol ownership: the formal ownership criterion is
 what theorem statements observe.
 
+The world prior is an ordinary PMF. Its finite carrier supplies the payoff
+integration proofs for this example, without restricting the Bayesian or
+epistemic semantic types. Partitions are Setoids and the example uses the
+canonical scalar posterior and guarded expected utility. EXP-135 preserves
+the same mutual-belief, common-belief, and profitable-deviation controls under
+these general APIs; it introduces no example-specific probability semantics.
+
 ## Consequences for public API
 
 The example exposes endpoint worlds, observations, actions, the shared world
@@ -84,10 +87,6 @@ positively reaches both input families.
 
 ## Promotion evidence
 
-`GameTheory/Examples/ElectronicMail.lean` contains the 24-declaration stable
-example. The focused target builds in 1,725 jobs and the full project in 3,365
-jobs. Phase 2 reaches all four intended bridge symbols, rejects all four
-Protocol/Analysis boundary symbols, and verifies both directions of
-Bayesian/Epistemic input-root independence. The mutual-belief,
-not-common-belief, and non-Nash theorems depend only on `propext`,
-`Classical.choice`, and `Quot.sound`.
+`GameTheory/Examples/ElectronicMail.lean` is the bridge owner. Bayesian and
+epistemic inputs remain independent of one another, and the example must not
+import Protocol or Analysis.

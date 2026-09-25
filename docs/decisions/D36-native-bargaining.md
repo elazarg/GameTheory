@@ -51,10 +51,8 @@ point is machine-refuted as a Nash solution.
 | imports | ordered-field finite-product algebra and tactics; no project Probability, Core game, Protocol, or Analysis import |
 | general results | weak Pareto consequence, symmetry/uniqueness equal gains, positive-affine invariance |
 | hostile distinction | product four versus product three; unequal scales and nonzero shifts |
-| bounded accounting | all 30 declarations classified; 14-row Nash slice promoted, 16 egalitarian/KS rows deferred |
 | boundary probes | 3 bargaining inputs reached; strategic Nash, `FinDist`, Protocol execution, and measurable theory rejected |
 | trust | sampled generic and fixture flagships use only `propext`, `Classical.choice`, and `Quot.sound` |
-| release gate | warning-clean 3,511-job build with zero build-output commands; Phase 2 and exact coverage `VERIFIED=1` |
 
 ## Kill condition
 

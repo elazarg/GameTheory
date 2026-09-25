@@ -41,8 +41,8 @@ def deviationSignalVector (M : G.PublicMonitoring) [DecidableEq ι]
     (profile : Profile G.form.sig) (who : ι)
     (action : G.form.sig.Strategy who) : M.Signal → ℝ :=
   fun signal =>
-    (M.signalLaw (Profile.update profile who action)).prob signal -
-      (M.signalLaw profile).prob signal
+    (M.signalLaw (Profile.update profile who action) signal).toReal -
+      (M.signalLaw profile signal).toReal
 
 /-- Matrix whose rows are the signal-law changes caused by one player's
 nontrivial stage deviations. -/
@@ -146,8 +146,14 @@ theorem sum_deviationSignalVector_eq_zero
     (profile : Profile G.form.sig) (who : ι)
     (action : G.form.sig.Strategy who) :
     ∑ signal, M.deviationSignalVector profile who action signal = 0 := by
+  have hmass (μ : PMF M.Signal) : ∑ signal, (μ signal).toReal = 1 := by
+    have hsum : (∑' signal, (μ signal).toReal) = 1 := by
+      rw [← ENNReal.tsum_toReal_eq (fun signal => μ.apply_ne_top signal),
+        PMF.tsum_coe]
+      rfl
+    simpa only [tsum_fintype] using hsum
   simp only [deviationSignalVector, Finset.sum_sub_distrib,
-    FinDist.sum_prob, sub_self]
+    hmass, sub_self]
 
 /-- Individual full rank forces every nontrivial deviation to change the
 public signal law. -/
@@ -163,7 +169,7 @@ theorem IndividualFullRank.signalLaw_update_ne
   funext signal
   simp only [deviationSignalMatrix, deviationSignalVector]
   rw [hequal]
-  exact sub_self _
+  simp
 
 /-- Under individual full rank, distinct nontrivial deviations induce
 distinct public signal laws. -/
@@ -177,7 +183,7 @@ theorem IndividualFullRank.signalLaw_update_injective
   apply hfull.injective
   funext signal
   simp only [deviationSignalMatrix, deviationSignalVector]
-  rw [congrArg (fun law => law.prob signal) hequal]
+  rw [congrArg (fun law : PMF M.Signal => (law signal).toReal) hequal]
 
 /-- The length-one history whose only public signal is `signal`. -/
 def singletonHistory (M : G.PublicMonitoring) (signal : M.Signal) :
@@ -187,20 +193,29 @@ def singletonHistory (M : G.PublicMonitoring) (signal : M.Signal) :
 /-- The probability of a length-one history is exactly the probability of its
 only signal under the current stage profile. -/
 theorem prob_signalHistoryLaw_one
-    (M : G.PublicMonitoring) [DecidableEq M.Signal]
+    (M : G.PublicMonitoring)
     (profile : M.MonitoredProfile) (signal : M.Signal) :
-    (M.signalHistoryLaw profile 1).prob (M.singletonHistory signal) =
-      (M.signalLaw
-        (fun i => profile i 0 (fun index => index.elim0))).prob signal := by
+    M.signalHistoryLaw profile 1 (M.singletonHistory signal) =
+      M.signalLaw
+        (fun i => profile i 0 (fun index => index.elim0)) signal := by
   rw [M.signalHistoryLaw_succ, M.signalHistoryLaw_zero,
-    FinDist.pure_bind]
+    PMF.pure_bind]
   let empty : M.SignalHistory 0 := fun index => index.elim0
   let append : M.Signal → M.SignalHistory 1 := fun next => Fin.snoc empty next
   have hinjective : Function.Injective append := by
     intro first second hequal
     exact congrFun hequal 0
-  have hprob := FinDist.prob_map_of_injective append hinjective
-    (M.signalLaw fun i => profile i 0 empty) signal
+  have hprob :
+      ((M.signalLaw fun i => profile i 0 empty).map append) (append signal) =
+        (M.signalLaw fun i => profile i 0 empty) signal := by
+    rw [PMF.map_apply]
+    rw [tsum_eq_single signal]
+    · simp
+    · intro other hne
+      have hdiff : append signal ≠ append other := by
+        intro heq
+        exact hne (hinjective heq).symm
+      simp [hdiff]
   have hsingleton : M.singletonHistory signal = append signal := by
     funext index
     fin_cases index
@@ -211,17 +226,17 @@ theorem prob_signalHistoryLaw_one
 /-- A deviation-signal row is the exact change in the generated one-signal
 prefix law caused by the canonical monitored one-shot deviation. -/
 theorem deviationSignalVector_eq_oneShotHistoryProb_sub
-    (M : G.PublicMonitoring) [DecidableEq ι] [DecidableEq M.Signal]
+    (M : G.PublicMonitoring) [DecidableEq ι]
     (profile : M.MonitoredProfile) (who : ι)
     (action : G.form.sig.Strategy who) (signal : M.Signal) :
     M.deviationSignalVector
         (fun i => profile i 0 (fun index => index.elim0)) who action signal =
       (M.signalHistoryLaw
           (Profile.update (sig := M.monitoredSignature) profile who
-            (M.oneShotDeviation profile who action)) 1).prob
-            (M.singletonHistory signal) -
-        (M.signalHistoryLaw profile 1).prob
-          (M.singletonHistory signal) := by
+            (M.oneShotDeviation profile who action)) 1
+            (M.singletonHistory signal)).toReal -
+        (M.signalHistoryLaw profile 1
+          (M.singletonHistory signal)).toReal := by
   rw [M.prob_signalHistoryLaw_one, M.prob_signalHistoryLaw_one,
     M.currentProfile_update_oneShotDeviation]
   rfl

@@ -77,16 +77,16 @@ theorem policyMeasure_isRegular :
 
 /-- Every bounded restriction is exactly the executable finite predraw. -/
 theorem finite_marginal_consumer (horizon : ℕ) :
-    (offPathGame.protocolPureProfileMeasure false (baseline false)).map
+      (offPathGame.protocolPureProfileMeasure false (baseline false)).map
         ((offPathGame.perfectMonitoring false).restrictPolicies
-          (offPathGame.boundedInformationSites false horizon)) =
+          (fun i => (boundedSitesFinite horizon i).toFinset)) =
       ((offPathGame.perfectMonitoring false).finitePolicyDraws
         (offPathGame.toBehaviorProfile false (baseline false))
-        (offPathGame.boundedInformationSites false horizon)).toMeasure := by
+        (fun i => (boundedSitesFinite horizon i).toFinset)).toMeasure := by
   unfold Game.protocolPureProfileMeasure
   exact (offPathGame.perfectMonitoring false).behavioralProfileMeasure_map_restrict
       (offPathGame.toBehaviorProfile false (baseline false))
-      (offPathGame.boundedInformationSites false horizon)
+      (fun i => (boundedSitesFinite horizon i).toFinset)
 
 /-- The same measure, syntactically outside the quantifier, realizes all
 finite prefixes. -/
@@ -100,7 +100,7 @@ theorem all_prefixes_consumer :
 /-- An arbitrary public-history deviation reaches the branch excluded from
 the baseline support. -/
 def deviation : offPathGame.PublicPolicy () :=
-  fun _ => FinDist.pure true
+  fun _ => PMF.pure true
 
 theorem unilateral_all_prefixes_consumer :
     ∀ horizon,
@@ -121,33 +121,56 @@ theorem stageUtility_abs_le_one (state : Bool)
 /-- Bounded nonconstant stage utility reaches the discounted consequence, not
 merely a family of bounded-prefix witnesses. -/
 theorem discounted_consumer :
-    Summable (fun time => (2 : ℝ)⁻¹ ^ time *
-        offPathGame.policyMeasureStageExpectation false
-          (baseline false) () time) ∧
-      offPathGame.policyMeasureDiscountedPayoff false (2 : ℝ)⁻¹
-          (baseline false) () =
-        offPathGame.behavioralDiscountedPayoff false (2 : ℝ)⁻¹
-          (baseline false) () := by
-  apply offPathGame.kuhn_policyMeasure_discountedPayoff
-    false (discount := (2 : ℝ)⁻¹) (bound := 1)
-  · norm_num
-  · norm_num
-  · exact stageUtility_abs_le_one
+    offPathGame.policyMeasureDiscountedPayoff false (2 : ℝ)⁻¹
+        (baseline false) ()
+        (fun time => offPathGame.policyMeasureStageIntegrable_of_bounded
+          false (baseline false) () 1 stageUtility_abs_le_one time)
+        (offPathGame.summable_discounted_policyMeasureStageExpectation
+          false (by norm_num) (by norm_num) (baseline false) ()
+          stageUtility_abs_le_one) =
+      offPathGame.behavioralDiscountedPayoff false (2 : ℝ)⁻¹
+        (baseline false) ()
+        (fun time => offPathGame.behavioralStageIntegrable_of_bounded
+          false (baseline false) () 1 stageUtility_abs_le_one time)
+        (offPathGame.summable_discounted_behavioralStageExpectation
+          false (by norm_num) (by norm_num) (baseline false) ()
+          stageUtility_abs_le_one) := by
+  exact offPathGame.kuhn_policyMeasure_discountedPayoff false
+    (discount := (2 : ℝ)⁻¹) (bound := 1)
+    (by norm_num) (by norm_num) (baseline false) () stageUtility_abs_le_one
 
 /-- Discounted equality also survives the off-baseline unilateral deviation. -/
 theorem unilateral_discounted_consumer :
-    Summable (fun time => (2 : ℝ)⁻¹ ^ time *
-        offPathGame.policyMeasureStageExpectation false
-          (Profile.update (baseline false) () deviation) () time) ∧
-      offPathGame.policyMeasureDiscountedPayoff false (2 : ℝ)⁻¹
-          (Profile.update (baseline false) () deviation) () =
-        offPathGame.behavioralDiscountedPayoff false (2 : ℝ)⁻¹
-          (Profile.update (baseline false) () deviation) () := by
-  apply offPathGame.kuhn_policyMeasure_update_discountedPayoff
-    false (discount := (2 : ℝ)⁻¹) (bound := 1)
-      (behavioral := baseline false) (who := ()) (replacement := deviation)
-  · norm_num
-  · norm_num
-  · exact stageUtility_abs_le_one
+    offPathGame.policyMeasureDiscountedPayoff false (2 : ℝ)⁻¹
+        (Profile.update (baseline false) () deviation) ()
+        (fun time => offPathGame.policyMeasureStageIntegrable_of_bounded
+          false (Profile.update (baseline false) () deviation) () 1
+          stageUtility_abs_le_one time)
+        (offPathGame.summable_discounted_policyMeasureStageExpectation
+          false (by norm_num) (by norm_num)
+          (Profile.update (baseline false) () deviation) ()
+          stageUtility_abs_le_one) =
+      offPathGame.behavioralDiscountedPayoff false (2 : ℝ)⁻¹
+        (Profile.update (baseline false) () deviation) ()
+        (fun time => offPathGame.behavioralStageIntegrable_of_bounded
+          false (Profile.update (baseline false) () deviation) () 1
+          stageUtility_abs_le_one time)
+        (offPathGame.summable_discounted_behavioralStageExpectation
+          false (by norm_num) (by norm_num)
+          (Profile.update (baseline false) () deviation) ()
+          stageUtility_abs_le_one) := by
+  let revised := Profile.update (baseline false) () deviation
+  let hbehavioral := fun time =>
+    offPathGame.behavioralStageIntegrable_of_bounded false revised () 1
+      stageUtility_abs_le_one time
+  let hsumBehavioral :=
+    offPathGame.summable_discounted_behavioralStageExpectation false
+      (by norm_num : 0 ≤ (2 : ℝ)⁻¹) (by norm_num : (2 : ℝ)⁻¹ < 1)
+      revised () stageUtility_abs_le_one
+  obtain ⟨_, heq⟩ :=
+    offPathGame.kuhn_policyMeasure_update_discountedPayoff false
+      (baseline false) () deviation (2 : ℝ)⁻¹
+      hbehavioral hsumBehavioral
+  simpa only [revised] using heq _
 
 end GameTheory.Experimental.PostArchitecture.StochasticInfiniteKuhn

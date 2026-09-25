@@ -35,7 +35,7 @@ closed-loop solution. -/
 def toGameForm (M : Model.{uAgent, uNature, uDecision})
     (solvable : M.IsSolvable) (nature : M.Nature) : GameForm M.Agent where
   sig := M.strategicSignature
-  play profile := FinDist.pure
+  play profile := PMF.pure
     ⟨nature, M.solution solvable profile nature⟩
 
 @[simp]
@@ -43,7 +43,7 @@ theorem toGameForm_play (M : Model.{uAgent, uNature, uDecision})
     (solvable : M.IsSolvable) (nature : M.Nature)
     (profile : M.PureProfile) :
     (M.toGameForm solvable nature).play profile =
-      FinDist.pure ⟨nature, M.solution solvable profile nature⟩ := rfl
+      PMF.pure ⟨nature, M.solution solvable profile nature⟩ := rfl
 
 /-- Canonical Nash is exactly comparison of the re-solved configuration after
 one intrinsic agent replaces its complete decision rule. -/
@@ -60,6 +60,13 @@ theorem isNash_toGameForm_iff
                 profile who replacement) nature⟩ who ≤
           utility ⟨nature, M.solution solvable profile nature⟩ who := by
   rw [isNash_iff]
-  simp only [euPreference_apply, expectedUtility_pure]
+  constructor
+  · intro h who replacement
+    have hcompare := h who replacement
+    obtain ⟨_, _, hvalue⟩ := hcompare
+    simpa [expectedUtility_pure] using hvalue
+  · intro h who replacement
+    refine ⟨payoffIntegrable_pure _ _, payoffIntegrable_pure _ _, ?_⟩
+    simpa [expectedUtility_pure] using h who replacement
 
 end GameTheory.Languages.Intrinsic.Model

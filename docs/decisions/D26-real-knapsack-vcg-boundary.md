@@ -48,17 +48,11 @@ infeasible alternatives.
 
 | Measure | EXP-055 result |
 |---|---|
-| pinned rows moved by the slice | 20 newly adapted, one newly retired; family now 26 adapt / 12 retired / 2 subsumed / 31 deferred |
 | stable split | scalar-free `Aggregate`; independent executable `Algorithm` and real `Basic`; `Mechanism` over `Basic` plus canonical VCG |
 | capability placement | explicit `Finset Agent` universe in `Basic`; `[Fintype Agent]` only for full-universe mechanism operations |
 | tie behavior | arbitrary chosen maximizer is monotone: a strict increase contradicts the two optimality inequalities if a selected bidder is dropped |
 | normalization | pivot offset is own-report independent; `vcgPayment` is zero after an own report of zero |
 | hostile witness | two unit-weight bidders, capacity one; opposing report changes pivot offset from `0` to `3`, own replacement leaves it at `3` |
-| focused builds | `Basic` 1,724 jobs; `Mechanism` 1,725; hostile witness 1,726 |
-| source hazards | zero raw updates, transports, hidden `Fintype`, placeholders, or custom axioms; executable leaves contain no classical section |
-| axiom profile | `propext`, `Classical.choice`, and `Quot.sound` only |
-| boundary audit | Aggregate rejects 8/8 real/game/analytic probes; Basic rejects 7/7 execution/VCG/Protocol/Analysis probes; mechanism reaches 6/6 canonical integration targets; Phase 2 `VERIFIED=1` |
-| full integration | umbrella 1,728 jobs; full build 3,409 jobs; Phases 0/1/2/3 and coverage audits all `VERIFIED=1` |
 
 ## Kill conditions and result
 
@@ -92,8 +86,5 @@ The predecessor's exact payment rule remains deferred behind D11/M-BAYES:
 zero normalization and monotonicity prepare that bridge but do not claim the
 analytic envelope equality.
 
-The 31 remaining knapsack rows are precisely the nine fractional rows, the
-21 repaired greedy/approximation rows, and exact Myerson payment equality.
-The next DFS gate is the repaired approximation theorem described by D25; it
-must return an actual feasible allocation and cannot inherit the predecessor's
-overweight-highest-bid defect.
+The approximation branch described by D25 must return an actual feasible
+allocation and cannot inherit the predecessor's overweight-highest-bid defect.

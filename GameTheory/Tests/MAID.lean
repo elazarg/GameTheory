@@ -75,7 +75,7 @@ def semantics : Semantics diagram where
 
 /-- Choose one Boolean value at the diagram's only decision site. -/
 def choose (value : Bool) : Policy diagram :=
-  fun _ _ _ => FinDist.pure value
+  fun _ _ _ => PMF.pure value
 
 def initial : FrontierState diagram :=
   FrontierState.initial semantics
@@ -102,20 +102,20 @@ theorem reached_value (value : Bool) :
     ⟨.decision, hmem⟩
 
 private theorem step_initial (value : Bool) :
-    step diagram semantics (choose value) initial = FinDist.pure (reached value) := by
+    step diagram semantics (choose value) initial = PMF.pure (reached value) := by
   rw [step, frontierLaw]
   have hlaws :
       (fun node => nodeLaw diagram semantics (choose value) initial node) =
-        fun _ => FinDist.pure value := by
+        fun _ => PMF.pure value := by
     funext node
     simp [nodeLaw, choose, diagram]
-  rw [hlaws, FinDist.pi_pure, FinDist.map_pure]
+  rw [hlaws, independentProduct_pure, PMF.pure_map]
   rfl
 
 theorem native_law (value : Bool) :
     (nativeBehavioralGameForm semantics).play (choose value) =
-      FinDist.pure (reached value).values := by
-  show FinDist.map (fun reached => reached.values)
+      PMF.pure (reached value).values := by
+  show PMF.map (fun reached => reached.values)
       (run diagram semantics (choose value) (Fintype.card Node) initial) = _
   have hcard : Fintype.card Node = 1 := by decide
   rw [hcard, run]
@@ -128,7 +128,7 @@ theorem native_law (value : Bool) :
       simp
     simp at hmem
   rw [ite_eq_right hincomplete, step_initial]
-  rw [FinDist.pure_bind, run, FinDist.map_pure]
+  rw [PMF.pure_bind, run, PMF.pure_map]
 
 /-- The two policies have distinct native laws; the decision coordinate is
 semantically reachable. -/
@@ -139,7 +139,7 @@ theorem native_laws_distinct :
   intro hequal
   have hpure : (reached false).values = (reached true).values := by
     have hmem : (reached false).values ∈
-        (FinDist.pure (reached true).values).support := by
+        (PMF.pure (reached true).values).support := by
       rw [← hequal]
       simp
     simpa using hmem
@@ -245,7 +245,7 @@ def semantics : Semantics diagram where
 
 /-- A pure policy assigning the same Boolean choice at every source site. -/
 def choose (value : Bool) : Policy diagram :=
-  fun _ _ _ => FinDist.pure value
+  fun _ _ _ => PMF.pure value
 
 def firstSite : DecisionSite diagram false := ⟨.first, rfl⟩
 
@@ -260,7 +260,7 @@ theorem first_owner_has_two_sites : firstSite ≠ secondSite := by
 /-- A concrete replacement is one owner policy containing rules for both
 owned sites. -/
 def firstOwnerReplacement (value : Bool) : OwnerPolicy diagram false :=
-  fun _ _ => FinDist.pure value
+  fun _ _ => PMF.pure value
 
 /-- Compilation groups a deviation at both source sites into the single
 `false`-owner profile coordinate, rather than exposing either site as a

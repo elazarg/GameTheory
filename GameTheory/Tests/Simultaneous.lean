@@ -45,9 +45,9 @@ def matching : ExecutionProtocol (Fin 2) where
     | .opening =>
         match joint.1 0, joint.1 1 with
         | some first, some second =>
-            FinDist.pure (if first = second then .agreed else .split)
-        | _, _ => FinDist.pure .split
-    | _ => FinDist.pure .split
+            PMF.pure (if first = second then .agreed else .split)
+        | _, _ => PMF.pure .split
+    | _ => PMF.pure .split
   progress := by
     rintro state hterm
     by_cases hopen : state = Pair.opening
@@ -89,13 +89,13 @@ theorem matching_outcome_depends_on_both :
     matching.step .opening ⟨bothTrue, legal_bothTrue⟩ ≠
       matching.step .opening ⟨firstFalse, legal_firstFalse⟩ := by
   have hboth : matching.step .opening ⟨bothTrue, legal_bothTrue⟩ =
-      FinDist.pure .agreed := rfl
+      PMF.pure .agreed := rfl
   have hfirst : matching.step .opening ⟨firstFalse, legal_firstFalse⟩ =
-      FinDist.pure .split := rfl
+      PMF.pure .split := rfl
   rw [hboth, hfirst]
   intro hequal
-  have hmass := congrArg (fun law => FinDist.prob law Pair.agreed) hequal
-  simp [FinDist.prob_pure_eq_ite] at hmass
+  have hmass := congrArg (fun law : PMF Pair => law Pair.agreed) hequal
+  simp at hmass
 
 /-! ## The finite-first encoding: only by sequentializing
 
@@ -135,6 +135,6 @@ def respondingPlan : Tree.PureStrategy sequentialTree :=
 reaches `agreed` — an outcome no simultaneous profile can guarantee against
 both calls. -/
 theorem respondingPlan_always_agrees :
-    Tree.eval sequentialTree respondingPlan = FinDist.pure .agreed := rfl
+    Tree.eval sequentialTree respondingPlan = PMF.pure .agreed := rfl
 
 end GameTheory.Tests

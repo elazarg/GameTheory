@@ -20,297 +20,337 @@ open GameTheory GameTheory.Math.Probability
 
 universe u
 
-/-- A payoff matrix as a two-player utility game, with the column player's
-payoff the negation of the row player's. -/
-@[reducible]
-def utilityGame {I J : Type u} (A : I → J → ℝ) : UtilityGame (Fin 2) where
-  form := form I J
-  utility := utility A
-
-/-- The row marginal of an arbitrary finite law over pure matrix profiles. -/
-def rowMarginal {I J : Type u}
-    (statusQuo : FinDist (Profile (form I J).sig)) : FinDist I :=
-  statusQuo.map fun profile => profile 0
-
-/-- The column marginal of an arbitrary finite law over pure matrix profiles. -/
-def columnMarginal {I J : Type u}
-    (statusQuo : FinDist (Profile (form I J).sig)) : FinDist J :=
-  statusQuo.map fun profile => profile 1
-
-/-- With a pure row, matrix expected payoff is expectation over the column
-law. -/
-theorem expectedPayoff_pure_row {I J : Type u} (A : I → J → ℝ)
-    (row : I) (col : FinDist J) :
-    expectedPayoff A (FinDist.pure row) col = col.expect (A row) := by
-  have hsame : Profile.update (mixedProfile (FinDist.pure row) col) 1 col =
-      mixedProfile (FinDist.pure row) col := by
-    exact Profile.update_eq_self _ 1
-  have hplay :
-      (form I J).mixed.play (mixedProfile (FinDist.pure row) col) =
-        col.bind fun current =>
-          (form I J).mixed.play
-            (Profile.update (mixedProfile (FinDist.pure row) col) 1
-              (FinDist.pure current)) := by
-    rw [← hsame]
-    exact GameForm.mixed_play_update (form I J)
-      (mixedProfile (FinDist.pure row) col) 1 col
-  unfold expectedPayoff
-  rw [hplay, expectedUtility_bind]
-  apply FinDist.expect_congr
-  intro current _
-  rw [mixedProfile_update_one]
-  have hpure : mixedProfile (FinDist.pure row) (FinDist.pure current) =
-      (form I J).purify (pureProfile row current) :=
-    mixedProfile_pure row current
+private theorem correlatedValue_zero {I J : Type u} (A : I → J → ℝ)
+    (statusQuo : PMF (Profile (form I J).sig))
+    (h : PayoffIntegrable statusQuo
+      (fun profile => A (profile 0) (profile 1))) :
+    expectedUtility (utility A) 0 ((form I J).outcomeLaw statusQuo)
+        (correlatedIntegrable_zero A statusQuo h) =
+      expect statusQuo (fun profile => A (profile 0) (profile 1)) h := by
+  let f : I × J → ℝ := fun outcome => A outcome.1 outcome.2
+  let projection : Profile (form I J).sig → I × J :=
+    fun profile => (profile 0, profile 1)
+  have hmap : PayoffIntegrable (statusQuo.map projection) f :=
+    (payoffIntegrable_map_iff projection statusQuo f).2 h
+  refine (show expect ((form I J).outcomeLaw statusQuo) f _ = _ from ?_)
   calc
-    expectedUtility (utility A) 0
-        ((form I J).mixed.play
-          (mixedProfile (FinDist.pure row) (FinDist.pure current))) =
-      expectedUtility (utility A) 0
-        ((form I J).mixed.play
-          ((form I J).purify (pureProfile row current))) := by rw [hpure]
-    _ = A row current := by
-      rw [GameForm.mixed_play_purify, expectedUtility_pure]
-      rfl
-
-/-- With a pure column, matrix expected payoff is expectation over the row
-law. -/
-theorem expectedPayoff_pure_column {I J : Type u} (A : I → J → ℝ)
-    (row : FinDist I) (col : J) :
-    expectedPayoff A row (FinDist.pure col) =
-      row.expect fun current => A current col := by
-  have hsame : Profile.update (mixedProfile row (FinDist.pure col)) 0 row =
-      mixedProfile row (FinDist.pure col) := by
-    exact Profile.update_eq_self _ 0
-  have hplay :
-      (form I J).mixed.play (mixedProfile row (FinDist.pure col)) =
-        row.bind fun current =>
-          (form I J).mixed.play
-            (Profile.update (mixedProfile row (FinDist.pure col)) 0
-              (FinDist.pure current)) := by
-    rw [← hsame]
-    exact GameForm.mixed_play_update (form I J)
-      (mixedProfile row (FinDist.pure col)) 0 row
-  unfold expectedPayoff
-  rw [hplay, expectedUtility_bind]
-  apply FinDist.expect_congr
-  intro current _
-  rw [mixedProfile_update_zero]
-  have hpure : mixedProfile (FinDist.pure current) (FinDist.pure col) =
-      (form I J).purify (pureProfile current col) :=
-    mixedProfile_pure current col
+    expect ((form I J).outcomeLaw statusQuo) f _ =
+        expect (statusQuo.map projection) f hmap :=
+      expect_congr_law (correlatedPlay_eq_map statusQuo) f _ _
+    _ = expect statusQuo (f ∘ projection) h :=
+      expect_map projection statusQuo f h hmap
+private theorem correlatedValue_one {I J : Type u} (A : I → J → ℝ)
+    (statusQuo : PMF (Profile (form I J).sig))
+    (h : PayoffIntegrable statusQuo
+      (fun profile => A (profile 0) (profile 1))) :
+    expectedUtility (utility A) 1 ((form I J).outcomeLaw statusQuo)
+        (correlatedIntegrable_one A statusQuo h) =
+      -expect statusQuo (fun profile => A (profile 0) (profile 1)) h := by
+  let f : I × J → ℝ := fun outcome => -A outcome.1 outcome.2
+  let projection : Profile (form I J).sig → I × J :=
+    fun profile => (profile 0, profile 1)
+  have hneg : PayoffIntegrable statusQuo (f ∘ projection) := payoffIntegrable_neg h
+  have hmap : PayoffIntegrable (statusQuo.map projection) f :=
+    (payoffIntegrable_map_iff projection statusQuo f).2 hneg
+  refine (show expect ((form I J).outcomeLaw statusQuo) f _ = _ from ?_)
   calc
+    expect ((form I J).outcomeLaw statusQuo) f _ =
+        expect (statusQuo.map projection) f hmap :=
+      expect_congr_law (correlatedPlay_eq_map statusQuo) f _ _
+    _ = expect statusQuo (f ∘ projection) hneg :=
+      expect_map projection statusQuo f hneg hmap
+    _ = -expect statusQuo (fun profile => A (profile 0) (profile 1)) h :=
+      expect_neg h
+
+private theorem rowReplacementValue {I J : Type u} (A : I → J → ℝ)
+    (statusQuo : PMF (Profile (form I J).sig)) (row : I)
+    (h : PayoffIntegrable (columnMarginal statusQuo) (A row)) :
     expectedUtility (utility A) 0
-        ((form I J).mixed.play
-          (mixedProfile (FinDist.pure current) (FinDist.pure col))) =
-      expectedUtility (utility A) 0
-        ((form I J).mixed.play
-          ((form I J).purify (pureProfile current col))) := by rw [hpure]
-    _ = A current col := by
-      rw [GameForm.mixed_play_purify, expectedUtility_pure]
-      rfl
+        (statusQuo.bind fun profile =>
+          (form I J).play (Profile.update profile 0 row))
+        (rowReplacementIntegrable A statusQuo row h) =
+      expectedPayoff A (PMF.pure row) (columnMarginal statusQuo)
+        (integrable_pure_row A row (columnMarginal statusQuo) h) := by
+  exact expectedUtility_congr_law (utility A) 0
+    ((rowReplacement_eq_map statusQuo row).trans
+      (mixed_play_pure_row row (columnMarginal statusQuo)).symm) _ _
 
-/-- Matrix payoff is affine in the row law. -/
-theorem expectedPayoff_eq_expect_rows {I J : Type u} (A : I → J → ℝ)
-    (row : FinDist I) (col : FinDist J) :
-    expectedPayoff A row col =
-      row.expect fun current => expectedPayoff A (FinDist.pure current) col := by
-  have hsame : Profile.update (mixedProfile row col) 0 row =
-      mixedProfile row col := Profile.update_eq_self _ 0
-  have hplay :
-      (form I J).mixed.play (mixedProfile row col) =
-        row.bind fun current =>
-          (form I J).mixed.play
-            (Profile.update (mixedProfile row col) 0 (FinDist.pure current)) := by
-    rw [← hsame]
-    exact GameForm.mixed_play_update (form I J) (mixedProfile row col) 0 row
-  unfold expectedPayoff
-  rw [hplay, expectedUtility_bind]
-  apply FinDist.expect_congr
-  intro current _
-  rw [mixedProfile_update_zero]
-
-/-- Matrix payoff is affine in the column law. -/
-theorem expectedPayoff_eq_expect_columns {I J : Type u} (A : I → J → ℝ)
-    (row : FinDist I) (col : FinDist J) :
-    expectedPayoff A row col =
-      col.expect fun current => expectedPayoff A row (FinDist.pure current) := by
-  have hsame : Profile.update (mixedProfile row col) 1 col =
-      mixedProfile row col := Profile.update_eq_self _ 1
-  have hplay :
-      (form I J).mixed.play (mixedProfile row col) =
-        col.bind fun current =>
-          (form I J).mixed.play
-            (Profile.update (mixedProfile row col) 1 (FinDist.pure current)) := by
-    rw [← hsame]
-    exact GameForm.mixed_play_update (form I J) (mixedProfile row col) 1 col
-  unfold expectedPayoff
-  rw [hplay, expectedUtility_bind]
-  apply FinDist.expect_congr
-  intro current _
-  rw [mixedProfile_update_one]
-
-/-- Expected payoff of a separable zero-sum matrix is the difference of the
-two marginal expectations. -/
-theorem expectedPayoff_sub {I J : Type u} (rowValue : I → ℝ)
-    (colValue : J → ℝ) (row : FinDist I) (col : FinDist J) :
-    expectedPayoff (fun currentRow currentCol =>
-        rowValue currentRow - colValue currentCol) row col =
-      row.expect rowValue - col.expect colValue := by
-  rw [expectedPayoff_eq_expect_rows]
-  simp_rw [expectedPayoff_pure_row, FinDist.expect_sub, FinDist.expect_const]
-
-/-- Row external regret is the fixed row's payoff against the status quo's
-column marginal minus the correlated status-quo payoff. -/
+private theorem columnReplacementValue {I J : Type u} (A : I → J → ℝ)
+    (statusQuo : PMF (Profile (form I J).sig)) (col : J)
+    (h : PayoffIntegrable (rowMarginal statusQuo)
+      (fun row => A row col)) :
+    expectedUtility (utility A) 1
+        (statusQuo.bind fun profile =>
+          (form I J).play (Profile.update profile 1 col))
+        (columnReplacementIntegrable A statusQuo col h) =
+      -expectedPayoff A (rowMarginal statusQuo) (PMF.pure col)
+        (integrable_pure_column A (rowMarginal statusQuo) col h) := by
+  let law := (form I J).mixed.play
+    (mixedProfile (rowMarginal statusQuo) (PMF.pure col))
+  have hzero : UtilityIntegrable (utility A) 0 law :=
+    integrable_pure_column A (rowMarginal statusQuo) col h
+  have hone : UtilityIntegrable (utility A) 1 law :=
+    payoffIntegrable_neg hzero
+  calc
+    _ = expectedUtility (utility A) 1 law hone :=
+      expectedUtility_congr_law (utility A) 1
+        ((columnReplacement_eq_map statusQuo col).trans
+          (mixed_play_pure_column (rowMarginal statusQuo) col).symm) _ _
+    _ = -expectedPayoff A (rowMarginal statusQuo) (PMF.pure col) hzero :=
+      expectedUtility_one_mixedProfile A (rowMarginal statusQuo)
+        (PMF.pure col) hzero hone
+/-- Row regret is the pure-row payoff against the column marginal minus the
+correlated incumbent payoff. -/
 theorem externalRegret_zero_eq {I J : Type u} (A : I → J → ℝ)
-    (statusQuo : FinDist (Profile (form I J).sig)) (row : I) :
-    (utilityGame A).externalRegret statusQuo 0 row =
-      expectedPayoff A (FinDist.pure row) (columnMarginal statusQuo) -
-        statusQuo.expect fun profile => A (profile 0) (profile 1) := by
-  rw [(utilityGame A).externalRegret_eq_expect_gain]
-  simp only [utilityGame, expectedUtility_pure, utility_zero]
-  have hupdated :
-      (fun profile : Profile (form I J).sig =>
-        A ((Profile.update profile 0 row) 0)
-          ((Profile.update profile 0 row) 1)) =
-        fun profile => A row (profile 1) := by
-    funext profile
-    rw [Profile.update_same,
-      Profile.update_of_ne _ _ (by decide : (1 : Fin 2) ≠ 0)]
-  rw [FinDist.expect_sub, hupdated, expectedPayoff_pure_row, columnMarginal,
-    FinDist.expect_map]
+    (statusQuo : PMF (Profile (form I J).sig)) (row : I)
+    (hbase : PayoffIntegrable statusQuo
+      (fun profile => A (profile 0) (profile 1)))
+    (hrow : PayoffIntegrable (columnMarginal statusQuo) (A row)) :
+    (utilityGame A).externalRegret statusQuo 0 row
+        (correlatedIntegrable_zero A statusQuo hbase)
+        (rowReplacementIntegrable A statusQuo row hrow) =
+      expectedPayoff A (PMF.pure row) (columnMarginal statusQuo)
+        (integrable_pure_row A row (columnMarginal statusQuo) hrow) -
+        expect statusQuo (fun profile => A (profile 0) (profile 1)) hbase := by
+  unfold UtilityGame.externalRegret
+  rw [rowReplacementValue A statusQuo row hrow,
+    correlatedValue_zero A statusQuo hbase]
 
-/-- Column external regret is the correlated row payoff minus the fixed
-column's payoff against the row marginal. -/
+/-- Column regret is correlated row payoff minus the pure-column payoff
+against the row marginal. -/
 theorem externalRegret_one_eq {I J : Type u} (A : I → J → ℝ)
-    (statusQuo : FinDist (Profile (form I J).sig)) (col : J) :
-    (utilityGame A).externalRegret statusQuo 1 col =
-      statusQuo.expect (fun profile => A (profile 0) (profile 1)) -
-        expectedPayoff A (rowMarginal statusQuo) (FinDist.pure col) := by
-  rw [(utilityGame A).externalRegret_eq_expect_gain]
-  simp only [utilityGame, expectedUtility_pure, utility_one]
-  have hupdated :
-      (fun profile : Profile (form I J).sig =>
-        -A ((Profile.update profile 1 col) 0)
-          ((Profile.update profile 1 col) 1)) =
-        fun profile => -A (profile 0) col := by
-    funext profile
-    rw [Profile.update_same,
-      Profile.update_of_ne _ _ (by decide : (0 : Fin 2) ≠ 1)]
-  rw [FinDist.expect_sub, hupdated, expectedPayoff_pure_column, rowMarginal,
-    FinDist.expect_map]
-  have hfixed :
-      statusQuo.expect (fun profile => -A (profile 0) col) =
-        -statusQuo.expect (fun profile => A (profile 0) col) := by
-    calc
-      statusQuo.expect (fun profile => -A (profile 0) col) =
-          statusQuo.expect (fun profile => (-1 : ℝ) * A (profile 0) col) := by
-            congr 1
-            funext profile
-            ring
-      _ = (-1 : ℝ) * statusQuo.expect
-          (fun profile => A (profile 0) col) := FinDist.expect_smul ..
-      _ = _ := by ring
-  have hbase :
-      statusQuo.expect (fun profile => -A (profile 0) (profile 1)) =
-        -statusQuo.expect (fun profile => A (profile 0) (profile 1)) := by
-    calc
-      statusQuo.expect (fun profile => -A (profile 0) (profile 1)) =
-          statusQuo.expect (fun profile =>
-            (-1 : ℝ) * A (profile 0) (profile 1)) := by
-              congr 1
-              funext profile
-              ring
-      _ = (-1 : ℝ) * statusQuo.expect
-          (fun profile => A (profile 0) (profile 1)) := FinDist.expect_smul ..
-      _ = _ := by ring
-  rw [hfixed, hbase]
+    (statusQuo : PMF (Profile (form I J).sig)) (col : J)
+    (hbase : PayoffIntegrable statusQuo
+      (fun profile => A (profile 0) (profile 1)))
+    (hcol : PayoffIntegrable (rowMarginal statusQuo)
+      (fun row => A row col)) :
+    (utilityGame A).externalRegret statusQuo 1 col
+        (correlatedIntegrable_one A statusQuo hbase)
+        (columnReplacementIntegrable A statusQuo col hcol) =
+      expect statusQuo (fun profile => A (profile 0) (profile 1)) hbase -
+        expectedPayoff A (rowMarginal statusQuo) (PMF.pure col)
+          (integrable_pure_column A (rowMarginal statusQuo) col hcol) := by
+  unfold UtilityGame.externalRegret
+  rw [columnReplacementValue A statusQuo col hcol,
+    correlatedValue_one A statusQuo hbase]
   ring
-
-/-- **Zero-sum regret cancellation.** The sum of the two canonical external
-regrets is exactly the saddle deviation gap of the independent marginals. -/
+/-- Correlated incumbent payoff cancels in the sum of signed row and column
+external regrets. -/
 theorem saddleGap_eq_externalRegret_add {I J : Type u}
-    (A : I → J → ℝ)
-    (statusQuo : FinDist (Profile (form I J).sig)) (row : I) (col : J) :
-    expectedPayoff A (FinDist.pure row) (columnMarginal statusQuo) -
-        expectedPayoff A (rowMarginal statusQuo) (FinDist.pure col) =
-      (utilityGame A).externalRegret statusQuo 0 row +
-        (utilityGame A).externalRegret statusQuo 1 col := by
-  rw [externalRegret_zero_eq, externalRegret_one_eq]
+    (A : I → J → ℝ) (statusQuo : PMF (Profile (form I J).sig))
+    (row : I) (col : J)
+    (hbase : PayoffIntegrable statusQuo
+      (fun profile => A (profile 0) (profile 1)))
+    (hrow : PayoffIntegrable (columnMarginal statusQuo) (A row))
+    (hcol : PayoffIntegrable (rowMarginal statusQuo)
+      (fun current => A current col)) :
+    expectedPayoff A (PMF.pure row) (columnMarginal statusQuo)
+        (integrable_pure_row A row (columnMarginal statusQuo) hrow) -
+      expectedPayoff A (rowMarginal statusQuo) (PMF.pure col)
+        (integrable_pure_column A (rowMarginal statusQuo) col hcol) =
+      (utilityGame A).externalRegret statusQuo 0 row
+        (correlatedIntegrable_zero A statusQuo hbase)
+        (rowReplacementIntegrable A statusQuo row hrow) +
+      (utilityGame A).externalRegret statusQuo 1 col
+        (correlatedIntegrable_one A statusQuo hbase)
+        (columnReplacementIntegrable A statusQuo col hcol) := by
+  rw [externalRegret_zero_eq A statusQuo row hbase hrow,
+    externalRegret_one_eq A statusQuo col hbase hcol]
   ring
 
-/-- Uniform external-regret bounds control every pure saddle deviation gap. -/
+/-- Uniform signed regret bounds control each pure saddle gap. -/
 theorem pureSaddleGap_le_of_externalRegret_le {I J : Type u}
-    (A : I → J → ℝ)
-    (statusQuo : FinDist (Profile (form I J).sig)) {rowBound colBound : ℝ}
-    (hrow : ∀ row, (utilityGame A).externalRegret statusQuo 0 row ≤ rowBound)
-    (hcol : ∀ col, (utilityGame A).externalRegret statusQuo 1 col ≤ colBound) :
+    (A : I → J → ℝ) (statusQuo : PMF (Profile (form I J).sig))
+    {rowBound colBound : ℝ}
+    (hbase : PayoffIntegrable statusQuo
+      (fun profile => A (profile 0) (profile 1)))
+    (hrows : ∀ row, PayoffIntegrable (columnMarginal statusQuo) (A row))
+    (hcols : ∀ col, PayoffIntegrable (rowMarginal statusQuo)
+      (fun row => A row col))
+    (hrow : ∀ row,
+      (utilityGame A).externalRegret statusQuo 0 row
+        (correlatedIntegrable_zero A statusQuo hbase)
+        (rowReplacementIntegrable A statusQuo row (hrows row)) ≤ rowBound)
+    (hcol : ∀ col,
+      (utilityGame A).externalRegret statusQuo 1 col
+        (correlatedIntegrable_one A statusQuo hbase)
+        (columnReplacementIntegrable A statusQuo col (hcols col)) ≤ colBound) :
     ∀ row col,
-      expectedPayoff A (FinDist.pure row) (columnMarginal statusQuo) -
-          expectedPayoff A (rowMarginal statusQuo) (FinDist.pure col) ≤
+      expectedPayoff A (PMF.pure row) (columnMarginal statusQuo)
+          (integrable_pure_row A row (columnMarginal statusQuo) (hrows row)) -
+        expectedPayoff A (rowMarginal statusQuo) (PMF.pure col)
+          (integrable_pure_column A (rowMarginal statusQuo) col (hcols col)) ≤
         rowBound + colBound := by
   intro row col
-  rw [saddleGap_eq_externalRegret_add]
+  rw [saddleGap_eq_externalRegret_add A statusQuo row col
+    hbase (hrows row) (hcols col)]
   exact add_le_add (hrow row) (hcol col)
-
-/-- The same bound controls the saddle gap against arbitrary mixed row and
-column deviations, by affinity of matrix payoff. -/
+/-- Pure saddle bounds extend to mixed deviations only when both actual
+independent deviation laws have integrable matrix payoff. -/
 theorem mixedSaddleGap_le_of_externalRegret_le {I J : Type u}
-    (A : I → J → ℝ)
-    (statusQuo : FinDist (Profile (form I J).sig)) {rowBound colBound : ℝ}
-    (hrow : ∀ row, (utilityGame A).externalRegret statusQuo 0 row ≤ rowBound)
-    (hcol : ∀ col, (utilityGame A).externalRegret statusQuo 1 col ≤ colBound)
-    (rowDeviation : FinDist I) (colDeviation : FinDist J) :
-    expectedPayoff A rowDeviation (columnMarginal statusQuo) -
-        expectedPayoff A (rowMarginal statusQuo) colDeviation ≤
+    (A : I → J → ℝ) (statusQuo : PMF (Profile (form I J).sig))
+    {rowBound colBound : ℝ}
+    (hbase : PayoffIntegrable statusQuo
+      (fun profile => A (profile 0) (profile 1)))
+    (hrows : ∀ row, PayoffIntegrable (columnMarginal statusQuo) (A row))
+    (hcols : ∀ col, PayoffIntegrable (rowMarginal statusQuo)
+      (fun row => A row col))
+    (hrow : ∀ row,
+      (utilityGame A).externalRegret statusQuo 0 row
+        (correlatedIntegrable_zero A statusQuo hbase)
+        (rowReplacementIntegrable A statusQuo row (hrows row)) ≤ rowBound)
+    (hcol : ∀ col,
+      (utilityGame A).externalRegret statusQuo 1 col
+        (correlatedIntegrable_one A statusQuo hbase)
+        (columnReplacementIntegrable A statusQuo col (hcols col)) ≤ colBound)
+    (rowDeviation : PMF I) (colDeviation : PMF J)
+    (hrowMixed : UtilityIntegrable (utility A) 0
+      ((form I J).mixed.play
+        (mixedProfile rowDeviation (columnMarginal statusQuo))))
+    (hcolMixed : UtilityIntegrable (utility A) 0
+      ((form I J).mixed.play
+        (mixedProfile (rowMarginal statusQuo) colDeviation))) :
+    expectedPayoff A rowDeviation (columnMarginal statusQuo) hrowMixed -
+        expectedPayoff A (rowMarginal statusQuo) colDeviation hcolMixed ≤
       rowBound + colBound := by
-  have hpure := pureSaddleGap_le_of_externalRegret_le A statusQuo hrow hcol
-  have hcolAverage : ∀ row,
-      expectedPayoff A (FinDist.pure row) (columnMarginal statusQuo) -
-          expectedPayoff A (rowMarginal statusQuo) colDeviation ≤
-        rowBound + colBound := by
-    intro row
-    have h := FinDist.expect_mono (μ := colDeviation)
-      (u := fun col =>
-        expectedPayoff A (FinDist.pure row) (columnMarginal statusQuo) -
-          expectedPayoff A (rowMarginal statusQuo) (FinDist.pure col))
-      (v := fun _col => rowBound + colBound)
-      (fun col _ => hpure row col)
-    rw [FinDist.expect_sub, FinDist.expect_const,
-      ← expectedPayoff_eq_expect_columns] at h
-    simpa only [FinDist.expect_const] using h
-  have h := FinDist.expect_mono (μ := rowDeviation)
-    (u := fun row =>
-      expectedPayoff A (FinDist.pure row) (columnMarginal statusQuo) -
-        expectedPayoff A (rowMarginal statusQuo) colDeviation)
-    (v := fun _row => rowBound + colBound)
-    (fun row _ => hcolAverage row)
-  rw [FinDist.expect_sub, FinDist.expect_const,
-    ← expectedPayoff_eq_expect_rows] at h
-  simpa only [FinDist.expect_const] using h
-
-/-- **No regret implies approximate zero-sum Nash.** The independent marginal
-profile of an arbitrary correlated trace is a canonical approximate mixed Nash
-profile, with tolerance equal to the sum of the two regret bounds. -/
+  have hpure := pureSaddleGap_le_of_externalRegret_le A statusQuo
+    hbase hrows hcols hrow hcol
+  have hpureRaw (row : I) (col : J) :
+      expect (columnMarginal statusQuo) (A row) (hrows row) -
+        expect (rowMarginal statusQuo) (fun current => A current col)
+          (hcols col) ≤ rowBound + colBound := by
+    have h := hpure row col
+    rw [expectedPayoff_pure_row A row (columnMarginal statusQuo) (hrows row),
+      expectedPayoff_pure_column A (rowMarginal statusQuo) col (hcols col)] at h
+    exact h
+  obtain ⟨hcolOuter, hcolAverage⟩ :=
+    expectedPayoff_eq_expect_columns A (rowMarginal statusQuo) colDeviation
+      hcolMixed hcols
+  have hcolGap (row : I) :
+      expect (columnMarginal statusQuo) (A row) (hrows row) -
+        expectedPayoff A (rowMarginal statusQuo) colDeviation hcolMixed ≤
+          rowBound + colBound := by
+    let c := expect (columnMarginal statusQuo) (A row) (hrows row)
+    have hsub : PayoffIntegrable colDeviation
+        (fun col => c - expect (rowMarginal statusQuo)
+          (fun current => A current col) (hcols col)) :=
+      payoffIntegrable_sub (payoffIntegrable_constant colDeviation c) hcolOuter
+    have hbound := expect_le_const colDeviation _ hsub
+      (rowBound + colBound) (fun col _ => hpureRaw row col)
+    have hvalue :
+        expect colDeviation (fun col => c - expect (rowMarginal statusQuo)
+            (fun current => A current col) (hcols col)) hsub =
+          c - expectedPayoff A (rowMarginal statusQuo) colDeviation hcolMixed := by
+      calc
+        _ = expect colDeviation (fun _ => c)
+              (payoffIntegrable_constant colDeviation c) -
+            expect colDeviation (fun col =>
+              expect (rowMarginal statusQuo) (fun current => A current col)
+                (hcols col)) hcolOuter :=
+          expect_sub (payoffIntegrable_constant colDeviation c) hcolOuter
+        _ = _ := by rw [expect_constant, ← hcolAverage]
+    rw [hvalue] at hbound
+    exact hbound
+  obtain ⟨hrowOuter, hrowAverage⟩ :=
+    expectedPayoff_eq_expect_rows A rowDeviation (columnMarginal statusQuo)
+      hrowMixed hrows
+  let c := expectedPayoff A (rowMarginal statusQuo) colDeviation hcolMixed
+  have hsub : PayoffIntegrable rowDeviation
+      (fun row => expect (columnMarginal statusQuo) (A row) (hrows row) - c) :=
+    payoffIntegrable_sub hrowOuter (payoffIntegrable_constant rowDeviation c)
+  have hbound := expect_le_const rowDeviation _ hsub
+    (rowBound + colBound) (fun row _ => hcolGap row)
+  have hvalue :
+      expect rowDeviation (fun row =>
+          expect (columnMarginal statusQuo) (A row) (hrows row) - c) hsub =
+        expectedPayoff A rowDeviation (columnMarginal statusQuo) hrowMixed - c := by
+    calc
+      _ = expect rowDeviation (fun row =>
+            expect (columnMarginal statusQuo) (A row) (hrows row)) hrowOuter -
+          expect rowDeviation (fun _ => c)
+            (payoffIntegrable_constant rowDeviation c) :=
+        expect_sub hrowOuter (payoffIntegrable_constant rowDeviation c)
+      _ = _ := by rw [expect_constant, ← hrowAverage]
+  rw [hvalue] at hbound
+  exact hbound
+/-- Independent marginals of a correlated trace are approximate Nash when
+all actual unilateral mixed deviation laws have defined payoff. -/
 theorem marginalProfile_isεNash_of_externalRegret_le {I J : Type u}
-    (A : I → J → ℝ)
-    (statusQuo : FinDist (Profile (form I J).sig)) {rowBound colBound : ℝ}
-    (hrow : ∀ row, (utilityGame A).externalRegret statusQuo 0 row ≤ rowBound)
-    (hcol : ∀ col, (utilityGame A).externalRegret statusQuo 1 col ≤ colBound) :
+    (A : I → J → ℝ) (statusQuo : PMF (Profile (form I J).sig))
+    {rowBound colBound : ℝ}
+    (hbase : PayoffIntegrable statusQuo
+      (fun profile => A (profile 0) (profile 1)))
+    (hrows : ∀ row, PayoffIntegrable (columnMarginal statusQuo) (A row))
+    (hcols : ∀ col, PayoffIntegrable (rowMarginal statusQuo)
+      (fun row => A row col))
+    (hrow : ∀ row,
+      (utilityGame A).externalRegret statusQuo 0 row
+        (correlatedIntegrable_zero A statusQuo hbase)
+        (rowReplacementIntegrable A statusQuo row (hrows row)) ≤ rowBound)
+    (hcol : ∀ col,
+      (utilityGame A).externalRegret statusQuo 1 col
+        (correlatedIntegrable_one A statusQuo hbase)
+        (columnReplacementIntegrable A statusQuo col (hcols col)) ≤ colBound)
+    (hrowMixed : ∀ replacement : PMF I, UtilityIntegrable (utility A) 0
+      ((form I J).mixed.play
+        (mixedProfile replacement (columnMarginal statusQuo))))
+    (hcolMixed : ∀ replacement : PMF J, UtilityIntegrable (utility A) 0
+      ((form I J).mixed.play
+        (mixedProfile (rowMarginal statusQuo) replacement))) :
     IsεNash (form I J).mixed (utility A) (rowBound + colBound)
       (mixedProfile (rowMarginal statusQuo) (columnMarginal statusQuo)) := by
   rw [isεNash_iff]
   intro who replacement
   rcases (by decide : ∀ player : Fin 2, player = 0 ∨ player = 1) who with rfl | rfl
-  · rw [mixedProfile_update_zero, expectedUtility_zero_mixedProfile,
-      expectedUtility_zero_mixedProfile]
-    have hgap := mixedSaddleGap_le_of_externalRegret_le A statusQuo hrow hcol
-      replacement (columnMarginal statusQuo)
-    linarith
-  · rw [mixedProfile_update_one, expectedUtility_one_mixedProfile,
-      expectedUtility_one_mixedProfile]
-    have hgap := mixedSaddleGap_le_of_externalRegret_le A statusQuo hrow hcol
-      (rowMarginal statusQuo) replacement
-    linarith
-
+  · let base := hrowMixed (rowMarginal statusQuo)
+    let dev := hrowMixed replacement
+    refine ⟨base, ?_, ?_⟩
+    · simpa only [mixedProfile_update_zero] using dev
+    · have hgap := mixedSaddleGap_le_of_externalRegret_le A statusQuo
+        hbase hrows hcols hrow hcol replacement (columnMarginal statusQuo)
+        dev (hcolMixed (columnMarginal statusQuo))
+      have hineq :
+          expectedUtility (utility A) 0
+              ((form I J).mixed.play
+                (mixedProfile replacement (columnMarginal statusQuo))) dev ≤
+            expectedUtility (utility A) 0
+                ((form I J).mixed.play
+                  (mixedProfile (rowMarginal statusQuo)
+                    (columnMarginal statusQuo))) base +
+              (rowBound + colBound) := by
+        show expectedPayoff A replacement (columnMarginal statusQuo) dev ≤
+          expectedPayoff A (rowMarginal statusQuo)
+            (columnMarginal statusQuo) base + (rowBound + colBound)
+        linarith
+      simpa only [mixedProfile_update_zero] using hineq
+  · let baseZero := hrowMixed (rowMarginal statusQuo)
+    let baseOne : UtilityIntegrable (utility A) 1
+        ((form I J).mixed.play
+          (mixedProfile (rowMarginal statusQuo) (columnMarginal statusQuo))) :=
+      payoffIntegrable_neg baseZero
+    let devZero := hcolMixed replacement
+    let devOne : UtilityIntegrable (utility A) 1
+        ((form I J).mixed.play
+          (mixedProfile (rowMarginal statusQuo) replacement)) :=
+      payoffIntegrable_neg devZero
+    refine ⟨baseOne, ?_, ?_⟩
+    · simpa only [mixedProfile_update_one] using devOne
+    · have hgap := mixedSaddleGap_le_of_externalRegret_le A statusQuo
+        hbase hrows hcols hrow hcol (rowMarginal statusQuo) replacement
+        baseZero devZero
+      have hineq :
+          expectedUtility (utility A) 1
+              ((form I J).mixed.play
+                (mixedProfile (rowMarginal statusQuo) replacement)) devOne ≤
+            expectedUtility (utility A) 1
+                ((form I J).mixed.play
+                  (mixedProfile (rowMarginal statusQuo)
+                    (columnMarginal statusQuo))) baseOne +
+              (rowBound + colBound) := by
+        rw [expectedUtility_one_mixedProfile A (rowMarginal statusQuo)
+          replacement devZero devOne,
+          expectedUtility_one_mixedProfile A (rowMarginal statusQuo)
+            (columnMarginal statusQuo) baseZero baseOne]
+        linarith
+      simpa only [mixedProfile_update_one] using hineq
 end GameTheory.MatrixGame

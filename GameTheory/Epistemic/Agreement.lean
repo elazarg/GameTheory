@@ -1,14 +1,15 @@
 /-
-# Agreement over finite epistemic partitions
+# Agreement over epistemic setoids
 
-Finite cell decomposition and Aumann's agreement theorem over the canonical
-finite probability law.
+Posterior aggregation uses the ordinary PMF quotient-observation disintegration.
+The proof ranges over supported quotient fibers and does not enumerate states
+or information cells.
 
 Primary reference: R. J. Aumann, “Agreeing to Disagree,” *Annals of
 Statistics* 4 (1976).
 -/
 
-import GameTheory.Epistemic.Knowledge
+import GameTheory.Epistemic.Basic
 
 noncomputable section
 
@@ -20,144 +21,238 @@ universe uΩ
 
 variable {Ω : Type uΩ}
 
-/-- Distinct cells of a partition are disjoint. -/
-theorem cells_disjoint (partition : InfoPartition Ω) {first second : Ω}
-    (hne : partition.cell first ≠ partition.cell second) :
-    Disjoint (partition.cell first) (partition.cell second) := by
-  rw [Finset.disjoint_left]
-  intro state hfirst hsecond
-  apply hne
-  rw [← partition.coherent first state hfirst,
-    partition.coherent second state hsecond]
+private theorem expect_indicator_inter_eq_report_mul_mass
+    (prior : PMF Ω) (partition : Setoid Ω) (event publicEvent : Set Ω)
+    (hself : IsSelfEvident partition publicEvent) (report : ℝ)
+    (hreport : ∀ state ∈ publicEvent,
+      posterior prior partition event state = report) :
+    expect prior
+        ((publicEvent ∩ event).indicator (fun _ => (1 : ℝ)))
+        (payoffIntegrable_indicator (publicEvent ∩ event)
+          (payoffIntegrable_constant prior 1)) =
+      report * (prior.toOuterMeasure publicEvent).toReal := by
+  classical
+  let obs := observation partition
+  let marginal := PMF.map obs prior
+  let qPublic : Set (Quotient partition) := obs '' publicEvent
+  let kernel := fun b hb => fiberPosterior prior obs b hb
+  let integrand : Ω → ℝ :=
+    (publicEvent ∩ event).indicator (fun _ => (1 : ℝ))
+  let outerValue : Quotient partition → ℝ := fun b =>
+    report * if b ∈ qPublic then 1 else 0
+  have hsource : PayoffIntegrable prior integrand :=
+    payoffIntegrable_indicator _ (payoffIntegrable_constant prior 1)
+  have hbind : PayoffIntegrable (marginal.bindOnSupport kernel) integrand :=
+    payoffIntegrable_congr_law (fiberPosterior_reconstruct prior obs).symm
+      hsource
+  have houterValue : PayoffIntegrable marginal outerValue := by
+    exact payoffIntegrable_const_mul
+      (payoffIntegrable_indicator qPublic
+        (payoffIntegrable_constant marginal 1))
+  have hconditional : ∀ b, ∀ hb : b ∈ marginal.support,
+      outerValue b =
+        expect (kernel b hb) integrand
+          (payoffIntegrable_bindOnSupport_conditional_on_support
+            marginal kernel integrand hbind b hb) := by
+    intro b hb
+    rcases (PMF.mem_support_map_iff (f := obs) (p := prior) (b := b)).mp hb
+      with ⟨representative,
+      hrepresentative, hrepresentativeEq⟩
+    have hkSupport : (kernel b hb).support =
+        {other | obs other = b} ∩ prior.support := by
+      simp only [kernel, fiberPosterior_support]
+    by_cases hbPublic : b ∈ qPublic
+    · obtain ⟨publicState, hpublicState, hpublicEq⟩ := hbPublic
+      have hclass : obs representative = obs publicState :=
+        hrepresentativeEq.trans hpublicEq.symm
+      have hrepresentativeCell :
+          representative ∈ cell partition publicState := by
+        rw [cell]
+        exact partition.symm (Quotient.eq.mp hclass)
+      have hrepresentativePublic : representative ∈ publicEvent :=
+        hself publicState hpublicState hrepresentativeCell
+      have hposterior := hreport representative hrepresentativePublic
+      have hcellWitness :
+          ∃ other ∈ cell partition representative, other ∈ prior.support :=
+        ⟨representative, partition.refl representative, hrepresentative⟩
+      have hposteriorBridge := posterior_eq_fiberPosterior_expect
+        prior partition event representative hcellWitness
+      have hkernelEq : kernel b hb =
+          fiberPosterior prior obs (obs representative) (by
+            rw [PMF.support_map]
+            exact ⟨representative, hrepresentative, rfl⟩) := by
+        subst b
+        rfl
+      have hconditionalSupport :
+          ∀ other ∈ (kernel b hb).support,
+            other ∈ publicEvent := by
+        intro other hother
+        rw [hkSupport, Set.mem_inter_iff] at hother
+        have hotherClass : obs other = obs publicState :=
+          hother.1.trans hpublicEq.symm
+        have hotherCell : other ∈ cell partition publicState := by
+          rw [cell]
+          exact partition.symm (Quotient.eq.mp hotherClass)
+        exact hself publicState hpublicState hotherCell
+      have hintegrandEq : ∀ other ∈ (kernel b hb).support,
+          integrand other = if other ∈ event then 1 else 0 := by
+        intro other hother
+        have hpublic := hconditionalSupport other hother
+        simp [integrand, Set.indicator, hpublic]
+      have hconstGuard : PayoffIntegrable (kernel b hb)
+          (fun _ : Ω => (1 : ℝ)) := payoffIntegrable_constant _ 1
+      have heventGuard : PayoffIntegrable (kernel b hb)
+          (fun other => if other ∈ event then 1 else 0) :=
+        payoffIntegrable_indicator event hconstGuard
+      have heqExpect := expect_congr_on_support hintegrandEq
+        (payoffIntegrable_bindOnSupport_conditional_on_support
+          marginal kernel integrand hbind b hb) heventGuard
+      have hposteriorValue : expect (kernel b hb) integrand
+          (payoffIntegrable_bindOnSupport_conditional_on_support
+            marginal kernel integrand hbind b hb) = report := by
+        have hfiberGuard := payoffIntegrable_congr_law hkernelEq heventGuard
+        calc
+          expect (kernel b hb) integrand
+              (payoffIntegrable_bindOnSupport_conditional_on_support
+                marginal kernel integrand hbind b hb) =
+              expect (kernel b hb)
+                (fun other => if other ∈ event then 1 else 0) heventGuard :=
+            heqExpect
+          _ = expect (fiberPosterior prior obs (obs representative) _)
+                (fun other => if other ∈ event then 1 else 0) hfiberGuard :=
+            expect_congr_law hkernelEq _ _ _
+          _ = report := by
+            simpa only [kernel] using hposteriorBridge.symm.trans hposterior
+      calc
+        outerValue b = report := by
+          have hpublic : b ∈ qPublic := ⟨publicState, hpublicState, hpublicEq⟩
+          simp [outerValue, hpublic]
+        _ = expect (kernel b hb) integrand
+              (payoffIntegrable_bindOnSupport_conditional_on_support
+                marginal kernel integrand hbind b hb) := hposteriorValue.symm
+    · have hzeroOnSupport : ∀ other ∈ (kernel b hb).support,
+          integrand other = 0 := by
+        intro other hother
+        rw [hkSupport, Set.mem_inter_iff] at hother
+        have hnotPublic : other ∉ publicEvent := by
+          intro hotherPublic
+          exact hbPublic ⟨other, hotherPublic, hother.1⟩
+        simp [integrand, hnotPublic]
+      have hzeroGuard : PayoffIntegrable (kernel b hb)
+          (fun _ : Ω => (0 : ℝ)) := payoffIntegrable_zero _
+      have hzero := expect_congr_on_support hzeroOnSupport
+        (payoffIntegrable_bindOnSupport_conditional_on_support
+          marginal kernel integrand hbind b hb) hzeroGuard
+      have hzero' : expect (kernel b hb) (fun _ => (0 : ℝ)) hzeroGuard = 0 := by
+        exact expect_constant _ 0 hzeroGuard
+      calc
+        outerValue b = 0 := by simp [outerValue, hbPublic]
+        _ = expect (kernel b hb) integrand
+              (payoffIntegrable_bindOnSupport_conditional_on_support
+                marginal kernel integrand hbind b hb) := (hzero.trans hzero').symm
+  have htower := expect_bindOnSupport_tower_on_support marginal kernel
+    integrand hbind outerValue hconditional
+  have hboundLaw := fiberPosterior_reconstruct prior obs
+  have hsourceEq := expect_congr_law hboundLaw integrand hbind hsource
+  have hpreimage : obs ⁻¹' qPublic = publicEvent := by
+    ext state
+    constructor
+    · rintro ⟨publicState, hpublicState, hclass⟩
+      have hstatePublic : state ∈ cell partition publicState := by
+        rw [cell]
+        exact Quotient.eq.mp hclass
+      exact hself publicState hpublicState hstatePublic
+    · intro hstate
+      exact ⟨state, hstate, rfl⟩
+  have hmass : (marginal.toOuterMeasure qPublic).toReal =
+      (prior.toOuterMeasure publicEvent).toReal := by
+    rw [PMF.toOuterMeasure_map_apply, hpreimage]
+  have houterEval : expect marginal outerValue houterValue =
+      report * (prior.toOuterMeasure publicEvent).toReal := by
+    have hind : PayoffIntegrable marginal
+        (fun b => if b ∈ qPublic then (1 : ℝ) else 0) :=
+      payoffIntegrable_indicator qPublic (payoffIntegrable_constant marginal 1)
+    calc
+      expect marginal outerValue houterValue =
+          report * expect marginal (fun b => if b ∈ qPublic then (1 : ℝ) else 0) hind := by
+        simpa only [outerValue] using expect_const_mul hind
+      _ = report * (marginal.toOuterMeasure qPublic).toReal := by
+        rw [expect_indicator marginal qPublic hind]
+      _ = report * (prior.toOuterMeasure publicEvent).toReal := by
+        rw [hmass]
+  calc
+    expect prior integrand hsource =
+        expect (marginal.bindOnSupport kernel) integrand hbind := hsourceEq.symm
+    _ = expect marginal outerValue houterValue := by
+      simpa only [marginal, kernel] using htower
+    _ = report * (prior.toOuterMeasure publicEvent).toReal := houterEval
 
-/-- A self-evident event is the disjoint union of the cells it contains. -/
-theorem selfEvident_eq_biUnion_cells [DecidableEq Ω]
-    (partition : InfoPartition Ω) {event : Finset Ω}
-    (hself : IsSelfEvident partition event) :
-    event = (event.image partition.cell).biUnion id := by
-  ext state
-  simp only [Finset.mem_biUnion, Finset.mem_image, id]
-  refine ⟨fun hstate => ?_, ?_⟩
-  · exact ⟨partition.cell state, ⟨state, hstate, rfl⟩,
-      partition.reflexive state⟩
-  · rintro ⟨_, ⟨source, hsource, rfl⟩, hstate⟩
-    exact hself source hsource hstate
-
-/-- Finite sums over a self-evident event decompose over its distinct cells. -/
-theorem selfEvident_sum_decomp [DecidableEq Ω]
-    (partition : InfoPartition Ω) {event : Finset Ω}
-    (hself : IsSelfEvident partition event) (value : Ω → ℝ) :
-    ∑ state ∈ event, value state =
-      ∑ cell ∈ event.image partition.cell, ∑ state ∈ cell, value state := by
-  have hdisjoint :
-      (event.image partition.cell : Set (Finset Ω)).PairwiseDisjoint id := by
-    intro first hfirst second hsecond hne
-    simp only [Finset.coe_image, Set.mem_image, Finset.mem_coe] at hfirst hsecond
-    obtain ⟨firstState, _, rfl⟩ := hfirst
-    obtain ⟨secondState, _, rfl⟩ := hsecond
-    exact cells_disjoint partition (fun h => hne h)
-  conv_lhs => rw [selfEvident_eq_biUnion_cells partition hself]
-  rw [Finset.sum_biUnion hdisjoint]
-  rfl
-
-/-- **Aumann full agreement.** On a common nonempty event that is self-evident
-for both partitions, two posteriors that are constant throughout that event
-are equal. -/
-theorem aumann_full_agreement [DecidableEq Ω]
-    (prior : FinDist Ω) (hfull : prior.FullSupport)
-    (first second : InfoPartition Ω) (event : Finset Ω)
-    {publicEvent : Finset Ω} (hnonempty : publicEvent.Nonempty)
+/-- **Aumann full agreement.** On a common nonempty event that is
+self-evident for both partitions, two posteriors that are constant throughout
+that event are equal. The state space, PMF support, and cells may be infinite. -/
+theorem aumann_full_agreement
+    (prior : PMF Ω)
+    (first second : Setoid Ω) (event : Set Ω)
+    {publicEvent : Set Ω} (hnonempty : publicEvent.Nonempty)
     (hfirst : IsSelfEvident first publicEvent)
     (hsecond : IsSelfEvident second publicEvent)
     {firstReport secondReport : ℝ}
-    (hfirstReport :
-      ∀ state ∈ publicEvent,
-        posterior prior first event state = firstReport)
-    (hsecondReport :
-      ∀ state ∈ publicEvent,
-        posterior prior second event state = secondReport) :
+    (hfirstReport : ∀ state ∈ publicEvent,
+      posterior prior first event state = firstReport)
+    (hsecondReport : ∀ state ∈ publicEvent,
+      posterior prior second event state = secondReport) :
     firstReport = secondReport := by
-  have hprior_pos : ∀ state, 0 < prior.prob state :=
-    fun state => FinDist.prob_pos_iff.mpr (hfull state)
-  have hpublic_pos : 0 < ∑ state ∈ publicEvent, prior.prob state :=
-    Finset.sum_pos (fun state _ => hprior_pos state) hnonempty
-  have hcellIdentity : ∀ {partition : InfoPartition Ω} {report : ℝ},
-      IsSelfEvident partition publicEvent →
-      (∀ state ∈ publicEvent,
-        posterior prior partition event state = report) →
-      ∀ {cell : Finset Ω}, cell ∈ publicEvent.image partition.cell →
-        ∑ state ∈ cell ∩ event, prior.prob state =
-          report * ∑ state ∈ cell, prior.prob state := by
-    intro partition report hself hreport cell hcell
-    rw [Finset.mem_image] at hcell
-    obtain ⟨state, hstate, hcellState⟩ := hcell
-    have hposterior := hreport state hstate
-    have hcell_pos : 0 < ∑ other ∈ partition.cell state, prior.prob other :=
-      Finset.sum_pos (fun other _ => hprior_pos other)
-        ⟨state, partition.reflexive state⟩
-    have hquotient :
-        (∑ other ∈ partition.cell state ∩ event, prior.prob other) /
-            ∑ other ∈ partition.cell state, prior.prob other =
-          report :=
-      hposterior
-    field_simp at hquotient
-    rw [← hcellState]
-    linarith
-  have htotal : ∀ {partition : InfoPartition Ω} {report : ℝ},
-      IsSelfEvident partition publicEvent →
-      (∀ state ∈ publicEvent,
-        posterior prior partition event state = report) →
-      ∑ state ∈ publicEvent ∩ event, prior.prob state =
-        report * ∑ state ∈ publicEvent, prior.prob state := by
-    intro partition report hself hreport
-    rw [selfEvident_sum_decomp partition hself prior.prob,
-      Finset.mul_sum]
-    have hinter :
-        publicEvent ∩ event =
-          (publicEvent.image partition.cell).biUnion
-            (fun cell => cell ∩ event) := by
-      conv_lhs => rw [selfEvident_eq_biUnion_cells partition hself]
-      rw [Finset.biUnion_inter]
-      rfl
-    rw [hinter]
-    have hdisjoint :
-        (publicEvent.image partition.cell : Set (Finset Ω)).PairwiseDisjoint
-          (fun cell => cell ∩ event) := by
-      intro firstCell hfirstCell secondCell hsecondCell hne
-      simp only [Finset.coe_image, Set.mem_image, Finset.mem_coe] at hfirstCell hsecondCell
-      obtain ⟨firstState, _, rfl⟩ := hfirstCell
-      obtain ⟨secondState, _, rfl⟩ := hsecondCell
-      exact (cells_disjoint partition (fun h => hne h)).mono
-        Finset.inter_subset_left Finset.inter_subset_left
-    rw [Finset.sum_biUnion hdisjoint]
-    exact Finset.sum_congr rfl fun cell hmem =>
-      hcellIdentity hself hreport hmem
-  have hfirstTotal := htotal hfirst hfirstReport
-  have hsecondTotal := htotal hsecond hsecondReport
+  by_cases hpublicZero : prior.toOuterMeasure publicEvent = 0
+  · have hdisjoint : Disjoint prior.support publicEvent := by
+      rw [← PMF.toOuterMeasure_apply_eq_zero_iff]
+      exact hpublicZero
+    have hposteriorZero (partition : Setoid Ω)
+        (hself : IsSelfEvident partition publicEvent)
+        {state : Ω} (hstate : state ∈ publicEvent) :
+        posterior prior partition event state = 0 := by
+      have hnumeratorZero :
+          prior.toOuterMeasure (event ∩ cell partition state) = 0 := by
+        rw [PMF.toOuterMeasure_apply_eq_zero_iff, Set.disjoint_left]
+        intro other hsupport hother
+        have hpublic : other ∈ publicEvent :=
+          hself state hstate hother.2
+        exact Set.disjoint_left.mp hdisjoint hsupport hpublic
+      simp [posterior, hnumeratorZero]
+    obtain ⟨state, hstate⟩ := hnonempty
+    have hfirstZero := hfirstReport state hstate
+    have hsecondZero := hsecondReport state hstate
+    rw [hposteriorZero first hfirst hstate] at hfirstZero
+    rw [hposteriorZero second hsecond hstate] at hsecondZero
+    exact hfirstZero.symm.trans hsecondZero
+  have hpublicPos : 0 < prior.toOuterMeasure publicEvent :=
+    pos_iff_ne_zero.mpr hpublicZero
+  have hpublicFinite := outerMeasure_ne_top prior publicEvent
+  have hfirstMass := expect_indicator_inter_eq_report_mul_mass prior first
+    event publicEvent hfirst firstReport hfirstReport
+  have hsecondMass := expect_indicator_inter_eq_report_mul_mass prior second
+    event publicEvent hsecond secondReport hsecondReport
   have hequal :
-      firstReport * ∑ state ∈ publicEvent, prior.prob state =
-        secondReport * ∑ state ∈ publicEvent, prior.prob state := by
-    rw [← hfirstTotal, ← hsecondTotal]
-  exact mul_right_cancel₀ hpublic_pos.ne' hequal
+      firstReport * (prior.toOuterMeasure publicEvent).toReal =
+        secondReport * (prior.toOuterMeasure publicEvent).toReal := by
+    rw [← hfirstMass, ← hsecondMass]
+  exact mul_right_cancel₀
+    (ne_of_gt (ENNReal.toReal_pos hpublicPos.ne' hpublicFinite)) hequal
 
 /-- **Aumann agreement from common knowledge.** The common-knowledge witness
-supplies the nonempty event that is self-evident for both selected agents;
-constancy of their reports only needs to hold on the commonly known event. -/
-theorem aumann_full_agreement_of_commonKnowledgeAt [DecidableEq Ω]
-    {agents : Type*} (prior : FinDist Ω) (hfull : prior.FullSupport)
-    (partition : agents → InfoPartition Ω) (first second : agents)
-    (event reportEvent : Finset Ω) {state : Ω}
+supplies the public event self-evident for both selected agents. -/
+theorem aumann_full_agreement_of_commonKnowledgeAt {agents : Type*}
+    (prior : PMF Ω)
+    (partition : agents → Setoid Ω) (first second : agents)
+    (event reportEvent : Set Ω) {state : Ω}
     {firstReport secondReport : ℝ}
     (hcommon : CommonKnowledgeAt partition reportEvent state)
-    (hfirstReport :
-      ∀ world ∈ reportEvent,
-        posterior prior (partition first) event world = firstReport)
-    (hsecondReport :
-      ∀ world ∈ reportEvent,
-        posterior prior (partition second) event world = secondReport) :
+    (hfirstReport : ∀ world ∈ reportEvent,
+      posterior prior (partition first) event world = firstReport)
+    (hsecondReport : ∀ world ∈ reportEvent,
+      posterior prior (partition second) event world = secondReport) :
     firstReport = secondReport := by
   obtain ⟨publicEvent, hsubset, hstate, hself⟩ := hcommon
-  exact aumann_full_agreement prior hfull (partition first) (partition second)
+  exact aumann_full_agreement prior (partition first) (partition second)
     event ⟨state, hstate⟩ (hself first) (hself second)
     (fun world hworld => hfirstReport world (hsubset hworld))
     (fun world hworld => hsecondReport world (hsubset hworld))

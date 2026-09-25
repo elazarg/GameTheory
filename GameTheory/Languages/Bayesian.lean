@@ -78,9 +78,9 @@ def execution (B : BayesianGame ι) [∀ i, Nonempty (B.Act i)] :
     match state with
     | .initial => B.prior.map State.typed
     | .typed types =>
-        FinDist.pure (.finished types
+        PMF.pure (.finished types
           (State.actionOfJoint joint.1 joint.2.2))
-    | .finished types actions => FinDist.pure (.finished types actions)
+    | .finished types actions => PMF.pure (.finished types actions)
   progress := by
     intro state hterm
     cases state with
@@ -93,6 +93,26 @@ def execution (B : BayesianGame ι) [∀ i, Nonempty (B.Act i)] :
         exact ⟨trivial, Set.mem_univ _⟩
     | finished types actions =>
         exact False.elim (hterm trivial)
+
+/-- At the simultaneous move, an all-some legal joint action realizes exactly
+the supplied action profile. -/
+theorem execution_step_typed_of_actions (B : BayesianGame ι)
+    [∀ i, Nonempty (B.Act i)] (types : ∀ i, B.Ty i)
+    (joint : { choices : ∀ i, Option (B.Act i) //
+      (execution B).Legal (.typed types) choices })
+    (actions : ∀ i, B.Act i)
+    (hjoint : ∀ i, joint.1 i = some (actions i)) :
+    (execution B).step (.typed types) joint =
+      PMF.pure (.finished types actions) := by
+  rcases joint with ⟨choices, hlegal⟩
+  have hchoices : choices = fun i => some (actions i) := funext hjoint
+  subst choices
+  have haction :
+      State.actionOfJoint (fun i => some (actions i)) hlegal.2 = actions := by
+    funext i
+    exact State.actionOfJoint_some actions hlegal.2 i
+  simpa only [execution] using
+    congrArg (fun profile => PMF.pure (State.finished types profile)) haction
 
 /-- The publicly visible phase contains no type information. -/
 inductive Phase
@@ -370,10 +390,8 @@ theorem runFor_chooserOfPlan_two (B : BayesianGame ι)
     (execution B).runFor (chooserOfPlan B plan) 2 .initial =
       B.prior.map fun types => State.finished types (B.actionsOf plan types) := by
   simp [ExecutionProtocol.runFor, execution, chooserOfPlan,
-    FinDist.map_eq_bind]
-  refine FinDist.bind_congr fun types _ => ?_
-  apply congrArg FinDist.pure
-  congr
+    ← PMF.bind_pure_comp]
+  congr 1
 
 /-- The protocol-backed strategic form, retaining only its terminal Bayesian
 outcome. Horizon two is sufficient by construction. -/
@@ -395,28 +413,28 @@ theorem toProtocolForm_play_policyProfileOfPlan (B : BayesianGame ι)
     (execution B).initHistory
   rw [← historyChooser_policyProfileOfPlan B plan] at hshadow
   show
-    (FinDist.map (fun history => outcomeOfState history.state)
+    (PMF.map (fun history => outcomeOfState history.state)
       ((informationModel B).run (policyProfileOfPlan B plan) 2)) =
         (B.prior.map fun types => (types, B.actionsOf plan types)).map some
   rw [InformationModel.run, InformationModel.runFrom]
   calc
-    FinDist.map (fun history => outcomeOfState history.state)
+    PMF.map (fun history => outcomeOfState history.state)
         ((execution B).runHistoryFor
           ((informationModel B).historyChooser (policyProfileOfPlan B plan)) 2
           (execution B).initHistory) =
-      FinDist.map outcomeOfState
-        (FinDist.map ExecutionProtocol.History.state
+      PMF.map outcomeOfState
+        (PMF.map ExecutionProtocol.History.state
           ((execution B).runHistoryFor
             ((informationModel B).historyChooser (policyProfileOfPlan B plan)) 2
             (execution B).initHistory)) := by
-              rw [FinDist.map_comp]
+              rw [PMF.map_comp]
               rfl
-    _ = FinDist.map outcomeOfState
+    _ = PMF.map outcomeOfState
         ((execution B).runFor (chooserOfPlan B plan) 2 .initial) := by
-          simpa using congrArg (FinDist.map outcomeOfState) hshadow
+          simpa using congrArg (PMF.map outcomeOfState) hshadow
     _ = (B.prior.map fun types => (types, B.actionsOf plan types)).map some := by
           rw [runFor_chooserOfPlan_two]
-          rw [FinDist.map_comp, FinDist.map_comp]
+          rw [PMF.map_comp, PMF.map_comp]
           rfl
 
 /-- The same play law for an arbitrary local-policy profile, after recovering

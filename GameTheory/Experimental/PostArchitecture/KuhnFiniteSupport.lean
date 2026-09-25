@@ -8,6 +8,8 @@ constructs a finite-support mixed witness without `Fintype InfoState`.
 -/
 
 import GameTheory.Protocol.Information
+import GameTheory.Protocol.PolicyRandomization
+import GameTheory.Math.Probability.Mixture
 
 noncomputable section
 
@@ -24,7 +26,7 @@ def execution : ExecutionProtocol Unit where
   active state _ := state < 2
   available _ _ := Set.univ
   terminal state := 2 ≤ state
-  step state _ := FinDist.pure (state + 1)
+  step state _ := PMF.pure (state + 1)
   progress := by
     intro state hterm
     have hactive : state < 2 := Nat.lt_of_not_ge hterm
@@ -95,11 +97,11 @@ theorem actsOnce : model.ActsOnceWhereItMatters := by
 
 def behavioral : model.BehavioralPolicy () := fun info =>
   if hinfo : info < 2 then
-    FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-      (FinDist.pure ⟨some false, by simp [menuAt, hinfo]⟩)
-      (FinDist.pure ⟨some true, by simp [menuAt, hinfo]⟩)
+    mix (1 / 2) (by norm_num) (by norm_num)
+      (PMF.pure ⟨some false, by simp [menuAt, hinfo]⟩)
+      (PMF.pure ⟨some true, by simp [menuAt, hinfo]⟩)
   else
-    FinDist.pure ⟨none, by simp [menuAt, hinfo]⟩
+    PMF.pure ⟨none, by simp [menuAt, hinfo]⟩
 
 theorem infoState_infinite : Infinite (model.InfoState ()) := by
   infer_instance
@@ -123,21 +125,79 @@ theorem reaches_second_information_state :
   let later := execution.initHistory.extend draw.2 realized
   refine ⟨later, ?_, ?_⟩
   · rw [model.runBehavioralFrom_succ_of_not_terminal profile 0 hterm,
-      FinDist.support_bind]
+      PMF.support_bind]
     refine Set.mem_iUnion₂.mpr ⟨draw, hdraw, ?_⟩
-    rw [FinDist.support_bindOnSupport]
+    rw [PMF.support_bindOnSupport]
     refine Set.mem_iUnion₂.mpr ⟨1, realized, ?_⟩
     simp [later, InformationModel.runBehavioralFrom]
   · rw [infoOf_state]
     rfl
 
+/-- Every reachable decision site through two rounds has state and information
+index in `{0, 1}`, giving a finite support-site certificate without a finite
+instance on the ambient information carrier. -/
+theorem reachableSites_finite :
+    (model.behavioralSupportSitesFrom (fun _ => behavioral) 2
+      execution.initHistory ()).Finite := by
+  have hfinite : (insert 0 ({1} : Set Nat)).Finite :=
+    (Set.finite_insert).2 (Set.finite_singleton 1)
+  apply Set.Finite.subset hfinite
+  intro info hinfo
+  rcases hinfo with ⟨elapsed, _hle, later, _hsupport, hterminal, hinfo⟩
+  have hstate : later.state < 2 := Nat.lt_of_not_ge hterminal
+  have hindex : model.infoOf () later.trace = later.state := infoOf_state later.trace
+  rw [← hinfo, hindex]
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
+  omega
 /-- The new witness applies at two rounds although the ambient information
 carrier is `Nat`, so no `Fintype (model.InfoState ())` can be supplied. -/
 theorem twoRound_realization :
     ∃ mixed : (i : Unit) → model.MixedPolicy i,
-      model.runMixed mixed 2 =
-        model.runBehavioral (fun _ => behavioral) 2 :=
-  model.exists_mixed_runMixed_eq_runBehavioral
-    actsOnce (fun _ => behavioral) 2
+      (∀ i, (mixed i).support.Finite) ∧
+        model.runMixed mixed 2 =
+          model.runBehavioral (fun _ => behavioral) 2 := by
+  classical
+  let policy : (i : Unit) → model.BehavioralPolicy i := fun _ => behavioral
+  have hfinite : ∀ i,
+      (model.behavioralSupportSitesFrom policy 2 execution.initHistory i).Finite := by
+    intro i
+    cases i
+    exact reachableSites_finite
+  let sites : (i : Unit) → Finset (model.InfoState i) :=
+    fun i => (hfinite i).toFinset
+  let fallback : (i : Unit) → model.Policy i :=
+    fun i => (policy i).supportFallback model
+  let finitePolicy : (i : Unit) → model.BehavioralPolicy i :=
+    fun i => (policy i).restrictRandomization model (sites i) (fallback i)
+  let mixed : (i : Unit) → model.MixedPolicy i :=
+    fun i => (finitePolicy i).toMixedOn (sites i) (fallback i)
+  refine ⟨mixed, ?_, ?_⟩
+  · intro i
+    have hsource : (independentProduct fun info : sites i =>
+        (finitePolicy i) info.1).support.Finite := Set.toFinite _
+    have hmixed : ((finitePolicy i).toMixedOn (sites i) (fallback i)).support.Finite := by
+      unfold InformationModel.BehavioralPolicy.toMixedOn
+      rw [FiniteAssignment.sampleOn, PMF.support_map]
+      exact hsource.image _
+    simpa only [mixed] using hmixed
+  · have hoff : ∀ i info, info ∉ sites i →
+    finitePolicy i info = PMF.pure (fallback i info) := by
+      intro i info hinfo
+      simp only [finitePolicy, InformationModel.BehavioralPolicy.restrictRandomization,
+        ite_eq_right hinfo]
+    have hpredraw := model.runMixedFrom_toMixedOn actsOnce 2 finitePolicy
+      sites fallback execution.initHistory hoff
+    have hsame : model.runBehavioralFrom finitePolicy 2 execution.initHistory =
+        model.runBehavioralFrom policy 2 execution.initHistory := by
+      apply (model.runBehavioralFrom_congr_on_support 2 execution.initHistory ?_).symm
+      intro elapsed helapsed later hlater hterminal i
+      have hsites : model.infoOf i later.trace ∈
+          model.behavioralSupportSitesFrom policy 2 execution.initHistory i :=
+        ⟨elapsed, helapsed, later, hlater, hterminal, rfl⟩
+      have hmem : model.infoOf i later.trace ∈ sites i :=
+        (Set.Finite.mem_toFinset (hfinite i)).2 hsites
+      simp only [finitePolicy, InformationModel.BehavioralPolicy.restrictRandomization,
+        ite_eq_left hmem]
+    exact hpredraw.trans hsame
 
 end GameTheory.Experimental.KuhnFiniteSupport

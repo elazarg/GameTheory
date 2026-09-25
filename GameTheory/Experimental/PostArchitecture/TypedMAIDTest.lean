@@ -88,7 +88,7 @@ def defaultValue : (node : Node) → Value node
 
 def semantics : Semantics diagram where
   defaultValue := defaultValue
-  chanceLaw node _ _ := FinDist.pure (defaultValue node)
+  chanceLaw node _ _ := PMF.pure (defaultValue node)
   utility _ _ := 0
 
 theorem initial_frontier :
@@ -176,10 +176,10 @@ def decisionParent (site : DecisionSite diagram ()) :
 /-- Each rule reads exactly its own singleton observation configuration. -/
 def responsive : Policy diagram :=
   fun _ site observation =>
-    FinDist.pure (observation (decisionParent site))
+    PMF.pure (observation (decisionParent site))
 
 def constant (value : Bool) : Policy diagram :=
-  fun _ _ _ => FinDist.pure value
+  fun _ _ _ => PMF.pure value
 
 def chanceValue : Node → Bool
   | .leftChance => false
@@ -191,8 +191,8 @@ def semantics : Semantics diagram where
   defaultValue _ := false
   chanceLaw node hkind _ := by
     cases node with
-    | leftChance => exact FinDist.pure false
-    | rightChance => exact FinDist.pure true
+    | leftChance => exact PMF.pure false
+    | rightChance => exact PMF.pure true
     | leftDecision => simp [kind] at hkind
     | rightDecision => simp [kind] at hkind
   utility _ assignment :=
@@ -243,7 +243,7 @@ theorem afterChance_right_value :
 theorem initial_nodeLaw (policy : Policy diagram)
     (node : {node // node ∈ initial.frontier}) :
     nodeLaw diagram semantics policy initial node =
-      FinDist.pure (chanceDraw node) := by
+      PMF.pure (chanceDraw node) := by
   rcases node with ⟨node, hnode⟩
   cases node with
   | leftChance => rfl
@@ -257,18 +257,18 @@ theorem initial_nodeLaw (policy : Policy diagram)
 
 theorem initial_frontierLaw (policy : Policy diagram) :
     frontierLaw diagram semantics policy initial =
-      FinDist.pure chanceDraw := by
+      PMF.pure chanceDraw := by
   rw [frontierLaw, show
     (fun node => nodeLaw diagram semantics policy initial node) =
-      fun node => FinDist.pure (chanceDraw node) by
+      fun node => PMF.pure (chanceDraw node) by
         funext node
         exact initial_nodeLaw policy node]
-  exact FinDist.pi_pure chanceDraw
+  exact independentProduct_pure chanceDraw
 
 theorem step_initial (policy : Policy diagram) :
     step diagram semantics policy initial =
-      FinDist.pure afterChance := by
-  rw [step, initial_frontierLaw policy, FinDist.map_pure]
+      PMF.pure afterChance := by
+  rw [step, initial_frontierLaw policy, PMF.pure_map]
   rfl
 
 def responsiveDraw :
@@ -293,7 +293,7 @@ def completeResponsive : FrontierState diagram :=
 theorem afterChance_nodeLaw
     (node : {node // node ∈ afterChance.frontier}) :
     nodeLaw diagram semantics responsive afterChance node =
-      FinDist.pure (responsiveDraw node) := by
+      PMF.pure (responsiveDraw node) := by
   rcases node with ⟨node, hnode⟩
   cases node with
   | leftChance =>
@@ -307,18 +307,18 @@ theorem afterChance_nodeLaw
 
 theorem afterChance_frontierLaw :
     frontierLaw diagram semantics responsive afterChance =
-      FinDist.pure responsiveDraw := by
+      PMF.pure responsiveDraw := by
   rw [frontierLaw, show
     (fun node => nodeLaw diagram semantics responsive afterChance node) =
-      fun node => FinDist.pure (responsiveDraw node) by
+      fun node => PMF.pure (responsiveDraw node) by
         funext node
         exact afterChance_nodeLaw node]
-  exact FinDist.pi_pure responsiveDraw
+  exact independentProduct_pure responsiveDraw
 
 theorem step_afterChance :
     step diagram semantics responsive afterChance =
-      FinDist.pure completeResponsive := by
-  rw [step, afterChance_frontierLaw, FinDist.map_pure]
+      PMF.pure completeResponsive := by
+  rw [step, afterChance_frontierLaw, PMF.pure_map]
   rfl
 
 theorem initial_not_complete :
@@ -334,10 +334,10 @@ theorem afterChance_not_complete :
 
 theorem run_two_responsive :
     run diagram semantics responsive 2 initial =
-      FinDist.pure completeResponsive := by
+      PMF.pure completeResponsive := by
   rw [run, ite_eq_right initial_not_complete, step_initial responsive,
-    FinDist.pure_bind, run, ite_eq_right afterChance_not_complete,
-    step_afterChance, FinDist.pure_bind, run]
+    PMF.pure_bind, run, ite_eq_right afterChance_not_complete,
+    step_afterChance, PMF.pure_bind, run]
 
 theorem decisions_commit_together :
     completeResponsive.resolved = Finset.univ := by
@@ -399,7 +399,7 @@ def completeConstantFalse : FrontierState diagram :=
 theorem afterChance_nodeLaw_constantFalse
     (node : {node // node ∈ afterChance.frontier}) :
     nodeLaw diagram semantics (constant false) afterChance node =
-      FinDist.pure (constantFalseDraw node) := by
+      PMF.pure (constantFalseDraw node) := by
   rcases node with ⟨node, hnode⟩
   cases node with
   | leftChance =>
@@ -413,22 +413,22 @@ theorem afterChance_nodeLaw_constantFalse
 
 theorem step_afterChance_constantFalse :
     step diagram semantics (constant false) afterChance =
-      FinDist.pure completeConstantFalse := by
+      PMF.pure completeConstantFalse := by
   rw [step, frontierLaw, show
     (fun node =>
       nodeLaw diagram semantics (constant false) afterChance node) =
-        fun node => FinDist.pure (constantFalseDraw node) by
+        fun node => PMF.pure (constantFalseDraw node) by
           funext node
           exact afterChance_nodeLaw_constantFalse node,
-    FinDist.pi_pure, FinDist.map_pure]
+    independentProduct_pure, PMF.pure_map]
   rfl
 
 theorem run_two_constantFalse :
     run diagram semantics (constant false) 2 initial =
-      FinDist.pure completeConstantFalse := by
+      PMF.pure completeConstantFalse := by
   rw [run, ite_eq_right initial_not_complete, step_initial (constant false),
-    FinDist.pure_bind, run, ite_eq_right afterChance_not_complete,
-    step_afterChance_constantFalse, FinDist.pure_bind, run]
+    PMF.pure_bind, run, ite_eq_right afterChance_not_complete,
+    step_afterChance_constantFalse, PMF.pure_bind, run]
 
 theorem completeConstantFalse_left_value :
     completeConstantFalse.values .leftDecision = false := by
@@ -468,13 +468,14 @@ theorem outcome_law_depends_on_policy :
       run diagram semantics (constant false) 2 initial := by
   intro hequal
   have hutility := congrArg
-    (fun law => law.expect fun state =>
-      semantics.utility () state.values) hequal
+    (fun law : PMF (FrontierState diagram) =>
+      law.map fun state => semantics.utility () state.values) hequal
   rw [run_two_responsive, run_two_constantFalse,
-    FinDist.expect_pure, FinDist.expect_pure,
+    PMF.pure_map, PMF.pure_map,
     completeResponsive_utility,
     completeConstantFalse_utility] at hutility
-  norm_num at hutility
+  have hmass := congrArg (fun law : PMF ℝ => law 2) hutility
+  norm_num [PMF.pure_apply] at hmass
 
 def constantTrueDraw :
     (node : {node // node ∈ afterChance.frontier}) →
@@ -487,7 +488,7 @@ def completeConstantTrue : FrontierState diagram :=
 theorem afterChance_nodeLaw_constantTrue
     (node : {node // node ∈ afterChance.frontier}) :
     nodeLaw diagram semantics (constant true) afterChance node =
-      FinDist.pure (constantTrueDraw node) := by
+      PMF.pure (constantTrueDraw node) := by
   rcases node with ⟨node, hnode⟩
   cases node with
   | leftChance =>
@@ -501,22 +502,22 @@ theorem afterChance_nodeLaw_constantTrue
 
 theorem step_afterChance_constantTrue :
     step diagram semantics (constant true) afterChance =
-      FinDist.pure completeConstantTrue := by
+      PMF.pure completeConstantTrue := by
   rw [step, frontierLaw, show
     (fun node =>
       nodeLaw diagram semantics (constant true) afterChance node) =
-        fun node => FinDist.pure (constantTrueDraw node) by
+        fun node => PMF.pure (constantTrueDraw node) by
           funext node
           exact afterChance_nodeLaw_constantTrue node,
-    FinDist.pi_pure, FinDist.map_pure]
+    independentProduct_pure, PMF.pure_map]
   rfl
 
 theorem run_two_constantTrue :
     run diagram semantics (constant true) 2 initial =
-      FinDist.pure completeConstantTrue := by
+      PMF.pure completeConstantTrue := by
   rw [run, ite_eq_right initial_not_complete, step_initial (constant true),
-    FinDist.pure_bind, run, ite_eq_right afterChance_not_complete,
-    step_afterChance_constantTrue, FinDist.pure_bind, run]
+    PMF.pure_bind, run, ite_eq_right afterChance_not_complete,
+    step_afterChance_constantTrue, PMF.pure_bind, run]
 
 theorem completeConstantTrue_left_value :
     completeConstantTrue.values .leftDecision = true := by
@@ -556,13 +557,14 @@ theorem outcome_law_depends_on_left_policy :
       run diagram semantics (constant true) 2 initial := by
   intro hequal
   have hutility := congrArg
-    (fun law => law.expect fun state =>
-      semantics.utility () state.values) hequal
+    (fun law : PMF (FrontierState diagram) =>
+      law.map fun state => semantics.utility () state.values) hequal
   rw [run_two_responsive, run_two_constantTrue,
-    FinDist.expect_pure, FinDist.expect_pure,
+    PMF.pure_map, PMF.pure_map,
     completeResponsive_utility,
     completeConstantTrue_utility] at hutility
-  norm_num at hutility
+  have hmass := congrArg (fun law : PMF ℝ => law 2) hutility
+  norm_num [PMF.pure_apply] at hmass
 
 end SameOwner
 

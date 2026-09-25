@@ -29,7 +29,7 @@ at arbitrary typed query configurations. -/
 theorem cylinderMass_eq_jointTable_factorProduct
     [Fintype Node] [DecidableEq Node]
     [∀ node, Fintype (Value node)] [∀ node, DecidableEq (Value node)]
-    (law : FinDist (Assignment Value))
+    (law : PMF (Assignment Value))
     (parents : Node → Finset Node)
     (topological : GameTheory.Math.DAG.TopologicalOrder parents)
     (kernels : LocalKernels Value parents)

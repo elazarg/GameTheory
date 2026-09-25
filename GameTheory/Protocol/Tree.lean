@@ -13,12 +13,12 @@ Two properties are what it buys.
   because `PureStrategy` is defined by recursion on the tree. It is finite as
   soon as the local action carriers are.
 
-Chance is a binary node carrying a `FinDist Bool`, so a chance law is
+Chance is a binary node carrying an ordinary discrete PMF on `Bool`, so a chance law is
 normalized by construction and no proof obligation is stored in the
 constructor.
 -/
 
-import GameTheory.Math.Probability.FinDist
+import GameTheory.Math.Probability.Product
 
 noncomputable section
 
@@ -36,7 +36,7 @@ inductive Tree (ι : Type uι) (Action : ι → Type ua) (Outcome : Type uo) :
   | /-- Play stops with this outcome. -/
     leaf (outcome : Outcome) : Tree ι Action Outcome
   | /-- Nature picks a branch according to a normalized law. -/
-    chance (law : FinDist Bool) (whenTrue whenFalse : Tree ι Action Outcome) :
+    chance (law : PMF Bool) (whenTrue whenFalse : Tree ι Action Outcome) :
       Tree ι Action Outcome
   | /-- `mover` chooses, and play continues in the corresponding subtree. -/
     node (mover : ι) (child : Action mover → Tree ι Action Outcome) :
@@ -55,8 +55,8 @@ def PureStrategy : Tree ι Action Outcome → Type (max uι ua)
 
 /-- The outcome law of a strategy. Structural recursion: no fuel, no horizon
 certificate, and no partiality. -/
-def eval : (tree : Tree ι Action Outcome) → PureStrategy tree → FinDist Outcome
-  | .leaf outcome, _ => FinDist.pure outcome
+def eval : (tree : Tree ι Action Outcome) → PureStrategy tree → PMF Outcome
+  | .leaf outcome, _ => PMF.pure outcome
   | .chance law whenTrue whenFalse, plan =>
       law.bind fun branch =>
         if branch then eval whenTrue plan.1 else eval whenFalse plan.2
@@ -65,10 +65,10 @@ def eval : (tree : Tree ι Action Outcome) → PureStrategy tree → FinDist Out
 @[simp]
 theorem eval_leaf (outcome : Outcome)
     (plan : PureStrategy (Tree.leaf (ι := ι) (Action := Action) outcome)) :
-    eval (.leaf outcome) plan = FinDist.pure outcome := rfl
+    eval (.leaf outcome) plan = PMF.pure outcome := rfl
 
 @[simp]
-theorem eval_chance (law : FinDist Bool) (whenTrue whenFalse : Tree ι Action Outcome)
+theorem eval_chance (law : PMF Bool) (whenTrue whenFalse : Tree ι Action Outcome)
     (plan : PureStrategy (.chance law whenTrue whenFalse)) :
     eval (.chance law whenTrue whenFalse) plan =
       law.bind fun branch =>

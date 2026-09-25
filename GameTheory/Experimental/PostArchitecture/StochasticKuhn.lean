@@ -9,6 +9,7 @@ instance.
 -/
 
 import GameTheory.Stochastic.Kuhn
+import GameTheory.Protocol.Predraw
 
 noncomputable section
 
@@ -23,7 +24,7 @@ open GameTheory.Stochastic.Game
 def offPathGame : Game Unit where
   State := Bool
   Action := fun _ => Bool
-  transition _ action := FinDist.pure (action ())
+  transition _ action := PMF.pure (action ())
   stageUtility _ action _ := if action () then 1 else 0
 
 local instance actionNonempty :
@@ -44,11 +45,11 @@ theorem publicHistory_infinite : Infinite offPathGame.PublicHistory := by
 
 /-- A baseline that assigns zero probability to action `true` everywhere. -/
 def baseline (initial : Bool) : offPathGame.PublicProfile initial :=
-  fun _ _ => FinDist.pure false
+  fun _ _ => PMF.pure false
 
 theorem true_not_mem_baseline_initial (initial : Bool) :
     true ∉ (baseline initial () []).support := by
-  rw [baseline, FinDist.mem_support_pure]
+  rw [baseline, PMF.mem_support_pure_iff]
   decide
 
 def trueActions : ∀ _ : Unit, Bool := fun _ => true
@@ -66,8 +67,8 @@ theorem true_realized :
     true ∈
       ((offPathGame.toExecution false).step false
         ⟨trueJoint, trueJoint_legal⟩).support := by
-  show true ∈ (FinDist.pure true).support
-  exact FinDist.mem_support_pure.mpr rfl
+  show true ∈ (PMF.pure true).support
+  exact (PMF.mem_support_pure_iff _ _).mpr rfl
 
 /-- The history reached only by the excluded baseline action. -/
 def offPathHistory : (offPathGame.toExecution false).History :=
@@ -89,6 +90,17 @@ theorem offPath_info_mem_boundedInformationSites :
   exact offPathGame.boundedInformationSites_cover false 1
     offPathHistory offPathHistory_reachesWithin (by simp) ()
 
+/-- Finite branching makes this horizon's counterfactual site set finite, even
+though the carrier of all public histories is infinite. -/
+theorem boundedSitesFinite (horizon : ℕ) :
+    ∀ i, (offPathGame.boundedInformationSites false horizon i).Finite := by
+  intro i
+  let M := offPathGame.perfectMonitoring false
+  exact M.behavioralSupportSitesFrom_finite_of_finite_branching
+      (offPathGame.fullyMixedBehaviorProfile false) horizon
+      (offPathGame.toExecution false).initHistory
+      (fun _ _ _ => Set.toFinite _) (fun _ => Set.toFinite _) i
+
 /-- The hostile game consumes the public unilateral theorem with its infinite
 public-history carrier. -/
 theorem unilateral_consumer (who : Unit)
@@ -96,12 +108,12 @@ theorem unilateral_consumer (who : Unit)
     ((offPathGame.pureHorizonForm false 1).mixed).play
         (Profile.update
           (fun i => PublicPolicy.toMixed offPathGame false 1
-            (baseline false i)) who replacement) =
+            (baseline false i) (boundedSitesFinite 1 i)) who replacement) =
       (offPathGame.publicHorizonForm false 1).play
         (Profile.update (baseline false) who
           (MixedPublicPolicy.toBehavioral offPathGame false replacement)) :=
   offPathGame.kuhn_behavioral_update_toMixed
-    false (baseline false) who replacement 1
+    false (baseline false) who replacement 1 (boundedSitesFinite 1)
 
 /-- The same infinite-carrier witness reaches exact Nash transfer. -/
 theorem nash_consumer
@@ -111,8 +123,8 @@ theorem nash_consumer
     IsNash (offPathGame.pureHorizonForm false 1).mixed
       (euPreference utility)
       (fun i => PublicPolicy.toMixed offPathGame false 1
-        (baseline false i)) :=
+        (baseline false i) (boundedSitesFinite 1 i)) :=
   offPathGame.isNash_toMixed_of_isNash_behavioral
-    false utility (baseline false) 1 hnash
+    false utility (baseline false) 1 (boundedSitesFinite 1) hnash
 
 end GameTheory.Experimental.PostArchitecture.StochasticKuhn

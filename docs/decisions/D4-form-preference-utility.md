@@ -62,8 +62,9 @@ neither weakly prefers the status quo nor strictly gains:
 The chosen definition is therefore the stricter of the two: a coalition's
 deviation is refused only when some member is affirmatively not made worse off,
 so fewer profiles are strong Nash under a partial preference. Under expected
-utility, `euPreference_total` closes the gap and the two readings coincide with
-the textbook concept.
+utility, `euPreference_total` closes the gap when every law under consideration
+has integrable utility. Finite-support laws supplied this automatically in the
+original experiment; general PMFs require the integration premise explicitly.
 
 ## Rejected sub-proposal
 
@@ -109,6 +110,22 @@ imported `Core/Preference.lean`, so `FinDist` was reachable even though no
 social-choice declaration mentioned probability. The generic relation algebra
 now lives in `Core/Rank.lean`; lottery-specific convexity and relabeling remain
 in `Core/Preference.lean`, which imports `Rank` in the one allowed direction.
-Negative reachability probes now keep `FinDist` out of both `SocialChoice` and
+Negative reachability probes keep probability out of both `SocialChoice` and
 `Arrow`. This refines D4's physical boundary without changing any accepted
 semantic declaration.
+
+## PMF restoration refinement
+
+EXP-124 replaces finite-support evaluation with guarded expectation over the
+canonical PMF carrier. Both laws must have integrable utility for an
+`euPreference` comparison. Transitivity remains unconditional; global
+reflexivity and totality require integration of all laws in their domain.
+The canonical equilibrium and coalition definitions are unchanged.
+
+The probability-only utility declarations live in `Core.ExpectedUtility`,
+while `Core.Utility` retains game-form integration, outcome-law, and equilibrium
+bridges. The lower module must expose the canonical guarded preference and
+affine invariance without importing GameForm, Nash, or fixed-point theory.
+Probability-free probes use `PMF` as their carrier sentinel. EXP-129 records
+the import-boundary evidence; implementation status belongs to the delivery
+ledger.

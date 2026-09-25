@@ -51,21 +51,49 @@ def targetUtility (outcome : binarySignature.Outcome) (who : Bool) : ℝ :=
 
 def baseProfile : Profile binarySignature := fun _ => false
 
+/-- Every target fixture law is a pure point mass, so its payoff is integrable. -/
+theorem targetUtility_integrable (profile : Profile targetForm.sig) (who : Bool) :
+    UtilityIntegrable targetUtility who (targetForm.play profile) := by
+  simpa [targetForm, sourceForm] using
+    (payoffIntegrable_pure profile (fun outcome => targetUtility outcome who))
+
+/-- Every source fixture law is a pure point mass, so its payoff is integrable. -/
+theorem sourceUtility_integrable (profile : Profile sourceForm.sig) (who : Bool) :
+    UtilityIntegrable sourceUtility who (sourceForm.play profile) := by
+  simpa [sourceForm] using
+    (payoffIntegrable_pure profile (fun outcome => sourceUtility outcome who))
+
 /-- Payoff conjugacy holds at every profile, not only the hostile base point. -/
 theorem expectedUtility_eq (targetProfile : Profile targetForm.sig) (who : Bool) :
-    expectedUtility targetUtility who (targetForm.play targetProfile) =
+    expectedUtility targetUtility who (targetForm.play targetProfile)
+        (targetUtility_integrable targetProfile who) =
       expectedUtility sourceUtility who
-        (sourceForm.play (profileEquiv.symm targetProfile)) := by
-  simp [sourceUtility, targetUtility, profileEquiv]
+        (sourceForm.play (profileEquiv.symm targetProfile))
+        (sourceUtility_integrable (profileEquiv.symm targetProfile) who) := by
+  simp only [expectedUtility, expect_pure]
+  rfl
 
 /-- The conjugated target profile is zero-slack Nash. -/
 theorem target_isεNash_zero :
     IsεNash targetForm targetUtility 0 (profileEquiv baseProfile) := by
   rw [isεNash_iff]
   intro who replacement
-  cases who <;> cases replacement <;>
-    simp [sourceUtility, targetUtility, sourceForm, targetForm, profileEquiv,
-      swapProfile, baseProfile]
+  let baseGuard := targetUtility_integrable (profileEquiv baseProfile) who
+  let deviationGuard := targetUtility_integrable
+    (Profile.update (profileEquiv baseProfile) who replacement) who
+  refine ⟨baseGuard, deviationGuard, ?_⟩
+  have hbase : expectedUtility targetUtility who
+      (targetForm.play (profileEquiv baseProfile)) baseGuard = 0 := by
+    simp [expectedUtility, expect_pure, targetUtility, sourceUtility,
+      profileEquiv, swapProfile, baseProfile]
+  have hdeviation : expectedUtility targetUtility who
+      (targetForm.play (Profile.update (profileEquiv baseProfile) who replacement))
+      deviationGuard = 0 := by
+    cases who <;> cases replacement <;>
+      simp [expectedUtility, expect_pure, targetUtility, sourceUtility,
+        profileEquiv, swapProfile, baseProfile]
+  rw [hdeviation, hbase]
+  norm_num
 
 /-- The source base profile is not zero-slack Nash: player `false` profits by
 switching its own coordinate to `true`. -/

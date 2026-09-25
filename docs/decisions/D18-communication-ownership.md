@@ -41,15 +41,11 @@ change its message or assumes its plan remains constant.
 
 | Measure | EXP-046 result |
 |---|---|
-| authored experiment | 141 nonblank lines; 20 declarations |
 | authored import | `GameTheory.Examples.Classic` only |
-| focused build | 1,738 jobs |
 | deviation representation | one canonical `Profile.update` after projection |
 | equilibrium surface | ordinary preference-parametric `IsNash` |
 | Protocol / Analysis imports | none |
 | finite capabilities | none |
-| source hazards | zero placeholders, native decisions, direct updates, transports, `HEq`, `Fintype.ofFinite`, `open Classical`, or custom axioms |
-| axiom profile | `propext`, `Classical.choice`, `Quot.sound` only |
 | hostile consumers | opera and football babbling equilibria |
 
 ## Kill condition
@@ -87,23 +83,14 @@ language consumer. Protocol owns multi-round messages, private or imperfectly
 observed communication histories, signaling during play, and any theorem whose
 statement observes an intermediate communication state.
 
-Promotion adds positive Core reachability for the extension and babbling
-theorem plus negative probes for Protocol execution and analytic existence.
-The four deferred NFG cheap-talk rows are closed by the stable generic theorem
-and both Battle-of-the-Sexes witnesses.
+## Public ownership
 
-## Promotion evidence
+`GameTheory/Core/CheapTalk.lean` owns the generic construction;
+`GameTheory/Examples/CheapTalk.lean` supplies Battle-of-the-Sexes controls.
+Neither construction needs Protocol or Analysis.
 
-`GameTheory/Core/CheapTalk.lean` contains the generic construction and
-`GameTheory/Examples/CheapTalk.lean` contains the hostile Battle-of-the-Sexes
-consumers. The focused targets build in 1,739 jobs and the full project in
-3,361 jobs. The Phase 2 audit preserves the transport and import budgets,
-reaches both intended Core symbols, and rejects all four Protocol/Analysis
-boundary symbols. The generic theorem and both examples depend only on
-`propext`, `Classical.choice`, and `Quot.sound`.
-
-The first post-promotion harvest also recovered the converse:
+The converse has the same owner:
 `actionProfile_isNash_of_isNash` sends every pure cheap-talk equilibrium to
 its realized base equilibrium, and `exists_isNash_play_iff` proves equality of
 the complete sets of pure-Nash outcome laws. These results remain
-preference-parametric and retain the same standard axiom profile.
+preference-parametric.

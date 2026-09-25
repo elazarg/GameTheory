@@ -1,15 +1,15 @@
 /-
 # Correlated and independent rationalizability
 
-For finite games, correlated rationalizability admits an iterated-deletion
-characterization: eliminate a pure strategy when a finite mixture of surviving
+Correlated rationalizability admits an iterated-deletion characterization:
+eliminate a pure strategy when a PMF mixture of surviving
 own strategies strictly improves against every surviving joint opponents'
 profile.  Unlike Bernheim--Pearce independent rationalizability for games with
 three or more players, this characterization does not impose a product-belief
 restriction across opponents.
 
 The correlated mixture and every independent marginal use the canonical
-`FinDist`; no second profile, probability, or equilibrium layer is introduced.
+`PMF`; no second profile, probability, or equilibrium layer is introduced.
 Pure-strategy elimination remains the separately named `pureSurvivors` /
 `SurvivesAllPureEliminationRounds` surface in `Core.Response`.
 
@@ -33,39 +33,80 @@ variable {ι : Type uι} [DecidableEq ι]
 /-- The outcome law after randomizing only `who`'s replacement at a pure
 profile. -/
 def randomizedDeviationOutcome (F : GameForm ι) (profile : Profile F.sig)
-    (who : ι) (replacement : FinDist (F.sig.Strategy who)) :
-    FinDist F.sig.Outcome :=
+    (who : ι) (replacement : PMF (F.sig.Strategy who)) :
+    PMF F.sig.Outcome :=
   F.outcomeLaw
     ((DeviationScheme.unilateralRandomized F.sig).apply
-      (FinDist.pure profile) who replacement)
+      (PMF.pure profile) who replacement)
 
 @[simp]
 theorem randomizedDeviationOutcome_pure (F : GameForm ι)
     (profile : Profile F.sig) (who : ι) (replacement : F.sig.Strategy who) :
-    randomizedDeviationOutcome F profile who (FinDist.pure replacement) =
+    randomizedDeviationOutcome F profile who (PMF.pure replacement) =
       F.play (Profile.update profile who replacement) := by
-  simp [randomizedDeviationOutcome, GameForm.outcomeLaw, FinDist.map_eq_bind]
+  simp [randomizedDeviationOutcome, DeviationScheme.unilateralRandomized_apply,
+    GameForm.outcomeLaw]
 
-/-- Expected utility of a randomized unilateral replacement is the finite
-average of its pure-replacement utilities. -/
+/-- Randomizing one player's action binds the corresponding pure play laws. -/
+theorem randomizedDeviationOutcome_eq_bind (F : GameForm ι)
+    (profile : Profile F.sig) (who : ι)
+    (replacement : PMF (F.sig.Strategy who)) :
+    randomizedDeviationOutcome F profile who replacement =
+      replacement.bind fun action => F.play (Profile.update profile who action) := by
+  simp [randomizedDeviationOutcome, DeviationScheme.unilateralRandomized_apply,
+    GameForm.outcomeLaw, PMF.bind_map]
+  rfl
+
+/-- Integrating the actual randomized deviation gives its supported pure
+conditional values and their outer expectation. -/
 theorem expectedUtility_randomizedDeviationOutcome (F : GameForm ι)
     (utility : Utility F.sig) (profile : Profile F.sig) (who : ι)
-    (replacement : FinDist (F.sig.Strategy who)) :
-    expectedUtility utility who
-        (randomizedDeviationOutcome F profile who replacement) =
-      replacement.expect fun action =>
-        expectedUtility utility who
-          (F.play (Profile.update profile who action)) := by
-  simp [randomizedDeviationOutcome, GameForm.outcomeLaw,
-    FinDist.map_eq_bind, expectedUtility_bind]
+    (replacement : PMF (F.sig.Strategy who))
+    (hmixed : UtilityIntegrable utility who
+      (randomizedDeviationOutcome F profile who replacement)) :
+    ∃ hconditional : ∀ action, action ∈ replacement.support →
+        UtilityIntegrable utility who (F.play (Profile.update profile who action)),
+      ∃ values : F.sig.Strategy who → ℝ,
+        (∀ action, ∀ ha : action ∈ replacement.support,
+          values action = expectedUtility utility who
+            (F.play (Profile.update profile who action)) (hconditional action ha)) ∧
+        ∃ houter : PayoffIntegrable replacement values,
+          expectedUtility utility who
+              (randomizedDeviationOutcome F profile who replacement) hmixed =
+            expect replacement values houter := by
+  classical
+  let kernel := fun action => F.play (Profile.update profile who action)
+  have hbind : PayoffIntegrable (replacement.bind kernel)
+      (fun outcome => utility outcome who) := by
+    rw [← randomizedDeviationOutcome_eq_bind]
+    exact hmixed
+  let hconditional := payoffIntegrable_bind_conditional_on_support replacement kernel
+    (fun outcome => utility outcome who) hbind
+  let values : F.sig.Strategy who → ℝ := fun action =>
+    if ha : action ∈ replacement.support then
+      expectedUtility utility who (kernel action) (hconditional action ha) else 0
+  have hvalues (action : F.sig.Strategy who) (ha : action ∈ replacement.support) :
+      values action = expect (kernel action) (fun outcome => utility outcome who)
+        (hconditional action ha) := by
+    have hne : replacement action ≠ 0 :=
+      (PMF.mem_support_iff replacement action).mp ha
+    simp [values, hne, expectedUtility]
+  have houter := payoffIntegrable_bind_conditionalValue_on_support replacement kernel
+    (fun outcome => utility outcome who) hbind values hvalues
+  refine ⟨hconditional, values, ?_, houter, ?_⟩
+  · intro action ha
+    simpa only [expectedUtility] using hvalues action ha
+  have htower := expect_bind_tower_on_support replacement kernel
+    (fun outcome => utility outcome who) hbind values hvalues
+  simpa only [expectedUtility, randomizedDeviationOutcome_eq_bind] using htower
 
 /-- A pure strategy is strictly dominated by a mixed strategy when some
-finite-support randomized replacement is strictly preferred at every pure
+randomized replacement is strictly preferred at every pure
 profile. -/
 def StrictlyDominatedByMixed (F : GameForm ι)
     (weaklyPrefers : WeakPreference ι F.sig.Outcome) (who : ι)
     (alternative : F.sig.Strategy who) : Prop :=
-  ∃ replacement : FinDist (F.sig.Strategy who),
+  ∃ replacement : PMF (F.sig.Strategy who),
     ∀ profile : Profile F.sig,
       Preference.strict weaklyPrefers who
         (randomizedDeviationOutcome F profile who replacement)
@@ -77,9 +118,42 @@ theorem StrictlyDominates.toStrictlyDominatedByMixed
     {who : ι} {preferred alternative : F.sig.Strategy who}
     (hdom : StrictlyDominates F weaklyPrefers who preferred alternative) :
     StrictlyDominatedByMixed F weaklyPrefers who alternative :=
-  ⟨FinDist.pure preferred, fun profile => by
+  ⟨PMF.pure preferred, fun profile => by
     rw [randomizedDeviationOutcome_pure]
     exact hdom profile (fun _ => Set.mem_univ _)⟩
+
+private theorem strictRandomized_not_isBestResponse
+    {F : GameForm ι} {utility : Utility F.sig} {who : ι}
+    {alternative : F.sig.Strategy who}
+    {profile : Profile F.sig} {replacement : PMF (F.sig.Strategy who)}
+    (hstrict : Preference.strict (euPreference utility) who
+      (randomizedDeviationOutcome F profile who replacement)
+      (F.play (Profile.update profile who alternative)))
+    (hbest : IsBestResponse F (euPreference utility) who profile alternative) :
+    False := by
+  obtain ⟨hmixed, hbase, _⟩ := hstrict.1
+  have hlt := (euPreference_strict_iff utility who _ _ hmixed hbase).mp hstrict
+  obtain ⟨hconditional, values, hvalues, houter, heq⟩ :=
+    expectedUtility_randomizedDeviationOutcome F utility profile who replacement hmixed
+  have hle : expect replacement values houter ≤
+      expectedUtility utility who (F.play (Profile.update profile who alternative))
+        hbase := by
+    calc
+      expect replacement values houter ≤
+          expect replacement
+            (fun _ => expectedUtility utility who
+              (F.play (Profile.update profile who alternative)) hbase)
+            (payoffIntegrable_constant replacement _) := by
+        apply expect_mono (μ := replacement)
+        · intro action ha
+          rw [hvalues action ha]
+          exact (euPreference_iff utility who _ _ hbase (hconditional action ha)).mp
+            (hbest action)
+      _ = expectedUtility utility who
+            (F.play (Profile.update profile who alternative)) hbase :=
+        expect_constant replacement _ _
+  rw [← heq] at hle
+  exact (not_lt_of_ge hle) hlt
 
 /-- Mixed strict dominance rules out best-response status under expected
 utility. -/
@@ -91,27 +165,7 @@ theorem StrictlyDominatedByMixed.not_isBestResponse
     ¬ IsBestResponse F (euPreference utility) who profile alternative := by
   obtain ⟨replacement, hreplacement⟩ := hdom
   intro hbest
-  have hstrict := (euPreference_strict_iff utility who _ _).1
-    (hreplacement profile)
-  have hle :
-      expectedUtility utility who
-          (randomizedDeviationOutcome F profile who replacement) ≤
-        expectedUtility utility who
-          (F.play (Profile.update profile who alternative)) := by
-    rw [expectedUtility_randomizedDeviationOutcome]
-    calc
-      (replacement.expect fun action =>
-          expectedUtility utility who
-            (F.play (Profile.update profile who action))) ≤
-          replacement.expect fun _ =>
-            expectedUtility utility who
-              (F.play (Profile.update profile who alternative)) :=
-        FinDist.expect_mono fun action _ => by
-          simpa only [euPreference_apply] using hbest action
-      _ = expectedUtility utility who
-            (F.play (Profile.update profile who alternative)) :=
-        FinDist.expect_const ..
-  exact (not_lt_of_ge hle) hstrict
+  exact strictRandomized_not_isBestResponse (hreplacement profile) hbest
 
 section Survivors
 
@@ -125,7 +179,7 @@ def correlatedSurvivors : ℕ → ∀ who, Set (F.sig.Strategy who)
   | round + 1, who =>
       { alternative |
         alternative ∈ correlatedSurvivors round who ∧
-          ¬ ∃ replacement : FinDist (F.sig.Strategy who),
+          ¬ ∃ replacement : PMF (F.sig.Strategy who),
             (∀ action ∈ replacement.support,
               action ∈ correlatedSurvivors round who) ∧
               ∀ profile : Profile F.sig,
@@ -157,26 +211,180 @@ def IsIndependentBestResponse (who : ι) (strategy : F.sig.Strategy who)
   ∀ alternative : F.sig.Strategy who,
     weaklyPrefers who
       (F.mixed.play
-        (Profile.update beliefs who (FinDist.pure strategy)))
+        (Profile.update beliefs who (PMF.pure strategy)))
       (F.mixed.play
-        (Profile.update beliefs who (FinDist.pure alternative)))
+        (Profile.update beliefs who (PMF.pure alternative)))
 
-/-- Expected utility against independent beliefs is the expectation, over the
-product profile law, of the corresponding pure-profile replacement. -/
+/-- Mixing one coordinate before play equals averaging its pure randomized
+deviation law over the original independent profile belief. -/
+theorem mixed_play_update_eq_bind_randomizedDeviation
+    (beliefs : Profile F.sig.mixed) (who : ι)
+    (replacement : PMF (F.sig.Strategy who)) :
+    F.mixed.play (Profile.update beliefs who replacement) =
+      (independentProduct beliefs).bind fun profile =>
+        randomizedDeviationOutcome F profile who replacement := by
+  calc
+    F.mixed.play (Profile.update beliefs who replacement) =
+        replacement.bind fun action =>
+          F.mixed.play (Profile.update beliefs who (PMF.pure action)) :=
+      GameForm.mixed_play_update F beliefs who replacement
+    _ = replacement.bind fun action =>
+          (independentProduct beliefs).bind fun profile =>
+            F.play (Profile.update profile who action) := by
+      congr 1
+      funext action
+      exact mixed_play_update_pure_eq_bind (F := F) beliefs who action
+    _ = (independentProduct beliefs).bind fun profile =>
+          replacement.bind fun action => F.play (Profile.update profile who action) :=
+      (PMF.bind_comm (independentProduct beliefs) replacement
+        (fun profile action => F.play (Profile.update profile who action))).symm
+    _ = (independentProduct beliefs).bind fun profile =>
+          randomizedDeviationOutcome F profile who replacement := by
+      congr 1
+      funext profile
+      exact (randomizedDeviationOutcome_eq_bind F profile who replacement).symm
+
+/-- Actual mixed-law integration supplies the supported pure-profile values
+and their expectation over the independent product belief. -/
 theorem expectedUtility_mixed_play_update_pure
     (utility : Utility F.sig) (beliefs : Profile F.sig.mixed)
-    (who : ι) (strategy : F.sig.Strategy who) :
+    (who : ι) (strategy : F.sig.Strategy who)
+    (hmixed : UtilityIntegrable utility who
+      (F.mixed.play (Profile.update beliefs who (PMF.pure strategy)))) :
+    ∃ hconditional : ∀ profile, profile ∈ (independentProduct beliefs).support →
+        UtilityIntegrable utility who (F.play (Profile.update profile who strategy)),
+      ∃ values : Profile F.sig → ℝ,
+        (∀ profile, ∀ hp : profile ∈ (independentProduct beliefs).support,
+          values profile = expectedUtility utility who
+            (F.play (Profile.update profile who strategy)) (hconditional profile hp)) ∧
+        ∃ houter : PayoffIntegrable (independentProduct beliefs) values,
+          expectedUtility utility who
+              (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) hmixed =
+            expect (independentProduct beliefs) values houter := by
+  classical
+  let profileLaw := independentProduct beliefs
+  let kernel := fun profile => F.play (Profile.update profile who strategy)
+  have hbind : PayoffIntegrable (profileLaw.bind kernel)
+      (fun outcome => utility outcome who) := by
+    rw [← mixed_play_update_pure_eq_bind]
+    exact hmixed
+  let hconditional := payoffIntegrable_bind_conditional_on_support profileLaw kernel
+    (fun outcome => utility outcome who) hbind
+  let values : Profile F.sig → ℝ := fun profile =>
+    if hp : profile ∈ profileLaw.support then
+      expectedUtility utility who (kernel profile) (hconditional profile hp) else 0
+  have hvalues (profile : Profile F.sig) (hp : profile ∈ profileLaw.support) :
+      values profile = expect (kernel profile) (fun outcome => utility outcome who)
+        (hconditional profile hp) := by
+    have hne : profileLaw profile ≠ 0 := (PMF.mem_support_iff profileLaw profile).mp hp
+    simp [values, hne, expectedUtility]
+  have houter := payoffIntegrable_bind_conditionalValue_on_support profileLaw kernel
+    (fun outcome => utility outcome who) hbind values hvalues
+  refine ⟨hconditional, values, ?_, houter, ?_⟩
+  · intro profile hp
+    simpa only [expectedUtility] using hvalues profile hp
+  have htower := expect_bind_tower_on_support profileLaw kernel
+    (fun outcome => utility outcome who) hbind values hvalues
+  calc
     expectedUtility utility who
-        (F.mixed.play
-          (Profile.update beliefs who (FinDist.pure strategy))) =
-      (FinDist.pi beliefs).expect fun profile =>
+        (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) hmixed =
+        expect (profileLaw.bind kernel) (fun outcome => utility outcome who) hbind := by
+      exact expectedUtility_congr_law utility who
+        (mixed_play_update_pure_eq_bind (F := F) beliefs who strategy) hmixed hbind
+    _ = expect profileLaw values houter := htower
+
+/-- A pointwise strict mixed improvement on the supported product belief
+contradicts independent best response when its actual joint outcome law is
+integrable. Separate conditional integrals do not supply this guard. -/
+theorem IsIndependentBestResponse.not_strict_mixed_on_support
+    {utility : Utility F.sig} {beliefs : Profile F.sig.mixed}
+    {who : ι} {strategy : F.sig.Strategy who}
+    (hbest : IsIndependentBestResponse F (euPreference utility) who strategy beliefs)
+    (replacement : PMF (F.sig.Strategy who))
+    (hjoint : UtilityIntegrable utility who
+      (F.mixed.play (Profile.update beliefs who replacement)))
+    (hstrict : ∀ profile, profile ∈ (independentProduct beliefs).support →
+      Preference.strict (euPreference utility) who
+        (randomizedDeviationOutcome F profile who replacement)
+        (F.play (Profile.update profile who strategy))) : False := by
+  let profileLaw := independentProduct beliefs
+  let f : F.sig.Outcome → ℝ := fun outcome => utility outcome who
+  let baseKernel := fun profile => F.play (Profile.update profile who strategy)
+  let mixedKernel := fun profile => randomizedDeviationOutcome F profile who replacement
+  let actionKernel := fun action : F.sig.Strategy who =>
+    F.mixed.play (Profile.update beliefs who (PMF.pure action))
+  have hbase : UtilityIntegrable utility who
+      (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) :=
+    (hbest strategy).1
+  have hbaseBind : PayoffIntegrable (profileLaw.bind baseKernel) f := by
+    rw [← mixed_play_update_pure_eq_bind]
+    exact hbase
+  have hjointProfile : PayoffIntegrable (profileLaw.bind mixedKernel) f := by
+    rw [← mixed_play_update_eq_bind_randomizedDeviation]
+    exact hjoint
+  have hjointAction : PayoffIntegrable (replacement.bind actionKernel) f := by
+    rw [← GameForm.mixed_play_update]
+    exact hjoint
+  have hleAction :
+      expectedUtility utility who
+          (F.mixed.play (Profile.update beliefs who replacement)) hjoint ≤
         expectedUtility utility who
-          (F.play (Profile.update profile who strategy)) := by
-  rw [GameForm.mixed_play]
-  rw [show FinDist.pure strategy =
-      (beliefs who).map (fun _ => strategy) by simp]
-  rw [← GameForm.pi_map_recommendation, expectedUtility_bind,
-    FinDist.expect_map]
+          (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) hbase := by
+    have hbound := expect_bind_le_of_forall_on_support replacement actionKernel f
+      hjointAction
+      (expectedUtility utility who
+        (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) hbase)
+      (fun action ha => by
+        have hconditional := payoffIntegrable_bind_conditional_on_support
+          replacement actionKernel f hjointAction action ha
+        exact (euPreference_iff utility who _ _ hbase hconditional).mp
+          (hbest action))
+    calc
+      expectedUtility utility who
+          (F.mixed.play (Profile.update beliefs who replacement)) hjoint =
+          expect (replacement.bind actionKernel) f hjointAction := by
+        exact expectedUtility_congr_law utility who
+          (GameForm.mixed_play_update F beliefs who replacement)
+          hjoint hjointAction
+      _ ≤ expectedUtility utility who
+            (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) hbase :=
+        hbound
+  have hpoint (profile : Profile F.sig) (hp : profile ∈ profileLaw.support) :
+      expect (baseKernel profile) f
+          (payoffIntegrable_bind_conditional_on_support profileLaw baseKernel f
+            hbaseBind profile hp) <
+        expect (mixedKernel profile) f
+          (payoffIntegrable_bind_conditional_on_support profileLaw mixedKernel f
+            hjointProfile profile hp) := by
+    exact (euPreference_strict_iff utility who _ _
+      (payoffIntegrable_bind_conditional_on_support profileLaw mixedKernel f
+        hjointProfile profile hp)
+      (payoffIntegrable_bind_conditional_on_support profileLaw baseKernel f
+        hbaseBind profile hp)).mp (hstrict profile hp)
+  obtain ⟨witness, hwitness⟩ := profileLaw.support_nonempty
+  have hstrictBind := expect_bind_lt_on_support profileLaw baseKernel mixedKernel f
+    hbaseBind hjointProfile
+    (fun profile hp => (hpoint profile hp).le) witness hwitness
+    (hpoint witness hwitness)
+  have hstrictMean :
+      expectedUtility utility who
+          (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) hbase <
+        expectedUtility utility who
+          (F.mixed.play (Profile.update beliefs who replacement)) hjoint := by
+    calc
+      expectedUtility utility who
+          (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) hbase =
+          expect (profileLaw.bind baseKernel) f hbaseBind := by
+        exact expectedUtility_congr_law utility who
+          (mixed_play_update_pure_eq_bind (F := F) beliefs who strategy)
+          hbase hbaseBind
+      _ < expect (profileLaw.bind mixedKernel) f hjointProfile := hstrictBind
+      _ = expectedUtility utility who
+            (F.mixed.play (Profile.update beliefs who replacement)) hjoint := by
+        exact (expectedUtility_congr_law utility who
+          (mixed_play_update_eq_bind_randomizedDeviation (F := F)
+            beliefs who replacement) hjoint hjointProfile).symm
+  exact (not_lt_of_ge hleAction) hstrictMean
 
 /-- Strategies surviving iterated independent-belief best response.  Each
 opponent's marginal must be supported on the preceding round; the product law
@@ -213,7 +421,7 @@ theorem mem_correlatedSurvivors_succ {round : ℕ} {who : ι}
     {strategy : F.sig.Strategy who} :
     strategy ∈ correlatedSurvivors F weaklyPrefers (round + 1) who ↔
       strategy ∈ correlatedSurvivors F weaklyPrefers round who ∧
-        ¬ ∃ replacement : FinDist (F.sig.Strategy who),
+        ¬ ∃ replacement : PMF (F.sig.Strategy who),
           (∀ action ∈ replacement.support,
             action ∈ correlatedSurvivors F weaklyPrefers round who) ∧
             ∀ profile : Profile F.sig,
@@ -248,11 +456,9 @@ theorem IsNash.survivesCorrelatedElimination
     ∀ round who,
       profile who ∈
         correlatedSurvivors F (euPreference utility) round who := by
-  have hrandomized :
-      IsEquilibrium F (euPreference utility) (FinDist.pure profile)
-        (DeviationScheme.unilateralRandomized F.sig) :=
-    isCoarseCorrelatedEq_randomized
-      ((isNash_iff_isCoarseCorrelatedEq_pure profile).1 hnash)
+  have hbest (who : ι) :
+      IsBestResponse F (euPreference utility) who profile (profile who) :=
+    (isNash_iff_isBestResponse profile).mp hnash who
   intro round
   induction round with
   | zero => intro who; exact Set.mem_univ _
@@ -261,9 +467,7 @@ theorem IsNash.survivesCorrelatedElimination
       refine ⟨ih who, ?_⟩
       rintro ⟨replacement, _, hdominates⟩
       have hstrict := hdominates profile ih
-      apply hstrict.2
-      simpa [randomizedDeviationOutcome, GameForm.outcomeLaw,
-        Profile.update_eq_self] using hrandomized who replacement
+      exact strictRandomized_not_isBestResponse hstrict (hbest who)
 
 /-- Every action played at a Nash equilibrium is correlated rationalizable. -/
 theorem IsNash.isCorrelatedRationalizable {utility : Utility F.sig}
@@ -370,11 +574,20 @@ theorem mem_independentSurvivors_of_le {earlier later : ℕ}
   | refl => exact h
   | step _ ih => exact ih h.1
 
-/-- Independent-belief survival implies correlated mixed-dominator survival.
-The proof averages any purported pointwise mixed dominator against the product
-belief witnessing independent best response. -/
+/-- Independent-belief survival implies correlated mixed-dominator survival
+when each putative dominator's actual product-belief outcome law is integrable.
+The condition concerns only the belief and replacement used in the comparison. -/
 theorem independentSurvivors_subset_correlatedSurvivors
-    {utility : Utility F.sig} :
+    {utility : Utility F.sig}
+    (hjoint : ∀ who strategy (beliefs : Profile F.sig.mixed)
+      (replacement : PMF (F.sig.Strategy who)),
+      IsIndependentBestResponse F (euPreference utility) who strategy beliefs →
+      (∀ profile, profile ∈ (independentProduct beliefs).support →
+        Preference.strict (euPreference utility) who
+          (randomizedDeviationOutcome F profile who replacement)
+          (F.play (Profile.update profile who strategy))) →
+      UtilityIntegrable utility who
+        (F.mixed.play (Profile.update beliefs who replacement))) :
     ∀ round who,
       independentSurvivors F (euPreference utility) round who ⊆
         correlatedSurvivors F (euPreference utility) round who := by
@@ -386,48 +599,11 @@ theorem independentSurvivors_subset_correlatedSurvivors
       obtain ⟨survivesEarlier, beliefs, beliefsSupported, best⟩ := survives
       refine ⟨ih who survivesEarlier, ?_⟩
       rintro ⟨replacement, _, dominates⟩
-      let profileLaw := FinDist.pi beliefs
-      have bestValue (alternative : F.sig.Strategy who) :
-          profileLaw.expect (fun profile =>
-              expectedUtility utility who
-                (F.play (Profile.update profile who alternative))) ≤
-            profileLaw.expect fun profile =>
-              expectedUtility utility who
-                (F.play (Profile.update profile who strategy)) := by
-        have hbest := best alternative
-        rw [euPreference_apply,
-          expectedUtility_mixed_play_update_pure,
-          expectedUtility_mixed_play_update_pure] at hbest
-        exact hbest
-      have averageReplacement_le :
-          profileLaw.expect (fun profile =>
-              expectedUtility utility who
-                (randomizedDeviationOutcome F profile who replacement)) ≤
-            profileLaw.expect fun profile =>
-              expectedUtility utility who
-                (F.play (Profile.update profile who strategy)) := by
-        simp_rw [expectedUtility_randomizedDeviationOutcome]
-        rw [FinDist.expect_comm]
-        calc
-          replacement.expect (fun alternative =>
-              profileLaw.expect fun profile =>
-                expectedUtility utility who
-                  (F.play (Profile.update profile who alternative))) ≤
-              replacement.expect (fun _ =>
-                profileLaw.expect fun profile =>
-                  expectedUtility utility who
-                    (F.play (Profile.update profile who strategy))) :=
-            FinDist.expect_mono fun alternative _ => bestValue alternative
-          _ = profileLaw.expect fun profile =>
-                expectedUtility utility who
-                  (F.play (Profile.update profile who strategy)) :=
-            FinDist.expect_const ..
-      have pointwiseStrict (profile : Profile F.sig)
-          (hprofile : profile ∈ profileLaw.support) :
-          expectedUtility utility who
-              (F.play (Profile.update profile who strategy)) <
-            expectedUtility utility who
-              (randomizedDeviationOutcome F profile who replacement) := by
+      have hstrict (profile : Profile F.sig)
+          (hprofile : profile ∈ (independentProduct beliefs).support) :
+          Preference.strict (euPreference utility) who
+            (randomizedDeviationOutcome F profile who replacement)
+            (F.play (Profile.update profile who strategy)) := by
         have allSurvive :
             ∀ player,
               Profile.update profile who strategy player ∈
@@ -439,41 +615,53 @@ theorem independentSurvivors_subset_correlatedSurvivors
           · rw [Profile.update_of_ne _ _ hplayer]
             apply ih player
             exact beliefsSupported player hplayer (profile player)
-              ((FinDist.mem_support_pi.mp hprofile) player)
-        have hstrict := dominates (Profile.update profile who strategy) allSurvive
-        rw [euPreference_strict_iff] at hstrict
-        simpa [randomizedDeviationOutcome, Profile.update_idem] using hstrict
-      have averageStrict :
-          profileLaw.expect (fun profile =>
-              expectedUtility utility who
-                (F.play (Profile.update profile who strategy))) <
-            profileLaw.expect fun profile =>
-              expectedUtility utility who
-                (randomizedDeviationOutcome F profile who replacement) := by
-        let difference := fun profile =>
-          expectedUtility utility who
-              (F.play (Profile.update profile who strategy)) -
-            expectedUtility utility who
-              (randomizedDeviationOutcome F profile who replacement)
-        obtain ⟨witness, hwitness⟩ := profileLaw.support_nonempty
-        have hnegative : profileLaw.expect difference < 0 :=
-          FinDist.expect_lt_of_mem_support profileLaw difference 0
-            (fun profile hprofile => sub_nonpos.mpr (pointwiseStrict profile hprofile).le)
-            hwitness (sub_neg.mpr (pointwiseStrict witness hwitness))
-        dsimp only [difference] at hnegative
-        rw [FinDist.expect_sub] at hnegative
-        linarith
-      exact (not_lt_of_ge averageReplacement_le) averageStrict
+              ((independentProduct_support_iff beliefs profile).mp hprofile player)
+        have hdom := dominates (Profile.update profile who strategy) allSurvive
+        simpa [randomizedDeviationOutcome_eq_bind, Profile.update_idem] using hdom
+      exact IsIndependentBestResponse.not_strict_mixed_on_support F best replacement
+        (hjoint who strategy beliefs replacement best hstrict) hstrict
 
-/-- Independent rationalizability is contained in correlated
-rationalizability for finite expected-utility games. -/
+/-- The guarded roundwise inclusion passes to all finite elimination rounds. -/
 theorem IsIndependentRationalizable.isCorrelatedRationalizable
     {utility : Utility F.sig} {who : ι} {strategy : F.sig.Strategy who}
     (hindependent :
-      IsIndependentRationalizable F (euPreference utility) who strategy) :
+      IsIndependentRationalizable F (euPreference utility) who strategy)
+    (hjoint : ∀ who strategy (beliefs : Profile F.sig.mixed)
+      (replacement : PMF (F.sig.Strategy who)),
+      IsIndependentBestResponse F (euPreference utility) who strategy beliefs →
+      (∀ profile, profile ∈ (independentProduct beliefs).support →
+        Preference.strict (euPreference utility) who
+          (randomizedDeviationOutcome F profile who replacement)
+          (F.play (Profile.update profile who strategy))) →
+      UtilityIntegrable utility who
+        (F.mixed.play (Profile.update beliefs who replacement))) :
     IsCorrelatedRationalizable F (euPreference utility) who strategy :=
-  fun round => independentSurvivors_subset_correlatedSurvivors round who
+  fun round => independentSurvivors_subset_correlatedSurvivors hjoint round who
     (hindependent round)
+
+/-- Finite strategy carriers derive every needed product-belief/mixed-deviator
+guard from pure-play integration. The outcome carrier remains arbitrary. -/
+theorem independentSurvivors_subset_correlatedSurvivors_of_finite
+    {utility : Utility F.sig}
+    [∀ i, Finite (F.sig.Strategy i)]
+    (hintegrable : GameForm.HasIntegrableUtility F utility) :
+    ∀ round who,
+      independentSurvivors F (euPreference utility) round who ⊆
+        correlatedSurvivors F (euPreference utility) round who := by
+  apply independentSurvivors_subset_correlatedSurvivors
+  intro who strategy beliefs replacement _ _
+  exact hintegrable.mixed_of_finite who
+    (Profile.update beliefs who replacement)
+
+theorem IsIndependentRationalizable.isCorrelatedRationalizable_of_finite
+    {utility : Utility F.sig} {who : ι} {strategy : F.sig.Strategy who}
+    [∀ i, Finite (F.sig.Strategy i)]
+    (hindependent :
+      IsIndependentRationalizable F (euPreference utility) who strategy)
+    (hintegrable : GameForm.HasIntegrableUtility F utility) :
+    IsCorrelatedRationalizable F (euPreference utility) who strategy :=
+  fun round => independentSurvivors_subset_correlatedSurvivors_of_finite
+    hintegrable round who (hindependent round)
 
 /-- Every pure Nash action survives every independent-belief round.  Point-mass
 opponent marginals are supported on the preceding Nash actions. -/
@@ -491,7 +679,7 @@ theorem IsNash.survivesIndependentElimination
       refine ⟨ih who, F.purify profile, ?_, ?_⟩
       · intro player _ action haction
         have haction_eq : action = profile player := by
-          simpa only [GameForm.purify, FinDist.mem_support_pure] using haction
+          simpa only [GameForm.purify, PMF.mem_support_pure_iff] using haction
         simpa only [haction_eq] using ih player
       · intro alternative
         rw [purify_update, purify_update, GameForm.mixed_play_purify,

@@ -1,27 +1,14 @@
 /- Copyright (c) 2026 VegasCore contributors. All rights reserved. -/
 
 import GameTheory.Core.UtilitySimulation
+import GameTheory.Math.Probability.Uniform
 
 /-! # A channel that only a coalition can use
 
-The base game draws a fair coin, one player has nothing to do, and the other is
-paid for guessing the coin. No strategy sees the draw, so every profile is worth
-one half to both players, and every profile is strong Nash.
-
-The target game is the same draw with a channel: the first player's strategy is
-a message chosen as a function of the coin, and the second player's strategy is
-a guess chosen as a function of the received message. Compiling a base strategy
-sends a constant message and ignores the received one.
-
-A lone deviator gains nothing: against a constant message the guess is constant,
-and a message nobody listens to changes no outcome. So the compiled embedding
-carries an exact one-player certificate. The two-player coalition that sends the
-coin and copies it is worth one, so no coalition certificate exists at all, for
-any strategy translation, and strong Nash is not preserved.
-
-This is why `UtilitySimulation` is indexed by the coalitions it covers: the
-one-player certificate does not supply the coalition one, and exactness at one
-player does not help.
+The base game draws a fair coin and pays both players when the second player
+guesses it. The target adds a message channel from player zero to player one.
+Constant messages preserve all unilateral utility bounds, but a coalition can
+transmit the coin and earn one rather than one half.
 -/
 
 noncomputable section
@@ -30,55 +17,67 @@ namespace GameTheory.GameForm.CoalitionWitness
 
 open GameTheory.Math.Probability
 
-/-- The fair draw both games share. -/
-def fairCoin : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num) (FinDist.pure false) (FinDist.pure true)
+def fairCoin : PMF Bool := PMF.uniformOfFintype Bool
 
-/-- The base game: player `1` guesses the coin without observing anything. -/
 abbrev baseGame : GameForm (Fin 2) where
   sig := { Strategy := fun _ => Bool, Outcome := Bool × Bool }
   play profile := fairCoin.map fun coin => (coin, profile 1)
 
-/-- The same draw with a channel: player `0` sends a message chosen from the
-coin, and player `1` guesses from the message. -/
 abbrev channelGame : GameForm (Fin 2) where
   sig := { Strategy := fun _ => Bool → Bool, Outcome := Bool × Bool }
   play profile := fairCoin.map fun coin => (coin, profile 1 (profile 0 coin))
 
-/-- Both players are paid exactly when the guess matches the coin. -/
 def matchUtility (outcome : Bool × Bool) (_player : Fin 2) : ℝ :=
   if outcome.1 = outcome.2 then 1 else 0
 
-/-- Compiling ignores the channel: a constant message, and a guess that does not
-read the message it receives. -/
-def compileConstant : (who : Fin 2) → baseGame.sig.Strategy who → channelGame.sig.Strategy who :=
-  fun _ strategy _ => strategy
+def compileConstant : (who : Fin 2) → baseGame.sig.Strategy who →
+    channelGame.sig.Strategy who := fun _ strategy _ => strategy
 
-/-- A guess that does not depend on the coin is right half the time. -/
-theorem expect_constantGuess (guess : Bool) (who : Fin 2) :
-    (fairCoin.map fun coin => ((coin, guess) : Bool × Bool)).expect
-        (fun outcome => matchUtility outcome who) = 1 / 2 := by
-  cases guess <;>
-    norm_num [fairCoin, matchUtility, FinDist.expect_map, FinDist.expect_mix]
+private theorem matchBound (who : Fin 2) (outcome : Bool × Bool) :
+    |matchUtility outcome who| ≤ 1 := by
+  simp [matchUtility]
+  split_ifs <;> norm_num
 
-/-- A guess that copies the coin is always right. -/
-theorem expect_copyCoin (who : Fin 2) :
-    (fairCoin.map fun coin => ((coin, coin) : Bool × Bool)).expect
-        (fun outcome => matchUtility outcome who) = 1 := by
-  norm_num [fairCoin, matchUtility, FinDist.expect_map, FinDist.expect_mix]
+private theorem matchGuard (law : PMF (Bool × Bool)) (who : Fin 2) :
+    UtilityIntegrable matchUtility who law :=
+  payoffIntegrable_of_bounded law _ (matchBound who)
 
-/-- Every base profile is worth one half to both players. -/
-theorem base_expect (profile : Profile baseGame.sig) (who : Fin 2) :
-    (baseGame.play profile).expect (fun outcome => matchUtility outcome who) = 1 / 2 :=
-  expect_constantGuess (profile 1) who
+/-- Any fixed guess succeeds on half of the fair draw. -/
+theorem expect_constantGuess (guess : Bool) (who : Fin 2)
+    (h : UtilityIntegrable matchUtility who
+      (fairCoin.map fun coin => ((coin, guess) : Bool × Bool))) :
+    expectedUtility matchUtility who
+      (fairCoin.map fun coin => ((coin, guess) : Bool × Bool)) h = 1 / 2 := by
+  rw [expectedUtility_map]
+  unfold expectedUtility
+  simp only [fairCoin]
+  rw [expect_proof_irrel (PMF.uniformOfFintype Bool) _ _
+    (payoffIntegrable_of_finite _ _), expect_uniformOfFintype]
+  cases guess <;> norm_num [matchUtility]
 
-/-- Against compiled opponents a single deviation still produces a guess that
-does not depend on the coin. -/
+/-- Copying the fair draw succeeds surely. -/
+theorem expect_copyCoin (who : Fin 2)
+    (h : UtilityIntegrable matchUtility who
+      (fairCoin.map fun coin => ((coin, coin) : Bool × Bool))) :
+    expectedUtility matchUtility who
+      (fairCoin.map fun coin => ((coin, coin) : Bool × Bool)) h = 1 := by
+  rw [expectedUtility_map]
+  unfold expectedUtility
+  simp only [fairCoin]
+  rw [expect_proof_irrel (PMF.uniformOfFintype Bool) _ _
+    (payoffIntegrable_of_finite _ _), expect_uniformOfFintype]
+  norm_num [matchUtility]
+
+theorem base_expect (profile : Profile baseGame.sig) (who : Fin 2)
+    (h : UtilityIntegrable matchUtility who (baseGame.play profile)) :
+    expectedUtility matchUtility who (baseGame.play profile) h = 1 / 2 :=
+  expect_constantGuess (profile 1) who h
+
 theorem update_compileConstant_play (profile : Profile baseGame.sig) (who : Fin 2)
     (replacement : channelGame.sig.Strategy who) :
     ∃ guess : Bool,
       channelGame.play (Profile.update
-          (fun player => compileConstant player (profile player)) who replacement) =
+          (Profile.map compileConstant profile) who replacement) =
         fairCoin.map fun coin => ((coin, guess) : Bool × Bool) := by
   fin_cases who
   · exact ⟨profile 1, by simp [compileConstant, Profile.update_of_ne]⟩
@@ -89,40 +88,68 @@ def unilateralSimulation :
     UtilitySimulation baseGame channelGame matchUtility matchUtility
       (singletonGroups (Fin 2)) :=
   UtilitySimulation.ofUnilateral compileConstant
-    (fun profile who => by
-      obtain ⟨guess, hplay⟩ := update_compileConstant_play profile who (compileConstant who
-        (profile who))
-      rw [Profile.update_eq_self] at hplay
-      rw [hplay, expect_constantGuess, base_expect])
+    (fun _ _ => ⟨fun _ => matchGuard _ _, fun _ => matchGuard _ _⟩)
+    (fun profile who htarget hsource => by
+      obtain ⟨guess, hplay⟩ := update_compileConstant_play profile who
+        (compileConstant who (profile who))
+      have hself : Profile.update (Profile.map compileConstant profile) who
+          (compileConstant who (profile who)) = Profile.map compileConstant profile := by
+        simpa only [Profile.map_apply] using
+          Profile.update_eq_self (Profile.map compileConstant profile) who
+      rw [hself] at hplay
+      calc
+        _ = expectedUtility matchUtility who
+              (fairCoin.map fun coin => ((coin, guess) : Bool × Bool))
+              (matchGuard _ _) :=
+          expectedUtility_congr_law matchUtility who hplay htarget (matchGuard _ _)
+        _ = 1 / 2 := expect_constantGuess guess who _
+        _ = _ := (base_expect profile who hsource).symm)
     (fun profile who replacement => by
       refine ⟨profile who, ?_⟩
+      intro hsource
       obtain ⟨guess, hplay⟩ := update_compileConstant_play profile who replacement
-      rw [hplay, expect_constantGuess, Profile.update_eq_self, base_expect])
+      have htarget : UtilityIntegrable matchUtility who
+          (channelGame.play (Profile.update
+            (Profile.map compileConstant profile) who replacement)) :=
+        matchGuard _ _
+      refine ⟨htarget, le_of_eq ?_⟩
+      have hsource' : UtilityIntegrable matchUtility who (baseGame.play profile) :=
+        matchGuard _ _
+      calc
+        _ = expectedUtility matchUtility who
+              (fairCoin.map fun coin => ((coin, guess) : Bool × Bool))
+              (matchGuard _ _) :=
+          expectedUtility_congr_law matchUtility who hplay htarget (matchGuard _ _)
+        _ = 1 / 2 := expect_constantGuess guess who _
+        _ = expectedUtility matchUtility who (baseGame.play profile) hsource' :=
+          (base_expect profile who hsource').symm
+        _ = _ := by
+          have hlaw : baseGame.play profile =
+              baseGame.play (Profile.update profile who (profile who)) := by
+            rw [Profile.update_eq_self]
+          exact expectedUtility_congr_law matchUtility who hlaw hsource' hsource)
 
-/-- Send the coin, then copy the message received. -/
 def copyProfile : Profile channelGame.sig := fun _ => id
 
-/-- The coalition that sends the coin and copies it is always right. -/
-theorem copyProfile_expect (who : Fin 2) :
-    (channelGame.play copyProfile).expect (fun outcome => matchUtility outcome who) = 1 :=
-  expect_copyCoin who
+theorem copyProfile_expect (who : Fin 2)
+    (h : UtilityIntegrable matchUtility who (channelGame.play copyProfile)) :
+    expectedUtility matchUtility who (channelGame.play copyProfile) h = 1 :=
+  expect_copyCoin who h
 
-/-- Overriding both coordinates is that coalition, whatever was there. -/
 theorem override_copyProfile (profile : Profile channelGame.sig) :
     Profile.override Finset.univ (fun i => copyProfile i.1) profile = copyProfile := by
   funext player
   simp [Profile.override]
 
-/-- No coalition certificate exists, for any strategy translation. The grand
-coalition reaches one in the target, while every base profile is worth one
-half, so the bound would assert `1 ≤ 1 / 2`. -/
+/-- The grand coalition reaches a payoff no source profile can match. -/
 theorem isEmpty_coalitionSimulation :
     IsEmpty (UtilitySimulation baseGame channelGame matchUtility matchUtility
       (nonemptyGroups (Fin 2))) :=
   UtilitySimulation.isEmpty_of_grandCoalitionValue Finset.univ_nonempty
     (fun _ => false) 0 copyProfile (1 / 2)
-    (fun alternative => le_of_eq (base_expect alternative 0))
-    (by rw [copyProfile_expect]; norm_num)
+    (fun alternative =>
+      ⟨matchGuard _ _, le_of_eq (base_expect alternative 0 (matchGuard _ _))⟩)
+    (fun ht => by rw [copyProfile_expect 0 ht]; norm_num)
 
 /-- Every base profile is strong Nash: no coalition can beat one half. -/
 theorem base_isStrongNash (profile : Profile baseGame.sig) :
@@ -130,95 +157,118 @@ theorem base_isStrongNash (profile : Profile baseGame.sig) :
   rw [isStrongNash_iff]
   intro coalition hne replacement
   obtain ⟨member, hmember⟩ := hne
-  refine ⟨member, hmember, ?_⟩
-  simp only [euPreference_apply, expectedUtility]
-  rw [expect_constantGuess, expect_constantGuess]
+  refine ⟨member, hmember, matchGuard _ _, matchGuard _ _, ?_⟩
+  rw [base_expect profile member, base_expect _ member]
 
-/-- Its compilation is not: the coalition that uses the channel gains. -/
+/-- The channel lets the grand coalition improve from one half to one. -/
 theorem compiled_not_isStrongNash (profile : Profile baseGame.sig) :
     ¬ IsStrongNash channelGame (euPreference matchUtility)
-      (fun player => compileConstant player (profile player)) := by
+      (Profile.map compileConstant profile) := by
   rw [isStrongNash_iff]
   intro h
-  obtain ⟨member, _, hprefer⟩ :=
+  obtain ⟨member, _, hbase, hdev, hprefer⟩ :=
     h Finset.univ Finset.univ_nonempty (fun i => copyProfile i.1)
-  rw [euPreference_apply, expectedUtility, expectedUtility, override_copyProfile,
-    copyProfile_expect] at hprefer
-  have hhonest : (channelGame.play
-      (fun player => compileConstant player (profile player))).expect
-        (fun outcome => matchUtility outcome member) = 1 / 2 := by
-    obtain ⟨guess, hplay⟩ := update_compileConstant_play profile member
-      (compileConstant member (profile member))
-    rw [Profile.update_eq_self] at hplay
-    rw [hplay, expect_constantGuess]
-  rw [hhonest] at hprefer
+  have hdevlaw : channelGame.play
+      (Profile.override Finset.univ (fun i => copyProfile i.1)
+        (Profile.map compileConstant profile)) = channelGame.play copyProfile := by
+    rw [override_copyProfile]
+  have hdevvalue : expectedUtility matchUtility member _ hdev = 1 := by
+    calc
+      _ = expectedUtility matchUtility member (channelGame.play copyProfile)
+          (matchGuard _ _) :=
+        expectedUtility_congr_law matchUtility member hdevlaw hdev (matchGuard _ _)
+      _ = 1 := copyProfile_expect member _
+  rw [hdevvalue] at hprefer
+  obtain ⟨guess, hplay⟩ := update_compileConstant_play profile member
+    (compileConstant member (profile member))
+  have hself : Profile.update (Profile.map compileConstant profile) member
+      (compileConstant member (profile member)) = Profile.map compileConstant profile := by
+    simpa only [Profile.map_apply] using
+      Profile.update_eq_self (Profile.map compileConstant profile) member
+  rw [hself] at hplay
+  have hhalf : expectedUtility matchUtility member
+      (channelGame.play (Profile.map compileConstant profile)) hbase = 1 / 2 := by
+    calc
+      _ = expectedUtility matchUtility member
+          (fairCoin.map fun coin => ((coin, guess) : Bool × Bool))
+          (matchGuard _ _) :=
+        expectedUtility_congr_law matchUtility member hplay hbase (matchGuard _ _)
+      _ = 1 / 2 := expect_constantGuess guess member _
+  rw [hhalf] at hprefer
   norm_num at hprefer
 
 /-- Coordination succeeds only when both players choose true. -/
 abbrev coordinationGame : GameForm (Fin 2) where
   sig := { Strategy := fun _ => Bool, Outcome := Bool }
-  play profile := FinDist.pure (profile 0 && profile 1)
+  play profile := PMF.pure (profile 0 && profile 1)
 
 def coordinationUtility (outcome : Bool) (_player : Fin 2) : ℝ :=
   if outcome then 1 else 0
 
-/-- Extra private strategy coordinates that play ignores cannot create a
-coalitional communication channel. -/
 abbrev redundantGame : GameForm (Fin 2) where
   sig := { Strategy := fun _ => Bool × Bool, Outcome := Bool }
-  play profile := FinDist.pure ((profile 0).1 && (profile 1).1)
+  play profile := PMF.pure ((profile 0).1 && (profile 1).1)
 
-/-- One projected source replacement simultaneously matches the utilities of
-every coalition member, including the genuine two-player coalition. -/
+/-- One source replacement matches all members of a deviating coalition. -/
 def coalitionSimulation :
-    UtilitySimulation coordinationGame redundantGame coordinationUtility coordinationUtility
-      (nonemptyGroups (Fin 2)) where
+    UtilitySimulation coordinationGame redundantGame
+      coordinationUtility coordinationUtility (nonemptyGroups (Fin 2)) where
   compileStrategy _ strategy := (strategy, false)
-  honest_utility _ _ := rfl
+  honest_integrable profile who := by
+    exact ⟨fun _ => payoffIntegrable_pure _ _, fun _ => payoffIntegrable_pure _ _⟩
+  honest_utility profile who _ _ := by
+    simp [coordinationGame, redundantGame, expectedUtility_pure, Profile.map_apply]
   deviation_bound members _ profile replacement := by
     refine ⟨fun i => (replacement i).1, ?_⟩
-    intro member _
+    intro member _ hsource
     have hlaw :
         redundantGame.play (Profile.override members replacement
-          (fun player => (profile player, false))) =
+          (Profile.map (fun _ strategy => (strategy, false)) profile)) =
         coordinationGame.play
           (Profile.override members (fun i => (replacement i).1) profile) := by
       by_cases hzero : (0 : Fin 2) ∈ members <;>
         by_cases hone : (1 : Fin 2) ∈ members <;>
-        simp [redundantGame, Profile.override, hzero, hone]
-    rw [hlaw]
+        simp [redundantGame, coordinationGame, Profile.override,
+          Profile.map_apply, hzero, hone]
+    have htarget : UtilityIntegrable coordinationUtility member
+        (redundantGame.play (Profile.override members replacement
+          (Profile.map (fun _ strategy => (strategy, false)) profile))) :=
+      payoffIntegrable_pure _ _
+    refine ⟨htarget, le_of_eq ?_⟩
+    exact expectedUtility_congr_law coordinationUtility member hlaw htarget hsource
 
 theorem coordination_isStrongNash :
-    IsStrongNash coordinationGame (euPreference coordinationUtility) (fun _ => true) := by
+    IsStrongNash coordinationGame (euPreference coordinationUtility)
+      (fun _ => true) := by
   rw [isStrongNash_iff]
   intro members hne replacement
   obtain ⟨member, hmember⟩ := hne
   refine ⟨member, hmember, ?_⟩
-  simp only [euPreference, expectedUtility, coordinationGame, FinDist.expect_pure,
-    coordinationUtility, Bool.and_self, ite_true]
+  rw [euPreference_pure_iff]
+  simp [coordinationGame, coordinationUtility]
   split_ifs <;> norm_num
 
 theorem coordination_false_isNash :
-    IsNash coordinationGame (euPreference coordinationUtility) (fun _ => false) := by
+    IsNash coordinationGame (euPreference coordinationUtility)
+      (fun _ => false) := by
   rw [isNash_iff]
   intro who replacement
+  rw [euPreference_pure_iff]
   fin_cases who <;> cases replacement <;>
-    norm_num [euPreference, expectedUtility, coordinationGame, coordinationUtility,
-      Profile.update_of_ne]
+    simp [coordinationGame, coordinationUtility, Profile.update_of_ne]
 
-/-- The positive fixture has a genuine coalition gain: neither player can
-repair failed coordination alone, but their joint true replacement improves
-both. It is therefore not merely a constant-utility certificate. -/
+/-- Both players jointly gain even though neither can repair coordination. -/
 theorem coordination_false_not_isStrongNash :
-    ¬ IsStrongNash coordinationGame (euPreference coordinationUtility) (fun _ => false) := by
+    ¬ IsStrongNash coordinationGame (euPreference coordinationUtility)
+      (fun _ => false) := by
   rw [isStrongNash_iff]
   intro h
-  obtain ⟨member, _, hbound⟩ := h Finset.univ Finset.univ_nonempty (fun _ => true)
-  norm_num [euPreference, expectedUtility, coordinationGame, coordinationUtility,
-    Profile.override] at hbound
+  obtain ⟨member, _, hbound⟩ :=
+    h Finset.univ Finset.univ_nonempty (fun _ => true)
+  rw [euPreference_pure_iff] at hbound
+  norm_num [coordinationGame, coordinationUtility, Profile.override] at hbound
 
-/-- Unlike the channel extension, the redundant-strategy extension preserves
-strong Nash using one certificate for every nonempty coalition. -/
+/-- The redundant-strategy extension preserves strong Nash. -/
 theorem redundant_isStrongNash :
     IsStrongNash redundantGame (euPreference coordinationUtility)
       (coalitionSimulation.compileProfile (fun _ => true)) := by
@@ -226,16 +276,15 @@ theorem redundant_isStrongNash :
       euPreference coordinationUtility := by
     funext player preferred alternative
     simp [euPreferenceWithin, euPreference]
-  have hsource : IsStrongNash coordinationGame (euPreferenceWithin 0 coordinationUtility)
-      (fun _ => true) := by
+  have hsource : IsStrongNash coordinationGame
+      (euPreferenceWithin 0 coordinationUtility) (fun _ => true) := by
     rw [hpreference]
     exact coordination_isStrongNash
   have htarget :=
     (coalitionSimulation.isStrongNash_compileProfile_iff 0 (fun _ => true)).mpr hsource
   rwa [hpreference] at htarget
 
-/-- Empty coalitions cannot supply an improving member. A group family
-containing only the empty coalition therefore imposes no equilibrium test. -/
+/-- A group family containing only the empty coalition is vacuous. -/
 theorem empty_group_vacuous (ε : ℝ) (profile : Profile channelGame.sig) :
     IsεGroupNash channelGame matchUtility ({∅} : Set (Finset (Fin 2))) ε profile := by
   rw [isεGroupNash_iff]

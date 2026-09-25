@@ -14,7 +14,7 @@ noncomputable section
 
 namespace GameTheory.Languages.EFG
 
-open GameTheory.Protocol
+open GameTheory.Protocol GameTheory.Math.Probability
 
 universe uι us ua up uq uk
 
@@ -72,11 +72,17 @@ theorem isHistorywiseOptimal_iff_hasNoProfitableOneShotDeviation
     (hactsOnce : G.information.ActsOnceWhereItMatters)
     (certificate : G.execution.WellFoundedPlay)
     (profile : Profile G.strategicSignature)
-    (utility : G.History → ι → ℝ) :
+    (utility : G.History → ι → ℝ)
+    (hcandidate : ∀ (who : ι) (alternative : G.information.Policy who)
+      (history : G.History), PayoffIntegrable
+        (G.execution.historyBackwardLaw certificate
+          (G.information.historyChooser
+            (Profile.update profile who alternative)) history)
+        (fun outcome => utility outcome who)) :
     G.IsHistorywiseOptimal certificate profile utility ↔
       G.HasNoProfitableOneShotDeviation certificate profile utility :=
   G.information.isHistorywiseOptimal_iff_hasNoProfitableOneShotDeviation
-    hactsOnce certificate profile utility
+    hactsOnce certificate profile utility hcandidate
 
 end Game
 

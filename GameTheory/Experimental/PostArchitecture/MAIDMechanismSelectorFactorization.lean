@@ -13,6 +13,7 @@ independence, optimality, coverage, or equilibrium theorem.
 import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
 import GameTheory.Experimental.PostArchitecture.MAIDSitePolicySurgery
 import GameTheory.Experimental.PostArchitecture.MAIDUtilityFactorization
+import GameTheory.Math.Probability.Support
 
 noncomputable section
 
@@ -287,7 +288,7 @@ def componentPolicy [DecidableEq Player] [DecidableEq Node]
     (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1)) (selector : Fin 2) :
+      PMF (diagram.Value source.1)) (selector : Fin 2) :
     Policy diagram :=
   if selector = 0 then baselinePolicy base owner replacement
   else
@@ -302,9 +303,9 @@ def mechanismSelectorLaw
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1)) :
-    FinDist (MechanismAssignment view owner) :=
-  (FinDist.uniformFin 2).bind fun selector =>
+      PMF (diagram.Value source.1)) :
+    PMF (MechanismAssignment view owner) :=
+  (PMF.uniformOfFintype (Fin 2)).bind fun selector =>
     (augmentedLaw view owner
       (componentPolicy base owner replacement source sourceRule selector)).map
         (mechanismAugment view selector)
@@ -351,13 +352,13 @@ def mechanismSelectorKernels
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1)) :
+      PMF (diagram.Value source.1)) :
     LocalKernels (mechanismGraphValue view (owner := owner))
       (mechanismGraphParents view source) :=
   fun node configuration => by
     cases node with
     | mechanism =>
-        exact (FinDist.uniformFin 2).map ULift.up
+        exact (PMF.uniformOfFintype (Fin 2)).map ULift.up
     | object graphNode =>
         cases graphNode with
         | utility site =>
@@ -393,30 +394,21 @@ theorem mechanismAugment_projectObjects (view : UtilityView semantics)
   | object _ => rfl
 
 private theorem prob_bind_eq_chosen_mul
-    {Alpha Beta : Type*} (law : FinDist Alpha)
-    (continuation : Alpha → FinDist Beta) (chosen : Alpha) (target : Beta)
+    {Alpha Beta : Type*} (law : PMF Alpha)
+    (continuation : Alpha → PMF Beta) (chosen : Alpha) (target : Beta)
     (hoffTarget : ∀ value ∈ law.support, value ≠ chosen →
-      (continuation value).prob target = 0) :
-    (law.bind continuation).prob target =
-      law.prob chosen * (continuation chosen).prob target := by
+      (continuation value) target = 0) :
+    (law.bind continuation) target =
+      law chosen * (continuation chosen) target := by
   classical
-  rw [FinDist.prob_bind, FinDist.expect_eq_sum_support]
-  by_cases hchosen : chosen ∈ law.support
-  · rw [Finset.sum_eq_single chosen]
-    · intro value hvalue hne
-      rw [hoffTarget value (FinDist.mem_supportFinset.mp hvalue) hne,
-        mul_zero]
-    · intro hnot
-      exact absurd (FinDist.mem_supportFinset.mpr hchosen) hnot
-  · rw [FinDist.prob_eq_zero_iff.mpr hchosen, zero_mul]
-    apply Finset.sum_eq_zero
-    intro value hvalue
-    have hsupport := FinDist.mem_supportFinset.mp hvalue
-    have hne : value ≠ chosen := by
-      intro hequal
-      subst value
-      exact hchosen hsupport
-    rw [hoffTarget value hsupport hne, mul_zero]
+  rw [PMF.bind_apply]
+  apply tsum_eq_single chosen
+  intro value hne
+  by_cases hsupport : value ∈ law.support
+  · rw [hoffTarget value hsupport hne, mul_zero]
+  · have hzero : law value = 0 :=
+      (law.apply_eq_zero_iff value).mpr hsupport
+    simp [hzero]
 
 /-- Point masses of the selector law split into the fair selector mass and
 the selected canonical augmented-law mass. -/
@@ -427,30 +419,32 @@ theorem mechanismSelectorLaw_prob
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (assignment : MechanismAssignment view owner) :
-    (mechanismSelectorLaw view owner base replacement source sourceRule).prob
+    (mechanismSelectorLaw view owner base replacement source sourceRule)
         assignment =
-      (FinDist.uniformFin 2).prob (assignment .mechanism).down *
+      (PMF.uniformOfFintype (Fin 2)) (assignment .mechanism).down *
         (augmentedLaw view owner
           (componentPolicy base owner replacement source sourceRule
-            (assignment .mechanism).down)).prob
+            (assignment .mechanism).down))
           (projectObjects view assignment) := by
   let chosen := (assignment .mechanism).down
   unfold mechanismSelectorLaw
-  rw [prob_bind_eq_chosen_mul (FinDist.uniformFin 2)
+  rw [prob_bind_eq_chosen_mul (PMF.uniformOfFintype (Fin 2))
     (fun selector =>
       (augmentedLaw view owner
         (componentPolicy base owner replacement source sourceRule
           selector)).map (mechanismAugment view selector)) chosen assignment]
-  · apply congrArg ((FinDist.uniformFin 2).prob chosen * ·)
+  · apply congrArg ((PMF.uniformOfFintype (Fin 2)) chosen * ·)
     rw [← mechanismAugment_projectObjects view assignment]
-    exact FinDist.prob_map_of_injective
-      (mechanismAugment view chosen) (mechanismAugment_injective view chosen)
-      _ _
+    exact pmf_map_apply_of_injective _
+      (mechanismAugment_injective view chosen) _
   · intro selector _ hselector
-    apply FinDist.prob_eq_zero_iff.mpr
-    rw [FinDist.support_map]
+    apply (PMF.apply_eq_zero_iff
+      ((augmentedLaw view owner
+        (componentPolicy base owner replacement source sourceRule
+          selector)).map (mechanismAugment view selector)) assignment).mpr
+    rw [PMF.support_map]
     rintro ⟨objects, _, hequal⟩
     apply hselector
     calc
@@ -465,7 +459,7 @@ private theorem componentPolicy_apply_of_ne_source
     (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1)) (selector : Fin 2)
+      PMF (diagram.Value source.1)) (selector : Fin 2)
     (otherOwner : Player) (site : DecisionSite diagram otherOwner)
     (hne : site.1 ≠ source.1) :
     componentPolicy base owner replacement source sourceRule selector
@@ -492,7 +486,7 @@ private theorem augmentedKernels_component_eq_baseline_of_ne
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1)) (selector : Fin 2)
+      PMF (diagram.Value source.1)) (selector : Fin 2)
     (node : view.GraphNode owner)
     (hne : node ≠ (.base source.1 : view.GraphNode owner)) :
     augmentedKernels view
@@ -553,7 +547,7 @@ theorem mechanismSelectorKernels_object_parentConfiguration
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (assignment : MechanismAssignment view owner)
     (node : view.GraphNode owner) :
     mechanismSelectorKernels view owner base replacement source sourceRule
@@ -593,22 +587,22 @@ theorem mechanismSelector_localFactor_mechanism
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (assignment : MechanismAssignment view owner) :
     localFactor (mechanismGraphValue view (owner := owner))
         (mechanismGraphParents view source)
         (mechanismSelectorKernels view owner base replacement source sourceRule)
         assignment .mechanism =
-      (FinDist.uniformFin 2).prob (assignment .mechanism).down := by
+      ((PMF.uniformOfFintype (Fin 2)) (assignment .mechanism).down).toReal := by
   unfold localFactor mechanismSelectorKernels
   have hlift : assignment .mechanism =
       ULift.up (assignment .mechanism).down := by
     apply ULift.ext
     rfl
   rw [hlift]
-  exact FinDist.prob_map_of_injective ULift.up
-    (fun first second hequal => congrArg ULift.down hequal)
-    (FinDist.uniformFin 2) _
+  exact congrArg ENNReal.toReal <|
+    pmf_map_apply_of_injective (PMF.uniformOfFintype (Fin 2))
+      (fun first second hequal => congrArg ULift.down hequal) _
 
 /-- Every object local factor is the corresponding local factor of the
 selected canonical augmented component. -/
@@ -618,7 +612,7 @@ theorem mechanismSelector_localFactor_object
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (assignment : MechanismAssignment view owner)
     (node : view.GraphNode owner) :
     localFactor (mechanismGraphValue view (owner := owner))
@@ -644,13 +638,13 @@ theorem mechanismSelector_factorProduct
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (assignment : MechanismAssignment view owner) :
     factorProduct (mechanismGraphValue view (owner := owner))
         (mechanismGraphParents view source)
         (mechanismSelectorKernels view owner base replacement source sourceRule)
         Finset.univ assignment =
-      (FinDist.uniformFin 2).prob (assignment .mechanism).down *
+      ((PMF.uniformOfFintype (Fin 2)) (assignment .mechanism).down).toReal *
         factorProduct (graphValue view (owner := owner))
           (view.graphParents (owner := owner))
           (augmentedKernels view
@@ -690,7 +684,7 @@ theorem mechanismSelectorLaw_factorizes
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1)) :
+      PMF (diagram.Value source.1)) :
     Factorizes (mechanismGraphValue view (owner := owner))
       (mechanismSelectorLaw view owner base replacement source sourceRule)
       (mechanismGraphParents view source)
@@ -698,24 +692,24 @@ theorem mechanismSelectorLaw_factorizes
         sourceRule) := by
   intro assignment
   calc
-    (mechanismSelectorLaw view owner base replacement source sourceRule).prob
-        assignment =
-      (FinDist.uniformFin 2).prob (assignment .mechanism).down *
-        (augmentedLaw view owner
+    ((mechanismSelectorLaw view owner base replacement source sourceRule)
+        assignment).toReal =
+      ((PMF.uniformOfFintype (Fin 2)) (assignment .mechanism).down).toReal *
+        ((augmentedLaw view owner
           (componentPolicy base owner replacement source sourceRule
-            (assignment .mechanism).down)).prob
-          (projectObjects view assignment) :=
-      mechanismSelectorLaw_prob view owner base replacement source sourceRule
-        assignment
-    _ = (FinDist.uniformFin 2).prob (assignment .mechanism).down *
+            (assignment .mechanism).down))
+          (projectObjects view assignment)).toReal := by
+      rw [mechanismSelectorLaw_prob view owner base replacement source
+        sourceRule assignment, ENNReal.toReal_mul]
+    _ = ((PMF.uniformOfFintype (Fin 2)) (assignment .mechanism).down).toReal *
         factorProduct (graphValue view (owner := owner))
           (view.graphParents (owner := owner))
           (augmentedKernels view
             (componentPolicy base owner replacement source sourceRule
               (assignment .mechanism).down)) Finset.univ
           (projectObjects view assignment) := by
-      apply congrArg ((FinDist.uniformFin 2).prob
-        (assignment .mechanism).down * ·)
+      apply congrArg (((PMF.uniformOfFintype (Fin 2))
+        (assignment .mechanism).down).toReal * ·)
       exact augmentedLaw_factorizes topological view owner
         (componentPolicy base owner replacement source sourceRule
           (assignment .mechanism).down) (projectObjects view assignment)

@@ -7,6 +7,7 @@ participation uses nonzero outside options.
 -/
 
 import GameTheory.Mechanism.PrincipalAgent
+import GameTheory.Math.Probability.Uniform
 
 noncomputable section
 
@@ -14,15 +15,13 @@ namespace GameTheory.Tests.PrincipalAgent
 
 open GameTheory GameTheory.Mechanism GameTheory.Math.Probability
 
-def fairCoin : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure false) (FinDist.pure true)
+def fairCoin : PMF Bool := PMF.uniformOfFintype Bool
 
 /-- `false` is safe and costless; `true` is productive, costly, and noisy. -/
 @[reducible]
 def fixture : Mechanism.PrincipalAgent Bool Bool where
   outcomeLaw
-    | false => FinDist.pure false
+    | false => PMF.pure false
     | true => fairCoin
   reward
     | false => 0
@@ -36,66 +35,100 @@ def successBonus : Bool → ℝ
   | false => 0
   | true => 1
 
-@[simp] theorem expectedReward_safe : fixture.expectedReward false = 0 := by
-  simp [Mechanism.PrincipalAgent.expectedReward]
+/-- Finite outcome support integrates each payment schedule. -/
+theorem paymentGuard (payment : Bool → ℝ) (action : Bool) :
+    PayoffIntegrable (fixture.outcomeLaw action) payment :=
+  payoffIntegrable_of_finite _ _
 
-@[simp] theorem expectedReward_productive : fixture.expectedReward true = 1 := by
-  rw [Mechanism.PrincipalAgent.expectedReward]
-  simp [fairCoin, FinDist.expect_mix]
-  norm_num
+/-- Finite outcome support integrates the fixture's reward. -/
+theorem rewardGuard (action : Bool) :
+    PayoffIntegrable (fixture.outcomeLaw action) fixture.reward :=
+  payoffIntegrable_of_finite _ _
 
-@[simp] theorem zeroPayment_safe : fixture.agentUtility zeroPayment false = 0 := by
-  simp [Mechanism.PrincipalAgent.agentUtility,
-    Mechanism.PrincipalAgent.expectedPayment, zeroPayment]
+/-- Finite outcome support integrates principal net revenue. -/
+theorem netGuard (payment : Bool → ℝ) (action : Bool) :
+    PayoffIntegrable (fixture.outcomeLaw action)
+      (fun outcome => fixture.reward outcome - payment outcome) :=
+  payoffIntegrable_of_finite _ _
 
-@[simp] theorem zeroPayment_productive : fixture.agentUtility zeroPayment true = -(1 / 4 : ℝ) := by
-  unfold Mechanism.PrincipalAgent.agentUtility Mechanism.PrincipalAgent.expectedPayment
-  rw [show fixture.outcomeLaw true = fairCoin from rfl,
-    show zeroPayment = (fun _ : Bool => 0) from rfl]
-  rw [FinDist.expect_const]
-  norm_num
+@[simp] theorem expectedReward_safe :
+    fixture.expectedReward false (rewardGuard false) = 0 := by
+  norm_num [Mechanism.PrincipalAgent.expectedReward, expect_eq_sum,
+    Fintype.sum_bool, PMF.pure_apply, fixture]
 
-@[simp] theorem successBonus_safe : fixture.agentUtility successBonus false = 0 := by
-  simp [Mechanism.PrincipalAgent.agentUtility,
-    Mechanism.PrincipalAgent.expectedPayment, successBonus]
+@[simp] theorem expectedReward_productive :
+    fixture.expectedReward true (rewardGuard true) = 1 := by
+  norm_num [Mechanism.PrincipalAgent.expectedReward, expect_eq_sum,
+    Fintype.sum_bool, fairCoin, PMF.uniformOfFintype_apply, fixture]
+
+@[simp] theorem zeroPayment_safe :
+    fixture.agentUtility zeroPayment false (paymentGuard zeroPayment false) = 0 := by
+  norm_num [Mechanism.PrincipalAgent.agentUtility,
+    Mechanism.PrincipalAgent.expectedPayment, expect_eq_sum,
+    Fintype.sum_bool, PMF.pure_apply, zeroPayment, fixture]
+
+@[simp] theorem zeroPayment_productive :
+    fixture.agentUtility zeroPayment true (paymentGuard zeroPayment true) =
+      -(1 / 4 : ℝ) := by
+  norm_num [Mechanism.PrincipalAgent.agentUtility,
+    Mechanism.PrincipalAgent.expectedPayment, expect_eq_sum,
+    Fintype.sum_bool, PMF.uniformOfFintype_apply, fairCoin,
+    zeroPayment, fixture]
+
+@[simp] theorem successBonus_safe :
+    fixture.agentUtility successBonus false
+      (paymentGuard successBonus false) = 0 := by
+  norm_num [Mechanism.PrincipalAgent.agentUtility,
+    Mechanism.PrincipalAgent.expectedPayment, expect_eq_sum,
+    Fintype.sum_bool, PMF.pure_apply, successBonus, fixture]
 
 @[simp] theorem successBonus_productive :
-    fixture.agentUtility successBonus true = 1 / 4 := by
-  simp [Mechanism.PrincipalAgent.agentUtility,
-    Mechanism.PrincipalAgent.expectedPayment, successBonus,
-    fairCoin, FinDist.expect_mix]
-  norm_num
+    fixture.agentUtility successBonus true
+      (paymentGuard successBonus true) = 1 / 4 := by
+  norm_num [Mechanism.PrincipalAgent.agentUtility,
+    Mechanism.PrincipalAgent.expectedPayment, expect_eq_sum,
+    Fintype.sum_bool, PMF.uniformOfFintype_apply, fairCoin,
+    successBonus, fixture]
 
 theorem zeroPayment_prefers_safe :
-    fixture.agentUtility zeroPayment true < fixture.agentUtility zeroPayment false := by
-  norm_num
+    fixture.agentUtility zeroPayment true (paymentGuard zeroPayment true) <
+      fixture.agentUtility zeroPayment false (paymentGuard zeroPayment false) := by
+  norm_num [zeroPayment_safe, zeroPayment_productive]
 
 theorem successBonus_prefers_productive :
-    fixture.agentUtility successBonus false < fixture.agentUtility successBonus true := by
-  norm_num
+    fixture.agentUtility successBonus false (paymentGuard successBonus false) <
+      fixture.agentUtility successBonus true (paymentGuard successBonus true) := by
+  norm_num [successBonus_safe, successBonus_productive]
 
 theorem successBonus_incentivizes_productive : fixture.IsIncentivized successBonus true := by
+  refine ⟨paymentGuard successBonus, ?_⟩
   intro alternative
-  cases alternative <;> norm_num
+  cases alternative <;>
+    norm_num [successBonus_safe, successBonus_productive]
 
 theorem successBonus_participates_at_quarter :
     fixture.Participates (1 / 4) successBonus true := by
-  norm_num [Mechanism.PrincipalAgent.Participates]
+  exact ⟨paymentGuard successBonus true, by
+    norm_num [successBonus_productive]⟩
 
 theorem successBonus_rejects_three_quarters :
     ¬ fixture.OffersParticipation (3 / 4) successBonus := by
   rintro ⟨action, haction⟩
-  cases action <;> norm_num [Mechanism.PrincipalAgent.Participates] at haction
+  rcases haction with ⟨hpayment, hvalue⟩
+  cases action <;> norm_num [successBonus_safe, successBonus_productive] at hvalue
 
 /-- The accounting identity specializes to the nonconstant-reward productive
 action. -/
 theorem productive_welfare_accounting :
-    fixture.principalUtility successBonus true + fixture.agentUtility successBonus true =
-      fixture.socialSurplus true :=
+    fixture.principalUtility successBonus true (netGuard successBonus true) +
+      fixture.agentUtility successBonus true (paymentGuard successBonus true) =
+      fixture.socialSurplus true (rewardGuard true) :=
   fixture.principalUtility_add_agentUtility successBonus true
+    (rewardGuard true) (paymentGuard successBonus true) (netGuard successBonus true)
 
 theorem fixture_exists_incentivized : ∃ action, fixture.IsIncentivized successBonus action :=
   fixture.exists_incentivized successBonus
+    (paymentGuard successBonus)
 
 /-- Generic participation transport moves an offered contract to the selected
 incentivized action. -/
@@ -108,7 +141,7 @@ theorem participation_from_incentives :
 
 @[reducible]
 def singletonNegative : Mechanism.PrincipalAgent Unit Bool where
-  outcomeLaw _ := FinDist.pure false
+  outcomeLaw _ := PMF.pure false
   reward _ := 0
   cost _ := 1
 
@@ -119,6 +152,7 @@ theorem zeroPayment_limitedLiability :
 
 theorem singleton_zero_payment_incentivized :
     singletonNegative.IsIncentivized (fun _ : Bool => 0) () := by
+  refine ⟨fun _ => payoffIntegrable_of_finite _ _, ?_⟩
   intro alternative
   rcases alternative with ⟨⟩
   exact le_rfl
@@ -127,8 +161,9 @@ theorem singleton_zero_payment_incentivized :
 has positive cost and no payment, hence rejects outside option zero. -/
 theorem singleton_zero_payment_rejects_zero :
     ¬ singletonNegative.Participates 0 (fun _ : Bool => 0) () := by
-  norm_num [Mechanism.PrincipalAgent.Participates,
-    Mechanism.PrincipalAgent.agentUtility,
-    Mechanism.PrincipalAgent.expectedPayment, singletonNegative]
+  rintro ⟨hpayment, hvalue⟩
+  norm_num [Mechanism.PrincipalAgent.agentUtility,
+    Mechanism.PrincipalAgent.expectedPayment, expect_pure,
+    singletonNegative] at hvalue
 
 end GameTheory.Tests.PrincipalAgent

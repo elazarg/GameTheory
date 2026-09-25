@@ -116,8 +116,9 @@ theorem sum_deviation_cost_le [DecidableEq ι] (C : CongestionGame ι)
         mul_nonneg hb hz]
 
 /-- Social welfare of the induced utility game is negated social cost. -/
-theorem socialWelfare_toUtilityGame (C : CongestionGame ι) (profile : C.Profile) :
-    C.toUtilityGame.socialWelfare profile = -C.socialCost profile := by
+theorem socialWelfare_toUtilityGame (C : CongestionGame ι) (profile : C.Profile)
+    (h : ∀ i, UtilityIntegrable C.utility i (C.toGameForm.play profile)) :
+    C.toUtilityGame.socialWelfare profile h = -C.socialCost profile := by
   rw [UtilityGame.socialWelfare, socialCost]
   simp only [toUtilityGame, toGameForm, expectedUtility_pure, utility]
   rw [← Finset.sum_neg_distrib]
@@ -125,26 +126,46 @@ theorem socialWelfare_toUtilityGame (C : CongestionGame ι) (profile : C.Profile
 /-- Expected social welfare of the induced utility game is negated expected
 social cost. -/
 theorem expectedSocialWelfare_toUtilityGame (C : CongestionGame ι)
-    (law : FinDist C.Profile) :
-    C.toUtilityGame.expectedSocialWelfare law = -law.expect C.socialCost := by
-  rw [UtilityGame.expectedSocialWelfare]
+    (law : PMF C.Profile)
+    (h : ∀ i, UtilityIntegrable C.utility i
+      (C.toUtilityGame.form.outcomeLaw law)) :
+    C.toUtilityGame.expectedSocialWelfare law h =
+      -expect law C.socialCost
+        (C.socialCost_integrable_of_utility law (fun i => by
+          simpa [toUtilityGame, toGameForm, GameForm.outcomeLaw] using h i)) := by
+  let hplayer (i : ι) : PayoffIntegrable law
+      (fun profile => C.utility profile i) := by
+    simpa [toUtilityGame, toGameForm, GameForm.outcomeLaw] using h i
+  let hcost (i : ι) : PayoffIntegrable law
+      (fun profile => C.playerCost profile i) := by
+    simpa only [utility, neg_neg] using payoffIntegrable_neg (hplayer i)
   calc
-    law.expect C.toUtilityGame.socialWelfare =
-        law.expect (fun profile => -C.socialCost profile) :=
-      FinDist.expect_congr fun profile _ => C.socialWelfare_toUtilityGame profile
-    _ =
-        law.expect (fun profile => (-1) * C.socialCost profile) := by
+    C.toUtilityGame.expectedSocialWelfare law h =
+        ∑ i, expect law (fun profile => C.utility profile i) (hplayer i) := by
+      simp only [UtilityGame.expectedSocialWelfare, expectedUtility]
+      apply Finset.sum_congr rfl
+      intro i _
+      simp [toGameForm, GameForm.outcomeLaw]
+    _ = -∑ i, expect law (fun profile => C.playerCost profile i) (hcost i) := by
+      simp only [utility, ← Finset.sum_neg_distrib]
+      apply Finset.sum_congr rfl
+      intro i _
+      exact expect_neg (hcost i)
+    _ = -expect law C.socialCost
+        (C.socialCost_integrable_of_utility law (fun i => by
+          simpa [toUtilityGame, toGameForm, GameForm.outcomeLaw] using h i)) := by
       congr 1
-      funext profile
-      ring
-    _ = (-1) * law.expect C.socialCost := by rw [FinDist.expect_smul]
-    _ = -law.expect C.socialCost := by ring
+      unfold CongestionGame.socialCost
+      exact (expect_sum law
+        (fun i profile => C.playerCost profile i) hcost).symm
 
 /-- Affine congestion games are `(5/3, -1/3)`-smooth in the utility
 (negated-cost) convention. -/
 theorem isSmooth_of_isAffine [DecidableEq ι] (C : CongestionGame ι)
     {a b : C.Resource → ℝ} (h : C.IsAffine a b) :
     C.toUtilityGame.IsSmooth (5 / 3) (-(1 / 3)) := by
+  refine ⟨(fun profile i =>
+    payoffIntegrable_pure profile (fun result => C.utility result i)), ?_⟩
   intro statusQuo target
   rw [socialWelfare_toUtilityGame, socialWelfare_toUtilityGame]
   have hdeviations := C.sum_deviation_cost_le h statusQuo target
@@ -156,7 +177,8 @@ theorem isSmooth_of_isAffine [DecidableEq ι] (C : CongestionGame ι)
       linarith
     _ = ∑ i, expectedUtility C.utility i
         (C.toGameForm.play
-          (Profile.update (sig := C.toGameForm.sig) statusQuo i (target i))) := by
+          (Profile.update (sig := C.toGameForm.sig) statusQuo i (target i)))
+        (payoffIntegrable_pure _ (fun profile => C.utility profile i)) := by
       rw [← Finset.sum_neg_distrib]
       exact Finset.sum_congr rfl fun i _ => (C.expectedUtility_toGameForm _ i).symm
 
@@ -175,10 +197,17 @@ theorem socialCost_nash_le [DecidableEq ι] (C : CongestionGame ι)
 /-- **Robust price of anarchy of affine congestion games.**  The `5/2` bound
 extends from pure Nash equilibria to every coarse correlated equilibrium. -/
 theorem coarseCorrelated_socialCost_le [DecidableEq ι] (C : CongestionGame ι)
-    {a b : C.Resource → ℝ} (h : C.IsAffine a b) {law : FinDist C.Profile}
+    {a b : C.Resource → ℝ} (h : C.IsAffine a b) {law : PMF C.Profile}
     (hlaw : IsCoarseCorrelatedEq C.toGameForm (euPreference C.utility) law)
     (target : C.Profile) :
-    law.expect C.socialCost ≤ 5 / 2 * C.socialCost target := by
+    expect law C.socialCost
+      (C.socialCost_integrable_of_utility law (fun i => by
+        obtain ⟨hbase, _, _⟩ :=
+          (C.toUtilityGame.isεCoarseCorrelatedEq_iff_externalRegret_le.mp
+            ((C.toUtilityGame.isCoarseCorrelatedEq_iff_isεCoarseCorrelatedEq_zero
+              (statusQuo := law)).mp hlaw)) i (target i)
+        simpa [toUtilityGame, toGameForm, GameForm.outcomeLaw] using hbase)) ≤
+      5 / 2 * C.socialCost target := by
   have hbound := UtilityGame.IsSmooth.coarseCorrelated_bound
     (C.isSmooth_of_isAffine h) hlaw target
   rw [C.expectedSocialWelfare_toUtilityGame, C.socialWelfare_toUtilityGame] at hbound

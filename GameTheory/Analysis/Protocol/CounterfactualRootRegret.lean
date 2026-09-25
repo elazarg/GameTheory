@@ -37,14 +37,18 @@ def counterfactualRegretMatchAverage
     (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
     [Fintype (M.Choice who site.1)] [Nonempty (M.Choice who site.1)]
-    (strategyOf : FinDist (M.Choice who site.1) → Q →
+    (strategyOf : PMF (M.Choice who site.1) → Q →
       (player : ι) → M.BehavioralPolicy player)
     (payoffOf : Q → E.History → ℝ) (fuel : ℕ)
+    (hguard : ∀ law current,
+      M.LocalCounterfactualRegretsIntegrable
+        (strategyOf law current) who site (payoffOf current) fuel)
     (environment : ℕ → Q) (t : ℕ) :
     EuclideanSpace ℝ (M.Choice who site.1) :=
   avgVec
     (fun law current => localCounterfactualRegretVector M
-      (strategyOf law current) who site (payoffOf current) fuel)
+      (strategyOf law current) who site (payoffOf current) fuel
+        (hguard law current))
     regretMatch environment t
 
 /-- The named local average is exactly the Cesaro sum of the instantaneous
@@ -56,23 +60,28 @@ theorem counterfactualRegretMatchAverage_smul_eq_sum
     (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
     [Fintype (M.Choice who site.1)] [Nonempty (M.Choice who site.1)]
-    (strategyOf : FinDist (M.Choice who site.1) → Q →
+    (strategyOf : PMF (M.Choice who site.1) → Q →
       (player : ι) → M.BehavioralPolicy player)
     (payoffOf : Q → E.History → ℝ) (fuel : ℕ)
+    (hguard : ∀ law current,
+      M.LocalCounterfactualRegretsIntegrable
+        (strategyOf law current) who site (payoffOf current) fuel)
     (environment : ℕ → Q) (t : ℕ) :
     (t : ℝ) • counterfactualRegretMatchAverage M who site strategyOf
-        payoffOf fuel environment t =
+        payoffOf fuel hguard environment t =
       ∑ round ∈ Finset.range t,
         localCounterfactualRegretVector M
           (strategyOf
             (regretMatch
               (counterfactualRegretMatchAverage M who site strategyOf
-                payoffOf fuel environment round))
+                payoffOf fuel hguard environment round))
             (environment round))
-          who site (payoffOf (environment round)) fuel := by
+          who site (payoffOf (environment round)) fuel
+            (hguard _ (environment round)) := by
   exact avgVec_smul_eq_sum
     (fun law current => localCounterfactualRegretVector M
-      (strategyOf law current) who site (payoffOf current) fuel)
+      (strategyOf law current) who site (payoffOf current) fuel
+        (hguard law current))
     regretMatch environment t
 
 /-- **Finite root-regret aggregation.** If an actual scalar root gain at every
@@ -88,10 +97,14 @@ theorem counterfactualRegretMatches_positiveRootGain_le
     [∀ key, Fintype (M.Choice who (site key).1)]
     [∀ key, Nonempty (M.Choice who (site key).1)]
     (strategyOf : ∀ key,
-      FinDist (M.Choice who (site key).1) → Q key →
+      PMF (M.Choice who (site key).1) → Q key →
         (player : ι) → M.BehavioralPolicy player)
     (payoffOf : ∀ key, Q key → E.History → ℝ)
     (fuel : Site → ℕ) (environment : ∀ key, ℕ → Q key)
+    (hguard : ∀ key law current,
+      M.LocalCounterfactualRegretsIntegrable
+        (strategyOf key law current) who (site key)
+          (payoffOf key current) (fuel key))
     (gain : ℕ → ℝ) (reach : Site → ℝ)
     (hreach : ∀ key, reach key ∈ Set.Icc 0 1)
     (deviation : ∀ key, M.Choice who (site key).1)
@@ -102,16 +115,21 @@ theorem counterfactualRegretMatches_positiveRootGain_le
             (strategyOf key
               (regretMatch
                 (counterfactualRegretMatchAverage M who (site key)
-                  (strategyOf key) (payoffOf key) (fuel key)
+                  (strategyOf key) (payoffOf key) (fuel key) (hguard key)
                   (environment key) round))
               (environment key round))
             who (site key) (payoffOf key (environment key round))
-              (fuel key)).ofLp (deviation key))
+              (fuel key)
+              (hguard key
+                (regretMatch (counterfactualRegretMatchAverage M who
+                  (site key) (strategyOf key) (payoffOf key) (fuel key)
+                  (hguard key) (environment key) round))
+                (environment key round))).ofLp (deviation key))
     (t : ℕ) (ht : 0 < t) :
     max ((∑ round ∈ Finset.range t, gain round) / (t : ℝ)) 0 ≤
       ∑ key, Metric.infDist
         (counterfactualRegretMatchAverage M who (site key)
-          (strategyOf key) (payoffOf key) (fuel key)
+          (strategyOf key) (payoffOf key) (fuel key) (hguard key)
           (environment key) t)
         nonposOrthant := by
   apply positiveAverageGain_le_sum_infDist
@@ -119,16 +137,20 @@ theorem counterfactualRegretMatches_positiveRootGain_le
       (strategyOf key
         (regretMatch
           (counterfactualRegretMatchAverage M who (site key)
-            (strategyOf key) (payoffOf key) (fuel key)
+            (strategyOf key) (payoffOf key) (fuel key) (hguard key)
             (environment key) round))
         (environment key round))
-      who (site key) (payoffOf key (environment key round)) (fuel key))
+      who (site key) (payoffOf key (environment key round)) (fuel key)
+        (hguard key
+          (regretMatch (counterfactualRegretMatchAverage M who (site key)
+            (strategyOf key) (payoffOf key) (fuel key) (hguard key)
+            (environment key) round)) (environment key round)))
     (fun key => counterfactualRegretMatchAverage M who (site key)
-      (strategyOf key) (payoffOf key) (fuel key) (environment key) t)
+      (strategyOf key) (payoffOf key) (fuel key) (hguard key) (environment key) t)
     gain reach hreach deviation t ht
   · intro key
     exact counterfactualRegretMatchAverage_smul_eq_sum M who (site key)
-      (strategyOf key) (payoffOf key) (fuel key) (environment key) t
+      (strategyOf key) (payoffOf key) (fuel key) (hguard key) (environment key) t
   · intro round _
     exact hgain round
 
@@ -148,10 +170,14 @@ theorem counterfactualRegretMatches_positiveRootGains_le
     [∀ key, Fintype (M.Choice who (site key).1)]
     [∀ key, Nonempty (M.Choice who (site key).1)]
     (strategyOf : ∀ key,
-      FinDist (M.Choice who (site key).1) → Q key →
+      PMF (M.Choice who (site key).1) → Q key →
         (player : ι) → M.BehavioralPolicy player)
     (payoffOf : ∀ key, Q key → E.History → ℝ)
     (fuel : Site → ℕ) (environment : ∀ key, ℕ → Q key)
+    (hguard : ∀ key law current,
+      M.LocalCounterfactualRegretsIntegrable
+        (strategyOf key law current) who (site key)
+          (payoffOf key current) (fuel key))
     (gain : Deviation → ℕ → ℝ)
     (reach : Deviation → Site → ℝ)
     (hreach : ∀ deviation key, reach deviation key ∈ Set.Icc 0 1)
@@ -163,17 +189,22 @@ theorem counterfactualRegretMatches_positiveRootGains_le
             (strategyOf key
               (regretMatch
                 (counterfactualRegretMatchAverage M who (site key)
-                  (strategyOf key) (payoffOf key) (fuel key)
+                  (strategyOf key) (payoffOf key) (fuel key) (hguard key)
                   (environment key) round))
               (environment key round))
             who (site key) (payoffOf key (environment key round))
-              (fuel key)).ofLp (choice deviation key))
+              (fuel key)
+              (hguard key
+                (regretMatch (counterfactualRegretMatchAverage M who
+                  (site key) (strategyOf key) (payoffOf key) (fuel key)
+                  (hguard key) (environment key) round))
+                (environment key round))).ofLp (choice deviation key))
     (t : ℕ) (ht : 0 < t) :
     ∀ deviation,
       max ((∑ round ∈ Finset.range t, gain deviation round) / (t : ℝ)) 0 ≤
         ∑ key, Metric.infDist
           (counterfactualRegretMatchAverage M who (site key)
-            (strategyOf key) (payoffOf key) (fuel key)
+            (strategyOf key) (payoffOf key) (fuel key) (hguard key)
             (environment key) t)
           nonposOrthant := by
   apply positiveAverageGains_le_sum_infDist
@@ -181,16 +212,20 @@ theorem counterfactualRegretMatches_positiveRootGains_le
       (strategyOf key
         (regretMatch
           (counterfactualRegretMatchAverage M who (site key)
-            (strategyOf key) (payoffOf key) (fuel key)
+            (strategyOf key) (payoffOf key) (fuel key) (hguard key)
             (environment key) round))
         (environment key round))
-      who (site key) (payoffOf key (environment key round)) (fuel key))
+      who (site key) (payoffOf key (environment key round)) (fuel key)
+        (hguard key
+          (regretMatch (counterfactualRegretMatchAverage M who (site key)
+            (strategyOf key) (payoffOf key) (fuel key) (hguard key)
+            (environment key) round)) (environment key round)))
     (fun key => counterfactualRegretMatchAverage M who (site key)
-      (strategyOf key) (payoffOf key) (fuel key) (environment key) t)
+      (strategyOf key) (payoffOf key) (fuel key) (hguard key) (environment key) t)
     gain reach hreach choice t ht
   · intro key
     exact counterfactualRegretMatchAverage_smul_eq_sum M who (site key)
-      (strategyOf key) (payoffOf key) (fuel key) (environment key) t
+      (strategyOf key) (payoffOf key) (fuel key) (hguard key) (environment key) t
   · intro deviation round _
     exact hgain deviation round
 
@@ -209,10 +244,14 @@ theorem counterfactualRegretMatches_positiveRootGains_tendsto_zero
     [∀ key, Fintype (M.Choice who (site key).1)]
     [∀ key, Nonempty (M.Choice who (site key).1)]
     (strategyOf : ∀ key,
-      FinDist (M.Choice who (site key).1) → Q key →
+      PMF (M.Choice who (site key).1) → Q key →
         (player : ι) → M.BehavioralPolicy player)
     (payoffOf : ∀ key, Q key → E.History → ℝ)
     (fuel : Site → ℕ) (environment : ∀ key, ℕ → Q key)
+    (hguard : ∀ key law current,
+      M.LocalCounterfactualRegretsIntegrable
+        (strategyOf key law current) who (site key)
+          (payoffOf key current) (fuel key))
     (gain : Deviation → ℕ → ℝ)
     (reach : Deviation → Site → ℝ)
     (hreach : ∀ deviation key, reach deviation key ∈ Set.Icc 0 1)
@@ -224,16 +263,21 @@ theorem counterfactualRegretMatches_positiveRootGains_tendsto_zero
             (strategyOf key
               (regretMatch
                 (counterfactualRegretMatchAverage M who (site key)
-                  (strategyOf key) (payoffOf key) (fuel key)
+                  (strategyOf key) (payoffOf key) (fuel key) (hguard key)
                   (environment key) round))
               (environment key round))
             who (site key) (payoffOf key (environment key round))
-              (fuel key)).ofLp (choice deviation key))
+              (fuel key)
+              (hguard key
+                (regretMatch (counterfactualRegretMatchAverage M who
+                  (site key) (strategyOf key) (payoffOf key) (fuel key)
+                  (hguard key) (environment key) round))
+                (environment key round))).ofLp (choice deviation key))
     (hlocal : ∀ key,
       Tendsto
         (fun t => Metric.infDist
           (counterfactualRegretMatchAverage M who (site key)
-            (strategyOf key) (payoffOf key) (fuel key)
+            (strategyOf key) (payoffOf key) (fuel key) (hguard key)
             (environment key) t)
           nonposOrthant)
         atTop (nhds 0)) :
@@ -247,16 +291,20 @@ theorem counterfactualRegretMatches_positiveRootGains_tendsto_zero
       (strategyOf key
         (regretMatch
           (counterfactualRegretMatchAverage M who (site key)
-            (strategyOf key) (payoffOf key) (fuel key)
+            (strategyOf key) (payoffOf key) (fuel key) (hguard key)
             (environment key) round))
         (environment key round))
-      who (site key) (payoffOf key (environment key round)) (fuel key))
+      who (site key) (payoffOf key (environment key round)) (fuel key)
+        (hguard key
+          (regretMatch (counterfactualRegretMatchAverage M who (site key)
+            (strategyOf key) (payoffOf key) (fuel key) (hguard key)
+            (environment key) round)) (environment key round)))
     (fun key t => counterfactualRegretMatchAverage M who (site key)
-      (strategyOf key) (payoffOf key) (fuel key) (environment key) t)
+      (strategyOf key) (payoffOf key) (fuel key) (hguard key) (environment key) t)
     gain reach hreach choice
   · intro key t
     exact counterfactualRegretMatchAverage_smul_eq_sum M who (site key)
-      (strategyOf key) (payoffOf key) (fuel key) (environment key) t
+      (strategyOf key) (payoffOf key) (fuel key) (hguard key) (environment key) t
   · exact hgain
   · exact hlocal
 

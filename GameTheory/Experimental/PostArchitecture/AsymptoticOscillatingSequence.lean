@@ -415,19 +415,25 @@ theorem cesaroAverage_complement_alternating_liminf_limsup :
   exact ⟨le_antisymm hliminf_le hlow', le_antisymm hhigh' hlimsup_ge⟩
 
 theorem alternatingBlockStage_separates_asymptotic_payoffs :
-    FinDist.expect (fairTwoPointLaw alternatingBlockStage)
-        (fun path => Filter.liminf (fun n => cesaroAverage path n) atTop) = 0 ∧
-    (∀ n, FinDist.expect (fairTwoPointLaw alternatingBlockStage)
-      (fun path => cesaroAverage path n) = (1 / 2 : ℝ)) ∧
-    Tendsto (fun n => FinDist.expect (fairTwoPointLaw alternatingBlockStage)
-      (fun path => cesaroAverage path n)) atTop (𝓝 (1 / 2 : ℝ)) ∧
-    FinDist.expect (fairTwoPointLaw alternatingBlockStage)
-        (fun path => Filter.limsup (fun n => cesaroAverage path n) atTop) = 1 ∧
-    FinDist.expect (fairTwoPointLaw alternatingBlockStage)
-        (fun path => Filter.liminf (fun n => cesaroAverage path n) atTop) ≠
+    expect (fairTwoPointLaw alternatingBlockStage)
+        (fun path => Filter.liminf (fun n => cesaroAverage path n) atTop)
+        (fairTwoPointIntegrable alternatingBlockStage _) = 0 ∧
+    (∀ n, expect (fairTwoPointLaw alternatingBlockStage)
+      (fun path => cesaroAverage path n)
+      (fairTwoPointIntegrable alternatingBlockStage _) = (1 / 2 : ℝ)) ∧
+    Tendsto (fun n => expect (fairTwoPointLaw alternatingBlockStage)
+      (fun path => cesaroAverage path n)
+      (fairTwoPointIntegrable alternatingBlockStage _)) atTop (𝓝 (1 / 2 : ℝ)) ∧
+    expect (fairTwoPointLaw alternatingBlockStage)
+        (fun path => Filter.limsup (fun n => cesaroAverage path n) atTop)
+        (fairTwoPointIntegrable alternatingBlockStage _) = 1 ∧
+    expect (fairTwoPointLaw alternatingBlockStage)
+        (fun path => Filter.liminf (fun n => cesaroAverage path n) atTop)
+        (fairTwoPointIntegrable alternatingBlockStage _) ≠
       (1 / 2 : ℝ) ∧
-    FinDist.expect (fairTwoPointLaw alternatingBlockStage)
-        (fun path => Filter.limsup (fun n => cesaroAverage path n) atTop) ≠
+    expect (fairTwoPointLaw alternatingBlockStage)
+        (fun path => Filter.limsup (fun n => cesaroAverage path n) atTop)
+        (fairTwoPointIntegrable alternatingBlockStage _) ≠
       (1 / 2 : ℝ) := by
   exact fair_two_point_order_limits alternatingBlockStage
     cesaroAverage_alternating_liminf_limsup.1

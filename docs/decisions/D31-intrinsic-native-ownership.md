@@ -56,9 +56,6 @@ can be erased from the positive causality proof.
 | negative test | future-decision information is rejected before temporal compilation |
 | configuration-cell test | nonconstant three-agent schedule; `SamePrefixThrough` is equivalent to direct `PrefixCell` membership through the current slot |
 | independence test | concrete pairs refute each premise-erased causality variant |
-| focused check | `lake env lean GameTheory/Experimental/PostArchitecture/IntrinsicOwnership.lean`, warning-free |
-| source hazards | no placeholders, custom axioms, native reduction, raw profile updates, stored/global finiteness, `open Classical`, or public transport plumbing |
-| axiom profile | `Quot.sound` for solvability; otherwise only `propext`, `Classical.choice`, and `Quot.sound` as applicable |
 
 ## Kill conditions and result
 
@@ -67,9 +64,9 @@ theorems; require temporal execution merely to state; need stored global
 finiteness, PMF, utility, duplicate equilibrium semantics, public transports,
 or forbidden trust features; or if either causality premise is ornamental.
 
-No kill condition fired.  Sol audit additionally compiled negations of both
-premise-erased variants.  EXP-062 therefore supports native ownership and the
-configuration-dependent causality representation.
+Counterexamples refute both premise-erased variants. EXP-062 therefore
+supports native ownership and the configuration-dependent causality
+representation.
 
 ## Consequences for the public API
 

@@ -283,10 +283,10 @@ private theorem augmentedTermMarginalLaw_eq_termMarginalLaw
     Assignment.restrict diagram assignment (view.term term).parents
   show ((nativeLaw.map (augmentAssignment view)).map graphRestriction).map
       projection = nativeLaw.map baseRestriction
-  rw [FinDist.map_comp projection graphRestriction
-    (nativeLaw.map (augmentAssignment view))]
-  rw [FinDist.map_comp (projection ∘ graphRestriction)
-    (augmentAssignment view) nativeLaw]
+  rw [PMF.map_comp graphRestriction
+    (nativeLaw.map (augmentAssignment view)) projection]
+  rw [PMF.map_comp (augmentAssignment view) nativeLaw
+    (projection ∘ graphRestriction)]
   apply congrArg
     (fun observable => nativeLaw.map observable)
   funext assignment parent
@@ -314,7 +314,7 @@ theorem nonrelevantTerm_marginal_eq
   have hrestricted := augmentedUtilityAncestorsLaw_eq topological view owner
     target hunique term hnonrelevant policy first second
   have hmarginals := congrArg
-    (FinDist.map (termParentProjection view owner term))
+    (PMF.map (termParentProjection view owner term))
     hrestricted
   have hpair :
       termMarginalLaw view owner term (updatedPolicy owner policy first) =

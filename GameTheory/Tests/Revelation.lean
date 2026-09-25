@@ -20,9 +20,9 @@ def falseTypes : Unit → Bool := fun _ => false
 
 def trueTypes : Unit → Bool := fun _ => true
 
-def prior : FinDist (Unit → Bool) :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure falseTypes) (FinDist.pure trueTypes)
+def prior : PMF (Unit → Bool) :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure falseTypes) (PMF.pure trueTypes)
 
 @[reducible]
 def game : BayesianGame Unit where
@@ -44,12 +44,13 @@ theorem equilibriumPlan_isNash :
   intro who replacement
   cases who
   rw [euPreference_apply]
-  unfold expectedUtility
-  rw [BayesianGame.toForm_play, FinDist.expect_map,
-    BayesianGame.toForm_play, FinDist.expect_map]
-  apply FinDist.expect_mono
+  refine ⟨payoffIntegrable_of_finite _ _, payoffIntegrable_of_finite _ _, ?_⟩
+  rw [game.expectedUtility_eq_prior ()
+      (Profile.update equilibriumPlan () replacement) _,
+    game.expectedUtility_eq_prior () equilibriumPlan _]
+  apply expect_mono
   intro types _
-  simp only [BayesianGame.utility]
+  simp only [BayesianGame.planPayoff]
   simp only [game, BayesianGame.actionsOf, equilibriumPlan,
     Profile.update_same]
   split <;> norm_num
@@ -80,9 +81,9 @@ theorem direct_truthful_isNash :
 
 /-! ## Two-player bridge witness -/
 
-def twoPlayerPrior : FinDist (Bool → Bool) :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure fun _ => false) (FinDist.pure fun _ => true)
+def twoPlayerPrior : PMF (Bool → Bool) :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure fun _ => false) (PMF.pure fun _ => true)
 
 /-- Each player values matching its own type and coordinating with the other
 player. Truthful type-contingent play maximizes the first term, while the
@@ -107,20 +108,23 @@ theorem twoPlayerPlan_isNash :
   rw [isNash_iff]
   intro who replacement
   rw [euPreference_apply]
-  unfold expectedUtility
-  rw [BayesianGame.toForm_play, FinDist.expect_map,
-    BayesianGame.toForm_play, FinDist.expect_map]
-  apply FinDist.expect_mono
+  refine ⟨payoffIntegrable_of_finite _ _, payoffIntegrable_of_finite _ _, ?_⟩
+  rw [twoPlayerGame.expectedUtility_eq_prior who
+      (Profile.update twoPlayerPlan who replacement) _,
+    twoPlayerGame.expectedUtility_eq_prior who twoPlayerPlan _]
+  apply expect_mono
   intro types htypes
-  simp only [BayesianGame.utility]
+  simp only [BayesianGame.planPayoff]
   simp only [twoPlayerGame, BayesianGame.actionsOf, twoPlayerPlan,
     Profile.update_same]
   have htypes' : types ∈ twoPlayerPrior.support := htypes
   unfold twoPlayerPrior at htypes'
-  have hcases : types = (fun _ => false) ∨ types = (fun _ => true) :=
-    (FinDist.mem_support_mix_pure_iff
-      (1 / 2) (by norm_num) (by norm_num) (by norm_num) (by norm_num)
-      (fun _ : Bool => false) (fun _ : Bool => true) types).mp htypes'
+  have hcases : types = (fun _ => false) ∨ types = (fun _ => true) := by
+    by_contra hnot
+    push Not at hnot
+    have hzero : twoPlayerPrior types = 0 := by
+      simp [twoPlayerPrior, mix_apply, PMF.pure_apply, hnot.1, hnot.2]
+    exact htypes' hzero
   rcases hcases with rfl | rfl <;> cases who <;>
     simp [Profile.update_of_ne, twoPlayerPlan] <;>
       split <;> norm_num

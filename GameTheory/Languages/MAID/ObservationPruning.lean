@@ -52,7 +52,7 @@ grouped by their source owner. -/
 abbrev ReducedOwnerPolicy (pruning : Pruning diagram) (owner : Player) :=
   (site : DecisionSite diagram owner) →
     Config diagram (pruning.kept site.1) →
-      GameTheory.Math.Probability.FinDist (diagram.Value site.1)
+      PMF (diagram.Value site.1)
 
 /-- A complete profile over the pruned observation domains. -/
 abbrev ReducedPolicy (pruning : Pruning diagram) :=
@@ -307,11 +307,12 @@ theorem isNash_expanded_of_isNash_reduced
     IsNash (nativeBehavioralGameForm semantics)
       (euPreference fun assignment owner => semantics.utility owner assignment)
       (pruning.expandPolicy policy) := by
-  exact GameForm.isNash_of_deviation_bounds
-    (source := pruning.reducedNativeGameForm semantics)
-    (target := nativeBehavioralGameForm semantics)
-    policy (pruning.expandPolicy policy) (fun _ => rfl)
-    (fun owner replacement => hcover owner replacement) hnash
+  rw [isNash_iff] at hnash ⊢
+  intro owner replacement
+  obtain ⟨alternative, hbound⟩ := hcover owner replacement
+  exact euPreference_transitive
+    (fun assignment who => semantics.utility who assignment)
+    owner _ _ _ (hnash owner alternative) hbound
 
 /-- Profile-local coverage preserves the same approximate-Nash tolerance. -/
 theorem isεNash_expanded_of_isεNash_reduced
@@ -328,8 +329,26 @@ theorem isεNash_expanded_of_isεNash_reduced
   exact GameForm.isεNash_of_deviation_bounds
     (source := pruning.reducedNativeGameForm semantics)
     (target := nativeBehavioralGameForm semantics)
-    policy (pruning.expandPolicy policy) (fun _ => rfl)
-    (fun owner replacement => hcover owner replacement) ε hnash
+    (sourceUtility := fun assignment owner => semantics.utility owner assignment)
+    (targetUtility := fun assignment owner => semantics.utility owner assignment)
+    policy (pruning.expandPolicy policy)
+    (fun _ hsource => ⟨hsource, rfl⟩)
+    (fun owner replacement => by
+      obtain ⟨alternative, hbound⟩ := hcover owner replacement
+      refine ⟨alternative, ?_⟩
+      intro hsource
+      rcases hbound with ⟨hcovered, htarget, hle⟩
+      refine ⟨htarget, ?_⟩
+      have heq : expectedUtility
+          (fun assignment who => semantics.utility who assignment) owner
+          ((pruning.reducedNativeGameForm semantics).play
+            (Profile.update policy owner alternative)) hcovered =
+          expectedUtility
+            (fun assignment who => semantics.utility who assignment) owner
+            ((pruning.reducedNativeGameForm semantics).play
+              (Profile.update policy owner alternative)) hsource := by
+        rfl
+      exact hle.trans_eq heq) ε hnash
 
 /-- Every expanded full-space Nash profile covers all full deviations: choose
 the owner's current reduced policy as the covering replacement.  Thus coverage

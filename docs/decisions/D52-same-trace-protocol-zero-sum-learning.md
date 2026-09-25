@@ -9,10 +9,14 @@
 Validate the dynamic composition of D50 and D51 before introducing a general
 coupled-learning API. In the existing two-player simultaneous FOSG/Protocol,
 run one canonical local counterfactual regret-matching process per player and
-assemble their round laws into one `FinDist` over joint pure profiles. Both
+assemble their round laws into one PMF over joint pure profiles. Both
 players' external-regret identities must concern that same law. Time-average
 it once, derive both empirical marginals from it, and feed their uniform
 regret bounds directly to D51's canonical `IsεNash` theorem.
+
+The assembly supplies the actual continuation and regret integration
+certificates consumed by D50 and D51. These are automatic finite-game facts in
+the one-shot fixture, rather than assumptions stored in Protocol semantics.
 
 The hostile slice remains a test-level assembly. It freezes no universal
 learner state, scheduler, exploitability wrapper, or second equilibrium
@@ -59,16 +63,7 @@ information fibers. The next architecture gate should use a genuinely
 multi-site two-player Protocol to test the reusable scheduling contract before
 any public dynamics API is frozen.
 
-## Validation
+## Evidence
 
-- `lake build GameTheory.Analysis.ZeroSumLearning`
-- `lake build GameTheory.Analysis.Protocol.CounterfactualZeroSumLearningTest`
-- `lake build GameTheory.Analysis.Protocol GameTheory.Analysis`
-- `lake build GameTheory`
-- `scripts/phase2-audit.ps1 -VerifyExpected`
-- `scripts/phase3-audit.ps1 -VerifyExpected`
-
-The hostile leaf completes a warm build in about 8.2 seconds and the Analysis
-aggregate in about 8.0 seconds. The stable package gate completes 3,595 jobs in
-10.5 seconds. Both fast audits report `VERIFIED=1`. Deep reachability was not
-run.
+Exact validation commands and results are recorded under this decision's
+experiment IDs in the [experiment log](../ExperimentLog.md).

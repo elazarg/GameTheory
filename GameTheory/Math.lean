@@ -1,7 +1,7 @@
 /-
 # `GameTheory.Math`
 
-Finite probability and its narrow ordinary-measure bridge, learning, discrete
+Discrete probability and its ordinary-measure bridges, learning, discrete
 structures, discounted sums, and geometric tools used throughout the library.
 -/
 

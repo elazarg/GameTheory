@@ -33,12 +33,12 @@ theorem exists_subseq_behavioralAssessmentConvergesPointwise
     (sequence : ℕ → M.BehavioralAssessment) :
     ∃ (target : M.BehavioralAssessment) (subseq : ℕ → ℕ),
       StrictMono subseq ∧
-        (∀ i info, FinDistConvergesPointwise
+        (∀ i info, PMFConvergesPointwise
           (fun n => (sequence (subseq n)).strategy i info) (target.strategy i info)) ∧
         BehavioralAssessmentConvergesPointwise (fun n => sequence (subseq n)) target := by
   classical
   obtain ⟨strategy, first, hfirst, hstrategy⟩ :=
-    exists_subseq_finDistConvergesPointwise_pi
+    exists_subseq_pmfConvergesPointwise_pi
       (ι := (i : ι) × M.InfoState i)
       (A := fun coordinate => M.Choice coordinate.1 coordinate.2)
       (fun n coordinate => (sequence n).strategy coordinate.1 coordinate.2)
@@ -46,14 +46,14 @@ theorem exists_subseq_behavioralAssessmentConvergesPointwise
     unfold InformationSite
     infer_instance
   obtain ⟨belief, second, hsecond, hbelief⟩ :=
-    exists_subseq_finDistConvergesPointwise_pi
+    exists_subseq_pmfConvergesPointwise_pi
       (ι := (i : ι) × M.InformationSite i)
       (A := fun coordinate => M.InformationHistory coordinate.1 coordinate.2.1)
       (fun n coordinate => (sequence (first n)).belief coordinate.1 coordinate.2)
   let target : M.BehavioralAssessment :=
     { strategy := fun i info => strategy ⟨i, info⟩
       belief := fun i site => belief ⟨i, site⟩ }
-  have htotal : ∀ i info, FinDistConvergesPointwise
+  have htotal : ∀ i info, PMFConvergesPointwise
       (fun n => (sequence (first (second n))).strategy i info) (target.strategy i info) :=
     fun i info => (hstrategy ⟨i, info⟩).subseq hsecond
   exact ⟨target, first ∘ second, hfirst.comp hsecond, htotal,
@@ -64,8 +64,6 @@ witnesses sequential consistency of its limit. This applies in particular to
 the common subsequence extracted by assessment compactness. -/
 theorem BehavioralAssessmentConvergesPointwise.isSequentiallyConsistent
     [Fintype ι]
-    [∀ (i : ι) (site : M.InformationSite i),
-      Fintype (M.InformationHistory i site.1)]
     {sequence : ℕ → M.BehavioralAssessment} {target : M.BehavioralAssessment}
     (hlimit : BehavioralAssessmentConvergesPointwise sequence target)
     (hantichain : M.DecisionInformationAntichain)

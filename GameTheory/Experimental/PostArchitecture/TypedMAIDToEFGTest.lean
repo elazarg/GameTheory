@@ -303,7 +303,7 @@ theorem right_complete_assignment_eq_native :
 
 theorem serialStep_leftInitial :
     serialStep leftFirst semantics responsive leftInitial (by decide) =
-      FinDist.pure afterLeftChance := by
+      PMF.pure afterLeftChance := by
   let hpending :
       leftInitial.path.length < leftFirst.order.length := by
     decide
@@ -322,7 +322,7 @@ theorem serialStep_leftInitial :
           (leftInitial.configOf leftFirst semantics
             (diagram.parents
               (leftInitial.pendingNode leftFirst hpending))) =
-        FinDist.pure false := by
+        PMF.pure false := by
     generalize hnodeEq :
       leftInitial.pendingNode leftFirst hpending = node at hkind ⊢
     have heq : node = Node.leftChance :=
@@ -331,17 +331,17 @@ theorem serialStep_leftInitial :
     rfl
   unfold serialStep
   rw [serialNodeLaw_of_chance leftFirst semantics responsive
-    leftInitial hpending hkind, hlaw, FinDist.map_pure]
+    leftInitial hpending hkind, hlaw, PMF.pure_map]
   rfl
 
 set_option backward.isDefEq.respectTransparency false in
 theorem serialStep_afterLeftChance :
     serialStep leftFirst semantics responsive afterLeftChance (by decide) =
-      FinDist.pure afterLeftFalse := by
+      PMF.pure afterLeftFalse := by
   unfold serialStep
   rw [serialNodeLaw_of_decision leftFirst semantics responsive
     afterLeftChance (by decide) (by rfl)]
-  simp [responsive, decisionParent, Stage.configOf,
+  simp [PMF.pure_map, responsive, decisionParent, Stage.configOf,
     GameTheory.Languages.MAID.Assignment.restrict, afterLeftChance,
     leftInitial, Stage.initial, Stage.assignment,
     Stage.Assignment.setOne, GameTheory.Languages.MAID.Assignment.resolve,
@@ -349,7 +349,7 @@ theorem serialStep_afterLeftChance :
 
 theorem serialStep_afterLeftFalse :
     serialStep leftFirst semantics responsive afterLeftFalse (by decide) =
-      FinDist.pure beforeRightDecisionFalse := by
+      PMF.pure beforeRightDecisionFalse := by
   let hpending :
       afterLeftFalse.path.length < leftFirst.order.length := by
     decide
@@ -368,7 +368,7 @@ theorem serialStep_afterLeftFalse :
           (afterLeftFalse.configOf leftFirst semantics
             (diagram.parents
               (afterLeftFalse.pendingNode leftFirst hpending))) =
-        FinDist.pure true := by
+        PMF.pure true := by
     generalize hnodeEq :
       afterLeftFalse.pendingNode leftFirst hpending = node at hkind ⊢
     have heq : node = Node.rightChance :=
@@ -377,25 +377,25 @@ theorem serialStep_afterLeftFalse :
     rfl
   unfold serialStep
   rw [serialNodeLaw_of_chance leftFirst semantics responsive
-    afterLeftFalse hpending hkind, hlaw, FinDist.map_pure]
+    afterLeftFalse hpending hkind, hlaw, PMF.pure_map]
   rfl
 
 set_option backward.isDefEq.respectTransparency false in
 theorem serialStep_beforeRightDecision :
     serialStep leftFirst semantics responsive
         beforeRightDecisionFalse (by decide) =
-      FinDist.pure leftCompleteResponsive := by
+      PMF.pure leftCompleteResponsive := by
   unfold serialStep
   rw [serialNodeLaw_of_decision leftFirst semantics responsive
     beforeRightDecisionFalse (by decide) (by rfl)]
-  simp [responsive, decisionParent, Stage.configOf,
+  simp [PMF.pure_map, responsive, decisionParent, Stage.configOf,
     GameTheory.Languages.MAID.Assignment.restrict, Stage.assignment,
     beforeRightDecisionFalse_path, Stage.Assignment.setOne,
     GameTheory.Languages.MAID.Assignment.resolve, leftCompleteResponsive]
 
 theorem serialStep_rightInitial :
     serialStep rightFirst semantics responsive rightInitial (by decide) =
-      FinDist.pure afterRightChance := by
+      PMF.pure afterRightChance := by
   let hpending :
       rightInitial.path.length < rightFirst.order.length := by
     decide
@@ -414,7 +414,7 @@ theorem serialStep_rightInitial :
           (rightInitial.configOf rightFirst semantics
             (diagram.parents
               (rightInitial.pendingNode rightFirst hpending))) =
-        FinDist.pure true := by
+        PMF.pure true := by
     generalize hnodeEq :
       rightInitial.pendingNode rightFirst hpending = node at hkind ⊢
     have heq : node = Node.rightChance :=
@@ -423,17 +423,17 @@ theorem serialStep_rightInitial :
     rfl
   unfold serialStep
   rw [serialNodeLaw_of_chance rightFirst semantics responsive
-    rightInitial hpending hkind, hlaw, FinDist.map_pure]
+    rightInitial hpending hkind, hlaw, PMF.pure_map]
   rfl
 
 set_option backward.isDefEq.respectTransparency false in
 theorem serialStep_afterRightChance :
     serialStep rightFirst semantics responsive afterRightChance (by decide) =
-      FinDist.pure afterRightTrue := by
+      PMF.pure afterRightTrue := by
   unfold serialStep
   rw [serialNodeLaw_of_decision rightFirst semantics responsive
     afterRightChance (by decide) (by rfl)]
-  simp [responsive, decisionParent, Stage.configOf,
+  simp [PMF.pure_map, responsive, decisionParent, Stage.configOf,
     GameTheory.Languages.MAID.Assignment.restrict, afterRightChance,
     rightInitial, Stage.initial, Stage.assignment,
     Stage.Assignment.setOne, GameTheory.Languages.MAID.Assignment.resolve,
@@ -441,7 +441,7 @@ theorem serialStep_afterRightChance :
 
 theorem serialStep_afterRightTrue :
     serialStep rightFirst semantics responsive afterRightTrue (by decide) =
-      FinDist.pure beforeLeftDecisionTrue := by
+      PMF.pure beforeLeftDecisionTrue := by
   let hpending :
       afterRightTrue.path.length < rightFirst.order.length := by
     decide
@@ -460,7 +460,7 @@ theorem serialStep_afterRightTrue :
           (afterRightTrue.configOf rightFirst semantics
             (diagram.parents
               (afterRightTrue.pendingNode rightFirst hpending))) =
-        FinDist.pure false := by
+        PMF.pure false := by
     generalize hnodeEq :
       afterRightTrue.pendingNode rightFirst hpending = node at hkind ⊢
     have heq : node = Node.leftChance :=
@@ -469,88 +469,88 @@ theorem serialStep_afterRightTrue :
     rfl
   unfold serialStep
   rw [serialNodeLaw_of_chance rightFirst semantics responsive
-    afterRightTrue hpending hkind, hlaw, FinDist.map_pure]
+    afterRightTrue hpending hkind, hlaw, PMF.pure_map]
   rfl
 
 set_option backward.isDefEq.respectTransparency false in
 theorem serialStep_beforeLeftDecision :
     serialStep rightFirst semantics responsive
         beforeLeftDecisionTrue (by decide) =
-      FinDist.pure rightCompleteResponsive := by
+      PMF.pure rightCompleteResponsive := by
   unfold serialStep
   rw [serialNodeLaw_of_decision rightFirst semantics responsive
     beforeLeftDecisionTrue (by decide) (by rfl)]
-  simp [responsive, decisionParent, Stage.configOf,
+  simp [PMF.pure_map, responsive, decisionParent, Stage.configOf,
     GameTheory.Languages.MAID.Assignment.restrict, Stage.assignment,
     beforeLeftDecisionTrue_path, Stage.Assignment.setOne,
     GameTheory.Languages.MAID.Assignment.resolve, rightCompleteResponsive]
 
 theorem serialRun_leftFirst :
     serialRun leftFirst semantics responsive 4 leftInitial =
-      FinDist.pure leftCompleteResponsive := by
+      PMF.pure leftCompleteResponsive := by
   rw [serialRun, dite_eq_right (by decide), serialStep_leftInitial,
-    FinDist.pure_bind, serialRun, dite_eq_right (by decide),
-    serialStep_afterLeftChance, FinDist.pure_bind, serialRun,
+    PMF.pure_bind, serialRun, dite_eq_right (by decide),
+    serialStep_afterLeftChance, PMF.pure_bind, serialRun,
     dite_eq_right (by decide), serialStep_afterLeftFalse,
-    FinDist.pure_bind, serialRun, dite_eq_right (by decide),
-    serialStep_beforeRightDecision, FinDist.pure_bind, serialRun]
+    PMF.pure_bind, serialRun, dite_eq_right (by decide),
+    serialStep_beforeRightDecision, PMF.pure_bind, serialRun]
 
 theorem serialRun_rightFirst :
     serialRun rightFirst semantics responsive 4 rightInitial =
-      FinDist.pure rightCompleteResponsive := by
+      PMF.pure rightCompleteResponsive := by
   rw [serialRun, dite_eq_right (by decide), serialStep_rightInitial,
-    FinDist.pure_bind, serialRun, dite_eq_right (by decide),
-    serialStep_afterRightChance, FinDist.pure_bind, serialRun,
+    PMF.pure_bind, serialRun, dite_eq_right (by decide),
+    serialStep_afterRightChance, PMF.pure_bind, serialRun,
     dite_eq_right (by decide), serialStep_afterRightTrue,
-    FinDist.pure_bind, serialRun, dite_eq_right (by decide),
-    serialStep_beforeLeftDecision, FinDist.pure_bind, serialRun]
+    PMF.pure_bind, serialRun, dite_eq_right (by decide),
+    serialStep_beforeLeftDecision, PMF.pure_bind, serialRun]
 
 theorem serial_assignment_law_order_independent :
-    FinDist.map (Stage.assignment leftFirst semantics)
+    PMF.map (Stage.assignment leftFirst semantics)
         (serialRun leftFirst semantics responsive 4 leftInitial) =
-      FinDist.map (Stage.assignment rightFirst semantics)
+      PMF.map (Stage.assignment rightFirst semantics)
         (serialRun rightFirst semantics responsive 4 rightInitial) := by
   simpa [leftInitial, rightInitial, leftFirst, rightFirst] using
     serialRun_topological_order_independent semantics responsive
       leftFirst rightFirst
 
 theorem left_serial_assignment_law_eq_native :
-    FinDist.map (Stage.assignment leftFirst semantics)
+    PMF.map (Stage.assignment leftFirst semantics)
         (serialRun leftFirst semantics responsive 4 leftInitial) =
-      FinDist.map (fun state => state.values)
+      PMF.map (fun state => state.values)
         (GameTheory.Languages.MAID.run diagram semantics responsive 2 initial) := by
   rw [serialRun_leftFirst, run_two_responsive,
-    FinDist.map_pure, FinDist.map_pure,
+    PMF.pure_map, PMF.pure_map,
     left_complete_assignment_eq_native]
 
 theorem right_serial_assignment_law_eq_native :
-    FinDist.map (Stage.assignment rightFirst semantics)
+    PMF.map (Stage.assignment rightFirst semantics)
         (serialRun rightFirst semantics responsive 4 rightInitial) =
-      FinDist.map (fun state => state.values)
+      PMF.map (fun state => state.values)
         (GameTheory.Languages.MAID.run diagram semantics responsive 2 initial) := by
   rw [serialRun_rightFirst, run_two_responsive,
-    FinDist.map_pure, FinDist.map_pure,
+    PMF.pure_map, PMF.pure_map,
     right_complete_assignment_eq_native]
 
 /-- The actual compiled EFG behavioral runner agrees with the native frontier
 runner after histories are forgotten and the completed assignment is read. -/
 theorem left_behavioral_assignment_law_eq_native :
-    FinDist.map
+    PMF.map
         (fun history =>
           Stage.assignment leftFirst semantics history.state)
         ((information leftFirst semantics).runBehavioral
           leftBehavioral 4) =
-      FinDist.map (fun state => state.values)
+      PMF.map (fun state => state.values)
         (GameTheory.Languages.MAID.run diagram semantics responsive 2 initial) := by
   have hrun :=
     map_state_runBehavioralFrom_eq_serialRun leftFirst
       semantics responsive 4 (execution leftFirst semantics).initHistory
   have hmapped :=
-    congrArg (FinDist.map (Stage.assignment leftFirst semantics))
+    congrArg (PMF.map (Stage.assignment leftFirst semantics))
       hrun
-  rw [FinDist.map_comp] at hmapped
+  rw [PMF.map_comp] at hmapped
   calc
-    _ = FinDist.map (Stage.assignment leftFirst semantics)
+    _ = PMF.map (Stage.assignment leftFirst semantics)
           (serialRun leftFirst semantics responsive 4 leftInitial) := by
         simpa [GameTheory.Protocol.InformationModel.runBehavioral,
           leftBehavioral, leftInitial,
@@ -558,22 +558,22 @@ theorem left_behavioral_assignment_law_eq_native :
     _ = _ := left_serial_assignment_law_eq_native
 
 theorem right_behavioral_assignment_law_eq_native :
-    FinDist.map
+    PMF.map
         (fun history =>
           Stage.assignment rightFirst semantics history.state)
         ((information rightFirst semantics).runBehavioral
           rightBehavioral 4) =
-      FinDist.map (fun state => state.values)
+      PMF.map (fun state => state.values)
         (GameTheory.Languages.MAID.run diagram semantics responsive 2 initial) := by
   have hrun :=
     map_state_runBehavioralFrom_eq_serialRun rightFirst
       semantics responsive 4 (execution rightFirst semantics).initHistory
   have hmapped :=
-    congrArg (FinDist.map (Stage.assignment rightFirst semantics))
+    congrArg (PMF.map (Stage.assignment rightFirst semantics))
       hrun
-  rw [FinDist.map_comp] at hmapped
+  rw [PMF.map_comp] at hmapped
   calc
-    _ = FinDist.map (Stage.assignment rightFirst semantics)
+    _ = PMF.map (Stage.assignment rightFirst semantics)
           (serialRun rightFirst semantics responsive 4 rightInitial) := by
         simpa [GameTheory.Protocol.InformationModel.runBehavioral,
           rightBehavioral, rightInitial,
@@ -581,12 +581,12 @@ theorem right_behavioral_assignment_law_eq_native :
     _ = _ := right_serial_assignment_law_eq_native
 
 theorem behavioral_assignment_law_order_independent :
-    FinDist.map
+    PMF.map
         (fun history =>
           Stage.assignment leftFirst semantics history.state)
         ((information leftFirst semantics).runBehavioral
           leftBehavioral 4) =
-      FinDist.map
+      PMF.map
         (fun history =>
           Stage.assignment rightFirst semantics history.state)
         ((information rightFirst semantics).runBehavioral

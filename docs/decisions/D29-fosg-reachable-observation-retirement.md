@@ -50,9 +50,6 @@ list cancellation laws without an explicit recall premise.
 | subsumed owner | `projectActions_snoc_eq` by the richer typed `InfoSignals.ownPlay_extend` |
 | raw source hazards | 128 `ObsModelCore`; 47 `PMF`; 32 `ParameterizedChain`; 19 raw updates; 24 `change`; 20 `▸`; 3 `HEq`; 1 `Fintype.ofFinite`; 15 `classical`; 9 noncomputable definitions |
 | direct consumers | `ReachableHistory/Law.lean` and the umbrella; the law file uses the adapter for its retired native Kuhn/equilibrium-transfer proof spine |
-| focused witness | 1,724 jobs, warning-free |
-| full integration | full build 3,416 jobs; Phase 2 static and coverage audits `VERIFIED=1` |
-| axiom profile | `propext`, `Classical.choice`, and `Quot.sound` only |
 
 The source file declares no counterfactual reach, regret, or CFR theorem.  Its
 posterior-locality and strategy-lift declarations are inputs used downstream
@@ -67,7 +64,7 @@ inactivity, stored/global finiteness, raw `Function.update`, or public
 cast/`HEq` transport.  Also reject classification that credits a future CFR
 theorem merely because retired downstream code once imported this adapter.
 
-Both hostile slices compile and no candidate survives the kill conditions.
+No candidate survives the semantic kill conditions.
 The raw view and terminal claims are not merely awkward ports: they would
 weaken the accepted semantics.  Alternate runners, step invariants,
 posterior-locality adapters, and strategy lifts have no surviving consumer
@@ -75,11 +72,10 @@ after D28.
 
 ## Result and consequences
 
-The exact 46-row batch is closed with no new stable source.  Protocol owns
+Protocol owns
 history extension, information compression, operation-local menus, and the
 mixed/behavioral history laws.  FOSG remains a transparent specialization.
 
-The next FOSG DFS gate is the separately named simultaneous stochastic
-FOSG-to-EFG serialization comparison.  Future counterfactual or CFR work is a
-different theorem family: it must start from canonical `runBehavioral` history
-laws and justify its own definitions and proof interface.
+Simultaneous stochastic FOSG-to-EFG serialization is a separate bridge.
+Counterfactual and CFR theorems must start from canonical `runBehavioral`
+history laws and justify their own definitions and proof interface.

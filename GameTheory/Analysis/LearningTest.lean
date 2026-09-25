@@ -15,11 +15,22 @@ namespace GameTheory.Tests.Learning
 
 open GameTheory.Math.Probability
 
+private theorem utilityBand : ∀ who outcome,
+    utility outcome who ∈ Set.Icc (0 : ℝ) 1 := by
+  intro who outcome
+  simp only [utility]
+  split <;> norm_num
+
+/-- The concrete game's utility lies in the unit-width band used by self-play. -/
+theorem gameUtilityBand : ∀ who outcome,
+    game.utility outcome who ∈ Set.Icc (0 : ℝ) (0 + 1) := by
+  simpa only [game_utility, zero_add] using utilityBand
+
 /-- The quantitative bridge is non-vacuous on the concrete two-player game:
 for every positive tolerance, its finite multiplicative-weights trajectory
 exhibits a canonical approximate CCE law. -/
 theorem multiplicativeWeights_selfPlay_api {epsilon : ℝ} (hepsilon : 0 < epsilon) :
-    ∃ law : FinDist (Profile signature),
+    ∃ law : PMF (Profile signature),
       IsεCoarseCorrelatedEq game.form game.utility epsilon law := by
   apply game.mwSelfPlay_exists_isεCoarseCorrelatedEq_of_pos
     (lo := fun _ => 0) (width := 1) (L := Real.log 2)
@@ -37,9 +48,9 @@ theorem multiplicativeWeights_selfPlay_sqrt_rate_four :
     IsεCoarseCorrelatedEq game.form game.utility
       (1 * (2 * Real.sqrt (Real.log 2 * 4)) / 4)
       (game.form.timeAverage fun round : Fin 4 =>
-        FinDist.pi
+        independentProduct
           (game.mwProfile (Real.sqrt (Real.log 2 / 4))
-            (fun _ => 0) 1 (round : ℕ))) := by
+            (fun _ => 0) 1 gameUtilityBand (round : ℕ))) := by
   apply game.mwSelfPlay_timeAverage_isεCoarseCorrelatedEq_sqrt
     (lo := fun _ => 0) (width := 1) (L := Real.log 2) 4
   · exact Real.log_pos (by norm_num)
@@ -48,9 +59,6 @@ theorem multiplicativeWeights_selfPlay_sqrt_rate_four :
         Real.log_le_sub_one_of_pos (by norm_num)
       _ ≤ 4 := by norm_num
   · norm_num
-  · intro who outcome
-    simp only [utility]
-    split <;> norm_num
   · intro who
     simp
 

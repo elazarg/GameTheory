@@ -41,6 +41,7 @@ a `rfl`-checked type equation in which `hiddenCard.State` does not appear.
 -/
 
 import GameTheory.Protocol.Information
+import GameTheory.Math.Probability.Mixture
 
 noncomputable section
 
@@ -98,13 +99,18 @@ def Table.phase : Table → Phase
   | .settled .. => .over
 
 /-- The fair coin nature flips. -/
-def fairCoin : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num) (FinDist.pure true) (FinDist.pure false)
+def fairCoin : PMF Bool :=
+  mix (1 / 2) (by norm_num) (by norm_num) (PMF.pure true) (PMF.pure false)
 
 /-- Both sides of the coin are realized, so both deals are histories. -/
 theorem mem_support_fairCoin (side : Bool) : side ∈ fairCoin.support :=
-  FinDist.prob_pos_iff.mp
-    (by cases side <;> norm_num [fairCoin, FinDist.prob_pure_eq_ite])
+  by cases side with
+  | true =>
+      exact mem_support_mix_left (1 / 2) (by norm_num) (by norm_num)
+        (by norm_num) (by simp)
+  | false =>
+      exact mem_support_mix_right (1 / 2) (by norm_num) (by norm_num)
+        (by norm_num) (by simp)
 
 /-- Which state each side of the coin deals. -/
 def dealOf : Bool → Table
@@ -134,12 +140,12 @@ def hiddenCard : ExecutionProtocol Seat where
   terminal state := state.phase = .over
   step state joint :=
     match state with
-    | .shuffle => FinDist.map dealOf fairCoin
+    | .shuffle => PMF.map dealOf fairCoin
     | .dealt card =>
-        FinDist.pure
+        PMF.pure
           (.settled card (callOf (joint.1 .blind)) (callOf (joint.1 .informed)))
     | .settled card blindCall informedCall =>
-        FinDist.pure (.settled card blindCall informedCall)
+        PMF.pure (.settled card blindCall informedCall)
   progress := by
     intro state _
     by_cases hcalling : state.phase = Phase.calling
@@ -172,8 +178,8 @@ theorem shuffle_noop_legal : hiddenCard.Legal .shuffle hiddenCard.noop :=
 
 /-- Both deals are realized by the coin. -/
 theorem dealt_mem_support (card : Card) :
-    Table.dealt card ∈ (FinDist.map dealOf fairCoin).support := by
-  rw [FinDist.support_map]
+    Table.dealt card ∈ (PMF.map dealOf fairCoin).support := by
+  rw [PMF.support_map]
   cases card
   · exact ⟨true, mem_support_fairCoin true, rfl⟩
   · exact ⟨false, mem_support_fairCoin false, rfl⟩
@@ -275,8 +281,8 @@ theorem broadcastOf_phase (event : StepEvent hiddenCard) :
           (i := Seat.blind) (joint Seat.blind)
           (ExecutionProtocol.legalOption_of_legal isLegal Seat.blind)
           (shuffle_inactive Seat.blind)
-      have htarget : target ∈ (FinDist.map dealOf fairCoin).support := realized
-      rw [FinDist.support_map] at htarget
+      have htarget : target ∈ (PMF.map dealOf fairCoin).support := realized
+      rw [PMF.support_map] at htarget
       obtain ⟨side, _, rfl⟩ := htarget
       cases side <;> simp [broadcastOf, hblind, Broadcast.phase, dealOf, Table.phase]
   | dealt card =>
@@ -289,9 +295,9 @@ theorem broadcastOf_phase (event : StepEvent hiddenCard) :
         LegalOption.exists_eq_some_of_active (E := hiddenCard) (state := Table.dealt card)
           (i := Seat.informed) (joint Seat.informed)
           (ExecutionProtocol.legalOption_of_legal isLegal Seat.informed) hactive
-      have htarget : target ∈ (FinDist.pure (Table.settled card
+      have htarget : target ∈ (PMF.pure (Table.settled card
           (callOf (joint Seat.blind)) (callOf (joint Seat.informed)))).support := realized
-      rw [FinDist.mem_support_pure] at htarget
+      rw [PMF.mem_support_pure_iff] at htarget
       subst htarget
       simp [broadcastOf, hblind, hinformed, Broadcast.phase, Table.phase]
   | settled card blindCall informedCall => exact absurd rfl isLegal.1
@@ -442,8 +448,8 @@ theorem callJoint_legal (card blindCall informedCall : Card) :
 
 theorem callHistory_realized (card blindCall informedCall : Card) :
     Table.settled card blindCall informedCall ∈
-      (FinDist.pure (Table.settled card blindCall informedCall)).support :=
-  FinDist.mem_support_pure.mpr rfl
+      (PMF.pure (Table.settled card blindCall informedCall)).support := by
+  rw [PMF.mem_support_pure_iff]
 
 /-- The full history: the deal, then both calls. -/
 @[reducible]
@@ -502,8 +508,9 @@ theorem hidden_card_matters (blindCall informedCall : Card) :
           callJoint_legal .low blindCall informedCall⟩).support := by
   intro hmem
   have hpure : Table.settled Card.high blindCall informedCall ∈
-      (FinDist.pure (Table.settled Card.low blindCall informedCall)).support := hmem
-  rw [FinDist.mem_support_pure] at hpure
+      (PMF.pure (Table.settled Card.low blindCall informedCall)).support := by
+    simp [hiddenCard] at hmem
+  rw [PMF.mem_support_pure_iff] at hpure
   simp at hpure
 
 /-! ## Beliefs and legality at the information set
@@ -519,13 +526,13 @@ theorem dealt_mem_infoSet (card : Card) :
 
 /-- A conditional belief at that information state: the uniform posterior, which
 here is the chance law itself. -/
-def blindBelief : FinDist Table := FinDist.map dealOf fairCoin
+def blindBelief : PMF Table := PMF.map dealOf fairCoin
 
 theorem blindBelief_onInfoSet :
     dealModel.BeliefOn .blind
       (dealSignals.infoOf .blind (dealHistory .high)) blindBelief := by
   intro state hstate
-  rw [blindBelief, FinDist.support_map] at hstate
+  rw [blindBelief, PMF.support_map] at hstate
   obtain ⟨side, _, rfl⟩ := hstate
   cases side with
   | true => exact dealt_mem_infoSet .high

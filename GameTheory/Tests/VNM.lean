@@ -8,7 +8,6 @@ the representation theorem cannot omit its continuity premise.
 -/
 
 import GameTheory.Core.VNM
-import GameTheory.Core.Utility
 import Mathlib.Tactic
 
 noncomputable section
@@ -20,12 +19,31 @@ open GameTheory.Math.Probability
 def utility : Fin 3 → Unit → ℝ := fun outcome _ =>
   if outcome = 0 then 3 else if outcome = 1 then 1 else -1
 
-def high : FinDist (Fin 3) := FinDist.pure 0
-def middle : FinDist (Fin 3) := FinDist.pure 1
-def low : FinDist (Fin 3) := FinDist.pure 2
+def high : PMF (Fin 3) := PMF.pure 0
+def middle : PMF (Fin 3) := PMF.pure 1
+def low : PMF (Fin 3) := PMF.pure 2
 
-def middleMix : FinDist (Fin 3) :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num) high low
+def middleMix : PMF (Fin 3) :=
+  mix (1 / 2) (by norm_num) (by norm_num) high low
+
+private noncomputable def value (law : PMF (Fin 3)) : ℝ :=
+  expectedUtility utility () law (payoffIntegrable_of_finite law _)
+
+private theorem value_pure (outcome : Fin 3) :
+    value (PMF.pure outcome) = utility outcome () := by
+  exact expectedUtility_pure utility () outcome
+
+private theorem value_mix (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1)
+    (first second : PMF (Fin 3)) :
+    value (mix t h0 h1 first second) =
+      t * value first + (1 - t) * value second := by
+  simpa only [value] using expectedUtility_mix utility () t h0 h1 first second
+    (payoffIntegrable_of_finite first _) (payoffIntegrable_of_finite second _)
+
+private theorem eu_iff (first second : PMF (Fin 3)) :
+    euPreference utility () first second ↔ value second ≤ value first := by
+  exact euPreference_iff utility () first second
+    (payoffIntegrable_of_finite first _) (payoffIntegrable_of_finite second _)
 
 theorem eu_represents :
     Preference.RepresentsExpectedUtility (euPreference utility) utility := by
@@ -33,38 +51,34 @@ theorem eu_represents :
   rfl
 
 theorem high_strict_middle : Rank.strict (euPreference utility ()) high middle := by
-  constructor <;> norm_num [euPreference_apply, utility, high, middle, Fin.ext_iff]
+  constructor
+  · rw [eu_iff, high, middle, value_pure, value_pure]
+    norm_num [utility, Fin.ext_iff]
+  · rw [eu_iff, high, middle, value_pure, value_pure]
+    norm_num [utility, Fin.ext_iff]
 
 theorem middle_strict_low : Rank.strict (euPreference utility ()) middle low := by
-  constructor <;> norm_num [euPreference_apply, utility, middle, low, Fin.ext_iff]
+  constructor
+  · rw [eu_iff, middle, low, value_pure, value_pure]
+    norm_num [utility, Fin.ext_iff]
+  · rw [eu_iff, middle, low, value_pure, value_pure]
+    norm_num [utility, Fin.ext_iff]
 
 theorem middle_indifferent_middleMix :
     Rank.Indifferent (euPreference utility ()) middle middleMix := by
-  have hmiddle : expectedUtility utility () middle = 1 := by
-    calc
-      expectedUtility utility () middle = utility 1 () := expectedUtility_pure ..
-      _ = 1 := by norm_num [utility, Fin.ext_iff]
-  have hmix : expectedUtility utility () middleMix = 1 := by
-    calc
-      expectedUtility utility () middleMix =
-          (1 / 2) * expectedUtility utility () high +
-            (1 - 1 / 2) * expectedUtility utility () low := by
-        show
-          (FinDist.mix (1 / 2) (by norm_num) (by norm_num) high low).expect
-              (fun outcome => utility outcome ()) =
-            (1 / 2) * high.expect (fun outcome => utility outcome ()) +
-              (1 - 1 / 2) * low.expect (fun outcome => utility outcome ())
-        rw [FinDist.expect_mix]
-      _ = 1 := by
-        rw [high, low, expectedUtility_pure, expectedUtility_pure]
-        norm_num [utility, high, low, Fin.ext_iff]
-  constructor <;> rw [euPreference_apply, hmiddle, hmix]
+  have hmiddle : value middle = 1 := by
+    rw [middle, value_pure]
+    norm_num [utility, Fin.ext_iff]
+  have hmix : value middleMix = 1 := by
+    rw [middleMix, value_mix, high, low, value_pure, value_pure]
+    norm_num [utility, Fin.ext_iff]
+  constructor <;> rw [eu_iff, hmiddle, hmix]
 
 theorem eu_vnm_axioms :
     Preference.Total (euPreference utility) ∧ Preference.Transitive (euPreference utility) ∧
       Preference.MixtureIndependent (euPreference utility) ∧
         Preference.MixtureContinuous (euPreference utility) :=
-  eu_represents.vnmAxioms
+  eu_represents.vnmAxioms (fun _ law => payoffIntegrable_of_finite law _)
 
 theorem eu_characterization_produces_representation :
     ∃ represented : Fin 3 → Unit → ℝ,
@@ -83,6 +97,7 @@ theorem two_agent_characterization_produces_family :
     (euPreference twoAgentUtility)).mp
   exact (show Preference.RepresentsExpectedUtility
     (euPreference twoAgentUtility) twoAgentUtility from fun _ _ _ => Iff.rfl).vnmAxioms
+      (fun _ law => payoffIntegrable_of_finite law _)
 
 def emptyPreference : WeakPreference Unit Empty := fun _ _ _ => True
 
@@ -95,24 +110,27 @@ theorem empty_outcome_characterization_has_no_nonempty_assumption :
   Preference.vnmAxioms_iff_exists_representsExpectedUtility emptyPreference
 
 theorem zero_weight_independence_would_trivialize_preference :
-    ¬ (∀ first second common : FinDist (Fin 3),
+    ¬ (∀ first second common : PMF (Fin 3),
       euPreference utility () first second ↔
         euPreference utility ()
-          (FinDist.mix 0 le_rfl (by norm_num) first common)
-          (FinDist.mix 0 le_rfl (by norm_num) second common)) := by
+          (mix 0 le_rfl (by norm_num) first common)
+          (mix 0 le_rfl (by norm_num) second common)) := by
   intro hzero
   have hbad : euPreference utility () middle high :=
-    (hzero middle high low).mpr (by simp)
+    (hzero middle high low).mpr (by
+      simpa using (eu_iff low low).mpr le_rfl)
   exact high_strict_middle.2 hbad
 
 theorem eu_independence_two_thirds :
     euPreference utility () high middle ↔
       euPreference utility ()
-        (FinDist.mix (2 / 3) (by norm_num) (by norm_num) high low)
-        (FinDist.mix (2 / 3) (by norm_num) (by norm_num) middle low) :=
-  eu_represents.mixtureIndependent () high middle low (2 / 3) (by norm_num) (by norm_num)
+        (mix (2 / 3) (by norm_num) (by norm_num) high low)
+        (mix (2 / 3) (by norm_num) (by norm_num) middle low) :=
+  eu_represents.mixtureIndependent
+    (fun _ law => payoffIntegrable_of_finite law _)
+    () high middle low (2 / 3) (by norm_num) (by norm_num)
 
-theorem positive_affine_same_preference (preferred alternative : FinDist (Fin 3)) :
+theorem positive_affine_same_preference (preferred alternative : PMF (Fin 3)) :
     euPreference (affineUtility utility (fun _ => 2) (fun _ => 5)) () preferred alternative ↔
       euPreference utility () preferred alternative :=
   euPreference_affine utility (fun _ => by norm_num) () preferred alternative
@@ -155,16 +173,34 @@ theorem rescaled_is_positiveAffine_without_endpoint_arguments :
   intro agent
   exact ⟨2, 0, by norm_num [utility, Fin.ext_iff]⟩
 
+private noncomputable def coordinate (law : PMF (Fin 3)) (atom : Fin 3) : ℝ :=
+  expect law (fun outcome => if outcome = atom then 1 else 0)
+    (payoffIntegrable_of_finite law _)
+
+private theorem coordinate_pure (outcome atom : Fin 3) :
+    coordinate (PMF.pure outcome) atom = if outcome = atom then 1 else 0 := by
+  exact expect_pure outcome _ _
+
+private theorem coordinate_mix (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1)
+    (first second : PMF (Fin 3)) (atom : Fin 3) :
+    coordinate (mix t h0 h1 first second) atom =
+      t * coordinate first atom + (1 - t) * coordinate second atom := by
+  simpa only [coordinate] using
+    (expect_mix t h0 h1 first second
+      (fun outcome => if outcome = atom then (1 : ℝ) else 0)
+      (payoffIntegrable_of_finite first _) (payoffIntegrable_of_finite second _))
+
 def lexicographic : WeakPreference Unit (Fin 3) := fun _ first second =>
-  first.prob 0 > second.prob 0 ∨
-    first.prob 0 = second.prob 0 ∧ first.prob 1 ≥ second.prob 1
+  coordinate first 0 > coordinate second 0 ∨
+    coordinate first 0 = coordinate second 0 ∧
+      coordinate first 1 ≥ coordinate second 1
 
 theorem lexicographic_total : Preference.Total lexicographic := by
   intro agent first second
   rcases agent with ⟨⟩
-  rcases lt_trichotomy (first.prob 0) (second.prob 0) with h | h | h
+  rcases lt_trichotomy (coordinate first 0) (coordinate second 0) with h | h | h
   · exact Or.inr (Or.inl h)
-  · rcases le_total (second.prob 1) (first.prob 1) with h1 | h1
+  · rcases le_total (coordinate second 1) (coordinate first 1) with h1 | h1
     · exact Or.inl (Or.inr ⟨h, h1⟩)
     · exact Or.inr (Or.inr ⟨h.symm, h1⟩)
   · exact Or.inl (Or.inl h)
@@ -183,7 +219,7 @@ theorem lexicographic_mixtureIndependent :
     Preference.MixtureIndependent lexicographic := by
   intro agent first second common t hpos h1
   rcases agent with ⟨⟩
-  simp only [lexicographic, FinDist.prob_mix]
+  simp only [lexicographic, coordinate_mix]
   constructor
   · rintro (hfirst | ⟨hfirst0, hfirst1⟩)
     · left
@@ -199,9 +235,9 @@ theorem lexicographic_mixtureIndependent :
 theorem lexicographic_no_middle_indifferent_highLowMix
     (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) :
     ¬ Rank.Indifferent (lexicographic ()) middle
-      (FinDist.mix t h0 h1 high low) := by
+      (mix t h0 h1 high low) := by
   rintro ⟨hmiddle, hmix⟩
-  simp [lexicographic, FinDist.prob_mix, FinDist.prob_pure_eq_ite,
+  simp [lexicographic, coordinate_mix, coordinate_pure,
     high, middle, low, Fin.ext_iff] at hmiddle hmix
   rcases hmiddle with hmiddle | ⟨hmiddle0, _⟩
   · linarith
@@ -213,9 +249,9 @@ theorem lexicographic_not_mixtureContinuous :
     ¬ Preference.MixtureContinuous lexicographic := by
   intro hcontinuous
   obtain ⟨t, h0, h1, hindifferent⟩ := hcontinuous () high middle low
-    (by left; norm_num [lexicographic, high, middle, FinDist.prob_pure_eq_ite, Fin.ext_iff])
+    (by left; norm_num [lexicographic, high, middle, coordinate_pure, Fin.ext_iff])
     (by right; constructor <;>
-      norm_num [lexicographic, middle, low, FinDist.prob_pure_eq_ite, Fin.ext_iff])
+      norm_num [lexicographic, middle, low, coordinate_pure, Fin.ext_iff])
   exact lexicographic_no_middle_indifferent_highLowMix t h0 h1 hindifferent
 
 theorem lexicographic_not_representsExpectedUtility :

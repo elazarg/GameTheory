@@ -14,6 +14,7 @@ coverage, or equilibrium.
 -/
 
 import GameTheory.Experimental.PostArchitecture.FiniteConditionalContinuation
+import GameTheory.Math.Probability.Joint
 import GameTheory.Experimental.PostArchitecture.MAIDPruningConditionalIndependence
 import GameTheory.Experimental.PostArchitecture.MAIDSiteReplacementContext
 import GameTheory.Experimental.PostArchitecture.MAIDTargetSurgery
@@ -54,7 +55,7 @@ universe uPlayer uNode uValue
 private theorem conditionallyIndependent_map_equiv
     {Ω : Type uΩ} {X : Type uX} {Y : Type uY} {Z : Type uZ}
     {X' : Type uX'} {Y' : Type uY'} {Z' : Type uZ'}
-    {law : GameTheory.Math.Probability.FinDist Ω}
+    {law : PMF Ω}
     {first : Ω → X} {second : Ω → Y} {evidence : Ω → Z}
     (hindependent : IsConditionallyIndependent law first second evidence)
     (firstEquiv : X ≃ X') (secondEquiv : Y ≃ Y')
@@ -122,7 +123,7 @@ private theorem conditionallyIndependent_map_equiv
 
 private theorem conditionallyIndependent_adjoin_evidence
     {Ω : Type uΩ} {X : Type uX} {Y : Type uY} {Z : Type uZ}
-    {law : GameTheory.Math.Probability.FinDist Ω}
+    {law : PMF Ω}
     {first : Ω → X} {second : Ω → Y} {evidence : Ω → Z}
     (hindependent : IsConditionallyIndependent law first second evidence) :
     IsConditionallyIndependent law
@@ -164,8 +165,7 @@ private theorem conditionallyIndependent_adjoin_evidence
         Set.mem_empty_iff_false, iff_false]
       rintro ⟨⟨_, hcarried⟩, hactual⟩
       exact hevidence (hcarried.symm.trans hactual)
-    have hempty : law.probOf (∅ : Set Ω) = 0 := by
-      rw [← GameTheory.Math.Probability.FinDist.expect_indicator_eq_probOf]
+    have hempty : (law.toOuterMeasure (∅ : Set Ω)).toReal = 0 := by
       simp
     rw [htriple, hpair, hempty]
     simp
@@ -411,7 +411,7 @@ theorem hybrid_fullAction_conditionallyIndependent
     (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
     (rule : FullContext target →
-      GameTheory.Math.Probability.FinDist (diagram.Value target.1))
+      PMF (diagram.Value target.1))
     (hstable :
       MAIDPruningFixpointGraph.UtilityView.IsEdgeAdditionStableAt view
         pruning target)
@@ -536,7 +536,7 @@ theorem hybrid_fixedRule_jointLaw_eq_bind_continuation
     (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
     (rule : FullContext target →
-      GameTheory.Math.Probability.FinDist (diagram.Value target.1))
+      PMF (diagram.Value target.1))
     (hstable :
       MAIDPruningFixpointGraph.UtilityView.IsEdgeAdditionStableAt view
         pruning target)
@@ -574,8 +574,8 @@ theorem hybrid_fixedRule_jointLaw_eq_bind_continuation
 action. -/
 def constantSiteRule {owner : Player}
     (target : DecisionSite diagram owner) (action : diagram.Value target.1) :
-    FullContext target → FinDist (diagram.Value target.1) :=
-  fun _ => FinDist.pure action
+    FullContext target → PMF (diagram.Value target.1) :=
+  fun _ => PMF.pure action
 
 /-- Read the target full action and one exact term configuration from a base
 assignment, with the same association as the augmented-law observable. -/
@@ -588,30 +588,21 @@ def siteFullActionTermProjection (view : UtilityView semantics)
     Assignment.restrict diagram assignment (view.term term).parents)
 
 private theorem prob_bind_eq_chosen_mul
-    {Action Output : Type*} (law : FinDist Action)
-    (next : Action → FinDist Output) (chosen : Action) (output : Output)
+    {Action Output : Type*} (law : PMF Action)
+    (next : Action → PMF Output) (chosen : Action) (output : Output)
     (hoffTarget : ∀ action ∈ law.support, action ≠ chosen →
-      (next action).prob output = 0) :
-    (law.bind next).prob output =
-      law.prob chosen * (next chosen).prob output := by
+      (next action) output = 0) :
+    (law.bind next) output =
+      law chosen * (next chosen) output := by
   classical
-  rw [FinDist.prob_bind, FinDist.expect_eq_sum_support]
-  by_cases hchosen : chosen ∈ law.support
-  · rw [Finset.sum_eq_single chosen]
-    · intro action haction hne
-      rw [hoffTarget action (FinDist.mem_supportFinset.mp haction) hne,
-        mul_zero]
-    · intro hnot
-      exact absurd (FinDist.mem_supportFinset.mpr hchosen) hnot
-  · rw [FinDist.prob_eq_zero_iff.mpr hchosen, zero_mul]
-    apply Finset.sum_eq_zero
-    intro action haction
-    have hsupport := FinDist.mem_supportFinset.mp haction
-    have hne : action ≠ chosen := by
-      intro heq
-      subst action
-      exact hchosen hsupport
-    rw [hoffTarget action hsupport hne, mul_zero]
+  rw [PMF.bind_apply]
+  apply tsum_eq_single chosen
+  intro action hne
+  by_cases hsupport : action ∈ law.support
+  · rw [hoffTarget action hsupport hne, mul_zero]
+  · have hzero : law action = 0 :=
+      (law.apply_eq_zero_iff action).mpr hsupport
+    simp [hzero]
 
 private theorem suffix_prob_eq_zero_of_action_ne
     [DecidableEq Node] (semantics : Semantics diagram)
@@ -625,11 +616,11 @@ private theorem suffix_prob_eq_zero_of_action_ne
     (hne : chosen ≠ queried) :
     ((assignmentRun semantics base after
         (ToEFG.Stage.Assignment.setOne state ⟨target.1, chosen⟩)).map
-      (siteFullActionTermProjection view target term)).prob
+      (siteFullActionTermProjection view target term))
         ((context, queried), termValue) = 0 := by
-  apply FinDist.prob_eq_zero_iff.mpr
+  apply (PMF.apply_eq_zero_iff _ _).mpr
   intro houtput
-  rw [FinDist.support_map] at houtput
+  rw [PMF.support_map] at houtput
   obtain ⟨result, hresult, hprojection⟩ := houtput
   have hpreserved := assignmentRun_support_preserves_of_not_mem
     semantics base after
@@ -656,11 +647,11 @@ private theorem suffix_prob_eq_zero_of_context_ne
       (diagram.observedParents target.1) ≠ context) :
     ((assignmentRun semantics base after
         (ToEFG.Stage.Assignment.setOne state ⟨target.1, chosen⟩)).map
-      (siteFullActionTermProjection view target term)).prob
+      (siteFullActionTermProjection view target term))
         ((context, queried), termValue) = 0 := by
-  apply FinDist.prob_eq_zero_iff.mpr
+  apply (PMF.apply_eq_zero_iff _ _).mpr
   intro houtput
-  rw [FinDist.support_map] at houtput
+  rw [PMF.support_map] at houtput
   obtain ⟨result, hresult, hprojection⟩ := houtput
   have hsuffix :
       Assignment.restrict diagram result
@@ -699,16 +690,16 @@ theorem siteReplacementLaw_prob_eq_rule_mul_constant
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner) (view : UtilityView semantics)
     (term : view.UtilitySite owner)
-    (rule : FullContext target → FinDist (diagram.Value target.1))
+    (rule : FullContext target → PMF (diagram.Value target.1))
     (context : FullContext target) (action : diagram.Value target.1)
     (termValue : MAIDUtilityContinuationFromCI.TermConfig view term) :
     ((siteReplacementLaw semantics base owner replacement target rule).map
-      (siteFullActionTermProjection view target term)).prob
+      (siteFullActionTermProjection view target term))
         ((context, action), termValue) =
-      (rule context).prob action *
+      (rule context) action *
         ((siteReplacementLaw semantics base owner replacement target
           (constantSiteRule target action)).map
-          (siteFullActionTermProjection view target term)).prob
+          (siteFullActionTermProjection view target term))
             ((context, action), termValue) := by
   obtain ⟨before, after, horder⟩ :=
     List.mem_iff_append.mp (topological.complete target.1)
@@ -756,7 +747,7 @@ theorem siteReplacementLaw_prob_eq_rule_mul_constant
           base owner (replaceSiteRule replacement target rule)), horder]
     rw [assignmentRun_site_surgery_eq semantics base owner replacement target
       rule before after htargetBefore htargetAfter semantics.defaultValue]
-    simp only [FinDist.map_bind, fixedPolicy]
+    simp only [PMF.map_bind, fixedPolicy]
   have hconstant :
       (siteReplacementLaw semantics base owner replacement target
           (constantSiteRule target action)).map
@@ -776,15 +767,12 @@ theorem siteReplacementLaw_prob_eq_rule_mul_constant
     rw [assignmentRun_site_surgery_eq semantics base owner replacement target
       (constantSiteRule target action) before after htargetBefore htargetAfter
       semantics.defaultValue]
-    simp only [FinDist.map_bind, constantSiteRule, FinDist.pure_bind,
+    simp only [PMF.map_bind, constantSiteRule, PMF.pure_bind,
       fixedPolicy]
   rw [hrule, hconstant]
-  rw [FinDist.prob_bind]
-  rw [FinDist.prob_bind
-    (assignmentRun semantics fixedPolicy before semantics.defaultValue)]
-  rw [← FinDist.expect_smul]
-  apply FinDist.expect_congr
-  intro state _
+  rw [PMF.bind_apply, PMF.bind_apply, ← ENNReal.tsum_mul_left]
+  apply tsum_congr
+  intro state
   by_cases hcontext : Assignment.restrict diagram state
       (diagram.observedParents target.1) = context
   · have hfactor := prob_bind_eq_chosen_mul
@@ -799,7 +787,9 @@ theorem siteReplacementLaw_prob_eq_rule_mul_constant
         exact suffix_prob_eq_zero_of_action_ne semantics fixedPolicy target
           view term after htargetAfter state chosen action context termValue
             hne)
-    simpa only [hcontext] using hfactor
+    rw [hcontext] at hfactor
+    rw [hcontext, hfactor]
+    ac_rfl
   · have hconstantZero := suffix_prob_eq_zero_of_context_ne semantics
       fixedPolicy target view term after hobservedAfter state action action
       context termValue hcontext
@@ -809,22 +799,28 @@ theorem siteReplacementLaw_prob_eq_rule_mul_constant
             (assignmentRun semantics fixedPolicy after
               (ToEFG.Stage.Assignment.setOne state
                 ⟨target.1, chosen⟩)).map
-              (siteFullActionTermProjection view target term)).prob
+              (siteFullActionTermProjection view target term))
             ((context, action), termValue) = 0 := by
-      rw [FinDist.prob_bind]
-      have hbranches :
-          (fun chosen =>
-            ((assignmentRun semantics fixedPolicy after
-              (ToEFG.Stage.Assignment.setOne state
-                ⟨target.1, chosen⟩)).map
-              (siteFullActionTermProjection view target term)).prob
-                ((context, action), termValue)) = fun _ => 0 := by
-        funext chosen
-        exact suffix_prob_eq_zero_of_context_ne semantics fixedPolicy target
-          view term after hobservedAfter state chosen action context termValue
-            hcontext
-      rw [hbranches, FinDist.expect_const]
-    rw [harbitraryZero, hconstantZero, mul_zero]
+      rw [PMF.bind_apply]
+      calc
+        (∑' chosen,
+          (rule (Assignment.restrict diagram state
+            (diagram.observedParents target.1))) chosen *
+              ((assignmentRun semantics fixedPolicy after
+                (ToEFG.Stage.Assignment.setOne state
+                  ⟨target.1, chosen⟩)).map
+                (siteFullActionTermProjection view target term))
+                  ((context, action), termValue)) =
+            ∑' chosen : diagram.Value target.1, 0 := by
+          apply tsum_congr
+          intro chosen
+          rw [suffix_prob_eq_zero_of_context_ne semantics fixedPolicy target
+            view term after hobservedAfter state chosen action context termValue
+              hcontext]
+          simp
+        _ = 0 := by simp
+    rw [harbitraryZero, hconstantZero]
+    simp only [mul_zero]
 
 private theorem augmented_joint_eq_site_joint
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
@@ -832,7 +828,7 @@ private theorem augmented_joint_eq_site_joint
     (policy : pruning.ReducedPolicy) (owner : Player)
     (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner) (term : view.UtilitySite owner)
-    (rule : FullContext target → FinDist (diagram.Value target.1)) :
+    (rule : FullContext target → PMF (diagram.Value target.1)) :
     (augmentedLaw view owner
         (hybridPolicy pruning policy owner fixedOwner target rule)).map
         (fun assignment =>
@@ -842,7 +838,7 @@ private theorem augmented_joint_eq_site_joint
         (siteFullActionTermProjection view target term) := by
   rw [hybridPolicy_eq_update_replaceSiteRule]
   unfold augmentedLaw siteReplacementLaw
-  rw [FinDist.map_comp]
+  rw [PMF.map_comp]
   rfl
 
 private theorem augmented_fullAction_eq_site_contextAction
@@ -851,7 +847,7 @@ private theorem augmented_fullAction_eq_site_contextAction
     (policy : pruning.ReducedPolicy) (owner : Player)
     (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
-    (rule : FullContext target → FinDist (diagram.Value target.1)) :
+    (rule : FullContext target → PMF (diagram.Value target.1)) :
     (augmentedLaw view owner
         (hybridPolicy pruning policy owner fixedOwner target rule)).map
         (fullAction view target) =
@@ -862,29 +858,29 @@ private theorem augmented_fullAction_eq_site_contextAction
             (diagram.observedParents target.1), assignment target.1)) := by
   rw [hybridPolicy_eq_update_replaceSiteRule]
   unfold augmentedLaw siteReplacementLaw
-  rw [FinDist.map_comp]
+  rw [PMF.map_comp]
   rfl
 
 private theorem bind_tagged_prob
-    {First Second : Type*} (outer : FinDist First)
-    (kernel : First → FinDist Second) (first : First) (second : Second) :
+    {First Second : Type*} (outer : PMF First)
+    (kernel : First → PMF Second) (first : First) (second : Second) :
     (outer.bind fun candidate =>
-      (kernel candidate).map fun value => (candidate, value)).prob
+      (kernel candidate).map fun value => (candidate, value))
         (first, second) =
-      outer.prob first * (kernel first).prob second := by
-  exact FinDist.prob_bind_map_prod outer kernel first second
+      outer first * (kernel first) second := by
+  exact bindPairLaw_apply outer kernel first second
 
 private theorem nested_bind_tagged_prob
-    {Full Action Term Kept : Type*} (outer : FinDist Full)
-    (rule : Full → FinDist Action) (keep : Full → Kept)
-    (kernel : Kept → Action → FinDist Term)
+    {Full Action Term Kept : Type*} (outer : PMF Full)
+    (rule : Full → PMF Action) (keep : Full → Kept)
+    (kernel : Kept → Action → PMF Term)
     (full : Full) (action : Action) (term : Term) :
     (outer.bind fun candidate =>
       (rule candidate).bind fun chosen =>
         (kernel (keep candidate) chosen).map fun termValue =>
-          ((candidate, chosen), termValue)).prob ((full, action), term) =
-      outer.prob full * (rule full).prob action *
-        (kernel (keep full) action).prob term := by
+          ((candidate, chosen), termValue)) ((full, action), term) =
+      outer full * (rule full) action *
+        (kernel (keep full) action) term := by
   classical
   have hrepacked :
       outer.bind (fun candidate =>
@@ -896,54 +892,36 @@ private theorem nested_bind_tagged_prob
             (kernel (keep candidate) chosen).map fun termValue =>
               (chosen, termValue)).map fun pair =>
                 ((candidate, pair.1), pair.2) := by
-    apply FinDist.bind_congr
+    apply bind_congr_on_support
     intro candidate _
-    rw [FinDist.map_bind]
-    apply FinDist.bind_congr
+    rw [PMF.map_bind]
+    apply bind_congr_on_support
     intro chosen _
-    rw [FinDist.map_comp]
+    rw [PMF.map_comp]
     rfl
-  rw [hrepacked, FinDist.prob_bind]
-  calc
-    outer.expect (fun candidate =>
+  rw [hrepacked, PMF.bind_apply]
+  rw [tsum_eq_single full]
+  · have hinjective : Function.Injective
+        (fun pair : Action × Term => ((full, pair.1), pair.2)) := by
+      intro first second hequal
+      exact Prod.ext
+        (congrArg (fun output => output.1.2) hequal)
+        (congrArg (fun output => output.2) hequal)
+    rw [pmf_map_apply_of_injective _ hinjective (action, term)]
+    rw [bind_tagged_prob]
+    ring
+  · intro candidate hne
+    have hzero :
         (((rule candidate).bind fun chosen =>
           (kernel (keep candidate) chosen).map fun termValue =>
             (chosen, termValue)).map fun pair =>
-              ((candidate, pair.1), pair.2)).prob ((full, action), term)) =
-      outer.expect (fun candidate =>
-        if full = candidate then
-          ((rule full).bind fun chosen =>
-            (kernel (keep full) chosen).map fun termValue =>
-              (chosen, termValue)).prob (action, term)
-        else 0) := by
-      apply FinDist.expect_congr
-      intro candidate _
-      by_cases heq : full = candidate
-      · subst candidate
-        rw [ite_eq_left rfl]
-        exact FinDist.prob_map_of_injective
-          (fun pair => ((full, pair.1), pair.2)) (by
-            intro first second hequal
-            apply Prod.ext
-            · exact congrArg (fun output => output.1.2) hequal
-            · exact congrArg (fun output => output.2) hequal)
-          ((rule full).bind fun chosen =>
-            (kernel (keep full) chosen).map fun termValue =>
-              (chosen, termValue)) (action, term)
-      · rw [ite_eq_right heq, FinDist.prob_eq_zero_iff]
-        intro hsupport
-        rw [FinDist.support_map] at hsupport
-        obtain ⟨pair, _, hpair⟩ := hsupport
-        exact heq (congrArg (fun output => output.1.1) hpair).symm
-    _ = outer.prob full *
-        ((rule full).bind fun chosen =>
-          (kernel (keep full) chosen).map fun termValue =>
-            (chosen, termValue)).prob (action, term) := by
-      rw [FinDist.expect_ite_eq]
-    _ = outer.prob full * (rule full).prob action *
-        (kernel (keep full) action).prob term := by
-      rw [bind_tagged_prob]
-      ring
+              ((candidate, pair.1), pair.2)) ((full, action), term) = 0 := by
+      apply (PMF.apply_eq_zero_iff _ _).mpr
+      intro hsupport
+      rw [PMF.support_map] at hsupport
+      obtain ⟨pair, _, hpair⟩ := hsupport
+      exact hne (congrArg (fun output => output.1.1) hpair)
+    simp [hzero]
 
 /-- Recode a pruning-kept context and target action into the fixed-rule
 conditional-continuation key. -/
@@ -985,7 +963,7 @@ def hybridConstantActionContinuation
     (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner) (term : view.UtilitySite owner)
     (kept : KeptContext pruning target) (action : diagram.Value target.1) :
-    FinDist (MAIDReplacementInvariantUtility.TermConfig view term) :=
+    PMF (MAIDReplacementInvariantUtility.TermConfig view term) :=
   continuation
     (augmentedLaw view owner
       (hybridPolicy pruning policy owner fixedOwner target
@@ -1009,9 +987,9 @@ structure SiteTermContinuationLawAt
     (term : view.UtilitySite owner) where
   continuationLaw : KeptContext pruning target →
     diagram.Value target.1 →
-      FinDist (MAIDReplacementInvariantUtility.TermConfig view term)
+      PMF (MAIDReplacementInvariantUtility.TermConfig view term)
   joint_eq : ∀ rule : FullContext target →
-      FinDist (diagram.Value target.1),
+      PMF (diagram.Value target.1),
     (siteReplacementLaw semantics (pruning.expandPolicy policy) owner
       (pruning.expandOwnerPolicy owner fixedOwner) target rule).map
         (siteFullActionTermProjection view target term) =
@@ -1054,25 +1032,25 @@ def relevantTermContinuationLawAt_of_edgeAdditionStableAt
       owner fixedOwner target term
     joint_eq := ?_ }
   intro rule
-  apply FinDist.ext_of_prob
+  apply PMF.ext
   rintro ⟨⟨full, action⟩, termValue⟩
   let constantRule := constantSiteRule target action
   have hfixed := hybrid_fixedRule_jointLaw_eq_bind_continuation topological
     view pruning policy owner fixedOwner target constantRule hstable term
       hrelevant
   have hfixedPoint := congrArg
-    (fun law => law.prob ((full, action), termValue)) hfixed
+    (fun law => law ((full, action), termValue)) hfixed
   rw [bind_tagged_prob] at hfixedPoint
   have hfixedSite :
       ((siteReplacementLaw semantics (pruning.expandPolicy policy) owner
         (pruning.expandOwnerPolicy owner fixedOwner) target constantRule).map
-        (siteFullActionTermProjection view target term)).prob
+        (siteFullActionTermProjection view target term))
           ((full, action), termValue) =
         ((siteReplacementLaw semantics (pruning.expandPolicy policy) owner
           (pruning.expandOwnerPolicy owner fixedOwner) target constantRule).map
           (fun assignment =>
             (Assignment.restrict diagram assignment
-              (diagram.observedParents target.1), assignment target.1))).prob
+              (diagram.observedParents target.1), assignment target.1)))
             (full, action) *
           (continuation
             (augmentedLaw view owner
@@ -1083,13 +1061,13 @@ def relevantTermContinuationLawAt_of_edgeAdditionStableAt
               (MAIDPruningFixpointGraph.Pruning.missingAt pruning target))
             (keepFullAction target
               (MAIDPruningFixpointGraph.Pruning.missingAt pruning target)
-              (full, action))).prob termValue := by
+              (full, action))) termValue := by
     rw [← augmented_joint_eq_site_joint view pruning policy owner fixedOwner
       target term constantRule]
     rw [← augmented_fullAction_eq_site_contextAction view pruning policy owner
       fixedOwner target constantRule]
     exact hfixedPoint
-  have hcontextPoint := congrArg (fun law => law.prob (full, action))
+  have hcontextPoint := congrArg (fun law => law (full, action))
     (context.contextAction_eq constantRule)
   rw [bind_tagged_prob] at hcontextPoint
   have hconstantContext :
@@ -1097,8 +1075,8 @@ def relevantTermContinuationLawAt_of_edgeAdditionStableAt
         (pruning.expandOwnerPolicy owner fixedOwner) target constantRule).map
         (fun assignment =>
           (Assignment.restrict diagram assignment
-            (diagram.observedParents target.1), assignment target.1))).prob
-          (full, action) = context.contextLaw.prob full := by
+            (diagram.observedParents target.1), assignment target.1)))
+          (full, action) = context.contextLaw full := by
     simpa [constantRule, constantSiteRule] using hcontextPoint
   have hcontinuation :
       hybridConstantActionContinuation view pruning policy owner fixedOwner
@@ -1123,7 +1101,7 @@ def relevantTermContinuationLawAt_of_edgeAdditionStableAt
   show
     ((siteReplacementLaw semantics (pruning.expandPolicy policy) owner
       (pruning.expandOwnerPolicy owner fixedOwner) target rule).map
-      (siteFullActionTermProjection view target term)).prob
+      (siteFullActionTermProjection view target term))
         ((full, action), termValue) = _
   rw [siteReplacementLaw_prob_eq_rule_mul_constant topological semantics
     (pruning.expandPolicy policy) owner

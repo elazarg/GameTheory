@@ -8,7 +8,7 @@ frontier by one dependent finite product. The public laws validate this
 representation and its exact compiled-EFG semantics.
 -/
 
-import GameTheory.Math.Probability.FinDist
+import GameTheory.Math.Probability.Product
 import GameTheory.Math.DAG
 
 noncomputable section
@@ -69,7 +69,7 @@ remain indexed by their source owner; they are not promoted to players. -/
 abbrev OwnerPolicy (owner : Player) :=
   (site : DecisionSite diagram owner) →
     Config diagram (diagram.observedParents site.1) →
-      FinDist (diagram.Value site.1)
+      PMF (diagram.Value site.1)
 
 /-- Behavioral policy is local by type: a decision-site rule receives only
 that site's declared observation configuration. -/
@@ -84,7 +84,7 @@ structure Semantics where
   defaultValue : (node : Node) → diagram.Value node
   /-- The law nature draws a chance node from, given its causal inputs. -/
   chanceLaw : (node : Node) → diagram.kind node = .chance →
-    Config diagram (diagram.parents node) → FinDist (diagram.Value node)
+    Config diagram (diagram.parents node) → PMF (diagram.Value node)
   /-- Each player's payoff at a completed assignment. -/
   utility : Player → Assignment diagram → ℝ
 
@@ -271,7 +271,7 @@ def nodeLaw [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : Policy diagram)
     (state : FrontierState diagram)
     (node : {node // node ∈ state.frontier}) :
-    FinDist (diagram.Value node.1) := by
+    PMF (diagram.Value node.1) := by
   have hparents : diagram.parents node.1 ⊆ state.resolved :=
     state.frontier_parents_resolved node.2
   match hkind : diagram.kind node.1 with
@@ -291,25 +291,25 @@ exact. -/
 def frontierLaw [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : Policy diagram)
     (state : FrontierState diagram) :
-    FinDist ((node : {node // node ∈ state.frontier}) →
+    PMF ((node : {node // node ∈ state.frontier}) →
       diagram.Value node.1) :=
-  FinDist.pi fun node => nodeLaw diagram semantics policy state node
+  independentProduct fun node => nodeLaw diagram semantics policy state node
 
 /-- One evaluation step: draw the whole current frontier and absorb it. -/
 def step [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : Policy diagram)
     (state : FrontierState diagram) :
-    FinDist (FrontierState diagram) :=
+    PMF (FrontierState diagram) :=
   (frontierLaw diagram semantics policy state).map state.extend
 
 /-- Iterate `step` up to the given fuel, stopping early once complete. -/
 def run [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : Policy diagram) :
-    Nat → FrontierState diagram → FinDist (FrontierState diagram)
-  | 0, state => FinDist.pure state
+    Nat → FrontierState diagram → PMF (FrontierState diagram)
+  | 0, state => PMF.pure state
   | fuel + 1, state =>
       if state.IsComplete
-      then FinDist.pure state
+      then PMF.pure state
       else (step diagram semantics policy state).bind
         (run semantics policy fuel)
 
@@ -331,7 +331,7 @@ theorem eq_extend_of_mem_support_step
         (node : {node // node ∈ state.frontier}) →
           diagram.Value node.1,
       reached = state.extend draw := by
-  rw [step, FinDist.support_map] at hreached
+  rw [step, PMF.support_map] at hreached
   obtain ⟨draw, _, rfl⟩ := hreached
   exact ⟨draw, rfl⟩
 
@@ -339,7 +339,7 @@ theorem run_of_complete [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : Policy diagram)
     (fuel : Nat) (state : FrontierState diagram)
     (hcomplete : state.IsComplete) :
-    run diagram semantics policy fuel state = FinDist.pure state := by
+    run diagram semantics policy fuel state = PMF.pure state := by
   cases fuel with
   | zero => rfl
   | succ fuel => rw [run, ite_eq_left hcomplete]
@@ -365,16 +365,16 @@ theorem run_complete_of_remaining_le
         omega
       have hcomplete : state.IsComplete :=
         state.resolved.card_eq_iff_eq_univ.mp hcard
-      rw [run, FinDist.mem_support_pure] at hreached
+      rw [run, PMF.mem_support_pure_iff] at hreached
       simpa [hreached] using hcomplete
   | succ fuel ih =>
       intro reached hreached
       by_cases hcomplete : state.IsComplete
       · rw [run, ite_eq_left hcomplete,
-          FinDist.mem_support_pure] at hreached
+          PMF.mem_support_pure_iff] at hreached
         simpa [hreached] using hcomplete
       · rw [run, ite_eq_right hcomplete,
-          FinDist.support_bind] at hreached
+          PMF.support_bind] at hreached
         obtain ⟨next, hnext⟩ := Set.mem_iUnion.mp hreached
         obtain ⟨hnextStep, hnextRun⟩ :=
           Set.mem_iUnion.mp hnext

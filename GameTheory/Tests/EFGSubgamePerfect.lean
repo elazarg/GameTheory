@@ -32,23 +32,23 @@ theorem twiceRank_decreases
   | start =>
       cases hchoice : joint () with
       | none =>
-          simp [twice, hchoice, FinDist.mem_support_pure] at htarget
+          simp [twice, hchoice] at htarget
           subst target
           norm_num [twiceRank]
       | some vote =>
           cases vote <;>
-            simp [twice, hchoice, FinDist.mem_support_pure] at htarget <;>
+            simp [twice, hchoice] at htarget <;>
             subst target <;>
             norm_num [twiceRank]
   | after first =>
       cases hchoice : joint () with
       | none =>
-          simp [twice, hchoice, FinDist.mem_support_pure] at htarget
+          simp [twice, hchoice] at htarget
           subst target
           norm_num [twiceRank]
       | some vote =>
           cases vote <;>
-            simp [twice, hchoice, FinDist.mem_support_pure] at htarget <;>
+            simp [twice, hchoice] at htarget <;>
             subst target <;>
             norm_num [twiceRank]
   | done first second =>
@@ -62,6 +62,7 @@ end GameTheory.Tests.EFGSubgamePerfect
 namespace GameTheory.Tests.EFGSubgamePerfect
 
 open GameTheory GameTheory.Languages GameTheory.Protocol
+open GameTheory.Math.Probability
 
 /-- The EFG surface reduces directly to the canonical historywise Protocol
 equivalence on a two-decision perfect-recall game. -/
@@ -74,5 +75,7 @@ theorem oneShotDeviation_iff_historywiseOptimal
         twice_wellFoundedPlay profile utility :=
   EFGKuhn.recallGame.isHistorywiseOptimal_iff_hasNoProfitableOneShotDeviation
     EFGKuhn.recallGame_actsOnce twice_wellFoundedPlay profile utility
+      (fun _ _ _ => @payoffIntegrable_of_finite _
+        (@Fintype.finite _ EFGKuhn.recallHistoryFintype) _ _)
 
 end GameTheory.Tests.EFGSubgamePerfect

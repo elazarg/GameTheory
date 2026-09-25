@@ -43,9 +43,16 @@ theorem isBehavioralSubgamePerfect_iff [Fintype ι] [DecidableEq ι]
     (profile : Profile M.behavioralSignature) (utility : E.History → ι → ℝ) :
     M.IsBehavioralSubgamePerfect bounded profile utility ↔
       ∀ history, M.IsSubgameRoot history → ∀ who (alternative : M.BehavioralPolicy who),
-        (M.runBehavioralFrom (Profile.update profile who alternative)
-          bound history).expect (utility · who) ≤
-        (M.runBehavioralFrom profile bound history).expect (utility · who) :=
+        ∃ hbase : UtilityIntegrable utility who
+            (M.runBehavioralFrom profile bound history),
+          ∃ hdev : UtilityIntegrable utility who
+              (M.runBehavioralFrom (Profile.update profile who alternative)
+                bound history),
+            expectedUtility utility who
+                (M.runBehavioralFrom (Profile.update profile who alternative)
+                  bound history) hdev ≤
+              expectedUtility utility who
+                (M.runBehavioralFrom profile bound history) hbase :=
   M.isContinuationNash_iff _ _ _
 
 /-- Evaluation fuel is not a semantic deadline. -/
@@ -72,20 +79,16 @@ theorem isSubgamePerfect_of_behavioral [Fintype ι] [DecidableEq ι]
         (fun who (policy : M.Policy who) => policy.toBehavioral) profile) utility) :
     M.IsSubgamePerfect certificate profile utility := by
   rw [M.isSubgamePerfect_iff_isNash_continuation certificate bounded]
-  rw [M.isBehavioralSubgamePerfect_iff bounded] at perfect
   intro history proper
-  rw [isNash_iff]
-  intro who alternative
-  have optimal := perfect history proper who alternative.toBehavioral
-  rw [← Profile.map_update] at optimal
-  have pureBound :
-      (M.runBehavioralFrom
-        (fun player => (Profile.update profile who alternative player).toBehavioral)
-        bound history).expect (utility · who) ≤
-      (M.runBehavioralFrom (fun player => (profile player).toBehavioral)
-        bound history).expect (utility · who) := optimal
-  rw [M.runBehavioralFrom_toBehavioral, M.runBehavioralFrom_toBehavioral] at pureBound
-  exact pureBound
+  apply GameForm.isNash_of_honest_law
+    (source := M.toContinuationGameForm bound history)
+    (target := M.toBehavioralContinuationGameForm bound history)
+    (sourceObserve := id) (targetObserve := id)
+    (fun who (policy : M.Policy who) => policy.toBehavioral)
+  · intro pureProfile
+    simp only [PMF.map_id]
+    exact M.runBehavioralFrom_toBehavioral pureProfile bound history
+  · exact perfect history proper
 
 section SingleMover
 
@@ -113,9 +116,16 @@ theorem isSingleMoverBehavioralSubgamePerfect_iff {bound : ℕ}
     (utility : E.History → ι → ℝ) :
     M.IsSingleMoverBehavioralSubgamePerfect single bounded profile utility ↔
       ∀ history, M.IsSubgameRoot history → ∀ who (alternative : M.BehavioralPolicy who),
-        (M.runSingleMoverBehavioralFrom single (Profile.update profile who alternative)
-          bound history).expect (utility · who) ≤
-        (M.runSingleMoverBehavioralFrom single profile bound history).expect (utility · who) :=
+        ∃ hbase : UtilityIntegrable utility who
+            (M.runSingleMoverBehavioralFrom single profile bound history),
+          ∃ hdev : UtilityIntegrable utility who
+              (M.runSingleMoverBehavioralFrom single
+                (Profile.update profile who alternative) bound history),
+            expectedUtility utility who
+                (M.runSingleMoverBehavioralFrom single
+                  (Profile.update profile who alternative) bound history) hdev ≤
+              expectedUtility utility who
+                (M.runSingleMoverBehavioralFrom single profile bound history) hbase :=
   M.isContinuationNash_iff _ _ _
 
 /-- Single-mover behavioral SPE is also independent of the certified bound. -/
@@ -157,21 +167,16 @@ theorem isSubgamePerfect_of_singleMoverBehavioral {bound : ℕ}
         (fun who (policy : M.Policy who) => policy.toBehavioral) profile) utility) :
     M.IsSubgamePerfect certificate profile utility := by
   rw [M.isSubgamePerfect_iff_isNash_continuation certificate bounded]
-  rw [M.isSingleMoverBehavioralSubgamePerfect_iff single bounded] at perfect
   intro history proper
-  rw [isNash_iff]
-  intro who alternative
-  have optimal := perfect history proper who alternative.toBehavioral
-  rw [← Profile.map_update] at optimal
-  have pureBound :
-      (M.runSingleMoverBehavioralFrom single
-        (fun player => (Profile.update profile who alternative player).toBehavioral)
-        bound history).expect (utility · who) ≤
-      (M.runSingleMoverBehavioralFrom single (fun player => (profile player).toBehavioral)
-        bound history).expect (utility · who) := optimal
-  rw [M.runSingleMoverBehavioralFrom_toBehavioral,
-    M.runSingleMoverBehavioralFrom_toBehavioral] at pureBound
-  exact pureBound
+  apply GameForm.isNash_of_honest_law
+    (source := M.toContinuationGameForm bound history)
+    (target := M.toSingleMoverBehavioralContinuationGameForm single bound history)
+    (sourceObserve := id) (targetObserve := id)
+    (fun who (policy : M.Policy who) => policy.toBehavioral)
+  · intro pureProfile
+    simp only [PMF.map_id]
+    exact M.runSingleMoverBehavioralFrom_toBehavioral single pureProfile bound history
+  · exact perfect history proper
 
 end SingleMover
 

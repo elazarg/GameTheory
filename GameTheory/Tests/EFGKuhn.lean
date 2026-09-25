@@ -33,7 +33,7 @@ theorem start_not_mem_step (source : Round)
     cases who
     exact hvote
   subst joint
-  rw [step_eq_pure source hstopped vote isLegal, FinDist.mem_support_pure]
+  rw [step_eq_pure source hstopped vote isLegal, PMF.mem_support_pure_iff]
   cases source with
   | start => simp [stepTo]
   | after first => simp [stepTo]
@@ -72,9 +72,9 @@ theorem step_predecessor_unique
   subst firstJoint
   subst secondJoint
   rw [step_eq_pure firstSource hfirstStopped firstVote firstLegal,
-    FinDist.mem_support_pure] at firstRealized
+    PMF.mem_support_pure_iff] at firstRealized
   rw [step_eq_pure secondSource hsecondStopped secondVote secondLegal,
-    FinDist.mem_support_pure] at secondRealized
+    PMF.mem_support_pure_iff] at secondRealized
   have htarget :
       stepTo firstSource firstVote = stepTo secondSource secondVote :=
     firstRealized.symm.trans secondRealized
@@ -105,6 +105,19 @@ theorem twice_treeShaped : twice.IsTreeShaped :=
   ExecutionProtocol.isTreeShaped_of_predecessor_unique start_not_mem_step
     (fun firstLegal secondLegal firstRealized secondRealized =>
       step_predecessor_unique firstLegal secondLegal firstRealized secondRealized)
+
+local instance roundFintype : Fintype Round := by
+  exact ⟨{.start, .after .up, .after .down,
+    .done .up .up, .done .up .down,
+    .done .down .up, .done .down .down}, by
+      intro state
+      cases state with
+      | start => simp
+      | after first => cases first <;> simp
+      | done first second => cases first <;> cases second <;> simp⟩
+
+local instance recallHistoryFintype : Fintype twice.History :=
+  ExecutionProtocol.historyFintype twice_treeShaped
 
 /-- The two-vote state records the entire action prefix, so its realized
 histories form a tree. -/
@@ -150,7 +163,7 @@ theorem behavioral_to_mixed
       recallGame.information.runMixed mixed horizon =
         recallGame.information.runBehavioral behavioral horizon :=
   recallGame.kuhn_behavioral_to_mixed
-    recallGame_actsOnce behavioral horizon
+    recallGame_actsOnce behavioral horizon (fun _ => Set.toFinite _)
 
 /-- The converse EFG wrapper uses the discharged perfect-recall proof. -/
 theorem mixed_to_behavioral
@@ -170,7 +183,7 @@ theorem historyLaws (horizon : ℕ) :
       { law | ∃ mixed : Profile recallGame.strategicSignature.mixed,
         recallGame.information.runMixed mixed horizon = law } :=
   recallGame.kuhn_historyLaws
-    recallGame_perfectRecall horizon
+    recallGame_perfectRecall horizon (fun _ _ => Set.toFinite _)
 
 /-- The language-facing utility corollary retains arbitrary, nonconstant
 history-dependent utility. -/
@@ -179,11 +192,20 @@ theorem behavioral_to_mixed_expectedUtility
     (horizon : ℕ) (utility : recallGame.History → Unit → ℝ) :
     ∃ mixed : Profile recallGame.strategicSignature.mixed,
       ∀ who,
+        ∃ hmixed : UtilityIntegrable utility who
+            (recallGame.information.runMixed mixed horizon),
         expectedUtility utility who
-            (recallGame.information.runMixed mixed horizon) =
+            (recallGame.information.runMixed mixed horizon) hmixed =
           expectedUtility utility who
-            (recallGame.information.runBehavioral behavioral horizon) :=
-  recallGame.kuhn_behavioral_to_mixed_expectedUtility
-    recallGame_actsOnce behavioral horizon utility
+            (recallGame.information.runBehavioral behavioral horizon)
+            (by
+              exact @payoffIntegrable_of_finite _
+                (@Fintype.finite _ recallHistoryFintype) _ _) :=
+  by
+    exact recallGame.kuhn_behavioral_to_mixed_expectedUtility
+      recallGame_actsOnce behavioral horizon (fun _ => Set.toFinite _)
+      utility (fun _ => by
+        exact @payoffIntegrable_of_finite _
+          (@Fintype.finite _ recallHistoryFintype) _ _)
 
 end GameTheory.Tests.EFGKuhn

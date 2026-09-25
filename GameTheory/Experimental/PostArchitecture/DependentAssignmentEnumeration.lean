@@ -8,6 +8,7 @@ transport or a non-dependent update operation.
 -/
 
 import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
+import GameTheory.Math.Probability.FiniteSampling
 
 noncomputable section
 
@@ -15,6 +16,7 @@ namespace GameTheory.Experimental.PostArchitecture.DependentAssignmentEnumeratio
 
 open scoped BigOperators
 open GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
+open GameTheory.Math.Probability.FiniteAssignment
 
 universe uNode uValue uResult
 
@@ -148,7 +150,7 @@ theorem agreeOn_insert_setOne_iff [DecidableEq Node]
     (nodes : Finset Node) {pivot : Node} (hpivot : pivot ∉ nodes)
     (witness assignment : Assignment Value) (value : Value pivot) :
     AgreeOn Value (insert pivot nodes) assignment
-        (GameTheory.Math.Probability.FinDist.DependentAssignment.setOne witness
+        (setOne witness
           ⟨pivot, value⟩) ↔
       AgreeOn Value nodes assignment witness ∧ assignment pivot = value := by
   constructor
@@ -159,22 +161,18 @@ theorem agreeOn_insert_setOne_iff [DecidableEq Node]
         intro heq
         subst node
         exact hpivot hnode
-      simpa [GameTheory.Math.Probability.FinDist.DependentAssignment.setOne,
-        GameTheory.Math.Probability.FinDist.DependentAssignment.resolve, hne] using
+      simpa [setOne, resolve, hne] using
           hagrees node (Finset.mem_insert_of_mem hnode)
-    · simpa [GameTheory.Math.Probability.FinDist.DependentAssignment.setOne,
-        GameTheory.Math.Probability.FinDist.DependentAssignment.resolve] using
+    · simpa [setOne, resolve] using
           hagrees pivot (Finset.mem_insert_self pivot nodes)
   · rintro ⟨hfixed, hpivotValue⟩ node hnode
     rcases Finset.mem_insert.mp hnode with rfl | hnode
-    · simpa [GameTheory.Math.Probability.FinDist.DependentAssignment.setOne,
-        GameTheory.Math.Probability.FinDist.DependentAssignment.resolve] using hpivotValue
+    · simpa [setOne, resolve] using hpivotValue
     · have hne : node ≠ pivot := by
         intro heq
         subst node
         exact hpivot hnode
-      simpa [GameTheory.Math.Probability.FinDist.DependentAssignment.setOne,
-        GameTheory.Math.Probability.FinDist.DependentAssignment.resolve, hne] using
+      simpa [setOne, resolve, hne] using
           hfixed node hnode
 
 /-- Fubini step for one newly fixed coordinate.  Each assignment agreeing on
@@ -191,7 +189,7 @@ theorem sum_ite_agrees_eq_sum_insert
       ∑ value : Value pivot,
         ∑ assignment : Assignment Value,
           if AgreeOn Value (insert pivot nodes) assignment
-              (GameTheory.Math.Probability.FinDist.DependentAssignment.setOne witness
+              (setOne witness
                 ⟨pivot, value⟩)
           then score assignment else 0 := by
   classical

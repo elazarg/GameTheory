@@ -2,7 +2,7 @@
 
 import GameTheory.Core.MixtureSimulation
 
-/-! # Composition of finite-mixture game-form simulations -/
+/-! # Composition of PMF-mixture game-form simulations -/
 
 noncomputable section
 
@@ -31,7 +31,7 @@ def transOn
     (right : MixtureSimulationOn middle target middleObserve targetObserve RightConsidered)
     (compatible : ∀ (profile : Profile source.sig) who replacement,
       RightConsidered who replacement →
-      ∃ alternatives : FinDist (middle.sig.Strategy who),
+      ∃ alternatives : PMF (middle.sig.Strategy who),
         (target.play (Profile.update (right.compileProfile (left.compileProfile profile))
             who replacement)).map
             targetObserve =
@@ -50,20 +50,25 @@ def transOn
     classical
     obtain ⟨middleAlternatives, hright, hsupported⟩ :=
       compatible profile who replacement hreplacement
-    let sourceAlternatives : middle.sig.Strategy who → FinDist (source.sig.Strategy who) :=
+    let sourceAlternatives : middle.sig.Strategy who → PMF (source.sig.Strategy who) :=
       fun alternative =>
         if h : LeftConsidered who alternative then
           Classical.choose (left.deviation_mixture profile who alternative h)
-        else FinDist.pure (profile who)
+        else PMF.pure (profile who)
     refine ⟨middleAlternatives.bind sourceAlternatives, ?_⟩
-    unfold compileProfile Profile.map at hright
-    rw [hright, FinDist.bind_bind]
-    apply FinDist.bind_congr
+    have hcompose : Profile.map
+        (fun who strategy => right.compileStrategy who (left.compileStrategy who strategy))
+        profile = right.compileProfile (left.compileProfile profile) := by
+      funext player
+      rfl
+    rw [hcompose, hright, PMF.bind_bind]
+    apply bind_congr_on_support middleAlternatives
     intro alternative halternative
     have hconsidered := hsupported alternative halternative
     have hlaw := Classical.choose_spec
       (left.deviation_mixture profile who alternative hconsidered)
-    simpa only [sourceAlternatives, dite_eq_left hconsidered] using hlaw
+    simpa only [sourceAlternatives, dite_eq_left hconsidered,
+      MixtureSimulationOn.compileProfile] using hlaw
 
 /-- Composition when every middle strategy is considered by the left
 simulation. Any deviation mixture supplied by the right simulation can then

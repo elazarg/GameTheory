@@ -9,6 +9,7 @@ though changing either information-state action alone is not.
 -/
 
 import GameTheory.Protocol.SubgamePerfect
+import GameTheory.Math.Probability.Mixture
 
 noncomputable section
 
@@ -45,15 +46,17 @@ def State.isTerminal : State → Prop
   | .done _ _ _ => True
   | _ => False
 
-def natureLaw : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure false) (FinDist.pure true)
+def natureLaw : PMF Bool :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure false) (PMF.pure true)
 
 theorem mem_support_natureLaw (hidden : Bool) :
-    hidden ∈ natureLaw.support :=
-  FinDist.prob_pos_iff.mp (by
-    cases hidden <;>
-      norm_num [natureLaw, FinDist.prob_pure_eq_ite])
+    hidden ∈ natureLaw.support := by
+  cases hidden
+  · exact mem_support_mix_left (1 / 2) (by norm_num) (by norm_num)
+      (by norm_num) ((PMF.mem_support_pure_iff _ _).mpr rfl)
+  · exact mem_support_mix_right (1 / 2) (by norm_num) (by norm_num)
+      (by norm_num) ((PMF.mem_support_pure_iff _ _).mpr rfl)
 
 def chosenAction (joint : Unit → Option Bool) : Bool :=
   (joint ()).getD false
@@ -68,13 +71,13 @@ def twoStage : ExecutionProtocol Unit where
   terminal := State.isTerminal
   step state joint :=
     match state with
-    | .root => FinDist.map State.first natureLaw
+    | .root => PMF.map State.first natureLaw
     | .first hidden =>
-        FinDist.pure (.second hidden (chosenAction joint.1))
+        PMF.pure (.second hidden (chosenAction joint.1))
     | .second hidden firstAction =>
-        FinDist.pure (.done hidden firstAction (chosenAction joint.1))
+        PMF.pure (.done hidden firstAction (chosenAction joint.1))
     | .done hidden firstAction secondAction =>
-        FinDist.pure (.done hidden firstAction secondAction)
+        PMF.pure (.done hidden firstAction secondAction)
   progress := by
     intro state hterm
     cases state with
@@ -110,7 +113,7 @@ theorem root_noop_legal : twoStage.Legal .root twoStage.noop :=
 theorem first_mem_support (hidden : Bool) :
     State.first hidden ∈
       (twoStage.step .root ⟨twoStage.noop, root_noop_legal⟩).support := by
-  rw [FinDist.support_map]
+  rw [PMF.support_map]
   exact ⟨hidden, mem_support_natureLaw hidden, rfl⟩
 
 @[reducible]
@@ -150,7 +153,7 @@ def secondHistory (hidden firstAction : Bool) : twoStage.History :=
   let isLegal := moveJoint_legal_first hidden firstAction
   ⟨.second hidden firstAction,
     (firstHistory hidden).trace.extend (moveJoint firstAction) isLegal
-      (FinDist.mem_support_pure.mpr rfl)⟩
+      ((PMF.mem_support_pure_iff _ _).mpr rfl)⟩
 
 theorem second_active (hidden firstAction : Bool) :
     twoStage.active (secondHistory hidden firstAction).state () := by
@@ -163,7 +166,7 @@ def terminalHistory (hidden firstAction secondAction : Bool) :
   ⟨.done hidden firstAction secondAction,
     (secondHistory hidden firstAction).trace.extend
       (moveJoint secondAction) isLegal
-      (FinDist.mem_support_pure.mpr rfl)⟩
+      ((PMF.mem_support_pure_iff _ _).mpr rfl)⟩
 
 abbrev ActionRecord := Stage × Bool
 abbrev Knowledge := Stage × List ActionRecord
@@ -278,14 +281,14 @@ theorem root_not_mem_step (source : State) (joint : Unit → Option Bool)
     State.root ∉ (twoStage.step source ⟨joint, isLegal⟩).support := by
   cases source with
   | root =>
-      rw [FinDist.support_map]
+      rw [PMF.support_map]
       rintro ⟨hidden, _, hroot⟩
       cases hroot
   | first hidden =>
-      rw [FinDist.mem_support_pure]
+      rw [PMF.mem_support_pure_iff]
       simp
   | second hidden firstAction =>
-      rw [FinDist.mem_support_pure]
+      rw [PMF.mem_support_pure_iff]
       simp
   | done hidden firstAction secondAction =>
       exact False.elim (isLegal.1 trivial)
@@ -306,7 +309,7 @@ theorem step_predecessor_unique
   | root =>
       have hfirstJoint := legal_joint_eq_noop firstLegal
       subst firstJoint
-      rw [FinDist.support_map] at firstRealized
+      rw [PMF.support_map] at firstRealized
       obtain ⟨hidden, _, rfl⟩ := firstRealized
       cases secondSource with
       | root =>
@@ -314,10 +317,10 @@ theorem step_predecessor_unique
           subst secondJoint
           exact ⟨rfl, rfl⟩
       | first secondHidden =>
-          rw [FinDist.mem_support_pure] at secondRealized
+          rw [PMF.mem_support_pure_iff] at secondRealized
           cases secondRealized
       | second secondHidden secondFirst =>
-          rw [FinDist.mem_support_pure] at secondRealized
+          rw [PMF.mem_support_pure_iff] at secondRealized
           cases secondRealized
       | done secondHidden secondFirst secondSecond =>
           exact False.elim (secondLegal.1 trivial)
@@ -325,23 +328,23 @@ theorem step_predecessor_unique
       obtain ⟨firstAction, hfirstJoint⟩ :=
         exists_action_joint_eq (state := .first hidden) trivial firstLegal
       subst firstJoint
-      rw [FinDist.mem_support_pure] at firstRealized
+      rw [PMF.mem_support_pure_iff] at firstRealized
       subst target
       cases secondSource with
       | root =>
-          rw [FinDist.support_map] at secondRealized
+          rw [PMF.support_map] at secondRealized
           obtain ⟨secondHidden, _, htarget⟩ := secondRealized
           cases htarget
       | first secondHidden =>
           obtain ⟨secondAction, hsecondJoint⟩ :=
             exists_action_joint_eq (state := .first secondHidden) trivial secondLegal
           subst secondJoint
-          rw [FinDist.mem_support_pure] at secondRealized
+          rw [PMF.mem_support_pure_iff] at secondRealized
           simp [chosenAction, moveJoint] at secondRealized
           obtain ⟨rfl, rfl⟩ := secondRealized
           exact ⟨rfl, rfl⟩
       | second secondHidden secondFirst =>
-          rw [FinDist.mem_support_pure] at secondRealized
+          rw [PMF.mem_support_pure_iff] at secondRealized
           cases secondRealized
       | done secondHidden secondFirst secondSecond =>
           exact False.elim (secondLegal.1 trivial)
@@ -350,15 +353,15 @@ theorem step_predecessor_unique
         exists_action_joint_eq (state := .second hidden firstAction)
           trivial firstLegal
       subst firstJoint
-      rw [FinDist.mem_support_pure] at firstRealized
+      rw [PMF.mem_support_pure_iff] at firstRealized
       subst target
       cases secondSource with
       | root =>
-          rw [FinDist.support_map] at secondRealized
+          rw [PMF.support_map] at secondRealized
           obtain ⟨secondHidden, _, htarget⟩ := secondRealized
           cases htarget
       | first secondHidden =>
-          rw [FinDist.mem_support_pure] at secondRealized
+          rw [PMF.mem_support_pure_iff] at secondRealized
           cases secondRealized
       | second secondHidden secondFirst =>
           obtain ⟨secondAction, hsecondJoint⟩ :=
@@ -366,7 +369,7 @@ theorem step_predecessor_unique
               (state := .second secondHidden secondFirst)
               trivial secondLegal
           subst secondJoint
-          rw [FinDist.mem_support_pure] at secondRealized
+          rw [PMF.mem_support_pure_iff] at secondRealized
           simp [chosenAction, moveJoint] at secondRealized
           obtain ⟨rfl, rfl, rfl⟩ := secondRealized
           exact ⟨rfl, rfl⟩
@@ -402,15 +405,15 @@ theorem rank_decreases (source target : State)
   rcases hsuccessor with ⟨joint, isLegal, realized⟩
   cases source with
   | root =>
-      rw [FinDist.support_map] at realized
+      rw [PMF.support_map] at realized
       obtain ⟨hidden, _, rfl⟩ := realized
       norm_num [rank]
   | first hidden =>
-      rw [FinDist.mem_support_pure] at realized
+      rw [PMF.mem_support_pure_iff] at realized
       subst target
       norm_num [rank]
   | second hidden firstAction =>
-      rw [FinDist.mem_support_pure] at realized
+      rw [PMF.mem_support_pure_iff] at realized
       subst target
       norm_num [rank]
   | done hidden firstAction secondAction =>
@@ -441,6 +444,22 @@ def utility (history : twoStage.History) (_ : Unit) : ℝ :=
   | .done _ true true => 1
   | _ => 0
 
+/-- The Boolean complementarity payoff is uniformly bounded. -/
+theorem utility_bound (history : twoStage.History) :
+    |utility history ()| ≤ 1 := by
+  rcases history with ⟨state, trace⟩
+  cases state with
+  | root => norm_num [utility]
+  | first _ => norm_num [utility]
+  | second _ _ => norm_num [utility]
+  | done _ firstAction secondAction =>
+      cases firstAction <;> cases secondAction <;> norm_num [utility]
+
+/-- Every actual outcome law integrates the bounded fixture payoff. -/
+theorem utility_integrable (law : PMF twoStage.History) :
+    PayoffIntegrable law (fun outcome => utility outcome ()) :=
+  payoffIntegrable_of_bounded law _ utility_bound
+
 theorem done_utility_match (hidden firstAction secondAction : Bool) :
     (match State.done hidden firstAction secondAction with
       | .done _ true true => (1 : ℝ)
@@ -456,7 +475,39 @@ def continuationValue (profile : Profile information.strategicSignature)
     (history : twoStage.History) : ℝ :=
   twoStage.historyBackwardValue wellFoundedPlay
     (information.historyChooser profile)
-    (fun outcome => utility outcome ()) history
+    (fun outcome => utility outcome ()) history (utility_integrable _)
+
+private theorem continuationValue_of_step_constant
+    (profile : Profile information.strategicSignature)
+    (history : twoStage.History)
+    (hnot : ¬ twoStage.terminal history.state) (c : ℝ)
+    (hchild : ∀ target
+      (realized : target ∈ (twoStage.step history.state
+        (information.historyChooser profile history hnot)).support),
+      continuationValue profile
+        (history.extend
+          (information.historyChooser profile history hnot).2 realized) = c) :
+    continuationValue profile history = c := by
+  obtain ⟨houter, heq⟩ := twoStage.historyBackwardValue_of_not_terminal
+    (certificate := wellFoundedPlay)
+    (chooser := information.historyChooser profile)
+    (payoff := fun outcome => utility outcome ())
+    (history := history) hnot (utility_integrable _)
+    (fun _ => c) (by
+      intro target realized hguard
+      simpa only [continuationValue] using (hchild target realized).symm)
+  simpa only [continuationValue, expect_constant] using heq
+
+private theorem continuationValue_terminal
+    (profile : Profile information.strategicSignature)
+    (hidden firstAction secondAction : Bool) :
+    continuationValue profile
+        (terminalHistory hidden firstAction secondAction) =
+      if firstAction && secondAction then 1 else 0 := by
+  rw [continuationValue,
+    twoStage.historyBackwardValue_of_terminal
+      (by simp [State.isTerminal]) (utility_integrable _)]
+  exact done_utility_match hidden firstAction secondAction
 
 theorem infoOf_firstHistory (hidden : Bool) :
     signals.infoOf () (firstHistory hidden).trace = (.first, []) := by
@@ -505,21 +556,25 @@ theorem continuationValue_prescribed_second
         (profileOf (prescribedPolicy prescribedFirst prescribedSecond))
         (secondHistory hidden firstAction) =
       if firstAction && prescribedSecond then 1 else 0 := by
-  rw [continuationValue,
-    twoStage.historyBackwardValue_of_not_terminal
-      (second_not_terminal hidden firstAction),
-    historyChooser_prescribed_second]
-  let chosen :
-      {joint : Unit → Option Bool //
-        twoStage.Legal (.second hidden firstAction) joint} :=
-    ⟨moveJoint prescribedSecond,
-      moveJoint_legal_second hidden firstAction prescribedSecond⟩
-  have hstep :
-      twoStage.step (.second hidden firstAction) chosen =
-        FinDist.pure (.done hidden firstAction prescribedSecond) := rfl
-  rw [twoStage.historyStepValue_of_step_eq_pure hstep _,
-    twoStage.historyBackwardValue_of_terminal (by simp [State.isTerminal])]
-  cases firstAction <;> cases prescribedSecond <;> norm_num [utility]
+  apply continuationValue_of_step_constant _ _
+    (second_not_terminal hidden firstAction) _
+  intro target realized
+  have hpure : target ∈
+      (PMF.pure (.done hidden firstAction prescribedSecond)).support := by
+    simpa [historyChooser_prescribed_second, chosenAction, moveJoint]
+      using realized
+  have htarget := (PMF.mem_support_pure_iff _ _).mp hpure
+  subst target
+  have hhistory :
+      (secondHistory hidden firstAction).extend
+          (information.historyChooser
+            (profileOf (prescribedPolicy prescribedFirst prescribedSecond))
+            (secondHistory hidden firstAction)
+            (second_not_terminal hidden firstAction)).2 realized =
+        terminalHistory hidden firstAction prescribedSecond :=
+    history_eq_of_state_eq rfl
+  rw [hhistory]
+  exact continuationValue_terminal _ hidden firstAction prescribedSecond
 
 theorem continuationValue_prescribed_first
     (hidden prescribedFirst prescribedSecond : Bool) :
@@ -527,43 +582,24 @@ theorem continuationValue_prescribed_first
         (profileOf (prescribedPolicy prescribedFirst prescribedSecond))
         (firstHistory hidden) =
       if prescribedFirst && prescribedSecond then 1 else 0 := by
-  rw [continuationValue,
-    twoStage.historyBackwardValue_of_not_terminal
-      (first_not_terminal hidden),
-    historyChooser_prescribed_first]
-  let chosen :
-      {joint : Unit → Option Bool //
-        twoStage.Legal (.first hidden) joint} :=
-    ⟨moveJoint prescribedFirst,
-      moveJoint_legal_first hidden prescribedFirst⟩
-  calc
-    twoStage.historyStepValue (firstHistory hidden) chosen
-        (fun target realized =>
-          twoStage.historyBackwardValue wellFoundedPlay
-            (information.historyChooser
-              (profileOf (prescribedPolicy prescribedFirst prescribedSecond)))
-            (fun outcome => utility outcome ())
-            ((firstHistory hidden).extend chosen.2 realized)) =
-      twoStage.historyStepValue (firstHistory hidden) chosen
-        (fun _target _realized =>
-          if prescribedFirst && prescribedSecond then 1 else 0) := by
-            apply ExecutionProtocol.historyStepValue_congr
-            intro target realized
-            have htarget : target = .second hidden prescribedFirst := by
-              have hpure : target ∈
-                  (FinDist.pure (.second hidden prescribedFirst)).support :=
-                realized
-              exact FinDist.mem_support_pure.mp hpure
-            subst target
-            have hhistory :
-                (firstHistory hidden).extend chosen.2 realized =
-                  secondHistory hidden prescribedFirst :=
-              history_eq_of_state_eq rfl
-            rw [hhistory]
-            exact continuationValue_prescribed_second hidden prescribedFirst
-              prescribedFirst prescribedSecond
-    _ = if prescribedFirst && prescribedSecond then 1 else 0 := by
-      simp [ExecutionProtocol.historyStepValue]
+  apply continuationValue_of_step_constant _ _ (first_not_terminal hidden) _
+  intro target realized
+  have hpure : target ∈
+      (PMF.pure (.second hidden prescribedFirst)).support := by
+    simpa [historyChooser_prescribed_first, chosenAction, moveJoint]
+      using realized
+  have htarget := (PMF.mem_support_pure_iff _ _).mp hpure
+  subst target
+  have hhistory :
+      (firstHistory hidden).extend
+          (information.historyChooser
+            (profileOf (prescribedPolicy prescribedFirst prescribedSecond))
+            (firstHistory hidden) (first_not_terminal hidden)).2 realized =
+        secondHistory hidden prescribedFirst :=
+    history_eq_of_state_eq rfl
+  rw [hhistory]
+  exact continuationValue_prescribed_second hidden prescribedFirst
+    prescribedFirst prescribedSecond
 
 theorem historyChooser_prescribed_root (firstAction secondAction : Bool) :
     information.historyChooser
@@ -581,39 +617,22 @@ theorem continuationValue_prescribed_root
         (profileOf (prescribedPolicy firstAction secondAction))
         twoStage.initHistory =
       if firstAction && secondAction then 1 else 0 := by
-  rw [continuationValue,
-    twoStage.historyBackwardValue_of_not_terminal root_not_terminal,
-    historyChooser_prescribed_root]
-  let chosen :
-      {joint : Unit → Option Bool // twoStage.Legal .root joint} :=
-    ⟨twoStage.noop, root_noop_legal⟩
-  calc
-    twoStage.historyStepValue twoStage.initHistory chosen
-        (fun target realized =>
-          twoStage.historyBackwardValue wellFoundedPlay
-            (information.historyChooser
-              (profileOf (prescribedPolicy firstAction secondAction)))
-            (fun outcome => utility outcome ())
-            (twoStage.initHistory.extend chosen.2 realized)) =
-      twoStage.historyStepValue twoStage.initHistory chosen
-        (fun _target _realized =>
-          if firstAction && secondAction then 1 else 0) := by
-            apply ExecutionProtocol.historyStepValue_congr
-            intro target realized
-            have hmap : target ∈
-                (FinDist.map State.first natureLaw).support := realized
-            rw [FinDist.support_map] at hmap
-            obtain ⟨hidden, _, htarget⟩ := hmap
-            subst target
-            have hhistory :
-                twoStage.initHistory.extend chosen.2 realized =
-                  firstHistory hidden :=
-              history_eq_of_state_eq rfl
-            rw [hhistory]
-            exact continuationValue_prescribed_first hidden firstAction
-              secondAction
-    _ = if firstAction && secondAction then 1 else 0 := by
-      simp [ExecutionProtocol.historyStepValue]
+  apply continuationValue_of_step_constant _ _ root_not_terminal _
+  intro target realized
+  have hmap : target ∈ (PMF.map State.first natureLaw).support := by
+    simpa [historyChooser_prescribed_root] using realized
+  rw [PMF.support_map] at hmap
+  obtain ⟨hidden, _, htarget⟩ := hmap
+  subst target
+  have hhistory :
+      twoStage.initHistory.extend
+          (information.historyChooser
+            (profileOf (prescribedPolicy firstAction secondAction))
+            twoStage.initHistory root_not_terminal).2 realized =
+        firstHistory hidden :=
+    history_eq_of_state_eq rfl
+  rw [hhistory]
+  exact continuationValue_prescribed_first hidden firstAction secondAction
 
 def firstKnowledge : Knowledge := (.first, [])
 
@@ -674,39 +693,25 @@ theorem continuationValue_policy_second (policy : information.Policy ())
         (secondHistory hidden firstAction) =
       if firstAction && policyAction policy (secondKnowledge firstAction)
         then 1 else 0 := by
-  rw [continuationValue,
-    twoStage.historyBackwardValue_of_not_terminal
-      (second_not_terminal hidden firstAction),
-    historyChooser_policy_second]
+  apply continuationValue_of_step_constant _ _
+    (second_not_terminal hidden firstAction) _
+  intro target realized
   let secondAction := policyAction policy (secondKnowledge firstAction)
-  let chosen :
-      {joint : Unit → Option Bool //
-        twoStage.Legal (.second hidden firstAction) joint} :=
-    ⟨moveJoint secondAction,
-      moveJoint_legal_second hidden firstAction secondAction⟩
-  calc
-    twoStage.historyStepValue (secondHistory hidden firstAction) chosen
-        (fun target realized =>
-          twoStage.historyBackwardValue wellFoundedPlay
-            (information.historyChooser (profileOf policy))
-            (fun outcome => utility outcome ())
-            ((secondHistory hidden firstAction).extend chosen.2 realized)) =
-      twoStage.historyStepValue (secondHistory hidden firstAction) chosen
-        (fun _target _realized =>
-          if firstAction && secondAction then 1 else 0) := by
-            apply ExecutionProtocol.historyStepValue_congr
-            intro target realized
-            have htarget : target = .done hidden firstAction secondAction := by
-              have hpure : target ∈
-                  (FinDist.pure (.done hidden firstAction secondAction)).support :=
-                realized
-              exact FinDist.mem_support_pure.mp hpure
-            subst target
-            rw [twoStage.historyBackwardValue_of_terminal]
-            · exact done_utility_match hidden firstAction secondAction
-            · simp [State.isTerminal]
-    _ = if firstAction && secondAction then 1 else 0 := by
-      simp [ExecutionProtocol.historyStepValue]
+  have hpure : target ∈
+      (PMF.pure (.done hidden firstAction secondAction)).support := by
+    simpa [historyChooser_policy_second, secondAction, chosenAction,
+      moveJoint] using realized
+  have htarget := (PMF.mem_support_pure_iff _ _).mp hpure
+  subst target
+  have hhistory :
+      (secondHistory hidden firstAction).extend
+          (information.historyChooser (profileOf policy)
+            (secondHistory hidden firstAction)
+            (second_not_terminal hidden firstAction)).2 realized =
+        terminalHistory hidden firstAction secondAction :=
+    history_eq_of_state_eq rfl
+  rw [hhistory]
+  exact continuationValue_terminal _ hidden firstAction secondAction
 
 theorem continuationValue_policy_first (policy : information.Policy ())
     (hidden : Bool) :
@@ -714,42 +719,22 @@ theorem continuationValue_policy_first (policy : information.Policy ())
       let firstAction := policyAction policy firstKnowledge
       if firstAction && policyAction policy (secondKnowledge firstAction)
         then 1 else 0 := by
-  rw [continuationValue,
-    twoStage.historyBackwardValue_of_not_terminal
-      (first_not_terminal hidden),
-    historyChooser_policy_first]
+  apply continuationValue_of_step_constant _ _ (first_not_terminal hidden) _
+  intro target realized
   let firstAction := policyAction policy firstKnowledge
-  let chosen :
-      {joint : Unit → Option Bool //
-        twoStage.Legal (.first hidden) joint} :=
-    ⟨moveJoint firstAction, moveJoint_legal_first hidden firstAction⟩
-  calc
-    twoStage.historyStepValue (firstHistory hidden) chosen
-        (fun target realized =>
-          twoStage.historyBackwardValue wellFoundedPlay
-            (information.historyChooser (profileOf policy))
-            (fun outcome => utility outcome ())
-            ((firstHistory hidden).extend chosen.2 realized)) =
-      twoStage.historyStepValue (firstHistory hidden) chosen
-        (fun _target _realized =>
-          if firstAction && policyAction policy (secondKnowledge firstAction)
-            then 1 else 0) := by
-            apply ExecutionProtocol.historyStepValue_congr
-            intro target realized
-            have htarget : target = .second hidden firstAction := by
-              have hpure : target ∈
-                  (FinDist.pure (.second hidden firstAction)).support := realized
-              exact FinDist.mem_support_pure.mp hpure
-            subst target
-            have hhistory :
-                (firstHistory hidden).extend chosen.2 realized =
-                  secondHistory hidden firstAction :=
-              history_eq_of_state_eq rfl
-            rw [hhistory]
-            exact continuationValue_policy_second policy hidden firstAction
-    _ = if firstAction && policyAction policy (secondKnowledge firstAction)
-          then 1 else 0 := by
-      simp [ExecutionProtocol.historyStepValue]
+  have hpure : target ∈ (PMF.pure (.second hidden firstAction)).support := by
+    simpa [historyChooser_policy_first, firstAction, chosenAction,
+      moveJoint] using realized
+  have htarget := (PMF.mem_support_pure_iff _ _).mp hpure
+  subst target
+  have hhistory :
+      (firstHistory hidden).extend
+          (information.historyChooser (profileOf policy)
+            (firstHistory hidden) (first_not_terminal hidden)).2 realized =
+        secondHistory hidden firstAction :=
+    history_eq_of_state_eq rfl
+  rw [hhistory]
+  exact continuationValue_policy_second policy hidden firstAction
 
 theorem historyChooser_policy_root (policy : information.Policy ()) :
     information.historyChooser (profileOf policy)
@@ -768,39 +753,21 @@ theorem continuationValue_policy_root (policy : information.Policy ()) :
       let firstAction := policyAction policy firstKnowledge
       if firstAction && policyAction policy (secondKnowledge firstAction)
         then 1 else 0 := by
-  rw [continuationValue,
-    twoStage.historyBackwardValue_of_not_terminal root_not_terminal,
-    historyChooser_policy_root]
-  let firstAction := policyAction policy firstKnowledge
-  let result : ℝ :=
-    if firstAction && policyAction policy (secondKnowledge firstAction)
-      then 1 else 0
-  let chosen :
-      {joint : Unit → Option Bool // twoStage.Legal .root joint} :=
-    ⟨twoStage.noop, root_noop_legal⟩
-  calc
-    twoStage.historyStepValue twoStage.initHistory chosen
-        (fun target realized =>
-          twoStage.historyBackwardValue wellFoundedPlay
-            (information.historyChooser (profileOf policy))
-            (fun outcome => utility outcome ())
-            (twoStage.initHistory.extend chosen.2 realized)) =
-      twoStage.historyStepValue twoStage.initHistory chosen
-        (fun _target _realized => result) := by
-            apply ExecutionProtocol.historyStepValue_congr
-            intro target realized
-            have hmap : target ∈
-                (FinDist.map State.first natureLaw).support := realized
-            rw [FinDist.support_map] at hmap
-            obtain ⟨hidden, _, htarget⟩ := hmap
-            subst target
-            have hhistory :
-                twoStage.initHistory.extend chosen.2 realized =
-                  firstHistory hidden :=
-              history_eq_of_state_eq rfl
-            rw [hhistory]
-            exact continuationValue_policy_first policy hidden
-    _ = result := by simp [ExecutionProtocol.historyStepValue]
+  apply continuationValue_of_step_constant _ _ root_not_terminal _
+  intro target realized
+  have hmap : target ∈ (PMF.map State.first natureLaw).support := by
+    simpa [historyChooser_policy_root] using realized
+  rw [PMF.support_map] at hmap
+  obtain ⟨hidden, _, htarget⟩ := hmap
+  subst target
+  have hhistory :
+      twoStage.initHistory.extend
+          (information.historyChooser (profileOf policy)
+            twoStage.initHistory root_not_terminal).2 realized =
+        firstHistory hidden :=
+    history_eq_of_state_eq rfl
+  rw [hhistory]
+  exact continuationValue_policy_first policy hidden
 
 theorem update_unit_eq_profileOf
     (profile : Profile information.strategicSignature)
@@ -863,14 +830,14 @@ strictly profitable in the initial (and always proper) subgame. -/
 theorem incumbent_not_isSubgamePerfect :
     ¬ information.IsSubgamePerfect wellFoundedPlay incumbent utility := by
   intro hspe
-  have hdeviation := hspe twoStage.initHistory
+  obtain ⟨hother, hinc, hdeviation⟩ := hspe twoStage.initHistory
     information.initHistory_isSubgameRoot () jointAlternative
   have hdeviation' :
       continuationValue
           (Profile.update incumbent () jointAlternative)
           twoStage.initHistory ≤
         continuationValue incumbent twoStage.initHistory :=
-    hdeviation
+    by simpa only [continuationValue] using hdeviation
   rw [update_unit_eq_profileOf, jointAlternative_value,
     incumbent_value] at hdeviation'
   norm_num at hdeviation'

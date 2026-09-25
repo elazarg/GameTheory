@@ -33,22 +33,29 @@ def falseProfile : Profile signature := fun _ => false
 
 def trueProfile : Profile signature := fun _ => true
 
+theorem play_integrable (profile : Profile signature) (who : Unit) :
+    UtilityIntegrable utility who (form.play profile) := by
+  rw [GameForm.deterministic_play]
+  exact payoffIntegrable_pure (profile ()) (fun outcome => utility outcome who)
+
 /-- Multiplying all nonzero utility differences by two preserves their sign. -/
 theorem scaledPotential_isOrdinal :
     IsOrdinalPotential form utility scaledPotential := by
+  refine ⟨play_integrable, ?_⟩
   intro who profile replacement
   rcases who with ⟨⟩
   cases hcurrent : profile () <;> cases replacement <;>
-    norm_num [form, utility, scaledPotential, hcurrent, Profile.update_same]
+    norm_num [form, utility, scaledPotential, hcurrent, Profile.update_same,
+      expectedUtility_pure]
 
 /-- The same scaling does not preserve the magnitude of the false-to-true
 deviation, so the ordinal potential is not exact. -/
 theorem scaledPotential_not_isExact :
     ¬ IsExactPotential form utility scaledPotential := by
   intro hexact
-  have h := hexact () falseProfile true
+  have h := hexact.difference () falseProfile true
   norm_num [form, utility, scaledPotential, falseProfile,
-    Profile.update_same] at h
+    Profile.update_same, expectedUtility_pure] at h
 
 /-- The ordinal-only theorem family is load-bearing: maximizing the scaled
 potential proves that the true action is Nash without an exact certificate. -/

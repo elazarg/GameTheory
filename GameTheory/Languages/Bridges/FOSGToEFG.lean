@@ -16,6 +16,7 @@ any supplied reached boundary.
 
 import GameTheory.Languages.EFG
 import GameTheory.Languages.FOSG
+import GameTheory.Math.Probability.FiniteSampling
 
 noncomputable section
 
@@ -305,11 +306,11 @@ def choiceOfJoint {history : History G} {count : ℕ}
 def resolve {history : History G}
     (collected : Prefix G order history order.slots)
     (hterm : ¬ G.execution.terminal history.state) :
-    FinDist (State G order) :=
+    PMF (State G order) :=
   let sourceLegal := collected.joint_legal hterm
   (G.execution.step history.state ⟨collected.joint, sourceLegal⟩).bindOnSupport
     fun _ realized =>
-      FinDist.pure <| .stage (history.extend sourceLegal realized) 0
+      PMF.pure <| .stage (history.extend sourceLegal realized) 0
         (Prefix.initial (order := order) _)
 
 /-- The generic serialized execution.  `DecidableEq` is an operational
@@ -328,7 +329,7 @@ def execution [DecidableEq ι] : ExecutionProtocol ι where
     cases state with
     | stage history count collected =>
         if hcount : count < order.slots then
-          exact FinDist.pure <| .stage history (count + 1)
+          exact PMF.pure <| .stage history (count + 1)
             (collected.advance hcount
               (choiceOfJoint G order collected hcount joint.1 joint.2.2))
         else
@@ -383,9 +384,9 @@ theorem predecessor_of_mem_resolve {history : History G}
     {target : State G order}
     (realized : target ∈ (resolve G order collected hterm).support) :
     predecessor G order target = some (.stage history order.slots collected) := by
-  simp only [resolve, FinDist.support_bindOnSupport, Set.mem_iUnion] at realized
+  simp only [resolve, PMF.support_bindOnSupport, Set.mem_iUnion] at realized
   obtain ⟨reached, hreached, htarget⟩ := realized
-  rw [FinDist.mem_support_pure] at htarget
+  rw [PMF.mem_support_pure_iff] at htarget
   subst target
   unfold ExecutionProtocol.History.extend
   simp only [predecessor]
@@ -406,12 +407,12 @@ theorem predecessor_of_mem_advance [DecidableEq ι]
   have hstep :
       (execution G order).step (.stage history count collected)
           ⟨joint, hlegal⟩ =
-        FinDist.pure (.stage history (count + 1)
+        PMF.pure (.stage history (count + 1)
           (collected.advance hcount
             (choiceOfJoint G order collected hcount joint hlegal.2))) := by
     simp [execution, hcount]
   rw [hstep] at realized
-  rw [FinDist.mem_support_pure] at realized
+  rw [PMF.mem_support_pure_iff] at realized
   subst target
   simp only [predecessor]
   rw [Prefix.retreat_advance]
@@ -495,7 +496,7 @@ theorem joint_eq_of_same_target [DecidableEq ι]
       · have firstStep :
             (execution G order).step (.stage history count collected)
                 ⟨first, firstLegal⟩ =
-              FinDist.pure (.stage history (count + 1)
+              PMF.pure (.stage history (count + 1)
                 (collected.advance hcount
                   (choiceOfJoint G order collected hcount first
                     firstLegal.2))) := by
@@ -503,13 +504,13 @@ theorem joint_eq_of_same_target [DecidableEq ι]
         have secondStep :
             (execution G order).step (.stage history count collected)
                 ⟨second, secondLegal⟩ =
-              FinDist.pure (.stage history (count + 1)
+              PMF.pure (.stage history (count + 1)
                 (collected.advance hcount
                   (choiceOfJoint G order collected hcount second
                     secondLegal.2))) := by
           simp [execution, hcount]
-        rw [firstStep, FinDist.mem_support_pure] at firstRealized
-        rw [secondStep, FinDist.mem_support_pure] at secondRealized
+        rw [firstStep, PMF.mem_support_pure_iff] at firstRealized
+        rw [secondStep, PMF.mem_support_pure_iff] at secondRealized
         have htarget := firstRealized.symm.trans secondRealized
         let owner := scheduledPlayer G order collected hcount
         have hvalues := congrArg
@@ -581,7 +582,7 @@ theorem step_select [DecidableEq ι]
       (.stage history count collected) joint) :
     (execution G order).step (.stage history count collected)
         ⟨joint, hlegal⟩ =
-      FinDist.pure (.stage history (count + 1)
+      PMF.pure (.stage history (count + 1)
         (collected.advance hcount
           (choiceOfJoint G order collected hcount joint hlegal.2))) := by
   simp [execution, hcount]
@@ -609,7 +610,7 @@ theorem mem_support_resolve_iff
         target = .stage
           (history.extend (collected.joint_legal hterm) realized) 0
           (Prefix.initial (order := order) _) := by
-  simp [resolve, FinDist.support_bindOnSupport]
+  simp [resolve, PMF.support_bindOnSupport]
 
 /-- One source round always occupies every player slot and one resolver. -/
 def roundWidth : ℕ := order.slots + 1
@@ -750,7 +751,7 @@ theorem infoOf_eq_viewOfState [DecidableEq ι] (player : ι) :
           by_cases hcount : count < order.slots
           · rw [step_select G order collected hcount joint isLegal]
               at realized
-            rw [FinDist.mem_support_pure] at realized
+            rw [PMF.mem_support_pure_iff] at realized
             subst target
             rw [InfoSignals.infoOf_extend, hprior]
             simp [signals, pushView, publicSignalOfEvent,
@@ -876,7 +877,7 @@ def projectBehavioral [DecidableEq ι]
       (information G order).BehavioralPolicy player) :
     (player : ι) → G.information.BehavioralPolicy player :=
   fun player source =>
-    FinDist.map (choiceEquiv G order player source)
+    PMF.map (choiceEquiv G order player source)
       (target player (scheduledView G player source))
 
 /-- Translate a source behavioral profile.  At all administrative target
@@ -889,12 +890,12 @@ def translateBehavioral [DecidableEq ι]
     | ⟨.select owner, sourceInfo⟩ =>
         if howner : owner = player then by
           subst owner
-          exact FinDist.map (choiceEquiv G order player sourceInfo).symm
+          exact PMF.map (choiceEquiv G order player sourceInfo).symm
             (source player sourceInfo)
         else
-          FinDist.pure ⟨none, by simp [menu, Ne.symm howner]⟩
+          PMF.pure ⟨none, by simp [menu, Ne.symm howner]⟩
     | ⟨.resolve, _⟩ =>
-        FinDist.pure ⟨none, by simp [menu]⟩
+        PMF.pure ⟨none, by simp [menu]⟩
 
 @[simp]
 theorem translateBehavioral_scheduledView [DecidableEq ι]
@@ -902,7 +903,7 @@ theorem translateBehavioral_scheduledView [DecidableEq ι]
     (player : ι) (sourceInfo : G.information.InfoState player) :
     translateBehavioral G order source player
         (scheduledView G player sourceInfo) =
-      FinDist.map (choiceEquiv G order player sourceInfo).symm
+      PMF.map (choiceEquiv G order player sourceInfo).symm
         (source player sourceInfo) := by
   simp [translateBehavioral, scheduledView]
 
@@ -913,9 +914,9 @@ theorem project_translate [DecidableEq ι]
     projectBehavioral G order (translateBehavioral G order source)
         player sourceInfo =
       source player sourceInfo := by
-  rw [projectBehavioral, translateBehavioral_scheduledView, FinDist.map_comp]
-  convert FinDist.map_id (source player sourceInfo) using 1
-  apply congrArg (fun f => FinDist.map f (source player sourceInfo))
+  rw [projectBehavioral, translateBehavioral_scheduledView, PMF.map_comp]
+  convert PMF.map_id (source player sourceInfo) using 1
+  apply congrArg (fun f => PMF.map f (source player sourceInfo))
   funext choice
   apply Subtype.ext
   rfl
@@ -935,11 +936,11 @@ theorem translate_project_scheduled [DecidableEq ι]
     translateBehavioral G order (projectBehavioral G order target)
         player (scheduledView G player sourceInfo) =
       target player (scheduledView G player sourceInfo) := by
-  rw [translateBehavioral_scheduledView, projectBehavioral, FinDist.map_comp]
-  convert FinDist.map_id
+  rw [translateBehavioral_scheduledView, projectBehavioral, PMF.map_comp]
+  convert PMF.map_id
     (target player (scheduledView G player sourceInfo)) using 1
   apply congrArg
-    (fun f => FinDist.map f
+    (fun f => PMF.map f
       (target player (scheduledView G player sourceInfo)))
   funext choice
   apply Subtype.ext
@@ -974,10 +975,10 @@ theorem translate_project_profile [DecidableEq ι]
         have htranslation :
             translateBehavioral G order (projectBehavioral G order target)
               player ⟨.select owner, sourceInfo⟩ =
-              FinDist.pure ⟨none, by simp [menu, Ne.symm howner]⟩ := by
+              PMF.pure ⟨none, by simp [menu, Ne.symm howner]⟩ := by
           simp [translateBehavioral, howner]
         rw [htranslation]
-        exact (FinDist.eq_pure_of_subsingleton
+        exact (eq_pure_of_subsingleton
           (target player ⟨.select owner, sourceInfo⟩)
           ⟨none, by simp [menu, Ne.symm howner]⟩).symm
   | resolve =>
@@ -1005,10 +1006,10 @@ theorem translate_project_profile [DecidableEq ι]
       have htranslation :
           translateBehavioral G order (projectBehavioral G order target)
             player ⟨.resolve, sourceInfo⟩ =
-            FinDist.pure ⟨none, by simp [menu]⟩ := by
+            PMF.pure ⟨none, by simp [menu]⟩ := by
         simp [translateBehavioral]
       rw [htranslation]
-      exact (FinDist.eq_pure_of_subsingleton
+      exact (eq_pure_of_subsingleton
         (target player ⟨.resolve, sourceInfo⟩)
         ⟨none, by simp [menu]⟩).symm
 
@@ -1030,8 +1031,8 @@ private def targetChoiceAtLaw [DecidableEq ι]
     (target : (player : ι) →
       (information G order).BehavioralPolicy player)
     (history : History G) (player : ι) :
-    FinDist (ChoiceAt G history player) :=
-  FinDist.map
+    PMF (ChoiceAt G history player) :=
+  PMF.map
     (fun choice => sourceChoiceAt G history player
       (choiceEquiv G order player
         (G.information.infoOf player history.trace) choice))
@@ -1042,8 +1043,8 @@ private def targetChoiceAtLaw [DecidableEq ι]
 private def sourceChoiceAtLaw
     (source : (player : ι) → G.information.BehavioralPolicy player)
     (history : History G) (player : ι) :
-    FinDist (ChoiceAt G history player) :=
-  FinDist.map (sourceChoiceAt G history player)
+    PMF (ChoiceAt G history player) :=
+  PMF.map (sourceChoiceAt G history player)
     (source player (G.information.infoOf player history.trace))
 
 private theorem targetChoiceAtLaw_eq_projected [DecidableEq ι]
@@ -1054,22 +1055,22 @@ private theorem targetChoiceAtLaw_eq_projected [DecidableEq ι]
       sourceChoiceAtLaw G (projectBehavioral G order target)
         history player := by
   unfold targetChoiceAtLaw sourceChoiceAtLaw projectBehavioral
-  rw [FinDist.map_comp]
+  rw [PMF.map_comp]
   rfl
 
 /-- Extend a source history through one certified joint action. -/
 private def extendCertifiedLaw (history : History G)
     (draw : { joint : (player : ι) → Option (G.execution.Action player) //
-      G.execution.Legal history.state joint }) : FinDist (History G) :=
+      G.execution.Legal history.state joint }) : PMF (History G) :=
   (G.execution.step history.state draw).bindOnSupport
-    fun _ realized => FinDist.pure (history.extend draw.2 realized)
+    fun _ realized => PMF.pure (history.extend draw.2 realized)
 
 /-- Resolve a completed prefix and retain the extended source history rather
 than the administrative target boundary state. -/
 private def extendCompletedLaw {history : History G}
     (collected : Prefix G order history order.slots)
     (hterm : ¬ G.execution.terminal history.state) :
-    FinDist (History G) :=
+    PMF (History G) :=
   extendCertifiedLaw G history
     ⟨collected.joint, collected.joint_legal hterm⟩
 
@@ -1097,7 +1098,7 @@ private def completionLaw [DecidableEq ι]
     (history : History G)
     (hterm : ¬ G.execution.terminal history.state) :
     (remaining count : ℕ) → count + remaining = order.slots →
-      Prefix G order history count → FinDist (History G)
+      Prefix G order history count → PMF (History G)
   | 0, count, hcount, collected => by
       have heq : count = order.slots := by omega
       subst count
@@ -1193,7 +1194,7 @@ private theorem map_choiceAtOfViewEq [DecidableEq ι]
     (view : (information G order).InfoState player)
     (hview : view = scheduledView G player
       (G.information.infoOf player history.trace)) :
-    FinDist.map (choiceAtOfViewEq G order history player view hview)
+    PMF.map (choiceAtOfViewEq G order history player view hview)
         (target player view) =
       targetChoiceAtLaw G order target history player := by
   subst view
@@ -1238,7 +1239,7 @@ private theorem behavioralJoint_stage [Fintype ι] [DecidableEq ι]
     (trace : (execution G order).Trace
       (.stage history count collected)) :
     (information G order).behavioralJoint target trace htargetTerm =
-      FinDist.map
+      PMF.map
         (targetJointOfViewChoice G order collected hslot hterm
           ((information G order).infoOf
             (scheduledPlayer G order collected hslot) trace)
@@ -1256,7 +1257,7 @@ private theorem behavioralJoint_stage [Fintype ι] [DecidableEq ι]
       rcases hactive' with ⟨otherSlot, howner, _⟩
       simpa [scheduledPlayer] using howner)]
   apply congrArg
-    (fun f => FinDist.map f
+    (fun f => PMF.map f
       (target (scheduledPlayer G order collected hslot)
         ((information G order).infoOf
           (scheduledPlayer G order collected hslot) trace)))
@@ -1325,7 +1326,7 @@ private theorem map_erase_runBehavioralFrom_resolve [Fintype ι] [DecidableEq ι
     (collected : Prefix G order history order.slots)
     (trace : (execution G order).Trace
       (.stage history order.slots collected)) :
-    FinDist.map (eraseHistory G order)
+    PMF.map (eraseHistory G order)
         ((information G order).runBehavioralFrom target 1
           ⟨.stage history order.slots collected, trace⟩) =
       extendCompletedLaw G order collected hterm := by
@@ -1337,7 +1338,7 @@ private theorem map_erase_runBehavioralFrom_resolve [Fintype ι] [DecidableEq ι
     ExecutionProtocol.runRandomizedFor_succ_of_not_terminal
       (E := execution G order) _ 0
         (h := ⟨.stage history order.slots collected, trace⟩) htargetTerm,
-    FinDist.map_bind]
+    PMF.map_bind]
   unfold InformationModel.randomizedChooser
   let idle (player : ι) :
       (information G order).Choice player
@@ -1345,9 +1346,18 @@ private theorem map_erase_runBehavioralFrom_resolve [Fintype ι] [DecidableEq ι
     ⟨none, by
       rw [infoOf_eq_viewOfState]
       simp [menu, viewOfState, phaseOfState]⟩
+  let idleJoint :
+      { joint : ∀ player, Option (G.execution.Action player) //
+        (execution G order).Legal (.stage history order.slots collected) joint } :=
+    ⟨fun _ => none, by
+      refine ⟨htargetTerm, ?_⟩
+      intro player
+      show ¬ active G order (.stage history order.slots collected) player
+      rintro ⟨hslot, _, _⟩
+      exact (Nat.lt_irrefl order.slots) hslot⟩
   have hpolicy (player : ι) :
       target player ((information G order).infoOf player trace) =
-        FinDist.pure (idle player) := by
+        PMF.pure (idle player) := by
     have : Subsingleton
         ((information G order).Choice player
           ((information G order).infoOf player trace)) := ⟨by
@@ -1360,27 +1370,53 @@ private theorem map_erase_runBehavioralFrom_resolve [Fintype ι] [DecidableEq ι
         simpa [information, menu, infoOf_eq_viewOfState,
           viewOfState, phaseOfState] using second.2
       rw [hfirst, hsecond]⟩
-    exact FinDist.eq_pure_of_subsingleton _ (idle player)
+    exact eq_pure_of_subsingleton _ (idle player)
   unfold InformationModel.behavioralJoint
   simp_rw [hpolicy]
-  rw [FinDist.pi_pure, FinDist.map_pure,
-    FinDist.pure_bind,
-    FinDist.map_bindOnSupport]
-  rw [FinDist.bindOnSupport_eq_bind_of_eq_on_support
-    (g := fun state => FinDist.pure state.history) (by
-      intro state realized
-      rw [ExecutionProtocol.runRandomizedFor_zero, FinDist.map_pure]
-      rfl)]
-  rw [← FinDist.map_eq_bind]
-  rw [dite_eq_right (Nat.lt_irrefl order.slots)]
-  show FinDist.map (fun state : State G order => state.history)
-      (resolve G order collected hterm) =
-    extendCompletedLaw G order collected hterm
-  unfold resolve extendCompletedLaw
-  rw [FinDist.map_bindOnSupport]
-  exact FinDist.bindOnSupport_congr fun reached realized => by
-    rw [FinDist.map_pure]
+  rw [independentProduct_pure, PMF.pure_map]
+  have hdraw :
+      (⟨fun player => (idle player).1, idleJoint.2⟩ :
+        { joint : ∀ player, Option (G.execution.Action player) //
+          (execution G order).Legal (.stage history order.slots collected) joint }) =
+      idleJoint := by
+    apply Subtype.ext
+    funext player
     rfl
+  rw [hdraw, PMF.pure_bind, map_bindOnSupport]
+  simp_rw [ExecutionProtocol.runRandomizedFor_zero, PMF.pure_map]
+  have hstep :
+      (execution G order).step (.stage history order.slots collected)
+          idleJoint = resolve G order collected hterm := by
+    simp [execution]
+  have hcollapse :
+      (((execution G order).step (.stage history order.slots collected)
+          idleJoint).bindOnSupport fun state realized =>
+            PMF.pure (eraseHistory G order
+              ((⟨.stage history order.slots collected, trace⟩ :
+                (execution G order).History).extend idleJoint.2 realized))) =
+        PMF.map (fun state : State G order => state.history)
+          (resolve G order collected hterm) := by
+    calc
+      _ = ((execution G order).step (.stage history order.slots collected)
+            idleJoint).bind (fun state => PMF.pure state.history) := by
+        apply bindOnSupport_eq_bind_of_eq_on_support
+        intro state realized
+        rfl
+      _ = PMF.map (fun state : State G order => state.history)
+            (resolve G order collected hterm) := by
+        rw [hstep]
+        rfl
+  calc
+    _ = PMF.map (fun state : State G order => state.history)
+          (resolve G order collected hterm) := hcollapse
+    _ = extendCompletedLaw G order collected hterm := by
+      unfold resolve extendCompletedLaw
+      rw [map_bindOnSupport]
+      apply bindOnSupport_congr
+      intro reached realized
+      ·
+        rw [PMF.pure_map]
+        rfl
 
 /-- From any within-round prefix, the remaining selection slots followed by
 the resolver erase to the recursive source-history law above.  The theorem is
@@ -1397,7 +1433,7 @@ private theorem map_erase_runBehavioralFrom_stage
       (collected : Prefix G order history count)
       (trace : (execution G order).Trace
         (.stage history count collected)),
-      FinDist.map (eraseHistory G order)
+      PMF.map (eraseHistory G order)
           ((information G order).runBehavioralFrom target
             (remaining + 1)
             ⟨.stage history count collected, trace⟩) =
@@ -1428,21 +1464,21 @@ private theorem map_erase_runBehavioralFrom_stage
       rw [completionLaw]
       rw [← map_choiceAtOfViewEq G order target history owner
           actualView hview,
-        FinDist.bind_map]
+        PMF.bind_map]
       rw [InformationModel.runBehavioralFrom,
         show remaining + 1 + 1 = (remaining + 1) + 1 by omega,
         ExecutionProtocol.runRandomizedFor_succ_of_not_terminal
           (E := execution G order) _ (remaining + 1)
             (h := ⟨.stage history count collected, trace⟩)
             htargetTerm,
-        FinDist.map_bind]
+        PMF.map_bind]
       unfold InformationModel.randomizedChooser
       rw [behavioralJoint_stage G order target collected hslot
         hterm htargetTerm trace,
-        FinDist.bind_map]
-      apply FinDist.bind_congr
+        PMF.bind_map]
+      apply bind_congr_on_support
       intro choice hchoice
-      refine FinDist.map_bindOnSupport_const _ fun state realized => ?_
+      refine map_bindOnSupport_const _ fun state realized => ?_
       have realized' : state ∈
           ((execution G order).step
             (.stage history count collected)
@@ -1450,8 +1486,9 @@ private theorem map_erase_runBehavioralFrom_stage
               actualView hview choice)).support := by
         simpa only using realized
       simp only [execution] at realized'
-      rw [dite_eq_left hslot, FinDist.mem_support_pure] at realized'
+      rw [dite_eq_left hslot, PMF.mem_support_pure_iff] at realized'
       subst state
+      simp only [Function.comp_def]
       rw [← choiceOfJoint_targetJointOfViewChoice G order collected
         hslot hterm actualView hview choice]
       exact ih (count + 1) (by omega)
@@ -1520,7 +1557,7 @@ private theorem advance_matches_setOne [DecidableEq ι]
       (scheduledPlayer G order collected hslot)) :
     Matches (G := G) (order := order)
       (collected.advance hslot choice)
-      (FinDist.DependentAssignment.setOne assignment
+      (FiniteAssignment.setOne assignment
         ⟨scheduledPlayer G order collected hslot, choice⟩) := by
   intro player
   by_cases howner :
@@ -1531,11 +1568,11 @@ private theorem advance_matches_setOne [DecidableEq ι]
           (scheduledPlayer G order collected hslot)).1 < count + 1 := by
       simp [scheduledPlayer]
     have hset :
-        FinDist.DependentAssignment.setOne assignment
+        FiniteAssignment.setOne assignment
             ⟨scheduledPlayer G order collected hslot, choice⟩
             (scheduledPlayer G order collected hslot) = choice := by
-      simp [FinDist.DependentAssignment.setOne,
-        FinDist.DependentAssignment.resolve]
+      simp [FiniteAssignment.setOne,
+        FiniteAssignment.resolve]
     rw [show (collected.advance hslot choice).choices
           (scheduledPlayer G order collected hslot) = some choice by
         simp [advance, scheduledPlayer]]
@@ -1548,11 +1585,11 @@ private theorem advance_matches_setOne [DecidableEq ι]
           collected.choices player := by
       simp [advance, howner']
     have hset :
-        FinDist.DependentAssignment.setOne assignment
+        FiniteAssignment.setOne assignment
             ⟨scheduledPlayer G order collected hslot, choice⟩ player =
           assignment player := by
-      simp [FinDist.DependentAssignment.setOne,
-        FinDist.DependentAssignment.resolve, howner]
+      simp [FiniteAssignment.setOne,
+        FiniteAssignment.resolve, howner]
     rw [hadvance, hmatches player, hset]
     by_cases hselected : (order.player.symm player).1 < count
     · have hnext : (order.player.symm player).1 < count + 1 := by
@@ -1623,7 +1660,7 @@ private theorem completionLaw_eq_runDependent
       Prefix.Matches (G := G) (order := order) collected assignment →
       completionLaw G order target history hterm
           remaining count hcount collected =
-        (FinDist.runDependent
+        (FiniteAssignment.runOrdered
           (targetChoiceAtLaw G order target history)
           ((playerOrder order).drop count) assignment).bind
             (fun completed => extendCompletedLaw G order
@@ -1638,20 +1675,20 @@ private theorem completionLaw_eq_runDependent
           (playerOrder order).drop order.slots = [] := by
         apply List.drop_eq_nil_iff.mpr
         simp
-      rw [completionLaw, hdrop, FinDist.runDependent,
-        FinDist.pure_bind]
+      rw [completionLaw, hdrop, FiniteAssignment.runOrdered,
+        PMF.pure_bind]
       rw [Prefix.eq_prefixOfAssignment G order collected assignment
         hmatches hterm]
   | succ remaining ih =>
       intro count hcount collected assignment hmatches
       have hslot : count < order.slots := by omega
       rw [completionLaw, drop_playerOrder G order collected hslot,
-        FinDist.runDependent, FinDist.bind_bind]
-      apply FinDist.bind_congr
+        FiniteAssignment.runOrdered, PMF.bind_bind]
+      apply bind_congr_on_support
       intro choice hchoice
       exact ih (count + 1) (by omega)
         (collected.advance hslot choice)
-        (FinDist.DependentAssignment.setOne assignment
+        (FiniteAssignment.setOne assignment
           ⟨scheduledPlayer G order collected hslot, choice⟩)
         (Prefix.advance_matches_setOne (G := G) (order := order)
           collected assignment hmatches hslot choice)
@@ -1678,7 +1715,7 @@ private theorem completionLaw_initial_eq_pi
     completionLaw G order target history hterm order.slots 0
         (Nat.zero_add order.slots)
         (Prefix.initial (G := G) (order := order) history) =
-      (FinDist.pi (targetChoiceAtLaw G order target history)).bind
+      (independentProduct (targetChoiceAtLaw G order target history)).bind
         (fun completed => extendCompletedLaw G order
           (prefixOfAssignment G order completed hterm) hterm) := by
   rw [completionLaw_eq_runDependent G order target history hterm
@@ -1688,7 +1725,7 @@ private theorem completionLaw_initial_eq_pi
     (Prefix.initial_matches (G := G) (order := order) history
       (defaultChoiceAssignment G history hterm))]
   simp only [List.drop_zero]
-  rw [FinDist.runDependent_eq_pi
+  rw [FiniteAssignment.runOrdered_eq_independentProduct
     (targetChoiceAtLaw G order target history)
     (playerOrder order) (playerOrder_nodup order)
     (mem_playerOrder order) (defaultChoiceAssignment G history hterm)]
@@ -1701,7 +1738,7 @@ private theorem source_runBehavioralFrom_one_eq_choiceAtPi
     (history : History G)
     (hterm : ¬ G.execution.terminal history.state) :
     G.information.runBehavioralFrom source 1 history =
-      (FinDist.pi (sourceChoiceAtLaw G source history)).bind
+      (independentProduct (sourceChoiceAtLaw G source history)).bind
         (fun assignment => extendCompletedLaw G order
           (prefixOfAssignment G order assignment hterm) hterm) := by
   rw [InformationModel.runBehavioralFrom,
@@ -1711,10 +1748,10 @@ private theorem source_runBehavioralFrom_one_eq_choiceAtPi
   unfold InformationModel.randomizedChooser
   unfold InformationModel.behavioralJoint
   simp_rw [ExecutionProtocol.runRandomizedFor_zero]
-  rw [FinDist.bind_map]
+  rw [PMF.bind_map]
   unfold sourceChoiceAtLaw
-  rw [FinDist.pi_map, FinDist.bind_map]
-  apply FinDist.bind_congr
+  rw [← independentProduct_map, PMF.bind_map]
+  apply bind_congr_on_support
   intro choices hchoices
   let assignment : (player : ι) → ChoiceAt G history player :=
     fun player => sourceChoiceAt G history player (choices player)
@@ -1747,7 +1784,7 @@ private theorem map_erase_runBehavioralFrom_boundary
     (trace : (execution G order).Trace
       (.stage history 0
         (Prefix.initial (G := G) (order := order) history))) :
-    FinDist.map (eraseHistory G order)
+    PMF.map (eraseHistory G order)
         ((information G order).runBehavioralFrom target
           (roundWidth order)
           ⟨.stage history 0
@@ -1760,10 +1797,10 @@ private theorem map_erase_runBehavioralFrom_boundary
     (Prefix.initial (G := G) (order := order) history) trace]
   rw [completionLaw_initial_eq_pi G order target history hterm]
   have hpi :
-      FinDist.pi (targetChoiceAtLaw G order target history) =
-        FinDist.pi (sourceChoiceAtLaw G
+      independentProduct (targetChoiceAtLaw G order target history) =
+        independentProduct (sourceChoiceAtLaw G
           (projectBehavioral G order target) history) := by
-    apply congrArg FinDist.pi
+    apply congrArg independentProduct
     funext player
     exact targetChoiceAtLaw_eq_projected G order target history player
   rw [hpi]
@@ -1778,7 +1815,7 @@ private theorem map_erase_runBehavioralFrom_boundary_any
     (trace : (execution G order).Trace
       (.stage history 0
         (Prefix.initial (G := G) (order := order) history))) :
-    FinDist.map (eraseHistory G order)
+    PMF.map (eraseHistory G order)
         ((information G order).runBehavioralFrom target
           (roundWidth order)
           ⟨.stage history 0
@@ -1796,7 +1833,7 @@ private theorem map_erase_runBehavioralFrom_boundary_any
         (h := ⟨.stage history 0
           (Prefix.initial (G := G) (order := order) history), trace⟩)
         htarget,
-      FinDist.map_pure,
+      PMF.pure_map,
       InformationModel.runBehavioralFrom,
       ExecutionProtocol.runRandomizedFor_of_terminal
         (E := G.execution) _ _ (h := history) hterm]
@@ -1840,12 +1877,12 @@ private theorem state_of_mem_runBehavioralFrom_stage
           (E := execution G order) _ 0
           (h := ⟨.stage history order.slots collected, trace⟩)
           htargetTerm] at hreached
-      simp only [FinDist.support_bind, Set.mem_iUnion] at hreached
+      simp only [PMF.support_bind, Set.mem_iUnion] at hreached
       obtain ⟨draw, hdraw, hreached⟩ := hreached
-      simp only [FinDist.support_bindOnSupport, Set.mem_iUnion] at hreached
+      simp only [PMF.support_bindOnSupport, Set.mem_iUnion] at hreached
       obtain ⟨state, hstate, hreached⟩ := hreached
       rw [ExecutionProtocol.runRandomizedFor_zero,
-        FinDist.mem_support_pure] at hreached
+        PMF.mem_support_pure_iff] at hreached
       subst reached
       have hstate' : state ∈
           ((execution G order).step
@@ -1869,16 +1906,16 @@ private theorem state_of_mem_runBehavioralFrom_stage
           (E := execution G order) _ (remaining + 1)
           (h := ⟨.stage history count collected, trace⟩)
           htargetTerm] at hreached
-      simp only [FinDist.support_bind, Set.mem_iUnion] at hreached
+      simp only [PMF.support_bind, Set.mem_iUnion] at hreached
       obtain ⟨draw, hdraw, hreached⟩ := hreached
-      simp only [FinDist.support_bindOnSupport, Set.mem_iUnion] at hreached
+      simp only [PMF.support_bindOnSupport, Set.mem_iUnion] at hreached
       obtain ⟨state, hstate, hreached⟩ := hreached
       have hstate' : state ∈
           ((execution G order).step
             (.stage history count collected) draw).support := by
         simpa only using hstate
       simp only [execution] at hstate'
-      rw [dite_eq_left hslot, FinDist.mem_support_pure] at hstate'
+      rw [dite_eq_left hslot, PMF.mem_support_pure_iff] at hstate'
       subst state
       exact ih (count + 1) (by omega)
         (collected.advance hslot
@@ -1915,7 +1952,7 @@ private theorem state_of_mem_runBehavioralFrom_boundary_any
         (h := ⟨.stage history 0
           (Prefix.initial (G := G) (order := order) history), trace⟩)
         htarget,
-      FinDist.mem_support_pure] at hreached
+      PMF.mem_support_pure_iff] at hreached
     subst reached
     exact ⟨history, rfl⟩
   · rw [roundWidth] at hreached
@@ -1948,7 +1985,7 @@ theorem state_of_mem_runBehavioralFrom_rounds
       intro history trace reached hreached
       rw [Nat.zero_mul, InformationModel.runBehavioralFrom,
         ExecutionProtocol.runRandomizedFor_zero,
-        FinDist.mem_support_pure] at hreached
+        PMF.mem_support_pure_iff] at hreached
       subst reached
       exact ⟨history, rfl⟩
   | succ rounds ih =>
@@ -1957,7 +1994,7 @@ theorem state_of_mem_runBehavioralFrom_rounds
           roundWidth order + rounds * roundWidth order by
             simp [Nat.succ_mul, Nat.add_comm],
         InformationModel.runBehavioralFrom_add] at hreached
-      simp only [FinDist.support_bind, Set.mem_iUnion] at hreached
+      simp only [PMF.support_bind, Set.mem_iUnion] at hreached
       obtain ⟨middle, hmiddle, hreached⟩ := hreached
       obtain ⟨middleSource, hmiddleState⟩ :=
         state_of_mem_runBehavioralFrom_boundary_any G order target
@@ -2005,7 +2042,7 @@ theorem map_erase_runBehavioralFrom_eq_source
       (trace : (execution G order).Trace
         (.stage history 0
           (Prefix.initial (G := G) (order := order) history))),
-      FinDist.map (eraseHistory G order)
+      PMF.map (eraseHistory G order)
           ((information G order).runBehavioralFrom target
             (rounds * roundWidth order)
             ⟨.stage history 0
@@ -2018,7 +2055,7 @@ theorem map_erase_runBehavioralFrom_eq_source
       intro history trace
       rw [Nat.zero_mul, InformationModel.runBehavioralFrom,
         ExecutionProtocol.runRandomizedFor_zero,
-        FinDist.map_pure,
+        PMF.pure_map,
         InformationModel.runBehavioralFrom,
         ExecutionProtocol.runRandomizedFor_zero]
       rfl
@@ -2028,7 +2065,7 @@ theorem map_erase_runBehavioralFrom_eq_source
           roundWidth order + rounds * roundWidth order by
             simp [Nat.succ_mul, Nat.add_comm],
         InformationModel.runBehavioralFrom_add,
-        FinDist.map_bind]
+        PMF.map_bind]
       calc
         _ = ((information G order).runBehavioralFrom target
               (roundWidth order)
@@ -2038,7 +2075,7 @@ theorem map_erase_runBehavioralFrom_eq_source
               G.information.runBehavioralFrom
                 (projectBehavioral G order target) rounds
                 (eraseHistory G order middle)) := by
-          apply FinDist.bind_congr
+          apply bind_congr_on_support
           intro middle hmiddle
           obtain ⟨middleSource, hmiddleState⟩ :=
             state_of_mem_runBehavioralFrom_boundary_any G order target
@@ -2049,14 +2086,15 @@ theorem map_erase_runBehavioralFrom_eq_source
             hmiddleState
           subst middleState
           exact ih middleSource middleTrace
-        _ = (FinDist.map (eraseHistory G order)
+        _ = (PMF.map (eraseHistory G order)
               ((information G order).runBehavioralFrom target
                 (roundWidth order)
                 ⟨.stage history 0
                   (Prefix.initial (G := G) (order := order) history), trace⟩)).bind
             (G.information.runBehavioralFrom
               (projectBehavioral G order target) rounds) := by
-          rw [FinDist.bind_map]
+          rw [PMF.bind_map]
+          rfl
         _ = (G.information.runBehavioralFrom
               (projectBehavioral G order target) 1 history).bind
             (G.information.runBehavioralFrom
@@ -2074,7 +2112,7 @@ theorem map_erase_runBehavioral_eq_source
     (target : (player : ι) →
       (information G order).BehavioralPolicy player)
     (rounds : ℕ) :
-    FinDist.map (eraseHistory G order)
+    PMF.map (eraseHistory G order)
         ((information G order).runBehavioral target
           (rounds * roundWidth order)) =
       G.information.runBehavioral
@@ -2111,7 +2149,7 @@ theorem mem_support_runBehavioralFrom_projected_iff
               (Prefix.initial (G := G) (order := order) history), trace⟩).support,
         eraseHistory G order targetReached = sourceReached := by
   rw [← map_erase_runBehavioralFrom_eq_source G order target rounds
-    history trace, FinDist.support_map]
+    history trace, PMF.support_map]
   rfl
 
 /-- Initial-state support form of
@@ -2129,7 +2167,7 @@ theorem mem_support_runBehavioral_projected_iff
             (rounds * roundWidth order)).support,
         eraseHistory G order targetReached = sourceReached := by
   rw [← map_erase_runBehavioral_eq_source G order target rounds,
-    FinDist.support_map]
+    PMF.support_map]
   rfl
 
 /-- Terminal continuations occur with positive probability before
@@ -2203,7 +2241,7 @@ theorem map_erase_runBehavioral_translate
     [Fintype ι] [DecidableEq ι]
     (source : (player : ι) → G.information.BehavioralPolicy player)
     (rounds : ℕ) :
-    FinDist.map (eraseHistory G order)
+    PMF.map (eraseHistory G order)
         ((information G order).runBehavioral
           (translateBehavioral G order source)
           (rounds * roundWidth order)) =
@@ -2219,10 +2257,10 @@ theorem map_erase_runBehavioral_order_transport
     (target : (player : ι) →
       (information G first).BehavioralPolicy player)
     (rounds : ℕ) :
-    FinDist.map (eraseHistory G first)
+    PMF.map (eraseHistory G first)
         ((information G first).runBehavioral target
           (rounds * roundWidth first)) =
-      FinDist.map (eraseHistory G second)
+      PMF.map (eraseHistory G second)
         ((information G second).runBehavioral
           (translateBehavioral G second
             (projectBehavioral G first target))

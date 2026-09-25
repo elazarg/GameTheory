@@ -1,6 +1,7 @@
 /- Copyright (c) 2026 VegasCore contributors. All rights reserved. -/
 
 import GameTheory.Protocol.Randomized
+import GameTheory.Math.Probability.Support
 
 /-! # Reading a continuation law from randomized histories
 
@@ -25,8 +26,8 @@ theorem runRandomizedFor_readout_eq (chooser : E.RandomizedChooser)
     (decreases : ∀ (history : E.History)
       (joint : {actions : ∀ who, Option (E.Action who) // E.Legal history.state actions})
       after, after ∈ (E.step history.state joint).support → rank after < rank history.state)
-    (readout : E.State → Ω) (law : E.State → FinDist Ω)
-    (terminal_law : ∀ state, E.terminal state → law state = FinDist.pure (readout state))
+    (readout : E.State → Ω) (law : E.State → PMF Ω)
+    (terminal_law : ∀ state, E.terminal state → law state = PMF.pure (readout state))
     (step_law : ∀ (history : E.History) (running : ¬ E.terminal history.state),
       (chooser history running).bind (fun joint => (E.step history.state joint).bind law) =
         law history.state)
@@ -35,20 +36,20 @@ theorem runRandomizedFor_readout_eq (chooser : E.RandomizedChooser)
       law history.state := by
   induction fuel generalizing history with
   | zero =>
-      rw [runRandomizedFor_zero, FinDist.map_pure,
+      rw [runRandomizedFor_zero, PMF.pure_map,
         terminal_law history.state (zero_terminal history.state (by omega))]
   | succ fuel ih =>
       by_cases stopped : E.terminal history.state
-      · rw [runRandomizedFor_of_terminal _ _ stopped, FinDist.map_pure,
+      · rw [runRandomizedFor_of_terminal _ _ stopped, PMF.pure_map,
           terminal_law history.state stopped]
-      · rw [runRandomizedFor_succ_of_not_terminal _ _ stopped, FinDist.map_bind]
+      · rw [runRandomizedFor_succ_of_not_terminal _ _ stopped, PMF.map_bind]
         calc
           _ = (chooser history stopped).bind
               (fun joint => (E.step history.state joint).bind law) := by
-            apply FinDist.bind_congr
+            apply GameTheory.Math.Probability.bind_congr_on_support
             intro joint _
-            rw [FinDist.map_bindOnSupport]
-            apply FinDist.bindOnSupport_eq_bind_of_eq_on_support
+            rw [GameTheory.Math.Probability.map_bindOnSupport]
+            apply GameTheory.Math.Probability.bindOnSupport_eq_bind_of_eq_on_support
             intro after reached
             exact ih (history.extend joint.2 reached)
               (by have smaller := decreases history joint after reached; exact Nat.le_of_lt_succ

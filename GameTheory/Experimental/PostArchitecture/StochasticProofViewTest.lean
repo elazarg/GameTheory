@@ -8,6 +8,7 @@ uses the canonical Protocol runner and canonical approximate-Nash predicate.
 -/
 
 import GameTheory.Stochastic.History
+import GameTheory.Math.Probability.Mixture
 import Mathlib.Tactic.NormNum
 
 noncomputable section
@@ -17,9 +18,9 @@ namespace GameTheory.Experimental.PostArchitecture.StochasticProofView.Hostile
 open GameTheory.Math.Probability Stochastic Protocol Protocol.ExecutionProtocol
 
 /-- A fair public signal represented as the next stochastic-game state. -/
-def fairSignal : FinDist (Option Bool) :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure (some false)) (FinDist.pure (some true))
+def fairSignal : PMF (Option Bool) :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure (some false)) (PMF.pure (some true))
 
 /-- The first stage publicly draws a bit. At the second stage player `false`
 earns two exactly when its action matches the observed bit. -/
@@ -30,7 +31,7 @@ def signalGame : Stochastic.Game Bool where
   transition state _ :=
     match state with
     | none => fairSignal
-    | some signal => FinDist.pure (some signal)
+    | some signal => PMF.pure (some signal)
   stageUtility state actions who :=
     if who then 0
     else match state with
@@ -43,12 +44,12 @@ local instance signalGameActionNonempty :
 
 /-- The status-quo action ignores the public history. -/
 def constantFalsePolicy (i : Bool) : Game.PublicPolicy signalGame i :=
-  fun _ => FinDist.pure false
+  fun _ => PMF.pure false
 
 /-- Player `false` follows the latest public target signal, if one exists. -/
 def followSignalPolicy : Game.PublicPolicy signalGame false :=
   fun history =>
-    FinDist.pure <| match history with
+    PMF.pure <| match history with
       | [] => false
       | latest :: _ => latest.target.getD false
 
@@ -66,25 +67,28 @@ def signalHistory (signal : Bool) : signalGame.PublicHistory :=
 
 /-- The replacement really distinguishes the two observed public histories. -/
 theorem followSignalPolicy_history_dependent :
-    followSignalPolicy (signalHistory false) = FinDist.pure false ∧
-      followSignalPolicy (signalHistory true) = FinDist.pure true := by
+    followSignalPolicy (signalHistory false) = PMF.pure false ∧
+      followSignalPolicy (signalHistory true) = PMF.pure true := by
   constructor <;> rfl
 
 /-- Both signal values occur with positive probability. -/
 theorem fairSignal_nondegenerate :
     some false ∈ fairSignal.support ∧ some true ∈ fairSignal.support := by
-  constructor <;>
-    exact FinDist.prob_pos_iff.mp
-      (by norm_num [fairSignal, FinDist.prob_mix, FinDist.prob_pure_eq_ite])
+  constructor
+  · exact mem_support_mix_left (1 / 2) (by norm_num) (by norm_num)
+      (by norm_num) (by simp)
+  · exact mem_support_mix_right (1 / 2) (by norm_num) (by norm_num)
+      (by norm_num) (by simp)
 
 theorem fairSignal_support_iff (state : Option Bool) :
     state ∈ fairSignal.support ↔ ∃ signal, state = some signal := by
-  rw [← FinDist.prob_pos_iff]
   cases state with
-  | none => simp [fairSignal, FinDist.prob_mix, FinDist.prob_pure_eq_ite]
+  | none =>
+      simp [fairSignal, PMF.mem_support_iff, mix_apply, PMF.pure_apply]
   | some signal =>
-      cases signal <;>
-        norm_num [fairSignal, FinDist.prob_mix, FinDist.prob_pure_eq_ite]
+      cases signal
+      · exact iff_of_true fairSignal_nondegenerate.1 ⟨false, rfl⟩
+      · exact iff_of_true fairSignal_nondegenerate.2 ⟨true, rfl⟩
 
 /-- The joint action used before the signal is observed. -/
 def allFalse : ∀ i, signalGame.Action i := fun _ => false
@@ -112,7 +116,8 @@ def finalHistory (signal : Bool) (firstRealized : some signal ∈ fairSignal.sup
   (firstHistory signal firstRealized).extend
     (Game.canonicalJoint signalGame none (some signal) (responseActions action)).2
     (Game.canonicalRealized signalGame none
-      (FinDist.mem_support_pure.mpr rfl))
+      (state := some signal) (target := some signal)
+      (actions := responseActions action) (by simp [signalGame]))
 
 theorem infoOf_firstHistory (signal : Bool)
     (realized : some signal ∈ fairSignal.support) (who : Bool) :
@@ -129,7 +134,7 @@ theorem constantProfile_after_signal (signal : Bool)
     constantProfile who
         ((signalGame.perfectMonitoring none).infoOf who
           (firstHistory signal realized).trace) =
-      FinDist.pure false :=
+      PMF.pure false :=
   rfl
 
 theorem contingentProfile_after_signal (signal : Bool)
@@ -137,7 +142,7 @@ theorem contingentProfile_after_signal (signal : Bool)
     contingentProfile who
         ((signalGame.perfectMonitoring none).infoOf who
           (firstHistory signal realized).trace) =
-      FinDist.pure (responseActions signal who) := by
+      PMF.pure (responseActions signal who) := by
   rw [infoOf_firstHistory]
   cases who <;>
     simp [contingentProfile, constantProfile, constantFalsePolicy,
@@ -147,16 +152,16 @@ theorem constantProfile_initial (who : Bool) :
     constantProfile who
         ((signalGame.perfectMonitoring none).infoOf who
           (signalGame.toExecution none).initHistory.trace) =
-      FinDist.pure (allFalse who) :=
+      PMF.pure (allFalse who) :=
   rfl
 
 theorem contingentProfile_initial (who : Bool) :
     contingentProfile who
         ((signalGame.perfectMonitoring none).infoOf who
           (signalGame.toExecution none).initHistory.trace) =
-      FinDist.pure (allFalse who) := by
+      PMF.pure (allFalse who) := by
   cases who
-  · show followSignalPolicy [] = FinDist.pure false
+  · show followSignalPolicy [] = PMF.pure false
     rfl
   · rfl
 
@@ -171,150 +176,186 @@ private theorem historyAverageUtility_two_steps
           (Game.canonicalEvent signalGame none allFalse firstRealized) false) +
         signalGame.eventUtility none
           (Game.canonicalEvent signalGame none
-            (responseActions action) (FinDist.mem_support_pure.mpr rfl)) false) =
+            (state := some signal) (target := some signal)
+            (responseActions action) (by simp [signalGame])) false) =
       if action = signal then 1 else 0
   simp [signalGame, firstHistory, responseActions]
 
-private theorem secondStagePayoff
+private theorem secondStageLaw
     (profile : Game.PublicProfile signalGame none) (signal action : Bool)
     (realized : some signal ∈ fairSignal.support)
     (hlaws : ∀ who,
       profile who
           ((signalGame.perfectMonitoring none).infoOf who
             (firstHistory signal realized).trace) =
-        FinDist.pure (responseActions action who)) :
-    expectedUtility (signalGame.horizonUtility none 2) false
-        ((signalGame.perfectMonitoring none).runBehavioralFrom
-          (Game.toBehaviorProfile signalGame none profile) 1
-          (firstHistory signal realized)) =
-      if action = signal then 1 else 0 := by
+        PMF.pure (responseActions action who)) :
+    (signalGame.perfectMonitoring none).runBehavioralFrom
+        (Game.toBehaviorProfile signalGame none profile) 1
+        (firstHistory signal realized) =
+      PMF.pure (finalHistory signal realized action) := by
   rw [Game.runBehavioralFrom_succ_toBehaviorProfile signalGame none profile 0
     (firstHistory signal realized)]
   simp_rw [hlaws]
-  simp only [FinDist.pi_pure, FinDist.pure_bind]
+  simp only [independentProduct_pure, PMF.pure_bind]
   simp only [firstHistory_state]
-  show expectedUtility (signalGame.horizonUtility none 2) false
-      ((FinDist.pure (some signal)).bindOnSupport fun _ targetRealized =>
-        FinDist.pure
+  show (PMF.pure (some signal)).bindOnSupport
+      (fun _ targetRealized =>
+        PMF.pure
           ((firstHistory signal realized).extend
             (Game.canonicalJoint signalGame none (some signal)
               (responseActions action)).2
             (Game.canonicalRealized signalGame none targetRealized))) = _
-  rw [FinDist.pure_bindOnSupport, expectedUtility_pure]
-  exact historyAverageUtility_two_steps signal action realized
+  rw [PMF.pure_bindOnSupport]
+  simp only [finalHistory]
 
-private def constantBranchValue : Option Bool → ℝ
-  | none => 0
-  | some signal => if false = signal then 1 else 0
+private theorem fairSignal_supported (signal : Bool) :
+    some signal ∈ fairSignal.support := by
+  cases signal
+  · exact fairSignal_nondegenerate.1
+  · exact fairSignal_nondegenerate.2
 
-private def contingentBranchValue : Option Bool → ℝ
-  | none => 0
-  | some _ => 1
+private def finalOutcome (choose : Bool → Bool) (state : Option Bool) :
+    (signalGame.toExecution none).History :=
+  match state with
+  | none => (signalGame.toExecution none).initHistory
+  | some signal => finalHistory signal (fairSignal_supported signal) (choose signal)
+
+private theorem twoStageLaw (profile : Game.PublicProfile signalGame none)
+    (choose : Bool → Bool)
+    (hinitial : ∀ who, profile who
+      ((signalGame.perfectMonitoring none).infoOf who
+        (signalGame.toExecution none).initHistory.trace) =
+        PMF.pure (allFalse who))
+    (hresponse : ∀ signal realized who,
+      profile who
+        ((signalGame.perfectMonitoring none).infoOf who
+          (firstHistory signal realized).trace) =
+        PMF.pure (responseActions (choose signal) who)) :
+    (signalGame.perfectMonitoring none).runBehavioral
+        (Game.toBehaviorProfile signalGame none profile) 2 =
+      PMF.map (finalOutcome choose) fairSignal := by
+  unfold InformationModel.runBehavioral
+  rw [Game.runBehavioralFrom_succ_toBehaviorProfile signalGame none profile 1
+    (signalGame.toExecution none).initHistory]
+  simp_rw [hinitial]
+  simp only [independentProduct_pure, PMF.pure_bind]
+  show fairSignal.bindOnSupport (fun state stateRealized =>
+      (signalGame.perfectMonitoring none).runBehavioralFrom
+        (Game.toBehaviorProfile signalGame none profile) 1
+        ((signalGame.toExecution none).initHistory.extend
+          (Game.canonicalJoint signalGame none none allFalse).2
+          (Game.canonicalRealized signalGame none stateRealized))) = _
+  calc
+    _ = fairSignal.bindOnSupport
+        (fun state _ => PMF.pure (finalOutcome choose state)) := by
+      apply bindOnSupport_congr
+      intro state stateRealized
+      obtain ⟨signal, rfl⟩ := (fairSignal_support_iff state).mp stateRealized
+      simpa only [firstHistory, finalOutcome] using
+        secondStageLaw profile signal (choose signal) stateRealized
+          (hresponse signal stateRealized)
+    _ = PMF.map (finalOutcome choose) fairSignal := by
+      rw [PMF.bindOnSupport_eq_bind]
+      exact PMF.bind_pure_comp _ _
+
+private theorem twoStageIntegrable (choose : Bool → Bool) :
+    PayoffIntegrable (PMF.map (finalOutcome choose) fairSignal)
+      (fun history => signalGame.horizonUtility none 2 history false) := by
+  apply (payoffIntegrable_map_iff (finalOutcome choose) fairSignal _).2
+  exact payoffIntegrable_of_finite fairSignal _
+
+private theorem twoStagePayoff (profile : Game.PublicProfile signalGame none)
+    (choose : Bool → Bool)
+    (hinitial : ∀ who, profile who
+      ((signalGame.perfectMonitoring none).infoOf who
+        (signalGame.toExecution none).initHistory.trace) =
+        PMF.pure (allFalse who))
+    (hresponse : ∀ signal realized who,
+      profile who
+        ((signalGame.perfectMonitoring none).infoOf who
+          (firstHistory signal realized).trace) =
+        PMF.pure (responseActions (choose signal) who)) :
+    signalGame.finiteAveragePayoff none 2
+        (Game.toBehaviorProfile signalGame none profile) false
+        (by rw [signalGame.horizonForm_play,
+            twoStageLaw profile choose hinitial hresponse]
+            exact twoStageIntegrable choose) =
+      ((if choose false = false then 1 else 0) +
+        (if choose true = true then 1 else 0)) / 2 := by
+  unfold Game.finiteAveragePayoff expectedUtility
+  have hlaw :
+      (signalGame.horizonForm none 2).play
+          (Game.toBehaviorProfile signalGame none profile) =
+        PMF.map (finalOutcome choose) fairSignal := by
+    rw [signalGame.horizonForm_play]
+    exact twoStageLaw profile choose hinitial hresponse
+  have hvalue (signal : Bool) :
+      signalGame.horizonUtility none 2 (finalOutcome choose (some signal)) false =
+        if choose signal = signal then 1 else 0 := by
+    exact historyAverageUtility_two_steps signal (choose signal)
+      (fairSignal_supported signal)
+  calc
+    _ = expect (PMF.map (finalOutcome choose) fairSignal)
+        (fun history => signalGame.horizonUtility none 2 history false)
+        (twoStageIntegrable choose) :=
+      expect_congr_law hlaw _ _ _
+    _ = expect fairSignal
+        ((fun history => signalGame.horizonUtility none 2 history false) ∘
+          finalOutcome choose)
+        (payoffIntegrable_of_finite fairSignal _) :=
+      expect_map (finalOutcome choose) fairSignal _ _ _
+    _ = _ := by
+      rw [expect_eq_sum]
+      simp only [Fintype.sum_option, Fintype.sum_bool]
+      simp [fairSignal, mix_apply, PMF.pure_apply]
+      rw [hvalue true, hvalue false]
+      norm_num
+      cases hfalse : choose false <;> cases htrue : choose true <;>
+        norm_num [hfalse, htrue]
+
+/-- The constant policy's actual two-step history law integrates its payoff. -/
+theorem constantProfileIntegrable :
+    UtilityIntegrable (signalGame.horizonUtility none 2) false
+      ((signalGame.horizonForm none 2).play
+        (Game.toBehaviorProfile signalGame none constantProfile)) := by
+  rw [signalGame.horizonForm_play,
+    twoStageLaw constantProfile (fun _ => false)
+      constantProfile_initial (fun signal realized who => by
+        simpa [responseActions] using
+          constantProfile_after_signal signal realized who)]
+  exact twoStageIntegrable (fun _ => false)
+
+/-- The signal-following policy's actual two-step law integrates its payoff. -/
+theorem contingentProfileIntegrable :
+    UtilityIntegrable (signalGame.horizonUtility none 2) false
+      ((signalGame.horizonForm none 2).play
+        (Game.toBehaviorProfile signalGame none contingentProfile)) := by
+  rw [signalGame.horizonForm_play,
+    twoStageLaw contingentProfile id contingentProfile_initial
+      (fun signal realized who =>
+        contingentProfile_after_signal signal realized who)]
+  exact twoStageIntegrable id
 
 /-- Ignoring the fair signal earns one half of the two-stage average payoff. -/
 theorem constantProfile_payoff :
     signalGame.finiteAveragePayoff none 2
-        (Game.toBehaviorProfile signalGame none constantProfile) false = 1 / 2 := by
-  show expectedUtility (signalGame.horizonUtility none 2) false
-      ((signalGame.perfectMonitoring none).runBehavioral
-        (Game.toBehaviorProfile signalGame none constantProfile) 2) = 1 / 2
-  unfold InformationModel.runBehavioral
-  rw [Game.runBehavioralFrom_succ_toBehaviorProfile signalGame none constantProfile 1
-    (signalGame.toExecution none).initHistory]
-  simp only [constantProfile, constantFalsePolicy, FinDist.pi_pure,
-    FinDist.pure_bind]
-  show expectedUtility (signalGame.horizonUtility none 2) false
-      (fairSignal.bindOnSupport fun state stateRealized =>
-        (signalGame.perfectMonitoring none).runBehavioralFrom
-          (Game.toBehaviorProfile signalGame none constantProfile) 1
-          ((signalGame.toExecution none).initHistory.extend
-            (Game.canonicalJoint signalGame none none allFalse).2
-            (Game.canonicalRealized signalGame none stateRealized))) = 1 / 2
-  unfold expectedUtility
-  calc
-    FinDist.expect
-        (fairSignal.bindOnSupport fun state stateRealized =>
-          (signalGame.perfectMonitoring none).runBehavioralFrom
-            (Game.toBehaviorProfile signalGame none constantProfile) 1
-            ((signalGame.toExecution none).initHistory.extend
-              (Game.canonicalJoint signalGame none none allFalse).2
-              (Game.canonicalRealized signalGame none stateRealized)))
-        (fun history => signalGame.horizonUtility none 2 history false) =
-      FinDist.expect
-        (fairSignal.bindOnSupport fun state _ =>
-          FinDist.pure (constantBranchValue state)) id := by
-        apply FinDist.expect_bindOnSupport_congr
-        intro state stateRealized
-        obtain ⟨signal, rfl⟩ := (fairSignal_support_iff state).mp stateRealized
-        have hbranch := secondStagePayoff constantProfile signal false stateRealized
-          (fun who => by
-            have hconstant :=
-              constantProfile_after_signal signal stateRealized who
-            cases who <;> simpa [responseActions] using hconstant)
-        unfold expectedUtility at hbranch
-        simpa [firstHistory, constantBranchValue] using hbranch
-    _ = FinDist.expect (FinDist.map constantBranchValue fairSignal) id := by
-      rw [FinDist.bindOnSupport_eq_bind]
-      rfl
-    _ = 1 / 2 := by
-      rw [FinDist.expect_map]
-      unfold fairSignal
-      rw [FinDist.expect_mix]
-      norm_num [constantBranchValue]
+        (Game.toBehaviorProfile signalGame none constantProfile) false
+        constantProfileIntegrable = 1 / 2 := by
+  rw [twoStagePayoff constantProfile (fun _ => false)
+    constantProfile_initial (fun signal realized who => by
+      simpa [responseActions] using
+        constantProfile_after_signal signal realized who)]
+  norm_num
 
 /-- Following either realized signal earns the full two-stage average payoff. -/
 theorem contingentProfile_payoff :
     signalGame.finiteAveragePayoff none 2
-        (Game.toBehaviorProfile signalGame none contingentProfile) false = 1 := by
-  show expectedUtility (signalGame.horizonUtility none 2) false
-      ((signalGame.perfectMonitoring none).runBehavioral
-        (Game.toBehaviorProfile signalGame none contingentProfile) 2) = 1
-  unfold InformationModel.runBehavioral
-  rw [Game.runBehavioralFrom_succ_toBehaviorProfile signalGame none contingentProfile 1
-    (signalGame.toExecution none).initHistory]
-  have hinitial (who : Bool) :
-      contingentProfile who
-          ((signalGame.perfectSignals none).infoOf who
-            (signalGame.toExecution none).initHistory.trace) =
-        FinDist.pure (allFalse who) :=
-    contingentProfile_initial who
-  simp_rw [hinitial]
-  simp only [FinDist.pi_pure, FinDist.pure_bind]
-  show expectedUtility (signalGame.horizonUtility none 2) false
-      (fairSignal.bindOnSupport fun state stateRealized =>
-        (signalGame.perfectMonitoring none).runBehavioralFrom
-          (Game.toBehaviorProfile signalGame none contingentProfile) 1
-          ((signalGame.toExecution none).initHistory.extend
-            (Game.canonicalJoint signalGame none none allFalse).2
-            (Game.canonicalRealized signalGame none stateRealized))) = 1
-  unfold expectedUtility
-  calc
-    FinDist.expect
-        (fairSignal.bindOnSupport fun state stateRealized =>
-          (signalGame.perfectMonitoring none).runBehavioralFrom
-            (Game.toBehaviorProfile signalGame none contingentProfile) 1
-            ((signalGame.toExecution none).initHistory.extend
-              (Game.canonicalJoint signalGame none none allFalse).2
-              (Game.canonicalRealized signalGame none stateRealized)))
-        (fun history => signalGame.horizonUtility none 2 history false) =
-      FinDist.expect
-        (fairSignal.bindOnSupport fun state _ =>
-          FinDist.pure (contingentBranchValue state)) id := by
-        apply FinDist.expect_bindOnSupport_congr
-        intro state stateRealized
-        obtain ⟨signal, rfl⟩ := (fairSignal_support_iff state).mp stateRealized
-        have hbranch := secondStagePayoff contingentProfile signal signal stateRealized
-          (contingentProfile_after_signal signal stateRealized)
-        unfold expectedUtility at hbranch
-        simpa [firstHistory, contingentBranchValue] using hbranch
-    _ = FinDist.expect (FinDist.map contingentBranchValue fairSignal) id := by
-      rw [FinDist.bindOnSupport_eq_bind]
-      rfl
-    _ = 1 := by
-      rw [FinDist.expect_map]
-      unfold fairSignal
-      rw [FinDist.expect_mix]
-      norm_num [contingentBranchValue]
+        (Game.toBehaviorProfile signalGame none contingentProfile) false
+        contingentProfileIntegrable = 1 := by
+  rw [twoStagePayoff contingentProfile id contingentProfile_initial
+    (fun signal realized who =>
+      contingentProfile_after_signal signal realized who)]
+  norm_num
 
 /-- The stochastic-facing unilateral splice compiles to exactly the canonical
 Protocol profile replacement. -/
@@ -331,9 +372,11 @@ theorem canonical_contingent_update :
 two-stage average by one half. -/
 theorem contingent_improvement_exact :
     signalGame.finiteAveragePayoff none 2
-          (Game.toBehaviorProfile signalGame none contingentProfile) false -
+          (Game.toBehaviorProfile signalGame none contingentProfile) false
+          contingentProfileIntegrable -
         signalGame.finiteAveragePayoff none 2
-          (Game.toBehaviorProfile signalGame none constantProfile) false =
+          (Game.toBehaviorProfile signalGame none constantProfile) false
+          constantProfileIntegrable =
       1 / 2 := by
   rw [contingentProfile_payoff, constantProfile_payoff]
   norm_num
@@ -348,8 +391,24 @@ theorem constantProfile_not_isZeroHorizonNash :
   intro hNash
   have hdeviation := hNash false
     (Game.toBehavioralPolicy signalGame none followSignalPolicy)
-  rw [← canonical_contingent_update, contingentProfile_payoff,
-    constantProfile_payoff] at hdeviation
-  norm_num at hdeviation
+  obtain ⟨hprofile, hchanged, hle⟩ := hdeviation
+  have hchangedValue : signalGame.finiteAveragePayoff none 2
+      (Profile.update (Game.toBehaviorProfile signalGame none constantProfile)
+        false (Game.toBehavioralPolicy signalGame none followSignalPolicy))
+      false hchanged = 1 := by
+    calc
+      _ = signalGame.finiteAveragePayoff none 2
+          (Game.toBehaviorProfile signalGame none contingentProfile) false
+          contingentProfileIntegrable := by
+        exact expectedUtility_congr_law
+          (signalGame.horizonUtility none 2) false
+          (congrArg (fun profile => (signalGame.horizonForm none 2).play profile)
+            canonical_contingent_update.symm) _ _
+      _ = 1 := contingentProfile_payoff
+  have hprofileValue : signalGame.finiteAveragePayoff none 2
+      (Game.toBehaviorProfile signalGame none constantProfile) false hprofile = 1 / 2 := by
+    simpa only using constantProfile_payoff
+  rw [hchangedValue, hprofileValue] at hle
+  norm_num at hle
 
 end GameTheory.Experimental.PostArchitecture.StochasticProofView.Hostile

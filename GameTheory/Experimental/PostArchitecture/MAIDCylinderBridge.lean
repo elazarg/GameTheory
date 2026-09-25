@@ -101,40 +101,40 @@ theorem tripleCylinder_eq_agreeOn
         (Finset.mem_union_right (first ∪ second) node.2)
 
 /-- The one-set typed cylinder mass is the generic cylinder mass. -/
-theorem cylinder_probOf_eq_cylinderMass
-    (law : FinDist (Assignment diagram)) (nodes : Finset Node)
+theorem cylinder_mass_eq_cylinderMass
+    (law : PMF (Assignment diagram)) (nodes : Finset Node)
     (witness : Assignment diagram) :
-    law.probOf
-        (cylinder nodes (Assignment.restrict diagram witness nodes)) =
+    (law.toOuterMeasure
+        (cylinder nodes (Assignment.restrict diagram witness nodes))).toReal =
       cylinderMass diagram.Value law nodes witness := by
   rw [cylinder_eq_agreeOn]
   rfl
 
 /-- The same-witness pair-cylinder mass is the generic mass on the union. -/
-theorem pairCylinder_probOf_eq_cylinderMass
-    (law : FinDist (Assignment diagram)) (first second : Finset Node)
+theorem pairCylinder_mass_eq_cylinderMass
+    (law : PMF (Assignment diagram)) (first second : Finset Node)
     [DecidableEq Node]
     (witness : Assignment diagram) :
-    law.probOf
+    (law.toOuterMeasure
         (pairCylinder first second
           (Assignment.restrict diagram witness first)
-          (Assignment.restrict diagram witness second)) =
+          (Assignment.restrict diagram witness second))).toReal =
       cylinderMass diagram.Value law (first ∪ second) witness := by
   rw [pairCylinder_eq_agreeOn]
   rfl
 
 /-- The same-witness triple-cylinder mass is the generic mass on the
 three-way union. -/
-theorem tripleCylinder_probOf_eq_cylinderMass
-    (law : FinDist (Assignment diagram))
+theorem tripleCylinder_mass_eq_cylinderMass
+    (law : PMF (Assignment diagram))
     (first second evidence : Finset Node)
     [DecidableEq Node]
     (witness : Assignment diagram) :
-    law.probOf
+    (law.toOuterMeasure
         (tripleCylinder first second evidence
           (Assignment.restrict diagram witness first)
           (Assignment.restrict diagram witness second)
-          (Assignment.restrict diagram witness evidence)) =
+          (Assignment.restrict diagram witness evidence))).toReal =
       cylinderMass diagram.Value law (first ∪ second ∪ evidence) witness := by
   rw [tripleCylinder_eq_agreeOn]
   rfl
@@ -142,7 +142,7 @@ theorem tripleCylinder_probOf_eq_cylinderMass
 /-- The coordinate cross-product theorem reads directly as the four generic
 union-cylinder masses used by marginalization. -/
 theorem sameWitness_cylinderMass_cross_product
-    (law : FinDist (Assignment diagram))
+    (law : PMF (Assignment diagram))
     (first second evidence : Finset Node)
     [DecidableEq Node]
     (hindependent :
@@ -154,10 +154,10 @@ theorem sameWitness_cylinderMass_cross_product
         cylinderMass diagram.Value law (second ∪ evidence) witness := by
   have hcross := sameWitness_cross_product law first second evidence
     hindependent witness
-  rw [tripleCylinder_probOf_eq_cylinderMass,
-    cylinder_probOf_eq_cylinderMass,
-    pairCylinder_probOf_eq_cylinderMass,
-    pairCylinder_probOf_eq_cylinderMass] at hcross
+  rw [tripleCylinder_mass_eq_cylinderMass,
+    cylinder_mass_eq_cylinderMass,
+    pairCylinder_mass_eq_cylinderMass,
+    pairCylinder_mass_eq_cylinderMass] at hcross
   exact hcross
 
 /-! ## Dependent Boolean control -/
@@ -174,21 +174,21 @@ witness has mass one. -/
 theorem all_cylinderMass :
     cylinderMass controlDiagram.Value controlLaw allCoordinates
       controlAssignment = 1 := by
-  unfold cylinderMass controlLaw
-  apply FinDist.probOf_pure_self
-  intro _ _
-  rfl
+  unfold cylinderMass
+  rw [show controlLaw = PMF.pure controlAssignment from rfl,
+    PMF.toOuterMeasure_pure_apply]
+  simp [AgreeOn]
 
 /-- The typed three-restriction cylinder computes the same unit mass through
 the bridge. -/
 theorem tripleCylinder_mass :
-    controlLaw.probOf
+    (controlLaw.toOuterMeasure
         (tripleCylinder firstCoordinates secondCoordinates evidenceCoordinates
           (Assignment.restrict controlDiagram controlAssignment firstCoordinates)
           (Assignment.restrict controlDiagram controlAssignment secondCoordinates)
-          (Assignment.restrict controlDiagram controlAssignment evidenceCoordinates)) =
+          (Assignment.restrict controlDiagram controlAssignment evidenceCoordinates))).toReal =
       1 := by
-  rw [tripleCylinder_probOf_eq_cylinderMass]
+  rw [tripleCylinder_mass_eq_cylinderMass]
   exact all_cylinderMass
 
 end BoolControl

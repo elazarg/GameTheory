@@ -32,28 +32,16 @@ open GameTheory GameTheory.Protocol GameTheory.Math.Probability
 themselves, which is what the tree must reproduce. -/
 
 theorem runFor_two_take :
-    coinThenMove.runFor takePolicy 2 .chance = FinDist.pure .tookIt := by
-  refine FinDist.ext_of_prob fun spot => ?_
+    coinThenMove.runFor takePolicy 2 .chance = PMF.pure .tookIt := by
   rw [ExecutionProtocol.runFor_succ_of_chance takePolicy 1 coinThenMove_chance_isChance,
-    FinDist.prob_bind, ExecutionProtocol.chanceLaw]
-  show (FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-      (FinDist.pure Spot.heads) (FinDist.pure Spot.tails)).expect
-      (fun s => (coinThenMove.runFor takePolicy 1 s).prob spot) = _
-  rw [FinDist.expect_mix, FinDist.expect_pure, FinDist.expect_pure,
-    runFor_one_heads_take, runFor_one_tails_take]
-  ring
+    ExecutionProtocol.chanceLaw, mix_bind]
+  simp [runFor_one_heads_take, runFor_one_tails_take]
 
 theorem runFor_two_leave :
-    coinThenMove.runFor leavePolicy 2 .chance = FinDist.pure .leftIt := by
-  refine FinDist.ext_of_prob fun spot => ?_
+    coinThenMove.runFor leavePolicy 2 .chance = PMF.pure .leftIt := by
   rw [ExecutionProtocol.runFor_succ_of_chance leavePolicy 1 coinThenMove_chance_isChance,
-    FinDist.prob_bind, ExecutionProtocol.chanceLaw]
-  show (FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-      (FinDist.pure Spot.heads) (FinDist.pure Spot.tails)).expect
-      (fun s => (coinThenMove.runFor leavePolicy 1 s).prob spot) = _
-  rw [FinDist.expect_mix, FinDist.expect_pure, FinDist.expect_pure,
-    runFor_one_heads_leave, runFor_one_tails_leave]
-  ring
+    ExecutionProtocol.chanceLaw, mix_bind]
+  simp [runFor_one_heads_leave, runFor_one_tails_leave]
 
 /-! ## Cost of the general-state presentation: a bounded-horizon certificate
 
@@ -63,21 +51,21 @@ certificate that makes it one, and it is small: one support computation. -/
 theorem takePolicy_stopsWithin : coinThenMove.StopsWithin takePolicy 2 .chance := by
   intro reached hreached
   rw [runFor_two_take] at hreached
-  rw [FinDist.mem_support_pure.1 hreached]
+  rw [(PMF.mem_support_pure_iff _ _).mp hreached]
   simp
 
 /-- With the certificate, extra fuel is provably irrelevant: the fuelled runner
 becomes a total evaluator. -/
 theorem runFor_take_stable {fuel : ℕ} (hfuel : 2 ≤ fuel) :
-    coinThenMove.runFor takePolicy fuel .chance = FinDist.pure .tookIt := by
+    coinThenMove.runFor takePolicy fuel .chance = PMF.pure .tookIt := by
   rw [ExecutionProtocol.runFor_eq_of_stopsWithin_le takePolicy_stopsWithin hfuel,
     runFor_two_take]
 
 /-! ## The finite-first presentation: the same game as a tree -/
 
 /-- The fair coin as a law over branches. -/
-def fairCoin : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num) (FinDist.pure true) (FinDist.pure false)
+def fairCoin : PMF Bool :=
+  mix (1 / 2) (by norm_num) (by norm_num) (PMF.pure true) (PMF.pure false)
 
 /-- After the coin, the player moves and the move decides the outcome. -/
 def coinBranch : Tree Unit (fun _ => Move) Spot :=
@@ -99,19 +87,19 @@ def takePlan : Tree.PureStrategy coinTree := (takeBranchPlan, takeBranchPlan)
 def leavePlan : Tree.PureStrategy coinTree := (leaveBranchPlan, leaveBranchPlan)
 
 theorem eval_coinBranch_take :
-    Tree.eval coinBranch takeBranchPlan = FinDist.pure .tookIt := rfl
+    Tree.eval coinBranch takeBranchPlan = PMF.pure .tookIt := rfl
 
 theorem eval_coinBranch_leave :
-    Tree.eval coinBranch leaveBranchPlan = FinDist.pure .leftIt := rfl
+    Tree.eval coinBranch leaveBranchPlan = PMF.pure .leftIt := rfl
 
-theorem eval_coinTree_take : Tree.eval coinTree takePlan = FinDist.pure .tookIt := by
+theorem eval_coinTree_take : Tree.eval coinTree takePlan = PMF.pure .tookIt := by
   show fairCoin.bind (fun branch =>
     if branch then Tree.eval coinBranch takeBranchPlan
     else Tree.eval coinBranch takeBranchPlan) = _
   rw [eval_coinBranch_take]
   simp
 
-theorem eval_coinTree_leave : Tree.eval coinTree leavePlan = FinDist.pure .leftIt := by
+theorem eval_coinTree_leave : Tree.eval coinTree leavePlan = PMF.pure .leftIt := by
   show fairCoin.bind (fun branch =>
     if branch then Tree.eval coinBranch leaveBranchPlan
     else Tree.eval coinBranch leaveBranchPlan) = _
@@ -140,8 +128,8 @@ theorem takePlan_ne_leavePlan :
     Tree.eval coinTree takePlan ≠ Tree.eval coinTree leavePlan := by
   rw [eval_coinTree_take, eval_coinTree_leave]
   intro hequal
-  have hmass := congrArg (fun law => FinDist.prob law Spot.tookIt) hequal
-  simp [FinDist.prob_pure_eq_ite] at hmass
+  have hmass := congrArg (fun law : PMF Spot => law Spot.tookIt) hequal
+  simp [PMF.pure_apply] at hmass
 
 /-! ## Finite extracted strategies
 

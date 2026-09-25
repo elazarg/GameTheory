@@ -11,6 +11,7 @@ compiler's hypotheses say it does.
 -/
 
 import GameTheory.Protocol.Strategic
+import GameTheory.Protocol.StrategicRealization
 import GameTheory.Core.Utility
 import GameTheory.Tests.Execution
 import GameTheory.Tests.Information
@@ -21,6 +22,11 @@ noncomputable section
 namespace GameTheory.Tests
 
 open GameTheory GameTheory.Protocol GameTheory.Math.Probability
+
+local instance strategicSpotFintype : Fintype Spot :=
+  ⟨{.chance, .heads, .tails, .tookIt, .leftIt}, by
+    intro state
+    cases state <;> simp⟩
 
 /-- Always take, as a state policy. -/
 def takeState : coinThenMove.StatePolicy () := fun _ _ => ⟨.take, Set.mem_univ _⟩
@@ -51,36 +57,26 @@ theorem chooserOf_leaveProfile : coinThenMove.chooserOf leaveProfile = leavePoli
 /-- The two-step state law needed by the strategic compilation probe. Kept
 local to this test so it can coexist with the hidden-card test module. -/
 theorem runFor_two_take_strategic :
-    coinThenMove.runFor takePolicy 2 .chance = FinDist.pure .tookIt := by
-  refine FinDist.ext_of_prob fun spot => ?_
-  rw [ExecutionProtocol.runFor_succ_of_chance takePolicy 1 coinThenMove_chance_isChance,
-    FinDist.prob_bind, ExecutionProtocol.chanceLaw]
-  show (FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-      (FinDist.pure Spot.heads) (FinDist.pure Spot.tails)).expect
-      (fun s => (coinThenMove.runFor takePolicy 1 s).prob spot) = _
-  rw [FinDist.expect_mix, FinDist.expect_pure, FinDist.expect_pure,
-    runFor_one_heads_take, runFor_one_tails_take]
-  ring
+    coinThenMove.runFor takePolicy 2 .chance = PMF.pure .tookIt := by
+  rw [ExecutionProtocol.runFor_succ_of_chance takePolicy 1
+      coinThenMove_chance_isChance,
+    ExecutionProtocol.chanceLaw, mix_bind]
+  simp [runFor_one_heads_take, runFor_one_tails_take]
 
 /-- The matching leave law for the strategic compilation probe. -/
 theorem runFor_two_leave_strategic :
-    coinThenMove.runFor leavePolicy 2 .chance = FinDist.pure .leftIt := by
-  refine FinDist.ext_of_prob fun spot => ?_
-  rw [ExecutionProtocol.runFor_succ_of_chance leavePolicy 1 coinThenMove_chance_isChance,
-    FinDist.prob_bind, ExecutionProtocol.chanceLaw]
-  show (FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-      (FinDist.pure Spot.heads) (FinDist.pure Spot.tails)).expect
-      (fun s => (coinThenMove.runFor leavePolicy 1 s).prob spot) = _
-  rw [FinDist.expect_mix, FinDist.expect_pure, FinDist.expect_pure,
-    runFor_one_heads_leave, runFor_one_tails_leave]
-  ring
+    coinThenMove.runFor leavePolicy 2 .chance = PMF.pure .leftIt := by
+  rw [ExecutionProtocol.runFor_succ_of_chance leavePolicy 1
+      coinThenMove_chance_isChance,
+    ExecutionProtocol.chanceLaw, mix_bind]
+  simp [runFor_one_heads_leave, runFor_one_tails_leave]
 
 theorem play_takeProfile :
-    (coinThenMove.toGameForm 2).play takeProfile = FinDist.pure .tookIt := by
+    (coinThenMove.toGameForm 2).play takeProfile = PMF.pure .tookIt := by
   rw [ExecutionProtocol.toGameForm_play, chooserOf_takeProfile, runFor_two_take_strategic]
 
 theorem play_leaveProfile :
-    (coinThenMove.toGameForm 2).play leaveProfile = FinDist.pure .leftIt := by
+    (coinThenMove.toGameForm 2).play leaveProfile = PMF.pure .leftIt := by
   rw [ExecutionProtocol.toGameForm_play, chooserOf_leaveProfile, runFor_two_leave_strategic]
 
 /-- **Probe.** The compiled form still separates the two strategies, so the
@@ -90,8 +86,8 @@ theorem compiled_form_separates :
       (coinThenMove.toGameForm 2).play leaveProfile := by
   rw [play_takeProfile, play_leaveProfile]
   intro hequal
-  have hmass := congrArg (fun law => FinDist.prob law Spot.tookIt) hequal
-  simp [FinDist.prob_pure_eq_ite] at hmass
+  have hmass := congrArg (fun law : PMF Spot => law Spot.tookIt) hequal
+  simp [PMF.pure_apply] at hmass
 
 /-! ## The static concepts apply unchanged
 
@@ -109,12 +105,14 @@ def compiledGame : UtilityGame Unit where
 /-- Expected utility of the compiled form is computed by the static machinery,
 with no protocol vocabulary in sight. -/
 theorem expectedUtility_takeProfile :
-    expectedUtility takeIsBetter () ((coinThenMove.toGameForm 2).play takeProfile) = 1 := by
+    expectedUtility takeIsBetter () ((coinThenMove.toGameForm 2).play takeProfile)
+        (payoffIntegrable_of_finite _ _) = 1 := by
   rw [play_takeProfile, expectedUtility_pure]
   simp [takeIsBetter]
 
 theorem expectedUtility_leaveProfile :
-    expectedUtility takeIsBetter () ((coinThenMove.toGameForm 2).play leaveProfile) = 0 := by
+    expectedUtility takeIsBetter () ((coinThenMove.toGameForm 2).play leaveProfile)
+        (payoffIntegrable_of_finite _ _) = 0 := by
   rw [play_leaveProfile, expectedUtility_pure]
   simp [takeIsBetter]
 
@@ -124,7 +122,8 @@ theorem taking_is_preferred :
     euPreference takeIsBetter ()
       ((coinThenMove.toGameForm 2).play takeProfile)
       ((coinThenMove.toGameForm 2).play leaveProfile) := by
-  rw [euPreference_apply, expectedUtility_takeProfile, expectedUtility_leaveProfile]
+  refine ⟨payoffIntegrable_of_finite _ _, payoffIntegrable_of_finite _ _, ?_⟩
+  rw [expectedUtility_takeProfile, expectedUtility_leaveProfile]
   norm_num
 
 /-! ## Information-local compilation
@@ -140,19 +139,20 @@ ordinary projection from histories to their current states. No state evaluator
 was introduced to prove this. -/
 theorem information_play_first_deal
     (profile : Profile dealModel.strategicSignature) :
-    FinDist.map ExecutionProtocol.History.state
+    PMF.map ExecutionProtocol.History.state
         ((dealModel.toGameForm 1).play profile) =
-      FinDist.map dealOf fairCoin := by
+      PMF.map dealOf fairCoin := by
   rw [InformationModel.toGameForm_play, InformationModel.run, InformationModel.runFrom,
     ExecutionProtocol.runHistoryFor_succ_of_not_terminal _ 0 shuffle_not_terminal,
-    FinDist.map_bindOnSupport]
-  show (FinDist.map dealOf fairCoin).bindOnSupport (fun target realized => _) =
-    FinDist.map dealOf fairCoin
+    map_bindOnSupport]
+  show (PMF.map dealOf fairCoin).bindOnSupport (fun target realized => _) =
+    PMF.map dealOf fairCoin
   calc
-    _ = (FinDist.map dealOf fairCoin).bind FinDist.pure := by
-      apply FinDist.bindOnSupport_eq_bind_of_eq_on_support
+    _ = (PMF.map dealOf fairCoin).bind PMF.pure := by
+      apply bindOnSupport_eq_bind_of_eq_on_support
       intro target realized
-      simp
+      simp only [ExecutionProtocol.runHistoryFor_zero, PMF.pure_map,
+        ExecutionProtocol.History.extend_state]
     _ = _ := by simp
 
 /-- Both genuinely different hidden states remain in the compiled outcome law.
@@ -160,7 +160,7 @@ Thus retaining histories did not collapse nature's hidden branch. -/
 theorem information_compilation_retains_both_hidden_states
     (profile : Profile dealModel.strategicSignature) (card : Card) :
     Table.dealt card ∈
-      (FinDist.map ExecutionProtocol.History.state
+      (PMF.map ExecutionProtocol.History.state
         ((dealModel.toGameForm 1).play profile)).support := by
   rw [information_play_first_deal]
   exact dealt_mem_support card
@@ -184,9 +184,9 @@ model separates them; the recall model on the same protocol identifies them.
 /-- Without the no-revisit hypothesis, behavioral compilation is genuinely not
 the static mixed extension of the pure-policy compilation. -/
 theorem compiled_behavioral_ne_static_mixed_without_actsOnce :
-    FinDist.map ExecutionProtocol.History.state
+    PMF.map ExecutionProtocol.History.state
         ((Randomized.model.toBehavioralGameForm 2).play (fun _ => Randomized.coinPolicy)) ≠
-      FinDist.map ExecutionProtocol.History.state
+      PMF.map ExecutionProtocol.History.state
         (((Randomized.model.toGameForm 2).mixed).play
           (fun _ => Randomized.coinPolicy.toMixed)) := by
   rw [InformationModel.toBehavioralGameForm_play, InformationModel.toGameForm_mixed_play]

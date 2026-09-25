@@ -1,6 +1,7 @@
 /- Copyright (c) 2026 VegasCore contributors. All rights reserved. -/
 
 import GameTheory.Math.Probability.SelectiveStopping
+import GameTheory.Math.Probability.Uniform
 
 /-! # Finite regressions for information-fiber stopping bounds -/
 
@@ -10,7 +11,7 @@ namespace GameTheory.Tests.SelectiveStopping
 
 open GameTheory.Math.Probability
 
-def law : FinDist (Fin 3) := FinDist.uniformFin 3
+def law : PMF (Fin 3) := PMF.uniformOfFintype (Fin 3)
 
 def stopped (state : Fin 3) : Bool := decide (state = 0 ∨ state = 1)
 
@@ -25,8 +26,19 @@ def sourceValue (state : Fin 3) : ℝ :=
 
 def margin : ℝ := 1 / 2
 
-/-- Information value two has zero mass, so the fiber theorem requests no
-comparison for it. Value one occurs only outside the stopping event. -/
+/-- The three-state stopping fixture integrates every observable. -/
+theorem integrable (f : Fin 3 → ℝ) : PayoffIntegrable law f :=
+  payoffIntegrable_of_finite law f
+
+private theorem law_expect (f : Fin 3 → ℝ) (hf : PayoffIntegrable law f) :
+    expect law f hf = (∑ state : Fin 3, f state) / 3 := by
+  calc
+    expect law f hf =
+        expect law f (payoffIntegrable_of_finite law f) :=
+      expect_proof_irrel law f _ _
+    _ = _ := expect_uniformFin f
+
+/-- Information values one and two have no reached stopped state. -/
 theorem unsupported_stopped_fibers :
     ¬ (∃ state ∈ law.support,
         stopped state = true ∧ information state = (1 : Fin 3)) ∧
@@ -35,69 +47,79 @@ theorem unsupported_stopped_fibers :
   constructor <;> rintro ⟨state, _, hstopped, hinfo⟩ <;>
     fin_cases state <;> simp [stopped, information] at hstopped hinfo
 
-/-- On the sole supported stopped fiber, gains and losses average to exactly
-the source value after charging the positive margin. -/
+/-- The sole reached stopping fiber balances a positive charge exactly. -/
 theorem stopped_fiber_comparison (observed : Fin 3)
-    (hobserved : ∃ state ∈ law.support,
-      stopped state = true ∧ information state = observed) :
-    law.expect (fun state =>
-        if stopped state && decide (information state = observed)
-        then targetValue state + margin else 0) ≤
-      law.expect (fun state =>
-        if stopped state && decide (information state = observed)
-        then sourceValue state else 0) := by
-  obtain ⟨state, _, hstopped, hinfo⟩ := hobserved
-  have heq : observed = 0 := by
-    fin_cases state <;> simp [stopped, information] at hstopped hinfo
-    · exact hinfo.symm
-    · exact hinfo.symm
-  subst observed
-  have htarget : (fun state : Fin 3 =>
-      if stopped state && decide (information state = (0 : Fin 3))
-      then targetValue state + margin else 0) =
-      fun state => if state = 0 then 7 / 2 else if state = 1 then 1 / 2 else 0 := by
-    funext state
-    fin_cases state <;> norm_num [stopped, information, targetValue, margin]
-  have hsource : (fun state : Fin 3 =>
-      if stopped state && decide (information state = (0 : Fin 3))
-      then sourceValue state else 0) =
-      fun state => if state = 0 then 1 else if state = 1 then 3 else 0 := by
-    funext state
-    fin_cases state <;> norm_num [stopped, information, sourceValue]
-  rw [heq]
-  rw [htarget, hsource]
-  unfold law
-  rw [FinDist.expect_uniformFin, FinDist.expect_uniformFin]
-  have hne : (2 : Fin 3) ≠ 1 := by decide
-  norm_num [Fin.sum_univ_succ, hne]
+    (hobserved : observed ∈ (law.map information).support) :
+    expect law ((information ⁻¹' {observed}).indicator
+      (stoppingCharge stopped targetValue margin))
+      (payoffIntegrable_indicator (information ⁻¹' {observed})
+        (stoppingCharge_integrable law stopped targetValue margin
+          (integrable targetValue))) ≤
+    expect law ((information ⁻¹' {observed}).indicator sourceValue)
+      (payoffIntegrable_indicator (information ⁻¹' {observed})
+        (integrable sourceValue)) := by
+  classical
+  rw [law_expect, law_expect]
+  fin_cases observed <;>
+    norm_num [Fin.sum_univ_succ, information, stopped, stopIndicator,
+      stoppingCharge, sourceValue, targetValue, margin, law] at *
 
-/-- The fiber condition is strictly weaker than pointwise dominance: state
-zero favors the target even after charging the margin. -/
+theorem reached_stopped_fiber_comparison (observed : Fin 3)
+    (hobserved : observed ∈ (law.map information).support) :
+    let stoppedFiber : Set (Fin 3) :=
+      {state | information state = observed ∧ stopped state = true}
+    expect law (stoppedFiber.indicator
+      (stoppingCharge stopped targetValue margin))
+      (payoffIntegrable_indicator stoppedFiber
+        (stoppingCharge_integrable law stopped targetValue margin
+          (integrable targetValue))) ≤
+    expect law (stoppedFiber.indicator sourceValue)
+      (payoffIntegrable_indicator stoppedFiber
+        (integrable sourceValue)) := by
+  classical
+  dsimp only
+  rw [law_expect, law_expect]
+  fin_cases observed <;>
+    norm_num [Fin.sum_univ_succ, information, stopped, stopIndicator,
+      stoppingCharge, sourceValue, targetValue, margin, law] at *
+
+theorem outside_stopping_dominance :
+    ∀ state ∈ law.support, stopped state = false →
+      targetValue state ≤ sourceValue state := by
+  intro state _ hstop
+  fin_cases state
+  all_goals simp_all [stopped, targetValue, sourceValue]
+
+/-- State zero favors the stopped target even after its charge. -/
 theorem pointwise_comparison_fails :
     ¬ ∀ state ∈ law.support, stopped state = true →
       targetValue state + margin ≤ sourceValue state := by
   intro h
   have hsupport : (0 : Fin 3) ∈ law.support := by
-    rw [← FinDist.prob_pos_iff]
-    norm_num [law]
+    simp [law]
   have hbound := h 0 hsupport (by decide)
   norm_num [targetValue, sourceValue, margin] at hbound
 
-/-- A genuinely random stopping event with positive margin satisfies the
-unconditional bound even though pointwise stopped-state comparison fails. -/
+/-- A random stopping event with a positive margin satisfies the global
+comparison despite failure of stopped-state pointwise dominance. -/
 theorem randomized_positive_margin_bound :
-    0 < margin ∧ 0 < (law.map stopped).prob true ∧
-      law.expect targetValue + margin * (law.map stopped).prob true ≤
-        law.expect sourceValue := by
+    0 < margin ∧ 0 < ((law.map stopped).toOuterMeasure {true}).toReal ∧
+      expect law targetValue (integrable targetValue) +
+        margin * ((law.map stopped).toOuterMeasure {true}).toReal ≤
+      expect law sourceValue (integrable sourceValue) := by
   refine ⟨by norm_num [margin], ?_, ?_⟩
-  · rw [FinDist.prob_map, law, FinDist.expect_uniformFin]
-    norm_num [stopped, Fin.sum_univ_succ]
-    exact ⟨0, by simp⟩
-  · apply FinDist.stopping_information_fiber_bound law stopped information
-      sourceValue targetValue margin
-    · intro state _ hstate
-      fin_cases state <;> simp [stopped, targetValue, sourceValue] at hstate ⊢
-    · exact stopped_fiber_comparison
+  · rw [← expect_stopIndicator law stopped, law_expect]
+    have hsum : (∑ state : Fin 3, stopIndicator stopped state) = 2 := by
+      have hcard :
+          (Finset.univ.filter (fun state : Fin 3 => state = 0 ∨ state = 1)).card =
+            2 := by decide
+      norm_num [Fin.sum_univ_succ, stopped, stopIndicator, hcard]
+    rw [hsum]
+    norm_num
+  · exact stopping_information_fiber_bound_of_stopped law stopped information
+      sourceValue targetValue margin (integrable sourceValue)
+      (integrable targetValue) outside_stopping_dominance
+      reached_stopped_fiber_comparison
 
 private def gapEvent (state : Fin 2) : Bool := decide (state = 0)
 
@@ -105,55 +127,107 @@ private def gapSource (state : Fin 2) : ℝ := if state = 0 then -1 else 3
 
 private def gapTarget (state : Fin 2) : ℝ := if state = 0 then 0 else 3
 
-/-- The event-weighted discrepancy bound can be attained: a unit improvement
-on an event of probability one half raises expectation from one to three halves.
-This is a finite-law regression, not a native-runtime optimality claim. -/
+/-- A unit event discrepancy is attained on a half-mass event. -/
 theorem event_gap_sharp :
-    let pair := FinDist.uniformFin 2
-    (pair.map gapEvent).prob true = 1 / 2 ∧
-      pair.expect gapSource = 1 ∧ pair.expect gapTarget = 3 / 2 ∧
-      pair.expect gapTarget ≤ pair.expect gapSource + 1 * (pair.map gapEvent).prob true := by
+    let pair := PMF.uniformOfFintype (Fin 2)
+    let hs := payoffIntegrable_of_finite pair gapSource
+    let ht := payoffIntegrable_of_finite pair gapTarget
+    ((pair.map gapEvent).toOuterMeasure {true}).toReal = 1 / 2 ∧
+      expect pair gapSource hs = 1 ∧ expect pair gapTarget ht = 3 / 2 ∧
+      expect pair gapTarget ht ≤
+        expect pair gapSource hs +
+          ((pair.map gapEvent).toOuterMeasure {true}).toReal := by
   dsimp only
-  refine ⟨?_, ?_, ?_, ?_⟩
-  · rw [FinDist.prob_map, FinDist.expect_uniformFin]
-    norm_num [gapEvent, Fin.sum_univ_succ]
-  · rw [FinDist.expect_uniformFin]
-    norm_num [gapSource, Fin.sum_univ_succ]
-  · rw [FinDist.expect_uniformFin]
-    norm_num [gapTarget, Fin.sum_univ_succ]
-  · rw [FinDist.prob_map_eq_probOf_preimage_singleton]
-    apply FinDist.expect_le_add_event_gap
-    · intro state _ hstate
-      fin_cases state <;> simp [gapEvent, gapSource, gapTarget] at hstate ⊢
-    · intro state _ hstate
-      fin_cases state <;> simp [gapEvent, gapSource, gapTarget] at hstate ⊢
+  have hmass : ((PMF.uniformOfFintype (Fin 2)).map gapEvent
+      |>.toOuterMeasure {true}).toReal = 1 / 2 := by
+    rw [← expect_stopIndicator (PMF.uniformOfFintype (Fin 2)) gapEvent,
+      expect_uniformFin]
+    norm_num [Fin.sum_univ_succ, gapEvent, stopIndicator]
+  refine ⟨hmass, ?_, ?_, ?_⟩
+  · rw [expect_uniformFin]
+    norm_num [Fin.sum_univ_succ, gapSource]
+  · rw [expect_uniformFin]
+    norm_num [Fin.sum_univ_succ, gapTarget]
+  · rw [expect_uniformFin, expect_uniformFin, hmass]
+    norm_num [Fin.sum_univ_succ, gapSource, gapTarget]
 
-/-- Unconditional quit and continuation expectations can agree while selecting
-when to quit strictly improves utility. Decision-point comparisons therefore
-cannot be replaced by one unconditional expectation comparison. -/
+private def states2 : PMF (Fin 2) := PMF.uniformOfFintype (Fin 2)
+
+private def quit2 (state : Fin 2) : PMF ℝ :=
+  PMF.pure (if state = 0 then 2 else 0)
+
+private def proceed2 (_state : Fin 2) : PMF ℝ := PMF.pure 1
+
+private def stop2 (state : Fin 2) : PMF Bool :=
+  PMF.pure (decide (state = 0))
+
+private def quitValue2 (state : Fin 2) : ℝ := if state = 0 then 2 else 0
+
+private def selectedValue2 (state : Fin 2) : ℝ :=
+  if state = 0 then 2 else 1
+
+private theorem selectedLaw2 :
+    (states2.bind fun state => (stop2 state).bind fun stops =>
+      if stops then quit2 state else proceed2 state) =
+      states2.map selectedValue2 := by
+  calc
+    _ = states2.bind (fun state => PMF.pure (selectedValue2 state)) := by
+      apply bind_congr_on_support
+      intro state _
+      fin_cases state <;> simp [stop2, quit2, proceed2, selectedValue2]
+    _ = states2.map selectedValue2 := PMF.bind_pure_comp _ _
+
+private theorem expect_map_states2 (f : Fin 2 → ℝ)
+    (hf : PayoffIntegrable (states2.map f) id) :
+    expect (states2.map f) id hf = (∑ state : Fin 2, f state) / 2 := by
+  have hsource : PayoffIntegrable states2 (id ∘ f) :=
+    payoffIntegrable_of_finite states2 _
+  calc
+    expect (states2.map f) id hf = expect states2 (id ∘ f) hsource :=
+      expect_map f states2 id hsource hf
+    _ = _ := by
+      simpa [states2, Function.comp_def] using
+        (expect_uniformFin f)
+
+/-- Unconditional quit and continuation means agree, but selecting quit at
+the favorable state strictly improves the realized mean. -/
 theorem unconditional_comparison_insufficient :
-    let states := FinDist.uniformFin 2
-    let quit := fun state : Fin 2 => FinDist.pure (if state = 0 then (2 : ℝ) else 0)
-    let proceed := fun _ : Fin 2 => FinDist.pure (1 : ℝ)
-    let stop := fun state : Fin 2 => FinDist.pure (decide (state = 0))
-    (states.bind quit).expect id = (states.bind proceed).expect id ∧
-      (states.bind proceed).expect id <
-        (states.bind fun state => (stop state).bind fun stops =>
-          if stops then quit state else proceed state).expect id := by
-  norm_num [FinDist.expect_bind, FinDist.expect_uniformFin, Fin.sum_univ_succ]
+    let hquit := (payoffIntegrable_map_iff quitValue2 states2 id).2
+      (payoffIntegrable_of_finite states2 (id ∘ quitValue2))
+    let hproceed := (payoffIntegrable_map_iff (fun _ : Fin 2 => (1 : ℝ))
+      states2 id).2
+      (payoffIntegrable_of_finite states2 (id ∘ fun _ : Fin 2 => (1 : ℝ)))
+    let hselected := (payoffIntegrable_map_iff selectedValue2 states2 id).2
+      (payoffIntegrable_of_finite states2 (id ∘ selectedValue2))
+    expect (states2.map quitValue2) id hquit =
+      expect (states2.map fun _ : Fin 2 => (1 : ℝ)) id hproceed ∧
+    expect (states2.map fun _ : Fin 2 => (1 : ℝ)) id hproceed <
+      expect (states2.map selectedValue2) id hselected ∧
+    (states2.bind fun state => (stop2 state).bind fun stops =>
+      if stops then quit2 state else proceed2 state) =
+      states2.map selectedValue2 := by
+  dsimp only
+  refine ⟨?_, ?_, selectedLaw2⟩
+  · rw [expect_map_states2, expect_map_states2]
+    norm_num [Fin.sum_univ_succ, quitValue2]
+  · rw [expect_map_states2, expect_map_states2]
+    norm_num [Fin.sum_univ_succ, selectedValue2]
 
-/-- Negative event discrepancies are retained without a nonnegativity
-assumption on the gap. Here the negative bound is attained. -/
+/-- A negative event gap is retained exactly. -/
 theorem negative_event_gap :
-    let states := FinDist.uniformFin 2
+    let states := PMF.uniformOfFintype (Fin 2)
     let event : Set (Fin 2) := {0}
     let target := fun state : Fin 2 => if state = 0 then (-2 : ℝ) else 0
-    states.expect target = -1 ∧
-      states.expect target ≤ states.expect (fun _ => 0) + (-2) * states.probOf event := by
+    let ht := payoffIntegrable_of_finite states target
+    expect states target ht = -1 ∧
+      expect states target ht ≤
+        expect states (fun _ => 0) (payoffIntegrable_zero states) +
+          (-2) * (states.toOuterMeasure event).toReal := by
   dsimp only
   constructor
-  · norm_num [FinDist.expect_uniformFin, Fin.sum_univ_succ]
-  · apply FinDist.expect_le_add_event_gap
+  · rw [expect_uniformFin]
+    norm_num [Fin.sum_univ_succ]
+  · apply expect_le_add_event_gap
     · intro state _ hstate
       simp only [Set.mem_singleton_iff] at hstate
       simp [hstate]
@@ -162,5 +236,3 @@ theorem negative_event_gap :
       simp [hstate]
 
 end GameTheory.Tests.SelectiveStopping
-
-/-! The regression proof itself uses only the standard finite-law axioms. -/

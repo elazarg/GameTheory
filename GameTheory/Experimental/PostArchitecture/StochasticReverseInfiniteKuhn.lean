@@ -72,7 +72,7 @@ def laterInfo : offPathGame.PublicHistory :=
 of the hostile correlated pushforward. -/
 def fairProtocolBehavioral :
     (offPathGame.perfectMonitoring false).BehavioralPolicy () :=
-  fun _ => FinDist.uniformOfFintype
+  fun _ => PMF.uniformOfFintype _
 
 /-- Force the choice at `laterInfo` to equal the initial choice while leaving
 all other infinitely many policy coordinates intact. -/
@@ -195,19 +195,51 @@ theorem stageUtility_abs_le_one (state : Bool)
 /-- The reverse construction reaches the discounted consequence for a
 nonconstant stage utility. -/
 theorem discounted_consumer :
-    Summable (fun time => (2 : ℝ)⁻¹ ^ time *
+    ∃ hstage : ∀ time, Integrable
+        (offPathGame.latestStageUtility false ())
+        ((offPathGame.perfectMonitoring false).runPolicyMeasure
+          correlatedLaws (time + 1)),
+      ∃ hsum : Summable (fun time => (2 : ℝ)⁻¹ ^ time *
         offPathGame.arbitraryPolicyMeasureStageExpectation false
-          correlatedLaws () time) ∧
-      offPathGame.arbitraryPolicyMeasureDiscountedPayoff false (2 : ℝ)⁻¹
-          correlatedLaws () =
-        offPathGame.behavioralDiscountedPayoff false (2 : ℝ)⁻¹
-          (offPathGame.policyMeasuresToPublicBehavioralWith false
-            correlatedLaws falseFallback) () := by
-  apply offPathGame.kuhn_arbitraryPolicyMeasure_discountedPayoff
+          correlatedLaws () time (hstage time)),
+        ∃ hbehavioral : ∀ time, PayoffIntegrable
+          ((offPathGame.perfectMonitoring false).runBehavioral
+            (offPathGame.toBehaviorProfile false
+              (offPathGame.policyMeasuresToPublicBehavioralWith false
+                correlatedLaws falseFallback)) (time + 1))
+          (offPathGame.latestStageUtility false ()),
+          ∃ hbehavioralSum : Summable (fun time => (2 : ℝ)⁻¹ ^ time *
+            offPathGame.behavioralStageExpectation false
+              (offPathGame.policyMeasuresToPublicBehavioralWith false
+                correlatedLaws falseFallback) () time (hbehavioral time)),
+            offPathGame.arbitraryPolicyMeasureDiscountedPayoff false
+                (2 : ℝ)⁻¹ correlatedLaws () hstage hsum =
+              offPathGame.behavioralDiscountedPayoff false (2 : ℝ)⁻¹
+                (offPathGame.policyMeasuresToPublicBehavioralWith false
+                  correlatedLaws falseFallback) () hbehavioral
+                hbehavioralSum := by
+  let hbound : ∀ state actions,
+      |offPathGame.stageUtility state actions ()| ≤ 1 :=
+    stageUtility_abs_le_one
+  let hstage := fun time =>
+    offPathGame.arbitraryPolicyMeasureStageIntegrable_of_bounded false
+      correlatedLaws falseFallback () 1 hbound time
+  let hsum := offPathGame.summable_discounted_arbitraryPolicyMeasureStageExpectation
+    false (by norm_num : 0 ≤ (2 : ℝ)⁻¹)
+    (by norm_num : (2 : ℝ)⁻¹ < 1)
+    correlatedLaws falseFallback () hbound
+  let hbehavioral := fun time =>
+    offPathGame.behavioralStageIntegrable_of_bounded false
+      (offPathGame.policyMeasuresToPublicBehavioralWith false
+        correlatedLaws falseFallback) () 1 hbound time
+  let hbehavioralSum := offPathGame.summable_discounted_behavioralStageExpectation
+    false (by norm_num : 0 ≤ (2 : ℝ)⁻¹)
+    (by norm_num : (2 : ℝ)⁻¹ < 1)
+    (offPathGame.policyMeasuresToPublicBehavioralWith false
+      correlatedLaws falseFallback) () hbound
+  refine ⟨hstage, hsum, hbehavioral, hbehavioralSum, ?_⟩
+  exact offPathGame.kuhn_arbitraryPolicyMeasure_discountedPayoff
     false (discount := (2 : ℝ)⁻¹) (bound := 1)
-      (laws := correlatedLaws) (fallback := falseFallback) (who := ())
-  · norm_num
-  · norm_num
-  · exact stageUtility_abs_le_one
+    (by norm_num) (by norm_num) correlatedLaws falseFallback () hbound
 
 end GameTheory.Experimental.PostArchitecture.StochasticReverseInfiniteKuhn

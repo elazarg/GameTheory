@@ -12,6 +12,8 @@ noncomputable section
 
 namespace GameTheory.Mechanism.Auction
 
+open GameTheory.Math.Probability
+
 namespace ReserveVickrey
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
@@ -236,16 +238,20 @@ def reserveVickreyGame (value : ι → ℝ) (reserve : ℝ) : UtilityGame ι :=
 theorem reserveVickreyGame_expectedUtility (value : ι → ℝ) (reserve : ℝ)
     (bids : BidProfile ι) (who : ι) :
     expectedUtility (reserveVickreyGame value reserve).utility who
-      ((reserveVickreyGame value reserve).form.play bids) =
+      ((reserveVickreyGame value reserve).form.play bids)
+      (payoffIntegrable_pure bids
+        (fun outcome => (reserveVickreyGame value reserve).utility outcome who)) =
         reserveVickreyUtility value reserve bids who := by
-  simp [reserveVickreyGame, reserveVickreyUtility]
+  simp [reserveVickreyGame, reserveVickreyUtility, expectedUtility_pure]
 
 /-- Truthful bidding is dominant under the canonical expected-utility preference. -/
 theorem valuation_is_dominant (value : ι → ℝ) (reserve : ℝ) (who : ι) :
     IsDominant (reserveVickreyGame value reserve).form
       (euPreference (reserveVickreyGame value reserve).utility) who (value who) := by
   intro alternative bids
-  simp only [euPreference_apply, expectedUtility_pure]
+  rw [euPreference_apply]
+  refine ⟨payoffIntegrable_pure _ _, payoffIntegrable_pure _ _, ?_⟩
+  simp only [expectedUtility_pure]
   exact truthful_weakly_dominant value reserve who bids alternative
 
 /-- The reserve-price Vickrey mechanism is dominant-strategy incentive compatible. -/

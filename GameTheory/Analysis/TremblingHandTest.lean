@@ -21,18 +21,18 @@ open Filter GameTheory GameTheory.Finite GameTheory.Math.Probability GameTheory.
 
 /-- Both actions receive strictly positive probability at the fair profile. -/
 theorem fairPennies_fullSupport (who : Fin 2) :
-    (fairPennies who).FullSupport := by
+    ∀ action, action ∈ (fairPennies who).support := by
   intro action
-  rw [← FinDist.prob_pos_iff, TableGame.toMixed_prob]
+  rw [PMF.mem_support_iff, fairPennies, TableGame.toMixed_apply]
   norm_num [uniformPennies]
 
 /-- The fair mixed Nash profile carries an explicit positive, vanishing
 perturbation certificate through the general theorem. -/
 theorem fairPennies_isTremblingHandPerfect :
-    matchingPennies.toForm.IsTremblingHandPerfect
+  matchingPennies.toForm.IsTremblingHandPerfect
       (euPreference matchingPennies.utility) fairPennies :=
-  fairPennies_isNash.isTremblingHandPerfect_of_fullSupport
-    matchingPennies.toForm fairPennies_fullSupport
+  GameTheory.IsNash.isTremblingHandPerfect_of_fullSupport
+    matchingPennies.toForm fairPennies_isNash fairPennies_fullSupport
 
 /-- Nondegeneracy is visible in the statement: the game has no pure Nash
 profile but does have a trembling-hand-perfect mixed profile. -/
@@ -49,7 +49,7 @@ theorem matchingPennies_refinement_without_pure_equilibrium :
 @[reducible]
 def dominatedForm : GameForm (Fin 2) where
   sig := { Strategy := fun _ => Bool, Outcome := Fin 2 → Bool }
-  play profile := FinDist.pure profile
+  play profile := PMF.pure profile
 
 /-- Player zero earns one only when both players choose `true`; player one is
 indifferent. Thus `false` is weakly dominated for player zero. -/
@@ -69,18 +69,44 @@ private theorem boolProfiles :
       {bitsTT, bitsTF, bitsFT, bitsFF} := by
   decide
 
+private theorem pmfBool_sum_toReal_one (μ : PMF Bool) :
+    (μ false).toReal + (μ true).toReal = 1 := by
+  have h := congrArg ENNReal.toReal μ.tsum_coe
+  rw [ENNReal.tsum_toReal_eq (fun action => μ.apply_ne_top action)] at h
+  simpa only [tsum_fintype, Fintype.sum_bool, ENNReal.toReal_one,
+    add_comm] using h
+
 /-- Player zero's mixed payoff is the product of the two `true` masses. -/
 theorem dominated_expectedUtility_zero
     (mixedProfile : Profile dominatedForm.sig.mixed) :
     expectedUtility dominatedUtility 0
-        (dominatedForm.mixed.play mixedProfile) =
-      (mixedProfile 0).prob true * (mixedProfile 1).prob true := by
-  rw [GameForm.mixed_play, expectedUtility_bind, FinDist.expect_eq_sum,
-    boolProfiles, Finset.sum_insert (by decide),
-    Finset.sum_insert (by decide), Finset.sum_insert (by decide),
-    Finset.sum_singleton]
-  simp [dominatedForm, dominatedUtility, bitsTT, bitsTF, bitsFT, bitsFF,
-    FinDist.prob_pi, Fin.prod_univ_two]
+        (dominatedForm.mixed.play mixedProfile)
+        (payoffIntegrable_of_finite (dominatedForm.mixed.play mixedProfile)
+          (fun outcome => dominatedUtility outcome 0)) =
+      (mixedProfile 0 true).toReal * (mixedProfile 1 true).toReal := by
+  let hproduct := payoffIntegrable_of_finite (independentProduct mixedProfile)
+    (fun outcome => dominatedUtility outcome 0)
+  have hlaw : dominatedForm.mixed.play mixedProfile =
+      independentProduct mixedProfile := by
+    rw [GameForm.mixed_play]
+    simp [dominatedForm]
+  calc
+    expectedUtility dominatedUtility 0
+        (dominatedForm.mixed.play mixedProfile)
+        (payoffIntegrable_of_finite (dominatedForm.mixed.play mixedProfile)
+          (fun outcome => dominatedUtility outcome 0))
+        = expectedUtility dominatedUtility 0
+            (independentProduct mixedProfile) hproduct :=
+          expectedUtility_congr_law dominatedUtility 0 hlaw _ hproduct
+    _ = ∑ profile, (independentProduct mixedProfile profile).toReal *
+          dominatedUtility profile 0 := by
+        rw [expectedUtility, expect_eq_sum]
+    _ = (mixedProfile 0 true).toReal * (mixedProfile 1 true).toReal := by
+      rw [boolProfiles, Finset.sum_insert (by decide),
+        Finset.sum_insert (by decide), Finset.sum_insert (by decide),
+        Finset.sum_singleton]
+      simp [dominatedUtility, bitsTT, bitsTF, bitsFT, bitsFF,
+        independentProduct_apply, Fin.prod_univ_two]
 
 def weakProfile : Profile dominatedForm.sig := fun _ => false
 
@@ -95,13 +121,15 @@ theorem weakProfile_isNash :
   intro who alternative
   rw [euPreference_apply]
   fin_cases who <;> cases alternative <;>
-    norm_num [dominatedForm, dominatedUtility, weakProfile, expectedUtility,
-      Profile.update]
+    refine ⟨payoffIntegrable_pure weakProfile _,
+      payoffIntegrable_pure (weakProfile.update _ _) _, ?_⟩ <;>
+      simp [expectedUtility_pure, dominatedForm, dominatedUtility,
+        weakProfile]
 
 theorem weakMixedProfile_isNash :
     IsNash dominatedForm.mixed (euPreference dominatedUtility)
       weakMixedProfile :=
-  weakProfile_isNash.purify
+  weakProfile_isNash.purify_of_finite
 
 /-- The weakly dominated Nash equilibrium is not trembling-hand perfect.
 Against every positive tremble by player one, player zero strictly benefits by
@@ -113,8 +141,7 @@ theorem weakMixedProfile_not_isTremblingHandPerfect :
   intro hperfect
   rcases hperfect with ⟨lower, approximating, hequilibria, hzero, hconverges⟩
   have hmassLe (n : ℕ) : lower n 0 false + lower n 0 true ≤ 1 := by
-    have hsum := FinDist.sum_prob (approximating n 0)
-    rw [Fintype.sum_bool] at hsum
+    have hsum := pmfBool_sum_toReal_one (approximating n 0)
     have hfalse := (hequilibria n).2.1 0 false
     have htrue := (hequilibria n).2.1 0 true
     linarith
@@ -129,48 +156,75 @@ theorem weakMixedProfile_not_isTremblingHandPerfect :
   have hshiftedSum (n : ℕ) : ∑ action, shiftedWeight n action = 1 := by
     rw [Fintype.sum_bool]
     simp [shiftedWeight]
-  let shifted : ℕ → FinDist Bool := fun n =>
-    FinDist.ofWeights (shiftedWeight n) (hshiftedNonneg n) (hshiftedSum n)
+  let shifted : ℕ → PMF Bool := fun n =>
+    PMF.ofFintype (fun action => ENNReal.ofReal (shiftedWeight n action)) (by
+      rw [← ENNReal.ofReal_sum_of_nonneg
+        (fun action _ => hshiftedNonneg n action), hshiftedSum n]
+      norm_num)
   have hshiftedRespects (n : ℕ) :
       dominatedForm.StrategyRespectsPerturbation (lower n 0) (shifted n) := by
     intro action
-    rw [show (shifted n).prob action = shiftedWeight n action by
-      exact FinDist.prob_ofWeights ..]
+    rw [show (shifted n action).toReal = shiftedWeight n action by
+      simp [shifted, PMF.ofFintype_apply, ENNReal.toReal_ofReal,
+        hshiftedNonneg]]
     cases action <;> simp only [shiftedWeight, Bool.false_eq_true,
       ite_false, ite_true]
     · exact le_rfl
     · linarith [hmassLe n]
   have hfalseEq (n : ℕ) :
-      (approximating n 0).prob false = lower n 0 false := by
+      (approximating n 0 false).toReal = lower n 0 false := by
     have hpref :=
       ((dominatedForm.isPerturbedEq_iff (euPreference dominatedUtility)
         (lower n) (approximating n)).mp (hequilibria n).2).2
         0 (shifted n) (hshiftedRespects n)
-    rw [euPreference_apply, dominated_expectedUtility_zero,
-      dominated_expectedUtility_zero] at hpref
-    have hopponentPos : 0 < (approximating n 1).prob true :=
+    rcases hpref with ⟨hpreferred, halternative, hle⟩
+    have hpreferredFormula :
+        expectedUtility dominatedUtility 0
+          (dominatedForm.mixed.play (approximating n)) hpreferred =
+          (approximating n 0 true).toReal *
+          (approximating n 1 true).toReal := by
+      let hcanonical := payoffIntegrable_of_finite
+        (dominatedForm.mixed.play (approximating n))
+        (fun outcome => dominatedUtility outcome 0)
+      rw [expectedUtility_congr_law dominatedUtility 0 rfl hpreferred
+        hcanonical]
+      exact dominated_expectedUtility_zero (approximating n)
+    have halternativeFormula :
+        expectedUtility dominatedUtility 0
+          (dominatedForm.mixed.play ((approximating n).update 0 (shifted n)))
+          halternative =
+          ((approximating n).update 0 (shifted n) 0 true).toReal *
+          ((approximating n).update 0 (shifted n) 1 true).toReal := by
+      let hcanonical := payoffIntegrable_of_finite
+        (dominatedForm.mixed.play ((approximating n).update 0 (shifted n)))
+        (fun outcome => dominatedUtility outcome 0)
+      rw [expectedUtility_congr_law dominatedUtility 0 rfl halternative
+        hcanonical]
+      exact dominated_expectedUtility_zero _
+    rw [hpreferredFormula, halternativeFormula] at hle
+    have hopponentPos : 0 < (approximating n 1 true).toReal :=
       lt_of_lt_of_le ((hequilibria n).1 1 true)
         ((hequilibria n).2.1 1 true)
-    have hsum := FinDist.sum_prob (approximating n 0)
-    rw [Fintype.sum_bool] at hsum
+    have hsum := pmfBool_sum_toReal_one (approximating n 0)
     have hfalseLower := (hequilibria n).2.1 0 false
-    have hshiftedTrue : (shifted n).prob true = 1 - lower n 0 false := by
-      rw [show (shifted n).prob true = shiftedWeight n true by
-        exact FinDist.prob_ofWeights ..]
+    have hshiftedTrue : (shifted n true).toReal = 1 - lower n 0 false := by
+      rw [show (shifted n true).toReal = shiftedWeight n true by
+        simp [shifted, PMF.ofFintype_apply, ENNReal.toReal_ofReal,
+          hshiftedNonneg]]
       simp [shiftedWeight]
     simp only [Profile.update_same,
-      Profile.update_of_ne _ _ (by decide : (1 : Fin 2) ≠ 0)] at hpref
-    rw [hshiftedTrue] at hpref
+      Profile.update_of_ne _ _ (by decide : (1 : Fin 2) ≠ 0)] at hle
+    rw [hshiftedTrue] at hle
     nlinarith
   have htarget :
-      Tendsto (fun n => (approximating n 0).prob false) atTop (nhds 1) := by
+      Tendsto (fun n => (approximating n 0 false).toReal) atTop (nhds 1) := by
     simpa [weakMixedProfile, weakProfile, GameForm.purify] using
-      hconverges 0 false
+      (hconverges 0).toReal false
   have hlower :
       Tendsto (fun n => lower n 0 false) atTop (nhds 0) :=
     hzero 0 false
   have hequal :
-      (fun n => (approximating n 0).prob false) =
+      (fun n => (approximating n 0 false).toReal) =
         (fun n => lower n 0 false) :=
     funext hfalseEq
   rw [hequal] at htarget

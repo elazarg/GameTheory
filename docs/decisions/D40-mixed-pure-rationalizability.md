@@ -1,8 +1,8 @@
 # D40: distinguish correlated, independent, and pure rationalizability
 
-- **Status:** accepted; independent product-belief package completed by EXP-080
+- **Status:** accepted; general PMF integration boundary governed by D62
 - **Date:** 2026-08-09
-- **Experiment IDs:** EXP-073, EXP-076, EXP-080
+- **Experiment IDs:** EXP-073, EXP-076, EXP-080, EXP-132
 
 ## Decision
 
@@ -11,20 +11,32 @@ represents:
 
 - `GameTheory.correlatedSurvivors` and
   `GameTheory.IsCorrelatedRationalizable` eliminate a pure strategy when a
-  `FinDist` of surviving own strategies strictly improves against every
+  PMF of surviving own strategies strictly improves against every
   surviving *joint* opponents' profile;
 - `GameTheory.pureSurvivors` names the distinct pure-dominator iteration and
   `GameTheory.SurvivesAllPureEliminationRounds` names its all-round survivor
   property without overloading “rationalizability”; and
 - `GameTheory.independentSurvivors` and
   `GameTheory.IsIndependentRationalizable` iterate best response to a profile
-  of per-opponent `FinDist` marginals, interpreted by the canonical mixed
+  of per-opponent PMF marginals, interpreted by the canonical mixed
   extension as an independent product law.
 
 Do not provide an unqualified `IsRationalizable` alias.  In games with three
 or more players it would hide the material distinction between arbitrary
 beliefs over joint opponents' actions and products of per-opponent beliefs.
 There are no source-compatibility aliases.
+
+[D62](D62-general-pmf-restoration.md) governs the general PMF carrier and
+integrability of the actual compared laws. The survivor predicates above mean
+survival of every finite iteration. They do not assert a transfinite or greatest
+fixed-point characterization on infinite strategy spaces. Interchanging a
+product belief with a mixed dominator additionally requires integration of
+their joint payoff law; separate conditional expectations do not supply it.
+EXP-132 proves that this premise is necessary: an action survives every
+independent round but is removed by correlated elimination in round one,
+despite integration of every conditional row and column. Finite strategy
+spaces recover the inclusion from integration of pure play, without requiring
+finite outcome spaces.
 
 ## Competing designs
 
@@ -60,16 +72,15 @@ Primary references:
 ## Representative slice and measurements
 
 The Core operator reuses `DeviationScheme.unilateralRandomized`,
-`GameForm.outcomeLaw`, `FinDist`, `Preference.strict`, and `Profile.update`.
+`GameForm.outcomeLaw`, PMF, `Preference.strict`, and `Profile.update`.
 It stores no finiteness and imports neither Analysis nor a domain root.  The
 hostile three-action game still separates mixed and pure dominators in its
 first round.
 
-EXP-076 compared the implemented quantifiers with the primary definitions.
-The implementation ranges over a single joint opponents' profile, so its
-dual best-response belief may correlate different opponents' actions.  The
-public API and all direct consumers were renamed without aliases.  A focused
-Core/Finite/test/example build completed 1,757 jobs warning-free.
+EXP-076 identifies the quantifier distinction: a belief on a joint opponents
+profile may correlate different opponents' actions. The public names must
+express that correlated interpretation rather than imply independent
+opponent mixing.
 
 ## Kill condition and result
 
@@ -82,7 +93,8 @@ separation.
 The correction therefore stands, and EXP-080 completes the named independent
 surface. `Tests.Rationalizability` proves that one candidate survives every
 correlated mixed-dominator round but is rejected in the first independent
-best-response round. The general inclusion theorem proves independent implies
-correlated rationalizability. The symbolic converse counterexample quantifies
+best-response round. The inclusion theorem proves independent implies
+correlated rationalizability under the joint-law integration premise above.
+The symbolic converse counterexample quantifies
 over every pair of opponent marginals; it is not a sampled or
 definition-for-definition comparison.

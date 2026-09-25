@@ -22,7 +22,7 @@ open GameTheory.Protocol GameTheory.Math.Probability
   active state _ := state = false
   available _ _ := {0}
   terminal state := state = true
-  step _ _ := FinDist.pure true
+  step _ _ := PMF.pure true
   progress := by
     intro state hterm
     cases state
@@ -174,22 +174,38 @@ theorem wellFoundedPlay : execution.WellFoundedPlay := by
   subst target
   decide
 
+theorem finiteStepSupport : ∀ (history : execution.History)
+    (_ : ¬ execution.terminal history.state)
+    (chosen : {joint : Unit → Option Nat // execution.Legal history.state joint}),
+    (execution.step history.state chosen).support.Finite := by
+  intro history hterm chosen
+  exact Set.toFinite _
+
 def utility : execution.History → Unit → ℝ := fun _ _ => 0
+
+theorem backwardIntegrable (chooser : execution.HistoryChooser)
+    (history : execution.History) (who : Unit) :
+    PayoffIntegrable (execution.historyBackwardLaw wellFoundedPlay chooser history)
+      (fun outcome => utility outcome who) :=
+  execution.payoffIntegrable_historyBackwardLaw_of_finite_step_support
+    (certificate := wellFoundedPlay) finiteStepSupport chooser
+    (fun outcome => utility outcome who) history
 
 /-- Backward induction constructs an SPE despite the infinite unreachable
 choice carrier; only the explicit total fallback supplies its unused value. -/
 theorem exists_subgamePerfect :
-    ∃ profile : Profile information.strategicSignature,
+  ∃ profile : Profile information.strategicSignature,
       information.IsSubgamePerfect wellFoundedPlay profile utility :=
-  information.exists_isSubgamePerfect singleMover fallback
-    finiteDecisionChoices wellFoundedPlay perfect utility
+  information.exists_isSubgamePerfect_of_finite_step_support singleMover fallback
+    finiteDecisionChoices wellFoundedPlay perfect utility finiteStepSupport
 
 /-- At the infinite unreachable menu, the constructed policy is exactly the
 caller's fallback rather than the result of an impossible maximization. -/
 theorem backwardPolicy_two_eq_fallback :
     information.backwardPolicy singleMover fallback finiteDecisionChoices
-        wellFoundedPlay utility () 2 = fallback () 2 := by
+        wellFoundedPlay utility backwardIntegrable () 2 = fallback () 2 := by
   apply information.backwardPolicy_eq_fallback_of_no_decision_history
+    singleMover fallback finiteDecisionChoices backwardIntegrable () 2
   rintro ⟨history, _, hactive, hinfo⟩
   have hstate : history.state = false := by
     simpa [execution] using hactive

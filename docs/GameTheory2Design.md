@@ -3,6 +3,13 @@
 Status: design RFC for a rewrite from scratch
 Date: 2026-07-22
 
+[D62](decisions/D62-general-pmf-restoration.md) revises the discrete semantic
+carrier to ordinary Mathlib PMF with guarded real expected utility. The
+[restoration design](PMFRestorationDesign.md) specifies its validated semantic
+boundaries, and the [delivery ledger](DeliveryLedger.md) owns delivery status.
+Earlier experiment records retain the evidence for the superseded finite-law
+default; they do not restrict the current semantic types.
+
 ## 1. Purpose
 
 This document specifies a greenfield architecture for a second GameTheory
@@ -112,10 +119,12 @@ The foundational characteristic-function game and its core live in
 merely to fit this diagram. Larger cooperative developments may still warrant
 their own dependency root.
 
-Finite hidden-action contracts are likewise native to the opt-in mechanism
-branch.  D32 represents each action by its own finite-support outcome law and
-states agent optimality and explicit participation directly; it does not add
-dummy strategic players merely to reuse `GameForm`.
+Hidden-action contracts are likewise native to the opt-in mechanism branch.
+D32/D62 represent each action by its own PMF outcome law and state agent
+optimality and explicit participation directly. Real comparisons require
+integration of the actual payment or net payoff; reward and payment need not
+be separately integrable when only their difference is evaluated. The native
+model does not add dummy strategic players merely to reuse `GameForm`.
 
 Quasilinear direct mechanisms also have a capability-free native owner in the
 opt-in mechanism branch.  D33 stores only report types, valuations, allocation,
@@ -131,7 +140,7 @@ than fields forced into its foundation.
 |---|---|---|---|
 | D0 | Share static forms, incentive logic, and one execution base; use direct named bridges | Final | Mine the existing hub, price direct bridges, and prototype only the hybrid |
 | D1 | Bind profiles to a signature and store that signature in each form | Decided | Implement six core operations in indexed and bundled-signature prototypes |
-| D2 | Represent finite-support laws by a finite-support `PMF` subtype | Adopted | Compare a finite-support `PMF` subtype with normalized `Finsupp`, including their finite-carrier simplex bridge |
+| D2 / D62 | Use ordinary PMF; localize support finiteness and guard real expectations | adopted | Infinite-support static and sequential consumers, divergent-payoff controls, and whole-library recovery |
 | D3 | Do not introduce a generic probability-monad class in the baseline | Adopted | Revisit only after a second probability model shares three nontrivial theorems |
 | D4 | Separate `GameForm`, preferences, and utility evaluation | Adopted | Define Nash, CE, welfare, and utility invariance without duplicate predicates |
 | D5 | Define equilibrium once from local, law-linear deviations; keep profile-quantified response concepts distinct | Accepted | Express five equilibria plus best response, dominance, and one Bayesian slice |
@@ -243,12 +252,12 @@ abbrev Profile {ι : Type uι} (sig : GameSignature ι) :=
   ∀ i, sig.Strategy i
 
 structure GameForm {ι : Type uι} (sig : GameSignature ι) where
-  play : Profile sig → FinDist sig.Outcome
+  play : Profile sig → PMF sig.Outcome
 ```
 
 This keeps carrier choices explicit in result types. For example, mixed
 extension returns a form indexed by a signature whose strategy family is
-definitionally `fun i => FinDist (sig.Strategy i)`.
+definitionally `fun i => PMF (sig.Strategy i)`.
 
 `Profile` is bound to the signature, not to the full payoff- or
 preference-bearing game. Namespaces and explicit arguments may still provide
@@ -311,143 +320,70 @@ fallback. Binding profiles to the whole play/payoff object is not a fallback:
 the two-law reuse test above makes signature ownership an independent
 invariant. This decision must be made from the spike, not aesthetics.
 
-### D2. Finite-support probability and its concrete representation
+### D2 / D62. General discrete PMF with local finite capabilities
 
-The default game form uses a finite-support distribution on an arbitrary
-carrier. The carrier itself need not be finite.
+The default game form uses ordinary Mathlib `PMF` on an arbitrary carrier.
+Each law has countable support; neither the carrier nor the support is required
+to be finite. Strategies, deviations, protocol transitions, and beliefs use
+that same concrete probability type. No parallel finite game hierarchy or
+finite-law operation algebra is needed.
 
-The largest immediate payoff is that real expectation becomes unconditional:
-every observable is summable on the law's finite support. The core should not
-need parallel bounded-utility lemmas merely to justify bind, map, or payoff-law
-transport.
-
-Finite support also gives:
-
-- lawful finite bind and map;
-- unconditional real expectation for arbitrary utilities on the finite
-  support;
-- finite-support mixed strategies over countable or infinite action carriers;
-- no silent interpretation of a nonsummable real series as an expected payoff.
-
-The main API should distinguish these notions:
+Finite support is useful evidence for a particular operation. It does not
+justify restricting every law or make arbitrary real probabilities executable.
+Keep these capabilities separate:
 
 ```text
-finite support of a particular law  -- built into FinDist
-finite player carrier               -- needed for independent products
-finite strategy carrier             -- needed for enumeration/existence proofs
-finite outcome carrier              -- needed by particular compactness/sum arguments
-countably supported probability     -- separate extension layer
+finite support of a particular PMF  -- sufficient for real payoff integration
+finite player carrier              -- needed for the discrete independent product
+finite strategy carrier            -- needed for enumeration or finite existence
+finite outcome carrier             -- sufficient for payoff integration
+explicit finite rational tables    -- executable algorithms
+infinite product/path law          -- may need an ordinary probability measure
 ```
 
-The finite-support policy and its representation are separate decisions. Two
-representations must compete before the core API freezes:
+Real expectation requires a certificate of absolute integration under the
+actual law. The numerical operation accepts that certificate; expected-utility
+preference asserts that both compared values exist and satisfy the desired
+inequality. Bounded utility and finite support are sufficient conditions that
+individual theorems may use. Neither belongs in every game. An undefined
+unilateral deviation fails the equilibrium comparison instead of disappearing
+from its quantifier or acquiring a default value.
 
-```lean
-universe u
+Map and law transport preserve actual integration. Bind theorems derive
+conditional integration on positive-mass fibers and require enough evidence
+for the joint law. Integration of every conditional fiber alone is insufficient:
+a countable mixture of individually integrable payoffs can diverge. Standalone
+interim comparisons can use a local conditional certificate; ex-ante incentive
+claims must account for the whole deviation law.
 
--- Candidate A: inherit Mathlib's PMF theory.
-def FiniteSupportPMF (α : Type u) :=
-  { μ : PMF α // μ.support.Finite }
+The finite-carrier simplex remains an analytic representation of the same PMF
+and canonical equilibrium predicate. The executable rational presentation stays
+separate and connects by correctness theorems. Neither bridge creates another
+mixed-strategy or expected-utility semantics.
 
--- Candidate B: make the finite sum explicit.
-structure NormalizedFinsupp (α : Type u) where
-  weight : α →₀ ℝ≥0
-  mass_one : weight.sum (fun _ p => p) = 1
-```
+The original finite-representation competition is preserved in
+[D2](decisions/D2-finite-law-representation.md) and EXP-003–007/030. It compared
+a finite-support PMF subtype with normalized `Finsupp`; it did not establish
+that excluding infinite-support laws was mathematically appropriate. D62's
+counterexamples and representative consumers determine the broader boundary.
 
-Candidate A should inherit more probability lemmas but is likely to retain
-noncomputable `PMF` operations. Its weights live in `ℝ≥0∞`, so real-valued
-finite expectation may expose recurring `ENNReal.toReal` plumbing even when
-summability is trivial. Candidate B should expose finite sums directly but
-requires a new monad-law and interoperability development. Neither is assumed
-to serve D10: arbitrary real or nonnegative-real weights are not an executable
-substitute for a rational distribution.
+#### Validation and disproof conditions
 
-This is not a clean-room comparison. The current
-`comparison corpus` already implements the `PMF` subtype
-and substantial pure/map/bind/product/expectation/support theory, with further
-bind, conditioning, independence, and update experience under `comparison corpus`.
-Mine those proofs as measured prior art. In particular, count the actual
-`toReal`, classical, support, and reducibility costs before deciding whether to
-reuse, extract, or replace that implementation. The current convergence layer's
-use of explicit pointwise convergence because `PMF` lacks the desired bundled
-topology is also evidence for the simplex-bridge test, not a hypothetical risk.
+The [restoration gates](PMFRestorationDesign.md) require infinite-support
+products, conditioning, static equilibrium, typed execution, sequential
+consistency, finite-existence recovery, and executable correctness. Preserve
+the finite fixtures as specializations of the same concepts. Reject hidden
+finiteness, undefined real payoff comparisons, filtered deviations, duplicate
+semantics, weakened sequential consistency, or infinite-space existence inferred
+from finite compactness. Whole-library validation is part of acceptance.
 
-#### Validation spike
-
-First implement for both candidates:
-
-1. `pure`, `map`, `bind`, product, and their laws;
-2. real expectation and expectation-through-bind;
-3. support lemmas used by conditioning and deviation proofs;
-4. dependent finite products for finitely many players;
-5. conversion to Mathlib `PMF` and preservation theorems;
-6. on finite carriers, a round-trip equivalence with Mathlib `stdSimplex` that
-   preserves pure distributions, products, expectation, and affine structure.
-
-Measure:
-
-- proof lines required for monad and expectation laws;
-- source-level `ENNReal.toReal` and coercion plumbing in real expectation;
-- explicit classical/noncomputable declarations;
-- reduction and simp behavior of pure, bind, and mixed extension;
-- interoperability proof burden with Mathlib probability;
-- proof burden of reaching Mathlib's convex/topological simplex APIs;
-- elaboration time on the mixed-extension and CE slices;
-- whether support and expectation computations can be inspected in concrete
-  examples without unfolding representation internals.
-
-Then complete all of the following using the winning finite-support API:
-
-1. deterministic NFG compilation;
-2. an EFG with a nontrivial chance node;
-3. independent mixed extension for finitely many players;
-4. correlated and coarse-correlated equilibrium definitions;
-5. a finitely supported mixed strategy on a countably infinite action type.
-
-Also choose one flagship theorem from learning or repeated games and identify
-whether any distribution in its statement genuinely requires infinite support
-or a probability law on an infinite path space.
-
-Then prove one finite-game Nash-existence slice through the finite-law to
-`stdSimplex` equivalence. It must reuse the public mixed-profile, expected-value,
-and equilibrium definitions. Introducing parallel `MixedProfile`, expected
-payoff, or mixed-Nash predicates for the geometry layer fails the spike. The
-probability coefficient type must not be selected implicitly from the payoff
-scalar merely to make multiplication convenient.
-
-#### Disproof condition
-
-Reject either concrete representation if it loses its predicted advantage: a
-`PMF` subtype that still requires extensive support/expectation repair, or a
-normalized `Finsupp` that recreates a large probability library without
-improving reduction or downstream proofs. If neither wins clearly, prefer the
-`PMF` subtype for Mathlib interoperability and keep the representation hidden.
-
-If the finite-law/simplex bridge dominates the existence proof, does not expose
-the topology required by Mathlib without wrapper-breaking, or repeatedly forces
-representation-level reasoning on users, consider `stdSimplex` as the
-Analysis-facing representation. Even then, retain one canonical semantic
-equilibrium predicate and prove a representation equivalence; do not fork the
-logical API.
-
-Do not make finite support the only semantic core if a flagship theorem needs
-an infinite-support law in its statement and cannot be cleanly isolated in a
-countable extension. In that event, keep distinct finite and countable forms
-unless a precise shared interface has already passed D3's reopening test.
-
-Infinite repetition has a stricter the baseline boundary. Stable repeated-game theorems
-may use stagewise expected utility, deterministic paths of mixed stage
-profiles, recursive/Bellman expectations, and finite-prefix distributions of
-realized signals. They must not encode a stochastic law on the entire infinite
-signal-history space as `FinDist` or as a merely countably supported law. Under
-indefinitely nondegenerate stochastic monitoring, such a path law is generally
-not countably supported. The current
-`comparison corpus` presentation—an `ℕ`-indexed
-path of stage profiles evaluated per round—is positive evidence for this
-boundary; `comparison corpus` currently stops at
-finite-prefix signal laws. Genuine path-space probability waits for D11's
-measurable layer.
+An infinite product of nondegenerate discrete coordinates can be nonatomic.
+In particular, a fixed execution horizon need not give a finite cover of policy
+coordinates when chance has infinite support. PMF predrawing therefore retains
+an explicit finite-site premise, while ordinary product measures support the
+more general policy realization. Likewise, finite-prefix PMFs and stagewise
+discounted expectations do not by themselves define a PMF on infinite realized
+paths. Such path laws remain at D11's measurable boundary.
 
 ### D3. No generic probability monad in the first release
 
@@ -458,11 +394,11 @@ A small `GProb` class would conceal these obligations rather than solve them.
 
 Therefore:
 
-- the baseline uses a concrete finite-support probability type;
-- a countable `PMF` extension may be added with explicit expectation
-  hypotheses;
-- continuous and infinite-path probability are a separate measurable research
-  spike, not a type parameter threaded through the initial library.
+- discrete semantics use concrete Mathlib PMF with actual-law integration
+  requirements for real expected utility;
+- ordinary measures handle validated infinite-product or continuous-law
+  consumers, with measurability local to the operation;
+- a probability abstraction is not threaded through every semantic object.
 
 #### Reopening condition
 
@@ -482,7 +418,7 @@ The utility-free form is canonical. Preferences compare outcome laws:
 universe uι
 
 abbrev WeakPreference (Agent Outcome : Type*) :=
-  Agent → FinDist Outcome → FinDist Outcome → Prop
+  Agent → PMF Outcome → PMF Outcome → Prop
 
 abbrev Utility {ι : Type uι} (sig : GameSignature ι) :=
   sig.Outcome → ι → ℝ
@@ -492,7 +428,9 @@ structure UtilityGame {ι : Type uι} (sig : GameSignature ι) where
   utility : Utility sig
 ```
 
-Expected-utility preference is derived from a `Utility`. `UtilityGame` is only
+Expected-utility preference requires integration of both compared outcome
+laws and compares their real expectations. It is not globally reflexive when
+some laws have undefined utility. `UtilityGame` is only
 the dependent pair of a form and its evaluation; it does not repeat the form's
 strategy, outcome, or play fields. Generic solution concepts continue to take
 the form and preference explicitly, so bundling is an ergonomic option rather
@@ -597,10 +535,10 @@ structure DeviationScheme
   members : Deviator → Finset ι
   Dev : Deviator → Type*
   actLocal : ∀ who, Dev who →
-    Subprofile sig (members who) → FinDist (Subprofile sig (members who))
+    Subprofile sig (members who) → PMF (Subprofile sig (members who))
 
 def GameForm.outcomeLaw
-    (F : GameForm sig) (μ : FinDist (Profile sig)) : FinDist sig.Outcome :=
+    (F : GameForm sig) (μ : PMF (Profile sig)) : PMF sig.Outcome :=
   μ.bind F.play
 
 variable [DecidableEq ι]
@@ -608,7 +546,7 @@ variable {Deviator : Type*}
 
 def DeviationScheme.apply
     (D : DeviationScheme sig Deviator)
-    (μ : FinDist (Profile sig)) (who) (d : D.Dev who) :=
+    (μ : PMF (Profile sig)) (who) (d : D.Dev who) :=
   μ.bind fun profile =>
     (D.actLocal who d (Profile.restrict (D.members who) profile)).map
       fun local => Profile.override (D.members who) local profile
@@ -616,7 +554,7 @@ def DeviationScheme.apply
 def IsEquilibrium
     (F : GameForm sig)
     (weaklyPrefers : WeakPreference Deviator sig.Outcome)
-    (μ : FinDist (Profile sig))
+    (μ : PMF (Profile sig))
     (D : DeviationScheme sig Deviator) : Prop :=
   ∀ who d,
     weaklyPrefers who
@@ -768,7 +706,7 @@ structure ExecutionProtocol (ι : Type uι) where
   legal_iff_active_available : ...
   step : (state : State) →
     { joint : (∀ i, Option (Action i)) // legal state joint } →
-    FinDist State
+    PMF State
   terminal_no_legal : ...
   nonterminal_exists_legal : ...
 
@@ -827,24 +765,26 @@ without a second evaluator, and the ordinary mixed extension of the pure form
 is definitionally the existing mixed-policy runner. Point-mass theorems recover
 deterministic play, and the behavioral/mixed correspondence commutes with
 compilation in both directions under its respective no-revisit and recall-like
-hypotheses. In the bounded whole-profile forward direction, EXP-115 predraws
-only the finite support exposed by the supplied profile and horizon, so ambient
-information-state carriers may be infinite. The context-independent full
-product still requires finite information carriers. EXP-116 adds the
-operation-local alternative needed for counterfactual claims: a finite site
-family covering every legal prefix through one horizon. Under perfect recall,
-finite-site predrawing then preserves updated history laws for arbitrary
-one-player replacements while holding every opponent fixed and transfers Nash
-in both directions, without ambient `Fintype InfoState`. Perfect-monitoring
-finite-action stochastic games construct such a cover from one fully supported
-run, despite their infinite public-history carrier.
+hypotheses. In the bounded whole-profile forward direction, discrete predrawing
+uses an actual finite family of reachable information sites. EXP-115 derives
+such a family from finite branching; an arbitrary PMF run need not have it.
+The context-independent full product still requires finite information
+carriers. EXP-116 adds the operation-local alternative needed for counterfactual
+claims: a finite site family covering every legal prefix through one horizon.
+Under perfect recall, finite-site predrawing preserves updated history laws
+for arbitrary one-player replacements while holding every opponent fixed,
+without ambient `Fintype InfoState`. Expected-utility transfer also requires
+integration of the actual compared laws. A fully supported run identifies the
+needed sites in finite-action perfect-monitoring stochastic games, but finite
+horizon alone does not make that site set finite when chance has infinite support.
 
 EXP-117/D57 adds the separately gated unbounded layer. A behavioral profile
 induces one ordinary infinite-product probability measure over total pure
 Protocol policies, with no horizon in the selected measure. Every finite
 coordinate marginal is the existing executable predraw, so integrating the
-sole Protocol runner against that same measure realizes every covered finite
-prefix. The statement also survives arbitrary behavioral unilateral
+sole Protocol runner against that same measure realizes every finite prefix;
+EXP-127 removes the finite-site-cover premise from this measure construction.
+The statement also survives arbitrary behavioral unilateral
 replacement. Under countable-product topological hypotheses the policy law is
 regular; under explicit summability, equality of all prefix expectations gives
 normalized discounted-payoff equality. This is a policy law, not the
@@ -1400,7 +1340,7 @@ target remains stable; only the executable representation should change.
 
 Continuous auctions, continuous mixed strategies, and stochastic laws on an
 entire infinite realized-signal path require a measurable-kernel/integration
-design, not a cosmetic replacement of `PMF`. Do not burden the finite core with
+design, not a cosmetic replacement of `PMF`. Do not burden the discrete core with
 measurable-space parameters in anticipation of future work.
 
 After the baseline, run an isolated spike formalizing one continuous Bayesian auction and
@@ -1418,14 +1358,14 @@ statements and supports substantive shared proofs.
 
 During the architecture spike, classify every selected flagship theorem by its
 actual probability needs. D11 is validated if the stable finite/discrete slice
-requires no measurable-kernel imports. It is disproved as a the baseline scope decision
+requires no measurable-kernel imports. It is disproved as the baseline scope decision
 if an explicitly selected flagship result—not a hypothetical future auction—
 essentially quantifies over continuous distributions or an infinite stochastic
 path law. In that case, design a separate measurable core before freezing the
 finite API; do not simulate it through a generic monad placeholder.
 
-Infinite repeated games do not by themselves disprove D11. the baseline presentation
-boundary from D2 permits stagewise expected utility, deterministic paths of
+Infinite repeated games do not by themselves disprove D11. The discrete
+boundary permits stagewise expected utility, deterministic paths of
 mixed stage profiles, recursive values, and finite-prefix signal laws. A
 theorem requiring the stochastic law of an entire infinite realized-signal
 path is routed to the measurable spike: a countably supported `PMF` layer is
@@ -1434,7 +1374,7 @@ not an adequate substitute.
 EXP-030 validates the lower half of this boundary in the greenfield code:
 history-dependent deterministic paths, normalized discounted utility, and an
 exact finite-prefix Protocol compiler require neither a measurable kernel nor
-an infinite-path `FinDist`. EXP-031 validates the full deterministic discounted
+an infinite-path probability law. EXP-031 validates the full deterministic discounted
 folk theorem on the same representation: observable mixed stage profiles,
 periodic continuations, and public trigger punishments still require no law on
 an infinite realized path. Its convex geometry is isolated under
@@ -1446,22 +1386,23 @@ though those coordinates are indexed by Protocol histories. That topology is
 isolated under `GameTheory.Analysis.Protocol`.
 
 EXP-064 validates the public-monitoring equilibrium waist on the same side of
-the boundary.  Every horizon has a finite `FinDist` of public signals and the
-discounted payoff is an ordinary real series of those stage expectations.
+the boundary. Every finite horizon has a PMF of public signals and the
+discounted payoff is a real series of stage expectations. EXP-133 separates
+actual stage-payoff integration from summability of that series.
 Perfect-public equilibrium is canonical `IsNash` after every typed finite
 public history, including zero-probability histories, and uniformly bounded
 stage expected payoffs imply the exact one-shot-deviation principle without
 constructing a law on an infinite realized path.
 
-Monitoring informativeness stays on that finite side of the boundary. The
+Monitoring informativeness stays on that discrete side of the boundary. The
 individual and pairwise rank conditions are linear independence of one-stage
 public-signal probability differences. Their semantic bridge identifies each
 row with the probability change in the native one-signal history law under the
 canonical one-shot deviation; no rank claim is phrased through a hypothetical
 infinite path distribution.
 
-The recursive public-monitoring layer likewise stays within finite-support
-expectations. Its Abreu--Pearce--Stacchetti decomposition operator uses current
+The recursive public-monitoring layer likewise uses discrete expectations.
+Its Abreu--Pearce--Stacchetti decomposition operator uses current
 stage profiles and signal-contingent continuation promises; coordinatewise
 bounds enter only when the generated pure public strategy is proved to realize
 its infinite discounted payoff. The resulting self-generation theorem feeds
@@ -1493,7 +1434,7 @@ GameTheory.Math           independently reusable mathematical infrastructure
 The exact number of Lake packages/targets is an implementation question, but
 the following dependency properties are mandatory:
 
-- Core does not import topology, fixed points, LP, or a language;
+- Core does not import project Analysis, the fixed-point dependency, LP, or a language;
 - syntax modules do not import solution concepts;
 - stable packages do not import Frontier;
 - no stable or Frontier package imports Challenges;
@@ -1504,38 +1445,38 @@ EXP-031 fixes one instance of the last two rules. Continuation, periodic-path,
 and trigger-incentive theorems remain in `GameTheory.Repeated`; feasible-payoff
 geometry, opponent minmax, and the discounted folk theorem live in the one-way
 `GameTheory.Analysis.Repeated` bridge; generic denominator clearing lives in
-the separate `GameTheory.Math` target. The stable root retains negative
-`stdSimplex`/`kakutani_fixed_point` probes, while positive bridge probes require
+the separate `GameTheory.Math` target. The stable root excludes project
+Analysis and the external fixed-point dependency, while positive bridge probes require
 the trigger, minmax, and generic approximation sides to remain reachable.
-`Polynomial` is not a boundary sentinel there: public-monitoring rank reaches
-it legitimately through Mathlib matrix rank. Protocol is deliberately
+Mathlib topology, simplex, and polynomial vocabulary are not reliable boundary
+sentinels (EXP-129). Protocol is deliberately
 unreachable from the repeated-analysis bridge.
 
 EXP-032 fixes the complementary bridge direction needed by sequential
 consistency. Stable `GameTheory.Protocol` owns behavioral assessments,
-history-supported beliefs, finite positive-mass Bayes consistency, and a topology-free limit
-schema. `GameTheory.Math.Probability` owns pointwise convergence of finite
+history-supported beliefs, positive-mass Bayes consistency, and a topology-free limit
+schema. `GameTheory.Math.Probability` owns pointwise convergence of ordinary PMF
 laws; `GameTheory.Analysis.Protocol` applies it coordinatewise in the
 Kreps-Wilson specialization. Protocol rejects both analytic declarations;
 positive bridge probes reach stable rationality, stable Bayes consistency, and
-the finite-law convergence definition; the bridge rejects `stdSimplex` and
-`Polynomial`. Basic topology names are already transitively reachable through
-Mathlib, so project-declaration probes, not vocabulary probes, enforce this
-boundary.
+the PMF convergence definition. Mathlib's vocabulary is transitively reachable
+through its probability infrastructure, so project-declaration probes enforce
+this boundary. Strong sequential consistency retains its joint perturbation
+limit; the PMF restoration does not weaken it to on-path Bayes consistency.
 
 EXP-049/D21 applies the same enforced split to finite online learning. Core
 owns only product-law, normalization, and finite regret-to-CCE identities.
 `GameTheory.Math.OnlineLearning` proves multiplicative-weights regret over a
-normalized real vector without importing either game semantics or `FinDist`;
+normalized real vector without importing game semantics or the PMF adapter;
 `GameTheory.Math.Probability.OnlineLearning` alone packages that vector as the
-canonical finite law; `GameTheory.Analysis.Learning` composes the two sides.
+canonical PMF; `GameTheory.Analysis.Learning` composes the two sides.
 Negative probes keep the algorithm and adapter unreachable from Core, while
 positive probes require the bridge to reach both and the stable self-play
 theorem. Protocol and the fixed-point dependency remain unreachable from the
 learning bridge.
 
 EXP-050/D22 applies the stratified rule to finite stochastic games. Native
-stochastic data stores only state, actions, a `FinDist` transition, and stage
+stochastic data stores only state, actions, a PMF transition, and stage
 utility. A named perfect-public-monitoring bridge supplies the accepted
 Protocol execution, proof-free public history, and behavioral runner; each
 finite horizon then uses canonical expected utility and approximate Nash.
@@ -1543,7 +1484,9 @@ finite horizon then uses canonical expected utility and approximate Nash.
 layers while rejecting Repeated and the fixed-point dependency. It contains no
 infinite-path outcome law or general uniform-equilibrium existence claim.
 EXP-117/D57 does add a regular ex-ante law over total pure Protocol policies
-for countable-state finite-action perfect monitoring. Thin stochastic
+for countable-state perfect monitoring. The general forward law does not need
+finite site covers; reverse and hybrid readings use countable measurable local
+choices and target-local finite marginals (EXP-136). Thin stochastic
 corollaries identify every finite-prefix law, including arbitrary behavioral
 unilateral replacements, and bounded discounted payoffs. These consequences
 are derived from the one policy law and the existing bounded runner; they do
@@ -1582,12 +1525,15 @@ value cube, applies the already-admitted Brouwer dependency, and decodes the
 fixed point as canonical mixed Nash in every statewise auxiliary
 `UtilityGame`.  `GameTheory.Math` owns only the game-independent positive-part
 fixed-point identity used to verify the Nash adjustment.  The promoted surface
-uses `FinDist`, `Profile.update`, and `IsNash` exclusively; it adds no PMF,
-infinite-path, stored-discount, or parallel equilibrium layer.  Uniform
-equilibrium existence remains a separate open problem.
+uses ordinary PMF, `Profile.update`, and `IsNash`; it adds no infinite-path,
+stored-discount, or parallel equilibrium layer. D62/EXP-138 places the
+arbitrary-state Bellman certificate in `Stochastic.OneStep`, evaluated against
+the actual joint-action/next-state law. Finite-state compactness stays in
+Analysis, and unrelated divergent joint actions impose no guard on the semantic
+predicate. Uniform equilibrium existence remains a separate open problem.
 
 EXP-052/D24 adds the first shared welfare consumer without creating a new
-semantic branch.  `Core.Welfare` defines aggregate and finite-law expected
+semantic branch.  `Core.Welfare` defines aggregate and guarded PMF expected
 welfare plus smoothness directly on `UtilityGame`, then derives the
 division-free pure Nash bound through canonical unilateral updates.  EXP-053
 closes the robust gate in a theorem-only `Core.RobustWelfare` leaf above both
@@ -1937,9 +1883,9 @@ Any one of these pauses breadth work and reopens the relevant core decisions:
 1. Normal use requires more than one public logical definition of Nash or CE.
 2. The equilibrium API cannot enforce both law-linearity and recommendation
    locality for standard Nash/CE/coalitional deviations.
-3. The selected finite-law representation gives mathematically misleading
-   expectation or requires the boundedness machinery finite support was meant
-   to remove.
+3. The probability representation excludes laws required by the selected
+   mathematical scope, or real payoff comparisons silently totalize undefined
+   expectations or omit undefined deviations.
 4. The executable frontend must duplicate solution concepts rather than prove
    its algorithms correct against the semantic definitions.
 5. Importing Core pulls topology, fixed points, a language, Frontier, or
@@ -1961,10 +1907,8 @@ These reject or narrow one decision but do not pause unrelated core work:
 
 - indexed signatures expose more transport than a stored bundled signature:
   choose the bundled-signature form of D1;
-- neither finite-support representation clearly wins: hide a `PMF` subtype
-  behind the API and record the compromise;
-- a flagship theorem essentially needs countably supported probability but no
-  path-space measure: add a separate countable layer and narrow D2;
+- an operation needs finite support: require a support certificate or explicit
+  finite enumeration at that operation, without narrowing semantic PMFs;
 - a flagship theorem needs the stochastic law of an entire infinite path:
   route it to D11's measurable layer rather than pretending a countable layer
   is sufficient;

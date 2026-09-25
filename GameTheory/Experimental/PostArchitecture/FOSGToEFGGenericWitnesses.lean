@@ -140,8 +140,8 @@ action at the canonical scheduled view. -/
 def translatedFalseOptionLaw
     (source : (player : Bool) →
       Source.information.BehavioralPolicy player)
-    (view : Source.View) : FinDist (Option Bool) :=
-  FinDist.map Subtype.val
+    (view : Source.View) : PMF (Option Bool) :=
+  PMF.map Subtype.val
     (FOSGToEFG.translateBehavioral Source.game falseFirst source false
       (FOSGToEFG.scheduledView Source.game false view))
 
@@ -153,8 +153,8 @@ theorem translatedFalseOptionLaw_eq
     translatedFalseOptionLaw source view = falseSignalOptionLaw view := by
   rw [translatedFalseOptionLaw,
     FOSGToEFG.translateBehavioral_scheduledView, hfalse,
-    falseSignalOptionLaw, FinDist.map_comp]
-  apply congrArg (fun f => FinDist.map f (falseSignalPolicy view))
+    falseSignalOptionLaw, PMF.map_comp]
+  apply congrArg (fun f => PMF.map f (falseSignalPolicy view))
   funext choice
   rfl
 
@@ -207,7 +207,7 @@ theorem falseFirst_full_profile_round_trip
 theorem falseFirst_exact
     (target : (player : Bool) →
       (FOSGToEFG.information Source.game falseFirst).BehavioralPolicy player) :
-    FinDist.map (FOSGToEFG.eraseHistory Source.game falseFirst)
+    PMF.map (FOSGToEFG.eraseHistory Source.game falseFirst)
         ((FOSGToEFG.information Source.game falseFirst).runBehavioral target 6) =
       Source.information.runBehavioral
         (FOSGToEFG.projectBehavioral Source.game falseFirst target) 2 := by
@@ -217,7 +217,7 @@ theorem falseFirst_exact
 theorem trueFirst_exact
     (target : (player : Bool) →
       (FOSGToEFG.information Source.game trueFirst).BehavioralPolicy player) :
-    FinDist.map (FOSGToEFG.eraseHistory Source.game trueFirst)
+    PMF.map (FOSGToEFG.eraseHistory Source.game trueFirst)
         ((FOSGToEFG.information Source.game trueFirst).runBehavioral target 6) =
       Source.information.runBehavioral
         (FOSGToEFG.projectBehavioral Source.game trueFirst target) 2 := by
@@ -227,7 +227,7 @@ theorem trueFirst_exact
 theorem translated_exact
     (source : (player : Bool) →
       Source.information.BehavioralPolicy player) :
-    FinDist.map (FOSGToEFG.eraseHistory Source.game falseFirst)
+    PMF.map (FOSGToEFG.eraseHistory Source.game falseFirst)
         ((FOSGToEFG.information Source.game falseFirst).runBehavioral
           (FOSGToEFG.translateBehavioral Source.game falseFirst source) 6) =
       Source.information.runBehavioral source 2 := by
@@ -237,9 +237,9 @@ theorem translated_exact
 theorem arbitrary_order_transport
     (target : (player : Bool) →
       (FOSGToEFG.information Source.game falseFirst).BehavioralPolicy player) :
-    FinDist.map (FOSGToEFG.eraseHistory Source.game falseFirst)
+    PMF.map (FOSGToEFG.eraseHistory Source.game falseFirst)
         ((FOSGToEFG.information Source.game falseFirst).runBehavioral target 6) =
-      FinDist.map (FOSGToEFG.eraseHistory Source.game trueFirst)
+      PMF.map (FOSGToEFG.eraseHistory Source.game trueFirst)
         ((FOSGToEFG.information Source.game trueFirst).runBehavioral
           (FOSGToEFG.translateBehavioral Source.game trueFirst
             (FOSGToEFG.projectBehavioral Source.game falseFirst target)) 6) := by

@@ -1,7 +1,7 @@
 /-
-# Finite public monitoring
+# Public monitoring
 
-A public monitoring structure assigns a finite-support public signal law to
+A public monitoring structure assigns a public signal law to
 each chosen stage profile. Monitored strategies may depend on the complete
 finite public signal history. This module constructs only finite-horizon laws;
 it introduces no probability measure on infinite paths.
@@ -31,13 +31,13 @@ variable {ι : Type uι}
 
 namespace UtilityGame
 
-/-- A finite-support public signal law conditional on the chosen stage
+/-- A public signal law conditional on the chosen stage
 profile. -/
 structure PublicMonitoring (G : UtilityGame.{uι, us, uo} ι) where
   /-- Public signal observed by every player after a stage. -/
   Signal : Type uy
   /-- Conditional law of the next public signal. -/
-  signalLaw : Profile G.form.sig → FinDist Signal
+  signalLaw : Profile G.form.sig → PMF Signal
 
 namespace PublicMonitoring
 
@@ -73,15 +73,15 @@ theorem afterSignal_apply (M : G.PublicMonitoring)
 The successor rule appends the newly sampled signal to the realized prefix. -/
 def signalHistoryLaw (M : G.PublicMonitoring)
     (profile : M.MonitoredProfile) :
-    (t : ℕ) → FinDist (M.SignalHistory t)
-  | 0 => FinDist.pure fun k => k.elim0
+    (t : ℕ) → PMF (M.SignalHistory t)
+  | 0 => PMF.pure fun k => k.elim0
   | t + 1 => (M.signalHistoryLaw profile t).bind fun history =>
       (M.signalLaw fun i => profile i t history).map (Fin.snoc history)
 
 @[simp]
 theorem signalHistoryLaw_zero (M : G.PublicMonitoring)
     (profile : M.MonitoredProfile) :
-    M.signalHistoryLaw profile 0 = FinDist.pure (fun k => k.elim0) :=
+    M.signalHistoryLaw profile 0 = PMF.pure (fun k => k.elim0) :=
   rfl
 
 @[simp]
@@ -106,21 +106,21 @@ theorem signalHistoryLaw_succ_eq_bind_first
               (Fin.cons (α := fun _ => M.Signal) signal)
   | 0 => by
       rw [signalHistoryLaw_succ, signalHistoryLaw_zero]
-      simp only [FinDist.pure_bind, signalHistoryLaw_zero,
-        FinDist.map_eq_bind]
+      simp only [PMF.pure_bind, signalHistoryLaw_zero, PMF.pure_map]
+      rw [← PMF.bind_pure_comp]
       apply congrArg
       funext signal
-      apply congrArg FinDist.pure
+      apply congrArg PMF.pure
       funext j
       refine Fin.cases ?_ (fun k => Fin.elim0 k) j
       rfl
   | n + 1 => by
       rw [signalHistoryLaw_succ,
         signalHistoryLaw_succ_eq_bind_first M profile n]
-      rw [FinDist.bind_bind]
+      rw [PMF.bind_bind]
       congr 1
       funext signal
-      rw [FinDist.bind_map, signalHistoryLaw_succ, FinDist.map_bind]
+      rw [PMF.bind_map, signalHistoryLaw_succ, PMF.map_bind]
       congr 1
       funext history
       show
@@ -131,7 +131,7 @@ theorem signalHistoryLaw_succ_eq_bind_first
               (fun i => profile i (n + 1) (Fin.cons signal history))).map
               (Fin.snoc history)).map
             (Fin.cons (α := fun _ => M.Signal) signal)
-      rw [FinDist.map_comp]
+      rw [PMF.map_comp]
       congr 1
       funext next
       exact (Fin.cons_snoc_eq_snoc_cons signal history next).symm

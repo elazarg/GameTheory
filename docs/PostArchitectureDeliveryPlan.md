@@ -2,8 +2,9 @@
 
 Status: active successor-native queue.
 
-The architecture is settled. Delivery now proceeds by dependency depth and
-compiled theorem evidence. The authoritative status index is
+The original architecture gates passed. General discrete probability scope is
+reopened by EXP-122/D62; its migration remains gated. Delivery proceeds by
+dependency depth and compiled theorem evidence. The authoritative status index is
 [`DeliveryLedger.md`](DeliveryLedger.md); recognizable public workflows are in
 [`CapabilityMatrix.md`](CapabilityMatrix.md); discriminating examples are in
 [`SupportEvidenceMatrix.md`](SupportEvidenceMatrix.md).
@@ -41,6 +42,22 @@ The two repository-wide reviews sharpen how those admission rules are applied:
   reachability and full-library audits only at integration or release gates.
 
 ## 2. Active dependency queue
+
+### Completed foundation: general discrete PMF semantics
+
+[D62](decisions/D62-general-pmf-restoration.md) restores ordinary Mathlib PMF in
+the canonical owners. Finite support belongs to the operations that need it;
+real expected utility requires integration of each actual compared law.
+The [P0–P4 restoration gates](PMFRestorationDesign.md) are complete, including
+the original consumer families, finite existence, executable correctness, and
+whole-library validation. EXP-122–141 record the hostile slices and integration
+evidence; EXP-129 closes the full build, lint, and architecture checks.
+
+General forward, reverse, and hybrid policy-measure realization retain no
+global finite site cover. EXP-141 also removes ambient-history countability
+from the experimental infinite-play constructor and chronological marginals.
+Further measurable-game abstractions, infinite-space equilibrium existence,
+and additional path-coherence generalizations remain consumer-gated.
 
 EXP-120/D60 admits the finite-law composition and informed-stopping tools plus
 two narrow noninvertible strategic-transfer certificates. Direct profile-local
@@ -90,11 +107,12 @@ changes the terminal law, and a coordination equilibrium crosses both Nash
 transfer directions. No-revisit remains an internal consequence of perfect
 recall rather than a duplicated public premise.
 
-EXP-115 separately removes ambient information-state finiteness from bounded
+EXP-115 removes ambient information-state finiteness from bounded
 whole-profile realization. Its hostile `Nat`-information model reaches two
-distinct decision sites, and the promoted Protocol theorem predraws only the
-finite support exposed by the supplied profile and horizon. The full-product
-`BehavioralPolicy.toMixed` convenience remains finite.
+distinct decision sites. The general PMF theorem takes an actual finite-site
+certificate for discrete predrawing; a bounded horizon alone does not supply
+one under infinite-support chance. The full-product `BehavioralPolicy.toMixed`
+convenience requires a finite information-site index.
 
 EXP-116 adds finite counterfactual coverage, preserving arbitrary unilateral
 updated laws and Nash transfer through one bounded horizon on infinite
@@ -124,14 +142,14 @@ Recover, in order:
    the exact bridge from each deviation row to the canonical one-signal
    history law; the hostile fixture proves pairwise rank two under perfect
    action observation and rejects a constant monitor;
-2. **complete:** finite-support APS decomposition and self-generation over the
+2. **complete:** guarded-PMF APS decomposition and self-generation over the
    existing continuation/payoff API; a two-state Prisoner's Dilemma witness
    uses signal-contingent reward/punishment, rejects constant cooperative
    continuation, and reaches an actual PPE payoff;
 3. **gated breadth:** public randomization only if it has a concrete signal-law
    consumer; and
-4. **separate breadth:** monitored uniform results without introducing an
-   infinite finite-support path law.
+4. **separate breadth:** monitored uniform results without forcing an infinite
+   path law into a discrete PMF.
 
 PPE remains canonical discounted Nash after every public history. Monitoring
 rank remains an explicitly one-period informativeness condition, linked to
@@ -303,9 +321,9 @@ strategic-reliance/public-promotion decision. Keep requisite observation
 (whether a realized parent value is needed by a rule) separate from strategic
 relevance (whether another decision's rule is strategically live), even though
 the latter graph is needed to formulate sufficient recall. Rotate current
-delivery toward the countable-probability, realizable-history, and long-run
-payoff gates; finite-support execution remains distinct from EXP-110 and
-EXP-108.
+delivery toward realizable-history and long-run payoff gates. General discrete
+execution shares the PMF carrier with countable stopping laws; an infinite
+path measure still needs its own construction and measurable interface.
 
 ### G. Static mature-family rotation
 
@@ -366,7 +384,8 @@ is arithmetic, not an auction model.
 - `GameTheory.Mechanism` owns coordinated incentive and transfer domains over
   canonical forms, utilities, responses, and equilibrium predicates.
 - `GameTheory.Repeated` and `GameTheory.Stochastic` use finite histories and
-  finite-support transitions without claiming an infinite path law.
+  general PMF transitions. Infinite path measures require their separate
+  measurable construction.
 - `GameTheory.Analysis` imports stable semantic roots in one direction for
   topology, convexity, fixed points, and convergence.
 - `GameTheory.Math` contains independently reusable mathematics justified by a

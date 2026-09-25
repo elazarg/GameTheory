@@ -1,7 +1,7 @@
 /-
 # Mixed cheap talk as public randomization
 
-Independent mixed play of observable one-stage cheap talk induces a finite law
+Independent mixed play of observable one-stage cheap talk induces a PMF
 over base action profiles. Exact commutation with recommendation-dependent
 deviations turns mixed Nash of the extension into correlated equilibrium of the
 base form without introducing a communication-specific solution concept.
@@ -29,8 +29,8 @@ variable {F : GameForm.{uι, us, uo} ι}
 /-- The base action-profile law induced by independent mixed cheap-talk
 strategies. -/
 def mixedActionLaw (mixedProfile : Profile C.signature.mixed) :
-    FinDist (Profile F.sig) :=
-  (FinDist.pi mixedProfile).map C.actionProfile
+    PMF (Profile F.sig) :=
+  (independentProduct mixedProfile).map C.actionProfile
 
 /-- Lift a base recommendation-reading deviation by retaining the message and
 applying the deviation to every contingent base action. -/
@@ -72,7 +72,7 @@ theorem mixedActionLaw_update_map_liftActionDeviation
   unfold mixedActionLaw
   rw [← pi_map_recommendation C.signature mixedProfile who
     (C.liftActionDeviation who respond)]
-  rw [FinDist.map_comp, FinDist.map_comp]
+  rw [PMF.map_comp, PMF.map_comp]
   congr 1
   funext profile
   exact C.actionProfile_update_liftActionDeviation profile who respond
@@ -84,8 +84,10 @@ theorem mixed_play_eq_outcomeLaw_mixedActionLaw
     (mixedProfile : Profile C.signature.mixed) :
     C.form.mixed.play mixedProfile =
       F.outcomeLaw (C.mixedActionLaw mixedProfile) := by
-  unfold mixedActionLaw GameForm.outcomeLaw
-  rw [FinDist.bind_map]
+  rw [GameForm.mixed_play]
+  simp only [GameForm.outcomeLaw, mixedActionLaw, CheapTalkExtension.form]
+  rw [PMF.bind_map]
+  rfl
 
 /-- The mixed-extension deviation law is exactly the base correlated-deviation
 outcome law after lifting the response. -/
@@ -101,7 +103,8 @@ theorem mixed_play_update_map_liftActionDeviation
   rw [C.mixed_play_eq_outcomeLaw_mixedActionLaw,
     C.mixedActionLaw_update_map_liftActionDeviation]
   unfold GameForm.outcomeLaw
-  rw [FinDist.bind_map]
+  rw [PMF.bind_map]
+  rfl
 
 /-- A mixed Nash profile of observable static cheap talk induces a correlated
 equilibrium of the base form. The result is preference-parametric because the

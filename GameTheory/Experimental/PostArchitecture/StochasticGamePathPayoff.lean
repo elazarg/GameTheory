@@ -8,6 +8,7 @@ still generated solely by the canonical stochastic Protocol runner.
 
 import GameTheory.Experimental.PostArchitecture.ProtocolHistoryCountable
 import GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayPayoffConsistency
+import GameTheory.Math.Probability.Mixture
 import Mathlib.Tactic.NormNum
 
 noncomputable section
@@ -28,9 +29,9 @@ open GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayPayoffBridge
 open GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayPayoffConsistency
 open GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayPayoffConsistency.Game
 
-def fairBit : FinDist (Option Bool) :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure (some false)) (FinDist.pure (some true))
+def fairBit : PMF (Option Bool) :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure (some false)) (PMF.pure (some true))
 
 @[reducible]
 def pathGame : Stochastic.Game Unit where
@@ -39,7 +40,7 @@ def pathGame : Stochastic.Game Unit where
   transition state _ :=
     match state with
     | none => fairBit
-    | some bit => FinDist.pure (some bit)
+    | some bit => PMF.pure (some bit)
   stageUtility state _ _ :=
     match state with
     | none => 0
@@ -103,37 +104,101 @@ private theorem pathBehavioralJoint
     (hterm : ¬ (pathGame.toExecution none).terminal history.state) :
     (pathGame.perfectMonitoring none).behavioralJoint pathProfile
         history.trace hterm =
-      FinDist.pure ⟨fun _ => some (), by
+      PMF.pure ⟨fun _ => some (), by
         exact ⟨hterm, by simp [IsLegalJoint]
         ⟩⟩ := by
   rw [(pathGame.perfectMonitoring none).behavioralJoint_eq_map_of_at_most_one_active
     pathProfile history.trace hterm () (fun i _ => Subsingleton.elim _ _)]
   · simp [pathProfile, pathPolicy,
       InformationModel.Policy.toBehavioral]
-    apply congrArg FinDist.pure
+    rw [PMF.pure_map]
+    apply congrArg PMF.pure
     apply Subtype.ext
     rfl
 
 theorem fairBit_support :
     some false ∈ fairBit.support ∧ some true ∈ fairBit.support := by
-  constructor <;>
-    exact FinDist.prob_pos_iff.mp
-      (by norm_num [fairBit, FinDist.prob_mix, FinDist.prob_pure_eq_ite])
+  constructor
+  · exact mem_support_mix_left (1 / 2) (by norm_num) (by norm_num)
+      (by norm_num) (by simp)
+  · exact mem_support_mix_right (1 / 2) (by norm_num) (by norm_num)
+      (by norm_num) (by simp)
 
 theorem fairBit_support_iff (state : Option Bool) :
     state ∈ fairBit.support ↔ state = some false ∨ state = some true := by
-  rw [fairBit, FinDist.mem_support_mix_pure_iff]
-  all_goals norm_num
+  cases state with
+  | none => simp [fairBit, PMF.mem_support_iff, mix_apply, PMF.pure_apply]
+  | some bit =>
+      cases bit
+      · exact iff_of_true fairBit_support.1 (Or.inl rfl)
+      · exact iff_of_true fairBit_support.2 (Or.inr rfl)
 
 theorem fairBit_nonconstant :
-    FinDist.pure (some false) ≠ FinDist.pure (some true) := by
+    PMF.pure (some false) ≠ PMF.pure (some true) := by
   intro h
-  have := congrArg (fun law => law.prob (some false)) h
-  simp [FinDist.prob_pure_eq_ite] at this
+  have := congrArg (fun law : PMF (Option Bool) => law (some false)) h
+  simp [PMF.pure_apply] at this
+
+private theorem pathGame_stageBound_two
+    (history : pathGame.ChronologicalHistory 2) :
+    ‖pathGame.publicHistoryAverageUtility 2
+      (pathGame.publicHistoryOfChronological history) ()‖ ≤ 1 := by
+  have hrecord : ∀ record : pathGame.StageRecord,
+      0 ≤ pathGame.stageRecordUtility record () ∧
+        pathGame.stageRecordUtility record () ≤ 1 := by
+    intro record
+    rcases record with ⟨source, joint, target⟩
+    cases source with
+    | none => norm_num [Stochastic.Game.stageRecordUtility, pathGame]
+    | some bit =>
+        cases bit <;>
+          norm_num [Stochastic.Game.stageRecordUtility, pathGame]
+  have hlist : ∀ records : List pathGame.StageRecord,
+      |List.sum (List.map (fun record =>
+        pathGame.stageRecordUtility record ()) records)| ≤
+        records.length := by
+    intro records
+    induction records with
+    | nil => simp
+    | cons record records ih =>
+        have hrecord' := hrecord record
+        rw [List.map_cons, List.sum_cons, List.length_cons]
+        have habs : |pathGame.stageRecordUtility record ()| ≤ 1 := by
+          rw [abs_of_nonneg hrecord'.1]
+          exact hrecord'.2
+        calc
+          |pathGame.stageRecordUtility record () +
+              List.sum (List.map (fun record =>
+                pathGame.stageRecordUtility record ()) records)| ≤
+              |pathGame.stageRecordUtility record ()| +
+                |List.sum (List.map (fun record =>
+                  pathGame.stageRecordUtility record ()) records)| :=
+            abs_add_le _ _
+          _ ≤ 1 + records.length := by
+            exact add_le_add habs ih
+          _ = (records.length + 1 : ℕ) := by
+            norm_num [Nat.cast_add]
+            ring
+  have hsum := hlist (pathGame.publicHistoryOfChronological history)
+  have hlength :
+      (pathGame.publicHistoryOfChronological history).length = 2 := by
+    simp [Stochastic.Game.publicHistoryOfChronological]
+  rw [hlength] at hsum
+  norm_num [Stochastic.Game.publicHistoryAverageUtility, pathGame]
+  norm_num at hsum ⊢
+  linarith
+
+/-- The bounded two-stage path payoff integrates under its canonical horizon law. -/
+theorem pathGame_horizonIntegrable_two :
+    UtilityIntegrable (pathGame.horizonUtility none 2) ()
+      ((pathGame.horizonForm none 2).play pathProfile) :=
+  canonicalProjectedAverage_integrable pathGame none pathProfile () 2
+    (fun history => pathGame_stageBound_two history)
 
 set_option backward.isDefEq.respectTransparency false in
 theorem pathGame_finite_average_two :
-    pathGame.finiteAveragePayoff none 2 pathProfile () = (1 / 4 : ℝ) := by
+    pathGame.finiteAveragePayoff none 2 pathProfile ()
+      pathGame_horizonIntegrable_two = (1 / 4 : ℝ) := by
   norm_num [Stochastic.Game.finiteAveragePayoff, Stochastic.Game.horizonUtility,
     Stochastic.Game.historyAverageUtility, Stochastic.Game.eventUtility,
     Stochastic.Game.horizonForm, InformationModel.runBehavioral,
@@ -141,23 +206,24 @@ theorem pathGame_finite_average_two :
     ExecutionProtocol.runRandomizedFor, pathProfile, pathPolicy, pathGame,
     fairBit, InformationModel.Policy.toBehavioral]
   simp_rw [pathBehavioralJoint]
-  simp only [FinDist.pure_bind]
+  simp only [PMF.pure_bind]
   simp only [pathGame]
   simp only [ExecutionProtocol.initHistory_state]
   unfold expectedUtility
-  rw [FinDist.expect_bindOnSupport_congr
-    (μ := fairBit)
-    (g := fun state _ => FinDist.pure state)
-    (v := fun state : Option Bool => if state = some true then 1 / 2 else 0)]
-  · rw [FinDist.bindOnSupport_eq_bind, FinDist.expect_bind]
-    rw [fairBit, FinDist.expect_mix]
-    norm_num
-  · intro state hstate
-    rcases (fairBit_support_iff state).mp hstate with rfl | rfl
-    · simp [Stochastic.Game.horizonUtility,
-        Stochastic.Game.historyAverageUtility, Stochastic.Game.eventUtility]
-    · simp [Stochastic.Game.horizonUtility,
-        Stochastic.Game.historyAverageUtility, Stochastic.Game.eventUtility]
+  calc
+    _ = expect fairBit
+        (fun state : Option Bool => if state = some true then 1 / 2 else 0)
+        (payoffIntegrable_of_finite fairBit _) := by
+      apply expect_bindOnSupport_tower_on_support
+      intro state hstate
+      rcases (fairBit_support_iff state).mp hstate with rfl | rfl
+      · simp [expect_pure, Stochastic.Game.horizonUtility,
+          Stochastic.Game.historyAverageUtility, Stochastic.Game.eventUtility]
+      · simp [expect_pure, Stochastic.Game.horizonUtility,
+          Stochastic.Game.historyAverageUtility, Stochastic.Game.eventUtility]
+    _ = 1 / 4 := by
+      rw [expect_eq_sum]
+      norm_num [fairBit, mix_apply, PMF.pure_apply]
 
 theorem pathGame_integral_canonicalPathAverage_two :
     (∫ play, canonicalPathAverage pathGame none () play 2 ∂
@@ -166,53 +232,7 @@ theorem pathGame_integral_canonicalPathAverage_two :
     pathGame none pathProfile () 2 (C := 1)]
   · exact pathGame_finite_average_two
   · exact Measurable.of_discrete
-  · intro history
-    have hrecord : ∀ record : pathGame.StageRecord,
-        0 ≤ pathGame.stageRecordUtility record () ∧
-          pathGame.stageRecordUtility record () ≤ 1 := by
-      intro record
-      rcases record with ⟨source, joint, target⟩
-      cases source with
-      | none => norm_num [Stochastic.Game.stageRecordUtility, pathGame]
-      | some bit =>
-          cases bit <;>
-            norm_num [Stochastic.Game.stageRecordUtility, pathGame]
-    have hlist : ∀ records : List pathGame.StageRecord,
-        |List.sum (List.map (fun record =>
-          pathGame.stageRecordUtility record ()) records)| ≤
-          records.length := by
-      intro records
-      induction records with
-      | nil => simp
-      | cons record records ih =>
-          have hrecord' := hrecord record
-          rw [List.map_cons, List.sum_cons, List.length_cons]
-          have habs : |pathGame.stageRecordUtility record ()| ≤ 1 := by
-            rw [abs_of_nonneg hrecord'.1]
-            exact hrecord'.2
-          calc
-            |pathGame.stageRecordUtility record () +
-                List.sum (List.map (fun record =>
-                  pathGame.stageRecordUtility record ()) records)| ≤
-                |pathGame.stageRecordUtility record ()| +
-                  |List.sum (List.map (fun record =>
-                    pathGame.stageRecordUtility record ()) records)| :=
-              abs_add_le _ _
-            _ ≤ 1 + records.length := by
-              have hh := add_le_add habs ih
-              exact hh
-            _ = (records.length + 1 : ℕ) := by
-              norm_num [Nat.cast_add]
-              ring
-    have hsum := hlist
-      (pathGame.publicHistoryOfChronological history)
-    have hlength :
-        (pathGame.publicHistoryOfChronological history).length = 2 := by
-      simp [Stochastic.Game.publicHistoryOfChronological]
-    rw [hlength] at hsum
-    norm_num [Stochastic.Game.publicHistoryAverageUtility, pathGame]
-    norm_num at hsum ⊢
-    linarith
+  · exact pathGame_stageBound_two
 
 theorem pathGame_expectedFiniteAverage_one :
     expectedFiniteAverage (infinitePlayMeasure pathGame none pathProfile)
@@ -271,11 +291,11 @@ private theorem pathState_succ_eq_one_of_coherent
       rcases pathState_one_of_coherent play hcoh with hfalse | htrue
       · have hsource : (play (n + 1)).1.state = some false := ih.trans hfalse
         have htarget : (play (n + 1 + 1)).1.state = some false := by
-          simpa [pathGame, hsource, FinDist.mem_support_pure] using realized
+          simpa [pathGame, hsource, PMF.mem_support_pure_iff] using realized
         exact htarget.trans hfalse.symm
       · have hsource : (play (n + 1)).1.state = some true := ih.trans htrue
         have htarget : (play (n + 1 + 1)).1.state = some true := by
-          simpa [pathGame, hsource, FinDist.mem_support_pure] using realized
+          simpa [pathGame, hsource, PMF.mem_support_pure_iff] using realized
         exact htarget.trans htrue.symm
 
 private theorem pathStageUtility_of_coherent

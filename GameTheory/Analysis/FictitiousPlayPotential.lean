@@ -32,11 +32,17 @@ theorem IsExactPotential.summable_harmonic_aggregatePlayedGain
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) :
     Summable (fun t : ℕ =>
-      (1 / ((t : ℝ) + 2)) * G.aggregatePlayedGain history t) := by
+      (1 / ((t : ℝ) + 2)) *
+        hplay.aggregatePlayedGain t) := by
   let value : ℕ → ℝ := fun n =>
     G.form.mixedPotential potential (G.form.empiricalBelief history (n + 1))
+      (payoffIntegrable_of_bounded
+        (independentProduct (G.form.empiricalBelief history (n + 1)))
+        potential hbound)
   let errorScale : ℝ :=
     ((Fintype.card ι : ℝ) * (Fintype.card ι : ℝ)) * (4 * C)
+  let aggregate := fun t =>
+    hplay.aggregatePlayedGain t
   let error : ℕ → ℝ := fun t =>
     errorScale * ((1 / ((t : ℝ) + 2)) ^ 2)
   have hC : 0 ≤ C := by
@@ -55,11 +61,12 @@ theorem IsExactPotential.summable_harmonic_aggregatePlayedGain
       simpa [one_div, inv_pow, Nat.cast_add] using hs2
     simpa [error] using hs3.mul_left errorScale
   have htermNonneg : ∀ t : ℕ,
-      0 ≤ (1 / ((t : ℝ) + 2)) * G.aggregatePlayedGain history t := by
+      0 ≤ (1 / ((t : ℝ) + 2)) * aggregate t := by
     intro t
     exact mul_nonneg (by positivity)
       (UtilityGame.IsFictitiousPlay.aggregatePlayedGain_nonneg
-        (G := G) hplay t)
+        (G := G) hplay t
+        )
   have htelescopes : ∀ n : ℕ,
       (∑ t ∈ Finset.range n, (value (t + 1) - value t)) =
         value n - value 0 := by
@@ -71,21 +78,21 @@ theorem IsExactPotential.summable_harmonic_aggregatePlayedGain
         ring
   have hpartial : ∀ n : ℕ,
       (∑ t ∈ Finset.range n,
-          (1 / ((t : ℝ) + 2)) * G.aggregatePlayedGain history t) ≤
+          (1 / ((t : ℝ) + 2)) * aggregate t) ≤
         2 * C + ∑' t, error t := by
     intro n
     have hpoint : ∀ t ∈ Finset.range n,
-        (1 / ((t : ℝ) + 2)) * G.aggregatePlayedGain history t ≤
+        (1 / ((t : ℝ) + 2)) * aggregate t ≤
           (value (t + 1) - value t) + error t := by
       intro t _
       have hlyapunov :=
         UtilityGame.IsExactPotential.mixedPotential_empiricalBelief_succ_sub_ge
-          (G := G) hpotential hbound history t
-      dsimp [value, error, errorScale]
+          (G := G) hpotential hbound hplay t
+      dsimp [value, error, errorScale, aggregate]
       linarith
     calc
       (∑ t ∈ Finset.range n,
-          (1 / ((t : ℝ) + 2)) * G.aggregatePlayedGain history t) ≤
+          (1 / ((t : ℝ) + 2)) * aggregate t) ≤
           ∑ t ∈ Finset.range n,
             ((value (t + 1) - value t) + error t) :=
         Finset.sum_le_sum hpoint
@@ -116,7 +123,8 @@ theorem IsExactPotential.frequently_aggregatePlayedGain_lt
     {C : ℝ} (hbound : ∀ profile, |potential profile| ≤ C)
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) {ε : ℝ} (hε : 0 < ε) :
-    ∃ᶠ t in atTop, G.aggregatePlayedGain history t < ε :=
+    ∃ᶠ t in atTop,
+      hplay.aggregatePlayedGain t < ε :=
   GameTheory.Math.frequently_lt_of_summable_one_div_mul
     (UtilityGame.IsExactPotential.summable_harmonic_aggregatePlayedGain
       (G := G) hpotential hbound hplay) hε
@@ -129,7 +137,9 @@ theorem IsExactPotential.aggregatePlayedGain_tendsto_zero
     {C : ℝ} (hbound : ∀ profile, |potential profile| ≤ C)
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) :
-    Tendsto (fun t : ℕ => G.aggregatePlayedGain history t) atTop (nhds 0) := by
+    Tendsto (fun t : ℕ =>
+      hplay.aggregatePlayedGain t)
+      atTop (nhds 0) := by
   let K : ℝ :=
     ((Fintype.card ι : ℝ) * (Fintype.card ι : ℝ)) * (4 * C)
   have hC : 0 ≤ C := by
@@ -156,8 +166,9 @@ variable [∀ who, Fintype (G.form.sig.Strategy who)]
 theorem IsFictitiousPlay.weightedPlayedGain_nonneg
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) (t : ℕ) :
-    0 ≤ G.weightedPlayedGain history t := by
-  rw [weightedPlayedGain]
+    0 ≤ hplay.weightedPlayedGain t := by
+  show 0 ≤ G.weightedPlayedGain history t _ _
+  rw [UtilityGame.weightedPlayedGain]
   exact Finset.sum_nonneg fun who _ =>
     mul_nonneg (Nat.cast_nonneg _)
       (UtilityGame.IsFictitiousPlay.playedGain_nonneg (G := G) hplay t who)
@@ -167,9 +178,9 @@ constant times aggregate played gain. -/
 theorem IsFictitiousPlay.weightedPlayedGain_le_cardSum_mul_aggregate
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) (t : ℕ) :
-    G.weightedPlayedGain history t ≤
+    hplay.weightedPlayedGain t ≤
       (∑ who : ι, (Fintype.card (G.form.sig.Strategy who) : ℝ)) *
-        G.aggregatePlayedGain history t := by
+        hplay.aggregatePlayedGain t := by
   let cardSum : ℝ :=
     ∑ who : ι, (Fintype.card (G.form.sig.Strategy who) : ℝ)
   have hcard : ∀ who : ι,
@@ -180,15 +191,27 @@ theorem IsFictitiousPlay.weightedPlayedGain_le_cardSum_mul_aggregate
       (fun player _ => Nat.cast_nonneg
         (Fintype.card (G.form.sig.Strategy player)))
       (Finset.mem_univ who)
-  rw [weightedPlayedGain, aggregatePlayedGain]
+  show G.weightedPlayedGain history t _ _ ≤
+    (∑ who : ι, (Fintype.card (G.form.sig.Strategy who) : ℝ)) *
+      G.aggregatePlayedGain history t _ _
+  rw [UtilityGame.weightedPlayedGain, UtilityGame.aggregatePlayedGain]
   calc
     (∑ who : ι, (Fintype.card (G.form.sig.Strategy who) : ℝ) *
-        G.playedGain history t who) ≤
-        ∑ who : ι, cardSum * G.playedGain history t who := by
+        G.playedGain history t who
+          (UtilityGame.IsFictitiousPlay.incumbent_integrable (G := G) hplay t who)
+          (UtilityGame.IsFictitiousPlay.deviation_integrable (G := G) hplay t who
+            (PMF.pure (history (t + 1) who)))) ≤
+        ∑ who : ι, cardSum * G.playedGain history t who
+          (UtilityGame.IsFictitiousPlay.incumbent_integrable (G := G) hplay t who)
+          (UtilityGame.IsFictitiousPlay.deviation_integrable (G := G) hplay t who
+            (PMF.pure (history (t + 1) who))) := by
       refine Finset.sum_le_sum fun who _ => ?_
       exact mul_le_mul_of_nonneg_right (hcard who)
         (UtilityGame.IsFictitiousPlay.playedGain_nonneg (G := G) hplay t who)
-    _ = cardSum * ∑ who : ι, G.playedGain history t who := by
+    _ = cardSum * ∑ who : ι, G.playedGain history t who
+        (UtilityGame.IsFictitiousPlay.incumbent_integrable (G := G) hplay t who)
+        (UtilityGame.IsFictitiousPlay.deviation_integrable (G := G) hplay t who
+          (PMF.pure (history (t + 1) who))) := by
       rw [Finset.mul_sum]
 
 /-- Cardinality-weighted played gain also tends to zero. -/
@@ -198,25 +221,26 @@ theorem IsExactPotential.weightedPlayedGain_tendsto_zero
     {C : ℝ} (hbound : ∀ profile, |potential profile| ≤ C)
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) :
-    Tendsto (fun t : ℕ => G.weightedPlayedGain history t) atTop (nhds 0) := by
+    Tendsto (fun t : ℕ =>
+      hplay.weightedPlayedGain t)
+      atTop (nhds 0) := by
   let cardSum : ℝ :=
     ∑ who : ι, (Fintype.card (G.form.sig.Strategy who) : ℝ)
-  have hplayed :
-      Tendsto (fun t : ℕ => G.aggregatePlayedGain history t) atTop (nhds 0) :=
+  have hplayed : Tendsto (fun t : ℕ =>
+      hplay.aggregatePlayedGain t)
+      atTop (nhds 0) :=
     UtilityGame.IsExactPotential.aggregatePlayedGain_tendsto_zero
       (G := G) hpotential hbound hplay
   have hupper : ∀ t : ℕ,
-      G.weightedPlayedGain history t ≤
-        cardSum * G.aggregatePlayedGain history t := by
+      hplay.weightedPlayedGain t ≤ cardSum * hplay.aggregatePlayedGain t := by
     intro t
     simpa [cardSum] using
       UtilityGame.IsFictitiousPlay.weightedPlayedGain_le_cardSum_mul_aggregate
         (G := G) hplay t
-  have hscaled :
-      Tendsto (fun t : ℕ => cardSum * G.aggregatePlayedGain history t)
+  have hscaled : Tendsto (fun t : ℕ => cardSum * hplay.aggregatePlayedGain t)
         atTop (nhds 0) := by
     simpa using (tendsto_const_nhds.mul hplayed :
-      Tendsto (fun t : ℕ => cardSum * G.aggregatePlayedGain history t)
+      Tendsto (fun t : ℕ => cardSum * hplay.aggregatePlayedGain t)
         atTop (nhds (cardSum * 0)))
   exact squeeze_zero
     (fun t => UtilityGame.IsFictitiousPlay.weightedPlayedGain_nonneg
@@ -232,12 +256,16 @@ theorem IsExactPotential.mixedImprovement_empiricalBelief_tendsto_zero_of_abs_bo
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) :
     Tendsto (fun t : ℕ =>
-      G.mixedImprovement (G.form.empiricalBelief history (t + 1))) atTop (nhds 0) := by
+      G.mixedImprovement (G.form.empiricalBelief history (t + 1))
+        (fun who action => UtilityGame.IsFictitiousPlay.deviation_integrable
+          (G := G) hplay t who (PMF.pure action))) atTop (nhds 0) := by
   have hweighted := UtilityGame.IsExactPotential.weightedPlayedGain_tendsto_zero
     (G := G) hpotential hbound hplay
   exact squeeze_zero
     (fun t => G.mixedImprovement_nonneg
-      (G.form.empiricalBelief history (t + 1)))
+      (G.form.empiricalBelief history (t + 1))
+      (fun who action => UtilityGame.IsFictitiousPlay.deviation_integrable
+        (G := G) hplay t who (PMF.pure action)))
     (fun t =>
       UtilityGame.IsFictitiousPlay.mixedImprovement_le_weightedPlayedGain
         (G := G) hplay t)
@@ -250,7 +278,9 @@ theorem IsExactPotential.mixedImprovement_empiricalBelief_tendsto_zero
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) :
     Tendsto (fun t : ℕ =>
-      G.mixedImprovement (G.form.empiricalBelief history (t + 1))) atTop (nhds 0) := by
+      G.mixedImprovement (G.form.empiricalBelief history (t + 1))
+        (fun who action => UtilityGame.IsFictitiousPlay.deviation_integrable
+          (G := G) hplay t who (PMF.pure action))) atTop (nhds 0) := by
   obtain ⟨C, hbound⟩ := G.exists_profile_abs_bound potential
   exact UtilityGame.IsExactPotential.mixedImprovement_empiricalBelief_tendsto_zero_of_abs_bound
       (G := G) hpotential hbound hplay
@@ -259,13 +289,18 @@ theorem IsExactPotential.mixedImprovement_empiricalBelief_tendsto_zero
 every positive-error approximate mixed Nash condition. -/
 theorem eventually_isεNash_of_mixedImprovement_tendsto_zero
     {mixedProfiles : ℕ → Profile G.form.sig.mixed}
-    (hconverges : Tendsto (fun t => G.mixedImprovement (mixedProfiles t))
+    (hpure : ∀ t who (action : G.form.sig.Strategy who),
+      UtilityIntegrable G.utility who
+        (G.form.mixed.play (Profile.update (mixedProfiles t) who (PMF.pure action))))
+    (hconverges : Tendsto (fun t => G.mixedImprovement (mixedProfiles t)
+      (hpure t))
       atTop (nhds 0)) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ t in atTop, IsεNash G.form.mixed G.utility ε (mixedProfiles t) := by
-  have hsmall : ∀ᶠ t in atTop, G.mixedImprovement (mixedProfiles t) < ε :=
+  have hsmall : ∀ᶠ t in atTop,
+      G.mixedImprovement (mixedProfiles t) (hpure t) < ε :=
     hconverges.eventually (eventually_lt_nhds hε)
   filter_upwards [hsmall] with t ht
-  exact G.isεNash_of_mixedImprovement_le (le_of_lt ht)
+  exact G.isεNash_of_mixedImprovement_le (hpure t) (le_of_lt ht)
 
 /-- Bounded exact-potential fictitious play is eventually approximate Nash. -/
 theorem IsExactPotential.eventually_isεNash_of_isFictitiousPlay_of_abs_bound
@@ -278,8 +313,10 @@ theorem IsExactPotential.eventually_isεNash_of_isFictitiousPlay_of_abs_bound
       IsεNash G.form.mixed G.utility ε
         (G.form.empiricalBelief history (t + 1)) :=
   G.eventually_isεNash_of_mixedImprovement_tendsto_zero
+    (fun t who action => UtilityGame.IsFictitiousPlay.deviation_integrable
+      (G := G) hplay t who (PMF.pure action))
     (UtilityGame.IsExactPotential.mixedImprovement_empiricalBelief_tendsto_zero_of_abs_bound
-        (G := G) hpotential hbound hplay) hε
+      (G := G) hpotential hbound hplay) hε
 
 /-- **Finite Monderer-Shapley convergence.** Along fictitious play in a finite
 exact-potential game, empirical beliefs are eventually ε-Nash for every
@@ -293,6 +330,8 @@ theorem IsExactPotential.eventually_isεNash_of_isFictitiousPlay
       IsεNash G.form.mixed G.utility ε
         (G.form.empiricalBelief history (t + 1)) :=
   G.eventually_isεNash_of_mixedImprovement_tendsto_zero
+    (fun t who action => UtilityGame.IsFictitiousPlay.deviation_integrable
+      (G := G) hplay t who (PMF.pure action))
     (UtilityGame.IsExactPotential.mixedImprovement_empiricalBelief_tendsto_zero
       (G := G) hpotential hplay) hε
 
@@ -301,23 +340,29 @@ eventually approximate mixed Nash. -/
 theorem IsFictitiousPlay.eventually_isεNash_of_weightedPlayedGain_tendsto_zero
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history)
-    (hgain : Tendsto (fun t : ℕ => G.weightedPlayedGain history t)
+    (hgain : Tendsto (fun t : ℕ =>
+      hplay.weightedPlayedGain t)
       atTop (nhds 0)) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ t in atTop,
       IsεNash G.form.mixed G.utility ε
         (G.form.empiricalBelief history (t + 1)) := by
   have himprovement :
       Tendsto (fun t : ℕ =>
-        G.mixedImprovement (G.form.empiricalBelief history (t + 1)))
+        G.mixedImprovement (G.form.empiricalBelief history (t + 1))
+          (fun who action => UtilityGame.IsFictitiousPlay.deviation_integrable
+            (G := G) hplay t who (PMF.pure action)))
         atTop (nhds 0) :=
     squeeze_zero
       (fun t => G.mixedImprovement_nonneg
-        (G.form.empiricalBelief history (t + 1)))
+        (G.form.empiricalBelief history (t + 1))
+        (fun who action => UtilityGame.IsFictitiousPlay.deviation_integrable
+          (G := G) hplay t who (PMF.pure action)))
       (fun t => UtilityGame.IsFictitiousPlay.mixedImprovement_le_weightedPlayedGain
         (G := G) hplay t)
       hgain
   exact G.eventually_isεNash_of_mixedImprovement_tendsto_zero
-    himprovement hε
+    (fun t who action => UtilityGame.IsFictitiousPlay.deviation_integrable
+      (G := G) hplay t who (PMF.pure action)) himprovement hε
 
 end UtilityGame
 

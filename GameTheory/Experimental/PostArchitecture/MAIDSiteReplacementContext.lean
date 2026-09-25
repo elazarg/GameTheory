@@ -36,7 +36,7 @@ def siteReplacementLaw [DecidableEq Player] [Fintype Node]
     (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) : FinDist (Assignment diagram) :=
+      PMF (diagram.Value target.1)) : PMF (Assignment diagram) :=
   (nativeBehavioralGameForm semantics).play
     (Profile.update (sig := nativeBehavioralSignature diagram)
       base owner (replaceSiteRule replacement target rule))
@@ -49,10 +49,10 @@ structure SiteReplacementContextLawAt
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner) where
   contextLaw :
-    FinDist (Config diagram (diagram.observedParents target.1))
+    PMF (Config diagram (diagram.observedParents target.1))
   contextAction_eq :
     ∀ rule : Config diagram (diagram.observedParents target.1) →
-        FinDist (diagram.Value target.1),
+        PMF (diagram.Value target.1),
       (siteReplacementLaw semantics base owner replacement target rule).map
           (fun assignment =>
             (Assignment.restrict diagram assignment
@@ -145,8 +145,8 @@ open MAIDSitePolicySurgery.TwoSiteControl
 
 def falseRule :
     Config controlDiagram (controlDiagram.observedParents bitSite.1) →
-      FinDist (controlDiagram.Value bitSite.1) :=
-  fun _ => FinDist.pure false
+      PMF (controlDiagram.Value bitSite.1) :=
+  fun _ => PMF.pure false
 
 def certificate :
     SiteReplacementContextLawAt semantics base () replacement bitSite :=

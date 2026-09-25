@@ -1,4 +1,5 @@
 import GameTheory.Protocol.Backward
+import GameTheory.Math.Probability.ExpectationMixture
 
 noncomputable section
 
@@ -47,6 +48,11 @@ inductive Spot
   | /-- Terminal: the player passed, or chance passed for them. -/ passed
   deriving DecidableEq
 
+local instance spotFintype : Fintype Spot :=
+  ⟨{.flip, .pick, .grabbed, .passed}, by
+    intro state
+    cases state <;> simp⟩
+
 /-- The single player's actions. -/
 inductive Move
   | /-- Grab. -/ grab
@@ -61,32 +67,32 @@ def Move.outcome : Move → Spot
 /-- The fair coin at the root: half the time the player gets to decide, half the
 time chance passes on their behalf. The asymmetry is what makes the root value a
 nondegenerate mixture. -/
-def coin : FinDist Spot :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure .pick) (FinDist.pure .passed)
+def coin : PMF Spot :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure .pick) (PMF.pure .passed)
 
 /-- `coin` unfolded. The `norm_num` side conditions are proofs, so the two sides
 are definitionally equal. -/
 theorem coin_eq_mix :
-    coin = FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-      (FinDist.pure Spot.pick) (FinDist.pure Spot.passed) := rfl
+    coin = mix (1 / 2) (by norm_num) (by norm_num)
+      (PMF.pure Spot.pick) (PMF.pure Spot.passed) := rfl
 
 /-- Only the two branches carry mass. -/
 theorem mem_support_coin {target : Spot} (hmem : target ∈ coin.support) :
     target = .pick ∨ target = .passed := by
   by_contra hno
   push Not at hno
-  have hzero : coin.prob target = 0 := by
-    rw [coin_eq_mix, FinDist.prob_mix, FinDist.prob_pure_of_ne hno.1,
-      FinDist.prob_pure_of_ne hno.2]
-    ring
-  exact (FinDist.prob_pos_iff.2 hmem).ne' hzero
+  have hzero : coin target = 0 := by
+    simp [coin, mix_apply, PMF.pure_apply, hno.1, hno.2]
+  exact (PMF.mem_support_iff _ _).mp hmem hzero
 
 /-- Expectation against the coin, in closed form. -/
 theorem expect_coin (observable : Spot → ℝ) :
-    coin.expect observable = 1 / 2 * observable .pick + 1 / 2 * observable .passed := by
-  rw [coin_eq_mix, FinDist.expect_mix, FinDist.expect_pure, FinDist.expect_pure]
+    expect coin observable (payoffIntegrable_of_finite _ _) =
+      1 / 2 * observable .pick + 1 / 2 * observable .passed := by
+  rw [coin_eq_mix, expect_mix, expect_pure, expect_pure]
   norm_num
+  all_goals exact payoffIntegrable_pure _ _
 
 /-- One player, one coin, one decision that matters, then stop.
 
@@ -110,7 +116,7 @@ def probe : ExecutionProtocol Unit where
   step state joint :=
     match state with
     | .flip => coin
-    | _ => FinDist.pure ((joint.1 ()).elim Spot.passed Move.outcome)
+    | _ => PMF.pure ((joint.1 ()).elim Spot.passed Move.outcome)
   progress := by
     intro state _
     by_cases hpick : state = Spot.pick
@@ -155,8 +161,8 @@ theorem probe_wellFoundedPlay : probe.WellFoundedPlay := by
   | flip => rcases mem_support_coin hmem with rfl | rfl <;> simp [rank]
   | pick =>
     have hpure :
-        target ∈ (FinDist.pure ((joint ()).elim Spot.passed Move.outcome)).support := hmem
-    rw [FinDist.mem_support_pure.1 hpure, rank_outcome]
+        target ∈ (PMF.pure ((joint ()).elim Spot.passed Move.outcome)).support := hmem
+    rw [(PMF.mem_support_pure_iff _ _).mp hpure, rank_outcome]
     simp [rank]
   | grabbed => exact absurd (Or.inl rfl) hlegal.1
   | passed => exact absurd (Or.inr rfl) hlegal.1
@@ -178,25 +184,53 @@ theorem step_flip (move : Move) :
 /-- The transition at the decision node is the policy's move, resolved. -/
 theorem step_pick (move : Move) :
     probe.step Spot.pick (policy move Spot.pick pick_not_terminal) =
-      FinDist.pure move.outcome := rfl
+      PMF.pure move.outcome := rfl
 
 /-- The value at the decision node is the payoff of the move the policy plays.
 This is one backward-induction step past a terminal state. -/
+theorem backwardLaw_pick (move : Move) :
+    probe.backwardLaw probe_wellFoundedPlay (policy move) Spot.pick =
+      PMF.pure move.outcome := by
+  rw [backwardLaw_of_not_terminal pick_not_terminal, step_pick,
+    PMF.bindOnSupport_eq_bind, PMF.pure_bind,
+    backwardLaw_of_terminal (outcome_terminal move)]
+
 theorem backwardValue_pick (move : Move) (payoff : Spot → ℝ) :
-    probe.backwardValue probe_wellFoundedPlay (policy move) payoff Spot.pick =
+    probe.backwardValue probe_wellFoundedPlay (policy move) payoff Spot.pick
+        (payoffIntegrable_of_finite _ _) =
       payoff move.outcome := by
-  rw [backwardValue_of_not_terminal pick_not_terminal, step_pick, FinDist.expect_pure,
-    backwardValue_of_terminal (outcome_terminal move)]
+  calc
+    _ = expect (PMF.pure move.outcome) payoff
+        (payoffIntegrable_of_finite _ _) :=
+      expect_congr_law (backwardLaw_pick move) payoff _ _
+    _ = payoff move.outcome := expect_pure _ _ _
 
 /-- **The closed form.** Two backward-induction steps past the terminal states:
 the root value mixes the payoff the policy earns at the decision node with the
 payoff chance forces. Note which arguments appear — the move's outcome and
 `passed` — and which do not: the payoffs at `flip` and `pick`. -/
+theorem backwardLaw_flip (move : Move) :
+    probe.backwardLaw probe_wellFoundedPlay (policy move) Spot.flip =
+      mix (1 / 2) (by norm_num) (by norm_num)
+        (PMF.pure move.outcome) (PMF.pure Spot.passed) := by
+  rw [backwardLaw_of_not_terminal flip_not_terminal, step_flip,
+    PMF.bindOnSupport_eq_bind, coin_eq_mix, mix_bind]
+  simp [backwardLaw_pick, backwardLaw_of_terminal passed_terminal]
+
 theorem backwardValue_flip (move : Move) (payoff : Spot → ℝ) :
-    probe.backwardValue probe_wellFoundedPlay (policy move) payoff Spot.flip =
+    probe.backwardValue probe_wellFoundedPlay (policy move) payoff Spot.flip
+        (payoffIntegrable_of_finite _ _) =
       1 / 2 * payoff move.outcome + 1 / 2 * payoff Spot.passed := by
-  rw [backwardValue_of_not_terminal flip_not_terminal, step_flip, expect_coin,
-    backwardValue_pick, backwardValue_of_terminal passed_terminal]
+  calc
+    _ = expect
+        (mix (1 / 2) (by norm_num) (by norm_num)
+          (PMF.pure move.outcome) (PMF.pure Spot.passed)) payoff
+        (payoffIntegrable_of_finite _ _) :=
+      expect_congr_law (backwardLaw_flip move) payoff _ _
+    _ = _ := by
+      rw [expect_mix, expect_pure, expect_pure]
+      ring
+      all_goals exact payoffIntegrable_pure _ _
 
 /-! ### The payoff assignments the probes compare -/
 
@@ -225,25 +259,29 @@ def loudInteriorPayoff : Spot → ℝ
   | .passed => 0
 
 theorem backwardValue_grab_base :
-    probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff Spot.flip =
+    probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff Spot.flip
+        (payoffIntegrable_of_finite _ _) =
       1 / 2 := by
   rw [backwardValue_flip]
   norm_num [basePayoff, Move.outcome]
 
 theorem backwardValue_grab_raised :
-    probe.backwardValue probe_wellFoundedPlay (policy .grab) raisedPayoff Spot.flip =
+    probe.backwardValue probe_wellFoundedPlay (policy .grab) raisedPayoff Spot.flip
+        (payoffIntegrable_of_finite _ _) =
       1 := by
   rw [backwardValue_flip]
   norm_num [raisedPayoff, Move.outcome]
 
 theorem backwardValue_grab_loudInterior :
-    probe.backwardValue probe_wellFoundedPlay (policy .grab) loudInteriorPayoff Spot.flip =
+    probe.backwardValue probe_wellFoundedPlay (policy .grab) loudInteriorPayoff Spot.flip
+        (payoffIntegrable_of_finite _ _) =
       1 / 2 := by
   rw [backwardValue_flip]
   norm_num [loudInteriorPayoff, Move.outcome]
 
 theorem backwardValue_pass_base :
-    probe.backwardValue probe_wellFoundedPlay (policy .pass) basePayoff Spot.flip = 0 := by
+    probe.backwardValue probe_wellFoundedPlay (policy .pass) basePayoff Spot.flip
+        (payoffIntegrable_of_finite _ _) = 0 := by
   rw [backwardValue_flip]
   norm_num [basePayoff, Move.outcome]
 
@@ -254,8 +292,10 @@ so the value genuinely depends on its successors' values. Kills any
 implementation that returns `payoff source`, a constant, or the payoff of the
 state it starts at. -/
 theorem backwardValue_sensitive_to_successor :
-    probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff Spot.flip ≠
-      probe.backwardValue probe_wellFoundedPlay (policy .grab) raisedPayoff Spot.flip := by
+    probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff Spot.flip
+        (payoffIntegrable_of_finite _ _) ≠
+      probe.backwardValue probe_wellFoundedPlay (policy .grab) raisedPayoff Spot.flip
+        (payoffIntegrable_of_finite _ _) := by
   rw [backwardValue_grab_base, backwardValue_grab_raised]
   norm_num
 
@@ -265,17 +305,20 @@ stopping after one expectation. Kills a one-step implementation
 `expect (step source ..) payoff`, which would report `1/2 * 100 + 1/2 * 0`
 under `loudInteriorPayoff`. -/
 theorem backwardValue_ignores_interior_payoff :
-    probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff Spot.flip =
+    probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff Spot.flip
+        (payoffIntegrable_of_finite _ _) =
       probe.backwardValue probe_wellFoundedPlay (policy .grab) loudInteriorPayoff
-        Spot.flip := by
+        Spot.flip (payoffIntegrable_of_finite _ _) := by
   rw [backwardValue_grab_base, backwardValue_grab_loudInterior]
 
 /-- **Probe 3.** The value depends on the chooser's answer. Kills any
 implementation that consults the chooser and discards the result, or that
 manufactures its own legal action from `progress` and `Classical.choice`. -/
 theorem backwardValue_sensitive_to_chooser :
-    probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff Spot.flip ≠
-      probe.backwardValue probe_wellFoundedPlay (policy .pass) basePayoff Spot.flip := by
+    probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff Spot.flip
+        (payoffIntegrable_of_finite _ _) ≠
+      probe.backwardValue probe_wellFoundedPlay (policy .pass) basePayoff Spot.flip
+        (payoffIntegrable_of_finite _ _) := by
   rw [backwardValue_grab_base, backwardValue_pass_base]
   norm_num
 
@@ -283,9 +326,11 @@ theorem backwardValue_sensitive_to_chooser :
 averages rather than selecting a branch. Kills a maximizing or minimizing
 implementation as surely as a copying one. -/
 theorem backwardValue_flip_ne_terminal_payoffs :
-    probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff Spot.flip ≠
+    probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff Spot.flip
+        (payoffIntegrable_of_finite _ _) ≠
         basePayoff .grabbed ∧
-      probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff Spot.flip ≠
+      probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff Spot.flip
+        (payoffIntegrable_of_finite _ _) ≠
         basePayoff .passed := by
   rw [backwardValue_grab_base]
   constructor <;> norm_num [basePayoff]
@@ -299,30 +344,33 @@ half's. Discharging both on one game shows they describe one semantics. -/
 theorem probe_stopsWithin (move : Move) : probe.StopsWithin (policy move) 2 Spot.flip := by
   intro reached hreached
   rw [runFor_succ_of_not_terminal (policy move) 1 flip_not_terminal, step_flip,
-    FinDist.support_bind] at hreached
+    PMF.support_bind] at hreached
   simp only [Set.mem_iUnion, exists_prop] at hreached
   obtain ⟨spot, hspot, hrun⟩ := hreached
   rcases mem_support_coin hspot with rfl | rfl
   · rw [runFor_succ_of_not_terminal (policy move) 0 pick_not_terminal, step_pick,
-      FinDist.pure_bind, runFor_zero, FinDist.mem_support_pure] at hrun
+      PMF.pure_bind, runFor_zero, PMF.mem_support_pure_iff] at hrun
     rw [hrun]
     exact outcome_terminal move
   · rw [runFor_of_terminal (policy move) 1 passed_terminal,
-      FinDist.mem_support_pure] at hrun
+      PMF.mem_support_pure_iff] at hrun
     rw [hrun]
     exact passed_terminal
 
 /-- Backward induction and the fuelled evaluator compute the same number on the
 probe game. -/
 theorem expect_runFor_eq_backwardValue (move : Move) (payoff : Spot → ℝ) :
-    (probe.runFor (policy move) 2 Spot.flip).expect payoff =
-      probe.backwardValue probe_wellFoundedPlay (policy move) payoff Spot.flip :=
-  (backwardValue_eq_expect_runFor (probe_stopsWithin move)).symm
+    expect (probe.runFor (policy move) 2 Spot.flip) payoff
+        (payoffIntegrable_of_finite _ _) =
+      probe.backwardValue probe_wellFoundedPlay (policy move) payoff Spot.flip
+        (payoffIntegrable_of_finite _ _) :=
+  (backwardValue_eq_expect_runFor (probe_stopsWithin move) _ _).symm
 
 /-- Concretely: the run law's expected payoff is the backward-induction value
 `1/2`, so probes 1-4 constrain the forward semantics too. -/
 theorem expect_runFor_grab_base :
-    (probe.runFor (policy .grab) 2 Spot.flip).expect basePayoff = 1 / 2 := by
+    expect (probe.runFor (policy .grab) 2 Spot.flip) basePayoff
+        (payoffIntegrable_of_finite _ _) = 1 / 2 := by
   rw [expect_runFor_eq_backwardValue, backwardValue_grab_base]
 
 /-! ### The probes have teeth
@@ -336,13 +384,18 @@ plausible mistake. -/
 reading `payoff` at the states the first transition reaches. -/
 def oneStepValue (chooser : probe.Chooser) (payoff : Spot → ℝ) (source : Spot) : ℝ :=
   if hterm : probe.terminal source then payoff source
-  else (probe.step source (chooser source hterm)).expect payoff
+  else expect (probe.step source (chooser source hterm)) payoff
+    (payoffIntegrable_of_finite _ _)
 
 theorem oneStepValue_flip (move : Move) (payoff : Spot → ℝ) :
     oneStepValue (policy move) payoff Spot.flip =
       1 / 2 * payoff Spot.pick + 1 / 2 * payoff Spot.passed := by
   unfold oneStepValue
-  rw [dite_eq_right flip_not_terminal, step_flip, expect_coin]
+  rw [dite_eq_right flip_not_terminal]
+  calc
+    _ = expect coin payoff (payoffIntegrable_of_finite _ _) :=
+      expect_congr_law (step_flip move) payoff _ _
+    _ = _ := expect_coin payoff
 
 /-- Probe 2 refutes implementation A: it reads the interior payoff, so the two
 payoff assignments that differ only at `pick` give `7/2` and `50`. -/
@@ -364,7 +417,8 @@ theorem sourceOnlyValue_fails_probe_one :
 and play a fixed action instead — what a runner built from `progress` and
 `Classical.choice` would do. -/
 def chooserBlindValue (_chooser : probe.Chooser) (payoff : Spot → ℝ) : Spot → ℝ :=
-  probe.backwardValue probe_wellFoundedPlay (policy .grab) payoff
+  fun source => probe.backwardValue probe_wellFoundedPlay (policy .grab) payoff
+    source (payoffIntegrable_of_finite _ _)
 
 /-- Probe 3 refutes implementation C: both policies get the same number. -/
 theorem chooserBlindValue_fails_probe_three :

@@ -11,6 +11,9 @@ sound for this fixture.
 
 import GameTheory.Languages.EFG
 import GameTheory.Languages.FOSG
+import GameTheory.Math.Probability.Joint
+import GameTheory.Math.Probability.Mixture
+import GameTheory.Math.Probability.Product
 
 noncomputable section
 
@@ -20,19 +23,19 @@ open GameTheory.Languages GameTheory.Math.Probability GameTheory.Protocol
 open GameTheory.Protocol.ExecutionProtocol
 
 theorem map_pi_bool {α : Bool → Type*}
-    (laws : (index : Bool) → FinDist (α index)) :
-    FinDist.map (fun draws => (draws false, draws true))
-        (FinDist.pi laws) =
-      FinDist.product (laws false) (laws true) := by
+    (laws : (index : Bool) → PMF (α index)) :
+    PMF.map (fun draws => (draws false, draws true))
+        (independentProduct laws) =
+      bindPairLaw (laws false) (fun _ => laws true) := by
   classical
-  apply FinDist.ext_of_prob
+  apply PMF.ext
   intro pair
   let assignment : (index : Bool) → α index
     | false => pair.1
     | true => pair.2
   have hpair : (assignment false, assignment true) = pair := rfl
-  rw [← hpair, FinDist.prob_map_of_injective]
-  · rw [FinDist.prob_pi, FinDist.prob_product, Fintype.prod_bool]
+  rw [← hpair, pmf_map_apply_of_injective]
+  · rw [independentProduct_apply, bindPairLaw_apply, Fintype.prod_bool]
     simp [mul_comm]
   · intro first second hequal
     funext index
@@ -46,24 +49,24 @@ def boolPairAssignment {α : Bool → Type*}
   | true => pair.2
 
 theorem pi_bool_eq_map_product {α : Bool → Type*}
-    (laws : (index : Bool) → FinDist (α index)) :
-    FinDist.pi laws =
-      FinDist.map boolPairAssignment
-        (FinDist.product (laws false) (laws true)) := by
+    (laws : (index : Bool) → PMF (α index)) :
+    independentProduct laws =
+      PMF.map boolPairAssignment
+        (bindPairLaw (laws false) (fun _ => laws true)) := by
   classical
-  apply FinDist.ext_of_prob
+  apply PMF.ext
   intro assignment
   have hrebuild :
       boolPairAssignment (assignment false, assignment true) = assignment := by
     funext index
     cases index <;> rfl
   conv_rhs => rw [← hrebuild]
-  rw [FinDist.prob_pi,
-    FinDist.prob_map_of_injective boolPairAssignment (by
+  rw [independentProduct_apply,
+    pmf_map_apply_of_injective _ (by
       intro first second hequal
       exact Prod.ext
         (congrFun hequal false) (congrFun hequal true)),
-    FinDist.prob_product, Fintype.prod_bool]
+    bindPairLaw_apply, Fintype.prod_bool]
   simp [mul_comm]
 
 namespace Source
@@ -79,25 +82,28 @@ def terminal : State → Prop
   | .finished .. => True
   | _ => False
 
-def coin : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure false) (FinDist.pure true)
+def coin : PMF Bool :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure false) (PMF.pure true)
 
-def firstResolution : FinDist (Bool × Bool) :=
-  FinDist.product coin coin
+def firstResolution : PMF (Bool × Bool) :=
+  bindPairLaw coin (fun _ => coin)
 
 theorem mem_support_coin (value : Bool) : value ∈ coin.support := by
-  refine FinDist.prob_pos_iff.mp ?_
-  cases value <;> norm_num [coin, FinDist.prob_pure_eq_ite]
+  cases value with
+  | false =>
+      exact mem_support_mix_left (1 / 2) (by norm_num) (by norm_num)
+        (by norm_num) (by simp)
+  | true =>
+      exact mem_support_mix_right (1 / 2) (by norm_num) (by norm_num)
+        (by norm_num) (by simp)
 
 theorem mem_support_firstResolution (publicBit hiddenActiveBit : Bool) :
     (publicBit, hiddenActiveBit) ∈ firstResolution.support := by
-  refine FinDist.prob_pos_iff.mp ?_
-  unfold firstResolution
-  rw [FinDist.prob_product]
-  exact mul_pos
-    (FinDist.prob_pos_iff.mpr (mem_support_coin publicBit))
-    (FinDist.prob_pos_iff.mpr (mem_support_coin hiddenActiveBit))
+  rw [PMF.mem_support_iff, firstResolution, bindPairLaw_apply]
+  exact mul_ne_zero
+    ((coin.apply_pos_iff publicBit).mpr (mem_support_coin publicBit)).ne'
+    ((coin.apply_pos_iff hiddenActiveBit).mpr (mem_support_coin hiddenActiveBit)).ne'
 
 def active : State → Bool → Prop
   | .start, _ => True
@@ -127,13 +133,13 @@ def execution : ExecutionProtocol Bool where
   step state joint :=
     match state with
     | .start =>
-        FinDist.map (fun bits => State.round2 bits.1 bits.2)
+        PMF.map (fun bits => State.round2 bits.1 bits.2)
           firstResolution
     | .round2 publicBit hiddenActiveBit =>
         let falseAction := actionAt (.round2 publicBit hiddenActiveBit)
           joint.1 joint.2.2 false (by simp [active])
         let trueAction := joint.1 true
-        FinDist.map
+        PMF.map
           (State.finished publicBit hiddenActiveBit falseAction trueAction)
           coin
     | .finished .. => False.elim (joint.2.1 trivial)
@@ -194,7 +200,7 @@ def finishedHistory (left right publicBit hiddenActiveBit falseAction
       (secondJoint_legal publicBit hiddenActiveBit falseAction trueAction) (by
         show State.finished publicBit hiddenActiveBit falseAction
             (joint true) secondCoin ∈
-          (FinDist.map
+          (PMF.map
             (State.finished publicBit hiddenActiveBit
               (actionAt (.round2 publicBit hiddenActiveBit) joint
                 (secondJoint_legal publicBit hiddenActiveBit falseAction trueAction).2
@@ -204,7 +210,7 @@ def finishedHistory (left right publicBit hiddenActiveBit falseAction
             (secondJoint_legal publicBit hiddenActiveBit falseAction trueAction).2
             false (by simp [active]) = falseAction := by
           rfl
-        rw [hfalse, FinDist.support_map]
+        rw [hfalse, PMF.support_map]
         exact ⟨secondCoin, mem_support_coin secondCoin, rfl⟩)⟩
 
 inductive PublicSignal
@@ -404,9 +410,9 @@ theorem start_not_mem_step (source : State)
     (certified : { joint : Bool → Option Bool // execution.Legal source joint }) :
     State.start ∉ (execution.step source certified).support := by
   cases source with
-  | start => simp [execution, FinDist.support_map]
+  | start => simp [execution, PMF.support_map]
   | round2 publicBit hiddenActiveBit =>
-      simp [execution, FinDist.support_map]
+      simp [execution, PMF.support_map]
   | finished publicBit hiddenActiveBit falseAction trueAction secondCoin =>
       exact fun _ => certified.2.1 trivial
 
@@ -551,12 +557,12 @@ def resolve (first : Bool) (history : Source.execution.History)
     (firstChoice : ChoiceAt history first)
     (secondChoice : ChoiceAt history (!first))
     (hterm : ¬ Source.execution.terminal history.state) :
-    FinDist (State first) :=
+    PMF (State first) :=
   let sourceLegal := combine_legal first hterm firstChoice secondChoice
   (Source.execution.step history.state
       ⟨combine first firstChoice secondChoice, sourceLegal⟩).bindOnSupport
     fun _ realized =>
-      FinDist.pure <| .boundary (history.extend sourceLegal realized)
+      PMF.pure <| .boundary (history.extend sourceLegal realized)
 
 theorem mem_support_resolve_iff (first : Bool)
     (history : Source.execution.History)
@@ -573,7 +579,7 @@ theorem mem_support_resolve_iff (first : Bool)
         target = .boundary
           (history.extend
             (combine_legal first hterm firstChoice secondChoice) realized) := by
-  simp [resolve, FinDist.support_bindOnSupport]
+  simp [resolve, PMF.support_bindOnSupport]
 
 @[reducible]
 def execution (first : Bool) : ExecutionProtocol Bool := by
@@ -588,10 +594,10 @@ def execution (first : Bool) : ExecutionProtocol Bool := by
     step state joint :=
       match state with
       | .boundary history =>
-          FinDist.pure <| .afterFirst history
+          PMF.pure <| .afterFirst history
             (firstChoiceOfJoint first history joint.1 joint.2.2)
       | .afterFirst history prior =>
-          FinDist.pure <| .ready history prior
+          PMF.pure <| .ready history prior
             (secondChoiceOfJoint first history prior joint.1 joint.2.2)
       | .ready history firstChoice secondChoice =>
           resolve first history firstChoice secondChoice
@@ -610,7 +616,7 @@ theorem step_boundary (first : Bool) (history : Source.execution.History)
     (joint : Bool → Option Bool)
     (hlegal : (execution first).Legal (.boundary history) joint) :
     (execution first).step (.boundary history) ⟨joint, hlegal⟩ =
-      FinDist.pure (.afterFirst history
+      PMF.pure (.afterFirst history
         (firstChoiceOfJoint first history joint hlegal.2)) := by
   rfl
 
@@ -619,7 +625,7 @@ theorem step_afterFirst (first : Bool) (history : Source.execution.History)
     (joint : Bool → Option Bool)
     (hlegal : (execution first).Legal (.afterFirst history prior) joint) :
     (execution first).step (.afterFirst history prior) ⟨joint, hlegal⟩ =
-      FinDist.pure (.ready history prior
+      PMF.pure (.ready history prior
         (secondChoiceOfJoint first history prior joint hlegal.2)) := by
   rfl
 
@@ -1283,7 +1289,7 @@ theorem resolve_realized (first : Bool)
         (Source.execution.step history.state
           ⟨combine first firstChoice secondChoice, combinedLegal⟩).support := by
       have hstep := congrArg (Source.execution.step history.state) hcertified
-      have hsupportEq := congrArg FinDist.support hstep
+      have hsupportEq := congrArg PMF.support hstep
       exact (Set.ext_iff.mp hsupportEq reached).mpr sourceRealized
     refine ⟨reached, hsupport, ?_⟩
     congr
@@ -1351,7 +1357,7 @@ def projectBehavioral (first : Bool)
       (information first).BehavioralPolicy player) :
     (player : Bool) → Source.information.BehavioralPolicy player :=
   fun player source =>
-    FinDist.map (choiceEquiv first player source)
+    PMF.map (choiceEquiv first player source)
       (target player (scheduledView first player source))
 
 noncomputable def defaultChoice (first player : Bool) (view : View) :
@@ -1374,7 +1380,7 @@ def translateBehavioral (first : Bool)
     (player : Bool) → (information first).BehavioralPolicy player :=
   fun player view =>
     if hview : view = scheduledView first player view.source then
-      FinDist.map (fun choice => ⟨choice.1, by
+      PMF.map (fun choice => ⟨choice.1, by
         have hmenu : (information first).menu player view =
             Source.information.menu player view.source := by
           rw [hview]
@@ -1382,7 +1388,7 @@ def translateBehavioral (first : Bool)
         rw [hmenu]
         exact choice.2⟩) (source player view.source)
     else
-      FinDist.pure (defaultChoice first player view)
+      PMF.pure (defaultChoice first player view)
 
 theorem project_translate (first player : Bool) (sourceView : Source.View)
     (source : (player : Bool) →
@@ -1391,10 +1397,10 @@ theorem project_translate (first player : Bool) (sourceView : Source.View)
         player sourceView =
       source player sourceView := by
   unfold projectBehavioral translateBehavioral
-  rw [dite_eq_left (by simp), FinDist.map_comp]
-  show FinDist.map _ (source player sourceView) = source player sourceView
-  convert FinDist.map_id (source player sourceView) using 1
-  apply congrArg (fun f => FinDist.map f (source player sourceView))
+  rw [dite_eq_left (by simp), PMF.map_comp]
+  show PMF.map _ (source player sourceView) = source player sourceView
+  convert PMF.map_id (source player sourceView) using 1
+  apply congrArg (fun f => PMF.map f (source player sourceView))
   funext choice
   apply Subtype.ext
   rfl
@@ -1409,14 +1415,14 @@ def sourceChoiceAt (history : Source.execution.History) (player : Bool)
 def extendCertifiedSourceLaw (history : Source.execution.History)
     (draw : { joint : Bool → Option Bool //
       Source.execution.Legal history.state joint }) :
-    FinDist Source.execution.History :=
+    PMF Source.execution.History :=
   (Source.execution.step history.state draw).bindOnSupport
-    fun _ realized => FinDist.pure (history.extend draw.2 realized)
+    fun _ realized => PMF.pure (history.extend draw.2 realized)
 
 def extendSourceLaw (history : Source.execution.History)
     (joint : Bool → Option Bool)
     (hlegal : Source.execution.Legal history.state joint) :
-    FinDist Source.execution.History :=
+    PMF Source.execution.History :=
   extendCertifiedSourceLaw history ⟨joint, hlegal⟩
 
 def orderedSourceHistoryLaw (first : Bool)
@@ -1424,7 +1430,7 @@ def orderedSourceHistoryLaw (first : Bool)
       Source.information.BehavioralPolicy player)
     (history : Source.execution.History)
     (hterm : ¬ Source.execution.terminal history.state) :
-    FinDist Source.execution.History :=
+    PMF Source.execution.History :=
   (policies first (Source.information.infoOf first history.trace)).bind
     fun firstChoice =>
       (policies (!first)
@@ -1447,17 +1453,17 @@ theorem source_runBehavioralFrom_one_eq_ordered (first : Bool)
     ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ 0 hterm]
   unfold InformationModel.randomizedChooser
   unfold InformationModel.behavioralJoint
-  rw [FinDist.bind_map]
+  rw [PMF.bind_map]
   unfold orderedSourceHistoryLaw
   simp_rw [ExecutionProtocol.runRandomizedFor_zero]
-  rw [pi_bool_eq_map_product, FinDist.bind_map]
-  unfold FinDist.product
-  rw [FinDist.bind_bind]
-  simp_rw [FinDist.bind_map]
+  rw [pi_bool_eq_map_product, PMF.bind_map]
+  unfold bindPairLaw
+  rw [PMF.bind_bind]
+  simp_rw [PMF.bind_map]
   cases first
-  · apply FinDist.bind_congr
+  · apply bind_congr_on_support
     intro firstChoice _
-    apply FinDist.bind_congr
+    apply bind_congr_on_support
     intro secondChoice _
     let draws := boolPairAssignment
       (α := fun player => Source.information.Choice player
@@ -1482,10 +1488,10 @@ theorem source_runBehavioralFrom_one_eq_ordered (first : Bool)
       extendCertifiedSourceLaw history
         ⟨combine false firstAt secondAt, _⟩
     exact congrArg (extendCertifiedSourceLaw history) hcertified
-  · conv_lhs => rw [FinDist.bind_comm]
-    apply FinDist.bind_congr
+  · conv_lhs => rw [PMF.bind_comm]
+    apply bind_congr_on_support
     intro firstChoice _
-    apply FinDist.bind_congr
+    apply bind_congr_on_support
     intro secondChoice _
     let draws := boolPairAssignment
       (α := fun player => Source.information.Choice player
@@ -1591,8 +1597,8 @@ def targetChoiceAtLaw (first : Bool)
     (target : (player : Bool) →
       (information first).BehavioralPolicy player)
     (history : Source.execution.History) (player : Bool) :
-    FinDist (ChoiceAt history player) :=
-  FinDist.map (scheduledChoiceAt first history player)
+    PMF (ChoiceAt history player) :=
+  PMF.map (scheduledChoiceAt first history player)
     (target player
       (scheduledView first player
         (Source.information.infoOf player history.trace)))
@@ -1625,7 +1631,7 @@ theorem map_choiceAtOfViewEq (first : Bool)
     (view : (information first).InfoState player)
     (hview : view = scheduledView first player
       (Source.information.infoOf player history.trace)) :
-    FinDist.map (choiceAtOfViewEq first history player view hview)
+    PMF.map (choiceAtOfViewEq first history player view hview)
         (target player view) =
       targetChoiceAtLaw first target history player := by
   subst view
@@ -1654,7 +1660,7 @@ theorem map_erase_runBehavioralFrom_ready (first : Bool)
     (secondChoice : ChoiceAt history (!first))
     (trace : (execution first).Trace
       (.ready history firstChoice secondChoice)) :
-    FinDist.map (eraseHistory first)
+    PMF.map (eraseHistory first)
         ((information first).runBehavioralFrom target 1
           ⟨.ready history firstChoice secondChoice, trace⟩) =
       extendSourceLaw history
@@ -1665,29 +1671,28 @@ theorem map_erase_runBehavioralFrom_ready (first : Bool)
   rw [InformationModel.runBehavioralFrom,
     ExecutionProtocol.runRandomizedFor_succ_of_not_terminal
       _ 0 htargetTerm,
-    FinDist.map_bind]
+    PMF.map_bind]
   unfold InformationModel.randomizedChooser
   rw [InformationModel.behavioralJoint_eq_pure_of_no_active
     (information first) target trace htargetTerm (by
       intro player
       simp [active]),
-    FinDist.pure_bind,
-    FinDist.map_bindOnSupport]
-  rw [FinDist.bindOnSupport_eq_bind_of_eq_on_support
-    (g := fun state => FinDist.pure state.history) (by
+    PMF.pure_bind,
+    map_bindOnSupport]
+  rw [bindOnSupport_eq_bind_of_eq_on_support _
+    (g := fun state => PMF.pure state.history) (by
       intro state realized
-      rw [ExecutionProtocol.runRandomizedFor_zero, FinDist.map_pure]
+      rw [ExecutionProtocol.runRandomizedFor_zero, PMF.pure_map]
       rfl)]
-  rw [← FinDist.map_eq_bind]
-  show FinDist.map (fun state : State first => state.history)
+  show PMF.map (fun state : State first => state.history)
       (resolve first history firstChoice secondChoice hterm) =
     extendSourceLaw history
       (combine first firstChoice secondChoice)
       (combine_legal first hterm firstChoice secondChoice)
   unfold extendSourceLaw extendCertifiedSourceLaw resolve
-  rw [FinDist.map_bindOnSupport]
-  exact FinDist.bindOnSupport_congr fun reached realized => by
-    rw [FinDist.map_pure]
+  rw [map_bindOnSupport]
+  exact bindOnSupport_congr _ fun reached realized => by
+    rw [PMF.pure_map]
     rfl
 
 set_option backward.isDefEq.respectTransparency false in
@@ -1699,7 +1704,7 @@ theorem map_erase_runBehavioralFrom_afterFirst (first : Bool)
     (firstChoice : ChoiceAt history first)
     (trace : (execution first).Trace
       (.afterFirst history firstChoice)) :
-    FinDist.map (eraseHistory first)
+    PMF.map (eraseHistory first)
         ((information first).runBehavioralFrom target 2
           ⟨.afterFirst history firstChoice, trace⟩) =
       (target (!first)
@@ -1715,17 +1720,17 @@ theorem map_erase_runBehavioralFrom_afterFirst (first : Bool)
   rw [InformationModel.runBehavioralFrom,
     ExecutionProtocol.runRandomizedFor_succ_of_not_terminal
       _ 1 htargetTerm,
-    FinDist.map_bind]
+    PMF.map_bind]
   unfold InformationModel.randomizedChooser
   rw [InformationModel.behavioralJoint_eq_map_of_at_most_one_active
     (information first) target trace htargetTerm (!first) (by
       intro player hactive
       exact (show player = !first ∧
         Source.execution.active history.state player from hactive).1),
-    FinDist.bind_map]
-  apply FinDist.bind_congr
+    PMF.bind_map]
+  apply bind_congr_on_support
   intro choice hchoice
-  refine FinDist.map_bindOnSupport_const _ fun state realized => ?_
+  refine map_bindOnSupport_const _ fun state realized => ?_
   simp [execution] at realized
   subst state
   let secondAt := secondChoiceOfJoint first history firstChoice
@@ -1736,7 +1741,7 @@ theorem map_erase_runBehavioralFrom_afterFirst (first : Bool)
         simpa using ((information first).menu_adequate (!first) trace
           choice.1).mp choice.2
       · simp [LegalOption, active, howner])).2
-  show FinDist.map (eraseHistory first)
+  show PMF.map (eraseHistory first)
       ((information first).runBehavioralFrom target 1
         ⟨.ready history firstChoice secondAt, _⟩) = _
   rw [map_erase_runBehavioralFrom_ready first target history hterm
@@ -1760,7 +1765,7 @@ theorem map_erase_runBehavioralFrom_afterFirst_eq_choiceAtLaw
     (firstChoice : ChoiceAt history first)
     (trace : (execution first).Trace
       (.afterFirst history firstChoice)) :
-    FinDist.map (eraseHistory first)
+    PMF.map (eraseHistory first)
         ((information first).runBehavioralFrom target 2
           ⟨.afterFirst history firstChoice, trace⟩) =
       (targetChoiceAtLaw first target history (!first)).bind
@@ -1774,7 +1779,8 @@ theorem map_erase_runBehavioralFrom_afterFirst_eq_choiceAtLaw
   rw [← map_choiceAtOfViewEq first target history (!first)
     ((information first).infoOf (!first) trace)
     (afterFirst_info_eq_scheduled first history hterm firstChoice trace),
-    FinDist.bind_map]
+    PMF.bind_map]
+  rfl
 
 def boundaryChoiceAt (first : Bool)
     (history : Source.execution.History)
@@ -1795,7 +1801,7 @@ theorem map_erase_runBehavioralFrom_boundary (first : Bool)
     (history : Source.execution.History)
     (hterm : ¬ Source.execution.terminal history.state)
     (trace : (execution first).Trace (.boundary history)) :
-    FinDist.map (eraseHistory first)
+    PMF.map (eraseHistory first)
         ((information first).runBehavioralFrom target 3
           ⟨.boundary history, trace⟩) =
       (target first ((information first).infoOf first trace)).bind
@@ -1814,17 +1820,17 @@ theorem map_erase_runBehavioralFrom_boundary (first : Bool)
   rw [InformationModel.runBehavioralFrom,
     ExecutionProtocol.runRandomizedFor_succ_of_not_terminal
       _ 2 htargetTerm,
-    FinDist.map_bind]
+    PMF.map_bind]
   unfold InformationModel.randomizedChooser
   rw [InformationModel.behavioralJoint_eq_map_of_at_most_one_active
     (information first) target trace htargetTerm first (by
       intro player hactive
       exact (show player = first ∧
         Source.execution.active history.state player from hactive).1),
-    FinDist.bind_map]
-  apply FinDist.bind_congr
+    PMF.bind_map]
+  apply bind_congr_on_support
   intro choice hchoice
-  refine FinDist.map_bindOnSupport_const _ fun state realized => ?_
+  refine map_bindOnSupport_const _ fun state realized => ?_
   simp [execution] at realized
   subst state
   let firstAt := firstChoiceOfJoint first history
@@ -1835,12 +1841,12 @@ theorem map_erase_runBehavioralFrom_boundary (first : Bool)
         simpa using ((information first).menu_adequate first trace
           choice.1).mp choice.2
       · simp [LegalOption, active, howner])).2
-  show FinDist.map (eraseHistory first)
+  show PMF.map (eraseHistory first)
       ((information first).runBehavioralFrom target 2
         ⟨.afterFirst history firstAt, _⟩) = _
   rw [map_erase_runBehavioralFrom_afterFirst_eq_choiceAtLaw
     first target history hterm firstAt]
-  apply FinDist.bind_congr
+  apply bind_congr_on_support
   intro secondChoice _
   have hfirst : firstAt.1 = choice.1 := by
     unfold firstAt firstChoiceOfJoint
@@ -1859,7 +1865,7 @@ theorem map_erase_runBehavioralFrom_boundary_eq_choiceAtLaws
     (history : Source.execution.History)
     (hterm : ¬ Source.execution.terminal history.state)
     (trace : (execution first).Trace (.boundary history)) :
-    FinDist.map (eraseHistory first)
+    PMF.map (eraseHistory first)
         ((information first).runBehavioralFrom target 3
           ⟨.boundary history, trace⟩) =
       (targetChoiceAtLaw first target history first).bind
@@ -1874,14 +1880,15 @@ theorem map_erase_runBehavioralFrom_boundary_eq_choiceAtLaws
   rw [← map_choiceAtOfViewEq first target history first
     ((information first).infoOf first trace)
     (boundary_info_eq_scheduled first history hterm trace),
-    FinDist.bind_map]
+    PMF.bind_map]
+  rfl
 
 def sourceChoiceAtLaw
     (policies : (player : Bool) →
       Source.information.BehavioralPolicy player)
     (history : Source.execution.History) (player : Bool) :
-    FinDist (ChoiceAt history player) :=
-  FinDist.map (sourceChoiceAt history player)
+    PMF (ChoiceAt history player) :=
+  PMF.map (sourceChoiceAt history player)
     (policies player
       (Source.information.infoOf player history.trace))
 
@@ -1892,7 +1899,7 @@ theorem targetChoiceAtLaw_eq_projected (first : Bool)
     targetChoiceAtLaw first target history player =
       sourceChoiceAtLaw (projectBehavioral first target) history player := by
   unfold targetChoiceAtLaw sourceChoiceAtLaw projectBehavioral
-  rw [FinDist.map_comp]
+  rw [PMF.map_comp]
   rfl
 
 theorem orderedSourceHistoryLaw_eq_choiceAtLaws (first : Bool)
@@ -1909,10 +1916,10 @@ theorem orderedSourceHistoryLaw_eq_choiceAtLaws (first : Bool)
                 (combine first firstChoice secondChoice)
                 (combine_legal first hterm firstChoice secondChoice) := by
   unfold orderedSourceHistoryLaw sourceChoiceAtLaw
-  rw [FinDist.bind_map]
-  apply FinDist.bind_congr
+  rw [PMF.bind_map]
+  apply bind_congr_on_support
   intro firstChoice _
-  rw [FinDist.bind_map]
+  simp only [PMF.bind_map, Function.comp_def]
 
 /-- Three administrative target steps erase to one literal source-history
 step for every target behavioral profile, not only for translated profiles. -/
@@ -1922,7 +1929,7 @@ theorem map_erase_runBehavioralFrom_boundary_eq_source (first : Bool)
     (history : Source.execution.History)
     (hterm : ¬ Source.execution.terminal history.state)
     (trace : (execution first).Trace (.boundary history)) :
-    FinDist.map (eraseHistory first)
+    PMF.map (eraseHistory first)
         ((information first).runBehavioralFrom target 3
           ⟨.boundary history, trace⟩) =
       Source.information.runBehavioralFrom
@@ -1941,7 +1948,7 @@ theorem map_erase_runBehavioralFrom_boundary_eq_source_any (first : Bool)
       (information first).BehavioralPolicy player)
     (history : Source.execution.History)
     (trace : (execution first).Trace (.boundary history)) :
-    FinDist.map (eraseHistory first)
+    PMF.map (eraseHistory first)
         ((information first).runBehavioralFrom target 3
           ⟨.boundary history, trace⟩) =
       Source.information.runBehavioralFrom
@@ -1950,49 +1957,12 @@ theorem map_erase_runBehavioralFrom_boundary_eq_source_any (first : Bool)
   · have htarget : (execution first).terminal (.boundary history) := hterm
     rw [InformationModel.runBehavioralFrom,
       ExecutionProtocol.runRandomizedFor_of_terminal _ 3 htarget,
-      FinDist.map_pure,
+      PMF.pure_map,
       InformationModel.runBehavioralFrom,
       ExecutionProtocol.runRandomizedFor_of_terminal _ 1 hterm]
     rfl
   · exact map_erase_runBehavioralFrom_boundary_eq_source
       first target history hterm trace
-
-theorem runRandomizedFor_add {ι : Type*} (E : ExecutionProtocol ι)
-    (chooser : E.RandomizedChooser) (firstFuel secondFuel : ℕ)
-    (history : E.History) :
-    E.runRandomizedFor chooser (firstFuel + secondFuel) history =
-      (E.runRandomizedFor chooser firstFuel history).bind
-        (E.runRandomizedFor chooser secondFuel) := by
-  induction firstFuel generalizing history with
-  | zero => simp [FinDist.pure_bind]
-  | succ firstFuel ih =>
-      by_cases hterm : E.terminal history.state
-      · rw [ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterm,
-          ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterm,
-          FinDist.pure_bind,
-          ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterm]
-      · rw [show firstFuel + 1 + secondFuel =
-            (firstFuel + secondFuel) + 1 by omega,
-          ExecutionProtocol.runRandomizedFor_succ_of_not_terminal
-            chooser _ hterm,
-          ExecutionProtocol.runRandomizedFor_succ_of_not_terminal
-            chooser _ hterm,
-          FinDist.bind_bind]
-        apply FinDist.bind_congr
-        intro draw _
-        rw [FinDist.bind_bindOnSupport]
-        exact FinDist.bindOnSupport_congr fun reached realized =>
-          ih (history.extend draw.2 realized)
-
-theorem runBehavioralFrom_add {ι : Type*} [Fintype ι]
-    {E : ExecutionProtocol ι} (model : InformationModel E)
-    (policies : (player : ι) → model.BehavioralPolicy player)
-    (firstFuel secondFuel : ℕ) (history : E.History) :
-    model.runBehavioralFrom policies (firstFuel + secondFuel) history =
-      (model.runBehavioralFrom policies firstFuel history).bind
-        (model.runBehavioralFrom policies secondFuel) :=
-  runRandomizedFor_add E (model.randomizedChooser policies)
-    firstFuel secondFuel history
 
 theorem state_of_mem_runBehavioralFrom_one_boundary (first : Bool)
     (target : (player : Bool) →
@@ -2010,14 +1980,14 @@ theorem state_of_mem_runBehavioralFrom_one_boundary (first : Bool)
   rw [InformationModel.runBehavioralFrom,
     ExecutionProtocol.runRandomizedFor_succ_of_not_terminal
       _ 0 htargetTerm] at hreached
-  simp only [FinDist.support_bind, Set.mem_iUnion] at hreached
+  simp only [PMF.support_bind, Set.mem_iUnion] at hreached
   obtain ⟨draw, hdraw, hreached⟩ := hreached
-  simp only [FinDist.support_bindOnSupport, Set.mem_iUnion] at hreached
+  simp only [PMF.support_bindOnSupport, Set.mem_iUnion] at hreached
   obtain ⟨state, hstate, hreached⟩ := hreached
   rw [ExecutionProtocol.runRandomizedFor_zero,
-    FinDist.mem_support_pure] at hreached
+    PMF.mem_support_pure_iff] at hreached
   subst reached
-  rw [FinDist.mem_support_pure] at hstate
+  rw [PMF.mem_support_pure_iff] at hstate
   subst state
   exact ⟨firstChoiceOfJoint first history draw.1 draw.2.2, rfl⟩
 
@@ -2039,14 +2009,14 @@ theorem state_of_mem_runBehavioralFrom_one_afterFirst (first : Bool)
   rw [InformationModel.runBehavioralFrom,
     ExecutionProtocol.runRandomizedFor_succ_of_not_terminal
       _ 0 htargetTerm] at hreached
-  simp only [FinDist.support_bind, Set.mem_iUnion] at hreached
+  simp only [PMF.support_bind, Set.mem_iUnion] at hreached
   obtain ⟨draw, hdraw, hreached⟩ := hreached
-  simp only [FinDist.support_bindOnSupport, Set.mem_iUnion] at hreached
+  simp only [PMF.support_bindOnSupport, Set.mem_iUnion] at hreached
   obtain ⟨state, hstate, hreached⟩ := hreached
   rw [ExecutionProtocol.runRandomizedFor_zero,
-    FinDist.mem_support_pure] at hreached
+    PMF.mem_support_pure_iff] at hreached
   subst reached
-  rw [FinDist.mem_support_pure] at hstate
+  rw [PMF.mem_support_pure_iff] at hstate
   subst state
   exact ⟨secondChoiceOfJoint first history firstChoice
     draw.1 draw.2.2, rfl⟩
@@ -2071,12 +2041,12 @@ theorem state_of_mem_runBehavioralFrom_one_ready (first : Bool)
   rw [InformationModel.runBehavioralFrom,
     ExecutionProtocol.runRandomizedFor_succ_of_not_terminal
       _ 0 htargetTerm] at hreached
-  simp only [FinDist.support_bind, Set.mem_iUnion] at hreached
+  simp only [PMF.support_bind, Set.mem_iUnion] at hreached
   obtain ⟨draw, hdraw, hreached⟩ := hreached
-  simp only [FinDist.support_bindOnSupport, Set.mem_iUnion] at hreached
+  simp only [PMF.support_bindOnSupport, Set.mem_iUnion] at hreached
   obtain ⟨state, hstate, hreached⟩ := hreached
   rw [ExecutionProtocol.runRandomizedFor_zero,
-    FinDist.mem_support_pure] at hreached
+    PMF.mem_support_pure_iff] at hreached
   subst reached
   rw [mem_support_resolve_iff] at hstate
   obtain ⟨sourceState, realized, rfl⟩ := hstate
@@ -2097,8 +2067,8 @@ theorem state_of_mem_runBehavioralFrom_three_boundary (first : Bool)
       reached.state = .boundary sourceHistory := by
   unfold InformationModel.runBehavioralFrom at hreached
   rw [show 3 = 1 + 2 by norm_num,
-    runRandomizedFor_add] at hreached
-  simp only [FinDist.support_bind, Set.mem_iUnion] at hreached
+    ExecutionProtocol.runRandomizedFor_add] at hreached
+  simp only [PMF.support_bind, Set.mem_iUnion] at hreached
   obtain ⟨middle1, hmiddle1, hreached⟩ := hreached
   have hmiddle1' : middle1 ∈
       ((information first).runBehavioralFrom target 1
@@ -2111,8 +2081,8 @@ theorem state_of_mem_runBehavioralFrom_three_boundary (first : Bool)
       middle1State = .afterFirst history firstChoice := hmiddle1State
   subst middle1State
   rw [show 2 = 1 + 1 by norm_num,
-    runRandomizedFor_add] at hreached
-  simp only [FinDist.support_bind, Set.mem_iUnion] at hreached
+    ExecutionProtocol.runRandomizedFor_add] at hreached
+  simp only [PMF.support_bind, Set.mem_iUnion] at hreached
   obtain ⟨middle2, hmiddle2, hreached⟩ := hreached
   have hmiddle2' : middle2 ∈
       ((information first).runBehavioralFrom target 1
@@ -2136,7 +2106,7 @@ as the two source rounds, for every target behavioral profile. -/
 theorem map_erase_runBehavioral_eq_source (first : Bool)
     (target : (player : Bool) →
       (information first).BehavioralPolicy player) :
-    FinDist.map (eraseHistory first)
+    PMF.map (eraseHistory first)
         ((information first).runBehavioral target 6) =
       Source.information.runBehavioral
         (projectBehavioral first target) 2 := by
@@ -2145,7 +2115,7 @@ theorem map_erase_runBehavioral_eq_source (first : Bool)
       Source.execution.initHistory.state := by
     simp [Source.execution, Source.terminal]
   have hfirstLaw :
-      FinDist.map (eraseHistory first)
+      PMF.map (eraseHistory first)
           ((information first).runBehavioralFrom target 3
             (execution first).initHistory) =
         Source.information.runBehavioralFrom sourcePolicies 1
@@ -2155,15 +2125,15 @@ theorem map_erase_runBehavioral_eq_source (first : Bool)
         (execution first).initHistory.trace
   unfold InformationModel.runBehavioral
   rw [show 6 = 3 + 3 by norm_num,
-    runBehavioralFrom_add,
-    FinDist.map_bind]
+    InformationModel.runBehavioralFrom_add,
+    PMF.map_bind]
   calc
     _ = ((information first).runBehavioralFrom target 3
           (execution first).initHistory).bind
         (fun middle =>
           Source.information.runBehavioralFrom sourcePolicies 1
             (eraseHistory first middle)) := by
-      apply FinDist.bind_congr
+      apply bind_congr_on_support
       intro middle hmiddle
       have hboundary := state_of_mem_runBehavioralFrom_three_boundary
         first target Source.execution.initHistory hsourceStart
@@ -2174,18 +2144,19 @@ theorem map_erase_runBehavioral_eq_source (first : Bool)
       subst middleState
       exact map_erase_runBehavioralFrom_boundary_eq_source_any
         first target sourceHistory middleTrace
-    _ = (FinDist.map (eraseHistory first)
+    _ = (PMF.map (eraseHistory first)
           ((information first).runBehavioralFrom target 3
             (execution first).initHistory)).bind
         (Source.information.runBehavioralFrom sourcePolicies 1) := by
-      rw [FinDist.bind_map]
+      rw [PMF.bind_map]
+      rfl
     _ = (Source.information.runBehavioralFrom sourcePolicies 1
           Source.execution.initHistory).bind
         (Source.information.runBehavioralFrom sourcePolicies 1) := by
       rw [hfirstLaw]
     _ = Source.information.runBehavioralFrom sourcePolicies 2
           Source.execution.initHistory := by
-      rw [show 2 = 1 + 1 by norm_num, runBehavioralFrom_add]
+      rw [show 2 = 1 + 1 by norm_num, InformationModel.runBehavioralFrom_add]
 
 theorem project_translate_profile (first : Bool)
     (source : (player : Bool) →
@@ -2198,7 +2169,7 @@ theorem project_translate_profile (first : Bool)
 theorem map_erase_runBehavioral_translate (first : Bool)
     (source : (player : Bool) →
       Source.information.BehavioralPolicy player) :
-    FinDist.map (eraseHistory first)
+    PMF.map (eraseHistory first)
         ((information first).runBehavioral
           (translateBehavioral first source) 6) =
       Source.information.runBehavioral source 2 := by
@@ -2210,10 +2181,10 @@ literal source-history law. -/
 theorem map_erase_runBehavioral_order_independent
     (source : (player : Bool) →
       Source.information.BehavioralPolicy player) :
-    FinDist.map (eraseHistory false)
+    PMF.map (eraseHistory false)
         ((information false).runBehavioral
           (translateBehavioral false source) 6) =
-      FinDist.map (eraseHistory true)
+      PMF.map (eraseHistory true)
         ((information true).runBehavioral
           (translateBehavioral true source) 6) := by
   rw [map_erase_runBehavioral_translate,
@@ -2225,9 +2196,9 @@ theorem map_erase_runBehavioral_arbitrary_order_transport
     (first second : Bool)
     (target : (player : Bool) →
       (information first).BehavioralPolicy player) :
-    FinDist.map (eraseHistory first)
+    PMF.map (eraseHistory first)
         ((information first).runBehavioral target 6) =
-      FinDist.map (eraseHistory second)
+      PMF.map (eraseHistory second)
         ((information second).runBehavioral
           (translateBehavioral second (projectBehavioral first target)) 6) := by
   rw [map_erase_runBehavioral_eq_source,

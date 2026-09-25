@@ -95,7 +95,7 @@ def auctionGame {Bid : ι → Type} {Alloc : Type}
     (valuation : ι → Alloc → ℝ) : UtilityGame ι where
   form :=
     { sig := { Strategy := Bid, Outcome := ∀ bidder, Bid bidder }
-      play := fun bids => FinDist.pure bids }
+      play := fun bids => PMF.pure bids }
   utility := fun bids bidder => valuation bidder (allocation bids) - payment bids bidder
 
 omit [Fintype ι] [DecidableEq ι] in
@@ -106,7 +106,10 @@ theorem auctionGame_expectedUtility {Bid : ι → Type} {Alloc : Type}
     (payment : (∀ bidder, Bid bidder) → ι → ℝ)
     (valuation : ι → Alloc → ℝ) (bids : ∀ bidder, Bid bidder) (bidder : ι) :
     expectedUtility (auctionGame allocation payment valuation).utility bidder
-      ((auctionGame allocation payment valuation).form.play bids) =
+      ((auctionGame allocation payment valuation).form.play bids)
+      (payoffIntegrable_pure bids
+        (fun outcome =>
+          (auctionGame allocation payment valuation).utility outcome bidder)) =
         valuation bidder (allocation bids) - payment bids bidder :=
   expectedUtility_pure ..
 
@@ -142,8 +145,9 @@ theorem auctionGame_ic_isNash {Bid : ι → Type} {Alloc : Type}
       (euPreference (auctionGame allocation payment valuation).utility) bids := by
   apply IsDominantProfile.isNash
   intro bidder alternative profile
-  simpa only [euPreference_apply, expectedUtility_pure] using
-    hIC bidder profile alternative
+  rw [euPreference_apply]
+  refine ⟨payoffIntegrable_pure _ _, payoffIntegrable_pure _ _, ?_⟩
+  simpa only [expectedUtility_pure] using hIC bidder profile alternative
 
 /-- The payoff of the strict-winner second-price presentation.  The price is
 independent of the bidder's own bid. -/
@@ -154,7 +158,7 @@ def secondPricePayoff (value : ι → ℝ) (bids : BidProfile ι) (who : ι) : �
 def secondPriceGame (value : ι → ℝ) : UtilityGame ι where
   form :=
     { sig := bidSignature ι
-      play := fun bids => FinDist.pure bids }
+      play := fun bids => PMF.pure bids }
   utility := secondPricePayoff value
 
 /-- Truthful bidding gives at least the payoff of any alternative bid against
@@ -173,8 +177,9 @@ theorem secondPrice_truthful_isDominant (value : ι → ℝ) (who : ι) :
     IsDominant (secondPriceGame value).form (euPreference (secondPriceGame value).utility)
       who (value who) := by
   intro alternative bids
-  simp only [euPreference_apply, secondPriceGame, expectedUtility_pure,
-    secondPricePayoff]
+  rw [euPreference_apply]
+  refine ⟨payoffIntegrable_pure _ _, payoffIntegrable_pure _ _, ?_⟩
+  simp only [expectedUtility_pure, secondPriceGame, secondPricePayoff]
   exact secondPrice_truthful_payoff_ge value who bids alternative
 
 /-- Truthful bidding is a Nash profile because every truthful bid is dominant. -/
@@ -241,7 +246,7 @@ theorem firstPricePayoff_loser (value : ι → ℝ) (bids : BidProfile ι) (who 
 def firstPriceGame (value : ι → ℝ) : UtilityGame ι where
   form :=
     { sig := bidSignature ι
-      play := fun bids => FinDist.pure bids }
+      play := fun bids => PMF.pure bids }
   utility := firstPricePayoff value
 
 /-- No bid is weakly dominant in the first-price game: against a profile in
@@ -253,7 +258,9 @@ theorem firstPrice_not_isDominant (value : ι → ℝ) (who : ι) (bid : ℝ) :
   intro hdominant
   let bids : BidProfile ι := fun _ => bid - 2
   have h := hdominant (bid - 1) bids
-  simp only [euPreference_apply, firstPriceGame, expectedUtility_pure] at h
+  rw [euPreference_apply] at h
+  rcases h with ⟨_, _, h⟩
+  simp only [expectedUtility_pure, firstPriceGame] at h
   have hwinBid : who = winner (Profile.update bids who bid) := by
     apply eq_winner_of_bid_gt
     intro other hother

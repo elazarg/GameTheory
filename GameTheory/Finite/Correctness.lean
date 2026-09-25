@@ -10,7 +10,7 @@ This module may import Core and real-valued semantics; the algorithm module may
 not.
 -/
 
-import GameTheory.Core
+import GameTheory.Core.Response
 import GameTheory.Finite.Algorithm
 
 noncomputable section
@@ -39,9 +39,15 @@ def utility (G : TableGame ι) : Utility G.sig :=
 theorem utility_apply (G : TableGame ι) (outcome : Profile G.sig) (who : ι) :
     G.utility outcome who = (G.payoff outcome who : ℝ) := rfl
 
+/-- Every actual law over this table game's finite outcome carrier integrates
+its real utility. -/
+theorem utilityIntegrable (G : TableGame ι) (who : ι)
+    (law : PMF (Profile G.sig)) : UtilityIntegrable G.utility who law :=
+  payoffIntegrable_of_finite law (fun outcome => G.utility outcome who)
+
 @[simp]
 theorem toForm_play (G : TableGame ι) (profile : Profile G.sig) :
-    G.toForm.play profile = FinDist.pure profile := rfl
+    G.toForm.play profile = PMF.pure profile := rfl
 
 /-! ## Pure Nash -/
 
@@ -50,7 +56,10 @@ theorem isNash_toForm_iff (G : TableGame ι) (profile : Profile G.sig) :
       ∀ (who : ι) (replacement : G.Action who),
         G.payoff (Profile.update profile who replacement) who ≤ G.payoff profile who := by
   rw [isNash_iff]
-  exact forall_congr' fun who => forall_congr' fun replacement => by simp
+  exact forall_congr' fun who => forall_congr' fun replacement => by
+    rw [euPreference_iff _ _ _ _ (utilityIntegrable G who _)
+      (utilityIntegrable G who _)]
+    simp [utility_apply]
 
 theorem isNash_eq_true_iff (G : TableGame ι) (profile : Profile G.sig) :
     G.isNash profile = true ↔ IsNash G.toForm (euPreference G.utility) profile := by
@@ -72,19 +81,29 @@ theorem weaklyDominates_eq_true_iff (G : TableGame ι) (who : ι)
   rw [weaklyDominates, decide_eq_true_eq]
   constructor
   · rintro ⟨hweak, profile, hstrict⟩
-    exact ⟨fun current => by simpa using hweak current,
-      ⟨profile, (euPreference_strict_iff _ _ _ _).2 (by simpa using hstrict)⟩⟩
+    exact ⟨fun current =>
+        (euPreference_iff _ _ _ _ (utilityIntegrable G who _)
+          (utilityIntegrable G who _)).2 (by simpa using hweak current),
+      ⟨profile, (euPreference_strict_iff _ _ _ _
+        (utilityIntegrable G who _) (utilityIntegrable G who _)).2
+          (by simpa using hstrict)⟩⟩
   · rintro ⟨hweak, profile, hstrict⟩
-    exact ⟨fun current => by simpa using hweak current,
+    exact ⟨fun current => by
+        rcases hweak current with ⟨hpref, halt, hle⟩
+        simpa [toForm_play, expectedUtility_pure] using hle,
       ⟨profile, by
-        simpa using (euPreference_strict_iff _ _ _ _).1 hstrict⟩⟩
+        simpa using (euPreference_strict_iff _ _ _ _
+          (utilityIntegrable G who _) (utilityIntegrable G who _)).1 hstrict⟩⟩
 
 theorem veryWeaklyDominates_eq_true_iff (G : TableGame ι) (who : ι)
     (preferred alternative : G.Action who) :
     G.veryWeaklyDominates who preferred alternative = true ↔
       VeryWeaklyDominates G.toForm (euPreference G.utility) who preferred alternative := by
   rw [veryWeaklyDominates, decide_eq_true_eq]
-  exact forall_congr' fun profile => by simp
+  exact forall_congr' fun profile => by
+    rw [euPreference_iff _ _ _ _ (utilityIntegrable G who _)
+      (utilityIntegrable G who _)]
+    simp [utility_apply]
 
 theorem strictlyDominates_eq_true_iff (G : TableGame ι) (who : ι)
     (preferred alternative : G.Action who) :
@@ -93,9 +112,13 @@ theorem strictlyDominates_eq_true_iff (G : TableGame ι) (who : ι)
   rw [strictlyDominates, decide_eq_true_eq]
   constructor
   · intro hlt profile _
-    exact (euPreference_strict_iff _ _ _ _).2 (by simpa using hlt profile)
+    exact (euPreference_strict_iff _ _ _ _
+      (utilityIntegrable G who _) (utilityIntegrable G who _)).2
+        (by simpa using hlt profile)
   · intro hstrict profile
-    have := (euPreference_strict_iff _ _ _ _).1 (hstrict profile fun _ => Set.mem_univ _)
+    have := (euPreference_strict_iff _ _ _ _
+      (utilityIntegrable G who _) (utilityIntegrable G who _)).1
+        (hstrict profile fun _ => Set.mem_univ _)
     simpa using this
 
 theorem isDominantProfile_eq_true_iff (G : TableGame ι) (profile : Profile G.sig) :
@@ -114,8 +137,9 @@ theorem strict_euPreference_iff (G : TableGame ι) (who : ι)
     Preference.strict (euPreference G.utility) who
         (G.toForm.play preferred) (G.toForm.play alternative) ↔
       G.payoff alternative who < G.payoff preferred who := by
-  rw [euPreference_strict_iff]
-  simp
+  rw [euPreference_strict_iff _ _ _ _
+    (utilityIntegrable G who _) (utilityIntegrable G who _)]
+  simp [utility_apply]
 
 /-! ## Iterated strict dominance -/
 
@@ -208,10 +232,14 @@ theorem paretoDominates_eq_true_iff (G : TableGame ι) (better worse : Profile G
     G.paretoDominates better worse = true ↔
       ParetoDominates G.toForm (euPreference G.utility) better worse := by
   rw [paretoDominates, decide_eq_true_eq, ParetoDominates]
-  refine and_congr (forall_congr' fun i => by simp) ?_
+  refine and_congr (forall_congr' fun i => ?_) ?_
+  · rw [euPreference_iff _ _ _ _ (utilityIntegrable G i _)
+      (utilityIntegrable G i _)]
+    simp [utility_apply]
   exact exists_congr fun i => by
-    rw [euPreference_strict_iff]
-    simp
+    rw [euPreference_strict_iff _ _ _ _
+      (utilityIntegrable G i _) (utilityIntegrable G i _)]
+    simp [utility_apply]
 
 theorem isParetoEfficient_eq_true_iff (G : TableGame ι) (profile : Profile G.sig) :
     G.isParetoEfficient profile = true ↔
@@ -237,19 +265,21 @@ theorem isMixed_iff (G : TableGame ι) (mixed : Profile G.mixedSig) :
 extension. -/
 def toMixed (G : TableGame ι) (mixed : Profile G.mixedSig) (hmixed : G.isMixed mixed = true) :
     Profile G.sig.mixed :=
-  fun i => FinDist.ofWeights (fun a => ((mixed i a : ℚ) : ℝ))
-    (fun a => by exact_mod_cast ((isMixed_iff G mixed).1 hmixed i).1 a)
-    (by
-      have hsum := ((isMixed_iff G mixed).1 hmixed i).2
-      have : (((∑ a, mixed i a : ℚ)) : ℝ) = ((1 : ℚ) : ℝ) := by rw [hsum]
-      push_cast at this
-      simpa using this)
+  fun i => PMF.ofFintype
+    (fun a => ENNReal.ofReal ((mixed i a : ℚ) : ℝ)) (by
+      have hcoords := ((isMixed_iff G mixed).1 hmixed i)
+      have hsum : ∑ a, ((mixed i a : ℚ) : ℝ) = 1 := by
+        rw [← Rat.cast_sum]
+        exact_mod_cast hcoords.2
+      rw [← ENNReal.ofReal_sum_of_nonneg (fun a _ =>
+        show 0 ≤ ((mixed i a : ℚ) : ℝ) from by exact_mod_cast hcoords.1 a),
+        hsum]
+      norm_num)
 
 @[simp]
-theorem toMixed_prob (G : TableGame ι) (mixed : Profile G.mixedSig)
+theorem toMixed_apply (G : TableGame ι) (mixed : Profile G.mixedSig)
     (hmixed : G.isMixed mixed = true) (i : ι) (a : G.Action i) :
-    (G.toMixed mixed hmixed i).prob a = ((mixed i a : ℚ) : ℝ) :=
-  FinDist.prob_ofWeights ..
+    G.toMixed mixed hmixed i a = ENNReal.ofReal ((mixed i a : ℚ) : ℝ) := rfl
 
 theorem isMixed_update_pureMixed (G : TableGame ι) (mixed : Profile G.mixedSig)
     (hmixed : G.isMixed mixed = true) (who : ι) (a : G.Action who) :
@@ -267,32 +297,54 @@ theorem toMixed_update (G : TableGame ι) (mixed : Profile G.mixedSig)
     (hmixed : G.isMixed mixed = true) (who : ι) (a : G.Action who) :
     G.toMixed (Profile.update mixed who (G.pureMixed who a))
         (G.isMixed_update_pureMixed mixed hmixed who a) =
-      Profile.update (G.toMixed mixed hmixed) who (FinDist.pure a) := by
+      Profile.update (G.toMixed mixed hmixed) who (PMF.pure a) := by
   funext i
-  refine FinDist.ext_of_prob fun b => ?_
   by_cases hi : i = who
   · subst hi
-    rw [toMixed_prob, Profile.update_same, Profile.update_same,
-      FinDist.prob_pure_eq_ite, pureMixed]
-    split <;> norm_num
-  · rw [toMixed_prob, Profile.update_of_ne _ _ hi, Profile.update_of_ne _ _ hi, toMixed_prob]
+    apply PMF.ext
+    intro b
+    by_cases hb : b = a
+    · subst b
+      simp [toMixed, Profile.update_same, pureMixed]
+    · simp [toMixed, Profile.update_same, pureMixed, hb]
+  · simp [Profile.update_of_ne, hi, toMixed]
 
 /-- Exact rational expected payoff agrees with semantic expected utility in the
 mixed extension. -/
 theorem expectedUtility_toMixed (G : TableGame ι) (mixed : Profile G.mixedSig)
     (hmixed : G.isMixed mixed = true) (who : ι) :
-    expectedUtility G.utility who (G.toForm.mixed.play (G.toMixed mixed hmixed)) =
+    expectedUtility G.utility who (G.toForm.mixed.play (G.toMixed mixed hmixed))
+        (utilityIntegrable G who _) =
       ((G.expectedPayoff mixed who : ℚ) : ℝ) := by
   have hplay : G.toForm.mixed.play (G.toMixed mixed hmixed) =
-      FinDist.pi (G.toMixed mixed hmixed) := by
-    rw [GameForm.mixed_play]
-    exact FinDist.bind_pure ..
-  rw [hplay, expectedUtility, FinDist.expect_eq_sum, expectedPayoff]
-  push_cast
-  exact Finset.sum_congr rfl fun profile _ => by
-    rw [FinDist.prob_pi, mixedWeight]
-    push_cast
-    exact congrArg₂ _ (Finset.prod_congr rfl fun i _ => toMixed_prob ..) rfl
+      independentProduct (G.toMixed mixed hmixed) := by
+    rw [GameForm.mixed_play, PMF.bind_pure]
+  unfold expectedUtility
+  rw [hplay, expect_eq_sum]
+  have hmass (profile : Profile G.sig) :
+      (independentProduct (G.toMixed mixed hmixed) profile).toReal =
+        ((G.mixedWeight mixed profile : ℚ) : ℝ) := by
+    rw [independentProduct_apply, mixedWeight]
+    simp only [toMixed, PMF.ofFintype_apply]
+    rw [ENNReal.toReal_prod]
+    rw [Rat.cast_prod]
+    apply Finset.prod_congr rfl
+    intro i _
+    simp [ENNReal.toReal_ofReal, Rat.cast_nonneg.mpr
+      (((isMixed_iff G mixed).1 hmixed i).1 (profile i))]
+  calc
+    (∑ profile : Profile G.sig,
+        (independentProduct (G.toMixed mixed hmixed) profile).toReal *
+          G.utility profile who) =
+        ∑ profile : Profile G.sig,
+          ((G.mixedWeight mixed profile : ℚ) : ℝ) *
+            ((G.payoff profile who : ℚ) : ℝ) := by
+      apply Finset.sum_congr rfl
+      intro profile _
+      rw [hmass, utility_apply]
+    _ = ((G.expectedPayoff mixed who : ℚ) : ℝ) := by
+      rw [expectedPayoff]
+      simp only [Rat.cast_sum, Rat.cast_mul]
 
 /-- Exact verification of a supplied rational mixed profile is correct against
 the semantic mixed-Nash predicate. -/
@@ -300,10 +352,20 @@ theorem verifyMixedNash_eq_true_iff (G : TableGame ι) (mixed : Profile G.mixedS
     (hmixed : G.isMixed mixed = true) :
     G.verifyMixedNash mixed = true ↔
       IsNash G.toForm.mixed (euPreference G.utility) (G.toMixed mixed hmixed) := by
-  rw [isNash_mixed_iff, verifyMixedNash, hmixed, Bool.true_and, decide_eq_true_eq]
+  have hdev : ∀ who (replacement : PMF (G.Action who)),
+      UtilityIntegrable G.utility who
+        (G.toForm.mixed.play
+          (Profile.update (G.toMixed mixed hmixed) who replacement)) := by
+    intro who replacement
+    exact utilityIntegrable G who _
+  have hiff := isNash_mixed_iff (F := G.toForm) (utility := G.utility)
+    (mixedProfile := G.toMixed mixed hmixed) hdev
+  rw [verifyMixedNash, hmixed, Bool.true_and, decide_eq_true_eq]
+  rw [hiff]
   refine forall_congr' fun who => forall_congr' fun a => ?_
-  rw [← toMixed_update G mixed hmixed who a, expectedUtility_toMixed,
-    expectedUtility_toMixed, Rat.cast_le]
+  rw [euPreference_iff _ _ _ _ (utilityIntegrable G who _)
+    (utilityIntegrable G who _), ← toMixed_update G mixed hmixed who a,
+    expectedUtility_toMixed, expectedUtility_toMixed, Rat.cast_le]
 
 end TableGame
 

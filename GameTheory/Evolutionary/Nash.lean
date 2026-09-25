@@ -51,18 +51,25 @@ theorem IsESS.isNash_symmetric {payoff : S → S → ℝ} {resident : S}
   rw [isNash_iff]
   intro who replacement
   rw [euPreference_apply]
+  refine ⟨payoffIntegrable_pure _ _, payoffIntegrable_pure _ _, ?_⟩
   fin_cases who <;>
-    simpa [symmetricForm, symmetricUtility, residentProfile, opponent] using
+    simpa [symmetricForm, symmetricUtility, residentProfile, opponent,
+      expectedUtility_pure] using
       h.1 replacement
 
-/-- A mixed-mutation ESS is Nash in the symmetric encounter game whose pure
-strategies are finite population laws. -/
+/-- A mixed ESS induces Nash in the symmetric game of population laws. The
+all-pair guard supplies every numerical encounter payoff in that game. -/
 theorem IsMixedESS.isNash_symmetric
-    {payoff : S → S → ℝ} {resident : FinDist S}
+    {payoff : S → S → ℝ} {resident : PMF S}
     (h : IsMixedESS payoff resident) :
-    IsNash (symmetricForm (FinDist S))
-      (euPreference (symmetricUtility (mixedPayoff payoff)))
-      (residentProfile resident) :=
-  IsESS.isNash_symmetric h
+    ∃ hall : ∀ own opponent : PMF S,
+        PayoffIntegrable (bindPairLaw own (fun _ => opponent))
+          (fun pair => payoff pair.1 pair.2),
+      IsNash (symmetricForm (PMF S))
+        (euPreference (symmetricUtility
+          (fun own opponent => mixedPayoff payoff own opponent (hall own opponent))))
+        (residentProfile resident) := by
+  obtain ⟨hall, hess⟩ := h
+  exact ⟨hall, hess.isNash_symmetric⟩
 
 end GameTheory.Evolutionary

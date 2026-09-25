@@ -3,15 +3,16 @@
 
 The stable foundation and static theory: signatures and profiles, game forms,
 preferences and utility evaluation, local deviation schemes, the single
-equilibrium predicate, finite Bayesian forms and interim optimality, response
+equilibrium predicate, Bayesian forms and interim optimality, response
 concepts, potentials, welfare smoothness, mixed and zero-sum games, social
 choice, and foundational coalitional games.
 
 Not every concept here is forced through `GameForm`: a coalitional game has no
 strategies or outcome law and is deliberately a parallel primitive. Core
-imports no protocol, language front-end, executable frontend, or fixed-point
-and topology dependencies. Analytic existence results live above it, so reading
-a definition never costs the machinery a later theorem happens to need.
+imports no protocol, language front-end, executable frontend, project Analysis,
+or external fixed-point dependency. Mathlib's canonical probability operations
+bring their own analytic prerequisites; game-theoretic existence results live
+above Core.
 
 Uniform utility-transfer certificates and their mixture bridge are stable
 opt-in leaves: `Core.UtilitySimulation` and `Core.MixtureUtilitySimulation`.

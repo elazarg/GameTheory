@@ -8,6 +8,7 @@ utility leaf, whose deterministic kernel gives both sides point mass zero.
 -/
 
 import GameTheory.Experimental.PostArchitecture.MAIDUtilityGraphFinite
+import GameTheory.Math.Probability.Support
 
 noncomputable section
 
@@ -34,7 +35,7 @@ variable {diagram : Structure Player Node} {semantics : Semantics diagram}
 play, not another evaluator. -/
 def augmentedLaw [Fintype Node] [DecidableEq Node]
     (view : UtilityView semantics) (owner : Player)
-    (policy : Policy diagram) : FinDist (AugmentedAssignment view owner) :=
+    (policy : Policy diagram) : PMF (AugmentedAssignment view owner) :=
   ((nativeBehavioralGameForm semantics).play policy).map
     (augmentAssignment view (owner := owner))
 
@@ -80,11 +81,9 @@ private theorem localFactor_utility_augmentAssignment
         (augmentAssignment view (owner := owner) assignment)
         (.utility site : UtilityView.GraphNode view owner) = 1 := by
   classical
-  unfold localFactor
-  rw [augmentedKernels_utility,
-    utilityParentConfiguration_augmentAssignment]
-  exact FinDist.prob_pure_self _
-
+  simp only [localFactor, augmentedKernels_utility,
+    utilityParentConfiguration_augmentAssignment, augmentAssignment_utility]
+  simp [DFunLike.coe, PMF.pure]
 /-- Augmenting a canonical assignment adds only unit-mass deterministic
 utility factors. -/
 theorem factorProduct_augmentAssignment
@@ -155,18 +154,13 @@ private theorem localFactor_utility_eq_zero_of_mismatch
       (augmentedKernels view (owner := owner) policy) assignment
         (.utility site : UtilityView.GraphNode view owner) = 0 := by
   classical
-  unfold localFactor
-  rw [augmentedKernels_utility,
-    utilityParentConfiguration_projectBase]
   simp only [augmentAssignment_utility] at hmismatch
-  let actual : Config diagram (view.term site).parents :=
-    assignment (.utility site)
-  have hactual : actual ≠
-      Assignment.restrict diagram
-        (projectBase view (owner := owner) assignment)
-          (view.term site).parents := hmismatch
-  exact FinDist.prob_pure_of_ne hactual
-
+  simp only [localFactor, augmentedKernels_utility,
+    utilityParentConfiguration_projectBase]
+  simp only [DFunLike.coe, PMF.pure]
+  split_ifs with hequal
+  · exact (hmismatch hequal).elim
+  · rfl
 /-- An augmented assignment outside the canonical image has a zero utility
 factor and therefore zero total local-factor product. -/
 theorem factorProduct_eq_zero_of_inconsistent
@@ -195,9 +189,9 @@ theorem augmentedLaw_prob_eq_zero_of_inconsistent
     (hinconsistent :
       assignment ≠ augmentAssignment view (owner := owner)
         (projectBase view (owner := owner) assignment)) :
-    (augmentedLaw view owner policy).prob assignment = 0 := by
-  apply FinDist.prob_eq_zero_iff.mpr
-  rw [augmentedLaw, FinDist.support_map]
+    (augmentedLaw view owner policy) assignment = 0 := by
+  apply ((augmentedLaw view owner policy).apply_eq_zero_iff assignment).mpr
+  rw [augmentedLaw, PMF.support_map]
   rintro ⟨base, _, rfl⟩
   exact hinconsistent (by simp)
 
@@ -222,12 +216,12 @@ theorem augmentedLaw_factorizes
         augmentAssignment view (owner := owner) base := hconsistent
     rw [hassignment]
     calc
-      (augmentedLaw view owner policy).prob
-          (augmentAssignment view (owner := owner) base) =
-          ((nativeBehavioralGameForm semantics).play policy).prob base :=
-        FinDist.prob_map_of_injective
-          (augmentAssignment view (owner := owner))
-          (augmentAssignment_injective view) _ base
+      ((augmentedLaw view owner policy)
+          (augmentAssignment view (owner := owner) base)).toReal =
+          (((nativeBehavioralGameForm semantics).play policy) base).toReal :=
+        congrArg ENNReal.toReal <|
+          pmf_map_apply_of_injective _
+            (augmentAssignment_injective view) base
       _ = factorProduct diagram.Value (effectiveParents diagram)
           (effectiveKernels semantics policy) Finset.univ base :=
         native_play_factorizes topological semantics policy base
@@ -240,6 +234,7 @@ theorem augmentedLaw_factorizes
         view owner policy assignment hconsistent,
       factorProduct_eq_zero_of_inconsistent
         view owner policy assignment hconsistent]
+    simp
 
 /-! ## Split-term consumer -/
 

@@ -44,14 +44,7 @@ over both laws and proves equality of the joint utility distributions.
 
 | Measure | EXP-042 result |
 |---|---|
-| authored size | 401 nonblank lines; 42 declarations across compiler and hostile test |
-| stable API change during experiment | 0 declarations and 0 imports |
 | authored import | `GameTheory.Protocol.Strategic` only |
-| focused build | 1,722 jobs |
-| full build | 3,339 jobs |
-| source trust/audit tokens | 0 placeholders, native decisions, direct updates, transports, `HEq`, tactic `change`, custom axioms, or `open Classical` |
-| repository audits | Phase 2 and Phase 3 expected source measurements pass; full reachability is rerun after promotion |
-| axiom profile | `propext`, `Classical.choice`, `Quot.sound` only |
 | target evaluator | existing `InformationModel.run` through `toGameForm`; no FOSG runner |
 | target players/actions | definitionally the source players and source action family |
 | horizon/progress capabilities | horizon fixed by the named compiler; `Nonempty` actions requested only by execution construction |
@@ -92,8 +85,7 @@ Promotion must split syntax, FOSG specialization, and the named bridge into
 separate modules so import probes can verify the intended boundaries. The
 hostile fixture remains experimental.
 
-That promotion is complete. `Languages.NFG`, `Languages.FOSG`, and
-`Languages.Bridges.NFGFOSG` are separate stable modules; the hostile fixture
-remains under `Experimental/PostArchitecture`. The full build completes in
-3,341 jobs. Phase 2/3 full reachability audits pass, including positive and
-negative NFG/FOSG/bridge probes, and the flagship axiom profile is unchanged.
+`Languages.NFG`, `Languages.FOSG`, and
+`Languages.Bridges.NFGFOSG` are separate modules. The hostile fixture belongs
+under `Experimental/PostArchitecture`; the bridge does not merge the two
+language owners.

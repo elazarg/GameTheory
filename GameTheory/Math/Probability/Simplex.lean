@@ -1,12 +1,12 @@
 /-
-# Finite-support laws as points of the standard simplex
+# Finite-carrier PMFs as points of the standard simplex
 
-The analytic presentation of a finite-support probability law on a finite
+The analytic presentation of an ordinary probability law on a finite
 carrier. The ambient function space is the coordinate image of Mathlib's
 canonical finitely supported simplex.
 -/
 
-import GameTheory.Math.Probability.FinDist
+import GameTheory.Math.Probability.Expectation
 import Mathlib.Analysis.Convex.Basic
 import Mathlib.Geometry.Convex.ConvexSpace.CompactSpaceStdSimplex
 
@@ -49,31 +49,42 @@ theorem isClosed_simplexWeights (α : Type*) [Finite α] : IsClosed (simplexWeig
 theorem isCompact_simplexWeights (α : Type*) [Finite α] : IsCompact (simplexWeights α) :=
   isCompact_range (Convexity.StdSimplex.isEmbedding_toFun_comp_weights ℝ α).continuous
 
-namespace FinDist
+namespace PMF
 
 variable [Fintype α]
 
-/-- A law's probability vector is a point of the standard simplex. -/
-theorem prob_mem_simplexWeights (μ : FinDist α) : μ.prob ∈ simplexWeights α :=
-  mem_simplexWeights.mpr ⟨μ.prob_nonneg, μ.sum_prob⟩
+/-- A PMF's real weight vector is a point of the standard simplex. -/
+theorem toReal_mem_simplexWeights (μ : PMF α) :
+    (fun value => (μ value).toReal) ∈ simplexWeights α := by
+  apply mem_simplexWeights.mpr
+  refine ⟨(fun _ => ENNReal.toReal_nonneg), ?_⟩
+  have hmass : (∑' value, (μ value).toReal) = 1 := by
+    rw [← ENNReal.tsum_toReal_eq (fun value => μ.apply_ne_top value), PMF.tsum_coe]
+    rfl
+  simpa only [tsum_fintype] using hmass
 
-/-- Every point of the standard simplex determines a finite-support law. -/
-def ofSimplex {x : α → ℝ} (hx : x ∈ simplexWeights α) : FinDist α :=
-  ofWeights x (mem_simplexWeights.mp hx).1 (mem_simplexWeights.mp hx).2
+/-- Every real point of the finite standard simplex determines an ordinary
+PMF through Mathlib's finite-carrier constructor. -/
+def ofSimplex {x : α → ℝ} (hx : x ∈ simplexWeights α) : PMF α :=
+  PMF.ofFintype (fun value => ENNReal.ofReal (x value)) (by
+    have hcoords := mem_simplexWeights.mp hx
+    rw [← ENNReal.ofReal_sum_of_nonneg (fun value _ => hcoords.1 value), hcoords.2]
+    norm_num)
 
-@[simp]
-theorem prob_ofSimplex {x : α → ℝ} (hx : x ∈ simplexWeights α) :
-    (ofSimplex hx).prob = x := by
-  funext _
-  exact prob_ofWeights ..
+theorem ofSimplex_toReal {x : α → ℝ} (hx : x ∈ simplexWeights α) :
+    (fun value => (ofSimplex hx value).toReal) = x := by
+  funext value
+  simp [ofSimplex, ENNReal.toReal_ofReal ((mem_simplexWeights.mp hx).1 value)]
 
-@[simp]
-theorem ofSimplex_prob (μ : FinDist α) : ofSimplex μ.prob_mem_simplexWeights = μ :=
-  ext_of_prob fun _ => prob_ofWeights ..
+theorem ofSimplex_toReal_weights (μ : PMF α) :
+    ofSimplex (toReal_mem_simplexWeights μ) = μ := by
+  ext value
+  simp [ofSimplex, ENNReal.ofReal_toReal (μ.apply_ne_top value)]
 
 /-- A nonempty finite carrier has a nonempty simplex: a point mass is in it. -/
 theorem simplexWeights_nonempty [Nonempty α] : (simplexWeights α).Nonempty :=
-  ⟨(pure (Classical.arbitrary α)).prob, prob_mem_simplexWeights _⟩
+  ⟨(fun value => ((pure (Classical.arbitrary α) : PMF α) value).toReal),
+    toReal_mem_simplexWeights _⟩
 
-end FinDist
+end PMF
 end GameTheory.Math.Probability

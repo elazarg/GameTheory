@@ -129,7 +129,7 @@ private def finiteUnitOptionBool : ExecutionProtocol Unit where
   active := fun _ _ => False
   available := fun _ _ => Set.univ
   terminal := fun _ => False
-  step := fun state _ => GameTheory.Math.Probability.FinDist.pure state
+  step := fun state _ => PMF.pure state
   progress := by
     intro state hterminal
     exact ⟨fun _ => none, by simp [IsLegalJoint]⟩

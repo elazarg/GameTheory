@@ -3,7 +3,7 @@
 
 The exponential-potential argument in finite real-vector form. Probabilities
 are coordinates summing to one; `GameTheory.Math.Probability.OnlineLearning`
-packages those coordinates as `FinDist` laws.
+packages those coordinates as canonical finite-support PMFs.
 -/
 
 import Mathlib.Analysis.Convex.SpecificFunctions.Basic

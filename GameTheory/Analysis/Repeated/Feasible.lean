@@ -35,7 +35,9 @@ theorem exists_uniform_stagePayoff_abs_bound
     (G : UtilityGame ι) [Fintype ι] [Fintype G.form.sig.Outcome] :
     ∃ bound : ℝ, 0 ≤ bound ∧
       ∀ (profile : Profile G.form.sig) (who : ι),
-        |G.stagePayoff profile who| ≤ bound := by
+        |G.stagePayoff profile who
+          (G.form.hasIntegrableUtility_of_finiteOutcome G.utility
+            who profile)| ≤ bound := by
   let bound : ℝ :=
     ∑ who : ι, ∑ outcome : G.form.sig.Outcome,
       |G.utility outcome who|
@@ -60,76 +62,66 @@ theorem exists_uniform_stagePayoff_abs_bound
             Finset.sum_nonneg fun result _ =>
               abs_nonneg (G.utility result player))
           (Finset.mem_univ who)
-  have hupper :
-      expectedUtility G.utility who (G.form.play profile) ≤ bound := by
-    calc
-      expectedUtility G.utility who (G.form.play profile) ≤
-          (G.form.play profile).expect
-            (fun outcome => |G.utility outcome who|) := by
-        apply FinDist.expect_mono
-        intro outcome _
-        exact le_abs_self _
-      _ ≤ (G.form.play profile).expect (fun _ => bound) := by
-        exact FinDist.expect_mono fun outcome _ => hcoordinate outcome
-      _ = bound := FinDist.expect_const ..
-  have hlower :
-      -bound ≤ expectedUtility G.utility who (G.form.play profile) := by
-    calc
-      -bound = (G.form.play profile).expect (fun _ => -bound) := by
-        rw [FinDist.expect_const]
-      _ ≤ expectedUtility G.utility who (G.form.play profile) := by
-        apply FinDist.expect_mono
-        intro outcome _
-        exact (neg_le_neg (hcoordinate outcome)).trans (neg_abs_le _)
-  exact abs_le.mpr ⟨hlower, hupper⟩
+  exact expect_abs_le_of_bounded hbound0 hcoordinate
+    (G.form.hasIntegrableUtility_of_finiteOutcome G.utility who profile)
 
 /-- The expected stage-payoff vector induced by a strategy profile. -/
-def payoffVector (G : UtilityGame ι) (profile : Profile G.form.sig) :
+def payoffVector (G : UtilityGame ι)
+    (hG : G.form.HasIntegrableUtility G.utility)
+    (profile : Profile G.form.sig) :
     PayoffVector ι :=
-  fun who => G.stagePayoff profile who
+  fun who => G.stagePayoff profile who (hG who profile)
 
 @[simp]
 theorem payoffVector_apply (G : UtilityGame ι)
+    (hG : G.form.HasIntegrableUtility G.utility)
     (profile : Profile G.form.sig) (who : ι) :
-    G.payoffVector profile who = G.stagePayoff profile who :=
+    G.payoffVector hG profile who = G.stagePayoff profile who (hG who profile) :=
   rfl
 
 /-- Stage-payoff vectors attainable by pure profiles of the given form. -/
-def purePayoffSet (G : UtilityGame ι) : Set (PayoffVector ι) :=
-  Set.range G.payoffVector
+def purePayoffSet (G : UtilityGame ι)
+    (hG : G.form.HasIntegrableUtility G.utility) : Set (PayoffVector ι) :=
+  Set.range (G.payoffVector hG)
 
-theorem mem_purePayoffSet (G : UtilityGame ι) (value : PayoffVector ι) :
-    value ∈ G.purePayoffSet ↔
-      ∃ profile : Profile G.form.sig, G.payoffVector profile = value := by
+theorem mem_purePayoffSet (G : UtilityGame ι)
+    (hG : G.form.HasIntegrableUtility G.utility)
+    (value : PayoffVector ι) :
+    value ∈ G.purePayoffSet hG ↔
+      ∃ profile : Profile G.form.sig, G.payoffVector hG profile = value := by
   simp [purePayoffSet]
 
 /-- Feasible payoffs are finite convex combinations of stage-payoff vectors. -/
-def feasibleSet (G : UtilityGame ι) : Set (PayoffVector ι) :=
-  convexHull ℝ G.purePayoffSet
+def feasibleSet (G : UtilityGame ι)
+    (hG : G.form.HasIntegrableUtility G.utility) :
+    Set (PayoffVector ι) :=
+  convexHull ℝ (G.purePayoffSet hG)
 
 theorem payoffVector_mem_feasibleSet (G : UtilityGame ι)
+    (hG : G.form.HasIntegrableUtility G.utility)
     (profile : Profile G.form.sig) :
-    G.payoffVector profile ∈ G.feasibleSet :=
-  subset_convexHull ℝ G.purePayoffSet ⟨profile, rfl⟩
+    G.payoffVector hG profile ∈ G.feasibleSet hG :=
+  subset_convexHull ℝ (G.purePayoffSet hG) ⟨profile, rfl⟩
 
 theorem exists_fintype_weighted_profiles_of_mem_feasibleSet
-    (G : UtilityGame ι) {value : PayoffVector ι}
-    (hvalue : value ∈ G.feasibleSet) :
+    (G : UtilityGame ι) (hG : G.form.HasIntegrableUtility G.utility)
+    {value : PayoffVector ι}
+    (hvalue : value ∈ G.feasibleSet hG) :
     ∃ (κ : Type) (_ : Fintype κ) (weight : κ → ℝ)
         (profile : κ → Profile G.form.sig),
       (∀ k, 0 ≤ weight k) ∧
         (∑ k, weight k = 1) ∧
-          (∑ k, weight k • G.payoffVector (profile k) = value) := by
+          (∑ k, weight k • G.payoffVector hG (profile k) = value) := by
   rw [feasibleSet] at hvalue
   rcases (mem_convexHull_iff_exists_fintype (R := ℝ)
-      (s := G.purePayoffSet) (x := value)).1 hvalue with
+      (s := G.purePayoffSet hG) (x := value)).1 hvalue with
     ⟨κ, hκ, weight, point, hnonneg, hsum, hpoint, hweighted⟩
   let : Fintype κ := hκ
   choose profile hprofile using
-    fun k => (G.mem_purePayoffSet (point k)).1 (hpoint k)
+    fun k => (G.mem_purePayoffSet hG (point k)).1 (hpoint k)
   refine ⟨κ, hκ, weight, profile, hnonneg, hsum, ?_⟩
   calc
-    ∑ k, weight k • G.payoffVector (profile k) =
+    ∑ k, weight k • G.payoffVector hG (profile k) =
         ∑ k, weight k • point k := by
       apply Finset.sum_congr rfl
       intro k _
@@ -137,15 +129,17 @@ theorem exists_fintype_weighted_profiles_of_mem_feasibleSet
     _ = value := hweighted
 
 theorem exists_fintype_weighted_profiles_apply_of_mem_feasibleSet
-    (G : UtilityGame ι) {value : PayoffVector ι}
-    (hvalue : value ∈ G.feasibleSet) :
+    (G : UtilityGame ι) (hG : G.form.HasIntegrableUtility G.utility)
+    {value : PayoffVector ι}
+    (hvalue : value ∈ G.feasibleSet hG) :
     ∃ (κ : Type) (_ : Fintype κ) (weight : κ → ℝ)
         (profile : κ → Profile G.form.sig),
       (∀ k, 0 ≤ weight k) ∧
         (∑ k, weight k = 1) ∧
-          ∀ who, ∑ k, weight k * G.stagePayoff (profile k) who =
+          ∀ who, ∑ k, weight k *
+            G.stagePayoff (profile k) who (hG who (profile k)) =
             value who := by
-  rcases G.exists_fintype_weighted_profiles_of_mem_feasibleSet hvalue with
+  rcases G.exists_fintype_weighted_profiles_of_mem_feasibleSet hG hvalue with
     ⟨κ, hκ, weight, profile, hnonneg, hsum, hweighted⟩
   let : Fintype κ := hκ
   refine ⟨κ, hκ, weight, profile, hnonneg, hsum, ?_⟩
@@ -162,67 +156,74 @@ def strictReservationSet (reservation : PayoffVector ι) :
 
 /-- Feasible payoffs strictly above the opponent punishment vector. -/
 def strictIndividuallyRationalPayoffSet (G : UtilityGame ι)
+    (hG : G.form.HasIntegrableUtility G.utility)
     (reservation : PayoffVector ι) : Set (PayoffVector ι) :=
-  G.feasibleSet ∩ strictReservationSet reservation
+  G.feasibleSet hG ∩ strictReservationSet reservation
 
 /-- Best payoff against a fixed full punishment profile; the punished player's
 stored coordinate is ignored and replaced.  On an empty strategy carrier this
 inherits `iSup`'s empty-index convention; operational punishment theorems below
 therefore request the relevant nonemptiness explicitly. -/
 def bestResponseValueAgainstPunishment (G : UtilityGame ι)
-    [DecidableEq ι] (who : ι) (punishment : Profile G.form.sig) : ℝ :=
+    [DecidableEq ι] (hG : G.form.HasIntegrableUtility G.utility)
+    (who : ι) (punishment : Profile G.form.sig) : ℝ :=
   ⨆ own : G.form.sig.Strategy who,
     G.stagePayoff (Profile.update punishment who own) who
+      (hG who _)
 
 /-- The lowest best-response value the other players can impose.  On an empty
 profile carrier this inherits `iInf`'s empty-index convention; no minmax claim
 is made there. -/
 def opponentMinmaxLevel (G : UtilityGame ι) [DecidableEq ι]
-    (who : ι) : ℝ :=
+    (hG : G.form.HasIntegrableUtility G.utility) (who : ι) : ℝ :=
   ⨅ punishment : Profile G.form.sig,
-    G.bestResponseValueAgainstPunishment who punishment
+    G.bestResponseValueAgainstPunishment hG who punishment
 
 /-- Opponent-enforced punishment levels for all players. -/
-def opponentMinmaxVector (G : UtilityGame ι) [DecidableEq ι] :
+def opponentMinmaxVector (G : UtilityGame ι) [DecidableEq ι]
+    (hG : G.form.HasIntegrableUtility G.utility) :
     PayoffVector ι :=
-  fun who => G.opponentMinmaxLevel who
+  fun who => G.opponentMinmaxLevel hG who
 
 theorem exists_punishment_bestResponseValue_lt_add
     (G : UtilityGame ι) [DecidableEq ι]
+    (hG : G.form.HasIntegrableUtility G.utility)
     (who : ι) [Nonempty (Profile G.form.sig)]
     {ε : ℝ} (hε : 0 < ε) :
     ∃ punishment : Profile G.form.sig,
-      G.bestResponseValueAgainstPunishment who punishment <
-        G.opponentMinmaxLevel who + ε := by
+      G.bestResponseValueAgainstPunishment hG who punishment <
+        G.opponentMinmaxLevel hG who + ε := by
   have hlt :
-      G.opponentMinmaxLevel who < G.opponentMinmaxLevel who + ε :=
+      G.opponentMinmaxLevel hG who < G.opponentMinmaxLevel hG who + ε :=
     lt_add_of_pos_right _ hε
   simpa [opponentMinmaxLevel] using
     (exists_lt_of_ciInf_lt
       (f := fun punishment : Profile G.form.sig =>
-        G.bestResponseValueAgainstPunishment who punishment)
+        G.bestResponseValueAgainstPunishment hG who punishment)
       hlt)
 
 theorem stagePayoff_update_le_bestResponseValue
     (G : UtilityGame ι) [DecidableEq ι]
+    (hG : G.form.HasIntegrableUtility G.utility)
     (who : ι) (punishment : Profile G.form.sig)
     (hbounded : BddAbove (Set.range fun own : G.form.sig.Strategy who =>
-      G.stagePayoff (Profile.update punishment who own) who))
+      G.stagePayoff (Profile.update punishment who own) who (hG who _)))
     (own : G.form.sig.Strategy who) :
-    G.stagePayoff (Profile.update punishment who own) who ≤
-      G.bestResponseValueAgainstPunishment who punishment :=
+    G.stagePayoff (Profile.update punishment who own) who (hG who _) ≤
+      G.bestResponseValueAgainstPunishment hG who punishment :=
   le_ciSup hbounded own
 
 theorem exists_approx_punishmentProfiles
     (G : UtilityGame ι) [DecidableEq ι]
+    (hG : G.form.HasIntegrableUtility G.utility)
     [Nonempty (Profile G.form.sig)]
     {ε : ℝ} (hε : 0 < ε) :
     ∃ punishment : ι → Profile G.form.sig,
       ∀ who,
-        G.bestResponseValueAgainstPunishment who (punishment who) <
-          G.opponentMinmaxLevel who + ε := by
+        G.bestResponseValueAgainstPunishment hG who (punishment who) <
+          G.opponentMinmaxLevel hG who + ε := by
   choose punishment hpunishment using
-    fun who => G.exists_punishment_bestResponseValue_lt_add who hε
+    fun who => G.exists_punishment_bestResponseValue_lt_add hG who hε
   exact ⟨punishment, hpunishment⟩
 
 /-- Strict coordinatewise domination over finitely many players has a common
@@ -253,8 +254,9 @@ theorem exists_pos_margin_of_mem_strictReservationSet
 
 theorem exists_pos_margin_of_mem_strictIndividuallyRationalPayoffSet
     (G : UtilityGame ι) [Fintype ι]
+    (hG : G.form.HasIntegrableUtility G.utility)
     {reservation value : PayoffVector ι}
-    (hvalue : value ∈ G.strictIndividuallyRationalPayoffSet reservation) :
+    (hvalue : value ∈ G.strictIndividuallyRationalPayoffSet hG reservation) :
     ∃ margin : ℝ, 0 < margin ∧
       ∀ who, reservation who + margin ≤ value who :=
   exists_pos_margin_of_mem_strictReservationSet hvalue.2
@@ -270,40 +272,62 @@ def cycleOfCounts (G : UtilityGame ι)
 
 theorem sum_stagePayoff_cycleOfCounts
     (G : UtilityGame ι) {κ : Type} [Fintype κ]
-    (count : κ → ℕ) (profile : κ → Profile G.form.sig) (who : ι) :
+    (count : κ → ℕ) (profile : κ → Profile G.form.sig) (who : ι)
+    (hprofile : ∀ k, UtilityIntegrable G.utility who
+      (G.form.play (profile k))) :
     (∑ t : Fin (Fintype.card (Sigma fun k => Fin (count k))),
-        G.stagePayoff (G.cycleOfCounts count profile t) who) =
-      ∑ k, (count k : ℝ) * G.stagePayoff (profile k) who := by
+        G.stagePayoff (G.cycleOfCounts count profile t) who
+          (hprofile _)) =
+      ∑ k, (count k : ℝ) *
+        G.stagePayoff (profile k) who (hprofile k) := by
   rw [show
       (∑ t : Fin (Fintype.card (Sigma fun k => Fin (count k))),
-          G.stagePayoff (G.cycleOfCounts count profile t) who) =
+          G.stagePayoff (G.cycleOfCounts count profile t) who
+            (hprofile _)) =
         ∑ a : Sigma fun k => Fin (count k),
-          G.stagePayoff (profile a.1) who from ?_]
+          G.stagePayoff (profile a.1) who (hprofile a.1) from ?_]
   · rw [Fintype.sum_sigma]
-    simp [Finset.sum_const, nsmul_eq_mul]
+    apply Finset.sum_congr rfl
+    intro k _
+    calc
+      (∑ y : Fin (count k),
+          G.stagePayoff
+            (profile (⟨k, y⟩ : Sigma fun j => Fin (count j)).1)
+            who (hprofile _)) =
+          ∑ _y : Fin (count k),
+            G.stagePayoff (profile k) who (hprofile k) := by
+        apply Finset.sum_congr rfl
+        intro y _
+        rfl
+      _ = (count k : ℝ) * G.stagePayoff (profile k) who (hprofile k) := by
+        simp [Finset.sum_const, nsmul_eq_mul]
   · exact
       (Fintype.sum_equiv
         (Fintype.equivFin (Sigma fun k => Fin (count k)))
         (fun a : Sigma fun k => Fin (count k) =>
-          G.stagePayoff (profile a.1) who)
+          G.stagePayoff (profile a.1) who (hprofile a.1))
         (fun t : Fin (Fintype.card (Sigma fun k => Fin (count k))) =>
-          G.stagePayoff (G.cycleOfCounts count profile t) who)
+          G.stagePayoff (G.cycleOfCounts count profile t) who
+            (hprofile _))
         (fun a => by simp [cycleOfCounts])).symm
 
 /-- Every feasible vector is approximated by the uniform average of a finite
 stage-profile cycle. -/
 theorem exists_cycleAveragePayoff_close_of_mem_feasibleSet
     (G : UtilityGame ι)
-    {value : PayoffVector ι} (hvalue : value ∈ G.feasibleSet)
+    (hG : G.form.HasIntegrableUtility G.utility)
+    {value : PayoffVector ι} (hvalue : value ∈ G.feasibleSet hG)
     {bound ε : ℝ}
     (hbound : ∀ (profile : Profile G.form.sig) (who : ι),
-      |G.stagePayoff profile who| ≤ bound)
+      |G.stagePayoff profile who (hG who profile)| ≤ bound)
     (hbound0 : 0 ≤ bound) (hε : 0 < ε) :
     ∃ (n : ℕ) (_ : NeZero n) (cycle : Fin n → Profile G.form.sig),
-      ∀ who, |G.cycleAveragePayoff cycle who - value who| < ε := by
+      ∀ who,
+        |G.cycleAveragePayoff cycle who (fun t => hG who (cycle t)) -
+          value who| < ε := by
   classical
   rcases G.exists_fintype_weighted_profiles_apply_of_mem_feasibleSet
-      hvalue with
+      hG hvalue with
     ⟨κ, hκ, weight, profile, hnonneg, hsum, hvalueSum⟩
   let : Fintype κ := hκ
   have hκ : Nonempty κ := by
@@ -347,18 +371,20 @@ theorem exists_cycleAveragePayoff_close_of_mem_feasibleSet
   refine ⟨n, inferInstance, cycle, ?_⟩
   intro who
   let payoff : κ → ℝ :=
-    fun k => G.stagePayoff (profile k) who
+    fun k => G.stagePayoff (profile k) who (hG who (profile k))
   have hdenominatorReal : (denominator : ℝ) ≠ 0 := by
     exact_mod_cast Nat.ne_of_gt hdenominatorPos
   have hcycle :
-      G.cycleAveragePayoff cycle who =
+      G.cycleAveragePayoff cycle who (fun t => hG who (cycle t)) =
         (n : ℝ)⁻¹ * ∑ k, (count k : ℝ) * payoff k := by
     have hcycleSum :
-        (∑ t : Fin n, G.stagePayoff (cycle t) who) =
+        (∑ t : Fin n,
+          G.stagePayoff (cycle t) who (hG who (cycle t))) =
           ∑ k, (count k : ℝ) * payoff k := by
       dsimp [cycle, n]
       simpa [payoff] using
         G.sum_stagePayoff_cycleOfCounts count profile who
+          (fun k => hG who (profile k))
     rw [cycleAveragePayoff, hcycleSum]
   have herror :
       (denominator : ℝ)⁻¹ *
@@ -422,7 +448,8 @@ theorem exists_cycleAveragePayoff_close_of_mem_feasibleSet
       simpa [hright] using hmul
     exact hle.trans_lt hlt
   calc
-    |G.cycleAveragePayoff cycle who - value who| =
+    |G.cycleAveragePayoff cycle who
+        (fun t => hG who (cycle t)) - value who| =
         |(denominator : ℝ)⁻¹ *
             (∑ k, (count k : ℝ) * payoff k) -
           ∑ k, weight k * payoff k| := by

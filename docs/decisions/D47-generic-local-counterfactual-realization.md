@@ -53,11 +53,6 @@ deviation test can be harmless while a coordinated two-site policy deviation
 is profitable, so the local result is not mislabeled as SPE, root regret, or
 global exploitability.
 
-The combined counterfactual consumers completed 2,451 jobs warning-free; the
-Protocol-analysis aggregate completed 2,446; and the full library completed
-3,586. Fast Phase 2 and Phase 3 audits report `VERIFIED=1`. Deep reachability
-mode was deliberately not run.
-
 ## Kill conditions and result
 
 Reject or narrow the design if linearity fails despite no revisit; if terminal

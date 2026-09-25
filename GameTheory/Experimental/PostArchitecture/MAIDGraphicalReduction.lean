@@ -15,6 +15,7 @@ noncomputable section
 namespace GameTheory.Experimental.PostArchitecture.MAIDGraphicalReduction
 
 open GameTheory.Languages.MAID
+open GameTheory.Math.Probability
 open GameTheory.Languages.MAID.ObservationPruning
 open GameTheory.Experimental.PostArchitecture.MAIDLocalReduction
 open GameTheory.Experimental.PostArchitecture.MAIDNonrelevantUtilityInvariance
@@ -72,10 +73,15 @@ theorem localUtilityFactorsAt_of_graphicallyIgnorable
     (hignore : view.AreGraphicallyIgnorable target
       (diagram.observedParents target.1 \ pruning.kept target.1)) :
     LocalUtilityFactorsAt pruning semantics policy owner target :=
-  localUtilityFactorsAt_of_replacementInvariantUtilityLawAt pruning semantics
-    policy owner target view
-      (replacementInvariantUtilityLawAt_of_graphicallyIgnorable pruning
-        topological semantics policy owner target shape view hignore)
+  by
+    apply localUtilityFactorsAt_of_replacementInvariantUtilityLawAt pruning
+      semantics policy owner target view
+        (replacementInvariantUtilityLawAt_of_graphicallyIgnorable pruning
+          topological semantics policy owner target shape view hignore)
+    · intro replacement term
+      exact payoffIntegrable_of_finite _ _
+    · intro other _ replacement
+      exact payoffIntegrable_of_finite _ _
 
 /-- Under the full one-site pruning shape, graphical ignorability discharges
 the canonical full-deviation coverage certificate. -/

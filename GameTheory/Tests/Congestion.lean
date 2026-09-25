@@ -13,6 +13,7 @@ noncomputable section
 namespace GameTheory.Tests.Congestion
 
 open GameTheory
+open GameTheory.Math.Probability
 
 @[reducible]
 def fixture : CongestionGame (Fin 2) where
@@ -79,17 +80,19 @@ theorem split_potential : fixture.potential split = -2 := by
 /-- The canonical Rosenthal theorem applies to a deviation with a nonzero
 utility and potential change. -/
 theorem rosenthal_identity_nonzero :
-    expectedUtility fixture.utility 1 (fixture.toGameForm.play split) -
-        expectedUtility fixture.utility 1 (fixture.toGameForm.play crowded) =
+    expectedUtility fixture.utility 1 (fixture.toGameForm.play split)
+        (payoffIntegrable_pure split (fun profile => fixture.utility profile 1)) -
+      expectedUtility fixture.utility 1 (fixture.toGameForm.play crowded)
+        (payoffIntegrable_pure crowded (fun profile => fixture.utility profile 1)) =
       fixture.potential split - fixture.potential crowded := by
-  have h := fixture.isExactPotential 1 crowded true
+  have h := fixture.isExactPotential.difference 1 crowded true
   simpa [split] using h
 
 /-- A constant function is not an exact potential for this congestion game. -/
 theorem constant_not_exactPotential :
     ¬ IsExactPotential fixture.toGameForm fixture.utility (fun _ => 0) := by
   intro hconstant
-  have h := hconstant 1 crowded true
+  have h := hconstant.difference 1 crowded true
   have hupdate :
       Profile.update (sig := fixture.toGameForm.sig) crowded 1 true = split := rfl
   rw [hupdate] at h

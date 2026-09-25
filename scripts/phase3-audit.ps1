@@ -1,3 +1,5 @@
+#requires -Version 7.0
+# UTF-8 Lean identifiers and source markers must be decoded consistently.
 param(
   [switch] $VerifyExpected,
   [switch] $DeepReachability
@@ -119,7 +121,7 @@ Report 'FUNCTION_UPDATE_SEQUENTIAL' `
   (Count-Pattern $SequentialFiles '(?<![A-Za-z0-9_.])Function\.update(?![A-Za-z0-9_])')
 Report 'MAID_SHARED_PI_REINDEX_USES' `
   (Count-Pattern @('GameTheory/Languages/MAID/FrontierEquivalence.lean') `
-    '(?<![A-Za-z0-9_.])FinDist\.pi_reindex(?![A-Za-z0-9_])')
+    '(?<![A-Za-z0-9_])independentProduct_reindex(?![A-Za-z0-9_])')
 Report 'SORRY_OR_ADMIT_SEQUENTIAL' `
   (Count-Pattern $SequentialFiles '(?<![A-Za-z0-9_])(sorry|admit|native_decide)(?![A-Za-z0-9_])')
 Report 'CUSTOM_AXIOM_SEQUENTIAL' (Count-Pattern $SequentialFiles '(?m)^\s*axiom\s')
@@ -158,8 +160,8 @@ Report 'PROTOCOL_MODULES' $ProtocolFiles.Count
 Report 'LANGUAGE_MODULES' $LanguageFiles.Count
 
 # --------------------------------------------------------------------------
-# 4. Optional symbol reachability. The sequential layer inherits the core's
-#    dependency budget: convexity and polynomial theory must stay out. These
+# 4. Optional symbol reachability. Project Analysis and external fixed-point
+#    imports stay outside the semantic layer; PMF brings Mathlib prerequisites. These
 #    compiler probes are a deliberate CI/release gate, not an implementation-
 #    loop check.
 # --------------------------------------------------------------------------
@@ -200,8 +202,9 @@ if ($DeepReachability) {
   $unreachable = 0
   $reachable = @()
   foreach ($group in @(
-      @('GameTheory.Protocol.Execution', @('Convexity.StdSimplex', 'Polynomial')),
-      @('GameTheory.Protocol.Information', @('Convexity.StdSimplex')))) {
+      @('GameTheory.Protocol.Execution',
+        @('GameTheory.exists_isNash_mixed', 'kakutani_fixed_point')),
+      @('GameTheory.Protocol.Information', @('kakutani_fixed_point')))) {
     $output = Run-Probe $group[0] $group[1]
     foreach ($constant in $group[1]) {
       if (Is-Unreachable $output $constant) { $unreachable++ }
@@ -278,7 +281,7 @@ if ($DeepReachability) {
   # must positively consume both stable halves and its analytic definition.
   $protocolAnalysisRejected = 0
   $protocolAnalysisConstants = @(
-      'GameTheory.Math.Probability.FinDistConvergesPointwise',
+      'GameTheory.Math.Probability.PMFConvergesPointwise',
       'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsSequentiallyConsistent')
   $protocolOutput = Run-Probe 'GameTheory.Protocol' $protocolAnalysisConstants
   foreach ($constant in $protocolAnalysisConstants) {
@@ -329,7 +332,7 @@ if ($DeepReachability) {
   # separate state-partition branch. Neither stable root imports the other.
   $protocolEpistemicRejected = 0
   $protocolEpistemicConstants = @(
-    'GameTheory.Epistemic.InfoPartition',
+    'GameTheory.Epistemic.cell',
     'GameTheory.Epistemic.aumann_full_agreement')
   $protocolEpistemicOutput =
     Run-Probe 'GameTheory.Protocol' $protocolEpistemicConstants
@@ -358,9 +361,12 @@ if ($DeepReachability) {
   $sequentialBridgeConstants = @(
       'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsSequentiallyRational',
       'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsBayesConsistent',
-      'GameTheory.Math.Probability.FinDistConvergesPointwise')
+      'GameTheory.Math.Probability.PMFConvergesPointwise')
+  # EXP-129: canonical Mathlib PMFs expose the former geometry proxies.
+  # The lightweight assessment bridge must still exclude fixed-point existence.
+  $sequentialGeometryConstants = @('GameTheory.exists_isNash_mixed', 'kakutani_fixed_point')
   $sequentialOutput = Run-Probe 'GameTheory.Analysis.Protocol.Sequential' `
-    ($sequentialBridgeConstants + @('Convexity.StdSimplex', 'Polynomial'))
+    ($sequentialBridgeConstants + $sequentialGeometryConstants)
   foreach ($constant in $sequentialBridgeConstants) {
     if (-not (Is-Unreachable $sequentialOutput $constant)) {
       $sequentialBridgeInputsReached++
@@ -369,7 +375,7 @@ if ($DeepReachability) {
   Report 'SEQUENTIAL_BRIDGE_INPUTS_REACHED' $sequentialBridgeInputsReached
 
   $sequentialGeometryRejected = 0
-  foreach ($constant in @('Convexity.StdSimplex', 'Polynomial')) {
+  foreach ($constant in $sequentialGeometryConstants) {
     if (Is-Unreachable $sequentialOutput $constant) {
       $sequentialGeometryRejected++
     }
@@ -381,7 +387,7 @@ if ($DeepReachability) {
   $efgSyntaxRejected = 0
   $efgSyntaxConstants = @(
       'GameTheory.IsNash',
-      'GameTheory.Math.Probability.FinDistConvergesPointwise',
+      'GameTheory.Math.Probability.PMFConvergesPointwise',
       'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsSequentiallyConsistent')
   $efgSyntaxOutput = Run-Probe 'GameTheory.Languages.EFG' `
     ($efgSyntaxConstants + @(
@@ -418,7 +424,7 @@ if ($DeepReachability) {
   $maidBasicInputs = @(
     'GameTheory.Languages.MAID.Structure',
     'GameTheory.Math.DAG.Acyclic',
-    'GameTheory.Math.Probability.FinDist')
+    'PMF')
   $maidBasicOutput = Run-Probe 'GameTheory.Languages.MAID.Basic' `
     ($maidBasicConstants + $maidBasicInputs)
   foreach ($constant in $maidBasicConstants) {
@@ -517,7 +523,7 @@ if ($DeepReachability) {
     'GameTheory.Languages.MultiRound.MonitoringGame.toGameForm')
   $multiRoundBoundary = @(
     'GameTheory.IsNash',
-    'GameTheory.Math.Probability.FinDistConvergesPointwise',
+    'GameTheory.Math.Probability.PMFConvergesPointwise',
     'GameTheory.Stochastic.Game',
     'GameTheory.Repeated.informationModel')
   $multiRoundOutput = Run-Probe 'GameTheory.Languages.MultiRound' `

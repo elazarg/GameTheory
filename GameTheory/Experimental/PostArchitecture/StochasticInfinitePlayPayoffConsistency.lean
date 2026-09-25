@@ -272,7 +272,9 @@ theorem integral_canonicalPathAverage_eq_finiteAveragePayoff
           (G.publicHistoryOfChronological history) who‖ ≤ C) :
     (∫ play, canonicalPathAverage G initial who play horizon ∂
       infinitePlayMeasure G initial profile) =
-      G.finiteAveragePayoff initial horizon profile who := by
+      G.finiteAveragePayoff initial horizon profile who
+        (canonicalProjectedAverage_integrable G initial profile who horizon
+          hstage_bound) := by
   exact integral_canonicalPathAverage_eq_finiteAveragePayoff_of_ae_stagewiseConsistency
     G initial profile who horizon hstage_measurable hstage_bound
       (ae_stagewiseConsistency G initial profile who horizon)

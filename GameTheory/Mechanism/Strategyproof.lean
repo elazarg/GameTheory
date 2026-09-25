@@ -32,10 +32,12 @@ omit [DecidableEq ι] in
 /-- Expected utility of the deterministic mechanism is utility of its chosen
 outcome. -/
 theorem utility_toForm (utility : M.Outcome → ι → ℝ)
-    (reports : ∀ i, M.Report i) (who : ι) :
-    expectedUtility utility who (M.toForm.play reports) =
+    (reports : ∀ i, M.Report i) (who : ι)
+    (h : UtilityIntegrable utility who (M.toForm.play reports)) :
+    expectedUtility utility who (M.toForm.play reports) h =
       utility (M.choose reports) who :=
-  FinDist.expect_pure ..
+  by simpa only [Mechanism.toForm] using
+    (expectedUtility_pure utility who (M.choose reports))
 
 /-- Strategyproofness unfolded to its reportwise incentive inequalities. -/
 theorem isStrategyproof_iff (utility : M.Outcome → ι → ℝ)
@@ -48,11 +50,16 @@ theorem isStrategyproof_iff (utility : M.Outcome → ι → ℝ)
             (Profile.update reports who (truth who))) who := by
   constructor
   · intro hproof who misreport reports
-    have := hproof who misreport reports
-    rwa [euPreference_apply, utility_toForm, utility_toForm] at this
+    obtain ⟨hpreferred, halternative, hbound⟩ :=
+      hproof who misreport reports
+    simpa only [M.utility_toForm utility _ who halternative,
+      M.utility_toForm utility _ who hpreferred] using hbound
   · intro hbeat who misreport reports
-    rw [euPreference_apply, utility_toForm, utility_toForm]
-    exact hbeat who misreport reports
+    refine ⟨?_, ?_, ?_⟩
+    · exact payoffIntegrable_pure _ _
+    · exact payoffIntegrable_pure _ _
+    · simpa only [M.utility_toForm] using
+        hbeat who misreport reports
 
 end Mechanism
 

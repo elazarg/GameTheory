@@ -259,7 +259,7 @@ theorem removed_conditionallyIndependent_of_factorizes_of_ignorableUnder
     (topological : GameTheory.Math.DAG.TopologicalOrder
       (MAIDPruningFixpointGraph.UtilityView.graphParentsUnder
         (owner := owner) view decisionParents))
-    (law : GameTheory.Math.Probability.FinDist
+    (law : PMF
       (AugmentedAssignment view owner))
     (kernels : LocalKernels (graphValue view)
       (MAIDPruningFixpointGraph.UtilityView.graphParentsUnder
@@ -308,7 +308,7 @@ theorem hybrid_removed_conditionallyIndependent_of_edgeAdditionStableAt
     (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      GameTheory.Math.Probability.FinDist (diagram.Value target.1))
+      PMF (diagram.Value target.1))
     (hstable :
       MAIDPruningFixpointGraph.UtilityView.IsEdgeAdditionStableAt view
         pruning target)

@@ -2,7 +2,7 @@
 
 - **Status:** adopted and promoted
 - **Date:** 2026-08-20
-- **Experiment IDs:** EXP-118; builds on EXP-115, EXP-116, and EXP-117
+- **Experiment IDs:** EXP-118 and EXP-136; builds on EXP-115–117
 
 ## Decision / question
 
@@ -38,7 +38,7 @@ forward independent-coordinate law. The consumer checks all finite prefixes,
 an arbitrary unilateral policy-measure replacement, and a nonconstant bounded
 discounted payoff.
 
-## Measurements
+## Original finite-law evidence
 
 `ConsistentAt` is a finite intersection of measurable coordinate cylinders.
 On a positive-mass cylinder, ordinary `ProbabilityTheory.cond` followed by the
@@ -46,7 +46,7 @@ current-coordinate map is a probability measure on a finite discrete choice
 carrier and converts exactly to `FinDist`. On a zero-mass cylinder, one fixed
 total policy supplies the fallback; it does not change as play advances.
 
-The executable proof closes a finite prefix cover under the own-record
+The original proof closes a finite prefix cover under the own-record
 coordinates of every covered site. Restricting an arbitrary policy measure to
 that finite closure, converting the marginal to `FinDist`, and filling omitted
 coordinates from the fallback preserves both the conditioning cylinder and the
@@ -60,13 +60,27 @@ strictly stronger than the requested regular-measure statement. Those
 hypotheses remain relevant to constructing the forward product law in D57, not
 to reading a supplied law backward.
 
-Focused builds compiled 2,990, 3,001, 3,018, and 3,021 jobs for the measure
-bridge, Protocol layer, stochastic specialization, and hostile consumer. The
-full library build passed 3,996 jobs. Standard and deep Phase 2 and Phase 3
-audits all reported `VERIFIED=1`; positive probes reached all new Protocol and
-Stochastic declarations and rejected the experimental path measure. Ten
-representative axiom prints contain only `propext`, `Classical.choice`, and
-`Quot.sound`.
+## General PMF boundary
+
+With countable local choice carriers, conditional coordinate measures convert
+to ordinary PMFs. No finite global cover of the information sites reachable
+within a horizon is needed. For each target history, the proof restricts to
+its finite queried coordinates and their own records. These target-local
+marginals determine its probability. The normalized behavioral PMF then
+supplies a common countable support for the integrated history kernel.
+
+Local choices require measurable singletons. Histories need a measurable
+space, but their singletons need not be measurable: the final measure equality
+is proved on measurable events. Independence is required between players;
+within one player's policy law, arbitrary coordinate correlation is allowed.
+Fallback choices remain fixed at zero-mass own-record events.
+
+EXP-136 has infinitely many reachable information sites already after two
+rounds. Its policy measure is nonatomic, correlates two genuine random choices,
+and has no PMF representation. Every finite-prefix law agrees with the one
+canonical behavioral reading. This distinguishes the general reverse theorem
+from the discrete whole-policy predrawing construction, which still needs an
+actual finite-site certificate.
 
 ## Evidence from existing libraries
 

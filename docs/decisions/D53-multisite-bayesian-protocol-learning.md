@@ -60,15 +60,7 @@ Nash guarantee. It is deliberately an explicit test-level scheduler.
 Reusable finite schedule synthesis, arbitrary behavioral replacement regret,
 and unequal-depth information fibers remain separate architecture gates.
 
-## Validation
+## Evidence
 
-- `lake build GameTheory.Analysis.Protocol.BayesianZeroSumLearningTest`
-- `lake build GameTheory.Analysis`
-- `lake build GameTheory`
-- `scripts/phase2-audit.ps1 -VerifyExpected`
-- `scripts/phase3-audit.ps1 -VerifyExpected`
-
-The hostile leaf completes a warm build of 2,452 jobs in about 8.7 seconds.
-The cached Analysis aggregate completes 3,211 jobs in 3.4 seconds and the
-stable package gate completes 3,596 jobs in 3.3 seconds. Both fast audits
-report `VERIFIED=1`. Deep reachability was not run.
+Exact validation commands and results are recorded under this decision's
+experiment IDs in the [experiment log](../ExperimentLog.md).

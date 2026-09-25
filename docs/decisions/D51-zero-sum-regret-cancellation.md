@@ -1,12 +1,12 @@
 # D51: Derive zero-sum equilibrium from canonical external regret
 
-- **Status:** adopted for finite two-player matrix games
+- **Status:** adopted for two-player matrix games with actual-law integration
 - **Date:** 2026-08-11
 - **Experiment ID:** EXP-089
 
 ## Decision
 
-Represent a finite learning trace by its actual `FinDist` over joint pure
+Represent a learning trace by its actual PMF over joint pure
 profiles. Derive the row and column empirical marginals from that joint law.
 For the canonical two-player zero-sum `UtilityGame`, identify each player's
 existing external regret with its signed payoff difference and add the two
@@ -22,7 +22,11 @@ Uniform bounds on the two canonical regrets therefore control every pure and
 mixed saddle deviation gap. Their sum is also a direct tolerance for the
 existing canonical `IsεNash` predicate at the independent empirical-marginal
 profile. No maximized exploitability definition or matrix-specific proxy
-regret is introduced.
+regret is introduced. The cancellation identity requires integration of the
+correlated incumbent and the compared pure deviations. Its mixed-deviation
+extension additionally requires integration of those actual independent laws;
+the approximate-Nash consequence certifies every unilateral mixed deviation.
+No finite row or column carrier is needed by these guarded statements.
 
 ## Hostile evidence
 
@@ -50,28 +54,20 @@ The adopted API exposes the exact gap identity, pure and mixed quantitative
 bounds, and the canonical approximate-Nash consequence. A new scalar
 `exploitability` wrapper would add no theorem-level capability at this gate.
 
-## Scope and next gate
+## Scope
 
 This decision closes the reusable static zero-sum implication for arbitrary
-finite correlated traces over rectangular matrix games. It does not prove that
-a particular learning process supplies both players' regret bounds.
+correlated PMF laws over rectangular matrix games with the stated integration
+certificates. Finite carriers supply those certificates automatically. It
+does not prove that a particular learning process supplies both players'
+regret bounds.
 
-The next gate is dynamic: build one two-player zero-sum Protocol/CFR schedule
-whose two D50 external-regret certificates concern the same round law, then
-feed those bounds directly to D51. General schedule synthesis, arbitrary
-behavioral replacements, and unequal-depth information fibers remain
-separate.
+A dynamic Protocol/CFR application must supply both players' D50 external-regret
+certificates for the same round law before applying this result; see D52.
+General schedule synthesis, arbitrary behavioral replacements, and unequal-depth
+information fibers require their own hypotheses.
 
-## Validation
+## Evidence
 
-- `lake build GameTheory.Analysis.ZeroSumLearning`
-- `lake build GameTheory.Analysis.ZeroSumLearningTest`
-- `lake build GameTheory.Analysis`
-- `lake build GameTheory`
-- `scripts/phase2-audit.ps1 -VerifyExpected`
-- `scripts/phase3-audit.ps1 -VerifyExpected`
-
-The two responsive narrow builds completed in under 16 seconds, the Analysis
-aggregator completed 3,211 jobs in 11.4 seconds, and the cached stable package
-gate completed 3,594 jobs in 3.3 seconds. Both fast audits reported
-`VERIFIED=1`. Deep reachability was not run.
+Exact validation commands and results are recorded under this decision's
+experiment IDs in the [experiment log](../ExperimentLog.md).

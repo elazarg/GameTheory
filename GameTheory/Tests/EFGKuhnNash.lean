@@ -44,11 +44,11 @@ def execution : ExecutionProtocol Player where
     | _ => False
   step state joint :=
     match state with
-    | .first => FinDist.pure (.second ((joint.1 false).getD false))
+    | .first => PMF.pure (.second ((joint.1 false).getD false))
     | .second firstAction =>
-        FinDist.pure (.done firstAction ((joint.1 true).getD false))
+        PMF.pure (.done firstAction ((joint.1 true).getD false))
     | .done firstAction secondAction =>
-        FinDist.pure (.done firstAction secondAction)
+        PMF.pure (.done firstAction secondAction)
   progress := by
     intro state hterm
     cases state with
@@ -135,34 +135,34 @@ theorem step_predecessor_unique
   | first =>
       obtain ⟨firstAction, hfirst⟩ := legal_first_eq_jointAt firstLegal
       subst firstJoint
-      rw [FinDist.mem_support_pure] at firstRealized
+      have htarget : target = .second firstAction := by
+        simpa [execution, jointAt] using firstRealized
       subst target
       cases secondSource with
       | first =>
           obtain ⟨secondAction, hsecond⟩ := legal_first_eq_jointAt secondLegal
           subst secondJoint
-          rw [FinDist.mem_support_pure] at secondRealized
+          rw [PMF.mem_support_iff] at secondRealized
           simp [jointAt] at secondRealized
           subst secondAction
           exact ⟨rfl, rfl⟩
       | second secondFirst =>
-          rw [FinDist.mem_support_pure] at secondRealized
-          cases secondRealized
+          simp [execution] at secondRealized
       | done secondFirst secondSecond =>
           exact False.elim (secondLegal.1 trivial)
   | second firstAction =>
       obtain ⟨firstSecond, hfirst⟩ := legal_second_eq_jointAt firstLegal
       subst firstJoint
-      rw [FinDist.mem_support_pure] at firstRealized
+      have htarget : target = .done firstAction firstSecond := by
+        simpa [execution, jointAt] using firstRealized
       subst target
       cases secondSource with
       | first =>
-          rw [FinDist.mem_support_pure] at secondRealized
-          cases secondRealized
+          simp [execution] at secondRealized
       | second secondFirst =>
           obtain ⟨secondSecond, hsecond⟩ := legal_second_eq_jointAt secondLegal
           subst secondJoint
-          rw [FinDist.mem_support_pure] at secondRealized
+          rw [PMF.mem_support_iff] at secondRealized
           simp [jointAt] at secondRealized
           obtain ⟨rfl, rfl⟩ := secondRealized
           exact ⟨rfl, rfl⟩
@@ -263,13 +263,24 @@ def behavioralProfile (firstAction secondAction : Bool) :
 def secondHistory (firstAction : Bool) : execution.History :=
   let isLegal := jointAt_legal_first firstAction
   execution.initHistory.extend isLegal (by
-    exact FinDist.mem_support_pure.mpr rfl)
+    show State.second firstAction ∈
+      (execution.step State.first ⟨jointAt false firstAction, isLegal⟩).support
+    simp [execution, jointAt])
+
+@[simp]
+theorem secondHistory_state (firstAction : Bool) :
+    (secondHistory firstAction).state = State.second firstAction := by
+  unfold secondHistory ExecutionProtocol.History.extend
+  rfl
 
 @[reducible]
 def terminalHistory (firstAction secondAction : Bool) : execution.History :=
   let isLegal := jointAt_legal_second firstAction secondAction
   (secondHistory firstAction).extend isLegal (by
-    exact FinDist.mem_support_pure.mpr rfl)
+    show State.done firstAction secondAction ∈
+      (execution.step (State.second firstAction)
+        ⟨jointAt true secondAction, isLegal⟩).support
+    simp [execution, jointAt])
 
 def firstChoice (action : Bool) :
     {joint : Player → Option Bool //
@@ -280,18 +291,20 @@ def secondChoice (firstAction secondAction : Bool) :
     {joint : Player → Option Bool //
       execution.Legal (secondHistory firstAction).state joint} :=
   ⟨jointAt true secondAction,
-    jointAt_legal_second firstAction secondAction⟩
+    by rw [secondHistory_state]
+       exact jointAt_legal_second firstAction secondAction⟩
 
 theorem step_firstChoice (action : Bool) :
     execution.step execution.initHistory.state (firstChoice action) =
-      FinDist.pure (.second action) := by
+      PMF.pure (.second action) := by
   rfl
 
 theorem step_secondChoice (firstAction secondAction : Bool) :
     execution.step (secondHistory firstAction).state
         (secondChoice firstAction secondAction) =
-      FinDist.pure (.done firstAction secondAction) := by
-  rfl
+      PMF.pure (.done firstAction secondAction) := by
+  simp [execution, secondChoice, secondHistory, ExecutionProtocol.History.extend,
+    jointAt]
 
 set_option backward.isDefEq.respectTransparency false in
 theorem historyChooser_first (firstAction secondAction : Bool) :
@@ -325,48 +338,56 @@ theorem historyChooser_second (firstAction secondAction : Bool) :
 set_option backward.isDefEq.respectTransparency false in
 theorem run_actionProfile (firstAction secondAction : Bool) :
     information.run (actionProfile firstAction secondAction) 2 =
-      FinDist.pure (terminalHistory firstAction secondAction) := by
+      PMF.pure (terminalHistory firstAction secondAction) := by
   rw [InformationModel.run, InformationModel.runFrom,
     execution.runHistoryFor_succ_of_not_terminal
       (information.historyChooser (actionProfile firstAction secondAction))
       1 first_not_terminal,
     historyChooser_first]
-  rw [FinDist.bindOnSupport_eq_bind_of_eq_on_support
-    (g := fun _ => execution.runHistoryFor
-      (information.historyChooser (actionProfile firstAction secondAction))
-      1 (secondHistory firstAction))]
-  · rw [step_firstChoice, FinDist.pure_bind]
-    rw [execution.runHistoryFor_succ_of_not_terminal
-      (information.historyChooser (actionProfile firstAction secondAction))
-      0 (second_not_terminal firstAction), historyChooser_second]
-    rw [FinDist.bindOnSupport_eq_bind_of_eq_on_support
-      (g := fun _ => FinDist.pure
-        (terminalHistory firstAction secondAction))]
-    · rw [step_secondChoice, FinDist.pure_bind]
-    · intro target realized
-      have htarget : target = .done firstAction secondAction := by
-        simpa [execution, secondChoice, secondHistory, jointAt] using realized
-      subst target
-      have hhistory :
-          (secondHistory firstAction).extend
-              (secondChoice firstAction secondAction).2 realized =
-            terminalHistory firstAction secondAction :=
-        history_eq_of_state_eq rfl
-      rw [execution.runHistoryFor_zero, hhistory]
-  · intro target realized
-    have htarget : target = .second firstAction := by
+  have hfirst :
+      (execution.step execution.initHistory.state (firstChoice firstAction)).bindOnSupport
+        (fun target realized =>
+          execution.runHistoryFor
+            (information.historyChooser (actionProfile firstAction secondAction))
+            1 (execution.initHistory.extend (firstChoice firstAction).2 realized)) =
+      (execution.step execution.initHistory.state (firstChoice firstAction)).bind
+        (fun _ => execution.runHistoryFor
+          (information.historyChooser (actionProfile firstAction secondAction))
+          1 (secondHistory firstAction)) := by
+    apply bindOnSupport_eq_bind_of_eq_on_support
+    intro target realized
+    have htarget : target = State.second firstAction := by
       simpa [execution, firstChoice, jointAt] using realized
     subst target
-    have hhistory :
-        execution.initHistory.extend (firstChoice firstAction).2 realized =
-          secondHistory firstAction :=
-      history_eq_of_state_eq rfl
-    rw [hhistory]
+    congr 1
+  rw [hfirst, step_firstChoice, PMF.pure_bind,
+    execution.runHistoryFor_succ_of_not_terminal
+      (information.historyChooser (actionProfile firstAction secondAction))
+      0 (second_not_terminal firstAction),
+    historyChooser_second]
+  have hsecond :
+      (execution.step (secondHistory firstAction).state
+          (secondChoice firstAction secondAction)).bindOnSupport
+        (fun target realized =>
+          execution.runHistoryFor
+            (information.historyChooser (actionProfile firstAction secondAction))
+            0 ((secondHistory firstAction).extend
+              (secondChoice firstAction secondAction).2 realized)) =
+      (execution.step (secondHistory firstAction).state
+          (secondChoice firstAction secondAction)).bind
+        (fun _ => PMF.pure (terminalHistory firstAction secondAction)) := by
+    apply bindOnSupport_eq_bind_of_eq_on_support
+    intro target realized
+    have htarget : target = State.done firstAction secondAction := by
+      simpa [execution, secondChoice, secondHistory, jointAt] using realized
+    subst target
+    congr 1
+  rw [hsecond, step_secondChoice, PMF.pure_bind]
 
 theorem runBehavioral_actionProfile (firstAction secondAction : Bool) :
     information.runBehavioral
         (behavioralProfile firstAction secondAction) 2 =
-      FinDist.pure (terminalHistory firstAction secondAction) := by
+      PMF.pure (terminalHistory firstAction secondAction) := by
   have hpure := information.runBehavioralFrom_toBehavioral
     (actionProfile firstAction secondAction) 2 execution.initHistory
   exact hpure.trans (run_actionProfile firstAction secondAction)
@@ -384,13 +405,37 @@ theorem coordinationUtility_le_one (history : execution.History)
   | first | second => simp [coordinationUtility]
   | done firstAction secondAction =>
       by_cases heq : firstAction = secondAction <;>
+      simp [coordinationUtility, heq]
+
+theorem coordinationUtility_abs_le_one (history : execution.History)
+    (who : Player) : |coordinationUtility history who| ≤ 1 := by
+  rcases history with ⟨state, trace⟩
+  cases state with
+  | first => simp [coordinationUtility]
+  | second _ => simp [coordinationUtility]
+  | done firstAction secondAction =>
+      by_cases heq : firstAction = secondAction <;>
         simp [coordinationUtility, heq]
+
+theorem coordinationIntegrable (law : PMF execution.History) (who : Player) :
+    UtilityIntegrable coordinationUtility who law :=
+  payoffIntegrable_of_bounded law (fun history => coordinationUtility history who)
+    (fun history => coordinationUtility_abs_le_one history who)
 
 theorem coordinated_value (who : Player) :
     expectedUtility coordinationUtility who
-        (information.runBehavioral (behavioralProfile true true) 2) = 1 := by
-  rw [runBehavioral_actionProfile, expectedUtility_pure]
-  rfl
+        (information.runBehavioral (behavioralProfile true true) 2)
+        (coordinationIntegrable
+          (information.runBehavioral (behavioralProfile true true) 2) who) = 1 := by
+  rw [runBehavioral_actionProfile]
+  calc
+    expectedUtility coordinationUtility who (PMF.pure (terminalHistory true true)) _ =
+        expectedUtility coordinationUtility who (PMF.pure (terminalHistory true true))
+          (payoffIntegrable_pure (terminalHistory true true)
+            (fun history => coordinationUtility history who)) :=
+      expectedUtility_congr_law coordinationUtility who rfl _ _
+    _ = coordinationUtility (terminalHistory true true) who := expectedUtility_pure ..
+    _ = 1 := by rfl
 
 /-- Coordination at `(true, true)` is a behavioral Nash equilibrium: its value
 is one and no history can yield either player more than one. -/
@@ -399,12 +444,22 @@ theorem coordinated_behavioral_isNash :
       (euPreference coordinationUtility) (behavioralProfile true true) := by
   rw [game.isNash_toBehavioralGameForm_iff]
   intro who replacement
-  rw [coordinated_value]
-  exact FinDist.expect_le_of_forall
-    (information.runBehavioral
-      (Profile.update (behavioralProfile true true) who replacement) 2)
-    (fun history => coordinationUtility history who) 1
-    (fun history _ => coordinationUtility_le_one history who)
+  let deviationLaw := information.runBehavioral
+    (Profile.update (behavioralProfile true true) who replacement) 2
+  let hbase := coordinationIntegrable
+    (information.runBehavioral (behavioralProfile true true) 2) who
+  let hdeviation := coordinationIntegrable deviationLaw who
+  refine ⟨hbase, hdeviation, ?_⟩
+  calc
+    expectedUtility coordinationUtility who deviationLaw hdeviation ≤
+        expect deviationLaw (fun _ => 1) (payoffIntegrable_constant deviationLaw 1) :=
+      expect_mono (fun history _ => coordinationUtility_le_one history who)
+        hdeviation (payoffIntegrable_constant deviationLaw 1)
+    _ = 1 := expect_constant deviationLaw 1 (payoffIntegrable_constant deviationLaw 1)
+    _ = expectedUtility coordinationUtility who
+        (information.runBehavioral (behavioralProfile true true) 2) hbase := by
+      symm
+      exact coordinated_value who
 
 /-- The Nash-transfer theorem reaches an ordinary mixed Nash equilibrium of
 the extracted strategic form, not merely equality of whole-profile laws. -/
@@ -427,9 +482,9 @@ theorem coordinated_roundTrip_behavioral_isNash :
     coordinated_mixed_isNash
 
 def coinMixed (who : Player) : game.MixedPlan who :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure (purePolicy false who))
-    (FinDist.pure (purePolicy true who))
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure (purePolicy false who))
+    (PMF.pure (purePolicy true who))
 
 /-- A genuinely mixed deviation by player `false` is realized behaviorally
 while player `true` keeps the prescribed `false` policy. -/
@@ -461,13 +516,14 @@ theorem changing_nonDeviator_changes_law :
       information.runBehavioral (behavioralProfile true true) 2 := by
   rw [runBehavioral_actionProfile, runBehavioral_actionProfile]
   intro heq
-  have hsupport := congrArg FinDist.support heq
+  have hsupport := congrArg PMF.support heq
   have hmem : terminalHistory true false ∈
-      (FinDist.pure (terminalHistory true true)).support := by
+      (PMF.pure (terminalHistory true true)).support := by
     rw [← hsupport]
-    exact FinDist.mem_support_pure.mpr rfl
-  rw [FinDist.mem_support_pure] at hmem
-  have hstate := congrArg ExecutionProtocol.History.state hmem
-  simp [terminalHistory, jointAt] at hstate
+    exact by simp
+  have hhistory : terminalHistory true false = terminalHistory true true := by
+    simpa using hmem
+  have hstate := congrArg ExecutionProtocol.History.state hhistory
+  simp [terminalHistory] at hstate
 
 end GameTheory.Tests.EFGKuhnNash

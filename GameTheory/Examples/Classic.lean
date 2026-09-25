@@ -11,7 +11,10 @@ the semantics drift apart.
 -/
 
 import GameTheory.Finite.Correctness
+import GameTheory.Core.BinaryMixed
+import GameTheory.Core.BinaryCorrelated
 import GameTheory.Core.CorrelatedDominance
+import GameTheory.Core.Rationalizability
 import Mathlib.Tactic.DeriveFintype
 import Mathlib.Tactic.Ring
 
@@ -82,7 +85,7 @@ theorem prisonersDilemma_bothDefect_isNash :
 /-- The deterministic frontend plays the mutual-defection profile as its point
 mass outcome law. -/
 theorem prisonersDilemma_bothDefect_play :
-    prisonersDilemma.toForm.play bothDefect = FinDist.pure bothDefect :=
+    prisonersDilemma.toForm.play bothDefect = PMF.pure bothDefect :=
   TableGame.toForm_play prisonersDilemma bothDefect
 
 /-- Mutual cooperation is not a Nash equilibrium: either player can profit by
@@ -135,28 +138,33 @@ theorem prisonersDilemma_existsUniqueNash_of_strictDominance :
     ∃! profile : Profile prisonersDilemma.sig,
       IsNash prisonersDilemma.toForm (euPreference prisonersDilemma.utility) profile :=
   prisonersDilemma_isDominantStrategySolvable.existsUniqueNash
-    (euPreference_reflexive prisonersDilemma.utility)
+    (euPreference_reflexive prisonersDilemma.utility
+      prisonersDilemma.utilityIntegrable)
 
 /-- Strict dominance pins every coarse correlated equilibrium, not only every
 pure Nash profile: arbitrary correlation still concentrates on mutual
 defection. -/
 theorem prisonersDilemma_isCoarseCorrelatedEq_iff
-    (law : FinDist (Profile prisonersDilemma.sig)) :
+    (law : PMF (Profile prisonersDilemma.sig)) :
     IsCoarseCorrelatedEq prisonersDilemma.toForm
         (euPreference prisonersDilemma.utility) law ↔
-      law = FinDist.pure bothDefect :=
+      law = PMF.pure bothDefect :=
   strictDominant_isCoarseCorrelatedEq_iff
     (fun who => prisonersDilemma_defect_isStrictDominant who)
+    (fun who => prisonersDilemma.utilityIntegrable who
+      (prisonersDilemma.toForm.play bothDefect))
 
 /-- The same point mass is therefore the unique correlated equilibrium of the
 Prisoner's Dilemma. -/
 theorem prisonersDilemma_isCorrelatedEq_iff
-    (law : FinDist (Profile prisonersDilemma.sig)) :
+    (law : PMF (Profile prisonersDilemma.sig)) :
     IsCorrelatedEq prisonersDilemma.toForm
         (euPreference prisonersDilemma.utility) law ↔
-      law = FinDist.pure bothDefect :=
+      law = PMF.pure bothDefect :=
   strictDominant_isCorrelatedEq_iff
     (fun who => prisonersDilemma_defect_isStrictDominant who)
+    (fun who => prisonersDilemma.utilityIntegrable who
+      (prisonersDilemma.toForm.play bothDefect))
 
 /-- Hence cooperation survives no round of elimination — from the abstract
 theorem, not from a second computation. -/
@@ -196,7 +204,11 @@ theorem prisonersDilemma_bothDefect_not_isWeaklyParetoEfficient :
   apply hefficient
   refine ⟨bothCooperate, ?_⟩
   intro who
-  rw [euPreference_strict_iff]
+  rw [euPreference_strict_iff prisonersDilemma.utility who
+    (prisonersDilemma.toForm.play bothCooperate)
+    (prisonersDilemma.toForm.play bothDefect)
+    (prisonersDilemma.utilityIntegrable who _)
+    (prisonersDilemma.utilityIntegrable who _)]
   rw [TableGame.toForm_play, TableGame.toForm_play, expectedUtility_pure,
     expectedUtility_pure, TableGame.utility_apply, TableGame.utility_apply,
     prisonersDilemma_payoff, prisonersDilemma_payoff]
@@ -210,7 +222,9 @@ theorem prisonersDilemma_bothDefect_not_isStrongNash :
       (euPreference prisonersDilemma.utility) bothDefect := by
   intro hstrong
   exact prisonersDilemma_bothDefect_not_isWeaklyParetoEfficient
-    (hstrong.isWeaklyParetoEfficient (euPreference_total _))
+    (hstrong.isWeaklyParetoEfficient
+      (euPreference_total prisonersDilemma.utility
+        (fun who law => prisonersDilemma.utilityIntegrable who law)))
 
 /-- Mutual defection stays an equilibrium once the players may randomize. Mixed
 Nash is not a separate predicate here — it is `IsNash` of the mixed extension —
@@ -218,7 +232,10 @@ so this is the abstract embedding theorem instantiated, not a new computation. -
 theorem prisonersDilemma_bothDefect_isNash_mixed :
     IsNash prisonersDilemma.toForm.mixed (euPreference prisonersDilemma.utility)
       (prisonersDilemma.toForm.purify bothDefect) :=
-  prisonersDilemma_bothDefect_isNash.purify
+  prisonersDilemma_bothDefect_isNash.purify (fun who replacement =>
+    prisonersDilemma.utilityIntegrable who
+      (prisonersDilemma.toForm.mixed.play
+        (Profile.update (prisonersDilemma.toForm.purify bothDefect) who replacement)))
 
 /-! ## Matching Pennies -/
 
@@ -266,6 +283,8 @@ def matchingPenniesLike :
   action := matchingPenniesAction
   scale := 1
   scale_pos := by norm_num
+  integrable := fun who profile =>
+    matchingPennies.utilityIntegrable who (matchingPennies.toForm.play profile)
   payoff_zero bits := by
     rw [TableGame.toForm_play, expectedUtility_pure]
     simp only [TableGame.utility_apply]
@@ -285,8 +304,8 @@ theorem matchingPennies_mixed_isNash_iff_half
     (mixedProfile : Profile matchingPennies.toForm.sig.mixed) :
     IsNash matchingPennies.toForm.mixed
         (euPreference matchingPennies.utility) mixedProfile ↔
-      (mixedProfile 0).prob .heads = (1 / 2 : ℝ) ∧
-        (mixedProfile 1).prob .heads = (1 / 2 : ℝ) := by
+      ((mixedProfile 0) Side.heads).toReal = (1 / 2 : ℝ) ∧
+        ((mixedProfile 1) Side.heads).toReal = (1 / 2 : ℝ) := by
   have hzero : matchingPenniesLike.action 0 true = .heads := rfl
   have hone : matchingPenniesLike.action 1 true = .heads := rfl
   simpa only [GameForm.MatchingPenniesLike.probTrue, hzero, hone] using
@@ -390,42 +409,56 @@ Pennies. This is the concrete consumer of the general mixed-Nash-to-CE bridge.
 -/
 theorem matchingPennies_fair_isCorrelatedEq :
     IsCorrelatedEq matchingPennies.toForm
-      (euPreference matchingPennies.utility) (GameTheory.Math.Probability.FinDist.pi fairPennies) :=
+      (euPreference matchingPennies.utility) (independentProduct fairPennies) :=
   fairPennies_isNash.isCorrelatedEq_pi
 
 private theorem matchingPenniesLike_fairProfile_eq_fairPennies :
     matchingPenniesLike.fairProfile = fairPennies := by
   funext who
-  apply FinDist.ext_of_prob
+  apply PMF.ext
   intro action
-  rw [TableGame.toMixed_prob]
+  rw [TableGame.toMixed_apply]
   cases action
   · have hheads : (Side.heads : matchingPennies.Action who) =
         matchingPenniesLike.action who true := rfl
-    rw [hheads, matchingPenniesLike.fairProfile_prob_action]
+    rw [hheads]
+    apply (ENNReal.toReal_eq_toReal_iff'
+      (PMF.apply_ne_top (matchingPenniesLike.fairProfile who)
+        (matchingPenniesLike.action who true))
+      (PMF.apply_ne_top (fairPennies who)
+        (matchingPenniesLike.action who true))).mp
+    rw [matchingPenniesLike.fairProfile_prob_action]
+    rw [matchingPennies.toMixed_apply]
     norm_num [uniformPennies]
   · have htails : (Side.tails : matchingPennies.Action who) =
         matchingPenniesLike.action who false := rfl
-    rw [htails, matchingPenniesLike.fairProfile_prob_action]
+    rw [htails]
+    apply (ENNReal.toReal_eq_toReal_iff'
+      (PMF.apply_ne_top (matchingPenniesLike.fairProfile who)
+        (matchingPenniesLike.action who false))
+      (PMF.apply_ne_top (fairPennies who)
+        (matchingPenniesLike.action who false))).mp
+    rw [matchingPenniesLike.fairProfile_prob_action]
+    rw [matchingPennies.toMixed_apply]
     norm_num [uniformPennies]
 
 /-- The independent fair law is the unique correlated equilibrium of Matching
 Pennies. -/
 theorem matchingPennies_correlatedEq_unique
-    {law : FinDist (Profile matchingPennies.sig)}
+    {law : PMF (Profile matchingPennies.sig)}
     (hCE : IsCorrelatedEq matchingPennies.toForm
       (euPreference matchingPennies.utility) law) :
-    law = FinDist.pi fairPennies := by
+    law = independentProduct fairPennies := by
   rw [← matchingPenniesLike_fairProfile_eq_fairPennies]
   exact matchingPenniesLike.correlatedEq_unique hCE
 
 /-- A profile law is a correlated equilibrium of Matching Pennies exactly when
 it is the independent fair law. -/
 theorem matchingPennies_isCorrelatedEq_iff
-    (law : FinDist (Profile matchingPennies.sig)) :
+    (law : PMF (Profile matchingPennies.sig)) :
     IsCorrelatedEq matchingPennies.toForm
         (euPreference matchingPennies.utility) law ↔
-      law = FinDist.pi fairPennies := by
+      law = independentProduct fairPennies := by
   constructor
   · exact matchingPennies_correlatedEq_unique
   · rintro rfl
@@ -615,7 +648,7 @@ theorem prisonersDilemma_bothDefect_isNash_ordinal :
   rw [isNash_iff]
   intro who replacement bad hbad
   refine ⟨bothDefect, by simp, ?_⟩
-  rw [FinDist.mem_support_pure] at hbad
+  rw [PMF.mem_support_pure_iff] at hbad
   subst hbad
   revert who replacement
   decide
@@ -638,8 +671,8 @@ intended profile is played, otherwise both players defect. -/
 noncomputable def noisyDilemma : GameForm (Fin 2) where
   sig := prisonersDilemma.sig
   play profile :=
-    FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-      (FinDist.pure profile) (FinDist.pure bothDefect)
+    mix (1 / 2) (by norm_num) (by norm_num)
+      (PMF.pure profile) (PMF.pure bothDefect)
 
 /-- One signature-bound profile, two different play laws, one shared profile
 theorem. Nothing is restated or converted. -/

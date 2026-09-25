@@ -35,7 +35,7 @@ variable {ι : Type uι} (M : Mechanism ι)
 @[reducible]
 def toForm : GameForm ι where
   sig := { Strategy := M.Report, Outcome := M.Outcome }
-  play reports := FinDist.pure (M.choose reports)
+  play reports := PMF.pure (M.choose reports)
 
 end Mechanism
 

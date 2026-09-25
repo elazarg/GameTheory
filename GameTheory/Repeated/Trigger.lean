@@ -15,6 +15,8 @@ noncomputable section
 
 namespace GameTheory
 
+open GameTheory.Math.Probability
+
 universe uι
 
 variable {ι : Type uι}
@@ -305,26 +307,45 @@ theorem triggerRepeatedProfile_isNash
     (path : ℕ → Profile G.form.sig)
     (punishment : ι → Profile G.form.sig)
     (cap : ι → ℝ)
+    (hG : G.form.HasIntegrableUtility G.utility)
     (hbound : ∀ (who : ι) (stage : Profile G.form.sig),
-      |G.stagePayoff stage who| ≤ bound)
+      |G.stagePayoff stage who (hG who stage)| ≤ bound)
     (hpunishment : ∀ (who : ι) (own : G.form.sig.Strategy who),
-      G.stagePayoff (Profile.update (punishment who) who own) who ≤
+      G.stagePayoff (Profile.update (punishment who) who own) who
+          (hG who _) ≤
         cap who)
     (hpath : ∀ (who : ι) (start : ℕ),
       cap who + margin ≤
-        G.discountedContinuationPayoff discount path start who)
+        G.discountedContinuationPayoffOfBounded hdiscount0 hdiscount1
+          path start who hG (hbound who))
     (hpatient : (1 - discount) * (2 * bound) ≤ discount * margin) :
-    IsNash G.repeatedForm (euPreference (G.discountedUtility discount))
+    IsNash G.repeatedForm
+      (euPreference (G.discountedUtilityOfBounded
+        hdiscount0 hdiscount1 hG
+        (fun who => ⟨bound, hbound who⟩)))
       (G.triggerRepeatedProfile path punishment) := by
   classical
+  let hbounds : ∀ who : ι, ∃ c : ℝ,
+      ∀ stage : Profile G.form.sig,
+        |G.stagePayoff stage who (hG who stage)| ≤ c :=
+    fun who => ⟨bound, hbound who⟩
   rw [isNash_iff]
   intro who deviation
   rw [euPreference_apply]
-  simp only [repeatedForm, expectedUtility_pure, discountedUtility]
   let statusQuo := G.triggerRepeatedProfile path punishment
   let deviatingProfile := Profile.update statusQuo who deviation
   let deviatingPath : ℕ → Profile G.form.sig :=
     fun t => G.repeatedPlay deviatingProfile t
+  refine ⟨by simpa [repeatedForm] using
+    (payoffIntegrable_pure statusQuo
+      (fun profile => G.discountedUtilityOfBounded
+        hdiscount0 hdiscount1 hG hbounds profile who)),
+    by simpa [repeatedForm] using
+      (payoffIntegrable_pure deviatingProfile
+        (fun profile => G.discountedUtilityOfBounded
+          hdiscount0 hdiscount1 hG hbounds profile who)), ?_⟩
+  simp only [repeatedForm, expectedUtility_pure,
+    discountedUtilityOfBounded, discountedUtility]
   by_cases hnever : ∀ t, deviatingPath t = path t
   · unfold discountedPayoff GameTheory.Math.normalizedDiscountedSum
     apply mul_le_mul_of_nonneg_left _ (sub_nonneg.mpr hdiscount1.le)
@@ -337,8 +358,7 @@ theorem triggerRepeatedProfile_isNash
             (Profile.update (G.triggerRepeatedProfile path punishment)
               who deviation) t = path t := by
       simpa [deviatingPath, deviatingProfile, statusQuo] using hnever t
-    rw [hdev, G.repeatedPlay_triggerRepeatedProfile_eq_path
-      path punishment t]
+    simp only [hdev, G.repeatedPlay_triggerRepeatedProfile_eq_path]
   · have hexists : ∃ t, deviatingPath t ≠ path t := not_forall.mp hnever
     let first : ℕ := Nat.find hexists
     have hmismatch : deviatingPath first ≠ path first :=
@@ -348,7 +368,8 @@ theorem triggerRepeatedProfile_isNash
       by_contra hne
       exact Nat.not_lt_of_ge (Nat.find_min' hexists hne) ht
     have htailStage : ∀ k : ℕ,
-        G.stagePayoff (deviatingPath (first + 1 + k)) who ≤ cap who := by
+        G.stagePayoff (deviatingPath (first + 1 + k)) who
+          (hG who _) ≤ cap who := by
       intro k
       have hafter : first < first + 1 + k := by omega
       have hprofile :=
@@ -362,33 +383,42 @@ theorem triggerRepeatedProfile_isNash
       rw [hprofile']
       exact hpunishment who _
     have hdeviatingTail :
-        G.discountedContinuationPayoff discount deviatingPath
-            (first + 1) who ≤ cap who := by
+        G.discountedContinuationPayoffOfBounded hdiscount0 hdiscount1
+            deviatingPath (first + 1) who hG (hbound who) ≤ cap who := by
       apply G.discountedContinuationPayoff_le_const
-        hdiscount0 hdiscount1 deviatingPath (first + 1) who (hbound who)
+        hdiscount0 hdiscount1 deviatingPath (first + 1) who
+        (fun k => hG who _)
+        (G.summable_discounted_continuation_of_abs_bound
+          hdiscount0 hdiscount1 deviatingPath (first + 1) who
+          (fun k => hG who _)
+          (fun k => hbound who _))
       intro k
       simpa only [Nat.add_assoc] using htailStage k
     have hfirstComparison :
-        G.discountedContinuationPayoff discount deviatingPath first who ≤
-          G.discountedContinuationPayoff discount path first who := by
+        G.discountedContinuationPayoffOfBounded hdiscount0 hdiscount1
+            deviatingPath first who hG (hbound who) ≤
+          G.discountedContinuationPayoffOfBounded hdiscount0 hdiscount1
+            path first who hG (hbound who) := by
       rw [G.discountedContinuationPayoff_eq_head_add
-        hdiscount0 hdiscount1 deviatingPath first who (hbound who)]
+        hdiscount0 hdiscount1 deviatingPath first who hG (hbound who)]
       rw [G.discountedContinuationPayoff_eq_head_add
-        hdiscount0 hdiscount1 path first who (hbound who)]
+        hdiscount0 hdiscount1 path first who hG (hbound who)]
       have hdevStage :
-          G.stagePayoff (deviatingPath first) who ≤ bound :=
+          G.stagePayoff (deviatingPath first) who (hG who _) ≤ bound :=
         (abs_le.mp (hbound who (deviatingPath first))).2
       have hpathStage :
-          -bound ≤ G.stagePayoff (path first) who :=
+          -bound ≤ G.stagePayoff (path first) who (hG who _) :=
         (abs_le.mp (hbound who (path first))).1
       have hpathTail := hpath who (first + 1)
       nlinarith
     have hzero :
-        G.discountedContinuationPayoff discount deviatingPath 0 who ≤
-          G.discountedContinuationPayoff discount path 0 who := by
+        G.discountedContinuationPayoffOfBounded hdiscount0 hdiscount1
+            deviatingPath 0 who hG (hbound who) ≤
+          G.discountedContinuationPayoffOfBounded hdiscount0 hdiscount1
+            path 0 who hG (hbound who) := by
       apply G.discountedContinuationPayoff_le_of_prefix_eq_of_tail_le
         hdiscount0 hdiscount1 deviatingPath path 0 first who
-        (hbound who)
+        hG (hbound who)
       · intro k hk
         simpa using hbefore k hk
       · simpa using hfirstComparison
@@ -403,16 +433,19 @@ theorem triggerRepeatedProfile_isNash
       G.discountedContinuationPayoff discount
           (fun t => G.repeatedPlay
             (Profile.update (G.triggerRepeatedProfile path punishment)
-              who deviation) t) 0 who =
-        G.discountedContinuationPayoff discount deviatingPath 0 who := by
+              who deviation) t) 0 who _ _ =
+        G.discountedContinuationPayoffOfBounded hdiscount0 hdiscount1
+          deviatingPath 0 who hG (hbound who) := by
           rfl
-      _ ≤ G.discountedContinuationPayoff discount path 0 who := hzero
+      _ ≤ G.discountedContinuationPayoffOfBounded hdiscount0 hdiscount1
+          path 0 who hG (hbound who) := hzero
       _ = G.discountedContinuationPayoff discount
           (fun t => G.repeatedPlay
-            (G.triggerRepeatedProfile path punishment) t) 0 who :=
+            (G.triggerRepeatedProfile path punishment) t) 0 who _ _ :=
         congrArg
           (fun generated =>
-            G.discountedContinuationPayoff discount generated 0 who)
+            G.discountedContinuationPayoffOfBounded hdiscount0 hdiscount1
+              generated 0 who hG (hbound who))
           hstatusPath.symm
 
 end UtilityGame

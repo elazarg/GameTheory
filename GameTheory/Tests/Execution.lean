@@ -19,6 +19,7 @@ two policies produce two *different* two-step laws.
 -/
 
 import GameTheory.Protocol.Execution
+import GameTheory.Math.Probability.Mixture
 
 noncomputable section
 
@@ -83,12 +84,12 @@ def coinThenMove : ExecutionProtocol Unit where
   step state joint :=
     match state with
     | .chance =>
-        FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-          (FinDist.pure .heads) (FinDist.pure .tails)
+        mix (1 / 2) (by norm_num) (by norm_num)
+          (PMF.pure .heads) (PMF.pure .tails)
     | _ =>
         match joint.1 () with
-        | some move => FinDist.pure move.resolve
-        | none => FinDist.pure .leftIt
+        | some move => PMF.pure move.resolve
+        | none => PMF.pure .leftIt
   progress := by
     rintro state hterm
     by_cases hactive : state = Spot.heads ∨ state = Spot.tails
@@ -110,19 +111,30 @@ Chance is carried by the transition law, not by dummy data attached to a `none`
 mover. -/
 
 theorem coinThenMove_chanceLaw_heads :
-    (coinThenMove.chanceLaw coinThenMove_chance_isChance).prob .heads = 1 / 2 := by
-  simp [ExecutionProtocol.chanceLaw, FinDist.prob_pure_eq_ite]
+    ((coinThenMove.chanceLaw coinThenMove_chance_isChance) .heads).toReal = 1 / 2 := by
+  calc
+    ((coinThenMove.chanceLaw coinThenMove_chance_isChance) .heads).toReal =
+        (mix (1 / 2) (by norm_num) (by norm_num)
+          (PMF.pure Spot.heads) (PMF.pure Spot.tails) Spot.heads).toReal := rfl
+    _ = 1 / 2 := by
+      rw [mix_apply_toReal]
+      norm_num [PMF.pure_apply]
 
 theorem coinThenMove_chanceLaw_tails :
-    (coinThenMove.chanceLaw coinThenMove_chance_isChance).prob .tails = 1 / 2 := by
-  simp [ExecutionProtocol.chanceLaw, FinDist.prob_pure_eq_ite]
-  norm_num
+    ((coinThenMove.chanceLaw coinThenMove_chance_isChance) .tails).toReal = 1 / 2 := by
+  calc
+    ((coinThenMove.chanceLaw coinThenMove_chance_isChance) .tails).toReal =
+        (mix (1 / 2) (by norm_num) (by norm_num)
+          (PMF.pure Spot.heads) (PMF.pure Spot.tails) Spot.tails).toReal := rfl
+    _ = 1 / 2 := by
+      rw [mix_apply_toReal]
+      norm_num [PMF.pure_apply]
 
 /-- The two branches carry all the mass: the law is a genuine distribution, not
 a degenerate placeholder. -/
 theorem coinThenMove_chanceLaw_normalized :
-    (coinThenMove.chanceLaw coinThenMove_chance_isChance).prob .heads +
-      (coinThenMove.chanceLaw coinThenMove_chance_isChance).prob .tails = 1 := by
+    ((coinThenMove.chanceLaw coinThenMove_chance_isChance) .heads).toReal +
+      ((coinThenMove.chanceLaw coinThenMove_chance_isChance) .tails).toReal = 1 := by
   rw [coinThenMove_chanceLaw_heads, coinThenMove_chanceLaw_tails]
   norm_num
 
@@ -145,11 +157,11 @@ theorem runFor_one_from_chance :
     coinThenMove.runFor takePolicy 1 .chance =
       coinThenMove.chanceLaw coinThenMove_chance_isChance := by
   rw [ExecutionProtocol.runFor_succ_of_chance takePolicy 0 coinThenMove_chance_isChance,
-    show coinThenMove.runFor takePolicy 0 = FinDist.pure from rfl, FinDist.bind_pure]
+    show coinThenMove.runFor takePolicy 0 = PMF.pure from rfl, PMF.bind_pure]
 
 /-- Terminal states are absorbing under every policy and every fuel. -/
 theorem runFor_tookIt (fuel : ℕ) :
-    coinThenMove.runFor takePolicy fuel .tookIt = FinDist.pure .tookIt :=
+    coinThenMove.runFor takePolicy fuel .tookIt = PMF.pure .tookIt :=
   ExecutionProtocol.runFor_of_terminal takePolicy fuel (by simp)
 
 /-! ### Hostile test: the chosen action actually drives the run
@@ -158,52 +170,48 @@ A runner that consulted the chooser but discarded its answer — or that picked
 any legal action itself — would make the two policies agree. They do not. -/
 
 theorem runFor_one_heads_take :
-    coinThenMove.runFor takePolicy 1 .heads = FinDist.pure .tookIt := by
+    coinThenMove.runFor takePolicy 1 .heads = PMF.pure .tookIt := by
   rw [ExecutionProtocol.runFor_succ_of_not_terminal takePolicy 0
     coinThenMove_heads_not_terminal]
   simp [takePolicy, Move.resolve]
 
 theorem runFor_one_tails_take :
-    coinThenMove.runFor takePolicy 1 .tails = FinDist.pure .tookIt := by
+    coinThenMove.runFor takePolicy 1 .tails = PMF.pure .tookIt := by
   rw [ExecutionProtocol.runFor_succ_of_not_terminal takePolicy 0
     coinThenMove_tails_not_terminal]
   simp [takePolicy, Move.resolve]
 
 theorem runFor_one_heads_leave :
-    coinThenMove.runFor leavePolicy 1 .heads = FinDist.pure .leftIt := by
+    coinThenMove.runFor leavePolicy 1 .heads = PMF.pure .leftIt := by
   rw [ExecutionProtocol.runFor_succ_of_not_terminal leavePolicy 0
     coinThenMove_heads_not_terminal]
   simp [leavePolicy, Move.resolve]
 
 theorem runFor_one_tails_leave :
-    coinThenMove.runFor leavePolicy 1 .tails = FinDist.pure .leftIt := by
+    coinThenMove.runFor leavePolicy 1 .tails = PMF.pure .leftIt := by
   rw [ExecutionProtocol.runFor_succ_of_not_terminal leavePolicy 0
     coinThenMove_tails_not_terminal]
   simp [leavePolicy, Move.resolve]
 
 /-- Taking, through the coin, ends at `tookIt` with certainty. -/
 theorem prob_tookIt_take :
-    (coinThenMove.runFor takePolicy 2 .chance).prob .tookIt = 1 := by
-  rw [ExecutionProtocol.runFor_succ_of_chance takePolicy 1 coinThenMove_chance_isChance,
-    FinDist.prob_bind, ExecutionProtocol.chanceLaw]
-  show (FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-      (FinDist.pure Spot.heads) (FinDist.pure Spot.tails)).expect
-      (fun s => (coinThenMove.runFor takePolicy 1 s).prob .tookIt) = 1
-  rw [FinDist.expect_mix, FinDist.expect_pure, FinDist.expect_pure,
-    runFor_one_heads_take, runFor_one_tails_take]
-  simp
+    ((coinThenMove.runFor takePolicy 2 .chance) .tookIt).toReal = 1 := by
+  rw [ExecutionProtocol.runFor_succ_of_chance takePolicy 1 coinThenMove_chance_isChance]
+  show (((mix (1 / 2) (by norm_num) (by norm_num)
+      (PMF.pure Spot.heads) (PMF.pure Spot.tails)).bind
+        (coinThenMove.runFor takePolicy 1)) .tookIt).toReal = 1
+  rw [mix_bind]
+  simp [runFor_one_heads_take, runFor_one_tails_take]
 
 /-- Leaving, through the same coin, never reaches `tookIt`. -/
 theorem prob_tookIt_leave :
-    (coinThenMove.runFor leavePolicy 2 .chance).prob .tookIt = 0 := by
-  rw [ExecutionProtocol.runFor_succ_of_chance leavePolicy 1 coinThenMove_chance_isChance,
-    FinDist.prob_bind, ExecutionProtocol.chanceLaw]
-  show (FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-      (FinDist.pure Spot.heads) (FinDist.pure Spot.tails)).expect
-      (fun s => (coinThenMove.runFor leavePolicy 1 s).prob .tookIt) = 0
-  rw [FinDist.expect_mix, FinDist.expect_pure, FinDist.expect_pure,
-    runFor_one_heads_leave, runFor_one_tails_leave]
-  simp [FinDist.prob_pure_eq_ite]
+    ((coinThenMove.runFor leavePolicy 2 .chance) .tookIt).toReal = 0 := by
+  rw [ExecutionProtocol.runFor_succ_of_chance leavePolicy 1 coinThenMove_chance_isChance]
+  show (((mix (1 / 2) (by norm_num) (by norm_num)
+      (PMF.pure Spot.heads) (PMF.pure Spot.tails)).bind
+        (coinThenMove.runFor leavePolicy 1)) .tookIt).toReal = 0
+  rw [mix_bind]
+  simp [runFor_one_heads_leave, runFor_one_tails_leave]
 
 /-- **The probe.** The run law depends on the chooser's answer, so the runner
 cannot be discarding it. -/

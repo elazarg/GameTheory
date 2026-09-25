@@ -20,6 +20,8 @@ open scoped BigOperators
 
 namespace GameTheory.Mechanism
 
+open GameTheory.Math.Probability
+
 /-- Data for a Groves mechanism: dependent report types, outcomes, valuations,
 an allocation rule, and report-indexed Groves offsets.  Efficiency and
 own-report independence are theorem-local certificates because they are the
@@ -135,7 +137,7 @@ theorem toUtilityGame_play_truthful [Fintype ι] [DecidableEq ι]
     (trueTypes : V.ReportProfile) :
     (V.toUtilityGame trueTypes).form.play
         (fun i => V.truthfulStrategy i (trueTypes i)) =
-      GameTheory.Math.Probability.FinDist.pure trueTypes := by
+      PMF.pure trueTypes := by
   rfl
 
 /-- Truthful reporting is an ex-post equilibrium: for every true-type profile,
@@ -151,6 +153,7 @@ theorem truthfulStrategy_isExPostNash [Fintype ι] [DecidableEq ι]
   rw [isNash_iff]
   intro who alternative
   rw [euPreference_apply]
+  refine ⟨payoffIntegrable_pure _ _, payoffIntegrable_pure _ _, ?_⟩
   simp only [toUtilityGame, expectedUtility_pure]
   have htruth := V.groves_truthful alloc_efficient h_independent trueTypes who
     (trueTypes who) alternative

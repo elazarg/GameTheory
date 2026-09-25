@@ -154,7 +154,7 @@ def entryPlan (commitment : LeaderAction) : Tree.PureStrategy entryTree :=
 No separate Stackelberg evaluator is introduced. -/
 theorem eval_entryPlan (commitment : LeaderAction) :
     Tree.eval entryTree (entryPlan commitment) =
-      FinDist.pure ⟨commitment, followerResponse commitment⟩ := rfl
+      PMF.pure ⟨commitment, followerResponse commitment⟩ := rfl
 
 /-- The leader's value after the follower best-responds. -/
 def commitmentValue (commitment : LeaderAction) : ℚ :=

@@ -13,6 +13,7 @@ has exactly that terminal state law.
 -/
 
 import GameTheory.Protocol.Information
+import GameTheory.Math.Probability.ExpectationMixture
 
 noncomputable section
 
@@ -53,9 +54,9 @@ def rightValue : State → ℝ
       if right then 1 else 0
   | _ => 0
 
-def fairCoin : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure false) (FinDist.pure true)
+def fairCoin : PMF Bool :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure false) (PMF.pure true)
 
 def terminal : State → Prop
   | .resolved _ _ _ _ => True
@@ -94,14 +95,14 @@ def transition : (state : State) →
     { joint : Agent → Option Bool //
       ¬ terminal state ∧
         IsLegalJoint (active state) (available state) joint } →
-    FinDist State
-  | .start, _ => FinDist.map State.chanceKnown fairCoin
+    PMF State
+  | .start, _ => PMF.map State.chanceKnown fairCoin
   | .chanceKnown signal, cert =>
-      FinDist.pure (.decisionsMade signal
+      PMF.pure (.decisionsMade signal
         (decisionValue (cert.1 .left) (choice_ne_none cert .left))
         (decisionValue (cert.1 .right) (choice_ne_none cert .right)))
   | .decisionsMade signal left right, _ =>
-      FinDist.pure (.resolved signal left right
+      PMF.pure (.resolved signal left right
         (payoff signal left right))
   | .resolved _ _ _ _, cert => (cert.2.1 trivial).elim
 
@@ -153,13 +154,13 @@ theorem both_active (signal : Bool) (who : Agent) :
 theorem step_start (joint : Agent → Option Bool)
     (isLegal : protocol.Legal .start joint) :
     protocol.step .start ⟨joint, isLegal⟩ =
-      FinDist.map State.chanceKnown fairCoin := rfl
+      PMF.map State.chanceKnown fairCoin := rfl
 
 theorem step_decisionsMade (signal left right : Bool)
     (joint : Agent → Option Bool)
     (isLegal : protocol.Legal (.decisionsMade signal left right) joint) :
     protocol.step (.decisionsMade signal left right) ⟨joint, isLegal⟩ =
-      FinDist.pure (.resolved signal left right
+      PMF.pure (.resolved signal left right
         (payoff signal left right)) := rfl
 
 /-! ## Information locality -/
@@ -275,7 +276,7 @@ theorem step_chanceKnown_chooser
     protocol.step (.chanceKnown signal)
         (chooserOf profile (.chanceKnown signal)
           (chanceKnown_not_terminal signal)) =
-      FinDist.pure (.decisionsMade signal
+      PMF.pure (.decisionsMade signal
         (ruleOf .left (profile .left) signal)
         (ruleOf .right (profile .right) signal)) := rfl
 
@@ -283,7 +284,7 @@ theorem step_start_chooser
     (profile : (who : Agent) → model.Policy who) :
     protocol.step .start
         (chooserOf profile .start start_not_terminal) =
-      FinDist.map State.chanceKnown fairCoin := rfl
+      PMF.map State.chanceKnown fairCoin := rfl
 
 theorem step_decisionsMade_chooser
     (profile : (who : Agent) → model.Policy who)
@@ -291,14 +292,14 @@ theorem step_decisionsMade_chooser
     protocol.step (.decisionsMade signal left right)
         (chooserOf profile (.decisionsMade signal left right)
           (decisionsMade_not_terminal signal left right)) =
-      FinDist.pure (.resolved signal left right
+      PMF.pure (.resolved signal left right
         (payoff signal left right)) := rfl
 
 /-! ## Direct and compiled evaluation -/
 
 def intendedOutcome
-    (leftRule rightRule : Bool → Bool) : FinDist State :=
-  FinDist.map
+    (leftRule rightRule : Bool → Bool) : PMF State :=
+  PMF.map
     (fun signal =>
       .resolved signal (leftRule signal) (rightRule signal)
         (payoff signal (leftRule signal) (rightRule signal)))
@@ -312,7 +313,7 @@ theorem runFor_eq_intendedOutcome
         (ruleOf .right (profile .right)) := by
   have hcont : ∀ signal : Bool,
       protocol.runFor (chooserOf profile) 2 (.chanceKnown signal) =
-        FinDist.pure (.resolved signal
+        PMF.pure (.resolved signal
           (ruleOf .left (profile .left) signal)
           (ruleOf .right (profile .right) signal)
           (payoff signal
@@ -321,25 +322,25 @@ theorem runFor_eq_intendedOutcome
     intro signal
     rw [ExecutionProtocol.runFor_succ_of_not_terminal
         (chooserOf profile) 1 (chanceKnown_not_terminal signal),
-      step_chanceKnown_chooser, FinDist.pure_bind,
+      step_chanceKnown_chooser, PMF.pure_bind,
       ExecutionProtocol.runFor_succ_of_not_terminal
         (chooserOf profile) 0
         (decisionsMade_not_terminal signal
           (ruleOf .left (profile .left) signal)
           (ruleOf .right (profile .right) signal)),
-      step_decisionsMade_chooser, FinDist.pure_bind,
+      step_decisionsMade_chooser, PMF.pure_bind,
       ExecutionProtocol.runFor_zero]
   rw [ExecutionProtocol.runFor_succ_of_not_terminal
       (chooserOf profile) 2 start_not_terminal,
-    step_start_chooser, FinDist.bind_map, intendedOutcome,
-    FinDist.map_eq_bind]
-  exact FinDist.bind_congr fun signal _ => hcont signal
+    step_start_chooser, PMF.bind_map, intendedOutcome,
+    ← PMF.bind_pure_comp]
+  exact bind_congr_on_support _ fun signal _ => hcont signal
 
 /-- The information-local history runner has the same terminal state law as
 direct frontier evaluation. -/
 theorem map_state_run_eq_intendedOutcome
     (profile : (who : Agent) → model.Policy who) :
-    FinDist.map History.state (model.run profile 3) =
+    PMF.map History.state (model.run profile 3) =
       intendedOutcome
         (ruleOf .left (profile .left))
         (ruleOf .right (profile .right)) := by
@@ -347,6 +348,31 @@ theorem map_state_run_eq_intendedOutcome
   rw [← chooserOf_toHistoryChooser_eq profile,
     ExecutionProtocol.map_state_runHistoryFor]
   exact runFor_eq_intendedOutcome profile
+
+/-- Every intended-outcome payoff is integrable under this finite witness law. -/
+theorem intendedOutcome_integrable
+    (leftRule rightRule : Bool → Bool) (score : State → ℝ) :
+    PayoffIntegrable (intendedOutcome leftRule rightRule) score := by
+  unfold intendedOutcome
+  exact (payoffIntegrable_map_iff _ _ _).mpr
+    (payoffIntegrable_of_finite _ _)
+
+/-- The canonical three-step run integrates every state payoff in this fixture. -/
+theorem runState_integrable
+    (profile : (who : Agent) → model.Policy who) (score : State → ℝ) :
+    PayoffIntegrable (PMF.map History.state (model.run profile 3)) score :=
+  payoffIntegrable_congr_law (map_state_run_eq_intendedOutcome profile).symm
+    (intendedOutcome_integrable _ _ score)
+
+private theorem expect_runState_eq_intendedOutcome
+    (profile : (who : Agent) → model.Policy who) (score : State → ℝ) :
+    expect (PMF.map History.state (model.run profile 3)) score
+        (runState_integrable profile score) =
+      expect (intendedOutcome
+          (ruleOf .left (profile .left))
+          (ruleOf .right (profile .right))) score
+        (intendedOutcome_integrable _ _ score) :=
+  expect_congr_law (map_state_run_eq_intendedOutcome profile) score _ _
 
 /-- The simultaneous decision transition records both actions at once. Every
 supported target has both decisions, so no hidden serialization state exists. -/
@@ -361,7 +387,7 @@ theorem decisions_commit_together
     target = .decisionsMade signal
       (ruleOf .left (profile .left) signal)
       (ruleOf .right (profile .right) signal) := by
-  rw [step_chanceKnown_chooser, FinDist.mem_support_pure] at htarget
+  rw [step_chanceKnown_chooser, PMF.mem_support_pure_iff] at htarget
   exact htarget
 
 /-! ## Hostile non-vacuity probes -/
@@ -388,87 +414,106 @@ def constant (value : Bool) : Bool → Bool := fun _ => value
 def responsive : Bool → Bool := fun signal => signal
 
 theorem expect_fairCoin (score : Bool → ℝ) :
-    fairCoin.expect score =
+    expect fairCoin score (payoffIntegrable_of_finite _ _) =
       1 / 2 * score false + (1 - 1 / 2) * score true := by
-  rw [fairCoin, FinDist.expect_mix,
-    FinDist.expect_pure, FinDist.expect_pure]
+  have hfalse : PayoffIntegrable (PMF.pure false) score :=
+    payoffIntegrable_pure _ _
+  have htrue : PayoffIntegrable (PMF.pure true) score :=
+    payoffIntegrable_pure _ _
+  have hmix := expect_mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure false) (PMF.pure true) score hfalse htrue
+  simpa only [fairCoin, expect_pure] using hmix
 
 theorem expect_payoff_intendedOutcome
     (leftRule rightRule : Bool → Bool) :
-    (intendedOutcome leftRule rightRule).expect payoffValue =
-      fairCoin.expect fun signal =>
-        payoff signal (leftRule signal) (rightRule signal) := by
-  rw [intendedOutcome, FinDist.expect_map]
-  rfl
+    expect (intendedOutcome leftRule rightRule) payoffValue
+        (intendedOutcome_integrable leftRule rightRule payoffValue) =
+      expect fairCoin (fun signal =>
+        payoff signal (leftRule signal) (rightRule signal))
+        (payoffIntegrable_of_finite _ _) := by
+  exact expect_map _ _ _ _ _
 
 theorem expect_left_intendedOutcome
     (leftRule rightRule : Bool → Bool) :
-    (intendedOutcome leftRule rightRule).expect leftValue =
-      fairCoin.expect fun signal =>
-        if leftRule signal then 1 else 0 := by
-  rw [intendedOutcome, FinDist.expect_map]
-  rfl
+    expect (intendedOutcome leftRule rightRule) leftValue
+        (intendedOutcome_integrable leftRule rightRule leftValue) =
+      expect fairCoin (fun signal =>
+        if leftRule signal then 1 else 0)
+        (payoffIntegrable_of_finite _ _) := by
+  exact expect_map _ _ _ _ _
 
 theorem expect_right_intendedOutcome
     (leftRule rightRule : Bool → Bool) :
-    (intendedOutcome leftRule rightRule).expect rightValue =
-      fairCoin.expect fun signal =>
-        if rightRule signal then 1 else 0 := by
-  rw [intendedOutcome, FinDist.expect_map]
-  rfl
+    expect (intendedOutcome leftRule rightRule) rightValue
+        (intendedOutcome_integrable leftRule rightRule rightValue) =
+      expect fairCoin (fun signal =>
+        if rightRule signal then 1 else 0)
+        (payoffIntegrable_of_finite _ _) := by
+  exact expect_map _ _ _ _ _
 
 theorem outcome_law_depends_on_left :
-    FinDist.map History.state
+    PMF.map History.state
         (model.run (profileOfRules (constant false) (constant false)) 3) ≠
-      FinDist.map History.state
+      PMF.map History.state
         (model.run (profileOfRules (constant true) (constant false)) 3) := by
   intro hequal
-  have hscore := congrArg (fun law => law.expect leftValue) hequal
   rw [map_state_run_eq_intendedOutcome,
-    map_state_run_eq_intendedOutcome,
+    map_state_run_eq_intendedOutcome] at hequal
+  have hscore := expect_congr_law hequal leftValue
+    (intendedOutcome_integrable _ _ leftValue)
+    (intendedOutcome_integrable _ _ leftValue)
+  rw [
     expect_left_intendedOutcome, expect_left_intendedOutcome,
     expect_fairCoin, expect_fairCoin] at hscore
   norm_num [profileOfRules, constant] at hscore
 
 theorem outcome_law_depends_on_right :
-    FinDist.map History.state
+    PMF.map History.state
         (model.run (profileOfRules (constant false) (constant false)) 3) ≠
-      FinDist.map History.state
+      PMF.map History.state
         (model.run (profileOfRules (constant false) (constant true)) 3) := by
   intro hequal
-  have hscore := congrArg (fun law => law.expect rightValue) hequal
   rw [map_state_run_eq_intendedOutcome,
-    map_state_run_eq_intendedOutcome,
+    map_state_run_eq_intendedOutcome] at hequal
+  have hscore := expect_congr_law hequal rightValue
+    (intendedOutcome_integrable _ _ rightValue)
+    (intendedOutcome_integrable _ _ rightValue)
+  rw [
     expect_right_intendedOutcome, expect_right_intendedOutcome,
     expect_fairCoin, expect_fairCoin] at hscore
   norm_num [profileOfRules, constant] at hscore
 
 theorem expect_responsive :
-    (FinDist.map History.state
-      (model.run (profileOfRules responsive responsive) 3)).expect
-        payoffValue = 2 := by
-  rw [map_state_run_eq_intendedOutcome,
+    expect (PMF.map History.state
+      (model.run (profileOfRules responsive responsive) 3)) payoffValue
+      (runState_integrable (profileOfRules responsive responsive) payoffValue) =
+        2 := by
+  rw [expect_runState_eq_intendedOutcome,
     expect_payoff_intendedOutcome, expect_fairCoin]
   norm_num [profileOfRules, responsive, payoff]
 
 theorem expect_both_constant_false :
-    (FinDist.map History.state
+    expect (PMF.map History.state
       (model.run
-        (profileOfRules (constant false) (constant false)) 3)).expect
-        payoffValue = 1 := by
-  rw [map_state_run_eq_intendedOutcome,
+        (profileOfRules (constant false) (constant false)) 3)) payoffValue
+      (runState_integrable
+        (profileOfRules (constant false) (constant false)) payoffValue) = 1 := by
+  rw [expect_runState_eq_intendedOutcome,
     expect_payoff_intendedOutcome, expect_fairCoin]
   norm_num [profileOfRules, constant, payoff]
 
 /-- Observing the common chance parent is behaviorally load-bearing. -/
 theorem outcome_law_depends_on_observation :
-    FinDist.map History.state
+    PMF.map History.state
         (model.run (profileOfRules responsive responsive) 3) ≠
-      FinDist.map History.state
+      PMF.map History.state
         (model.run
           (profileOfRules (constant false) (constant false)) 3) := by
   intro hequal
-  have hscore := congrArg (fun law => law.expect payoffValue) hequal
+  have hscore := expect_congr_law hequal payoffValue
+    (runState_integrable (profileOfRules responsive responsive) payoffValue)
+    (runState_integrable
+      (profileOfRules (constant false) (constant false)) payoffValue)
   rw [expect_responsive, expect_both_constant_false] at hscore
   norm_num at hscore
 

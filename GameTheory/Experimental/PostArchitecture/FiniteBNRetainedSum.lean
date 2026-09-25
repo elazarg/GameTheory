@@ -105,7 +105,7 @@ retained set.  Finiteness is required only to enumerate the new coordinates. -/
 theorem cylinderMass_eq_sum_retained
     [Fintype Node] [DecidableEq Node]
     [∀ node, Fintype (Value node)] [∀ node, DecidableEq (Value node)]
-    (law : FinDist (Assignment Value))
+    (law : PMF (Assignment Value))
     (fixed retained : Finset Node) (hsubset : fixed ⊆ retained)
     (witness : Assignment Value) :
     cylinderMass Value law fixed witness =
@@ -147,7 +147,7 @@ theorem cylinderMass_eq_sum_retained
 theorem cylinderMass_eq_sum_latents
     [Fintype Node] [DecidableEq Node]
     [∀ node, Fintype (Value node)] [∀ node, DecidableEq (Value node)]
-    (law : FinDist (Assignment Value))
+    (law : PMF (Assignment Value))
     (fixed retained latentLeft latentRight : Finset Node)
     (hsubset : fixed ⊆ retained)
     (partition : LatentPartition fixed retained latentLeft latentRight)
@@ -171,7 +171,7 @@ cylinder in the partition is its retained local-factor product. -/
 theorem cylinderMass_eq_sum_factorProduct_of_parentClosed
     [Fintype Node] [DecidableEq Node]
     [∀ node, Fintype (Value node)] [∀ node, DecidableEq (Value node)]
-    (law : FinDist (Assignment Value))
+    (law : PMF (Assignment Value))
     (parents : Node → Finset Node)
     (topological : GameTheory.Math.DAG.TopologicalOrder parents)
     (kernels : LocalKernels Value parents)
@@ -195,7 +195,7 @@ factor score consumed by rank-one assembly. -/
 theorem cylinderMass_eq_sum_latentFactorProducts_of_parentClosed
     [Fintype Node] [DecidableEq Node]
     [∀ node, Fintype (Value node)] [∀ node, DecidableEq (Value node)]
-    (law : FinDist (Assignment Value))
+    (law : PMF (Assignment Value))
     (parents : Node → Finset Node)
     (topological : GameTheory.Math.DAG.TopologicalOrder parents)
     (kernels : LocalKernels Value parents)
@@ -228,7 +228,7 @@ abbrev BoolValue (_ : Bool) := Bool
 
 def witness : Assignment BoolValue := fun _ => false
 
-def law : FinDist (Assignment BoolValue) := FinDist.pure witness
+def law : PMF (Assignment BoolValue) := PMF.pure witness
 
 def fixed : Finset Bool := {false}
 

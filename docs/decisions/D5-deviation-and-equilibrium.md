@@ -1,7 +1,6 @@
 # D5: one local, law-linear deviation predicate
 
-- **Status:** accepted for the static core (Phase 2 gate); the interface is
-  re-tested against sequential deviations in Phase 3
+- **Status:** accepted for the static core
 - **Date:** 2026-07-26
 - **Experiment IDs:** EXP-005, EXP-008; stable stress evidence EXP-029
 
@@ -28,23 +27,7 @@ Four schemes (`unilateralConstant`, `recommendation`, `unilateralRandomized`,
 `coalitionConstant`), three scheme morphisms, the five concepts, and the hostile
 file `GameTheory/Tests/Locality.lean`.
 
-## Measurements
-
-Run:
-
-```text
-lake build
-pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected
-```
-
-| Metric | Value |
-|---|---:|
-| Public `def`s per solution concept | 1 each, 11 concepts |
-| Separate definitions of mixed Nash | 0 (`IsNash F.mixed`) |
-| `Function.update` outside the profile module | 0 |
-| Source-level transport tokens in Phase 2 source | 1 |
-| Source-level transport in the designated profile module | 1 |
-| `sorry` / `admit` / `native_decide` / custom axioms | 0 |
+## Cost of specialization
 
 Proof sizes of the cross-concept theorems: `isNash_iff_isCoarseCorrelatedEq_pure`
 is `Iff.rfl`; `IsCorrelatedEq.isCoarseCorrelatedEq` is one term;
@@ -67,9 +50,10 @@ support of a deviated law.
 
 Law-linearity is structural: `DeviationScheme.apply` is the only place a
 deviation meets a status-quo law, it acts by `bind`, and `apply_bind` holds for
-every scheme. `isCoarseCorrelatedEq_randomized` shows that under expected
-utility a randomized replacement cannot beat all deterministic ones, so
-defining CCE with deterministic deviations does not weaken it.
+every scheme. Under expected utility, an integrable randomized replacement
+cannot beat all deterministic ones. D62's general PMF semantics requires that
+mixture integrability explicitly: integrability of each deterministic play
+law alone does not establish it.
 
 ## Unexpected costs
 
@@ -97,18 +81,18 @@ Neither fired. All five concepts are one line each on top of `IsEquilibrium`,
 and the Bayesian probe (EXP-008) showed that an interim, type-dependent
 deviation is also expressible without widening the interface.
 
-EXP-029 promotes that result from a probe to stable API and compiles the same
-game through `InformationModel`. The prior-weighted interim theorem is still an
+EXP-029 tests the same game through `InformationModel`. The prior-weighted
+interim theorem is an
 equivalence with ordinary `IsNash`; the protocol-backed fair-bit endpoint uses
 the same predicate after the policy/plan and outcome-law equalities. No
 `BayesNash` definition or wrapper was introduced.
 
 ## Result
 
-Accept for the static core. The decision is explicitly re-opened in Phase 3 for
-sequential rationality, conditional beliefs, and one-shot deviations: those may
-require an explicitly named observation-dependent deviation interface, which
-D5 permits as a *new* named interface rather than a weakening of this one.
+Accept for the static core. Sequential rationality and conditional beliefs may
+require a named observation-dependent deviation interface. Such an interface
+must preserve this static interface's locality guarantee; its existence alone
+does not justify widening the information available to a static deviation.
 
 ## Consequences for public API
 

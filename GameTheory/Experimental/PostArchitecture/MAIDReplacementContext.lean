@@ -45,7 +45,7 @@ theorem assignmentRun_eq_of_nodeLaws_eq [DecidableEq Node]
       simp only [assignmentRun]
       unfold assignmentStep
       rw [hlaws initial head (by simp)]
-      apply FinDist.bind_congr
+      apply bind_congr_on_support
       intro afterHead _
       apply ih
       intro assignment node hnode
@@ -65,12 +65,12 @@ private theorem map_assignmentRun_contextAction_eq_pure
         (fun result =>
           (Assignment.restrict diagram result
             (diagram.observedParents target.1), result target.1)) =
-      FinDist.pure
+      PMF.pure
         (Assignment.restrict diagram initial
           (diagram.observedParents target.1), initial target.1) := by
-  apply FinDist.eq_pure_of_support_subset_singleton
+  apply pmf_eq_pure_of_support_subset_singleton
   intro projected hprojected
-  rw [FinDist.support_map] at hprojected
+  rw [PMF.support_map] at hprojected
   obtain ⟨result, hresult, rfl⟩ := hprojected
   apply Set.mem_singleton_iff.mpr
   apply Prod.ext
@@ -99,12 +99,12 @@ theorem assignmentRun_contextAction_eq [DecidableEq Node]
           Assignment.restrict diagram state
             (diagram.observedParents target.1))).bind fun context =>
         (policy owner target context).map fun action => (context, action) := by
-  rw [assignmentRun_append, FinDist.map_bind, FinDist.bind_map]
-  apply FinDist.bind_congr
+  rw [assignmentRun_append, PMF.map_bind, PMF.bind_map]
+  apply bind_congr_on_support
   intro state _
   simp only [assignmentRun]
   unfold assignmentStep
-  rw [FinDist.map_bind, FinDist.bind_map]
+  rw [PMF.map_bind, PMF.bind_map]
   have htargetLaw :
       assignmentNodeLaw semantics policy state target.1 =
         policy owner target
@@ -121,15 +121,14 @@ theorem assignmentRun_contextAction_eq [DecidableEq Node]
       subst siteOwner
       rfl
   rw [htargetLaw]
-  rw [FinDist.map_eq_bind
-    (fun action =>
-      (Assignment.restrict diagram state
-        (diagram.observedParents target.1), action))]
-  apply FinDist.bind_congr
+  simp only [Function.comp_apply]
+  conv_rhs => rw [← PMF.bind_pure_comp]
+  apply bind_congr_on_support
   intro action _
+  simp only [Function.comp_apply]
   rw [map_assignmentRun_contextAction_eq_pure semantics policy target after
     htargetAfter hobservedAfter]
-  apply congrArg FinDist.pure
+  apply congrArg PMF.pure
   apply Prod.ext
   · apply restrict_setOne_of_not_mem
     intro hself

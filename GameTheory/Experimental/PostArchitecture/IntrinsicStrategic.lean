@@ -7,8 +7,7 @@ The hostile sender deviation must re-solve the receiver's downstream action.
 -/
 
 import GameTheory.Examples.Intrinsic
-import GameTheory.Languages.Intrinsic.Solution
-import GameTheory.Core.Utility
+import GameTheory.Languages.Intrinsic.Strategic
 
 noncomputable section
 
@@ -16,53 +15,6 @@ namespace GameTheory.Experimental.IntrinsicStrategic
 
 open GameTheory.Languages.Intrinsic
 open GameTheory.Examples.Intrinsic
-open GameTheory.Math.Probability
-
-namespace Candidate
-
-universe uAgent uNature uDecision
-
-/-- Intrinsic agents own their complete information-local decision rules; the
-outcome retains the selected closed-loop configuration. -/
-abbrev strategicSignature
-    (M : Model.{uAgent, uNature, uDecision}) : GameSignature M.Agent where
-  Strategy := M.PureStrategy
-  Outcome := M.Configuration
-
-/-- Compile one fixed nature state by selecting the certified unique
-closed-loop solution. -/
-@[reducible]
-def toGameForm (M : Model.{uAgent, uNature, uDecision})
-    (solvable : M.IsSolvable) (nature : M.Nature) : GameForm M.Agent where
-  sig := strategicSignature M
-  play profile := FinDist.pure
-    ⟨nature, M.solution solvable profile nature⟩
-
-@[simp]
-theorem toGameForm_play (M : Model.{uAgent, uNature, uDecision})
-    (solvable : M.IsSolvable) (nature : M.Nature)
-    (profile : M.PureProfile) :
-    (toGameForm M solvable nature).play profile =
-      FinDist.pure ⟨nature, M.solution solvable profile nature⟩ := rfl
-
-/-- Canonical Nash is exactly comparison of the re-solved configuration after
-one intrinsic agent replaces its complete decision rule. -/
-theorem isNash_toGameForm_iff
-    (M : Model.{uAgent, uNature, uDecision})
-    (solvable : M.IsSolvable) (nature : M.Nature)
-    [DecidableEq M.Agent] (utility : M.Configuration → M.Agent → ℝ)
-    (profile : M.PureProfile) :
-    IsNash (toGameForm M solvable nature) (euPreference utility) profile ↔
-      ∀ who replacement,
-        utility
-            ⟨nature, M.solution solvable
-              (Profile.update (sig := strategicSignature M)
-                profile who replacement) nature⟩ who ≤
-          utility ⟨nature, M.solution solvable profile nature⟩ who := by
-  rw [isNash_iff]
-  simp only [euPreference_apply, expectedUtility_pure]
-
-end Candidate
 
 /-! ## Hostile sender–receiver slice -/
 
@@ -156,7 +108,7 @@ theorem lying_solution :
   cases agent <;> rfl
 
 theorem update_lying_sender :
-    Profile.update (sig := Candidate.strategicSignature signaling)
+    Profile.update (sig := signaling.strategicSignature)
         lyingProfile false truthfulSender = truthfulProfile := by
   funext agent
   cases agent <;>
@@ -168,9 +120,9 @@ def utility (configuration : signaling.Configuration) (_who : Bool) : ℝ :=
 
 /-- Truthful signaling and copying is Nash at the true nature value. -/
 theorem truthful_isNash :
-    IsNash (Candidate.toGameForm signaling signaling_isSolvable true)
+    IsNash (signaling.toGameForm signaling_isSolvable true)
       (euPreference utility) truthfulProfile := by
-  rw [Candidate.isNash_toGameForm_iff]
+  rw [signaling.isNash_toGameForm_iff]
   intro who replacement
   rw [truthful_solution]
   simp only [utility]
@@ -180,11 +132,11 @@ theorem truthful_isNash :
 rule makes the receiver change too, raising the shared payoff from zero to
 one. -/
 theorem lying_not_isNash :
-    ¬ IsNash (Candidate.toGameForm signaling signaling_isSolvable true)
+    ¬ IsNash (signaling.toGameForm signaling_isSolvable true)
       (euPreference utility) lyingProfile := by
   intro hnash
   have hdeviation :=
-    (Candidate.isNash_toGameForm_iff signaling signaling_isSolvable true
+    (signaling.isNash_toGameForm_iff signaling_isSolvable true
       utility lyingProfile).1 hnash false truthfulSender
   rw [update_lying_sender, truthful_solution, lying_solution] at hdeviation
   simp [utility] at hdeviation

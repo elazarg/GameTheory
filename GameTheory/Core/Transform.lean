@@ -40,13 +40,13 @@ theorem isCoarseCorrelatedEq_mapOutcome_comap
     (F : GameForm ι) {Outcome' : Type*}
     (relabel : F.sig.Outcome → Outcome')
     (weaklyPrefers : WeakPreference ι Outcome')
-    (statusQuo : FinDist (Profile F.sig)) :
+    (statusQuo : PMF (Profile F.sig)) :
     IsCoarseCorrelatedEq (F.mapOutcome relabel) weaklyPrefers statusQuo ↔
       IsCoarseCorrelatedEq F
         (Preference.comapOutcome relabel weaklyPrefers) statusQuo := by
   rw [isCoarseCorrelatedEq_iff, isCoarseCorrelatedEq_iff]
   simp only [Preference.comapOutcome_apply,
-    GameForm.outcomeLaw_mapOutcome, FinDist.map_bind]
+    GameForm.outcomeLaw_mapOutcome, PMF.map_bind]
   rfl
 
 /-- The same outcome/preference pullback preserves correlated equilibrium. -/
@@ -55,13 +55,13 @@ theorem isCorrelatedEq_mapOutcome_comap
     (F : GameForm ι) {Outcome' : Type*}
     (relabel : F.sig.Outcome → Outcome')
     (weaklyPrefers : WeakPreference ι Outcome')
-    (statusQuo : FinDist (Profile F.sig)) :
+    (statusQuo : PMF (Profile F.sig)) :
     IsCorrelatedEq (F.mapOutcome relabel) weaklyPrefers statusQuo ↔
       IsCorrelatedEq F
         (Preference.comapOutcome relabel weaklyPrefers) statusQuo := by
   rw [isCorrelatedEq_iff, isCorrelatedEq_iff]
   simp only [Preference.comapOutcome_apply,
-    GameForm.outcomeLaw_mapOutcome, FinDist.map_bind]
+    GameForm.outcomeLaw_mapOutcome, PMF.map_bind]
   rfl
 
 /-! ## Player reindexing -/
@@ -190,7 +190,7 @@ reindexing. -/
 theorem isCoarseCorrelatedEq_reindexPlayers {ι : Type uι} {κ : Type uκ}
     [DecidableEq ι] [DecidableEq κ]
     (F : GameForm ι) (weaklyPrefers : WeakPreference ι F.sig.Outcome)
-    (equiv : ι ≃ κ) (statusQuo : FinDist (Profile F.sig)) :
+    (equiv : ι ≃ κ) (statusQuo : PMF (Profile F.sig)) :
     IsCoarseCorrelatedEq (F.reindexPlayers equiv)
         (Preference.reindexPlayers equiv weaklyPrefers)
         (statusQuo.map (Profile.reindexPlayers equiv)) ↔
@@ -200,10 +200,12 @@ theorem isCoarseCorrelatedEq_reindexPlayers {ι : Type uι} {κ : Type uκ}
   · intro h who replacement
     obtain ⟨target, rfl⟩ := equiv.symm.surjective who
     have htarget := h target replacement
-    simpa [Preference.reindexPlayers, GameForm.outcomeLaw] using htarget
+    simpa [Preference.reindexPlayers, GameForm.outcomeLaw, PMF.bind_map,
+      Function.comp_def] using htarget
   · intro h who replacement
     have hsource := h (equiv.symm who) replacement
-    simpa [Preference.reindexPlayers, GameForm.outcomeLaw] using hsource
+    simpa [Preference.reindexPlayers, GameForm.outcomeLaw, PMF.bind_map,
+      Function.comp_def] using hsource
 
 /-- Correlated equilibrium is invariant under an invertible player
 reindexing; recommendation-dependent responses are transported with their
@@ -211,7 +213,7 @@ owner coordinate. -/
 theorem isCorrelatedEq_reindexPlayers {ι : Type uι} {κ : Type uκ}
     [DecidableEq ι] [DecidableEq κ]
     (F : GameForm ι) (weaklyPrefers : WeakPreference ι F.sig.Outcome)
-    (equiv : ι ≃ κ) (statusQuo : FinDist (Profile F.sig)) :
+    (equiv : ι ≃ κ) (statusQuo : PMF (Profile F.sig)) :
     IsCorrelatedEq (F.reindexPlayers equiv)
         (Preference.reindexPlayers equiv weaklyPrefers)
         (statusQuo.map (Profile.reindexPlayers equiv)) ↔
@@ -221,10 +223,12 @@ theorem isCorrelatedEq_reindexPlayers {ι : Type uι} {κ : Type uκ}
   · intro h who respond
     obtain ⟨target, rfl⟩ := equiv.symm.surjective who
     have htarget := h target respond
-    simpa [Preference.reindexPlayers, GameForm.outcomeLaw] using htarget
+    simpa [Preference.reindexPlayers, GameForm.outcomeLaw, PMF.bind_map,
+      Function.comp_def] using htarget
   · intro h who respond
     have hsource := h (equiv.symm who) respond
-    simpa [Preference.reindexPlayers, GameForm.outcomeLaw] using hsource
+    simpa [Preference.reindexPlayers, GameForm.outcomeLaw, PMF.bind_map,
+      Function.comp_def] using hsource
 
 /-! ## Strategy relabeling -/
 
@@ -325,7 +329,7 @@ theorem isCoarseCorrelatedEq_relabelStrategies
     (F : GameForm ι) (weaklyPrefers : WeakPreference ι F.sig.Outcome)
     {Strategy : ι → Type us'}
     (equiv : ∀ player, F.sig.Strategy player ≃ Strategy player)
-    (statusQuo : FinDist (Profile F.sig)) :
+    (statusQuo : PMF (Profile F.sig)) :
     IsCoarseCorrelatedEq (F.relabelStrategies equiv) weaklyPrefers
         (statusQuo.map (Profile.relabelStrategies equiv)) ↔
       IsCoarseCorrelatedEq F weaklyPrefers statusQuo := by
@@ -333,10 +337,12 @@ theorem isCoarseCorrelatedEq_relabelStrategies
   constructor
   · intro h who replacement
     have htarget := h who (equiv who replacement)
-    simpa [GameForm.outcomeLaw, Profile.relabelStrategies] using htarget
+    simpa [GameForm.outcomeLaw, Profile.relabelStrategies,
+      PMF.bind_map, Function.comp_def] using htarget
   · intro h who replacement
     have hsource := h who ((equiv who).symm replacement)
-    simpa [GameForm.outcomeLaw, Profile.relabelStrategies] using hsource
+    simpa [GameForm.outcomeLaw, Profile.relabelStrategies,
+      PMF.bind_map, Function.comp_def] using hsource
 
 /-- Correlated equilibrium is invariant under invertible strategy relabeling.
 The response map is conjugated by the coordinate equivalence, so every target
@@ -345,7 +351,7 @@ theorem isCorrelatedEq_relabelStrategies {ι : Type uι} [DecidableEq ι]
     (F : GameForm ι) (weaklyPrefers : WeakPreference ι F.sig.Outcome)
     {Strategy : ι → Type us'}
     (equiv : ∀ player, F.sig.Strategy player ≃ Strategy player)
-    (statusQuo : FinDist (Profile F.sig)) :
+    (statusQuo : PMF (Profile F.sig)) :
     IsCorrelatedEq (F.relabelStrategies equiv) weaklyPrefers
         (statusQuo.map (Profile.relabelStrategies equiv)) ↔
       IsCorrelatedEq F weaklyPrefers statusQuo := by
@@ -357,14 +363,14 @@ theorem isCorrelatedEq_relabelStrategies {ι : Type uι} [DecidableEq ι]
         equiv who (respond ((equiv who).symm recommendation))
     have htarget := h who targetRespond
     simpa [targetRespond, GameForm.outcomeLaw,
-      Profile.relabelStrategies] using htarget
+      Profile.relabelStrategies, PMF.bind_map, Function.comp_def] using htarget
   · intro h who respond
     let sourceRespond : F.sig.Strategy who → F.sig.Strategy who :=
       fun recommendation =>
         (equiv who).symm (respond (equiv who recommendation))
     have hsource := h who sourceRespond
     simpa [sourceRespond, GameForm.outcomeLaw,
-      Profile.relabelStrategies] using hsource
+      Profile.relabelStrategies, PMF.bind_map, Function.comp_def] using hsource
 
 /-- Strategy relabeling commutes with the independent mixed extension at the
 actual play law. Each target-coordinate law is simply pushed back through the
@@ -377,11 +383,12 @@ theorem mixed_relabelStrategies_play {ι : Type uι} [Fintype ι]
       F.mixed.play fun player =>
         (profile player).map (equiv player).symm := by
   show
-    (FinDist.pi profile).bind
+    (independentProduct profile).bind
         (fun target => F.play (Profile.unrelabelStrategies equiv target)) =
-      (FinDist.pi fun player =>
+      (independentProduct fun player =>
         (profile player).map (equiv player).symm).bind F.play
-  rw [FinDist.pi_map, FinDist.bind_map]
+  rw [← independentProduct_map profile (fun player => (equiv player).symm),
+    PMF.bind_map]
   rfl
 
 /-- Player reindexing commutes with the independent mixed extension at the
@@ -392,21 +399,43 @@ theorem mixed_reindexPlayers_play {ι : Type uι} {κ : Type uκ}
     (F.mixed.reindexPlayers equiv).play profile =
       (F.reindexPlayers equiv).mixed.play profile := by
   show
-    (FinDist.pi
+    (independentProduct
       (Profile.unreindexPlayers (sig := F.sig.mixed) equiv profile)).bind F.play =
-      (FinDist.pi profile).bind
+      (independentProduct profile).bind
         (fun source =>
           F.play (Profile.unreindexPlayers (sig := F.sig) equiv source))
-  have hunreindexLaws :
-      Profile.unreindexPlayers (sig := F.sig.mixed) equiv profile =
-        (Equiv.piCongrLeft'
-          (fun player => FinDist (F.sig.Strategy player)) equiv).symm profile :=
-    rfl
-  have hunreindexProfiles :
-      Profile.unreindexPlayers (sig := F.sig) equiv =
-        (Equiv.piCongrLeft' F.sig.Strategy equiv).symm :=
-    rfl
-  rw [hunreindexLaws, hunreindexProfiles]
-  rw [← FinDist.pi_unreindex F.sig.Strategy equiv profile, FinDist.bind_map]
+  have hproduct :
+      independentProduct
+          (Profile.unreindexPlayers (sig := F.sig.mixed) equiv profile) =
+        (independentProduct profile).map
+          (Profile.unreindexPlayers (sig := F.sig) equiv) := by
+    classical
+    ext source
+    rw [PMF.map_apply]
+    rw [tsum_eq_single (Profile.reindexPlayers (sig := F.sig) equiv source)]
+    · simp only [Profile.unreindex_reindex]
+      rw [independentProduct_apply, independentProduct_apply]
+      rw [← equiv.symm.prod_comp (g := fun who : ι =>
+        (Profile.unreindexPlayers (sig := F.sig.mixed) equiv profile who)
+          (source who))]
+      apply Finset.prod_congr rfl
+      intro who hwho
+      have hlaw :
+          Profile.unreindexPlayers (sig := F.sig.mixed) equiv profile
+              (equiv.symm who) = profile who := by
+        simpa only [Profile.unreindexPlayers] using
+          Equiv.piCongrLeft'_symm_apply_apply
+            (fun i => PMF (F.sig.Strategy i)) equiv profile who
+      rw [hlaw, Profile.reindexPlayers_apply]
+    · intro target htarget
+      have hne :
+          source ≠ Profile.unreindexPlayers (sig := F.sig) equiv target := by
+        intro h
+        apply htarget
+        simpa only [Profile.reindex_unreindex] using
+          congrArg (Profile.reindexPlayers (sig := F.sig) equiv) h.symm
+      simp [hne]
+  rw [hproduct, PMF.bind_map]
+  rfl
 
 end GameTheory

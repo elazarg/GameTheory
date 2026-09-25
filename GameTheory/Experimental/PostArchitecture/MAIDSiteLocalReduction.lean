@@ -18,6 +18,8 @@ noncomputable section
 
 namespace GameTheory.Experimental.PostArchitecture.MAIDSiteLocalReduction
 
+open GameTheory
+open GameTheory.Math.Probability
 open GameTheory.Languages.MAID
 open GameTheory.Languages.MAID.ObservationPruning
 open GameTheory.Experimental.PostArchitecture.MAIDKernelMarginalization
@@ -45,22 +47,28 @@ structure SiteLocalUtilityFactorsAt (pruning : Pruning diagram)
   continuationValue :
     KeptContext pruning target → diagram.Value target.1 → ℝ
   utility_eq : ∀ rule : FullContext target →
-      GameTheory.Math.Probability.FinDist (diagram.Value target.1),
-    siteRuleExpectedUtility semantics base owner replacement target rule =
-      context.contextLaw.expect fun full =>
-        (rule full).expect fun action =>
-          continuationValue
-            (Config.restrict (pruning.kept_sub_observed target.1) full)
-            action
+      PMF (diagram.Value target.1),
+    ∃ hsite : UtilityIntegrable
+        (fun assignment who => semantics.utility who assignment) owner
+        (siteReplacementLaw semantics base owner replacement target rule),
+      ∃ hjoint : PayoffIntegrable
+          (fullJoint context.contextLaw
+            (Config.restrict (pruning.kept_sub_observed target.1)) rule)
+          (fun pair => continuationValue pair.1 pair.2),
+        siteRuleExpectedUtility semantics base owner replacement target
+            rule hsite =
+          expect (fullJoint context.contextLaw
+            (Config.restrict (pruning.kept_sub_observed target.1)) rule)
+            (fun pair => continuationValue pair.1 pair.2) hjoint
 
 /-- Expand a target rule on the retained context back to the target's full
 declared observation context. -/
 def expandKeptSiteRule (pruning : Pruning diagram) {owner : Player}
     (target : DecisionSite diagram owner)
     (rule : KeptContext pruning target →
-      GameTheory.Math.Probability.FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     FullContext target →
-      GameTheory.Math.Probability.FinDist (diagram.Value target.1) :=
+      PMF (diagram.Value target.1) :=
   fun full =>
     rule (Config.restrict (pruning.kept_sub_observed target.1) full)
 
@@ -82,7 +90,7 @@ theorem exists_reduced_isOptimalSiteRule
       (pruning.expandPolicy policy) owner
       (pruning.expandOwnerPolicy owner fixedOwner) target) :
     ∃ reducedRule : KeptContext pruning target →
-        GameTheory.Math.Probability.FinDist (diagram.Value target.1),
+        PMF (diagram.Value target.1),
       IsOptimalSiteRule semantics (pruning.expandPolicy policy) owner
         (pruning.expandOwnerPolicy owner fixedOwner) target
         (expandKeptSiteRule pruning target reducedRule) := by
@@ -92,33 +100,35 @@ theorem exists_reduced_isOptimalSiteRule
   let keep : FullContext target → KeptContext pruning target :=
     Config.restrict (pruning.kept_sub_observed target.1)
   let reducedRule : KeptContext pruning target →
-      GameTheory.Math.Probability.FinDist (diagram.Value target.1) :=
+      PMF (diagram.Value target.1) :=
     averagedKernel factors.context.contextLaw keep best
   refine ⟨reducedRule, ?_⟩
   intro alternative
-  calc
-    siteRuleExpectedUtility semantics (pruning.expandPolicy policy) owner
-        (pruning.expandOwnerPolicy owner fixedOwner) target alternative ≤
+  obtain ⟨hbestSite, haltSite, hle⟩ := hbest alternative
+  obtain ⟨_, hbestJoint, hbestEq⟩ := factors.utility_eq best
+  obtain ⟨hredSite, hredJoint, hredEq⟩ :=
+    factors.utility_eq (expandKeptSiteRule pruning target reducedRule)
+  have hjointLaw :
+      fullJoint factors.context.contextLaw keep best =
+        fullJoint factors.context.contextLaw keep
+          (expandKeptSiteRule pruning target reducedRule) := by
+    exact fullJoint_eq_fullJoint_averagedKernel
+      factors.context.contextLaw keep best
+  have hvalue :
       siteRuleExpectedUtility semantics (pruning.expandPolicy policy) owner
-        (pruning.expandOwnerPolicy owner fixedOwner) target best :=
-      hbest alternative
-    _ = factors.context.contextLaw.expect (fun full =>
-          (best full).expect fun action =>
-            factors.continuationValue (keep full) action) := by
-      rw [factors.utility_eq best]
-    _ = (factors.context.contextLaw.map keep).expect (fun kept =>
-          (reducedRule kept).expect fun action =>
-            factors.continuationValue kept action) := by
-      exact expect_kernel_eq_averagedKernel factors.context.contextLaw keep
-        best factors.continuationValue
-    _ = factors.context.contextLaw.expect (fun full =>
-          (expandKeptSiteRule pruning target reducedRule full).expect
-            fun action => factors.continuationValue (keep full) action) := by
-      rw [GameTheory.Math.Probability.FinDist.expect_map]
-      rfl
-    _ = siteRuleExpectedUtility semantics (pruning.expandPolicy policy) owner
-        (pruning.expandOwnerPolicy owner fixedOwner) target
-        (expandKeptSiteRule pruning target reducedRule) := by
-      rw [factors.utility_eq]
+          (pruning.expandOwnerPolicy owner fixedOwner) target best hbestSite =
+        siteRuleExpectedUtility semantics (pruning.expandPolicy policy) owner
+          (pruning.expandOwnerPolicy owner fixedOwner) target
+          (expandKeptSiteRule pruning target reducedRule) hredSite := by
+    calc
+      _ = expect (fullJoint factors.context.contextLaw keep best)
+          (fun pair => factors.continuationValue pair.1 pair.2)
+          hbestJoint := hbestEq
+      _ = expect (fullJoint factors.context.contextLaw keep
+            (expandKeptSiteRule pruning target reducedRule))
+          (fun pair => factors.continuationValue pair.1 pair.2)
+          hredJoint := expect_congr_law hjointLaw _ hbestJoint hredJoint
+      _ = _ := hredEq.symm
+  exact ⟨hredSite, haltSite, hle.trans hvalue.le⟩
 
 end GameTheory.Experimental.PostArchitecture.MAIDSiteLocalReduction

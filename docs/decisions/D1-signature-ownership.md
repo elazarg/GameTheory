@@ -120,7 +120,7 @@ should weigh it explicitly.
 
 The provisional decision named three transformations to be rerun and one
 condition that would overturn it: the accepted design *repeatedly* needing
-signature equalities or user-visible transports. Both have now been done.
+signature equalities or user-visible transports. EXP-020 tests both requirements.
 
 ### The tests
 
@@ -163,7 +163,7 @@ needs both in one of them. The decision was taken on downstream signature
 ergonomics and the recheck was aimed at exactly that axis, which is why it, and
 not the annotation count, settles the matter.
 
-Bundling stands. The reducibility tax is real, is now measured, and is accepted
+Bundling stands. The measured reducibility tax is accepted
 as a known bounded cost rather than left as folklore: `phase2-audit.ps1` fails if
 any literal instance of a carrier-bearing structure is not reducible, which
 converts the late and confusing failure into an immediate one and recovers most
@@ -171,4 +171,4 @@ of what indexing was offering.
 
 **Consequences for public API:** unchanged. Forms keep a `sig` field, protocols
 keep their state and action carriers, and every literal instance of such a
-structure is `@[reducible]` — now enforced rather than remembered.
+structure is `@[reducible]`, enforced by the source audit.

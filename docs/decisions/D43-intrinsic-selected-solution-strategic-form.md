@@ -12,6 +12,11 @@ to a `GameForm`. The deterministic outcome is the complete configuration whose
 decision coordinates are the selected closed-loop solution. Utilities remain
 external, and equilibrium is the canonical core `IsNash` predicate.
 
+The outcome law is `PMF.pure`. Every incumbent and replacement therefore has
+integrable utility under D62, and canonical expected-utility Nash reduces to
+comparison of the re-solved deterministic configurations without additional
+payoff assumptions.
+
 Do not choose a temporal Protocol execution merely to evaluate a closed-loop
 profile. Do not define intrinsic-specific utility or equilibrium predicates.
 
@@ -44,9 +49,9 @@ probability field, temporal runner, public transport, or trust exception.
 
 Reject the direct compiler if the downstream fixed-point effect is invisible;
 if compilation needs stored capabilities or temporal execution; if utility
-must enter `Model`; or if a second solution predicate is needed. No kill
-condition fired. The positive Nash witness and profitable-deviation control
-both compile warning-free.
+must enter `Model`; or if a second solution predicate is needed. The positive
+Nash and profitable-deviation controls distinguish the selected-solution
+semantics.
 
 ## Public API consequences
 

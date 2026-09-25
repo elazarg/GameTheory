@@ -1,7 +1,7 @@
 /-
 # Topology-free mixed perturbations
 
-Lower bounds on finite mixed strategies and equilibrium under the resulting
+Lower bounds on mixed strategies and equilibrium under the resulting
 restricted unilateral deviations are algebraic data.  They live in Core and
 reuse the sole `IsEquilibrium` predicate through a constrained deviation
 scheme.  Only limits of perturbations belong in Analysis.
@@ -31,8 +31,8 @@ abbrev Perturbation : Type _ :=
 /-- One mixed strategy respects its coordinatewise lower bounds. -/
 def StrategyRespectsPerturbation {i : ι}
     (lower : F.sig.Strategy i → ℝ)
-    (strategy : FinDist (F.sig.Strategy i)) : Prop :=
-  ∀ action, lower action ≤ strategy.prob action
+    (strategy : PMF (F.sig.Strategy i)) : Prop :=
+  ∀ action, lower action ≤ (strategy action).toReal
 
 /-- Every coordinate of a mixed profile respects the supplied perturbation. -/
 def RespectsPerturbation (lower : F.Perturbation)
@@ -47,17 +47,19 @@ def Perturbation.Positive (lower : F.Perturbation) : Prop :=
 theorem RespectsPerturbation.apply {lower : F.Perturbation}
     {profile : Profile F.sig.mixed} (h : F.RespectsPerturbation lower profile)
     (i : ι) (action : F.sig.Strategy i) :
-    lower i action ≤ (profile i).prob action :=
+    lower i action ≤ (profile i action).toReal :=
   h i action
 
 theorem Perturbation.Positive.fullSupport_of_respects
     {lower : F.Perturbation} (hpositive : lower.Positive)
     {profile : Profile F.sig.mixed}
     (hrespects : F.RespectsPerturbation lower profile) (i : ι) :
-    (profile i).FullSupport := by
+    ∀ action, action ∈ (profile i).support := by
   intro action
-  rw [← FinDist.prob_pos_iff]
-  exact lt_of_lt_of_le (hpositive i action) (hrespects i action)
+  have hreal : 0 < (profile i action).toReal :=
+    lt_of_lt_of_le (hpositive i action) (hrespects i action)
+  exact ((profile i).mem_support_iff action).mpr
+    (ne_of_gt (ENNReal.toReal_pos_iff.mp hreal).1)
 
 end GameForm
 
@@ -70,10 +72,10 @@ def perturbedMixed (F : GameForm ι) (lower : F.Perturbation) :
     DeviationScheme F.sig.mixed ι where
   members who := {who}
   Dev who :=
-    { replacement : FinDist (F.sig.Strategy who) //
+    { replacement : PMF (F.sig.Strategy who) //
       F.StrategyRespectsPerturbation (lower who) replacement }
   actLocal who replacement _ :=
-    FinDist.pure (Subprofile.single who replacement.1)
+    PMF.pure (Subprofile.single who replacement.1)
 
 /-- Forgetting the lower-bound certificate embeds every perturbed deviation
 into the ordinary Nash deviation scheme. -/
@@ -94,14 +96,14 @@ parallel Nash predicate. -/
 def IsPerturbedEq (weaklyPrefers : WeakPreference ι F.sig.Outcome)
     (lower : F.Perturbation) (profile : Profile F.sig.mixed) : Prop :=
   F.RespectsPerturbation lower profile ∧
-    IsEquilibrium F.mixed weaklyPrefers (FinDist.pure profile)
+    IsEquilibrium F.mixed weaklyPrefers (PMF.pure profile)
       (DeviationScheme.perturbedMixed F lower)
 
 theorem isPerturbedEq_iff (weaklyPrefers : WeakPreference ι F.sig.Outcome)
     (lower : F.Perturbation) (profile : Profile F.sig.mixed) :
     F.IsPerturbedEq weaklyPrefers lower profile ↔
       F.RespectsPerturbation lower profile ∧
-        ∀ (who : ι) (replacement : FinDist (F.sig.Strategy who)),
+        ∀ (who : ι) (replacement : PMF (F.sig.Strategy who)),
           F.StrategyRespectsPerturbation (lower who) replacement →
             weaklyPrefers who (F.mixed.play profile)
               (F.mixed.play (Profile.update profile who replacement)) := by

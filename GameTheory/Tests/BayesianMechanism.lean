@@ -22,9 +22,9 @@ def falseTypes : Unit → Bool := fun _ => false
 
 def trueTypes : Unit → Bool := fun _ => true
 
-def prior : FinDist (Unit → Bool) :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure falseTypes) (FinDist.pure trueTypes)
+def prior : PMF (Unit → Bool) :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure falseTypes) (PMF.pure trueTypes)
 
 /-- The chosen outcome is the sole report, while utility compares it with the
 true type rather than treating the report as the type. -/
@@ -62,7 +62,9 @@ theorem truthful_isNash :
       (euPreference (mechanism.toBayesianGame prior).utility)
       (mechanism.truthfulPlan prior) :=
   mechanism.isNash_truthfulPlan_of_isIncentiveCompatible
-    prior mechanism_isIncentiveCompatible
+    prior (fun _ => payoffIntegrable_of_finite _ _)
+    (fun _ _ => payoffIntegrable_of_finite _ _)
+    mechanism_isIncentiveCompatible
 
 /-- Truthful compilation feeds the Bayes-correlated outcome-law theorem
 directly. -/

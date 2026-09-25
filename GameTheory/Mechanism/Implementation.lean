@@ -37,13 +37,46 @@ def withProfileTransfer (G : UtilityGame.{uι, us, uo} ι)
   form := G.form.recordProfile
   utility observed who := G.utility observed.2 who + transfer observed.1 who
 
+theorem withProfileTransfer_integrable (G : UtilityGame.{uι, us, uo} ι)
+    (transfer : G.ProfileTransfer) (profile : Profile G.form.sig) (who : ι)
+    (h : UtilityIntegrable G.utility who (G.form.play profile)) :
+    UtilityIntegrable (G.withProfileTransfer transfer).utility who
+      ((G.withProfileTransfer transfer).form.play profile) := by
+  have hconst := payoffIntegrable_constant (G.form.play profile)
+    (transfer profile who)
+  have hadd := payoffIntegrable_add h hconst
+  exact (payoffIntegrable_map_iff
+    (fun outcome => (profile, outcome)) (G.form.play profile)
+    (fun observed => (G.withProfileTransfer transfer).utility observed who)).mpr
+      (by simpa only [withProfileTransfer, Function.comp_def] using hadd)
+
 theorem expectedUtility_withProfileTransfer (G : UtilityGame.{uι, us, uo} ι)
     (transfer : G.ProfileTransfer) (profile : Profile G.form.sig) (who : ι) :
+    ∀ (h : UtilityIntegrable G.utility who (G.form.play profile)),
     expectedUtility (G.withProfileTransfer transfer).utility who
-        ((G.withProfileTransfer transfer).form.play profile) =
-      expectedUtility G.utility who (G.form.play profile) + transfer profile who := by
-  simp [withProfileTransfer, expectedUtility, FinDist.expect_add,
-    FinDist.expect_const]
+        ((G.withProfileTransfer transfer).form.play profile)
+        (G.withProfileTransfer_integrable transfer profile who h) =
+      expectedUtility G.utility who (G.form.play profile) h +
+        transfer profile who := by
+  intro h
+  have hconst := payoffIntegrable_constant (G.form.play profile)
+    (transfer profile who)
+  have hadd := payoffIntegrable_add h hconst
+  calc
+    expectedUtility (G.withProfileTransfer transfer).utility who
+        ((G.withProfileTransfer transfer).form.play profile)
+        (G.withProfileTransfer_integrable transfer profile who h) =
+      expect (G.form.play profile)
+        (fun outcome => G.utility outcome who + transfer profile who) hadd := by
+          exact expect_map (fun outcome => (profile, outcome))
+            (G.form.play profile)
+            (fun observed => (G.withProfileTransfer transfer).utility observed who)
+            (by simpa only [withProfileTransfer, Function.comp_def] using hadd)
+            (G.withProfileTransfer_integrable transfer profile who h)
+    _ = expectedUtility G.utility who (G.form.play profile) h +
+        transfer profile who := by
+          rw [expect_add h hconst, expect_constant]
+          rfl
 
 /-- Nonnegative transfers implement a target under weak undominance when the
 transferred game has a weakly-undominated profile and every such profile lies

@@ -139,8 +139,8 @@ def transformedProfile (profile : Profile runtimeGame.sig) :
 This is an execution law, not a new runner. -/
 theorem transformed_play (profile : Profile runtimeGame.sig) :
     transformedForm.play (transformedProfile profile) =
-      FinDist.pure (traceOf profile) := by
-  simp [transformedForm, transformedProfile]
+      PMF.pure (traceOf profile) := by
+  simp [transformedForm, transformedProfile, PMF.pure_map]
 
 /-- Executable Nash recognition is exactly canonical Nash after the client has
 changed outcomes, both heterogeneous action carriers, and player indexing. -/

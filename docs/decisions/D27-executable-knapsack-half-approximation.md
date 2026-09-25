@@ -51,12 +51,6 @@ the remaining capacity.
 | returned object | the better of an actual greedy-prefix `Finset` and an actual highest-value feasible singleton `Finset` |
 | proof route | direct natural-number exchange at the first rejected item; cross multiplication only, with no fractional allocation or cast bridge |
 | exhaustive pre-check | 3,119,265 small finite instances checked independently with no counterexample |
-| pinned rows after classification | 33 adapt / 35 retired / 2 subsumed / 1 deferred; exact Myerson payment is the only remaining row |
-| focused build | algorithm, structural correctness, and ratio theorem build as an 828-job target |
-| source hazards | zero placeholders, custom axioms, raw updates, transport tokens, hidden `Fintype`, classical executable declarations, or analytic/game imports in the algorithm leaf |
-| axiom profile | `propext`, `Classical.choice`, and `Quot.sound` only |
-| boundary audit | executable approximation leaf rejects 7/7 real/game/probability/analytic probes; public knapsack root reaches 5/5 exact/approximation inputs; Phase 2 `VERIFIED=1` |
-| full integration | full build 3,413 jobs; Phases 0/1/2/3 and coverage audits all pass their expected measurements |
 
 ## Kill conditions and result
 
@@ -100,10 +94,6 @@ item satisfies `remaining < weight rejected`; positivity follows immediately
 from `0 ≤ remaining`. Removing the global premise therefore changes neither
 the density comparison nor the feasible class and does not introduce division.
 
-The input checker now certifies only `items.Nodup`. The algorithm guard and
-`Experimental.PostArchitecture.KnapsackApproximation` both exercise a
-zero-weight item, while the generic theorem covers every duplicate-free list.
-Focused builds passed for the algorithm/correctness/theorem stack (828 jobs),
-the EXP-056 witness (1,738 jobs), and the public mechanism aggregator (1,771
-jobs). This narrows the adopted API without changing its architecture or
-proof/execution boundary.
+The input checker certifies `items.Nodup`. Zero-weight items are valid inputs;
+the generic theorem covers every duplicate-free list. This capability belongs
+at the executable input boundary rather than in a stored game assumption.

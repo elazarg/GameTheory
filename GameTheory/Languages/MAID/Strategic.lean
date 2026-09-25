@@ -41,7 +41,7 @@ def nativeBehavioralGameForm
     (semantics : Semantics diagram) : GameForm Player where
   sig := nativeBehavioralSignature diagram
   play policy :=
-    FinDist.map (fun reached => reached.values)
+    PMF.map (fun reached => reached.values)
       (run diagram semantics policy (Fintype.card Node)
         (FrontierState.initial semantics))
 
@@ -51,7 +51,7 @@ theorem nativeBehavioralGameForm_play
     (semantics : Semantics diagram)
     (policy : Profile (nativeBehavioralSignature diagram)) :
     (nativeBehavioralGameForm semantics).play policy =
-      FinDist.map (fun reached => reached.values)
+      PMF.map (fun reached => reached.values)
         (run diagram semantics policy (Fintype.card Node)
           (FrontierState.initial semantics)) :=
   rfl
@@ -125,7 +125,7 @@ def sourceOwnerPolicy
       (information topological semantics).BehavioralPolicy owner) :
     OwnerPolicy diagram owner :=
   fun site observed =>
-    FinDist.map
+    PMF.map
       (actingChoiceValue topological semantics site observed)
       (behavioral (.acting site observed))
 
@@ -142,17 +142,17 @@ theorem sourceOwnerPolicy_ownerBehavioralPolicy
       policy := by
   funext site observed
   unfold sourceOwnerPolicy ownerBehavioralPolicy
-  rw [FinDist.map_comp]
+  rw [PMF.map_comp]
   calc
-    _ = FinDist.map id (policy site observed) := by
-      apply congrArg (fun f => FinDist.map f (policy site observed))
+    _ = PMF.map id (policy site observed) := by
+      apply congrArg (fun f => PMF.map f (policy site observed))
       funext value
       have haction :=
         Option.some.inj
           (actingChoiceValue_spec topological semantics site observed
             ⟨some ⟨site, value⟩, ⟨value, rfl⟩⟩)
       exact eq_of_heq (Sigma.mk.inj_iff.mp haction).2.symm
-    _ = _ := FinDist.map_id _
+    _ = _ := PMF.map_id _
 
 /-- Forgetting and then re-encoding an arbitrary compiled behavioral policy is
 the identity, including its necessarily unique inactive choice. -/
@@ -195,32 +195,32 @@ theorem ownerBehavioralPolicy_sourceOwnerPolicy
           exact hmem
         exact hfirst.trans hsecond.symm
       unfold ownerBehavioralPolicy
-      rw [FinDist.eq_pure_of_subsingleton
+      rw [eq_pure_of_subsingleton
         (behavioral (.inactive : View diagram owner)) idle]
   | acting site observed =>
       show
-        FinDist.map
+        PMF.map
             (fun value =>
               (⟨some ⟨site, value⟩, ⟨value, rfl⟩⟩ :
                 (information topological semantics).Choice owner
                   (.acting site observed)))
-            (FinDist.map
+            (PMF.map
               (actingChoiceValue topological semantics site observed)
               (behavioral (.acting site observed))) =
           behavioral (.acting site observed)
-      rw [FinDist.map_comp]
+      rw [PMF.map_comp]
       calc
         _ =
-            FinDist.map id
+            PMF.map id
               (behavioral (.acting site observed)) := by
           apply congrArg (fun f =>
-            FinDist.map f (behavioral (.acting site observed)))
+            PMF.map f (behavioral (.acting site observed)))
           funext choice
           apply Subtype.ext
           exact
             (actingChoiceValue_spec topological semantics
               site observed choice).symm
-        _ = _ := FinDist.map_id _
+        _ = _ := PMF.map_id _
 
 /-- Source-owner local rules and compiled EFG behavioral policies are
 equivalent coordinate by coordinate. -/
@@ -430,13 +430,14 @@ theorem isεNash_native_iff_compiled
               _ = _ := by
                 rw [(ownerPolicyEquiv topological semantics owner).apply_symm_apply]
                 rfl⟩)
-      (fun targetProfile owner =>
-        congrArg
-          (expectedUtility
-            (fun assignment owner => semantics.utility owner assignment)
-            owner)
+      (fun targetProfile owner => by
+        rw [native_play_symm_eq_compiled_play topological semantics
+          targetProfile])
+      (fun targetProfile owner htarget hsource =>
+        expectedUtility_congr_law
+          (fun assignment owner => semantics.utility owner assignment) owner
           (native_play_symm_eq_compiled_play topological semantics
-            targetProfile).symm)
+            targetProfile).symm htarget hsource)
       ε policy).symm
 
 /-- Native behavioral Nash equilibrium is exactly

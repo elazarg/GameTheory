@@ -76,7 +76,7 @@ def constantActionContinuation
     (hunique : ∀ site : DecisionSite diagram owner, site = target)
     (view : UtilityView semantics) (term : view.UtilitySite owner)
     (kept : KeptContext pruning target) (action : diagram.Value target.1) :
-    FinDist (MAIDReplacementInvariantUtility.TermConfig view term) :=
+    PMF (MAIDReplacementInvariantUtility.TermConfig view term) :=
   let constantOwner := constantActionOwnerPolicy target hunique action
   let constantPolicy :=
     Profile.update (sig := nativeBehavioralSignature diagram)
@@ -87,25 +87,25 @@ def constantActionContinuation
     (pruningKeptAction pruning target kept action)
 
 private theorem bind_tagged_prob
-    {First Second : Type*} (outer : FinDist First)
-    (kernel : First → FinDist Second) (first : First) (second : Second) :
+    {First Second : Type*} (outer : PMF First)
+    (kernel : First → PMF Second) (first : First) (second : Second) :
     (outer.bind fun candidate =>
-      (kernel candidate).map fun value => (candidate, value)).prob
+      (kernel candidate).map fun value => (candidate, value))
         (first, second) =
-      outer.prob first * (kernel first).prob second := by
-  exact FinDist.prob_bind_map_prod outer kernel first second
+      outer first * (kernel first) second := by
+  exact bindPairLaw_apply outer kernel first second
 
 private theorem nested_bind_tagged_prob
     {Full Action Term Kept : Type*}
-    (outer : FinDist Full) (rule : Full → FinDist Action)
-    (keep : Full → Kept) (kernel : Kept → Action → FinDist Term)
+    (outer : PMF Full) (rule : Full → PMF Action)
+    (keep : Full → Kept) (kernel : Kept → Action → PMF Term)
     (full : Full) (action : Action) (term : Term) :
     (outer.bind fun candidate =>
       (rule candidate).bind fun chosen =>
         (kernel (keep candidate) chosen).map fun termValue =>
-          (candidate, (chosen, termValue))).prob (full, (action, term)) =
-      outer.prob full * (rule full).prob action *
-        (kernel (keep full) action).prob term := by
+          (candidate, (chosen, termValue))) (full, (action, term)) =
+      outer full * (rule full) action *
+        (kernel (keep full) action) term := by
   have hrepacked :
       outer.bind (fun candidate =>
           (rule candidate).bind fun chosen =>
@@ -115,16 +115,21 @@ private theorem nested_bind_tagged_prob
           ((rule candidate).bind fun chosen =>
             (kernel (keep candidate) chosen).map fun termValue =>
               (chosen, termValue)).map fun pair => (candidate, pair) := by
-    apply FinDist.bind_congr
+    apply bind_congr_on_support
     intro candidate _
-    rw [FinDist.map_bind]
-    apply FinDist.bind_congr
+    rw [PMF.map_bind]
+    apply bind_congr_on_support
     intro chosen _
-    rw [FinDist.map_comp]
+    rw [PMF.map_comp]
     rfl
-  rw [hrepacked, FinDist.prob_bind_map_prod]
-  rw [FinDist.prob_bind_map_prod]
-  ring
+  rw [hrepacked]
+  have houter := bindPairLaw_apply outer
+    (fun candidate => bindPairLaw (rule candidate)
+      (kernel (keep candidate))) full (action, term)
+  have hinner := bindPairLaw_apply (rule full)
+    (kernel (keep full)) action term
+  rw [hinner] at houter
+  simpa only [bindPairLaw, mul_assoc] using houter
 
 private theorem augmented_joint_eq_native_joint
     [Fintype Node] [DecidableEq Node]
@@ -141,7 +146,7 @@ private theorem augmented_joint_eq_native_joint
             Assignment.restrict diagram assignment
               (view.term term).parents)) := by
   unfold augmentedLaw
-  rw [FinDist.map_comp]
+  rw [PMF.map_comp]
   apply congrArg
     (fun observable =>
       ((nativeBehavioralGameForm semantics).play policy).map observable)
@@ -158,7 +163,7 @@ private theorem augmented_fullAction_eq_native_contextAction
           (Assignment.restrict diagram assignment
             (diagram.observedParents target.1), assignment target.1)) := by
   unfold augmentedLaw
-  rw [FinDist.map_comp]
+  rw [PMF.map_comp]
   apply congrArg
     (fun observable =>
       ((nativeBehavioralGameForm semantics).play policy).map observable)
@@ -173,12 +178,12 @@ private theorem native_associated_prob_eq_augmented_joint_prob
     (context : FullContext target) (action : diagram.Value target.1)
     (termValue : MAIDReplacementInvariantUtility.TermConfig view term) :
     (((nativeBehavioralGameForm semantics).play policy).map
-      (contextActionTermProjection view target term)).prob
+      (contextActionTermProjection view target term))
         (context, (action, termValue)) =
       ((augmentedLaw view owner policy).map
         (fun assignment =>
           (fullAction view target assignment,
-            termConfig view term assignment))).prob
+            termConfig view term assignment)))
         ((context, action), termValue) := by
   classical
   let nativeLaw := (nativeBehavioralGameForm semantics).play policy
@@ -202,21 +207,22 @@ private theorem native_associated_prob_eq_augmented_joint_prob
           nativeLaw.map (associator ∘ unassociated) :=
         congrArg (fun observable => nativeLaw.map observable) hfunctions
       _ = (nativeLaw.map unassociated).map associator :=
-        (FinDist.map_comp associator unassociated nativeLaw).symm
+        (PMF.map_comp unassociated nativeLaw associator).symm
   calc
-    (nativeLaw.map (contextActionTermProjection view target term)).prob
+    (nativeLaw.map (contextActionTermProjection view target term))
         (context, (action, termValue)) =
-        ((nativeLaw.map unassociated).map associator).prob
+        ((nativeLaw.map unassociated).map associator)
           (associator ((context, action), termValue)) := by
       rw [hlaws]
       simp [associator]
-    _ = (nativeLaw.map unassociated).prob ((context, action), termValue) :=
-      FinDist.prob_map_of_injective associator associator.injective
-        (nativeLaw.map unassociated) ((context, action), termValue)
+    _ = (nativeLaw.map unassociated) ((context, action), termValue) :=
+      pmf_map_apply_of_injective (nativeLaw.map unassociated)
+        associator.injective
+        ((context, action), termValue)
     _ = ((augmentedLaw view owner policy).map
         (fun assignment =>
           (fullAction view target assignment,
-            termConfig view term assignment))).prob
+            termConfig view term assignment)))
           ((context, action), termValue) := by
       rw [augmented_joint_eq_native_joint view owner policy target term]
 
@@ -233,49 +239,49 @@ private theorem fixedPolicy_associated_prob_eq
     (context : FullContext target) (action : diagram.Value target.1)
     (termValue : MAIDReplacementInvariantUtility.TermConfig view term) :
     (((nativeBehavioralGameForm semantics).play policy).map
-      (contextActionTermProjection view target term)).prob
+      (contextActionTermProjection view target term))
         (context, (action, termValue)) =
       (((nativeBehavioralGameForm semantics).play policy).map
         (fun assignment =>
           (Assignment.restrict diagram assignment
-            (diagram.observedParents target.1), assignment target.1))).prob
+            (diagram.observedParents target.1), assignment target.1)))
           (context, action) *
         (continuation (augmentedLaw view owner policy)
           (fullAction view target) (termConfig view term)
           (keepFullAction target removed)
-          (keepFullAction target removed (context, action))).prob termValue := by
+          (keepFullAction target removed (context, action))) termValue := by
   have hfixed := fixedPolicy_jointLaw_eq_bind_continuation topological view
     owner policy target removed hignore term hrelevant
   have hpoint := congrArg
-    (fun law => law.prob ((context, action), termValue)) hfixed
+    (fun law => law ((context, action), termValue)) hfixed
   rw [bind_tagged_prob] at hpoint
   calc
     (((nativeBehavioralGameForm semantics).play policy).map
-        (contextActionTermProjection view target term)).prob
+        (contextActionTermProjection view target term))
           (context, (action, termValue)) =
         ((augmentedLaw view owner policy).map
           (fun assignment =>
             (fullAction view target assignment,
-              termConfig view term assignment))).prob
+              termConfig view term assignment)))
             ((context, action), termValue) :=
       native_associated_prob_eq_augmented_joint_prob view owner policy target
         term context action termValue
     _ = ((augmentedLaw view owner policy).map
-          (fullAction view target)).prob (context, action) *
+          (fullAction view target)) (context, action) *
         (continuation (augmentedLaw view owner policy)
           (fullAction view target) (termConfig view term)
           (keepFullAction target removed)
-          (keepFullAction target removed (context, action))).prob termValue :=
+          (keepFullAction target removed (context, action))) termValue :=
       hpoint
     _ = (((nativeBehavioralGameForm semantics).play policy).map
           (fun assignment =>
             (Assignment.restrict diagram assignment
-              (diagram.observedParents target.1), assignment target.1))).prob
+              (diagram.observedParents target.1), assignment target.1)))
             (context, action) *
         (continuation (augmentedLaw view owner policy)
           (fullAction view target) (termConfig view term)
           (keepFullAction target removed)
-          (keepFullAction target removed (context, action))).prob termValue := by
+          (keepFullAction target removed (context, action))) termValue := by
       rw [augmented_fullAction_eq_native_contextAction view owner policy target]
 
 /-- A graphically ignorable set gives one relevant-term continuation that is
@@ -304,7 +310,7 @@ def relevantTermContinuationLawAt_of_unique_site
       owner target hunique view term
     joint_eq := ?_ }
   intro replacement
-  apply FinDist.ext_of_prob
+  apply PMF.ext
   rintro ⟨full, action, termValue⟩
   let constantOwner := constantActionOwnerPolicy target hunique action
   let constantPolicy :=
@@ -315,28 +321,28 @@ def relevantTermContinuationLawAt_of_unique_site
       hrelevant full action termValue
   have hfixedReplacement :
       ((replacementLaw pruning semantics policy owner constantOwner).map
-        (contextActionTermProjection view target term)).prob
+        (contextActionTermProjection view target term))
           (full, (action, termValue)) =
         ((replacementLaw pruning semantics policy owner constantOwner).map
           (fun assignment =>
             (Assignment.restrict diagram assignment
-              (diagram.observedParents target.1), assignment target.1))).prob
+              (diagram.observedParents target.1), assignment target.1)))
             (full, action) *
           (continuation (augmentedLaw view owner constantPolicy)
             (fullAction view target) (termConfig view term)
             (keepFullAction target (removedObservations pruning target))
             (keepFullAction target (removedObservations pruning target)
-              (full, action))).prob termValue := by
+              (full, action))) termValue := by
     simpa [replacementLaw, constantOwner, constantPolicy] using hfixed
-  have hcontextPoint := congrArg (fun law => law.prob (full, action))
+  have hcontextPoint := congrArg (fun law => law (full, action))
     (context.contextAction_eq constantOwner)
   rw [bind_tagged_prob] at hcontextPoint
   have hconstantContext :
       ((replacementLaw pruning semantics policy owner constantOwner).map
         (fun assignment =>
           (Assignment.restrict diagram assignment
-            (diagram.observedParents target.1), assignment target.1))).prob
-          (full, action) = context.contextLaw.prob full := by
+            (diagram.observedParents target.1), assignment target.1)))
+          (full, action) = context.contextLaw full := by
     simpa [constantOwner] using hcontextPoint
   have hcontinuation :
       constantActionContinuation pruning semantics policy owner target
@@ -357,7 +363,7 @@ def relevantTermContinuationLawAt_of_unique_site
       hunique view term) full action termValue
   show
     ((replacementLaw pruning semantics policy owner replacement).map
-      (contextActionTermProjection view target term)).prob
+      (contextActionTermProjection view target term))
         (full, (action, termValue)) = _
   rw [replacementLaw_contextActionTerm_prob_eq_kernel_mul_constant pruning
     semantics policy owner target hunique view term replacement full action

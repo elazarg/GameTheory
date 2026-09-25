@@ -9,6 +9,7 @@ both heterogeneous unilateral quantifiers.
 -/
 
 import GameTheory.Stochastic.Kuhn
+import GameTheory.Protocol.Predraw
 
 noncomputable section
 
@@ -23,7 +24,7 @@ action-dependent stage utility. -/
 def hybridGame : Game Bool where
   State := Bool
   Action := fun _ => Bool
-  transition _ actions := FinDist.pure (actions false)
+  transition _ actions := PMF.pure (actions false)
   stageUtility _ actions who := if actions who then 1 else 0
 
 local instance canonicalHistoryMeasurableSpace :
@@ -57,6 +58,15 @@ local instance choiceNonempty :
   fun i info => Nonempty.map
     (hybridGame.actionChoiceEquiv false i info) inferInstance
 
+theorem boundedSitesFinite (horizon : ℕ) :
+    ∀ i, (hybridGame.boundedInformationSites false horizon i).Finite := by
+  intro i
+  let M := hybridGame.perfectMonitoring false
+  exact M.behavioralSupportSitesFrom_finite_of_finite_branching
+    (hybridGame.fullyMixedBehaviorProfile false) horizon
+    (hybridGame.toExecution false).initHistory
+    (fun _ _ _ => Set.toFinite _) (fun _ => Set.toFinite _) i
+
 /-- A noninitial public-history coordinate. -/
 def laterInfo : hybridGame.PublicHistory :=
   [⟨false, fun _ => false, false⟩]
@@ -64,7 +74,8 @@ def laterInfo : hybridGame.PublicHistory :=
 /-- Independent fair choices at every information state. -/
 def fairProtocolBehavioral (i : Bool) :
     (hybridGame.perfectMonitoring false).BehavioralPolicy i :=
-  fun _ => FinDist.uniformOfFintype
+  fun info => PMF.uniformOfFintype
+    ((hybridGame.perfectMonitoring false).Choice i info)
 
 /-- Force one player's choices at the initial and `laterInfo` coordinates to
 agree, retaining all other infinitely many coordinates. -/
@@ -145,12 +156,12 @@ local instance arbitraryOpponentLaws_isProbability :
 def falseFallback : hybridGame.PurePublicProfile := fun _ _ => false
 
 def falseBehavioral : hybridGame.PublicProfile false :=
-  fun _ _ => FinDist.pure false
+  fun _ _ => PMF.pure false
 
 /-- The focal player deviates to the action excluded by the baseline support
 at every public history. -/
 def trueDeviation : hybridGame.PublicPolicy false :=
-  fun _ => FinDist.pure true
+  fun _ => PMF.pure true
 
 /-- Arbitrary total-plan-law opponents plus an unchanged behavioral focal
 deviation consume the first heterogeneous quantifier. -/
@@ -168,7 +179,8 @@ theorem behavioral_deviation_consumer :
               arbitraryOpponentLaws falseFallback)
             false trueDeviation)).toMeasure :=
   hybridGame.kuhn_arbitraryPolicyMeasure_opponents_behavioralDeviation_allFinitePrefixes
-      false arbitraryOpponentLaws falseFallback false trueDeviation
+      false arbitraryOpponentLaws falseFallback false
+      trueDeviation
 
 /-- Behavioral opponents plus an unchanged arbitrary correlated focal law
 consume the reverse heterogeneous quantifier. -/
@@ -189,7 +201,8 @@ theorem policy_measure_deviation_consumer :
                 ((hybridGame.purePolicyEquiv false false).symm
                   (falseFallback false)))))).toMeasure :=
   hybridGame.kuhn_behavioral_opponents_arbitraryPolicyMeasureDeviation_allFinitePrefixes
-      false falseBehavioral false (correlatedPolicyMeasure false)
+      false falseBehavioral false
+      (correlatedPolicyMeasure false)
         (falseFallback false)
 
 theorem stageUtility_abs_le_one (state : Bool)
@@ -199,68 +212,130 @@ theorem stageUtility_abs_le_one (state : Bool)
       (if actions who then 1 else 0) by rfl]
   split <;> norm_num
 
+def behavioralDeviationLaws : hybridGame.ProtocolPolicyMeasureProfile false :=
+  Profile.update
+    (sig := (hybridGame.perfectMonitoring false).policyMeasureSignature)
+    arbitraryOpponentLaws false
+    (hybridGame.toBehavioralPolicy false trueDeviation).toPureMeasure
+
+def behavioralDeviationProfile : hybridGame.PublicProfile false :=
+  Profile.update
+    (hybridGame.policyMeasuresToPublicBehavioralWith false
+      arbitraryOpponentLaws falseFallback)
+    false trueDeviation
+
+def policyMeasureDeviationLaws : hybridGame.ProtocolPolicyMeasureProfile false :=
+  Profile.update
+    (sig := (hybridGame.perfectMonitoring false).policyMeasureSignature)
+    (fun i => (hybridGame.toBehavioralPolicy false
+      (falseBehavioral i)).toPureMeasure)
+    false (correlatedPolicyMeasure false)
+
+def policyMeasureDeviationProfile : hybridGame.PublicProfile false :=
+  Profile.update falseBehavioral false
+    (hybridGame.ofBehavioralPolicy false
+      (InformationModel.PolicyMeasure.toBehavioralWith
+        (M := hybridGame.perfectMonitoring false)
+        (correlatedPolicyMeasure false)
+        ((hybridGame.purePolicyEquiv false false).symm
+          (falseFallback false))))
+
+local instance behavioralDeviationLaws_isProbability (i : Bool) :
+    IsProbabilityMeasure (behavioralDeviationLaws i) := by
+  cases i with
+  | false =>
+      simpa [behavioralDeviationLaws] using
+        (InformationModel.BehavioralPolicy.toPureMeasure_isProbability
+          (M := hybridGame.perfectMonitoring false)
+          (hybridGame.toBehavioralPolicy false trueDeviation))
+  | true =>
+      simpa [behavioralDeviationLaws] using
+        (inferInstanceAs (IsProbabilityMeasure (arbitraryOpponentLaws true)))
+
+local instance policyMeasureDeviationLaws_isProbability (i : Bool) :
+    IsProbabilityMeasure (policyMeasureDeviationLaws i) := by
+  cases i with
+  | false =>
+      simpa [policyMeasureDeviationLaws] using
+        (inferInstanceAs (IsProbabilityMeasure (correlatedPolicyMeasure false)))
+  | true =>
+      simpa [policyMeasureDeviationLaws] using
+        (InformationModel.BehavioralPolicy.toPureMeasure_isProbability
+          (M := hybridGame.perfectMonitoring false)
+          (hybridGame.toBehavioralPolicy false (falseBehavioral true)))
+
 /-- The behavioral focal deviation remains unchanged through the discounted
 hybrid correspondence. -/
 theorem behavioral_deviation_discounted_consumer :
-    Summable (fun time => (2 : ℝ)⁻¹ ^ time *
-        hybridGame.arbitraryPolicyMeasureStageExpectation false
-          (Profile.update
-            (sig := (hybridGame.perfectMonitoring false).policyMeasureSignature)
-            arbitraryOpponentLaws false
-              (hybridGame.toBehavioralPolicy false
-                trueDeviation).toPureMeasure)
-          false time) ∧
-      hybridGame.arbitraryPolicyMeasureDiscountedPayoff false (2 : ℝ)⁻¹
-          (Profile.update
-            (sig := (hybridGame.perfectMonitoring false).policyMeasureSignature)
-            arbitraryOpponentLaws false
-              (hybridGame.toBehavioralPolicy false
-                trueDeviation).toPureMeasure)
-          false =
-        hybridGame.behavioralDiscountedPayoff false (2 : ℝ)⁻¹
-          (Profile.update
-            (hybridGame.policyMeasuresToPublicBehavioralWith false
-              arbitraryOpponentLaws falseFallback)
-            false trueDeviation) false := by
-  apply hybridGame.kuhn_arbitraryPolicyMeasure_opponents_behavioralDeviation_discountedPayoff
-      false (discount := (2 : ℝ)⁻¹) (bound := 1)
-      (laws := arbitraryOpponentLaws) (fallback := falseFallback)
-      (who := false) (replacement := trueDeviation)
-  · norm_num
-  · norm_num
-  · exact fun state actions => stageUtility_abs_le_one state actions false
+    ∃ hbehavioral : ∀ time, PayoffIntegrable
+        ((hybridGame.perfectMonitoring false).runBehavioral
+          (hybridGame.toBehaviorProfile false behavioralDeviationProfile)
+          (time + 1)) (hybridGame.latestStageUtility false false),
+      ∃ hsumBehavioral : Summable (fun time => (2 : ℝ)⁻¹ ^ time *
+        hybridGame.behavioralStageExpectation false
+          behavioralDeviationProfile false time (hbehavioral time)),
+      ∃ hmeasure : ∀ time, Integrable
+          (hybridGame.latestStageUtility false false)
+          ((hybridGame.perfectMonitoring false).runPolicyMeasure
+            behavioralDeviationLaws (time + 1)),
+        ∃ hsumMeasure : Summable (fun time => (2 : ℝ)⁻¹ ^ time *
+          hybridGame.arbitraryPolicyMeasureStageExpectation false
+            behavioralDeviationLaws false time (hmeasure time)),
+          hybridGame.arbitraryPolicyMeasureDiscountedPayoff false (2 : ℝ)⁻¹
+              behavioralDeviationLaws false hmeasure hsumMeasure =
+            hybridGame.behavioralDiscountedPayoff false (2 : ℝ)⁻¹
+              behavioralDeviationProfile false hbehavioral hsumBehavioral := by
+  let hbound : ∀ state actions,
+      |hybridGame.stageUtility state actions false| ≤ 1 :=
+    fun state actions => stageUtility_abs_le_one state actions false
+  let hbehavioral := fun time =>
+    hybridGame.behavioralStageIntegrable_of_bounded false
+      behavioralDeviationProfile false 1 hbound time
+  let hsumBehavioral :=
+    hybridGame.summable_discounted_behavioralStageExpectation false
+      (by norm_num : 0 ≤ (2 : ℝ)⁻¹) (by norm_num : (2 : ℝ)⁻¹ < 1)
+      behavioralDeviationProfile false hbound
+  obtain ⟨hmeasure, hsumMeasure, heq⟩ :=
+    hybridGame.kuhn_arbitraryPolicyMeasure_opponents_behavioralDeviation_discountedPayoff
+      false arbitraryOpponentLaws falseFallback false trueDeviation
+      (2 : ℝ)⁻¹ hbehavioral hsumBehavioral
+  exact ⟨hbehavioral, hsumBehavioral, hmeasure, hsumMeasure, heq⟩
 
 /-- The arbitrary correlated focal measure remains unchanged through the
 reverse discounted hybrid correspondence. -/
 theorem policy_measure_deviation_discounted_consumer :
-    Summable (fun time => (2 : ℝ)⁻¹ ^ time *
-        hybridGame.arbitraryPolicyMeasureStageExpectation false
-          (Profile.update
-            (sig := (hybridGame.perfectMonitoring false).policyMeasureSignature)
-            (fun i => (hybridGame.toBehavioralPolicy false
-              (falseBehavioral i)).toPureMeasure)
-            false (correlatedPolicyMeasure false)) false time) ∧
-      hybridGame.arbitraryPolicyMeasureDiscountedPayoff false (2 : ℝ)⁻¹
-          (Profile.update
-            (sig := (hybridGame.perfectMonitoring false).policyMeasureSignature)
-            (fun i => (hybridGame.toBehavioralPolicy false
-              (falseBehavioral i)).toPureMeasure)
-            false (correlatedPolicyMeasure false)) false =
-        hybridGame.behavioralDiscountedPayoff false (2 : ℝ)⁻¹
-          (Profile.update falseBehavioral false
-            (hybridGame.ofBehavioralPolicy false
-              (InformationModel.PolicyMeasure.toBehavioralWith
-                (M := hybridGame.perfectMonitoring false)
-                (correlatedPolicyMeasure false)
-                ((hybridGame.purePolicyEquiv false false).symm
-                  (falseFallback false))))) false := by
-  apply hybridGame.kuhn_behavioral_opponents_arbitraryPolicyMeasureDeviation_discountedPayoff
-      false (discount := (2 : ℝ)⁻¹) (bound := 1)
-      (behavioral := falseBehavioral) (who := false)
-      (replacement := correlatedPolicyMeasure false)
-      (replacementFallback := falseFallback false)
-  · norm_num
-  · norm_num
-  · exact fun state actions => stageUtility_abs_le_one state actions false
+    ∃ hbehavioral : ∀ time, PayoffIntegrable
+        ((hybridGame.perfectMonitoring false).runBehavioral
+          (hybridGame.toBehaviorProfile false policyMeasureDeviationProfile)
+          (time + 1)) (hybridGame.latestStageUtility false false),
+      ∃ hsumBehavioral : Summable (fun time => (2 : ℝ)⁻¹ ^ time *
+        hybridGame.behavioralStageExpectation false
+          policyMeasureDeviationProfile false time (hbehavioral time)),
+      ∃ hmeasure : ∀ time, Integrable
+          (hybridGame.latestStageUtility false false)
+          ((hybridGame.perfectMonitoring false).runPolicyMeasure
+            policyMeasureDeviationLaws (time + 1)),
+        ∃ hsumMeasure : Summable (fun time => (2 : ℝ)⁻¹ ^ time *
+          hybridGame.arbitraryPolicyMeasureStageExpectation false
+            policyMeasureDeviationLaws false time (hmeasure time)),
+          hybridGame.arbitraryPolicyMeasureDiscountedPayoff false (2 : ℝ)⁻¹
+              policyMeasureDeviationLaws false hmeasure hsumMeasure =
+            hybridGame.behavioralDiscountedPayoff false (2 : ℝ)⁻¹
+              policyMeasureDeviationProfile false hbehavioral hsumBehavioral := by
+  let hbound : ∀ state actions,
+      |hybridGame.stageUtility state actions false| ≤ 1 :=
+    fun state actions => stageUtility_abs_le_one state actions false
+  let hbehavioral := fun time =>
+    hybridGame.behavioralStageIntegrable_of_bounded false
+      policyMeasureDeviationProfile false 1 hbound time
+  let hsumBehavioral :=
+    hybridGame.summable_discounted_behavioralStageExpectation false
+      (by norm_num : 0 ≤ (2 : ℝ)⁻¹) (by norm_num : (2 : ℝ)⁻¹ < 1)
+      policyMeasureDeviationProfile false hbound
+  obtain ⟨hmeasure, hsumMeasure, heq⟩ :=
+    hybridGame.kuhn_behavioral_opponents_arbitraryPolicyMeasureDeviation_discountedPayoff
+      false falseBehavioral false (correlatedPolicyMeasure false)
+      (falseFallback false) (2 : ℝ)⁻¹ hbehavioral hsumBehavioral
+  exact ⟨hbehavioral, hsumBehavioral, hmeasure, hsumMeasure, heq⟩
 
 end GameTheory.Experimental.PostArchitecture.StochasticHybridInfiniteKuhn

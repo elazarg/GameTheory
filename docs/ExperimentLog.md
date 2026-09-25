@@ -9,6 +9,9 @@ becomes difficult to scan.
 
 ## Index
 
+PMF restoration experiments EXP-123 onward are recorded in the chronological
+entries below, following the initial feasibility survey.
+
 | ID | Date | RFC decision | Question/slice | Outcome | Artifacts |
 |---|---|---|---|---|---|
 | EXP-001 | 2026-07-22 | D0 / Phase 0 | Which semantic layers earn shared infrastructure? | Narrows | [`Phase0ArchitectureEvidence.md`](Phase0ArchitectureEvidence.md); [`decisions/D0-semantic-architecture.md`](decisions/D0-semantic-architecture.md) |
@@ -126,6 +129,26 @@ becomes difficult to scan.
 | EXP-118 | 2026-08-20 | D6/D22/D58 / reverse infinite-policy Kuhn | Can independent regular probability laws over total pure policies be read as one behavioral profile preserving every finite-prefix, unilateral-deviation, and discounted law under perfect recall? | Complete; supports and promoted | finite discrete measure bridge; own-record cylinder conditioning; hostile correlated within-policy law on infinite public histories |
 | EXP-119 | 2026-08-20 | D6/D22/D59 / hybrid infinite-policy Kuhn | Do the two infinite-policy directions preserve heterogeneous unilateral deviations strongly enough to transport the Nash deviation quantifier? | Complete; supports and promoted | Protocol hybrid update/discounted laws; stochastic corollaries; two-player hostile infinite-history consumer |
 | EXP-121 | 2026-09-24 | D12/D61 / sequential-equilibrium existence | Can perturbations and joint assessment limits establish canonical finite perfect-recall existence without equal-depth information sets? | Complete; supports finite terminal-horizon existence and refutes arbitrary-fuel existence | `Analysis.Protocol.EFGExistence`; unequal-depth and insufficient/sufficient-horizon consumers |
+| EXP-122 | 2026-09-24 | D2/D3/D11/D12/D62 / discrete scope restoration | How much v1 PMF infrastructure is reusable, and can a genuine infinite-support bounded-expectation pilot compile? | Survey and probability feasibility complete; canonical migration still gated | `PMFRestorationDesign.md`; three linked surveys; `Experimental.PostArchitecture.PMFRestorationProbe` |
+| EXP-123 | 2026-09-24 | D62 / probability foundation | Do general products, conditioning, and guarded expectations support the dependent runner? | Complete; canonical validation continues in EXP-124 | PMF probability owners; `PMFProductGate` |
+| EXP-124 | 2026-09-24 | D62 / canonical semantics | Can static and sequential consumers retain genuine infinite support and every actual deviation? | Complete; supports guarded canonical PMF semantics | `PMFStaticGate`; `PMFSequentialGate` |
+| EXP-125 | 2026-09-24 | D62 / backward evaluation | Can well-founded play terminate through infinite-support chance laws? | Complete; supports law-first evaluation and guarded values | `PMFBackwardGate` |
+| EXP-126 | 2026-09-24 | D62 / policy-law boundary | Can one PMF realize all prescribed infinite-site marginals? | Complete; explicit obstruction | `InfiniteProductBoundary`; `PMFProductGate` |
+| EXP-127 | 2026-09-24 | D57/D62 / forward policy measures | Can product measures remove the global finite site cover? | Complete; supports exact prefix realization | `PolicyMeasure`; `PMFProductGate` |
+| EXP-128 | 2026-09-24 | D62 / finite Nash | Does finite-strategy existence need finite outcome support? | Complete; only actual payoff integration is needed | `PMFExistenceTest` |
+| EXP-129 | 2026-09-24 | D12/D62 / integration and imports | Which analytic-boundary probes remain meaningful under canonical PMF imports? | Complete; amended probes, full build, lint, and architecture acceptance | `phase2-audit.ps1`; `phase3-audit.ps1`; restoration delivery record |
+| EXP-130 | 2026-09-24 | D62 / Bayesian values | Can local interim values be defined when ex-ante utility diverges? | Complete; separate posterior and whole-plan guards | `PMFBayesianGate` |
+| EXP-131 | 2026-09-24 | D60/D62 / mixture transfer | Does source Nash imply integration of arbitrary target mixtures? | Complete; counterexample requires actual target-deviation guards | `PMFTransferGate` |
+| EXP-132 | 2026-09-24 | D62 / rationalizability | Do integrable rows and columns justify joint payoff Fubini? | Complete; counterexample and guarded inclusion | `PMFRationalizabilityGate` |
+| EXP-133 | 2026-09-24 | D62 / discounted payoffs | Does integration at every stage imply discounted-series summability? | Complete; separates the two conditions | `PMFRepeatedGate`; `PMFMonitoringGate` |
+| EXP-134 | 2026-09-24 | D62 / finite averages | Can canonical uniform equilibrium avoid unrelated payoff premises? | Complete; actual finite-stage sampling law | `PMFUniformGate` |
+| EXP-135 | 2026-09-24 | D62 / epistemic scope | Do agreement and knowledge require finite carriers or global full support? | Complete; arbitrary knowledge cells and explicit null-cell controls | `PMFEpistemicGate` |
+| EXP-136 | 2026-09-24 | D58/D59/D62 / reverse and hybrid measures | Can arbitrary policy measures be read without a global finite site cover? | Complete; exact prefixes and original focal deviations preserved | `PMFPolicyMeasureReverseGate` |
+| EXP-137 | 2026-09-24 | D62 / evolutionary comparisons | What integration follows from actual small-invasion comparisons? | Complete; all-pair necessity and divergent-mutant refutation | `PMFEvolutionaryGate` |
+| EXP-138 | 2026-09-24 | D23/D62 / Bellman semantics | Can arbitrary-state stationary equilibrium use only actual comparison laws? | Complete; guarded one-step game and finite Fink recovery | `PMFStochasticBellmanGate` |
+| EXP-139 | 2026-09-24 | D32/D62 / mechanisms | Which net-payoff and weighted-score laws must be integrable? | Complete; general splitting and undefined-alternative controls | `PMFMechanismGate` |
+| EXP-140 | 2026-09-24 | D14/D56/D62 / MAID | Does native/compiled law equality preserve Nash with infinite chance values? | Complete; canonical gate and all 47 graphical/reduction clients | `PMFMAIDGate`; original experimental MAID family |
+| EXP-141 | 2026-09-25 | D11/D62 / infinite play | Does Ionescu–Tulcea need countable ambient histories? | Complete; discrete coordinates suffice; real-action hostile consumer | `StochasticInfinitePlayMeasure`; `PMFInfinitePlayGate` |
 
 ## Entry template
 
@@ -7699,3 +7722,1277 @@ memory.
   broader refinement/payoff-correspondence results and infinite ambient
   information/action coverage as separate work; do not reopen the disproved
   arbitrary-fuel claim.
+
+### EXP-122: general-PMF semantics restoration survey and feasibility
+
+- **Date / status:** 2026-09-24; survey and probability feasibility complete;
+  supports a gated proposal, no production API migration.
+- **Question:** can ordinary Mathlib `PMF` restore v1's countably supported
+  semantic scope while retaining v2 signatures, information locality, and
+  canonical deviations, with finite support used only where mathematically needed?
+- **Competing designs:** direct PMF semantic owners with finite-support
+  specializations; a parallel countable game hierarchy; a general probability
+  abstraction. Recover concrete v1/Mathlib infrastructure before considering
+  new abstractions.
+- **Representative slice:** inventory exact v1/current declaration reuse and
+  current dependency impact; compile a genuinely infinite-support probability
+  consumer, bounded expectation composition, and a nonsummable-payoff control.
+- **Kill conditions:** testing only finite laws on infinite carriers, silently
+  interpreting divergent payoff sums as finite expected utilities, assuming
+  finiteness under new names, introducing duplicate production semantics, or
+  presenting a probability pilot as a validated end-to-end game migration.
+- **Survey artifacts:** three Sol agents produced the
+  [v1 inventory](PMFRestorationV1Inventory.md),
+  [impact survey](PMFRestorationImpactSurvey.md), and
+  [semantic review](PMFRestorationSemanticsReview.md). V1 has substantial
+  general bounded expectation, convergence, conditioning, and product proofs;
+  several marginal/disintegration lemmas still assume finite carriers. At
+  baseline `1dba3327`, 335/500 Lean files mention `FinDist` and its module has
+  424 transitive authored importers. These measure review scope, not work saved.
+- **Compiled artifact:** `Experimental.PostArchitecture.PMFRestorationProbe`
+  constructs a positive-at-every-natural geometric PMF, proves no `FinDist`
+  represents it, conditions on an infinite event, and adapts v1's bounded
+  summability/Fubini argument to current Mathlib. An unbounded nonnegative
+  reward has infinite expectation and nonsummable real weights, yet its
+  totalized real `tsum` is zero. This control rejects unguarded real payoff
+  evaluation; switching to a totalized Bochner integral alone is insufficient.
+- **Commands / results:**
+  `lake build GameTheory.Experimental.PostArchitecture.PMFRestorationProbe`
+  passed warning-free (2,997 jobs; compiled module reported 12 s).
+  `lake env lean ephemeral/pmf-restoration-axioms.lean` checks nine declarations;
+  only `propext`, `Classical.choice`, and `Quot.sound` occur. Both
+  `pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected` and the
+  corresponding Phase 3 command report `VERIFIED=1`. Local axiom/audit logs
+  are `ephemeral/pmf-restoration-{axioms,phase2-audit,phase3-audit}.log`.
+- **Audit boundary:** exactly one named experimental exception added: five
+  boundary files, 101 representation tokens and 13 `toPMF` tokens, versus
+  4/42/12 previously. Production leakage, new transport, placeholders, and
+  custom axioms remain zero; maximum Lean line length remains 100.
+- **Limit / next action:** the [design](PMFRestorationDesign.md) and
+  [D62](decisions/D62-general-pmf-restoration.md) target direct canonical PMF
+  owners and guarded utility. The probability pilot does not validate general
+  products/disintegration or an end-to-end static/sequential API. Complete
+  P0–P2 before broad cutover, then P3–P4 consumer and finite-analysis recovery.
+  No infinite equilibrium-existence claim or new probability abstraction.
+
+- **Restoration follow-up:** the current pilot and PMFProductGate express
+  nonrepresentability using an ordinary PMF and an explicit finite-support
+  certificate, removing their import of the retired wrapper. The original
+  geometric, conditioning, bounded-Fubini, and divergent-value controls remain.
+  Both direct checks and the combined narrow build pass (2,999 jobs). The
+  historical wrapper comparison above records the initial experiment; its
+  current theorem is `geometric_no_finite_support_representation`.
+
+### EXP-123: general-PMF infrastructure and sequential vertical slice
+
+- **Date / status:** 2026-09-24; complete at the P0–P2 dependency gate.
+- **Question:** can the proposed ordinary-PMF and guarded-expectation interface
+  support a genuinely countable static-to-sequential consumer with typed
+  information and full-policy deviations, without duplicate stable semantics?
+- **Competing designs:** direct PMF plus local finite-support/integrability
+  hypotheses; bundled finite-law API; universal probability carrier. User
+  explicitly prioritizes final design over migration churn and forbids worktrees.
+- **Representative slice:** finite-index products with infinite-support factors;
+  guarded map/bind expectation; countable action/chance execution and positive
+  Bayes belief; variable-depth and whole-policy/off-path controls.
+- **Kill conditions:** concealed finiteness, undefined utility interpreted as a
+  payoff, omitted deviations, unproved history mass normalization, loss of typed
+  legality, permanent parallel semantics, or finite-only evidence presented as
+  general sequential validation.
+- **Artifacts / commands / observations:** named narrow targets for
+  `Math.Probability.Product`, `Mixture`, `Support`, `Expectation`,
+  `ExpectationComposition`, `ExpectationMap`, `ExpectationAlgebra`,
+  `ExpectationMixture`, `ExpectationBind`, and `Conditioning` build warning-free. The product
+  gate exhibits infinite-support marginals; conditioning reconstructs the
+  original law by supported fiber posteriors and projects the subtype law
+  back to its carrier. `lake env lean ephemeral/pmf-infrastructure-axioms.lean`
+  checks twelve general product/expectation/conditioning declarations; only
+  `propext`, `Classical.choice`, and `Quot.sound` occur. General bind integrability
+  is equivalent to joint absolute summability; it supplies the outer conditional
+  expectation certificate and the tower law. The bounded tower now derives
+  from the general proof. Assignments are in `PMFRestorationWorklog.md`.
+- **Outcome / next action:** probability infrastructure passes; EXP-124
+  completes the hostile consumers on canonical owners. Retire the temporary
+  mirrored execution model and proceed to dependency-gated consumer recovery.
+  This is not a whole-library migration claim.
+
+### EXP-124: canonical PMF static and execution cutover
+
+- **Date / status:** 2026-09-24; complete for canonical P1/P2 slices.
+- **Question:** can the general PMF and guarded-expectation operations replace
+  the existing canonical owners while preserving information/deviation
+  invariants and recovering finite-carrier semantics?
+- **Prior evidence:** EXP-123 compiles general products/marginals, guarded
+  expectation/map/bounded bind, a genuine infinite-support product, and a
+  temporary dependent PMF execution model. Review corrected terminal legality
+  and distinguished a stopping cut from a decision information set. The revised
+  chance-first decision event has mass one half and variable-depth histories.
+- **Scope decision:** complete remaining semantic gates on canonical types;
+  extending a duplicate experimental policy/assessment framework would provide
+  weaker integration evidence. This does not declare all of P0–P2 complete.
+- **Competing routes:** migrate canonical owners in place; keep extending and
+  bridging a temporary parallel hierarchy. Choose in-place validation, retain
+  focused hostile examples, and retire generic prototype interfaces.
+- **Kill conditions:** hidden finiteness or measurability assumptions, altered
+  deviation quantifiers, undefined real payoff values, weakened information
+  locality or sequential consistency, or retaining duplicate semantic owners.
+- **Artifacts / commands / observations:** `lake build` targets
+  `GameTheory.Protocol.Execution`, `Extraction`, `History`, `Randomized`, and
+  `Information` pass
+  warning-free with canonical PMF laws, typed trace extension, and the
+  history-runner/state-runner correspondence. The information module contains
+  general policy and behavioral-run semantics; the realization/predrawing
+  family moved to the one-way `PolicyRandomization` leaf and remains to recover.
+  `lake build GameTheory.Core.Form GameTheory.Core.Preference
+  GameTheory.Core.Deviation GameTheory.Core.Equilibrium` also passes (3,004 jobs),
+  using general product bind/map/marginal laws for mixed deviations.
+  `lake build GameTheory.Core.Utility` passes (3,011 jobs), including guarded
+  randomized-deviation transfer. `BehavioralAssessment` proves continuation-law
+  and rationality invariance above a certified horizon. `HistoryEvents` and
+  `BehavioralBayes` build the variable-depth antichain mass bound and normalized
+  positive-mass beliefs with arbitrary branching. A proof-local discrete
+  measurable space suffices for finite additivity; canonical data is unchanged.
+  Disjoint ownership and checkpoints are in `PMFRestorationWorklog.md`.
+  `lake build GameTheory.Experimental.PostArchitecture.PMFStaticGate` passes
+  (3,015 jobs), including infinite-support CE/CCE and mixed Nash through the
+  general transfer theorems, rejection of divergent incumbent/alternative laws,
+  and a payoff unbounded on the full support of a geometric law with a finite
+  positive expectation. `lake build GameTheory.Languages.NFG` and the gate's
+  finite Boolean payoff/Nash controls also pass.
+  A follow-up singleton-action control has strict dominance for every player
+  but neither Nash nor coarse correlated equilibrium under divergent geometric
+  utility. It validates the explicit incumbent guard in CorrelatedDominance;
+  the original correlated-dominance fixture and PMFStaticGate pass together
+  in a 3,099-job narrow build. The final universal-player control is included
+  in the subsequent 3,106-job certificate-cleanup build.
+  `lake build GameTheory.Experimental.PostArchitecture.PMFSequentialGate`
+  passes with infinite positive posterior support at depths one and two,
+  positive information mass strictly below one, canonical Bayes consistency,
+  whole-assessment horizon invariance, and a valid zero-reach information site
+  refuting public sequential rationality. Exact root-only/full-policy controls
+  distinguish the continuation choices. The mirrored prototype and temporary
+  CanonicalGate source have been removed.
+  `lake env lean ephemeral/pmf-gate-axioms.lean` checks nine final
+  static/sequential/convergence declarations; only `propext`, `Classical.choice`,
+  and `Quot.sound` occur.
+  The general Analysis Bayes constructor also passes direct/narrow validation
+  with arbitrary information-history fibers. Review removed two accidental
+  restrictions in its first port: finite fibers and full support at unused
+  information-state labels. The final contract requires support only at actual
+  decision sites, matching canonical `IsFullyMixed`; information-mass positivity
+  is a canonical Protocol lemma. `PMFSequentialTest` instantiates that public
+  constructor on the geometric fixture and proves its Bayes fiber has infinite
+  support (3,021-job narrow build). Six additional checks in
+  `ephemeral/pmf-general-bayes-axioms.lean` use only standard Lean axioms; the
+  constructor type check confirms that no finite-fiber premise remains.
+  Follow-up P4 coverage in `PMFSequentialTest` uses nonconstant vanishing
+  geometric trembles around a pure action on the natural-number menu. Every
+  approximation has infinite full support; the pure limit is not fully mixed.
+  Keeping the infinite-support belief fixed gives convergence of actual
+  bounded continuation values on the canonical runner. This varying-strategy
+  family makes no additional Bayes-consistency claim; the existing fully mixed
+  Bayes/Kreps–Wilson witness is retained. Direct Lean and the 3,021-job narrow
+  build pass. The fresh dependency build also exposed and repaired a stale
+  constructor unfolding in the earlier off-path fixture.
+  Eight checks in `ephemeral/pmf-countable-trembles-axioms.lean` cover support,
+  convergence, full mixing, the pure-limit negative control, the infinite
+  belief, and the unrestricted runner/value limit theorems; only the standard
+  three Lean axioms occur.
+- **Outcome / next action:** P0–P2 dependency gates pass. Restore analytic
+  bridges and consumer theorem families; complete finite existence, algorithms,
+  full build and audits before claiming whole-library integration. EXP-125
+  records the next backward-induction semantic correction.
+
+### EXP-125: well-founded PMF evaluation and guarded backward values
+
+- **Date / status:** 2026-09-24; complete.
+- **Question:** can well-founded terminal-law recursion preserve the existing
+  backward-induction theorem family after removing finite-support assumptions,
+  while exposing exactly the integrability needed for real payoff comparisons?
+- **Competing designs:** recurse into an ordinary PMF and evaluate its guarded
+  expectation; recurse into totalized real sums; impose a global payoff bound
+  or finite branching on semantic data. Test the law-first design and reject
+  the latter two as general semantic defaults.
+- **Representative slice:** infinite-support chance followed by termination,
+  terminal-law agreement with the bounded runner, guarded payoff agreement,
+  and one-shot comparison under integration of the actual compared laws.
+- **Kill conditions:** divergent sums treated as finite values, discarded
+  deviations, hidden finite branching, lost backward/one-shot theorem coverage,
+  or a second unrelated execution semantics.
+- **Artifacts / commands / observations:** `lake build
+  GameTheory.Protocol.Backward` and `lake build
+  GameTheory.Experimental.PostArchitecture.PMFBackwardGate` pass warning-free.
+  The existing well-founded recursor builds a PMF by support-dependent bind.
+  Terminal/nonterminal law equations and equality with a stopped bounded run
+  are unconditional on payoffs. The hostile one-step protocol has geometric
+  infinite terminal support; its divergent reward cannot supply the certificate
+  required by guarded `backwardValue`. The old padding representation is removed.
+  Generic terminal support now follows by well-founded induction, without a
+  uniform horizon. Guarded one-shot/global comparison and its converse now
+  build, along with the stopped-runner corollary. Forward comparison needs
+  integration only of the queried alternative law, deriving the successor
+  certificates on its support. The converse's global premise supplies guards
+  existentially, so undefined deviations cannot satisfy it vacuously.
+  `lake build GameTheory.Protocol.InformationOneShot` also passes: guarded
+  history induction gives whole-policy comparison, and the Nash corollary
+  states integration of all compared player/policy outcome laws.
+  The distinct-action `ChoiceChance` control in `PMFBackwardGate` now passes:
+  both actions have infinite terminal support, their guarded values are exactly
+  one and zero, the better chooser is one-shot optimal, the worse chooser is
+  refuted, and the generic stopped-run comparison applies. The combined narrow
+  build of `Backward`, `InformationOneShot`, and `PMFBackwardGate` passes
+  warning-free (3,028 jobs).
+  `lake env lean ephemeral/pmf-measure-backward-axioms.lean` checks eleven
+  measure, supported-expectation, and backward declarations, with only
+  `propext`, `Classical.choice`, and `Quot.sound`.
+- **Further checkpoint:** `lake build GameTheory.Protocol.SubgamePerfect`
+  passes warning-free. History terminal-law recursion, terminal support,
+  stopped-runner agreement, numerical Bellman, and reach-cone congruence are
+  restored. Local-to-whole-policy comparison needs integration only of the
+  queried candidate law. Under the existing once-per-information-site premise,
+  the converse identifies persistent replacement with the one-shot law. The
+  guarded equivalence retains integration of every compared whole-policy law.
+- **Constructor checkpoint:** `lake build GameTheory.Protocol.Zermelo` passes
+  warning-free (3,024 jobs). `HistoryChooserComposition` grafts a legal action
+  to independently selected child-cone choosers and proves its exact terminal
+  law. Well-founded maximization therefore evaluates actual chooser laws under
+  the theorem-local all-chooser integration premise; no arbitrary-distribution
+  closure assumption is imposed. The information-local profile has the same
+  terminal law, is one-shot optimal, and is subgame perfect. Finite-transition
+  and bounded-terminal-payoff corollaries derive the integration family.
+- **Consumer checkpoint:** the EFG wrapper and existing EFG/menu fixtures pass
+  direct Lean checks and the combined narrow Lake build (3,030 jobs). The
+  original exit payoff `5`, continuation payoff `1`, and off-path reward choice
+  are preserved. `PMFBackwardGate.ChoiceChance.exists_subgamePerfect` invokes
+  the public generic constructor on its original infinite-support protocol;
+  both root actions retain infinitely many terminal successors. It supplies
+  finite decision menus, separated decision histories, and the actual
+  all-chooser/history integration family from bounded utility. Direct Lean and
+  the narrow gate build pass warning-free (3,031 jobs).
+- **Outcome / next action:** law-first recursion, guarded comparison, and the
+  exact subgame-perfect constructor pass both finite preservation and the
+  infinite-chance control. Finite menus alone do not supply payoff integration.
+  Continue downstream recovery; whole-library integration and final audits
+  remain separate gates.
+
+### EXP-126: the discrete boundary for infinite policy marginals
+
+- **Date / status:** 2026-09-24; complete.
+- **Question:** can arbitrary behavioral randomization over infinitely many
+  information sites always be represented by a PMF on total pure policies?
+- **Competing designs:** unrestricted PMF predrawing; finite-site PMF sampling
+  with a measure for a single law on all sites. The policy carrier remains the
+  existing dependent function type.
+- **Representative slice:** uniform action laws on `Fin (n + 1)` for each
+  natural-number site. Every positive atom of a hypothetical total-policy PMF
+  is bounded by every coordinate atom, hence by `1 / (n + 1)` for all `n`.
+  Finite-site sampling is the positive control. The proposed impossibility is
+  stronger than failure of independence: even these marginals cannot all be
+  represented by one PMF.
+- **Kill conditions:** assume a finite information carrier, silently drop
+  marginal equalities, use only informal nonatomicity, or confuse absence of a
+  PMF with absence of an ordinary product measure.
+- **Artifacts / commands / observations:** `lake build
+  GameTheory.Math.Probability.InfiniteProductBoundary` passes warning-free.
+  `no_pmf_of_marginal_bound_tendsto_zero` proves the general vanishing-atom-bound
+  obstruction. `no_uniform_finSucc_marginals` specializes it to the growing
+  finite menus; `finite_uniform_finSucc_marginals` constructs the exact uniform
+  marginals on every supplied finite set using `FiniteSampling.sampleOn`.
+  `lake env lean ephemeral/pmf-policy-boundary-axioms.lean` checks these three
+  declarations plus four measure/history/sequential integration declarations;
+  only `propext`, `Classical.choice`, and `Quot.sound` occur.
+- **Outcome / next action:** unrestricted PMF predrawing is refuted even without
+  independence. The same marginals have PMF realizations on every finite set.
+  Retain explicit finite-site hypotheses for discrete predrawing and recover
+  the ordinary policy-measure bridge for one law on all sites.
+
+### EXP-127: forward policy measures without finite site covers
+
+- **Date / status:** 2026-09-24; complete.
+- **Question:** can the existing independent policy product measure realize
+  every bounded behavioral run under the once-per-information-site premise,
+  without a finite counterfactual site cover?
+- **Competing designs:** finite-coordinate factorization as the general forward
+  theorem; almost-everywhere measurable kernels and countable reached-support
+  induction for the same canonical runner. The former is a valid sufficient
+  route, not an impossibility boundary for ordinary measures.
+- **Representative slice:** a countable chance draw `n` followed by a uniform
+  legal choice in `Fin (n + 1)`. EXP-126 supplies the all-coordinate PMF
+  obstruction. The positive target is a single ordinary policy measure with
+  the correct two-step execution law, then the general bounded-horizon law.
+- **Kill conditions:** global countability of information/action carriers,
+  new measurable fields in protocol data, a duplicate execution evaluator,
+  an assumed kernel measurability obligation that simply restates the problem,
+  or silently extending the reverse measure-to-PMF statement.
+- **Artifacts / commands / observations:** the full existing `PolicyMeasure`
+  family first narrow-builds warning-free (3,093 jobs), including forward and
+  reverse covered laws, both hybrid deviation directions, and guarded prefix
+  and discounted payoff bridges. `lake build
+  GameTheory.Math.Probability.Measure
+  GameTheory.Math.Probability.InfiniteProductBoundary` then passes (3,081 jobs).
+  `uniformFinSuccTableMeasure_bind_eval_comm` proves that drawing the whole
+  table before chance agrees with chance-first evaluation, using a measurable
+  adaptive evaluator and Fubini. `countableChancePredrawnOutcome_eq_sequential`
+  proves this predrawn outcome law equals chance followed by the selected
+  uniform action law. Geometric chance reaches every natural-number site with
+  positive probability. At this checkpoint the general canonical-runner
+  induction and its almost-everywhere kernel measurability were still open.
+  Review rejected the initial chance-first marginal identity as sufficient
+  predraw evidence: the stronger reversed sampling order required the explicit
+  kernel-measurability and product-measure proof now included.
+- **General-proof decomposition:** form the countable union of behavioral
+  supports up to the queried horizon. The policy product measure almost surely
+  selects supported choices at those countably many reached sites, so the pure
+  runner stays inside that countable history set. For each target trace, its
+  mass depends on only finitely many queried coordinates; finite product
+  marginals and the once-per-site premise should identify it with behavioral
+  mass. The first new checkpoint is a reusable almost-everywhere measurable
+  kernel lemma from common countable support and measurable coordinate masses.
+  A local measurable-singleton premise on histories is acceptable; global
+  countability, new protocol fields, and assumed runner measurability are not.
+- **Kernel checkpoint:** `Math.Probability.Measure` now proves
+  `aemeasurable_toMeasure_of_countable_support` by measurable countable Dirac
+  sums and almost-everywhere equality. It assumes only a common countable
+  support almost everywhere and measurable supported atom masses; source and
+  target carriers need not be countable. Direct Lean and the narrow Lake target
+  pass warning-free (3,076 jobs). `Protocol.HistoryPathMass` then proves the
+  exact-target predecessor factor and pure-run point-mass locality from
+  agreement on the finitely many information coordinates of that target trace.
+  Direct Lean and the narrow target pass (3,012 jobs). These statements use the
+  canonical runner and no global cover.
+- **Final canonical runner:** `aemeasurable_runPure_kernel` derives the missing
+  measurability from target-local atom formulas and a common countable support.
+  `runPureMeasure_eq_runBehavioral` now requires only finite players, the
+  once-per-site premise, and local measurable-singleton instances on choices
+  and histories. No finite cover, supplied fallback, global countability, or
+  kernel-measurability premise remains. The unilateral update, prefix utility
+  integrability/value, and summable discounted forward bridges share this
+  stronger law. Redundant finite-cover public wrappers were removed.
+  Direct Lean and `lake build GameTheory.Protocol.PolicyMeasure` pass
+  warning-free (3,101 jobs). Seven axiom checks in
+  `ephemeral/pmf-forward-measure-axioms.lean` use only the standard three axioms.
+- **Scope of hostile evidence:** the growing-menu chance example is a concrete
+  measure-level predraw law; the canonical runner result is universal. No
+  concrete growing-menu Protocol instance is claimed. The finite EFG fixture
+  and existing protocol consumers remain separate preservation controls.
+- **Outcome / next action:** the general forward measure law is validated.
+  Keep finite-site hypotheses for the PMF sampling construction and atomic
+  inverse premises for reverse reading. Migrate broader downstream callers;
+  this does not establish infinite-path outcome semantics.
+
+### EXP-128: finite-strategy equilibrium existence with infinite outcome laws
+
+- **Date / status:** 2026-09-24; canonical existence slice complete.
+- **Question:** does the existing finite-dimensional Nash proof require only
+  finite strategy carriers and integration of actual pure-play utility laws,
+  while permitting unbounded payoffs and infinite stochastic outcome support?
+- **Competing designs:** derive mixed-play integration from finite outer
+  support; impose finite outcomes or a global payoff bound. Test the former;
+  the latter would reintroduce the scope restriction this restoration removes.
+- **Representative slice:** the canonical payoff polynomial and best-response
+  correspondence, `exists_isNash_mixed`, existing finite consumers, and a game
+  with two distinct actions, geometric terminal randomness, and an unbounded
+  integrable utility. Invoke the public existence theorem on that game.
+- **Kill conditions:** finite outcome assumptions, undefined payoff
+  totalization, omitted mixed deviations, a second equilibrium definition, or
+  stronger integration premises than the actual pure-play family requires.
+- **Artifacts / commands / observations:** direct Lean checks and narrow Lake
+  builds pass for `GameTheory.Analysis.Payoff` (3,014 jobs),
+  `GameTheory.Analysis.Nash` (3,599 jobs), and
+  `GameTheory.Analysis.PMFExistenceTest` (3,604 jobs). The last target invokes
+  `exists_isNash_mixed` on geometric infinite-support outcome laws and an
+  unbounded integrable utility. `GameForm.HasIntegrableUtility.mixed_of_finite`
+  derives the mixed-play guard from actual pure-play integration and finite
+  strategy carriers. The public existence theorem gains no finite-outcome or
+  bounded-payoff premise. The fixed-point dependency remains inside Analysis.
+  Older `Analysis.Examples` currently stops at a stale Bayesian-equilibrium
+  import; its body and other analytic consumers remain integration work.
+  `lake env lean ephemeral/pmf-finite-nash-axioms.lean` checks six declarations,
+  including the public existence theorem and infinite-support consumer; all
+  use only `propext`, `Classical.choice`, and `Quot.sound`.
+- **Additional control:** the fixture now includes an action-dependent bounded
+  bonus, and `utility_depends_on_action` proves that distinct choices change
+  utility. Direct Lean and the narrow fixture build pass again.
+- **Outcome / next action:** the general stochastic-outcome Nash slice passes.
+  Restore the finite sequential-existence chain in dependency order. This result does
+  not claim completion of the remaining analytic consumers.
+
+### EXP-129: PMF import ownership and analytic-boundary probes
+
+- **Date / status:** started 2026-09-24; complete 2026-09-25.
+- **Trigger / question:** the migrated Core leaf probe unexpectedly reaches
+  `Convexity.StdSimplex` and `Polynomial`. Can basic law/expectation consumers
+  retain their light closure while canonical Mathlib filtering remains usable
+  at conditioning consumers without importing the project's analytic layer?
+- **Competing designs:** retain unnecessary construction imports in all
+  probability owners; separate product conditioning from basic product laws
+  and narrow imports to `PMF.Monad`; duplicate Mathlib filtering to preserve
+  the old symbol proxies. Test the second; reject duplicate probability
+  semantics merely to satisfy a transitive-import proxy.
+- **Kill conditions:** a new evaluator/filter definition, an authored Analysis
+  or external fixed-point import outside Analysis, relaxed executable-layer
+  checks, or claiming a full-root probe passed before that root compiles.
+- **Artifacts / commands / observations:**
+  `lake env lean ephemeral/pmf-current-core-boundary.lean` reaches both proxy
+  symbols from the completed Core leaves. Isolated probes
+  `ephemeral/pmf-monad-boundary.lean` and
+  `ephemeral/pmf-constructions-boundary.lean` show `PMF.Monad` rejects both,
+  whereas `PMF.Constructions`, the owner of canonical `PMF.filter`, reaches
+  both even without any project import. Both reject `kakutani_fixed_point`.
+  The simplex path runs through Bernoulli/Bochner integration; the polynomial
+  path is in the imported Mathlib closure. Unknown-identifier exit codes are
+  expected negative-probe evidence.
+- **Failed narrowing attempt:** replacing construction imports with `PMF.Monad`
+  in Product/Mixture/Expectation and moving product filtering to Conditioning
+  did not typecheck. Canonical `PMF.map`, its laws, and `LawfulMonad PMF` also
+  belong to Mathlib's `Constructions`; filtering is not the only cause. The
+  attempt was reverted before publishing any artifacts. Preserving these
+  proxies would require duplicating canonical map/filter mathematics or an
+  upstream Mathlib module split. Neither follows from changing the probability
+  carrier, and no dependency source was modified.
+- **Further probe:** the restored completed-Core import slice rejects
+  `kakutani_fixed_point`, `brouwer_fixed_point`, and the canonical analytic
+  `GameTheory.exists_isNash_mixed`, while exposing canonical map/filter.
+  Review also found seven negative probes naming the nonexistent
+  `GameTheory.Analysis.nash_exists`; those now target the actual
+  `GameTheory.exists_isNash_mixed` declaration. This repairs a vacuous check
+  rather than relaxing an import boundary.
+- **Audit implementation checkpoint:** phase2/phase3 now use actual project
+  existence and external fixed-point sentinels for Core, Protocol, the
+  lightweight sequential bridge, and probability-bearing semantic consumers.
+  Nash's positive probe names the same actual machinery. Executable,
+  probability-free knapsack, coalitional, social-choice, and evolutionary-basic
+  probes retain their stronger restrictions. The sequential positive probe
+  now names the canonical `PMFConvergesPointwise`. Full deep runs remain open.
+- **Two-sided leaf checks:** `ephemeral/pmf-fixed-point-positive.lean` reaches
+  Nash, Kakutani, and Brouwer from `Analysis.Nash`. The
+  `pmf-protocol-boundary` and `pmf-sequential-boundary` probes reach their
+  canonical runner/assessment/convergence inputs and reject Nash/Kakutani.
+  The latter two exit 1 solely for the intended unknown identifiers. This
+  verifies the replacement sentinels against completed leaves, not the
+  unfinished Core/Protocol umbrellas.
+- **Expected-utility owner check:** `Core.ExpectedUtility` and `Core.Utility`
+  narrow-build after extracting game-independent guarded evaluation. The
+  `pmf-expectedutility-boundary` probe reaches four canonical utility inputs
+  and rejects GameForm, Nash, Nash existence, and Kakutani (expected exit 1).
+  Matching positive/negative probes are retained in phase2. VNM recovery and
+  whole-root acceptance are still pending.
+- **Subsequent Core gate:** after VNM, correlated dominance, and certificate
+  recovery, `lake build GameTheory.Core` passes (3,693 jobs), including final
+  shared-law ownership cleanup. `lake build
+  GameTheory.Tests.UtilityTransferBoundary` passes (3,694 jobs), confirming
+  that the default Core surface includes direct transfer while uniform
+  certificate bridges remain opt-in. A diagnostic phase2 source audit has no
+  unauthorized weights, placeholders, custom axioms, forbidden imports, or
+  duplicate concepts (`ephemeral/pmf-audit-core-1418.txt`). It is not the final
+  expected-count/deep audit or whole-library acceptance.
+- **Combined public gate:** after the domain cutover, the explicit public
+  module batch passes warning-free (3,941 jobs). It builds `GameTheory.lean`
+  and all 281 Lean files under `GameTheory` outside Tests, Experimental, test
+  leaves, and the retiring FinDist carrier. Its first run exposed missing
+  pure-law guards in Examples.NFG and replacement-law normalization in
+  Analysis.TremblingHand; both were repaired, and TremblingHandTest also
+  passes. The saved successful log is
+  `ephemeral/pmf-public-closure-build.log`. This is public integration evidence;
+  the unrestricted default build and final deep audits remain required.
+- **Outcome / next action:** retain canonical operations and narrow D12's
+  semantic-layer proxies to actual project/fixed-point declarations. Preserve
+  stronger executable and probability-free checks. The decision amendment
+  records this measured distinction; final whole-root/deep acceptance and
+  remaining migration-specific probe updates await consumer recovery.
+
+- **Public lint and signature closure:** after the 3,942-job public lint-scope
+  build, `lake lint` passes all configured environment linters. The first run
+  exposed 43 documentation, redundant-simp, and unused-assumption issues,
+  which were corrected without linter suppressions. The whole-public type
+  scan finds no authored declaration naming a project-private constant in its
+  type; its ten remaining matches are generated equation/helper declarations.
+  Original client recovery and unrestricted build/deep audits remain open.
+- **Sequential deep gate:** `pwsh -NoProfile -File scripts/phase3-audit.ps1
+  -VerifyExpected -DeepReachability` passes all frozen expected values.
+  Positive inputs and forbidden downstream symbols are checked together,
+  including all 15 policy-measure inputs and the separate infinite-path
+  boundary.
+- **Static/domain deep gate:** `pwsh -NoProfile -File scripts/phase2-audit.ps1
+  -DeepReachability` completes all 350 symbol probes. All 89 deep counters
+  match the script's frozen expected values; saved log:
+  `ephemeral/pmf-phase2-deep.log`. Public-source fingerprints are unchanged
+  from the validated public build. Source representation counters will be
+  refrozen after carrier retirement; original client recovery and the
+  unrestricted build remain open.
+- **Additive language normalization:** the public Bayesian typed-step theorem
+  exposes an all-some action profile's exact transition law without exposing
+  its private action decoder. The 3,942-job public rebuild and `lake lint`
+  pass; its public type names no private constant and its axioms are
+  `propext`, `Classical.choice`, and `Quot.sound`. It adds no imports.
+- **Final source acceptance:** all three architecture scripts pass
+  `-VerifyExpected`. The reviewed representation boundary has 39 named experiment
+  files and 319 raw-weight tokens, with no remaining `toPMF` conversion.
+  Unauthorized raw-weight occurrences remain zero. The retired FinDist carrier
+  has no remaining Lean reference, and a new zero-budget check prevents its
+  return. Math transport falls to zero; all other forbidden-pattern budgets
+  remain unchanged. The public source fingerprint comparison confirms all 282
+  audited modules remain identical to their validated versions.
+- **Unrestricted acceptance:** `lake build` passes warning-free (4,209 jobs;
+  `ephemeral/pmf-unrestricted-build2.log`). The first full run exposed one
+  missed ApproximateEquilibriumTransport fixture and the pending SubgamePerfect
+  proof. Both were repaired with internally derived integration guards, while
+  preserving the exact payoff-conjugacy/non-Nash control and the profitable
+  off-path deviation. The final build includes every test and experiment,
+  rather than only public umbrella imports. Public `lake lint`, release-version
+  alignment, and whitespace checks also pass.
+- **Fixture signature cleanup:** source review found new private integration
+  helpers in public fixture theorem types. Those helpers are now public and
+  documented, with their proof bodies and the original control statements
+  unchanged. The eight experimental files pass together (3,150 jobs), and the
+  eleven Tests files pass together (3,142 jobs). The same check of Analysis
+  fixtures identifies five more files; their visibility-only cleanup passes
+  together (3,154 jobs). The final combined
+  `lake build GameTheory GameTheory.Math GameTheory.LintAll` passes 4,211 jobs
+  (`ephemeral/pmf-unrestricted-final.log`), and the source audits pass again.
+  This complements the compiled signature audit of the 282 public library
+  modules. Final whitespace cleanup removes trailing blank lines in two
+  Protocol files without changing their declarations or imports.
+- **Final outcome:** accept the PMF import-ownership policy and whole-library
+  restoration. P0–P4 and D62 are complete. The private-signature review,
+  infinite-support hostile controls, original finite examples, finite existence,
+  and executable correctness accompany the full build; no acceptance criterion
+  is replaced by a declaration or module count.
+
+### EXP-130: infinite-prior Bayesian equilibrium and local posterior values
+
+- **Date / status:** 2026-09-24; complete.
+- **Question:** do the restored canonical Bayesian equivalence and value APIs
+  admit an infinite prior, unbounded integrable payoffs, and arbitrary plans
+  over infinitely many own types without hidden finite-type premises?
+- **Representative slice:** a geometric prior on natural-number types, binary
+  actions with an action-dependent bonus, actual whole-plan deviation guards,
+  and an application of the public interim/Nash equivalence. Reuse the existing
+  geometric integration evidence rather than prove another series theorem.
+  If the existing posterior tools suffice directly, also check a finite
+  posterior value for a payoff whose whole-prior expectation diverges.
+- **Kill conditions:** finite own-type or outcome assumptions, bounded payoff
+  substitution, omitted whole-plan deviations, or requiring off-event
+  integration to define a single posterior value.
+- **Artifacts / commands / observations:** direct Lean and
+  `lake build GameTheory.Experimental.PostArchitecture.PMFBayesianGate` pass
+  warning-free (3,100 jobs). The fixture proves infinite prior support,
+  unbounded utility, a strict action bonus, arbitrary whole-plan deviation
+  integration, Nash, and the public general interim characterization.
+  An exploding-utility game has a nonintegrable whole plan law but admits
+  the canonical `BayesianGame.interimValue` at its positive type-zero event,
+  using only event-restricted integration. Existing geometric positive and
+  divergent controls supply the series facts. Original Bayesian/BCE fixtures
+  and their compiler also narrow-build. Eight fixture axiom checks in
+  `ephemeral/pmf-bayesian-gate-axioms.lean` pass using only `propext`,
+  `Classical.choice`, and `Quot.sound`.
+- **Outcome / next action:** the infinite-prior and local-value slice passes.
+  Continue simulation/continuation recovery; whole-library P3/P4 remain open.
+
+### EXP-131: arbitrary mixture transfer and the integration boundary
+
+- **Date / status:** 2026-09-24; complete for canonical transfer and leaf fixtures.
+- **Question:** can the law-level simulation API use arbitrary PMFs while
+  utility transfer requires only integration of the actual target-deviation
+  laws, without dropping deviations or adding global payoff bounds?
+- **Competing designs:** preserve an unconditional finite-mixture transfer
+  statement; store integration in the law certificate; guard the utility
+  theorem on its actual compared laws. Test the third design and preserve
+  utility-free composition/reflection where law equality already suffices.
+- **Representative slice:** canonical mixture simulation and approximate/Nash
+  transfer, original transfer/coalition counterexamples, and a geometric
+  mixture of integrable deterministic deviations. Use linear negative payoff
+  as an integrable positive control and exponential negative payoff to refute
+  the unconditional forward transfer. One law certificate should serve both
+  utility choices; reuse existing geometric integration evidence.
+- **Kill conditions:** integration stored in a law-only simulation certificate,
+  undefined expectations evaluated as zero, omitted target deviations, finite
+  outcome restrictions, or exchanging the shared coalition replacement and
+  per-member quantifiers.
+- **Artifacts / commands / observations:** `PMFTransferGate.lean` passes direct
+  Lean and `lake build GameTheory.Experimental.PostArchitecture.PMFTransferGate`
+  (3,020 jobs). Its one-player natural-number source embeds into an optional
+  natural-number target; the added `none` action plays a shifted geometric law.
+  Linear loss integrates every target deviation and transfers source Nash
+  through the public iff. Exponential loss makes the added deviation
+  nonintegrable even though every source pure deviation integrates and is
+  nonimproving; the public iff then refutes target Nash. One utility-free
+  simulation certificate serves both controls. General/considered transfer,
+  composition, pure-to-mixed simulation, and `toUtilitySimulation` also pass
+  direct/narrow builds. Ten checks in `ephemeral/pmf-transfer-axioms.lean` use
+  only `propext`, `Classical.choice`, and `Quot.sound`. Generic scalar helpers
+  have been moved to their canonical Math owners; the hostile gate passes its
+  post-relocation rebuild. Original `Tests.MixtureSimulation` also passes
+  direct/narrow validation (3,021 jobs), retaining restricted composition,
+  nonrepresentability, pure-to-mixed guards, and honest-law reflection.
+  `Tests.UtilitySimulation`, `Tests.UtilityTransferComparison`, and
+  `Tests.CoalitionSimulation` pass direct/narrow builds (3,026/3,027/3,020 jobs).
+  The finite controls preserve direct/bundled comparisons, the communication
+  counterexample, singleton versus coalition coverage, a positive full-coalition
+  certificate, and the empty-group case. Seven further checks in
+  `ephemeral/pmf-transfer-finite-axioms.lean` use only standard Lean axioms.
+- **Outcome / next action:** the canonical transfer slice and original leaf
+  fixtures pass. Recover Protocol continuation using this interface. The thin
+  negative import-boundary probe passes, while the original broad Core umbrella
+  fixture remains pending under whole-Core P3 integration. Whole-library P3/P4
+  and EXP-129 whole-root audit acceptance remain open.
+
+### EXP-132: product-belief rationalizability and absolute integration
+
+- **Date / status:** 2026-09-24; complete, with a canonical Lean counterexample.
+- **Question:** does independent-belief survival still imply survival of mixed
+  dominance when finite-support beliefs and dominators become arbitrary PMFs?
+  The existing proof interchanges two expectations. Separate integration of
+  each conditional law does not justify that interchange.
+- **Representative candidate:** two players; the first has a baseline action
+  with payoff zero and actions indexed by `n : Nat`; the second chooses
+  `m : Nat` and has constant utility. Give both natural-number coordinates the
+  geometric masses `p(n) = 2^(-(n+1))`. The first player's other payoffs are
+  `u(n,n) = -(n+1) * 2^(2*n+2)` and
+  `u(m+1,m) = (m+2) * 2^(2*m+3)`, zero elsewhere.
+  Each row and column has finite nonzero payoff support. Against the geometric
+  opponent belief, pure-action values are `-2, 0, 0, ...`, so baseline is best.
+  The geometric own-action mixture has value `2^(m+1) > 0` at every fixed
+  opponent action. Its absolute joint expectation diverges: diagonal weighted
+  absolute terms are `n+1`.
+- **Artifacts and command:** `python ephemeral/pmf-rationalizability-fubini.py`.
+  Exact rational arithmetic checks the complete nonzero support of the first
+  eight rows and columns; it is not a proof of the quantified claims.
+- **Initial observation:** the arithmetic supported a counterexample to the
+  unconditional generalization already at elimination round one. The planned
+  Lean check must use canonical definitions and retain the counterexample,
+  rather than strengthen the definitions to exclude it.
+- **Lean artifacts / commands / observations:**
+  `GameTheory/Experimental/PostArchitecture/PMFRationalizabilityGate.lean`
+  expresses the same matrix using reciprocal geometric masses. Direct Lean
+  and `lake build GameTheory.Core.Rationalizability
+  GameTheory.Experimental.PostArchitecture.PMFRationalizabilityGate` pass
+  warning-free (3,017 jobs). It proves integration and the exact expectations
+  for every conditional row and column, an independent best response under
+  the infinite-support opponent belief, and strict domination by the own-action
+  PMF at every pure opponent profile. Mutual induction proves that the baseline
+  and all opponent actions survive every independent round. The baseline is
+  removed by correlated elimination in round one, refuting the all-round
+  inclusion against the public definitions. Joint-law nonintegration follows
+  by contradiction from the guarded Core comparison theorem; the Lean proof
+  does not require a separate divergent-series argument. The general inclusion
+  carries actual joint-law integration, while finite-strategy corollaries
+  derive it from pure-play integration with arbitrary outcome carriers. Five
+  checks in `ephemeral/pmf-rationalizability-axioms.lean` cover both inclusions
+  and the three hostile facts, using only `propext`, `Classical.choice`, and
+  `Quot.sound`.
+- **Outcome / next action:** reject the unconditional PMF generalization;
+  retain the actual joint-law premise on the theorem. Recover the original
+  finite fixture, then continue downstream migration. No finiteness or
+  integration field was added to the survivor definitions.
+
+### EXP-133: defined stages versus summable repeated payoff
+
+- **Date / status:** 2026-09-24; thin slice passed, broader repeated recovery
+  remains in progress. Reserved before implementation.
+- **Question:** can general-PMF repeated play retain its series of expected
+  stage values while rejecting undefined stages and divergent discounted sums?
+- **Candidate:** one player chooses a natural-number action; geometric outcome
+  noise gives payoff action plus noise. Every stage law has unbounded but
+  integrable payoff. Stationary or linearly growing actions have summable
+  half-discounted expected values; actions growing as `2^t` make the weighted
+  values at least one and the series divergent.
+- **Competing designs:** guard stage integration and time-series summability
+  separately; keep an unguarded totalized sum; reinterpret the value as an
+  expectation at a geometric random time. The last route may impose stronger
+  absolute integration than the existing series of stage expectations.
+- **Kill conditions:** treat divergence as zero payoff, hide finiteness or
+  boundedness in game data, omit repeated deviations, or silently change the
+  order of payoff aggregation.
+- **Artifacts:** canonical `Repeated.Basic`, `Repeated.Discounted`, the
+  prerequisite `Repeated.Protocol` compiler, `Tests.Repeated`, and
+  `Experimental.PostArchitecture.PMFRepeatedGate`. The gate uses payoff
+  `action + noise + 1`, reusing the existing geometric-noise integrability
+  proof. It validates the stationary positive control; the optional linear
+  path is not needed for the distinction.
+- **Commands / observations:** direct `lake env lean` checks and narrow
+  `lake build GameTheory.<module>` targets pass without warnings for those
+  five modules (3,013/3,015/3,020/3,023/3,019 jobs respectively). Source hygiene
+  checks pass. `lake env lean ephemeral/pmf-repeated-axioms.lean` checks the
+  infinite-support, stage-integrability, stationary-summability,
+  exponential-term-bound, and nonsummability declarations; only `propext`,
+  `Classical.choice`, and `Quot.sound` occur.
+- **Result:** every stage on the exponential path is integrable, yet every
+  half-discounted expected-payoff term is at least one, so the actual series
+  is not summable. No certified discounted value is constructed for that
+  path. The original bounded stationary-Nash fixture is preserved.
+- **Outcome / next action:** retain separate actual stage integration and
+  time-series summability arguments on the canonical evaluator. Proceed to
+  public-monitoring and continuation consumers; this is not whole-family or
+  whole-library acceptance.
+- **Monitoring follow-up:** `Experimental.PostArchitecture.PMFMonitoringGate`
+  uses an infinite geometric signal law and infinite geometric stage-outcome
+  laws. Realized utility is unbounded on every stage support but integrable;
+  the first signal selects a permanent Boolean action, producing unequal
+  continuation values at supported signals zero and one. The canonical
+  two-field monitored-stage certificate and first-signal discounted Bellman
+  identity apply without finite signals or bounded realized payoffs.
+  Direct Lean and `lake build
+  GameTheory.Experimental.PostArchitecture.PMFMonitoringGate` pass warning-free
+  (3,109 jobs). Six checks in `ephemeral/pmf-monitoring-gate-axioms.lean`
+  use only `propext`, `Classical.choice`, and `Quot.sound`. The monitored
+  discounted, one-shot, and decomposition leaves pass their narrow builds;
+  self-generation subsequently passes its 3,025-job narrow build, retaining
+  promise realization, PPE inclusion, and the greatest bounded self-generating
+  set theorem. Three checks in `ephemeral/pmf-self-generation-axioms.lean`
+  use only standard Lean axioms. The original Monitoring, MonitoringRank,
+  MonitoringEquilibrium, and MonitoringSelfGeneration fixtures also pass;
+  the latter two retain off-path and profitable-deviation controls and the
+  cooperative/punishment payoff construction. Trigger, uniform/periodic, and
+  analytic repeated consumers remain open.
+
+### EXP-134: finite-average Nash without unrelated payoff premises
+
+- **Date / status:** 2026-09-24; passed. Reserved before implementation.
+- **Question:** can finite-average and uniform equilibrium retain the canonical
+  Nash predicate while requiring integration only for incumbent and unilateral
+  deviation paths?
+- **Competing designs:** require integration at every repeated profile to
+  construct a total utility; duplicate guarded Nash inequalities locally; use
+  a finite-average outcome law with the existing expected-utility preference.
+- **Candidate:** a form with repeated strategies samples a uniform stage in
+  the finite horizon, then that stage's actual outcome law. An optional outcome
+  gives the empty horizon a deterministic zero-payoff result. For a positive
+  horizon, integration should be equivalent to integration of every sampled
+  stage, and its expected utility should equal the existing finite average.
+- **Hostile slice:** preserve stationary uniform equilibrium from stage Nash
+  when an unrelated stage profile has nonintegrable utility. Include a
+  unilateral deviation with an undefined payoff as a negative control, and
+  check the empty horizon. Existing finite examples must retain their values.
+- **Kill conditions:** require unrelated-profile integration, omit undefined
+  deviations, change the finite-average value, duplicate the Nash engine, or
+  generalize the random-time interpretation to infinite discounted sums.
+- **Artifacts / commands / observations:** `Repeated.Uniform` passes direct
+  Lean and `lake build GameTheory.Repeated.Uniform` (3,019 jobs), including
+  finite-law integration equivalence, the expectation/average identity,
+  canonical approximate-Nash characterization, and stationary uniformity
+  from stage Nash without an unrelated-profile integration premise.
+  Three checks in `ephemeral/pmf-uniform-axioms.lean` use only `propext`,
+  `Classical.choice`, and `Quot.sound`. `Tests.RepeatedUniform` and
+  `Experimental.PostArchitecture.PMFUniformGate` subsequently pass direct
+  Lean and narrow builds (3,109/3,105 jobs). The original four controls remain.
+  In the new two-player Boolean game, all-false is stage Nash and stationary
+  uniform despite the all-true profile's divergent geometric payoff. At
+  false/true, a unilateral deviation produces that undefined payoff and refutes
+  approximate finite-horizon Nash for every positive horizon. Horizon zero has
+  a deterministic zero payoff and is approximate Nash for nonnegative error.
+- **Outcome / next action:** select the sampled finite-average law and retire
+  the unused total finite-average utility constructor. The experiment refutes
+  the necessity of unrelated-profile integration and preserves rejection of
+  undefined actual deviations. Continue the remaining repeated family as one
+  dependency batch; the infinite discounted-series boundary is unchanged.
+
+### EXP-135: general epistemic events and null-cell agreement
+
+- **Date / status:** 2026-09-24; validated.
+- **Question:** can the existing knowledge and agreement results use arbitrary
+  sets and information cells, reusing Mathlib equivalence relations and the
+  canonical PMF conditioning infrastructure, without global full support?
+- **Competing designs:** retain the custom finite-cell partition; replace its
+  field with an arbitrary set-valued cell and repeat the partition laws; use
+  explicit Mathlib `Setoid` arguments and ordinary set events. The third is the
+  candidate. Pure knowledge remains independent of probability.
+- **Hostile slice:** actual infinite-support priors and infinite information
+  cells through exact and approximate agreement; a nonempty null public event;
+  and a null singleton that knows the full event but has scalar posterior zero.
+  Recover the original finite/approximate controls and preserve the independent
+  Protocol merged-state/no-state-view counterexample.
+- **Candidate boundary:** scalar posteriors use cell/event mass ratios and are
+  zero at null cells. Positive public mass enables averaging in exact agreement;
+  null public mass should force both constant reports to zero. Positive common
+  p-belief should supply the local positivity needed by approximate agreement.
+  Knowledge-to-positive-belief bridges require positive cells where evaluated.
+- **Kill conditions:** hidden finite state, cell, or agent carriers; an invented
+  posterior PMF at a null cell; an unconditional knowledge-to-positive-belief
+  implication; lost original controls; or a duplicate generic partition or
+  probability algebra. Record any refutation before revising the candidate.
+- **Planned artifacts:** `Epistemic.{Knowledge,Basic,Agreement,Approximate,
+  ApproximateAgreement}`, `Tests.Agreement`,
+  `Experimental.PostArchitecture.PMFEpistemicGate`, and the two existing direct
+  experimental epistemic consumers. Commands and observations are pending.
+- **Outcome:** ordinary `Setoid` partitions and set-valued knowledge events
+  replace the custom finite-cell object. Pure cell/S5 lemmas live in Knowledge;
+  generic support and event-mass bounds live in Math.Probability.Support.
+  Exact and quantitative agreement have no finite carrier or global full-support
+  premise. The null-public-event branch proves both reports zero. Local positive
+  cell mass is explicit on knowledge-to-positive-belief bridges.
+- **Hostile evidence:** the geometric prior has infinite support and both
+  partitions have an infinite tail cell. Exact agreement uses that public cell.
+  At the center, two different partitions report `1/3` and `0` under common
+  `2/3`-belief, and the quantitative theorem supplies the bound. An Option Nat
+  lift has a nonempty null public event; its null singleton knows the universe
+  but fails positive belief. Original Agreement/ElectronicMail and the Protocol
+  merged-state/no-state-view counterexample remain consumers of canonical APIs.
+  Duplicate experimental posterior/agreement definitions are removed.
+- **Validation:** the combined `lake build` target list is
+  `GameTheory.Math.Probability.Support`, `GameTheory.Epistemic.Knowledge`,
+  `GameTheory.Epistemic.Basic`, `GameTheory.Epistemic.Approximate`,
+  `GameTheory.Epistemic.Agreement`, `GameTheory.Epistemic.ApproximateAgreement`,
+  `GameTheory.Tests.Agreement`, `GameTheory.Examples.ElectronicMail`,
+  `GameTheory.Experimental.PostArchitecture.KnowledgeOwnership`,
+  `GameTheory.Experimental.PostArchitecture.ElectronicMail`, and
+  `GameTheory.Experimental.PostArchitecture.PMFEpistemicGate`.
+  It passes warning-free (3,115 jobs). Parent axiom checks on both agreement
+  theorems and eight hostile controls use only the standard three axioms.
+- **Next action:** preserve D16's independent epistemic branch and keep the
+  original Protocol information counterexample. Continue routine MAID fixtures;
+  whole-library validation remains EXP-129.
+
+### EXP-136: reverse policy-measure realization beyond finite site covers
+
+- **Date / status:** 2026-09-24; validated, including hybrid closure.
+- **Question:** can arbitrary independent pure-policy probability measures be
+  read behaviorally through every bounded PMF run without a finite global site
+  cover, under the existing countable local-choice hypotheses?
+- **Current obstruction:** the reverse proof converts a finite, record-closed
+  marginal of each policy measure to a PMF. A finite cover makes that marginal
+  determine the entire bounded run. Removing the premise requires a new proof;
+  it is not a syntactic generalization of the finite construction.
+- **Candidate:** localize each target history's mass to its finitely many
+  queried policy coordinates and their own records. Prove bounded reachable
+  history support countable from countable choices and PMF transitions, then
+  use the existing countable-support measure-kernel and extensionality lemmas.
+- **Hostile slice:** finite actions, infinite chance support, infinitely many
+  reachable information sites at one fixed horizon, and correlated coordinates
+  under a pure-policy measure so conditional behavioral reading is substantive.
+  Exercise a nonatomic policy law as well as the original finite controls.
+- **Kill conditions:** assume finite states or a finite global site cover,
+  replace arbitrary policy measures by independent coordinate measures, omit
+  zero-mass histories from the policy type, or require an uncontrolled redesign
+  of execution semantics. A failed or inconclusive result remains evidence.
+- **Planned scope:** the reverse runner law in Protocol.PolicyMeasure, its
+  stochastic wrapper, and one focused experimental consumer. Keep the current
+  explicit-cover theorem valid until the generalized proof is established.
+  Commands, measurements, and outcome are pending.
+- **Candidate refinement before implementation:** the existing forward proof's
+  `lintegral_run_mass` and `ae_run_support_subset_runBehavioral` suggest a
+  shorter route. Prove each target atom using only its finite queried sites
+  and their record closure, then use the normalized behavioral PMF's countable
+  support and total mass one to obtain almost-everywhere kernel support.
+  This may avoid a separate countability proof for all counterfactual reachable
+  histories. The original hypothesis and kill conditions are unchanged.
+- **Intermediate observation:** `lintegral_runPolicy_mass` proves the atom
+  identity from target-local queried sites and record closure. The normalized
+  behavioral PMF's countable support supplies the almost-everywhere support
+  argument. Measure equality on measurable events removes any singleton
+  measurability premise on histories. The canonical reverse, measure-update,
+  prefix-value, and discounted wrappers no longer require covers.
+  `lake build GameTheory.Stochastic.Kuhn` passes warning-free (3,122 jobs).
+  The correlated nonatomic infinite-chance fixture and general hybrid focal
+  reading remain pending; no final acceptance is claimed.
+- **General reverse result:** `PMFPolicyMeasureReverseGate` supplies geometric
+  chance branching and infinitely many reachable sites already at horizon two.
+  An infinite product policy measure is transformed to correlate the root
+  choice with a later site. Both root choices have mass one half, the two
+  choices agree almost surely, every policy singleton has mass zero, and the
+  law cannot equal the measure of any PMF. The canonical behavioral reading
+  preserves every finite prefix. No finite global site cover is available.
+- **Validation:** `lake build
+  GameTheory.Experimental.PostArchitecture.PMFPolicyMeasureReverseGate`
+  passes warning-free (3,130 jobs); the original
+  `GameTheory.Experimental.PostArchitecture.StochasticReverseInfiniteKuhn`
+  consumer passes (3,126 jobs). Parent `#print axioms` checks cover the general
+  theorem and all seven hostile controls; only `propext`, `Classical.choice`,
+  and `Quot.sound` occur.
+- **Remaining closure:** general hybrid policy replacement needs target-local
+  finite-marginal roundtrip identities. It remains a proof extension of the
+  same runner and behavioral reading; its previous cover premises are not
+  removed by the completed general reverse check alone.
+- **Hybrid outcome:** target-local roundtrip and unilateral identities close
+  that obligation. Both canonical hybrid measure laws retain the original
+  behavioral deviation or arbitrary focal policy measure, with no sites/cover
+  arguments. Prefix integration/expectation and normalized discounted bridges
+  inherit the stronger law. The stochastic wrappers expose all prefixes with
+  no finite-site premise.
+- **Hybrid validation:** `lake build GameTheory.Protocol.StrategicRealization`
+  passes (3,099 jobs); `GameTheory.Protocol.PolicyMeasure` passes (3,102);
+  `GameTheory.Stochastic.Kuhn` passes (3,122); and the original
+  `GameTheory.Experimental.PostArchitecture.StochasticHybridInfiniteKuhn`
+  passes (3,124). The combined PMFPolicyMeasureReverseGate and original
+  StochasticReverseInfiniteKuhn targets pass (3,134). All are warning-free.
+  Parent axiom checks on both hybrid laws and both discounted bridges use only
+  the standard three axioms. The public-type audit finds no authored signature
+  exposing a private certificate.
+- **Result:** retain the canonical conditional reading and runner; remove
+  global finite covers from reverse and hybrid policy-measure laws. Keep
+  actual finite-site certificates for discrete whole-policy predrawing.
+  Independent player measures and countable measurable local choices remain
+  explicit. Correlated joint player laws and infinite-path semantics are not
+  consequences of this experiment.
+- **Downstream coverage follow-up:** the parent theorem-surface review found
+  three omitted Stochastic.Kuhn discounted unilateral-payoff consequences.
+  General prefix laws and Protocol discounted bridges are validated, but the
+  public stochastic consequences must also be restored with actual payoff
+  guards and their original controls before whole-family acceptance.
+- **Coverage closure:** all three public stochastic consequences are restored.
+  They retain the specified opponents and unilateral replacement, transport
+  actual stage integration, and derive convergence of the matching discounted
+  series. The combined original StochasticInfiniteKuhn,
+  StochasticHybridInfiniteKuhn, and Analysis.Protocol.Examples targets pass
+  warning-free (3,131 jobs) with default heartbeats. Parent axiom checks on
+  the three restored consequences use only the standard three axioms; none
+  of their public types references a project-private constant.
+
+### EXP-137: mixed evolutionary stability with only compared payoffs defined
+
+- **Date / status:** 2026-09-24; validated, including ESS/NSS characterizations
+  and the strengthened unique-resident hostile gate.
+- **Question:** can mixed ESS/NSS use ordinary PMFs and canonical guarded
+  expected-utility comparisons without demanding defined values at encounters
+  that the stability test never compares?
+- **Competing designs:** require integration for every pair of population laws
+  to build a total mixed-payoff kernel; use a dependent partial numerical
+  payoff operation; factor the ESS/NSS tests through a relation on encounter
+  pairs. The third is the candidate, with ordinary numerical ESS/NSS as
+  transparent specializations and no additional probability carrier or record.
+- **Candidate:** the first comparison ranks mutant-versus-resident below
+  resident-versus-resident. If the reverse comparison also holds, the mutant
+  ties; a distinct tying mutant must lose the second encounter comparison.
+  Strict preference requires the forward weak comparison and failure of its
+  reverse. For guarded expected utility, the positive comparison supplies
+  definedness of both operands. Pure knowledge of a failed reverse comparison
+  alone must never certify a strict improvement.
+- **Hostile slice:** an infinite-support population law has an undefined
+  self-encounter payoff, yet a pure resident strictly beats every distinct
+  mutant in the first test and is ESS. The unused self-encounter must not impose
+  a premise. Conversely, an undefined mutant-versus-resident payoff must
+  refute stability. Preserve the original Boolean nonvacuous tie-break controls
+  and derive the mixed ESS-to-Nash bridge through the canonical mixed form.
+- **Kill conditions:** a second Nash engine; duplicate ESS/NSS semantics;
+  default numerical values at undefined encounters; exclusion of undefined
+  mutants from the test; all-pairs integration added for convenience; loss of
+  the original strict/tie controls; or probability imported into the pure Basic
+  owner. The raw-payoff specialization must recover the original statements.
+- **Planned scope:** Evolutionary.Basic, Mixed, Nash, Tests.Evolutionary, and
+  one focused PMFEvolutionaryGate consumer. D17's separate static branch and
+  one-way canonical Nash bridge remain fixed. Commands and outcome are pending.
+- **Pre-implementation review / rejected weakening:** the proposed positive
+  self-encounter example overlooks the usual small-invasion fitness formula.
+  At every positive mutant share, the mutant encounters itself with positive
+  probability. A divergent self-encounter therefore prevents that actual
+  fitness comparison even when the first resident comparison is strict.
+  The formula is stated explicitly in [Alger, Definition 2.1](https://pmc.ncbi.nlm.nih.gov/articles/PMC10024981/).
+  The original candidate and kill conditions above are retained as evidence;
+  its intended positive witness must instead become a negative control.
+- **Corrected candidate, independently reviewed before implementation:** keep
+  numerical IsESS/IsNSS at the probability-free owner. Their mixed
+  specializations existentially supply an integrability family for the total
+  pair-payoff kernel. This family must be proved necessary, not supplied for
+  convenience: actual positive-share invasion integrability implies every
+  mutant self-encounter is integrable, and self-encounter of
+  `(mu + nu) / 2` dominates the `mu`/`nu` encounter with positive weight.
+  Hence all-pair integration follows on the full convex PMF strategy space.
+  No symmetry of the numerical payoff is needed. The intended validation
+  includes an iff with positively guarded small-invasion comparisons plus
+  baseline integration, the divergent-invasion refutation, original finite
+  controls, and the canonical mixed-game Nash bridge. The necessity and iff
+  remain proof obligations; no Lean refutation or completed gate is claimed yet.
+- **Implementation evidence:** `actualSmallInvasionPayoffs_iff_allPairs` proves
+  necessity by positive invasion and a half-population diagonal. The guarded
+  affine invasion identity uses only the actual three encounter guards.
+  `isMixedESS_iff_actualSmallInvasion` identifies the numerical specialization
+  with the actual strict invasion test. The Evolutionary umbrella, original
+  fixture, ownership consumer, and initial gate pass together (3,021 jobs).
+- **Hostile-model review:** the initial `Bool × Nat` gate has multiple resident
+  clones, which tie both ESS tests. Although its chosen geometric mutant loses
+  the first-order test and has divergent invasion fitness, that model does not
+  isolate the rejected partial-ESS design. Replace it with a unique resident
+  on `Option Nat`, prove strict first-order fitness against every distinct PMF
+  mutant, and preserve divergence at every positive invasion share. The
+  original intended negative control and NSS weak characterization remain
+  required before acceptance.
+- **Final outcome:** the `Option Nat` gate has one resident. Every distinct PMF
+  mutant has defined, strictly lower first-order fitness. The geometric mutant
+  nevertheless has divergent self fitness and undefined fitness at every
+  positive invasion share, refuting both actual ESS and NSS. Canonical mixed
+  ESS and NSS are each equivalent to the corresponding guarded strict/weak
+  small-invasion condition; all-pair integration is necessary on the full PMF
+  mutant space. The original numerical definitions and mixed-form Nash bridge
+  are retained without a second evolutionary equilibrium engine.
+- **Final validation:** `lake build GameTheory.Evolutionary
+  GameTheory.Tests.Evolutionary
+  GameTheory.Experimental.PostArchitecture.EvolutionaryOwnership
+  GameTheory.Experimental.PostArchitecture.PMFEvolutionaryGate` passes
+  warning-free (3,021 jobs). Ten parent axiom checks cover both equivalences,
+  necessity, mixed ESS-to-Nash, and the hostile controls; only the standard
+  three axioms occur. A fresh Basic import reaches both numerical definitions
+  and both numerical invasion equivalences while rejecting PMF, measures,
+  GameForm, and Protocol execution. The public-type audit finds no authored
+  private-certificate leaks.
+
+### EXP-138: arbitrary-state Bellman semantics through the actual one-step game
+
+- **Date / status:** 2026-09-24; validated. Reserved before correcting the provisional
+  port; the intermediate finite-state build was not API acceptance.
+- **Observed failure:** making the auxiliary game deterministic over joint
+  actions requires a total transition-averaged utility at every pure joint
+  action. The first port supplied finite states for this purpose, accidentally
+  narrowing the previously arbitrary-state Bellman-equilibrium predicate.
+  Generalizing only the scalar auxiliary utility does not repair that predicate.
+- **Competing designs:** retain finite states in the semantic predicate;
+  supply an all-joint-action transition-integration family; use the actual
+  one-step stochastic form with outcomes consisting of joint action and next
+  state. The third is the candidate.
+- **Candidate:** pure play maps the native transition PMF to the recorded
+  joint action and next state. Realized utility is normalized stage utility
+  plus discounted continuation value. The auxiliary game and Bellman predicate
+  then need no state finiteness or prior total expectation. Canonical Nash
+  requires only actual incumbent and unilateral-deviation integration. A
+  guarded pure-play expectation identity recovers the scalar matrix/Fink
+  formula. Finite-state compactness and continuity remain in their proofs.
+- **Hostile slice:** an infinite state space where a stationary profile is
+  Bellman equilibrium despite an unrelated joint action's divergent transition
+  continuation payoff; an undefined actual unilateral deviation must refute
+  equilibrium. Recover the original finite zero-sum and general-sum examples
+  and the fixed-point-to-Bellman theorem.
+- **Kill conditions:** finite states in the auxiliary game or Bellman predicate;
+  integration at unrelated profiles; filtering undefined deviations; duplicate
+  Nash semantics; a second stochastic runner; or a change to the finite
+  auxiliary payoff values. Public types must expose public integration lemmas.
+- **Planned scope:** Stochastic.OneStep, Analysis.Stochastic.Fink and its
+  existing examples, the scalar matrix link in Analysis.Stochastic.Discounted,
+  and one PMFStochasticBellmanGate consumer. No canonical game-data changes or
+  infinite-path construction are planned.
+- **Artifacts / command:** `Stochastic.OneStep` and
+  `Experimental.PostArchitecture.PMFStochasticBellmanGate`;
+  `lake build GameTheory.Experimental.PostArchitecture.PMFStochasticBellmanGate`
+  passes warning-free (3,102 jobs). Fixture-only heartbeat allowances support
+  elaboration of the concrete game; production limits are unchanged.
+- **Observation:** on Nat states with unbounded exponential continuation
+  values, `allFalse_bellman` proves canonical stationary Bellman equilibrium.
+  The all-true action's geometric transition is nonintegrable for either player
+  (`unrelated_oneStep_not_integrable`), while changing one player of true/false
+  to true exposes that undefined actual deviation and refutes equilibrium
+  (`trueFalse_not_bellman`). The pure scalar expectation identity is shared by
+  the same actual one-step form. All three hostile declarations use only
+  propext, Classical.choice, and Quot.sound in the parent axiom check.
+- **Finite recovery:** `lake build GameTheory.Analysis.Stochastic.Fink` and
+  `lake build GameTheory.Analysis.Stochastic.Examples` pass warning-free
+  (3,608 and 3,615 jobs). The original zero-sum and general-sum controls remain.
+  Fink's finite coordinate payoff consumes the pure scalar identity; its full
+  fixed-point-to-Bellman family targets the actual one-step game. The mixed
+  integration constructor is public. The parent public-type audit finds no
+  authored Fink declaration referring to a private certificate, and the
+  general existence theorem and general-sum fixture use only the standard
+  three axioms.
+- **Outcome:** retain actual one-step PMF semantics and local finite
+  fixed-point hypotheses. No semantic kill condition fired in the hostile
+  or original finite slices. Continue the wider stochastic consumer batch.
+
+### EXP-139: actual-law mechanism values and general posterior splitting
+
+- **Date / status:** 2026-09-24; validated. The combined mechanism and original
+  fixture batch passes, including the infinite-support gate.
+- **Question:** do guarded mechanism values and posterior splitting retain
+  their general discrete scope without unnecessary integration or finiteness?
+- **Candidate:** posterior laws are PMFs of PMFs; their mean is bind with the
+  identity. Splitting reuses supported disintegration of the canonical coupling.
+  Numerical values require integration of their actual payoff function: net
+  principal reward, agent payment, or message-weighted receiver/sender score.
+  Optimality positively asserts definedness of every compared alternative.
+- **Hostile slice:** an infinite-support posterior law is reconstructed by its
+  splitting signal. A principal's net payoff is defined when equal reward and
+  payment separately diverge. A message-weighted score is defined while the
+  unweighted utility diverges. An undefined actual receiver or agent alternative
+  prevents optimality. Retain original finite incentives, persuasion, and
+  splitting controls.
+- **Competing boundary:** blanket integration of gross reward and payment is
+  stronger than integration of their net difference; blanket integration of
+  unweighted utility is stronger than integration of a local weighted score.
+  Such stronger premises belong only to decomposition or accounting results
+  that evaluate those additional quantities.
+- **Kill conditions:** finite state/message premises on splitting; default
+  numerical values at undefined payoffs; filtering undefined alternatives;
+  a second conditioning algebra; or unrelated integration assumptions on the
+  primitive operations.
+- **Planned artifacts:** the existing Mechanism and Bayesian-mechanism owners,
+  their original direct consumers, and PMFMechanismGate. Exact commands and
+  observations are pending.
+- **Intermediate observation:** the Mechanism umbrella passes (3,134 jobs).
+  Posterior splitting has no finite State/Message premise. Full-commission
+  principal utility derives its zero-net guard independently of gross reward
+  integration. The finite-message sender-score formula needs only finite
+  Message: each weighted score guard follows from the actual joint-law guard
+  by a summable slice. Its InformationDesign target passes (3,003 jobs).
+  All seven initially failing original mechanism fixture modules have been
+  individually repaired; their combined batch and PMFMechanismGate remain
+  pending. These are source milestones, not final experiment acceptance.
+- **Combined validation:** `lake build GameTheory.Mechanism
+  GameTheory.Experimental.PostArchitecture.PMFMechanismGate
+  GameTheory.Tests.AffineMaximizer GameTheory.Tests.AuctionSemantics
+  GameTheory.Tests.BayesianWelfare GameTheory.Tests.BayesianMechanism
+  GameTheory.Tests.FeasiblePosteriors GameTheory.Tests.Implementation
+  GameTheory.Tests.Groves GameTheory.Tests.InformationDesign
+  GameTheory.Tests.SingleParameter GameTheory.Tests.Revelation
+  GameTheory.Tests.QuasiLinearMechanism GameTheory.Tests.PrincipalAgent
+  GameTheory.Tests.JointFeasiblePosteriors GameTheory.Tests.SelectiveStopping`
+  passes warning-free (3,155 jobs). The added positive-message control passes
+  `lake build GameTheory.Experimental.PostArchitecture.PMFMechanismGate`
+  (3,090 jobs).
+- **Hostile observations:** `posteriorLaw_infinite_support` and
+  `posteriorLaw_has_signal` realize splitting for an infinite law of point
+  beliefs. Separate reward/payment divergence coexists with
+  `principal_net_defined`. `local_true_message_positive` rules out a vacuous
+  null-message explanation for the defined weighted receiver score, whose
+  unweighted payoff diverges. The undefined receiver and agent alternatives
+  each refute their respective optimality predicate.
+- **Independent review:** the parent axiom audit in
+  `ephemeral/pmf-mechanism-axioms.lean` checks nine hostile controls, general
+  splitting, and Revelation using only propext, Classical.choice, and Quot.sound.
+  The mechanism umbrella's public-type audit finds no authored public type
+  referring to a private certificate.
+- **Outcome:** adopt the actual-payoff guard boundary and general discrete
+  splitting. No kill condition fired. The additional legacy probability-tail
+  experiment remains part of the broader restoration queue, not a condition
+  of the mechanism gate.
+
+### EXP-140: general PMF MAID execution and source-owner deviations
+
+- **Date / status:** 2026-09-24; complete, including original
+  graphical/reduction consumers.
+- **Question:** does native/compiled MAID law equality support infinite node
+  values and guarded Nash transfer without weakening site locality?
+- **Candidate:** finite unresolved frontiers use the canonical finite-index
+  PMF product. Node values and local chance/behavioral laws remain unrestricted.
+  Exact assignment-law equality transports actual payoff integrability and
+  preferences. Full-source-owner replacements retain every owned site.
+- **Hostile slice:** a finite typed diagram with a geometric Nat-valued chance
+  node and a Boolean decision, exact native/compiled assignment-law equality,
+  and a bounded-payoff equilibrium. Under a second payoff, a pure unilateral
+  decision exposes divergent utility and refutes equilibrium on both sides.
+  Preserve original incomparable-site, same-owner cross-observation, graphical
+  reduction, and ForgetfulMovieStar controls.
+- **Competing boundary:** finite node enumeration is needed by this evaluator;
+  finite value carriers are not. Finite-value sums in the existing finite-BN
+  graphical proofs remain theorem-local. No claim of countable-BN global
+  Markov generalization is needed for this recovery.
+- **Kill conditions:** finite node-value premises on native/compiled laws;
+  all-profile integrability imposed on exact-law Nash equivalence; enlarged
+  site observations or relabelled source owners; default undefined payoffs;
+  loss of original refutations; or a second evaluator/conditioning algebra.
+- **Planned artifacts:** stable Languages.MAID family, original direct and
+  experimental consumers, and PMFMAIDGate. Exact commands and observations
+  are pending.
+- **Canonical result:** the stable MAID umbrella uses native PMF chance and
+  local policies. Exact assignment-law equality transports integration and
+  same-slack Nash comparisons through source-owner policy equivalence. Node
+  values remain arbitrary; no all-profile integration premise is introduced.
+  Pruning coverage positively compares actual full/reduced deviation laws.
+- **Hostile evidence:** a two-node typed diagram combines geometric Nat-valued
+  chance with a Boolean decision. Native/compiled assignment laws agree. A
+  bounded payoff gives Nash in both forms. Under a second payoff, the false
+  incumbent is integrable with value zero but the actual true deviation is
+  nonintegrable; both canonical Nash predicates are refuted.
+- **Validation:** `lake build GameTheory.Languages.MAID` passes (3,034 jobs).
+  `GameTheory.Experimental.PostArchitecture.PMFMAIDGate` passes (3,031).
+  The combined original `GameTheory.Tests.MAID`,
+  `GameTheory.Tests.MAIDObservationPruning`,
+  `GameTheory.Experimental.PostArchitecture.TypedMAIDTest`, and
+  `GameTheory.Experimental.PostArchitecture.TypedMAIDToEFGTest` targets pass
+  (3,038). All are warning-free. Parent axiom checks cover eight hostile
+  controls and both general Nash-transfer theorems; only standard axioms occur.
+- **Incremental recovery:** the combined original MAIDSafeReduction and
+  MAIDPruningComposition targets pass warning-free (3,034 jobs), preserving the
+  safe/live Nash controls and nested two-signal coverage counterexample.
+  MAIDKernelMarginalization (3,086), MAIDLocalReduction (3,114), and
+  MAIDSitePolicySurgery (3,030) also pass. FiniteConditionalIndependence passes
+  with native PMF event masses and arbitrary event carriers (2,998).
+- **Graphical prerequisites:** `lake build` of MAIDUtilitySeparationBridge,
+  FiniteBNGlobalMarkovSoundness, and MAIDGlobalMarkovSoundness passes (3,053);
+  the original finite-BN chain/collider/zero-evidence targets pass together
+  (3,055). FiniteConditionalContinuation passes (3,083), with canonical
+  positive-fiber conditioning and arbitrary context/term carriers.
+  MAIDUtilityFactorization passes (3,041). The combined
+  MAIDReplacementInvariantUtility, MAIDReplacementContext, and
+  MAIDNonrelevantUtilityInvariance publication passes (3,145). The utility-law
+  certificate remains distributional: the expectation assembly theorem needs
+  actual per-term integration because total utility can hide cancellation.
+  These names refer to the corresponding PostArchitecture modules. All
+  reported publications are warning-free.
+- **Full graphical publication:** the combined Lake build over all 47
+  experimental `MAID*.lean` modules passes warning-free (3,180 jobs;
+  `ephemeral/pmf-maid-all-build.log`). It includes site optimality, strategic
+  nonreachability, global full-deviation coverage, the fixpoint checker, and
+  all original positive/refutation fixtures. In particular, ForgetfulMovieStar
+  retains its exact `3/2` versus `2` deviation and GraphicalReductionTest retains
+  relay noncoverage. The source audit finds no placeholders, custom axioms,
+  FinDist references, or obsolete finite expectation operations.
+- **Outcome:** the canonical infinite-chance gate and original MAID theorem
+  family pass. Native law/Nash transfer has arbitrary node-value carriers;
+  finite-value capabilities remain local to the finite-BN graphical results
+  and the optimizer/global pruning proofs. No kill condition fired.
+
+  Reproduce the combined MAID build in PowerShell:
+
+  ```powershell
+  $maidTargets = rg --files GameTheory/Experimental/PostArchitecture -g 'MAID*.lean' |
+    ForEach-Object { ($_ -replace '[\\/]','.' -replace '\.lean$','') }
+  lake build @maidTargets
+  ```
+
+### EXP-141: infinite-play construction without countable ambient histories
+
+- **Date / status:** 2026-09-25; complete.
+- **Question:** does the canonical Ionescu–Tulcea construction require
+  countability of all legal histories, or only measurability of the outgoing
+  history kernel and coordinate projections?
+- **Hypothesis:** each exact-length history coordinate already has the full
+  discrete measurable structure. Its outgoing PMF kernel is measurable, and
+  the last-coordinate map is measurable as a product projection. The path
+  measure and chronological marginal theorem should therefore need no
+  ambient-history countability assumption.
+- **Representative slice:** remove only redundant premises from
+  `StochasticInfinitePlayMeasure`; consume its probability-measure instance
+  and chronological marginal theorem in a game with real-valued legal actions.
+  Preserve the same runner, kernels, and Ionescu–Tulcea construction.
+- **Kill condition:** reject the removal if it needs an unjustified measurable
+  event, a different path semantics, or a broad coherence redesign. Keep
+  countability local to any separate coherence theorem that still needs it.
+- **Artifacts:** `StochasticInfinitePlayMeasure`, its payoff bridge, and
+  `PMFInfinitePlayGate`, under `Experimental/PostArchitecture`.
+- **Observation:** each `PathHistory` coordinate has the full discrete
+  measurable structure. `pathStepKernel` is measurable by `Measurable.of_discrete`;
+  `lastPathHistory` is measurable by `measurable_pi_apply`, without asserting
+  that its product domain is discrete. The canonical PMF-to-measure bind
+  theorem uses the law's countable support, not a countable ambient carrier.
+  The coordinate induction and chronological marginal proof remain unchanged
+  in mathematical meaning.
+- **Hostile result:** real-valued legal actions inject into canonical histories,
+  proving that their ambient carrier is uncountable. The same game nevertheless
+  has the canonical infinite probability measure and its exact two-stage
+  chronological marginal, with no `Countable` instance supplied.
+- **Validation:** the hostile gate builds warning-free (3,109 jobs). The
+  combined build of all nine path clients passes warning-free (3,121 jobs),
+  saved in `ephemeral/pmf-countability-all9-repair2.log`. An independent review
+  confirms the measurable-space arguments, unchanged runner semantics, and
+  absence of private constants in authored public theorem types.
+- **Consumer inference correction:** removing the gate's local measurable-space
+  copies exposed missing instance inference for the dependent infinite product
+  (`ephemeral/pmf-countability-gate-public-instances.log`). The constructor owner
+  now exports `playMeasurableSpace`, assembled from the existing discrete
+  `pathHistoryMeasurableSpace` coordinates using `MeasurableSpace.pi`. It is
+  definitionally the original product space, so no path-law semantics changes.
+  The gate uses only public instances. The final nine-client build again passes
+  warning-free (3,121 jobs; `ephemeral/pmf-countability-public-product-all9.log`).
+- **Outcome:** remove the redundant ambient-history premise from the constructor,
+  probability instance, and chronological marginal theorem. Keep separate
+  countability assumptions where the existing coherence or integration proofs
+  still use them. No kill condition fired.
+
+  Reproduce the combined slice:
+
+  ```powershell
+  $pathClients = @(
+    'StochasticGamePathPayoff', 'StochasticInfinitePlayMeasure',
+    'StochasticInfinitePlayCoherence', 'StochasticInfinitePlayPayoffBridge',
+    'StochasticInfinitePlayPayoffConsistency', 'StochasticPublicHistoryCoherence',
+    'StochasticPublicHistoryCoherenceTest', 'StochasticProofViewTest',
+    'PMFInfinitePlayGate'
+  ) | ForEach-Object { "GameTheory.Experimental.PostArchitecture.$_" }
+  lake build @pathClients
+  ```

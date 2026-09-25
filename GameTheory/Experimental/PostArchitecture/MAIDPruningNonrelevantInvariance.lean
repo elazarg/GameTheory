@@ -103,7 +103,7 @@ private theorem hybridAugmentedKernels_eq_of_ne_target
     (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
     (first second : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1))
+      PMF (diagram.Value target.1))
     (node : view.GraphNode owner)
     (hne : node ≠ (.base target.1 : view.GraphNode owner)) :
     hybridAugmentedKernels view pruning policy owner fixedOwner target first
@@ -135,7 +135,7 @@ private theorem hybridAugmentedKernels_eqOn_utilityAncestors
         (MAIDPruningFixpointGraph.Pruning.restoreAllAt pruning target)
         target term)
     (first second : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     ∀ node ∈ hybridUtilityAncestors view pruning target term,
       hybridAugmentedKernels view pruning policy owner fixedOwner target first
           node =
@@ -156,7 +156,7 @@ private def hybridAugmentedUtilityAncestorLaw
     (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner) (term : view.UtilitySite owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :=
+      PMF (diagram.Value target.1)) :=
   (augmentedLaw view owner
     (hybridPolicy pruning policy owner fixedOwner target rule)).map
     (hybridUtilityAncestorRestriction view pruning target term)
@@ -175,7 +175,7 @@ private theorem hybridAugmentedUtilityAncestorsLaw_eq
         (MAIDPruningFixpointGraph.Pruning.restoreAllAt pruning target)
         target term)
     (first second : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     hybridAugmentedUtilityAncestorLaw view pruning policy owner fixedOwner
         target term first =
       hybridAugmentedUtilityAncestorLaw view pruning policy owner fixedOwner
@@ -239,7 +239,7 @@ private def hybridAugmentedTermMarginalLaw
     (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner) (term : view.UtilitySite owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :=
+      PMF (diagram.Value target.1)) :=
   (hybridAugmentedUtilityAncestorLaw view pruning policy owner fixedOwner
     target term rule).map
       (hybridTermParentProjection view pruning target term)
@@ -258,7 +258,7 @@ private theorem hybridAugmentedTermMarginalLaw_eq
         (MAIDPruningFixpointGraph.Pruning.restoreAllAt pruning target)
         target term)
     (first second : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     hybridAugmentedTermMarginalLaw view pruning policy owner fixedOwner target
         term first =
       hybridAugmentedTermMarginalLaw view pruning policy owner fixedOwner
@@ -266,7 +266,7 @@ private theorem hybridAugmentedTermMarginalLaw_eq
   have hrestricted := hybridAugmentedUtilityAncestorsLaw_eq topological view
     pruning policy owner fixedOwner target term hnonrelevant first second
   exact congrArg
-    (FinDist.map (hybridTermParentProjection view pruning target term))
+    (PMF.map (hybridTermParentProjection view pruning target term))
     hrestricted
 
 private theorem hybridAugmentedTermMarginalLaw_eq_siteTermMarginal
@@ -276,7 +276,7 @@ private theorem hybridAugmentedTermMarginalLaw_eq_siteTermMarginal
     (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner) (term : view.UtilitySite owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     hybridAugmentedTermMarginalLaw view pruning policy owner fixedOwner target
         term rule =
       (siteReplacementLaw semantics (pruning.expandPolicy policy) owner
@@ -299,10 +299,10 @@ private theorem hybridAugmentedTermMarginalLaw_eq_siteTermMarginal
     Assignment.restrict diagram assignment (view.term term).parents
   show ((nativeLaw.map (augmentAssignment view)).map graphRestriction).map
       projection = nativeLaw.map baseRestriction
-  rw [FinDist.map_comp projection graphRestriction
-    (nativeLaw.map (augmentAssignment view))]
-  rw [FinDist.map_comp (projection ∘ graphRestriction)
-    (augmentAssignment view) nativeLaw]
+  rw [PMF.map_comp graphRestriction
+    (nativeLaw.map (augmentAssignment view)) projection]
+  rw [PMF.map_comp (augmentAssignment view) nativeLaw
+    (projection ∘ graphRestriction)]
   apply congrArg (fun observable => nativeLaw.map observable)
   funext assignment parent
   rfl
@@ -323,7 +323,7 @@ theorem nonrelevantTerm_marginal_eq
         (MAIDPruningFixpointGraph.Pruning.restoreAllAt pruning target)
         target term)
     (first second : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     (siteReplacementLaw semantics (pruning.expandPolicy policy) owner
       (pruning.expandOwnerPolicy owner fixedOwner) target first).map
         (fun assignment => Assignment.restrict diagram assignment
@@ -348,9 +348,9 @@ structure SiteInvariantTermMarginalAt
     (owner : Player) (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner) (view : UtilityView semantics)
     (term : view.UtilitySite owner) where
-  marginalLaw : FinDist (MAIDReplacementInvariantUtility.TermConfig view term)
+  marginalLaw : PMF (MAIDReplacementInvariantUtility.TermConfig view term)
   marginal_eq : ∀ rule : Config diagram
-      (diagram.observedParents target.1) → FinDist (diagram.Value target.1),
+      (diagram.observedParents target.1) → PMF (diagram.Value target.1),
     (siteReplacementLaw semantics (pruning.expandPolicy policy) owner
       (pruning.expandOwnerPolicy owner fixedOwner) target rule).map
         (fun assignment => Assignment.restrict diagram assignment

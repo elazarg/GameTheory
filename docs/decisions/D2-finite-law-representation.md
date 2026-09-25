@@ -1,10 +1,15 @@
 # D2: finite-law representation
 
-- **Status:** adopted for the baseline finite core; Phase 2 kill tests passed
+[D62](D62-general-pmf-restoration.md) revises the default semantic carrier to
+general PMF. This record's representation evidence concerns finite-law
+operations; it does not justify restricting every discrete game law.
+
+- **Status:** superseded as the semantic default by D62; finite-operation
+  representation evidence retained
 - **Date:** 2026-07-22, amended 2026-07-30
 - **Evidence:** EXP-003, EXP-004, EXP-006, EXP-007; post-decision stress
   EXP-030
-- **Decision:** Represent the future `FinDist α` by a `PMF α` paired with a
+- **Original decision:** Represent `FinDist α` by a `PMF α` paired with a
   proof that its support is finite. Hide that representation behind the public
   API; do not expose the experimental candidate name.
 
@@ -26,12 +31,8 @@ expectation laws, and simplex boundary needed by the stable probability API.
 
 ## Measurements
 
-Run:
-
-```text
-pwsh -NoProfile -File scripts/phase1-audit.ps1 -VerifyExpected -Time
-lake build GameTheory.Experimental.Phase1.D1.Stress GameTheory.Experimental.Phase1.D2.Interop
-```
+The named experiments record exact commands and source revisions in the
+[experiment log](../ExperimentLog.md).
 
 | Metric | PMF subtype | Normalized Finsupp | Finsupp interop/product boundary |
 |---|---:|---:|---:|

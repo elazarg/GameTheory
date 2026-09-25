@@ -43,7 +43,7 @@ structure SourceChange (view : UtilityView semantics) [DecidableEq Node]
     {owner : Player} (target : DecisionSite diagram owner) where
   source : DecisionSite diagram owner
   source_ne_target : source ≠ target
-  sourceRule : FullContext source → FinDist (diagram.Value source.1)
+  sourceRule : FullContext source → PMF (diagram.Value source.1)
   not_sReachable : ¬ UtilityView.SReachable view source target
 
 /-- The policy obtained by changing the one source carried by a package. -/
@@ -149,7 +149,7 @@ theorem IsOptimalSiteRule.transport_applySourceChanges_of_distinct
     (hmixed : FullyMixedOn replacement changes)
     [Fintype (FullContext target)]
     [∀ term : view.UtilitySite owner, Fintype (TermConfig view term)]
-    (targetRule : FullContext target → FinDist (diagram.Value target.1))
+    (targetRule : FullContext target → PMF (diagram.Value target.1))
     (hoptimal : IsOptimalSiteRule semantics base owner replacement target
       targetRule) :
     IsOptimalSiteRule semantics base owner

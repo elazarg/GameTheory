@@ -12,7 +12,8 @@ post-decision boundary stresses [EXP-030](../ExperimentLog.md) and
 [EXP-034](../ExperimentLog.md), with the Bayes-fiber correction measured by
 [EXP-077](../ExperimentLog.md); reachability-proxy maintenance
 [EXP-096](../ExperimentLog.md); mathematics-root consolidation
-[EXP-101](../ExperimentLog.md).
+[EXP-101](../ExperimentLog.md); general-PMF import review
+[EXP-129](../ExperimentLog.md).
 
 ## Hypothesis
 
@@ -34,7 +35,11 @@ that layer does.
 *Take the primitive as an external dependency.* Accepted. The measurement
 below is what makes it defensible rather than convenient.
 
-## Measurements
+## Evidence from the dependency competition
+
+The following provenance and trust measurements describe EXP-063's pinned
+revision. Exact commands, elaboration costs, and subsequent pin maintenance
+belong in the experiment log; `lakefile.lean` owns the active revision.
 
 | Measure | Value |
 |---|---|
@@ -44,7 +49,6 @@ below is what makes it defensible rather than convenient.
 | revisions changed by the `v4.32.2` update | root Mathlib and the direct fixed-point pin only; 0 transitive revisions |
 | axioms behind `brouwer_fixed_point`, `kakutani_fixed_point`, `GameTheory.exists_isNash_mixed` | `propext`, `Classical.choice`, `Quot.sound` only |
 | `sorry`, `admit`, custom axioms in the dependency | 0 |
-| additional build jobs | 490 (6 its own, 484 Mathlib) |
 | existing reachability probes that fire on it | both (`stdSimplex`, `Polynomial`) |
 
 The original EXP-023 import measurement used the upstream `harfe` commit and
@@ -67,11 +71,12 @@ much cannot be contained by convention.
 
 `GameTheory.Analysis` is the only root permitted to import
 `FixedPointTheorems`, and no module outside it may import `GameTheory.Analysis`.
-The existing probes are unchanged and must keep passing: Core and the
-executable frontend still may not see `stdSimplex` or `Polynomial`. The new root
-is *expected* to see both, and that expectation is recorded as a measurement in
-its own right — a probe that asserts the leak exists exactly where it was
-allowed to.
+The original probe design used `stdSimplex` and `Polynomial` as proxies for
+that dependency. EXP-129 replaces those proxies for probability-bearing
+semantic modules with actual project Analysis and external fixed-point
+declarations, as described below. The executable frontend retains the stronger
+restrictions. Positive Analysis probes verify that the forbidden dependency is
+present where the architecture permits it.
 
 The trust argument is separable from the convenience one. Version alignment and
 build cost decide whether taking the dependency is pleasant; the axiom profile
@@ -287,3 +292,26 @@ adapter retain their imports. Stable Protocol and language syntax acquire no
 Analysis dependency. All zero budgets for forbidden imports, transport,
 placeholders, and custom axioms remain unchanged. The hostile existence
 consumers live under the analytic root, alongside the existing analytic tests.
+
+## General PMF imports
+
+EXP-129 refutes `StdSimplex`/`Polynomial` as reliable negative proxies for
+semantic consumers of canonical Mathlib PMFs on the pinned toolchain.
+`PMF.Monad` rejects both names, but `PMF.Constructions` exposes both before
+any project module is imported. The latter owns `PMF.map`, its laws,
+`LawfulMonad PMF`, and `PMF.filter`; its Bernoulli/Bochner closure reaches the
+simplex symbol. Restricting imports to `PMF.Monad` would also remove the
+canonical map API, not merely unnecessary filtering dependencies.
+
+The competing alternatives are to duplicate Mathlib probability operations,
+to wait for an upstream import split, or to measure the actual forbidden
+dependency. The restoration chooses the latter. Semantic-layer negative
+probes name actual external fixed-point and project Analysis declarations;
+positive Analysis probes must still show the existence machinery is present
+and used. Source checks continue to forbid every authored Analysis or external
+fixed-point import outside Analysis. Executable and probability-free modules
+retain their stronger negative probes; this is not a blanket budget increase.
+
+EXP-129 records the isolated probes, failed narrowing attempt, and replacement
+sentinel checks. D62 governs the PMF carrier decision; the delivery ledger
+tracks implementation acceptance.

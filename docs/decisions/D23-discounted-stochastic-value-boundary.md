@@ -2,7 +2,7 @@
 
 - **Status:** adopted and promoted
 - **Date:** 2026-08-02
-- **Experiment IDs:** EXP-051
+- **Experiment IDs:** EXP-051, EXP-138
 
 ## Decision / question
 
@@ -28,7 +28,7 @@ under the rewrite's accepted boundaries.
 
 Design 1 is adopted. The one-shot value is game-semantic and already follows
 from `Analysis.Minimax`; design 2 would generalize before a second independent
-consumer. Design 3 duplicates accepted finite laws and equilibrium semantics.
+consumer. Design 3 duplicates canonical probability and equilibrium semantics.
 Design 4 reverses the enforced one-way Analysis dependency.
 
 ## Representative hostile slice
@@ -77,10 +77,7 @@ and its values grow like `1 / (1 - beta)` near one.
 | matrix-value construction | canonical deterministic `GameForm`; `FinDist` mixed actions; existing saddle theorem |
 | probability representations | one: `FinDist`; no `PMF` exposure or infinite path law |
 | fixed-point use | Banach contraction from Mathlib directly; Kakutani remains transitively reachable through `Analysis.Minimax` |
-| focused build | 3,105 jobs; 13 seconds after dependency build |
 | source maximum line | 86 characters |
-| source hazards | zero placeholders, raw updates, transports, `Fintype.ofFinite`, or representation leaks |
-| axiom profile | `propext`, `Classical.choice`, and `Quot.sound` only |
 
 The decisive proof is a saddle squeeze. Against the row half of one selected
 saddle and the column half of another, an entrywise payoff perturbation bounds
@@ -113,8 +110,9 @@ optimality against arbitrary infinite-history strategies is not claimed.
 
 `GameTheory.Stochastic.ZeroSum` owns only the pointwise zero-sum predicate and
 the proof-free row/column presentation of a two-player joint action.
-`GameTheory.Analysis.MatrixValue` owns the canonical matrix adapter and value
-perturbation theorem. `GameTheory.Analysis.Stochastic.Discounted` owns the
+`GameTheory.Core.MatrixGame` owns the matrix-game data, mixed laws, and guarded
+expected payoffs. `GameTheory.Analysis.MatrixValue` owns the minimax value and
+value perturbation theorem. `GameTheory.Analysis.Stochastic.Discounted` owns the
 normalized auxiliary matrices, contraction, unique value, and stationary
 saddle selectors. Its zero-sum bridge identifies the constructed column
 utility with the native player-one stage payoff and negated continuation value;
@@ -122,18 +120,16 @@ the algebraic row-payoff operator itself remains assumption-minimal. The stable
 stochastic umbrella does not import Analysis; the analytic stochastic root
 imports stable stochastic data in one direction.
 
-The final six-target permanent-module build completes in 3,121 jobs. The
-stable stochastic root positively reaches its structural zero-sum surface and
-rejects the Shapley operator and Kakutani; the Analysis root positively reaches
-the zero-sum interpretation theorem, canonical matrix value, `FinDist`,
-contraction, stationary selector, and existing Kakutani/minimax path while
-rejecting Protocol and Repeated. Headline axioms remain `propext`,
-`Classical.choice`, and `Quot.sound`.
+Under D62, transition laws are ordinary PMFs. The auxiliary matrix requires
+integration of the continuation value under each transition law it evaluates;
+its definition needs no finite state carrier. The promoted Shapley contraction
+and stationary-selector theorems retain finite state and action spaces as
+local hypotheses. Those hypotheses supply the required integration and the
+finite matrix/sup-metric arguments; they are not fields of the stochastic game.
 
-The final reachability counts are 7 positive and 3 negative probes for stable
-Stochastic, and 8 positive and 2 negative probes for Analysis.Stochastic. The
-run also corrected the probe matcher so an unknown qualified child can no
-longer make its known namespace prefix appear unknown.
+The structural stochastic root excludes the Shapley operator and Kakutani.
+The analytic owner combines matrix value, contraction, stationary selection,
+and the existing minimax path, without importing Protocol or Repeated.
 
 This closes the mature discounted-value gate without pretending to prove the
 active sibling branch's general uniform-equilibrium conjecture. General

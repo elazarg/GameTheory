@@ -35,7 +35,7 @@ namespace DeviationScheme
 def unilateralConstant (sig : GameSignature ι) : DeviationScheme sig ι where
   members who := {who}
   Dev who := sig.Strategy who
-  actLocal who replacement _ := FinDist.pure (Subprofile.single who replacement)
+  actLocal who replacement _ := PMF.pure (Subprofile.single who replacement)
 
 /-- Recommendation-dependent unilateral maps: Aumann's correlated family. The
 deviation's only input is the deviator's own recommendation. -/
@@ -43,12 +43,12 @@ def recommendation (sig : GameSignature ι) : DeviationScheme sig ι where
   members who := {who}
   Dev who := sig.Strategy who → sig.Strategy who
   actLocal who respond own :=
-    FinDist.pure (Subprofile.single who (respond (own ⟨who, Finset.mem_singleton_self who⟩)))
+    PMF.pure (Subprofile.single who (respond (own ⟨who, Finset.mem_singleton_self who⟩)))
 
 /-- Randomized unilateral replacements. -/
 def unilateralRandomized (sig : GameSignature ι) : DeviationScheme sig ι where
   members who := {who}
-  Dev who := FinDist (sig.Strategy who)
+  Dev who := PMF (sig.Strategy who)
   actLocal who replacement _ := replacement.map (Subprofile.single who)
 
 /-- Joint replacements available to a nonempty coalition. -/
@@ -56,7 +56,7 @@ def coalitionConstant (sig : GameSignature ι) :
     DeviationScheme sig { members : Finset ι // members.Nonempty } where
   members coalition := coalition.1
   Dev coalition := Subprofile sig coalition.1
-  actLocal _ replacement _ := FinDist.pure replacement
+  actLocal _ replacement _ := PMF.pure replacement
 
 section Projections
 
@@ -69,7 +69,7 @@ section Projections
 @[simp] theorem unilateralConstant_actLocal (sig : GameSignature ι) (who : ι)
     (replacement : sig.Strategy who) (own : Subprofile sig {who}) :
     (unilateralConstant sig).actLocal who replacement own =
-      FinDist.pure (Subprofile.single who replacement) := rfl
+      PMF.pure (Subprofile.single who replacement) := rfl
 
 @[simp] theorem recommendation_members (sig : GameSignature ι) (who : ι) :
     (recommendation sig).members who = {who} := rfl
@@ -80,17 +80,17 @@ section Projections
 @[simp] theorem recommendation_actLocal (sig : GameSignature ι) (who : ι)
     (respond : sig.Strategy who → sig.Strategy who) (own : Subprofile sig {who}) :
     (recommendation sig).actLocal who respond own =
-      FinDist.pure
+      PMF.pure
         (Subprofile.single who (respond (own ⟨who, Finset.mem_singleton_self who⟩))) := rfl
 
 @[simp] theorem unilateralRandomized_members (sig : GameSignature ι) (who : ι) :
     (unilateralRandomized sig).members who = {who} := rfl
 
 @[simp] theorem unilateralRandomized_Dev (sig : GameSignature ι) (who : ι) :
-    (unilateralRandomized sig).Dev who = FinDist (sig.Strategy who) := rfl
+    (unilateralRandomized sig).Dev who = PMF (sig.Strategy who) := rfl
 
 @[simp] theorem unilateralRandomized_actLocal (sig : GameSignature ι) (who : ι)
-    (replacement : FinDist (sig.Strategy who)) (own : Subprofile sig {who}) :
+    (replacement : PMF (sig.Strategy who)) (own : Subprofile sig {who}) :
     (unilateralRandomized sig).actLocal who replacement own =
       replacement.map (Subprofile.single who) := rfl
 
@@ -106,7 +106,7 @@ section Projections
     (coalition : { members : Finset ι // members.Nonempty })
     (replacement : Subprofile sig coalition.1) (own : Subprofile sig coalition.1) :
     (coalitionConstant sig).actLocal coalition replacement own =
-      FinDist.pure replacement := rfl
+      PMF.pure replacement := rfl
 
 end Projections
 
@@ -115,35 +115,40 @@ section Apply
 variable [DecidableEq ι]
 
 @[simp]
-theorem unilateralConstant_apply (sig : GameSignature ι) (statusQuo : FinDist (Profile sig))
+theorem unilateralConstant_apply (sig : GameSignature ι) (statusQuo : PMF (Profile sig))
     (who : ι) (replacement : sig.Strategy who) :
     (unilateralConstant sig).apply statusQuo who replacement =
       statusQuo.map fun profile => Profile.update profile who replacement := by
-  simp [apply, FinDist.map_eq_bind]
+  simpa [apply, PMF.pure_map, Function.comp_def] using
+    (PMF.bind_pure_comp (fun profile => Profile.update profile who replacement) statusQuo)
 
 @[simp]
-theorem recommendation_apply (sig : GameSignature ι) (statusQuo : FinDist (Profile sig))
+theorem recommendation_apply (sig : GameSignature ι) (statusQuo : PMF (Profile sig))
     (who : ι) (respond : sig.Strategy who → sig.Strategy who) :
     (recommendation sig).apply statusQuo who respond =
       statusQuo.map fun profile => Profile.update profile who (respond (profile who)) := by
-  simp [apply, FinDist.map_eq_bind]
+  simpa [apply, PMF.pure_map, Function.comp_def] using
+    (PMF.bind_pure_comp
+      (fun profile => Profile.update profile who (respond (profile who))) statusQuo)
 
 @[simp]
-theorem unilateralRandomized_apply (sig : GameSignature ι) (statusQuo : FinDist (Profile sig))
-    (who : ι) (replacement : FinDist (sig.Strategy who)) :
+theorem unilateralRandomized_apply (sig : GameSignature ι) (statusQuo : PMF (Profile sig))
+    (who : ι) (replacement : PMF (sig.Strategy who)) :
     (unilateralRandomized sig).apply statusQuo who replacement =
       statusQuo.bind fun profile =>
         replacement.map fun s => Profile.update profile who s := by
   simp only [apply, unilateralRandomized_members, unilateralRandomized_actLocal,
-    FinDist.map_comp, Function.comp_def, Profile.override_single]
+    PMF.map_comp, Function.comp_def, Profile.override_single]
 
 @[simp]
-theorem coalitionConstant_apply (sig : GameSignature ι) (statusQuo : FinDist (Profile sig))
+theorem coalitionConstant_apply (sig : GameSignature ι) (statusQuo : PMF (Profile sig))
     (coalition : { members : Finset ι // members.Nonempty })
     (replacement : Subprofile sig coalition.1) :
     (coalitionConstant sig).apply statusQuo coalition replacement =
       statusQuo.map fun profile => Profile.override coalition.1 replacement profile := by
-  simp [apply, FinDist.map_eq_bind]
+  simpa [apply, PMF.pure_map, Function.comp_def] using
+    (PMF.bind_pure_comp
+      (fun profile => Profile.override coalition.1 replacement profile) statusQuo)
 
 /-- A constant replacement is the recommendation-independent rewrite. This
 morphism is what makes "CE implies CCE" a theorem rather than a second proof. -/
@@ -167,10 +172,12 @@ def constantToCoalition (sig : GameSignature ι) :
 /-- A deterministic replacement is a point-mass randomized replacement. -/
 def constantToRandomized (sig : GameSignature ι) :
     Hom id (unilateralConstant sig) (unilateralRandomized sig) where
-  map _ replacement := FinDist.pure replacement
+  map _ replacement := PMF.pure replacement
   apply_eq statusQuo who replacement := by
     simp only [unilateralConstant_Dev] at replacement
-    simp [FinDist.map_eq_bind]
+    simpa [PMF.pure_map, Function.comp_def] using
+      (PMF.bind_pure_comp
+        (fun profile => Profile.update profile who replacement) statusQuo)
 
 end Apply
 
@@ -185,17 +192,17 @@ variable [DecidableEq ι] (F : GameForm ι) (weaklyPrefers : WeakPreference ι F
 /-- A pure Nash equilibrium: no player prefers a unilateral constant
 replacement. -/
 def IsNash (profile : Profile F.sig) : Prop :=
-  IsEquilibrium F weaklyPrefers (FinDist.pure profile)
+  IsEquilibrium F weaklyPrefers (PMF.pure profile)
     (DeviationScheme.unilateralConstant F.sig)
 
 /-- A coarse correlated equilibrium: the same deviations, but the status quo is
 an arbitrary law over profiles. -/
-def IsCoarseCorrelatedEq (statusQuo : FinDist (Profile F.sig)) : Prop :=
+def IsCoarseCorrelatedEq (statusQuo : PMF (Profile F.sig)) : Prop :=
   IsEquilibrium F weaklyPrefers statusQuo (DeviationScheme.unilateralConstant F.sig)
 
 /-- A correlated equilibrium: deviations may depend on the deviator's own
 recommendation. -/
-def IsCorrelatedEq (statusQuo : FinDist (Profile F.sig)) : Prop :=
+def IsCorrelatedEq (statusQuo : PMF (Profile F.sig)) : Prop :=
   IsEquilibrium F weaklyPrefers statusQuo (DeviationScheme.recommendation F.sig)
 
 /-- A strong Nash equilibrium: after every nonempty coalition replacement,
@@ -203,7 +210,7 @@ some member weakly prefers the status quo.  For total preferences this is
 equivalent to saying that no coalition replacement makes every member strictly
 better off; see `isStrongNash_iff_not_all_gain`. -/
 def IsStrongNash (profile : Profile F.sig) : Prop :=
-  IsEquilibrium F (Preference.coalition weaklyPrefers) (FinDist.pure profile)
+  IsEquilibrium F (Preference.coalition weaklyPrefers) (PMF.pure profile)
     (DeviationScheme.coalitionConstant F.sig)
 
 end Concepts
@@ -224,21 +231,21 @@ theorem isNash_iff (profile : Profile F.sig) :
           (F.play (Profile.update profile who replacement)) := by
   simp [IsNash, IsEquilibrium, GameForm.outcomeLaw]
 
-theorem isCoarseCorrelatedEq_iff (statusQuo : FinDist (Profile F.sig)) :
+theorem isCoarseCorrelatedEq_iff (statusQuo : PMF (Profile F.sig)) :
     IsCoarseCorrelatedEq F weaklyPrefers statusQuo ↔
       ∀ who replacement,
         weaklyPrefers who (F.outcomeLaw statusQuo)
           (statusQuo.bind fun profile =>
             F.play (Profile.update profile who replacement)) := by
-  simp [IsCoarseCorrelatedEq, IsEquilibrium, GameForm.outcomeLaw]
+  simp [IsCoarseCorrelatedEq, IsEquilibrium, GameForm.outcomeLaw, Function.comp_def]
 
-theorem isCorrelatedEq_iff (statusQuo : FinDist (Profile F.sig)) :
+theorem isCorrelatedEq_iff (statusQuo : PMF (Profile F.sig)) :
     IsCorrelatedEq F weaklyPrefers statusQuo ↔
       ∀ who (respond : F.sig.Strategy who → F.sig.Strategy who),
         weaklyPrefers who (F.outcomeLaw statusQuo)
           (statusQuo.bind fun profile =>
             F.play (Profile.update profile who (respond (profile who)))) := by
-  simp [IsCorrelatedEq, IsEquilibrium, GameForm.outcomeLaw]
+  simp [IsCorrelatedEq, IsEquilibrium, GameForm.outcomeLaw, Function.comp_def]
 
 theorem isStrongNash_iff (profile : Profile F.sig) :
     IsStrongNash F weaklyPrefers profile ↔
@@ -285,12 +292,12 @@ own point mass. The two concepts differ only in the status quo they accept, so
 this is definitional rather than a transported proof. -/
 theorem isNash_iff_isCoarseCorrelatedEq_pure (profile : Profile F.sig) :
     IsNash F weaklyPrefers profile ↔
-      IsCoarseCorrelatedEq F weaklyPrefers (FinDist.pure profile) :=
+      IsCoarseCorrelatedEq F weaklyPrefers (PMF.pure profile) :=
   Iff.rfl
 
 /-- Correlated equilibrium implies coarse correlated equilibrium, by the
 constant-into-recommendation scheme morphism. -/
-theorem IsCorrelatedEq.isCoarseCorrelatedEq {statusQuo : FinDist (Profile F.sig)}
+theorem IsCorrelatedEq.isCoarseCorrelatedEq {statusQuo : PMF (Profile F.sig)}
     (h : IsCorrelatedEq F weaklyPrefers statusQuo) :
     IsCoarseCorrelatedEq F weaklyPrefers statusQuo :=
   IsEquilibrium.ofHom (DeviationScheme.constantToRecommendation F.sig) h
@@ -313,7 +320,7 @@ recommendation — but at a point mass there is only one recommendation to read.
 /-- A pure Nash equilibrium is a correlated equilibrium of its own point mass. -/
 theorem IsNash.isCorrelatedEq {profile : Profile F.sig}
     (h : IsNash F weaklyPrefers profile) :
-    IsCorrelatedEq F weaklyPrefers (FinDist.pure profile) := by
+    IsCorrelatedEq F weaklyPrefers (PMF.pure profile) := by
   rw [isCorrelatedEq_iff]
   intro who respond
   have := (isNash_iff profile).1 h who (respond (profile who))
@@ -332,25 +339,25 @@ preferences; expected utility satisfies it. -/
 
 /-- **Coarse correlated equilibria are closed under mixing.** -/
 theorem IsCoarseCorrelatedEq.mix (hconvex : Preference.Convex weaklyPrefers)
-    {first second : FinDist (Profile F.sig)} (hfirst : IsCoarseCorrelatedEq F weaklyPrefers first)
+    {first second : PMF (Profile F.sig)} (hfirst : IsCoarseCorrelatedEq F weaklyPrefers first)
     (hsecond : IsCoarseCorrelatedEq F weaklyPrefers second)
     (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) :
-    IsCoarseCorrelatedEq F weaklyPrefers (FinDist.mix t h0 h1 first second) := by
+    IsCoarseCorrelatedEq F weaklyPrefers (mix t h0 h1 first second) := by
   rw [isCoarseCorrelatedEq_iff] at hfirst hsecond ⊢
   intro who replacement
-  rw [GameForm.outcomeLaw_mix, FinDist.mix_bind]
+  rw [GameForm.outcomeLaw_mix, mix_bind]
   exact hconvex who t h0 h1 _ _ _ _ (hfirst who replacement) (hsecond who replacement)
 
 /-- **And so are correlated equilibria**, by the same argument with the
 recommendation-reading deviations. -/
 theorem IsCorrelatedEq.mix (hconvex : Preference.Convex weaklyPrefers)
-    {first second : FinDist (Profile F.sig)} (hfirst : IsCorrelatedEq F weaklyPrefers first)
+    {first second : PMF (Profile F.sig)} (hfirst : IsCorrelatedEq F weaklyPrefers first)
     (hsecond : IsCorrelatedEq F weaklyPrefers second)
     (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) :
-    IsCorrelatedEq F weaklyPrefers (FinDist.mix t h0 h1 first second) := by
+    IsCorrelatedEq F weaklyPrefers (mix t h0 h1 first second) := by
   rw [isCorrelatedEq_iff] at hfirst hsecond ⊢
   intro who respond
-  rw [GameForm.outcomeLaw_mix, FinDist.mix_bind]
+  rw [GameForm.outcomeLaw_mix, mix_bind]
   exact hconvex who t h0 h1 _ _ _ _ (hfirst who respond) (hsecond who respond)
 
 end Relations

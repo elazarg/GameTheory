@@ -35,7 +35,7 @@ def replacementLaw (pruning : Pruning diagram)
     [DecidableEq Player] [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : pruning.ReducedPolicy)
     (owner : Player) (replacement : OwnerPolicy diagram owner) :
-    FinDist (Assignment diagram) :=
+    PMF (Assignment diagram) :=
   (nativeBehavioralGameForm semantics).play
     (Profile.update (pruning.expandPolicy policy) owner replacement)
 
@@ -60,7 +60,7 @@ structure ReplacementContextLawAt (pruning : Pruning diagram)
     [DecidableEq Player] [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : pruning.ReducedPolicy)
     (owner : Player) (target : DecisionSite diagram owner) where
-  contextLaw : FinDist (FullContext target)
+  contextLaw : PMF (FullContext target)
   contextAction_eq : ∀ replacement : OwnerPolicy diagram owner,
     (replacementLaw pruning semantics policy owner replacement).map
         (fun assignment =>
@@ -79,7 +79,7 @@ structure TermContinuationLawAt (pruning : Pruning diagram)
     (context : ReplacementContextLawAt pruning semantics policy owner target)
     (term : view.UtilitySite owner) where
   continuationLaw : KeptContext pruning target →
-    diagram.Value target.1 → FinDist (TermConfig view term)
+    diagram.Value target.1 → PMF (TermConfig view term)
   joint_eq : ∀ replacement : OwnerPolicy diagram owner,
     (replacementLaw pruning semantics policy owner replacement).map
         (fun assignment =>
@@ -101,7 +101,7 @@ structure ReplacementInvariantTermMarginalAt (pruning : Pruning diagram)
     (semantics : Semantics diagram) (policy : pruning.ReducedPolicy)
     (owner : Player) (view : UtilityView semantics)
     (term : view.UtilitySite owner) where
-  marginalLaw : FinDist (TermConfig view term)
+  marginalLaw : PMF (TermConfig view term)
   marginal_eq : ∀ replacement : OwnerPolicy diagram owner,
     (replacementLaw pruning semantics policy owner replacement).map
         (fun assignment => Assignment.restrict diagram assignment
@@ -125,6 +125,59 @@ structure ReplacementInvariantUtilityLawAt (pruning : Pruning diagram)
       ReplacementInvariantTermMarginalAt pruning semantics policy owner view
         term
 
+private theorem relevantTermLaw_eq_jointBind
+    (pruning : Pruning diagram)
+    [DecidableEq Player] [Fintype Node] [DecidableEq Node]
+    (semantics : Semantics diagram) (policy : pruning.ReducedPolicy)
+    (owner : Player) (target : DecisionSite diagram owner)
+    (view : UtilityView semantics)
+    (certificate : ReplacementInvariantUtilityLawAt pruning semantics policy
+      owner target view)
+    (replacement : OwnerPolicy diagram owner)
+    (term : view.UtilitySite owner)
+    (hrelevant : view.IsRelevantUtilityTerm target term) :
+    (replacementLaw pruning semantics policy owner replacement).map
+        (fun assignment => Assignment.restrict diagram assignment
+          (view.term term).parents) =
+      (fullJoint certificate.context.contextLaw
+        (Config.restrict (pruning.kept_sub_observed target.1))
+        (replacement target)).bind fun result =>
+          (certificate.relevant term hrelevant).continuationLaw
+            result.1 result.2 := by
+  let termLaw := certificate.relevant term hrelevant
+  let law := replacementLaw pruning semantics policy owner replacement
+  let keep : FullContext target → KeptContext pruning target :=
+    Config.restrict (pruning.kept_sub_observed target.1)
+  let triple := fun assignment : Assignment diagram =>
+    (Assignment.restrict diagram assignment
+        (diagram.observedParents target.1),
+      (assignment target.1,
+        Assignment.restrict diagram assignment (view.term term).parents))
+  have htriple := termLaw.joint_eq replacement
+  calc
+    law.map (fun assignment => Assignment.restrict diagram assignment
+        (view.term term).parents) =
+        (law.map triple).map (fun result => result.2.2) := by
+      rw [PMF.map_comp]
+      rfl
+    _ = (certificate.context.contextLaw.bind fun full =>
+          (replacement target full).bind fun action =>
+            (termLaw.continuationLaw (keep full) action).map
+              fun termConfig => (full, (action, termConfig))).map
+              (fun result => result.2.2) := by
+      rw [htriple]
+    _ = (fullJoint certificate.context.contextLaw keep
+          (replacement target)).bind fun result =>
+            termLaw.continuationLaw result.1 result.2 := by
+      simp [fullJoint, PMF.map_bind, PMF.bind_bind, PMF.map_comp,
+        Function.comp_def]
+      apply bind_congr_on_support
+      intro full _
+      apply bind_congr_on_support
+      intro action _
+      simpa only [show (fun x : TermConfig view term => x) = id from rfl]
+        using (PMF.map_id (termLaw.continuationLaw (keep full) action))
+
 private noncomputable def termContinuationValue (pruning : Pruning diagram)
     [DecidableEq Player] [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : pruning.ReducedPolicy)
@@ -136,10 +189,123 @@ private noncomputable def termContinuationValue (pruning : Pruning diagram)
     (action : diagram.Value target.1) : ℝ := by
   classical
   by_cases hrelevant : view.IsRelevantUtilityTerm target term
-  · exact ((certificate.relevant term hrelevant).continuationLaw kept action).expect
-      (view.term term).payoff
-  · exact (certificate.nonrelevant term hrelevant).marginalLaw.expect
-      (view.term term).payoff
+  · let law := (certificate.relevant term hrelevant).continuationLaw kept action
+    exact if h : PayoffIntegrable law (view.term term).payoff then
+      expect law (view.term term).payoff h else 0
+  · let law := (certificate.nonrelevant term hrelevant).marginalLaw
+    exact if h : PayoffIntegrable law (view.term term).payoff then
+      expect law (view.term term).payoff h else 0
+
+private theorem expectedTerm_eq_jointValue
+    (pruning : Pruning diagram)
+    [DecidableEq Player] [Fintype Node] [DecidableEq Node]
+    (semantics : Semantics diagram) (policy : pruning.ReducedPolicy)
+    (owner : Player) (target : DecisionSite diagram owner)
+    (view : UtilityView semantics)
+    (certificate : ReplacementInvariantUtilityLawAt pruning semantics policy
+      owner target view)
+    (replacement : OwnerPolicy diagram owner)
+    (term : view.UtilitySite owner)
+    (hterm : PayoffIntegrable
+      (replacementLaw pruning semantics policy owner replacement)
+      (view.term term).value) :
+    ∃ hvalue : PayoffIntegrable
+      (fullJoint certificate.context.contextLaw
+        (Config.restrict (pruning.kept_sub_observed target.1))
+        (replacement target))
+      (fun result => termContinuationValue pruning semantics policy owner
+        target view certificate term result.1 result.2),
+      expect (replacementLaw pruning semantics policy owner replacement)
+          (view.term term).value hterm =
+        expect (fullJoint certificate.context.contextLaw
+          (Config.restrict (pruning.kept_sub_observed target.1))
+          (replacement target))
+          (fun result => termContinuationValue pruning semantics policy owner
+            target view certificate term result.1 result.2) hvalue := by
+  classical
+  let law := replacementLaw pruning semantics policy owner replacement
+  let keep : FullContext target → KeptContext pruning target :=
+    Config.restrict (pruning.kept_sub_observed target.1)
+  let joint := fullJoint certificate.context.contextLaw keep
+    (replacement target)
+  let projection := fun assignment : Assignment diagram =>
+    Assignment.restrict diagram assignment (view.term term).parents
+  have hcomp : (view.term term).payoff ∘ projection =
+      (view.term term).value := rfl
+  have hmap : PayoffIntegrable (law.map projection)
+      (view.term term).payoff := by
+    apply (payoffIntegrable_map_iff projection law
+      (view.term term).payoff).mpr
+    simpa only [hcomp, law] using hterm
+  have hmapValue :
+      expect law (view.term term).value hterm =
+        expect (law.map projection) (view.term term).payoff hmap := by
+    simpa only [hcomp] using
+      (expect_map projection law (view.term term).payoff hterm hmap).symm
+  by_cases hrelevant : view.IsRelevantUtilityTerm target term
+  · let termLaw := certificate.relevant term hrelevant
+    let kernel := fun result : KeptContext pruning target ×
+        diagram.Value target.1 =>
+      termLaw.continuationLaw result.1 result.2
+    have hlaw : law.map projection = joint.bind kernel :=
+      relevantTermLaw_eq_jointBind pruning semantics policy owner target view
+        certificate replacement term hrelevant
+    have hbind : PayoffIntegrable (joint.bind kernel)
+        (view.term term).payoff := payoffIntegrable_congr_law hlaw hmap
+    let value := fun result : KeptContext pruning target ×
+        diagram.Value target.1 =>
+      termContinuationValue pruning semantics policy owner target view
+        certificate term result.1 result.2
+    have hagree : ∀ (result) (hresult : result ∈ joint.support),
+        value result = expect (kernel result) (view.term term).payoff
+          (payoffIntegrable_bind_conditional_on_support joint kernel
+            (view.term term).payoff hbind result hresult) := by
+      intro result hresult
+      have hbranch := payoffIntegrable_bind_conditional_on_support joint
+        kernel (view.term term).payoff hbind result hresult
+      simp [value, termContinuationValue, hrelevant, kernel, termLaw,
+        hbranch]
+    have hvalue := payoffIntegrable_bind_conditionalValue_on_support joint
+      kernel (view.term term).payoff hbind value hagree
+    refine ⟨hvalue, ?_⟩
+    calc
+      expect law (view.term term).value hterm =
+          expect (law.map projection) (view.term term).payoff hmap := hmapValue
+      _ = expect (joint.bind kernel) (view.term term).payoff hbind :=
+        expect_congr_law hlaw _ hmap hbind
+      _ = expect joint value hvalue :=
+        expect_bind_tower_on_support joint kernel (view.term term).payoff
+          hbind value hagree
+  · let termLaw := certificate.nonrelevant term hrelevant
+    have hlaw : law.map projection = termLaw.marginalLaw :=
+      termLaw.marginal_eq replacement
+    have hmarg : PayoffIntegrable termLaw.marginalLaw
+        (view.term term).payoff := payoffIntegrable_congr_law hlaw hmap
+    let score := expect termLaw.marginalLaw (view.term term).payoff hmarg
+    let value := fun result : KeptContext pruning target ×
+        diagram.Value target.1 =>
+      termContinuationValue pruning semantics policy owner target view
+        certificate term result.1 result.2
+    have hvalueEq : value = fun _ => score := by
+      funext result
+      simp [value, termContinuationValue, hrelevant, score, termLaw, hmarg]
+    have hvalue : PayoffIntegrable joint value := by
+      rw [hvalueEq]
+      exact payoffIntegrable_constant joint score
+    refine ⟨hvalue, ?_⟩
+    calc
+      expect law (view.term term).value hterm =
+          expect (law.map projection) (view.term term).payoff hmap := hmapValue
+      _ = score := expect_congr_law hlaw _ hmap hmarg
+      _ = expect joint value hvalue := by
+        let hconst := payoffIntegrable_constant joint score
+        calc
+          score = expect joint (fun _ => score) hconst :=
+            (expect_constant joint score hconst).symm
+          _ = expect joint value hvalue :=
+            expect_congr_on_support
+              (fun result _ => (congrFun hvalueEq result).symm)
+              hconst hvalue
 
 /-- Replacement-invariant term laws assemble into the existing graph-free
 local utility factorization.  No one-site shape or value finiteness is needed
@@ -151,13 +317,22 @@ theorem localUtilityFactorsAt_of_replacementInvariantUtilityLawAt
     (owner : Player) (target : DecisionSite diagram owner)
     (view : UtilityView semantics)
     (certificate : ReplacementInvariantUtilityLawAt pruning semantics policy
-      owner target view) :
+      owner target view)
+    (hterm : ∀ (replacement : OwnerPolicy diagram owner)
+      (term : view.UtilitySite owner),
+      PayoffIntegrable (replacementLaw pruning semantics policy owner replacement)
+        (view.term term).value)
+    (hother : ∀ (other : Player), other ≠ owner →
+      ∀ replacement : OwnerPolicy diagram other,
+        UtilityIntegrable
+          (fun assignment who => semantics.utility who assignment) other
+          (replacementLaw pruning semantics policy other replacement)) :
     LocalUtilityFactorsAt pruning semantics policy owner target := by
   classical
   refine ⟨certificate.context.contextLaw,
     fun kept action => ∑ term : view.UtilitySite owner,
       termContinuationValue pruning semantics policy owner target view
-        certificate term kept action, ?_⟩
+        certificate term kept action, ?_, hother⟩
   intro replacement
   let law := replacementLaw pruning semantics policy owner replacement
   let keep : FullContext target → KeptContext pruning target :=
@@ -165,77 +340,44 @@ theorem localUtilityFactorsAt_of_replacementInvariantUtilityLawAt
       (pruning.kept_sub_observed target.1)
   let joint := fullJoint certificate.context.contextLaw keep
     (replacement target)
-  have hterm : ∀ term : view.UtilitySite owner,
-      law.expect (view.term term).value =
-        joint.expect (fun result =>
-          termContinuationValue pruning semantics policy owner target view
-            certificate term result.1 result.2) := by
+  let value := fun term : view.UtilitySite owner =>
+    fun result : KeptContext pruning target × diagram.Value target.1 =>
+      termContinuationValue pruning semantics policy owner target view
+        certificate term result.1 result.2
+  have hcomponent : ∀ term : view.UtilitySite owner,
+      PayoffIntegrable joint (value term) := by
     intro term
-    by_cases hrelevant : view.IsRelevantUtilityTerm target term
-    · let termLaw := certificate.relevant term hrelevant
-      calc
-        law.expect (view.term term).value =
-            (law.map fun assignment =>
-              (Assignment.restrict diagram assignment
-                  (diagram.observedParents target.1),
-                (assignment target.1,
-                  Assignment.restrict diagram assignment
-                    (view.term term).parents))).expect
-              (fun result => (view.term term).payoff result.2.2) := by
-                rw [FinDist.expect_map]
-                rfl
-        _ = (certificate.context.contextLaw.bind fun full =>
-              (replacement target full).bind fun action =>
-                (termLaw.continuationLaw (keep full) action).map
-                  fun termConfig => (full, (action, termConfig))).expect
-              (fun result => (view.term term).payoff result.2.2) := by
-                rw [termLaw.joint_eq replacement]
-        _ = joint.expect (fun result =>
-              termContinuationValue pruning semantics policy owner target view
-                certificate term result.1 result.2) := by
-                simp [joint, fullJoint, keep, FinDist.expect_bind,
-                  FinDist.expect_map, termContinuationValue, hrelevant,
-                  termLaw]
-    · let termLaw := certificate.nonrelevant term hrelevant
-      calc
-        law.expect (view.term term).value =
-            (law.map fun assignment =>
-              Assignment.restrict diagram assignment
-                (view.term term).parents).expect
-              (view.term term).payoff := by
-                rw [FinDist.expect_map]
-                rfl
-        _ = termLaw.marginalLaw.expect (view.term term).payoff := by
-              rw [termLaw.marginal_eq replacement]
-        _ = joint.expect (fun result =>
-              termContinuationValue pruning semantics policy owner target view
-                certificate term result.1 result.2) := by
-                simp [joint, fullJoint, termContinuationValue, hrelevant,
-                  termLaw, FinDist.expect_const]
-  show law.expect (fun assignment => semantics.utility owner assignment) = _
+    exact (expectedTerm_eq_jointValue pruning semantics policy owner target
+      view certificate replacement term (hterm replacement term)).choose
+  have heach : ∀ term : view.UtilitySite owner,
+      expect law (view.term term).value (hterm replacement term) =
+        expect joint (value term) (hcomponent term) := by
+    intro term
+    exact (expectedTerm_eq_jointValue pruning semantics policy owner target
+      view certificate replacement term (hterm replacement term)).choose_spec
+  have hsum := expect_eq_sum_on_support law
+    (fun term : view.UtilitySite owner => (view.term term).value)
+    (fun assignment => semantics.utility owner assignment)
+    (hterm replacement) (by
+      intro assignment _
+      exact view.utility_eq_sum owner assignment)
+  let hplay : UtilityIntegrable
+      (fun assignment who => semantics.utility who assignment) owner law :=
+    hsum.1
+  let hjoint := payoffIntegrable_sum joint value hcomponent
+  refine ⟨hplay, hjoint, ?_⟩
   calc
-    law.expect (fun assignment => semantics.utility owner assignment) =
-        law.expect (fun assignment => ∑ term : view.UtilitySite owner,
-          (view.term term).value assignment) := by
-            apply FinDist.expect_congr
-            intro assignment _
-            exact view.utility_eq_sum owner assignment
+    expectedUtility (fun assignment who => semantics.utility who assignment)
+        owner law hplay =
+      ∑ term : view.UtilitySite owner,
+        expect law (view.term term).value (hterm replacement term) := hsum.2
     _ = ∑ term : view.UtilitySite owner,
-          law.expect (view.term term).value :=
-      (FinDist.expect_sum_comm law fun term assignment =>
-        (view.term term).value assignment).symm
-    _ = ∑ term : view.UtilitySite owner,
-          joint.expect (fun result =>
-            termContinuationValue pruning semantics policy owner target view
-              certificate term result.1 result.2) := by
+          expect joint (value term) (hcomponent term) := by
       apply Finset.sum_congr rfl
       intro term _
-      exact hterm term
-    _ = joint.expect (fun result => ∑ term : view.UtilitySite owner,
-          termContinuationValue pruning semantics policy owner target view
-            certificate term result.1 result.2) :=
-      FinDist.expect_sum_comm joint fun term result =>
-        termContinuationValue pruning semantics policy owner target view
-          certificate term result.1 result.2
+      exact heach term
+    _ = expect joint (fun result => ∑ term : view.UtilitySite owner,
+          value term result) hjoint :=
+      (expect_sum joint value hcomponent).symm
 
 end GameTheory.Experimental.PostArchitecture.MAIDReplacementInvariantUtility

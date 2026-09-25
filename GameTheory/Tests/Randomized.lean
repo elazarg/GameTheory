@@ -18,6 +18,9 @@ what such a hypothesis is buying.
 -/
 
 import GameTheory.Protocol.Information
+import GameTheory.Protocol.PolicyRandomization
+import GameTheory.Math.Probability.Mixture
+import GameTheory.Math.Probability.Support
 
 noncomputable section
 
@@ -54,13 +57,13 @@ def twice : ExecutionProtocol Unit where
     match state with
     | .start =>
         match joint.1 () with
-        | some vote => FinDist.pure (.after vote)
-        | none => FinDist.pure (.after .up)
+        | some vote => PMF.pure (.after vote)
+        | none => PMF.pure (.after .up)
     | .after first =>
         match joint.1 () with
-        | some vote => FinDist.pure (.done first vote)
-        | none => FinDist.pure (.done first .up)
-    | .done first second => FinDist.pure (.done first second)
+        | some vote => PMF.pure (.done first vote)
+        | none => PMF.pure (.done first .up)
+    | .done first second => PMF.pure (.done first second)
   progress := by
     rintro state hterm
     refine ⟨fun _ => some .up, fun _ => ⟨?_, Set.mem_univ _⟩⟩
@@ -122,26 +125,25 @@ theorem none_mem_menu : (none : Option Vote) ∈ model.menu () true := by simp [
 def coinPolicy : model.BehavioralPolicy () := fun info =>
   match info with
   | false =>
-      FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-        (FinDist.pure ⟨some .up, up_mem_menu⟩) (FinDist.pure ⟨some .down, down_mem_menu⟩)
-  | true => FinDist.pure ⟨none, none_mem_menu⟩
+      mix (1 / 2) (by norm_num) (by norm_num)
+        (PMF.pure ⟨some .up, up_mem_menu⟩) (PMF.pure ⟨some .down, down_mem_menu⟩)
+  | true => PMF.pure ⟨none, none_mem_menu⟩
 
 theorem mem_support_coinPolicy_up :
     (⟨some Vote.up, up_mem_menu⟩ : model.Choice () false) ∈ (coinPolicy false).support := by
-  refine FinDist.prob_pos_iff.mp ?_
-  rw [show coinPolicy false = FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-      (FinDist.pure ⟨some .up, up_mem_menu⟩)
-      (FinDist.pure ⟨some .down, down_mem_menu⟩) from rfl]
-  simp [FinDist.prob_pure_eq_ite]
+  rw [PMF.mem_support_iff]
+  rw [show coinPolicy false = mix (1 / 2) (by norm_num) (by norm_num)
+      (PMF.pure ⟨some .up, up_mem_menu⟩)
+      (PMF.pure ⟨some .down, down_mem_menu⟩) from rfl]
+  norm_num [mix_apply]
 
 theorem mem_support_coinPolicy_down :
     (⟨some Vote.down, down_mem_menu⟩ : model.Choice () false) ∈ (coinPolicy false).support := by
-  refine FinDist.prob_pos_iff.mp ?_
-  rw [show coinPolicy false = FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-      (FinDist.pure ⟨some .up, up_mem_menu⟩)
-      (FinDist.pure ⟨some .down, down_mem_menu⟩) from rfl]
-  simp [FinDist.prob_pure_eq_ite]
-  norm_num
+  rw [PMF.mem_support_iff]
+  rw [show coinPolicy false = mix (1 / 2) (by norm_num) (by norm_num)
+      (PMF.pure ⟨some .up, up_mem_menu⟩)
+      (PMF.pure ⟨some .down, down_mem_menu⟩) from rfl]
+  norm_num [mix_apply]
 
 /-! ## A mixed profile can only vote the same way twice
 
@@ -162,7 +164,7 @@ def stepTo : Round → Vote → Round
 
 theorem step_eq_pure (state : Round) (hstopped : state.stopped = false) (vote : Vote)
     (hlegal : twice.Legal state (fun _ => some vote)) :
-    twice.step state ⟨fun _ => some vote, hlegal⟩ = FinDist.pure (stepTo state vote) := by
+    twice.step state ⟨fun _ => some vote, hlegal⟩ = PMF.pure (stepTo state vote) := by
   cases state with
   | start => rfl
   | after first => rfl
@@ -180,7 +182,7 @@ theorem step_historyChooser (policies : (i : Unit) → model.Policy i) (vote : V
     (hvote : (policies () false).1 = some vote) (h : History twice)
     (hstopped : h.state.stopped = false) (hterm : ¬ twice.terminal h.state) :
     twice.step h.state (model.historyChooser policies h hterm) =
-      FinDist.pure (stepTo h.state vote) := by
+      PMF.pure (stepTo h.state vote) := by
   obtain ⟨state, trace⟩ := h
   have hjoint : (model.jointAt policies trace) () = some vote := by
     simp only [InformationModel.jointAt, InformationModel.Policy.act]
@@ -189,14 +191,14 @@ theorem step_historyChooser (policies : (i : Unit) → model.Policy i) (vote : V
   cases state with
   | start =>
     show (match (model.jointAt policies trace) () with
-      | some vote => FinDist.pure (Round.after vote)
-      | none => FinDist.pure (Round.after Vote.up)) = _
+      | some vote => PMF.pure (Round.after vote)
+      | none => PMF.pure (Round.after Vote.up)) = _
     rw [hjoint]
     rfl
   | after first =>
     show (match (model.jointAt policies trace) () with
-      | some vote => FinDist.pure (Round.done first vote)
-      | none => FinDist.pure (Round.done first Vote.up)) = _
+      | some vote => PMF.pure (Round.done first vote)
+      | none => PMF.pure (Round.done first Vote.up)) = _
     rw [hjoint]
     rfl
   | done first second => exact absurd hstopped (by simp [Round.stopped])
@@ -205,29 +207,29 @@ theorem step_historyChooser (policies : (i : Unit) → model.Policy i) (vote : V
 theorem map_state_runFrom_one (policies : (i : Unit) → model.Policy i) (vote : Vote)
     (hvote : (policies () false).1 = some vote) (h : History twice)
     (hstopped : h.state.stopped = false) :
-    FinDist.map History.state (model.runFrom policies 1 h) =
-      FinDist.pure (stepTo h.state vote) := by
+    PMF.map History.state (model.runFrom policies 1 h) =
+      PMF.pure (stepTo h.state vote) := by
   have hterm : ¬ twice.terminal h.state := by simp [hstopped]
   have hstep := step_historyChooser policies vote hvote h hstopped hterm
   rw [InformationModel.runFrom, ExecutionProtocol.runHistoryFor_succ_of_not_terminal _ 0 hterm]
-  refine FinDist.map_bindOnSupport_const _ fun target hrealized => ?_
-  rw [hstep, FinDist.mem_support_pure] at hrealized
+  refine map_bindOnSupport_const _ fun target hrealized => ?_
+  rw [hstep, PMF.mem_support_pure_iff] at hrealized
   subst hrealized
-  rw [ExecutionProtocol.runHistoryFor_zero, FinDist.map_pure]
+  rw [ExecutionProtocol.runHistoryFor_zero, PMF.pure_map]
   rfl
 
 /-- **A deterministic profile votes the same way twice**, because it meets the
 same information state twice and a policy is a function of that. -/
 theorem map_state_runFrom_two (policies : (i : Unit) → model.Policy i) (vote : Vote)
     (hvote : (policies () false).1 = some vote) :
-    FinDist.map History.state (model.runFrom policies 2 twice.initHistory) =
-      FinDist.pure (Round.done vote vote) := by
+    PMF.map History.state (model.runFrom policies 2 twice.initHistory) =
+      PMF.pure (Round.done vote vote) := by
   have hterm : ¬ twice.terminal twice.initHistory.state := by
     simp [Round.stopped, ExecutionProtocol.initHistory]
   have hstep := step_historyChooser policies vote hvote twice.initHistory rfl hterm
   rw [InformationModel.runFrom, ExecutionProtocol.runHistoryFor_succ_of_not_terminal _ 1 hterm]
-  refine FinDist.map_bindOnSupport_const _ fun target hrealized => ?_
-  rw [hstep, FinDist.mem_support_pure] at hrealized
+  refine map_bindOnSupport_const _ fun target hrealized => ?_
+  rw [hstep, PMF.mem_support_pure_iff] at hrealized
   subst hrealized
   exact map_state_runFrom_one policies vote hvote _ rfl
 
@@ -236,14 +238,14 @@ profile it draws answers the one continuing information state once, so both
 votes are that answer. -/
 theorem not_mem_support_runMixed :
     Round.done Vote.up Vote.down ∉
-      (FinDist.map History.state
+      (PMF.map History.state
         (model.runMixed (fun _ => coinPolicy.toMixed) 2)).support := by
-  rw [InformationModel.runMixed, InformationModel.runMixedFrom, FinDist.map_bind,
-    FinDist.support_bind]
+  rw [InformationModel.runMixed, InformationModel.runMixedFrom, PMF.map_bind,
+    PMF.support_bind]
   intro hmem
   obtain ⟨policies, _, hin⟩ := Set.mem_iUnion₂.mp hmem
   obtain ⟨vote, hvote⟩ := exists_vote (policies ())
-  rw [map_state_runFrom_two policies vote hvote, FinDist.mem_support_pure] at hin
+  rw [map_state_runFrom_two policies vote hvote, PMF.mem_support_pure_iff] at hin
   cases vote <;> simp at hin
 
 /-! ## The behavioral law does show two different votes
@@ -260,40 +262,40 @@ theorem mem_support_randomizedChooser {state : Round} (trace : Trace twice state
       { joint : ∀ i, Option (twice.Action i) //
         twice.Legal (History.state ⟨state, trace⟩) joint }) ∈
       (model.randomizedChooser (fun _ => coinPolicy) ⟨state, trace⟩ hterm).support := by
-  rw [InformationModel.randomizedChooser, InformationModel.behavioralJoint, FinDist.support_map]
-  exact ⟨draws, FinDist.mem_support_pi.mpr hmem, rfl⟩
+  rw [InformationModel.randomizedChooser, InformationModel.behavioralJoint, PMF.support_map]
+  exact ⟨draws, (independentProduct_support_iff _ draws).2 hmem, rfl⟩
 
 /-- **The behavioral law does.** Two independent draws can disagree, and this
 one does. -/
 theorem mem_support_runBehavioral :
     Round.done Vote.up Vote.down ∈
-      (FinDist.map History.state (model.runBehavioral (fun _ => coinPolicy) 2)).support := by
+      (PMF.map History.state (model.runBehavioral (fun _ => coinPolicy) 2)).support := by
   have hterm0 : ¬ twice.terminal (History.state twice.initHistory) := by
     simp [Round.stopped, ExecutionProtocol.initHistory]
   rw [InformationModel.runBehavioral, InformationModel.runBehavioralFrom,
     ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ 1 hterm0,
-    FinDist.map_bind, FinDist.support_bind]
+    PMF.map_bind, PMF.support_bind]
   refine Set.mem_biUnion
     (mem_support_randomizedChooser _ hterm0 (fun _ => ⟨some Vote.up, up_mem_menu⟩)
       (fun _ => mem_support_coinPolicy_up)) ?_
-  rw [FinDist.map_bindOnSupport, FinDist.support_bindOnSupport]
+  rw [map_bindOnSupport, PMF.support_bindOnSupport]
   refine Set.mem_iUnion.mpr ⟨Round.after Vote.up,
-    Set.mem_iUnion.mpr ⟨FinDist.mem_support_pure.mpr rfl, ?_⟩⟩
+    Set.mem_iUnion.mpr ⟨(PMF.mem_support_pure_iff _ _).mpr rfl, ?_⟩⟩
   have hterm1 : ¬ twice.terminal
       (History.state (twice.initHistory.extend
         (ExecutionProtocol.legal_of_legalOption hterm0 fun i =>
           (model.menu_adequate i twice.initHistory.trace (some Vote.up)).mp up_mem_menu)
-        (FinDist.mem_support_pure.mpr rfl))) := by
+        ((PMF.mem_support_pure_iff _ _).mpr rfl))) := by
     simp [Round.stopped, ExecutionProtocol.History.extend]
   rw [ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ 0 hterm1,
-    FinDist.map_bind, FinDist.support_bind]
+    PMF.map_bind, PMF.support_bind]
   refine Set.mem_biUnion
     (mem_support_randomizedChooser _ hterm1 (fun _ => ⟨some Vote.down, down_mem_menu⟩)
       (fun _ => mem_support_coinPolicy_down)) ?_
-  rw [FinDist.map_bindOnSupport, FinDist.support_bindOnSupport]
+  rw [map_bindOnSupport, PMF.support_bindOnSupport]
   refine Set.mem_iUnion.mpr ⟨Round.done Vote.up Vote.down,
-    Set.mem_iUnion.mpr ⟨FinDist.mem_support_pure.mpr rfl, ?_⟩⟩
-  rw [ExecutionProtocol.runRandomizedFor_zero, FinDist.map_pure, FinDist.mem_support_pure]
+    Set.mem_iUnion.mpr ⟨(PMF.mem_support_pure_iff _ _).mpr rfl, ?_⟩⟩
+  rw [ExecutionProtocol.runRandomizedFor_zero, PMF.pure_map, PMF.mem_support_pure_iff]
   rfl
 
 /-- **Where a player puts its randomness matters.** Drawing at each information
@@ -304,8 +306,8 @@ An equivalence between the two must therefore rule this out, which is what a
 hypothesis forbidding a player to revisit an information state it has acted at
 is for. -/
 theorem runBehavioral_ne_runMixed :
-    FinDist.map History.state (model.runBehavioral (fun _ => coinPolicy) 2) ≠
-      FinDist.map History.state (model.runMixed (fun _ => coinPolicy.toMixed) 2) := by
+    PMF.map History.state (model.runBehavioral (fun _ => coinPolicy) 2) ≠
+      PMF.map History.state (model.runMixed (fun _ => coinPolicy.toMixed) 2) := by
   intro hequal
   refine not_mem_support_runMixed ?_
   rw [← hequal]
@@ -322,7 +324,7 @@ theorem legalUpStart : twice.Legal Round.start (fun _ => some Vote.up) :=
 
 theorem realized_afterUp :
     Round.after Vote.up ∈ (twice.step Round.start ⟨_, legalUpStart⟩).support :=
-  FinDist.mem_support_pure.2 rfl
+  (PMF.mem_support_pure_iff _ _).mpr rfl
 
 theorem legalDownAfter : twice.Legal (Round.after Vote.up) (fun _ => some Vote.down) :=
   legal_of_not_stopped rfl .down
@@ -330,7 +332,7 @@ theorem legalDownAfter : twice.Legal (Round.after Vote.up) (fun _ => some Vote.d
 theorem realized_done :
     Round.done Vote.up Vote.down ∈
       (twice.step (Round.after Vote.up) ⟨_, legalDownAfter⟩).support :=
-  FinDist.mem_support_pure.2 rfl
+  (PMF.mem_support_pure_iff _ _).mpr rfl
 
 /-- The play that votes `up` and then `down`. -/
 def votedTwice : Trace twice (Round.done Vote.up Vote.down) :=
@@ -376,9 +378,9 @@ def once : ExecutionProtocol Unit where
     match state with
     | .start =>
         match joint.1 () with
-        | some vote => FinDist.pure (.voted vote)
-        | none => FinDist.pure (.voted .up)
-    | .voted vote => FinDist.pure (.voted vote)
+        | some vote => PMF.pure (.voted vote)
+        | none => PMF.pure (.voted .up)
+    | .voted vote => PMF.pure (.voted vote)
   progress := by
     rintro state hterm
     refine ⟨fun _ => some .up, fun _ => ⟨?_, Set.mem_univ _⟩⟩
@@ -423,12 +425,12 @@ theorem actedAt_single {state : once.State} (trace : Trace once state) :
     subst hsource
     obtain ⟨vote, hvote⟩ := LegalOption.exists_eq_some_of_active (joint ())
       (ExecutionProtocol.legalOption_of_legal isLegal ()) rfl
-    have hstep : once.step Single.start ⟨joint, isLegal⟩ = FinDist.pure (Single.voted vote) := by
+    have hstep : once.step Single.start ⟨joint, isLegal⟩ = PMF.pure (Single.voted vote) := by
       show (match joint () with
-        | some v => FinDist.pure (Single.voted v)
-        | none => FinDist.pure (Single.voted Vote.up)) = _
+        | some v => PMF.pure (Single.voted v)
+        | none => PMF.pure (Single.voted Vote.up)) = _
       rw [hvote]
-    rw [hstep, FinDist.mem_support_pure] at realized
+    rw [hstep, PMF.mem_support_pure_iff] at realized
     subst realized
     rw [InfoSignals.actedAt, hvote, ih, singleInfoOf_eq_stopped]
     rfl
@@ -511,10 +513,10 @@ theorem legalDownOnce : once.Legal Single.start (fun _ => some Vote.down) :=
     fun _ => ⟨rfl, Set.mem_univ _⟩
 
 theorem realized_up : Single.voted Vote.up ∈ (once.step .start ⟨_, legalUpOnce⟩).support :=
-  FinDist.mem_support_pure.2 rfl
+  (PMF.mem_support_pure_iff _ _).mpr rfl
 
 theorem realized_down : Single.voted Vote.down ∈ (once.step .start ⟨_, legalDownOnce⟩).support :=
-  FinDist.mem_support_pure.2 rfl
+  (PMF.mem_support_pure_iff _ _).mpr rfl
 
 /-- **And so does the one-vote protocol**, for the same reason: having stopped,
 it cannot tell which way it voted. Satisfying the no-revisit condition is
@@ -590,23 +592,23 @@ theorem memory_step {source target : Round} {joint : ∀ i, Option (twice.Action
   have hstopped := stopped_eq_false_of_legal isLegal
   cases source with
   | start =>
-    have hstep : twice.step Round.start ⟨joint, isLegal⟩ = FinDist.pure (Round.after vote) := by
+    have hstep : twice.step Round.start ⟨joint, isLegal⟩ = PMF.pure (Round.after vote) := by
       show (match joint () with
-        | some chosen => FinDist.pure (Round.after chosen)
-        | none => FinDist.pure (Round.after Vote.up)) = _
+        | some chosen => PMF.pure (Round.after chosen)
+        | none => PMF.pure (Round.after Vote.up)) = _
       rw [hvote]
-    rw [hstep, FinDist.mem_support_pure] at realized
+    rw [hstep, PMF.mem_support_pure_iff] at realized
     subst realized
     refine ⟨?_, ?_⟩ <;> · show _ = _; rw [hvote]; rfl
   | after first =>
     have hstep :
         twice.step (Round.after first) ⟨joint, isLegal⟩ =
-          FinDist.pure (Round.done first vote) := by
+          PMF.pure (Round.done first vote) := by
       show (match joint () with
-        | some chosen => FinDist.pure (Round.done first chosen)
-        | none => FinDist.pure (Round.done first Vote.up)) = _
+        | some chosen => PMF.pure (Round.done first chosen)
+        | none => PMF.pure (Round.done first Vote.up)) = _
       rw [hvote]
-    rw [hstep, FinDist.mem_support_pure] at realized
+    rw [hstep, PMF.mem_support_pure_iff] at realized
     subst realized
     refine ⟨?_, ?_⟩ <;> · show _ = _; rw [hvote]; rfl
   | done first second => exact absurd hstopped (by simp [Round.stopped])
@@ -703,6 +705,7 @@ theorem recall_kuhn (fuel : ℕ) :
   recallModel.runBehavioral_image_eq_runMixed_image
     (recallModel.actsOnceWhereItMatters_of_perfectRecall recall_perfectRecall)
     (InformationModel.constrainsAlike_of_perfectRecall recall_perfectRecall) fuel
+    (fun _ _ => Set.toFinite _)
 
 /-! ## A certified horizon, including runs started partway through play -/
 
@@ -719,11 +722,11 @@ theorem twice_trace_length {state : twice.State} (trace : Trace twice state) :
       cases source with
       | start =>
           cases hchoice : joint () <;>
-            simp only [twice, hchoice, FinDist.mem_support_pure] at realized <;>
+            simp only [twice, hchoice, PMF.mem_support_pure_iff] at realized <;>
             subst target <;> simp [Trace.length, ih]
       | after first =>
           cases hchoice : joint () <;>
-            simp only [twice, hchoice, FinDist.mem_support_pure] at realized <;>
+            simp only [twice, hchoice, PMF.mem_support_pure_iff] at realized <;>
             subst target <;> simp [Trace.length, ih]
       | done first second => simp [Round.stopped] at hstopped
 

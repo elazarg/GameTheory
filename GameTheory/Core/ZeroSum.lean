@@ -43,13 +43,56 @@ theorem IsZeroSum.eq_neg {utility : Outcome → Fin 2 → ℝ} (hzero : IsZeroSu
   linarith
 
 /-- Hence the second player's expected utility is the first player's negated. -/
-theorem IsZeroSum.expectedUtility_one {utility : Outcome → Fin 2 → ℝ}
-    (hzero : IsZeroSum utility) (law : FinDist Outcome) :
-    expectedUtility utility 1 law = -expectedUtility utility 0 law := by
+theorem IsZeroSum.utilityIntegrable_one_of_zero
+    {utility : Outcome → Fin 2 → ℝ} (hzero : IsZeroSum utility)
+    (law : PMF Outcome)
+    (hzeroIntegrable : UtilityIntegrable utility 0 law) :
+    UtilityIntegrable utility 1 law := by
+  apply payoffIntegrable_congr_on_support
+    (fun outcome _ => (hzero.eq_neg outcome).symm)
+  exact payoffIntegrable_neg hzeroIntegrable
+
+theorem IsZeroSum.utilityIntegrable_zero_of_one
+    {utility : Outcome → Fin 2 → ℝ} (hzero : IsZeroSum utility)
+    (law : PMF Outcome)
+    (honeIntegrable : UtilityIntegrable utility 1 law) :
+    UtilityIntegrable utility 0 law := by
+  apply payoffIntegrable_congr_on_support
+    (fun outcome _ => by
+      have heq := hzero.eq_neg outcome
+      calc
+        -utility outcome 1 = -(-utility outcome 0) := by rw [heq]
+        _ = utility outcome 0 := by ring)
+  exact payoffIntegrable_neg honeIntegrable
+
+/-- The opposite player's integrability certificate follows from a zero-sum
+identity under the same law. -/
+theorem IsZeroSum.expectedUtility_one
+    {utility : Outcome → Fin 2 → ℝ} (hzero : IsZeroSum utility)
+    (law : PMF Outcome)
+    (hzeroIntegrable : UtilityIntegrable utility 0 law)
+    (honeIntegrable : UtilityIntegrable utility 1 law) :
+    expectedUtility utility 1 law honeIntegrable =
+      -expectedUtility utility 0 law hzeroIntegrable := by
   unfold expectedUtility
-  rw [show (fun outcome => utility outcome 1) = fun outcome => (-1 : ℝ) * utility outcome 0 from
-    funext fun outcome => by rw [neg_one_mul, hzero.eq_neg]]
-  rw [FinDist.expect_smul]
+  calc
+    expect law (fun outcome => utility outcome 1) honeIntegrable =
+        expect law (fun outcome => -utility outcome 0)
+          (payoffIntegrable_neg hzeroIntegrable) :=
+      expect_congr_on_support
+        (fun outcome _ => hzero.eq_neg outcome) honeIntegrable
+        (payoffIntegrable_neg hzeroIntegrable)
+    _ = -expect law (fun outcome => utility outcome 0) hzeroIntegrable :=
+      expect_neg hzeroIntegrable
+
+theorem IsZeroSum.expectedUtility_zero
+    {utility : Outcome → Fin 2 → ℝ} (hzero : IsZeroSum utility)
+    (law : PMF Outcome)
+    (hzeroIntegrable : UtilityIntegrable utility 0 law)
+    (honeIntegrable : UtilityIntegrable utility 1 law) :
+    expectedUtility utility 0 law hzeroIntegrable =
+      -expectedUtility utility 1 law honeIntegrable := by
+  rw [hzero.expectedUtility_one law hzeroIntegrable honeIntegrable]
   ring
 
 /-- A zero-sum team game has zero utility at every outcome. -/
@@ -77,12 +120,17 @@ variable (utility) in
 lower it alone. Only the first player's payoff appears, because in a zero-sum
 game the second player's is its negation. -/
 def IsSaddlePoint (σ : Profile F.sig.mixed) : Prop :=
-  (∀ μ : FinDist (F.sig.Strategy 0),
-      expectedUtility utility 0 (F.mixed.play (Profile.update σ 0 μ)) ≤
-        expectedUtility utility 0 (F.mixed.play σ)) ∧
-    ∀ ν : FinDist (F.sig.Strategy 1),
-      expectedUtility utility 0 (F.mixed.play σ) ≤
-        expectedUtility utility 0 (F.mixed.play (Profile.update σ 1 ν))
+  ∃ hbase : UtilityIntegrable utility 0 (F.mixed.play σ),
+    (∀ μ : PMF (F.sig.Strategy 0),
+      ∃ hdev : UtilityIntegrable utility 0
+          (F.mixed.play (Profile.update σ 0 μ)),
+        expectedUtility utility 0 (F.mixed.play (Profile.update σ 0 μ)) hdev ≤
+          expectedUtility utility 0 (F.mixed.play σ) hbase) ∧
+    (∀ ν : PMF (F.sig.Strategy 1),
+      ∃ hdev : UtilityIntegrable utility 0
+          (F.mixed.play (Profile.update σ 1 ν)),
+        expectedUtility utility 0 (F.mixed.play σ) hbase ≤
+          expectedUtility utility 0 (F.mixed.play (Profile.update σ 1 ν)) hdev)
 
 /-- Replacing the second player's law by another profile's is the same as
 replacing that profile's first player by this one's — with two players there is
@@ -99,11 +147,25 @@ is the equilibrium condition; the second player's is the same condition read
 through the negation. -/
 theorem IsNash.isSaddlePoint (hzero : IsZeroSum utility)
     (hnash : IsNash F.mixed (euPreference utility) σ) : IsSaddlePoint utility σ := by
-  rw [isNash_iff] at hnash
-  refine ⟨fun μ => hnash 0 μ, fun ν => ?_⟩
-  have hone := hnash 1 ν
-  rw [euPreference_apply, hzero.expectedUtility_one, hzero.expectedUtility_one] at hone
-  linarith
+  have hbase := hnash.utilityIntegrable 0
+  refine ⟨hbase, ?_, ?_⟩
+  · intro μ
+    obtain ⟨_, hdev, hle⟩ :=
+      (isNash_iff (F := F.mixed) σ).1 hnash 0 μ
+    refine ⟨hdev, ?_⟩
+    exact hle.trans_eq (expectedUtility_congr_law utility 0 rfl _ hbase)
+  · intro ν
+    obtain ⟨honeBase, honeDev, hle⟩ :=
+      (isNash_iff (F := F.mixed) σ).1 hnash 1 ν
+    let devLaw := F.mixed.play (Profile.update σ 1 ν)
+    have hzeroDev := hzero.utilityIntegrable_zero_of_one devLaw honeDev
+    have hbaseEq := hzero.expectedUtility_one
+      (F.mixed.play σ) hbase honeBase
+    have hdevEq := hzero.expectedUtility_one devLaw hzeroDev honeDev
+    refine ⟨hzeroDev, ?_⟩
+    have hle' := hle
+    rw [hdevEq, hbaseEq] at hle'
+    linarith
 
 /-- **A saddle point of a zero-sum game is a mixed Nash equilibrium.**  The
 row inequality is player zero's Nash condition; negating the column inequality
@@ -111,13 +173,22 @@ gives player one's condition. -/
 theorem IsSaddlePoint.isNash (hσ : IsSaddlePoint utility σ)
     (hzero : IsZeroSum utility) :
     IsNash F.mixed (euPreference utility) σ := by
+  rcases hσ with ⟨hbase, hrow, hcolumn⟩
   rw [isNash_iff]
   intro who deviation
   rcases (by decide : ∀ i : Fin 2, i = 0 ∨ i = 1) who with rfl | rfl
-  · exact hσ.1 deviation
-  · rw [euPreference_apply, hzero.expectedUtility_one,
-      hzero.expectedUtility_one]
-    exact neg_le_neg (hσ.2 deviation)
+  · obtain ⟨hdev, hle⟩ := hrow deviation
+    exact ⟨hbase, hdev, hle⟩
+  · obtain ⟨hzeroDev, hle⟩ := hcolumn deviation
+    let baseLaw := F.mixed.play σ
+    let devLaw := F.mixed.play (Profile.update σ 1 deviation)
+    have honeBase := hzero.utilityIntegrable_one_of_zero baseLaw hbase
+    have honeDev := hzero.utilityIntegrable_one_of_zero devLaw hzeroDev
+    have hbaseEq := hzero.expectedUtility_one baseLaw hbase honeBase
+    have hdevEq := hzero.expectedUtility_one devLaw hzeroDev honeDev
+    refine ⟨honeBase, honeDev, ?_⟩
+    rw [hbaseEq, hdevEq]
+    exact neg_le_neg hle
 
 /-- In a two-player zero-sum game, mixed Nash and saddle points are exactly
 the same canonical predicate. -/
@@ -129,11 +200,42 @@ theorem isNash_iff_isSaddlePoint (hzero : IsZeroSum utility) :
 /-- **Every saddle point of a game is worth the same.** Play one player's half
 of one against the other player's half of the other and the two values are
 squeezed together. -/
-theorem IsSaddlePoint.value_eq (hσ : IsSaddlePoint utility σ) (hτ : IsSaddlePoint utility τ) :
-    expectedUtility utility 0 (F.mixed.play σ) = expectedUtility utility 0 (F.mixed.play τ) := by
+theorem IsSaddlePoint.value_eq (hσ : IsSaddlePoint utility σ)
+    (hτ : IsSaddlePoint utility τ) :
+    ∃ hσbase : UtilityIntegrable utility 0 (F.mixed.play σ),
+      ∃ hτbase : UtilityIntegrable utility 0 (F.mixed.play τ),
+        expectedUtility utility 0 (F.mixed.play σ) hσbase =
+          expectedUtility utility 0 (F.mixed.play τ) hτbase := by
+  rcases hσ with ⟨hσbase, hσrow, hσcolumn⟩
+  rcases hτ with ⟨hτbase, hτrow, hτcolumn⟩
+  refine ⟨hσbase, hτbase, ?_⟩
   refine le_antisymm ?_ ?_
-  · exact (hσ.2 (τ 1)).trans (by rw [update_one_eq_update_zero]; exact hτ.1 (σ 0))
-  · exact (hτ.2 (σ 1)).trans (by rw [update_one_eq_update_zero]; exact hσ.1 (τ 0))
+  · obtain ⟨hσCross, hσle⟩ := hσcolumn (τ 1)
+    obtain ⟨hτCross, hτle⟩ := hτrow (σ 0)
+    have hlaw : F.mixed.play (Profile.update σ 1 (τ 1)) =
+        F.mixed.play (Profile.update τ 0 (σ 0)) := by
+      rw [update_one_eq_update_zero]
+    calc
+      expectedUtility utility 0 (F.mixed.play σ) hσbase ≤
+          expectedUtility utility 0
+            (F.mixed.play (Profile.update σ 1 (τ 1))) hσCross := hσle
+      _ = expectedUtility utility 0
+            (F.mixed.play (Profile.update τ 0 (σ 0))) hτCross :=
+          expectedUtility_congr_law utility 0 hlaw hσCross hτCross
+      _ ≤ expectedUtility utility 0 (F.mixed.play τ) hτbase := hτle
+  · obtain ⟨hτCross, hτle⟩ := hτcolumn (σ 1)
+    obtain ⟨hσCross, hσle⟩ := hσrow (τ 0)
+    have hlaw : F.mixed.play (Profile.update τ 1 (σ 1)) =
+        F.mixed.play (Profile.update σ 0 (τ 0)) := by
+      rw [update_one_eq_update_zero]
+    calc
+      expectedUtility utility 0 (F.mixed.play τ) hτbase ≤
+          expectedUtility utility 0
+            (F.mixed.play (Profile.update τ 1 (σ 1))) hτCross := hτle
+      _ = expectedUtility utility 0
+            (F.mixed.play (Profile.update σ 0 (τ 0))) hσCross :=
+          expectedUtility_congr_law utility 0 hlaw hτCross hσCross
+      _ ≤ expectedUtility utility 0 (F.mixed.play σ) hσbase := hσle
 
 end Saddle
 

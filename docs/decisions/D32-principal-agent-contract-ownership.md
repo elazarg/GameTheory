@@ -1,19 +1,19 @@
-# D32: finite hidden-action contracts use a native principal-agent branch
+# D32: hidden-action contracts use a native principal-agent branch
 
 - **Status:** adopted and promoted
 - **Date:** 2026-08-03
-- **Experiment ID:** EXP-065
+- **Experiment IDs:** EXP-065, EXP-139
 
 ## Decision / question
 
 Whether the pinned moral-hazard model belongs directly in the opt-in
-`GameTheory.Mechanism` branch over finite-support outcome laws, or should be
+`GameTheory.Mechanism` branch over discrete outcome laws, or should be
 encoded as a one-player strategic form or specialized through auction data.
 
 ## Competing designs
 
 1. Define capability-free `PrincipalAgent` data with an action-indexed
-   `FinDist` outcome law, reward, and effort cost.  Treat an
+   PMF outcome law, reward, and effort cost. Treat an
    outcome-contingent payment as theorem input.
 2. Manufacture a one- or two-player `GameForm` and state action optimality as
    Nash equilibrium.
@@ -39,35 +39,32 @@ trivially incentivized and the payment has limited liability, but the agent
 rejects outside utility zero.  This refutes the premise-erased participation
 claim and forces the public theorem to expose an acceptable fallback.
 
-## Measurements
+## Original finite-law measurements
 
 | Measure | EXP-065 result |
 |---|---|
 | direct import | only `GameTheory.Math.Probability.FinDist` |
 | candidate artifact | 167 nonblank lines; 37 declarations including witnesses |
-| promoted leaf / fixture | 171 / 107 nonblank lines; 23/23 pinned declarations classified |
 | probability capability | finite support belongs to each action law; no finite outcome carrier |
 | action capability | `[Finite Action] [Nonempty Action]` only on maximizer existence |
 | stochasticity | productive outcome law is a non-point-mass fair mixture |
-| source hazards | zero raw updates, transports, `Fintype.ofFinite`, placeholders, or custom axioms |
-| axiom profile | `propext`, `Classical.choice`, and `Quot.sound` only |
-| gate validation | focused root/test build, 3,440-job full build, Phase 2 structural and exact coverage `VERIFIED=1` |
-
-The focused and root builds, architecture audit, exact bootstrap accounting,
-and independent integration review all pass.
 
 ## Kill condition
 
 Reject native ownership if the accounting or participation theorem needs a
-strategic-game wrapper, if `FinDist` loses essential PMF mathematics, if the
-base data needs stored finiteness or topology, if participation silently
-normalizes the outside option to zero, or if the hostile fixture cannot
-distinguish actions, contracts, and reservation utilities.
+strategic-game wrapper, if the base data needs stored finiteness or topology,
+if primitive values demand integration of unrelated quantities, if undefined
+alternatives are omitted from optimality, if participation silently normalizes
+the outside option to zero, or if the hostile fixture cannot distinguish
+actions, contracts, and reservation utilities. EXP-065 retains the original
+finite-law experiment conditions; EXP-139 supplies the actual-payoff boundary.
 
-No kill condition fired.  Any later private-type/report model, principal
-contract-selection game, Protocol compiler, measurable outcome law, or
-executable optimizer is a named consumer with its own gate rather than a field
-added to this foundation.
+EXP-065 validated native ownership. D62 supersedes its finite-support default:
+EXP-139 separates the integration requirements of net payoff, reward, and
+payment, while retaining the native contract model. Any later private-type/report
+model, principal contract-selection game, Protocol compiler, measurable outcome
+law, or executable optimizer is a named consumer with its own gate rather than
+a field added to this foundation.
 
 ## Consequences for the public API
 
@@ -75,7 +72,16 @@ The public leaf lives under `GameTheory.Mechanism`, remains absent from the
 main `GameTheory` umbrella, and exposes one native `PrincipalAgent` concept.
 Agent and outcome universes remain independent.  Expected payment, agent and
 principal utilities, social surplus, incentive maximization, explicit
-participation, and limited liability are defined directly over `FinDist`.
+participation, and limited liability are defined directly over ordinary PMFs.
+
+Each numerical operation requires integration of the quantity it actually
+evaluates. Principal utility integrates reward minus payment; accounting
+identities that separately evaluate gross reward and payment require their
+additional guards. Equal divergent reward and full commission can therefore
+have a defined zero net payoff. Agent optimality positively requires defined
+payment expectations at every action alternative; an undefined alternative
+refutes optimality. Participation requires only the selected action's defined
+payoff and the explicit outside-option comparison.
 
 `IsIncentivized` is not advertised as Nash equilibrium.  The exact welfare
 identity, classical finite-action maximizer existence, and participation from

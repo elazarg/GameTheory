@@ -18,6 +18,7 @@ actually happened.
 -/
 
 import GameTheory.Protocol.Information
+import GameTheory.Math.Probability.Mixture
 
 noncomputable section
 
@@ -36,20 +37,26 @@ inductive Move | l | r
   deriving DecidableEq, Repr
 
 /-- The fair chance move that opens play. -/
-def coin : FinDist Stage :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num) (FinDist.pure .lft) (FinDist.pure .rgt)
+def coin : PMF Stage :=
+  mix (1 / 2) (by norm_num) (by norm_num) (PMF.pure .lft) (PMF.pure .rgt)
 
-theorem prob_coin_lft : coin.prob .lft = 1 / 2 := by
-  simp [coin, FinDist.prob_pure_eq_ite]
+theorem prob_coin_lft : (coin .lft).toReal = 1 / 2 := by
+  rw [coin, mix_apply_toReal]
+  norm_num [PMF.pure_apply]
 
-theorem prob_coin_rgt : coin.prob .rgt = 1 / 2 := by
-  simp [coin, FinDist.prob_pure_eq_ite]; norm_num
+theorem prob_coin_rgt : (coin .rgt).toReal = 1 / 2 := by
+  rw [coin, mix_apply_toReal]
+  norm_num [PMF.pure_apply]
 
-theorem mem_support_coin_lft : Stage.lft ∈ coin.support :=
-  FinDist.prob_pos_iff.mp (by rw [prob_coin_lft]; norm_num)
+theorem mem_support_coin_lft : Stage.lft ∈ coin.support := by
+  apply (coin.mem_support_iff _).mpr
+  rw [coin, mix_apply, PMF.pure_apply]
+  norm_num
 
-theorem mem_support_coin_rgt : Stage.rgt ∈ coin.support :=
-  FinDist.prob_pos_iff.mp (by rw [prob_coin_rgt]; norm_num)
+theorem mem_support_coin_rgt : Stage.rgt ∈ coin.support := by
+  apply (coin.mem_support_iff _).mpr
+  rw [coin, mix_apply, PMF.pure_apply]
+  norm_num
 
 /-- Chance splits, the branches merge, and then the player moves. -/
 @[reducible]
@@ -63,15 +70,15 @@ def merge : ExecutionProtocol Unit where
   step state joint :=
     match state with
     | .start => coin
-    | .lft => FinDist.pure .mid
-    | .rgt => FinDist.pure .mid
+    | .lft => PMF.pure .mid
+    | .rgt => PMF.pure .mid
     | .mid =>
         match joint.1 () with
-        | some .l => FinDist.pure .endL
-        | some .r => FinDist.pure .endR
-        | none => FinDist.pure .endL
-    | .endL => FinDist.pure .endL
-    | .endR => FinDist.pure .endR
+        | some .l => PMF.pure .endL
+        | some .r => PMF.pure .endR
+        | none => PMF.pure .endL
+    | .endL => PMF.pure .endL
+    | .endR => PMF.pure .endR
   progress := by
     rintro state hterm
     by_cases hactive : state = Stage.mid
@@ -165,10 +172,10 @@ theorem realized_rgt : Stage.rgt ∈ (merge.step .start ⟨_, legal_start⟩).su
   mem_support_coin_rgt
 
 theorem realized_mid_of_lft : Stage.mid ∈ (merge.step .lft ⟨_, legal_lft⟩).support :=
-  FinDist.mem_support_pure.2 rfl
+  by simp
 
 theorem realized_mid_of_rgt : Stage.mid ∈ (merge.step .rgt ⟨_, legal_rgt⟩).support :=
-  FinDist.mem_support_pure.2 rfl
+  by simp
 
 /-- Reaching `mid` through the left branch. -/
 def viaLeft : History merge :=
@@ -228,33 +235,36 @@ def endingOf : Move → Stage
 theorem eq_of_mem_support_coin {s : Stage} (hs : s ∈ coin.support) : s = .lft ∨ s = .rgt := by
   by_contra hne
   push Not at hne
-  refine FinDist.prob_eq_zero_iff.mp ?_ hs
-  simp [coin, FinDist.prob_pure_eq_ite, hne.1, hne.2]
+  have hzero : coin s = 0 := by
+    simp [coin, mix_apply, PMF.pure_apply, hne.1, hne.2]
+  exact (coin.mem_support_iff s).mp hs hzero
 
 /-- From the merged state, play ends where the policy's move sends it. -/
 theorem map_state_runFrom_mid (policy : model.Policy ()) (move : Move) (info : List Stage)
     (hplay : (policy info).1 = some move) (trace : Trace merge Stage.mid)
     (hinfo : signals.infoOf () trace = info) :
-    FinDist.map History.state (model.runFrom (fun _ => policy) 1 ⟨Stage.mid, trace⟩) =
-      FinDist.pure (endingOf move) := by
+    PMF.map History.state (model.runFrom (fun _ => policy) 1 ⟨Stage.mid, trace⟩) =
+      PMF.pure (endingOf move) := by
   have hterm : ¬ merge.terminal (History.state ⟨Stage.mid, trace⟩) := by simp
   have hstep :
       merge.step (History.state ⟨Stage.mid, trace⟩)
           (model.historyChooser (fun _ => policy) ⟨Stage.mid, trace⟩ hterm) =
-        FinDist.pure (endingOf move) := by
+        PMF.pure (endingOf move) := by
     show (match (model.jointAt (fun _ => policy) trace) () with
-      | some .l => FinDist.pure Stage.endL
-      | some .r => FinDist.pure Stage.endR
-      | none => FinDist.pure Stage.endL) = _
+      | some .l => PMF.pure Stage.endL
+      | some .r => PMF.pure Stage.endR
+      | none => PMF.pure Stage.endL) = _
     rw [show (model.jointAt (fun _ => policy) trace) () = some move by
       simp only [InformationModel.jointAt, InformationModel.Policy.act]
       rw [show model.infoOf () trace = info from hinfo, hplay]]
     cases move <;> rfl
   rw [InformationModel.runFrom, ExecutionProtocol.runHistoryFor_succ_of_not_terminal _ 0 hterm]
-  refine FinDist.map_bindOnSupport_const _ fun target hrealized => ?_
-  rw [hstep, FinDist.mem_support_pure] at hrealized
-  subst hrealized
-  rw [ExecutionProtocol.runHistoryFor_zero, FinDist.map_pure]
+  refine map_bindOnSupport_const _ fun target hrealized => ?_
+  rw [hstep, PMF.mem_support_iff] at hrealized
+  have htarget : target = endingOf move := by
+    simpa [PMF.pure_apply] using hrealized
+  subst target
+  rw [ExecutionProtocol.runHistoryFor_zero, PMF.pure_map]
   rfl
 
 /-- A branch state is administrative: play passes through it to the merged
@@ -263,19 +273,20 @@ theorem map_state_runFrom_branch (policy : model.Policy ()) (move : Move) (branc
     (hbranch : branch = .lft ∨ branch = .rgt)
     (hplay : (policy [Stage.mid, branch, Stage.start]).1 = some move)
     (trace : Trace merge branch) (hinfo : signals.infoOf () trace = [branch, Stage.start]) :
-    FinDist.map History.state (model.runFrom (fun _ => policy) 2 ⟨branch, trace⟩) =
-      FinDist.pure (endingOf move) := by
+    PMF.map History.state (model.runFrom (fun _ => policy) 2 ⟨branch, trace⟩) =
+      PMF.pure (endingOf move) := by
   have hterm : ¬ merge.terminal (History.state ⟨branch, trace⟩) := by
     rcases hbranch with rfl | rfl <;> simp
   have hstep :
       merge.step (History.state ⟨branch, trace⟩)
           (model.historyChooser (fun _ => policy) ⟨branch, trace⟩ hterm) =
-        FinDist.pure Stage.mid := by
+        PMF.pure Stage.mid := by
     rcases hbranch with rfl | rfl <;> rfl
   rw [InformationModel.runFrom, ExecutionProtocol.runHistoryFor_succ_of_not_terminal _ 1 hterm]
-  refine FinDist.map_bindOnSupport_const _ fun target hrealized => ?_
+  refine map_bindOnSupport_const _ fun target hrealized => ?_
   have hmid : target = Stage.mid := by
-    rw [hstep, FinDist.mem_support_pure] at hrealized; exact hrealized
+    rw [hstep, PMF.mem_support_iff] at hrealized
+    simpa [PMF.pure_apply] using hrealized
   subst hmid
   exact map_state_runFrom_mid policy move _ hplay _ (by rw [InfoSignals.infoOf_extend, hinfo])
 
@@ -286,12 +297,12 @@ policy's answer at that branch decides the ending. -/
 theorem map_state_run (policy : model.Policy ()) (moveAt : Stage → Move)
     (hplay : ∀ branch, branch = .lft ∨ branch = .rgt →
       (policy [Stage.mid, branch, Stage.start]).1 = some (moveAt branch)) :
-    FinDist.map History.state (model.run (fun _ => policy) 3) =
-      coin.bind fun branch => FinDist.pure (endingOf (moveAt branch)) := by
+    PMF.map History.state (model.run (fun _ => policy) 3) =
+      coin.bind fun branch => PMF.pure (endingOf (moveAt branch)) := by
   rw [InformationModel.run, InformationModel.runFrom,
     ExecutionProtocol.runHistoryFor_succ_of_not_terminal _ 2 init_isChance.1,
-    FinDist.map_bindOnSupport]
-  refine FinDist.bindOnSupport_eq_bind_of_eq_on_support fun branch hbranch => ?_
+    map_bindOnSupport]
+  refine bindOnSupport_eq_bind_of_eq_on_support _ fun branch hbranch => ?_
   have hb := eq_of_mem_support_coin hbranch
   exact map_state_runFrom_branch policy _ branch hb (hplay branch hb) _
     (by rw [InfoSignals.infoOf_extend]; rfl)
@@ -302,27 +313,44 @@ theorem map_state_run (policy : model.Policy ()) (moveAt : Stage → Move)
 that no state-indexed chooser reaches. -/
 
 theorem map_state_run_follow :
-    FinDist.map History.state (model.run (fun _ => follow) 3) =
+    PMF.map History.state (model.run (fun _ => follow) 3) =
       coin.bind fun branch =>
-        FinDist.pure (endingOf (if branch = Stage.rgt then Move.r else Move.l)) :=
+        PMF.pure (endingOf (if branch = Stage.rgt then Move.r else Move.l)) :=
   map_state_run follow _ (by rintro branch (rfl | rfl) <;> rfl)
+
+theorem map_state_run_follow_eq_mix :
+    PMF.map History.state (model.run (fun _ => follow) 3) =
+      mix (1 / 2) (by norm_num) (by norm_num)
+        (PMF.pure Stage.endL) (PMF.pure Stage.endR) := by
+  rw [map_state_run_follow]
+  calc
+    coin.bind (fun branch => PMF.pure (endingOf
+        (if branch = Stage.rgt then Move.r else Move.l))) =
+        coin.map (fun branch => endingOf
+          (if branch = Stage.rgt then Move.r else Move.l)) := by
+            rfl
+    _ = mix (1 / 2) (by norm_num) (by norm_num)
+        (PMF.pure Stage.endL) (PMF.pure Stage.endR) := by
+          rw [coin, mix_map]
+          simp [endingOf, PMF.pure_map]
 
 /-- Half the mass on each ending. -/
 theorem prob_endL_run_follow :
-    (FinDist.map History.state (model.run (fun _ => follow) 3)).prob Stage.endL = 1 / 2 := by
-  rw [map_state_run_follow, FinDist.prob_bind, coin, FinDist.expect_mix]
-  simp [FinDist.prob_pure_eq_ite, endingOf]
+    (PMF.map History.state (model.run (fun _ => follow) 3) Stage.endL).toReal =
+      1 / 2 := by
+  rw [map_state_run_follow_eq_mix, mix_apply_toReal]
+  norm_num [PMF.pure_apply]
 
 theorem prob_endR_run_follow :
-    (FinDist.map History.state (model.run (fun _ => follow) 3)).prob Stage.endR = 1 / 2 := by
-  rw [map_state_run_follow, FinDist.prob_bind, coin, FinDist.expect_mix]
-  simp [FinDist.prob_pure_eq_ite, endingOf]
-  norm_num
+    (PMF.map History.state (model.run (fun _ => follow) 3) Stage.endR).toReal =
+      1 / 2 := by
+  rw [map_state_run_follow_eq_mix, mix_apply_toReal]
+  norm_num [PMF.pure_apply]
 
 /-- Under any state-indexed chooser, play from the merged state ends at one
 fixed ending: the chooser has nothing left to condition on. -/
 theorem exists_runFor_mid_eq_pure (chooser : merge.Chooser) :
-    ∃ ending, merge.runFor chooser 1 Stage.mid = FinDist.pure ending := by
+    ∃ ending, merge.runFor chooser 1 Stage.mid = PMF.pure ending := by
   have hterm : ¬ merge.terminal Stage.mid := by simp
   obtain ⟨move, hmove⟩ :=
     LegalOption.exists_eq_some_of_active ((chooser Stage.mid hterm).1 ())
@@ -330,29 +358,29 @@ theorem exists_runFor_mid_eq_pure (chooser : merge.Chooser) :
   refine ⟨endingOf move, ?_⟩
   rw [ExecutionProtocol.runFor_succ_of_not_terminal chooser 0 hterm]
   show (match (chooser Stage.mid hterm).1 () with
-    | some .l => FinDist.pure Stage.endL
-    | some .r => FinDist.pure Stage.endR
-    | none => FinDist.pure Stage.endL).bind (merge.runFor chooser 0) = _
+    | some .l => PMF.pure Stage.endL
+    | some .r => PMF.pure Stage.endR
+    | none => PMF.pure Stage.endL).bind (merge.runFor chooser 0) = _
   rw [hmove]
   cases move <;> simp [endingOf]
 
 /-- Everything before the merged state is chance and administration, so a state
 chooser's whole law is decided at that one state. -/
 theorem runFor_init_eq_pure (chooser : merge.Chooser) {ending : Stage}
-    (hmid : merge.runFor chooser 1 Stage.mid = FinDist.pure ending) :
-    merge.runFor chooser 3 merge.init = FinDist.pure ending := by
+    (hmid : merge.runFor chooser 1 Stage.mid = PMF.pure ending) :
+    merge.runFor chooser 3 merge.init = PMF.pure ending := by
   rw [ExecutionProtocol.runFor_succ_of_chance chooser 2 init_isChance]
-  refine Eq.trans (FinDist.bind_congr fun s hs => ?_) (FinDist.bind_const _ _)
+  refine Eq.trans (bind_congr_on_support _ fun s hs => ?_) (PMF.bind_const _ _)
   rcases eq_of_mem_support_coin hs with rfl | rfl <;>
     · rw [ExecutionProtocol.runFor_succ_of_not_terminal chooser 1 (by simp)]
-      exact (FinDist.pure_bind _ _).trans hmid
+      exact (PMF.pure_bind _ _).trans hmid
 
 /-- **The law-level test.** The profile's law splits its mass between the two
 endings. No state-indexed chooser can produce it, because at the merged state
 such a chooser answers the same whichever branch led there, so its law is a
 point mass. -/
 theorem run_follow_ne_runFor (chooser : merge.Chooser) :
-    FinDist.map History.state (model.run (fun _ => follow) 3) ≠
+    PMF.map History.state (model.run (fun _ => follow) 3) ≠
       merge.runFor chooser 3 merge.init := by
   obtain ⟨ending, hending⟩ := exists_runFor_mid_eq_pure chooser
   intro hequal
@@ -360,9 +388,9 @@ theorem run_follow_ne_runFor (chooser : merge.Chooser) :
   have hmem : ∀ branch ∈ coin.support,
       endingOf (if branch = Stage.rgt then Move.r else Move.l) = ending := by
     intro branch hbranch
-    refine FinDist.mem_support_pure.mp ?_
-    rw [← hequal, FinDist.support_bind]
-    exact Set.mem_biUnion hbranch (FinDist.mem_support_pure.mpr rfl)
+    refine (PMF.mem_support_pure_iff _ _).mp ?_
+    rw [← hequal, PMF.support_bind]
+    exact Set.mem_biUnion hbranch ((PMF.mem_support_pure_iff _ _).mpr rfl)
   have hL := hmem _ mem_support_coin_lft
   have hR := hmem _ mem_support_coin_rgt
   rw [ite_eq_right (by simp), ← hR] at hL
@@ -391,13 +419,13 @@ def alwaysLeft : merge.Chooser := fun state hterm =>
     · rw [ite_eq_left hmid]; exact ⟨hmid, Set.mem_univ _⟩
     · rw [ite_eq_right hmid]; exact hmid⟩
 
-theorem runFor_alwaysLeft_mid : merge.runFor alwaysLeft 1 Stage.mid = FinDist.pure Stage.endL := by
+theorem runFor_alwaysLeft_mid : merge.runFor alwaysLeft 1 Stage.mid = PMF.pure Stage.endL := by
   have hterm : ¬ merge.terminal Stage.mid := by simp
   rw [ExecutionProtocol.runFor_succ_of_not_terminal alwaysLeft 0 hterm]
   show (match (alwaysLeft Stage.mid hterm).1 () with
-    | some .l => FinDist.pure Stage.endL
-    | some .r => FinDist.pure Stage.endR
-    | none => FinDist.pure Stage.endL).bind (merge.runFor alwaysLeft 0) = _
+    | some .l => PMF.pure Stage.endL
+    | some .r => PMF.pure Stage.endR
+    | none => PMF.pure Stage.endL).bind (merge.runFor alwaysLeft 0) = _
   rw [show (alwaysLeft Stage.mid hterm).1 () = some Move.l by simp [alwaysLeft]]
   simp
 
@@ -406,10 +434,10 @@ state-indexed chooser. So the history runner costs nothing where history is not
 used, and the previous theorem holds because `follow` reads the branch, not
 because it runs along a history. -/
 theorem run_stubborn_eq_runFor :
-    FinDist.map History.state (model.run (fun _ => stubborn) 3) =
+    PMF.map History.state (model.run (fun _ => stubborn) 3) =
       merge.runFor alwaysLeft 3 merge.init := by
   rw [map_state_run stubborn (fun _ => Move.l) (by rintro branch (rfl | rfl) <;> rfl),
     runFor_init_eq_pure alwaysLeft runFor_alwaysLeft_mid]
-  exact FinDist.bind_const _ _
+  exact PMF.bind_const _ _
 
 end GameTheory.Tests

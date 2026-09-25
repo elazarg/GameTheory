@@ -113,20 +113,21 @@ theorem publicHistoryLaw_eq_of_publicHistoryAgreement
 
 theorem publicFiniteAveragePayoff_eq_of_publicHistoryAgreement
     {first second : G.BehaviorProfile initial}
-    (h : PublicHistoryAgreement G initial first second) (horizon : ℕ) (who : ι) :
-    G.finiteAveragePayoff initial horizon first who =
-      G.finiteAveragePayoff initial horizon second who := by
-  calc
-    G.finiteAveragePayoff initial horizon first who =
-        G.publicFiniteAveragePayoff initial horizon first who :=
-      (G.publicFiniteAveragePayoff_eq_finiteAveragePayoff initial horizon
-        first who).symm
-    _ = G.publicFiniteAveragePayoff initial horizon second who := by
-      unfold publicFiniteAveragePayoff
-      rw [publicHistoryLaw_eq_of_publicHistoryAgreement G h horizon]
-    _ = G.finiteAveragePayoff initial horizon second who :=
-      G.publicFiniteAveragePayoff_eq_finiteAveragePayoff initial horizon
-        second who
+    (h : PublicHistoryAgreement G initial first second) (horizon : ℕ) (who : ι)
+    (hfirst : UtilityIntegrable (G.horizonUtility initial horizon) who
+      ((G.horizonForm initial horizon).play first))
+    (hsecond : UtilityIntegrable (G.horizonUtility initial horizon) who
+      ((G.horizonForm initial horizon).play second)) :
+    G.finiteAveragePayoff initial horizon first who hfirst =
+      G.finiteAveragePayoff initial horizon second who hsecond := by
+  have hlaw : (G.horizonForm initial horizon).play first =
+      (G.horizonForm initial horizon).play second := by
+    rw [G.horizonForm_play, G.horizonForm_play]
+    unfold InformationModel.runBehavioral
+    exact runBehavioralFrom_eq_of_publicHistoryAgreement G h horizon
+      (G.toExecution initial).initHistory
+  exact expectedUtility_congr_law (G.horizonUtility initial horizon) who
+    hlaw hfirst hsecond
 
 end Runner
 
@@ -186,7 +187,8 @@ theorem forgedRecord_not_realizable :
           have hsource := congrArg StageRecord.source hrecord
           have hjoint := congrArg (fun record => record.joint false) hrecord
           simp [Game.stageRecordOfEvent, forgedRecord] at htarget hsource hjoint
-          have htransition := FinDist.mem_support_pure.mp realized
+          have htransition := realized
+          rw [PMF.mem_support_pure_iff] at htransition
           rw [hjoint] at htransition
           exact Bool.noConfusion (htransition.symm.trans htarget)
       | extend priorTrace priorJoint priorLegal priorRealized =>
@@ -196,7 +198,7 @@ def forgedPublicProfile : PublicProfile actionGame false :=
   fun who history =>
     match who, history with
     | false, [record] =>
-        if isForgedRecord record then FinDist.pure true
+        if isForgedRecord record then PMF.pure true
         else publicProfile false [record]
     | _, _ => publicProfile who history
 
@@ -235,15 +237,19 @@ theorem forged_history_law_eq (horizon : ℕ) :
       actionGame.publicHistoryLaw false forgedProfile horizon :=
   publicHistoryLaw_eq_of_publicHistoryAgreement actionGame forgedProfile_agreement horizon
 
-theorem forged_finite_average_payoff_eq (horizon : ℕ) (who : Bool) :
-    actionGame.finiteAveragePayoff false horizon canonicalProfile who =
-      actionGame.finiteAveragePayoff false horizon forgedProfile who :=
+theorem forged_finite_average_payoff_eq (horizon : ℕ) (who : Bool)
+    (hcanonical : UtilityIntegrable (actionGame.horizonUtility false horizon) who
+      ((actionGame.horizonForm false horizon).play canonicalProfile))
+    (hforged : UtilityIntegrable (actionGame.horizonUtility false horizon) who
+      ((actionGame.horizonForm false horizon).play forgedProfile)) :
+    actionGame.finiteAveragePayoff false horizon canonicalProfile who hcanonical =
+      actionGame.finiteAveragePayoff false horizon forgedProfile who hforged :=
   publicFiniteAveragePayoff_eq_of_publicHistoryAgreement actionGame
-    forgedProfile_agreement horizon who
+    forgedProfile_agreement horizon who hcanonical hforged
 
 def livePublicProfile : PublicProfile actionGame false :=
   fun who history =>
-    if who = false ∧ history = [] then FinDist.pure false
+    if who = false ∧ history = [] then PMF.pure false
     else publicProfile who history
 
 def liveProfile : actionGame.BehaviorProfile false :=
@@ -252,9 +258,9 @@ def liveProfile : actionGame.BehaviorProfile false :=
 theorem live_first_action_differs :
     livePublicProfile false [] ≠ publicProfile false [] := by
   intro h
-  have hprob := congrArg (fun law => law.prob true) h
+  have hmass := congrArg (fun law : PMF Bool => law true) h
   norm_num [livePublicProfile, publicProfile, firstActions,
-    FinDist.prob_pure_eq_ite] at hprob
+    PMF.pure_apply] at hmass
 
 end HostileFixture
 

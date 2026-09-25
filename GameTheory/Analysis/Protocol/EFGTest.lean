@@ -10,6 +10,11 @@ presentation carries an actual sequential-equilibrium witness.
 -/
 
 import GameTheory.Analysis.Protocol.EFG
+import GameTheory.Math.Probability.Mixture
+import GameTheory.Math.Probability.Product
+import GameTheory.Math.Probability.Support
+import GameTheory.Math.Probability.ExpectationBind
+import GameTheory.Math.Probability.ExpectationMixture
 
 noncomputable section
 
@@ -33,14 +38,19 @@ inductive State
   deriving DecidableEq, Fintype
 
 /-- The nondegenerate chance law. -/
-def fairCoin : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure true) (FinDist.pure false)
+def fairCoin : PMF Bool :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure true) (PMF.pure false)
 
 theorem mem_support_fairCoin (side : Bool) :
     side ∈ fairCoin.support := by
-  rw [← FinDist.prob_pos_iff]
-  cases side <;> norm_num [fairCoin, FinDist.prob_pure_eq_ite]
+  cases side with
+  | true =>
+      exact mem_support_mix_left (1 / 2) (by norm_num) (by norm_num)
+        (by norm_num) (by simp)
+  | false =>
+      exact mem_support_mix_right (1 / 2) (by norm_num) (by norm_num)
+        (by norm_num) (by simp)
 
 /-- Chance, one hidden-information decision, then termination. -/
 @[reducible]
@@ -60,11 +70,11 @@ def execution : ExecutionProtocol Player where
   step state joint :=
     match state with
     | .initial =>
-        FinDist.map (fun hidden => State.decision hidden joint.1) fairCoin
+        PMF.map (fun hidden => State.decision hidden joint.1) fairCoin
     | .decision hidden arrival =>
-        FinDist.pure (.terminal hidden arrival joint.1)
+        PMF.pure (.terminal hidden arrival joint.1)
     | .terminal hidden arrival action =>
-        FinDist.pure (.terminal hidden arrival action)
+        PMF.pure (.terminal hidden arrival action)
   progress := by
     intro state hterm
     cases state with
@@ -80,7 +90,7 @@ theorem initial_not_mem_step (source : State)
     State.initial ∉ (execution.step source ⟨joint, hlegal⟩).support := by
   cases source with
   | initial =>
-      rw [FinDist.support_map]
+      rw [PMF.support_map]
       rintro ⟨side, _hside, hstate⟩
       cases hstate
   | decision hidden arrival =>
@@ -100,30 +110,30 @@ theorem step_predecessor_unique
     firstSource = secondSource ∧ firstJoint = secondJoint := by
   cases firstSource with
   | initial =>
-      rw [FinDist.support_map] at firstRealized
+      rw [PMF.support_map] at firstRealized
       rcases firstRealized with ⟨firstSide, _hside, rfl⟩
       cases secondSource with
       | initial =>
-          rw [FinDist.support_map] at secondRealized
+          rw [PMF.support_map] at secondRealized
           rcases secondRealized with ⟨secondSide, _hsecond, hequal⟩
           injection hequal with _ hjoint
           have hjoint' : secondJoint = firstJoint := hjoint
           exact ⟨rfl, hjoint'.symm⟩
       | decision hidden arrival =>
-          rw [FinDist.mem_support_pure] at secondRealized
+          rw [PMF.mem_support_pure_iff] at secondRealized
           cases secondRealized
       | terminal hidden arrival action =>
           exact False.elim (secondLegal.1 trivial)
   | decision firstHidden firstArrival =>
-      rw [FinDist.mem_support_pure] at firstRealized
+      rw [PMF.mem_support_pure_iff] at firstRealized
       subst target
       cases secondSource with
       | initial =>
-          rw [FinDist.support_map] at secondRealized
+          rw [PMF.support_map] at secondRealized
           rcases secondRealized with ⟨secondSide, _hsecond, hequal⟩
           cases hequal
       | decision secondHidden secondArrival =>
-          rw [FinDist.mem_support_pure] at secondRealized
+          rw [PMF.mem_support_pure_iff] at secondRealized
           injection secondRealized with hhidden harrival hjoint
           have hjoint' : firstJoint = secondJoint := hjoint
           subst secondHidden
@@ -231,6 +241,46 @@ local instance finiteInformationHistory
   classical
   infer_instance
 
+/-- Finite test carriers give the actual law a canonical guarded expectation. -/
+noncomputable def finiteExpect {α : Type*} [Fintype α]
+    (law : PMF α) (payoff : α → ℝ) : ℝ :=
+  expect law payoff (payoffIntegrable_of_finite law payoff)
+
+private theorem finiteExpect_pure {α : Type*} [Fintype α]
+    (a : α) (payoff : α → ℝ) :
+    finiteExpect (PMF.pure a) payoff = payoff a := by
+  unfold finiteExpect
+  exact expect_pure a payoff _
+
+private theorem finiteExpect_map {α β : Type*} [Fintype α] [Fintype β]
+    (f : α → β) (law : PMF α) (payoff : β → ℝ) :
+    finiteExpect (PMF.map f law) payoff =
+      finiteExpect law (payoff ∘ f) := by
+  unfold finiteExpect
+  exact expect_map f law payoff
+    (payoffIntegrable_of_finite law (payoff ∘ f))
+    (payoffIntegrable_of_finite (PMF.map f law) payoff)
+
+private theorem finiteExpect_bind {α β : Type*} [Fintype α] [Fintype β]
+    (law : PMF α) (kernel : α → PMF β) (payoff : β → ℝ) :
+    finiteExpect (law.bind kernel) payoff =
+      finiteExpect law (fun a => finiteExpect (kernel a) payoff) := by
+  unfold finiteExpect
+  let hbind := payoffIntegrable_of_finite (law.bind kernel) payoff
+  let hcond := fun a => payoffIntegrable_of_finite (kernel a) payoff
+  calc
+    expect (law.bind kernel) payoff
+        (payoffIntegrable_of_finite (law.bind kernel) payoff) =
+      expect (law.bind kernel) payoff hbind := expect_proof_irrel ..
+    _ = expect law (fun a => expect (kernel a) payoff (hcond a))
+        (payoffIntegrable_bind_conditionalExpectation law kernel payoff hbind hcond) :=
+      expect_bind_tower law kernel payoff hbind hcond
+    _ = expect law (fun a => expect (kernel a) payoff
+        (payoffIntegrable_of_finite (kernel a) payoff))
+        (payoffIntegrable_of_finite law
+          (fun a => expect (kernel a) payoff
+            (payoffIntegrable_of_finite (kernel a) payoff))) := expect_proof_irrel ..
+
 /-! ## Two histories, one decision information site -/
 
 theorem initial_not_terminal : ¬ execution.terminal .initial := by
@@ -259,7 +309,7 @@ theorem initial_legal_joint_eq_noop
 theorem decision_mem_support (hidden : Bool) :
     State.decision hidden execution.noop ∈
       (execution.step .initial ⟨execution.noop, initialLegal⟩).support := by
-  rw [FinDist.support_map]
+  rw [PMF.support_map]
   exact ⟨hidden, mem_support_fairCoin hidden, rfl⟩
 
 def decisionTrace (hidden : Bool) :
@@ -323,7 +373,7 @@ theorem decision_trace_arrival_eq_noop
       cases hstate
       cases source with
       | initial =>
-          rw [FinDist.support_map] at realized
+          rw [PMF.support_map] at realized
           rcases realized with ⟨side, _hside, hequal⟩
           injection hequal with _ hjoint
           exact hjoint.symm.trans
@@ -373,25 +423,25 @@ def actingHistoryEquivBool :
 
 /-- The nondegenerate belief supported on the two hidden decision histories. -/
 def decisionBelief :
-    FinDist (information.InformationHistory .player actingSite.1) :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure (decisionInformationHistory true))
-    (FinDist.pure (decisionInformationHistory false))
+    PMF (information.InformationHistory .player actingSite.1) :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure (decisionInformationHistory true))
+    (PMF.pure (decisionInformationHistory false))
 
 theorem decisionInformationHistory_mem_belief (hidden : Bool) :
     decisionInformationHistory hidden ∈ decisionBelief.support := by
   cases hidden
-  · exact FinDist.mem_support_mix_right (1 / 2) (by norm_num) (by norm_num)
-      (by norm_num) (FinDist.mem_support_pure.mpr rfl)
-  · exact FinDist.mem_support_mix_left (1 / 2) (by norm_num) (by norm_num)
-      (by norm_num) (FinDist.mem_support_pure.mpr rfl)
+  · exact mem_support_mix_right (1 / 2) (by norm_num) (by norm_num)
+      (by norm_num) (by simp)
+  · exact mem_support_mix_left (1 / 2) (by norm_num) (by norm_num)
+      (by norm_num) (by simp)
 
 /-! ## The full analytic presentation typechecks on the hostile carrier -/
 
 def behavioralPolicy : information.BehavioralPolicy .player
-  | .waiting => FinDist.pure ⟨none, by simp⟩
-  | .acting => FinDist.pure ⟨some false, by simp⟩
-  | .done => FinDist.pure ⟨none, by simp⟩
+  | .waiting => PMF.pure ⟨none, by simp⟩
+  | .acting => PMF.pure ⟨some false, by simp⟩
+  | .done => PMF.pure ⟨none, by simp⟩
 
 def behavioralProfile (who : Player) :
     information.BehavioralPolicy who := by
@@ -400,32 +450,32 @@ def behavioralProfile (who : Player) :
 
 /-- A genuinely mixed action law at the hidden decision information set. -/
 def fullyMixedBehavioralPolicy : information.BehavioralPolicy .player
-  | .waiting => FinDist.pure ⟨none, by simp⟩
+  | .waiting => PMF.pure ⟨none, by simp⟩
   | .acting =>
-      FinDist.map
+      PMF.map
         (fun action => ⟨some action, by simp⟩)
         fairCoin
-  | .done => FinDist.pure ⟨none, by simp⟩
+  | .done => PMF.pure ⟨none, by simp⟩
 
 theorem fullyMixedBehavioralPolicy_fullSupport (view : View) :
-    (fullyMixedBehavioralPolicy view).FullSupport := by
+    ∀ choice, choice ∈ (fullyMixedBehavioralPolicy view).support := by
   intro choice
   cases view with
   | waiting =>
-      rw [fullyMixedBehavioralPolicy, FinDist.mem_support_pure]
+      rw [fullyMixedBehavioralPolicy, PMF.mem_support_pure_iff]
       rcases choice with ⟨choice, hchoice⟩
       cases choice with
       | none => rfl
       | some action => simp at hchoice
   | acting =>
-      rw [fullyMixedBehavioralPolicy, FinDist.support_map]
+      rw [fullyMixedBehavioralPolicy, PMF.support_map]
       rcases choice with ⟨choice, hchoice⟩
       cases choice with
       | none => simp at hchoice
       | some action =>
           exact ⟨action, mem_support_fairCoin action, rfl⟩
   | done =>
-      rw [fullyMixedBehavioralPolicy, FinDist.mem_support_pure]
+      rw [fullyMixedBehavioralPolicy, PMF.mem_support_pure_iff]
       rcases choice with ⟨choice, hchoice⟩
       cases choice with
       | none => rfl
@@ -436,17 +486,27 @@ def fullyMixedBehavioralProfile (who : Player) :
   cases who
   exact fullyMixedBehavioralPolicy
 
+private theorem initialLegal_at_initHistory :
+    execution.Legal execution.initHistory.state execution.noop := by
+  simpa [ExecutionProtocol.initHistory, execution] using initialLegal
+
+/-- The unique legal initial draw in the hidden-information fixture. -/
+def initialDraw :
+    { joint : Player → Option Bool //
+      execution.Legal execution.initHistory.state joint } :=
+  ⟨execution.noop, initialLegal_at_initHistory⟩
+
 theorem randomizedChooser_initial :
     information.randomizedChooser fullyMixedBehavioralProfile
       execution.initHistory initial_not_terminal =
-        FinDist.pure ⟨execution.noop, initialLegal⟩ := by
+        PMF.pure initialDraw := by
   let : Subsingleton
       { joint : Player → Option Bool //
         execution.Legal execution.initHistory.state joint } :=
     ⟨fun first second => Subtype.ext (by
       rw [initial_legal_joint_eq_noop first,
         initial_legal_joint_eq_noop second])⟩
-  exact FinDist.eq_pure_of_subsingleton _ _
+  exact eq_pure_of_subsingleton _ _
 
 def oneStepHistory : State → execution.History
   | .decision hidden _ => decisionHistory hidden
@@ -458,56 +518,99 @@ theorem decisionHistory_injective : Function.Injective decisionHistory := by
   simpa [decisionHistory] using hstate
 
 theorem historyReachProbability_decision (hidden : Bool) :
-    information.historyReachProbability fullyMixedBehavioralProfile
-      (decisionInformationHistory hidden) = 1 / 2 := by
+    information.historyReachWeight fullyMixedBehavioralProfile
+      (decisionInformationHistory hidden).1 =
+        ENNReal.ofReal (1 / 2 : ℝ) := by
   classical
-  show
-    (information.runBehavioral fullyMixedBehavioralProfile 1).prob
-      (decisionHistory hidden) = 1 / 2
-  rw [InformationModel.runBehavioral, InformationModel.runBehavioralFrom,
+  unfold InformationModel.historyReachWeight
+  rw [show (decisionInformationHistory hidden).1.trace.length = 1 by rfl,
+    InformationModel.runBehavioral, InformationModel.runBehavioralFrom,
     ExecutionProtocol.runRandomizedFor_succ_of_not_terminal
       _ 0 initial_not_terminal,
-    randomizedChooser_initial, FinDist.pure_bind]
-  show
-    ((execution.step .initial ⟨execution.noop, initialLegal⟩).bindOnSupport
-      (fun _ realized =>
-        FinDist.pure (execution.initHistory.extend initialLegal realized))).prob
-        (decisionHistory hidden) = 1 / 2
-  rw [FinDist.bindOnSupport_eq_bind_of_eq_on_support
-    (g := fun state => FinDist.pure (oneStepHistory state))]
-  · rw [← FinDist.map_eq_bind, FinDist.map_comp]
-    show
-      (FinDist.map decisionHistory fairCoin).prob
-        (decisionHistory hidden) = 1 / 2
-    rw [FinDist.prob_map_of_injective decisionHistory
-      decisionHistory_injective fairCoin hidden]
-    cases hidden <;> norm_num [fairCoin, FinDist.prob_pure_eq_ite]
-  · intro state hstate
-    rw [FinDist.support_map] at hstate
+    randomizedChooser_initial, PMF.pure_bind]
+  show (execution.step execution.initHistory.state initialDraw).bindOnSupport
+      (fun state realized =>
+        ExecutionProtocol.runRandomizedFor
+          (information.randomizedChooser fullyMixedBehavioralProfile) 0
+          (execution.initHistory.extend (joint := execution.noop)
+            initialLegal_at_initHistory realized))
+      (decisionHistory hidden) = ENNReal.ofReal (1 / 2 : ℝ)
+  have hkernel : ∀ state
+      (hstate : state ∈ (execution.step execution.initHistory.state
+        initialDraw).support),
+      ExecutionProtocol.runRandomizedFor
+        (information.randomizedChooser fullyMixedBehavioralProfile) 0
+        (execution.initHistory.extend (joint := execution.noop)
+          initialLegal_at_initHistory (target := state) hstate) =
+        PMF.pure (oneStepHistory state) := by
+    intro state hstate
+    rw [show execution.step execution.initHistory.state initialDraw =
+      PMF.map (fun side => State.decision side execution.noop) fairCoin by rfl,
+      PMF.support_map] at hstate
     rcases hstate with ⟨side, _hside, rfl⟩
-    congr 1
+    have htrace :
+        (execution.initHistory.extend (joint := execution.noop)
+          initialLegal_at_initHistory (target := State.decision side execution.noop)
+          hstate).trace = decisionTrace side := by
+      have hstate' :
+          (execution.initHistory.extend (joint := execution.noop)
+            initialLegal_at_initHistory
+            (target := State.decision side execution.noop) hstate).state =
+            State.decision side execution.noop := rfl
+      cases hstate'
+      exact @Subsingleton.elim _
+        (execution_treeShaped (State.decision side execution.noop)) _ _
+    apply congrArg PMF.pure
+    exact congrArg
+      (fun trace : execution.Trace (State.decision side execution.noop) =>
+        (⟨State.decision side execution.noop, trace⟩ : execution.History)) htrace
+  rw [bindOnSupport_eq_bind_of_eq_on_support
+      (execution.step execution.initHistory.state initialDraw)
+    (g := fun state => PMF.pure (oneStepHistory state)) hkernel]
+  rw [show (execution.step execution.initHistory.state initialDraw).bind
+      (fun state => PMF.pure (oneStepHistory state)) =
+        PMF.map oneStepHistory
+          (execution.step execution.initHistory.state initialDraw) by
+            simpa only [Function.comp_def] using
+              PMF.bind_pure_comp oneStepHistory
+                (execution.step execution.initHistory.state initialDraw),
+    show execution.step execution.initHistory.state initialDraw =
+        PMF.map (fun side => State.decision side execution.noop) fairCoin by
+          rfl,
+    PMF.map_comp]
+  rw [PMF.map_apply, tsum_eq_single hidden]
+  · cases hidden <;>
+      norm_num [fairCoin, mix_apply, PMF.pure_apply, oneStepHistory]
+  · intro side hside
+    by_cases hequal :
+        decisionHistory hidden =
+          oneStepHistory (State.decision side execution.noop)
+    · have hhidden : hidden = side :=
+        decisionHistory_injective (by simpa [oneStepHistory] using hequal)
+      exact False.elim (hside hhidden.symm)
+    · simp [hequal]
 
 /-- The two equiprobable histories exhaust the acting information fiber. -/
 theorem informationMass_fullyMixed_acting :
     information.informationMass fullyMixedBehavioralProfile
       .player actingSite = 1 := by
-  rw [InformationModel.informationMass]
+  rw [InformationModel.informationMass, tsum_fintype]
   calc
     (∑ history :
         information.InformationHistory .player actingSite.1,
-        information.historyReachProbability
-          fullyMixedBehavioralProfile history) =
+        information.historyReachWeight
+          fullyMixedBehavioralProfile history.1) =
       ∑ hidden : Bool,
-        information.historyReachProbability fullyMixedBehavioralProfile
-          (decisionInformationHistory hidden) := by
+        information.historyReachWeight fullyMixedBehavioralProfile
+          (decisionInformationHistory hidden).1 := by
             exact Fintype.sum_equiv actingHistoryEquivBool
               (fun history =>
-                information.historyReachProbability
-                  fullyMixedBehavioralProfile history)
+                information.historyReachWeight
+                  fullyMixedBehavioralProfile history.1)
               (fun hidden =>
-                information.historyReachProbability
+                information.historyReachWeight
                   fullyMixedBehavioralProfile
-                    (decisionInformationHistory hidden))
+                    (decisionInformationHistory hidden).1)
               (fun history => by
                 have hinverse :=
                   actingHistoryEquivBool.symm_apply_apply history
@@ -515,14 +618,27 @@ theorem informationMass_fullyMixed_acting :
                   (fun current :
                       information.InformationHistory
                         .player actingSite.1 =>
-                    information.historyReachProbability
-                      fullyMixedBehavioralProfile current)
+                      information.historyReachWeight
+                      fullyMixedBehavioralProfile current.1)
                   hinverse.symm)
-    _ = ∑ _hidden : Bool, (1 / 2 : ℝ) := by
+    _ = ∑ _hidden : Bool, ENNReal.ofReal (1 / 2 : ℝ) := by
           apply Finset.sum_congr rfl
           intro hidden _hhidden
           exact historyReachProbability_decision hidden
-    _ = 1 := by norm_num
+    _ = 1 := by
+          have hhalf : ENNReal.ofReal (1 / 2 : ℝ) = (1 : ENNReal) / 2 := by
+            rw [ENNReal.ofReal_div_of_pos (by norm_num)]
+            norm_num
+          have hsum :
+              (∑ _hidden : Bool, ENNReal.ofReal (1 / 2 : ℝ)) =
+                ENNReal.ofReal (1 / 2 : ℝ) + ENNReal.ofReal (1 / 2 : ℝ) := by
+            rw [Fintype.sum_bool]
+          calc
+            _ = ENNReal.ofReal (1 / 2 : ℝ) +
+                ENNReal.ofReal (1 / 2 : ℝ) := hsum
+            _ = 1 := by
+              rw [hhalf]
+              exact ENNReal.add_halves 1
 
 theorem informationSite_info_eq_acting
     (site : information.InformationSite .player) :
@@ -575,23 +691,23 @@ theorem informationMass_fullyMixed_pos
       (infoOf_decisionHistory false).trans
         (informationSite_info_eq_acting site).symm⟩
   have hwitness :
-      information.historyReachProbability fullyMixedBehavioralProfile witness =
-        1 / 2 := by
+      information.historyReachWeight fullyMixedBehavioralProfile witness.1 =
+        ENNReal.ofReal (1 / 2 : ℝ) := by
     simpa [witness] using historyReachProbability_decision false
   have hnonneg :
       ∀ history : information.InformationHistory .player site.1,
-        0 ≤ information.historyReachProbability
-          fullyMixedBehavioralProfile history := by
+        0 ≤ information.historyReachWeight
+          fullyMixedBehavioralProfile history.1 := by
     intro history
-    exact FinDist.prob_nonneg _ _
-  rw [InformationModel.informationMass]
+    exact bot_le
+  rw [InformationModel.informationMass, tsum_fintype]
   exact lt_of_lt_of_le (by rw [hwitness]; norm_num)
     (Finset.single_le_sum (fun history _ => hnonneg history)
       (Finset.mem_univ witness))
 
 def assessmentBelief
     (who : Player) (site : information.InformationSite who) :
-    FinDist (information.InformationHistory who site.1) := by
+    PMF (information.InformationHistory who site.1) := by
   cases who
   rw [informationSite_info_eq_acting site]
   exact decisionBelief
@@ -619,70 +735,88 @@ set_option backward.isDefEq.respectTransparency false in
 theorem runBehavioralFrom_decision_matchingPayoff
     (hidden : Bool)
     (alternative : information.BehavioralPolicy Player.player) :
-    (information.runBehavioralFrom
+    finiteExpect (information.runBehavioralFrom
       (Profile.update (sig := information.behavioralSignature)
         fullyMixedBehavioralProfile Player.player alternative) 2
-      (decisionHistory hidden)).expect (matchingPayoff .player) =
-        (alternative .acting).expect fun choice =>
+      (decisionHistory hidden)) (matchingPayoff .player) =
+        finiteExpect (alternative .acting) fun choice =>
           if choice.1 = some hidden then 1 else 0 := by
+  classical
   let drawLaw :
-      FinDist ((i : Player) →
+      PMF ((i : Player) →
         information.Choice i
           (information.infoOf i (decisionHistory hidden).trace)) :=
-    FinDist.pi fun i =>
+      independentProduct fun i =>
       Profile.update (sig := information.behavioralSignature)
         fullyMixedBehavioralProfile Player.player alternative i
         (information.infoOf i (decisionHistory hidden).trace)
   rw [InformationModel.runBehavioralFrom,
     ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ 1
       (decision_not_terminal hidden),
-    FinDist.expect_bind, InformationModel.randomizedChooser,
-    InformationModel.behavioralJoint, FinDist.expect_map]
+    finiteExpect_bind, InformationModel.randomizedChooser,
+    InformationModel.behavioralJoint, finiteExpect_map]
   have hmarginal :
-      FinDist.map (fun draws => (draws Player.player).1) drawLaw =
-        FinDist.map (fun choice => choice.1) (alternative .acting) := by
+      PMF.map (fun draws => (draws Player.player).1) drawLaw =
+        PMF.map (fun choice => choice.1) (alternative .acting) := by
     have hchoice :
-        FinDist.map (fun draws => draws Player.player) drawLaw =
+        PMF.map (fun draws => draws Player.player) drawLaw =
           alternative
             (information.infoOf Player.player
               (decisionHistory hidden).trace) := by
       unfold drawLaw
-      rw [FinDist.map_apply_pi, Profile.update_same]
+      rw [independentProduct_map_eval, Profile.update_same]
     have hprojected :
-        FinDist.map (fun draws => (draws Player.player).1) drawLaw =
-          FinDist.map (fun choice => choice.1)
+        PMF.map (fun draws => (draws Player.player).1) drawLaw =
+          PMF.map (fun choice => choice.1)
             (alternative
               (information.infoOf Player.player
                 (decisionHistory hidden).trace)) := by
       have hcongr := congrArg
-        (fun law : FinDist
+        (fun law : PMF
             (information.Choice Player.player
               (information.infoOf Player.player
                 (decisionHistory hidden).trace)) =>
-          FinDist.map (fun choice => choice.1) law)
+          PMF.map (fun choice => choice.1) law)
         hchoice
-      simpa only [FinDist.map_comp, Function.comp_def] using hcongr
+      simpa only [PMF.map_comp, Function.comp_def] using hcongr
     exact hprojected.trans (by
       rw [infoOf_decisionHistory])
   calc
     _ =
-      drawLaw.expect (fun draws =>
+      finiteExpect drawLaw (fun draws =>
         if (draws Player.player).1 = some hidden then 1 else 0) := by
-          apply FinDist.expect_congr
-          intro draws _hdraws
-          simp [execution, decisionHistory, matchingPayoff,
-            ExecutionProtocol.runRandomizedFor_of_terminal]
-    _ = (FinDist.map (fun draws => (draws Player.player).1) drawLaw).expect
+          unfold finiteExpect
+          apply expect_congr_on_support
+          · intro draws _hdraws
+            have hlegal := (draws Player.player).2
+            cases hdraw : (draws Player.player).1 with
+            | none =>
+                simp [information, signals_infoOf, viewOfState, hdraw] at hlegal
+            | some action =>
+                cases action <;> cases hidden <;>
+                  simp [hdraw, expect_pure, execution, decisionHistory, matchingPayoff,
+                    PMF.pure_bindOnSupport,
+                    ExecutionProtocol.History.extend_state,
+                    ExecutionProtocol.runRandomizedFor_of_terminal]
+    _ = finiteExpect
+          (PMF.map (fun draws => (draws Player.player).1) drawLaw)
           (fun choice : Option Bool =>
             if choice = some hidden then 1 else 0) := by
-          rw [FinDist.expect_map]
-    _ = (FinDist.map (fun choice => choice.1) (alternative .acting)).expect
+          simpa only [Function.comp_def] using
+            (finiteExpect_map (fun draws => (draws Player.player).1)
+              drawLaw (fun choice : Option Bool =>
+                if choice = some hidden then 1 else 0)).symm
+    _ = finiteExpect
+          (PMF.map (fun choice => choice.1) (alternative .acting))
           (fun choice : Option Bool =>
             if choice = some hidden then 1 else 0) := by
           rw [hmarginal]
-    _ = (alternative .acting).expect fun choice =>
+    _ = finiteExpect (alternative .acting) fun choice =>
           if choice.1 = some hidden then 1 else 0 := by
-          rw [FinDist.expect_map]
+          simpa only [Function.comp_def] using
+            finiteExpect_map (fun choice => choice.1) (alternative .acting)
+              (fun action : Option Bool =>
+                if action = some hidden then 1 else 0)
 
 /-- The Bayes assessment used by the concrete equilibrium theorem. Unlike the
 presentation-only assessment above, its decision law has full support and its
@@ -708,7 +842,7 @@ theorem fullyMixedAssessment_isBayesConsistent :
       information_decisionInformationAntichain := by
   intro who site _hmass history
   cases who
-  exact information.bayesBelief_prob fullyMixedBehavioralProfile .player site
+  exact information.bayesBelief_apply fullyMixedBehavioralProfile .player site
     (information_decisionInformationAntichain .player site)
     (informationMass_fullyMixed_pos site) history
 
@@ -718,62 +852,143 @@ explicit fair mixture over nature's two hidden histories. -/
 theorem fullyMixedAssessment_belief_acting :
     fullyMixedAssessment.belief .player actingSite = decisionBelief := by
   classical
-  apply FinDist.ext_of_prob
+  apply PMF.ext
   intro history
   obtain ⟨hidden, hcarrier⟩ :=
     history_eq_decisionHistory_of_info_acting history.1 history.2
   have hhistory : history = decisionInformationHistory hidden :=
     Subtype.ext hcarrier
   subst history
-  rw [fullyMixedAssessment, InformationModel.bayesBelief_prob,
+  rw [fullyMixedAssessment, InformationModel.bayesBelief_apply,
     informationMass_fullyMixed_acting,
     historyReachProbability_decision]
+  have hstate :
+      State.decision false execution.noop ≠
+        State.decision true execution.noop := by simp
   cases hidden <;>
     norm_num [decisionBelief, decisionInformationHistory_ne,
-      FinDist.prob_pure_eq_ite]
-  all_goals
-    intro hequal
-    simp at hequal
+      PMF.pure_apply, ENNReal.ofReal, hstate, hstate.symm]
 
 /-- Every whole continuation policy has value `1 / 2`: after projecting legal
 choices to their Boolean action, the two hidden states contribute
 complementary indicators. -/
 theorem continuationContext_matchingPayoff_value
-    (alternative : information.BehavioralPolicy .player) :
+    (alternative : information.BehavioralPolicy .player)
+    (hvalue : (fullyMixedAssessment.continuationContext actingSite
+      (matchingPayoff .player) 2).IntegrableAt alternative) :
     (fullyMixedAssessment.continuationContext actingSite
-      (matchingPayoff .player) 2).value alternative = 1 / 2 := by
-  have hstrategy :
-      fullyMixedAssessment.strategy = fullyMixedBehavioralProfile := rfl
-  have hdecision (hidden : Bool) :
-      ((decisionInformationHistory hidden :
-        information.InformationHistory .player actingSite.1) :
-          execution.History) = decisionHistory hidden := rfl
-  rw [InformationModel.BehavioralAssessment.continuationContext_value,
-    fullyMixedAssessment_belief_acting, FinDist.expect_bind,
-    decisionBelief, FinDist.expect_mix,
-    FinDist.expect_pure, FinDist.expect_pure,
-    hstrategy, hdecision true, hdecision false,
-    runBehavioralFrom_decision_matchingPayoff,
-    runBehavioralFrom_decision_matchingPayoff]
-  have hindicators :
-      (alternative .acting).expect
-          (fun choice => if choice.1 = some true then 1 else 0) +
-        (alternative .acting).expect
-          (fun choice => if choice.1 = some false then 1 else 0) = 1 := by
-    rw [← FinDist.expect_add]
+      (matchingPayoff .player) 2).value alternative hvalue = 1 / 2 := by
+  let kernel : information.InformationHistory .player actingSite.1 →
+      PMF execution.History := fun history =>
+    information.runBehavioralFrom
+      (Profile.update (sig := information.behavioralSignature)
+        fullyMixedAssessment.strategy .player alternative) 2 history.1
+  let belief : PMF (information.InformationHistory .player actingSite.1) :=
+    fullyMixedAssessment.belief .player actingSite
+  have hbelief : belief = decisionBelief := by
+    dsimp [belief]
+    exact fullyMixedAssessment_belief_acting
+  have hbind : PayoffIntegrable (belief.bind kernel) (matchingPayoff .player) := by
+    show (fullyMixedAssessment.continuationContext actingSite
+      (matchingPayoff .player) 2).IntegrableAt alternative
+    exact hvalue
+  have hcond (history : information.InformationHistory .player actingSite.1) :
+      PayoffIntegrable (kernel history) (matchingPayoff .player) :=
+    payoffIntegrable_of_finite (kernel history) (matchingPayoff .player)
+  let branchValue := fun history =>
+    expect (kernel history) (matchingPayoff .player) (hcond history)
+  have houter := payoffIntegrable_bind_conditionalExpectation
+    belief kernel (matchingPayoff .player) hbind hcond
+  have hbranch (hidden : Bool) :
+      branchValue (decisionInformationHistory hidden) =
+        finiteExpect (alternative .acting) (fun choice =>
+          if choice.1 = some hidden then 1 else 0) := by
+    unfold branchValue kernel
+    have hlaw :
+        information.runBehavioralFrom
+            (Profile.update (sig := information.behavioralSignature)
+              fullyMixedAssessment.strategy Player.player alternative)
+            2 (decisionHistory hidden) =
+          information.runBehavioralFrom
+            (Profile.update (sig := information.behavioralSignature)
+              fullyMixedBehavioralProfile Player.player alternative)
+            2 (decisionHistory hidden) := by
+      simp only [fullyMixedAssessment]
+    have hsame := expect_proof_irrel _ _
+      (hcond (decisionInformationHistory hidden))
+      (payoffIntegrable_of_finite _ _)
+    have hvalue' := runBehavioralFrom_decision_matchingPayoff hidden alternative
     calc
-      (alternative .acting).expect (fun choice =>
-          (if choice.1 = some true then 1 else 0) +
-            if choice.1 = some false then 1 else 0) =
-        (alternative .acting).expect (fun _choice => 1) := by
-          apply FinDist.expect_congr
-          intro choice _hchoice
-          rcases choice with ⟨choice, hlegal⟩
-          cases choice with
-          | none => simp at hlegal
-          | some action => cases action <;> simp
-      _ = 1 := FinDist.expect_const ..
-  linarith
+      expect
+          (information.runBehavioralFrom
+            (Profile.update (sig := information.behavioralSignature)
+              fullyMixedAssessment.strategy Player.player alternative)
+            2 (decisionHistory hidden))
+          (matchingPayoff .player) (hcond (decisionInformationHistory hidden)) =
+        expect
+          (information.runBehavioralFrom
+            (Profile.update (sig := information.behavioralSignature)
+              fullyMixedBehavioralProfile Player.player alternative)
+            2 (decisionHistory hidden))
+          (matchingPayoff .player) _ :=
+            expect_congr_law hlaw _ _ _
+      _ = finiteExpect (alternative .acting) (fun choice =>
+          if choice.1 = some hidden then 1 else 0) := hsame.trans hvalue'
+  have htrue : PayoffIntegrable
+      (PMF.pure (decisionInformationHistory true)) branchValue :=
+    payoffIntegrable_of_finite _ _
+  have hfalse : PayoffIntegrable
+      (PMF.pure (decisionInformationHistory false)) branchValue :=
+    payoffIntegrable_of_finite _ _
+  have hmix := expect_mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure (decisionInformationHistory true))
+    (PMF.pure (decisionInformationHistory false)) branchValue htrue hfalse
+  have hcomplement :
+      finiteExpect (alternative .acting) (fun choice =>
+        if choice.1 = some true then 1 else 0) +
+      finiteExpect (alternative .acting) (fun choice =>
+        if choice.1 = some false then 1 else 0) = 1 := by
+    let ftrue := fun choice : information.Choice .player View.acting =>
+      if choice.1 = some true then (1 : ℝ) else 0
+    let ffalse := fun choice : information.Choice .player View.acting =>
+      if choice.1 = some false then (1 : ℝ) else 0
+    have hf : PayoffIntegrable (alternative .acting) ftrue :=
+      payoffIntegrable_of_finite _ _
+    have hg : PayoffIntegrable (alternative .acting) ffalse :=
+      payoffIntegrable_of_finite _ _
+    have hconst : PayoffIntegrable (alternative .acting) (fun _ => (1 : ℝ)) :=
+      payoffIntegrable_of_finite _ _
+    have hpoint (choice : information.Choice .player View.acting)
+        (_hchoice : choice ∈ (alternative .acting).support) :
+        ftrue choice + ffalse choice = 1 := by
+      rcases choice with ⟨choice, hchoice⟩
+      rcases hchoice with ⟨action, rfl⟩
+      cases action <;> simp [ftrue, ffalse]
+    have hcongr := expect_congr_on_support hpoint
+      (payoffIntegrable_add hf hg) hconst
+    have hadd := expect_add hf hg
+    unfold finiteExpect
+    calc
+      _ = expect (alternative .acting) (fun choice =>
+            ftrue choice + ffalse choice) (payoffIntegrable_add hf hg) := hadd.symm
+      _ = expect (alternative .acting) (fun _ => (1 : ℝ)) hconst := hcongr
+      _ = 1 := expect_constant (alternative .acting) 1 hconst
+  calc
+    expect (belief.bind kernel) (matchingPayoff .player) hbind =
+      expect belief branchValue houter :=
+        expect_bind_tower belief kernel (matchingPayoff .player) hbind hcond
+    _ = expect decisionBelief branchValue
+          (payoffIntegrable_congr_law hbelief houter) :=
+      expect_congr_law hbelief branchValue houter
+        (payoffIntegrable_congr_law hbelief houter)
+    _ = (1 / 2) * branchValue (decisionInformationHistory true) +
+          (1 - 1 / 2) * branchValue (decisionInformationHistory false) := by
+      rw [expect_pure, expect_pure] at hmix
+      exact hmix
+    _ = 1 / 2 := by
+      rw [hbranch true, hbranch false]
+      rw [show 1 - 1 / 2 = (1 / 2 : ℝ) by norm_num]
+      nlinarith [hcomplement]
 
 /-- The fair hidden state makes every whole continuation policy optimal, even
 though the terminal payoff itself is nonconstant. -/
@@ -783,14 +998,24 @@ theorem fullyMixedAssessment_isSequentiallyRationalWithin_matchingPayoff :
   cases who
   have hsite := informationSite_eq_actingSite site
   subst site
-  intro alternative _halternative
-  rw [continuationContext_matchingPayoff_value,
-    continuationContext_matchingPayoff_value]
+  let context := fullyMixedAssessment.continuationContext actingSite
+    (matchingPayoff .player) 2
+  have hfinite (alternative : information.BehavioralPolicy .player) :
+      context.IntegrableAt alternative :=
+    payoffIntegrable_of_finite (context.outcome alternative)
+      context.continuation
+  show context.IsLocallyOptimal Set.univ
+    (fullyMixedAssessment.strategy .player)
+  refine ⟨hfinite _, fun alternative _ => hfinite alternative, ?_⟩
+  intro alternative _ hincumbent halternative
+  rw [continuationContext_matchingPayoff_value alternative halternative,
+    continuationContext_matchingPayoff_value
+      (fullyMixedAssessment.strategy .player) hincumbent]
 
 theorem fullyMixedAssessment_isSequentiallyConsistent :
     game.IsSequentiallyConsistent information_decisionInformationAntichain
       fullyMixedAssessment := by
-  exact
+  simpa only [GameTheory.Languages.EFG.Game.IsSequentiallyConsistent] using
     InformationModel.BehavioralAssessment.IsSequentiallyConsistent.of_fullyMixed_bayes
       information_decisionInformationAntichain
       fullyMixedAssessment_isFullyMixed
@@ -827,10 +1052,10 @@ puts all mass on hidden `true`, while its strategy chooses `false`. -/
 
 def trueBelief
     (who : Player) (site : information.InformationSite who) :
-    FinDist (information.InformationHistory who site.1) := by
+    PMF (information.InformationHistory who site.1) := by
   cases who
   rw [informationSite_info_eq_acting site]
-  exact FinDist.pure (decisionInformationHistory true)
+  exact PMF.pure (decisionInformationHistory true)
 
 def wrongAssessment : information.BehavioralAssessment where
   strategy := behavioralProfile
@@ -839,22 +1064,42 @@ def wrongAssessment : information.BehavioralAssessment where
 @[simp]
 theorem wrongAssessment_belief_acting :
     wrongAssessment.belief .player actingSite =
-      FinDist.pure (decisionInformationHistory true) := by
+      PMF.pure (decisionInformationHistory true) := by
   rfl
 
 def alwaysTruePolicy : information.BehavioralPolicy .player
-  | .waiting => FinDist.pure ⟨none, by simp⟩
-  | .acting => FinDist.pure ⟨some true, by simp⟩
-  | .done => FinDist.pure ⟨none, by simp⟩
+  | .waiting => PMF.pure ⟨none, by simp⟩
+  | .acting => PMF.pure ⟨some true, by simp⟩
+  | .done => PMF.pure ⟨none, by simp⟩
 
 /-- Under the dogmatic belief, continuation value is exactly the probability
 of choosing `true` at the acting information state. -/
 theorem wrongAssessment_continuationContext_value
-    (alternative : information.BehavioralPolicy .player) :
+    (alternative : information.BehavioralPolicy .player)
+    (hvalue : (wrongAssessment.continuationContext actingSite
+      (matchingPayoff .player) 2).IntegrableAt alternative) :
     (wrongAssessment.continuationContext actingSite
-      (matchingPayoff .player) 2).value alternative =
-        (alternative .acting).expect fun choice =>
+      (matchingPayoff .player) 2).value alternative hvalue =
+      finiteExpect (alternative .acting) fun choice =>
           if choice.1 = some true then 1 else 0 := by
+  let kernel : information.InformationHistory .player actingSite.1 →
+      PMF execution.History := fun history =>
+    information.runBehavioralFrom
+      (Profile.update (sig := information.behavioralSignature)
+        wrongAssessment.strategy .player alternative) 2 history.1
+  let belief : PMF (information.InformationHistory .player actingSite.1) :=
+    wrongAssessment.belief .player actingSite
+  have hbind : PayoffIntegrable (belief.bind kernel) (matchingPayoff .player) := by
+    show (wrongAssessment.continuationContext actingSite
+      (matchingPayoff .player) 2).IntegrableAt alternative
+    exact hvalue
+  have hcond (history : information.InformationHistory .player actingSite.1) :
+      PayoffIntegrable (kernel history) (matchingPayoff .player) :=
+    payoffIntegrable_of_finite (kernel history) (matchingPayoff .player)
+  let branchValue := fun history =>
+    expect (kernel history) (matchingPayoff .player) (hcond history)
+  have houter := payoffIntegrable_bind_conditionalExpectation
+    belief kernel (matchingPayoff .player) hbind hcond
   have hupdated :
       Profile.update (sig := information.behavioralSignature)
           wrongAssessment.strategy .player alternative =
@@ -863,22 +1108,100 @@ theorem wrongAssessment_continuationContext_value
     funext who
     cases who
     exact Profile.update_same _ _ _
-  rw [InformationModel.BehavioralAssessment.continuationContext_value,
-    wrongAssessment_belief_acting, FinDist.expect_bind, FinDist.expect_pure,
-    hupdated]
-  exact runBehavioralFrom_decision_matchingPayoff true alternative
+  have hbelief : belief = PMF.pure (decisionInformationHistory true) := by
+    dsimp [belief]
+    exact wrongAssessment_belief_acting
+  have hpure : PayoffIntegrable
+      (PMF.pure (decisionInformationHistory true)) branchValue :=
+    payoffIntegrable_of_finite _ _
+  calc
+    expect (belief.bind kernel) (matchingPayoff .player) hbind =
+        expect belief branchValue houter :=
+      expect_bind_tower belief kernel (matchingPayoff .player) hbind hcond
+    _ = expect (PMF.pure (decisionInformationHistory true)) branchValue hpure :=
+      expect_congr_law hbelief branchValue houter hpure
+    _ = finiteExpect (alternative .acting) fun choice =>
+          if choice.1 = some true then 1 else 0 := by
+      rw [expect_pure]
+      unfold branchValue kernel
+      have hrun :
+          information.runBehavioralFrom
+              (Profile.update (sig := information.behavioralSignature)
+                wrongAssessment.strategy .player alternative)
+              2 (decisionHistory true) =
+            information.runBehavioralFrom
+              (Profile.update (sig := information.behavioralSignature)
+                fullyMixedBehavioralProfile .player alternative)
+              2 (decisionHistory true) :=
+        congrArg (fun profile =>
+          information.runBehavioralFrom profile 2 (decisionHistory true)) hupdated
+      have hfull : PayoffIntegrable
+          (information.runBehavioralFrom
+            (Profile.update (sig := information.behavioralSignature)
+              fullyMixedBehavioralProfile .player alternative)
+            2 (decisionHistory true)) (matchingPayoff .player) :=
+        payoffIntegrable_congr_law hrun.symm
+          (hcond (decisionInformationHistory true))
+      calc
+        expect (information.runBehavioralFrom
+            (Profile.update (sig := information.behavioralSignature)
+              wrongAssessment.strategy .player alternative)
+            2 (decisionHistory true))
+            (matchingPayoff .player) (hcond (decisionInformationHistory true)) =
+          expect (information.runBehavioralFrom
+            (Profile.update (sig := information.behavioralSignature)
+              fullyMixedBehavioralProfile .player alternative)
+            2 (decisionHistory true))
+            (matchingPayoff .player) hfull :=
+              expect_congr_law hrun _ _ _
+        _ = finiteExpect (alternative .acting) (fun choice =>
+            if choice.1 = some true then 1 else 0) := by
+          have hsame := expect_proof_irrel _ _
+            hfull (payoffIntegrable_of_finite _ _)
+          have hvalue' := runBehavioralFrom_decision_matchingPayoff true alternative
+          exact hsame.trans hvalue'
 
 /-- The prescribed `false` policy has value zero, while the whole-policy
 alternative choosing `true` has value one. -/
 theorem wrongAssessment_not_isSequentiallyRationalWithin_matchingPayoff :
     ¬ wrongAssessment.IsSequentiallyRationalWithin matchingPayoff 2 := by
   intro hrational
-  have hdeviation :=
-    hrational .player actingSite alwaysTruePolicy (Set.mem_univ _)
-  rw [wrongAssessment_continuationContext_value,
-    wrongAssessment_continuationContext_value] at hdeviation
-  norm_num [alwaysTruePolicy, wrongAssessment, behavioralProfile,
-    behavioralPolicy] at hdeviation
+  let context := wrongAssessment.continuationContext actingSite
+    (matchingPayoff .player) 2
+  have hlocal : context.IsLocallyOptimal Set.univ
+      (wrongAssessment.strategy .player) := hrational .player actingSite
+  rcases hlocal with ⟨hincumbent, hall, hoptimal⟩
+  have hdeviation := hoptimal alwaysTruePolicy (Set.mem_univ _)
+    hincumbent (hall alwaysTruePolicy (Set.mem_univ _))
+  have hdeviation' :
+      context.value alwaysTruePolicy (hall alwaysTruePolicy (Set.mem_univ _)) ≤
+        context.value (wrongAssessment.strategy .player) hincumbent := by
+    simpa only [context] using hdeviation
+  have htrue := wrongAssessment_continuationContext_value alwaysTruePolicy
+    (hall alwaysTruePolicy (Set.mem_univ _))
+  have hincumbent' := wrongAssessment_continuationContext_value
+    (wrongAssessment.strategy .player) hincumbent
+  have hvalues :
+      finiteExpect (alwaysTruePolicy .acting) (fun choice =>
+        if choice.1 = some true then 1 else 0) ≤
+      finiteExpect (wrongAssessment.strategy .player .acting) (fun choice =>
+        if choice.1 = some true then 1 else 0) := by
+    calc
+      _ = context.value alwaysTruePolicy (hall alwaysTruePolicy (Set.mem_univ _)) :=
+        htrue.symm
+      _ ≤ context.value (wrongAssessment.strategy .player) hincumbent := hdeviation'
+      _ = _ := hincumbent'
+  have hincumbentValue :
+      finiteExpect (wrongAssessment.strategy Player.player .acting) (fun choice =>
+        if choice.1 = some true then 1 else 0) = 0 := by
+    simp [wrongAssessment, behavioralProfile, behavioralPolicy,
+      finiteExpect_pure]
+  have halwaysValue :
+      finiteExpect (alwaysTruePolicy .acting) (fun choice =>
+        if choice.1 = some true then 1 else 0) = 1 := by
+    simp [alwaysTruePolicy, finiteExpect_pure]
+  rw [halwaysValue, hincumbentValue] at hvalues
+  norm_num at hvalues
 
 /-- Failed sequential rationality is already enough to refute sequential
 equilibrium, independently of the assessment's consistency status. -/
@@ -891,9 +1214,8 @@ theorem wrongAssessment_not_isSequentialEquilibrium_matchingPayoff :
     information_decisionInformationAntichain wrongAssessment matchingPayoff 2).mp
       hequilibrium |>.1
 
-/-- The language adapter supplies finite history fibers and the canonical
-full-policy continuation contexts. This is a genuine proposition, not a stub
-or a language-specific equilibrium definition. -/
+/-- The fixture supplies finite history fibers; the language adapter
+specializes canonical full-policy contexts and consistency predicates. -/
 def sequentialEquilibriumTarget : Prop :=
   game.IsSequentialEquilibriumWithin information_decisionInformationAntichain
     assessment payoff 2

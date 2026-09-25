@@ -23,7 +23,7 @@ open GameTheory.Math.Probability
   active _ _ := True
   available _ _ := Set.univ
   terminal state := 2 ≤ state
-  step state _ := FinDist.pure (state + 1)
+  step state _ := PMF.pure (state + 1)
   progress _ _ := ⟨fun _ => some false, fun _ => ⟨True.intro, Set.mem_univ _⟩⟩
 
 /-- The predrawn seat remembers the round, the opponent remembers nothing. -/
@@ -74,12 +74,12 @@ def choice (who : Bool) (info : model.InfoState who) (action : Bool) :
 def fallback : model.Policy true := fun info => choice true info false
 
 def coin (who : Bool) (info : model.InfoState who) :
-    FinDist (model.Choice who info) :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure (choice who info false)) (FinDist.pure (choice who info true))
+    PMF (model.Choice who info) :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure (choice who info false)) (PMF.pure (choice who info true))
 
 def targetPolicy : model.BehavioralPolicy true := fun info =>
-  if info ∈ ({0, 1} : Finset Nat) then coin true info else FinDist.pure (fallback info)
+  if info ∈ ({0, 1} : Finset Nat) then coin true info else PMF.pure (fallback info)
 
 def profile : Profile model.behavioralSignature
   | true => targetPolicy
@@ -87,33 +87,37 @@ def profile : Profile model.behavioralSignature
 
 theorem targetPolicy_finite (info : model.InfoState true)
     (hout : info ∉ ({0, 1} : Finset Nat)) :
-    targetPolicy info = FinDist.pure (fallback info) := by
+    targetPolicy info = PMF.pure (fallback info) := by
   simp [targetPolicy, hout]
 
 /-- Both answers have positive mass for the forgetful opponent. -/
 theorem opponent_has_both_answers (action : Bool) :
     choice false () action ∈ (profile false ()).support := by
-  apply FinDist.prob_pos_iff.mp
-  cases action <;> norm_num [profile, coin, FinDist.prob_pure_eq_ite, choice]
+  apply (PMF.mem_support_iff _ _).mpr
+  cases action <;>
+    norm_num [profile, coin, mix_apply, PMF.pure_apply, choice]
 
 def firstHistory : rounds.History :=
-  rounds.initHistory.extend
+  rounds.initHistory.extend (target := 1)
     (joint := fun _ => some false)
-    ⟨by decide, fun _ => ⟨True.intro, Set.mem_univ _⟩⟩
-    (FinDist.mem_support_pure.mpr rfl)
+    ⟨by simp [rounds], fun _ => ⟨True.intro, Set.mem_univ _⟩⟩
+    (by simp [rounds])
 
 def terminalHistory : rounds.History :=
-  firstHistory.extend
+  firstHistory.extend (target := 2)
     (joint := fun _ => some true)
-    ⟨by decide, fun _ => ⟨True.intro, Set.mem_univ _⟩⟩
-    (FinDist.mem_support_pure.mpr rfl)
+    ⟨by simp [rounds, firstHistory], fun _ => ⟨True.intro, Set.mem_univ _⟩⟩
+    (by simp [rounds, firstHistory])
 
 /-- The opponent violates freshness across actual consecutive decision sites. -/
 theorem opponent_not_fresh : ¬ (∀ first later : rounds.History,
     first.trace.length < later.trace.length →
       model.infoOf false later.trace ≠ model.infoOf false first.trace) := by
   intro hfresh
-  exact hfresh rounds.initHistory firstHistory (by decide) rfl
+  have hlength : rounds.initHistory.trace.length < firstHistory.trace.length := by
+    simp [ExecutionProtocol.initHistory, firstHistory, ExecutionProtocol.History.extend,
+      ExecutionProtocol.Trace.length]
+  exact hfresh rounds.initHistory firstHistory hlength rfl
 
 /-- Predrawing changes no opponent policy, including its repeated local draw. -/
 example (policy : model.Policy true) :
@@ -131,12 +135,54 @@ theorem two_round_predraw :
     model.runBehavioralFrom_predrawOneOn true fresh profile 2 targetPolicy
       {0, 1} fallback rounds.initHistory targetPolicy_finite
 
+private theorem profileChoicesFinite : ∀ history : rounds.History,
+    ¬ rounds.terminal history.state → ∀ who,
+      (profile who (model.infoOf who history.trace)).support.Finite := by
+  have hcoin (who : Bool) (info : model.InfoState who) :
+      (coin who info).support.Finite := by
+    apply ((Set.finite_singleton (choice who info true)).insert
+      (choice who info false)).subset
+    intro actual hactual
+    rw [PMF.mem_support_iff] at hactual
+    by_contra hnot
+    have hnfalse : actual ≠ choice who info false := by
+      intro heq
+      exact hnot (by simp [heq])
+    have hntrue : actual ≠ choice who info true := by
+      intro heq
+      exact hnot (by simp [heq])
+    have hzero : coin who info actual = 0 := by
+      simp [coin, mix_apply, PMF.pure_apply, hnfalse, hntrue]
+    exact hactual hzero
+  have hpure (info : model.InfoState true) :
+      (PMF.pure (fallback info)).support.Finite := by
+    simpa only [PMF.support_pure] using Set.finite_singleton (fallback info)
+  intro history _ who
+  cases who with
+  | false => exact hcoin false ()
+  | true =>
+      by_cases hmem : model.infoOf true history.trace ∈ ({0, 1} : Finset Nat)
+      · simpa [profile, targetPolicy, hmem] using
+          hcoin true (model.infoOf true history.trace)
+      · simp [profile, targetPolicy, hmem]
+
+private theorem stepSupportFinite
+    {state : rounds.State}
+    (draw : {joint : ∀ who, Option (rounds.Action who) // rounds.Legal state joint}) :
+    (rounds.step state draw).support.Finite := by
+  simp [rounds]
+
+private theorem predrawSitesFinite :
+    (model.behavioralSupportSitesFrom profile 2 rounds.initHistory true).Finite :=
+  model.behavioralSupportSitesFrom_finite_of_finite_branching profile 2
+    rounds.initHistory profileChoicesFinite (fun {_} draw => stepSupportFinite draw) true
+
 /-- The existential API needs no finite instance for the target information. -/
-example : ∃ policies : FinDist (model.Policy true),
+example : ∃ policies : PMF (model.Policy true),
     policies.bind (fun policy => model.runBehavioralFrom
         (Profile.update profile true policy.toBehavioral) 2 rounds.initHistory) =
       model.runBehavioralFrom profile 2 rounds.initHistory :=
-  model.exists_predrawOne true fresh profile 2 rounds.initHistory
+  model.exists_predrawOne true fresh profile 2 rounds.initHistory predrawSitesFinite
 
 /-- Zero fuel still admits the same nontrivial finite-table draw. -/
 example (start : rounds.History) :
@@ -148,14 +194,15 @@ example (start : rounds.History) :
     model.runBehavioralFrom_predrawOneOn true fresh profile 0 targetPolicy
       {0, 1} fallback start targetPolicy_finite
 
-theorem terminalHistory_terminal : rounds.terminal terminalHistory.state := by decide
+theorem terminalHistory_terminal : rounds.terminal terminalHistory.state := by
+  simp [rounds, terminalHistory, firstHistory]
 
 /-- Starting at a terminal history is absorbed for every horizon. -/
 example (fuel : Nat) :
     (targetPolicy.toMixedOn {0, 1} fallback).bind
         (fun policy => model.runBehavioralFrom
           (Profile.update profile true policy.toBehavioral) fuel terminalHistory) =
-      FinDist.pure terminalHistory := by
+      PMF.pure terminalHistory := by
   have heq := model.runBehavioralFrom_predrawOneOn true fresh profile fuel targetPolicy
     {0, 1} fallback terminalHistory targetPolicy_finite
   rw [model.runBehavioralFrom_of_terminal _ _ terminalHistory_terminal] at heq

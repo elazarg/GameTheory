@@ -39,9 +39,9 @@ family's assumptions out of the basic one:
 | Protocol execution, histories, information, assessment, SPE, backward induction | `GameTheory.Protocol` |
 | Finite pure-Nash enumeration and checked rational algorithms | `GameTheory.Finite.Algorithm`, `GameTheory.Finite.Correctness` |
 | Mixed-Nash existence, minimax, refinements, approachability, convergence | `GameTheory.Analysis` |
-| Finite probability, DAGs, online learning, discounted sums, reusable geometry | `GameTheory.Math` |
+| Discrete probability, DAGs, online learning, discounted sums, reusable geometry | `GameTheory.Math` |
 | Repeated games, public monitoring, PPE, self-generation, uniform equilibrium | `GameTheory.Repeated` |
-| Finite stochastic games, public policies, restart calculus, uniform payoffs | `GameTheory.Stochastic` |
+| Stochastic games, public policies, restart calculus, uniform payoffs | `GameTheory.Stochastic` |
 | Auctions, Groves mechanisms, information design, implementation, fair division | `GameTheory.Mechanism` |
 | Bargaining, matching, coalitional games, voting-power indices | `GameTheory.Cooperative` |
 | NFG, EFG, FOSG, MAID, Bayesian, intrinsic, and multi-round encodings | `GameTheory.Languages.*` |
@@ -54,7 +54,7 @@ import GameTheory.Math.Probability.Bounds
 
 open GameTheory.Math.Probability
 
-#check FinDist.probOf_le_expect_div
+#check eventMass_toReal_le_expect_div
 ```
 
 ## Examples
@@ -89,26 +89,33 @@ with their exact imports and compiled consumers.
 
 ## Organization
 
-`GameTheory.Math` owns the reusable mathematics, including the canonical
-finite-support law `FinDist`. `GameTheory.Core` owns static forms, utility,
+`GameTheory.Math` owns the reusable mathematics, including products,
+conditioning, and guarded expectation for ordinary Mathlib `PMF` laws.
+`GameTheory.Core` owns static forms, utility,
 deviations, preferences, and solution concepts. `GameTheory.Protocol` owns the
 single execution and behavioral-policy semantics the sequential languages share.
-`GameTheory.Analysis` is the one root that may reach fixed points, topology, and
-the other analytic existence arguments; the architecture audits check that
-boundary on every build.
+`GameTheory.Analysis` owns analytic existence and convergence arguments and is
+the only root allowed to import the external fixed-point library. Architecture
+audits check these project dependency boundaries.
 
-Assumptions sit on the theorem or operation that needs them: finite support
-belongs to a probability law, and finiteness of players or actions is requested
-separately. Executable modules use explicit enumerations and computable scalars;
+Assumptions sit on the theorem or operation that needs them: finite support,
+finite player/action carriers, and payoff integrability are requested locally.
+Executable modules use explicit enumerations and computable scalars;
 correctness modules connect them to the real-valued semantics.
 
 ## Scope
 
-Probability is finite-support throughout, including laws on infinite carriers.
-This is the one boundary worth knowing before you build on the library: results
-needing a general measure over infinite play paths — measurable games, monitored
-public randomization — live in focused experiments under
-`GameTheory.Experimental`, not in the public roots.
+Discrete semantics uses `PMF` on arbitrary carriers; each law may have countably
+infinite support. Real expected utility requires integrability of the actual
+compared laws. An undefined alternative fails its equilibrium comparison,
+rather than disappearing from the deviation quantifier. Finite support and
+bounded payoffs are sufficient ways to discharge these requirements.
+
+Ordinary measures represent infinite policy products and arbitrary independent
+per-player policy laws, with exact finite-prefix behavioral correspondences.
+General measurable games and infinite-play outcome laws remain separate
+extensions; the latter currently live in focused experiments under
+`GameTheory.Experimental`.
 
 Partial and queued theorem families are tracked in the
 [delivery ledger](docs/DeliveryLedger.md).

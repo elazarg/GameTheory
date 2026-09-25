@@ -11,6 +11,7 @@ to the typed assignment.
 
 import GameTheory.Languages.MAID.Basic
 import GameTheory.Languages.EFG
+import GameTheory.Math.Probability.Support
 
 noncomputable section
 
@@ -314,11 +315,11 @@ def transitionAt [DecidableEq Node]
     (hlegal :
       IsLegalJoint (Active topological state)
         (Available topological state) joint) :
-    FinDist (Stage diagram topological) := by
+    PMF (Stage diagram topological) := by
   let node := state.pendingNode topological hpending
   match hkind : diagram.kind node with
   | .chance =>
-      exact FinDist.map
+      exact PMF.map
         (state.advance topological hpending)
         (semantics.chanceLaw node hkind
           (state.configOf topological semantics (diagram.parents node)))
@@ -336,7 +337,7 @@ def transitionAt [DecidableEq Node]
         Option.some.inj
           (hlegalOwner.2.symm.trans
             (pending_eq_some topological hpending))
-      exact FinDist.pure
+      exact PMF.pure
         (state.advanceTagged topological hpending
           ⟨action.1.1, action.2⟩ hsite)
 
@@ -349,7 +350,7 @@ def transition [DecidableEq Node]
       ¬ state.IsTerminal topological ∧
         IsLegalJoint (Active topological state)
           (Available topological state) joint } →
-      FinDist (Stage diagram topological) := fun certified =>
+      PMF (Stage diagram topological) := fun certified =>
   transitionAt topological semantics state
     ((state.not_terminal_iff topological).mp certified.2.1)
     certified.1 certified.2.2
@@ -556,11 +557,11 @@ theorem mem_transition_path [DecidableEq Node]
   dsimp only at htarget
   split at htarget
   next hkind =>
-    rw [FinDist.support_map] at htarget
+    rw [PMF.support_map] at htarget
     obtain ⟨value, _, rfl⟩ := htarget
     exact ⟨_, rfl⟩
   next owner hkind =>
-    rw [FinDist.mem_support_pure] at htarget
+    rw [PMF.mem_support_pure_iff] at htarget
     subst target
     exact ⟨_, rfl⟩
 
@@ -667,7 +668,7 @@ theorem mem_transition_decision_path
       GameTheory.Languages.MAID.NodeKind.decision.inj
         (hdecision.symm.trans hkind)
     subst activeOwner
-    rw [FinDist.mem_support_pure] at htarget
+    rw [PMF.mem_support_pure_iff] at htarget
     subst target
     refine ⟨_, ?_, rfl⟩
     exact selectedAction_spec topological certified.1
@@ -870,9 +871,9 @@ def ownerBehavioralPolicy [DecidableEq Player] [DecidableEq Node]
     (owner : Player)
     (policy : GameTheory.Languages.MAID.OwnerPolicy diagram owner) :
     (information topological semantics).BehavioralPolicy owner
-  | .inactive => FinDist.pure ⟨none, rfl⟩
+  | .inactive => PMF.pure ⟨none, rfl⟩
   | .acting site observed =>
-      FinDist.map
+      PMF.map
         (fun value => ⟨some ⟨site, value⟩, ⟨value, rfl⟩⟩)
         (policy site observed)
 
@@ -898,7 +899,7 @@ def serialNodeLaw [DecidableEq Node]
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length) :
-    FinDist
+    PMF
       (diagram.Value (state.pendingNode topological hpending)) := by
   let node := state.pendingNode topological hpending
   match hkind : diagram.kind node with
@@ -916,8 +917,8 @@ def serialStep [DecidableEq Node]
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length) :
-    FinDist (Stage diagram topological) :=
-  FinDist.map (state.advance topological hpending)
+    PMF (Stage diagram topological) :=
+  PMF.map (state.advance topological hpending)
     (serialNodeLaw topological semantics policy state hpending)
 
 theorem serialNodeLaw_of_chance
@@ -995,7 +996,7 @@ def serialJointLaw [DecidableEq Player] [DecidableEq Node]
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
     (hterminal : ¬ (execution topological semantics).terminal state) :
-    FinDist
+    PMF
       { joint : (owner : Player) →
           Option ((execution topological semantics).Action owner) //
         (execution topological semantics).Legal state joint } := by
@@ -1005,11 +1006,11 @@ def serialJointLaw [DecidableEq Player] [DecidableEq Node]
   let node := state.pendingNode topological hpending
   match hkind : diagram.kind node with
   | .chance =>
-      exact FinDist.pure ⟨fun _ => none, hterminal,
+      exact PMF.pure ⟨fun _ => none, hterminal,
         fun owner => inactive_of_pending_chance topological state
           hpending hkind owner⟩
   | .decision owner =>
-      exact FinDist.map
+      exact PMF.map
         (fun value => ⟨
           jointFor topological state hpending hkind value,
           hterminal,
@@ -1032,7 +1033,7 @@ theorem transition_of_chance
       diagram.kind (state.pendingNode topological hpending) =
         .chance) :
     transition topological semantics state certified =
-      FinDist.map (state.advance topological hpending)
+      PMF.map (state.advance topological hpending)
         (semantics.chanceLaw
           (state.pendingNode topological hpending) hkind
           (state.configOf topological semantics
@@ -1066,7 +1067,7 @@ theorem transition_jointFor
         ⟨jointFor topological state hpending hkind value,
           hterminal,
           jointFor_legal topological state hpending hkind value⟩ =
-      FinDist.pure (state.advance topological hpending value) := by
+      PMF.pure (state.advance topological hpending value) := by
   have hpendingEq :
       hpending =
         (state.not_terminal_iff topological).mp hterminal :=
@@ -1099,7 +1100,7 @@ theorem transition_jointFor
       simp [jointFor]
     rw [hjoint] at hselected
     have haction := Option.some.inj hselected
-    apply congrArg FinDist.pure
+    apply congrArg PMF.pure
     apply Stage.eq_of_path_eq
     simp only [Stage.advanceTagged, Stage.advance]
     exact congrArg (fun entry => state.path ++ [entry])
@@ -1124,18 +1125,18 @@ theorem serialJointLaw_bind_transition
   dsimp only
   split
   next hkind =>
-    rw [FinDist.pure_bind,
+    rw [PMF.pure_bind,
       transition_of_chance topological semantics state _
         hpending hkind]
     unfold serialStep
     rw [serialNodeLaw_of_chance topological semantics policy
       state hpending hkind]
   next owner hkind =>
-    rw [FinDist.bind_map]
+    rw [PMF.bind_map]
     unfold serialStep
     rw [serialNodeLaw_of_decision topological semantics policy
-      state hpending hkind, FinDist.map_eq_bind]
-    exact FinDist.bind_congr fun value _ =>
+      state hpending hkind, ← PMF.bind_pure_comp]
+    exact bind_congr_on_support _ fun value _ =>
       transition_jointFor topological semantics state hterminal
         hpending hkind value
 
@@ -1145,12 +1146,12 @@ def serialRun [DecidableEq Player] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram) :
     Nat → Stage diagram topological →
-      FinDist (Stage diagram topological)
-  | 0, state => FinDist.pure state
+      PMF (Stage diagram topological)
+  | 0, state => PMF.pure state
   | fuel + 1, state =>
       if hterminal :
           state.path.length = topological.order.length then
-        FinDist.pure state
+        PMF.pure state
       else
         (serialStep topological semantics policy state
           (Nat.lt_of_le_of_ne state.length_le hterminal)).bind

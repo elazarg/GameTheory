@@ -20,6 +20,13 @@ other behavioral coordinate. The generic finite regret-matching estimate
 belongs with the existing approachability engine; the Protocol leaf is only
 the realization adapter.
 
+`LocalCounterfactualRegretsIntegrable` certifies the incumbent continuation and
+every pure-action continuation used by the regret vector. Finiteness of the
+action vector does not imply integration of those continuation payoffs.
+The generic vector aggregation remains probability-free; its Protocol
+realization supplies the actual-law certificates under
+[D62](D62-general-pmf-restoration.md).
+
 This is local CFR learning at one information site. It is not the global CFR
 theorem that bounds root deviation gain or exploitability by the sum of local
 counterfactual regrets across a perfect-recall tree.
@@ -51,12 +58,6 @@ orthant. A fixed false law has exact positive regret `1/2` for true. From that
 losing regret vector, the actual `regretMatch` update assigns probability one
 to true. These controls reject a constant vector, a no-op update, and a theorem
 that never reaches D45 semantics.
-
-The narrow source/consumer build completed 2,448 jobs and the stable aggregate
-completed 2,449 jobs warning-free. Both fast expected architecture audits
-report `VERIFIED=1`. The full `GameTheory` library target completed 3,585 jobs
-and the Analysis umbrella completed 3,207 jobs warning-free. Deep reachability
-mode was not run.
 
 ## Kill conditions and result
 

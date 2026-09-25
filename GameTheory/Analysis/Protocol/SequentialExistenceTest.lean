@@ -8,7 +8,6 @@ so perfect recall holds on every legal history.
 -/
 
 import GameTheory.Analysis.Protocol.EFGExistence
-import GameTheory.Analysis.Protocol.CounterfactualDecomposition
 import GameTheory.Analysis.Protocol.SequentialExistenceBoundaryTest
 
 noncomputable section
@@ -34,13 +33,14 @@ def State.stopped : State → Prop
   | .terminal _ _ => True
   | _ => False
 
-def rootLaw : FinDist State :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure (.decision false)) (FinDist.pure .waiting)
+def rootLaw : PMF State :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure (.decision false)) (PMF.pure .waiting)
 
 @[simp] theorem rootLaw_support (state : State) :
     state ∈ rootLaw.support ↔ state = .decision false ∨ state = .waiting := by
-  exact FinDist.mem_support_mix_pure_iff _ _ _ (by norm_num) (by norm_num) _ _ _
+  rw [PMF.mem_support_iff, rootLaw, mix_apply, PMF.pure_apply, PMF.pure_apply]
+  cases state <;> norm_num
 
 @[reducible] def execution : ExecutionProtocol Unit where
   State := State
@@ -52,9 +52,9 @@ def rootLaw : FinDist State :=
   step state joint :=
     match state with
     | .root => rootLaw
-    | .waiting => FinDist.pure (.decision true)
-    | .decision hidden => FinDist.pure (.terminal hidden ((joint.1 ()).getD false))
-    | .terminal hidden action => FinDist.pure (.terminal hidden action)
+    | .waiting => PMF.pure (.decision true)
+    | .decision hidden => PMF.pure (.terminal hidden ((joint.1 ()).getD false))
+    | .terminal hidden action => PMF.pure (.terminal hidden action)
   progress := by
     intro state running
     cases state with
@@ -87,7 +87,15 @@ theorem legal_joint {state : State} {joint : Unit → Option Bool}
 theorem no_return (source : State) (joint : Unit → Option Bool)
     (legal : execution.Legal source joint) :
     State.root ∉ (execution.step source ⟨joint, legal⟩).support := by
-  cases source <;> simp [execution]
+  cases source with
+  | root =>
+      have hnot : State.root ∉ rootLaw.support := by
+        rw [rootLaw_support]
+        simp
+      simpa only [execution] using hnot
+  | waiting => simp [execution]
+  | decision hidden => simp [execution]
+  | terminal hidden action => simp [execution]
 
 theorem predecessor_unique {target first second : State}
     {firstJoint secondJoint : Unit → Option Bool}
@@ -101,7 +109,7 @@ theorem predecessor_unique {target first second : State}
   have firstRunning := firstLegal.1
   have secondRunning := secondLegal.1
   cases first <;> cases second <;>
-    simp_all [execution, jointAt, State.stopped, FinDist.mem_support_pure]
+    simp_all [execution, jointAt, State.stopped, rootLaw, mix_apply, PMF.pure_apply]
 
 theorem treeShaped : execution.IsTreeShaped :=
   isTreeShaped_of_predecessor_unique no_return predecessor_unique
@@ -160,13 +168,17 @@ theorem ownPlay : ∀ {state : State} (trace : execution.Trace state),
           rw [rootLaw_support] at realized
           rcases realized with rfl | rfl <;> simp [jointAt, ih]
       | waiting =>
-          have realized : target ∈ (FinDist.pure (.decision true)).support := realized
-          rw [FinDist.mem_support_pure] at realized
+          have realized : target ∈ (PMF.pure (.decision true)).support := realized
+          rw [PMF.mem_support_iff] at realized
+          have htarget : target = .decision true := by
+            simpa [PMF.pure_apply] using realized
           subst target
           simp [jointAt, ih]
       | decision hidden =>
-          have realized : target ∈ (FinDist.pure (.terminal hidden action)).support := realized
-          rw [FinDist.mem_support_pure] at realized
+          have realized : target ∈ (PMF.pure (.terminal hidden action)).support := realized
+          rw [PMF.mem_support_iff] at realized
+          have htarget : target = .terminal hidden action := by
+            simpa [PMF.pure_apply] using realized
           subst target
           simp [jointAt, ih, viewOf]
       | terminal hidden action => exact False.elim (running trivial)
@@ -207,14 +219,18 @@ theorem waiting_legal : execution.Legal .waiting execution.noop :=
   execution.noop_isLegal (by simp [State.stopped]) (fun _ => by simp [State.active])
 
 @[reducible] def earlyHistory : execution.History :=
-  execution.initHistory.extend (target := .decision false) root_legal (by simp [execution])
+  execution.initHistory.extend (target := .decision false) root_legal (by
+    have h := (rootLaw_support _).2 (Or.inl rfl)
+    simpa [ExecutionProtocol.initHistory, execution] using h)
 
 @[reducible] def waitingHistory : execution.History :=
-  execution.initHistory.extend (target := .waiting) root_legal (by simp [execution])
+  execution.initHistory.extend (target := .waiting) root_legal (by
+    have h := (rootLaw_support _).2 (Or.inr rfl)
+    simpa [ExecutionProtocol.initHistory, execution] using h)
 
 @[reducible] def lateHistory : execution.History :=
   waitingHistory.extend (target := .decision true) waiting_legal (by
-    show State.decision true ∈ (FinDist.pure (.decision true)).support
+    show State.decision true ∈ (PMF.pure (.decision true)).support
     simp)
 
 theorem same_information : information.infoOf () earlyHistory.trace =
@@ -268,13 +284,17 @@ theorem trace_length : ∀ {state : State} (trace : execution.Trace state),
           rw [rootLaw_support] at realized
           rcases realized with rfl | rfl <;> simp [Trace.length, ih, stage]
       | waiting =>
-          have realized : target ∈ (FinDist.pure (.decision true)).support := realized
-          rw [FinDist.mem_support_pure] at realized
+          have realized : target ∈ (PMF.pure (.decision true)).support := realized
+          rw [PMF.mem_support_iff] at realized
+          have htarget : target = .decision true := by
+            simpa [PMF.pure_apply] using realized
           subst target
           simp [Trace.length, ih, stage]
       | decision hidden =>
-          have realized : target ∈ (FinDist.pure (.terminal hidden action)).support := realized
-          rw [FinDist.mem_support_pure] at realized
+          have realized : target ∈ (PMF.pure (.terminal hidden action)).support := realized
+          rw [PMF.mem_support_iff] at realized
+          have htarget : target = .terminal hidden action := by
+            simpa [PMF.pure_apply] using realized
           subst target
           cases hidden <;> simp [Trace.length, ih, stage]
       | terminal hidden action => exact False.elim (running trivial)

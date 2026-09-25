@@ -14,6 +14,15 @@ replacement. Counterfactual regret is the difference from the prescribed
 policy. Pure action regret is a transparent specialization through
 `BehavioralPolicy.commit` at one information state.
 
+With general PMF continuations, each value requires payoff integration on
+exactly the histories with nonzero counterfactual reach. A zero focal-player
+reach does not remove this requirement: such histories can still contribute
+to counterfactual regret. The named `CounterfactualContinuationIntegrable`
+certificate records this domain without requiring a global payoff bound.
+The information-fiber sum remains finite at this theorem boundary; the
+underlying continuation laws may have infinite support. See
+[D62](D62-general-pmf-restoration.md) for the shared expectation contract.
+
 The useful contract is not the definition alone. At a positive-mass history
 antichain with common focal own reach, information mass times the ordinary
 canonical Bayes continuation gain equals own reach times counterfactual
@@ -50,11 +59,6 @@ probability of the existing `ownPlay` record, from which perfect recall
 discharges the certificate. Positive canonical information mass proves that
 the common focal factor is positive, so the familiar sign theorem needs no
 extra reach premise.
-
-The narrow source/consumer build completed 1,775 jobs and the stable aggregate
-completed 1,776 jobs warning-free. Both fast expected architecture audits
-report `VERIFIED=1`; the full build completed 3,585 jobs warning-free. Deep
-reachability mode was not run.
 
 ## Kill conditions and result
 

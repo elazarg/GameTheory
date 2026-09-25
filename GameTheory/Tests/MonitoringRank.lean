@@ -26,7 +26,7 @@ def signature : GameSignature Player where
 @[reducible]
 def form : GameForm Player where
   sig := signature
-  play _ := FinDist.pure ()
+  play _ := PMF.pure ()
 
 @[reducible]
 def game : UtilityGame Player where
@@ -61,14 +61,14 @@ profile. -/
 @[reducible]
 def perfectMonitoring : game.PublicMonitoring where
   Signal := Profile signature
-  signalLaw profile := FinDist.pure profile
+  signalLaw profile := PMF.pure profile
 
 /-- An uninformative monitor emits the same public signal after every stage
 profile. -/
 @[reducible]
 def constantMonitoring : game.PublicMonitoring where
   Signal := Unit
-  signalLaw _ := FinDist.pure ()
+  signalLaw _ := PMF.pure ()
 
 def trueDeviation (who : Player) :
     UtilityGame.PublicMonitoring.NontrivialDeviation
@@ -113,29 +113,25 @@ theorem perfect_pairwiseFullRank :
       coefficient (Sum.inl (trueDeviation false)) = 0 := by
     have hfirst' :
         coefficient (Sum.inl (trueDeviation false)) *
-            ((FinDist.pure firstChanged).prob firstChanged -
-              (FinDist.pure base).prob firstChanged) +
+            ((PMF.pure firstChanged firstChanged).toReal -
+              (PMF.pure base firstChanged).toReal) +
           coefficient (Sum.inr (trueDeviation true)) *
-            ((FinDist.pure secondChanged).prob firstChanged -
-              (FinDist.pure base).prob firstChanged) = 0 := hfirst
-    rw [FinDist.prob_pure_self,
-      FinDist.prob_pure_of_ne firstChanged_ne_base,
-      FinDist.prob_pure_of_ne firstChanged_ne_secondChanged] at hfirst'
-    norm_num at hfirst'
+            ((PMF.pure secondChanged firstChanged).toReal -
+              (PMF.pure base firstChanged).toReal) = 0 := hfirst
+    simp [PMF.pure_apply, firstChanged_ne_base,
+      firstChanged_ne_secondChanged] at hfirst'
     exact hfirst'
   have hsecondCoefficient :
       coefficient (Sum.inr (trueDeviation true)) = 0 := by
     have hsecond' :
         coefficient (Sum.inl (trueDeviation false)) *
-            ((FinDist.pure firstChanged).prob secondChanged -
-              (FinDist.pure base).prob secondChanged) +
+            ((PMF.pure firstChanged secondChanged).toReal -
+              (PMF.pure base secondChanged).toReal) +
           coefficient (Sum.inr (trueDeviation true)) *
-            ((FinDist.pure secondChanged).prob secondChanged -
-              (FinDist.pure base).prob secondChanged) = 0 := hsecond
-    rw [FinDist.prob_pure_of_ne firstChanged_ne_secondChanged.symm,
-      FinDist.prob_pure_of_ne secondChanged_ne_base,
-      FinDist.prob_pure_self] at hsecond'
-    norm_num at hsecond'
+            ((PMF.pure secondChanged secondChanged).toReal -
+              (PMF.pure base secondChanged).toReal) = 0 := hsecond
+    simp [PMF.pure_apply, firstChanged_ne_secondChanged.symm,
+      secondChanged_ne_base] at hsecond'
     exact hsecond'
   cases deviation with
   | inl deviation =>
@@ -197,10 +193,9 @@ theorem firstDeviation_prefixEffect :
             (sig := perfectMonitoring.monitoredSignature)
             stationaryBase false
             (perfectMonitoring.oneShotDeviation stationaryBase false true))
-          1).prob
-          (perfectMonitoring.singletonHistory firstChanged) -
-        (perfectMonitoring.signalHistoryLaw stationaryBase 1).prob
-          (perfectMonitoring.singletonHistory firstChanged) := by
+          1 (perfectMonitoring.singletonHistory firstChanged)).toReal -
+        (perfectMonitoring.signalHistoryLaw stationaryBase 1
+          (perfectMonitoring.singletonHistory firstChanged)).toReal := by
   simpa [stationaryBase,
     UtilityGame.PublicMonitoring.stationaryMonitoredProfile] using
     perfectMonitoring.deviationSignalVector_eq_oneShotHistoryProb_sub
@@ -214,15 +209,12 @@ theorem firstDeviation_prefixEffect_eq_one :
           (sig := perfectMonitoring.monitoredSignature)
           stationaryBase false
           (perfectMonitoring.oneShotDeviation stationaryBase false true))
-        1).prob
-        (perfectMonitoring.singletonHistory firstChanged) -
-      (perfectMonitoring.signalHistoryLaw stationaryBase 1).prob
-        (perfectMonitoring.singletonHistory firstChanged) = 1 := by
+        1 (perfectMonitoring.singletonHistory firstChanged)).toReal -
+      (perfectMonitoring.signalHistoryLaw stationaryBase 1
+        (perfectMonitoring.singletonHistory firstChanged)).toReal = 1 := by
   rw [← firstDeviation_prefixEffect]
-  show (FinDist.pure firstChanged).prob firstChanged -
-      (FinDist.pure base).prob firstChanged = 1
-  rw [FinDist.prob_pure_self,
-    FinDist.prob_pure_of_ne firstChanged_ne_base]
-  norm_num
+  show (PMF.pure firstChanged firstChanged).toReal -
+      (PMF.pure base firstChanged).toReal = 1
+  simp [PMF.pure_apply, firstChanged_ne_base]
 
 end GameTheory.Tests.MonitoringRank

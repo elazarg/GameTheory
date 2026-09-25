@@ -98,7 +98,7 @@ def execution (G : UtilityGame ι) (horizon : ℕ)
   step state joint :=
     let hactive : state.length < horizon :=
       Nat.lt_of_not_ge joint.2.1
-    FinDist.pure (state.snoc
+    PMF.pure (state.snoc
       (Prefix.actionOfJoint joint.1 (state.length < horizon)
         joint.2.2 hactive))
   progress := by
@@ -235,14 +235,14 @@ theorem step_chooserOfRepeated_ofPlay (G : UtilityGame ι)
     (execution G horizon).step (Prefix.ofPlay G profile t)
         (chooserOfRepeated G horizon profile (Prefix.ofPlay G profile t)
           (by simpa [execution, Prefix.ofPlay] using ht)) =
-      FinDist.pure (Prefix.ofPlay G profile (t + 1)) := by
+      PMF.pure (Prefix.ofPlay G profile (t + 1)) := by
   have hactions :
       (fun i => profile i (Prefix.ofPlay G profile t)) =
         G.repeatedPlay profile t := by
     funext i
     rw [UtilityGame.repeatedPlay]
     rfl
-  apply congrArg FinDist.pure
+  apply congrArg PMF.pure
   show (Prefix.ofPlay G profile t).snoc
       (fun i => profile i (Prefix.ofPlay G profile t)) = _
   rw [hactions]
@@ -256,7 +256,7 @@ theorem runFor_chooserOfRepeated_to_horizon (G : UtilityGame ι)
     ∀ {fuel t : ℕ}, t + fuel = horizon →
       (execution G horizon).runFor (chooserOfRepeated G horizon profile)
           fuel (Prefix.ofPlay G profile t) =
-        FinDist.pure (Prefix.ofPlay G profile horizon) := by
+        PMF.pure (Prefix.ofPlay G profile horizon) := by
   intro fuel
   induction fuel with
   | zero =>
@@ -273,7 +273,7 @@ theorem runFor_chooserOfRepeated_to_horizon (G : UtilityGame ι)
       rw [ExecutionProtocol.runFor_succ_of_not_terminal
         (chooserOfRepeated G horizon profile) fuel hterm]
       rw [step_chooserOfRepeated_ofPlay G horizon profile hactive,
-        FinDist.pure_bind]
+        PMF.pure_bind]
       exact ih (by omega)
 
 /-- The finite-prefix protocol form, with the reached public prefix as outcome. -/
@@ -291,18 +291,18 @@ theorem toProtocolForm_play_policyProfileOfRepeated
     (profile : G.RepeatedProfile) :
     (toProtocolForm G horizon).play
         (policyProfileOfRepeated G horizon profile) =
-      FinDist.pure (Prefix.ofPlay G profile horizon) := by
+      PMF.pure (Prefix.ofPlay G profile horizon) := by
   have hshadow := map_state_runHistoryFor
     (chooserOfRepeated G horizon profile) horizon
     (execution G horizon).initHistory
   rw [← historyChooser_policyProfileOfRepeated G horizon profile] at hshadow
-  show FinDist.map ExecutionProtocol.History.state
+  show PMF.map ExecutionProtocol.History.state
       ((informationModel G horizon).run
         (policyProfileOfRepeated G horizon profile) horizon) =
-    FinDist.pure (Prefix.ofPlay G profile horizon)
+    PMF.pure (Prefix.ofPlay G profile horizon)
   rw [InformationModel.run, InformationModel.runFrom]
   calc
-    FinDist.map ExecutionProtocol.History.state
+    PMF.map ExecutionProtocol.History.state
         ((execution G horizon).runHistoryFor
           ((informationModel G horizon).historyChooser
             (policyProfileOfRepeated G horizon profile))
@@ -310,7 +310,7 @@ theorem toProtocolForm_play_policyProfileOfRepeated
       (execution G horizon).runFor
         (chooserOfRepeated G horizon profile) horizon
         (execution G horizon).initHistory.state := hshadow
-    _ = FinDist.pure (Prefix.ofPlay G profile horizon) := by
+    _ = PMF.pure (Prefix.ofPlay G profile horizon) := by
       simpa [execution, Prefix.empty, Prefix.ofPlay] using
         runFor_chooserOfRepeated_to_horizon G horizon profile
           (fuel := horizon) (t := 0) (by omega)

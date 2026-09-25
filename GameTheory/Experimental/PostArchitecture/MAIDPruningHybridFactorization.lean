@@ -52,7 +52,7 @@ def hybridPolicy [DecidableEq Player] [DecidableEq Node]
     (owner : Player) (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) : Policy diagram :=
+      PMF (diagram.Value target.1)) : Policy diagram :=
   Profile.update (sig := nativeBehavioralSignature diagram)
     (pruning.expandPolicy
       (fixedReducedPolicy pruning policy owner fixedOwner)) owner
@@ -69,7 +69,7 @@ theorem hybridPolicy_eq_update_replaceSiteRule
     (owner : Player) (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     hybridPolicy pruning policy owner fixedOwner target rule =
       Profile.update (sig := nativeBehavioralSignature diagram)
         (pruning.expandPolicy policy) owner
@@ -88,7 +88,7 @@ theorem hybridPolicy_respects_restoreAllAt
     (owner : Player) (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     PolicyRespects (MAIDPruningFixpointGraph.Pruning.restoreAllAt pruning target)
       (restoreAllAt_subset_observed pruning target)
       (hybridPolicy pruning policy owner fixedOwner target rule) := by
@@ -171,7 +171,7 @@ def hybridEffectiveKernels [DecidableEq Player] [DecidableEq Node]
     (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     LocalKernels diagram.Value
       (MAIDPruningFixpointGraph.effectiveParentsUnder diagram
         (MAIDPruningFixpointGraph.Pruning.restoreAllAt pruning target)) :=
@@ -195,7 +195,7 @@ theorem hybridEffectiveKernels_of_ne
     (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) (node : Node)
+      PMF (diagram.Value target.1)) (node : Node)
     (hne : node ≠ target.1)
     (configuration : ParentConfiguration diagram.Value
       (MAIDPruningFixpointGraph.effectiveParentsUnder diagram
@@ -215,7 +215,7 @@ theorem hybridEffectiveKernels_target_parentConfiguration
     (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) (assignment : Assignment diagram) :
+      PMF (diagram.Value target.1)) (assignment : Assignment diagram) :
     hybridEffectiveKernels semantics pruning policy owner fixedOwner target rule
         target.1
         (parentConfiguration diagram.Value
@@ -238,7 +238,7 @@ theorem hybridEffectiveKernels_parentConfiguration
     (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1))
+      PMF (diagram.Value target.1))
     (assignment : Assignment diagram) (node : Node) :
     hybridEffectiveKernels semantics pruning policy owner fixedOwner target rule
         node
@@ -291,7 +291,7 @@ theorem native_play_factorizes_hybrid
     (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     Factorizes diagram.Value
       ((nativeBehavioralGameForm semantics).play
         (hybridPolicy pruning policy owner fixedOwner target rule))
@@ -301,9 +301,9 @@ theorem native_play_factorizes_hybrid
         rule) := by
   intro assignment
   calc
-    ((nativeBehavioralGameForm semantics).play
-        (hybridPolicy pruning policy owner fixedOwner target rule)).prob
-          assignment =
+    (((nativeBehavioralGameForm semantics).play
+        (hybridPolicy pruning policy owner fixedOwner target rule))
+          assignment).toReal =
         factorProduct diagram.Value (effectiveParents diagram)
           (effectiveKernels semantics
             (hybridPolicy pruning policy owner fixedOwner target rule))
@@ -359,7 +359,7 @@ def hybridAugmentedKernels
     (owner : Player) (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     LocalKernels (graphValue view (owner := graphOwner))
       (MAIDPruningFixpointGraph.UtilityView.graphParentsUnder view
         (MAIDPruningFixpointGraph.Pruning.restoreAllAt pruning target))
@@ -368,7 +368,7 @@ def hybridAugmentedKernels
         rule node
         (hybridBaseParentConfiguration view pruning target node configuration)
   | .utility site, configuration =>
-      FinDist.pure
+      PMF.pure
         (hybridUtilityParentConfiguration view pruning target site configuration)
 
 /-- Hybrid and original augmented local factors agree pointwise for the
@@ -380,7 +380,7 @@ theorem hybridLocalFactor_eq_original
     (owner : Player) (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1))
+      PMF (diagram.Value target.1))
     (assignment : AugmentedAssignment view graphOwner)
     (node : view.GraphNode graphOwner) :
     localFactor (graphValue view (owner := graphOwner))
@@ -396,8 +396,8 @@ theorem hybridLocalFactor_eq_original
   | base baseNode =>
       unfold localFactor hybridAugmentedKernels augmentedKernels
       apply congrArg
-        (fun law : FinDist (diagram.Value baseNode) =>
-          law.prob (assignment (.base baseNode)))
+        (fun law : PMF (diagram.Value baseNode) =>
+          (law (assignment (.base baseNode))).toReal)
       exact hybridEffectiveKernels_parentConfiguration semantics pruning policy
         owner fixedOwner target rule (projectBase view assignment) baseNode
   | utility _ => rfl
@@ -413,7 +413,7 @@ theorem augmentedLaw_factorizes_hybrid
     (owner : Player) (fixedOwner : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     Factorizes (graphValue view (owner := graphOwner))
       (augmentedLaw view graphOwner
         (hybridPolicy pruning policy owner fixedOwner target rule))
@@ -423,9 +423,9 @@ theorem augmentedLaw_factorizes_hybrid
   by
     intro assignment
     calc
-      (augmentedLaw view graphOwner
-          (hybridPolicy pruning policy owner fixedOwner target rule)).prob
-          assignment =
+      ((augmentedLaw view graphOwner
+          (hybridPolicy pruning policy owner fixedOwner target rule))
+          assignment).toReal =
           factorProduct (graphValue view (owner := graphOwner))
             view.graphParents
             (augmentedKernels view

@@ -33,7 +33,7 @@ universe uPlayer uNode
 private theorem conditionallyIndependent_map_equiv
     {Ω : Type uΩ} {X : Type uX} {Y : Type uY} {Z : Type uZ}
     {X' : Type uX'} {Y' : Type uY'} {Z' : Type uZ'}
-    {law : GameTheory.Math.Probability.FinDist Ω}
+    {law : PMF Ω}
     {first : Ω → X} {second : Ω → Y} {evidence : Ω → Z}
     (hindependent :
       IsConditionallyIndependent law first second evidence)
@@ -102,7 +102,7 @@ private theorem conditionallyIndependent_map_equiv
 
 private theorem conditionallyIndependent_adjoin_evidence
     {Ω : Type uΩ} {X : Type uX} {Y : Type uY} {Z : Type uZ}
-    {law : GameTheory.Math.Probability.FinDist Ω}
+    {law : PMF Ω}
     {first : Ω → X} {second : Ω → Y} {evidence : Ω → Z}
     (hindependent :
       IsConditionallyIndependent law first second evidence) :
@@ -145,8 +145,7 @@ private theorem conditionallyIndependent_adjoin_evidence
         Set.mem_empty_iff_false, iff_false]
       rintro ⟨⟨_, hcarried⟩, hactual⟩
       exact hevidence (hcarried.symm.trans hactual)
-    have hempty : law.probOf (∅ : Set Ω) = 0 := by
-      rw [← GameTheory.Math.Probability.FinDist.expect_indicator_eq_probOf]
+    have hempty : (law.toOuterMeasure (∅ : Set Ω)).toReal = 0 := by
       simp
     rw [htriple, hpair, hempty]
     simp

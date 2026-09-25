@@ -66,7 +66,7 @@ def extendWitness [DecidableEq Node]
 theorem sum_cylinderMass_extensions
     [Fintype Node] [DecidableEq Node]
     [∀ node, Fintype (Value node)] [∀ node, DecidableEq (Value node)]
-    (law : FinDist (Assignment Value))
+    (law : PMF (Assignment Value))
     (fixed retained new : Finset Node)
     (partition : ExtensionPartition fixed retained new)
     (witness : Assignment Value) :
@@ -91,19 +91,21 @@ theorem sum_cylinderMass_extensions
 
 /-- Cylinder mass depends only on the witness coordinates inside the cylinder. -/
 theorem cylinderMass_eq_of_witnesses_agree
-    (law : FinDist (Assignment Value)) (nodes : Finset Node)
+    (law : PMF (Assignment Value)) (nodes : Finset Node)
     {firstWitness secondWitness : Assignment Value}
     (hagrees : AgreeOn Value nodes firstWitness secondWitness) :
     cylinderMass Value law nodes firstWitness =
       cylinderMass Value law nodes secondWitness := by
   unfold cylinderMass
-  apply congrArg (FinDist.probOf law)
-  ext assignment
-  constructor
-  · intro hfirst node hnode
-    exact (hfirst node hnode).trans (hagrees node hnode)
-  · intro hsecond node hnode
-    exact (hsecond node hnode).trans (hagrees node hnode).symm
+  have hsets : {assignment | AgreeOn Value nodes assignment firstWitness} =
+      {assignment | AgreeOn Value nodes assignment secondWitness} := by
+    ext assignment
+    constructor
+    · intro hfirst node hnode
+      exact (hfirst node hnode).trans (hagrees node hnode)
+    · intro hsecond node hnode
+      exact (hsecond node hnode).trans (hagrees node hnode).symm
+  rw [hsets]
 
 def firstEvidence [DecidableEq Node]
     (first evidence : Finset Node) : Finset Node :=
@@ -240,7 +242,7 @@ theorem queryWitness_agrees_first_extension [DecidableEq Node]
 theorem sum_second_queryCylinders
     [Fintype Node] [DecidableEq Node]
     [∀ node, Fintype (Value node)] [∀ node, DecidableEq (Value node)]
-    (law : FinDist (Assignment Value)) (default : Assignment Value)
+    (law : PMF (Assignment Value)) (default : Assignment Value)
     (first second evidence : Finset Node)
     (hfirstSecond : Disjoint first second)
     (hsecondEvidence : Disjoint second evidence)
@@ -276,7 +278,7 @@ theorem sum_second_queryCylinders
 theorem sum_first_queryCylinders
     [Fintype Node] [DecidableEq Node]
     [∀ node, Fintype (Value node)] [∀ node, DecidableEq (Value node)]
-    (law : FinDist (Assignment Value)) (default : Assignment Value)
+    (law : PMF (Assignment Value)) (default : Assignment Value)
     (first second evidence : Finset Node)
     (hfirstSecond : Disjoint first second)
     (hfirstEvidence : Disjoint first evidence)
@@ -312,7 +314,7 @@ theorem sum_first_queryCylinders
 theorem sum_firstEvidence_queryCylinders
     [Fintype Node] [DecidableEq Node]
     [∀ node, Fintype (Value node)] [∀ node, DecidableEq (Value node)]
-    (law : FinDist (Assignment Value)) (default : Assignment Value)
+    (law : PMF (Assignment Value)) (default : Assignment Value)
     (first second evidence : Finset Node)
     (hfirstEvidence : Disjoint first evidence)
     (evidenceConfiguration : Configuration Value evidence) :
@@ -354,7 +356,7 @@ theorem sum_firstEvidence_queryCylinders
 theorem sum_first_second_queryCylinders
     [Fintype Node] [DecidableEq Node]
     [∀ node, Fintype (Value node)] [∀ node, DecidableEq (Value node)]
-    (law : FinDist (Assignment Value)) (default : Assignment Value)
+    (law : PMF (Assignment Value)) (default : Assignment Value)
     (first second evidence : Finset Node)
     (hfirstSecond : Disjoint first second)
     (hfirstEvidence : Disjoint first evidence)
@@ -390,7 +392,7 @@ abbrev SentinelValue (_ : Unit) := Unit
 
 def default : Assignment SentinelValue := fun _ => ()
 
-def law : FinDist (Assignment SentinelValue) := FinDist.pure default
+def law : PMF (Assignment SentinelValue) := PMF.pure default
 
 def first : Finset Unit := ∅
 

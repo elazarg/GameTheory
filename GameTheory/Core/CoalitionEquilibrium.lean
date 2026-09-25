@@ -40,7 +40,7 @@ def IsεGroupNash (F : GameForm.{uPlayer, uStrategy, uOutcome} Player)
   IsEquilibrium F
     (fun (coalition : { members : Finset Player // members.Nonempty ∧ members ∈ groups }) =>
       Preference.coalition (euPreferenceWithin ε utility) ⟨coalition.1, coalition.2.1⟩)
-    (FinDist.pure profile)
+    (PMF.pure profile)
     ((DeviationScheme.coalitionConstant F.sig).comap
       (fun (coalition : { members : Finset Player // members.Nonempty ∧ members ∈ groups }) =>
         ⟨coalition.1, coalition.2.1⟩))
@@ -53,20 +53,23 @@ theorem isεGroupNash_iff (utility : F.sig.Outcome → Player → ℝ)
       ∀ members ∈ groups, members.Nonempty →
         ∀ replacement : Subprofile F.sig members,
           ∃ member ∈ members,
-            expectedUtility utility member
-                (F.play (Profile.override members replacement profile)) ≤
-              expectedUtility utility member (F.play profile) + ε := by
+            ∃ hbase : UtilityIntegrable utility member (F.play profile),
+              ∃ hdev : UtilityIntegrable utility member
+                (F.play (Profile.override members replacement profile)),
+                expectedUtility utility member
+                    (F.play (Profile.override members replacement profile)) hdev ≤
+                  expectedUtility utility member (F.play profile) hbase + ε := by
   constructor
   · intro h members hmembers hne replacement
     simpa [IsεGroupNash, DeviationScheme.comap, DeviationScheme.apply,
       DeviationScheme.coalitionConstant, GameForm.outcomeLaw, euPreferenceWithin,
-      FinDist.pure_bind] using
+      PMF.pure_bind] using
       h ⟨members, hne, hmembers⟩ replacement
   · intro h coalition replacement
     dsimp only [DeviationScheme.comap, DeviationScheme.coalitionConstant] at replacement
     simpa [DeviationScheme.comap, DeviationScheme.apply,
       DeviationScheme.coalitionConstant, GameForm.outcomeLaw, euPreferenceWithin,
-      FinDist.pure_bind] using
+      PMF.pure_bind] using
       h coalition.1 coalition.2.2 coalition.2.1 replacement
 
 /-- One-player coalitions recover ordinary approximate Nash. -/

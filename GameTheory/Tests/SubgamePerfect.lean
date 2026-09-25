@@ -48,15 +48,15 @@ def arena : ExecutionProtocol Unit where
     match state with
     | .root =>
         match joint.1 () with
-        | some .enter => FinDist.pure .decision
-        | _ => FinDist.pure .exited
+        | some .enter => PMF.pure .decision
+        | _ => PMF.pure .exited
     | .decision =>
         match joint.1 () with
-        | some .reward => FinDist.pure .rewarded
-        | _ => FinDist.pure .punished
-    | .exited => FinDist.pure .exited
-    | .punished => FinDist.pure .punished
-    | .rewarded => FinDist.pure .rewarded
+        | some .reward => PMF.pure .rewarded
+        | _ => PMF.pure .punished
+    | .exited => PMF.pure .exited
+    | .punished => PMF.pure .punished
+    | .rewarded => PMF.pure .rewarded
   progress := by
     intro state hterm
     cases state with
@@ -157,6 +157,15 @@ def payoff (history : arena.History) (_ : Unit) : ℝ :=
   | .rewarded => 1
   | _ => 0
 
+theorem payoff_bound (history : arena.History) :
+    |payoff history ()| ≤ 2 := by
+  rcases history with ⟨state, trace⟩
+  cases state <;> norm_num [payoff]
+
+theorem payoff_integrable (law : PMF arena.History) :
+    PayoffIntegrable law (fun history => payoff history ()) :=
+  payoffIntegrable_of_bounded law _ payoff_bound
+
 def rank : State → ℕ
   | .root => 2
   | .decision => 1
@@ -171,23 +180,23 @@ theorem rank_decreases
   | root =>
       cases hchoice : joint () with
       | none =>
-          simp [arena, hchoice, FinDist.mem_support_pure] at htarget
+          simp [arena, hchoice] at htarget
           subst target
           norm_num [rank]
       | some action =>
           cases action <;>
-            simp [arena, hchoice, FinDist.mem_support_pure] at htarget <;>
+            simp [arena, hchoice] at htarget <;>
             subst target <;>
             norm_num [rank]
   | decision =>
       cases hchoice : joint () with
       | none =>
-          simp [arena, hchoice, FinDist.mem_support_pure] at htarget
+          simp [arena, hchoice] at htarget
           subst target
           norm_num [rank]
       | some action =>
           cases action <;>
-            simp [arena, hchoice, FinDist.mem_support_pure] at htarget <;>
+            simp [arena, hchoice] at htarget <;>
             subst target <;>
             norm_num [rank]
   | exited => exact False.elim (hlegal.1 terminal_exited)
@@ -254,7 +263,7 @@ theorem incumbent_step_decision :
     arena.step decisionHistory.state
         (model.historyChooser incumbentProfile
           decisionHistory decision_not_terminal) =
-      FinDist.pure .punished := by
+      PMF.pure .punished := by
   rfl
 
 theorem rewarding_step_decision :
@@ -262,14 +271,14 @@ theorem rewarding_step_decision :
         (model.historyChooser
           (Profile.update incumbentProfile () rewardingPolicy)
           decisionHistory decision_not_terminal) =
-      FinDist.pure .rewarded := by
+      PMF.pure .rewarded := by
   rfl
 
 theorem incumbent_step_root :
     arena.step arena.initHistory.state
         (model.historyChooser incumbentProfile
           arena.initHistory root_not_terminal) =
-      FinDist.pure .exited := by
+      PMF.pure .exited := by
   rfl
 
 theorem exited_mem_incumbent_step :
@@ -278,7 +287,7 @@ theorem exited_mem_incumbent_step :
         (model.historyChooser incumbentProfile
           arena.initHistory root_not_terminal)).support := by
   rw [incumbent_step_root]
-  exact FinDist.mem_support_pure.mpr rfl
+  simp
 
 def exitedHistory : arena.History :=
   arena.initHistory.extend
@@ -288,21 +297,25 @@ def exitedHistory : arena.History :=
 
 theorem incumbent_run_one :
     model.run incumbentProfile 1 =
-      FinDist.pure exitedHistory := by
+      PMF.pure exitedHistory := by
+  have hinit : ¬ arena.terminal arena.initHistory.state := by
+    simpa only [ExecutionProtocol.initHistory_state] using root_not_terminal
   rw [InformationModel.run, InformationModel.runFrom,
     ExecutionProtocol.runHistoryFor_succ_of_not_terminal
-      _ 0 root_not_terminal]
-  rw [FinDist.bindOnSupport_eq_bind_of_eq_on_support
-    (g := fun _state => FinDist.pure exitedHistory)]
-  · exact FinDist.bind_const _ _
-  · intro state hstate
-    have hstate' : state = .exited := by
-      rw [incumbent_step_root,
-        FinDist.mem_support_pure] at hstate
-      exact hstate
-    subst state
-    rw [ExecutionProtocol.runHistoryFor_zero]
-    congr 1
+      _ 0 hinit]
+  calc
+    _ = (arena.step arena.initHistory.state
+        (model.historyChooser incumbentProfile arena.initHistory hinit)).bind
+          (fun _ => PMF.pure exitedHistory) := by
+      apply bindOnSupport_eq_bind_of_eq_on_support
+      intro state hstate
+      have hstate' : state = .exited := by
+        rw [incumbent_step_root, PMF.mem_support_pure_iff] at hstate
+        exact hstate
+      subst state
+      rw [ExecutionProtocol.runHistoryFor_zero]
+      congr 1
+    _ = PMF.pure exitedHistory := PMF.bind_const _ _
 
 /-- The decision history is legal and reachable in the protocol, but the
 incumbent profile exits before reaching it. -/
@@ -310,58 +323,61 @@ theorem decisionHistory_offPath :
     decisionHistory ∉
       (model.run incumbentProfile 1).support := by
   intro hmem
-  rw [incumbent_run_one, FinDist.mem_support_pure] at hmem
+  rw [incumbent_run_one, PMF.mem_support_pure_iff] at hmem
   have hstate :=
     congrArg (fun history : arena.History => history.state) hmem
   simp [decisionHistory, exitedHistory] at hstate
 
+private theorem backwardValue_of_constant_successors
+    (chooser : arena.HistoryChooser) (history : arena.History)
+    (hterm : ¬ arena.terminal history.state) (c : ℝ)
+    (hchild : ∀ target
+      (realized : target ∈ (arena.step history.state
+        (chooser history hterm)).support)
+      (hguard : PayoffIntegrable
+        (arena.historyBackwardLaw arena_wellFoundedPlay chooser
+          (history.extend (chooser history hterm).2 realized))
+        (fun outcome => payoff outcome ())),
+      arena.historyBackwardValue arena_wellFoundedPlay chooser
+        (fun outcome => payoff outcome ())
+        (history.extend (chooser history hterm).2 realized) hguard = c) :
+    arena.historyBackwardValue arena_wellFoundedPlay chooser
+      (fun outcome => payoff outcome ()) history
+      (payoff_integrable _) = c := by
+  obtain ⟨houter, heq⟩ := arena.historyBackwardValue_of_not_terminal
+    hterm (payoff_integrable _) (fun _ => c)
+      (by intro target realized hguard
+          exact (hchild target realized hguard).symm)
+  simpa only [expect_constant] using heq
+
 theorem incumbent_value_decision :
     arena.historyBackwardValue arena_wellFoundedPlay
         (model.historyChooser incumbentProfile)
-        (fun history => payoff history ()) decisionHistory = 0 := by
-  rw [arena.historyBackwardValue_of_not_terminal decision_not_terminal]
-  calc
-    _ = arena.historyStepValue decisionHistory
-        (model.historyChooser incumbentProfile
-          decisionHistory decision_not_terminal)
-        (fun _target _realized => 0) := by
-          apply arena.historyStepValue_congr
-          intro target realized
-          have htarget : target = .punished := by
-            rw [incumbent_step_decision,
-              FinDist.mem_support_pure] at realized
-            exact realized
-          subst target
-          rw [arena.historyBackwardValue_of_terminal
-            terminal_punished]
-          rfl
-    _ = 0 := by
-      simp [ExecutionProtocol.historyStepValue]
+        (fun history => payoff history ()) decisionHistory
+        (payoff_integrable _) = 0 := by
+  apply backwardValue_of_constant_successors _ _ decision_not_terminal 0
+  intro target realized hguard
+  have htarget : target = .punished := by
+    rw [incumbent_step_decision, PMF.mem_support_pure_iff] at realized
+    exact realized
+  subst target
+  rw [arena.historyBackwardValue_of_terminal terminal_punished hguard]
+  rfl
 
 theorem rewarding_value_decision :
     arena.historyBackwardValue arena_wellFoundedPlay
         (model.historyChooser
           (Profile.update incumbentProfile () rewardingPolicy))
-        (fun history => payoff history ()) decisionHistory = 1 := by
-  rw [arena.historyBackwardValue_of_not_terminal decision_not_terminal]
-  calc
-    _ = arena.historyStepValue decisionHistory
-        (model.historyChooser
-          (Profile.update incumbentProfile () rewardingPolicy)
-          decisionHistory decision_not_terminal)
-        (fun _target _realized => 1) := by
-          apply arena.historyStepValue_congr
-          intro target realized
-          have htarget : target = .rewarded := by
-            rw [rewarding_step_decision,
-              FinDist.mem_support_pure] at realized
-            exact realized
-          subst target
-          rw [arena.historyBackwardValue_of_terminal
-            terminal_rewarded]
-          rfl
-    _ = 1 := by
-      simp [ExecutionProtocol.historyStepValue]
+        (fun history => payoff history ()) decisionHistory
+        (payoff_integrable _) = 1 := by
+  apply backwardValue_of_constant_successors _ _ decision_not_terminal 1
+  intro target realized hguard
+  have htarget : target = .rewarded := by
+    rw [rewarding_step_decision, PMF.mem_support_pure_iff] at realized
+    exact realized
+  subst target
+  rw [arena.historyBackwardValue_of_terminal terminal_rewarded hguard]
+  rfl
 
 theorem payoff_le_two (history : arena.History) :
     payoff history () ≤ 2 := by
@@ -370,57 +386,36 @@ theorem payoff_le_two (history : arena.History) :
 
 /-- No policy can earn more than the exit payoff `2` from any history. -/
 theorem historyBackwardValue_le_two
-    (chooser : arena.HistoryChooser) :
-    ∀ history : arena.History,
-      arena.historyBackwardValue arena_wellFoundedPlay chooser
-          (fun outcome => payoff outcome ()) history ≤ 2 := by
-  intro history
-  induction history using
-      (arena.wellFounded_historySuccessor
-        arena_wellFoundedPlay).induction with
-  | _ current ih =>
-      by_cases hterm : arena.terminal current.state
-      · rw [arena.historyBackwardValue_of_terminal hterm]
-        exact payoff_le_two current
-      · rw [arena.historyBackwardValue_of_not_terminal hterm]
-        let chosen := chooser current hterm
-        calc
-          arena.historyStepValue current chosen
-              (fun target realized =>
-                arena.historyBackwardValue arena_wellFoundedPlay chooser
-                  (fun outcome => payoff outcome ())
-                  (current.extend chosen.2 realized)) ≤
-            arena.historyStepValue current chosen
-              (fun _target _realized => 2) := by
-                apply arena.historyStepValue_mono
-                intro target realized
-                exact ih (current.extend chosen.2 realized)
-                  ⟨chosen.1, chosen.2, realized⟩
-          _ = 2 := by
-            simp [ExecutionProtocol.historyStepValue]
+    (chooser : arena.HistoryChooser) (history : arena.History) :
+    arena.historyBackwardValue arena_wellFoundedPlay chooser
+        (fun outcome => payoff outcome ()) history
+        (payoff_integrable _) ≤ 2 := by
+  unfold ExecutionProtocol.historyBackwardValue
+  calc
+    expect (arena.historyBackwardLaw arena_wellFoundedPlay chooser history)
+        (fun outcome => payoff outcome ()) (payoff_integrable _) ≤
+      expect (arena.historyBackwardLaw arena_wellFoundedPlay chooser history)
+        (fun _ => 2) (payoffIntegrable_constant _ 2) := by
+      apply expect_mono
+      intro outcome _
+      exact payoff_le_two outcome
+    _ = 2 := expect_constant _ 2 _
 
 theorem incumbent_value_root :
     arena.historyBackwardValue arena_wellFoundedPlay
         (model.historyChooser incumbentProfile)
-        (fun history => payoff history ()) arena.initHistory = 2 := by
-  rw [arena.historyBackwardValue_of_not_terminal root_not_terminal]
-  calc
-    _ = arena.historyStepValue arena.initHistory
-        (model.historyChooser incumbentProfile
-          arena.initHistory root_not_terminal)
-        (fun _target _realized => 2) := by
-          apply arena.historyStepValue_congr
-          intro target realized
-          have htarget : target = .exited := by
-            rw [incumbent_step_root,
-              FinDist.mem_support_pure] at realized
-            exact realized
-          subst target
-          rw [arena.historyBackwardValue_of_terminal
-            terminal_exited]
-          rfl
-    _ = 2 := by
-      simp [ExecutionProtocol.historyStepValue]
+        (fun history => payoff history ()) arena.initHistory
+        (payoff_integrable _) = 2 := by
+  have hinit : ¬ arena.terminal arena.initHistory.state := by
+    simpa only [ExecutionProtocol.initHistory_state] using root_not_terminal
+  apply backwardValue_of_constant_successors _ _ hinit 2
+  intro target realized hguard
+  have htarget : target = .exited := by
+    rw [incumbent_step_root, PMF.mem_support_pure_iff] at realized
+    exact realized
+  subst target
+  rw [arena.historyBackwardValue_of_terminal terminal_exited hguard]
+  rfl
 
 /-- From the initial history the incumbent is optimal against every whole
 replacement policy; the failure below is therefore genuinely off path. -/
@@ -429,10 +424,12 @@ theorem incumbent_optimal_from_initial
     arena.historyBackwardValue arena_wellFoundedPlay
         (model.historyChooser
           (Profile.update incumbentProfile () alternative))
-        (fun history => payoff history ()) arena.initHistory ≤
+        (fun history => payoff history ()) arena.initHistory
+        (payoff_integrable _) ≤
       arena.historyBackwardValue arena_wellFoundedPlay
         (model.historyChooser incumbentProfile)
-        (fun history => payoff history ()) arena.initHistory := by
+        (fun history => payoff history ()) arena.initHistory
+        (payoff_integrable _) := by
   rw [incumbent_value_root]
   exact historyBackwardValue_le_two
     (model.historyChooser
@@ -448,7 +445,7 @@ theorem historywiseOptimal_iff_noProfitableOneShotDeviation :
         arena_wellFoundedPlay incumbentProfile payoff :=
   model.isHistorywiseOptimal_iff_hasNoProfitableOneShotDeviation
     model_actsOnceWhereItMatters arena_wellFoundedPlay
-    incumbentProfile payoff
+    incumbentProfile payoff (fun _ _ _ => payoff_integrable _)
 
 /-- The incumbent's bad continuation is rejected at the off-path decision
 history, even though the incumbent exits before reaching it. -/
@@ -457,7 +454,16 @@ theorem incumbent_not_historywiseOptimal :
       incumbentProfile payoff := by
   intro hoptimal
   have hdecision := hoptimal () rewardingPolicy decisionHistory
-  rw [rewarding_value_decision, incumbent_value_decision] at hdecision
+  obtain ⟨hother, hinc, hdecision⟩ := hdecision
+  have hreward : arena.historyBackwardValue arena_wellFoundedPlay
+      (model.historyChooser (Profile.update incumbentProfile () rewardingPolicy))
+      (fun history => payoff history ()) decisionHistory hother = 1 := by
+    simpa only using rewarding_value_decision
+  have hincumbent : arena.historyBackwardValue arena_wellFoundedPlay
+      (model.historyChooser incumbentProfile)
+      (fun history => payoff history ()) decisionHistory hinc = 0 := by
+    simpa only using incumbent_value_decision
+  rw [hreward, hincumbent] at hdecision
   norm_num at hdecision
 
 /-- Equivalently, the bad off-path threat is a profitable one-shot deviation. -/

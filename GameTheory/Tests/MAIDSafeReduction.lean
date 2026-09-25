@@ -10,6 +10,11 @@ copying policy earns one.
 -/
 
 import GameTheory.Languages.MAID.ObservationPruning
+import GameTheory.Math.Probability.Mixture
+import GameTheory.Math.Probability.ExpectationBind
+import GameTheory.Math.Probability.ExpectationAlgebra
+import GameTheory.Math.Probability.ExpectationMap
+import GameTheory.Math.Probability.ExpectationMixture
 
 noncomputable section
 
@@ -23,6 +28,12 @@ open GameTheory.Languages.MAID.Strategic
 open GameTheory.Languages.MAID.ToEFG
 open GameTheory.Languages.MAID.Order
 open GameTheory.Languages.MAID.FrontierEquivalence
+
+local syntax:max "expectedUtility" term:max term:max term:max : term
+local macro_rules
+  | `(expectedUtility $utility $who $law) =>
+      `(GameTheory.expectedUtility $utility $who $law
+        (payoffIntegrable_of_finite $law _))
 
 set_option backward.isDefEq.respectTransparency false in
 inductive Node
@@ -63,14 +74,20 @@ def diagram : Structure Unit Node where
 def topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents :=
   topologicalParents
 
-def fairSignal : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure false) (FinDist.pure true)
+def fairSignal : PMF Bool :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure false) (PMF.pure true)
 
 theorem fairSignal_expect (score : Bool → ℝ) :
-    fairSignal.expect score = (score false + score true) / 2 := by
-  rw [fairSignal, FinDist.expect_mix,
-    FinDist.expect_pure, FinDist.expect_pure]
+    expect fairSignal score (payoffIntegrable_of_finite fairSignal score) =
+      (score false + score true) / 2 := by
+  rw [fairSignal]
+  rw [expect_mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure false) (PMF.pure true) score
+    (payoffIntegrable_pure false score) (payoffIntegrable_pure true score)]
+  rw [expect_pure false score (payoffIntegrable_pure false score),
+    expect_pure true score (payoffIntegrable_pure true score)]
+  norm_num
   ring
 
 @[reducible]
@@ -97,11 +114,11 @@ def pruning : Pruning diagram where
 def decisionSite : DecisionSite diagram () := ⟨.decision, rfl⟩
 
 def observedConfig (signal : Bool) :
-    Config diagram (diagram.observedParents .decision) :=
+    Config diagram (diagram.observedParents decisionSite.1) :=
   fun _ => signal
 
 def reducedPure (value : Bool) : pruning.ReducedPolicy :=
-  fun _ _ _ => FinDist.pure value
+  fun _ _ _ => PMF.pure value
 
 theorem pruning_kept_decision : pruning.kept decisionSite.1 = ∅ := by
   rfl
@@ -116,7 +133,7 @@ def fullCopySignal : Policy diagram :=
         have hkind := site.2
         simp [diagram, hnode] at hkind
     | .decision =>
-        FinDist.pure (observed ⟨.signal, by simp [diagram, parents, hnode]⟩)
+        PMF.pure (observed ⟨.signal, by simp [diagram, parents, hnode]⟩)
 
 def assignmentOf (signal action : Bool) : Assignment diagram
   | .signal => signal
@@ -171,17 +188,20 @@ theorem native_play_eq (matchSignal : Bool) (policy : Policy diagram) :
       (testSemantics matchSignal) policy]
   show assignmentRun (testSemantics matchSignal) policy
       [.signal, .decision] (testSemantics matchSignal).defaultValue = _
-  rw [assignmentRun, assignmentStep, assignmentNodeLaw_signal,
-    FinDist.bind_map]
-  apply FinDist.bind_congr
+  simp only [assignmentRun.eq_def]
+  rw [assignmentStep.eq_def, assignmentNodeLaw_signal, PMF.bind_map]
+  apply bind_congr_on_support
   intro signal _
-  rw [assignmentRun, assignmentStep,
+  simp only [Function.comp_apply]
+  simp only [assignmentRun.eq_def]
+  rw [assignmentStep.eq_def,
     assignmentNodeLaw_decision_after_signal,
-    FinDist.bind_map]
-  apply FinDist.bind_congr
+    PMF.bind_map]
+  apply bind_congr_on_support
   intro action _
-  rw [assignmentRun]
-  exact congrArg FinDist.pure
+  simp only [Function.comp_apply]
+  rw [assignmentRun.eq_def]
+  exact congrArg PMF.pure
     (set_decision_after_signal matchSignal signal action)
 
 /-- In the irrelevant-utility game, only the chosen action enters payoff. -/
@@ -189,14 +209,23 @@ theorem irrelevant_expectedUtility (policy : Policy diagram) :
     expectedUtility
         (fun assignment owner => irrelevantSemantics.utility owner assignment)
         () ((nativeBehavioralGameForm irrelevantSemantics).play policy) =
-      fairSignal.expect fun signal =>
-        (policy () decisionSite (observedConfig signal)).expect fun action =>
-          if action then 1 else 0 := by
-  unfold expectedUtility
-  rw [native_play_eq false, FinDist.expect_bind]
-  apply FinDist.expect_congr
+      expect fairSignal (fun signal =>
+        expect (policy () decisionSite (observedConfig signal))
+          (fun action => if action then 1 else 0)
+          (payoffIntegrable_of_finite _ _))
+        (payoffIntegrable_of_finite _ _) := by
+  rw [native_play_eq false]
+  rw [expectedUtility_bind
+    (fun assignment owner => irrelevantSemantics.utility owner assignment)
+    () fairSignal
+    (fun signal =>
+      (policy () decisionSite (observedConfig signal)).map (assignmentOf signal))
+    (payoffIntegrable_of_finite _ _)
+    (fun signal => payoffIntegrable_of_finite _ _)]
+  apply expect_congr_on_support
   intro signal _
-  rw [FinDist.expect_map]
+  rw [expectedUtility_map]
+  simp only [GameTheory.expectedUtility]
   rfl
 
 /-- In the observation-sensitive game, payoff is the signal-match indicator. -/
@@ -204,14 +233,23 @@ theorem matching_expectedUtility (policy : Policy diagram) :
     expectedUtility
         (fun assignment owner => matchingSemantics.utility owner assignment)
         () ((nativeBehavioralGameForm matchingSemantics).play policy) =
-      fairSignal.expect fun signal =>
-        (policy () decisionSite (observedConfig signal)).expect fun action =>
-          if action = signal then 1 else 0 := by
-  unfold expectedUtility
-  rw [native_play_eq true, FinDist.expect_bind]
-  apply FinDist.expect_congr
+      expect fairSignal (fun signal =>
+        expect (policy () decisionSite (observedConfig signal))
+          (fun action => if action = signal then 1 else 0)
+          (payoffIntegrable_of_finite _ _))
+        (payoffIntegrable_of_finite _ _) := by
+  rw [native_play_eq true]
+  rw [expectedUtility_bind
+    (fun assignment owner => matchingSemantics.utility owner assignment)
+    () fairSignal
+    (fun signal =>
+      (policy () decisionSite (observedConfig signal)).map (assignmentOf signal))
+    (payoffIntegrable_of_finite _ _)
+    (fun signal => payoffIntegrable_of_finite _ _)]
+  apply expect_congr_on_support
   intro signal _
-  rw [FinDist.expect_map]
+  rw [expectedUtility_map]
+  simp only [GameTheory.expectedUtility]
   rfl
 
 /-- Expanding a reduced policy cannot recover the observation that was removed. -/
@@ -226,20 +264,24 @@ theorem expanded_reduced_ignores_signal (policy : pruning.ReducedPolicy)
   exact (node_not_mem_empty node.1 hmember).elim
 
 /-- The two Boolean match indicators partition probability one. -/
-theorem expect_match_false_add_true (law : FinDist Bool) :
-    law.expect (fun action => if action = false then 1 else 0) +
-        law.expect (fun action => if action = true then 1 else 0) =
+theorem expect_match_false_add_true (law : PMF Bool) :
+    expect law (fun action => if action = false then 1 else 0)
+        (payoffIntegrable_of_finite law _) +
+        expect law (fun action => if action = true then 1 else 0)
+          (payoffIntegrable_of_finite law _) =
       1 := by
-  rw [← FinDist.expect_add]
+  rw [← expect_add (payoffIntegrable_of_finite law _)
+    (payoffIntegrable_of_finite law _)]
   calc
-    law.expect (fun action =>
+    expect law (fun action =>
         (if action = false then 1 else 0) +
-          (if action = true then 1 else 0)) =
-        law.expect (fun _ => 1) := by
-      apply FinDist.expect_congr
+          (if action = true then 1 else 0))
+        (payoffIntegrable_of_finite law _) =
+        expect law (fun _ => 1) (payoffIntegrable_of_finite law _) := by
+      apply expect_congr_on_support
       intro action _
       cases action <;> norm_num
-    _ = 1 := FinDist.expect_const law 1
+    _ = 1 := expect_constant law 1 (payoffIntegrable_of_finite law _)
 
 /-- Signal-blind policies earn exactly one half when payoff rewards matching. -/
 theorem matching_expanded_reduced_expectedUtility
@@ -261,7 +303,8 @@ theorem irrelevant_expanded_true_expectedUtility :
           (pruning.expandPolicy (reducedPure true))) =
       1 := by
   rw [irrelevant_expectedUtility, fairSignal_expect]
-  norm_num [Pruning.expandPolicy, Pruning.expandOwnerPolicy, reducedPure]
+  simp [Pruning.expandPolicy, Pruning.expandOwnerPolicy, reducedPure,
+    decisionSite, expect_pure]
 
 /-- No full policy can exceed the maximal irrelevant payoff. -/
 theorem irrelevant_expectedUtility_le_one (policy : Policy diagram) :
@@ -270,15 +313,15 @@ theorem irrelevant_expectedUtility_le_one (policy : Policy diagram) :
         () ((nativeBehavioralGameForm irrelevantSemantics).play policy) ≤
       1 := by
   rw [irrelevant_expectedUtility]
-  apply FinDist.expect_le_of_forall
+  apply expect_le_const
   intro signal _
-  apply FinDist.expect_le_of_forall
+  apply expect_le_const
   intro action _
   cases action <;> norm_num
 
 theorem fullCopySignal_decision (signal : Bool) :
     fullCopySignal () decisionSite (observedConfig signal) =
-      FinDist.pure signal := by
+      PMF.pure signal := by
   rfl
 
 /-- Observing and copying the fair signal wins surely in the matching game. -/
@@ -289,9 +332,7 @@ theorem matching_copy_expectedUtility :
           fullCopySignal) =
       1 := by
   rw [matching_expectedUtility, fairSignal_expect]
-  rw [fullCopySignal_decision, fullCopySignal_decision,
-    FinDist.expect_pure, FinDist.expect_pure]
-  norm_num
+  simp [fullCopySignal, decisionSite, observedConfig, expect_pure]
 
 /-! ## Safe positive case -/
 
@@ -303,16 +344,16 @@ theorem irrelevant_reduced_true_isNash :
       (reducedPure true) := by
   rw [isNash_iff]
   intro owner replacement
-  rw [euPreference_apply]
-  show expectedUtility
-      (fun assignment owner => irrelevantSemantics.utility owner assignment)
-      () ((nativeBehavioralGameForm irrelevantSemantics).play
-        (pruning.expandPolicy
-          (Profile.update (reducedPure true) owner replacement))) ≤
-    expectedUtility
-      (fun assignment owner => irrelevantSemantics.utility owner assignment)
-      () ((nativeBehavioralGameForm irrelevantSemantics).play
-        (pruning.expandPolicy (reducedPure true)))
+  rw [euPreference_iff _ _ _ _
+    (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)]
+  have hbase := pruning.native_play_eq_reducedNative_play_of_expands
+    irrelevantSemantics (pruning.expandPolicy (reducedPure true))
+    (reducedPure true) rfl
+  have halt := pruning.native_play_eq_reducedNative_play_of_expands
+    irrelevantSemantics
+    (pruning.expandPolicy (Profile.update (reducedPure true) owner replacement))
+    (Profile.update (reducedPure true) owner replacement) rfl
+  rw [← hbase, ← halt]
   rw [irrelevant_expanded_true_expectedUtility]
   exact irrelevant_expectedUtility_le_one _
 
@@ -322,16 +363,9 @@ theorem irrelevant_true_coversFullDeviations :
       (reducedPure true) := by
   intro owner fullReplacement
   refine ⟨(reducedPure true) owner, ?_⟩
-  rw [euPreference_apply, Profile.update_eq_self]
-  show expectedUtility
-      (fun assignment owner => irrelevantSemantics.utility owner assignment)
-      () ((nativeBehavioralGameForm irrelevantSemantics).play
-        (Profile.update (pruning.expandPolicy (reducedPure true))
-          owner fullReplacement)) ≤
-    expectedUtility
-      (fun assignment owner => irrelevantSemantics.utility owner assignment)
-      () ((nativeBehavioralGameForm irrelevantSemantics).play
-        (pruning.expandPolicy (reducedPure true)))
+  rw [euPreference_iff _ _ _ _
+    (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _),
+    Profile.update_eq_self]
   rw [irrelevant_expanded_true_expectedUtility]
   exact irrelevant_expectedUtility_le_one _
 
@@ -368,15 +402,15 @@ theorem matching_reduced_isNash (policy : pruning.ReducedPolicy) :
       policy := by
   rw [isNash_iff]
   intro owner replacement
-  rw [euPreference_apply]
-  show expectedUtility
-      (fun assignment owner => matchingSemantics.utility owner assignment)
-      () ((nativeBehavioralGameForm matchingSemantics).play
-        (pruning.expandPolicy (Profile.update policy owner replacement))) ≤
-    expectedUtility
-      (fun assignment owner => matchingSemantics.utility owner assignment)
-      () ((nativeBehavioralGameForm matchingSemantics).play
-        (pruning.expandPolicy policy))
+  rw [euPreference_iff _ _ _ _
+    (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)]
+  have hbase := pruning.native_play_eq_reducedNative_play_of_expands
+    matchingSemantics (pruning.expandPolicy policy) policy rfl
+  have halt := pruning.native_play_eq_reducedNative_play_of_expands
+    matchingSemantics
+    (pruning.expandPolicy (Profile.update policy owner replacement))
+    (Profile.update policy owner replacement) rfl
+  rw [← hbase, ← halt]
   rw [matching_expanded_reduced_expectedUtility,
     matching_expanded_reduced_expectedUtility]
 
@@ -393,9 +427,8 @@ theorem fullCopySignal_not_represented :
   rintro ⟨policy, hpolicy⟩
   have hblind := expanded_reduced_ignores_signal policy false true
   rw [hpolicy, fullCopySignal_decision, fullCopySignal_decision] at hblind
-  have hprob := congrArg (fun law : FinDist Bool => law.prob true) hblind
-  rw [FinDist.prob_pure_of_ne (by decide), FinDist.prob_pure_self] at hprob
-  norm_num at hprob
+  have hprob := congrArg (fun law : PMF Bool => law true) hblind
+  simp at hprob
 
 theorem update_expanded_false_to_copy :
     Profile.update (sig := nativeBehavioralSignature diagram)
@@ -429,10 +462,31 @@ theorem matching_expanded_false_not_isNash :
       (pruning.expandPolicy (reducedPure false)) := by
   intro hnash
   have hdeviation := (isNash_iff _).mp hnash () (fullCopySignal ())
-  rw [euPreference_apply, update_expanded_false_to_copy,
-    matching_copy_expectedUtility,
-    matching_expanded_reduced_expectedUtility] at hdeviation
-  norm_num at hdeviation
+  rcases hdeviation with ⟨hbase, hcopy, hle⟩
+  have hbaseLaw :
+      (nativeBehavioralGameForm matchingSemantics).play
+          (pruning.expandPolicy (reducedPure false)) =
+        (nativeBehavioralGameForm matchingSemantics).play
+          (pruning.expandPolicy (reducedPure false)) := rfl
+  have hbase' := expectedUtility_congr_law
+    (fun assignment owner => matchingSemantics.utility owner assignment) ()
+    hbaseLaw hbase (payoffIntegrable_of_finite
+      ((nativeBehavioralGameForm matchingSemantics).play
+        (pruning.expandPolicy (reducedPure false))) _)
+  have hcopyLaw :
+      (nativeBehavioralGameForm matchingSemantics).play
+          (Profile.update (pruning.expandPolicy (reducedPure false)) ()
+            (fullCopySignal ())) =
+        (nativeBehavioralGameForm matchingSemantics).play fullCopySignal := by
+    exact congrArg (nativeBehavioralGameForm matchingSemantics).play
+      update_expanded_false_to_copy
+  have hcopy' := expectedUtility_congr_law
+    (fun assignment owner => matchingSemantics.utility owner assignment) ()
+    hcopyLaw hcopy (payoffIntegrable_of_finite
+      ((nativeBehavioralGameForm matchingSemantics).play fullCopySignal) _)
+  rw [hcopy', hbase', matching_copy_expectedUtility,
+    matching_expanded_reduced_expectedUtility] at hle
+  norm_num at hle
 
 /-- The negative example also refutes the exact missing coverage certificate. -/
 theorem matching_false_not_coversFullDeviations :

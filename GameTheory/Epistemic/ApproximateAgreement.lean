@@ -1,181 +1,161 @@
 /-
 # Quantitative approximate agreement
 
-The private finite-mass lemmas establish the Monderer--Samet bound for the
-public `p`-belief operators. They use the canonical `FinDist` prior throughout.
+The Monderer--Samet bound is obtained by comparing event indicators inside
+each information fiber and aggregating with the PMF fiberwise expectation law.
+The state space, event cells, and probability support may be infinite.
 -/
 
-import GameTheory.Epistemic.Agreement
 import GameTheory.Epistemic.Approximate
+import GameTheory.Math.Probability.ExpectationConditioning
 
 noncomputable section
 
 namespace GameTheory.Epistemic
 
 open GameTheory.Math.Probability
+open Classical
 
 universe uι uΩ
 
-variable {Ω : Type uΩ} [Fintype Ω] [DecidableEq Ω]
+variable {Ω : Type uΩ}
 
-private def eventMass (prior : FinDist Ω) (event : Finset Ω) : ℝ :=
-  ∑ state ∈ event, prior.prob state
+private def eventMass (prior : PMF Ω) (event : Set Ω) : ℝ :=
+  (prior.toOuterMeasure event).toReal
 
-private theorem eventMass_decomp_cells
-    (prior : FinDist Ω) (partition : InfoPartition Ω) (event : Finset Ω) :
-    eventMass prior event =
-      ∑ cell ∈ Finset.univ.image partition.cell,
-        eventMass prior (cell ∩ event) := by
-  unfold eventMass
-  have hself :
-      IsSelfEvident partition (Finset.univ : Finset Ω) := by
-    intro _ _ state _
-    exact Finset.mem_univ state
-  have hdecomp :=
-    selfEvident_sum_decomp partition hself
-      (fun state => if state ∈ event then prior.prob state else 0)
-  simpa [Finset.sum_filter, Finset.mem_inter, and_left_comm, and_assoc] using
-    hdecomp
+private def eventIndicator (event : Set Ω) : Ω → ℝ :=
+  fun state => if state ∈ event then 1 else 0
 
-omit [Fintype Ω] [DecidableEq Ω] in
-private theorem eventMass_mono (prior : FinDist Ω)
-    {smaller larger : Finset Ω} (hsubset : smaller ⊆ larger) :
+private theorem eventIndicator_integrable (prior : PMF Ω) (event : Set Ω) :
+    PayoffIntegrable prior (eventIndicator event) := by
+  apply payoffIntegrable_congr_on_support
+    (μ := prior) (f := event.indicator (fun _ => (1 : ℝ)))
+    (g := eventIndicator event)
+  · intro state _
+    by_cases hstate : state ∈ event <;> simp [eventIndicator, Set.indicator, hstate]
+  · exact payoffIntegrable_indicator event (payoffIntegrable_constant prior 1)
+
+private theorem eventMass_indicator (prior : PMF Ω) (event : Set Ω) :
+    expect prior (eventIndicator event) (eventIndicator_integrable prior event) =
+      eventMass prior event := by
+  show expect prior (fun state => if state ∈ event then 1 else 0)
+      (eventIndicator_integrable prior event) =
+    (prior.toOuterMeasure event).toReal
+  exact expect_indicator prior event (eventIndicator_integrable prior event)
+
+private theorem eventMass_nonneg (prior : PMF Ω) (event : Set Ω) :
+    0 ≤ eventMass prior event := ENNReal.toReal_nonneg
+
+private theorem eventMass_mono (prior : PMF Ω)
+    {smaller larger : Set Ω} (hsubset : smaller ⊆ larger) :
     eventMass prior smaller ≤ eventMass prior larger := by
-  unfold eventMass
-  exact Finset.sum_le_sum_of_subset_of_nonneg hsubset
-    (by intro state _ _; exact FinDist.prob_nonneg prior state)
+  rw [← eventMass_indicator, ← eventMass_indicator]
+  apply expect_mono
+  · intro state _
+    by_cases hsmall : state ∈ smaller
+    · simp [eventIndicator, hsmall, hsubset hsmall]
+    · by_cases hlarge : state ∈ larger <;>
+        simp [eventIndicator, hsmall, hlarge]
 
-omit [Fintype Ω] [DecidableEq Ω] in
-private theorem eventMass_nonneg
-    (prior : FinDist Ω) (event : Finset Ω) :
-    0 ≤ eventMass prior event := by
-  unfold eventMass
-  exact Finset.sum_nonneg fun state _ => FinDist.prob_nonneg prior state
+private theorem eventMass_pos_iff_support (prior : PMF Ω) (event : Set Ω) :
+    0 < eventMass prior event ↔ ∃ state ∈ event, state ∈ prior.support := by
+  constructor
+  · intro hpos
+    by_contra hnone
+    have hdisjoint : Disjoint prior.support event := by
+      rw [Set.disjoint_left]
+      intro state hsupport hevent
+      exact hnone ⟨state, hevent, hsupport⟩
+    have hzero : prior.toOuterMeasure event = 0 := by
+      rw [PMF.toOuterMeasure_apply_eq_zero_iff]
+      exact hdisjoint
+    unfold eventMass at hpos
+    rw [hzero] at hpos
+    norm_num at hpos
+  · rintro ⟨state, hevent, hsupport⟩
+    have hpositive := outerMeasure_pos_of_mem_support state hevent hsupport
+    exact ENNReal.toReal_pos hpositive.ne' (outerMeasure_ne_top prior event)
 
-omit [Fintype Ω] [DecidableEq Ω] in
-private theorem eventMass_pos_of_nonempty
-    (prior : FinDist Ω) (hfull : prior.FullSupport)
-    {event : Finset Ω} (hnonempty : event.Nonempty) :
-    0 < eventMass prior event := by
-  unfold eventMass
-  exact Finset.sum_pos
-    (fun state _ => FinDist.prob_pos_iff.mpr (hfull state)) hnonempty
-
-omit [Fintype Ω] in
-private theorem eventMass_inter_add_sdiff
-    (prior : FinDist Ω) (cell event : Finset Ω) :
-    eventMass prior (cell ∩ event) +
-        eventMass prior (cell \ event) =
-      eventMass prior cell := by
-  unfold eventMass
-  rw [← Finset.sum_union]
-  · have hunion : cell ∩ event ∪ cell \ event = cell := by
-      ext state
-      simp only [Finset.mem_union, Finset.mem_inter, Finset.mem_sdiff]
-      constructor
-      · rintro (hstate | hstate) <;> exact hstate.1
-      · intro hstate
-        by_cases hevent : state ∈ event
-        · exact Or.inl ⟨hstate, hevent⟩
-        · exact Or.inr ⟨hstate, hevent⟩
-    rw [hunion]
-  · rw [Finset.disjoint_left]
-    intro state hfirst hsecond
-    simp only [Finset.mem_inter, Finset.mem_sdiff] at hfirst hsecond
-    exact hsecond.2 hfirst.2
-
-private theorem PBelief_mono_event
-    (prior : FinDist Ω) (hfull : prior.FullSupport)
-    (partition : InfoPartition Ω) (threshold : ℝ)
-    {smaller larger : Finset Ω} (hsubset : smaller ⊆ larger) :
-    PBelief prior partition threshold smaller ⊆
-      PBelief prior partition threshold larger := by
-  intro state hstate
-  rw [mem_PBelief_iff] at hstate ⊢
-  unfold posterior at hstate ⊢
-  have hdenominator :
-      0 < ∑ other ∈ partition.cell state, prior.prob other :=
-    Finset.sum_pos
-      (fun other _ => FinDist.prob_pos_iff.mpr (hfull other))
-      ⟨state, partition.reflexive state⟩
-  have hnumerator :
-      (∑ other ∈ partition.cell state ∩ smaller, prior.prob other) ≤
-        ∑ other ∈ partition.cell state ∩ larger, prior.prob other := by
-    exact Finset.sum_le_sum_of_subset_of_nonneg
-      (by
-        intro other hother
-        exact Finset.mem_inter.mpr
-          ⟨(Finset.mem_inter.mp hother).1,
-            hsubset (Finset.mem_inter.mp hother).2⟩)
-      (by intro other _ _; exact FinDist.prob_nonneg prior other)
-  exact le_trans hstate <|
-    (div_le_div_iff_of_pos_right hdenominator).2 hnumerator
+private theorem eventMass_inter_sdiff (prior : PMF Ω) (event witness : Set Ω) :
+    eventMass prior event =
+      eventMass prior (event ∩ witness) + eventMass prior (event \ witness) := by
+  let firstGuard := eventIndicator_integrable prior (event ∩ witness)
+  let secondGuard := eventIndicator_integrable prior (event \ witness)
+  let eventGuard := eventIndicator_integrable prior event
+  calc
+    eventMass prior event = expect prior (eventIndicator event) eventGuard :=
+      (eventMass_indicator prior event).symm
+    _ = expect prior
+        (fun state => eventIndicator (event ∩ witness) state +
+          eventIndicator (event \ witness) state)
+        (payoffIntegrable_add firstGuard secondGuard) := by
+      apply expect_congr_on_support
+      · intro state _
+        by_cases hevent : state ∈ event <;>
+          by_cases hwitness : state ∈ witness <;>
+          simp [eventIndicator, hevent, hwitness]
+    _ = expect prior (eventIndicator (event ∩ witness)) firstGuard +
+          expect prior (eventIndicator (event \ witness)) secondGuard :=
+      expect_add firstGuard secondGuard
+    _ = eventMass prior (event ∩ witness) + eventMass prior (event \ witness) := by
+      rw [eventMass_indicator, eventMass_indicator]
 
 private theorem PBelief_cell_inter_nonempty
-    (prior : FinDist Ω) (hfull : prior.FullSupport)
-    (partition : InfoPartition Ω) {threshold : ℝ}
-    (hthreshold : 0 < threshold) {event : Finset Ω} {state : Ω}
+    (prior : PMF Ω)
+    (partition : Setoid Ω) {threshold : ℝ}
+    (hthreshold : 0 < threshold) {event : Set Ω} {state : Ω}
     (hstate : state ∈ PBelief prior partition threshold event) :
-    (partition.cell state ∩ event).Nonempty := by
+    (cell partition state ∩ event).Nonempty := by
   rw [mem_PBelief_iff] at hstate
-  unfold posterior at hstate
-  have hdenominator :
-      0 < ∑ other ∈ partition.cell state, prior.prob other :=
-    Finset.sum_pos
-      (fun other _ => FinDist.prob_pos_iff.mpr (hfull other))
-      ⟨state, partition.reflexive state⟩
-  have hnumerator :
-      0 < ∑ other ∈ partition.cell state ∩ event, prior.prob other := by
-    have hmul :
-        threshold *
-            (∑ other ∈ partition.cell state, prior.prob other) ≤
-          ∑ other ∈ partition.cell state ∩ event, prior.prob other :=
-      (le_div_iff₀ hdenominator).1 hstate
-    nlinarith [mul_pos hthreshold hdenominator]
-  by_contra hempty
-  rw [Finset.not_nonempty_iff_eq_empty] at hempty
-  rw [hempty, Finset.sum_empty] at hnumerator
-  linarith
+  have hnumerator : 0 < eventMass prior (event ∩ cell partition state) := by
+    by_contra hnot
+    have hzero : eventMass prior (event ∩ cell partition state) = 0 :=
+      le_antisymm (le_of_not_gt hnot) (eventMass_nonneg prior _)
+    have htoReal :
+        (prior.toOuterMeasure (event ∩ cell partition state)).toReal = 0 := by
+      simpa [eventMass] using hzero
+    have hzeroPosterior : posterior prior partition event state = 0 := by
+      rw [posterior, htoReal]
+      exact zero_div _
+    rw [hzeroPosterior] at hstate
+    exact (not_le_of_gt hthreshold) hstate
+  obtain ⟨other, hotherEvent, hotherSupport⟩ :=
+    (eventMass_pos_iff_support prior (event ∩ cell partition state)).1 hnumerator
+  exact ⟨other, ⟨hotherEvent.2, hotherEvent.1⟩⟩
+
+private theorem PBelief_cell_inter_mass_pos
+    (prior : PMF Ω) (partition : Setoid Ω) {threshold : ℝ}
+    (hthreshold : 0 < threshold) {event : Set Ω} {state : Ω}
+    (hstate : state ∈ PBelief prior partition threshold event) :
+    0 < eventMass prior (event ∩ cell partition state) := by
+  rw [mem_PBelief_iff] at hstate
+  by_contra hnot
+  have hzero : eventMass prior (event ∩ cell partition state) = 0 :=
+    le_antisymm (le_of_not_gt hnot) (eventMass_nonneg prior _)
+  have htoReal :
+      (prior.toOuterMeasure (event ∩ cell partition state)).toReal = 0 := by
+    simpa [eventMass] using hzero
+  have hzeroPosterior : posterior prior partition event state = 0 := by
+    rw [posterior, htoReal]
+    exact zero_div _
+  rw [hzeroPosterior] at hstate
+  exact (not_le_of_gt hthreshold) hstate
 
 private theorem posterior_eq_of_mem_PBelief_const
-    (prior : FinDist Ω) (hfull : prior.FullSupport)
-    (partition : InfoPartition Ω) {threshold : ℝ}
+    (prior : PMF Ω)
+    (partition : Setoid Ω) {threshold : ℝ}
     (hthreshold : 0 < threshold)
-    {beliefEvent reportEvent : Finset Ω} {report : ℝ} {state : Ω}
-    (hstate :
-      state ∈ PBelief prior partition threshold beliefEvent)
-    (hreport :
-      ∀ other ∈ beliefEvent,
-        posterior prior partition reportEvent other = report) :
+    {beliefEvent reportEvent : Set Ω} {report : ℝ} {state : Ω}
+    (hstate : state ∈ PBelief prior partition threshold beliefEvent)
+    (hreport : ∀ other ∈ beliefEvent,
+      posterior prior partition reportEvent other = report) :
     posterior prior partition reportEvent state = report := by
-  obtain ⟨other, hother⟩ :=
-    PBelief_cell_inter_nonempty
-      prior hfull partition hthreshold hstate
-  rw [Finset.mem_inter] at hother
-  rw [posterior_eq_of_mem_cell
-    prior partition reportEvent state other hother.1]
-  exact hreport other hother.2
+  obtain ⟨other, hcell⟩ := PBelief_cell_inter_nonempty
+    prior partition hthreshold hstate
+  exact (posterior_eq_of_mem_cell prior partition reportEvent state other hcell.1).trans
+    (hreport other hcell.2)
 
-private theorem PBelief_of_PBelief_subset_PBelief
-    (prior : FinDist Ω) (hfull : prior.FullSupport)
-    (partition : InfoPartition Ω) {threshold : ℝ}
-    (hthreshold : 0 < threshold)
-    {first second : Finset Ω} {state : Ω}
-    (hstate : state ∈ PBelief prior partition threshold first)
-    (hsubset : first ⊆ PBelief prior partition threshold second) :
-    state ∈ PBelief prior partition threshold second := by
-  rw [mem_PBelief_iff]
-  obtain ⟨other, hother⟩ :=
-    PBelief_cell_inter_nonempty
-      prior hfull partition hthreshold hstate
-  rw [Finset.mem_inter] at hother
-  have hsecond := hsubset hother.2
-  rw [mem_PBelief_iff] at hsecond
-  rw [posterior_eq_of_mem_cell
-    prior partition second state other hother.1]
-  exact hsecond
-
-private lemma commonPBelief_atom_real_arith
+private theorem commonPBelief_atom_real_arith
     {conditional share report threshold remainder : ℝ}
     (hconditional0 : 0 ≤ conditional) (hconditional1 : conditional ≤ 1)
     (hshare1 : share ≤ 1) (hthreshold : threshold ≤ share)
@@ -183,444 +163,325 @@ private lemma commonPBelief_atom_real_arith
     (hremainder1 : remainder ≤ 1 - share)
     (heq : report = conditional * share + remainder) :
     |conditional - report| ≤ 1 - threshold := by
-  have hshare0 : (0 : ℝ) ≤ 1 - share := by
-    linarith
+  have hshare0 : (0 : ℝ) ≤ 1 - share := by linarith
   rw [abs_le]
   refine ⟨?_, ?_⟩ <;>
-    nlinarith [
-      mul_le_mul_of_nonneg_right hconditional1 hshare0,
+    nlinarith [mul_le_mul_of_nonneg_right hconditional1 hshare0,
       mul_nonneg hconditional0 hshare0]
 
-private theorem commonPBelief_atom_bound
-    (prior : FinDist Ω) (hfull : prior.FullSupport)
-    (partition : InfoPartition Ω)
-    {threshold report : ℝ} {witness reportEvent cell : Finset Ω}
-    (hevident :
-      witness ⊆ PBelief prior partition threshold witness)
-    (hreports :
-      ∀ state ∈ witness,
-        posterior prior partition reportEvent state = report)
-    (hcell : cell ∈ Finset.univ.image partition.cell)
-    (hcellWitness : 0 < eventMass prior (cell ∩ witness)) :
-    |eventMass prior ((cell ∩ reportEvent) ∩ witness) /
-          eventMass prior (cell ∩ witness) -
-        report| ≤
-      1 - threshold := by
-  obtain ⟨source, _, rfl⟩ := Finset.mem_image.mp hcell
-  have hnonempty : (partition.cell source ∩ witness).Nonempty := by
-    by_contra hempty
-    rw [Finset.not_nonempty_iff_eq_empty] at hempty
-    rw [hempty] at hcellWitness
-    unfold eventMass at hcellWitness
-    simp at hcellWitness
-  obtain ⟨state, hstate⟩ := hnonempty
-  rw [Finset.mem_inter] at hstate
-  have hcellState :
-      partition.cell state = partition.cell source :=
-    partition.coherent source state hstate.1
-  have hcellPos : 0 < eventMass prior (partition.cell source) :=
-    eventMass_pos_of_nonempty prior hfull
-      ⟨source, partition.reflexive source⟩
-  have hreportWitness :
-      eventMass prior
-          ((partition.cell source ∩ reportEvent) ∩ witness) ≤
-        eventMass prior (partition.cell source ∩ witness) :=
-    eventMass_mono prior <| by
-      intro other hother
-      rw [Finset.mem_inter] at hother ⊢
-      exact ⟨(Finset.mem_inter.mp hother.1).1, hother.2⟩
-  have hreportCell :
-      eventMass prior
-          ((partition.cell source ∩ reportEvent) ∩ witness) ≤
-        eventMass prior (partition.cell source ∩ reportEvent) :=
-    eventMass_mono prior <| by
-      intro other hother
-      exact (Finset.mem_inter.mp hother).1
-  have hwitnessCell :
-      eventMass prior (partition.cell source ∩ witness) ≤
-        eventMass prior (partition.cell source) :=
-    eventMass_mono prior Finset.inter_subset_left
-  have hreportEq :
-      eventMass prior (partition.cell source ∩ reportEvent) =
-        report * eventMass prior (partition.cell source) := by
-    have hposterior := hreports state hstate.2
-    unfold posterior at hposterior
-    rw [hcellState] at hposterior
-    have hposteriorMass :
-        eventMass prior (partition.cell source ∩ reportEvent) /
-          eventMass prior (partition.cell source) =
-          report := by
-      simpa only [eventMass] using hposterior
-    field_simp [hcellPos.ne'] at hposteriorMass
-    simpa [mul_comm] using hposteriorMass
-  have hthresholdShare :
-      threshold ≤
-        eventMass prior (partition.cell source ∩ witness) /
-          eventMass prior (partition.cell source) := by
-    have hbelief := hevident hstate.2
-    rw [mem_PBelief_iff] at hbelief
-    unfold posterior at hbelief
-    rw [hcellState] at hbelief
-    have hbeliefMass :
-        eventMass prior (partition.cell source ∩ witness) /
-            eventMass prior (partition.cell source) ≥
-          threshold := by
-      simpa only [eventMass] using hbelief
-    exact hbeliefMass
-  have hremainderBound :
-      eventMass prior (partition.cell source ∩ reportEvent) -
-            eventMass prior
-              ((partition.cell source ∩ reportEvent) ∩ witness) ≤
-        eventMass prior (partition.cell source) -
-          eventMass prior (partition.cell source ∩ witness) := by
-    have hreportDecomp :=
-      eventMass_inter_add_sdiff
-        prior (partition.cell source ∩ reportEvent) witness
-    have hcellDecomp :=
-      eventMass_inter_add_sdiff prior (partition.cell source) witness
-    have houtside :
-        eventMass prior ((partition.cell source ∩ reportEvent) \ witness) ≤
-          eventMass prior (partition.cell source \ witness) :=
-      eventMass_mono prior <| by
-        intro other hother
-        rw [Finset.mem_sdiff] at hother ⊢
-        exact ⟨(Finset.mem_inter.mp hother.1).1, hother.2⟩
-    linarith
-  have hconditional :
-      eventMass prior
-            ((partition.cell source ∩ reportEvent) ∩ witness) /
-          eventMass prior (partition.cell source ∩ witness) ∈
-        Set.Icc (0 : ℝ) 1 := by
-    refine Set.mem_Icc.mpr ⟨?_, ?_⟩
-    · exact div_nonneg (eventMass_nonneg prior _) hcellWitness.le
-    · exact (div_le_one hcellWitness).2 hreportWitness
-  have hremainder0 :
-      0 ≤
-        (eventMass prior (partition.cell source ∩ reportEvent) -
-            eventMass prior
-              ((partition.cell source ∩ reportEvent) ∩ witness)) /
-          eventMass prior (partition.cell source) :=
-    div_nonneg (sub_nonneg.mpr hreportCell) hcellPos.le
-  have hremainder1 :
-      (eventMass prior (partition.cell source ∩ reportEvent) -
-            eventMass prior
-              ((partition.cell source ∩ reportEvent) ∩ witness)) /
-          eventMass prior (partition.cell source) ≤
-        1 -
-          eventMass prior (partition.cell source ∩ witness) /
-            eventMass prior (partition.cell source) := by
-    have hrewrite :
-        1 -
-            eventMass prior (partition.cell source ∩ witness) /
-              eventMass prior (partition.cell source) =
-          (eventMass prior (partition.cell source) -
-              eventMass prior (partition.cell source ∩ witness)) /
-            eventMass prior (partition.cell source) := by
-      field_simp [hcellPos.ne']
-    rw [hrewrite]
-    exact div_le_div_of_nonneg_right hremainderBound hcellPos.le
-  have heq :
-      report =
-        (eventMass prior
-              ((partition.cell source ∩ reportEvent) ∩ witness) /
-            eventMass prior (partition.cell source ∩ witness)) *
-            (eventMass prior (partition.cell source ∩ witness) /
-              eventMass prior (partition.cell source)) +
-          (eventMass prior (partition.cell source ∩ reportEvent) -
-              eventMass prior
-                ((partition.cell source ∩ reportEvent) ∩ witness)) /
-            eventMass prior (partition.cell source) := by
-    have hcellNe : eventMass prior (partition.cell source) ≠ 0 :=
-      hcellPos.ne'
-    have hwitnessNe :
-        eventMass prior (partition.cell source ∩ witness) ≠ 0 :=
-      hcellWitness.ne'
-    rw [show
-      report =
-          eventMass prior (partition.cell source ∩ reportEvent) /
-            eventMass prior (partition.cell source) by
-      rw [hreportEq]
-      field_simp [hcellNe]]
-    field_simp [hcellNe, hwitnessNe]
-    ring
-  exact commonPBelief_atom_real_arith
-    hconditional.1 hconditional.2
-    ((div_le_one hcellPos).2 hwitnessCell)
-    hthresholdShare hremainder0 hremainder1 heq
-
 private theorem commonPBelief_core_bound
-    (prior : FinDist Ω) (hfull : prior.FullSupport)
-    (partition : InfoPartition Ω)
-    {threshold report : ℝ} {witness reportEvent : Finset Ω}
-    (hnonempty : witness.Nonempty)
-    (hevident :
-      witness ⊆ PBelief prior partition threshold witness)
-    (hreports :
-      ∀ state ∈ witness,
-        posterior prior partition reportEvent state = report) :
-    |report -
-        eventMass prior (witness ∩ reportEvent) /
-          eventMass prior witness| ≤
-      1 - threshold := by
-  let cells : Finset (Finset Ω) :=
-    Finset.univ.image partition.cell
-  have hwitnessPos : 0 < eventMass prior witness :=
-    eventMass_pos_of_nonempty prior hfull hnonempty
-  have hwitnessDecomp :
-      eventMass prior witness =
-        ∑ cell ∈ cells, eventMass prior (cell ∩ witness) := by
-    simpa [cells] using eventMass_decomp_cells prior partition witness
-  have hreportDecomp :
-      eventMass prior (witness ∩ reportEvent) =
-        ∑ cell ∈ cells,
-          eventMass prior ((cell ∩ reportEvent) ∩ witness) := by
+    (prior : PMF Ω)
+    (partition : Setoid Ω)
+    {threshold report : ℝ} {witness reportEvent : Set Ω}
+    (hmassWitness : 0 < eventMass prior witness)
+    (hevident : witness ⊆ PBelief prior partition threshold witness)
+    (hreports : ∀ state ∈ witness,
+      posterior prior partition reportEvent state = report) :
+    |report - eventMass prior (witness ∩ reportEvent) /
+        eventMass prior witness| ≤ 1 - threshold := by
+  let indicatorWitness := eventIndicator witness
+  let indicatorReport := eventIndicator (witness ∩ reportEvent)
+  let difference : Ω → ℝ := fun state =>
+    report * indicatorWitness state - indicatorReport state
+  let bound : Ω → ℝ := fun state => (1 - threshold) * indicatorWitness state
+  have hI : PayoffIntegrable prior indicatorWitness :=
+    eventIndicator_integrable prior witness
+  have hR : PayoffIntegrable prior indicatorReport :=
+    eventIndicator_integrable prior (witness ∩ reportEvent)
+  have hD : PayoffIntegrable prior difference := by
+    exact payoffIntegrable_sub (payoffIntegrable_const_mul hI) hR
+  have hB : PayoffIntegrable prior bound :=
+    payoffIntegrable_const_mul hI
+  have hDneg : PayoffIntegrable prior (fun state => -difference state) :=
+    payoffIntegrable_neg hD
+  have hboundFiber : ∀ b (hb : b ∈ (PMF.map (observation partition) prior).support),
+      |expect (fiberPosterior prior (observation partition) b hb) difference
+        (payoffIntegrable_fiberPosterior prior (observation partition)
+          difference hD b hb)| ≤
+      expect (fiberPosterior prior (observation partition) b hb) bound
+        (payoffIntegrable_fiberPosterior prior (observation partition)
+          bound hB b hb) := by
+    intro b hb
+    let conditional := fiberPosterior prior (observation partition) b hb
+    have hconditionalSupport := fiberPosterior_support prior
+      (observation partition) b hb
+    let share := eventMass conditional witness
+    let remainder := eventMass conditional (reportEvent \ witness)
+    let ratio := eventMass conditional (witness ∩ reportEvent) / share
+    have hshareNonneg : 0 ≤ share := eventMass_nonneg conditional witness
+    have hshareLe : share ≤ 1 := by
+      simpa only [share, eventMass, ENNReal.toReal_one] using
+        ENNReal.toReal_mono ENNReal.one_ne_top
+        (outerMeasure_le_one conditional witness)
+    by_cases hsharePos : 0 < share
+    · obtain ⟨state, hstateWitness, hstateSupport⟩ :=
+        (eventMass_pos_iff_support conditional witness).1 hsharePos
+      have hstateSupport' := hstateSupport
+      rw [hconditionalSupport] at hstateSupport'
+      have hstatePrior := hstateSupport'.2
+      have hcell : state ∈ cell partition state := partition.refl state
+      have hposteriorWitness := posterior_eq_fiberPosterior_expect
+        prior partition witness state ⟨state, hcell, hstatePrior⟩
+      have hposteriorReport := posterior_eq_fiberPosterior_expect
+        prior partition reportEvent state ⟨state, hcell, hstatePrior⟩
+      have hobservation : observation partition state = b := hstateSupport'.1
+      have hconditionalEq : conditional =
+          fiberPosterior prior (observation partition)
+            (observation partition state) (by
+              rw [hobservation]
+              exact hb) := by
+        dsimp [conditional]
+        cases hobservation
+        rfl
+      have hconditionalWitness : share =
+          posterior prior partition witness state := by
+        calc
+          share = expect conditional (eventIndicator witness)
+              (eventIndicator_integrable conditional witness) :=
+            (eventMass_indicator conditional witness).symm
+          _ = expect (fiberPosterior prior (observation partition)
+              (observation partition state) (by
+                rw [hobservation]
+                exact hb)) (eventIndicator witness)
+              (eventIndicator_integrable _ witness) := by
+            rw [hconditionalEq]
+          _ = posterior prior partition witness state :=
+            hposteriorWitness.symm
+      have hthreshold : threshold ≤ share := by
+        rw [hconditionalWitness]
+        exact hevident hstateWitness
+      have hconditionalReport :
+          eventMass conditional reportEvent = report := by
+        calc
+          eventMass conditional reportEvent =
+              expect conditional (eventIndicator reportEvent)
+                (eventIndicator_integrable conditional reportEvent) :=
+            (eventMass_indicator conditional reportEvent).symm
+          _ = posterior prior partition reportEvent state := by
+            rw [hconditionalEq]
+            exact hposteriorReport.symm
+          _ = report := hreports state hstateWitness
+      have hreportBound : 0 ≤ report ∧ report ≤ 1 := by
+        have hmass := eventMass_nonneg conditional reportEvent
+        have hmass' : eventMass conditional reportEvent ≤ 1 := by
+          simpa only [eventMass, ENNReal.toReal_one] using
+            ENNReal.toReal_mono ENNReal.one_ne_top
+            (outerMeasure_le_one conditional reportEvent)
+        rw [hconditionalReport] at hmass hmass'
+        exact ⟨hmass, hmass'⟩
+      have hratio0 : 0 ≤ ratio :=
+        div_nonneg (eventMass_nonneg conditional _) hshareNonneg
+      have hratio1 : ratio ≤ 1 := by
+        apply (div_le_one hsharePos).2
+        exact eventMass_mono conditional (by
+          intro other hother
+          exact hother.1)
+      have hremainder0 : 0 ≤ remainder :=
+        eventMass_nonneg conditional _
+      have houtside : remainder ≤ 1 - share := by
+        have hcompl : eventMass conditional (Set.univ \ witness) = 1 - share := by
+          have huniv : eventMass conditional Set.univ = 1 := by
+            unfold eventMass
+            rw [PMF.toOuterMeasure_apply]
+            simp [Set.indicator, conditional.tsum_coe]
+          have hdecomp := eventMass_inter_sdiff conditional Set.univ witness
+          have hdecomp' : 1 = share +
+              eventMass conditional (Set.univ \ witness) := by
+            rw [huniv] at hdecomp
+            simpa [share, Set.univ_inter] using hdecomp
+          linarith [hdecomp']
+        exact le_trans (eventMass_mono conditional
+          (smaller := reportEvent \ witness)
+          (larger := Set.univ \ witness) (by
+          intro other hother
+          exact ⟨Set.mem_univ other, hother.2⟩)) (by rw [hcompl])
+      have heq : report = ratio * share + remainder := by
+        have hsplit' : eventMass conditional reportEvent =
+            eventMass conditional (witness ∩ reportEvent) + remainder := by
+          simpa [remainder, Set.inter_comm] using
+            eventMass_inter_sdiff conditional reportEvent witness
+        calc
+          report = eventMass conditional reportEvent := hconditionalReport.symm
+          _ = eventMass conditional (witness ∩ reportEvent) + remainder := hsplit'
+          _ = ratio * share + remainder := by
+            dsimp [ratio, share]
+            rw [div_mul_cancel₀ _ (ne_of_gt hsharePos)]
+      have hatom := commonPBelief_atom_real_arith hratio0 hratio1
+        hshareLe hthreshold hremainder0 houtside heq
+      have hdiffEval : expect conditional difference
+          (payoffIntegrable_fiberPosterior _ _ difference hD b hb) =
+          share * (report - ratio) := by
+        calc
+          expect conditional difference
+              (payoffIntegrable_fiberPosterior _ _ difference hD b hb) =
+              report * expect conditional indicatorWitness
+                (eventIndicator_integrable conditional witness) -
+                expect conditional indicatorReport
+                  (eventIndicator_integrable conditional
+                    (witness ∩ reportEvent)) := by
+            dsimp [difference, indicatorWitness, indicatorReport]
+            rw [expect_sub (payoffIntegrable_const_mul
+              (eventIndicator_integrable conditional witness))
+              (eventIndicator_integrable conditional
+                (witness ∩ reportEvent)),
+              expect_const_mul (eventIndicator_integrable conditional witness)]
+          _ = report * share - eventMass conditional
+                (witness ∩ reportEvent) := by
+            rw [eventMass_indicator, eventMass_indicator]
+          _ = share * (report - ratio) := by
+            dsimp [ratio, share]
+            rw [mul_sub, mul_div_cancel₀ _ (ne_of_gt hsharePos)]
+            ring
+      have hboundEval : expect conditional bound
+          (payoffIntegrable_fiberPosterior _ _ bound hB b hb) =
+          (1 - threshold) * share := by
+        calc
+          expect conditional bound
+              (payoffIntegrable_fiberPosterior _ _ bound hB b hb) =
+              (1 - threshold) * expect conditional indicatorWitness
+                (eventIndicator_integrable conditional witness) := by
+            dsimp [bound, indicatorWitness]
+            exact expect_const_mul (eventIndicator_integrable conditional witness)
+          _ = (1 - threshold) * share := by rw [eventMass_indicator]
+      rw [hdiffEval, hboundEval, abs_mul, abs_of_nonneg hshareNonneg]
+      rw [abs_sub_comm] at hatom
+      nlinarith
+    · have hshareZero : share = 0 :=
+        le_antisymm (le_of_not_gt hsharePos) hshareNonneg
+      have hintersectionZero :
+          eventMass conditional (witness ∩ reportEvent) = 0 := by
+        apply le_antisymm
+        · exact eventMass_mono conditional Set.inter_subset_left |> fun h =>
+            le_trans h (le_of_eq hshareZero)
+        · exact eventMass_nonneg conditional _
+      have hdiffEval : expect conditional difference
+          (payoffIntegrable_fiberPosterior _ _ difference hD b hb) = 0 := by
+        calc
+          expect conditional difference
+              (payoffIntegrable_fiberPosterior _ _ difference hD b hb) =
+              report * share - eventMass conditional
+                (witness ∩ reportEvent) := by
+            dsimp [difference, indicatorWitness, indicatorReport]
+            rw [expect_sub (payoffIntegrable_const_mul
+              (eventIndicator_integrable conditional witness))
+              (eventIndicator_integrable conditional
+                (witness ∩ reportEvent)),
+              expect_const_mul (eventIndicator_integrable conditional witness),
+              eventMass_indicator, eventMass_indicator]
+          _ = 0 := by rw [hshareZero, hintersectionZero]; ring
+      have hboundEval : expect conditional bound
+          (payoffIntegrable_fiberPosterior _ _ bound hB b hb) = 0 := by
+        calc
+          expect conditional bound
+              (payoffIntegrable_fiberPosterior _ _ bound hB b hb) =
+              (1 - threshold) * share := by
+            dsimp [bound, indicatorWitness]
+            rw [expect_const_mul (eventIndicator_integrable conditional witness),
+              eventMass_indicator]
+          _ = 0 := by rw [hshareZero]; ring
+      rw [hdiffEval, hboundEval]
+      simp
+  have hnegativeFiber : ∀ b (hb : b ∈
+      (PMF.map (observation partition) prior).support),
+      expect (fiberPosterior prior (observation partition) b hb)
+        (fun state => -difference state)
+        (payoffIntegrable_fiberPosterior _ _ (fun state => -difference state)
+          hDneg b hb) ≤
+      expect (fiberPosterior prior (observation partition) b hb) bound
+        (payoffIntegrable_fiberPosterior _ _ bound hB b hb) := by
+    intro b hb
+    have hpositive := hboundFiber b hb
+    have hnegative := (abs_le.mp hpositive).1
     calc
-      eventMass prior (witness ∩ reportEvent) =
-          ∑ cell ∈ cells,
-            eventMass prior (cell ∩ (witness ∩ reportEvent)) := by
-        simpa [cells] using
-          eventMass_decomp_cells
-            prior partition (witness ∩ reportEvent)
-      _ = ∑ cell ∈ cells,
-            eventMass prior ((cell ∩ reportEvent) ∩ witness) := by
-        refine Finset.sum_congr rfl fun cell _ => ?_
-        rw [Finset.inter_assoc]
-        congr 1
-        ext state
-        simp [and_assoc, and_comm]
-  have hweighted :
-      |report * eventMass prior witness -
-          eventMass prior (witness ∩ reportEvent)| ≤
-        eventMass prior witness * (1 - threshold) := by
-    calc
-      |report * eventMass prior witness -
-          eventMass prior (witness ∩ reportEvent)| =
-          |∑ cell ∈ cells,
-            (report * eventMass prior (cell ∩ witness) -
-              eventMass prior
-                ((cell ∩ reportEvent) ∩ witness))| := by
-        rw [hwitnessDecomp, hreportDecomp, Finset.mul_sum,
-          ← Finset.sum_sub_distrib]
-      _ ≤ ∑ cell ∈ cells,
-          |report * eventMass prior (cell ∩ witness) -
-            eventMass prior
-              ((cell ∩ reportEvent) ∩ witness)| :=
-        Finset.abs_sum_le_sum_abs _ _
-      _ ≤ ∑ cell ∈ cells,
-          eventMass prior (cell ∩ witness) *
-            (1 - threshold) := by
-        refine Finset.sum_le_sum fun cell hcell => ?_
-        by_cases hcellPos : 0 < eventMass prior (cell ∩ witness)
-        · have hbound :=
-            commonPBelief_atom_bound
-              prior hfull partition hevident hreports hcell hcellPos
-          rw [abs_sub_comm] at hbound
-          have hcellNe : eventMass prior (cell ∩ witness) ≠ 0 :=
-            hcellPos.ne'
-          have hcellNonneg :
-              0 ≤ eventMass prior (cell ∩ witness) :=
-            eventMass_nonneg prior _
-          have hterm :
-              |report * eventMass prior (cell ∩ witness) -
-                  eventMass prior
-                    ((cell ∩ reportEvent) ∩ witness)| =
-                eventMass prior (cell ∩ witness) *
-                  |report -
-                    eventMass prior
-                        ((cell ∩ reportEvent) ∩ witness) /
-                      eventMass prior (cell ∩ witness)| := by
-            rw [show
-              report * eventMass prior (cell ∩ witness) -
-                    eventMass prior
-                      ((cell ∩ reportEvent) ∩ witness) =
-                  eventMass prior (cell ∩ witness) *
-                    (report -
-                      eventMass prior
-                          ((cell ∩ reportEvent) ∩ witness) /
-                        eventMass prior (cell ∩ witness)) by
-              field_simp [hcellNe]]
-            rw [abs_mul, abs_of_pos hcellPos]
-          rw [hterm]
-          exact mul_le_mul_of_nonneg_left hbound hcellNonneg
-        · have hcellNonpos :
-              eventMass prior (cell ∩ witness) ≤ 0 :=
-            le_of_not_gt hcellPos
-          have hcellZero :
-              eventMass prior (cell ∩ witness) = 0 :=
-            le_antisymm hcellNonpos (eventMass_nonneg prior _)
-          have hreportLe :
-              eventMass prior
-                  ((cell ∩ reportEvent) ∩ witness) ≤
-                eventMass prior (cell ∩ witness) :=
-            eventMass_mono prior <| by
-              intro state hstate
-              rw [Finset.mem_inter] at hstate ⊢
-              exact ⟨(Finset.mem_inter.mp hstate.1).1, hstate.2⟩
-          have hreportZero :
-              eventMass prior
-                  ((cell ∩ reportEvent) ∩ witness) = 0 :=
-            le_antisymm (by simpa [hcellZero] using hreportLe)
-              (eventMass_nonneg prior _)
-          have hreportZero' :
-              eventMass prior (cell ∩ (reportEvent ∩ witness)) = 0 := by
-            simpa [Finset.inter_assoc, Finset.inter_comm,
-              Finset.inter_left_comm] using hreportZero
-          simp [hcellZero, hreportZero']
-      _ = eventMass prior witness * (1 - threshold) := by
-        rw [← Finset.sum_mul, ← hwitnessDecomp]
-  have hscaled :
-      |report -
-          eventMass prior (witness ∩ reportEvent) /
-            eventMass prior witness| ≤
-        1 - threshold := by
-    have hwitnessNe : eventMass prior witness ≠ 0 :=
-      hwitnessPos.ne'
-    have hrewrite :
-        report -
-            eventMass prior (witness ∩ reportEvent) /
-              eventMass prior witness =
-          (report * eventMass prior witness -
-              eventMass prior (witness ∩ reportEvent)) /
-            eventMass prior witness := by
-      field_simp [hwitnessNe]
-    rw [hrewrite, abs_div, abs_of_pos hwitnessPos]
-    have hweighted' :
-        |report * eventMass prior witness -
-            eventMass prior (witness ∩ reportEvent)| ≤
-          (1 - threshold) * eventMass prior witness := by
-      simpa [mul_comm] using hweighted
-    exact (div_le_iff₀ hwitnessPos).2 hweighted'
-  simpa [abs_sub_comm] using hscaled
+      expect (fiberPosterior prior (observation partition) b hb)
+          (fun state => -difference state)
+          (payoffIntegrable_fiberPosterior _ _ (fun state => -difference state)
+            hDneg b hb) =
+          -expect (fiberPosterior prior (observation partition) b hb)
+            difference (payoffIntegrable_fiberPosterior _ _ difference hD b hb) := by
+        rw [expect_neg (payoffIntegrable_fiberPosterior _ _ difference hD b hb)]
+      _ ≤ expect (fiberPosterior prior (observation partition) b hb) bound
+          (payoffIntegrable_fiberPosterior _ _ bound hB b hb) := by
+        linarith [hnegative]
+  have hpositiveFiber : ∀ b (hb : b ∈
+      (PMF.map (observation partition) prior).support),
+      expect (fiberPosterior prior (observation partition) b hb) difference
+        (payoffIntegrable_fiberPosterior _ _ difference hD b hb) ≤
+      expect (fiberPosterior prior (observation partition) b hb) bound
+        (payoffIntegrable_fiberPosterior _ _ bound hB b hb) := by
+    intro b hb
+    exact (abs_le.mp (hboundFiber b hb)).2
+  have hglobal := expect_fiberwise_le prior (observation partition)
+    difference bound hD hB hpositiveFiber
+  have hglobalNeg := expect_fiberwise_le prior (observation partition)
+    (fun state => -difference state) bound hDneg hB hnegativeFiber
+  have hglobalEval : expect prior difference hD =
+      report * eventMass prior witness -
+        eventMass prior (witness ∩ reportEvent) := by
+    dsimp [difference, indicatorWitness, indicatorReport]
+    rw [expect_sub (payoffIntegrable_const_mul
+      (eventIndicator_integrable prior witness))
+      (eventIndicator_integrable prior (witness ∩ reportEvent)),
+      expect_const_mul (eventIndicator_integrable prior witness),
+      eventMass_indicator, eventMass_indicator]
+  have hboundEval : expect prior bound hB =
+      (1 - threshold) * eventMass prior witness := by
+    dsimp [bound, indicatorWitness]
+    rw [expect_const_mul (eventIndicator_integrable prior witness),
+      eventMass_indicator]
+  have hscaledUpper := hglobal
+  rw [hglobalEval, hboundEval] at hscaledUpper
+  have hscaledLower := hglobalNeg
+  rw [expect_neg hD, hglobalEval, hboundEval] at hscaledLower
+  have hrewrite : report -
+      eventMass prior (witness ∩ reportEvent) / eventMass prior witness =
+    (report * eventMass prior witness -
+      eventMass prior (witness ∩ reportEvent)) / eventMass prior witness := by
+    field_simp [ne_of_gt hmassWitness]
+  rw [hrewrite, abs_div, abs_of_pos hmassWitness]
+  apply (div_le_iff₀ hmassWitness).2
+  exact (abs_le).2 ⟨by linarith, by linarith⟩
 
 /-- **Monderer--Samet approximate agreement.** Common `p`-belief that every
 agent reports a fixed posterior makes any two reports differ by at most
 `2 * (1 - p)`. -/
 theorem commonPBelief_posterior_reports_close
-    {ι : Type uι} [Fintype ι]
-    {prior : FinDist Ω} (hfull : prior.FullSupport)
-    {partition : ι → InfoPartition Ω}
-    {reportEvent : Finset Ω} {state : Ω}
+    {agents : Type uι} {prior : PMF Ω}
+    {partition : agents → Setoid Ω} {reportEvent : Set Ω} {state : Ω}
     {threshold : ℝ} (hthreshold : 0 < threshold)
-    {report : ι → ℝ}
-    (hcommon :
-      CommonPBeliefAt prior partition threshold
-        (Finset.univ.filter fun world =>
-          ∀ agent : ι,
-            posterior prior (partition agent) reportEvent world =
-              report agent)
-        state) :
-    ∀ first second,
-      |report first - report second| ≤
-        2 * (1 - threshold) := by
+    {report : agents → ℝ}
+    (hcommon : CommonPBeliefAt prior partition threshold
+      {world | ∀ agent, posterior prior (partition agent) reportEvent world =
+        report agent} state) :
+    ∀ first second, |report first - report second| ≤ 2 * (1 - threshold) := by
+  obtain ⟨witness, hstate, hevident, hbelief⟩ := hcommon
   intro first second
-  obtain ⟨initial, hstateInitial, hinitialEvident, hinitialBelief⟩ :=
-    hcommon
-  let reportStates : Finset Ω :=
-    Finset.univ.filter fun world =>
-      ∀ agent : ι,
-        posterior prior (partition agent) reportEvent world =
-          report agent
-  let witness : Finset Ω :=
-    PBelief prior (partition first) threshold initial ∩
-      PBelief prior (partition second) threshold initial
-  have hinitialWitness : initial ⊆ witness := by
-    intro world hworld
-    rw [Finset.mem_inter]
-    exact ⟨hinitialEvident first hworld,
-      hinitialEvident second hworld⟩
-  have hwitnessNonempty : witness.Nonempty :=
-    ⟨state, hinitialWitness hstateInitial⟩
-  have hfirstEvident :
-      witness ⊆
-        PBelief prior (partition first) threshold witness := by
-    intro world hworld
-    rw [Finset.mem_inter] at hworld
-    exact PBelief_mono_event
-      prior hfull (partition first) threshold
-      hinitialWitness hworld.1
-  have hsecondEvident :
-      witness ⊆
-        PBelief prior (partition second) threshold witness := by
-    intro world hworld
-    rw [Finset.mem_inter] at hworld
-    exact PBelief_mono_event
-      prior hfull (partition second) threshold
-      hinitialWitness hworld.2
-  have hfirstReports :
-      witness ⊆
-        PBelief prior (partition first) threshold reportStates := by
-    intro world hworld
-    rw [Finset.mem_inter] at hworld
-    exact PBelief_of_PBelief_subset_PBelief
-      prior hfull (partition first) hthreshold hworld.1 <| by
-        intro other hother
-        have hmutual := hinitialBelief hother
-        rw [mem_mutualPBelief_iff] at hmutual
-        rw [mem_PBelief_iff]
-        exact hmutual first
-  have hsecondReports :
-      witness ⊆
-        PBelief prior (partition second) threshold reportStates := by
-    intro world hworld
-    rw [Finset.mem_inter] at hworld
-    exact PBelief_of_PBelief_subset_PBelief
-      prior hfull (partition second) hthreshold hworld.2 <| by
-        intro other hother
-        have hmutual := hinitialBelief hother
-        rw [mem_mutualPBelief_iff] at hmutual
-        rw [mem_PBelief_iff]
-        exact hmutual second
-  have hfirstConstant :
-      ∀ world ∈ witness,
-        posterior prior (partition first) reportEvent world =
-          report first := by
-    intro world hworld
-    exact posterior_eq_of_mem_PBelief_const
-      prior hfull (partition first) hthreshold
-      (hfirstReports hworld) <| by
-        intro other hother
-        have hfilter :
-            other ∈ Finset.univ.filter
-              (fun candidate =>
-                ∀ agent : ι,
-                  posterior prior (partition agent) reportEvent candidate =
-                    report agent) := by
-          simpa only [reportStates] using hother
-        rw [Finset.mem_filter] at hfilter
-        exact hfilter.2 first
-  have hsecondConstant :
-      ∀ world ∈ witness,
-        posterior prior (partition second) reportEvent world =
-          report second := by
-    intro world hworld
-    exact posterior_eq_of_mem_PBelief_const
-      prior hfull (partition second) hthreshold
-      (hsecondReports hworld) <| by
-        intro other hother
-        have hfilter :
-            other ∈ Finset.univ.filter
-              (fun candidate =>
-                ∀ agent : ι,
-                  posterior prior (partition agent) reportEvent candidate =
-                    report agent) := by
-          simpa only [reportStates] using hother
-        rw [Finset.mem_filter] at hfilter
-        exact hfilter.2 second
-  have hfirstBound :=
-    commonPBelief_core_bound
-      prior hfull (partition first) hwitnessNonempty
-      hfirstEvident hfirstConstant
-  have hsecondBound :=
-    commonPBelief_core_bound
-      prior hfull (partition second) hwitnessNonempty
-      hsecondEvident hsecondConstant
-  have htriangle :=
-    abs_sub_le
-      (report first)
-      (eventMass prior (witness ∩ reportEvent) /
-        eventMass prior witness)
-      (report second)
+  have hmassWitness : 0 < eventMass prior witness := by
+    have hpositive := PBelief_cell_inter_mass_pos prior (partition first)
+      hthreshold (hevident first hstate)
+    have hmono : eventMass prior (witness ∩ cell (partition first) state) ≤
+        eventMass prior witness :=
+      eventMass_mono prior (by intro world hworld; exact hworld.1)
+    exact lt_of_lt_of_le hpositive
+      hmono
+  have hfirstBound := commonPBelief_core_bound prior (partition first)
+    hmassWitness (hevident first) (by
+      intro world hworld
+      exact posterior_eq_of_mem_PBelief_const prior (partition first)
+        hthreshold (hbelief hworld first) (by
+          intro other hother
+          exact hother first))
+  have hsecondBound := commonPBelief_core_bound prior (partition second)
+    hmassWitness (hevident second) (by
+      intro world hworld
+      exact posterior_eq_of_mem_PBelief_const prior (partition second)
+        hthreshold (hbelief hworld second) (by
+          intro other hother
+          exact hother second))
   rw [abs_sub_comm] at hsecondBound
+  have htriangle := abs_sub_le (report first)
+    (eventMass prior (witness ∩ reportEvent) / eventMass prior witness)
+    (report second)
   linarith
 
 end GameTheory.Epistemic

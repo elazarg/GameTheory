@@ -24,18 +24,19 @@ universe uι us uo
 variable {ι : Type uι} [Fintype ι] [DecidableEq ι] {F : GameForm ι}
 variable [∀ i, Fintype (F.sig.Strategy i)] [∀ i, Nonempty (F.sig.Strategy i)]
 
-/-- **Every finite game has a correlated equilibrium.**  The outcome type need
-not be finite and its utility need not be supplied with a separate bound:
-finite support makes every expectation used by the canonical semantics finite. -/
-theorem exists_isCorrelatedEq (utility : F.sig.Outcome → ι → ℝ) :
-    ∃ law : FinDist (Profile F.sig), IsCorrelatedEq F (euPreference utility) law := by
-  obtain ⟨mixedProfile, hnash⟩ := exists_isNash_mixed utility
-  exact ⟨FinDist.pi mixedProfile, hnash.isCorrelatedEq_pi⟩
+/-- **Every finite-action game with integrable pure plays has a correlated
+equilibrium.** The outcome carrier may be arbitrary. -/
+theorem exists_isCorrelatedEq (utility : F.sig.Outcome → ι → ℝ)
+    (hintegrable : F.HasIntegrableUtility utility) :
+    ∃ law : PMF (Profile F.sig), IsCorrelatedEq F (euPreference utility) law := by
+  obtain ⟨mixedProfile, hnash⟩ := exists_isNash_mixed utility hintegrable
+  exact ⟨independentProduct mixedProfile, hnash.isCorrelatedEq_pi⟩
 
 /-- **Every finite game has a coarse correlated equilibrium.** -/
-theorem exists_isCoarseCorrelatedEq (utility : F.sig.Outcome → ι → ℝ) :
-    ∃ law : FinDist (Profile F.sig), IsCoarseCorrelatedEq F (euPreference utility) law := by
-  obtain ⟨mixedProfile, hnash⟩ := exists_isNash_mixed utility
-  exact ⟨FinDist.pi mixedProfile, hnash.isCoarseCorrelatedEq_pi⟩
+theorem exists_isCoarseCorrelatedEq (utility : F.sig.Outcome → ι → ℝ)
+    (hintegrable : F.HasIntegrableUtility utility) :
+    ∃ law : PMF (Profile F.sig), IsCoarseCorrelatedEq F (euPreference utility) law := by
+  obtain ⟨mixedProfile, hnash⟩ := exists_isNash_mixed utility hintegrable
+  exact ⟨independentProduct mixedProfile, hnash.isCoarseCorrelatedEq_pi⟩
 
 end GameTheory

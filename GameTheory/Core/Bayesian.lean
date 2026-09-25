@@ -6,9 +6,9 @@ type-contingent plans. This module owns only that data and its direct
 `GameForm`; utility and equilibrium theory live in `BayesianEquilibrium`, so a
 language compiler may reuse the syntax without importing solution concepts.
 
-Finiteness is deliberately absent from the structure. The common prior already
-has finite support, while enumerating every value of one player's type is a
-capability needed only by the interim decomposition theorem.
+Finiteness is deliberately absent from the structure. Interim values use
+unnormalized event-restricted laws, so zero-mass type cells contribute zero;
+posterior conditioning is provided by the shared probability layer.
 -/
 
 import GameTheory.Core.Form
@@ -29,7 +29,7 @@ structure BayesianGame (ι : Type uι) where
   /-- Each player's feasible action. -/
   Act : ι → Type ua
   /-- The common prior over type profiles. -/
-  prior : FinDist (∀ i, Ty i)
+  prior : PMF (∀ i, Ty i)
   /-- Realized payoff as a function of types, actions, and the player paid. -/
   payoff : (∀ i, Ty i) → (∀ i, Act i) → ι → ℝ
 

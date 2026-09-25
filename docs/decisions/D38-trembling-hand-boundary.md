@@ -56,26 +56,19 @@ perfect.
 | Analysis owner | pointwise profile convergence, vanishing perturbations, and `IsTremblingHandPerfect` |
 | canonical reuse | perturbed equilibrium is `IsEquilibrium` for `DeviationScheme.perturbedMixed`; its hom maps into `unilateralConstant` |
 | stored capabilities | none; finiteness and decidable equality occur only where the deviation scheme needs finite players |
-| representation | real `FinDist.prob` only; no PMF, ENNReal, or second probability carrier |
+| representation | canonical probability laws; D62 supersedes the original finite-support default |
 | hostile distinction | fair Matching Pennies is fully mixed and perfect while admitting no pure Nash profile; a weakly dominated Nash fixture is not perfect |
-| bounded accounting | all 26 pinned declarations classified; 20 adapted/subsumed and six alternative-limit rows deferred |
-| boundary correction | an Analysis-importing fixture under `Tests` was rejected and moved under `Analysis`; no source-check exemption was added |
-| source checks | zero forbidden imports, raw `Function.update`, representation leaks, source transports, placeholders, custom axioms, or build-output commands |
-| trust sample | the characterization, general perfection theorem, and hostile witness use only `propext`, `Classical.choice`, and `Quot.sound` |
-| reachability | Core inputs reached 3/3 and analytic names rejected 2/2; Analysis inputs reached 5/5 and unrelated boundaries rejected 4/4 |
-| release validation | Phase 2 and exact coverage return `VERIFIED=1`; warning-clean default build completes 3,517 jobs |
 
 ## Kill condition
 
 Reject the split if Core needs topology; the refinement requires a parallel
-Nash predicate; PMF/ENNReal representation escapes `FinDist`; the proof needs
+Nash predicate; the proof needs
 raw updates or user-visible transports; full-support Nash cannot furnish a
 positive vanishing certificate; or the hostile fixture does not exercise
 genuine mixing.
 
-No kill condition fired. The source audit instead caught and corrected the
-fixture's directory-level boundary violation, which is evidence that the
-one-way rule is enforced rather than descriptive.
+Fixtures using analytic existence belong under Analysis, preserving the same
+one-way dependency boundary as the theorem.
 
 ## Consequences for the public API
 
@@ -83,7 +76,8 @@ Topology-free consumers import `GameTheory.Core.TremblingHand`. Limit-based
 consumers import `GameTheory.Analysis.TremblingHand`. Expected-utility
 perfection is a transparent `UtilityGame` specialization; new refinement
 theorems continue to use canonical `IsNash`, `IsEquilibrium`, `Profile.update`,
-and `FinDist`.
+and the canonical probability law. [D62](D62-general-pmf-restoration.md)
+requires integration of actual compared laws for real expected utility.
 
 The predecessor's fully-mixed-equilibrium and vanishing-approximate-Nash limit
 predicates remain a bounded S-MIX BFS gate because they express distinct

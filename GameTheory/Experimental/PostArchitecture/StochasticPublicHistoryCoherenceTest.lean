@@ -26,7 +26,7 @@ def liveRecord : actionGame.StageRecord where
   target := false
 
 theorem livePublicProfile_initial (who : Bool) :
-    livePublicProfile who [] = FinDist.pure (secondActions who) := by
+    livePublicProfile who [] = PMF.pure (secondActions who) := by
   cases who <;> rfl
 
 theorem empty_history_realizable :
@@ -39,7 +39,7 @@ theorem liveProfile_not_agreement :
   intro hagree
   have hpolicy := hagree [] empty_history_realizable false
   have hpublic : publicProfile false [] = livePublicProfile false [] := by
-    apply (FinDist.map_injective
+    apply (pmf_map_injective
       (actionChoiceEquiv actionGame false false []).injective)
     simpa [canonicalProfile, liveProfile, toBehaviorProfile,
       toBehavioralPolicy] using hpolicy
@@ -47,33 +47,33 @@ theorem liveProfile_not_agreement :
 
 theorem live_publicHistoryLaw_one :
     actionGame.publicHistoryLaw false liveProfile 1 =
-      FinDist.pure [liveRecord] := by
+      PMF.pure [liveRecord] := by
   have hrestart :
       actionGame.restartHistoryLaw liveProfile [] false 1 =
-        FinDist.pure [liveRecord] := by
+        PMF.pure [liveRecord] := by
     unfold liveProfile
     rw [actionGame.restartHistoryLaw_succ_toPublicProfile
       livePublicProfile [] false 0]
     simp_rw [livePublicProfile_initial]
-    rw [FinDist.pi_pure secondActions, FinDist.pure_bind]
-    simp only [actionGame, FinDist.pure_bindOnSupport]
-    rw [Game.restartHistoryLaw_zero, FinDist.map_pure]
+    rw [independentProduct_pure secondActions, PMF.pure_bind]
+    simp only [actionGame, PMF.pure_bindOnSupport]
+    rw [Game.restartHistoryLaw_zero, PMF.pure_map]
     simp [liveRecord, secondActions]
   simpa only [Game.restartHistoryLaw, Game.afterPublicHistory_nil] using hrestart
 
 theorem canonical_publicHistoryLaw_one :
     actionGame.publicHistoryLaw false canonicalProfile 1 =
-      FinDist.pure [firstRecord] := by
+      PMF.pure [firstRecord] := by
   have hrestart :
       actionGame.restartHistoryLaw canonicalProfile [] false 1 =
-        FinDist.pure [firstRecord] := by
+        PMF.pure [firstRecord] := by
     unfold canonicalProfile
     rw [actionGame.restartHistoryLaw_succ_toPublicProfile
       publicProfile [] false 0]
     simp_rw [publicProfile_initial]
-    rw [FinDist.pi_pure firstActions, FinDist.pure_bind]
-    simp only [actionGame, FinDist.pure_bindOnSupport]
-    rw [Game.restartHistoryLaw_zero, FinDist.map_pure]
+    rw [independentProduct_pure firstActions, PMF.pure_bind]
+    simp only [actionGame, PMF.pure_bindOnSupport]
+    rw [Game.restartHistoryLaw_zero, PMF.pure_map]
     simp [firstRecord, firstActions]
   simpa only [Game.restartHistoryLaw, Game.afterPublicHistory_nil] using hrestart
 
@@ -83,31 +83,76 @@ theorem live_publicHistoryLaw_differs :
   rw [canonical_publicHistoryLaw_one, live_publicHistoryLaw_one]
   intro heq
   have htargets := congrArg
-    (FinDist.map (List.map StageRecord.target)) heq
-  have hprob := congrArg (fun law => law.prob [true]) htargets
-  simp [firstRecord, liveRecord, FinDist.prob_pure_eq_ite] at hprob
+    (PMF.map (List.map StageRecord.target)) heq
+  rw [PMF.pure_map, PMF.pure_map] at htargets
+  have hmass := congrArg (fun law : PMF (List Bool) => law [true]) htargets
+  simp [firstRecord, liveRecord, PMF.pure_apply] at hmass
+
+/-- The canonical one-step profile has an integrable finite-average payoff. -/
+theorem canonical_integrable :
+    UtilityIntegrable (actionGame.horizonUtility false 1) false
+      ((actionGame.horizonForm false 1).play canonicalProfile) := by
+  apply (actionGame.publicFiniteAverageIntegrable_iff
+    false 1 canonicalProfile false).mp
+  rw [canonical_publicHistoryLaw_one]
+  exact payoffIntegrable_pure [firstRecord]
+    (fun history => actionGame.publicHistoryAverageUtility 1 history false)
+
+/-- The live one-step profile has an integrable finite-average payoff. -/
+theorem live_integrable :
+    UtilityIntegrable (actionGame.horizonUtility false 1) false
+      ((actionGame.horizonForm false 1).play liveProfile) := by
+  apply (actionGame.publicFiniteAverageIntegrable_iff
+    false 1 liveProfile false).mp
+  rw [live_publicHistoryLaw_one]
+  exact payoffIntegrable_pure [liveRecord]
+    (fun history => actionGame.publicHistoryAverageUtility 1 history false)
 
 theorem canonical_finiteAveragePayoff_one :
-    actionGame.finiteAveragePayoff false 1 canonicalProfile false = 0 := by
+    actionGame.finiteAveragePayoff false 1 canonicalProfile false
+      canonical_integrable = 0 := by
+  have hpublic := (actionGame.publicFiniteAverageIntegrable_iff
+    false 1 canonicalProfile false).mpr canonical_integrable
   rw [← actionGame.publicFiniteAveragePayoff_eq_finiteAveragePayoff
-    false 1 canonicalProfile false]
+    false 1 canonicalProfile false hpublic canonical_integrable]
   unfold publicFiniteAveragePayoff
-  rw [canonical_publicHistoryLaw_one]
-  simp [publicHistoryAverageUtility, stageRecordUtility, firstRecord,
-    actionGame, firstActions]
+  calc
+    expectedUtility (actionGame.publicHistoryAverageUtility 1) false
+        (actionGame.publicHistoryLaw false canonicalProfile 1) hpublic =
+      expectedUtility (actionGame.publicHistoryAverageUtility 1) false
+        (PMF.pure [firstRecord])
+        (payoffIntegrable_pure [firstRecord]
+          (fun history => actionGame.publicHistoryAverageUtility 1 history false)) :=
+        expectedUtility_congr_law _ _ canonical_publicHistoryLaw_one _ _
+    _ = 0 := by
+      simp [publicHistoryAverageUtility, stageRecordUtility, firstRecord,
+        actionGame, firstActions]
 
 theorem live_finiteAveragePayoff_one :
-    actionGame.finiteAveragePayoff false 1 liveProfile false = 1 := by
+    actionGame.finiteAveragePayoff false 1 liveProfile false
+      live_integrable = 1 := by
+  have hpublic := (actionGame.publicFiniteAverageIntegrable_iff
+    false 1 liveProfile false).mpr live_integrable
   rw [← actionGame.publicFiniteAveragePayoff_eq_finiteAveragePayoff
-    false 1 liveProfile false]
+    false 1 liveProfile false hpublic live_integrable]
   unfold publicFiniteAveragePayoff
-  rw [live_publicHistoryLaw_one]
-  simp [publicHistoryAverageUtility, stageRecordUtility, liveRecord,
-    actionGame, secondActions]
+  calc
+    expectedUtility (actionGame.publicHistoryAverageUtility 1) false
+        (actionGame.publicHistoryLaw false liveProfile 1) hpublic =
+      expectedUtility (actionGame.publicHistoryAverageUtility 1) false
+        (PMF.pure [liveRecord])
+        (payoffIntegrable_pure [liveRecord]
+          (fun history => actionGame.publicHistoryAverageUtility 1 history false)) :=
+        expectedUtility_congr_law _ _ live_publicHistoryLaw_one _ _
+    _ = 1 := by
+      simp [publicHistoryAverageUtility, stageRecordUtility, liveRecord,
+        actionGame, secondActions]
 
 theorem finiteAveragePayoff_one_differs :
-    actionGame.finiteAveragePayoff false 1 canonicalProfile false ≠
-      actionGame.finiteAveragePayoff false 1 liveProfile false := by
+    actionGame.finiteAveragePayoff false 1 canonicalProfile false
+      canonical_integrable ≠
+      actionGame.finiteAveragePayoff false 1 liveProfile false
+        live_integrable := by
   rw [canonical_finiteAveragePayoff_one, live_finiteAveragePayoff_one]
   norm_num
 

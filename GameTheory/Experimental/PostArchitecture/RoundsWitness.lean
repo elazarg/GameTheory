@@ -47,15 +47,15 @@ def rounds : ExecutionProtocol (Fin 2) where
     match state with
     | .opening =>
         match joint.1 0, joint.1 1 with
-        | some first, some second => FinDist.pure (.second (first == second))
-        | _, _ => FinDist.pure (.second false)
+        | some first, some second => PMF.pure (.second (first == second))
+        | _, _ => PMF.pure (.second false)
     | .second agreedFirst =>
         match joint.1 0, joint.1 1 with
         | some first, some second =>
-            FinDist.pure (.finished agreedFirst (first == second))
-        | _, _ => FinDist.pure (.finished agreedFirst false)
+            PMF.pure (.finished agreedFirst (first == second))
+        | _, _ => PMF.pure (.finished agreedFirst false)
     | .finished agreedFirst agreedSecond =>
-        FinDist.pure (.finished agreedFirst agreedSecond)
+        PMF.pure (.finished agreedFirst agreedSecond)
   progress := by
     rintro state hterm
     refine ⟨fun _ => some true, fun i => ?_⟩
@@ -96,13 +96,13 @@ theorem opening_depends_on_both :
     rounds.step .opening ⟨bothTrue, legal_bothTrue opening_not_terminal⟩ ≠
       rounds.step .opening ⟨firstSwitches, legal_firstSwitches opening_not_terminal⟩ := by
   have hagree : rounds.step .opening ⟨bothTrue, legal_bothTrue opening_not_terminal⟩ =
-      FinDist.pure (.second true) := rfl
+      PMF.pure (.second true) := rfl
   have hsplit : rounds.step .opening ⟨firstSwitches, legal_firstSwitches opening_not_terminal⟩ =
-      FinDist.pure (.second false) := rfl
+      PMF.pure (.second false) := rfl
   rw [hagree, hsplit]
   intro hequal
-  have hmass := congrArg (fun law => FinDist.prob law (Stage.second true)) hequal
-  simp [FinDist.prob_pure_eq_ite] at hmass
+  have hmass := congrArg (fun law : PMF Stage => law (Stage.second true)) hequal
+  simp [PMF.pure_apply] at hmass
 
 /-! ## Probe 2: the second round is not vestigial
 
@@ -115,15 +115,15 @@ theorem second_round_depends_on_both (agreedFirst : Bool) :
         ⟨firstSwitches, legal_firstSwitches (second_not_terminal agreedFirst)⟩ := by
   have hagree : rounds.step (.second agreedFirst)
       ⟨bothTrue, legal_bothTrue (second_not_terminal agreedFirst)⟩ =
-      FinDist.pure (.finished agreedFirst true) := rfl
+      PMF.pure (.finished agreedFirst true) := rfl
   have hsplit : rounds.step (.second agreedFirst)
       ⟨firstSwitches, legal_firstSwitches (second_not_terminal agreedFirst)⟩ =
-      FinDist.pure (.finished agreedFirst false) := rfl
+      PMF.pure (.finished agreedFirst false) := rfl
   rw [hagree, hsplit]
   intro hequal
   have hmass :=
-    congrArg (fun law => FinDist.prob law (Stage.finished agreedFirst true)) hequal
-  simp [FinDist.prob_pure_eq_ite] at hmass
+    congrArg (fun law : PMF Stage => law (Stage.finished agreedFirst true)) hequal
+  simp [PMF.pure_apply] at hmass
 
 /-! ## Probe 3: round two can see round one
 
@@ -136,9 +136,9 @@ theorem second_states_are_distinct : Stage.second true ≠ Stage.second false :=
 distinction is realized rather than merely available. -/
 theorem first_round_selects_second_state :
     rounds.step .opening ⟨bothTrue, legal_bothTrue opening_not_terminal⟩ =
-        FinDist.pure (.second true) ∧
+        PMF.pure (.second true) ∧
       rounds.step .opening ⟨firstSwitches, legal_firstSwitches opening_not_terminal⟩ =
-        FinDist.pure (.second false) :=
+        PMF.pure (.second false) :=
   ⟨rfl, rfl⟩
 
 /-! ## Running the whole game -/
@@ -148,25 +148,27 @@ def alwaysTrue : rounds.Chooser :=
   fun _ hterm => ⟨bothTrue, legal_bothTrue hterm⟩
 
 theorem runFor_two :
-    rounds.runFor alwaysTrue 2 .opening = FinDist.pure (.finished true true) := by
+    rounds.runFor alwaysTrue 2 .opening = PMF.pure (.finished true true) := by
   rw [ExecutionProtocol.runFor_succ_of_not_terminal alwaysTrue 1 opening_not_terminal]
-  show (FinDist.pure (Stage.second true)).bind (rounds.runFor alwaysTrue 1) = _
-  rw [FinDist.pure_bind,
+  show (PMF.pure (Stage.second true)).bind (rounds.runFor alwaysTrue 1) = _
+  rw [PMF.pure_bind,
     ExecutionProtocol.runFor_succ_of_not_terminal alwaysTrue 0 (second_not_terminal true)]
-  show (FinDist.pure (Stage.finished true true)).bind (rounds.runFor alwaysTrue 0) = _
-  rw [FinDist.pure_bind]
+  show (PMF.pure (Stage.finished true true)).bind (rounds.runFor alwaysTrue 0) = _
+  rw [PMF.pure_bind]
   rfl
 
 /-- Two rounds is exactly the horizon, so the fuelled runner is a total
 evaluator on this game. -/
 theorem stopsWithin_two : rounds.StopsWithin alwaysTrue 2 .opening := by
   intro reached hreached
-  rw [runFor_two, FinDist.mem_support_pure] at hreached
-  subst hreached
+  rw [runFor_two] at hreached
+  have hvalue : reached = Stage.finished true true := by
+    simpa [PMF.pure_apply] using hreached
+  subst reached
   simp
 
 theorem runFor_stable {fuel : ℕ} (hfuel : 2 ≤ fuel) :
-    rounds.runFor alwaysTrue fuel .opening = FinDist.pure (.finished true true) := by
+    rounds.runFor alwaysTrue fuel .opening = PMF.pure (.finished true true) := by
   rw [ExecutionProtocol.runFor_eq_of_stopsWithin_le stopsWithin_two hfuel, runFor_two]
 
 /-! ## Workarounds

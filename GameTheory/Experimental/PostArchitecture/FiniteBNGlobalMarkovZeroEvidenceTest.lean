@@ -9,6 +9,7 @@ neither evidence positivity nor a conditional-law convention at zero mass.
 -/
 
 import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovSoundness
+import GameTheory.Math.Probability.Product
 
 noncomputable section
 
@@ -63,11 +64,11 @@ def diagram : Structure Unit ChainNode where
 
 def allFalse : Assignment diagram := fun _ => false
 
-def law : FinDist (Assignment diagram) :=
-  FinDist.pi fun _ => FinDist.pure false
+def law : PMF (Assignment diagram) :=
+  independentProduct fun _ => PMF.pure false
 
 def kernels : LocalKernels diagram.Value parents :=
-  fun _ _ => FinDist.pure false
+  fun _ _ => PMF.pure false
 
 def first : Finset ChainNode := {.left}
 
@@ -80,8 +81,8 @@ def impossibleEvidenceConfiguration : Config diagram evidence :=
 
 theorem factorizes : Factorizes diagram.Value law parents kernels := by
   intro assignment
-  rw [law, FinDist.prob_pi]
-  simp [factorProduct, localFactor, kernels]
+  simp [law, independentProduct_apply, ENNReal.toReal_prod,
+    factorProduct, localFactor, kernels]
 
 theorem separates : Separates parents first second evidence := by
   intro source hsource target htarget
@@ -115,19 +116,20 @@ theorem separates : Separates parents first second evidence := by
   · cases equality
   · exact isolated next firstStep
 
-theorem law_eq_pure : law = FinDist.pure allFalse := by
-  exact FinDist.pi_pure allFalse
+theorem law_eq_pure : law = PMF.pure allFalse := by
+  exact independentProduct_pure allFalse
 
 /-- The evidence value used below is outside the support of the chain law. -/
 theorem impossibleEvidenceCylinder_mass_zero :
-    law.probOf (cylinder evidence impossibleEvidenceConfiguration) = 0 := by
+    (law.toOuterMeasure
+      (cylinder evidence impossibleEvidenceConfiguration)).toReal = 0 := by
   classical
   have hnot : allFalse ∉ cylinder evidence impossibleEvidenceConfiguration := by
     intro hevidence
     have hvalue := congrFun hevidence
       (⟨.middle, by simp [evidence]⟩ : {node // node ∈ evidence})
     simp [Assignment.restrict, allFalse, impossibleEvidenceConfiguration] at hvalue
-  rw [law_eq_pure, ← FinDist.expect_indicator_eq_probOf, FinDist.expect_pure]
+  rw [law_eq_pure, PMF.toOuterMeasure_pure_apply]
   simp [hnot]
 
 /-- Global Markov soundness applies to the deterministic chain without any
@@ -144,16 +146,17 @@ evidence.  Its evidence factor is explicitly known to be zero. -/
 theorem cross_product_at_impossible_evidence
     (firstConfiguration : Config diagram first)
     (secondConfiguration : Config diagram second) :
-    law.probOf
+    (law.toOuterMeasure
           (tripleCylinder first second evidence firstConfiguration
-            secondConfiguration impossibleEvidenceConfiguration) *
-        law.probOf (cylinder evidence impossibleEvidenceConfiguration) =
-      law.probOf
+            secondConfiguration impossibleEvidenceConfiguration)).toReal *
+        (law.toOuterMeasure
+          (cylinder evidence impossibleEvidenceConfiguration)).toReal =
+      (law.toOuterMeasure
           (pairCylinder first evidence firstConfiguration
-            impossibleEvidenceConfiguration) *
-        law.probOf
+            impossibleEvidenceConfiguration)).toReal *
+        (law.toOuterMeasure
           (pairCylinder second evidence secondConfiguration
-            impossibleEvidenceConfiguration) := by
+            impossibleEvidenceConfiguration)).toReal := by
   exact conditionallyIndependent firstConfiguration secondConfiguration
     impossibleEvidenceConfiguration
 

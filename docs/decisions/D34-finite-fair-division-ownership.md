@@ -45,13 +45,7 @@ EF1 theorems specialize to the same valuation profile.
 | Measure | EXP-067 result |
 |---|---|
 | canonical owner | `Mechanism.Combinatorial.Allocation`; no stored capability after `e1e5052` |
-| promoted leaves / fixture | 173 / 713 / 71 nonblank lines for Basic, RoundRobin, and the hostile test |
 | public recursive surface | none; raw bundle maps and the update helper remain private |
-| source hazards | zero raw updates, transports, `Fintype.ofFinite`, placeholders, or custom axioms |
-| boundary probes | 4 positive inputs reached; probability, Nash, Protocol, and measurable theory all rejected |
-| axiom profile | `propext`, `Classical.choice`, and `Quot.sound` only |
-| exact recovery | 67/91 M-FAIR declarations reviewed; RoundRobin 27/27 complete |
-| release gate | focused root/test build, 3,504-job full build, Phase 2 and exact coverage `VERIFIED=1` |
 
 ## Kill condition
 
@@ -60,10 +54,6 @@ allocation type, stored finiteness/decidability, raw function updates, a game
 wrapper, or measurable probability; if EF1 can only be proved for two agents;
 or if the fixture cannot distinguish actual envy from the one-good-removal
 guarantee.
-
-No kill condition fired.  The source audit did catch nineteen explicit
-equality transports and one `change` inherited from the pinned proof; all were
-replaced with named equality reasoning before promotion.
 
 ## Consequences for the public API
 
@@ -74,6 +64,6 @@ certificate, and fairness predicates remain independent of games and
 probability.  The public round-robin result returns this allocation directly;
 the predecessor's raw recursive `roundRobinAux` is retired.
 
-Two-agent EFX, envy-cycle elimination, and maximin-share results are the next
-finite consumers.  Divisible cake cutting remains M-CAKE/D11 work and cannot
-weaken or delay the finite branch.
+Two-agent EFX, envy-cycle elimination, and maximin-share results can use the
+same finite allocation semantics. Divisible cake cutting requires the separate
+measure boundary in D11.

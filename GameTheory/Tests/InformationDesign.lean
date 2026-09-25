@@ -9,6 +9,7 @@ renaming deterministic states.
 -/
 
 import GameTheory.Mechanism.InformationDesign
+import GameTheory.Math.Probability.Uniform
 
 noncomputable section
 
@@ -16,12 +17,10 @@ namespace GameTheory.Tests.InformationDesign
 
 open GameTheory.Math.Probability
 
-def fairBool : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure false) (FinDist.pure true)
+def fairBool : PMF Bool := PMF.uniformOfFintype Bool
 
 def partialSignal : SignalStructure Bool Bool where
-  kernel state := if state then FinDist.pure true else fairBool
+  kernel state := if state then PMF.pure true else fairBool
 
 def partialProblem : PersuasionProblem Bool Bool Bool where
   prior := fairBool
@@ -37,55 +36,74 @@ def fullProblem : PersuasionProblem Bool Bool Bool where
 
 def followMessage : partialProblem.DecisionRule := id
 
+/-- Finite prior support integrates every receiver-weighted fixture payoff. -/
+theorem receiverGuard (message action : Bool) :
+    PayoffIntegrable partialProblem.prior
+      (partialProblem.receiverWeighted message action) :=
+  payoffIntegrable_of_finite _ _
+
+/-- Finite joint support integrates every sender payoff for a decision rule. -/
+theorem senderGuard (P : PersuasionProblem Bool Bool Bool)
+    (rule : P.DecisionRule) :
+    PayoffIntegrable (P.signal.joint P.prior)
+      (fun outcome => P.senderUtility outcome.1 (rule outcome.2)) :=
+  payoffIntegrable_of_finite _ _
+
 theorem partialSignal_is_stochastic :
-    (partialSignal.kernel false).prob false = 1 / 2 ∧
-      (partialSignal.kernel false).prob true = 1 / 2 := by
-  norm_num [partialSignal, fairBool, FinDist.prob_mix,
-    FinDist.prob_pure_eq_ite]
+    (partialSignal.kernel false) false = 1 / 2 ∧
+      (partialSignal.kernel false) true = 1 / 2 := by
+  norm_num [partialSignal, fairBool, PMF.uniformOfFintype_apply]
 
 theorem partialJoint_has_prior_marginal :
     (partialSignal.joint fairBool).map Prod.fst = fairBool :=
   partialSignal.map_fst_joint fairBool
 
 theorem partialJoint_false_messages_are_nontrivial :
-    (partialSignal.joint fairBool).prob (false, false) = 1 / 4 ∧
-      (partialSignal.joint fairBool).prob (false, true) = 1 / 4 := by
+    (partialSignal.joint fairBool) (false, false) = 1 / 4 ∧
+      (partialSignal.joint fairBool) (false, true) = 1 / 4 := by
   constructor <;>
-    rw [SignalStructure.prob_joint] <;>
-    norm_num [partialSignal, fairBool, FinDist.prob_mix,
-      FinDist.prob_pure_eq_ite]
+    rw [SignalStructure.joint_apply] <;>
+    norm_num [partialSignal, fairBool, PMF.uniformOfFintype_apply,
+      ENNReal.ofReal_div_of_pos (show (0 : ℝ) < 2 by norm_num)] <;>
+    rw [← ENNReal.mul_inv (a := 2) (b := 2)
+      (Or.inl (by norm_num)) (Or.inl (by norm_num))] <;> norm_num
 
 theorem receiver_scores_are_strict :
-    partialProblem.receiverScore false false = 1 / 4 ∧
-      partialProblem.receiverScore false true = 0 ∧
-      partialProblem.receiverScore true false = 1 / 4 ∧
-      partialProblem.receiverScore true true = 1 / 2 := by
-  norm_num [PersuasionProblem.receiverScore, partialProblem, partialSignal,
-    fairBool, FinDist.expect_mix, FinDist.prob_mix,
-    FinDist.prob_pure_eq_ite]
+    partialProblem.receiverScore false false (receiverGuard false false) = 1 / 4 ∧
+      partialProblem.receiverScore false true (receiverGuard false true) = 0 ∧
+      partialProblem.receiverScore true false (receiverGuard true false) = 1 / 4 ∧
+      partialProblem.receiverScore true true (receiverGuard true true) = 1 / 2 := by
+  norm_num [PersuasionProblem.receiverScore, expect_eq_sum,
+    PersuasionProblem.receiverWeighted, partialProblem, partialSignal,
+    fairBool, Fintype.sum_bool, PMF.uniformOfFintype_apply,
+    PMF.pure_apply]
 
 theorem followMessage_isPersuasive :
     partialProblem.IsPersuasive followMessage := by
-  intro message alternative
+  intro message
+  refine ⟨receiverGuard message, ?_⟩
+  intro alternative
+  rcases receiver_scores_are_strict with ⟨hff, hft, htf, htt⟩
   cases message <;> cases alternative <;>
-    norm_num [PersuasionProblem.IsReceiverOptimal,
-      PersuasionProblem.receiverScore, followMessage, partialProblem,
-      partialSignal, fairBool, FinDist.expect_mix, FinDist.prob_mix,
-      FinDist.prob_pure_eq_ite]
+    norm_num [followMessage, hff, hft, htf, htt]
 
 theorem partial_senderEU :
-    partialProblem.senderEU followMessage = 3 / 4 := by
-  rw [PersuasionProblem.senderEU_eq_expect]
+    partialProblem.senderEU followMessage
+      (senderGuard partialProblem followMessage) = 3 / 4 := by
+  rw [PersuasionProblem.senderEU_eq_sum]
   norm_num [followMessage, partialProblem, partialSignal, fairBool,
-    FinDist.expect_mix]
+    Fintype.sum_bool, PMF.uniformOfFintype_apply, PMF.pure_apply]
 
 theorem fullInformation_senderEU :
-    fullProblem.senderEU id = 1 / 2 := by
-  rw [PersuasionProblem.senderEU_eq_expect]
-  norm_num [fullProblem, fairBool, FinDist.expect_mix]
+    fullProblem.senderEU id (senderGuard fullProblem id) = 1 / 2 := by
+  rw [PersuasionProblem.senderEU_eq_sum]
+  norm_num [fullProblem, fairBool, Fintype.sum_bool,
+    PMF.uniformOfFintype_apply, PMF.pure_apply]
 
 theorem partial_revelation_strictly_improves_sender_value :
-    fullProblem.senderEU id < partialProblem.senderEU followMessage := by
+    fullProblem.senderEU id (senderGuard fullProblem id) <
+      partialProblem.senderEU followMessage
+        (senderGuard partialProblem followMessage) := by
   rw [fullInformation_senderEU, partial_senderEU]
   norm_num
 
@@ -96,5 +114,6 @@ theorem optimal_persuasive_rule_exists :
       partialProblem.IsOptimalPersuasive rule :=
   PersuasionProblem.exists_optimalPersuasive partialProblem
     ⟨followMessage, followMessage_isPersuasive⟩
+    (fun rule _ => senderGuard partialProblem rule)
 
 end GameTheory.Tests.InformationDesign

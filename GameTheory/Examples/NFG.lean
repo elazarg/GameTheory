@@ -38,6 +38,7 @@ theorem natChooseZero_isNash :
       natChooseZero := by
   rw [isNash_iff]
   intro who replacement
+  simp only [euPreference_pure_iff]
   fin_cases who <;>
     by_cases hreplacement : replacement = 0 <;>
       simp [natChoose, natChooseUtility, natChooseZero, Profile.update,
@@ -48,6 +49,7 @@ countably infinite. -/
 theorem natChooseZero_isDominant_zero :
     IsDominant natChoose.toGameForm (euPreference natChooseUtility) 0 0 := by
   intro alternative profile
+  simp only [euPreference_pure_iff]
   by_cases hopponent : profile 1 = 0
   · by_cases halternative : alternative = 0
     · simp [natChoose, natChooseUtility, Profile.update,

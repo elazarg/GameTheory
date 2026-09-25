@@ -94,7 +94,7 @@ def rootDeviation : (key : Bool) →
 incumbent environment at the first site and the first-committed environment at
 the off-path second site. -/
 def failedStrategyOf (key : Bool)
-    (_law : FinDist (information.Choice () (rootSite key).1)) (_current : Unit) :
+    (_law : PMF (information.Choice () (rootSite key).1)) (_current : Unit) :
     (player : Unit) → information.BehavioralPolicy player := by
   cases key
   · exact incumbentBehavioralStrategy
@@ -107,12 +107,22 @@ def localFuel : Bool → ℕ
   | false => 2
   | true => 1
 
+theorem rootGuard
+    (strategy : (who : Unit) → information.BehavioralPolicy who)
+    (key : Bool) :
+    information.LocalCounterfactualRegretsIntegrable strategy ()
+      (rootSite key) terminalPayoff (localFuel key) := by
+  constructor
+  · intro choice
+    exact counterfactualIntegrable strategy (rootSite key)
+      ((strategy ()).commit (rootSite key).1 choice) (localFuel key)
+  · exact counterfactualIntegrable strategy (rootSite key)
+      (strategy ()) (localFuel key)
+
 /-- The scalar sequence is the actual canonical behavioral root gain, not a
 fixture-local proxy. -/
 def failedRootGain (_round : ℕ) : ℝ :=
-  (information.runBehavioral finalCommittedStrategy 3).expect terminalPayoff -
-    (information.runBehavioral incumbentBehavioralStrategy 3).expect
-      terminalPayoff
+  rootValue finalCommittedStrategy - rootValue incumbentBehavioralStrategy
 
 theorem failedRootGain_eq_one (round : ℕ) : failedRootGain round = 1 :=
   wholeDeviation_rootGain_eq_one
@@ -127,25 +137,31 @@ theorem failedRootGain_decomposition (round : ℕ) :
             (regretMatch
               (counterfactualRegretMatchAverage information () (rootSite key)
                 (failedStrategyOf key) (failedPayoffOf key) (localFuel key)
+                (fun _ _ => rootGuard _ key)
                 (fun _ => ()) round)) ())
-          () (rootSite key) terminalPayoff (localFuel key)).ofLp
+          () (rootSite key) terminalPayoff (localFuel key)
+          (rootGuard _ key)).ofLp
             (rootDeviation key) := by
   rw [failedRootGain_eq_one]
   rw [Fintype.sum_bool]
   simp only [rootSite, failedStrategyOf, localFuel, rootDeviation, one_mul]
   rw [show
       (localCounterfactualRegretVector information
-        incumbentBehavioralStrategy () firstSite terminalPayoff 2).ofLp
+        incumbentBehavioralStrategy () firstSite terminalPayoff 2
+        (rootGuard _ false)).ofLp
           (firstChoice true) =
-        information.counterfactualActionRegret incumbentBehavioralStrategy ()
-          firstSite terminalPayoff 2 (firstChoice true) by rfl,
+        guardedActionRegret incumbentBehavioralStrategy firstSite 2
+          (firstChoice true) by rfl,
     show
       (localCounterfactualRegretVector information
-        firstCommittedStrategy () (secondSite true) terminalPayoff 1).ofLp
+        firstCommittedStrategy () (secondSite true) terminalPayoff 1
+        (rootGuard _ true)).ofLp
           (secondChoice true true) =
-        information.counterfactualActionRegret firstCommittedStrategy ()
-          (secondSite true) terminalPayoff 1 (secondChoice true true) by rfl,
-    first_counterfactualActionRegret,
+        guardedActionRegret firstCommittedStrategy (secondSite true) 1
+          (secondChoice true true) by rfl,
+    show guardedActionRegret incumbentBehavioralStrategy firstSite 2
+      (firstChoice true) = 0 by
+      simpa only [guardedActionRegret] using first_counterfactualActionRegret,
     firstCommitted_second_counterfactualActionRegret]
   norm_num
 
@@ -156,12 +172,14 @@ theorem failedRootGain_le_localDistances :
       ∑ key : Bool, Metric.infDist
         (counterfactualRegretMatchAverage information () (rootSite key)
           (failedStrategyOf key) (failedPayoffOf key) (localFuel key)
+          (fun _ _ => rootGuard _ key)
           (fun _ => ()) 1)
         nonposOrthant := by
   simpa only [Nat.cast_one] using
     counterfactualRegretMatches_positiveRootGain_le information
       (fun _key => Unit) () rootSite failedStrategyOf failedPayoffOf localFuel
-      (fun _key _round => ()) failedRootGain (fun _ => 1)
+      (fun _key _round => ()) (fun key _ _ => rootGuard _ key)
+      failedRootGain (fun _ => 1)
       (fun _ => by constructor <;> norm_num) rootDeviation
       failedRootGain_decomposition 1 (by norm_num)
 
@@ -177,30 +195,30 @@ theorem failedRootGain_positiveAverage_eq_one (t : ℕ) (ht : 0 < t) :
 
 /-! ## Simultaneous two-site regret matching -/
 
-def firstBasePolicy (secondLaw : FinDist SecondTrueAction) :
+def firstBasePolicy (secondLaw : PMF SecondTrueAction) :
     information.BehavioralPolicy () :=
   incumbentBehavioralPolicy.withLaw (secondSite true).1 secondLaw
 
-def firstBaseStrategy (secondLaw : FinDist SecondTrueAction)
+def firstBaseStrategy (secondLaw : PMF SecondTrueAction)
     (_player : Unit) : information.BehavioralPolicy () :=
   firstBasePolicy secondLaw
 
-def secondBasePolicy (firstLaw : FinDist FirstAction) :
+def secondBasePolicy (firstLaw : PMF FirstAction) :
     information.BehavioralPolicy () :=
   incumbentBehavioralPolicy.withLaw firstSite.1 firstLaw
 
-def secondBaseStrategy (firstLaw : FinDist FirstAction)
+def secondBaseStrategy (firstLaw : PMF FirstAction)
     (_player : Unit) : information.BehavioralPolicy () :=
   secondBasePolicy firstLaw
 
 def LocalEnvironment : Bool → Type
-  | false => FinDist SecondTrueAction
-  | true => FinDist FirstAction
+  | false => PMF SecondTrueAction
+  | true => PMF FirstAction
 
 /-- Each local D46 process receives the other site's current law as its
 environment. -/
 def cfrStrategyOf : (key : Bool) →
-    FinDist (information.Choice () (rootSite key).1) →
+    PMF (information.Choice () (rootSite key).1) →
     LocalEnvironment key →
     (player : Unit) → information.BehavioralPolicy player
   | false, law, current =>
@@ -210,14 +228,14 @@ def cfrStrategyOf : (key : Bool) →
       strategyWithLocalLaw information (secondBaseStrategy current) ()
         (secondSite true) law
 
-def jointPolicy (firstLaw : FinDist FirstAction)
-    (secondLaw : FinDist SecondTrueAction) :
+def jointPolicy (firstLaw : PMF FirstAction)
+    (secondLaw : PMF SecondTrueAction) :
     information.BehavioralPolicy () :=
   (incumbentBehavioralPolicy.withLaw firstSite.1 firstLaw).withLaw
     (secondSite true).1 secondLaw
 
-def jointStrategy (firstLaw : FinDist FirstAction)
-    (secondLaw : FinDist SecondTrueAction) (_player : Unit) :
+def jointStrategy (firstLaw : PMF FirstAction)
+    (secondLaw : PMF SecondTrueAction) (_player : Unit) :
     information.BehavioralPolicy () :=
   jointPolicy firstLaw secondLaw
 
@@ -225,7 +243,7 @@ theorem firstSite_ne_secondTrue : firstSite.1 ≠ (secondSite true).1 := by
   simp [firstKnowledge, secondKnowledge]
 
 theorem cfrStrategyOf_false_eq_joint
-    (firstLaw : FinDist FirstAction) (secondLaw : FinDist SecondTrueAction) :
+    (firstLaw : PMF FirstAction) (secondLaw : PMF SecondTrueAction) :
     cfrStrategyOf false firstLaw secondLaw =
       jointStrategy firstLaw secondLaw := by
   funext player info
@@ -252,7 +270,7 @@ theorem cfrStrategyOf_false_eq_joint
         BehavioralPolicy.withLaw_of_ne (M := information) _ _ _ hfirst]
 
 theorem cfrStrategyOf_true_eq_joint
-    (firstLaw : FinDist FirstAction) (secondLaw : FinDist SecondTrueAction) :
+    (firstLaw : PMF FirstAction) (secondLaw : PMF SecondTrueAction) :
     cfrStrategyOf true secondLaw firstLaw =
       jointStrategy firstLaw secondLaw := by
   funext player
@@ -273,12 +291,12 @@ def strategyOfState (state : TwoSiteCFRState) :
 def firstInstantaneous (state : TwoSiteCFRState) :
     EuclideanSpace ℝ FirstAction :=
   localCounterfactualRegretVector information (strategyOfState state) ()
-    firstSite terminalPayoff 2
+    firstSite terminalPayoff 2 (rootGuard _ false)
 
 def secondInstantaneous (state : TwoSiteCFRState) :
     EuclideanSpace ℝ SecondTrueAction :=
   localCounterfactualRegretVector information (strategyOfState state) ()
-    (secondSite true) terminalPayoff 1
+    (secondSite true) terminalPayoff 1 (rootGuard _ true)
 
 /-- Simultaneous local regret matching, expressed as the same Cesaro recurrence
 used by `avgVec` at both sites. -/
@@ -302,10 +320,10 @@ def cfrPayoffOf (_key : Bool) (_current : LocalEnvironment _key) :
 averages; neither local convergence is assumed. -/
 theorem cfrAverages_eq_state (round : ℕ) :
     counterfactualRegretMatchAverage information () firstSite
-        (cfrStrategyOf false) (cfrPayoffOf false) 2
+        (cfrStrategyOf false) (cfrPayoffOf false) 2 (fun _ _ => rootGuard _ false)
         (cfrEnvironment false) round = (twoSiteCFRState round).first ∧
       counterfactualRegretMatchAverage information () (secondSite true)
-        (cfrStrategyOf true) (cfrPayoffOf true) 1
+        (cfrStrategyOf true) (cfrPayoffOf true) 1 (fun _ _ => rootGuard _ true)
         (cfrEnvironment true) round = (twoSiteCFRState round).second := by
   induction round with
   | zero => simp [counterfactualRegretMatchAverage, avgVec, twoSiteCFRState]
@@ -314,26 +332,27 @@ theorem cfrAverages_eq_state (round : ℕ) :
       · show
           ((round : ℝ) / ((round : ℝ) + 1)) •
               counterfactualRegretMatchAverage information () firstSite
-                (cfrStrategyOf false) (cfrPayoffOf false) 2
+                (cfrStrategyOf false) (cfrPayoffOf false) 2 (fun _ _ => rootGuard _ false)
                 (cfrEnvironment false) round +
             (1 / ((round : ℝ) + 1)) •
               localCounterfactualRegretVector information
                 (cfrStrategyOf false
                   (regretMatch
                     (counterfactualRegretMatchAverage information () firstSite
-                      (cfrStrategyOf false) (cfrPayoffOf false) 2
+                      (cfrStrategyOf false) (cfrPayoffOf false) 2 (fun _ _ => rootGuard _ false)
                       (cfrEnvironment false) round))
                   (cfrEnvironment false round))
-                () firstSite terminalPayoff 2 =
+                () firstSite terminalPayoff 2 (rootGuard _ false) =
             (twoSiteCFRState (round + 1)).first
         rw [ih.1]
         simp only [cfrEnvironment]
-        rw [cfrStrategyOf_false_eq_joint]
+        simp only [cfrStrategyOf_false_eq_joint]
         rfl
       · show
           ((round : ℝ) / ((round : ℝ) + 1)) •
               counterfactualRegretMatchAverage information ()
                 (secondSite true) (cfrStrategyOf true) (cfrPayoffOf true) 1
+                (fun _ _ => rootGuard _ true)
                 (cfrEnvironment true) round +
             (1 / ((round : ℝ) + 1)) •
               localCounterfactualRegretVector information
@@ -341,26 +360,29 @@ theorem cfrAverages_eq_state (round : ℕ) :
                   (regretMatch
                     (counterfactualRegretMatchAverage information ()
                       (secondSite true) (cfrStrategyOf true)
-                      (cfrPayoffOf true) 1 (cfrEnvironment true) round))
+                      (cfrPayoffOf true) 1 (fun _ _ => rootGuard _ true)
+                      (cfrEnvironment true) round))
                   (cfrEnvironment true round))
-                () (secondSite true) terminalPayoff 1 =
+                () (secondSite true) terminalPayoff 1 (rootGuard _ true) =
             (twoSiteCFRState (round + 1)).second
         rw [ih.2]
         simp only [cfrEnvironment]
-        rw [cfrStrategyOf_true_eq_joint]
+        simp only [cfrStrategyOf_true_eq_joint]
         rfl
 
 /-- The ordinary first-site utility with the second-site law as environment. -/
 def firstCFRUtility (choice : FirstAction)
-    (secondLaw : FinDist SecondTrueAction) : ℝ :=
+    (secondLaw : PMF SecondTrueAction) : ℝ :=
   information.counterfactualActionUtility
     (firstBaseStrategy secondLaw) () firstSite terminalPayoff 2 choice
+    ((rootGuard _ false).1 choice)
 
 /-- The ordinary second-site utility with the first-site law as environment. -/
 def secondCFRUtility (choice : SecondTrueAction)
-    (firstLaw : FinDist FirstAction) : ℝ :=
+    (firstLaw : PMF FirstAction) : ℝ :=
   information.counterfactualActionUtility
     (secondBaseStrategy firstLaw) () (secondSite true) terminalPayoff 1 choice
+    ((rootGuard _ true).1 choice)
 
 theorem terminalPayoff_mem_Icc (history : twoStage.History) :
     terminalPayoff history ∈ Set.Icc (0 : ℝ) 1 := by
@@ -378,22 +400,22 @@ theorem behavioralContinuationValue_mem_Icc
     (alternative : information.BehavioralPolicy ()) (fuel : ℕ)
     (history : twoStage.History) :
     information.behavioralContinuationValue strategy () alternative
-        terminalPayoff fuel history ∈ Set.Icc (0 : ℝ) 1 := by
+        terminalPayoff fuel history (terminalPayoff_integrable _) ∈
+      Set.Icc (0 : ℝ) 1 := by
   unfold InformationModel.behavioralContinuationValue
   constructor
-  · have h := FinDist.expect_mono
-      (μ := information.runBehavioralFrom
-        (Profile.update (sig := information.behavioralSignature)
-          strategy () alternative) fuel history)
-      (u := fun _history : twoStage.History => (0 : ℝ))
-      (v := terminalPayoff)
-      (fun final _ => (terminalPayoff_mem_Icc final).1)
-    simpa using h
-  · exact FinDist.expect_le_of_forall
+  · exact expect_nonneg
       (information.runBehavioralFrom
         (Profile.update (sig := information.behavioralSignature)
           strategy () alternative) fuel history)
-      terminalPayoff 1 (fun final _ => (terminalPayoff_mem_Icc final).2)
+      terminalPayoff (terminalPayoff_integrable _)
+      (fun final _ => (terminalPayoff_mem_Icc final).1)
+  · exact expect_le_const
+      (information.runBehavioralFrom
+        (Profile.update (sig := information.behavioralSignature)
+          strategy () alternative) fuel history)
+      terminalPayoff (terminalPayoff_integrable _) 1
+      (fun final _ => (terminalPayoff_mem_Icc final).2)
 
 theorem counterfactualReach_first_any
     (strategy : (player : Unit) → information.BehavioralPolicy player)
@@ -480,80 +502,92 @@ theorem counterfactualReachMass_secondTrue
       norm_num
 
 theorem firstCFRUtility_mem_Icc (choice : FirstAction)
-    (secondLaw : FinDist SecondTrueAction) :
+    (secondLaw : PMF SecondTrueAction) :
     firstCFRUtility choice secondLaw ∈ Set.Icc (0 : ℝ) 1 := by
   exact information.counterfactualActionUtility_mem_Icc
     (firstBaseStrategy secondLaw) () firstSite terminalPayoff 2 choice
+    ((rootGuard _ false).1 choice)
     (counterfactualReachMass_first (firstBaseStrategy secondLaw))
-    (fun history => behavioralContinuationValue_mem_Icc
+    (fun history _ => behavioralContinuationValue_mem_Icc
       (firstBaseStrategy secondLaw)
       ((firstBaseStrategy secondLaw ()).commit firstSite.1 choice) 2 history.1)
 
 theorem secondCFRUtility_mem_Icc (choice : SecondTrueAction)
-    (firstLaw : FinDist FirstAction) :
+    (firstLaw : PMF FirstAction) :
     secondCFRUtility choice firstLaw ∈ Set.Icc (0 : ℝ) 1 := by
   exact information.counterfactualActionUtility_mem_Icc
     (secondBaseStrategy firstLaw) () (secondSite true) terminalPayoff 1 choice
+    ((rootGuard _ true).1 choice)
     (counterfactualReachMass_secondTrue (secondBaseStrategy firstLaw))
-    (fun history => behavioralContinuationValue_mem_Icc
+    (fun history _ => behavioralContinuationValue_mem_Icc
       (secondBaseStrategy firstLaw)
       ((secondBaseStrategy firstLaw ()).commit (secondSite true).1 choice)
       1 history.1)
 
 theorem firstCFR_regretPayoff_norm_le
-    (law : FinDist FirstAction) (current : FinDist SecondTrueAction) :
-    ‖regretPayoff firstCFRUtility law current‖ ≤
+    (law : PMF FirstAction) (current : PMF SecondTrueAction) :
+    ‖regretPayoff firstCFRUtility law current
+      (payoffIntegrable_of_finite _ _)‖ ≤
       (Fintype.card FirstAction : ℝ) := by
   simpa using regretPayoff_norm_le_card_mul_width firstCFRUtility
     (lo := 0) (hi := 1) firstCFRUtility_mem_Icc law current
 
 theorem secondCFR_regretPayoff_norm_le
-    (law : FinDist SecondTrueAction) (current : FinDist FirstAction) :
-    ‖regretPayoff secondCFRUtility law current‖ ≤
+    (law : PMF SecondTrueAction) (current : PMF FirstAction) :
+    ‖regretPayoff secondCFRUtility law current
+      (payoffIntegrable_of_finite _ _)‖ ≤
       (Fintype.card SecondTrueAction : ℝ) := by
   simpa using regretPayoff_norm_le_card_mul_width secondCFRUtility
     (lo := 0) (hi := 1) secondCFRUtility_mem_Icc law current
 
 /-- The first coupled process satisfies D46's realization equation by D47. -/
-theorem cfrRealization_first (law : FinDist FirstAction)
-    (current : FinDist SecondTrueAction) :
+theorem cfrRealization_first (law : PMF FirstAction)
+    (current : PMF SecondTrueAction) :
     localCounterfactualRegretVector information
         (strategyWithLocalLaw information (firstBaseStrategy current) ()
-          firstSite law) () firstSite terminalPayoff 2 =
-      regretPayoff firstCFRUtility law current := by
+          firstSite law) () firstSite terminalPayoff 2
+          (rootGuard _ false) =
+      regretPayoff firstCFRUtility law current
+        (payoffIntegrable_of_finite _ _) := by
   calc
     _ = regretPayoff
-        (fun choice (_environment : FinDist SecondTrueAction) =>
+        (fun choice (_environment : PMF SecondTrueAction) =>
           information.counterfactualActionUtility
-            (firstBaseStrategy current) () firstSite terminalPayoff 2 choice)
-        law current :=
+            (firstBaseStrategy current) () firstSite terminalPayoff 2 choice
+            ((rootGuard _ false).1 choice))
+        law current (payoffIntegrable_of_finite _ _) :=
       localCounterfactualRegretVector_strategyWithLocalLaw information
       information_actsOnce (firstBaseStrategy current) () firstSite
         firstSite_allNonterminal law terminalPayoff 1 current
-    _ = regretPayoff firstCFRUtility law current := by
+        (rootGuard _ false) (rootGuard _ false).1
+    _ = regretPayoff firstCFRUtility law current
+          (payoffIntegrable_of_finite _ _) := by
       ext choice
       rfl
 
 /-- The off-path coupled process independently satisfies the same D46
 realization contract. -/
-theorem cfrRealization_second (law : FinDist SecondTrueAction)
-    (current : FinDist FirstAction) :
+theorem cfrRealization_second (law : PMF SecondTrueAction)
+    (current : PMF FirstAction) :
     localCounterfactualRegretVector information
         (strategyWithLocalLaw information (secondBaseStrategy current) ()
           (secondSite true) law) () (secondSite true)
-          terminalPayoff 1 =
-      regretPayoff secondCFRUtility law current := by
+          terminalPayoff 1 (rootGuard _ true) =
+      regretPayoff secondCFRUtility law current
+        (payoffIntegrable_of_finite _ _) := by
   calc
     _ = regretPayoff
-        (fun choice (_environment : FinDist FirstAction) =>
+        (fun choice (_environment : PMF FirstAction) =>
           information.counterfactualActionUtility
             (secondBaseStrategy current) () (secondSite true)
-              terminalPayoff 1 choice)
-        law current :=
+              terminalPayoff 1 choice ((rootGuard _ true).1 choice))
+        law current (payoffIntegrable_of_finite _ _) :=
       localCounterfactualRegretVector_strategyWithLocalLaw information
       information_actsOnce (secondBaseStrategy current) () (secondSite true)
         (secondSite_allNonterminal true) law terminalPayoff 0 current
-    _ = regretPayoff secondCFRUtility law current := by
+        (rootGuard _ true) (rootGuard _ true).1
+    _ = regretPayoff secondCFRUtility law current
+          (payoffIntegrable_of_finite _ _) := by
       ext choice
       rfl
 
@@ -576,11 +610,8 @@ def deviatedStrategyOfState (state : TwoSiteCFRState)
 
 /-- The successful process is measured by the canonical root evaluator. -/
 def cfrRootGain (round : ℕ) : ℝ :=
-  (information.runBehavioral
-      (deviatedStrategyOfState (twoSiteCFRState round)) 3).expect
-        terminalPayoff -
-    (information.runBehavioral (strategyOfState (twoSiteCFRState round)) 3).expect
-      terminalPayoff
+  rootValue (deviatedStrategyOfState (twoSiteCFRState round)) -
+    rootValue (strategyOfState (twoSiteCFRState round))
 
 /-! ## Every payoff-relevant pure plan -/
 
@@ -641,9 +672,8 @@ theorem planDeviatedPolicyOfState_eq_fixed
 
 /-- Canonical root gain against a fixed payoff-relevant pure plan. -/
 def planRootGain (plan : PayoffPlan) (round : ℕ) : ℝ :=
-  (information.runBehavioral (fixedPlanStrategy plan) 3).expect terminalPayoff -
-    (information.runBehavioral (strategyOfState (twoSiteCFRState round)) 3).expect
-      terminalPayoff
+  rootValue (fixedPlanStrategy plan) -
+    rootValue (strategyOfState (twoSiteCFRState round))
 
 /-- Alternative own reach is one at the first site.  It reaches the
 `second-after-true` site exactly when the plan's first action is `true`. -/
@@ -673,17 +703,16 @@ theorem ownReach_secondTrue_after_planFirstCommit
       [(firstKnowledge, true)] by rfl,
     InformationModel.ownPlayReachProbability]
   have hpolicy : planFirstCommittedPolicyOfState state plan firstKnowledge =
-      FinDist.pure (firstChoice plan.1) := by
+      PMF.pure (firstChoice plan.1) := by
     unfold planFirstCommittedPolicyOfState
     rw [BehavioralPolicy.commit_self (M := information)]
   rw [show planFirstCommittedStrategyOfState state plan () firstKnowledge =
-      FinDist.pure (firstChoice plan.1) from hpolicy]
+      PMF.pure (firstChoice plan.1) from hpolicy]
   cases plan.1
-  · simpa [FinDist.map_pure, firstChoice,
-      InformationModel.ownPlayReachProbability] using
-        (FinDist.prob_pure_of_ne (a := some true) (b := some false)
-          (by decide))
-  · simp [firstChoice, InformationModel.ownPlayReachProbability]
+  · simp [PMF.pure_map, firstChoice,
+      InformationModel.ownPlayReachProbability, PMF.pure_apply]
+  · simp [PMF.pure_map, firstChoice,
+      InformationModel.ownPlayReachProbability, PMF.pure_apply]
 
 theorem commonOwnReach_secondTrue_after_planFirstCommit
     (state : TwoSiteCFRState) (plan : PayoffPlan)
@@ -721,12 +750,13 @@ theorem ownReach_secondTrue_after_firstCommit
       [(firstKnowledge, true)] by rfl,
     InformationModel.ownPlayReachProbability]
   have hpolicy : firstCommittedPolicyOfState state firstKnowledge =
-      FinDist.pure (firstChoice true) := by
+      PMF.pure (firstChoice true) := by
     unfold firstCommittedPolicyOfState
     rw [BehavioralPolicy.commit_self (M := information)]
   rw [show firstCommittedStrategyOfState state () firstKnowledge =
-      FinDist.pure (firstChoice true) from hpolicy]
-  simp [firstChoice, InformationModel.ownPlayReachProbability]
+      PMF.pure (firstChoice true) from hpolicy]
+  simp [firstChoice, InformationModel.ownPlayReachProbability,
+    PMF.pure_map]
 
 theorem commonOwnReach_secondTrue_after_firstCommit
     (state : TwoSiteCFRState)
@@ -738,18 +768,20 @@ theorem commonOwnReach_secondTrue_after_firstCommit
 
 theorem planFirstStep_rootGain
     (state : TwoSiteCFRState) (plan : PayoffPlan) :
-    (information.runBehavioral
-          (planFirstCommittedStrategyOfState state plan) 3).expect
-          terminalPayoff -
-        (information.runBehavioral (strategyOfState state) 3).expect
-          terminalPayoff =
-      information.counterfactualActionRegret (strategyOfState state) ()
-        firstSite terminalPayoff 2 (firstChoice plan.1) := by
+    rootValue (planFirstCommittedStrategyOfState state plan) -
+        rootValue (strategyOfState state) =
+      guardedActionRegret (strategyOfState state) firstSite 2
+        (firstChoice plan.1) := by
   have hroot := information.rootGain_eq_ownReach_mul_counterfactualRegret
     (strategyOfState state) () firstSite
       (planFirstCommittedPolicyOfState state plan) 1 2 firstSite_commonDepth
       (fun hne => BehavioralPolicy.commit_of_ne _ _ _ hne) 1
       (commonOwnReach_first_of_strategy (strategyOfState state)) terminalPayoff
+      (terminalPayoff_integrable _) (terminalPayoff_integrable _)
+      (counterfactualIntegrable (strategyOfState state) firstSite
+        (planFirstCommittedPolicyOfState state plan) 2)
+      (counterfactualIntegrable (strategyOfState state) firstSite
+        (strategyOfState state ()) 2)
   have hprofile : planFirstCommittedStrategyOfState state plan =
       Profile.update (sig := information.behavioralSignature)
         (strategyOfState state) ()
@@ -759,25 +791,17 @@ theorem planFirstStep_rootGain
     rw [Profile.update_same]
     rfl
   rw [← hprofile] at hroot
-  rw [show information.counterfactualRegret (strategyOfState state) ()
-      firstSite terminalPayoff 2
-        (planFirstCommittedPolicyOfState state plan) =
-      information.counterfactualActionRegret (strategyOfState state) ()
-        firstSite terminalPayoff 2 (firstChoice plan.1) by rfl] at hroot
-  norm_num at hroot ⊢
-  exact hroot
+  simpa [rootValue, guardedActionRegret,
+    InformationModel.counterfactualActionRegret,
+    planFirstCommittedPolicyOfState] using hroot
 
 theorem planSecondStep_rootGain
     (state : TwoSiteCFRState) (plan : PayoffPlan) :
-    (information.runBehavioral
-          (planDeviatedStrategyOfState state plan) 3).expect terminalPayoff -
-        (information.runBehavioral
-          (planFirstCommittedStrategyOfState state plan) 3).expect
-            terminalPayoff =
+    rootValue (planDeviatedStrategyOfState state plan) -
+        rootValue (planFirstCommittedStrategyOfState state plan) =
       (if plan.1 then 1 else 0) *
-        information.counterfactualActionRegret
-          (planFirstCommittedStrategyOfState state plan) () (secondSite true)
-            terminalPayoff 1 (secondChoice true plan.2) := by
+        guardedActionRegret (planFirstCommittedStrategyOfState state plan)
+          (secondSite true) 1 (secondChoice true plan.2) := by
   have hroot := information.rootGain_eq_ownReach_mul_counterfactualRegret
     (planFirstCommittedStrategyOfState state plan) () (secondSite true)
       (planDeviatedPolicyOfState state plan) 2 1
@@ -786,6 +810,13 @@ theorem planSecondStep_rootGain
       (if plan.1 then 1 else 0)
       (commonOwnReach_secondTrue_after_planFirstCommit state plan)
       terminalPayoff
+      (terminalPayoff_integrable _) (terminalPayoff_integrable _)
+      (counterfactualIntegrable
+        (planFirstCommittedStrategyOfState state plan) (secondSite true)
+        (planDeviatedPolicyOfState state plan) 1)
+      (counterfactualIntegrable
+        (planFirstCommittedStrategyOfState state plan) (secondSite true)
+        (planFirstCommittedStrategyOfState state plan ()) 1)
   have hprofile : planDeviatedStrategyOfState state plan =
       Profile.update (sig := information.behavioralSignature)
         (planFirstCommittedStrategyOfState state plan) ()
@@ -795,27 +826,28 @@ theorem planSecondStep_rootGain
     rw [Profile.update_same]
     rfl
   rw [← hprofile] at hroot
-  rw [show information.counterfactualRegret
-      (planFirstCommittedStrategyOfState state plan) () (secondSite true)
-        terminalPayoff 1 (planDeviatedPolicyOfState state plan) =
-      information.counterfactualActionRegret
-        (planFirstCommittedStrategyOfState state plan) () (secondSite true)
-          terminalPayoff 1 (secondChoice true plan.2) by rfl] at hroot
-  exact hroot
+  simpa [rootValue, guardedActionRegret,
+    InformationModel.counterfactualActionRegret,
+    planDeviatedPolicyOfState,
+    show planFirstCommittedStrategyOfState state plan () =
+      planFirstCommittedPolicyOfState state plan by rfl] using hroot
 
 theorem firstStep_rootGain
     (state : TwoSiteCFRState) :
-    (information.runBehavioral (firstCommittedStrategyOfState state) 3).expect
-          terminalPayoff -
-        (information.runBehavioral (strategyOfState state) 3).expect
-          terminalPayoff =
-      information.counterfactualActionRegret (strategyOfState state) ()
-        firstSite terminalPayoff 2 (firstChoice true) := by
+    rootValue (firstCommittedStrategyOfState state) -
+        rootValue (strategyOfState state) =
+      guardedActionRegret (strategyOfState state) firstSite 2
+        (firstChoice true) := by
   have hroot := information.rootGain_eq_ownReach_mul_counterfactualRegret
     (strategyOfState state) () firstSite
       (firstCommittedPolicyOfState state) 1 2 firstSite_commonDepth
       (fun hne => BehavioralPolicy.commit_of_ne _ _ _ hne) 1
       (commonOwnReach_first_of_strategy (strategyOfState state)) terminalPayoff
+      (terminalPayoff_integrable _) (terminalPayoff_integrable _)
+      (counterfactualIntegrable (strategyOfState state) firstSite
+        (firstCommittedPolicyOfState state) 2)
+      (counterfactualIntegrable (strategyOfState state) firstSite
+        (strategyOfState state ()) 2)
   have hprofile : firstCommittedStrategyOfState state =
       Profile.update (sig := information.behavioralSignature)
         (strategyOfState state) () (firstCommittedPolicyOfState state) := by
@@ -824,27 +856,26 @@ theorem firstStep_rootGain
     rw [Profile.update_same]
     rfl
   rw [← hprofile] at hroot
-  rw [show information.counterfactualRegret (strategyOfState state) ()
-      firstSite terminalPayoff 2 (firstCommittedPolicyOfState state) =
-      information.counterfactualActionRegret (strategyOfState state) ()
-        firstSite terminalPayoff 2 (firstChoice true) by rfl] at hroot
-  norm_num at hroot ⊢
-  exact hroot
+  simpa [rootValue, guardedActionRegret,
+    InformationModel.counterfactualActionRegret,
+    firstCommittedPolicyOfState] using hroot
 
 theorem secondStep_rootGain
     (state : TwoSiteCFRState) :
-    (information.runBehavioral (deviatedStrategyOfState state) 3).expect
-          terminalPayoff -
-        (information.runBehavioral
-          (firstCommittedStrategyOfState state) 3).expect terminalPayoff =
-      information.counterfactualActionRegret
-        (firstCommittedStrategyOfState state) () (secondSite true)
-          terminalPayoff 1 (secondChoice true true) := by
+    rootValue (deviatedStrategyOfState state) -
+        rootValue (firstCommittedStrategyOfState state) =
+      guardedActionRegret (firstCommittedStrategyOfState state)
+        (secondSite true) 1 (secondChoice true true) := by
   have hroot := information.rootGain_eq_ownReach_mul_counterfactualRegret
     (firstCommittedStrategyOfState state) () (secondSite true)
       (deviatedPolicyOfState state) 2 1 (secondSite_commonDepth true)
       (fun hne => BehavioralPolicy.commit_of_ne _ _ _ hne) 1
       (commonOwnReach_secondTrue_after_firstCommit state) terminalPayoff
+      (terminalPayoff_integrable _) (terminalPayoff_integrable _)
+      (counterfactualIntegrable (firstCommittedStrategyOfState state)
+        (secondSite true) (deviatedPolicyOfState state) 1)
+      (counterfactualIntegrable (firstCommittedStrategyOfState state)
+        (secondSite true) (firstCommittedStrategyOfState state ()) 1)
   have hprofile : deviatedStrategyOfState state =
       Profile.update (sig := information.behavioralSignature)
         (firstCommittedStrategyOfState state) ()
@@ -854,44 +885,49 @@ theorem secondStep_rootGain
     rw [Profile.update_same]
     rfl
   rw [← hprofile] at hroot
-  rw [show information.counterfactualRegret
-      (firstCommittedStrategyOfState state) () (secondSite true)
-        terminalPayoff 1 (deviatedPolicyOfState state) =
-      information.counterfactualActionRegret
-        (firstCommittedStrategyOfState state) () (secondSite true)
-          terminalPayoff 1 (secondChoice true true) by rfl] at hroot
-  norm_num at hroot ⊢
-  exact hroot
+  simpa [rootValue, guardedActionRegret,
+    InformationModel.counterfactualActionRegret,
+    deviatedPolicyOfState,
+    show firstCommittedStrategyOfState state () =
+      firstCommittedPolicyOfState state by rfl] using hroot
 
 theorem secondRegret_after_firstCommit_eq
     (state : TwoSiteCFRState) :
-    information.counterfactualActionRegret
-        (firstCommittedStrategyOfState state) () (secondSite true)
-          terminalPayoff 1 (secondChoice true true) =
-      information.counterfactualActionRegret (strategyOfState state) ()
-        (secondSite true) terminalPayoff 1 (secondChoice true true) := by
-  exact information.counterfactualActionRegret_eq_of_agree_off_pastSite
+    guardedActionRegret (firstCommittedStrategyOfState state)
+        (secondSite true) 1 (secondChoice true true) =
+      guardedActionRegret (strategyOfState state)
+        (secondSite true) 1 (secondChoice true true) := by
+  simpa only [guardedActionRegret] using
+    (information.counterfactualActionRegret_eq_of_agree_off_pastSite
     (firstCommittedStrategyOfState state) (strategyOfState state) () firstSite
       1 firstSite_commonDepth
       (fun other hne => False.elim (hne (Subsingleton.elim other ())))
       (fun hinfo => BehavioralPolicy.commit_of_ne _ _ _ hinfo)
       (secondSite true) secondInformationHistory_after_firstDepth
       terminalPayoff 1 (secondChoice true true)
+      ((rootGuard _ true).1 (secondChoice true true))
+      (rootGuard _ true).2
+      ((rootGuard _ true).1 (secondChoice true true))
+      (rootGuard _ true).2)
 
 theorem planSecondRegret_after_firstCommit_eq
     (state : TwoSiteCFRState) (plan : PayoffPlan) :
-    information.counterfactualActionRegret
-        (planFirstCommittedStrategyOfState state plan) () (secondSite true)
-          terminalPayoff 1 (secondChoice true plan.2) =
-      information.counterfactualActionRegret (strategyOfState state) ()
-        (secondSite true) terminalPayoff 1 (secondChoice true plan.2) := by
-  exact information.counterfactualActionRegret_eq_of_agree_off_pastSite
+    guardedActionRegret (planFirstCommittedStrategyOfState state plan)
+        (secondSite true) 1 (secondChoice true plan.2) =
+      guardedActionRegret (strategyOfState state)
+        (secondSite true) 1 (secondChoice true plan.2) := by
+  simpa only [guardedActionRegret] using
+    (information.counterfactualActionRegret_eq_of_agree_off_pastSite
     (planFirstCommittedStrategyOfState state plan) (strategyOfState state) ()
       firstSite 1 firstSite_commonDepth
       (fun other hne => False.elim (hne (Subsingleton.elim other ())))
       (fun hinfo => BehavioralPolicy.commit_of_ne _ _ _ hinfo)
       (secondSite true) secondInformationHistory_after_firstDepth
       terminalPayoff 1 (secondChoice true plan.2)
+      ((rootGuard _ true).1 (secondChoice true plan.2))
+      (rootGuard _ true).2
+      ((rootGuard _ true).1 (secondChoice true plan.2))
+      (rootGuard _ true).2)
 
 /-- Every payoff-relevant pure plan has an exact D48 decomposition.  Plans
 starting with `false` receive zero reach at the later `true` site, so they are
@@ -903,34 +939,33 @@ theorem planRootGain_decomposition (plan : PayoffPlan) (round : ℕ) :
           (cfrStrategyOf key
             (regretMatch
               (counterfactualRegretMatchAverage information () (rootSite key)
-                (cfrStrategyOf key) (cfrPayoffOf key) (localFuel key)
+                (cfrStrategyOf key) (cfrPayoffOf key) (localFuel key) (fun _ _ => rootGuard _ key)
                 (cfrEnvironment key) round))
             (cfrEnvironment key round))
-          () (rootSite key) terminalPayoff (localFuel key)).ofLp
+          () (rootSite key) terminalPayoff (localFuel key)
+          (rootGuard _ key)).ofLp
             (planChoice plan key) := by
   have havg := cfrAverages_eq_state round
   rw [Fintype.sum_bool]
   simp only [rootSite, localFuel, planReach, planChoice, one_mul]
-  rw [havg.1, havg.2]
+  simp only [havg.1, havg.2]
   simp only [cfrEnvironment]
-  rw [cfrStrategyOf_false_eq_joint, cfrStrategyOf_true_eq_joint]
+  simp only [cfrStrategyOf_false_eq_joint,
+    cfrStrategyOf_true_eq_joint]
   show planRootGain plan round =
     (if plan.1 then 1 else 0) *
-        information.counterfactualActionRegret
-          (strategyOfState (twoSiteCFRState round)) () (secondSite true)
-            terminalPayoff 1 (secondChoice true plan.2) +
-      information.counterfactualActionRegret
-        (strategyOfState (twoSiteCFRState round)) () firstSite
-          terminalPayoff 2 (firstChoice plan.1)
+        guardedActionRegret
+          (strategyOfState (twoSiteCFRState round))
+          (secondSite true) 1 (secondChoice true plan.2) +
+      guardedActionRegret
+        (strategyOfState (twoSiteCFRState round))
+        firstSite 2 (firstChoice plan.1)
   unfold planRootGain
   unfold fixedPlanStrategy
   rw [← planDeviatedPolicyOfState_eq_fixed]
   show
-    (information.runBehavioral
-          (planDeviatedStrategyOfState (twoSiteCFRState round) plan) 3).expect
-          terminalPayoff -
-        (information.runBehavioral
-          (strategyOfState (twoSiteCFRState round)) 3).expect terminalPayoff = _
+    rootValue (planDeviatedStrategyOfState (twoSiteCFRState round) plan) -
+        rootValue (strategyOfState (twoSiteCFRState round)) = _
   rw [← planSecondRegret_after_firstCommit_eq,
     ← planSecondStep_rootGain, ← planFirstStep_rootGain]
   ring
@@ -943,12 +978,13 @@ theorem allPayoffPlans_positiveRootGain_le_localDistances
       max ((∑ round ∈ Finset.range t, planRootGain plan round) / (t : ℝ)) 0 ≤
         ∑ key : Bool, Metric.infDist
           (counterfactualRegretMatchAverage information () (rootSite key)
-            (cfrStrategyOf key) (cfrPayoffOf key) (localFuel key)
+            (cfrStrategyOf key) (cfrPayoffOf key) (localFuel key) (fun _ _ => rootGuard _ key)
             (cfrEnvironment key) t)
           nonposOrthant := by
   exact counterfactualRegretMatches_positiveRootGains_le information
     (fun key => LocalEnvironment key) () rootSite cfrStrategyOf cfrPayoffOf
-    localFuel cfrEnvironment planRootGain planReach planReach_mem_Icc planChoice
+    localFuel cfrEnvironment (fun key _ _ => rootGuard _ key)
+    planRootGain planReach planReach_mem_Icc planChoice
     (fun plan round => (planRootGain_decomposition plan round).le) t ht
 
 /-! ## Canonical strategic external regret -/
@@ -958,22 +994,50 @@ def behavioralUtilityGame : UtilityGame Unit where
   form := information.toBehavioralGameForm 3
   utility history _who := terminalPayoff history
 
+theorem behavioralUtility_integrable (who : Unit)
+    (law : PMF twoStage.History) :
+    UtilityIntegrable behavioralUtilityGame.utility who law := by
+  cases who
+  exact terminalPayoff_integrable law
+
+def guardedExternalRegret
+    (law : PMF (Profile behavioralUtilityGame.form.sig)) (who : Unit)
+    (replacement : behavioralUtilityGame.form.sig.Strategy who) : ℝ :=
+  behavioralUtilityGame.externalRegret law who replacement
+    (behavioralUtility_integrable who _)
+    (behavioralUtility_integrable who _)
+
+theorem guardedExternalRegret_pure
+    (strategy : Profile behavioralUtilityGame.form.sig)
+    (replacement : behavioralUtilityGame.form.sig.Strategy ()) :
+    guardedExternalRegret (PMF.pure strategy) () replacement =
+      rootValue (Profile.update strategy () replacement) -
+        rootValue strategy := by
+  unfold guardedExternalRegret
+  rw [behavioralUtilityGame.externalRegret_eq_expect_gain
+    (PMF.pure strategy) () replacement
+    (behavioralUtility_integrable () _)
+    (behavioralUtility_integrable () _)
+    (fun _ => behavioralUtility_integrable () _)
+    (fun _ => behavioralUtility_integrable () _)]
+  rw [expect_pure]
+  rfl
+
 def cfrRoundLaw (round : ℕ) :
-    FinDist (Profile behavioralUtilityGame.form.sig) :=
-  FinDist.pure (strategyOfState (twoSiteCFRState round))
+    PMF (Profile behavioralUtilityGame.form.sig) :=
+  PMF.pure (strategyOfState (twoSiteCFRState round))
 
 /-- The scalar controlled above is exactly the Core library's external regret
 against a fixed behavioral strategy.  The replacement is independent of the
 round; only the status quo is learned. -/
 theorem externalRegret_cfrRoundLaw_eq_planRootGain
     (plan : PayoffPlan) (round : ℕ) :
-    behavioralUtilityGame.externalRegret (cfrRoundLaw round) ()
+    guardedExternalRegret (cfrRoundLaw round) ()
         (fixedPlanPolicy plan) =
       planRootGain plan round := by
-  rw [behavioralUtilityGame.externalRegret_eq_expect_gain,
-    show cfrRoundLaw round =
-      FinDist.pure (strategyOfState (twoSiteCFRState round)) by rfl,
-    FinDist.expect_pure]
+  rw [show cfrRoundLaw round =
+      PMF.pure (strategyOfState (twoSiteCFRState round)) by rfl,
+    guardedExternalRegret_pure]
   have hupdate :
       Profile.update (sig := behavioralUtilityGame.form.sig)
           (strategyOfState (twoSiteCFRState round)) () (fixedPlanPolicy plan) =
@@ -985,11 +1049,11 @@ theorem externalRegret_cfrRoundLaw_eq_planRootGain
   rw [hupdate]
   rfl
 
-def incumbentRoundLaw : FinDist (Profile behavioralUtilityGame.form.sig) :=
-  FinDist.pure incumbentBehavioralStrategy
+def incumbentRoundLaw : PMF (Profile behavioralUtilityGame.form.sig) :=
+  PMF.pure incumbentBehavioralStrategy
 
-def coordinatedRoundLaw : FinDist (Profile behavioralUtilityGame.form.sig) :=
-  FinDist.pure finalCommittedStrategy
+def coordinatedRoundLaw : PMF (Profile behavioralUtilityGame.form.sig) :=
+  PMF.pure finalCommittedStrategy
 
 theorem fixedPlanPolicy_true_true_eq_final :
     fixedPlanPolicy (true, true) = finalCommittedStrategy () := by
@@ -1015,11 +1079,10 @@ theorem fixedPlanPolicy_false_false_eq_incumbent :
 /-- Positive control at the canonical interface: the coordinated fixed
 replacement has exact unit external regret against the incumbent. -/
 theorem incumbent_to_coordinated_externalRegret_eq_one :
-    behavioralUtilityGame.externalRegret incumbentRoundLaw ()
+    guardedExternalRegret incumbentRoundLaw ()
         (fixedPlanPolicy (true, true)) = 1 := by
   rw [fixedPlanPolicy_true_true_eq_final]
-  rw [behavioralUtilityGame.externalRegret_eq_expect_gain]
-  simp only [incumbentRoundLaw, FinDist.expect_pure]
+  rw [incumbentRoundLaw, guardedExternalRegret_pure]
   have hupdate :
       Profile.update (sig := behavioralUtilityGame.form.sig)
           incumbentBehavioralStrategy () (finalCommittedStrategy ()) =
@@ -1033,11 +1096,10 @@ theorem incumbent_to_coordinated_externalRegret_eq_one :
 /-- Nonprofitable control at the same interface: reversing the two fixed
 strategies gives exact external regret `-1`. -/
 theorem coordinated_to_incumbent_externalRegret_eq_neg_one :
-    behavioralUtilityGame.externalRegret coordinatedRoundLaw ()
+    guardedExternalRegret coordinatedRoundLaw ()
         (fixedPlanPolicy (false, false)) = -1 := by
   rw [fixedPlanPolicy_false_false_eq_incumbent]
-  rw [behavioralUtilityGame.externalRegret_eq_expect_gain]
-  simp only [coordinatedRoundLaw, FinDist.expect_pure]
+  rw [coordinatedRoundLaw, guardedExternalRegret_pure]
   have hupdate :
       Profile.update (sig := behavioralUtilityGame.form.sig)
           finalCommittedStrategy () incumbentBehavioralPolicy =
@@ -1048,16 +1110,10 @@ theorem coordinated_to_incumbent_externalRegret_eq_neg_one :
     rfl
   rw [hupdate]
   calc
-    expectedUtility behavioralUtilityGame.utility ()
-          (behavioralUtilityGame.form.play incumbentBehavioralStrategy) -
-        expectedUtility behavioralUtilityGame.utility ()
-          (behavioralUtilityGame.form.play finalCommittedStrategy) =
-      -((information.runBehavioral finalCommittedStrategy 3).expect
-          terminalPayoff -
-        (information.runBehavioral incumbentBehavioralStrategy 3).expect
-          terminalPayoff) := by
-            simp only [behavioralUtilityGame, expectedUtility]
-            ring
+    rootValue incumbentBehavioralStrategy -
+        rootValue finalCommittedStrategy =
+      -(rootValue finalCommittedStrategy -
+        rootValue incumbentBehavioralStrategy) := by ring
     _ = -1 := by rw [wholeDeviation_rootGain_eq_one]
 
 /-- Thus the same deviation-independent right-hand side controls the canonical
@@ -1067,20 +1123,32 @@ theorem allPayoffPlans_externalRegret_le_localDistances
     ∀ plan : PayoffPlan,
       max
           ((∑ round ∈ Finset.range t,
-              behavioralUtilityGame.externalRegret (cfrRoundLaw round) ()
+              guardedExternalRegret (cfrRoundLaw round) ()
                 (fixedPlanPolicy plan)) / (t : ℝ))
           0 ≤
         ∑ key : Bool, Metric.infDist
           (counterfactualRegretMatchAverage information () (rootSite key)
-            (cfrStrategyOf key) (cfrPayoffOf key) (localFuel key)
+            (cfrStrategyOf key) (cfrPayoffOf key) (localFuel key) (fun _ _ => rootGuard _ key)
             (cfrEnvironment key) t)
           nonposOrthant := by
   simpa only [externalRegret_cfrRoundLaw_eq_planRootGain] using
     allPayoffPlans_positiveRootGain_le_localDistances t ht
 
 def cfrFinRoundLaw {T : ℕ} (round : Fin T) :
-    FinDist (Profile behavioralUtilityGame.form.sig) :=
+    PMF (Profile behavioralUtilityGame.form.sig) :=
   cfrRoundLaw round
+
+theorem guardedExternalRegret_timeAverage {T : ℕ} [NeZero T]
+    (roundLaw : Fin T → PMF (Profile behavioralUtilityGame.form.sig))
+    (replacement : behavioralUtilityGame.form.sig.Strategy ()) :
+    guardedExternalRegret
+        (behavioralUtilityGame.form.timeAverage roundLaw) () replacement =
+      (∑ round : Fin T,
+        guardedExternalRegret (roundLaw round) () replacement) / T := by
+  unfold guardedExternalRegret
+  exact behavioralUtilityGame.externalRegret_timeAverage roundLaw ()
+    replacement (fun _ => behavioralUtility_integrable () _)
+      (fun _ => behavioralUtility_integrable () _)
 
 /-- Direct time-average consumer of the canonical Core identity.  This is the
 form downstream coarse-correlated-equilibrium reductions inspect. -/
@@ -1088,20 +1156,20 @@ theorem allPayoffPlans_timeAverageExternalRegret_le_localDistances
     (T : ℕ) [NeZero T] :
     ∀ plan : PayoffPlan,
       max
-          (behavioralUtilityGame.externalRegret
+          (guardedExternalRegret
             (behavioralUtilityGame.form.timeAverage
               (cfrFinRoundLaw (T := T))) () (fixedPlanPolicy plan))
           0 ≤
         ∑ key : Bool, Metric.infDist
           (counterfactualRegretMatchAverage information () (rootSite key)
-            (cfrStrategyOf key) (cfrPayoffOf key) (localFuel key)
+            (cfrStrategyOf key) (cfrPayoffOf key) (localFuel key) (fun _ _ => rootGuard _ key)
             (cfrEnvironment key) T)
           nonposOrthant := by
   intro plan
-  rw [behavioralUtilityGame.externalRegret_timeAverage]
+  rw [guardedExternalRegret_timeAverage]
   simp only [cfrFinRoundLaw]
   rw [Fin.sum_univ_eq_sum_range (fun round =>
-    behavioralUtilityGame.externalRegret (cfrRoundLaw round) ()
+    guardedExternalRegret (cfrRoundLaw round) ()
       (fixedPlanPolicy plan)) T]
   exact allPayoffPlans_externalRegret_le_localDistances T
     (Nat.pos_of_ne_zero (NeZero.ne T)) plan
@@ -1115,24 +1183,24 @@ theorem cfrRootGain_decomposition (round : ℕ) :
           (cfrStrategyOf key
             (regretMatch
               (counterfactualRegretMatchAverage information () (rootSite key)
-                (cfrStrategyOf key) (cfrPayoffOf key) (localFuel key)
+                (cfrStrategyOf key) (cfrPayoffOf key) (localFuel key) (fun _ _ => rootGuard _ key)
                 (cfrEnvironment key) round))
             (cfrEnvironment key round))
-          () (rootSite key) terminalPayoff (localFuel key)).ofLp
+          () (rootSite key) terminalPayoff (localFuel key)
+          (rootGuard _ key)).ofLp
             (rootDeviation key) := by
   have havg := cfrAverages_eq_state round
   rw [Fintype.sum_bool]
   simp only [rootSite, localFuel, rootDeviation, one_mul]
-  rw [havg.1, havg.2]
+  simp only [havg.1, havg.2]
   simp only [cfrEnvironment]
-  rw [cfrStrategyOf_false_eq_joint, cfrStrategyOf_true_eq_joint]
+  simp only [cfrStrategyOf_false_eq_joint,
+    cfrStrategyOf_true_eq_joint]
   show cfrRootGain round =
-    information.counterfactualActionRegret
-        (strategyOfState (twoSiteCFRState round)) () (secondSite true)
-          terminalPayoff 1 (secondChoice true true) +
-      information.counterfactualActionRegret
-        (strategyOfState (twoSiteCFRState round)) () firstSite
-          terminalPayoff 2 (firstChoice true)
+    guardedActionRegret (strategyOfState (twoSiteCFRState round))
+        (secondSite true) 1 (secondChoice true true) +
+      guardedActionRegret (strategyOfState (twoSiteCFRState round))
+        firstSite 2 (firstChoice true)
   unfold cfrRootGain
   rw [← secondRegret_after_firstCommit_eq,
     ← secondStep_rootGain, ← firstStep_rootGain]
@@ -1145,24 +1213,26 @@ theorem twoSiteCFR_positiveRootGain_le_localDistances
     max ((∑ round ∈ Finset.range t, cfrRootGain round) / (t : ℝ)) 0 ≤
       ∑ key : Bool, Metric.infDist
         (counterfactualRegretMatchAverage information () (rootSite key)
-          (cfrStrategyOf key) (cfrPayoffOf key) (localFuel key)
+          (cfrStrategyOf key) (cfrPayoffOf key) (localFuel key) (fun _ _ => rootGuard _ key)
           (cfrEnvironment key) t)
         nonposOrthant := by
   let firstAverage :=
     counterfactualRegretMatchAverage information () firstSite
-      (cfrStrategyOf false) (cfrPayoffOf false) 2
+      (cfrStrategyOf false) (cfrPayoffOf false) 2 (fun _ _ => rootGuard _ false)
       (cfrEnvironment false) t
   let secondAverage :=
     counterfactualRegretMatchAverage information () (secondSite true)
-      (cfrStrategyOf true) (cfrPayoffOf true) 1
+      (cfrStrategyOf true) (cfrPayoffOf true) 1 (fun _ _ => rootGuard _ true)
       (cfrEnvironment true) t
   have hfirstVector :=
     counterfactualRegretMatchAverage_smul_eq_sum information () firstSite
       (cfrStrategyOf false) (cfrPayoffOf false) 2
+      (fun _ _ => rootGuard _ false)
       (cfrEnvironment false) t
   have hsecondVector :=
     counterfactualRegretMatchAverage_smul_eq_sum information ()
       (secondSite true) (cfrStrategyOf true) (cfrPayoffOf true) 1
+      (fun _ _ => rootGuard _ true)
       (cfrEnvironment true) t
   have hfirstCoordinate :
       ∑ round ∈ Finset.range t,
@@ -1170,10 +1240,11 @@ theorem twoSiteCFR_positiveRootGain_le_localDistances
           (cfrStrategyOf false
             (regretMatch
               (counterfactualRegretMatchAverage information () firstSite
-                (cfrStrategyOf false) (cfrPayoffOf false) 2
+                (cfrStrategyOf false) (cfrPayoffOf false) 2 (fun _ _ => rootGuard _ false)
                 (cfrEnvironment false) round))
             (cfrEnvironment false round))
-          () firstSite terminalPayoff 2).ofLp (firstChoice true) =
+          () firstSite terminalPayoff 2
+          (rootGuard _ false)).ofLp (firstChoice true) =
         (t : ℝ) * firstAverage.ofLp (firstChoice true) := by
     have happly := congrArg
       (fun value : EuclideanSpace ℝ FirstAction =>
@@ -1186,9 +1257,11 @@ theorem twoSiteCFR_positiveRootGain_le_localDistances
             (regretMatch
               (counterfactualRegretMatchAverage information ()
                 (secondSite true) (cfrStrategyOf true) (cfrPayoffOf true) 1
+                (fun _ _ => rootGuard _ true)
                 (cfrEnvironment true) round))
             (cfrEnvironment true round))
-          () (secondSite true) terminalPayoff 1).ofLp
+          () (secondSite true) terminalPayoff 1
+          (rootGuard _ true)).ofLp
             (secondChoice true true) =
         (t : ℝ) * secondAverage.ofLp (secondChoice true true) := by
     have happly := congrArg
@@ -1207,18 +1280,20 @@ theorem twoSiteCFR_positiveRootGain_le_localDistances
                 (regretMatch
                   (counterfactualRegretMatchAverage information ()
                     (secondSite true) (cfrStrategyOf true)
-                    (cfrPayoffOf true) 1 (cfrEnvironment true) round))
+                    (cfrPayoffOf true) 1 (fun _ _ => rootGuard _ true) (cfrEnvironment true) round))
                 (cfrEnvironment true round))
-              () (secondSite true) terminalPayoff 1).ofLp
+              () (secondSite true) terminalPayoff 1
+              (rootGuard _ true)).ofLp
                 (secondChoice true true) +
               (localCounterfactualRegretVector information
                 (cfrStrategyOf false
                   (regretMatch
                     (counterfactualRegretMatchAverage information () firstSite
-                      (cfrStrategyOf false) (cfrPayoffOf false) 2
+                      (cfrStrategyOf false) (cfrPayoffOf false) 2 (fun _ _ => rootGuard _ false)
                       (cfrEnvironment false) round))
                   (cfrEnvironment false round))
-                () firstSite terminalPayoff 2).ofLp (firstChoice true)) := by
+                () firstSite terminalPayoff 2
+                (rootGuard _ false)).ofLp (firstChoice true)) := by
         apply Finset.sum_congr rfl
         intro round _
         rw [cfrRootGain_decomposition, Fintype.sum_bool]
@@ -1244,31 +1319,35 @@ theorem twoSiteCFR_positiveRootGain_le_localDistances
 /-- D46 drives the first coupled local process to its nonpositive orthant. -/
 theorem firstCFR_approaches {bound : ℝ} (hbound0 : 0 ≤ bound)
     (hbound : ∀ law current,
-      ‖regretPayoff firstCFRUtility law current‖ ≤ bound) :
+      ‖regretPayoff firstCFRUtility law current
+        (payoffIntegrable_of_finite _ _)‖ ≤ bound) :
     Tendsto
       (fun t => Metric.infDist
         (counterfactualRegretMatchAverage information () firstSite
-          (cfrStrategyOf false) (cfrPayoffOf false) 2
+          (cfrStrategyOf false) (cfrPayoffOf false) 2 (fun _ _ => rootGuard _ false)
           (cfrEnvironment false) t)
         nonposOrthant)
       atTop (nhds 0) :=
   counterfactualRegretMatch_approaches information () firstSite
     firstCFRUtility (cfrStrategyOf false) (cfrPayoffOf false) 2
+      (fun _ _ => rootGuard _ false)
       cfrRealization_first hbound0 hbound (cfrEnvironment false)
 
 /-- D46 independently drives the off-path second process to its orthant. -/
 theorem secondCFR_approaches {bound : ℝ} (hbound0 : 0 ≤ bound)
     (hbound : ∀ law current,
-      ‖regretPayoff secondCFRUtility law current‖ ≤ bound) :
+      ‖regretPayoff secondCFRUtility law current
+        (payoffIntegrable_of_finite _ _)‖ ≤ bound) :
     Tendsto
       (fun t => Metric.infDist
         (counterfactualRegretMatchAverage information () (secondSite true)
-          (cfrStrategyOf true) (cfrPayoffOf true) 1
+          (cfrStrategyOf true) (cfrPayoffOf true) 1 (fun _ _ => rootGuard _ true)
           (cfrEnvironment true) t)
         nonposOrthant)
       atTop (nhds 0) :=
   counterfactualRegretMatch_approaches information () (secondSite true)
     secondCFRUtility (cfrStrategyOf true) (cfrPayoffOf true) 1
+      (fun _ _ => rootGuard _ true)
       cfrRealization_second hbound0 hbound (cfrEnvironment true)
 
 /-- The `[0,1]` payoff certificate discharges D46's first-site vector bound. -/
@@ -1276,7 +1355,7 @@ theorem firstCFR_approaches_from_payoffRange :
     Tendsto
       (fun t => Metric.infDist
         (counterfactualRegretMatchAverage information () firstSite
-          (cfrStrategyOf false) (cfrPayoffOf false) 2
+          (cfrStrategyOf false) (cfrPayoffOf false) 2 (fun _ _ => rootGuard _ false)
           (cfrEnvironment false) t)
         nonposOrthant)
       atTop (nhds 0) :=
@@ -1288,7 +1367,7 @@ theorem secondCFR_approaches_from_payoffRange :
     Tendsto
       (fun t => Metric.infDist
         (counterfactualRegretMatchAverage information () (secondSite true)
-          (cfrStrategyOf true) (cfrPayoffOf true) 1
+          (cfrStrategyOf true) (cfrPayoffOf true) 1 (fun _ _ => rootGuard _ true)
           (cfrEnvironment true) t)
         nonposOrthant)
       atTop (nhds 0) :=
@@ -1306,7 +1385,8 @@ theorem allPayoffPlans_positiveRootGain_tendsto_zero :
         atTop (nhds 0) := by
   exact counterfactualRegretMatches_positiveRootGains_tendsto_zero information
     (fun key => LocalEnvironment key) () rootSite cfrStrategyOf cfrPayoffOf
-    localFuel cfrEnvironment planRootGain planReach planReach_mem_Icc planChoice
+    localFuel cfrEnvironment (fun key _ _ => rootGuard _ key)
+    planRootGain planReach planReach_mem_Icc planChoice
     (fun plan round => (planRootGain_decomposition plan round).le)
     (fun key => by
       cases key
@@ -1320,7 +1400,7 @@ theorem allPayoffPlans_externalRegret_tendsto_zero :
       Tendsto
         (fun t => max
           ((∑ round ∈ Finset.range t,
-            behavioralUtilityGame.externalRegret (cfrRoundLaw round) ()
+            guardedExternalRegret (cfrRoundLaw round) ()
               (fixedPlanPolicy plan)) / (t : ℝ)) 0)
         atTop (nhds 0) := by
   intro plan
@@ -1333,7 +1413,7 @@ theorem allPayoffPlans_timeAverageExternalRegret_tendsto_zero :
     ∀ plan : PayoffPlan,
       Tendsto
         (fun t => max
-          (behavioralUtilityGame.externalRegret
+          (guardedExternalRegret
             (behavioralUtilityGame.form.timeAverage
               (cfrFinRoundLaw (T := t + 1))) () (fixedPlanPolicy plan)) 0)
         atTop (nhds 0) := by
@@ -1343,10 +1423,10 @@ theorem allPayoffPlans_timeAverageExternalRegret_tendsto_zero :
   apply hshift.congr
   intro t
   apply congrArg (fun value : ℝ => max value 0)
-  rw [behavioralUtilityGame.externalRegret_timeAverage]
+  rw [guardedExternalRegret_timeAverage]
   simp only [cfrFinRoundLaw]
   rw [Fin.sum_univ_eq_sum_range (fun round =>
-    behavioralUtilityGame.externalRegret (cfrRoundLaw round) ()
+    guardedExternalRegret (cfrRoundLaw round) ()
       (fixedPlanPolicy plan)) (t + 1)]
 
 /-- **Concrete two-site CFR root theorem.** Ordinary per-site payoff-vector
@@ -1356,10 +1436,12 @@ theorem twoSiteCFR_positiveRootGain_tendsto_zero
     {firstBound secondBound : ℝ}
     (hfirst0 : 0 ≤ firstBound)
     (hfirst : ∀ law current,
-      ‖regretPayoff firstCFRUtility law current‖ ≤ firstBound)
+      ‖regretPayoff firstCFRUtility law current
+        (payoffIntegrable_of_finite _ _)‖ ≤ firstBound)
     (hsecond0 : 0 ≤ secondBound)
     (hsecond : ∀ law current,
-      ‖regretPayoff secondCFRUtility law current‖ ≤ secondBound) :
+      ‖regretPayoff secondCFRUtility law current
+        (payoffIntegrable_of_finite _ _)‖ ≤ secondBound) :
     Tendsto
       (fun t => max
         ((∑ round ∈ Finset.range t, cfrRootGain round) / (t : ℝ)) 0)
@@ -1371,10 +1453,11 @@ theorem twoSiteCFR_positiveRootGain_tendsto_zero
         Metric.infDist
             (counterfactualRegretMatchAverage information ()
               (secondSite true) (cfrStrategyOf true) (cfrPayoffOf true) 1
+              (fun _ _ => rootGuard _ true)
               (cfrEnvironment true) t) nonposOrthant +
           Metric.infDist
             (counterfactualRegretMatchAverage information () firstSite
-              (cfrStrategyOf false) (cfrPayoffOf false) 2
+              (cfrStrategyOf false) (cfrPayoffOf false) 2 (fun _ _ => rootGuard _ false)
               (cfrEnvironment false) t) nonposOrthant)
       atTop (nhds 0) := by
     simpa using hsecondLimit.add hfirstLimit
@@ -1383,10 +1466,11 @@ theorem twoSiteCFR_positiveRootGain_tendsto_zero
         Metric.infDist
             (counterfactualRegretMatchAverage information ()
               (secondSite true) (cfrStrategyOf true) (cfrPayoffOf true) 1
+              (fun _ _ => rootGuard _ true)
               (cfrEnvironment true) t) nonposOrthant +
           Metric.infDist
             (counterfactualRegretMatchAverage information () firstSite
-              (cfrStrategyOf false) (cfrPayoffOf false) 2
+              (cfrStrategyOf false) (cfrPayoffOf false) 2 (fun _ _ => rootGuard _ false)
               (cfrEnvironment false) t) nonposOrthant := by
     intro t
     cases t with

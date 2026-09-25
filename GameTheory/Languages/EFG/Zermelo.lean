@@ -15,6 +15,7 @@ noncomputable section
 namespace GameTheory.Languages.EFG
 
 open GameTheory.Protocol
+open GameTheory.Math.Probability
 
 universe uι us ua up uq uk
 
@@ -38,11 +39,34 @@ theorem exists_isSubgamePerfect
     (finiteChoices : G.information.HasFiniteDecisionChoices)
     (certificate : G.execution.WellFoundedPlay)
     (hperfect : G.HasPerfectInformation)
-    (utility : G.History → ι → ℝ) :
+    (utility : G.History → ι → ℝ)
+    (hglobal : ∀ chooser history who,
+      PayoffIntegrable (G.execution.historyBackwardLaw certificate chooser history)
+        (fun outcome => utility outcome who)) :
     ∃ profile : Profile G.strategicSignature,
       G.IsSubgamePerfect certificate profile utility :=
   G.information.exists_isSubgamePerfect G.singleMover fallback finiteChoices
-    certificate hperfect utility
+    certificate hperfect utility hglobal
+
+/-- Finite transition support supplies the law-specific integrability family
+for EFG backward induction without restricting histories or outcomes. -/
+theorem exists_isSubgamePerfect_of_finite_step_support
+    [DecidableEq ι]
+    [∀ who, DecidableEq (G.information.InfoState who)]
+    (fallback : Profile G.strategicSignature)
+    (finiteChoices : G.information.HasFiniteDecisionChoices)
+    (certificate : G.execution.WellFoundedPlay)
+    (hperfect : G.HasPerfectInformation)
+    (utility : G.History → ι → ℝ)
+    (hfinite : ∀ (history : G.History)
+      (_hterm : ¬ G.execution.terminal history.state)
+      (chosen : {joint : ∀ i, Option (G.execution.Action i) //
+        G.execution.Legal history.state joint}),
+      (G.execution.step history.state chosen).support.Finite) :
+    ∃ profile : Profile G.strategicSignature,
+      G.IsSubgamePerfect certificate profile utility := by
+  exact G.information.exists_isSubgamePerfect_of_finite_step_support
+    G.singleMover fallback finiteChoices certificate hperfect utility hfinite
 
 end Game
 

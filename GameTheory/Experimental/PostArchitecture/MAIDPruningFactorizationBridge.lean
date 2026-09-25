@@ -282,8 +282,8 @@ theorem native_play_factorizes_candidate
       (reducedEffectiveKernels semantics pruning policy) := by
   intro assignment
   calc
-    ((nativeBehavioralGameForm semantics).play
-        (pruning.expandPolicy policy)).prob assignment =
+    (((nativeBehavioralGameForm semantics).play
+        (pruning.expandPolicy policy)) assignment).toReal =
         factorProduct diagram.Value (effectiveParents diagram)
           (effectiveKernels semantics (pruning.expandPolicy policy))
           Finset.univ assignment :=
@@ -339,7 +339,7 @@ def candidateAugmentedKernels [DecidableEq Node]
       reducedEffectiveKernels semantics pruning policy node
         (candidateBaseParentConfiguration view pruning node configuration)
   | .utility site, configuration =>
-      FinDist.pure
+      PMF.pure
         (candidateUtilityParentConfiguration view pruning site configuration)
 
 /-- Candidate and original augmented local factors agree pointwise for an
@@ -360,8 +360,8 @@ theorem candidateLocalFactor_eq_original
   | base baseNode =>
       unfold localFactor candidateAugmentedKernels augmentedKernels
       apply congrArg
-        (fun law : FinDist (diagram.Value baseNode) =>
-          law.prob (assignment (.base baseNode)))
+        (fun law : PMF (diagram.Value baseNode) =>
+          (law (assignment (.base baseNode))).toReal)
       exact reducedEffectiveKernels_parentConfiguration semantics pruning
         policy (projectBase view assignment) baseNode
   | utility _ => rfl
@@ -380,8 +380,8 @@ theorem augmentedLaw_factorizes_candidate
       (candidateAugmentedKernels view pruning policy) := by
   intro assignment
   calc
-    (augmentedLaw view owner
-        (pruning.expandPolicy policy)).prob assignment =
+    ((augmentedLaw view owner
+        (pruning.expandPolicy policy)) assignment).toReal =
         factorProduct (graphValue view (owner := owner))
           view.graphParents
           (augmentedKernels view (pruning.expandPolicy policy))

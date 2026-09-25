@@ -20,6 +20,8 @@ open scoped BigOperators
 
 namespace GameTheory
 
+open GameTheory.Math.Probability
+
 universe uι ur us
 
 /-- A congestion game.  The data itself makes no finiteness or decidable-
@@ -109,8 +111,21 @@ def toUtilityGame [Fintype ι] (C : CongestionGame ι) : UtilityGame ι where
 
 theorem expectedUtility_toGameForm [Fintype ι] (C : CongestionGame ι)
     (σ : C.Profile) (i : ι) :
-    expectedUtility C.utility i (C.toGameForm.play σ) = -C.playerCost σ i := by
+    expectedUtility C.utility i (C.toGameForm.play σ)
+      (payoffIntegrable_pure σ (fun profile => C.utility profile i)) =
+        -C.playerCost σ i := by
   simp [toGameForm, utility]
+
+/-- Integrating each player's actual utility law also integrates total cost. -/
+theorem socialCost_integrable_of_utility [Fintype ι] (C : CongestionGame ι)
+    (law : PMF C.Profile)
+    (h : ∀ i, PayoffIntegrable law (fun profile => C.utility profile i)) :
+    PayoffIntegrable law C.socialCost := by
+  have hcost (i : ι) :
+      PayoffIntegrable law (fun profile => C.playerCost profile i) := by
+    simpa only [utility, neg_neg] using payoffIntegrable_neg (h i)
+  unfold CongestionGame.socialCost
+  exact payoffIntegrable_sum law (fun i profile => C.playerCost profile i) hcost
 
 /-- Count the other players whose strategies occupy a resource. -/
 noncomputable def congestionWithout [Fintype ι] (C : CongestionGame ι) (σ : C.Profile)

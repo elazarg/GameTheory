@@ -178,8 +178,8 @@ variable [Fintype ι]
 play, not an independently recursive stochastic law. -/
 def publicHistoryLaw (initial : G.State) [∀ i, Nonempty (G.Action i)]
     (profile : G.BehaviorProfile initial) (horizon : ℕ) :
-    FinDist G.PublicHistory :=
-  FinDist.map
+    PMF G.PublicHistory :=
+  PMF.map
     (fun history => G.publicHistoryOfTrace initial history.trace)
     ((G.perfectMonitoring initial).runBehavioral profile horizon)
 
@@ -187,8 +187,8 @@ def publicHistoryLaw (initial : G.State) [∀ i, Nonempty (G.Action i)]
 def publicHistoryLawFrom (initial : G.State)
     [∀ i, Nonempty (G.Action i)]
     (profile : G.BehaviorProfile initial) (horizon : ℕ)
-    (start : (G.toExecution initial).History) : FinDist G.PublicHistory :=
-  FinDist.map
+    (start : (G.toExecution initial).History) : PMF G.PublicHistory :=
+  PMF.map
     (fun history => G.publicHistoryOfTrace initial history.trace)
     ((G.perfectMonitoring initial).runBehavioralFrom profile horizon start)
 
@@ -212,7 +212,7 @@ theorem publicHistoryLawFrom_add (initial : G.State)
         (G.publicHistoryLawFrom initial profile secondFuel) := by
   unfold publicHistoryLawFrom
   rw [(G.perfectMonitoring initial).runBehavioralFrom_add,
-    FinDist.map_bind]
+    PMF.map_bind]
 
 /-- Every public history in the nonterminating stochastic horizon law has the
 requested length. -/
@@ -222,7 +222,7 @@ theorem length_eq_of_mem_support_publicHistoryLaw
     {history : G.PublicHistory}
     (hmem : history ∈ (G.publicHistoryLaw initial profile horizon).support) :
     history.length = horizon := by
-  rw [publicHistoryLaw, FinDist.support_map] at hmem
+  rw [publicHistoryLaw, PMF.support_map] at hmem
   obtain ⟨result, hresult, rfl⟩ := hmem
   rw [G.publicHistoryOfTrace_length]
   have hlength :=
@@ -237,9 +237,9 @@ support invariant of `publicHistoryLaw`. -/
 def chronologicalHistoryLaw (initial : G.State)
     [∀ i, Nonempty (G.Action i)]
     (profile : G.BehaviorProfile initial) (horizon : ℕ) :
-    FinDist (G.ChronologicalHistory horizon) :=
+    PMF (G.ChronologicalHistory horizon) :=
   (G.publicHistoryLaw initial profile horizon).bindOnSupport fun history hmem =>
-    FinDist.pure <|
+    PMF.pure <|
       G.chronologicalOfPublicHistory history
         (G.length_eq_of_mem_support_publicHistoryLaw initial profile horizon hmem)
 
@@ -248,17 +248,18 @@ canonical projected law exactly. -/
 theorem map_publicHistoryOfChronological_chronologicalHistoryLaw
     (initial : G.State) [∀ i, Nonempty (G.Action i)]
     (profile : G.BehaviorProfile initial) (horizon : ℕ) :
-    FinDist.map G.publicHistoryOfChronological
+    PMF.map G.publicHistoryOfChronological
         (G.chronologicalHistoryLaw initial profile horizon) =
       G.publicHistoryLaw initial profile horizon := by
   unfold chronologicalHistoryLaw
-  rw [FinDist.map_bindOnSupport]
-  rw [FinDist.bindOnSupport_eq_bind_of_eq_on_support
-    (g := fun history => FinDist.pure history)]
-  · exact FinDist.bind_pure _
-  · intro history hmem
-    rw [FinDist.map_pure,
-      G.publicHistoryOfChronological_chronologicalOfPublicHistory]
+  rw [map_bindOnSupport]
+  calc
+    _ = (G.publicHistoryLaw initial profile horizon).bind PMF.pure := by
+      apply bindOnSupport_eq_bind_of_eq_on_support
+      intro history hmem
+      simp [PMF.map,
+        G.publicHistoryOfChronological_chronologicalOfPublicHistory]
+    _ = G.publicHistoryLaw initial profile horizon := PMF.bind_pure _
 
 /-- Stage utility read directly from one proof-free stochastic record. -/
 def stageRecordUtility (record : G.StageRecord) (who : ι) : ℝ :=
@@ -301,23 +302,56 @@ theorem historyAverageUtility_eq_publicHistoryAverageUtility
 history law. -/
 def publicFiniteAveragePayoff (initial : G.State)
     [∀ i, Nonempty (G.Action i)] (horizon : ℕ)
-    (profile : G.BehaviorProfile initial) (who : ι) : ℝ :=
+    (profile : G.BehaviorProfile initial) (who : ι)
+    (hintegrable : UtilityIntegrable (G.publicHistoryAverageUtility horizon) who
+      (G.publicHistoryLaw initial profile horizon)) : ℝ :=
   expectedUtility (G.publicHistoryAverageUtility horizon) who
-    (G.publicHistoryLaw initial profile horizon)
+    (G.publicHistoryLaw initial profile horizon) hintegrable
+
+/-- Public-history payoff is defined exactly when the compiled history payoff is. -/
+theorem publicFiniteAverageIntegrable_iff (initial : G.State)
+    [∀ i, Nonempty (G.Action i)] (horizon : ℕ)
+    (profile : G.BehaviorProfile initial) (who : ι) :
+    UtilityIntegrable (G.publicHistoryAverageUtility horizon) who
+        (G.publicHistoryLaw initial profile horizon) ↔
+      UtilityIntegrable (G.horizonUtility initial horizon) who
+        ((G.horizonForm initial horizon).play profile) := by
+  rw [G.horizonForm_play]
+  unfold publicHistoryLaw UtilityIntegrable
+  rw [payoffIntegrable_map_iff]
+  simp only [Function.comp_def, horizonUtility,
+    G.historyAverageUtility_eq_publicHistoryAverageUtility]
 
 /-- The proof-free evaluator is exactly the canonical finite-average payoff. -/
 theorem publicFiniteAveragePayoff_eq_finiteAveragePayoff
     (initial : G.State) [∀ i, Nonempty (G.Action i)]
-    (horizon : ℕ) (profile : G.BehaviorProfile initial) (who : ι) :
-    G.publicFiniteAveragePayoff initial horizon profile who =
-      G.finiteAveragePayoff initial horizon profile who := by
-  unfold publicFiniteAveragePayoff publicHistoryLaw finiteAveragePayoff
-  rw [G.horizonForm_play, expectedUtility_map]
-  apply congrArg (fun utility => expectedUtility utility who
-    ((G.perfectMonitoring initial).runBehavioral profile horizon))
-  funext history player
-  exact (G.historyAverageUtility_eq_publicHistoryAverageUtility
-    initial horizon history player).symm
+    (horizon : ℕ) (profile : G.BehaviorProfile initial) (who : ι)
+    (hpublic : UtilityIntegrable (G.publicHistoryAverageUtility horizon) who
+      (G.publicHistoryLaw initial profile horizon))
+    (hcanonical : UtilityIntegrable (G.horizonUtility initial horizon) who
+      ((G.horizonForm initial horizon).play profile)) :
+    G.publicFiniteAveragePayoff initial horizon profile who hpublic =
+      G.finiteAveragePayoff initial horizon profile who hcanonical := by
+  let μ := (G.perfectMonitoring initial).runBehavioral profile horizon
+  let projection := fun history : (G.toExecution initial).History =>
+    G.publicHistoryOfTrace initial history.trace
+  let u := fun history : G.PublicHistory =>
+    G.publicHistoryAverageUtility horizon history who
+  let v := fun history : (G.toExecution initial).History =>
+    G.horizonUtility initial horizon history who
+  have hp : PayoffIntegrable (μ.map projection) u := hpublic
+  have hpu : PayoffIntegrable μ (u ∘ projection) :=
+    (payoffIntegrable_map_iff projection μ u).mp hp
+  have hv : PayoffIntegrable μ v := by
+    simpa only [G.horizonForm_play] using hcanonical
+  have hpoint : ∀ history ∈ μ.support, u (projection history) = v history := by
+    intro history _
+    exact (G.historyAverageUtility_eq_publicHistoryAverageUtility
+      initial horizon history who).symm
+  have heq : expect (μ.map projection) u hp = expect μ v hv :=
+    (expect_map projection μ u hpu hp).trans
+      (expect_congr_on_support hpoint hpu hv)
+  exact heq
 
 /-- Uniform deviation-cap certificates can be written entirely with the
 proof-free public-history evaluator.  This is a characterization of the one
@@ -330,19 +364,66 @@ theorem hasUniformDeviationCapConstructor_iff_publicHistoryPayoff
         ∃ (profile : G.BehaviorProfile initial) (threshold : ℕ),
           ∀ horizon, threshold ≤ horizon →
             (∀ who,
-              |G.publicFiniteAveragePayoff initial horizon profile who -
-                value who| ≤ delta) ∧
+              ∃ hpublic : UtilityIntegrable
+                  (G.publicHistoryAverageUtility horizon) who
+                  (G.publicHistoryLaw initial profile horizon),
+                |G.publicFiniteAveragePayoff initial horizon profile who hpublic -
+                  value who| ≤ delta) ∧
             ∀ who (deviation :
               (G.perfectMonitoring initial).BehavioralPolicy who),
-              G.publicFiniteAveragePayoff initial horizon
-                  (Profile.update profile who deviation) who ≤
-                value who + delta := by
+              ∃ hpublic : UtilityIntegrable
+                  (G.publicHistoryAverageUtility horizon) who
+                  (G.publicHistoryLaw initial
+                    (Profile.update profile who deviation) horizon),
+                G.publicFiniteAveragePayoff initial horizon
+                  (Profile.update profile who deviation) who hpublic ≤
+                  value who + delta := by
   unfold HasUniformDeviationCapConstructor
-  constructor <;> intro hcertificate delta hdelta <;>
-    obtain ⟨profile, threshold, hprofile⟩ := hcertificate delta hdelta <;>
-    exact ⟨profile, threshold, fun horizon hhorizon => by
-      simpa only [G.publicFiniteAveragePayoff_eq_finiteAveragePayoff] using
-        hprofile horizon hhorizon⟩
+  constructor
+  · intro hcertificate delta hdelta
+    obtain ⟨profile, threshold, hprofile⟩ := hcertificate delta hdelta
+    refine ⟨profile, threshold, fun horizon hhorizon => ?_⟩
+    obtain ⟨honPath, hdeviation⟩ := hprofile horizon hhorizon
+    constructor
+    · intro who
+      obtain ⟨hcanonical, hclose⟩ := honPath who
+      let hpublic := (G.publicFiniteAverageIntegrable_iff initial horizon
+        profile who).2 hcanonical
+      refine ⟨hpublic, ?_⟩
+      rw [G.publicFiniteAveragePayoff_eq_finiteAveragePayoff
+        initial horizon profile who hpublic hcanonical]
+      exact hclose
+    · intro who deviation
+      obtain ⟨hcanonical, hbound⟩ := hdeviation who deviation
+      let hpublic := (G.publicFiniteAverageIntegrable_iff initial horizon
+        (Profile.update profile who deviation) who).2 hcanonical
+      refine ⟨hpublic, ?_⟩
+      rw [G.publicFiniteAveragePayoff_eq_finiteAveragePayoff
+        initial horizon (Profile.update profile who deviation) who
+        hpublic hcanonical]
+      exact hbound
+  · intro hcertificate delta hdelta
+    obtain ⟨profile, threshold, hprofile⟩ := hcertificate delta hdelta
+    refine ⟨profile, threshold, fun horizon hhorizon => ?_⟩
+    obtain ⟨honPath, hdeviation⟩ := hprofile horizon hhorizon
+    constructor
+    · intro who
+      obtain ⟨hpublic, hclose⟩ := honPath who
+      let hcanonical := (G.publicFiniteAverageIntegrable_iff initial horizon
+        profile who).1 hpublic
+      refine ⟨hcanonical, ?_⟩
+      rw [← G.publicFiniteAveragePayoff_eq_finiteAveragePayoff
+        initial horizon profile who hpublic hcanonical]
+      exact hclose
+    · intro who deviation
+      obtain ⟨hpublic, hbound⟩ := hdeviation who deviation
+      let hcanonical := (G.publicFiniteAverageIntegrable_iff initial horizon
+        (Profile.update profile who deviation) who).1 hpublic
+      refine ⟨hcanonical, ?_⟩
+      rw [← G.publicFiniteAveragePayoff_eq_finiteAveragePayoff
+        initial horizon (Profile.update profile who deviation) who
+        hpublic hcanonical]
+      exact hbound
 
 /-! ## Proof-free restart inputs -/
 
@@ -405,8 +486,8 @@ theorem toBehaviorProfile_after
   funext i continuation
   unfold toBehaviorProfile toBehavioralPolicy PublicProfile.after
     PublicPolicy.after afterPublicHistory
-  apply FinDist.map_congr_of_eq_on_support
-  intro action _
+  apply congrArg (fun f => PMF.map f (profile i (continuation ++ observed)))
+  funext action
   apply Subtype.ext
   rfl
 
@@ -423,7 +504,7 @@ theorem behavioralJoint_afterPublicHistory_init
       (G.perfectMonitoring initial).behavioralJoint profile start.trace (by simp) := by
   unfold InformationModel.behavioralJoint
   congr 1
-  apply congrArg FinDist.pi
+  apply congrArg independentProduct
   funext i
   rw [G.perfectMonitoring_infoOf_eq_publicHistoryOfTrace initial i start.trace]
   rfl
@@ -433,7 +514,7 @@ proof-free prefix.  This is a named use of the sole Protocol runner. -/
 def restartHistoryLaw {initial : G.State}
     [∀ i, Nonempty (G.Action i)]
     (profile : G.BehaviorProfile initial) (observed : G.PublicHistory)
-    (restart : G.State) (horizon : ℕ) : FinDist G.PublicHistory :=
+    (restart : G.State) (horizon : ℕ) : PMF G.PublicHistory :=
   G.publicHistoryLaw restart
     (G.afterPublicHistory (restart := restart) profile observed) horizon
 
@@ -457,10 +538,10 @@ theorem restartHistoryLaw_zero {initial : G.State}
     [∀ i, Nonempty (G.Action i)]
     (profile : G.BehaviorProfile initial) (observed : G.PublicHistory)
     (restart : G.State) :
-    G.restartHistoryLaw profile observed restart 0 = FinDist.pure [] := by
+    G.restartHistoryLaw profile observed restart 0 = PMF.pure [] := by
   unfold restartHistoryLaw publicHistoryLaw InformationModel.runBehavioral
     InformationModel.runBehavioralFrom
-  rw [ExecutionProtocol.runRandomizedFor_zero, FinDist.map_pure]
+  rw [ExecutionProtocol.runRandomizedFor_zero, PMF.map, PMF.pure_bind, Function.comp_apply]
   rfl
 
 /-- Convert a suffix law from a restart into complete public histories. -/
@@ -471,8 +552,8 @@ def splicePrefix (observed continuation : G.PublicHistory) : G.PublicHistory :=
 def restartedFullHistoryLaw {initial : G.State}
     [∀ i, Nonempty (G.Action i)]
     (profile : G.BehaviorProfile initial) (observed : G.PublicHistory)
-    (restart : G.State) (horizon : ℕ) : FinDist G.PublicHistory :=
-  FinDist.map (G.splicePrefix observed)
+    (restart : G.State) (horizon : ℕ) : PMF G.PublicHistory :=
+  PMF.map (G.splicePrefix observed)
     (G.restartHistoryLaw profile observed restart horizon)
 
 /-- One-step continuation from a realized canonical history is exactly a fresh
@@ -496,16 +577,16 @@ theorem publicHistoryLawFrom_one_eq_restartedFullHistoryLaw
       (G.afterPublicHistory (restart := start.state) profile
         (G.publicHistoryOfTrace initial start.trace)) 0 hfresh,
     G.behavioralJoint_afterPublicHistory_init profile start]
-  simp only [FinDist.map_bind, FinDist.map_bindOnSupport,
-    FinDist.map_comp]
-  apply FinDist.bind_congr
+  simp only [PMF.map_bind, map_bindOnSupport,
+    PMF.map_comp]
+  apply bind_congr_on_support
   intro draw hdraw
-  apply FinDist.bindOnSupport_congr
+  apply bindOnSupport_congr
   intro target realized
   simp only [InformationModel.runBehavioralFrom,
-    ExecutionProtocol.runRandomizedFor_zero, FinDist.map_pure]
-  apply congrArg FinDist.pure
-  simp only [Function.comp_apply, splicePrefix, History.extend,
+    ExecutionProtocol.runRandomizedFor_zero, PMF.map, PMF.pure_bind, Function.comp_apply]
+  apply congrArg PMF.pure
+  simp only [splicePrefix, History.extend,
     ExecutionProtocol.initHistory, publicHistoryOfTrace, List.singleton_append]
   rfl
 
@@ -524,7 +605,8 @@ theorem publicHistoryLawFrom_eq_restartedFullHistoryLaw
       unfold publicHistoryLawFrom restartedFullHistoryLaw restartHistoryLaw
         publicHistoryLaw InformationModel.runBehavioral
         InformationModel.runBehavioralFrom
-      simp only [ExecutionProtocol.runRandomizedFor_zero, FinDist.map_pure,
+      simp only [ExecutionProtocol.runRandomizedFor_zero, PMF.map,
+        PMF.pure_bind, Function.comp_apply,
         splicePrefix, ExecutionProtocol.initHistory, publicHistoryOfTrace,
         List.nil_append]
   | succ fuel ih =>
@@ -538,19 +620,19 @@ theorem publicHistoryLawFrom_eq_restartedFullHistoryLaw
           (G.afterPublicHistory (restart := start.state) profile
             (G.publicHistoryOfTrace initial start.trace)) fuel hfresh,
         G.behavioralJoint_afterPublicHistory_init profile start]
-      simp only [FinDist.map_bind, FinDist.map_bindOnSupport, FinDist.map_comp]
-      apply FinDist.bind_congr
+      simp only [PMF.map_bind, map_bindOnSupport, PMF.map_comp]
+      apply bind_congr_on_support
       intro draw hdraw
-      apply FinDist.bindOnSupport_congr
+      apply bindOnSupport_congr
       intro target realized
       let originalNext : (G.toExecution initial).History :=
         start.extend draw.2 realized
       let freshNext : (G.toExecution start.state).History :=
         (G.toExecution start.state).initHistory.extend draw.2 realized
-      conv_rhs => rw [← FinDist.map_comp]
+      conv_rhs => rw [← PMF.map_comp]
       have hcontinuation :
           G.publicHistoryLawFrom initial profile fuel originalNext =
-            FinDist.map (G.splicePrefix (G.publicHistoryOfTrace initial start.trace))
+            PMF.map (G.splicePrefix (G.publicHistoryOfTrace initial start.trace))
               (G.publicHistoryLawFrom start.state
                 (G.afterPublicHistory (restart := start.state) profile
                   (G.publicHistoryOfTrace initial start.trace)) fuel freshNext) := by
@@ -561,8 +643,8 @@ theorem publicHistoryLawFrom_eq_restartedFullHistoryLaw
         unfold restartedFullHistoryLaw restartHistoryLaw
         simp only [originalNext, freshNext, History.extend,
           ExecutionProtocol.initHistory, publicHistoryOfTrace]
-        rw [G.afterPublicHistory_afterPublicHistory, FinDist.map_comp]
-        apply congrArg (fun relabel => FinDist.map relabel _)
+        rw [G.afterPublicHistory_afterPublicHistory, PMF.map_comp]
+        apply congrArg (fun relabel => PMF.map relabel _)
         funext continuation
         simp only [Function.comp_apply, splicePrefix]
         rw [List.append_assoc]
@@ -579,9 +661,9 @@ theorem restartHistoryLaw_succ_toPublicProfile
     (restart : G.State) (fuel : ℕ) :
     G.restartHistoryLaw (G.toBehaviorProfile initial profile)
         observed restart (fuel + 1) =
-      (FinDist.pi fun i => profile i observed).bind fun actions =>
+      (independentProduct fun i => profile i observed).bind fun actions =>
         (G.transition restart actions).bindOnSupport fun target _ =>
-          FinDist.map
+          PMF.map
             (fun continuation => continuation ++
               [{ source := restart, joint := actions, target := target }])
             (G.restartHistoryLaw (G.toBehaviorProfile initial profile)
@@ -598,10 +680,10 @@ theorem restartHistoryLaw_succ_toPublicProfile
   rw [hcompiled]
   rw [G.runBehavioralFrom_succ_toBehaviorProfile restart shifted fuel
     (G.toExecution restart).initHistory]
-  simp only [FinDist.map_bind, FinDist.map_bindOnSupport]
-  apply FinDist.bind_congr
+  simp only [PMF.map_bind, map_bindOnSupport]
+  apply bind_congr_on_support
   · intro actions _
-    apply FinDist.bindOnSupport_congr
+    apply bindOnSupport_congr
     intro target realized
     let first : (G.toExecution restart).History :=
       (G.toExecution restart).initHistory.extend

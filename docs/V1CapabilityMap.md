@@ -6,6 +6,10 @@ it preserves useful mathematics through successor-native owners rather than
 compatibility aliases or declaration-for-declaration ports. The final v1 tree
 remains available at the `v1-final` tag.
 
+General PMF semantics is restored in the public modules. The remaining original
+clients and whole-library acceptance are tracked in the
+[delivery ledger](DeliveryLedger.md) and [restoration worklog](PMFRestorationWorklog.md).
+
 Status labels:
 
 - **supported**: a public successor workflow and representative consumer
@@ -22,7 +26,7 @@ Status labels:
 |---|---|---|
 | Strategic forms, preferences, deviations, Nash, CE, CCE, welfare, and transformations | `GameTheory.Core` | supported; solution concepts share the canonical deviation waist |
 | Finite mixed Nash, correlated-equilibrium existence, minimax, and refinements | `GameTheory.Analysis` | supported, opt-in analytic root |
-| Finite-support probability and finite pointwise convergence | `GameTheory.Math.Probability.FinDist`, `.Bounds`, and `.Convergence` | supported; the finite core does not expose a parallel `PMF` wrapper hierarchy |
+| Discrete probability, guarded expectation, products, conditioning, and pointwise convergence | Ordinary Mathlib `PMF` with `GameTheory.Math.Probability.Expectation`, `.Product`, `.Conditioning`, `.Bounds`, and `.Convergence` | supported on arbitrary carriers; finite support is required only by the operations that use it |
 | Executable finite pure-Nash search | `GameTheory.Finite.Algorithm` and `GameTheory.Finite.Correctness` | supported; rational execution is separated from real-valued correctness |
 | Protocol execution, histories, information, assessment, SPE, and backward induction | `GameTheory.Protocol` | supported; one runner and one policy semantics |
 | NFG syntax | `GameTheory.Languages.NFG` | supported; compiles directly to the canonical static form |
@@ -32,13 +36,13 @@ Status labels:
 | Multi-round imperfect monitoring | `GameTheory.Languages.MultiRound` | supported |
 | Intrinsic-form closed loops and pure strategic analysis | `GameTheory.Languages.Intrinsic` | supported through explicit opt-in solution/strategic leaves |
 | Repeated games, public monitoring, PPE, self-generation, uniform equilibrium, and the folk theorem | `GameTheory.Repeated` and `GameTheory.Analysis.Repeated` | supported; public randomization remains queued |
-| Finite stochastic games, chronological histories, continuation/restart, uniform payoffs, and discounted stationary values | `GameTheory.Stochastic` and `GameTheory.Analysis.Stochastic` | supported through ordinary public policies projected onto the canonical runner; no infinite-path law or general uniform-existence claim |
-| Bayesian games, BCE, revelation, information design, Groves, auctions, and knapsack | `GameTheory.Core.Bayesian`, `GameTheory.Mechanism`, and `GameTheory.Languages.Bayesian` | supported in the finite/algebraic scopes recorded by the capability matrix |
+| Stochastic games, chronological histories, continuation/restart, uniform payoffs, and discounted stationary values | `GameTheory.Stochastic` and `GameTheory.Analysis.Stochastic` | native PMF transitions and actual payoff guards; finite-state assumptions remain local to existence theorems; no general uniform-existence claim |
+| Bayesian games, BCE, revelation, information design, Groves, auctions, and knapsack | `GameTheory.Core.Bayesian`, `GameTheory.Mechanism`, and `GameTheory.Languages.Bayesian` | general PMF priors, posterior laws, and guarded payoffs; optimizer and executable scopes remain as recorded by the capability matrix |
 | Monderer--Tennenholtz-style target implementation by profile transfers | `GameTheory.Mechanism.Implementation` | supported for canonical weak undominance and finite surviving-budget bounds; mixed, correlated, informational, VCG, price, and attainment extensions remain consumer-gated |
 | Indivisible-goods EF1 and two-agent EFX | `GameTheory.Mechanism.FairDivision` | supported |
 | Coalitional games, Shapley/Banzhaf/Shapley--Shubik values, bargaining, and matching | `GameTheory.Core.Coalitional` and `GameTheory.Cooperative` | supported or partial as recorded in the delivery ledger |
 | Congestion games and affine price of anarchy | `GameTheory.Congestion` | supported |
-| Finite knowledge, posteriors, common knowledge, and agreement | `GameTheory.Epistemic` | supported |
+| Knowledge, posteriors, common knowledge, and agreement | `GameTheory.Epistemic` | arbitrary information cells and PMF priors; positive-cell assumptions are local to the implications needing them |
 | ESS/NSS and the symmetric-Nash bridge | `GameTheory.Evolutionary` | supported |
 
 The exact public imports, hostile consumers, and limitations are indexed in

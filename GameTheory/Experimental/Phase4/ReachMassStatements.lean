@@ -32,7 +32,7 @@ quantifying over the information state before the objects indexed by it removes
 the need — both sides land in one type by construction.
 -/
 
-import GameTheory.Protocol.Information
+import GameTheory.Protocol.PolicyRandomization
 
 noncomputable section
 
@@ -59,7 +59,7 @@ mass. -/
 def StepMassInvariant : Prop :=
   ∀ {state target : E.State} (first second : LegalJoint E state),
     target ∈ (E.step state first).support → target ∈ (E.step state second).support →
-      (E.step state first).prob target = (E.step state second).prob target
+      (E.step state first) target = (E.step state second) target
 
 /-! ## Condition two: reaching a state factors player by player
 
@@ -97,7 +97,7 @@ variable {E} in
 /-- **The answer's law at an information state does not depend on which history
 reached it.** The two conditioning events are the player's own records along the
 two histories; where recall fails those records differ, so the condition has
-content. Both sides land in `FinDist (M.Choice i info)` for the one `info`
+content. Both sides land in `PMF (M.Choice i info)` for the one `info`
 quantified over first, so nothing is transported.
 
 Recall makes this automatic — the two records coincide — which is the precise
@@ -107,10 +107,10 @@ def ActionPosteriorLocal (M : InformationModel E) (i : ι) : Prop :=
     M.infoOf i first.trace = info → M.infoOf i second.trace = info →
     ∀ (hfirst : ∃ q ∈ M.Consistent i (M.ownPlay i first.trace), q ∈ mixed.support)
       (hsecond : ∃ q ∈ M.Consistent i (M.ownPlay i second.trace), q ∈ mixed.support),
-      FinDist.map (fun policy => policy info)
-          (mixed.condOn (M.Consistent i (M.ownPlay i first.trace)) hfirst) =
-        FinDist.map (fun policy => policy info)
-          (mixed.condOn (M.Consistent i (M.ownPlay i second.trace)) hsecond)
+      PMF.map (fun policy => policy info)
+          (mixed.filter (M.Consistent i (M.ownPlay i first.trace)) hfirst) =
+        PMF.map (fun policy => policy info)
+          (mixed.filter (M.Consistent i (M.ownPlay i second.trace)) hsecond)
 
 variable {E} in
 /-- And the sufficiency, which is the one thing this file proves — now from the
@@ -122,6 +122,7 @@ theorem actionPosteriorLocal_of_constrainsAlike {M : InformationModel E}
   have hsame : M.Consistent i (M.ownPlay i first.trace) =
       M.Consistent i (M.ownPlay i second.trace) :=
     hconstrain i first.trace second.trace (by rw [hfirst, hsecond])
-  rw [FinDist.condOn_congr _ hsame hf (by rw [← hsame]; exact hf)]
+  congr 1
+  exact PMF.ext (fun policy => by simp only [PMF.filter_apply, hsame])
 
 end GameTheory.Experimental.Phase4

@@ -72,7 +72,8 @@ instance graphValueDecidableEq
       unfold graphValue Config
       infer_instance
 
-private theorem baseParent_mem [DecidableEq Node]
+/-- Every effective parent of a base node remains a base graph parent. -/
+theorem baseParent_mem [DecidableEq Node]
     (view : UtilityView semantics) {owner : Player}
     (node : Node) (parent : {parent // parent ∈ effectiveParents diagram node}) :
     (.base parent.1 : UtilityView.GraphNode view owner) ∈
@@ -103,7 +104,8 @@ theorem baseParentConfiguration_apply [DecidableEq Node]
       configuration ⟨.base parent.1, baseParent_mem view node parent⟩ :=
   rfl
 
-private theorem utilityParent_mem [DecidableEq Node]
+/-- Every utility-term parent is represented by a base graph parent. -/
+theorem utilityParent_mem [DecidableEq Node]
     (view : UtilityView semantics) {owner : Player}
     (site : view.UtilitySite owner)
     (parent : {parent // parent ∈ (view.term site).parents}) :
@@ -173,7 +175,7 @@ def augmentedKernels [DecidableEq Node]
       effectiveKernels semantics policy node
         (baseParentConfiguration view node configuration)
   | .utility site, configuration =>
-      FinDist.pure (utilityParentConfiguration view site configuration)
+      PMF.pure (utilityParentConfiguration view site configuration)
 
 @[simp]
 theorem augmentedKernels_base [DecidableEq Node]
@@ -198,7 +200,7 @@ theorem augmentedKernels_utility [DecidableEq Node]
       ParentConfiguration (graphValue view (owner := owner))
         (view.graphParents (owner := owner)) (.utility site)) :
     augmentedKernels view policy (.utility site) configuration =
-      FinDist.pure (utilityParentConfiguration view site configuration) :=
+      PMF.pure (utilityParentConfiguration view site configuration) :=
   rfl
 
 /-- Base nodes in effective topological order, followed by every utility

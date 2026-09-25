@@ -36,13 +36,13 @@ implementation" holds across both layers.
 
 `verifyMixedNash_eq_true_iff` is the D2 kill test "NFG mixed extension using the
 final signature API". It needs `isNash_mixed_iff` — a randomized deviation in
-the mixed extension is a mixture of pure ones — and `FinDist.ofWeights` to
+the mixed extension is a mixture of pure ones — and `PMF.ofFintype` to
 compile a rational weight vector into the semantic law. No second mixed-game
 API appears.
 
 EXP-073/D40 clarifies that this frontend checks the weaker pure-dominator
 iteration.  Standard Bernheim--Pearce rationalizability lives in Core and uses
-`FinDist` mixed dominators; an executable mixed-elimination procedure would
+PMF mixed dominators; an executable mixed-elimination procedure would
 need its own exact certificate design and is not inferred from this frontend.
 
 ## Dependency budget, measured
@@ -56,11 +56,13 @@ elaborates probe files instead and requires the named constant to be unknown:
 | `GameTheory.Finite.Algorithm` | `PMF` | unreachable |
 | `GameTheory.Finite.Algorithm` | `MeasureTheory.Measure` | unreachable |
 | `GameTheory.Finite.Algorithm` | `stdSimplex` | unreachable |
-| `GameTheory.Core` | `stdSimplex` | unreachable |
-| `GameTheory.Core` | `Polynomial` | unreachable |
 
 The algorithm module contains no `open Classical`, `classical`,
 `noncomputable`, or `Fintype.ofFinite`.
+
+Core's separate boundary excludes project Analysis and the external fixed-point
+dependency. The former simplex/polynomial proxy probes do not characterize
+that boundary under Mathlib's canonical PMF imports (EXP-129, D62).
 
 ## Executable examples
 

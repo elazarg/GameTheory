@@ -5,7 +5,7 @@ Public root of the greenfield GameTheory library.
 
 `GameTheory.Core` is the stable foundation and static theory;
 `GameTheory.Protocol` is the sequential layer and its compilation into the
-core; `GameTheory.Epistemic` is the finite partition and knowledge branch;
+core; `GameTheory.Epistemic` is the partition and knowledge branch;
 `GameTheory.Evolutionary` is the static ESS/NSS branch; `GameTheory.Finite` is
 the executable rational frontend and its correctness layer.
 

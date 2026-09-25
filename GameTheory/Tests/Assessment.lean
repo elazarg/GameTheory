@@ -27,6 +27,9 @@ open GameTheory.Protocol.ExecutionProtocol (Context)
 inductive Room | left | right | done
   deriving DecidableEq, Repr
 
+instance : Fintype Room :=
+  ⟨{.left, .right, .done}, by intro room; cases room <;> simp⟩
+
 /-- The deviator's two calls. -/
 inductive Call | up | down
   deriving DecidableEq, Repr
@@ -40,7 +43,7 @@ def rooms : ExecutionProtocol Unit where
   active state _ := state ≠ .done
   available _ _ := Set.univ
   terminal state := state = .done
-  step _ _ := FinDist.pure .done
+  step _ _ := PMF.pure .done
   progress := by
     rintro state hterm
     exact ⟨fun _ => some .up, fun _ => ⟨hterm, Set.mem_univ _⟩⟩
@@ -49,9 +52,9 @@ def rooms : ExecutionProtocol Unit where
 def splitContext (continuation : Room → ℝ) : rooms.Context () where
   outcome choice :=
     match choice with
-    | some .up => FinDist.pure .left
-    | some .down => FinDist.pure .right
-    | none => FinDist.pure .done
+    | some .up => PMF.pure .left
+    | some .down => PMF.pure .right
+    | none => PMF.pure .done
   continuation := continuation
 
 /-- A continuation that prefers `left`. -/
@@ -67,12 +70,14 @@ def prefersRight : Room → ℝ
   | .done => 0
 
 theorem value_up (continuation : Room → ℝ) :
-    (splitContext continuation).value (some .up) = continuation .left :=
-  FinDist.expect_pure ..
+    (splitContext continuation).value (some .up)
+      (payoffIntegrable_of_finite _ _) = continuation .left := by
+  exact expect_pure _ _ _
 
 theorem value_down (continuation : Room → ℝ) :
-    (splitContext continuation).value (some .down) = continuation .right :=
-  FinDist.expect_pure ..
+    (splitContext continuation).value (some .down)
+      (payoffIntegrable_of_finite _ _) = continuation .right := by
+  exact expect_pure _ _ _
 
 /-- Both calls are on the table. -/
 def bothCalls : Set (Option Call) := {some .up, some .down}
@@ -86,15 +91,18 @@ lacks. -/
 
 theorem up_optimal_under_prefersLeft :
     (splitContext prefersLeft).IsLocallyOptimal bothCalls (some .up) := by
-  rintro alternative (rfl | rfl)
-  · rw [value_up]
+  refine ⟨payoffIntegrable_of_finite _ _,
+    (fun _ _ => payoffIntegrable_of_finite _ _), ?_⟩
+  rintro alternative (rfl | rfl) hchoice halt
+  · exact le_rfl
   · rw [value_down, value_up]
     norm_num [prefersLeft]
 
 theorem up_not_optimal_under_prefersRight :
     ¬ (splitContext prefersRight).IsLocallyOptimal bothCalls (some .up) := by
   intro hopt
-  have hdown := hopt (some .down) (by simp [bothCalls])
+  have hdown := hopt.2.2 (some .down) (by simp [bothCalls])
+    (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
   rw [value_down, value_up] at hdown
   norm_num [prefersRight] at hdown
 
@@ -107,15 +115,17 @@ back. This kills any `value` that ignores the outcome map. -/
 def swappedContext (continuation : Room → ℝ) : rooms.Context () where
   outcome choice :=
     match choice with
-    | some .up => FinDist.pure .right
-    | some .down => FinDist.pure .left
-    | none => FinDist.pure .done
+    | some .up => PMF.pure .right
+    | some .down => PMF.pure .left
+    | none => PMF.pure .done
   continuation := continuation
 
 theorem up_optimal_under_swapped :
     (swappedContext prefersRight).IsLocallyOptimal bothCalls (some .up) := by
-  rintro alternative (rfl | rfl) <;>
-    simp [Context.value, swappedContext, prefersRight, FinDist.expect_pure]
+  refine ⟨payoffIntegrable_of_finite _ _,
+    (fun _ _ => payoffIntegrable_of_finite _ _), ?_⟩
+  rintro alternative (rfl | rfl) hchoice halt <;>
+    simp [Context.value, swappedContext, prefersRight, expect_pure]
 
 /-- Same continuation as `up_not_optimal_under_prefersRight`, opposite verdict:
 only the outcome map changed. -/
@@ -131,7 +141,8 @@ profitable deviation ever existed. Here is one. -/
 
 theorem down_is_profitable_under_prefersRight :
     (splitContext prefersRight).IsProfitableDeviation bothCalls (some .up) (some .down) := by
-  refine ⟨by simp [bothCalls], ?_⟩
+  refine ⟨by simp [bothCalls], payoffIntegrable_of_finite _ _,
+    payoffIntegrable_of_finite _ _, ?_⟩
   rw [value_up, value_down]
   norm_num [prefersRight]
 
@@ -140,30 +151,34 @@ of optimality, rather than the refutation being assumed. -/
 theorem no_optimality_from_profitable_deviation :
     ¬ (splitContext prefersRight).IsLocallyOptimal bothCalls (some .up) := by
   rw [Context.isLocallyOptimal_iff_no_profitable_deviation]
-  intro hnone
-  exact hnone ⟨some .down, down_is_profitable_under_prefersRight⟩
+  intro hopt
+  exact hopt.2.2 ⟨some .down, down_is_profitable_under_prefersRight⟩
 
 /-! ## Probe 4: `ofBelief` really averages over the belief
 
 The belief-built context must depend on the belief, not just on one state. -/
 
 /-- A branch that reports where it was. -/
-def roomBranch (state : Room) (_choice : Option Call) : FinDist Room := FinDist.pure state
+def roomBranch (state : Room) (_choice : Option Call) : PMF Room := PMF.pure state
 
 theorem ofBelief_value_pure (state : Room) (continuation : Room → ℝ)
     (choice : Option Call) :
-    (Context.ofBelief (E := rooms) (i := ()) (FinDist.pure state) roomBranch
-      continuation).value choice = continuation state := by
-  rw [Context.ofBelief_value]
-  simp [roomBranch]
+    (Context.ofBelief (E := rooms) (i := ()) (PMF.pure state) roomBranch
+      continuation).value choice (payoffIntegrable_of_finite _ _) =
+      continuation state := by
+  dsimp only [GameTheory.Protocol.Context.value,
+    GameTheory.Protocol.Context.IntegrableAt,
+    ExecutionProtocol.Context.ofBelief,
+    GameTheory.Protocol.Context.ofBelief]
+  simp only [PMF.pure_bind, roomBranch, expect_pure]
 
 /-- Two different point beliefs give two different values, so the belief is not
 being discarded. -/
 theorem belief_matters :
-    (Context.ofBelief (E := rooms) (i := ()) (FinDist.pure .left) roomBranch
-        prefersLeft).value (some .up) ≠
-      (Context.ofBelief (E := rooms) (i := ()) (FinDist.pure .right) roomBranch
-        prefersLeft).value (some .up) := by
+    (Context.ofBelief (E := rooms) (i := ()) (PMF.pure .left) roomBranch
+        prefersLeft).value (some .up) (payoffIntegrable_of_finite _ _) ≠
+      (Context.ofBelief (E := rooms) (i := ()) (PMF.pure .right) roomBranch
+        prefersLeft).value (some .up) (payoffIntegrable_of_finite _ _) := by
   rw [ofBelief_value_pure, ofBelief_value_pure]
   simp [prefersLeft]
 
@@ -186,21 +201,47 @@ variable (profile : Profile information.strategicSignature)
 theorem first_decision_bound
     (hopt : information.IsOneShotOptimalWithin profile () payoff 3)
     (choice : information.Choice ()
-      (information.infoOf () leftHistory.trace)) :
-    (information.oneShotLaw profile 1 leftHistory left_not_terminal () choice).expect
-        payoff ≤
-      (information.runFrom profile 2 leftHistory).expect payoff := by
-  exact hopt 1 leftHistory (by rfl) left_not_terminal choice
+      (information.infoOf () leftHistory.trace))
+    (hchoice : PayoffIntegrable
+      (information.oneShotLaw profile 1 leftHistory left_not_terminal () choice) payoff)
+    (hbase : PayoffIntegrable (information.runFrom profile 2 leftHistory) payoff) :
+    expect (information.oneShotLaw profile 1 leftHistory left_not_terminal () choice)
+        payoff hchoice ≤
+      expect (information.runFrom profile 2 leftHistory) payoff hbase := by
+  have hlocal := hopt 1 leftHistory (by rfl) left_not_terminal
+  have hbase' :
+      (information.historyContext profile () payoff 1 leftHistory
+        left_not_terminal).IntegrableAt
+          (profile () (information.infoOf () leftHistory.trace)) := by
+    dsimp only [Context.IntegrableAt, InformationModel.historyContext]
+    rw [information.oneShotLaw_self]
+    exact hbase
+  have hle := hlocal.2.2 choice (Set.mem_univ _) hbase' hchoice
+  simpa only [Context.value, InformationModel.historyContext,
+    information.oneShotLaw_self] using hle
 
 /-- The later decision is evaluated with exactly one total step remaining. -/
 theorem second_decision_bound
     (hopt : information.IsOneShotOptimalWithin profile () payoff 3)
     (choice : information.Choice ()
-      (information.infoOf () secondHistory.trace)) :
-    (information.oneShotLaw profile 0 secondHistory second_not_terminal () choice).expect
-        payoff ≤
-      (information.runFrom profile 1 secondHistory).expect payoff := by
-  exact hopt 0 secondHistory (by rfl) second_not_terminal choice
+      (information.infoOf () secondHistory.trace))
+    (hchoice : PayoffIntegrable
+      (information.oneShotLaw profile 0 secondHistory second_not_terminal () choice) payoff)
+    (hbase : PayoffIntegrable (information.runFrom profile 1 secondHistory) payoff) :
+    expect (information.oneShotLaw profile 0 secondHistory second_not_terminal () choice)
+        payoff hchoice ≤
+      expect (information.runFrom profile 1 secondHistory) payoff hbase := by
+  have hlocal := hopt 0 secondHistory (by rfl) second_not_terminal
+  have hbase' :
+      (information.historyContext profile () payoff 0 secondHistory
+        second_not_terminal).IntegrableAt
+          (profile () (information.infoOf () secondHistory.trace)) := by
+    dsimp only [Context.IntegrableAt, InformationModel.historyContext]
+    rw [information.oneShotLaw_self]
+    exact hbase
+  have hle := hlocal.2.2 choice (Set.mem_univ _) hbase' hchoice
+  simpa only [Context.value, InformationModel.historyContext,
+    information.oneShotLaw_self] using hle
 
 /-- The depth equation rejects evaluating the first decision with the later
 decision's continuation fuel. -/
@@ -239,7 +280,7 @@ theorem exitedHistory_terminal : execution.terminal exitedHistory.state := by
 history runner is already absorbing. -/
 theorem early_exit_absorbing :
     information.runFrom profile 1 exitedHistory =
-      FinDist.pure exitedHistory := by
+      PMF.pure exitedHistory := by
   exact ExecutionProtocol.runHistoryFor_of_terminal _ _ exitedHistory_terminal
 
 end StoppingDepth
@@ -284,9 +325,30 @@ def upStateUtility : Round → ℝ
   | .done _ .up => 1
   | _ => 0
 
+theorem upStateUtility_bound (state : Round) :
+    |upStateUtility state| ≤ 1 := by
+  cases state with
+  | start => norm_num [upStateUtility]
+  | after vote => cases vote <;> norm_num [upStateUtility]
+  | done first second =>
+      cases second <;> norm_num [upStateUtility]
+
 /-- The corresponding utility on compiled history outcomes. -/
 def upUtility (h : History twice) (_ : Unit) : ℝ :=
   upStateUtility h.state
+
+theorem upUtility_bound (h : History twice) :
+    |upUtility h ()| ≤ 1 := by
+  rcases h with ⟨state, trace⟩
+  cases state with
+  | start => norm_num [upUtility, upStateUtility]
+  | after vote => cases vote <;> norm_num [upUtility, upStateUtility]
+  | done first second =>
+      cases second <;> norm_num [upUtility, upStateUtility]
+
+theorem upUtility_integrable (law : PMF (History twice)) :
+    PayoffIntegrable law (fun h => upUtility h ()) :=
+  payoffIntegrable_of_bounded law _ upUtility_bound
 
 /-- At every nonterminal history, the typed up choice is locally optimal in
 the actual history context. The payoff bound handles every typed alternative;
@@ -306,16 +368,16 @@ theorem up_sequentiallyRationalAt_historyContext :
     · rfl
     · exact absurd hstopped hterm
   have hup : (upProfile () false).1 = some Vote.up := rfl
-  intro alternative _
-  rw [InformationModel.historyContext_value,
-    InformationModel.historyContext_value,
-    InformationModel.oneShotLaw_self]
+  refine ⟨upUtility_integrable _, (fun _ _ => upUtility_integrable _), ?_⟩
+  intro alternative _ hbase halt
+  dsimp only [Context.value, InformationModel.historyContext] at hbase halt ⊢
+  dsimp only [Context.IntegrableAt, InformationModel.historyContext] at hbase
   calc
-    (model.oneShotLaw upProfile 0 h hterm () alternative).expect
-          (fun outcome => upUtility outcome ()) ≤
-        (model.oneShotLaw upProfile 0 h hterm () alternative).expect
-            (fun _ => 1) := by
-              apply FinDist.expect_mono
+    expect (model.oneShotLaw upProfile 0 h hterm () alternative)
+          (fun outcome => upUtility outcome ()) halt ≤
+        expect (model.oneShotLaw upProfile 0 h hterm () alternative)
+            (fun _ => 1) (payoffIntegrable_constant _ 1) := by
+              apply expect_mono
               intro outcome _
               rcases outcome with ⟨state, outcomeTrace⟩
               cases state with
@@ -324,9 +386,10 @@ theorem up_sequentiallyRationalAt_historyContext :
                   cases vote <;> norm_num [upUtility, upStateUtility]
               | done first second =>
                   cases second <;> norm_num [upUtility, upStateUtility]
-    _ = 1 := FinDist.expect_const ..
-    _ = (model.runFrom upProfile 1 h).expect
-          (fun outcome => upUtility outcome ()) := by
+    _ = 1 := expect_constant _ _ _
+    _ = expect (model.oneShotLaw upProfile 0 h hterm ()
+          (upProfile () (model.infoOf () h.trace)))
+          (fun outcome => upUtility outcome ()) hbase := by
       have hvalue : upStateUtility (stepTo h.state Vote.up) = 1 := by
         cases hstate : h.state with
         | start => rfl
@@ -334,16 +397,21 @@ theorem up_sequentiallyRationalAt_historyContext :
         | done first second =>
             simp [hstate, Round.stopped] at hstopped
       calc
-        1 = (FinDist.pure (stepTo h.state Vote.up)).expect
-            upStateUtility := by
-              simp [hvalue]
-        _ = (FinDist.map History.state
-              (model.runFrom upProfile 1 h)).expect upStateUtility := by
+        1 = expect (PMF.pure (stepTo h.state Vote.up)) upStateUtility
+            (payoffIntegrable_of_bounded _ _ upStateUtility_bound) := by
+              rw [expect_pure]
+              exact hvalue.symm
+        _ = expect (PMF.map History.state (model.runFrom upProfile 1 h))
+              upStateUtility (payoffIntegrable_of_bounded _ _ upStateUtility_bound) := by
                 rw [map_state_runFrom_one upProfile Vote.up hup h hstopped]
-        _ = (model.runFrom upProfile 1 h).expect
-            (fun outcome => upUtility outcome ()) := by
-              rw [FinDist.expect_map]
+        _ = expect (model.runFrom upProfile 1 h)
+            (fun outcome => upUtility outcome ()) (upUtility_integrable _) := by
+              rw [expect_map History.state]
               rfl
+        _ = _ := (expect_congr_law
+          (model.oneShotLaw_self upProfile 0 h hterm ())
+          (fun outcome => upUtility outcome ()) hbase
+          (upUtility_integrable _)).symm
 
 /-- The history-context characterization packages the concrete local proof as
 finite-horizon one-shot optimality. -/
@@ -356,59 +424,62 @@ theorem up_isOneShotOptimalWithin :
 /-- The generic global bridge now controls an arbitrary replacement policy,
 including policies that reach a different continuation history. -/
 theorem arbitrary_policy_update_no_better (alternative : model.Policy ()) :
-    (model.runFrom (Profile.update upProfile () alternative) 1
-        twice.initHistory).expect (fun outcome => upUtility outcome ()) ≤
-      (model.runFrom upProfile 1 twice.initHistory).expect
-        (fun outcome => upUtility outcome ()) :=
+    expect (model.runFrom (Profile.update upProfile () alternative) 1
+        twice.initHistory) (fun outcome => upUtility outcome ())
+        (upUtility_integrable _) ≤
+      expect (model.runFrom upProfile 1 twice.initHistory)
+        (fun outcome => upUtility outcome ()) (upUtility_integrable _) := by
+  simpa only [expect_proof_irrel] using
   model.expect_runFrom_update_le_of_isOneShotOptimalWithin
     upProfile () (fun outcome => upUtility outcome ()) 1
     up_isOneShotOptimalWithin alternative twice.initHistory (by
       simp [ExecutionProtocol.initHistory, ExecutionProtocol.Trace.length])
+    (upUtility_integrable _)
 
 /-- The optimal profile has value one in the compiled form. -/
 theorem up_expectedUtility :
     expectedUtility upUtility ()
-      ((model.toGameForm 1).play upProfile) = 1 := by
+      ((model.toGameForm 1).play upProfile) (upUtility_integrable _) = 1 := by
   rw [InformationModel.toGameForm_play]
   unfold expectedUtility InformationModel.run
   calc
-    (model.runFrom upProfile 1 twice.initHistory).expect
-        (fun outcome => upUtility outcome ()) =
-      (FinDist.map History.state
-        (model.runFrom upProfile 1 twice.initHistory)).expect
-          upStateUtility := by
-            rw [FinDist.expect_map]
+    expect (model.runFrom upProfile 1 twice.initHistory)
+        (fun outcome => upUtility outcome ()) (upUtility_integrable _) =
+      expect (PMF.map History.state
+        (model.runFrom upProfile 1 twice.initHistory)) upStateUtility
+          (payoffIntegrable_of_bounded _ _ upStateUtility_bound) := by
+            rw [expect_map History.state]
             rfl
     _ = 1 := by
       rw [map_state_runFrom_one upProfile Vote.up rfl
         twice.initHistory rfl]
-      norm_num [stepTo, upStateUtility]
+      norm_num [stepTo, upStateUtility, expect_pure]
 
 /-- The down profile has value zero, so optimality is not vacuous. -/
 theorem down_expectedUtility :
     expectedUtility upUtility ()
-      ((model.toGameForm 1).play downProfile) = 0 := by
+      ((model.toGameForm 1).play downProfile) (upUtility_integrable _) = 0 := by
   rw [InformationModel.toGameForm_play]
   unfold expectedUtility InformationModel.run
   calc
-    (model.runFrom downProfile 1 twice.initHistory).expect
-        (fun outcome => upUtility outcome ()) =
-      (FinDist.map History.state
-        (model.runFrom downProfile 1 twice.initHistory)).expect
-          upStateUtility := by
-            rw [FinDist.expect_map]
+    expect (model.runFrom downProfile 1 twice.initHistory)
+        (fun outcome => upUtility outcome ()) (upUtility_integrable _) =
+      expect (PMF.map History.state
+        (model.runFrom downProfile 1 twice.initHistory)) upStateUtility
+          (payoffIntegrable_of_bounded _ _ upStateUtility_bound) := by
+            rw [expect_map History.state]
             rfl
     _ = 0 := by
       rw [map_state_runFrom_one downProfile Vote.down rfl
         twice.initHistory rfl]
-      norm_num [stepTo, upStateUtility]
+      norm_num [stepTo, upStateUtility, expect_pure]
 
 /-- The concrete alternative is strictly worse. -/
 theorem up_strictly_better_than_down :
     expectedUtility upUtility ()
-        ((model.toGameForm 1).play downProfile) <
+        ((model.toGameForm 1).play downProfile) (upUtility_integrable _) <
       expectedUtility upUtility ()
-        ((model.toGameForm 1).play upProfile) := by
+        ((model.toGameForm 1).play upProfile) (upUtility_integrable _) := by
   rw [down_expectedUtility, up_expectedUtility]
   norm_num
 
@@ -416,10 +487,10 @@ theorem up_strictly_better_than_down :
 ordinary Nash for the information-local compiled game. -/
 theorem up_isNash :
     IsNash (model.toGameForm 1) (euPreference upUtility) upProfile := by
-  apply model.isNash_toGameForm_of_isOneShotOptimalWithin
-  intro who
-  cases who
-  exact up_isOneShotOptimalWithin
+  exact model.isNash_toGameForm_of_isOneShotOptimalWithin
+    upProfile upUtility 1
+    (fun who => by cases who; exact up_isOneShotOptimalWithin)
+    (fun who _ => by cases who; exact upUtility_integrable _)
 
 end AssessmentBridge
 

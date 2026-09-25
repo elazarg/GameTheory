@@ -153,12 +153,13 @@ private theorem exists_reducedOwnerPolicy_dominates_on_sourceFirst
           (fun assignment who => semantics.utility who assignment) owner
           ((nativeBehavioralGameForm semantics).play
             (Profile.update (pruning.expandPolicy policy) owner
-              fullReplacement)) ≤
+              fullReplacement)) (payoffIntegrable_of_finite _ _) ≤
         expectedUtility
           (fun assignment who => semantics.utility who assignment) owner
           ((nativeBehavioralGameForm semantics).play
             (Profile.update (pruning.expandPolicy policy) owner
-              (pruning.expandOwnerPolicy owner reducedReplacement))) := by
+              (pruning.expandOwnerPolicy owner reducedReplacement)))
+          (payoffIntegrable_of_finite _ _) := by
   let : Fintype (Assignment diagram) := by
     unfold Assignment
     infer_instance
@@ -249,14 +250,16 @@ private theorem exists_reducedOwnerPolicy_dominates_on_sourceFirst
               (fun assignment who => semantics.utility who assignment) owner
               ((nativeBehavioralGameForm semantics).play
                 (Profile.update (pruning.expandPolicy policy) owner
-                  fullReplacement)) ≤
+                  fullReplacement)) (payoffIntegrable_of_finite _ _) ≤
             expectedUtility
               (fun assignment who => semantics.utility who assignment) owner
               ((nativeBehavioralGameForm semantics).play
                 (Profile.update (pruning.expandPolicy policy) owner
-                  nextFull)) := by
+                  nextFull)) (payoffIntegrable_of_finite _ _) := by
+        obtain ⟨hbest, halt, hle⟩ :=
+          htransported.upperBound (fullReplacement target)
         simpa only [siteRuleExpectedUtility, siteReplacementLaw, hleft,
-          nextFull] using htransported.upperBound (fullReplacement target)
+          nextFull] using hle
       have hmixedUpdated : ∀ site, site ∈ sites →
           FullyMixedAt (pruning.expandOwnerPolicy owner updated) site := by
         intro site hsite
@@ -323,12 +326,13 @@ theorem exists_reducedOwnerPolicy_dominates
           (fun assignment who => semantics.utility who assignment) owner
           ((nativeBehavioralGameForm semantics).play
             (Profile.update (pruning.expandPolicy policy) owner
-              fullReplacement)) ≤
+              fullReplacement)) (payoffIntegrable_of_finite _ _) ≤
         expectedUtility
           (fun assignment who => semantics.utility who assignment) owner
           ((nativeBehavioralGameForm semantics).play
             (Profile.update (pruning.expandPolicy policy) owner
-              (pruning.expandOwnerPolicy owner reducedReplacement))) := by
+              (pruning.expandOwnerPolicy owner reducedReplacement)))
+          (payoffIntegrable_of_finite _ _) := by
   let ownerOrder := orientedTopologicalOrder view owner hacyclic
   let initial := uniformReducedOwnerPolicyOfSemantics pruning semantics owner
   apply exists_reducedOwnerPolicy_dominates_on_sourceFirst pruning topological
@@ -366,6 +370,7 @@ theorem coversFullDeviationsAt_of_edgeAdditionFixpoint
             (pruning.expandOwnerPolicy owner reducedReplacement)) by
     exact congrArg (nativeBehavioralGameForm semantics).play
       (pruning.expandPolicy_update policy owner reducedReplacement)]
-  exact hdominates
+  exact ⟨payoffIntegrable_of_finite _ _, payoffIntegrable_of_finite _ _,
+    hdominates⟩
 
 end GameTheory.Experimental.PostArchitecture.MAIDPruningGlobalReduction

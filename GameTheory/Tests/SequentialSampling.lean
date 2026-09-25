@@ -1,4 +1,5 @@
 import GameTheory.Math.Probability.SequentialSampling
+import GameTheory.Math.Probability.Uniform
 
 /-! # Correlated reconstruction and no-incoming-information controls -/
 
@@ -9,25 +10,25 @@ namespace GameTheory.Tests.SequentialSampling
 open GameTheory.Math.Probability
 open GameTheory.Math.Probability.SequentialSampling
 
-private def coin : FinDist Bool := FinDist.uniformOfFintype
+private def coin : PMF Bool := PMF.uniformOfFintype Bool
 
 private theorem coin_support (value : Bool) : value ∈ coin.support :=
-  FinDist.mem_support_uniformOfFintype value
+  PMF.mem_support_uniformOfFintype value
 
-private def correlated : FinDist (List Bool) := coin.map fun value => [value, value]
+private def correlated : PMF (List Bool) := coin.map fun value => [value, value]
 
 /-- Conditioning realizes a genuinely correlated two-step law. -/
 theorem correlated_reconstruction : run (next correlated) 2 = correlated := by
   apply run_next
   intro actions member
-  rw [correlated, FinDist.support_map] at member
+  rw [correlated, PMF.support_map] at member
   obtain ⟨value, _, rfl⟩ := member
   rfl
 
 /-- Both constant transcripts have positive probability. -/
 theorem correlated_two_branches :
     [false, false] ∈ correlated.support ∧ [true, true] ∈ correlated.support := by
-  constructor <;> rw [correlated, FinDist.support_map]
+  constructor <;> rw [correlated, PMF.support_map]
   · exact ⟨false, coin_support false, rfl⟩
   · exact ⟨true, coin_support true, rfl⟩
 
@@ -37,39 +38,38 @@ theorem independent_draws_do_not_reconstruct :
   intro equal
   have mixed : [false, true] ∈
       (coin.bind (fun first => coin.map (fun second => [first, second]))).support := by
-    rw [FinDist.support_bind]
+    rw [PMF.support_bind]
     apply Set.mem_iUnion_of_mem false
     apply Set.mem_iUnion_of_mem (coin_support false)
-    rw [FinDist.support_map]
+    rw [PMF.support_map]
     exact ⟨true, coin_support true, rfl⟩
-  rw [equal, correlated, FinDist.support_map] at mixed
+  rw [equal, correlated, PMF.support_map] at mixed
   obtain ⟨value, _, equalList⟩ := mixed
   cases value <;> simp at equalList
 
 /-- A zero-probability prefix still has a specified total next-action law. -/
 theorem off_path_prefix :
-    next (FinDist.pure [false, false]) [true] = FinDist.pure false := by
-  rw [next, FinDist.condOnFibre_eq_self_of_not_mem_support]
-  · simp [next]
-  · simp
+    next (PMF.pure [false, false]) [true] = PMF.pure false := by
+  simp [next, conditionOnHead, PMF.pure_map]
 
 /-- The sampler itself needs no typeclass supplying a default action. -/
 theorem zero_length_without_default {Action View : Type*}
-    (advance : View → Action → View) (choose : View → FinDist Action) (view : View) :
-    transcript advance choose 0 view = FinDist.pure [] := rfl
+    (advance : View → Action → View) (choose : View → PMF Action) (view : View) :
+    transcript advance choose 0 view = PMF.pure [] := rfl
 
 /-- Conditional reconstruction also covers a zero-length response. -/
 theorem zero_length_reconstruction :
-    run (next (FinDist.pure ([] : List Bool))) 0 = FinDist.pure [] := by
+    run (next (PMF.pure ([] : List Bool))) 0 = PMF.pure [] := by
   apply run_next
   intro actions member
-  cases FinDist.mem_support_pure.mp member
+  rw [PMF.mem_support_pure_iff] at member
+  subst actions
   rfl
 
 /-- Asking for another action after an exhausted response returns the default. -/
 theorem exhausted_response_default :
-    next (FinDist.pure ([] : List Bool)) [] = FinDist.pure default := by
-  simp [next]
+    next (PMF.pure ([] : List Bool)) [] = PMF.pure default := by
+  simp [next, PMF.pure_map]
 
 private abbrev HiddenState := {state : ℕ × Bool // Even state.1}
 
@@ -80,8 +80,8 @@ private def update (_ : Bool) (action : Bool) : Bool := !action
 private def step (state : HiddenState) (action : Bool) : HiddenState :=
   ⟨(state.1.1, !action), state.2⟩
 
-private def policy (view : Bool) : FinDist Bool :=
-  if view then coin else FinDist.pure true
+private def policy (view : Bool) : PMF Bool :=
+  if view then coin else PMF.pure true
 
 private theorem observe_step (state : HiddenState) (action : Bool) :
     observe (step state action) = update (observe state) action := rfl
@@ -106,19 +106,19 @@ theorem hidden_endpoint_projection (count : Nat) (state : HiddenState) :
         (fun actions => (actions.foldl step state).1) =
       ((fun law => law.bind (fun current =>
         (policy (observe current)).map (step current)))^[count]
-          (FinDist.pure state)).map Subtype.val := by
+          (PMF.pure state)).map Subtype.val := by
   rw [← transcript_eq_iteration update policy observe step observe_step]
-  rw [FinDist.map_comp]
+  rw [PMF.map_comp]
   rfl
 
 /-- Any later stochastic continuation on the hidden endpoint is preserved. -/
 theorem hidden_continuation (count : Nat) (state : HiddenState)
-    (later : HiddenState → FinDist ℕ) :
+    (later : HiddenState → PMF ℕ) :
     ((transcript update policy count (observe state)).map
         (fun actions => actions.foldl step state)).bind later =
       ((fun law => law.bind (fun current =>
         (policy (observe current)).map (step current)))^[count]
-          (FinDist.pure state)).bind later :=
+          (PMF.pure state)).bind later :=
   continuation_eq update policy observe step observe_step count state later
 
 private def revealObserve (state : Bool × Bool × Bool) : Bool := state.2.1
@@ -139,18 +139,18 @@ theorem incoming_information_rejects_local_update :
 /-- Ignoring that incoming information actually changes the complete endpoint
 law after two actions. -/
 theorem incoming_information_changes_endpoint :
-    (transcript (fun view (_ : Bool) => view) FinDist.pure 2 false).map
+    (transcript (fun view (_ : Bool) => view) PMF.pure 2 false).map
         (fun actions => actions.foldl revealStep (true, false, false)) ≠
       (fun law => law.bind (fun current =>
-        (FinDist.pure (revealObserve current)).map (revealStep current)))^[2]
-          (FinDist.pure (true, false, false)) := by
-  simp only [transcript, FinDist.pure_bind, FinDist.map_pure, List.foldl_cons,
+        (PMF.pure (revealObserve current)).map (revealStep current)))^[2]
+          (PMF.pure (true, false, false)) := by
+  simp only [transcript, PMF.pure_bind, PMF.pure_map, List.foldl_cons,
     List.foldl_nil, Function.iterate_succ_apply, Function.iterate_zero_apply,
     revealStep, revealObserve]
   intro equal
-  have supported : (true, true, false) ∈ (FinDist.pure (true, true, false)).support :=
-    FinDist.mem_support_pure.mpr rfl
-  rw [equal, FinDist.mem_support_pure] at supported
+  have supported : (true, true, false) ∈ (PMF.pure (true, true, false)).support :=
+    by simp
+  rw [equal, PMF.mem_support_pure_iff] at supported
   cases supported
 
 end GameTheory.Tests.SequentialSampling

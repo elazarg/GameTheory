@@ -19,11 +19,11 @@ def binaryChoice : GameForm Unit where
   sig :=
     { Strategy := fun _ => Bool
       Outcome := Bool }
-  play profile := FinDist.pure (profile ())
+  play profile := PMF.pure (profile ())
 
 @[simp]
 theorem binaryChoice_play (profile : Profile binaryChoice.sig) :
-    binaryChoice.play profile = FinDist.pure (profile ()) :=
+    binaryChoice.play profile = PMF.pure (profile ()) :=
   rfl
 
 /-- Choosing `true` yields one; choosing `false` yields zero. -/
@@ -43,31 +43,41 @@ theorem chooses_true_isNash :
   rw [isNash_iff]
   intro who replacement
   rcases who with ⟨⟩
-  cases replacement <;>
-    simp [binaryChoice, binaryChoiceUtility, chooses, expectedUtility]
+  cases replacement
+  · simpa only [binaryChoice, chooses_apply, Profile.update_same,
+      euPreference_pure_iff] using
+      (show binaryChoiceUtility false () ≤ binaryChoiceUtility true () by
+        simp [binaryChoiceUtility])
+  · simpa only [binaryChoice, chooses_apply, Profile.update_same,
+      euPreference_pure_iff] using
+      (show binaryChoiceUtility true () ≤ binaryChoiceUtility true () by rfl)
 
 /-- The high-payoff action is also dominant. -/
 theorem true_isDominant :
     IsDominant binaryChoice (euPreference binaryChoiceUtility) () true := by
   intro alternative profile
-  cases alternative <;>
-    norm_num [euPreference_apply, binaryChoiceUtility]
+  cases alternative
+  · simpa only [binaryChoice, Profile.update_same, euPreference_pure_iff] using
+      (show binaryChoiceUtility false () ≤ binaryChoiceUtility true () by
+        simp [binaryChoiceUtility])
+  · simpa only [binaryChoice, Profile.update_same, euPreference_pure_iff] using
+      (show binaryChoiceUtility true () ≤ binaryChoiceUtility true () by rfl)
 
 /-- A genuinely nontrivial positive affine change preserves the Nash witness. -/
 theorem chooses_true_isNash_positiveAffine :
     IsNash binaryChoice
       (euPreference (affineUtility binaryChoiceUtility (fun _ => 3) (fun _ => 7)))
       (chooses true) :=
-  (isNash_affine binaryChoiceUtility (fun _ => 3) (fun _ => 7)
+  (isNash_affine (F := binaryChoice) binaryChoiceUtility (fun _ => 3) (fun _ => 7)
     (fun _ => by norm_num) (chooses true)).1 chooses_true_isNash
 
 /-- The same affine change preserves the dominant-strategy witness. -/
 theorem true_isDominant_positiveAffine :
-    IsDominant binaryChoice
+  IsDominant binaryChoice
       (euPreference (affineUtility binaryChoiceUtility (fun _ => 3) (fun _ => 7)))
       () true :=
-  (isDominant_affine binaryChoiceUtility (fun _ => 3) (fun _ => 7)
-    (F := binaryChoice) (fun _ => by norm_num) () true).1 true_isDominant
+  (isDominant_affine (F := binaryChoice) binaryChoiceUtility (fun _ => 3) (fun _ => 7)
+    (fun _ => by norm_num) () true).1 true_isDominant
 
 /-- Positivity is essential: multiplying by `-1` destroys the original Nash
 profile. -/
@@ -77,8 +87,14 @@ theorem chooses_true_not_isNash_negativeScale :
       (chooses true) := by
   intro hnash
   have h := (isNash_iff (chooses true)).1 hnash () false
-  simp [euPreference_apply] at h
-  norm_num [binaryChoiceUtility, affineUtility] at h
+  have h' : affineUtility binaryChoiceUtility (fun _ => -1) (fun _ => 0)
+      false () ≤ affineUtility binaryChoiceUtility (fun _ => -1) (fun _ => 0)
+        true () := by
+    have hpref : euPreference (affineUtility binaryChoiceUtility (fun _ => -1)
+        (fun _ => 0)) () (PMF.pure true) (PMF.pure false) := by
+      simpa only [binaryChoice, chooses_apply, Profile.update_same] using h
+    exact (euPreference_pure_iff _ _ _ _).1 hpref
+  norm_num [binaryChoiceUtility, affineUtility] at h'
 
 /-- Under the negative scale the low original payoff becomes the Nash action,
 so the hostile case exhibits an actual incentive reversal. -/
@@ -89,7 +105,16 @@ theorem chooses_false_isNash_negativeScale :
   rw [isNash_iff]
   intro who replacement
   rcases who with ⟨⟩
-  cases replacement <;>
-    norm_num [euPreference_apply, binaryChoiceUtility, affineUtility]
+  cases replacement
+  · simpa only [binaryChoice, chooses_apply, Profile.update_same,
+      euPreference_pure_iff] using
+      (show affineUtility binaryChoiceUtility (fun _ => -1) (fun _ => 0)
+          false () ≤ affineUtility binaryChoiceUtility (fun _ => -1) (fun _ => 0)
+          false () by rfl)
+  · simpa only [binaryChoice, chooses_apply, Profile.update_same,
+      euPreference_pure_iff] using
+      (show affineUtility binaryChoiceUtility (fun _ => -1) (fun _ => 0)
+          true () ≤ affineUtility binaryChoiceUtility (fun _ => -1) (fun _ => 0)
+          false () by norm_num [binaryChoiceUtility, affineUtility])
 
 end GameTheory.Tests.UtilityInvariance

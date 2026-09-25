@@ -42,7 +42,7 @@ def fixture : MonitoringGame Player where
   initialPublic := false
   initialPrivate _ := ()
   signalLaw _ chosen :=
-    FinDist.pure (decide (chosen 0 = chosen 1), fun _ => ())
+    PMF.pure (decide (chosen 0 = chosen 1), fun _ => ())
 
 instance actionNonempty (i : Player) : Nonempty (fixture.Action i) := by
   infer_instance
@@ -63,26 +63,28 @@ def oneRound (first second : Action) : fixture.State :=
 theorem step_unequal {first second : Action} (hne : first ≠ second) :
     fixture.execution.step []
         ⟨joint first second, joint_legal first second⟩ =
-      FinDist.pure (oneRound first second) := by
+      PMF.pure (oneRound first second) := by
   rw [fixture.execution_step_some [] (actions first second)
     (joint_legal first second)]
-  simp [MonitoringGame.nextLaw, fixture, actions, hne, oneRound,
+  unfold MonitoringGame.nextLaw
+  rw [PMF.pure_map]
+  simp [fixture, actions, hne, oneRound,
     unequalSignals]
 
 def trace01 : Trace fixture.execution (oneRound 0 1) :=
   .extend .start (joint 0 1) (joint_legal 0 1) (by
     rw [step_unequal (by decide)]
-    exact FinDist.mem_support_pure.mpr rfl)
+    exact (PMF.mem_support_pure_iff _ _).mpr rfl)
 
 def trace02 : Trace fixture.execution (oneRound 0 2) :=
   .extend .start (joint 0 2) (joint_legal 0 2) (by
     rw [step_unequal (by decide)]
-    exact FinDist.mem_support_pure.mpr rfl)
+    exact (PMF.mem_support_pure_iff _ _).mpr rfl)
 
 def trace12 : Trace fixture.execution (oneRound 1 2) :=
   .extend .start (joint 1 2) (joint_legal 1 2) (by
     rw [step_unequal (by decide)]
-    exact FinDist.mem_support_pure.mpr rfl)
+    exact (PMF.mem_support_pure_iff _ _).mpr rfl)
 
 /-- The hidden states differ because the opponent's realized action differs. -/
 theorem hidden_states_distinct : oneRound 0 1 ≠ oneRound 0 2 := by
@@ -167,13 +169,13 @@ theorem initialLegal01 :
 theorem initial_step01 :
     fixture.execution.step fixture.execution.initHistory.state
         ⟨joint 0 1, initialLegal01⟩ =
-      FinDist.pure (oneRound 0 1) := by
+      PMF.pure (oneRound 0 1) := by
   simpa using step_unequal (first := 0) (second := 1) (by decide)
 
 def history01 : fixture.execution.History :=
   fixture.execution.initHistory.extend initialLegal01 (by
     rw [initial_step01]
-    exact FinDist.mem_support_pure.mpr rfl)
+    exact (PMF.mem_support_pure_iff _ _).mpr rfl)
 
 /-- Player zero receives a nonzero transition value; player one receives zero.
 The value is external to the monitoring syntax and execution object. -/

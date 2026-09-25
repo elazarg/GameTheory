@@ -56,7 +56,7 @@ def tripleCylinder (first second evidence : Finset Node)
 /-- Coordinate conditional independence is the existing observable predicate
 specialized transparently to three dependent restriction maps. -/
 abbrev CoordinatesConditionallyIndependent
-    (law : FinDist (Assignment diagram))
+    (law : PMF (Assignment diagram))
     (first second evidence : Finset Node) : Prop :=
   IsConditionallyIndependent law
     (fun assignment => Assignment.restrict diagram assignment first)
@@ -66,7 +66,7 @@ abbrev CoordinatesConditionallyIndependent
 /-- The coordinate API is definitionally the observable API, not a parallel
 notion requiring a bridge theorem. -/
 theorem coordinatesConditionallyIndependent_iff
-    (law : FinDist (Assignment diagram))
+    (law : PMF (Assignment diagram))
     (first second evidence : Finset Node) :
     CoordinatesConditionallyIndependent law first second evidence ↔
       IsConditionallyIndependent law
@@ -110,48 +110,48 @@ theorem restriction_tripleAtom_eq_tripleCylinder
 /-- Unfolding coordinate conditional independence gives exactly the four
 cylinder masses in the division-free cross-product identity. -/
 theorem coordinatesConditionallyIndependent_iff_cylinders
-    (law : FinDist (Assignment diagram))
+    (law : PMF (Assignment diagram))
     (first second evidence : Finset Node) :
     CoordinatesConditionallyIndependent law first second evidence ↔
       ∀ (firstConfiguration : Config diagram first)
         (secondConfiguration : Config diagram second)
         (evidenceConfiguration : Config diagram evidence),
-        law.probOf
-              (tripleCylinder first second evidence firstConfiguration
-                secondConfiguration evidenceConfiguration) *
-            law.probOf (cylinder evidence evidenceConfiguration) =
-          law.probOf
-              (pairCylinder first evidence firstConfiguration
-                evidenceConfiguration) *
-            law.probOf
+        (law.toOuterMeasure
+            (tripleCylinder first second evidence firstConfiguration
+                secondConfiguration evidenceConfiguration)).toReal *
+            (law.toOuterMeasure (cylinder evidence evidenceConfiguration)).toReal =
+          (law.toOuterMeasure
+            (pairCylinder first evidence firstConfiguration
+                evidenceConfiguration)).toReal *
+            (law.toOuterMeasure
               (pairCylinder second evidence secondConfiguration
-                evidenceConfiguration) :=
+                evidenceConfiguration)).toReal :=
   Iff.rfl
 
 /-- One complete assignment gives compatible local configurations and hence
 the expected same-witness cylinder identity.  No gluing operation, transport,
 or disjointness premise is needed. -/
 theorem sameWitness_cross_product
-    (law : FinDist (Assignment diagram))
+    (law : PMF (Assignment diagram))
     (first second evidence : Finset Node)
     (hindependent :
       CoordinatesConditionallyIndependent law first second evidence)
     (witness : Assignment diagram) :
-    law.probOf
+    (law.toOuterMeasure
           (tripleCylinder first second evidence
             (Assignment.restrict diagram witness first)
             (Assignment.restrict diagram witness second)
-            (Assignment.restrict diagram witness evidence)) *
-        law.probOf
-          (cylinder evidence (Assignment.restrict diagram witness evidence)) =
-      law.probOf
+            (Assignment.restrict diagram witness evidence))).toReal *
+        (law.toOuterMeasure
+          (cylinder evidence (Assignment.restrict diagram witness evidence))).toReal =
+      (law.toOuterMeasure
           (pairCylinder first evidence
             (Assignment.restrict diagram witness first)
-            (Assignment.restrict diagram witness evidence)) *
-        law.probOf
+            (Assignment.restrict diagram witness evidence))).toReal *
+        (law.toOuterMeasure
           (pairCylinder second evidence
             (Assignment.restrict diagram witness second)
-            (Assignment.restrict diagram witness evidence)) :=
+            (Assignment.restrict diagram witness evidence))).toReal :=
   (coordinatesConditionallyIndependent_iff_cylinders law
     first second evidence).mp hindependent _ _ _
 
@@ -188,8 +188,8 @@ def controlDiagram : Structure Unit ControlNode where
 
 def controlAssignment : Assignment controlDiagram := fun _ => false
 
-def controlLaw : FinDist (Assignment controlDiagram) :=
-  FinDist.pure controlAssignment
+def controlLaw : PMF (Assignment controlDiagram) :=
+  PMF.pure controlAssignment
 
 def firstCoordinates : Finset ControlNode := {.first}
 
@@ -211,8 +211,8 @@ def impossibleEvidenceConfiguration :
 the coordinate specialization preserves the base predicate's zero-evidence
 behavior. -/
 theorem impossibleEvidenceCylinder_mass_zero :
-    controlLaw.probOf
-      (cylinder evidenceCoordinates impossibleEvidenceConfiguration) = 0 := by
+    (controlLaw.toOuterMeasure
+      (cylinder evidenceCoordinates impossibleEvidenceConfiguration)).toReal = 0 := by
   have hnot : controlAssignment ∉
       cylinder evidenceCoordinates impossibleEvidenceConfiguration := by
     intro equality
@@ -221,10 +221,11 @@ theorem impossibleEvidenceCylinder_mass_zero :
         {node // node ∈ evidenceCoordinates})
     simp [Assignment.restrict, controlAssignment,
       impossibleEvidenceConfiguration] at hvalue
-  show (FinDist.pure controlAssignment).probOf
-    (cylinder evidenceCoordinates impossibleEvidenceConfiguration) = 0
-  classical
-  rw [← FinDist.expect_indicator_eq_probOf, FinDist.expect_pure]
-  simp [hnot]
+  show ((PMF.pure controlAssignment).toOuterMeasure
+    (cylinder evidenceCoordinates impossibleEvidenceConfiguration)).toReal = 0
+  rw [PMF.toOuterMeasure_apply, tsum_eq_single controlAssignment]
+  · simp [Set.indicator, hnot]
+  · intro value hne
+    simp [Set.indicator, PMF.pure_apply, hne]
 
 end GameTheory.Experimental.PostArchitecture.FiniteBNCoordinateIndependence

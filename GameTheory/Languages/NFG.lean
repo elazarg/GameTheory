@@ -50,7 +50,7 @@ def toGameForm : GameForm ι :=
 
 @[simp]
 theorem toGameForm_play (profile : Profile G.signature) :
-    G.toGameForm.play profile = FinDist.pure (G.outcome profile) := rfl
+    G.toGameForm.play profile = PMF.pure (G.outcome profile) := rfl
 
 end Game
 

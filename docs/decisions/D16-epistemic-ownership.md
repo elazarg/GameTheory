@@ -2,11 +2,11 @@
 
 - **Status:** adopted and promoted
 - **Date:** 2026-07-30
-- **Experiment IDs:** EXP-043
+- **Experiment IDs:** EXP-043; PMF generalization under EXP-135
 
 ## Decision / question
 
-Whether finite partitions, knowledge events, posteriors, and Aumann agreement
+Whether information partitions, knowledge events, posteriors, and Aumann agreement
 should be laws of `Protocol.InformationModel.InfoState`, a separate epistemic
 branch, or game-free mathematics.
 
@@ -15,8 +15,8 @@ branch, or game-free mathematics.
 1. Treat every Protocol `InfoSet` as a cell of a partition of execution states.
 2. Derive partitions only from Protocol models carrying an extra
    unique-history or state-view premise.
-3. Give epistemic games their own finite-cell partition object, sharing only
-   the canonical finite probability law.
+3. Give epistemic games a separate state-partition development, sharing the
+   canonical probability operations.
 4. Put the whole development under `GameTheory.Math`.
 
 Design 3 is adopted. Design 2 remains available as a future named bridge when
@@ -37,25 +37,18 @@ refutes every function from execution state to view that agrees with `infoOf`
 on every trace. Protocol information is history-local by design and is not, in
 general, a state partition.
 
-The positive half defines a finite-cell partition independently and proves
+The original positive half defines a finite-cell partition independently and proves
 full Aumann agreement from one `FinDist` prior, operation-local decidable
 equality, full support, a nonempty public event, self-evidence for both
 partitions, and constant posterior reports.
 
-## Measurements
+## Original experiment measurements
 
 | Measure | EXP-043 result |
 |---|---|
-| authored size | 287 nonblank lines; 22 declarations |
-| stable API change during experiment | 0 declarations and 0 imports |
 | authored import | `GameTheory.Protocol.Information` only |
-| focused build | 1,718 jobs |
-| full build | 3,342 jobs |
 | probability representation | existing `GameTheory.Math.Probability.FinDist`; no second law type |
 | data-level capabilities | no stored `Fintype`, `Finite`, or `DecidableEq` |
-| source trust/audit tokens | 0 placeholders, native decisions, custom axioms, direct updates, transports, `HEq`, tactic `change`, or `open Classical` |
-| repository audits | Phase 2/3 expected source measurements and declaration coverage pass |
-| axiom profile | `propext`, `Classical.choice`, `Quot.sound` only |
 | positive reachability | `FinDist`, `InformationModel`, experimental `InfoPartition`, and Aumann agreement |
 | negative reachability | `IsNash`, sequential Analysis convergence, `stdSimplex`, and `Polynomial` rejected |
 | Protocol partition probe | one reachable state lies in two distinct `InfoSet`s |
@@ -74,11 +67,12 @@ directly reject the Protocol-as-partition design.
 
 ## Result
 
-Adopt a stable `GameTheory.Epistemic` branch. Its foundational object is an
-explicit finite-cell `InfoPartition`; it owns event knowledge, common
-knowledge, posteriors, and agreement results. It shares
-`GameTheory.Math.Probability.FinDist`, but it does not import Protocol, static game
-forms, solution concepts, or Analysis.
+Adopt a stable `GameTheory.Epistemic` branch. Information partitions are ordinary
+`Setoid` values and events are arbitrary sets. Knowledge and common knowledge
+are probability-free; their owner imports only elementary set theory.
+Posteriors and agreement use ordinary PMFs and shared fiber conditioning.
+The branch does not import Protocol, static game forms, solution concepts,
+or project Analysis. No finite-cell wrapper or second probability law is needed.
 
 `Protocol.InformationModel.InfoState` remains history-local. No new law is
 added to it, and no conversion to an epistemic partition is claimed. A future
@@ -86,59 +80,38 @@ Protocol-to-epistemic bridge must name and test the extra premise that makes a
 state view well-defined; tree-shaped execution is a candidate, not an implicit
 default.
 
-Promotion starts with the checked finite-cell, posterior, self-evidence,
-disjoint-cell, sum-decomposition, and Aumann-agreement slice. Broader S5 and
-approximate-common-knowledge recovery follows only after the D-KNOW
-declaration ledger classifies the representative inventory.
-
-That promotion is complete. `GameTheory.Epistemic.Basic` contains the
-partition, posterior, and self-evidence interface;
-`GameTheory.Epistemic.Agreement` contains the cell decomposition and Aumann
-theorem; and `GameTheory.Epistemic` is re-exported by the public root. The
-stable branch has 174 nonblank lines and no Protocol, static-solution, or
-Analysis import. Full Phase 2/3 reachability audits pass: all three intended
-finite-law/epistemic inputs are reached, five forbidden epistemic dependencies
-are rejected, and Protocol rejects both public epistemic probes. The stable
-Aumann theorem has only the standard `propext`, `Classical.choice`, and
-`Quot.sound` axiom profile. The focused build completes in 1,715 jobs and the
-full build in 3,345.
+`GameTheory.Epistemic.Knowledge` owns cells, self-evidence, and S5 operators.
+`GameTheory.Epistemic.Basic` owns scalar posteriors and their connection to
+canonical fiber conditioning. `GameTheory.Epistemic.Agreement` owns weighted
+report reconstruction and Aumann agreement.
+The public Epistemic root must remain independent of Protocol, static solution
+concepts, and Analysis.
 
 ## Common-knowledge recovery
 
-The next mature batch validates the same boundary rather than reopening it.
-`GameTheory.Epistemic.Knowledge` now owns the finite S5 operator, T/4/5,
-monotonicity and conjunction, mutual knowledge, and the public self-evident
-event characterization of common knowledge. Enumeration capabilities occur on
-`Knows`, mutual knowledge, and the finite common-knowledge event, never on
-`InfoPartition`.
-
-All 30 declarations in the pinned `CommonKnowledge.lean` file now have exact
-reviewed ledger rows. The expanded Epistemic root has 370 nonblank lines; its
-focused build completes in 1,716 jobs and the full build in 3,350. The full
-Phase 2 gate positively reaches the new common-knowledge layer (`4/4`
-Epistemic inputs) while rejecting the same five static, sequential, and
-analytic dependencies. Representative S5/common-knowledge theorems retain the
-standard axiom profile.
+The S5 operator, T/4/5, monotonicity and conjunction, mutual knowledge, and
+the self-evident-event characterization of common knowledge require neither
+state nor agent enumeration. A quotient observation identifies information
+cells when the probability layer needs fiber reconstruction.
 
 The approximate operator batch also stays inside D16. `PBelief`,
 `mutualPBelief`, `IsPEvident`, and `CommonPBeliefAt` reuse the same posterior,
-partition, and finite event model; exact common knowledge implies common
-`p`-belief for every threshold at most one. The predecessor's separate
-positive-prior predicate is subsumed by `FinDist.FullSupport`.
+partition, and set-valued event model. Scalar posterior is the ratio of event
+and cell masses and is zero at a null cell. This convention does not construct
+a conditional PMF on that cell. Knowing an event therefore implies positive
+belief only with positive cell mass; full support is a sufficient convenience
+assumption, not part of epistemic data. A null singleton can know the whole
+space while assigning it scalar posterior zero.
 
-This raises the expanded Epistemic root to 544 nonblank lines. Its focused
-build completes in 1,717 jobs and the full build in 3,351. The Phase 2 audit
-now positively reaches all five intended Epistemic layers and still rejects
-all five forbidden dependency probes.
+Exact Aumann agreement requires a nonempty common self-evident event and
+constant reports. It does not require full support or positive public mass:
+on a null public event every contained cell is null, so both reports are zero.
+On a positive event, supported fiber reconstruction proves the weighted-report
+identity even when the prior support and cells are infinite.
 
-The final quantitative batch promotes
-`commonPBelief_posterior_reports_close`. Its 13 supporting mass, cell, and
-scalar lemmas remain private. The proof uses `FinDist.prob` and `FullSupport`
-throughout and establishes the full Monderer--Samet
-`|r i - r j| ≤ 2 * (1 - p)` bound.
-
-D-KNOW recovery is now complete: all 62 pinned declarations have exact
-reviewed dispositions. The final Epistemic root has 1,149 nonblank lines,
-builds in 1,718 focused / 3,352 full jobs, has zero source transport or trust
-tokens, and retains the standard axiom profile. The full Phase 2 gate reaches
-all six intended Epistemic layers and rejects all five forbidden dependencies.
+For quantitative agreement, a strictly positive belief threshold supplies
+the positive witness and cell masses used by the proof.
+`commonPBelief_posterior_reports_close` establishes the Monderer--Samet bound
+`|r i - r j| ≤ 2 * (1 - p)` without finite state/agent carriers or global full
+support. EXP-135 tests infinite support and cells, distinct quantitative
+reports, and the null-event distinction against the canonical definitions.

@@ -8,9 +8,9 @@ the hypotheses of the theorems that use them; they are not stored in these
 definitions.
 -/
 
-import GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayMeasure
 import GameTheory.Experimental.PostArchitecture.AsymptoticOscillatingSequence
-import GameTheory.Experimental.PostArchitecture.CountablePMFExpectation
+import GameTheory.Math.Probability.ExpectationMixture
+import GameTheory.Math.Probability.Measure
 
 noncomputable section
 
@@ -91,23 +91,7 @@ theorem expectedFiniteAverage_eq_integral (μ : Measure Ω)
       ∫ ω, cesaroAverage (stage ω) n ∂μ :=
   rfl
 
-/-! ## The countable discrete bridge -/
-
 open GameTheory.Math.Probability
-
-/--
-On a countable discrete carrier, the total Bochner integral used by
-`expectedFiniteAverage` agrees with `FinDist.expect` under an explicit
-pointwise bound.
--/
-theorem finDistMeasure_integral_eq_expect_of_bound {α : Type*}
-    [Countable α] [MeasurableSpace α] [MeasurableSingletonClass α]
-    (μ : FinDist α) (f : α → ℝ) {C : ℝ}
-    (hbound : ∀ a, ‖f a‖ ≤ C) :
-    (∫ a, f a ∂StochasticInfinitePlayMeasure.finDistMeasure μ) =
-      μ.expect f := by
-  exact CountablePMFExpectation.finDist_integral_eq_expect_of_bound
-    μ f hbound
 
 theorem hasExpectedFiniteAverageLimit_iff (μ : Measure Ω)
     (stage : Ω → ℕ → ℝ) (value : ℝ) :
@@ -132,9 +116,30 @@ theorem hasExpectedFiniteAverageLimit_const
 /-! ## A countable two-point hostile consumer -/
 
 /-- The fair selector law on the countable carrier `Bool`. -/
-def fairSelectorLaw : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure true) (FinDist.pure false)
+def fairSelectorLaw : PMF Bool :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure true) (PMF.pure false)
+
+private theorem expect_fairSelectorLaw (f : Bool → ℝ)
+    (h : PayoffIntegrable fairSelectorLaw f) :
+    expect fairSelectorLaw f h = (1 / 2 : ℝ) * f true + (1 / 2 : ℝ) * f false := by
+  classical
+  let htrue := payoffIntegrable_of_finite (PMF.pure true) f
+  let hfalse := payoffIntegrable_of_finite (PMF.pure false) f
+  calc
+    expect fairSelectorLaw f h =
+        expect (mix (1 / 2) (by norm_num) (by norm_num)
+          (PMF.pure true) (PMF.pure false)) f
+          (payoffIntegrable_mix (1 / 2) (by norm_num) (by norm_num)
+            (PMF.pure true) (PMF.pure false) f htrue hfalse) := rfl
+    _ = (1 / 2 : ℝ) * expect (PMF.pure true) f htrue +
+        (1 / 2 : ℝ) * expect (PMF.pure false) f hfalse :=
+      by
+        simpa only [show 1 - (1 / 2 : ℝ) = 1 / 2 by norm_num] using
+          (expect_mix (1 / 2) (by norm_num) (by norm_num)
+            (PMF.pure true) (PMF.pure false) f htrue hfalse)
+    _ = (1 / 2 : ℝ) * f true + (1 / 2 : ℝ) * f false := by
+      rw [expect_pure, expect_pure]
 
 /-- Select a stage sequence or its pointwise unit complement. -/
 def fairSelectorStage (stage : ℕ → ℝ) : Bool → ℕ → ℝ
@@ -209,16 +214,16 @@ theorem fair_selector_order_limits_measure (stage : ℕ → ℝ)
     (hcomplement_bound : ∀ n,
       ‖cesaroAverage (complementSequence stage) n‖ ≤ 1) :
     expectedPathwiseLiminf
-          (StochasticInfinitePlayMeasure.finDistMeasure (fairSelectorLaw))
+          fairSelectorLaw.toMeasure
           (fairSelectorStage stage) = 0 ∧
       (∀ n, expectedFiniteAverage
-          (StochasticInfinitePlayMeasure.finDistMeasure (fairSelectorLaw))
+          fairSelectorLaw.toMeasure
           (fairSelectorStage stage) n = (1 / 2 : ℝ)) ∧
       HasExpectedFiniteAverageLimit
-          (StochasticInfinitePlayMeasure.finDistMeasure (fairSelectorLaw))
+          fairSelectorLaw.toMeasure
           (fairSelectorStage stage) (1 / 2 : ℝ) ∧
       expectedPathwiseLimsup
-          (StochasticInfinitePlayMeasure.finDistMeasure (fairSelectorLaw))
+          fairSelectorLaw.toMeasure
           (fairSelectorStage stage) = 1 := by
   have hliminf_bound := fairSelectorStage_liminf_bound stage
     hstage_liminf hcomplement_liminf
@@ -226,46 +231,56 @@ theorem fair_selector_order_limits_measure (stage : ℕ → ℝ)
     hstage_limsup hcomplement_limsup
   have havg_bound := fairSelectorStage_average_bound stage
     hstage_bound hcomplement_bound
-  have hLiminf := finDistMeasure_integral_eq_expect_of_bound
-    fairSelectorLaw
+  have hliminf_integrable : PayoffIntegrable fairSelectorLaw
+      (fun b => Filter.liminf
+        (fun n => pathwiseAverage (fairSelectorStage stage) b n) atTop) :=
+    payoffIntegrable_of_bounded fairSelectorLaw _ (C := 1) (by
+      intro b
+      simpa [Real.norm_eq_abs] using hliminf_bound b)
+  have hlimsup_integrable : PayoffIntegrable fairSelectorLaw
+      (fun b => Filter.limsup
+        (fun n => pathwiseAverage (fairSelectorStage stage) b n) atTop) :=
+    payoffIntegrable_of_bounded fairSelectorLaw _ (C := 1) (by
+      intro b
+      simpa [Real.norm_eq_abs] using hlimsup_bound b)
+  have havg_integrable : ∀ n, PayoffIntegrable fairSelectorLaw
+      (fun b => pathwiseAverage (fairSelectorStage stage) b n) := by
+    intro n
+    apply payoffIntegrable_of_bounded fairSelectorLaw _ (C := 1)
+    intro b
+    simpa [Real.norm_eq_abs] using havg_bound b n
+  have hLiminf := expect_eq_integral fairSelectorLaw
     (fun b => Filter.liminf
       (fun n => pathwiseAverage (fairSelectorStage stage) b n) atTop)
-    hliminf_bound
-  have hLimsup := finDistMeasure_integral_eq_expect_of_bound
-    fairSelectorLaw
+    hliminf_integrable
+  have hLimsup := expect_eq_integral fairSelectorLaw
     (fun b => Filter.limsup
       (fun n => pathwiseAverage (fairSelectorStage stage) b n) atTop)
-    hlimsup_bound
+    hlimsup_integrable
   have hLiminfValue :
-      expectedPathwiseLiminf
-          (StochasticInfinitePlayMeasure.finDistMeasure (fairSelectorLaw))
+      expectedPathwiseLiminf fairSelectorLaw.toMeasure
           (fairSelectorStage stage) = 0 := by
     unfold expectedPathwiseLiminf
-    rw [hLiminf, fairSelectorLaw, FinDist.expect_mix,
-      FinDist.expect_pure, FinDist.expect_pure]
+    rw [← hLiminf, expect_fairSelectorLaw _ hliminf_integrable]
     simp only [fairSelectorStage, pathwiseAverage]
     rw [hstage_liminf, hcomplement_liminf]
     norm_num
   have hLimsupValue :
-      expectedPathwiseLimsup
-          (StochasticInfinitePlayMeasure.finDistMeasure (fairSelectorLaw))
+      expectedPathwiseLimsup fairSelectorLaw.toMeasure
           (fairSelectorStage stage) = 1 := by
     unfold expectedPathwiseLimsup
-    rw [hLimsup, fairSelectorLaw, FinDist.expect_mix,
-      FinDist.expect_pure, FinDist.expect_pure]
+    rw [← hLimsup, expect_fairSelectorLaw _ hlimsup_integrable]
     simp only [fairSelectorStage, pathwiseAverage]
     rw [hstage_limsup, hcomplement_limsup]
     norm_num
   have havg_value : ∀ n, expectedFiniteAverage
-      (StochasticInfinitePlayMeasure.finDistMeasure (fairSelectorLaw))
+      fairSelectorLaw.toMeasure
       (fairSelectorStage stage) n = (1 / 2 : ℝ) := by
     intro n
     unfold expectedFiniteAverage
-    have h := finDistMeasure_integral_eq_expect_of_bound
-      fairSelectorLaw (fun b => pathwiseAverage
-        (fairSelectorStage stage) b n) (havg_bound · n)
-    rw [h, fairSelectorLaw, FinDist.expect_mix,
-      FinDist.expect_pure, FinDist.expect_pure]
+    have h := expect_eq_integral fairSelectorLaw (fun b => pathwiseAverage
+      (fairSelectorStage stage) b n) (havg_integrable n)
+    rw [← h, expect_fairSelectorLaw _ (havg_integrable n)]
     simp only [fairSelectorStage, pathwiseAverage]
     rw [cesaroAverage_complement]
     ring
@@ -278,16 +293,16 @@ theorem fair_selector_order_limits_measure (stage : ℕ → ℝ)
 /-- The machine-checked alternating-block path realizes the hostile slice. -/
 theorem alternatingBlockStage_order_limits_measure :
     expectedPathwiseLiminf
-          (StochasticInfinitePlayMeasure.finDistMeasure (fairSelectorLaw))
+          fairSelectorLaw.toMeasure
           (fairSelectorStage alternatingBlockStage) = 0 ∧
       (∀ n, expectedFiniteAverage
-          (StochasticInfinitePlayMeasure.finDistMeasure (fairSelectorLaw))
+          fairSelectorLaw.toMeasure
           (fairSelectorStage alternatingBlockStage) n = (1 / 2 : ℝ)) ∧
       HasExpectedFiniteAverageLimit
-          (StochasticInfinitePlayMeasure.finDistMeasure (fairSelectorLaw))
+          fairSelectorLaw.toMeasure
           (fairSelectorStage alternatingBlockStage) (1 / 2 : ℝ) ∧
       expectedPathwiseLimsup
-          (StochasticInfinitePlayMeasure.finDistMeasure (fairSelectorLaw))
+          fairSelectorLaw.toMeasure
           (fairSelectorStage alternatingBlockStage) = 1 := by
   have hstage_bound : ∀ n,
       ‖cesaroAverage alternatingBlockStage n‖ ≤ 1 := by

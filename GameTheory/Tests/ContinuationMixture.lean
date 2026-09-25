@@ -3,6 +3,7 @@
 import GameTheory.Protocol.Continuation
 import GameTheory.Protocol.Zermelo
 import GameTheory.Protocol.ContinuationLaw
+import GameTheory.Math.Probability.Uniform
 
 /-! # A lottery deviation at an off-path proper subgame
 
@@ -22,12 +23,12 @@ inductive State where
   | root | decision | done (value : Option Bool)
   deriving DecidableEq
 
-def coin : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num) (FinDist.pure false) (FinDist.pure true)
+def coin : PMF Bool :=
+  PMF.uniformOfFintype Bool
 
-def choiceLaw (action : Fin 3) : FinDist Bool :=
-  if action = 0 then FinDist.pure false
-  else if action = 1 then FinDist.pure true else coin
+def choiceLaw (action : Fin 3) : PMF Bool :=
+  if action = 0 then PMF.pure false
+  else if action = 1 then PMF.pure true else coin
 
 def rank : State → ℕ
   | .root => 2
@@ -45,9 +46,9 @@ def allowed (lottery : Bool) (state : State) (action : Fin 3) : Prop :=
   available state _ := {action | allowed lottery state action}
   terminal state := rank state = 0
   step state joint := match state with
-    | .root => FinDist.pure (if joint.1 () = some 1 then .decision else .done none)
+    | .root => PMF.pure (if joint.1 () = some 1 then .decision else .done none)
     | .decision => (choiceLaw ((joint.1 ()).getD 0)).map (fun bit => .done (some bit))
-    | .done value => FinDist.pure (.done value)
+    | .done value => PMF.pure (.done value)
   progress := by
     intro state running
     exact ⟨fun _ => some 0, fun _ => ⟨Nat.pos_of_ne_zero running, Or.inl (by decide)⟩⟩
@@ -87,11 +88,12 @@ theorem rank_decreases (lottery : Bool) (before after : State)
   obtain ⟨joint, legal, reached⟩ := step
   cases before with
   | root =>
-      have eq := FinDist.mem_support_pure.mp reached
+      rw [PMF.mem_support_pure_iff] at reached
+      have eq := reached
       subst after
       split <;> decide
   | decision =>
-      rw [FinDist.support_map] at reached
+      rw [PMF.support_map] at reached
       obtain ⟨bit, _, rfl⟩ := reached
       norm_num [rank]
   | done value => exact False.elim (legal.1 rfl)
@@ -147,7 +149,7 @@ theorem history_decision (lottery : Bool) : ∀ {state : State} (trace : (arena 
           rw [traceEq]
           rfl
       | decision =>
-          rw [FinDist.support_map] at reached
+          rw [PMF.support_map] at reached
           obtain ⟨bit, _, impossible⟩ := reached
           cases impossible
       | done value => exact False.elim (legal.1 rfl)
@@ -221,11 +223,11 @@ def readout : State → Option Bool
   | _ => none
 
 def law {lottery : Bool} (profile : Profile (model lottery).strategicSignature) :
-    State → FinDist (Option Bool)
+    State → PMF (Option Bool)
   | .root => if selected profile .root = 1 then (choiceLaw (selected profile .decision)).map some
-      else FinDist.pure none
+      else PMF.pure none
   | .decision => (choiceLaw (selected profile .decision)).map some
-  | .done value => FinDist.pure value
+  | .done value => PMF.pure value
 
 theorem run_law {lottery : Bool} (profile : Profile (model lottery).strategicSignature)
     (history : (arena lottery).History) :
@@ -239,18 +241,18 @@ theorem run_law {lottery : Bool} (profile : Profile (model lottery).strategicSig
   · intro state stopped
     cases state <;> simp_all [rank, law, readout]
   · intro history running
-    simp only [HistoryChooser.toRandomized, FinDist.pure_bind]
+    simp only [HistoryChooser.toRandomized, PMF.pure_bind]
     rcases history with ⟨state, trace⟩
     cases state with
     | root =>
         simp only [InformationModel.historyChooser, InformationModel.jointAt,
-          info_state, arena, FinDist.pure_bind]
+          info_state, arena, PMF.pure_bind]
         cases chosen : (profile ()).act .root with
         | none => simp [chosen, law, selected]
         | some action => by_cases h : action = 1 <;> simp [chosen, law, selected, h]
     | decision =>
         simp [InformationModel.historyChooser, InformationModel.jointAt,
-          FinDist.bind_map, law, selected]
+          PMF.bind_map, law, selected]
         rfl
     | done value => exact False.elim (running rfl)
   · cases history.state <;> simp [rank]
@@ -263,37 +265,42 @@ theorem run_law {lottery : Bool} (profile : Profile (model lottery).strategicSig
   cases state <;> rfl
 
 theorem law_profile (lottery : Bool) (state : State) :
-    law (profile lottery) state = FinDist.pure (match state with
+    law (profile lottery) state = PMF.pure (match state with
       | .root => none | .decision => some true | .done value => value) := by
-  cases state <;> simp [law, selected, profile, policy, InformationModel.Policy.act, choiceLaw]
+  cases state <;> simp [law, selected, profile, policy, InformationModel.Policy.act,
+    choiceLaw, PMF.pure_map]
 
 theorem law_replacement (enter bit : Bool) (state : State) :
     law (Profile.update (profile false) () (policy false enter bit)) state =
-      FinDist.pure (match state with
+      PMF.pure (match state with
         | .root => if enter then some bit else none
         | .decision => some bit
         | .done value => value) := by
   cases state <;> cases enter <;> cases bit <;>
-    simp [law, selected, Profile.update_same, policy, InformationModel.Policy.act, choiceLaw]
+    simp [law, selected, Profile.update_same, policy, InformationModel.Policy.act,
+      choiceLaw, PMF.pure_map]
 
 theorem deviation_law (alternative : (model true).Policy ()) (state : State) :
     law (Profile.update (profile true) () alternative) state =
       ((choiceLaw ((alternative.act .decision).getD 0)).map
         (policy false (decide (alternative.act .root = some 1)))).bind fun replacement =>
         law (Profile.update (profile false) () replacement) state := by
-  rw [FinDist.bind_map]
-  simp only [law_replacement]
+  rw [PMF.bind_map]
+  simp only [Function.comp_def, law_replacement]
   cases state with
   | root =>
       simp only [law, selected, Profile.update_same]
       cases chosen : alternative.act .root with
-      | none => simp
+      | none =>
+          simp [InformationModel.Policy.act]
       | some action =>
           by_cases h : action = 1
-          · simp only [Option.getD_some, h, ↓reduceIte, decide_true]
-            rfl
-          · simp [h]
-  | decision => rfl
+          · simp only [h, InformationModel.Policy.act]
+            exact (PMF.bind_pure_comp some _).symm
+          · simp [h, InformationModel.Policy.act]
+  | decision =>
+      simp only [law, selected, Profile.update_same, InformationModel.Policy.act]
+      exact (PMF.bind_pure_comp some _).symm
   | done value => simp [law]
 
 theorem coverage : ∀ targetRoot, (model true).IsSubgameRoot targetRoot →
@@ -304,7 +311,7 @@ theorem coverage : ∀ targetRoot, (model true).IsSubgameRoot targetRoot →
         (fun history => readout history.state) =
       ((model false).runFrom (profile false) 2 sourceRoot).map
         (fun history => readout history.state) ∧
-      ∀ who (alternative : (model true).Policy who), ∃ mixture : FinDist ((model false).Policy who),
+      ∀ who (alternative : (model true).Policy who), ∃ mixture : PMF ((model false).Policy who),
         ((model true).runFrom
           (Profile.update
             (Profile.map (target := (model true).strategicSignature) compile (profile false))
@@ -328,16 +335,13 @@ def lotteryPolicy : (model true).Policy ()
   | .decision => ⟨some 2, by simp [menu, rank, allowed]⟩
   | .done _ => ⟨none, by simp [menu, rank]⟩
 
-theorem lottery_not_pure (bit : Bool) : coin.map some ≠ FinDist.pure (some bit) := by
-  intro eq
-  have recovered : coin = FinDist.pure bit := by
-    have mapped := congrArg (FinDist.map (fun value : Option Bool => value.getD false)) eq
-    simp only [FinDist.map_comp, FinDist.map_pure, Function.comp_def, Option.getD_some] at mapped
-    have mapped : FinDist.map id coin = FinDist.pure bit := mapped
-    rwa [FinDist.map_id] at mapped
-  have masses := congrArg (fun law => law.prob (!bit)) recovered
-  cases bit <;>
-    norm_num [coin, FinDist.prob_mix, FinDist.prob_pure_eq_ite] at masses
+theorem lottery_not_pure (bit : Bool) : coin.map some ≠ PMF.pure (some bit) := by
+  intro heq
+  have hsupport : some (!bit) ∈ (coin.map some).support := by
+    rw [PMF.mem_support_map_iff]
+    exact ⟨!bit, PMF.mem_support_uniformOfFintype _, rfl⟩
+  rw [heq, PMF.mem_support_pure_iff] at hsupport
+  cases bit <;> cases hsupport
 
 /-- The target lottery cannot be covered by a single source replacement. -/
 theorem lottery_requires_mixture (alternative : (model false).Policy ()) :
@@ -352,37 +356,42 @@ theorem lottery_requires_mixture (alternative : (model false).Policy ()) :
   | none => simp [chosen, menu, rank] at authorized
   | some action =>
       fin_cases action
-      · simpa [choiceLaw] using lottery_not_pure false
-      · simpa [choiceLaw] using lottery_not_pure true
+      · simpa [choiceLaw, PMF.pure_map] using lottery_not_pure false
+      · simpa [choiceLaw, PMF.pure_map] using lottery_not_pure true
       · simp [chosen, menu, allowed] at authorized
 
 theorem incumbent_run_one (lottery : Bool) :
     (model lottery).run (profile lottery) 1 =
-      FinDist.pure (rootAt lottery (.done none)) := by
+      PMF.pure (rootAt lottery (.done none)) := by
   have running : ¬ (arena lottery).terminal (arena lottery).initHistory.state := by
     show 2 ≠ 0
     decide
   have step : (arena lottery).step (arena lottery).initHistory.state
       ((model lottery).historyChooser (profile lottery) (arena lottery).initHistory running) =
-        FinDist.pure (.done none) := rfl
+        PMF.pure (.done none) := rfl
   rw [InformationModel.run, InformationModel.runFrom,
     runHistoryFor_succ_of_not_terminal _ 0 running]
-  rw [FinDist.bindOnSupport_eq_bind_of_eq_on_support
-    (g := fun _ => FinDist.pure (rootAt lottery (.done none)))]
-  · exact FinDist.bind_const _ _
-  · intro state reached
-    have stateEq : state = .done none := by
-      rwa [step, FinDist.mem_support_pure] at reached
-    subst state
-    rw [runHistoryFor_zero]
-    congr 1
+  calc
+    _ = ((arena lottery).step (arena lottery).initHistory.state
+          ((model lottery).historyChooser (profile lottery)
+            (arena lottery).initHistory running)).bind
+          (fun _ => PMF.pure (rootAt lottery (.done none))) := by
+        apply bindOnSupport_eq_bind_of_eq_on_support
+        intro state reached
+        have stateEq : state = .done none := by
+          rw [step, PMF.mem_support_pure_iff] at reached
+          exact reached
+        subst state
+        rw [runHistoryFor_zero]
+        congr 1
+    _ = _ := PMF.bind_const _ _
 
 /-- Entering is legal, but the incumbent has already exited at this depth. -/
 theorem decision_offPath (lottery : Bool) :
     (model lottery).IsSubgameRoot (decisionRoot lottery) ∧
       decisionRoot lottery ∉ ((model lottery).run (profile lottery) 1).support := by
   refine ⟨every_root lottery _, ?_⟩
-  rw [incumbent_run_one, FinDist.mem_support_pure]
+  rw [incumbent_run_one, PMF.mem_support_pure_iff]
   intro eq
   have states := congrArg History.state eq
   have states : State.decision = .done none := states
@@ -393,35 +402,132 @@ def utility : Option Bool → Unit → ℝ
   | some true, _ => 1
   | some false, _ => 0
 
-theorem value_law {lottery : Bool} (policies : Profile (model lottery).strategicSignature)
-    (history : (arena lottery).History) :
-    (arena lottery).historyBackwardValue (terminates lottery)
-      ((model lottery).historyChooser policies) (fun final => utility (readout final.state) ())
-      history = (law policies history.state).expect (utility · ()) := by
-  rw [(model lottery).historyBackwardValue_eq_expect_runFrom_of_bound
-    (terminates lottery) (bounded lottery)]
-  rw [← FinDist.expect_map (fun final : (arena lottery).History => readout final.state)
-    ((model lottery).runFrom policies 2 history) (utility · ()), run_law]
+private theorem utility_bound (result : Option Bool) : |utility result ()| ≤ 2 := by
+  cases result with
+  | none => norm_num [utility]
+  | some bit => cases bit <;> norm_num [utility]
+
+private theorem history_utility_guard {lottery : Bool}
+    (law : PMF (arena lottery).History) :
+    PayoffIntegrable law (fun final => utility (readout final.state) ()) := by
+  apply payoffIntegrable_of_bounded law _ (C := 2)
+  intro final
+  exact utility_bound _
+
+/-- The guarded backward value has the explicitly calculated public law. -/
+theorem value_law {lottery : Bool} (certificate : (arena lottery).WellFoundedPlay)
+    (policies : Profile (model lottery).strategicSignature)
+    (history : (arena lottery).History)
+    (hback : PayoffIntegrable
+      ((arena lottery).historyBackwardLaw certificate
+        ((model lottery).historyChooser policies) history)
+      (fun final => utility (readout final.state) ()))
+    (hlaw : PayoffIntegrable (law policies history.state) (utility · ())) :
+    (arena lottery).historyBackwardValue certificate
+      ((model lottery).historyChooser policies)
+      (fun final => utility (readout final.state) ()) history hback =
+        expect (law policies history.state) (utility · ()) hlaw := by
+  let hrun := history_utility_guard ((model lottery).runFrom policies 2 history)
+  have hlawRun :
+      (((model lottery).runFrom policies 2 history).map
+        (fun final => readout final.state)) =
+      (law policies history.state).map id := by
+    simpa only [PMF.map_id] using run_law policies history
+  calc
+    _ = expect ((model lottery).runFrom policies 2 history)
+        (fun final => utility (readout final.state) ()) hrun :=
+      (model lottery).historyBackwardValue_eq_expect_runFrom_of_bound
+        certificate (bounded lottery) policies _ history hback hrun
+    _ = expect (law policies history.state) (utility · ()) hlaw := by
+      exact expect_observed_law_eq
+        ((model lottery).runFrom policies 2 history) (law policies history.state)
+        (fun final => readout final.state) id (utility · ()) hlawRun hrun hlaw
+
+private theorem source_law_bound (alternative : (model false).Policy ())
+    (state : State) :
+    expect (law (Profile.update (profile false) () alternative) state)
+        (utility · ()) (payoffIntegrable_of_finite _ _) ≤
+      expect (law (profile false) state) (utility · ())
+        (payoffIntegrable_of_finite _ _) := by
+  cases state with
+  | root =>
+      calc
+        _ ≤ expect (law (Profile.update (profile false) () alternative) .root)
+            (fun _ => (2 : ℝ)) (payoffIntegrable_constant _ _) := by
+          apply expect_mono
+          intro result _
+          exact le_trans (le_abs_self _) (utility_bound result)
+        _ = 2 := expect_constant _ _ _
+        _ = _ := by rw [law_profile]; simp [utility, expect_pure]
+  | decision =>
+      have hsup : ∀ result ∈
+          (law (Profile.update (profile false) () alternative) .decision).support,
+          utility result () ≤ 1 := by
+        intro result hresult
+        simp only [law, PMF.support_map] at hresult
+        obtain ⟨bit, _, rfl⟩ := hresult
+        cases bit <;> norm_num [utility]
+      calc
+        _ ≤ expect (law (Profile.update (profile false) () alternative) .decision)
+            (fun _ => (1 : ℝ)) (payoffIntegrable_constant _ _) := by
+          exact expect_mono hsup (payoffIntegrable_of_finite _ _)
+            (payoffIntegrable_constant _ _)
+        _ = 1 := expect_constant _ _ _
+        _ = _ := by rw [law_profile]; simp [utility, expect_pure]
+  | done value =>
+      simp [law, expect_pure]
 
 theorem sourcePerfect : (model false).IsSubgamePerfect (terminates false) (profile false)
     (fun history who => utility (readout history.state) who) := by
-  apply InformationModel.IsHistorywiseOptimal.isSubgamePerfect
-  intro who alternative history
+  apply ((model false).isSubgamePerfect_iff_isNash_continuation
+    (terminates false) (bounded false) (profile false)
+    (fun history who => utility (readout history.state) who)).mpr
+  intro history _
+  rw [isNash_iff]
+  intro who alternative
   cases who
-  rw [value_law, value_law, law_profile, FinDist.expect_pure]
-  cases history.state with
-  | root =>
-      apply FinDist.expect_le_of_forall
-      intro outcome _
-      cases outcome with
-      | none => norm_num [utility]
-      | some bit => cases bit <;> norm_num [utility]
-  | decision =>
-      simp only [law, FinDist.expect_map]
-      apply FinDist.expect_le_of_forall
-      intro bit _
-      cases bit <;> norm_num [utility]
-  | done value => simp [law]
+  let hrdev := history_utility_guard
+    ((model false).runFrom (Profile.update (profile false) () alternative) 2 history)
+  let hrbase := history_utility_guard ((model false).runFrom (profile false) 2 history)
+  refine ⟨hrbase, hrdev, ?_⟩
+  let hldev := payoffIntegrable_of_finite
+    (law (Profile.update (profile false) () alternative) history.state) (utility · ())
+  let hlbase := payoffIntegrable_of_finite (law (profile false) history.state) (utility · ())
+  simp only [InformationModel.toContinuationGameForm, expectedUtility]
+  have hdevValue : expect
+      ((model false).runFrom (Profile.update (profile false) () alternative) 2 history)
+      (fun final => utility (readout final.state) ()) hrdev =
+        expect (law (Profile.update (profile false) () alternative) history.state)
+          (utility · ()) hldev := by
+    have hlaw :
+        (((model false).runFrom
+          (Profile.update (profile false) () alternative) 2 history).map
+          (fun final => readout final.state)) =
+        (law (Profile.update (profile false) () alternative) history.state).map id := by
+      simpa only [PMF.map_id] using
+        run_law (Profile.update (profile false) () alternative) history
+    exact expect_observed_law_eq
+      ((model false).runFrom (Profile.update (profile false) () alternative) 2 history)
+      (law (Profile.update (profile false) () alternative) history.state)
+      (fun final => readout final.state) id (utility · ()) hlaw hrdev hldev
+  have hbaseValue : expect ((model false).runFrom (profile false) 2 history)
+      (fun final => utility (readout final.state) ()) hrbase =
+        expect (law (profile false) history.state) (utility · ()) hlbase := by
+    have hlaw :
+        (((model false).runFrom (profile false) 2 history).map
+          (fun final => readout final.state)) =
+        (law (profile false) history.state).map id := by
+      simpa only [PMF.map_id] using run_law (profile false) history
+    exact expect_observed_law_eq
+      ((model false).runFrom (profile false) 2 history)
+      (law (profile false) history.state)
+      (fun final => readout final.state) id (utility · ()) hlaw hrbase hlbase
+  calc
+    _ = expect (law (Profile.update (profile false) () alternative) history.state)
+        (utility · ()) hldev := hdevValue
+    _ ≤ expect (law (profile false) history.state) (utility · ()) hlbase :=
+      source_law_bound alternative history.state
+    _ = _ := hbaseValue.symm
 
 /-- The nonidentity compiler preserves SPE at every target root. Its coverage
 uses both pure source choices to realize the additional lottery deviation. -/
@@ -431,6 +537,7 @@ theorem targetPerfect : (model true).IsSubgamePerfect (terminates true) (profile
   exact (model false).isSubgamePerfect_of_continuation_laws (model true)
     (terminates false) (terminates true) (bounded false) (bounded true) compile
     (fun history => readout history.state) (fun history => readout history.state)
-    (profile false) coverage utility sourcePerfect
+    (profile false) coverage utility
+    (fun _ _ _ _ => history_utility_guard _) sourcePerfect
 
 end GameTheory.Tests.ContinuationMixture

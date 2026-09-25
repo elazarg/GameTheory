@@ -1,8 +1,8 @@
 # D17: evolutionary stability is static; dynamics are opt-in
 
-- **Status:** adopted and promoted
+- **Status:** adopted, including the mixed PMF boundary
 - **Date:** 2026-07-30
-- **Experiment IDs:** EXP-044
+- **Experiment IDs:** EXP-044, EXP-137
 
 ## Decision / question
 
@@ -50,16 +50,9 @@ unilateral replacement through the canonical deviation API.
 
 | Measure | EXP-044 result |
 |---|---|
-| authored size | 134 nonblank lines; 17 declarations including bridge helpers and hostile facts |
-| stable API change during experiment | 0 declarations and 0 imports |
 | authored import | `GameTheory.Core.Utility` only |
-| focused build | 1,720 jobs |
-| full build | 3,346 jobs |
 | ESS/NSS data | `S → S → ℝ` and one resident; no structure or stored capability |
 | Nash surface | canonical `GameForm`, `euPreference`, `Profile.update`, and `IsNash` |
-| source trust/audit tokens | 0 placeholders, native decisions, custom axioms, direct updates, transports, `HEq`, tactic `change`, `Fintype.ofFinite`, or `open Classical` |
-| repository audit | Phase 2 expected source measurements pass |
-| axiom profile | `propext`, `Classical.choice`, `Quot.sound` only |
 | positive reachability | `GameForm`, `IsNash`, experimental `IsESS`, and ESS-to-Nash |
 | negative reachability | Protocol execution, Analysis Nash existence, `stdSimplex`, and `Polynomial` rejected |
 | hostile stability test | mutant ties in the Nash condition and loses the nonvacuous ESS tie-break |
@@ -88,13 +81,37 @@ fields, forward invariance, trajectories, and convergence belong to a future
 `GameTheory.Analysis.Evolutionary` root only after a named dynamics theorem
 measures their scalar, finite-dimensional, and topological needs.
 
-That promotion is complete. `GameTheory.Evolutionary.Basic` owns the seven
-payoff-kernel declarations without importing any game-semantic module.
-`GameTheory.Evolutionary.Nash` owns the symmetric presentation and the single
-Nash bridge; the public root re-exports the umbrella. The stable root has 119
-nonblank lines. Full Phase 2/3 audits pass: Basic reaches both intended
-definitions and rejects six game/analytic probes; the bridge reaches all three
-intended static symbols and rejects four sequential/analytic probes; Core and
-Protocol each reject both reverse-dependency probes. The stable flagship uses
-only `propext`, `Classical.choice`, and `Quot.sound`. The focused build
-completes in 1,722 jobs and the full build in 3,349.
+## Mixed population laws and defined invasion fitness
+
+`Evolutionary.Mixed` specializes the numerical concepts to ordinary PMFs.
+An encounter draws the actor and opponent independently. Its expected payoff
+requires absolute integration under that actual joint law; the payoff
+operation itself has no finite-carrier or all-pair premise.
+
+The mixed ESS/NSS specialization supplies integration for every ordered pair
+of population laws before applying the corresponding numerical predicate.
+This requirement follows from ordinary small-invasion semantics on the full
+PMF mutant space. A positive mutant share charges that mutant's self encounter.
+If every mutant has defined invasion fitness, each diagonal encounter is
+integrable. For arbitrary populations `mu` and `nu`, the self encounter of
+their half-mixture dominates `mu × nu` with coefficient one quarter. Thus all
+pair encounters are integrable. No symmetry of the payoff kernel is assumed.
+
+An alternative that requires only the first comparison when it is strict is
+rejected. A mutant losing against the resident can still have divergent self
+fitness, which enters every positive invasion. Omitting that encounter changes
+the mathematical notion. Undefined mutants remain in the stability test and
+prevent the comparison; they are never assigned a default fitness or excluded.
+EXP-137 compares the numerical specialization with positively guarded strict
+and weak small-invasion tests and records the discriminating controls.
+
+The mixed Nash bridge uses the ordinary mixed extension of the pure symmetric
+game, preserving the actor/opponent orientation for both players. It does not
+construct a second deterministic game over population laws with totalized
+fitness. Integration certificates belong to the operation or stability
+proposition, not to the semantic game data.
+
+`GameTheory.Evolutionary.Basic` owns payoff-kernel concepts without game
+semantics. `GameTheory.Evolutionary.Nash` owns the symmetric presentation and
+the Nash bridge. Core and Protocol must not depend on either evolutionary
+owner; the bridge must not import sequential or analytic game theory.

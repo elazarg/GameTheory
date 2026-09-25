@@ -15,6 +15,9 @@ independence.
 import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
 import GameTheory.Experimental.PostArchitecture.FiniteConditionalIndependence
 import GameTheory.Experimental.PostArchitecture.DependentAssignmentEnumeration
+import GameTheory.Math.Probability.FiniteSampling
+import GameTheory.Math.Probability.Product
+import GameTheory.Math.Probability.Expectation
 import GameTheory.Math.DAG
 
 noncomputable section
@@ -24,6 +27,7 @@ open scoped BigOperators
 namespace GameTheory.Experimental.PostArchitecture.FiniteBNMarginalization
 
 open GameTheory.Math.Probability
+open GameTheory.Math.Probability.FiniteAssignment
 open GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
 open GameTheory.Experimental.PostArchitecture.DependentAssignmentEnumeration
 
@@ -31,43 +35,44 @@ universe uNode uValue
 
 variable {Node : Type uNode} (Value : Node → Type uValue)
 
-/-- The probability mass of the cylinder fixed by `witness` on `nodes`. -/
-def cylinderMass (law : FinDist (Assignment Value))
+/-- The real outer-measure mass of the cylinder fixed by `witness`. -/
+def cylinderMass (law : PMF (Assignment Value))
     (nodes : Finset Node) (witness : Assignment Value) : ℝ :=
-  law.probOf {assignment | AgreeOn Value nodes assignment witness}
+  (law.toOuterMeasure {assignment | AgreeOn Value nodes assignment witness}).toReal
 
 /-- A joint law has exactly the point masses prescribed by the local factors. -/
-def Factorizes [Fintype Node] (law : FinDist (Assignment Value))
+def Factorizes [Fintype Node] (law : PMF (Assignment Value))
     (parents : Node → Finset Node)
     (kernels : LocalKernels Value parents) : Prop :=
   ∀ assignment,
-    law.prob assignment =
+    (law assignment).toReal =
       factorProduct Value parents kernels Finset.univ assignment
 
 /-- Expand a cylinder mass as a finite sum of point masses. -/
 theorem cylinderMass_eq_sum [Fintype Node] [DecidableEq Node]
     [∀ node, Fintype (Value node)] [∀ node, DecidableEq (Value node)]
-    (law : FinDist (Assignment Value)) (nodes : Finset Node)
+    (law : PMF (Assignment Value)) (nodes : Finset Node)
     (witness : Assignment Value) :
     cylinderMass Value law nodes witness =
       ∑ assignment : Assignment Value,
-        if AgreeOn Value nodes assignment witness then law.prob assignment else 0 := by
+        if AgreeOn Value nodes assignment witness then (law assignment).toReal else 0 := by
   classical
-  rw [cylinderMass, ← FinDist.expect_indicator_eq_probOf,
-    FinDist.expect_eq_sum]
-  apply Finset.sum_congr rfl
-  intro assignment _
-  simp only [Set.mem_ofPred_eq]
-  by_cases hagrees : AgreeOn Value nodes assignment witness
-  · simp [hagrees, mul_one]
-  · simp [hagrees]
+  let agreeing := Finset.univ.filter fun assignment : Assignment Value =>
+    AgreeOn Value nodes assignment witness
+  have hset : {assignment | AgreeOn Value nodes assignment witness} =
+      (agreeing : Set (Assignment Value)) := by
+    ext assignment
+    simp [agreeing]
+  rw [cylinderMass, hset, PMF.toOuterMeasure_apply_finset,
+    ENNReal.toReal_sum (fun assignment _ => law.apply_ne_top assignment)]
+  rw [← Finset.sum_filter]
 
 /-- Under point-mass factorization, a cylinder is exactly the corresponding
 finite sum of local factor products.  No normalization of an independently
 constructed product law is assumed here. -/
 theorem cylinderMass_eq_sum_factorProduct [Fintype Node] [DecidableEq Node]
     [∀ node, Fintype (Value node)] [∀ node, DecidableEq (Value node)]
-    (law : FinDist (Assignment Value))
+    (law : PMF (Assignment Value))
     (parents : Node → Finset Node)
     (kernels : LocalKernels Value parents)
     (hfactor : Factorizes Value law parents kernels)
@@ -99,12 +104,18 @@ theorem cylinderEvent_mono {smaller larger : Finset Node}
 
 /-- A cylinder contained in a zero-mass cylinder also has zero mass. -/
 theorem cylinderMass_eq_zero_mono
-    (law : FinDist (Assignment Value)) {smaller larger : Finset Node}
+    (law : PMF (Assignment Value)) {smaller larger : Finset Node}
     (hsubset : smaller ⊆ larger) (witness : Assignment Value)
     (hzero : cylinderMass Value law smaller witness = 0) :
     cylinderMass Value law larger witness = 0 := by
-  exact FiniteConditionalIndependence.probOf_eq_zero_of_subset law
-    (cylinderEvent_mono Value hsubset witness) hzero
+  have hzero' :
+      law.toOuterMeasure
+        {assignment | AgreeOn Value smaller assignment witness} = 0 := by
+    simpa [cylinderMass, ENNReal.toReal_eq_zero_iff,
+      outerMeasure_ne_top law _] using hzero
+  simpa [cylinderMass] using
+    outerMeasure_toReal_eq_zero_of_subset law
+      (cylinderEvent_mono Value hsubset witness) hzero'
 
 /-! ## The local normalization step used by variable elimination -/
 
@@ -116,7 +127,7 @@ theorem parentConfiguration_setOne_of_notMem
     (assignment : Assignment Value) {changed node : Node}
     (value : Value changed) (hnotParent : changed ∉ parents node) :
     parentConfiguration Value parents
-        (FinDist.DependentAssignment.setOne assignment ⟨changed, value⟩) node =
+        (setOne assignment ⟨changed, value⟩) node =
       parentConfiguration Value parents assignment node := by
   funext parent
   have hparentNe : parent.1 ≠ changed := by
@@ -124,8 +135,8 @@ theorem parentConfiguration_setOne_of_notMem
     apply hnotParent
     simpa only [heq] using parent.2
   unfold parentConfiguration
-  unfold FinDist.DependentAssignment.setOne
-  apply FinDist.DependentAssignment.resolve_of_notMem
+  unfold setOne
+  apply resolve_of_not_mem
   simpa only [Finset.mem_singleton] using hparentNe
 
 /-- Updating a node preserves the configuration of its parents in an
@@ -136,7 +147,7 @@ theorem parentConfiguration_setOne_self
     (topological : GameTheory.Math.DAG.TopologicalOrder parents)
     (assignment : Assignment Value) (node : Node) (value : Value node) :
     parentConfiguration Value parents
-        (FinDist.DependentAssignment.setOne assignment ⟨node, value⟩) node =
+        (setOne assignment ⟨node, value⟩) node =
       parentConfiguration Value parents assignment node := by
   have hnotSelf : node ∉ parents node := by
     intro hself
@@ -154,15 +165,15 @@ theorem localFactor_setOne_of_ne_of_notParent
     (value : Value changed) (hne : node ≠ changed)
     (hnotParent : changed ∉ parents node) :
     localFactor Value parents kernels
-        (FinDist.DependentAssignment.setOne assignment ⟨changed, value⟩) node =
+        (setOne assignment ⟨changed, value⟩) node =
       localFactor Value parents kernels assignment node := by
   unfold localFactor
   rw [parentConfiguration_setOne_of_notMem Value parents assignment value hnotParent]
   have hnode :
-      FinDist.DependentAssignment.setOne assignment ⟨changed, value⟩ node =
+      setOne assignment ⟨changed, value⟩ node =
         assignment node := by
-    simp [FinDist.DependentAssignment.setOne,
-      FinDist.DependentAssignment.resolve, hne]
+    simp [setOne,
+      resolve, hne]
   rw [hnode]
 
 /-- A product of factors is invariant under changing a coordinate which none
@@ -176,7 +187,7 @@ theorem factorProduct_setOne_of_not_read
     (hchanged : changed ∉ factors)
     (hnotParent : ∀ node ∈ factors, changed ∉ parents node) :
     factorProduct Value parents kernels factors
-        (FinDist.DependentAssignment.setOne assignment ⟨changed, value⟩) =
+        (setOne assignment ⟨changed, value⟩) =
       factorProduct Value parents kernels factors assignment := by
   unfold factorProduct
   apply Finset.prod_congr rfl
@@ -196,16 +207,18 @@ theorem sum_localFactor_setOne
     (assignment : Assignment Value) :
     ∑ value : Value node,
       localFactor Value parents kernels
-        (FinDist.DependentAssignment.setOne assignment ⟨node, value⟩) node = 1 := by
+        (setOne assignment ⟨node, value⟩) node = 1 := by
   have hparents (value : Value node) :=
     parentConfiguration_setOne_self Value parents topological assignment node value
   simp_rw [localFactor, hparents]
   have hself (value : Value node) :
-      FinDist.DependentAssignment.setOne assignment ⟨node, value⟩ node = value := by
-    simp [FinDist.DependentAssignment.setOne,
-      FinDist.DependentAssignment.resolve]
+      setOne assignment ⟨node, value⟩ node = value := by
+    simp [setOne,
+      resolve]
   simp_rw [hself]
-  exact FinDist.sum_prob _
+  simpa only [tsum_fintype] using
+    pmf_weight_tsum_one
+      (kernels node (parentConfiguration Value parents assignment node))
 
 /-- Eliminate one factor whose coordinate is not read by any remaining
 factor.  This is the reusable algebraic step in reverse-topological
@@ -221,7 +234,7 @@ theorem sum_factorProduct_setOne
       changed ∉ parents node) :
     ∑ value : Value changed,
       factorProduct Value parents kernels factors
-        (FinDist.DependentAssignment.setOne assignment ⟨changed, value⟩) =
+        (setOne assignment ⟨changed, value⟩) =
       factorProduct Value parents kernels (factors.erase changed) assignment := by
   have hdisjoint : Disjoint ({changed} : Finset Node) (factors.erase changed) := by
     simp
@@ -229,23 +242,23 @@ theorem sum_factorProduct_setOne
     simpa only [Finset.singleton_union] using Finset.insert_erase hchanged
   have hsplit (value : Value changed) :
       factorProduct Value parents kernels factors
-          (FinDist.DependentAssignment.setOne assignment ⟨changed, value⟩) =
+          (setOne assignment ⟨changed, value⟩) =
         factorProduct Value parents kernels {changed}
-            (FinDist.DependentAssignment.setOne assignment ⟨changed, value⟩) *
+            (setOne assignment ⟨changed, value⟩) *
           factorProduct Value parents kernels (factors.erase changed)
-            (FinDist.DependentAssignment.setOne assignment ⟨changed, value⟩) := by
+            (setOne assignment ⟨changed, value⟩) := by
     calc
       factorProduct Value parents kernels factors
-          (FinDist.DependentAssignment.setOne assignment ⟨changed, value⟩) =
+          (setOne assignment ⟨changed, value⟩) =
           factorProduct Value parents kernels
             ({changed} ∪ factors.erase changed)
-            (FinDist.DependentAssignment.setOne assignment ⟨changed, value⟩) := by
+            (setOne assignment ⟨changed, value⟩) := by
               rw [hcover]
       _ = _ := factorProduct_union Value parents kernels hdisjoint _
   simp_rw [hsplit]
   have hrest (value : Value changed) :
       factorProduct Value parents kernels (factors.erase changed)
-          (FinDist.DependentAssignment.setOne assignment ⟨changed, value⟩) =
+          (setOne assignment ⟨changed, value⟩) =
         factorProduct Value parents kernels (factors.erase changed) assignment :=
     factorProduct_setOne_of_not_read Value parents kernels
       (factors.erase changed) assignment value (by simp)
@@ -254,9 +267,9 @@ theorem sum_factorProduct_setOne
   rw [← Finset.sum_mul]
   have hsingleton (value : Value changed) :
       factorProduct Value parents kernels {changed}
-          (FinDist.DependentAssignment.setOne assignment ⟨changed, value⟩) =
+          (setOne assignment ⟨changed, value⟩) =
         localFactor Value parents kernels
-          (FinDist.DependentAssignment.setOne assignment ⟨changed, value⟩) changed := by
+          (setOne assignment ⟨changed, value⟩) changed := by
     simp [factorProduct]
   simp_rw [hsingleton]
   rw [sum_localFactor_setOne Value changed parents topological kernels assignment,
@@ -265,7 +278,7 @@ theorem sum_factorProduct_setOne
 private theorem cylinderMass_eq_factorProduct_of_pending
     [Fintype Node] [DecidableEq Node]
     [∀ node, Fintype (Value node)] [∀ node, DecidableEq (Value node)]
-    (law : FinDist (Assignment Value))
+    (law : PMF (Assignment Value))
     (parents : Node → Finset Node)
     (topological : GameTheory.Math.DAG.TopologicalOrder parents)
     (kernels : LocalKernels Value parents)
@@ -352,7 +365,7 @@ private theorem cylinderMass_eq_factorProduct_of_pending
         · exact Finset.mem_insert_of_mem (hclosed node hnode hparent)
       have hinduction (value : Value head) :=
         ih htailNodup htailOrdered (insert head retained)
-          (FinDist.DependentAssignment.setOne witness ⟨head, value⟩)
+          (setOne witness ⟨head, value⟩)
           htailOutside hcoverTail hclosedTail
       have hnotRead : ∀ node ∈ (insert head retained).erase head,
           head ∉ parents node := by
@@ -372,23 +385,23 @@ private theorem cylinderMass_eq_factorProduct_of_pending
         _ = ∑ value : Value head,
               ∑ assignment : Assignment Value,
                 if AgreeOn Value (insert head retained) assignment
-                    (FinDist.DependentAssignment.setOne witness ⟨head, value⟩)
+                    (setOne witness ⟨head, value⟩)
                 then factorProduct Value parents kernels Finset.univ assignment
                 else 0 :=
           sum_ite_agrees_eq_sum_insert Value retained hheadOutside witness
             (factorProduct Value parents kernels Finset.univ)
         _ = ∑ value : Value head,
               cylinderMass Value law (insert head retained)
-                (FinDist.DependentAssignment.setOne witness ⟨head, value⟩) := by
+                (setOne witness ⟨head, value⟩) := by
           apply Finset.sum_congr rfl
           intro value _
           symm
           exact cylinderMass_eq_sum_factorProduct Value law parents kernels
             hfactor (insert head retained)
-              (FinDist.DependentAssignment.setOne witness ⟨head, value⟩)
+              (setOne witness ⟨head, value⟩)
         _ = ∑ value : Value head,
               factorProduct Value parents kernels (insert head retained)
-                (FinDist.DependentAssignment.setOne witness ⟨head, value⟩) := by
+                (setOne witness ⟨head, value⟩) := by
           apply Finset.sum_congr rfl
           intro value _
           exact hinduction value
@@ -403,7 +416,7 @@ needed: the statement is about cylinder masses, including zero-mass ones. -/
 theorem cylinderMass_eq_factorProduct_of_parentClosed
     [Fintype Node] [DecidableEq Node]
     [∀ node, Fintype (Value node)] [∀ node, DecidableEq (Value node)]
-    (law : FinDist (Assignment Value))
+    (law : PMF (Assignment Value))
     (parents : Node → Finset Node)
     (topological : GameTheory.Math.DAG.TopologicalOrder parents)
     (kernels : LocalKernels Value parents)
@@ -454,8 +467,8 @@ abbrev BoolValue (_ : BoolNode) := Bool
 
 def falseAssignment : Assignment BoolValue := fun _ => false
 
-def falseLaw : FinDist (Assignment BoolValue) :=
-  FinDist.pure falseAssignment
+def falseLaw : PMF (Assignment BoolValue) :=
+  PMF.pure falseAssignment
 
 def parents (_ : BoolNode) : Finset BoolNode := ∅
 
@@ -470,14 +483,14 @@ def topological : GameTheory.Math.DAG.TopologicalOrder parents where
     simp [parents] at hparent
 
 def kernels : LocalKernels BoolValue parents :=
-  fun _ _ => FinDist.pure false
+  fun _ _ => PMF.pure false
 
 /-- The one-node factor product normalizes by the same atomic elimination
 lemma needed in the general reverse-topological proof. -/
 theorem factorProduct_sum :
     ∑ value : Bool,
       factorProduct BoolValue parents kernels Finset.univ
-        (FinDist.DependentAssignment.setOne falseAssignment ⟨(), value⟩) = 1 := by
+        (setOne falseAssignment ⟨(), value⟩) = 1 := by
   have heliminate := sum_factorProduct_setOne BoolValue () parents topological
     kernels Finset.univ falseAssignment (Finset.mem_univ ()) (by simp [parents])
   simpa [factorProduct] using heliminate
@@ -485,9 +498,10 @@ theorem factorProduct_sum :
 /-- The unconstrained cylinder is the whole sample space and has mass one. -/
 theorem empty_cylinderMass :
     cylinderMass BoolValue falseLaw ∅ falseAssignment = 1 := by
-  classical
-  apply FinDist.probOf_pure_self
-  simp [AgreeOn]
+  rw [cylinderMass, PMF.toOuterMeasure_apply, tsum_eq_single falseAssignment]
+  · simp [falseLaw, AgreeOn]
+  · intro assignment hne
+    simp [falseLaw, hne]
 
 /-- An impossible value of the Boolean coordinate has zero cylinder mass. -/
 theorem true_cylinderMass :
@@ -504,10 +518,11 @@ theorem true_cylinderMass :
       have hatUnit : assignment () = true := hat
       simpa only [Unit.ext node] using hatUnit
   rw [hset]
-  classical
   unfold falseLaw
-  rw [← FinDist.expect_indicator_eq_probOf, FinDist.expect_pure]
-  simp [falseAssignment]
+  rw [PMF.toOuterMeasure_apply, tsum_eq_single falseAssignment]
+  · simp [Set.indicator, falseAssignment]
+  · intro assignment hne
+    simp [Set.indicator, PMF.pure_apply, hne]
 
 namespace TwoNode
 
@@ -537,10 +552,10 @@ def topological : GameTheory.Math.DAG.TopologicalOrder parents where
       exact ⟨0, by decide, rfl⟩
 
 def kernels : LocalKernels ChainValue parents :=
-  fun _ _ => FinDist.pure false
+  fun _ _ => PMF.pure false
 
-def law : FinDist (Assignment ChainValue) :=
-  FinDist.pi fun _ => FinDist.pure false
+def law : PMF (Assignment ChainValue) :=
+  independentProduct fun _ => PMF.pure false
 
 def allFalse : Assignment ChainValue := fun _ => false
 
@@ -548,7 +563,7 @@ def retained : Finset ChainNode := {.root}
 
 theorem factorizes : Factorizes ChainValue law parents kernels := by
   intro assignment
-  rw [law, FinDist.prob_pi]
+  rw [law, independentProduct_apply]
   simp [factorProduct, localFactor, kernels]
 
 theorem retained_parentClosed : ParentClosed parents retained := by

@@ -31,7 +31,7 @@ def allowed (source : Bool) (state : State) : Set Bool :=
   active state _ := state.length < 4
   available state _ := allowed source state
   terminal state := 4 ≤ state.length
-  step state joint := FinDist.pure ((joint.1 ()).getD false :: state)
+  step state joint := PMF.pure ((joint.1 ()).getD false :: state)
   progress := by
     intro state running
     refine ⟨fun _ => some true, fun _ => ?_⟩
@@ -75,7 +75,8 @@ theorem rank_decreases (source : Bool) (before after : State)
   have running : before.length < 4 := by
     have stopped : ¬ 4 ≤ before.length := legal.1
     omega
-  have eq := FinDist.mem_support_pure.mp reached
+  rw [PMF.mem_support_pure_iff] at reached
+  have eq := reached
   subst after
   simp only [List.length_cons]
   omega
@@ -87,7 +88,8 @@ theorem history_length (source : Bool) : ∀ {state : State} (trace : (arena sou
     trace.length = state.length
   | _, .start => rfl
   | _, .extend prior joint _ reached => by
-      have stateEq := FinDist.mem_support_pure.mp reached
+      rw [PMF.mem_support_pure_iff] at reached
+      have stateEq := reached
       subst_vars
       simpa only [Trace.length, List.length_cons] using
         congrArg (· + 1) (history_length source prior)
@@ -150,31 +152,69 @@ theorem continuationPayoff_terminal {source : Bool}
   rcases state with _ | ⟨a, _ | ⟨b, _ | ⟨c, _ | ⟨d, rest⟩⟩⟩⟩ <;>
     simp_all [continuationPayoff]
 
+/-- Every public result has a bounded payoff, including off-path histories. -/
+private theorem utility_bounded (prefer : Bool) (result : Bool × Option Bool) :
+    |utility prefer result| ≤ 3 := by
+  rcases result with ⟨valid, choice⟩
+  cases choice with
+  | none => norm_num [utility]
+  | some bit =>
+      cases valid <;> cases bit <;> cases prefer <;>
+        norm_num [utility]
+
+private theorem backward_integrable {source : Bool}
+    (profile : Profile (model source).strategicSignature) (prefer : Bool)
+    (history : (arena source).History) :
+    PayoffIntegrable
+      ((arena source).historyBackwardLaw (terminates source)
+        ((model source).historyChooser profile) history)
+      (fun h => payoff source prefer h ()) := by
+  apply payoffIntegrable_of_bounded _ _ (C := 3)
+  intro final
+  exact utility_bounded prefer (outcome final.state)
+
 /-- The closed form agrees with the canonical history-preserving SPE evaluator. -/
 theorem backward_eq {source : Bool} (profile : Profile (model source).strategicSignature)
-    (prefer : Bool) (history : (arena source).History) :
+    (prefer : Bool) (history : (arena source).History)
+    (hback : PayoffIntegrable
+      ((arena source).historyBackwardLaw (terminates source)
+        ((model source).historyChooser profile) history)
+      (fun h => payoff source prefer h ())) :
     (arena source).historyBackwardValue (terminates source)
-      ((model source).historyChooser profile) (fun h => payoff source prefer h ()) history =
+      ((model source).historyChooser profile) (fun h => payoff source prefer h ())
+      history hback =
         continuationPayoff profile prefer history.state := by
   induction history using ((arena source).wellFounded_historySuccessor
       (terminates source)).induction with
   | _ history ih =>
       by_cases stopped : (arena source).terminal history.state
-      · rw [(arena source).historyBackwardValue_of_terminal stopped]
+      · rw [(arena source).historyBackwardValue_of_terminal stopped hback]
         exact (continuationPayoff_terminal profile prefer history.state stopped).symm
-      · rw [(arena source).historyBackwardValue_of_not_terminal stopped]
-        have step : (arena source).step history.state
+      · have step : (arena source).step history.state
             ((model source).historyChooser profile history stopped) =
-              FinDist.pure (pick profile history.state :: history.state) := by
+              PMF.pure (pick profile history.state :: history.state) := by
           simp [arena, InformationModel.historyChooser, InformationModel.jointAt, pick]
-        rw [(arena source).historyStepValue_of_step_eq_pure step]
-        rw [ih _ ⟨_, _, show (pick profile history.state :: history.state) ∈
-          ((arena source).step history.state
-            ((model source).historyChooser profile history stopped)).support from by
-              rw [step]; exact FinDist.mem_support_pure.mpr rfl⟩]
-        exact continuationPayoff_step profile prefer history.state (by
-          have stopped : ¬ 4 ≤ history.state.length := stopped
-          omega)
+        let value : State → ℝ := fun _ => continuationPayoff profile prefer history.state
+        obtain ⟨houter, heq⟩ :=
+          (arena source).historyBackwardValue_of_not_terminal stopped hback value (by
+            intro target realized hchild
+            have htarget : target = pick profile history.state :: history.state := by
+              rw [step, PMF.mem_support_pure_iff] at realized
+              exact realized
+            subst target
+            have hchildValue := ih _ ⟨_, _, realized⟩ hchild
+            exact (continuationPayoff_step profile prefer history.state (by
+              have hnot : ¬ 4 ≤ history.state.length := stopped
+              omega)).symm.trans hchildValue.symm)
+        calc
+          _ = expect ((arena source).step history.state
+                ((model source).historyChooser profile history stopped))
+                value houter := heq
+          _ = expect (PMF.pure (pick profile history.state :: history.state))
+                value (payoffIntegrable_pure _ _) :=
+            expect_congr_law step value houter (payoffIntegrable_pure _ _)
+          _ = continuationPayoff profile prefer history.state := by
+            rw [expect_pure]
 
 def sourcePolicy : (model true).Policy () := fun state =>
   if running : state.length < 4 then
@@ -192,7 +232,8 @@ theorem source_valid : ∀ {state : State} (_trace : (arena true).Trace state),
     state = [] ∨ state.getLast? = some true
   | _, .start => Or.inl rfl
   | _, .extend (source := state) prior joint legal reached => by
-      have eq := FinDist.mem_support_pure.mp reached
+      rw [PMF.mem_support_pure_iff] at reached
+      have eq := reached
       subst_vars
       right
       rcases source_valid prior with empty | last
@@ -218,7 +259,11 @@ theorem source_subgamePerfect (prefer : Bool) :
   apply InformationModel.IsHistorywiseOptimal.isSubgamePerfect
   intro who alternative history
   cases who
-  rw [backward_eq, backward_eq]
+  let hdev := backward_integrable (Profile.update sourceProfile () alternative)
+    prefer history
+  let hbase := backward_integrable sourceProfile prefer history
+  refine ⟨hdev, hbase, ?_⟩
+  rw [backward_eq _ prefer history hdev, backward_eq _ prefer history hbase]
   have valid := source_valid history.trace
   rcases history with ⟨state, trace⟩
   dsimp only at valid ⊢
@@ -307,7 +352,7 @@ def failedRoot : (arena false).History :=
   (arena false).initHistory.extend
     (joint := fun _ => some false)
     (by exact ⟨by simp [arena], fun _ => ⟨by simp [arena], by simp [allowed]⟩⟩)
-    (target := [false]) (FinDist.mem_support_pure.mpr rfl)
+    (target := [false]) (by simp)
 
 /-- The failed-binding continuation is an actual off-path proper subgame. -/
 theorem failedRoot_subgame : (model false).IsSubgameRoot failedRoot :=
@@ -320,11 +365,16 @@ def targetPolicy (prefer : Bool) : (model false).Policy () := fun state =>
         Set.mem_univ]⟩⟩
   else ⟨none, running⟩
 
-theorem failedRoot_best (prefer : Bool) (profile : Profile (model false).strategicSignature) :
+theorem failedRoot_best (prefer : Bool) (profile : Profile (model false).strategicSignature)
+    (hback : PayoffIntegrable
+      ((arena false).historyBackwardLaw (terminates false)
+        ((model false).historyChooser
+          (Profile.update profile () (targetPolicy prefer))) failedRoot)
+      (fun h => payoff false prefer h ())) :
     (arena false).historyBackwardValue (terminates false)
       ((model false).historyChooser (Profile.update profile () (targetPolicy prefer)))
-      (fun h => payoff false prefer h ()) failedRoot = 2 := by
-  rw [backward_eq]
+      (fun h => payoff false prefer h ()) failedRoot hback = 2 := by
+  rw [backward_eq _ prefer failedRoot hback]
   simp [failedRoot, History.extend, continuationPayoff, pick, Profile.update_same,
     InformationModel.Policy.act, targetPolicy, outcome, utility]
 
@@ -334,13 +384,23 @@ theorem failed_utility_sum (choice : Option Bool) :
   | none => norm_num [utility]
   | some bit => cases bit <;> norm_num [utility]
 
-theorem failedRoot_value_sum (profile : Profile (model false).strategicSignature) :
+theorem failedRoot_value_sum (profile : Profile (model false).strategicSignature)
+    (hfirst : PayoffIntegrable
+      ((arena false).historyBackwardLaw (terminates false)
+        ((model false).historyChooser profile) failedRoot)
+      (fun h => payoff false false h ()))
+    (hsecond : PayoffIntegrable
+      ((arena false).historyBackwardLaw (terminates false)
+        ((model false).historyChooser profile) failedRoot)
+      (fun h => payoff false true h ())) :
     (arena false).historyBackwardValue (terminates false)
-        ((model false).historyChooser profile) (fun h => payoff false false h ()) failedRoot +
+        ((model false).historyChooser profile) (fun h => payoff false false h ())
+        failedRoot hfirst +
       (arena false).historyBackwardValue (terminates false)
-        ((model false).historyChooser profile) (fun h => payoff false true h ()) failedRoot ≤
+        ((model false).historyChooser profile) (fun h => payoff false true h ())
+        failedRoot hsecond ≤
       3 := by
-  rw [backward_eq, backward_eq]
+  rw [backward_eq _ false failedRoot hfirst, backward_eq _ true failedRoot hsecond]
   simpa only [failedRoot, History.extend, continuationPayoff, outcome, Bool.false_and] using
     failed_utility_sum
       (if pick profile [pick profile [pick profile [false], false], pick profile [false], false]
@@ -353,10 +413,13 @@ theorem no_common_target_spe :
       (model false).IsSubgamePerfect (terminates false) profile (payoff false false) ∧
       (model false).IsSubgamePerfect (terminates false) profile (payoff false true) := by
   rintro ⟨profile, first, second⟩
-  have firstBound := first failedRoot failedRoot_subgame () (targetPolicy false)
-  have secondBound := second failedRoot failedRoot_subgame () (targetPolicy true)
-  rw [failedRoot_best] at firstBound secondBound
-  have total := failedRoot_value_sum profile
+  obtain ⟨hotherF, hincF, firstBound⟩ :=
+    first failedRoot failedRoot_subgame () (targetPolicy false)
+  obtain ⟨hotherT, hincT, secondBound⟩ :=
+    second failedRoot failedRoot_subgame () (targetPolicy true)
+  rw [failedRoot_best false profile hotherF] at firstBound
+  rw [failedRoot_best true profile hotherT] at secondBound
+  have total := failedRoot_value_sum profile hincF hincT
   linarith
 
 /-- A compiler given only the source plan cannot preserve SPE for all public
@@ -374,14 +437,23 @@ theorem no_utility_independent_spe_compiler :
 
 /-- Randomization cannot recover a common optimum after failure either: the
 two utilities sum to at most three, while each has an attainable value two. -/
-theorem no_randomized_common_completion (law : FinDist (Option Bool)) :
-    ¬ (2 ≤ law.expect (fun choice => utility false (false, choice)) ∧
-      2 ≤ law.expect (fun choice => utility true (false, choice))) := by
+theorem no_randomized_common_completion (law : PMF (Option Bool)) :
+    ¬ (2 ≤ expect law (fun choice => utility false (false, choice))
+          (payoffIntegrable_of_finite _ _) ∧
+      2 ≤ expect law (fun choice => utility true (false, choice))
+          (payoffIntegrable_of_finite _ _)) := by
   rintro ⟨first, second⟩
-  have total : law.expect (fun choice =>
-      utility false (false, choice) + utility true (false, choice)) ≤ 3 :=
-    FinDist.expect_le_of_forall _ _ _ (fun choice _ => failed_utility_sum choice)
-  rw [FinDist.expect_add] at total
+  let hf := payoffIntegrable_of_finite law (fun choice => utility false (false, choice))
+  let hg := payoffIntegrable_of_finite law (fun choice => utility true (false, choice))
+  have total : expect law (fun choice =>
+      utility false (false, choice) + utility true (false, choice))
+        (payoffIntegrable_add hf hg) ≤ 3 := by
+    calc
+      _ ≤ expect law (fun _ => (3 : ℝ)) (payoffIntegrable_constant _ _) := by
+        exact expect_mono (fun choice _ => failed_utility_sum choice)
+          (payoffIntegrable_add hf hg) (payoffIntegrable_constant _ _)
+      _ = 3 := expect_constant _ _ _
+  rw [expect_add hf hg] at total
   linarith
 
 end GameTheory.Tests.IrreversibleFailure

@@ -57,7 +57,7 @@ erasing three serialized microsteps gives exactly one source round. -/
 theorem serialized_exact
     (target : (player : Bool) →
       (FOSGToEFG.information twoBit falseFirst).BehavioralPolicy player) :
-    FinDist.map (FOSGToEFG.eraseHistory twoBit falseFirst)
+    PMF.map (FOSGToEFG.eraseHistory twoBit falseFirst)
         ((FOSGToEFG.information twoBit falseFirst).runBehavioral target 3) =
       twoBit.information.runBehavioral
         (FOSGToEFG.projectBehavioral twoBit falseFirst target) 1 := by
@@ -68,7 +68,7 @@ theorem serialized_exact
 literal one-round source-history law. -/
 theorem translated_serialized_exact
     (source : (player : Bool) → twoBit.information.BehavioralPolicy player) :
-    FinDist.map (FOSGToEFG.eraseHistory twoBit falseFirst)
+    PMF.map (FOSGToEFG.eraseHistory twoBit falseFirst)
         ((FOSGToEFG.information twoBit falseFirst).runBehavioral
           (FOSGToEFG.translateBehavioral twoBit falseFirst source) 3) =
       twoBit.information.runBehavioral source 1 := by

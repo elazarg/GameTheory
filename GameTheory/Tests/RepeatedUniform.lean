@@ -27,14 +27,21 @@ theorem prisonersDilemma_cooperate_not_oneStageApproximateNash :
     ¬ prisonersDilemmaGame.IsεFiniteRepeatedNash 1 1
       (prisonersDilemmaGame.stationaryRepeatedProfile bothCooperate) := by
   intro happroximate
-  have hdeviation :=
+  obtain ⟨hinc, hdev, hdeviation⟩ :=
     (prisonersDilemmaGame.isεFiniteRepeatedNash_iff).1 happroximate
       0 permanentDefection
-  rw [UtilityGame.finiteAveragePayoff_one,
-    prisonersDilemmaGame.repeatedPlay_update_stationaryRepeatedProfile,
-    UtilityGame.finiteAveragePayoff_one,
+  have hpath :
+      prisonersDilemmaGame.repeatedPlay
+          (Profile.update
+            (prisonersDilemmaGame.stationaryRepeatedProfile bothCooperate)
+            0 permanentDefection) 0 =
+        Profile.update bothCooperate 0 Choice.defect := by
+    rw [prisonersDilemmaGame.repeatedPlay_update_stationaryRepeatedProfile]
+    rfl
+  simp only [UtilityGame.finiteAveragePayoff_one,
+    hpath,
     prisonersDilemmaGame.repeatedPlay_stationaryRepeatedProfile] at hdeviation
-  simp only [UtilityGame.stagePayoff, permanentDefection,
+  simp only [UtilityGame.stagePayoff,
     prisonersDilemmaGame] at hdeviation
   rw [expectedUtility_pure, expectedUtility_pure,
     TableGame.utility_apply, TableGame.utility_apply] at hdeviation
@@ -54,7 +61,7 @@ theorem prisonersDilemma_cooperate_not_approximateNash
     ¬ prisonersDilemmaGame.IsεFiniteRepeatedNash horizon 1
       (prisonersDilemmaGame.stationaryRepeatedProfile bothCooperate) := by
   intro happroximate
-  have hdeviation :=
+  obtain ⟨hinc, hdev, hdeviation⟩ :=
     (prisonersDilemmaGame.isεFiniteRepeatedNash_iff).1 happroximate
       0 permanentDefection
   have hprofile :
@@ -71,13 +78,16 @@ theorem prisonersDilemma_cooperate_not_approximateNash
       prisonersDilemmaGame.finiteAveragePayoff horizon
           (Profile.update
             (prisonersDilemmaGame.stationaryRepeatedProfile bothCooperate)
-            0 permanentDefection) 0 = 5 := by
-    rw [hprofile,
+            0 permanentDefection) 0 hdev = 5 := by
+    have hstationary :=
       prisonersDilemmaGame.finiteAveragePayoff_stationaryRepeatedProfile
-        (by omega)]
+        (by omega : horizon ≠ 0)
+        (Profile.update bothCooperate 0 Choice.defect) 0
+        (prisonersDilemma.utilityIntegrable 0 _)
     have hstage :
         prisonersDilemmaGame.stagePayoff
-          (Profile.update bothCooperate 0 Choice.defect) 0 = 5 := by
+          (Profile.update bothCooperate 0 Choice.defect) 0
+          (prisonersDilemma.utilityIntegrable 0 _) = 5 := by
       simp only [UtilityGame.stagePayoff, prisonersDilemmaGame]
       rw [expectedUtility_pure, TableGame.utility_apply]
       have hpayoff :
@@ -86,12 +96,13 @@ theorem prisonersDilemma_cooperate_not_approximateNash
         decide
       rw [hpayoff]
       norm_num
-    exact hstage
+    simpa only [hprofile] using hstationary.trans hstage
   have hcooperationPayoff :
       prisonersDilemmaGame.finiteAveragePayoff horizon
-          (prisonersDilemmaGame.stationaryRepeatedProfile bothCooperate) 0 = 3 := by
+          (prisonersDilemmaGame.stationaryRepeatedProfile bothCooperate)
+          0 hinc = 3 := by
     rw [prisonersDilemmaGame.finiteAveragePayoff_stationaryRepeatedProfile
-      (by omega)]
+      (by omega) _ _ (prisonersDilemma.utilityIntegrable 0 _)]
     simp only [UtilityGame.stagePayoff, prisonersDilemmaGame]
     rw [expectedUtility_pure, TableGame.utility_apply]
     have hpayoff : prisonersDilemma.payoff bothCooperate 0 = 3 := by

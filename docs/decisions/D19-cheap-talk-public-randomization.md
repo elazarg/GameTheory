@@ -45,16 +45,12 @@ stronger ownership test than an expected-utility-only proof.
 
 | Measure | EXP-047 result |
 |---|---|
-| authored experiment | 152 nonblank lines; 8 declarations |
 | authored import | `GameTheory.Core.CheapTalk` only |
-| focused build | 1,720 jobs |
 | new probability surface | one coordinate-map law for independent profile laws |
 | deviation representation | canonical `Profile.update` only |
 | equilibrium surface | ordinary `IsNash` and `IsCorrelatedEq` |
 | preference assumption | arbitrary `WeakPreference` |
 | Protocol / Analysis imports | none |
-| source hazards | zero placeholders, native decisions, direct updates, transports, `HEq`, stored finiteness, `open Classical`, or custom axioms |
-| axiom profile | `propext`, `Classical.choice`, `Quot.sound` only |
 
 ## Kill condition
 
@@ -87,13 +83,7 @@ Protocol execution and analytic existence.
 
 ## Promotion evidence
 
-`GameTheory/Core/CheapTalkRandomization.lean` contains the static bridge and is
-imported by the public Core root after the minimal cheap-talk construction. Its
-independent-coordinate map law now lives at the lower sufficient layer in
-`GameTheory/Core/Form.lean`, where the general mixed-Nash-to-CE theorem can
-reuse it without depending on communication.
-The focused target builds in 1,720 jobs and the full project in 3,363 jobs.
-Phase 2 preserves every source and import budget, reaches both intended public
-symbols, and rejects all four Protocol/Analysis boundary symbols. The
-coordinate-map lemma and both CE/CCE results depend only on `propext`,
-`Classical.choice`, and `Quot.sound`.
+`GameTheory/Core/CheapTalkRandomization.lean` owns the static bridge. The
+independent-coordinate map law belongs in `Core.Form`, where mixed-Nash-to-CE
+can reuse it without depending on communication. The bridge introduces no
+Protocol or Analysis dependency.

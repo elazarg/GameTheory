@@ -23,25 +23,22 @@ The module is organised so that the cost is readable off its structure.
 * `backwardRec` is `WellFounded.fix` at that relation, plus its unfolding
   equation. There is no inductive tree, no second transition relation, and no
   fuel.
-* `backwardValue` is the substantive instantiation: the value of a **fixed
-  chooser**, that is, the expected terminal payoff when the given policy is
-  followed. It is deliberately *not* a max-over-actions optimum. Optimizing
-  would need a supremum over the legal-action set together with a boundedness
-  hypothesis — a preference and order question rather than an execution
-  question, and this module is about execution. The honest scope of this file is
-  therefore "backward induction exists and computes", not "backward induction
-  optimizes".
-* `backwardValue_eq_expect_runFor` joins the two halves: wherever the fuelled
-  runner has already stopped, the backward-induction value *is* the expected
-  payoff of the run law. That is the sharpest available evidence that backward
-  induction is not a second semantics for the same protocol but a second view of
-  the same one.
+* `backwardLaw` is the substantive instantiation: the terminal PMF of a fixed
+  chooser, assembled through support-dependent continuation kernels. It needs
+  neither finite branching nor a real payoff.
+* `backwardValue` reads that law through a finite-real integrability guard.
+  The one-shot context compares actual terminal laws, never padded successor
+  values or a totalized divergent real sum.
+* `backwardLaw_eq_runFor` joins the two halves before any payoff is introduced:
+  wherever the fuelled runner has stopped, its law is the backward law.
 
 The discriminating fixture lives in `GameTheory.Tests.Backward`, so stable
 importers compile only the semantic definitions and proofs in this module.
 -/
 
 import GameTheory.Protocol.Execution
+import GameTheory.Protocol.Context
+import GameTheory.Math.Probability.ExpectationBind
 
 noncomputable section
 
@@ -129,158 +126,298 @@ theorem backwardRec_eq {motive : E.State → Sort uv} (certificate : E.WellFound
       rule source fun target _ => E.backwardRec certificate rule target :=
   WellFounded.fix_eq (r := E.Successor) certificate rule source
 
-/-! ## The value of a fixed chooser
-
-The substantive instantiation: a real payoff collected at terminal states, and
-elsewhere the expected successor value under the law the chooser induces. -/
+/-! ## Terminal laws by well-founded recursion -/
 
 variable (E) in
 open Classical in
-/-- `FinDist.expect` consumes a *total* observable, while backward induction
-supplies values only at successors. Padding every non-successor with `0` closes
-that gap, and `FinDist.expect_congr` then discards the padding, because
-everything in a transition law's support is by definition a successor. This
-adapter is the entire representational cost of running backward induction
-through the probability layer. -/
-def padSuccessorValues (source : E.State)
-    (successorValue : (reached : E.State) → E.Successor reached source → ℝ)
-    (target : E.State) : ℝ :=
-  if hsucc : E.Successor target source then successorValue target hsucc else 0
+/-- The terminal-state law induced by a fixed chooser. The continuation
+kernel receives exactly the proof that each drawn target is a successor. -/
+def backwardLaw (certificate : E.WellFoundedPlay) (chooser : E.Chooser) :
+    E.State → PMF E.State :=
+  E.backwardRec certificate fun source successorLaw =>
+    if hterm : E.terminal source then PMF.pure source
+    else (E.step source (chooser source hterm)).bindOnSupport
+      fun target realized =>
+        successorLaw target
+          ⟨(chooser source hterm).1, (chooser source hterm).2, realized⟩
 
-/-- On successors the padding is invisible. -/
-theorem padSuccessorValues_of_successor {source target : E.State}
-    {successorValue : (reached : E.State) → E.Successor reached source → ℝ}
-    (hsucc : E.Successor target source) :
-    E.padSuccessorValues source successorValue target = successorValue target hsucc :=
-  dite_eq_left hsucc
+variable {certificate : E.WellFoundedPlay} {chooser : E.Chooser}
 
-variable (E) in
 open Classical in
-/-- The backward-induction rule for a terminal payoff: collect at a terminal
-state, and otherwise average the successor values under the law the chooser
-induces. Terminality is inspected before the chooser is consulted, exactly as in
-`runFor`, so no total legal-action chooser is required. -/
-def backwardStep (chooser : E.Chooser) (payoff : E.State → ℝ) (source : E.State)
-    (successorValue : (reached : E.State) → E.Successor reached source → ℝ) : ℝ :=
-  if hterm : E.terminal source then payoff source
-  else (E.step source (chooser source hterm)).expect
-    (E.padSuccessorValues source successorValue)
+/-- The law unfolds through the same successor relation as `backwardRec`. -/
+theorem backwardLaw_eq (source : E.State) :
+    E.backwardLaw certificate chooser source =
+      if hterm : E.terminal source then PMF.pure source
+      else (E.step source (chooser source hterm)).bindOnSupport
+        fun target _ => E.backwardLaw certificate chooser target := by
+  rw [backwardLaw, backwardRec_eq]
 
-variable (E) in
-/-- The backward-induction value of a *fixed* chooser: the expected terminal
-payoff of following `chooser`, defined by recursion on the protocol rather than
-by running it. This is not an optimum over actions; see the module docstring. -/
-def backwardValue (certificate : E.WellFoundedPlay) (chooser : E.Chooser)
-    (payoff : E.State → ℝ) : E.State → ℝ :=
-  E.backwardRec (motive := fun _ => ℝ) certificate (E.backwardStep chooser payoff)
+/-- Terminal states are absorbed without consulting the chooser. -/
+theorem backwardLaw_of_terminal {source : E.State}
+    (hterm : E.terminal source) :
+    E.backwardLaw certificate chooser source = PMF.pure source := by
+  rw [backwardLaw_eq, dite_eq_left hterm]
 
-variable {certificate : E.WellFoundedPlay} {chooser : E.Chooser} {payoff : E.State → ℝ}
+/-- A nonterminal law binds exactly the realized successor continuations. -/
+theorem backwardLaw_of_not_terminal {source : E.State}
+    (hterm : ¬ E.terminal source) :
+    E.backwardLaw certificate chooser source =
+      (E.step source (chooser source hterm)).bindOnSupport
+        fun target _ => E.backwardLaw certificate chooser target := by
+  rw [backwardLaw_eq, dite_eq_right hterm]
 
-/-- `backwardValue` unfolded one level, still mentioning the padding. -/
-theorem backwardValue_eq (source : E.State) :
-    E.backwardValue certificate chooser payoff source =
-      E.backwardStep chooser payoff source
-        fun reached _ => E.backwardValue certificate chooser payoff reached :=
-  backwardRec_eq certificate (E.backwardStep chooser payoff) source
+theorem backwardLaw_of_not_terminal_bind {source : E.State}
+    (hterm : ¬ E.terminal source) :
+    E.backwardLaw certificate chooser source =
+      (E.step source (chooser source hterm)).bind
+        (E.backwardLaw certificate chooser) := by
+  rw [backwardLaw_of_not_terminal hterm, PMF.bindOnSupport_eq_bind]
 
-/-- At a terminal state the value is the payoff. -/
-theorem backwardValue_of_terminal {source : E.State} (hterm : E.terminal source) :
-    E.backwardValue certificate chooser payoff source = payoff source := by
-  rw [backwardValue_eq]
-  exact dite_eq_left hterm
+/-- Whenever the forward run has stopped, its law is the backward law.
+The equality is unconditional on the payoff and has no branching finiteness
+assumption. -/
+theorem backwardLaw_eq_runFor {horizon : ℕ} {state : E.State}
+    (hstop : E.StopsWithin chooser horizon state) :
+    E.backwardLaw certificate chooser state =
+      E.runFor chooser horizon state := by
+  induction horizon generalizing state with
+  | zero =>
+      have hterm : E.terminal state :=
+        hstop state (by simp [runFor])
+      rw [backwardLaw_of_terminal hterm, runFor_zero]
+  | succ horizon ih =>
+      by_cases hterm : E.terminal state
+      · rw [backwardLaw_of_terminal hterm,
+          runFor_of_terminal chooser _ hterm]
+      · rw [backwardLaw_of_not_terminal hterm,
+          runFor_succ_of_not_terminal chooser horizon hterm]
+        apply bindOnSupport_eq_bind_of_eq_on_support
+        intro target htarget
+        apply ih
+        intro final hfinal
+        apply hstop final
+        rw [runFor_succ_of_not_terminal chooser horizon hterm,
+          PMF.support_bind]
+        exact Set.mem_iUnion₂.mpr ⟨target, htarget, hfinal⟩
 
-/-- **The computation rule that matters.** Away from terminal states the value is
-the expected successor value under the transition law, with no padding left in
-the statement. -/
-theorem backwardValue_of_not_terminal {source : E.State} (hterm : ¬ E.terminal source) :
-    E.backwardValue certificate chooser payoff source =
-      (E.step source (chooser source hterm)).expect
-        (E.backwardValue certificate chooser payoff) := by
-  have hstep : E.backwardStep chooser payoff source
-      (fun reached _ => E.backwardValue certificate chooser payoff reached) =
-      (E.step source (chooser source hterm)).expect
-        (E.padSuccessorValues source
-          fun reached _ => E.backwardValue certificate chooser payoff reached) :=
-    dite_eq_right hterm
-  rw [backwardValue_eq, hstep]
-  refine FinDist.expect_congr fun reached hreached => ?_
-  exact padSuccessorValues_of_successor
-    ⟨(chooser source hterm).1, (chooser source hterm).2, hreached⟩
-
-/-! ## The one-shot deviation principle
-
-Checking a strategy against every alternative strategy is checking infinitely
-many things; checking it against every alternative *action*, one step at a time,
-is checking finitely many. The principle below says the two tests are
-equivalent, and the certificate that makes the sufficient direction work is the
-same well-foundedness the backward recursion already needs — nothing further is
-assumed.
-
-What makes it non-circular is that the one-step comparison is made against the
-chooser's *own* continuation value. A chooser that cannot improve on itself by
-changing one action, given that it will go on playing as it does, cannot be
-improved on by any other chooser at all. -/
-
-variable (E) in
-/-- No single legal action, substituted at one state and followed by the
-chooser's own continued play, does better than the action the chooser takes. -/
-def IsOneShotOptimal (certificate : E.WellFoundedPlay) (chooser : E.Chooser)
-    (payoff : E.State → ℝ) : Prop :=
-  ∀ (state : E.State) (hterm : ¬ E.terminal state)
-    (alternative : { joint : ∀ i, Option (E.Action i) // E.Legal state joint }),
-    (E.step state alternative).expect (E.backwardValue certificate chooser payoff) ≤
-      (E.step state (chooser state hterm)).expect
-        (E.backwardValue certificate chooser payoff)
-
-/-- **The one-shot deviation principle.** A chooser that no single-action change
-improves is better than every other chooser, everywhere.
-
-The induction is along the same `Successor` relation the value recursion uses,
-so the certificate carries both and no second hypothesis appears. -/
-theorem backwardValue_le_of_isOneShotOptimal {certificate : E.WellFoundedPlay}
-    {optimal : E.Chooser} {payoff : E.State → ℝ}
-    (hopt : E.IsOneShotOptimal certificate optimal payoff) (other : E.Chooser)
-    (state : E.State) :
-    E.backwardValue certificate other payoff state ≤
-      E.backwardValue certificate optimal payoff state := by
+/-- Every state supported by the well-founded backward law is terminal,
+including when no uniform stopping horizon exists. -/
+theorem backwardLaw_support_terminal (state : E.State) :
+    ∀ target ∈ (E.backwardLaw certificate chooser state).support,
+      E.terminal target := by
   induction state using certificate.induction with
   | _ source ih =>
-    by_cases hterm : E.terminal source
-    · rw [backwardValue_of_terminal hterm, backwardValue_of_terminal hterm]
-    · rw [backwardValue_of_not_terminal hterm, backwardValue_of_not_terminal hterm]
-      refine le_trans (FinDist.expect_mono fun reached hreached => ?_)
-        (hopt source hterm (other source hterm))
-      exact ih reached ⟨(other source hterm).1, (other source hterm).2, hreached⟩
+      intro target htarget
+      by_cases hterm : E.terminal source
+      · rw [backwardLaw_of_terminal hterm,
+          PMF.mem_support_pure_iff] at htarget
+        subst target
+        exact hterm
+      · rw [backwardLaw_of_not_terminal hterm,
+          PMF.mem_support_bindOnSupport_iff] at htarget
+        obtain ⟨reached, hrealized, hcontinue⟩ := htarget
+        apply ih reached
+          ⟨(chooser source hterm).1, (chooser source hterm).2, hrealized⟩
+        exact hcontinue
 
-/-! ### The converse
+/-- A finite real backward value exists only for an integrable terminal-law
+payoff. The terminal law remains meaningful when this guard fails. -/
+def backwardValue (certificate : E.WellFoundedPlay) (chooser : E.Chooser)
+    (payoff : E.State → ℝ) (state : E.State)
+    (hintegrable : PayoffIntegrable (E.backwardLaw certificate chooser state) payoff) :
+    ℝ :=
+  expect (E.backwardLaw certificate chooser state) payoff hintegrable
 
-The one-step condition is not merely sufficient. Recovering it from global
-optimality needs a chooser that plays one action at one state and follows the
-original everywhere else, and that is constructible here: a chooser's *answer*
-is a joint action, whose type does not mention the state, so only the legality
-certificate has to be repaired. Nothing is transported.
+theorem backwardValue_eq_expect_runFor
+    {certificate : E.WellFoundedPlay} {chooser : E.Chooser}
+    {payoff : E.State → ℝ} {horizon : ℕ} {state : E.State}
+    (hstop : E.StopsWithin chooser horizon state)
+    (hback : PayoffIntegrable (E.backwardLaw certificate chooser state) payoff)
+    (hforward : PayoffIntegrable (E.runFor chooser horizon state) payoff) :
+    E.backwardValue certificate chooser payoff state hback =
+      expect (E.runFor chooser horizon state) payoff hforward := by
+  unfold backwardValue expect
+  rw [E.backwardLaw_eq_runFor hstop]
 
-What makes the recovery work is the certificate again. A state cannot be reached
-from its own successors — that would be an infinite descending chain — so the
-deviant agrees with the original everywhere the value recursion looks after the
-first step. -/
+theorem backwardValue_of_terminal
+    {certificate : E.WellFoundedPlay} {chooser : E.Chooser}
+    {payoff : E.State → ℝ} {source : E.State}
+    (hterm : E.terminal source)
+    (hintegrable : PayoffIntegrable
+      (E.backwardLaw certificate chooser source) payoff) :
+    E.backwardValue certificate chooser payoff source hintegrable =
+      payoff source := by
+  have hpure : PayoffIntegrable (PMF.pure source) payoff := by
+    rw [← E.backwardLaw_of_terminal hterm]
+    exact hintegrable
+  calc
+    E.backwardValue certificate chooser payoff source hintegrable =
+        expect (PMF.pure source) payoff hpure := by
+          unfold backwardValue expect
+          rw [E.backwardLaw_of_terminal hterm]
+    _ = payoff source := expect_pure source payoff hpure
+
+/-- Numerical Bellman equation at the supported successors of a nonterminal
+state. The joint terminal-law guard derives every conditional and outer guard. -/
+theorem backwardValue_of_not_terminal
+    {certificate : E.WellFoundedPlay} {chooser : E.Chooser}
+    {payoff : E.State → ℝ} {source : E.State}
+    (hterm : ¬ E.terminal source)
+    (hsource : PayoffIntegrable (E.backwardLaw certificate chooser source) payoff)
+    (successorValue : E.State → ℝ)
+    (hvalue : ∀ target, ∀ ht :
+      target ∈ (E.step source (chooser source hterm)).support,
+      successorValue target =
+        E.backwardValue certificate chooser payoff target
+          (payoffIntegrable_bind_conditional_on_support
+            (E.step source (chooser source hterm))
+            (E.backwardLaw certificate chooser) payoff
+            (by rwa [← E.backwardLaw_of_not_terminal_bind hterm]) target ht)) :
+    ∃ houter : PayoffIntegrable
+        (E.step source (chooser source hterm)) successorValue,
+      E.backwardValue certificate chooser payoff source hsource =
+        expect (E.step source (chooser source hterm)) successorValue houter := by
+  let p := E.step source (chooser source hterm)
+  let q := E.backwardLaw certificate chooser
+  have hbind : PayoffIntegrable (p.bind q) payoff := by
+    rw [← E.backwardLaw_of_not_terminal_bind hterm]
+    exact hsource
+  have hcond : ∀ target, ∀ ht : target ∈ p.support,
+      successorValue target = expect (q target) payoff
+        (payoffIntegrable_bind_conditional_on_support p q payoff hbind target ht) := by
+    intro target ht
+    simpa only [backwardValue] using hvalue target ht
+  let houter := payoffIntegrable_bind_conditionalValue_on_support
+    p q payoff hbind successorValue hcond
+  refine ⟨houter, ?_⟩
+  have htower := expect_bind_tower_on_support
+    p q payoff hbind successorValue hcond
+  unfold backwardValue expect at htower ⊢
+  rw [E.backwardLaw_of_not_terminal_bind hterm]
+  exact htower
+
+/-- One legal action followed by the incumbent chooser's backward terminal
+law. The context compares actual outcome laws under the same payoff. -/
+def oneShotContext (certificate : E.WellFoundedPlay) (chooser : E.Chooser)
+    (payoff : E.State → ℝ) (source : E.State)
+    (_hterm : ¬ E.terminal source) :
+    GameTheory.Protocol.Context
+      { joint : ∀ i, Option (E.Action i) // E.Legal source joint } E.State where
+  outcome alternative :=
+    (E.step source alternative).bind (E.backwardLaw certificate chooser)
+  continuation := payoff
+
+/-- At a nonterminal state, the incumbent one-shot law is precisely its
+backward law. -/
+theorem oneShotContext_incumbentLaw
+    {certificate : E.WellFoundedPlay} {chooser : E.Chooser}
+    {payoff : E.State → ℝ} {source : E.State}
+    (hterm : ¬ E.terminal source) :
+    (E.oneShotContext certificate chooser payoff source hterm).outcome
+        (chooser source hterm) =
+      E.backwardLaw certificate chooser source := by
+  rw [backwardLaw_of_not_terminal hterm]
+  simpa only [oneShotContext] using
+    (bindOnSupport_eq_bind_of_eq_on_support
+      (μ := E.step source (chooser source hterm))
+      (g := E.backwardLaw certificate chooser)
+      (fun _ _ => rfl)).symm
+
+/-- Every legal one-step replacement has a defined finite real payoff, and
+none improves over the incumbent's whole continuation law. -/
+def IsOneShotOptimal (certificate : E.WellFoundedPlay)
+    (chooser : E.Chooser) (payoff : E.State → ℝ) : Prop :=
+  ∀ (source : E.State) (hterm : ¬ E.terminal source),
+    (E.oneShotContext certificate chooser payoff source hterm).IsLocallyOptimal
+      Set.univ (chooser source hterm)
+
+/-- The incumbent law is integrable at every state under guarded one-shot
+optimality. At terminal states this follows from the pure law. -/
+theorem IsOneShotOptimal.integrable
+    {certificate : E.WellFoundedPlay} {chooser : E.Chooser}
+    {payoff : E.State → ℝ}
+    (hoptimal : E.IsOneShotOptimal certificate chooser payoff)
+    (source : E.State) :
+    PayoffIntegrable (E.backwardLaw certificate chooser source) payoff := by
+  by_cases hterm : E.terminal source
+  · rw [E.backwardLaw_of_terminal hterm]
+    exact payoffIntegrable_pure source payoff
+  · have hctx : PayoffIntegrable
+        ((E.oneShotContext certificate chooser payoff source hterm).outcome
+          (chooser source hterm)) payoff :=
+      (hoptimal source hterm).1
+    rwa [E.oneShotContext_incumbentLaw hterm] at hctx
+
+/-- Guarded one-shot optimality compares the incumbent with any chooser whose
+terminal law has a finite real value at each state. -/
+theorem backwardValue_le_of_isOneShotOptimal
+    {certificate : E.WellFoundedPlay} {optimal : E.Chooser}
+    {payoff : E.State → ℝ}
+    (hopt : E.IsOneShotOptimal certificate optimal payoff)
+    (other : E.Chooser)
+    (state : E.State)
+    (hother : PayoffIntegrable
+      (E.backwardLaw certificate other state) payoff) :
+    E.backwardValue certificate other payoff state hother ≤
+      E.backwardValue certificate optimal payoff state (hopt.integrable state) := by
+  induction state using certificate.induction with
+  | _ source ih =>
+      by_cases hterm : E.terminal source
+      · unfold backwardValue expect
+        rw [E.backwardLaw_of_terminal hterm,
+          E.backwardLaw_of_terminal hterm]
+      · let ctx := E.oneShotContext certificate optimal payoff source hterm
+        have hlocal := hopt source hterm
+        have hright : ctx.IntegrableAt (other source hterm) :=
+          hlocal.2.1 _ (Set.mem_univ _)
+        have hinc : ctx.IntegrableAt (optimal source hterm) := hlocal.1
+        have hbound := hlocal.2.2 (other source hterm)
+          (Set.mem_univ _) hinc hright
+        have hleft : PayoffIntegrable
+            ((E.step source (other source hterm)).bind
+              (E.backwardLaw certificate other)) payoff := by
+          rw [← E.backwardLaw_of_not_terminal_bind hterm]
+          exact hother
+        unfold backwardValue
+        calc
+          expect (E.backwardLaw certificate other source) payoff hother =
+              expect ((E.step source (other source hterm)).bind
+                (E.backwardLaw certificate other)) payoff hleft := by
+              unfold expect
+              rw [E.backwardLaw_of_not_terminal_bind hterm]
+          _ ≤ expect ((E.step source (other source hterm)).bind
+                (E.backwardLaw certificate optimal)) payoff hright := by
+              apply expect_bind_mono_on_support
+              intro reached hreached
+              have hstep : E.Successor reached source :=
+                ⟨(other source hterm).1, (other source hterm).2, hreached⟩
+              have hconditional := payoffIntegrable_bind_conditional_on_support
+                (E.step source (other source hterm))
+                (E.backwardLaw certificate other) payoff hleft reached hreached
+              simpa only [backwardValue] using ih reached hstep hconditional
+          _ ≤ expect (E.backwardLaw certificate optimal source) payoff
+                (hopt.integrable source) := by
+              unfold Context.value at hbound
+              unfold expect at hbound ⊢
+              rw [E.oneShotContext_incumbentLaw hterm] at hbound
+              exact hbound
 
 variable (E) in
-/-- States reachable from `source` by realized legal steps, `source` included. -/
+/-- States reachable from a source by realized legal steps, including the source. -/
 def Reaches (source target : E.State) : Prop :=
   Relation.ReflTransGen (fun earlier later => E.Successor later earlier) source target
 
-theorem Reaches.refl (state : E.State) : E.Reaches state state := Relation.ReflTransGen.refl
+theorem Reaches.refl (state : E.State) : E.Reaches state state :=
+  Relation.ReflTransGen.refl
 
-theorem Reaches.step {source middle target : E.State} (hstep : E.Successor middle source)
-    (hrest : E.Reaches middle target) : E.Reaches source target :=
+theorem Reaches.step {source middle target : E.State}
+    (hstep : E.Successor middle source) (hrest : E.Reaches middle target) :
+    E.Reaches source target :=
   Relation.ReflTransGen.head hstep hrest
 
 open Classical in
 variable (E) in
-/-- The chooser that answers `replacement` at one state and follows `chooser`
-everywhere else. The answer's type does not mention the state, so the branch
-needs no transport of data; only the legality certificate is repaired. -/
+/-- Replace one answer at `state`, preserving the chooser everywhere else. -/
 def deviateAt (state : E.State)
     (replacement : { joint : ∀ i, Option (E.Action i) // E.Legal state joint })
     (chooser : E.Chooser) : E.Chooser := fun source hterm =>
@@ -302,32 +439,45 @@ theorem deviateAt_of_ne {state source : E.State}
   classical
   exact dite_eq_right hne
 
-/-- Choosers agreeing everywhere the recursion can look from `start` give the
-same value there. -/
-theorem backwardValue_congr_of_reaches {certificate : E.WellFoundedPlay}
-    {first second : E.Chooser} {payoff : E.State → ℝ} :
+/-- Choosers agreeing on the reachable cone induce the same backward law. -/
+theorem backwardLaw_congr_of_reaches {certificate : E.WellFoundedPlay}
+    {first second : E.Chooser} :
     ∀ (start : E.State),
       (∀ source, E.Reaches start source → ∀ hterm : ¬ E.terminal source,
         first source hterm = second source hterm) →
-      E.backwardValue certificate first payoff start =
-        E.backwardValue certificate second payoff start := by
+      E.backwardLaw certificate first start =
+        E.backwardLaw certificate second start := by
   intro start
   induction start using certificate.induction with
   | _ source ih =>
-    intro hagree
-    by_cases hterm : E.terminal source
-    · rw [backwardValue_of_terminal hterm, backwardValue_of_terminal hterm]
-    · rw [backwardValue_of_not_terminal hterm, backwardValue_of_not_terminal hterm,
-        hagree source (Reaches.refl source) hterm]
-      refine FinDist.expect_congr fun reached hreached => ?_
-      have hstep : E.Successor reached source :=
-        ⟨(second source hterm).1, (second source hterm).2, hreached⟩
-      exact ih reached hstep fun later hlater =>
-        hagree later (Reaches.step hstep hlater)
+      intro hagree
+      by_cases hterm : E.terminal source
+      · rw [backwardLaw_of_terminal hterm, backwardLaw_of_terminal hterm]
+      · rw [backwardLaw_of_not_terminal hterm,
+          backwardLaw_of_not_terminal hterm,
+          hagree source (Reaches.refl source) hterm]
+        refine bindOnSupport_congr _ fun reached hreached => ?_
+        have hstep : E.Successor reached source :=
+          ⟨(second source hterm).1, (second source hterm).2, hreached⟩
+        exact ih reached hstep fun later hlater =>
+          hagree later (Reaches.step hstep hlater)
 
-/-- No state is reachable from its own successors: that would be a descending
-chain the certificate forbids. -/
-theorem not_reaches_of_successor {certificate : E.WellFoundedPlay} {source target : E.State}
+/-- Numerical values agree when the terminal laws agree on a reachable cone. -/
+theorem backwardValue_congr_of_reaches {certificate : E.WellFoundedPlay}
+    {first second : E.Chooser} {payoff : E.State → ℝ} (start : E.State)
+    (hagree : ∀ source, E.Reaches start source →
+      ∀ hterm : ¬ E.terminal source,
+        first source hterm = second source hterm)
+    (hfirst : PayoffIntegrable (E.backwardLaw certificate first start) payoff)
+    (hsecond : PayoffIntegrable (E.backwardLaw certificate second start) payoff) :
+    E.backwardValue certificate first payoff start hfirst =
+      E.backwardValue certificate second payoff start hsecond := by
+  unfold backwardValue expect
+  rw [E.backwardLaw_congr_of_reaches start hagree]
+
+/-- A successor cannot reach its predecessor in a well-founded protocol. -/
+theorem not_reaches_of_successor {certificate : E.WellFoundedPlay}
+    {source target : E.State}
     (hstep : E.Successor target source) : ¬ E.Reaches target source := by
   intro hback
   have hforward : Relation.ReflTransGen E.Successor source target := by
@@ -339,71 +489,103 @@ theorem not_reaches_of_successor {certificate : E.WellFoundedPlay} {source targe
     Relation.TransGen.tail' hforward hstep
   exact (certificate.transGen).irrefl.irrefl source hcycle
 
-/-- **The converse.** A chooser better than every other is unimprovable by any
-single action, so the one-step condition is not merely sufficient. -/
-theorem isOneShotOptimal_of_backwardValue_le {certificate : E.WellFoundedPlay}
-    {optimal : E.Chooser} {payoff : E.State → ℝ}
+/-- A single changed answer produces exactly its one-shot continuation law.
+Well-foundedness prevents that answer from being consulted again later. -/
+theorem oneShotContext_deviateAtLaw
+    {certificate : E.WellFoundedPlay} {chooser : E.Chooser}
+    {payoff : E.State → ℝ} {source : E.State}
+    (hterm : ¬ E.terminal source)
+    (alternative : { joint : ∀ i, Option (E.Action i) // E.Legal source joint }) :
+    (E.oneShotContext certificate chooser payoff source hterm).outcome alternative =
+      E.backwardLaw certificate (E.deviateAt source alternative chooser) source := by
+  rw [backwardLaw_of_not_terminal_bind hterm, deviateAt_self hterm]
+  unfold oneShotContext
+  apply bind_congr_on_support
+  intro reached hreached
+  apply E.backwardLaw_congr_of_reaches reached
+  intro later hlater hlaterTerm
+  symm
+  apply E.deviateAt_of_ne
+  intro hsame
+  subst later
+  exact E.not_reaches_of_successor
+    (certificate := certificate)
+    (⟨alternative.1, alternative.2, hreached⟩ : E.Successor reached source)
+    hlater
+
+/-- The converse needs a guarded global comparison: the assumed preference
+itself certifies both compared terminal laws, including the local deviation. -/
+theorem isOneShotOptimal_of_backwardValue_le
+    {certificate : E.WellFoundedPlay} {optimal : E.Chooser}
+    {payoff : E.State → ℝ}
     (hbest : ∀ (other : E.Chooser) (state : E.State),
-      E.backwardValue certificate other payoff state ≤
-        E.backwardValue certificate optimal payoff state) :
+      ∃ hother : PayoffIntegrable
+          (E.backwardLaw certificate other state) payoff,
+        ∃ hoptimal : PayoffIntegrable
+          (E.backwardLaw certificate optimal state) payoff,
+          E.backwardValue certificate other payoff state hother ≤
+            E.backwardValue certificate optimal payoff state hoptimal) :
     E.IsOneShotOptimal certificate optimal payoff := by
-  intro state hterm alternative
-  have hdeviant := hbest (E.deviateAt state alternative optimal) state
-  rw [backwardValue_of_not_terminal (chooser := E.deviateAt state alternative optimal) hterm,
-    deviateAt_self hterm,
-    backwardValue_of_not_terminal (chooser := optimal) hterm] at hdeviant
-  refine le_trans (le_of_eq ?_) hdeviant
-  refine (FinDist.expect_congr fun reached hreached => ?_).symm
-  refine backwardValue_congr_of_reaches reached fun source hreaches hsourceTerm => ?_
-  refine deviateAt_of_ne (fun hsame => ?_) hsourceTerm
-  rw [hsame] at hreaches
-  exact not_reaches_of_successor (certificate := certificate)
-    (⟨alternative.1, alternative.2, hreached⟩ : E.Successor reached state) hreaches
+  intro source hterm
+  let ctx := E.oneShotContext certificate optimal payoff source hterm
+  obtain ⟨_, hinc, _⟩ := hbest optimal source
+  have hincCtx : ctx.IntegrableAt (optimal source hterm) := by
+    show PayoffIntegrable
+      ((E.oneShotContext certificate optimal payoff source hterm).outcome
+        (optimal source hterm)) payoff
+    rw [E.oneShotContext_incumbentLaw hterm]
+    exact hinc
+  refine ⟨hincCtx, ?_, ?_⟩
+  · intro alternative _
+    obtain ⟨hdev, _, _⟩ :=
+      hbest (E.deviateAt source alternative optimal) source
+    show PayoffIntegrable
+      ((E.oneShotContext certificate optimal payoff source hterm).outcome
+        alternative) payoff
+    rw [E.oneShotContext_deviateAtLaw hterm alternative]
+    exact hdev
+  · intro alternative _ hinc' halt
+    obtain ⟨hdev, hopt', hle⟩ :=
+      hbest (E.deviateAt source alternative optimal) source
+    show expect
+        ((E.oneShotContext certificate optimal payoff source hterm).outcome
+          alternative) payoff halt ≤
+      expect
+        ((E.oneShotContext certificate optimal payoff source hterm).outcome
+          (optimal source hterm)) payoff hinc'
+    unfold backwardValue expect at hle
+    unfold expect
+    rw [E.oneShotContext_deviateAtLaw hterm alternative,
+      E.oneShotContext_incumbentLaw hterm]
+    exact hle
 
-/-! ## Backward induction computes the forward semantics
-
-The fuelled evaluator and this recursion describe the same number. That is
-what distinguishes "a small certificate over one semantics" from "a second
-parallel semantics". -/
-
-/-- Wherever the fuelled runner has already stopped, the backward-induction value
-of a chooser equals the expected payoff of its run law. Neither side is defined
-in terms of the other: `backwardValue` recurses on `Successor`, `runFor` recurses
-on fuel, and `StopsWithin` is the bounded certificate that makes them meet. -/
-theorem backwardValue_eq_expect_runFor {horizon : ℕ} {state : E.State}
-    (hstop : E.StopsWithin chooser horizon state) :
-    E.backwardValue certificate chooser payoff state =
-      (E.runFor chooser horizon state).expect payoff := by
-  induction horizon generalizing state with
-  | zero =>
-    have hterm : E.terminal state :=
-      hstop state (by rw [runFor_zero]; exact FinDist.mem_support_pure.2 rfl)
-    rw [backwardValue_of_terminal hterm, runFor_zero, FinDist.expect_pure]
-  | succ horizon ih =>
-    by_cases hterm : E.terminal state
-    · rw [backwardValue_of_terminal hterm, runFor_of_terminal chooser _ hterm,
-        FinDist.expect_pure]
-    · rw [backwardValue_of_not_terminal hterm,
-        runFor_succ_of_not_terminal chooser horizon hterm, FinDist.expect_bind]
-      refine FinDist.expect_congr fun reached hreached => ih fun final hfinal => ?_
-      refine hstop final ?_
-      rw [runFor_succ_of_not_terminal chooser horizon hterm, FinDist.support_bind]
-      exact Set.mem_biUnion hreached hfinal
-
-/-- **The forward reading.** Where both choosers have stopped, the principle is a
-statement about run laws: the locally unimprovable chooser's expected payoff is
-at least any other's. Nothing new is proved here — the two semantics were already
-known to agree — but this is the form a caller quotes. -/
-theorem expect_runFor_le_of_isOneShotOptimal {certificate : E.WellFoundedPlay}
-    {optimal : E.Chooser} {payoff : E.State → ℝ}
-    (hopt : E.IsOneShotOptimal certificate optimal payoff) (other : E.Chooser)
-    {horizon : ℕ} {state : E.State}
-    (hother : E.StopsWithin other horizon state) (hoptimal : E.StopsWithin optimal horizon state) :
-    (E.runFor other horizon state).expect payoff ≤
-      (E.runFor optimal horizon state).expect payoff := by
-  rw [← backwardValue_eq_expect_runFor (certificate := certificate) hother,
-    ← backwardValue_eq_expect_runFor (certificate := certificate) hoptimal]
-  exact backwardValue_le_of_isOneShotOptimal hopt other state
+/-- When both forward runs have stopped, guarded one-shot optimality compares
+their actual terminal laws. The incumbent integrability certificate is derived. -/
+theorem expect_runFor_le_of_isOneShotOptimal
+    {certificate : E.WellFoundedPlay} {optimal : E.Chooser}
+    {payoff : E.State → ℝ}
+    (hopt : E.IsOneShotOptimal certificate optimal payoff)
+    (other : E.Chooser) {horizon : ℕ} {state : E.State}
+    (hotherStop : E.StopsWithin other horizon state)
+    (hoptimalStop : E.StopsWithin optimal horizon state)
+    (hother : PayoffIntegrable (E.runFor other horizon state) payoff) :
+    ∃ hoptimal : PayoffIntegrable (E.runFor optimal horizon state) payoff,
+      expect (E.runFor other horizon state) payoff hother ≤
+        expect (E.runFor optimal horizon state) payoff hoptimal := by
+  have hotherBack : PayoffIntegrable
+      (E.backwardLaw certificate other state) payoff := by
+    rw [E.backwardLaw_eq_runFor hotherStop]
+    exact hother
+  let hoptimal : PayoffIntegrable (E.runFor optimal horizon state) payoff := by
+    rw [← E.backwardLaw_eq_runFor hoptimalStop]
+    exact hopt.integrable state
+  refine ⟨hoptimal, ?_⟩
+  have hle := E.backwardValue_le_of_isOneShotOptimal hopt other state hotherBack
+  unfold backwardValue expect at hle
+  unfold expect
+  rw [E.backwardLaw_eq_runFor hotherStop,
+    E.backwardLaw_eq_runFor hoptimalStop] at hle
+  exact hle
 
 end ExecutionProtocol
 

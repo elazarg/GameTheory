@@ -3,7 +3,7 @@
 - **Status:** adopted; native evaluation and explicit-order EFG compilation
   validated, public recovery unblocked
 - **Date:** 2026-07-30
-- **Experiment IDs:** EXP-014, EXP-037, EXP-038, EXP-039, EXP-040, EXP-041
+- **Experiment IDs:** EXP-014, EXP-037, EXP-038, EXP-039, EXP-040, EXP-041, EXP-140
 
 ## Decision / question
 
@@ -45,15 +45,8 @@ one of the two decisions.
 
 | Measure | EXP-037 result |
 |---|---|
-| authored size | 406 nonblank lines; 58 declarations |
-| stable API change | 0 declarations and 0 imports |
 | authored import | `GameTheory.Protocol.Information` only |
 | project import closure | 6 prerequisites: FinDist, Execution, Extraction, History, Randomized, Information |
-| source trust/audit tokens | 0 placeholders, native decisions, direct updates, transports, `HEq`, or tactic `change` |
-| focused build | 1,718 jobs |
-| full build | 3,326 jobs |
-| repository audits | Phase 0–3 expected measurements and reachability probes pass |
-| axiom profile | `propext`, `Classical.choice`, `Quot.sound` only |
 | semantic runner | existing `InformationModel.run`; exact equality to direct frontier evaluation |
 | false serialization | no partial-decision state; both agents active and committed in one step |
 | hostile sensitivity | each action changes the law; observing the chance parent changes expected payoff from 1 to 2 |
@@ -76,16 +69,9 @@ the representation needed for an incomparable decision antichain: the source
 players and actions are reused directly, policy views contain only resolved
 parents, and the compiled law agrees with direct evaluation.
 
-The experiment does not itself freeze a general node/DAG API. The next slice
-must package an arbitrary finite acyclic dependency relation, prove progress of
-frontier evaluation, and specialize back to the hostile antichain before T3 is
-credited. If that work needs a false order or any kill condition above, the
-stable concrete MAID remains the public surface.
-
-The gate also exposed an audit-ownership gap: the new post-architecture
-experiment was initially unbucketed by the Phase 2 source audit. It now has its
-own zero-transport bucket, leaving the historical Phase 1–4 measurements
-unchanged.
+The antichain experiment alone does not justify a general node/DAG API.
+That API also needs an arbitrary finite acyclic dependency relation, progress
+of frontier evaluation, and an exact specialization to the hostile antichain.
 
 ## Open strategy-locality challenge
 
@@ -131,13 +117,12 @@ same-owner/disjoint-observation graph. The latter's real runner commits both
 decisions together and distinguishes changes at each site. The source contains
 no direct update or transport token and stores no finite capability.
 
-This validates the native side of T3 but does not freeze it publicly.
-`run_complete_of_remaining_le` and `completesWithin_card` now lift strict
-frontier growth to a uniform finite completion certificate. The remaining gate
-is the explicit-order EFG compiler: it must prove exact equality with the
-frontier law and independence from the chosen order.
+`run_complete_of_remaining_le` and `completesWithin_card` lift strict
+frontier growth to a uniform finite completion certificate. The explicit-order
+EFG compiler additionally needs exact equality with the frontier law and
+independence from the chosen order.
 
-## Explicit-order compiler milestone
+## Explicit-order compilation
 
 EXP-041's generic experimental compiler constructs an
 accepted `Languages.EFG.Game` from a typed diagram, semantics, and explicit
@@ -150,11 +135,11 @@ The compiler proves menu adequacy, tree shape, and the single-mover law. The
 same-owner hostile fixture compiles at two opposite topological orders, and
 each order proves that changing the earlier incomparable decision leaves the
 later site's view unchanged. Its source joint law followed by the actual EFG
-transition now equals a named one-node serial step. Both hostile serial orders
+transition equals a named one-node serial step. Both hostile serial orders
 produce the same complete assignment law, and each equals the native frontier
 runner's assignment law.
 
-The actual Protocol path is now connected too. For every one-owner typed
+For every one-owner typed
 diagram, the mapped `InformationModel.behavioralJoint` equals the source joint
 law, one compiled behavioral transition equals one serialized source step, and
 forgetting histories from the behavioral runner equals the serialized stage
@@ -162,7 +147,7 @@ runner for every fuel and starting history. On the hostile fixture, the two
 opposite-order compiled EFG assignment laws are equal and each is exactly the
 native frontier law.
 
-The order algebra is now general. Typed assignment kernels for distinct nodes
+Typed assignment kernels for distinct nodes
 with no direct edge commute; this lifts through arbitrary prefixes and suffixes.
 A head-bubbling proof shows that any two dependency-compatible, duplicate-free
 permutations induce the same law, and every pair of topological orders meets
@@ -195,14 +180,11 @@ simultaneous-frontier evaluator and the actual compiled
 arbitrary finite typed diagrams, source-player carriers, and supplied
 topological orders.
 
-EXP-041 therefore closes D14's representation, locality, order-independence,
-and exact-evaluation gates. Public recovery of the validated typed syntax,
-native evaluator, and explicit-order compiler is unblocked. T3's remaining
-equilibrium-transfer theorem is a delivery obligation, not a reason to weaken
-or reopen the adopted execution design: deviations must be regrouped by source
-owner, never by decision site.
+EXP-041 supplies representation, locality, order-independence, and
+exact-evaluation evidence. Equilibrium transfer must additionally regroup
+deviations by source owner, never by decision site.
 
-The validated surface is now promoted under `GameTheory.Languages.MAID`:
+The ownership under `GameTheory.Languages.MAID` is:
 `Basic` owns typed syntax and frontier evaluation, `ToEFG` owns the named
 compiler, `Order` owns serialized order algebra, and `FrontierEquivalence`
 owns the exact native/compiled theorem. `Strategic` presents both assignment
@@ -220,17 +202,21 @@ one source-owner coordinate, not one synthetic decision-site player.
 `isNash_native_iff_compiled` consequently uses the canonical `IsNash` on both
 ordinary game forms and proves exact equivalence.
 
-The aggregate and both hostile suites build; the full project and Phase 2/3
-source/reachability audits pass, and the promoted flagship theorems retain the
-standard `propext`, `Classical.choice`, `Quot.sound` axiom profile.
-The Phase 3 audit now checks the split positively: `MAID.Basic` rejects two
-Protocol/solution probes while reaching three probability/DAG/syntax inputs,
-and `MAID.Strategic` reaches all four intended information, outcome-law, and
-equilibrium inputs.
+The canonical laws use ordinary PMFs with arbitrary node-value carriers.
+Finiteness of the node set supports frontier products and termination; it does
+not restrict the support of a chance or decision law. Exact assignment-law
+equality transports integration of each actual payoff comparison, so native
+and compiled Nash equivalence needs no all-profile integration assumption.
+EXP-140 distinguishes an integrable incumbent from an undefined unilateral
+deviation on an infinite chance carrier: both presentations reject Nash.
 
-## Observation-pruning delivery milestone
+The syntax leaf `MAID.Basic` depends on probability and DAG data but excludes
+Protocol and solution concepts. `MAID.Strategic` owns the connection to
+information-local policies, outcome laws, and equilibrium.
 
-The stable `MAID.ObservationPruning` leaf now supplies the semantic target for
+## Observation pruning
+
+The `MAID.ObservationPruning` leaf supplies the semantic target for
 later graphical requisite analysis. A pruning reduces each decision site's
 observed-parent configuration while retaining one strategic coordinate per
 source owner. Expansion back to the accepted policy type commutes with owner

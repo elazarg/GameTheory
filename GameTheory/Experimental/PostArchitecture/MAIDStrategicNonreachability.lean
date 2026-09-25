@@ -130,7 +130,7 @@ private theorem nonrelevantTerm_site_marginal_eq
     (target : DecisionSite diagram owner) (term : view.UtilitySite owner)
     (hnonrelevant : ¬ view.IsRelevantUtilityTerm target term)
     (first second : MAIDReplacementInvariantUtility.FullContext target →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     (siteReplacementLaw semantics base owner replacement target first).map
         (fun assignment => Assignment.restrict diagram assignment
           (view.term term).parents) =
@@ -157,13 +157,13 @@ private def siteTermFullScore
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (rule : MAIDReplacementInvariantUtility.FullContext target →
-      FinDist (diagram.Value target.1)) (view : UtilityView semantics)
+      PMF (diagram.Value target.1)) (view : UtilityView semantics)
     (term : view.UtilitySite owner) [Fintype (TermConfig view term)]
     (full : TargetAtom target) : ℝ :=
   ∑ termValue : TermConfig view term,
-    ((siteReplacementLaw semantics base owner replacement target rule).map
-      (siteFullActionTermProjection view target term)).prob
-        (full, termValue) * (view.term term).payoff termValue
+    (((siteReplacementLaw semantics base owner replacement target rule).map
+      (siteFullActionTermProjection view target term))
+        (full, termValue)).toReal * (view.term term).payoff termValue
 
 private theorem siteTermFullScore_rule_mul_constant
     [DecidableEq Player] [Fintype Node] [DecidableEq Node]
@@ -173,13 +173,13 @@ private theorem siteTermFullScore_rule_mul_constant
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (rule : MAIDReplacementInvariantUtility.FullContext target →
-      FinDist (diagram.Value target.1)) (view : UtilityView semantics)
+      PMF (diagram.Value target.1)) (view : UtilityView semantics)
     (term : view.UtilitySite owner) [Fintype (TermConfig view term)]
     (context : MAIDReplacementInvariantUtility.FullContext target)
     (action : diagram.Value target.1) :
     siteTermFullScore semantics base owner replacement target rule view term
         (context, action) =
-      (rule context).prob action *
+      ((rule context) action).toReal *
         siteTermFullScore semantics base owner replacement target
           (constantSiteRule target action) view term (context, action) := by
   unfold siteTermFullScore
@@ -190,6 +190,7 @@ private theorem siteTermFullScore_rule_mul_constant
     semantics base owner replacement target view term rule context action
       termValue
   rw [hpoint]
+  rw [ENNReal.toReal_mul]
   ring
 
 private theorem siteRuleExpectedUtility_eq_sum_termFullScore
@@ -203,29 +204,34 @@ private theorem siteRuleExpectedUtility_eq_sum_termFullScore
     [Fintype (Assignment diagram)]
     [∀ term : view.UtilitySite owner, Fintype (TermConfig view term)]
     (rule : MAIDReplacementInvariantUtility.FullContext target →
-      FinDist (diagram.Value target.1)) :
-    siteRuleExpectedUtility semantics base owner replacement target rule =
+      PMF (diagram.Value target.1)) :
+    siteRuleExpectedUtility semantics base owner replacement target rule
+        (payoffIntegrable_of_finite _ _) =
       ∑ full : TargetAtom target, ∑ term : view.UtilitySite owner,
         siteTermFullScore semantics base owner replacement target rule view
           term full := by
   unfold siteRuleExpectedUtility expectedUtility
   let law := siteReplacementLaw semantics base owner replacement target rule
   calc
-    law.expect (fun assignment => semantics.utility owner assignment) =
-        law.expect (fun assignment => ∑ term : view.UtilitySite owner,
+    expect law (fun assignment => semantics.utility owner assignment)
+        (payoffIntegrable_of_finite _ _) =
+        expect law (fun assignment => ∑ term : view.UtilitySite owner,
           (view.term term).payoff
             (Assignment.restrict diagram assignment
-              (view.term term).parents)) := by
-      apply FinDist.expect_congr
+              (view.term term).parents)) (payoffIntegrable_of_finite _ _) := by
+      apply expect_congr_on_support
       intro assignment _
       simpa [UtilityView.term, UtilityTerm.value] using
         view.utility_eq_sum owner assignment
     _ = ∑ term : view.UtilitySite owner,
-        law.expect (fun assignment =>
+        expect law (fun assignment =>
           (view.term term).payoff
             (Assignment.restrict diagram assignment
-              (view.term term).parents)) :=
-      (FinDist.expect_sum_comm _ _).symm
+              (view.term term).parents)) (payoffIntegrable_of_finite _ _) := by
+      exact expect_sum law (fun term : view.UtilitySite owner =>
+        fun assignment => (view.term term).payoff
+          (Assignment.restrict diagram assignment (view.term term).parents))
+        (fun _ => payoffIntegrable_of_finite _ _)
     _ = ∑ term : view.UtilitySite owner, ∑ full : TargetAtom target,
         siteTermFullScore semantics base owner replacement target rule view
           term full := by
@@ -260,7 +266,7 @@ private def siteRelevantValue
     [Fintype (MAIDReplacementInvariantUtility.FullContext target)]
     [∀ term : view.UtilitySite owner, Fintype (TermConfig view term)]
     (rule : MAIDReplacementInvariantUtility.FullContext target →
-      FinDist (diagram.Value target.1)) : ℝ := by
+      PMF (diagram.Value target.1)) : ℝ := by
   classical
   exact ∑ context : MAIDReplacementInvariantUtility.FullContext target,
     ∑ action : diagram.Value target.1,
@@ -274,14 +280,16 @@ private def siteNonrelevantValue
     (semantics : Semantics diagram) (base : Policy diagram)
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner) (view : UtilityView semantics)
+    [∀ term : view.UtilitySite owner, Fintype (TermConfig view term)]
     (rule : MAIDReplacementInvariantUtility.FullContext target →
-      FinDist (diagram.Value target.1)) : ℝ := by
+      PMF (diagram.Value target.1)) : ℝ := by
   classical
   exact ∑ term ∈ Finset.univ.filter
       (¬ view.IsRelevantUtilityTerm target ·),
-    ((siteReplacementLaw semantics base owner replacement target rule).map
+    expect ((siteReplacementLaw semantics base owner replacement target rule).map
       (fun assignment => Assignment.restrict diagram assignment
-        (view.term term).parents)).expect (view.term term).payoff
+        (view.term term).parents)) (view.term term).payoff
+      (payoffIntegrable_of_finite _ _)
 
 private def siteRelevantProbeScore
     [DecidableEq Player] [Fintype Node] [DecidableEq Node]
@@ -308,11 +316,11 @@ private theorem siteRelevantValue_eq_sum_probe
     [Fintype (MAIDReplacementInvariantUtility.FullContext target)]
     [∀ term : view.UtilitySite owner, Fintype (TermConfig view term)]
     (rule : MAIDReplacementInvariantUtility.FullContext target →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     siteRelevantValue semantics base owner replacement target view rule =
       ∑ context : MAIDReplacementInvariantUtility.FullContext target,
         ∑ action : diagram.Value target.1,
-          (rule context).prob action *
+        ((rule context) action).toReal *
             siteRelevantProbeScore semantics base owner replacement target
               view context action := by
   classical
@@ -338,8 +346,9 @@ private theorem siteRuleExpectedUtility_eq_relevant_add_nonrelevant
     [Fintype (MAIDReplacementInvariantUtility.FullContext target)]
     [∀ term : view.UtilitySite owner, Fintype (TermConfig view term)]
     (rule : MAIDReplacementInvariantUtility.FullContext target →
-      FinDist (diagram.Value target.1)) :
-    siteRuleExpectedUtility semantics base owner replacement target rule =
+      PMF (diagram.Value target.1)) :
+    siteRuleExpectedUtility semantics base owner replacement target rule
+        (payoffIntegrable_of_finite _ _) =
       siteRelevantValue semantics base owner replacement target view rule +
         siteNonrelevantValue semantics base owner replacement target view
           rule := by
@@ -351,11 +360,12 @@ private theorem siteRuleExpectedUtility_eq_relevant_add_nonrelevant
       (∑ full : TargetAtom target,
           siteTermFullScore semantics base owner replacement target rule view
             term full) =
-        ((siteReplacementLaw semantics base owner replacement target rule).map
+        expect ((siteReplacementLaw semantics base owner replacement target rule).map
           (fun assignment => Assignment.restrict diagram assignment
-            (view.term term).parents)).expect (view.term term).payoff := by
+            (view.term term).parents)) (view.term term).payoff
+          (payoffIntegrable_of_finite _ _) := by
     intro term
-    rw [FinDist.expect_map]
+    rw [expect_map]
     let law := siteReplacementLaw semantics base owner replacement target rule
     have hfibres := expect_eq_sum_joint_fibres law
       (fun assignment =>
@@ -385,9 +395,10 @@ private theorem siteRuleExpectedUtility_eq_relevant_add_nonrelevant
   congr 1
   calc
     ∑ term ∈ Finset.univ.filter (view.IsRelevantUtilityTerm target),
-        ((siteReplacementLaw semantics base owner replacement target rule).map
+        expect ((siteReplacementLaw semantics base owner replacement target rule).map
           (fun assignment => Assignment.restrict diagram assignment
-            (view.term term).parents)).expect (view.term term).payoff =
+            (view.term term).parents)) (view.term term).payoff
+          (payoffIntegrable_of_finite _ _) =
       ∑ term ∈ Finset.univ.filter (view.IsRelevantUtilityTerm target),
         ∑ full : TargetAtom target,
           siteTermFullScore semantics base owner replacement target rule view
@@ -418,8 +429,9 @@ private theorem siteNonrelevantValue_eq
     (view : UtilityView semantics) (base : Policy diagram)
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
+    [∀ term : view.UtilitySite owner, Fintype (TermConfig view term)]
     (first second : MAIDReplacementInvariantUtility.FullContext target →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     siteNonrelevantValue semantics base owner replacement target view first =
       siteNonrelevantValue semantics base owner replacement target view
         second := by
@@ -429,8 +441,9 @@ private theorem siteNonrelevantValue_eq
   intro term hterm
   have hnonrelevant : ¬ view.IsRelevantUtilityTerm target term := by
     simpa using (Finset.mem_filter.mp hterm).2
-  rw [nonrelevantTerm_site_marginal_eq topological view base owner
-    replacement target term hnonrelevant first second]
+  exact expect_congr_law
+    (nonrelevantTerm_site_marginal_eq topological view base owner replacement
+      target term hnonrelevant first second) _ _ _
 
 /-! ## Mechanism components as site-replacement probes -/
 
@@ -440,9 +453,9 @@ private theorem componentPolicy_zero_eq_siteReplacement
     (replacement : OwnerPolicy diagram owner)
     (source target : DecisionSite diagram owner)
     (sourceRule : MAIDReplacementInvariantUtility.FullContext source →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (targetRule : MAIDReplacementInvariantUtility.FullContext target →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     componentPolicy base owner (replaceSiteRule replacement target targetRule)
         source sourceRule 0 =
       Profile.update (sig := nativeBehavioralSignature diagram) base owner
@@ -455,9 +468,9 @@ private theorem componentPolicy_one_eq_siteReplacement
     (replacement : OwnerPolicy diagram owner)
     (source target : DecisionSite diagram owner) (hneq : source ≠ target)
     (sourceRule : MAIDReplacementInvariantUtility.FullContext source →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (targetRule : MAIDReplacementInvariantUtility.FullContext target →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     componentPolicy base owner (replaceSiteRule replacement target targetRule)
         source sourceRule 1 =
       Profile.update (sig := nativeBehavioralSignature diagram) base owner
@@ -477,11 +490,11 @@ private theorem componentTermScore_eq_siteTermFullScore
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : MAIDReplacementInvariantUtility.FullContext source →
-      FinDist (diagram.Value source.1)) (selector : Fin 2)
+      PMF (diagram.Value source.1)) (selector : Fin 2)
     (target : DecisionSite diagram owner)
     (targetReplacement : OwnerPolicy diagram owner)
     (targetRule : MAIDReplacementInvariantUtility.FullContext target →
-      FinDist (diagram.Value target.1))
+      PMF (diagram.Value target.1))
     (hpolicy : componentPolicy base owner replacement source sourceRule
         selector =
       Profile.update (sig := nativeBehavioralSignature diagram) base owner
@@ -494,7 +507,7 @@ private theorem componentTermScore_eq_siteTermFullScore
         targetRule view term full := by
   unfold componentTermScore componentAugmentedLaw augmentedLaw
     siteTermFullScore siteReplacementLaw
-  rw [hpolicy, FinDist.map_comp]
+  rw [hpolicy, PMF.map_comp]
   rfl
 
 private theorem componentFullActionMass_eq_siteFullActionMass
@@ -503,26 +516,26 @@ private theorem componentFullActionMass_eq_siteFullActionMass
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : MAIDReplacementInvariantUtility.FullContext source →
-      FinDist (diagram.Value source.1)) (selector : Fin 2)
+      PMF (diagram.Value source.1)) (selector : Fin 2)
     (target : DecisionSite diagram owner)
     (targetReplacement : OwnerPolicy diagram owner)
     (targetRule : MAIDReplacementInvariantUtility.FullContext target →
-      FinDist (diagram.Value target.1))
+      PMF (diagram.Value target.1))
     (hpolicy : componentPolicy base owner replacement source sourceRule
         selector =
       Profile.update (sig := nativeBehavioralSignature diagram) base owner
         (replaceSiteRule targetReplacement target targetRule))
     (full : TargetAtom target) :
-    ((componentAugmentedLaw view owner base replacement source sourceRule
-      selector).map (fullAction view target)).prob full =
-      ((siteReplacementLaw semantics base owner targetReplacement target
+    (((componentAugmentedLaw view owner base replacement source sourceRule
+      selector).map (fullAction view target)) full).toReal =
+      (((siteReplacementLaw semantics base owner targetReplacement target
         targetRule).map
         (fun assignment =>
           (Assignment.restrict diagram assignment
-            (diagram.observedParents target.1), assignment target.1))).prob
-          full := by
+            (diagram.observedParents target.1), assignment target.1)))
+          full).toReal := by
   unfold componentAugmentedLaw augmentedLaw siteReplacementLaw
-  rw [hpolicy, FinDist.map_comp]
+  rw [hpolicy, PMF.map_comp]
   rfl
 
 private def siteContextMass
@@ -532,8 +545,8 @@ private def siteContextMass
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (context : MAIDReplacementInvariantUtility.FullContext target) : ℝ :=
-  (siteReplacementContextLawAt topological semantics base owner replacement
-    target).contextLaw.prob context
+  ((siteReplacementContextLawAt topological semantics base owner replacement
+    target).contextLaw context).toReal
 
 private theorem constantSiteRule_fullAction_prob_eq_contextMass
     [DecidableEq Player] [Fintype Node] [DecidableEq Node]
@@ -544,27 +557,27 @@ private theorem constantSiteRule_fullAction_prob_eq_contextMass
     [DecidableEq (MAIDReplacementInvariantUtility.FullContext target)]
     (context : MAIDReplacementInvariantUtility.FullContext target)
     (action : diagram.Value target.1) :
-    ((siteReplacementLaw semantics base owner replacement target
+    (((siteReplacementLaw semantics base owner replacement target
         (constantSiteRule target action)).map
       (fun assignment =>
         (Assignment.restrict diagram assignment
-          (diagram.observedParents target.1), assignment target.1))).prob
-        (context, action) =
+          (diagram.observedParents target.1), assignment target.1)))
+        (context, action)).toReal =
       siteContextMass topological semantics base owner replacement target
         context := by
   classical
   rw [(siteReplacementContextLawAt topological semantics base owner
     replacement target).contextAction_eq (constantSiteRule target action)]
   unfold siteContextMass
-  rw [FinDist.prob_bind]
-  simp only [constantSiteRule, FinDist.map_pure]
-  rw [show (fun observed =>
-      (FinDist.pure (observed, action)).prob (context, action)) =
-      (fun observed => if context = observed then 1 else 0) by
-    funext observed
-    rw [FinDist.prob_pure_eq_ite]
-    simp]
-  rw [FinDist.expect_ite_eq, mul_one]
+  simp only [constantSiteRule, PMF.pure_map]
+  have hkernel :
+      (fun observed : MAIDReplacementInvariantUtility.FullContext target =>
+        PMF.pure (observed, action)) =
+      PMF.pure ∘ (fun observed => (observed, action)) := rfl
+  rw [hkernel, PMF.bind_pure_comp]
+  rw [pmf_map_apply_of_injective _ (by
+    intro first second heq
+    exact congrArg Prod.fst heq) context]
 
 private theorem siteRelevantProbeScore_cross_product
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
@@ -575,7 +588,7 @@ private theorem siteRelevantProbeScore_cross_product
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (source target : DecisionSite diagram owner) (hneq : source ≠ target)
     (sourceRule : MAIDReplacementInvariantUtility.FullContext source →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (hnot : ¬ MAIDPruningFixpointGraph.UtilityView.SReachable view source
       target)
     [∀ term : view.UtilitySite owner, Fintype (TermConfig view term)]
@@ -638,7 +651,7 @@ private theorem siteContextMass_pos_of_changed
     (replacement : OwnerPolicy diagram owner)
     (source target : DecisionSite diagram owner) (hneq : source ≠ target)
     (sourceRule : MAIDReplacementInvariantUtility.FullContext source →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (hmixed : FullyMixedAt replacement source)
     (context : MAIDReplacementInvariantUtility.FullContext target)
     (hchanged : 0 < siteContextMass topological semantics base owner
@@ -666,9 +679,9 @@ private theorem siteContextMass_pos_of_changed
     base selectorReplacement source sourceRule 0 target replacement targetRule
       hzero (context, action)
   have hchangedFull : 0 <
-      ((componentAugmentedLaw view owner base selectorReplacement source
-        sourceRule 1).map (fullAction view target)).prob
-          (context, action) := by
+      (((componentAugmentedLaw view owner base selectorReplacement source
+        sourceRule 1).map (fullAction view target))
+          (context, action)).toReal := by
     rw [hmassOne]
     rw [constantSiteRule_fullAction_prob_eq_contextMass topological semantics
       base owner (replaceSiteRule replacement source sourceRule) target context
@@ -677,11 +690,15 @@ private theorem siteContextMass_pos_of_changed
   have hbaselineSupport := componentFullAction_support_subset_of_fullyMixed
     topological semantics view owner base selectorReplacement source target
       sourceRule (context, action) hmixedSelector
-        (FinDist.prob_pos_iff.mp hchangedFull)
+        ((PMF.apply_pos_iff _ _).mp
+          (ENNReal.toReal_pos_iff.mp hchangedFull).1)
   have hbaselineFull : 0 <
-      ((componentAugmentedLaw view owner base selectorReplacement source
-        sourceRule 0).map (fullAction view target)).prob
-          (context, action) := FinDist.prob_pos_iff.mpr hbaselineSupport
+      (((componentAugmentedLaw view owner base selectorReplacement source
+        sourceRule 0).map (fullAction view target))
+          (context, action)).toReal :=
+    ENNReal.toReal_pos
+      (ne_of_gt ((PMF.apply_pos_iff _ _).mpr hbaselineSupport))
+      (PMF.apply_ne_top _ _)
   rw [hmassZero] at hbaselineFull
   rw [constantSiteRule_fullAction_prob_eq_contextMass topological semantics
     base owner replacement target context action] at hbaselineFull
@@ -693,12 +710,12 @@ private def replaceContextWithPure
     {owner : Player} (target : DecisionSite diagram owner)
     [DecidableEq (MAIDReplacementInvariantUtility.FullContext target)]
     (rule : MAIDReplacementInvariantUtility.FullContext target →
-      FinDist (diagram.Value target.1))
+      PMF (diagram.Value target.1))
     (chosen : MAIDReplacementInvariantUtility.FullContext target)
     (action : diagram.Value target.1) :
     MAIDReplacementInvariantUtility.FullContext target →
-      FinDist (diagram.Value target.1) :=
-  fun context => if context = chosen then FinDist.pure action else rule context
+      PMF (diagram.Value target.1) :=
+  fun context => if context = chosen then PMF.pure action else rule context
 
 private theorem siteRelevantProbeScore_le_of_optimal
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
@@ -713,7 +730,7 @@ private theorem siteRelevantProbeScore_le_of_optimal
     [Fintype (MAIDReplacementInvariantUtility.FullContext target)]
     [∀ term : view.UtilitySite owner, Fintype (TermConfig view term)]
     (targetRule : MAIDReplacementInvariantUtility.FullContext target →
-      FinDist (diagram.Value target.1))
+      PMF (diagram.Value target.1))
     (hoptimal : IsOptimalSiteRule semantics base owner replacement target
       targetRule)
     (context : MAIDReplacementInvariantUtility.FullContext target)
@@ -721,12 +738,19 @@ private theorem siteRelevantProbeScore_le_of_optimal
     siteRelevantProbeScore semantics base owner replacement target view
         context action ≤
       ∑ candidate : diagram.Value target.1,
-        (targetRule context).prob candidate *
+        ((targetRule context) candidate).toReal *
           siteRelevantProbeScore semantics base owner replacement target view
             context candidate := by
   classical
   let alternative := replaceContextWithPure target targetRule context action
-  have hutility := hoptimal alternative
+  have hutility :
+      siteRuleExpectedUtility semantics base owner replacement target
+          alternative (payoffIntegrable_of_finite _ _) ≤
+        siteRuleExpectedUtility semantics base owner replacement target
+          targetRule (payoffIntegrable_of_finite _ _) := by
+    exact (euPreference_iff _ owner _ _
+      (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _)).mp (hoptimal alternative)
   rw [siteRuleExpectedUtility_eq_relevant_add_nonrelevant semantics base owner
     replacement target view alternative] at hutility
   rw [siteRuleExpectedUtility_eq_relevant_add_nonrelevant semantics base owner
@@ -738,19 +762,20 @@ private theorem siteRelevantProbeScore_le_of_optimal
           alternative ≤
         siteRelevantValue semantics base owner replacement target view
           targetRule := by
-    linarith
+    rw [hnonrelevant] at hutility
+    exact (add_le_add_iff_right _).mp hutility
   rw [siteRelevantValue_eq_sum_probe topological semantics base owner
     replacement target view alternative] at hrelevant
   rw [siteRelevantValue_eq_sum_probe topological semantics base owner
     replacement target view targetRule] at hrelevant
   let alternativeAt := fun observed =>
     ∑ candidate : diagram.Value target.1,
-      (alternative observed).prob candidate *
+      ((alternative observed) candidate).toReal *
         siteRelevantProbeScore semantics base owner replacement target view
           observed candidate
   let targetAt := fun observed =>
     ∑ candidate : diagram.Value target.1,
-      (targetRule observed).prob candidate *
+      ((targetRule observed) candidate).toReal *
         siteRelevantProbeScore semantics base owner replacement target view
           observed candidate
   have hrest :
@@ -786,7 +811,11 @@ private theorem siteRelevantProbeScore_le_of_optimal
       siteRelevantProbeScore semantics base owner replacement target view
         context action := by
     unfold alternativeAt alternative replaceContextWithPure
-    rw [ite_eq_left rfl, ← FinDist.expect_eq_sum, FinDist.expect_pure]
+    simp only [ite_true, PMF.pure_apply, apply_ite,
+      ENNReal.toReal_one, ENNReal.toReal_zero,
+      ite_mul, one_mul, zero_mul]
+    rw [Finset.sum_ite_eq' Finset.univ action]
+    simp
   rw [halternative] at hlocal
   exact hlocal
 
@@ -818,12 +847,20 @@ private theorem siteRelevantProbeScore_eq_zero_of_contextMass_eq_zero
   have hfull :
       (law.map (fun assignment =>
         (Assignment.restrict diagram assignment
-          (diagram.observedParents target.1), assignment target.1))).prob
+          (diagram.observedParents target.1), assignment target.1)))
           (context, action) = 0 := by
-    unfold law
-    rw [constantSiteRule_fullAction_prob_eq_contextMass topological semantics
-      base owner replacement target context action]
-    exact hzero
+    have hreal :
+        ((law.map (fun assignment =>
+          (Assignment.restrict diagram assignment
+            (diagram.observedParents target.1), assignment target.1)))
+            (context, action)).toReal = 0 := by
+      unfold law
+      rw [constantSiteRule_fullAction_prob_eq_contextMass topological semantics
+        base owner replacement target context action]
+      exact hzero
+    rcases (ENNReal.toReal_eq_zero_iff _).mp hreal with hzero | htop
+    · exact hzero
+    · exact False.elim ((PMF.apply_ne_top _ _) htop)
   have hjoint := joint_mass_eq_zero_of_fullAction_mass_eq_zero_at law
     (fun assignment =>
       (Assignment.restrict diagram assignment
@@ -840,7 +877,8 @@ private theorem siteRelevantProbeScore_eq_zero_of_contextMass_eq_zero
         siteFullActionTermProjection view target term := by
     funext assignment
     rfl
-  rw [← hprojection, hjoint, zero_mul]
+  rw [← hprojection, hjoint]
+  simp
 
 private theorem siteRelevantProbeScore_le_after_source_change
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
@@ -853,14 +891,14 @@ private theorem siteRelevantProbeScore_le_after_source_change
     (replacement : OwnerPolicy diagram owner)
     (source target : DecisionSite diagram owner) (hneq : source ≠ target)
     (sourceRule : MAIDReplacementInvariantUtility.FullContext source →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (hnot : ¬ MAIDPruningFixpointGraph.UtilityView.SReachable view source
       target)
     (hmixed : FullyMixedAt replacement source)
     [Fintype (MAIDReplacementInvariantUtility.FullContext target)]
     [∀ term : view.UtilitySite owner, Fintype (TermConfig view term)]
     (targetRule : MAIDReplacementInvariantUtility.FullContext target →
-      FinDist (diagram.Value target.1))
+      PMF (diagram.Value target.1))
     (hoptimal : IsOptimalSiteRule semantics base owner replacement target
       targetRule)
     (context : MAIDReplacementInvariantUtility.FullContext target)
@@ -869,7 +907,7 @@ private theorem siteRelevantProbeScore_le_after_source_change
         (replaceSiteRule replacement source sourceRule) target view context
           action ≤
       ∑ candidate : diagram.Value target.1,
-        (targetRule context).prob candidate *
+        ((targetRule context) candidate).toReal *
           siteRelevantProbeScore semantics base owner
             (replaceSiteRule replacement source sourceRule) target view context
               candidate := by
@@ -890,7 +928,7 @@ private theorem siteRelevantProbeScore_le_after_source_change
     simp_rw [hscoreZero]
     simp
   · have hchangedNonneg : 0 ≤ changedMass :=
-      FinDist.prob_nonneg _ _
+      ENNReal.toReal_nonneg
     have hchangedPos : 0 < changedMass :=
       lt_of_le_of_ne hchangedNonneg (Ne.symm hchangedZero)
     have hbaselinePos : 0 < baselineMass :=
@@ -903,12 +941,12 @@ private theorem siteRelevantProbeScore_le_after_source_change
       base owner replacement source target hneq sourceRule hnot context action
     have hcrossExpected :
         (∑ candidate : diagram.Value target.1,
-            (targetRule context).prob candidate *
+            ((targetRule context) candidate).toReal *
               siteRelevantProbeScore semantics base owner replacement target
                 view context candidate) * changedMass =
           baselineMass *
             (∑ candidate : diagram.Value target.1,
-              (targetRule context).prob candidate *
+              ((targetRule context) candidate).toReal *
                 siteRelevantProbeScore semantics base owner changed target view
                   context candidate) := by
       rw [Finset.sum_mul, Finset.mul_sum]
@@ -919,18 +957,18 @@ private theorem siteRelevantProbeScore_le_after_source_change
           candidate
       dsimp only [changedMass, baselineMass, changed] at hcross ⊢
       calc
-        ((targetRule context).prob candidate *
+        (((targetRule context) candidate).toReal *
             siteRelevantProbeScore semantics base owner replacement target view
               context candidate) *
             siteContextMass topological semantics base owner
               (replaceSiteRule replacement source sourceRule) target context =
-          (targetRule context).prob candidate *
+          ((targetRule context) candidate).toReal *
             (siteRelevantProbeScore semantics base owner replacement target
                 view context candidate *
               siteContextMass topological semantics base owner
                 (replaceSiteRule replacement source sourceRule) target
                   context) := by ring
-        _ = (targetRule context).prob candidate *
+        _ = ((targetRule context) candidate).toReal *
             (siteContextMass topological semantics base owner replacement
                 target context *
               siteRelevantProbeScore semantics base owner
@@ -938,7 +976,7 @@ private theorem siteRelevantProbeScore_le_after_source_change
                   context candidate) := by rw [hcross]
         _ = siteContextMass topological semantics base owner replacement
               target context *
-            ((targetRule context).prob candidate *
+            (((targetRule context) candidate).toReal *
               siteRelevantProbeScore semantics base owner
                 (replaceSiteRule replacement source sourceRule) target view
                   context candidate) := by ring
@@ -959,14 +997,14 @@ theorem IsOptimalSiteRule.transport_replaceSiteRule_of_not_sReachable
     (replacement : OwnerPolicy diagram owner)
     (source target : DecisionSite diagram owner) (hneq : source ≠ target)
     (sourceRule : MAIDReplacementInvariantUtility.FullContext source →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (hnot : ¬ MAIDPruningFixpointGraph.UtilityView.SReachable view source
       target)
     (hmixed : FullyMixedAt replacement source)
     [Fintype (MAIDReplacementInvariantUtility.FullContext target)]
     [∀ term : view.UtilitySite owner, Fintype (TermConfig view term)]
     (targetRule : MAIDReplacementInvariantUtility.FullContext target →
-      FinDist (diagram.Value target.1))
+      PMF (diagram.Value target.1))
     (hoptimal : IsOptimalSiteRule semantics base owner replacement target
       targetRule) :
     IsOptimalSiteRule semantics base owner
@@ -986,35 +1024,51 @@ theorem IsOptimalSiteRule.transport_replaceSiteRule_of_not_sReachable
     intro context _
     let targetExpected :=
       ∑ action : diagram.Value target.1,
-        (targetRule context).prob action *
+        ((targetRule context) action).toReal *
           siteRelevantProbeScore semantics base owner changed target view
             context action
     calc
       ∑ action : diagram.Value target.1,
-          (alternative context).prob action *
+          ((alternative context) action).toReal *
             siteRelevantProbeScore semantics base owner changed target view
               context action ≤
         ∑ action : diagram.Value target.1,
-          (alternative context).prob action * targetExpected := by
+          ((alternative context) action).toReal * targetExpected := by
             apply Finset.sum_le_sum
             intro action _
             apply mul_le_mul_of_nonneg_left
             · exact siteRelevantProbeScore_le_after_source_change
                 topological semantics view base owner replacement source target
                   hneq sourceRule hnot hmixed targetRule hoptimal context action
-            · exact FinDist.prob_nonneg _ _
+            · exact ENNReal.toReal_nonneg
       _ = targetExpected := by
-        rw [← Finset.sum_mul, FinDist.sum_prob, one_mul]
+        have hmass :
+            ∑ action : diagram.Value target.1,
+              ((alternative context) action).toReal = 1 := by
+          have hconstant := expect_eq_sum (alternative context)
+            (fun _ => (1 : ℝ)) (payoffIntegrable_of_finite _ _)
+          rw [expect_constant] at hconstant
+          simpa only [mul_one] using hconstant.symm
+        rw [← Finset.sum_mul, hmass, one_mul]
       _ = ∑ action : diagram.Value target.1,
-          (targetRule context).prob action *
+          ((targetRule context) action).toReal *
             siteRelevantProbeScore semantics base owner changed target view
               context action := rfl
   have hnonrelevant := siteNonrelevantValue_eq topological view base owner
     changed target alternative targetRule
-  rw [siteRuleExpectedUtility_eq_relevant_add_nonrelevant semantics base owner
-    changed target view alternative]
-  rw [siteRuleExpectedUtility_eq_relevant_add_nonrelevant semantics base owner
-    changed target view targetRule]
-  linarith
+  have hcomparison :
+      siteRuleExpectedUtility semantics base owner changed target alternative
+          (payoffIntegrable_of_finite _ _) ≤
+        siteRuleExpectedUtility semantics base owner changed target targetRule
+          (payoffIntegrable_of_finite _ _) := by
+    rw [siteRuleExpectedUtility_eq_relevant_add_nonrelevant semantics base owner
+      changed target view alternative]
+    rw [siteRuleExpectedUtility_eq_relevant_add_nonrelevant semantics base owner
+      changed target view targetRule]
+    rw [hnonrelevant]
+    exact add_le_add_left hrelevant _
+  exact (euPreference_iff _ owner _ _
+    (payoffIntegrable_of_finite _ _)
+    (payoffIntegrable_of_finite _ _)).mpr hcomparison
 
 end GameTheory.Experimental.PostArchitecture.MAIDStrategicNonreachability

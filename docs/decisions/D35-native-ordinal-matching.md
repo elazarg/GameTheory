@@ -50,10 +50,8 @@ general perfect-stable theorem specializes to the fixture.
 | general result | finite ordinal deferred acceptance is stable; balanced complete acceptability implies perfectness |
 | hostile dynamics | exact first-round rejection plus reachable holder replacement |
 | negative control | concrete valid assignment with a named blocking pair |
-| bounded accounting | all 74 Matching/GaleShapley/Perfect declarations classified; 11 optimality/symmetry rows deferred |
 | boundary probes | 5 Cooperative inputs reached; Nash, finite probability, Protocol, and measurable theory rejected |
 | trust | sampled flagships use only `propext`, `Classical.choice`, and `Quot.sound` |
-| release gate | warning-clean 3,509-job build; Phase 1--3 and exact coverage `VERIFIED=1` |
 
 ## Kill condition
 

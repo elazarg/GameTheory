@@ -12,6 +12,8 @@ this module.
 -/
 
 import GameTheory.Protocol.BehavioralAssessment
+import GameTheory.Protocol.HistoryPathMass
+import GameTheory.Math.Probability.Support
 
 noncomputable section
 
@@ -26,33 +28,6 @@ variable (M : InformationModel.{uι, us, ua, up, uq, uk} E)
 
 namespace InformationModel
 
-private theorem prob_bindOnSupport_pure_of_injective [DecidableEq α]
-    [DecidableEq β] (μ : FinDist α) (f : ∀ a ∈ μ.support, β)
-    (hf : ∀ a ha b hb, f a ha = f b hb → a = b)
-    (a : α) (ha : a ∈ μ.support) :
-    (μ.bindOnSupport fun b hb => FinDist.pure (f b hb)).prob (f a ha) =
-      μ.prob a := by
-  classical
-  obtain ⟨fallback, hfallback⟩ := μ.support_nonempty
-  let total : α → FinDist β := fun b =>
-    if hb : b ∈ μ.support then FinDist.pure (f b hb)
-    else FinDist.pure (f fallback hfallback)
-  rw [FinDist.bindOnSupport_eq_bind_of_eq_on_support
-      (g := total) (fun b hb => by simp [total, hb]),
-    FinDist.prob_bind]
-  calc
-    μ.expect (fun b => (total b).prob (f a ha)) =
-        μ.expect (fun b => if a = b then 1 else 0) := by
-      apply FinDist.expect_congr
-      intro b hb
-      simp only [total, hb, dite_true, FinDist.prob_pure_eq_ite]
-      by_cases hab : a = b
-      · subst b
-        simp
-      · have hne : f a ha ≠ f b hb := fun heq => hab (hf a ha b hb heq)
-        simp [hab, hne]
-    _ = μ.prob a := FinDist.expect_ite_eq μ a 1 |>.trans (mul_one _)
-
 private def traceLastJoint? : ∀ {state : E.State}, E.Trace state →
     Option ((player : ι) → Option (E.Action player))
   | _, .start => none
@@ -62,13 +37,6 @@ private def historyLastJoint? (history : E.History) :
     Option ((player : ι) → Option (E.Action player)) :=
   traceLastJoint? history.trace
 
-private def tracePrior? : ∀ {state : E.State}, E.Trace state → Option E.History
-  | _, .start => none
-  | _, .extend prior _ _ _ => some ⟨_, prior⟩
-
-private def historyPrior? (history : E.History) : Option E.History :=
-  tracePrior? history.trace
-
 @[simp]
 private theorem historyLastJoint?_extend (history : E.History)
     {joint : ∀ i, Option (E.Action i)} (isLegal : E.Legal history.state joint)
@@ -76,24 +44,6 @@ private theorem historyLastJoint?_extend (history : E.History)
     (realized : target ∈ (E.step history.state ⟨joint, isLegal⟩).support) :
     historyLastJoint? (history.extend isLegal realized) = some joint :=
   rfl
-
-@[simp]
-private theorem historyPrior?_extend (history : E.History)
-    {joint : ∀ i, Option (E.Action i)} (isLegal : E.Legal history.state joint)
-    {target : E.State}
-    (realized : target ∈ (E.step history.state ⟨joint, isLegal⟩).support) :
-    historyPrior? (history.extend isLegal realized) = some history :=
-  rfl
-
-private theorem trace_length_le_of_reachesWithin {fuel : ℕ}
-    {start target : E.History} (hreach : E.ReachesWithin fuel start target) :
-    target.trace.length ≤ start.trace.length + fuel := by
-  induction hreach with
-  | refl fuel history => omega
-  | step joint isLegal realized rest ih =>
-      simp only [ExecutionProtocol.History.extend,
-        ExecutionProtocol.Trace.length] at ih
-      omega
 
 /-- A history in a behavioral run either stopped early at a terminal state or
 used the entire fuel budget. This is the bounded-cut fact needed to compare a
@@ -111,21 +61,21 @@ theorem terminal_or_trace_length_eq_of_mem_support_runBehavioralFrom
       intro start target htarget
       rw [InformationModel.runBehavioralFrom,
         ExecutionProtocol.runRandomizedFor_zero,
-        FinDist.mem_support_pure] at htarget
+        PMF.mem_support_pure_iff] at htarget
       subst target
       exact Or.inr (by omega)
   | succ fuel ih =>
       intro start target htarget
       by_cases hterm : E.terminal start.state
       · rw [M.runBehavioralFrom_of_terminal policies (fuel + 1) hterm,
-          FinDist.mem_support_pure] at htarget
+          PMF.mem_support_pure_iff] at htarget
         subst target
         exact Or.inl hterm
       · rw [M.runBehavioralFrom_succ_of_not_terminal policies fuel hterm,
-          FinDist.support_bind] at htarget
+          PMF.support_bind] at htarget
         simp only [Set.mem_iUnion] at htarget
         obtain ⟨draw, _hdraw, hinner⟩ := htarget
-        rw [FinDist.support_bindOnSupport] at hinner
+        rw [PMF.support_bindOnSupport] at hinner
         simp only [Set.mem_iUnion] at hinner
         obtain ⟨reached, realized, hrest⟩ := hinner
         rcases ih (start.extend draw.2 realized) target hrest with
@@ -176,56 +126,54 @@ theorem behavioralJoint_prob_eq_prod [Fintype ι]
     {state : E.State} (trace : E.Trace state)
     (hterm : ¬ E.terminal state)
     (joint : { action : ∀ i, Option (E.Action i) // E.Legal state action }) :
-    (M.behavioralJoint policies trace hterm).prob joint =
+    ((M.behavioralJoint policies trace hterm) joint).toReal =
       ∏ player,
-        (policies player (M.infoOf player trace)).prob
-          (choicesOfLegal M trace joint player) := by
+        ((policies player (M.infoOf player trace))
+          (choicesOfLegal M trace joint player)).toReal := by
   classical
   let choices := fun player => choicesOfLegal M trace joint player
   have hbehavioral : M.behavioralJoint policies trace hterm =
-      FinDist.map (jointOfChoices M trace hterm)
-        (FinDist.pi fun player =>
+      PMF.map (jointOfChoices M trace hterm)
+        (independentProduct fun player =>
           policies player (M.infoOf player trace)) := by
     unfold InformationModel.behavioralJoint
     apply congrArg (fun assemble =>
-      FinDist.map assemble
-        (FinDist.pi fun player =>
+      PMF.map assemble
+        (independentProduct fun player =>
           policies player (M.infoOf player trace)))
     funext draws
     apply Subtype.ext
     rfl
   calc
-    (M.behavioralJoint policies trace hterm).prob joint =
-        (M.behavioralJoint policies trace hterm).prob
-          (jointOfChoices M trace hterm choices) := by
-      rw [jointOfChoices_choicesOfLegal M trace joint]
-    _ = (FinDist.pi fun player =>
-          policies player (M.infoOf player trace)).prob choices := by
-      rw [hbehavioral]
-      exact FinDist.prob_map_of_injective
-        (jointOfChoices M trace hterm)
-        (jointOfChoices_injective M trace hterm)
-        (FinDist.pi fun player =>
-          policies player (M.infoOf player trace)) choices
-    _ = _ := FinDist.prob_pi _ _
+    ((M.behavioralJoint policies trace hterm) joint).toReal =
+        ((independentProduct fun player =>
+          policies player (M.infoOf player trace)) choices).toReal := by
+      rw [hbehavioral, ← jointOfChoices_choicesOfLegal M trace joint]
+      exact congrArg ENNReal.toReal
+        (pmf_map_apply_of_injective
+          (independentProduct fun player =>
+            policies player (M.infoOf player trace))
+          (jointOfChoices_injective M trace hterm) choices)
+    _ = _ := by
+      rw [independentProduct_apply, ENNReal.toReal_prod]
 
 /-- The focal player's own contribution to one selected legal joint. -/
 def playerStepProb (policies : (player : ι) → M.BehavioralPolicy player)
     (who : ι) {state : E.State} (trace : E.Trace state)
     (joint : { action : ∀ i, Option (E.Action i) // E.Legal state action }) :
     ℝ :=
-  (policies who (M.infoOf who trace)).prob
-    (choicesOfLegal M trace joint who)
+  ((policies who (M.infoOf who trace))
+    (choicesOfLegal M trace joint who)).toReal
 
 /-- The other players' independent contribution to one selected legal joint. -/
 def opponentsStepProb [Fintype ι] [DecidableEq ι]
     (policies : (player : ι) → M.BehavioralPolicy player)
     (who : ι) {state : E.State} (trace : E.Trace state)
     (joint : { action : ∀ i, Option (E.Action i) // E.Legal state action }) :
-    ℝ :=
+  ℝ :=
   ∏ other ∈ Finset.univ.erase who,
-    (policies other (M.infoOf other trace)).prob
-      (choicesOfLegal M trace joint other)
+    ((policies other (M.infoOf other trace))
+      (choicesOfLegal M trace joint other)).toReal
 
 /-- The actual probability coefficient of one joint/transition pair. -/
 def stepProb [Fintype ι]
@@ -233,58 +181,89 @@ def stepProb [Fintype ι]
     {state : E.State} (trace : E.Trace state)
     (joint : { action : ∀ i, Option (E.Action i) // E.Legal state action })
     (target : E.State) : ℝ :=
-  (M.behavioralJoint policies trace joint.2.1).prob joint *
-    (E.step state joint).prob target
+  ((M.behavioralJoint policies trace joint.2.1) joint).toReal *
+    ((E.step state joint) target).toReal
 
-/-- The step coefficient is exactly the mass of the corresponding extended
-history in the canonical one-step continuation law. -/
-theorem runBehavioralFrom_one_prob_extend [Fintype ι]
+/-- The PMF mass of an extended history factors into its joint and transition
+masses in the canonical one-step continuation law. -/
+private theorem runBehavioralFrom_one_apply_extend [Fintype ι]
     (policies : (player : ι) → M.BehavioralPolicy player)
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (joint : { action : ∀ i, Option (E.Action i) //
       E.Legal history.state action })
     (target : E.State)
     (realized : target ∈ (E.step history.state joint).support) :
-    (M.runBehavioralFrom policies 1 history).prob
+    (M.runBehavioralFrom policies 1 history)
         (history.extend joint.2 realized) =
-      stepProb M policies history.trace joint target := by
+      (M.behavioralJoint policies history.trace hterm) joint *
+        (E.step history.state joint) target := by
   classical
-  rw [show 1 = 0 + 1 by omega,
-    M.runBehavioralFrom_succ_of_not_terminal policies 0 hterm,
-    FinDist.prob_bind]
-  calc
-    (M.behavioralJoint policies history.trace hterm).expect
-        (fun draw => ((E.step history.state draw).bindOnSupport fun reached realized' =>
-          M.runBehavioralFrom policies 0 (history.extend draw.2 realized')).prob
-            (history.extend joint.2 realized)) =
-      (M.behavioralJoint policies history.trace hterm).expect
-        (fun draw => if joint = draw then (E.step history.state joint).prob target else 0) := by
-      apply FinDist.expect_congr
-      intro draw hdraw
-      simp only [InformationModel.runBehavioralFrom,
-        ExecutionProtocol.runRandomizedFor_zero]
-      by_cases heq : joint = draw
-      · subst draw
-        rw [ite_eq_left rfl]
-        exact prob_bindOnSupport_pure_of_injective
-          (E.step history.state joint)
+  let extended := history.extend joint.2 realized
+  let jointLaw := M.behavioralJoint policies history.trace hterm
+  let transition := E.step history.state joint
+  let kernel := fun draw =>
+    (E.step history.state draw).bindOnSupport fun reached realized' =>
+      M.runBehavioralFrom policies 0 (history.extend draw.2 realized')
+  have hrun : M.runBehavioralFrom policies 1 history = jointLaw.bind kernel := by
+    rw [show 1 = 0 + 1 by omega,
+      M.runBehavioralFrom_succ_of_not_terminal policies 0 hterm]
+  have hmass : (M.runBehavioralFrom policies 1 history) extended =
+      jointLaw joint * transition target := by
+    rw [hrun, PMF.bind_apply]
+    have hinner : kernel joint extended = transition target := by
+        simp only [kernel, InformationModel.runBehavioralFrom,
+          ExecutionProtocol.runRandomizedFor_zero]
+        exact bindOnSupport_pure_apply_of_injective transition
           (fun reached realized' => history.extend joint.2 realized')
-          (fun first _ second _ hext => congrArg ExecutionProtocol.History.state hext)
+          (fun first _ second _ hext =>
+            congrArg ExecutionProtocol.History.state hext)
           target realized
-      · rw [ite_eq_right heq, FinDist.prob_eq_zero_iff]
-        intro hmem
-        rw [FinDist.support_bindOnSupport] at hmem
-        simp only [Set.mem_iUnion] at hmem
-        obtain ⟨reached, reachedRealized, hpure⟩ := hmem
-        rw [FinDist.mem_support_pure] at hpure
-        apply heq
-        apply Subtype.ext
-        have hlast := congrArg (historyLastJoint? (E := E)) hpure
-        exact Option.some.inj (by simpa only [historyLastJoint?_extend] using hlast)
-    _ = (M.behavioralJoint policies history.trace hterm).prob joint *
-          (E.step history.state joint).prob target :=
-      FinDist.expect_ite_eq _ joint _
-    _ = stepProb M policies history.trace joint target := rfl
+    calc
+      (∑' draw, jointLaw draw * kernel draw extended) =
+          jointLaw joint * kernel joint extended := by
+        apply tsum_eq_single joint
+        intro draw hdraw
+        have hzero : kernel draw extended = 0 := by
+          by_contra hnonzero
+          have hmem : extended ∈ (kernel draw).support :=
+            (PMF.mem_support_iff _ _).mpr hnonzero
+          have hmem' : extended ∈
+              ((E.step history.state draw).bindOnSupport fun reached realized' =>
+                M.runBehavioralFrom policies 0
+                  (history.extend draw.2 realized')).support := by
+            simpa only [kernel] using hmem
+          -- The support of the continuation bind exposes its realized step.
+          rw [PMF.support_bindOnSupport] at hmem'
+          simp only [Set.mem_iUnion] at hmem'
+          obtain ⟨reached, realized', hpure⟩ := hmem'
+          rw [InformationModel.runBehavioralFrom,
+            ExecutionProtocol.runRandomizedFor_zero,
+            PMF.mem_support_pure_iff] at hpure
+          apply hdraw
+          apply Subtype.ext
+          have hlast := congrArg (historyLastJoint? (E := E)) hpure
+          have hlast' : some joint.1 = some draw.1 := by
+            simpa only [extended, historyLastJoint?_extend] using hlast
+          exact Option.some.inj hlast'.symm
+        simp [hzero]
+      _ = jointLaw joint * transition target := by rw [hinner]
+  exact hmass
+
+/-- The step coefficient is exactly the mass of the corresponding extended
+history in the canonical one-step continuation law. -/
+theorem runBehavioralFrom_one_prob_extend [Fintype ι]
+    (policies : (player : ι) → M.BehavioralPolicy player)
+    (history : E.History) (hterm : ¬ E.terminal history.state)
+    (joint : { action : ∀ i, Option (E.Action i) // E.Legal history.state action })
+    (target : E.State)
+    (realized : target ∈ (E.step history.state joint).support) :
+    ((M.runBehavioralFrom policies 1 history)
+        (history.extend joint.2 realized)).toReal =
+      stepProb M policies history.trace joint target := by
+  have hmass := runBehavioralFrom_one_apply_extend M policies history hterm
+    joint target realized
+  rw [hmass]
+  simp only [stepProb, ENNReal.toReal_mul]
 
 /-- Canonical history reach has the continuation equation: prior reach times
 the exact one-step joint/transition coefficient. -/
@@ -293,80 +272,50 @@ theorem historyReachProbability_extend [Fintype ι]
     {source target : E.State} (prior : E.Trace source)
     (joint : ∀ i, Option (E.Action i)) (isLegal : E.Legal source joint)
     (realized : target ∈ (E.step source ⟨joint, isLegal⟩).support) :
-    M.historyReachProbability policies
-        ⟨target, prior.extend joint isLegal realized⟩ =
-      M.historyReachProbability policies ⟨source, prior⟩ *
+    (M.historyReachWeight policies
+        ⟨target, prior.extend joint isLegal realized⟩).toReal =
+      (M.historyReachWeight policies ⟨source, prior⟩).toReal *
         stepProb M policies prior ⟨joint, isLegal⟩ target := by
   classical
   let previous : E.History := ⟨source, prior⟩
   let extended : E.History :=
     ⟨target, prior.extend joint isLegal realized⟩
-  unfold InformationModel.historyReachProbability
-  simp only [ExecutionProtocol.Trace.length]
-  rw [InformationModel.runBehavioral,
-    M.runBehavioralFrom_add policies prior.length 1 E.initHistory,
-    FinDist.prob_bind]
+  have hweight : M.historyReachWeight policies extended =
+      M.historyReachWeight policies previous *
+        (M.runBehavioralFrom policies 1 previous) extended := by
+    simp only [InformationModel.historyReachWeight, InformationModel.runBehavioral,
+      InformationModel.runBehavioralFrom]
+    rw [show extended.trace.length = prior.length + 1 by
+      simp [extended, ExecutionProtocol.Trace.length]]
+    exact E.runRandomizedFor_apply_of_trace_succ (M.randomizedChooser policies)
+      prior.length E.initHistory extended (by simp [extended,
+        ExecutionProtocol.Trace.length, ExecutionProtocol.initHistory])
+  have hstep := runBehavioralFrom_one_apply_extend M policies previous
+    isLegal.1 ⟨joint, isLegal⟩ target realized
   calc
-    (M.runBehavioralFrom policies prior.length E.initHistory).expect
-        (fun history => (M.runBehavioralFrom policies 1 history).prob extended) =
-      (M.runBehavioralFrom policies prior.length E.initHistory).expect
-        (fun history => if previous = history then
-          stepProb M policies prior ⟨joint, isLegal⟩ target else 0) := by
-      apply FinDist.expect_congr
-      intro history hhistory
-      by_cases heq : previous = history
-      · subst history
-        rw [ite_eq_left rfl]
-        exact runBehavioralFrom_one_prob_extend M policies previous
-          isLegal.1 ⟨joint, isLegal⟩ target realized
-      · rw [ite_eq_right heq, FinDist.prob_eq_zero_iff]
-        intro hbranch
-        by_cases hterm : E.terminal history.state
-        · rw [M.runBehavioralFrom_of_terminal policies 1 hterm,
-            FinDist.mem_support_pure] at hbranch
-          have hreach : E.ReachesWithin prior.length E.initHistory history :=
-            E.runRandomizedFor_reachesWithin (M.randomizedChooser policies)
-              prior.length E.initHistory history hhistory
-          have hbound := trace_length_le_of_reachesWithin hreach
-          have hlength := congrArg
-            (fun current : E.History => current.trace.length) hbranch
-          simp [extended, ExecutionProtocol.Trace.length,
-            ExecutionProtocol.initHistory] at hlength hbound
-          omega
-        · rw [show 1 = 0 + 1 by omega,
-            M.runBehavioralFrom_succ_of_not_terminal policies 0 hterm,
-            FinDist.support_bind] at hbranch
-          simp only [Set.mem_iUnion] at hbranch
-          obtain ⟨draw, _hdraw, hinner⟩ := hbranch
-          rw [FinDist.support_bindOnSupport] at hinner
-          simp only [Set.mem_iUnion] at hinner
-          obtain ⟨reached, reachedRealized, hrest⟩ := hinner
-          rw [InformationModel.runBehavioralFrom,
-            ExecutionProtocol.runRandomizedFor_zero,
-            FinDist.mem_support_pure] at hrest
-          apply heq
-          have hprior := congrArg (historyPrior? (E := E)) hrest
-          have hextended : historyPrior? extended = some previous := by
-            rfl
-          rw [hextended, historyPrior?_extend] at hprior
-          exact Option.some.inj hprior
-    _ = (M.runBehavioralFrom policies prior.length E.initHistory).prob previous *
-          stepProb M policies prior ⟨joint, isLegal⟩ target :=
-      FinDist.expect_ite_eq _ previous _
-    _ = M.historyReachProbability policies ⟨source, prior⟩ *
+    (M.historyReachWeight policies extended).toReal =
+        (M.historyReachWeight policies previous *
+          (M.runBehavioralFrom policies 1 previous) extended).toReal :=
+      congrArg ENNReal.toReal hweight
+    _ = (M.historyReachWeight policies previous).toReal *
           stepProb M policies prior ⟨joint, isLegal⟩ target := by
-      rfl
+      have hstep' : (M.runBehavioralFrom policies 1 previous) extended =
+          (M.behavioralJoint policies prior isLegal.1) ⟨joint, isLegal⟩ *
+            (E.step source ⟨joint, isLegal⟩) target := by
+        simpa [extended, previous, ExecutionProtocol.History.extend] using hstep
+      rw [ENNReal.toReal_mul, hstep']
+      simp only [stepProb, ENNReal.toReal_mul]
 
 /-- Counterfactual one-step reach for `who`: every other player's action
 factor together with the stochastic transition, excluding `who`'s own action
 factor. -/
 def counterfactualStepProb [Fintype ι] [DecidableEq ι]
     (policies : (player : ι) → M.BehavioralPolicy player)
-    (who : ι) {state : E.State} (trace : E.Trace state)
+  (who : ι) {state : E.State} (trace : E.Trace state)
     (joint : { action : ∀ i, Option (E.Action i) // E.Legal state action })
     (target : E.State) : ℝ :=
   opponentsStepProb M policies who trace joint *
-    (E.step state joint).prob target
+    ((E.step state joint) target).toReal
 
 /-- Actual one-step reach factors into the focal player's contribution and
 the counterfactual coefficient. -/
@@ -384,8 +333,8 @@ theorem stepProb_eq_player_mul_counterfactual
     behavioralJoint_prob_eq_prod M policies trace joint.2.1 joint]
   rw [← Finset.mul_prod_erase Finset.univ
     (fun player =>
-      (policies player (M.infoOf player trace)).prob
-        (choicesOfLegal M trace joint player))
+      ((policies player (M.infoOf player trace))
+        (choicesOfLegal M trace joint player)).toReal)
     (Finset.mem_univ who)]
   simp only [playerStepProb, counterfactualStepProb, opponentsStepProb]
   ring
@@ -461,7 +410,7 @@ theorem historyReachProbability_eq_player_mul_counterfactual
     [Fintype ι] [DecidableEq ι]
     (policies : (player : ι) → M.BehavioralPolicy player) (who : ι)
     {state : E.State} (trace : E.Trace state) :
-    M.historyReachProbability policies ⟨state, trace⟩ =
+    (M.historyReachWeight policies ⟨state, trace⟩).toReal =
       playerReachProbability M policies who trace *
         counterfactualReachProbability M policies who trace := by
   classical
@@ -469,16 +418,119 @@ theorem historyReachProbability_eq_player_mul_counterfactual
   | start =>
       rw [playerReachProbability_start, counterfactualReachProbability_start,
         one_mul]
-      unfold InformationModel.historyReachProbability
-      simp [InformationModel.runBehavioral,
-        InformationModel.runBehavioralFrom,
-        ExecutionProtocol.Trace.length,
+      simp [InformationModel.historyReachWeight, InformationModel.runBehavioral,
+        InformationModel.runBehavioralFrom, ExecutionProtocol.Trace.length,
         ExecutionProtocol.initHistory]
   | @extend source target prior joint isLegal realized ih =>
       rw [historyReachProbability_extend M policies prior joint isLegal realized,
         playerReachProbability, counterfactualReachProbability,
         stepProb_eq_player_mul_counterfactual M policies who, ih]
       ring
+
+/-- Probability of an own-action record under one behavioral policy. Inactive
+steps are absent because their only legal choice has probability one. -/
+def ownPlayReachProbability {who : ι} (policy : M.BehavioralPolicy who) :
+    List (M.InfoState who × E.Action who) → ℝ
+  | [] => 1
+  | (info, action) :: prior =>
+      ((PMF.map (fun choice => choice.1) (policy info)) (some action)).toReal *
+        ownPlayReachProbability policy prior
+
+private theorem playerStepProb_eq_one_of_none
+    (strategy : (player : ι) → M.BehavioralPolicy player) (who : ι)
+    {state : E.State} (trace : E.Trace state)
+    (joint : { action : ∀ i, Option (E.Action i) // E.Legal state action })
+    (hchoice : joint.1 who = none) :
+    M.playerStepProb strategy who trace joint = 1 := by
+  classical
+  have hinactive : ¬ E.active state who := by
+    have hlegal := E.legalOption_of_legal joint.2 who
+    simpa [hchoice, LegalOption] using hlegal
+  let : Subsingleton (M.Choice who (M.infoOf who trace)) :=
+    ⟨fun first second => by
+      apply Subtype.ext
+      have hfirst := (M.menu_adequate who trace first.1).mp first.2
+      have hsecond := (M.menu_adequate who trace second.1).mp second.2
+      rw [LegalOption.eq_none_of_inactive first.1 hfirst hinactive,
+        LegalOption.eq_none_of_inactive second.1 hsecond hinactive]⟩
+  unfold playerStepProb
+  rw [eq_pure_of_subsingleton (strategy who (M.infoOf who trace))
+    (M.choicesOfLegal trace joint who)]
+  simp
+
+/-- The recursive focal reach is exactly the probability of the canonical
+own-action record. Consequently it ignores chance, opponents, and forced
+inactive coordinates. -/
+theorem playerReachProbability_eq_ownPlayReachProbability
+    (strategy : (player : ι) → M.BehavioralPolicy player) (who : ι)
+    {state : E.State} (trace : E.Trace state) :
+    M.playerReachProbability strategy who trace =
+      ownPlayReachProbability M (strategy who) (M.ownPlay who trace) := by
+  classical
+  induction trace with
+  | start => rfl
+  | @extend source target prior joint isLegal realized ih =>
+      show
+        M.playerReachProbability strategy who prior *
+            M.playerStepProb strategy who prior ⟨joint, isLegal⟩ =
+          ownPlayReachProbability M (strategy who)
+            (M.ownPlay who (prior.extend joint isLegal realized))
+      rw [InfoSignals.ownPlay_extend, ih]
+      cases hchoice : joint who with
+      | none =>
+          rw [playerStepProb_eq_one_of_none M strategy who prior
+            ⟨joint, isLegal⟩ hchoice, mul_one]
+      | some action =>
+          rw [ownPlayReachProbability]
+          have hstep :
+              M.playerStepProb strategy who prior ⟨joint, isLegal⟩ =
+                ((PMF.map (fun choice => choice.1)
+                  (strategy who (M.infoOf who prior))) (some action)).toReal := by
+            have hvalue :
+                (M.choicesOfLegal prior ⟨joint, isLegal⟩ who).1 =
+                  some action := by
+              simp [choicesOfLegal, hchoice]
+            have hmass := pmf_map_apply_of_injective
+              (f := fun choice : M.Choice who (M.infoOf who prior) => choice.1)
+              (strategy who (M.infoOf who prior)) Subtype.val_injective
+              (M.choicesOfLegal prior ⟨joint, isLegal⟩ who)
+            rw [hvalue] at hmass
+            unfold playerStepProb
+            exact congrArg ENNReal.toReal hmass.symm
+          rw [hstep]
+          exact mul_comm _ _
+
+/-- Perfect recall discharges the common-own-reach premise used by the
+counterfactual/Bayes normalization theorem. -/
+theorem playerReachProbability_eq_of_perfectRecall
+    (hrecall : M.PerfectRecall)
+    (strategy : (player : ι) → M.BehavioralPolicy player) (who : ι)
+    {firstState secondState : E.State}
+    (first : E.Trace firstState) (second : E.Trace secondState)
+    (hinfo : M.infoOf who first = M.infoOf who second) :
+    M.playerReachProbability strategy who first =
+      M.playerReachProbability strategy who second := by
+  rw [playerReachProbability_eq_ownPlayReachProbability M,
+    playerReachProbability_eq_ownPlayReachProbability M,
+    hrecall who first second hinfo]
+
+/-- Counterfactual reach is nonnegative because every recursive factor is a
+finite product of distribution masses. -/
+theorem counterfactualReachProbability_nonneg
+    [Fintype ι] [DecidableEq ι]
+    (strategy : (player : ι) → M.BehavioralPolicy player) (who : ι)
+    {state : E.State} (trace : E.Trace state) :
+    0 ≤ M.counterfactualReachProbability strategy who trace := by
+  classical
+  induction trace with
+  | start => norm_num [counterfactualReachProbability]
+  | @extend source target prior joint isLegal realized ih =>
+      rw [counterfactualReachProbability]
+      apply mul_nonneg ih
+      unfold counterfactualStepProb opponentsStepProb
+      apply mul_nonneg
+      · exact Finset.prod_nonneg fun other _ => ENNReal.toReal_nonneg
+      · exact ENNReal.toReal_nonneg
 
 end InformationModel
 

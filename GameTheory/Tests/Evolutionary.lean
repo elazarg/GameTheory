@@ -64,9 +64,10 @@ theorem nashOnly_true_isNash :
   rw [isNash_iff]
   intro who replacement
   rw [euPreference_apply]
+  refine ⟨payoffIntegrable_pure _ _, payoffIntegrable_pure _ _, ?_⟩
   fin_cases who <;>
-    simpa [symmetricForm, symmetricUtility, residentProfile, opponent] using
-      hfirst replacement
+    simpa [symmetricForm, symmetricUtility, residentProfile, opponent,
+      expectedUtility_pure] using hfirst replacement
 
 theorem nashOnly_true_not_isNSS : ¬ IsNSS nashOnlyPayoff true := by
   intro hnss
@@ -80,55 +81,87 @@ theorem nashOnly_true_not_isESS : ¬ IsESS nashOnlyPayoff true := by
 /-- Only choosing `true` earns a payoff; the opponent action is immaterial. -/
 def payoff (own _other : Bool) : ℝ := if own then 1 else 0
 
-def resident : FinDist Bool := FinDist.pure true
+def resident : PMF Bool := PMF.pure true
 
-def fairMutant : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure true) (FinDist.pure false)
+def fairMutant : PMF Bool :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure true) (PMF.pure false)
 
-theorem mixedPayoff_eq_prob_true (own opponent : FinDist Bool) :
-    mixedPayoff payoff own opponent = own.prob true := by
-  unfold mixedPayoff
-  rw [FinDist.expect_eq_sum, Fintype.sum_bool]
-  simp [payoff]
+/-- Finite encounter outcomes make the fixture payoff integrable. -/
+theorem encounterGuard (own opponent : PMF Bool) :
+    PayoffIntegrable (bindPairLaw own (fun _ => opponent))
+      (fun pair => payoff pair.1 pair.2) :=
+  payoffIntegrable_of_finite _ _
 
-private theorem prob_true_lt_one_of_ne_resident
-    (mutant : FinDist Bool) (hne : mutant ≠ resident) :
-    mutant.prob true < 1 := by
-  apply lt_of_le_of_ne (FinDist.prob_le_one mutant true)
-  intro heq
-  apply hne
-  apply FinDist.ext_of_prob
-  intro action
-  cases action
-  · have hsum := FinDist.sum_prob mutant
-    rw [Fintype.sum_bool, heq] at hsum
-    rw [resident, FinDist.prob_pure_of_ne (by decide : false ≠ true)]
-    linarith
-  · rw [resident, FinDist.prob_pure_self]
-    exact heq
+theorem mixedPayoff_eq_mass_true (own opponent : PMF Bool)
+    (hguard : PayoffIntegrable (bindPairLaw own (fun _ => opponent))
+      (fun pair => payoff pair.1 pair.2)) :
+    mixedPayoff payoff own opponent hguard = (own true).toReal := by
+  let joint := bindPairLaw own (fun _ => opponent)
+  let score : Bool → ℝ := fun action => if action then 1 else 0
+  have hown : PayoffIntegrable own score := payoffIntegrable_of_finite _ _
+  have hmap : PayoffIntegrable (joint.map Prod.fst) score := by
+    exact payoffIntegrable_congr_law
+      (bindPairLaw_map_fst own (fun _ => opponent)).symm hown
+  calc
+    mixedPayoff payoff own opponent hguard =
+        expect (joint.map Prod.fst) score hmap := by
+      unfold mixedPayoff
+      symm
+      exact expect_map Prod.fst joint score hguard hmap
+    _ = expect own score hown := by
+      exact expect_congr_law (bindPairLaw_map_fst own (fun _ => opponent))
+        score hmap hown
+    _ = (own true).toReal := by
+      rw [expect_eq_sum, Fintype.sum_bool]
+      simp [score]
+
+private theorem mass_true_lt_one_of_ne_resident
+    (mutant : PMF Bool) (hne : mutant ≠ resident) :
+    (mutant true).toReal < 1 := by
+  have hfalse : mutant false ≠ 0 := by
+    intro hzero
+    apply hne
+    apply pmf_eq_pure_of_support_subset_singleton mutant true
+    intro action ha
+    cases action with
+    | false =>
+        have hpositive := (mutant.mem_support_iff false).mp ha
+        exact False.elim (hpositive hzero)
+    | true => simp
+  have hpositive : 0 < (mutant false).toReal :=
+    ENNReal.toReal_pos hfalse (mutant.apply_ne_top false)
+  have hsum : (mutant false).toReal + (mutant true).toReal = 1 := by
+    simpa only [tsum_fintype, Fintype.sum_bool, add_comm] using
+      (pmf_weight_tsum_one mutant)
+  linarith
 
 /-- The pure `true` population is ESS against every finite-law mutant. -/
 theorem resident_isMixedESS : IsMixedESS payoff resident := by
-  apply isESS_of_strict_nash
+  refine ⟨encounterGuard, isESS_of_strict_nash ?_⟩
   intro mutant hne
-  rw [mixedPayoff_eq_prob_true, mixedPayoff_eq_prob_true]
-  rw [resident, FinDist.prob_pure_self]
-  exact prob_true_lt_one_of_ne_resident mutant hne
+  rw [mixedPayoff_eq_mass_true, mixedPayoff_eq_mass_true]
+  simp only [resident, PMF.pure_apply, ite_true, ENNReal.toReal_one]
+  exact mass_true_lt_one_of_ne_resident mutant hne
 
 theorem resident_isMixedNSS : IsMixedNSS payoff resident :=
   resident_isMixedESS.isNSS
 
-def vulnerableResident : FinDist Bool := FinDist.pure false
+def vulnerableResident : PMF Bool := PMF.pure false
 
 /-- A resident fixed at the payoff-zero action fails even the first neutral-
 stability clause against the pure-`true` mutant. -/
 theorem vulnerableResident_not_isMixedNSS :
     ¬ IsMixedNSS payoff vulnerableResident := by
-  intro hnss
+  rintro ⟨hall, hnss⟩
   have hfirst := hnss.1 resident
-  rw [mixedPayoff_eq_prob_true, mixedPayoff_eq_prob_true] at hfirst
-  norm_num [vulnerableResident, resident, FinDist.prob_pure_eq_ite] at hfirst
+  have hfirst' :
+      mixedPayoff payoff vulnerableResident vulnerableResident
+          (hall vulnerableResident vulnerableResident) ≥
+        mixedPayoff payoff resident vulnerableResident
+          (hall resident vulnerableResident) := hfirst
+  rw [mixedPayoff_eq_mass_true, mixedPayoff_eq_mass_true] at hfirst'
+  norm_num [vulnerableResident, resident, PMF.pure_apply] at hfirst'
 
 theorem vulnerableResident_not_isMixedESS :
     ¬ IsMixedESS payoff vulnerableResident := by
@@ -137,17 +170,21 @@ theorem vulnerableResident_not_isMixedESS :
 
 /-- The genuinely mixed mutant obtains only half the resident payoff. -/
 theorem fairMutant_loses :
-    mixedPayoff payoff resident fairMutant >
-      mixedPayoff payoff fairMutant fairMutant := by
-  rw [mixedPayoff_eq_prob_true, mixedPayoff_eq_prob_true]
-  norm_num [resident, fairMutant, FinDist.prob_pure_of_ne]
+    mixedPayoff payoff resident fairMutant (encounterGuard resident fairMutant) >
+      mixedPayoff payoff fairMutant fairMutant (encounterGuard fairMutant fairMutant) := by
+  rw [mixedPayoff_eq_mass_true, mixedPayoff_eq_mass_true]
+  norm_num [resident, fairMutant, mix_apply, PMF.pure_apply]
 
 /-- The mixed-mutation ESS reaches the canonical Nash predicate through the
 symmetric population-law encounter game. -/
 theorem resident_isNash_symmetric :
-    IsNash (symmetricForm (FinDist Bool))
-      (euPreference (symmetricUtility (mixedPayoff payoff)))
-      (residentProfile resident) :=
+    ∃ hall : ∀ own opponent : PMF Bool,
+        PayoffIntegrable (bindPairLaw own (fun _ => opponent))
+          (fun pair => payoff pair.1 pair.2),
+      IsNash (symmetricForm (PMF Bool))
+        (euPreference (symmetricUtility
+          (fun own opponent => mixedPayoff payoff own opponent (hall own opponent))))
+        (residentProfile resident) :=
   resident_isMixedESS.isNash_symmetric
 
 end GameTheory.Tests.Evolutionary

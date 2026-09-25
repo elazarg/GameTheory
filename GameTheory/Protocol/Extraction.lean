@@ -53,16 +53,16 @@ theorem reachable_of_mem_runFor (chooser : E.Chooser) :
   induction fuel with
   | zero =>
     intro source reached hsource hreached
-    rw [runFor_zero, FinDist.mem_support_pure] at hreached
+    rw [runFor_zero, PMF.mem_support_pure_iff] at hreached
     subst hreached
     exact hsource
   | succ fuel ih =>
     intro source reached hsource hreached
     by_cases hterm : E.terminal source
-    · rw [runFor_of_terminal chooser _ hterm, FinDist.mem_support_pure] at hreached
+    · rw [runFor_of_terminal chooser _ hterm, PMF.mem_support_pure_iff] at hreached
       subst hreached
       exact hsource
-    · rw [runFor_succ_of_not_terminal chooser fuel hterm, FinDist.support_bind] at hreached
+    · rw [runFor_succ_of_not_terminal chooser fuel hterm, PMF.support_bind] at hreached
       simp only [Set.mem_iUnion] at hreached
       obtain ⟨mid, hmid, hrest⟩ := hreached
       exact ih (hsource.extend (chooser source hterm).2 hmid) hrest
@@ -101,7 +101,7 @@ theorem runFor_congr_of_restrict_eq {first second : E.Chooser}
         congrFun hagree ⟨source, hsource, hterm⟩
       rw [runFor_succ_of_not_terminal first fuel hterm,
         runFor_succ_of_not_terminal second fuel hterm, hhere]
-      exact FinDist.bind_congr fun mid hmid =>
+      exact bind_congr_on_support (E.step source (second source hterm)) fun mid hmid =>
         ih (hsource.extend (second source hterm).2 hmid)
 
 end ExecutionProtocol

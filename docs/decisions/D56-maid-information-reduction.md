@@ -3,7 +3,7 @@
 - **Status:** adopted for the semantic seam; experiment-only sufficient-recall
   global discharge validated
 - **Date:** 2026-08-16
-- **Experiment IDs:** EXP-102, EXP-103, EXP-104, EXP-105, EXP-107
+- **Experiment IDs:** EXP-102, EXP-103, EXP-104, EXP-105, EXP-107, EXP-140
 
 ## Decision and result
 
@@ -22,6 +22,13 @@ reduced Nash and coverage; reduced Nash plus coverage implies full Nash. The
 same certificate serves native and compiled execution through the existing law
 equivalence. It introduces no second policy, utility, evaluator, or equilibrium
 predicate.
+
+With general PMF laws, this comparison is the canonical guarded expected-utility
+preference. It certifies integration of both actual deviation laws; an undefined
+full replacement cannot be omitted from coverage. Exact native/compiled law
+equality transports those certificates without imposing integration at
+unrelated profiles or finite node-value carriers (EXP-140). Finite-value
+enumeration in the graphical construction remains local to its finite sums.
 
 Nested semantic reductions compose. `Pruning.Refines` records that a finer
 reduction keeps no more observations than a coarser one, while
@@ -92,44 +99,17 @@ the certificates rather than assume them. Even a safe reduction may discard
 original equilibria, including Pareto-preferred ones; safety is only
 reduced-Nash-to-full-Nash inclusion.
 
-EXP-107 keeps the graphical construction experiment-only. Its hybrid restore-all
-graph, original-graph mechanism-node s-reachability, candidate/hybrid
-factorization, fixed-law global-Markov conditional independence, exact
-hybrid-to-site policy adapter, multi-site target-rule surgery, and
-replacement-uniform relevant-term continuation now compile. The
-nonrelevant-term marginal certificate and site-local factor/optimality
-endpoints now compile as
-[`MAIDPruningNonrelevantInvariance.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDPruningNonrelevantInvariance.lean)
-and
-[`MAIDPruningSiteReduction.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDPruningSiteReduction.lean);
-the proof-side fully mixed owner order and mechanism-selector factorization
-also compile as
-[`MAIDPruningRecallOrder.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDPruningRecallOrder.lean)
-and
-[`MAIDMechanismSelectorFactorization.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDMechanismSelectorFactorization.lean).
-The selector conditional-independence and division-free component cross-law
-also compile in
-[`MAIDMechanismSelectorIndependence.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDMechanismSelectorIndependence.lean).
-The score/support argument and the one-source semantic soundness/optimality
-transport theorem under a fully mixed reference rule (Koller--Milch Lemmas
-6.1--6.2 style) now compile in
-[`MAIDStrategicNonreachability.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDStrategicNonreachability.lean).
-Finite-list transport, same-owner relevance-order induction, and the global
-coverage theorem now compile in
-[`MAIDPruningGlobalReduction.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDPruningGlobalReduction.lean).
-The chain starts from `SReachAcyclic` and `IsEdgeAdditionFixpoint`, constructs
-a source-first fully mixed site order, transports site optimality across
-non-s-reachable later-source changes, and obtains a reduced whole-owner policy
-dominating every full owner replacement. The exact focused build of the
-global theorem and positive consumer completed warning-free with 1,789/1,789
-jobs.
-The positive consumer keeps its independent direct `CoversFullDeviationsAt`
-proof and also consumes the generic theorem. No positivity premise or
-`Fintype Player` requirement is introduced; finite node/value enumeration is
-local to the finite execution operation. The final full repository build
-passes warning-free with 3,678 jobs, and the deep Phase 1--3 architecture
-audits each report `VERIFIED=1`, including
-`TRANSPORT_POST_ARCHITECTURE=0`.
+EXP-107 keeps the coordinated graphical construction experiment-only.
+[`MAIDPruningGlobalReduction.lean`](../../GameTheory/Experimental/PostArchitecture/MAIDPruningGlobalReduction.lean)
+constructs full-deviation coverage from `SReachAcyclic` and
+`IsEdgeAdditionFixpoint`. The proof uses a source-first fully mixed site order,
+then transports site optimality across non-s-reachable later-source changes.
+Its mechanism-selector conditional independence and division-free score
+comparison justify that transport without assuming positive chance laws.
+The result is a reduced whole-owner policy dominating every full owner
+replacement. Finite node/value enumeration is local to the execution
+operation; the theorem requires no `Fintype Player`.
+
 The paper's
 qualitative Forgetful Movie Star profile is not accepted as negative evidence:
 under an explicit `2 * avoid + consistency` instantiation, its described
@@ -222,54 +202,21 @@ signal-relaying rival makes the observation requisite and not ignorable; its
 copying full deviation earns `3/2` against the blind reduced value `1`, so
 coverage is false.
 
-## Measurements and kill conditions
+## Evidence and kill conditions
 
-The stable certificate is 11 source lines. The 445-line semantic consumer
-unfolds the canonical assignment runner once and reuses canonical
-`expectedUtility`, `euPreference`, and `IsNash`. The exact-term graph spike is
-821 lines; kernel marginalization is 237 lines; the graph-free MAID coverage
-bridge is 190 lines; and the initial finite-BN factor algebra is 149 lines.
+The small semantic certificate and its graph-free coverage bridge isolate the
+public API from the substantially larger graphical construction. This is the
+reason to adopt coverage independently of the graph front end. Source-size
+measurements, exact commands, and validation results belong to EXP-102 through
+EXP-107 in the [experiment log](../ExperimentLog.md).
 
-Focused builds passed warning-free: the semantic test built 1735 jobs with a
-6.9-second final module build; the graph spike built 1715 jobs with an
-8.1-second final module build; the local reduction bridge built 1736 jobs with
-a 7.9-second final module build; and the finite-BN factors built 1713 jobs with
-a 7.4-second final module build. The new artifacts contain no `set_option`,
-`nolint`, `sorry`, `admit`, axiom, direct `Function.update`, stored value-domain
-finiteness, positivity, faithfulness, or user-visible equality transport.
-
-The completed EXP-104 path adds a 249-line generic global-Markov theorem and a
-57-line canonical MAID corollary after the measured factorization,
-marginalization, moral-component, retained-cylinder, and rank-one modules. Its
-153-line heterogeneous chain, 268-line collider/descendant, and 159-line
-zero-evidence consumers compile warning-free. The final theorem stores no
-finiteness capability and adds no positivity, nontriviality, or inhabitedness
-premise; a default dependent assignment is selected from the input law's
-nonempty support.
-
-The EXP-105 close-out adds a 100-line generic graphical assembly and an
-802-line safe/live relay consumer after the measured augmentation,
-factorization, conditional-independence, continuation, and kernel-invariance
-modules. The focused consumer build passes warning-free, and the source audit
-finds no option, lint suppression, placeholder, axiom, direct update, visible
-transport, representation leak, or compatibility shim.
-
-EXP-107's site-local closeout adds the nonrelevant-term marginal certificate,
-the edge-addition-stable site-local factor/optimality endpoint, the fully mixed
-owner-order machinery, and canonical mechanism-selector factorization. The
-selector conditional-independence/cross-law bridge also compiles. The
-original fourteen-artifact foundation set plus the two hostile consumers has
-a warning-free aggregate targeted Lake build (1,785 jobs), full repository
-build (3,673 jobs), and deep Phase 1--3 audit (`VERIFIED=1` for each phase).
-Two further focused modules add division-free term-score comparison,
-changed-to-reference support without chance positivity, policy-surgery
-algebra, and exact expected-utility score decomposition. The global
-source-first reduction module adds finite-list transport, same-owner
-relevance-order induction, and the reduced whole-owner domination theorem;
-the exact global-theorem/positive-consumer build completes warning-free with
-1,789/1,789 jobs. The positive consumer retains direct coverage and also consumes
-the generic theorem. No positivity premise or `Fintype Player` requirement
-is introduced.
+The global-Markov theorem stores no finiteness capability and adds no
+positivity, nontriviality, or inhabitedness premise: a default dependent
+assignment is selected from the input law's nonempty support. Its
+heterogeneous chain, collider/descendant, and zero-evidence consumers test
+these boundaries. The graphical coverage consumer also retains an independent
+direct coverage proof, so the graph construction can be checked against the
+semantic endpoint.
 
 Reject or narrow the graph route if it becomes a second evaluator, cannot
 construct full owner-deviation coverage, assumes faithfulness of the current
@@ -282,8 +229,8 @@ relay, and semantic coverage is independently refuted there.
 
 The constant-utility and singleton-domain controls remain part of the hostile
 scope. Nonrelevant-term invariance, site-local utility-factor assembly,
-one-source transport, and the sufficient-recall relevance-order induction are
-now complete at the experiment-only endpoint. EXP-109 also provides an
+one-source transport, and sufficient-recall relevance-order induction belong
+to the experiment-only endpoint. EXP-109 provides an
 executable explicit-enumeration checker exactly equivalent to the existing
 site-stability and fixpoint predicates. It does not construct a pruning or
 establish minimality, maximal removal, or confluence. Those claims and any
@@ -295,23 +242,24 @@ consumer.
 The semantic seam is public. Graphical ignorability, requisite observation,
 strategic reliance, and s-reachability remain experimental and separate.
 Canonical MAID point-mass factorization and division-free finite global-Markov
-soundness are now validated experimentally through arbitrary dependent query
-configurations, including impossible evidence. Finite utility-leaf
-augmentation and replacement invariance now let local graphical ignorability
-construct `CoversFullDeviationsAt` for one unique pruned site, and the hostile
-safe/live relay consumer validates both sides. Stable relative coverage now
-composes already-certified nested reductions without a recall premise. It does
+soundness apply to arbitrary dependent query configurations, including
+impossible evidence. Finite utility-leaf augmentation and replacement
+invariance let local graphical ignorability construct `CoversFullDeviationsAt`
+for one unique pruned site. Stable relative coverage composes already-certified
+nested reductions without a recall premise. It does
 not promote the graph view to a public API, derive either stage's certificate,
 or justify a stable executable coordinated-pruning pass. One-source semantic
 soundness/optimality transport for changes at non-s-reachable same-owner sites
 under a fully mixed reference rule and the sufficient-recall relevance-order
-induction now compile, yielding global coverage at an edge-addition fixpoint.
+induction yield global coverage at an edge-addition fixpoint.
 Requisite observation and strategic reliance remain distinct notions despite
-that dependency. The experiment-only fixpoint predicate is now decidable from
+that dependency. The experiment-only fixpoint predicate is decidable from
 caller-supplied causal and player enumerations, with exact Boolean/proposition
-equivalence; there is still no stable automatic pruning pass. This experiment
-uses finite-support execution only and does not alter the separate countable
-or infinite-path boundaries tested by EXP-110 and EXP-108.
+equivalence; there is still no stable automatic pruning pass. The graphical
+finite-BN theorems retain their local finite-value premises. Under D62, the
+underlying execution and semantic reduction laws use ordinary PMF, and
+EXP-140 permits infinite chance values. These discrete assignment laws remain
+distinct from infinite-path measures.
 
 There is no backward-compatibility obligation in this greenfield rewrite. If a
 hostile consumer finds the coverage quantifiers, utility view, or graph witness

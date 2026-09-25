@@ -62,9 +62,9 @@ theorem row_policy_hides_column :
 outcome, so the locality test is not vacuous. -/
 theorem hostile_target_law :
     (toProtocolForm game).play (policyProfile game columnTrue) =
-      FinDist.pure (some (false, true)) := by
+      PMF.pure (some (false, true)) := by
   rw [toProtocolForm_play_policyProfile]
-  simp [NFG.Game.toGameForm, game, columnTrue]
+  simp [NFG.Game.toGameForm, game, columnTrue, PMF.pure_map]
 
 /-- Utility preservation is non-vacuous for both source players. -/
 def utility : game.Outcome → Player → ℝ

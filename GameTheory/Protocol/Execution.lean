@@ -22,7 +22,7 @@ A protocol therefore cannot declare a legality relation inconsistent with its ow
 `active` and `available`.
 -/
 
-import GameTheory.Math.Probability.FinDist
+import GameTheory.Math.Probability.Support
 
 noncomputable section
 
@@ -64,7 +64,7 @@ structure ExecutionProtocol (ι : Type uι) where
   step : (state : State) →
     { joint : ∀ i, Option (Action i) //
       ¬ terminal state ∧ IsLegalJoint (active state) (available state) joint } →
-    FinDist State
+    PMF State
   /-- Every non-terminal state has something legal to do. -/
   progress : ∀ state, ¬ terminal state →
     ∃ joint, IsLegalJoint (active state) (available state) joint
@@ -161,7 +161,7 @@ def IsChance (state : E.State) : Prop :=
   ¬ E.terminal state ∧ ∀ i, ¬ E.active state i
 
 /-- The law a chance state induces. -/
-def chanceLaw {state : E.State} (hchance : E.IsChance state) : FinDist E.State :=
+def chanceLaw {state : E.State} (hchance : E.IsChance state) : PMF E.State :=
   E.step state ⟨E.noop, E.noop_isLegal hchance.1 hchance.2⟩
 
 /-! ## Run semantics
@@ -177,23 +177,23 @@ abbrev Chooser : Type _ :=
 
 open Classical in
 /-- Run for at most `fuel` steps, stopping at terminal states. -/
-def runFor (chooser : E.Chooser) : ℕ → E.State → FinDist E.State
-  | 0, state => FinDist.pure state
+def runFor (chooser : E.Chooser) : ℕ → E.State → PMF E.State
+  | 0, state => PMF.pure state
   | fuel + 1, state =>
-    if hterm : E.terminal state then FinDist.pure state
+    if hterm : E.terminal state then PMF.pure state
     else (E.step state (chooser state hterm)).bind (runFor chooser fuel)
 
 variable {E}
 
 @[simp]
 theorem runFor_zero (chooser : E.Chooser) (state : E.State) :
-    E.runFor chooser 0 state = FinDist.pure state := rfl
+    E.runFor chooser 0 state = PMF.pure state := rfl
 
 /-- Terminal states are absorbing: the run stops, it does not ask for an
 action. -/
 @[simp]
 theorem runFor_of_terminal (chooser : E.Chooser) (fuel : ℕ) {state : E.State}
-    (hterm : E.terminal state) : E.runFor chooser fuel state = FinDist.pure state := by
+    (hterm : E.terminal state) : E.runFor chooser fuel state = PMF.pure state := by
   cases fuel with
   | zero => rfl
   | succ fuel => rw [runFor, dite_eq_left hterm]
@@ -220,15 +220,16 @@ theorem runFor_add (chooser : E.Chooser) (first second : ℕ) (state : E.State) 
     E.runFor chooser (first + second) state =
       (E.runFor chooser first state).bind (E.runFor chooser second) := by
   induction first generalizing state with
-  | zero => simp [FinDist.pure_bind]
+  | zero => simp [PMF.pure_bind]
   | succ first ih =>
     by_cases hterm : E.terminal state
     · rw [runFor_of_terminal chooser _ hterm, runFor_of_terminal chooser _ hterm,
-        FinDist.pure_bind, runFor_of_terminal chooser second hterm]
+        PMF.pure_bind, runFor_of_terminal chooser second hterm]
     · rw [show first + 1 + second = (first + second) + 1 by omega,
         runFor_succ_of_not_terminal chooser _ hterm,
-        runFor_succ_of_not_terminal chooser _ hterm, FinDist.bind_bind]
-      exact FinDist.bind_congr fun s _ => ih s
+        runFor_succ_of_not_terminal chooser _ hterm, PMF.bind_bind]
+      exact congrArg (fun f => (E.step state (chooser state hterm)).bind f)
+        (funext ih)
 
 variable (E) in
 /-- Under `chooser`, everything reachable from `state` in `horizon` steps has
@@ -243,8 +244,12 @@ theorem runFor_eq_of_stopsWithin {chooser : E.Chooser} {horizon : ℕ} {state : 
     (hstop : E.StopsWithin chooser horizon state) (extra : ℕ) :
     E.runFor chooser (horizon + extra) state = E.runFor chooser horizon state := by
   rw [runFor_add]
-  refine Eq.trans (FinDist.bind_congr fun reached hreached => ?_) (FinDist.bind_pure _)
-  exact runFor_of_terminal chooser extra (hstop reached hreached)
+  calc
+    _ = (E.runFor chooser horizon state).bind PMF.pure := by
+      apply bind_congr_on_support
+      intro reached hreached
+      exact runFor_of_terminal chooser extra (hstop reached hreached)
+    _ = E.runFor chooser horizon state := PMF.bind_pure _
 
 /-- Hence the run law is the same for every fuel past the horizon. -/
 theorem runFor_eq_of_stopsWithin_le {chooser : E.Chooser} {horizon fuel : ℕ}

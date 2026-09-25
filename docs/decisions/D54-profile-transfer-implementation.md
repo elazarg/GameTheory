@@ -30,17 +30,11 @@ implements it with exact surviving budget four. The same transfer implements a
 non-singleton target cylinder by target monotonicity. Zero transfer leaves the
 all-false profile weakly undominated and refutes both targets.
 
-`Core.Form` adds a 20-line transparent `recordProfile` transformation and
-`Core.Response` adds 10 lines for weak-undominated strategies and profiles.
-The mechanism facade is 93 source lines / 75 nonblank; the stable hostile test
-is 172 / 139. The facade mentions the paired outcome only in its utility
-definition. The test has zero paired-outcome projections, `Profile.update`,
-cast, `Eq.ndrec`, tactic `change`, or `Function.update` references. It consumes
-the canonical `WeaklyDominates` relation in both positive and falsifying
-proofs. Warm warning-clean elaboration of each changed owner and the test takes
-about 10--11 seconds against the existing v2 artifacts.
-The fast source audit also enforces exactly one definition of each graduated
-weak-undominance and implementation predicate.
+`Core.Form.recordProfile` records the paired outcome, while `Core.Response`
+owns weak-undominated strategies and profiles. The mechanism facade needs the
+paired outcome only in its utility definition. Consumers use canonical
+`WeaklyDominates` without paired-outcome projections, profile updates, or
+visible equality transport. Each implementation predicate has one owner.
 
 ## Public boundary
 

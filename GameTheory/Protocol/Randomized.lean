@@ -33,19 +33,19 @@ variable (E) in
 Legality stays a typing constraint: no law can put mass on an illegal move. -/
 abbrev RandomizedChooser : Type _ :=
   (h : E.History) → ¬ E.terminal h.state →
-    FinDist { joint : ∀ i, Option (E.Action i) // E.Legal h.state joint }
+    PMF { joint : ∀ i, Option (E.Action i) // E.Legal h.state joint }
 
 /-- A deterministic chooser is one whose every answer is a point mass. -/
 def HistoryChooser.toRandomized (chooser : E.HistoryChooser) : E.RandomizedChooser :=
-  fun h hterm => FinDist.pure (chooser h hterm)
+  fun h hterm => PMF.pure (chooser h hterm)
 
 open Classical in
 /-- Run for at most `fuel` steps, drawing a joint action at each history and
 then stepping through the transition law it selects. -/
-def runRandomizedFor (chooser : E.RandomizedChooser) : ℕ → E.History → FinDist E.History
-  | 0, h => FinDist.pure h
+def runRandomizedFor (chooser : E.RandomizedChooser) : ℕ → E.History → PMF E.History
+  | 0, h => PMF.pure h
   | fuel + 1, h =>
-    if hterm : E.terminal h.state then FinDist.pure h
+    if hterm : E.terminal h.state then PMF.pure h
     else
       (chooser h hterm).bind fun draw =>
         (E.step h.state draw).bindOnSupport fun _ realized =>
@@ -53,11 +53,11 @@ def runRandomizedFor (chooser : E.RandomizedChooser) : ℕ → E.History → Fin
 
 @[simp]
 theorem runRandomizedFor_zero (chooser : E.RandomizedChooser) (h : E.History) :
-    E.runRandomizedFor chooser 0 h = FinDist.pure h := rfl
+    E.runRandomizedFor chooser 0 h = PMF.pure h := rfl
 
 @[simp]
 theorem runRandomizedFor_of_terminal (chooser : E.RandomizedChooser) (fuel : ℕ) {h : E.History}
-    (hterm : E.terminal h.state) : E.runRandomizedFor chooser fuel h = FinDist.pure h := by
+    (hterm : E.terminal h.state) : E.runRandomizedFor chooser fuel h = PMF.pure h := by
   cases fuel with
   | zero => rfl
   | succ fuel => rw [runRandomizedFor, dite_eq_left hterm]
@@ -78,22 +78,22 @@ theorem runRandomizedFor_add (chooser : E.RandomizedChooser)
       (E.runRandomizedFor chooser firstFuel history).bind
         (E.runRandomizedFor chooser secondFuel) := by
   induction firstFuel generalizing history with
-  | zero => simp [FinDist.pure_bind]
+  | zero => simp [PMF.pure_bind]
   | succ firstFuel ih =>
       by_cases hterm : E.terminal history.state
       · rw [runRandomizedFor_of_terminal _ _ hterm,
           runRandomizedFor_of_terminal _ _ hterm,
-          FinDist.pure_bind,
+          PMF.pure_bind,
           runRandomizedFor_of_terminal _ _ hterm]
       · rw [show firstFuel + 1 + secondFuel =
             (firstFuel + secondFuel) + 1 by omega,
           runRandomizedFor_succ_of_not_terminal chooser _ hterm,
           runRandomizedFor_succ_of_not_terminal chooser _ hterm,
-          FinDist.bind_bind]
-        apply FinDist.bind_congr
+          PMF.bind_bind]
+        apply bind_congr_on_support
         intro draw _
-        rw [FinDist.bind_bindOnSupport]
-        exact FinDist.bindOnSupport_congr fun reached realized =>
+        rw [bindOnSupport_bind]
+        exact bindOnSupport_congr (E.step history.state draw) fun reached realized =>
           ih (history.extend draw.2 realized)
 
 /-- Every supported run either stops at a terminal history or consumes all its
@@ -105,19 +105,19 @@ theorem runRandomizedFor_terminal_or_length
     E.terminal next.state ∨ start.trace.length + fuel ≤ next.trace.length := by
   induction fuel generalizing start with
   | zero =>
-      rw [runRandomizedFor_zero, FinDist.mem_support_pure] at hnext
+      rw [runRandomizedFor_zero, PMF.mem_support_pure_iff] at hnext
       subst next
       exact Or.inr (by omega)
   | succ fuel ih =>
       by_cases hterm : E.terminal start.state
       · rw [runRandomizedFor_of_terminal _ _ hterm,
-          FinDist.mem_support_pure] at hnext
+          PMF.mem_support_pure_iff] at hnext
         subst next
         exact Or.inl hterm
       · rw [runRandomizedFor_succ_of_not_terminal chooser fuel hterm,
-          FinDist.support_bind] at hnext
+          PMF.support_bind] at hnext
         obtain ⟨draw, _, hnext⟩ := Set.mem_iUnion₂.mp hnext
-        rw [FinDist.support_bindOnSupport] at hnext
+        rw [PMF.support_bindOnSupport] at hnext
         obtain ⟨target, realized, hnext⟩ := Set.mem_iUnion₂.mp hnext
         rcases ih (start.extend draw.2 realized) hnext with hterminal | hlength
         · exact Or.inl hterminal
@@ -137,15 +137,15 @@ theorem trace_length_eq_of_mem_support_runRandomizedFor
   induction fuel with
   | zero =>
       intro start result hresult
-      rw [runRandomizedFor_zero, FinDist.mem_support_pure] at hresult
+      rw [runRandomizedFor_zero, PMF.mem_support_pure_iff] at hresult
       subst result
       simp
   | succ fuel ih =>
       intro start result hresult
       rw [runRandomizedFor_succ_of_not_terminal chooser fuel
-          (neverTerminal start.state), FinDist.support_bind] at hresult
+          (neverTerminal start.state), PMF.support_bind] at hresult
       obtain ⟨draw, hdraw, hresult⟩ := Set.mem_iUnion₂.mp hresult
-      rw [FinDist.support_bindOnSupport] at hresult
+      rw [PMF.support_bindOnSupport] at hresult
       obtain ⟨target, realized, hresult⟩ := Set.mem_iUnion₂.mp hresult
       have hlength := ih (start.extend draw.2 realized) result hresult
       simpa only [History.extend, Trace.length, Nat.add_assoc,
@@ -160,18 +160,21 @@ theorem runRandomizedFor_reachesWithin (chooser : E.RandomizedChooser) :
   induction fuel with
   | zero =>
       intro history final supported
-      cases FinDist.mem_support_pure.mp supported
+      rw [runRandomizedFor_zero] at supported
+      have heq := (PMF.mem_support_pure_iff history final).mp supported
+      subst final
       exact .refl 0 history
   | succ fuel ih =>
       intro history final supported
       by_cases stopped : E.terminal history.state
       · rw [runRandomizedFor_of_terminal chooser _ stopped] at supported
-        cases FinDist.mem_support_pure.mp supported
+        have heq := (PMF.mem_support_pure_iff history final).mp supported
+        subst final
         exact .refl _ history
       · rw [runRandomizedFor_succ_of_not_terminal chooser fuel stopped,
-          FinDist.support_bind] at supported
+          PMF.support_bind] at supported
         obtain ⟨joint, _, supported⟩ := Set.mem_iUnion₂.mp supported
-        rw [FinDist.support_bindOnSupport] at supported
+        rw [PMF.support_bindOnSupport] at supported
         obtain ⟨target, realized, supported⟩ := Set.mem_iUnion₂.mp supported
         exact .step joint.1 joint.2 realized (ih _ final supported)
 
@@ -183,14 +186,14 @@ theorem runRandomizedFor_eq_of_bound {bound : ℕ} (bounded : E.BoundedHorizon b
   obtain ⟨extra, rfl⟩ := Nat.exists_eq_add_of_le enough
   rw [E.runRandomizedFor_add]
   calc
-    _ = (E.runRandomizedFor chooser bound history).bind FinDist.pure := by
-      apply FinDist.bind_congr
+    _ = (E.runRandomizedFor chooser bound history).bind PMF.pure := by
+      apply bind_congr_on_support
       intro final reached
       apply E.runRandomizedFor_of_terminal
       rcases E.runRandomizedFor_terminal_or_length _ _ _ _ reached with stopped | consumed
       · exact stopped
       · exact bounded final.state final.trace (by omega)
-    _ = _ := FinDist.bind_pure _
+    _ = _ := PMF.bind_pure _
 
 /-- **Deterministic play is the degenerate case.** A chooser that answers with
 point masses induces exactly the law the deterministic runner induces, so
@@ -207,13 +210,13 @@ theorem runRandomizedFor_toRandomized (chooser : E.HistoryChooser) :
     · rw [runRandomizedFor_of_terminal _ _ hterm, runHistoryFor_of_terminal _ _ hterm]
     · rw [runRandomizedFor_succ_of_not_terminal _ fuel hterm,
         runHistoryFor_succ_of_not_terminal _ fuel hterm,
-        HistoryChooser.toRandomized, FinDist.pure_bind]
-      exact FinDist.bindOnSupport_congr fun _ _ => ih _
+        HistoryChooser.toRandomized, PMF.pure_bind]
+      exact bindOnSupport_congr (E.step h.state (chooser h hterm)) fun _ _ => ih _
 
 /-- And therefore the state law is still recovered by forgetting the history,
 for a chooser that reads neither the history nor a coin. -/
 theorem map_state_runRandomizedFor (chooser : E.Chooser) (fuel : ℕ) (h : E.History) :
-    FinDist.map History.state
+    PMF.map History.state
         (E.runRandomizedFor chooser.toHistoryChooser.toRandomized fuel h) =
       E.runFor chooser fuel h.state := by
   rw [runRandomizedFor_toRandomized, map_state_runHistoryFor]
@@ -233,7 +236,8 @@ theorem runRandomizedFor_congr {first second : E.RandomizedChooser}
     · rw [runRandomizedFor_of_terminal _ _ hterm, runRandomizedFor_of_terminal _ _ hterm]
     · rw [runRandomizedFor_succ_of_not_terminal first fuel hterm,
         runRandomizedFor_succ_of_not_terminal second fuel hterm, hagree h hterm]
-      exact FinDist.bind_congr fun _ _ => FinDist.bindOnSupport_congr fun _ _ => ih _
+      exact bind_congr_on_support (second h hterm) fun draw _ =>
+        bindOnSupport_congr (E.step h.state draw) fun _ _ => ih _
 
 end ExecutionProtocol
 

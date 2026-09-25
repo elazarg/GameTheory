@@ -7,6 +7,7 @@ canonical approximate Nash.
 -/
 
 import GameTheory.Stochastic.Uniform
+import GameTheory.Math.Probability.Mixture
 import Mathlib.Tactic.NormNum
 
 noncomputable section
@@ -18,9 +19,9 @@ open GameTheory.Math.Probability Stochastic Protocol Protocol.ExecutionProtocol
 namespace Game
 
 /-- The unbiased law on the two states. -/
-def fairState : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure false) (FinDist.pure true)
+def fairState : PMF Bool :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure false) (PMF.pure true)
 
 /-- Disagreement randomizes the next state; utility depends on the current
 state and the player's simultaneous action. -/
@@ -28,7 +29,7 @@ def hostile : Game Bool where
   State := Bool
   Action := fun _ => Bool
   transition state action :=
-    if action false = action true then FinDist.pure (!state) else fairState
+    if action false = action true then PMF.pure (!state) else fairState
   stageUtility state action who := if action who = state then 1 else 0
 
 local instance hostileActionNonempty :
@@ -36,10 +37,12 @@ local instance hostileActionNonempty :
   fun _ => ⟨false⟩
 
 theorem false_mem_support_fairState : false ∈ fairState.support := by
-  exact FinDist.prob_pos_iff.mp (by norm_num [fairState, FinDist.prob_pure_eq_ite])
+  exact mem_support_mix_left (1 / 2) (by norm_num) (by norm_num)
+    (by norm_num) (by simp)
 
 theorem true_mem_support_fairState : true ∈ fairState.support := by
-  exact FinDist.prob_pos_iff.mp (by norm_num [fairState, FinDist.prob_pure_eq_ite])
+  exact mem_support_mix_right (1 / 2) (by norm_num) (by norm_num)
+    (by norm_num) (by simp)
 
 /-- The representative joint action reaches both states with positive mass. -/
 theorem hostile_transition_nondegenerate (state : Bool) :
@@ -55,9 +58,15 @@ theorem hostile_horizon_nash_is_canonical (initial : Bool) (horizon : ℕ)
     (epsilon : ℝ) (profile : hostile.BehaviorProfile initial) :
     hostile.IsεHorizonNash initial horizon epsilon profile ↔
       ∀ who (deviation : (hostile.perfectMonitoring initial).BehavioralPolicy who),
-        hostile.finiteAveragePayoff initial horizon
-              (Profile.update profile who deviation) who ≤
-          hostile.finiteAveragePayoff initial horizon profile who + epsilon :=
+        ∃ hprofile : UtilityIntegrable (hostile.horizonUtility initial horizon) who
+            ((hostile.horizonForm initial horizon).play profile),
+          ∃ hdeviation : UtilityIntegrable (hostile.horizonUtility initial horizon)
+              who ((hostile.horizonForm initial horizon).play
+                (Profile.update profile who deviation)),
+            hostile.finiteAveragePayoff initial horizon
+                (Profile.update profile who deviation) who hdeviation ≤
+              hostile.finiteAveragePayoff initial horizon profile who hprofile +
+                epsilon :=
   hostile.isεHorizonNash_iff initial horizon epsilon profile
 
 /-! The same nondegenerate dynamics with zero stage utility provide an exact
@@ -78,7 +87,7 @@ local instance zeroPayoffActionNonempty :
 
 /-- The constant profile in the zero-payoff game. -/
 def zeroProfile (initial : Bool) : zeroPayoff.BehaviorProfile initial :=
-  fun _ _ => FinDist.pure ⟨some false, ⟨false, rfl⟩⟩
+  fun _ _ => PMF.pure ⟨some false, ⟨false, rfl⟩⟩
 
 /-- Zero utility does not trivialize the stochastic dynamics. -/
 theorem zeroPayoff_transition_nondegenerate (state : Bool) :
@@ -105,17 +114,30 @@ theorem zeroPayoff_historyAverageUtility (initial : Bool) (horizon : ℕ)
   rw [hsum]
   ring
 
+/-- The zero stage payoff is integrable at every horizon and behavioral profile. -/
+@[simp]
+theorem zeroPayoff_horizonIntegrable (initial : Bool) (horizon : ℕ)
+    (profile : zeroPayoff.BehaviorProfile initial) (who : Bool) :
+    UtilityIntegrable (zeroPayoff.horizonUtility initial horizon) who
+      ((zeroPayoff.horizonForm initial horizon).play profile) := by
+  apply payoffIntegrable_of_bounded _ _ (C := 0)
+  intro history
+  simp only [Game.horizonUtility, zeroPayoff_historyAverageUtility,
+    abs_zero, le_refl]
+
 @[simp]
 theorem zeroPayoff_finiteAveragePayoff (initial : Bool) (horizon : ℕ)
     (profile : zeroPayoff.BehaviorProfile initial) (who : Bool) :
-    zeroPayoff.finiteAveragePayoff initial horizon profile who = 0 := by
-  show expectedUtility (zeroPayoff.horizonUtility initial horizon) who
-    ((zeroPayoff.horizonForm initial horizon).play profile) = 0
-  unfold expectedUtility
-  refine Eq.trans (FinDist.expect_congr (v := fun _ => 0) ?_)
-    (FinDist.expect_const _ 0)
-  intro history _
-  exact zeroPayoff_historyAverageUtility initial horizon history who
+    zeroPayoff.finiteAveragePayoff initial horizon profile who
+      (zeroPayoff_horizonIntegrable initial horizon profile who) = 0 := by
+  let law := (zeroPayoff.horizonForm initial horizon).play profile
+  have hconstant := payoffIntegrable_constant law 0
+  have heq := expect_congr_on_support (μ := law)
+    (f := fun history => zeroPayoff.horizonUtility initial horizon history who)
+    (g := fun _ => 0)
+    (fun history _ => zeroPayoff_historyAverageUtility initial horizon history who)
+    (zeroPayoff_horizonIntegrable initial horizon profile who) hconstant
+  exact heq.trans (expect_constant law 0 hconstant)
 
 /-- The zero vector is a uniform equilibrium payoff, witnessed at every
 horizon by one fixed behavioral profile. -/
@@ -126,10 +148,16 @@ theorem zeroPayoff_isUniformEquilibriumPayoff (initial : Bool) :
   constructor
   · rw [zeroPayoff.isεHorizonNash_iff]
     intro who deviation
-    simp
+    refine ⟨zeroPayoff_horizonIntegrable initial horizon (zeroProfile initial) who,
+      zeroPayoff_horizonIntegrable initial horizon
+        (Profile.update (zeroProfile initial) who deviation) who, ?_⟩
+    simp only [zeroPayoff_finiteAveragePayoff, zero_add]
     exact le_of_lt hepsilon
   · intro who
-    simpa using le_of_lt hepsilon
+    refine ⟨zeroPayoff_horizonIntegrable initial horizon (zeroProfile initial) who,
+      ?_⟩
+    simpa only [zeroPayoff_finiteAveragePayoff, sub_zero, abs_zero] using
+      (le_of_lt hepsilon)
 
 /-- The constant-one vector fails the approximation clause even though the
 underlying transition remains genuinely stochastic. -/
@@ -137,7 +165,8 @@ theorem one_not_isUniformEquilibriumPayoff (initial : Bool) :
     ¬ zeroPayoff.IsUniformEquilibriumPayoff initial (fun _ => 1) := by
   intro hone
   obtain ⟨profile, threshold, hprofile⟩ := hone (1 / 2) (by norm_num)
-  have hclose := (hprofile threshold le_rfl).2 false
+  obtain ⟨hguard, hclose⟩ := (hprofile threshold le_rfl).2 false
+  rw [zeroPayoff_finiteAveragePayoff] at hclose
   norm_num at hclose
 
 /-! ## A reachable, nonconstant transient-payoff certificate -/
@@ -149,7 +178,7 @@ positive-horizon path, and the transient contribution vanishes uniformly. -/
 def transientPayoff : Game Bool where
   State := Bool
   Action := fun _ => Bool
-  transition _state _action := FinDist.pure false
+  transition _state _action := PMF.pure false
   stageUtility state _action who :=
     if state then if who then 2 else 1 else 0
 
@@ -166,7 +195,7 @@ local instance transientPayoffActionNonempty :
 
 /-- The constant profile in the transient-payoff game. -/
 def transientProfile : transientPayoff.BehaviorProfile true :=
-  fun _ _ => FinDist.pure ⟨some false, ⟨false, rfl⟩⟩
+  fun _ _ => PMF.pure ⟨some false, ⟨false, rfl⟩⟩
 
 theorem transientPayoff_is_reachable_and_nonconstant :
     transientPayoff.stageUtility true (fun _ => false) false = 1 ∧
@@ -185,8 +214,8 @@ private theorem transientPayoff_target_false
         ((transientPayoff.toExecution true).step source
           ⟨joint, isLegal⟩).support) :
     target = false := by
-  have hpure : target ∈ (FinDist.pure false).support := realized
-  exact FinDist.mem_support_pure.mp hpure
+  have hpure : target ∈ (PMF.pure false).support := realized
+  exact (PMF.mem_support_pure_iff _ _).mp hpure
 
 /-- Every history contains at most the one initial transient reward. -/
 private theorem transientPayoff_trace_valueSum_bounds
@@ -216,46 +245,62 @@ private theorem transientPayoff_trace_valueSum_bounds
         subst source
         simpa [Game.eventUtility, transientPayoff] using ih
 
+/-- The bounded transient payoff is integrable at every horizon and profile. -/
+theorem transientPayoff_horizonIntegrable (horizon : ℕ)
+    (profile : transientPayoff.BehaviorProfile true) (who : Bool) :
+    UtilityIntegrable (transientPayoff.horizonUtility true horizon) who
+      ((transientPayoff.horizonForm true horizon).play profile) := by
+  apply payoffIntegrable_of_bounded _ _ (C := 2 * (horizon : ℝ)⁻¹)
+  intro history
+  have hsum := transientPayoff_trace_valueSum_bounds history who
+  have hinv : 0 ≤ (horizon : ℝ)⁻¹ := by positivity
+  have hnonneg : 0 ≤ (horizon : ℝ)⁻¹ * history.valueSum
+      (fun event => transientPayoff.eventUtility true event who) :=
+    mul_nonneg hinv hsum.1
+  have hupper : (horizon : ℝ)⁻¹ * history.valueSum
+      (fun event => transientPayoff.eventUtility true event who) ≤
+        2 * (horizon : ℝ)⁻¹ := by
+    nlinarith [mul_le_mul_of_nonneg_left hsum.2 hinv]
+  simpa only [Game.horizonUtility, Game.historyAverageUtility,
+    abs_of_nonneg hnonneg] using hupper
+
 /-- At every horizon, every behavioral profile and deviation has payoff in
-the interval from zero to the reciprocal horizon, up to the player-two factor
-of two. -/
+the interval from zero to twice the reciprocal horizon. -/
 theorem transientPayoff_finiteAveragePayoff_bounds (horizon : ℕ)
     (profile : transientPayoff.BehaviorProfile true) (who : Bool) :
-    0 ≤ transientPayoff.finiteAveragePayoff true horizon profile who ∧
-      transientPayoff.finiteAveragePayoff true horizon profile who ≤
+    0 ≤ transientPayoff.finiteAveragePayoff true horizon profile who
+        (transientPayoff_horizonIntegrable horizon profile who) ∧
+      transientPayoff.finiteAveragePayoff true horizon profile who
+        (transientPayoff_horizonIntegrable horizon profile who) ≤
         2 * (horizon : ℝ)⁻¹ := by
-  show
-    0 ≤ expectedUtility (transientPayoff.horizonUtility true horizon) who
-        ((transientPayoff.horizonForm true horizon).play profile) ∧
-      expectedUtility (transientPayoff.horizonUtility true horizon) who
-          ((transientPayoff.horizonForm true horizon).play profile) ≤
-        2 * (horizon : ℝ)⁻¹
+  let law := (transientPayoff.horizonForm true horizon).play profile
+  let hpayoff := transientPayoff_horizonIntegrable horizon profile who
+  have hzero := payoffIntegrable_constant law 0
+  have hcap := payoffIntegrable_constant law (2 * (horizon : ℝ)⁻¹)
   constructor
-  · calc
-      0 = FinDist.expect
-          ((transientPayoff.horizonForm true horizon).play profile)
-          (fun _ => 0) := (FinDist.expect_const _ 0).symm
-      _ ≤ _ := FinDist.expect_mono fun history _ => by
-        unfold Game.horizonUtility Game.historyAverageUtility
-        have hsum :=
-          (transientPayoff_trace_valueSum_bounds history who).1
-        exact mul_nonneg (by positivity) hsum
-  · calc
-      _ ≤ FinDist.expect
-          ((transientPayoff.horizonForm true horizon).play profile)
-          (fun _ => 2 * (horizon : ℝ)⁻¹) :=
-        FinDist.expect_mono fun history _ => by
-          unfold Game.horizonUtility Game.historyAverageUtility
+  · have hmono := expect_mono (μ := law)
+        (f := fun _ => 0)
+        (g := fun history => transientPayoff.horizonUtility true horizon
+          history who)
+        (fun history _ => by
+          exact mul_nonneg (by positivity)
+            (transientPayoff_trace_valueSum_bounds history who).1)
+        hzero hpayoff
+    simpa only [expect_constant, Game.finiteAveragePayoff,
+      expectedUtility] using hmono
+  · have hmono := expect_mono (μ := law)
+        (f := fun history => transientPayoff.horizonUtility true horizon
+          history who)
+        (g := fun _ => 2 * (horizon : ℝ)⁻¹)
+        (fun history _ => by
           have hsum :=
             (transientPayoff_trace_valueSum_bounds history who).2
           have hinv : 0 ≤ (horizon : ℝ)⁻¹ := by positivity
-          calc
-            (horizon : ℝ)⁻¹ * history.valueSum
-                (fun event => transientPayoff.eventUtility true event who) ≤
-                (horizon : ℝ)⁻¹ * 2 :=
-              mul_le_mul_of_nonneg_left hsum hinv
-            _ = 2 * (horizon : ℝ)⁻¹ := by ring
-      _ = 2 * (horizon : ℝ)⁻¹ := FinDist.expect_const _ _
+          dsimp only [Game.horizonUtility, Game.historyAverageUtility]
+          nlinarith [mul_le_mul_of_nonneg_left hsum hinv])
+        hpayoff hcap
+    simpa only [expect_constant, Game.finiteAveragePayoff,
+      expectedUtility] using hmono
 
 /-- A nonconstant-payoff uniform deviation-cap constructor. The threshold
 makes the one-period transient smaller than the requested accuracy. -/
@@ -282,13 +327,16 @@ theorem transientPayoff_hasUniformDeviationCapConstructor :
   · intro who
     have hbounds :=
       transientPayoff_finiteAveragePayoff_bounds horizon transientProfile who
-    rw [sub_zero, abs_of_nonneg hbounds.1]
-    exact hbounds.2.trans hsmall
+    refine ⟨transientPayoff_horizonIntegrable horizon transientProfile who, ?_⟩
+    simpa only [Pi.zero_apply, sub_zero, abs_of_nonneg hbounds.1] using
+      hbounds.2.trans hsmall
   · intro who deviation
-    exact
+    refine ⟨transientPayoff_horizonIntegrable horizon
+      (Profile.update transientProfile who deviation) who, ?_⟩
+    simpa only [Pi.zero_apply, zero_add] using
       (transientPayoff_finiteAveragePayoff_bounds horizon
         (Profile.update transientProfile who deviation) who).2.trans
-        (by simpa using hsmall)
+        hsmall
 
 /-- The public semantic uniform-payoff predicate is reached through the
 nonconstant deviation-cap certificate. -/

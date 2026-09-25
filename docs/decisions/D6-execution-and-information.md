@@ -133,20 +133,20 @@ inlined `∀ i, match …`, so its pointwise form is not definitionally equal an
 needed a one-off case split; a later refactor to `∀ i, LegalOption …` would
 remove that friction.
 
-## Post-decision close-out
+## Behavioral policies and continuation scope
 
-D7 has since been rejected for the baseline and D0 is final; neither status remains open.
-The post-decision history and randomized runners close the execution mismatch
-that was recorded at the gate. Both behavioral/mixed directions now hold at the
+History and randomized runners connect the execution and information layers.
+The behavioral/mixed correspondences compare laws at the
 history-law level, under their distinct no-revisit and recall-like conditions,
 and the one-shot principle for state-indexed choosers is an equivalence under
 `WellFoundedPlay`.
 
-EXP-115 sharpens the forward direction's capability boundary. For one supplied
-profile and finite horizon, only finitely many information states occur in the
-support tree, so a finite dependent product realizes the complete behavioral
-history law without `Fintype InfoState`. This is exposed as an existential
-bounded theorem and finite-site predrawing operations. EXP-116 supplies the
+EXP-115 sharpens the forward direction's capability boundary. Under its
+finite-support transition and policy assumptions, a supplied profile and finite
+horizon visit only finitely many information states in the support tree. A finite
+dependent product then realizes the complete behavioral history law without
+`Fintype InfoState`. D62 removes the finite-support default: a bounded horizon
+alone no longer supplies a finite site cover. EXP-116 supplies the
 stronger counterfactual premise: one finite site family covers every legal
 prefix through the horizon, independently of a selected profile. Under that
 premise, `BehavioralPolicy.toMixedWithin` gives fixed whole-profile and
@@ -157,7 +157,7 @@ even though its `List StageRecord` public-history carrier is infinite. The
 unbounded convenience `BehavioralPolicy.toMixed` still draws every information
 coordinate and therefore retains its `Fintype InfoState` requirement.
 
-The composed compiler is now present too. `InformationModel.toGameForm`
+`InformationModel.toGameForm`
 compiles pure information-local policies with full histories as outcomes;
 `toBehavioralGameForm` compiles local randomization; and the ordinary static
 mixed extension is exactly `runMixed`. Their named evaluation and
@@ -173,12 +173,9 @@ one history at incompatible total depths. The corrected induction carries this
 depth equation and still reaches arbitrary-policy comparison and compiled Nash;
 early terminal histories remain absorbing and create no fictitious decision.
 
-The remaining SPE-style theorem does not reopen D6. There is no public
-subgame-perfect-equilibrium predicate or full well-founded
-`oneShotDeviation_iff_spe` analogue. No converse from initial static Nash is
-claimed: unlike the one-shot condition, that predicate does not inspect every
-off-path history. This is downstream semantics over the accepted execution and
-information interfaces, not a missing execution representation.
+Subgame perfection is downstream semantics over these execution and information
+interfaces; see D42. Initial static Nash alone cannot imply optimality at every
+off-path history, so a converse requires additional rootwise hypotheses.
 
 EXP-029 adds the complementary incomplete-information stress. A common-prior
 Bayesian game compiles to a two-step execution protocol whose chance step draws

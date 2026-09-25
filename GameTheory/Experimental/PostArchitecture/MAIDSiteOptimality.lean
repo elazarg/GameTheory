@@ -7,6 +7,7 @@ canonical native MAID form.
 -/
 
 import GameTheory.Experimental.PostArchitecture.MAIDSiteReplacementContext
+import GameTheory.Math.Probability.Product
 
 noncomputable section
 
@@ -37,12 +38,14 @@ theorem fullyMixedAt_iff_prob_pos {owner : Player}
     (policy : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner) :
     FullyMixedAt policy target ↔
-      ∀ context action, 0 < (policy target context).prob action := by
+      ∀ context action, 0 < (policy target context) action := by
   constructor
   · intro hmixed context action
-    exact FinDist.prob_pos_iff.mpr (hmixed context action)
+    exact ((policy target context).apply_pos_iff action).mpr
+      (hmixed context action)
   · intro hpositive context action
-    exact FinDist.prob_pos_iff.mp (hpositive context action)
+    exact ((policy target context).apply_pos_iff action).mp
+      (hpositive context action)
 
 theorem FullyMixedAt.congr {owner : Player}
     {first second : OwnerPolicy diagram owner}
@@ -57,7 +60,7 @@ theorem fullyMixedAt_replaceSiteRule_iff [DecidableEq Node]
     {owner : Player} (policy : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     FullyMixedAt (replaceSiteRule policy target rule) target ↔
       ∀ context action, action ∈ (rule context).support := by
   simp only [FullyMixedAt, replaceSiteRule_same]
@@ -70,9 +73,12 @@ def siteRuleExpectedUtility [DecidableEq Player] [Fintype Node]
     (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) : ℝ :=
+      PMF (diagram.Value target.1))
+    (hguard : UtilityIntegrable
+      (fun assignment who => semantics.utility who assignment) owner
+      (siteReplacementLaw semantics base owner replacement target rule)) : ℝ :=
   expectedUtility (fun assignment who => semantics.utility who assignment)
-    owner (siteReplacementLaw semantics base owner replacement target rule)
+    owner (siteReplacementLaw semantics base owner replacement target rule) hguard
 
 /-- A target rule is optimal against arbitrary behavioral alternatives at that
 site, holding the rest of the whole-owner replacement fixed. -/
@@ -82,11 +88,12 @@ def IsOptimalSiteRule [DecidableEq Player] [Fintype Node]
     (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) : Prop :=
+      PMF (diagram.Value target.1)) : Prop :=
   ∀ alternative,
-    siteRuleExpectedUtility semantics base owner replacement target
-        alternative ≤
-      siteRuleExpectedUtility semantics base owner replacement target rule
+    euPreference (fun assignment who => semantics.utility who assignment)
+      owner
+      (siteReplacementLaw semantics base owner replacement target rule)
+      (siteReplacementLaw semantics base owner replacement target alternative)
 
 theorem siteReplacementLaw_congr [DecidableEq Player] [Fintype Node]
     [DecidableEq Node] (semantics : Semantics diagram)
@@ -94,7 +101,7 @@ theorem siteReplacementLaw_congr [DecidableEq Player] [Fintype Node]
     (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (first second : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1))
+      PMF (diagram.Value target.1))
     (heq : ∀ context, first context = second context) :
     siteReplacementLaw semantics base owner replacement target first =
       siteReplacementLaw semantics base owner replacement target second := by
@@ -121,7 +128,7 @@ theorem isOptimalSiteRule_congr [DecidableEq Player] [Fintype Node]
     (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (first second : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1))
+      PMF (diagram.Value target.1))
     (heq : ∀ context, first context = second context) :
     IsOptimalSiteRule semantics base owner replacement target first ↔
       IsOptimalSiteRule semantics base owner replacement target second := by
@@ -135,14 +142,22 @@ theorem IsOptimalSiteRule.upperBound [DecidableEq Player] [Fintype Node]
     {replacement : OwnerPolicy diagram owner}
     {target : DecisionSite diagram owner}
     {rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)}
+      PMF (diagram.Value target.1)}
     (hoptimal : IsOptimalSiteRule semantics base owner replacement target rule)
     (alternative : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :
-    siteRuleExpectedUtility semantics base owner replacement target
-        alternative ≤
-      siteRuleExpectedUtility semantics base owner replacement target rule :=
-  hoptimal alternative
+      PMF (diagram.Value target.1)) :
+    ∃ hbest : UtilityIntegrable
+        (fun assignment who => semantics.utility who assignment) owner
+        (siteReplacementLaw semantics base owner replacement target rule),
+      ∃ halt : UtilityIntegrable
+          (fun assignment who => semantics.utility who assignment) owner
+          (siteReplacementLaw semantics base owner replacement target alternative),
+        siteRuleExpectedUtility semantics base owner replacement target
+            alternative halt ≤
+          siteRuleExpectedUtility semantics base owner replacement target
+            rule hbest := by
+  obtain ⟨hbest, halt, hle⟩ := hoptimal alternative
+  exact ⟨hbest, halt, hle⟩
 
 theorem IsOptimalSiteRule.currentRule_le [DecidableEq Player]
     [Fintype Node] [DecidableEq Node] {semantics : Semantics diagram}
@@ -150,11 +165,19 @@ theorem IsOptimalSiteRule.currentRule_le [DecidableEq Player]
     {replacement : OwnerPolicy diagram owner}
     {target : DecisionSite diagram owner}
     {rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)}
+      PMF (diagram.Value target.1)}
     (hoptimal : IsOptimalSiteRule semantics base owner replacement target rule) :
-    siteRuleExpectedUtility semantics base owner replacement target
-        (replacement target) ≤
-      siteRuleExpectedUtility semantics base owner replacement target rule :=
+    ∃ hbest : UtilityIntegrable
+        (fun assignment who => semantics.utility who assignment) owner
+        (siteReplacementLaw semantics base owner replacement target rule),
+      ∃ hcurrent : UtilityIntegrable
+          (fun assignment who => semantics.utility who assignment) owner
+          (siteReplacementLaw semantics base owner replacement target
+            (replacement target)),
+        siteRuleExpectedUtility semantics base owner replacement target
+            (replacement target) hcurrent ≤
+          siteRuleExpectedUtility semantics base owner replacement target
+            rule hbest :=
   hoptimal.upperBound (replacement target)
 
 /-- A deterministic action choice at every target context. -/
@@ -167,22 +190,38 @@ abbrev PureSiteRule {owner : Player}
 def behavioralRuleOfPure {owner : Player}
     (target : DecisionSite diagram owner) (rule : PureSiteRule target) :
     Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1) :=
-  fun context => FinDist.pure (rule context)
+      PMF (diagram.Value target.1) :=
+  fun context => PMF.pure (rule context)
 
 /-- Independently sample one deterministic action for every target context.
-This is the canonical `FinDist.pi` law, with dependent context finiteness kept
+This is the canonical finite independent product law, with context finiteness kept
 local to the construction. -/
 def independentPureSiteRuleLaw [DecidableEq Node]
     [∀ node, Fintype (diagram.Value node)] {owner : Player}
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) : FinDist (PureSiteRule target) := by
+      PMF (diagram.Value target.1)) : PMF (PureSiteRule target) := by
   letI : Fintype
       (Config diagram (diagram.observedParents target.1)) := by
     unfold Config
     infer_instance
-  exact FinDist.pi rule
+  exact independentProduct rule
+
+/-- Every site replacement has an actual utility certificate when the
+assignment carrier is finite. -/
+theorem siteReplacementLaw_integrable_of_finite
+    [DecidableEq Player] [Fintype Node] [DecidableEq Node]
+    [∀ node, Fintype (diagram.Value node)]
+    (semantics : Semantics diagram) (base : Policy diagram)
+    (owner : Player) (replacement : OwnerPolicy diagram owner)
+    (target : DecisionSite diagram owner)
+    (rule : Config diagram (diagram.observedParents target.1) →
+      PMF (diagram.Value target.1)) :
+    UtilityIntegrable
+      (fun assignment who => semantics.utility who assignment) owner
+      (siteReplacementLaw semantics base owner replacement target rule) := by
+  let : Fintype (Assignment diagram) := inferInstance
+  exact payoffIntegrable_of_finite _ _
 
 /-- A behavioral target rule is exactly an independent mixture over
 deterministic context-indexed rules.  The target executes once, while the
@@ -196,7 +235,7 @@ theorem siteReplacementLaw_eq_bind_pureSiteRules
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     siteReplacementLaw semantics base owner replacement target rule =
       (independentPureSiteRuleLaw target rule).bind fun pureRule =>
         siteReplacementLaw semantics base owner replacement target
@@ -267,7 +306,7 @@ theorem siteReplacementLaw_eq_bind_pureSiteRules
             (Stage.Assignment.setOne state
               ⟨target.1, pureRule (Assignment.restrict diagram state
                 (diagram.observedParents target.1))⟩)) := by
-      apply FinDist.bind_congr
+      apply bind_congr_on_support
       intro state _
       let context := Assignment.restrict diagram state
         (diagram.observedParents target.1)
@@ -287,7 +326,7 @@ theorem siteReplacementLaw_eq_bind_pureSiteRules
           unfold Config
           infer_instance
         unfold independentPureSiteRuleLaw
-        exact FinDist.map_apply_pi context rule
+        exact independentProduct_map_eval rule context
       calc
         (rule context).bind continuation =
             ((independentPureSiteRuleLaw target rule).map
@@ -295,14 +334,14 @@ theorem siteReplacementLaw_eq_bind_pureSiteRules
                 rw [hmarginal]
         _ = (independentPureSiteRuleLaw target rule).bind
               (fun pureRule => continuation (pureRule context)) :=
-          FinDist.bind_map _ _ _
+          PMF.bind_map _ _ _
     _ = (independentPureSiteRuleLaw target rule).bind fun pureRule =>
         prefixLaw.bind fun state =>
           assignmentRun semantics fixedPolicy after
             (Stage.Assignment.setOne state
               ⟨target.1, pureRule (Assignment.restrict diagram state
                 (diagram.observedParents target.1))⟩) :=
-      FinDist.bind_comm prefixLaw (independentPureSiteRuleLaw target rule)
+      PMF.bind_comm prefixLaw (independentPureSiteRuleLaw target rule)
         (fun state pureRule =>
           assignmentRun semantics fixedPolicy after
             (Stage.Assignment.setOne state
@@ -311,10 +350,10 @@ theorem siteReplacementLaw_eq_bind_pureSiteRules
     _ = (independentPureSiteRuleLaw target rule).bind fun pureRule =>
         siteReplacementLaw semantics base owner replacement target
           (behavioralRuleOfPure target pureRule) := by
-      apply FinDist.bind_congr
+      apply bind_congr_on_support
       intro pureRule _
       rw [hplay (behavioralRuleOfPure target pureRule)]
-      apply FinDist.bind_congr
+      apply bind_congr_on_support
       intro state _
       simp [behavioralRuleOfPure]
 
@@ -331,9 +370,13 @@ theorem exists_pureSiteRule_dominates_pure
     ∃ best : PureSiteRule target,
       ∀ alternative : PureSiteRule target,
         siteRuleExpectedUtility semantics base owner replacement target
-            (behavioralRuleOfPure target alternative) ≤
+            (behavioralRuleOfPure target alternative)
+            (siteReplacementLaw_integrable_of_finite semantics base owner
+              replacement target (behavioralRuleOfPure target alternative)) ≤
           siteRuleExpectedUtility semantics base owner replacement target
-            (behavioralRuleOfPure target best) := by
+            (behavioralRuleOfPure target best)
+            (siteReplacementLaw_integrable_of_finite semantics base owner
+              replacement target (behavioralRuleOfPure target best)) := by
   let : Fintype
       (Config diagram (diagram.observedParents target.1)) := by
     unfold Config
@@ -346,6 +389,8 @@ theorem exists_pureSiteRule_dominates_pure
   exact Finite.exists_max fun rule : PureSiteRule target =>
     siteRuleExpectedUtility semantics base owner replacement target
       (behavioralRuleOfPure target rule)
+      (siteReplacementLaw_integrable_of_finite semantics base owner
+        replacement target (behavioralRuleOfPure target rule))
 
 /-- A fully optimal behavioral rule exists at every finite target site.  The
 witness is deterministic: exact site-law multilinearity reduces every
@@ -359,17 +404,50 @@ theorem exists_isOptimalSiteRule
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner) :
     ∃ rule : Config diagram (diagram.observedParents target.1) →
-        FinDist (diagram.Value target.1),
+        PMF (diagram.Value target.1),
       IsOptimalSiteRule semantics base owner replacement target rule := by
   obtain ⟨best, hbest⟩ := exists_pureSiteRule_dominates_pure semantics
     base owner replacement target
   refine ⟨behavioralRuleOfPure target best, ?_⟩
   intro alternative
-  unfold siteRuleExpectedUtility
-  rw [siteReplacementLaw_eq_bind_pureSiteRules topological semantics base
-    owner replacement target alternative]
-  rw [expectedUtility_bind]
-  refine FinDist.expect_le_of_forall _ _ _ fun pureRule _ => ?_
-  simpa only [siteRuleExpectedUtility] using hbest pureRule
+  let utility := fun assignment who => semantics.utility who assignment
+  let branches := fun pureRule =>
+    siteReplacementLaw semantics base owner replacement target
+      (behavioralRuleOfPure target pureRule)
+  let pureRules := independentPureSiteRuleLaw target alternative
+  have hlaw :
+      siteReplacementLaw semantics base owner replacement target alternative =
+        pureRules.bind branches :=
+    siteReplacementLaw_eq_bind_pureSiteRules topological semantics base
+      owner replacement target alternative
+  have hbestGuard : UtilityIntegrable utility owner (branches best) :=
+    siteReplacementLaw_integrable_of_finite semantics base owner
+      replacement target (behavioralRuleOfPure target best)
+  have haltGuard : UtilityIntegrable utility owner
+      (siteReplacementLaw semantics base owner replacement target alternative) :=
+    siteReplacementLaw_integrable_of_finite semantics base owner
+      replacement target alternative
+  have hbind : UtilityIntegrable utility owner (pureRules.bind branches) :=
+    payoffIntegrable_congr_law hlaw haltGuard
+  have hbranch : ∀ pureRule, UtilityIntegrable utility owner (branches pureRule) :=
+    fun pureRule => siteReplacementLaw_integrable_of_finite semantics base
+      owner replacement target (behavioralRuleOfPure target pureRule)
+  refine ⟨hbestGuard, haltGuard, ?_⟩
+  calc
+    expectedUtility utility owner
+        (siteReplacementLaw semantics base owner replacement target alternative)
+        haltGuard =
+      expectedUtility utility owner (pureRules.bind branches) hbind :=
+        expectedUtility_congr_law utility owner hlaw haltGuard hbind
+    _ = expect pureRules
+          (fun pureRule => expectedUtility utility owner (branches pureRule)
+            (hbranch pureRule))
+          (payoffIntegrable_bind_conditionalExpectation pureRules branches
+            (fun assignment => utility assignment owner) hbind hbranch) :=
+        expectedUtility_bind utility owner pureRules branches hbind hbranch
+    _ ≤ expectedUtility utility owner (branches best) hbestGuard := by
+      apply expect_le_const
+      intro pureRule _
+      exact hbest pureRule
 
 end GameTheory.Experimental.PostArchitecture.MAIDSiteOptimality

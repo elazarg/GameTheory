@@ -55,13 +55,8 @@ decidable equality.
 | worst-case recurrence | `C(n) = 2^(n + 1) - 1` solver calls when every item fits; no memoization |
 | Mathlib overlap | no existing `0/1` knapsack solver; `Finset.powerset` and `List.argmax` can supply a reference enumerator |
 | hostile slice | 198 nonblank lines; three public correctness theorems; no stored `Fintype` |
-| focused builds | hostile slice 799 jobs; promoted correctness leaf 800 jobs; mechanism umbrella 1,733 jobs |
-| full build | 3,405 jobs |
 | execution witness | compiled evaluation returns cardinality two; kernel `decide` proves the exact `{0, 1}` result |
 | negative reachability | `Real.instAdd`, `PMF`, `MeasureTheory.Measure`, `stdSimplex`, and `Polynomial` all unreachable |
-| promoted reachability audit | algorithm rejects 7/7 semantic/real/analytic probes; opt-in root reaches solver plus 2/2 headline correctness theorems |
-| source hazards | no raw update, transport, `Fintype.ofFinite`, `open Classical`, `noncomputable`, placeholder, or custom axiom |
-| axiom profile | `propext`, `Classical.choice`, and `Quot.sound` only |
 
 ## Kill condition
 
@@ -112,6 +107,6 @@ The other 52 pinned rows do not ride this decision silently:
   behind M-BAYES/D11.  The retired `SingleParameterMechanism` wrapper stack is
   not recreated.
 
-The delivery audit must add a direct negative probe for the algorithm leaf and
-a positive probe that the opt-in knapsack root reaches both the solver and its
-correctness theorem.  The promoted probes pass at 7/7 rejected and 3/3 reached.
+The import boundary keeps the algorithm leaf independent of semantic and
+analytic layers. The opt-in knapsack root exposes both the solver and its
+correctness theorem.

@@ -48,7 +48,6 @@ Full commands, exact revisions, probe text, and failed outputs are preserved in
 
 | Measure | Result |
 |---|---|
-| toolchain skew | packages pin 4.31-era toolchains; all measured candidates compile on this project's `v4.32.0` |
 | licenses | four transitive candidates, all Apache-2.0 |
 | manifest disturbance | four additions in isolation; zero changes to existing revisions or the repository manifest |
 | authored trust hazards | zero custom axioms, `sorry`, `admit`, `unsafe`, `native_decide`, `ofReduceBool`, or FFI declarations |
@@ -56,7 +55,6 @@ Full commands, exact revisions, probe text, and failed outputs are preserved in
 | soundness axioms | `propext`, `Classical.choice`, `Quot.sound` only |
 | certificate rejection | verifier tamper suite passes |
 | import containment | 15/15 negative probes pass; 3/3 positive LP probes fire |
-| downstream build delta | 49 jobs including the probe |
 | source surface | 67 Lean files, 9,935 lines |
 | concrete Farkas implication | succeeds with the pure backend forced |
 | EXP-007 proof reduction | none material; explicit enumeration remains |

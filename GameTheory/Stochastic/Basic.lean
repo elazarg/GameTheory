@@ -1,20 +1,18 @@
 /-
-# Finite-support stochastic games
+# Stochastic games
 
-The native object stores only state, simultaneous actions, a finite-support
+The native object stores only state, simultaneous actions, a probability-mass
 transition law, and stage utility. Initial states, discount factors,
 finiteness, and nonemptiness belong to the consumers that need them.
 -/
 
-import GameTheory.Math.Probability.FinDist
+import Mathlib.Probability.ProbabilityMassFunction.Constructions
 
 namespace GameTheory.Stochastic
 
-open GameTheory.Math.Probability
-
 universe uι us ua
 
-/-- A stochastic game with simultaneous pure actions and finite-support state
+/-- A stochastic game with simultaneous pure actions and ordinary PMF state
 transitions. -/
 structure Game (ι : Type uι) where
   /-- Public state. -/
@@ -22,7 +20,7 @@ structure Game (ι : Type uι) where
   /-- Each player's action carrier. -/
   Action : ι → Type ua
   /-- Transition law after a pure joint action. -/
-  transition : State → (∀ i, Action i) → FinDist State
+  transition : State → (∀ i, Action i) → PMF State
   /-- One-stage utility before the transition is realized. -/
   stageUtility : State → (∀ i, Action i) → ι → ℝ
 

@@ -19,7 +19,8 @@ root, complementary changes at several information states can be profitable
 even though no single-information-state replacement is.
 -/
 
-import GameTheory.Protocol.Assessment
+import GameTheory.Protocol.Backward
+import GameTheory.Protocol.InformationOneShot
 
 noncomputable section
 
@@ -72,140 +73,142 @@ theorem historyBackwardRec_eq {motive : E.History → Sort*}
   WellFounded.fix_eq
     (E.wellFounded_historySuccessor certificate) rule history
 
-/-- Expected value after one realized legal step, retaining the support proof
-needed to extend the current history. -/
-def historyStepValue (history : E.History)
-    (chosen :
-      { joint : ∀ i, Option (E.Action i) //
-        E.Legal history.state joint })
-    (continuation :
-      ∀ target : E.State,
-        target ∈ (E.step history.state chosen).support → ℝ) : ℝ :=
-  ((E.step history.state chosen).bindOnSupport fun target realized =>
-    FinDist.pure (continuation target realized)).expect id
-
-/-- Pointwise larger successor values give a larger one-step value. -/
-theorem historyStepValue_mono
-    {history : E.History}
-    {chosen :
-      { joint : ∀ i, Option (E.Action i) //
-        E.Legal history.state joint }}
-    {first second :
-      ∀ target : E.State,
-        target ∈ (E.step history.state chosen).support → ℝ}
-    (hle : ∀ target realized, first target realized ≤ second target realized) :
-    E.historyStepValue history chosen first ≤
-      E.historyStepValue history chosen second := by
-  apply FinDist.expect_bindOnSupport_mono
-  intro target realized
-  simp [hle target realized]
-
-/-- Pointwise equal successor values give the same one-step value. -/
-theorem historyStepValue_congr
-    {history : E.History}
-    {chosen :
-      { joint : ∀ i, Option (E.Action i) //
-        E.Legal history.state joint }}
-    {first second :
-      ∀ target : E.State,
-        target ∈ (E.step history.state chosen).support → ℝ}
-    (heq : ∀ target realized, first target realized = second target realized) :
-    E.historyStepValue history chosen first =
-      E.historyStepValue history chosen second := by
-  apply FinDist.expect_bindOnSupport_congr
-  intro target realized
-  simp [heq target realized]
-
-/-- A point-mass transition evaluates a support-dependent continuation at its
-unique successor. The theorem constructs the support witness internally, so a
-client can use a deterministic step law without rewriting under a dependent
-continuation or exposing proof-irrelevance plumbing. -/
-theorem historyStepValue_of_step_eq_pure
-    {history : E.History}
-    {chosen : {joint : ∀ i, Option (E.Action i) // E.Legal history.state joint}}
-    {target : E.State}
-    (hstep : E.step history.state chosen = FinDist.pure target)
-    (continuation : ∀ next, next ∈ (E.step history.state chosen).support → ℝ) :
-    E.historyStepValue history chosen continuation =
-      continuation target (by
-        rw [hstep]
-        exact FinDist.mem_support_pure.mpr rfl) := by
-  let realized : target ∈ (E.step history.state chosen).support := by
-    rw [hstep]
-    exact FinDist.mem_support_pure.mpr rfl
-  unfold historyStepValue
-  rw [FinDist.bindOnSupport_eq_bind_of_eq_on_support
-      (g := fun _ => FinDist.pure (continuation target realized)) (by
-        intro next hnext
-        have hpure : next ∈ (FinDist.pure target).support := by
-          rw [← hstep]
-          exact hnext
-        have hnextTarget := FinDist.mem_support_pure.mp hpure
-        subst next
-        congr),
-    FinDist.bind_const, FinDist.expect_pure]
-  rfl
-
 open Classical in
-/-- Terminal payoff induced by a fixed history-dependent chooser. This is the
-history-preserving analogue of `backwardValue`, using the same transition law
-and the same `WellFoundedPlay` certificate. -/
-def historyBackwardValue (certificate : E.WellFoundedPlay)
-    (chooser : E.HistoryChooser) (payoff : E.History → ℝ) :
-    E.History → ℝ :=
+/-- A history-preserving terminal law, recursing through realized successors. -/
+def historyBackwardLaw (certificate : E.WellFoundedPlay)
+    (chooser : E.HistoryChooser) : E.History → PMF E.History :=
   E.historyBackwardRec certificate fun history recurse =>
-    if hterm : E.terminal history.state then payoff history
+    if hterm : E.terminal history.state then PMF.pure history
     else
       let chosen := chooser history hterm
-      E.historyStepValue history chosen fun _target realized =>
+      (E.step history.state chosen).bindOnSupport fun _target realized =>
         recurse (history.extend chosen.2 realized)
           ⟨chosen.1, chosen.2, realized⟩
 
 open Classical in
-/-- Unfold history-preserving backward value once. -/
-theorem historyBackwardValue_eq
-    (certificate : E.WellFoundedPlay)
-    (chooser : E.HistoryChooser) (payoff : E.History → ℝ)
-    (history : E.History) :
-    E.historyBackwardValue certificate chooser payoff history =
-      if hterm : E.terminal history.state then payoff history
+theorem historyBackwardLaw_eq (certificate : E.WellFoundedPlay)
+    (chooser : E.HistoryChooser) (history : E.History) :
+    E.historyBackwardLaw certificate chooser history =
+      if hterm : E.terminal history.state then PMF.pure history
       else
         let chosen := chooser history hterm
-        E.historyStepValue history chosen fun _target realized =>
-          E.historyBackwardValue certificate chooser payoff
+        (E.step history.state chosen).bindOnSupport fun _target realized =>
+          E.historyBackwardLaw certificate chooser
             (history.extend chosen.2 realized) := by
-  rw [historyBackwardValue, historyBackwardRec_eq]
+  rw [historyBackwardLaw, historyBackwardRec_eq]
 
-/-- At a terminal history, backward value is the supplied payoff. -/
-theorem historyBackwardValue_of_terminal
-    {certificate : E.WellFoundedPlay}
-    {chooser : E.HistoryChooser} {payoff : E.History → ℝ}
-    {history : E.History} (_hterm : E.terminal history.state) :
-    E.historyBackwardValue certificate chooser payoff history =
-      payoff history := by
-  rw [historyBackwardValue_eq, dite_eq_left _hterm]
+theorem historyBackwardLaw_of_terminal
+    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
+    {history : E.History} (hterm : E.terminal history.state) :
+    E.historyBackwardLaw certificate chooser history = PMF.pure history := by
+  rw [historyBackwardLaw_eq, dite_eq_left hterm]
 
-/-- At a nonterminal history, backward value is the expected value of its
-realized successor histories. -/
-theorem historyBackwardValue_of_not_terminal
-    {certificate : E.WellFoundedPlay}
-    {chooser : E.HistoryChooser} {payoff : E.History → ℝ}
+theorem historyBackwardLaw_of_not_terminal
+    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
     {history : E.History} (hterm : ¬ E.terminal history.state) :
-    E.historyBackwardValue certificate chooser payoff history =
-      let chosen := chooser history hterm
-      E.historyStepValue history chosen fun _target realized =>
-        E.historyBackwardValue certificate chooser payoff
-          (history.extend chosen.2 realized) := by
-  rw [historyBackwardValue_eq, dite_eq_right hterm]
+    E.historyBackwardLaw certificate chooser history =
+      (E.step history.state (chooser history hterm)).bindOnSupport
+        fun _target realized =>
+          E.historyBackwardLaw certificate chooser
+            (history.extend (chooser history hterm).2 realized) := by
+  rw [historyBackwardLaw_eq, dite_eq_right hterm]
 
-/-- A history-dependent chooser has stopped within `horizon` when every history
-in the forward runner's support at that fuel is terminal. -/
+/-- Rewrite the nonterminal law using an equal chosen joint action without
+exposing dependent legality proofs at callers. -/
+theorem historyBackwardLaw_of_not_terminal_of_chooser_eq
+    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
+    {history : E.History} (hterm : ¬ E.terminal history.state)
+    (chosen : { joint : ∀ i, Option (E.Action i) //
+      E.Legal history.state joint })
+    (hchosen : chooser history hterm = chosen) :
+    E.historyBackwardLaw certificate chooser history =
+      (E.step history.state chosen).bindOnSupport fun _target realized =>
+        E.historyBackwardLaw certificate chooser
+          (history.extend chosen.2 realized) := by
+  calc
+    E.historyBackwardLaw certificate chooser history =
+        (E.step history.state (chooser history hterm)).bindOnSupport
+          fun _target realized => E.historyBackwardLaw certificate chooser
+            (history.extend (chooser history hterm).2 realized) :=
+      E.historyBackwardLaw_of_not_terminal hterm
+    _ = (E.step history.state chosen).bindOnSupport
+          fun _target realized => E.historyBackwardLaw certificate chooser
+            (history.extend chosen.2 realized) :=
+      congrArg (fun selected : { joint : ∀ i, Option (E.Action i) //
+        E.Legal history.state joint } =>
+        (E.step history.state selected).bindOnSupport fun _target realized =>
+          E.historyBackwardLaw certificate chooser
+            (history.extend selected.2 realized)) hchosen
+
+/-- Every supported outcome of the well-founded history law is terminal. -/
+theorem historyBackwardLaw_support_terminal
+    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
+    (history : E.History) :
+    ∀ final ∈ (E.historyBackwardLaw certificate chooser history).support,
+      E.terminal final.state := by
+  induction history using
+      (E.wellFounded_historySuccessor certificate).induction with
+  | _ current ih =>
+      intro final hfinal
+      by_cases hterm : E.terminal current.state
+      · rw [E.historyBackwardLaw_of_terminal hterm,
+          PMF.mem_support_pure_iff] at hfinal
+        subst final
+        exact hterm
+      · rw [E.historyBackwardLaw_of_not_terminal hterm,
+          PMF.mem_support_bindOnSupport_iff] at hfinal
+        obtain ⟨target, realized, hcontinue⟩ := hfinal
+        exact ih (current.extend (chooser current hterm).2 realized)
+          ⟨(chooser current hterm).1, (chooser current hterm).2, realized⟩
+          final hcontinue
+
+/-- Boundedness only on terminal histories is sufficient for any well-founded
+history chooser's real payoff to be defined. -/
+theorem payoffIntegrable_historyBackwardLaw_of_bounded_terminal
+    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
+    {payoff : E.History → ℝ} {C : ℝ}
+    (hbound : ∀ final, E.terminal final.state → |payoff final| ≤ C)
+    (history : E.History) :
+    PayoffIntegrable (E.historyBackwardLaw certificate chooser history) payoff := by
+  apply payoffIntegrable_of_bounded_on_support
+  intro final hfinal
+  exact hbound final (E.historyBackwardLaw_support_terminal history final hfinal)
+
+/-- Finite support at each legal transition also makes every well-founded
+terminal payoff integrable, without any bound on the payoff itself. -/
+theorem payoffIntegrable_historyBackwardLaw_of_finite_step_support
+    {certificate : E.WellFoundedPlay}
+    (hfinite : ∀ (history : E.History) (_hterm : ¬ E.terminal history.state)
+      (chosen : {joint : ∀ i, Option (E.Action i) //
+        E.Legal history.state joint}),
+      (E.step history.state chosen).support.Finite)
+    (chooser : E.HistoryChooser) (payoff : E.History → ℝ)
+    (history : E.History) :
+    PayoffIntegrable (E.historyBackwardLaw certificate chooser history) payoff := by
+  induction history using
+      (E.wellFounded_historySuccessor certificate).induction with
+  | _ current ih =>
+      by_cases hterm : E.terminal current.state
+      · rw [E.historyBackwardLaw_of_terminal hterm]
+        exact payoffIntegrable_pure current payoff
+      · rw [E.historyBackwardLaw_of_not_terminal hterm]
+        exact payoffIntegrable_bindOnSupport_of_finite_support
+          (E.step current.state (chooser current hterm))
+          (fun _target realized => E.historyBackwardLaw certificate chooser
+            (current.extend (chooser current hterm).2 realized)) payoff
+          (hfinite current hterm (chooser current hterm))
+          (fun _target realized =>
+            ih (current.extend (chooser current hterm).2 realized)
+              ⟨(chooser current hterm).1,
+                (chooser current hterm).2, realized⟩)
+
+/-- A history chooser has stopped at this fuel when the forward law contains
+only terminal histories. -/
 def StopsHistoryWithin (chooser : E.HistoryChooser)
     (horizon : ℕ) (history : E.History) : Prop :=
   ∀ final ∈ (E.runHistoryFor chooser horizon history).support,
     E.terminal final.state
 
-/-- A global bound on legal history length bounds continuation from every prefix. -/
 theorem stopsHistoryWithin_of_bound {bound : ℕ} (bounded : E.BoundedHorizon bound)
     (chooser : E.HistoryChooser) (history : E.History) :
     E.StopsHistoryWithin chooser bound history := by
@@ -216,42 +219,130 @@ theorem stopsHistoryWithin_of_bound {bound : ℕ} (bounded : E.BoundedHorizon bo
   · exact stopped
   · exact bounded final.state final.trace (by omega)
 
-/-- Wherever the forward history runner has stopped, history-indexed backward
-value computes its expected terminal payoff. -/
-theorem historyBackwardValue_eq_expect_runHistoryFor
-    {certificate : E.WellFoundedPlay}
-    {chooser : E.HistoryChooser} {payoff : E.History → ℝ}
+/-- The well-founded history law agrees with any forward run that has stopped. -/
+theorem historyBackwardLaw_eq_runHistoryFor
+    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
     {horizon : ℕ} {history : E.History}
     (hstop : E.StopsHistoryWithin chooser horizon history) :
-    E.historyBackwardValue certificate chooser payoff history =
-      (E.runHistoryFor chooser horizon history).expect payoff := by
+    E.historyBackwardLaw certificate chooser history =
+      E.runHistoryFor chooser horizon history := by
   induction horizon generalizing history with
   | zero =>
       have hterm : E.terminal history.state :=
         hstop history (by
           rw [ExecutionProtocol.runHistoryFor_zero]
-          exact FinDist.mem_support_pure.mpr rfl)
-      rw [E.historyBackwardValue_of_terminal hterm,
-        ExecutionProtocol.runHistoryFor_zero, FinDist.expect_pure]
+          simp)
+      rw [E.historyBackwardLaw_of_terminal hterm,
+        ExecutionProtocol.runHistoryFor_zero]
   | succ horizon ih =>
       by_cases hterm : E.terminal history.state
-      · rw [E.historyBackwardValue_of_terminal hterm,
-          ExecutionProtocol.runHistoryFor_of_terminal _ _ hterm,
-          FinDist.expect_pure]
-      · rw [E.historyBackwardValue_of_not_terminal hterm,
+      · rw [E.historyBackwardLaw_of_terminal hterm,
+          ExecutionProtocol.runHistoryFor_of_terminal _ _ hterm]
+      · rw [E.historyBackwardLaw_of_not_terminal hterm,
           ExecutionProtocol.runHistoryFor_succ_of_not_terminal
-            chooser horizon hterm,
-          historyStepValue]
-        apply FinDist.expect_bindOnSupport_congr
+            chooser horizon hterm]
+        apply bindOnSupport_congr
         intro target realized
-        rw [FinDist.expect_pure]
         apply ih
         intro final hfinal
         apply hstop final
         rw [ExecutionProtocol.runHistoryFor_succ_of_not_terminal
-          chooser horizon hterm, FinDist.support_bindOnSupport]
-        exact Set.mem_iUnion.mpr
-          ⟨target, Set.mem_iUnion.mpr ⟨realized, hfinal⟩⟩
+          chooser horizon hterm, PMF.mem_support_bindOnSupport_iff]
+        exact ⟨target, realized, hfinal⟩
+
+/-- A real history value requires finite integrability under its terminal law. -/
+def historyBackwardValue (certificate : E.WellFoundedPlay)
+    (chooser : E.HistoryChooser) (payoff : E.History → ℝ)
+    (history : E.History)
+    (hintegrable : PayoffIntegrable
+      (E.historyBackwardLaw certificate chooser history) payoff) : ℝ :=
+  expect (E.historyBackwardLaw certificate chooser history) payoff hintegrable
+
+theorem historyBackwardValue_of_terminal
+    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
+    {payoff : E.History → ℝ} {history : E.History}
+    (hterm : E.terminal history.state)
+    (hintegrable : PayoffIntegrable
+      (E.historyBackwardLaw certificate chooser history) payoff) :
+    E.historyBackwardValue certificate chooser payoff history hintegrable =
+      payoff history := by
+  have hpure : PayoffIntegrable (PMF.pure history) payoff := by
+    rw [← E.historyBackwardLaw_of_terminal hterm]
+    exact hintegrable
+  unfold historyBackwardValue expect
+  rw [E.historyBackwardLaw_of_terminal hterm]
+  exact expect_pure history payoff hpure
+
+/-- Numerical history Bellman equation on supported realized successors.
+The source law guard supplies the conditional and outer guards. -/
+theorem historyBackwardValue_of_not_terminal
+    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
+    {payoff : E.History → ℝ} {history : E.History}
+    (hterm : ¬ E.terminal history.state)
+    (hsource : PayoffIntegrable
+      (E.historyBackwardLaw certificate chooser history) payoff)
+    (successorValue : E.State → ℝ)
+    (hvalue : ∀ target, ∀ realized :
+      target ∈ (E.step history.state (chooser history hterm)).support,
+      ∀ hchild : PayoffIntegrable
+        (E.historyBackwardLaw certificate chooser
+          (history.extend (chooser history hterm).2 realized)) payoff,
+        successorValue target =
+          E.historyBackwardValue certificate chooser payoff
+            (history.extend (chooser history hterm).2 realized) hchild) :
+    ∃ houter : PayoffIntegrable
+        (E.step history.state (chooser history hterm)) successorValue,
+      E.historyBackwardValue certificate chooser payoff history hsource =
+        expect (E.step history.state (chooser history hterm))
+          successorValue houter := by
+  let chosen := chooser history hterm
+  let p := E.step history.state chosen
+  let q : ∀ target, target ∈ p.support → PMF E.History :=
+    fun _target realized =>
+      E.historyBackwardLaw certificate chooser (history.extend chosen.2 realized)
+  have hbind : PayoffIntegrable (p.bindOnSupport q) payoff := by
+    rw [← E.historyBackwardLaw_of_not_terminal hterm]
+    exact hsource
+  have hcond : ∀ target, ∀ realized : target ∈ p.support,
+      successorValue target = expect (q target realized) payoff
+        (payoffIntegrable_bindOnSupport_conditional_on_support
+          p q payoff hbind target realized) := by
+    intro target realized
+    exact hvalue target realized _
+  let houter := payoffIntegrable_bindOnSupport_conditionalValue_on_support
+    p q payoff hbind successorValue hcond
+  refine ⟨houter, ?_⟩
+  have htower := expect_bindOnSupport_tower_on_support
+    p q payoff hbind successorValue hcond
+  unfold historyBackwardValue expect at htower ⊢
+  rw [E.historyBackwardLaw_of_not_terminal hterm]
+  exact htower
+
+theorem historyBackwardValue_eq_expect_runHistoryFor
+    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
+    {payoff : E.History → ℝ} {horizon : ℕ} {history : E.History}
+    (hstop : E.StopsHistoryWithin chooser horizon history)
+    (hback : PayoffIntegrable
+      (E.historyBackwardLaw certificate chooser history) payoff)
+    (hrun : PayoffIntegrable (E.runHistoryFor chooser horizon history) payoff) :
+    E.historyBackwardValue certificate chooser payoff history hback =
+      expect (E.runHistoryFor chooser horizon history) payoff hrun := by
+  unfold historyBackwardValue expect
+  rw [E.historyBackwardLaw_eq_runHistoryFor hstop]
+
+theorem historyBackwardValue_eq_expect_runHistoryFor_guarded
+    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
+    {payoff : E.History → ℝ} {horizon : ℕ} {history : E.History}
+    (hstop : E.StopsHistoryWithin chooser horizon history)
+    (hback : PayoffIntegrable
+      (E.historyBackwardLaw certificate chooser history) payoff) :
+    ∃ hrun : PayoffIntegrable (E.runHistoryFor chooser horizon history) payoff,
+      E.historyBackwardValue certificate chooser payoff history hback =
+        expect (E.runHistoryFor chooser horizon history) payoff hrun := by
+  let hrun : PayoffIntegrable (E.runHistoryFor chooser horizon history) payoff := by
+    rw [← E.historyBackwardLaw_eq_runHistoryFor hstop]
+    exact hback
+  exact ⟨hrun, E.historyBackwardValue_eq_expect_runHistoryFor hstop hback hrun⟩
 
 /-- Unbounded reachability between histories, expressed through the existing
 finite path witness rather than a second transition relation. -/
@@ -273,37 +364,48 @@ theorem HistoryReaches.step {start target : E.History}
   rcases rest with ⟨fuel, hrest⟩
   exact ⟨fuel + 1, .step joint isLegal realized hrest⟩
 
-/-- Choosers agreeing at every history reachable from `start` have equal
-history-preserving backward value there. -/
-theorem historyBackwardValue_congr_of_reaches
+/-- Choosers agreeing on the reachable history cone have the same terminal law. -/
+theorem historyBackwardLaw_congr_of_reaches
     {certificate : E.WellFoundedPlay}
-    {first second : E.HistoryChooser}
-    {payoff : E.History → ℝ} :
+    {first second : E.HistoryChooser} :
     ∀ start : E.History,
       (∀ later, E.HistoryReaches start later →
         ∀ hterm : ¬ E.terminal later.state,
           first later hterm = second later hterm) →
-      E.historyBackwardValue certificate first payoff start =
-        E.historyBackwardValue certificate second payoff start := by
+      E.historyBackwardLaw certificate first start =
+        E.historyBackwardLaw certificate second start := by
   intro start
   induction start using
       (E.wellFounded_historySuccessor certificate).induction with
   | _ history ih =>
       intro hagree
       by_cases hterm : E.terminal history.state
-      · rw [E.historyBackwardValue_of_terminal hterm,
-          E.historyBackwardValue_of_terminal hterm]
-      · rw [E.historyBackwardValue_of_not_terminal hterm,
-          E.historyBackwardValue_of_not_terminal hterm,
+      · rw [E.historyBackwardLaw_of_terminal hterm,
+          E.historyBackwardLaw_of_terminal hterm]
+      · rw [E.historyBackwardLaw_of_not_terminal hterm,
+          E.historyBackwardLaw_of_not_terminal hterm,
           hagree history (HistoryReaches.refl E history) hterm]
-        apply historyStepValue_congr
+        apply bindOnSupport_congr
         intro target realized
         let chosen := second history hterm
         exact ih (history.extend chosen.2 realized)
           ⟨chosen.1, chosen.2, realized⟩
           (fun later hreach =>
-            hagree later
-              (HistoryReaches.step E chosen.2 realized hreach))
+            hagree later (HistoryReaches.step E chosen.2 realized hreach))
+
+theorem historyBackwardValue_congr_of_reaches
+    {certificate : E.WellFoundedPlay}
+    {first second : E.HistoryChooser}
+    {payoff : E.History → ℝ} (start : E.History)
+    (hagree : ∀ later, E.HistoryReaches start later →
+      ∀ hterm : ¬ E.terminal later.state,
+        first later hterm = second later hterm)
+    (hfirst : PayoffIntegrable (E.historyBackwardLaw certificate first start) payoff)
+    (hsecond : PayoffIntegrable (E.historyBackwardLaw certificate second start) payoff) :
+    E.historyBackwardValue certificate first payoff start hfirst =
+      E.historyBackwardValue certificate second payoff start hsecond := by
+  unfold historyBackwardValue expect
+  rw [E.historyBackwardLaw_congr_of_reaches start hagree]
 
 end ExecutionProtocol
 
@@ -437,146 +539,289 @@ theorem historyChooser_oneShotProfile_eq_of_actsOnce
   · simp [InformationModel.historyChooser, InformationModel.jointAt,
       M.oneShotProfile_of_ne profile history who choice hi]
 
-/-- Expected payoff from changing one current information-local choice and then
-returning to the original profile. -/
-def oneShotHistoryValue [DecidableEq ι]
+/-- A changed current choice followed by the original profile's complete
+history-preserving terminal law. -/
+def oneShotHistoryLaw [DecidableEq ι]
     (certificate : E.WellFoundedPlay)
-    (profile : Profile M.strategicSignature)
-    (payoff : E.History → ℝ) (who : ι)
+    (profile : Profile M.strategicSignature) (who : ι)
     [DecidableEq (M.InfoState who)]
     (history : E.History) (hterm : ¬ E.terminal history.state)
-    (choice : M.Choice who (M.infoOf who history.trace)) : ℝ :=
+    (choice : M.Choice who (M.infoOf who history.trace)) : PMF E.History :=
   let changed := M.oneShotProfile profile history who choice
   let chosen := M.historyChooser changed history hterm
-  E.historyStepValue history chosen fun _target realized =>
-    E.historyBackwardValue certificate (M.historyChooser profile) payoff
+  (E.step history.state chosen).bindOnSupport fun _target realized =>
+    E.historyBackwardLaw certificate (M.historyChooser profile)
       (history.extend chosen.2 realized)
 
-/-- No player has a profitable typed one-choice deviation after any history. -/
+/-- The actual one-choice history context uses the same guarded continuation
+comparison as the generic protocol context. -/
+def oneShotHistoryContext [DecidableEq ι]
+    (certificate : E.WellFoundedPlay)
+    (profile : Profile M.strategicSignature)
+    (utility : E.History → ι → ℝ) (who : ι)
+    [DecidableEq (M.InfoState who)]
+    (history : E.History) (hterm : ¬ E.terminal history.state) :
+    GameTheory.Protocol.Context
+      (M.Choice who (M.infoOf who history.trace)) E.History where
+  outcome choice := M.oneShotHistoryLaw certificate profile who history hterm choice
+  continuation outcome := utility outcome who
+
+theorem oneShotHistoryLaw_self [DecidableEq ι]
+    (certificate : E.WellFoundedPlay)
+    (profile : Profile M.strategicSignature) (who : ι)
+    [DecidableEq (M.InfoState who)]
+    (history : E.History) (hterm : ¬ E.terminal history.state) :
+    M.oneShotHistoryLaw certificate profile who history hterm
+        (profile who (M.infoOf who history.trace)) =
+      E.historyBackwardLaw certificate (M.historyChooser profile) history := by
+  let continuation := fun
+      (chosen : { joint : ∀ i, Option (E.Action i) //
+        E.Legal history.state joint }) =>
+    (E.step history.state chosen).bindOnSupport fun _target realized =>
+      E.historyBackwardLaw certificate (M.historyChooser profile)
+        (history.extend chosen.2 realized)
+  have hchosen :=
+    (M.historyChooser_oneShotProfile_self profile history hterm who).symm
+  calc
+    M.oneShotHistoryLaw certificate profile who history hterm
+        (profile who (M.infoOf who history.trace)) =
+      continuation (M.historyChooser
+        (M.oneShotProfile profile history who
+          (profile who (M.infoOf who history.trace))) history hterm) := rfl
+    _ = continuation (M.historyChooser profile history hterm) :=
+      congrArg continuation hchosen
+    _ = E.historyBackwardLaw certificate (M.historyChooser profile) history :=
+      (E.historyBackwardLaw_of_not_terminal hterm).symm
+
+/-- The incumbent and every legal one-choice continuation have finite real
+values, and no one-choice change improves the incumbent. -/
 def HasNoProfitableOneShotDeviation [DecidableEq ι]
     [∀ i, DecidableEq (M.InfoState i)]
     (certificate : E.WellFoundedPlay)
     (profile : Profile M.strategicSignature)
     (utility : E.History → ι → ℝ) : Prop :=
   ∀ (who : ι) (history : E.History)
-    (hterm : ¬ E.terminal history.state)
-    (choice : M.Choice who (M.infoOf who history.trace)),
-      M.oneShotHistoryValue certificate profile
-          (fun outcome => utility outcome who)
-          who history hterm choice ≤
-        E.historyBackwardValue certificate
-          (M.historyChooser profile)
-          (fun outcome => utility outcome who) history
+    (hterm : ¬ E.terminal history.state),
+      (M.oneShotHistoryContext certificate profile utility who history hterm).IsLocallyOptimal
+        Set.univ (profile who (M.infoOf who history.trace))
 
-/-- A pure profile is historywise optimal when no whole replacement policy
-improves any player's payoff after any complete history.  This stronger notion
-is useful in perfect-information backward induction and has the clean
-history-local one-shot characterization below. -/
+/-- Whole-policy optimality after every history. Each comparison carries both
+finite-real integrability witnesses, including off-path histories. -/
 def IsHistorywiseOptimal [DecidableEq ι]
     (certificate : E.WellFoundedPlay)
     (profile : Profile M.strategicSignature)
     (utility : E.History → ι → ℝ) : Prop :=
-  ∀ (who : ι) (alternative : M.Policy who)
-    (history : E.History),
-      E.historyBackwardValue certificate
-          (M.historyChooser
-            (Profile.update profile who alternative))
-          (fun outcome => utility outcome who) history ≤
+  ∀ (who : ι) (alternative : M.Policy who) (history : E.History),
+    ∃ hother : PayoffIntegrable
+        (E.historyBackwardLaw certificate
+          (M.historyChooser (Profile.update profile who alternative)) history)
+        (fun outcome => utility outcome who),
+      ∃ hinc : PayoffIntegrable
+          (E.historyBackwardLaw certificate (M.historyChooser profile) history)
+          (fun outcome => utility outcome who),
         E.historyBackwardValue certificate
-          (M.historyChooser profile)
-          (fun outcome => utility outcome who) history
+            (M.historyChooser (Profile.update profile who alternative))
+            (fun outcome => utility outcome who) history hother ≤
+          E.historyBackwardValue certificate (M.historyChooser profile)
+            (fun outcome => utility outcome who) history hinc
 
-/-- A pure profile is subgame perfect when no player benefits from a whole
-replacement policy in any information-set-closed subgame, reached or off path.
-The initial history is always included. -/
+/-- Whole-policy optimality at every information-set-closed subgame root. -/
 def IsSubgamePerfect [DecidableEq ι]
     (certificate : E.WellFoundedPlay)
     (profile : Profile M.strategicSignature)
     (utility : E.History → ι → ℝ) : Prop :=
   ∀ (history : E.History), M.IsSubgameRoot history →
     ∀ (who : ι) (alternative : M.Policy who),
-      E.historyBackwardValue certificate
-          (M.historyChooser
-            (Profile.update profile who alternative))
-          (fun outcome => utility outcome who) history ≤
-        E.historyBackwardValue certificate
-          (M.historyChooser profile)
-          (fun outcome => utility outcome who) history
+      ∃ hother : PayoffIntegrable
+          (E.historyBackwardLaw certificate
+            (M.historyChooser (Profile.update profile who alternative)) history)
+          (fun outcome => utility outcome who),
+        ∃ hinc : PayoffIntegrable
+            (E.historyBackwardLaw certificate (M.historyChooser profile) history)
+            (fun outcome => utility outcome who),
+          E.historyBackwardValue certificate
+              (M.historyChooser (Profile.update profile who alternative))
+              (fun outcome => utility outcome who) history hother ≤
+            E.historyBackwardValue certificate (M.historyChooser profile)
+              (fun outcome => utility outcome who) history hinc
 
-/-- Historywise optimality implies subgame perfection by restriction to the
-certified subgame roots. -/
 theorem IsHistorywiseOptimal.isSubgamePerfect [DecidableEq ι]
     {certificate : E.WellFoundedPlay}
     {profile : Profile M.strategicSignature}
     {utility : E.History → ι → ℝ}
     (hoptimal : M.IsHistorywiseOptimal certificate profile utility) :
     M.IsSubgamePerfect certificate profile utility := by
-  intro history hroot who alternative
+  intro history _ who alternative
   exact hoptimal who alternative history
 
-/-- One-shot optimality at every history defeats every whole replacement
-information-local policy after every history. -/
+/-- Guarded local optimality certifies the incumbent terminal law at every
+history, including terminal and off-path histories. -/
+theorem historyBackwardLaw_integrable_of_hasNoProfitableOneShotDeviation
+    [DecidableEq ι] [∀ i, DecidableEq (M.InfoState i)]
+    {certificate : E.WellFoundedPlay}
+    {profile : Profile M.strategicSignature}
+    {utility : E.History → ι → ℝ}
+    (hopt : M.HasNoProfitableOneShotDeviation certificate profile utility)
+    (who : ι) (history : E.History) :
+    PayoffIntegrable
+      (E.historyBackwardLaw certificate (M.historyChooser profile) history)
+      (fun outcome => utility outcome who) := by
+  by_cases hterm : E.terminal history.state
+  · rw [E.historyBackwardLaw_of_terminal hterm]
+    exact payoffIntegrable_pure history _
+  · have hlocal := (hopt who history hterm).1
+    rw [← M.oneShotHistoryLaw_self certificate profile who history hterm]
+    exact hlocal
+
+/-- A guarded local one-choice condition defeats an arbitrary whole-policy
+replacement at a queried history once that candidate's terminal law is finite. -/
+theorem historyBackwardValue_update_le_of_hasNoProfitableOneShotDeviation
+    [DecidableEq ι] [∀ i, DecidableEq (M.InfoState i)]
+    {certificate : E.WellFoundedPlay}
+    {profile : Profile M.strategicSignature}
+    {utility : E.History → ι → ℝ}
+    (hopt : M.HasNoProfitableOneShotDeviation certificate profile utility)
+    (who : ι) (alternative : M.Policy who) (history : E.History)
+    (hcandidate : PayoffIntegrable
+      (E.historyBackwardLaw certificate
+        (M.historyChooser (Profile.update profile who alternative)) history)
+      (fun outcome => utility outcome who)) :
+    E.historyBackwardValue certificate
+        (M.historyChooser (Profile.update profile who alternative))
+        (fun outcome => utility outcome who) history hcandidate ≤
+      E.historyBackwardValue certificate (M.historyChooser profile)
+        (fun outcome => utility outcome who) history
+        (M.historyBackwardLaw_integrable_of_hasNoProfitableOneShotDeviation
+          hopt who history) := by
+  induction history using
+      (E.wellFounded_historySuccessor certificate).induction with
+  | _ current ih =>
+      by_cases hterm : E.terminal current.state
+      · unfold ExecutionProtocol.historyBackwardValue expect
+        rw [E.historyBackwardLaw_of_terminal hterm,
+          E.historyBackwardLaw_of_terminal hterm]
+      · let choice := alternative (M.infoOf who current.trace)
+        let changed := M.oneShotProfile profile current who choice
+        let chosen := M.historyChooser changed current hterm
+        let stepLaw := E.step current.state chosen
+        have hchosen :
+            M.historyChooser (Profile.update profile who alternative)
+                current hterm = chosen := by
+          dsimp only [chosen, changed, choice]
+          exact M.historyChooser_update_eq_oneShotProfile
+            profile current hterm who alternative
+        have hleftLaw :
+            E.historyBackwardLaw certificate
+                (M.historyChooser (Profile.update profile who alternative)) current =
+              stepLaw.bindOnSupport fun _target realized =>
+                E.historyBackwardLaw certificate
+                  (M.historyChooser (Profile.update profile who alternative))
+                  (current.extend chosen.2 realized) :=
+          E.historyBackwardLaw_of_not_terminal_of_chooser_eq hterm chosen hchosen
+        have hrightLaw :
+            M.oneShotHistoryLaw certificate profile who current hterm choice =
+              stepLaw.bindOnSupport fun _target realized =>
+                E.historyBackwardLaw certificate (M.historyChooser profile)
+                  (current.extend chosen.2 realized) := rfl
+        have hleft : PayoffIntegrable
+            (stepLaw.bindOnSupport fun _target realized =>
+              E.historyBackwardLaw certificate
+                (M.historyChooser (Profile.update profile who alternative))
+                (current.extend chosen.2 realized))
+            (fun outcome => utility outcome who) := by
+          rw [← hleftLaw]
+          exact hcandidate
+        have hlocal := hopt who current hterm
+        have hright : PayoffIntegrable
+            (stepLaw.bindOnSupport fun _target realized =>
+              E.historyBackwardLaw certificate (M.historyChooser profile)
+                (current.extend chosen.2 realized))
+            (fun outcome => utility outcome who) := by
+          rw [← hrightLaw]
+          exact hlocal.2.1 choice (Set.mem_univ _)
+        have hbound := hlocal.2.2 choice (Set.mem_univ _)
+          hlocal.1 (hlocal.2.1 choice (Set.mem_univ _))
+        unfold ExecutionProtocol.historyBackwardValue
+        calc
+          expect (E.historyBackwardLaw certificate
+              (M.historyChooser (Profile.update profile who alternative)) current)
+              (fun outcome => utility outcome who) hcandidate =
+            expect (stepLaw.bindOnSupport fun _target realized =>
+              E.historyBackwardLaw certificate
+                (M.historyChooser (Profile.update profile who alternative))
+                (current.extend chosen.2 realized))
+              (fun outcome => utility outcome who) hleft := by
+                unfold expect
+                rw [hleftLaw]
+          _ ≤ expect (stepLaw.bindOnSupport fun _target realized =>
+                E.historyBackwardLaw certificate (M.historyChooser profile)
+                  (current.extend chosen.2 realized))
+                (fun outcome => utility outcome who) hright := by
+              apply expect_bindOnSupport_mono_on_support
+              intro target realized hconditional _
+              simpa only [ExecutionProtocol.historyBackwardValue] using
+                ih (current.extend chosen.2 realized)
+                  ⟨chosen.1, chosen.2, realized⟩ hconditional
+          _ ≤ expect (E.historyBackwardLaw certificate
+                (M.historyChooser profile) current)
+                (fun outcome => utility outcome who)
+                (M.historyBackwardLaw_integrable_of_hasNoProfitableOneShotDeviation
+                  hopt who current) := by
+              unfold GameTheory.Protocol.Context.value at hbound
+              unfold expect at hbound ⊢
+              simpa only [oneShotHistoryContext, hrightLaw,
+                M.oneShotHistoryLaw_self] using hbound
+
+/-- Local optimality implies guarded historywise optimality when each whole
+replacement policy being compared has a defined finite terminal value. -/
 theorem isHistorywiseOptimal_of_hasNoProfitableOneShotDeviation
     [DecidableEq ι] [∀ i, DecidableEq (M.InfoState i)]
     {certificate : E.WellFoundedPlay}
     {profile : Profile M.strategicSignature}
     {utility : E.History → ι → ℝ}
-    (hopt :
-      M.HasNoProfitableOneShotDeviation
-        certificate profile utility) :
+    (hopt : M.HasNoProfitableOneShotDeviation certificate profile utility)
+    (hcandidate : ∀ (who : ι) (alternative : M.Policy who)
+      (history : E.History), PayoffIntegrable
+        (E.historyBackwardLaw certificate
+          (M.historyChooser (Profile.update profile who alternative)) history)
+        (fun outcome => utility outcome who)) :
     M.IsHistorywiseOptimal certificate profile utility := by
   intro who alternative history
-  induction history using
-      (E.wellFounded_historySuccessor certificate).induction with
-  | _ current ih =>
-      by_cases hterm : E.terminal current.state
-      · rw [E.historyBackwardValue_of_terminal hterm,
-          E.historyBackwardValue_of_terminal hterm]
-      · let choice := alternative (M.infoOf who current.trace)
-        let changed := M.oneShotProfile profile current who choice
-        let chosen := M.historyChooser changed current hterm
-        have hchosen :
-            M.historyChooser
-                (Profile.update profile who alternative)
-                current hterm =
-              chosen := by
-          dsimp only [chosen, changed, choice]
-          exact M.historyChooser_update_eq_oneShotProfile
-            profile current hterm who alternative
-        rw [E.historyBackwardValue_of_not_terminal
-              (chooser := M.historyChooser
-                (Profile.update profile who alternative)) hterm,
-          hchosen]
-        calc
-          E.historyStepValue current chosen
-              (fun target realized =>
-                E.historyBackwardValue certificate
-                  (M.historyChooser
-                    (Profile.update profile who alternative))
-                  (fun outcome => utility outcome who)
-                  (current.extend chosen.2 realized)) ≤
-            E.historyStepValue current chosen
-              (fun target realized =>
-                E.historyBackwardValue certificate
-                  (M.historyChooser profile)
-                  (fun outcome => utility outcome who)
-                  (current.extend chosen.2 realized)) := by
-              apply ExecutionProtocol.historyStepValue_mono
-              intro target realized
-              exact ih (current.extend chosen.2 realized)
-                ⟨chosen.1, chosen.2, realized⟩
-          _ = M.oneShotHistoryValue certificate profile
-              (fun outcome => utility outcome who)
-              who current hterm choice := by
-                rfl
-          _ ≤ E.historyBackwardValue certificate
-              (M.historyChooser profile)
-              (fun outcome => utility outcome who) current :=
-                hopt who current hterm choice
+  let hother := hcandidate who alternative history
+  let hinc := M.historyBackwardLaw_integrable_of_hasNoProfitableOneShotDeviation
+    hopt who history
+  exact ⟨hother, hinc,
+    M.historyBackwardValue_update_le_of_hasNoProfitableOneShotDeviation
+      hopt who alternative history hother⟩
 
-/-- Under the same no-revisit condition used by the behavioral/mixed
-representation theorem, historywise optimality rules out every one-shot
-deviation. -/
+/-- If an information state never matters again after one action, the
+one-choice continuation law is the law of the persistent replacement policy. -/
+theorem oneShotHistoryLaw_eq_changed_of_actsOnce
+    [DecidableEq ι] {who : ι} [DecidableEq (M.InfoState who)]
+    (hactsOnce : M.ActsOnceWhereItMatters)
+    (certificate : E.WellFoundedPlay)
+    (profile : Profile M.strategicSignature)
+    (history : E.History) (hterm : ¬ E.terminal history.state)
+    (choice : M.Choice who (M.infoOf who history.trace)) :
+    M.oneShotHistoryLaw certificate profile who history hterm choice =
+      E.historyBackwardLaw certificate
+        (M.historyChooser (M.oneShotProfile profile history who choice)) history := by
+  let changed := M.oneShotProfile profile history who choice
+  let chosen := M.historyChooser changed history hterm
+  rw [E.historyBackwardLaw_of_not_terminal hterm]
+  dsimp only [oneShotHistoryLaw]
+  apply bindOnSupport_congr
+  intro target realized
+  apply E.historyBackwardLaw_congr_of_reaches
+    (history.extend chosen.2 realized)
+  intro later hreach hlater
+  symm
+  rcases hreach with ⟨fuel, hwithin⟩
+  exact M.historyChooser_oneShotProfile_eq_of_actsOnce
+    hactsOnce profile history hterm choice realized later hwithin hlater
+
+/-- Guarded whole-policy optimality rules out every local choice when the
+current information state cannot be revisited with a genuine choice. -/
 theorem hasNoProfitableOneShotDeviation_of_isHistorywiseOptimal
     [DecidableEq ι] [∀ i, DecidableEq (M.InfoState i)]
     (hactsOnce : M.ActsOnceWhereItMatters)
@@ -584,61 +829,65 @@ theorem hasNoProfitableOneShotDeviation_of_isHistorywiseOptimal
     {profile : Profile M.strategicSignature}
     {utility : E.History → ι → ℝ}
     (hoptimal : M.IsHistorywiseOptimal certificate profile utility) :
-    M.HasNoProfitableOneShotDeviation
-      certificate profile utility := by
-  intro who history hterm choice
-  let alternative :=
-    (profile who).replaceAt (M.infoOf who history.trace) choice
-  let changed := M.oneShotProfile profile history who choice
-  let chosen := M.historyChooser changed history hterm
-  have hprofile :
-      Profile.update profile who alternative = changed := by
-    rfl
-  have hbest := hoptimal who alternative history
-  rw [hprofile,
-    E.historyBackwardValue_of_not_terminal
-      (chooser := M.historyChooser changed) hterm] at hbest
-  calc
-    M.oneShotHistoryValue certificate profile
-        (fun outcome => utility outcome who)
-        who history hterm choice =
-      E.historyStepValue history chosen
-        (fun target realized =>
-          E.historyBackwardValue certificate
-            (M.historyChooser changed)
-            (fun outcome => utility outcome who)
-            (history.extend chosen.2 realized)) := by
-              apply ExecutionProtocol.historyStepValue_congr
-              intro target realized
-              symm
-              apply
-                ExecutionProtocol.historyBackwardValue_congr_of_reaches
-              intro later hreach hlater
-              rcases hreach with ⟨fuel, hreach⟩
-              exact
-                M.historyChooser_oneShotProfile_eq_of_actsOnce
-                  hactsOnce profile history hterm choice
-                  realized later hreach hlater
-    _ ≤ E.historyBackwardValue certificate
-        (M.historyChooser profile)
-        (fun outcome => utility outcome who) history := hbest
+    M.HasNoProfitableOneShotDeviation certificate profile utility := by
+  intro who history hterm
+  let ctx := M.oneShotHistoryContext certificate profile utility who history hterm
+  let own := profile who (M.infoOf who history.trace)
+  have hownLaw := M.oneShotHistoryLaw_self certificate profile who history hterm
+  obtain ⟨_, hinc, _⟩ := hoptimal who (profile who) history
+  have hincCtx : ctx.IntegrableAt own := by
+    show PayoffIntegrable
+      (M.oneShotHistoryLaw certificate profile who history hterm own)
+      (fun outcome => utility outcome who)
+    rw [hownLaw]
+    exact hinc
+  refine ⟨hincCtx, ?_, ?_⟩
+  · intro choice _
+    let replacement := (profile who).replaceAt
+      (M.infoOf who history.trace) choice
+    obtain ⟨hchanged, _, _⟩ := hoptimal who replacement history
+    have hLaw := M.oneShotHistoryLaw_eq_changed_of_actsOnce
+      hactsOnce certificate profile history hterm choice
+    show PayoffIntegrable
+      (M.oneShotHistoryLaw certificate profile who history hterm choice)
+      (fun outcome => utility outcome who)
+    rw [hLaw]
+    exact hchanged
+  · intro choice _ hinc' halt
+    let replacement := (profile who).replaceAt
+      (M.infoOf who history.trace) choice
+    obtain ⟨hchanged, hincOther, hle⟩ := hoptimal who replacement history
+    have hLaw := M.oneShotHistoryLaw_eq_changed_of_actsOnce
+      hactsOnce certificate profile history hterm choice
+    show expect
+        (M.oneShotHistoryLaw certificate profile who history hterm choice)
+        (fun outcome => utility outcome who) halt ≤
+      expect
+        (M.oneShotHistoryLaw certificate profile who history hterm own)
+        (fun outcome => utility outcome who) hinc'
+    unfold ExecutionProtocol.historyBackwardValue expect at hle
+    unfold expect
+    rw [hLaw, hownLaw]
+    exact hle
 
-/-- **Well-founded historywise one-shot deviation principle.** On an
-information model where genuine choices do not recur at one information state,
-a profile is optimal after every history exactly when no player has a
-profitable one-shot deviation after any history. -/
+/-- Under no revisits, the historywise one-shot principle is an equivalence
+provided every whole-policy candidate law in the comparison has a finite value. -/
 theorem isHistorywiseOptimal_iff_hasNoProfitableOneShotDeviation
     [DecidableEq ι] [∀ i, DecidableEq (M.InfoState i)]
     (hactsOnce : M.ActsOnceWhereItMatters)
     (certificate : E.WellFoundedPlay)
     (profile : Profile M.strategicSignature)
-    (utility : E.History → ι → ℝ) :
+    (utility : E.History → ι → ℝ)
+    (hcandidate : ∀ (who : ι) (alternative : M.Policy who)
+      (history : E.History), PayoffIntegrable
+        (E.historyBackwardLaw certificate
+          (M.historyChooser (Profile.update profile who alternative)) history)
+        (fun outcome => utility outcome who)) :
     M.IsHistorywiseOptimal certificate profile utility ↔
-      M.HasNoProfitableOneShotDeviation
-        certificate profile utility :=
-  ⟨M.hasNoProfitableOneShotDeviation_of_isHistorywiseOptimal
-      hactsOnce,
-    M.isHistorywiseOptimal_of_hasNoProfitableOneShotDeviation⟩
+      M.HasNoProfitableOneShotDeviation certificate profile utility :=
+  ⟨M.hasNoProfitableOneShotDeviation_of_isHistorywiseOptimal hactsOnce,
+    fun hlocal => M.isHistorywiseOptimal_of_hasNoProfitableOneShotDeviation
+      hlocal hcandidate⟩
 
 end InformationModel
 

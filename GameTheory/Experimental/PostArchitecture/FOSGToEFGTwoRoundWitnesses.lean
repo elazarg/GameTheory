@@ -227,37 +227,39 @@ def falseSignalChoice (view : Source.View) :
     | done => simp [falseSignalAction, Source.menu]⟩
 
 def falseSignalPolicy : Source.information.BehavioralPolicy false :=
-  fun view => GameTheory.Math.Probability.FinDist.pure (falseSignalChoice view)
+  fun view => PMF.pure (falseSignalChoice view)
 
 def falseSignalOptionLaw (view : Source.View) :
-    GameTheory.Math.Probability.FinDist (Option Bool) :=
-  GameTheory.Math.Probability.FinDist.map Subtype.val (falseSignalPolicy view)
+    PMF (Option Bool) :=
+  PMF.map Subtype.val (falseSignalPolicy view)
 
 theorem pure_some_false_ne_true :
-    GameTheory.Math.Probability.FinDist.pure (some false) ≠
-      GameTheory.Math.Probability.FinDist.pure (some true) := by
+    (PMF.pure (some false) : PMF (Option Bool)) ≠
+      PMF.pure (some true) := by
   intro hequal
-  have hprob := congrArg
-    (fun law : GameTheory.Math.Probability.FinDist (Option Bool) =>
-      law.prob (some false)) hequal
-  norm_num [GameTheory.Math.Probability.FinDist.prob_pure_eq_ite] at hprob
+  have hmass := congrArg (fun law : PMF (Option Bool) =>
+    law (some false)) hequal
+  simp at hmass
 
 theorem false_signal_policy_reads_public :
     falseSignalOptionLaw (.round2 false false none false) ≠
       falseSignalOptionLaw (.round2 true false none false) := by
   simpa [falseSignalOptionLaw, falseSignalPolicy, falseSignalChoice,
+    PMF.pure_map,
     falseSignalAction] using pure_some_false_ne_true
 
 theorem false_signal_policy_reads_private :
     falseSignalOptionLaw (.round2 false false none false) ≠
       falseSignalOptionLaw (.round2 false true none false) := by
   simpa [falseSignalOptionLaw, falseSignalPolicy, falseSignalChoice,
+    PMF.pure_map,
     falseSignalAction] using pure_some_false_ne_true
 
 theorem false_signal_policy_reads_own_action :
     falseSignalOptionLaw (.round2 false false none false) ≠
       falseSignalOptionLaw (.round2 false false none true) := by
   simpa [falseSignalOptionLaw, falseSignalPolicy, falseSignalChoice,
+    PMF.pure_map,
     falseSignalAction] using pure_some_false_ne_true
 
 

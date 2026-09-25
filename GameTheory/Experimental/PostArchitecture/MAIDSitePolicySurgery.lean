@@ -31,7 +31,7 @@ def replaceSiteRule [DecidableEq Node] {owner : Player}
     (policy : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     OwnerPolicy diagram owner :=
   fun site => by
     by_cases hsite : site = target
@@ -44,7 +44,7 @@ theorem replaceSiteRule_same [DecidableEq Node] {owner : Player}
     (policy : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     replaceSiteRule policy target rule target = rule := by
   simp [replaceSiteRule]
 
@@ -52,7 +52,7 @@ theorem replaceSiteRule_of_ne [DecidableEq Node] {owner : Player}
     (policy : OwnerPolicy diagram owner)
     (target site : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) (hne : site ≠ target) :
+      PMF (diagram.Value target.1)) (hne : site ≠ target) :
     replaceSiteRule policy target rule site = policy site := by
   simp [replaceSiteRule, hne]
 
@@ -75,7 +75,7 @@ theorem assignmentNodeLaw_update_replaceSiteRule_target
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) (assignment : Assignment diagram) :
+      PMF (diagram.Value target.1)) (assignment : Assignment diagram) :
     assignmentNodeLaw semantics
         (Profile.update (sig := nativeBehavioralSignature diagram)
           base owner (replaceSiteRule replacement target rule))
@@ -105,7 +105,7 @@ theorem assignmentNodeLaw_update_replaceSiteRule_of_ne
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) (assignment : Assignment diagram)
+      PMF (diagram.Value target.1)) (assignment : Assignment diagram)
     (node : Node) (hne : node ≠ target.1) :
     assignmentNodeLaw semantics
         (Profile.update (sig := nativeBehavioralSignature diagram)
@@ -138,7 +138,7 @@ theorem assignmentRun_update_replaceSiteRule_eq_of_not_mem
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1)) (nodes : List Node)
+      PMF (diagram.Value target.1)) (nodes : List Node)
     (htarget : target.1 ∉ nodes) (initial : Assignment diagram) :
     assignmentRun semantics
         (Profile.update (sig := nativeBehavioralSignature diagram)
@@ -158,7 +158,7 @@ theorem assignmentRun_update_replaceSiteRule_eq_of_not_mem
         exact htarget (by simp)
       rw [assignmentNodeLaw_update_replaceSiteRule_of_ne semantics base owner
         replacement target rule initial head hhead]
-      apply FinDist.bind_congr
+      apply bind_congr_on_support
       intro afterHead _
       apply ih
       intro htargetTail
@@ -172,7 +172,7 @@ theorem assignmentRun_site_surgery_eq
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
     (rule : Config diagram (diagram.observedParents target.1) →
-      FinDist (diagram.Value target.1))
+      PMF (diagram.Value target.1))
     (before after : List Node) (htargetBefore : target.1 ∉ before)
     (htargetAfter : target.1 ∉ after) (initial : Assignment diagram) :
     assignmentRun semantics
@@ -191,14 +191,14 @@ theorem assignmentRun_site_surgery_eq
   rw [assignmentRun_append]
   rw [assignmentRun_update_replaceSiteRule_eq_of_not_mem semantics base owner
     replacement target rule before htargetBefore initial]
-  apply FinDist.bind_congr
+  apply bind_congr_on_support
   intro state _
   simp only [assignmentRun]
   unfold assignmentStep
-  rw [FinDist.bind_map]
+  rw [PMF.bind_map]
   rw [assignmentNodeLaw_update_replaceSiteRule_target semantics base owner
     replacement target rule state]
-  apply FinDist.bind_congr
+  apply bind_congr_on_support
   intro action _
   exact assignmentRun_update_replaceSiteRule_eq_of_not_mem semantics base owner
     replacement target rule after htargetAfter
@@ -246,19 +246,19 @@ def replacement : OwnerPolicy controlDiagram () :=
   fun site _ => by
     rcases site with ⟨node, _⟩
     cases node with
-    | bit => exact FinDist.pure false
-    | tri => exact FinDist.pure 0
+    | bit => exact PMF.pure false
+    | tri => exact PMF.pure 0
 
 def trueRule :
     Config controlDiagram (controlDiagram.observedParents bitSite.1) →
-      FinDist (controlDiagram.Value bitSite.1) :=
-  fun _ => FinDist.pure true
+      PMF (controlDiagram.Value bitSite.1) :=
+  fun _ => PMF.pure true
 
 theorem target_rule_replaced
     (context : Config controlDiagram
       (controlDiagram.observedParents bitSite.1)) :
     replaceSiteRule replacement bitSite trueRule bitSite context =
-      FinDist.pure true := by
+      PMF.pure true := by
   rw [replaceSiteRule_same]
   rfl
 
@@ -266,7 +266,7 @@ theorem heterogeneous_other_rule_preserved
     (context : Config controlDiagram
       (controlDiagram.observedParents triSite.1)) :
     replaceSiteRule replacement bitSite trueRule triSite context =
-      FinDist.pure (0 : Fin 3) := by
+      PMF.pure (0 : Fin 3) := by
   rw [replaceSiteRule_of_ne replacement bitSite triSite trueRule (by
     intro hsite
     cases congrArg Subtype.val hsite)]

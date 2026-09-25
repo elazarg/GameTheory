@@ -54,43 +54,28 @@ theorem matchingPolicy_is_history_dependent :
 
 /-! ## A reusable terminal-payoff bound -/
 
-/-- Backward value cannot exceed a bound that holds at every terminal history.
-The proof uses the canonical history recursion and finite-law monotonicity. -/
+/-- A guarded terminal-law value cannot exceed a bound on terminal outcomes. -/
 theorem historyBackwardValue_le_of_terminal_le
     {E : ExecutionProtocol Unit} {certificate : E.WellFoundedPlay}
     {chooser : E.HistoryChooser} {payoff : E.History → ℝ} {bound : ℝ}
-    (hbound : ∀ history, E.terminal history.state → payoff history ≤ bound) :
-    ∀ history,
-      E.historyBackwardValue certificate chooser payoff history ≤ bound := by
-  intro history
-  induction history using
-      (E.wellFounded_historySuccessor certificate).induction with
-  | _ current ih =>
-      by_cases hterm : E.terminal current.state
-      · rw [E.historyBackwardValue_of_terminal hterm]
-        exact hbound current hterm
-      · rw [E.historyBackwardValue_of_not_terminal hterm]
-        let chosen := chooser current hterm
-        show E.historyStepValue current chosen
-            (fun _target realized =>
-              E.historyBackwardValue certificate chooser payoff
-                (current.extend chosen.2 realized)) ≤ bound
-        calc
-          E.historyStepValue current chosen
-              (fun _target realized =>
-                E.historyBackwardValue certificate chooser payoff
-                  (current.extend chosen.2 realized)) ≤
-              E.historyStepValue current chosen (fun _ _ => bound) := by
-            apply E.historyStepValue_mono
-            intro target realized
-            exact ih (current.extend chosen.2 realized)
-              ⟨chosen.1, chosen.2, realized⟩
-          _ = bound := by
-            unfold ExecutionProtocol.historyStepValue
-            rw [FinDist.bindOnSupport_eq_bind_of_eq_on_support
-                (g := fun _ => FinDist.pure bound) (by intro _ _; rfl),
-              FinDist.bind_const, FinDist.expect_pure]
-            rfl
+    (hbound : ∀ history, E.terminal history.state → payoff history ≤ bound)
+    (history : E.History)
+    (hintegrable : PayoffIntegrable
+      (E.historyBackwardLaw certificate chooser history) payoff) :
+    E.historyBackwardValue certificate chooser payoff history hintegrable ≤
+      bound := by
+  unfold ExecutionProtocol.historyBackwardValue
+  calc
+    expect (E.historyBackwardLaw certificate chooser history) payoff
+        hintegrable ≤
+      expect (E.historyBackwardLaw certificate chooser history)
+        (fun _ => bound)
+        (payoffIntegrable_constant _ bound) := by
+      apply expect_mono
+      intro final hfinal
+      exact hbound final
+        (E.historyBackwardLaw_support_terminal history final hfinal)
+    _ = bound := expect_constant _ bound _
 
 /-! ## Exact incumbent continuation values -/
 
@@ -100,19 +85,39 @@ abbrev matchingChooser : twice.HistoryChooser :=
 abbrev mismatchingChooser : twice.HistoryChooser :=
   recallModel.historyChooser mismatchingProfile
 
+private theorem matchUtility_terminal_bound
+    (history : twice.History) (hterm : twice.terminal history.state) :
+    |matchUtility history ()| ≤ 1 := by
+  rcases history with ⟨state, trace⟩
+  cases state with
+  | start => simp [matchUtility]
+  | after first => simp [matchUtility]
+  | done first second =>
+      by_cases hmatch : first = second <;> simp [matchUtility, hmatch]
+
+/-- The bounded terminal matching payoff integrates every backward history law. -/
+theorem matchIntegrable (chooser : twice.HistoryChooser)
+    (history : twice.History) :
+    PayoffIntegrable (twice.historyBackwardLaw twice_wellFoundedPlay
+      chooser history) (fun outcome => matchUtility outcome ()) :=
+  twice.payoffIntegrable_historyBackwardLaw_of_bounded_terminal
+    (C := 1) matchUtility_terminal_bound history
+
 def matchingValue (history : twice.History) : ℝ :=
   twice.historyBackwardValue twice_wellFoundedPlay matchingChooser
     (fun outcome => matchUtility outcome ()) history
+    (matchIntegrable matchingChooser history)
 
 def mismatchingValue (history : twice.History) : ℝ :=
   twice.historyBackwardValue twice_wellFoundedPlay mismatchingChooser
     (fun outcome => matchUtility outcome ()) history
+    (matchIntegrable mismatchingChooser history)
 
 theorem matching_step_start (trace : twice.Trace .start)
     (hterm : ¬ twice.terminal (.start : Round)) :
     twice.step .start
         (matchingChooser (⟨.start, trace⟩ : twice.History) hterm) =
-      FinDist.pure (.after .up) := by
+      PMF.pure (.after .up) := by
   have hchoice :
       (matchingChooser (⟨.start, trace⟩ : twice.History) hterm).1 () =
         some .up := by
@@ -122,15 +127,15 @@ theorem matching_step_start (trace : twice.Trace .start)
       recallInfoOf_eq_memory trace]
     rfl
   show (match (matchingChooser (⟨.start, trace⟩ : twice.History) hterm).1 () with
-    | some vote => FinDist.pure (Round.after vote)
-    | none => FinDist.pure (Round.after .up)) = FinDist.pure (Round.after .up)
+    | some vote => PMF.pure (Round.after vote)
+    | none => PMF.pure (Round.after .up)) = PMF.pure (Round.after .up)
   rw [hchoice]
 
 theorem matching_step_after (first : Vote) (trace : twice.Trace (Round.after first))
     (hterm : ¬ twice.terminal (Round.after first)) :
     twice.step (Round.after first)
         (matchingChooser (⟨Round.after first, trace⟩ : twice.History) hterm) =
-      FinDist.pure (Round.done first first) := by
+      PMF.pure (Round.done first first) := by
   have hchoice :
       (matchingChooser (⟨Round.after first, trace⟩ : twice.History) hterm).1 () =
         some first := by
@@ -141,15 +146,15 @@ theorem matching_step_after (first : Vote) (trace : twice.Trace (Round.after fir
     rfl
   show (match
       (matchingChooser (⟨Round.after first, trace⟩ : twice.History) hterm).1 () with
-    | some vote => FinDist.pure (Round.done first vote)
-    | none => FinDist.pure (Round.done first .up)) = FinDist.pure (Round.done first first)
+    | some vote => PMF.pure (Round.done first vote)
+    | none => PMF.pure (Round.done first .up)) = PMF.pure (Round.done first first)
   rw [hchoice]
 
 theorem mismatching_step_after_up (trace : twice.Trace (Round.after .up))
     (hterm : ¬ twice.terminal (Round.after .up)) :
     twice.step (Round.after .up)
         (mismatchingChooser (⟨Round.after .up, trace⟩ : twice.History) hterm) =
-      FinDist.pure (Round.done .up .down) := by
+      PMF.pure (Round.done .up .down) := by
   have hchoice :
       (mismatchingChooser (⟨Round.after .up, trace⟩ : twice.History) hterm).1 () =
         some .down := by
@@ -160,48 +165,71 @@ theorem mismatching_step_after_up (trace : twice.Trace (Round.after .up))
     rfl
   show (match
       (mismatchingChooser (⟨Round.after .up, trace⟩ : twice.History) hterm).1 () with
-    | some vote => FinDist.pure (Round.done .up vote)
-    | none => FinDist.pure (Round.done .up .up)) = FinDist.pure (Round.done .up .down)
+    | some vote => PMF.pure (Round.done .up vote)
+    | none => PMF.pure (Round.done .up .up)) = PMF.pure (Round.done .up .down)
   rw [hchoice]
+
+private theorem value_of_constant_successors (chooser : twice.HistoryChooser)
+    (history : twice.History) (hterm : ¬ twice.terminal history.state)
+    (c : ℝ)
+    (hchild : ∀ target
+      (realized : target ∈ (twice.step history.state
+        (chooser history hterm)).support)
+      (hguard : PayoffIntegrable
+        (twice.historyBackwardLaw twice_wellFoundedPlay chooser
+          (history.extend (chooser history hterm).2 realized))
+        (fun outcome => matchUtility outcome ())),
+      twice.historyBackwardValue twice_wellFoundedPlay chooser
+        (fun outcome => matchUtility outcome ())
+        (history.extend (chooser history hterm).2 realized) hguard = c) :
+    twice.historyBackwardValue twice_wellFoundedPlay chooser
+      (fun outcome => matchUtility outcome ()) history
+      (matchIntegrable chooser history) = c := by
+  obtain ⟨houter, heq⟩ := twice.historyBackwardValue_of_not_terminal
+    hterm (matchIntegrable chooser history) (fun _ => c)
+      (by intro target realized hguard
+          exact (hchild target realized hguard).symm)
+  simpa only [expect_constant] using heq
 
 theorem matchingValue_after (first : Vote) (trace : twice.Trace (Round.after first)) :
     matchingValue (⟨Round.after first, trace⟩ : twice.History) = 1 := by
   have hterm : ¬ twice.terminal (Round.after first) := by
     simp [Round.stopped]
-  rw [matchingValue, twice.historyBackwardValue_of_not_terminal hterm]
-  dsimp only
-  let chosen := matchingChooser (⟨Round.after first, trace⟩ : twice.History) hterm
-  have hstep : twice.step (Round.after first) chosen =
-      FinDist.pure (Round.done first first) :=
-    matching_step_after first trace hterm
-  rw [twice.historyStepValue_of_step_eq_pure hstep _,
-    twice.historyBackwardValue_of_terminal (by simp [Round.stopped])]
+  unfold matchingValue
+  apply value_of_constant_successors matchingChooser _ hterm 1
+  intro target realized hguard
+  have hstep := matching_step_after first trace hterm
+  rw [hstep, PMF.mem_support_pure_iff] at realized
+  subst target
+  rw [twice.historyBackwardValue_of_terminal
+    (by simp [Round.stopped]) hguard]
   simp [matchUtility]
 
 theorem matchingValue_start (trace : twice.Trace .start) :
     matchingValue (⟨.start, trace⟩ : twice.History) = 1 := by
   have hterm : ¬ twice.terminal (.start : Round) := by
     simp [Round.stopped]
-  rw [matchingValue, twice.historyBackwardValue_of_not_terminal hterm]
-  dsimp only
-  let chosen := matchingChooser (⟨.start, trace⟩ : twice.History) hterm
-  have hstep : twice.step .start chosen = FinDist.pure (Round.after .up) :=
-    matching_step_start trace hterm
-  rw [twice.historyStepValue_of_step_eq_pure hstep _]
-  exact matchingValue_after .up _
+  unfold matchingValue
+  apply value_of_constant_successors matchingChooser _ hterm 1
+  intro target realized hguard
+  have hstep := matching_step_start trace hterm
+  rw [hstep, PMF.mem_support_pure_iff] at realized
+  subst target
+  simpa only [matchingValue, ExecutionProtocol.History.extend] using
+    matchingValue_after .up _
 
 theorem mismatchingValue_after_up (trace : twice.Trace (Round.after .up)) :
     mismatchingValue (⟨Round.after .up, trace⟩ : twice.History) = 0 := by
   have hterm : ¬ twice.terminal (Round.after .up) := by
     simp [Round.stopped]
-  rw [mismatchingValue, twice.historyBackwardValue_of_not_terminal hterm]
-  dsimp only
-  let chosen := mismatchingChooser (⟨Round.after .up, trace⟩ : twice.History) hterm
-  have hstep : twice.step (Round.after .up) chosen =
-      FinDist.pure (Round.done .up .down) :=
-    mismatching_step_after_up trace hterm
-  rw [twice.historyStepValue_of_step_eq_pure hstep _,
-    twice.historyBackwardValue_of_terminal (by simp [Round.stopped])]
+  unfold mismatchingValue
+  apply value_of_constant_successors mismatchingChooser _ hterm 0
+  intro target realized hguard
+  have hstep := mismatching_step_after_up trace hterm
+  rw [hstep, PMF.mem_support_pure_iff] at realized
+  subst target
+  rw [twice.historyBackwardValue_of_terminal
+    (by simp [Round.stopped]) hguard]
   simp [matchUtility]
 
 theorem matchingValue_of_not_terminal (history : twice.History)
@@ -215,8 +243,9 @@ theorem matchingValue_of_not_terminal (history : twice.History)
 
 theorem everyValue_le_one (chooser : twice.HistoryChooser) (history : twice.History) :
     twice.historyBackwardValue twice_wellFoundedPlay chooser
-        (fun outcome => matchUtility outcome ()) history ≤ 1 := by
-  apply historyBackwardValue_le_of_terminal_le
+        (fun outcome => matchUtility outcome ()) history
+        (matchIntegrable chooser history) ≤ 1 := by
+  apply historyBackwardValue_le_of_terminal_le (history := history)
   rintro ⟨state, trace⟩ _
   cases state with
   | start => norm_num [matchUtility]
@@ -230,6 +259,9 @@ theorem matching_isHistorywiseOptimal :
     recallGame.IsHistorywiseOptimal twice_wellFoundedPlay matchingProfile matchUtility := by
   intro who alternative history
   rcases who with ⟨⟩
+  refine ⟨matchIntegrable
+      (recallModel.historyChooser (Profile.update matchingProfile () alternative))
+      history, matchIntegrable matchingChooser history, ?_⟩
   by_cases hterm : twice.terminal history.state
   · rw [twice.historyBackwardValue_of_terminal hterm,
       twice.historyBackwardValue_of_terminal hterm]
@@ -237,10 +269,12 @@ theorem matching_isHistorywiseOptimal :
       twice.historyBackwardValue twice_wellFoundedPlay
           (recallModel.historyChooser
             (Profile.update matchingProfile () alternative))
-          (fun outcome => matchUtility outcome ()) history ≤ 1 :=
+          (fun outcome => matchUtility outcome ()) history
+          (matchIntegrable _ history) ≤ 1 :=
         everyValue_le_one _ history
       _ = twice.historyBackwardValue twice_wellFoundedPlay matchingChooser
-          (fun outcome => matchUtility outcome ()) history := by
+          (fun outcome => matchUtility outcome ()) history
+          (matchIntegrable matchingChooser history) := by
         symm
         exact matchingValue_of_not_terminal history hterm
 
@@ -268,6 +302,7 @@ theorem mismatching_not_isHistorywiseOptimal :
   have hcomparison := hoptimal () matchingPolicy afterUpHistory
   rw [update_unit_eq_profile, show (fun _ => matchingPolicy) = matchingProfile from rfl]
     at hcomparison
+  obtain ⟨hother, hinc, hcomparison⟩ := hcomparison
   have hcomparison' : matchingValue afterUpHistory ≤ mismatchingValue afterUpHistory := by
     simpa [matchingValue, mismatchingValue, matchingChooser, mismatchingChooser]
       using hcomparison

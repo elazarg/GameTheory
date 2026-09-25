@@ -70,19 +70,7 @@ canonical external-regret bounds to an explicit saddle-gap/exploitability
 theorem, with a nonzero finite control. Unequal-depth information fibers remain
 outside D48 and D50.
 
-## Validation
+## Evidence
 
-- `lake build GameTheory.Math.RegretAggregation`
-- `lake build GameTheory.Analysis.Approachability`
-- `lake build GameTheory.Analysis.Protocol.CounterfactualRegret`
-- `lake build GameTheory.Analysis.Protocol.CounterfactualRootRegret`
-- `lake build GameTheory.Analysis.Protocol.CounterfactualRootRegretTest`
-- `lake build GameTheory.Math GameTheory.Analysis.Protocol`
-- `lake build GameTheory`
-- `scripts/phase2-audit.ps1 -VerifyExpected`
-- `scripts/phase3-audit.ps1 -VerifyExpected`
-
-The hostile consumer's warm build was 9.1 seconds; the stable aggregate build
-completed 2,463 jobs in 10.2 seconds, and the package gate completed 3,592 jobs
-in 19.1 seconds. Both fast audits reported `VERIFIED=1`. Deep reachability was
-not run.
+Exact validation commands and results are recorded under this decision's
+experiment IDs in the [experiment log](../ExperimentLog.md).

@@ -33,34 +33,51 @@ def IsBoundedPayoffSet (payoffs : Set (ι → ℝ)) : Prop :=
 /-- Payoff vectors delivered by perfect public equilibria. -/
 def perfectPublicEquilibriumPayoffs
     (M : G.PublicMonitoring) [DecidableEq ι]
-    (discount : ℝ) : Set (ι → ℝ) :=
+    (discount : ℝ)
+    (hstage : ∀ profile : M.MonitoredProfile, ∀ who t,
+      M.MonitoredStageIntegrable profile t who)
+    (hsum : ∀ profile : M.MonitoredProfile, ∀ who,
+      Summable fun t : ℕ => discount ^ t *
+        M.monitoredStagePayoff profile t who (hstage profile who t)) :
+    Set (ι → ℝ) :=
   {payoff | ∃ profile : M.MonitoredProfile,
-    M.IsPerfectPublicEquilibrium discount profile ∧
-      ∀ who, M.discountedPayoff discount profile who = payoff who}
+    M.IsPerfectPublicEquilibrium discount hstage hsum profile ∧
+      ∀ who, M.discountedPayoff discount profile who
+        (hstage profile who) (hsum profile who) = payoff who}
 
 /-- Continuation payoff delivered after each possible next public signal. -/
 def continuationPayoffAssignment
     (M : G.PublicMonitoring) (discount : ℝ)
+    (hstage : ∀ profile : M.MonitoredProfile, ∀ who t,
+      M.MonitoredStageIntegrable profile t who)
+    (hsum : ∀ profile : M.MonitoredProfile, ∀ who,
+      Summable fun t : ℕ => discount ^ t *
+        M.monitoredStagePayoff profile t who (hstage profile who t))
     (profile : M.MonitoredProfile) : M.ContinuationAssignment :=
   fun signal who =>
     M.discountedPayoff discount (M.afterSignal profile signal) who
+      (hstage _ who) (hsum _ who)
 
 /-- Bounded stage payoffs bound the complete PPE payoff set coordinatewise. -/
 theorem isBoundedPayoffSet_perfectPublicEquilibriumPayoffs_of_bounded
     (M : G.PublicMonitoring) [DecidableEq ι]
     {discount : ℝ} (hdiscount0 : 0 ≤ discount)
     (hdiscount1 : discount < 1)
-    (hstage : ∀ who : ι, ∃ bound : ℝ,
+    (hG : G.form.HasIntegrableUtility G.utility)
+    (hbound : ∀ who : ι, ∃ bound : ℝ,
       ∀ profile : Profile G.form.sig,
-        |G.stagePayoff profile who| ≤ bound) :
-    IsBoundedPayoffSet (M.perfectPublicEquilibriumPayoffs discount) := by
+        |G.stagePayoff profile who (hG who profile)| ≤ bound) :
+    IsBoundedPayoffSet (M.perfectPublicEquilibriumPayoffs discount
+      (M.discountedStageIntegrableOfBounded hG hbound)
+      (M.discountedSummableOfBounded
+        hdiscount0 hdiscount1 hG hbound)) := by
   intro who
-  obtain ⟨bound, hbound⟩ := hstage who
+  obtain ⟨bound, hwho⟩ := hbound who
   refine ⟨bound, ?_⟩
   rintro payoff ⟨profile, _hequilibrium, hpayoff⟩
   rw [← hpayoff who]
-  exact M.abs_discountedPayoff_le_of_abs_stagePayoff_bound
-    hdiscount0 hdiscount1 profile who hbound
+  exact M.abs_discountedPayoffOfBounded_le
+    hdiscount0 hdiscount1 hG profile who hwho
 
 namespace SelfGenerating
 
@@ -192,20 +209,24 @@ theorem generatedProfile_realizesPromise_of_bounds
     (hself : M.SelfGenerating discount payoffs)
     {who : ι} {stageBound promiseBound : ℝ}
     (hdiscount0 : 0 ≤ discount) (hdiscount1 : discount < 1)
+    (hG : G.form.HasIntegrableUtility G.utility)
     (hstage : ∀ profile : Profile G.form.sig,
-      |G.stagePayoff profile who| ≤ stageBound)
+      |G.stagePayoff profile who (hG who profile)| ≤ stageBound)
     (hpromise : ∀ payoff ∈ payoffs,
       |payoff who| ≤ promiseBound)
     (promise : payoffs) :
-    M.discountedPayoff discount (hself.generatedProfile promise) who =
+    M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+      (hself.generatedProfile promise) who hstage =
       promise.1 who := by
+  let V (state : payoffs) : ℝ :=
+    M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+      (hself.generatedProfile state) who hstage
   have hstageNonneg : 0 ≤ stageBound :=
     le_trans (abs_nonneg _) (hstage (hself.action promise))
   have hpromiseNonneg : 0 ≤ promiseBound :=
     le_trans (abs_nonneg _) (hpromise promise.1 promise.2)
   have herror : ∀ steps (state : payoffs),
-      |M.discountedPayoff discount (hself.generatedProfile state) who -
-          state.1 who| ≤
+      |V state - state.1 who| ≤
         discount ^ steps * (stageBound + promiseBound) := by
     intro steps
     induction steps with
@@ -213,24 +234,20 @@ theorem generatedProfile_realizesPromise_of_bounds
         intro state
         rw [pow_zero, one_mul]
         calc
-          |M.discountedPayoff discount
-                (hself.generatedProfile state) who - state.1 who| ≤
-              |M.discountedPayoff discount
-                (hself.generatedProfile state) who| + |state.1 who| :=
+          |V state - state.1 who| ≤
+              |V state| + |state.1 who| :=
             abs_sub _ _
           _ ≤ stageBound + promiseBound := by
             exact add_le_add
-              (M.abs_discountedPayoff_le_of_abs_stagePayoff_bound
-                hdiscount0 hdiscount1
+              (M.abs_discountedPayoffOfBounded_le
+                hdiscount0 hdiscount1 hG
                 (hself.generatedProfile state) who hstage)
               (hpromise state.1 state.2)
     | succ steps ih =>
         intro state
         let errorBound : ℝ :=
           discount ^ steps * (stageBound + promiseBound)
-        let realized : payoffs → ℝ := fun next =>
-          M.discountedPayoff discount
-            (hself.generatedProfile next) who
+        let realized : payoffs → ℝ := V
         let promised : payoffs → ℝ := fun next => next.1 who
         let law := M.signalLaw (hself.action state)
         have hpointUpper (signal : M.Signal) :
@@ -245,65 +262,96 @@ theorem generatedProfile_realizesPromise_of_bounds
           have habs := abs_le.mp (ih (hself.nextState state signal))
           dsimp only [realized, promised, errorBound]
           linarith
+        have hreal : PayoffIntegrable law
+            (fun signal => realized (hself.nextState state signal)) :=
+          payoffIntegrable_of_bounded law _ (fun signal =>
+            M.abs_discountedPayoffOfBounded_le hdiscount0 hdiscount1
+              hG (hself.generatedProfile (hself.nextState state signal))
+              who hstage)
+        have hprom : PayoffIntegrable law
+            (fun signal => promised (hself.nextState state signal)) :=
+          payoffIntegrable_of_bounded law _
+            (fun signal => hpromise
+              (hself.nextState state signal).1
+              (hself.nextState state signal).2)
+        have hconstant : PayoffIntegrable law
+            (fun _ : M.Signal => errorBound) :=
+          payoffIntegrable_constant law errorBound
         have hexpectUpper :
-            law.expect (fun signal =>
-                realized (hself.nextState state signal)) ≤
-              law.expect (fun signal =>
-                promised (hself.nextState state signal)) + errorBound := by
+            expect law (fun signal =>
+                realized (hself.nextState state signal)) hreal ≤
+              expect law (fun signal =>
+                promised (hself.nextState state signal)) hprom +
+                errorBound := by
           calc
-            law.expect (fun signal =>
-                realized (hself.nextState state signal)) ≤
-                law.expect (fun signal =>
-                  promised (hself.nextState state signal) + errorBound) :=
-              FinDist.expect_mono fun signal _ => hpointUpper signal
-            _ = _ := by
-              rw [FinDist.expect_add, FinDist.expect_const]
+            expect law (fun signal =>
+                realized (hself.nextState state signal)) hreal ≤
+                expect law (fun signal =>
+                  promised (hself.nextState state signal) + errorBound)
+                  (payoffIntegrable_add hprom hconstant) :=
+              expect_mono (fun signal _ => hpointUpper signal)
+                hreal (payoffIntegrable_add hprom hconstant)
+            _ = expect law
+                  (fun signal => promised (hself.nextState state signal))
+                  hprom + expect law (fun _ => errorBound) hconstant :=
+              expect_add hprom hconstant
+            _ = _ := by rw [expect_constant law errorBound hconstant]
         have hexpectLower :
-            law.expect (fun signal =>
-                promised (hself.nextState state signal)) ≤
-              law.expect (fun signal =>
-                realized (hself.nextState state signal)) + errorBound := by
+            expect law (fun signal =>
+                promised (hself.nextState state signal)) hprom ≤
+              expect law (fun signal =>
+                realized (hself.nextState state signal)) hreal +
+                errorBound := by
           calc
-            law.expect (fun signal =>
-                promised (hself.nextState state signal)) ≤
-                law.expect (fun signal =>
-                  realized (hself.nextState state signal) + errorBound) :=
-              FinDist.expect_mono fun signal _ => hpointLower signal
-            _ = _ := by
-              rw [FinDist.expect_add, FinDist.expect_const]
+            expect law (fun signal =>
+                promised (hself.nextState state signal)) hprom ≤
+                expect law (fun signal =>
+                  realized (hself.nextState state signal) + errorBound)
+                  (payoffIntegrable_add hreal hconstant) :=
+              expect_mono (fun signal _ => hpointLower signal)
+                hprom (payoffIntegrable_add hreal hconstant)
+            _ = expect law
+                  (fun signal => realized (hself.nextState state signal))
+                  hreal + expect law (fun _ => errorBound) hconstant :=
+              expect_add hreal hconstant
+            _ = _ := by rw [expect_constant law errorBound hconstant]
         have hbell := M.discountedPayoff_eq_head_add_expected
-          hdiscount0 hdiscount1 (hself.generatedProfile state) who hstage
+          hdiscount0 hdiscount1 hG
+          (hself.generatedProfile state) who hstage
         simp only [hself.generatedProfile_zero,
           hself.afterSignal_generatedProfile] at hbell
         have hbellRealized :
             realized state =
               (1 - discount) *
-                  G.stagePayoff (hself.action state) who +
-                discount * law.expect (fun signal =>
-                  realized (hself.nextState state signal)) := by
-          simpa only [realized, law] using hbell
+                  G.stagePayoff (hself.action state) who
+                    (hG who (hself.action state)) +
+                discount * expect law (fun signal =>
+                  realized (hself.nextState state signal)) hreal := by
+          simpa only [realized, V, law] using hbell
         have hkeep :
-            (1 - discount) * G.stagePayoff (hself.action state) who +
-                discount * law.expect (fun signal =>
-                  promised (hself.nextState state signal)) =
+            (1 - discount) * G.stagePayoff
+                (hself.action state) who (hG who (hself.action state)) +
+                discount * expect law (fun signal =>
+                  promised (hself.nextState state signal)) hprom =
               promised state := by
-          have hcoordinate := congrFun (hself.promiseKeeping state) who
-          simpa only [IsPromiseKeeping, decomposedPayoff,
-            law, promised, nextState_val] using hcoordinate
+          obtain ⟨hbase, hsignal, hcoordinate⟩ :=
+            hself.promiseKeeping state who
+          simpa only [decomposedPayoff, law, promised, nextState_val]
+            using hcoordinate
         have hupper :
             realized state ≤ promised state + discount * errorBound := by
           calc
             realized state =
                 (1 - discount) * G.stagePayoff
-                    (hself.action state) who +
-                  discount * law.expect (fun signal =>
-                    realized (hself.nextState state signal)) :=
+                    (hself.action state) who (hG who _) +
+                  discount * expect law (fun signal =>
+                    realized (hself.nextState state signal)) hreal :=
               hbellRealized
             _ ≤ (1 - discount) * G.stagePayoff
-                    (hself.action state) who +
+                    (hself.action state) who (hG who _) +
                   discount *
-                    (law.expect (fun signal =>
-                      promised (hself.nextState state signal)) +
+                    (expect law (fun signal =>
+                      promised (hself.nextState state signal)) hprom +
                         errorBound) := by
               exact add_le_add_right
                 (mul_le_mul_of_nonneg_left hexpectUpper hdiscount0) _
@@ -315,15 +363,15 @@ theorem generatedProfile_realizesPromise_of_bounds
           calc
             promised state =
                 (1 - discount) * G.stagePayoff
-                    (hself.action state) who +
-                  discount * law.expect (fun signal =>
-                    promised (hself.nextState state signal)) :=
+                    (hself.action state) who (hG who _) +
+                  discount * expect law (fun signal =>
+                    promised (hself.nextState state signal)) hprom :=
               hkeep.symm
             _ ≤ (1 - discount) * G.stagePayoff
-                    (hself.action state) who +
+                    (hself.action state) who (hG who _) +
                   discount *
-                    (law.expect (fun signal =>
-                      realized (hself.nextState state signal)) +
+                    (expect law (fun signal =>
+                      realized (hself.nextState state signal)) hreal +
                         errorBound) := by
               exact add_le_add_right
                 (mul_le_mul_of_nonneg_left hexpectLower hdiscount0) _
@@ -349,12 +397,10 @@ theorem generatedProfile_realizesPromise_of_bounds
         hdiscount0 hdiscount1).mul_const
           (stageBound + promiseBound)
   have hzero :
-      |M.discountedPayoff discount (hself.generatedProfile promise) who -
-          promise.1 who| ≤ 0 :=
+      |V promise - promise.1 who| ≤ 0 :=
     ge_of_tendsto' hlimit (fun steps => herror steps promise)
   have hequal :
-      M.discountedPayoff discount (hself.generatedProfile promise) who -
-          promise.1 who = 0 :=
+      V promise - promise.1 who = 0 :=
     abs_eq_zero.mp (le_antisymm hzero (abs_nonneg _))
   exact sub_eq_zero.mp hequal
 
@@ -363,37 +409,46 @@ promise realization. -/
 theorem generatedProfile_realizesPromise
     (hself : M.SelfGenerating discount payoffs)
     (hdiscount0 : 0 ≤ discount) (hdiscount1 : discount < 1)
-    (hstage : ∀ who : ι, ∃ bound : ℝ,
+    (hG : G.form.HasIntegrableUtility G.utility)
+    (hbound : ∀ who : ι, ∃ bound : ℝ,
       ∀ profile : Profile G.form.sig,
-        |G.stagePayoff profile who| ≤ bound)
+        |G.stagePayoff profile who (hG who profile)| ≤ bound)
     (hpayoffs : IsBoundedPayoffSet payoffs)
     (promise : payoffs) (who : ι) :
-    M.discountedPayoff discount (hself.generatedProfile promise) who =
+    M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+      (hself.generatedProfile promise) who (hbound who).choose_spec =
       promise.1 who := by
-  obtain ⟨stageBound, hstageBound⟩ := hstage who
+  obtain ⟨stageBound, hstageBound⟩ := hbound who
   obtain ⟨promiseBound, hpromiseBound⟩ := hpayoffs who
   exact hself.generatedProfile_realizesPromise_of_bounds
-    hdiscount0 hdiscount1 hstageBound hpromiseBound promise
+    hdiscount0 hdiscount1 hG hstageBound hpromiseBound promise
 
 /-- The actual payoff from a generated strategy's one-shot deviation equals
 the selected decomposed deviation payoff. -/
 theorem discountedPayoff_oneShotDeviation_eq_decomposedDeviationPayoff
     (hself : M.SelfGenerating discount payoffs)
     (hdiscount0 : 0 ≤ discount) (hdiscount1 : discount < 1)
-    (hstage : ∀ who : ι, ∃ bound : ℝ,
+    (hG : G.form.HasIntegrableUtility G.utility)
+    (hbound : ∀ who : ι, ∃ bound : ℝ,
       ∀ profile : Profile G.form.sig,
-        |G.stagePayoff profile who| ≤ bound)
+        |G.stagePayoff profile who (hG who profile)| ≤ bound)
     (hpayoffs : IsBoundedPayoffSet payoffs)
     (promise : payoffs) (who : ι)
-    (action : G.form.sig.Strategy who) :
-    M.discountedPayoff discount
+    (action : G.form.sig.Strategy who)
+    (hdeviationStage : UtilityIntegrable G.utility who
+      (G.form.play (Profile.update (hself.action promise) who action)))
+    (hdeviationSignal : PayoffIntegrable
+      (M.signalLaw (Profile.update (hself.action promise) who action))
+      (fun signal => hself.continuation promise signal who)) :
+    M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
         (Profile.update (sig := M.monitoredSignature)
           (hself.generatedProfile promise) who
           (M.oneShotDeviation (hself.generatedProfile promise)
-            who action)) who =
+            who action)) who (hbound who).choose_spec =
       M.decomposedDeviationPayoff discount
-        (hself.action promise) (hself.continuation promise) who action := by
-  obtain ⟨bound, hbound⟩ := hstage who
+        (hself.action promise) (hself.continuation promise)
+        who action hdeviationStage hdeviationSignal := by
+  obtain ⟨bound, hwho⟩ := hbound who
   let deviating : M.MonitoredProfile :=
     Profile.update (sig := M.monitoredSignature)
       (hself.generatedProfile promise) who
@@ -402,81 +457,160 @@ theorem discountedPayoff_oneShotDeviation_eq_decomposedDeviationPayoff
     (hself.generatedProfile promise) who action
   simp only [hself.generatedProfile_zero] at hroot
   have hbell := M.discountedPayoff_eq_head_add_expected
-    hdiscount0 hdiscount1 deviating who hbound
+    hdiscount0 hdiscount1 hG deviating who hwho
   have hcontinuation (signal : M.Signal) :
       M.afterSignal deviating signal =
         hself.generatedProfile (hself.nextState promise signal) := by
     dsimp only [deviating]
     rw [M.afterSignal_update_oneShotDeviation,
       hself.afterSignal_generatedProfile]
-  rw [hroot] at hbell
-  simp_rw [hcontinuation] at hbell
-  simp_rw [hself.generatedProfile_realizesPromise
-    hdiscount0 hdiscount1 hstage hpayoffs] at hbell
-  simpa only [deviating, decomposedDeviationPayoff, decomposedPayoff,
-    nextState_val] using hbell
+  have hpoint (signal : M.Signal) :
+      M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+          (M.afterSignal deviating signal) who hwho =
+        hself.continuation promise signal who := by
+    rw [hcontinuation]
+    exact hself.generatedProfile_realizesPromise
+      hdiscount0 hdiscount1 hG hbound hpayoffs
+      (hself.nextState promise signal) who
+  have hlaw :
+      M.signalLaw (fun i => deviating i 0 (fun k => k.elim0)) =
+        M.signalLaw (Profile.update (hself.action promise) who action) :=
+    congrArg M.signalLaw hroot
+  have hsignalRealized :=
+    M.discountedAfterSignal_integrable_of_expected_bound
+      hdiscount0 hdiscount1 hG deviating who hwho
+  have hsignalUpdated := payoffIntegrable_congr_law
+    hlaw hsignalRealized
+  have hexpect := expect_congr_on_support
+    (μ := M.signalLaw (Profile.update (hself.action promise) who action))
+    (fun signal _ => hpoint signal)
+    hsignalUpdated hdeviationSignal
+  calc
+    M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+        deviating who hwho =
+      (1 - discount) * G.stagePayoff
+          (fun i => deviating i 0 (fun k => k.elim0))
+          who (hG who _) +
+        discount * expect
+          (M.signalLaw
+            (fun i => deviating i 0 (fun k => k.elim0)))
+          (fun signal => M.discountedPayoffOfBounded
+            hdiscount0 hdiscount1 hG
+            (M.afterSignal deviating signal) who hwho)
+          hsignalRealized := hbell
+    _ = (1 - discount) * G.stagePayoff
+          (Profile.update (hself.action promise) who action)
+          who (hG who _) +
+        discount * expect
+          (M.signalLaw
+            (Profile.update (hself.action promise) who action))
+          (fun signal => M.discountedPayoffOfBounded
+            hdiscount0 hdiscount1 hG
+            (M.afterSignal deviating signal) who hwho)
+          hsignalUpdated := by
+      have hstageEq := congrArg
+        (fun stage : Profile G.form.sig =>
+          G.stagePayoff stage who (hG who stage)) hroot
+      rw [hstageEq]
+      exact congrArg (fun value : ℝ =>
+        (1 - discount) * G.stagePayoff
+          (Profile.update (hself.action promise) who action)
+          who (hG who _) + discount * value)
+        (expect_congr_law hlaw _ hsignalRealized hsignalUpdated)
+    _ = (1 - discount) * G.stagePayoff
+          (Profile.update (hself.action promise) who action)
+          who (hG who _) +
+        discount * expect
+          (M.signalLaw
+            (Profile.update (hself.action promise) who action))
+          (fun signal => hself.continuation promise signal who)
+          hdeviationSignal := by rw [hexpect]
+    _ = M.decomposedDeviationPayoff discount
+          (hself.action promise) (hself.continuation promise)
+          who action hdeviationStage hdeviationSignal := rfl
 
 /-- The generated strategy has no profitable current one-shot deviation. -/
 theorem generatedProfile_hasNoProfitableOneShotDeviation
     (hself : M.SelfGenerating discount payoffs)
     (hdiscount0 : 0 ≤ discount) (hdiscount1 : discount < 1)
-    (hstage : ∀ who : ι, ∃ bound : ℝ,
+    (hG : G.form.HasIntegrableUtility G.utility)
+    (hbound : ∀ who : ι, ∃ bound : ℝ,
       ∀ profile : Profile G.form.sig,
-        |G.stagePayoff profile who| ≤ bound)
+        |G.stagePayoff profile who (hG who profile)| ≤ bound)
     (hpayoffs : IsBoundedPayoffSet payoffs) (promise : payoffs) :
     M.HasNoProfitableOneShotDeviation discount
+      (M.discountedStageIntegrableOfBounded hG hbound)
+      (M.discountedSummableOfBounded hdiscount0 hdiscount1 hG hbound)
       (hself.generatedProfile promise) := by
   intro who action
+  obtain ⟨hbaseStage, hbaseSignal, hdeviationStage,
+    hdeviationSignal, henforce⟩ := hself.enforceable promise who action
   calc
-    M.discountedPayoff discount
+    M.discountedUtility discount
+        (M.discountedStageIntegrableOfBounded hG hbound)
+        (M.discountedSummableOfBounded
+          hdiscount0 hdiscount1 hG hbound)
         (Profile.update (sig := M.monitoredSignature)
           (hself.generatedProfile promise) who
           (M.oneShotDeviation (hself.generatedProfile promise)
             who action)) who =
         M.decomposedDeviationPayoff discount
           (hself.action promise) (hself.continuation promise)
-          who action :=
+          who action hdeviationStage hdeviationSignal :=
       hself.discountedPayoff_oneShotDeviation_eq_decomposedDeviationPayoff
-        hdiscount0 hdiscount1 hstage hpayoffs promise who action
+        hdiscount0 hdiscount1 hG hbound hpayoffs promise who action
+        hdeviationStage hdeviationSignal
     _ ≤ M.decomposedPayoff discount
-          (hself.action promise) (hself.continuation promise) who :=
-      hself.enforceable promise who action
-    _ = promise.1 who := congrFun (hself.promiseKeeping promise) who
-    _ = M.discountedPayoff discount
+          (hself.action promise) (hself.continuation promise)
+          who hbaseStage hbaseSignal := henforce
+    _ = promise.1 who := by
+      obtain ⟨hstage, hsignal, hkeep⟩ := hself.promiseKeeping promise who
+      exact hkeep
+    _ = M.discountedUtility discount
+          (M.discountedStageIntegrableOfBounded hG hbound)
+          (M.discountedSummableOfBounded
+            hdiscount0 hdiscount1 hG hbound)
           (hself.generatedProfile promise) who :=
       (hself.generatedProfile_realizesPromise hdiscount0 hdiscount1
-        hstage hpayoffs promise who).symm
+        hG hbound hpayoffs promise who).symm
 
 /-- One-shot optimality of the generated strategy holds after every public
 history, including off-path histories. -/
 theorem generatedProfile_hasNoProfitableOneShotDeviationAfterEveryHistory
     (hself : M.SelfGenerating discount payoffs)
     (hdiscount0 : 0 ≤ discount) (hdiscount1 : discount < 1)
-    (hstage : ∀ who : ι, ∃ bound : ℝ,
+    (hG : G.form.HasIntegrableUtility G.utility)
+    (hbound : ∀ who : ι, ∃ bound : ℝ,
       ∀ profile : Profile G.form.sig,
-        |G.stagePayoff profile who| ≤ bound)
+        |G.stagePayoff profile who (hG who profile)| ≤ bound)
     (hpayoffs : IsBoundedPayoffSet payoffs) (promise : payoffs) :
     M.HasNoProfitableOneShotDeviationAfterEveryHistory discount
+      (M.discountedStageIntegrableOfBounded hG hbound)
+      (M.discountedSummableOfBounded hdiscount0 hdiscount1 hG hbound)
       (hself.generatedProfile promise) := by
   intro t history
   rw [hself.after_generatedProfile]
   exact hself.generatedProfile_hasNoProfitableOneShotDeviation
-    hdiscount0 hdiscount1 hstage hpayoffs _
+    hdiscount0 hdiscount1 hG hbound hpayoffs _
 
 /-- The strategy generated by a bounded self-generating set is a perfect
 public equilibrium. -/
 theorem generatedProfile_isPerfectPublicEquilibrium
     (hself : M.SelfGenerating discount payoffs)
     (hdiscount0 : 0 ≤ discount) (hdiscount1 : discount < 1)
-    (hstage : ∀ who : ι, ∃ bound : ℝ,
+    (hG : G.form.HasIntegrableUtility G.utility)
+    (hbound : ∀ who : ι, ∃ bound : ℝ,
       ∀ profile : Profile G.form.sig,
-        |G.stagePayoff profile who| ≤ bound)
+        |G.stagePayoff profile who (hG who profile)| ≤ bound)
     (hpayoffs : IsBoundedPayoffSet payoffs) (promise : payoffs) :
     M.IsPerfectPublicEquilibrium discount
+      (M.discountedStageIntegrableOfBounded hG hbound)
+      (M.discountedSummableOfBounded hdiscount0 hdiscount1 hG hbound)
       (hself.generatedProfile promise) :=
   (hself.generatedProfile_hasNoProfitableOneShotDeviationAfterEveryHistory
-    hdiscount0 hdiscount1 hstage hpayoffs promise
-      ).isPerfectPublicEquilibrium_of_bounded hdiscount0 hdiscount1 hstage
+    hdiscount0 hdiscount1 hG hbound hpayoffs promise
+      ).isPerfectPublicEquilibrium_of_bounded
+        hdiscount0 hdiscount1 hG hbound
 
 /-- Every payoff in a bounded self-generating set is delivered by a perfect
 public equilibrium. -/
@@ -484,19 +618,23 @@ theorem selfGenerating_subset_perfectPublicEquilibriumPayoffs
     (M : G.PublicMonitoring)
     {discount : ℝ} (hdiscount0 : 0 ≤ discount)
     (hdiscount1 : discount < 1)
-    (hstage : ∀ who : ι, ∃ bound : ℝ,
+    (hG : G.form.HasIntegrableUtility G.utility)
+    (hbound : ∀ who : ι, ∃ bound : ℝ,
       ∀ profile : Profile G.form.sig,
-        |G.stagePayoff profile who| ≤ bound)
+        |G.stagePayoff profile who (hG who profile)| ≤ bound)
     {payoffs : Set (ι → ℝ)} (hpayoffs : IsBoundedPayoffSet payoffs)
     (hself : M.SelfGenerating discount payoffs) :
-    payoffs ⊆ M.perfectPublicEquilibriumPayoffs discount := by
+    payoffs ⊆ M.perfectPublicEquilibriumPayoffs discount
+      (M.discountedStageIntegrableOfBounded hG hbound)
+      (M.discountedSummableOfBounded
+        hdiscount0 hdiscount1 hG hbound) := by
   intro payoff hpayoff
   let promise : payoffs := ⟨payoff, hpayoff⟩
   exact ⟨hself.generatedProfile promise,
     hself.generatedProfile_isPerfectPublicEquilibrium
-      hdiscount0 hdiscount1 hstage hpayoffs promise,
+      hdiscount0 hdiscount1 hG hbound hpayoffs promise,
     fun who => hself.generatedProfile_realizesPromise
-      hdiscount0 hdiscount1 hstage hpayoffs promise who⟩
+      hdiscount0 hdiscount1 hG hbound hpayoffs promise who⟩
 
 end SelfGenerating
 
@@ -506,30 +644,49 @@ theorem perfectPublicEquilibriumPayoffs_selfGenerating_of_bounded
     (M : G.PublicMonitoring) [DecidableEq ι]
     {discount : ℝ} (hdiscount0 : 0 ≤ discount)
     (hdiscount1 : discount < 1)
-    (hstage : ∀ who : ι, ∃ bound : ℝ,
+    (hG : G.form.HasIntegrableUtility G.utility)
+    (hbound : ∀ who : ι, ∃ bound : ℝ,
       ∀ profile : Profile G.form.sig,
-        |G.stagePayoff profile who| ≤ bound) :
+        |G.stagePayoff profile who (hG who profile)| ≤ bound) :
     M.SelfGenerating discount
-      (M.perfectPublicEquilibriumPayoffs discount) := by
+      (M.perfectPublicEquilibriumPayoffs discount
+        (M.discountedStageIntegrableOfBounded hG hbound)
+        (M.discountedSummableOfBounded
+          hdiscount0 hdiscount1 hG hbound)) := by
   intro payoff hpayoff
   obtain ⟨profile, hequilibrium, hpayoff⟩ := hpayoff
   let current : Profile G.form.sig :=
     fun who => profile who 0 (fun index => index.elim0)
   let continuation : M.ContinuationAssignment :=
-    M.continuationPayoffAssignment discount profile
+    M.continuationPayoffAssignment discount
+      (M.discountedStageIntegrableOfBounded hG hbound)
+      (M.discountedSummableOfBounded
+        hdiscount0 hdiscount1 hG hbound) profile
   refine ⟨current, continuation, ?_, ?_, ?_⟩
   · intro signal
     exact ⟨M.afterSignal profile signal,
-      hequilibrium.afterSignal signal, fun _ => rfl⟩
-  · funext who
-    obtain ⟨bound, hbound⟩ := hstage who
+      IsPerfectPublicEquilibrium.afterSignal M discount
+        (M.discountedStageIntegrableOfBounded hG hbound)
+        (M.discountedSummableOfBounded
+          hdiscount0 hdiscount1 hG hbound)
+        hequilibrium signal,
+      fun _ => rfl⟩
+  · intro who
+    obtain ⟨bound, hwho⟩ := hbound who
+    have hbaseStage := hG who current
+    have hbaseSignal : PayoffIntegrable (M.signalLaw current)
+        (fun signal => continuation signal who) := by
+      simpa only [current, continuation, continuationPayoffAssignment]
+        using M.discountedAfterSignal_integrable_of_expected_bound
+          hdiscount0 hdiscount1 hG profile who hwho
+    refine ⟨hbaseStage, hbaseSignal, ?_⟩
     have hbell := M.discountedPayoff_eq_head_add_expected
-      hdiscount0 hdiscount1 profile who hbound
+      hdiscount0 hdiscount1 hG profile who hwho
     rw [← hpayoff who]
     simpa only [decomposedPayoff, current, continuation,
       continuationPayoffAssignment] using hbell.symm
   · intro who action
-    obtain ⟨bound, hbound⟩ := hstage who
+    obtain ⟨bound, hwho⟩ := hbound who
     let deviating : M.MonitoredProfile :=
       Profile.update (sig := M.monitoredSignature) profile who
         (M.oneShotDeviation profile who action)
@@ -538,25 +695,106 @@ theorem perfectPublicEquilibriumPayoffs_selfGenerating_of_bounded
     have hcontinuation (signal : M.Signal) :
         M.afterSignal deviating signal = M.afterSignal profile signal := by
       simp [deviating]
+    have hcontBound (signal : M.Signal) :
+        |continuation signal who| ≤ bound := by
+      simpa only [continuation, continuationPayoffAssignment] using
+        M.abs_discountedPayoffOfBounded_le hdiscount0 hdiscount1
+          hG (M.afterSignal profile signal) who hwho
+    have hbaseStage := hG who current
+    have hdeviationStage :=
+      hG who (Profile.update current who action)
+    have hbaseSignal : PayoffIntegrable (M.signalLaw current)
+        (fun signal => continuation signal who) :=
+      payoffIntegrable_of_bounded _ _ hcontBound
+    have hdeviationSignal : PayoffIntegrable
+        (M.signalLaw (Profile.update current who action))
+        (fun signal => continuation signal who) :=
+      payoffIntegrable_of_bounded _ _ hcontBound
+    refine ⟨hbaseStage, hbaseSignal, hdeviationStage,
+      hdeviationSignal, ?_⟩
     have hdeviatingBell := M.discountedPayoff_eq_head_add_expected
-      hdiscount0 hdiscount1 deviating who hbound
-    rw [hroot] at hdeviatingBell
-    simp_rw [hcontinuation] at hdeviatingBell
+      hdiscount0 hdiscount1 hG deviating who hwho
     have hbaseBell := M.discountedPayoff_eq_head_add_expected
-      hdiscount0 hdiscount1 profile who hbound
+      hdiscount0 hdiscount1 hG profile who hwho
+    have hlaw :
+        M.signalLaw (fun i => deviating i 0 (fun k => k.elim0)) =
+          M.signalLaw (Profile.update current who action) := by
+      exact congrArg M.signalLaw hroot
+    have hsignalRealized :=
+      M.discountedAfterSignal_integrable_of_expected_bound
+        hdiscount0 hdiscount1 hG deviating who hwho
+    have hsignalUpdated := payoffIntegrable_congr_law
+      hlaw hsignalRealized
+    have hpoint (signal : M.Signal) :
+        M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+            (M.afterSignal deviating signal) who hwho =
+          continuation signal who := by
+      rw [hcontinuation]
+      rfl
+    have hexpect := expect_congr_on_support
+      (μ := M.signalLaw (Profile.update current who action))
+      (fun signal _ => hpoint signal)
+      hsignalUpdated hdeviationSignal
+    have hstageEq := congrArg
+      (fun stage : Profile G.form.sig =>
+        G.stagePayoff stage who (hG who stage)) hroot
+    have hdeviationValue :
+        M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+            deviating who hwho =
+          M.decomposedDeviationPayoff discount current continuation
+            who action hdeviationStage hdeviationSignal := by
+      calc
+        _ = (1 - discount) * G.stagePayoff
+              (fun i => deviating i 0 (fun k => k.elim0))
+              who (hG who _) +
+            discount * expect
+              (M.signalLaw
+                (fun i => deviating i 0 (fun k => k.elim0)))
+              (fun signal => M.discountedPayoffOfBounded
+                hdiscount0 hdiscount1 hG
+                (M.afterSignal deviating signal) who hwho)
+              hsignalRealized := hdeviatingBell
+        _ = (1 - discount) * G.stagePayoff
+              (Profile.update current who action) who (hG who _) +
+            discount * expect
+              (M.signalLaw (Profile.update current who action))
+              (fun signal => continuation signal who)
+              hdeviationSignal := by
+          rw [hstageEq]
+          exact congrArg (fun value : ℝ =>
+            (1 - discount) * G.stagePayoff
+              (Profile.update current who action) who (hG who _) +
+              discount * value)
+            ((expect_congr_law hlaw _ hsignalRealized hsignalUpdated).trans
+              hexpect)
+        _ = _ := rfl
+    have hbaseValue :
+        M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+            profile who hwho =
+          M.decomposedPayoff discount current continuation
+            who hbaseStage hbaseSignal := by
+      simpa only [decomposedPayoff, current, continuation,
+        continuationPayoffAssignment] using hbaseBell
+    have hNoShot := IsDiscountedPublicNash.hasNoProfitableOneShotDeviation
+      M discount
+      (M.discountedStageIntegrableOfBounded hG hbound)
+      (M.discountedSummableOfBounded
+        hdiscount0 hdiscount1 hG hbound)
+      (IsPerfectPublicEquilibrium.isDiscountedPublicNash
+        M discount
+        (M.discountedStageIntegrableOfBounded hG hbound)
+        (M.discountedSummableOfBounded
+          hdiscount0 hdiscount1 hG hbound)
+        hequilibrium)
     calc
       M.decomposedDeviationPayoff discount current continuation
-          who action =
-          M.discountedPayoff discount deviating who := by
-        simpa only [decomposedDeviationPayoff, decomposedPayoff,
-          current, continuation, continuationPayoffAssignment] using
-            hdeviatingBell.symm
-      _ ≤ M.discountedPayoff discount profile who :=
-        hequilibrium.isDiscountedPublicNash.hasNoProfitableOneShotDeviation
-          who action
-      _ = M.decomposedPayoff discount current continuation who := by
-        simpa only [decomposedPayoff, current, continuation,
-          continuationPayoffAssignment] using hbaseBell
+          who action hdeviationStage hdeviationSignal =
+          M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+            deviating who hwho := hdeviationValue.symm
+      _ ≤ M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+          profile who hwho := hNoShot who action
+      _ = M.decomposedPayoff discount current continuation
+          who hbaseStage hbaseSignal := hbaseValue
 
 /-- The PPE payoff set is the greatest coordinatewise-bounded
 self-generating set under bounded stage payoffs. -/
@@ -564,20 +802,27 @@ theorem perfectPublicEquilibriumPayoffs_greatest_bounded_selfGenerating
     (M : G.PublicMonitoring) [DecidableEq ι]
     {discount : ℝ} (hdiscount0 : 0 ≤ discount)
     (hdiscount1 : discount < 1)
-    (hstage : ∀ who : ι, ∃ bound : ℝ,
+    (hG : G.form.HasIntegrableUtility G.utility)
+    (hbound : ∀ who : ι, ∃ bound : ℝ,
       ∀ profile : Profile G.form.sig,
-        |G.stagePayoff profile who| ≤ bound) :
+        |G.stagePayoff profile who (hG who profile)| ≤ bound) :
     M.SelfGenerating discount
-        (M.perfectPublicEquilibriumPayoffs discount) ∧
+        (M.perfectPublicEquilibriumPayoffs discount
+          (M.discountedStageIntegrableOfBounded hG hbound)
+          (M.discountedSummableOfBounded
+            hdiscount0 hdiscount1 hG hbound)) ∧
       ∀ payoffs : Set (ι → ℝ),
         IsBoundedPayoffSet payoffs →
           M.SelfGenerating discount payoffs →
-            payoffs ⊆ M.perfectPublicEquilibriumPayoffs discount := by
+            payoffs ⊆ M.perfectPublicEquilibriumPayoffs discount
+              (M.discountedStageIntegrableOfBounded hG hbound)
+              (M.discountedSummableOfBounded
+                hdiscount0 hdiscount1 hG hbound) := by
   refine ⟨M.perfectPublicEquilibriumPayoffs_selfGenerating_of_bounded
-    hdiscount0 hdiscount1 hstage, ?_⟩
+    hdiscount0 hdiscount1 hG hbound, ?_⟩
   intro payoffs hbounded hself
   exact SelfGenerating.selfGenerating_subset_perfectPublicEquilibriumPayoffs
-    M hdiscount0 hdiscount1 hstage hbounded hself
+    M hdiscount0 hdiscount1 hG hbound hbounded hself
 
 end UtilityGame.PublicMonitoring
 

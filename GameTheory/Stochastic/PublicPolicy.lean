@@ -23,7 +23,7 @@ variable {ι : Type uι} (G : Stochastic.Game.{uι, us, ua} ι)
 /-- A stochastic-facing behavioral policy: after a proof-free public history,
 draw one ordinary action. -/
 abbrev PublicPolicy (i : ι) : Type _ :=
-  G.PublicHistory → FinDist (G.Action i)
+  G.PublicHistory → PMF (G.Action i)
 
 /-- The direct public-policy signature uses the canonical Protocol history as
 its outcome, but its strategies contain no legal-choice subtype or `Option`. -/
@@ -85,14 +85,14 @@ Protocol policy. -/
 def toBehavioralPolicy (initial : G.State) [∀ i, Nonempty (G.Action i)]
     {i : ι} (policy : PublicPolicy G i) :
     (G.perfectMonitoring initial).BehavioralPolicy i :=
-  fun history => FinDist.map (actionChoiceEquiv G initial i history) (policy history)
+  fun history => PMF.map (actionChoiceEquiv G initial i history) (policy history)
 
 /-- Decode a canonical all-active behavioral policy back to ordinary actions. -/
 def ofBehavioralPolicy (initial : G.State) [∀ i, Nonempty (G.Action i)]
     {i : ι} (policy : (G.perfectMonitoring initial).BehavioralPolicy i) :
     PublicPolicy G i :=
   fun history =>
-    FinDist.map (actionChoiceEquiv G initial i history).symm (policy history)
+    PMF.map (actionChoiceEquiv G initial i history).symm (policy history)
 
 @[simp]
 theorem ofBehavioralPolicy_toBehavioralPolicy
@@ -104,9 +104,9 @@ theorem ofBehavioralPolicy_toBehavioralPolicy
   have hround : equivalence.symm ∘ equivalence = id := by
     funext action
     exact equivalence.symm_apply_apply action
-  show FinDist.map equivalence.symm (FinDist.map equivalence (policy history)) =
+  show PMF.map equivalence.symm (PMF.map equivalence (policy history)) =
     policy history
-  rw [FinDist.map_comp, hround, FinDist.map_id]
+  rw [PMF.map_comp, hround, PMF.map_id]
 
 @[simp]
 theorem toBehavioralPolicy_ofBehavioralPolicy
@@ -118,9 +118,9 @@ theorem toBehavioralPolicy_ofBehavioralPolicy
   have hround : equivalence ∘ equivalence.symm = id := by
     funext choice
     exact equivalence.apply_symm_apply choice
-  show FinDist.map equivalence (FinDist.map equivalence.symm (policy history)) =
+  show PMF.map equivalence (PMF.map equivalence.symm (policy history)) =
     policy history
-  rw [FinDist.map_comp, hround, FinDist.map_id]
+  rw [PMF.map_comp, hround, PMF.map_id]
 
 /-- Public stochastic policies and canonical perfect-monitoring behavioral
 policies are the same data, up to the proved legal-choice presentation. -/
@@ -292,12 +292,12 @@ theorem behavioralJoint_toBehaviorProfile
     (hterm : ¬ (G.toExecution initial).terminal state) :
     (G.perfectMonitoring initial).behavioralJoint
         (toBehaviorProfile G initial profile) trace hterm =
-      FinDist.map (canonicalJoint G initial state)
-        (FinDist.pi fun i =>
+      PMF.map (canonicalJoint G initial state)
+        (independentProduct fun i =>
           profile i ((G.perfectMonitoring initial).infoOf i trace)) := by
   unfold InformationModel.behavioralJoint toBehaviorProfile toBehavioralPolicy
-  rw [FinDist.pi_map, FinDist.map_comp]
-  apply congrArg (fun f => FinDist.map f _)
+  rw [← independentProduct_map, PMF.map_comp]
+  apply congrArg (fun f => PMF.map f _)
   funext actions
   apply Subtype.ext
   funext i
@@ -311,7 +311,7 @@ theorem runBehavioralFrom_succ_toBehaviorProfile
     (history : (G.toExecution initial).History) :
     (G.perfectMonitoring initial).runBehavioralFrom
         (toBehaviorProfile G initial profile) (fuel + 1) history =
-      (FinDist.pi fun i =>
+      (independentProduct fun i =>
           profile i ((G.perfectMonitoring initial).infoOf i history.trace)).bind
         fun actions =>
           (G.transition history.state actions).bindOnSupport fun _ realized =>
@@ -325,12 +325,12 @@ theorem runBehavioralFrom_succ_toBehaviorProfile
   rw [(G.perfectMonitoring initial).runBehavioralFrom_succ_of_not_terminal
       (toBehaviorProfile G initial profile) fuel hterm,
     behavioralJoint_toBehaviorProfile G initial profile history.trace hterm]
-  simp only [FinDist.map_eq_bind, FinDist.bind_bind, FinDist.pure_bind]
-  apply FinDist.bind_congr
+  rw [PMF.bind_map]
+  apply bind_congr_on_support
   intro actions _
   have hstep := toExecution_step_canonicalJoint G initial history.state actions
   cases hstep
-  apply FinDist.bindOnSupport_congr
+  apply bindOnSupport_congr
   intro target realized
   rfl
 

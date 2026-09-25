@@ -10,6 +10,7 @@ import GameTheory.Experimental.PostArchitecture.MAIDReplacementInvariantUtility
 import GameTheory.Experimental.PostArchitecture.MAIDSitePolicySurgery
 import GameTheory.Experimental.PostArchitecture.MAIDSiteLocalReduction
 import GameTheory.Experimental.PostArchitecture.MAIDSiteOptimality
+import Mathlib.Probability.Distributions.Uniform
 
 noncomputable section
 
@@ -39,7 +40,7 @@ def replaceReducedSiteRule (pruning : Pruning diagram)
     {owner : Player} (policy : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
     (rule : KeptContext pruning target →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     pruning.ReducedOwnerPolicy owner :=
   fun site => by
     by_cases hsite : site = target
@@ -52,7 +53,7 @@ theorem replaceReducedSiteRule_same (pruning : Pruning diagram)
     {owner : Player} (policy : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
     (rule : KeptContext pruning target →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     replaceReducedSiteRule pruning policy target rule target = rule := by
   simp [replaceReducedSiteRule]
 
@@ -60,7 +61,7 @@ theorem replaceReducedSiteRule_of_ne (pruning : Pruning diagram)
     {owner : Player} (policy : pruning.ReducedOwnerPolicy owner)
     (target site : DecisionSite diagram owner)
     (rule : KeptContext pruning target →
-      FinDist (diagram.Value target.1)) (hne : site ≠ target) :
+      PMF (diagram.Value target.1)) (hne : site ≠ target) :
     replaceReducedSiteRule pruning policy target rule site = policy site := by
   simp [replaceReducedSiteRule, hne]
 
@@ -82,7 +83,7 @@ theorem expandOwnerPolicy_replaceReducedSiteRule
     {owner : Player} (policy : pruning.ReducedOwnerPolicy owner)
     (target : DecisionSite diagram owner)
     (rule : KeptContext pruning target →
-      FinDist (diagram.Value target.1)) :
+      PMF (diagram.Value target.1)) :
     pruning.expandOwnerPolicy owner
         (replaceReducedSiteRule pruning policy target rule) =
       replaceSiteRule (pruning.expandOwnerPolicy owner policy) target
@@ -195,18 +196,12 @@ theorem later_not_oriented_source
 /-! ## A finite fully mixed reduced owner policy -/
 
 /-- Uniform law on an arbitrary nonempty finite carrier. -/
-noncomputable def uniformFinite [Fintype α] [Nonempty α] : FinDist α :=
-  FinDist.ofWeights (fun _ => (Fintype.card α : ℝ)⁻¹)
-    (fun _ => inv_nonneg.mpr (Nat.cast_nonneg _)) (by
-      rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
-      exact mul_inv_cancel₀ (by
-        exact_mod_cast (Fintype.card_ne_zero : Fintype.card α ≠ 0)))
+noncomputable def uniformFinite [Fintype α] [Nonempty α] : PMF α :=
+  PMF.uniformOfFintype α
 
 theorem uniformFinite_mem_support [Fintype α] [Nonempty α] (action : α) :
-    action ∈ (uniformFinite : FinDist α).support := by
-  rw [← FinDist.prob_pos_iff, uniformFinite, FinDist.prob_ofWeights]
-  exact inv_pos.mpr (by
-    exact_mod_cast (Fintype.card_pos_iff.mpr (inferInstance : Nonempty α)))
+    action ∈ (uniformFinite : PMF α).support := by
+  exact PMF.mem_support_uniformOfFintype action
 
 /-- Uniformly randomize every site in a reduced owner policy. -/
 noncomputable def uniformReducedOwnerPolicy (pruning : Pruning diagram)

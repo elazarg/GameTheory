@@ -36,22 +36,22 @@ private theorem pathStepLaw_support_coherent
         ((G.toExecution initial).step history.1.state ⟨joint, isLegal⟩).support),
       result.1 = history.1.extend isLegal realized := by
   unfold pathStepLaw at hresult
-  rw [FinDist.support_bindOnSupport] at hresult
+  rw [PMF.support_bindOnSupport] at hresult
   obtain ⟨outcome, houtcome, hresult⟩ := Set.mem_iUnion₂.mp hresult
-  have heq := FinDist.mem_support_pure.mp hresult
+  rw [PMF.mem_support_pure_iff] at hresult
   subst result
   have hbehavior : outcome ∈
       ((G.perfectMonitoring initial).runBehavioralFrom profile 1 history.1).support :=
     houtcome
   rw [(G.perfectMonitoring initial).runBehavioralFrom_succ_of_not_terminal
     profile 0 (by simp)] at hbehavior
-  rw [FinDist.support_bind] at hbehavior
+  rw [PMF.support_bind] at hbehavior
   obtain ⟨draw, hdraw, hbehavior⟩ := Set.mem_iUnion₂.mp hbehavior
-  rw [FinDist.support_bindOnSupport] at hbehavior
+  rw [PMF.support_bindOnSupport] at hbehavior
   obtain ⟨target, realized, hbehavior⟩ := Set.mem_iUnion₂.mp hbehavior
   rw [InformationModel.runBehavioralFrom,
     ExecutionProtocol.runRandomizedFor_zero] at hbehavior
-  rw [FinDist.mem_support_pure] at hbehavior
+  rw [PMF.mem_support_pure_iff] at hbehavior
   subst outcome
   exact ⟨draw.1, draw.2, realized, rfl⟩
 
@@ -67,12 +67,12 @@ private theorem trajectoryKernel_ae_support
   rw [Measure.dirac_bind (Kernel.measurable _)]
   have hmeasure :
       (pathStepLaw G initial profile n
-        (lastPathHistory G initial n historyPrefix)).toPMF.toMeasure
+        (lastPathHistory G initial n historyPrefix)).toMeasure
           {a | a ∈ (pathStepLaw G initial profile n
             (lastPathHistory G initial n historyPrefix)).support} = 1 := by
     rw [PMF.toMeasure_apply_eq_one_iff
       (pathStepLaw G initial profile n
-        (lastPathHistory G initial n historyPrefix)).toPMF
+        (lastPathHistory G initial n historyPrefix))
       MeasurableSet.of_discrete]
     exact Set.Subset.rfl
   exact hmeasure

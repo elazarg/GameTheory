@@ -1,13 +1,9 @@
 /-
   EXP-110: a direct Mathlib PMF stopping law with infinite support.
-
-  This is intentionally experiment-only.  The finite-support probability core
-  remains canonical; the only bridge used below is `FinDist.toPMF`.
 -/
 
 import Mathlib.Analysis.SpecificLimits.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
-import GameTheory.Math.Probability.FinDist
 
 noncomputable section
 
@@ -15,9 +11,8 @@ open scoped BigOperators ENNReal
 
 namespace GameTheory.Experimental.CountableDiscreteStopping
 
-open GameTheory.Math.Probability
 
-private def halfMass (n : ℕ) : ℝ := (1 : ℝ) / 2 / 2 ^ n
+def halfMass (n : ℕ) : ℝ := (1 : ℝ) / 2 / 2 ^ n
 
 private theorem hasSum_halfMass : HasSum halfMass 1 := by
   have hmass : halfMass = fun n : ℕ => (1 : ℝ) / 2 / 2 ^ n := rfl
@@ -35,7 +30,7 @@ private theorem halfMass_pos (n : ℕ) : 0 < halfMass n := by
 /-- The constant hazard used by the stopping-law slice. -/
 def halfHazard (_ : ℕ) : ℝ := (1 : ℝ) / 2
 
-private def halfSurvival (n : ℕ) : ℝ :=
+def halfSurvival (n : ℕ) : ℝ :=
   ∏ time ∈ Finset.range n, (1 - halfHazard time)
 
 private theorem halfSurvival_eq_pow (n : ℕ) :
@@ -121,13 +116,5 @@ theorem halfStoppingLaw_support_infinite :
   intro n
   rw [PMF.mem_support_iff, halfStoppingLaw_some]
   exact ENNReal.ofReal_ne_zero_iff.mpr (halfMass_pos _)
-
-theorem no_finDist_representation :
-    ¬ ∃ μ : FinDist (Option ℕ), μ.toPMF = halfStoppingLaw := by
-  rintro ⟨μ, hμ⟩
-  have hfinite : halfStoppingLaw.support.Finite := by
-    rw [← hμ]
-    exact μ.support_finite
-  exact halfStoppingLaw_support_infinite.not_finite hfinite
 
 end GameTheory.Experimental.CountableDiscreteStopping

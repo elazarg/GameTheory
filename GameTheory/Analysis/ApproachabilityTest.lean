@@ -33,54 +33,49 @@ private theorem score_positive :
   norm_num [score]
 
 theorem regretMatch_score_prob_zero :
-    (regretMatch score).prob 0 = 1 / 4 := by
-  rw [regretMatch, dite_eq_left score_positive, FinDist.prob_ofWeights]
+    expect (regretMatch score) (fun action => if action = 0 then 1 else 0)
+      (payoffIntegrable_of_finite _ _) = 1 / 4 := by
+  rw [expect_regretMatch_pos score_positive]
   rw [Fin.sum_univ_two]
   norm_num [score]
 
 theorem regretMatch_score_prob_one :
-    (regretMatch score).prob 1 = 3 / 4 := by
-  rw [regretMatch, dite_eq_left score_positive, FinDist.prob_ofWeights]
+    expect (regretMatch score) (fun action => if action = 1 then 1 else 0)
+      (payoffIntegrable_of_finite _ _) = 3 / 4 := by
+  rw [expect_regretMatch_pos score_positive]
   rw [Fin.sum_univ_two]
   norm_num [score]
 
 theorem regretPayoff_false_zero :
-    (regretPayoff utility (regretMatch score) false).ofLp 0 = 3 / 4 := by
-  rw [regretPayoff_ofLp, FinDist.expect_eq_sum, Fin.sum_univ_two]
-  rw [regretMatch_score_prob_zero, regretMatch_score_prob_one]
-  norm_num [utility]
+    (regretPayoff utility (regretMatch score) false
+      (payoffIntegrable_of_finite _ _)).ofLp 0 = 3 / 4 := by
+  rw [regretPayoff_ofLp, expect_regretMatch_pos score_positive,
+    Fin.sum_univ_two]
+  norm_num [utility, score]
 
 theorem regretPayoff_true_one :
-    (regretPayoff utility (regretMatch score) true).ofLp 1 = 1 / 2 := by
-  rw [regretPayoff_ofLp, FinDist.expect_eq_sum, Fin.sum_univ_two]
-  rw [regretMatch_score_prob_zero, regretMatch_score_prob_one]
-  norm_num [utility]
+    (regretPayoff utility (regretMatch score) true
+      (payoffIntegrable_of_finite _ _)).ofLp 1 = 1 / 2 := by
+  rw [regretPayoff_ofLp, expect_regretMatch_pos score_positive,
+    Fin.sum_univ_two]
+  norm_num [utility, score]
 
 theorem score_steers (environment : Bool) :
     inner ℝ
-      (regretPayoff utility (regretMatch score) environment - orthantProj score)
+      (regretPayoff utility (regretMatch score) environment
+        (payoffIntegrable_of_finite _ _) - orthantProj score)
       (score - orthantProj score) ≤ 0 :=
   regretMatch_steering utility score environment
 
-theorem regretPayoff_norm_le (p : FinDist (Fin 2)) (environment : Bool) :
-    ‖regretPayoff utility p environment‖ ≤ 6 := by
-  have hexpect : |p.expect fun action => utility action environment| ≤ 2 :=
-    p.abs_expect_le_of_abs_bound (fun action => utility action environment) fun action _ => by
-      fin_cases action <;> cases environment <;> norm_num [utility]
-  have hcoord : ∀ action, |(regretPayoff utility p environment).ofLp action| ≤ 4 := by
-    intro action
-    rw [regretPayoff_ofLp]
-    have hutility : |utility action environment| ≤ 2 := by
-      fin_cases action <;> cases environment <;> norm_num [utility]
-    exact (abs_sub _ _).trans (by linarith)
-  have hsq : ‖regretPayoff utility p environment‖ ^ 2 ≤ 32 := by
-    rw [norm_sq_eq_sum, Fin.sum_univ_two]
-    have hzero := hcoord 0
-    have hone := hcoord 1
-    rw [abs_le] at hzero hone
-    nlinarith [sq_nonneg ((regretPayoff utility p environment).ofLp 0),
-      sq_nonneg ((regretPayoff utility p environment).ofLp 1)]
-  nlinarith [hsq, norm_nonneg (regretPayoff utility p environment)]
+theorem regretPayoff_norm_le (p : PMF (Fin 2)) (environment : Bool) :
+    ‖regretPayoff utility p environment
+      (payoffIntegrable_of_finite p _)‖ ≤ 6 := by
+  have hrange (action : Fin 2) (q : Bool) :
+      utility action q ∈ Set.Icc (0 : ℝ) 2 := by
+    fin_cases action <;> cases q <;> norm_num [utility]
+  have h := regretPayoff_norm_le_card_mul_width utility hrange p environment
+  norm_num at h ⊢
+  linarith
 
 /-- A changing environment, so the convergence consumer is not a stationary
 or point-mass special case. -/
@@ -89,7 +84,9 @@ def alternatingEnvironment (t : ℕ) : Bool := t % 2 == 0
 theorem alternating_regretMatch_approaches :
     Tendsto
       (fun t => Metric.infDist
-        (avgVec (regretPayoff utility) regretMatch alternatingEnvironment t)
+        (avgVec (fun p q => regretPayoff utility p q
+          (payoffIntegrable_of_finite p _)) regretMatch
+          alternatingEnvironment t)
         (nonposOrthant (ι := Fin 2)))
       atTop (nhds 0) :=
   regretMatch_approaches utility (M := 6) (by norm_num) regretPayoff_norm_le

@@ -48,15 +48,15 @@ def componentTermScore
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1)) (selector : Fin 2)
+      PMF (diagram.Value source.1)) (selector : Fin 2)
     (target : DecisionSite diagram owner) (term : view.UtilitySite owner)
     [Fintype (TermConfig view term)]
     (fullValue : FullAction target) : ℝ :=
   ∑ termValue : TermConfig view term,
-    ((componentAugmentedLaw view owner base replacement source sourceRule
+    (((componentAugmentedLaw view owner base replacement source sourceRule
       selector).map (fun assignment =>
-        (fullAction view target assignment, termConfig view term assignment))).prob
-      (fullValue, termValue) * (view.term term).payoff termValue
+        (fullAction view target assignment, termConfig view term assignment)))
+      (fullValue, termValue)).toReal * (view.term term).payoff termValue
 
 private theorem componentTermScore_cross_product_aux
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
@@ -67,25 +67,26 @@ private theorem componentTermScore_cross_product_aux
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source target : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (hnot : ¬ SReachable view source target)
     (term : view.UtilitySite owner)
     (hrelevant : view.IsRelevantUtilityTerm target term)
     (fullValue : FullAction target) (termValue : TermConfig view term) :
-    ((componentAugmentedLaw view owner base replacement source sourceRule 0).map
+    (((componentAugmentedLaw view owner base replacement source sourceRule 0).map
         (fun assignment =>
-          (fullAction view target assignment, termConfig view term assignment))).prob
-        (fullValue, termValue) *
-      ((componentAugmentedLaw view owner base replacement source sourceRule 1).map
-        (fullAction view target)).prob fullValue =
-    ((componentAugmentedLaw view owner base replacement source sourceRule 0).map
-        (fullAction view target)).prob fullValue *
-      ((componentAugmentedLaw view owner base replacement source sourceRule 1).map
+          (fullAction view target assignment, termConfig view term assignment)))
+        (fullValue, termValue)).toReal *
+      (((componentAugmentedLaw view owner base replacement source sourceRule 1).map
+        (fullAction view target)) fullValue).toReal =
+    (((componentAugmentedLaw view owner base replacement source sourceRule 0).map
+        (fullAction view target)) fullValue).toReal *
+      (((componentAugmentedLaw view owner base replacement source sourceRule 1).map
         (fun assignment =>
-          (fullAction view target assignment, termConfig view term assignment))).prob
-        (fullValue, termValue) :=
-  componentTerm_cross_product topological view owner base replacement source
-    target sourceRule hnot term hrelevant fullValue termValue
+          (fullAction view target assignment, termConfig view term assignment)))
+        (fullValue, termValue)).toReal := by
+  simpa only [ENNReal.toReal_mul] using congrArg ENNReal.toReal
+    (componentTerm_cross_product topological view owner base replacement
+      source target sourceRule hnot term hrelevant fullValue termValue)
 
 /-- The two source components give the same term score after cross-multiplying
 by their target-context masses. -/
@@ -98,7 +99,7 @@ theorem componentTermScore_cross_product
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source target : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (hnot : ¬ SReachable view source target)
     (term : view.UtilitySite owner)
     (hrelevant : view.IsRelevantUtilityTerm target term)
@@ -106,10 +107,10 @@ theorem componentTermScore_cross_product
     [Fintype (TermConfig view term)] :
     componentTermScore view owner base replacement source sourceRule 0 target
         term fullValue *
-      ((componentAugmentedLaw view owner base replacement source sourceRule 1).map
-        (fullAction view target)).prob fullValue =
-    ((componentAugmentedLaw view owner base replacement source sourceRule 0).map
-        (fullAction view target)).prob fullValue *
+      (((componentAugmentedLaw view owner base replacement source sourceRule 1).map
+        (fullAction view target)) fullValue).toReal =
+    (((componentAugmentedLaw view owner base replacement source sourceRule 0).map
+        (fullAction view target)) fullValue).toReal *
       componentTermScore view owner base replacement source sourceRule 1 target
         term fullValue := by
   unfold componentTermScore
@@ -120,20 +121,21 @@ theorem componentTermScore_cross_product
     base replacement source target sourceRule hnot term hrelevant fullValue
     termValue
   calc
-    _ = (((componentAugmentedLaw view owner base replacement source sourceRule 0).map
+    _ = ((((componentAugmentedLaw view owner base replacement source sourceRule 0).map
           (fun assignment =>
-            (fullAction view target assignment, termConfig view term assignment))).prob
-          (fullValue, termValue) *
-        ((componentAugmentedLaw view owner base replacement source sourceRule 1).map
-          (fullAction view target)).prob fullValue) *
+            (fullAction view target assignment, termConfig view term assignment)))
+          (fullValue, termValue)).toReal *
+        (((componentAugmentedLaw view owner base replacement source sourceRule 1).map
+          (fullAction view target)) fullValue).toReal) *
         (view.term term).payoff termValue := by ring
-    _ = (((componentAugmentedLaw view owner base replacement source sourceRule 0).map
-          (fullAction view target)).prob fullValue *
-        ((componentAugmentedLaw view owner base replacement source sourceRule 1).map
+    _ = ((((componentAugmentedLaw view owner base replacement source sourceRule 0).map
+          (fullAction view target)) fullValue).toReal *
+        (((componentAugmentedLaw view owner base replacement source sourceRule 1).map
           (fun assignment =>
-            (fullAction view target assignment, termConfig view term assignment))).prob
-          (fullValue, termValue)) *
-        (view.term term).payoff termValue := by rw [hcross]
+            (fullAction view target assignment, termConfig view term assignment)))
+          (fullValue, termValue)).toReal) *
+        (view.term term).payoff termValue := by
+          rw [hcross]
     _ = _ := by ring
 
 /-- On a target atom reached by both components, the corresponding term
@@ -148,25 +150,25 @@ private theorem componentTermScore_conditional_eq
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source target : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (hnot : ¬ SReachable view source target)
     (term : view.UtilitySite owner)
     (hrelevant : view.IsRelevantUtilityTerm target term)
     (fullValue : FullAction target) [Fintype (TermConfig view term)]
     (hbase : 0 <
-      ((componentAugmentedLaw view owner base replacement source sourceRule 0).map
-        (fullAction view target)).prob fullValue)
+      (((componentAugmentedLaw view owner base replacement source sourceRule 0).map
+        (fullAction view target)) fullValue).toReal)
     (hchanged : 0 <
-      ((componentAugmentedLaw view owner base replacement source sourceRule 1).map
-        (fullAction view target)).prob fullValue) :
+      (((componentAugmentedLaw view owner base replacement source sourceRule 1).map
+        (fullAction view target)) fullValue).toReal) :
     componentTermScore view owner base replacement source sourceRule 0 target
         term fullValue /
-          ((componentAugmentedLaw view owner base replacement source sourceRule 0).map
-            (fullAction view target)).prob fullValue =
+          (((componentAugmentedLaw view owner base replacement source sourceRule 0).map
+            (fullAction view target)) fullValue).toReal =
       componentTermScore view owner base replacement source sourceRule 1 target
         term fullValue /
-          ((componentAugmentedLaw view owner base replacement source sourceRule 1).map
-            (fullAction view target)).prob fullValue := by
+          (((componentAugmentedLaw view owner base replacement source sourceRule 1).map
+            (fullAction view target)) fullValue).toReal := by
   apply (div_eq_div_iff hbase.ne' hchanged.ne').2
   have hcross := componentTermScore_cross_product topological view owner base
     replacement source target sourceRule hnot term hrelevant fullValue
@@ -189,7 +191,7 @@ private theorem localFactor_pos_of_factorProduct_pos
       exact hzero
     exact (ne_of_gt hproduct) hproductZero
   exact lt_of_le_of_ne
-    (FinDist.prob_nonneg _ _) hne.symm
+    ENNReal.toReal_nonneg hne.symm
 
 private theorem baseline_source_localFactor_pos
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
@@ -212,10 +214,11 @@ private theorem baseline_source_localFactor_pos
     unfold baselinePolicy
     rw [replaceSiteRule_self]
   rw [← hpolicy, hsourceLaw]
+  have hsourcePos := (PMF.apply_pos_iff _ _).mpr
+    (hmixed (Assignment.restrict diagram assignment
+      (diagram.observedParents source.1)) (assignment source.1))
   simpa [baselinePolicy, replaceSiteRule_self] using
-    (FinDist.prob_pos_iff.mpr
-      (hmixed (Assignment.restrict diagram assignment
-        (diagram.observedParents source.1)) (assignment source.1)))
+    ENNReal.toReal_pos (ne_of_gt hsourcePos) (PMF.apply_ne_top _ _)
 
 private theorem baseline_factorProduct_pos_of_changed_support
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
@@ -226,7 +229,7 @@ private theorem baseline_factorProduct_pos_of_changed_support
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (assignment : Assignment diagram)
     (hchanged : assignment ∈
       ((nativeBehavioralGameForm semantics).play
@@ -236,9 +239,12 @@ private theorem baseline_factorProduct_pos_of_changed_support
         (effectiveKernels semantics (baselinePolicy base owner replacement))
         Finset.univ assignment := by
   have hchangedProb : 0 <
-      ((nativeBehavioralGameForm semantics).play
-        (componentPolicy base owner replacement source sourceRule 1)).prob
-          assignment := FinDist.prob_pos_iff.mpr hchanged
+      (((nativeBehavioralGameForm semantics).play
+        (componentPolicy base owner replacement source sourceRule 1))
+          assignment).toReal := by
+    exact ENNReal.toReal_pos
+      (ne_of_gt ((PMF.apply_pos_iff _ _).mpr hchanged))
+      (PMF.apply_ne_top _ _)
   have hchangedProduct : 0 < factorProduct diagram.Value
       (effectiveParents diagram)
       (effectiveKernels semantics
@@ -255,20 +261,22 @@ private theorem baseline_factorProduct_pos_of_changed_support
       source assignment hmixed
   · have hchangedLocal := localFactor_pos_of_factorProduct_pos
       hchangedProduct node
-    rw [show localFactor diagram.Value (effectiveParents diagram)
+    have hfactorEq : localFactor diagram.Value (effectiveParents diagram)
         (effectiveKernels semantics (baselinePolicy base owner replacement))
         assignment node =
       localFactor diagram.Value (effectiveParents diagram)
         (effectiveKernels semantics
           (componentPolicy base owner replacement source sourceRule 1))
-        assignment node by
+        assignment node := by
       unfold localFactor
       rw [effectiveKernels_parentConfiguration,
         effectiveKernels_parentConfiguration]
+      have heq := congrArg (fun law => law (assignment node))
+        (assignmentNodeLaw_update_replaceSiteRule_of_ne semantics base owner
+          replacement source sourceRule assignment node hsource)
       simpa [baselinePolicy, componentPolicy] using
-        (congrArg (fun law => law.prob (assignment node))
-          (assignmentNodeLaw_update_replaceSiteRule_of_ne semantics base owner
-            replacement source sourceRule assignment node hsource)).symm]
+        congrArg ENNReal.toReal heq.symm
+    rw [hfactorEq]
     exact hchangedLocal
 
 /-- A changed source rule cannot create a target full-action atom outside the
@@ -283,7 +291,7 @@ theorem componentFullAction_support_subset_of_fullyMixed
     (replacement : OwnerPolicy diagram owner)
     (source target : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (fullValue : FullAction target)
     (hmixed : FullyMixedAt replacement source)
     (hchanged : fullValue ∈
@@ -292,25 +300,26 @@ theorem componentFullAction_support_subset_of_fullyMixed
     fullValue ∈
       ((componentAugmentedLaw view owner base replacement source sourceRule 0).map
         (fullAction view target)).support := by
-  rw [FinDist.support_map] at hchanged ⊢
+  rw [PMF.support_map] at hchanged ⊢
   obtain ⟨assignment, hassignment, hfull⟩ := hchanged
-  rw [componentAugmentedLaw, augmentedLaw, FinDist.support_map] at hassignment
+  rw [componentAugmentedLaw, augmentedLaw, PMF.support_map] at hassignment
   obtain ⟨nativeAssignment, hnative, haugmented⟩ := hassignment
   have hproduct := baseline_factorProduct_pos_of_changed_support topological
     semantics base owner replacement source sourceRule
     nativeAssignment hnative hmixed
   · refine ⟨augmentAssignment view (owner := owner) nativeAssignment, ?_, ?_⟩
     · unfold componentAugmentedLaw augmentedLaw
-      rw [FinDist.support_map (augmentAssignment view (owner := owner))]
+      rw [PMF.support_map (augmentAssignment view (owner := owner))]
       refine ⟨nativeAssignment, ?_, rfl⟩
-      apply FinDist.prob_pos_iff.mp
+      apply (PMF.apply_pos_iff _ _).mp
       have hprob : 0 <
-          ((nativeBehavioralGameForm semantics).play
-            (baselinePolicy base owner replacement)).prob nativeAssignment := by
+          (((nativeBehavioralGameForm semantics).play
+            (baselinePolicy base owner replacement)) nativeAssignment).toReal := by
         rw [native_play_prob_eq_factorProduct_univ topological semantics
           (baselinePolicy base owner replacement) nativeAssignment]
         exact hproduct
-      simpa [componentPolicy] using hprob
+      exact (ENNReal.toReal_pos_iff.mp
+        (by simpa [componentPolicy] using hprob)).1
     · rw [haugmented]
       exact hfull
 

@@ -17,6 +17,7 @@ evidence, not API.
 -/
 
 import GameTheory.Core.Form
+import GameTheory.Math.Probability.Product
 
 noncomputable section
 
@@ -33,7 +34,7 @@ variable {ι : Type uι}
 /-- A form indexed by its signature rather than storing it. -/
 structure IndexedForm (sig : GameSignature.{uι, us, uo} ι) where
   /-- The stochastic outcome law of each profile. -/
-  play : Profile sig → FinDist sig.Outcome
+  play : Profile sig → PMF sig.Outcome
 
 /-- Relabelling outcomes. What the accepted design states as a theorem — that the
 result's signature is the transformed signature — is written here in the type. -/
@@ -45,7 +46,7 @@ def IndexedForm.mapOutcome {sig : GameSignature.{uι, us, uo} ι} (F : IndexedFo
 /-- The mixed extension. Likewise. -/
 def IndexedForm.mixed [Fintype ι] {sig : GameSignature.{uι, us, uo} ι} (F : IndexedForm sig) :
     IndexedForm sig.mixed where
-  play law := (FinDist.pi law).bind F.play
+  play law := (independentProduct law).bind F.play
 
 /-! ## What indexing removes, and what it does not
 
@@ -77,7 +78,7 @@ example {sig : GameSignature.{uι, us, uo} ι} (F : IndexedForm sig)
     (F.mapOutcome Middle first).mapOutcome Outcome second =
       F.mapOutcome Outcome (second ∘ first) := by
   refine congrArg IndexedForm.mk (funext fun profile => ?_)
-  simp [IndexedForm.mapOutcome, Function.comp_def]
+  simp [IndexedForm.mapOutcome, Function.comp_def, PMF.map_comp]
 
 /-! ## What the index costs
 
@@ -89,6 +90,6 @@ sit at the same sites. -/
 
 variable (sig : GameSignature.{uι, us, uo} ι)
 
-example (F : IndexedForm sig) : Profile sig → FinDist sig.Outcome := F.play
+example (F : IndexedForm sig) : Profile sig → PMF sig.Outcome := F.play
 
 end GameTheory.Experimental.Phase4.D1

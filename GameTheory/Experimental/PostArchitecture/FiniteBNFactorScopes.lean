@@ -14,7 +14,6 @@ noncomputable section
 
 namespace GameTheory.Experimental.PostArchitecture.FiniteBNFactorScopes
 
-open GameTheory.Math.Probability
 open GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
 
 universe uNode uValue
@@ -146,7 +145,7 @@ def parents : ControlNode → Finset ControlNode
   | .right => {.evidence}
 
 def kernels : LocalKernels ControlValue parents :=
-  fun _ _ => FinDist.pure false
+  fun _ _ => PMF.pure false
 
 def leftFactors : Finset ControlNode := {.left}
 

@@ -14,6 +14,7 @@ transfer Nash equilibria in both directions.
 -/
 
 import GameTheory.Languages.EFG.Strategic
+import GameTheory.Protocol.StrategicRealization
 import GameTheory.Core.Utility
 
 noncomputable section
@@ -66,13 +67,18 @@ theorem isNash_toBehavioralGameForm_iff
     (behavioral : Profile G.behavioralSignature) (horizon : ℕ) :
     IsNash (G.toBehavioralGameForm horizon) (euPreference utility) behavioral ↔
       ∀ who replacement,
+        ∃ hbase : UtilityIntegrable utility who
+          (G.information.runBehavioral behavioral horizon),
+        ∃ hdeviation : UtilityIntegrable utility who
+          (G.information.runBehavioral
+            (Profile.update behavioral who replacement) horizon),
         expectedUtility utility who
             (G.information.runBehavioral
-              (Profile.update behavioral who replacement) horizon) ≤
+              (Profile.update behavioral who replacement) horizon) hdeviation ≤
           expectedUtility utility who
-            (G.information.runBehavioral behavioral horizon) := by
-  rw [isNash_iff]
-  rfl
+            (G.information.runBehavioral behavioral horizon) hbase := by
+  rw [isNash_iff, G.toBehavioralGameForm_play]
+  simp only [euPreference_apply]
 
 /-- A player's mixed strategy may be read behaviorally and redrawn as mixed
 without changing the history law against the other players' fixed mixed
@@ -101,12 +107,15 @@ profile with exactly the same history law, even when the ambient information
 carriers are infinite. -/
 theorem kuhn_behavioral_to_mixed
     (hactsOnce : G.information.ActsOnceWhereItMatters)
-    (behavioral : Profile G.behavioralSignature) (horizon : ℕ) :
+    (behavioral : Profile G.behavioralSignature) (horizon : ℕ)
+    (hfinite : ∀ who,
+      (G.information.behavioralSupportSitesFrom behavioral horizon
+        G.execution.initHistory who).Finite) :
     ∃ mixed : Profile G.strategicSignature.mixed,
       G.information.runMixed mixed horizon =
         G.information.runBehavioral behavioral horizon :=
   G.information.exists_mixed_runMixed_eq_runBehavioral
-    hactsOnce behavioral horizon
+    hactsOnce behavioral horizon hfinite
 
 /-- **Mixed-to-behavioral Kuhn direction.** Under perfect recall, the canonical
 behavioral reading of a mixed contingent plan has exactly the same history
@@ -129,14 +138,22 @@ same bounded history laws. Perfect recall supplies the no-revisit consequence
 used in the behavioral-to-mixed direction; no ambient information-state
 finiteness is required. -/
 theorem kuhn_historyLaws
-    (hrecall : G.information.PerfectRecall) (horizon : ℕ) :
+    (hrecall : G.information.PerfectRecall) (horizon : ℕ)
+    (hfinite : ∀ behavioral : Profile G.behavioralSignature, ∀ who,
+      (G.information.behavioralSupportSitesFrom behavioral horizon
+        G.execution.initHistory who).Finite) :
     { law | ∃ behavioral : Profile G.behavioralSignature,
         G.information.runBehavioral behavioral horizon = law } =
       { law | ∃ mixed : Profile G.strategicSignature.mixed,
         G.information.runMixed mixed horizon = law } :=
-  G.information.runBehavioral_image_eq_runMixed_image
-    (G.information.actsOnceWhereItMatters_of_perfectRecall hrecall)
-    (InformationModel.constrainsAlike_of_perfectRecall hrecall) horizon
+  by
+    simpa [InformationModel.toBehavioralGameForm_play,
+      InformationModel.toGameForm_mixed_play, InformationModel.runMixed,
+      InformationModel.runMixedFrom, InformationModel.run] using
+      G.information.toBehavioralGameForm_play_image_eq_mixed_play_image
+        (G.information.actsOnceWhereItMatters_of_perfectRecall hrecall)
+        (InformationModel.constrainsAlike_of_perfectRecall hrecall) horizon
+        hfinite
 
 section UnilateralTransfers
 
@@ -215,15 +232,15 @@ theorem isNash_toMixed_of_isNash_behavioral
   rw [G.isNash_mixed_toGameForm_iff]
   rw [G.isNash_toBehavioralGameForm_iff] at hnash
   intro who replacement
-  have hdeviation := G.kuhn_behavioral_update_toMixed
+  have hdevLaw := G.kuhn_behavioral_update_toMixed
     hrecall behavioral who replacement horizon
-  have hbaseline := G.information.runMixed_toMixed
+  have hbaseLaw := G.information.runMixed_toMixed
     (G.information.actsOnceWhereItMatters_of_perfectRecall hrecall)
     behavioral horizon
-  rw [hdeviation, hbaseline]
-  exact hnash who
-    (InformationModel.MixedPolicy.toBehavioral
-      (M := G.information) replacement)
+  have hrelation := congrArg₂ (euPreference utility who) hbaseLaw.symm
+    hdevLaw.symm
+  exact hrelation.mp (hnash who (InformationModel.MixedPolicy.toBehavioral
+    (M := G.information) replacement))
 
 /-- A mixed Nash equilibrium becomes a behavioral Nash equilibrium under the
 canonical conditional behavioral reading. Arbitrary behavioral deviations are
@@ -242,13 +259,13 @@ theorem isNash_toBehavioral_of_isNash_mixed
   rw [G.isNash_toBehavioralGameForm_iff]
   rw [G.isNash_mixed_toGameForm_iff] at hnash
   intro who replacement
-  have hdeviation := G.kuhn_mixed_update_toBehavioral
+  have hdevLaw := G.kuhn_mixed_update_toBehavioral
     hrecall mixed who replacement horizon
-  have hbaseline := G.information.runMixed_toBehavioral
+  have hbaseLaw := G.information.runMixed_toBehavioral
     (InformationModel.constrainsAlike_of_perfectRecall hrecall)
     horizon mixed
-  rw [hdeviation, ← hbaseline]
-  exact hnash who replacement.toMixed
+  have hrelation := congrArg₂ (euPreference utility who) hbaseLaw hdevLaw.symm
+  exact hrelation.mp (hnash who replacement.toMixed)
 
 end UnilateralTransfers
 
@@ -258,13 +275,16 @@ with utility generalized to arbitrary retained outcome data. -/
 theorem kuhn_behavioral_to_mixed_outcomeLaw
     (hactsOnce : G.information.ActsOnceWhereItMatters)
     (behavioral : Profile G.behavioralSignature) (horizon : ℕ)
+    (hfinite : ∀ who,
+      (G.information.behavioralSupportSitesFrom behavioral horizon
+        G.execution.initHistory who).Finite)
     {Outcome : Type uo} (outcome : G.History → Outcome) :
     ∃ mixed : Profile G.strategicSignature.mixed,
-      FinDist.map outcome (G.information.runMixed mixed horizon) =
-        FinDist.map outcome (G.information.runBehavioral behavioral horizon) := by
+      PMF.map outcome (G.information.runMixed mixed horizon) =
+        PMF.map outcome (G.information.runBehavioral behavioral horizon) := by
   obtain ⟨mixed, hmixed⟩ :=
-    G.kuhn_behavioral_to_mixed hactsOnce behavioral horizon
-  exact ⟨mixed, congrArg (FinDist.map outcome) hmixed⟩
+    G.kuhn_behavioral_to_mixed hactsOnce behavioral horizon hfinite
+  exact ⟨mixed, congrArg (PMF.map outcome) hmixed⟩
 
 /-- Pushing a mixed history law through any outcome map preserves the
 mixed-to-behavioral correspondence. -/
@@ -273,43 +293,61 @@ theorem kuhn_mixed_to_behavioral_outcomeLaw
     (mixed : Profile G.strategicSignature.mixed) (horizon : ℕ)
     {Outcome : Type uo} (outcome : G.History → Outcome) :
     ∃ behavioral : Profile G.behavioralSignature,
-      FinDist.map outcome (G.information.runBehavioral behavioral horizon) =
-        FinDist.map outcome (G.information.runMixed mixed horizon) := by
+      PMF.map outcome (G.information.runBehavioral behavioral horizon) =
+        PMF.map outcome (G.information.runMixed mixed horizon) := by
   obtain ⟨behavioral, hbehavioral⟩ :=
     G.kuhn_mixed_to_behavioral hrecall mixed horizon
-  exact ⟨behavioral, congrArg (FinDist.map outcome) hbehavioral⟩
+  exact ⟨behavioral, congrArg (PMF.map outcome) hbehavioral⟩
 
 /-- The behavioral-to-mixed witness preserves every player's expected utility. -/
 theorem kuhn_behavioral_to_mixed_expectedUtility
     (hactsOnce : G.information.ActsOnceWhereItMatters)
     (behavioral : Profile G.behavioralSignature) (horizon : ℕ)
-    (utility : G.History → ι → ℝ) :
+    (hfinite : ∀ who,
+      (G.information.behavioralSupportSitesFrom behavioral horizon
+        G.execution.initHistory who).Finite)
+    (utility : G.History → ι → ℝ)
+    (hintegrable : ∀ who,
+      UtilityIntegrable utility who
+        (G.information.runBehavioral behavioral horizon)) :
     ∃ mixed : Profile G.strategicSignature.mixed,
       ∀ who,
+        ∃ hmixed : UtilityIntegrable utility who
+          (G.information.runMixed mixed horizon),
         expectedUtility utility who
-            (G.information.runMixed mixed horizon) =
+            (G.information.runMixed mixed horizon) hmixed =
           expectedUtility utility who
-            (G.information.runBehavioral behavioral horizon) := by
+            (G.information.runBehavioral behavioral horizon) (hintegrable who) := by
   obtain ⟨mixed, hmixed⟩ :=
-    G.kuhn_behavioral_to_mixed hactsOnce behavioral horizon
-  exact ⟨mixed, fun who => congrArg (expectedUtility utility who) hmixed⟩
+    G.kuhn_behavioral_to_mixed hactsOnce behavioral horizon hfinite
+  refine ⟨mixed, fun who => ?_⟩
+  have hmixedIntegrable := payoffIntegrable_congr_law hmixed.symm (hintegrable who)
+  exact ⟨hmixedIntegrable,
+    expectedUtility_congr_law utility who hmixed hmixedIntegrable (hintegrable who)⟩
 
 /-- The mixed-to-behavioral witness preserves every player's expected utility. -/
 theorem kuhn_mixed_to_behavioral_expectedUtility
     (hrecall : G.information.PerfectRecall)
     (mixed : Profile G.strategicSignature.mixed) (horizon : ℕ)
-    (utility : G.History → ι → ℝ) :
+    (utility : G.History → ι → ℝ)
+    (hintegrable : ∀ who,
+      UtilityIntegrable utility who (G.information.runMixed mixed horizon)) :
     ∃ behavioral : Profile G.behavioralSignature,
       ∀ who,
+        ∃ hbehavioral : UtilityIntegrable utility who
+          (G.information.runBehavioral behavioral horizon),
         expectedUtility utility who
-            (G.information.runBehavioral behavioral horizon) =
+            (G.information.runBehavioral behavioral horizon) hbehavioral =
           expectedUtility utility who
-            (G.information.runMixed mixed horizon) := by
+            (G.information.runMixed mixed horizon) (hintegrable who) := by
   obtain ⟨behavioral, hbehavioral⟩ :=
     G.kuhn_mixed_to_behavioral hrecall mixed horizon
-  exact
-    ⟨behavioral,
-      fun who => congrArg (expectedUtility utility who) hbehavioral⟩
+  refine ⟨behavioral, fun who => ?_⟩
+  have hbehavioralIntegrable := payoffIntegrable_congr_law
+    hbehavioral.symm (hintegrable who)
+  exact ⟨hbehavioralIntegrable,
+    expectedUtility_congr_law utility who hbehavioral
+      hbehavioralIntegrable (hintegrable who)⟩
 
 end Game
 

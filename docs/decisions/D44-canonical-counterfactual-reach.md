@@ -1,13 +1,13 @@
 # D44: Derive counterfactual reach from canonical behavioral histories
 
-- **Status:** adopted; coefficient and continuation package promoted
+- **Status:** adopted
 - **Date:** 2026-08-10
 - **Experiment ID:** EXP-081
 
 ## Decision
 
-Keep `InformationModel.historyReachProbability` as the sole actual history
-reach semantics. Define only the focal action product and the complementary
+Keep `InformationModel.historyReachWeight` as the sole actual history reach
+semantics. Define only the focal action product and the complementary
 counterfactual product on canonical `ExecutionProtocol.Trace`, and prove that
 their product is the existing canonical reach probability.
 
@@ -20,7 +20,7 @@ probability carrier, or bridge-specific equilibrium predicate is admitted.
 1. Factor the canonical behavioral joint and history laws.
 2. Restore the retired FOSG runner and its recursive probability functions.
 3. Introduce a second recursive actual trace weight beside
-   `historyReachProbability`.
+   the canonical history reach atom.
 4. Defer every coefficient until a complete CFR theorem fixes the API.
 
 Design 1 is adopted. The spike briefly implemented Design 3, then rejected it
@@ -42,14 +42,12 @@ factors are both `1/2`; recursive player reach and canonical history reach are
 `1/4`, while counterfactual reach is one. This rejects an implementation that
 merely renames the last one-step factor.
 
-The narrow source/consumer build completed 1,738 jobs warning-free, both fast
-expected audits report `VERIFIED=1`, and the full build completed 3,583 jobs
-warning-free. Deep reachability mode was not run.
+EXP-081 records the artifacts and validation evidence for these controls.
 
 ## Continuation and factorization results
 
 `behavioralJoint_prob_eq_prod` derives local coordinate masses from
-`FinDist.pi`. `runBehavioralFrom_one_prob_extend` proves that a joint and
+the independent PMF product. `runBehavioralFrom_one_prob_extend` proves that a joint and
 transition coefficient is exactly the probability of the corresponding
 canonical history extension. `historyReachProbability_extend` then proves the
 full continuation equation from the actual runner.
@@ -75,7 +73,26 @@ include it in `GameTheory.Analysis.Protocol`. Keep the definitions on generic
 `InformationModel`, so FOSG uses them through its canonical Protocol semantics
 rather than owning a parallel analysis layer.
 
-This decision delivers coefficients and continuation identities, not CFR.
-The next gate is a regret decomposition with a direct coefficient consumer;
-CFR convergence follows only after that theorem fixes the needed update and
-regret surface.
+The coefficient and continuation interface is independent of a particular
+regret algorithm. A CFR theorem must additionally connect its update rule to
+regret decomposition; the reach factorization alone does not establish
+convergence.
+
+## Probability ownership
+
+The exact-depth runner atom is the `ENNReal`-valued `historyReachWeight`,
+owned by `Protocol.HistoryEvents`. Real counterfactual coefficients convert
+that same atom at their numerical boundary; no parallel actual-reach
+definition was restored. `Protocol.HistoryPathMass` supplies the generic
+predecessor factor, replacing the duplicated extension case split.
+The support-indexed injective pure-bind atom lemma belongs to game-independent
+`Math.Probability.Support`.
+
+The source audit names this numerical coefficient owner and its focused
+`CounterfactualReachTest` fixture explicitly. The latter compares the canonical
+reach atom's real value with the player/counterfactual factorization, including
+the repeated-site value `1 / 4`; this conversion is part of the quantity being
+tested. Other fixtures retain the ordinary PMF mass or guarded-expectation API.
+
+The coefficient source has no Bayesian normalization dependency. PMF
+restoration validation is recorded in the worklog and experiment log.

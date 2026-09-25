@@ -1,212 +1,174 @@
 /-
-# Finite hidden-action contract ownership experiment
+# Canonical principal-agent ownership regression
 
-This hostile slice tests a native role-asymmetric principal-agent model over
-finite-support outcome laws.  It deliberately does not manufacture strategic
-players or reuse auction-specific allocation data.
+The stochastic fixture exercises the shared principal-agent model and its
+operation-local payoff guards.
 -/
 
-import GameTheory.Math.Probability.FinDist
+import GameTheory.Mechanism.PrincipalAgent
+import GameTheory.Math.Probability.Expectation
+import GameTheory.Math.Probability.Mixture
 
 noncomputable section
 
 namespace GameTheory.Experimental.PostArchitecture.ContractOwnership
 
 open GameTheory.Math.Probability
-
-universe uAction uOutcome
-
-/-- Candidate capability-free data for a hidden-action environment. -/
-structure PrincipalAgentCandidate (Action : Type uAction) (Outcome : Type uOutcome) where
-  outcomeLaw : Action → FinDist Outcome
-  reward : Outcome → ℝ
-  cost : Action → ℝ
-
-namespace PrincipalAgentCandidate
-
-variable {Action : Type uAction} {Outcome : Type uOutcome}
-variable (I : PrincipalAgentCandidate Action Outcome)
-
-/-- Expected transfer received by the agent. -/
-def expectedPayment (payment : Outcome → ℝ) (action : Action) : ℝ :=
-  (I.outcomeLaw action).expect payment
-
-/-- The risk-neutral agent's expected transfer less effort cost. -/
-def agentUtility (payment : Outcome → ℝ) (action : Action) : ℝ :=
-  I.expectedPayment payment action - I.cost action
-
-/-- The principal's expected reward net of the transfer. -/
-def principalUtility (payment : Outcome → ℝ) (action : Action) : ℝ :=
-  (I.outcomeLaw action).expect fun outcome => I.reward outcome - payment outcome
-
-/-- Expected gross reward before transfers. -/
-def expectedReward (action : Action) : ℝ :=
-  (I.outcomeLaw action).expect I.reward
-
-/-- Expected reward net of effort cost. -/
-def socialSurplus (action : Action) : ℝ :=
-  I.expectedReward action - I.cost action
-
-/-- An incentivized action weakly maximizes the agent's utility. -/
-def IsIncentivized (payment : Outcome → ℝ) (action : Action) : Prop :=
-  ∀ alternative, I.agentUtility payment alternative ≤ I.agentUtility payment action
-
-/-- Participation compares the selected action with an explicit outside option. -/
-def Participates (outsideOption : ℝ) (payment : Outcome → ℝ) (action : Action) : Prop :=
-  outsideOption ≤ I.agentUtility payment action
-
-/-- The contract offers at least one action that meets the outside option. -/
-def HasParticipationOption (outsideOption : ℝ) (payment : Outcome → ℝ) : Prop :=
-  ∃ action, I.Participates outsideOption payment action
-
-/-- Transfers only split social surplus between principal and agent. -/
-theorem principalUtility_add_agentUtility (payment : Outcome → ℝ) (action : Action) :
-    I.principalUtility payment action + I.agentUtility payment action =
-      I.socialSurplus action := by
-  simp only [principalUtility, agentUtility, expectedPayment, socialSurplus, expectedReward]
-  rw [show (fun outcome => I.reward outcome - payment outcome) =
-      (fun outcome => I.reward outcome + (-1) * payment outcome) from
-        funext fun outcome => by ring]
-  rw [FinDist.expect_add, FinDist.expect_smul]
-  ring
-
-/-- A finite nonempty action set has an agent-optimal action. -/
-theorem exists_incentivized [Finite Action] [Nonempty Action] (payment : Outcome → ℝ) :
-    ∃ action, I.IsIncentivized payment action := by
-  obtain ⟨action, hmax⟩ := Finite.exists_max (I.agentUtility payment)
-  exact ⟨action, hmax⟩
-
-/-- Any optimal action participates when the contract offers an acceptable fallback. -/
-theorem participates_of_isIncentivized
-    {outsideOption : ℝ} {payment : Outcome → ℝ} {action : Action}
-    (hoption : I.HasParticipationOption outsideOption payment)
-    (hincentivized : I.IsIncentivized payment action) :
-    I.Participates outsideOption payment action := by
-  obtain ⟨fallback, hfallback⟩ := hoption
-  exact hfallback.trans (hincentivized fallback)
-
-end PrincipalAgentCandidate
-
-/-- Limited liability prevents a contract from charging the agent. -/
-def LimitedLiability {Outcome : Type uOutcome} (payment : Outcome → ℝ) : Prop :=
-  ∀ outcome, 0 ≤ payment outcome
-
-/-! ## Hostile stochastic fixture -/
+open GameTheory.Mechanism
 
 namespace Hostile
 
 /-- The productive action succeeds fairly; the safe action deterministically fails. -/
-def environment : PrincipalAgentCandidate Bool Bool where
+def environment : PrincipalAgent Bool Bool where
   outcomeLaw action :=
     if action then
-      FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-        (FinDist.pure false) (FinDist.pure true)
-    else
-      FinDist.pure false
+      mix (1 / 2) (by norm_num) (by norm_num)
+        (PMF.pure false) (PMF.pure true)
+    else PMF.pure false
   reward outcome := if outcome then 4 else 0
   cost action := if action then 1 else 0
 
-/-- No transfer makes the safe action uniquely attractive. -/
 def zeroPayment : Bool → ℝ := fun _ => 0
 
-/-- A success bonus makes the costly productive action uniquely attractive. -/
 def successBonus : Bool → ℝ := fun outcome => if outcome then 3 else 0
 
+theorem paymentIntegrable (action : Bool) :
+    PayoffIntegrable (environment.outcomeLaw action) successBonus :=
+  payoffIntegrable_of_finite _ _
+
+theorem zeroPaymentIntegrable (action : Bool) :
+    PayoffIntegrable (environment.outcomeLaw action) zeroPayment :=
+  payoffIntegrable_of_finite _ _
+
+theorem rewardIntegrable (action : Bool) :
+    PayoffIntegrable (environment.outcomeLaw action) environment.reward :=
+  payoffIntegrable_of_finite _ _
+
+theorem bonusNetIntegrable (action : Bool) :
+    PayoffIntegrable (environment.outcomeLaw action)
+      (fun outcome => environment.reward outcome - successBonus outcome) :=
+  payoffIntegrable_of_finite _ _
+
 theorem expectedPayment_zero (action : Bool) :
-    environment.expectedPayment zeroPayment action = 0 := by
-  unfold PrincipalAgentCandidate.expectedPayment zeroPayment
-  exact FinDist.expect_const _ 0
+    environment.expectedPayment zeroPayment action
+      (zeroPaymentIntegrable action) = 0 := by
+  rw [PrincipalAgent.expectedPayment]
+  exact expect_constant _ 0 (payoffIntegrable_constant _ 0)
 
 theorem expectedPayment_bonus_safe :
-    environment.expectedPayment successBonus false = 0 := by
-  simp [PrincipalAgentCandidate.expectedPayment, environment, successBonus]
+    environment.expectedPayment successBonus false (paymentIntegrable false) = 0 := by
+  rw [PrincipalAgent.expectedPayment, expect_eq_sum]
+  norm_num [environment, successBonus, PMF.pure_apply]
 
 theorem expectedPayment_bonus_productive :
-    environment.expectedPayment successBonus true = 3 / 2 := by
-  simp [PrincipalAgentCandidate.expectedPayment, environment, successBonus,
-    FinDist.expect_mix]
-  norm_num
+    environment.expectedPayment successBonus true (paymentIntegrable true) = 3 / 2 := by
+  rw [PrincipalAgent.expectedPayment, expect_eq_sum]
+  norm_num [environment, successBonus, mix_apply, PMF.pure_apply]
 
-theorem agentUtility_zero_safe : environment.agentUtility zeroPayment false = 0 := by
-  rw [PrincipalAgentCandidate.agentUtility, expectedPayment_zero]
+theorem agentUtility_zero_safe :
+    environment.agentUtility zeroPayment false (zeroPaymentIntegrable false) = 0 := by
+  rw [PrincipalAgent.agentUtility, expectedPayment_zero]
   norm_num [environment]
 
-theorem agentUtility_zero_productive : environment.agentUtility zeroPayment true = -1 := by
-  rw [PrincipalAgentCandidate.agentUtility, expectedPayment_zero]
+theorem agentUtility_zero_productive :
+    environment.agentUtility zeroPayment true (zeroPaymentIntegrable true) = -1 := by
+  rw [PrincipalAgent.agentUtility, expectedPayment_zero]
   norm_num [environment]
 
-theorem agentUtility_bonus_safe : environment.agentUtility successBonus false = 0 := by
-  rw [PrincipalAgentCandidate.agentUtility, expectedPayment_bonus_safe]
+theorem agentUtility_bonus_safe :
+    environment.agentUtility successBonus false (paymentIntegrable false) = 0 := by
+  rw [PrincipalAgent.agentUtility, expectedPayment_bonus_safe]
   norm_num [environment]
 
 theorem agentUtility_bonus_productive :
-    environment.agentUtility successBonus true = 1 / 2 := by
-  rw [PrincipalAgentCandidate.agentUtility, expectedPayment_bonus_productive]
+    environment.agentUtility successBonus true (paymentIntegrable true) = 1 / 2 := by
+  rw [PrincipalAgent.agentUtility, expectedPayment_bonus_productive]
   norm_num [environment]
 
 theorem zero_incentivizes_safe : environment.IsIncentivized zeroPayment false := by
+  refine ⟨zeroPaymentIntegrable, ?_⟩
   intro alternative
-  cases alternative <;>
-    norm_num [agentUtility_zero_safe, agentUtility_zero_productive]
+  cases alternative with
+  | false => exact le_rfl
+  | true => rw [agentUtility_zero_safe, agentUtility_zero_productive]; norm_num
 
 theorem bonus_incentivizes_productive :
     environment.IsIncentivized successBonus true := by
+  refine ⟨paymentIntegrable, ?_⟩
   intro alternative
-  cases alternative <;>
-    norm_num [agentUtility_bonus_safe, agentUtility_bonus_productive]
+  cases alternative with
+  | false => rw [agentUtility_bonus_safe, agentUtility_bonus_productive]; norm_num
+  | true => exact le_rfl
 
-theorem bonus_limitedLiability : LimitedLiability successBonus := by
+theorem bonus_limitedLiability : PrincipalAgent.IsLimitedLiability successBonus := by
   intro outcome
   cases outcome <;> norm_num [successBonus]
 
 theorem productive_participates_quarter :
     environment.Participates (1 / 4) successBonus true := by
-  norm_num [PrincipalAgentCandidate.Participates, agentUtility_bonus_productive]
+  exact ⟨paymentIntegrable true, by
+    rw [PrincipalAgent.agentUtility, expectedPayment_bonus_productive]
+    norm_num [environment]⟩
 
 theorem productive_rejects_three_quarters :
     ¬environment.Participates (3 / 4) successBonus true := by
-  norm_num [PrincipalAgentCandidate.Participates, agentUtility_bonus_productive]
+  rintro ⟨hpayment, hparticipates⟩
+  have heq : hpayment = paymentIntegrable true := Subsingleton.elim _ _
+  rw [heq, PrincipalAgent.agentUtility, expectedPayment_bonus_productive] at hparticipates
+  norm_num [environment] at hparticipates
 
 theorem bonus_has_participation_option :
-    environment.HasParticipationOption (1 / 4) successBonus :=
+    environment.OffersParticipation (1 / 4) successBonus :=
   ⟨true, productive_participates_quarter⟩
 
 theorem productive_participates_from_incentives :
     environment.Participates (1 / 4) successBonus true :=
-  environment.participates_of_isIncentivized
+  environment.participates_of_offersParticipation_of_isIncentivized
     bonus_has_participation_option bonus_incentivizes_productive
 
 theorem incentivized_action_exists :
-    ∃ action, environment.IsIncentivized successBonus action :=
-  environment.exists_incentivized successBonus
+    ∃ action, environment.IsIncentivized successBonus action := by
+  exact environment.exists_incentivized successBonus paymentIntegrable
 
 theorem productive_welfare_identity :
-    environment.principalUtility successBonus true +
-        environment.agentUtility successBonus true =
-      environment.socialSurplus true :=
-  environment.principalUtility_add_agentUtility successBonus true
+    environment.principalUtility successBonus true (bonusNetIntegrable true) +
+        environment.agentUtility successBonus true (paymentIntegrable true) =
+      environment.socialSurplus true (rewardIntegrable true) := by
+  exact environment.principalUtility_add_agentUtility successBonus true
+    (rewardIntegrable true) (paymentIntegrable true) (bonusNetIntegrable true)
 
-/-- Without an acceptable fallback, limited liability and optimality do not imply participation. -/
-def negativeControl : PrincipalAgentCandidate Unit Bool where
-  outcomeLaw _ := FinDist.pure false
+def negativeControl : PrincipalAgent Unit Bool where
+  outcomeLaw _ := PMF.pure false
   reward _ := 0
   cost _ := 1
 
 def negativePayment : Bool → ℝ := fun _ => 0
 
-theorem negative_limitedLiability : LimitedLiability negativePayment := by
+theorem negativePaymentIntegrable :
+    PayoffIntegrable (negativeControl.outcomeLaw ()) negativePayment :=
+  payoffIntegrable_of_finite _ _
+
+theorem negative_limitedLiability : PrincipalAgent.IsLimitedLiability negativePayment := by
   intro outcome
   simp [negativePayment]
 
-theorem negative_incentivized : negativeControl.IsIncentivized negativePayment () := by
+theorem negative_incentivized :
+    negativeControl.IsIncentivized negativePayment () := by
+  refine ⟨fun _ => negativePaymentIntegrable, ?_⟩
   intro alternative
   cases alternative
   exact le_rfl
 
 theorem negative_not_participating :
     ¬negativeControl.Participates 0 negativePayment () := by
-  norm_num [PrincipalAgentCandidate.Participates, PrincipalAgentCandidate.agentUtility,
-    PrincipalAgentCandidate.expectedPayment, negativeControl, negativePayment]
+  rintro ⟨hpayment, hparticipates⟩
+  have hproof : hpayment = negativePaymentIntegrable := Subsingleton.elim _ _
+  rw [hproof, PrincipalAgent.agentUtility, PrincipalAgent.expectedPayment] at hparticipates
+  have hvalue : expect (negativeControl.outcomeLaw ()) negativePayment hpayment = 0 := by
+    rw [expect_proof_irrel _ _ hpayment (payoffIntegrable_constant _ 0)]
+    exact expect_constant _ 0 (payoffIntegrable_constant _ 0)
+  rw [hvalue] at hparticipates
+  norm_num [negativeControl] at hparticipates
 
 end Hostile
 

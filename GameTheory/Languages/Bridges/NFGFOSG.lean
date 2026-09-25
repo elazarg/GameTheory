@@ -72,7 +72,7 @@ def execution [∀ i, Nonempty (G.Action i)] : ExecutionProtocol ι where
   step state joint :=
     match state with
     | .initial =>
-        FinDist.pure (.finished (State.actionOfJoint G joint.1 joint.2.2))
+        PMF.pure (.finished (State.actionOfJoint G joint.1 joint.2.2))
     | .finished _ => False.elim (joint.2.1 trivial)
   progress := by
     intro state hterm
@@ -245,11 +245,11 @@ theorem historyChooser_policyProfile [∀ i, Nonempty (G.Action i)]
 theorem runFor_chooserOfProfile_one [∀ i, Nonempty (G.Action i)]
     (profile : Profile G.signature) :
     (execution G).runFor (chooserOfProfile G profile) 1 .initial =
-      FinDist.pure (.finished profile) := by
+      PMF.pure (.finished profile) := by
   rw [ExecutionProtocol.runFor]
   simp only [execution, chooserOfProfile, ↓reduceDIte]
-  rw [FinDist.pure_bind, ExecutionProtocol.runFor]
-  apply congrArg FinDist.pure
+  rw [PMF.pure_bind, ExecutionProtocol.runFor]
+  apply congrArg PMF.pure
   apply congrArg State.finished
   funext i
   exact State.actionOfJoint_some G profile _ i
@@ -279,28 +279,29 @@ theorem toProtocolForm_play_policyProfile
     (chooserOfProfile G profile) 1 (execution G).initHistory
   rw [← historyChooser_policyProfile G profile] at hshadow
   show
-    FinDist.map (fun history => outcomeOfState G history.state)
+    PMF.map (fun history => outcomeOfState G history.state)
         ((informationModel G).run (policyProfile G profile) 1) =
-      (FinDist.pure (G.outcome profile)).map some
+      (PMF.pure (G.outcome profile)).map some
   rw [InformationModel.run, InformationModel.runFrom]
   calc
-    FinDist.map (fun history => outcomeOfState G history.state)
+    PMF.map (fun history => outcomeOfState G history.state)
         ((execution G).runHistoryFor
           ((informationModel G).historyChooser (policyProfile G profile)) 1
           (execution G).initHistory) =
-      FinDist.map (outcomeOfState G)
-        (FinDist.map ExecutionProtocol.History.state
+      PMF.map (outcomeOfState G)
+        (PMF.map ExecutionProtocol.History.state
           ((execution G).runHistoryFor
             ((informationModel G).historyChooser (policyProfile G profile)) 1
             (execution G).initHistory)) := by
-              rw [FinDist.map_comp]
+              rw [PMF.map_comp]
               rfl
-    _ = FinDist.map (outcomeOfState G)
+    _ = PMF.map (outcomeOfState G)
         ((execution G).runFor (chooserOfProfile G profile) 1 .initial) := by
-          simpa using congrArg (FinDist.map (outcomeOfState G)) hshadow
-    _ = (FinDist.pure (G.outcome profile)).map some := by
+          simpa using congrArg (PMF.map (outcomeOfState G)) hshadow
+    _ = (PMF.pure (G.outcome profile)).map some := by
           rw [runFor_chooserOfProfile_one]
-          simp [outcomeOfState]
+          rw [PMF.pure_map, PMF.pure_map]
+          rfl
 
 /-- Extend a source utility to the total optional outcome carrier. Its value on
 short nonterminal runs is irrelevant to the horizon-one law. -/
@@ -318,7 +319,7 @@ theorem toProtocolForm_utilityLaw_policyProfile
     ((toProtocolForm G).play (policyProfile G profile)).map
         (utilityOfOutcome G utility) =
       (G.toGameForm.play profile).map utility := by
-  rw [toProtocolForm_play_policyProfile, FinDist.map_comp]
+  rw [toProtocolForm_play_policyProfile, PMF.map_comp]
   apply congrArg (fun f => (G.toGameForm.play profile).map f)
   funext outcome
   rfl

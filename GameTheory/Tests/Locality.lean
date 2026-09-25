@@ -38,7 +38,7 @@ example (who spy : ι) (_own : Subprofile sig {who}) (hspy : spy ∈ ({who} : Fi
 /-- The same statement for a coalition: `actLocal` sees the coalition's own
 recommendation and nothing else. -/
 example (D : DeviationScheme sig ι) (who : ι) (d : D.Dev who) :
-    Subprofile sig (D.members who) → FinDist (Subprofile sig (D.members who)) :=
+    Subprofile sig (D.members who) → PMF (Subprofile sig (D.members who)) :=
   D.actLocal who d
 
 /-! ## Locality is a congruence, not a side condition -/
@@ -56,7 +56,7 @@ example (D : DeviationScheme sig ι) (who : ι) (d : D.Dev who)
 
 /-- Nonmember coordinates survive into every profile the deviation can
 produce. -/
-example [DecidableEq ι] (D : DeviationScheme sig ι) (statusQuo : FinDist (Profile sig))
+example [DecidableEq ι] (D : DeviationScheme sig ι) (statusQuo : PMF (Profile sig))
     (who : ι) (d : D.Dev who) (deviated : Profile sig)
     (hmem : deviated ∈ (D.apply statusQuo who d).support) :
     ∃ profile ∈ statusQuo.support, ∀ j ∉ D.members who, deviated j = profile j :=
@@ -67,8 +67,8 @@ example [DecidableEq ι] (D : DeviationScheme sig ι) (statusQuo : FinDist (Prof
 A deviation meets the status-quo law only through `bind`, so it commutes with
 mixing the status quo. -/
 
-example [DecidableEq ι] (D : DeviationScheme sig ι) {α : Type*} (μ : FinDist α)
-    (f : α → FinDist (Profile sig)) (who : ι) (d : D.Dev who) :
+example [DecidableEq ι] (D : DeviationScheme sig ι) {α : Type*} (μ : PMF α)
+    (f : α → PMF (Profile sig)) (who : ι) (d : D.Dev who) :
     D.apply (μ.bind f) who d = μ.bind fun a => D.apply (f a) who d :=
   D.apply_bind μ f who d
 
@@ -82,28 +82,28 @@ variable [DecidableEq ι] (F : GameForm ι) (weaklyPrefers : WeakPreference ι F
 
 example (profile : Profile F.sig) :
     IsNash F weaklyPrefers profile =
-      IsEquilibrium F weaklyPrefers (FinDist.pure profile)
+      IsEquilibrium F weaklyPrefers (PMF.pure profile)
         (DeviationScheme.unilateralConstant F.sig) := rfl
 
-example (statusQuo : FinDist (Profile F.sig)) :
+example (statusQuo : PMF (Profile F.sig)) :
     IsCoarseCorrelatedEq F weaklyPrefers statusQuo =
       IsEquilibrium F weaklyPrefers statusQuo
         (DeviationScheme.unilateralConstant F.sig) := rfl
 
-example (statusQuo : FinDist (Profile F.sig)) :
+example (statusQuo : PMF (Profile F.sig)) :
     IsCorrelatedEq F weaklyPrefers statusQuo =
       IsEquilibrium F weaklyPrefers statusQuo
         (DeviationScheme.recommendation F.sig) := rfl
 
 example (profile : Profile F.sig) :
     IsStrongNash F weaklyPrefers profile =
-      IsEquilibrium F (Preference.coalition weaklyPrefers) (FinDist.pure profile)
+      IsEquilibrium F (Preference.coalition weaklyPrefers) (PMF.pure profile)
         (DeviationScheme.coalitionConstant F.sig) := rfl
 
 /-- Mixed Nash is `IsNash` of the mixed extension, not a sixth definition. -/
 example [Fintype ι] (mixedProfile : Profile F.sig.mixed) :
     IsNash F.mixed weaklyPrefers mixedProfile =
-      IsEquilibrium F.mixed weaklyPrefers (FinDist.pure mixedProfile)
+      IsEquilibrium F.mixed weaklyPrefers (PMF.pure mixedProfile)
         (DeviationScheme.unilateralConstant F.sig.mixed) := rfl
 
 end Concepts

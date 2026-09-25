@@ -30,9 +30,10 @@ theorem exists_localChoice_fixedPoint
     (score : (Set.pi Set.univ fun i => simplexWeights (A i)) → ∀ i, A i → ℝ)
     (continuous_score : ∀ i a, Continuous fun x => score x i a) :
     ∃ x : (Set.pi Set.univ fun i => simplexWeights (A i)),
-      ∀ i (alternative : FinDist (A i)),
-        alternative.expect (score x i) ≤
-          (FinDist.ofSimplex (x.property i (Set.mem_univ i))).expect (score x i) := by
+      ∀ i (alternative : PMF (A i)),
+        expect alternative (score x i) (payoffIntegrable_of_finite _ _) ≤
+          expect (PMF.ofSimplex (x.property i (Set.mem_univ i))) (score x i)
+            (payoffIntegrable_of_finite _ _) := by
   classical
   let domain : Set (∀ i, A i → ℝ) :=
     Set.pi Set.univ fun i => simplexWeights (A i)
@@ -69,7 +70,7 @@ theorem exists_localChoice_fixedPoint
         exact (continuous_apply a).mul continuous_const
       obtain ⟨v, hv, hmax⟩ := (isCompact_simplexWeights (A i)).exists_isMaxOn
         (f := fun v => ∑ a, v a * score x i a)
-        FinDist.simplexWeights_nonempty score_sum_continuous.continuousOn
+        PMF.simplexWeights_nonempty score_sum_continuous.continuousOn
       exact ⟨v, hv, fun w hw => hmax hw⟩
     choose v hv hmax using coordinate_nonempty
     exact ⟨v, fun i _ => ⟨hv i, hmax i⟩⟩
@@ -99,15 +100,30 @@ theorem exists_localChoice_fixedPoint
           (continuous_apply a).comp ((continuous_apply i).comp continuous_snd)
         exact coordinate_continuous.mul ((continuous_score i a).comp continuous_fst)
   have domain_nonempty : domain.Nonempty :=
-    ⟨fun i => (FinDist.pure (Classical.arbitrary (A i))).prob,
-      fun i _ => FinDist.prob_mem_simplexWeights _⟩
+    ⟨(fun i action =>
+      (((PMF.pure (Classical.arbitrary (A i)) : PMF (A i)) action).toReal)),
+      fun i _ => PMF.toReal_mem_simplexWeights
+        (PMF.pure (Classical.arbitrary (A i)))⟩
   obtain ⟨x, hx⟩ := kakutani_fixed_point domain
     (convex_pi fun i _ => convex_simplexWeights (A i))
     (isCompact_univ_pi fun i => isCompact_simplexWeights (A i)) domain_nonempty
     replies replies_closedGraph
     (fun x => ⟨replies_subset x, replies_convex x, replies_nonempty x⟩)
   refine ⟨x, fun i alternative => ?_⟩
-  simpa only [FinDist.expect_eq_sum, FinDist.prob_ofSimplex] using
-    (hx i (Set.mem_univ i)).2 alternative.prob alternative.prob_mem_simplexWeights
+  have hoptimal := (hx i (Set.mem_univ i)).2
+    (fun action => (alternative action).toReal)
+    (PMF.toReal_mem_simplexWeights alternative)
+  rw [expect_eq_sum, expect_eq_sum]
+  calc
+    (∑ action, (alternative action).toReal * score x i action) ≤
+        ∑ action, ((x : ∀ j, A j → ℝ) i action) * score x i action := hoptimal
+    _ = ∑ action,
+        ((PMF.ofSimplex (x.property i (Set.mem_univ i)) action).toReal) *
+          score x i action := by
+      apply Finset.sum_congr rfl
+      intro action _
+      congr 1
+      exact (congrFun
+        (PMF.ofSimplex_toReal (x.property i (Set.mem_univ i))) action).symm
 
 end GameTheory

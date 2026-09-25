@@ -22,7 +22,7 @@ action.  The fixture fails if action data is erased during restart. -/
 def actionGame : Stochastic.Game Bool where
   State := Bool
   Action := fun _ => Bool
-  transition _ actions := FinDist.pure (actions false)
+  transition _ actions := PMF.pure (actions false)
   stageUtility state actions who :=
     if who then 0 else if state = actions false then 1 else 0
 
@@ -39,14 +39,14 @@ theorem transition_really_action_dependent :
     actionGame.transition false firstActions ≠
       actionGame.transition false secondActions := by
   intro hequal
-  have hprob := congrArg (fun law => law.prob true) hequal
+  have hprob := congrArg (fun law : PMF Bool => law true) hequal
   norm_num [actionGame, firstActions, secondActions,
-    FinDist.prob_pure_eq_ite] at hprob
+    PMF.pure_apply] at hprob
 
 /-- At the empty history player `false` chooses `true`; after any observed
 stage both players choose `false`. -/
 def publicProfile : PublicProfile actionGame false :=
-  fun who history => FinDist.pure <|
+  fun who history => PMF.pure <|
     if who then false
     else match history with
       | [] => true
@@ -67,7 +67,7 @@ def secondRecord : actionGame.StageRecord where
 
 theorem firstRealized :
     true ∈ (actionGame.transition false firstActions).support := by
-  exact FinDist.mem_support_pure.mpr rfl
+  simp [actionGame, firstActions]
 
 /-- The canonical realized history after the action-dependent first step. -/
 def firstHistory : (actionGame.toExecution false).History :=
@@ -85,52 +85,51 @@ theorem publicHistoryOfTrace_firstHistory :
   rfl
 
 theorem publicProfile_after_first (who : Bool) :
-    publicProfile who [firstRecord] = FinDist.pure (secondActions who) := by
+    publicProfile who [firstRecord] = PMF.pure (secondActions who) := by
   cases who <;> rfl
 
 theorem publicProfile_initial (who : Bool) :
-    publicProfile who [] = FinDist.pure (firstActions who) := by
+    publicProfile who [] = PMF.pure (firstActions who) := by
   cases who <;> rfl
 
 /-- Restarting after the first realized record selects the second-stage action
 and hence the second target. -/
 theorem restart_one_step :
     actionGame.restartHistoryLaw canonicalProfile [firstRecord] true 1 =
-      FinDist.pure [secondRecord] := by
+      PMF.pure [secondRecord] := by
   unfold canonicalProfile
   rw [actionGame.restartHistoryLaw_succ_toPublicProfile
     publicProfile [firstRecord] true 0]
   simp_rw [publicProfile_after_first]
-  rw [FinDist.pi_pure secondActions, FinDist.pure_bind]
-  simp only [actionGame, FinDist.pure_bindOnSupport,
-    Game.restartHistoryLaw_zero, FinDist.map_pure]
-  rfl
+  rw [independentProduct_pure secondActions, PMF.pure_bind]
+  simp [actionGame, Game.restartHistoryLaw_zero, PMF.map,
+    secondRecord, secondActions]
 
 /-- The source-facing horizon decomposition computes the full action-dependent
 two-stage law without exposing canonical traces. -/
 theorem publicHistoryLaw_two_steps :
     actionGame.publicHistoryLaw false canonicalProfile 2 =
-      FinDist.pure [secondRecord, firstRecord] := by
+      PMF.pure [secondRecord, firstRecord] := by
   have hrestart :
       actionGame.restartHistoryLaw canonicalProfile [] false 2 =
-        FinDist.pure [secondRecord, firstRecord] := by
+        PMF.pure [secondRecord, firstRecord] := by
     unfold canonicalProfile
     rw [actionGame.restartHistoryLaw_succ_toPublicProfile
       publicProfile [] false 1]
     simp_rw [publicProfile_initial]
-    rw [FinDist.pi_pure firstActions, FinDist.pure_bind]
-    simp only [actionGame, FinDist.pure_bindOnSupport]
+    rw [independentProduct_pure firstActions, PMF.pure_bind]
+    simp only [actionGame, PMF.pure_bindOnSupport]
     have hrestarted := congrArg
-      (FinDist.map (fun continuation => continuation ++ [firstRecord]))
+      (PMF.map (fun continuation => continuation ++ [firstRecord]))
       restart_one_step
-    simpa [firstActions, firstRecord, canonicalProfile] using hrestarted
+    simpa [firstActions, firstRecord, canonicalProfile, PMF.map] using hrestarted
   simpa only [Game.restartHistoryLaw, Game.afterPublicHistory_nil] using hrestart
 
 /-- The fixed `Fin 2` chronological law maps back to that exact public law. -/
 theorem chronologicalHistoryLaw_two_steps :
-    FinDist.map actionGame.publicHistoryOfChronological
+    PMF.map actionGame.publicHistoryOfChronological
         (actionGame.chronologicalHistoryLaw false canonicalProfile 2) =
-      FinDist.pure [secondRecord, firstRecord] := by
+      PMF.pure [secondRecord, firstRecord] := by
   rw [actionGame.map_publicHistoryOfChronological_chronologicalHistoryLaw,
     publicHistoryLaw_two_steps]
 
@@ -139,13 +138,13 @@ set_option backward.isDefEq.respectTransparency false in
 history in the monitoring convention. -/
 theorem continuation_from_first_one_step :
     actionGame.publicHistoryLawFrom false canonicalProfile 1 firstHistory =
-      FinDist.pure [secondRecord, firstRecord] := by
+      PMF.pure [secondRecord, firstRecord] := by
   rw [actionGame.publicHistoryLawFrom_eq_restartedFullHistoryLaw
     canonicalProfile firstHistory 1]
   rw [publicHistoryOfTrace_firstHistory]
   unfold Game.restartedFullHistoryLaw
   have hrestarted := congrArg
-    (FinDist.map (actionGame.splicePrefix [firstRecord])) restart_one_step
-  simpa [firstHistory, Game.splicePrefix] using hrestarted
+    (PMF.map (actionGame.splicePrefix [firstRecord])) restart_one_step
+  simpa [firstHistory, Game.splicePrefix, PMF.map] using hrestarted
 
 end GameTheory.Tests.StochasticContinuation

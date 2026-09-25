@@ -12,7 +12,9 @@ the owner's continuation utility depends on the full context only through the
 kept observation and chosen action.
 -/
 
-import GameTheory.Math.Probability.FinDist
+import GameTheory.Math.Probability.Conditioning
+import GameTheory.Math.Probability.ExpectationBind
+import GameTheory.Math.Probability.ExpectationMixture
 
 noncomputable section
 
@@ -25,210 +27,224 @@ universe uContext uKept uAction
 variable {Context : Type uContext} {Kept : Type uKept}
 variable {Action : Type uAction}
 
-/-- Average a full-context action kernel over the conditional distribution of
-full contexts at one kept observation.  `condOnFibre` supplies an arbitrary
-total fallback off the support; such kept observations are never drawn. -/
-def averagedKernel (contextLaw : FinDist Context) (keep : Context → Kept)
-    (kernel : Context → FinDist Action) (kept : Kept) : FinDist Action :=
-  (contextLaw.condOnFibre keep kept).bind kernel
+/-- The actual fiber posterior on positive kept observations. Null fibers use
+the source law as a total fallback, which is never charged by the marginal. -/
+private def conditionedContext (contextLaw : PMF Context) (keep : Context → Kept)
+    (kept : Kept) : PMF Context := by
+  classical
+  exact if h : kept ∈ (contextLaw.map keep).support then
+    fiberPosterior contextLaw keep kept h else contextLaw
+
+/-- Average a full-context action kernel over the actual fiber posterior. -/
+def averagedKernel (contextLaw : PMF Context) (keep : Context → Kept)
+    (kernel : Context → PMF Action) (kept : Kept) : PMF Action :=
+  (conditionedContext contextLaw keep kept).bind kernel
 
 /-- The joint experiment using the original full-context kernel. -/
-def fullJoint (contextLaw : FinDist Context) (keep : Context → Kept)
-    (kernel : Context → FinDist Action) : FinDist (Kept × Action) :=
+def fullJoint (contextLaw : PMF Context) (keep : Context → Kept)
+    (kernel : Context → PMF Action) : PMF (Kept × Action) :=
   contextLaw.bind fun context =>
     (kernel context).map fun action => (keep context, action)
 
 /-- The joint experiment after replacing the kernel by its kept-context
 average. -/
-def averagedJoint (contextLaw : FinDist Context) (keep : Context → Kept)
-    (kernel : Context → FinDist Action) : FinDist (Kept × Action) :=
+def averagedJoint (contextLaw : PMF Context) (keep : Context → Kept)
+    (kernel : Context → PMF Action) : PMF (Kept × Action) :=
   (contextLaw.map keep).bind fun kept =>
     (averagedKernel contextLaw keep kernel kept).map fun action =>
       (kept, action)
 
 /-- Marginalizing the removed part of a context preserves the exact joint law
 of the kept context and action. -/
-theorem fullJoint_eq_averagedJoint (contextLaw : FinDist Context)
-    (keep : Context → Kept) (kernel : Context → FinDist Action) :
+theorem fullJoint_eq_averagedJoint (contextLaw : PMF Context)
+    (keep : Context → Kept) (kernel : Context → PMF Action) :
     fullJoint contextLaw keep kernel =
       averagedJoint contextLaw keep kernel := by
   classical
-  have hdecompose := FinDist.eq_bind_condOnFibre contextLaw keep
+  have hdecompose :
+      (contextLaw.map keep).bind
+        (conditionedContext contextLaw keep) = contextLaw := by
+    calc
+      (contextLaw.map keep).bind (conditionedContext contextLaw keep) =
+          (contextLaw.map keep).bindOnSupport
+            (fun kept hkept => fiberPosterior contextLaw keep kept hkept) := by
+        symm
+        apply bindOnSupport_eq_bind_of_eq_on_support
+        intro kept hkept
+        unfold conditionedContext
+        rw [dite_eq_left hkept]
+      _ = contextLaw := fiberPosterior_reconstruct contextLaw keep
   calc
     fullJoint contextLaw keep kernel =
         (contextLaw.map keep).bind fun kept =>
-          (contextLaw.condOnFibre keep kept).bind fun context =>
+          (conditionedContext contextLaw keep kept).bind fun context =>
             (kernel context).map fun action =>
               (keep context, action) := by
       unfold fullJoint
-      conv_lhs => rw [hdecompose, FinDist.bind_bind]
+      conv_lhs => rw [← hdecompose, PMF.bind_bind]
     _ = (contextLaw.map keep).bind fun kept =>
-          (contextLaw.condOnFibre keep kept).bind fun context =>
+          (conditionedContext contextLaw keep kept).bind fun context =>
             (kernel context).map fun action => (kept, action) := by
-      apply FinDist.bind_congr
+      apply bind_congr_on_support
       intro kept hkept
-      apply FinDist.bind_congr
+      apply bind_congr_on_support
       intro context hcontext
-      have hfibre :
-          ∃ witness ∈ keep ⁻¹' {kept}, witness ∈ contextLaw.support := by
-        rw [FinDist.support_map] at hkept
-        obtain ⟨witness, hwitness, hkeep⟩ := hkept
-        exact ⟨witness, by simpa using hkeep, hwitness⟩
-      have hcontextFibre : context ∈ keep ⁻¹' {kept} := by
-        have hconditioned := hcontext
-        simp only [FinDist.condOnFibre, dite_eq_left hfibre] at hconditioned
-        exact (FinDist.support_condOn contextLaw
-          (keep ⁻¹' {kept}) hfibre hconditioned).1
-      have hkeep : keep context = kept := by
-        simpa using hcontextFibre
+      have hcontextFibre :
+          context ∈ {value | keep value = kept} ∩ contextLaw.support := by
+        simpa only [conditionedContext, dite_eq_left hkept,
+          fiberPosterior_support] using hcontext
+      have hkeep : keep context = kept := hcontextFibre.1
       rw [hkeep]
     _ = averagedJoint contextLaw keep kernel := by
       unfold averagedJoint averagedKernel
-      apply FinDist.bind_congr
+      apply bind_congr_on_support
       intro kept _
-      rw [FinDist.map_bind]
+      rw [PMF.map_bind]
 
 /-- The averaged kept-context kernel may be expanded back to a full-context
 kernel without changing the kept-context/action joint law. -/
 theorem fullJoint_eq_fullJoint_averagedKernel
-    (contextLaw : FinDist Context) (keep : Context → Kept)
-    (kernel : Context → FinDist Action) :
+    (contextLaw : PMF Context) (keep : Context → Kept)
+    (kernel : Context → PMF Action) :
     fullJoint contextLaw keep kernel =
       fullJoint contextLaw keep (fun context =>
         averagedKernel contextLaw keep kernel (keep context)) := by
   rw [fullJoint_eq_averagedJoint]
   unfold averagedJoint fullJoint
-  rw [FinDist.bind_map]
+  rw [PMF.bind_map]
+  rfl
 
-/-- Consequently every observable of the kept context and action has the same
-expectation before and after marginalization. -/
-theorem expect_fullJoint_eq_averagedJoint (contextLaw : FinDist Context)
-    (keep : Context → Kept) (kernel : Context → FinDist Action)
-    (observable : Kept × Action → ℝ) :
-    (fullJoint contextLaw keep kernel).expect observable =
-      (averagedJoint contextLaw keep kernel).expect observable := by
-  rw [fullJoint_eq_averagedJoint]
+/-- Exact joint-law equality transports the actual observable guard. -/
+theorem expect_fullJoint_eq_averagedJoint (contextLaw : PMF Context)
+    (keep : Context → Kept) (kernel : Context → PMF Action)
+    (observable : Kept × Action → ℝ)
+    (hfull : PayoffIntegrable (fullJoint contextLaw keep kernel) observable) :
+    expect (fullJoint contextLaw keep kernel) observable hfull =
+      expect (averagedJoint contextLaw keep kernel) observable
+        (payoffIntegrable_congr_law
+          (fullJoint_eq_averagedJoint contextLaw keep kernel) hfull) :=
+  expect_congr_law (fullJoint_eq_averagedJoint contextLaw keep kernel)
+    observable hfull _
 
-/-- Graph-free local-value bridge: whenever continuation value is a function
-only of the kept context and chosen action, averaging away the rest of the
-context preserves expected continuation value exactly. -/
-theorem expect_kernel_eq_averagedKernel (contextLaw : FinDist Context)
-    (keep : Context → Kept) (kernel : Context → FinDist Action)
-    (continuationValue : Kept → Action → ℝ) :
-    contextLaw.expect (fun context =>
-        (kernel context).expect fun action =>
-          continuationValue (keep context) action) =
-      (contextLaw.map keep).expect (fun kept =>
-        (averagedKernel contextLaw keep kernel kept).expect fun action =>
-          continuationValue kept action) := by
-  have hjoint := expect_fullJoint_eq_averagedJoint
-    contextLaw keep kernel (fun pair => continuationValue pair.1 pair.2)
-  simpa only [fullJoint, averagedJoint, FinDist.expect_bind,
-    FinDist.expect_map] using hjoint
+/-- The same statement for a continuation value on kept context and action. -/
+theorem expect_kernel_eq_averagedKernel (contextLaw : PMF Context)
+    (keep : Context → Kept) (kernel : Context → PMF Action)
+    (continuationValue : Kept → Action → ℝ)
+    (hfull : PayoffIntegrable (fullJoint contextLaw keep kernel)
+      (fun pair => continuationValue pair.1 pair.2)) :
+    expect (fullJoint contextLaw keep kernel)
+        (fun pair => continuationValue pair.1 pair.2) hfull =
+      expect (averagedJoint contextLaw keep kernel)
+        (fun pair => continuationValue pair.1 pair.2)
+        (payoffIntegrable_congr_law
+          (fullJoint_eq_averagedJoint contextLaw keep kernel) hfull) :=
+  expect_fullJoint_eq_averagedJoint contextLaw keep kernel _ hfull
 
-/-- A graph-free certificate that both the full-rule and kept-rule evaluators
-use one continuation value depending only on the kept context and action.  A
-future MAID global-Markov theorem should construct this certificate from
-d-separation; it is not deviation coverage by definition. -/
-structure ContinuationFactorsThrough (contextLaw : FinDist Context)
+/-- A kept-rule's actual joint law. -/
+def keptJoint (contextLaw : PMF Context) (keep : Context → Kept)
+    (kernel : Kept → PMF Action) : PMF (Kept × Action) :=
+  (contextLaw.map keep).bind fun kept =>
+    (kernel kept).map fun action => (kept, action)
+
+/-- A shared continuation value and guards for the actual family of full and
+kept rules compared by local information removal. -/
+structure ContinuationFactorsThrough (contextLaw : PMF Context)
     (keep : Context → Kept)
-    (fullValue : (Context → FinDist Action) → ℝ)
-    (keptValue : (Kept → FinDist Action) → ℝ) where
+    (fullValue : (Context → PMF Action) → ℝ)
+    (keptValue : (Kept → PMF Action) → ℝ) where
   continuationValue : Kept → Action → ℝ
+  fullGuard : ∀ kernel, PayoffIntegrable (fullJoint contextLaw keep kernel)
+    (fun pair => continuationValue pair.1 pair.2)
+  keptGuard : ∀ kernel, PayoffIntegrable (keptJoint contextLaw keep kernel)
+    (fun pair => continuationValue pair.1 pair.2)
   full_eq : ∀ kernel,
-    fullValue kernel =
-      contextLaw.expect (fun context =>
-        (kernel context).expect fun action =>
-          continuationValue (keep context) action)
+    fullValue kernel = expect (fullJoint contextLaw keep kernel)
+      (fun pair => continuationValue pair.1 pair.2) (fullGuard kernel)
   kept_eq : ∀ kernel,
-    keptValue kernel =
-      (contextLaw.map keep).expect (fun kept =>
-        (kernel kept).expect fun action =>
-          continuationValue kept action)
+    keptValue kernel = expect (keptJoint contextLaw keep kernel)
+      (fun pair => continuationValue pair.1 pair.2) (keptGuard kernel)
 
-/-- A shared continuation factor constructs exact local rule coverage.  The
-witness is the conditional average of the arbitrary full-context rule. -/
+/-- The conditional average covers every full-context rule's actual value. -/
 theorem exists_keptRule_value_eq_of_continuationFactorsThrough
-    (contextLaw : FinDist Context) (keep : Context → Kept)
-    (fullValue : (Context → FinDist Action) → ℝ)
-    (keptValue : (Kept → FinDist Action) → ℝ)
+    (contextLaw : PMF Context) (keep : Context → Kept)
+    (fullValue : (Context → PMF Action) → ℝ)
+    (keptValue : (Kept → PMF Action) → ℝ)
     (hfactor : ContinuationFactorsThrough contextLaw keep fullValue keptValue)
-    (fullRule : Context → FinDist Action) :
-    ∃ keptRule : Kept → FinDist Action,
+    (fullRule : Context → PMF Action) :
+    ∃ keptRule : Kept → PMF Action,
       fullValue fullRule = keptValue keptRule := by
-  refine ⟨averagedKernel contextLaw keep fullRule, ?_⟩
+  let keptRule := averagedKernel contextLaw keep fullRule
+  refine ⟨keptRule, ?_⟩
   rw [hfactor.full_eq, hfactor.kept_eq]
-  exact expect_kernel_eq_averagedKernel contextLaw keep fullRule
-    hfactor.continuationValue
+  exact expect_congr_law
+    (fullJoint_eq_averagedJoint contextLaw keep fullRule)
+    (fun pair => hfactor.continuationValue pair.1 pair.2)
+    (hfactor.fullGuard fullRule) (hfactor.keptGuard keptRule)
 
 /-! ## Fair-signal control -/
 
-def fairSignal : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure false) (FinDist.pure true)
+def fairSignal : PMF Bool :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure false) (PMF.pure true)
 
-def copySignal (signal : Bool) : FinDist Bool :=
-  FinDist.pure signal
+def copySignal (signal : Bool) : PMF Bool := PMF.pure signal
 
-def fullActionValue (kernel : Bool → FinDist Bool) : ℝ :=
-  fairSignal.expect fun signal =>
-    (kernel signal).expect fun action => if action then 1 else 0
+def fullActionValue (kernel : Bool → PMF Bool) : ℝ :=
+  expect (fullJoint fairSignal (fun _ : Bool => ()) kernel)
+    (fun pair => if pair.2 then 1 else 0)
+    (payoffIntegrable_of_bounded _ _ (C := 1) (by
+      intro pair
+      cases pair.2 <;> norm_num))
 
-def keptActionValue (kernel : Unit → FinDist Bool) : ℝ :=
-  (kernel ()).expect fun action => if action then 1 else 0
+def keptActionValue (kernel : Unit → PMF Bool) : ℝ :=
+  expect (keptJoint fairSignal (fun _ : Bool => ()) kernel)
+    (fun pair => if pair.2 then 1 else 0)
+    (payoffIntegrable_of_bounded _ _ (C := 1) (by
+      intro pair
+      cases pair.2 <;> norm_num))
 
-/-- The fair-signal action-only payoff supplies the stronger local
-continuation-factorization certificate, not merely an equality for one rule.
--/
+/-- Both finite-control evaluators use the same guarded joint observable. -/
 def actionValueFactors : ContinuationFactorsThrough fairSignal
     (fun _ : Bool => ()) fullActionValue keptActionValue where
   continuationValue _ action := if action then 1 else 0
+  fullGuard _ := payoffIntegrable_of_bounded _ _ (C := 1) (by
+    intro pair
+    cases pair.2 <;> norm_num)
+  keptGuard _ := payoffIntegrable_of_bounded _ _ (C := 1) (by
+    intro pair
+    cases pair.2 <;> norm_num)
   full_eq _ := rfl
-  kept_eq kernel := by
-    unfold keptActionValue
-    rw [FinDist.map_const, FinDist.expect_pure]
+  kept_eq _ := rfl
 
-/-- The full kernel genuinely reads the context that will be removed. -/
 theorem copySignal_reads_context : copySignal false ≠ copySignal true := by
   intro hequal
-  have hprob := congrArg (fun law : FinDist Bool => law.prob true) hequal
-  norm_num [copySignal, FinDist.prob_pure_eq_ite] at hprob
+  have hfalse := congrArg (fun law : PMF Bool => law false) hequal
+  norm_num [copySignal, PMF.pure_apply] at hfalse
 
-/-- After forgetting the entire context, averaging the copying rule produces
-the fair randomized action law.  This is not constant-policy factorization. -/
+/-- Averaging the copying rule after forgetting the signal gives its fair law. -/
 theorem averagedKernel_copySignal :
     averagedKernel fairSignal (fun _ : Bool => ()) copySignal () =
       fairSignal := by
-  unfold averagedKernel
-  have hfibre :
-      ∃ signal ∈ (fun _ : Bool => ()) ⁻¹' {()},
-        signal ∈ fairSignal.support := by
-    refine ⟨false, by simp, ?_⟩
-    rw [← FinDist.prob_pos_iff]
-    norm_num [fairSignal, FinDist.prob_mix,
-      FinDist.prob_pure_eq_ite]
-  rw [FinDist.condOnFibre, dite_eq_left hfibre]
-  have hfibreUniv : (fun _ : Bool => ()) ⁻¹' {()} = Set.univ := by
-    ext signal
+  unfold averagedKernel conditionedContext
+  have hsupport : () ∈ (fairSignal.map fun _ : Bool => ()).support := by
     simp
-  have huniv : ∃ signal ∈ Set.univ, signal ∈ fairSignal.support := by
-    obtain ⟨signal, _, hsignal⟩ := hfibre
-    exact ⟨signal, Set.mem_univ signal, hsignal⟩
-  rw [FinDist.condOn_congr fairSignal hfibreUniv hfibre huniv,
-    FinDist.condOn_univ fairSignal huniv]
-  exact FinDist.bind_pure fairSignal
+  rw [dite_eq_left hsupport]
+  have hposterior : fiberPosterior fairSignal (fun _ : Bool => ()) ()
+      hsupport = fairSignal := by
+    unfold fiberPosterior
+    apply filter_of_support_subset
+    intro signal _
+    simp
+  rw [hposterior]
+  exact PMF.bind_pure fairSignal
 
-/-- The generic joint-law theorem is exercised on a signal-dependent kernel,
-so it cannot pass by simplifying the original rule to a constant. -/
 theorem copySignal_joint_preserved :
     fullJoint fairSignal (fun _ : Bool => ()) copySignal =
       averagedJoint fairSignal (fun _ : Bool => ()) copySignal :=
   fullJoint_eq_averagedJoint fairSignal (fun _ => ()) copySignal
 
-/-- The named continuation certificate constructs a signal-blind rule with
-the same action-only value as the genuinely signal-reading copy rule. -/
 theorem exists_keptRule_copySignal_value_eq :
-    ∃ keptRule : Unit → FinDist Bool,
+    ∃ keptRule : Unit → PMF Bool,
       fullActionValue copySignal = keptActionValue keptRule :=
   exists_keptRule_value_eq_of_continuationFactorsThrough
     fairSignal (fun _ => ()) fullActionValue keptActionValue

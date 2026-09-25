@@ -52,10 +52,6 @@ coordinates.
 | law test | literal target-history erasure equals the canonical source `InformationModel.runBehavioral` history law for every target profile; forward translation and both explicit orders agree; full action/action/coin projections follow |
 | stochastic witness | fair Boolean resolution has both values in support; actions and resolution remain separate outcome coordinates |
 | reusable repair | two generic single-mover behavioral-joint lemmas moved from `Languages.MAID.Order` to `Protocol.Information` without changing their proof content |
-| focused build | 1,723 jobs, warning-free |
-| full integration | 3,417 jobs, warning-free; Phase 2, Phase 3, and exact coverage audits verified |
-| source hazards | no placeholders, custom axioms, raw updates, `Fintype.ofFinite`, `open Classical`, cast/`HEq`/recursor tokens, or source-level `change`/`▸` transport |
-| axiom profile | `propext`, `Classical.choice`, and `Quot.sound` only |
 
 ## Kill conditions and result
 
@@ -111,8 +107,8 @@ a later leaf over those laws and D8's coordinate/update results.
 Do not port pinned `FOSG.Serial`: its own documentation says it is not
 semantics-preserving, and it is not on the mature pinned bridge dependency
 path.  Mine `FOSG.Compile`, `Bridges/FOSG/SerialExec`, `AugmentedEFG`, and
-`Expressiveness/EFG_FOSG` now that the generic bounded bridge compiles, and
-reuse statements rather than their PMF, global-finiteness, or transport API.
+`Expressiveness/EFG_FOSG` for mathematical statements, without preserving
+their global-finiteness or transport API.
 
 ## Generic promotion
 
@@ -132,14 +128,10 @@ orders, within-round hiding, hidden inactive slots, resolver-only replay of
 public/private/own-action information, and a translated policy sensitive to
 each replayed coordinate.
 
-The bridge has only stable EFG/FOSG imports.  The recursive exact-law proof
-machinery is private, so the public API exposes no second runner or default
-assignment.  The focused 1,727-job build is warning-free and the printed axiom
-profile is exactly `propext`, `Classical.choice`, and `Quot.sound`.  The full
-3,422-job integration build and Phase 2, Phase 3, and exact coverage audits all
-pass.  No D30 kill condition fired.  The pinned live bridge chain may now be
-recovered or retired against this canonical adapter; equilibrium transfer
-still requires a separate strategic gate.
+The bridge has only EFG/FOSG imports. Recursive exact-law machinery remains
+private, so the public API exposes no second runner or default assignment.
+Equilibrium transfer additionally requires strategic deviation coverage;
+exact execution-law preservation alone does not establish it.
 
 The immediate breadth-first recovery reviewed all 104 declarations in the
 pinned `SerialExec`, `AugmentedEFG`, and `EFG_FOSG` chain.  The only new stable
@@ -150,10 +142,6 @@ scheduled inverse; non-owner and resolver menus are singleton by construction.
 Thus the old `EFGProfileRespectsFOSG`, invalid-action legalization, bounded
 encoding, and cast proof spine disappear rather than becoming wrappers.
 
-The exact ledger classifies 11 declarations as adapted, 27 as subsumed, 47 as
-retired, and 19 as deferred.  The deferred set is not serializer debt: it
-belongs to separately named ordinary-continuation/terminal-support,
-augmentation, strategic/utility, and language-expressiveness gates.  The
-post-gate focused 1,727-job and full 3,422-job builds pass; exact coverage rises
-to 1,677 accounted declarations with no duplicates, omissions, or open rows in
-complete bounded ledgers, and Phase 2/3 remain verified.
+Ordinary-continuation/terminal-support, augmentation, strategic/utility, and
+language-expressiveness results have separate gates; they are not obligations
+of the serializer.

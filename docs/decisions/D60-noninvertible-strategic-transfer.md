@@ -1,8 +1,8 @@
-# D60: finite mixtures and utility coverage for noninvertible strategic transfer
+# D60: mixtures and utility coverage for noninvertible strategic transfer
 
 - **Status:** adopted with narrowed, opt-in utility certificates
 - **Date:** 2026-09-21
-- **Experiment:** EXP-120
+- **Experiments:** EXP-120; general PMF boundary EXP-131 / D62
 
 ## Question and competing designs
 
@@ -29,7 +29,7 @@ refuted their initial admission into the default root.
 
 - `GameForm.MixtureSimulationOn` records a coordinatewise strategy map, honest
   common-observation laws, coverage of compiled strategies by the selected
-  target deviations, and finite-mixture representation of those deviations.
+  target deviations, and PMF-mixture representation of those deviations.
   The direct reflection theorem needs only honest laws. Direct preservation
   needs only the supplied profile's honest law and deviation mixtures.
 - `GameForm.UtilitySimulation` records honest utility equality and one source
@@ -79,7 +79,11 @@ coalition cannot make equilibrium impossible.
 of the direct utility theorem. Its existing safe and value-of-information
 failure controls continue through the shared Core theorem.
 
-The accompanying finite-law ports use the existing `FinDist` representation.
+D62 uses ordinary PMFs for these laws. EXP-131 shows that preservation through
+an arbitrary mixture requires integration of each actual target deviation;
+integration of all source deviations separately does not imply it. Honest
+expected-utility transport also preserves definedness.
+
 General event and fiber inequalities live in `Math.Probability.Bounds`;
 `Math.Probability.SelectiveStopping` proves the informed binary-decision
 consequences. The infinite-site shared-coin counterexample refutes the source

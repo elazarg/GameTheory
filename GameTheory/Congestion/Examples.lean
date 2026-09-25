@@ -66,7 +66,7 @@ theorem pigou_both_isNash :
     fin_cases j <;> simp
   rw [isNash_iff]
   intro who s'
-  simp only [euPreference_apply, toGameForm, expectedUtility_pure, utility,
+  simp only [toGameForm, euPreference_pure_iff, utility,
     neg_le_neg_iff]
   rcases (by decide : ∀ i : Fin 2, i = 0 ∨ i = 1) who with rfl | rfl
   · dsimp [pigou, CongestionGame.signature] at s'
@@ -146,7 +146,7 @@ theorem braessRestricted_split_isNash :
     fin_cases j <;> simp
   rw [isNash_iff]
   intro who s'
-  simp only [euPreference_apply, toGameForm, expectedUtility_pure, utility,
+  simp only [toGameForm, euPreference_pure_iff, utility,
     neg_le_neg_iff]
   rcases (by decide : ∀ i : Fin 2, i = 0 ∨ i = 1) who with rfl | rfl
   · dsimp [braessRestricted, CongestionGame.signature] at s'
@@ -185,7 +185,7 @@ theorem braessAugmented_both_isNash :
     fin_cases j <;> simp
   rw [isNash_iff]
   intro who s'
-  simp only [euPreference_apply, toGameForm, expectedUtility_pure, utility,
+  simp only [toGameForm, euPreference_pure_iff, utility,
     neg_le_neg_iff]
   rcases (by decide : ∀ i : Fin 2, i = 0 ∨ i = 1) who with rfl | rfl
   · dsimp [braessAugmented, CongestionGame.signature] at s'
@@ -219,7 +219,7 @@ theorem braessAugmented_split_not_isNash :
     fin_cases j <;> simp
   intro hσ
   have h := (isNash_iff (F := braessAugmented.toGameForm) ![0, 1]).mp hσ 0 (2 : Fin 3)
-  simp only [euPreference_apply, toGameForm, expectedUtility_pure, utility,
+  simp only [toGameForm, euPreference_pure_iff, utility,
     neg_le_neg_iff] at h
   rw [update_zero] at h
   simp [playerCost, congestion_two, braessAugmented, braessDelay,

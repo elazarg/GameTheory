@@ -87,24 +87,24 @@ private theorem queryWitness_restrict_evidence
     retained latentLeft latentRight partition firstConfiguration
       secondConfiguration evidenceConfiguration node.2
 
-private theorem tripleCylinder_probOf_eq_queryCylinderMass
+private theorem tripleCylinder_mass_eq_queryCylinderMass
     [DecidableEq Node]
-    (law : FinDist (Assignment diagram)) (default : Assignment diagram)
+    (law : PMF (Assignment diagram)) (default : Assignment diagram)
     (first second evidence retained latentLeft latentRight : Finset Node)
     (partition :
       ScorePartition first second evidence retained latentLeft latentRight)
     (firstConfiguration : Config diagram first)
     (secondConfiguration : Config diagram second)
     (evidenceConfiguration : Config diagram evidence) :
-    law.probOf
+    (law.toOuterMeasure
         (tripleCylinder first second evidence firstConfiguration
-          secondConfiguration evidenceConfiguration) =
+          secondConfiguration evidenceConfiguration)).toReal =
       cylinderMass diagram.Value law (fixedCoordinates first second evidence)
         (queryWitness diagram.Value default first second evidence
           firstConfiguration secondConfiguration evidenceConfiguration) := by
   let witness := queryWitness diagram.Value default first second evidence
     firstConfiguration secondConfiguration evidenceConfiguration
-  have hmass := tripleCylinder_probOf_eq_cylinderMass law first second evidence witness
+  have hmass := tripleCylinder_mass_eq_cylinderMass law first second evidence witness
   rw [queryWitness_restrict_first (diagram := diagram) default
       first second evidence,
     queryWitness_restrict_second (diagram := diagram) default first second evidence
@@ -113,15 +113,16 @@ private theorem tripleCylinder_probOf_eq_queryCylinderMass
       retained latentLeft latentRight partition] at hmass
   simpa [witness, fixedCoordinates] using hmass
 
-private theorem firstEvidence_probOf_eq_queryCylinderMass
+private theorem firstEvidence_mass_eq_queryCylinderMass
     [DecidableEq Node]
-    (law : FinDist (Assignment diagram)) (default : Assignment diagram)
+    (law : PMF (Assignment diagram)) (default : Assignment diagram)
     (first second evidence retained latentLeft latentRight : Finset Node)
     (partition :
       ScorePartition first second evidence retained latentLeft latentRight)
     (firstConfiguration : Config diagram first)
     (evidenceConfiguration : Config diagram evidence) :
-    law.probOf (pairCylinder first evidence firstConfiguration evidenceConfiguration) =
+    (law.toOuterMeasure
+      (pairCylinder first evidence firstConfiguration evidenceConfiguration)).toReal =
       cylinderMass diagram.Value law (firstEvidence first evidence)
         (queryWitness diagram.Value default first second evidence
           firstConfiguration (configurationOf diagram.Value default second)
@@ -129,22 +130,23 @@ private theorem firstEvidence_probOf_eq_queryCylinderMass
   let witness := queryWitness diagram.Value default first second evidence
     firstConfiguration (configurationOf diagram.Value default second)
       evidenceConfiguration
-  have hmass := pairCylinder_probOf_eq_cylinderMass law first evidence witness
+  have hmass := pairCylinder_mass_eq_cylinderMass law first evidence witness
   rw [queryWitness_restrict_first (diagram := diagram) default
       first second evidence,
     queryWitness_restrict_evidence (diagram := diagram) default first second evidence
       retained latentLeft latentRight partition] at hmass
   simpa [witness, firstEvidence] using hmass
 
-private theorem secondEvidence_probOf_eq_queryCylinderMass
+private theorem secondEvidence_mass_eq_queryCylinderMass
     [DecidableEq Node]
-    (law : FinDist (Assignment diagram)) (default : Assignment diagram)
+    (law : PMF (Assignment diagram)) (default : Assignment diagram)
     (first second evidence retained latentLeft latentRight : Finset Node)
     (partition :
       ScorePartition first second evidence retained latentLeft latentRight)
     (secondConfiguration : Config diagram second)
     (evidenceConfiguration : Config diagram evidence) :
-    law.probOf (pairCylinder second evidence secondConfiguration evidenceConfiguration) =
+    (law.toOuterMeasure
+      (pairCylinder second evidence secondConfiguration evidenceConfiguration)).toReal =
       cylinderMass diagram.Value law (secondEvidence second evidence)
         (queryWitness diagram.Value default first second evidence
           (configurationOf diagram.Value default first) secondConfiguration
@@ -152,21 +154,21 @@ private theorem secondEvidence_probOf_eq_queryCylinderMass
   let witness := queryWitness diagram.Value default first second evidence
     (configurationOf diagram.Value default first) secondConfiguration
       evidenceConfiguration
-  have hmass := pairCylinder_probOf_eq_cylinderMass law second evidence witness
+  have hmass := pairCylinder_mass_eq_cylinderMass law second evidence witness
   rw [queryWitness_restrict_second (diagram := diagram) default first second evidence
       retained latentLeft latentRight partition,
     queryWitness_restrict_evidence (diagram := diagram) default first second evidence
       retained latentLeft latentRight partition] at hmass
   simpa [witness, secondEvidence] using hmass
 
-private theorem evidence_probOf_eq_queryCylinderMass
+private theorem evidence_mass_eq_queryCylinderMass
     [DecidableEq Node]
-    (law : FinDist (Assignment diagram)) (default : Assignment diagram)
+    (law : PMF (Assignment diagram)) (default : Assignment diagram)
     (first second evidence retained latentLeft latentRight : Finset Node)
     (partition :
       ScorePartition first second evidence retained latentLeft latentRight)
     (evidenceConfiguration : Config diagram evidence) :
-    law.probOf (cylinder evidence evidenceConfiguration) =
+    (law.toOuterMeasure (cylinder evidence evidenceConfiguration)).toReal =
       cylinderMass diagram.Value law evidence
         (queryWitness diagram.Value default first second evidence
           (configurationOf diagram.Value default first)
@@ -175,7 +177,7 @@ private theorem evidence_probOf_eq_queryCylinderMass
   let witness := queryWitness diagram.Value default first second evidence
     (configurationOf diagram.Value default first)
     (configurationOf diagram.Value default second) evidenceConfiguration
-  have hmass := cylinder_probOf_eq_cylinderMass law evidence witness
+  have hmass := cylinder_mass_eq_cylinderMass law evidence witness
   rw [queryWitness_restrict_evidence (diagram := diagram) default first second evidence
       retained latentLeft latentRight partition] at hmass
   simpa [witness] using hmass
@@ -186,7 +188,7 @@ theorem coordinatesConditionallyIndependent_of_factorizes_of_separates
     [Fintype Node] [DecidableEq Node]
     [∀ node, Fintype (diagram.Value node)]
     [∀ node, DecidableEq (diagram.Value node)]
-    (law : FinDist (Assignment diagram))
+    (law : PMF (Assignment diagram))
     (parents : Node → Finset Node)
     (topological : GameTheory.Math.DAG.TopologicalOrder parents)
     (kernels : LocalKernels diagram.Value parents)
@@ -236,13 +238,13 @@ theorem coordinatesConditionallyIndependent_of_factorizes_of_separates
       hfirstSecond hsecondEvidence,
     sum_first_queryCylinders diagram.Value law default first second evidence
       hfirstSecond hfirstEvidence] at hcross
-  rw [tripleCylinder_probOf_eq_queryCylinderMass (diagram := diagram) law default
+  rw [tripleCylinder_mass_eq_queryCylinderMass (diagram := diagram) law default
       first second evidence retained latentLeft latentRight partition,
-    evidence_probOf_eq_queryCylinderMass (diagram := diagram) law default
+    evidence_mass_eq_queryCylinderMass (diagram := diagram) law default
       first second evidence retained latentLeft latentRight partition,
-    firstEvidence_probOf_eq_queryCylinderMass (diagram := diagram) law default
+    firstEvidence_mass_eq_queryCylinderMass (diagram := diagram) law default
       first second evidence retained latentLeft latentRight partition,
-    secondEvidence_probOf_eq_queryCylinderMass (diagram := diagram) law default
+    secondEvidence_mass_eq_queryCylinderMass (diagram := diagram) law default
       first second evidence retained latentLeft latentRight partition]
   exact hcross
 

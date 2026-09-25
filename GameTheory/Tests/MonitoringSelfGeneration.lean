@@ -29,7 +29,7 @@ def signature : GameSignature Player where
 @[reducible]
 def form : GameForm Player where
   sig := signature
-  play profile := FinDist.pure profile
+  play profile := PMF.pure profile
 
 def stageUtility (profile : ActionProfile) (who : Player) : ℝ :=
   match profile false, profile true, who with
@@ -44,6 +44,12 @@ def stageUtility (profile : ActionProfile) (who : Player) : ℝ :=
 def game : UtilityGame Player where
   form := form
   utility := stageUtility
+
+theorem game_integrable : game.form.HasIntegrableUtility game.utility := by
+  intro who profile
+  simpa [form] using
+    (payoffIntegrable_pure profile
+      (fun outcome => stageUtility outcome who))
 
 def cooperate : Profile signature := fun _ => false
 def punish : Profile signature := fun _ => true
@@ -74,7 +80,7 @@ theorem cooperate_update_false (who : Player) :
 @[reducible]
 def monitoring : game.PublicMonitoring where
   Signal := ActionProfile
-  signalLaw profile := FinDist.pure profile
+  signalLaw profile := PMF.pure profile
 
 def rewardOrPunish : monitoring.ContinuationAssignment :=
   fun signal => if signal = cooperate then cooperativePayoff
@@ -83,23 +89,51 @@ def rewardOrPunish : monitoring.ContinuationAssignment :=
 def payoffSet : Set (Player → ℝ) :=
   {cooperativePayoff, punishmentPayoff}
 
+private theorem signal_integrable (profile : Profile signature)
+    (continuation : monitoring.ContinuationAssignment) (who : Player) :
+    PayoffIntegrable (monitoring.signalLaw profile)
+      (fun signal => continuation signal who) := by
+  simpa [monitoring] using
+    (payoffIntegrable_pure profile
+      (fun signal => continuation signal who))
+
 theorem stagePayoff_eq (profile : Profile signature) (who : Player) :
-    game.stagePayoff profile who = stageUtility profile who := by
-  simp [UtilityGame.stagePayoff, game, form]
+    game.stagePayoff profile who (game_integrable who profile) =
+      stageUtility profile who := by
+  simp [UtilityGame.stagePayoff, form, expectedUtility_pure]
+
+private theorem pure_preference_iff (who : Player)
+    (preferred alternative : Profile signature) :
+    euPreference stageUtility who (form.play preferred)
+        (form.play alternative) ↔
+      stageUtility alternative who ≤ stageUtility preferred who := by
+  constructor
+  · rintro ⟨hpreferred, halternative, hle⟩
+    simpa [form, expectedUtility_pure] using hle
+  · intro hle
+    refine ⟨by simpa [form] using
+      (payoffIntegrable_pure preferred
+        (fun outcome => stageUtility outcome who)),
+      by simpa [form] using
+        (payoffIntegrable_pure alternative
+          (fun outcome => stageUtility outcome who)), ?_⟩
+    simpa [form, expectedUtility_pure] using hle
 
 theorem punish_isNash :
     IsNash form (euPreference stageUtility) punish := by
   rw [isNash_iff]
   intro who action
+  rw [pure_preference_iff]
   cases who <;> cases action <;>
-    norm_num [euPreference_apply, form, punish, stageUtility]
+    norm_num [punish, stageUtility]
 
 theorem cooperate_not_isNash :
     ¬ IsNash form (euPreference stageUtility) cooperate := by
   intro hnash
   rw [isNash_iff] at hnash
   have hdeviation := hnash false true
-  norm_num [euPreference_apply, form, cooperate, stageUtility] at hdeviation
+  rw [pure_preference_iff] at hdeviation
+  norm_num [cooperate, stageUtility] at hdeviation
 
 /-- The tempting stationary-cooperation decomposition with a constant
 cooperative continuation is rejected: cooperation is not stage Nash. -/
@@ -118,12 +152,14 @@ theorem rewardOrPunish_mem (signal : monitoring.Signal) :
 theorem cooperate_promiseKeeping :
     monitoring.IsPromiseKeeping (1 / 2) cooperativePayoff
       cooperate rewardOrPunish := by
-  funext who
+  intro who
+  refine ⟨game_integrable who cooperate,
+    signal_integrable cooperate rewardOrPunish who, ?_⟩
   cases who <;>
-    norm_num [UtilityGame.PublicMonitoring.IsPromiseKeeping,
-      UtilityGame.PublicMonitoring.decomposedPayoff,
+    norm_num [UtilityGame.PublicMonitoring.decomposedPayoff,
+      expect_pure, stagePayoff_eq,
       rewardOrPunish, cooperativePayoff, punishmentPayoff,
-      monitoring, cooperate, stagePayoff_eq, stageUtility_cooperate]
+      monitoring, cooperate, stageUtility_cooperate]
 
 /-- A unilateral defection earns four now but selects punishment value one;
 at discount one half this is no better than cooperation value three. -/
@@ -132,20 +168,33 @@ theorem cooperate_enforceable :
   have hfalse := cooperate_update_true_ne false
   have htrue := cooperate_update_true_ne true
   intro who action
+  refine ⟨game_integrable who cooperate,
+    signal_integrable cooperate rewardOrPunish who,
+    game_integrable who (Profile.update cooperate who action),
+    signal_integrable (Profile.update cooperate who action)
+      rewardOrPunish who, ?_⟩
   cases who <;> cases action <;>
     norm_num [UtilityGame.PublicMonitoring.decomposedDeviationPayoff,
       UtilityGame.PublicMonitoring.decomposedPayoff,
       rewardOrPunish, cooperativePayoff, punishmentPayoff,
       monitoring, cooperate, stagePayoff_eq, stageUtility,
       cooperate_update_false, hfalse, htrue]
+  all_goals
+    rw [expect_pure, expect_pure]
+    norm_num [rewardOrPunish, cooperativePayoff, punishmentPayoff,
+      cooperate, hfalse, htrue]
 
 theorem punish_promiseKeeping :
     monitoring.IsPromiseKeeping (1 / 2) punishmentPayoff punish
       (monitoring.constantContinuation punishmentPayoff) := by
-  funext who
+  intro who
+  refine ⟨game_integrable who punish,
+    signal_integrable punish
+      (monitoring.constantContinuation punishmentPayoff) who, ?_⟩
   cases who <;>
-    norm_num [UtilityGame.PublicMonitoring.IsPromiseKeeping,
-      punishmentPayoff, punish, stagePayoff_eq, stageUtility_punish]
+    norm_num [UtilityGame.PublicMonitoring.decomposedPayoff,
+      expect_pure, punishmentPayoff, punish, stagePayoff_eq,
+      stageUtility_punish]
 
 theorem punish_enforceable :
     monitoring.IsEnforceable (1 / 2) punish
@@ -179,7 +228,7 @@ theorem payoffSet_bounded :
 theorem stagePayoff_bounded :
     ∀ who : Player, ∃ bound : ℝ,
       ∀ profile : Profile signature,
-        |game.stagePayoff profile who| ≤ bound := by
+        |game.stagePayoff profile who (game_integrable who profile)| ≤ bound := by
   intro who
   refine ⟨4, ?_⟩
   intro profile
@@ -192,9 +241,15 @@ theorem stagePayoff_bounded :
 stopping at an algebraic decomposition certificate. -/
 theorem cooperativePayoff_mem_perfectPublicEquilibriumPayoffs :
     cooperativePayoff ∈
-      monitoring.perfectPublicEquilibriumPayoffs (1 / 2) := by
+      monitoring.perfectPublicEquilibriumPayoffs (1 / 2)
+        (monitoring.discountedStageIntegrableOfBounded
+          game_integrable stagePayoff_bounded)
+        (monitoring.discountedSummableOfBounded
+          (by norm_num) (by norm_num)
+          game_integrable stagePayoff_bounded) := by
   apply (selfGenerating_subset_perfectPublicEquilibriumPayoffs
-      monitoring (by norm_num) (by norm_num) stagePayoff_bounded
+      monitoring (by norm_num) (by norm_num)
+      game_integrable stagePayoff_bounded
       payoffSet_bounded payoffSet_selfGenerating)
   simp [payoffSet]
 

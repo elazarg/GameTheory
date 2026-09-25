@@ -11,6 +11,7 @@ certificate.  This is a test fixture, not another Bayesian-network evaluator.
 -/
 
 import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovSoundness
+import GameTheory.Math.Probability.Mixture
 
 noncomputable section
 
@@ -94,27 +95,27 @@ private theorem rawWorld_eq_world_iff (first second collider descendant x y : Bo
   · rintro ⟨rfl, rfl, rfl, rfl⟩
     rfl
 
-def fairMix {T : Type} (left right : FinDist T) : FinDist T :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num) left right
+def fairMix {T : Type} (left right : PMF T) : PMF T :=
+  mix (1 / 2) (by norm_num) (by norm_num) left right
 
-def fairBool : FinDist Bool := fairMix (FinDist.pure false) (FinDist.pure true)
+def fairBool : PMF Bool := fairMix (PMF.pure false) (PMF.pure true)
 
-def law : FinDist BNAssignment :=
+def law : PMF BNAssignment :=
   fairMix
-    (fairMix (FinDist.pure (world false false))
-      (FinDist.pure (world false true)))
-    (fairMix (FinDist.pure (world true false))
-      (FinDist.pure (world true true)))
+    (fairMix (PMF.pure (world false false))
+      (PMF.pure (world false true)))
+    (fairMix (PMF.pure (world true false))
+      (PMF.pure (world true true)))
 
 def kernels : LocalKernels diagram.Value parents
   | .first, _ => fairBool
   | .second, _ => fairBool
   | .collider, configuration =>
-      FinDist.pure
+      PMF.pure
         (configuration ⟨.first, by simp [parents]⟩ ==
           configuration ⟨.second, by simp [parents]⟩)
   | .descendant, configuration =>
-      FinDist.pure (configuration ⟨.collider, by simp [parents]⟩)
+      PMF.pure (configuration ⟨.collider, by simp [parents]⟩)
 
 private theorem assignment_eq_worldValues (assignment : BNAssignment) :
     assignment = rawWorld (assignment .first) (assignment .second)
@@ -136,11 +137,12 @@ theorem factorizes : Factorizes diagram.Value law parents kernels := by
   generalize assignment .descendant = descendantValue
   cases firstValue <;> cases secondValue <;>
     cases colliderValue <;> cases descendantValue <;>
-      simp_rw [law, fairMix, FinDist.prob_mix, FinDist.prob_pure_eq_ite]
+      simp_rw [law, fairMix, mix_apply_toReal, PMF.pure_apply]
   all_goals
     rw [factorProduct, allNodes]
     simp [rawWorld_eq_world_iff, rawWorld, localFactor, parentConfiguration,
-      kernels, fairBool, fairMix, FinDist.prob_pure_eq_ite]
+      kernels, fairBool, fairMix, PMF.pure_apply]
+    all_goals norm_num [ENNReal.toReal_ofReal]
 
 def firstCoordinates : Finset ColliderNode := {.first}
 

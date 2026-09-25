@@ -54,8 +54,7 @@ subtree evaluator, a new strategy carrier, user-visible transport, or an
 Analysis dependency; or if it cannot reject a root that cuts the hostile
 information set while retaining the initial root.
 
-No kill condition fired.  Focused Protocol, EFG, Zermelo, and hostile-test
-builds completed warning-free.
+EXP-078 records the hostile subgame and policy-replacement evidence.
 
 EXP-078 then tested the tempting follow-up characterization rather than
 freezing it from analogy with perfect-information play. Its finite

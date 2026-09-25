@@ -1,19 +1,18 @@
 /-
-Nondegenerate Bayes-Nash-to-BCE probe.
+# Bayes-Nash and Bayes-correlated equilibrium probe
 
-One player has a fair Boolean type and receives one exactly when its action
-matches that type. The private signal repeats the type, and the induced plan
-chooses the true-type coordinate. Both types have positive probability, so the
-outcome-law theorem is not a one-state or zero-payoff tautology.
+A fair true type is duplicated as a private signal. Matching it earns one;
+recommending its opposite remains plausible but fails obedience.
 -/
 
 import GameTheory.Core.BayesCorrelated
+import Mathlib.Probability.Distributions.Uniform
 
 noncomputable section
 
 namespace GameTheory.Tests.BayesCorrelated
 
-open GameTheory.Math.Probability
+open GameTheory GameTheory.Math.Probability
 
 abbrev Player := Fin 1
 
@@ -21,9 +20,8 @@ def falseTypes : Player → Bool := fun _ => false
 
 def trueTypes : Player → Bool := fun _ => true
 
-def prior : FinDist (Player → Bool) :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure falseTypes) (FinDist.pure trueTypes)
+def prior : PMF (Player → Bool) :=
+  (PMF.uniformOfFintype Bool).map fun bit _ => bit
 
 @[reducible]
 def game : BayesianGame Player where
@@ -34,96 +32,83 @@ def game : BayesianGame Player where
     if actions who = types who then 1 else 0
 
 @[simp]
-theorem prior_prob_false : prior.prob falseTypes = 1 / 2 := by
-  have hne : falseTypes ≠ trueTypes := by
+theorem prior_prob_false : prior falseTypes = 1 / 2 := by
+  have hne : (fun _ : Player => false) ≠ (fun _ : Player => true) := by
     intro h
-    have := congrFun h 0
-    simp [falseTypes, trueTypes] at this
-  rw [prior, FinDist.prob_mix]
-  norm_num [FinDist.prob_pure_eq_ite, hne]
+    have hzero := congrFun h 0
+    cases hzero
+  simp [prior, PMF.map_apply, PMF.uniformOfFintype_apply]
+  unfold falseTypes
+  simp [hne]
 
 @[simp]
-theorem prior_prob_true : prior.prob trueTypes = 1 / 2 := by
-  have hne : trueTypes ≠ falseTypes := by
+theorem prior_prob_true : prior trueTypes = 1 / 2 := by
+  have hne : (fun _ : Player => true) ≠ (fun _ : Player => false) := by
     intro h
-    have := congrFun h 0
-    simp [falseTypes, trueTypes] at this
-  rw [prior, FinDist.prob_mix]
-  norm_num [FinDist.prob_pure_eq_ite, hne]
+    have hzero := congrFun h 0
+    cases hzero
+  simp [prior, PMF.map_apply, PMF.uniformOfFintype_apply]
+  unfold trueTypes
+  simp [hne]
 
-/-- The signal profile repeats the true type profile. -/
 @[reducible]
 def information : BayesianGame.InformationStructure game (fun _ => Bool) where
   law := prior.map fun types => (types, types)
   isBayesPlausible := by
-    rw [FinDist.map_comp]
-    exact FinDist.map_id prior
+    rw [PMF.map_comp]
+    exact PMF.map_id prior
 
-/-- Choose the true-type coordinate; the duplicate signal is deliberately not
-needed for optimality. -/
 def matchingPlan : Profile information.inducedBayesianGame.signature :=
   fun _ observed => observed.1
+
+private theorem inducedUtility_bounded (who : Player)
+    (outcome : information.inducedBayesianGame.signature.Outcome) :
+    |information.inducedBayesianGame.utility outcome who| ≤ (1 : ℝ) := by
+  simp [BayesianGame.utility, information, game]
+  split <;> norm_num
 
 theorem matchingPlan_isNash :
     IsNash information.inducedBayesianGame.toForm
       (euPreference information.inducedBayesianGame.utility)
       matchingPlan := by
-  rw [information.inducedBayesianGame.isNash_iff_interim]
-  intro who ownType respond
-  unfold BayesianGame.interimValue
-  apply FinDist.expect_mono
-  intro types _
-  by_cases htype : types who = ownType
-  · subst ownType
-    simp [matchingPlan, BayesianGame.InformationStructure.inducedBayesianGame,
-      game]
-    split <;> norm_num
-  · simp [htype]
-
-/-- Every positive own-type/recommendation cell of the induced law obeys: on
-its support the recommendation equals the true type, while a replacement can
-pay at most one. -/
-theorem outcomeLaw_interim_obedience :
-    ∀ who ownType recommended replacement,
-      ∀ hObserved :
-          ∃ rec ∈ game.obedienceEvent who ownType recommended,
-            rec ∈ (information.outcomeLaw matchingPlan).support,
-        game.interimDeviatingValue (information.outcomeLaw matchingPlan)
-              who ownType recommended replacement hObserved ≤
-          game.interimRecommendedValue (information.outcomeLaw matchingPlan)
-            who ownType recommended hObserved := by
-  intro who ownType recommended replacement hObserved
-  unfold BayesianGame.interimDeviatingValue
-    BayesianGame.interimRecommendedValue
-  apply FinDist.expect_mono
-  intro rec hrec
-  have hsupported :=
-    (FinDist.support_condOn (information.outcomeLaw matchingPlan)
-      (game.obedienceEvent who ownType recommended) hObserved hrec).2
-  rw [BayesianGame.InformationStructure.outcomeLaw, FinDist.support_map]
-    at hsupported
-  obtain ⟨types, _, rfl⟩ := hsupported
-  simp [game, matchingPlan, Profile.update]
+  rw [isNash_iff]
+  intro who replacement
+  let dev := Profile.update matchingPlan who replacement
+  have hmatch : UtilityIntegrable information.inducedBayesianGame.utility who
+      (information.inducedBayesianGame.toForm.play matchingPlan) :=
+    payoffIntegrable_of_bounded _ _ (inducedUtility_bounded who)
+  have hdev : UtilityIntegrable information.inducedBayesianGame.utility who
+      (information.inducedBayesianGame.toForm.play dev) :=
+    payoffIntegrable_of_bounded _ _ (inducedUtility_bounded who)
+  apply (euPreference_iff information.inducedBayesianGame.utility who
+    (information.inducedBayesianGame.toForm.play matchingPlan)
+    (information.inducedBayesianGame.toForm.play dev) hmatch hdev).2
+  rw [information.inducedBayesianGame.expectedUtility_eq_prior
+      who matchingPlan hmatch,
+    information.inducedBayesianGame.expectedUtility_eq_prior who dev hdev]
+  apply expect_mono
+  intro observed _
+  simp [BayesianGame.planPayoff, dev, matchingPlan, information, game,
+    BayesianGame.actionsOf]
   split <;> norm_num
 
-/-- The conditional characterization certifies the induced law without
-enumerating deviations over all type/recommendation pairs at once. -/
-theorem outcomeLaw_isBayesCorrelatedEq_via_interim :
-    game.IsBayesCorrelatedEq (information.outcomeLaw matchingPlan) :=
-  (game.isBayesCorrelatedEq_iff_interim_obedience
-      (information.outcomeLaw matchingPlan)).2
-    ⟨information.outcomeLaw_isBayesPlausible matchingPlan,
-      outcomeLaw_interim_obedience⟩
-
-/-- The Bayes-Nash plan induces a Bayes-plausible and obedient recommendation
-law in the original game. -/
 theorem outcomeLaw_isBayesCorrelatedEq :
     game.IsBayesCorrelatedEq (information.outcomeLaw matchingPlan) :=
   information.isBayesCorrelatedEq_outcomeLaw_of_isNash
     matchingPlan matchingPlan_isNash
 
-/-- Recommend the action opposite the true type. The type marginal remains
-correct, but following the recommendation is strictly suboptimal. -/
+/-- The fixture exercises the full guarded interim characterization. -/
+theorem outcomeLaw_interim_obedience :
+    game.IsBayesPlausible (information.outcomeLaw matchingPlan) ∧
+      game.InterimObedienceTests (information.outcomeLaw matchingPlan) :=
+  (game.isBayesCorrelatedEq_iff_interim_obedience
+    (information.outcomeLaw matchingPlan)).1 outcomeLaw_isBayesCorrelatedEq
+
+theorem outcomeLaw_isBayesCorrelatedEq_via_interim :
+    game.IsBayesCorrelatedEq (information.outcomeLaw matchingPlan) :=
+  (game.isBayesCorrelatedEq_iff_interim_obedience
+    (information.outcomeLaw matchingPlan)).2 outcomeLaw_interim_obedience
+
 def mismatchingPlan : Profile game.signature :=
   fun _ ownType => !ownType
 
@@ -137,48 +122,86 @@ theorem mismatchingRecommendation_isBayesPlausible :
 def flipDeviation : game.ObedienceDeviation 0 :=
   fun _ recommended => !recommended
 
+private theorem gameUtility_bounded (who : Player)
+    (outcome : game.signature.Outcome) :
+    |game.utility outcome who| ≤ (1 : ℝ) := by
+  simp [BayesianGame.utility, game]
+  split <;> norm_num
+
+/-- The recommendation law integrates the actual correlated payoff. -/
+theorem hRecommended :
+    UtilityIntegrable game.utility 0 mismatchingRecommendation :=
+  payoffIntegrable_of_bounded _ _ (gameUtility_bounded 0)
+
+/-- The deviating recommendation law integrates its mapped payoff. -/
+theorem hDeviating :
+    UtilityIntegrable game.utility 0
+      (mismatchingRecommendation.map
+        (game.recordDeviation 0 flipDeviation)) :=
+  payoffIntegrable_of_bounded _ _ (gameUtility_bounded 0)
+
 theorem mismatchingRecommendation_recommendedValue :
-    game.recommendedValue mismatchingRecommendation 0 = 0 := by
-  unfold BayesianGame.recommendedValue mismatchingRecommendation
-    BayesianGame.strategyRecommendationLaw
-  rw [FinDist.expect_map]
-  convert FinDist.expect_const game.prior 0 using 1
-  apply FinDist.expect_congr
-  intro types _
-  simp [mismatchingPlan, BayesianGame.actionsOf]
+    game.recommendedValue mismatchingRecommendation 0 hRecommended = 0 := by
+  have hplan : UtilityIntegrable game.utility 0
+      (game.toForm.play mismatchingPlan) := hRecommended
+  have hpoint : ∀ types, game.planPayoff 0 mismatchingPlan types = 0 := by
+    intro types
+    simp [BayesianGame.planPayoff, mismatchingPlan,
+      BayesianGame.actionsOf]
+  calc
+    game.recommendedValue mismatchingRecommendation 0 hRecommended =
+      expect game.prior (game.planPayoff 0 mismatchingPlan)
+        (game.planPayoff_integrable 0 mismatchingPlan hplan) :=
+      game.expectedUtility_eq_prior 0 mismatchingPlan hplan
+    _ = expect game.prior (fun _ => 0)
+        (payoffIntegrable_constant game.prior 0) :=
+      expect_congr_on_support (fun types _ => hpoint types) _ _
+    _ = 0 := expect_constant game.prior 0 _
 
 theorem mismatchingRecommendation_deviatingValue :
-    game.deviatingValue mismatchingRecommendation 0 flipDeviation = 1 := by
-  unfold BayesianGame.deviatingValue mismatchingRecommendation
-    BayesianGame.strategyRecommendationLaw
-  rw [FinDist.expect_map]
-  convert FinDist.expect_const game.prior 1 using 1
-  apply FinDist.expect_congr
-  intro types _
-  simp [game, mismatchingPlan, flipDeviation,
-    BayesianGame.actionsOf, BayesianGame.applyObedienceDeviation]
+    game.deviatingValue mismatchingRecommendation 0 flipDeviation
+        hDeviating = 1 := by
+  let devPlan := Profile.update mismatchingPlan 0
+    (fun ownType => flipDeviation ownType (mismatchingPlan 0 ownType))
+  have hplan : UtilityIntegrable game.utility 0 (game.toForm.play devPlan) :=
+    payoffIntegrable_congr_law
+      (game.recordDeviation_strategyRecommendationLaw
+        mismatchingPlan 0 flipDeviation) hDeviating
+  have hpoint : ∀ types, game.planPayoff 0 devPlan types = 1 := by
+    intro types
+    simp [BayesianGame.planPayoff, devPlan, game, mismatchingPlan,
+      flipDeviation, BayesianGame.actionsOf]
+  calc
+    game.deviatingValue mismatchingRecommendation 0 flipDeviation
+        hDeviating =
+      expect game.prior (game.planPayoff 0 devPlan)
+        (game.planPayoff_integrable 0 devPlan hplan) := by
+          exact (game.deviatingValue_strategyRecommendationLaw
+            mismatchingPlan 0 flipDeviation hDeviating).trans
+            (game.expectedUtility_eq_prior 0 devPlan hplan)
+    _ = expect game.prior (fun _ => 1)
+        (payoffIntegrable_constant game.prior 1) :=
+      expect_congr_on_support (fun types _ => hpoint types) _ _
+    _ = 1 := expect_constant game.prior 1 _
 
-/-- Bayes plausibility alone does not imply obedience. -/
 theorem mismatchingRecommendation_not_isBayesCorrelatedEq :
     ¬ game.IsBayesCorrelatedEq mismatchingRecommendation := by
-  rintro ⟨_, obedient⟩
-  have hdeviation := obedient 0 flipDeviation
+  intro hBCE
+  have hobey := hBCE.2 0 flipDeviation
+  have hle :
+      game.deviatingValue mismatchingRecommendation 0 flipDeviation
+          hDeviating ≤
+        game.recommendedValue mismatchingRecommendation 0 hRecommended :=
+    (euPreference_iff game.utility 0 mismatchingRecommendation
+      (mismatchingRecommendation.map
+        (game.recordDeviation 0 flipDeviation))
+      hRecommended hDeviating).mp hobey
   rw [mismatchingRecommendation_deviatingValue,
-    mismatchingRecommendation_recommendedValue] at hdeviation
-  norm_num at hdeviation
+    mismatchingRecommendation_recommendedValue] at hle
+  norm_num at hle
 
-/-- Therefore the mismatching recommendation cannot pass every positive-cell
-interim check either.  Bayes plausibility is held fixed, so the failure is an
-obedience failure rather than a marginal-law failure. -/
 theorem mismatchingRecommendation_not_interim_obedient :
-    ¬ ∀ who ownType recommended replacement,
-      ∀ hObserved :
-          ∃ rec ∈ game.obedienceEvent who ownType recommended,
-            rec ∈ mismatchingRecommendation.support,
-        game.interimDeviatingValue mismatchingRecommendation who ownType
-              recommended replacement hObserved ≤
-          game.interimRecommendedValue mismatchingRecommendation who ownType
-            recommended hObserved := by
+    ¬ game.InterimObedienceTests mismatchingRecommendation := by
   intro hinterim
   apply mismatchingRecommendation_not_isBayesCorrelatedEq
   exact (game.isBayesCorrelatedEq_iff_interim_obedience

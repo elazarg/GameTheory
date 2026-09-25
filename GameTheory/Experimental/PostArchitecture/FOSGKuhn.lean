@@ -66,10 +66,10 @@ example : ¬forgetfulGame.information.ActsOnceWhereItMatters :=
   Randomized.not_actsOnceWhereItMatters
 
 example :
-    GameTheory.Math.Probability.FinDist.map (fun history => history.state)
+    PMF.map (fun history => history.state)
         (forgetfulGame.information.runBehavioral
           (fun _ => Randomized.coinPolicy) 2) ≠
-      GameTheory.Math.Probability.FinDist.map (fun history => history.state)
+      PMF.map (fun history => history.state)
         (forgetfulGame.information.runMixed
           (fun _ => Randomized.coinPolicy.toMixed) 2) := by
   simpa [forgetfulGame] using Randomized.runBehavioral_ne_runMixed
@@ -88,6 +88,7 @@ example (behavioral : Profile singleGame.behavioralSignature) (horizon : ℕ) :
       singleGame.information.runMixed mixed horizon =
         singleGame.information.runBehavioral behavioral horizon :=
   singleGame.kuhn_behavioral_to_mixed singleActsOnce behavioral horizon
+    (fun _ => Set.toFinite _)
 
 private theorem recallingActsOnce :
     recallingGame.information.ActsOnceWhereItMatters :=
@@ -102,9 +103,10 @@ private theorem recallingPerfectRecall :
 theorem recalling_behavioral_to_mixed
     (behavioral : Profile recallingGame.behavioralSignature) (horizon : ℕ) :
     ∃ mixed : Profile recallingGame.information.strategicSignature.mixed,
-      recallingGame.information.runMixed mixed horizon =
+  recallingGame.information.runMixed mixed horizon =
         recallingGame.information.runBehavioral behavioral horizon :=
   recallingGame.kuhn_behavioral_to_mixed recallingActsOnce behavioral horizon
+    (fun _ => Set.toFinite _)
 
 /-- The recall-facing direction uses the same histories and runner. -/
 theorem recalling_mixed_to_behavioral
@@ -122,18 +124,19 @@ theorem recalling_historyLaws (horizon : ℕ) :
       { law | ∃ mixed : Profile recallingGame.information.strategicSignature.mixed,
         recallingGame.information.runMixed mixed horizon = law } :=
   recallingGame.kuhn_historyLaws recallingPerfectRecall horizon
+    (fun _ _ => Set.toFinite _)
 
 /-- Arbitrary retained outcome data commutes with the predrawn mixed witness. -/
 theorem recalling_outcomeLaw
     (behavioral : Profile recallingGame.behavioralSignature) (horizon : ℕ)
     {Outcome : Type} (outcome : recallingGame.History → Outcome) :
     ∃ mixed : Profile recallingGame.information.strategicSignature.mixed,
-      GameTheory.Math.Probability.FinDist.map outcome
+      PMF.map outcome
           (recallingGame.information.runMixed mixed horizon) =
-        GameTheory.Math.Probability.FinDist.map outcome
+        PMF.map outcome
           (recallingGame.information.runBehavioral behavioral horizon) :=
   recallingGame.kuhn_behavioral_to_mixed_outcomeLaw
-    recallingActsOnce behavioral horizon outcome
+    recallingActsOnce behavioral horizon (fun _ => Set.toFinite _) outcome
 
 
 end GameTheory.Experimental.FOSGKuhn

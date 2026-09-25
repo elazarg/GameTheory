@@ -13,6 +13,7 @@ transfer Nash equilibria between behavioral and mixed strategy spaces.
 -/
 
 import GameTheory.Languages.FOSG
+import GameTheory.Protocol.PolicyRandomization
 
 noncomputable section
 
@@ -52,17 +53,20 @@ theorem toBehavioralGameForm_play (horizon : ℕ)
       G.information.runBehavioral behavioral horizon :=
   InformationModel.toBehavioralGameForm_play G.information horizon behavioral
 
-/-- Predrawing the finite support exposed by this bounded behavioral run
-preserves the complete FOSG history law without ambient information-state
-finiteness. -/
+/-- A finite cover of the sites exposed by this bounded behavioral run lets a
+predrawn mixed profile preserve the complete FOSG history law, without
+requiring the ambient information-state carriers to be finite. -/
 theorem kuhn_behavioral_to_mixed
     (hactsOnce : G.information.ActsOnceWhereItMatters)
-    (behavioral : Profile G.behavioralSignature) (horizon : ℕ) :
+    (behavioral : Profile G.behavioralSignature) (horizon : ℕ)
+    (hfinite : ∀ i,
+      (G.information.behavioralSupportSitesFrom behavioral horizon
+        G.execution.initHistory i).Finite) :
     ∃ mixed : Profile G.information.strategicSignature.mixed,
       G.information.runMixed mixed horizon =
         G.information.runBehavioral behavioral horizon :=
   G.information.exists_mixed_runMixed_eq_runBehavioral
-    hactsOnce behavioral horizon
+    hactsOnce behavioral horizon hfinite
 
 /-- Under perfect recall, the behavioral reading of a mixed FOSG plan
 preserves the complete history law. -/
@@ -84,27 +88,34 @@ bounded complete-history laws. Perfect recall supplies the no-revisit
 consequence used in the behavioral-to-mixed direction; no ambient
 information-state finiteness is required. -/
 theorem kuhn_historyLaws
-    (hrecall : G.information.PerfectRecall) (horizon : ℕ) :
+    (hrecall : G.information.PerfectRecall) (horizon : ℕ)
+    (hfinite : ∀ behavioral i,
+      (G.information.behavioralSupportSitesFrom behavioral horizon
+        G.execution.initHistory i).Finite) :
     { law | ∃ behavioral : Profile G.behavioralSignature,
         G.information.runBehavioral behavioral horizon = law } =
       { law | ∃ mixed : Profile G.information.strategicSignature.mixed,
-        G.information.runMixed mixed horizon = law } :=
-  G.information.runBehavioral_image_eq_runMixed_image
+        G.information.runMixed mixed horizon = law } := by
+  classical
+  exact G.information.runBehavioral_image_eq_runMixed_image
     (G.information.actsOnceWhereItMatters_of_perfectRecall hrecall)
-    (InformationModel.constrainsAlike_of_perfectRecall hrecall) horizon
+    (InformationModel.constrainsAlike_of_perfectRecall hrecall) horizon hfinite
 
 /-- Every outcome projection of the behavioral history law is preserved by
 the predrawn mixed witness. -/
 theorem kuhn_behavioral_to_mixed_outcomeLaw
     (hactsOnce : G.information.ActsOnceWhereItMatters)
     (behavioral : Profile G.behavioralSignature) (horizon : ℕ)
+    (hfinite : ∀ i,
+      (G.information.behavioralSupportSitesFrom behavioral horizon
+        G.execution.initHistory i).Finite)
     {Outcome : Type uo} (outcome : G.History → Outcome) :
     ∃ mixed : Profile G.information.strategicSignature.mixed,
-      FinDist.map outcome (G.information.runMixed mixed horizon) =
-        FinDist.map outcome (G.information.runBehavioral behavioral horizon) := by
+      PMF.map outcome (G.information.runMixed mixed horizon) =
+        PMF.map outcome (G.information.runBehavioral behavioral horizon) := by
   obtain ⟨mixed, hmixed⟩ :=
-    G.kuhn_behavioral_to_mixed hactsOnce behavioral horizon
-  exact ⟨mixed, congrArg (FinDist.map outcome) hmixed⟩
+    G.kuhn_behavioral_to_mixed hactsOnce behavioral horizon hfinite
+  exact ⟨mixed, congrArg (PMF.map outcome) hmixed⟩
 
 /-- Every outcome projection of a mixed FOSG history law is preserved by its
 behavioral reading under perfect recall. -/
@@ -113,11 +124,11 @@ theorem kuhn_mixed_to_behavioral_outcomeLaw
     (mixed : Profile G.information.strategicSignature.mixed) (horizon : ℕ)
     {Outcome : Type uo} (outcome : G.History → Outcome) :
     ∃ behavioral : Profile G.behavioralSignature,
-      FinDist.map outcome (G.information.runBehavioral behavioral horizon) =
-        FinDist.map outcome (G.information.runMixed mixed horizon) := by
+      PMF.map outcome (G.information.runBehavioral behavioral horizon) =
+        PMF.map outcome (G.information.runMixed mixed horizon) := by
   obtain ⟨behavioral, hbehavioral⟩ :=
     G.kuhn_mixed_to_behavioral hrecall mixed horizon
-  exact ⟨behavioral, congrArg (FinDist.map outcome) hbehavioral⟩
+  exact ⟨behavioral, congrArg (PMF.map outcome) hbehavioral⟩
 
 end Game
 

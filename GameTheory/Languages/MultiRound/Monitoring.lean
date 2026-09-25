@@ -3,7 +3,7 @@
 
 This is a constructor for a common native shape, not a second sequential
 semantics.  A monitoring game supplies action carriers, initial observations,
-and the finite-support law of the public/private signals emitted after a joint
+and the PMF law of the public/private signals emitted after a joint
 action.  It compiles directly to the accepted execution and information
 interfaces.  Within this constructor, Protocol is therefore the sole owner of
 histories, policies, run laws, and strategic-form compilation.  This claim does
@@ -49,7 +49,7 @@ structure MonitoringGame (ι : Type uι) where
   signalLaw :
     List ((i : ι) → Action i) →
       ((i : ι) → Action i) →
-        FinDist (PublicSignal × ((i : ι) → PrivateSignal i))
+        PMF (PublicSignal × ((i : ι) → PrivateSignal i))
 
 -- Actions and public/private signals intentionally have independent universes;
 -- the linter sees their levels only through the combined signal law.
@@ -85,7 +85,7 @@ def appendRound (state : G.State) (actions : (i : ι) → G.Action i)
 
 /-- One monitoring transition before Protocol legality is attached. -/
 def nextLaw (state : G.State) (actions : (i : ι) → G.Action i) :
-    FinDist G.State :=
+    PMF G.State :=
   (G.signalLaw (G.actionHistory state) actions).map (G.appendRound state actions)
 
 theorem exists_eq_appendRound_of_mem_nextLaw {state : G.State}
@@ -93,7 +93,7 @@ theorem exists_eq_appendRound_of_mem_nextLaw {state : G.State}
     (reached : target ∈ (G.nextLaw state actions).support) :
     ∃ signals ∈ (G.signalLaw (G.actionHistory state) actions).support,
       target = G.appendRound state actions signals := by
-  rw [nextLaw, FinDist.support_map] at reached
+  rw [nextLaw, PMF.support_map] at reached
   obtain ⟨signals, hsignals, rfl⟩ := reached
   exact ⟨signals, hsignals, rfl⟩
 

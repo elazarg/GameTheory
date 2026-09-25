@@ -18,7 +18,7 @@ whose semantics are the accepted Protocol execution/information pair.
 2. Expose only raw `FOSG.Game` records and reconstruct the same monitoring
    mechanics at each consumer.
 3. Store action carriers, a finite horizon, initial observations, and a
-   finite-support monitoring law; compile this data directly to canonical
+   monitoring PMF; compile this data directly to canonical
    `ExecutionProtocol`, `InformationModel`, FOSG, and `GameForm` values.
 
 Design 3 is adopted. Hidden execution state records the realized joint-action
@@ -26,6 +26,11 @@ and signal history. A player's information state records only its own previous
 choices and received public/private signals. Protocol remains the sole owner
 of traces, histories, pure/behavioral/mixed policies, runners, and strategic
 compilation.
+
+Under [D62](D62-general-pmf-restoration.md), signal laws may have infinite
+support. Neither public nor private signal carriers acquire a finiteness
+assumption. The historical EXP-070 slice used finite-support laws; the same
+constructor now inherits general discrete execution from Protocol.
 
 ## Representative hostile slice
 
@@ -39,9 +44,11 @@ the canonical Protocol run.
 
 The generic constructor also proves `InfoSignals.PerfectRecall`. Thus the
 mixed-to-behavioral direction is inherited from Protocol without a
-multi-round-specific theorem. The behavioral-to-mixed direction remains a
-named BFS gate because the current list-valued information carrier is not
-globally finite even though reachable traces have bounded length.
+multi-round-specific theorem. Discrete behavioral-to-mixed realization needs
+an actual finite information-site cover at the evaluated horizon. Bounded
+trace length alone does not supply that cover when signal branching is
+infinite. Protocol's separate policy-measure theorems apply under their own
+hypotheses, as specified by D57–D59; no multi-round evaluator is introduced.
 
 ## Measurements
 
@@ -53,12 +60,7 @@ globally finite even though reachable traces have bounded length.
 | canonical reuse | one Protocol trace/history, information model, pure/behavioral/mixed runner, and strategic compiler |
 | semantic certificate | generic `MonitoringGame.perfectRecall` |
 | hostile distinction | two distinct opponent-action histories merge locally; a changed own action remains distinguishable and changes the second-round policy choice |
-| bounded accounting | all 233 L-ROUND declarations classified: 27 adapted, 6 subsumed, 163 retired, and 37 deferred |
 | public-surface cleanup | the Phase 3 two-round probe moved from `Languages/Rounds.lean` to `Experimental/PostArchitecture/RoundsWitness.lean` |
-| reachability | 5 native/Protocol inputs reached; Nash, Analysis consistency, Stochastic, and Repeated boundaries rejected 4/4 |
-| source checks | zero language transports, raw `Function.update`, placeholders, native reduction, or custom axioms |
-| trust sample | perfect recall, menu adequacy, hidden-opponent locality, and canonical-play flagships use only `propext`, `Classical.choice`, and `Quot.sound` |
-| release validation | warning-clean 3,514-job build with zero build-output commands; Phase 2 source, Phase 3, and exact coverage `VERIFIED=1` |
 
 ## Kill condition
 

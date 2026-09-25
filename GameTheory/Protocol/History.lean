@@ -20,6 +20,7 @@ reads the proof that its input occurs.
 -/
 
 import GameTheory.Protocol.Extraction
+import Mathlib.Probability.ProbabilityMassFunction.Constructions
 
 noncomputable section
 
@@ -179,22 +180,22 @@ def Chooser.toHistoryChooser (chooser : E.Chooser) : E.HistoryChooser :=
 open Classical in
 /-- Run for at most `fuel` steps, recording the history rather than only the
 state it reached. -/
-def runHistoryFor (chooser : E.HistoryChooser) : ℕ → E.History → FinDist E.History
-  | 0, h => FinDist.pure h
+def runHistoryFor (chooser : E.HistoryChooser) : ℕ → E.History → PMF E.History
+  | 0, h => PMF.pure h
   | fuel + 1, h =>
-    if hterm : E.terminal h.state then FinDist.pure h
+    if hterm : E.terminal h.state then PMF.pure h
     else
       (E.step h.state (chooser h hterm)).bindOnSupport fun _ realized =>
         runHistoryFor chooser fuel (h.extend (chooser h hterm).2 realized)
 
 @[simp]
 theorem runHistoryFor_zero (chooser : E.HistoryChooser) (h : E.History) :
-    E.runHistoryFor chooser 0 h = FinDist.pure h := rfl
+    E.runHistoryFor chooser 0 h = PMF.pure h := rfl
 
 /-- Terminal histories are absorbing, exactly as terminal states are. -/
 @[simp]
 theorem runHistoryFor_of_terminal (chooser : E.HistoryChooser) (fuel : ℕ) {h : E.History}
-    (hterm : E.terminal h.state) : E.runHistoryFor chooser fuel h = FinDist.pure h := by
+    (hterm : E.terminal h.state) : E.runHistoryFor chooser fuel h = PMF.pure h := by
   cases fuel with
   | zero => rfl
   | succ fuel => rw [runHistoryFor, dite_eq_left hterm]
@@ -212,18 +213,18 @@ law. Every theorem about the state law therefore transfers, and what the history
 law adds is exactly what the state law had discarded. -/
 theorem map_state_runHistoryFor (chooser : E.Chooser) :
     ∀ (fuel : ℕ) (h : E.History),
-      FinDist.map History.state (E.runHistoryFor chooser.toHistoryChooser fuel h) =
+      PMF.map History.state (E.runHistoryFor chooser.toHistoryChooser fuel h) =
         E.runFor chooser fuel h.state := by
   intro fuel
   induction fuel with
-  | zero => intro h; simp
+  | zero => intro h; simp only [runHistoryFor_zero, runFor_zero, PMF.pure_map]
   | succ fuel ih =>
     intro h
     by_cases hterm : E.terminal h.state
-    · rw [runHistoryFor_of_terminal _ _ hterm, runFor_of_terminal _ _ hterm, FinDist.map_pure]
+    · rw [runHistoryFor_of_terminal _ _ hterm, runFor_of_terminal _ _ hterm, PMF.pure_map]
     · rw [runHistoryFor_succ_of_not_terminal _ fuel hterm,
-        runFor_succ_of_not_terminal chooser fuel hterm, FinDist.map_bindOnSupport]
-      exact FinDist.bindOnSupport_eq_bind_of_eq_on_support fun _ _ => ih _
+        runFor_succ_of_not_terminal chooser fuel hterm, map_bindOnSupport]
+      exact bindOnSupport_eq_bind_of_eq_on_support _ fun _ _ => ih _
 
 variable (E) in
 /-- The histories a run of at most `fuel` steps can pass through, starting from
@@ -293,6 +294,14 @@ theorem ReachesWithin.eq_of_trace_length_eq {fuel : ℕ}
       simp only [History.extend, Trace.length] at hle
       omega
 
+/-- Once a history is terminal, bounded semantic reachability cannot extend it. -/
+theorem ReachesWithin.eq_of_terminal {fuel : ℕ}
+    {start target : E.History} (hterm : E.terminal start.state)
+    (hreach : E.ReachesWithin fuel start target) : target = start := by
+  cases hreach with
+  | refl => rfl
+  | step joint isLegal realized rest => exact False.elim (isLegal.1 hterm)
+
 /-- Every complete history is semantically reachable from the initial history;
 its indexed trace supplies the exact transition budget. -/
 theorem reachesWithin_from_init (h : E.History) :
@@ -305,6 +314,73 @@ theorem reachesWithin_from_init (h : E.History) :
           ⟨target, Trace.extend prior joint isLegal realized⟩ :=
         .step joint isLegal realized (.refl 0 _)
       simpa [Trace.length] using ih.trans hone
+
+/-- The immediate predecessor of a nonempty complete history. -/
+def History.prior : E.History → E.History
+  | ⟨_, .start⟩ => E.initHistory
+  | ⟨_, .extend prior _ _ _⟩ => ⟨_, prior⟩
+
+/-- Two realized continuations ending at the same history have the same
+ancestor at any common trace depth. -/
+theorem ReachesWithin.eq_start_of_same_length
+    {firstFuel secondFuel : ℕ} {first second target : E.History}
+    (hfirst : E.ReachesWithin firstFuel first target)
+    (hsecond : E.ReachesWithin secondFuel second target)
+    (hlength : first.trace.length = second.trace.length) : first = second := by
+  induction hfirst generalizing second secondFuel with
+  | refl =>
+      exact hsecond.eq_of_trace_length_eq hlength.symm
+  | @step fuel first target joint legal reached realized rest ih =>
+      cases hsecond with
+      | refl =>
+          have hle := rest.trace_length_le
+          simp only [History.extend, Trace.length] at hle
+          omega
+      | @step otherFuel second target otherJoint otherLegal otherReached
+          otherRealized otherRest =>
+          have hnext := ih otherRest (by
+            simpa only [History.extend, Trace.length] using
+              (congrArg (fun n : ℕ => n + 1) hlength))
+          exact congrArg History.prior hnext
+
+/-- Among two ancestors of one history, the shallower one reaches the deeper. -/
+theorem ReachesWithin.ancestor_comparable
+    {firstFuel secondFuel : ℕ} {first second target : E.History}
+    (hfirst : E.ReachesWithin firstFuel first target)
+    (hsecond : E.ReachesWithin secondFuel second target)
+    (hlength : first.trace.length ≤ second.trace.length) :
+    E.ReachesWithin firstFuel first second := by
+  induction hfirst generalizing second secondFuel with
+  | refl =>
+      have hlen := Nat.le_antisymm hsecond.trace_length_le hlength
+      have heq := hsecond.eq_of_trace_length_eq hlen
+      subst second
+      exact .refl _ _
+  | @step fuel first target joint legal reached realized rest ih =>
+      by_cases heq : first.trace.length = second.trace.length
+      · have hsame := (ReachesWithin.step joint legal realized rest)
+          |>.eq_start_of_same_length hsecond heq
+        subst second
+        exact .refl _ first
+      · have hnext : (first.extend legal realized).trace.length ≤
+            second.trace.length := by
+          simp only [History.extend, Trace.length]
+          omega
+        exact .step joint legal realized (ih hsecond hnext)
+
+/-- A nontrivial reachability witness begins with a realized legal step. -/
+theorem ReachesWithin.eq_or_step {fuel : ℕ}
+    {start target : E.History} (hreach : E.ReachesWithin fuel start target) :
+    start = target ∨
+      ∃ (joint : ∀ i, Option (E.Action i))
+        (legal : E.Legal start.state joint) (reached : E.State)
+        (realized : reached ∈ (E.step start.state ⟨joint, legal⟩).support)
+        (restFuel : ℕ),
+        E.ReachesWithin restFuel (start.extend legal realized) target := by
+  cases hreach with
+  | refl => exact Or.inl rfl
+  | @step restFuel start target joint legal reached realized rest =>
+      exact Or.inr ⟨joint, legal, reached, realized, restFuel, rest⟩
 
 /-- Choosers agreeing on every history induce the same history law. -/
 theorem runHistoryFor_congr {first second : E.HistoryChooser}
@@ -320,7 +396,7 @@ theorem runHistoryFor_congr {first second : E.HistoryChooser}
     · rw [runHistoryFor_of_terminal _ _ hterm, runHistoryFor_of_terminal _ _ hterm]
     · rw [runHistoryFor_succ_of_not_terminal first fuel hterm,
         runHistoryFor_succ_of_not_terminal second fuel hterm, hagree h hterm]
-      exact FinDist.bindOnSupport_congr fun _ _ => ih _
+      exact bindOnSupport_congr _ fun _ _ => ih _
 
 end ExecutionProtocol
 

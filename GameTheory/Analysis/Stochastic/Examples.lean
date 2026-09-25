@@ -9,6 +9,7 @@ stationary saddle selector.
 
 import GameTheory.Analysis.Stochastic.Discounted
 import GameTheory.Analysis.Stochastic.Fink
+import GameTheory.Math.Probability.Mixture
 
 noncomputable section
 
@@ -17,13 +18,13 @@ namespace GameTheory.Stochastic.Examples
 open GameTheory GameTheory.Math.Probability
 open scoped NNReal
 
-private def transition (state : Bool) (action : Fin 2 → Bool) : FinDist Bool :=
+private def transition (state : Bool) (action : Fin 2 → Bool) : PMF Bool :=
   if action 0 = action 1 then
-    FinDist.mix (1 / 3) (by norm_num) (by norm_num)
-      (FinDist.pure state) (FinDist.pure (!state))
+    mix (1 / 3) (by norm_num) (by norm_num)
+      (PMF.pure state) (PMF.pure (!state))
   else
-    FinDist.mix (2 / 3) (by norm_num) (by norm_num)
-      (FinDist.pure state) (FinDist.pure (!state))
+    mix (2 / 3) (by norm_num) (by norm_num)
+      (PMF.pure state) (PMF.pure (!state))
 
 private def stageUtility
     (state : Bool) (action : Fin 2 → Bool) : Fin 2 → ℝ :=
@@ -38,13 +39,16 @@ def hostileGame : Game (Fin 2) where
   transition := transition
   stageUtility := stageUtility
 
-private instance stateFintype : Fintype hostileGame.State :=
+/-- The hostile witness has the two Boolean states. -/
+instance stateFintype : Fintype hostileGame.State :=
   inferInstanceAs (Fintype Bool)
 
-private instance actionFintype : ∀ i, Fintype (hostileGame.Action i) :=
+/-- Each player in the hostile witness has two Boolean actions. -/
+instance actionFintype : ∀ i, Fintype (hostileGame.Action i) :=
   fun _ => inferInstanceAs (Fintype Bool)
 
-private instance actionNonempty : ∀ i, Nonempty (hostileGame.Action i) :=
+/-- Every player in the hostile witness has an available action. -/
+instance actionNonempty : ∀ i, Nonempty (hostileGame.Action i) :=
   fun _ => inferInstanceAs (Nonempty Bool)
 
 theorem hostileGame_isZeroSum : hostileGame.IsZeroSum := by
@@ -65,7 +69,8 @@ theorem hostileGame_hasStationarySaddle {β : ℝ≥0} (hβ : β < 1)
     IsSaddlePoint
       (MatrixGame.utility
         (hostileGame.auxiliaryMatrix (β : ℝ)
-          (hostileGame.discountedValue hβ) state))
+          (hostileGame.discountedValue hβ) state
+          (fun _ _ => payoffIntegrable_of_finite _ _)))
       (hostileGame.stationarySaddleProfile hβ state) :=
   hostileGame.stationarySaddleProfile_isSaddlePoint hβ state
 
@@ -73,8 +78,8 @@ theorem hostileGame_hasStationarySaddle {β : ℝ≥0} (hβ : β < 1)
 
 /-- A two-point transition law with both states in its support. -/
 private def twoStateLaw (weight : ℝ) (hzero : 0 ≤ weight)
-    (hone : weight ≤ 1) : FinDist (Fin 2) :=
-  FinDist.mix weight hzero hone (FinDist.pure 0) (FinDist.pure 1)
+    (hone : weight ≤ 1) : PMF (Fin 2) :=
+  mix weight hzero hone (PMF.pure 0) (PMF.pure 1)
 
 /-- A finite general-sum stochastic game. Agreement and disagreement change
 the transition weights, while the two players value the states differently. -/
@@ -121,14 +126,14 @@ theorem generalSumGame_transition_supports_both
   simp only [generalSumGame]
   split_ifs
   · constructor
-    · exact FinDist.mem_support_mix_left (1 / 3) (by norm_num) (by norm_num)
+    · exact mem_support_mix_left (1 / 3) (by norm_num) (by norm_num)
         (by norm_num) (by simp)
-    · exact FinDist.mem_support_mix_right (1 / 3) (by norm_num) (by norm_num)
+    · exact mem_support_mix_right (1 / 3) (by norm_num) (by norm_num)
         (by norm_num) (by simp)
   · constructor
-    · exact FinDist.mem_support_mix_left (2 / 3) (by norm_num) (by norm_num)
+    · exact mem_support_mix_left (2 / 3) (by norm_num) (by norm_num)
         (by norm_num) (by simp)
-    · exact FinDist.mem_support_mix_right (2 / 3) (by norm_num) (by norm_num)
+    · exact mem_support_mix_right (2 / 3) (by norm_num) (by norm_num)
         (by norm_num) (by simp)
 
 /-- The general fixed-point theorem supplies a stationary Bellman equilibrium

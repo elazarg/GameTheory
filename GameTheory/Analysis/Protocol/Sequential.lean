@@ -9,7 +9,7 @@ live behind this one-way bridge.
 -/
 
 import GameTheory.Math.Probability.Convergence
-import GameTheory.Protocol.BehavioralAssessment
+import GameTheory.Protocol.BehavioralBayes
 
 noncomputable section
 
@@ -29,18 +29,18 @@ variable {M : InformationModel E}
 def BehavioralAssessment.IsFullyMixed
     (A : M.BehavioralAssessment) : Prop :=
   ∀ (i : ι) (site : M.InformationSite i),
-    (A.strategy i site.1).FullSupport
+    ∀ choice, choice ∈ (A.strategy i site.1).support
 
 /-- Pointwise convergence of behavioral strategies and history beliefs. -/
 def BehavioralAssessmentConvergesPointwise
     (sequence : ℕ → M.BehavioralAssessment)
     (target : M.BehavioralAssessment) : Prop :=
   (∀ (i : ι) (site : M.InformationSite i),
-      FinDistConvergesPointwise
+      PMFConvergesPointwise
         (fun n => (sequence n).strategy i site.1)
         (target.strategy i site.1)) ∧
     ∀ (i : ι) (site : M.InformationSite i),
-      FinDistConvergesPointwise
+      PMFConvergesPointwise
         (fun n => (sequence n).belief i site)
         (target.belief i site)
 
@@ -50,7 +50,7 @@ theorem BehavioralAssessmentConvergesPointwise.strategy
     {target : M.BehavioralAssessment}
     (h : BehavioralAssessmentConvergesPointwise sequence target)
     (i : ι) (site : M.InformationSite i) :
-    FinDistConvergesPointwise
+    PMFConvergesPointwise
       (fun n => (sequence n).strategy i site.1)
       (target.strategy i site.1) :=
   h.1 i site
@@ -61,7 +61,7 @@ theorem BehavioralAssessmentConvergesPointwise.belief
     {target : M.BehavioralAssessment}
     (h : BehavioralAssessmentConvergesPointwise sequence target)
     (i : ι) (site : M.InformationSite i) :
-    FinDistConvergesPointwise
+    PMFConvergesPointwise
       (fun n => (sequence n).belief i site)
       (target.belief i site) :=
   h.2 i site
@@ -71,28 +71,25 @@ coordinate. -/
 theorem behavioralAssessmentConvergesPointwise_const
     (A : M.BehavioralAssessment) :
     BehavioralAssessmentConvergesPointwise (fun _ => A) A :=
-  ⟨fun _ _ => finDistConvergesPointwise_const _,
-    fun _ _ => finDistConvergesPointwise_const _⟩
+  ⟨fun _ _ => pmfConvergesPointwise_const _,
+    fun _ _ => pmfConvergesPointwise_const _⟩
 
-/-- Kreps-Wilson consistency for a finite protocol assessment: a pointwise
-limit of fully mixed, Bayes-consistent behavioral assessments. -/
+/-- Kreps-Wilson consistency: a pointwise limit of fully mixed,
+Bayes-consistent behavioral assessments. No finite action or history carrier
+is required. The approximating laws themselves witness full support. -/
 def BehavioralAssessment.IsSequentiallyConsistent
     [Fintype ι] (A : M.BehavioralAssessment)
-    (hantichain : M.DecisionInformationAntichain)
-    [∀ (i : ι) (site : M.InformationSite i),
-      Fintype (M.InformationHistory i site.1)] : Prop :=
+    (hantichain : M.DecisionInformationAntichain) : Prop :=
   A.IsLimitConsistent
     BehavioralAssessment.IsFullyMixed
     (fun assessment =>
       BehavioralAssessment.IsBayesConsistent M assessment hantichain)
     BehavioralAssessmentConvergesPointwise
 
-/-- A fully mixed assessment that already obeys finite Bayes' rule is
+/-- A fully mixed assessment that already obeys Bayes' rule is
 sequentially consistent, witnessed by the constant approximating sequence. -/
 theorem BehavioralAssessment.IsSequentiallyConsistent.of_fullyMixed_bayes
     [Fintype ι] {A : M.BehavioralAssessment}
-    [∀ (i : ι) (site : M.InformationSite i),
-      Fintype (M.InformationHistory i site.1)]
     (hantichain : M.DecisionInformationAntichain)
     (hfull : A.IsFullyMixed)
     (hbayes : BehavioralAssessment.IsBayesConsistent M A hantichain) :
@@ -104,8 +101,6 @@ theorem BehavioralAssessment.IsSequentiallyConsistent.of_fullyMixed_bayes
 paired with Kreps-Wilson consistency. -/
 def BehavioralAssessment.IsSequentialEquilibriumFor
     [Fintype ι] (A : M.BehavioralAssessment)
-    [∀ (i : ι) (site : M.InformationSite i),
-      Fintype (M.InformationHistory i site.1)]
     (hantichain : M.DecisionInformationAntichain)
     (context : (i : ι) → (site : M.InformationSite i) →
       GameTheory.Protocol.Context
@@ -114,8 +109,6 @@ def BehavioralAssessment.IsSequentialEquilibriumFor
 
 theorem BehavioralAssessment.isSequentialEquilibriumFor_iff
     [Fintype ι] (A : M.BehavioralAssessment)
-    [∀ (i : ι) (site : M.InformationSite i),
-      Fintype (M.InformationHistory i site.1)]
     (hantichain : M.DecisionInformationAntichain)
     (context : (i : ι) → (site : M.InformationSite i) →
       GameTheory.Protocol.Context

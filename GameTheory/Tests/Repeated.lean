@@ -8,7 +8,9 @@ execution is exactly the native public prefix. Separately, stationary repetition
 of a stage Nash equilibrium is Nash for normalized discounted utility.
 -/
 
-import GameTheory.Repeated
+import GameTheory.Repeated.Basic
+import GameTheory.Repeated.Discounted
+import GameTheory.Repeated.Protocol
 
 noncomputable section
 
@@ -23,7 +25,7 @@ def coordinationForm : GameForm (Fin 2) where
   sig :=
     { Strategy := fun _ => Bool
       Outcome := Fin 2 → Bool }
-  play profile := FinDist.pure profile
+  play profile := PMF.pure profile
 
 /-- Both players receive one when their chosen booleans agree, and zero
 otherwise. -/
@@ -36,7 +38,13 @@ instance coordinationStrategyNonempty (i : Fin 2) :
   ⟨false⟩
 
 theorem coordination_play (profile : Profile coordination.form.sig) :
-    coordination.form.play profile = FinDist.pure profile := rfl
+    coordination.form.play profile = PMF.pure profile := rfl
+
+theorem coordination_stageIntegrable :
+    coordination.form.HasIntegrableUtility coordination.utility := by
+  intro who profile
+  rw [coordination_play]
+  exact payoffIntegrable_pure profile _
 
 @[simp]
 theorem coordination_utility (profile : Fin 2 → Bool) (who : Fin 2) :
@@ -46,10 +54,18 @@ theorem coordination_utility (profile : Fin 2 → Bool) (who : Fin 2) :
 @[simp]
 theorem coordination_expectedUtility (profile : Profile coordination.form.sig)
     (who : Fin 2) :
-    expectedUtility coordination.utility who (coordination.form.play profile) =
+    expectedUtility coordination.utility who (coordination.form.play profile)
+      (coordination_stageIntegrable who profile) =
       coordination.utility profile who := by
-  rw [coordination_play]
-  exact expectedUtility_pure coordination.utility who profile
+  calc
+    expectedUtility coordination.utility who (coordination.form.play profile)
+        (coordination_stageIntegrable who profile) =
+        expectedUtility coordination.utility who (PMF.pure profile)
+          (payoffIntegrable_pure profile _) :=
+      expectedUtility_congr_law coordination.utility who
+        (coordination_play profile) _ _
+    _ = coordination.utility profile who :=
+      expectedUtility_pure coordination.utility who profile
 
 def allFalse : Profile coordinationForm.sig :=
   fun _ => false
@@ -97,7 +113,7 @@ prefix, including the two history-dependent transitions. -/
 theorem alternating_protocol_three :
     (toProtocolForm coordination 3).play
         (policyProfileOfRepeated coordination 3 alternating) =
-      FinDist.pure [allFalse, allTrue, allFalse] := by
+      PMF.pure [allFalse, allTrue, allFalse] := by
   rw [toProtocolForm_play_policyProfileOfRepeated]
   congr
   simp only [Prefix.ofPlay, List.ofFn_succ, List.ofFn_zero]
@@ -111,7 +127,11 @@ theorem allTrue_isNash :
     IsNash coordination.form (euPreference coordination.utility) allTrue := by
   rw [isNash_iff]
   intro who replacement
-  rw [euPreference_apply]
+  rw [euPreference_iff coordination.utility who
+    (coordination.form.play allTrue)
+    (coordination.form.play (Profile.update allTrue who replacement))
+    (coordination_stageIntegrable who allTrue)
+    (coordination_stageIntegrable who (Profile.update allTrue who replacement))]
   rw [coordination_expectedUtility, coordination_expectedUtility]
   fin_cases who <;> cases replacement <;>
     simp only [coordination, allTrue] <;>
@@ -121,7 +141,8 @@ theorem allTrue_isNash :
 theorem coordination_stagePayoff_bounded :
     ∀ who : Fin 2, ∃ bound : ℝ,
       ∀ stage : Profile coordination.form.sig,
-        |coordination.stagePayoff stage who| ≤ bound := by
+        |coordination.stagePayoff stage who
+          (coordination_stageIntegrable who stage)| ≤ bound := by
   intro who
   refine ⟨1, fun stage => ?_⟩
   rw [UtilityGame.stagePayoff, coordination_expectedUtility]
@@ -132,10 +153,12 @@ theorem coordination_stagePayoff_bounded :
 equilibrium result. -/
 theorem allTrue_stationary_discounted_isNash :
     IsNash coordination.repeatedForm
-      (euPreference (coordination.discountedUtility (1 / 2)))
+      (euPreference (coordination.discountedUtilityOfBounded
+        (by norm_num : 0 ≤ (1 / 2 : ℝ)) (by norm_num : (1 / 2 : ℝ) < 1)
+        coordination_stageIntegrable coordination_stagePayoff_bounded))
       (coordination.stationaryRepeatedProfile allTrue) := by
   exact coordination.stationaryRepeatedProfile_isNash_of_isNash_of_bounded
     (by norm_num) (by norm_num) allTrue_isNash
-      coordination_stagePayoff_bounded
+      coordination_stageIntegrable coordination_stagePayoff_bounded
 
 end GameTheory.Tests.Repeated

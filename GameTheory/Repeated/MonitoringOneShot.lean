@@ -32,11 +32,18 @@ variable {G : UtilityGame.{uι, us, uo} ι}
 history, including histories having zero probability. -/
 theorem HasNoProfitableOneShotDeviationAfterEveryHistory.after
     {M : G.PublicMonitoring} [DecidableEq ι]
-    {discount : ℝ} {profile : M.MonitoredProfile}
-    (h : M.HasNoProfitableOneShotDeviationAfterEveryHistory discount profile)
+    {discount : ℝ}
+    (hstage : ∀ profile : M.MonitoredProfile, ∀ who t,
+      M.MonitoredStageIntegrable profile t who)
+    (hsum : ∀ profile : M.MonitoredProfile, ∀ who,
+      Summable fun t : ℕ => discount ^ t *
+        M.monitoredStagePayoff profile t who (hstage profile who t))
+    {profile : M.MonitoredProfile}
+    (h : M.HasNoProfitableOneShotDeviationAfterEveryHistory
+      discount hstage hsum profile)
     {t : ℕ} (history : M.SignalHistory t) :
-    M.HasNoProfitableOneShotDeviationAfterEveryHistory discount
-      (M.after profile history) := by
+    M.HasNoProfitableOneShotDeviationAfterEveryHistory
+      discount hstage hsum (M.after profile history) := by
   intro n future
   rw [M.after_after]
   exact h (t + n) (Fin.append history future)
@@ -47,16 +54,25 @@ theorem truncatedDeviation_discountedPayoff_le_of_bounded
     (M : G.PublicMonitoring) [DecidableEq ι]
     {discount : ℝ} (hdiscount0 : 0 ≤ discount)
     (hdiscount1 : discount < 1) {profile : M.MonitoredProfile}
-    (hlocal :
-      M.HasNoProfitableOneShotDeviationAfterEveryHistory discount profile)
+    (hG : G.form.HasIntegrableUtility G.utility)
     (who : ι) {bound : ℝ}
     (hbound : ∀ stage : Profile G.form.sig,
-      |G.stagePayoff stage who| ≤ bound)
+      |G.stagePayoff stage who (hG who stage)| ≤ bound)
+    (hlocal : ∀ t (history : M.SignalHistory t)
+      (action : G.form.sig.Strategy who),
+      M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+          (Profile.update (sig := M.monitoredSignature)
+            (M.after profile history) who
+            (M.oneShotDeviation (M.after profile history) who action))
+          who hbound ≤
+        M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+          (M.after profile history) who hbound)
     (deviation : M.MonitoredStrategy who) (count : ℕ) :
-    M.discountedPayoff discount
+    M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
         (Profile.update (sig := M.monitoredSignature) profile who
-          (M.truncatedDeviation profile who deviation count)) who ≤
-      M.discountedPayoff discount profile who := by
+          (M.truncatedDeviation profile who deviation count)) who hbound ≤
+      M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+        profile who hbound := by
   induction count generalizing profile deviation with
   | zero =>
       simp
@@ -90,57 +106,88 @@ theorem truncatedDeviation_discountedPayoff_le_of_bounded
           M.afterSignal oneShot signal = M.afterSignal profile signal := by
         simp [oneShot]
       have hcontinuation (signal : M.Signal) :
-          M.discountedPayoff discount
-              (M.afterSignal truncated signal) who ≤
-            M.discountedPayoff discount
-              (M.afterSignal oneShot signal) who := by
+          M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+              (M.afterSignal truncated signal) who hbound ≤
+            M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+              (M.afterSignal oneShot signal) who hbound := by
         rw [htruncatedContinuation signal, honeShotContinuation signal]
-        exact ih (hlocal.afterSignal signal)
+        exact ih (profile := M.afterSignal profile signal)
+          (fun n history action => by
+            simpa [M.after_afterSignal] using
+              hlocal (n + 1) (Fin.cons signal history) action)
           (M.strategyAfterSignal deviation signal)
+      have hafterOneShot : PayoffIntegrable
+          (M.signalLaw (fun i => truncated i 0 (fun k => k.elim0)))
+          (fun signal => M.discountedPayoffOfBounded
+            hdiscount0 hdiscount1 hG
+            (M.afterSignal oneShot signal) who hbound) := by
+        rw [hroot]
+        exact M.discountedAfterSignal_integrable_of_expected_bound
+          hdiscount0 hdiscount1 hG oneShot who hbound
       have hexpect :
-          (M.signalLaw
-              (fun i => truncated i 0 (fun k => k.elim0))).expect
-              (fun signal => M.discountedPayoff discount
-                (M.afterSignal truncated signal) who) ≤
-            (M.signalLaw
-              (fun i => truncated i 0 (fun k => k.elim0))).expect
-              (fun signal => M.discountedPayoff discount
-                (M.afterSignal oneShot signal) who) :=
-        FinDist.expect_mono fun signal _ => hcontinuation signal
+          expect (M.signalLaw
+            (fun i => truncated i 0 (fun k => k.elim0)))
+            (fun signal => M.discountedPayoffOfBounded
+              hdiscount0 hdiscount1 hG
+              (M.afterSignal truncated signal) who hbound)
+            (M.discountedAfterSignal_integrable_of_expected_bound
+              hdiscount0 hdiscount1 hG truncated who hbound) ≤
+          expect (M.signalLaw
+            (fun i => truncated i 0 (fun k => k.elim0)))
+            (fun signal => M.discountedPayoffOfBounded
+              hdiscount0 hdiscount1 hG
+              (M.afterSignal oneShot signal) who hbound)
+            hafterOneShot :=
+        expect_mono (fun signal _ => hcontinuation signal) _ _
       have hfinite :
-          M.discountedPayoff discount truncated who ≤
-            M.discountedPayoff discount oneShot who := by
+          M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+              truncated who hbound ≤
+            M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+              oneShot who hbound := by
         calc
-          M.discountedPayoff discount truncated who =
+          M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+              truncated who hbound =
               (1 - discount) * G.stagePayoff
-                  (fun i => truncated i 0 (fun k => k.elim0)) who +
-                discount *
+                  (fun i => truncated i 0 (fun k => k.elim0)) who
+                  (hG who _) +
+                discount * expect
                   (M.signalLaw
-                    (fun i => truncated i 0 (fun k => k.elim0))).expect
-                    (fun signal => M.discountedPayoff discount
-                      (M.afterSignal truncated signal) who) :=
+                    (fun i => truncated i 0 (fun k => k.elim0)))
+                  (fun signal => M.discountedPayoffOfBounded
+                    hdiscount0 hdiscount1 hG
+                    (M.afterSignal truncated signal) who hbound)
+                  (M.discountedAfterSignal_integrable_of_expected_bound
+                    hdiscount0 hdiscount1 hG truncated who hbound) :=
             M.discountedPayoff_eq_head_add_expected
-              hdiscount0 hdiscount1 truncated who hbound
+              hdiscount0 hdiscount1 hG truncated who hbound
           _ ≤ (1 - discount) * G.stagePayoff
-                  (fun i => truncated i 0 (fun k => k.elim0)) who +
-                discount *
+                  (fun i => truncated i 0 (fun k => k.elim0)) who
+                  (hG who _) +
+                discount * expect
                   (M.signalLaw
-                    (fun i => truncated i 0 (fun k => k.elim0))).expect
-                    (fun signal => M.discountedPayoff discount
-                      (M.afterSignal oneShot signal) who) := by
+                    (fun i => truncated i 0 (fun k => k.elim0)))
+                  (fun signal => M.discountedPayoffOfBounded
+                    hdiscount0 hdiscount1 hG
+                    (M.afterSignal oneShot signal) who hbound)
+                  hafterOneShot := by
             exact add_le_add_right
               (mul_le_mul_of_nonneg_left hexpect hdiscount0) _
-          _ = M.discountedPayoff discount oneShot who := by
-            rw [hroot]
-            symm
-            exact M.discountedPayoff_eq_head_add_expected
-              hdiscount0 hdiscount1 oneShot who hbound
-      show M.discountedPayoff discount truncated who ≤ _
+          _ = M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+              oneShot who hbound := by
+            simpa only [hroot] using
+              (M.discountedPayoff_eq_head_add_expected
+                hdiscount0 hdiscount1 hG oneShot who hbound).symm
+      show M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+        truncated who hbound ≤ _
       calc
-        M.discountedPayoff discount truncated who ≤
-            M.discountedPayoff discount oneShot who := hfinite
-        _ ≤ M.discountedPayoff discount profile who := by
-          apply hlocal 0 (fun k => k.elim0)
+        M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+            truncated who hbound ≤
+            M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+              oneShot who hbound := hfinite
+        _ ≤ M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
+              profile who hbound := by
+          simpa [oneShot, after, afterSignals] using
+            hlocal 0 (fun k => k.elim0) action
 
 /-- Discounted payoffs of finite truncations converge to the payoff of the
 full public deviation. -/
@@ -148,63 +195,70 @@ theorem tendsto_discountedPayoff_update_truncatedDeviation_of_bounded
     (M : G.PublicMonitoring) [DecidableEq ι]
     {discount : ℝ} (hdiscount0 : 0 ≤ discount)
     (hdiscount1 : discount < 1) (profile : M.MonitoredProfile)
+    (hG : G.form.HasIntegrableUtility G.utility)
     (who : ι) (deviation : M.MonitoredStrategy who) {bound : ℝ}
     (hbound : ∀ stage : Profile G.form.sig,
-      |G.stagePayoff stage who| ≤ bound) :
+      |G.stagePayoff stage who (hG who stage)| ≤ bound) :
     Filter.Tendsto
-      (fun count => M.discountedPayoff discount
+      (fun count => M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
         (Profile.update (sig := M.monitoredSignature) profile who
-          (M.truncatedDeviation profile who deviation count)) who)
+          (M.truncatedDeviation profile who deviation count)) who hbound)
       Filter.atTop
-      (nhds (M.discountedPayoff discount
+      (nhds (M.discountedPayoffOfBounded hdiscount0 hdiscount1 hG
         (Profile.update (sig := M.monitoredSignature) profile who deviation)
-        who)) := by
+        who hbound)) := by
+  let truncated (count : ℕ) : M.MonitoredProfile :=
+    Profile.update (sig := M.monitoredSignature) profile who
+      (M.truncatedDeviation profile who deviation count)
+  let full : M.MonitoredProfile :=
+    Profile.update (sig := M.monitoredSignature) profile who deviation
+  let cert (p : M.MonitoredProfile) (t : ℕ) :
+      M.MonitoredStageIntegrable p t who :=
+    M.monitoredStageIntegrable_of_expected_bound p t who hG hbound
   have hgeom : Summable fun t : ℕ => bound * discount ^ t :=
     (summable_geometric_of_lt_one hdiscount0 hdiscount1).mul_left bound
   have hterm (t : ℕ) :
       Filter.Tendsto
         (fun count => discount ^ t * M.monitoredStagePayoff
-          (Profile.update (sig := M.monitoredSignature) profile who
-            (M.truncatedDeviation profile who deviation count)) t who)
+          (truncated count) t who (cert (truncated count) t))
         Filter.atTop
         (nhds (discount ^ t * M.monitoredStagePayoff
-          (Profile.update (sig := M.monitoredSignature) profile who deviation)
-          t who)) := by
+          full t who (cert full t))) := by
     apply tendsto_const_nhds.congr'
     filter_upwards [Filter.eventually_gt_atTop t] with count ht
     rw [M.monitoredStagePayoff_update_truncatedDeviation_eq_of_lt
-      profile who deviation ht]
+      profile who deviation ht (cert (truncated count) t) (cert full t)]
   have hdom : ∀ count t,
       ‖discount ^ t * M.monitoredStagePayoff
-          (Profile.update (sig := M.monitoredSignature) profile who
-            (M.truncatedDeviation profile who deviation count)) t who‖ ≤
+          (truncated count) t who (cert (truncated count) t)‖ ≤
         bound * discount ^ t := by
     intro count t
     rw [Real.norm_eq_abs, abs_mul,
       abs_of_nonneg (pow_nonneg hdiscount0 t)]
     calc
       discount ^ t * |M.monitoredStagePayoff
-          (Profile.update (sig := M.monitoredSignature) profile who
-            (M.truncatedDeviation profile who deviation count)) t who| ≤
+          (truncated count) t who (cert (truncated count) t)| ≤
           discount ^ t * bound := by
         exact mul_le_mul_of_nonneg_left
-          (M.abs_monitoredStagePayoff_le _ t who hbound)
+          (M.abs_monitoredStagePayoff_le _ t who
+            (cert (truncated count) t)
+            (fun history _ =>
+              hbound (fun i => truncated count i t history)))
           (pow_nonneg hdiscount0 t)
       _ = bound * discount ^ t := by ring
   have hsum := tendsto_tsum_of_dominated_convergence hgeom hterm
     (Filter.Eventually.of_forall hdom)
-  simpa only [discountedPayoff] using
+  simpa only [discountedPayoffOfBounded, discountedPayoff,
+    GameTheory.Math.normalizedDiscountedSum, truncated, full, cert] using
     (tendsto_const_nhds.mul hsum :
       Filter.Tendsto
         (fun count => (1 - discount) * ∑' t : ℕ,
           discount ^ t * M.monitoredStagePayoff
-            (Profile.update (sig := M.monitoredSignature) profile who
-              (M.truncatedDeviation profile who deviation count)) t who)
+            (truncated count) t who (cert (truncated count) t))
         Filter.atTop
         (nhds ((1 - discount) * ∑' t : ℕ,
           discount ^ t * M.monitoredStagePayoff
-            (Profile.update (sig := M.monitoredSignature) profile who
-              deviation) t who)))
+            full t who (cert full t))))
 
 /-- Sequential one-shot optimality rules out every public deviation at the
 current continuation. -/
@@ -212,21 +266,33 @@ theorem HasNoProfitableOneShotDeviationAfterEveryHistory.isDiscountedPublicNash_
     {M : G.PublicMonitoring} [DecidableEq ι]
     {discount : ℝ} (hdiscount0 : 0 ≤ discount)
     (hdiscount1 : discount < 1) {profile : M.MonitoredProfile}
-    (hlocal :
-      M.HasNoProfitableOneShotDeviationAfterEveryHistory discount profile)
+    (hG : G.form.HasIntegrableUtility G.utility)
     (hbound : ∀ who : ι, ∃ bound : ℝ,
-      ∀ stage : Profile G.form.sig, |G.stagePayoff stage who| ≤ bound) :
-    M.IsDiscountedPublicNash discount profile := by
+      ∀ stage : Profile G.form.sig,
+        |G.stagePayoff stage who (hG who stage)| ≤ bound)
+    (hlocal :
+      M.HasNoProfitableOneShotDeviationAfterEveryHistory discount
+        (M.discountedStageIntegrableOfBounded hG hbound)
+        (M.discountedSummableOfBounded
+          hdiscount0 hdiscount1 hG hbound) profile) :
+    M.IsDiscountedPublicNash discount
+      (M.discountedStageIntegrableOfBounded hG hbound)
+      (M.discountedSummableOfBounded
+        hdiscount0 hdiscount1 hG hbound) profile := by
   rw [M.isDiscountedPublicNash_iff]
   intro who deviation
   obtain ⟨bound, hwho⟩ := hbound who
   have hlimit :=
     M.tendsto_discountedPayoff_update_truncatedDeviation_of_bounded
-      hdiscount0 hdiscount1 profile who deviation hwho
+      hdiscount0 hdiscount1 profile hG who deviation hwho
   apply le_of_tendsto' hlimit
   intro count
-  exact M.truncatedDeviation_discountedPayoff_le_of_bounded
-    hdiscount0 hdiscount1 hlocal who hwho deviation count
+  apply M.truncatedDeviation_discountedPayoff_le_of_bounded
+    hdiscount0 hdiscount1 hG who hwho
+  · intro t history action
+    simpa [HasNoProfitableOneShotDeviation, discountedUtility,
+      discountedPayoffOfBounded] using
+      hlocal t history who action
 
 /-- In a bounded discounted game, sequential one-shot optimality implies PPE
 among public strategies. -/
@@ -234,14 +300,26 @@ theorem HasNoProfitableOneShotDeviationAfterEveryHistory.isPerfectPublicEquilibr
     {M : G.PublicMonitoring} [DecidableEq ι]
     {discount : ℝ} (hdiscount0 : 0 ≤ discount)
     (hdiscount1 : discount < 1) {profile : M.MonitoredProfile}
-    (hlocal :
-      M.HasNoProfitableOneShotDeviationAfterEveryHistory discount profile)
+    (hG : G.form.HasIntegrableUtility G.utility)
     (hbound : ∀ who : ι, ∃ bound : ℝ,
-      ∀ stage : Profile G.form.sig, |G.stagePayoff stage who| ≤ bound) :
-    M.IsPerfectPublicEquilibrium discount profile := by
+      ∀ stage : Profile G.form.sig,
+        |G.stagePayoff stage who (hG who stage)| ≤ bound)
+    (hlocal :
+      M.HasNoProfitableOneShotDeviationAfterEveryHistory discount
+        (M.discountedStageIntegrableOfBounded hG hbound)
+        (M.discountedSummableOfBounded
+          hdiscount0 hdiscount1 hG hbound) profile) :
+    M.IsPerfectPublicEquilibrium discount
+      (M.discountedStageIntegrableOfBounded hG hbound)
+      (M.discountedSummableOfBounded
+        hdiscount0 hdiscount1 hG hbound) profile := by
   intro t history
-  exact (hlocal.after history).isDiscountedPublicNash_of_bounded
-    hdiscount0 hdiscount1 hbound
+  have hafter := HasNoProfitableOneShotDeviationAfterEveryHistory.after
+    (M.discountedStageIntegrableOfBounded hG hbound)
+    (M.discountedSummableOfBounded
+      hdiscount0 hdiscount1 hG hbound) hlocal history
+  exact hafter.isDiscountedPublicNash_of_bounded
+    hdiscount0 hdiscount1 hG hbound
 
 /-- **One-shot-deviation principle.** For bounded stage payoffs, a public
 strategy profile is a perfect-public equilibrium exactly when no player has a
@@ -250,15 +328,26 @@ theorem isPerfectPublicEquilibrium_iff_noProfitableOneShotDeviation_of_bounded
     (M : G.PublicMonitoring) [DecidableEq ι]
     {discount : ℝ} (hdiscount0 : 0 ≤ discount)
     (hdiscount1 : discount < 1) (profile : M.MonitoredProfile)
+    (hG : G.form.HasIntegrableUtility G.utility)
     (hbound : ∀ who : ι, ∃ bound : ℝ,
-      ∀ stage : Profile G.form.sig, |G.stagePayoff stage who| ≤ bound) :
-    M.IsPerfectPublicEquilibrium discount profile ↔
-      M.HasNoProfitableOneShotDeviationAfterEveryHistory discount profile := by
+      ∀ stage : Profile G.form.sig,
+        |G.stagePayoff stage who (hG who stage)| ≤ bound) :
+    M.IsPerfectPublicEquilibrium discount
+        (M.discountedStageIntegrableOfBounded hG hbound)
+        (M.discountedSummableOfBounded
+          hdiscount0 hdiscount1 hG hbound) profile ↔
+      M.HasNoProfitableOneShotDeviationAfterEveryHistory discount
+        (M.discountedStageIntegrableOfBounded hG hbound)
+        (M.discountedSummableOfBounded
+          hdiscount0 hdiscount1 hG hbound) profile := by
   constructor
   · exact IsPerfectPublicEquilibrium.hasNoProfitableOneShotDeviationAfterEveryHistory
+      M discount
+      (M.discountedStageIntegrableOfBounded hG hbound)
+      (M.discountedSummableOfBounded hdiscount0 hdiscount1 hG hbound)
   · intro hlocal
     exact hlocal.isPerfectPublicEquilibrium_of_bounded
-      hdiscount0 hdiscount1 hbound
+      hdiscount0 hdiscount1 hG hbound
 
 end UtilityGame.PublicMonitoring
 

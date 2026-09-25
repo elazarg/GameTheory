@@ -274,7 +274,7 @@ def exampleSemantics : Semantics exampleDiagram where
   defaultValue _ := false
   chanceLaw node hchance _ := by
     cases node with
-    | signal => exact GameTheory.Math.Probability.FinDist.pure false
+    | signal => exact PMF.pure false
     | early => simp at hchance
     | late => simp at hchance
   utility _ _ := 0

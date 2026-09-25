@@ -7,6 +7,7 @@ coupling, and therefore has Bayes-plausible marginals for both players.
 -/
 
 import GameTheory.Mechanism.JointFeasiblePosteriors
+import GameTheory.Math.Probability.ExpectationMixture
 
 noncomputable section
 
@@ -14,18 +15,18 @@ namespace GameTheory.Tests.JointFeasiblePosteriors
 
 open GameTheory.Math.Probability
 
-def prior : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure false) (FinDist.pure true)
+def prior : PMF Bool :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure false) (PMF.pure true)
 
 def law : JointPosteriorLaw Bool Bool :=
   JointPosteriorLaw.fullRevelation prior
 
-def falseBeliefs : Bool → FinDist Bool :=
-  fun _ => FinDist.pure false
+def falseBeliefs : Bool → PMF Bool :=
+  fun _ => PMF.pure false
 
-def trueBeliefs : Bool → FinDist Bool :=
-  fun _ => FinDist.pure true
+def trueBeliefs : Bool → PMF Bool :=
+  fun _ => PMF.pure true
 
 theorem law_isFeasible : law.IsFeasible prior :=
   JointPosteriorLaw.isFeasible_fullRevelation prior
@@ -36,14 +37,14 @@ theorem law_isBayesPlausible : law.IsBayesPlausible prior :=
 theorem law_supports_two_belief_profiles :
     falseBeliefs ∈ law.support ∧ trueBeliefs ∈ law.support := by
   constructor
-  · rw [law, JointPosteriorLaw.fullRevelation, FinDist.support_map]
+  · rw [law, JointPosteriorLaw.fullRevelation, PMF.support_map]
     refine ⟨false, ?_, rfl⟩
-    rw [← FinDist.prob_pos_iff]
-    norm_num [prior, FinDist.prob_mix, FinDist.prob_pure_eq_ite]
-  · rw [law, JointPosteriorLaw.fullRevelation, FinDist.support_map]
+    show prior false ≠ 0
+    norm_num [prior, mix_apply, PMF.pure_apply]
+  · rw [law, JointPosteriorLaw.fullRevelation, PMF.support_map]
     refine ⟨true, ?_, rfl⟩
-    rw [← FinDist.prob_pos_iff]
-    norm_num [prior, FinDist.prob_mix, FinDist.prob_pure_eq_ite]
+    show prior true ≠ 0
+    norm_num [prior, mix_apply, PMF.pure_apply]
 
 theorem player_false_marginal_isBayesPlausible :
     (law.agentMarginal false).IsBayesPlausible prior :=

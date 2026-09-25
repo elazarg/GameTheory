@@ -12,6 +12,7 @@ import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovSoundness
 import GameTheory.Experimental.PostArchitecture.FiniteConditionalContinuation
 import GameTheory.Experimental.PostArchitecture.MAIDMechanismSelectorFactorization
 import GameTheory.Experimental.PostArchitecture.MAIDUtilityContinuationFromCI
+import GameTheory.Math.Probability.Joint
 
 noncomputable section
 
@@ -49,7 +50,7 @@ private theorem conditionallyIndependent_map_equiv
     {Omega : Type uOmega} {First : Type uFirst}
     {Second : Type uSecond} {Evidence : Type uEvidence}
     {First' : Type uFirst'} {Second' : Type uSecond'}
-    {Evidence' : Type uEvidence'} {law : FinDist Omega}
+    {Evidence' : Type uEvidence'} {law : PMF Omega}
     {first : Omega → First} {second : Omega → Second}
     {evidence : Omega → Evidence}
     (hindependent :
@@ -128,7 +129,7 @@ theorem mechanism_coordinates_conditionallyIndependent
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source target : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (hnot : ¬ SReachable view source target)
     (term : view.UtilitySite owner)
     (hrelevant : view.IsRelevantUtilityTerm target term) :
@@ -318,7 +319,7 @@ theorem selector_term_conditionallyIndependent
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source target : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (hnot : ¬ SReachable view source target)
     (term : view.UtilitySite owner)
     (hrelevant : view.IsRelevantUtilityTerm target term) :
@@ -390,8 +391,8 @@ def componentAugmentedLaw
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1)) (selector : Fin 2) :
-    FinDist (AugmentedAssignment view owner) :=
+      PMF (diagram.Value source.1)) (selector : Fin 2) :
+    PMF (AugmentedAssignment view owner) :=
   augmentedLaw view owner
     (componentPolicy base owner replacement source sourceRule selector)
 
@@ -403,30 +404,30 @@ theorem mechanismSelectorLaw_map_selector
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     {Result : Type*} (observable : AugmentedAssignment view owner → Result) :
     (mechanismSelectorLaw view owner base replacement source sourceRule).map
         (fun assignment =>
           ((assignment .mechanism).down,
             observable (projectObjects view assignment))) =
-      (FinDist.uniformFin 2).bind fun selector =>
+      (PMF.uniformOfFintype (Fin 2)).bind fun selector =>
         (componentAugmentedLaw view owner base replacement source sourceRule
           selector).map fun assignment => (selector, observable assignment) := by
   unfold mechanismSelectorLaw componentAugmentedLaw
-  rw [FinDist.map_bind]
-  apply FinDist.bind_congr
+  rw [PMF.map_bind]
+  apply bind_congr_on_support
   intro selector _
-  rw [FinDist.map_comp]
+  rw [PMF.map_comp]
   rfl
 
 private theorem bind_tagged_prob
-    {First Second : Type*} (outer : FinDist First)
-    (kernel : First → FinDist Second) (first : First) (second : Second) :
+    {First Second : Type*} (outer : PMF First)
+    (kernel : First → PMF Second) (first : First) (second : Second) :
     (outer.bind fun candidate =>
-      (kernel candidate).map fun value => (candidate, value)).prob
+      (kernel candidate).map fun value => (candidate, value))
         (first, second) =
-      outer.prob first * (kernel first).prob second := by
-  exact FinDist.prob_bind_map_prod outer kernel first second
+      outer first * (kernel first) second := by
+  exact bindPairLaw_apply outer kernel first second
 
 /-- Point masses of selector-tagged observables expose exactly one component
 and its fair selector weight. -/
@@ -436,17 +437,17 @@ theorem mechanismSelectorLaw_map_selector_prob
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     {Result : Type*} (observable : AugmentedAssignment view owner → Result)
     (selector : Fin 2) (result : Result) :
     ((mechanismSelectorLaw view owner base replacement source sourceRule).map
       (fun assignment =>
         ((assignment .mechanism).down,
-          observable (projectObjects view assignment)))).prob
+          observable (projectObjects view assignment))))
         (selector, result) =
-      (FinDist.uniformFin 2).prob selector *
+      (PMF.uniformOfFintype (Fin 2)) selector *
         ((componentAugmentedLaw view owner base replacement source sourceRule
-          selector).map observable).prob result := by
+          selector).map observable) result := by
   rw [mechanismSelectorLaw_map_selector]
   rw [show (fun selected =>
       (componentAugmentedLaw view owner base replacement source sourceRule
@@ -455,9 +456,9 @@ theorem mechanismSelectorLaw_map_selector_prob
         ((componentAugmentedLaw view owner base replacement source sourceRule
           selected).map observable).map fun value => (selected, value)) by
     funext selected
-    rw [FinDist.map_comp]
+    rw [PMF.map_comp]
     rfl]
-  exact bind_tagged_prob (FinDist.uniformFin 2)
+  exact bind_tagged_prob (PMF.uniformOfFintype (Fin 2))
     (fun selected =>
       (componentAugmentedLaw view owner base replacement source sourceRule
         selected).map observable) selector result
@@ -470,18 +471,18 @@ theorem mechanismSelectorLaw_map_objects
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     {Result : Type*} (observable : AugmentedAssignment view owner → Result) :
     (mechanismSelectorLaw view owner base replacement source sourceRule).map
         (fun assignment => observable (projectObjects view assignment)) =
-      (FinDist.uniformFin 2).bind fun selector =>
+      (PMF.uniformOfFintype (Fin 2)).bind fun selector =>
         (componentAugmentedLaw view owner base replacement source sourceRule
           selector).map observable := by
   unfold mechanismSelectorLaw componentAugmentedLaw
-  rw [FinDist.map_bind]
-  apply FinDist.bind_congr
+  rw [PMF.map_bind]
+  apply bind_congr_on_support
   intro selector _
-  rw [FinDist.map_comp]
+  rw [PMF.map_comp]
   rfl
 
 /-- An untagged object-observable mass is the arithmetic mean of its two
@@ -492,52 +493,46 @@ theorem mechanismSelectorLaw_map_objects_prob
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     {Result : Type*} (observable : AugmentedAssignment view owner → Result)
     (result : Result) :
     ((mechanismSelectorLaw view owner base replacement source sourceRule).map
-      (fun assignment => observable (projectObjects view assignment))).prob
+      (fun assignment => observable (projectObjects view assignment)))
         result =
-      (FinDist.uniformFin 2).prob 0 *
+      (PMF.uniformOfFintype (Fin 2)) 0 *
           ((componentAugmentedLaw view owner base replacement source sourceRule
-            0).map observable).prob result +
-        (FinDist.uniformFin 2).prob 1 *
+            0).map observable) result +
+        (PMF.uniformOfFintype (Fin 2)) 1 *
           ((componentAugmentedLaw view owner base replacement source sourceRule
-            1).map observable).prob result := by
-  rw [mechanismSelectorLaw_map_objects, FinDist.prob_bind,
-    FinDist.expect_uniformFin]
-  norm_num [FinDist.prob_uniformFin, Fin.sum_univ_two]
-  ring
+            1).map observable) result := by
+  rw [mechanismSelectorLaw_map_objects, PMF.bind_apply, tsum_fintype]
+  simp only [Fin.sum_univ_two]
 
 private theorem map_selector_fullTerm_prob_eq_triple
-    {Omega Selector Full Term : Type*} (law : FinDist Omega)
+    {Omega Selector Full Term : Type*} (law : PMF Omega)
     (selector : Omega → Selector) (full : Omega → Full)
     (term : Omega → Term) (selectorValue : Selector)
     (fullValue : Full) (termValue : Term) :
-    (law.map fun state => (selector state, (full state, term state))).prob
-        (selectorValue, (fullValue, termValue)) =
-      law.probOf
-        (tripleAtom selector term full selectorValue termValue fullValue) := by
-  rw [← FinDist.probOf_singleton, FinDist.probOf_map]
-  congr 1
-  ext state
-  simp only [tripleAtom, Set.mem_ofPred_eq, Set.mem_preimage,
-    Set.mem_singleton_iff, Prod.mk.injEq]
-  tauto
+    ((law.map fun state => (selector state, (full state, term state)))
+        (selectorValue, (fullValue, termValue))).toReal =
+      (law.toOuterMeasure
+        (tripleAtom selector term full selectorValue termValue fullValue)).toReal := by
+  have h := map_mass_eq_atomMass law
+    (fun state => (selector state, (full state, term state)))
+    (selectorValue, (fullValue, termValue))
+  simpa [PMF.toOuterMeasure_apply_singleton, atom, tripleAtom,
+    Prod.mk.injEq, and_assoc, and_left_comm, and_comm] using h
 
 private theorem map_fullTerm_prob_eq_pair
-    {Omega Full Term : Type*} (law : FinDist Omega)
+    {Omega Full Term : Type*} (law : PMF Omega)
     (full : Omega → Full) (term : Omega → Term)
     (fullValue : Full) (termValue : Term) :
-    (law.map fun state => (full state, term state)).prob
-        (fullValue, termValue) =
-      law.probOf (pairAtom term full termValue fullValue) := by
-  rw [← FinDist.probOf_singleton, FinDist.probOf_map]
-  congr 1
-  ext state
-  simp only [pairAtom, Set.mem_ofPred_eq, Set.mem_preimage,
-    Set.mem_singleton_iff, Prod.mk.injEq]
-  tauto
+    ((law.map fun state => (full state, term state))
+        (fullValue, termValue)).toReal =
+      (law.toOuterMeasure
+        (pairAtom term full termValue fullValue)).toReal := by
+  have h := map_pair_mass_eq_pairAtomMass law full term fullValue termValue
+  simpa [PMF.toOuterMeasure_apply_singleton, pairAtom, and_comm] using h
 
 /-- Division-free component comparison.  At any full target context/action and
 term configuration, the baseline and source-changed canonical laws satisfy
@@ -551,7 +546,7 @@ theorem componentTerm_cross_product
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source target : DecisionSite diagram owner)
     (sourceRule : Config diagram (diagram.observedParents source.1) →
-      FinDist (diagram.Value source.1))
+      PMF (diagram.Value source.1))
     (hnot : ¬ SReachable view source target)
     (term : view.UtilitySite owner)
     (hrelevant : view.IsRelevantUtilityTerm target term)
@@ -559,15 +554,15 @@ theorem componentTerm_cross_product
     ((componentAugmentedLaw view owner base replacement source sourceRule 0).map
         (fun assignment =>
           (fullAction view target assignment,
-            termConfig view term assignment))).prob (fullValue, termValue) *
+            termConfig view term assignment))) (fullValue, termValue) *
       ((componentAugmentedLaw view owner base replacement source sourceRule 1).map
-        (fullAction view target)).prob fullValue =
+        (fullAction view target)) fullValue =
     ((componentAugmentedLaw view owner base replacement source sourceRule 0).map
-        (fullAction view target)).prob fullValue *
+        (fullAction view target)) fullValue *
       ((componentAugmentedLaw view owner base replacement source sourceRule 1).map
         (fun assignment =>
           (fullAction view target assignment,
-            termConfig view term assignment))).prob (fullValue, termValue) := by
+            termConfig view term assignment))) (fullValue, termValue) := by
   let law :=
     mechanismSelectorLaw view owner base replacement source sourceRule
   let selectorObservable := fun assignment : MechanismAssignment view owner =>
@@ -581,12 +576,13 @@ theorem componentTerm_cross_product
   have hcross := hindependent (0 : Fin 2) termValue fullValue
   rw [← map_selector_fullTerm_prob_eq_triple law selectorObservable
       fullObservable termObservable 0 fullValue termValue,
-    ← map_prob_eq_probOf_atom law fullObservable fullValue,
-    ← map_pair_prob_eq_probOf_pairAtom law selectorObservable
+    ← map_mass_eq_atomMass law fullObservable fullValue,
+    ← map_pair_mass_eq_pairAtomMass law selectorObservable
       fullObservable 0 fullValue,
     ← map_fullTerm_prob_eq_pair law fullObservable termObservable
       fullValue termValue] at hcross
   dsimp only [law, selectorObservable, fullObservable, termObservable] at hcross
+  simp only [PMF.toOuterMeasure_apply_singleton] at hcross
   rw [mechanismSelectorLaw_map_selector_prob view owner base replacement
       source sourceRule
       (fun assignment =>
@@ -601,7 +597,17 @@ theorem componentTerm_cross_product
       (fun assignment =>
         (fullAction view target assignment, termConfig view term assignment))
       (fullValue, termValue)] at hcross
-  norm_num [FinDist.prob_uniformFin] at hcross
-  nlinarith
+  rw [ENNReal.toReal_add, ENNReal.toReal_add] at hcross
+  simp only [ENNReal.toReal_mul, PMF.uniformOfFintype_apply,
+    Fintype.card_fin, ENNReal.toReal_inv, ENNReal.toReal_natCast] at hcross
+  norm_num only at hcross
+  apply (ENNReal.toReal_eq_toReal_iff'
+    (ENNReal.mul_ne_top (PMF.apply_ne_top _ _) (PMF.apply_ne_top _ _))
+    (ENNReal.mul_ne_top (PMF.apply_ne_top _ _) (PMF.apply_ne_top _ _))).1
+  rw [ENNReal.toReal_mul, ENNReal.toReal_mul]
+  nlinarith [hcross]
+  all_goals
+    exact ENNReal.mul_ne_top (PMF.apply_ne_top _ _)
+      (PMF.apply_ne_top _ _)
 
 end GameTheory.Experimental.PostArchitecture.MAIDMechanismSelectorIndependence

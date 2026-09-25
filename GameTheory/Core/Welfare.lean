@@ -1,17 +1,12 @@
 /-
 # Social welfare and smooth games
 
-Social welfare is an aggregate view of the canonical expected utilities, not a
-new game or payoff semantics.  Smoothness likewise quantifies over unilateral
-updates in the existing game form.  Its first consumer is the affine
-congestion-game price-of-anarchy theorem.
-
-The public surface intentionally stops at an inequality.  It does not define
-an optimum, a best or worst equilibrium, or a total-division ratio whose
-meaning changes at zero or under the cost-to-welfare sign convention.
+Social welfare sums guarded expected utilities under the law being assessed.
+Smoothness carries exactly the pure-profile utility certificates its comparison
+uses.
 -/
 
-import GameTheory.Core.Utility
+import GameTheory.Core.Response
 
 noncomputable section
 
@@ -27,59 +22,125 @@ namespace UtilityGame
 
 variable {ι : Type uι}
 
-/-- Aggregate expected utility at a pure strategy profile.  Player finiteness
-is required by this operation, not stored in `UtilityGame`. -/
-def socialWelfare [Fintype ι] (G : UtilityGame ι) (profile : Profile G.form.sig) : ℝ :=
-  ∑ i, expectedUtility G.utility i (G.form.play profile)
+/-- Aggregate expected utility at a pure strategy profile. -/
+def socialWelfare [Fintype ι] (G : UtilityGame ι)
+    (profile : Profile G.form.sig)
+    (h : ∀ i, UtilityIntegrable G.utility i (G.form.play profile)) : ℝ :=
+  ∑ i, expectedUtility G.utility i (G.form.play profile) (h i)
 
-/-- Expected social welfare under a finite-support law on pure profiles.  This
-is the expectation of the canonical pure-profile aggregate, not a second
-correlated-payoff semantics. -/
+/-- Expected social welfare under a law on profiles, evaluated through its
+actual induced outcome law. -/
 def expectedSocialWelfare [Fintype ι] (G : UtilityGame ι)
-    (law : FinDist (Profile G.form.sig)) : ℝ :=
-  law.expect G.socialWelfare
+    (law : PMF (Profile G.form.sig))
+    (h : ∀ i, UtilityIntegrable G.utility i (G.form.outcomeLaw law)) : ℝ :=
+  ∑ i, expectedUtility G.utility i (G.form.outcomeLaw law) (h i)
 
-@[simp]
+/-- A point mass specializes expected welfare to the pure-profile aggregate. -/
 theorem expectedSocialWelfare_pure [Fintype ι] (G : UtilityGame ι)
-    (profile : Profile G.form.sig) :
-    G.expectedSocialWelfare (FinDist.pure profile) = G.socialWelfare profile :=
-  FinDist.expect_pure ..
+    (profile : Profile G.form.sig)
+    (h : ∀ i, UtilityIntegrable G.utility i (G.form.play profile)) :
+    G.expectedSocialWelfare (PMF.pure profile)
+      (fun i => by simpa using h i) = G.socialWelfare profile h := by
+  simp [expectedSocialWelfare, socialWelfare, GameForm.outcomeLaw_pure]
 
-/-- Expected social welfare is equivalently the sum of each player's expected
-utility under the induced outcome law. -/
-theorem expectedSocialWelfare_eq_sum [Fintype ι] (G : UtilityGame ι)
-    (law : FinDist (Profile G.form.sig)) :
-    G.expectedSocialWelfare law =
-      ∑ i, expectedUtility G.utility i (G.form.outcomeLaw law) := by
-  unfold expectedSocialWelfare socialWelfare
-  simp_rw [expectedUtility_outcomeLaw]
-  exact (FinDist.expect_sum_comm law fun i profile =>
-    expectedUtility G.utility i (G.form.play profile)).symm
+/-- Profilewise welfare is integrable when each player's conditional and
+aggregate utilities are integrable. -/
+theorem profilewiseSocialWelfareIntegrable [Fintype ι]
+    (G : UtilityGame ι) (law : PMF (Profile G.form.sig))
+    (haggregate : ∀ i,
+      UtilityIntegrable G.utility i (G.form.outcomeLaw law))
+    (hconditional : ∀ profile i,
+      UtilityIntegrable G.utility i (G.form.play profile)) :
+    PayoffIntegrable law (fun profile =>
+      G.socialWelfare profile (hconditional profile)) := by
+  let conditional (i : ι) (profile : Profile G.form.sig) :=
+    expectedUtility G.utility i (G.form.play profile) (hconditional profile i)
+  have houter (i : ι) : PayoffIntegrable law (conditional i) := by
+    exact payoffIntegrable_bind_conditionalExpectation law G.form.play
+      (fun outcome => G.utility outcome i) (haggregate i) (hconditional · i)
+  simpa [socialWelfare, conditional] using payoffIntegrable_sum law conditional houter
 
-/-- A utility game is `(λ, μ)`-smooth when simultaneous comparison with a
-target profile is bounded by the sum of its unilateral target deviations. -/
-def IsSmooth [Fintype ι] [DecidableEq ι] (G : UtilityGame ι) (lam mu : ℝ) : Prop :=
-  ∀ statusQuo target : Profile G.form.sig,
-    lam * G.socialWelfare target - mu * G.socialWelfare statusQuo ≤
+/-- When every conditional profile utility and each aggregate utility are
+integrable, expected social welfare also equals the expected pure-profile
+aggregate. -/
+theorem expectedSocialWelfare_eq_expect_profilewise [Fintype ι]
+    (G : UtilityGame ι) (law : PMF (Profile G.form.sig))
+    (haggregate : ∀ i,
+      UtilityIntegrable G.utility i (G.form.outcomeLaw law))
+    (hconditional : ∀ profile i,
+      UtilityIntegrable G.utility i (G.form.play profile)) :
+    G.expectedSocialWelfare law haggregate =
+      expect law (fun profile => G.socialWelfare profile (hconditional profile))
+        (profilewiseSocialWelfareIntegrable G law haggregate hconditional) := by
+  classical
+  let conditional (i : ι) (profile : Profile G.form.sig) :=
+    expectedUtility G.utility i (G.form.play profile) (hconditional profile i)
+  have houter (i : ι) : PayoffIntegrable law (conditional i) := by
+    exact payoffIntegrable_bind_conditionalExpectation law G.form.play
+      (fun outcome => G.utility outcome i) (haggregate i) (hconditional · i)
+  have hprofile : PayoffIntegrable law
+      (fun profile => ∑ i, conditional i profile) :=
+    payoffIntegrable_sum law conditional houter
+  have htower (i : ι) :
+      expect (G.form.outcomeLaw law) (fun outcome => G.utility outcome i)
+          (haggregate i) = expect law (conditional i) (houter i) := by
+    simpa only [GameForm.outcomeLaw, conditional, expectedUtility] using
+      expect_bind_tower law G.form.play (fun outcome => G.utility outcome i)
+        (haggregate i) (hconditional · i)
+  calc
+    G.expectedSocialWelfare law haggregate =
+        ∑ i, expect (G.form.outcomeLaw law)
+          (fun outcome => G.utility outcome i) (haggregate i) := rfl
+    _ =
+        ∑ i, expect law (conditional i) (houter i) := by
+          apply Finset.sum_congr rfl
+          intro i _
+          exact htower i
+    _ = expect law (fun profile => ∑ i, conditional i profile)
+        hprofile := (expect_sum law conditional houter).symm
+    _ = expect law (fun profile => G.socialWelfare profile
+        (hconditional profile))
+        (profilewiseSocialWelfareIntegrable G law haggregate hconditional) := by
+      exact expect_proof_irrel law _ _ _
+
+/-- Smoothness carries a certificate that every pure-profile utility used by
+its comparisons is integrable. -/
+structure IsSmooth [Fintype ι] [DecidableEq ι]
+    (G : UtilityGame ι) (lam mu : ℝ) : Prop where
+  integrable : ∀ profile i,
+    UtilityIntegrable G.utility i (G.form.play profile)
+  inequality : ∀ statusQuo target : Profile G.form.sig,
+    lam * G.socialWelfare target (fun i => integrable target i) -
+        mu * G.socialWelfare statusQuo (fun i => integrable statusQuo i) ≤
       ∑ i, expectedUtility G.utility i
         (G.form.play (Profile.update statusQuo i (target i)))
+        (integrable (Profile.update statusQuo i (target i)) i)
 
-/-- **Smoothness bounds every Nash equilibrium.**  The inequality form avoids
-division and therefore needs no positivity or nonzero-denominator side
-condition. -/
-theorem IsSmooth.nash_bound [Fintype ι] [DecidableEq ι] {G : UtilityGame ι}
-    {lam mu : ℝ} (hsmooth : G.IsSmooth lam mu)
+/-- **Smoothness bounds every Nash equilibrium.** The inequality form avoids
+division and therefore needs no positivity or nonzero-denominator condition. -/
+theorem IsSmooth.nash_bound [Fintype ι] [DecidableEq ι]
+    {G : UtilityGame ι} {lam mu : ℝ}
+    (hsmooth : G.IsSmooth lam mu)
     {statusQuo : Profile G.form.sig}
     (hnash : IsNash G.form (euPreference G.utility) statusQuo)
     (target : Profile G.form.sig) :
-    lam * G.socialWelfare target ≤ (1 + mu) * G.socialWelfare statusQuo := by
+    lam * G.socialWelfare target (fun i => hsmooth.integrable target i) ≤
+      (1 + mu) * G.socialWelfare statusQuo
+        (fun i => hsmooth.integrable statusQuo i) := by
   have hdeviations :
       (∑ i, expectedUtility G.utility i
-          (G.form.play (Profile.update statusQuo i (target i)))) ≤
-        G.socialWelfare statusQuo := by
+          (G.form.play (Profile.update statusQuo i (target i)))
+          (hsmooth.integrable (Profile.update statusQuo i (target i)) i)) ≤
+        G.socialWelfare statusQuo (fun i => hsmooth.integrable statusQuo i) := by
     rw [socialWelfare]
-    exact Finset.sum_le_sum fun i _ => (isNash_iff statusQuo).mp hnash i (target i)
-  linarith [hsmooth statusQuo target]
+    apply Finset.sum_le_sum
+    intro i _
+    have hpref := (isNash_iff (F := G.form) statusQuo).1 hnash i (target i)
+    exact (euPreference_iff G.utility i (G.form.play statusQuo)
+      (G.form.play (Profile.update statusQuo i (target i)))
+      (hsmooth.integrable statusQuo i)
+      (hsmooth.integrable (Profile.update statusQuo i (target i)) i)).1 hpref
+  linarith [hsmooth.inequality statusQuo target]
 
 end UtilityGame
 

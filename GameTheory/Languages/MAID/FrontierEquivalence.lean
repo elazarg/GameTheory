@@ -24,10 +24,10 @@ variable {diagram : GameTheory.Languages.MAID.Structure Player Node}
 /-- Sequentially draw a fixed node-law family and replace each listed
 coordinate. -/
 def fixedAssignmentRun [DecidableEq Node]
-    (laws : (node : Node) → FinDist (diagram.Value node)) :
+    (laws : (node : Node) → PMF (diagram.Value node)) :
     List Node → GameTheory.Languages.MAID.Assignment diagram →
-      FinDist (GameTheory.Languages.MAID.Assignment diagram)
-  | [], assignment => FinDist.pure assignment
+      PMF (GameTheory.Languages.MAID.Assignment diagram)
+  | [], assignment => PMF.pure assignment
   | node :: rest, assignment =>
       (laws node).bind fun value =>
         fixedAssignmentRun laws rest
@@ -37,14 +37,14 @@ def fixedAssignmentRun [DecidableEq Node]
 the corresponding dependent product and resolving all listed coordinates at
 once. -/
 theorem fixedAssignmentRun_eq_pi [DecidableEq Node]
-    (laws : (node : Node) → FinDist (diagram.Value node)) :
+    (laws : (node : Node) → PMF (diagram.Value node)) :
     ∀ (nodes : List Node), nodes.Nodup →
       ∀ assignment : GameTheory.Languages.MAID.Assignment diagram,
         fixedAssignmentRun laws nodes assignment =
-          FinDist.map
+          PMF.map
             (GameTheory.Languages.MAID.Assignment.resolve diagram assignment
               nodes.toFinset)
-            (FinDist.pi fun node : {node // node ∈ nodes.toFinset} =>
+            (independentProduct fun node : {node // node ∈ nodes.toFinset} =>
               laws node.1) := by
   intro nodes
   induction nodes with
@@ -62,14 +62,14 @@ theorem fixedAssignmentRun_eq_pi [DecidableEq Node]
           (fun node :
               {node : Node // node ∈ ([] : List Node).toFinset} =>
             laws node.1) =
-            fun node => FinDist.pure (emptyDraw node) := by
+            fun node => PMF.pure (emptyDraw node) := by
         funext node
         exfalso
         have hmem := node.2
         exact List.not_mem_nil (List.mem_toFinset.mp hmem)
-      rw [fixedAssignmentRun, hlaws, FinDist.pi_pure,
-        FinDist.map_pure]
-      apply congrArg FinDist.pure
+      rw [fixedAssignmentRun, hlaws, independentProduct_pure,
+        PMF.pure_map]
+      apply congrArg PMF.pure
       funext node
       simp [GameTheory.Languages.MAID.Assignment.resolve]
   | cons head tail ih =>
@@ -114,19 +114,19 @@ theorem fixedAssignmentRun_eq_pi [DecidableEq Node]
       let remainingValue (node : remaining) :=
         diagram.Value node.1.1
       let remainingLaws (node : remaining) :
-          FinDist (remainingValue node) :=
+          PMF (remainingValue node) :=
         laws node.1.1
       have hreindex :
-          FinDist.map
+          PMF.map
               (Equiv.piCongrLeft remainingValue remainingEquiv).symm
-              (FinDist.pi remainingLaws) =
-            FinDist.pi
+              (independentProduct remainingLaws) =
+            independentProduct
               (fun node : tailIndex => laws node.1) := by
         simpa [remainingEquiv, remainingValue, remainingLaws, tailIndex] using
-          FinDist.pi_reindex remainingValue remainingEquiv remainingLaws
+          independentProduct_reindex remainingEquiv.symm remainingLaws
       have hresolve
           (value : diagram.Value head) :
-          FinDist.map
+          PMF.map
               (fun draw : (node : remaining) →
                   remainingValue node =>
                 GameTheory.Languages.MAID.Assignment.resolve diagram assignment
@@ -135,16 +135,16 @@ theorem fixedAssignmentRun_eq_pi [DecidableEq Node]
                     (fun node : full =>
                       diagram.Value node.1)).symm
                     (value, draw)))
-              (FinDist.pi remainingLaws) =
-            FinDist.map
+              (independentProduct remainingLaws) =
+            PMF.map
               (GameTheory.Languages.MAID.Assignment.resolve diagram
                 (Stage.Assignment.setOne assignment ⟨head, value⟩)
                 tail.toFinset)
-              (FinDist.pi
+              (independentProduct
                 (fun node : tailIndex => laws node.1)) := by
-        rw [← hreindex, FinDist.map_comp]
+        rw [← hreindex, PMF.map_comp]
         apply congrArg (fun f =>
-          FinDist.map f (FinDist.pi remainingLaws))
+          PMF.map f (independentProduct remainingLaws))
         funext draw node
         by_cases hnodeHead : node = head
         · subst node
@@ -161,21 +161,19 @@ theorem fixedAssignmentRun_eq_pi [DecidableEq Node]
       rw [fixedAssignmentRun]
       simp_rw [ih htailNodup]
       let fullLaws : (node : full) →
-          FinDist (diagram.Value node.1) :=
+          PMF (diagram.Value node.1) :=
         fun node => laws node.1
       rw [show (fun node :
           {node : Node // node ∈ (head :: tail).toFinset} =>
             laws node.1) = fullLaws by rfl,
-        FinDist.pi_eq_map_product headIndex fullLaws,
-        FinDist.map_comp]
-      unfold FinDist.product
-      rw [FinDist.map_bind]
-      apply FinDist.bind_congr
+        independentProduct_splitAt fullLaws headIndex]
+      rw [PMF.map_bind]
+      apply bind_congr_on_support
       intro value _
       refine (hresolve value).symm.trans ?_
-      rw [FinDist.map_comp]
+      rw [PMF.map_comp]
       apply congrArg (fun f =>
-        FinDist.map f (FinDist.pi remainingLaws))
+        PMF.map f (independentProduct remainingLaws))
       funext draw
       rfl
 
@@ -231,7 +229,7 @@ held fixed. -/
 theorem assignmentRun_eq_fixed_of_pairwise [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
-    (laws : (node : Node) → FinDist (diagram.Value node)) :
+    (laws : (node : Node) → PMF (diagram.Value node)) :
     ∀ (nodes : List Node),
       nodes.Pairwise
         (fun earlier later => earlier ∉ diagram.parents later) →
@@ -260,8 +258,8 @@ theorem assignmentRun_eq_fixed_of_pairwise [DecidableEq Node]
             (fun earlier later => earlier ∉ diagram.parents later) :=
         (List.pairwise_cons.mp hpairwise).2
       simp only [assignmentRun, assignmentStep, fixedAssignmentRun]
-      rw [FinDist.bind_map, hhead]
-      apply FinDist.bind_congr
+      rw [PMF.bind_map, hhead]
+      apply bind_congr_on_support
       intro value _
       apply ih htailPairwise
       intro node hnode
@@ -313,7 +311,7 @@ theorem map_values_step_eq_assignmentRun
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : GameTheory.Languages.MAID.FrontierState diagram) :
-    FinDist.map (fun reached => reached.values)
+    PMF.map (fun reached => reached.values)
         (GameTheory.Languages.MAID.step diagram semantics policy state) =
       assignmentRun semantics policy state.frontier.toList state.values := by
   rw [assignmentRun_frontier_eq_fixed,
@@ -321,7 +319,7 @@ theorem map_values_step_eq_assignmentRun
       state.frontier.nodup_toList state.values,
     Finset.toList_toFinset]
   unfold GameTheory.Languages.MAID.step GameTheory.Languages.MAID.frontierLaw
-  rw [FinDist.map_comp]
+  rw [PMF.map_comp]
   have hlaws :
       (fun node : {node // node ∈ state.frontier} =>
         assignmentNodeLaw semantics policy state.values node.1) =
@@ -331,8 +329,8 @@ theorem map_values_step_eq_assignmentRun
     exact assignmentNodeLaw_eq_nodeLaw semantics policy state node
   rw [hlaws]
   apply congrArg (fun f =>
-    FinDist.map f
-      (FinDist.pi fun node : {node // node ∈ state.frontier} =>
+    PMF.map f
+      (independentProduct fun node : {node // node ∈ state.frontier} =>
         GameTheory.Languages.MAID.nodeLaw diagram semantics policy state node))
   funext draw
   rfl
@@ -513,8 +511,8 @@ theorem assignmentRun_append [DecidableEq Node]
   | cons head tail ih =>
       intro second assignment
       simp only [List.cons_append, assignmentRun]
-      rw [FinDist.bind_bind]
-      apply FinDist.bind_congr
+      rw [PMF.bind_bind]
+      apply bind_congr_on_support
       intro afterHead _
       exact ih second afterHead
 
@@ -554,7 +552,7 @@ theorem map_values_run_eq_assignmentRun_unresolved
     (policy : GameTheory.Languages.MAID.Policy diagram) :
     ∀ (fuel : ℕ) (state : GameTheory.Languages.MAID.FrontierState diagram),
       Fintype.card Node - state.resolved.card ≤ fuel →
-      FinDist.map (fun reached => reached.values)
+      PMF.map (fun reached => reached.values)
           (GameTheory.Languages.MAID.run diagram semantics policy fuel state) =
         assignmentRun semantics policy
           (unresolvedOrder topological state) state.values := by
@@ -573,7 +571,7 @@ theorem map_values_run_eq_assignmentRun_unresolved
       have hremaining :
           unresolvedOrder topological state = [] := by
         simp [unresolvedOrder, hcomplete]
-      rw [GameTheory.Languages.MAID.run, FinDist.map_pure, hremaining,
+      rw [GameTheory.Languages.MAID.run, PMF.pure_map, hremaining,
         assignmentRun]
   | succ fuel ih =>
       intro state hbound
@@ -581,19 +579,19 @@ theorem map_values_run_eq_assignmentRun_unresolved
       · have hremaining :
             unresolvedOrder topological state = [] := by
           simp [unresolvedOrder, hcomplete]
-        rw [GameTheory.Languages.MAID.run, ite_eq_left hcomplete, FinDist.map_pure,
+        rw [GameTheory.Languages.MAID.run, ite_eq_left hcomplete, PMF.pure_map,
           hremaining, assignmentRun]
-      · rw [GameTheory.Languages.MAID.run, ite_eq_right hcomplete, FinDist.map_bind]
+      · rw [GameTheory.Languages.MAID.run, ite_eq_right hcomplete, PMF.map_bind]
         calc
           (GameTheory.Languages.MAID.step diagram semantics policy state).bind
               (fun next =>
-                FinDist.map (fun reached => reached.values)
+                PMF.map (fun reached => reached.values)
                   (GameTheory.Languages.MAID.run diagram semantics policy fuel next)) =
             (GameTheory.Languages.MAID.step diagram semantics policy state).bind
               (fun next =>
                 assignmentRun semantics policy
                   (unresolvedOrder topological next) next.values) := by
-              apply FinDist.bind_congr
+              apply bind_congr_on_support
               intro next hnext
               obtain ⟨draw, rfl⟩ :=
                 GameTheory.Languages.MAID.eq_extend_of_mem_support_step
@@ -621,18 +619,19 @@ theorem map_values_run_eq_assignmentRun_unresolved
               (fun next =>
                 assignmentRun semantics policy
                   (remainingOrder topological state) next.values) := by
-              apply FinDist.bind_congr
+              apply bind_congr_on_support
               intro next hnext
               obtain ⟨draw, rfl⟩ :=
                 GameTheory.Languages.MAID.eq_extend_of_mem_support_step
                   diagram semantics policy state next hnext
               rw [unresolvedOrder_extend]
           _ =
-            (FinDist.map (fun next => next.values)
+            (PMF.map (fun next => next.values)
               (GameTheory.Languages.MAID.step diagram semantics policy state)).bind
                 (assignmentRun semantics policy
                   (remainingOrder topological state)) := by
-              rw [FinDist.bind_map]
+              rw [PMF.bind_map]
+              simp only [Function.comp_def]
           _ =
             (assignmentRun semantics policy state.frontier.toList
               state.values).bind
@@ -653,7 +652,7 @@ theorem map_values_nativeRun_eq_assignmentRun
     [Fintype Node] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram) :
-    FinDist.map (fun reached => reached.values)
+    PMF.map (fun reached => reached.values)
         (GameTheory.Languages.MAID.run diagram semantics policy
           (Fintype.card Node)
           (GameTheory.Languages.MAID.FrontierState.initial semantics)) =
@@ -674,11 +673,11 @@ theorem nativeRun_eq_serialRun
     [Fintype Node] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram) :
-    FinDist.map (fun reached => reached.values)
+    PMF.map (fun reached => reached.values)
         (GameTheory.Languages.MAID.run diagram semantics policy
           (Fintype.card Node)
           (GameTheory.Languages.MAID.FrontierState.initial semantics)) =
-      FinDist.map (Stage.assignment topological semantics)
+      PMF.map (Stage.assignment topological semantics)
         (serialRun topological semantics policy
           topological.order.length (Stage.initial topological)) := by
   rw [map_values_nativeRun_eq_assignmentRun topological semantics policy,
@@ -697,11 +696,11 @@ theorem nativeRun_eq_compiledBehavioralRun
     [Fintype Node] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram) :
-    FinDist.map (fun reached => reached.values)
+    PMF.map (fun reached => reached.values)
         (GameTheory.Languages.MAID.run diagram semantics policy
           (Fintype.card Node)
           (GameTheory.Languages.MAID.FrontierState.initial semantics)) =
-      FinDist.map
+      PMF.map
         (fun history =>
           Stage.assignment topological semantics history.state)
         ((information topological semantics).runBehavioral
@@ -712,12 +711,12 @@ theorem nativeRun_eq_compiledBehavioralRun
       policy topological.order.length
       (execution topological semantics).initHistory
   have hassignment :=
-    congrArg (FinDist.map (Stage.assignment topological semantics))
+    congrArg (PMF.map (Stage.assignment topological semantics))
       hstate
-  rw [FinDist.map_comp] at hassignment
+  rw [PMF.map_comp] at hassignment
   calc
     _ =
-        FinDist.map (Stage.assignment topological semantics)
+        PMF.map (Stage.assignment topological semantics)
           (serialRun topological semantics policy
             topological.order.length (Stage.initial topological)) :=
       nativeRun_eq_serialRun topological semantics policy

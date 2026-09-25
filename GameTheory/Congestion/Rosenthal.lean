@@ -20,6 +20,8 @@ open scoped BigOperators
 
 namespace GameTheory
 
+open GameTheory.Math.Probability
+
 namespace CongestionGame
 
 variable {ι : Type*}
@@ -35,6 +37,8 @@ open Classical in
 game form and negative-cost utility. -/
 theorem isExactPotential [Fintype ι] [DecidableEq ι] (C : CongestionGame ι) :
     IsExactPotential C.toGameForm C.utility C.potential := by
+  refine ⟨(fun profile who =>
+    payoffIntegrable_pure profile (fun result => C.utility result who)), ?_⟩
   intro who (σ : C.Profile) s'
   simp only [toGameForm, utility, expectedUtility_pure, playerCost, potential,
     Profile.update_same]

@@ -133,16 +133,15 @@ theorem about two strategy *representations* within one information model, not
 a transfer between two languages, so both sides live in the same layer and
 neither needs a witness — the same reason the compiled languages needed none.
 
-**Close-out (2026-07-30).** T2 is now built in both directions at the stronger
-history-law level. Local randomization is representable by one policy draw
+**Strategy representation (T2).** The comparison is at the history-law level.
+Local randomization is representable by one policy draw
 under `ActsOnceWhereItMatters`; one policy draw is representable by local
 randomization under `ConstrainsAlike`, which perfect recall implies; and the
 sets of realizable laws are equal when both conditions hold. D7's reopening
 condition remains unmet, because this is still a same-layer representation
-theorem. T4 remains outside the evidence on which D0 was finalized.
+theorem.
 
-**T3 delivery close-out (2026-07-30).** The general typed MAID now has both
-frozen transfer results. Its order-free frontier assignment law equals the
+**MAID transfer (T3).** The order-free frontier assignment law equals the
 actual compiled-EFG behavioral law at every topological order. Its native
 source-owner policy profile is coordinatewise equivalent to the compiled
 behavioral profile, unilateral updates commute with that equivalence, and
@@ -150,17 +149,16 @@ ordinary expected-utility `IsNash` is equivalent on the native and compiled
 game forms. Decision sites are not relabelled as players and no certificate
 layer was introduced.
 
-**T4 delivery close-out (2026-07-30).** Utility-free deterministic
+**One-shot transfer (T4).** Utility-free deterministic
 `Languages.NFG.Game` compiles directly to `GameForm`, while
 `Languages.FOSG.Game` is the transparent pairing of the accepted execution and
 information objects. The named one-shot bridge keeps source players and action
 types, makes every player active at the same history, and proves that the
 actual Protocol history law mapped back to source outcomes equals the direct
 NFG law. Mapping any external utility preserves the joint utility law as well.
-The predecessor morphism wrapper is retired under D7. All four frozen
-transfers T1-T4 are now closed without a generic certificate hierarchy.
+The predecessor morphism wrapper adds no capability to these equalities.
+The transfers require no generic certificate hierarchy.
 
-The execution-side scope limit recorded at finalization is now closed.
 `History.lean` and `Randomized.lean` run information-local deterministic,
 behavioral, and mixed policies over histories, with pushforward and point-mass
 compatibility theorems. `InformationModel.toGameForm` compiles pure policies
@@ -172,10 +170,9 @@ The finite-horizon information-local one-shot theorem also reaches the
 compiler: one-shot optimality at every history defeats every whole replacement
 policy and implies ordinary static Nash. Its `historyContext` packages the
 actual continuation at a history, and the one-shot premise is equivalent to
-`IsSequentiallyRationalAt` in those contexts. This is not yet a full
-well-founded `oneShotDeviation_iff_spe`: there is no SPE predicate, and no
-converse from initial static Nash is claimed because it does not quantify over
-off-path histories.
+`IsSequentiallyRationalAt` in those contexts. Initial static Nash alone cannot
+supply the converse: it does not quantify over off-path histories. Subgame
+perfection therefore needs its own root quantification, as specified in D42.
 
 ### Unexpected cost from Phase 0, resolved
 
@@ -243,7 +240,7 @@ certificate, or infinite-path law appears.
 
 [EXP-065](../ExperimentLog.md) applies the same ownership rule to hidden-action
 contracts.  A committed outcome-contingent payment leaves one agent choosing
-an action whose `FinDist` law determines reward and effort cost.  A dummy
+an action whose PMF law determines reward and effort cost. A dummy
 principal player and a Nash wrapper would add strategic structure absent from
 the theorem.  D32 therefore keeps the model native under `Mechanism`, while
 making each outside option explicit and attaching action finiteness only to

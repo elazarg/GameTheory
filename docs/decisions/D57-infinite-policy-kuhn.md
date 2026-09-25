@@ -2,7 +2,7 @@
 
 - **Status:** adopted and promoted
 - **Date:** 2026-08-20
-- **Experiment IDs:** EXP-117; builds on EXP-115 and EXP-116
+- **Experiment IDs:** EXP-117 and EXP-127; builds on EXP-115 and EXP-116
 
 ## Decision / question
 
@@ -12,12 +12,12 @@ discounted payoff comparisons.
 
 ## Competing designs
 
-1. Select a separate finite-support `FinDist` witness for each horizon.
+1. Select a separate discrete policy witness for each horizon.
 2. Reuse the experimental behavioral infinite-path outcome measure.
 3. Use Mathlib's ordinary infinite product measure directly over total pure
-   policies and reconnect each finite marginal to the executable `FinDist`
-   layer.
-4. Introduce a project-wide probability-law abstraction hiding both `FinDist`
+   policies and reconnect each finite-coordinate marginal to ordinary PMF
+   semantics.
+4. Introduce a project-wide probability-law abstraction hiding both `PMF`
    and `Measure`.
 
 Design 3 is adopted. Design 1 has the wrong quantifier order and does not give
@@ -36,19 +36,18 @@ and baseline and unilateral discounted equality.
 
 ## Measurements
 
-The finite marginal of `Measure.infinitePi` is exactly the existing nested
-`FinDist.pi` after conversion to an ordinary measure. Covered bounded runs
-depend only on those coordinates, so the existing Protocol runner proves the
-prefix law without another evaluator. The generic discounted theorem assumes
-summability; the stochastic specialization derives it from bounded stage
-utility and `0 ≤ discount < 1`. Regularity requires countable indices and the
-standard Borel, second-countable, completely-pseudometrizable hypotheses. The
-focused builds compiled 2,990, 3,001, 3,018, and 3,020 jobs for the bridge,
-Protocol layer, stochastic specialization, and hostile consumer respectively.
-The integrated target passed 3,048 jobs and the full default target passed
-3,995 jobs. Deep Phase 2 and Phase 3 audits both reported `VERIFIED=1`; eight
-flagship axiom prints contain only `propext`, `Classical.choice`, and
-`Quot.sound`.
+The finite-coordinate marginal of `Measure.infinitePi` agrees with the
+independent PMF product after conversion to an ordinary measure. The choices
+and PMF supports need not be finite. Each target history queries only finitely
+many coordinates. This gives its exact mass; the behavioral PMF's countable
+support supplies almost-everywhere support for the integrated runner kernel.
+No global cover of the sites reachable within a horizon is required (EXP-127).
+
+The generic discounted theorem requires integration of each actual stage and
+summability of its weighted expected values. Bounded stage utility and
+`0 ≤ discount < 1` suffice in the stochastic specialization. Regularity is a
+separate operation: it requires countable indices and the
+standard Borel, second-countable, completely-pseudometrizable hypotheses.
 
 ## Evidence from existing libraries
 
@@ -60,13 +59,13 @@ No new probability abstraction or game evaluator is required.
 
 ## Unexpected costs
 
-The finite/executable layer needed explicit theorems showing that `FinDist`
+The original finite-law layer needed explicit theorems showing that `FinDist`
 pure, map, bind, and dependent product commute with conversion to `Measure`.
 Policy types are transparent abbreviations so Mathlib can synthesize the
 canonical dependent product measurable/topological instances. These are API
-repairs, not additional semantic objects. The Phase 2 representation audit now
-names exactly `FinDist.lean` and `Measure.lean` as representation owners and
-continues to reject `PMF`/`toPMF` leakage everywhere else.
+requirements, not additional semantic objects. D62 replaces the finite-law
+wrapper with ordinary PMF semantics while retaining an explicit measure bridge
+and named owners for raw weight conversion.
 
 ## Kill condition
 
@@ -81,14 +80,15 @@ No kill condition fired.
 ## Result and public API consequences
 
 `Protocol.PolicyMeasure` owns the horizon-independent product probability law,
-its exact finite marginals, all covered finite-prefix laws, arbitrary
+its exact finite-coordinate marginals, all finite-prefix laws, arbitrary
 behavioral unilateral replacements, prefix expectations, discounted equality,
 and operation-local regularity. `Stochastic.Kuhn` proves perfect-monitoring
 countability/regularity and exposes all-prefix and bounded discounted
-corollaries. `Math.Probability.Measure` is only the reusable finite-law bridge.
+corollaries. `Math.Probability.Measure` owns the reusable discrete PMF/measure
+and guarded expectation bridges.
 
-The unbounded `BehavioralPolicy.toMixed : FinDist _` convenience remains
-finite. This decision does not create an infinite-path outcome law. The
+Discrete whole-policy predrawing retains explicit finite-site certificates.
+This decision does not create an infinite-path outcome law. The
 reverse construction from arbitrary per-player pure-policy measures was a
 separate gate, subsequently closed by EXP-118/D58 through finite own-record
 conditioning.

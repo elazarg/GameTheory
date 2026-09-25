@@ -36,7 +36,13 @@ def IsIncentiveCompatible : Prop :=
 /-- Pointwise incentive compatibility implies ordinary Nash of the compiled
 Bayesian game under truthful contingent reporting. -/
 theorem isNash_truthfulPlan_of_isIncentiveCompatible
-    (prior : FinDist (∀ i, M.Ty i))
+    (prior : PMF (∀ i, M.Ty i))
+    (htruth : ∀ who, UtilityIntegrable (M.toBayesianGame prior).utility who
+      ((M.toBayesianGame prior).toForm.play (M.truthfulPlan prior)))
+    (hdeviation : ∀ who (deviation : M.Ty who → M.Report who),
+      UtilityIntegrable (M.toBayesianGame prior).utility who
+        ((M.toBayesianGame prior).toForm.play
+          (Profile.update (M.truthfulPlan prior) who deviation)))
     (hIC : M.IsIncentiveCompatible) :
     IsNash (M.toBayesianGame prior).toForm
       (euPreference (M.toBayesianGame prior).utility)
@@ -44,11 +50,15 @@ theorem isNash_truthfulPlan_of_isIncentiveCompatible
   rw [isNash_iff]
   intro who deviation
   rw [euPreference_apply]
-  unfold expectedUtility
-  rw [BayesianGame.toForm_play, FinDist.expect_map,
-    BayesianGame.toForm_play, FinDist.expect_map]
-  apply FinDist.expect_mono
+  refine ⟨htruth who, hdeviation who deviation, ?_⟩
+  rw [(M.toBayesianGame prior).expectedUtility_eq_prior who
+      (Profile.update (M.truthfulPlan prior) who deviation)
+      (hdeviation who deviation),
+    (M.toBayesianGame prior).expectedUtility_eq_prior who
+      (M.truthfulPlan prior) (htruth who)]
+  apply expect_mono
   intro types _
+  simp only [BayesianGame.planPayoff]
   rw [M.actionsOf_update_truthfulPlan, M.actionsOf_truthfulPlan]
   have hpoint :=
     hIC who types (M.truthfulReports types) (deviation (types who))

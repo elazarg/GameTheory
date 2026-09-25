@@ -80,9 +80,9 @@ def diagram : Structure Unit Node where
 def topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents :=
   topologicalParents
 
-def fairSignal : FinDist Bool :=
-  FinDist.mix (1 / 2) (by norm_num) (by norm_num)
-    (FinDist.pure false) (FinDist.pure true)
+def fairSignal : PMF Bool :=
+  mix (1 / 2) (by norm_num) (by norm_num)
+    (PMF.pure false) (PMF.pure true)
 
 @[reducible]
 def semantics : Semantics diagram where
@@ -778,9 +778,9 @@ def reducedPolicy : pruning.ReducedPolicy :=
     | .signal => by
         have hkind := site.2
         simp [diagram, hnode] at hkind
-    | .early => FinDist.pure false
+    | .early => PMF.pure false
     | .late =>
-        FinDist.pure (observed ⟨.early, by simp [pruning, hnode]⟩)
+        PMF.pure (observed ⟨.early, by simp [pruning, hnode]⟩)
 
 def assignmentOf (signal early late : Bool) : Assignment diagram
   | .signal => signal
@@ -799,13 +799,13 @@ def lateConfig (signal early : Bool) :
 
 theorem expanded_early_rule (signal : Bool) :
     pruning.expandPolicy reducedPolicy () earlySite (earlyConfig signal) =
-      FinDist.pure false := by
+      PMF.pure false := by
   rfl
 
 theorem expanded_late_rule (signal early : Bool) :
     pruning.expandPolicy reducedPolicy () lateSite
         (lateConfig signal early) =
-      FinDist.pure early := by
+      PMF.pure early := by
   rfl
 
 theorem restrict_at_early (signal : Bool) :
@@ -876,49 +876,75 @@ theorem expanded_play :
   show assignmentRun semantics (pruning.expandPolicy reducedPolicy)
       [.signal, .early, .late] semantics.defaultValue = _
   rw [assignmentRun, assignmentStep, assignmentNodeLaw_signal,
-    FinDist.bind_map]
-  apply FinDist.bind_congr
+    PMF.bind_map]
+  apply bind_congr_on_support
   intro signal _
-  rw [assignmentRun, assignmentStep, assignmentNodeLaw_early,
-    expanded_early_rule, FinDist.map_pure, FinDist.pure_bind]
-  rw [assignmentRun, assignmentStep, assignmentNodeLaw_late,
-    expanded_late_rule, FinDist.map_pure, FinDist.pure_bind]
-  rw [assignmentRun]
-  exact congrArg FinDist.pure (set_late signal false false)
+  simp only [Function.comp_apply]
+  rw [GameTheory.Languages.MAID.Order.assignmentRun.eq_def]
+  dsimp only []
+  rw [assignmentStep]
+  rw [assignmentNodeLaw_early,
+    expanded_early_rule, PMF.pure_map, PMF.pure_bind]
+  rw [GameTheory.Languages.MAID.Order.assignmentRun.eq_def]
+  dsimp only []
+  rw [assignmentStep, assignmentNodeLaw_late,
+    expanded_late_rule, PMF.pure_map, PMF.pure_bind]
+  rw [GameTheory.Languages.MAID.Order.assignmentRun.eq_def]
+  exact congrArg PMF.pure (set_late signal false false)
 
 theorem expanded_expectedUtility :
     expectedUtility
         (fun assignment owner => semantics.utility owner assignment) ()
         ((nativeBehavioralGameForm semantics).play
-          (pruning.expandPolicy reducedPolicy)) = 1 := by
+          (pruning.expandPolicy reducedPolicy))
+        (payoffIntegrable_of_finite _ _) = 1 := by
   unfold expectedUtility
-  rw [expanded_play, FinDist.expect_map]
   calc
-    fairSignal.expect (fun signal =>
+    expect ((nativeBehavioralGameForm semantics).play
+        (pruning.expandPolicy reducedPolicy))
+        (fun assignment => semantics.utility () assignment)
+        (payoffIntegrable_of_finite _ _) =
+      expect (fairSignal.map fun signal => assignmentOf signal false false)
+        (fun assignment => semantics.utility () assignment)
+        (payoffIntegrable_of_finite _ _) :=
+      expect_congr_law expanded_play _ _ _
+    _ = expect fairSignal (fun signal =>
         (fun assignment owner => semantics.utility owner assignment)
-          (assignmentOf signal false false) ()) =
-        fairSignal.expect (fun _ => 1) := by
-      apply FinDist.expect_congr
+          (assignmentOf signal false false) ())
+        (payoffIntegrable_of_finite _ _) := by
+      exact expect_map _ _ _ _ _
+    _ = expect fairSignal (fun _ => 1)
+          (payoffIntegrable_of_finite _ _) := by
+      apply expect_congr_on_support
       intro signal _
       simp [assignmentOf]
-    _ = 1 := FinDist.expect_const fairSignal 1
+    _ = 1 := expect_constant fairSignal 1 _
 
 theorem expectedUtility_le_one (policy : Policy diagram) :
     expectedUtility
         (fun assignment owner => semantics.utility owner assignment) ()
-        ((nativeBehavioralGameForm semantics).play policy) ≤ 1 := by
+        ((nativeBehavioralGameForm semantics).play policy)
+        (payoffIntegrable_of_finite _ _) ≤ 1 := by
   unfold expectedUtility
-  apply FinDist.expect_le_of_forall
-  intro assignment _
-  by_cases hmatch : assignment .early = assignment .late <;>
-    simp [hmatch]
+  calc
+    expect ((nativeBehavioralGameForm semantics).play policy)
+        (fun assignment => semantics.utility () assignment)
+        (payoffIntegrable_of_finite _ _) ≤
+      expect ((nativeBehavioralGameForm semantics).play policy)
+        (fun _ => 1) (payoffIntegrable_of_finite _ _) := by
+      apply expect_mono
+      intro assignment _
+      by_cases hmatch : assignment .early = assignment .late <;>
+        simp [hmatch]
+    _ = 1 := expect_constant _ 1 _
 
 theorem coversFullDeviations :
     pruning.CoversFullDeviationsAt semantics reducedPolicy := by
   intro owner fullReplacement
   refine ⟨reducedPolicy owner, ?_⟩
-  rw [euPreference_apply, Profile.update_eq_self,
-    expanded_expectedUtility]
+  rw [euPreference_apply, Profile.update_eq_self]
+  refine ⟨payoffIntegrable_of_finite _ _, payoffIntegrable_of_finite _ _, ?_⟩
+  rw [expanded_expectedUtility]
   exact expectedUtility_le_one _
 
 theorem generic_coversFullDeviations :
@@ -933,7 +959,9 @@ theorem reduced_isNash :
       reducedPolicy := by
   rw [isNash_iff]
   intro owner replacement
-  rw [euPreference_apply, expanded_expectedUtility]
+  rw [euPreference_apply]
+  refine ⟨payoffIntegrable_of_finite _ _, payoffIntegrable_of_finite _ _, ?_⟩
+  rw [expanded_expectedUtility]
   exact expectedUtility_le_one _
 
 theorem expanded_isNash :

@@ -55,11 +55,6 @@ true utility.
 | stored capabilities | none: no prior, finiteness, decidable equality, probability law, topology, or Groves certificate |
 | incentive semantics | `IsDSIC` abbreviates canonical `IsIncentiveCompatible` |
 | hostile variability | allocation, valuation, payment, and deviation utility all nonconstant |
-| source hazards | zero raw updates, transports, `Fintype.ofFinite`, probability projections, placeholders, or custom axioms |
-| axiom profile | `propext`, `Classical.choice`, and `Quot.sound` only |
-| focused gate | warning-free 1,726-job build |
-| promoted leaf / fixture | 106 / 67 nonblank lines; pinned monotonicity file 5/5 |
-| integration gate | warning-free 1,750-job focused root build and 3,453-job full build; structural and coverage audits `VERIFIED=1`; Mechanism root reaches the owner and the main umbrella rejects it |
 
 ## Kill condition
 

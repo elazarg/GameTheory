@@ -73,30 +73,20 @@ theorem effectiveKernels_parentConfiguration
     rfl
 
 private theorem prob_bind_eq_mul_of_off_target_zero
-    {α β : Type*} (μ : FinDist α) (continuation : α → FinDist β)
+    {α β : Type*} (μ : PMF α) (continuation : α → PMF β)
     (chosen : α) (target : β)
     (hoffTarget : ∀ value ∈ μ.support, value ≠ chosen →
-      (continuation value).prob target = 0) :
-    (μ.bind continuation).prob target =
-      μ.prob chosen * (continuation chosen).prob target := by
+      (continuation value) target = 0) :
+    (μ.bind continuation) target =
+      μ chosen * (continuation chosen) target := by
   classical
-  rw [FinDist.prob_bind, FinDist.expect_eq_sum_support]
-  by_cases hchosen : chosen ∈ μ.support
-  · rw [Finset.sum_eq_single chosen]
-    · intro value hvalue hne
-      rw [hoffTarget value (FinDist.mem_supportFinset.mp hvalue) hne,
-        mul_zero]
-    · intro hnot
-      exact absurd (FinDist.mem_supportFinset.mpr hchosen) hnot
-  · rw [FinDist.prob_eq_zero_iff.mpr hchosen, zero_mul]
-    apply Finset.sum_eq_zero
-    intro value hvalue
-    have hsupport := FinDist.mem_supportFinset.mp hvalue
-    have hne : value ≠ chosen := by
-      intro heq
-      subst value
-      exact hchosen hsupport
-    rw [hoffTarget value hsupport hne, mul_zero]
+  rw [PMF.bind_apply]
+  apply tsum_eq_single chosen
+  intro value hne
+  by_cases hsupport : value ∈ μ.support
+  · rw [hoffTarget value hsupport hne, mul_zero]
+  · have hzero : μ value = 0 := (μ.apply_eq_zero_iff value).mpr hsupport
+    simp [hzero]
 
 /-- Executing nodes other than `fixed` leaves the `fixed` coordinate unchanged
 on every supported result. -/
@@ -109,7 +99,7 @@ theorem assignmentRun_support_preserves_of_not_mem [DecidableEq Node]
     result fixed = assignment fixed := by
   induction nodes generalizing assignment result with
   | nil =>
-      rw [assignmentRun, FinDist.mem_support_pure] at hresult
+      rw [assignmentRun, PMF.mem_support_pure_iff] at hresult
       subst result
       rfl
   | cons head tail ih =>
@@ -119,11 +109,11 @@ theorem assignmentRun_support_preserves_of_not_mem [DecidableEq Node]
       have htail : fixed ∉ tail := by
         intro hmem
         exact hfixed (by simp [hmem])
-      rw [assignmentRun, FinDist.support_bind] at hresult
+      rw [assignmentRun, PMF.support_bind] at hresult
       simp only [Set.mem_iUnion] at hresult
       obtain ⟨afterHead, hafterHead, hresult⟩ := hresult
       unfold assignmentStep at hafterHead
-      rw [FinDist.support_map] at hafterHead
+      rw [PMF.support_map] at hafterHead
       obtain ⟨value, _, rfl⟩ := hafterHead
       calc
         result fixed =
@@ -140,17 +130,19 @@ theorem assignmentRun_cons_prob [DecidableEq Node]
     (semantics : Semantics diagram) (policy : Policy diagram)
     (head : Node) (tail : List Node) (hhead : head ∉ tail)
     (assignment target : Assignment diagram) :
-    (assignmentRun semantics policy (head :: tail) assignment).prob target =
-      (assignmentNodeLaw semantics policy assignment head).prob (target head) *
+    (assignmentRun semantics policy (head :: tail) assignment) target =
+      (assignmentNodeLaw semantics policy assignment head) (target head) *
         (assignmentRun semantics policy tail
           (ToEFG.Stage.Assignment.setOne assignment
-            ⟨head, target head⟩)).prob target := by
+            ⟨head, target head⟩)) target := by
   rw [assignmentRun]
   unfold assignmentStep
-  rw [FinDist.bind_map]
+  rw [PMF.bind_map]
   apply prob_bind_eq_mul_of_off_target_zero
   intro value _ hne
-  apply FinDist.prob_eq_zero_iff.mpr
+  apply (PMF.apply_eq_zero_iff
+    (assignmentRun semantics policy tail
+      (ToEFG.Stage.Assignment.setOne assignment ⟨head, value⟩)) target).mpr
   intro hresult
   have hcoordinate := assignmentRun_support_preserves_of_not_mem
     semantics policy tail
@@ -185,7 +177,7 @@ theorem assignmentRun_prob_eq_factorProduct_of_agree_outside
         (fun earlier later => later ∉ diagram.parents earlier) →
       ∀ (assignment target : Assignment diagram),
         (∀ node, node ∉ nodes → assignment node = target node) →
-        (assignmentRun semantics policy nodes assignment).prob target =
+        ((assignmentRun semantics policy nodes assignment) target).toReal =
           factorProduct diagram.Value (effectiveParents diagram)
             (effectiveKernels semantics policy) nodes.toFinset target := by
   classical
@@ -245,16 +237,16 @@ theorem assignmentRun_prob_eq_factorProduct_of_agree_outside
           simpa [ToEFG.Stage.Assignment.setOne,
             GameTheory.Languages.MAID.Assignment.resolve, hnode] using houtside
       calc
-        (assignmentRun semantics policy (head :: tail) assignment).prob target =
-            (assignmentNodeLaw semantics policy assignment head).prob
-                (target head) *
-              (assignmentRun semantics policy tail
+        ((assignmentRun semantics policy (head :: tail) assignment) target).toReal =
+            ((assignmentNodeLaw semantics policy assignment head)
+                (target head)).toReal *
+              ((assignmentRun semantics policy tail
                 (ToEFG.Stage.Assignment.setOne assignment
-                  ⟨head, target head⟩)).prob target :=
-          assignmentRun_cons_prob semantics policy head tail hheadTail
-            assignment target
-        _ = (assignmentNodeLaw semantics policy target head).prob
-                (target head) *
+                  ⟨head, target head⟩)) target).toReal := by
+          rw [assignmentRun_cons_prob semantics policy head tail hheadTail
+            assignment target, ENNReal.toReal_mul]
+        _ = ((assignmentNodeLaw semantics policy target head)
+                (target head)).toReal *
               factorProduct diagram.Value (effectiveParents diagram)
                 (effectiveKernels semantics policy) tail.toFinset target := by
           rw [hlaw, ih htailNodup htailOrdered _ target hnext]
@@ -275,7 +267,7 @@ theorem assignmentRun_topological_prob_eq_factorProduct
     (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (semantics : Semantics diagram) (policy : Policy diagram)
     (initial target : Assignment diagram) :
-    (assignmentRun semantics policy topological.order initial).prob target =
+    ((assignmentRun semantics policy topological.order initial) target).toReal =
       factorProduct diagram.Value (effectiveParents diagram)
         (effectiveKernels semantics policy) topological.order.toFinset target := by
   apply assignmentRun_prob_eq_factorProduct_of_agree_outside
@@ -292,7 +284,7 @@ theorem native_play_prob_eq_factorProduct
     (semantics : Semantics diagram)
     (policy : Profile (nativeBehavioralSignature diagram))
     (target : Assignment diagram) :
-    ((nativeBehavioralGameForm semantics).play policy).prob target =
+    (((nativeBehavioralGameForm semantics).play policy) target).toReal =
       factorProduct diagram.Value (effectiveParents diagram)
         (effectiveKernels semantics policy) topological.order.toFinset target := by
   rw [nativeBehavioralGameForm_play,
@@ -316,7 +308,7 @@ theorem native_play_prob_eq_factorProduct_univ
     (semantics : Semantics diagram)
     (policy : Profile (nativeBehavioralSignature diagram))
     (target : Assignment diagram) :
-    ((nativeBehavioralGameForm semantics).play policy).prob target =
+    (((nativeBehavioralGameForm semantics).play policy) target).toReal =
       factorProduct diagram.Value (effectiveParents diagram)
         (effectiveKernels semantics policy) Finset.univ target := by
   rw [← topological_toFinset_eq_univ topological]
@@ -325,7 +317,7 @@ theorem native_play_prob_eq_factorProduct_univ
 namespace ThreeNodeControl
 
 def policy : Policy Nonrequisite.model :=
-  fun _ _ _ => FinDist.pure false
+  fun _ _ _ => PMF.pure false
 
 def allFalse : Assignment Nonrequisite.model :=
   fun _ => false
@@ -333,8 +325,8 @@ def allFalse : Assignment Nonrequisite.model :=
 /-- A typed signal/decision/reward MAID consumes the generic native theorem
 without an auxiliary evaluator or a flattened value type. -/
 theorem native_allFalse_prob_factorizes :
-    ((nativeBehavioralGameForm Nonrequisite.semantics).play policy).prob
-        allFalse =
+    (((nativeBehavioralGameForm Nonrequisite.semantics).play policy)
+        allFalse).toReal =
       factorProduct Nonrequisite.model.Value
         (effectiveParents Nonrequisite.model)
         (effectiveKernels Nonrequisite.semantics policy)

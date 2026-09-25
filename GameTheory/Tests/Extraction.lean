@@ -41,10 +41,10 @@ def ghostArena : ExecutionProtocol Unit where
     match state with
     | .begin =>
         match joint.1 () with
-        | some .goLeft => FinDist.pure .leftStop
-        | some .goRight => FinDist.pure .rightStop
-        | none => FinDist.pure .leftStop
-    | _ => FinDist.pure .leftStop
+        | some .goLeft => PMF.pure .leftStop
+        | some .goRight => PMF.pure .rightStop
+        | none => PMF.pure .leftStop
+    | _ => PMF.pure .leftStop
   progress := by
     rintro state hterm
     by_cases hactive : state = GhostSpot.begin ∨ state = GhostSpot.ghost

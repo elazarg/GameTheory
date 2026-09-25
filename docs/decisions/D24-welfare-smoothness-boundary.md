@@ -44,12 +44,8 @@ of costs seven and eight, plus the destroyed split equilibrium.
 | `Core.Welfare` | 46 nonblank lines; three public declarations; direct import only `Core.Utility` |
 | `Congestion.AffinePoA` | 140 nonblank lines; direct imports only `Congestion.Basic` and `Core.Welfare` |
 | hostile examples | 210 nonblank lines; all 17 pinned declarations plus a named generic-bound consumer |
-| focused public-root build | 1,744 jobs for `GameTheory.Core` and `GameTheory.Congestion` |
-| full project build | 3,395 jobs |
 | exact pinned accounting | foundational welfare row plus 4/4 smoothness, 8/8 affine PoA, and 17/17 examples reviewed |
 | robust follow-on | EXP-053 closes epsilon-CCE, exact CCE, and affine correlated bounds through canonical `FinDist` expected welfare |
-| source hazards | zero placeholders, custom axioms, raw updates, transports, `Fintype.ofFinite`, or forbidden imports |
-| axiom profile | `propext`, `Classical.choice`, and `Quot.sound` only |
 
 ## Kill condition
 
@@ -59,10 +55,6 @@ Protocol, a domain-specific premise in the generic theorem, or a sign
 convention that cannot state the cost result transparently.  Reject promotion
 if the public umbrellas do not expose the intended leaves or the concrete
 routing examples fail against the canonical profile/update API.
-
-No kill condition fired.  Integration audit removed one avoidable tactic
-import and required both promoted leaves to be reachable through their public
-roots before the decision froze.
 
 ## Result and consequences
 
@@ -77,12 +69,19 @@ the reader-facing Pigou and Braess witnesses.  The stable Core umbrella exports
 the generic welfare surface; the opt-in Congestion umbrella exports the affine
 theory without entering the main root.
 
-EXP-053 closes the robust follow-up gate.  `Core.Welfare` now defines expected
-social welfare of a canonical `FinDist` profile law and its sum-of-player-
+`Core.Welfare` defines expected social welfare and its sum-of-player-
 utilities characterization.  A theorem-only `Core.RobustWelfare` leaf imports
 both Welfare and Learning, rather than making the lower pure-welfare module
 depend on learning.  It proves epsilon and exact CCE bounds through the
-existing predicates, with no finite profile or outcome assumption.  The affine
+existing predicates, with no finite profile or outcome assumption. Under
+[D62](D62-general-pmf-restoration.md), these expectations require integration
+of the actual profile and deviation laws. The affine
 consumer converts expected negated welfare to expected social cost and closes
 the pinned correlated `5/2` theorem without per-strategy finiteness.  This does
 not justify the predecessor's generic ratio hierarchy.
+
+In the affine CCE theorem, the equilibrium comparisons supply each player's
+actual utility integration. Negation and the finite player sum then certify
+the social-cost expectation. Resource and strategy carriers remain arbitrary;
+the result requires no additional payoff bound or finite-support premise on
+the correlated law.
