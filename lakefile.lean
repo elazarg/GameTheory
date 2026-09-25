@@ -15,7 +15,7 @@ abbrev gameTheoryLeanOptions : Array LeanOption := #[
 ]
 
 package GameTheory where
-  version := v!"4.34.0"
+  version := v!"4.34.1"
   description :=
     "Formalized game theory: static forms, sequential execution protocols, \
     information models, mechanisms, and the standard equilibrium concepts."
@@ -27,7 +27,7 @@ package GameTheory where
   lintDriver := "batteries/runLinter"
   lintDriverArgs := #["GameTheory.LintAll"]
 
-require "leanprover-community" / "mathlib" @ git "v4.34.0"
+require "leanprover-community" / "mathlib" @ git "v4.34.1"
 
 /-- Brouwer's and Kakutani's fixed-point theorems, which Mathlib does not carry.
 Only the analytic root may import from it; the semantic core and the sequential
