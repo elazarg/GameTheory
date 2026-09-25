@@ -10,24 +10,28 @@ specifications by correctness theorems.
 
 ## Getting started
 
-The library tracks Mathlib and is currently on Lean `v4.34.0`. Set your
-`lean-toolchain` to `leanprover/lean4:v4.34.0` and add the tested GameTheory
-revision to your `lakefile.lean`:
+GameTheory follows Mathlib releases. The Lean toolchain it builds with is in
+[`lean-toolchain`](lean-toolchain), and the Mathlib revision is in
+[`lakefile.lean`](lakefile.lean). Use the same toolchain in your project, and
+match any Mathlib requirement you declare yourself to GameTheory's.
+
+Add the library to your `lakefile.lean`. Pin it to a release tag or a commit.
+Release tags are named after the Lean version they build with.
 
 ```lean
-require "elazarg" / "GameTheory" @ git
-  "a447ebc845c39a4de137036b77c5f58bba89eb37"
+require "elazarg" / "GameTheory" @ git "<tag-or-commit>"
 ```
 
-Align any direct Mathlib requirement with `v4.34.0`. The
-[4.34 bump lessons](docs/Lean434BumpLessons.md) give the dependency pins and
-client migration instructions. The tested revision above includes general PMF
-semantics and the updated fixed-point-theorems dependency.
+Then fetch the dependencies and the prebuilt Mathlib cache, and build:
 
 ```text
 lake update
+lake exe cache get
 lake build
 ```
+
+Lake also fetches the other dependencies, including the fixed-point theorem
+library used by `GameTheory.Analysis`.
 
 `import GameTheory` gives the static, sequential, epistemic, evolutionary, and
 executable foundations. Everything else is an explicit import, which keeps each
@@ -113,12 +117,12 @@ bounded payoffs are sufficient ways to discharge these requirements.
 
 Ordinary measures represent infinite policy products and arbitrary independent
 per-player policy laws, with exact finite-prefix behavioral correspondences.
-General measurable games and infinite-play outcome laws remain separate
-extensions; the latter currently live in focused experiments under
+General measurable games and infinite-play outcome laws are outside the core;
+focused experiments with infinite-play laws live under
 `GameTheory.Experimental`.
 
-Partial and queued theorem families are tracked in the
-[delivery ledger](docs/DeliveryLedger.md).
+The [delivery ledger](docs/DeliveryLedger.md) lists theorem families that are
+partial or planned.
 
 ## Development
 
