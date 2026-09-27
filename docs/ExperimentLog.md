@@ -8996,3 +8996,147 @@ memory.
   ) | ForEach-Object { "GameTheory.Experimental.PostArchitecture.$_" }
   lake build @pathClients
   ```
+
+### EXP-142: fuel-free well-founded randomized continuation
+
+- **Date / status:** 2026-09-27; complete.
+- **Question:** can randomized continuation optimality pass to assessment
+  limits without a fixed execution horizon or a uniform termination-tail
+  premise, when every legal play is well-founded?
+- **Hypothesis:** history-indexed well-founded recursion defines a terminal
+  PMF using the canonical step law. Well-founded induction and PMF bind
+  continuity give terminal-law convergence. Bounded terminal payoffs then
+  preserve comparisons against every whole-policy deviation.
+- **Competing designs:** well-founded recursion; limits of finite runners
+  with a uniform tail premise; a separate infinite-path stopping construction.
+  The latter two are unnecessary if the first supports the hostile slice.
+- **Representative slice:** randomized terminal law, pure specialization,
+  sufficient-horizon equality, terminal assessment contexts, and rationality
+  limits. Validate with well-founded play having unbounded finite durations,
+  infinite chance support, and a genuine strategic decision.
+- **Kill conditions:** a hidden uniform horizon, finite action/history carrier,
+  tail premise, duplicate pure terminal semantics, weakened deviation
+  quantifier, or unguarded undefined utility invalidates this design.
+- **Artifacts:** `Protocol.RandomizedBackward`, `HistoryBackward`,
+  `BehavioralTerminal`, and their terminal convergence/limit analytic leaves.
+- **Initial evidence:** `RandomizedBackward` builds warning-free (3,007 jobs).
+  Its terminal support, stopped-run equality, and terminal-only integration
+  support the extracted `HistoryBackward` pure specialization; the dependent
+  `SubgamePerfect` build passes warning-free (3,028 jobs). Existing pure
+  theorem statements retain their mathematical meaning.
+- **Terminal limit gate:** `BehavioralTerminalConvergence` and
+  `SequentialTerminalLimits` pass together (3,024 jobs). The theorem uses
+  convergence only at actual decision sites, terminal-only payoff bounds, and
+  approximate whole-policy inequalities with error tending to zero. Inactive
+  choices are forced, so unused raw information coordinates are irrelevant.
+  `WellFoundedTerminalGate` passes (3,011 jobs): a Boolean decision followed by
+  geometric countdown has a lexicographic well-founded rank and no uniform
+  horizon. Its raw information carrier is `ℝ`; only the initial decision is
+  an information site.
+- **Public integration:** `lake build GameTheory.LintAll` passes warning-free
+  (3,949 jobs; `ephemeral/sequential-terminal-public-build.log`), preserving
+  Zermelo, continuation, Kuhn, FOSG, and stochastic clients after the extraction.
+- **Constructed consumer:** `Analysis.Protocol.WellFoundedTerminalAssessmentTest`
+  defines the canonical fully mixed Bayes assessments and whole-policy repairs.
+  `WellFoundedTerminalEquilibriumTest` proves that the random countdown
+  preserves the Boolean choice's reward law, the incumbent value is exactly
+  `1 - trembleWeight n`, and every repaired alternative has value at most one.
+  The combined extraction theorem gives a terminal equilibrium for the
+  nonconstant payoff. `unbounded_terminal_sequential_equilibrium` pairs that
+  conclusion with failure of every uniform horizon. This supplies the
+  approximating optimality inputs rather than assuming them in the example.
+- **Finite regression:** `SequentialTerminalFiniteTest` transfers the existing
+  three-step equilibrium to terminal rationality, retaining failure of the
+  two-step predicate. The guarded sufficient-horizon equality needs no payoff
+  boundedness premise; terminal bounds are local to integration and limits.
+- **Integration corrections:** the first full build exposed a theorem-name
+  line-wrap parse error in the finite regression; the short qualified name
+  fixes it. The source audit also rejected analytic imports from the two
+  experimental consumer leaves. They now live under `Analysis.Protocol`,
+  following the existing fixture/analytic-test split. No audit threshold was
+  relaxed. The final full build passes with warnings treated as errors:
+  `lake build GameTheory GameTheory.Math GameTheory.LintAll` (4,223 jobs;
+  `ephemeral/sequential-terminal-full-build-final.log`).
+- **Outcome:** adopt the well-founded terminal design in D63. No mathematical
+  kill condition fired. Cyclic almost-sure termination remains a separate
+  construction, not an implicit consequence of well-founded play.
+
+### EXP-143: uniformly tight discrete assessment subsequences
+
+- **Date / status:** 2026-09-27; complete.
+- **Question:** can countably many strategy and belief coordinates admit a
+  common PMF subsequence without finite action or history spaces?
+- **Hypothesis:** uniform finite-set tightness prevents loss of total mass.
+  The countable union of the sequence's PMF supports permits diagonal
+  extraction on arbitrary ambient carriers. Countably many such coordinates
+  can share one subsequence.
+- **Competing designs:** finite simplices; discrete support restriction and
+  diagonal compactness; weak compactness of general probability measures.
+  Weak convergence alone does not preserve atomwise PMF convergence.
+- **Representative slice:** reusable PMF tightness/compactness, all-raw-info
+  assessment extraction, a countably indexed infinite-support positive
+  consumer, and point masses escaping on the naturals as a negative control.
+- **Kill conditions:** hidden finite carriers, assumed convergence, lost
+  normalization, or an unrestricted infinite-game existence conclusion.
+- **Artifacts:** `Math.Probability.Tightness`, `Compactness`,
+  `TightnessTest`, and `Analysis.Protocol.AssessmentCompactness`.
+- **Initial evidence:** `Math.Probability.TightnessTest` builds warning-free
+  (3,008 jobs), proving that escaping point masses tend to zero at every atom,
+  admit no pointwise-convergent subsequence with a PMF limit, and fail uniform
+  finite-set tightness.
+- **Compactness gate:** the final grouped build of `TightnessTest`,
+  `SequentialTerminalExistence`, and existing `SequentialExistence` passes
+  warning-free (3,705 jobs). The positive control uses countably many
+  coordinatewise oscillating infinite-support laws on `ℝ`, obtained from
+  Mathlib's geometric probability measure. The theorem derives normalization
+  of the extracted limit from tightness, without countable ambient carriers.
+  Finite compactness reuses this theorem with countably many coordinates and
+  finite local carriers.
+- **Assessment refinement:** the terminal existence criterion counts only
+  actual information sites. Its strategy extension at unused raw values uses
+  the first approximation's total policy. `IsDecisionInfo` names the existing
+  site condition once, also reused by finite perturbation scores. Fully mixed
+  Bayes approximants and approximate optimality remain explicit inputs; only
+  their convergence is derived by the theorem.
+- **Combined consumer:** the countdown equilibrium from EXP-142 uses the
+  criterion with its constructed fully mixed Bayes sequence and convergent
+  whole-policy repairs. Raw information values range over `ℝ`; only actual
+  decision sites need a countable carrier. All compared payoffs are integrable
+  by the terminal support theorem and terminal bound. Independent review
+  confirms that every whole-policy alternative remains quantified and no
+  optimality or convergence conclusion was smuggled into the example's inputs.
+- **Final validation for EXP-142/143:** the full 4,223-job build and `lake lint`
+  pass. `scripts/phase1-audit.ps1 -VerifyExpected`,
+  `scripts/phase2-audit.ps1 -VerifyExpected`, and
+  `scripts/phase3-audit.ps1 -VerifyExpected -DeepReachability` all pass. The new
+  deep probes reach all three terminal semantic declarations, reject both
+  analytic declarations from the terminal semantic leaf, reach tight
+  compactness and terminal existence from its analytic leaf, and reject
+  Kakutani there. No forbidden source pattern or line-length violation occurs.
+  Logs are `ephemeral/sequential-terminal-{full-build-final,lint-final,phase1,
+  phase2-final,phase3-deep}.log`.
+- **Trust review:** `lake env lean
+  ephemeral/sequential-terminal-public-audit.lean` reports no project-private
+  constants in authored public types; the same ten previously reviewed
+  compiler-generated equations/helpers are excluded by exact name. The six
+  audited endpoints (terminal support and convergence, tight compactness,
+  conditional terminal existence, finite regression, and the unbounded
+  countdown equilibrium) use only `propext`, `Classical.choice`, and
+  `Quot.sound`. The result is saved in
+  `ephemeral/sequential-terminal-public-audit-final.log`. All 377 relative
+  links in the edited documentation resolve, and `git diff --check` passes.
+- **Outcome:** adopt discrete uniform-tightness extraction in D63. Neither
+  finite ambient carriers nor convergence is assumed by the extraction result.
+  Perturbed approximate optima remain an explicit input to the general
+  terminal existence criterion, and are constructed for the countdown
+  consumer. No unrestricted infinite-game existence conclusion is drawn.
+
+  Reproduce both slices and their finite and mass-escape controls:
+
+  ```powershell
+  lake build GameTheory.Protocol.SubgamePerfect `
+    GameTheory.Math.Probability.TightnessTest `
+    GameTheory.Analysis.Protocol.SequentialTerminalExistence `
+    GameTheory.Analysis.Protocol.SequentialTerminalFiniteTest `
+    GameTheory.Analysis.Protocol.WellFoundedTerminalEquilibriumTest
+  ```

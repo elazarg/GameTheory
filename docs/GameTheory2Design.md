@@ -874,6 +874,22 @@ A separate counterexample refutes existence for arbitrary rolling fuel, while
 the same game satisfies the theorem at its sufficient horizon. The lightweight
 consistency definition does not acquire the fixed-point dependency.
 
+EXP-142/143 and [D63](decisions/D63-well-founded-sequential-limits.md) extend
+this path to well-founded terminal play with no uniform horizon.
+`RandomizedBackward` owns the history terminal law; pure history execution is
+its point-mass specialization. Terminal assessment contexts specialize the
+existing whole-policy rationality predicate, and coincide with sufficient-fuel
+contexts when a horizon certificate exists. Bounds only on terminal payoffs
+suffice for convergence and vanishing-error optimality limits.
+
+The terminal limit needs strategy convergence only at actual decision sites.
+Uniform finite-set tightness and countably many such sites supply a common
+strategy/belief subsequence without finite action or history carriers, or
+countable unused raw information values. The resulting existence criterion
+assumes fully mixed Bayes approximants and their approximate whole-policy
+optimality; it does not construct those inputs for arbitrary infinite games.
+Cyclic almost-sure termination requires a separate terminal-law construction.
+
 Information locality must hold by construction. A player's policy may receive
 its `InfoState`, recommendation, and a legal-menu value determined by that
 `InfoState`, but not the hidden execution state or a proof from which that state

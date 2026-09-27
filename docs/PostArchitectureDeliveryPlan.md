@@ -2,8 +2,8 @@
 
 Status: active successor-native queue.
 
-The original architecture gates passed. General discrete probability scope is
-reopened by EXP-122/D62; its migration remains gated. Delivery proceeds by
+The original architecture gates and general PMF restoration passed
+(EXP-122–141/D62). Delivery proceeds by
 dependency depth and compiled theorem evidence. The authoritative status index is
 [`DeliveryLedger.md`](DeliveryLedger.md); recognizable public workflows are in
 [`CapabilityMatrix.md`](CapabilityMatrix.md); discriminating examples are in
@@ -69,6 +69,14 @@ and communication-channel controls delimit this delivered surface. This does
 not reopen a universal adequacy hierarchy or imply CE/CCE transfer.
 
 ### A. Sequential refinements — finite existence and proper-subgame boundary resolved
+
+Fuel-free well-founded continuation (EXP-142) and uniform-tightness extraction
+of countably many actual assessment sites (EXP-143) are delivered by D63.
+Their composition retains all whole-policy deviations and fully mixed Bayes
+consistency. The countdown consumer constructs its approximately optimal
+perturbations and has no uniform horizon. Constructing such perturbations for
+other infinite games remains a separate existence obligation; compactness
+alone does not supply it. Cyclic almost-sure termination is outside this slice.
 
 Finite sequential-equilibrium existence is separately delivered by
 EXP-121/D61 through the explicit `Analysis.Protocol.EFGExistence` import.

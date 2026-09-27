@@ -18,6 +18,8 @@ choice and continuation as a context. `InformationOneShot` proves when local
 optimality implies whole-policy optimality. `Backward` constructs a terminal
 law by well-founded recursion, evaluates it under an integration certificate,
 and proves agreement with a runner whose horizon is sufficient for termination.
+`RandomizedBackward` retains complete histories and allows randomized choices;
+`HistoryBackward` specializes this terminal law to pure history-dependent play.
 `Zermelo` adds the finite-choice perfect-information optimization construction
 on that same history semantics, yielding a pure subgame-perfect profile without
 introducing a second evaluator.
@@ -35,8 +37,9 @@ coverage and regularity premises. Measurability remains operation-local.
 at reached decision sites and forms continuation contexts from whole replacement
 policies. `BehavioralBayes` normalizes the reach masses of information-history
 antichains without importing the project's analytic equilibrium layer.
-`SubgamePerfect` lifts well-founded backward value to complete histories and
-separates textbook subgame perfection over information-set-closed roots from
+`BehavioralTerminal` forms fuel-free continuation contexts for well-founded
+play, with integration required on each actual comparison law.
+`SubgamePerfect` separates textbook subgame perfection over information-set-closed roots from
 the stronger historywise continuation predicate.  The latter is equivalent to
 information-local one-shot optimality under the same no-revisit condition used
 by the behavioral/mixed representation theorem.
@@ -54,6 +57,8 @@ import GameTheory.Protocol.Randomized
 import GameTheory.Protocol.StateKernel
 import GameTheory.Protocol.ContinuationLaw
 import GameTheory.Protocol.Backward
+import GameTheory.Protocol.RandomizedBackward
+import GameTheory.Protocol.HistoryBackward
 import GameTheory.Protocol.Information
 import GameTheory.Protocol.SingleMover
 import GameTheory.Protocol.Predraw
@@ -65,4 +70,5 @@ import GameTheory.Protocol.Continuation
 import GameTheory.Protocol.BehavioralContinuation
 import GameTheory.Protocol.PolicyMeasure
 import GameTheory.Protocol.BehavioralAssessment
+import GameTheory.Protocol.BehavioralTerminal
 import GameTheory.Protocol.BehavioralMixture

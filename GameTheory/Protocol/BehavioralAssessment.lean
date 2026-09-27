@@ -35,14 +35,17 @@ invariant for beliefs is carried by this subtype. -/
 abbrev InformationHistory (i : ι) (info : M.InfoState i) :=
   { history : E.History // M.infoOf i history.trace = info }
 
+/-- An information-state value reached at a nonterminal genuine decision. -/
+def IsDecisionInfo (i : ι) (info : M.InfoState i) : Prop :=
+  ∃ history : M.InformationHistory i info,
+    ¬ E.terminal history.1.state ∧
+      ∃ action : E.Action i, some action ∈ M.menu i info
+
 /-- A reached information-state value at which the player has a genuine action.
 Models may contain unreachable values and observations at which the player is
 inactive; neither is an information set requiring an assessment belief. -/
 def InformationSite (i : ι) :=
-  { info : M.InfoState i //
-    ∃ history : M.InformationHistory i info,
-      ¬ E.terminal history.1.state ∧
-        ∃ action : E.Action i, some action ∈ M.menu i info }
+  { info : M.InfoState i // M.IsDecisionInfo i info }
 
 /-- Every history in this information fiber occurs at one trace depth. -/
 def InformationSite.CommonDepth {i : ι}

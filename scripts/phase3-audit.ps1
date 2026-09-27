@@ -382,6 +382,40 @@ if ($DeepReachability) {
   }
   Report 'SEQUENTIAL_BRIDGE_GEOMETRY_REJECTED' $sequentialGeometryRejected
 
+  # D63: terminal execution stays semantic; its tightness-based equilibrium
+  # criterion is an analytic leaf that needs no finite-game fixed point.
+  $terminalInputs = @(
+    'GameTheory.Protocol.ExecutionProtocol.randomizedBackwardLaw',
+    'GameTheory.Protocol.InformationModel.BehavioralAssessment.terminalContinuationContext',
+    'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsSequentiallyRationalTerminal')
+  $terminalExistence =
+    'GameTheory.Protocol.InformationModel.exists_sequentialEquilibriumTerminal_of_uniformlyTight'
+  $terminalOutput = Run-Probe 'GameTheory.Protocol.BehavioralTerminal' `
+    ($terminalInputs + @($terminalExistence, 'kakutani_fixed_point'))
+  $terminalInputsReached = 0
+  foreach ($constant in $terminalInputs) {
+    if (-not (Is-Unreachable $terminalOutput $constant)) { $terminalInputsReached++ }
+  }
+  Report 'TERMINAL_PROTOCOL_INPUTS_REACHED' $terminalInputsReached
+  $terminalAnalysisRejected = 0
+  foreach ($constant in @($terminalExistence, 'kakutani_fixed_point')) {
+    if (Is-Unreachable $terminalOutput $constant) { $terminalAnalysisRejected++ }
+  }
+  Report 'TERMINAL_PROTOCOL_ANALYSIS_REJECTED' $terminalAnalysisRejected
+  $tightInputs = @(
+    'GameTheory.Math.Probability.exists_subseq_pmfConvergesPointwise_pi_of_uniformlyTight',
+    $terminalExistence)
+  $tightOutput = Run-Probe 'GameTheory.Analysis.Protocol.SequentialTerminalExistence' `
+    ($tightInputs + @('kakutani_fixed_point'))
+  $tightInputsReached = 0
+  foreach ($constant in $tightInputs) {
+    if (-not (Is-Unreachable $tightOutput $constant)) { $tightInputsReached++ }
+  }
+  Report 'TIGHT_TERMINAL_INPUTS_REACHED' $tightInputsReached
+  $tightFixedPointRejected = 0
+  if (Is-Unreachable $tightOutput 'kakutani_fixed_point') { $tightFixedPointRejected++ }
+  Report 'TIGHT_TERMINAL_FIXED_POINT_REJECTED' $tightFixedPointRejected
+
   # The finite EFG syntax is a transparent Protocol specialization. It must
   # reach its semantic inputs but no equilibrium or analytic declaration.
   $efgSyntaxRejected = 0
@@ -633,6 +667,10 @@ if ($VerifyExpected) {
     $Expected['PROTOCOL_EVOLUTIONARY_PROBES_REJECTED'] = 2
     $Expected['SEQUENTIAL_BRIDGE_INPUTS_REACHED'] = 3
     $Expected['SEQUENTIAL_BRIDGE_GEOMETRY_REJECTED'] = 2
+    $Expected['TERMINAL_PROTOCOL_INPUTS_REACHED'] = 3
+    $Expected['TERMINAL_PROTOCOL_ANALYSIS_REJECTED'] = 2
+    $Expected['TIGHT_TERMINAL_INPUTS_REACHED'] = 2
+    $Expected['TIGHT_TERMINAL_FIXED_POINT_REJECTED'] = 1
     $Expected['EFG_SYNTAX_SOLUTION_PROBES_REJECTED'] = 3
     $Expected['EFG_SYNTAX_INPUT_PROBES_REACHED'] = 3
     $Expected['MAID_BASIC_BOUNDARY_PROBES_REJECTED'] = 2

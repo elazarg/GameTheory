@@ -120,9 +120,7 @@ theorem exists_uniformTremble_locallyOptimal_bayesAssessment
     ((assessment x).continuationContext site (payoff i) (fuel + 1)).value
       alternative (hintegrable x i site alternative)
   let score (x : Domain) (c : Coordinate) (choice : Action c) : ℝ :=
-    if hsite : ∃ history : M.InformationHistory c.1 c.2,
-        ¬ E.terminal history.1.state ∧ ∃ action : E.Action c.1,
-          some action ∈ M.menu c.1 c.2 then
+    if hsite : M.IsDecisionInfo c.1 c.2 then
       scoreValue x c.1 ⟨c.2, hsite⟩ ((profile x c.1).commit c.2 choice)
     else 0
   have hscore_site (x : Domain) (i : ι) (site : M.InformationSite i)
@@ -133,9 +131,7 @@ theorem exists_uniformTremble_locallyOptimal_bayesAssessment
     simp only [score, dite_eq_left hsite]
   have hscore (c : Coordinate) (choice : Action c) :
       Continuous fun x : Domain => score x c choice := by
-    by_cases hsite : ∃ history : M.InformationHistory c.1 c.2,
-        ¬ E.terminal history.1.state ∧ ∃ action : E.Action c.1,
-          some action ∈ M.menu c.1 c.2
+    by_cases hsite : M.IsDecisionInfo c.1 c.2
     · simp only [score, dite_eq_left hsite]
       apply M.continuous_continuationContext_value assessment hprofile c.1 ⟨c.2, hsite⟩
         (hbelief c.1 ⟨c.2, hsite⟩) (fun x => (profile x c.1).commit c.2 choice)

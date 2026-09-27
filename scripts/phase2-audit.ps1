@@ -204,6 +204,9 @@ $RepresentationModules = @(
   'GameTheory/Math/Probability/Continuity.lean',
   'GameTheory/Math/Probability/Simplex.lean',
   'GameTheory/Math/Probability/Compactness.lean',
+  # Finite-set tightness and its mass-escape control compare native atom weights.
+  'GameTheory/Math/Probability/Tightness.lean',
+  'GameTheory/Math/Probability/TightnessTest.lean',
   'GameTheory/Math/Probability/Bounds.lean',
   # Stopping margins are weighted by the actual event's real probability.
   'GameTheory/Math/Probability/SelectiveStopping.lean',

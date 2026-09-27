@@ -30,6 +30,7 @@ import GameTheory.Analysis.Protocol.AssessmentCompactness
 import GameTheory.Analysis.Protocol.BehavioralBayes
 import GameTheory.Analysis.Protocol.BehavioralContinuity
 import GameTheory.Analysis.Protocol.BehavioralConvergence
+import GameTheory.Analysis.Protocol.BehavioralTerminalConvergence
 import GameTheory.Analysis.Protocol.CounterfactualDecomposition
 import GameTheory.Analysis.Protocol.CounterfactualReach
 import GameTheory.Analysis.Protocol.CounterfactualRegret
@@ -43,6 +44,8 @@ import GameTheory.Analysis.Protocol.SequentialExistence
 import GameTheory.Analysis.Protocol.SequentialLimits
 import GameTheory.Analysis.Protocol.SequentialPerturbation
 import GameTheory.Analysis.Protocol.SequentialRationality
+import GameTheory.Analysis.Protocol.SequentialTerminalExistence
+import GameTheory.Analysis.Protocol.SequentialTerminalLimits
 import GameTheory.Analysis.Repeated
 import GameTheory.Analysis.Repeated.Examples
 import GameTheory.Analysis.Repeated.Feasible
@@ -200,6 +203,7 @@ import GameTheory.Math.Probability.SelectiveStopping
 import GameTheory.Math.Probability.SequentialSampling
 import GameTheory.Math.Probability.Simplex
 import GameTheory.Math.Probability.Support
+import GameTheory.Math.Probability.Tightness
 import GameTheory.Math.Probability.Uniform
 import GameTheory.Math.RegretAggregation
 import GameTheory.Math.SimplexApproximation
@@ -246,6 +250,7 @@ import GameTheory.Protocol.BehavioralAssessment
 import GameTheory.Protocol.BehavioralBayes
 import GameTheory.Protocol.BehavioralContinuation
 import GameTheory.Protocol.BehavioralMixture
+import GameTheory.Protocol.BehavioralTerminal
 import GameTheory.Protocol.Context
 import GameTheory.Protocol.Continuation
 import GameTheory.Protocol.ContinuationLaw
@@ -253,6 +258,7 @@ import GameTheory.Protocol.Execution
 import GameTheory.Protocol.Extraction
 import GameTheory.Protocol.FiniteHorizon
 import GameTheory.Protocol.History
+import GameTheory.Protocol.HistoryBackward
 import GameTheory.Protocol.HistoryChooserComposition
 import GameTheory.Protocol.HistoryEvents
 import GameTheory.Protocol.HistoryPathMass
@@ -262,6 +268,7 @@ import GameTheory.Protocol.PolicyMeasure
 import GameTheory.Protocol.PolicyRandomization
 import GameTheory.Protocol.Predraw
 import GameTheory.Protocol.Randomized
+import GameTheory.Protocol.RandomizedBackward
 import GameTheory.Protocol.SingleMover
 import GameTheory.Protocol.StateKernel
 import GameTheory.Protocol.Strategic
