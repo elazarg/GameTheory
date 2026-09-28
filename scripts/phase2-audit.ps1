@@ -222,6 +222,9 @@ $RepresentationModules = @(
   'GameTheory/Analysis/Approachability.lean',
   # Fink's finite fixed-point map uses real action-simplex coordinates.
   'GameTheory/Analysis/Stochastic/Fink.lean',
+  # Incentive differences are the real vectors of two laws' atom-mass differences.
+  'GameTheory/Analysis/IncentiveCone.lean',
+  'GameTheory/Analysis/IncentiveConeTest.lean',
   # Finite trembling-hand repairs normalize and compare local PMF mass coordinates.
   'GameTheory/Analysis/TremblingHand.lean',
   # Coordination-game separation compares exact Boolean tremble masses.

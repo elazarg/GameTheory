@@ -21,6 +21,7 @@ import GameTheory.Analysis.ExpectedUtility
 import GameTheory.Analysis.FictitiousPlayPotential
 import GameTheory.Analysis.Learning
 import GameTheory.Analysis.LocalChoiceFixedPoint
+import GameTheory.Analysis.IncentiveCone
 import GameTheory.Analysis.MatrixValue
 import GameTheory.Analysis.Minimax
 import GameTheory.Analysis.Nash
@@ -39,6 +40,7 @@ import GameTheory.Analysis.Protocol.CounterfactualRootRegret
 import GameTheory.Analysis.Protocol.EFG
 import GameTheory.Analysis.Protocol.EFGExistence
 import GameTheory.Analysis.Protocol.Examples
+import GameTheory.Analysis.Protocol.Incentives
 import GameTheory.Analysis.Protocol.Sequential
 import GameTheory.Analysis.Protocol.SequentialExistence
 import GameTheory.Analysis.Protocol.SequentialLimits

@@ -10,6 +10,7 @@ lightweight `GameTheory` umbrella.
 import GameTheory.Analysis.Approachability
 import GameTheory.Analysis.Correlated
 import GameTheory.Analysis.FictitiousPlayPotential
+import GameTheory.Analysis.IncentiveCone
 import GameTheory.Analysis.Learning
 import GameTheory.Analysis.MatrixValue
 import GameTheory.Analysis.Protocol
