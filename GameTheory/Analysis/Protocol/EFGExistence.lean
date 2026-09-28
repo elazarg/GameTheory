@@ -3,7 +3,8 @@
 
 This explicit analytic import adds existence to the lightweight EFG
 assessment interface. Finite tree-shaped execution supplies finite histories;
-perfect recall and inhabited total policies supply the strategic hypotheses.
+decision recall (implied by perfect recall) and inhabited total policies supply
+the strategic hypotheses.
 -/
 
 import GameTheory.Analysis.Protocol.EFG
@@ -24,16 +25,16 @@ variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
     [∀ i, Fintype (G.information.InfoState i)]
     [∀ i, DecidableEq (G.information.InfoState i)]
 
-/-- Finite perfect-recall EFGs have a sequential equilibrium at every positive
+/-- Finite decision-recall EFGs have a sequential equilibrium at every positive
 certified terminal horizon. The conclusion is the existing EFG predicate. -/
 theorem exists_isSequentialEquilibriumWithin
-    (hrecall : G.information.PerfectRecall)
+    (hrecall : G.information.DecisionRecall)
     (fallback : (i : ι) → G.information.Policy i)
     (payoff : ι → G.History → ℝ) (bound : ℕ) (hpositive : 0 < bound)
     (hbound : G.execution.BoundedHorizon bound) :
     ∃ assessment : G.information.BehavioralAssessment,
       G.IsSequentialEquilibriumWithin
-        (G.information.decisionInformationAntichain_of_perfectRecall hrecall)
+        (hrecall.decisionInformationAntichain)
         assessment payoff bound := by
   let : Fintype G.History := G.historyFintype
   obtain ⟨fuel, rfl⟩ := Nat.exists_eq_succ_of_ne_zero (Nat.ne_of_gt hpositive)
@@ -41,13 +42,13 @@ theorem exists_isSequentialEquilibriumWithin
 
 /-- The finite tree supplies a sufficient horizon automatically. -/
 theorem exists_isSequentialEquilibrium
-    (hrecall : G.information.PerfectRecall)
+    (hrecall : G.information.DecisionRecall)
     (fallback : (i : ι) → G.information.Policy i)
     (payoff : ι → G.History → ℝ) :
     ∃ (bound : ℕ) (assessment : G.information.BehavioralAssessment),
       0 < bound ∧ G.execution.BoundedHorizon bound ∧
         G.IsSequentialEquilibriumWithin
-          (G.information.decisionInformationAntichain_of_perfectRecall hrecall)
+          (hrecall.decisionInformationAntichain)
           assessment payoff bound := by
   let : Fintype G.History := G.historyFintype
   obtain ⟨bound, hpositive, hbound⟩ := G.execution.exists_pos_boundedHorizon

@@ -622,12 +622,12 @@ theorem rootGain_eq_ownReach_mul_counterfactualRegret
           Profile.update_eq_self]
       · simp only [localGain, dite_eq_right hreach, mul_zero]
 
-/-- Perfect recall supplies the common own-reach coefficient in the
+/-- Decision recall supplies the common own-reach coefficient in the
 single-site root decomposition. The coefficient is read at the decision
 history already carried by `InformationSite`. -/
-theorem rootGain_eq_representativeReach_mul_counterfactualRegret_of_perfectRecall
+theorem rootGain_eq_representativeReach_mul_counterfactualRegret_of_decisionRecall
     [Fintype ι] [DecidableEq ι]
-    (hrecall : M.PerfectRecall)
+    (hrecall : M.DecisionRecall)
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (who : ι) (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
@@ -657,14 +657,13 @@ theorem rootGain_eq_representativeReach_mul_counterfactualRegret_of_perfectRecal
     alternative depth fuel hdepth hagree _ _ payoff hupdated hbaseline
       halternative hincumbent
   intro history
-  exact M.playerReachProbability_eq_of_perfectRecall hrecall strategy who
-    history.1.trace site.2.choose.1.trace
-      (history.2.trans site.2.choose.2.symm)
+  exact M.playerReachProbability_eq_of_decisionRecall hrecall strategy who site
+    history site.2.choose
 
-/-- Pure-action specialization of the perfect-recall root bridge. -/
-theorem rootGain_eq_representativeReach_mul_counterfactualActionRegret_of_perfectRecall
+/-- Pure-action specialization of the decision-recall root bridge. -/
+theorem rootGain_eq_representativeReach_mul_counterfactualActionRegret_of_decisionRecall
     [Fintype ι] [DecidableEq ι]
-    (hrecall : M.PerfectRecall)
+    (hrecall : M.DecisionRecall)
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
@@ -691,7 +690,7 @@ theorem rootGain_eq_representativeReach_mul_counterfactualActionRegret_of_perfec
         M.playerReachProbability strategy who site.2.choose.1.trace *
           M.counterfactualActionRegret strategy who site payoff fuel choice
             haction hincumbent := by
-  exact M.rootGain_eq_representativeReach_mul_counterfactualRegret_of_perfectRecall
+  exact M.rootGain_eq_representativeReach_mul_counterfactualRegret_of_decisionRecall
     hrecall strategy who site ((strategy who).commit site.1 choice)
       depth fuel hdepth (fun hne =>
         BehavioralPolicy.commit_of_ne (strategy who) site.1 choice hne)

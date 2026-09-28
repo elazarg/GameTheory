@@ -9185,3 +9185,49 @@ memory.
   the named Protocol-to-epistemic connection anticipated by D16; the state
   partition remains refuted. Posterior and agreement bridges would need a
   history law and are not claimed.
+
+### EXP-145: decision recall for finite sequential-equilibrium existence
+
+- **Date / status:** 2026-09-28; complete.
+- **Question:** does finite sequential-equilibrium existence need perfect
+  recall, or only recall at genuine decision information sets?
+- **Hypothesis:** the existence proof uses recall only to show that a decision
+  information state is never revisited after acting, that own reach is
+  constant on a decision fiber, that decision fibers are history antichains,
+  and that the player's record at a decision is its actual own play. All four
+  follow from decision recall: histories in each decision fiber carry the same
+  own-play record. Observations at which a player cannot act may merge
+  histories with different own play. Splicing a continuation reads the record
+  only where the player acts; inactive laws are forced.
+- **Competing designs:** keep perfect recall; decision recall; the weaker
+  no-revisit condition alone. The last cannot identify own reach on a fiber.
+- **Representative slice:** the finite existence theorem and its whole-policy
+  one-shot principle, plus a protocol with decision recall but not perfect
+  recall, where the new theorem applies and the old one does not.
+- **Kill conditions:** a step that needs the record at a non-decision
+  information state; an added premise elsewhere; or a changed sequential
+  equilibrium predicate.
+- **Artifacts:** `Protocol.DecisionRecall`; the generalized
+  `SequentialRationality`, `CounterfactualReach`, `CounterfactualRegret`,
+  `CounterfactualDecomposition`, `SequentialExistence`, and `EFGExistence`;
+  `Analysis.Protocol.DecisionRecallExistenceTest`.
+- **Observations:** every perfect-recall step was a decision-site step.
+  Non-recurrence after acting, the decision-fiber antichain, and distinct
+  own-action records follow by comparing own-play lengths at the acting
+  history. Common own reach is read on one decision fiber. The only use of the
+  record at an arbitrary history was splicing a continuation; splitting on
+  whether the player is active leaves the active case to decision recall and
+  the inactive case to the forced local law. No premise was added and the
+  sequential-equilibrium predicate is unchanged. The `_of_perfectRecall`
+  counterfactual corollaries are renamed `_of_decisionRecall`; perfect-recall
+  callers pass `decisionRecall_of_perfectRecall`, and all existing existence,
+  boundary, and root-bridge fixtures build unchanged in content.
+- **Hostile consumer:** the one-vote protocol observes only whether play has
+  stopped. `singleModel_not_perfectRecall` shows it forgets its vote;
+  `single_decisionRecall` shows recall holds at its only decision; and
+  `exists_sequentialEquilibrium` applies the generalized theorem to it.
+- **Validation:** the full build of `GameTheory`, `GameTheory.Math`, and
+  `GameTheory.LintAll` (4,241 jobs), `lake lint`, and the phase 1, phase 2,
+  and deep phase 3 audits pass.
+- **Outcome:** no kill condition fired. D61 now states existence under
+  decision recall. Finite carriers are unchanged; relaxing them is separate.

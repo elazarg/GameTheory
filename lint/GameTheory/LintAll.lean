@@ -255,6 +255,7 @@ import GameTheory.Protocol.BehavioralContinuation
 import GameTheory.Protocol.BehavioralMixture
 import GameTheory.Protocol.BehavioralTerminal
 import GameTheory.Protocol.Context
+import GameTheory.Protocol.DecisionRecall
 import GameTheory.Protocol.Continuation
 import GameTheory.Protocol.ContinuationLaw
 import GameTheory.Protocol.Execution

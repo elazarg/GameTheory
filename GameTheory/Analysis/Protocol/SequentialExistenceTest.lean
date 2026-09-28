@@ -321,7 +321,8 @@ depths. All structural hypotheses are discharged by this concrete fixture. -/
 theorem exists_sequential_equilibrium :
     ∃ assessment : information.BehavioralAssessment,
       game.IsSequentialEquilibriumWithin antichain assessment payoff 3 :=
-  game.exists_isSequentialEquilibriumWithin perfectRecall fallback payoff 3
+  game.exists_isSequentialEquilibriumWithin (information.decisionRecall_of_perfectRecall
+    perfectRecall) fallback payoff 3
     (by decide) bounded_three
 
 /-- The truncation counterexample has an equilibrium at its certified full
@@ -333,7 +334,8 @@ theorem boundary_exists_at_full_horizon :
         SequentialExistenceBoundary.antichain assessment
         SequentialExistenceBoundary.payoff 3 :=
   SequentialExistenceBoundary.game.exists_isSequentialEquilibriumWithin
-    SequentialExistenceBoundary.perfectRecall
+    (SequentialExistenceBoundary.information.decisionRecall_of_perfectRecall
+      SequentialExistenceBoundary.perfectRecall)
     (fun _ => SequentialExistenceBoundary.forcedChoice)
     SequentialExistenceBoundary.payoff 3 (by decide)
     SequentialExistenceBoundary.bounded_three

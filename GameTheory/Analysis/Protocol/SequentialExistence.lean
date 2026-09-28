@@ -1,9 +1,10 @@
 /-
-# Existence of finite perfect-recall sequential equilibria
+# Existence of finite sequential equilibria under decision recall
 
 Positive uniform perturbations have locally optimal Bayes assessments.
-Perfect recall upgrades those exact local inequalities to whole-policy
-inequalities. Compactness supplies one joint strategy/belief limit, and
+Recall at decision information states upgrades those exact local inequalities
+to whole-policy inequalities; observations made while a player cannot act may
+forget its own play. Compactness supplies one joint strategy/belief limit, and
 vanishingly perturbed deviations recover unrestricted sequential rationality.
 
 The conclusion uses the existing assessment predicates and continuation
@@ -27,20 +28,20 @@ variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
     {E : ExecutionProtocol.{uι, us, ua} ι}
     (M : InformationModel.{uι, us, ua, up, uq, uk} E)
 
-/-- Every finite perfect-recall protocol with inhabited total policies has a
+/-- Every finite decision-recall protocol with inhabited total policies has a
 consistent, sequentially rational assessment at any positive certified
 terminal horizon. The fallback inhabits menus even at unused information
 states; no equilibrium or approximation witness is assumed. -/
 theorem exists_sequentialEquilibriumWithin
     [Fintype E.State] [Fintype E.History] [∀ i, Fintype (E.Action i)]
     [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)]
-    (hrecall : M.PerfectRecall) (fallback : (i : ι) → M.Policy i)
+    (hrecall : M.DecisionRecall) (fallback : (i : ι) → M.Policy i)
     (payoff : ι → E.History → ℝ) (fuel : ℕ)
     (hbound : E.BoundedHorizon (fuel + 1)) :
     ∃ assessment : M.BehavioralAssessment,
       assessment.IsSequentiallyRationalWithin payoff (fuel + 1) ∧
         assessment.IsSequentiallyConsistent
-          (M.decisionInformationAntichain_of_perfectRecall hrecall) := by
+          (hrecall.decisionInformationAntichain) := by
   classical
   let (i : ι) (info : M.InfoState i) : Fintype (M.Choice i info) := inferInstance
   let (i : ι) (info : M.InfoState i) : Nonempty (M.Choice i info) := ⟨fallback i info⟩
@@ -62,8 +63,8 @@ theorem exists_sequentialEquilibriumWithin
     ring
   choose sequence hfull hbayes hfeasible hlocal using fun n =>
     M.exists_uniformTremble_locallyOptimal_bayesAssessment
-      (M.actsOnceWhereItMatters_of_perfectRecall hrecall)
-      (M.decisionInformationAntichain_of_perfectRecall hrecall)
+      hrecall.actsOnceWhereItMatters
+      (hrecall.decisionInformationAntichain)
       (weight n) (hpositive n) (hone n) payoff fuel
   obtain ⟨assessment, subseq, hsubseq, hstrategy, hconvergence⟩ :=
     M.exists_subseq_behavioralAssessmentConvergesPointwise sequence
@@ -99,7 +100,7 @@ theorem exists_sequentialEquilibriumWithin
     intro info
     exact ⟨alternative info, rfl⟩
   · exact hconvergence.isSequentiallyConsistent
-      (M.decisionInformationAntichain_of_perfectRecall hrecall)
+      (hrecall.decisionInformationAntichain)
       (fun n => hfull (subseq n)) (fun n => hbayes (subseq n))
 
 end GameTheory.Protocol.InformationModel

@@ -34,6 +34,8 @@ same measure realizes every bounded behavioral run, including unilateral
 replacements and guarded summable discounted consequences. Forward realization
 needs no finite site cover; reverse and hybrid results retain their stated
 coverage and regularity premises. Measurability remains operation-local.
+`DecisionRecall` asks recall only where a player can act, which suffices
+wherever recall is used at decisions.
 `BehavioralAssessment` pairs local randomization with history-supported beliefs
 at reached decision sites and forms continuation contexts from whole replacement
 policies. `BehavioralBayes` normalizes the reach masses of information-history
@@ -72,5 +74,6 @@ import GameTheory.Protocol.Continuation
 import GameTheory.Protocol.BehavioralContinuation
 import GameTheory.Protocol.PolicyMeasure
 import GameTheory.Protocol.BehavioralAssessment
+import GameTheory.Protocol.DecisionRecall
 import GameTheory.Protocol.BehavioralTerminal
 import GameTheory.Protocol.BehavioralMixture

@@ -12,6 +12,7 @@ this module.
 -/
 
 import GameTheory.Protocol.BehavioralAssessment
+import GameTheory.Protocol.DecisionRecall
 import GameTheory.Protocol.HistoryPathMass
 import GameTheory.Math.Probability.Support
 
@@ -500,19 +501,18 @@ theorem playerReachProbability_eq_ownPlayReachProbability
           rw [hstep]
           exact mul_comm _ _
 
-/-- Perfect recall discharges the common-own-reach premise used by the
-counterfactual/Bayes normalization theorem. -/
-theorem playerReachProbability_eq_of_perfectRecall
-    (hrecall : M.PerfectRecall)
+/-- Decision recall discharges the common-own-reach premise used by the
+counterfactual/Bayes normalization theorem: histories in one decision fiber
+share their own-play record, hence their own reach. -/
+theorem playerReachProbability_eq_of_decisionRecall
+    (hrecall : M.DecisionRecall)
     (strategy : (player : ι) → M.BehavioralPolicy player) (who : ι)
-    {firstState secondState : E.State}
-    (first : E.Trace firstState) (second : E.Trace secondState)
-    (hinfo : M.infoOf who first = M.infoOf who second) :
-    M.playerReachProbability strategy who first =
-      M.playerReachProbability strategy who second := by
+    (site : M.InformationSite who) (first second : M.InformationHistory who site.1) :
+    M.playerReachProbability strategy who first.1.trace =
+      M.playerReachProbability strategy who second.1.trace := by
   rw [playerReachProbability_eq_ownPlayReachProbability M,
     playerReachProbability_eq_ownPlayReachProbability M,
-    hrecall who first second hinfo]
+    hrecall who site first second]
 
 /-- Counterfactual reach is nonnegative because every recursive factor is a
 finite product of distribution masses. -/

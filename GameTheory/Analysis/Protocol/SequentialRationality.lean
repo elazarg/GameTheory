@@ -413,7 +413,7 @@ private theorem supported_one_step_eq_extend_early
 
 theorem continuation_withLaw_eq_step_expect
     [Fintype ι] [DecidableEq ι]
-    (hrecall : M.PerfectRecall)
+    (hrecall : M.DecisionRecall)
     (baseline : (i : ι) → M.BehavioralPolicy i)
     (who : ι) [DecidableEq (M.InfoState who)]
     (alternative : M.BehavioralPolicy who)
@@ -471,7 +471,7 @@ theorem continuation_withLaw_eq_step_expect
     · subst player
       simp only [changed, Profile.update_same]
       exact BehavioralPolicy.withLaw_of_ne _ _ _
-        (M.infoOf_ne_of_perfectRecall_after_step hrecall who draw.2 realized hactive hreach)
+        (hrecall.infoOf_ne_after_step who draw.2 realized hactive hreach)
     · simp [changed, Profile.update_of_ne _ _ hplayer]
   have hone : M.runBehavioralFrom changed 1 history =
       M.runBehavioralFrom other 1 history := by
@@ -519,11 +519,11 @@ theorem playerReachProbability_nonneg
       exact mul_nonneg ih ENNReal.toReal_nonneg
 
 /-- Whole-policy root optimality follows from counterfactual optimality of
-every local replacement. Perfect recall makes the alternative own reach a
+every local replacement. Decision recall makes the alternative own reach a
 common nonnegative factor on each information fiber. -/
 theorem behavioralRootGain_nonpos_of_counterfactualLocalGain_nonpos
     [Fintype ι] [DecidableEq ι] [Fintype E.History]
-    (hrecall : M.PerfectRecall)
+    (hrecall : M.DecisionRecall)
     (baseline : (i : ι) → M.BehavioralPolicy i)
     (who : ι) [Fintype (M.InfoState who)] [DecidableEq (M.InfoState who)]
     (alternative : M.BehavioralPolicy who)
@@ -622,9 +622,8 @@ theorem behavioralRootGain_nonpos_of_counterfactualLocalGain_nonpos
           (M.historyReachWeight changed history.1).toReal =
             reach * M.counterfactualReachProbability baseline who history.1.trace := by
         rw [M.historyReachProbability_eq_player_mul_counterfactual changed who history.1.trace,
-          M.playerReachProbability_eq_of_perfectRecall hrecall changed who
-            history.1.trace site.2.choose.1.trace
-              (history.2.trans site.2.choose.2.symm)]
+          M.playerReachProbability_eq_of_decisionRecall hrecall changed who site
+            history site.2.choose]
         congr 1
         exact M.counterfactualReachProbability_eq_of_eq_off
           (fun other hother => Profile.update_of_ne _ _ hother) history.1.trace
@@ -671,8 +670,8 @@ theorem behavioralRootGain_nonpos_of_counterfactualLocalGain_nonpos
   exact Finset.sum_nonpos fun info _ => hnonpos info
 
 /-- Use an alternative policy at a selected information state and after that
-decision. Perfect recall identifies the remembered decision history with the
-actual one at every reached information state. -/
+decision. Decision recall identifies the remembered decision history with the
+actual one wherever the player can act; elsewhere its law is forced. -/
 def BehavioralPolicy.spliceAfter {who : ι}
     (baseline alternative : M.BehavioralPolicy who) (info : M.InfoState who) :
     M.BehavioralPolicy who := by
@@ -682,21 +681,22 @@ def BehavioralPolicy.spliceAfter {who : ι}
       alternative later else baseline later
 
 theorem BehavioralPolicy.spliceAfter_at_history
-    (hrecall : M.PerfectRecall) {who : ι}
+    (hrecall : M.DecisionRecall) {who : ι}
     [DecidableEq (M.InfoState who)]
     (baseline alternative : M.BehavioralPolicy who) (info : M.InfoState who)
-    (history : E.History) :
+    (history : E.History) (hterm : ¬ E.terminal history.state)
+    (hactive : E.active history.state who) :
     baseline.spliceAfter M alternative info (M.infoOf who history.trace) =
       if M.infoOf who history.trace = info ∨ info ∈ M.actedAt who history.trace then
         alternative (M.infoOf who history.trace) else baseline (M.infoOf who history.trace) := by
   classical
-  simp only [spliceAfter, M.recordAt_eq_ownPlay hrecall who history,
+  simp only [spliceAfter, hrecall.recordAt_eq_ownPlay_of_active who history hterm hactive,
     ← M.actedAt_eq_map_ownPlay]
 
 /-- The current decision is absent from the player's past decisions under
-perfect recall. Nonterminality ensures that a genuine action can be taken. -/
-theorem infoOf_not_mem_actedAt_of_perfectRecall
-    [Fintype ι] (hrecall : M.PerfectRecall)
+decision recall. Nonterminality ensures that a genuine action can be taken. -/
+theorem infoOf_not_mem_actedAt_of_decisionRecall
+    [Fintype ι] (hrecall : M.DecisionRecall)
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (who : ι) (history : E.History)
     (hterm : ¬ E.terminal history.state) (hactive : E.active history.state who) :
@@ -705,7 +705,7 @@ theorem infoOf_not_mem_actedAt_of_perfectRecall
   obtain ⟨next, realized⟩ := (E.step history.state draw).support_nonempty
   obtain ⟨action, haction⟩ :=
     (E.legalOption_of_legal draw.2 who).exists_eq_some_of_active (draw.1 who) hactive
-  have hnodup := InfoSignals.PerfectRecall.actsOnceAtEachInfoState M.toInfoSignals hrecall who
+  have hnodup := hrecall.actsOnceAtEachInfoState who
     (history.extend draw.2 realized).trace
   simp only [ExecutionProtocol.History.extend, InfoSignals.actedAt, haction,
     List.nodup_cons] at hnodup
@@ -731,7 +731,7 @@ private theorem supported_one_step_eq_extend
 indistinguishable from the entire alternative continuation policy. -/
 theorem runBehavioralFrom_spliceAfter_eq
     [Fintype ι] [DecidableEq ι]
-    (hrecall : M.PerfectRecall)
+    (hrecall : M.DecisionRecall)
     (baseline : (i : ι) → M.BehavioralPolicy i)
     (who : ι) (site : M.InformationSite who)
     (alternative : M.BehavioralPolicy who)
@@ -744,10 +744,14 @@ theorem runBehavioralFrom_spliceAfter_eq
           fuel history.1 := by
   classical
   apply M.runBehavioralFrom_congr
-  intro later hreach _ player
+  intro later hreach hlater player
   by_cases hplayer : player = who
   · subst player
-    simp only [Profile.update_same, BehavioralPolicy.spliceAfter_at_history M hrecall]
+    simp only [Profile.update_same]
+    by_cases hactive : E.active later.state who
+    swap
+    · exact M.behavioral_eq_of_not_active _ _ later.trace hactive
+    rw [BehavioralPolicy.spliceAfter_at_history M hrecall _ _ _ later hlater hactive]
     apply ite_eq_left
     cases hreach with
     | refl => exact Or.inl history.2
@@ -765,7 +769,7 @@ reach-weighted sum of gains on its entire fiber, even if its histories occur
 at different trace depths. -/
 theorem rootGain_spliceAfter_eq_sum_informationGain
     [Fintype ι] [DecidableEq ι] [Fintype E.History]
-    (hrecall : M.PerfectRecall)
+    (hrecall : M.DecisionRecall)
     (baseline : (i : ι) → M.BehavioralPolicy i)
     (who : ι) [DecidableEq (M.InfoState who)] (site : M.InformationSite who)
     (alternative : M.BehavioralPolicy who)
@@ -814,7 +818,7 @@ theorem rootGain_spliceAfter_eq_sum_informationGain
     by_cases hpast : site.1 ∈ M.actedAt who history.trace
     · have hinfo : M.infoOf who history.trace ≠ site.1 := by
         intro heq
-        have hnot := M.infoOf_not_mem_actedAt_of_perfectRecall hrecall baseline who
+        have hnot := M.infoOf_not_mem_actedAt_of_decisionRecall hrecall baseline who
           history hterm (InformationSite.active M site ⟨history, heq⟩)
         rw [heq] at hnot
         exact hnot hpast
@@ -854,8 +858,12 @@ theorem rootGain_spliceAfter_eq_sum_informationGain
             intro player
             by_cases hplayer : player = who
             · subst player
-              simp [changed, Profile.update_same,
-                BehavioralPolicy.spliceAfter_at_history M hrecall, hinfo, hpast]
+              by_cases hactive : E.active history.state who
+              · simp [changed, Profile.update_same,
+                  BehavioralPolicy.spliceAfter_at_history M hrecall _ _ _ history hterm hactive,
+                  hinfo, hpast]
+              · simp only [changed, Profile.update_same]
+                exact M.behavioral_eq_of_not_active _ _ history.trace hactive
             · simp [changed, Profile.update_of_ne _ _ hplayer]
           rw [hjoint]
           rfl
@@ -1160,11 +1168,11 @@ assumption is imposed. -/
 theorem BehavioralAssessment.continuation_value_le_of_locallyOptimal
     [Fintype ι] [DecidableEq ι] [Fintype E.History]
     [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)]
-    (hrecall : M.PerfectRecall)
+    (hrecall : M.DecisionRecall)
     (assessment : M.BehavioralAssessment)
     (hfull : assessment.IsFullyMixed)
     (hbayes : BehavioralAssessment.IsBayesConsistent M assessment
-      (M.decisionInformationAntichain_of_perfectRecall hrecall))
+      (hrecall.decisionInformationAntichain))
     (Allowed : (i : ι) → (info : M.InfoState i) → PMF (M.Choice i info) → Prop)
     (hfeasible : ∀ i info, Allowed i info (assessment.strategy i info))
     (payoff : ι → E.History → ℝ) {bound : ℕ}
@@ -1195,7 +1203,7 @@ theorem BehavioralAssessment.continuation_value_le_of_locallyOptimal
         (fun _ _ => payoffIntegrable_of_finite _ _)
         (fun _ _ => payoffIntegrable_of_finite _ _) ≤ 0 := by
     have hmass := M.informationMass_pos_of_fullSupport assessment.strategy hfull who later
-    have hantichain := M.decisionInformationAntichain_of_perfectRecall hrecall who later
+    have hantichain := hrecall.decisionInformationAntichain who later
     have hle := hlocal who later (spliced later.1) (hspliced later.1)
     have hguardAlt : (assessment.continuationContext later (payoff who) bound).IntegrableAt
         ((assessment.strategy who).withLaw later.1 (spliced later.1)) :=
@@ -1211,7 +1219,7 @@ theorem BehavioralAssessment.continuation_value_le_of_locallyOptimal
         bound hguardBase] at hle
     apply le_of_not_gt
     intro hpositive
-    have hgain := (M.counterfactualRegret_pos_iff_bayesGain_pos_of_perfectRecall hrecall
+    have hgain := (M.counterfactualRegret_pos_iff_bayesGain_pos_of_decisionRecall hrecall
       assessment.strategy who later hantichain hmass
       ((assessment.strategy who).withLaw later.1 (spliced later.1)) (payoff who) bound
       (fun _ _ => payoffIntegrable_of_finite _ _)
@@ -1223,7 +1231,7 @@ theorem BehavioralAssessment.continuation_value_le_of_locallyOptimal
     who site alternative (payoff who) hbound
   have hmass := M.informationMass_pos_of_fullSupport assessment.strategy hfull who site
   have hnormalized := assessment.informationMass_mul_continuationGain_eq_sum M who site
-    (M.decisionInformationAntichain_of_perfectRecall hrecall who site)
+    (hrecall.decisionInformationAntichain who site)
     hmass (hbayes who site hmass) alternative (payoff who) bound
     (fun _ => payoffIntegrable_of_finite _ _)
     (fun _ => payoffIntegrable_of_finite _ _)
@@ -1240,7 +1248,7 @@ theorem BehavioralAssessment.continuation_value_le_of_locallyOptimal
     ENNReal.toReal_pos (ne_of_gt hmass) (ne_of_lt
       (lt_of_le_of_lt
         (M.informationMass_le_one assessment.strategy who site
-          (M.decisionInformationAntichain_of_perfectRecall hrecall who site))
+          (hrecall.decisionInformationAntichain who site))
         ENNReal.one_lt_top))
   apply le_of_not_gt
   intro hpositive

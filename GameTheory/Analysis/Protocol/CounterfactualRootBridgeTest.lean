@@ -70,8 +70,9 @@ theorem firstCommit_perfectRecallRootBridge :
   simpa [rootValue, guardedActionRegret,
     show incumbentBehavioralStrategy () = incumbentBehavioralPolicy by rfl]
     using
-    rootGain_eq_representativeReach_mul_counterfactualActionRegret_of_perfectRecall
-      information information_perfectRecall incumbentBehavioralStrategy ()
+    rootGain_eq_representativeReach_mul_counterfactualActionRegret_of_decisionRecall
+      information (information.decisionRecall_of_perfectRecall information_perfectRecall)
+      incumbentBehavioralStrategy ()
       firstSite (firstChoice true) 1 2 firstSite_commonDepth terminalPayoff
       (terminalPayoff_integrable _) (terminalPayoff_integrable _)
       (counterfactualIntegrable incumbentBehavioralStrategy firstSite

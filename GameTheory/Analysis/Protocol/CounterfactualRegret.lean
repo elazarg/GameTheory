@@ -551,7 +551,7 @@ theorem counterfactualActionUtility_mem_Icc
       _ = hi := by rw [hmass, one_mul]
 
 /-- Named certificate that the focal player's own reach is constant on one
-information fiber.  Perfect recall implies it, while absent-minded models may
+information fiber.  Decision recall implies it, while absent-minded models may
 establish it directly at selected sites. -/
 def CommonPlayerReachAt
     (strategy : (player : ι) → M.BehavioralPolicy player)
@@ -559,18 +559,16 @@ def CommonPlayerReachAt
   ∃ reach : ℝ, ∀ history : M.InformationHistory who site.1,
       M.playerReachProbability strategy who history.1.trace = reach
 
-/-- Perfect recall supplies common own reach at every decision information
+/-- Decision recall supplies common own reach at every decision information
 site. -/
-theorem commonPlayerReachAt_of_perfectRecall
-    (hrecall : M.PerfectRecall)
+theorem commonPlayerReachAt_of_decisionRecall
+    (hrecall : M.DecisionRecall)
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who) :
     CommonPlayerReachAt M strategy who site := by
   obtain ⟨reference, _hnonterminal, _haction⟩ := site.2
-  refine ⟨M.playerReachProbability strategy who reference.1.trace, ?_⟩
-  intro history
-  exact playerReachProbability_eq_of_perfectRecall M hrecall strategy who
-    history.1.trace reference.1.trace (history.2.trans reference.2.symm)
+  exact ⟨M.playerReachProbability strategy who reference.1.trace, fun history =>
+    playerReachProbability_eq_of_decisionRecall M hrecall strategy who site history reference⟩
 
 /-- Positive information mass forces the certified common own reach to be
 positive; a zero-own-reach fiber cannot have positive actual mass. -/
@@ -965,11 +963,11 @@ theorem counterfactualRegret_pos_iff_bayesGain_pos_of_commonReach
       (commonPlayerReach_pos M reach hcommon hmass)
       hcommon alternative payoff fuel halternative hincumbent
 
-/-- Familiar perfect-recall specialization: no fiberwise reach proof remains
-at the call site. -/
-theorem counterfactualRegret_pos_iff_bayesGain_pos_of_perfectRecall
+/-- Decision-recall specialization: no fiberwise reach proof remains at the
+call site. Perfect recall supplies it through `decisionRecall_of_perfectRecall`. -/
+theorem counterfactualRegret_pos_iff_bayesGain_pos_of_decisionRecall
     [Fintype ι] [DecidableEq ι]
-    (hrecall : M.PerfectRecall)
+    (hrecall : M.DecisionRecall)
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
@@ -993,15 +991,15 @@ theorem counterfactualRegret_pos_iff_bayesGain_pos_of_perfectRecall
           (strategy who) payoff fuel hbayesIncumbent :=
   counterfactualRegret_pos_iff_bayesGain_pos_of_commonReach M strategy who site
     hantichain hmass
-    (commonPlayerReachAt_of_perfectRecall M hrecall strategy who site)
+    (commonPlayerReachAt_of_decisionRecall M hrecall strategy who site)
     alternative payoff fuel halternative hincumbent
 
-/-- Perfect-recall action-local specialization.  Positive counterfactual
+/-- Decision-recall action-local specialization.  Positive counterfactual
 action regret is exactly an ordinary profitable pure commitment at the
 canonical Bayes continuation game. -/
-theorem counterfactualActionRegret_pos_iff_bayesActionGain_pos_of_perfectRecall
+theorem counterfactualActionRegret_pos_iff_bayesActionGain_pos_of_decisionRecall
     [Fintype ι] [DecidableEq ι]
-    (hrecall : M.PerfectRecall)
+    (hrecall : M.DecisionRecall)
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
@@ -1025,7 +1023,7 @@ theorem counterfactualActionRegret_pos_iff_bayesActionGain_pos_of_perfectRecall
           ((strategy who).commit site.1 choice) payoff fuel hbayesAction -
         bayesContinuationValue M strategy who site hantichain hmass
           (strategy who) payoff fuel hbayesIncumbent := by
-  exact counterfactualRegret_pos_iff_bayesGain_pos_of_perfectRecall M hrecall
+  exact counterfactualRegret_pos_iff_bayesGain_pos_of_decisionRecall M hrecall
     strategy who site hantichain hmass
       ((strategy who).commit site.1 choice) payoff fuel haction hincumbent
 

@@ -2,7 +2,7 @@
 
 - **Status:** adopted
 - **Date:** 2026-09-24
-- **Experiment ID:** EXP-121
+- **Experiment IDs:** EXP-121; decision-recall generalization under EXP-145
 
 ## Decision
 
@@ -72,6 +72,20 @@ The original kill conditions were hidden equilibrium or optimality premises,
 inferring equal depth from recall, placeholders, and fixed-point dependencies
 leaking into Protocol or lightweight consistency. The final API has none of
 the first three; dependency and trust checks are recorded in EXP-121.
+
+## Decision recall
+
+EXP-145 replaces the perfect-recall premise by decision recall: histories in
+each genuine decision fiber share their own-play record, while observations at
+which a player cannot act may forget its play. Every recall step of the proof
+is taken at a decision: the non-recurrence of a decision after acting, common
+own reach on a decision fiber, the decision-fiber antichain, and the record
+read by the spliced continuation. Splicing reads the record only where the
+player acts; elsewhere the player's law is forced. Perfect recall supplies the
+premise through `decisionRecall_of_perfectRecall`, so every earlier consumer is
+recovered unchanged. `DecisionRecallExistenceTest` applies the theorem to a
+one-vote protocol that forgets its vote after acting and provably lacks perfect
+recall.
 
 ## Boundary and validation
 
