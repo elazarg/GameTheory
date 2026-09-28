@@ -10,8 +10,11 @@ $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 
 # RFC 7.1 counts transport at source level over authored declarations, not in
 # elaborated proof terms.
+# Genuine transport only: coercion along a propositional equality of types or
+# terms. `change` restates a goal up to definitional equality and moves nothing,
+# so it is counted only by the D1 measurement in the phase 1 audit.
 $TransportPattern =
-  '(?<![A-Za-z0-9_])(cast|HEq|change)(?![A-Za-z0-9_])|Eq\.(ndrec|mpr|rec)(?![A-Za-z0-9_])|▸'
+  '(?<![A-Za-z0-9_])(cast|HEq)(?![A-Za-z0-9_])|Eq\.(ndrec|mpr|rec)(?![A-Za-z0-9_])|▸'
 
 function Remove-LeanCommentsAndStrings([string] $Source) {
   $result = [Text.StringBuilder]::new()

@@ -169,6 +169,14 @@ any literal instance of a carrier-bearing structure is not reducible, which
 converts the late and confusing failure into an immediate one and recovers most
 of what indexing was offering.
 
+**Source gates after the decision:** the D1 comparison above counts `change`
+as a proxy for transport cost, and the phase 1 audit keeps that exact regex so
+the measurement stays reproducible. The standing phase 2 and 3 source gates
+count only genuine transport — `cast`, `HEq`, `Eq.ndrec`/`Eq.mpr`/`Eq.rec`, and
+`▸`. A `change` restates a goal up to definitional equality, for example
+unfolding membership in a dual cone; it coerces nothing along an equality, and
+forbidding it only pushes proofs toward less direct tactics.
+
 **Consequences for public API:** unchanged. Forms keep a `sig` field, protocols
 keep their state and action carriers, and every literal instance of such a
 structure is `@[reducible]`, enforced by the source audit.
