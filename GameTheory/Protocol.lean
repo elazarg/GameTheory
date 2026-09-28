@@ -13,7 +13,8 @@ pushforward. `Randomized` lets the answer at a history be a law rather than a
 single action, with deterministic play as the point-mass case. `Information`
 keeps a policy's domain to what its owner can see, by typing rather than by a
 side condition, and is where a player's randomness is placed either at each
-information state or once over whole policies. `Assessment` packages a typed
+information state or once over whole policies. `OwnPlayRecall` refines any
+information model to its coarsest perfect-recall refinement. `Assessment` packages a typed
 choice and continuation as a context. `InformationOneShot` proves when local
 optimality implies whole-policy optimality. `Backward` constructs a terminal
 law by well-founded recursion, evaluates it under an integration certificate,
@@ -60,6 +61,7 @@ import GameTheory.Protocol.Backward
 import GameTheory.Protocol.RandomizedBackward
 import GameTheory.Protocol.HistoryBackward
 import GameTheory.Protocol.Information
+import GameTheory.Protocol.OwnPlayRecall
 import GameTheory.Protocol.SingleMover
 import GameTheory.Protocol.Predraw
 import GameTheory.Protocol.Assessment

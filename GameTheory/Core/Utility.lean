@@ -123,6 +123,16 @@ theorem IsNash.utilityIntegrable [DecidableEq ι] {F : GameForm ι}
   obtain ⟨hbase, -, -⟩ := (isNash_iff profile).1 hnash who (profile who)
   exact hbase
 
+/-- A guarded coarse correlated equilibrium includes integrability of each
+player's payoff under the recommended outcome law. -/
+theorem IsCoarseCorrelatedEq.utilityIntegrable [DecidableEq ι] {F : GameForm ι}
+    {utility : F.sig.Outcome → ι → ℝ} {law : PMF (Profile F.sig)}
+    (hcce : IsCoarseCorrelatedEq F (euPreference utility) law) (who : ι) :
+    UtilityIntegrable utility who (F.outcomeLaw law) := by
+  obtain ⟨hbase, -, -⟩ := (isCoarseCorrelatedEq_iff law).1 hcce who
+    (law.support_nonempty.some who)
+  exact hbase
+
 /-- A guarded Nash relation includes integrability of every compared unilateral
 outcome law. -/
 theorem IsNash.deviationIntegrable [DecidableEq ι] {F : GameForm ι}

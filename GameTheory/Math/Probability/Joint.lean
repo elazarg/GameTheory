@@ -75,4 +75,10 @@ theorem bindPairLaw_swap_apply {α β : Type*} (p : PMF α)
       exact hpair (Prod.swap_injective (by simpa using heq.symm))
     simp [hne]
 
+/-- Independent draws can be recorded in either order. -/
+theorem bindPairLaw_const_map_swap {α β : Type*} (p : PMF α) (q : PMF β) :
+    (bindPairLaw p fun _ => q).map Prod.swap = bindPairLaw q fun _ => p := by
+  ext ⟨b, a⟩
+  rw [bindPairLaw_swap_apply, bindPairLaw_apply, mul_comm]
+
 end GameTheory.Math.Probability

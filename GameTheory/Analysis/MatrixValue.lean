@@ -311,6 +311,17 @@ theorem expectedPayoff_eq_value_of_isNash (A : I → J → ℝ)
   expectedPayoff_eq_value_of_isSaddlePoint A
     ((isNash_iff_isSaddlePoint (utility_isZeroSum A)).1 hnash)
 
+/-- Correlating the players' mixed strategies cannot move a matrix game off its
+value: every coarse correlated equilibrium of the mixed extension gives the row
+player exactly the value. -/
+theorem expectedUtility_eq_value_of_isCoarseCorrelatedEq (A : I → J → ℝ)
+    {law : PMF (Profile (form I J).sig.mixed)}
+    (hcce : IsCoarseCorrelatedEq (form I J).mixed (euPreference (utility A)) law) :
+    expectedUtility (utility A) 0 ((form I J).mixed.outcomeLaw law)
+        (hcce.utilityIntegrable 0) = value A := by
+  have hnash := (valueProfile_isSaddlePoint A).isNash (utility_isZeroSum A)
+  exact hcce.expectedUtility_eq_of_zeroSum (utility_isZeroSum A) hnash 0
+
 /-- At least one mixed row guarantees the matrix value. -/
 theorem optimalRowStrategies_nonempty (A : I → J → ℝ) :
     (optimalRowStrategies A).Nonempty :=

@@ -7,9 +7,11 @@ push it up alone and the second cannot push it down alone.
 
 Nothing here needs a fixed point. The definitions are static, the equilibrium
 correspondence is arithmetic, and the fact that all saddle points of a game are
-worth the same is a two-line argument from the definition. Only the assertion
-that one exists needs analysis, and it lives above this module rather than in
-it.
+worth the same is a two-line argument from the definition. The same squeeze
+shows that an equilibrium strategy is secure against every opponent strategy,
+so every coarse correlated equilibrium, however correlated, is worth the
+equilibrium value. Only the assertion that an equilibrium exists needs
+analysis, and it lives above this module rather than in it.
 
 The two-player restriction is real and is in the type: the saddle inequalities
 name a player who moves up and a player who moves down, and with three players
@@ -110,6 +112,125 @@ theorem IsZeroSum.teamGame_utility_zero [Nonempty ι] {utility : Outcome → ι 
 
 end ZeroSum
 
+/-- Replacing the second player's strategy by another profile's is the same as
+replacing that profile's first player by this one's — with two players there is
+nothing else to disagree about. -/
+theorem update_one_eq_update_zero {sig : GameSignature (Fin 2)} (σ τ : Profile sig) :
+    Profile.update σ 1 (τ 1) = Profile.update τ 0 (σ 0) := by
+  funext i
+  rcases (by decide : ∀ i : Fin 2, i = 0 ∨ i = 1) i with rfl | rfl
+  · rw [Profile.update_of_ne _ _ (by decide), Profile.update_same]
+  · rw [Profile.update_same, Profile.update_of_ne _ _ (by decide)]
+
+section Security
+
+/-! ## Security and the value of coarse correlation
+
+The strategy carrier is arbitrary: strategies may already be mixed or
+behavioral, so these statements need no second layer of randomization. Only
+expected utilities are fixed; outcome laws and sequential incentives are not. -/
+
+variable {F : GameForm (Fin 2)} {utility : F.sig.Outcome → Fin 2 → ℝ}
+  {profile : Profile F.sig}
+
+/-- Against a Nash profile, an opponent's replacement of the second player is a
+unilateral deviation of that player, so its first-player payoff is integrable. -/
+theorem IsNash.zeroSum_rowIntegrable (hzero : IsZeroSum utility)
+    (hnash : IsNash F (euPreference utility) profile) (other : Profile F.sig) :
+    UtilityIntegrable utility 0 (F.play (Profile.update other 0 (profile 0))) := by
+  rw [← update_one_eq_update_zero]
+  exact hzero.utilityIntegrable_zero_of_one _ (hnash.deviationIntegrable 1 (other 1))
+
+/-- Against a Nash profile, an opponent's replacement of the first player is a
+unilateral deviation of that player. -/
+theorem IsNash.zeroSum_columnIntegrable
+    (hnash : IsNash F (euPreference utility) profile) (other : Profile F.sig) :
+    UtilityIntegrable utility 0 (F.play (Profile.update other 1 (profile 1))) := by
+  rw [update_one_eq_update_zero]
+  exact hnash.deviationIntegrable 0 (other 0)
+
+/-- **Nash strategies are secure in zero-sum games.** Each player's equilibrium
+strategy guarantees the equilibrium value against every opponent strategy. -/
+theorem IsNash.zeroSum_security (hzero : IsZeroSum utility)
+    (hnash : IsNash F (euPreference utility) profile) (other : Profile F.sig) :
+    expectedUtility utility 0 (F.play profile) (hnash.utilityIntegrable 0) ≤
+        expectedUtility utility 0 (F.play (Profile.update other 0 (profile 0)))
+          (hnash.zeroSum_rowIntegrable hzero other) ∧
+      expectedUtility utility 0 (F.play (Profile.update other 1 (profile 1)))
+          (hnash.zeroSum_columnIntegrable other) ≤
+        expectedUtility utility 0 (F.play profile) (hnash.utilityIntegrable 0) := by
+  constructor
+  · obtain ⟨hbase, hdeviation, hle⟩ := (isNash_iff profile).1 hnash 1 (other 1)
+    have hlaw := congrArg F.play (update_one_eq_update_zero profile other)
+    rw [hzero.expectedUtility_one _ (hnash.utilityIntegrable 0) hbase,
+      hzero.expectedUtility_one _
+        (hzero.utilityIntegrable_zero_of_one _ hdeviation) hdeviation] at hle
+    have hrow := expectedUtility_congr_law utility 0 hlaw
+      (hzero.utilityIntegrable_zero_of_one _ hdeviation)
+      (hnash.zeroSum_rowIntegrable hzero other)
+    linarith
+  · obtain ⟨_, hdeviation, hle⟩ := (isNash_iff profile).1 hnash 0 (other 0)
+    have hlaw := congrArg F.play (update_one_eq_update_zero other profile)
+    rw [expectedUtility_congr_law utility 0 hlaw
+      (hnash.zeroSum_columnIntegrable other) hdeviation]
+    exact hle
+
+/-- **Coarse correlation cannot change a zero-sum value.** If a two-player
+zero-sum game has a Nash equilibrium in its strategy carrier, every coarse
+correlated equilibrium gives each player exactly the equilibrium payoff, even
+when it recommends profiles far from that equilibrium. -/
+theorem IsCoarseCorrelatedEq.expectedUtility_eq_of_zeroSum (hzero : IsZeroSum utility)
+    {law : PMF (Profile F.sig)}
+    (hcce : IsCoarseCorrelatedEq F (euPreference utility) law)
+    (hnash : IsNash F (euPreference utility) profile) (who : Fin 2) :
+    expectedUtility utility who (F.outcomeLaw law) (hcce.utilityIntegrable who) =
+      expectedUtility utility who (F.play profile) (hnash.utilityIntegrable who) := by
+  have hvalue := payoffIntegrable_constant law
+    (expectedUtility utility 0 (F.play profile) (hnash.utilityIntegrable 0))
+  have lower : expectedUtility utility 0 (F.play profile) (hnash.utilityIntegrable 0) ≤
+      expectedUtility utility 0 (F.outcomeLaw law) (hcce.utilityIntegrable 0) := by
+    obtain ⟨hbase, hbind, hle⟩ :=
+      (isCoarseCorrelatedEq_iff law).1 hcce 0 (profile 0)
+    rw [expectedUtility_bind utility 0 law _ hbind
+      (hnash.zeroSum_rowIntegrable hzero)] at hle
+    rw [← expect_constant law _ hvalue]
+    exact (expect_mono (fun other _ => (hnash.zeroSum_security hzero other).1)
+      hvalue _).trans hle
+  have upper : expectedUtility utility 0 (F.outcomeLaw law) (hcce.utilityIntegrable 0) ≤
+      expectedUtility utility 0 (F.play profile) (hnash.utilityIntegrable 0) := by
+    obtain ⟨hbase, hbind, hle⟩ :=
+      (isCoarseCorrelatedEq_iff law).1 hcce 1 (profile 1)
+    have hbindZero := hzero.utilityIntegrable_zero_of_one _ hbind
+    rw [hzero.expectedUtility_one _ (hcce.utilityIntegrable 0) hbase,
+      hzero.expectedUtility_one _ hbindZero hbind, neg_le_neg_iff,
+      expectedUtility_bind utility 0 law _ hbindZero
+        (hnash.zeroSum_columnIntegrable)] at hle
+    rw [← expect_constant law _ hvalue]
+    exact hle.trans (expect_mono (fun other _ => (hnash.zeroSum_security hzero other).2)
+      _ hvalue)
+  have hsame := le_antisymm upper lower
+  rcases (by decide : ∀ i : Fin 2, i = 0 ∨ i = 1) who with rfl | rfl
+  · exact hsame
+  · rw [hzero.expectedUtility_one _ (hcce.utilityIntegrable 0),
+      hzero.expectedUtility_one _ (hnash.utilityIntegrable 0), hsame]
+
+/-- **All zero-sum Nash equilibria are worth the same**, in any strategy
+carrier. For mixed extensions this is also `IsSaddlePoint.value_eq`, which needs
+no zero-sum premise because a saddle point is stated in one payoff. -/
+theorem IsNash.expectedUtility_eq_of_zeroSum (hzero : IsZeroSum utility)
+    {other : Profile F.sig}
+    (hnash : IsNash F (euPreference utility) profile)
+    (hother : IsNash F (euPreference utility) other) (who : Fin 2) :
+    expectedUtility utility who (F.play profile) (hnash.utilityIntegrable who) =
+      expectedUtility utility who (F.play other) (hother.utilityIntegrable who) := by
+  have hcce : IsCoarseCorrelatedEq F (euPreference utility) (PMF.pure profile) :=
+    (isNash_iff_isCoarseCorrelatedEq_pure profile).1 hnash
+  have hequal := hcce.expectedUtility_eq_of_zeroSum hzero hother who
+  rwa [expectedUtility_congr_law utility who (F.outcomeLaw_pure profile)
+    (hcce.utilityIntegrable who) (hnash.utilityIntegrable who)] at hequal
+
+end Security
+
 section Saddle
 
 variable {F : GameForm (Fin 2)} {utility : F.sig.Outcome → Fin 2 → ℝ}
@@ -132,15 +253,6 @@ def IsSaddlePoint (σ : Profile F.sig.mixed) : Prop :=
         expectedUtility utility 0 (F.mixed.play σ) hbase ≤
           expectedUtility utility 0 (F.mixed.play (Profile.update σ 1 ν)) hdev)
 
-/-- Replacing the second player's law by another profile's is the same as
-replacing that profile's first player by this one's — with two players there is
-nothing else to disagree about. -/
-theorem update_one_eq_update_zero (σ τ : Profile F.sig.mixed) :
-    Profile.update σ 1 (τ 1) = Profile.update τ 0 (σ 0) := by
-  funext i
-  rcases (by decide : ∀ i : Fin 2, i = 0 ∨ i = 1) i with rfl | rfl
-  · rw [Profile.update_of_ne _ _ (by decide), Profile.update_same]
-  · rw [Profile.update_same, Profile.update_of_ne _ _ (by decide)]
 
 /-- **A zero-sum equilibrium is a saddle point.** The first player's inequality
 is the equilibrium condition; the second player's is the same condition read

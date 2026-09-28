@@ -194,6 +194,7 @@ import GameTheory.Math.Probability.ExpectationMixture
 import GameTheory.Math.Probability.ExpectationSeries
 import GameTheory.Math.Probability.FiniteSampling
 import GameTheory.Math.Probability.InfiniteProductBoundary
+import GameTheory.Math.Probability.Interaction
 import GameTheory.Math.Probability.Joint
 import GameTheory.Math.Probability.Measure
 import GameTheory.Math.Probability.Mixture
@@ -264,6 +265,7 @@ import GameTheory.Protocol.HistoryEvents
 import GameTheory.Protocol.HistoryPathMass
 import GameTheory.Protocol.Information
 import GameTheory.Protocol.InformationOneShot
+import GameTheory.Protocol.OwnPlayRecall
 import GameTheory.Protocol.PolicyMeasure
 import GameTheory.Protocol.PolicyRandomization
 import GameTheory.Protocol.Predraw
