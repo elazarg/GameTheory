@@ -2,7 +2,8 @@
 
 - **Status:** adopted and promoted
 - **Date:** 2026-07-30
-- **Experiment IDs:** EXP-043; PMF generalization under EXP-135
+- **Experiment IDs:** EXP-043; PMF generalization under EXP-135; history
+  bridge under EXP-144
 
 ## Decision / question
 
@@ -86,6 +87,23 @@ canonical fiber conditioning. `GameTheory.Epistemic.Agreement` owns weighted
 report reconstruction and Aumann agreement.
 The public Epistemic root must remain independent of Protocol, static solution
 concepts, and Analysis.
+
+## History-partition bridge
+
+EXP-144 supplies the named bridge this decision anticipated, without a state
+view. Protocol information partitions complete histories, not execution
+states: `InfoSignals.historyPartition` is the kernel of `infoOf` on
+`E.History`, and protocol knowledge is exactly `Epistemic.Knows` on it. No
+tree-shape, finiteness, or decidability premise is needed, and nothing is added
+to `InformationModel`. Perfect recall is equivalent to each player knowing its
+own play, and a known value holds under every belief on the information set.
+
+The bridge lives in the opt-in leaf `GameTheory.Protocol.Knowledge`. The stable
+Protocol root still does not reach the epistemic branch, and the Epistemic root
+still does not import Protocol; the phase 3 audit checks both directions and
+the leaf's positive reachability. On the merging execution the known event
+separates two histories reaching one state, which no state partition could
+express, so design 1 stays refuted.
 
 ## Common-knowledge recovery
 

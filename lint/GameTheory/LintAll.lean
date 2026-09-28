@@ -265,6 +265,7 @@ import GameTheory.Protocol.HistoryEvents
 import GameTheory.Protocol.HistoryPathMass
 import GameTheory.Protocol.Information
 import GameTheory.Protocol.InformationOneShot
+import GameTheory.Protocol.Knowledge
 import GameTheory.Protocol.OwnPlayRecall
 import GameTheory.Protocol.PolicyMeasure
 import GameTheory.Protocol.PolicyRandomization

@@ -9140,3 +9140,48 @@ memory.
     GameTheory.Analysis.Protocol.SequentialTerminalFiniteTest `
     GameTheory.Analysis.Protocol.WellFoundedTerminalEquilibriumTest
   ```
+
+### EXP-144: protocol knowledge as epistemic knowledge of histories
+
+- **Date / status:** 2026-09-28; complete.
+- **Question:** is a player's protocol information an epistemic partition of
+  complete histories without any extra premise, so that "the fact holds at
+  every compatible history" is exactly the canonical `Epistemic.Knows`?
+- **Hypothesis:** `infoOf` is a function of the history, so its kernel is a
+  `Setoid` on `E.History`. EXP-043 refuted only the state partition; the
+  history partition needs no tree-shape or state-view premise. Perfect recall
+  is then exactly knowledge of one's own play, and knowledge constrains every
+  belief on an information set without Bayes consistency.
+- **Competing designs:** a protocol-native `Knows` predicate (a second
+  definition of knowledge); a history-partition bridge reusing
+  `Epistemic.Knows`; a state partition (refuted by EXP-043).
+- **Representative slice:** the EXP-043 merging execution, where two
+  histories share one terminal state but carry different own play; the
+  forgetful two-vote protocol as the negative control.
+- **Kill conditions:** the bridge needs a state view, tree shape, finiteness,
+  or decidability; it adds a law to `InformationModel`; it makes the stable
+  Protocol root reach `GameTheory.Epistemic`; or knowledge fails to constrain
+  some non-Bayes belief.
+- **Artifacts:** `Protocol.Knowledge` (opt-in leaf, not imported by the
+  Protocol root); `Experimental.PostArchitecture.ProtocolKnowledgeBridge`;
+  `Tests.ProtocolKnowledge`.
+- **Observations:** the partition is `Setoid.ker` of `infoOf` on complete
+  histories, and cell membership is definitionally equality of information
+  states. `perfectRecall_iff_knows_ownPlay` proves perfect recall is exactly
+  each player knowing its own play at every history. `belief_map_eq_pure_of_knows`
+  fixes a known value under every PMF on the information set, with no
+  consistency premise. On the merging execution with own-play recall, the known
+  event separates two histories reaching the same terminal state, and
+  `known_event_not_state_event` proves it is no event about execution states.
+  The negative control shows the forgetful player does not know it has not
+  voted, and a pure belief on its information set contradicts its true play.
+- **Validation:** the leaf, evidence file, and test build warning-free;
+  `lake lint` passes; `scripts/phase2-audit.ps1 -VerifyExpected` and
+  `scripts/phase3-audit.ps1 -VerifyExpected -DeepReachability` pass. The
+  existing probe still rejects `Epistemic.cell` and `aumann_full_agreement`
+  from `GameTheory.Protocol`; a new probe reaches `Epistemic.Knows` and the
+  recall theorem from `GameTheory.Protocol.Knowledge`.
+- **Outcome:** no kill condition fired. Adopt the history-partition bridge as
+  the named Protocol-to-epistemic connection anticipated by D16; the state
+  partition remains refuted. Posterior and agreement bridges would need a
+  history law and are not claimed.

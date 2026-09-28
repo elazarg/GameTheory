@@ -343,6 +343,21 @@ if ($DeepReachability) {
   }
   Report 'PROTOCOL_EPISTEMIC_PROBES_REJECTED' $protocolEpistemicRejected
 
+  # EXP-144: the opt-in history-partition leaf is the one Protocol module that
+  # reaches epistemic knowledge; the stable root above still does not.
+  $protocolKnowledgeReached = 0
+  $protocolKnowledgeConstants = @(
+    'GameTheory.Epistemic.Knows',
+    'GameTheory.Protocol.InfoSignals.perfectRecall_iff_knows_ownPlay')
+  $protocolKnowledgeOutput =
+    Run-Probe 'GameTheory.Protocol.Knowledge' $protocolKnowledgeConstants
+  foreach ($constant in $protocolKnowledgeConstants) {
+    if (-not (Is-Unreachable $protocolKnowledgeOutput $constant)) {
+      $protocolKnowledgeReached++
+    }
+  }
+  Report 'PROTOCOL_KNOWLEDGE_BRIDGE_PROBES_REACHED' $protocolKnowledgeReached
+
   $protocolEvolutionaryRejected = 0
   $protocolEvolutionaryConstants = @(
     'GameTheory.Evolutionary.IsESS',
@@ -664,6 +679,7 @@ if ($VerifyExpected) {
     $Expected['POLICY_MEASURE_INPUT_PROBES_REACHED'] = 15
     $Expected['POLICY_MEASURE_PATH_BOUNDARY_REJECTED'] = 1
     $Expected['PROTOCOL_EPISTEMIC_PROBES_REJECTED'] = 2
+    $Expected['PROTOCOL_KNOWLEDGE_BRIDGE_PROBES_REACHED'] = 2
     $Expected['PROTOCOL_EVOLUTIONARY_PROBES_REJECTED'] = 2
     $Expected['SEQUENTIAL_BRIDGE_INPUTS_REACHED'] = 3
     $Expected['SEQUENTIAL_BRIDGE_GEOMETRY_REJECTED'] = 2
