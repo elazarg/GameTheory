@@ -4,6 +4,12 @@
 Infinite posterior splitting, cancellation in the principal's net payoff,
 message-local integration, and undefined actual alternatives exercise the
 mechanism interfaces without imposing finite outcome carriers.
+
+EXP-147 update: receiver obedience and agent incentives now compare
+extended-real values. The two divergent alternatives below have value `+∞`,
+so they still refute optimality, now by being infinitely better rather than by
+failing a finiteness guard. The added control shows the changed case: an
+alternative whose expected payment is `−∞` no longer refutes incentives.
 -/
 
 import GameTheory.Mechanism.PosteriorSignals
@@ -125,20 +131,36 @@ def undefinedAlternative : PersuasionProblem ℕ Unit Bool where
   receiverUtility n action := if action then exploding n else 0
   senderUtility _ _ := 0
 
+private theorem exploding_nonneg (n : ℕ) : 0 ≤ exploding n := by
+  unfold exploding
+  positivity
+
+private theorem exploding_value : extendedExpect geometric exploding = ⊤ :=
+  extendedExpect_eq_top_of_nonneg (fun n _ => exploding_nonneg n) exploding_not_integrable
+
+private theorem exploding_hasExpectation : HasExpectation geometric exploding :=
+  hasExpectation_of_nonneg fun n _ => exploding_nonneg n
+
 theorem undefined_receiver_alternative_refutes_optimality :
     ¬ undefinedAlternative.IsReceiverOptimal () false := by
-  rintro ⟨hscore, _⟩
-  apply exploding_not_integrable
+  rintro ⟨-, hbest⟩
   have hweighted :
       undefinedAlternative.receiverWeighted () true = exploding := by
     funext n
     simp [undefinedAlternative, SignalStructure.uninformative,
       PersuasionProblem.receiverWeighted, PMF.pure_apply]
-  have htrue := hscore true
-  rw [hweighted] at htrue
-  exact htrue
+  have hzero :
+      undefinedAlternative.receiverWeighted () false = fun _ => 0 := by
+    funext n
+    simp [undefinedAlternative, PersuasionProblem.receiverWeighted]
+  have hle := hbest true
+  rw [PersuasionProblem.extendedReceiverScore, PersuasionProblem.extendedReceiverScore,
+    hweighted, hzero, extendedExpect_constant,
+    show extendedExpect undefinedAlternative.prior exploding = ⊤ from exploding_value] at hle
+  exact EReal.coe_ne_top 0 (top_le_iff.1 hle)
 
-/-- An undefined payment at a real alternative refutes agent optimality. -/
+/-- A divergent payment worth `+∞` at a real alternative refutes agent
+optimality. -/
 def agentAlternative : PrincipalAgent Bool ℕ where
   outcomeLaw action := if action then geometric else PMF.pure 0
   reward _ := 0
@@ -146,8 +168,27 @@ def agentAlternative : PrincipalAgent Bool ℕ where
 
 theorem undefined_agent_alternative_refutes_incentives :
     ¬ agentAlternative.IsIncentivized exploding false := by
-  rintro ⟨hpayment, _⟩
-  apply exploding_not_integrable
-  simpa [agentAlternative] using hpayment true
+  rintro ⟨-, hbest⟩
+  have hle := hbest true
+  simp only [PrincipalAgent.extendedAgentUtility, agentAlternative, ite_true,
+    Bool.false_eq_true, ite_false, extendedExpect_pure, EReal.coe_zero, sub_zero,
+    exploding_value] at hle
+  exact EReal.coe_ne_top _ (top_le_iff.1 hle)
+
+/-- An alternative with expected payment `−∞` is simply worse; it does not
+refute the incumbent's incentives. -/
+theorem losing_agent_alternative_keeps_incentives :
+    agentAlternative.IsIncentivized (fun n => -exploding n) false := by
+  refine ⟨fun action => ?_, fun action => ?_⟩
+  · cases action
+    · simpa [agentAlternative] using hasExpectation_of_payoffIntegrable
+        (payoffIntegrable_pure 0 fun n => -exploding n)
+    · simpa [agentAlternative] using
+        (hasExpectation_neg_iff geometric exploding).2 exploding_hasExpectation
+  · cases action
+    · exact le_rfl
+    · simp only [PrincipalAgent.extendedAgentUtility, agentAlternative, ite_true]
+      rw [extendedExpect_neg exploding_hasExpectation, exploding_value]
+      simp
 
 end GameTheory.Experimental.PMFMechanismGate

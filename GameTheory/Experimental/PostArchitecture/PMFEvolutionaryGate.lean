@@ -2,8 +2,15 @@
 # EXP-137: positive-invasion integrability in mixed evolutionary stability
 
 A unique pure resident beats every distinct mutant in the first-order test,
-but a geometric mutant has an undefined positive self encounter. The ordinary
-all-pair guard rejects it, as does the actual small-invasion formulation.
+but a geometric mutant has a non-integrable positive self encounter. The
+ordinary all-pair guard rejects it, as does the actual small-invasion
+formulation.
+
+EXP-147 update: small-invasion fitness is now compared in the extended reals.
+The mutant's self encounter is `+∞`, so its fitness in every positively
+invaded population is `+∞` and it defeats the resident's finite fitness. The
+small-invasion rejection is therefore proved directly from that infinite
+fitness instead of through the integrable all-pair characterization.
 -/
 
 import GameTheory.Evolutionary
@@ -235,16 +242,65 @@ theorem resident_not_mixedNSS : ¬ IsMixedNSS payoff resident := by
   rintro ⟨hall, _⟩
   exact mutant_self_not_integrable (hall mutant mutant)
 
+theorem payoff_nonneg (own opponent : Option ℕ) : 0 ≤ payoff own opponent := by
+  rcases own with _ | n
+  · norm_num [payoff]
+  · rcases opponent with _ | m
+    · norm_num [payoff]
+    · simp only [payoff, exploding]
+      positivity
+
+theorem resident_ne_mutant : resident ≠ mutant := by
+  intro h
+  have hnone := congrArg (fun law : PMF (Option ℕ) => law none) h
+  simp [resident, mutant, PMF.map_apply] at hnone
+
+/-- Every positive invasion gives the mutant infinite fitness. -/
+theorem mutant_invasion_value (share : ℝ) (hpositive : 0 < share) (hunit : share < 1) :
+    extendedMixedPayoff payoff mutant
+        (invasionPopulation resident mutant share hpositive hunit) = ⊤ :=
+  extendedExpect_eq_top_of_nonneg (fun pair _ => payoff_nonneg pair.1 pair.2)
+    (positive_invasion_not_integrable share hpositive hunit)
+
+/-- The resident earns one against every population. -/
+theorem resident_value (opponent : PMF (Option ℕ)) :
+    extendedMixedPayoff payoff resident opponent = 1 := by
+  have hscore : ∀ pair ∈ (bindPairLaw resident (fun _ => opponent)).support,
+      payoff pair.1 pair.2 = 1 := by
+    rintro ⟨own, other⟩ hpair
+    have hne : resident own * opponent other ≠ 0 := by
+      simpa only [bindPairLaw_apply] using
+        ((bindPairLaw resident (fun _ => opponent)).mem_support_iff (own, other)).mp hpair
+    have hown : own = none := by
+      by_contra hsome
+      simp [resident, PMF.pure_apply, hsome] at hne
+    subst hown
+    rfl
+  rw [extendedMixedPayoff, extendedExpect_congr_on_support hscore, extendedExpect_constant,
+    EReal.coe_one]
+
+private theorem small_share (threshold : ℝ) (hthreshold : 0 < threshold) :
+    ∃ share : ℝ, 0 < share ∧ share < 1 ∧ share < threshold :=
+  ⟨min (threshold / 2) (1 / 2), lt_min (by linarith) (by norm_num),
+    lt_of_le_of_lt (min_le_right _ _) (by norm_num),
+    lt_of_le_of_lt (min_le_left _ _) (by linarith)⟩
+
 theorem resident_not_actualSmallInvasionESS :
     ¬ IsActualSmallInvasionESS payoff resident := by
-  intro hactual
-  exact resident_not_mixedESS
-    ((isMixedESS_iff_actualSmallInvasion payoff resident).2 hactual)
+  rintro ⟨-, hactual⟩
+  obtain ⟨threshold, hthreshold, hsmall⟩ := hactual mutant resident_ne_mutant
+  obtain ⟨share, hpositive, hunit, hbelow⟩ := small_share threshold hthreshold
+  obtain ⟨-, -, hgt⟩ := hsmall share hpositive hunit hbelow
+  rw [mutant_invasion_value, resident_value] at hgt
+  exact not_top_lt hgt
 
 theorem resident_not_actualSmallInvasionNSS :
     ¬ IsActualSmallInvasionNSS payoff resident := by
-  intro hactual
-  exact resident_not_mixedNSS
-    ((isMixedNSS_iff_actualSmallInvasion payoff resident).2 hactual)
+  rintro ⟨-, hactual⟩
+  obtain ⟨threshold, hthreshold, hsmall⟩ := hactual mutant resident_ne_mutant
+  obtain ⟨share, hpositive, hunit, hbelow⟩ := small_share threshold hthreshold
+  obtain ⟨-, -, hge⟩ := hsmall share hpositive hunit hbelow
+  rw [mutant_invasion_value, resident_value] at hge
+  exact EReal.coe_ne_top 1 (top_le_iff.1 hge)
 
 end GameTheory.Experimental.PMFEvolutionaryGate

@@ -435,16 +435,22 @@ theorem no_sequentially_rational_assessment
     (assessment : information.BehavioralAssessment) :
     ¬ assessment.IsSequentiallyRationalWithin payoff 2 := by
   intro rational
-  rcases rational () rootSite with ⟨hroot, hrootAllowed, hrootOptimal⟩
-  rcases rational () choiceSite with ⟨hchoice, hchoiceAllowed, hchoiceOptimal⟩
-  have hrootAlt := hrootAllowed (policy false) (Set.mem_univ _)
-  have hchoiceAlt := hchoiceAllowed (policy true) (Set.mem_univ _)
-  have atRoot := hrootOptimal (policy false) (Set.mem_univ _)
-  have atChoice := hchoiceOptimal (policy true) (Set.mem_univ _)
-  rw [context_value_root assessment (policy false) hrootAlt,
-    context_value_root assessment (assessment.strategy ()) hroot, shortWeight_short] at atRoot
-  rw [context_value_choice assessment (policy true) hchoiceAlt,
-    context_value_choice assessment (assessment.strategy ()) hchoice, shortWeight_long] at atChoice
+  have hfinite : ∀ (site : information.InformationSite ())
+      (alternative : information.BehavioralPolicy ()),
+      (assessment.continuationContext site (payoff ()) 2).IntegrableAt alternative :=
+    fun _ _ => payoffIntegrable_of_finite _ _
+  have atRoot := (GameTheory.Protocol.Context.isLocallyOptimal_iff_of_integrable
+    (hfinite _ _) fun alternative _ => hfinite _ alternative).1 (rational () rootSite)
+    (policy false) (Set.mem_univ _)
+  have atChoice := (GameTheory.Protocol.Context.isLocallyOptimal_iff_of_integrable
+    (hfinite _ _) fun alternative _ => hfinite _ alternative).1 (rational () choiceSite)
+    (policy true) (Set.mem_univ _)
+  rw [context_value_root assessment (policy false) (hfinite _ _),
+    context_value_root assessment (assessment.strategy ()) (hfinite _ _),
+    shortWeight_short] at atRoot
+  rw [context_value_choice assessment (policy true) (hfinite _ _),
+    context_value_choice assessment (assessment.strategy ()) (hfinite _ _),
+    shortWeight_long] at atChoice
   linarith
 
 /-- Even finite, perfectly informed, perfect-recall EFGs with nonempty menus

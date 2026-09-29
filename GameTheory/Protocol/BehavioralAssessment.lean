@@ -265,12 +265,12 @@ theorem isSequentiallyRationalWithin_zero [Fintype ι] [DecidableEq ι]
     (A : M.BehavioralAssessment) (fuel : ℕ) :
     A.IsSequentiallyRationalWithin (fun _ _ => 0) fuel := by
   intro i site
-  refine ⟨payoffIntegrable_zero _, ?_, ?_⟩
+  refine ⟨hasExpectation_of_payoffIntegrable (payoffIntegrable_zero _), ?_, ?_⟩
   · intro alternative _
-    exact payoffIntegrable_zero _
+    exact hasExpectation_of_payoffIntegrable (payoffIntegrable_zero _)
   · intro alternative _
-    rw [continuationContext_value, continuationContext_value]
-    simp [expect]
+    simp [GameTheory.Protocol.Context.extendedValue, continuationContext,
+      GameTheory.Protocol.Context.ofBelief]
 
 /-- A topology-free limit schema. The analytic bridge supplies pointwise
 convergence; other consumers may supply a different convergence relation

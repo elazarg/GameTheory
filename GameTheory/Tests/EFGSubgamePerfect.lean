@@ -75,7 +75,7 @@ theorem oneShotDeviation_iff_historywiseOptimal
         twice_wellFoundedPlay profile utility :=
   EFGKuhn.recallGame.isHistorywiseOptimal_iff_hasNoProfitableOneShotDeviation
     EFGKuhn.recallGame_actsOnce twice_wellFoundedPlay profile utility
-      (fun _ _ _ => @payoffIntegrable_of_finite _
-        (@Fintype.finite _ EFGKuhn.recallHistoryFintype) _ _)
+      (fun _ _ _ => hasExpectation_of_payoffIntegrable (@payoffIntegrable_of_finite _
+        (@Fintype.finite _ EFGKuhn.recallHistoryFintype) _ _))
 
 end GameTheory.Tests.EFGSubgamePerfect

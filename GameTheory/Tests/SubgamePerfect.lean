@@ -443,7 +443,8 @@ theorem historywiseOptimal_iff_noProfitableOneShotDeviation :
         arena_wellFoundedPlay incumbentProfile payoff :=
   model.isHistorywiseOptimal_iff_hasNoProfitableOneShotDeviation
     model_actsOnceWhereItMatters arena_wellFoundedPlay
-    incumbentProfile payoff (fun _ _ _ => payoff_integrable _)
+    incumbentProfile payoff
+    (fun _ _ _ => hasExpectation_of_payoffIntegrable (payoff_integrable _))
 
 /-- The incumbent's bad continuation is rejected at the off-path decision
 history, even though the incumbent exits before reaching it. -/
@@ -452,7 +453,9 @@ theorem incumbent_not_historywiseOptimal :
       incumbentProfile payoff := by
   intro hoptimal
   have hdecision := hoptimal () rewardingPolicy decisionHistory
-  obtain ⟨hother, hinc, hdecision⟩ := hdecision
+  obtain ⟨-, -, hdecision⟩ := hdecision
+  rw [ExecutionProtocol.historyBackwardExtendedValue_le_iff _ (payoff_integrable _)
+    (payoff_integrable _)] at hdecision
   have hreward : arena.historyBackwardValue arena_wellFoundedPlay
       (model.historyChooser (Profile.update incumbentProfile () rewardingPolicy))
       (fun history => payoff history ()) decisionHistory = 1 := by

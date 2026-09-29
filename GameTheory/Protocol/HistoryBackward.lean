@@ -6,6 +6,7 @@ well-founded randomized law. Its values and one-shot properties use that law.
 -/
 
 import GameTheory.Protocol.RandomizedBackward
+import GameTheory.Math.Probability.ExtendedExpectation
 
 noncomputable section
 
@@ -169,6 +170,32 @@ def historyBackwardValue (certificate : E.WellFoundedPlay)
     (chooser : E.HistoryChooser) (payoff : E.History → ℝ)
     (history : E.History) : ℝ :=
   expect (E.historyBackwardLaw certificate chooser history) payoff
+
+/-- The extended-real value of a history under its terminal law, meaningful when
+the payoff has an expectation there. -/
+def historyBackwardExtendedValue (certificate : E.WellFoundedPlay)
+    (chooser : E.HistoryChooser) (payoff : E.History → ℝ)
+    (history : E.History) : EReal :=
+  extendedExpect (E.historyBackwardLaw certificate chooser history) payoff
+
+theorem historyBackwardExtendedValue_eq {certificate : E.WellFoundedPlay}
+    {chooser : E.HistoryChooser} {payoff : E.History → ℝ} {history : E.History}
+    (h : PayoffIntegrable (E.historyBackwardLaw certificate chooser history) payoff) :
+    E.historyBackwardExtendedValue certificate chooser payoff history =
+      E.historyBackwardValue certificate chooser payoff history :=
+  extendedExpect_eq_expect h
+
+/-- Between integrable history values, the extended comparison is the real one. -/
+theorem historyBackwardExtendedValue_le_iff {certificate : E.WellFoundedPlay}
+    {left right : E.HistoryChooser} {payoff : E.History → ℝ} {history : E.History}
+    (hleft : PayoffIntegrable (E.historyBackwardLaw certificate left history) payoff)
+    (hright : PayoffIntegrable (E.historyBackwardLaw certificate right history) payoff) :
+    E.historyBackwardExtendedValue certificate left payoff history ≤
+        E.historyBackwardExtendedValue certificate right payoff history ↔
+      E.historyBackwardValue certificate left payoff history ≤
+        E.historyBackwardValue certificate right payoff history := by
+  rw [E.historyBackwardExtendedValue_eq hleft, E.historyBackwardExtendedValue_eq hright,
+    EReal.coe_le_coe_iff]
 
 theorem historyBackwardValue_of_terminal
     {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}

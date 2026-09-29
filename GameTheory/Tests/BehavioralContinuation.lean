@@ -113,7 +113,6 @@ theorem simultaneous_pure_embedding :
       (policyProfile GameTheory.Examples.FOSG.twoBitSource allTrueActions) sourceUtility :=
   source.information.isSubgamePerfect_of_behavioral simultaneous_bounded
     simultaneous_terminates _ sourceUtility simultaneous_behavioral_perfect
-    fun _ _ who _ => sourceUtility_integrable _ who
 
 /-- Behavioral continuations inherit the same shared mixture-transfer theorem
 as pure continuations. The identity compiler has point-mass deviation coverage. -/
@@ -147,7 +146,7 @@ theorem simultaneous_shared_transfer :
       (source.information.runBehavioralFrom
         (Profile.update (behavioralProfile allTrueActions) who replacement)
         1 history) who
-    simpa only [hprofile, Function.id_def] using hguard
+    simpa only [hprofile, Function.id_def] using hguard.hasExpectation
   · exact simultaneous_behavioral_perfect
 
 /-- Honest compiled laws also use the shared reflection theorem at every
@@ -204,12 +203,10 @@ example (certificate : protocol.WellFoundedPlay)
     (policies : Profile model.strategicSignature) (utility : protocol.History → ℕ → ℝ)
     (perfect : model.IsSingleMoverBehavioralSubgamePerfect single bounded
       (Profile.map (target := model.behavioralSignature)
-        (fun who (policy : model.Policy who) => policy.toBehavioral) policies) utility)
-    (hintegrable : ∀ history, model.IsSubgameRoot history →
-      (model.toContinuationGameForm 2 history).HasIntegrableDeviations utility policies) :
+        (fun who (policy : model.Policy who) => policy.toBehavioral) policies) utility) :
     model.IsSubgamePerfect certificate policies utility :=
   model.isSubgamePerfect_of_singleMoverBehavioral single bounded certificate
-    policies utility perfect hintegrable
+    policies utility perfect
 
 end InfinitePlayers
 

@@ -476,7 +476,6 @@ theorem sourcePerfect : (model false).IsSubgamePerfect (terminates false) (profi
     (terminates false) (bounded false) (profile false)
     (fun history who => utility (readout history.state) who)).mpr
   intro history _
-  refine ⟨?_, fun _ _ => history_utility_guard _⟩
   rw [isNash_iff]
   intro who alternative
   cases who
@@ -529,6 +528,7 @@ theorem targetPerfect : (model true).IsSubgamePerfect (terminates true) (profile
     (terminates false) (terminates true) (bounded false) (bounded true) compile
     (fun history => readout history.state) (fun history => readout history.state)
     (profile false) coverage utility
-    (fun _ _ _ _ => history_utility_guard _) sourcePerfect
+    (fun _ _ _ _ => hasExpectation_of_payoffIntegrable (history_utility_guard _))
+    sourcePerfect
 
 end GameTheory.Tests.ContinuationMixture

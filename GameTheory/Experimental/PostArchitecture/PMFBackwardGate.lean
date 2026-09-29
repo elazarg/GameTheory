@@ -226,8 +226,9 @@ theorem optimal_oneShot :
       have hintegrable (joint : { joint : ∀ i, Option (execution.Action i) //
           execution.Legal none joint }) : ctx.IntegrableAt joint :=
         payoffIntegrable_of_bounded _ _ payoff_bounded
-      refine ⟨hintegrable (chooser true none hterm),
-        (fun joint _ => hintegrable joint), ?_⟩
+      refine (GameTheory.Protocol.Context.isLocallyOptimal_iff_of_integrable ?hchoice ?hall).2 ?_
+      case hchoice => exact hintegrable (chooser true none hterm)
+      case hall => exact fun joint _ => hintegrable joint
       intro joint _
       have hconst : PayoffIntegrable (ctx.outcome joint) (fun _ => (1 : ℝ)) :=
         payoffIntegrable_of_bounded _ _ (C := 1) (fun _ => by norm_num)
@@ -251,8 +252,12 @@ theorem suboptimal_not_oneShot :
   let good := chooser true none (by simp)
   let ctx := execution.oneShotContext wellFounded (chooser false) payoff none
     (by simp)
-  have hlocal := hbad none (by simp)
-  have hle := hlocal.2.2 good (Set.mem_univ _)
+  have hintegrable (joint : { joint : ∀ i, Option (execution.Action i) //
+      execution.Legal none joint }) : ctx.IntegrableAt joint :=
+    payoffIntegrable_of_bounded _ _ payoff_bounded
+  have hle := (GameTheory.Protocol.Context.isLocallyOptimal_iff_of_integrable
+    (hintegrable _) fun joint _ => hintegrable joint).1 (hbad none (by simp)) good
+    (Set.mem_univ _)
   have hgood : ctx.value good = 1 := by
     simpa [ctx, good, chooser] using (contextValue false good)
   have hfalse : ctx.value (chooser false none (by simp)) = 0 := by
@@ -317,9 +322,12 @@ theorem runnerOptimalAgainstBad :
     PayoffIntegrable (execution.runFor (chooser true) 1 none) payoff ∧
       expect (execution.runFor (chooser false) 1 none) payoff ≤
         expect (execution.runFor (chooser true) 1 none) payoff := by
-  exact execution.expect_runFor_le_of_isOneShotOptimal optimal_oneShot
-    (chooser false) (stopsWithinOne false) (stopsWithinOne true)
-    (payoffIntegrable_of_bounded _ _ payoff_bounded)
+  have hle := (execution.extendedExpect_runFor_le_of_isOneShotOptimal optimal_oneShot
+    (chooser false) (stopsWithinOne false) (stopsWithinOne true)).2
+  rw [extendedExpect_eq_expect (payoffIntegrable_of_bounded _ _ payoff_bounded),
+    extendedExpect_eq_expect (payoffIntegrable_of_bounded _ _ payoff_bounded),
+    EReal.coe_le_coe_iff] at hle
+  exact ⟨payoffIntegrable_of_bounded _ _ payoff_bounded, hle⟩
 
 /-- The root decision is observed directly; the infinitely many terminal
 successors retain their ordinary state observations. -/

@@ -131,7 +131,7 @@ theorem cooperate_constant_not_enforceable :
     ¬ monitoring.IsEnforceable (1 / 2) cooperate
       (monitoring.constantContinuation cooperativePayoff) := by
   rw [monitoring.isEnforceable_constant_iff_isNash (by norm_num)]
-  exact fun h => cooperate_not_isNash h.1
+  exact cooperate_not_isNash
 
 theorem rewardOrPunish_mem (signal : monitoring.Signal) :
     rewardOrPunish signal ∈ payoffSet := by
@@ -158,11 +158,10 @@ theorem cooperate_enforceable :
   have hfalse := cooperate_update_true_ne false
   have htrue := cooperate_update_true_ne true
   intro who action
-  refine ⟨game_integrable who cooperate,
-    signal_integrable cooperate rewardOrPunish who,
-    game_integrable who (Profile.update cooperate who action),
-    signal_integrable (Profile.update cooperate who action)
-      rewardOrPunish who, ?_⟩
+  refine (monitoring.deters_iff_of_integrable (game_integrable who cooperate)
+    (signal_integrable cooperate rewardOrPunish who)
+    (game_integrable who (Profile.update cooperate who action))
+    (signal_integrable (Profile.update cooperate who action) rewardOrPunish who)).2 ?_
   cases who <;> cases action <;>
     norm_num [UtilityGame.PublicMonitoring.decomposedDeviationPayoff,
       UtilityGame.PublicMonitoring.decomposedPayoff,
@@ -190,8 +189,7 @@ theorem punish_enforceable :
     monitoring.IsEnforceable (1 / 2) punish
       (monitoring.constantContinuation punishmentPayoff) :=
   (monitoring.isEnforceable_constant_iff_isNash (by norm_num)
-    punish punishmentPayoff).2
-      ⟨punish_isNash, fun _ _ => payoffIntegrable_pure _ _⟩
+    punish punishmentPayoff).2 punish_isNash
 
 /-- The cooperative and punishment promises form a genuinely two-state
 self-generating set. -/

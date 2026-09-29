@@ -365,6 +365,54 @@ theorem hasExpectation_congr_on_support {μ : PMF α} {f g : α → ℝ}
   unfold HasExpectation
   rw [positiveExpect_congr_on_support h, negativeExpect_congr_on_support h]
 
+/-! ## Weight domination -/
+
+private theorem tsum_scaled_weight_le {source target : PMF α} {scale : ℝ}
+    (hscale : 0 < scale) (hle : ∀ a, scale * (source a).toReal ≤ (target a).toReal)
+    (g : α → ℝ≥0∞) :
+    ENNReal.ofReal scale * ∑' a, source a * g a ≤ ∑' a, target a * g a := by
+  rw [← ENNReal.tsum_mul_left]
+  refine ENNReal.tsum_le_tsum fun a => ?_
+  rw [← mul_assoc]
+  refine mul_le_mul' ?_ le_rfl
+  calc
+    ENNReal.ofReal scale * source a =
+        ENNReal.ofReal (scale * (source a).toReal) := by
+      rw [ENNReal.ofReal_mul hscale.le, ENNReal.ofReal_toReal (source.apply_ne_top a)]
+    _ ≤ ENNReal.ofReal (target a).toReal := ENNReal.ofReal_le_ofReal (hle a)
+    _ = target a := ENNReal.ofReal_toReal (target.apply_ne_top a)
+
+/-- A law dominated by a positive multiple of another has at most a matching
+multiple of its expected gains. -/
+theorem positiveExpect_le_of_scaled_weight_le {source target : PMF α} {scale : ℝ}
+    (hscale : 0 < scale) (hle : ∀ a, scale * (source a).toReal ≤ (target a).toReal)
+    (f : α → ℝ) :
+    ENNReal.ofReal scale * positiveExpect source f ≤ positiveExpect target f :=
+  tsum_scaled_weight_le hscale hle _
+
+theorem negativeExpect_le_of_scaled_weight_le {source target : PMF α} {scale : ℝ}
+    (hscale : 0 < scale) (hle : ∀ a, scale * (source a).toReal ≤ (target a).toReal)
+    (f : α → ℝ) :
+    ENNReal.ofReal scale * negativeExpect source f ≤ negativeExpect target f :=
+  tsum_scaled_weight_le hscale hle _
+
+private theorem ne_top_of_scaled_le {scale : ℝ} (hscale : 0 < scale) {x y : ℝ≥0∞}
+    (hle : ENNReal.ofReal scale * x ≤ y) (hy : y ≠ ⊤) : x ≠ ⊤ := by
+  rintro rfl
+  rw [ENNReal.mul_top (ENNReal.ofReal_pos.2 hscale).ne', top_le_iff] at hle
+  exact hy hle
+
+/-- An expectation passes to any law dominated by a positive multiple of the
+original law. -/
+theorem hasExpectation_of_scaled_weight_le {source target : PMF α} {f : α → ℝ} {scale : ℝ}
+    (hscale : 0 < scale) (hle : ∀ a, scale * (source a).toReal ≤ (target a).toReal)
+    (htarget : HasExpectation target f) : HasExpectation source f := by
+  rcases htarget with hpos | hneg
+  · exact Or.inl (ne_top_of_scaled_le hscale
+      (positiveExpect_le_of_scaled_weight_le hscale hle f) hpos)
+  · exact Or.inr (ne_top_of_scaled_le hscale
+      (negativeExpect_le_of_scaled_weight_le hscale hle f) hneg)
+
 /-! ## Sign -/
 
 /-- The extended expectation is nonpositive exactly when the expected gains do
@@ -373,6 +421,29 @@ value `⊥` when both are infinite. -/
 theorem extendedExpect_nonpos_iff (μ : PMF α) (f : α → ℝ) :
     extendedExpect μ f ≤ 0 ↔ positiveExpect μ f ≤ negativeExpect μ f := by
   rw [extendedExpect, EReal.sub_nonpos, EReal.coe_ennreal_le_coe_ennreal_iff]
+
+/-- A payoff that is nonnegative on the support has no expected losses, so its
+expectation exists. -/
+theorem negativeExpect_eq_zero_of_nonneg {μ : PMF α} {f : α → ℝ}
+    (h : ∀ a ∈ μ.support, 0 ≤ f a) : negativeExpect μ f = 0 := by
+  refine ENNReal.tsum_eq_zero.2 fun a => ?_
+  by_cases ha : a ∈ μ.support
+  · rw [ENNReal.ofReal_of_nonpos (neg_nonpos.2 (h a ha)), mul_zero]
+  · rw [(PMF.apply_eq_zero_iff μ a).2 ha, zero_mul]
+
+theorem hasExpectation_of_nonneg {μ : PMF α} {f : α → ℝ}
+    (h : ∀ a ∈ μ.support, 0 ≤ f a) : HasExpectation μ f :=
+  Or.inr (ne_of_eq_of_ne (negativeExpect_eq_zero_of_nonneg h) ENNReal.zero_ne_top)
+
+/-- A nonnegative payoff that is not integrable has expectation `⊤`. -/
+theorem extendedExpect_eq_top_of_nonneg {μ : PMF α} {f : α → ℝ}
+    (h : ∀ a ∈ μ.support, 0 ≤ f a) (hnot : ¬ PayoffIntegrable μ f) :
+    extendedExpect μ f = ⊤ := by
+  have hneg : negativeExpect μ f ≠ ⊤ :=
+    ne_of_eq_of_ne (negativeExpect_eq_zero_of_nonneg h) ENNReal.zero_ne_top
+  refine extendedExpect_eq_top ?_ hneg
+  by_contra hpos
+  exact hnot ((payoffIntegrable_iff_parts μ f).2 ⟨hpos, hneg⟩)
 
 /-- Only infinite expected losses make the extended expectation `⊥`. -/
 theorem negativeExpect_eq_top_of_extendedExpect_eq_bot {μ : PMF α} {f : α → ℝ}
@@ -466,6 +537,20 @@ theorem le_extendedExpect_bind {μ : PMF α} {q : α → PMF β} {f : β → ℝ
 
 /-! ## Comparison bounds -/
 
+/-- The extended expectation never exceeds the expected gains. -/
+theorem extendedExpect_le_positiveExpect (μ : PMF α) (f : α → ℝ) :
+    extendedExpect μ f ≤ positiveExpect μ f := by
+  rw [extendedExpect, sub_eq_add_neg]
+  refine add_le_of_nonpos_right (EReal.neg_le.2 ?_)
+  rw [neg_zero]
+  exact EReal.coe_ennreal_nonneg _
+
+/-- Only infinite expected gains make the extended expectation `⊤`. -/
+theorem positiveExpect_eq_top_of_extendedExpect_eq_top {μ : PMF α} {f : α → ℝ}
+    (h : extendedExpect μ f = ⊤) : positiveExpect μ f = ⊤ := by
+  have hle := extendedExpect_le_positiveExpect μ f
+  rwa [h, top_le_iff, EReal.coe_ennreal_eq_top_iff] at hle
+
 /-- A payoff worth at most another has expected gains bounded by the other's
 expected gains plus its own expected losses. -/
 theorem positiveExpect_le_of_extendedExpect_le {μ : PMF α} {ν : PMF β} {f : α → ℝ}
@@ -474,12 +559,7 @@ theorem positiveExpect_le_of_extendedExpect_le {μ : PMF α} {ν : PMF β} {f : 
   by_cases hloss : negativeExpect μ f = ⊤
   · rw [hloss, add_top]
     exact le_top
-  have hgain : extendedExpect ν g ≤ positiveExpect ν g := by
-    rw [extendedExpect, sub_eq_add_neg]
-    refine add_le_of_nonpos_right (EReal.neg_le.2 ?_)
-    rw [neg_zero]
-    exact EReal.coe_ennreal_nonneg _
-  have hle := h.trans hgain
+  have hle := h.trans (extendedExpect_le_positiveExpect ν g)
   rw [extendedExpect, EReal.sub_le_iff_le_add (Or.inl (EReal.coe_ennreal_ne_bot _))
     (Or.inl (mt EReal.coe_ennreal_eq_top_iff.1 hloss)), ← EReal.coe_ennreal_add] at hle
   exact EReal.coe_ennreal_le_coe_ennreal_iff.1 hle
@@ -503,5 +583,145 @@ theorem payoffIntegrable_bind_of_extendedExpect_le {μ : PMF α} {p q : α → P
     · rw [(PMF.apply_eq_zero_iff μ a).2 ha, zero_mul, zero_mul]
   refine (payoffIntegrable_iff_parts _ _).2 ⟨ne_top_of_le_ne_top ?_ hbound, hloss⟩
   exact ENNReal.add_ne_top.2 ⟨((payoffIntegrable_iff_parts _ _).1 hq).1, hloss⟩
+
+/-! ## Monotone mixtures -/
+
+private theorem coe_sub_le_coe_sub_iff {a b c d : ℝ≥0∞} (ha : a ≠ ⊤) (hb : b ≠ ⊤)
+    (hc : c ≠ ⊤) (hd : d ≠ ⊤) :
+    (a : EReal) - b ≤ (c : EReal) - d ↔ a + d ≤ c + b := by
+  lift a to NNReal using ha
+  lift b to NNReal using hb
+  lift c to NNReal using hc
+  lift d to NNReal using hd
+  rw [EReal.coe_nnreal_eq_coe_real, EReal.coe_nnreal_eq_coe_real, EReal.coe_nnreal_eq_coe_real,
+    EReal.coe_nnreal_eq_coe_real, ← EReal.coe_sub, ← EReal.coe_sub, EReal.coe_le_coe_iff,
+    ← ENNReal.coe_add, ← ENNReal.coe_add, ENNReal.coe_le_coe, ← NNReal.coe_le_coe,
+    NNReal.coe_add, NNReal.coe_add]
+  constructor <;> intro h <;> linarith
+
+/-- The cross inequality of gains and losses orders extended expectations,
+when the larger side has an expectation. -/
+theorem extendedExpect_le_of_cross {μ : PMF α} {ν : PMF β} {f : α → ℝ} {g : β → ℝ}
+    (hcross : positiveExpect μ f + negativeExpect ν g ≤
+      positiveExpect ν g + negativeExpect μ f)
+    (hν : HasExpectation ν g) :
+    extendedExpect μ f ≤ extendedExpect ν g := by
+  by_cases hloss : negativeExpect μ f = ⊤
+  · rw [extendedExpect_eq_bot_of_negativeExpect_eq_top hloss]
+    exact bot_le
+  by_cases hgain : positiveExpect ν g = ⊤
+  · rw [extendedExpect_eq_top hgain (hν.resolve_left (not_not.2 hgain))]
+    exact le_top
+  have hsum : positiveExpect ν g + negativeExpect μ f ≠ ⊤ :=
+    ENNReal.add_ne_top.2 ⟨hgain, hloss⟩
+  have hgainμ : positiveExpect μ f ≠ ⊤ :=
+    ne_top_of_le_ne_top hsum (le_self_add.trans hcross)
+  have hlossν : negativeExpect ν g ≠ ⊤ :=
+    ne_top_of_le_ne_top hsum (le_add_self.trans hcross)
+  exact (coe_sub_le_coe_sub_iff hgainμ hloss hgain hlossν).2 hcross
+
+/-- Ordered extended expectations satisfy the cross inequality of gains and
+losses. -/
+theorem positiveExpect_add_negativeExpect_le {μ : PMF α} {ν : PMF β} {f : α → ℝ}
+    {g : β → ℝ} (h : extendedExpect μ f ≤ extendedExpect ν g) :
+    positiveExpect μ f + negativeExpect ν g ≤ positiveExpect ν g + negativeExpect μ f := by
+  by_cases hloss : negativeExpect μ f = ⊤
+  · rw [hloss, add_top]
+    exact le_top
+  by_cases hgain : positiveExpect ν g = ⊤
+  · rw [hgain, top_add]
+    exact le_top
+  have hgainμ : positiveExpect μ f ≠ ⊤ := fun htop => by
+    rw [extendedExpect_eq_top htop hloss, top_le_iff] at h
+    exact hgain (positiveExpect_eq_top_of_extendedExpect_eq_top h)
+  have hlossν : negativeExpect ν g ≠ ⊤ := fun htop => by
+    rw [extendedExpect_eq_bot_of_negativeExpect_eq_top htop, le_bot_iff] at h
+    exact hloss (negativeExpect_eq_top_of_extendedExpect_eq_bot h)
+  exact (coe_sub_le_coe_sub_iff hgainμ hloss hgain hlossν).1 h
+
+private theorem tsum_bindOnSupport_mul (μ : PMF α) (k : ∀ a ∈ μ.support, PMF β)
+    (g : β → ℝ≥0∞) :
+    ∑' b, μ.bindOnSupport k b * g b =
+      ∑' a, μ a * (if h : μ a = 0 then 0 else ∑' b, k a h b * g b) := by
+  simp_rw [PMF.bindOnSupport_apply, ← ENNReal.tsum_mul_right]
+  rw [ENNReal.tsum_comm]
+  refine tsum_congr fun a => ?_
+  by_cases h : μ a = 0
+  · simp [h]
+  · simp only [h, dite_false, ← ENNReal.tsum_mul_left, mul_assoc]
+
+theorem positiveExpect_bindOnSupport (μ : PMF α) (k : ∀ a ∈ μ.support, PMF β)
+    (f : β → ℝ) :
+    positiveExpect (μ.bindOnSupport k) f =
+      ∑' a, μ a * (if h : μ a = 0 then 0 else positiveExpect (k a h) f) :=
+  tsum_bindOnSupport_mul μ k _
+
+theorem negativeExpect_bindOnSupport (μ : PMF α) (k : ∀ a ∈ μ.support, PMF β)
+    (f : β → ℝ) :
+    negativeExpect (μ.bindOnSupport k) f =
+      ∑' a, μ a * (if h : μ a = 0 then 0 else negativeExpect (k a h) f) :=
+  tsum_bindOnSupport_mul μ k _
+
+/-- A mixture of laws, each worth at most the matching law of another mixture,
+is worth at most that mixture, when the larger mixture has an expectation. -/
+theorem extendedExpect_bindOnSupport_mono {μ : PMF α} {p q : ∀ a ∈ μ.support, PMF β}
+    {f : β → ℝ}
+    (h : ∀ a (ha : a ∈ μ.support), extendedExpect (p a ha) f ≤ extendedExpect (q a ha) f)
+    (hq : HasExpectation (μ.bindOnSupport q) f) :
+    extendedExpect (μ.bindOnSupport p) f ≤ extendedExpect (μ.bindOnSupport q) f := by
+  refine extendedExpect_le_of_cross ?_ hq
+  rw [positiveExpect_bindOnSupport, positiveExpect_bindOnSupport, negativeExpect_bindOnSupport,
+    negativeExpect_bindOnSupport, ← ENNReal.tsum_add, ← ENNReal.tsum_add]
+  refine ENNReal.tsum_le_tsum fun a => ?_
+  rw [← mul_add, ← mul_add]
+  by_cases ha : μ a = 0
+  · simp [ha]
+  · simp only [ha, dite_false]
+    exact mul_le_mul' le_rfl (positiveExpect_add_negativeExpect_le (h a ha))
+
+/-- The mixture form of `extendedExpect_bindOnSupport_mono`. -/
+theorem extendedExpect_bind_mono {μ : PMF α} {p q : α → PMF β} {f : β → ℝ}
+    (h : ∀ a ∈ μ.support, extendedExpect (p a) f ≤ extendedExpect (q a) f)
+    (hq : HasExpectation (μ.bind q) f) :
+    extendedExpect (μ.bind p) f ≤ extendedExpect (μ.bind q) f := by
+  rw [← PMF.bindOnSupport_eq_bind] at hq ⊢
+  rw [← PMF.bindOnSupport_eq_bind]
+  exact extendedExpect_bindOnSupport_mono (fun a ha => h a ha) hq
+
+/-- Two extended reals have a defined sum unless they are opposite infinities.
+`EReal` addition sends that case to `⊥` only by convention, so a sum of two
+separately taken expectations is meaningful exactly when this holds. -/
+def HasDefinedSum (a b : EReal) : Prop :=
+  ¬ (a = ⊤ ∧ b = ⊥) ∧ ¬ (a = ⊥ ∧ b = ⊤)
+
+theorem hasDefinedSum_coe_right (a : EReal) (r : ℝ) : HasDefinedSum a r := by
+  simp [HasDefinedSum]
+
+/-- A positive affine map is an order embedding of the extended reals. -/
+theorem coe_mul_add_coe_le_iff {c : ℝ} (hc : 0 < c) (k : ℝ) {a b : EReal} :
+    (c : EReal) * a + k ≤ c * b + k ↔ a ≤ b := by
+  induction a using EReal.rec with
+  | bot => simp [EReal.coe_mul_bot_of_pos hc]
+  | top =>
+    induction b using EReal.rec with
+    | bot => simp [EReal.coe_mul_bot_of_pos hc, EReal.coe_mul_top_of_pos hc]
+    | top => simp
+    | coe b =>
+      rw [EReal.coe_mul_top_of_pos hc, EReal.top_add_coe, ← EReal.coe_mul, ← EReal.coe_add]
+      exact iff_of_false (fun h => EReal.coe_ne_top _ (top_le_iff.1 h))
+        (fun h => EReal.coe_ne_top _ (top_le_iff.1 h))
+  | coe a =>
+    induction b using EReal.rec with
+    | bot =>
+      rw [EReal.coe_mul_bot_of_pos hc, EReal.bot_add, ← EReal.coe_mul, ← EReal.coe_add]
+      exact iff_of_false (fun h => EReal.coe_ne_bot _ (le_bot_iff.1 h))
+        (fun h => EReal.coe_ne_bot _ (le_bot_iff.1 h))
+    | top =>
+      rw [EReal.coe_mul_top_of_pos hc, EReal.top_add_coe]
+      simp
+    | coe b =>
+      rw [← EReal.coe_mul, ← EReal.coe_add, ← EReal.coe_mul, ← EReal.coe_add,
+        EReal.coe_le_coe_iff, EReal.coe_le_coe_iff, add_le_add_iff_right,
+        mul_le_mul_iff_right₀ hc]
 
 end GameTheory.Math.Probability

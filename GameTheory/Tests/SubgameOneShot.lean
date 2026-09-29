@@ -830,8 +830,10 @@ strictly profitable in the initial (and always proper) subgame. -/
 theorem incumbent_not_isSubgamePerfect :
     ¬ information.IsSubgamePerfect wellFoundedPlay incumbent utility := by
   intro hspe
-  obtain ⟨hother, hinc, hdeviation⟩ := hspe twoStage.initHistory
+  obtain ⟨-, -, hdeviation⟩ := hspe twoStage.initHistory
     information.initHistory_isSubgameRoot () jointAlternative
+  rw [ExecutionProtocol.historyBackwardExtendedValue_le_iff _ (utility_integrable _)
+    (utility_integrable _)] at hdeviation
   have hdeviation' :
       continuationValue
           (Profile.update incumbent () jointAlternative)

@@ -832,8 +832,9 @@ theorem backwardProfile_hasNoProfitableOneShotDeviation [DecidableEq ι]
     dsimp only [ctx, Context.IntegrableAt, oneShotHistoryContext]
     rw [M.oneShotHistoryLaw_self certificate profile who history hterm]
     exact hglobal (M.historyChooser profile) history who
-  refine ⟨hinc, ?_, ?_⟩
-  · intro choice _
+  have hall : ∀ choice ∈ (Set.univ : Set (M.Choice who (M.infoOf who history.trace))),
+      ctx.IntegrableAt choice := by
+    intro choice _
     by_cases hactive : E.active history.state who
     · let candidate := M.historyChoiceChooser singleMover
         (M.historyChooser fallback) history hterm
@@ -852,67 +853,68 @@ theorem backwardProfile_hasNoProfitableOneShotDeviation [DecidableEq ι]
         (M.subsingleton_choice_of_not_active history.trace hactive).elim _ _
       subst choice
       exact hinc
-  · intro choice _
-    by_cases hactive : E.active history.state who
-    · have hfinite : Finite (M.Choice who (M.infoOf who history.trace)) :=
-        finiteChoices who (M.infoOf who history.trace) history
-          ⟨hterm, hactive, rfl⟩
-      have hnonempty : Nonempty (M.Choice who
-          (M.infoOf who history.trace)) :=
-        ⟨fallback who (M.infoOf who history.trace)⟩
-      let recurse : ∀ later : E.History,
-          E.HistorySuccessor later history → E.HistoryChooser :=
-        fun later _ => M.backwardChooserBundle singleMover fallback
-          finiteChoices certificate utility later
-      let candidate := M.historyChoiceChooser singleMover
-        (M.historyChooser fallback) history hterm recurse who hactive choice
-      have hlaw : M.oneShotHistoryLaw certificate profile who history hterm
-          choice = E.historyBackwardLaw certificate candidate history :=
-        M.oneShotHistoryLaw_backwardProfile singleMover fallback
-          finiteChoices hperfect history hterm who hactive choice
-      have hleft : ctx.value choice =
+  refine (Context.isLocallyOptimal_iff_of_integrable hinc hall).2 ?_
+  intro choice _
+  by_cases hactive : E.active history.state who
+  · have hfinite : Finite (M.Choice who (M.infoOf who history.trace)) :=
+      finiteChoices who (M.infoOf who history.trace) history
+        ⟨hterm, hactive, rfl⟩
+    have hnonempty : Nonempty (M.Choice who
+        (M.infoOf who history.trace)) :=
+      ⟨fallback who (M.infoOf who history.trace)⟩
+    let recurse : ∀ later : E.History,
+        E.HistorySuccessor later history → E.HistoryChooser :=
+      fun later _ => M.backwardChooserBundle singleMover fallback
+        finiteChoices certificate utility later
+    let candidate := M.historyChoiceChooser singleMover
+      (M.historyChooser fallback) history hterm recurse who hactive choice
+    have hlaw : M.oneShotHistoryLaw certificate profile who history hterm
+        choice = E.historyBackwardLaw certificate candidate history :=
+      M.oneShotHistoryLaw_backwardProfile singleMover fallback
+        finiteChoices hperfect history hterm who hactive choice
+    have hleft : ctx.value choice =
+        M.historyChoiceValue singleMover (M.historyChooser fallback)
+          certificate utility history hterm recurse who hactive
+          choice := by
+      simp only [ctx, Context.value, oneShotHistoryContext,
+        historyChoiceValue, hlaw]
+      dsimp only [candidate, recurse]
+    have hright : ctx.value
+        (profile who (M.infoOf who history.trace)) =
+        M.backwardOutcome singleMover fallback finiteChoices certificate
+          utility history who := by
+      have hlaw : ctx.outcome
+          (profile who (M.infoOf who history.trace)) =
+          E.historyBackwardLaw certificate
+            (M.backwardChooserBundle singleMover fallback finiteChoices
+              certificate utility history) history := by
+        exact (M.oneShotHistoryLaw_self certificate profile who history hterm).trans
+          (M.historyBackwardLaw_backwardProfile singleMover fallback
+            finiteChoices hperfect history)
+      exact expectedUtility_congr_law utility who hlaw
+    calc
+      ctx.value choice =
           M.historyChoiceValue singleMover (M.historyChooser fallback)
             certificate utility history hterm recurse who hactive
-            choice := by
-        simp only [ctx, Context.value, oneShotHistoryContext,
-          historyChoiceValue, hlaw]
-        dsimp only [candidate, recurse]
-      have hright : ctx.value
-          (profile who (M.infoOf who history.trace)) =
-          M.backwardOutcome singleMover fallback finiteChoices certificate
-            utility history who := by
-        have hlaw : ctx.outcome
-            (profile who (M.infoOf who history.trace)) =
-            E.historyBackwardLaw certificate
-              (M.backwardChooserBundle singleMover fallback finiteChoices
-                certificate utility history) history := by
-          exact (M.oneShotHistoryLaw_self certificate profile who history hterm).trans
-            (M.historyBackwardLaw_backwardProfile singleMover fallback
-              finiteChoices hperfect history)
-        exact expectedUtility_congr_law utility who hlaw
-      calc
-        ctx.value choice =
-            M.historyChoiceValue singleMover (M.historyChooser fallback)
-              certificate utility history hterm recurse who hactive
-              choice := hleft
-        _ ≤ M.historyChoiceValue singleMover (M.historyChooser fallback)
-              certificate utility history hterm recurse who hactive
-              (M.bestHistoryChoice singleMover (M.historyChooser fallback)
-                certificate utility history hterm recurse who hactive) :=
-          M.historyChoiceValue_le_bestHistoryChoice singleMover
-            (M.historyChooser fallback) certificate utility history
-            hterm recurse who hactive choice
-        _ = M.backwardOutcome singleMover fallback finiteChoices certificate
-              utility history who :=
-          (M.backwardOutcome_eq_bestHistoryChoiceValue singleMover
-            fallback finiteChoices history hterm who hactive).symm
-        _ = ctx.value (profile who (M.infoOf who history.trace)) :=
-          hright.symm
-    · have hchoice : choice =
-          profile who (M.infoOf who history.trace) :=
-        (M.subsingleton_choice_of_not_active history.trace hactive).elim _ _
-      subst choice
-      exact le_rfl
+            choice := hleft
+      _ ≤ M.historyChoiceValue singleMover (M.historyChooser fallback)
+            certificate utility history hterm recurse who hactive
+            (M.bestHistoryChoice singleMover (M.historyChooser fallback)
+              certificate utility history hterm recurse who hactive) :=
+        M.historyChoiceValue_le_bestHistoryChoice singleMover
+          (M.historyChooser fallback) certificate utility history
+          hterm recurse who hactive choice
+      _ = M.backwardOutcome singleMover fallback finiteChoices certificate
+            utility history who :=
+        (M.backwardOutcome_eq_bestHistoryChoiceValue singleMover
+          fallback finiteChoices history hterm who hactive).symm
+      _ = ctx.value (profile who (M.infoOf who history.trace)) :=
+        hright.symm
+  · have hchoice : choice =
+        profile who (M.infoOf who history.trace) :=
+      (M.subsingleton_choice_of_not_active history.trace hactive).elim _ _
+    subst choice
+    exact le_rfl
 
 /-- Well-founded perfect-information backward induction yields a pure
 subgame-perfect profile when every actual history-chooser terminal law has a
@@ -940,8 +942,8 @@ theorem exists_isSubgamePerfect [DecidableEq ι]
   · exact M.backwardProfile_hasNoProfitableOneShotDeviation singleMover
       fallback finiteChoices hglobal hperfect
   · intro who alternative history
-    exact hglobal (M.historyChooser (Profile.update profile who alternative))
-      history who
+    exact hasExpectation_of_payoffIntegrable
+      (hglobal (M.historyChooser (Profile.update profile who alternative)) history who)
 
 /-- The finite-transition domain recovers the constructor for arbitrary real
 terminal payoffs, with no global payoff bound or finite history carrier. -/

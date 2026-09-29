@@ -7,8 +7,12 @@ Monitoring*, Econometrica 58(5), 1990, 1041--1063. A current stage profile and
 a signal-indexed continuation payoff assignment jointly promise a payoff
 vector and deter unilateral current-stage deviations.
 
-Current-stage and continuation expectations carry their actual integration
-certificates. No bound or finite signal carrier is stored in the model.
+A promise is a real payoff vector, so promise keeping carries the actual
+integration certificates of the current-stage and continuation expectations.
+Deterrence instead compares extended-real decomposed payoffs: a deviation whose
+current-stage or continuation expectation is infinite is still ranked, and only
+a deviation whose payoff is genuinely undefined is left incomparable. No bound
+or finite signal carrier is stored in the model.
 -/
 
 import GameTheory.Repeated.MonitoringDiscounted
@@ -61,24 +65,94 @@ def IsPromiseKeeping (M : G.PublicMonitoring) (discount : ℝ)
       M.decomposedPayoff discount profile continuation
         who = promise who
 
+/-- The normalized discounted payoff promised by a profile and a continuation
+assignment, in the extended reals: each of the current-stage and continuation
+expectations may be infinite. -/
+def extendedDecomposedPayoff (M : G.PublicMonitoring) (discount : ℝ)
+    (profile : Profile G.form.sig) (continuation : M.ContinuationAssignment)
+    (who : ι) : EReal :=
+  ((1 - discount : ℝ) : EReal) *
+      extendedExpectedUtility G.utility who (G.form.play profile) +
+    (discount : EReal) *
+      extendedExpect (M.signalLaw profile) (fun signal => continuation signal who)
+
+/-- The decomposed payoff exists: both expectations exist and their weighted
+terms are not opposite infinities. -/
+def HasDecomposedPayoff (M : G.PublicMonitoring) (discount : ℝ)
+    (profile : Profile G.form.sig) (continuation : M.ContinuationAssignment)
+    (who : ι) : Prop :=
+  UtilityHasExpectation G.utility who (G.form.play profile) ∧
+    HasExpectation (M.signalLaw profile) (fun signal => continuation signal who) ∧
+    HasDefinedSum
+      (((1 - discount : ℝ) : EReal) *
+        extendedExpectedUtility G.utility who (G.form.play profile))
+      ((discount : EReal) *
+        extendedExpect (M.signalLaw profile) (fun signal => continuation signal who))
+
+/-- One unilateral current-stage action is deterred: both decomposed payoffs
+exist and the deviation's is no larger. -/
+def Deters (M : G.PublicMonitoring) [DecidableEq ι]
+    (discount : ℝ) (profile : Profile G.form.sig)
+    (continuation : M.ContinuationAssignment) (who : ι)
+    (action : G.form.sig.Strategy who) : Prop :=
+  M.HasDecomposedPayoff discount profile continuation who ∧
+    M.HasDecomposedPayoff discount (Profile.update profile who action) continuation who ∧
+    M.extendedDecomposedPayoff discount (Profile.update profile who action)
+        continuation who ≤
+      M.extendedDecomposedPayoff discount profile continuation who
+
 /-- Every unilateral current-stage action is deterred by the same public
 continuation assignment. -/
 def IsEnforceable (M : G.PublicMonitoring) [DecidableEq ι]
     (discount : ℝ) (profile : Profile G.form.sig)
     (continuation : M.ContinuationAssignment) : Prop :=
-  ∀ who action,
-    UtilityIntegrable G.utility who (G.form.play profile) ∧
-    PayoffIntegrable (M.signalLaw profile)
-      (fun signal => continuation signal who) ∧
-    UtilityIntegrable G.utility who
-      (G.form.play (Profile.update profile who action)) ∧
-    PayoffIntegrable
-      (M.signalLaw (Profile.update profile who action))
-      (fun signal => continuation signal who) ∧
-      M.decomposedDeviationPayoff discount profile continuation
-          who action ≤
-        M.decomposedPayoff discount profile continuation
-          who
+  ∀ who action, M.Deters discount profile continuation who action
+
+/-- With integrable expectations, the extended decomposed payoff is the real
+one. -/
+theorem extendedDecomposedPayoff_eq (M : G.PublicMonitoring) {discount : ℝ}
+    {profile : Profile G.form.sig} {continuation : M.ContinuationAssignment} {who : ι}
+    (hstage : UtilityIntegrable G.utility who (G.form.play profile))
+    (hsignal : PayoffIntegrable (M.signalLaw profile)
+      (fun signal => continuation signal who)) :
+    M.extendedDecomposedPayoff discount profile continuation who =
+      M.decomposedPayoff discount profile continuation who := by
+  rw [extendedDecomposedPayoff, extendedExpectedUtility_eq hstage,
+    extendedExpect_eq_expect hsignal, decomposedPayoff, stagePayoff]
+  norm_cast
+
+theorem hasDecomposedPayoff_of_integrable (M : G.PublicMonitoring) {discount : ℝ}
+    {profile : Profile G.form.sig} {continuation : M.ContinuationAssignment} {who : ι}
+    (hstage : UtilityIntegrable G.utility who (G.form.play profile))
+    (hsignal : PayoffIntegrable (M.signalLaw profile)
+      (fun signal => continuation signal who)) :
+    M.HasDecomposedPayoff discount profile continuation who := by
+  refine ⟨hasExpectation_of_payoffIntegrable hstage,
+    hasExpectation_of_payoffIntegrable hsignal, ?_⟩
+  rw [extendedExpect_eq_expect hsignal, ← EReal.coe_mul]
+  exact hasDefinedSum_coe_right _ _
+
+/-- With integrable expectations on both sides, deterrence is the real
+comparison of decomposed payoffs. -/
+theorem deters_iff_of_integrable (M : G.PublicMonitoring) [DecidableEq ι]
+    {discount : ℝ} {profile : Profile G.form.sig}
+    {continuation : M.ContinuationAssignment} {who : ι}
+    {action : G.form.sig.Strategy who}
+    (hstage : UtilityIntegrable G.utility who (G.form.play profile))
+    (hsignal : PayoffIntegrable (M.signalLaw profile)
+      (fun signal => continuation signal who))
+    (hdeviationStage : UtilityIntegrable G.utility who
+      (G.form.play (Profile.update profile who action)))
+    (hdeviationSignal : PayoffIntegrable (M.signalLaw (Profile.update profile who action))
+      (fun signal => continuation signal who)) :
+    M.Deters discount profile continuation who action ↔
+      M.decomposedDeviationPayoff discount profile continuation who action ≤
+        M.decomposedPayoff discount profile continuation who := by
+  rw [Deters, M.extendedDecomposedPayoff_eq hstage hsignal,
+    M.extendedDecomposedPayoff_eq hdeviationStage hdeviationSignal, EReal.coe_le_coe_iff,
+    decomposedDeviationPayoff]
+  exact ⟨fun h => h.2.2, fun h => ⟨M.hasDecomposedPayoff_of_integrable hstage hsignal,
+    M.hasDecomposedPayoff_of_integrable hdeviationStage hdeviationSignal, h⟩⟩
 
 /-- A payoff decomposes on `payoffs` when it is promised and enforced by a
 current profile and every signal-contingent continuation lies in `payoffs`. -/
@@ -171,97 +245,75 @@ theorem isPromiseKeeping_constant_stagePayoff
       M.decomposedPayoff_constant discount profile _ who
     _ = G.stagePayoff profile who := by ring
 
+/-- A constant continuation contributes a finite term, so the decomposed
+payoff exists exactly when the current-stage expectation does. -/
+theorem hasDecomposedPayoff_constant_iff (M : G.PublicMonitoring) (discount : ℝ)
+    (profile : Profile G.form.sig) (payoff : ι → ℝ) (who : ι) :
+    M.HasDecomposedPayoff discount profile (M.constantContinuation payoff) who ↔
+      UtilityHasExpectation G.utility who (G.form.play profile) := by
+  have hsignal : PayoffIntegrable (M.signalLaw profile)
+      (fun signal => M.constantContinuation payoff signal who) :=
+    payoffIntegrable_constant _ _
+  refine ⟨fun h => h.1, fun h => ⟨h, hasExpectation_of_payoffIntegrable hsignal, ?_⟩⟩
+  rw [extendedExpect_eq_expect hsignal, ← EReal.coe_mul]
+  exact hasDefinedSum_coe_right _ _
+
+theorem extendedDecomposedPayoff_constant (M : G.PublicMonitoring) (discount : ℝ)
+    (profile : Profile G.form.sig) (payoff : ι → ℝ) (who : ι) :
+    M.extendedDecomposedPayoff discount profile (M.constantContinuation payoff) who =
+      ((1 - discount : ℝ) : EReal) *
+          extendedExpectedUtility G.utility who (G.form.play profile) +
+        ((discount * payoff who : ℝ) : EReal) := by
+  rw [extendedDecomposedPayoff]
+  simp only [constantContinuation_apply]
+  rw [extendedExpect_constant, EReal.coe_mul]
+
 /-- With a constant continuation and `discount < 1`, APS enforceability is
-exactly ordinary stage-game Nash with integrable unilateral deviations. -/
+exactly ordinary stage-game Nash. -/
 theorem isEnforceable_constant_iff_isNash
     (M : G.PublicMonitoring) [DecidableEq ι]
     {discount : ℝ} (hdiscount1 : discount < 1)
     (profile : Profile G.form.sig) (payoff : ι → ℝ) :
     M.IsEnforceable discount profile (M.constantContinuation payoff) ↔
-      IsNash G.form (euPreference G.utility) profile ∧
-        G.form.HasIntegrableDeviations G.utility profile := by
+      IsNash G.form (euPreference G.utility) profile := by
   rw [IsEnforceable, isNash_iff]
-  constructor
-  · intro henforce
-    refine ⟨fun who action => ?_, fun who action => (henforce who action).2.2.1⟩
-    obtain ⟨hbase, _hbaseSignal, hupdate, _hupdateSignal,
-      hdeviation⟩ := henforce who action
-    refine (euPreference_iff _ _ _ _ hbase hupdate).2 ?_
-    have hdeviation' :
-        (1 - discount) * G.stagePayoff
-            (Profile.update profile who action) who +
-          discount * payoff who ≤
-        (1 - discount) * G.stagePayoff profile who +
-          discount * payoff who := by
-      calc
-        _ = M.decomposedDeviationPayoff discount profile
-            (M.constantContinuation payoff) who action :=
-          (M.decomposedPayoff_constant discount
-            (Profile.update profile who action) payoff who).symm
-        _ ≤ M.decomposedPayoff discount profile
-            (M.constantContinuation payoff) who := hdeviation
-        _ = _ := M.decomposedPayoff_constant
-          discount profile payoff who
-    dsimp only [stagePayoff] at hdeviation'
-    nlinarith
-  · rintro ⟨hnash, hintegrable⟩ who action
-    have hbase := hintegrable.base who
-    have hupdate := hintegrable who action
-    have hdeviation := (euPreference_iff _ _ _ _ hbase hupdate).1 (hnash who action)
-    refine ⟨hbase, payoffIntegrable_constant _ _,
-      hupdate, payoffIntegrable_constant _ _, ?_⟩
-    calc
-      M.decomposedDeviationPayoff discount profile
-          (M.constantContinuation payoff) who action =
-        (1 - discount) * G.stagePayoff
-            (Profile.update profile who action) who +
-          discount * payoff who :=
-        M.decomposedPayoff_constant discount
-          (Profile.update profile who action) payoff who
-      _ ≤ (1 - discount) * G.stagePayoff profile who +
-          discount * payoff who := by
-        dsimp only [stagePayoff]
-        nlinarith
-      _ = M.decomposedPayoff discount profile
-          (M.constantContinuation payoff) who :=
-        (M.decomposedPayoff_constant
-          discount profile payoff who).symm
+  refine forall_congr' fun who => forall_congr' fun action => ?_
+  rw [Deters, euPreference_apply, hasDecomposedPayoff_constant_iff,
+    hasDecomposedPayoff_constant_iff, extendedDecomposedPayoff_constant,
+    extendedDecomposedPayoff_constant, coe_mul_add_coe_le_iff (by linarith)]
 
-/-- A stage-Nash payoff with integrable unilateral deviations decomposes on
-its singleton through stationary continuation promises. -/
+/-- A stage-Nash payoff with an integrable incumbent decomposes on its
+singleton through stationary continuation promises. -/
 theorem decomposesOn_singleton_stagePayoff_of_isNash
     (M : G.PublicMonitoring) [DecidableEq ι]
     {discount : ℝ} (hdiscount1 : discount < 1)
     {profile : Profile G.form.sig}
     (hnash : IsNash G.form (euPreference G.utility) profile)
-    (hintegrable : G.form.HasIntegrableDeviations G.utility profile) :
+    (hstage : ∀ who, UtilityIntegrable G.utility who (G.form.play profile)) :
     M.DecomposesOn discount
       ({fun who => G.stagePayoff profile who} : Set (ι → ℝ))
       (fun who => G.stagePayoff profile who) := by
-  have hstage : ∀ who,
-      UtilityIntegrable G.utility who (G.form.play profile) := hintegrable.base
   let payoff : ι → ℝ := fun who => G.stagePayoff profile who
   refine ⟨profile, M.constantContinuation payoff, ?_, ?_, ?_⟩
   · intro signal
     simp [payoff]
   · exact M.isPromiseKeeping_constant_stagePayoff discount profile hstage
-  · exact (M.isEnforceable_constant_iff_isNash
-      hdiscount1 profile payoff).2 ⟨hnash, hintegrable⟩
+  · exact (M.isEnforceable_constant_iff_isNash hdiscount1 profile payoff).2 hnash
 
-/-- Every singleton stage-Nash payoff with integrable unilateral deviations is
+/-- Every singleton stage-Nash payoff with an integrable incumbent is
 self-generating. -/
 theorem selfGenerating_singleton_stagePayoff_of_isNash
     (M : G.PublicMonitoring) [DecidableEq ι]
     {discount : ℝ} (hdiscount1 : discount < 1)
     {profile : Profile G.form.sig}
     (hnash : IsNash G.form (euPreference G.utility) profile)
-    (hintegrable : G.form.HasIntegrableDeviations G.utility profile) :
+    (hstage : ∀ who, UtilityIntegrable G.utility who (G.form.play profile)) :
     M.SelfGenerating discount
       ({fun who => G.stagePayoff profile who} : Set (ι → ℝ)) := by
   intro promise hpromise
   rw [Set.mem_singleton_iff] at hpromise
   subst promise
-  exact M.decomposesOn_singleton_stagePayoff_of_isNash hdiscount1 hnash hintegrable
+  exact M.decomposesOn_singleton_stagePayoff_of_isNash hdiscount1 hnash hstage
 
 end UtilityGame.PublicMonitoring
 

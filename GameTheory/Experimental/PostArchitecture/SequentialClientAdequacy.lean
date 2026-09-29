@@ -256,9 +256,11 @@ theorem matching_isHistorywiseOptimal :
     recallGame.IsHistorywiseOptimal twice_wellFoundedPlay matchingProfile matchUtility := by
   intro who alternative history
   rcases who with ⟨⟩
-  refine ⟨matchIntegrable
-      (recallModel.historyChooser (Profile.update matchingProfile () alternative))
-      history, matchIntegrable matchingChooser history, ?_⟩
+  have hdev := matchIntegrable
+    (recallModel.historyChooser (Profile.update matchingProfile () alternative)) history
+  have hbase := matchIntegrable matchingChooser history
+  refine ⟨hasExpectation_of_payoffIntegrable hdev, hasExpectation_of_payoffIntegrable hbase,
+    (twice.historyBackwardExtendedValue_le_iff hdev hbase).2 ?_⟩
   by_cases hterm : twice.terminal history.state
   · rw [twice.historyBackwardValue_of_terminal hterm,
       twice.historyBackwardValue_of_terminal hterm]
@@ -298,7 +300,9 @@ theorem mismatching_not_isHistorywiseOptimal :
   have hcomparison := hoptimal () matchingPolicy afterUpHistory
   rw [update_unit_eq_profile, show (fun _ => matchingPolicy) = matchingProfile from rfl]
     at hcomparison
-  obtain ⟨hother, hinc, hcomparison⟩ := hcomparison
+  obtain ⟨-, -, hcomparison⟩ := hcomparison
+  replace hcomparison := (twice.historyBackwardExtendedValue_le_iff (matchIntegrable _ _)
+    (matchIntegrable _ _)).1 hcomparison
   have hcomparison' : matchingValue afterUpHistory ≤ mismatchingValue afterUpHistory := by
     simpa [matchingValue, mismatchingValue, matchingChooser, mismatchingChooser]
       using hcomparison

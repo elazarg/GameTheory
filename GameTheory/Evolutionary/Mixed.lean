@@ -2,14 +2,21 @@
 # Evolutionary stability against mixed mutants
 
 Population strategies are ordinary PMFs. An encounter draws the actor and
-opponent independently, retaining both draws in the actual joint law. A mixed
-ESS requires every pair encounter used by the mutant family to have a defined
-payoff; the numerical ESS then uses the unchanged static definition.
+opponent independently, retaining both draws in the actual joint law.
+
+Actual small-invasion stability compares extended-real fitness in the actual
+invaded population, so an infinite fitness is still ranked and only an
+undefined one is left incomparable. The classical static mixed ESS compares
+finite fitness values and so requires every pair encounter to be integrable.
+With infinite fitness the two notions come apart: a mutant with an infinite
+self encounter wins every positive invasion even when the static first-order
+test favours the resident. Under integrability they coincide.
 -/
 
 import GameTheory.Evolutionary.Basic
 import GameTheory.Math.Probability.ExpectationBind
 import GameTheory.Math.Probability.ExpectationMixture
+import GameTheory.Math.Probability.ExtendedExpectation
 
 noncomputable section
 
@@ -35,27 +42,16 @@ private theorem mix_half_weight {α : Type*} (μ ν : PMF α) (a : α) :
   · exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top (μ.apply_ne_top a)
   · exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top (ν.apply_ne_top a)
 
-/-- A half-and-half population's self encounter controls either ordered
-cross encounter, even for unbounded payoffs on infinite carriers. -/
-theorem pairPayoffIntegrable_of_half_self (payoff : S → S → ℝ)
-    (μ ν : PMF S)
-    (hself : PayoffIntegrable
+/-- A half-and-half population's self encounter charges either ordered cross
+encounter with at least a quarter of its weight. -/
+private theorem half_self_weight_le (μ ν : PMF S) (pair : S × S) :
+    (1 / 4 : ℝ) * (bindPairLaw μ (fun _ => ν) pair).toReal ≤
       (bindPairLaw (mix (1 / 2 : ℝ) (by norm_num) (by norm_num) μ ν)
-        (fun _ => mix (1 / 2 : ℝ) (by norm_num) (by norm_num) μ ν))
-      (fun pair => payoff pair.1 pair.2)) :
-    PayoffIntegrable (bindPairLaw μ (fun _ => ν))
-      (fun pair => payoff pair.1 pair.2) := by
-  let κ := mix (1 / 2 : ℝ) (by norm_num) (by norm_num) μ ν
-  apply payoffIntegrable_of_scaled_weight_le
-    (bindPairLaw μ (fun _ => ν)) (bindPairLaw κ (fun _ => κ))
-    (fun pair => payoff pair.1 pair.2) (1 / 4) (by norm_num) ?_ hself
-  rintro ⟨a, b⟩
+        (fun _ => mix (1 / 2 : ℝ) (by norm_num) (by norm_num) μ ν) pair).toReal := by
+  rcases pair with ⟨a, b⟩
   rw [bindPairLaw_apply, bindPairLaw_apply]
   simp only [ENNReal.toReal_mul]
-  rw [show (κ a).toReal = ((μ a).toReal + (ν a).toReal) / 2 from
-    mix_half_weight μ ν a]
-  rw [show (κ b).toReal = ((μ b).toReal + (ν b).toReal) / 2 from
-    mix_half_weight μ ν b]
+  rw [mix_half_weight μ ν a, mix_half_weight μ ν b]
   have haμ : 0 ≤ (μ a).toReal := ENNReal.toReal_nonneg
   have hbμ : 0 ≤ (μ b).toReal := ENNReal.toReal_nonneg
   have haν : 0 ≤ (ν a).toReal := ENNReal.toReal_nonneg
@@ -63,22 +59,15 @@ theorem pairPayoffIntegrable_of_half_self (payoff : S → S → ℝ)
   nlinarith [mul_nonneg haμ hbμ, mul_nonneg haν hbμ,
     mul_nonneg haν hbν]
 
-/-- Any positive mutant share charges every mutant self encounter. -/
-theorem pairPayoffIntegrable_self_of_positive_invasion
-    (payoff : S → S → ℝ) (resident mutant : PMF S)
-    (share : ℝ) (hpositive : 0 < share) (hunit : share < 1)
-    (hinvasion : PayoffIntegrable
+/-- A mutant's encounter with an invaded population charges its self encounter
+with at least the invasion share of its weight. -/
+private theorem positive_invasion_weight_le (resident mutant : PMF S)
+    (share : ℝ) (hpositive : 0 < share) (hunit : share < 1) (pair : S × S) :
+    share * (bindPairLaw mutant (fun _ => mutant) pair).toReal ≤
       (bindPairLaw mutant (fun _ =>
-        invasionPopulation resident mutant share hpositive hunit))
-      (fun pair => payoff pair.1 pair.2)) :
-    PayoffIntegrable (bindPairLaw mutant (fun _ => mutant))
-      (fun pair => payoff pair.1 pair.2) := by
+        invasionPopulation resident mutant share hpositive hunit) pair).toReal := by
   let invasion := invasionPopulation resident mutant share hpositive hunit
-  apply payoffIntegrable_of_scaled_weight_le
-    (bindPairLaw mutant (fun _ => mutant))
-    (bindPairLaw mutant (fun _ => invasion))
-    (fun pair => payoff pair.1 pair.2) share hpositive ?_ hinvasion
-  rintro ⟨a, b⟩
+  rcases pair with ⟨a, b⟩
   rw [bindPairLaw_apply, bindPairLaw_apply]
   simp only [ENNReal.toReal_mul]
   have hmass : (invasion b).toReal =
@@ -93,54 +82,117 @@ theorem pairPayoffIntegrable_self_of_positive_invasion
         (resident.apply_ne_top b)
     · exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top
         (mutant.apply_ne_top b)
+  change share * ((mutant a).toReal * (mutant b).toReal) ≤
+    (mutant a).toReal * (invasion b).toReal
   rw [hmass]
   have hfirst : 0 ≤ (mutant a).toReal := ENNReal.toReal_nonneg
   have hsecond : 0 ≤ (resident b).toReal := ENNReal.toReal_nonneg
   have hcoefficient : 0 ≤ 1 - share := by linarith
   nlinarith [mul_nonneg hfirst (mul_nonneg hcoefficient hsecond)]
 
+/-- A half-and-half population's self encounter controls either ordered
+cross encounter, even for unbounded payoffs on infinite carriers. -/
+theorem pairPayoffIntegrable_of_half_self (payoff : S → S → ℝ)
+    (μ ν : PMF S)
+    (hself : PayoffIntegrable
+      (bindPairLaw (mix (1 / 2 : ℝ) (by norm_num) (by norm_num) μ ν)
+        (fun _ => mix (1 / 2 : ℝ) (by norm_num) (by norm_num) μ ν))
+      (fun pair => payoff pair.1 pair.2)) :
+    PayoffIntegrable (bindPairLaw μ (fun _ => ν))
+      (fun pair => payoff pair.1 pair.2) :=
+  payoffIntegrable_of_scaled_weight_le _ _ _ (1 / 4) (by norm_num)
+    (half_self_weight_le μ ν) hself
+
+/-- The same control for the existence of an expectation. -/
+theorem pairHasExpectation_of_half_self (payoff : S → S → ℝ)
+    (μ ν : PMF S)
+    (hself : HasExpectation
+      (bindPairLaw (mix (1 / 2 : ℝ) (by norm_num) (by norm_num) μ ν)
+        (fun _ => mix (1 / 2 : ℝ) (by norm_num) (by norm_num) μ ν))
+      (fun pair => payoff pair.1 pair.2)) :
+    HasExpectation (bindPairLaw μ (fun _ => ν))
+      (fun pair => payoff pair.1 pair.2) :=
+  hasExpectation_of_scaled_weight_le (by norm_num) (half_self_weight_le μ ν) hself
+
+/-- Any positive mutant share charges every mutant self encounter. -/
+theorem pairPayoffIntegrable_self_of_positive_invasion
+    (payoff : S → S → ℝ) (resident mutant : PMF S)
+    (share : ℝ) (hpositive : 0 < share) (hunit : share < 1)
+    (hinvasion : PayoffIntegrable
+      (bindPairLaw mutant (fun _ =>
+        invasionPopulation resident mutant share hpositive hunit))
+      (fun pair => payoff pair.1 pair.2)) :
+    PayoffIntegrable (bindPairLaw mutant (fun _ => mutant))
+      (fun pair => payoff pair.1 pair.2) :=
+  payoffIntegrable_of_scaled_weight_le _ _ _ share hpositive
+    (positive_invasion_weight_le resident mutant share hpositive hunit) hinvasion
+
+/-- The same charge for the existence of an expectation. -/
+theorem pairHasExpectation_self_of_positive_invasion
+    (payoff : S → S → ℝ) (resident mutant : PMF S)
+    (share : ℝ) (hpositive : 0 < share) (hunit : share < 1)
+    (hinvasion : HasExpectation
+      (bindPairLaw mutant (fun _ =>
+        invasionPopulation resident mutant share hpositive hunit))
+      (fun pair => payoff pair.1 pair.2)) :
+    HasExpectation (bindPairLaw mutant (fun _ => mutant))
+      (fun pair => payoff pair.1 pair.2) :=
+  hasExpectation_of_scaled_weight_le hpositive
+    (positive_invasion_weight_le resident mutant share hpositive hunit) hinvasion
+
 /-- Actual encounter payoff for two population laws. -/
 def mixedPayoff (payoff : S → S → ℝ) (own opponent : PMF S) : ℝ :=
   expect (bindPairLaw own (fun _ => opponent))
     (fun pair => payoff pair.1 pair.2)
 
-/-- The resident self encounter is defined, and every distinct mutant has
-both actual invasion fitnesses defined throughout a positive interval. -/
+/-- Actual encounter fitness in the extended reals. -/
+def extendedMixedPayoff (payoff : S → S → ℝ) (own opponent : PMF S) : EReal :=
+  extendedExpect (bindPairLaw own (fun _ => opponent))
+    (fun pair => payoff pair.1 pair.2)
+
+theorem extendedMixedPayoff_eq {payoff : S → S → ℝ} {own opponent : PMF S}
+    (h : PayoffIntegrable (bindPairLaw own (fun _ => opponent))
+      (fun pair => payoff pair.1 pair.2)) :
+    extendedMixedPayoff payoff own opponent = mixedPayoff payoff own opponent :=
+  extendedExpect_eq_expect h
+
+/-- The resident self encounter has an expectation, and every distinct mutant
+has both actual invasion fitnesses defined throughout a positive interval. -/
 def HasActualSmallInvasionPayoffs (payoff : S → S → ℝ)
     (resident : PMF S) : Prop :=
-  PayoffIntegrable (bindPairLaw resident (fun _ => resident))
+  HasExpectation (bindPairLaw resident (fun _ => resident))
       (fun pair => payoff pair.1 pair.2) ∧
     ∀ mutant, resident ≠ mutant →
       ∃ threshold : ℝ, 0 < threshold ∧
         ∀ share : ℝ, (hpositive : 0 < share) →
           (hunit : share < 1) → share < threshold →
-          PayoffIntegrable
+          HasExpectation
               (bindPairLaw resident (fun _ =>
                 invasionPopulation resident mutant share hpositive hunit))
               (fun pair => payoff pair.1 pair.2) ∧
-            PayoffIntegrable
+            HasExpectation
               (bindPairLaw mutant (fun _ =>
                 invasionPopulation resident mutant share hpositive hunit))
               (fun pair => payoff pair.1 pair.2)
 
 /-- Defined actual fitness at arbitrarily small positive mutant shares is
-equivalent to integration of every ordered pair encounter. In particular,
-integrability cannot omit a divergent mutant self encounter. -/
+equivalent to an expectation for every ordered pair encounter. In particular,
+it cannot omit an undefined mutant self encounter. -/
 theorem actualSmallInvasionPayoffs_iff_allPairs
     (payoff : S → S → ℝ) (resident : PMF S) :
     HasActualSmallInvasionPayoffs payoff resident ↔
       ∀ own opponent : PMF S,
-        PayoffIntegrable (bindPairLaw own (fun _ => opponent))
+        HasExpectation (bindPairLaw own (fun _ => opponent))
           (fun pair => payoff pair.1 pair.2) := by
   constructor
   · intro h own opponent
     let κ := mix (1 / 2 : ℝ) (by norm_num) (by norm_num)
       own opponent
-    have hself : PayoffIntegrable (bindPairLaw κ (fun _ => κ))
+    have hself : HasExpectation (bindPairLaw κ (fun _ => κ))
         (fun pair => payoff pair.1 pair.2) := by
       by_cases hsame : resident = κ
-      · exact payoffIntegrable_congr_law
-          (by rw [← hsame]) h.1
+      · rw [← hsame]
+        exact h.1
       · obtain ⟨threshold, hthreshold, hguard⟩ := h.2 κ hsame
         let share := min (threshold / 2) (1 / 2 : ℝ)
         have hpositive : 0 < share := by
@@ -150,10 +202,10 @@ theorem actualSmallInvasionPayoffs_iff_allPairs
           exact lt_of_le_of_lt (min_le_left _ _) (by linarith)
         have hunit : share < 1 := by
           exact lt_of_le_of_lt (min_le_right _ _) (by norm_num)
-        exact pairPayoffIntegrable_self_of_positive_invasion
+        exact pairHasExpectation_self_of_positive_invasion
           payoff resident κ share hpositive hunit
           (hguard share hpositive hunit hsmall).2
-    exact pairPayoffIntegrable_of_half_self payoff own opponent hself
+    exact pairHasExpectation_of_half_self payoff own opponent hself
   · intro hall
     refine ⟨hall resident resident, ?_⟩
     intro mutant _
@@ -200,54 +252,58 @@ theorem mixedPayoff_invasionPopulation
         (expect_mix (1 - share) (by linarith) (by linarith)
           first second score hresident hmutant)
 
-/-- Every actual pair encounter is defined before a numerical ESS comparison
-is made. This also covers each mutant's self encounter at positive invasion
-shares. -/
+/-- The classical static ESS of the mixed-extension fitness. Its first- and
+second-order tests compare finite fitness values, so every actual pair
+encounter, including each mutant's self encounter, is integrable. -/
 def IsMixedESS (payoff : S → S → ℝ) (resident : PMF S) : Prop :=
   (∀ own opponent : PMF S,
       PayoffIntegrable (bindPairLaw own (fun _ => opponent))
         (fun pair => payoff pair.1 pair.2)) ∧
     IsESS (fun own opponent => mixedPayoff payoff own opponent) resident
 
-/-- Neutral stability with defined fitness for every mixed pair encounter. -/
+/-- Classical neutral stability with integrable fitness for every mixed pair
+encounter. -/
 def IsMixedNSS (payoff : S → S → ℝ) (resident : PMF S) : Prop :=
   (∀ own opponent : PMF S,
       PayoffIntegrable (bindPairLaw own (fun _ => opponent))
         (fun pair => payoff pair.1 pair.2)) ∧
     IsNSS (fun own opponent => mixedPayoff payoff own opponent) resident
 
-/-- Actual small-invasion fitness must be defined on both populations, and
-the resident must win every sufficiently small positive invasion. -/
+/-- Actual small-invasion fitness must exist on both populations, and the
+resident must win every sufficiently small positive invasion. -/
 def IsActualSmallInvasionESS (payoff : S → S → ℝ)
     (resident : PMF S) : Prop :=
-  PayoffIntegrable (bindPairLaw resident (fun _ => resident))
+  HasExpectation (bindPairLaw resident (fun _ => resident))
       (fun pair => payoff pair.1 pair.2) ∧
     ∀ mutant, resident ≠ mutant →
       ∃ threshold : ℝ, 0 < threshold ∧
         ∀ share : ℝ, (hpositive : 0 < share) →
           (hunit : share < 1) → share < threshold →
-          PayoffIntegrable
+          HasExpectation
               (bindPairLaw resident (fun _ =>
                 invasionPopulation resident mutant share hpositive hunit))
               (fun pair => payoff pair.1 pair.2) ∧
-            PayoffIntegrable
+            HasExpectation
               (bindPairLaw mutant (fun _ =>
                 invasionPopulation resident mutant share hpositive hunit))
               (fun pair => payoff pair.1 pair.2) ∧
-              mixedPayoff payoff resident
+              extendedMixedPayoff payoff resident
                   (invasionPopulation resident mutant share hpositive hunit) >
-                mixedPayoff payoff mutant
+                extendedMixedPayoff payoff mutant
                   (invasionPopulation resident mutant share hpositive hunit)
 
-/-- The guarded all-pair ESS is exactly strict fitness against every actual
-small positive invasion, with the resident baseline defined. -/
+/-- The static mixed ESS is exactly strict fitness against every actual small
+positive invasion, for games whose pair encounters are all integrable. -/
 theorem isMixedESS_iff_actualSmallInvasion
     (payoff : S → S → ℝ) (resident : PMF S) :
     IsMixedESS payoff resident ↔
-      IsActualSmallInvasionESS payoff resident := by
+      (∀ own opponent : PMF S,
+        PayoffIntegrable (bindPairLaw own (fun _ => opponent))
+          (fun pair => payoff pair.1 pair.2)) ∧
+        IsActualSmallInvasionESS payoff resident := by
   constructor
   · rintro ⟨hall, hess⟩
-    refine ⟨hall resident resident, ?_⟩
+    refine ⟨hall, hasExpectation_of_payoffIntegrable (hall resident resident), ?_⟩
     intro mutant hne
     obtain ⟨threshold, hthreshold, hsmall⟩ :=
       ((isESS_iff_small_invasion
@@ -255,43 +311,26 @@ theorem isMixedESS_iff_actualSmallInvasion
         resident).1 hess) mutant hne
     refine ⟨threshold, hthreshold, ?_⟩
     intro share hpositive hunit hbelow
-    refine ⟨hall resident _, hall mutant _, ?_⟩
-    rw [mixedPayoff_invasionPopulation payoff resident resident mutant
+    refine ⟨hasExpectation_of_payoffIntegrable (hall resident _),
+      hasExpectation_of_payoffIntegrable (hall mutant _), ?_⟩
+    rw [extendedMixedPayoff_eq (hall resident _), extendedMixedPayoff_eq (hall mutant _),
+      gt_iff_lt, EReal.coe_lt_coe_iff,
+      mixedPayoff_invasionPopulation payoff resident resident mutant
       share hpositive hunit (hall resident resident) (hall resident mutant),
       mixedPayoff_invasionPopulation payoff mutant resident mutant
       share hpositive hunit (hall mutant resident) (hall mutant mutant)]
     exact hsmall share hpositive hbelow hunit
-  · intro hactual
-    have hdefined : HasActualSmallInvasionPayoffs payoff resident := by
-      refine ⟨hactual.1, ?_⟩
-      intro mutant hne
-      obtain ⟨threshold, hthreshold, hsmall⟩ := hactual.2 mutant hne
-      refine ⟨threshold, hthreshold, ?_⟩
-      intro share hpositive hunit hbelow
-      obtain ⟨hresident, hmutant, _⟩ :=
-        hsmall share hpositive hunit hbelow
-      exact ⟨hresident, hmutant⟩
-    let hall := (actualSmallInvasionPayoffs_iff_allPairs payoff resident).1 hdefined
+  · rintro ⟨hall, -, hactual⟩
     refine ⟨hall, (isESS_iff_small_invasion
       (fun own opponent => mixedPayoff payoff own opponent)
       resident).2 ?_⟩
     intro mutant hne
-    obtain ⟨threshold, hthreshold, hsmall⟩ := hactual.2 mutant hne
+    obtain ⟨threshold, hthreshold, hsmall⟩ := hactual mutant hne
     refine ⟨threshold, hthreshold, ?_⟩
     intro share hpositive hbelow hunit
-    obtain ⟨hresident, hmutant, hgt⟩ :=
-      hsmall share hpositive hunit hbelow
-    have hresidentEq :
-        mixedPayoff payoff resident
-            (invasionPopulation resident mutant share hpositive hunit) =
-          mixedPayoff payoff resident
-            (invasionPopulation resident mutant share hpositive hunit) := rfl
-    have hmutantEq :
-        mixedPayoff payoff mutant
-            (invasionPopulation resident mutant share hpositive hunit) =
-          mixedPayoff payoff mutant
-            (invasionPopulation resident mutant share hpositive hunit) := rfl
-    rw [hresidentEq, hmutantEq,
+    obtain ⟨-, -, hgt⟩ := hsmall share hpositive hunit hbelow
+    rw [extendedMixedPayoff_eq (hall resident _), extendedMixedPayoff_eq (hall mutant _),
+      gt_iff_lt, EReal.coe_lt_coe_iff,
       mixedPayoff_invasionPopulation payoff resident resident mutant
         share hpositive hunit (hall resident resident)
         (hall resident mutant),
@@ -304,33 +343,36 @@ theorem isMixedESS_iff_actualSmallInvasion
 invasion and permits equality in the comparison. -/
 def IsActualSmallInvasionNSS (payoff : S → S → ℝ)
     (resident : PMF S) : Prop :=
-  PayoffIntegrable (bindPairLaw resident (fun _ => resident))
+  HasExpectation (bindPairLaw resident (fun _ => resident))
       (fun pair => payoff pair.1 pair.2) ∧
     ∀ mutant, resident ≠ mutant →
       ∃ threshold : ℝ, 0 < threshold ∧
         ∀ share : ℝ, (hpositive : 0 < share) →
           (hunit : share < 1) → share < threshold →
-          PayoffIntegrable
+          HasExpectation
               (bindPairLaw resident (fun _ =>
                 invasionPopulation resident mutant share hpositive hunit))
               (fun pair => payoff pair.1 pair.2) ∧
-            PayoffIntegrable
+            HasExpectation
               (bindPairLaw mutant (fun _ =>
                 invasionPopulation resident mutant share hpositive hunit))
               (fun pair => payoff pair.1 pair.2) ∧
-              mixedPayoff payoff resident
+              extendedMixedPayoff payoff resident
                   (invasionPopulation resident mutant share hpositive hunit) ≥
-                mixedPayoff payoff mutant
+                extendedMixedPayoff payoff mutant
                   (invasionPopulation resident mutant share hpositive hunit)
 
-/-- The same all-pair necessity applies to neutral stability. -/
+/-- The same characterization for neutral stability. -/
 theorem isMixedNSS_iff_actualSmallInvasion
     (payoff : S → S → ℝ) (resident : PMF S) :
     IsMixedNSS payoff resident ↔
-      IsActualSmallInvasionNSS payoff resident := by
+      (∀ own opponent : PMF S,
+        PayoffIntegrable (bindPairLaw own (fun _ => opponent))
+          (fun pair => payoff pair.1 pair.2)) ∧
+        IsActualSmallInvasionNSS payoff resident := by
   constructor
   · rintro ⟨hall, hnss⟩
-    refine ⟨hall resident resident, ?_⟩
+    refine ⟨hall, hasExpectation_of_payoffIntegrable (hall resident resident), ?_⟩
     intro mutant hne
     obtain ⟨threshold, hthreshold, hsmall⟩ :=
       ((isNSS_iff_small_invasion
@@ -338,43 +380,26 @@ theorem isMixedNSS_iff_actualSmallInvasion
         resident).1 hnss) mutant hne
     refine ⟨threshold, hthreshold, ?_⟩
     intro share hpositive hunit hbelow
-    refine ⟨hall resident _, hall mutant _, ?_⟩
-    rw [mixedPayoff_invasionPopulation payoff resident resident mutant
+    refine ⟨hasExpectation_of_payoffIntegrable (hall resident _),
+      hasExpectation_of_payoffIntegrable (hall mutant _), ?_⟩
+    rw [extendedMixedPayoff_eq (hall resident _), extendedMixedPayoff_eq (hall mutant _),
+      ge_iff_le, EReal.coe_le_coe_iff,
+      mixedPayoff_invasionPopulation payoff resident resident mutant
       share hpositive hunit (hall resident resident) (hall resident mutant),
       mixedPayoff_invasionPopulation payoff mutant resident mutant
       share hpositive hunit (hall mutant resident) (hall mutant mutant)]
     exact hsmall share hpositive hbelow hunit
-  · intro hactual
-    have hdefined : HasActualSmallInvasionPayoffs payoff resident := by
-      refine ⟨hactual.1, ?_⟩
-      intro mutant hne
-      obtain ⟨threshold, hthreshold, hsmall⟩ := hactual.2 mutant hne
-      refine ⟨threshold, hthreshold, ?_⟩
-      intro share hpositive hunit hbelow
-      obtain ⟨hresident, hmutant, _⟩ :=
-        hsmall share hpositive hunit hbelow
-      exact ⟨hresident, hmutant⟩
-    let hall := (actualSmallInvasionPayoffs_iff_allPairs payoff resident).1 hdefined
+  · rintro ⟨hall, -, hactual⟩
     refine ⟨hall, (isNSS_iff_small_invasion
       (fun own opponent => mixedPayoff payoff own opponent)
       resident).2 ?_⟩
     intro mutant hne
-    obtain ⟨threshold, hthreshold, hsmall⟩ := hactual.2 mutant hne
+    obtain ⟨threshold, hthreshold, hsmall⟩ := hactual mutant hne
     refine ⟨threshold, hthreshold, ?_⟩
     intro share hpositive hbelow hunit
-    obtain ⟨hresident, hmutant, hge⟩ :=
-      hsmall share hpositive hunit hbelow
-    have hresidentEq :
-        mixedPayoff payoff resident
-            (invasionPopulation resident mutant share hpositive hunit) =
-          mixedPayoff payoff resident
-            (invasionPopulation resident mutant share hpositive hunit) := rfl
-    have hmutantEq :
-        mixedPayoff payoff mutant
-            (invasionPopulation resident mutant share hpositive hunit) =
-          mixedPayoff payoff mutant
-            (invasionPopulation resident mutant share hpositive hunit) := rfl
-    rw [hresidentEq, hmutantEq,
+    obtain ⟨-, -, hge⟩ := hsmall share hpositive hunit hbelow
+    rw [extendedMixedPayoff_eq (hall resident _), extendedMixedPayoff_eq (hall mutant _),
+      ge_iff_le, EReal.coe_le_coe_iff,
       mixedPayoff_invasionPopulation payoff resident resident mutant
         share hpositive hunit (hall resident resident)
         (hall resident mutant),

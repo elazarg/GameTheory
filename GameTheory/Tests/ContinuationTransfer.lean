@@ -34,7 +34,7 @@ example (source : Bool) (profile : Profile (model source).strategicSignature)
   · intro root proper who alternative
     have hroot := ((model source).isSubgamePerfect_iff_isNash_continuation
       (terminates source) (bounded source) profile value).mp perfect root proper
-    exact hroot.2 who alternative
+    exact ((isNash_iff _).1 hroot who alternative).2.1
 
 private theorem utility_bounded (prefer : Bool) (result : Bool × Option Bool) :
     |utility prefer result| ≤ 3 := by
@@ -77,11 +77,13 @@ theorem no_uniform_failure_continuation_laws
       (terminates true) (terminates false) (bounded true) (bounded false)
       compile (fun history => outcome history.state) (fun history => outcome history.state)
       sourceProfile coverage (fun result _ => utility false result)
-      (fun _ _ _ _ => utility_integrable false _) (source_subgamePerfect false)
+      (fun _ _ _ _ => hasExpectation_of_payoffIntegrable (utility_integrable false _))
+      (source_subgamePerfect false)
   · exact (model true).isSubgamePerfect_of_continuation_laws (model false)
       (terminates true) (terminates false) (bounded true) (bounded false)
       compile (fun history => outcome history.state) (fun history => outcome history.state)
       sourceProfile coverage (fun result _ => utility true result)
-      (fun _ _ _ _ => utility_integrable true _) (source_subgamePerfect true)
+      (fun _ _ _ _ => hasExpectation_of_payoffIntegrable (utility_integrable true _))
+      (source_subgamePerfect true)
 
 end GameTheory.Tests.ContinuationTransfer

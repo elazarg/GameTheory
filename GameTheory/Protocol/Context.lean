@@ -2,11 +2,14 @@
 # Continuation contexts
 
 A context assigns a PMF outcome law to each choice and evaluates it with a
-real continuation payoff. The value of a choice is its expected continuation
-payoff; comparisons of values state the integrability of every compared law.
+real continuation payoff. Choices are compared by their extended-real expected
+continuation payoffs, so a choice worth `+∞` or `−∞` is compared like any other;
+every compared choice must have an expectation. A choice with an integrable
+payoff also has a real value, and between such choices the comparison is the
+real one.
 -/
 
-import GameTheory.Math.Probability.Expectation
+import GameTheory.Math.Probability.ExtendedExpectation
 
 noncomputable section
 
@@ -43,29 +46,63 @@ def IntegrableAt (ctx : Context Choice Outcome) (choice : Choice) : Prop :=
 def value (ctx : Context Choice Outcome) (choice : Choice) : ℝ :=
   expect (ctx.outcome choice) ctx.continuation
 
-/-- The incumbent and every allowed alternative have finite real values, and
-no allowed alternative has a larger value. The incumbent must be integrable
-even when `allowed` is empty. -/
+/-- A choice's continuation payoff has an expectation. -/
+def HasValueAt (ctx : Context Choice Outcome) (choice : Choice) : Prop :=
+  HasExpectation (ctx.outcome choice) ctx.continuation
+
+/-- The extended-real continuation value of a choice, meaningful when
+`ctx.HasValueAt choice`. -/
+def extendedValue (ctx : Context Choice Outcome) (choice : Choice) : EReal :=
+  extendedExpect (ctx.outcome choice) ctx.continuation
+
+theorem IntegrableAt.hasValueAt {ctx : Context Choice Outcome} {choice : Choice}
+    (h : ctx.IntegrableAt choice) : ctx.HasValueAt choice :=
+  hasExpectation_of_payoffIntegrable h
+
+theorem extendedValue_eq {ctx : Context Choice Outcome} {choice : Choice}
+    (h : ctx.IntegrableAt choice) : ctx.extendedValue choice = ctx.value choice :=
+  extendedExpect_eq_expect h
+
+/-- The incumbent and every allowed alternative have expected continuation
+payoffs, and no allowed alternative has a larger one. The incumbent must have an
+expectation even when `allowed` is empty. -/
 def IsLocallyOptimal (ctx : Context Choice Outcome) (allowed : Set Choice)
     (choice : Choice) : Prop :=
-  ctx.IntegrableAt choice ∧
-    (∀ alternative ∈ allowed, ctx.IntegrableAt alternative) ∧
-      ∀ alternative ∈ allowed, ctx.value alternative ≤ ctx.value choice
+  ctx.HasValueAt choice ∧
+    (∀ alternative ∈ allowed, ctx.HasValueAt alternative) ∧
+      ∀ alternative ∈ allowed, ctx.extendedValue alternative ≤ ctx.extendedValue choice
 
-/-- An admissible alternative with a defined, strictly larger real value. -/
+/-- An admissible alternative whose expected continuation payoff is strictly
+larger. -/
 def IsProfitableDeviation (ctx : Context Choice Outcome) (allowed : Set Choice)
     (choice alternative : Choice) : Prop :=
-  alternative ∈ allowed ∧ ctx.IntegrableAt choice ∧ ctx.IntegrableAt alternative ∧
-    ctx.value choice < ctx.value alternative
+  alternative ∈ allowed ∧ ctx.HasValueAt choice ∧ ctx.HasValueAt alternative ∧
+    ctx.extendedValue choice < ctx.extendedValue alternative
 
-/-- Under integrability of every compared law, local optimality means no
-allowed profitable deviation. Integrability cannot be inferred from the
-absence of a profitable deviation. -/
+/-- Between integrable choices local optimality is the real comparison of
+values. -/
+theorem isLocallyOptimal_iff_of_integrable {ctx : Context Choice Outcome}
+    {allowed : Set Choice} {choice : Choice} (hchoice : ctx.IntegrableAt choice)
+    (hall : ∀ alternative ∈ allowed, ctx.IntegrableAt alternative) :
+    ctx.IsLocallyOptimal allowed choice ↔
+      ∀ alternative ∈ allowed, ctx.value alternative ≤ ctx.value choice := by
+  refine ⟨fun h alternative hmem => ?_, fun h => ⟨hchoice.hasValueAt,
+    fun alternative hmem => (hall alternative hmem).hasValueAt, fun alternative hmem => ?_⟩⟩
+  · have hle := h.2.2 alternative hmem
+    rwa [extendedValue_eq (hall alternative hmem), extendedValue_eq hchoice,
+      EReal.coe_le_coe_iff] at hle
+  · rw [extendedValue_eq (hall alternative hmem), extendedValue_eq hchoice,
+      EReal.coe_le_coe_iff]
+    exact h alternative hmem
+
+/-- When every compared choice has an expectation, local optimality means no
+allowed profitable deviation. Expectations cannot be inferred from the absence
+of a profitable deviation. -/
 theorem isLocallyOptimal_iff_no_profitable_deviation
     (ctx : Context Choice Outcome) (allowed : Set Choice) (choice : Choice) :
     ctx.IsLocallyOptimal allowed choice ↔
-      ctx.IntegrableAt choice ∧
-        (∀ alternative ∈ allowed, ctx.IntegrableAt alternative) ∧
+      ctx.HasValueAt choice ∧
+        (∀ alternative ∈ allowed, ctx.HasValueAt alternative) ∧
           ¬ ∃ alternative, ctx.IsProfitableDeviation allowed choice alternative := by
   constructor
   · rintro ⟨hchoice, hall, hopt⟩
@@ -77,29 +114,16 @@ theorem isLocallyOptimal_iff_no_profitable_deviation
     by_contra hgt
     exact hnone ⟨alternative, hmem, hchoice, hall alternative hmem, not_le.mp hgt⟩
 
-/-- Local optimality is preserved by contexts with the same admissible values. -/
+/-- Local optimality is preserved by contexts with the same expectations and
+extended values. -/
 theorem isLocallyOptimal_congr {first second : Context Choice Outcome}
     {allowed : Set Choice} {choice : Choice}
-    (hintegrable : ∀ option,
-      first.IntegrableAt option ↔ second.IntegrableAt option)
-    (hvalue : ∀ option, first.IntegrableAt option →
-      first.value option = second.value option) :
+    (hexpectation : ∀ option, first.HasValueAt option ↔ second.HasValueAt option)
+    (hvalue : ∀ option, first.extendedValue option = second.extendedValue option) :
     first.IsLocallyOptimal allowed choice ↔
       second.IsLocallyOptimal allowed choice := by
-  constructor
-  · rintro ⟨hchoice, hall, hopt⟩
-    refine ⟨(hintegrable choice).mp hchoice,
-      fun alternative hmem => (hintegrable alternative).mp (hall alternative hmem),
-      fun alternative hmem => ?_⟩
-    rw [← hvalue alternative (hall alternative hmem), ← hvalue choice hchoice]
-    exact hopt alternative hmem
-  · rintro ⟨hchoice, hall, hopt⟩
-    have hchoice' := (hintegrable choice).mpr hchoice
-    refine ⟨hchoice', fun alternative hmem => (hintegrable alternative).mpr (hall alternative hmem),
-      fun alternative hmem => ?_⟩
-    rw [hvalue alternative ((hintegrable alternative).mpr (hall alternative hmem)),
-      hvalue choice hchoice']
-    exact hopt alternative hmem
+  unfold IsLocallyOptimal
+  simp only [hexpectation, hvalue]
 
 end Context
 

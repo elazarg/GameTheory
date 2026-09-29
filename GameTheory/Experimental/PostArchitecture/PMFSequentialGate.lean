@@ -4,6 +4,9 @@
 The chance-first countable decision fixture is expressed using the public
 execution and information interfaces. The off-path fixture checks whole-policy
 assessment and guarded continuation values.
+
+Under EXP-147's extended expectation the divergent incumbent is worth `⊤`, a
+defined value, so with no alternatives it is locally optimal.
 -/
 
 import GameTheory.Protocol.Information
@@ -192,14 +195,13 @@ theorem exploding_not_integrable : ¬ PayoffIntegrable geometric exploding := by
   unfold PayoffIntegrable at hp
   rwa [heq] at hp
 
-/-- Even an empty deviation family cannot make an undefined incumbent value
-look optimal. -/
-theorem divergent_incumbent_not_optimal_with_no_alternatives :
-    ¬ ({ outcome := fun _ : Unit => geometric,
-         continuation := exploding } : GameTheory.Protocol.Context Unit ℕ).IsLocallyOptimal
-        ∅ () := by
-  intro hoptimal
-  exact exploding_not_integrable hoptimal.1
+/-- The divergent incumbent has the defined value `⊤`, so with no alternatives
+it is locally optimal. -/
+theorem divergent_incumbent_optimal_with_no_alternatives :
+    ({ outcome := fun _ : Unit => geometric,
+       continuation := exploding } : GameTheory.Protocol.Context Unit ℕ).IsLocallyOptimal
+        ∅ () :=
+  ⟨exploding_hasExpectation, fun _ hmem => hmem.elim, fun _ hmem => hmem.elim⟩
 
 def decisionSite : canonicalInformation.InformationSite () :=
   canonicalInformation.informationSite ()
@@ -1113,7 +1115,12 @@ theorem incumbent_not_locallyOptimalAtSecond :
     ¬ (incumbentAssessment.continuationContext secondSite payoff 2).IsLocallyOptimal
       Set.univ (incumbentAssessment.strategy ()) := by
   intro hoptimal
-  have hcompare := hoptimal.2.2
+  have hbounded : ∀ alternative,
+      (incumbentAssessment.continuationContext secondSite payoff 2).IntegrableAt alternative :=
+    fun _ => payoffIntegrable_of_bounded _ _ (C := 1) fun history =>
+      statePayoff_bounded history.state
+  have hcompare := (GameTheory.Protocol.Context.isLocallyOptimal_iff_of_integrable
+    (hbounded _) fun alternative _ => hbounded alternative).1 hoptimal
     ((policy false true).toBehavioral) (Set.mem_univ _)
   have hincValue := contextValue false false
   have haltValue := contextValue false true

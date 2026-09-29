@@ -181,25 +181,25 @@ theorem isOneShotOptimalWithin_iff_sequentiallyRationalAt_historyContext
           (profile who) (M.infoOf who h.trace)
           (M.historyContext profile who payoff fuel h hterm) := Iff.rfl
 
-/-- Local optimality itself certifies the incumbent continuation law at every
-history that can be evaluated with the stated finite horizon. -/
-theorem runFrom_integrable_of_isOneShotOptimalWithin
+/-- Local optimality itself gives the incumbent continuation law an expectation
+at every history that can be evaluated with the stated finite horizon. -/
+theorem runFrom_hasExpectation_of_isOneShotOptimalWithin
     (profile : Profile M.strategicSignature) (who : ι)
     [DecidableEq (M.InfoState who)]
     (payoff : E.History → ℝ) (horizon : ℕ)
     (hopt : M.IsOneShotOptimalWithin profile who payoff horizon)
     {fuel : ℕ} (h : E.History)
     (hdepth : h.trace.length + fuel = horizon) :
-    PayoffIntegrable (M.runFrom profile fuel h) payoff := by
+    HasExpectation (M.runFrom profile fuel h) payoff := by
   cases fuel with
   | zero =>
       rw [InformationModel.runFrom, ExecutionProtocol.runHistoryFor_zero]
-      exact payoffIntegrable_pure h payoff
+      exact hasExpectation_of_payoffIntegrable (payoffIntegrable_pure h payoff)
   | succ fuel =>
       by_cases hterm : E.terminal h.state
       · rw [InformationModel.runFrom,
           ExecutionProtocol.runHistoryFor_of_terminal _ _ hterm]
-        exact payoffIntegrable_pure h payoff
+        exact hasExpectation_of_payoffIntegrable (payoffIntegrable_pure h payoff)
       · have hlocal := hopt fuel h (by omega) hterm
         rw [← M.oneShotLaw_self profile fuel h hterm who]
         exact hlocal.1
@@ -208,28 +208,23 @@ theorem runFrom_integrable_of_isOneShotOptimalWithin
 direction.** If no current information-local choice improves play at any
 history, then no replacement policy for that player improves the induced
 history law. -/
-theorem expect_runFrom_update_le_of_isOneShotOptimalWithin
+theorem extendedExpect_runFrom_update_le_of_isOneShotOptimalWithin
     (profile : Profile M.strategicSignature) (who : ι)
     [DecidableEq (M.InfoState who)]
     (payoff : E.History → ℝ) (horizon : ℕ)
     (hopt : M.IsOneShotOptimalWithin profile who payoff horizon)
     (alternative : M.Policy who) {fuel : ℕ} (h : E.History)
-    (hdepth : h.trace.length + fuel = horizon)
-    (hcandidate : PayoffIntegrable
-      (M.runFrom (Profile.update profile who alternative) fuel h) payoff) :
-    expect (M.runFrom (Profile.update profile who alternative) fuel h)
+    (hdepth : h.trace.length + fuel = horizon) :
+    extendedExpect (M.runFrom (Profile.update profile who alternative) fuel h)
         payoff ≤
-      expect (M.runFrom profile fuel h) payoff := by
+      extendedExpect (M.runFrom profile fuel h) payoff := by
   induction fuel generalizing h with
   | zero =>
-      unfold expect
-      simp only [InformationModel.runFrom,
-        ExecutionProtocol.runHistoryFor_zero, PMF.pure_apply]
+      simp only [InformationModel.runFrom, ExecutionProtocol.runHistoryFor_zero]
       exact le_refl _
   | succ fuel ih =>
       by_cases hterm : E.terminal h.state
-      · unfold expect
-        simp only [InformationModel.runFrom,
+      · simp only [InformationModel.runFrom,
           ExecutionProtocol.runHistoryFor_of_terminal _ _ hterm]
         exact le_refl _
       · let choice := alternative (M.infoOf who h.trace)
@@ -254,13 +249,7 @@ theorem expect_runFrom_update_le_of_isOneShotOptimalWithin
             M.oneShotLaw profile fuel h hterm who choice =
               stepLaw.bindOnSupport (fun _ realized =>
                 M.runFrom profile fuel (h.extend chosen.2 realized)) := rfl
-        have hleft : PayoffIntegrable
-            (stepLaw.bindOnSupport (fun _ realized =>
-              M.runFrom (Profile.update profile who alternative) fuel
-                (h.extend chosen.2 realized))) payoff := by
-          rw [← hleftLaw]
-          exact hcandidate
-        have hright : PayoffIntegrable
+        have hright : HasExpectation
             (stepLaw.bindOnSupport (fun _ realized =>
               M.runFrom profile fuel (h.extend chosen.2 realized))) payoff := by
           rw [← hrightLaw]
@@ -268,35 +257,32 @@ theorem expect_runFrom_update_le_of_isOneShotOptimalWithin
         have hlocal := (hopt fuel h (by omega) hterm).2.2 choice
           (Set.mem_univ _)
         calc
-          expect (M.runFrom (Profile.update profile who alternative)
+          extendedExpect (M.runFrom (Profile.update profile who alternative)
               (fuel + 1) h) payoff =
-            expect (stepLaw.bindOnSupport fun _ realized =>
+            extendedExpect (stepLaw.bindOnSupport fun _ realized =>
               M.runFrom (Profile.update profile who alternative) fuel
                 (h.extend chosen.2 realized)) payoff := by
-                  unfold expect
                   rw [hleftLaw]
-          _ ≤ expect (stepLaw.bindOnSupport fun _ realized =>
+          _ ≤ extendedExpect (stepLaw.bindOnSupport fun _ realized =>
                 M.runFrom profile fuel (h.extend chosen.2 realized))
                 payoff := by
-              refine expect_bindOnSupport_mono_on_support _ _ _ _ hleft hright ?_
-              intro reached hreached hconditional _
+              refine extendedExpect_bindOnSupport_mono (fun reached hreached => ?_) hright
               have hchildDepth :
                   (h.extend chosen.2 hreached).trace.length + fuel = horizon := by
                 simp only [ExecutionProtocol.History.extend,
                   ExecutionProtocol.Trace.length]
                 omega
-              simpa using
-                ih (h.extend chosen.2 hreached) hchildDepth hconditional
-          _ ≤ expect (M.runFrom profile (fuel + 1) h) payoff := by
-              unfold Context.value at hlocal
-              unfold expect at hlocal ⊢
+              exact ih (h.extend chosen.2 hreached) hchildDepth
+          _ ≤ extendedExpect (M.runFrom profile (fuel + 1) h) payoff := by
+              unfold Context.extendedValue at hlocal
               simpa only [historyContext, hrightLaw, M.oneShotLaw_self]
                 using hlocal
 
 /-- The static consequence of the information-local one-shot principle.
 Compiling the same policy profile introduces no new equilibrium notion: local
 optimality at every history implies ordinary expected-utility Nash in the
-finite-horizon `GameForm`. -/
+finite-horizon `GameForm`, once every replacement policy's law has an
+expectation. -/
 theorem isNash_toGameForm_of_isOneShotOptimalWithin
     [∀ i, DecidableEq (M.InfoState i)]
     (profile : Profile M.strategicSignature)
@@ -304,21 +290,19 @@ theorem isNash_toGameForm_of_isOneShotOptimalWithin
     (hopt : ∀ who,
       M.IsOneShotOptimalWithin profile who (fun h => utility h who) horizon)
     (hcandidate : ∀ who (alternative : M.Policy who),
-      PayoffIntegrable (M.run (Profile.update profile who alternative) horizon)
+      HasExpectation (M.run (Profile.update profile who alternative) horizon)
         (fun h => utility h who)) :
     IsNash (M.toGameForm horizon) (euPreference utility) profile := by
   rw [isNash_iff]
   intro who alternative
   have hdepth : E.initHistory.trace.length + horizon = horizon := by
     simp [ExecutionProtocol.initHistory, ExecutionProtocol.Trace.length]
-  have hinc := M.runFrom_integrable_of_isOneShotOptimalWithin
-    profile who (fun h => utility h who) horizon (hopt who) E.initHistory hdepth
-  have hcand := hcandidate who alternative
-  have hle := M.expect_runFrom_update_le_of_isOneShotOptimalWithin
-    profile who (fun h => utility h who) horizon (hopt who) alternative
-    E.initHistory hdepth hcand
-  refine (euPreference_iff _ _ _ _ hinc hcand).2 ?_
-  simpa only [expectedUtility, InformationModel.run] using hle
+  exact ⟨M.runFrom_hasExpectation_of_isOneShotOptimalWithin
+      profile who (fun h => utility h who) horizon (hopt who) E.initHistory hdepth,
+    hcandidate who alternative,
+    M.extendedExpect_runFrom_update_le_of_isOneShotOptimalWithin
+      profile who (fun h => utility h who) horizon (hopt who) alternative
+      E.initHistory hdepth⟩
 
 end InformationModel
 

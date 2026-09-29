@@ -41,23 +41,20 @@ theorem BehavioralAssessment.isSequentiallyRationalWithin_of_converging_deviatio
           ((sequence n).strategy i)) :
     target.IsSequentiallyRationalWithin payoff fuel := by
   intro i site
-  simp only [BehavioralAssessment.IsSequentiallyRationalAt,
-    Context.IsLocallyOptimal]
-  refine ⟨payoffIntegrable_of_bounded _ _ (hbound i), ?_, ?_⟩
-  · intro alternative _
-    exact payoffIntegrable_of_bounded _ _ (hbound i)
-  · intro alternative _
-    have hnonneg : 0 ≤ bound i :=
-      (abs_nonneg (payoff i E.initHistory)).trans (hbound i E.initHistory)
-    have hdeviation := M.continuationContext_value_tendsto_of_bounded
-      hstrategy i site (hbelief i site) (hrepair i alternative)
-      (payoff i) fuel (bound i) hnonneg (hbound i)
-    have hbaseline := M.continuationContext_value_tendsto_of_bounded
-      hstrategy i site (hbelief i site) (hstrategy i)
-      (payoff i) fuel (bound i) hnonneg (hbound i)
-    have hlimit := le_of_tendsto_of_tendsto hdeviation hbaseline
-      (Eventually.of_forall fun n => hoptimal n i site alternative)
-    exact hlimit
+  simp only [BehavioralAssessment.IsSequentiallyRationalAt]
+  refine (Context.isLocallyOptimal_iff_of_integrable (payoffIntegrable_of_bounded _ _ (hbound i))
+    fun alternative _ => payoffIntegrable_of_bounded _ _ (hbound i)).2 fun alternative _ => ?_
+  have hnonneg : 0 ≤ bound i :=
+    (abs_nonneg (payoff i E.initHistory)).trans (hbound i E.initHistory)
+  have hdeviation := M.continuationContext_value_tendsto_of_bounded
+    hstrategy i site (hbelief i site) (hrepair i alternative)
+    (payoff i) fuel (bound i) hnonneg (hbound i)
+  have hbaseline := M.continuationContext_value_tendsto_of_bounded
+    hstrategy i site (hbelief i site) (hstrategy i)
+    (payoff i) fuel (bound i) hnonneg (hbound i)
+  have hlimit := le_of_tendsto_of_tendsto hdeviation hbaseline
+    (Eventually.of_forall fun n => hoptimal n i site alternative)
+  exact hlimit
 
 /-- On finite history carriers, full continuation-policy optimality passes to the
 limit when every deviation can be approximated by deviations allowed at the corresponding

@@ -3,11 +3,13 @@
 
 A signal is a Markov kernel from states to public messages. Receiver scores
 integrate the actual message-weighted state payoff, so a null message has zero
-score even when an unweighted payoff is not integrable.
+score even when an unweighted payoff is not integrable. Receiver obedience and
+sender optimality compare extended-real values, so an infinite value is still
+ranked; only an alternative whose value is undefined is left incomparable.
 -/
 
 import GameTheory.Math.Probability.ExpectationBind
-import GameTheory.Math.Probability.ExpectationAlgebra
+import GameTheory.Math.Probability.ExtendedExpectation
 import GameTheory.Math.Probability.Joint
 
 noncomputable section
@@ -183,22 +185,38 @@ theorem senderScore_null
       expect_congr_on_support hzero
     _ = 0 := expect_zero _
 
-/-- An optimal receiver action requires defined scores for every alternative.
+/-- Unnormalized receiver value at a message, in the extended reals. -/
+def extendedReceiverScore (P : PersuasionProblem State Message Action)
+    (message : Message) (action : Action) : EReal :=
+  extendedExpect P.prior (P.receiverWeighted message action)
+
+/-- An optimal receiver action requires every alternative's score to exist.
 Undefined alternatives are not silently removed from the comparison. -/
 def IsReceiverOptimal (P : PersuasionProblem State Message Action)
     (message : Message) (action : Action) : Prop :=
-  (∀ alternative, PayoffIntegrable P.prior (P.receiverWeighted message alternative)) ∧
-    ∀ alternative, P.receiverScore message alternative ≤ P.receiverScore message action
+  (∀ alternative, HasExpectation P.prior (P.receiverWeighted message alternative)) ∧
+    ∀ alternative,
+      P.extendedReceiverScore message alternative ≤ P.extendedReceiverScore message action
+
+/-- With integrable scores, receiver optimality is the real comparison. -/
+theorem isReceiverOptimal_iff_of_integrable (P : PersuasionProblem State Message Action)
+    {message : Message} {action : Action}
+    (hscore : ∀ alternative,
+      PayoffIntegrable P.prior (P.receiverWeighted message alternative)) :
+    P.IsReceiverOptimal message action ↔
+      ∀ alternative, P.receiverScore message alternative ≤ P.receiverScore message action := by
+  simp only [IsReceiverOptimal, extendedReceiverScore, extendedExpect_eq_expect (hscore _),
+    EReal.coe_le_coe_iff]
+  exact ⟨fun h => h.2, fun h => ⟨fun alternative =>
+    hasExpectation_of_payoffIntegrable (hscore alternative), h⟩⟩
 
 /-- Receiver obedience is automatic at a null message. -/
 theorem isReceiverOptimal_null (P : PersuasionProblem State Message Action)
     (message : Message) (action : Action)
     (hnull : P.signal.messageMarginal P.prior message = 0) :
     P.IsReceiverOptimal message action := by
-  let hscore : ∀ alternative,
-      PayoffIntegrable P.prior (P.receiverWeighted message alternative) :=
-    fun alternative => (P.receiverScore_null message alternative hnull).1
-  refine ⟨hscore, ?_⟩
+  refine (P.isReceiverOptimal_iff_of_integrable fun alternative =>
+    (P.receiverScore_null message alternative hnull).1).2 ?_
   intro alternative
   have hfirst := (P.receiverScore_null message alternative hnull).2
   have hsecond := (P.receiverScore_null message action hnull).2
@@ -214,22 +232,22 @@ def IsPersuasive (P : PersuasionProblem State Message Action)
   ∀ message, P.IsReceiverOptimal message (rule message)
 
 /-- A score maximizer gives a persuasive rule on finite nonempty action
-spaces, provided every actual message-weighted comparison is integrable. -/
+spaces, provided every actual message-weighted score exists. -/
 theorem exists_isPersuasive [Finite Action] [Nonempty Action]
     (P : PersuasionProblem State Message Action)
     (hscore : ∀ message alternative,
-      PayoffIntegrable P.prior (P.receiverWeighted message alternative)) :
+      HasExpectation P.prior (P.receiverWeighted message alternative)) :
     ∃ rule : P.DecisionRule, P.IsPersuasive rule := by
   let rule : P.DecisionRule := fun message =>
     Classical.choose
       (Finite.exists_max fun action : Action =>
-        P.receiverScore message action)
+        P.extendedReceiverScore message action)
   refine ⟨rule, fun message => ⟨hscore message, ?_⟩⟩
   intro alternative
   simpa only [rule] using
     (Classical.choose_spec
       (Finite.exists_max fun action : Action =>
-        P.receiverScore message action)
+        P.extendedReceiverScore message action)
       alternative)
 
 /-- The sender payoff under the actual joint state-message law. -/
@@ -343,25 +361,32 @@ theorem senderEU_eq_sum_senderScore [Fintype Message]
   simp only [term, SignalStructure.joint_apply, ENNReal.toReal_mul,
     senderWeighted, mul_assoc]
 
-/-- Sender optimality requires a defined value for every persuasive
-alternative, including alternatives with otherwise divergent outcomes. -/
+/-- The sender payoff under the actual joint state-message law, in the extended
+reals. -/
+def extendedSenderEU (P : PersuasionProblem State Message Action)
+    (rule : P.DecisionRule) : EReal :=
+  extendedExpect (P.signal.joint P.prior)
+    (fun outcome => P.senderUtility outcome.1 (rule outcome.2))
+
+/-- Sender optimality requires the value of every persuasive alternative to
+exist, including alternatives with otherwise divergent outcomes. -/
 def IsOptimalPersuasive (P : PersuasionProblem State Message Action)
     (rule : P.DecisionRule) : Prop :=
   P.IsPersuasive rule ∧
-    PayoffIntegrable (P.signal.joint P.prior)
+    HasExpectation (P.signal.joint P.prior)
         (fun outcome => P.senderUtility outcome.1 (rule outcome.2)) ∧
       ∀ alternative, P.IsPersuasive alternative →
-        PayoffIntegrable (P.signal.joint P.prior)
+        HasExpectation (P.signal.joint P.prior)
             (fun outcome => P.senderUtility outcome.1 (alternative outcome.2)) ∧
-          P.senderEU alternative ≤ P.senderEU rule
+          P.extendedSenderEU alternative ≤ P.extendedSenderEU rule
 
-/-- Existence requires actual-law integration throughout the feasible family
-being compared. -/
+/-- Existence requires the actual-law sender value to exist throughout the
+feasible family being compared. -/
 theorem exists_optimalPersuasive [Finite Message] [Finite Action]
     (P : PersuasionProblem State Message Action)
     (hfeasible : ∃ rule : P.DecisionRule, P.IsPersuasive rule)
     (hall : ∀ rule : P.DecisionRule, P.IsPersuasive rule →
-      PayoffIntegrable (P.signal.joint P.prior)
+      HasExpectation (P.signal.joint P.prior)
         (fun outcome => P.senderUtility outcome.1 (rule outcome.2))) :
     ∃ rule : P.DecisionRule, P.IsOptimalPersuasive rule := by
   let FeasibleRule := {rule : P.DecisionRule // P.IsPersuasive rule}
@@ -369,7 +394,7 @@ theorem exists_optimalPersuasive [Finite Message] [Finite Action]
     ⟨⟨Classical.choose hfeasible, Classical.choose_spec hfeasible⟩⟩
   obtain ⟨best, hbest⟩ :=
     Finite.exists_max fun candidate : FeasibleRule =>
-      P.senderEU candidate.1
+      P.extendedSenderEU candidate.1
   exact ⟨best.1, best.2, hall best.1 best.2,
     fun alternative halternative =>
       ⟨hall alternative halternative, hbest ⟨alternative, halternative⟩⟩⟩
@@ -377,9 +402,9 @@ theorem exists_optimalPersuasive [Finite Message] [Finite Action]
 theorem exists_optimalPersuasive_of_nonempty [Finite Message] [Finite Action]
     [Nonempty Action] (P : PersuasionProblem State Message Action)
     (hscore : ∀ message alternative,
-      PayoffIntegrable P.prior (P.receiverWeighted message alternative))
+      HasExpectation P.prior (P.receiverWeighted message alternative))
     (hall : ∀ rule : P.DecisionRule, P.IsPersuasive rule →
-      PayoffIntegrable (P.signal.joint P.prior)
+      HasExpectation (P.signal.joint P.prior)
         (fun outcome => P.senderUtility outcome.1 (rule outcome.2))) :
     ∃ rule : P.DecisionRule, P.IsOptimalPersuasive rule :=
   P.exists_optimalPersuasive (P.exists_isPersuasive hscore) hall

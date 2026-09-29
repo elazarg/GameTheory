@@ -121,22 +121,20 @@ theorem BehavioralAssessment.isSequentiallyRationalTerminal_of_converging_deviat
         certificate site (payoff i)).value ((sequence n).strategy i) + error n) :
     target.IsSequentiallyRationalTerminal certificate payoff := by
   intro i site
-  simp only [BehavioralAssessment.IsSequentiallyRationalAt,
-    Context.IsLocallyOptimal]
-  refine ⟨target.terminalContinuationContext_integrable_of_bounded_terminal
-    certificate site (payoff i) (bound i) (hbound i) (target.strategy i), ?_, ?_⟩
-  · intro alternative _
-    exact target.terminalContinuationContext_integrable_of_bounded_terminal
-      certificate site (payoff i) (bound i) (hbound i) alternative
-  · intro alternative _
-    have hdeviation := M.terminalContinuationContext_value_tendsto_of_bounded_terminal
-      certificate hstrategy i site (hbelief i site) (hrepair i alternative)
-      (payoff i) (bound i) (hC i) (hbound i)
-    have hbaseline := M.terminalContinuationContext_value_tendsto_of_bounded_terminal
-      certificate hstrategy i site (hbelief i site) (hstrategy i)
-      (payoff i) (bound i) (hC i) (hbound i)
-    have hlimit := le_of_tendsto_of_tendsto hdeviation (hbaseline.add herror)
-      (Eventually.of_forall fun n => hoptimal n i site alternative)
-    simpa only [add_zero] using hlimit
+  simp only [BehavioralAssessment.IsSequentiallyRationalAt]
+  refine (Context.isLocallyOptimal_iff_of_integrable
+    (target.terminalContinuationContext_integrable_of_bounded_terminal
+      certificate site (payoff i) (bound i) (hbound i) (target.strategy i))
+    fun alternative _ => target.terminalContinuationContext_integrable_of_bounded_terminal
+      certificate site (payoff i) (bound i) (hbound i) alternative).2 fun alternative _ => ?_
+  have hdeviation := M.terminalContinuationContext_value_tendsto_of_bounded_terminal
+    certificate hstrategy i site (hbelief i site) (hrepair i alternative)
+    (payoff i) (bound i) (hC i) (hbound i)
+  have hbaseline := M.terminalContinuationContext_value_tendsto_of_bounded_terminal
+    certificate hstrategy i site (hbelief i site) (hstrategy i)
+    (payoff i) (bound i) (hC i) (hbound i)
+  have hlimit := le_of_tendsto_of_tendsto hdeviation (hbaseline.add herror)
+    (Eventually.of_forall fun n => hoptimal n i site alternative)
+  simpa only [add_zero] using hlimit
 
 end GameTheory.Protocol.InformationModel

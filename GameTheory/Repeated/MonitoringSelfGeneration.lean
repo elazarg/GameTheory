@@ -520,7 +520,13 @@ theorem generatedProfile_hasNoProfitableOneShotDeviation
       (M.discountedSummableOfBounded hdiscount0 hdiscount1 hG hbound)
       (hself.generatedProfile promise) := by
   intro who action
-  obtain ⟨-, -, -, -, henforce⟩ := hself.enforceable promise who action
+  obtain ⟨promiseBound, hpromiseBound⟩ := hpayoffs who
+  have henforce := (M.deters_iff_of_integrable (hself.promiseKeeping promise who).1
+    (hself.promiseKeeping promise who).2.1
+    (hG who (Profile.update (hself.action promise) who action))
+    (payoffIntegrable_of_bounded _ _ fun signal =>
+      hpromiseBound _ (hself.continuation_mem promise signal))).1
+    (hself.enforceable promise who action)
   calc
     M.discountedUtility discount
         (M.discountedSummableOfBounded
@@ -676,8 +682,8 @@ theorem perfectPublicEquilibriumPayoffs_selfGenerating_of_bounded
         (M.signalLaw (Profile.update current who action))
         (fun signal => continuation signal who) :=
       payoffIntegrable_of_bounded _ _ hcontBound
-    refine ⟨hbaseStage, hbaseSignal, hdeviationStage,
-      hdeviationSignal, ?_⟩
+    refine (M.deters_iff_of_integrable hbaseStage hbaseSignal hdeviationStage
+      hdeviationSignal).2 ?_
     have hdeviatingBell := M.discountedPayoff_eq_head_add_expected
       hdiscount0 hdiscount1 hG deviating who hwho
     have hbaseBell := M.discountedPayoff_eq_head_add_expected

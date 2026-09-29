@@ -3,10 +3,13 @@
 
 Each hidden action induces an ordinary PMF. Payment, reward, and net payoff
 are integrated only by the operation that needs them. In particular, the
-principal's net payoff can exist when its two components do not.
+principal's net payoff can exist when its two components do not. The agent's
+incentive and participation constraints compare extended-real payoffs, so an
+action whose expected payment is infinite is still ranked; only an action whose
+expected payment is undefined is left incomparable.
 -/
 
-import GameTheory.Math.Probability.ExpectationAlgebra
+import GameTheory.Math.Probability.ExtendedExpectation
 
 noncomputable section
 
@@ -60,17 +63,49 @@ def socialSurplus (action : Action) : ℝ :=
 def linearPayment (α : ℝ) : Outcome → ℝ :=
   fun outcome => α * I.reward outcome
 
-/-- An incentivized action has a defined payoff and weakly dominates every
-alternative. Undefined alternative payoffs refute the predicate. -/
-def IsIncentivized (payment : Outcome → ℝ) (action : Action) : Prop :=
-  (∀ alternative, PayoffIntegrable (I.outcomeLaw alternative) payment) ∧
-    ∀ alternative, I.agentUtility payment alternative ≤ I.agentUtility payment action
+/-- Agent payoff in the extended reals: the expected payment may be infinite. -/
+def extendedAgentUtility (payment : Outcome → ℝ) (action : Action) : EReal :=
+  extendedExpect (I.outcomeLaw action) payment - I.cost action
 
-/-- The agent accepts an action only with a defined payment expectation. -/
+theorem extendedAgentUtility_eq {payment : Outcome → ℝ} {action : Action}
+    (hpayment : PayoffIntegrable (I.outcomeLaw action) payment) :
+    I.extendedAgentUtility payment action = I.agentUtility payment action := by
+  rw [extendedAgentUtility, extendedExpect_eq_expect hpayment, agentUtility, expectedPayment]
+  norm_cast
+
+/-- An incentivized action weakly dominates every alternative, and every
+action's payment expectation exists. An alternative whose expected payment is
+undefined refutes the predicate. -/
+def IsIncentivized (payment : Outcome → ℝ) (action : Action) : Prop :=
+  (∀ alternative, HasExpectation (I.outcomeLaw alternative) payment) ∧
+    ∀ alternative,
+      I.extendedAgentUtility payment alternative ≤ I.extendedAgentUtility payment action
+
+/-- The agent accepts an action whose payment expectation exists and meets the
+outside option. -/
 def Participates (outsideOption : ℝ) (payment : Outcome → ℝ)
     (action : Action) : Prop :=
-  PayoffIntegrable (I.outcomeLaw action) payment ∧
-    outsideOption ≤ I.agentUtility payment action
+  HasExpectation (I.outcomeLaw action) payment ∧
+    (outsideOption : EReal) ≤ I.extendedAgentUtility payment action
+
+/-- With integrable payments, incentive compatibility is the real comparison
+of agent payoffs. -/
+theorem isIncentivized_iff_of_integrable {payment : Outcome → ℝ} {action : Action}
+    (hpayment : ∀ alternative, PayoffIntegrable (I.outcomeLaw alternative) payment) :
+    I.IsIncentivized payment action ↔
+      ∀ alternative, I.agentUtility payment alternative ≤ I.agentUtility payment action := by
+  simp only [IsIncentivized, I.extendedAgentUtility_eq (hpayment _), EReal.coe_le_coe_iff]
+  exact ⟨fun h => h.2, fun h => ⟨fun alternative =>
+    hasExpectation_of_payoffIntegrable (hpayment alternative), h⟩⟩
+
+/-- With an integrable payment, participation is the real comparison with the
+outside option. -/
+theorem participates_iff_of_integrable {outsideOption : ℝ} {payment : Outcome → ℝ}
+    {action : Action} (hpayment : PayoffIntegrable (I.outcomeLaw action) payment) :
+    I.Participates outsideOption payment action ↔
+      outsideOption ≤ I.agentUtility payment action := by
+  rw [Participates, I.extendedAgentUtility_eq hpayment, EReal.coe_le_coe_iff]
+  exact ⟨fun h => h.2, fun h => ⟨hasExpectation_of_payoffIntegrable hpayment, h⟩⟩
 
 /-- Some action meets the outside option. -/
 def OffersParticipation (outsideOption : ℝ)
@@ -158,15 +193,15 @@ theorem principalUtility_linearPayment_one (action : Action) :
       expect_congr_on_support hzero
     _ = 0 := expect_zero _
 
-/-- A finite action set has a best defined agent action when every alternative
+/-- A finite action set has a best agent action when every alternative
 payment expectation exists. -/
 theorem exists_incentivized [Finite Action] [Nonempty Action]
     (payment : Outcome → ℝ)
-    (hpayment : ∀ action, PayoffIntegrable (I.outcomeLaw action) payment) :
+    (hpayment : ∀ action, HasExpectation (I.outcomeLaw action) payment) :
     ∃ action, I.IsIncentivized payment action := by
   obtain ⟨action, hbest⟩ :=
     Finite.exists_max (fun alternative =>
-      I.agentUtility payment alternative)
+      I.extendedAgentUtility payment alternative)
   exact ⟨action, hpayment, hbest⟩
 
 theorem isIncentivized_linearPayment_one_iff
@@ -177,22 +212,9 @@ theorem isIncentivized_linearPayment_one_iff
       ∀ alternative,
         I.socialSurplus alternative ≤
           I.socialSurplus action := by
-  constructor
-  · rintro ⟨hpayment, hbest⟩ alternative
-    have hvalue (candidate : Action) :
-        I.agentUtility (I.linearPayment 1) candidate =
-          I.socialSurplus candidate := by
-      calc
-        _ = I.agentUtility (I.linearPayment 1) candidate := rfl
-        _ = _ := I.agentUtility_linearPayment_one candidate
-    simpa only [hvalue] using hbest alternative
-  · intro hbest
-    refine ⟨fun candidate => payoffIntegrable_const_mul (c := (1 : ℝ))
-      (hreward candidate), ?_⟩
-    intro alternative
-    rw [I.agentUtility_linearPayment_one alternative,
-      I.agentUtility_linearPayment_one action]
-    exact hbest alternative
+  rw [I.isIncentivized_iff_of_integrable (payment := I.linearPayment 1) fun candidate =>
+    payoffIntegrable_const_mul (c := (1 : ℝ)) (hreward candidate)]
+  simp only [I.agentUtility_linearPayment_one]
 
 theorem agentUtility_mono (payment payment' : Outcome → ℝ)
     (hpayment : ∀ outcome, payment outcome ≤ payment' outcome)
@@ -212,38 +234,39 @@ theorem participates_of_offersParticipation_of_isIncentivized
     (hoffers : I.OffersParticipation outsideOption payment)
     (hincentive : I.IsIncentivized payment action) :
     I.Participates outsideOption payment action := by
-  obtain ⟨alternative, hparticipates⟩ := hoffers
-  obtain ⟨hpaymentAlternative, hparticipates⟩ := hparticipates
+  obtain ⟨alternative, -, hparticipates⟩ := hoffers
   obtain ⟨hpayment, hbest⟩ := hincentive
-  refine ⟨hpayment action, ?_⟩
-  exact le_trans hparticipates (hbest alternative)
+  exact ⟨hpayment action, le_trans hparticipates (hbest alternative)⟩
 
+/-- A limited-liability payment has an expectation, possibly infinite, so a
+costless action already meets a zero outside option. -/
 theorem offersParticipation_zero_of_costless_of_limitedLiability
     (payment : Outcome → ℝ) (hpayment : IsLimitedLiability payment)
-    {costless : Action} (hcostless : I.cost costless = 0)
-    (hintegrable : PayoffIntegrable (I.outcomeLaw costless) payment) :
+    {costless : Action} (hcostless : I.cost costless = 0) :
     I.OffersParticipation 0 payment := by
-  refine ⟨costless, hintegrable, ?_⟩
-  have h := I.agentUtility_ge payment hpayment costless
-  simpa [hcostless] using h
+  refine ⟨costless, hasExpectation_of_nonneg fun outcome _ => hpayment outcome, ?_⟩
+  have hnonneg := extendedExpect_mono (μ := I.outcomeLaw costless)
+    (f := fun _ => (0 : ℝ)) (g := payment) fun outcome _ => hpayment outcome
+  rw [extendedExpect_constant] at hnonneg
+  rwa [extendedAgentUtility, hcostless, EReal.coe_zero, sub_zero]
 
 theorem participates_zero_of_costless_of_limitedLiability_of_isIncentivized
     (payment : Outcome → ℝ) (hpayment : IsLimitedLiability payment)
     {costless : Action} (hcostless : I.cost costless = 0)
-    (hintegrable : PayoffIntegrable (I.outcomeLaw costless) payment)
     {action : Action} (hincentive : I.IsIncentivized payment action) :
     I.Participates 0 payment action :=
   I.participates_of_offersParticipation_of_isIncentivized
     (I.offersParticipation_zero_of_costless_of_limitedLiability
-      payment hpayment hcostless hintegrable) hincentive
+      payment hpayment hcostless) hincentive
 
 theorem principalUtility_le_socialSurplus_sub_outsideOption
     (payment : Outcome → ℝ) {outsideOption : ℝ} {action : Action}
     (hreward : PayoffIntegrable (I.outcomeLaw action) I.reward)
+    (hpayment : PayoffIntegrable (I.outcomeLaw action) payment)
     (hparticipates : I.Participates outsideOption payment action) :
     I.principalUtility payment action ≤
       I.socialSurplus action - outsideOption := by
-  obtain ⟨hpayment, houtside⟩ := hparticipates
+  have houtside := (I.participates_iff_of_integrable hpayment).1 hparticipates
   have haccount :=
     I.principalUtility_add_agentUtility payment action hreward hpayment
   linarith
@@ -251,11 +274,12 @@ theorem principalUtility_le_socialSurplus_sub_outsideOption
 theorem principalUtility_le_socialSurplus_of_participates_zero
     (payment : Outcome → ℝ) {action : Action}
     (hreward : PayoffIntegrable (I.outcomeLaw action) I.reward)
+    (hpayment : PayoffIntegrable (I.outcomeLaw action) payment)
     (hparticipates : I.Participates 0 payment action) :
     I.principalUtility payment action ≤
       I.socialSurplus action := by
   simpa using I.principalUtility_le_socialSurplus_sub_outsideOption
-    payment hreward hparticipates
+    payment hreward hpayment hparticipates
 
 theorem principalUtility_eq_socialSurplus_sub_outsideOption_iff
     (payment : Outcome → ℝ) (outsideOption : ℝ) (action : Action)
@@ -282,6 +306,7 @@ theorem principalUtility_le_firstBest [Finite Action] [Nonempty Action]
     (payment : Outcome → ℝ) {outsideOption : ℝ} {action : Action}
     (hreward : ∀ alternative, PayoffIntegrable
       (I.outcomeLaw alternative) I.reward)
+    (hpayment : PayoffIntegrable (I.outcomeLaw action) payment)
     (hparticipates : I.Participates outsideOption payment action) :
     ∃ best : Action,
       (∀ alternative,
@@ -294,13 +319,14 @@ theorem principalUtility_le_firstBest [Finite Action] [Nonempty Action]
   refine ⟨best, hbest, ?_⟩
   exact le_trans
     (I.principalUtility_le_socialSurplus_sub_outsideOption
-      payment (hreward action) hparticipates)
+      payment (hreward action) hpayment hparticipates)
     (sub_le_sub_right (hbest action) outsideOption)
 
 theorem principalUtility_le_firstBest_zero [Finite Action] [Nonempty Action]
     (payment : Outcome → ℝ) {action : Action}
     (hreward : ∀ alternative, PayoffIntegrable
       (I.outcomeLaw alternative) I.reward)
+    (hpayment : PayoffIntegrable (I.outcomeLaw action) payment)
     (hparticipates : I.Participates 0 payment action) :
     ∃ best : Action,
       (∀ alternative,
@@ -309,7 +335,7 @@ theorem principalUtility_le_firstBest_zero [Finite Action] [Nonempty Action]
       I.principalUtility payment action ≤
         I.socialSurplus best := by
   simpa using I.principalUtility_le_firstBest
-    payment hreward hparticipates
+    payment hreward hpayment hparticipates
 
 end PrincipalAgent
 

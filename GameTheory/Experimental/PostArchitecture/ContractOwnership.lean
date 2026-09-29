@@ -86,7 +86,7 @@ theorem agentUtility_bonus_productive :
   norm_num [environment]
 
 theorem zero_incentivizes_safe : environment.IsIncentivized zeroPayment false := by
-  refine ⟨zeroPaymentIntegrable, ?_⟩
+  refine (environment.isIncentivized_iff_of_integrable zeroPaymentIntegrable).2 ?_
   intro alternative
   cases alternative with
   | false => exact le_rfl
@@ -94,7 +94,7 @@ theorem zero_incentivizes_safe : environment.IsIncentivized zeroPayment false :=
 
 theorem bonus_incentivizes_productive :
     environment.IsIncentivized successBonus true := by
-  refine ⟨paymentIntegrable, ?_⟩
+  refine (environment.isIncentivized_iff_of_integrable paymentIntegrable).2 ?_
   intro alternative
   cases alternative with
   | false => rw [agentUtility_bonus_safe, agentUtility_bonus_productive]; norm_num
@@ -106,14 +106,15 @@ theorem bonus_limitedLiability : PrincipalAgent.IsLimitedLiability successBonus 
 
 theorem productive_participates_quarter :
     environment.Participates (1 / 4) successBonus true := by
-  exact ⟨paymentIntegrable true, by
-    rw [PrincipalAgent.agentUtility, expectedPayment_bonus_productive]
-    norm_num [environment]⟩
+  refine (environment.participates_iff_of_integrable (paymentIntegrable true)).2 ?_
+  rw [PrincipalAgent.agentUtility, expectedPayment_bonus_productive]
+  norm_num [environment]
 
 theorem productive_rejects_three_quarters :
     ¬environment.Participates (3 / 4) successBonus true := by
-  rintro ⟨-, hparticipates⟩
-  rw [PrincipalAgent.agentUtility, expectedPayment_bonus_productive] at hparticipates
+  intro hparticipates
+  rw [environment.participates_iff_of_integrable (paymentIntegrable true),
+    PrincipalAgent.agentUtility, expectedPayment_bonus_productive] at hparticipates
   norm_num [environment] at hparticipates
 
 theorem bonus_has_participation_option :
@@ -127,7 +128,8 @@ theorem productive_participates_from_incentives :
 
 theorem incentivized_action_exists :
     ∃ action, environment.IsIncentivized successBonus action := by
-  exact environment.exists_incentivized successBonus paymentIntegrable
+  exact environment.exists_incentivized successBonus
+    fun action => hasExpectation_of_payoffIntegrable (paymentIntegrable action)
 
 theorem productive_welfare_identity :
     environment.principalUtility successBonus true +
@@ -153,15 +155,17 @@ theorem negative_limitedLiability : PrincipalAgent.IsLimitedLiability negativePa
 
 theorem negative_incentivized :
     negativeControl.IsIncentivized negativePayment () := by
-  refine ⟨fun _ => negativePaymentIntegrable, ?_⟩
+  refine (negativeControl.isIncentivized_iff_of_integrable
+    fun _ => negativePaymentIntegrable).2 ?_
   intro alternative
   cases alternative
   exact le_rfl
 
 theorem negative_not_participating :
     ¬negativeControl.Participates 0 negativePayment () := by
-  rintro ⟨-, hparticipates⟩
-  rw [PrincipalAgent.agentUtility, PrincipalAgent.expectedPayment] at hparticipates
+  intro hparticipates
+  rw [negativeControl.participates_iff_of_integrable negativePaymentIntegrable,
+    PrincipalAgent.agentUtility, PrincipalAgent.expectedPayment] at hparticipates
   have hvalue : expect (negativeControl.outcomeLaw ()) negativePayment = 0 :=
     expect_constant _ 0
   rw [hvalue] at hparticipates

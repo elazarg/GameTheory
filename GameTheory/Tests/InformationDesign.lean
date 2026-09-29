@@ -81,7 +81,7 @@ theorem receiver_scores_are_strict :
 theorem followMessage_isPersuasive :
     partialProblem.IsPersuasive followMessage := by
   intro message
-  refine ⟨receiverGuard message, ?_⟩
+  refine (partialProblem.isReceiverOptimal_iff_of_integrable (receiverGuard message)).2 ?_
   intro alternative
   rcases receiver_scores_are_strict with ⟨hff, hft, htf, htt⟩
   cases message <;> cases alternative <;>
@@ -113,6 +113,6 @@ theorem optimal_persuasive_rule_exists :
       partialProblem.IsOptimalPersuasive rule :=
   PersuasionProblem.exists_optimalPersuasive partialProblem
     ⟨followMessage, followMessage_isPersuasive⟩
-    (fun rule _ => senderGuard partialProblem rule)
+    (fun rule _ => hasExpectation_of_payoffIntegrable (senderGuard partialProblem rule))
 
 end GameTheory.Tests.InformationDesign

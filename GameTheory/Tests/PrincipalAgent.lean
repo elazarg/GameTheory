@@ -101,20 +101,21 @@ theorem successBonus_prefers_productive :
   norm_num [successBonus_safe, successBonus_productive]
 
 theorem successBonus_incentivizes_productive : fixture.IsIncentivized successBonus true := by
-  refine ⟨paymentGuard successBonus, ?_⟩
+  refine (fixture.isIncentivized_iff_of_integrable (paymentGuard successBonus)).2 ?_
   intro alternative
   cases alternative <;>
     norm_num [successBonus_safe, successBonus_productive]
 
 theorem successBonus_participates_at_quarter :
     fixture.Participates (1 / 4) successBonus true := by
-  exact ⟨paymentGuard successBonus true, by
-    norm_num [successBonus_productive]⟩
+  refine (fixture.participates_iff_of_integrable (paymentGuard successBonus true)).2 ?_
+  norm_num [successBonus_productive]
 
 theorem successBonus_rejects_three_quarters :
     ¬ fixture.OffersParticipation (3 / 4) successBonus := by
   rintro ⟨action, haction⟩
-  rcases haction with ⟨hpayment, hvalue⟩
+  have hvalue := (fixture.participates_iff_of_integrable (paymentGuard successBonus action)).1
+    haction
   cases action <;> norm_num [successBonus_safe, successBonus_productive] at hvalue
 
 /-- The accounting identity specializes to the nonconstant-reward productive
@@ -128,7 +129,7 @@ theorem productive_welfare_accounting :
 
 theorem fixture_exists_incentivized : ∃ action, fixture.IsIncentivized successBonus action :=
   fixture.exists_incentivized successBonus
-    (paymentGuard successBonus)
+    fun action => hasExpectation_of_payoffIntegrable (paymentGuard successBonus action)
 
 /-- Generic participation transport moves an offered contract to the selected
 incentivized action. -/
@@ -152,7 +153,8 @@ theorem zeroPayment_limitedLiability :
 
 theorem singleton_zero_payment_incentivized :
     singletonNegative.IsIncentivized (fun _ : Bool => 0) () := by
-  refine ⟨fun _ => payoffIntegrable_of_finite _ _, ?_⟩
+  refine (singletonNegative.isIncentivized_iff_of_integrable
+    fun _ => payoffIntegrable_of_finite _ _).2 ?_
   intro alternative
   rcases alternative with ⟨⟩
   exact le_rfl
@@ -161,7 +163,9 @@ theorem singleton_zero_payment_incentivized :
 has positive cost and no payment, hence rejects outside option zero. -/
 theorem singleton_zero_payment_rejects_zero :
     ¬ singletonNegative.Participates 0 (fun _ : Bool => 0) () := by
-  rintro ⟨hpayment, hvalue⟩
+  intro hparticipates
+  have hvalue := (singletonNegative.participates_iff_of_integrable
+    (payoffIntegrable_of_finite _ _)).1 hparticipates
   norm_num [Mechanism.PrincipalAgent.agentUtility,
     Mechanism.PrincipalAgent.expectedPayment, expect_pure,
     singletonNegative] at hvalue

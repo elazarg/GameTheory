@@ -135,8 +135,8 @@ theorem isSequentiallyRationalAt_iff {i : ι} (policy : M.Policy i)
     (info : M.InfoState i) {Outcome : Type uo}
     (ctx : GameTheory.Protocol.Context (M.Choice i info) Outcome) :
     M.IsSequentiallyRationalAt policy info ctx ↔
-      ctx.IntegrableAt (policy info) ∧
-        (∀ alternative, ctx.IntegrableAt alternative) ∧
+      ctx.HasValueAt (policy info) ∧
+        (∀ alternative, ctx.HasValueAt alternative) ∧
           ¬ ∃ alternative,
             ctx.IsProfitableDeviation Set.univ (policy info) alternative := by
   simpa [IsSequentiallyRationalAt] using

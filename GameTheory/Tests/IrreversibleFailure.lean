@@ -262,8 +262,9 @@ theorem source_subgamePerfect (prefer : Bool) :
   let hdev := backward_integrable (Profile.update sourceProfile () alternative)
     prefer history
   let hbase := backward_integrable sourceProfile prefer history
-  refine ⟨hdev, hbase, ?_⟩
-  rw [backward_eq _ prefer history hdev, backward_eq _ prefer history hbase]
+  refine ⟨hasExpectation_of_payoffIntegrable hdev, hasExpectation_of_payoffIntegrable hbase, ?_⟩
+  rw [ExecutionProtocol.historyBackwardExtendedValue_le_iff _ hdev hbase,
+    backward_eq _ prefer history hdev, backward_eq _ prefer history hbase]
   have valid := source_valid history.trace
   rcases history with ⟨state, trace⟩
   dsimp only at valid ⊢
@@ -413,12 +414,18 @@ theorem no_common_target_spe :
       (model false).IsSubgamePerfect (terminates false) profile (payoff false false) ∧
       (model false).IsSubgamePerfect (terminates false) profile (payoff false true) := by
   rintro ⟨profile, first, second⟩
-  obtain ⟨hotherF, hincF, firstBound⟩ :=
-    first failedRoot failedRoot_subgame () (targetPolicy false)
-  obtain ⟨hotherT, hincT, secondBound⟩ :=
-    second failedRoot failedRoot_subgame () (targetPolicy true)
-  rw [failedRoot_best false profile hotherF] at firstBound
-  rw [failedRoot_best true profile hotherT] at secondBound
+  obtain ⟨-, -, firstBound⟩ := first failedRoot failedRoot_subgame () (targetPolicy false)
+  obtain ⟨-, -, secondBound⟩ := second failedRoot failedRoot_subgame () (targetPolicy true)
+  have hotherF := backward_integrable (Profile.update profile () (targetPolicy false)) false
+    failedRoot
+  have hotherT := backward_integrable (Profile.update profile () (targetPolicy true)) true
+    failedRoot
+  have hincF := backward_integrable profile false failedRoot
+  have hincT := backward_integrable profile true failedRoot
+  rw [ExecutionProtocol.historyBackwardExtendedValue_le_iff _ hotherF hincF,
+    failedRoot_best false profile hotherF] at firstBound
+  rw [ExecutionProtocol.historyBackwardExtendedValue_le_iff _ hotherT hincT,
+    failedRoot_best true profile hotherT] at secondBound
   have total := failedRoot_value_sum profile hincF hincT
   linarith
 

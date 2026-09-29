@@ -74,7 +74,7 @@ theorem isHistorywiseOptimal_iff_hasNoProfitableOneShotDeviation
     (profile : Profile G.strategicSignature)
     (utility : G.History → ι → ℝ)
     (hcandidate : ∀ (who : ι) (alternative : G.information.Policy who)
-      (history : G.History), PayoffIntegrable
+      (history : G.History), HasExpectation
         (G.execution.historyBackwardLaw certificate
           (G.information.historyChooser
             (Profile.update profile who alternative)) history)

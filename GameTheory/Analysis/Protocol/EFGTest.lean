@@ -957,8 +957,8 @@ theorem fullyMixedAssessment_isSequentiallyRationalWithin_matchingPayoff :
       context.continuation
   show context.IsLocallyOptimal Set.univ
     (fullyMixedAssessment.strategy .player)
-  refine ⟨hfinite _, fun alternative _ => hfinite alternative, ?_⟩
-  intro alternative _
+  refine (GameTheory.Protocol.Context.isLocallyOptimal_iff_of_integrable (hfinite _)
+    fun alternative _ => hfinite alternative).2 fun alternative _ => ?_
   rw [continuationContext_matchingPayoff_value alternative (hfinite alternative),
     continuationContext_matchingPayoff_value
       (fullyMixedAssessment.strategy .player) (hfinite _)]
@@ -1103,16 +1103,16 @@ theorem wrongAssessment_not_isSequentiallyRationalWithin_matchingPayoff :
     (matchingPayoff .player) 2
   have hlocal : context.IsLocallyOptimal Set.univ
       (wrongAssessment.strategy .player) := hrational .player actingSite
-  rcases hlocal with ⟨hincumbent, hall, hoptimal⟩
-  have hdeviation := hoptimal alwaysTruePolicy (Set.mem_univ _)
-  have hdeviation' :
-      context.value alwaysTruePolicy ≤
-        context.value (wrongAssessment.strategy .player) := by
-    simpa only [context] using hdeviation
+  have hfinite (alternative : information.BehavioralPolicy .player) :
+      context.IntegrableAt alternative :=
+    payoffIntegrable_of_finite (context.outcome alternative) context.continuation
+  have hdeviation' := (GameTheory.Protocol.Context.isLocallyOptimal_iff_of_integrable
+    (hfinite _) fun alternative _ => hfinite alternative).1 hlocal alwaysTruePolicy
+    (Set.mem_univ _)
   have htrue := wrongAssessment_continuationContext_value alwaysTruePolicy
-    (hall alwaysTruePolicy (Set.mem_univ _))
+    (hfinite alwaysTruePolicy)
   have hincumbent' := wrongAssessment_continuationContext_value
-    (wrongAssessment.strategy .player) hincumbent
+    (wrongAssessment.strategy .player) (hfinite _)
   have hvalues :
       expect (alwaysTruePolicy .acting) (fun choice =>
         if choice.1 = some true then 1 else 0) ≤

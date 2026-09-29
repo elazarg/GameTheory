@@ -47,8 +47,8 @@ more. -/
 theorem grab_isOneShotOptimal :
     probe.IsOneShotOptimal probe_wellFoundedPlay (policy .grab) basePayoff := by
   intro state hterm
-  refine ⟨payoffIntegrable_of_finite _ _,
-    (fun _ _ => payoffIntegrable_of_finite _ _), ?_⟩
+  refine (Context.isLocallyOptimal_iff_of_integrable (payoffIntegrable_of_finite _ _)
+    (fun _ _ => payoffIntegrable_of_finite _ _)).2 ?_
   rintro ⟨joint, isLegal⟩ _
   match state with
   | .grabbed | .passed => exact absurd (by simp) hterm
@@ -104,7 +104,7 @@ theorem pass_not_isOneShotOptimal :
     ¬ probe.IsOneShotOptimal probe_wellFoundedPlay (policy .pass) basePayoff := by
   intro hopt
   have hle := backwardValue_le_of_isOneShotOptimal hopt
-    (policy .grab) Spot.flip (payoffIntegrable_of_finite _ _)
+    (policy .grab) Spot.flip (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
   rw [backwardValue_grab_base, backwardValue_pass_base] at hle
   norm_num at hle
 
@@ -115,7 +115,7 @@ theorem grab_best (other : probe.Chooser) (state : Spot) :
     probe.backwardValue probe_wellFoundedPlay other basePayoff state ≤
       probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff state :=
   backwardValue_le_of_isOneShotOptimal grab_isOneShotOptimal other state
-    (payoffIntegrable_of_finite _ _)
+    (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
 
 /-- **And back again.** The principle is an equivalence: being best among all
 choosers recovers the one-step condition, so nothing is lost by checking only

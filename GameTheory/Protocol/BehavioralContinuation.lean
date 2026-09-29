@@ -69,21 +69,17 @@ theorem isBehavioralSubgamePerfect_bound_iff [Fintype ι] [DecidableEq ι]
     (E.runRandomizedFor_eq_of_bound secondBound _ history
       (max first second) (Nat.le_max_right _ _))
 
-/-- A point-mass behavioral SPE defeats every pure replacement; subgame
-perfection also asks those replacements to be integrable. -/
+/-- A point-mass behavioral SPE defeats every pure replacement. -/
 theorem isSubgamePerfect_of_behavioral [Fintype ι] [DecidableEq ι]
     {bound : ℕ} (bounded : E.BoundedHorizon bound)
     (certificate : E.WellFoundedPlay) (profile : Profile M.strategicSignature)
     (utility : E.History → ι → ℝ)
     (perfect : M.IsBehavioralSubgamePerfect bounded
       (Profile.map (target := M.behavioralSignature)
-        (fun who (policy : M.Policy who) => policy.toBehavioral) profile) utility)
-    (hintegrable : ∀ history, M.IsSubgameRoot history →
-      (M.toContinuationGameForm bound history).HasIntegrableDeviations utility profile) :
+        (fun who (policy : M.Policy who) => policy.toBehavioral) profile) utility) :
     M.IsSubgamePerfect certificate profile utility := by
   rw [M.isSubgamePerfect_iff_isNash_continuation certificate bounded]
   intro history proper
-  refine ⟨?_, hintegrable history proper⟩
   apply GameForm.isNash_of_honest_law
     (source := M.toContinuationGameForm bound history)
     (target := M.toBehavioralContinuationGameForm bound history)
@@ -162,20 +158,16 @@ theorem isSingleMoverBehavioralSubgamePerfect_iff_behavioral [Fintype ι]
   exact fun history _ policies =>
     M.runSingleMoverBehavioralFrom_eq_runBehavioralFrom single policies bound history
 
-/-- The pure implication does not require finitely many possible players.
-Subgame perfection also asks the pure replacements to be integrable. -/
+/-- The pure implication does not require finitely many possible players. -/
 theorem isSubgamePerfect_of_singleMoverBehavioral {bound : ℕ}
     (bounded : E.BoundedHorizon bound) (certificate : E.WellFoundedPlay)
     (profile : Profile M.strategicSignature) (utility : E.History → ι → ℝ)
     (perfect : M.IsSingleMoverBehavioralSubgamePerfect single bounded
       (Profile.map (target := M.behavioralSignature)
-        (fun who (policy : M.Policy who) => policy.toBehavioral) profile) utility)
-    (hintegrable : ∀ history, M.IsSubgameRoot history →
-      (M.toContinuationGameForm bound history).HasIntegrableDeviations utility profile) :
+        (fun who (policy : M.Policy who) => policy.toBehavioral) profile) utility) :
     M.IsSubgamePerfect certificate profile utility := by
   rw [M.isSubgamePerfect_iff_isNash_continuation certificate bounded]
   intro history proper
-  refine ⟨?_, hintegrable history proper⟩
   apply GameForm.isNash_of_honest_law
     (source := M.toContinuationGameForm bound history)
     (target := M.toSingleMoverBehavioralContinuationGameForm single bound history)

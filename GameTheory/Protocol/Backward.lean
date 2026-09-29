@@ -221,11 +221,17 @@ theorem backwardLaw_support_terminal (state : E.State) :
         exact hcontinue
 
 /-- The expected payoff of the terminal law. Like `expect`, it is `0` for a
-non-integrable payoff, so comparisons state integrability separately. -/
+non-integrable payoff, so real comparisons state integrability separately. -/
 def backwardValue (certificate : E.WellFoundedPlay) (chooser : E.Chooser)
     (payoff : E.State → ℝ) (state : E.State) :
     ℝ :=
   expect (E.backwardLaw certificate chooser state) payoff
+
+/-- The extended-real value of a state under its terminal law, meaningful when
+the payoff has an expectation there. -/
+def backwardExtendedValue (certificate : E.WellFoundedPlay) (chooser : E.Chooser)
+    (payoff : E.State → ℝ) (state : E.State) : EReal :=
+  extendedExpect (E.backwardLaw certificate chooser state) payoff
 
 theorem backwardValue_eq_expect_runFor
     {certificate : E.WellFoundedPlay} {chooser : E.Chooser}
@@ -309,82 +315,83 @@ theorem oneShotContext_incumbentLaw
       (g := E.backwardLaw certificate chooser)
       (fun _ _ => rfl)).symm
 
-/-- Every legal one-step replacement has a defined finite real payoff, and
-none improves over the incumbent's whole continuation law. -/
+/-- Every legal one-step replacement has an expected payoff, and none is worth
+more than the incumbent's whole continuation law. -/
 def IsOneShotOptimal (certificate : E.WellFoundedPlay)
     (chooser : E.Chooser) (payoff : E.State → ℝ) : Prop :=
   ∀ (source : E.State) (hterm : ¬ E.terminal source),
     (E.oneShotContext certificate chooser payoff source hterm).IsLocallyOptimal
       Set.univ (chooser source hterm)
 
-/-- The incumbent law is integrable at every state under guarded one-shot
-optimality. At terminal states this follows from the pure law. -/
-theorem IsOneShotOptimal.integrable
+/-- Under one-shot optimality the incumbent law has an expectation at every
+state. At terminal states this follows from the pure law. -/
+theorem IsOneShotOptimal.hasExpectation
     {certificate : E.WellFoundedPlay} {chooser : E.Chooser}
     {payoff : E.State → ℝ}
     (hoptimal : E.IsOneShotOptimal certificate chooser payoff)
     (source : E.State) :
-    PayoffIntegrable (E.backwardLaw certificate chooser source) payoff := by
+    HasExpectation (E.backwardLaw certificate chooser source) payoff := by
   by_cases hterm : E.terminal source
   · rw [E.backwardLaw_of_terminal hterm]
-    exact payoffIntegrable_pure source payoff
-  · have hctx : PayoffIntegrable
+    exact hasExpectation_of_payoffIntegrable (payoffIntegrable_pure source payoff)
+  · have hctx : HasExpectation
         ((E.oneShotContext certificate chooser payoff source hterm).outcome
           (chooser source hterm)) payoff :=
       (hoptimal source hterm).1
     rwa [E.oneShotContext_incumbentLaw hterm] at hctx
 
-/-- Guarded one-shot optimality compares the incumbent with any chooser whose
-terminal law has a finite real value at each state. -/
+/-- One-shot optimality defeats every chooser at every state: no chooser's
+terminal law has a larger extended value. -/
+theorem backwardExtendedValue_le_of_isOneShotOptimal
+    {certificate : E.WellFoundedPlay} {optimal : E.Chooser}
+    {payoff : E.State → ℝ}
+    (hopt : E.IsOneShotOptimal certificate optimal payoff)
+    (other : E.Chooser) (state : E.State) :
+    E.backwardExtendedValue certificate other payoff state ≤
+      E.backwardExtendedValue certificate optimal payoff state := by
+  induction state using certificate.induction with
+  | _ source ih =>
+      by_cases hterm : E.terminal source
+      · unfold backwardExtendedValue
+        rw [E.backwardLaw_of_terminal hterm,
+          E.backwardLaw_of_terminal hterm]
+      · have hlocal := hopt source hterm
+        have hright :
+            (E.oneShotContext certificate optimal payoff source hterm).HasValueAt
+              (other source hterm) :=
+          hlocal.2.1 _ (Set.mem_univ _)
+        have hbound := hlocal.2.2 (other source hterm) (Set.mem_univ _)
+        unfold backwardExtendedValue
+        calc
+          extendedExpect (E.backwardLaw certificate other source) payoff =
+              extendedExpect ((E.step source (other source hterm)).bind
+                (E.backwardLaw certificate other)) payoff := by
+              rw [E.backwardLaw_of_not_terminal_bind hterm]
+          _ ≤ extendedExpect ((E.step source (other source hterm)).bind
+                (E.backwardLaw certificate optimal)) payoff :=
+              extendedExpect_bind_mono (fun reached hreached =>
+                ih reached ⟨(other source hterm).1, (other source hterm).2, hreached⟩)
+                hright
+          _ ≤ extendedExpect (E.backwardLaw certificate optimal source) payoff := by
+              unfold Context.extendedValue at hbound
+              rw [E.oneShotContext_incumbentLaw hterm] at hbound
+              exact hbound
+
+/-- Between integrable terminal laws, one-shot optimality compares real
+values. -/
 theorem backwardValue_le_of_isOneShotOptimal
     {certificate : E.WellFoundedPlay} {optimal : E.Chooser}
     {payoff : E.State → ℝ}
     (hopt : E.IsOneShotOptimal certificate optimal payoff)
-    (other : E.Chooser)
-    (state : E.State)
-    (hother : PayoffIntegrable
-      (E.backwardLaw certificate other state) payoff) :
+    (other : E.Chooser) (state : E.State)
+    (hother : PayoffIntegrable (E.backwardLaw certificate other state) payoff)
+    (hoptimal : PayoffIntegrable (E.backwardLaw certificate optimal state) payoff) :
     E.backwardValue certificate other payoff state ≤
       E.backwardValue certificate optimal payoff state := by
-  induction state using certificate.induction with
-  | _ source ih =>
-      by_cases hterm : E.terminal source
-      · unfold backwardValue expect
-        rw [E.backwardLaw_of_terminal hterm,
-          E.backwardLaw_of_terminal hterm]
-      · let ctx := E.oneShotContext certificate optimal payoff source hterm
-        have hlocal := hopt source hterm
-        have hright : ctx.IntegrableAt (other source hterm) :=
-          hlocal.2.1 _ (Set.mem_univ _)
-        have hbound := hlocal.2.2 (other source hterm)
-          (Set.mem_univ _)
-        have hleft : PayoffIntegrable
-            ((E.step source (other source hterm)).bind
-              (E.backwardLaw certificate other)) payoff := by
-          rw [← E.backwardLaw_of_not_terminal_bind hterm]
-          exact hother
-        unfold backwardValue
-        calc
-          expect (E.backwardLaw certificate other source) payoff =
-              expect ((E.step source (other source hterm)).bind
-                (E.backwardLaw certificate other)) payoff := by
-              unfold expect
-              rw [E.backwardLaw_of_not_terminal_bind hterm]
-          _ ≤ expect ((E.step source (other source hterm)).bind
-                (E.backwardLaw certificate optimal)) payoff := by
-              refine expect_bind_mono_on_support _ _ _ _ hleft hright
-                (fun reached hreached => ?_)
-              have hstep : E.Successor reached source :=
-                ⟨(other source hterm).1, (other source hterm).2, hreached⟩
-              have hconditional := payoffIntegrable_bind_conditional_on_support
-                (E.step source (other source hterm))
-                (E.backwardLaw certificate other) payoff hleft reached hreached
-              simpa only [backwardValue] using ih reached hstep hconditional
-          _ ≤ expect (E.backwardLaw certificate optimal source) payoff := by
-              unfold Context.value at hbound
-              unfold expect at hbound ⊢
-              rw [E.oneShotContext_incumbentLaw hterm] at hbound
-              exact hbound
+  have hle := E.backwardExtendedValue_le_of_isOneShotOptimal hopt other state
+  unfold backwardExtendedValue at hle
+  rwa [extendedExpect_eq_expect hother, extendedExpect_eq_expect hoptimal,
+    EReal.coe_le_coe_iff] at hle
 
 variable (E) in
 /-- States reachable from a source by realized legal steps, including the source. -/
@@ -495,79 +502,82 @@ theorem oneShotContext_deviateAtLaw
     (⟨alternative.1, alternative.2, hreached⟩ : E.Successor reached source)
     hlater
 
-/-- The converse needs a guarded global comparison: the assumed preference
-itself certifies both compared terminal laws, including the local deviation. -/
-theorem isOneShotOptimal_of_backwardValue_le
+/-- The converse: a chooser that is weakly preferred to every chooser at every
+state, with expectations for both compared laws, is one-shot optimal. -/
+theorem isOneShotOptimal_of_backwardExtendedValue_le
     {certificate : E.WellFoundedPlay} {optimal : E.Chooser}
     {payoff : E.State → ℝ}
     (hbest : ∀ (other : E.Chooser) (state : E.State),
-      PayoffIntegrable
-          (E.backwardLaw certificate other state) payoff ∧
-        PayoffIntegrable
-          (E.backwardLaw certificate optimal state) payoff ∧
-          E.backwardValue certificate other payoff state ≤
-            E.backwardValue certificate optimal payoff state) :
+      HasExpectation (E.backwardLaw certificate other state) payoff ∧
+        HasExpectation (E.backwardLaw certificate optimal state) payoff ∧
+          E.backwardExtendedValue certificate other payoff state ≤
+            E.backwardExtendedValue certificate optimal payoff state) :
     E.IsOneShotOptimal certificate optimal payoff := by
   intro source hterm
-  let ctx := E.oneShotContext certificate optimal payoff source hterm
-  obtain ⟨_, hinc, _⟩ := hbest optimal source
-  have hincCtx : ctx.IntegrableAt (optimal source hterm) := by
-    show PayoffIntegrable
+  have hincCtx :
+      (E.oneShotContext certificate optimal payoff source hterm).HasValueAt
+        (optimal source hterm) := by
+    show HasExpectation
       ((E.oneShotContext certificate optimal payoff source hterm).outcome
         (optimal source hterm)) payoff
     rw [E.oneShotContext_incumbentLaw hterm]
-    exact hinc
+    exact (hbest optimal source).2.1
   refine ⟨hincCtx, ?_, ?_⟩
   · intro alternative _
-    obtain ⟨hdev, _, _⟩ :=
-      hbest (E.deviateAt source alternative optimal) source
-    show PayoffIntegrable
+    show HasExpectation
       ((E.oneShotContext certificate optimal payoff source hterm).outcome
         alternative) payoff
     rw [E.oneShotContext_deviateAtLaw hterm alternative]
-    exact hdev
+    exact (hbest (E.deviateAt source alternative optimal) source).1
   · intro alternative _
-    obtain ⟨hdev, hopt', hle⟩ :=
-      hbest (E.deviateAt source alternative optimal) source
-    show expect
+    have hle := (hbest (E.deviateAt source alternative optimal) source).2.2
+    show extendedExpect
         ((E.oneShotContext certificate optimal payoff source hterm).outcome
           alternative) payoff ≤
-      expect
+      extendedExpect
         ((E.oneShotContext certificate optimal payoff source hterm).outcome
           (optimal source hterm)) payoff
-    unfold backwardValue expect at hle
-    unfold expect
+    unfold backwardExtendedValue at hle
     rw [E.oneShotContext_deviateAtLaw hterm alternative,
       E.oneShotContext_incumbentLaw hterm]
     exact hle
 
-/-- When both forward runs have stopped, guarded one-shot optimality compares
-their actual terminal laws. The incumbent integrability certificate is derived. -/
-theorem expect_runFor_le_of_isOneShotOptimal
+/-- The converse between integrable terminal laws. -/
+theorem isOneShotOptimal_of_backwardValue_le
+    {certificate : E.WellFoundedPlay} {optimal : E.Chooser}
+    {payoff : E.State → ℝ}
+    (hbest : ∀ (other : E.Chooser) (state : E.State),
+      PayoffIntegrable (E.backwardLaw certificate other state) payoff ∧
+        PayoffIntegrable (E.backwardLaw certificate optimal state) payoff ∧
+          E.backwardValue certificate other payoff state ≤
+            E.backwardValue certificate optimal payoff state) :
+    E.IsOneShotOptimal certificate optimal payoff := by
+  refine E.isOneShotOptimal_of_backwardExtendedValue_le fun other state => ?_
+  obtain ⟨hother, hoptimal, hle⟩ := hbest other state
+  refine ⟨hasExpectation_of_payoffIntegrable hother,
+    hasExpectation_of_payoffIntegrable hoptimal, ?_⟩
+  unfold backwardExtendedValue
+  rw [extendedExpect_eq_expect hother, extendedExpect_eq_expect hoptimal]
+  exact EReal.coe_le_coe_iff.2 hle
+
+/-- When both forward runs have stopped, one-shot optimality compares their
+actual terminal laws; the incumbent law has an expectation. -/
+theorem extendedExpect_runFor_le_of_isOneShotOptimal
     {certificate : E.WellFoundedPlay} {optimal : E.Chooser}
     {payoff : E.State → ℝ}
     (hopt : E.IsOneShotOptimal certificate optimal payoff)
     (other : E.Chooser) {horizon : ℕ} {state : E.State}
     (hotherStop : E.StopsWithin other horizon state)
-    (hoptimalStop : E.StopsWithin optimal horizon state)
-    (hother : PayoffIntegrable (E.runFor other horizon state) payoff) :
-    PayoffIntegrable (E.runFor optimal horizon state) payoff ∧
-      expect (E.runFor other horizon state) payoff ≤
-        expect (E.runFor optimal horizon state) payoff := by
-  have hotherBack : PayoffIntegrable
-      (E.backwardLaw certificate other state) payoff := by
-    rw [E.backwardLaw_eq_runFor hotherStop]
-    exact hother
-  let hoptimal : PayoffIntegrable (E.runFor optimal horizon state) payoff := by
-    rw [← E.backwardLaw_eq_runFor hoptimalStop]
-    exact hopt.integrable state
-  refine ⟨hoptimal, ?_⟩
-  have hle := E.backwardValue_le_of_isOneShotOptimal hopt other state hotherBack
-  unfold backwardValue expect at hle
-  unfold expect
-  rw [E.backwardLaw_eq_runFor hotherStop,
-    E.backwardLaw_eq_runFor hoptimalStop] at hle
-  exact hle
+    (hoptimalStop : E.StopsWithin optimal horizon state) :
+    HasExpectation (E.runFor optimal horizon state) payoff ∧
+      extendedExpect (E.runFor other horizon state) payoff ≤
+        extendedExpect (E.runFor optimal horizon state) payoff := by
+  have hle := E.backwardExtendedValue_le_of_isOneShotOptimal hopt other state
+  unfold backwardExtendedValue at hle
+  rw [E.backwardLaw_eq_runFor hotherStop, E.backwardLaw_eq_runFor hoptimalStop] at hle
+  refine ⟨?_, hle⟩
+  rw [← E.backwardLaw_eq_runFor hoptimalStop]
+  exact hopt.hasExpectation state
 
 end ExecutionProtocol
 

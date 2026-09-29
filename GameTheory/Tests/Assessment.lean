@@ -89,8 +89,8 @@ lacks. -/
 
 theorem up_optimal_under_prefersLeft :
     (splitContext prefersLeft).IsLocallyOptimal bothCalls (some .up) := by
-  refine ⟨payoffIntegrable_of_finite _ _,
-    (fun _ _ => payoffIntegrable_of_finite _ _), ?_⟩
+  refine (Context.isLocallyOptimal_iff_of_integrable (payoffIntegrable_of_finite _ _)
+    (fun _ _ => payoffIntegrable_of_finite _ _)).2 ?_
   rintro alternative (rfl | rfl)
   · exact le_rfl
   · rw [value_down, value_up]
@@ -99,7 +99,8 @@ theorem up_optimal_under_prefersLeft :
 theorem up_not_optimal_under_prefersRight :
     ¬ (splitContext prefersRight).IsLocallyOptimal bothCalls (some .up) := by
   intro hopt
-  have hdown := hopt.2.2 (some .down) (by simp [bothCalls])
+  have hdown := (Context.isLocallyOptimal_iff_of_integrable (payoffIntegrable_of_finite _ _)
+    (fun _ _ => payoffIntegrable_of_finite _ _)).1 hopt (some .down) (by simp [bothCalls])
   rw [value_down, value_up] at hdown
   norm_num [prefersRight] at hdown
 
@@ -119,8 +120,8 @@ def swappedContext (continuation : Room → ℝ) : rooms.Context () where
 
 theorem up_optimal_under_swapped :
     (swappedContext prefersRight).IsLocallyOptimal bothCalls (some .up) := by
-  refine ⟨payoffIntegrable_of_finite _ _,
-    (fun _ _ => payoffIntegrable_of_finite _ _), ?_⟩
+  refine (Context.isLocallyOptimal_iff_of_integrable (payoffIntegrable_of_finite _ _)
+    (fun _ _ => payoffIntegrable_of_finite _ _)).2 ?_
   rintro alternative (rfl | rfl) <;>
     simp [Context.value, swappedContext, prefersRight, expect_pure]
 
@@ -138,9 +139,13 @@ profitable deviation ever existed. Here is one. -/
 
 theorem down_is_profitable_under_prefersRight :
     (splitContext prefersRight).IsProfitableDeviation bothCalls (some .up) (some .down) := by
-  refine ⟨by simp [bothCalls], payoffIntegrable_of_finite _ _,
-    payoffIntegrable_of_finite _ _, ?_⟩
-  rw [value_up, value_down]
+  have hup : (splitContext prefersRight).IntegrableAt (some .up) :=
+    payoffIntegrable_of_finite _ _
+  have hdown : (splitContext prefersRight).IntegrableAt (some .down) :=
+    payoffIntegrable_of_finite _ _
+  refine ⟨by simp [bothCalls], hup.hasValueAt, hdown.hasValueAt, ?_⟩
+  rw [Context.extendedValue_eq hup, Context.extendedValue_eq hdown, EReal.coe_lt_coe_iff,
+    value_up, value_down]
   norm_num [prefersRight]
 
 /-- And the interface theorem converts the exhibited deviation into a refutation
@@ -199,12 +204,12 @@ theorem first_decision_bound
     (hopt : information.IsOneShotOptimalWithin profile () payoff 3)
     (choice : information.Choice ()
       (information.infoOf () leftHistory.trace)) :
-    expect (information.oneShotLaw profile 1 leftHistory left_not_terminal () choice)
-        payoff ≤
-      expect (information.runFrom profile 2 leftHistory) payoff := by
+    extendedExpect
+        (information.oneShotLaw profile 1 leftHistory left_not_terminal () choice) payoff ≤
+      extendedExpect (information.runFrom profile 2 leftHistory) payoff := by
   have hlocal := hopt 1 leftHistory (by rfl) left_not_terminal
   have hle := hlocal.2.2 choice (Set.mem_univ _)
-  simpa only [Context.value, InformationModel.historyContext,
+  simpa only [Context.extendedValue, InformationModel.historyContext,
     information.oneShotLaw_self] using hle
 
 /-- The later decision is evaluated with exactly one total step remaining. -/
@@ -212,12 +217,12 @@ theorem second_decision_bound
     (hopt : information.IsOneShotOptimalWithin profile () payoff 3)
     (choice : information.Choice ()
       (information.infoOf () secondHistory.trace)) :
-    expect (information.oneShotLaw profile 0 secondHistory second_not_terminal () choice)
-        payoff ≤
-      expect (information.runFrom profile 1 secondHistory) payoff := by
+    extendedExpect
+        (information.oneShotLaw profile 0 secondHistory second_not_terminal () choice) payoff ≤
+      extendedExpect (information.runFrom profile 1 secondHistory) payoff := by
   have hlocal := hopt 0 secondHistory (by rfl) second_not_terminal
   have hle := hlocal.2.2 choice (Set.mem_univ _)
-  simpa only [Context.value, InformationModel.historyContext,
+  simpa only [Context.extendedValue, InformationModel.historyContext,
     information.oneShotLaw_self] using hle
 
 /-- The depth equation rejects evaluating the first decision with the later
@@ -345,7 +350,9 @@ theorem up_sequentiallyRationalAt_historyContext :
     · rfl
     · exact absurd hstopped hterm
   have hup : (upProfile () false).1 = some Vote.up := rfl
-  refine ⟨upUtility_integrable _, (fun _ _ => upUtility_integrable _), ?_⟩
+  refine (Context.isLocallyOptimal_iff_of_integrable ?hchoice ?hall).2 ?_
+  case hchoice => exact upUtility_integrable _
+  case hall => exact fun _ _ => upUtility_integrable _
   intro alternative _
   dsimp only [Context.value, InformationModel.historyContext]
   calc
@@ -404,12 +411,12 @@ theorem arbitrary_policy_update_no_better (alternative : model.Policy ()) :
         twice.initHistory) (fun outcome => upUtility outcome ()) ≤
       expect (model.runFrom upProfile 1 twice.initHistory)
         (fun outcome => upUtility outcome ()) := by
-  simpa using
-  model.expect_runFrom_update_le_of_isOneShotOptimalWithin
+  have hle := model.extendedExpect_runFrom_update_le_of_isOneShotOptimalWithin
     upProfile () (fun outcome => upUtility outcome ()) 1
-    up_isOneShotOptimalWithin alternative twice.initHistory (by
+    up_isOneShotOptimalWithin alternative (fuel := 1) twice.initHistory (by
       simp [ExecutionProtocol.initHistory, ExecutionProtocol.Trace.length])
-    (upUtility_integrable _)
+  rwa [extendedExpect_eq_expect (upUtility_integrable _),
+    extendedExpect_eq_expect (upUtility_integrable _), EReal.coe_le_coe_iff] at hle
 
 /-- The optimal profile has value one in the compiled form. -/
 theorem up_expectedUtility :
@@ -463,7 +470,7 @@ theorem up_isNash :
   exact model.isNash_toGameForm_of_isOneShotOptimalWithin
     upProfile upUtility 1
     (fun who => by cases who; exact up_isOneShotOptimalWithin)
-    (fun who _ => by cases who; exact upUtility_integrable _)
+    (fun who _ => by cases who; exact hasExpectation_of_payoffIntegrable (upUtility_integrable _))
 
 end AssessmentBridge
 
