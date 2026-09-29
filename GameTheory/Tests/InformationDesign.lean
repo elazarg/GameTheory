@@ -69,10 +69,10 @@ theorem partialJoint_false_messages_are_nontrivial :
       (Or.inl (by norm_num)) (Or.inl (by norm_num))] <;> norm_num
 
 theorem receiver_scores_are_strict :
-    partialProblem.receiverScore false false (receiverGuard false false) = 1 / 4 ∧
-      partialProblem.receiverScore false true (receiverGuard false true) = 0 ∧
-      partialProblem.receiverScore true false (receiverGuard true false) = 1 / 4 ∧
-      partialProblem.receiverScore true true (receiverGuard true true) = 1 / 2 := by
+    partialProblem.receiverScore false false = 1 / 4 ∧
+      partialProblem.receiverScore false true = 0 ∧
+      partialProblem.receiverScore true false = 1 / 4 ∧
+      partialProblem.receiverScore true true = 1 / 2 := by
   norm_num [PersuasionProblem.receiverScore, expect_eq_sum,
     PersuasionProblem.receiverWeighted, partialProblem, partialSignal,
     fairBool, Fintype.sum_bool, PMF.uniformOfFintype_apply,
@@ -89,21 +89,20 @@ theorem followMessage_isPersuasive :
 
 theorem partial_senderEU :
     partialProblem.senderEU followMessage
-      (senderGuard partialProblem followMessage) = 3 / 4 := by
+       = 3 / 4 := by
   rw [PersuasionProblem.senderEU_eq_sum]
   norm_num [followMessage, partialProblem, partialSignal, fairBool,
     Fintype.sum_bool, PMF.uniformOfFintype_apply, PMF.pure_apply]
 
 theorem fullInformation_senderEU :
-    fullProblem.senderEU id (senderGuard fullProblem id) = 1 / 2 := by
+    fullProblem.senderEU id = 1 / 2 := by
   rw [PersuasionProblem.senderEU_eq_sum]
   norm_num [fullProblem, fairBool, Fintype.sum_bool,
     PMF.uniformOfFintype_apply, PMF.pure_apply]
 
 theorem partial_revelation_strictly_improves_sender_value :
-    fullProblem.senderEU id (senderGuard fullProblem id) <
-      partialProblem.senderEU followMessage
-        (senderGuard partialProblem followMessage) := by
+    fullProblem.senderEU id <
+      partialProblem.senderEU followMessage := by
   rw [fullInformation_senderEU, partial_senderEU]
   norm_num
 

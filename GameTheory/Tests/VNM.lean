@@ -27,7 +27,7 @@ def middleMix : PMF (Fin 3) :=
   mix (1 / 2) (by norm_num) (by norm_num) high low
 
 private noncomputable def value (law : PMF (Fin 3)) : ℝ :=
-  expectedUtility utility () law (payoffIntegrable_of_finite law _)
+  expectedUtility utility () law
 
 private theorem value_pure (outcome : Fin 3) :
     value (PMF.pure outcome) = utility outcome () := by
@@ -175,11 +175,10 @@ theorem rescaled_is_positiveAffine_without_endpoint_arguments :
 
 private noncomputable def coordinate (law : PMF (Fin 3)) (atom : Fin 3) : ℝ :=
   expect law (fun outcome => if outcome = atom then 1 else 0)
-    (payoffIntegrable_of_finite law _)
 
 private theorem coordinate_pure (outcome atom : Fin 3) :
     coordinate (PMF.pure outcome) atom = if outcome = atom then 1 else 0 := by
-  exact expect_pure outcome _ _
+  exact expect_pure outcome _
 
 private theorem coordinate_mix (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1)
     (first second : PMF (Fin 3)) (atom : Fin 3) :

@@ -78,11 +78,9 @@ it anchors the abstract theorem to a profile the frontend checked by
 arithmetic. -/
 theorem matchingPennies_value_eq_uniform (σ : Profile matchingPennies.toForm.sig.mixed)
     (hσ : IsSaddlePoint (F := matchingPennies.toForm) matchingPennies.utility σ) :
-    expectedUtility matchingPennies.utility 0 (matchingPennies.toForm.mixed.play σ)
-        (payoffIntegrable_of_finite _ _) =
+    expectedUtility matchingPennies.utility 0 (matchingPennies.toForm.mixed.play σ) =
       expectedUtility matchingPennies.utility 0 (matchingPennies.toForm.mixed.play
-        (matchingPennies.toMixed uniformPennies uniformPennies_isMixed))
-        (payoffIntegrable_of_finite _ _) := by
+        (matchingPennies.toMixed uniformPennies uniformPennies_isMixed)) := by
   obtain ⟨_, _, hvalue⟩ := hσ.value_eq matchingPennies_uniform_isSaddlePoint
   exact hvalue
 
@@ -123,7 +121,7 @@ theorem securityMatrix_pure_isSaddlePoint :
 
 @[simp]
 theorem securityMatrix_pure_expectedPayoff :
-    MatrixGame.expectedPayoffOfFinite securityMatrix
+    MatrixGame.expectedPayoff securityMatrix
       (PMF.pure 1) (PMF.pure 1) = 1 := by
   have hlaw :
       (MatrixGame.form (Fin 2) (Fin 2)).mixed.play
@@ -133,39 +131,29 @@ theorem securityMatrix_pure_expectedPayoff :
     rfl
   calc
     _ = expectedUtility (MatrixGame.utility securityMatrix) 0
-          (PMF.pure (1, 1))
-          (payoffIntegrable_pure (1, 1)
-            (fun outcome => MatrixGame.utility securityMatrix outcome 0)) := by
+          (PMF.pure (1, 1)) := by
       exact expectedUtility_congr_law (MatrixGame.utility securityMatrix) 0
-        hlaw _ _
+        hlaw
     _ = 1 := by simp [MatrixGame.utility, securityMatrix]
 
 /-- The bottom row guarantees the nonzero value against every mixed column. -/
 theorem securityMatrix_row_guarantees :
     MatrixGame.RowGuarantees securityMatrix (PMF.pure 1) 1 := by
-  obtain ⟨hbase, hrow, _⟩ :=
+  obtain ⟨-, hrow, -⟩ :=
     (MatrixGame.isSaddlePoint_iff_guarantees_caps securityMatrix
     (PMF.pure 1) (PMF.pure 1)).1
     securityMatrix_pure_isSaddlePoint
-  have hvalue : MatrixGame.expectedPayoff securityMatrix
-      (PMF.pure 1) (PMF.pure 1) hbase = 1 := by
-    simpa only [MatrixGame.expectedPayoffOfFinite] using
-      securityMatrix_pure_expectedPayoff
-  rw [hvalue] at hrow
+  rw [securityMatrix_pure_expectedPayoff] at hrow
   exact hrow
 
 /-- The right column caps the row payoff at the same nonzero value. -/
 theorem securityMatrix_column_caps :
     MatrixGame.ColumnCaps securityMatrix (PMF.pure 1) 1 := by
-  obtain ⟨hbase, _, hcol⟩ :=
+  obtain ⟨-, -, hcol⟩ :=
     (MatrixGame.isSaddlePoint_iff_guarantees_caps securityMatrix
     (PMF.pure 1) (PMF.pure 1)).1
     securityMatrix_pure_isSaddlePoint
-  have hvalue : MatrixGame.expectedPayoff securityMatrix
-      (PMF.pure 1) (PMF.pure 1) hbase = 1 := by
-    simpa only [MatrixGame.expectedPayoffOfFinite] using
-      securityMatrix_pure_expectedPayoff
-  rw [hvalue] at hcol
+  rw [securityMatrix_pure_expectedPayoff] at hcol
   exact hcol
 
 /-- The abstract selected matrix value is forced to equal the explicit common

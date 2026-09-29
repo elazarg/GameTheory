@@ -50,14 +50,11 @@ theorem transferredGuard (profile : Profile signature) (who : Player) :
 
 @[simp]
 theorem transferred_payoff (profile : Profile signature) (who : Player) :
-    expectedUtility transferred.utility who (transferred.form.play profile)
-      (transferredGuard profile who) =
+    expectedUtility transferred.utility who (transferred.form.play profile) =
       if profile who = true then 2 else 1 := by
-  rw [show expectedUtility transferred.utility who (transferred.form.play profile)
-      (transferredGuard profile who) =
+  rw [show expectedUtility transferred.utility who (transferred.form.play profile) =
         expectedUtility transferred.utility who (transferred.form.play profile)
-          (game.withProfileTransfer_integrable transfer profile who
-            (payoffIntegrable_of_finite _ _)) from rfl,
+           from rfl,
     game.expectedUtility_withProfileTransfer transfer profile who
       (payoffIntegrable_of_finite _ _)]
   simp [game, form, utility, transfer]
@@ -171,15 +168,13 @@ theorem untransferredGuard (profile : Profile signature) (who : Player) :
 
 @[simp]
 theorem untransferred_payoff (profile : Profile signature) (who : Player) :
-    expectedUtility untransferred.utility who (untransferred.form.play profile)
-      (untransferredGuard profile who) =
+    expectedUtility untransferred.utility who (untransferred.form.play profile) =
       if profile who = true then 0 else 1 := by
   rw [show expectedUtility untransferred.utility who
-      (untransferred.form.play profile) (untransferredGuard profile who) =
+      (untransferred.form.play profile) =
         expectedUtility untransferred.utility who
           (untransferred.form.play profile)
-          (game.withProfileTransfer_integrable zeroTransfer profile who
-            (payoffIntegrable_of_finite _ _)) from rfl,
+           from rfl,
     game.expectedUtility_withProfileTransfer zeroTransfer profile who
       (payoffIntegrable_of_finite _ _)]
   simp [game, form, utility, zeroTransfer]

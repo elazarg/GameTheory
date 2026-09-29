@@ -53,12 +53,12 @@ theorem isεGroupNash_iff (utility : F.sig.Outcome → Player → ℝ)
       ∀ members ∈ groups, members.Nonempty →
         ∀ replacement : Subprofile F.sig members,
           ∃ member ∈ members,
-            ∃ hbase : UtilityIntegrable utility member (F.play profile),
-              ∃ hdev : UtilityIntegrable utility member
-                (F.play (Profile.override members replacement profile)),
+            UtilityIntegrable utility member (F.play profile) ∧
+              UtilityIntegrable utility member
+                (F.play (Profile.override members replacement profile)) ∧
                 expectedUtility utility member
-                    (F.play (Profile.override members replacement profile)) hdev ≤
-                  expectedUtility utility member (F.play profile) hbase + ε := by
+                    (F.play (Profile.override members replacement profile)) ≤
+                  expectedUtility utility member (F.play profile) + ε := by
   constructor
   · intro h members hmembers hne replacement
     simpa [IsεGroupNash, DeviationScheme.comap, DeviationScheme.apply,

@@ -42,10 +42,7 @@ theorem stopObservable_bound (a : Option ℕ) :
 
 theorem halfStoppingLaw_expect_stopObservable :
     expect CountableDiscreteStopping.halfStoppingLaw stopObservable
-      (payoffIntegrable_of_bounded _ stopObservable (C := 1)
-        (fun a => by
-          have := stopObservable_bound a
-          simpa [Real.norm_eq_abs] using this)) = (2 : ℝ) / 3 := by
+       = (2 : ℝ) / 3 := by
   rw [expect_eq_integral]
   rw [PMF.integral_eq_tsum
     CountableDiscreteStopping.halfStoppingLaw stopObservable

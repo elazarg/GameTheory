@@ -62,20 +62,18 @@ theorem historyBackwardValue_le_of_terminal_le
     (history : E.History)
     (hintegrable : PayoffIntegrable
       (E.historyBackwardLaw certificate chooser history) payoff) :
-    E.historyBackwardValue certificate chooser payoff history hintegrable ≤
+    E.historyBackwardValue certificate chooser payoff history ≤
       bound := by
   unfold ExecutionProtocol.historyBackwardValue
   calc
-    expect (E.historyBackwardLaw certificate chooser history) payoff
-        hintegrable ≤
+    expect (E.historyBackwardLaw certificate chooser history) payoff ≤
       expect (E.historyBackwardLaw certificate chooser history)
-        (fun _ => bound)
-        (payoffIntegrable_constant _ bound) := by
-      apply expect_mono
+        (fun _ => bound) := by
+      refine expect_mono ?_ hintegrable (payoffIntegrable_constant _ _)
       intro final hfinal
       exact hbound final
         (E.historyBackwardLaw_support_terminal history final hfinal)
-    _ = bound := expect_constant _ bound _
+    _ = bound := expect_constant _ bound
 
 /-! ## Exact incumbent continuation values -/
 
@@ -106,12 +104,10 @@ theorem matchIntegrable (chooser : twice.HistoryChooser)
 def matchingValue (history : twice.History) : ℝ :=
   twice.historyBackwardValue twice_wellFoundedPlay matchingChooser
     (fun outcome => matchUtility outcome ()) history
-    (matchIntegrable matchingChooser history)
 
 def mismatchingValue (history : twice.History) : ℝ :=
   twice.historyBackwardValue twice_wellFoundedPlay mismatchingChooser
     (fun outcome => matchUtility outcome ()) history
-    (matchIntegrable mismatchingChooser history)
 
 theorem matching_step_start (trace : twice.Trace .start)
     (hterm : ¬ twice.terminal (.start : Round)) :
@@ -175,16 +171,16 @@ private theorem value_of_constant_successors (chooser : twice.HistoryChooser)
     (hchild : ∀ target
       (realized : target ∈ (twice.step history.state
         (chooser history hterm)).support)
-      (hguard : PayoffIntegrable
+      (_ : PayoffIntegrable
         (twice.historyBackwardLaw twice_wellFoundedPlay chooser
           (history.extend (chooser history hterm).2 realized))
         (fun outcome => matchUtility outcome ())),
       twice.historyBackwardValue twice_wellFoundedPlay chooser
         (fun outcome => matchUtility outcome ())
-        (history.extend (chooser history hterm).2 realized) hguard = c) :
+        (history.extend (chooser history hterm).2 realized) = c) :
     twice.historyBackwardValue twice_wellFoundedPlay chooser
       (fun outcome => matchUtility outcome ()) history
-      (matchIntegrable chooser history) = c := by
+       = c := by
   obtain ⟨houter, heq⟩ := twice.historyBackwardValue_of_not_terminal
     hterm (matchIntegrable chooser history) (fun _ => c)
       (by intro target realized hguard
@@ -202,7 +198,7 @@ theorem matchingValue_after (first : Vote) (trace : twice.Trace (Round.after fir
   rw [hstep, PMF.mem_support_pure_iff] at realized
   subst target
   rw [twice.historyBackwardValue_of_terminal
-    (by simp [Round.stopped]) hguard]
+    (by simp [Round.stopped])]
   simp [matchUtility]
 
 theorem matchingValue_start (trace : twice.Trace .start) :
@@ -229,7 +225,7 @@ theorem mismatchingValue_after_up (trace : twice.Trace (Round.after .up)) :
   rw [hstep, PMF.mem_support_pure_iff] at realized
   subst target
   rw [twice.historyBackwardValue_of_terminal
-    (by simp [Round.stopped]) hguard]
+    (by simp [Round.stopped])]
   simp [matchUtility]
 
 theorem matchingValue_of_not_terminal (history : twice.History)
@@ -244,8 +240,9 @@ theorem matchingValue_of_not_terminal (history : twice.History)
 theorem everyValue_le_one (chooser : twice.HistoryChooser) (history : twice.History) :
     twice.historyBackwardValue twice_wellFoundedPlay chooser
         (fun outcome => matchUtility outcome ()) history
-        (matchIntegrable chooser history) ≤ 1 := by
+         ≤ 1 := by
   apply historyBackwardValue_le_of_terminal_le (history := history)
+    (hintegrable := matchIntegrable chooser history)
   rintro ⟨state, trace⟩ _
   cases state with
   | start => norm_num [matchUtility]
@@ -270,11 +267,10 @@ theorem matching_isHistorywiseOptimal :
           (recallModel.historyChooser
             (Profile.update matchingProfile () alternative))
           (fun outcome => matchUtility outcome ()) history
-          (matchIntegrable _ history) ≤ 1 :=
+           ≤ 1 :=
         everyValue_le_one _ history
       _ = twice.historyBackwardValue twice_wellFoundedPlay matchingChooser
-          (fun outcome => matchUtility outcome ()) history
-          (matchIntegrable matchingChooser history) := by
+          (fun outcome => matchUtility outcome ()) history := by
         symm
         exact matchingValue_of_not_terminal history hterm
 

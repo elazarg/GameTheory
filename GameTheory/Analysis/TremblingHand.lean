@@ -250,25 +250,19 @@ theorem IsTremblingHandPerfect.isNash
   let G : UtilityGame ι := ⟨F, utility⟩
   have hstatusTendsto :
       Tendsto
-        (fun n => expectedUtility utility who (F.mixed.play (approximating n))
-          (hintegrable.mixed_of_finite who (approximating n)))
+        (fun n => expectedUtility utility who (F.mixed.play (approximating n)))
         atTop
-        (nhds (expectedUtility utility who (F.mixed.play profile)
-          (hintegrable.mixed_of_finite who profile))) := by
+        (nhds (expectedUtility utility who (F.mixed.play profile))) := by
     simpa only [G] using
       (UtilityGame.expectedUtility_mixed_tendsto (G := G)
         hconverges hintegrable who)
   have hdeviationTendsto :
       Tendsto
         (fun n => expectedUtility utility who
-          (F.mixed.play (Profile.update (approximating n) who (repaired n)))
-          (hintegrable.mixed_of_finite who
-            (Profile.update (approximating n) who (repaired n))))
+          (F.mixed.play (Profile.update (approximating n) who (repaired n))))
         atTop
       (nhds (expectedUtility utility who
-        (F.mixed.play (Profile.update profile who replacement))
-        (hintegrable.mixed_of_finite who
-          (Profile.update profile who replacement)))) := by
+        (F.mixed.play (Profile.update profile who replacement)))) := by
     simpa only [G] using
       (UtilityGame.expectedUtility_mixed_tendsto (G := G)
         hupdatedConverges hintegrable who)

@@ -1,9 +1,9 @@
 /-
-# Guarded one-step stochastic utility
+# One-step stochastic utility
 
 The normalized Bellman return integrates the actual next-state law. This
-operation has no finite-state or bounded-value premise; its caller supplies
-the integration certificate needed at the selected state and joint action.
+operation has no finite-state or bounded-value premise; results about it state
+the integrability they need at the selected state and joint action.
 -/
 
 import GameTheory.Stochastic.Basic
@@ -56,21 +56,19 @@ def IsDiscountedStationaryBellmanEq [Fintype ι] [DecidableEq ι]
       (euPreference (G.discountedAuxGame β value state).utility)
       (profile state)) ∧
   ∀ state who,
-    ∃ hintegrable : UtilityIntegrable
+    UtilityIntegrable
         (G.discountedAuxGame β value state).utility who
         ((G.discountedAuxGame β value state).form.mixed.play
-          (profile state)),
+          (profile state)) ∧
       expectedUtility (G.discountedAuxGame β value state).utility who
         ((G.discountedAuxGame β value state).form.mixed.play
-          (profile state)) hintegrable = value state who
+          (profile state)) = value state who
 
 /-- One normalized stage return under the actual stochastic transition law. -/
 def normalizedOneStepUtility (β : ℝ) (value : G.State → ℝ)
-    (state : G.State) (joint : ∀ player, G.Action player) (who : ι)
-    (hintegrable : PayoffIntegrable (G.transition state joint)
-      value) : ℝ :=
+    (state : G.State) (joint : ∀ player, G.Action player) (who : ι) : ℝ :=
   (1 - β) * G.stageUtility state joint who +
-    β * expect (G.transition state joint) value hintegrable
+    β * expect (G.transition state joint) value
 
 /-- An actual transition guard supplies pure one-step utility integration. -/
 theorem oneStepUtility_pure_integrable (β : ℝ)
@@ -93,29 +91,27 @@ theorem oneStepUtility_pure_expected (β : ℝ)
     (value : G.State → ι → ℝ) (state : G.State)
     (joint : ∀ player, G.Action player) (who : ι)
     (hintegrable : PayoffIntegrable (G.transition state joint)
-      (fun next => value next who))
-    (hstep : UtilityIntegrable (G.oneStepUtility β value state) who
-      ((G.oneStepForm state).play joint)) :
+      (fun next => value next who)) :
     expectedUtility (G.oneStepUtility β value state) who
-        ((G.oneStepForm state).play joint) hstep =
+        ((G.oneStepForm state).play joint) =
       G.normalizedOneStepUtility β (fun next => value next who)
-        state joint who hintegrable := by
+        state joint who := by
   rw [expectedUtility_map]
   let hconst := payoffIntegrable_constant (G.transition state joint)
     ((1 - β) * G.stageUtility state joint who)
   let hmul := payoffIntegrable_const_mul (c := β) hintegrable
   calc
     expect (G.transition state joint)
-        (fun next => G.oneStepUtility β value state (joint, next) who) _ =
+        (fun next => G.oneStepUtility β value state (joint, next) who) =
       expect (G.transition state joint)
         (fun next => (1 - β) * G.stageUtility state joint who +
-          β * value next who) (payoffIntegrable_add hconst hmul) := rfl
+          β * value next who) := rfl
     _ = expect (G.transition state joint)
-          (fun _ => (1 - β) * G.stageUtility state joint who) hconst +
+          (fun _ => (1 - β) * G.stageUtility state joint who) +
         expect (G.transition state joint)
-          (fun next => β * value next who) hmul := expect_add hconst hmul
+          (fun next => β * value next who) := expect_add hconst hmul
     _ = G.normalizedOneStepUtility β (fun next => value next who)
-        state joint who hintegrable := by
+        state joint who := by
       rw [expect_constant, expect_const_mul]
       rfl
 

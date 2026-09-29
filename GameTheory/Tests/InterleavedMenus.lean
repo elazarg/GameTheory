@@ -63,26 +63,24 @@ theorem payoffIntegrable_resolved (law : PMF (Option Bool))
 This also rules out randomized batches that ignore the incoming information. -/
 theorem no_randomized_fixed_response (law : PMF (Option Bool)) :
     ¬ (2 ≤ expect law (fun command => payoff true (resolve false command))
-          (payoffIntegrable_resolved law true false) ∧
-      2 ≤ expect law (fun command => payoff true (resolve true command))
-          (payoffIntegrable_resolved law true true)) := by
+           ∧
+      2 ≤ expect law (fun command => payoff true (resolve true command))) := by
   rintro ⟨first, second⟩
   let hfirst := payoffIntegrable_resolved law true false
   let hsecond := payoffIntegrable_resolved law true true
   have hsum := expect_add hfirst hsecond
   have total : expect law (fun command =>
-      payoff true (resolve false command) + payoff true (resolve true command))
-        (payoffIntegrable_add hfirst hsecond) ≤
-      expect law (fun _ => 3) (payoffIntegrable_constant law 3) :=
+      payoff true (resolve false command) + payoff true (resolve true command)) ≤
+      expect law (fun _ => 3) :=
     expect_mono (fun command _ => reply_payoff_sum command)
       (payoffIntegrable_add hfirst hsecond) (payoffIntegrable_constant law 3)
   rw [hsum] at total
-  rw [expect_constant law 3 (payoffIntegrable_constant law 3)] at total
+  rw [expect_constant law 3] at total
   have hfirst' : 2 ≤ expect law
-      (fun command => payoff true (resolve false command)) hfirst := by
+      (fun command => payoff true (resolve false command)) := by
     simpa [hfirst] using first
   have hsecond' : 2 ≤ expect law
-      (fun command => payoff true (resolve true command)) hsecond := by
+      (fun command => payoff true (resolve true command)) := by
     simpa [hsecond] using second
   linarith
 
@@ -96,26 +94,24 @@ theorem payoff_sum (result : Option Bool) :
 Both bounds are required by SPE at a proper root with this final decision. -/
 theorem no_common_randomized_completion (reply : Bool) (law : PMF (Option Bool)) :
     ¬ (2 ≤ expect law (fun command => payoff false (resolve reply command))
-          (payoffIntegrable_resolved law false reply) ∧
-      2 ≤ expect law (fun command => payoff true (resolve reply command))
-          (payoffIntegrable_resolved law true reply)) := by
+           ∧
+      2 ≤ expect law (fun command => payoff true (resolve reply command))) := by
   rintro ⟨first, second⟩
   let hfirst := payoffIntegrable_resolved law false reply
   let hsecond := payoffIntegrable_resolved law true reply
   have hsum := expect_add hfirst hsecond
   have total : expect law (fun command =>
-      payoff false (resolve reply command) + payoff true (resolve reply command))
-        (payoffIntegrable_add hfirst hsecond) ≤
-      expect law (fun _ => 3) (payoffIntegrable_constant law 3) :=
+      payoff false (resolve reply command) + payoff true (resolve reply command)) ≤
+      expect law (fun _ => 3) :=
     expect_mono (fun command _ => payoff_sum (resolve reply command))
       (payoffIntegrable_add hfirst hsecond) (payoffIntegrable_constant law 3)
   rw [hsum] at total
-  rw [expect_constant law 3 (payoffIntegrable_constant law 3)] at total
+  rw [expect_constant law 3] at total
   have hfirst' : 2 ≤ expect law
-      (fun command => payoff false (resolve reply command)) hfirst := by
+      (fun command => payoff false (resolve reply command)) := by
     simpa [hfirst] using first
   have hsecond' : 2 ≤ expect law
-      (fun command => payoff true (resolve reply command)) hsecond := by
+      (fun command => payoff true (resolve reply command)) := by
     simpa [hsecond] using second
   linarith
 

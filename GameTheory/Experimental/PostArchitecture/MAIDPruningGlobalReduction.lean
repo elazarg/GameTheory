@@ -153,13 +153,12 @@ private theorem exists_reducedOwnerPolicy_dominates_on_sourceFirst
           (fun assignment who => semantics.utility who assignment) owner
           ((nativeBehavioralGameForm semantics).play
             (Profile.update (pruning.expandPolicy policy) owner
-              fullReplacement)) (payoffIntegrable_of_finite _ _) ≤
+              fullReplacement)) ≤
         expectedUtility
           (fun assignment who => semantics.utility who assignment) owner
           ((nativeBehavioralGameForm semantics).play
             (Profile.update (pruning.expandPolicy policy) owner
-              (pruning.expandOwnerPolicy owner reducedReplacement)))
-          (payoffIntegrable_of_finite _ _) := by
+              (pruning.expandOwnerPolicy owner reducedReplacement))) := by
   let : Fintype (Assignment diagram) := by
     unfold Assignment
     infer_instance
@@ -250,12 +249,12 @@ private theorem exists_reducedOwnerPolicy_dominates_on_sourceFirst
               (fun assignment who => semantics.utility who assignment) owner
               ((nativeBehavioralGameForm semantics).play
                 (Profile.update (pruning.expandPolicy policy) owner
-                  fullReplacement)) (payoffIntegrable_of_finite _ _) ≤
+                  fullReplacement)) ≤
             expectedUtility
               (fun assignment who => semantics.utility who assignment) owner
               ((nativeBehavioralGameForm semantics).play
                 (Profile.update (pruning.expandPolicy policy) owner
-                  nextFull)) (payoffIntegrable_of_finite _ _) := by
+                  nextFull)) := by
         obtain ⟨hbest, halt, hle⟩ :=
           htransported.upperBound (fullReplacement target)
         simpa only [siteRuleExpectedUtility, siteReplacementLaw, hleft,
@@ -326,13 +325,12 @@ theorem exists_reducedOwnerPolicy_dominates
           (fun assignment who => semantics.utility who assignment) owner
           ((nativeBehavioralGameForm semantics).play
             (Profile.update (pruning.expandPolicy policy) owner
-              fullReplacement)) (payoffIntegrable_of_finite _ _) ≤
+              fullReplacement)) ≤
         expectedUtility
           (fun assignment who => semantics.utility who assignment) owner
           ((nativeBehavioralGameForm semantics).play
             (Profile.update (pruning.expandPolicy policy) owner
-              (pruning.expandOwnerPolicy owner reducedReplacement)))
-          (payoffIntegrable_of_finite _ _) := by
+              (pruning.expandOwnerPolicy owner reducedReplacement))) := by
   let ownerOrder := orientedTopologicalOrder view owner hacyclic
   let initial := uniformReducedOwnerPolicyOfSemantics pruning semantics owner
   apply exists_reducedOwnerPolicy_dominates_on_sourceFirst pruning topological

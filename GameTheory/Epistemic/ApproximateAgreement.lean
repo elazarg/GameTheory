@@ -36,12 +36,11 @@ private theorem eventIndicator_integrable (prior : PMF Ω) (event : Set Ω) :
   · exact payoffIntegrable_indicator event (payoffIntegrable_constant prior 1)
 
 private theorem eventMass_indicator (prior : PMF Ω) (event : Set Ω) :
-    expect prior (eventIndicator event) (eventIndicator_integrable prior event) =
+    expect prior (eventIndicator event) =
       eventMass prior event := by
-  show expect prior (fun state => if state ∈ event then 1 else 0)
-      (eventIndicator_integrable prior event) =
+  show expect prior (fun state => if state ∈ event then 1 else 0) =
     (prior.toOuterMeasure event).toReal
-  exact expect_indicator prior event (eventIndicator_integrable prior event)
+  exact expect_indicator prior event
 
 private theorem eventMass_nonneg (prior : PMF Ω) (event : Set Ω) :
     0 ≤ eventMass prior event := ENNReal.toReal_nonneg
@@ -50,12 +49,12 @@ private theorem eventMass_mono (prior : PMF Ω)
     {smaller larger : Set Ω} (hsubset : smaller ⊆ larger) :
     eventMass prior smaller ≤ eventMass prior larger := by
   rw [← eventMass_indicator, ← eventMass_indicator]
-  apply expect_mono
-  · intro state _
-    by_cases hsmall : state ∈ smaller
-    · simp [eventIndicator, hsmall, hsubset hsmall]
-    · by_cases hlarge : state ∈ larger <;>
-        simp [eventIndicator, hsmall, hlarge]
+  refine expect_mono (fun state _ => ?_) (eventIndicator_integrable prior smaller)
+    (eventIndicator_integrable prior larger)
+  by_cases hsmall : state ∈ smaller
+  · simp [eventIndicator, hsmall, hsubset hsmall]
+  · by_cases hlarge : state ∈ larger <;>
+      simp [eventIndicator, hsmall, hlarge]
 
 private theorem eventMass_pos_iff_support (prior : PMF Ω) (event : Set Ω) :
     0 < eventMass prior event ↔ ∃ state ∈ event, state ∈ prior.support := by
@@ -81,21 +80,19 @@ private theorem eventMass_inter_sdiff (prior : PMF Ω) (event witness : Set Ω) 
       eventMass prior (event ∩ witness) + eventMass prior (event \ witness) := by
   let firstGuard := eventIndicator_integrable prior (event ∩ witness)
   let secondGuard := eventIndicator_integrable prior (event \ witness)
-  let eventGuard := eventIndicator_integrable prior event
   calc
-    eventMass prior event = expect prior (eventIndicator event) eventGuard :=
+    eventMass prior event = expect prior (eventIndicator event) :=
       (eventMass_indicator prior event).symm
     _ = expect prior
         (fun state => eventIndicator (event ∩ witness) state +
-          eventIndicator (event \ witness) state)
-        (payoffIntegrable_add firstGuard secondGuard) := by
+          eventIndicator (event \ witness) state) := by
       apply expect_congr_on_support
       · intro state _
         by_cases hevent : state ∈ event <;>
           by_cases hwitness : state ∈ witness <;>
           simp [eventIndicator, hevent, hwitness]
-    _ = expect prior (eventIndicator (event ∩ witness)) firstGuard +
-          expect prior (eventIndicator (event \ witness)) secondGuard :=
+    _ = expect prior (eventIndicator (event ∩ witness)) +
+          expect prior (eventIndicator (event \ witness)) :=
       expect_add firstGuard secondGuard
     _ = eventMass prior (event ∩ witness) + eventMass prior (event \ witness) := by
       rw [eventMass_indicator, eventMass_indicator]
@@ -195,12 +192,8 @@ private theorem commonPBelief_core_bound
   have hDneg : PayoffIntegrable prior (fun state => -difference state) :=
     payoffIntegrable_neg hD
   have hboundFiber : ∀ b (hb : b ∈ (PMF.map (observation partition) prior).support),
-      |expect (fiberPosterior prior (observation partition) b hb) difference
-        (payoffIntegrable_fiberPosterior prior (observation partition)
-          difference hD b hb)| ≤
-      expect (fiberPosterior prior (observation partition) b hb) bound
-        (payoffIntegrable_fiberPosterior prior (observation partition)
-          bound hB b hb) := by
+      |expect (fiberPosterior prior (observation partition) b hb) difference| ≤
+      expect (fiberPosterior prior (observation partition) b hb) bound := by
     intro b hb
     let conditional := fiberPosterior prior (observation partition) b hb
     have hconditionalSupport := fiberPosterior_support prior
@@ -236,14 +229,12 @@ private theorem commonPBelief_core_bound
       have hconditionalWitness : share =
           posterior prior partition witness state := by
         calc
-          share = expect conditional (eventIndicator witness)
-              (eventIndicator_integrable conditional witness) :=
+          share = expect conditional (eventIndicator witness) :=
             (eventMass_indicator conditional witness).symm
           _ = expect (fiberPosterior prior (observation partition)
               (observation partition state) (by
                 rw [hobservation]
-                exact hb)) (eventIndicator witness)
-              (eventIndicator_integrable _ witness) := by
+                exact hb)) (eventIndicator witness) := by
             rw [hconditionalEq]
           _ = posterior prior partition witness state :=
             hposteriorWitness.symm
@@ -254,8 +245,7 @@ private theorem commonPBelief_core_bound
           eventMass conditional reportEvent = report := by
         calc
           eventMass conditional reportEvent =
-              expect conditional (eventIndicator reportEvent)
-                (eventIndicator_integrable conditional reportEvent) :=
+              expect conditional (eventIndicator reportEvent) :=
             (eventMass_indicator conditional reportEvent).symm
           _ = posterior prior partition reportEvent state := by
             rw [hconditionalEq]
@@ -308,23 +298,18 @@ private theorem commonPBelief_core_bound
             rw [div_mul_cancel₀ _ (ne_of_gt hsharePos)]
       have hatom := commonPBelief_atom_real_arith hratio0 hratio1
         hshareLe hthreshold hremainder0 houtside heq
-      have hdiffEval : expect conditional difference
-          (payoffIntegrable_fiberPosterior _ _ difference hD b hb) =
+      have hdiffEval : expect conditional difference =
           share * (report - ratio) := by
         calc
-          expect conditional difference
-              (payoffIntegrable_fiberPosterior _ _ difference hD b hb) =
-              report * expect conditional indicatorWitness
-                (eventIndicator_integrable conditional witness) -
-                expect conditional indicatorReport
-                  (eventIndicator_integrable conditional
-                    (witness ∩ reportEvent)) := by
+          expect conditional difference =
+              report * expect conditional indicatorWitness -
+                expect conditional indicatorReport := by
             dsimp [difference, indicatorWitness, indicatorReport]
             rw [expect_sub (payoffIntegrable_const_mul
               (eventIndicator_integrable conditional witness))
               (eventIndicator_integrable conditional
                 (witness ∩ reportEvent)),
-              expect_const_mul (eventIndicator_integrable conditional witness)]
+              expect_const_mul]
           _ = report * share - eventMass conditional
                 (witness ∩ reportEvent) := by
             rw [eventMass_indicator, eventMass_indicator]
@@ -332,16 +317,13 @@ private theorem commonPBelief_core_bound
             dsimp [ratio, share]
             rw [mul_sub, mul_div_cancel₀ _ (ne_of_gt hsharePos)]
             ring
-      have hboundEval : expect conditional bound
-          (payoffIntegrable_fiberPosterior _ _ bound hB b hb) =
+      have hboundEval : expect conditional bound =
           (1 - threshold) * share := by
         calc
-          expect conditional bound
-              (payoffIntegrable_fiberPosterior _ _ bound hB b hb) =
-              (1 - threshold) * expect conditional indicatorWitness
-                (eventIndicator_integrable conditional witness) := by
+          expect conditional bound =
+              (1 - threshold) * expect conditional indicatorWitness := by
             dsimp [bound, indicatorWitness]
-            exact expect_const_mul (eventIndicator_integrable conditional witness)
+            exact expect_const_mul
           _ = (1 - threshold) * share := by rw [eventMass_indicator]
       rw [hdiffEval, hboundEval, abs_mul, abs_of_nonneg hshareNonneg]
       rw [abs_sub_comm] at hatom
@@ -355,10 +337,9 @@ private theorem commonPBelief_core_bound
             le_trans h (le_of_eq hshareZero)
         · exact eventMass_nonneg conditional _
       have hdiffEval : expect conditional difference
-          (payoffIntegrable_fiberPosterior _ _ difference hD b hb) = 0 := by
+           = 0 := by
         calc
-          expect conditional difference
-              (payoffIntegrable_fiberPosterior _ _ difference hD b hb) =
+          expect conditional difference =
               report * share - eventMass conditional
                 (witness ∩ reportEvent) := by
             dsimp [difference, indicatorWitness, indicatorReport]
@@ -366,17 +347,16 @@ private theorem commonPBelief_core_bound
               (eventIndicator_integrable conditional witness))
               (eventIndicator_integrable conditional
                 (witness ∩ reportEvent)),
-              expect_const_mul (eventIndicator_integrable conditional witness),
+              expect_const_mul,
               eventMass_indicator, eventMass_indicator]
           _ = 0 := by rw [hshareZero, hintersectionZero]; ring
       have hboundEval : expect conditional bound
-          (payoffIntegrable_fiberPosterior _ _ bound hB b hb) = 0 := by
+           = 0 := by
         calc
-          expect conditional bound
-              (payoffIntegrable_fiberPosterior _ _ bound hB b hb) =
+          expect conditional bound =
               (1 - threshold) * share := by
             dsimp [bound, indicatorWitness]
-            rw [expect_const_mul (eventIndicator_integrable conditional witness),
+            rw [expect_const_mul,
               eventMass_indicator]
           _ = 0 := by rw [hshareZero]; ring
       rw [hdiffEval, hboundEval]
@@ -384,55 +364,47 @@ private theorem commonPBelief_core_bound
   have hnegativeFiber : ∀ b (hb : b ∈
       (PMF.map (observation partition) prior).support),
       expect (fiberPosterior prior (observation partition) b hb)
-        (fun state => -difference state)
-        (payoffIntegrable_fiberPosterior _ _ (fun state => -difference state)
-          hDneg b hb) ≤
-      expect (fiberPosterior prior (observation partition) b hb) bound
-        (payoffIntegrable_fiberPosterior _ _ bound hB b hb) := by
+        (fun state => -difference state) ≤
+      expect (fiberPosterior prior (observation partition) b hb) bound := by
     intro b hb
     have hpositive := hboundFiber b hb
     have hnegative := (abs_le.mp hpositive).1
     calc
       expect (fiberPosterior prior (observation partition) b hb)
-          (fun state => -difference state)
-          (payoffIntegrable_fiberPosterior _ _ (fun state => -difference state)
-            hDneg b hb) =
+          (fun state => -difference state) =
           -expect (fiberPosterior prior (observation partition) b hb)
-            difference (payoffIntegrable_fiberPosterior _ _ difference hD b hb) := by
-        rw [expect_neg (payoffIntegrable_fiberPosterior _ _ difference hD b hb)]
-      _ ≤ expect (fiberPosterior prior (observation partition) b hb) bound
-          (payoffIntegrable_fiberPosterior _ _ bound hB b hb) := by
+            difference := by
+        rw [expect_neg]
+      _ ≤ expect (fiberPosterior prior (observation partition) b hb) bound := by
         linarith [hnegative]
   have hpositiveFiber : ∀ b (hb : b ∈
       (PMF.map (observation partition) prior).support),
-      expect (fiberPosterior prior (observation partition) b hb) difference
-        (payoffIntegrable_fiberPosterior _ _ difference hD b hb) ≤
-      expect (fiberPosterior prior (observation partition) b hb) bound
-        (payoffIntegrable_fiberPosterior _ _ bound hB b hb) := by
+      expect (fiberPosterior prior (observation partition) b hb) difference ≤
+      expect (fiberPosterior prior (observation partition) b hb) bound := by
     intro b hb
     exact (abs_le.mp (hboundFiber b hb)).2
   have hglobal := expect_fiberwise_le prior (observation partition)
     difference bound hD hB hpositiveFiber
   have hglobalNeg := expect_fiberwise_le prior (observation partition)
     (fun state => -difference state) bound hDneg hB hnegativeFiber
-  have hglobalEval : expect prior difference hD =
+  have hglobalEval : expect prior difference =
       report * eventMass prior witness -
         eventMass prior (witness ∩ reportEvent) := by
     dsimp [difference, indicatorWitness, indicatorReport]
     rw [expect_sub (payoffIntegrable_const_mul
       (eventIndicator_integrable prior witness))
       (eventIndicator_integrable prior (witness ∩ reportEvent)),
-      expect_const_mul (eventIndicator_integrable prior witness),
+      expect_const_mul,
       eventMass_indicator, eventMass_indicator]
-  have hboundEval : expect prior bound hB =
+  have hboundEval : expect prior bound =
       (1 - threshold) * eventMass prior witness := by
     dsimp [bound, indicatorWitness]
-    rw [expect_const_mul (eventIndicator_integrable prior witness),
+    rw [expect_const_mul,
       eventMass_indicator]
   have hscaledUpper := hglobal
   rw [hglobalEval, hboundEval] at hscaledUpper
   have hscaledLower := hglobalNeg
-  rw [expect_neg hD, hglobalEval, hboundEval] at hscaledLower
+  rw [expect_neg, hglobalEval, hboundEval] at hscaledLower
   have hrewrite : report -
       eventMass prior (witness ∩ reportEvent) / eventMass prior witness =
     (report * eventMass prior witness -

@@ -46,9 +46,9 @@ theorem equilibriumPlan_isNash :
   rw [euPreference_apply]
   refine ⟨payoffIntegrable_of_finite _ _, payoffIntegrable_of_finite _ _, ?_⟩
   rw [game.expectedUtility_eq_prior ()
-      (Profile.update equilibriumPlan () replacement) _,
-    game.expectedUtility_eq_prior () equilibriumPlan _]
-  apply expect_mono
+      (Profile.update equilibriumPlan () replacement),
+    game.expectedUtility_eq_prior () equilibriumPlan]
+  refine expect_mono ?_ (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
   intro types _
   simp only [BayesianGame.planPayoff]
   simp only [game, BayesianGame.actionsOf, equilibriumPlan,
@@ -110,9 +110,9 @@ theorem twoPlayerPlan_isNash :
   rw [euPreference_apply]
   refine ⟨payoffIntegrable_of_finite _ _, payoffIntegrable_of_finite _ _, ?_⟩
   rw [twoPlayerGame.expectedUtility_eq_prior who
-      (Profile.update twoPlayerPlan who replacement) _,
-    twoPlayerGame.expectedUtility_eq_prior who twoPlayerPlan _]
-  apply expect_mono
+      (Profile.update twoPlayerPlan who replacement),
+    twoPlayerGame.expectedUtility_eq_prior who twoPlayerPlan]
+  refine expect_mono ?_ (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
   intro types htypes
   simp only [BayesianGame.planPayoff]
   simp only [twoPlayerGame, BayesianGame.actionsOf, twoPlayerPlan,

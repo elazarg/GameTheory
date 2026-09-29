@@ -33,22 +33,13 @@ theorem IsSmooth.epsilonCoarseCorrelated_bound [Fintype ι] [DecidableEq ι]
     {law : PMF (Profile G.form.sig)}
     (hlaw : IsεCoarseCorrelatedEq G.form G.utility ε law)
     (target : Profile G.form.sig) :
-    lam * G.socialWelfare target
-        (fun i => hsmooth.integrable target i) ≤
+    lam * G.socialWelfare target ≤
       (1 + mu) * G.expectedSocialWelfare law
-        (by
-          intro i
-          obtain ⟨hbase, _, _⟩ :=
-            (G.isεCoarseCorrelatedEq_iff_externalRegret_le.mp hlaw)
-              i (target i)
-          exact hbase) + (Fintype.card ι) * ε := by
-  let hconditional (profile : Profile G.form.sig) (i : ι) :=
-    hsmooth.integrable profile i
-  have hcert : ∀ i, ∃ hbase : UtilityIntegrable G.utility i
-      (G.form.outcomeLaw law), ∃ hdev : UtilityIntegrable G.utility i
-      (law.bind fun profile =>
-        G.form.play (Profile.update profile i (target i))),
-      G.externalRegret law i (target i) hbase hdev ≤ ε := by
+         + (Fintype.card ι) * ε := by
+  have hcert : ∀ i, UtilityIntegrable G.utility i (G.form.outcomeLaw law) ∧
+      UtilityIntegrable G.utility i
+        (law.bind fun profile => G.form.play (Profile.update profile i (target i))) ∧
+      G.externalRegret law i (target i) ≤ ε := by
     intro i
     exact (G.isεCoarseCorrelatedEq_iff_externalRegret_le.mp hlaw) i
       (target i)
@@ -57,85 +48,72 @@ theorem IsSmooth.epsilonCoarseCorrelated_bound [Fintype ι] [DecidableEq ι]
     G.form.play (Profile.update profile i (target i))
   let devValue (i : ι) (profile : Profile G.form.sig) :=
     expectedUtility G.utility i (devKernel i profile)
-      (hconditional (Profile.update profile i (target i)) i)
   let baseValue (i : ι) (profile : Profile G.form.sig) :=
     expectedUtility G.utility i (G.form.play profile)
-      (hconditional profile i)
   have hbaseOuter (i : ι) : PayoffIntegrable law (baseValue i) := by
     exact payoffIntegrable_bind_conditionalExpectation law G.form.play
       (fun outcome => G.utility outcome i) (by
         simpa only [GameForm.outcomeLaw] using hbase i)
-      (hconditional · i)
   have hdevOuter (i : ι) : PayoffIntegrable law (devValue i) := by
     exact payoffIntegrable_bind_conditionalExpectation law (devKernel i)
       (fun outcome => G.utility outcome i) (hdev i)
-      (fun profile => hconditional
-        (Profile.update profile i (target i)) i)
   have hdeviations :
-      (∑ i, expect law (devValue i) (hdevOuter i)) ≤
-        G.expectedSocialWelfare law hbase + (Fintype.card ι) * ε := by
+      (∑ i, expect law (devValue i)) ≤
+        G.expectedSocialWelfare law + (Fintype.card ι) * ε := by
     calc
-      (∑ i, expect law (devValue i) (hdevOuter i)) ≤
-          ∑ i, (expect law (baseValue i) (hbaseOuter i) + ε) := by
+      (∑ i, expect law (devValue i)) ≤
+          ∑ i, (expect law (baseValue i) + ε) := by
         refine Finset.sum_le_sum fun i _ => ?_
         have hdevTower := expectedUtility_bind G.utility i law
           (devKernel i) (hdev i)
-          (fun profile => hconditional
-            (Profile.update profile i (target i)) i)
         have hbaseTower := expectedUtility_outcomeLaw G.form G.utility i law
-          (hbase i) (hconditional · i)
+          (hbase i)
         have hle := hregret i
         unfold externalRegret at hle
         dsimp only [devValue, baseValue] at hdevTower hbaseTower ⊢
         rw [hdevTower, hbaseTower] at hle
         linarith
-      _ = G.expectedSocialWelfare law hbase +
+      _ = G.expectedSocialWelfare law +
           (Fintype.card ι) * ε := by
         rw [Finset.sum_add_distrib, Finset.sum_const, Finset.card_univ,
           nsmul_eq_mul]
-        rw [G.expectedSocialWelfare_eq_expect_profilewise law hbase
-          (hconditional ·)]
+        rw [G.expectedSocialWelfare_eq_expect_profilewise law hbase]
         apply congrArg (fun value : ℝ => value +
           (Fintype.card ι) * ε)
         simpa only [socialWelfare, baseValue] using
           (expect_sum law baseValue hbaseOuter).symm
   have hprofile : PayoffIntegrable law
-      (fun profile => G.socialWelfare profile (hconditional profile)) :=
-    G.profilewiseSocialWelfareIntegrable law hbase (hconditional ·)
+      (fun profile => G.socialWelfare profile) :=
+    G.profilewiseSocialWelfareIntegrable law hbase
   have hleft : PayoffIntegrable law
-      (fun profile => lam * G.socialWelfare target
-        (fun i => hsmooth.integrable target i) -
-          mu * G.socialWelfare profile (hconditional profile)) := by
+      (fun profile => lam * G.socialWelfare target -
+          mu * G.socialWelfare profile) := by
     apply payoffIntegrable_sub
     · exact payoffIntegrable_constant law
-        (lam * G.socialWelfare target (fun i => hsmooth.integrable target i))
+        (lam * G.socialWelfare target)
     · exact payoffIntegrable_const_mul hprofile
   have hright : PayoffIntegrable law
       (fun profile => ∑ i, devValue i profile) :=
     payoffIntegrable_sum law devValue hdevOuter
   have hpointwise : ∀ profile ∈ law.support,
-      lam * G.socialWelfare target
-          (fun i => hsmooth.integrable target i) -
-        mu * G.socialWelfare profile (hconditional profile) ≤
+      lam * G.socialWelfare target -
+        mu * G.socialWelfare profile ≤
           ∑ i, devValue i profile := by
     intro profile _
     exact hsmooth.inequality profile target
   have hsmoothAverage := expect_mono hpointwise hleft hright
   have hleftValue : expect law
-      (fun profile => lam * G.socialWelfare target
-        (fun i => hsmooth.integrable target i) -
-          mu * G.socialWelfare profile (hconditional profile)) hleft =
-      lam * G.socialWelfare target
-          (fun i => hsmooth.integrable target i) -
-        mu * G.expectedSocialWelfare law hbase := by
+      (fun profile => lam * G.socialWelfare target -
+          mu * G.socialWelfare profile) =
+      lam * G.socialWelfare target -
+        mu * G.expectedSocialWelfare law := by
     rw [expect_sub (payoffIntegrable_constant law
-      (lam * G.socialWelfare target (fun i => hsmooth.integrable target i)))
+      (lam * G.socialWelfare target))
       (payoffIntegrable_const_mul hprofile)]
     rw [expect_constant, expect_const_mul]
-    rw [G.expectedSocialWelfare_eq_expect_profilewise law hbase
-      (hconditional ·)]
+    rw [G.expectedSocialWelfare_eq_expect_profilewise law hbase]
   have hrightValue : expect law (fun profile => ∑ i, devValue i profile)
-      hright = ∑ i, expect law (devValue i) (hdevOuter i) :=
+       = ∑ i, expect law (devValue i) :=
     expect_sum law devValue hdevOuter
   rw [hleftValue, hrightValue] at hsmoothAverage
   linarith
@@ -146,16 +124,8 @@ theorem IsSmooth.coarseCorrelated_bound [Fintype ι] [DecidableEq ι]
     {law : PMF (Profile G.form.sig)}
     (hlaw : IsCoarseCorrelatedEq G.form G.preference law)
     (target : Profile G.form.sig) :
-    lam * G.socialWelfare target
-        (fun i => hsmooth.integrable target i) ≤
-      (1 + mu) * G.expectedSocialWelfare law
-        (by
-          intro i
-          obtain ⟨hbase, _, _⟩ :=
-            (G.isεCoarseCorrelatedEq_iff_externalRegret_le.mp
-              ((G.isCoarseCorrelatedEq_iff_isεCoarseCorrelatedEq_zero
-                (statusQuo := law)).mp hlaw)) i (target i)
-          exact hbase) := by
+    lam * G.socialWelfare target ≤
+      (1 + mu) * G.expectedSocialWelfare law := by
   have hbound := hsmooth.epsilonCoarseCorrelated_bound
     ((G.isCoarseCorrelatedEq_iff_isεCoarseCorrelatedEq_zero
       (statusQuo := law)).mp hlaw) target

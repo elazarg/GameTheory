@@ -191,13 +191,12 @@ def continuationContext [Fintype ι] [DecidableEq ι]
 theorem continuationContext_value [Fintype ι] [DecidableEq ι]
     (A : M.BehavioralAssessment) {i : ι}
     (site : M.InformationSite i) (payoff : E.History → ℝ) (fuel : ℕ)
-    (alternative : M.BehavioralPolicy i)
-    (h : (A.continuationContext site payoff fuel).IntegrableAt alternative) :
-    (A.continuationContext site payoff fuel).value alternative h =
+    (alternative : M.BehavioralPolicy i) :
+    (A.continuationContext site payoff fuel).value alternative =
       expect ((A.belief i site).bind fun history =>
         M.runBehavioralFrom
           (Profile.update (sig := M.behavioralSignature)
-            A.strategy i alternative) fuel history.1) payoff h :=
+            A.strategy i alternative) fuel history.1) payoff :=
   rfl
 
 /-- The belief average of conditional continuation values equals the guarded
@@ -206,26 +205,15 @@ theorem continuationContext_value_tower [Fintype ι] [DecidableEq ι]
     (A : M.BehavioralAssessment) {i : ι}
     (site : M.InformationSite i) (payoff : E.History → ℝ) (fuel : ℕ)
     (alternative : M.BehavioralPolicy i)
-    (hbind : (A.continuationContext site payoff fuel).IntegrableAt alternative)
-    (hcond : ∀ history : M.InformationHistory i site.1,
-      PayoffIntegrable
-        (M.runBehavioralFrom
-          (Profile.update (sig := M.behavioralSignature)
-            A.strategy i alternative) fuel history.1) payoff) :
-    (A.continuationContext site payoff fuel).value alternative hbind =
+    (hbind : (A.continuationContext site payoff fuel).IntegrableAt alternative) :
+    (A.continuationContext site payoff fuel).value alternative =
       expect (A.belief i site)
         (fun history => expect
           (M.runBehavioralFrom
             (Profile.update (sig := M.behavioralSignature)
               A.strategy i alternative) fuel history.1)
-          payoff (hcond history))
-        (payoffIntegrable_bind_conditionalExpectation
-          (A.belief i site)
-          (fun history => M.runBehavioralFrom
-            (Profile.update (sig := M.behavioralSignature)
-              A.strategy i alternative) fuel history.1)
-          payoff hbind hcond) := by
-  exact expect_bind_tower _ _ _ hbind hcond
+          payoff) := by
+  exact expect_bind_tower _ _ _ hbind
 
 /-- Once every legal history has stopped by `bound`, extra fuel leaves every
 whole-policy continuation law and its guarded value domain unchanged. -/
@@ -280,7 +268,7 @@ theorem isSequentiallyRationalWithin_zero [Fintype ι] [DecidableEq ι]
   refine ⟨payoffIntegrable_zero _, ?_, ?_⟩
   · intro alternative _
     exact payoffIntegrable_zero _
-  · intro alternative _ hchoice halt
+  · intro alternative _
     rw [continuationContext_value, continuationContext_value]
     simp [expect]
 

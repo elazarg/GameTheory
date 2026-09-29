@@ -1,8 +1,9 @@
 /-
 # Mixed deviation gains
 
-Mixed gains are guarded by the expected utilities they compare. Finite-action
-aggregates derive randomized-deviation integrability by finite bind closure.
+Mixed gains are differences of expected utilities; results about them require
+the compared laws to be integrable. Finite-action aggregates derive
+randomized-deviation integrability by finite bind closure.
 -/
 
 import GameTheory.Core.Approximate
@@ -25,26 +26,19 @@ variable (G : UtilityGame.{uι, us, uo} ι)
 /-- The expected-utility gain from a pure replacement. Both compared laws are
 explicitly required to have defined expected utilities. -/
 def mixedGain (mixedProfile : Profile G.form.sig.mixed) (who : ι)
-    (action : G.form.sig.Strategy who)
-    (hbase : UtilityIntegrable G.utility who (G.form.mixed.play mixedProfile))
-    (hpure : UtilityIntegrable G.utility who
-      (G.form.mixed.play
-        (Profile.update mixedProfile who (PMF.pure action)))) : ℝ :=
+    (action : G.form.sig.Strategy who) : ℝ :=
   expectedUtility G.utility who
       (G.form.mixed.play
-        (Profile.update mixedProfile who (PMF.pure action))) hpure -
-    expectedUtility G.utility who (G.form.mixed.play mixedProfile) hbase
+        (Profile.update mixedProfile who (PMF.pure action))) -
+    expectedUtility G.utility who (G.form.mixed.play mixedProfile)
 
 /-- Pure-action gains are integrable under the player's mixed action when the
 status quo and every pure replacement are integrable. -/
 theorem mixedGain_integrable
     (mixedProfile : Profile G.form.sig.mixed) (who : ι)
-    (hbase : UtilityIntegrable G.utility who (G.form.mixed.play mixedProfile))
-    (hpure : ∀ action, UtilityIntegrable G.utility who
-      (G.form.mixed.play
-        (Profile.update mixedProfile who (PMF.pure action)))) :
+    (hbase : UtilityIntegrable G.utility who (G.form.mixed.play mixedProfile)) :
     PayoffIntegrable (mixedProfile who)
-      (fun action => G.mixedGain mixedProfile who action hbase (hpure action)) := by
+      (fun action => G.mixedGain mixedProfile who action) := by
   let q := fun action => G.form.mixed.play
     (Profile.update mixedProfile who (PMF.pure action))
   have hlaw : G.form.mixed.play mixedProfile = (mixedProfile who).bind q := by
@@ -57,13 +51,13 @@ theorem mixedGain_integrable
   have hbind : UtilityIntegrable G.utility who ((mixedProfile who).bind q) := by
     exact payoffIntegrable_congr_law hlaw hbase
   have houter := payoffIntegrable_bind_conditionalExpectation
-    (mixedProfile who) q (fun outcome => G.utility outcome who) hbind hpure
+    (mixedProfile who) q (fun outcome => G.utility outcome who) hbind
   let baseline := expectedUtility G.utility who
-    (G.form.mixed.play mixedProfile) hbase
+    (G.form.mixed.play mixedProfile)
   have hconstant : PayoffIntegrable (mixedProfile who) (fun _ => baseline) :=
     payoffIntegrable_constant (mixedProfile who) baseline
   have houter' : PayoffIntegrable (mixedProfile who)
-      (fun action => expectedUtility G.utility who (q action) (hpure action)) := by
+      (fun action => expectedUtility G.utility who (q action)) := by
     simpa only [expectedUtility] using houter
   have hgain := payoffIntegrable_sub houter' hconstant
   simpa [mixedGain, baseline, q] using hgain
@@ -71,13 +65,10 @@ theorem mixedGain_integrable
 /-- A player's own strategy averages its guarded pure-deviation gains to zero. -/
 theorem expect_mixedGain_self_zero
     (mixedProfile : Profile G.form.sig.mixed) (who : ι)
-    (hbase : UtilityIntegrable G.utility who (G.form.mixed.play mixedProfile))
-    (hpure : ∀ action, UtilityIntegrable G.utility who
-      (G.form.mixed.play
-        (Profile.update mixedProfile who (PMF.pure action)))) :
+    (hbase : UtilityIntegrable G.utility who (G.form.mixed.play mixedProfile)) :
     expect (mixedProfile who)
-      (fun action => G.mixedGain mixedProfile who action hbase (hpure action))
-      (mixedGain_integrable G mixedProfile who hbase hpure) = 0 := by
+      (fun action => G.mixedGain mixedProfile who action)
+       = 0 := by
   let q := fun action => G.form.mixed.play
     (Profile.update mixedProfile who (PMF.pure action))
   have hlaw : G.form.mixed.play mixedProfile = (mixedProfile who).bind q := by
@@ -90,36 +81,31 @@ theorem expect_mixedGain_self_zero
   have hbind : UtilityIntegrable G.utility who ((mixedProfile who).bind q) := by
     exact payoffIntegrable_congr_law hlaw hbase
   have houter := payoffIntegrable_bind_conditionalExpectation
-    (mixedProfile who) q (fun outcome => G.utility outcome who) hbind hpure
-  let values := fun action => expectedUtility G.utility who (q action) (hpure action)
+    (mixedProfile who) q (fun outcome => G.utility outcome who) hbind
+  let values := fun action => expectedUtility G.utility who (q action)
   let baseline := expectedUtility G.utility who
-    (G.form.mixed.play mixedProfile) hbase
+    (G.form.mixed.play mixedProfile)
   have hconstant : PayoffIntegrable (mixedProfile who) (fun _ => baseline) :=
     payoffIntegrable_constant (mixedProfile who) baseline
   have houter' : PayoffIntegrable (mixedProfile who) values := by
     simpa only [values, expectedUtility] using houter
-  have hgain : PayoffIntegrable (mixedProfile who)
-      (fun action => values action - baseline) :=
-    payoffIntegrable_sub houter' hconstant
   have hmean := expectedUtility_mixed_eq_expect G.form G.utility
-    mixedProfile who hbase hpure
-  have hvalue : expect (mixedProfile who) values houter' = baseline := by
+    mixedProfile who hbase
+  have hvalue : expect (mixedProfile who) values = baseline := by
     simpa only [values, expectedUtility, baseline] using hmean.symm
   calc
     expect (mixedProfile who)
-        (fun action => G.mixedGain mixedProfile who action hbase (hpure action))
-        (mixedGain_integrable G mixedProfile who hbase hpure) =
-      expect (mixedProfile who) (fun action => values action - baseline) hgain := by
+        (fun action => G.mixedGain mixedProfile who action) =
+      expect (mixedProfile who) (fun action => values action - baseline) := by
         exact expect_congr_on_support
           (fun action _ => rfl)
-          (mixedGain_integrable G mixedProfile who hbase hpure) hgain
-    _ = expect (mixedProfile who) values houter' - baseline := by
+    _ = expect (mixedProfile who) values - baseline := by
       calc
-        _ = expect (mixedProfile who) values houter' -
-            expect (mixedProfile who) (fun _ => baseline) hconstant := by
+        _ = expect (mixedProfile who) values -
+            expect (mixedProfile who) (fun _ => baseline) := by
               simpa only [values, baseline] using
                 expect_sub houter' hconstant
-        _ = expect (mixedProfile who) values houter' - baseline := by
+        _ = expect (mixedProfile who) values - baseline := by
           rw [expect_constant]
     _ = 0 := by simp [hvalue]
 
@@ -135,8 +121,8 @@ theorem isNash_iff_mixedGain_nonpos
         (G.form.mixed.play (Profile.update mixedProfile who replacement))) :
     IsNash G.form.mixed (euPreference G.utility) mixedProfile ↔
       ∀ who (action : G.form.sig.Strategy who),
-        G.mixedGain mixedProfile who action (hbase who)
-          (hdeviation who (PMF.pure action)) ≤ 0 := by
+        G.mixedGain mixedProfile who action
+           ≤ 0 := by
   constructor
   · intro hnash who action
     rw [isNash_iff] at hnash
@@ -162,35 +148,31 @@ theorem isNash_iff_mixedGain_nonpos
         GameForm.mixed_play_update G.form mixedProfile who replacement
     have hbind : UtilityIntegrable G.utility who (replacement.bind q) := by
       exact payoffIntegrable_congr_law hlaw (hdeviation who replacement)
-    have hpure : ∀ action, UtilityIntegrable G.utility who (q action) :=
-      fun action => hdeviation who (PMF.pure action)
     have houter := payoffIntegrable_bind_conditionalExpectation replacement q
-      (fun outcome => G.utility outcome who) hbind hpure
-    let values := fun action => expectedUtility G.utility who (q action) (hpure action)
+      (fun outcome => G.utility outcome who) hbind
+    let values := fun action => expectedUtility G.utility who (q action)
     let baseline := expectedUtility G.utility who
-      (G.form.mixed.play mixedProfile) (hbase who)
+      (G.form.mixed.play mixedProfile)
     have hconstant : PayoffIntegrable replacement (fun _ => baseline) :=
       payoffIntegrable_constant replacement baseline
     have houter' : PayoffIntegrable replacement values := by
       simpa only [values, expectedUtility] using houter
-    have hle : expect replacement values houter' ≤ baseline := by
+    have hle : expect replacement values ≤ baseline := by
       calc
-        expect replacement values houter' ≤
-            expect replacement (fun _ => baseline) hconstant :=
+        expect replacement values ≤
+            expect replacement (fun _ => baseline) :=
           expect_mono (μ := replacement) (f := values)
             (g := fun _ => baseline)
             (fun action _ => sub_nonpos.mp (hgain who action)) houter' hconstant
-        _ = baseline := expect_constant replacement baseline hconstant
-    have htower := expectedUtility_bind G.utility who replacement q hbind hpure
+        _ = baseline := expect_constant replacement baseline
+    have htower := expectedUtility_bind G.utility who replacement q hbind
     calc
       expectedUtility G.utility who
-          (G.form.mixed.play (Profile.update mixedProfile who replacement))
-          (hdeviation who replacement) =
-        expectedUtility G.utility who (replacement.bind q) hbind :=
+          (G.form.mixed.play (Profile.update mixedProfile who replacement)) =
+        expectedUtility G.utility who (replacement.bind q) :=
           expectedUtility_congr_law G.utility who hlaw
-            (hdeviation who replacement) hbind
       _ =
-          expect replacement values houter' := by
+          expect replacement values := by
         simpa only [values] using htower
       _ ≤ baseline := hle
 
@@ -247,24 +229,14 @@ theorem mixedDeviationIntegrable_of_finite_actions
 
 /-- Sum of positive pure-deviation gains over every player and finite action menu. -/
 def mixedImprovement [∀ who, Fintype (G.form.sig.Strategy who)]
-    (mixedProfile : Profile G.form.sig.mixed)
-    (hpure : ∀ who (action : G.form.sig.Strategy who),
-      UtilityIntegrable G.utility who
-        (G.form.mixed.play
-          (Profile.update mixedProfile who (PMF.pure action)))) : ℝ :=
+    (mixedProfile : Profile G.form.sig.mixed) : ℝ :=
   ∑ who, ∑ action : G.form.sig.Strategy who,
-    max (G.mixedGain mixedProfile who action
-      (mixedUtilityIntegrable_of_finite_actions G mixedProfile hpure who)
-      (hpure who action)) 0
+    max (G.mixedGain mixedProfile who action) 0
 
 theorem mixedImprovement_nonneg
     [∀ who, Fintype (G.form.sig.Strategy who)]
-    (mixedProfile : Profile G.form.sig.mixed)
-    (hpure : ∀ who (action : G.form.sig.Strategy who),
-      UtilityIntegrable G.utility who
-        (G.form.mixed.play
-          (Profile.update mixedProfile who (PMF.pure action)))) :
-    0 ≤ G.mixedImprovement mixedProfile hpure := by
+    (mixedProfile : Profile G.form.sig.mixed) :
+    0 ≤ G.mixedImprovement mixedProfile := by
   rw [mixedImprovement]
   exact Finset.sum_nonneg fun who _ =>
     Finset.sum_nonneg fun action _ => le_max_right _ _
@@ -272,41 +244,25 @@ theorem mixedImprovement_nonneg
 theorem mixedGain_pospart_le_mixedImprovement
     [∀ who, Fintype (G.form.sig.Strategy who)]
     (mixedProfile : Profile G.form.sig.mixed)
-    (hpure : ∀ who (action : G.form.sig.Strategy who),
-      UtilityIntegrable G.utility who
-        (G.form.mixed.play
-          (Profile.update mixedProfile who (PMF.pure action))))
     (who : ι) (action : G.form.sig.Strategy who) :
-    max (G.mixedGain mixedProfile who action
-      (mixedUtilityIntegrable_of_finite_actions G mixedProfile hpure who)
-      (hpure who action)) 0 ≤ G.mixedImprovement mixedProfile hpure := by
+    max (G.mixedGain mixedProfile who action) 0 ≤ G.mixedImprovement mixedProfile := by
   have haction :
-      max (G.mixedGain mixedProfile who action
-        (mixedUtilityIntegrable_of_finite_actions G mixedProfile hpure who)
-        (hpure who action)) 0 ≤
+      max (G.mixedGain mixedProfile who action) 0 ≤
         ∑ candidate : G.form.sig.Strategy who,
-          max (G.mixedGain mixedProfile who candidate
-            (mixedUtilityIntegrable_of_finite_actions G mixedProfile hpure who)
-            (hpure who candidate)) 0 :=
+          max (G.mixedGain mixedProfile who candidate) 0 :=
     Finset.single_le_sum
       (f := fun candidate =>
-        max (G.mixedGain mixedProfile who candidate
-          (mixedUtilityIntegrable_of_finite_actions G mixedProfile hpure who)
-          (hpure who candidate)) 0)
+        max (G.mixedGain mixedProfile who candidate) 0)
       (fun candidate _ => le_max_right _ _)
       (Finset.mem_univ action)
   have hplayer :
       (∑ candidate : G.form.sig.Strategy who,
-          max (G.mixedGain mixedProfile who candidate
-            (mixedUtilityIntegrable_of_finite_actions G mixedProfile hpure who)
-            (hpure who candidate)) 0) ≤
-        G.mixedImprovement mixedProfile hpure := by
+          max (G.mixedGain mixedProfile who candidate) 0) ≤
+        G.mixedImprovement mixedProfile := by
     have hnonneg :
         ∀ player ∈ (Finset.univ : Finset ι),
           0 ≤ ∑ candidate : G.form.sig.Strategy player,
-            max (G.mixedGain mixedProfile player candidate
-              (mixedUtilityIntegrable_of_finite_actions G mixedProfile hpure player)
-              (hpure player candidate)) 0 := by
+            max (G.mixedGain mixedProfile player candidate) 0 := by
       intro player _
       exact Finset.sum_nonneg fun candidate _ => le_max_right _ _
     rw [mixedImprovement]
@@ -316,30 +272,20 @@ theorem mixedGain_pospart_le_mixedImprovement
 theorem mixedGain_le_mixedImprovement
     [∀ who, Fintype (G.form.sig.Strategy who)]
     (mixedProfile : Profile G.form.sig.mixed)
-    (hpure : ∀ who (action : G.form.sig.Strategy who),
-      UtilityIntegrable G.utility who
-        (G.form.mixed.play
-          (Profile.update mixedProfile who (PMF.pure action))))
     (who : ι) (action : G.form.sig.Strategy who) :
     G.mixedGain mixedProfile who action
-        (mixedUtilityIntegrable_of_finite_actions G mixedProfile hpure who)
-        (hpure who action) ≤ G.mixedImprovement mixedProfile hpure :=
+         ≤ G.mixedImprovement mixedProfile :=
   (le_max_left _ _).trans
-    (G.mixedGain_pospart_le_mixedImprovement mixedProfile hpure who action)
+    (G.mixedGain_pospart_le_mixedImprovement mixedProfile who action)
 
 theorem mixedGain_le_of_mixedImprovement_le
     [∀ who, Fintype (G.form.sig.Strategy who)]
     {mixedProfile : Profile G.form.sig.mixed} {ε : ℝ}
-    (hpure : ∀ who (action : G.form.sig.Strategy who),
-      UtilityIntegrable G.utility who
-        (G.form.mixed.play
-          (Profile.update mixedProfile who (PMF.pure action))))
-    (hε : G.mixedImprovement mixedProfile hpure ≤ ε) (who : ι)
+    (hε : G.mixedImprovement mixedProfile ≤ ε) (who : ι)
     (action : G.form.sig.Strategy who) :
     G.mixedGain mixedProfile who action
-        (mixedUtilityIntegrable_of_finite_actions G mixedProfile hpure who)
-        (hpure who action) ≤ ε :=
-  (G.mixedGain_le_mixedImprovement mixedProfile hpure who action).trans hε
+         ≤ ε :=
+  (G.mixedGain_le_mixedImprovement mixedProfile who action).trans hε
 
 private theorem max_zero_eq_zero_iff {x : ℝ} : max x 0 = 0 ↔ x ≤ 0 := by
   constructor
@@ -349,23 +295,16 @@ private theorem max_zero_eq_zero_iff {x : ℝ} : max x 0 = 0 ↔ x ≤ 0 := by
 
 theorem mixedImprovement_eq_zero_iff_gains_nonpos
     [∀ who, Fintype (G.form.sig.Strategy who)]
-    (mixedProfile : Profile G.form.sig.mixed)
-    (hpure : ∀ who (action : G.form.sig.Strategy who),
-      UtilityIntegrable G.utility who
-        (G.form.mixed.play
-          (Profile.update mixedProfile who (PMF.pure action)))) :
-    G.mixedImprovement mixedProfile hpure = 0 ↔
+    (mixedProfile : Profile G.form.sig.mixed) :
+    G.mixedImprovement mixedProfile = 0 ↔
       ∀ who (action : G.form.sig.Strategy who),
         G.mixedGain mixedProfile who action
-          (mixedUtilityIntegrable_of_finite_actions G mixedProfile hpure who)
-          (hpure who action) ≤ 0 := by
+           ≤ 0 := by
   constructor
   · intro hzero who action
-    have hpos : max (G.mixedGain mixedProfile who action
-        (mixedUtilityIntegrable_of_finite_actions G mixedProfile hpure who)
-        (hpure who action)) 0 ≤ 0 := by
+    have hpos : max (G.mixedGain mixedProfile who action) 0 ≤ 0 := by
       simpa [hzero] using
-        G.mixedGain_pospart_le_mixedImprovement mixedProfile hpure who action
+        G.mixedGain_pospart_le_mixedImprovement mixedProfile who action
     exact max_zero_eq_zero_iff.mp
       (le_antisymm hpos (le_max_right _ _))
   · intro hgain
@@ -379,7 +318,7 @@ theorem mixedImprovement_eq_zero_iff_isNash
       UtilityIntegrable G.utility who
         (G.form.mixed.play
           (Profile.update mixedProfile who (PMF.pure action)))) :
-    G.mixedImprovement mixedProfile hpure = 0 ↔
+    G.mixedImprovement mixedProfile = 0 ↔
       IsNash G.form.mixed (euPreference G.utility) mixedProfile := by
   have hbase : ∀ who, UtilityIntegrable G.utility who
       (G.form.mixed.play mixedProfile) :=
@@ -388,7 +327,7 @@ theorem mixedImprovement_eq_zero_iff_isNash
       UtilityIntegrable G.utility who
         (G.form.mixed.play (Profile.update mixedProfile who replacement)) :=
     mixedDeviationIntegrable_of_finite_actions G mixedProfile hpure
-  rw [G.mixedImprovement_eq_zero_iff_gains_nonpos mixedProfile hpure,
+  rw [G.mixedImprovement_eq_zero_iff_gains_nonpos mixedProfile,
     G.isNash_iff_mixedGain_nonpos mixedProfile hbase hdeviation]
 
 theorem isNash_iff_mixedImprovement_eq_zero
@@ -399,7 +338,7 @@ theorem isNash_iff_mixedImprovement_eq_zero
         (G.form.mixed.play
           (Profile.update mixedProfile who (PMF.pure action)))) :
     IsNash G.form.mixed (euPreference G.utility) mixedProfile ↔
-      G.mixedImprovement mixedProfile hpure = 0 :=
+      G.mixedImprovement mixedProfile = 0 :=
   (G.mixedImprovement_eq_zero_iff_isNash mixedProfile hpure).symm
 
 theorem isεNash_of_mixedImprovement_le
@@ -409,7 +348,7 @@ theorem isεNash_of_mixedImprovement_le
       UtilityIntegrable G.utility who
         (G.form.mixed.play
           (Profile.update mixedProfile who (PMF.pure action))))
-    (hε : G.mixedImprovement mixedProfile hpure ≤ ε) :
+    (hε : G.mixedImprovement mixedProfile ≤ ε) :
     IsεNash G.form.mixed G.utility ε mixedProfile := by
   have hbase : ∀ who, UtilityIntegrable G.utility who
       (G.form.mixed.play mixedProfile) :=
@@ -429,40 +368,35 @@ theorem isεNash_of_mixedImprovement_le
       GameForm.mixed_play_update G.form mixedProfile who replacement
   have hbind : UtilityIntegrable G.utility who (replacement.bind q) :=
     payoffIntegrable_congr_law hlaw (hdeviation who replacement)
-  have hpure' : ∀ action, UtilityIntegrable G.utility who (q action) :=
-    fun action => hpure who action
   have houter := payoffIntegrable_bind_conditionalExpectation replacement q
-    (fun outcome => G.utility outcome who) hbind hpure'
-  let values := fun action => expectedUtility G.utility who (q action) (hpure' action)
+    (fun outcome => G.utility outcome who) hbind
+  let values := fun action => expectedUtility G.utility who (q action)
   let baseline := expectedUtility G.utility who (G.form.mixed.play mixedProfile)
-    (hbase who)
   have houter' : PayoffIntegrable replacement values := by
     simpa only [values, expectedUtility] using houter
   have hconstant : PayoffIntegrable replacement (fun _ => baseline + ε) :=
     payoffIntegrable_constant replacement (baseline + ε)
-  have hvalues : expect replacement values houter' ≤ baseline + ε := by
+  have hvalues : expect replacement values ≤ baseline + ε := by
     calc
-      expect replacement values houter' ≤
-          expect replacement (fun _ => baseline + ε) hconstant :=
+      expect replacement values ≤
+          expect replacement (fun _ => baseline + ε) :=
         expect_mono (μ := replacement) (f := values)
           (g := fun _ => baseline + ε)
           (fun action _ => by
             have hgain := G.mixedGain_le_of_mixedImprovement_le
-              hpure hε who action
+               hε who action
             have h := hgain
             unfold mixedGain at h
             linarith)
           houter' hconstant
-      _ = baseline + ε := expect_constant replacement _ hconstant
-  have htower := expectedUtility_bind G.utility who replacement q hbind hpure'
+      _ = baseline + ε := expect_constant replacement _
+  have htower := expectedUtility_bind G.utility who replacement q hbind
   calc
     expectedUtility G.utility who
-        (G.form.mixed.play (Profile.update mixedProfile who replacement))
-        (hdeviation who replacement) =
-      expectedUtility G.utility who (replacement.bind q) hbind :=
+        (G.form.mixed.play (Profile.update mixedProfile who replacement)) =
+      expectedUtility G.utility who (replacement.bind q) :=
         expectedUtility_congr_law G.utility who hlaw
-          (hdeviation who replacement) hbind
-    _ = expect replacement values houter' := by
+    _ = expect replacement values := by
       simpa only [values] using htower
     _ ≤ baseline + ε := hvalues
 

@@ -78,37 +78,28 @@ def discount : ℝ := 1 / 2
 @[simp]
 theorem stagePayoff_eq_agreement (stage : Profile coordination.form.sig)
     (who : Fin 2) :
-    coordination.stagePayoff stage who (coordination_integrable who stage) =
+    coordination.stagePayoff stage who =
       if stage 0 = stage 1 then 1 else 0 := by
   simp [UtilityGame.stagePayoff, coordinationForm, expectedUtility_pure]
 
 /-- Coordination gives a uniform, sharp absolute stage-payoff bound. -/
 theorem stagePayoff_abs_le_one (stage : Profile coordination.form.sig)
     (who : Fin 2) :
-    |coordination.stagePayoff stage who
-      (coordination_integrable who stage)| ≤ 1 := by
+    |coordination.stagePayoff stage who| ≤ 1 := by
   rw [stagePayoff_eq_agreement]
   split <;> norm_num
 
 theorem coordination_stagePayoff_bounded :
     ∀ who : Fin 2, ∃ bound : ℝ,
       ∀ stage : Profile coordination.form.sig,
-        |coordination.stagePayoff stage who
-          (coordination_integrable who stage)| ≤ bound := by
+        |coordination.stagePayoff stage who| ≤ bound := by
   intro who
   exact ⟨1, fun stage => stagePayoff_abs_le_one stage who⟩
-
-abbrev stageCert :
-    ∀ profile : monitoring.MonitoredProfile, ∀ who t,
-      monitoring.MonitoredStageIntegrable profile t who :=
-  monitoring.discountedStageIntegrableOfBounded
-    coordination_integrable coordination_stagePayoff_bounded
 
 abbrev seriesCert :
     ∀ profile : monitoring.MonitoredProfile, ∀ who,
       Summable fun t : ℕ => discount ^ t *
-        monitoring.monitoredStagePayoff profile t who
-          (stageCert profile who t) :=
+        monitoring.monitoredStagePayoff profile t who :=
   monitoring.discountedSummableOfBounded
     (by norm_num [discount]) (by norm_num [discount])
     coordination_integrable coordination_stagePayoff_bounded
@@ -116,10 +107,8 @@ abbrev seriesCert :
 /-- A current unilateral mismatch is a genuine strict loss, not a weak tie. -/
 theorem unilateral_mismatch_strict_loss (who : Fin 2) :
     coordination.stagePayoff
-        (Profile.update (sig := coordination.form.sig) allFalse who true) who
-        (coordination_integrable who _) <
-      coordination.stagePayoff allFalse who
-        (coordination_integrable who allFalse) := by
+        (Profile.update (sig := coordination.form.sig) allFalse who true) who <
+      coordination.stagePayoff allFalse who := by
   fin_cases who <;>
     simp [stagePayoff_eq_agreement, allFalse, Profile.update]
 
@@ -136,7 +125,7 @@ theorem fairCoin_prob_true : fairCoin true = 1 / 2 := by
   norm_num
 
 theorem fairCoin_expect (u : Bool → ℝ) :
-    expect fairCoin u (payoffIntegrable_of_finite fairCoin u) =
+    expect fairCoin u =
       (u false + u true) / 2 := by
   rw [expect_eq_sum]
   simp [fairCoin_prob_false, fairCoin_prob_true]
@@ -246,11 +235,11 @@ theorem discountedPayoff_stationary_coordinated (b : Bool) (who : Fin 2) :
         (monitoring.stationaryMonitoredProfile (coordinated b)) who
         (stagePayoff_abs_le_one · who) = 1 := by
   show monitoring.discountedPayoff discount
-    (monitoring.stationaryMonitoredProfile (coordinated b)) who _ _ = 1
+    (monitoring.stationaryMonitoredProfile (coordinated b)) who _ = 1
   rw [monitoring.discountedPayoff_stationaryMonitoredProfile
     (discount := discount)
     (by norm_num [discount]) (by norm_num [discount])
-    (coordinated b) who (coordination_integrable who _)]
+    (coordinated b) who]
   simp [stagePayoff_eq_agreement, coordinated]
 
 /-- Prescribed play coordinates in every period, although its first public
@@ -274,7 +263,7 @@ discounted payoff. The strict stage loss above is offset only by returning to
 coordinated continuation play. -/
 theorem prescribed_hasNoProfitableOneShotDeviation :
     monitoring.HasNoProfitableOneShotDeviation discount
-      stageCert seriesCert prescribed := by
+      seriesCert prescribed := by
   intro who action
   show monitoring.discountedPayoffOfBounded (discount := discount)
       (by norm_num [discount]) (by norm_num [discount])
@@ -303,7 +292,7 @@ theorem prescribed_hasNoProfitableOneShotDeviation :
 /-- Every stationary coordinated continuation is one-shot optimal. -/
 theorem stationary_coordinated_hasNoProfitableOneShotDeviation (b : Bool) :
     monitoring.HasNoProfitableOneShotDeviation discount
-      stageCert seriesCert
+      seriesCert
       (monitoring.stationaryMonitoredProfile (coordinated b)) := by
   intro who action
   show monitoring.discountedPayoffOfBounded (discount := discount)
@@ -340,7 +329,7 @@ theorem stationary_coordinated_hasNoProfitableOneShotDeviation (b : Bool) :
 histories in the generated law's support. -/
 theorem prescribed_hasNoProfitableOneShotDeviationAfterEveryHistory :
     monitoring.HasNoProfitableOneShotDeviationAfterEveryHistory
-      discount stageCert seriesCert prescribed := by
+      discount seriesCert prescribed := by
   intro t history
   cases t with
   | zero =>
@@ -369,7 +358,7 @@ theorem prescribed_hasNoProfitableOneShotDeviationAfterEveryHistory :
 incentive condition. -/
 theorem zeroProbabilityHistory_hasNoProfitableOneShotDeviation :
     monitoring.HasNoProfitableOneShotDeviation discount
-      stageCert seriesCert
+      seriesCert
       (monitoring.after prescribed zeroProbabilityHistory) :=
   prescribed_hasNoProfitableOneShotDeviationAfterEveryHistory
     2 zeroProbabilityHistory
@@ -378,9 +367,9 @@ theorem zeroProbabilityHistory_hasNoProfitableOneShotDeviation :
 fixture at discount one half. -/
 theorem prescribed_ppe_iff_noProfitableOneShotDeviation :
     monitoring.IsPerfectPublicEquilibrium discount
-        stageCert seriesCert prescribed ↔
+        seriesCert prescribed ↔
       monitoring.HasNoProfitableOneShotDeviationAfterEveryHistory discount
-        stageCert seriesCert prescribed := by
+        seriesCert prescribed := by
   exact monitoring.isPerfectPublicEquilibrium_iff_noProfitableOneShotDeviation_of_bounded
     (by norm_num [discount]) (by norm_num [discount]) prescribed
     coordination_integrable coordination_stagePayoff_bounded
@@ -388,7 +377,7 @@ theorem prescribed_ppe_iff_noProfitableOneShotDeviation :
 /-- The noisy branch-dependent prescribed profile is an actual PPE. -/
 theorem prescribed_isPerfectPublicEquilibrium :
     monitoring.IsPerfectPublicEquilibrium discount
-      stageCert seriesCert prescribed :=
+      seriesCert prescribed :=
   prescribed_ppe_iff_noProfitableOneShotDeviation.mpr
     prescribed_hasNoProfitableOneShotDeviationAfterEveryHistory
 
@@ -396,9 +385,9 @@ theorem prescribed_isPerfectPublicEquilibrium :
 every public continuation. -/
 theorem prescribed_isεPerfectPublicEquilibrium {ε : ℝ} (hε : 0 ≤ ε) :
     monitoring.IsεPerfectPublicEquilibrium discount
-      stageCert seriesCert ε prescribed :=
+      seriesCert ε prescribed :=
   UtilityGame.PublicMonitoring.IsPerfectPublicEquilibrium.isεPerfectPublicEquilibrium
-    monitoring discount stageCert seriesCert prescribed_isPerfectPublicEquilibrium hε
+    monitoring discount seriesCert prescribed_isPerfectPublicEquilibrium hε
 
 /-! A stationary mismatched profile supplies the converse regression: player
 zero can coordinate immediately, while the continuation stays mismatched. -/
@@ -418,11 +407,11 @@ theorem discountedPayoff_mismatchedProfile (who : Fin 2) :
         (stagePayoff_abs_le_one · who) = 0 := by
   unfold mismatchedProfile
   show monitoring.discountedPayoff discount
-    (monitoring.stationaryMonitoredProfile mismatched) who _ _ = 0
+    (monitoring.stationaryMonitoredProfile mismatched) who _ = 0
   rw [monitoring.discountedPayoff_stationaryMonitoredProfile
     (discount := discount)
     (by norm_num [discount]) (by norm_num [discount])
-    mismatched who (coordination_integrable who _)]
+    mismatched who]
   fin_cases who <;> simp [mismatched, stagePayoff_eq_agreement]
 
 @[simp]
@@ -433,7 +422,7 @@ theorem afterSignal_mismatchedProfile (signal : Bool) :
 /-- Player zero's one-shot switch to `true` is strictly profitable. -/
 theorem mismatchedProfile_has_profitable_oneShotDeviation :
     ¬ monitoring.HasNoProfitableOneShotDeviation discount
-      stageCert seriesCert mismatchedProfile := by
+      seriesCert mismatchedProfile := by
   intro hno
   have hdeviation :
       monitoring.discountedPayoffOfBounded (discount := discount)
@@ -464,7 +453,7 @@ theorem mismatchedProfile_has_profitable_oneShotDeviation :
 /-- The profitable root deviation falsifies perfect public equilibrium. -/
 theorem mismatchedProfile_not_isPerfectPublicEquilibrium :
     ¬ monitoring.IsPerfectPublicEquilibrium discount
-      stageCert seriesCert mismatchedProfile := by
+      seriesCert mismatchedProfile := by
   intro hppe
   apply mismatchedProfile_has_profitable_oneShotDeviation
   have hall := hppe.hasNoProfitableOneShotDeviationAfterEveryHistory

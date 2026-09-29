@@ -133,13 +133,11 @@ def SurvivesAllPureEliminationRounds (who : ι)
 replacement strictly lowers the deviator's expected utility. -/
 def IsStrictNash (F : GameForm ι) (utility : F.sig.Outcome → ι → ℝ)
     (profile : Profile F.sig) : Prop :=
-  ∀ who, ∃ hbase : UtilityIntegrable utility who (F.play profile),
+  ∀ who, UtilityIntegrable utility who (F.play profile) ∧
     ∀ replacement, replacement ≠ profile who →
-      ∃ hdeviation : UtilityIntegrable utility who
-          (F.play (Profile.update profile who replacement)),
-        expectedUtility utility who
-          (F.play (Profile.update profile who replacement)) hdeviation <
-          expectedUtility utility who (F.play profile) hbase
+      UtilityIntegrable utility who (F.play (Profile.update profile who replacement)) ∧
+        expectedUtility utility who (F.play (Profile.update profile who replacement)) <
+          expectedUtility utility who (F.play profile)
 
 /-- A strict unilateral expected-utility improvement from `source` to `target`.
 The target equation keeps the relation tied to the canonical profile operation. -/
@@ -147,10 +145,10 @@ def ImprovingStep (F : GameForm ι) (utility : F.sig.Outcome → ι → ℝ)
     (source target : Profile F.sig) : Prop :=
   ∃ who replacement,
     target = Profile.update source who replacement ∧
-      ∃ hsource : UtilityIntegrable utility who (F.play source),
-        ∃ htarget : UtilityIntegrable utility who (F.play target),
-          expectedUtility utility who (F.play source) hsource <
-            expectedUtility utility who (F.play target) htarget
+      UtilityIntegrable utility who (F.play source) ∧
+        UtilityIntegrable utility who (F.play target) ∧
+          expectedUtility utility who (F.play source) <
+            expectedUtility utility who (F.play target)
 
 /-- From every profile, some finite path of strict unilateral improvements
 reaches a Nash profile. This is a response-graph property; potential functions
@@ -218,10 +216,9 @@ theorem not_isNash_iff_exists_improvingStep {F : GameForm ι}
       (F.play (Profile.update profile who replacement))
       (hbase who) (hdeviation who replacement)).mp
         ((isNash_iff profile).1 hnash who replacement)
-    have himprove' : expectedUtility utility who (F.play profile) (hbase who) <
+    have himprove' : expectedUtility utility who (F.play profile) <
         expectedUtility utility who
-          (F.play (Profile.update profile who replacement))
-          (hdeviation who replacement) := by
+          (F.play (Profile.update profile who replacement)) := by
       simpa only [expectedUtility] using himprove
     exact (not_lt_of_ge hle) himprove'
 
@@ -574,8 +571,8 @@ utility when every player's canonical expected utility reaches that player's
 reservation level. -/
 def IsIndividuallyRational (utility : F.sig.Outcome → ι → ℝ)
     (reservation : ι → ℝ) (profile : Profile F.sig) : Prop :=
-  ∀ player, ∃ h : UtilityIntegrable utility player (F.play profile),
-    reservation player ≤ expectedUtility utility player (F.play profile) h
+  ∀ player, UtilityIntegrable utility player (F.play profile) ∧
+    reservation player ≤ expectedUtility utility player (F.play profile)
 
 variable (F weaklyPrefers) in
 /-- `better` Pareto-dominates `worse`: nobody is worse off and somebody is
@@ -611,8 +608,8 @@ theorem IsIndividuallyRational.of_paretoDominates
   fun player => by
     obtain ⟨hworse, hir⟩ := hir player
     obtain ⟨hbetter, hother, hdom⟩ := hdom.1 player
-    have hdom' : expectedUtility utility player (F.play worse) hworse ≤
-        expectedUtility utility player (F.play better) hbetter := by
+    have hdom' : expectedUtility utility player (F.play worse) ≤
+        expectedUtility utility player (F.play better) := by
       simpa only [expectedUtility] using hdom
     exact ⟨hbetter, hir.trans hdom'⟩
 
@@ -628,9 +625,9 @@ theorem IsIndividuallyRational.sup {utility : F.sig.Outcome → ι → ℝ}
     obtain ⟨hint₁, hfirst⟩ := hfirst player
     obtain ⟨hint₂, hsecond⟩ := hsecond player
     have hint : UtilityIntegrable utility player (F.play profile) := hint₁
-    have hfirst' : first player ≤ expectedUtility utility player (F.play profile) hint := by
+    have hfirst' : first player ≤ expectedUtility utility player (F.play profile) := by
       simpa only [expectedUtility] using hfirst
-    have hsecond' : second player ≤ expectedUtility utility player (F.play profile) hint := by
+    have hsecond' : second player ≤ expectedUtility utility player (F.play profile) := by
       simpa only [expectedUtility] using hsecond
     exact ⟨hint, max_le hfirst' hsecond'⟩
 

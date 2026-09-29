@@ -158,38 +158,23 @@ mixed equilibria uses, and it is a consequence rather than a definition. -/
 its own randomization. -/
 theorem expectedUtility_mixed_eq_expect (F : GameForm ι) (utility : F.sig.Outcome → ι → ℝ)
     (mixedProfile : Profile F.sig.mixed) (who : ι)
-    (hmixed : UtilityIntegrable utility who (F.mixed.play mixedProfile))
-    (hpure : ∀ s, UtilityIntegrable utility who
-      (F.mixed.play (Profile.update mixedProfile who (PMF.pure s)))) :
-    expectedUtility utility who (F.mixed.play mixedProfile) hmixed =
+    (hmixed : UtilityIntegrable utility who (F.mixed.play mixedProfile)) :
+    expectedUtility utility who (F.mixed.play mixedProfile) =
       expect (mixedProfile who)
         (fun s => expectedUtility utility who
-          (F.mixed.play (Profile.update mixedProfile who (PMF.pure s))) (hpure s))
-        (payoffIntegrable_bind_conditionalExpectation (mixedProfile who)
-          (fun s => F.mixed.play (Profile.update mixedProfile who (PMF.pure s)))
-          (fun outcome => utility outcome who)
-          (by
-            have heq : F.mixed.play mixedProfile =
-                (mixedProfile who).bind fun s =>
-                  F.mixed.play (Profile.update mixedProfile who (PMF.pure s)) :=
-              mixed_play_update_self F mixedProfile who
-            rw [← heq]
-            exact hmixed)
-          hpure) := by
+          (F.mixed.play (Profile.update mixedProfile who (PMF.pure s)))) := by
   let q := fun s => F.mixed.play (Profile.update mixedProfile who (PMF.pure s))
   have heq := mixed_play_update_self F mixedProfile who
   have hbind : UtilityIntegrable utility who ((mixedProfile who).bind q) := by
     rw [← heq]
     exact hmixed
-  have htower := expectedUtility_bind utility who (mixedProfile who) q hbind hpure
+  have htower := expectedUtility_bind utility who (mixedProfile who) q hbind
   calc
-    expectedUtility utility who (F.mixed.play mixedProfile) hmixed =
-        expectedUtility utility who ((mixedProfile who).bind q) hbind :=
-      expectedUtility_congr_law utility who heq hmixed hbind
+    expectedUtility utility who (F.mixed.play mixedProfile) =
+        expectedUtility utility who ((mixedProfile who).bind q) :=
+      expectedUtility_congr_law utility who heq
     _ = expect (mixedProfile who)
-        (fun s => expectedUtility utility who (q s) (hpure s))
-        (payoffIntegrable_bind_conditionalExpectation (mixedProfile who) q
-          (fun outcome => utility outcome who) hbind hpure) := htower
+        (fun s => expectedUtility utility who (q s)) := htower
 
 /-- **A mixed equilibrium is indifferent across its own support.** Every strategy
 it gives positive weight is worth exactly what the mixture is worth — so none of
@@ -198,10 +183,8 @@ theorem IsNash.expectedUtility_eq_of_mem_support
     (hnash : IsNash F.mixed (euPreference utility) mixedProfile) (who : ι)
     {s : F.sig.Strategy who} (hs : s ∈ (mixedProfile who).support) :
     expectedUtility utility who
-        (F.mixed.play (Profile.update mixedProfile who (PMF.pure s)))
-        (hnash.deviationIntegrable who (PMF.pure s)) =
-      expectedUtility utility who (F.mixed.play mixedProfile)
-        (hnash.utilityIntegrable who) := by
+        (F.mixed.play (Profile.update mixedProfile who (PMF.pure s))) =
+      expectedUtility utility who (F.mixed.play mixedProfile) := by
   have hbase := hnash.utilityIntegrable who
   have hpure : ∀ t, UtilityIntegrable utility who
       (F.mixed.play (Profile.update mixedProfile who (PMF.pure t))) := by
@@ -220,19 +203,19 @@ theorem IsNash.expectedUtility_eq_of_mem_support
                 rw [Profile.update_eq_self]
           _ = _ := GameForm.mixed_play_update F mixedProfile who (mixedProfile who)
       rw [← heq]
-      exact hbase) hpure
+      exact hbase)
   let value := fun t => expectedUtility utility who
-    (F.mixed.play (Profile.update mixedProfile who (PMF.pure t))) (hpure t)
-  let base := expectedUtility utility who (F.mixed.play mixedProfile) hbase
+    (F.mixed.play (Profile.update mixedProfile who (PMF.pure t)))
+  let base := expectedUtility utility who (F.mixed.play mixedProfile)
   have hle : ∀ t, expectedUtility utility who
-      (F.mixed.play (Profile.update mixedProfile who (PMF.pure t))) (hpure t) ≤
+      (F.mixed.play (Profile.update mixedProfile who (PMF.pure t))) ≤
       base := by
     intro t
     exact (euPreference_iff utility who (F.mixed.play mixedProfile)
       (F.mixed.play (Profile.update mixedProfile who (PMF.pure t))) hbase (hpure t)).mp
       (hnash who (PMF.pure t))
-  have havg := expectedUtility_mixed_eq_expect F utility mixedProfile who hbase hpure
-  have havg' : expect (mixedProfile who) value houter = base := by
+  have havg := expectedUtility_mixed_eq_expect F utility mixedProfile who hbase
+  have havg' : expect (mixedProfile who) value = base := by
     simpa only [value, base] using havg.symm
   have hvalue := expect_eq_const_of_le_on_support
     (mixedProfile who) value base houter

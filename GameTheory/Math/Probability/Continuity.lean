@@ -19,8 +19,7 @@ theorem continuous_pmf_expect [Fintype α]
     (law : X → PMF α) (observable : X → α → ℝ)
     (hlaw : ∀ value, Continuous fun x => (law x value).toReal)
     (hobservable : ∀ value, Continuous fun x => observable x value) :
-    Continuous fun x => expect (law x) (observable x)
-      (payoffIntegrable_of_finite (law x) (observable x)) := by
+    Continuous fun x => expect (law x) (observable x) := by
   simp_rw [expect_eq_sum]
   exact continuous_finsetSum _ fun value _ =>
     (hlaw value).mul (hobservable value)

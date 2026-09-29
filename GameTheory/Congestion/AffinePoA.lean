@@ -116,9 +116,8 @@ theorem sum_deviation_cost_le [DecidableEq ι] (C : CongestionGame ι)
         mul_nonneg hb hz]
 
 /-- Social welfare of the induced utility game is negated social cost. -/
-theorem socialWelfare_toUtilityGame (C : CongestionGame ι) (profile : C.Profile)
-    (h : ∀ i, UtilityIntegrable C.utility i (C.toGameForm.play profile)) :
-    C.toUtilityGame.socialWelfare profile h = -C.socialCost profile := by
+theorem socialWelfare_toUtilityGame (C : CongestionGame ι) (profile : C.Profile) :
+    C.toUtilityGame.socialWelfare profile = -C.socialCost profile := by
   rw [UtilityGame.socialWelfare, socialCost]
   simp only [toUtilityGame, toGameForm, expectedUtility_pure, utility]
   rw [← Finset.sum_neg_distrib]
@@ -129,10 +128,8 @@ theorem expectedSocialWelfare_toUtilityGame (C : CongestionGame ι)
     (law : PMF C.Profile)
     (h : ∀ i, UtilityIntegrable C.utility i
       (C.toUtilityGame.form.outcomeLaw law)) :
-    C.toUtilityGame.expectedSocialWelfare law h =
-      -expect law C.socialCost
-        (C.socialCost_integrable_of_utility law (fun i => by
-          simpa [toUtilityGame, toGameForm, GameForm.outcomeLaw] using h i)) := by
+    C.toUtilityGame.expectedSocialWelfare law =
+      -expect law C.socialCost := by
   let hplayer (i : ι) : PayoffIntegrable law
       (fun profile => C.utility profile i) := by
     simpa [toUtilityGame, toGameForm, GameForm.outcomeLaw] using h i
@@ -140,20 +137,18 @@ theorem expectedSocialWelfare_toUtilityGame (C : CongestionGame ι)
       (fun profile => C.playerCost profile i) := by
     simpa only [utility, neg_neg] using payoffIntegrable_neg (hplayer i)
   calc
-    C.toUtilityGame.expectedSocialWelfare law h =
-        ∑ i, expect law (fun profile => C.utility profile i) (hplayer i) := by
+    C.toUtilityGame.expectedSocialWelfare law =
+        ∑ i, expect law (fun profile => C.utility profile i) := by
       simp only [UtilityGame.expectedSocialWelfare, expectedUtility]
       apply Finset.sum_congr rfl
       intro i _
       simp [toGameForm, GameForm.outcomeLaw]
-    _ = -∑ i, expect law (fun profile => C.playerCost profile i) (hcost i) := by
+    _ = -∑ i, expect law (fun profile => C.playerCost profile i) := by
       simp only [utility, ← Finset.sum_neg_distrib]
       apply Finset.sum_congr rfl
       intro i _
-      exact expect_neg (hcost i)
-    _ = -expect law C.socialCost
-        (C.socialCost_integrable_of_utility law (fun i => by
-          simpa [toUtilityGame, toGameForm, GameForm.outcomeLaw] using h i)) := by
+      exact expect_neg
+    _ = -expect law C.socialCost := by
       congr 1
       unfold CongestionGame.socialCost
       exact (expect_sum law
@@ -177,8 +172,7 @@ theorem isSmooth_of_isAffine [DecidableEq ι] (C : CongestionGame ι)
       linarith
     _ = ∑ i, expectedUtility C.utility i
         (C.toGameForm.play
-          (Profile.update (sig := C.toGameForm.sig) statusQuo i (target i)))
-        (payoffIntegrable_pure _ (fun profile => C.utility profile i)) := by
+          (Profile.update (sig := C.toGameForm.sig) statusQuo i (target i))) := by
       rw [← Finset.sum_neg_distrib]
       exact Finset.sum_congr rfl fun i _ => (C.expectedUtility_toGameForm _ i).symm
 
@@ -200,17 +194,17 @@ theorem coarseCorrelated_socialCost_le [DecidableEq ι] (C : CongestionGame ι)
     {a b : C.Resource → ℝ} (h : C.IsAffine a b) {law : PMF C.Profile}
     (hlaw : IsCoarseCorrelatedEq C.toGameForm (euPreference C.utility) law)
     (target : C.Profile) :
-    expect law C.socialCost
-      (C.socialCost_integrable_of_utility law (fun i => by
-        obtain ⟨hbase, _, _⟩ :=
-          (C.toUtilityGame.isεCoarseCorrelatedEq_iff_externalRegret_le.mp
-            ((C.toUtilityGame.isCoarseCorrelatedEq_iff_isεCoarseCorrelatedEq_zero
-              (statusQuo := law)).mp hlaw)) i (target i)
-        simpa [toUtilityGame, toGameForm, GameForm.outcomeLaw] using hbase)) ≤
+    expect law C.socialCost ≤
       5 / 2 * C.socialCost target := by
   have hbound := UtilityGame.IsSmooth.coarseCorrelated_bound
     (C.isSmooth_of_isAffine h) hlaw target
-  rw [C.expectedSocialWelfare_toUtilityGame, C.socialWelfare_toUtilityGame] at hbound
+  have hintegrable : ∀ i, UtilityIntegrable C.utility i
+      (C.toUtilityGame.form.outcomeLaw law) := fun i =>
+    ((C.toUtilityGame.isεCoarseCorrelatedEq_iff_externalRegret_le.mp
+      ((C.toUtilityGame.isCoarseCorrelatedEq_iff_isεCoarseCorrelatedEq_zero
+        (statusQuo := law)).mp hlaw)) i (target i)).1
+  rw [C.expectedSocialWelfare_toUtilityGame law hintegrable,
+    C.socialWelfare_toUtilityGame] at hbound
   linarith
 
 end GameTheory.CongestionGame

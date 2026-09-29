@@ -1086,13 +1086,8 @@ theorem contextStateLaw (rootChoice secondChoice : Bool) :
     _ = PMF.pure (.done secondChoice) := PMF.bind_const _ _
 
 theorem expect_of_stateLaw (law : PMF execution.History) (result : Bool)
-    (hlaw : law.map (fun history => history.state) = PMF.pure (.done result))
-    (hintegrable : PayoffIntegrable law payoff) :
-    expect law payoff hintegrable = if result then 1 else 0 := by
-  have hconst : PayoffIntegrable law (fun _ => if result then 1 else 0) :=
-    payoffIntegrable_of_bounded (C := 1) _ _ (by
-      intro history
-      cases result <;> norm_num)
+    (hlaw : law.map (fun history => history.state) = PMF.pure (.done result)) :
+    expect law payoff = if result then 1 else 0 := by
   have hpayoff (history : execution.History) (hsupport : history ∈ law.support) :
       payoff history = if result then 1 else 0 := by
     have hstate : history.state ∈
@@ -1102,34 +1097,26 @@ theorem expect_of_stateLaw (law : PMF execution.History) (result : Bool)
     rw [hlaw, PMF.mem_support_pure_iff] at hstate
     cases result <;> simp [payoff, statePayoff, hstate]
   calc
-    expect law payoff hintegrable =
-        expect law (fun _ => if result then 1 else 0) hconst :=
-      expect_congr_on_support hpayoff hintegrable hconst
-    _ = if result then 1 else 0 := expect_constant law _ hconst
+    expect law payoff =
+        expect law (fun _ => if result then 1 else 0) :=
+      expect_congr_on_support hpayoff
+    _ = if result then 1 else 0 := expect_constant law _
 
-theorem contextValue (rootChoice secondChoice : Bool)
-    (hintegrable :
-      (incumbentAssessment.continuationContext secondSite payoff 2).IntegrableAt
-        ((policy rootChoice secondChoice).toBehavioral)) :
+theorem contextValue (rootChoice secondChoice : Bool) :
     (incumbentAssessment.continuationContext secondSite payoff 2).value
-      ((policy rootChoice secondChoice).toBehavioral) hintegrable =
+      ((policy rootChoice secondChoice).toBehavioral) =
         if secondChoice then 1 else 0 := by
   exact expect_of_stateLaw _ secondChoice
-    (contextStateLaw rootChoice secondChoice) hintegrable
+    (contextStateLaw rootChoice secondChoice)
 
 theorem incumbent_not_locallyOptimalAtSecond :
     ¬ (incumbentAssessment.continuationContext secondSite payoff 2).IsLocallyOptimal
       Set.univ (incumbentAssessment.strategy ()) := by
   intro hoptimal
-  let ctx := incumbentAssessment.continuationContext secondSite payoff 2
-  have hinc : ctx.IntegrableAt (incumbentAssessment.strategy ()) := hoptimal.1
-  have halt : ctx.IntegrableAt ((policy false true).toBehavioral) :=
-    payoffIntegrable_of_bounded _ _ payoff_bounded
   have hcompare := hoptimal.2.2
-    ((policy false true).toBehavioral) (Set.mem_univ _) hinc halt
+    ((policy false true).toBehavioral) (Set.mem_univ _)
   have hincValue := contextValue false false
-    (by simpa [ctx, incumbentAssessment_strategy, profile] using hinc)
-  have haltValue := contextValue false true halt
+  have haltValue := contextValue false true
   simp only [incumbentAssessment_strategy, profile] at hcompare
   rw [hincValue, haltValue] at hcompare
   norm_num at hcompare

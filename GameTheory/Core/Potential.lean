@@ -37,9 +37,8 @@ structure IsExactPotential : Prop where
     UtilityIntegrable utility who (F.play profile)
   difference : ∀ (who : ι) (profile : Profile F.sig)
       (replacement : F.sig.Strategy who),
-    expectedUtility utility who (F.play (Profile.update profile who replacement))
-        (integrable (Profile.update profile who replacement) who) -
-      expectedUtility utility who (F.play profile) (integrable profile who) =
+    expectedUtility utility who (F.play (Profile.update profile who replacement)) -
+      expectedUtility utility who (F.play profile) =
         potential (Profile.update profile who replacement) - potential profile
 
 variable (F utility potential) in
@@ -50,9 +49,9 @@ structure IsOrdinalPotential : Prop where
     UtilityIntegrable utility who (F.play profile)
   comparison : ∀ (who : ι) (profile : Profile F.sig)
       (replacement : F.sig.Strategy who),
-    expectedUtility utility who (F.play profile) (integrable profile who) <
+    expectedUtility utility who (F.play profile) <
         expectedUtility utility who (F.play (Profile.update profile who replacement))
-          (integrable (Profile.update profile who replacement) who) ↔
+           ↔
       potential profile < potential (Profile.update profile who replacement)
 
 /-- An exact potential is an ordinal one: equal differences have equal signs. -/
@@ -112,7 +111,7 @@ theorem isExactPotential_of_identicalInterests (common : F.sig.Outcome → ℝ)
     (hintegrable : ∀ profile : Profile F.sig,
       PayoffIntegrable (F.play profile) common) :
     IsExactPotential F (fun outcome _ => common outcome)
-      (fun profile => expect (F.play profile) common (hintegrable profile)) := by
+      (fun profile => expect (F.play profile) common) := by
   refine ⟨?_, ?_⟩
   · intro profile who
     exact hintegrable profile
@@ -146,10 +145,8 @@ theorem IsOrdinalPotential.isNash_iff_local_maximal
   constructor
   · intro hnash who replacement
     by_contra hnot
-    have hgain : expectedUtility utility who (F.play profile)
-          (hpotential.integrable profile who) <
-        expectedUtility utility who (F.play (Profile.update profile who replacement))
-          (hpotential.integrable (Profile.update profile who replacement) who) :=
+    have hgain : expectedUtility utility who (F.play profile) <
+        expectedUtility utility who (F.play (Profile.update profile who replacement)) :=
       (hpotential.comparison who profile replacement).2 (lt_of_not_ge hnot)
     have hpref := (euPreference_iff utility who (F.play profile)
       (F.play (Profile.update profile who replacement))
@@ -182,9 +179,8 @@ expected-utility and profile-update vocabulary. -/
 theorem IsExactPotential.expectedUtility_diff_eq_potential_diff
     (hpotential : IsExactPotential F utility potential) (profile : Profile F.sig)
     (who : ι) (replacement : F.sig.Strategy who) :
-    expectedUtility utility who (F.play (Profile.update profile who replacement))
-        (hpotential.integrable (Profile.update profile who replacement) who) -
-      expectedUtility utility who (F.play profile) (hpotential.integrable profile who) =
+    expectedUtility utility who (F.play (Profile.update profile who replacement)) -
+      expectedUtility utility who (F.play profile) =
       potential (Profile.update profile who replacement) - potential profile :=
   hpotential.difference who profile replacement
 
@@ -192,10 +188,8 @@ theorem IsExactPotential.expectedUtility_diff_eq_potential_diff
 theorem IsExactPotential.improving_deviation_increases_potential
     (hpotential : IsExactPotential F utility potential) {profile : Profile F.sig}
     {who : ι} {replacement : F.sig.Strategy who}
-    (himprove : expectedUtility utility who (F.play profile)
-        (hpotential.integrable profile who) <
-      expectedUtility utility who (F.play (Profile.update profile who replacement))
-        (hpotential.integrable (Profile.update profile who replacement) who)) :
+    (himprove : expectedUtility utility who (F.play profile) <
+      expectedUtility utility who (F.play (Profile.update profile who replacement))) :
     potential profile < potential (Profile.update profile who replacement) := by
   have hdiff := hpotential.difference who profile replacement
   linarith
@@ -205,9 +199,8 @@ theorem IsExactPotential.no_improving_at_maximal
     (hpotential : IsExactPotential F utility potential) {profile : Profile F.sig}
     (hmax : ∀ other, potential other ≤ potential profile)
     (who : ι) (replacement : F.sig.Strategy who) :
-    expectedUtility utility who (F.play (Profile.update profile who replacement))
-        (hpotential.integrable (Profile.update profile who replacement) who) ≤
-      expectedUtility utility who (F.play profile) (hpotential.integrable profile who) := by
+    expectedUtility utility who (F.play (Profile.update profile who replacement)) ≤
+      expectedUtility utility who (F.play profile) := by
   have hdiff := hpotential.difference who profile replacement
   have hle := hmax (Profile.update profile who replacement)
   linarith
@@ -333,33 +326,14 @@ theorem IsTeamGame.isExactPotential (hteam : IsTeamGame utility) (anchor : ι)
       UtilityIntegrable utility anchor (F.play profile)) :
     IsExactPotential F utility
       (fun profile =>
-        expectedUtility utility anchor (F.play profile) (hintegrable profile)) := by
+        expectedUtility utility anchor (F.play profile)) := by
   refine ⟨?_, ?_⟩
   · intro profile who
     exact payoffIntegrable_congr_on_support
       (fun outcome _ => (hteam outcome who anchor).symm) (hintegrable profile)
   intro who profile replacement
-  have hwBefore : UtilityIntegrable utility who (F.play profile) :=
-    payoffIntegrable_congr_on_support
-      (fun outcome _ => (hteam outcome who anchor).symm) (hintegrable profile)
-  have hwAfter : UtilityIntegrable utility who
-      (F.play (Profile.update profile who replacement)) :=
-    payoffIntegrable_congr_on_support
-      (fun outcome _ => (hteam outcome who anchor).symm)
-      (hintegrable (Profile.update profile who replacement))
-  have hbefore : expectedUtility utility who (F.play profile) hwBefore =
-      expectedUtility utility anchor (F.play profile) (hintegrable profile) :=
-    hteam.expectedUtility_eq
-    (F.play profile) who anchor hwBefore (hintegrable profile)
-  have hafter : expectedUtility utility who
-      (F.play (Profile.update profile who replacement)) hwAfter =
-      expectedUtility utility anchor
-        (F.play (Profile.update profile who replacement))
-        (hintegrable (Profile.update profile who replacement)) :=
-    hteam.expectedUtility_eq
-    (F.play (Profile.update profile who replacement)) who anchor
-    hwAfter (hintegrable (Profile.update profile who replacement))
-  rw [hbefore, hafter]
+  rw [hteam.expectedUtility_eq (F.play profile) who anchor,
+    hteam.expectedUtility_eq (F.play (Profile.update profile who replacement)) who anchor]
 
 /-- In a team game, Nash is exactly local maximality of any anchor player's
 expected utility. -/
@@ -371,9 +345,8 @@ theorem IsTeamGame.isNash_iff_local_potential_maximal
     IsNash F (euPreference utility) profile ↔
       ∀ who replacement,
         expectedUtility utility anchor
-          (F.play (Profile.update profile who replacement))
-          (hintegrable (Profile.update profile who replacement)) ≤
-        expectedUtility utility anchor (F.play profile) (hintegrable profile) :=
+          (F.play (Profile.update profile who replacement)) ≤
+        expectedUtility utility anchor (F.play profile) :=
   (hteam.isExactPotential anchor hintegrable).isNash_iff_local_maximal
 
 end GameTheory

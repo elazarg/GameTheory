@@ -68,10 +68,8 @@ def cyclingHistory (round : ℕ) : Profile cyclingSignature :=
 private theorem cycling_expectedUtility_zero (belief : Profile cyclingSignature.mixed)
     (replacement : PMF (cyclingSignature.Strategy 0)) :
     expectedUtility cyclingUtility 0
-        (cyclingForm.mixed.play (Profile.update belief 0 replacement))
-        (payoffIntegrable_of_finite _ _) =
-      expect (belief 1) (fun action => (action : ℝ))
-        (payoffIntegrable_of_finite _ _) := by
+        (cyclingForm.mixed.play (Profile.update belief 0 replacement)) =
+      expect (belief 1) (fun action => (action : ℝ)) := by
   let outcomeLaw := cyclingForm.mixed.play (Profile.update belief 0 replacement)
   have hplay : outcomeLaw =
       (independentProduct (Profile.update belief 0 replacement)).map
@@ -85,28 +83,20 @@ private theorem cycling_expectedUtility_zero (belief : Profile cyclingSignature.
         (fun profile => profile 1) = belief 1 from ?_)
     rw [independentProduct_map_eval]
     exact Profile.update_of_ne _ _ (by decide : (1 : Fin 2) ≠ 0)
-  have hintegrable : PayoffIntegrable outcomeLaw (fun outcome => (outcome.2 : ℝ)) :=
-    payoffIntegrable_of_finite _ _
-  have hmap : PayoffIntegrable (outcomeLaw.map Prod.snd)
-      (fun action => (action : ℝ)) :=
-    (payoffIntegrable_map_iff Prod.snd outcomeLaw _).2 hintegrable
-  refine (show expect outcomeLaw (fun outcome => (outcome.2 : ℝ)) _ = _ from ?_)
+  refine (show expect outcomeLaw (fun outcome => (outcome.2 : ℝ)) = _ from ?_)
   calc
-    expect outcomeLaw (fun outcome => (outcome.2 : ℝ)) hintegrable =
-        expect (outcomeLaw.map Prod.snd) (fun action => (action : ℝ)) hmap :=
+    expect outcomeLaw (fun outcome => (outcome.2 : ℝ)) =
+        expect (outcomeLaw.map Prod.snd) (fun action => (action : ℝ)) :=
       (expect_map Prod.snd outcomeLaw (fun action => (action : ℝ))
-        hintegrable hmap).symm
-    _ = expect (belief 1) (fun action => (action : ℝ))
-          (payoffIntegrable_of_finite _ _) :=
-      expect_congr_law hprojection _ hmap _
+        ).symm
+    _ = expect (belief 1) (fun action => (action : ℝ)) :=
+      expect_congr_law hprojection _
 
 private theorem cycling_expectedUtility_one (belief : Profile cyclingSignature.mixed)
     (replacement : PMF (cyclingSignature.Strategy 1)) :
     expectedUtility cyclingUtility 1
-        (cyclingForm.mixed.play (Profile.update belief 1 replacement))
-        (payoffIntegrable_of_finite _ _) =
-      expect (belief 0) (fun action => (action : ℝ))
-        (payoffIntegrable_of_finite _ _) := by
+        (cyclingForm.mixed.play (Profile.update belief 1 replacement)) =
+      expect (belief 0) (fun action => (action : ℝ)) := by
   let outcomeLaw := cyclingForm.mixed.play (Profile.update belief 1 replacement)
   have hplay : outcomeLaw =
       (independentProduct (Profile.update belief 1 replacement)).map
@@ -120,20 +110,14 @@ private theorem cycling_expectedUtility_one (belief : Profile cyclingSignature.m
         (fun profile => profile 0) = belief 0 from ?_)
     rw [independentProduct_map_eval]
     exact Profile.update_of_ne _ _ (by decide : (0 : Fin 2) ≠ 1)
-  have hintegrable : PayoffIntegrable outcomeLaw (fun outcome => (outcome.1 : ℝ)) :=
-    payoffIntegrable_of_finite _ _
-  have hmap : PayoffIntegrable (outcomeLaw.map Prod.fst)
-      (fun action => (action : ℝ)) :=
-    (payoffIntegrable_map_iff Prod.fst outcomeLaw _).2 hintegrable
-  refine (show expect outcomeLaw (fun outcome => (outcome.1 : ℝ)) _ = _ from ?_)
+  refine (show expect outcomeLaw (fun outcome => (outcome.1 : ℝ)) = _ from ?_)
   calc
-    expect outcomeLaw (fun outcome => (outcome.1 : ℝ)) hintegrable =
-        expect (outcomeLaw.map Prod.fst) (fun action => (action : ℝ)) hmap :=
+    expect outcomeLaw (fun outcome => (outcome.1 : ℝ)) =
+        expect (outcomeLaw.map Prod.fst) (fun action => (action : ℝ)) :=
       (expect_map Prod.fst outcomeLaw (fun action => (action : ℝ))
-        hintegrable hmap).symm
-    _ = expect (belief 0) (fun action => (action : ℝ))
-          (payoffIntegrable_of_finite _ _) :=
-      expect_congr_law hprojection _ hmap _
+        ).symm
+    _ = expect (belief 0) (fun action => (action : ℝ)) :=
+      expect_congr_law hprojection _
 /-- The alternating path is genuine fictitious play because a unilateral
 replacement cannot change the replacing player's payoff. -/
 theorem cycling_isFictitiousPlay :
@@ -145,20 +129,20 @@ theorem cycling_isFictitiousPlay :
   · show
       expectedUtility cyclingUtility 0
         (cyclingForm.mixed.play (Profile.update
-          (cyclingForm.empiricalBelief cyclingHistory (t + 1)) 0 alternative)) _ ≤
+          (cyclingForm.empiricalBelief cyclingHistory (t + 1)) 0 alternative)) ≤
       expectedUtility cyclingUtility 0
         (cyclingForm.mixed.play (Profile.update
           (cyclingForm.empiricalBelief cyclingHistory (t + 1)) 0
-            (PMF.pure (cyclingHistory (t + 1) 0)))) _
+            (PMF.pure (cyclingHistory (t + 1) 0))))
     rw [cycling_expectedUtility_zero, cycling_expectedUtility_zero]
   · show
       expectedUtility cyclingUtility 1
         (cyclingForm.mixed.play (Profile.update
-          (cyclingForm.empiricalBelief cyclingHistory (t + 1)) 1 alternative)) _ ≤
+          (cyclingForm.empiricalBelief cyclingHistory (t + 1)) 1 alternative)) ≤
       expectedUtility cyclingUtility 1
         (cyclingForm.mixed.play (Profile.update
           (cyclingForm.empiricalBelief cyclingHistory (t + 1)) 1
-            (PMF.pure (cyclingHistory (t + 1) 1)))) _
+            (PMF.pure (cyclingHistory (t + 1) 1))))
     rw [cycling_expectedUtility_one, cycling_expectedUtility_one]
 
 /-- The long-run empirical target of the alternating path. -/

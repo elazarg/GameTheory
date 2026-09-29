@@ -28,20 +28,20 @@ theorem bundled_transfer (ε : ℝ) (profile : Profile source.sig) :
 
 theorem bundled_bound (profile : Profile source.sig) (replacement : target.sig.Strategy ()) :
     ∃ alternative : source.sig.Strategy (),
-      ∀ hsource : UtilityIntegrable
+      UtilityIntegrable
           (fun outcome player => booleanUtility (sourceObserve outcome) player) ()
-          (source.play (Profile.update profile () alternative)),
-        ∃ htarget : UtilityIntegrable
+          (source.play (Profile.update profile () alternative)) →
+        UtilityIntegrable
             (fun outcome player => booleanUtility (targetObserve outcome) player) ()
             (target.play (Profile.update
-              (bundled.compileProfile profile) () replacement)),
+              (bundled.compileProfile profile) () replacement)) ∧
           expectedUtility
               (fun outcome player => booleanUtility (targetObserve outcome) player) ()
               (target.play (Profile.update
-                (bundled.compileProfile profile) () replacement)) htarget ≤
+                (bundled.compileProfile profile) () replacement)) ≤
             expectedUtility
               (fun outcome player => booleanUtility (sourceObserve outcome) player) ()
-              (source.play (Profile.update profile () alternative)) hsource :=
+              (source.play (Profile.update profile () alternative)) :=
   bundled.unilateral_bound subset_rfl profile () replacement
 
 /-- Direct candidate: compose the same guarded bounds at the theorem call. -/
@@ -74,20 +74,20 @@ theorem direct_transfer (ε : ℝ) (profile : Profile source.sig) :
 
 theorem direct_bound (profile : Profile source.sig) (replacement : target.sig.Strategy ()) :
     ∃ alternative : source.sig.Strategy (),
-      ∀ hsource : UtilityIntegrable
+      UtilityIntegrable
           (fun outcome player => booleanUtility (sourceObserve outcome) player) ()
-          (source.play (Profile.update profile () alternative)),
-        ∃ htarget : UtilityIntegrable
+          (source.play (Profile.update profile () alternative)) →
+        UtilityIntegrable
             (fun outcome player => booleanUtility (targetObserve outcome) player) ()
             (target.play (Profile.update
-              (fun who => compileLayered who (profile who)) () replacement)),
+              (fun who => compileLayered who (profile who)) () replacement)) ∧
           expectedUtility
               (fun outcome player => booleanUtility (targetObserve outcome) player) ()
               (target.play (Profile.update
-                (fun who => compileLayered who (profile who)) () replacement)) htarget ≤
+                (fun who => compileLayered who (profile who)) () replacement)) ≤
             expectedUtility
               (fun outcome player => booleanUtility (sourceObserve outcome) player) ()
-              (source.play (Profile.update profile () alternative)) hsource := by
+              (source.play (Profile.update profile () alternative)) := by
   obtain ⟨middleAlternative, hright⟩ :=
     secondUtility.unilateral_bound subset_rfl
       (firstUtility.compileProfile profile) () replacement

@@ -2,7 +2,7 @@
 # Uniform equilibrium
 
 The finite-average form samples one of the finitely many stages, then samples
-its actual outcome. Its ordinary guarded expected utility is the finite
+its actual outcome. Its ordinary expected utility is the finite
 average of stage expected payoffs. At horizon zero the outcome is `none` and
 has zero utility. This makes finite-horizon approximate Nash exactly the
 canonical `IsεNash`, with integration required only on compared laws.
@@ -97,29 +97,25 @@ theorem finiteAverageForm_integrable_iff (G : UtilityGame ι)
         (fun outcome => G.finiteAverageOutcomeUtility outcome who)).mpr (h t)
 
 /-- Expected utility of the sampled finite-horizon form is the existing
-guarded arithmetic average of expected stage payoffs. -/
+arithmetic average of expected stage payoffs. -/
 theorem finiteAverageForm_expectedUtility_eq (G : UtilityGame ι)
     (horizon : ℕ) (profile : G.RepeatedProfile) (who : ι)
     (hstage : ∀ t < horizon,
       UtilityIntegrable G.utility who
         (G.form.play (G.repeatedPlay profile t))) :
     expectedUtility G.finiteAverageOutcomeUtility who
-        ((G.finiteAverageForm horizon).play profile)
-        ((G.finiteAverageForm_integrable_iff horizon profile who).2
-          (fun t => hstage t t.isLt)) =
-      G.finiteAveragePayoff horizon profile who hstage := by
+        ((G.finiteAverageForm horizon).play profile) =
+      G.finiteAveragePayoff horizon profile who := by
   by_cases hzero : horizon = 0
   · subst hzero
     calc
       expectedUtility G.finiteAverageOutcomeUtility who
-          ((G.finiteAverageForm 0).play profile)
-          ((G.finiteAverageForm_integrable_iff 0 profile who).2
-            (fun t => hstage t t.isLt)) =
+          ((G.finiteAverageForm 0).play profile) =
           expectedUtility G.finiteAverageOutcomeUtility who
-            (PMF.pure none) (payoffIntegrable_pure none _) := by
+            (PMF.pure none) := by
         apply expectedUtility_congr_law
         exact G.finiteAverageForm_play_zero profile
-      _ = G.finiteAveragePayoff 0 profile who hstage := by
+      _ = G.finiteAveragePayoff 0 profile who := by
         simp [finiteAveragePayoff, finiteAverageOutcomeUtility]
   · let : NeZero horizon := ⟨hzero⟩
     let p : PMF (Fin horizon) := PMF.uniformOfFintype (Fin horizon)
@@ -134,36 +130,29 @@ theorem finiteAverageForm_expectedUtility_eq (G : UtilityGame ι)
     have hbind : PayoffIntegrable (p.bind q) u :=
       payoffIntegrable_bind_of_finite p q u hcond
     have hrow (t : Fin horizon) :
-        expect (q t) u (hcond t) =
-          G.stagePayoff (G.repeatedPlay profile t) who
-            (hstage t t.isLt) := by
+        expect (q t) u =
+          G.stagePayoff (G.repeatedPlay profile t) who := by
       simpa only [q, u, stagePayoff, expectedUtility,
         finiteAverageOutcomeUtility,
         Function.comp_def] using
         expect_map some (G.form.play (G.repeatedPlay profile t)) u
-          (hstage t t.isLt) (hcond t)
     calc
       expectedUtility G.finiteAverageOutcomeUtility who
-          ((G.finiteAverageForm horizon).play profile)
-          ((G.finiteAverageForm_integrable_iff horizon profile who).2
-            (fun t => hstage t t.isLt)) =
+          ((G.finiteAverageForm horizon).play profile) =
           expectedUtility G.finiteAverageOutcomeUtility who
-            (p.bind q) hbind := by
+            (p.bind q) := by
         apply expectedUtility_congr_law
         exact G.finiteAverageForm_play_pos profile
       _ =
-          expect p (fun t => expect (q t) u (hcond t))
-            (payoffIntegrable_bind_conditionalExpectation p q u hbind hcond) := by
+          expect p (fun t => expect (q t) u) := by
         simpa only [expectedUtility, p, q, u] using
-          expect_bind_tower p q u hbind hcond
+          expect_bind_tower p q u hbind
       _ = expect p
-          (fun t => G.stagePayoff (G.repeatedPlay profile t) who
-            (hstage t t.isLt))
-          (payoffIntegrable_of_finite _ _) := by
+          (fun t => G.stagePayoff (G.repeatedPlay profile t) who) := by
         apply expect_congr_on_support
         intro t _
         exact hrow t
-      _ = G.finiteAveragePayoff horizon profile who hstage := by
+      _ = G.finiteAveragePayoff horizon profile who := by
         rw [expect_uniformFin]
         simp only [finiteAveragePayoff, div_eq_mul_inv]
         ring
@@ -175,23 +164,23 @@ def IsεFiniteRepeatedNash (G : UtilityGame ι) [DecidableEq ι]
   IsεNash (G.finiteAverageForm horizon) G.finiteAverageOutcomeUtility
     epsilon profile
 
-/-- Approximate Nash in the sampled form compares the guarded averages of
+/-- Approximate Nash in the sampled form compares the averages of
 the incumbent and each unilateral deviation. -/
 theorem isεFiniteRepeatedNash_iff
     (G : UtilityGame ι) [DecidableEq ι]
     {horizon : ℕ} {epsilon : ℝ} {profile : G.RepeatedProfile} :
     G.IsεFiniteRepeatedNash horizon epsilon profile ↔
       ∀ who deviation,
-        ∃ hincumbent : ∀ t < horizon,
+        (∀ t < horizon,
             UtilityIntegrable G.utility who
-              (G.form.play (G.repeatedPlay profile t)),
-          ∃ hdeviation : ∀ t < horizon,
+              (G.form.play (G.repeatedPlay profile t))) ∧
+          (∀ t < horizon,
               UtilityIntegrable G.utility who
                 (G.form.play (G.repeatedPlay
-                  (Profile.update profile who deviation) t)),
+                  (Profile.update profile who deviation) t))) ∧
             G.finiteAveragePayoff horizon
-                (Profile.update profile who deviation) who hdeviation ≤
-              G.finiteAveragePayoff horizon profile who hincumbent + epsilon := by
+                (Profile.update profile who deviation) who ≤
+              G.finiteAveragePayoff horizon profile who + epsilon := by
   rw [IsεFiniteRepeatedNash, isεNash_iff]
   constructor
   · intro h who deviation
@@ -209,16 +198,16 @@ theorem isεFiniteRepeatedNash_iff
     refine ⟨hi, hd, ?_⟩
     calc
       G.finiteAveragePayoff horizon
-          (Profile.update profile who deviation) who hd =
+          (Profile.update profile who deviation) who =
           expectedUtility G.finiteAverageOutcomeUtility who
             ((G.finiteAverageForm horizon).play
-              (Profile.update profile who deviation)) hdeviation :=
+              (Profile.update profile who deviation)) :=
         (G.finiteAverageForm_expectedUtility_eq horizon
           (Profile.update profile who deviation) who hd).symm
       _ ≤ expectedUtility G.finiteAverageOutcomeUtility who
-          ((G.finiteAverageForm horizon).play profile) hincumbent +
+          ((G.finiteAverageForm horizon).play profile) +
           epsilon := hle
-      _ = G.finiteAveragePayoff horizon profile who hi + epsilon := by
+      _ = G.finiteAveragePayoff horizon profile who + epsilon := by
         rw [G.finiteAverageForm_expectedUtility_eq horizon profile who hi]
   · intro h who deviation
     rcases h who deviation with ⟨hi, hd, hle⟩
@@ -230,14 +219,14 @@ theorem isεFiniteRepeatedNash_iff
     calc
       expectedUtility G.finiteAverageOutcomeUtility who
           ((G.finiteAverageForm horizon).play
-            (Profile.update profile who deviation)) _ =
+            (Profile.update profile who deviation)) =
           G.finiteAveragePayoff horizon
-            (Profile.update profile who deviation) who hd :=
+            (Profile.update profile who deviation) who :=
         G.finiteAverageForm_expectedUtility_eq horizon
           (Profile.update profile who deviation) who hd
-      _ ≤ G.finiteAveragePayoff horizon profile who hi + epsilon := hle
+      _ ≤ G.finiteAveragePayoff horizon profile who + epsilon := hle
       _ = expectedUtility G.finiteAverageOutcomeUtility who
-          ((G.finiteAverageForm horizon).play profile) _ + epsilon := by
+          ((G.finiteAverageForm horizon).play profile) + epsilon := by
         rw [G.finiteAverageForm_expectedUtility_eq horizon profile who hi]
 
 /-- A single horizon threshold makes the profile approximately Nash at every
@@ -251,11 +240,8 @@ abbrev IsUniformεEquilibrium (G : UtilityGame ι) [DecidableEq ι]
 satisfies every positive uniform approximation tolerance. -/
 def IsUniformEquilibrium (G : UtilityGame ι) [DecidableEq ι]
     (profile : G.RepeatedProfile) : Prop :=
-  (∃ (hstage : ∀ t who,
-      UtilityIntegrable G.utility who
-        (G.form.play (G.repeatedPlay profile t)))
-      (value : ι → ℝ),
-      G.HasLongRunAveragePayoff profile hstage value) ∧
+  ((∀ t who, UtilityIntegrable G.utility who (G.form.play (G.repeatedPlay profile t))) ∧
+      ∃ value : ι → ℝ, G.HasLongRunAveragePayoff profile value) ∧
     ∀ epsilon : ℝ, 0 < epsilon → G.IsUniformεEquilibrium epsilon profile
 
 /-- Finite-horizon approximate Nash is monotone in the error allowance. -/
@@ -289,8 +275,8 @@ theorem stationaryRepeatedProfile_isUniformEquilibrium_of_isNash
     rcases (isNash_iff profile).1 hnash who (profile who) with ⟨hi, _, _⟩
     exact hi
   refine ⟨⟨(fun t who => by simpa using hinc who),
-    (fun who => G.stagePayoff profile who (hinc who)),
-    G.hasLongRunAveragePayoff_stationaryRepeatedProfile profile hinc⟩, ?_⟩
+    (fun who => G.stagePayoff profile who),
+    G.hasLongRunAveragePayoff_stationaryRepeatedProfile profile⟩, ?_⟩
   intro epsilon hepsilon
   refine ⟨1, fun horizon hhorizon => ?_⟩
   show G.IsεFiniteRepeatedNash horizon epsilon
@@ -320,13 +306,13 @@ theorem stationaryRepeatedProfile_isUniformEquilibrium_of_isNash
     rw [hupdated t]
     exact (hstageNash t).2.1
   refine ⟨hi, hd, ?_⟩
-  have hdeviation : G.finiteAveragePayoff horizon updated who hd ≤
-      G.stagePayoff profile who (hinc who) := by
+  have hdeviation : G.finiteAveragePayoff horizon updated who ≤
+      G.stagePayoff profile who := by
     apply G.finiteAveragePayoff_le_of_forall_stagePayoff_le
-      hd (fun t => ?_) hhorizon0
+       (fun t => ?_) hhorizon0
     simpa only [hupdated t, stagePayoff] using (hstageNash t).2.2
   rw [G.finiteAveragePayoff_stationaryRepeatedProfile
-    hhorizon0 profile who (hinc who)]
+    hhorizon0 profile who]
   exact hdeviation.trans (le_add_of_nonneg_right hepsilon.le)
 
 end GameTheory.UtilityGame

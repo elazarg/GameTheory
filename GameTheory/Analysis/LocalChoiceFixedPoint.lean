@@ -31,9 +31,8 @@ theorem exists_localChoice_fixedPoint
     (continuous_score : ∀ i a, Continuous fun x => score x i a) :
     ∃ x : (Set.pi Set.univ fun i => simplexWeights (A i)),
       ∀ i (alternative : PMF (A i)),
-        expect alternative (score x i) (payoffIntegrable_of_finite _ _) ≤
-          expect (PMF.ofSimplex (x.property i (Set.mem_univ i))) (score x i)
-            (payoffIntegrable_of_finite _ _) := by
+        expect alternative (score x i) ≤
+          expect (PMF.ofSimplex (x.property i (Set.mem_univ i))) (score x i) := by
   classical
   let domain : Set (∀ i, A i → ℝ) :=
     Set.pi Set.univ fun i => simplexWeights (A i)

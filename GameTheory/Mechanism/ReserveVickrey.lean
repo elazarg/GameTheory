@@ -238,9 +238,7 @@ def reserveVickreyGame (value : ι → ℝ) (reserve : ℝ) : UtilityGame ι :=
 theorem reserveVickreyGame_expectedUtility (value : ι → ℝ) (reserve : ℝ)
     (bids : BidProfile ι) (who : ι) :
     expectedUtility (reserveVickreyGame value reserve).utility who
-      ((reserveVickreyGame value reserve).form.play bids)
-      (payoffIntegrable_pure bids
-        (fun outcome => (reserveVickreyGame value reserve).utility outcome who)) =
+      ((reserveVickreyGame value reserve).form.play bids) =
         reserveVickreyUtility value reserve bids who := by
   simp [reserveVickreyGame, reserveVickreyUtility, expectedUtility_pure]
 

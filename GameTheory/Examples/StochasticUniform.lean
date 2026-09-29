@@ -58,14 +58,14 @@ theorem hostile_horizon_nash_is_canonical (initial : Bool) (horizon : ℕ)
     (epsilon : ℝ) (profile : hostile.BehaviorProfile initial) :
     hostile.IsεHorizonNash initial horizon epsilon profile ↔
       ∀ who (deviation : (hostile.perfectMonitoring initial).BehavioralPolicy who),
-        ∃ hprofile : UtilityIntegrable (hostile.horizonUtility initial horizon) who
-            ((hostile.horizonForm initial horizon).play profile),
-          ∃ hdeviation : UtilityIntegrable (hostile.horizonUtility initial horizon)
+        UtilityIntegrable (hostile.horizonUtility initial horizon) who
+            ((hostile.horizonForm initial horizon).play profile) ∧
+          UtilityIntegrable (hostile.horizonUtility initial horizon)
               who ((hostile.horizonForm initial horizon).play
-                (Profile.update profile who deviation)),
+                (Profile.update profile who deviation)) ∧
             hostile.finiteAveragePayoff initial horizon
-                (Profile.update profile who deviation) who hdeviation ≤
-              hostile.finiteAveragePayoff initial horizon profile who hprofile +
+                (Profile.update profile who deviation) who ≤
+              hostile.finiteAveragePayoff initial horizon profile who +
                 epsilon :=
   hostile.isεHorizonNash_iff initial horizon epsilon profile
 
@@ -128,16 +128,13 @@ theorem zeroPayoff_horizonIntegrable (initial : Bool) (horizon : ℕ)
 @[simp]
 theorem zeroPayoff_finiteAveragePayoff (initial : Bool) (horizon : ℕ)
     (profile : zeroPayoff.BehaviorProfile initial) (who : Bool) :
-    zeroPayoff.finiteAveragePayoff initial horizon profile who
-      (zeroPayoff_horizonIntegrable initial horizon profile who) = 0 := by
+    zeroPayoff.finiteAveragePayoff initial horizon profile who = 0 := by
   let law := (zeroPayoff.horizonForm initial horizon).play profile
-  have hconstant := payoffIntegrable_constant law 0
   have heq := expect_congr_on_support (μ := law)
     (f := fun history => zeroPayoff.horizonUtility initial horizon history who)
     (g := fun _ => 0)
     (fun history _ => zeroPayoff_historyAverageUtility initial horizon history who)
-    (zeroPayoff_horizonIntegrable initial horizon profile who) hconstant
-  exact heq.trans (expect_constant law 0 hconstant)
+  exact heq.trans (expect_constant law 0)
 
 /-- The zero vector is a uniform equilibrium payoff, witnessed at every
 horizon by one fixed behavioral profile. -/
@@ -269,9 +266,8 @@ the interval from zero to twice the reciprocal horizon. -/
 theorem transientPayoff_finiteAveragePayoff_bounds (horizon : ℕ)
     (profile : transientPayoff.BehaviorProfile true) (who : Bool) :
     0 ≤ transientPayoff.finiteAveragePayoff true horizon profile who
-        (transientPayoff_horizonIntegrable horizon profile who) ∧
-      transientPayoff.finiteAveragePayoff true horizon profile who
-        (transientPayoff_horizonIntegrable horizon profile who) ≤
+         ∧
+      transientPayoff.finiteAveragePayoff true horizon profile who ≤
         2 * (horizon : ℝ)⁻¹ := by
   let law := (transientPayoff.horizonForm true horizon).play profile
   let hpayoff := transientPayoff_horizonIntegrable horizon profile who

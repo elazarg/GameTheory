@@ -189,17 +189,11 @@ theorem contextLaw (b : Bool)
 
 theorem contextValue (b : Bool)
     (joint : { joint : ∀ i, Option (execution.Action i) //
-      execution.Legal none joint })
-    (h : (execution.oneShotContext wellFounded (chooser b) payoff none
-      (by simp)).IntegrableAt joint) :
+      execution.Legal none joint }) :
     (execution.oneShotContext wellFounded (chooser b) payoff none
-      (by simp)).value joint h =
+      (by simp)).value joint =
         (if (joint.1 PUnit.unit).getD false then (1 : ℝ) else 0) := by
   let c : ℝ := if (joint.1 PUnit.unit).getD false then 1 else 0
-  have hc : PayoffIntegrable (execution.step none joint) (fun _ => c) :=
-    payoffIntegrable_of_bounded _ _ (C := 1) (fun _ => by
-      simp only [c]
-      split_ifs <;> norm_num)
   have hpoint : ∀ target ∈ (execution.step none joint).support,
       payoff target = c := by
     intro target htarget
@@ -207,15 +201,13 @@ theorem contextValue (b : Bool)
     obtain ⟨n, _, rfl⟩ := htarget
     rfl
   calc
-    _ = expect (execution.step none joint) payoff (by
-          rw [← contextLaw b joint]
-          exact h) := by
+    _ = expect (execution.step none joint) payoff := by
             unfold GameTheory.Protocol.Context.value expect
             rw [contextLaw b joint]
             rfl
-    _ = expect (execution.step none joint) (fun _ => c) hc := by
+    _ = expect (execution.step none joint) (fun _ => c) := by
           apply expect_congr_on_support hpoint
-    _ = c := expect_constant _ _ hc
+    _ = c := expect_constant _ _
     _ = _ := rfl
 
 theorem payoff_le_one (state : execution.State) : payoff state ≤ 1 := by
@@ -236,21 +228,21 @@ theorem optimal_oneShot :
         payoffIntegrable_of_bounded _ _ payoff_bounded
       refine ⟨hintegrable (chooser true none hterm),
         (fun joint _ => hintegrable joint), ?_⟩
-      intro joint _ hinc halt
+      intro joint _
       have hconst : PayoffIntegrable (ctx.outcome joint) (fun _ => (1 : ℝ)) :=
         payoffIntegrable_of_bounded _ _ (C := 1) (fun _ => by norm_num)
-      have hmax : ctx.value joint halt ≤ 1 := by
+      have hmax : ctx.value joint ≤ 1 := by
         calc
-          ctx.value joint halt ≤
-              expect (ctx.outcome joint) (fun _ => (1 : ℝ)) hconst := by
+          ctx.value joint ≤
+              expect (ctx.outcome joint) (fun _ => (1 : ℝ)) := by
                 unfold GameTheory.Protocol.Context.value
-                apply expect_mono
+                refine expect_mono ?_ (hintegrable joint) hconst
                 intro target _
                 exact payoff_le_one target
-          _ = 1 := expect_constant _ _ hconst
-      have hown : ctx.value (chooser true none hterm) hinc = 1 := by
+          _ = 1 := expect_constant _ _
+      have hown : ctx.value (chooser true none hterm) = 1 := by
         simpa [ctx, chooser] using
-          (contextValue true (chooser true none hterm) hinc)
+          (contextValue true (chooser true none hterm))
       exact le_trans hmax hown.symm.le
 
 theorem suboptimal_not_oneShot :
@@ -260,15 +252,12 @@ theorem suboptimal_not_oneShot :
   let ctx := execution.oneShotContext wellFounded (chooser false) payoff none
     (by simp)
   have hlocal := hbad none (by simp)
-  have hinc : ctx.IntegrableAt (chooser false none (by simp)) :=
-    hlocal.1
-  have halt : ctx.IntegrableAt good := hlocal.2.1 good (Set.mem_univ _)
-  have hle := hlocal.2.2 good (Set.mem_univ _) hinc halt
-  have hgood : ctx.value good halt = 1 := by
-    simpa [ctx, good, chooser] using (contextValue false good halt)
-  have hfalse : ctx.value (chooser false none (by simp)) hinc = 0 := by
+  have hle := hlocal.2.2 good (Set.mem_univ _)
+  have hgood : ctx.value good = 1 := by
+    simpa [ctx, good, chooser] using (contextValue false good)
+  have hfalse : ctx.value (chooser false none (by simp)) = 0 := by
     simpa [ctx, chooser] using
-      (contextValue false (chooser false none (by simp)) hinc)
+      (contextValue false (chooser false none (by simp)))
   rw [hgood, hfalse] at hle
   norm_num at hle
 
@@ -284,16 +273,11 @@ theorem stopsWithinOne (b : Bool) :
   trivial
 
 theorem backwardValue_choice (b : Bool) :
-    execution.backwardValue wellFounded (chooser b) payoff none
-      (payoffIntegrable_of_bounded _ _ payoff_bounded) =
+    execution.backwardValue wellFounded (chooser b) payoff none =
         (if b then (1 : ℝ) else 0) := by
   let hterm : ¬ execution.terminal none := by simp
   let joint := chooser b none hterm
-  have hctx :
-      (execution.oneShotContext wellFounded (chooser b) payoff none hterm).IntegrableAt
-        joint :=
-    payoffIntegrable_of_bounded _ _ payoff_bounded
-  have hval := contextValue b joint hctx
+  have hval := contextValue b joint
   unfold GameTheory.Protocol.Context.value at hval
   unfold expect at hval
   unfold backwardValue expect
@@ -301,10 +285,8 @@ theorem backwardValue_choice (b : Bool) :
   simpa [joint, chooser, ExecutionProtocol.oneShotContext] using hval
 
 theorem strict_backwardComparison :
-    execution.backwardValue wellFounded (chooser false) payoff none
-        (payoffIntegrable_of_bounded _ _ payoff_bounded) <
-      execution.backwardValue wellFounded (chooser true) payoff none
-        (payoffIntegrable_of_bounded _ _ payoff_bounded) := by
+    execution.backwardValue wellFounded (chooser false) payoff none <
+      execution.backwardValue wellFounded (chooser true) payoff none := by
   rw [backwardValue_choice false, backwardValue_choice true]
   norm_num
 
@@ -332,10 +314,9 @@ theorem backwardLaw_infiniteSupport (b : Bool) :
   exact ⟨n, (geometric_positive n).ne', rfl⟩
 
 theorem runnerOptimalAgainstBad :
-    ∃ hgood : PayoffIntegrable (execution.runFor (chooser true) 1 none) payoff,
-      expect (execution.runFor (chooser false) 1 none) payoff
-          (payoffIntegrable_of_bounded _ _ payoff_bounded) ≤
-        expect (execution.runFor (chooser true) 1 none) payoff hgood := by
+    PayoffIntegrable (execution.runFor (chooser true) 1 none) payoff ∧
+      expect (execution.runFor (chooser false) 1 none) payoff ≤
+        expect (execution.runFor (chooser true) 1 none) payoff := by
   exact execution.expect_runFor_le_of_isOneShotOptimal optimal_oneShot
     (chooser false) (stopsWithinOne false) (stopsWithinOne true)
     (payoffIntegrable_of_bounded _ _ payoff_bounded)

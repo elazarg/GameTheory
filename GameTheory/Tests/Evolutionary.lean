@@ -93,25 +93,19 @@ theorem encounterGuard (own opponent : PMF Bool) :
       (fun pair => payoff pair.1 pair.2) :=
   payoffIntegrable_of_finite _ _
 
-theorem mixedPayoff_eq_mass_true (own opponent : PMF Bool)
-    (hguard : PayoffIntegrable (bindPairLaw own (fun _ => opponent))
-      (fun pair => payoff pair.1 pair.2)) :
-    mixedPayoff payoff own opponent hguard = (own true).toReal := by
+theorem mixedPayoff_eq_mass_true (own opponent : PMF Bool) :
+    mixedPayoff payoff own opponent = (own true).toReal := by
   let joint := bindPairLaw own (fun _ => opponent)
   let score : Bool → ℝ := fun action => if action then 1 else 0
-  have hown : PayoffIntegrable own score := payoffIntegrable_of_finite _ _
-  have hmap : PayoffIntegrable (joint.map Prod.fst) score := by
-    exact payoffIntegrable_congr_law
-      (bindPairLaw_map_fst own (fun _ => opponent)).symm hown
   calc
-    mixedPayoff payoff own opponent hguard =
-        expect (joint.map Prod.fst) score hmap := by
+    mixedPayoff payoff own opponent =
+        expect (joint.map Prod.fst) score := by
       unfold mixedPayoff
       symm
-      exact expect_map Prod.fst joint score hguard hmap
-    _ = expect own score hown := by
+      exact expect_map Prod.fst joint score
+    _ = expect own score := by
       exact expect_congr_law (bindPairLaw_map_fst own (fun _ => opponent))
-        score hmap hown
+        score
     _ = (own true).toReal := by
       rw [expect_eq_sum, Fintype.sum_bool]
       simp [score]
@@ -156,10 +150,8 @@ theorem vulnerableResident_not_isMixedNSS :
   rintro ⟨hall, hnss⟩
   have hfirst := hnss.1 resident
   have hfirst' :
-      mixedPayoff payoff vulnerableResident vulnerableResident
-          (hall vulnerableResident vulnerableResident) ≥
-        mixedPayoff payoff resident vulnerableResident
-          (hall resident vulnerableResident) := hfirst
+      mixedPayoff payoff vulnerableResident vulnerableResident ≥
+        mixedPayoff payoff resident vulnerableResident := hfirst
   rw [mixedPayoff_eq_mass_true, mixedPayoff_eq_mass_true] at hfirst'
   norm_num [vulnerableResident, resident, PMF.pure_apply] at hfirst'
 
@@ -170,20 +162,20 @@ theorem vulnerableResident_not_isMixedESS :
 
 /-- The genuinely mixed mutant obtains only half the resident payoff. -/
 theorem fairMutant_loses :
-    mixedPayoff payoff resident fairMutant (encounterGuard resident fairMutant) >
-      mixedPayoff payoff fairMutant fairMutant (encounterGuard fairMutant fairMutant) := by
+    mixedPayoff payoff resident fairMutant >
+      mixedPayoff payoff fairMutant fairMutant := by
   rw [mixedPayoff_eq_mass_true, mixedPayoff_eq_mass_true]
   norm_num [resident, fairMutant, mix_apply, PMF.pure_apply]
 
 /-- The mixed-mutation ESS reaches the canonical Nash predicate through the
 symmetric population-law encounter game. -/
 theorem resident_isNash_symmetric :
-    ∃ hall : ∀ own opponent : PMF Bool,
+    (∀ own opponent : PMF Bool,
         PayoffIntegrable (bindPairLaw own (fun _ => opponent))
-          (fun pair => payoff pair.1 pair.2),
+          (fun pair => payoff pair.1 pair.2)) ∧
       IsNash (symmetricForm (PMF Bool))
         (euPreference (symmetricUtility
-          (fun own opponent => mixedPayoff payoff own opponent (hall own opponent))))
+          (fun own opponent => mixedPayoff payoff own opponent)))
         (residentProfile resident) :=
   resident_isMixedESS.isNash_symmetric
 

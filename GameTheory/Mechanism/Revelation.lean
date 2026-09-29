@@ -1,5 +1,5 @@
 /-
-# The guarded revelation principle
+# The revelation principle
 
 Any pure Bayes-Nash plan of a canonical `BayesianGame` induces a direct
 mechanism in which truthful reporting is Bayes-Nash, using the ordinary
@@ -130,29 +130,25 @@ theorem revelation_principle
       B.prior (fun outcome => D.utility outcome who)).mpr hdevPrior
   refine ⟨htruth, hdirectDev, ?_⟩
   rw [D.expectedUtility_eq_prior who
-      (Profile.update (direct.truthfulPlan B.prior) who misreport) hdirectDev,
-    D.expectedUtility_eq_prior who (direct.truthfulPlan B.prior) htruth,
+      (Profile.update (direct.truthfulPlan B.prior) who misreport),
+    D.expectedUtility_eq_prior who (direct.truthfulPlan B.prior),
     B.expectedUtility_eq_prior who
       (Profile.update plan who
-        (fun ownType => plan who (misreport ownType))) hdev,
-    B.expectedUtility_eq_prior who plan hbase] at *
+        (fun ownType => plan who (misreport ownType))),
+    B.expectedUtility_eq_prior who plan] at *
   calc
     expect B.prior
         (D.planPayoff who
-          (Profile.update (direct.truthfulPlan B.prior) who misreport))
-        (D.planPayoff_integrable who _ hdirectDev) =
+          (Profile.update (direct.truthfulPlan B.prior) who misreport)) =
       expect B.prior
         (B.planPayoff who
           (Profile.update plan who
-            (fun ownType => plan who (misreport ownType))))
-        (B.planPayoff_integrable who _ hdev) :=
-          expect_congr_on_support (fun types _ => hdevPayoff types) _ _
-    _ ≤ expect B.prior (B.planPayoff who plan)
-        (B.planPayoff_integrable who plan hbase) := hle
-    _ = expect B.prior (D.planPayoff who (direct.truthfulPlan B.prior))
-        (D.planPayoff_integrable who _ htruth) :=
+            (fun ownType => plan who (misreport ownType)))) :=
+          expect_congr_on_support (fun types _ => hdevPayoff types)
+    _ ≤ expect B.prior (B.planPayoff who plan) := hle
+    _ = expect B.prior (D.planPayoff who (direct.truthfulPlan B.prior)) :=
           expect_congr_on_support
-            (fun types _ => (htruthPayoff types).symm) _ _
+            (fun types _ => (htruthPayoff types).symm)
 
 end BayesianGame
 

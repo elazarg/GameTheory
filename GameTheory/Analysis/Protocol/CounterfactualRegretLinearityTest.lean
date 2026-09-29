@@ -108,23 +108,14 @@ def terminalPayoff (history : twoStage.History) : ℝ := utility history ()
 theorem terminalPayoff_integrable (law : PMF twoStage.History) :
     PayoffIntegrable law terminalPayoff := utility_integrable law
 
-/-- Every local replacement law satisfies the actual regret integrability guard. -/
-theorem localGuard (law : PMF FirstAction) :
-    information.LocalCounterfactualRegretsIntegrable
+/-- Every installed local law has an integrable incumbent continuation. -/
+theorem incumbentContinuationIntegrable (law : PMF FirstAction) :
+    information.CounterfactualContinuationIntegrable
       (strategyWithLocalLaw information baselineStrategy () firstSite law)
-      () firstSite terminalPayoff 2 := by
-  constructor
-  · intro choice history _
-    exact terminalPayoff_integrable _
-  · intro history _
-    exact terminalPayoff_integrable _
-
-/-- Every committed first action has an integrable continuation law. -/
-theorem sourceActionGuard (choice : FirstAction) :
-    information.CounterfactualContinuationIntegrable baselineStrategy ()
-      firstSite (baselinePolicy.commit firstSite.1 choice) terminalPayoff 2 := by
-  intro history _
-  exact terminalPayoff_integrable _
+      () firstSite
+      (strategyWithLocalLaw information baselineStrategy () firstSite law ())
+      terminalPayoff 2 :=
+  fun _ _ => terminalPayoff_integrable _
 
 /-- The downstream continuation is genuinely action-sensitive: with the same
 second-stage action `true`, the first-stage choices yield terminal values zero
@@ -156,22 +147,23 @@ theorem twoStage_runBehavioralFrom_affine
       (firstHistory hidden) (infoOf_firstHistory hidden)
       (first_not_terminal hidden) (first_active hidden) 1
 
-/-- The generic D47 theorem discharges D46's pointwise realization equation
-for every current law on this two-stage site. -/
+/-- The generic local-law realization theorem discharges the pointwise
+realization equation of regret matching for every current law on this
+two-stage site. -/
 theorem twoStage_localRealization
     (law : PMF FirstAction) (environment : Unit) :
     localCounterfactualRegretVector information
         (strategyWithLocalLaw information baselineStrategy () firstSite law)
-        () firstSite terminalPayoff 2 (localGuard law) =
+        () firstSite terminalPayoff 2 =
       regretPayoff
         (fun choice (_current : Unit) =>
           counterfactualActionUtility information baselineStrategy ()
-            firstSite terminalPayoff 2 choice (sourceActionGuard choice))
-        law environment (payoffIntegrable_of_finite _ _) :=
+            firstSite terminalPayoff 2 choice)
+        law environment :=
   localCounterfactualRegretVector_strategyWithLocalLaw information
     information_actsOnce baselineStrategy () firstSite
       firstSite_allNonterminal law terminalPayoff 1 environment
-        (localGuard law) sourceActionGuard
+        (incumbentContinuationIntegrable law)
 
 /-- With the ordinary boundedness premise required by regret matching, the
 actual two-stage Protocol payoff process converges.  No model-specific
@@ -182,8 +174,8 @@ theorem twoStage_regretMatch_approaches
       ‖regretPayoff
         (fun choice (_current : Unit) =>
           counterfactualActionUtility information baselineStrategy ()
-            firstSite terminalPayoff 2 choice (sourceActionGuard choice))
-        law environment (payoffIntegrable_of_finite _ _)‖ ≤ bound) :
+            firstSite terminalPayoff 2 choice)
+        law environment‖ ≤ bound) :
     Tendsto
       (fun t => Metric.infDist
         (avgVec
@@ -191,18 +183,18 @@ theorem twoStage_regretMatch_approaches
             localCounterfactualRegretVector information
               (strategyWithLocalLaw information baselineStrategy ()
                 firstSite law)
-              () firstSite terminalPayoff 2 (localGuard law))
+              () firstSite terminalPayoff 2)
           regretMatch (fun _ => ()) t)
         nonposOrthant)
       atTop (nhds 0) :=
   counterfactualRegretMatch_approaches information () firstSite
     (fun choice (_current : Unit) =>
       counterfactualActionUtility information baselineStrategy ()
-        firstSite terminalPayoff 2 choice (sourceActionGuard choice))
+        firstSite terminalPayoff 2 choice)
     (fun law _environment =>
       strategyWithLocalLaw information baselineStrategy () firstSite law)
     (fun _environment => terminalPayoff) 2
-    (fun law _environment => localGuard law) twoStage_localRealization
+    twoStage_localRealization
     hbound0 hbound (fun _ => ())
 
 /-- Failure control inherited from the same fixture: locally harmless actual

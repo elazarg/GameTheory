@@ -267,13 +267,13 @@ local instance policyMeasureDeviationLaws_isProbability (i : Bool) :
 /-- The behavioral focal deviation remains unchanged through the discounted
 hybrid correspondence. -/
 theorem behavioral_deviation_discounted_consumer :
-    ∃ hbehavioral : ∀ time, PayoffIntegrable
+    (∀ time, PayoffIntegrable
         ((hybridGame.perfectMonitoring false).runBehavioral
           (hybridGame.toBehaviorProfile false behavioralDeviationProfile)
-          (time + 1)) (hybridGame.latestStageUtility false false),
+          (time + 1)) (hybridGame.latestStageUtility false false)) ∧
       ∃ hsumBehavioral : Summable (fun time => (2 : ℝ)⁻¹ ^ time *
         hybridGame.behavioralStageExpectation false
-          behavioralDeviationProfile false time (hbehavioral time)),
+          behavioralDeviationProfile false time),
       ∃ hmeasure : ∀ time, Integrable
           (hybridGame.latestStageUtility false false)
           ((hybridGame.perfectMonitoring false).runPolicyMeasure
@@ -284,7 +284,7 @@ theorem behavioral_deviation_discounted_consumer :
           hybridGame.arbitraryPolicyMeasureDiscountedPayoff false (2 : ℝ)⁻¹
               behavioralDeviationLaws false hmeasure hsumMeasure =
             hybridGame.behavioralDiscountedPayoff false (2 : ℝ)⁻¹
-              behavioralDeviationProfile false hbehavioral hsumBehavioral := by
+              behavioralDeviationProfile false hsumBehavioral := by
   let hbound : ∀ state actions,
       |hybridGame.stageUtility state actions false| ≤ 1 :=
     fun state actions => stageUtility_abs_le_one state actions false
@@ -304,13 +304,13 @@ theorem behavioral_deviation_discounted_consumer :
 /-- The arbitrary correlated focal measure remains unchanged through the
 reverse discounted hybrid correspondence. -/
 theorem policy_measure_deviation_discounted_consumer :
-    ∃ hbehavioral : ∀ time, PayoffIntegrable
+    (∀ time, PayoffIntegrable
         ((hybridGame.perfectMonitoring false).runBehavioral
           (hybridGame.toBehaviorProfile false policyMeasureDeviationProfile)
-          (time + 1)) (hybridGame.latestStageUtility false false),
+          (time + 1)) (hybridGame.latestStageUtility false false)) ∧
       ∃ hsumBehavioral : Summable (fun time => (2 : ℝ)⁻¹ ^ time *
         hybridGame.behavioralStageExpectation false
-          policyMeasureDeviationProfile false time (hbehavioral time)),
+          policyMeasureDeviationProfile false time),
       ∃ hmeasure : ∀ time, Integrable
           (hybridGame.latestStageUtility false false)
           ((hybridGame.perfectMonitoring false).runPolicyMeasure
@@ -321,7 +321,7 @@ theorem policy_measure_deviation_discounted_consumer :
           hybridGame.arbitraryPolicyMeasureDiscountedPayoff false (2 : ℝ)⁻¹
               policyMeasureDeviationLaws false hmeasure hsumMeasure =
             hybridGame.behavioralDiscountedPayoff false (2 : ℝ)⁻¹
-              policyMeasureDeviationProfile false hbehavioral hsumBehavioral := by
+              policyMeasureDeviationProfile false hsumBehavioral := by
   let hbound : ∀ state actions,
       |hybridGame.stageUtility state actions false| ≤ 1 :=
     fun state actions => stageUtility_abs_le_one state actions false

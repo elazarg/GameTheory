@@ -276,10 +276,7 @@ private theorem twoStagePayoff (profile : Game.PublicProfile signalGame none)
           (firstHistory signal realized).trace) =
         PMF.pure (responseActions (choose signal) who)) :
     signalGame.finiteAveragePayoff none 2
-        (Game.toBehaviorProfile signalGame none profile) false
-        (by rw [signalGame.horizonForm_play,
-            twoStageLaw profile choose hinitial hresponse]
-            exact twoStageIntegrable choose) =
+        (Game.toBehaviorProfile signalGame none profile) false =
       ((if choose false = false then 1 else 0) +
         (if choose true = true then 1 else 0)) / 2 := by
   unfold Game.finiteAveragePayoff expectedUtility
@@ -296,14 +293,12 @@ private theorem twoStagePayoff (profile : Game.PublicProfile signalGame none)
       (fairSignal_supported signal)
   calc
     _ = expect (PMF.map (finalOutcome choose) fairSignal)
-        (fun history => signalGame.horizonUtility none 2 history false)
-        (twoStageIntegrable choose) :=
-      expect_congr_law hlaw _ _ _
+        (fun history => signalGame.horizonUtility none 2 history false) :=
+      expect_congr_law hlaw _
     _ = expect fairSignal
         ((fun history => signalGame.horizonUtility none 2 history false) ∘
-          finalOutcome choose)
-        (payoffIntegrable_of_finite fairSignal _) :=
-      expect_map (finalOutcome choose) fairSignal _ _ _
+          finalOutcome choose) :=
+      expect_map (finalOutcome choose) fairSignal _
     _ = _ := by
       rw [expect_eq_sum]
       simp only [Fintype.sum_option, Fintype.sum_bool]
@@ -340,7 +335,7 @@ theorem contingentProfileIntegrable :
 theorem constantProfile_payoff :
     signalGame.finiteAveragePayoff none 2
         (Game.toBehaviorProfile signalGame none constantProfile) false
-        constantProfileIntegrable = 1 / 2 := by
+         = 1 / 2 := by
   rw [twoStagePayoff constantProfile (fun _ => false)
     constantProfile_initial (fun signal realized who => by
       simpa [responseActions] using
@@ -351,7 +346,7 @@ theorem constantProfile_payoff :
 theorem contingentProfile_payoff :
     signalGame.finiteAveragePayoff none 2
         (Game.toBehaviorProfile signalGame none contingentProfile) false
-        contingentProfileIntegrable = 1 := by
+         = 1 := by
   rw [twoStagePayoff contingentProfile id contingentProfile_initial
     (fun signal realized who =>
       contingentProfile_after_signal signal realized who)]
@@ -372,11 +367,9 @@ theorem canonical_contingent_update :
 two-stage average by one half. -/
 theorem contingent_improvement_exact :
     signalGame.finiteAveragePayoff none 2
-          (Game.toBehaviorProfile signalGame none contingentProfile) false
-          contingentProfileIntegrable -
+          (Game.toBehaviorProfile signalGame none contingentProfile) false -
         signalGame.finiteAveragePayoff none 2
-          (Game.toBehaviorProfile signalGame none constantProfile) false
-          constantProfileIntegrable =
+          (Game.toBehaviorProfile signalGame none constantProfile) false =
       1 / 2 := by
   rw [contingentProfile_payoff, constantProfile_payoff]
   norm_num
@@ -395,18 +388,17 @@ theorem constantProfile_not_isZeroHorizonNash :
   have hchangedValue : signalGame.finiteAveragePayoff none 2
       (Profile.update (Game.toBehaviorProfile signalGame none constantProfile)
         false (Game.toBehavioralPolicy signalGame none followSignalPolicy))
-      false hchanged = 1 := by
+      false = 1 := by
     calc
       _ = signalGame.finiteAveragePayoff none 2
-          (Game.toBehaviorProfile signalGame none contingentProfile) false
-          contingentProfileIntegrable := by
+          (Game.toBehaviorProfile signalGame none contingentProfile) false := by
         exact expectedUtility_congr_law
           (signalGame.horizonUtility none 2) false
           (congrArg (fun profile => (signalGame.horizonForm none 2).play profile)
-            canonical_contingent_update.symm) _ _
+            canonical_contingent_update.symm)
       _ = 1 := contingentProfile_payoff
   have hprofileValue : signalGame.finiteAveragePayoff none 2
-      (Game.toBehaviorProfile signalGame none constantProfile) false hprofile = 1 / 2 := by
+      (Game.toBehaviorProfile signalGame none constantProfile) false = 1 / 2 := by
     simpa only using constantProfile_payoff
   rw [hchangedValue, hprofileValue] at hle
   norm_num at hle

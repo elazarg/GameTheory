@@ -73,7 +73,7 @@ theorem potentialIntegrable (profile : Profile signature.mixed) :
 play: randomizing one coordinate against `false` gives one half. -/
 theorem mixedPotential_half :
     game.form.mixedPotential potential halfMixed
-      (potentialIntegrable halfMixed) = 1 / 2 := by
+       = 1 / 2 := by
   let q := fun action : Bool => PMF.pure (Profile.update allFalse 0 action)
   have hlaw : independentProduct halfMixed = fairCoin.bind q := by
     rw [halfMixed, GameForm.pi_update_mixed]
@@ -83,27 +83,18 @@ theorem mixedPotential_half :
     exact independentProduct_pure (Profile.update allFalse 0 action)
   have hbind : PayoffIntegrable (fairCoin.bind q) potential :=
     payoffIntegrable_congr_law hlaw (potentialIntegrable halfMixed)
-  have hcond : ∀ action, PayoffIntegrable (q action) potential := by
-    intro action
-    exact payoffIntegrable_pure _ _
   have hpoint (action : Bool) :
-      expect (q action) potential (hcond action) =
+      expect (q action) potential =
         potential (Profile.update allFalse 0 action) :=
-    expect_pure _ _ _
-  have houter := payoffIntegrable_bind_conditionalExpectation fairCoin q
-    potential hbind hcond
-  have houter' : PayoffIntegrable fairCoin
-      (fun action => potential (Profile.update allFalse 0 action)) :=
-    payoffIntegrable_congr_on_support
-      (fun action _ => hpoint action) houter
+    expect_pure _ _
   calc
-    _ = expect (fairCoin.bind q) potential hbind :=
-      expect_congr_law hlaw potential _ _
-    _ = expect fairCoin (fun action => expect (q action) potential (hcond action))
-        houter := expect_bind_tower fairCoin q potential hbind hcond
+    _ = expect (fairCoin.bind q) potential :=
+      expect_congr_law hlaw potential
+    _ = expect fairCoin (fun action => expect (q action) potential)
+         := expect_bind_tower fairCoin q potential hbind
     _ = expect fairCoin
-        (fun action => potential (Profile.update allFalse 0 action)) houter' :=
-      expect_congr_on_support (fun action _ => hpoint action) _ _
+        (fun action => potential (Profile.update allFalse 0 action)) :=
+      expect_congr_on_support (fun action _ => hpoint action)
     _ = 1 / 2 := by
       rw [expect_eq_sum]
       norm_num [Fintype.sum_bool, fairCoin, PMF.uniformOfFintype_apply,
@@ -114,8 +105,7 @@ theorem mixedPotential_half :
 coordination fixture. -/
 theorem mixedExactPotential :
     IsExactPotential game.form.mixed game.utility
-      (fun profile => game.form.mixedPotential potential profile
-        (potentialIntegrable profile)) := by
+      (fun profile => game.form.mixedPotential potential profile) := by
   simpa only using UtilityGame.IsExactPotential.mixed_of_finite exactPotential
 
 /-- Replacing the fair coin by the pure coordinated action raises both
@@ -123,15 +113,11 @@ expected utility and mixed potential by the same nonzero amount. -/
 theorem fair_to_coordinated_diff :
     expectedUtility game.utility 0
         (game.form.mixed.play
-          (Profile.update halfMixed 0 (PMF.pure false)))
-        (actualIntegrable (Profile.update halfMixed 0 (PMF.pure false)) 0) -
-      expectedUtility game.utility 0 (game.form.mixed.play halfMixed)
-        (actualIntegrable halfMixed 0) =
+          (Profile.update halfMixed 0 (PMF.pure false))) -
+      expectedUtility game.utility 0 (game.form.mixed.play halfMixed) =
     game.form.mixedPotential potential
-        (Profile.update halfMixed 0 (PMF.pure false))
-        (potentialIntegrable (Profile.update halfMixed 0 (PMF.pure false))) -
-      game.form.mixedPotential potential halfMixed
-        (potentialIntegrable halfMixed) :=
+        (Profile.update halfMixed 0 (PMF.pure false)) -
+      game.form.mixedPotential potential halfMixed :=
   UtilityGame.IsExactPotential.mixed_pure_diff exactPotential halfMixed 0 false
     (actualIntegrable halfMixed 0)
     (actualIntegrable (Profile.update halfMixed 0 (PMF.pure false)) 0)

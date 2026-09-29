@@ -113,13 +113,9 @@ theorem publicHistoryLaw_eq_of_publicHistoryAgreement
 
 theorem publicFiniteAveragePayoff_eq_of_publicHistoryAgreement
     {first second : G.BehaviorProfile initial}
-    (h : PublicHistoryAgreement G initial first second) (horizon : ℕ) (who : ι)
-    (hfirst : UtilityIntegrable (G.horizonUtility initial horizon) who
-      ((G.horizonForm initial horizon).play first))
-    (hsecond : UtilityIntegrable (G.horizonUtility initial horizon) who
-      ((G.horizonForm initial horizon).play second)) :
-    G.finiteAveragePayoff initial horizon first who hfirst =
-      G.finiteAveragePayoff initial horizon second who hsecond := by
+    (h : PublicHistoryAgreement G initial first second) (horizon : ℕ) (who : ι) :
+    G.finiteAveragePayoff initial horizon first who =
+      G.finiteAveragePayoff initial horizon second who := by
   have hlaw : (G.horizonForm initial horizon).play first =
       (G.horizonForm initial horizon).play second := by
     rw [G.horizonForm_play, G.horizonForm_play]
@@ -127,7 +123,7 @@ theorem publicFiniteAveragePayoff_eq_of_publicHistoryAgreement
     exact runBehavioralFrom_eq_of_publicHistoryAgreement G h horizon
       (G.toExecution initial).initHistory
   exact expectedUtility_congr_law (G.horizonUtility initial horizon) who
-    hlaw hfirst hsecond
+    hlaw
 
 end Runner
 
@@ -237,15 +233,11 @@ theorem forged_history_law_eq (horizon : ℕ) :
       actionGame.publicHistoryLaw false forgedProfile horizon :=
   publicHistoryLaw_eq_of_publicHistoryAgreement actionGame forgedProfile_agreement horizon
 
-theorem forged_finite_average_payoff_eq (horizon : ℕ) (who : Bool)
-    (hcanonical : UtilityIntegrable (actionGame.horizonUtility false horizon) who
-      ((actionGame.horizonForm false horizon).play canonicalProfile))
-    (hforged : UtilityIntegrable (actionGame.horizonUtility false horizon) who
-      ((actionGame.horizonForm false horizon).play forgedProfile)) :
-    actionGame.finiteAveragePayoff false horizon canonicalProfile who hcanonical =
-      actionGame.finiteAveragePayoff false horizon forgedProfile who hforged :=
+theorem forged_finite_average_payoff_eq (horizon : ℕ) (who : Bool) :
+    actionGame.finiteAveragePayoff false horizon canonicalProfile who =
+      actionGame.finiteAveragePayoff false horizon forgedProfile who :=
   publicFiniteAveragePayoff_eq_of_publicHistoryAgreement actionGame
-    forgedProfile_agreement horizon who hcanonical hforged
+    forgedProfile_agreement horizon who
 
 def livePublicProfile : PublicProfile actionGame false :=
   fun who history =>

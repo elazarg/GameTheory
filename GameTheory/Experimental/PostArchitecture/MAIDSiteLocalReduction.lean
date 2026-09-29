@@ -48,18 +48,18 @@ structure SiteLocalUtilityFactorsAt (pruning : Pruning diagram)
     KeptContext pruning target → diagram.Value target.1 → ℝ
   utility_eq : ∀ rule : FullContext target →
       PMF (diagram.Value target.1),
-    ∃ hsite : UtilityIntegrable
+    UtilityIntegrable
         (fun assignment who => semantics.utility who assignment) owner
-        (siteReplacementLaw semantics base owner replacement target rule),
-      ∃ hjoint : PayoffIntegrable
+        (siteReplacementLaw semantics base owner replacement target rule) ∧
+      PayoffIntegrable
           (fullJoint context.contextLaw
             (Config.restrict (pruning.kept_sub_observed target.1)) rule)
-          (fun pair => continuationValue pair.1 pair.2),
+          (fun pair => continuationValue pair.1 pair.2) ∧
         siteRuleExpectedUtility semantics base owner replacement target
-            rule hsite =
+            rule =
           expect (fullJoint context.contextLaw
             (Config.restrict (pruning.kept_sub_observed target.1)) rule)
-            (fun pair => continuationValue pair.1 pair.2) hjoint
+            (fun pair => continuationValue pair.1 pair.2)
 
 /-- Expand a target rule on the retained context back to the target's full
 declared observation context. -/
@@ -116,18 +116,17 @@ theorem exists_reduced_isOptimalSiteRule
       factors.context.contextLaw keep best
   have hvalue :
       siteRuleExpectedUtility semantics (pruning.expandPolicy policy) owner
-          (pruning.expandOwnerPolicy owner fixedOwner) target best hbestSite =
+          (pruning.expandOwnerPolicy owner fixedOwner) target best =
         siteRuleExpectedUtility semantics (pruning.expandPolicy policy) owner
           (pruning.expandOwnerPolicy owner fixedOwner) target
-          (expandKeptSiteRule pruning target reducedRule) hredSite := by
+          (expandKeptSiteRule pruning target reducedRule) := by
     calc
       _ = expect (fullJoint factors.context.contextLaw keep best)
-          (fun pair => factors.continuationValue pair.1 pair.2)
-          hbestJoint := hbestEq
+          (fun pair => factors.continuationValue pair.1 pair.2) := hbestEq
       _ = expect (fullJoint factors.context.contextLaw keep
             (expandKeptSiteRule pruning target reducedRule))
           (fun pair => factors.continuationValue pair.1 pair.2)
-          hredJoint := expect_congr_law hjointLaw _ hbestJoint hredJoint
+           := expect_congr_law hjointLaw _
       _ = _ := hredEq.symm
   exact ⟨hredSite, haltSite, hle.trans hvalue.le⟩
 

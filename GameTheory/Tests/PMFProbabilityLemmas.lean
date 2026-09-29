@@ -69,66 +69,36 @@ theorem jointObservableRowIntegrable (a : Nat) :
 
 theorem jointObservableIteratedIntegrable :
     PayoffIntegrable twoPointNat (fun a =>
-      expect twoPointBool (fun b => jointObservable (a, b))
-        (jointObservableRowIntegrable a)) :=
+      expect twoPointBool (fun b => jointObservable (a, b))) :=
   payoffIntegrable_of_bounded _ _ (C := 5) (by
     intro a
-    have h := expect_abs_le_of_bounded (by norm_num : (0 : ℝ) ≤ 5)
-      (by intro b; unfold jointObservable; split_ifs <;> norm_num)
-      (jointObservableRowIntegrable a)
-    simpa using h)
+    exact expect_abs_le_of_bounded (μ := twoPointBool)
+      (f := fun b => jointObservable (a, b)) (by norm_num : (0 : ℝ) ≤ 5)
+      (by intro b; unfold jointObservable; split_ifs <;> norm_num))
 
 theorem expect_product_nonseparable :
-    expect (pairLaw twoPointNat twoPointBool) jointObservable
-      jointObservableIntegrable =
+    expect (pairLaw twoPointNat twoPointBool) jointObservable =
     expect twoPointNat (fun a =>
-      expect twoPointBool (fun b => jointObservable (a, b))
-        (jointObservableRowIntegrable a)) jointObservableIteratedIntegrable := by
+      expect twoPointBool (fun b => jointObservable (a, b))) := by
   exact expect_bindPairLaw_tower twoPointNat twoPointBool jointObservable
-    jointObservableIntegrable jointObservableRowIntegrable
-    jointObservableIteratedIntegrable
+    jointObservableIntegrable
 
 theorem expect_product_nonseparable_value :
     expect (pairLaw twoPointNat twoPointBool) jointObservable
-      jointObservableIntegrable = 2 := by
+       = 2 := by
   rw [expect_product_nonseparable]
   have hrowValue (a : Nat) :
-      expect twoPointBool (fun b => jointObservable (a, b))
-          (jointObservableRowIntegrable a) =
+      expect twoPointBool (fun b => jointObservable (a, b)) =
         if a = 1 then 3 / 2 else if a = 2 then 5 / 2 else 0 := by
-    have hrowMix : PayoffIntegrable
-        (mix (1 / 2) (by norm_num) (by norm_num)
-          (PMF.pure true) (PMF.pure false))
-        (fun b => jointObservable (a, b)) := by
-      simpa [twoPointBool] using jointObservableRowIntegrable a
     unfold twoPointBool
-    rw [expect_proof_irrel _ _ hrowMix
-      (payoffIntegrable_mix (1 / 2) (by norm_num) (by norm_num)
-        (PMF.pure true) (PMF.pure false) (fun b => jointObservable (a, b))
-        (payoffIntegrable_pure true _) (payoffIntegrable_pure false _))]
     rw [expect_mix (1 / 2) (by norm_num) (by norm_num)
       (PMF.pure true) (PMF.pure false) (fun b => jointObservable (a, b))
       (payoffIntegrable_pure true _) (payoffIntegrable_pure false _)]
     split_ifs <;> simp_all [jointObservable, expect_pure] <;> norm_num
-  have houterIntegrable :
-      PayoffIntegrable twoPointNat
-        (fun a => if a = 1 then 3 / 2 else if a = 2 then 5 / 2 else 0) :=
-    payoffIntegrable_of_bounded _ _ (C := 3) (by
-      intro a
-      split_ifs <;> norm_num)
-  have hvalue := expect_congr_on_support
-    (fun a _ => hrowValue a) jointObservableIteratedIntegrable houterIntegrable
+  have hvalue := expect_congr_on_support (μ := twoPointNat)
+    (fun a _ => hrowValue a)
   rw [hvalue]
-  have houterMix : PayoffIntegrable
-      (mix (1 / 2) (by norm_num) (by norm_num) (PMF.pure 1) (PMF.pure 2))
-      (fun a => if a = 1 then 3 / 2 else if a = 2 then 5 / 2 else 0) := by
-    simpa [twoPointNat] using houterIntegrable
   unfold twoPointNat
-  rw [expect_proof_irrel _ _ houterMix
-    (payoffIntegrable_mix (1 / 2) (by norm_num) (by norm_num)
-      (PMF.pure 1) (PMF.pure 2)
-      (fun a => if a = 1 then 3 / 2 else if a = 2 then 5 / 2 else 0)
-      (payoffIntegrable_pure 1 _) (payoffIntegrable_pure 2 _))]
   rw [expect_mix (1 / 2) (by norm_num) (by norm_num)
     (PMF.pure 1) (PMF.pure 2)
     (fun a => if a = 1 then 3 / 2 else if a = 2 then 5 / 2 else 0)
@@ -140,34 +110,24 @@ theorem pairLaw_pure_right (a : Nat) (b : Bool) :
   rw [pairLaw, bindPairLaw, PMF.pure_bind, PMF.pure_map]
 
 theorem expect_product_pure_right (a : Nat) (b : Bool) (u : Nat × Bool → ℝ) :
-    expect (pairLaw (PMF.pure a) (PMF.pure b)) u
-        (payoffIntegrable_congr_law (pairLaw_pure_right a b).symm
-          (payoffIntegrable_pure (a, b) u)) =
+    expect (pairLaw (PMF.pure a) (PMF.pure b)) u =
       expect (PMF.pure a) (fun x =>
-        expect (PMF.pure b) (fun y => u (x, y)) (payoffIntegrable_pure b _))
-        (payoffIntegrable_pure a _) := by
+        expect (PMF.pure b) (fun y => u (x, y))) := by
   have hlaw := pairLaw_pure_right a b
-  let hpair := payoffIntegrable_congr_law hlaw.symm (payoffIntegrable_pure (a, b) u)
   calc
-    expect (pairLaw (PMF.pure a) (PMF.pure b)) u
-        (payoffIntegrable_congr_law hlaw.symm (payoffIntegrable_pure (a, b) u)) =
-        expect (PMF.pure (a, b)) u (payoffIntegrable_pure (a, b) u) :=
-      expect_congr_law hlaw u hpair (payoffIntegrable_pure (a, b) u)
+    expect (pairLaw (PMF.pure a) (PMF.pure b)) u =
+        expect (PMF.pure (a, b)) u :=
+      expect_congr_law hlaw u
     _ = expect (PMF.pure a) (fun x =>
-        expect (PMF.pure b) (fun y => u (x, y)) (payoffIntegrable_pure b _))
-        (payoffIntegrable_pure a _) := by
+        expect (PMF.pure b) (fun y => u (x, y))) := by
       simp [expect_pure]
 
 theorem expect_product_on_infinite_carriers (μ ν : PMF Nat)
     (u : Nat × Nat → ℝ)
-    (hjoint : PayoffIntegrable (bindPairLaw μ (fun _ => ν)) u)
-    (hrow : ∀ a, PayoffIntegrable ν (fun b => u (a, b)))
-    (houter : PayoffIntegrable μ (fun a =>
-      expect ν (fun b => u (a, b)) (hrow a))) :
-    expect (bindPairLaw μ (fun _ => ν)) u hjoint =
-      expect μ (fun a => expect ν (fun b => u (a, b)) (hrow a))
-        houter := by
-  exact expect_bindPairLaw_tower μ ν u hjoint hrow houter
+    (hjoint : PayoffIntegrable (bindPairLaw μ (fun _ => ν)) u) :
+    expect (bindPairLaw μ (fun _ => ν)) u =
+      expect μ (fun a => expect ν (fun b => u (a, b))) := by
+  exact expect_bindPairLaw_tower μ ν u hjoint
 
 theorem bind_matching_summaries_ignores_unreachable_branches :
     (twoPointNat.bind fun n =>

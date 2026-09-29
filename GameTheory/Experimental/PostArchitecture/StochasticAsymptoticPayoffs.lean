@@ -120,20 +120,17 @@ def fairSelectorLaw : PMF Bool :=
   mix (1 / 2) (by norm_num) (by norm_num)
     (PMF.pure true) (PMF.pure false)
 
-private theorem expect_fairSelectorLaw (f : Bool → ℝ)
-    (h : PayoffIntegrable fairSelectorLaw f) :
-    expect fairSelectorLaw f h = (1 / 2 : ℝ) * f true + (1 / 2 : ℝ) * f false := by
+private theorem expect_fairSelectorLaw (f : Bool → ℝ) :
+    expect fairSelectorLaw f = (1 / 2 : ℝ) * f true + (1 / 2 : ℝ) * f false := by
   classical
   let htrue := payoffIntegrable_of_finite (PMF.pure true) f
   let hfalse := payoffIntegrable_of_finite (PMF.pure false) f
   calc
-    expect fairSelectorLaw f h =
+    expect fairSelectorLaw f =
         expect (mix (1 / 2) (by norm_num) (by norm_num)
-          (PMF.pure true) (PMF.pure false)) f
-          (payoffIntegrable_mix (1 / 2) (by norm_num) (by norm_num)
-            (PMF.pure true) (PMF.pure false) f htrue hfalse) := rfl
-    _ = (1 / 2 : ℝ) * expect (PMF.pure true) f htrue +
-        (1 / 2 : ℝ) * expect (PMF.pure false) f hfalse :=
+          (PMF.pure true) (PMF.pure false)) f := rfl
+    _ = (1 / 2 : ℝ) * expect (PMF.pure true) f +
+        (1 / 2 : ℝ) * expect (PMF.pure false) f :=
       by
         simpa only [show 1 - (1 / 2 : ℝ) = 1 / 2 by norm_num] using
           (expect_mix (1 / 2) (by norm_num) (by norm_num)
@@ -209,10 +206,7 @@ theorem fair_selector_order_limits_measure (stage : ℕ → ℝ)
           (fun n => cesaroAverage (complementSequence stage) n) atTop = 0)
     (hcomplement_limsup :
       Filter.limsup
-          (fun n => cesaroAverage (complementSequence stage) n) atTop = 1)
-    (hstage_bound : ∀ n, ‖cesaroAverage stage n‖ ≤ 1)
-    (hcomplement_bound : ∀ n,
-      ‖cesaroAverage (complementSequence stage) n‖ ≤ 1) :
+          (fun n => cesaroAverage (complementSequence stage) n) atTop = 1) :
     expectedPathwiseLiminf
           fairSelectorLaw.toMeasure
           (fairSelectorStage stage) = 0 ∧
@@ -225,43 +219,17 @@ theorem fair_selector_order_limits_measure (stage : ℕ → ℝ)
       expectedPathwiseLimsup
           fairSelectorLaw.toMeasure
           (fairSelectorStage stage) = 1 := by
-  have hliminf_bound := fairSelectorStage_liminf_bound stage
-    hstage_liminf hcomplement_liminf
-  have hlimsup_bound := fairSelectorStage_limsup_bound stage
-    hstage_limsup hcomplement_limsup
-  have havg_bound := fairSelectorStage_average_bound stage
-    hstage_bound hcomplement_bound
-  have hliminf_integrable : PayoffIntegrable fairSelectorLaw
-      (fun b => Filter.liminf
-        (fun n => pathwiseAverage (fairSelectorStage stage) b n) atTop) :=
-    payoffIntegrable_of_bounded fairSelectorLaw _ (C := 1) (by
-      intro b
-      simpa [Real.norm_eq_abs] using hliminf_bound b)
-  have hlimsup_integrable : PayoffIntegrable fairSelectorLaw
-      (fun b => Filter.limsup
-        (fun n => pathwiseAverage (fairSelectorStage stage) b n) atTop) :=
-    payoffIntegrable_of_bounded fairSelectorLaw _ (C := 1) (by
-      intro b
-      simpa [Real.norm_eq_abs] using hlimsup_bound b)
-  have havg_integrable : ∀ n, PayoffIntegrable fairSelectorLaw
-      (fun b => pathwiseAverage (fairSelectorStage stage) b n) := by
-    intro n
-    apply payoffIntegrable_of_bounded fairSelectorLaw _ (C := 1)
-    intro b
-    simpa [Real.norm_eq_abs] using havg_bound b n
   have hLiminf := expect_eq_integral fairSelectorLaw
     (fun b => Filter.liminf
       (fun n => pathwiseAverage (fairSelectorStage stage) b n) atTop)
-    hliminf_integrable
   have hLimsup := expect_eq_integral fairSelectorLaw
     (fun b => Filter.limsup
       (fun n => pathwiseAverage (fairSelectorStage stage) b n) atTop)
-    hlimsup_integrable
   have hLiminfValue :
       expectedPathwiseLiminf fairSelectorLaw.toMeasure
           (fairSelectorStage stage) = 0 := by
     unfold expectedPathwiseLiminf
-    rw [← hLiminf, expect_fairSelectorLaw _ hliminf_integrable]
+    rw [← hLiminf, expect_fairSelectorLaw]
     simp only [fairSelectorStage, pathwiseAverage]
     rw [hstage_liminf, hcomplement_liminf]
     norm_num
@@ -269,7 +237,7 @@ theorem fair_selector_order_limits_measure (stage : ℕ → ℝ)
       expectedPathwiseLimsup fairSelectorLaw.toMeasure
           (fairSelectorStage stage) = 1 := by
     unfold expectedPathwiseLimsup
-    rw [← hLimsup, expect_fairSelectorLaw _ hlimsup_integrable]
+    rw [← hLimsup, expect_fairSelectorLaw]
     simp only [fairSelectorStage, pathwiseAverage]
     rw [hstage_limsup, hcomplement_limsup]
     norm_num
@@ -279,8 +247,8 @@ theorem fair_selector_order_limits_measure (stage : ℕ → ℝ)
     intro n
     unfold expectedFiniteAverage
     have h := expect_eq_integral fairSelectorLaw (fun b => pathwiseAverage
-      (fairSelectorStage stage) b n) (havg_integrable n)
-    rw [← h, expect_fairSelectorLaw _ (havg_integrable n)]
+      (fairSelectorStage stage) b n)
+    rw [← h, expect_fairSelectorLaw]
     simp only [fairSelectorStage, pathwiseAverage]
     rw [cesaroAverage_complement]
     ring
@@ -321,6 +289,5 @@ theorem alternatingBlockStage_order_limits_measure :
     cesaroAverage_alternating_liminf_limsup.2
     cesaroAverage_complement_alternating_liminf_limsup.1
     cesaroAverage_complement_alternating_liminf_limsup.2
-    hstage_bound hcomplement_bound
 
 end GameTheory.Experimental.PostArchitecture

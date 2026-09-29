@@ -68,22 +68,18 @@ theorem horizonForm_play (initial : G.State) [∀ i, Nonempty (G.Action i)]
 /-- Expected finite-horizon average payoff, transparently evaluated by the
 canonical expected-utility function. -/
 abbrev finiteAveragePayoff (initial : G.State) [∀ i, Nonempty (G.Action i)]
-    (horizon : ℕ) (profile : G.BehaviorProfile initial) (who : ι)
-    (hintegrable : UtilityIntegrable (G.horizonUtility initial horizon) who
-      ((G.horizonForm initial horizon).play profile)) : ℝ :=
+    (horizon : ℕ) (profile : G.BehaviorProfile initial) (who : ι) : ℝ :=
   expectedUtility (G.horizonUtility initial horizon) who
-    ((G.horizonForm initial horizon).play profile) hintegrable
+    ((G.horizonForm initial horizon).play profile)
 
 /-- The utility-game bundle has exactly the named finite-horizon evaluation. -/
 @[simp]
 theorem horizonGame_expectedUtility (initial : G.State)
     [∀ i, Nonempty (G.Action i)] (horizon : ℕ)
-    (profile : G.BehaviorProfile initial) (who : ι)
-    (hintegrable : UtilityIntegrable (G.horizonGame initial horizon).utility who
-      ((G.horizonGame initial horizon).form.play profile)) :
+    (profile : G.BehaviorProfile initial) (who : ι) :
     expectedUtility (G.horizonGame initial horizon).utility who
-        ((G.horizonGame initial horizon).form.play profile) hintegrable =
-      G.finiteAveragePayoff initial horizon profile who hintegrable :=
+        ((G.horizonGame initial horizon).form.play profile) =
+      G.finiteAveragePayoff initial horizon profile who :=
   rfl
 
 /-- The empty average is integrable under the zero-horizon history law. -/
@@ -103,7 +99,7 @@ theorem finiteAveragePayoff_zero (initial : G.State)
     [∀ i, Nonempty (G.Action i)] (profile : G.BehaviorProfile initial)
     (who : ι) :
     G.finiteAveragePayoff initial 0 profile who
-      (G.horizonUtilityIntegrable_zero initial profile who) = 0 := by
+       = 0 := by
   simp [finiteAveragePayoff,
     InformationModel.runBehavioral, InformationModel.runBehavioralFrom,
     horizonUtility, historyAverageUtility]

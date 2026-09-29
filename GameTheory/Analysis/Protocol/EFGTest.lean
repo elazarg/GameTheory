@@ -241,45 +241,11 @@ local instance finiteInformationHistory
   classical
   infer_instance
 
-/-- Finite test carriers give the actual law a canonical guarded expectation. -/
-noncomputable def finiteExpect {α : Type*} [Fintype α]
-    (law : PMF α) (payoff : α → ℝ) : ℝ :=
-  expect law payoff (payoffIntegrable_of_finite law payoff)
-
-private theorem finiteExpect_pure {α : Type*} [Fintype α]
-    (a : α) (payoff : α → ℝ) :
-    finiteExpect (PMF.pure a) payoff = payoff a := by
-  unfold finiteExpect
-  exact expect_pure a payoff _
-
-private theorem finiteExpect_map {α β : Type*} [Fintype α] [Fintype β]
-    (f : α → β) (law : PMF α) (payoff : β → ℝ) :
-    finiteExpect (PMF.map f law) payoff =
-      finiteExpect law (payoff ∘ f) := by
-  unfold finiteExpect
-  exact expect_map f law payoff
-    (payoffIntegrable_of_finite law (payoff ∘ f))
-    (payoffIntegrable_of_finite (PMF.map f law) payoff)
-
-private theorem finiteExpect_bind {α β : Type*} [Fintype α] [Fintype β]
+private theorem expect_bind_of_finite {α β : Type*} [Fintype β]
     (law : PMF α) (kernel : α → PMF β) (payoff : β → ℝ) :
-    finiteExpect (law.bind kernel) payoff =
-      finiteExpect law (fun a => finiteExpect (kernel a) payoff) := by
-  unfold finiteExpect
-  let hbind := payoffIntegrable_of_finite (law.bind kernel) payoff
-  let hcond := fun a => payoffIntegrable_of_finite (kernel a) payoff
-  calc
-    expect (law.bind kernel) payoff
-        (payoffIntegrable_of_finite (law.bind kernel) payoff) =
-      expect (law.bind kernel) payoff hbind := expect_proof_irrel ..
-    _ = expect law (fun a => expect (kernel a) payoff (hcond a))
-        (payoffIntegrable_bind_conditionalExpectation law kernel payoff hbind hcond) :=
-      expect_bind_tower law kernel payoff hbind hcond
-    _ = expect law (fun a => expect (kernel a) payoff
-        (payoffIntegrable_of_finite (kernel a) payoff))
-        (payoffIntegrable_of_finite law
-          (fun a => expect (kernel a) payoff
-            (payoffIntegrable_of_finite (kernel a) payoff))) := expect_proof_irrel ..
+    expect (law.bind kernel) payoff =
+      expect law (fun a => expect (kernel a) payoff) :=
+  expect_bind_tower law kernel payoff (payoffIntegrable_of_finite _ _)
 
 /-! ## Two histories, one decision information site -/
 
@@ -735,11 +701,11 @@ set_option backward.isDefEq.respectTransparency false in
 theorem runBehavioralFrom_decision_matchingPayoff
     (hidden : Bool)
     (alternative : information.BehavioralPolicy Player.player) :
-    finiteExpect (information.runBehavioralFrom
+    expect (information.runBehavioralFrom
       (Profile.update (sig := information.behavioralSignature)
         fullyMixedBehavioralProfile Player.player alternative) 2
       (decisionHistory hidden)) (matchingPayoff .player) =
-        finiteExpect (alternative .acting) fun choice =>
+        expect (alternative .acting) fun choice =>
           if choice.1 = some hidden then 1 else 0 := by
   classical
   let drawLaw :
@@ -753,8 +719,8 @@ theorem runBehavioralFrom_decision_matchingPayoff
   rw [InformationModel.runBehavioralFrom,
     ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ 1
       (decision_not_terminal hidden),
-    finiteExpect_bind, InformationModel.randomizedChooser,
-    InformationModel.behavioralJoint, finiteExpect_map]
+    expect_bind_of_finite, InformationModel.randomizedChooser,
+    InformationModel.behavioralJoint, expect_map]
   have hmarginal :
       PMF.map (fun draws => (draws Player.player).1) drawLaw =
         PMF.map (fun choice => choice.1) (alternative .acting) := by
@@ -783,9 +749,8 @@ theorem runBehavioralFrom_decision_matchingPayoff
       rw [infoOf_decisionHistory])
   calc
     _ =
-      finiteExpect drawLaw (fun draws =>
+      expect drawLaw (fun draws =>
         if (draws Player.player).1 = some hidden then 1 else 0) := by
-          unfold finiteExpect
           apply expect_congr_on_support
           · intro draws _hdraws
             have hlegal := (draws Player.player).2
@@ -798,23 +763,23 @@ theorem runBehavioralFrom_decision_matchingPayoff
                     PMF.pure_bindOnSupport,
                     ExecutionProtocol.History.extend_state,
                     ExecutionProtocol.runRandomizedFor_of_terminal]
-    _ = finiteExpect
+    _ = expect
           (PMF.map (fun draws => (draws Player.player).1) drawLaw)
           (fun choice : Option Bool =>
             if choice = some hidden then 1 else 0) := by
           simpa only [Function.comp_def] using
-            (finiteExpect_map (fun draws => (draws Player.player).1)
+            (expect_map (fun draws => (draws Player.player).1)
               drawLaw (fun choice : Option Bool =>
                 if choice = some hidden then 1 else 0)).symm
-    _ = finiteExpect
+    _ = expect
           (PMF.map (fun choice => choice.1) (alternative .acting))
           (fun choice : Option Bool =>
             if choice = some hidden then 1 else 0) := by
           rw [hmarginal]
-    _ = finiteExpect (alternative .acting) fun choice =>
+    _ = expect (alternative .acting) fun choice =>
           if choice.1 = some hidden then 1 else 0 := by
           simpa only [Function.comp_def] using
-            finiteExpect_map (fun choice => choice.1) (alternative .acting)
+            expect_map (fun choice => choice.1) (alternative .acting)
               (fun action : Option Bool =>
                 if action = some hidden then 1 else 0)
 
@@ -877,7 +842,7 @@ theorem continuationContext_matchingPayoff_value
     (hvalue : (fullyMixedAssessment.continuationContext actingSite
       (matchingPayoff .player) 2).IntegrableAt alternative) :
     (fullyMixedAssessment.continuationContext actingSite
-      (matchingPayoff .player) 2).value alternative hvalue = 1 / 2 := by
+      (matchingPayoff .player) 2).value alternative = 1 / 2 := by
   let kernel : information.InformationHistory .player actingSite.1 →
       PMF execution.History := fun history =>
     information.runBehavioralFrom
@@ -892,16 +857,11 @@ theorem continuationContext_matchingPayoff_value
     show (fullyMixedAssessment.continuationContext actingSite
       (matchingPayoff .player) 2).IntegrableAt alternative
     exact hvalue
-  have hcond (history : information.InformationHistory .player actingSite.1) :
-      PayoffIntegrable (kernel history) (matchingPayoff .player) :=
-    payoffIntegrable_of_finite (kernel history) (matchingPayoff .player)
   let branchValue := fun history =>
-    expect (kernel history) (matchingPayoff .player) (hcond history)
-  have houter := payoffIntegrable_bind_conditionalExpectation
-    belief kernel (matchingPayoff .player) hbind hcond
+    expect (kernel history) (matchingPayoff .player)
   have hbranch (hidden : Bool) :
       branchValue (decisionInformationHistory hidden) =
-        finiteExpect (alternative .acting) (fun choice =>
+        expect (alternative .acting) (fun choice =>
           if choice.1 = some hidden then 1 else 0) := by
     unfold branchValue kernel
     have hlaw :
@@ -914,9 +874,6 @@ theorem continuationContext_matchingPayoff_value
               fullyMixedBehavioralProfile Player.player alternative)
             2 (decisionHistory hidden) := by
       simp only [fullyMixedAssessment]
-    have hsame := expect_proof_irrel _ _
-      (hcond (decisionInformationHistory hidden))
-      (payoffIntegrable_of_finite _ _)
     have hvalue' := runBehavioralFrom_decision_matchingPayoff hidden alternative
     calc
       expect
@@ -924,16 +881,16 @@ theorem continuationContext_matchingPayoff_value
             (Profile.update (sig := information.behavioralSignature)
               fullyMixedAssessment.strategy Player.player alternative)
             2 (decisionHistory hidden))
-          (matchingPayoff .player) (hcond (decisionInformationHistory hidden)) =
+          (matchingPayoff .player) =
         expect
           (information.runBehavioralFrom
             (Profile.update (sig := information.behavioralSignature)
               fullyMixedBehavioralProfile Player.player alternative)
             2 (decisionHistory hidden))
-          (matchingPayoff .player) _ :=
-            expect_congr_law hlaw _ _ _
-      _ = finiteExpect (alternative .acting) (fun choice =>
-          if choice.1 = some hidden then 1 else 0) := hsame.trans hvalue'
+          (matchingPayoff .player) :=
+            expect_congr_law hlaw _
+      _ = expect (alternative .acting) (fun choice =>
+          if choice.1 = some hidden then 1 else 0) := hvalue'
   have htrue : PayoffIntegrable
       (PMF.pure (decisionInformationHistory true)) branchValue :=
     payoffIntegrable_of_finite _ _
@@ -944,9 +901,9 @@ theorem continuationContext_matchingPayoff_value
     (PMF.pure (decisionInformationHistory true))
     (PMF.pure (decisionInformationHistory false)) branchValue htrue hfalse
   have hcomplement :
-      finiteExpect (alternative .acting) (fun choice =>
+      expect (alternative .acting) (fun choice =>
         if choice.1 = some true then 1 else 0) +
-      finiteExpect (alternative .acting) (fun choice =>
+      expect (alternative .acting) (fun choice =>
         if choice.1 = some false then 1 else 0) = 1 := by
     let ftrue := fun choice : information.Choice .player View.acting =>
       if choice.1 = some true then (1 : ℝ) else 0
@@ -956,8 +913,6 @@ theorem continuationContext_matchingPayoff_value
       payoffIntegrable_of_finite _ _
     have hg : PayoffIntegrable (alternative .acting) ffalse :=
       payoffIntegrable_of_finite _ _
-    have hconst : PayoffIntegrable (alternative .acting) (fun _ => (1 : ℝ)) :=
-      payoffIntegrable_of_finite _ _
     have hpoint (choice : information.Choice .player View.acting)
         (_hchoice : choice ∈ (alternative .acting).support) :
         ftrue choice + ffalse choice = 1 := by
@@ -965,22 +920,18 @@ theorem continuationContext_matchingPayoff_value
       rcases hchoice with ⟨action, rfl⟩
       cases action <;> simp [ftrue, ffalse]
     have hcongr := expect_congr_on_support hpoint
-      (payoffIntegrable_add hf hg) hconst
     have hadd := expect_add hf hg
-    unfold finiteExpect
     calc
       _ = expect (alternative .acting) (fun choice =>
-            ftrue choice + ffalse choice) (payoffIntegrable_add hf hg) := hadd.symm
-      _ = expect (alternative .acting) (fun _ => (1 : ℝ)) hconst := hcongr
-      _ = 1 := expect_constant (alternative .acting) 1 hconst
+            ftrue choice + ffalse choice) := hadd.symm
+      _ = expect (alternative .acting) (fun _ => (1 : ℝ)) := hcongr
+      _ = 1 := expect_constant (alternative .acting) 1
   calc
-    expect (belief.bind kernel) (matchingPayoff .player) hbind =
-      expect belief branchValue houter :=
-        expect_bind_tower belief kernel (matchingPayoff .player) hbind hcond
-    _ = expect decisionBelief branchValue
-          (payoffIntegrable_congr_law hbelief houter) :=
-      expect_congr_law hbelief branchValue houter
-        (payoffIntegrable_congr_law hbelief houter)
+    expect (belief.bind kernel) (matchingPayoff .player) =
+      expect belief branchValue :=
+        expect_bind_tower belief kernel (matchingPayoff .player) hbind
+    _ = expect decisionBelief branchValue :=
+      expect_congr_law hbelief branchValue
     _ = (1 / 2) * branchValue (decisionInformationHistory true) +
           (1 - 1 / 2) * branchValue (decisionInformationHistory false) := by
       rw [expect_pure, expect_pure] at hmix
@@ -1007,10 +958,10 @@ theorem fullyMixedAssessment_isSequentiallyRationalWithin_matchingPayoff :
   show context.IsLocallyOptimal Set.univ
     (fullyMixedAssessment.strategy .player)
   refine ⟨hfinite _, fun alternative _ => hfinite alternative, ?_⟩
-  intro alternative _ hincumbent halternative
-  rw [continuationContext_matchingPayoff_value alternative halternative,
+  intro alternative _
+  rw [continuationContext_matchingPayoff_value alternative (hfinite alternative),
     continuationContext_matchingPayoff_value
-      (fullyMixedAssessment.strategy .player) hincumbent]
+      (fullyMixedAssessment.strategy .player) (hfinite _)]
 
 theorem fullyMixedAssessment_isSequentiallyConsistent :
     game.IsSequentiallyConsistent information_decisionInformationAntichain
@@ -1079,8 +1030,8 @@ theorem wrongAssessment_continuationContext_value
     (hvalue : (wrongAssessment.continuationContext actingSite
       (matchingPayoff .player) 2).IntegrableAt alternative) :
     (wrongAssessment.continuationContext actingSite
-      (matchingPayoff .player) 2).value alternative hvalue =
-      finiteExpect (alternative .acting) fun choice =>
+      (matchingPayoff .player) 2).value alternative =
+      expect (alternative .acting) fun choice =>
           if choice.1 = some true then 1 else 0 := by
   let kernel : information.InformationHistory .player actingSite.1 →
       PMF execution.History := fun history =>
@@ -1093,13 +1044,8 @@ theorem wrongAssessment_continuationContext_value
     show (wrongAssessment.continuationContext actingSite
       (matchingPayoff .player) 2).IntegrableAt alternative
     exact hvalue
-  have hcond (history : information.InformationHistory .player actingSite.1) :
-      PayoffIntegrable (kernel history) (matchingPayoff .player) :=
-    payoffIntegrable_of_finite (kernel history) (matchingPayoff .player)
   let branchValue := fun history =>
-    expect (kernel history) (matchingPayoff .player) (hcond history)
-  have houter := payoffIntegrable_bind_conditionalExpectation
-    belief kernel (matchingPayoff .player) hbind hcond
+    expect (kernel history) (matchingPayoff .player)
   have hupdated :
       Profile.update (sig := information.behavioralSignature)
           wrongAssessment.strategy .player alternative =
@@ -1111,16 +1057,13 @@ theorem wrongAssessment_continuationContext_value
   have hbelief : belief = PMF.pure (decisionInformationHistory true) := by
     dsimp [belief]
     exact wrongAssessment_belief_acting
-  have hpure : PayoffIntegrable
-      (PMF.pure (decisionInformationHistory true)) branchValue :=
-    payoffIntegrable_of_finite _ _
   calc
-    expect (belief.bind kernel) (matchingPayoff .player) hbind =
-        expect belief branchValue houter :=
-      expect_bind_tower belief kernel (matchingPayoff .player) hbind hcond
-    _ = expect (PMF.pure (decisionInformationHistory true)) branchValue hpure :=
-      expect_congr_law hbelief branchValue houter hpure
-    _ = finiteExpect (alternative .acting) fun choice =>
+    expect (belief.bind kernel) (matchingPayoff .player) =
+        expect belief branchValue :=
+      expect_bind_tower belief kernel (matchingPayoff .player) hbind
+    _ = expect (PMF.pure (decisionInformationHistory true)) branchValue :=
+      expect_congr_law hbelief branchValue
+    _ = expect (alternative .acting) fun choice =>
           if choice.1 = some true then 1 else 0 := by
       rw [expect_pure]
       unfold branchValue kernel
@@ -1135,31 +1078,21 @@ theorem wrongAssessment_continuationContext_value
               2 (decisionHistory true) :=
         congrArg (fun profile =>
           information.runBehavioralFrom profile 2 (decisionHistory true)) hupdated
-      have hfull : PayoffIntegrable
-          (information.runBehavioralFrom
-            (Profile.update (sig := information.behavioralSignature)
-              fullyMixedBehavioralProfile .player alternative)
-            2 (decisionHistory true)) (matchingPayoff .player) :=
-        payoffIntegrable_congr_law hrun.symm
-          (hcond (decisionInformationHistory true))
       calc
         expect (information.runBehavioralFrom
             (Profile.update (sig := information.behavioralSignature)
               wrongAssessment.strategy .player alternative)
             2 (decisionHistory true))
-            (matchingPayoff .player) (hcond (decisionInformationHistory true)) =
+            (matchingPayoff .player) =
           expect (information.runBehavioralFrom
             (Profile.update (sig := information.behavioralSignature)
               fullyMixedBehavioralProfile .player alternative)
             2 (decisionHistory true))
-            (matchingPayoff .player) hfull :=
-              expect_congr_law hrun _ _ _
-        _ = finiteExpect (alternative .acting) (fun choice =>
+            (matchingPayoff .player) :=
+              expect_congr_law hrun _
+        _ = expect (alternative .acting) (fun choice =>
             if choice.1 = some true then 1 else 0) := by
-          have hsame := expect_proof_irrel _ _
-            hfull (payoffIntegrable_of_finite _ _)
-          have hvalue' := runBehavioralFrom_decision_matchingPayoff true alternative
-          exact hsame.trans hvalue'
+          exact runBehavioralFrom_decision_matchingPayoff true alternative
 
 /-- The prescribed `false` policy has value zero, while the whole-policy
 alternative choosing `true` has value one. -/
@@ -1172,34 +1105,32 @@ theorem wrongAssessment_not_isSequentiallyRationalWithin_matchingPayoff :
       (wrongAssessment.strategy .player) := hrational .player actingSite
   rcases hlocal with ⟨hincumbent, hall, hoptimal⟩
   have hdeviation := hoptimal alwaysTruePolicy (Set.mem_univ _)
-    hincumbent (hall alwaysTruePolicy (Set.mem_univ _))
   have hdeviation' :
-      context.value alwaysTruePolicy (hall alwaysTruePolicy (Set.mem_univ _)) ≤
-        context.value (wrongAssessment.strategy .player) hincumbent := by
+      context.value alwaysTruePolicy ≤
+        context.value (wrongAssessment.strategy .player) := by
     simpa only [context] using hdeviation
   have htrue := wrongAssessment_continuationContext_value alwaysTruePolicy
     (hall alwaysTruePolicy (Set.mem_univ _))
   have hincumbent' := wrongAssessment_continuationContext_value
     (wrongAssessment.strategy .player) hincumbent
   have hvalues :
-      finiteExpect (alwaysTruePolicy .acting) (fun choice =>
+      expect (alwaysTruePolicy .acting) (fun choice =>
         if choice.1 = some true then 1 else 0) ≤
-      finiteExpect (wrongAssessment.strategy .player .acting) (fun choice =>
+      expect (wrongAssessment.strategy .player .acting) (fun choice =>
         if choice.1 = some true then 1 else 0) := by
     calc
-      _ = context.value alwaysTruePolicy (hall alwaysTruePolicy (Set.mem_univ _)) :=
-        htrue.symm
-      _ ≤ context.value (wrongAssessment.strategy .player) hincumbent := hdeviation'
+      _ = context.value alwaysTruePolicy := htrue.symm
+      _ ≤ context.value (wrongAssessment.strategy .player) := hdeviation'
       _ = _ := hincumbent'
   have hincumbentValue :
-      finiteExpect (wrongAssessment.strategy Player.player .acting) (fun choice =>
+      expect (wrongAssessment.strategy Player.player .acting) (fun choice =>
         if choice.1 = some true then 1 else 0) = 0 := by
     simp [wrongAssessment, behavioralProfile, behavioralPolicy,
-      finiteExpect_pure]
+      expect_pure]
   have halwaysValue :
-      finiteExpect (alwaysTruePolicy .acting) (fun choice =>
+      expect (alwaysTruePolicy .acting) (fun choice =>
         if choice.1 = some true then 1 else 0) = 1 := by
-    simp [alwaysTruePolicy, finiteExpect_pure]
+    simp [alwaysTruePolicy, expect_pure]
   rw [halwaysValue, hincumbentValue] at hvalues
   norm_num at hvalues
 

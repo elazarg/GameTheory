@@ -52,23 +52,23 @@ theorem netGuard (payment : Bool → ℝ) (action : Bool) :
   payoffIntegrable_of_finite _ _
 
 @[simp] theorem expectedReward_safe :
-    fixture.expectedReward false (rewardGuard false) = 0 := by
+    fixture.expectedReward false = 0 := by
   norm_num [Mechanism.PrincipalAgent.expectedReward, expect_eq_sum,
     Fintype.sum_bool, PMF.pure_apply, fixture]
 
 @[simp] theorem expectedReward_productive :
-    fixture.expectedReward true (rewardGuard true) = 1 := by
+    fixture.expectedReward true = 1 := by
   norm_num [Mechanism.PrincipalAgent.expectedReward, expect_eq_sum,
     Fintype.sum_bool, fairCoin, PMF.uniformOfFintype_apply, fixture]
 
 @[simp] theorem zeroPayment_safe :
-    fixture.agentUtility zeroPayment false (paymentGuard zeroPayment false) = 0 := by
+    fixture.agentUtility zeroPayment false = 0 := by
   norm_num [Mechanism.PrincipalAgent.agentUtility,
     Mechanism.PrincipalAgent.expectedPayment, expect_eq_sum,
     Fintype.sum_bool, PMF.pure_apply, zeroPayment, fixture]
 
 @[simp] theorem zeroPayment_productive :
-    fixture.agentUtility zeroPayment true (paymentGuard zeroPayment true) =
+    fixture.agentUtility zeroPayment true =
       -(1 / 4 : ℝ) := by
   norm_num [Mechanism.PrincipalAgent.agentUtility,
     Mechanism.PrincipalAgent.expectedPayment, expect_eq_sum,
@@ -77,27 +77,27 @@ theorem netGuard (payment : Bool → ℝ) (action : Bool) :
 
 @[simp] theorem successBonus_safe :
     fixture.agentUtility successBonus false
-      (paymentGuard successBonus false) = 0 := by
+       = 0 := by
   norm_num [Mechanism.PrincipalAgent.agentUtility,
     Mechanism.PrincipalAgent.expectedPayment, expect_eq_sum,
     Fintype.sum_bool, PMF.pure_apply, successBonus, fixture]
 
 @[simp] theorem successBonus_productive :
     fixture.agentUtility successBonus true
-      (paymentGuard successBonus true) = 1 / 4 := by
+       = 1 / 4 := by
   norm_num [Mechanism.PrincipalAgent.agentUtility,
     Mechanism.PrincipalAgent.expectedPayment, expect_eq_sum,
     Fintype.sum_bool, PMF.uniformOfFintype_apply, fairCoin,
     successBonus, fixture]
 
 theorem zeroPayment_prefers_safe :
-    fixture.agentUtility zeroPayment true (paymentGuard zeroPayment true) <
-      fixture.agentUtility zeroPayment false (paymentGuard zeroPayment false) := by
+    fixture.agentUtility zeroPayment true <
+      fixture.agentUtility zeroPayment false := by
   norm_num [zeroPayment_safe, zeroPayment_productive]
 
 theorem successBonus_prefers_productive :
-    fixture.agentUtility successBonus false (paymentGuard successBonus false) <
-      fixture.agentUtility successBonus true (paymentGuard successBonus true) := by
+    fixture.agentUtility successBonus false <
+      fixture.agentUtility successBonus true := by
   norm_num [successBonus_safe, successBonus_productive]
 
 theorem successBonus_incentivizes_productive : fixture.IsIncentivized successBonus true := by
@@ -120,11 +120,11 @@ theorem successBonus_rejects_three_quarters :
 /-- The accounting identity specializes to the nonconstant-reward productive
 action. -/
 theorem productive_welfare_accounting :
-    fixture.principalUtility successBonus true (netGuard successBonus true) +
-      fixture.agentUtility successBonus true (paymentGuard successBonus true) =
-      fixture.socialSurplus true (rewardGuard true) :=
+    fixture.principalUtility successBonus true +
+      fixture.agentUtility successBonus true =
+      fixture.socialSurplus true :=
   fixture.principalUtility_add_agentUtility successBonus true
-    (rewardGuard true) (paymentGuard successBonus true) (netGuard successBonus true)
+    (rewardGuard true) (paymentGuard successBonus true)
 
 theorem fixture_exists_incentivized : ∃ action, fixture.IsIncentivized successBonus action :=
   fixture.exists_incentivized successBonus

@@ -47,16 +47,10 @@ theorem exists_sequentialEquilibriumTerminal_of_uniformlyTight
     (hbound : ∀ i final, E.terminal final.state → |payoff i final| ≤ bound i)
     (error : ℕ → ℝ) (herror : Tendsto error atTop (nhds 0))
     (hoptimal : ∀ n i site alternative,
-      (((sequence n).terminalContinuationContext
-        certificate site (payoff i)).value (repair n i alternative)
-        ((sequence n).terminalContinuationContext_integrable_of_bounded_terminal
-          certificate site (payoff i) (bound i)
-          (hbound i) (repair n i alternative))) ≤
-      (((sequence n).terminalContinuationContext
-        certificate site (payoff i)).value ((sequence n).strategy i)
-        ((sequence n).terminalContinuationContext_integrable_of_bounded_terminal
-          certificate site (payoff i) (bound i)
-          (hbound i) ((sequence n).strategy i))) + error n) :
+      ((sequence n).terminalContinuationContext
+        certificate site (payoff i)).value (repair n i alternative) ≤
+      ((sequence n).terminalContinuationContext
+        certificate site (payoff i)).value ((sequence n).strategy i) + error n) :
     ∃ assessment : M.BehavioralAssessment,
       assessment.IsSequentiallyRationalTerminal certificate payoff ∧
         assessment.IsSequentiallyConsistent hantichain := by

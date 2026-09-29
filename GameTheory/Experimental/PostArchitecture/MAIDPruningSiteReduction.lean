@@ -67,13 +67,11 @@ private noncomputable def siteTermContinuationValue
         topological semantics policy owner fixedOwner target view hstable term
         hrelevant).continuationLaw kept action
     exact expect law (view.term term).payoff
-      (payoffIntegrable_of_finite _ _)
   · letI : Fintype (TermConfig view term) := inferInstance
     let law :=
       (nonrelevantTermMarginalCertificate pruning topological semantics policy
         owner fixedOwner target view term hrelevant).marginalLaw
     exact expect law (view.term term).payoff
-      (payoffIntegrable_of_finite _ _)
 
 private theorem expect_taggedContinuation
     {Full Kept Action Term : Type*}
@@ -84,91 +82,70 @@ private theorem expect_taggedContinuation
     expect (outer.bind fun full =>
       (rule full).bind fun action =>
         (kernel (keep full) action).map fun term => ((full, action), term))
-      (fun tagged => payoff tagged.2) (payoffIntegrable_of_finite _ _) =
+      (fun tagged => payoff tagged.2) =
     expect (fullJoint outer keep rule)
-      (fun pair => expect (kernel pair.1 pair.2) payoff
-        (payoffIntegrable_of_finite _ _))
-      (payoffIntegrable_of_finite _ _) := by
+      (fun pair => expect (kernel pair.1 pair.2) payoff) := by
   let value : Kept × Action → ℝ := fun pair =>
-    expect (kernel pair.1 pair.2) payoff (payoffIntegrable_of_finite _ _)
+    expect (kernel pair.1 pair.2) payoff
   let tagged : Full → PMF ((Full × Action) × Term) := fun full =>
     (rule full).bind fun action =>
       (kernel (keep full) action).map fun term => ((full, action), term)
   have hmap (full : Full) (action : Action) :
       expect ((kernel (keep full) action).map fun term =>
           ((full, action), term))
-        (fun tagged : (Full × Action) × Term => payoff tagged.2)
-        (payoffIntegrable_of_finite _ _) =
+        (fun tagged : (Full × Action) × Term => payoff tagged.2) =
         value (keep full, action) := by
     simpa only [value, Function.comp_def] using
       (expect_map (fun term : Term => ((full, action), term))
         (kernel (keep full) action)
-        (fun tagged : (Full × Action) × Term => payoff tagged.2)
-        (payoffIntegrable_of_finite _ _)
-        (payoffIntegrable_of_finite _ _))
+        (fun tagged : (Full × Action) × Term => payoff tagged.2))
   have hinner (full : Full) :
-      expect (tagged full) (fun tagged => payoff tagged.2)
-        (payoffIntegrable_of_finite _ _) =
-        expect (rule full) (fun action => value (keep full, action))
-          (payoffIntegrable_of_finite _ _) := by
+      expect (tagged full) (fun tagged => payoff tagged.2) =
+        expect (rule full) (fun action => value (keep full, action)) := by
     calc
       _ = expect (rule full)
           (fun action => expect
             ((kernel (keep full) action).map fun term =>
               ((full, action), term))
-            (fun tagged : (Full × Action) × Term => payoff tagged.2)
-            (payoffIntegrable_of_finite _ _))
-          (payoffIntegrable_of_finite _ _) := by
+            (fun tagged : (Full × Action) × Term => payoff tagged.2)) := by
             exact expect_bind_tower (rule full)
               (fun action => (kernel (keep full) action).map fun term =>
                 ((full, action), term))
               (fun tagged : (Full × Action) × Term => payoff tagged.2)
               (payoffIntegrable_of_finite _ _)
-              (fun _ => payoffIntegrable_of_finite _ _)
       _ = _ := by
         apply expect_congr_on_support
         intro action _
         exact hmap full action
   have hjoint (full : Full) :
-      expect ((rule full).map fun action => (keep full, action)) value
-        (payoffIntegrable_of_finite _ _) =
-        expect (rule full) (fun action => value (keep full, action))
-          (payoffIntegrable_of_finite _ _) := by
+      expect ((rule full).map fun action => (keep full, action)) value =
+        expect (rule full) (fun action => value (keep full, action)) := by
     simpa only [Function.comp_def] using
-      (expect_map (fun action => (keep full, action)) (rule full) value
-        (payoffIntegrable_of_finite _ _)
-        (payoffIntegrable_of_finite _ _))
+      (expect_map (fun action => (keep full, action)) (rule full) value)
   calc
-    expect (outer.bind tagged) (fun tagged => payoff tagged.2)
-        (payoffIntegrable_of_finite _ _) =
+    expect (outer.bind tagged) (fun tagged => payoff tagged.2) =
       expect outer (fun full => expect (tagged full)
-        (fun tagged => payoff tagged.2) (payoffIntegrable_of_finite _ _))
-        (payoffIntegrable_of_finite _ _) := by
+        (fun tagged => payoff tagged.2)) := by
           exact expect_bind_tower outer tagged
             (fun tagged => payoff tagged.2)
             (payoffIntegrable_of_finite _ _)
-            (fun _ => payoffIntegrable_of_finite _ _)
     _ = expect outer
         (fun full => expect (rule full)
-          (fun action => value (keep full, action))
-          (payoffIntegrable_of_finite _ _))
-        (payoffIntegrable_of_finite _ _) := by
+          (fun action => value (keep full, action))) := by
           apply expect_congr_on_support
           intro full _
           exact hinner full
     _ = expect outer
         (fun full => expect ((rule full).map fun action =>
-          (keep full, action)) value (payoffIntegrable_of_finite _ _))
-        (payoffIntegrable_of_finite _ _) := by
+          (keep full, action)) value) := by
           apply expect_congr_on_support
           intro full _
           exact (hjoint full).symm
-    _ = expect (fullJoint outer keep rule) value
-        (payoffIntegrable_of_finite _ _) := by
+    _ = expect (fullJoint outer keep rule) value := by
           exact (expect_bind_tower outer
             (fun full => (rule full).map fun action => (keep full, action))
             value (payoffIntegrable_of_finite _ _)
-            (fun _ => payoffIntegrable_of_finite _ _)).symm
+            ).symm
 /-- Edge-addition stability constructs the exact graph-free site-local utility
 factorization while every other owner site remains fixed. -/
 def siteLocalUtilityFactorsAt_of_edgeAdditionStableAt
@@ -212,11 +189,10 @@ def siteLocalUtilityFactorsAt_of_edgeAdditionStableAt
     payoffIntegrable_of_finite _ _
   refine ⟨hsite, hjoint, ?_⟩
   have hterm : ∀ term : view.UtilitySite owner,
-      expect law (view.term term).value (payoffIntegrable_of_finite _ _) =
+      expect law (view.term term).value =
         expect joint (fun result =>
           siteTermContinuationValue pruning topological semantics policy owner
-            fixedOwner target view hstable term result.1 result.2)
-          (payoffIntegrable_of_finite _ _) := by
+            fixedOwner target view hstable term result.1 result.2) := by
     intro term
     by_cases hrelevant :
         MAIDPruningFixpointGraph.UtilityView.IsRelevantUtilityTermUnder view
@@ -237,31 +213,25 @@ def siteLocalUtilityFactorsAt_of_edgeAdditionStableAt
               siteFullActionTermProjection view target term =
             (view.term term).value := rfl
       calc
-        expect law (view.term term).value
-            (payoffIntegrable_of_finite _ _) =
+        expect law (view.term term).value =
           expect (law.map (siteFullActionTermProjection view target term))
-            (fun result => (view.term term).payoff result.2)
-            (payoffIntegrable_of_finite _ _) := by
+            (fun result => (view.term term).payoff result.2) := by
               rw [← hprojection]
               exact (expect_map
                 (siteFullActionTermProjection view target term) law
                 (fun result => (view.term term).payoff result.2)
-                (payoffIntegrable_of_finite _ _)
-                (payoffIntegrable_of_finite _ _)).symm
+                ).symm
         _ = expect taggedLaw
-            (fun result => (view.term term).payoff result.2)
-            (payoffIntegrable_of_finite _ _) :=
-          expect_congr_law hlaw _ _ _
+            (fun result => (view.term term).payoff result.2) :=
+          expect_congr_law hlaw _
         _ = expect joint (fun result =>
               expect (termLaw.continuationLaw result.1 result.2)
-                (view.term term).payoff (payoffIntegrable_of_finite _ _))
-            (payoffIntegrable_of_finite _ _) :=
+                (view.term term).payoff) :=
           expect_taggedContinuation context.contextLaw keep rule
             termLaw.continuationLaw (view.term term).payoff
         _ = expect joint (fun result =>
               siteTermContinuationValue pruning topological semantics policy
-                owner fixedOwner target view hstable term result.1 result.2)
-            (payoffIntegrable_of_finite _ _) := by
+                owner fixedOwner target view hstable term result.1 result.2) := by
               apply expect_congr_on_support
               intro result _
               simp [siteTermContinuationValue, hrelevant, termLaw]
@@ -270,26 +240,21 @@ def siteLocalUtilityFactorsAt_of_edgeAdditionStableAt
       let projection := fun assignment : Assignment diagram =>
         Assignment.restrict diagram assignment (view.term term).parents
       let score := expect termLaw.marginalLaw (view.term term).payoff
-        (payoffIntegrable_of_finite _ _)
       have hprojection :
           (view.term term).payoff ∘ projection =
             (view.term term).value := rfl
       have hlaw : law.map projection = termLaw.marginalLaw :=
         termLaw.marginal_eq rule
       calc
-        expect law (view.term term).value
-            (payoffIntegrable_of_finite _ _) =
-          expect (law.map projection) (view.term term).payoff
-            (payoffIntegrable_of_finite _ _) := by
+        expect law (view.term term).value =
+          expect (law.map projection) (view.term term).payoff := by
               simpa only [hprojection] using
                 (expect_map projection law (view.term term).payoff
-                  (payoffIntegrable_of_finite _ _)
-                  (payoffIntegrable_of_finite _ _)).symm
-        _ = score := expect_congr_law hlaw _ _ _
+                  ).symm
+        _ = score := expect_congr_law hlaw _
         _ = expect joint (fun result =>
               siteTermContinuationValue pruning topological semantics policy
-                owner fixedOwner target view hstable term result.1 result.2)
-            (payoffIntegrable_of_finite _ _) := by
+                owner fixedOwner target view hstable term result.1 result.2) := by
               have hvalue : (fun result : KeptContext pruning target ×
                   diagram.Value target.1 =>
                     siteTermContinuationValue pruning topological semantics
@@ -299,7 +264,7 @@ def siteLocalUtilityFactorsAt_of_edgeAdditionStableAt
                 simp [siteTermContinuationValue, hrelevant, termLaw, score]
               rw [hvalue]
               exact (expect_constant joint score
-                (payoffIntegrable_of_finite _ _)).symm
+                ).symm
   let value : view.UtilitySite owner →
       KeptContext pruning target × diagram.Value target.1 → ℝ :=
     fun term result =>
@@ -316,18 +281,16 @@ def siteLocalUtilityFactorsAt_of_edgeAdditionStableAt
     fun _ => payoffIntegrable_of_finite _ _
   unfold siteRuleExpectedUtility GameTheory.expectedUtility
   calc
-    expect law (fun assignment => semantics.utility owner assignment)
-        hsite =
+    expect law (fun assignment => semantics.utility owner assignment) =
       ∑ term : view.UtilitySite owner,
-        expect law (view.term term).value
-          (payoffIntegrable_of_finite _ _) := hsum.2
+        expect law (view.term term).value := hsum.2
     _ = ∑ term : view.UtilitySite owner,
-          expect joint (value term) (hcomponent term) := by
+          expect joint (value term) := by
       apply Finset.sum_congr rfl
       intro term _
       exact hterm term
     _ = expect joint (fun result => ∑ term : view.UtilitySite owner,
-          value term result) hjoint := by
+          value term result) := by
       simpa only [value] using (expect_sum joint value hcomponent).symm
 
 /-- At an edge-addition-stable target, some optimal target rule depends only

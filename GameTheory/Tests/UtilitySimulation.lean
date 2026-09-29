@@ -50,41 +50,29 @@ def layeredUtility : UtilitySimulation source target
     (singletonGroups Unit) :=
   firstUtility.trans secondUtility
 
-private theorem source_value (profile : Profile source.sig) (replacement : Bool)
-    (h : UtilityIntegrable
-      (fun outcome player => booleanUtility (sourceObserve outcome) player) ()
-      (source.play (Profile.update profile () replacement))) :
+private theorem source_value (profile : Profile source.sig) (replacement : Bool) :
     expectedUtility (fun outcome player => booleanUtility (sourceObserve outcome) player) ()
-      (source.play (Profile.update profile () replacement)) h =
+      (source.play (Profile.update profile () replacement)) =
         booleanUtility replacement () := by
   cases replacement <;>
     simp [source, sourceObserve, expectedUtility_pure, booleanUtility,
       Profile.update_same]
 
-private theorem coin_value (h : PayoffIntegrable coin (fun bit => booleanUtility bit ())) :
-    expect coin (fun bit => booleanUtility bit ()) h = 1 := by
+private theorem coin_value :
+    expect coin (fun bit => booleanUtility bit ()) = 1 := by
   rw [expect_eq_sum]
   simp [coin, PMF.uniformOfFintype_apply, booleanUtility]
 
-private theorem target_value (profile : Profile target.sig) (replacement : Fin 3)
-    (h : UtilityIntegrable
-      (fun outcome player => booleanUtility (targetObserve outcome) player) ()
-      (target.play (Profile.update profile () replacement))) :
+private theorem target_value (profile : Profile target.sig) (replacement : Fin 3) :
     expectedUtility (fun outcome player => booleanUtility (targetObserve outcome) player) ()
-      (target.play (Profile.update profile () replacement)) h =
+      (target.play (Profile.update profile () replacement)) =
         if replacement = 0 then 0 else if replacement = 1 then 2 else 1 := by
   fin_cases replacement
   · simp [target, targetObserve, booleanUtility, Profile.update_same,
       expectedUtility_pure]
   · simp [target, targetObserve, booleanUtility, Profile.update_same,
       expectedUtility_pure]
-  · have hmap : UtilityIntegrable
-        (fun outcome player => booleanUtility (targetObserve outcome) player) ()
-        (coin.map TargetOutcome.published) := by
-      simpa [target, Profile.update_same] using h
-    have hcoin : PayoffIntegrable coin (fun bit => booleanUtility bit ()) := by
-      exact payoffIntegrable_of_finite coin _
-    have hlaw : (coin.map TargetOutcome.published).map targetObserve =
+  · have hlaw : (coin.map TargetOutcome.published).map targetObserve =
         coin.map id := by
       have hf : targetObserve ∘ TargetOutcome.published = id := by
         funext bit
@@ -92,30 +80,30 @@ private theorem target_value (profile : Profile target.sig) (replacement : Fin 3
       rw [PMF.map_comp, hf]
     have heq : expectedUtility
         (fun outcome player => booleanUtility (targetObserve outcome) player) ()
-        (coin.map TargetOutcome.published) hmap =
-          expect coin (fun bit => booleanUtility bit ()) hcoin := by
+        (coin.map TargetOutcome.published) =
+          expect coin (fun bit => booleanUtility bit ()) := by
       exact expect_observed_law_eq (coin.map TargetOutcome.published) coin
-        targetObserve id (fun bit => booleanUtility bit ()) hlaw hmap hcoin
-    simpa [target, Profile.update_same] using heq.trans (coin_value hcoin)
+        targetObserve id (fun bit => booleanUtility bit ()) hlaw
+    simpa [target, Profile.update_same] using heq.trans coin_value
 
 /-- The mean-one target deviation forces the uniform certificate to select
 the source action worth two. -/
 example :
     ∃ alternative : source.sig.Strategy (), alternative = true ∧
-      ∀ hsource : UtilityIntegrable
+      (UtilityIntegrable
           (fun outcome player => booleanUtility (sourceObserve outcome) player) ()
-          (source.play (Profile.update (fun _ => false) () alternative)),
-        ∃ htarget : UtilityIntegrable
+          (source.play (Profile.update (fun _ => false) () alternative)) →
+        UtilityIntegrable
             (fun outcome player => booleanUtility (targetObserve outcome) player) ()
             (target.play (Profile.update
-              (layeredUtility.compileProfile (fun _ => false)) () (2 : Fin 3))),
+              (layeredUtility.compileProfile (fun _ => false)) () (2 : Fin 3))) ∧
           expectedUtility
               (fun outcome player => booleanUtility (targetObserve outcome) player) ()
               (target.play (Profile.update
-                (layeredUtility.compileProfile (fun _ => false)) () (2 : Fin 3))) htarget ≤
+                (layeredUtility.compileProfile (fun _ => false)) () (2 : Fin 3))) ≤
             expectedUtility
               (fun outcome player => booleanUtility (sourceObserve outcome) player) ()
-              (source.play (Profile.update (fun _ => false) () alternative)) hsource := by
+              (source.play (Profile.update (fun _ => false) () alternative))) := by
   obtain ⟨alternative, bound⟩ :=
     layeredUtility.unilateral_bound subset_rfl (fun _ => false) () (2 : Fin 3)
   refine ⟨alternative, ?_, bound⟩
@@ -123,8 +111,8 @@ example :
   | false =>
       have hs := observed_integrable
         (source.play (Profile.update (fun _ => false) () false)) sourceObserve
-      obtain ⟨ht, hle⟩ := bound hs
-      rw [target_value _ 2 ht, source_value _ false hs] at hle
+      obtain ⟨-, hle⟩ := bound hs
+      rw [target_value _ 2, source_value _ false] at hle
       norm_num [booleanUtility] at hle
   | true => rfl
 
@@ -140,10 +128,10 @@ example : IsεNash target
   let hdev := observed_integrable
     (source.play (Profile.update (fun _ => false) () alternative)) sourceObserve
   refine ⟨hbase, hdev, ?_⟩
-  rw [source_value _ alternative hdev]
+  rw [source_value _ alternative]
   have hbaseValue : expectedUtility
       (fun outcome player => booleanUtility (sourceObserve outcome) player) ()
-      (source.play (fun _ => false)) hbase = 0 := by
+      (source.play (fun _ => false)) = 0 := by
     simp [sourceObserve, booleanUtility, expectedUtility_pure]
   rw [hbaseValue]
   cases alternative <;> norm_num [booleanUtility]
@@ -165,7 +153,7 @@ theorem compiled_dominant_isBestResponse :
       (source.play (Profile.update profile () alternative)) :=
     observed_integrable _ sourceObserve
   refine ⟨hbase, hdev, ?_⟩
-  rw [source_value profile alternative hdev, source_value profile true hbase]
+  rw [source_value profile alternative, source_value profile true]
   cases alternative <;> norm_num [booleanUtility]
 
 /-- The mixed target deviation has value one, strictly below the compiled
@@ -173,16 +161,15 @@ source action worth two. -/
 example :
     expectedUtility (fun outcome player => booleanUtility (targetObserve outcome) player) ()
         (target.play (Profile.update (layeredUtility.compileProfile (fun _ => false)) ()
-          (2 : Fin 3))) (observed_integrable _ targetObserve) = 1 ∧
+          (2 : Fin 3))) = 1 ∧
       expectedUtility (fun outcome player => booleanUtility (targetObserve outcome) player) ()
         (target.play (Profile.update (layeredUtility.compileProfile (fun _ => false)) ()
           (layeredUtility.compileStrategy () true)))
-          (observed_integrable _ targetObserve) = 2 := by
+           = 2 := by
   constructor
-  · exact target_value _ 2 _
+  · exact target_value _ 2
   · have hcompile : layeredUtility.compileStrategy () true = (1 : Fin 3) := rfl
     simpa [hcompile] using target_value
       (layeredUtility.compileProfile (fun _ => false)) 1
-      (observed_integrable _ targetObserve)
 
 end GameTheory.GameForm.MixtureSimulationOn.Tests

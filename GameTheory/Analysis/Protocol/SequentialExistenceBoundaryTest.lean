@@ -14,11 +14,6 @@ namespace GameTheory.Tests.SequentialExistenceBoundary
 open GameTheory GameTheory.Protocol GameTheory.Protocol.ExecutionProtocol
 open GameTheory.Math.Probability
 
-local syntax:max "finiteExpect" term:max term:max : term
-local macro_rules
-  | `(term| finiteExpect $law:term $payoff:term) =>
-      `(expect $law $payoff (payoffIntegrable_of_finite $law $payoff))
-
 set_option backward.isDefEq.respectTransparency false in
 inductive State
   | root | choice | short | waiting | long
@@ -241,20 +236,18 @@ theorem step_value (profile : (who : Unit) → information.BehavioralPolicy who)
     (fuel : ℕ) (history : execution.History) (running : ¬ execution.terminal history.state)
     (value : State → ℝ)
     (continuation : ∀ nextHistory : execution.History,
-      finiteExpect (information.runBehavioralFrom profile fuel nextHistory) (payoff ()) =
+      expect (information.runBehavioralFrom profile fuel nextHistory) (payoff ()) =
         value nextHistory.state) :
-    finiteExpect (information.runBehavioralFrom profile (fuel + 1) history) (payoff ()) =
-      finiteExpect (localLaw profile history.state)
+    expect (information.runBehavioralFrom profile (fuel + 1) history) (payoff ()) =
+      expect (localLaw profile history.state)
         (fun choice => value (next history.state (choice.getD false))) := by
   rw [information.runBehavioralFrom_succ_of_not_terminal profile fuel running,
     information.behavioralJoint_eq_map_of_at_most_one_active profile history.trace running ()
       (fun who _ => Subsingleton.elim _ _)]
-  rw [expect_bind_tower _ _ _ (payoffIntegrable_of_finite _ _)
-    (fun _ => payoffIntegrable_of_finite _ _),
-    expect_map _ _ _ (payoffIntegrable_of_finite _ _)
-      (payoffIntegrable_of_finite _ _)]
+  rw [expect_bind_tower _ _ _ (payoffIntegrable_of_finite _ _) ,
+    expect_map _ _ _]
   calc
-    _ = finiteExpect (profile () (information.infoOf () history.trace))
+    _ = expect (profile () (information.infoOf () history.trace))
         (fun choice => value (next history.state (choice.1.getD false))) := by
       apply expect_congr_on_support
       intro choice _
@@ -262,23 +255,23 @@ theorem step_value (profile : (who : Unit) → information.BehavioralPolicy who)
       simp only [Function.comp_apply]
       rw [continuation]
       simp [singletonJoint]
-    _ = finiteExpect (localLaw profile (information.infoOf () history.trace))
+    _ = expect (localLaw profile (information.infoOf () history.trace))
         (fun choice => value (next history.state (choice.getD false))) := by
       rw [localLaw]
       exact (expect_map Subtype.val
         (profile () (information.infoOf () history.trace))
         (fun choice => value (next history.state (choice.getD false)))
-        (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)).symm
+        ).symm
     _ = _ := by rw [show information.infoOf () history.trace = history.state from infoOf () _]
 
 def shortWeight (profile : (who : Unit) → information.BehavioralPolicy who) : ℝ :=
-  finiteExpect (localLaw profile State.choice)
+  expect (localLaw profile State.choice)
     (fun choice => if choice = some false then 1 else 0)
 
 theorem shortWeight_le_one (profile : (who : Unit) → information.BehavioralPolicy who) :
     shortWeight profile ≤ 1 := by
   unfold shortWeight
-  apply expect_le_const
+  apply expect_le_const _ _ (payoffIntegrable_of_finite _ _)
   intro choice _
   split <;> norm_num
 
@@ -292,14 +285,14 @@ theorem choice_cases (choice : information.Choice () State.choice) :
 set_option backward.isDefEq.respectTransparency false in
 theorem value_one (profile : (who : Unit) → information.BehavioralPolicy who)
     (history : execution.History) :
-    finiteExpect (information.runBehavioralFrom profile 1 history) (payoff ()) =
+    expect (information.runBehavioralFrom profile 1 history) (payoff ()) =
       match history.state with
       | .root => 0
       | .choice => shortWeight profile
       | .short => 1
       | .waiting | .long => 2 := by
   have continuation (nextHistory : execution.History) :
-      finiteExpect (information.runBehavioralFrom profile 0 nextHistory) (payoff ()) =
+      expect (information.runBehavioralFrom profile 0 nextHistory) (payoff ()) =
         statePayoff nextHistory.state := by
     rw [InformationModel.runBehavioralFrom, ExecutionProtocol.runRandomizedFor,
       expect_pure]
@@ -330,7 +323,7 @@ theorem value_one (profile : (who : Unit) → information.BehavioralPolicy who)
 
 theorem value_two_root (profile : (who : Unit) → information.BehavioralPolicy who)
     (history : execution.History) (stateEq : history.state = .root) :
-    finiteExpect (information.runBehavioralFrom profile 2 history) (payoff ()) =
+    expect (information.runBehavioralFrom profile 2 history) (payoff ()) =
       shortWeight profile := by
   rw [step_value profile 1 history (by simp [stateEq, State.running])
     (fun state => match state with
@@ -341,15 +334,15 @@ theorem value_two_root (profile : (who : Unit) → information.BehavioralPolicy 
 set_option backward.isDefEq.respectTransparency false in
 theorem value_two_choice (profile : (who : Unit) → information.BehavioralPolicy who)
     (history : execution.History) (stateEq : history.state = .choice) :
-    finiteExpect (information.runBehavioralFrom profile 2 history) (payoff ()) =
+    expect (information.runBehavioralFrom profile 2 history) (payoff ()) =
       2 - shortWeight profile := by
   rw [step_value profile 1 history (by simp [stateEq, State.running])
     (fun state => match state with
       | .root => 0 | .choice => shortWeight profile | .short => 1 | .waiting | .long => 2)
     (value_one profile)]
   simp only [stateEq, shortWeight]
-  rw [← expect_constant (localLaw profile State.choice) 2
-    (payoffIntegrable_of_finite _ _), ← expect_sub]
+  rw [← expect_constant (localLaw profile State.choice) 2,
+    ← expect_sub (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)]
   apply expect_congr_on_support
   intro choice supported
   rw [localLaw, PMF.support_map] at supported
@@ -374,8 +367,8 @@ private theorem continuationValue_eq_constant
     (hvalue : ∀ history : information.InformationHistory () site.1,
       expect
         (information.runBehavioralFrom (fun _ => alternative) 2 history.1)
-        (payoff ()) (payoffIntegrable_of_finite _ _) = value) :
-    (assessment.continuationContext site (payoff ()) 2).value alternative hbase = value := by
+        (payoff ()) = value) :
+    (assessment.continuationContext site (payoff ()) 2).value alternative = value := by
   let belief := assessment.belief () site
   let q := fun history : information.InformationHistory () site.1 =>
     information.runBehavioralFrom (fun _ => alternative) 2 history.1
@@ -391,30 +384,25 @@ private theorem continuationValue_eq_constant
       (update_eq assessment alternative)
   have hcanonical : PayoffIntegrable canonicalLaw (payoff ()) :=
     payoffIntegrable_congr_law hlaw hbase
-  have hconditional : ∀ history, PayoffIntegrable (q history) (payoff ()) :=
-    fun _ => payoffIntegrable_of_finite _ _
   have hctx :=
     InformationModel.BehavioralAssessment.continuationContext_value
-      assessment site (payoff ()) 2 alternative hbase
+      assessment site (payoff ()) 2 alternative
   calc
-    _ = expect actualLaw (payoff ()) hbase := hctx
-    _ = expect canonicalLaw (payoff ()) hcanonical :=
-      expect_congr_law hlaw (payoff ()) hbase hcanonical
-    _ = expect belief (fun history => expect (q history) (payoff ())
-          (hconditional history))
-          (payoffIntegrable_bind_conditionalExpectation belief q (payoff ())
-            hcanonical hconditional) :=
-      expect_bind_tower belief q (payoff ()) hcanonical hconditional
-    _ = expect belief (fun _ => value) (payoffIntegrable_constant belief value) := by
+    _ = expect actualLaw (payoff ()) := hctx
+    _ = expect canonicalLaw (payoff ()) :=
+      expect_congr_law hlaw (payoff ())
+    _ = expect belief (fun history => expect (q history) (payoff ())) :=
+      expect_bind_tower belief q (payoff ()) hcanonical
+    _ = expect belief (fun _ => value) := by
       apply expect_congr_on_support
       intro history _
       exact hvalue history
-    _ = value := expect_constant belief value (payoffIntegrable_constant belief value)
+    _ = value := expect_constant belief value
 
 theorem context_value_root (assessment : information.BehavioralAssessment)
     (alternative : information.BehavioralPolicy ())
     (h : (assessment.continuationContext rootSite (payoff ()) 2).IntegrableAt alternative) :
-  (assessment.continuationContext rootSite (payoff ()) 2).value alternative h =
+  (assessment.continuationContext rootSite (payoff ()) 2).value alternative =
       shortWeight (fun _ => alternative) := by
   apply continuationValue_eq_constant assessment rootSite alternative h
     (shortWeight (fun _ => alternative))
@@ -426,7 +414,7 @@ theorem context_value_root (assessment : information.BehavioralAssessment)
 theorem context_value_choice (assessment : information.BehavioralAssessment)
     (alternative : information.BehavioralPolicy ())
     (h : (assessment.continuationContext choiceSite (payoff ()) 2).IntegrableAt alternative) :
-  (assessment.continuationContext choiceSite (payoff ()) 2).value alternative h =
+  (assessment.continuationContext choiceSite (payoff ()) 2).value alternative =
       2 - shortWeight (fun _ => alternative) := by
   apply continuationValue_eq_constant assessment choiceSite alternative h
     (2 - shortWeight (fun _ => alternative))
@@ -451,8 +439,8 @@ theorem no_sequentially_rational_assessment
   rcases rational () choiceSite with ⟨hchoice, hchoiceAllowed, hchoiceOptimal⟩
   have hrootAlt := hrootAllowed (policy false) (Set.mem_univ _)
   have hchoiceAlt := hchoiceAllowed (policy true) (Set.mem_univ _)
-  have atRoot := hrootOptimal (policy false) (Set.mem_univ _) hroot hrootAlt
-  have atChoice := hchoiceOptimal (policy true) (Set.mem_univ _) hchoice hchoiceAlt
+  have atRoot := hrootOptimal (policy false) (Set.mem_univ _)
+  have atChoice := hchoiceOptimal (policy true) (Set.mem_univ _)
   rw [context_value_root assessment (policy false) hrootAlt,
     context_value_root assessment (assessment.strategy ()) hroot, shortWeight_short] at atRoot
   rw [context_value_choice assessment (policy true) hchoiceAlt,

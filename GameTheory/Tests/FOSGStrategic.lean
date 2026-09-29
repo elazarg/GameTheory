@@ -110,14 +110,14 @@ private theorem optionalOutcomeUtility_integrable
 private theorem source_expectedUtility_le_one
     (law : PMF source.History) (who : Bool)
     (hintegrable : UtilityIntegrable sourceUtility who law) :
-    expectedUtility sourceUtility who law hintegrable ≤ 1 := by
+    expectedUtility sourceUtility who law ≤ 1 := by
   have hconstant : PayoffIntegrable law (fun _ => (1 : ℝ)) :=
     payoffIntegrable_of_bounded law _ (C := 1) (fun _ => by norm_num)
   calc
-    _ ≤ expect law (fun _ => 1) hconstant :=
+    _ ≤ expect law (fun _ => 1) :=
       expect_mono (fun history _ => (abs_le.mp
         (sourceUtility_abs_le_one history who)).2) hintegrable hconstant
-    _ = 1 := expect_constant law 1 hconstant
+    _ = 1 := expect_constant law 1
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Updating one deterministic behavioral coordinate is the behavioral lift
@@ -143,8 +143,7 @@ corresponding simultaneous action profile. -/
 theorem expectedUtility_behavioralProfile (actions : Bool → Bool)
     (who : Bool) :
     expectedUtility sourceUtility who
-        (source.information.runBehavioral (behavioralProfile actions) 1)
-        (sourceUtility_integrable _ who) =
+        (source.information.runBehavioral (behavioralProfile actions) 1) =
       if actions who then 1 else 0 := by
   let policies := policyProfile
     GameTheory.Examples.FOSG.twoBitSource actions
@@ -156,11 +155,9 @@ theorem expectedUtility_behavioralProfile (actions : Bool → Bool)
   calc
     expectedUtility sourceUtility who
         ((source.information.toBehavioralGameForm 1).play
-          (fun player => (policies player).toBehavioral))
-        (sourceUtility_integrable _ who) =
+          (fun player => (policies player).toBehavioral)) =
       expectedUtility sourceUtility who
-        ((source.information.toGameForm 1).play policies)
-        (sourceUtility_integrable _ who) := by
+        ((source.information.toGameForm 1).play policies) := by
       rw [InformationModel.toBehavioralGameForm_play_toBehavioral]
     _ = expectedUtility
         (utilityOfOutcome GameTheory.Examples.FOSG.twoBitSource
@@ -168,16 +165,14 @@ theorem expectedUtility_behavioralProfile (actions : Bool → Bool)
         (PMF.map
           (fun history =>
             outcomeOfState GameTheory.Examples.FOSG.twoBitSource history.state)
-          ((source.information.toGameForm 1).play policies))
-        (optionalOutcomeUtility_integrable _ who) := by
+          ((source.information.toGameForm 1).play policies)) := by
       rw [expectedUtility_map]
       rfl
     _ = expectedUtility
         (utilityOfOutcome GameTheory.Examples.FOSG.twoBitSource
           outcomeUtility) who
         ((toProtocolForm GameTheory.Examples.FOSG.twoBitSource).play
-          (policyProfile GameTheory.Examples.FOSG.twoBitSource actions))
-        (optionalOutcomeUtility_integrable _ who) := rfl
+          (policyProfile GameTheory.Examples.FOSG.twoBitSource actions)) := rfl
     _ = _ := by
       rw [toProtocolForm_play_policyProfile]
       simp [PMF.pure_map, expectedUtility_pure, utilityOfOutcome]
@@ -197,22 +192,20 @@ theorem allTrue_isNash :
   refine ⟨hpreferred, halternative, ?_⟩
   have hpreferredValue : expectedUtility sourceUtility who
       (source.information.runBehavioral (behavioralProfile allTrueActions) 1)
-      hpreferred = 1 := by
+       = 1 := by
     calc
       _ = expectedUtility sourceUtility who
           (source.information.runBehavioral
-            (behavioralProfile allTrueActions) 1)
-          (sourceUtility_integrable _ who) :=
-        expectedUtility_congr_law sourceUtility who rfl hpreferred
-          (sourceUtility_integrable _ who)
+            (behavioralProfile allTrueActions) 1) :=
+        expectedUtility_congr_law sourceUtility who rfl
       _ = 1 := by
         rw [expectedUtility_behavioralProfile]
         simp [allTrueActions]
   calc
     _ ≤ 1 := source_expectedUtility_le_one _ who halternative
     _ = expectedUtility sourceUtility who
-        (source.information.runBehavioral (behavioralProfile allTrueActions) 1)
-        hpreferred := hpreferredValue.symm
+        (source.information.runBehavioral (behavioralProfile allTrueActions) 1) :=
+      hpreferredValue.symm
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The all-false control is not Nash: player `false` can change only its own
@@ -236,11 +229,9 @@ theorem allFalse_not_isNash :
   have hpreferredValue := expectedUtility_behavioralProfile allFalseActions false
   have hdeviationValue := expectedUtility_behavioralProfile deviatedActions false
   have hle' : expectedUtility sourceUtility false
-      (source.information.runBehavioral (behavioralProfile deviatedActions) 1)
-      (payoffIntegrable_congr_law hdeviationLaw halternative) ≤
+      (source.information.runBehavioral (behavioralProfile deviatedActions) 1) ≤
     expectedUtility sourceUtility false
-      (source.information.runBehavioral (behavioralProfile allFalseActions) 1)
-      hpreferred := by
+      (source.information.runBehavioral (behavioralProfile allFalseActions) 1) := by
     exact hle
   rw [hdeviationValue, hpreferredValue] at hle'
   norm_num [allFalseActions, deviatedActions, Profile.update_same] at hle'

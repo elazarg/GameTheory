@@ -39,15 +39,11 @@ theorem terminalContinuationContext_value_tendsto_of_bounded_terminal
     (hbound : ∀ final, E.terminal final.state → |payoff final| ≤ C) :
     Tendsto
       (fun n =>
-        (((sequence n).terminalContinuationContext
-          certificate site payoff).value (alternative n)
-          ((sequence n).terminalContinuationContext_integrable_of_bounded_terminal
-            certificate site payoff C hbound (alternative n))))
+        ((sequence n).terminalContinuationContext
+          certificate site payoff).value (alternative n))
       atTop
       (nhds ((target.terminalContinuationContext
-        certificate site payoff).value replacement
-        (target.terminalContinuationContext_integrable_of_bounded_terminal
-          certificate site payoff C hbound replacement))) := by
+        certificate site payoff).value replacement)) := by
   classical
   let kernel (n : ℕ) (history : M.InformationHistory who site.1) : PMF E.History :=
     M.runBehavioralTerminalFrom certificate
@@ -73,11 +69,9 @@ theorem terminalContinuationContext_value_tendsto_of_bounded_terminal
     · simpa [clipped, hterm] using hbound final hterm
     · simpa [clipped, hterm] using hC
   have hseq (n : ℕ) :
-      (((sequence n).terminalContinuationContext
-        certificate site payoff).value (alternative n)
-        ((sequence n).terminalContinuationContext_integrable_of_bounded_terminal
-          certificate site payoff C hbound (alternative n))) =
-      expect (law n) clipped (payoffIntegrable_of_bounded _ clipped hclip) := by
+      ((sequence n).terminalContinuationContext
+        certificate site payoff).value (alternative n) =
+      expect (law n) clipped := by
     apply expect_congr_on_support
     · intro final hfinal
       have hterm :=
@@ -86,11 +80,9 @@ theorem terminalContinuationContext_value_tendsto_of_bounded_terminal
       show payoff final = clipped final
       simp [clipped, hterm]
   have htarget :
-      ((target.terminalContinuationContext certificate
-        site payoff).value replacement
-        (target.terminalContinuationContext_integrable_of_bounded_terminal
-          certificate site payoff C hbound replacement)) =
-      expect lawLimit clipped (payoffIntegrable_of_bounded _ clipped hclip) := by
+      (target.terminalContinuationContext certificate
+        site payoff).value replacement =
+      expect lawLimit clipped := by
     apply expect_congr_on_support
     · intro final hfinal
       have hterm :=
@@ -123,16 +115,10 @@ theorem BehavioralAssessment.isSequentiallyRationalTerminal_of_converging_deviat
       |payoff i final| ≤ bound i)
     (error : ℕ → ℝ) (herror : Tendsto error atTop (nhds 0))
     (hoptimal : ∀ n i site alternative,
-      (((sequence n).terminalContinuationContext
-        certificate site (payoff i)).value (repair n i alternative)
-        ((sequence n).terminalContinuationContext_integrable_of_bounded_terminal
-          certificate site (payoff i) (bound i)
-          (hbound i) (repair n i alternative))) ≤
-      (((sequence n).terminalContinuationContext
-        certificate site (payoff i)).value ((sequence n).strategy i)
-        ((sequence n).terminalContinuationContext_integrable_of_bounded_terminal
-          certificate site (payoff i) (bound i)
-          (hbound i) ((sequence n).strategy i))) + error n) :
+      ((sequence n).terminalContinuationContext
+        certificate site (payoff i)).value (repair n i alternative) ≤
+      ((sequence n).terminalContinuationContext
+        certificate site (payoff i)).value ((sequence n).strategy i) + error n) :
     target.IsSequentiallyRationalTerminal certificate payoff := by
   intro i site
   simp only [BehavioralAssessment.IsSequentiallyRationalAt,
@@ -142,7 +128,7 @@ theorem BehavioralAssessment.isSequentiallyRationalTerminal_of_converging_deviat
   · intro alternative _
     exact target.terminalContinuationContext_integrable_of_bounded_terminal
       certificate site (payoff i) (bound i) (hbound i) alternative
-  · intro alternative _ hincumbent halternative
+  · intro alternative _
     have hdeviation := M.terminalContinuationContext_value_tendsto_of_bounded_terminal
       certificate hstrategy i site (hbelief i site) (hrepair i alternative)
       (payoff i) (bound i) (hC i) (hbound i)
@@ -151,6 +137,6 @@ theorem BehavioralAssessment.isSequentiallyRationalTerminal_of_converging_deviat
       (payoff i) (bound i) (hC i) (hbound i)
     have hlimit := le_of_tendsto_of_tendsto hdeviation (hbaseline.add herror)
       (Eventually.of_forall fun n => hoptimal n i site alternative)
-    simpa only [Context.value, expect_proof_irrel, add_zero] using hlimit
+    simpa only [add_zero] using hlimit
 
 end GameTheory.Protocol.InformationModel

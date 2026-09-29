@@ -47,24 +47,23 @@ theorem stage_utility_unbounded (profile : Profile game.form.sig) (bound : ℝ) 
     linarith
 
 def noiseMean : ℝ :=
-  expect geometric (fun noise => (noise : ℝ) + 1) linearUtility_integrable_geometric
+  expect geometric (fun noise => (noise : ℝ) + 1)
 
 theorem stagePayoff_eq (profile : Profile game.form.sig) :
-    game.stagePayoff profile () (stage_integrable () profile) =
+    game.stagePayoff profile () =
       (if profile () then (1 : ℝ) else 0) + noiseMean := by
   have hconst := payoffIntegrable_constant geometric
     ((if profile () then 1 else 0 : ℕ) : ℝ)
   have hlinear := linearUtility_integrable_geometric
   have hmap := expectedUtility_map game.utility ()
     (fun noise : ℕ => (if profile () then 1 else 0, noise)) geometric
-    (stage_integrable () profile)
   have hadd := expect_add hconst hlinear
   rw [expect_constant] at hadd
   simpa [game, form, UtilityGame.stagePayoff, expectedUtility, linearUtility,
     noiseMean] using hmap.trans hadd
 
 theorem stage_bound (profile : Profile game.form.sig) :
-    |game.stagePayoff profile () (stage_integrable () profile)| ≤ 1 + |noiseMean| := by
+    |game.stagePayoff profile ()| ≤ 1 + |noiseMean| := by
   rw [stagePayoff_eq]
   calc
     |(if profile () then (1 : ℝ) else 0) + noiseMean| ≤
@@ -110,7 +109,7 @@ theorem discounted_afterSignal (signal : ℕ) :
   rw [afterSignal_responding]
   unfold discountedValue UtilityGame.PublicMonitoring.discountedPayoffOfBounded
   rw [monitoring.discountedPayoff_stationaryMonitoredProfile
-    (by norm_num) (by norm_num) _ () (stage_integrable () _)]
+    (by norm_num) (by norm_num) _ ()]
   simp [stagePayoff_eq]
 
 /-- The Bellman continuation integrand is nonconstant on supported signals. -/
@@ -132,8 +131,7 @@ theorem bellman :
     discountedValue responding =
       (1 / 2 : ℝ) * noiseMean + (1 / 2 : ℝ) *
         expect geometric
-          (fun signal => discountedValue (monitoring.afterSignal responding signal))
-          continuation_integrable := by
+          (fun signal => discountedValue (monitoring.afterSignal responding signal)) := by
   have h := monitoring.discountedPayoff_eq_head_add_expected
     (by norm_num : (0 : ℝ) ≤ 1 / 2) (by norm_num : (1 / 2 : ℝ) < 1)
     stage_integrable responding () stage_bound

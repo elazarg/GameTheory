@@ -30,11 +30,9 @@ variable {ι : Type uι} (G : Game.{uι, us, ua} ι)
 /-- The normalized one-step utility with continuation value `value`. -/
 def discountedAuxUtility (β : ℝ) (value : G.State → ι → ℝ)
     (state : G.State) (joint : ∀ player, G.Action player)
-    (who : ι)
-    (hintegrable : PayoffIntegrable (G.transition state joint)
-      (fun next => value next who)) : ℝ :=
+    (who : ι) : ℝ :=
   G.normalizedOneStepUtility β (fun next => value next who)
-    state joint who hintegrable
+    state joint who
 
 /-- A finite next-state carrier integrates each pure one-step law; the
 joint-action outcome carrier itself need not be finite. -/
@@ -137,20 +135,17 @@ theorem discountedAuxPurePayoff_eq_scalar [Finite G.State] (β : ℝ)
     (value : G.State → ι → ℝ) (state : G.State)
     (joint : ∀ player, G.Action player) (who : ι) :
     expectedUtility (G.discountedAuxGame β value state).utility who
-        ((G.discountedAuxGame β value state).form.play joint)
-        (G.discountedAuxIntegrable β value state who joint) =
-      G.discountedAuxUtility β value state joint who
-        (payoffIntegrable_of_finite _ _) :=
+        ((G.discountedAuxGame β value state).form.play joint) =
+      G.discountedAuxUtility β value state joint who :=
   G.oneStepUtility_pure_expected β value state joint who
-    (payoffIntegrable_of_finite _ _) _
+    (payoffIntegrable_of_finite _ _)
 
 /-- The on-profile auxiliary expected payoff in real simplex coordinates. -/
 def finkAuxPayoff [Fintype ι] [DecidableEq ι]
     [∀ player, Fintype (G.Action player)] (β : ℝ) {bound : ℝ}
     (point : G.finkDomain bound) (state : G.State) (who : ι) : ℝ :=
   payoff (G.oneStepForm state)
-    (G.discountedAuxGame β (G.finkValue point) state).utility
-    (G.discountedAuxIntegrable β (G.finkValue point) state) who
+    (G.discountedAuxGame β (G.finkValue point) state).utility who
     (G.finkStateWeights point state)
 
 /-- The auxiliary payoff after one pure deviation, in finite coordinates. -/
@@ -162,8 +157,7 @@ def finkDeviationPayoff [Fintype ι] [DecidableEq ι]
     ((PMF.pure action) (joint who)).toReal *
       ((∏ player ∈ Finset.univ.erase who,
           G.finkStateWeights point state player (joint player)) *
-        G.discountedAuxUtility β (G.finkValue point) state joint who
-          (payoffIntegrable_of_finite _ _))
+        G.discountedAuxUtility β (G.finkValue point) state joint who)
 
 theorem finkDeviationPayoff_eq_payoff_update
     [Fintype ι] [DecidableEq ι]
@@ -172,8 +166,7 @@ theorem finkDeviationPayoff_eq_payoff_update
     (action : G.Action who) :
     G.finkDeviationPayoff β point state who action =
       payoff (G.oneStepForm state)
-        (G.discountedAuxGame β (G.finkValue point) state).utility
-        (G.discountedAuxIntegrable β (G.finkValue point) state) who
+        (G.discountedAuxGame β (G.finkValue point) state).utility who
         (Profile.update (G.finkStateWeights point state) who
           (fun candidate => ((PMF.pure action) candidate).toReal)) := by
   rw [payoff_update]
@@ -189,8 +182,6 @@ theorem finkAuxPayoff_eq_expectedUtility
     G.finkAuxPayoff β point state who =
       expectedUtility (G.discountedAuxGame β (G.finkValue point) state).utility who
         ((G.discountedAuxGame β (G.finkValue point) state).form.mixed.play
-          (G.finkProfile point state))
-        (G.discountedAuxMixedIntegrable β (G.finkValue point) state who
           (G.finkProfile point state)) := by
   unfold finkAuxPayoff
   rw [← payoff_probs (F := G.oneStepForm state)
@@ -208,9 +199,6 @@ theorem finkDeviationPayoff_eq_expectedUtility
     G.finkDeviationPayoff β point state who action =
       expectedUtility (G.discountedAuxGame β (G.finkValue point) state).utility who
         ((G.discountedAuxGame β (G.finkValue point) state).form.mixed.play
-          (Profile.update (G.finkProfile point state) who
-            (PMF.pure action)))
-        (G.discountedAuxMixedIntegrable β (G.finkValue point) state who
           (Profile.update (G.finkProfile point state) who
             (PMF.pure action))) := by
   rw [G.finkDeviationPayoff_eq_payoff_update]
@@ -238,12 +226,7 @@ theorem finkGain_eq_mixedGain [Fintype ι]
     (state : G.State) (who : ι) (action : G.Action who) :
     G.finkGain β point state who action =
       (G.discountedAuxGame β (G.finkValue point) state).mixedGain
-        (G.finkProfile point state) who action
-        (G.discountedAuxMixedIntegrable β (G.finkValue point) state who
-          (G.finkProfile point state))
-        (G.discountedAuxMixedIntegrable β (G.finkValue point) state who
-          (Profile.update (G.finkProfile point state) who
-            (PMF.pure action))) := by
+        (G.finkProfile point state) who action := by
   unfold finkGain UtilityGame.mixedGain
   rw [G.finkDeviationPayoff_eq_expectedUtility,
     G.finkAuxPayoff_eq_expectedUtility]
@@ -254,6 +237,7 @@ def finkGainSum [Fintype ι] [DecidableEq ι]
     (point : G.finkDomain bound) (state : G.State) (who : ι) : ℝ :=
   ∑ action, max (G.finkGain β point state who action) 0
 
+omit [Fintype G.State] in
 theorem finkGainSum_nonneg [Fintype ι]
     [DecidableEq ι] [∀ player, Fintype (G.Action player)]
     (β : ℝ) {bound : ℝ} (point : G.finkDomain bound)
@@ -270,6 +254,7 @@ def finkStrategyWeightUpdate [Fintype ι]
       max (G.finkGain β point state who action) 0) /
     (1 + G.finkGainSum β point state who)
 
+omit [Fintype G.State] in
 theorem finkStrategyUpdate_mem [Fintype ι]
     [DecidableEq ι] [∀ player, Fintype (G.Action player)]
     (β : ℝ) {bound : ℝ} (point : G.finkDomain bound)
@@ -358,27 +343,23 @@ theorem abs_discountedAuxUtility_le (β bound : ℝ)
     (hstage : ∀ state joint who, |G.stageUtility state joint who| ≤ bound)
     (value : G.State → ι → ℝ)
     (hvalue : ∀ state who, |value state who| ≤ bound)
-    (state : G.State) (joint : ∀ player, G.Action player) (who : ι)
-    (hintegrable : PayoffIntegrable (G.transition state joint)
-      (fun next => value next who)) :
-    |G.discountedAuxUtility β value state joint who hintegrable| ≤ bound := by
+    (state : G.State) (joint : ∀ player, G.Action player) (who : ι) :
+    |G.discountedAuxUtility β value state joint who| ≤ bound := by
   have hweight : 0 ≤ 1 - β := sub_nonneg.mpr hβ1
   have hbound0 : 0 ≤ bound :=
     (abs_nonneg _).trans (hstage state joint who)
   have hexpect :
-      |expect (G.transition state joint) (fun next => value next who)
-        hintegrable| ≤ bound :=
+      |expect (G.transition state joint) (fun next => value next who)| ≤ bound :=
     expect_abs_le_of_bounded hbound0 (fun next => hvalue next who)
-      hintegrable
   calc
-    |G.discountedAuxUtility β value state joint who hintegrable| ≤
+    |G.discountedAuxUtility β value state joint who| ≤
         |(1 - β) * G.stageUtility state joint who| +
           |β * expect (G.transition state joint)
-            (fun next => value next who) hintegrable| := by
+            (fun next => value next who)| := by
       exact abs_add_le _ _
     _ = (1 - β) * |G.stageUtility state joint who| +
           β * |expect (G.transition state joint)
-            (fun next => value next who) hintegrable| := by
+            (fun next => value next who)| := by
       rw [abs_mul, abs_mul, abs_of_nonneg hweight, abs_of_nonneg hβ0]
     _ ≤ (1 - β) * bound + β * bound :=
       add_le_add
@@ -519,15 +500,13 @@ theorem isDiscountedStationaryBellmanEq_of_finkMap_fixedPoint
     · have hmean :=
         (G.discountedAuxGame β (G.finkValue point) state).expect_mixedGain_self_zero
           (G.finkProfile point state) who (hbase who)
-          (fun action => hdeviation who (PMF.pure action))
       rw [expect_eq_sum] at hmean
       calc
         ∑ candidate, (G.finkProfile point state who candidate).toReal *
             G.finkGain β point state who candidate =
             ∑ candidate, (G.finkProfile point state who candidate).toReal *
               (G.discountedAuxGame β (G.finkValue point) state).mixedGain
-                (G.finkProfile point state) who candidate
-                (hbase who) (hdeviation who (PMF.pure candidate)) := by
+                (G.finkProfile point state) who candidate := by
           exact Finset.sum_congr rfl fun candidate _ => by
             rw [G.finkGain_eq_mixedGain]
         _ = 0 := hmean

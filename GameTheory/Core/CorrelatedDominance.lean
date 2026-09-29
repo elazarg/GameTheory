@@ -80,26 +80,26 @@ theorem IsCorrelatedEq.conditional_obedience
       (marginal.bindOnSupport responseKernel) :=
     payoffIntegrable_congr_law hresponseDecomp.symm hresponse
   have hle' : expect (marginal.bindOnSupport responseKernel)
-      (fun outcome => utility outcome who) hresponse' ≤
+      (fun outcome => utility outcome who) ≤
     expect (marginal.bindOnSupport baseKernel)
-      (fun outcome => utility outcome who) hbase' := by
+      (fun outcome => utility outcome who) := by
     have hle'' : expect (law.bind (fun profile =>
         F.play (Profile.update profile who (respond (profile who)))))
-        (fun outcome => utility outcome who) hresponse ≤
-      expect (law.bind F.play) (fun outcome => utility outcome who) hbase := by
+        (fun outcome => utility outcome who) ≤
+      expect (law.bind F.play) (fun outcome => utility outcome who) := by
       simpa only [expectedUtility, GameForm.outcomeLaw] using hle
     calc
       _ = expect (law.bind (fun profile =>
           F.play (Profile.update profile who (respond (profile who)))))
-          (fun outcome => utility outcome who) hresponse :=
+          (fun outcome => utility outcome who) :=
         expect_congr_law hresponseDecomp
-          (fun outcome => utility outcome who) hresponse' hresponse
-      _ ≤ expect (law.bind F.play) (fun outcome => utility outcome who) hbase :=
+          (fun outcome => utility outcome who)
+      _ ≤ expect (law.bind F.play) (fun outcome => utility outcome who) :=
         hle''
       _ = expect (marginal.bindOnSupport baseKernel)
-          (fun outcome => utility outcome who) hbase' :=
+          (fun outcome => utility outcome who) :=
         (expect_congr_law hbaseDecomp
-          (fun outcome => utility outcome who) hbase' hbase).symm
+          (fun outcome => utility outcome who)).symm
   have hlocal := expect_bindOnSupport_le_of_le_of_eq_off marginal baseKernel
     responseKernel (fun outcome => utility outcome who) hbase' hresponse'
     hle' recommended hrecommended (by
@@ -222,10 +222,8 @@ theorem isCorrelatedEq_iff_conditional_obedience
           (baseKernel action ha),
         ∀ hresponseAction : UtilityIntegrable utility who
           (responseKernel action ha),
-          expect (responseKernel action ha) (fun outcome => utility outcome who)
-            hresponseAction ≤
-          expect (baseKernel action ha) (fun outcome => utility outcome who)
-            hbaseAction := by
+          expect (responseKernel action ha) (fun outcome => utility outcome who) ≤
+          expect (baseKernel action ha) (fun outcome => utility outcome who) := by
       intro action ha hbaseAction hresponseAction
       have hpref := hobedient who action (respond action) ha
       have hresponseEq : responseKernel action ha = responseActionKernel action ha := by
@@ -239,37 +237,31 @@ theorem isCorrelatedEq_iff_conditional_obedience
       have hresponseFixed := payoffIntegrable_congr_law hresponseEq hresponseAction
       have hlePref := (euPreference_iff utility who _ _ hbaseAction
         hresponseFixed).mp hpref
-      have hresponseActual := payoffIntegrable_congr_law hresponseEq.symm
-        hresponseFixed
       calc
-        expect (responseKernel action ha) (fun outcome => utility outcome who)
-            hresponseAction =
-          expect (responseKernel action ha) (fun outcome => utility outcome who)
-            hresponseActual := expect_proof_irrel _ _ _ _
+        expect (responseKernel action ha) (fun outcome => utility outcome who) =
+          expect (responseKernel action ha) (fun outcome => utility outcome who) := rfl
         _ = expect (responseActionKernel action ha)
-            (fun outcome => utility outcome who) hresponseFixed :=
+            (fun outcome => utility outcome who) :=
           expect_congr_law hresponseEq (fun outcome => utility outcome who)
-            hresponseActual hresponseFixed
-        _ ≤ expect (baseKernel action ha) (fun outcome => utility outcome who)
-            hbaseAction := hlePref
+        _ ≤ expect (baseKernel action ha) (fun outcome => utility outcome who) := hlePref
     have hle := expect_bindOnSupport_mono_on_support marginal responseKernel
       baseKernel (fun outcome => utility outcome who) hresponse' hbase'
       (fun action ha hresp hbase => hpointwise action ha hbase hresp)
     refine ⟨hbase, hresponse, ?_⟩
     have hle' : expect (law.bind (fun profile =>
         F.play (Profile.update profile who (respond (profile who)))))
-        (fun outcome => utility outcome who) hresponse ≤
-      expect (law.bind F.play) (fun outcome => utility outcome who) hbase := by
+        (fun outcome => utility outcome who) ≤
+      expect (law.bind F.play) (fun outcome => utility outcome who) := by
       calc
         _ = expect (marginal.bindOnSupport responseKernel)
-            (fun outcome => utility outcome who) hresponse' :=
+            (fun outcome => utility outcome who) :=
           expect_congr_law hresponseDecomp
-            (fun outcome => utility outcome who) hresponse' hresponse |>.symm
+            (fun outcome => utility outcome who) |>.symm
         _ ≤ expect (marginal.bindOnSupport baseKernel)
-            (fun outcome => utility outcome who) hbase' := hle
-        _ = expect (law.bind F.play) (fun outcome => utility outcome who) hbase :=
+            (fun outcome => utility outcome who) := hle
+        _ = expect (law.bind F.play) (fun outcome => utility outcome who) :=
           expect_congr_law hbaseDecomp
-            (fun outcome => utility outcome who) hbase' hbase
+            (fun outcome => utility outcome who)
     simpa only [expectedUtility, GameForm.outcomeLaw] using hle'
 
 /-- A correlated equilibrium never recommends an action that is strictly
@@ -302,27 +294,16 @@ theorem IsCorrelatedEq.support_avoids_strictlyDominatedOn
     posterior baseKernel (fun outcome => utility outcome who) hbase
   have hdeviationCond := payoffIntegrable_bind_conditional_on_support
     posterior deviationKernel (fun outcome => utility outcome who) hdeviation
-  let baseValue : Profile F.sig → ℝ := extendFromSupport posterior
-    (fun profile hprofile => expectedUtility utility who (baseKernel profile)
-      (hbaseCond profile hprofile))
-  let deviationValue : Profile F.sig → ℝ := extendFromSupport posterior
-    (fun profile hprofile => expectedUtility utility who (deviationKernel profile)
-      (hdeviationCond profile hprofile))
-  have hbaseAgree : ∀ profile, ∀ hprofile : profile ∈ posterior.support,
-      baseValue profile = expectedUtility utility who (baseKernel profile)
-        (hbaseCond profile hprofile) := by
-    intro profile hprofile
-    have hne : posterior profile ≠ 0 :=
-      (posterior.mem_support_iff profile).mp hprofile
-    simp [baseValue, extendFromSupport, hne]
-  have hdeviationAgree : ∀ profile,
-      ∀ hprofile : profile ∈ posterior.support,
-        deviationValue profile = expectedUtility utility who
-          (deviationKernel profile) (hdeviationCond profile hprofile) := by
-    intro profile hprofile
-    have hne : posterior profile ≠ 0 :=
-      (posterior.mem_support_iff profile).mp hprofile
-    simp [deviationValue, extendFromSupport, hne]
+  let baseValue : Profile F.sig → ℝ := fun profile =>
+    expectedUtility utility who (baseKernel profile)
+  let deviationValue : Profile F.sig → ℝ := fun profile =>
+    expectedUtility utility who (deviationKernel profile)
+  have hbaseAgree : ∀ profile ∈ posterior.support,
+      baseValue profile = expectedUtility utility who (baseKernel profile) :=
+    fun _ _ => rfl
+  have hdeviationAgree : ∀ profile ∈ posterior.support,
+      deviationValue profile = expectedUtility utility who (deviationKernel profile) :=
+    fun _ _ => rfl
   have hbaseValueIntegrable := payoffIntegrable_bind_conditionalValue_on_support
     posterior baseKernel (fun outcome => utility outcome who) hbase baseValue
     hbaseAgree
@@ -356,25 +337,23 @@ theorem IsCorrelatedEq.support_avoids_strictlyDominatedOn
       (deviationKernel profile) (baseKernel profile)
       hdeviationGuard hbaseGuard).mp hstrict.1
     have hneReverse : ¬ expect (deviationKernel profile)
-        (fun outcome => utility outcome who) hdeviationGuard ≤
-      expect (baseKernel profile) (fun outcome => utility outcome who) hbaseGuard := by
+        (fun outcome => utility outcome who) ≤
+      expect (baseKernel profile) (fun outcome => utility outcome who) := by
       intro hreverse
       apply hstrict.2
       exact (euPreference_iff utility who (baseKernel profile)
         (deviationKernel profile) hbaseGuard hdeviationGuard).mpr hreverse
     have hneValues :
-        expect (baseKernel profile) (fun outcome => utility outcome who) hbaseGuard ≠
-          expect (deviationKernel profile) (fun outcome => utility outcome who)
-            hdeviationGuard := by
+        expect (baseKernel profile) (fun outcome => utility outcome who) ≠
+          expect (deviationKernel profile) (fun outcome => utility outcome who) := by
       intro heq
       apply hneReverse
       rw [heq]
     have hlt := lt_of_le_of_ne hleValue hneValues
     calc
       baseValue profile = expectedUtility utility who (baseKernel profile)
-          (hbaseCond profile hprofile) := hbaseAgree profile hprofile
-      _ ≤ expectedUtility utility who (deviationKernel profile)
-          (hdeviationCond profile hprofile) := hlt.le
+           := hbaseAgree profile hprofile
+      _ ≤ expectedUtility utility who (deviationKernel profile) := hlt.le
       _ = deviationValue profile := (hdeviationAgree profile hprofile).symm
   have hltWitness : baseValue witness < deviationValue witness := by
     have hfiber : witness who = dominated := heq
@@ -391,33 +370,30 @@ theorem IsCorrelatedEq.support_avoids_strictlyDominatedOn
       (deviationKernel witness) (baseKernel witness)
       hdeviationGuard hbaseGuard).mp hstrict.1
     have hneReverse : ¬ expect (deviationKernel witness)
-        (fun outcome => utility outcome who) hdeviationGuard ≤
-      expect (baseKernel witness) (fun outcome => utility outcome who) hbaseGuard := by
+        (fun outcome => utility outcome who) ≤
+      expect (baseKernel witness) (fun outcome => utility outcome who) := by
       intro hreverse
       apply hstrict.2
       exact (euPreference_iff utility who (baseKernel witness)
         (deviationKernel witness) hbaseGuard hdeviationGuard).mpr hreverse
     have hneValues :
-        expect (baseKernel witness) (fun outcome => utility outcome who) hbaseGuard ≠
-          expect (deviationKernel witness) (fun outcome => utility outcome who)
-            hdeviationGuard := by
+        expect (baseKernel witness) (fun outcome => utility outcome who) ≠
+          expect (deviationKernel witness) (fun outcome => utility outcome who) := by
       intro heq
       apply hneReverse
       rw [heq]
     have hlt := lt_of_le_of_ne hleValue hneValues
     calc
-      baseValue witness = expectedUtility utility who (baseKernel witness)
-          (hbaseCond witness hwitnessPosterior) :=
+      baseValue witness = expectedUtility utility who (baseKernel witness) :=
         hbaseAgree witness hwitnessPosterior
-      _ < expectedUtility utility who (deviationKernel witness)
-          (hdeviationCond witness hwitnessPosterior) := hlt
+      _ < expectedUtility utility who (deviationKernel witness) := hlt
       _ = deviationValue witness :=
         (hdeviationAgree witness hwitnessPosterior).symm
   have hstrictExpectation := expect_lt_of_mem_support hbaseValueIntegrable
     hdeviationValueIntegrable hlePointwise witness hwitnessPosterior hltWitness
   have hconditionalOrder : expect (posterior.bind deviationKernel)
-      (fun outcome => utility outcome who) hdeviation ≤
-    expect (posterior.bind baseKernel) (fun outcome => utility outcome who) hbase := by
+      (fun outcome => utility outcome who) ≤
+    expect (posterior.bind baseKernel) (fun outcome => utility outcome who) := by
     simpa only [expectedUtility, GameForm.outcomeLaw, posterior,
       deviationKernel, baseKernel] using hle
   rw [hdeviationTower, hbaseTower] at hconditionalOrder
@@ -443,12 +419,8 @@ theorem IsCoarseCorrelatedEq.support_plays_strictDominant
   have hdeviation' : UtilityIntegrable utility who (law.bind deviationKernel) :=
     hdeviation
   have hlePointwise : ∀ profile, ∀ hprofile : profile ∈ law.support,
-      expect (baseKernel profile) (fun outcome => utility outcome who)
-          (payoffIntegrable_bind_conditional_on_support law baseKernel
-            (fun outcome => utility outcome who) hbase' profile hprofile) ≤
-        expect (deviationKernel profile) (fun outcome => utility outcome who)
-          (payoffIntegrable_bind_conditional_on_support law deviationKernel
-            (fun outcome => utility outcome who) hdeviation' profile hprofile) := by
+      expect (baseKernel profile) (fun outcome => utility outcome who) ≤
+        expect (deviationKernel profile) (fun outcome => utility outcome who) := by
     intro profile hprofile
     dsimp only [baseKernel, deviationKernel]
     have hbaseCond := payoffIntegrable_bind_conditional_on_support law F.play
@@ -460,7 +432,6 @@ theorem IsCoarseCorrelatedEq.support_plays_strictDominant
         rw [← heq]
         exact congrArg F.play (Profile.update_eq_self profile who)
       have heqExpect := expect_congr_law hsame (fun outcome => utility outcome who)
-        hdeviationCond hbaseCond
       exact heqExpect.symm.le
     · have hstrict := hdom (profile who) heq profile (fun _ => Set.mem_univ _)
       have hself : Profile.update profile who (profile who) = profile :=
@@ -472,12 +443,8 @@ theorem IsCoarseCorrelatedEq.support_plays_strictDominant
         hdeviationCond hbaseCond).mp hstrict.1
       exact hpreferred
   have hstrictWitness : expect (baseKernel witness)
-      (fun outcome => utility outcome who)
-      (payoffIntegrable_bind_conditional_on_support law baseKernel
-        (fun outcome => utility outcome who) hbase' witness hwitness) <
-    expect (deviationKernel witness) (fun outcome => utility outcome who)
-      (payoffIntegrable_bind_conditional_on_support law deviationKernel
-        (fun outcome => utility outcome who) hdeviation' witness hwitness) := by
+      (fun outcome => utility outcome who) <
+    expect (deviationKernel witness) (fun outcome => utility outcome who) := by
     dsimp only [baseKernel, deviationKernel]
     have hbaseCond := payoffIntegrable_bind_conditional_on_support law F.play
       (fun outcome => utility outcome who) hbase' witness hwitness
@@ -492,8 +459,8 @@ theorem IsCoarseCorrelatedEq.support_plays_strictDominant
       (F.play (Profile.update witness who dominant)) (F.play witness)
       hdeviationCond hbaseCond).mp hstrict.1
     have hnotReverse : ¬ expect (F.play (Profile.update witness who dominant))
-        (fun outcome => utility outcome who) hdeviationCond ≤
-      expect (F.play witness) (fun outcome => utility outcome who) hbaseCond := by
+        (fun outcome => utility outcome who) ≤
+      expect (F.play witness) (fun outcome => utility outcome who) := by
       intro hreverse
       apply hstrict.2
       exact (euPreference_iff utility who
@@ -505,8 +472,8 @@ theorem IsCoarseCorrelatedEq.support_plays_strictDominant
     (fun outcome => utility outcome who) hbase' hdeviation' hlePointwise witness
     hwitness hstrictWitness
   have hglobalOrder : expect (law.bind deviationKernel)
-      (fun outcome => utility outcome who) hdeviation' ≤
-    expect (law.bind baseKernel) (fun outcome => utility outcome who) hbase' := by
+      (fun outcome => utility outcome who) ≤
+    expect (law.bind baseKernel) (fun outcome => utility outcome who) := by
     simpa only [expectedUtility, GameForm.outcomeLaw, baseKernel, deviationKernel]
       using hle
   exact (not_le_of_gt hstrictAggregate) hglobalOrder

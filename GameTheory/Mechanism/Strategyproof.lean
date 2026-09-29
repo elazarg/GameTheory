@@ -32,9 +32,8 @@ omit [DecidableEq ι] in
 /-- Expected utility of the deterministic mechanism is utility of its chosen
 outcome. -/
 theorem utility_toForm (utility : M.Outcome → ι → ℝ)
-    (reports : ∀ i, M.Report i) (who : ι)
-    (h : UtilityIntegrable utility who (M.toForm.play reports)) :
-    expectedUtility utility who (M.toForm.play reports) h =
+    (reports : ∀ i, M.Report i) (who : ι) :
+    expectedUtility utility who (M.toForm.play reports) =
       utility (M.choose reports) who :=
   by simpa only [Mechanism.toForm] using
     (expectedUtility_pure utility who (M.choose reports))
@@ -52,8 +51,7 @@ theorem isStrategyproof_iff (utility : M.Outcome → ι → ℝ)
   · intro hproof who misreport reports
     obtain ⟨hpreferred, halternative, hbound⟩ :=
       hproof who misreport reports
-    simpa only [M.utility_toForm utility _ who halternative,
-      M.utility_toForm utility _ who hpreferred] using hbound
+    simpa only [M.utility_toForm utility] using hbound
   · intro hbeat who misreport reports
     refine ⟨?_, ?_, ?_⟩
     · exact payoffIntegrable_pure _ _

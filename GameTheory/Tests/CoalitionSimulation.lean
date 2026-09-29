@@ -43,35 +43,28 @@ private theorem matchGuard (law : PMF (Bool × Bool)) (who : Fin 2) :
   payoffIntegrable_of_bounded law _ (matchBound who)
 
 /-- Any fixed guess succeeds on half of the fair draw. -/
-theorem expect_constantGuess (guess : Bool) (who : Fin 2)
-    (h : UtilityIntegrable matchUtility who
-      (fairCoin.map fun coin => ((coin, guess) : Bool × Bool))) :
+theorem expect_constantGuess (guess : Bool) (who : Fin 2) :
     expectedUtility matchUtility who
-      (fairCoin.map fun coin => ((coin, guess) : Bool × Bool)) h = 1 / 2 := by
+      (fairCoin.map fun coin => ((coin, guess) : Bool × Bool)) = 1 / 2 := by
   rw [expectedUtility_map]
   unfold expectedUtility
   simp only [fairCoin]
-  rw [expect_proof_irrel (PMF.uniformOfFintype Bool) _ _
-    (payoffIntegrable_of_finite _ _), expect_uniformOfFintype]
+  rw [expect_uniformOfFintype]
   cases guess <;> norm_num [matchUtility]
 
 /-- Copying the fair draw succeeds surely. -/
-theorem expect_copyCoin (who : Fin 2)
-    (h : UtilityIntegrable matchUtility who
-      (fairCoin.map fun coin => ((coin, coin) : Bool × Bool))) :
+theorem expect_copyCoin (who : Fin 2) :
     expectedUtility matchUtility who
-      (fairCoin.map fun coin => ((coin, coin) : Bool × Bool)) h = 1 := by
+      (fairCoin.map fun coin => ((coin, coin) : Bool × Bool)) = 1 := by
   rw [expectedUtility_map]
   unfold expectedUtility
   simp only [fairCoin]
-  rw [expect_proof_irrel (PMF.uniformOfFintype Bool) _ _
-    (payoffIntegrable_of_finite _ _), expect_uniformOfFintype]
+  rw [expect_uniformOfFintype]
   norm_num [matchUtility]
 
-theorem base_expect (profile : Profile baseGame.sig) (who : Fin 2)
-    (h : UtilityIntegrable matchUtility who (baseGame.play profile)) :
-    expectedUtility matchUtility who (baseGame.play profile) h = 1 / 2 :=
-  expect_constantGuess (profile 1) who h
+theorem base_expect (profile : Profile baseGame.sig) (who : Fin 2) :
+    expectedUtility matchUtility who (baseGame.play profile) = 1 / 2 :=
+  expect_constantGuess (profile 1) who
 
 theorem update_compileConstant_play (profile : Profile baseGame.sig) (who : Fin 2)
     (replacement : channelGame.sig.Strategy who) :
@@ -89,7 +82,7 @@ def unilateralSimulation :
       (singletonGroups (Fin 2)) :=
   UtilitySimulation.ofUnilateral compileConstant
     (fun _ _ => ⟨fun _ => matchGuard _ _, fun _ => matchGuard _ _⟩)
-    (fun profile who htarget hsource => by
+    (fun profile who _ _ => by
       obtain ⟨guess, hplay⟩ := update_compileConstant_play profile who
         (compileConstant who (profile who))
       have hself : Profile.update (Profile.map compileConstant profile) who
@@ -99,11 +92,10 @@ def unilateralSimulation :
       rw [hself] at hplay
       calc
         _ = expectedUtility matchUtility who
-              (fairCoin.map fun coin => ((coin, guess) : Bool × Bool))
-              (matchGuard _ _) :=
-          expectedUtility_congr_law matchUtility who hplay htarget (matchGuard _ _)
-        _ = 1 / 2 := expect_constantGuess guess who _
-        _ = _ := (base_expect profile who hsource).symm)
+              (fairCoin.map fun coin => ((coin, guess) : Bool × Bool)) :=
+          expectedUtility_congr_law matchUtility who hplay
+        _ = 1 / 2 := expect_constantGuess guess who
+        _ = _ := (base_expect profile who).symm)
     (fun profile who replacement => by
       refine ⟨profile who, ?_⟩
       intro hsource
@@ -113,28 +105,24 @@ def unilateralSimulation :
             (Profile.map compileConstant profile) who replacement)) :=
         matchGuard _ _
       refine ⟨htarget, le_of_eq ?_⟩
-      have hsource' : UtilityIntegrable matchUtility who (baseGame.play profile) :=
-        matchGuard _ _
       calc
         _ = expectedUtility matchUtility who
-              (fairCoin.map fun coin => ((coin, guess) : Bool × Bool))
-              (matchGuard _ _) :=
-          expectedUtility_congr_law matchUtility who hplay htarget (matchGuard _ _)
-        _ = 1 / 2 := expect_constantGuess guess who _
-        _ = expectedUtility matchUtility who (baseGame.play profile) hsource' :=
-          (base_expect profile who hsource').symm
+              (fairCoin.map fun coin => ((coin, guess) : Bool × Bool)) :=
+          expectedUtility_congr_law matchUtility who hplay
+        _ = 1 / 2 := expect_constantGuess guess who
+        _ = expectedUtility matchUtility who (baseGame.play profile) :=
+          (base_expect profile who).symm
         _ = _ := by
           have hlaw : baseGame.play profile =
               baseGame.play (Profile.update profile who (profile who)) := by
             rw [Profile.update_eq_self]
-          exact expectedUtility_congr_law matchUtility who hlaw hsource' hsource)
+          exact expectedUtility_congr_law matchUtility who hlaw)
 
 def copyProfile : Profile channelGame.sig := fun _ => id
 
-theorem copyProfile_expect (who : Fin 2)
-    (h : UtilityIntegrable matchUtility who (channelGame.play copyProfile)) :
-    expectedUtility matchUtility who (channelGame.play copyProfile) h = 1 :=
-  expect_copyCoin who h
+theorem copyProfile_expect (who : Fin 2) :
+    expectedUtility matchUtility who (channelGame.play copyProfile) = 1 :=
+  expect_copyCoin who
 
 theorem override_copyProfile (profile : Profile channelGame.sig) :
     Profile.override Finset.univ (fun i => copyProfile i.1) profile = copyProfile := by
@@ -148,8 +136,8 @@ theorem isEmpty_coalitionSimulation :
   UtilitySimulation.isEmpty_of_grandCoalitionValue Finset.univ_nonempty
     (fun _ => false) 0 copyProfile (1 / 2)
     (fun alternative =>
-      ⟨matchGuard _ _, le_of_eq (base_expect alternative 0 (matchGuard _ _))⟩)
-    (fun ht => by rw [copyProfile_expect 0 ht]; norm_num)
+      ⟨matchGuard _ _, le_of_eq (base_expect alternative 0)⟩)
+    (fun _ => by rw [copyProfile_expect 0]; norm_num)
 
 /-- Every base profile is strong Nash: no coalition can beat one half. -/
 theorem base_isStrongNash (profile : Profile baseGame.sig) :
@@ -166,18 +154,19 @@ theorem compiled_not_isStrongNash (profile : Profile baseGame.sig) :
       (Profile.map compileConstant profile) := by
   rw [isStrongNash_iff]
   intro h
-  obtain ⟨member, _, hbase, hdev, hprefer⟩ :=
+  obtain ⟨member, _, -, -, hprefer⟩ :=
     h Finset.univ Finset.univ_nonempty (fun i => copyProfile i.1)
   have hdevlaw : channelGame.play
       (Profile.override Finset.univ (fun i => copyProfile i.1)
         (Profile.map compileConstant profile)) = channelGame.play copyProfile := by
     rw [override_copyProfile]
-  have hdevvalue : expectedUtility matchUtility member _ hdev = 1 := by
+  have hdevvalue : expectedUtility matchUtility member (channelGame.play
+      (Profile.override Finset.univ (fun i => copyProfile i.1)
+        (Profile.map compileConstant profile))) = 1 := by
     calc
-      _ = expectedUtility matchUtility member (channelGame.play copyProfile)
-          (matchGuard _ _) :=
-        expectedUtility_congr_law matchUtility member hdevlaw hdev (matchGuard _ _)
-      _ = 1 := copyProfile_expect member _
+      _ = expectedUtility matchUtility member (channelGame.play copyProfile) :=
+        expectedUtility_congr_law matchUtility member hdevlaw
+      _ = 1 := copyProfile_expect member
   rw [hdevvalue] at hprefer
   obtain ⟨guess, hplay⟩ := update_compileConstant_play profile member
     (compileConstant member (profile member))
@@ -187,13 +176,12 @@ theorem compiled_not_isStrongNash (profile : Profile baseGame.sig) :
       Profile.update_eq_self (Profile.map compileConstant profile) member
   rw [hself] at hplay
   have hhalf : expectedUtility matchUtility member
-      (channelGame.play (Profile.map compileConstant profile)) hbase = 1 / 2 := by
+      (channelGame.play (Profile.map compileConstant profile)) = 1 / 2 := by
     calc
       _ = expectedUtility matchUtility member
-          (fairCoin.map fun coin => ((coin, guess) : Bool × Bool))
-          (matchGuard _ _) :=
-        expectedUtility_congr_law matchUtility member hplay hbase (matchGuard _ _)
-      _ = 1 / 2 := expect_constantGuess guess member _
+          (fairCoin.map fun coin => ((coin, guess) : Bool × Bool)) :=
+        expectedUtility_congr_law matchUtility member hplay
+      _ = 1 / 2 := expect_constantGuess guess member
   rw [hhalf] at hprefer
   norm_num at hprefer
 
@@ -235,7 +223,7 @@ def coalitionSimulation :
           (Profile.map (fun _ strategy => (strategy, false)) profile))) :=
       payoffIntegrable_pure _ _
     refine ⟨htarget, le_of_eq ?_⟩
-    exact expectedUtility_congr_law coordinationUtility member hlaw htarget hsource
+    exact expectedUtility_congr_law coordinationUtility member hlaw
 
 theorem coordination_isStrongNash :
     IsStrongNash coordinationGame (euPreference coordinationUtility)

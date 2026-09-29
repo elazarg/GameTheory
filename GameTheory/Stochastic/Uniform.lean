@@ -37,14 +37,14 @@ theorem isεHorizonNash_iff [DecidableEq ι] (initial : G.State)
     (profile : G.BehaviorProfile initial) :
     G.IsεHorizonNash initial horizon epsilon profile ↔
       ∀ who (deviation : (G.perfectMonitoring initial).BehavioralPolicy who),
-        ∃ hprofile : UtilityIntegrable (G.horizonUtility initial horizon) who
-            ((G.horizonForm initial horizon).play profile),
-          ∃ hdeviation : UtilityIntegrable (G.horizonUtility initial horizon) who
+        UtilityIntegrable (G.horizonUtility initial horizon) who
+            ((G.horizonForm initial horizon).play profile) ∧
+          UtilityIntegrable (G.horizonUtility initial horizon) who
               ((G.horizonForm initial horizon).play
-                (Profile.update profile who deviation)),
+                (Profile.update profile who deviation)) ∧
             G.finiteAveragePayoff initial horizon
-                (Profile.update profile who deviation) who hdeviation ≤
-              G.finiteAveragePayoff initial horizon profile who hprofile + epsilon := by
+                (Profile.update profile who deviation) who ≤
+              G.finiteAveragePayoff initial horizon profile who + epsilon := by
   exact isεNash_iff (F := G.horizonForm initial horizon)
     (utility := G.horizonUtility initial horizon)
 
@@ -74,9 +74,9 @@ def IsUniformEquilibriumPayoff [DecidableEq ι] (initial : G.State)
       ∀ horizon, threshold ≤ horizon →
         G.IsεHorizonNash initial horizon epsilon profile ∧
           ∀ who,
-            ∃ hprofile : UtilityIntegrable (G.horizonUtility initial horizon) who
-                ((G.horizonForm initial horizon).play profile),
-              |G.finiteAveragePayoff initial horizon profile who hprofile -
+            UtilityIntegrable (G.horizonUtility initial horizon) who
+                ((G.horizonForm initial horizon).play profile) ∧
+              |G.finiteAveragePayoff initial horizon profile who -
                 value who| ≤ epsilon
 
 theorem IsUniformεEquilibrium.mono [DecidableEq ι] {initial : G.State}
@@ -99,16 +99,16 @@ def HasUniformDeviationCapConstructor [DecidableEq ι] (initial : G.State)
     ∃ (profile : G.BehaviorProfile initial) (threshold : ℕ),
       ∀ horizon, threshold ≤ horizon →
         (∀ who,
-          ∃ hprofile : UtilityIntegrable (G.horizonUtility initial horizon) who
-              ((G.horizonForm initial horizon).play profile),
-            |G.finiteAveragePayoff initial horizon profile who hprofile -
+          UtilityIntegrable (G.horizonUtility initial horizon) who
+              ((G.horizonForm initial horizon).play profile) ∧
+            |G.finiteAveragePayoff initial horizon profile who -
               value who| ≤ delta) ∧
         ∀ who (deviation : (G.perfectMonitoring initial).BehavioralPolicy who),
-          ∃ hdeviation : UtilityIntegrable (G.horizonUtility initial horizon) who
+          UtilityIntegrable (G.horizonUtility initial horizon) who
               ((G.horizonForm initial horizon).play
-                (Profile.update profile who deviation)),
+                (Profile.update profile who deviation)) ∧
             G.finiteAveragePayoff initial horizon
-              (Profile.update profile who deviation) who hdeviation ≤ value who + delta
+              (Profile.update profile who deviation) who ≤ value who + delta
 
 /-- A uniform deviation-cap constructor yields the semantic uniform-payoff
 property. -/

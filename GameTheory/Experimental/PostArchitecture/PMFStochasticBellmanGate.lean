@@ -103,13 +103,13 @@ private theorem deviation_law (state : ℕ) (who : Player)
 set_option maxHeartbeats 1000000 in
 private theorem deviation_value (state : ℕ) (who : Player)
     (replacement : PMF Bool) :
-    ∃ h : UtilityIntegrable
+    UtilityIntegrable
         (game.discountedAuxGame (1 / 2) value state).utility who
         ((game.discountedAuxGame (1 / 2) value state).form.mixed.play
-          (deviated state who replacement)),
+          (deviated state who replacement)) ∧
       expectedUtility (game.discountedAuxGame (1 / 2) value state).utility who
           ((game.discountedAuxGame (1 / 2) value state).form.mixed.play
-            (deviated state who replacement)) h = value state who := by
+            (deviated state who replacement)) = value state who := by
   let p := independentProduct (deviated state who replacement)
   let c := exploding state
   have hconst : PayoffIntegrable p (fun _ => c) :=
@@ -135,14 +135,14 @@ private theorem deviation_value (state : ℕ) (who : Player)
   calc
     expectedUtility (game.discountedAuxGame (1 / 2) value state).utility who
         ((game.discountedAuxGame (1 / 2) value state).form.mixed.play
-          (deviated state who replacement)) h =
+          (deviated state who replacement)) =
       expectedUtility (game.discountedAuxGame (1 / 2) value state).utility who
-        (p.map (fun joint => (joint, state))) hmap := by
-      exact expectedUtility_congr_law _ _ (deviation_law state who replacement) h hmap
+        (p.map (fun joint => (joint, state))) := by
+      exact expectedUtility_congr_law _ _ (deviation_law state who replacement)
     _ = expect p (fun joint => game.oneStepUtility (1 / 2) value state
-        (joint, state) who) hsource := expectedUtility_map _ _ _ _ hmap
-    _ = expect p (fun _ => c) hconst := by
-      apply expect_congr_on_support (hf := hsource) (hg := hconst)
+        (joint, state) who) := expectedUtility_map _ _ _ _
+    _ = expect p (fun _ => c) := by
+      apply expect_congr_on_support
       intro joint _
       simp [c, Stochastic.Game.oneStepUtility, value]
       ring
@@ -211,12 +211,6 @@ theorem unrelated_oneStep_not_integrable :
       ((game.discountedAuxGame (1 / 2) value (0 : ℕ)).form.play
         allTrueJoint) := by
   intro who h
-  have h' : PayoffIntegrable ((game.oneStepForm (0 : ℕ)).play allTrueJoint)
-      (fun outcome => (1 - (1 / 2 : ℝ)) * exploding 0 +
-        (1 / 2 : ℝ) * exploding outcome.2) := by
-    convert h using 1
-    funext outcome
-    rfl
   apply unrelated_transition_not_integrable
   rwa [allTrueLaw_eq_oneStep]
 

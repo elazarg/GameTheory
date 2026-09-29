@@ -62,12 +62,12 @@ all-pair guard supplies every numerical encounter payoff in that game. -/
 theorem IsMixedESS.isNash_symmetric
     {payoff : S → S → ℝ} {resident : PMF S}
     (h : IsMixedESS payoff resident) :
-    ∃ hall : ∀ own opponent : PMF S,
+    (∀ own opponent : PMF S,
         PayoffIntegrable (bindPairLaw own (fun _ => opponent))
-          (fun pair => payoff pair.1 pair.2),
+          (fun pair => payoff pair.1 pair.2)) ∧
       IsNash (symmetricForm (PMF S))
         (euPreference (symmetricUtility
-          (fun own opponent => mixedPayoff payoff own opponent (hall own opponent))))
+          (fun own opponent => mixedPayoff payoff own opponent)))
         (residentProfile resident) := by
   obtain ⟨hall, hess⟩ := h
   exact ⟨hall, hess.isNash_symmetric⟩

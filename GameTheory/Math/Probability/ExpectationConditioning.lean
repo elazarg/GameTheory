@@ -106,11 +106,9 @@ theorem payoffIntegrable_filter_iff {α : Type*} (μ : PMF α)
 /-- Expectation under a filtered law is the event-restricted expectation,
 divided by the event's probability. -/
 theorem expect_filter {α : Type*} (μ : PMF α) (event : Set α)
-    (h : ∃ a ∈ event, a ∈ μ.support) (f : α → ℝ)
-    (hf : PayoffIntegrable μ (event.indicator f)) :
-    expect (μ.filter event h) f
-        (payoffIntegrable_filter_iff μ event h f |>.2 hf) =
-      expect μ (event.indicator f) hf /
+    (h : ∃ a ∈ event, a ∈ μ.support) (f : α → ℝ) :
+    expect (μ.filter event h) f =
+      expect μ (event.indicator f) /
         (∑' a, event.indicator μ a).toReal := by
   classical
   let mass := (PMF.map (eventCode event) μ) true
@@ -138,9 +136,9 @@ theorem expect_indicator_le_of_expect_le_eq_off {α : Type*} (μ : PMF α)
     (event : Set α) (f g : α → ℝ)
     (hf : PayoffIntegrable μ f) (hg : PayoffIntegrable μ g)
     (hfg : ∀ a ∈ μ.support, a ∉ event → f a = g a)
-    (hle : expect μ f hf ≤ expect μ g hg) :
-    expect μ (event.indicator f) (payoffIntegrable_indicator event hf) ≤
-      expect μ (event.indicator g) (payoffIntegrable_indicator event hg) := by
+    (hle : expect μ f ≤ expect μ g) :
+    expect μ (event.indicator f) ≤
+      expect μ (event.indicator g) := by
   let fpart := event.indicator f
   let gpart := event.indicator g
   have hfpart : PayoffIntegrable μ fpart := payoffIntegrable_indicator event hf
@@ -150,15 +148,13 @@ theorem expect_indicator_le_of_expect_le_eq_off {α : Type*} (μ : PMF α)
     by_cases ha : a ∈ event
     · simp [fpart, gpart, Set.indicator_of_mem ha]
     · simp [fpart, gpart, Set.indicator_of_notMem ha, hfg a haμ ha]
-  have hdiffValue : expect μ f hf - expect μ g hg =
-      expect μ fpart hfpart - expect μ gpart hgpart := by
+  have hdiffValue : expect μ f - expect μ g =
+      expect μ fpart - expect μ gpart := by
     calc
-      _ = expect μ (fun a => f a - g a) (payoffIntegrable_sub hf hg) :=
+      _ = expect μ (fun a => f a - g a) :=
         (expect_sub hf hg).symm
-      _ = expect μ (fun a => fpart a - gpart a)
-          (payoffIntegrable_sub hfpart hgpart) := by
+      _ = expect μ (fun a => fpart a - gpart a) := by
             exact expect_congr_on_support hdiff
-              (payoffIntegrable_sub hf hg) (payoffIntegrable_sub hfpart hgpart)
       _ = _ := expect_sub hfpart hgpart
   apply sub_nonpos.mp
   rw [← hdiffValue]
@@ -170,13 +166,9 @@ theorem expect_filter_le_of_expect_le_of_eq_off {α : Type*} (μ : PMF α)
     (event : Set α) (h : ∃ a ∈ event, a ∈ μ.support)
     (f g : α → ℝ) (hf : PayoffIntegrable μ f) (hg : PayoffIntegrable μ g)
     (hfg : ∀ a ∈ μ.support, a ∉ event → f a = g a)
-    (hle : expect μ f hf ≤ expect μ g hg) :
-    expect (μ.filter event h) f
-      (payoffIntegrable_filter_iff μ event h f |>.2
-        (payoffIntegrable_indicator event hf)) ≤
-    expect (μ.filter event h) g
-      (payoffIntegrable_filter_iff μ event h g |>.2
-        (payoffIntegrable_indicator event hg)) := by
+    (hle : expect μ f ≤ expect μ g) :
+    expect (μ.filter event h) f ≤
+    expect (μ.filter event h) g := by
   classical
   let fpart := event.indicator f
   let gpart := event.indicator g
@@ -187,17 +179,15 @@ theorem expect_filter_le_of_expect_le_of_eq_off {α : Type*} (μ : PMF α)
     by_cases ha : a ∈ event
     · simp [fpart, gpart, Set.indicator_of_mem ha]
     · simp [fpart, gpart, Set.indicator_of_notMem ha, hfg a haμ ha]
-  have hdiffValue : expect μ f hf - expect μ g hg =
-      expect μ fpart hfpart - expect μ gpart hgpart := by
+  have hdiffValue : expect μ f - expect μ g =
+      expect μ fpart - expect μ gpart := by
     calc
-      _ = expect μ (fun a => f a - g a) (payoffIntegrable_sub hf hg) :=
+      _ = expect μ (fun a => f a - g a) :=
         (expect_sub hf hg).symm
-      _ = expect μ (fun a => fpart a - gpart a)
-          (payoffIntegrable_sub hfpart hgpart) := by
+      _ = expect μ (fun a => fpart a - gpart a) := by
             exact expect_congr_on_support hdiff
-              (payoffIntegrable_sub hf hg) (payoffIntegrable_sub hfpart hgpart)
       _ = _ := expect_sub hfpart hgpart
-  have hslice : expect μ fpart hfpart ≤ expect μ gpart hgpart := by
+  have hslice : expect μ fpart ≤ expect μ gpart := by
     apply sub_nonpos.mp
     rw [← hdiffValue]
     exact sub_nonpos.mpr hle
@@ -210,16 +200,15 @@ theorem expect_filter_le_of_expect_le_of_eq_off {α : Type*} (μ : PMF α)
       ENNReal.toReal_pos hm ht
     rw [eventMass_eq_indicator_tsum μ event] at hp
     exact hp
-  rw [expect_filter μ event h f hfpart, expect_filter μ event h g hgpart]
+  rw [expect_filter μ event h f, expect_filter μ event h g]
   exact div_le_div_of_nonneg_right hslice (le_of_lt hmass_pos)
 
 /-- A finite-valued observation partitions expectation into unnormalised
 expectations on its fibers. -/
 theorem expect_eq_sum_fibers {α κ : Type*} [Fintype κ] (μ : PMF α)
     (observation : α → κ) (f : α → ℝ) (hf : PayoffIntegrable μ f) :
-    expect μ f hf =
-      ∑ k, expect μ ((observation ⁻¹' {k}).indicator f)
-        (payoffIntegrable_indicator (observation ⁻¹' {k}) hf) := by
+    expect μ f =
+      ∑ k, expect μ ((observation ⁻¹' {k}).indicator f) := by
   classical
   let pieces := fun k => (observation ⁻¹' {k}).indicator f
   have hpieces : ∀ k, PayoffIntegrable μ (pieces k) :=
@@ -229,13 +218,11 @@ theorem expect_eq_sum_fibers {α κ : Type*} [Fintype κ] (μ : PMF α)
     simp [pieces, Set.indicator_apply, Set.mem_preimage,
       Set.mem_singleton_iff]
   calc
-    expect μ f hf =
-        expect μ (fun a => ∑ k, pieces k a)
-          (payoffIntegrable_sum μ pieces hpieces) := by
+    expect μ f =
+        expect μ (fun a => ∑ k, pieces k a) := by
             exact expect_congr_on_support
-              (fun a _ => (hpoint a).symm) hf
-              (payoffIntegrable_sum μ pieces hpieces)
-    _ = ∑ k, expect μ (pieces k) (hpieces k) :=
+              (fun a _ => (hpoint a).symm)
+    _ = ∑ k, expect μ (pieces k) :=
       expect_sum μ pieces hpieces
 
 /-- Whole-law integrability supplies every positive-fiber posterior guard. -/
@@ -253,12 +240,10 @@ theorem payoffIntegrable_fiberPosterior {α κ : Type*} (μ : PMF α)
 /-- A posterior expectation is the unnormalised fiber expectation divided by
 the positive marginal mass. -/
 theorem expect_fiberPosterior {α κ : Type*} (μ : PMF α)
-    (observation : α → κ) (f : α → ℝ) (hf : PayoffIntegrable μ f)
+    (observation : α → κ) (f : α → ℝ)
     (b : κ) (hb : b ∈ (PMF.map observation μ).support) :
-    expect (fiberPosterior μ observation b hb) f
-        (payoffIntegrable_fiberPosterior μ observation f hf b hb) =
-      expect μ ((observation ⁻¹' {b}).indicator f)
-        (payoffIntegrable_indicator _ hf) /
+    expect (fiberPosterior μ observation b hb) f =
+      expect μ ((observation ⁻¹' {b}).indicator f) /
         (∑' a, (observation ⁻¹' {b}).indicator μ a).toReal := by
   classical
   have hsupport : ∃ a ∈ observation ⁻¹' {b}, a ∈ μ.support := by
@@ -271,7 +256,6 @@ theorem expect_fiberPosterior {α κ : Type*} (μ : PMF α)
     congr 1
   rw [expect_congr_law hlaw]
   exact expect_filter μ (observation ⁻¹' {b}) hsupport f
-    (payoffIntegrable_indicator _ hf)
 
 /-- Every supported observation fiber has positive real prior mass. -/
 theorem fiberMass_toReal_pos {α κ : Type*} (μ : PMF α)
@@ -301,11 +285,9 @@ theorem expect_fiberwise_le {α κ : Type*} (μ : PMF α)
     (observation : α → κ) (f g : α → ℝ)
     (hf : PayoffIntegrable μ f) (hg : PayoffIntegrable μ g)
     (hcond : ∀ b (hb : b ∈ (PMF.map observation μ).support),
-      expect (fiberPosterior μ observation b hb) f
-        (payoffIntegrable_fiberPosterior μ observation f hf b hb) ≤
-      expect (fiberPosterior μ observation b hb) g
-        (payoffIntegrable_fiberPosterior μ observation g hg b hb)) :
-    expect μ f hf ≤ expect μ g hg := by
+      expect (fiberPosterior μ observation b hb) f ≤
+      expect (fiberPosterior μ observation b hb) g) :
+    expect μ f ≤ expect μ g := by
   classical
   let marginal := PMF.map observation μ
   let posterior := fun b hb => fiberPosterior μ observation b hb
@@ -318,14 +300,10 @@ theorem expect_fiberwise_le {α κ : Type*} (μ : PMF α)
   let vf : κ → ℝ := fun b =>
     if hb : b ∈ marginal.support then
       expect (posterior b hb) f
-        (payoffIntegrable_bindOnSupport_conditional_on_support
-          marginal posterior f hμf b hb)
     else 0
   let vg : κ → ℝ := fun b =>
     if hb : b ∈ marginal.support then
       expect (posterior b hb) g
-        (payoffIntegrable_bindOnSupport_conditional_on_support
-          marginal posterior g hμg b hb)
     else 0
   have hvf : PayoffIntegrable marginal vf :=
     payoffIntegrable_bindOnSupport_conditionalValue_on_support
@@ -349,82 +327,67 @@ theorem expect_fiberwise_le {α κ : Type*} (μ : PMF α)
       intro b hb
       have hmem : marginal b ≠ 0 := (marginal.mem_support_iff b).mp hb
       simp [vg, hmem])
-  have hle : expect marginal vf hvf ≤ expect marginal vg hvg := by
+  have hle : expect marginal vf ≤ expect marginal vg := by
     apply expect_mono _ hvf hvg
     intro b hb
     have hb' : b ∈ (PMF.map observation μ).support := by
       simpa only [marginal] using hb
     have hmem : marginal b ≠ 0 := (marginal.mem_support_iff b).mp hb
-    have hvfb : vf b = expect (posterior b hb) f
-        (payoffIntegrable_bindOnSupport_conditional_on_support
-          marginal posterior f hμf b hb) := by
+    have hvfb : vf b = expect (posterior b hb) f := by
       simp [vf, hmem]
     have hcondb := hcond b hb'
     rw [hvfb]
-    have hvgv : vg b = expect (posterior b hb) g
-        (payoffIntegrable_bindOnSupport_conditional_on_support
-          marginal posterior g hμg b hb) := by
+    have hvgv : vg b = expect (posterior b hb) g := by
       simp [vg, hmem]
     rw [hvgv]
     exact hcondb
   have hμf' := expect_congr_law
-    (fiberPosterior_reconstruct μ observation) f hμf hf
+    (fiberPosterior_reconstruct μ observation) f
   have hμg' := expect_congr_law
-    (fiberPosterior_reconstruct μ observation) g hμg hg
-  have htf' : expect (marginal.bindOnSupport posterior) f hμf =
-      expect marginal vf hvf := by simpa only [marginal, posterior] using htf
-  have htg' : expect (marginal.bindOnSupport posterior) g hμg =
-      expect marginal vg hvg := by simpa only [marginal, posterior] using htg
+    (fiberPosterior_reconstruct μ observation) g
+  have htf' : expect (marginal.bindOnSupport posterior) f =
+      expect marginal vf := by simpa only [marginal, posterior] using htf
+  have htg' : expect (marginal.bindOnSupport posterior) g =
+      expect marginal vg := by simpa only [marginal, posterior] using htg
   calc
-    expect μ f hf = expect (marginal.bindOnSupport posterior) f hμf :=
+    expect μ f = expect (marginal.bindOnSupport posterior) f :=
       hμf'.symm
-    _ = expect marginal vf hvf := htf'
-    _ ≤ expect marginal vg hvg := hle
-    _ = expect (marginal.bindOnSupport posterior) g hμg := htg'.symm
-    _ = expect μ g hg := hμg'
+    _ = expect marginal vf := htf'
+    _ ≤ expect marginal vg := hle
+    _ = expect (marginal.bindOnSupport posterior) g := htg'.symm
+    _ = expect μ g := hμg'
 
 theorem expect_bindOnSupport_le_of_le_of_eq_off
     {α β : Type*} (p : PMF α) (q₁ q₂ : ∀ a, a ∈ p.support → PMF β)
     (f : β → ℝ) (h₁ : PayoffIntegrable (p.bindOnSupport q₁) f)
     (h₂ : PayoffIntegrable (p.bindOnSupport q₂) f)
-    (hle : expect (p.bindOnSupport q₂) f h₂ ≤
-      expect (p.bindOnSupport q₁) f h₁)
+    (hle : expect (p.bindOnSupport q₂) f ≤
+      expect (p.bindOnSupport q₁) f)
     (a₀ : α) (ha₀ : a₀ ∈ p.support)
     (hoff : ∀ a, ∀ ha : a ∈ p.support, a ≠ a₀ → q₁ a ha = q₂ a ha) :
-    expect (q₂ a₀ ha₀) f
-        (payoffIntegrable_bindOnSupport_conditional_on_support p q₂ f h₂ a₀ ha₀) ≤
-      expect (q₁ a₀ ha₀) f
-        (payoffIntegrable_bindOnSupport_conditional_on_support p q₁ f h₁ a₀ ha₀) := by
+    expect (q₂ a₀ ha₀) f ≤
+      expect (q₁ a₀ ha₀) f := by
   classical
   let v₁ : α → ℝ := extendFromSupport p (fun a ha =>
-    expect (q₁ a ha) f
-      (payoffIntegrable_bindOnSupport_conditional_on_support p q₁ f h₁ a ha))
+    expect (q₁ a ha) f)
   let v₂ : α → ℝ := extendFromSupport p (fun a ha =>
-    expect (q₂ a ha) f
-      (payoffIntegrable_bindOnSupport_conditional_on_support p q₂ f h₂ a ha))
+    expect (q₂ a ha) f)
   have hv₁ : ∀ a, ∀ ha : a ∈ p.support,
-      v₁ a = expect (q₁ a ha) f
-        (payoffIntegrable_bindOnSupport_conditional_on_support p q₁ f h₁ a ha) := by
+      v₁ a = expect (q₁ a ha) f := by
     intro a ha
     have hne : p a ≠ 0 := (p.mem_support_iff a).mp ha
     simp [v₁, extendFromSupport, hne]
   have hv₂ : ∀ a, ∀ ha : a ∈ p.support,
-      v₂ a = expect (q₂ a ha) f
-        (payoffIntegrable_bindOnSupport_conditional_on_support p q₂ f h₂ a ha) := by
+      v₂ a = expect (q₂ a ha) f := by
     intro a ha
     have hne : p a ≠ 0 := (p.mem_support_iff a).mp ha
     simp [v₂, extendFromSupport, hne]
   have ht₁ := expect_bindOnSupport_tower_on_support p q₁ f h₁ v₁ hv₁
   have ht₂ := expect_bindOnSupport_tower_on_support p q₂ f h₂ v₂ hv₂
-  have houter : expect p v₂
-      (payoffIntegrable_bindOnSupport_conditionalValue_on_support p q₂ f h₂
-        v₂ hv₂) ≤
-      expect p v₁
-      (payoffIntegrable_bindOnSupport_conditionalValue_on_support p q₁ f h₁
-        v₁ hv₁) := by
+  have houter : expect p v₂ ≤ expect p v₁ := by
     calc
-      _ = expect (p.bindOnSupport q₂) f h₂ := ht₂.symm
-      _ ≤ expect (p.bindOnSupport q₁) f h₁ := hle
+      _ = expect (p.bindOnSupport q₂) f := ht₂.symm
+      _ ≤ expect (p.bindOnSupport q₁) f := hle
       _ = _ := ht₁
   have hoffValue : ∀ a ∈ p.support,
       a ∉ ({a₀} : Set α) → v₂ a = v₁ a := by
@@ -433,8 +396,7 @@ theorem expect_bindOnSupport_le_of_le_of_eq_off
       simpa only [Set.mem_singleton_iff] using hnot
     rw [hv₂ a ha, hv₁ a ha]
     exact (expect_congr_law (hoff a ha hne) f
-      (payoffIntegrable_bindOnSupport_conditional_on_support p q₁ f h₁ a ha)
-      (payoffIntegrable_bindOnSupport_conditional_on_support p q₂ f h₂ a ha)).symm
+      ).symm
   have hfiltered := expect_filter_le_of_expect_le_of_eq_off p {a₀}
     ⟨a₀, Set.mem_singleton _, ha₀⟩ v₂ v₁
     (payoffIntegrable_bindOnSupport_conditionalValue_on_support p q₂ f h₂
@@ -459,25 +421,17 @@ theorem expect_bindOnSupport_le_of_le_of_eq_off
         _ = if a₀ = a₀ then 1 else 0 := by simp
     · simp [Set.indicator, ha]
   have hleft : expect (p.filter {a₀} ⟨a₀, Set.mem_singleton _, ha₀⟩) v₂
-      (payoffIntegrable_filter_iff p {a₀}
-        ⟨a₀, Set.mem_singleton _, ha₀⟩ v₂ |>.2
-        (payoffIntegrable_indicator _
-          (payoffIntegrable_bindOnSupport_conditionalValue_on_support
-            p q₂ f h₂ v₂ hv₂))) = v₂ a₀ := by
+       = v₂ a₀ := by
     calc
-      _ = expect (PMF.pure a₀) v₂ (payoffIntegrable_pure a₀ v₂) :=
-        expect_congr_law hfilter v₂ _ _
-      _ = v₂ a₀ := expect_pure a₀ v₂ _
+      _ = expect (PMF.pure a₀) v₂ :=
+        expect_congr_law hfilter v₂
+      _ = v₂ a₀ := expect_pure a₀ v₂
   have hright : expect (p.filter {a₀} ⟨a₀, Set.mem_singleton _, ha₀⟩) v₁
-      (payoffIntegrable_filter_iff p {a₀}
-        ⟨a₀, Set.mem_singleton _, ha₀⟩ v₁ |>.2
-        (payoffIntegrable_indicator _
-          (payoffIntegrable_bindOnSupport_conditionalValue_on_support
-            p q₁ f h₁ v₁ hv₁))) = v₁ a₀ := by
+       = v₁ a₀ := by
     calc
-      _ = expect (PMF.pure a₀) v₁ (payoffIntegrable_pure a₀ v₁) :=
-        expect_congr_law hfilter v₁ _ _
-      _ = v₁ a₀ := expect_pure a₀ v₁ _
+      _ = expect (PMF.pure a₀) v₁ :=
+        expect_congr_law hfilter v₁
+      _ = v₁ a₀ := expect_pure a₀ v₁
   rw [hleft, hright] at hfiltered
   rw [hv₂ a₀ ha₀, hv₁ a₀ ha₀] at hfiltered
   exact hfiltered

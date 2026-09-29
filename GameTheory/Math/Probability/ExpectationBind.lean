@@ -42,43 +42,6 @@ theorem payoffIntegrable_bind_iff_joint {α β : Type*}
     have hs' := hs.congr fun ab => (hpoint ab).symm
     simpa only [PayoffIntegrable, Function.comp_apply] using hs'
 
-/-- Integrability of the bind and of every conditional payoff makes the
-conditional expectation integrable under the outer law. -/
-theorem payoffIntegrable_bind_conditionalExpectation
-    {α β : Type*} (p : PMF α) (q : α → PMF β) (f : β → ℝ)
-    (hbind : PayoffIntegrable (p.bind q) f)
-    (hcond : ∀ a, PayoffIntegrable (q a) f) :
-    PayoffIntegrable p (fun a => expect (q a) f (hcond a)) := by
-  have hjoint := payoffIntegrable_bind_iff_joint p q f |>.mp hbind
-  have hrows : Summable (fun a => ∑' b,
-      (p a).toReal * (q a b).toReal * |f b|) := by
-    simpa only [JointPayoffIntegrable] using hjoint.prod
-  have hinnerBound (a : α) :
-      |expect (q a) f (hcond a)| ≤ ∑' b, (q a b).toReal * |f b| := by
-    have habs : Summable (fun b => (q a b).toReal * |f b|) := by
-      simpa only [PayoffIntegrable] using hcond a
-    have hnorm : Summable (fun b =>
-        ‖(q a b).toReal * f b‖) := by
-      simpa [Real.norm_eq_abs, abs_mul,
-        abs_of_nonneg ENNReal.toReal_nonneg] using habs
-    have hle := norm_tsum_le_tsum_norm hnorm
-    simpa [expect, Real.norm_eq_abs, abs_mul,
-      abs_of_nonneg ENNReal.toReal_nonneg] using hle
-  have hmajor (a : α) :
-      (p a).toReal * |expect (q a) f (hcond a)| ≤
-        ∑' b, (p a).toReal * (q a b).toReal * |f b| := by
-    have hnonneg : 0 ≤ (p a).toReal := ENNReal.toReal_nonneg
-    calc
-      (p a).toReal * |expect (q a) f (hcond a)| ≤
-          (p a).toReal * ∑' b, (q a b).toReal * |f b| :=
-        mul_le_mul_of_nonneg_left (hinnerBound a) hnonneg
-      _ = ∑' b, (p a).toReal * (q a b).toReal * |f b| := by
-        rw [← tsum_mul_left]
-        simp_rw [mul_assoc]
-  apply Summable.of_nonneg_of_le
-    (fun a => mul_nonneg ENNReal.toReal_nonneg (abs_nonneg _))
-    hmajor hrows
-
 private theorem bind_apply_toReal {α β : Type*} (p : PMF α)
     (q : α → PMF β) (b : β) :
     (p.bind q b).toReal = ∑' a, (p a).toReal * (q a b).toReal := by
@@ -111,100 +74,70 @@ theorem payoffIntegrable_bind_conditional_on_support {α β : Type*}
   have hrow := (summable_mul_left_iff hp).mp hscaled
   simpa only [PayoffIntegrable] using hrow
 
-private theorem payoffIntegrable_bind_conditionalExpectation_on_support
+private theorem toReal_eq_zero_of_not_mem_support {α : Type*} {p : PMF α} {a : α}
+    (ha : a ∉ p.support) : (p a).toReal = 0 := by
+  have hzero : p a = 0 := not_ne_iff.mp ha
+  simp [hzero]
+
+/-- Integrability of a bind makes its conditional expectation integrable under
+the outer law. Off the outer support the conditional value carries no weight. -/
+theorem payoffIntegrable_bind_conditionalExpectation
     {α β : Type*} (p : PMF α) (q : α → PMF β) (f : β → ℝ)
-    (hbind : PayoffIntegrable (p.bind q) f)
-    (hcond : ∀ a, a ∈ p.support → PayoffIntegrable (q a) f) :
-    PayoffIntegrable p (extendFromSupport p (fun a ha =>
-      expect (q a) f (hcond a ha)) ) := by
-  classical
+    (hbind : PayoffIntegrable (p.bind q) f) :
+    PayoffIntegrable p (fun a => expect (q a) f) := by
   have hjoint := payoffIntegrable_bind_iff_joint p q f |>.mp hbind
   have hrows : Summable (fun a => ∑' b,
       (p a).toReal * (q a b).toReal * |f b|) := by
     simpa only [JointPayoffIntegrable] using hjoint.prod
   apply Summable.of_nonneg_of_le
-    (fun a => mul_nonneg ENNReal.toReal_nonneg (abs_nonneg _))
-  · intro a
-    by_cases ha : a ∈ p.support
-    · have habs : Summable (fun b => (q a b).toReal * |f b|) := by
-        simpa only [PayoffIntegrable] using hcond a ha
-      have hinnerBound : |expect (q a) f (hcond a ha)| ≤
-          ∑' b, (q a b).toReal * |f b| := by
-        have hnorm : Summable (fun b =>
-            ‖(q a b).toReal * f b‖) := by
-          simpa [Real.norm_eq_abs, abs_mul,
-            abs_of_nonneg ENNReal.toReal_nonneg] using habs
-        have hle := norm_tsum_le_tsum_norm hnorm
-        simpa [expect, Real.norm_eq_abs, abs_mul,
-          abs_of_nonneg ENNReal.toReal_nonneg] using hle
-      have hnonneg : 0 ≤ (p a).toReal := ENNReal.toReal_nonneg
-      calc
-        (p a).toReal * |extendFromSupport p (fun a ha =>
-            expect (q a) f (hcond a ha) ) a| ≤
-            (p a).toReal * ∑' b, (q a b).toReal * |f b| :=
-          by simpa [extendFromSupport, ha] using
-            mul_le_mul_of_nonneg_left hinnerBound hnonneg
-        _ = ∑' b, (p a).toReal * (q a b).toReal * |f b| := by
-          rw [← tsum_mul_left]
-          simp_rw [mul_assoc]
-    · have hp : (p a).toReal = 0 := by
-        have hzero : p a = 0 := by
-          by_contra hne
-          exact ha ((p.mem_support_iff a).2 hne)
-        simp [hzero]
-      simp [extendFromSupport, ha, hp]
-  · exact hrows
+    (fun a => mul_nonneg ENNReal.toReal_nonneg (abs_nonneg _)) (fun a => ?_) hrows
+  by_cases ha : a ∈ p.support
+  · have habs : Summable (fun b => (q a b).toReal * |f b|) := by
+      simpa only [PayoffIntegrable] using
+        payoffIntegrable_bind_conditional_on_support p q f hbind a ha
+    have hnorm : Summable (fun b => ‖(q a b).toReal * f b‖) := by
+      simpa [Real.norm_eq_abs, abs_mul,
+        abs_of_nonneg ENNReal.toReal_nonneg] using habs
+    have hinner : |expect (q a) f| ≤ ∑' b, (q a b).toReal * |f b| := by
+      simpa [expect, Real.norm_eq_abs, abs_mul,
+        abs_of_nonneg ENNReal.toReal_nonneg] using norm_tsum_le_tsum_norm hnorm
+    calc
+      (p a).toReal * |expect (q a) f| ≤
+          (p a).toReal * ∑' b, (q a b).toReal * |f b| :=
+        mul_le_mul_of_nonneg_left hinner ENNReal.toReal_nonneg
+      _ = ∑' b, (p a).toReal * (q a b).toReal * |f b| := by
+        rw [← tsum_mul_left]
+        simp_rw [mul_assoc]
+  · simp [toReal_eq_zero_of_not_mem_support ha]
 
 /-- Joint integrability makes any total function agreeing with conditional
 values on the outer support integrable under the outer law. -/
 theorem payoffIntegrable_bind_conditionalValue_on_support {α β : Type*} (p : PMF α)
     (q : α → PMF β) (f : β → ℝ)
     (hbind : PayoffIntegrable (p.bind q) f) (g : α → ℝ)
-    (hcond : ∀ a, ∀ ha : a ∈ p.support,
-      g a = expect (q a) f
-        (payoffIntegrable_bind_conditional_on_support p q f hbind a ha)) :
-    PayoffIntegrable p g := by
-  classical
-  apply payoffIntegrable_congr_on_support
-    (μ := p) (f := extendFromSupport p (fun a ha =>
-      expect (q a) f
-        (payoffIntegrable_bind_conditional_on_support p q f hbind a ha)))
-  · intro a ha
-    simpa [extendFromSupport, ha] using (hcond a ha).symm
-  · exact payoffIntegrable_bind_conditionalExpectation_on_support p q f hbind
-      (payoffIntegrable_bind_conditional_on_support p q f hbind)
+    (hcond : ∀ a ∈ p.support, g a = expect (q a) f) :
+    PayoffIntegrable p g :=
+  payoffIntegrable_congr_on_support (fun a ha => (hcond a ha).symm)
+    (payoffIntegrable_bind_conditionalExpectation p q f hbind)
 
-theorem expect_bind_tower_on_support {α β : Type*} (p : PMF α)
+/-- The tower law: an integrable bind has the expectation of its conditional
+expectations. -/
+theorem expect_bind_tower {α β : Type*} (p : PMF α)
     (q : α → PMF β) (f : β → ℝ)
-    (hbind : PayoffIntegrable (p.bind q) f) (g : α → ℝ)
-    (hcond : ∀ a, ∀ ha : a ∈ p.support,
-      g a = expect (q a) f
-        (payoffIntegrable_bind_conditional_on_support p q f hbind a ha)) :
-    expect (p.bind q) f hbind =
-      expect p g (payoffIntegrable_bind_conditionalValue_on_support p q f hbind g hcond) := by
-  classical
-  let hc := payoffIntegrable_bind_conditional_on_support p q f hbind
-  let g' := extendFromSupport p (fun a ha => expect (q a) f (hc a ha))
+    (hbind : PayoffIntegrable (p.bind q) f) :
+    expect (p.bind q) f = expect p (fun a => expect (q a) f) := by
   have hvalue (a : α) :
       ∑' b, (p a).toReal * (q a b).toReal * f b =
-        (p a).toReal * g' a := by
+        (p a).toReal * expect (q a) f := by
     by_cases ha : a ∈ p.support
-    · rw [show g' a = expect (q a) f (hc a ha) by
-        simp [g', extendFromSupport, ha]]
-      have habs : Summable (fun b => (q a b).toReal * |f b|) := by
-        simpa only [PayoffIntegrable] using hc a ha
+    · have habs : Summable (fun b => (q a b).toReal * |f b|) := by
+        simpa only [PayoffIntegrable] using
+          payoffIntegrable_bind_conditional_on_support p q f hbind a ha
       have hnorm : Summable (fun b => ‖(q a b).toReal * f b‖) := by
         simpa [Real.norm_eq_abs, abs_mul,
           abs_of_nonneg ENNReal.toReal_nonneg] using habs
-      have hsigned : Summable (fun b => (q a b).toReal * f b) := hnorm.of_norm
-      have hsum := hsigned.tsum_mul_left (p a).toReal
-      simpa only [expect, mul_assoc] using hsum
-    · have hp : (p a).toReal = 0 := by
-        have hzero : p a = 0 := by
-          by_contra hne
-          exact ha ((p.mem_support_iff a).2 hne)
-        simp [hzero]
-      simp [g', extendFromSupport, ha, hp]
+      simpa only [expect, mul_assoc] using hnorm.of_norm.tsum_mul_left (p a).toReal
+    · simp [toReal_eq_zero_of_not_mem_support ha]
   have hjoint := payoffIntegrable_bind_iff_joint p q f |>.mp hbind
   have hjointSigned : Summable (fun ab : α × β =>
       (p ab.1).toReal * (q ab.1 ab.2).toReal * f ab.2) := by
@@ -214,138 +147,59 @@ theorem expect_bind_tower_on_support {α β : Type*} (p : PMF α)
     apply Summable.of_norm
     simpa [Real.norm_eq_abs, abs_mul,
       abs_of_nonneg ENNReal.toReal_nonneg, mul_assoc] using habs
-  have hcomm :
-      (∑' b, ∑' a, (p a).toReal * (q a b).toReal * f b) =
-        ∑' a, ∑' b, (p a).toReal * (q a b).toReal * f b :=
-    hjointSigned.tsum_comm
   calc
-    expect (p.bind q) f hbind =
+    expect (p.bind q) f =
         ∑' b, ∑' a, (p a).toReal * (q a b).toReal * f b := by
       simp only [expect, bind_apply_toReal, ← tsum_mul_right]
-    _ = ∑' a, (p a).toReal * g' a := by
-      rw [hcomm]
-      apply tsum_congr
-      intro a
-      exact hvalue a
-    _ = expect p g'
-        (payoffIntegrable_bind_conditionalExpectation_on_support p q f hbind hc) := by
-      rfl
-    _ = expect p g
-        (payoffIntegrable_bind_conditionalValue_on_support p q f hbind g hcond) := by
-      have hgg : ∀ a ∈ p.support, g' a = g a := by
-        intro a ha
-        simpa [g', extendFromSupport, ha] using (hcond a ha).symm
-      apply expect_congr_on_support hgg
+    _ = ∑' a, ∑' b, (p a).toReal * (q a b).toReal * f b := hjointSigned.tsum_comm
+    _ = expect p (fun a => expect (q a) f) := tsum_congr hvalue
 
-/-- The all-conditionals bind tower is the support theorem specialized to a
-total continuation family. -/
-theorem expect_bind_tower {α β : Type*} (p : PMF α)
+/-- The tower law for any conditional value that agrees with the conditional
+expectations on the outer support. -/
+theorem expect_bind_tower_on_support {α β : Type*} (p : PMF α)
     (q : α → PMF β) (f : β → ℝ)
-    (hbind : PayoffIntegrable (p.bind q) f)
-    (hcond : ∀ a, PayoffIntegrable (q a) f) :
-    expect (p.bind q) f hbind =
-      expect p (fun a => expect (q a) f (hcond a))
-        (payoffIntegrable_bind_conditionalExpectation p q f hbind hcond) := by
-  let hc := payoffIntegrable_bind_conditional_on_support p q f hbind
-  let g := extendFromSupport p (fun a ha => expect (q a) f (hc a ha))
-  have hagree : ∀ a, ∀ ha : a ∈ p.support,
-      g a = expect (q a) f
-        (payoffIntegrable_bind_conditional_on_support p q f hbind a ha) := by
-    intro a ha
-    simp [g, extendFromSupport, ha]
-  have htower := expect_bind_tower_on_support p q f hbind g hagree
-  calc
-    expect (p.bind q) f hbind =
-        expect p g
-          (payoffIntegrable_bind_conditionalValue_on_support p q f hbind g hagree) :=
-      htower
-    _ = expect p (fun a => expect (q a) f (hcond a))
-        (payoffIntegrable_bind_conditionalExpectation p q f hbind hcond) := by
-      apply expect_congr_on_support (μ := p)
-      intro a ha
-      simp [g, extendFromSupport, ha]
+    (hbind : PayoffIntegrable (p.bind q) f) (g : α → ℝ)
+    (hcond : ∀ a ∈ p.support, g a = expect (q a) f) :
+    expect (p.bind q) f = expect p g :=
+  (expect_bind_tower p q f hbind).trans
+    (expect_congr_on_support fun a ha => (hcond a ha).symm)
 
 theorem expect_bind_mono_on_support {α β : Type*} (p : PMF α)
     (q₁ q₂ : α → PMF β) (f : β → ℝ)
     (h₁ : PayoffIntegrable (p.bind q₁) f)
     (h₂ : PayoffIntegrable (p.bind q₂) f)
-    (hle : ∀ a, ∀ ha : a ∈ p.support,
-      expect (q₁ a) f
-        (payoffIntegrable_bind_conditional_on_support p q₁ f h₁ a ha) ≤
-      expect (q₂ a) f
-        (payoffIntegrable_bind_conditional_on_support p q₂ f h₂ a ha)) :
-    expect (p.bind q₁) f h₁ ≤ expect (p.bind q₂) f h₂ := by
-  classical
-  let g₁ := extendFromSupport p (fun a ha =>
-    expect (q₁ a) f (payoffIntegrable_bind_conditional_on_support p q₁ f h₁ a ha))
-  let g₂ := extendFromSupport p (fun a ha =>
-    expect (q₂ a) f (payoffIntegrable_bind_conditional_on_support p q₂ f h₂ a ha))
-  have ht₁ := expect_bind_tower_on_support p q₁ f h₁ g₁
-    (fun a ha => by simp [g₁, extendFromSupport, ha])
-  have ht₂ := expect_bind_tower_on_support p q₂ f h₂ g₂
-    (fun a ha => by simp [g₂, extendFromSupport, ha])
-  rw [ht₁, ht₂]
-  apply expect_mono
-  · intro a ha
-    simpa [g₁, g₂, extendFromSupport, ha] using hle a ha
+    (hle : ∀ a ∈ p.support, expect (q₁ a) f ≤ expect (q₂ a) f) :
+    expect (p.bind q₁) f ≤ expect (p.bind q₂) f := by
+  rw [expect_bind_tower p q₁ f h₁, expect_bind_tower p q₂ f h₂]
+  exact expect_mono hle (payoffIntegrable_bind_conditionalExpectation p q₁ f h₁)
+    (payoffIntegrable_bind_conditionalExpectation p q₂ f h₂)
 
 /-- A strict conditional improvement at one supported outer atom makes the
 integrated bind expectation strict, provided all supported conditionals are
-weakly ordered. Both bind laws supply their own conditional guards. -/
+weakly ordered. -/
 theorem expect_bind_lt_on_support {α β : Type*} (p : PMF α)
     (q₁ q₂ : α → PMF β) (f : β → ℝ)
     (h₁ : PayoffIntegrable (p.bind q₁) f)
     (h₂ : PayoffIntegrable (p.bind q₂) f)
-    (hle : ∀ a, ∀ ha : a ∈ p.support,
-      expect (q₁ a) f
-        (payoffIntegrable_bind_conditional_on_support p q₁ f h₁ a ha) ≤
-      expect (q₂ a) f
-        (payoffIntegrable_bind_conditional_on_support p q₂ f h₂ a ha))
+    (hle : ∀ a ∈ p.support, expect (q₁ a) f ≤ expect (q₂ a) f)
     (a : α) (ha : a ∈ p.support)
-    (hlt : expect (q₁ a) f
-        (payoffIntegrable_bind_conditional_on_support p q₁ f h₁ a ha) <
-      expect (q₂ a) f
-        (payoffIntegrable_bind_conditional_on_support p q₂ f h₂ a ha)) :
-    expect (p.bind q₁) f h₁ < expect (p.bind q₂) f h₂ := by
-  classical
-  let g₁ := extendFromSupport p (fun b hb =>
-    expect (q₁ b) f (payoffIntegrable_bind_conditional_on_support p q₁ f h₁ b hb))
-  let g₂ := extendFromSupport p (fun b hb =>
-    expect (q₂ b) f (payoffIntegrable_bind_conditional_on_support p q₂ f h₂ b hb))
-  have ht₁ := expect_bind_tower_on_support p q₁ f h₁ g₁
-    (fun b hb => by simp [g₁, extendFromSupport, hb])
-  have ht₂ := expect_bind_tower_on_support p q₂ f h₂ g₂
-    (fun b hb => by simp [g₂, extendFromSupport, hb])
-  rw [ht₁, ht₂]
-  apply expect_lt_of_mem_support
-  · intro b hb
-    simpa [g₁, g₂, extendFromSupport, hb] using hle b hb
-  · exact ha
-  · simpa [g₁, g₂, extendFromSupport, ha] using hlt
+    (hlt : expect (q₁ a) f < expect (q₂ a) f) :
+    expect (p.bind q₁) f < expect (p.bind q₂) f := by
+  rw [expect_bind_tower p q₁ f h₁, expect_bind_tower p q₂ f h₂]
+  exact expect_lt_of_mem_support
+    (payoffIntegrable_bind_conditionalExpectation p q₁ f h₁)
+    (payoffIntegrable_bind_conditionalExpectation p q₂ f h₂) hle a ha hlt
 
 /-- A uniform upper bound on the supported conditional expectations bounds the
 expectation of the bound law. -/
 theorem expect_bind_le_of_forall_on_support {α β : Type*} (p : PMF α)
     (q : α → PMF β) (f : β → ℝ)
     (hbind : PayoffIntegrable (p.bind q) f) (c : ℝ)
-    (hle : ∀ a, ∀ ha : a ∈ p.support,
-      expect (q a) f
-        (payoffIntegrable_bind_conditional_on_support p q f hbind a ha) ≤ c) :
-    expect (p.bind q) f hbind ≤ c := by
-  classical
-  let g := extendFromSupport p (fun a ha =>
-    expect (q a) f (payoffIntegrable_bind_conditional_on_support p q f hbind a ha))
-  have htower := expect_bind_tower_on_support p q f hbind g
-    (fun a ha => by simp [g, extendFromSupport, ha])
-  have houter := payoffIntegrable_bind_conditionalValue_on_support p q f hbind g
-    (fun a ha => by simp [g, extendFromSupport, ha])
-  have hconst := payoffIntegrable_constant p c
-  rw [htower]
-  calc
-    expect p g houter ≤ expect p (fun _ => c) hconst := by
-      exact expect_mono (fun a ha => by
-        simpa [g, extendFromSupport, ha] using hle a ha) houter hconst
-    _ = c := expect_constant p c hconst
+    (hle : ∀ a ∈ p.support, expect (q a) f ≤ c) :
+    expect (p.bind q) f ≤ c := by
+  rw [expect_bind_tower p q f hbind]
+  exact expect_le_const p _ (payoffIntegrable_bind_conditionalExpectation p q f hbind)
+    c hle
 
 /-- Monotonicity for support-dependent continuation kernels. The joint laws
 provide the conditional integrability certificates on every supported branch. -/
@@ -353,12 +207,10 @@ theorem expect_bindOnSupport_mono_on_support {α β : Type*} (p : PMF α)
     (q₁ q₂ : ∀ a, a ∈ p.support → PMF β) (f : β → ℝ)
     (h₁ : PayoffIntegrable (p.bindOnSupport q₁) f)
     (h₂ : PayoffIntegrable (p.bindOnSupport q₂) f)
-    (hle : ∀ a ha
-      (h₁a : PayoffIntegrable (q₁ a ha) f)
-      (h₂a : PayoffIntegrable (q₂ a ha) f),
-      expect (q₁ a ha) f h₁a ≤ expect (q₂ a ha) f h₂a) :
-    expect (p.bindOnSupport q₁) f h₁ ≤
-      expect (p.bindOnSupport q₂) f h₂ := by
+    (hle : ∀ a ha, PayoffIntegrable (q₁ a ha) f → PayoffIntegrable (q₂ a ha) f →
+      expect (q₁ a ha) f ≤ expect (q₂ a ha) f) :
+    expect (p.bindOnSupport q₁) f ≤
+      expect (p.bindOnSupport q₂) f := by
   classical
   let k₁ : α → PMF β := fun a =>
     if ha : a ∈ p.support then q₁ a ha else p.bindOnSupport q₁
@@ -387,10 +239,8 @@ theorem expect_bindOnSupport_mono_on_support {α β : Type*} (p : PMF α)
         rw [← hk₂a]
         exact
           (payoffIntegrable_bind_conditional_on_support p k₂ f hk₂ a ha)
-      have h := hle a ha hcond₁ hcond₂
-      unfold expect at h ⊢
       rw [hk₁a, hk₂a]
-      exact h)
+      exact hle a ha hcond₁ hcond₂)
   simpa only [← heq₁, ← heq₂] using hmono
 
 private noncomputable def supportKernelExtend {α β : Type*} (p : PMF α)
@@ -508,8 +358,7 @@ theorem payoffIntegrable_bindOnSupport_conditionalValue_on_support {α β : Type
     (p : PMF α) (q : ∀ a, a ∈ p.support → PMF β) (f : β → ℝ)
     (hbind : PayoffIntegrable (p.bindOnSupport q) f) (g : α → ℝ)
     (hagree : ∀ a, ∀ ha : a ∈ p.support,
-      g a = expect (q a ha) f
-        (payoffIntegrable_bindOnSupport_conditional_on_support p q f hbind a ha)) :
+      g a = expect (q a ha) f) :
     PayoffIntegrable p g := by
   let k := supportKernelExtend p q
   have hk : PayoffIntegrable (p.bind k) f := by
@@ -528,19 +377,15 @@ theorem expect_bindOnSupport_tower_on_support {α β : Type*} (p : PMF α)
     (q : ∀ a, a ∈ p.support → PMF β) (f : β → ℝ)
     (hbind : PayoffIntegrable (p.bindOnSupport q) f) (g : α → ℝ)
     (hagree : ∀ a, ∀ ha : a ∈ p.support,
-      g a = expect (q a ha) f
-        (payoffIntegrable_bindOnSupport_conditional_on_support p q f hbind a ha)) :
-    expect (p.bindOnSupport q) f hbind =
-      expect p g
-        (payoffIntegrable_bindOnSupport_conditionalValue_on_support
-          p q f hbind g hagree) := by
+      g a = expect (q a ha) f) :
+    expect (p.bindOnSupport q) f =
+      expect p g := by
   let k := supportKernelExtend p q
   have hk : PayoffIntegrable (p.bind k) f := by
     rw [← bindOnSupport_eq_bind_supportKernelExtend]
     exact hbind
   have hcond : ∀ a, ∀ ha : a ∈ p.support,
-      g a = expect (k a) f
-        (payoffIntegrable_bind_conditional_on_support p k f hk a ha) := by
+      g a = expect (k a) f := by
     intro a ha
     have h := hagree a ha
     unfold expect at h ⊢
@@ -557,62 +402,21 @@ bounds control the expectation of an arbitrary PMF bind. -/
 theorem expect_bind_le_constant_on_support {α β : Type*}
     (μ : PMF α) (kernel : α → PMF β) (f : β → ℝ) (c : ℝ)
     (hbind : PayoffIntegrable (μ.bind kernel) f)
-    (hle : ∀ a, ∀ ha : a ∈ μ.support,
-      expect (kernel a) f
-        (payoffIntegrable_bind_conditional_on_support μ kernel f hbind a ha) ≤ c) :
-    expect (μ.bind kernel) f hbind ≤ c := by
-  classical
-  let g : α → ℝ := fun a => if ha : a ∈ μ.support then
-    expect (kernel a) f
-      (payoffIntegrable_bind_conditional_on_support μ kernel f hbind a ha)
-    else 0
-  have hagree : ∀ a, ∀ ha : a ∈ μ.support,
-      g a = expect (kernel a) f
-        (payoffIntegrable_bind_conditional_on_support μ kernel f hbind a ha) := by
-    intro a ha
-    have hne : μ a ≠ 0 := (μ.mem_support_iff a).mp ha
-    simp [g, hne]
-  let hg := payoffIntegrable_bind_conditionalValue_on_support
-    μ kernel f hbind g hagree
-  let hc := payoffIntegrable_constant μ c
-  calc
-    expect (μ.bind kernel) f hbind = expect μ g hg :=
-      expect_bind_tower_on_support μ kernel f hbind g hagree
-    _ ≤ expect μ (fun _ => c) hc := by
-      apply expect_mono
-      intro a ha
-      exact (hagree a ha).trans_le (hle a ha)
-    _ = c := expect_constant μ c hc
+    (hle : ∀ a ∈ μ.support, expect (kernel a) f ≤ c) :
+    expect (μ.bind kernel) f ≤ c :=
+  expect_bind_le_of_forall_on_support μ kernel f hbind c hle
 
 /-- The corresponding supported conditional lower-bound rule. -/
 theorem expect_bind_ge_constant_on_support {α β : Type*}
     (μ : PMF α) (kernel : α → PMF β) (f : β → ℝ) (c : ℝ)
     (hbind : PayoffIntegrable (μ.bind kernel) f)
-    (hle : ∀ a, ∀ ha : a ∈ μ.support,
-      c ≤ expect (kernel a) f
-        (payoffIntegrable_bind_conditional_on_support μ kernel f hbind a ha)) :
-    c ≤ expect (μ.bind kernel) f hbind := by
-  classical
-  let g : α → ℝ := fun a => if ha : a ∈ μ.support then
-    expect (kernel a) f
-      (payoffIntegrable_bind_conditional_on_support μ kernel f hbind a ha)
-    else 0
-  have hagree : ∀ a, ∀ ha : a ∈ μ.support,
-      g a = expect (kernel a) f
-        (payoffIntegrable_bind_conditional_on_support μ kernel f hbind a ha) := by
-    intro a ha
-    have hne : μ a ≠ 0 := (μ.mem_support_iff a).mp ha
-    simp [g, hne]
-  let hg := payoffIntegrable_bind_conditionalValue_on_support
-    μ kernel f hbind g hagree
-  let hc := payoffIntegrable_constant μ c
+    (hle : ∀ a ∈ μ.support, c ≤ expect (kernel a) f) :
+    c ≤ expect (μ.bind kernel) f := by
+  rw [expect_bind_tower μ kernel f hbind]
   calc
-    c = expect μ (fun _ => c) hc := (expect_constant μ c hc).symm
-    _ ≤ expect μ g hg := by
-      apply expect_mono
-      intro a ha
-      exact (hle a ha).trans_eq (hagree a ha).symm
-    _ = expect (μ.bind kernel) f hbind :=
-      (expect_bind_tower_on_support μ kernel f hbind g hagree).symm
+    c = expect μ (fun _ => c) := (expect_constant μ c).symm
+    _ ≤ expect μ (fun a => expect (kernel a) f) :=
+      expect_mono hle (payoffIntegrable_constant μ c)
+        (payoffIntegrable_bind_conditionalExpectation μ kernel f hbind)
 
 end GameTheory.Math.Probability

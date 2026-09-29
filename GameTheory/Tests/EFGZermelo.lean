@@ -371,12 +371,12 @@ def rewardChoice : information.Choice () (information.infoOf () secondHistory.tr
 theorem's Bellman engine. -/
 def bellmanProfile : Profile game.strategicSignature :=
   information.backwardProfile singleMover fallbackProfile finiteDecisionChoices
-    wellFoundedPlay utility backwardIntegrable
+    wellFoundedPlay utility
 
 private def recurseValue (later : execution.History)
     (_ : execution.HistorySuccessor later secondHistory) : execution.HistoryChooser :=
   information.backwardChooserBundle singleMover fallbackProfile finiteDecisionChoices
-    wellFoundedPlay utility backwardIntegrable later
+    wellFoundedPlay utility later
 
 private theorem historyChoiceLaw_of_pure_step
     (history : execution.History) (hterm : ¬ execution.terminal history.state)
@@ -515,15 +515,15 @@ private theorem historyChoiceLaw_of_pure_terminal_step
 private theorem backwardOutcome_terminal_apply (history : execution.History)
     (hterm : execution.terminal history.state) :
     information.backwardOutcome singleMover fallbackProfile finiteDecisionChoices
-      wellFoundedPlay utility backwardIntegrable history () =
+      wellFoundedPlay utility history () =
       utility history () := by
   exact information.backwardOutcome_of_terminal singleMover fallbackProfile
-    finiteDecisionChoices backwardIntegrable hterm ()
+    finiteDecisionChoices hterm ()
 
 theorem rewardChoice_value :
     information.historyChoiceValue singleMover
       (information.historyChooser fallbackProfile) wellFoundedPlay utility
-      backwardIntegrable secondHistory second_not_terminal
+       secondHistory second_not_terminal
       recurseValue () second_active rewardChoice = 1 := by
   have hstep : execution.step secondHistory.state
       (information.jointOfChoice singleMover secondHistory second_not_terminal
@@ -559,7 +559,7 @@ theorem rewardChoice_value :
 theorem punishChoice_value :
     information.historyChoiceValue singleMover
       (information.historyChooser fallbackProfile) wellFoundedPlay utility
-      backwardIntegrable secondHistory second_not_terminal
+       secondHistory second_not_terminal
       recurseValue () second_active punishChoice = 0 := by
   have hstep : execution.step secondHistory.state
       (information.jointOfChoice singleMover secondHistory second_not_terminal
@@ -596,7 +596,7 @@ private def secondBestChoice :
     information.Choice () (information.infoOf () secondHistory.trace) :=
   information.bestHistoryChoice singleMover
     (information.historyChooser fallbackProfile) wellFoundedPlay utility
-    backwardIntegrable secondHistory second_not_terminal
+     secondHistory second_not_terminal
     recurseValue () second_active
 
 private theorem rewardChoice_step :
@@ -647,17 +647,17 @@ theorem secondBestChoice_eq_rewardChoice : secondBestChoice = rewardChoice := by
   · have hbest : secondBestChoice = punishChoice := Subtype.ext hpunish
     have hmax := information.historyChoiceValue_le_bestHistoryChoice
       singleMover (information.historyChooser fallbackProfile)
-      wellFoundedPlay utility backwardIntegrable secondHistory second_not_terminal
+      wellFoundedPlay utility secondHistory second_not_terminal
       recurseValue () second_active
       rewardChoice
     have hmax' :
         information.historyChoiceValue singleMover
           (information.historyChooser fallbackProfile) wellFoundedPlay utility
-          backwardIntegrable secondHistory second_not_terminal
+           secondHistory second_not_terminal
           recurseValue () second_active rewardChoice ≤
         information.historyChoiceValue singleMover
           (information.historyChooser fallbackProfile) wellFoundedPlay utility
-          backwardIntegrable secondHistory second_not_terminal
+           secondHistory second_not_terminal
           recurseValue () second_active secondBestChoice := hmax
     rw [rewardChoice_value, hbest, punishChoice_value] at hmax'
     norm_num at hmax'
@@ -666,25 +666,25 @@ theorem secondBestChoice_eq_rewardChoice : secondBestChoice = rewardChoice := by
 private theorem backwardBundleLaw_second :
     execution.historyBackwardLaw wellFoundedPlay
       (information.backwardChooserBundle singleMover fallbackProfile
-        finiteDecisionChoices wellFoundedPlay utility backwardIntegrable
+        finiteDecisionChoices wellFoundedPlay utility
         secondHistory)
       secondHistory = PMF.pure rewardedHistory := by
   let recurse : ∀ later : execution.History,
       execution.HistorySuccessor later secondHistory → execution.HistoryChooser :=
     fun later _ => information.backwardChooserBundle singleMover fallbackProfile
-      finiteDecisionChoices wellFoundedPlay utility backwardIntegrable later
+      finiteDecisionChoices wellFoundedPlay utility later
   have hjoint := information.backwardJoint_of_active singleMover fallbackProfile
-    finiteDecisionChoices wellFoundedPlay utility backwardIntegrable secondHistory
+    finiteDecisionChoices wellFoundedPlay utility secondHistory
     second_not_terminal recurse () second_active
   have hchooser :
       information.backwardChooserBundle singleMover fallbackProfile
-        finiteDecisionChoices wellFoundedPlay utility backwardIntegrable
+        finiteDecisionChoices wellFoundedPlay utility
         secondHistory =
       information.historyChoiceChooser singleMover
         (information.historyChooser fallbackProfile) secondHistory
         second_not_terminal recurse () second_active secondBestChoice := by
     rw [information.backwardChooserBundle_of_not_terminal singleMover
-      fallbackProfile finiteDecisionChoices backwardIntegrable second_not_terminal]
+      fallbackProfile finiteDecisionChoices second_not_terminal]
     dsimp only
     rw [hjoint]
     rfl
@@ -715,23 +715,23 @@ private theorem backwardBundleLaw_second :
 
 theorem backwardChooser_second_action :
     (information.backwardChooser singleMover fallbackProfile finiteDecisionChoices
-      wellFoundedPlay utility backwardIntegrable
+      wellFoundedPlay utility
       secondHistory second_not_terminal).1 () = some .reward := by
   have hjoint := information.backwardJoint_of_active singleMover fallbackProfile
-    finiteDecisionChoices wellFoundedPlay utility backwardIntegrable secondHistory
+    finiteDecisionChoices wellFoundedPlay utility secondHistory
     second_not_terminal
     (fun later _ => information.backwardChooserBundle singleMover fallbackProfile
-      finiteDecisionChoices wellFoundedPlay utility backwardIntegrable later)
+      finiteDecisionChoices wellFoundedPlay utility later)
     () second_active
   have hbest :
       information.bestHistoryChoice singleMover
         (information.historyChooser fallbackProfile) wellFoundedPlay utility
-        backwardIntegrable secondHistory second_not_terminal
+         secondHistory second_not_terminal
         (fun later _ => information.backwardChooserBundle singleMover fallbackProfile
-          finiteDecisionChoices wellFoundedPlay utility backwardIntegrable later)
+          finiteDecisionChoices wellFoundedPlay utility later)
         () second_active = secondBestChoice := rfl
   rw [information.backwardChooser_eq_joint singleMover fallbackProfile
-    finiteDecisionChoices backwardIntegrable secondHistory second_not_terminal]
+    finiteDecisionChoices secondHistory second_not_terminal]
   rw [hjoint, hbest, secondBestChoice_eq_rewardChoice]
   rfl
 
@@ -742,18 +742,18 @@ theorem bellmanProfile_chooses_reward :
     (bellmanProfile ()).act .second = some .reward := by
   show
     (information.backwardPolicy singleMover fallbackProfile finiteDecisionChoices
-      wellFoundedPlay utility backwardIntegrable ()).act
+      wellFoundedPlay utility ()).act
       .second = some .reward
   calc
     _ = (information.backwardPolicy singleMover fallbackProfile
-        finiteDecisionChoices wellFoundedPlay utility backwardIntegrable ()).act
+        finiteDecisionChoices wellFoundedPlay utility ()).act
         (information.infoOf () secondHistory.trace) := by
           simp [infoOf_state, secondHistory]
     _ = (information.backwardChooser singleMover fallbackProfile
-        finiteDecisionChoices wellFoundedPlay utility backwardIntegrable
+        finiteDecisionChoices wellFoundedPlay utility
         secondHistory second_not_terminal).1 () :=
           information.backwardPolicy_act_at_decision singleMover fallbackProfile
-            finiteDecisionChoices backwardIntegrable perfect secondHistory
+            finiteDecisionChoices perfect secondHistory
             second_not_terminal ()
               second_active
     _ = some .reward := backwardChooser_second_action
@@ -777,38 +777,37 @@ theorem history_eq_secondHistory_of_state (history : execution.History)
 
 theorem backwardOutcome_second :
     information.backwardOutcome singleMover fallbackProfile finiteDecisionChoices
-      wellFoundedPlay utility backwardIntegrable
+      wellFoundedPlay utility
       secondHistory () = 1 := by
   dsimp only [InformationModel.backwardOutcome]
   calc
     expect (execution.historyBackwardLaw wellFoundedPlay
         (information.backwardChooserBundle singleMover fallbackProfile
-          finiteDecisionChoices wellFoundedPlay utility backwardIntegrable
+          finiteDecisionChoices wellFoundedPlay utility
           secondHistory) secondHistory)
-        (fun outcome => utility outcome ()) _ =
-      expect (PMF.pure rewardedHistory) (fun outcome => utility outcome ())
-        (payoffIntegrable_pure _ _) :=
-      expect_congr_law backwardBundleLaw_second _ _ _
-    _ = utility rewardedHistory () := expect_pure _ _ _
+        (fun outcome => utility outcome ()) =
+      expect (PMF.pure rewardedHistory) (fun outcome => utility outcome ()) :=
+      expect_congr_law backwardBundleLaw_second _
+    _ = utility rewardedHistory () := expect_pure _ _
     _ = 1 := by
       simp [utility, rewardedHistory, ExecutionProtocol.History.extend]
 
 private theorem backwardOutcome_eq_one_of_state_second
     (history : execution.History) (hstate : history.state = .second) :
     information.backwardOutcome singleMover fallbackProfile finiteDecisionChoices
-      wellFoundedPlay utility backwardIntegrable history () = 1 := by
+      wellFoundedPlay utility history () = 1 := by
   rw [history_eq_secondHistory_of_state history hstate]
   exact backwardOutcome_second
 
 private def leftRecurseValue (later : execution.History)
     (_ : execution.HistorySuccessor later leftHistory) : execution.HistoryChooser :=
   information.backwardChooserBundle singleMover fallbackProfile finiteDecisionChoices
-    wellFoundedPlay utility backwardIntegrable later
+    wellFoundedPlay utility later
 
 theorem exitChoice_value :
     information.historyChoiceValue singleMover
       (information.historyChooser fallbackProfile) wellFoundedPlay utility
-      backwardIntegrable leftHistory left_not_terminal
+       leftHistory left_not_terminal
       leftRecurseValue () left_active exitChoice = 5 := by
   let chosen := information.jointOfChoice singleMover leftHistory
     left_not_terminal () left_active exitChoice
@@ -836,17 +835,17 @@ theorem exitChoice_value :
         (information.historyChoiceChooser singleMover
           (information.historyChooser fallbackProfile) leftHistory
           left_not_terminal leftRecurseValue () left_active exitChoice)
-        leftHistory) (fun outcome => utility outcome ()) _ =
+        leftHistory) (fun outcome => utility outcome ()) =
       expect (PMF.pure (leftHistory.extend chosen.2 hrealized))
-        (fun outcome => utility outcome ()) (payoffIntegrable_pure _ _) :=
-      expect_congr_law hlaw _ _ _
-    _ = utility (leftHistory.extend chosen.2 hrealized) () := expect_pure _ _ _
+        (fun outcome => utility outcome ()) :=
+      expect_congr_law hlaw _
+    _ = utility (leftHistory.extend chosen.2 hrealized) () := expect_pure _ _
     _ = 5 := by simp [utility, ExecutionProtocol.History.extend]
 
 theorem continueChoice_value :
     information.historyChoiceValue singleMover
       (information.historyChooser fallbackProfile) wellFoundedPlay utility
-      backwardIntegrable leftHistory left_not_terminal
+       leftHistory left_not_terminal
       leftRecurseValue () left_active continueChoice = 1 := by
   let chosen := information.jointOfChoice singleMover leftHistory
     left_not_terminal () left_active continueChoice
@@ -877,7 +876,7 @@ theorem continueChoice_value :
     calc
       _ = execution.historyBackwardLaw wellFoundedPlay
             (information.backwardChooserBundle singleMover fallbackProfile
-              finiteDecisionChoices wellFoundedPlay utility backwardIntegrable
+              finiteDecisionChoices wellFoundedPlay utility
               secondHistory) secondHistory := by
         simpa only [leftRecurseValue, hchild] using hlaw
       _ = PMF.pure rewardedHistory := backwardBundleLaw_second
@@ -887,18 +886,17 @@ theorem continueChoice_value :
         (information.historyChoiceChooser singleMover
           (information.historyChooser fallbackProfile) leftHistory
           left_not_terminal leftRecurseValue () left_active continueChoice)
-        leftHistory) (fun outcome => utility outcome ()) _ =
-      expect (PMF.pure rewardedHistory) (fun outcome => utility outcome ())
-        (payoffIntegrable_pure _ _) :=
-      expect_congr_law hlaw' _ _ _
-    _ = utility rewardedHistory () := expect_pure _ _ _
+        leftHistory) (fun outcome => utility outcome ()) =
+      expect (PMF.pure rewardedHistory) (fun outcome => utility outcome ()) :=
+      expect_congr_law hlaw' _
+    _ = utility rewardedHistory () := expect_pure _ _
     _ = 1 := by simp [utility, rewardedHistory, ExecutionProtocol.History.extend]
 
 private def leftBestChoice :
     information.Choice () (information.infoOf () leftHistory.trace) :=
   information.bestHistoryChoice singleMover
     (information.historyChooser fallbackProfile) wellFoundedPlay utility
-    backwardIntegrable leftHistory left_not_terminal
+     leftHistory left_not_terminal
     leftRecurseValue () left_active
 
 theorem leftBestChoice_eq_exitChoice : leftBestChoice = exitChoice := by
@@ -925,40 +923,40 @@ theorem leftBestChoice_eq_exitChoice : leftBestChoice = exitChoice := by
   · have hbest : leftBestChoice = continueChoice := Subtype.ext hcontinue
     have hmax := information.historyChoiceValue_le_bestHistoryChoice
       singleMover (information.historyChooser fallbackProfile)
-      wellFoundedPlay utility backwardIntegrable leftHistory left_not_terminal
+      wellFoundedPlay utility leftHistory left_not_terminal
       leftRecurseValue () left_active
       exitChoice
     have hmax' :
         information.historyChoiceValue singleMover
           (information.historyChooser fallbackProfile) wellFoundedPlay utility
-          backwardIntegrable leftHistory left_not_terminal
+           leftHistory left_not_terminal
           leftRecurseValue () left_active exitChoice ≤
         information.historyChoiceValue singleMover
           (information.historyChooser fallbackProfile) wellFoundedPlay utility
-          backwardIntegrable leftHistory left_not_terminal
+           leftHistory left_not_terminal
           leftRecurseValue () left_active leftBestChoice := hmax
     rw [exitChoice_value, hbest, continueChoice_value] at hmax'
     norm_num at hmax'
 
 theorem backwardChooser_left_action :
     (information.backwardChooser singleMover fallbackProfile finiteDecisionChoices
-      wellFoundedPlay utility backwardIntegrable
+      wellFoundedPlay utility
       leftHistory left_not_terminal).1 () = some .exit := by
   have hjoint := information.backwardJoint_of_active singleMover fallbackProfile
-    finiteDecisionChoices wellFoundedPlay utility backwardIntegrable leftHistory
+    finiteDecisionChoices wellFoundedPlay utility leftHistory
     left_not_terminal
     (fun later _ => information.backwardChooserBundle singleMover fallbackProfile
-      finiteDecisionChoices wellFoundedPlay utility backwardIntegrable later)
+      finiteDecisionChoices wellFoundedPlay utility later)
     () left_active
   have hbest :
       information.bestHistoryChoice singleMover
         (information.historyChooser fallbackProfile) wellFoundedPlay utility
-        backwardIntegrable leftHistory left_not_terminal
+         leftHistory left_not_terminal
         (fun later _ => information.backwardChooserBundle singleMover fallbackProfile
-          finiteDecisionChoices wellFoundedPlay utility backwardIntegrable later)
+          finiteDecisionChoices wellFoundedPlay utility later)
         () left_active = leftBestChoice := rfl
   rw [information.backwardChooser_eq_joint singleMover fallbackProfile
-    finiteDecisionChoices backwardIntegrable leftHistory left_not_terminal]
+    finiteDecisionChoices leftHistory left_not_terminal]
   rw [hjoint, hbest]
   rw [leftBestChoice_eq_exitChoice]
   rfl
@@ -969,18 +967,18 @@ theorem bellmanProfile_chooses_exit :
     (bellmanProfile ()).act .left = some .exit := by
   show
     (information.backwardPolicy singleMover fallbackProfile finiteDecisionChoices
-      wellFoundedPlay utility backwardIntegrable ()).act
+      wellFoundedPlay utility ()).act
       .left = some .exit
   calc
     _ = (information.backwardPolicy singleMover fallbackProfile
-        finiteDecisionChoices wellFoundedPlay utility backwardIntegrable ()).act
+        finiteDecisionChoices wellFoundedPlay utility ()).act
         (information.infoOf () leftHistory.trace) := by
           simp [leftHistory]
     _ = (information.backwardChooser singleMover fallbackProfile
-        finiteDecisionChoices wellFoundedPlay utility backwardIntegrable
+        finiteDecisionChoices wellFoundedPlay utility
         leftHistory left_not_terminal).1 () :=
           information.backwardPolicy_act_at_decision singleMover fallbackProfile
-            finiteDecisionChoices backwardIntegrable perfect leftHistory
+            finiteDecisionChoices perfect leftHistory
             left_not_terminal ()
               left_active
     _ = some .exit := backwardChooser_left_action
@@ -989,10 +987,10 @@ theorem bellmanProfile_chooses_exit :
 information state, where the player never makes a decision. -/
 theorem backwardPolicy_chance_eq_fallback :
     information.backwardPolicy singleMover fallbackProfile
-        finiteDecisionChoices wellFoundedPlay utility backwardIntegrable () .chance =
+        finiteDecisionChoices wellFoundedPlay utility () .chance =
       fallbackProfile () .chance := by
   apply information.backwardPolicy_eq_fallback_of_no_decision_history
-    singleMover fallbackProfile finiteDecisionChoices backwardIntegrable () .chance
+    singleMover fallbackProfile finiteDecisionChoices () .chance
   rintro ⟨history, _, hactive, hinfo⟩
   rw [infoOf_state] at hinfo
   simp [execution, hinfo] at hactive

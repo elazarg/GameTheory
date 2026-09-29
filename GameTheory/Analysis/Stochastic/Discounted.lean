@@ -31,46 +31,35 @@ variable (G : Game (Fin 2))
 
 /-- The normalized auxiliary one-shot matrix at a state and continuation
 value. -/
-def auxiliaryMatrix (β : ℝ) (value : G.State → ℝ) (state : G.State)
-    (hintegrable : ∀ row col,
-      PayoffIntegrable (G.transition state (G.pairAction row col)) value) :
+def auxiliaryMatrix (β : ℝ) (value : G.State → ℝ) (state : G.State) :
     G.Action 0 → G.Action 1 → ℝ :=
   fun row col =>
     G.normalizedOneStepUtility β value state (G.pairAction row col) 0
-      (hintegrable row col)
 
 /-- The auxiliary matrix's row utility is the normalized player-zero
 one-step return. -/
 theorem auxiliaryUtility_zero (β : ℝ) (value : G.State → ℝ)
     (state : G.State)
-    (hintegrable : ∀ row col,
-      PayoffIntegrable (G.transition state (G.pairAction row col)) value)
     (row : G.Action 0) (col : G.Action 1) :
-    MatrixGame.utility (G.auxiliaryMatrix β value state hintegrable)
+    MatrixGame.utility (G.auxiliaryMatrix β value state)
         (row, col) 0 =
       (1 - β) * G.stageUtility state (G.pairAction row col) 0 +
-        β * expect (G.transition state (G.pairAction row col)) value
-          (hintegrable row col) := rfl
+        β * expect (G.transition state (G.pairAction row col)) value := rfl
 
 /-- In a zero-sum stochastic game, the auxiliary matrix's column utility is
 the normalized player-one return with the negated continuation value. -/
 theorem auxiliaryUtility_one_eq (hzero : G.IsZeroSum) (β : ℝ)
     (value : G.State → ℝ) (state : G.State)
-    (hintegrable : ∀ row col,
-      PayoffIntegrable (G.transition state (G.pairAction row col)) value)
     (row : G.Action 0) (col : G.Action 1) :
-    MatrixGame.utility (G.auxiliaryMatrix β value state hintegrable)
+    MatrixGame.utility (G.auxiliaryMatrix β value state)
         (row, col) 1 =
       (1 - β) * G.stageUtility state (G.pairAction row col) 1 +
         β * expect (G.transition state (G.pairAction row col))
-          (fun next => -value next)
-          (payoffIntegrable_neg (hintegrable row col)) := by
+          (fun next => -value next) := by
   have hstage := (hzero state (G.pairAction row col)).eq_neg ()
   rw [MatrixGame.utility_one, auxiliaryMatrix, normalizedOneStepUtility,
     hstage]
-  have hneg := expect_neg
-    (hintegrable row col)
-  simp only [hneg]
+  simp only [expect_neg]
   ring
 
 variable [Fintype G.State]
@@ -78,44 +67,39 @@ variable [∀ i, Fintype (G.Action i)] [∀ i, Nonempty (G.Action i)]
 
 /-- Evaluate every auxiliary matrix at its finite zero-sum value. -/
 def shapleyOperator (β : ℝ) (value : G.State → ℝ) : G.State → ℝ :=
-  fun state => MatrixGame.value (G.auxiliaryMatrix β value state
-    (fun _ _ => payoffIntegrable_of_finite _ _))
+  fun state => MatrixGame.value (G.auxiliaryMatrix β value state)
 
 omit [∀ i, Fintype (G.Action i)] [∀ i, Nonempty (G.Action i)] in
 private theorem abs_expect_sub_le_dist (law : PMF G.State)
     (value other : G.State → ℝ) :
-    |expect law value (payoffIntegrable_of_finite _ _) -
-      expect law other (payoffIntegrable_of_finite _ _)| ≤
+    |expect law value -
+      expect law other| ≤
         dist value other := by
   rw [abs_sub_le_iff]
   constructor
-  · have hmono : expect law value (payoffIntegrable_of_finite _ _) ≤
-        expect law (fun state => other state + dist value other)
-          (payoffIntegrable_of_finite _ _) :=
+  · have hmono : expect law value ≤
+        expect law (fun state => other state + dist value other) :=
       expect_mono (fun state _ => by
         have hcoord := dist_le_pi_dist value other state
         rw [Real.dist_eq, abs_sub_le_iff] at hcoord
         linarith [hcoord.1, hcoord.2])
         (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
-    rw [show expect law (fun state => other state + dist value other)
-        (payoffIntegrable_of_finite _ _) =
-        expect law other (payoffIntegrable_of_finite _ _) +
+    rw [show expect law (fun state => other state + dist value other) =
+        expect law other +
           dist value other by
       simpa only [expect_constant] using
         expect_add (payoffIntegrable_of_finite law other)
           (payoffIntegrable_constant law (dist value other))] at hmono
     linarith
-  · have hmono : expect law other (payoffIntegrable_of_finite _ _) ≤
-        expect law (fun state => value state + dist value other)
-          (payoffIntegrable_of_finite _ _) :=
+  · have hmono : expect law other ≤
+        expect law (fun state => value state + dist value other) :=
       expect_mono (fun state _ => by
         have hcoord := dist_le_pi_dist value other state
         rw [Real.dist_eq, abs_sub_le_iff] at hcoord
         linarith [hcoord.1, hcoord.2])
         (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
-    rw [show expect law (fun state => value state + dist value other)
-        (payoffIntegrable_of_finite _ _) =
-        expect law value (payoffIntegrable_of_finite _ _) +
+    rw [show expect law (fun state => value state + dist value other) =
+        expect law value +
           dist value other by
       simpa only [expect_constant] using
         expect_add (payoffIntegrable_of_finite law value)
@@ -133,13 +117,11 @@ theorem abs_shapleyOperator_sub_le {β : ℝ} (hβ : 0 ≤ β)
     (G.transition state (G.pairAction row col)) value other
   calc
     |G.auxiliaryMatrix β value state
-        (fun _ _ => payoffIntegrable_of_finite _ _) row col -
+         row col -
         G.auxiliaryMatrix β other state
-          (fun _ _ => payoffIntegrable_of_finite _ _) row col|
-        = β * |expect (G.transition state (G.pairAction row col)) value
-            (payoffIntegrable_of_finite _ _) -
-            expect (G.transition state (G.pairAction row col)) other
-              (payoffIntegrable_of_finite _ _)| := by
+           row col|
+        = β * |expect (G.transition state (G.pairAction row col)) value -
+            expect (G.transition state (G.pairAction row col)) other| := by
           rw [auxiliaryMatrix, auxiliaryMatrix,
             normalizedOneStepUtility, normalizedOneStepUtility,
             add_sub_add_left_eq_sub, ← mul_sub, abs_mul, abs_of_nonneg hβ]
@@ -183,8 +165,7 @@ noncomputable def stationarySaddleProfile {β : ℝ≥0} (hβ : β < 1)
     (state : G.State) :
     Profile (MatrixGame.form (G.Action 0) (G.Action 1)).sig.mixed :=
   MatrixGame.valueProfile
-    (G.auxiliaryMatrix (β : ℝ) (G.discountedValue hβ) state
-      (fun _ _ => payoffIntegrable_of_finite _ _))
+    (G.auxiliaryMatrix (β : ℝ) (G.discountedValue hβ) state)
 
 /-- The selected stationary action pair is a saddle point of every auxiliary
 one-shot game at the discounted continuation value. -/
@@ -192,12 +173,10 @@ theorem stationarySaddleProfile_isSaddlePoint {β : ℝ≥0} (hβ : β < 1)
     (state : G.State) :
     IsSaddlePoint
       (MatrixGame.utility
-        (G.auxiliaryMatrix (β : ℝ) (G.discountedValue hβ) state
-          (fun _ _ => payoffIntegrable_of_finite _ _)))
+        (G.auxiliaryMatrix (β : ℝ) (G.discountedValue hβ) state))
       (G.stationarySaddleProfile hβ state) :=
   MatrixGame.valueProfile_isSaddlePoint
-    (G.auxiliaryMatrix (β : ℝ) (G.discountedValue hβ) state
-      (fun _ _ => payoffIntegrable_of_finite _ _))
+    (G.auxiliaryMatrix (β : ℝ) (G.discountedValue hβ) state)
 
 /-- Bellman's value is realized by the selected stationary saddle actions. -/
 theorem discountedValue_eq_stationaryExpectedUtility {β : ℝ≥0}
@@ -205,22 +184,17 @@ theorem discountedValue_eq_stationaryExpectedUtility {β : ℝ≥0}
     G.discountedValue hβ state =
       expectedUtility
         (MatrixGame.utility
-          (G.auxiliaryMatrix (β : ℝ) (G.discountedValue hβ) state
-            (fun _ _ => payoffIntegrable_of_finite _ _))) 0
+          (G.auxiliaryMatrix (β : ℝ) (G.discountedValue hβ) state)) 0
         ((MatrixGame.form (G.Action 0) (G.Action 1)).mixed.play
-          (G.stationarySaddleProfile hβ state))
-        (MatrixGame.valueProfileIntegrable
-          (G.auxiliaryMatrix (β : ℝ) (G.discountedValue hβ) state
-            (fun _ _ => payoffIntegrable_of_finite _ _))) := by
+          (G.stationarySaddleProfile hβ state)) := by
   let A := G.auxiliaryMatrix (β : ℝ) (G.discountedValue hβ) state
-    (fun _ _ => payoffIntegrable_of_finite _ _)
   have hfixed : MatrixGame.value A = G.discountedValue hβ state := by
     exact congrFun (G.shapleyOperator_discountedValue hβ) state
   have hrealized :
       expectedUtility (MatrixGame.utility A) 0
           ((MatrixGame.form (G.Action 0) (G.Action 1)).mixed.play
             (MatrixGame.valueProfile A))
-          (MatrixGame.valueProfileIntegrable A) = MatrixGame.value A :=
+           = MatrixGame.value A :=
     MatrixGame.valueProfile_expectedUtility A
   exact hfixed.symm.trans hrealized.symm
 

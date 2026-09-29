@@ -38,9 +38,8 @@ def MixtureSimulationOn.toUtilitySimulation
   UtilitySimulation.ofUnilateral simulation.compileStrategy
     (fun profile who => simulation.integrable_compile_iff profile
       (fun observation => utility observation who))
-    (fun profile who htarget hsource =>
-      simulation.expect_compile profile (fun observation => utility observation who)
-        htarget hsource)
+    (fun profile who _ _ =>
+      simulation.expect_compile profile (fun observation => utility observation who))
     (by
       intro profile who replacement
       let value : Observation → ℝ := fun observation => utility observation who
@@ -60,13 +59,9 @@ def MixtureSimulationOn.toUtilitySimulation
       let g : source.sig.Strategy who → ℝ := fun a =>
         if ha : a ∈ alternatives.support then
           expect (kernel a) value
-            (payoffIntegrable_bind_conditional_on_support
-              alternatives kernel value hbind a ha)
         else 0
       have hagree : ∀ a, ∀ ha : a ∈ alternatives.support,
-          g a = expect (kernel a) value
-            (payoffIntegrable_bind_conditional_on_support
-              alternatives kernel value hbind a ha) := by
+          g a = expect (kernel a) value := by
         intro a ha
         have hne : alternatives a ≠ 0 := (alternatives.mem_support_iff a).mp ha
         simp [g, hne]
@@ -76,27 +71,21 @@ def MixtureSimulationOn.toUtilitySimulation
         exists_expect_le_support alternatives g hg
       refine ⟨alternative, ?_⟩
       intro hsource
-      have hcond := payoffIntegrable_bind_conditional_on_support
-        alternatives kernel value hbind alternative ha
-      have hsource' : PayoffIntegrable
-          (source.play (Profile.update profile who alternative))
-          (value ∘ sourceObserve) :=
-        (payoffIntegrable_map_iff sourceObserve _ value).mp hcond
       refine ⟨htarget, ?_⟩
       calc
         expectedUtility (fun outcome player => utility (targetObserve outcome) player) who
             (target.play (Profile.update
-              (simulation.compileProfile profile) who replacement)) htarget =
-          expect (alternatives.bind kernel) value hbind := by
-            have hmap := expect_map targetObserve _ value htarget htobs
-            exact hmap.symm.trans (expect_congr_law hlaw value htobs hbind)
-        _ = expect alternatives g hg :=
+              (simulation.compileProfile profile) who replacement)) =
+          expect (alternatives.bind kernel) value := by
+            exact (expect_map targetObserve _ value).symm.trans
+              (expect_congr_law hlaw value)
+        _ = expect alternatives g :=
           expect_bind_tower_on_support alternatives kernel value hbind g hagree
         _ ≤ g alternative := hmean
-        _ = expect (kernel alternative) value hcond := hagree alternative ha
+        _ = expect (kernel alternative) value := hagree alternative ha
         _ = expectedUtility
             (fun outcome player => utility (sourceObserve outcome) player) who
-            (source.play (Profile.update profile who alternative)) hsource := by
-              exact expect_map sourceObserve _ value hsource hcond)
+            (source.play (Profile.update profile who alternative)) := by
+              exact expect_map sourceObserve _ value)
 
 end GameTheory.GameForm

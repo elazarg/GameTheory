@@ -226,7 +226,7 @@ theorem false_incumbent_integrable :
       (native_play_eq_frontier_map false).symm) hmap
 
 theorem false_incumbent_value_zero :
-    expect falseLaw (semantics.utility ()) false_incumbent_integrable = 0 := by
+    expect falseLaw (semantics.utility ()) = 0 := by
   have hvalue : ∀ assignment ∈ falseLaw.support,
       semantics.utility () assignment = 0 := by
     intro assignment hassignment
@@ -235,7 +235,6 @@ theorem false_incumbent_value_zero :
     obtain ⟨draw, hdraw, rfl⟩ := hassignment
     simpa using utility_on_supported_draw false draw hdraw
   have hzero := expect_congr_on_support hvalue
-    false_incumbent_integrable (payoffIntegrable_zero falseLaw)
   simpa only [expect_zero] using hzero
 
 /-- The pure true deviation has an undefined actual expected payoff under the

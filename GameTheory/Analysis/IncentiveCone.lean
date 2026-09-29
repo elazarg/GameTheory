@@ -73,8 +73,8 @@ theorem holds_map_iff {Source : Type v} (observe : Source → Outcome)
     have hp := (payoffIntegrable_map_iff observe prescribed utility).1 hprescribed
     have ha := (payoffIntegrable_map_iff observe alternative utility).1 halternative
     refine ⟨hp, ha, ?_⟩
-    have hpe := expect_map observe prescribed utility hp hprescribed
-    have hae := expect_map observe alternative utility ha halternative
+    have hpe := expect_map observe prescribed utility
+    have hae := expect_map observe alternative utility
     simp only [expectedUtility] at hle ⊢
     rw [hpe, hae] at hle
     exact hle
@@ -82,8 +82,8 @@ theorem holds_map_iff {Source : Type v} (observe : Source → Outcome)
     have hprescribed := (payoffIntegrable_map_iff observe prescribed utility).2 hp
     have halternative := (payoffIntegrable_map_iff observe alternative utility).2 ha
     refine ⟨hprescribed, halternative, ?_⟩
-    have hpe := expect_map observe prescribed utility hp hprescribed
-    have hae := expect_map observe alternative utility ha halternative
+    have hpe := expect_map observe prescribed utility
+    have hae := expect_map observe alternative utility
     simp only [expectedUtility] at hle ⊢
     rw [hpe, hae]
     exact hle
@@ -94,8 +94,8 @@ variable [Fintype Outcome]
 inequality of its two expectations. -/
 theorem holds_iff (comparison : IncentiveComparison Outcome) (utility : Outcome → ℝ) :
     comparison.Holds utility ↔
-      expect comparison.alternative utility (payoffIntegrable_of_finite _ _) ≤
-        expect comparison.prescribed utility (payoffIntegrable_of_finite _ _) :=
+      expect comparison.alternative utility ≤
+        expect comparison.prescribed utility :=
   euPreference_iff _ () _ _ (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
 
 /-- Signed mass of keeping the prescribed plan rather than deviating. -/
@@ -105,8 +105,8 @@ def difference (comparison : IncentiveComparison Outcome) : EuclideanSpace ℝ O
 
 theorem inner_difference (comparison : IncentiveComparison Outcome) (utility : Outcome → ℝ) :
     ⟪comparison.difference, WithLp.toLp 2 utility⟫ =
-      expect comparison.prescribed utility (payoffIntegrable_of_finite _ _) -
-        expect comparison.alternative utility (payoffIntegrable_of_finite _ _) := by
+      expect comparison.prescribed utility -
+        expect comparison.alternative utility := by
   simp only [difference, EuclideanSpace.inner_toLp_toLp, dotProduct, Pi.star_apply,
     star_trivial, expect_eq_sum, mul_sub, Finset.sum_sub_distrib]
   congr 1 <;> apply Finset.sum_congr rfl <;> intro outcome _ <;> exact mul_comm _ _
@@ -172,8 +172,8 @@ theorem mem_cone_iff (comparisons : Index → IncentiveComparison Outcome)
 theorem separating_utility (comparisons : Index → IncentiveComparison Outcome)
     (target : IncentiveComparison Outcome) (outside : target.difference ∉ cone comparisons) :
     ∃ utility, (∀ index, (comparisons index).Holds utility) ∧
-      expect target.prescribed utility (payoffIntegrable_of_finite _ _) <
-        expect target.alternative utility (payoffIntegrable_of_finite _ _) := by
+      expect target.prescribed utility <
+        expect target.alternative utility := by
   rw [mem_cone_iff] at outside
   push Not at outside
   obtain ⟨utility, respected, fails⟩ := outside
@@ -234,9 +234,8 @@ subspace. -/
 theorem inner_projected_difference (comparison : IncentiveComparison Outcome)
     (utility : utilities) :
     ⟪utilities.orthogonalProjectionOnto comparison.difference, utility⟫ =
-      expect comparison.prescribed (WithLp.ofLp utility.val) (payoffIntegrable_of_finite _ _) -
-        expect comparison.alternative (WithLp.ofLp utility.val)
-          (payoffIntegrable_of_finite _ _) := by
+      expect comparison.prescribed (WithLp.ofLp utility.val) -
+        expect comparison.alternative (WithLp.ofLp utility.val) := by
   rw [utilities.inner_orthogonalProjectionOnto_eq_of_mem_right]
   exact comparison.inner_difference (WithLp.ofLp utility.val)
 
@@ -286,11 +285,10 @@ theorem projected_difference_eq_iff (first second : IncentiveComparison Outcome)
     utilities.orthogonalProjectionOnto first.difference =
         utilities.orthogonalProjectionOnto second.difference ↔
       ∀ utility : utilities,
-        expect first.prescribed (WithLp.ofLp utility.val) (payoffIntegrable_of_finite _ _) -
-            expect first.alternative (WithLp.ofLp utility.val) (payoffIntegrable_of_finite _ _) =
-          expect second.prescribed (WithLp.ofLp utility.val) (payoffIntegrable_of_finite _ _) -
-            expect second.alternative (WithLp.ofLp utility.val)
-              (payoffIntegrable_of_finite _ _) := by
+        expect first.prescribed (WithLp.ofLp utility.val) -
+            expect first.alternative (WithLp.ofLp utility.val) =
+          expect second.prescribed (WithLp.ofLp utility.val) -
+            expect second.alternative (WithLp.ofLp utility.val) := by
   constructor
   · intro same utility
     rw [← inner_projected_difference utilities first utility,
@@ -313,8 +311,8 @@ theorem regret_le_norm_comparison_residual
         weight term • utilities.orthogonalProjectionOnto (comparisons (index term)).difference)
     (utility : Outcome → ℝ)
     (respected : ∀ term ∈ terms, (comparisons (index term)).Holds utility) :
-    expect target.alternative utility (payoffIntegrable_of_finite _ _) -
-        expect target.prescribed utility (payoffIntegrable_of_finite _ _) ≤
+    expect target.alternative utility -
+        expect target.prescribed utility ≤
       ‖target.difference - ∑ term ∈ terms,
         weight term • (comparisons (index term)).difference‖ *
       ‖WithLp.toLp 2 utility -
@@ -342,8 +340,8 @@ theorem regret_le_norm_comparison_residual
   have lower := (abs_le.mp (abs_real_inner_le_norm residual
     (vector - (utilities.orthogonalProjectionOnto vector).val))).1
   have residual_margin : ⟪residual, vector⟫ =
-      expect target.prescribed utility (payoffIntegrable_of_finite _ _) -
-        expect target.alternative utility (payoffIntegrable_of_finite _ _) -
+      expect target.prescribed utility -
+        expect target.alternative utility -
           ⟪combination, vector⟫ := by
     change ⟪target.difference - combination, vector⟫ = _
     rw [inner_sub_left, target.inner_difference utility]

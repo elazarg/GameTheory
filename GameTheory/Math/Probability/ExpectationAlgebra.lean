@@ -57,14 +57,12 @@ theorem payoffIntegrable_const_mul {α : Type*} {μ : PMF α}
     ring
   simpa only [PayoffIntegrable] using hresult
 
-theorem expect_zero {α : Type*} (μ : PMF α)
-    (h : PayoffIntegrable μ (fun _ => (0 : ℝ))) :
-    expect μ (fun _ => 0) h = 0 := by
+theorem expect_zero {α : Type*} (μ : PMF α) :
+    expect μ (fun _ => 0) = 0 := by
   simp [expect]
 
-theorem expect_neg {α : Type*} {μ : PMF α} {f : α → ℝ}
-    (hf : PayoffIntegrable μ f) :
-    expect μ (fun a => -f a) (payoffIntegrable_neg hf) = -expect μ f hf := by
+theorem expect_neg {α : Type*} {μ : PMF α} {f : α → ℝ} :
+    expect μ (fun a => -f a) = -expect μ f := by
   unfold expect
   rw [← tsum_neg]
   refine tsum_congr fun a => ?_
@@ -72,8 +70,8 @@ theorem expect_neg {α : Type*} {μ : PMF α} {f : α → ℝ}
 
 theorem expect_add {α : Type*} {μ : PMF α} {f g : α → ℝ}
     (hf : PayoffIntegrable μ f) (hg : PayoffIntegrable μ g) :
-    expect μ (fun a => f a + g a) (payoffIntegrable_add hf hg) =
-      expect μ f hf + expect μ g hg := by
+    expect μ (fun a => f a + g a) =
+      expect μ f + expect μ g := by
   have hfs := hf.summable
   have hgs := hg.summable
   unfold expect
@@ -83,15 +81,15 @@ theorem expect_add {α : Type*} {μ : PMF α} {f g : α → ℝ}
 
 theorem expect_sub {α : Type*} {μ : PMF α} {f g : α → ℝ}
     (hf : PayoffIntegrable μ f) (hg : PayoffIntegrable μ g) :
-    expect μ (fun a => f a - g a) (payoffIntegrable_sub hf hg) =
-      expect μ f hf - expect μ g hg := by
+    expect μ (fun a => f a - g a) =
+      expect μ f - expect μ g := by
   calc
-    expect μ (fun a => f a - g a) (payoffIntegrable_sub hf hg) =
-        expect μ f hf + expect μ (fun a => -g a) (payoffIntegrable_neg hg) := by
+    expect μ (fun a => f a - g a) =
+        expect μ f + expect μ (fun a => -g a) := by
           simpa only [sub_eq_add_neg] using
             expect_add hf (payoffIntegrable_neg hg)
-    _ = expect μ f hf - expect μ g hg := by
-      rw [expect_neg hg]
+    _ = expect μ f - expect μ g := by
+      rw [expect_neg]
       ring
 
 /-- If an integrable payoff is bounded above by a constant on the law's
@@ -100,21 +98,21 @@ throughout the support. -/
 theorem expect_eq_const_of_le_on_support {α : Type*} (μ : PMF α) (f : α → ℝ)
     (c : ℝ) (hf : PayoffIntegrable μ f)
     (hle : ∀ a ∈ μ.support, f a ≤ c)
-    (heq : expect μ f hf = c) :
+    (heq : expect μ f = c) :
     ∀ a ∈ μ.support, f a = c := by
   have hconst : PayoffIntegrable μ (fun _ => c) :=
     payoffIntegrable_of_bounded μ (fun _ => c) (C := |c|) (fun _ => le_rfl)
   have hgap : PayoffIntegrable μ (fun a => c - f a) := by
     simpa only [sub_eq_add_neg] using
       payoffIntegrable_add hconst (payoffIntegrable_neg hf)
-  have hgapValue : expect μ (fun a => c - f a) hgap = 0 := by
+  have hgapValue : expect μ (fun a => c - f a) = 0 := by
     calc
-      _ = expect μ (fun _ => c) hconst +
-          expect μ (fun a => -f a) (payoffIntegrable_neg hf) := by
+      _ = expect μ (fun _ => c) +
+          expect μ (fun a => -f a) := by
             simpa only [sub_eq_add_neg] using
               expect_add hconst (payoffIntegrable_neg hf)
-      _ = c - expect μ f hf := by
-            rw [expect_constant μ c hconst, expect_neg hf]
+      _ = c - expect μ f := by
+            rw [expect_constant μ c, expect_neg]
             ring
       _ = 0 := by rw [heq]; ring
   intro a ha
@@ -143,22 +141,21 @@ theorem expect_eq_const_of_le_on_support {α : Type*} (μ : PMF α) (f : α → 
 /-- An integrable payoff attains an action whose value is at least its mean. -/
 theorem exists_mem_support_expect_le {α : Type*} (μ : PMF α) (f : α → ℝ)
     (hf : PayoffIntegrable μ f) :
-    ∃ a ∈ μ.support, expect μ f hf ≤ f a := by
+    ∃ a ∈ μ.support, expect μ f ≤ f a := by
   by_contra h
   push Not at h
-  have hle : ∀ a ∈ μ.support, f a ≤ expect μ f hf := by
+  have hle : ∀ a ∈ μ.support, f a ≤ expect μ f := by
     intro a ha
     exact (h a ha).le
-  have heq := expect_eq_const_of_le_on_support μ f (expect μ f hf) hf hle rfl
+  have heq := expect_eq_const_of_le_on_support μ f (expect μ f) hf hle rfl
   obtain ⟨a, ha⟩ := PMF.support_nonempty μ
   have hlt := h a ha
   rw [heq a ha] at hlt
   exact (lt_irrefl _ hlt)
 
-theorem expect_const_mul {α : Type*} {μ : PMF α} {c : ℝ} {f : α → ℝ}
-    (hf : PayoffIntegrable μ f) :
-    expect μ (fun a => c * f a) (payoffIntegrable_const_mul hf) =
-      c * expect μ f hf := by
+theorem expect_const_mul {α : Type*} {μ : PMF α} {c : ℝ} {f : α → ℝ} :
+    expect μ (fun a => c * f a) =
+      c * expect μ f := by
   unfold expect
   rw [← tsum_mul_left]
   refine tsum_congr fun a => ?_
@@ -183,41 +180,35 @@ theorem payoffIntegrable_sum {α κ : Type*} [Fintype κ] (μ : PMF α)
 
 private theorem expect_finset_sum_aux {α κ : Type*} (μ : PMF α)
     (s : Finset κ) (f : κ → α → ℝ) (h : ∀ k, PayoffIntegrable μ (f k)) :
-    expect μ (fun a => ∑ k ∈ s, f k a)
-      (payoffIntegrable_finset_sum_aux μ s f h) =
-        ∑ k ∈ s, expect μ (f k) (h k) := by
+    expect μ (fun a => ∑ k ∈ s, f k a) =
+        ∑ k ∈ s, expect μ (f k) := by
   classical
   induction s using Finset.induction_on with
   | empty =>
       simp [expect]
   | @insert k s hk ih =>
-      have hsum : PayoffIntegrable μ (fun a => ∑ j ∈ insert k s, f j a) :=
-        payoffIntegrable_finset_sum_aux μ (insert k s) f h
-      have hadd : PayoffIntegrable μ (fun a => f k a + ∑ j ∈ s, f j a) :=
-        payoffIntegrable_add (h k) (payoffIntegrable_finset_sum_aux μ s f h)
       have hfun : (fun a => ∑ j ∈ insert k s, f j a) =
           (fun a => f k a + ∑ j ∈ s, f j a) := by
         funext a
         simp [Finset.sum_insert, hk]
       calc
-        expect μ (fun a => ∑ j ∈ insert k s, f j a) hsum =
-            expect μ (fun a => f k a + ∑ j ∈ s, f j a) hadd := by
+        expect μ (fun a => ∑ j ∈ insert k s, f j a) =
+            expect μ (fun a => f k a + ∑ j ∈ s, f j a) := by
           exact expect_congr_on_support
-            (fun a _ => congrFun hfun a) hsum hadd
-        _ = expect μ (f k) (h k) +
-            expect μ (fun a => ∑ j ∈ s, f j a)
-              (payoffIntegrable_finset_sum_aux μ s f h) := expect_add (h k)
+            (fun a _ => congrFun hfun a)
+        _ = expect μ (f k) +
+            expect μ (fun a => ∑ j ∈ s, f j a) := expect_add (h k)
                 (payoffIntegrable_finset_sum_aux μ s f h)
-        _ = expect μ (f k) (h k) + ∑ j ∈ s, expect μ (f j) (h j) := by
+        _ = expect μ (f k) + ∑ j ∈ s, expect μ (f j) := by
           rw [ih]
-        _ = ∑ j ∈ insert k s, expect μ (f j) (h j) := by
+        _ = ∑ j ∈ insert k s, expect μ (f j) := by
           rw [Finset.sum_insert hk]
 
 /-- Expected value commutes with a finite sum of absolutely integrable payoffs. -/
 theorem expect_sum {α κ : Type*} [Fintype κ] (μ : PMF α)
     (f : κ → α → ℝ) (h : ∀ k, PayoffIntegrable μ (f k)) :
-    expect μ (fun a => ∑ k, f k a) (payoffIntegrable_sum μ f h) =
-      ∑ k, expect μ (f k) (h k) := by
+    expect μ (fun a => ∑ k, f k a) =
+      ∑ k, expect μ (f k) := by
   simpa using expect_finset_sum_aux μ Finset.univ f h
 
 /-- A payoff equal on support to a finite sum inherits integrability and its
@@ -226,31 +217,30 @@ theorem expect_eq_sum_on_support {α κ : Type*} [Fintype κ]
     (μ : PMF α) (term : κ → α → ℝ) (value : α → ℝ)
     (hterm : ∀ k, PayoffIntegrable μ (term k))
     (hvalue : ∀ a ∈ μ.support, value a = ∑ k, term k a) :
-    ∃ hvalueIntegrable : PayoffIntegrable μ value,
-      expect μ value hvalueIntegrable =
-        ∑ k, expect μ (term k) (hterm k) := by
+    PayoffIntegrable μ value ∧
+      expect μ value = ∑ k, expect μ (term k) := by
   have hsum := payoffIntegrable_sum μ term hterm
   have hvalueIntegrable : PayoffIntegrable μ value :=
     payoffIntegrable_congr_on_support
       (fun a ha => (hvalue a ha).symm) hsum
   refine ⟨hvalueIntegrable, ?_⟩
   calc
-    expect μ value hvalueIntegrable =
-        expect μ (fun a => ∑ k, term k a) hsum :=
-      expect_congr_on_support hvalue hvalueIntegrable hsum
-    _ = ∑ k, expect μ (term k) (hterm k) := expect_sum μ term hterm
+    expect μ value =
+        expect μ (fun a => ∑ k, term k a) :=
+      expect_congr_on_support hvalue
+    _ = ∑ k, expect μ (term k) := expect_sum μ term hterm
 
 /-- Some supported point attains at least the mean of an integrable payoff,
 even when the PMF has infinite support. -/
 theorem exists_expect_le_support {α : Type*} (law : PMF α)
     (value : α → ℝ) (hvalue : PayoffIntegrable law value) :
-    ∃ a ∈ law.support, expect law value hvalue ≤ value a := by
+    ∃ a ∈ law.support, expect law value ≤ value a := by
   by_contra hnone
-  have hlt : ∀ a ∈ law.support, value a < expect law value hvalue := by
+  have hlt : ∀ a ∈ law.support, value a < expect law value := by
     intro a ha
     exact lt_of_not_ge (fun hge => hnone ⟨a, ha, hge⟩)
   have heq := expect_eq_const_of_le_on_support law value
-    (expect law value hvalue) hvalue (fun a ha => (hlt a ha).le) rfl
+    (expect law value) hvalue (fun a ha => (hlt a ha).le) rfl
   obtain ⟨a, ha⟩ := law.support_nonempty
   exact (ne_of_lt (hlt a ha)) (heq a ha)
 

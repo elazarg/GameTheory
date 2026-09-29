@@ -1761,13 +1761,11 @@ theorem behavioralProfileMeasure_regular
 
 /-! ## Guarded finite-prefix expectations -/
 
-/-- The behavioral prefix value is the canonical guarded PMF expectation. -/
+/-- The behavioral prefix value is the canonical PMF expectation. -/
 def behavioralPrefixExpectation
     (policy : (i : ι) → M.BehavioralPolicy i)
-    (observable : ℕ → E.History → ℝ) (time : ℕ)
-    (h : PayoffIntegrable (M.runBehavioral policy (time + 1))
-      (observable time)) : ℝ :=
-  expect (M.runBehavioral policy (time + 1)) (observable time) h
+    (observable : ℕ → E.History → ℝ) (time : ℕ) : ℝ :=
+  expect (M.runBehavioral policy (time + 1)) (observable time)
 
 /-- A pure-policy measure prefix value requires integrability under the
 actual integrated runner law. -/
@@ -1806,11 +1804,11 @@ theorem pureMeasurePrefixExpectation_eq_behavioral
     M.pureMeasurePrefixExpectation policy observable time
         ((M.pureMeasurePrefixIntegrable_iff_behavioral hactsOnce policy
           (time + 1) (observable time)).2 hbehavioral) =
-      M.behavioralPrefixExpectation policy observable time hbehavioral := by
+      M.behavioralPrefixExpectation policy observable time := by
   unfold pureMeasurePrefixExpectation behavioralPrefixExpectation
   rw [M.runPureMeasure_eq_runBehavioral hactsOnce policy (time + 1)]
   exact (expect_eq_integral (M.runBehavioral policy (time + 1))
-    (observable time) hbehavioral).symm
+    (observable time)).symm
 
 /-- A finite-prefix observable under independently drawn policy measures is
 integrated only when it is integrable under the actual runner law. -/
@@ -1856,13 +1854,13 @@ theorem policyMeasurePrefixExpectation_eq_behavioralWith
         ((M.policyMeasurePrefixIntegrable_iff_behavioralWith hconstrain laws
           fallback (time + 1) (observable time)).2 hbehavioral) =
       M.behavioralPrefixExpectation
-        (M.policyMeasureBehavioralWith laws fallback) observable time hbehavioral := by
+        (M.policyMeasureBehavioralWith laws fallback) observable time := by
   unfold policyMeasurePrefixExpectation behavioralPrefixExpectation
   rw [M.runPolicyMeasure_eq_runBehavioralWith hconstrain laws fallback
     (time + 1)]
   exact (expect_eq_integral
     (M.runBehavioral (M.policyMeasureBehavioralWith laws fallback) (time + 1))
-    (observable time) hbehavioral).symm
+    (observable time)).symm
 
 /-- Replacing one policy measure preserves the precise prefix integrability
 condition under its conditional behavioral reading. -/
@@ -1922,11 +1920,11 @@ theorem policyMeasureUpdatePrefixExpectation_eq_behavioral
         (Profile.update (sig := M.behavioralSignature)
           (M.policyMeasureBehavioralWith laws fallback) who
           (PolicyMeasure.toBehavioralWith (M := M) replacement
-            replacementFallback)) observable time hbehavioral := by
+            replacementFallback)) observable time := by
   unfold policyMeasurePrefixExpectation behavioralPrefixExpectation
   rw [M.runPolicyMeasure_update_eq_runBehavioral_update hconstrain laws
     fallback who replacement replacementFallback (time + 1)]
-  exact (expect_eq_integral _ (observable time) hbehavioral).symm
+  exact (expect_eq_integral _ (observable time)).symm
 
 /-- Hybrid behavioral deviations transport prefix integrability from the
 behavioral runner to the independently drawn policy laws. -/
@@ -1980,11 +1978,11 @@ theorem policyMeasurePrefixExpectation_update_toPureMeasure_eq_behavioral_update
       M.behavioralPrefixExpectation
         (Profile.update (sig := M.behavioralSignature)
           (M.policyMeasureBehavioralWith laws fallback) who replacement)
-        observable time hbehavioral := by
+        observable time := by
   unfold policyMeasurePrefixExpectation behavioralPrefixExpectation
   rw [M.runPolicyMeasure_update_toPureMeasure_eq_runBehavioral_update
     hrecall laws fallback who replacement (time + 1)]
-  exact (expect_eq_integral _ (observable time) hbehavioral).symm
+  exact (expect_eq_integral _ (observable time)).symm
 
 /-- Hybrid policy-law deviations transport prefix integrability to their
 conditional behavioral reading. -/
@@ -2039,11 +2037,11 @@ theorem policyMeasurePrefixExpectation_toPureMeasure_update_eq_behavioral_update
       M.behavioralPrefixExpectation
         (Profile.update (sig := M.behavioralSignature) behavioral who
           (PolicyMeasure.toBehavioralWith (M := M) replacement
-            replacementFallback)) observable time hbehavioral := by
+            replacementFallback)) observable time := by
   unfold policyMeasurePrefixExpectation behavioralPrefixExpectation
   rw [M.runPolicyMeasure_toPureMeasure_update_eq_runBehavioral_update
     hrecall behavioral who replacement replacementFallback (time + 1)]
-  exact (expect_eq_integral _ (observable time) hbehavioral).symm
+  exact (expect_eq_integral _ (observable time)).symm
 
 /-! ## Guarded discounted expectations -/
 
@@ -2058,7 +2056,7 @@ theorem normalizedDiscountedPureMeasure_eq_behavioral
     (hbehavioral : ∀ time,
       PayoffIntegrable (M.runBehavioral policy (time + 1)) (observable time))
     (hsummable : Summable fun time => discount ^ time *
-      M.behavioralPrefixExpectation policy observable time (hbehavioral time)) :
+      M.behavioralPrefixExpectation policy observable time) :
     let hmeasure : ∀ time,
         Integrable (observable time) (M.runPureMeasure policy (time + 1)) :=
       fun time => (M.pureMeasurePrefixIntegrable_iff_behavioral hactsOnce
@@ -2069,15 +2067,13 @@ theorem normalizedDiscountedPureMeasure_eq_behavioral
           (fun time => M.pureMeasurePrefixExpectation policy observable time
             (hmeasure time)) =
         GameTheory.Math.normalizedDiscountedSum discount
-          (fun time => M.behavioralPrefixExpectation policy observable time
-            (hbehavioral time)) := by
+          (fun time => M.behavioralPrefixExpectation policy observable time) := by
   dsimp only
   have hpointwise (time : ℕ) :
       M.pureMeasurePrefixExpectation policy observable time
           ((M.pureMeasurePrefixIntegrable_iff_behavioral hactsOnce
             policy (time + 1) (observable time)).2 (hbehavioral time)) =
-        M.behavioralPrefixExpectation policy observable time
-          (hbehavioral time) :=
+        M.behavioralPrefixExpectation policy observable time :=
     M.pureMeasurePrefixExpectation_eq_behavioral hactsOnce
       policy time observable (hbehavioral time)
   simp only [hpointwise]
@@ -2099,8 +2095,7 @@ theorem normalizedDiscountedPolicyMeasure_eq_behavioralWith
       (observable time))
     (hsummable : Summable fun time => discount ^ time *
       M.behavioralPrefixExpectation
-        (M.policyMeasureBehavioralWith laws fallback) observable time
-        (hbehavioral time)) :
+        (M.policyMeasureBehavioralWith laws fallback) observable time) :
     let hmeasure : ∀ time,
         Integrable (observable time) (M.runPolicyMeasure laws (time + 1)) :=
       fun time => (M.policyMeasurePrefixIntegrable_iff_behavioralWith
@@ -2113,8 +2108,7 @@ theorem normalizedDiscountedPolicyMeasure_eq_behavioralWith
             (hmeasure time)) =
         GameTheory.Math.normalizedDiscountedSum discount
           (fun time => M.behavioralPrefixExpectation
-            (M.policyMeasureBehavioralWith laws fallback) observable time
-            (hbehavioral time)) := by
+            (M.policyMeasureBehavioralWith laws fallback) observable time) := by
   dsimp only
   have hpointwise (time : ℕ) :
       M.policyMeasurePrefixExpectation laws observable time
@@ -2122,8 +2116,7 @@ theorem normalizedDiscountedPolicyMeasure_eq_behavioralWith
             fallback (time + 1)
             (observable time)).2 (hbehavioral time)) =
         M.behavioralPrefixExpectation
-          (M.policyMeasureBehavioralWith laws fallback) observable time
-          (hbehavioral time) :=
+          (M.policyMeasureBehavioralWith laws fallback) observable time :=
     M.policyMeasurePrefixExpectation_eq_behavioralWith hconstrain laws
       fallback time observable (hbehavioral time)
   simp only [hpointwise]
@@ -2150,7 +2143,7 @@ theorem normalizedDiscountedPolicyMeasure_update_toPureMeasure_eq_behavioral_upd
       M.behavioralPrefixExpectation
         (Profile.update (sig := M.behavioralSignature)
           (M.policyMeasureBehavioralWith laws fallback) who replacement)
-        observable time (hbehavioral time)) :
+        observable time) :
     let hmeasure : ∀ time, Integrable (observable time)
         (M.runPolicyMeasure
           (Profile.update (sig := M.policyMeasureSignature)
@@ -2172,7 +2165,7 @@ theorem normalizedDiscountedPolicyMeasure_update_toPureMeasure_eq_behavioral_upd
           (fun time => M.behavioralPrefixExpectation
             (Profile.update (sig := M.behavioralSignature)
               (M.policyMeasureBehavioralWith laws fallback) who replacement)
-            observable time (hbehavioral time)) := by
+            observable time) := by
   dsimp only
   have hpointwise (time : ℕ) :
       M.policyMeasurePrefixExpectation
@@ -2184,7 +2177,7 @@ theorem normalizedDiscountedPolicyMeasure_update_toPureMeasure_eq_behavioral_upd
         M.behavioralPrefixExpectation
           (Profile.update (sig := M.behavioralSignature)
             (M.policyMeasureBehavioralWith laws fallback) who replacement)
-          observable time (hbehavioral time) :=
+          observable time :=
     M.policyMeasurePrefixExpectation_update_toPureMeasure_eq_behavioral_update
       hrecall laws fallback who replacement time
       observable (hbehavioral time)
@@ -2212,7 +2205,7 @@ theorem normalizedDiscountedPolicyMeasure_toPureMeasure_update_eq_behavioral_upd
       M.behavioralPrefixExpectation
         (Profile.update (sig := M.behavioralSignature) behavioral who
           (PolicyMeasure.toBehavioralWith (M := M) replacement
-            replacementFallback)) observable time (hbehavioral time)) :
+            replacementFallback)) observable time) :
     let hmeasure : ∀ time, Integrable (observable time)
         (M.runPolicyMeasure
           (Profile.update (sig := M.policyMeasureSignature)
@@ -2235,8 +2228,7 @@ theorem normalizedDiscountedPolicyMeasure_toPureMeasure_update_eq_behavioral_upd
           (fun time => M.behavioralPrefixExpectation
             (Profile.update (sig := M.behavioralSignature) behavioral who
               (PolicyMeasure.toBehavioralWith (M := M) replacement
-                replacementFallback)) observable time
-            (hbehavioral time)) := by
+                replacementFallback)) observable time) := by
   dsimp only
   have hpointwise (time : ℕ) :
       M.policyMeasurePrefixExpectation
@@ -2249,7 +2241,7 @@ theorem normalizedDiscountedPolicyMeasure_toPureMeasure_update_eq_behavioral_upd
         M.behavioralPrefixExpectation
           (Profile.update (sig := M.behavioralSignature) behavioral who
             (PolicyMeasure.toBehavioralWith (M := M) replacement
-              replacementFallback)) observable time (hbehavioral time) :=
+              replacementFallback)) observable time :=
     M.policyMeasurePrefixExpectation_toPureMeasure_update_eq_behavioral_update
       hrecall behavioral who replacement replacementFallback time
       observable (hbehavioral time)

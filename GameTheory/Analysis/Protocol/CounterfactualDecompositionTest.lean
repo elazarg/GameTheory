@@ -140,7 +140,7 @@ theorem expect_commit_of_info_eq
     (observable : Option Bool → ℝ) :
     expect (policy.commit info choice current)
         (fun selected => observable selected.1)
-        (payoffIntegrable_of_finite _ _) = observable choice.1 := by
+         = observable choice.1 := by
   subst current
   rw [InformationModel.BehavioralPolicy.commit_self (M := information),
     expect_pure]
@@ -242,11 +242,7 @@ theorem behavioralContinuation_second_committed
     information.behavioralContinuationValue incumbentBehavioralStrategy ()
         (incumbentBehavioralPolicy.commit (secondSite firstAction).1
           (secondChoice firstAction action))
-        terminalPayoff 1 (secondHistory hidden firstAction)
-        (continuationIntegrable incumbentBehavioralStrategy
-          (incumbentBehavioralPolicy.commit (secondSite firstAction).1
-            (secondChoice firstAction action)) 1
-          (secondHistory hidden firstAction)) =
+        terminalPayoff 1 (secondHistory hidden firstAction) =
       if firstAction && action then 1 else 0 := by
   have hLaw :
       information.runBehavioralFrom
@@ -284,7 +280,7 @@ theorem behavioralContinuation_second_committed
       ExecutionProtocol.singletonJoint]
     congr 3
   unfold InformationModel.behavioralContinuationValue
-  rw [expect_congr_law hLaw terminalPayoff _ (terminalPayoff_integrable _)]
+  rw [expect_congr_law hLaw terminalPayoff]
   rw [expect_pure]
   cases firstAction <;> cases action <;>
     simp [terminalPayoff, utility]
@@ -296,28 +292,18 @@ theorem counterfactualActionUtility_second
     (firstAction action : Bool) :
     information.counterfactualActionUtility incumbentBehavioralStrategy ()
         (secondSite firstAction) terminalPayoff 1
-        (secondChoice firstAction action)
-        (counterfactualIntegrable incumbentBehavioralStrategy
-          (secondSite firstAction)
-          (incumbentBehavioralPolicy.commit (secondSite firstAction).1
-            (secondChoice firstAction action)) 1) =
+        (secondChoice firstAction action) =
       if firstAction && action then 1 else 0 := by
   unfold InformationModel.counterfactualActionUtility
     InformationModel.counterfactualContinuationValue
   let value (history : information.InformationHistory ()
       (secondSite firstAction).1) : ℝ :=
-    if hreach : information.counterfactualReachProbability
-        incumbentBehavioralStrategy () history.1.trace ≠ 0 then
-      information.counterfactualReachProbability
-          incumbentBehavioralStrategy () history.1.trace *
-        information.behavioralContinuationValue
-          incumbentBehavioralStrategy ()
-          (incumbentBehavioralPolicy.commit (secondSite firstAction).1
-            (secondChoice firstAction action)) terminalPayoff 1 history.1
-          (continuationIntegrable incumbentBehavioralStrategy
-            (incumbentBehavioralPolicy.commit (secondSite firstAction).1
-              (secondChoice firstAction action)) 1 history.1)
-    else 0
+    information.counterfactualReachProbability
+        incumbentBehavioralStrategy () history.1.trace *
+      information.behavioralContinuationValue
+        incumbentBehavioralStrategy ()
+        (incumbentBehavioralPolicy.commit (secondSite firstAction).1
+          (secondChoice firstAction action)) terminalPayoff 1 history.1
   calc
     _ = ∑ history : information.InformationHistory ()
         (secondSite firstAction).1, value history := rfl
@@ -334,7 +320,6 @@ theorem counterfactualActionUtility_second
       apply Finset.sum_congr rfl
       intro hidden _
       simp only [value, secondInformationHistory]
-      rw [dite_eq_left (by rw [counterfactualReach_second]; norm_num)]
       rw [counterfactualReach_second,
         behavioralContinuation_second_committed]
     _ = _ := by
@@ -350,30 +335,19 @@ theorem incumbentBehavioralPolicy_secondSite (firstAction : Bool) :
 of changing its action to true. -/
 theorem offPathSecond_counterfactualActionRegret :
     information.counterfactualActionRegret incumbentBehavioralStrategy ()
-      (secondSite true) terminalPayoff 1 (secondChoice true true)
-      (counterfactualIntegrable incumbentBehavioralStrategy (secondSite true)
-        (incumbentBehavioralPolicy.commit (secondSite true).1
-          (secondChoice true true)) 1)
-      (counterfactualIntegrable incumbentBehavioralStrategy (secondSite true)
-        incumbentBehavioralPolicy 1) = 1 := by
+      (secondSite true) terminalPayoff 1 (secondChoice true true) = 1 := by
   obtain ⟨_, hregret⟩ := information.counterfactualActionRegret_eq_sub_expect
     information_actsOnce incumbentBehavioralStrategy () (secondSite true)
       (secondSite_allNonterminal true) terminalPayoff 0
       (secondChoice true true)
       (counterfactualIntegrable incumbentBehavioralStrategy (secondSite true)
-        (incumbentBehavioralPolicy.commit (secondSite true).1
-          (secondChoice true true)) 1)
-      (counterfactualIntegrable incumbentBehavioralStrategy (secondSite true)
         incumbentBehavioralPolicy 1)
-      (fun other _ => counterfactualIntegrable incumbentBehavioralStrategy
-        (secondSite true)
-        (incumbentBehavioralPolicy.commit (secondSite true).1 other) 1)
   rw [hregret, counterfactualActionUtility_second]
   simp only [incumbentBehavioralStrategy]
   simp only [show incumbentBehavioralPolicy (secondKnowledge true) =
     PMF.pure (secondChoice true false) by rfl]
   rw [expect_pure]
-  simp [extendFromSupport, counterfactualActionUtility_second]
+  simp [counterfactualActionUtility_second]
 
 theorem incumbentFirstCommit_secondLaw
     (hidden firstAction action : Bool) :
@@ -396,10 +370,7 @@ theorem behavioralContinuation_firstCommit_at_second
     (hidden firstAction action : Bool) :
     information.behavioralContinuationValue incumbentBehavioralStrategy ()
         (incumbentBehavioralPolicy.commit firstSite.1 (firstChoice action))
-        terminalPayoff 1 (secondHistory hidden firstAction)
-        (continuationIntegrable incumbentBehavioralStrategy
-          (incumbentBehavioralPolicy.commit firstSite.1 (firstChoice action))
-          1 (secondHistory hidden firstAction)) = 0 := by
+        terminalPayoff 1 (secondHistory hidden firstAction) = 0 := by
   have hLaw :
       information.runBehavioralFrom
           (Profile.update (sig := information.behavioralSignature)
@@ -433,7 +404,7 @@ theorem behavioralContinuation_firstCommit_at_second
       ExecutionProtocol.singletonJoint]
     congr 3
   unfold InformationModel.behavioralContinuationValue
-  rw [expect_congr_law hLaw terminalPayoff _ (terminalPayoff_integrable _)]
+  rw [expect_congr_law hLaw terminalPayoff]
   rw [expect_pure]
   simp [terminalPayoff, utility]
 
@@ -477,10 +448,7 @@ theorem behavioralContinuation_first_committed
     (hidden action : Bool) :
     information.behavioralContinuationValue incumbentBehavioralStrategy ()
         (incumbentBehavioralPolicy.commit firstSite.1 (firstChoice action))
-        terminalPayoff 2 (firstHistory hidden)
-        (continuationIntegrable incumbentBehavioralStrategy
-          (incumbentBehavioralPolicy.commit firstSite.1 (firstChoice action))
-          2 (firstHistory hidden)) = 0 := by
+        terminalPayoff 2 (firstHistory hidden) = 0 := by
   have hLaw :
       information.runBehavioralFrom
           (Profile.update (sig := information.behavioralSignature)
@@ -512,7 +480,7 @@ theorem behavioralContinuation_first_committed
     rw [← firstCommit_second_run_eq_pure hidden action action]
     congr 1
   unfold InformationModel.behavioralContinuationValue
-  rw [expect_congr_law hLaw terminalPayoff _ (terminalPayoff_integrable _)]
+  rw [expect_congr_law hLaw terminalPayoff]
   rw [expect_pure]
   simp [terminalPayoff, utility]
 
@@ -520,23 +488,15 @@ theorem behavioralContinuation_first_committed
 unchanged downstream action. Both hidden branches contribute zero. -/
 theorem counterfactualActionUtility_first (action : Bool) :
     information.counterfactualActionUtility incumbentBehavioralStrategy ()
-        firstSite terminalPayoff 2 (firstChoice action)
-        (counterfactualIntegrable incumbentBehavioralStrategy firstSite
-          (incumbentBehavioralPolicy.commit firstSite.1 (firstChoice action)) 2) = 0 := by
+        firstSite terminalPayoff 2 (firstChoice action) = 0 := by
   unfold InformationModel.counterfactualActionUtility
     InformationModel.counterfactualContinuationValue
   let value (history : information.InformationHistory () firstSite.1) : ℝ :=
-    if hreach : information.counterfactualReachProbability
-        incumbentBehavioralStrategy () history.1.trace ≠ 0 then
-      information.counterfactualReachProbability
-          incumbentBehavioralStrategy () history.1.trace *
-        information.behavioralContinuationValue incumbentBehavioralStrategy ()
-          (incumbentBehavioralPolicy.commit firstSite.1 (firstChoice action))
-          terminalPayoff 2 history.1
-          (continuationIntegrable incumbentBehavioralStrategy
-            (incumbentBehavioralPolicy.commit firstSite.1 (firstChoice action))
-            2 history.1)
-    else 0
+    information.counterfactualReachProbability
+        incumbentBehavioralStrategy () history.1.trace *
+      information.behavioralContinuationValue incumbentBehavioralStrategy ()
+        (incumbentBehavioralPolicy.commit firstSite.1 (firstChoice action))
+        terminalPayoff 2 history.1
   calc
     _ = ∑ history : information.InformationHistory () firstSite.1,
         value history := rfl
@@ -550,7 +510,6 @@ theorem counterfactualActionUtility_first (action : Bool) :
       apply Finset.sum_congr rfl
       intro hidden _
       simp only [value, firstInformationHistory]
-      rw [dite_eq_left (by rw [counterfactualReach_first]; norm_num)]
       rw [counterfactualReach_first,
         behavioralContinuation_first_committed]
     _ = 0 := by rw [Fintype.univ_bool]; norm_num
@@ -564,27 +523,19 @@ theorem incumbentBehavioralPolicy_firstSite :
 when the alternative also changes the downstream off-path site. -/
 theorem first_counterfactualActionRegret :
     information.counterfactualActionRegret incumbentBehavioralStrategy ()
-      firstSite terminalPayoff 2 (firstChoice true)
-      (counterfactualIntegrable incumbentBehavioralStrategy firstSite
-        (incumbentBehavioralPolicy.commit firstSite.1 (firstChoice true)) 2)
-      (counterfactualIntegrable incumbentBehavioralStrategy firstSite
-        incumbentBehavioralPolicy 2) = 0 := by
+      firstSite terminalPayoff 2 (firstChoice true) = 0 := by
   obtain ⟨_, hregret⟩ := information.counterfactualActionRegret_eq_sub_expect
     information_actsOnce incumbentBehavioralStrategy () firstSite
       firstSite_allNonterminal terminalPayoff 1
       (firstChoice true)
       (counterfactualIntegrable incumbentBehavioralStrategy firstSite
-        (incumbentBehavioralPolicy.commit firstSite.1 (firstChoice true)) 2)
-      (counterfactualIntegrable incumbentBehavioralStrategy firstSite
         incumbentBehavioralPolicy 2)
-      (fun other _ => counterfactualIntegrable incumbentBehavioralStrategy
-        firstSite (incumbentBehavioralPolicy.commit firstSite.1 other) 2)
   rw [hregret, counterfactualActionUtility_first]
   simp only [incumbentBehavioralStrategy]
   simp only [show incumbentBehavioralPolicy firstKnowledge =
     PMF.pure (firstChoice false) by rfl]
   rw [expect_pure]
-  simp [extendFromSupport, counterfactualActionUtility_first]
+  simp [counterfactualActionUtility_first]
 
 /-- The exact hostile identity: alternative own reach selects the off-path
 second site, whose local counterfactual regret recovers the whole unit gain. -/
@@ -595,20 +546,11 @@ theorem hostile_exact_decomposition :
           (firstHistory false).trace *
         information.counterfactualActionRegret
           incumbentBehavioralStrategy () firstSite terminalPayoff 2
-            (firstChoice true)
-            (counterfactualIntegrable incumbentBehavioralStrategy firstSite
-              (incumbentBehavioralPolicy.commit firstSite.1 (firstChoice true)) 2)
-            (counterfactualIntegrable incumbentBehavioralStrategy firstSite
-              incumbentBehavioralPolicy 2) +
+            (firstChoice true) +
       information.playerReachProbability alternativeBehavioralStrategy ()
           (secondHistory false true).trace *
         information.counterfactualActionRegret incumbentBehavioralStrategy ()
-          (secondSite true) terminalPayoff 1 (secondChoice true true)
-          (counterfactualIntegrable incumbentBehavioralStrategy (secondSite true)
-            (incumbentBehavioralPolicy.commit (secondSite true).1
-              (secondChoice true true)) 1)
-          (counterfactualIntegrable incumbentBehavioralStrategy (secondSite true)
-            incumbentBehavioralPolicy 1) := by
+          (secondSite true) terminalPayoff 1 (secondChoice true true) := by
   rw [jointAlternative_value, incumbent_value,
     alternativeOwnReach_first, first_counterfactualActionRegret,
     alternativeOwnReach_second, offPathSecond_counterfactualActionRegret]
@@ -705,9 +647,9 @@ def secondCommitCutGain (history : twoStage.History) : ℝ :=
           firstCommittedStrategy ()
             (firstCommittedPolicy.commit (secondSite true).1
               (secondChoice true true))) 1 history)
-      terminalPayoff (terminalPayoff_integrable _) -
+      terminalPayoff -
     expect (information.runBehavioralFrom firstCommittedStrategy 1 history)
-      terminalPayoff (terminalPayoff_integrable _)
+      terminalPayoff
 
 theorem secondCommitCutGain_bound (history : twoStage.History) :
     |secondCommitCutGain history| ≤ 2 := by
@@ -721,16 +663,16 @@ theorem secondCommitCutGain_bound (history : twoStage.History) :
         firstCommittedStrategy ()
           (firstCommittedPolicy.commit (secondSite true).1
             (secondChoice true true))) 1 history)
-    terminalPayoff (terminalPayoff_integrable _)
+    terminalPayoff
   let second : ℝ := expect
     (information.runBehavioralFrom firstCommittedStrategy 1 history)
-    terminalPayoff (terminalPayoff_integrable _)
+    terminalPayoff
   have hfirst : |first| ≤ 1 :=
     expect_abs_le_of_bounded (by norm_num : (0 : ℝ) ≤ 1)
-      hbound (terminalPayoff_integrable _)
+      hbound
   have hsecond : |second| ≤ 1 :=
     expect_abs_le_of_bounded (by norm_num : (0 : ℝ) ≤ 1)
-      hbound (terminalPayoff_integrable _)
+      hbound
   show |first - second| ≤ 2
   calc
     |first - second| ≤ |first| + |second| := by
@@ -751,12 +693,11 @@ theorem secondCommit_rootGain_eq_cutExpectation :
         (Profile.update (sig := information.behavioralSignature)
           firstCommittedStrategy ()
             (firstCommittedPolicy.commit (secondSite true).1
-              (secondChoice true true))) 3) terminalPayoff
-      (terminalPayoff_integrable _) -
+              (secondChoice true true))) 3) terminalPayoff -
       expect (information.runBehavioral firstCommittedStrategy 3)
-        terminalPayoff (terminalPayoff_integrable _) =
+        terminalPayoff =
     expect (information.runBehavioral firstCommittedStrategy 2)
-      secondCommitCutGain secondCommitCutGain_integrable := by
+      secondCommitCutGain := by
   obtain ⟨gain, hgain, hpoint, heq⟩ :=
     information.rootGain_eq_prefixExpectation
       (Profile.update (sig := information.behavioralSignature)
@@ -766,7 +707,7 @@ theorem secondCommit_rootGain_eq_cutExpectation :
       firstCommittedStrategy terminalPayoff 2 1 secondCommit_prefix_eq
       (terminalPayoff_integrable _) (terminalPayoff_integrable _)
   rw [heq]
-  apply expect_congr_on_support _ hgain secondCommitCutGain_integrable
+  apply expect_congr_on_support _
   intro history hhistory
   obtain ⟨hfirst, hsecond, hvalue⟩ := hpoint history hhistory
   rw [hvalue]

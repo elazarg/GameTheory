@@ -28,7 +28,6 @@ local instance : Fintype
 def rootValue
     (strategy : (who : Unit) → information.BehavioralPolicy who) : ℝ :=
   expect (information.runBehavioral strategy 3) terminalPayoff
-    (terminalPayoff_integrable _)
 
 def guardedActionRegret
     (strategy : (who : Unit) → information.BehavioralPolicy who)
@@ -36,9 +35,7 @@ def guardedActionRegret
     [Fintype (information.InformationHistory () site.1)]
     (fuel : ℕ) (choice : information.Choice () site.1) : ℝ :=
   information.counterfactualActionRegret strategy () site terminalPayoff fuel
-    choice (counterfactualIntegrable strategy site
-      ((strategy ()).commit site.1 choice) fuel)
-      (counterfactualIntegrable strategy site (strategy ()) fuel)
+    choice
 
 theorem incumbentOwnReach_first (hidden : Bool) :
     information.playerReachProbability incumbentBehavioralStrategy ()
@@ -75,10 +72,6 @@ theorem firstCommit_perfectRecallRootBridge :
       incumbentBehavioralStrategy ()
       firstSite (firstChoice true) 1 2 firstSite_commonDepth terminalPayoff
       (terminalPayoff_integrable _) (terminalPayoff_integrable _)
-      (counterfactualIntegrable incumbentBehavioralStrategy firstSite
-        (incumbentBehavioralPolicy.commit firstSite.1 (firstChoice true)) 2)
-      (counterfactualIntegrable incumbentBehavioralStrategy firstSite
-        incumbentBehavioralPolicy 2)
 
 /-- The generic single-site theorem proves at the root, not merely inside the
 information fiber, that changing only the first action gains exactly zero. -/
@@ -138,11 +131,6 @@ theorem secondCommit_rootGain_eq_counterfactualActionRegret :
             (secondSite true).1 (secondChoice true true) hne)
         1 firstCommittedCommonOwnReach_secondTrue terminalPayoff
         (terminalPayoff_integrable _) (terminalPayoff_integrable _)
-        (counterfactualIntegrable firstCommittedStrategy (secondSite true)
-          (firstCommittedPolicy.commit (secondSite true).1
-            (secondChoice true true)) 1)
-        (counterfactualIntegrable firstCommittedStrategy (secondSite true)
-          firstCommittedPolicy 1)
   simpa [rootValue, guardedActionRegret,
     InformationModel.counterfactualActionRegret,
     show firstCommittedStrategy () = firstCommittedPolicy by rfl] using
@@ -199,100 +187,78 @@ theorem firstCommitted_second_counterfactualActionRegret :
       (secondChoice true true) = 1 := by
   have halternative :
       information.counterfactualContinuationValue firstCommittedStrategy ()
-          (secondSite true) firstCommittedSecondTruePolicy terminalPayoff 1
-          (counterfactualIntegrable firstCommittedStrategy (secondSite true)
-            firstCommittedSecondTruePolicy 1) =
+          (secondSite true) firstCommittedSecondTruePolicy terminalPayoff 1 =
         information.counterfactualContinuationValue
           incumbentBehavioralStrategy () (secondSite true)
-            incumbentSecondTruePolicy terminalPayoff 1
-            (counterfactualIntegrable incumbentBehavioralStrategy
-              (secondSite true) incumbentSecondTruePolicy 1) := by
+            incumbentSecondTruePolicy terminalPayoff 1 := by
     unfold InformationModel.counterfactualContinuationValue
     apply Finset.sum_congr rfl
     intro history _
     have hreach := counterfactualReach_firstCommitted_eq_incumbent history
-    by_cases hp : information.counterfactualReachProbability
-        incumbentBehavioralStrategy () history.1.trace ≠ 0
-    · simp only [hreach, dite_eq_left hp]
-      apply congrArg
-        (fun value : ℝ =>
-          information.counterfactualReachProbability
-              incumbentBehavioralStrategy () history.1.trace * value)
-      unfold InformationModel.behavioralContinuationValue
-      apply congrArg
-        (fun law : PMF twoStage.History =>
-          expect law terminalPayoff (terminalPayoff_integrable law))
-      exact information.runBehavioralFrom_eq_of_agree_off_pastSite
-        (Profile.update (sig := information.behavioralSignature)
-          firstCommittedStrategy () firstCommittedSecondTruePolicy)
-        (Profile.update (sig := information.behavioralSignature)
-          incumbentBehavioralStrategy () incumbentSecondTruePolicy)
-        () firstSite 1 firstSite_commonDepth
-        (fun other hne => False.elim (hne (Subsingleton.elim other ())))
-        (fun hinfo => by
-          rw [Profile.update_same, Profile.update_same]
-          exact secondTruePolicies_eq_off_first hinfo)
-        history.1 (secondInformationHistory_after_firstDepth history) 1
-    · simp only [hreach, dite_eq_right hp]
+    rw [hreach]
+    apply congrArg
+      (fun value : ℝ =>
+        information.counterfactualReachProbability
+            incumbentBehavioralStrategy () history.1.trace * value)
+    unfold InformationModel.behavioralContinuationValue
+    apply congrArg
+      (fun law : PMF twoStage.History =>
+        expect law terminalPayoff)
+    exact information.runBehavioralFrom_eq_of_agree_off_pastSite
+      (Profile.update (sig := information.behavioralSignature)
+        firstCommittedStrategy () firstCommittedSecondTruePolicy)
+      (Profile.update (sig := information.behavioralSignature)
+        incumbentBehavioralStrategy () incumbentSecondTruePolicy)
+      () firstSite 1 firstSite_commonDepth
+      (fun other hne => False.elim (hne (Subsingleton.elim other ())))
+      (fun hinfo => by
+        rw [Profile.update_same, Profile.update_same]
+        exact secondTruePolicies_eq_off_first hinfo)
+      history.1 (secondInformationHistory_after_firstDepth history) 1
   have hbaseline :
       information.counterfactualContinuationValue firstCommittedStrategy ()
-          (secondSite true) firstCommittedPolicy terminalPayoff 1
-          (counterfactualIntegrable firstCommittedStrategy (secondSite true)
-            firstCommittedPolicy 1) =
+          (secondSite true) firstCommittedPolicy terminalPayoff 1 =
         information.counterfactualContinuationValue
           incumbentBehavioralStrategy () (secondSite true)
-            incumbentBehavioralPolicy terminalPayoff 1
-            (counterfactualIntegrable incumbentBehavioralStrategy
-              (secondSite true) incumbentBehavioralPolicy 1) := by
+            incumbentBehavioralPolicy terminalPayoff 1 := by
     unfold InformationModel.counterfactualContinuationValue
     apply Finset.sum_congr rfl
     intro history _
     have hreach := counterfactualReach_firstCommitted_eq_incumbent history
-    by_cases hp : information.counterfactualReachProbability
-        incumbentBehavioralStrategy () history.1.trace ≠ 0
-    · simp only [hreach, dite_eq_left hp]
-      apply congrArg
-        (fun value : ℝ =>
-          information.counterfactualReachProbability
-              incumbentBehavioralStrategy () history.1.trace * value)
-      unfold InformationModel.behavioralContinuationValue
-      apply congrArg
-        (fun law : PMF twoStage.History =>
-          expect law terminalPayoff (terminalPayoff_integrable law))
-      exact information.runBehavioralFrom_eq_of_agree_off_pastSite
-        (Profile.update (sig := information.behavioralSignature)
-          firstCommittedStrategy () firstCommittedPolicy)
-        (Profile.update (sig := information.behavioralSignature)
-          incumbentBehavioralStrategy () incumbentBehavioralPolicy)
-        () firstSite 1 firstSite_commonDepth
-        (fun other hne => False.elim (hne (Subsingleton.elim other ())))
-        (fun hinfo => by
-          rw [Profile.update_same, Profile.update_same]
-          exact firstCommitted_eq_incumbent_off_first hinfo)
-        history.1 (secondInformationHistory_after_firstDepth history) 1
-    · simp only [hreach, dite_eq_right hp]
+    rw [hreach]
+    apply congrArg
+      (fun value : ℝ =>
+        information.counterfactualReachProbability
+            incumbentBehavioralStrategy () history.1.trace * value)
+    unfold InformationModel.behavioralContinuationValue
+    apply congrArg
+      (fun law : PMF twoStage.History =>
+        expect law terminalPayoff)
+    exact information.runBehavioralFrom_eq_of_agree_off_pastSite
+      (Profile.update (sig := information.behavioralSignature)
+        firstCommittedStrategy () firstCommittedPolicy)
+      (Profile.update (sig := information.behavioralSignature)
+        incumbentBehavioralStrategy () incumbentBehavioralPolicy)
+      () firstSite 1 firstSite_commonDepth
+      (fun other hne => False.elim (hne (Subsingleton.elim other ())))
+      (fun hinfo => by
+        rw [Profile.update_same, Profile.update_same]
+        exact firstCommitted_eq_incumbent_off_first hinfo)
+      history.1 (secondInformationHistory_after_firstDepth history) 1
   calc
     guardedActionRegret firstCommittedStrategy (secondSite true) 1
         (secondChoice true true) =
       information.counterfactualContinuationValue firstCommittedStrategy ()
-          (secondSite true) firstCommittedSecondTruePolicy terminalPayoff 1
-          (counterfactualIntegrable firstCommittedStrategy (secondSite true)
-            firstCommittedSecondTruePolicy 1) -
+          (secondSite true) firstCommittedSecondTruePolicy terminalPayoff 1 -
         information.counterfactualContinuationValue firstCommittedStrategy ()
-          (secondSite true) firstCommittedPolicy terminalPayoff 1
-          (counterfactualIntegrable firstCommittedStrategy (secondSite true)
-            firstCommittedPolicy 1) := by
+          (secondSite true) firstCommittedPolicy terminalPayoff 1 := by
         rfl
     _ = information.counterfactualContinuationValue
           incumbentBehavioralStrategy () (secondSite true)
-          incumbentSecondTruePolicy terminalPayoff 1
-          (counterfactualIntegrable incumbentBehavioralStrategy
-            (secondSite true) incumbentSecondTruePolicy 1) -
+          incumbentSecondTruePolicy terminalPayoff 1 -
         information.counterfactualContinuationValue
           incumbentBehavioralStrategy () (secondSite true)
-          incumbentBehavioralPolicy terminalPayoff 1
-          (counterfactualIntegrable incumbentBehavioralStrategy
-            (secondSite true) incumbentBehavioralPolicy 1) := by
+          incumbentBehavioralPolicy terminalPayoff 1 := by
         rw [halternative, hbaseline]
     _ = 1 := by
       simpa [InformationModel.counterfactualActionRegret,
@@ -373,7 +339,6 @@ theorem wholeDeviation_rootGain_eq_localSum :
   have hsum := information.rootGain_eq_sum_stepCounterfactualTerms
       deviationPath
       terminalPayoff 3 2 (fun _ => 1) pathLocalRegret
-      (fun step _ => terminalPayoff_integrable _)
       (by
         intro step hstep
         simpa only [rootValue] using deviationPath_stepRootGain step hstep)

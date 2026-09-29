@@ -54,16 +54,13 @@ theorem coordination_utility (profile : Fin 2 → Bool) (who : Fin 2) :
 @[simp]
 theorem coordination_expectedUtility (profile : Profile coordination.form.sig)
     (who : Fin 2) :
-    expectedUtility coordination.utility who (coordination.form.play profile)
-      (coordination_stageIntegrable who profile) =
+    expectedUtility coordination.utility who (coordination.form.play profile) =
       coordination.utility profile who := by
   calc
-    expectedUtility coordination.utility who (coordination.form.play profile)
-        (coordination_stageIntegrable who profile) =
-        expectedUtility coordination.utility who (PMF.pure profile)
-          (payoffIntegrable_pure profile _) :=
+    expectedUtility coordination.utility who (coordination.form.play profile) =
+        expectedUtility coordination.utility who (PMF.pure profile) :=
       expectedUtility_congr_law coordination.utility who
-        (coordination_play profile) _ _
+        (coordination_play profile)
     _ = coordination.utility profile who :=
       expectedUtility_pure coordination.utility who profile
 
@@ -141,8 +138,7 @@ theorem allTrue_isNash :
 theorem coordination_stagePayoff_bounded :
     ∀ who : Fin 2, ∃ bound : ℝ,
       ∀ stage : Profile coordination.form.sig,
-        |coordination.stagePayoff stage who
-          (coordination_stageIntegrable who stage)| ≤ bound := by
+        |coordination.stagePayoff stage who| ≤ bound := by
   intro who
   refine ⟨1, fun stage => ?_⟩
   rw [UtilityGame.stagePayoff, coordination_expectedUtility]
@@ -155,7 +151,7 @@ theorem allTrue_stationary_discounted_isNash :
     IsNash coordination.repeatedForm
       (euPreference (coordination.discountedUtilityOfBounded
         (by norm_num : 0 ≤ (1 / 2 : ℝ)) (by norm_num : (1 / 2 : ℝ) < 1)
-        coordination_stageIntegrable coordination_stagePayoff_bounded))
+         coordination_stagePayoff_bounded))
       (coordination.stationaryRepeatedProfile allTrue) := by
   exact coordination.stationaryRepeatedProfile_isNash_of_isNash_of_bounded
     (by norm_num) (by norm_num) allTrue_isNash

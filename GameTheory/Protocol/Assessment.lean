@@ -81,33 +81,26 @@ theorem ofBelief_congr {belief : PMF E.State}
 /-- The value under a belief is the belief-average of the state-wise values. -/
 theorem ofBelief_value (belief : PMF E.State)
     (branch : E.State → Option (E.Action i) → PMF E.State)
-    (continuation : E.State → ℝ) (choice : Option (E.Action i))
-    (hintegrable : (ofBelief belief branch continuation).IntegrableAt choice) :
-    (ofBelief belief branch continuation).value choice hintegrable =
-      expect (belief.bind fun state => branch state choice) continuation
-        hintegrable := rfl
+    (continuation : E.State → ℝ) (choice : Option (E.Action i)) :
+    (ofBelief belief branch continuation).value choice =
+      expect (belief.bind fun state => branch state choice) continuation := rfl
 
-/-- A guarded belief average of conditional continuation values. Only states
-in the belief's support need conditional values. -/
+/-- A belief average of conditional continuation values. Only states in the
+belief's support need conditional values. -/
 theorem ofBelief_value_tower (belief : PMF E.State)
     (branch : E.State → Option (E.Action i) → PMF E.State)
     (continuation : E.State → ℝ) (choice : Option (E.Action i))
     (hintegrable : (ofBelief belief branch continuation).IntegrableAt choice)
     (stateValue : E.State → ℝ)
-    (hvalue : ∀ state, ∀ hs : state ∈ belief.support,
-      stateValue state = expect (branch state choice) continuation
-        (payoffIntegrable_bind_conditional_on_support belief
-          (fun state => branch state choice) continuation hintegrable state hs)) :
-    ∃ houter : PayoffIntegrable belief stateValue,
-      (ofBelief belief branch continuation).value choice hintegrable =
-        expect belief stateValue houter := by
-  let houter : PayoffIntegrable belief stateValue :=
-    payoffIntegrable_bind_conditionalValue_on_support belief
-      (fun state => branch state choice) continuation hintegrable stateValue hvalue
-  refine ⟨houter, ?_⟩
-  simpa only [ofBelief_value] using
-    (expect_bind_tower_on_support belief (fun state => branch state choice)
-      continuation hintegrable stateValue hvalue)
+    (hvalue : ∀ state ∈ belief.support,
+      stateValue state = expect (branch state choice) continuation) :
+    PayoffIntegrable belief stateValue ∧
+      (ofBelief belief branch continuation).value choice =
+        expect belief stateValue :=
+  ⟨payoffIntegrable_bind_conditionalValue_on_support belief
+      (fun state => branch state choice) continuation hintegrable stateValue hvalue,
+    expect_bind_tower_on_support belief (fun state => branch state choice)
+      continuation hintegrable stateValue hvalue⟩
 
 end Context
 

@@ -1,5 +1,5 @@
 /-
-# Guarded empirical potential recurrences
+# Empirical potential recurrences
 
 Advancing one empirical marginal is an affine update of the multilinear
 potential when the compared profile laws are integrable. In an exact-potential
@@ -35,20 +35,20 @@ theorem mixedPotential_update_empiricalMarginal_succ
     (hpure : PayoffIntegrable
       (independentProduct (Profile.update mixedProfile who
         (PMF.pure (history (t + 1) who)))) potential) :
-    ∃ hnext : PayoffIntegrable
+    PayoffIntegrable
       (independentProduct (Profile.update mixedProfile who
-        (G.form.empiricalMarginal history who (t + 2)))) potential,
+        (G.form.empiricalMarginal history who (t + 2)))) potential ∧
     G.form.mixedPotential potential
         (Profile.update mixedProfile who
-          (G.form.empiricalMarginal history who (t + 2))) hnext =
+          (G.form.empiricalMarginal history who (t + 2))) =
       ((t + 1 : ℝ) / (t + 2 : ℝ)) *
           G.form.mixedPotential potential
             (Profile.update mixedProfile who
-              (G.form.empiricalMarginal history who (t + 1))) hprev +
+              (G.form.empiricalMarginal history who (t + 1))) +
         (1 / (t + 2 : ℝ)) *
           G.form.mixedPotential potential
             (Profile.update mixedProfile who
-              (PMF.pure (history (t + 1) who))) hpure := by
+              (PMF.pure (history (t + 1) who))) := by
   let w := (t + 1 : ℝ) / (t + 2 : ℝ)
   have hw0 : 0 ≤ w := by dsimp [w]; positivity
   have hw1 : w ≤ 1 := by
@@ -63,19 +63,19 @@ theorem mixedPotential_update_empiricalMarginal_succ
   calc
     G.form.mixedPotential potential
         (Profile.update mixedProfile who
-          (G.form.empiricalMarginal history who (t + 2))) hnext =
+          (G.form.empiricalMarginal history who (t + 2))) =
       expect (mix w hw0 hw1
         (independentProduct (Profile.update mixedProfile who
           (G.form.empiricalMarginal history who (t + 1))))
         (independentProduct (Profile.update mixedProfile who
-          (PMF.pure (history (t + 1) who))))) potential hmix :=
-      expect_congr_law hlaw _ _ _
+          (PMF.pure (history (t + 1) who))))) potential :=
+      expect_congr_law hlaw _
     _ = w * G.form.mixedPotential potential
           (Profile.update mixedProfile who
-            (G.form.empiricalMarginal history who (t + 1))) hprev +
+            (G.form.empiricalMarginal history who (t + 1))) +
         (1 - w) * G.form.mixedPotential potential
           (Profile.update mixedProfile who
-            (PMF.pure (history (t + 1) who))) hpure :=
+            (PMF.pure (history (t + 1) who))) :=
       expect_mix w hw0 hw1 _ _ potential hprev hpure
     _ = _ := by
       dsimp [w]
@@ -93,22 +93,22 @@ theorem mixedPotential_update_empiricalMarginal_succ_sub
     (hpure : PayoffIntegrable
       (independentProduct (Profile.update mixedProfile who
         (PMF.pure (history (t + 1) who)))) potential) :
-    ∃ hnext : PayoffIntegrable
+    PayoffIntegrable
       (independentProduct (Profile.update mixedProfile who
-        (G.form.empiricalMarginal history who (t + 2)))) potential,
+        (G.form.empiricalMarginal history who (t + 2)))) potential ∧
     G.form.mixedPotential potential
         (Profile.update mixedProfile who
-          (G.form.empiricalMarginal history who (t + 2))) hnext -
+          (G.form.empiricalMarginal history who (t + 2))) -
       G.form.mixedPotential potential
         (Profile.update mixedProfile who
-          (G.form.empiricalMarginal history who (t + 1))) hprev =
+          (G.form.empiricalMarginal history who (t + 1))) =
       (1 / (t + 2 : ℝ)) *
         (G.form.mixedPotential potential
             (Profile.update mixedProfile who
-              (PMF.pure (history (t + 1) who))) hpure -
+              (PMF.pure (history (t + 1) who))) -
           G.form.mixedPotential potential
             (Profile.update mixedProfile who
-              (G.form.empiricalMarginal history who (t + 1))) hprev) := by
+              (G.form.empiricalMarginal history who (t + 1)))) := by
   obtain ⟨hnext, hrecurrence⟩ :=
     G.mixedPotential_update_empiricalMarginal_succ potential history
       mixedProfile who t hprev hpure
@@ -121,27 +121,10 @@ theorem mixedPotential_update_empiricalMarginal_succ_sub
 /-- The gain in mixed potential from replacing one marginal by a pure action. -/
 def mixedPotentialGain (potential : Profile G.form.sig → ℝ)
     (mixedProfile : Profile G.form.sig.mixed) (who : ι)
-    (action : G.form.sig.Strategy who)
-    (hbase : PayoffIntegrable (independentProduct mixedProfile) potential)
-    (hupdated : PayoffIntegrable
-      (independentProduct
-        (Profile.update mixedProfile who (PMF.pure action))) potential) : ℝ :=
-  G.form.mixedPotential potential
-      (Profile.update mixedProfile who (PMF.pure action)) hupdated -
-    G.form.mixedPotential potential mixedProfile hbase
-
-/-- A bounded pure-profile potential induces integrable actual laws for each
-mixed gain, so the guarded gain has a canonical scalar specialization. -/
-abbrev mixedPotentialGainOfAbsBound
-    (potential : Profile G.form.sig → ℝ) {C : ℝ}
-    (hbound : ∀ profile, |potential profile| ≤ C)
-    (mixedProfile : Profile G.form.sig.mixed) (who : ι)
     (action : G.form.sig.Strategy who) : ℝ :=
-  G.mixedPotentialGain potential mixedProfile who action
-    (payoffIntegrable_of_bounded (independentProduct mixedProfile)
-      potential hbound)
-    (payoffIntegrable_of_bounded (independentProduct
-      (Profile.update mixedProfile who (PMF.pure action))) potential hbound)
+  G.form.mixedPotential potential
+      (Profile.update mixedProfile who (PMF.pure action)) -
+    G.form.mixedPotential potential mixedProfile
 
 /-- If the updated coordinate is still the old empirical marginal, the
 potential increment is the step size times the matching pure gain. -/
@@ -156,19 +139,17 @@ theorem mixedPotential_update_empiricalMarginal_succ_sub_of_eq
         (G.form.empiricalMarginal history who (t + 1)))) potential)
     (hpure : PayoffIntegrable
       (independentProduct (Profile.update mixedProfile who
-        (PMF.pure (history (t + 1) who)))) potential)
-    (hbasePotential : PayoffIntegrable
-      (independentProduct mixedProfile) potential) :
-    ∃ hnext : PayoffIntegrable
+        (PMF.pure (history (t + 1) who)))) potential) :
+    PayoffIntegrable
       (independentProduct (Profile.update mixedProfile who
-        (G.form.empiricalMarginal history who (t + 2)))) potential,
+        (G.form.empiricalMarginal history who (t + 2)))) potential ∧
     G.form.mixedPotential potential
         (Profile.update mixedProfile who
-          (G.form.empiricalMarginal history who (t + 2))) hnext -
-      G.form.mixedPotential potential mixedProfile hbasePotential =
+          (G.form.empiricalMarginal history who (t + 2))) -
+      G.form.mixedPotential potential mixedProfile =
       (1 / (t + 2 : ℝ)) *
         G.mixedPotentialGain potential mixedProfile who
-          (history (t + 1) who) hbasePotential hpure := by
+          (history (t + 1) who) := by
   have hupdate :
       Profile.update mixedProfile who
           (G.form.empiricalMarginal history who (t + 1)) = mixedProfile := by
@@ -179,23 +160,19 @@ theorem mixedPotential_update_empiricalMarginal_succ_sub_of_eq
         (G.form.empiricalMarginal history who (t + 1))) =
       independentProduct mixedProfile := by
     rw [hupdate]
-  have hprevBase : PayoffIntegrable
-      (independentProduct mixedProfile) potential :=
-    payoffIntegrable_congr_law hbaseLaw hprev
   have hprevValue :
       G.form.mixedPotential potential
           (Profile.update mixedProfile who
-            (G.form.empiricalMarginal history who (t + 1))) hprev =
-        G.form.mixedPotential potential mixedProfile hbasePotential := by
+            (G.form.empiricalMarginal history who (t + 1))) =
+        G.form.mixedPotential potential mixedProfile := by
     unfold GameForm.mixedPotential
     calc
       expect (independentProduct
           (Profile.update mixedProfile who
-            (G.form.empiricalMarginal history who (t + 1)))) potential hprev =
-        expect (independentProduct mixedProfile) potential hprevBase :=
-          expect_congr_law hbaseLaw potential hprev hprevBase
-      _ = expect (independentProduct mixedProfile) potential hbasePotential :=
-        expect_proof_irrel _ _ _ _
+            (G.form.empiricalMarginal history who (t + 1)))) potential =
+        expect (independentProduct mixedProfile) potential :=
+          expect_congr_law hbaseLaw potential
+      _ = expect (independentProduct mixedProfile) potential := rfl
   obtain ⟨hnext, hrecurrence⟩ :=
     G.mixedPotential_update_empiricalMarginal_succ_sub
       potential history mixedProfile who t hprev hpure
@@ -221,9 +198,8 @@ theorem IsExactPotential.mixedPotentialGain_eq_mixedGain
     (hnewPotential : PayoffIntegrable
       (independentProduct
         (Profile.update mixedProfile who (PMF.pure action))) potential) :
-    G.mixedPotentialGain potential mixedProfile who action
-        hbasePotential hnewPotential =
-      G.mixedGain mixedProfile who action hbaseUtility hnewUtility := by
+    G.mixedPotentialGain potential mixedProfile who action =
+      G.mixedGain mixedProfile who action := by
   exact (UtilityGame.IsExactPotential.mixed_pure_diff
     (G := G) hpotential mixedProfile who action hbaseUtility hnewUtility
       hbasePotential hnewPotential).symm
@@ -246,17 +222,16 @@ theorem IsExactPotential.mixedPotential_belief_update_empiricalMarginal_succ_sub
       (independentProduct
         (Profile.update (G.form.empiricalBelief history (t + 1)) who
           (PMF.pure (history (t + 1) who)))) potential) :
-    ∃ hnext : PayoffIntegrable
+    PayoffIntegrable
       (independentProduct
         (Profile.update (G.form.empiricalBelief history (t + 1)) who
-          (G.form.empiricalMarginal history who (t + 2)))) potential,
+          (G.form.empiricalMarginal history who (t + 2)))) potential ∧
     G.form.mixedPotential potential
         (Profile.update (G.form.empiricalBelief history (t + 1)) who
-          (G.form.empiricalMarginal history who (t + 2))) hnext -
-      G.form.mixedPotential potential (G.form.empiricalBelief history (t + 1))
-        hbasePotential =
+          (G.form.empiricalMarginal history who (t + 2))) -
+      G.form.mixedPotential potential (G.form.empiricalBelief history (t + 1)) =
       (1 / (t + 2 : ℝ)) *
-        G.playedGain history t who hbaseUtility hplayedUtility := by
+        G.playedGain history t who := by
   have hcoordinate :
       G.form.empiricalBelief history (t + 1) who =
         G.form.empiricalMarginal history who (t + 1) := rfl
@@ -275,7 +250,7 @@ theorem IsExactPotential.mixedPotential_belief_update_empiricalMarginal_succ_sub
   obtain ⟨hnextPotential, hincrement⟩ :=
     G.mixedPotential_update_empiricalMarginal_succ_sub_of_eq
       potential history (G.form.empiricalBelief history (t + 1)) who t
-      hcoordinate hprevPotential hplayedPotential hbasePotential
+      hcoordinate hprevPotential hplayedPotential
   have hgain := IsExactPotential.mixedPotentialGain_eq_mixedGain
     (G := G) hpotential (G.form.empiricalBelief history (t + 1)) who
     (history (t + 1) who) hbaseUtility hplayedUtility hbasePotential
@@ -285,10 +260,10 @@ theorem IsExactPotential.mixedPotential_belief_update_empiricalMarginal_succ_sub
     _ = (1 / (t + 2 : ℝ)) *
         G.mixedPotentialGain potential
           (G.form.empiricalBelief history (t + 1)) who
-          (history (t + 1) who) hbasePotential hplayedPotential := by
+          (history (t + 1) who) := by
       simpa only [hupdate] using hincrement
     _ = (1 / (t + 2 : ℝ)) *
-        G.playedGain history t who hbaseUtility hplayedUtility := by
+        G.playedGain history t who := by
       rw [hgain]
       rfl
 
@@ -299,9 +274,7 @@ theorem mixedPotential_abs_le_of_abs_bound
     (potential : Profile G.form.sig → ℝ) {C : ℝ}
     (hbound : ∀ profile, |potential profile| ≤ C)
     (mixedProfile : Profile G.form.sig.mixed) :
-    |G.form.mixedPotential potential mixedProfile
-      (payoffIntegrable_of_bounded (independentProduct mixedProfile)
-        potential hbound)| ≤ C := by
+    |G.form.mixedPotential potential mixedProfile| ≤ C := by
   let μ := independentProduct mixedProfile
   let hp := payoffIntegrable_of_bounded μ potential hbound
   obtain ⟨profile, _⟩ := μ.support_nonempty
@@ -312,12 +285,12 @@ theorem mixedPotential_abs_le_of_abs_bound
   have hminus : PayoffIntegrable μ (fun _ => -C) :=
     payoffIntegrable_of_bounded μ (fun _ => -C) (C := C) (fun _ => by
       simp [abs_of_nonpos (neg_nonpos.mpr hC)])
-  have hupper : expect μ potential hp ≤ expect μ (fun _ => C) hplus :=
+  have hupper : expect μ potential ≤ expect μ (fun _ => C) :=
     expect_mono (fun a _ => (abs_le.mp (hbound a)).2) hp hplus
-  have hlower : expect μ (fun _ => -C) hminus ≤ expect μ potential hp :=
+  have hlower : expect μ (fun _ => -C) ≤ expect μ potential :=
     expect_mono (fun a _ => (abs_le.mp (hbound a)).1) hminus hp
-  rw [expect_constant μ C hplus] at hupper
-  rw [expect_constant μ (-C) hminus] at hlower
+  rw [expect_constant μ C] at hupper
+  rw [expect_constant μ (-C)] at hlower
   simpa only [GameForm.mixedPotential, μ, hp] using
     (abs_le.mpr ⟨by linarith, by linarith⟩)
 
@@ -344,14 +317,8 @@ theorem mixedPotential_update_empiricalMarginal_succ_abs_sub_le
       G.form.empiricalMarginal history who (t + 1)) :
     |G.form.mixedPotential potential
           (Profile.update mixedProfile who
-            (G.form.empiricalMarginal history who (t + 2)))
-          (payoffIntegrable_of_bounded
-            (independentProduct (Profile.update mixedProfile who
-              (G.form.empiricalMarginal history who (t + 2))))
-            potential hbound) -
-        G.form.mixedPotential potential mixedProfile
-          (payoffIntegrable_of_bounded
-            (independentProduct mixedProfile) potential hbound)| ≤
+            (G.form.empiricalMarginal history who (t + 2))) -
+        G.form.mixedPotential potential mixedProfile| ≤
       (1 / (t + 2 : ℝ)) * (2 * C) := by
   let hprev := payoffIntegrable_of_bounded
     (independentProduct (Profile.update mixedProfile who
@@ -359,11 +326,9 @@ theorem mixedPotential_update_empiricalMarginal_succ_abs_sub_le
   let hpure := payoffIntegrable_of_bounded
     (independentProduct (Profile.update mixedProfile who
       (PMF.pure (history (t + 1) who)))) potential hbound
-  let hbase := payoffIntegrable_of_bounded
-    (independentProduct mixedProfile) potential hbound
   obtain ⟨hnext, hrecurrence⟩ :=
     G.mixedPotential_update_empiricalMarginal_succ_sub_of_eq
-      potential history mixedProfile who t hcoordinate hprev hpure hbase
+      potential history mixedProfile who t hcoordinate hprev hpure
   have hpureBound := G.mixedPotential_abs_le_of_abs_bound potential hbound
     (Profile.update mixedProfile who (PMF.pure (history (t + 1) who)))
   have hbaseBound := G.mixedPotential_abs_le_of_abs_bound potential hbound
@@ -371,32 +336,26 @@ theorem mixedPotential_update_empiricalMarginal_succ_abs_sub_le
   have hdiff :
       |G.form.mixedPotential potential
           (Profile.update mixedProfile who
-            (PMF.pure (history (t + 1) who))) hpure -
-        G.form.mixedPotential potential mixedProfile hbase| ≤ 2 * C := by
+            (PMF.pure (history (t + 1) who))) -
+        G.form.mixedPotential potential mixedProfile| ≤ 2 * C := by
     have htriangle := abs_sub
       (G.form.mixedPotential potential
         (Profile.update mixedProfile who
-          (PMF.pure (history (t + 1) who))) hpure)
-      (G.form.mixedPotential potential mixedProfile hbase)
+          (PMF.pure (history (t + 1) who))))
+      (G.form.mixedPotential potential mixedProfile)
     linarith
   have hstep : 0 ≤ (1 / (t + 2 : ℝ)) := by positivity
   calc
     |G.form.mixedPotential potential
           (Profile.update mixedProfile who
-            (G.form.empiricalMarginal history who (t + 2)))
-          (payoffIntegrable_of_bounded
-            (independentProduct (Profile.update mixedProfile who
-              (G.form.empiricalMarginal history who (t + 2))))
-            potential hbound) -
-        G.form.mixedPotential potential mixedProfile
-          (payoffIntegrable_of_bounded
-            (independentProduct mixedProfile) potential hbound)| =
+            (G.form.empiricalMarginal history who (t + 2))) -
+        G.form.mixedPotential potential mixedProfile| =
         |(1 / (t + 2 : ℝ)) *
           G.mixedPotentialGain potential mixedProfile who
-            (history (t + 1) who) hbase hpure| := by rw [hrecurrence]
+            (history (t + 1) who)| := by rw [hrecurrence]
     _ = (1 / (t + 2 : ℝ)) *
         |G.mixedPotentialGain potential mixedProfile who
-          (history (t + 1) who) hbase hpure| := by
+          (history (t + 1) who)| := by
       rw [abs_mul, abs_of_nonneg hstep]
     _ ≤ (1 / (t + 2 : ℝ)) * (2 * C) :=
       mul_le_mul_of_nonneg_left hdiff hstep
@@ -412,10 +371,10 @@ theorem mixedPotentialGain_update_empiricalMarginal_succ_abs_sub_le_of_ne
     (hne : changed ≠ who) (t : ℕ)
     (hcoordinate : mixedProfile changed =
       G.form.empiricalMarginal history changed (t + 1)) :
-    |G.mixedPotentialGainOfAbsBound potential hbound
+    |G.mixedPotentialGain potential
           (Profile.update mixedProfile changed
             (G.form.empiricalMarginal history changed (t + 2))) who action -
-        G.mixedPotentialGainOfAbsBound potential hbound mixedProfile who
+        G.mixedPotentialGain potential mixedProfile who
           action| ≤
       (1 / (t + 2 : ℝ)) * (4 * C) := by
   have hpureCoordinate :
@@ -431,7 +390,7 @@ theorem mixedPotentialGain_update_empiricalMarginal_succ_abs_sub_le_of_ne
   have hbaseStep :=
     G.mixedPotential_update_empiricalMarginal_succ_abs_sub_le
       potential hbound history mixedProfile changed t hcoordinate
-  simp only [mixedPotentialGainOfAbsBound, mixedPotentialGain]
+  simp only [mixedPotentialGain, mixedPotentialGain]
   have hcommute :
       Profile.update
           (Profile.update mixedProfile changed
@@ -442,80 +401,51 @@ theorem mixedPotentialGain_update_empiricalMarginal_succ_abs_sub_le_of_ne
           changed (G.form.empiricalMarginal history changed (t + 2)) :=
     Profile.update_comm mixedProfile hne
       (G.form.empiricalMarginal history changed (t + 2)) (PMF.pure action)
-  let hp (profile : Profile G.form.sig.mixed) :
-      PayoffIntegrable (independentProduct profile) potential :=
-    payoffIntegrable_of_bounded (independentProduct profile) potential hbound
   have hcross :
       G.form.mixedPotential potential
           (Profile.update
             (Profile.update mixedProfile changed
               (G.form.empiricalMarginal history changed (t + 2)))
-            who (PMF.pure action))
-          (hp (Profile.update
-            (Profile.update mixedProfile changed
-              (G.form.empiricalMarginal history changed (t + 2)))
-            who (PMF.pure action))) =
+            who (PMF.pure action)) =
         G.form.mixedPotential potential
           (Profile.update
             (Profile.update mixedProfile who (PMF.pure action)) changed
-            (G.form.empiricalMarginal history changed (t + 2)))
-          (hp (Profile.update
-            (Profile.update mixedProfile who (PMF.pure action)) changed
-            (G.form.empiricalMarginal history changed (t + 2)))) := by
+            (G.form.empiricalMarginal history changed (t + 2))) := by
     unfold GameForm.mixedPotential
     exact expect_congr_law (congrArg independentProduct hcommute) potential
-      _ _
   have hrewrite :
       G.form.mixedPotential potential
           (Profile.update
             (Profile.update mixedProfile who (PMF.pure action)) changed
-            (G.form.empiricalMarginal history changed (t + 2)))
-          (hp (Profile.update
-            (Profile.update mixedProfile who (PMF.pure action)) changed
-            (G.form.empiricalMarginal history changed (t + 2)))) -
+            (G.form.empiricalMarginal history changed (t + 2))) -
         G.form.mixedPotential potential
           (Profile.update mixedProfile changed
-            (G.form.empiricalMarginal history changed (t + 2)))
-          (hp (Profile.update mixedProfile changed
-            (G.form.empiricalMarginal history changed (t + 2)))) -
+            (G.form.empiricalMarginal history changed (t + 2))) -
         (G.form.mixedPotential potential
-          (Profile.update mixedProfile who (PMF.pure action))
-          (hp (Profile.update mixedProfile who (PMF.pure action))) -
-          G.form.mixedPotential potential mixedProfile (hp mixedProfile)) =
+          (Profile.update mixedProfile who (PMF.pure action)) -
+          G.form.mixedPotential potential mixedProfile) =
       (G.form.mixedPotential potential
           (Profile.update
             (Profile.update mixedProfile who (PMF.pure action)) changed
-            (G.form.empiricalMarginal history changed (t + 2)))
-          (hp (Profile.update
-            (Profile.update mixedProfile who (PMF.pure action)) changed
-            (G.form.empiricalMarginal history changed (t + 2)))) -
+            (G.form.empiricalMarginal history changed (t + 2))) -
         G.form.mixedPotential potential
-          (Profile.update mixedProfile who (PMF.pure action))
-          (hp (Profile.update mixedProfile who (PMF.pure action)))) -
+          (Profile.update mixedProfile who (PMF.pure action))) -
       (G.form.mixedPotential potential
           (Profile.update mixedProfile changed
-            (G.form.empiricalMarginal history changed (t + 2)))
-          (hp (Profile.update mixedProfile changed
-            (G.form.empiricalMarginal history changed (t + 2)))) -
-        G.form.mixedPotential potential mixedProfile (hp mixedProfile)) := by ring
+            (G.form.empiricalMarginal history changed (t + 2))) -
+        G.form.mixedPotential potential mixedProfile) := by ring
   rw [hcross, hrewrite]
   calc
     _ ≤ |G.form.mixedPotential potential
           (Profile.update
             (Profile.update mixedProfile who (PMF.pure action)) changed
-             (G.form.empiricalMarginal history changed (t + 2)))
-          (hp ((Profile.update
-            (Profile.update mixedProfile who (PMF.pure action)) changed
-            (G.form.empiricalMarginal history changed (t + 2))))) -
+             (G.form.empiricalMarginal history changed (t + 2))) -
         G.form.mixedPotential potential
-          (Profile.update mixedProfile who (PMF.pure action))
-          (hp (Profile.update mixedProfile who (PMF.pure action)))| +
+          (Profile.update mixedProfile who (PMF.pure action))| +
       |G.form.mixedPotential potential
           (Profile.update mixedProfile changed
-            (G.form.empiricalMarginal history changed (t + 2)))
-          (hp (Profile.update mixedProfile changed
-            (G.form.empiricalMarginal history changed (t + 2)))) -
-        G.form.mixedPotential potential mixedProfile (hp mixedProfile)| :=
+            (G.form.empiricalMarginal history changed (t + 2))) -
+        G.form.mixedPotential potential mixedProfile| :=
           abs_sub _ _
     _ ≤ (1 / (t + 2 : ℝ)) * (2 * C) +
         (1 / (t + 2 : ℝ)) * (2 * C) := add_le_add hpureStep hbaseStep
@@ -531,38 +461,29 @@ theorem mixedPotentialGain_update_empiricalMarginal_succ_abs_sub_le_self
     {who : ι} (action : G.form.sig.Strategy who) (t : ℕ)
     (hcoordinate : mixedProfile who =
       G.form.empiricalMarginal history who (t + 1)) :
-    |G.mixedPotentialGainOfAbsBound potential hbound
+    |G.mixedPotentialGain potential
           (Profile.update mixedProfile who
             (G.form.empiricalMarginal history who (t + 2))) who action -
-        G.mixedPotentialGainOfAbsBound potential hbound mixedProfile who
+        G.mixedPotentialGain potential mixedProfile who
           action| ≤
       (1 / (t + 2 : ℝ)) * (2 * C) := by
   have hstep := G.mixedPotential_update_empiricalMarginal_succ_abs_sub_le
     potential hbound history mixedProfile who t hcoordinate
-  let hp (profile : Profile G.form.sig.mixed) :
-      PayoffIntegrable (independentProduct profile) potential :=
-    payoffIntegrable_of_bounded (independentProduct profile) potential hbound
-  simp only [mixedPotentialGainOfAbsBound, mixedPotentialGain,
+  simp only [mixedPotentialGain, mixedPotentialGain,
     Profile.update_idem]
   have hrewrite :
       G.form.mixedPotential potential
-          (Profile.update mixedProfile who (PMF.pure action))
-          (hp (Profile.update mixedProfile who (PMF.pure action))) -
+          (Profile.update mixedProfile who (PMF.pure action)) -
         G.form.mixedPotential potential
           (Profile.update mixedProfile who
-            (G.form.empiricalMarginal history who (t + 2)))
-          (hp (Profile.update mixedProfile who
-            (G.form.empiricalMarginal history who (t + 2)))) -
+            (G.form.empiricalMarginal history who (t + 2))) -
         (G.form.mixedPotential potential
-          (Profile.update mixedProfile who (PMF.pure action))
-          (hp (Profile.update mixedProfile who (PMF.pure action))) -
-          G.form.mixedPotential potential mixedProfile (hp mixedProfile)) =
+          (Profile.update mixedProfile who (PMF.pure action)) -
+          G.form.mixedPotential potential mixedProfile) =
       -(G.form.mixedPotential potential
           (Profile.update mixedProfile who
-            (G.form.empiricalMarginal history who (t + 2)))
-          (hp (Profile.update mixedProfile who
-            (G.form.empiricalMarginal history who (t + 2)))) -
-        G.form.mixedPotential potential mixedProfile (hp mixedProfile)) := by
+            (G.form.empiricalMarginal history who (t + 2))) -
+        G.form.mixedPotential potential mixedProfile) := by
     ring
   rw [hrewrite, abs_neg]
   exact hstep
@@ -579,21 +500,8 @@ theorem mixedPotentialGain_update_empiricalMarginal_succ_abs_sub_le
       G.form.empiricalMarginal history changed (t + 1)) :
     |G.mixedPotentialGain potential
           (Profile.update mixedProfile changed
-            (G.form.empiricalMarginal history changed (t + 2))) who action
-          (payoffIntegrable_of_bounded (independentProduct
-            (Profile.update mixedProfile changed
-              (G.form.empiricalMarginal history changed (t + 2))))
-            potential hbound)
-          (payoffIntegrable_of_bounded (independentProduct
-            ((Profile.update mixedProfile changed
-              (G.form.empiricalMarginal history changed (t + 2))).update
-                who (PMF.pure action))) potential hbound) -
-        G.mixedPotentialGain potential mixedProfile who action
-          (payoffIntegrable_of_bounded (independentProduct mixedProfile)
-            potential hbound)
-          (payoffIntegrable_of_bounded (independentProduct
-            (Profile.update mixedProfile who (PMF.pure action)))
-            potential hbound)| ≤
+            (G.form.empiricalMarginal history changed (t + 2))) who action -
+        G.mixedPotentialGain potential mixedProfile who action| ≤
       (1 / (t + 2 : ℝ)) * (4 * C) := by
   by_cases hsame : changed = who
   · subst changed
@@ -627,9 +535,9 @@ theorem mixedPotentialGain_advanceMarginals_abs_sub_le
       (∀ changed, changed ∈ players → mixedProfile changed =
         G.form.empiricalMarginal history changed (t + 1)) →
         ∀ (who : ι) (action : G.form.sig.Strategy who),
-        |G.mixedPotentialGainOfAbsBound potential hbound
+        |G.mixedPotentialGain potential
             (G.advanceMarginals history t players mixedProfile) who action -
-          G.mixedPotentialGainOfAbsBound potential hbound mixedProfile who
+          G.mixedPotentialGain potential mixedProfile who
             action| ≤
           (players.length : ℝ) *
             ((1 / (t + 2 : ℝ)) * (4 * C)) := by
@@ -665,28 +573,28 @@ theorem mixedPotentialGain_advanceMarginals_abs_sub_le
         G.mixedPotentialGain_update_empiricalMarginal_succ_abs_sub_le
           potential hbound history mixedProfile action t hfirstCoordinate
       have htriangle := abs_sub_le
-        (G.mixedPotentialGainOfAbsBound potential hbound
+        (G.mixedPotentialGain potential
           (G.advanceMarginals history t rest nextProfile) who action)
-        (G.mixedPotentialGainOfAbsBound potential hbound nextProfile who action)
-        (G.mixedPotentialGainOfAbsBound potential hbound mixedProfile who action)
+        (G.mixedPotentialGain potential nextProfile who action)
+        (G.mixedPotentialGain potential mixedProfile who action)
       calc
-        |G.mixedPotentialGainOfAbsBound potential hbound
+        |G.mixedPotentialGain potential
               (G.advanceMarginals history t (first :: rest) mixedProfile)
               who action -
-            G.mixedPotentialGainOfAbsBound potential hbound mixedProfile who
+            G.mixedPotentialGain potential mixedProfile who
               action| =
-            |G.mixedPotentialGainOfAbsBound potential hbound
+            |G.mixedPotentialGain potential
                 (G.advanceMarginals history t rest nextProfile) who action -
-              G.mixedPotentialGainOfAbsBound potential hbound mixedProfile who
+              G.mixedPotentialGain potential mixedProfile who
                 action| := by
           rfl
-        _ ≤ |G.mixedPotentialGainOfAbsBound potential hbound
+        _ ≤ |G.mixedPotentialGain potential
                 (G.advanceMarginals history t rest nextProfile) who action -
-              G.mixedPotentialGainOfAbsBound potential hbound nextProfile who
+              G.mixedPotentialGain potential nextProfile who
                 action| +
-            |G.mixedPotentialGainOfAbsBound potential hbound nextProfile who
+            |G.mixedPotentialGain potential nextProfile who
                 action -
-              G.mixedPotentialGainOfAbsBound potential hbound mixedProfile who
+              G.mixedPotentialGain potential mixedProfile who
                 action| :=
           htriangle
         _ ≤ (rest.length : ℝ) * stepError + stepError :=
@@ -707,22 +615,15 @@ theorem mixedPotential_advanceMarginals_sub_ge
         G.form.empiricalMarginal history who (t + 1)) →
       (1 / (t + 2 : ℝ)) *
           (∑ who ∈ players.toFinset,
-            G.mixedPotentialGainOfAbsBound potential hbound mixedProfile who
+            G.mixedPotentialGain potential mixedProfile who
               (history (t + 1) who)) -
         ((players.length : ℝ) * (players.length : ℝ)) *
           ((1 / (t + 2 : ℝ)) ^ 2 * (4 * C)) ≤
         G.form.mixedPotential potential
-            (G.advanceMarginals history t players mixedProfile)
-            (payoffIntegrable_of_bounded (independentProduct
-              (G.advanceMarginals history t players mixedProfile))
-              potential hbound) -
-          G.form.mixedPotential potential mixedProfile
-            (payoffIntegrable_of_bounded (independentProduct mixedProfile)
-              potential hbound) := by
+            (G.advanceMarginals history t players mixedProfile) -
+          G.form.mixedPotential potential mixedProfile := by
   let V (profile : Profile G.form.sig.mixed) : ℝ :=
     G.form.mixedPotential potential profile
-      (payoffIntegrable_of_bounded (independentProduct profile)
-        potential hbound)
   intro players
   induction players with
   | nil =>
@@ -754,7 +655,7 @@ theorem mixedPotential_advanceMarginals_sub_ge
       have hinductionRaw := ih nextProfile hrest hrestCoordinates
       have hinduction :
           step * (∑ who ∈ rest.toFinset,
-              G.mixedPotentialGainOfAbsBound potential hbound nextProfile who
+              G.mixedPotentialGain potential nextProfile who
                 (history (t + 1) who)) -
             ((rest.length : ℝ) * (rest.length : ℝ)) * error ≤
           V
@@ -769,9 +670,9 @@ theorem mixedPotential_advanceMarginals_sub_ge
         dsimp [error]
         positivity
       have hgainPoint : ∀ who ∈ rest.toFinset,
-          G.mixedPotentialGainOfAbsBound potential hbound mixedProfile who
+          G.mixedPotentialGain potential mixedProfile who
               (history (t + 1) who) ≤
-            G.mixedPotentialGainOfAbsBound potential hbound nextProfile who
+            G.mixedPotentialGain potential nextProfile who
                 (history (t + 1) who) + step * (4 * C) := by
         intro who hwhoFinset
         have hwho : who ∈ rest := by simpa using hwhoFinset
@@ -784,45 +685,45 @@ theorem mixedPotential_advanceMarginals_sub_ge
         linarith
       have hsum :
           (∑ who ∈ rest.toFinset,
-              G.mixedPotentialGainOfAbsBound potential hbound mixedProfile who
+              G.mixedPotentialGain potential mixedProfile who
                 (history (t + 1) who)) ≤
             (∑ who ∈ rest.toFinset,
-              G.mixedPotentialGainOfAbsBound potential hbound nextProfile who
+              G.mixedPotentialGain potential nextProfile who
                 (history (t + 1) who)) +
               (rest.length : ℝ) * (step * (4 * C)) := by
         calc
           (∑ who ∈ rest.toFinset,
-              G.mixedPotentialGainOfAbsBound potential hbound mixedProfile who
+              G.mixedPotentialGain potential mixedProfile who
                 (history (t + 1) who)) ≤
               ∑ who ∈ rest.toFinset,
-                (G.mixedPotentialGainOfAbsBound potential hbound nextProfile who
+                (G.mixedPotentialGain potential nextProfile who
                     (history (t + 1) who) + step * (4 * C)) :=
             Finset.sum_le_sum fun who hwho => hgainPoint who hwho
           _ = (∑ who ∈ rest.toFinset,
-                G.mixedPotentialGainOfAbsBound potential hbound nextProfile who
+                G.mixedPotentialGain potential nextProfile who
                   (history (t + 1) who)) +
               (rest.toFinset.card : ℝ) * (step * (4 * C)) := by
             rw [Finset.sum_add_distrib]
             simp [Finset.sum_const, nsmul_eq_mul]
           _ = (∑ who ∈ rest.toFinset,
-                G.mixedPotentialGainOfAbsBound potential hbound nextProfile who
+                G.mixedPotentialGain potential nextProfile who
                   (history (t + 1) who)) +
               (rest.length : ℝ) * (step * (4 * C)) := by
             rw [List.toFinset_card_of_nodup hrest]
       have hgainComparison :
           step * (∑ who ∈ rest.toFinset,
-              G.mixedPotentialGainOfAbsBound potential hbound mixedProfile who
+              G.mixedPotentialGain potential mixedProfile who
                 (history (t + 1) who)) -
             (rest.length : ℝ) * error ≤
           step * (∑ who ∈ rest.toFinset,
-              G.mixedPotentialGainOfAbsBound potential hbound nextProfile who
+              G.mixedPotentialGain potential nextProfile who
                 (history (t + 1) who)) := by
         dsimp [error]
         nlinarith [mul_le_mul_of_nonneg_left hsum hstep]
       have hincrement :
           V nextProfile -
               V mixedProfile =
-            step * G.mixedPotentialGainOfAbsBound potential hbound mixedProfile first
+            step * G.mixedPotentialGain potential mixedProfile first
               (history (t + 1) first) := by
         obtain ⟨hnext, hrecurrence⟩ :=
           G.mixedPotential_update_empiricalMarginal_succ_sub_of_eq
@@ -834,23 +735,21 @@ theorem mixedPotential_advanceMarginals_sub_ge
             (payoffIntegrable_of_bounded (independentProduct
               (Profile.update mixedProfile first
                 (PMF.pure (history (t + 1) first)))) potential hbound)
-            (payoffIntegrable_of_bounded (independentProduct mixedProfile)
-              potential hbound)
         simpa [nextProfile, step, V] using hrecurrence
       have hsumCons :
           (∑ who ∈ (first :: rest).toFinset,
-              G.mixedPotentialGainOfAbsBound potential hbound mixedProfile who
+              G.mixedPotentialGain potential mixedProfile who
                 (history (t + 1) who)) =
-            G.mixedPotentialGainOfAbsBound potential hbound mixedProfile first
+            G.mixedPotentialGain potential mixedProfile first
                 (history (t + 1) first) +
               ∑ who ∈ rest.toFinset,
-                G.mixedPotentialGainOfAbsBound potential hbound mixedProfile who
+                G.mixedPotentialGain potential mixedProfile who
                   (history (t + 1) who) := by
         simp [hfirst]
       rw [hsumCons]
       have htail :
           step * (∑ who ∈ rest.toFinset,
-              G.mixedPotentialGainOfAbsBound potential hbound mixedProfile who
+              G.mixedPotentialGain potential mixedProfile who
                 (history (t + 1) who)) -
             (((rest.length : ℝ) * (rest.length : ℝ)) * error +
               (rest.length : ℝ) * error) ≤
@@ -868,10 +767,10 @@ theorem mixedPotential_advanceMarginals_sub_ge
         push_cast
         nlinarith
       calc
-        step * (G.mixedPotentialGainOfAbsBound potential hbound mixedProfile first
+        step * (G.mixedPotentialGain potential mixedProfile first
               (history (t + 1) first) +
             ∑ who ∈ rest.toFinset,
-              G.mixedPotentialGainOfAbsBound potential hbound mixedProfile who
+              G.mixedPotentialGain potential mixedProfile who
                 (history (t + 1) who)) -
           (((first :: rest).length : ℝ) *
             ((first :: rest).length : ℝ)) * error ≤
@@ -913,9 +812,9 @@ theorem mixedPotentialGain_empiricalBelief_succ_abs_sub_le
     (hbound : ∀ profile, |potential profile| ≤ C)
     (history : ℕ → Profile G.form.sig) (who : ι)
     (action : G.form.sig.Strategy who) (t : ℕ) :
-    |G.mixedPotentialGainOfAbsBound potential hbound (G.form.empiricalBelief history (t + 2))
+    |G.mixedPotentialGain potential (G.form.empiricalBelief history (t + 2))
           who action -
-        G.mixedPotentialGainOfAbsBound potential hbound (G.form.empiricalBelief history (t + 1))
+        G.mixedPotentialGain potential (G.form.empiricalBelief history (t + 1))
           who action| ≤
       (Fintype.card ι : ℝ) * ((1 / (t + 2 : ℝ)) * (4 * C)) := by
   have hsweep := G.mixedPotentialGain_advanceMarginals_abs_sub_le
@@ -934,18 +833,11 @@ theorem IsExactPotential.mixedGain_empiricalBelief_succ_abs_sub_le
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) (who : ι)
     (action : G.form.sig.Strategy who) (t : ℕ) :
-    |G.mixedGain (G.form.empiricalBelief history (t + 2)) who action
-          (IsFictitiousPlay.incumbent_integrable (G := G) hplay (t + 1) who)
-          (IsFictitiousPlay.deviation_integrable (G := G) hplay (t + 1) who
-            (PMF.pure action)) -
-        G.mixedGain (G.form.empiricalBelief history (t + 1)) who action
-          (IsFictitiousPlay.incumbent_integrable (G := G) hplay t who)
-          (IsFictitiousPlay.deviation_integrable (G := G) hplay t who
-            (PMF.pure action))| ≤
+    |G.mixedGain (G.form.empiricalBelief history (t + 2)) who action -
+        G.mixedGain (G.form.empiricalBelief history (t + 1)) who action| ≤
       (Fintype.card ι : ℝ) * ((1 / (t + 2 : ℝ)) * (4 * C)) := by
   have hboundGain := G.mixedPotentialGain_empiricalBelief_succ_abs_sub_le
     potential hbound history who action t
-  simp only [mixedPotentialGainOfAbsBound] at hboundGain
   have hnew := UtilityGame.IsExactPotential.mixedPotentialGain_eq_mixedGain
     (G := G) hpotential (G.form.empiricalBelief history (t + 2)) who action
     (IsFictitiousPlay.incumbent_integrable (G := G) hplay (t + 1) who)
@@ -977,34 +869,17 @@ theorem IsExactPotential.aggregatePlayedGain_succ_abs_sub_le
     {C : ℝ} (hbound : ∀ profile, |potential profile| ≤ C)
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) (t : ℕ) :
-    |G.aggregatePlayedGain history (t + 1)
-          (fun who => IsFictitiousPlay.incumbent_integrable
-            (G := G) hplay (t + 1) who)
-          (fun who => IsFictitiousPlay.deviation_integrable
-            (G := G) hplay (t + 1) who
-            (PMF.pure (history (t + 2) who))) -
-        G.aggregatePlayedGain history t
-          (fun who => IsFictitiousPlay.incumbent_integrable
-            (G := G) hplay t who)
-          (fun who => IsFictitiousPlay.deviation_integrable
-            (G := G) hplay t who
-            (PMF.pure (history (t + 1) who)))| ≤
+    |G.aggregatePlayedGain history (t + 1) -
+        G.aggregatePlayedGain history t| ≤
       ((Fintype.card ι : ℝ) * (Fintype.card ι : ℝ)) *
         ((1 / (t + 2 : ℝ)) * (4 * C)) := by
   let coordinateBound : ℝ :=
     (Fintype.card ι : ℝ) * ((1 / (t + 2 : ℝ)) * (4 * C))
   have hpoint : ∀ who : ι,
       |G.mixedGain (G.form.empiricalBelief history (t + 2)) who
-            (history (t + 2) who)
-            (IsFictitiousPlay.incumbent_integrable (G := G) hplay
-              (t + 1) who)
-            (IsFictitiousPlay.deviation_integrable (G := G) hplay
-              (t + 1) who (PMF.pure (history (t + 2) who))) -
+            (history (t + 2) who) -
           G.mixedGain (G.form.empiricalBelief history (t + 1)) who
-            (history (t + 1) who)
-            (IsFictitiousPlay.incumbent_integrable (G := G) hplay t who)
-            (IsFictitiousPlay.deviation_integrable (G := G) hplay t who
-              (PMF.pure (history (t + 1) who)))| ≤ coordinateBound := by
+            (history (t + 1) who)| ≤ coordinateBound := by
     intro who
     have hnewBound :=
       UtilityGame.IsExactPotential.mixedGain_empiricalBelief_succ_abs_sub_le
@@ -1025,28 +900,16 @@ theorem IsExactPotential.aggregatePlayedGain_succ_abs_sub_le
     rcases hbestNew with ⟨_, _, hpreferNew⟩
     have holdComparison :
         G.mixedGain (G.form.empiricalBelief history (t + 1)) who
-            (history (t + 2) who)
-            (IsFictitiousPlay.incumbent_integrable (G := G) hplay t who)
-            (IsFictitiousPlay.deviation_integrable (G := G) hplay t who
-              (PMF.pure (history (t + 2) who))) ≤
+            (history (t + 2) who) ≤
           G.mixedGain (G.form.empiricalBelief history (t + 1)) who
-            (history (t + 1) who)
-            (IsFictitiousPlay.incumbent_integrable (G := G) hplay t who)
-            (IsFictitiousPlay.deviation_integrable (G := G) hplay t who
-              (PMF.pure (history (t + 1) who))) := by
+            (history (t + 1) who) := by
       unfold mixedGain
       linarith
     have hnewComparison :
         G.mixedGain (G.form.empiricalBelief history (t + 2)) who
-            (history (t + 1) who)
-            (IsFictitiousPlay.incumbent_integrable (G := G) hplay (t + 1) who)
-            (IsFictitiousPlay.deviation_integrable (G := G) hplay (t + 1) who
-              (PMF.pure (history (t + 1) who))) ≤
+            (history (t + 1) who) ≤
           G.mixedGain (G.form.empiricalBelief history (t + 2)) who
-            (history (t + 2) who)
-            (IsFictitiousPlay.incumbent_integrable (G := G) hplay (t + 1) who)
-            (IsFictitiousPlay.deviation_integrable (G := G) hplay (t + 1) who
-              (PMF.pure (history (t + 2) who))) := by
+            (history (t + 2) who) := by
       unfold mixedGain
       linarith
     apply abs_le.mpr
@@ -1060,28 +923,15 @@ theorem IsExactPotential.aggregatePlayedGain_succ_abs_sub_le
   calc
     |∑ who : ι,
         (G.mixedGain (G.form.empiricalBelief history (t + 2)) who
-            (history (t + 2) who)
-            (IsFictitiousPlay.incumbent_integrable (G := G) hplay
-              (t + 1) who)
-            (IsFictitiousPlay.deviation_integrable (G := G) hplay
-              (t + 1) who (PMF.pure (history (t + 2) who))) -
+            (history (t + 2) who) -
           G.mixedGain (G.form.empiricalBelief history (t + 1)) who
             (history (t + 1) who)
-            (IsFictitiousPlay.incumbent_integrable (G := G) hplay t who)
-            (IsFictitiousPlay.deviation_integrable (G := G) hplay t who
-              (PMF.pure (history (t + 1) who))))| ≤
+            )| ≤
         ∑ who : ι,
           |G.mixedGain (G.form.empiricalBelief history (t + 2)) who
-              (history (t + 2) who)
-              (IsFictitiousPlay.incumbent_integrable (G := G) hplay
-                (t + 1) who)
-              (IsFictitiousPlay.deviation_integrable (G := G) hplay
-                (t + 1) who (PMF.pure (history (t + 2) who))) -
+              (history (t + 2) who) -
             G.mixedGain (G.form.empiricalBelief history (t + 1)) who
-              (history (t + 1) who)
-              (IsFictitiousPlay.incumbent_integrable (G := G) hplay t who)
-              (IsFictitiousPlay.deviation_integrable (G := G) hplay t who
-                (PMF.pure (history (t + 1) who)))| :=
+              (history (t + 1) who)| :=
       Finset.abs_sum_le_sum_abs _ _
     _ ≤ ∑ _who : ι, coordinateBound :=
       Finset.sum_le_sum fun who _ => hpoint who
@@ -1100,22 +950,11 @@ theorem IsExactPotential.mixedPotential_empiricalBelief_succ_sub_ge
     {C : ℝ} (hbound : ∀ profile, |potential profile| ≤ C)
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) (t : ℕ) :
-    (1 / (t + 2 : ℝ)) * G.aggregatePlayedGain history t
-        (fun who => IsFictitiousPlay.incumbent_integrable
-          (G := G) hplay t who)
-        (fun who => IsFictitiousPlay.deviation_integrable
-          (G := G) hplay t who
-          (PMF.pure (history (t + 1) who))) -
+    (1 / (t + 2 : ℝ)) * G.aggregatePlayedGain history t -
         ((Fintype.card ι : ℝ) * (Fintype.card ι : ℝ)) *
           ((1 / (t + 2 : ℝ)) ^ 2 * (4 * C)) ≤
-      G.form.mixedPotential potential (G.form.empiricalBelief history (t + 2))
-          (payoffIntegrable_of_bounded
-            (independentProduct (G.form.empiricalBelief history (t + 2)))
-            potential hbound) -
-        G.form.mixedPotential potential (G.form.empiricalBelief history (t + 1))
-          (payoffIntegrable_of_bounded
-            (independentProduct (G.form.empiricalBelief history (t + 1)))
-            potential hbound) := by
+      G.form.mixedPotential potential (G.form.empiricalBelief history (t + 2)) -
+        G.form.mixedPotential potential (G.form.empiricalBelief history (t + 1)) := by
   have hsweep := G.mixedPotential_advanceMarginals_sub_ge
     potential hbound history t Finset.univ.toList
     (G.form.empiricalBelief history (t + 1)) Finset.univ.nodup_toList
@@ -1123,19 +962,14 @@ theorem IsExactPotential.mixedPotential_empiricalBelief_succ_sub_ge
   rw [G.advanceMarginals_univ_eq_empiricalBelief_succ history t] at hsweep
   have hsum :
       (∑ who ∈ (Finset.univ.toList : List ι).toFinset,
-        G.mixedPotentialGainOfAbsBound potential hbound (G.form.empiricalBelief history (t + 1))
+        G.mixedPotentialGain potential (G.form.empiricalBelief history (t + 1))
           who (history (t + 1) who)) =
-        G.aggregatePlayedGain history t
-          (fun who => IsFictitiousPlay.incumbent_integrable
-            (G := G) hplay t who)
-          (fun who => IsFictitiousPlay.deviation_integrable
-            (G := G) hplay t who
-            (PMF.pure (history (t + 1) who))) := by
+        G.aggregatePlayedGain history t := by
     simp only [aggregatePlayedGain]
     apply Finset.sum_congr
     · simp
     · intro who _
-      simp only [mixedPotentialGainOfAbsBound, mixedPotentialGain]
+      simp only [mixedPotentialGain, mixedPotentialGain]
       exact UtilityGame.IsExactPotential.mixedPotentialGain_eq_mixedGain
         (G := G) hpotential (G.form.empiricalBelief history (t + 1)) who
         (history (t + 1) who)

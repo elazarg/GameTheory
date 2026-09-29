@@ -35,25 +35,25 @@ theorem prob_not_isεNash_le (G : UtilityGame.{uι, us, uo} ι)
     (hpure : ∀ profile ∈ law.support, ∀ who (action : G.form.sig.Strategy who),
       UtilityIntegrable G.utility who
         (G.form.mixed.play (Profile.update profile who (PMF.pure action))))
-    (hscore_eq : ∀ profile (hs : profile ∈ law.support),
-      score profile = G.mixedImprovement profile (hpure profile hs))
-    (hexpect : expect law score hscore ≤ δ) :
+    (hscore_eq : ∀ profile (_ : profile ∈ law.support),
+      score profile = G.mixedImprovement profile)
+    (hexpect : expect law score ≤ δ) :
     (law.toOuterMeasure
       {profile | ¬ IsεNash G.form.mixed G.utility ε profile}).toReal ≤
       δ / ε := by
   calc
     (law.toOuterMeasure
       {profile | ¬ IsεNash G.form.mixed G.utility ε profile}).toReal ≤
-        expect law score hscore / ε := by
+        expect law score / ε := by
       apply eventMass_toReal_le_expect_div law
           {profile | ¬ IsεNash G.form.mixed G.utility ε profile}
           score hε hscore
       · intro profile hs
         rw [hscore_eq profile hs]
-        exact G.mixedImprovement_nonneg profile (hpure profile hs)
+        exact G.mixedImprovement_nonneg profile
       · intro profile hs hnotNash
         rw [hscore_eq profile hs]
-        have hnotle : ¬ G.mixedImprovement profile (hpure profile hs) ≤ ε := by
+        have hnotle : ¬ G.mixedImprovement profile ≤ ε := by
           intro himprovement
           exact hnotNash (G.isεNash_of_mixedImprovement_le
             (hpure profile hs) himprovement)
@@ -108,7 +108,7 @@ theorem choiceBaseGuard (profile : Profile choiceGame.form.sig.mixed)
 
 /-- The canonical mixed-improvement score for this finite choice fixture. -/
 def choiceScore (profile : Profile choiceGame.form.sig.mixed) : ℝ :=
-  choiceGame.mixedImprovement profile (choiceGuard profile)
+  choiceGame.mixedImprovement profile
 
 theorem optimalPure_isNash :
     IsNash choiceGame.form (euPreference choiceGame.utility) optimalPure := by
@@ -133,9 +133,7 @@ theorem optimalMixed_improvement :
 
 theorem choice_mixedGain_purify (profile : Profile choiceGame.form.sig)
     (action : Bool) :
-    choiceGame.mixedGain (choiceGame.form.purify profile) () action
-      (choiceBaseGuard (choiceGame.form.purify profile) ())
-      (choiceGuard (choiceGame.form.purify profile) () action) =
+    choiceGame.mixedGain (choiceGame.form.purify profile) () action =
       choiceUtility action () - choiceUtility (profile ()) () := by
   unfold UtilityGame.mixedGain
   have hdev : choiceGame.form.mixed.play
@@ -147,11 +145,7 @@ theorem choice_mixedGain_purify (profile : Profile choiceGame.form.sig)
       PMF.pure (profile ()) := by
     rw [GameForm.mixed_play_purify]
   have hdevEU := expectedUtility_congr_law choiceGame.utility () hdev
-    (choiceGuard (choiceGame.form.purify profile) () action)
-    (payoffIntegrable_pure action (fun outcome => choiceGame.utility outcome ()))
   have hbaseEU := expectedUtility_congr_law choiceGame.utility () hbase
-    (choiceBaseGuard (choiceGame.form.purify profile) ())
-    (payoffIntegrable_pure (profile ()) (fun outcome => choiceGame.utility outcome ()))
   rw [hdevEU, hbaseEU]
   simp [choiceUtility]
 
@@ -175,8 +169,7 @@ theorem exploitableMixed_not_isOneNash :
   rcases hdeviation with ⟨_, _, hdeviation⟩
   have hgain := choice_mixedGain_purify exploitablePure true
   have hle : choiceGame.mixedGain exploitableMixed () true
-      (choiceBaseGuard exploitableMixed ())
-      (choiceGuard exploitableMixed () true) ≤ 1 := by
+       ≤ 1 := by
     apply (sub_le_iff_le_add).2
     simpa only [UtilityGame.mixedGain, add_comm] using hdeviation
   simp only [exploitableMixed] at hle
@@ -196,17 +189,15 @@ theorem sampledGuard : PayoffIntegrable sampledMixedProfile choiceScore := by
   exact (Set.toFinite _).image _
 
 theorem sampled_expected_improvement :
-    expect sampledMixedProfile choiceScore sampledGuard = 1 / 2 := by
+    expect sampledMixedProfile choiceScore = 1 / 2 := by
   let relabel : Fin 4 → Profile choiceGame.form.sig.mixed := fun index =>
     if index = 0 then exploitableMixed else optimalMixed
-  have hsource : PayoffIntegrable (PMF.uniformOfFintype (Fin 4))
-      (choiceScore ∘ relabel) := payoffIntegrable_of_finite _ _
   calc
-    expect sampledMixedProfile choiceScore sampledGuard =
+    expect sampledMixedProfile choiceScore =
         expect (PMF.uniformOfFintype (Fin 4))
-          (choiceScore ∘ relabel) hsource := by
+          (choiceScore ∘ relabel) := by
       exact expect_map relabel (PMF.uniformOfFintype (Fin 4))
-        choiceScore hsource sampledGuard
+        choiceScore
     _ = 1 / 2 := by
       rw [expect_uniformFin]
       norm_num [relabel, Function.comp_def, Fin.sum_univ_succ,
@@ -269,7 +260,7 @@ theorem posterior_state_tail_le {State : Type*} (prior : PMF State)
     intro belief
     rw [abs_of_nonneg ENNReal.toReal_nonneg]
     exact ENNReal.toReal_mono (by simp) (belief.coe_le_one state)
-  have hmean : expect law (fun belief => (belief state).toReal) hobs =
+  have hmean : expect law (fun belief => (belief state).toReal) =
       (prior state).toReal := by
     have hmass := congrArg (fun μ : PMF State => (μ state).toReal) hplausible
     rw [PosteriorLaw.mean_apply, ENNReal.tsum_toReal_eq (fun belief =>
@@ -278,7 +269,7 @@ theorem posterior_state_tail_le {State : Type*} (prior : PMF State)
     simpa only [ENNReal.toReal_mul, expect] using hmass
   calc
     (law.toOuterMeasure {belief | threshold ≤ (belief state).toReal}).toReal ≤
-        expect law (fun belief => (belief state).toReal) hobs / threshold := by
+        expect law (fun belief => (belief state).toReal) / threshold := by
       exact markov_inequality law _ hthreshold hobs
         (fun belief _ => ENNReal.toReal_nonneg)
     _ = (prior state).toReal / threshold := by rw [hmean]

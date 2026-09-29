@@ -239,8 +239,8 @@ theorem linearUtility_integrable_geometric :
   exact hlinear
 
 theorem unbounded_integrable_utility_has_positive_eu :
-    ∃ h : UtilityIntegrable linearUtility 0 geometric,
-      0 < expectedUtility linearUtility 0 geometric h := by
+    UtilityIntegrable linearUtility 0 geometric ∧
+      0 < expectedUtility linearUtility 0 geometric := by
   have hcert := linearUtility_integrable_geometric
   refine ⟨hcert, ?_⟩
   have hconst : PayoffIntegrable geometric (fun _ : ℕ => (1 : ℝ)) :=
@@ -248,15 +248,14 @@ theorem unbounded_integrable_utility_has_positive_eu :
   have hle := expect_mono (μ := geometric)
     (f := fun _ => (1 : ℝ)) (g := fun n => linearUtility n 0)
     (fun n _ => by simp [linearUtility]) hconst hcert
-  rw [expect_constant geometric 1 hconst] at hle
+  rw [expect_constant geometric 1] at hle
   calc
     0 < 1 := by norm_num
-    _ ≤ expectedUtility linearUtility 0 geometric hcert := by
+    _ ≤ expectedUtility linearUtility 0 geometric := by
       simpa only [expectedUtility] using hle
 
-theorem finite_bool_expect_eq_sum (μ : PMF Bool) (f : Bool → ℝ)
-    (h : PayoffIntegrable μ f) :
-    expect μ f h = (μ false).toReal * f false + (μ true).toReal * f true := by
+theorem finite_bool_expect_eq_sum (μ : PMF Bool) (f : Bool → ℝ) :
+    expect μ f = (μ false).toReal * f false + (μ true).toReal * f true := by
   rw [expect_eq_sum]
   simp only [Fintype.sum_bool]
   ring
@@ -264,9 +263,7 @@ theorem finite_bool_expect_eq_sum (μ : PMF Bool) (f : Bool → ℝ)
 theorem bool_nfg_pure_payoff (profile : Profile boolCoordinationGame.signature)
     (player : Player) :
     expectedUtility boolCoordinationUtility player
-        (boolCoordinationForm.play profile)
-        (payoffIntegrable_pure (boolCoordinationGame.outcome profile)
-          (fun outcome => boolCoordinationUtility outcome player)) =
+        (boolCoordinationForm.play profile) =
       boolCoordinationUtility (boolCoordinationGame.outcome profile) player := by
   simp [boolCoordinationForm]
 
@@ -311,27 +308,22 @@ theorem coordination_optimal_of_always_coordinated (player : Player)
     payoffIntegrable_of_bounded alternative payoff (C := 1) (by
       intro outcome
       exact bounded_coordination_utility outcome player)
-  let hconstPref : PayoffIntegrable preferred (fun _ : ℕ × ℕ => (1 : ℝ)) :=
-    payoffIntegrable_of_bounded preferred _ (C := 1) (by intro _; norm_num)
-  let hconstAlt : PayoffIntegrable alternative (fun _ : ℕ × ℕ => (1 : ℝ)) :=
-    payoffIntegrable_of_bounded alternative _ (C := 1) (by intro _; norm_num)
-  have heq : expect preferred payoff hpref =
-      expect preferred (fun _ => (1 : ℝ)) hconstPref := by
+  have heq : expect preferred payoff =
+      expect preferred (fun _ => (1 : ℝ)) := by
     apply expect_congr_on_support
     · intro outcome ho
       simp [payoff, coordinationUtility, hpreferred outcome ho]
-  have hval : expect preferred payoff hpref = 1 := by
+  have hval : expect preferred payoff = 1 := by
     rw [heq, expect_constant]
-  have hle : expect alternative payoff halt ≤ 1 := by
+  have hle : expect alternative payoff ≤ 1 := by
     calc
-      expect alternative payoff halt ≤
-          expect alternative (fun _ => (1 : ℝ)) hconstAlt := by
-        apply expect_mono
-        · intro outcome _
-          unfold payoff coordinationUtility
-          split_ifs <;> norm_num
-      _ = 1 := expect_constant alternative 1 hconstAlt
-  have hlePref : expect alternative payoff halt ≤ expect preferred payoff hpref := by
+      expect alternative payoff ≤
+          expect alternative (fun _ => (1 : ℝ)) := by
+        refine expect_mono (fun outcome _ => ?_) halt (payoffIntegrable_constant _ _)
+        unfold payoff coordinationUtility
+        split_ifs <;> norm_num
+      _ = 1 := expect_constant alternative 1
+  have hlePref : expect alternative payoff ≤ expect preferred payoff := by
     rw [hval]
     exact hle
   exact ⟨hpref, halt, by simpa [expectedUtility, payoff] using hlePref⟩

@@ -99,9 +99,10 @@ theorem alwaysAccept_isNash :
   apply (euPreference_iff game.utility who
     (game.toForm.play alwaysAccept) (game.toForm.play deviated)
     hbase hdev).2
-  rw [game.expectedUtility_eq_prior who alwaysAccept hbase,
-    game.expectedUtility_eq_prior who deviated hdev]
-  apply expect_mono
+  rw [game.expectedUtility_eq_prior who alwaysAccept,
+    game.expectedUtility_eq_prior who deviated]
+  refine expect_mono ?_ ((game.planPayoff_integrable_iff who deviated).mp hdev)
+    ((game.planPayoff_integrable_iff who alwaysAccept).mp hbase)
   intro types _
   cases who
   simp [BayesianGame.planPayoff, BayesianGame.actionsOf,
@@ -111,15 +112,9 @@ theorem alwaysAccept_isNash :
 /-- The general interim theorem is used with arbitrary Nat-indexed plans. -/
 theorem alwaysAccept_interim_optimal :
     ∀ (who : Unit) (ownType : game.Ty who) (respond : game.Act who),
-      game.interimValueOfDeviation who ownType alwaysAccept respond
-        (game.singleTypeDeviation alwaysAccept who ownType respond) (by
-          simp [BayesianGame.singleTypeDeviation])
-        (whole_deviation_integrable who
-          (game.singleTypeDeviation alwaysAccept who ownType respond)) ≤
+      game.interimValueOfDeviation who ownType alwaysAccept respond ≤
       game.interimValueOfDeviation who ownType alwaysAccept
-        (alwaysAccept who ownType) (fun t => alwaysAccept who t) rfl
-        (by simpa only [Profile.update_eq_self] using
-          whole_deviation_integrable who (alwaysAccept who)) :=
+        (alwaysAccept who ownType) :=
   (game.isNash_iff_interim alwaysAccept whole_deviation_integrable).1
     alwaysAccept_isNash
 
@@ -162,15 +157,11 @@ theorem exploding_zero_type_integrable :
 
 theorem exploding_zero_type_value :
     expect (prior.filter zeroTypeEvent zeroTypeEvent_positive)
-        (fun types => exploding (types ())) exploding_zero_type_integrable =
+        (fun types => exploding (types ())) =
       exploding 0 := by
-  have hconst :
-      PayoffIntegrable (prior.filter zeroTypeEvent zeroTypeEvent_positive)
-        (fun _ => exploding 0) :=
-    payoffIntegrable_constant _ _
   calc
     _ = expect (prior.filter zeroTypeEvent zeroTypeEvent_positive)
-        (fun _ => exploding 0) hconst := by
+        (fun _ => exploding 0) := by
           apply expect_congr_on_support
           intro types htypes
           have hzero : types () = 0 := by
@@ -178,7 +169,7 @@ theorem exploding_zero_type_value :
             rw [PMF.mem_support_filter_iff] at hmem
             exact hmem.1
           simp [hzero]
-    _ = exploding 0 := expect_constant _ _ _
+    _ = exploding 0 := expect_constant _ _
 
 @[reducible]
 def explodingGame : BayesianGame Unit where
@@ -221,8 +212,7 @@ theorem exploding_interimPayoff_integrable :
     (fun types _ => hpoint types) exploding_zero_indicator_integrable
 
 theorem exploding_interimValue_nonnegative :
-    0 ≤ explodingGame.interimValue () 0 explodingPlan true
-      exploding_interimPayoff_integrable := by
+    0 ≤ explodingGame.interimValue () 0 explodingPlan true := by
   have hzero : PayoffIntegrable prior (fun _ : Unit → ℕ => (0 : ℝ)) :=
     payoffIntegrable_constant prior 0
   have hle := expect_mono
@@ -235,7 +225,7 @@ theorem exploding_interimValue_nonnegative :
       · simp [BayesianGame.interimPayoff, explodingGame, exploding, ht]
       · simp [BayesianGame.interimPayoff, explodingGame, ht])
     hzero exploding_interimPayoff_integrable
-  rw [expect_constant prior 0 hzero] at hle
+  rw [expect_constant prior 0] at hle
   exact hle
 
 end GameTheory.Experimental.PMFBayesianGate

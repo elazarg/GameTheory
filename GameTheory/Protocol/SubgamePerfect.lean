@@ -177,7 +177,7 @@ def oneShotHistoryLaw [DecidableEq ι]
     E.historyBackwardLaw certificate (M.historyChooser profile)
       (history.extend chosen.2 realized)
 
-/-- The actual one-choice history context uses the same guarded continuation
+/-- The actual one-choice history context uses the same continuation
 comparison as the generic protocol context. -/
 def oneShotHistoryContext [DecidableEq ι]
     (certificate : E.WellFoundedPlay)
@@ -229,25 +229,25 @@ def HasNoProfitableOneShotDeviation [DecidableEq ι]
       (M.oneShotHistoryContext certificate profile utility who history hterm).IsLocallyOptimal
         Set.univ (profile who (M.infoOf who history.trace))
 
-/-- Whole-policy optimality after every history. Each comparison carries both
-finite-real integrability witnesses, including off-path histories. -/
+/-- Whole-policy optimality after every history. Each comparison requires both
+payoff laws to be integrable, including off-path histories. -/
 def IsHistorywiseOptimal [DecidableEq ι]
     (certificate : E.WellFoundedPlay)
     (profile : Profile M.strategicSignature)
     (utility : E.History → ι → ℝ) : Prop :=
   ∀ (who : ι) (alternative : M.Policy who) (history : E.History),
-    ∃ hother : PayoffIntegrable
+    PayoffIntegrable
         (E.historyBackwardLaw certificate
           (M.historyChooser (Profile.update profile who alternative)) history)
-        (fun outcome => utility outcome who),
-      ∃ hinc : PayoffIntegrable
+        (fun outcome => utility outcome who) ∧
+      PayoffIntegrable
           (E.historyBackwardLaw certificate (M.historyChooser profile) history)
-          (fun outcome => utility outcome who),
+          (fun outcome => utility outcome who) ∧
         E.historyBackwardValue certificate
             (M.historyChooser (Profile.update profile who alternative))
-            (fun outcome => utility outcome who) history hother ≤
+            (fun outcome => utility outcome who) history ≤
           E.historyBackwardValue certificate (M.historyChooser profile)
-            (fun outcome => utility outcome who) history hinc
+            (fun outcome => utility outcome who) history
 
 /-- Whole-policy optimality at every information-set-closed subgame root. -/
 def IsSubgamePerfect [DecidableEq ι]
@@ -256,18 +256,18 @@ def IsSubgamePerfect [DecidableEq ι]
     (utility : E.History → ι → ℝ) : Prop :=
   ∀ (history : E.History), M.IsSubgameRoot history →
     ∀ (who : ι) (alternative : M.Policy who),
-      ∃ hother : PayoffIntegrable
+      PayoffIntegrable
           (E.historyBackwardLaw certificate
             (M.historyChooser (Profile.update profile who alternative)) history)
-          (fun outcome => utility outcome who),
-        ∃ hinc : PayoffIntegrable
+          (fun outcome => utility outcome who) ∧
+        PayoffIntegrable
             (E.historyBackwardLaw certificate (M.historyChooser profile) history)
-            (fun outcome => utility outcome who),
+            (fun outcome => utility outcome who) ∧
           E.historyBackwardValue certificate
               (M.historyChooser (Profile.update profile who alternative))
-              (fun outcome => utility outcome who) history hother ≤
+              (fun outcome => utility outcome who) history ≤
             E.historyBackwardValue certificate (M.historyChooser profile)
-              (fun outcome => utility outcome who) history hinc
+              (fun outcome => utility outcome who) history
 
 theorem IsHistorywiseOptimal.isSubgamePerfect [DecidableEq ι]
     {certificate : E.WellFoundedPlay}
@@ -312,11 +312,9 @@ theorem historyBackwardValue_update_le_of_hasNoProfitableOneShotDeviation
       (fun outcome => utility outcome who)) :
     E.historyBackwardValue certificate
         (M.historyChooser (Profile.update profile who alternative))
-        (fun outcome => utility outcome who) history hcandidate ≤
+        (fun outcome => utility outcome who) history ≤
       E.historyBackwardValue certificate (M.historyChooser profile)
-        (fun outcome => utility outcome who) history
-        (M.historyBackwardLaw_integrable_of_hasNoProfitableOneShotDeviation
-          hopt who history) := by
+        (fun outcome => utility outcome who) history := by
   induction history using
       (E.wellFounded_historySuccessor certificate).induction with
   | _ current ih =>
@@ -364,33 +362,30 @@ theorem historyBackwardValue_update_le_of_hasNoProfitableOneShotDeviation
           rw [← hrightLaw]
           exact hlocal.2.1 choice (Set.mem_univ _)
         have hbound := hlocal.2.2 choice (Set.mem_univ _)
-          hlocal.1 (hlocal.2.1 choice (Set.mem_univ _))
         unfold ExecutionProtocol.historyBackwardValue
         calc
           expect (E.historyBackwardLaw certificate
               (M.historyChooser (Profile.update profile who alternative)) current)
-              (fun outcome => utility outcome who) hcandidate =
+              (fun outcome => utility outcome who) =
             expect (stepLaw.bindOnSupport fun _target realized =>
               E.historyBackwardLaw certificate
                 (M.historyChooser (Profile.update profile who alternative))
                 (current.extend chosen.2 realized))
-              (fun outcome => utility outcome who) hleft := by
+              (fun outcome => utility outcome who) := by
                 unfold expect
                 rw [hleftLaw]
           _ ≤ expect (stepLaw.bindOnSupport fun _target realized =>
                 E.historyBackwardLaw certificate (M.historyChooser profile)
                   (current.extend chosen.2 realized))
-                (fun outcome => utility outcome who) hright := by
-              apply expect_bindOnSupport_mono_on_support
+                (fun outcome => utility outcome who) := by
+              refine expect_bindOnSupport_mono_on_support _ _ _ _ hleft hright ?_
               intro target realized hconditional _
               simpa only [ExecutionProtocol.historyBackwardValue] using
                 ih (current.extend chosen.2 realized)
                   ⟨chosen.1, chosen.2, realized⟩ hconditional
           _ ≤ expect (E.historyBackwardLaw certificate
                 (M.historyChooser profile) current)
-                (fun outcome => utility outcome who)
-                (M.historyBackwardLaw_integrable_of_hasNoProfitableOneShotDeviation
-                  hopt who current) := by
+                (fun outcome => utility outcome who) := by
               unfold GameTheory.Protocol.Context.value at hbound
               unfold expect at hbound ⊢
               simpa only [oneShotHistoryContext, hrightLaw,
@@ -477,18 +472,18 @@ theorem hasNoProfitableOneShotDeviation_of_isHistorywiseOptimal
       (fun outcome => utility outcome who)
     rw [hLaw]
     exact hchanged
-  · intro choice _ hinc' halt
+  · intro choice _
     let replacement := (profile who).replaceAt
       (M.infoOf who history.trace) choice
-    obtain ⟨hchanged, hincOther, hle⟩ := hoptimal who replacement history
+    obtain ⟨-, -, hle⟩ := hoptimal who replacement history
     have hLaw := M.oneShotHistoryLaw_eq_changed_of_actsOnce
       hactsOnce certificate profile history hterm choice
     show expect
         (M.oneShotHistoryLaw certificate profile who history hterm choice)
-        (fun outcome => utility outcome who) halt ≤
+        (fun outcome => utility outcome who) ≤
       expect
         (M.oneShotHistoryLaw certificate profile who history hterm own)
-        (fun outcome => utility outcome who) hinc'
+        (fun outcome => utility outcome who)
     unfold ExecutionProtocol.historyBackwardValue expect at hle
     unfold expect
     rw [hLaw, hownLaw]

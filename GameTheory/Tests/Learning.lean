@@ -82,8 +82,7 @@ theorem deviationIntegrable (who : Fin 2)
 round, player zero would have gained one by committing to `false`. -/
 theorem externalRegret_second_round :
     game.externalRegret (roundLaw 1) 0 false
-      (baseIntegrable 0 (roundLaw 1))
-      (deviationIntegrable 0 false (roundLaw 1)) = 1 := by
+       = 1 := by
   simp [UtilityGame.externalRegret, roundLaw, game, form, utility, mismatched,
     expectedUtility_pure]
 
@@ -91,9 +90,7 @@ theorem externalRegret_second_round :
 trace. This is a finite calculation, not an assumed learning guarantee. -/
 theorem cumulativeExternalRegret_le_one :
     ∀ who replacement,
-      (∑ round, game.externalRegret (roundLaw round) who replacement
-        (baseIntegrable who (roundLaw round))
-        (deviationIntegrable who replacement (roundLaw round))) ≤ 1 := by
+      (∑ round, game.externalRegret (roundLaw round) who replacement) ≤ 1 := by
   intro who replacement
   simp_rw [UtilityGame.externalRegret]
   refine Fin.cases ?_ (fun who => ?_) who
@@ -131,14 +128,14 @@ theorem timeAverage_not_coarseCorrelatedEq :
   have hnonpos := h 0 false
   rcases hnonpos with ⟨hbase, hdev, hle⟩
   have hvalue : game.externalRegret (game.form.timeAverage roundLaw) 0 false
-      hbase hdev = 1 / 2 := by
+       = 1 / 2 := by
     rw [game.externalRegret_timeAverage
       (hbase := fun round => baseIntegrable 0 (roundLaw round))
       (hdev := fun round => deviationIntegrable 0 false (roundLaw round))]
     norm_num [UtilityGame.externalRegret, roundLaw, game, form, utility,
       expectedUtility, expect_pure, coordinated, mismatched, Fin.sum_univ_two]
   have hle' : game.externalRegret (game.form.timeAverage roundLaw) 0 false
-      hbase hdev ≤ 0 := hle
+       ≤ 0 := hle
   rw [hvalue] at hle'
   norm_num at hle'
 
@@ -162,8 +159,7 @@ theorem coordinated_independentSelfPlay_isCoarseCorrelatedEq :
       intro who action
       have hbase : expectedUtility game.utility who
           (game.form.mixed.play (fun _ => PMF.pure false))
-          (utilityIntegrable who
-            (game.form.mixed.play (fun _ => PMF.pure false))) = 1 := by
+           = 1 := by
         have hprofile : (fun _ : Fin 2 => PMF.pure false) =
             game.form.purify coordinated := by
           funext player
@@ -173,9 +169,6 @@ theorem coordinated_independentSelfPlay_isCoarseCorrelatedEq :
       have hdev : expectedUtility game.utility who
           (game.form.mixed.play
             (Profile.update (fun _ => PMF.pure false) who (PMF.pure action)))
-          (utilityIntegrable who
-            (game.form.mixed.play
-              (Profile.update (fun _ => PMF.pure false) who (PMF.pure action))))
           ≤ 1 := by
         let law := game.form.mixed.play
           (Profile.update (fun _ => PMF.pure false) who (PMF.pure action))
@@ -185,12 +178,10 @@ theorem coordinated_independentSelfPlay_isCoarseCorrelatedEq :
             by_cases h : outcome.1 = outcome.2 <;> simp [utility, h])
           (utilityIntegrable who law) (payoffIntegrable_constant law 1)
         calc
-          expectedUtility game.utility who law (utilityIntegrable who law) =
-              expect law (fun outcome => utility outcome who)
-                (utilityIntegrable who law) := rfl
-          _ ≤ expect law (fun _ => (1 : ℝ))
-                (payoffIntegrable_constant law 1) := hmono
-          _ = 1 := expect_constant law 1 (payoffIntegrable_constant law 1)
+          expectedUtility game.utility who law =
+              expect law (fun outcome => utility outcome who) := rfl
+          _ ≤ expect law (fun _ => (1 : ℝ)) := hmono
+          _ = 1 := expect_constant law 1
       simp only [Fin.sum_univ_one]
       rw [hbase]
       linarith)

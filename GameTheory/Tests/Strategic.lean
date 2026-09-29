@@ -106,13 +106,13 @@ def compiledGame : UtilityGame Unit where
 with no protocol vocabulary in sight. -/
 theorem expectedUtility_takeProfile :
     expectedUtility takeIsBetter () ((coinThenMove.toGameForm 2).play takeProfile)
-        (payoffIntegrable_of_finite _ _) = 1 := by
+         = 1 := by
   rw [play_takeProfile, expectedUtility_pure]
   simp [takeIsBetter]
 
 theorem expectedUtility_leaveProfile :
     expectedUtility takeIsBetter () ((coinThenMove.toGameForm 2).play leaveProfile)
-        (payoffIntegrable_of_finite _ _) = 0 := by
+         = 0 := by
   rw [play_leaveProfile, expectedUtility_pure]
   simp [takeIsBetter]
 

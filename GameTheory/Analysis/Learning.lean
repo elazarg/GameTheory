@@ -48,7 +48,7 @@ noncomputable def mwScore (G : UtilityGame.{uι, us, uo} ι)
   | 0 => fun _ _ => 0
   | t + 1 => fun i action =>
       mwScore G eta lo width hband t i action +
-        G.normGain lo width hband
+        G.normGain lo width
           (fun j => GameTheory.Math.Probability.OnlineLearning.exponentialWeights eta
             (mwScore G eta lo width hband t j)) i action
 
@@ -70,7 +70,7 @@ theorem mwScore_eq_cumGain
     (t : ℕ) (who : ι) (action : G.form.sig.Strategy who) :
     mwScore G eta lo width hband t who action =
       OnlineLearning.cumGain
-        (fun round => G.normGain lo width hband
+        (fun round => G.normGain lo width
           (mwProfile G eta lo width hband round) who) t action := by
   induction t with
   | zero => simp [mwScore, OnlineLearning.cumGain]
@@ -86,7 +86,7 @@ theorem mwProfile_eq_multiplicativeWeights
     (t : ℕ) (who : ι) :
     mwProfile G eta lo width hband t who =
       GameTheory.Math.Probability.OnlineLearning.multiplicativeWeights eta
-        (fun round => G.normGain lo width hband
+        (fun round => G.normGain lo width
           (mwProfile G eta lo width hband round) who) t := by
   rw [mwProfile,
     GameTheory.Math.Probability.OnlineLearning.multiplicativeWeights_eq_exponentialWeights]
@@ -108,52 +108,41 @@ theorem mwSelfPlay_timeAverage_isεCoarseCorrelatedEq {L : ℝ} (heta : 0 < eta)
   apply G.selfPlay_timeAverage_isεCoarseCorrelatedEq lo width hband
   intro who action
   let gain : ℕ → G.form.sig.Strategy who → ℝ :=
-    fun round => G.normGain lo width hband
+    fun round => G.normGain lo width
       (mwProfile G eta lo width hband round) who
   have halgorithm : (∑ round ∈ Finset.range T,
-      expect (mwProfile G eta lo width hband round who) (gain round)
-        (normGain_integrable G hwidth hband
-          (mwProfile G eta lo width hband round) who)) =
+      expect (mwProfile G eta lo width hband round who) (gain round)) =
       OnlineLearning.algorithmGain eta gain T := by
     rw [OnlineLearning.algorithmGain]
     apply Finset.sum_congr rfl
     intro round _
     let law := mwProfile G eta lo width hband round who
-    let f := G.normGain lo width hband (mwProfile G eta lo width hband round) who
+    let f := G.normGain lo width (mwProfile G eta lo width hband round) who
     have hlaw := mwProfile_eq_multiplicativeWeights G eta lo width hband round who
-    have hguard : PayoffIntegrable law f := normGain_integrable G hwidth hband
-      (mwProfile G eta lo width hband round) who
-    have hguard' : PayoffIntegrable
-        (GameTheory.Math.Probability.OnlineLearning.multiplicativeWeights eta gain round) f :=
-      payoffIntegrable_congr_law hlaw hguard
     calc
-      expect law f hguard = expect
+      expect law f = expect
           (GameTheory.Math.Probability.OnlineLearning.multiplicativeWeights eta gain round)
-          f hguard' := expect_congr_law hlaw f hguard hguard'
+          f := expect_congr_law hlaw f
       _ = OnlineLearning.expected eta gain round f :=
         GameTheory.Math.Probability.OnlineLearning.expect_multiplicativeWeights
-          eta gain round f (h := hguard')
+          eta gain round f
   have hscale :
       (∑ round : Fin T,
         (expectedUtility G.utility who
         (G.form.mixed.play
               (Profile.update (mwProfile G eta lo width hband (round : ℕ)) who
-                (PMF.pure action)))
-            (utilityIntegrable_of_band G lo width hband who _) -
+                (PMF.pure action))) -
           expectedUtility G.utility who
-            (G.form.mixed.play (mwProfile G eta lo width hband (round : ℕ)))
-            (utilityIntegrable_of_band G lo width hband who _))) =
+            (G.form.mixed.play (mwProfile G eta lo width hband (round : ℕ))))) =
       width * (OnlineLearning.cumGain gain T action -
         OnlineLearning.algorithmGain eta gain T) := by
     rw [Fin.sum_univ_eq_sum_range (fun round =>
         expectedUtility G.utility who
           (G.form.mixed.play
             (Profile.update (mwProfile G eta lo width hband round) who
-              (PMF.pure action)))
-          (utilityIntegrable_of_band G lo width hband who _) -
+              (PMF.pure action))) -
         expectedUtility G.utility who
-          (G.form.mixed.play (mwProfile G eta lo width hband round))
-          (utilityIntegrable_of_band G lo width hband who _)) T]
+          (G.form.mixed.play (mwProfile G eta lo width hband round))) T]
     rw [Finset.sum_congr rfl (fun round _ =>
       G.expectedUtility_deviation_eq_width_mul_normGain hwidth hband
         (mwProfile G eta lo width hband round) who action)]
@@ -194,47 +183,39 @@ theorem mwSelfPlay_timeAverage_isεCoarseCorrelatedEq_sqrt {L : ℝ}
   apply G.selfPlay_timeAverage_isεCoarseCorrelatedEq lo width hband
   intro who action
   let gain : ℕ → G.form.sig.Strategy who → ℝ :=
-    fun round => G.normGain lo width hband
+    fun round => G.normGain lo width
       (mwProfile G (Real.sqrt (L / T)) lo width hband round) who
   have halgorithm :
       (∑ round ∈ Finset.range T,
         expect (mwProfile G (Real.sqrt (L / T)) lo width hband round who)
-          (gain round) (normGain_integrable G hwidth hband
-            (mwProfile G (Real.sqrt (L / T)) lo width hband round) who)) =
+          (gain round)) =
         OnlineLearning.algorithmGain (Real.sqrt (L / T)) gain T := by
     rw [OnlineLearning.algorithmGain]
     apply Finset.sum_congr rfl
     intro round _
     let law := mwProfile G (Real.sqrt (L / T)) lo width hband round who
-    let f := G.normGain lo width hband
+    let f := G.normGain lo width
       (mwProfile G (Real.sqrt (L / T)) lo width hband round) who
     have hlaw := mwProfile_eq_multiplicativeWeights G
       (Real.sqrt (L / T)) lo width hband round who
-    have hguard : PayoffIntegrable law f := normGain_integrable G hwidth hband
-      (mwProfile G (Real.sqrt (L / T)) lo width hband round) who
-    have hguard' : PayoffIntegrable
-        (GameTheory.Math.Probability.OnlineLearning.multiplicativeWeights
-          (Real.sqrt (L / T)) gain round) f := payoffIntegrable_congr_law hlaw hguard
     calc
-      expect law f hguard = expect
+      expect law f = expect
           (GameTheory.Math.Probability.OnlineLearning.multiplicativeWeights
-            (Real.sqrt (L / T)) gain round) f hguard' :=
-        expect_congr_law hlaw f hguard hguard'
+            (Real.sqrt (L / T)) gain round) f :=
+        expect_congr_law hlaw f
       _ = OnlineLearning.expected (Real.sqrt (L / T)) gain round f :=
         GameTheory.Math.Probability.OnlineLearning.expect_multiplicativeWeights
-          (Real.sqrt (L / T)) gain round f (h := hguard')
+          (Real.sqrt (L / T)) gain round f
   have hscale :
       (∑ round : Fin T,
         (expectedUtility G.utility who
         (G.form.mixed.play
               (Profile.update
                 (mwProfile G (Real.sqrt (L / T)) lo width hband (round : ℕ)) who
-                (PMF.pure action)))
-            (utilityIntegrable_of_band G lo width hband who _) -
+                (PMF.pure action))) -
           expectedUtility G.utility who
             (G.form.mixed.play
-              (mwProfile G (Real.sqrt (L / T)) lo width hband (round : ℕ)))
-            (utilityIntegrable_of_band G lo width hband who _))) =
+              (mwProfile G (Real.sqrt (L / T)) lo width hband (round : ℕ))))) =
         width * (OnlineLearning.cumGain gain T action -
           OnlineLearning.algorithmGain (Real.sqrt (L / T)) gain T) := by
     rw [Fin.sum_univ_eq_sum_range (fun round =>
@@ -242,12 +223,10 @@ theorem mwSelfPlay_timeAverage_isεCoarseCorrelatedEq_sqrt {L : ℝ}
           (G.form.mixed.play
             (Profile.update
               (mwProfile G (Real.sqrt (L / T)) lo width hband round) who
-              (PMF.pure action)))
-          (utilityIntegrable_of_band G lo width hband who _) -
+              (PMF.pure action))) -
         expectedUtility G.utility who
           (G.form.mixed.play
-            (mwProfile G (Real.sqrt (L / T)) lo width hband round))
-          (utilityIntegrable_of_band G lo width hband who _)) T]
+            (mwProfile G (Real.sqrt (L / T)) lo width hband round))) T]
     rw [Finset.sum_congr rfl (fun round _ =>
       G.expectedUtility_deviation_eq_width_mul_normGain hwidth hband
         (mwProfile G (Real.sqrt (L / T)) lo width hband round) who action)]
@@ -422,17 +401,16 @@ theorem expectedUtility_update_pure_tendsto_of_actual_guards
     (hsequence : ∀ n, UtilityIntegrable G.utility who
       (G.form.mixed.play
         (Profile.update (sequence n) who (PMF.pure action)))) :
-    ∃ htarget : UtilityIntegrable G.utility who
+    UtilityIntegrable G.utility who
         (G.form.mixed.play
-          (Profile.update target who (PMF.pure action))),
+          (Profile.update target who (PMF.pure action))) ∧
       Tendsto
         (fun n => expectedUtility G.utility who
           (G.form.mixed.play
-            (Profile.update (sequence n) who (PMF.pure action)))
-          (hsequence n)) atTop
+            (Profile.update (sequence n) who (PMF.pure action)))) atTop
         (nhds (expectedUtility G.utility who
           (G.form.mixed.play
-            (Profile.update target who (PMF.pure action))) htarget)) := by
+            (Profile.update target who (PMF.pure action))))) := by
   let source : ℕ → PMF (Profile G.form.sig) :=
     fun n => independentProduct (sequence n)
   let targetSource : PMF (Profile G.form.sig) := independentProduct target
@@ -458,17 +436,15 @@ theorem expectedUtility_update_pure_tendsto_of_actual_guards
   have hlimit := hsource.expect_bind_finite_of_sequence_integrable kernel
     (fun outcome => G.utility outcome who) hbind
   have hseqEq : (fun n => expectedUtility G.utility who
-      (G.form.mixed.play (Profile.update (sequence n) who (PMF.pure action)))
-      (hsequence n)) =
+      (G.form.mixed.play (Profile.update (sequence n) who (PMF.pure action)))) =
       (fun n => expect ((source n).bind kernel)
-        (fun outcome => G.utility outcome who) (hbind n)) := by
+        (fun outcome => G.utility outcome who)) := by
     funext n
     exact expectedUtility_congr_law G.utility who (hlaw n)
-      (hsequence n) (hbind n)
   have htargetEq : expectedUtility G.utility who
-      (G.form.mixed.play (Profile.update target who (PMF.pure action))) htarget =
-      expect (targetSource.bind kernel) (fun outcome => G.utility outcome who) htargetBind :=
-    expectedUtility_congr_law G.utility who hlawTarget htarget htargetBind
+      (G.form.mixed.play (Profile.update target who (PMF.pure action))) =
+      expect (targetSource.bind kernel) (fun outcome => G.utility outcome who) :=
+    expectedUtility_congr_law G.utility who hlawTarget
   refine ⟨htarget, ?_⟩
   rw [hseqEq, htargetEq]
   exact hlimit
@@ -509,10 +485,10 @@ theorem IsFictitiousPlay.limit_isNash
     by_contra hpreferred
     have hnotle : ¬ expectedUtility G.utility who
           (G.form.mixed.play
-            (Profile.update target who (PMF.pure alternative))) haltGuard ≤
+            (Profile.update target who (PMF.pure alternative))) ≤
         expectedUtility G.utility who
           (G.form.mixed.play
-            (Profile.update target who (PMF.pure action))) hactionGuard :=
+            (Profile.update target who (PMF.pure action))) :=
       fun hle => hpreferred ((euPreference_iff G.utility who
         (G.form.mixed.play (Profile.update target who (PMF.pure action)))
         (G.form.mixed.play (Profile.update target who (PMF.pure alternative)))
@@ -521,10 +497,10 @@ theorem IsFictitiousPlay.limit_isNash
     have hnegative :
         expectedUtility G.utility who
             (G.form.mixed.play
-              (Profile.update target who (PMF.pure action))) hactionGuard -
+              (Profile.update target who (PMF.pure action))) -
           expectedUtility G.utility who
             (G.form.mixed.play
-              (Profile.update target who (PMF.pure alternative))) haltGuard < 0 := by
+              (Profile.update target who (PMF.pure alternative))) < 0 := by
       have hlt := not_le.mp hnotle
       linarith
     have heventuallyNegative :=
@@ -533,11 +509,11 @@ theorem IsFictitiousPlay.limit_isNash
         0 ≤ expectedUtility G.utility who
               (G.form.mixed.play
                 (Profile.update (G.form.empiricalBelief history (t + 1)) who
-                  (PMF.pure action))) (hsequence action t) -
+                  (PMF.pure action))) -
             expectedUtility G.utility who
               (G.form.mixed.play
                 (Profile.update (G.form.empiricalBelief history (t + 1)) who
-                  (PMF.pure alternative))) (hsequence alternative t) := by
+                  (PMF.pure alternative))) := by
       refine hfrequent.mono fun t ht => ?_
       have hround :=
         (UtilityGame.IsFictitiousPlay.isBestResponse (G := G) hplay t who)
@@ -566,7 +542,6 @@ theorem IsFictitiousPlay.limit_isNash
   let value : G.form.sig.Strategy who → ℝ := fun action =>
     expectedUtility G.utility who
       (G.form.mixed.play (Profile.update target who (PMF.pure action)))
-      (hpure who action)
   have houter : PayoffIntegrable (target who) value :=
     payoffIntegrable_bind_conditionalExpectation (target who)
       (fun action => G.form.mixed.play
@@ -578,25 +553,21 @@ theorem IsFictitiousPlay.limit_isNash
           simpa only using mixed_play_update_self G.form target who
         rw [← hlaw]
         exact hbase who)
-      (hpure who)
   have hconstant : PayoffIntegrable (target who) (fun _ =>
       expectedUtility G.utility who
         (G.form.mixed.play
-          (Profile.update target who (PMF.pure alternative)))
-        (hpure who alternative)) := payoffIntegrable_constant _ _
+          (Profile.update target who (PMF.pure alternative)))) := payoffIntegrable_constant _ _
   have hle : expectedUtility G.utility who
       (G.form.mixed.play
-        (Profile.update target who (PMF.pure alternative)))
-      (hpure who alternative) ≤
-      expectedUtility G.utility who (G.form.mixed.play target) (hbase who) := by
+        (Profile.update target who (PMF.pure alternative))) ≤
+      expectedUtility G.utility who (G.form.mixed.play target) := by
     calc
       _ = expect (target who) (fun _ =>
           expectedUtility G.utility who
             (G.form.mixed.play
-              (Profile.update target who (PMF.pure alternative)))
-            (hpure who alternative)) hconstant :=
-          (expect_constant (target who) _ hconstant).symm
-      _ ≤ expect (target who) value houter :=
+              (Profile.update target who (PMF.pure alternative)))) :=
+          (expect_constant (target who) _).symm
+      _ ≤ expect (target who) value :=
           expect_mono (fun action ha =>
             (euPreference_iff G.utility who
               (G.form.mixed.play
@@ -605,9 +576,9 @@ theorem IsFictitiousPlay.limit_isNash
                 (Profile.update target who (PMF.pure alternative)))
               (hpure who action) (hpure who alternative)).mp
                 (hbest who action ha alternative)) hconstant houter
-      _ = expectedUtility G.utility who (G.form.mixed.play target) (hbase who) := by
+      _ = expectedUtility G.utility who (G.form.mixed.play target) := by
         exact (expectedUtility_mixed_eq_expect G.form G.utility target who
-          (hbase who) (hpure who)).symm
+          (hbase who)).symm
   exact (euPreference_iff G.utility who (G.form.mixed.play target)
     (G.form.mixed.play (Profile.update target who (PMF.pure alternative)))
     (hbase who) (hpure who alternative)).2 hle

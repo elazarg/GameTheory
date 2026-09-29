@@ -417,17 +417,11 @@ private theorem history_utility_guard {lottery : Bool}
 /-- The guarded backward value has the explicitly calculated public law. -/
 theorem value_law {lottery : Bool} (certificate : (arena lottery).WellFoundedPlay)
     (policies : Profile (model lottery).strategicSignature)
-    (history : (arena lottery).History)
-    (hback : PayoffIntegrable
-      ((arena lottery).historyBackwardLaw certificate
-        ((model lottery).historyChooser policies) history)
-      (fun final => utility (readout final.state) ()))
-    (hlaw : PayoffIntegrable (law policies history.state) (utility · ())) :
+    (history : (arena lottery).History) :
     (arena lottery).historyBackwardValue certificate
       ((model lottery).historyChooser policies)
-      (fun final => utility (readout final.state) ()) history hback =
-        expect (law policies history.state) (utility · ()) hlaw := by
-  let hrun := history_utility_guard ((model lottery).runFrom policies 2 history)
+      (fun final => utility (readout final.state) ()) history =
+        expect (law policies history.state) (utility · ()) := by
   have hlawRun :
       (((model lottery).runFrom policies 2 history).map
         (fun final => readout final.state)) =
@@ -435,29 +429,28 @@ theorem value_law {lottery : Bool} (certificate : (arena lottery).WellFoundedPla
     simpa only [PMF.map_id] using run_law policies history
   calc
     _ = expect ((model lottery).runFrom policies 2 history)
-        (fun final => utility (readout final.state) ()) hrun :=
+        (fun final => utility (readout final.state) ()) :=
       (model lottery).historyBackwardValue_eq_expect_runFrom_of_bound
-        certificate (bounded lottery) policies _ history hback hrun
-    _ = expect (law policies history.state) (utility · ()) hlaw := by
+        certificate (bounded lottery) policies _ history
+    _ = expect (law policies history.state) (utility · ()) := by
       exact expect_observed_law_eq
         ((model lottery).runFrom policies 2 history) (law policies history.state)
-        (fun final => readout final.state) id (utility · ()) hlawRun hrun hlaw
+        (fun final => readout final.state) id (utility · ()) hlawRun
 
 private theorem source_law_bound (alternative : (model false).Policy ())
     (state : State) :
     expect (law (Profile.update (profile false) () alternative) state)
-        (utility · ()) (payoffIntegrable_of_finite _ _) ≤
-      expect (law (profile false) state) (utility · ())
-        (payoffIntegrable_of_finite _ _) := by
+        (utility · ()) ≤
+      expect (law (profile false) state) (utility · ()) := by
   cases state with
   | root =>
       calc
         _ ≤ expect (law (Profile.update (profile false) () alternative) .root)
-            (fun _ => (2 : ℝ)) (payoffIntegrable_constant _ _) := by
-          apply expect_mono
+            (fun _ => (2 : ℝ)) := by
+          refine expect_mono ?_ (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
           intro result _
           exact le_trans (le_abs_self _) (utility_bound result)
-        _ = 2 := expect_constant _ _ _
+        _ = 2 := expect_constant _ _
         _ = _ := by rw [law_profile]; simp [utility, expect_pure]
   | decision =>
       have hsup : ∀ result ∈
@@ -469,10 +462,10 @@ private theorem source_law_bound (alternative : (model false).Policy ())
         cases bit <;> norm_num [utility]
       calc
         _ ≤ expect (law (Profile.update (profile false) () alternative) .decision)
-            (fun _ => (1 : ℝ)) (payoffIntegrable_constant _ _) := by
+            (fun _ => (1 : ℝ)) := by
           exact expect_mono hsup (payoffIntegrable_of_finite _ _)
             (payoffIntegrable_constant _ _)
-        _ = 1 := expect_constant _ _ _
+        _ = 1 := expect_constant _ _
         _ = _ := by rw [law_profile]; simp [utility, expect_pure]
   | done value =>
       simp [law, expect_pure]
@@ -490,15 +483,12 @@ theorem sourcePerfect : (model false).IsSubgamePerfect (terminates false) (profi
     ((model false).runFrom (Profile.update (profile false) () alternative) 2 history)
   let hrbase := history_utility_guard ((model false).runFrom (profile false) 2 history)
   refine ⟨hrbase, hrdev, ?_⟩
-  let hldev := payoffIntegrable_of_finite
-    (law (Profile.update (profile false) () alternative) history.state) (utility · ())
-  let hlbase := payoffIntegrable_of_finite (law (profile false) history.state) (utility · ())
   simp only [InformationModel.toContinuationGameForm, expectedUtility]
   have hdevValue : expect
       ((model false).runFrom (Profile.update (profile false) () alternative) 2 history)
-      (fun final => utility (readout final.state) ()) hrdev =
+      (fun final => utility (readout final.state) ()) =
         expect (law (Profile.update (profile false) () alternative) history.state)
-          (utility · ()) hldev := by
+          (utility · ()) := by
     have hlaw :
         (((model false).runFrom
           (Profile.update (profile false) () alternative) 2 history).map
@@ -509,10 +499,10 @@ theorem sourcePerfect : (model false).IsSubgamePerfect (terminates false) (profi
     exact expect_observed_law_eq
       ((model false).runFrom (Profile.update (profile false) () alternative) 2 history)
       (law (Profile.update (profile false) () alternative) history.state)
-      (fun final => readout final.state) id (utility · ()) hlaw hrdev hldev
+      (fun final => readout final.state) id (utility · ()) hlaw
   have hbaseValue : expect ((model false).runFrom (profile false) 2 history)
-      (fun final => utility (readout final.state) ()) hrbase =
-        expect (law (profile false) history.state) (utility · ()) hlbase := by
+      (fun final => utility (readout final.state) ()) =
+        expect (law (profile false) history.state) (utility · ()) := by
     have hlaw :
         (((model false).runFrom (profile false) 2 history).map
           (fun final => readout final.state)) =
@@ -521,11 +511,11 @@ theorem sourcePerfect : (model false).IsSubgamePerfect (terminates false) (profi
     exact expect_observed_law_eq
       ((model false).runFrom (profile false) 2 history)
       (law (profile false) history.state)
-      (fun final => readout final.state) id (utility · ()) hlaw hrbase hlbase
+      (fun final => readout final.state) id (utility · ()) hlaw
   calc
     _ = expect (law (Profile.update (profile false) () alternative) history.state)
-        (utility · ()) hldev := hdevValue
-    _ ≤ expect (law (profile false) history.state) (utility · ()) hlbase :=
+        (utility · ()) := hdevValue
+    _ ≤ expect (law (profile false) history.state) (utility · ()) :=
       source_law_bound alternative history.state
     _ = _ := hbaseValue.symm
 

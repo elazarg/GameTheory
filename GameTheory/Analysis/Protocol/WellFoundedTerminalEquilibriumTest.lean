@@ -195,33 +195,24 @@ theorem terminal_context_reward_law
             (information.randomizedChooser (fun _ => alternative))
     _ = _ := root_behavioral_reward_law (fun _ => alternative)
 
-/-- Guarded terminal value equals the expected reward of the whole policy's
+/-- The terminal value equals the expected reward of the whole policy's
 root choice; the unbounded random duration disappears from the value. -/
 theorem terminal_context_value_eq_choice
     (assessment : information.BehavioralAssessment)
     (site : information.InformationSite ())
-    (alternative : information.BehavioralPolicy ())
-    (h : (assessment.terminalContinuationContext wellFounded site
-      (terminalPayoff ())).IntegrableAt alternative) :
+    (alternative : information.BehavioralPolicy ()) :
     (assessment.terminalContinuationContext wellFounded site
-      (terminalPayoff ())).value alternative h =
+      (terminalPayoff ())).value alternative =
     expect (alternative 1)
       (fun choice : information.Choice () 1 =>
-        if choice.1 = some true then (1 : ℝ) else 0)
-      (by apply payoffIntegrable_of_bounded_on_support (C := 1)
-          intro choice _
-          by_cases htrue : choice.1 = some true <;> simp [htrue]) := by
+        if choice.1 = some true then (1 : ℝ) else 0) := by
   let rewardChoice : information.Choice () 1 → ℝ :=
     fun choice => if choice.1 = some true then 1 else 0
-  have hchoice : PayoffIntegrable (alternative 1) rewardChoice := by
-    apply payoffIntegrable_of_bounded_on_support (C := 1)
-    intro choice _
-    by_cases htrue : choice.1 = some true <;> simp [rewardChoice, htrue]
-  have hlaw := terminal_context_reward_law assessment site alternative
   have hvalue := expect_observed_law_eq
     ((assessment.terminalContinuationContext wellFounded site
       (terminalPayoff ())).outcome alternative)
-    (alternative 1) (terminalPayoff ()) rewardChoice id hlaw h hchoice
+    (alternative 1) (terminalPayoff ()) rewardChoice id
+    (terminal_context_reward_law assessment site alternative)
   simpa [Context.value, Function.comp_def, rewardChoice,
     InformationModel.BehavioralAssessment.terminalContinuationContext,
     Context.ofBelief] using hvalue
@@ -230,10 +221,7 @@ theorem terminal_context_value_eq_choice
 theorem incumbent_terminal_value (n : ℕ)
     (site : information.InformationSite ()) :
     ((assessment n).terminalContinuationContext wellFounded site
-      (terminalPayoff ())).value ((assessment n).strategy ())
-      ((assessment n).terminalContinuationContext_integrable_of_bounded_terminal
-        wellFounded site (terminalPayoff ()) 1
-        (terminalPayoff_bound ()) ((assessment n).strategy ())) =
+      (terminalPayoff ())).value ((assessment n).strategy ()) =
       1 - trembleWeight n := by
   let rewardChoice : information.Choice () 1 → ℝ :=
     fun choice => if choice.1 = some true then 1 else 0
@@ -241,18 +229,11 @@ theorem incumbent_terminal_value (n : ℕ)
     (trembleWeight_le_one n) (fallbackPolicy 1) (pureTruePolicy 1)
     rewardChoice (payoffIntegrable_pure _ _) (payoffIntegrable_pure _ _)
   calc
-    _ = expect (strategy n () 1) rewardChoice
-          (by apply payoffIntegrable_of_bounded_on_support (C := 1)
-              intro choice _
-              by_cases htrue : choice.1 = some true <;>
-                simp [rewardChoice, htrue]) := by
+    _ = expect (strategy n () 1) rewardChoice := by
           simpa only [assessment, InformationModel.bayesAssessment_strategy,
             rewardChoice] using
             terminal_context_value_eq_choice (assessment n) site
               ((assessment n).strategy ())
-              ((assessment n).terminalContinuationContext_integrable_of_bounded_terminal
-                wellFounded site (terminalPayoff ()) 1
-                (terminalPayoff_bound ()) ((assessment n).strategy ()))
     _ = trembleWeight n * 0 + (1 - trembleWeight n) * 1 := by
           simpa [strategy, repair, fallbackPolicy, pureTruePolicy,
             fallbackChoice, trueChoice, rewardChoice, expect_pure] using hmix
@@ -263,25 +244,19 @@ tremble error over the incumbent. -/
 theorem repaired_terminal_approximate_optimality
     (n : ℕ) (i : Unit) (site : information.InformationSite i)
     (alternative : information.BehavioralPolicy i) :
-    (((assessment n).terminalContinuationContext wellFounded site
-      (terminalPayoff i)).value (repair n i alternative)
-      ((assessment n).terminalContinuationContext_integrable_of_bounded_terminal
-        wellFounded site (terminalPayoff i) 1
-        (terminalPayoff_bound i) (repair n i alternative))) ≤
-    (((assessment n).terminalContinuationContext wellFounded site
-      (terminalPayoff i)).value ((assessment n).strategy i)
-      ((assessment n).terminalContinuationContext_integrable_of_bounded_terminal
-        wellFounded site (terminalPayoff i) 1
-        (terminalPayoff_bound i) ((assessment n).strategy i))) +
+    ((assessment n).terminalContinuationContext wellFounded site
+      (terminalPayoff i)).value (repair n i alternative) ≤
+    ((assessment n).terminalContinuationContext wellFounded site
+      (terminalPayoff i)).value ((assessment n).strategy i) +
       trembleWeight n := by
   cases i
   have hupper :
       ((assessment n).terminalContinuationContext wellFounded site
-        (terminalPayoff ())).value (repair n () alternative)
-        ((assessment n).terminalContinuationContext_integrable_of_bounded_terminal
-          wellFounded site (terminalPayoff ()) 1
-          (terminalPayoff_bound ()) (repair n () alternative)) ≤ 1 := by
-    apply expect_le_const
+        (terminalPayoff ())).value (repair n () alternative) ≤ 1 := by
+    apply expect_le_const _ _
+      ((assessment n).terminalContinuationContext_integrable_of_bounded_terminal
+        wellFounded site (terminalPayoff ()) 1 (terminalPayoff_bound ())
+        (repair n () alternative))
     intro final _
     exact terminalPayoff_le_one final
   rw [incumbent_terminal_value n site]

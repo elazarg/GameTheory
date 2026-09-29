@@ -1,5 +1,5 @@
 /-
-# Guarded expected-utility welfare fixture
+# Expected-utility welfare fixture
 
 This binary example retains a genuinely stochastic profile outcome and tests
 individual rationality and Pareto transfer with explicit PMF expectations.
@@ -58,12 +58,11 @@ theorem fixtureIntegrable (player : Bool) (law : PMF Bool) :
 
 theorem expectedUtility_low (player : Bool) :
     expectedUtility fixtureUtility player (fixtureForm.play low)
-      (fixtureIntegrable player (fixtureForm.play low)) = 1 := by
+       = 1 := by
   cases player <;> simp [low, fixtureUtility, expectedUtility_pure]
 
 theorem expectedUtility_improved (player : Bool) :
-    expectedUtility fixtureUtility player (fixtureForm.play improved)
-      (fixtureIntegrable player (fixtureForm.play improved)) =
+    expectedUtility fixtureUtility player (fixtureForm.play improved) =
         if player then 1 else 2 := by
   cases player
   · have hfalse : PayoffIntegrable (PMF.pure false)
@@ -75,33 +74,19 @@ theorem expectedUtility_improved (player : Bool) :
     have hm := expect_mix (1 / 2) (by norm_num) (by norm_num)
       (PMF.pure false) (PMF.pure true)
       (fun outcome => fixtureUtility outcome false) hfalse htrue
-    have hproof : fixtureIntegrable false fair =
-        payoffIntegrable_mix (1 / 2) (by norm_num) (by norm_num)
-          (PMF.pure false) (PMF.pure true)
-          (fun outcome => fixtureUtility outcome false) hfalse htrue := by
-      apply Subsingleton.elim
-    have hv : expectedUtility fixtureUtility false fair (fixtureIntegrable false fair) = 2 := by
+    have hv : expectedUtility fixtureUtility false fair = 2 := by
       unfold expectedUtility
       calc
-        expect fair (fun outcome => fixtureUtility outcome false)
-            (fixtureIntegrable false fair) =
-            expect fair (fun outcome => fixtureUtility outcome false)
-              (payoffIntegrable_mix (1 / 2) (by norm_num) (by norm_num)
-                (PMF.pure false) (PMF.pure true)
-                (fun outcome => fixtureUtility outcome false) hfalse htrue) :=
-          expect_proof_irrel fair _ _ _
+        expect fair (fun outcome => fixtureUtility outcome false) =
+            expect fair (fun outcome => fixtureUtility outcome false) := rfl
         _ = 2 := by
           have hm' := hm
           norm_num [fair, fixtureUtility, expect_pure] at hm'
           exact hm'
     simpa [improved] using hv
-  · have hconst : PayoffIntegrable fair (fun _ : Bool => (1 : ℝ)) :=
-      payoffIntegrable_of_bounded fair _ (C := 1) (by intro _; norm_num)
-    have hvalue := expect_constant fair 1 hconst
+  · have hvalue := expect_constant fair 1
     unfold expectedUtility
-    have hproof := expect_proof_irrel fair (fun _ : Bool => (1 : ℝ))
-      (fixtureIntegrable true fair) hconst
-    simpa [fixtureUtility, improved] using hproof.trans hvalue
+    simpa [fixtureUtility, improved] using hvalue
 
 theorem low_isIndividuallyRational :
     IsIndividuallyRational fixtureForm fixtureUtility reservation low := by

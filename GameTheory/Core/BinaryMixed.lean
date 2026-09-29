@@ -33,13 +33,11 @@ structure MatchingPenniesLike (F : GameForm (Fin 2))
   integrable : GameForm.HasIntegrableUtility F utility
   payoff_zero : ∀ bits : Fin 2 → Bool,
     expectedUtility utility 0
-        (F.play (fun i => action i (bits i)))
-        (integrable 0 (fun i => action i (bits i))) =
+        (F.play (fun i => action i (bits i))) =
       if bits 0 = bits 1 then scale else -scale
   payoff_one : ∀ bits : Fin 2 → Bool,
     expectedUtility utility 1
-        (F.play (fun i => action i (bits i)))
-        (integrable 1 (fun i => action i (bits i))) =
+        (F.play (fun i => action i (bits i))) =
       -(if bits 0 = bits 1 then scale else -scale)
 
 namespace MatchingPenniesLike
@@ -56,15 +54,13 @@ def encodeProfile (pureProfile : Profile F.sig) : Fin 2 → Bool :=
   fun i => (h.action i).symm (pureProfile i)
 
 theorem expectedUtility_profile_zero (bits : Fin 2 → Bool) :
-    expectedUtility utility 0 (F.play (h.profile bits))
-      (h.integrable 0 (h.profile bits)) =
+    expectedUtility utility 0 (F.play (h.profile bits)) =
       if bits 0 = bits 1 then h.scale else -h.scale := by
   unfold profile
   exact h.payoff_zero bits
 
 theorem expectedUtility_profile_one (bits : Fin 2 → Bool) :
-    expectedUtility utility 1 (F.play (h.profile bits))
-      (h.integrable 1 (h.profile bits)) =
+    expectedUtility utility 1 (F.play (h.profile bits)) =
       -(if bits 0 = bits 1 then h.scale else -h.scale) := by
   unfold profile
   exact h.payoff_one bits
@@ -203,42 +199,26 @@ private theorem probFalse (mixedProfile : Profile F.sig.mixed) (who : Fin 2) :
 
 private theorem mixedExpectedUtility_eq_sum
     (mixedProfile : Profile F.sig.mixed) (who : Fin 2) :
-    expectedUtility utility who (F.mixed.play mixedProfile)
-        (mixedUtilityIntegrable h mixedProfile who) =
+    expectedUtility utility who (F.mixed.play mixedProfile) =
       ∑ bits : Fin 2 → Bool,
         (∏ i, ((mixedProfile i) (h.action i (bits i))).toReal) *
-          expectedUtility utility who (F.play (h.profile bits))
-            (h.integrable who (h.profile bits)) := by
+          expectedUtility utility who (F.play (h.profile bits)) := by
   let encoded : Fin 2 → PMF Bool :=
     fun i => (mixedProfile i).map (h.action i).symm
   let μ := independentProduct mixedProfile
   let ν := independentProduct encoded
   let value : (Fin 2 → Bool) → ℝ := fun bits =>
     expectedUtility utility who (F.play (h.profile bits))
-      (h.integrable who (h.profile bits))
   have hmap : μ.map h.encodeProfile = ν := by
     show (independentProduct mixedProfile).map
       (fun pureProfile i => (h.action i).symm (pureProfile i)) = _
     simpa [ν, encoded] using
       independentProduct_map mixedProfile (fun i => (h.action i).symm)
-  have hcond : ∀ pureProfile, UtilityIntegrable utility who (F.play pureProfile) :=
-    fun pureProfile => h.integrable who pureProfile
-  have houter : PayoffIntegrable μ (fun pureProfile =>
-      expectedUtility utility who (F.play pureProfile) (hcond pureProfile)) := by
-    simpa only [expectedUtility, UtilityIntegrable] using
-      payoffIntegrable_bind_conditionalExpectation μ F.play
-        (fun outcome => utility outcome who)
-        (mixedUtilityIntegrable h mixedProfile who) hcond
   have hvalue : ∀ pureProfile,
-      expectedUtility utility who (F.play pureProfile) (hcond pureProfile) =
+      expectedUtility utility who (F.play pureProfile) =
         value (h.encodeProfile pureProfile) := by
     intro pureProfile
     simp [value, h.profile_encodeProfile]
-  have hpull : PayoffIntegrable μ (value ∘ h.encodeProfile) :=
-    payoffIntegrable_congr_on_support
-      (fun profile _ => hvalue profile) houter
-  have hmapped : PayoffIntegrable (μ.map h.encodeProfile) value :=
-    (payoffIntegrable_map_iff h.encodeProfile μ value).2 hpull
   have hmass (bits : Fin 2 → Bool) :
       (ν bits).toReal = ∏ i, ((mixedProfile i) (h.action i (bits i))).toReal := by
     rw [independentProduct_apply, ENNReal.toReal_prod]
@@ -246,21 +226,19 @@ private theorem mixedExpectedUtility_eq_sum
     intro i _
     exact prob_encoded h mixedProfile i (bits i)
   calc
-    expectedUtility utility who (F.mixed.play mixedProfile)
-        (mixedUtilityIntegrable h mixedProfile who) =
+    expectedUtility utility who (F.mixed.play mixedProfile) =
         expect μ (fun pureProfile =>
-          expectedUtility utility who (F.play pureProfile) (hcond pureProfile)) houter := by
+          expectedUtility utility who (F.play pureProfile)) := by
       exact expectedUtility_bind utility who μ F.play
-        (mixedUtilityIntegrable h mixedProfile who) hcond
-    _ = expect (μ.map h.encodeProfile) value hmapped := by
+        (mixedUtilityIntegrable h mixedProfile who)
+    _ = expect (μ.map h.encodeProfile) value := by
       calc
-        _ = expect μ (value ∘ h.encodeProfile) hpull :=
-          expect_congr_on_support (fun profile _ => hvalue profile) houter hpull
-        _ = expect (μ.map h.encodeProfile) value hmapped :=
-          (expect_map h.encodeProfile μ value hpull hmapped).symm
-    _ = expect ν value (payoffIntegrable_congr_law hmap hmapped) :=
-      expect_congr_law hmap value hmapped
-        (payoffIntegrable_congr_law hmap hmapped)
+        _ = expect μ (value ∘ h.encodeProfile) :=
+          expect_congr_on_support (fun profile _ => hvalue profile)
+        _ = expect (μ.map h.encodeProfile) value :=
+          (expect_map h.encodeProfile μ value).symm
+    _ = expect ν value :=
+      expect_congr_law hmap value
     _ = ∑ bits : Fin 2 → Bool,
           (∏ i, ((mixedProfile i) (h.action i (bits i))).toReal) * value bits := by
       rw [expect_eq_sum]
@@ -271,8 +249,7 @@ private theorem mixedExpectedUtility_eq_sum
 /-- Expected utility of player zero as a polynomial in the two `true`
 probabilities. -/
 theorem mixedExpectedUtility_zero (mixedProfile : Profile F.sig.mixed) :
-    expectedUtility utility 0 (F.mixed.play mixedProfile)
-        (mixedUtilityIntegrable h mixedProfile 0) =
+    expectedUtility utility 0 (F.mixed.play mixedProfile) =
       h.scale * ((2 * h.probTrue mixedProfile 0 - 1) *
         (2 * h.probTrue mixedProfile 1 - 1)) := by
   rw [h.mixedExpectedUtility_eq_sum, boolProfiles,
@@ -290,8 +267,7 @@ theorem mixedExpectedUtility_zero (mixedProfile : Profile F.sig.mixed) :
 /-- Expected utility of player one is the negative of player zero's
 Matching Pennies polynomial. -/
 theorem mixedExpectedUtility_one (mixedProfile : Profile F.sig.mixed) :
-    expectedUtility utility 1 (F.mixed.play mixedProfile)
-        (mixedUtilityIntegrable h mixedProfile 1) =
+    expectedUtility utility 1 (F.mixed.play mixedProfile) =
       -h.scale * ((2 * h.probTrue mixedProfile 0 - 1) *
         (2 * h.probTrue mixedProfile 1 - 1)) := by
   rw [h.mixedExpectedUtility_eq_sum, boolProfiles,

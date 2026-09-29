@@ -30,7 +30,7 @@ local instance : Fintype Spot := spotFintype
 /-- The backward value of grabbing, at every state. -/
 theorem value_grab :
     ∀ state, probe.backwardValue probe_wellFoundedPlay (policy .grab)
-      basePayoff state (payoffIntegrable_of_finite _ _) =
+      basePayoff state =
       match state with
       | .flip => 1 / 2
       | .pick => 1
@@ -38,8 +38,8 @@ theorem value_grab :
       | .passed => 0
   | .flip => by rw [backwardValue_flip]; norm_num [basePayoff, Move.outcome]
   | .pick => by rw [backwardValue_pick]; rfl
-  | .grabbed => backwardValue_of_terminal (by simp) _
-  | .passed => backwardValue_of_terminal (by simp) _
+  | .grabbed => backwardValue_of_terminal (by simp)
+  | .passed => backwardValue_of_terminal (by simp)
 
 /-- **Grabbing survives every one-shot deviation.** At the chance node no choice
 is available to change, and at the decision node the alternative is worth no
@@ -49,22 +49,22 @@ theorem grab_isOneShotOptimal :
   intro state hterm
   refine ⟨payoffIntegrable_of_finite _ _,
     (fun _ _ => payoffIntegrable_of_finite _ _), ?_⟩
-  rintro ⟨joint, isLegal⟩ _ hchoice halt
+  rintro ⟨joint, isLegal⟩ _
   match state with
   | .grabbed | .passed => exact absurd (by simp) hterm
   | .flip =>
     -- Nobody is active, so every legal joint action induces the same coin.
     dsimp only [Context.value, Context.IntegrableAt,
-      ExecutionProtocol.oneShotContext] at hchoice halt ⊢
+      ExecutionProtocol.oneShotContext]
     have hsame : probe.step Spot.flip ⟨joint, isLegal⟩ =
         probe.step Spot.flip (policy .grab Spot.flip hterm) := rfl
     exact le_of_eq (expect_congr_law
       (congrArg (fun law => law.bind
         (probe.backwardLaw probe_wellFoundedPlay (policy .grab))) hsame)
-      basePayoff _ _)
+      basePayoff)
   | .pick =>
     dsimp only [Context.value, Context.IntegrableAt,
-      ExecutionProtocol.oneShotContext] at hchoice halt ⊢
+      ExecutionProtocol.oneShotContext]
     have hleft :
         (probe.step Spot.pick ⟨joint, isLegal⟩).bind
             (probe.backwardLaw probe_wellFoundedPlay (policy .grab)) =
@@ -86,16 +86,15 @@ theorem grab_isOneShotOptimal :
       _ = basePayoff ((joint ()).elim Spot.passed Move.outcome) := by
         have hpure := payoffIntegrable_pure
           ((joint ()).elim Spot.passed Move.outcome) basePayoff
-        exact (expect_congr_law hleft basePayoff halt hpure).trans
-          (expect_pure _ _ hpure)
+        exact (expect_congr_law hleft basePayoff).trans
+          (expect_pure _ _)
       _ ≤ 1 := by
         cases hchoice : joint () with
         | none => norm_num [basePayoff]
         | some move => cases move <;> norm_num [basePayoff, Move.outcome]
       _ = _ := by
-        have hpure := payoffIntegrable_pure Spot.grabbed basePayoff
-        have hvalue := (expect_congr_law hright basePayoff hchoice hpure).trans
-          (expect_pure _ _ hpure)
+        have hvalue := (expect_congr_law hright basePayoff).trans
+          (expect_pure _ _)
         simpa only [basePayoff] using hvalue.symm
 
 /-- **Passing does not.** Grabbing instead is worth strictly more against the
@@ -113,10 +112,8 @@ theorem pass_not_isOneShotOptimal :
 not merely as good as passing, and without comparing against any of them one by
 one. -/
 theorem grab_best (other : probe.Chooser) (state : Spot) :
-    probe.backwardValue probe_wellFoundedPlay other basePayoff state
-        (payoffIntegrable_of_finite _ _) ≤
-      probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff state
-        (payoffIntegrable_of_finite _ _) :=
+    probe.backwardValue probe_wellFoundedPlay other basePayoff state ≤
+      probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff state :=
   backwardValue_le_of_isOneShotOptimal grab_isOneShotOptimal other state
     (payoffIntegrable_of_finite _ _)
 
@@ -131,10 +128,8 @@ theorem grab_isOneShotOptimal_of_best :
 
 /-- And the conclusion is not vacuous: passing really is worse at the root. -/
 theorem pass_strictly_worse :
-    probe.backwardValue probe_wellFoundedPlay (policy .pass) basePayoff Spot.flip
-        (payoffIntegrable_of_finite _ _) <
-      probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff Spot.flip
-        (payoffIntegrable_of_finite _ _) := by
+    probe.backwardValue probe_wellFoundedPlay (policy .pass) basePayoff Spot.flip <
+      probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff Spot.flip := by
   rw [backwardValue_flip, backwardValue_flip]
   norm_num [basePayoff, Move.outcome]
 

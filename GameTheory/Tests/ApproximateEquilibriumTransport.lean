@@ -65,11 +65,9 @@ theorem sourceUtility_integrable (profile : Profile sourceForm.sig) (who : Bool)
 
 /-- Payoff conjugacy holds at every profile, not only the hostile base point. -/
 theorem expectedUtility_eq (targetProfile : Profile targetForm.sig) (who : Bool) :
-    expectedUtility targetUtility who (targetForm.play targetProfile)
-        (targetUtility_integrable targetProfile who) =
+    expectedUtility targetUtility who (targetForm.play targetProfile) =
       expectedUtility sourceUtility who
-        (sourceForm.play (profileEquiv.symm targetProfile))
-        (sourceUtility_integrable (profileEquiv.symm targetProfile) who) := by
+        (sourceForm.play (profileEquiv.symm targetProfile)) := by
   simp only [expectedUtility, expect_pure]
   rfl
 
@@ -83,12 +81,12 @@ theorem target_isεNash_zero :
     (Profile.update (profileEquiv baseProfile) who replacement) who
   refine ⟨baseGuard, deviationGuard, ?_⟩
   have hbase : expectedUtility targetUtility who
-      (targetForm.play (profileEquiv baseProfile)) baseGuard = 0 := by
+      (targetForm.play (profileEquiv baseProfile)) = 0 := by
     simp [expectedUtility, expect_pure, targetUtility, sourceUtility,
       profileEquiv, swapProfile, baseProfile]
   have hdeviation : expectedUtility targetUtility who
       (targetForm.play (Profile.update (profileEquiv baseProfile) who replacement))
-      deviationGuard = 0 := by
+       = 0 := by
     cases who <;> cases replacement <;>
       simp [expectedUtility, expect_pure, targetUtility, sourceUtility,
         profileEquiv, swapProfile, baseProfile]

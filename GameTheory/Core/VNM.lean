@@ -44,8 +44,8 @@ def MixtureContinuous (weaklyPrefers : WeakPreference Agent Outcome) : Prop :=
         Rank.Indifferent (weaklyPrefers agent) middle
           (mix t h0 h1 best worst)
 
-/-- `utility` represents the weak preference by guarded expected utility.
-Only the compared laws need integration certificates. -/
+/-- `utility` represents the weak preference by expected utility, between
+integrable laws. Only the compared laws need to be integrable. -/
 def RepresentsExpectedUtility (weaklyPrefers : WeakPreference Agent Outcome)
     (utility : Outcome → Agent → ℝ) : Prop :=
   ∀ agent preferred alternative,
@@ -63,8 +63,8 @@ theorem total_of_integrable
     (hfirst : UtilityIntegrable utility agent first)
     (hsecond : UtilityIntegrable utility agent second) :
     weaklyPrefers agent first second ∨ weaklyPrefers agent second first := by
-  rcases le_total (expectedUtility utility agent second hsecond)
-      (expectedUtility utility agent first hfirst) with h | h
+  rcases le_total (expectedUtility utility agent second)
+      (expectedUtility utility agent first) with h | h
   · exact Or.inl ((hrep agent first second).mpr
       ((euPreference_iff utility agent first second hfirst hsecond).mpr h))
   · exact Or.inr ((hrep agent second first).mpr
@@ -105,10 +105,9 @@ theorem mixtureIndependent_of_integrable
       (fun outcome => utility outcome agent) hlaw hcommon
   have hvalue (law : PMF Outcome)
       (hlaw : UtilityIntegrable utility agent law) :
-      expectedUtility utility agent (mix t hpos.le h1 law common)
-          (hguard law hlaw) =
-        t * expectedUtility utility agent law hlaw +
-          (1 - t) * expectedUtility utility agent common hcommon :=
+      expectedUtility utility agent (mix t hpos.le h1 law common) =
+        t * expectedUtility utility agent law +
+          (1 - t) * expectedUtility utility agent common :=
     expectedUtility_mix utility agent t hpos.le h1 law common hlaw hcommon
   rw [hrep agent first second, hrep agent preferred alternative]
   rw [euPreference_iff utility agent first second
@@ -131,20 +130,20 @@ theorem mixtureContinuous (hrep : RepresentsExpectedUtility weaklyPrefers utilit
   intro agent best middle worst hbest hworst
   obtain ⟨hbestGuard, hmiddleGuard, hba⟩ := (hrep agent best middle).mp hbest
   obtain ⟨_, hworstGuard, hcb⟩ := (hrep agent middle worst).mp hworst
-  let a := expectedUtility utility agent best hbestGuard
-  let b := expectedUtility utility agent middle hmiddleGuard
-  let c := expectedUtility utility agent worst hworstGuard
+  let a := expectedUtility utility agent best
+  let b := expectedUtility utility agent middle
+  let c := expectedUtility utility agent worst
   have hmixGuard (t : ℝ) (ht0 : 0 ≤ t) (ht1 : t ≤ 1) :
       UtilityIntegrable utility agent (mix t ht0 ht1 best worst) :=
     payoffIntegrable_mix t ht0 ht1 best worst
       (fun outcome => utility outcome agent) hbestGuard hworstGuard
   have hmix (t : ℝ) (ht0 : 0 ≤ t) (ht1 : t ≤ 1) :
       expectedUtility utility agent (mix t ht0 ht1 best worst)
-          (hmixGuard t ht0 ht1) = t * a + (1 - t) * c :=
+           = t * a + (1 - t) * c :=
     expectedUtility_mix utility agent t ht0 ht1 best worst
       hbestGuard hworstGuard
   have hindiff (law : PMF Outcome) (hlaw : UtilityIntegrable utility agent law)
-      (heq : expectedUtility utility agent law hlaw = b) :
+      (heq : expectedUtility utility agent law = b) :
       Rank.Indifferent (weaklyPrefers agent) middle law := by
     constructor
     · apply (hrep agent middle law).mpr
@@ -254,7 +253,7 @@ theorem representsExpectedUtility_unique_positiveAffine
       payoffIntegrable_mix t ht0 ht1 _ _ _
         (payoffIntegrable_pure _ _) (payoffIntegrable_pure _ _)
     have hfirstEq :
-        expectedUtility first agent lottery hfirstLottery =
+        expectedUtility first agent lottery =
           first outcome agent := by
       dsimp [lottery]
       rw [expectedUtility_mix first agent t ht0 ht1
@@ -285,7 +284,7 @@ theorem representsExpectedUtility_unique_positiveAffine
       ((hsecond agent _ _).mp hlotteryPure)
     simp only [expectedUtility_pure] at hsecondLe hsecondGe
     have hsecondEq :
-        expectedUtility second agent lottery hsecondLottery =
+        expectedUtility second agent lottery =
           second outcome agent :=
       le_antisymm hsecondLe hsecondGe
     have hmixEq :
@@ -573,19 +572,15 @@ private theorem standardLottery_order
           (hbestStandard t ht0 htlt.le)
       simpa [hmixS] using h
 
-private noncomputable def finiteValue [Finite Outcome]
-    (law : PMF Outcome) (u : Outcome → ℝ) : ℝ :=
-  expect law u (payoffIntegrable_of_finite law u)
-
-private theorem finiteValue_nonneg [Finite Outcome]
+private theorem expect_nonneg_of_nonneg
     (law : PMF Outcome) {u : Outcome → ℝ}
-    (hu : ∀ outcome, 0 ≤ u outcome) : 0 ≤ finiteValue law u :=
-  expect_nonneg law u (payoffIntegrable_of_finite law u)
+    (hu : ∀ outcome, 0 ≤ u outcome) : 0 ≤ expect law u :=
+  expect_nonneg law u
     (fun outcome _ => hu outcome)
 
-private theorem finiteValue_le_one [Finite Outcome]
+private theorem expect_le_one_of_le_one [Finite Outcome]
     (law : PMF Outcome) {u : Outcome → ℝ}
-    (hu : ∀ outcome, u outcome ≤ 1) : finiteValue law u ≤ 1 :=
+    (hu : ∀ outcome, u outcome ≤ 1) : expect law u ≤ 1 :=
   expect_le_const law u (payoffIntegrable_of_finite law u) 1
     (fun outcome _ => hu outcome)
 
@@ -595,9 +590,9 @@ private theorem bind_standardLottery_eq_standard_expect
     (hu0 : ∀ outcome, 0 ≤ u outcome) (hu1 : ∀ outcome, u outcome ≤ 1) :
     law.bind (fun outcome => standardLottery best worst (u outcome)
       (hu0 outcome) (hu1 outcome)) =
-      standardLottery best worst (finiteValue law u)
-        (finiteValue_nonneg law hu0) (finiteValue_le_one law hu1) := by
-  simpa only [standardLottery, finiteValue] using
+      standardLottery best worst (expect law u)
+        (expect_nonneg_of_nonneg law hu0) (expect_le_one_of_le_one law hu1) := by
+  simpa only [standardLottery] using
     (bind_mix_expect law u hu0 hu1 (PMF.pure best) (PMF.pure worst))
 
 private theorem existsMaximalStrict {α : Type*} [Finite α] [Nonempty α]
@@ -664,10 +659,10 @@ private theorem representsExpectedUtility_of_certaintyEquivalents
         pref (standardLottery best worst s hs0 hs1)
           (standardLottery best worst t ht0 ht1) ↔ t ≤ s) :
     ∀ preferred alternative, pref preferred alternative ↔
-      finiteValue alternative u ≤ finiteValue preferred u := by
+      expect alternative u ≤ expect preferred u := by
   intro preferred alternative
-  let std (law : PMF Outcome) := standardLottery best worst (finiteValue law u)
-    (finiteValue_nonneg law hu0) (finiteValue_le_one law hu1)
+  let std (law : PMF Outcome) := standardLottery best worst (expect law u)
+    (expect_nonneg_of_nonneg law hu0) (expect_le_one_of_le_one law hu1)
   have hstdIndifferent : ∀ law : PMF Outcome, Rank.Indifferent pref law (std law) := by
     intro law
     have h := compoundIndifferent htrans hindependent law (Set.toFinite _)
@@ -682,17 +677,17 @@ private theorem representsExpectedUtility_of_certaintyEquivalents
     have hstd : pref (std preferred) (std alternative) :=
       htrans _ preferred _ hpreferred.2
         (htrans preferred alternative _ hpref halternative.1)
-    exact (hstandard (finiteValue preferred u) (finiteValue alternative u)
-      (finiteValue_nonneg preferred hu0) (finiteValue_le_one preferred hu1)
-      (finiteValue_nonneg alternative hu0) (finiteValue_le_one alternative hu1)).mp hstd
+    exact (hstandard (expect preferred u) (expect alternative u)
+      (expect_nonneg_of_nonneg preferred hu0) (expect_le_one_of_le_one preferred hu1)
+      (expect_nonneg_of_nonneg alternative hu0) (expect_le_one_of_le_one alternative hu1)).mp hstd
   · intro hexpect
     have hpreferred := hstdIndifferent preferred
     have halternative := hstdIndifferent alternative
     have hstd : pref (std preferred) (std alternative) :=
-      (hstandard (finiteValue preferred u) (finiteValue alternative u)
-        (finiteValue_nonneg preferred hu0) (finiteValue_le_one preferred hu1)
-        (finiteValue_nonneg alternative hu0)
-        (finiteValue_le_one alternative hu1)).mpr hexpect
+      (hstandard (expect preferred u) (expect alternative u)
+        (expect_nonneg_of_nonneg preferred hu0) (expect_le_one_of_le_one preferred hu1)
+        (expect_nonneg_of_nonneg alternative hu0)
+        (expect_le_one_of_le_one alternative hu1)).mpr hexpect
     exact htrans preferred (std preferred) alternative hpreferred.1
       (htrans (std preferred) (std alternative) alternative hstd halternative.2)
 
@@ -709,7 +704,7 @@ private theorem exists_representsExpectedUtility_pointwise
           Rank.Indifferent pref middle (mix t h0 h1 best worst)) :
     ∃ u : Outcome → ℝ, ∀ preferred alternative,
       pref preferred alternative ↔
-        finiteValue alternative u ≤ finiteValue preferred u := by
+        expect alternative u ≤ expect preferred u := by
   classical
   let pureRanks : Outcome → Outcome → Prop :=
     fun first second => pref (PMF.pure first) (PMF.pure second)
@@ -734,8 +729,8 @@ private theorem exists_representsExpectedUtility_pointwise
         (fun outcome => PMF.pure outcome) (fun _ => PMF.pure best)
         (fun outcome _ => hpureBest outcome)
       simpa using h
-    have hzero (law : PMF Outcome) : finiteValue law (fun _ => 0) = 0 :=
-      expect_constant law 0 (payoffIntegrable_of_finite law (fun _ => 0))
+    have hzero (law : PMF Outcome) : expect law (fun _ => 0) = 0 :=
+      expect_constant law 0
     intro preferred alternative
     constructor
     · intro _
@@ -801,8 +796,8 @@ theorem exists_representsExpectedUtility [Finite Outcome]
       have hagent : ∀ agent : Agent, ∃ u : Outcome → ℝ,
           ∀ preferred alternative,
             weaklyPrefers agent preferred alternative ↔
-              VNMProof.finiteValue alternative u ≤
-                VNMProof.finiteValue preferred u := by
+              expect alternative u ≤
+                expect preferred u := by
         intro agent
         exact VNMProof.exists_representsExpectedUtility_pointwise
           (htotal agent) (htrans agent)
@@ -818,7 +813,7 @@ theorem exists_representsExpectedUtility [Finite Outcome]
           agent alternative := payoffIntegrable_of_finite alternative _
       have hpoint := (hagent agent).choose_spec preferred alternative
       exact hpoint.trans (by
-        simpa only [VNMProof.finiteValue, expectedUtility, utilityFor] using
+        simpa only [expectedUtility, utilityFor] using
           (euPreference_iff
             (fun outcome agent => utilityFor agent outcome)
             agent preferred alternative hp ha).symm)

@@ -46,20 +46,16 @@ theorem unique_branch_may_be_unsupported :
 
 theorem empty_event_weighting (law reference : PMF ℕ) :
     law.toOuterMeasure (∅ : Set ℕ) = 0 ∧
-      expect law (fun value => if value ∈ (∅ : Set ℕ) then 1 else 0)
-          (payoffIntegrable_of_bounded law _ (C := 1) (by intro x; simp)) =
-        expect reference (fun _ => 0) (payoffIntegrable_zero reference) := by
+      expect law (fun value => if value ∈ (∅ : Set ℕ) then 1 else 0) =
+        expect reference (fun _ => 0) := by
   classical
   constructor
   · simp
   · calc
-      expect law (fun value => if value ∈ (∅ : Set ℕ) then 1 else 0)
-          (payoffIntegrable_of_bounded law _ (C := 1) (by intro x; simp)) =
-        expect law (fun _ => 0) (payoffIntegrable_zero law) :=
+      expect law (fun value => if value ∈ (∅ : Set ℕ) then 1 else 0) =
+        expect law (fun _ => 0) :=
           expect_congr_on_support (fun _ _ => by simp)
-            (payoffIntegrable_of_bounded law _ (C := 1) (by intro x; simp))
-            (payoffIntegrable_zero law)
-      _ = expect reference (fun _ => 0) (payoffIntegrable_zero reference) := by
+      _ = expect reference (fun _ => 0) := by
         rw [expect_constant, expect_constant]
 
 /-- Embedding a law supported on even integers into the genuine subtype

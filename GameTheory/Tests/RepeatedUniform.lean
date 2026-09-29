@@ -78,16 +78,15 @@ theorem prisonersDilemma_cooperate_not_approximateNash
       prisonersDilemmaGame.finiteAveragePayoff horizon
           (Profile.update
             (prisonersDilemmaGame.stationaryRepeatedProfile bothCooperate)
-            0 permanentDefection) 0 hdev = 5 := by
+            0 permanentDefection) 0 = 5 := by
     have hstationary :=
       prisonersDilemmaGame.finiteAveragePayoff_stationaryRepeatedProfile
         (by omega : horizon ≠ 0)
         (Profile.update bothCooperate 0 Choice.defect) 0
-        (prisonersDilemma.utilityIntegrable 0 _)
     have hstage :
         prisonersDilemmaGame.stagePayoff
           (Profile.update bothCooperate 0 Choice.defect) 0
-          (prisonersDilemma.utilityIntegrable 0 _) = 5 := by
+           = 5 := by
       simp only [UtilityGame.stagePayoff, prisonersDilemmaGame]
       rw [expectedUtility_pure, TableGame.utility_apply]
       have hpayoff :
@@ -100,9 +99,9 @@ theorem prisonersDilemma_cooperate_not_approximateNash
   have hcooperationPayoff :
       prisonersDilemmaGame.finiteAveragePayoff horizon
           (prisonersDilemmaGame.stationaryRepeatedProfile bothCooperate)
-          0 hinc = 3 := by
+          0 = 3 := by
     rw [prisonersDilemmaGame.finiteAveragePayoff_stationaryRepeatedProfile
-      (by omega) _ _ (prisonersDilemma.utilityIntegrable 0 _)]
+      (by omega) _ _]
     simp only [UtilityGame.stagePayoff, prisonersDilemmaGame]
     rw [expectedUtility_pure, TableGame.utility_apply]
     have hpayoff : prisonersDilemma.payoff bothCooperate 0 = 3 := by

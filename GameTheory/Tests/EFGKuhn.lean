@@ -192,15 +192,12 @@ theorem behavioral_to_mixed_expectedUtility
     (horizon : ℕ) (utility : recallGame.History → Unit → ℝ) :
     ∃ mixed : Profile recallGame.strategicSignature.mixed,
       ∀ who,
-        ∃ hmixed : UtilityIntegrable utility who
-            (recallGame.information.runMixed mixed horizon),
+        UtilityIntegrable utility who
+            (recallGame.information.runMixed mixed horizon) ∧
         expectedUtility utility who
-            (recallGame.information.runMixed mixed horizon) hmixed =
+            (recallGame.information.runMixed mixed horizon) =
           expectedUtility utility who
-            (recallGame.information.runBehavioral behavioral horizon)
-            (by
-              exact @payoffIntegrable_of_finite _
-                (@Fintype.finite _ recallHistoryFintype) _ _) :=
+            (recallGame.information.runBehavioral behavioral horizon) :=
   by
     exact recallGame.kuhn_behavioral_to_mixed_expectedUtility
       recallGame_actsOnce behavioral horizon (fun _ => Set.toFinite _)

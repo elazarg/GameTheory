@@ -167,25 +167,18 @@ theorem historyBackwardLaw_eq_runHistoryFor
 /-- A real history value requires finite integrability under its terminal law. -/
 def historyBackwardValue (certificate : E.WellFoundedPlay)
     (chooser : E.HistoryChooser) (payoff : E.History → ℝ)
-    (history : E.History)
-    (hintegrable : PayoffIntegrable
-      (E.historyBackwardLaw certificate chooser history) payoff) : ℝ :=
-  expect (E.historyBackwardLaw certificate chooser history) payoff hintegrable
+    (history : E.History) : ℝ :=
+  expect (E.historyBackwardLaw certificate chooser history) payoff
 
 theorem historyBackwardValue_of_terminal
     {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
     {payoff : E.History → ℝ} {history : E.History}
-    (hterm : E.terminal history.state)
-    (hintegrable : PayoffIntegrable
-      (E.historyBackwardLaw certificate chooser history) payoff) :
-    E.historyBackwardValue certificate chooser payoff history hintegrable =
+    (hterm : E.terminal history.state) :
+    E.historyBackwardValue certificate chooser payoff history =
       payoff history := by
-  have hpure : PayoffIntegrable (PMF.pure history) payoff := by
-    rw [← E.historyBackwardLaw_of_terminal hterm]
-    exact hintegrable
   unfold historyBackwardValue expect
   rw [E.historyBackwardLaw_of_terminal hterm]
-  exact expect_pure history payoff hpure
+  exact expect_pure history payoff
 
 /-- Numerical history Bellman equation on supported realized successors.
 The source law guard supplies the conditional and outer guards. -/
@@ -198,17 +191,17 @@ theorem historyBackwardValue_of_not_terminal
     (successorValue : E.State → ℝ)
     (hvalue : ∀ target, ∀ realized :
       target ∈ (E.step history.state (chooser history hterm)).support,
-      ∀ hchild : PayoffIntegrable
+      PayoffIntegrable
         (E.historyBackwardLaw certificate chooser
-          (history.extend (chooser history hterm).2 realized)) payoff,
+          (history.extend (chooser history hterm).2 realized)) payoff →
         successorValue target =
           E.historyBackwardValue certificate chooser payoff
-            (history.extend (chooser history hterm).2 realized) hchild) :
-    ∃ houter : PayoffIntegrable
-        (E.step history.state (chooser history hterm)) successorValue,
-      E.historyBackwardValue certificate chooser payoff history hsource =
+            (history.extend (chooser history hterm).2 realized)) :
+    PayoffIntegrable
+        (E.step history.state (chooser history hterm)) successorValue ∧
+      E.historyBackwardValue certificate chooser payoff history =
         expect (E.step history.state (chooser history hterm))
-          successorValue houter := by
+          successorValue := by
   let chosen := chooser history hterm
   let p := E.step history.state chosen
   let q : ∀ target, target ∈ p.support → PMF E.History :=
@@ -218,11 +211,10 @@ theorem historyBackwardValue_of_not_terminal
     rw [← E.historyBackwardLaw_of_not_terminal hterm]
     exact hsource
   have hcond : ∀ target, ∀ realized : target ∈ p.support,
-      successorValue target = expect (q target realized) payoff
-        (payoffIntegrable_bindOnSupport_conditional_on_support
-          p q payoff hbind target realized) := by
+      successorValue target = expect (q target realized) payoff := by
     intro target realized
-    exact hvalue target realized _
+    exact hvalue target realized
+      (payoffIntegrable_bindOnSupport_conditional_on_support p q payoff hbind target realized)
   let houter := payoffIntegrable_bindOnSupport_conditionalValue_on_support
     p q payoff hbind successorValue hcond
   refine ⟨houter, ?_⟩
@@ -235,12 +227,9 @@ theorem historyBackwardValue_of_not_terminal
 theorem historyBackwardValue_eq_expect_runHistoryFor
     {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
     {payoff : E.History → ℝ} {horizon : ℕ} {history : E.History}
-    (hstop : E.StopsHistoryWithin chooser horizon history)
-    (hback : PayoffIntegrable
-      (E.historyBackwardLaw certificate chooser history) payoff)
-    (hrun : PayoffIntegrable (E.runHistoryFor chooser horizon history) payoff) :
-    E.historyBackwardValue certificate chooser payoff history hback =
-      expect (E.runHistoryFor chooser horizon history) payoff hrun := by
+    (hstop : E.StopsHistoryWithin chooser horizon history) :
+    E.historyBackwardValue certificate chooser payoff history =
+      expect (E.runHistoryFor chooser horizon history) payoff := by
   unfold historyBackwardValue expect
   rw [E.historyBackwardLaw_eq_runHistoryFor hstop]
 
@@ -250,13 +239,13 @@ theorem historyBackwardValue_eq_expect_runHistoryFor_guarded
     (hstop : E.StopsHistoryWithin chooser horizon history)
     (hback : PayoffIntegrable
       (E.historyBackwardLaw certificate chooser history) payoff) :
-    ∃ hrun : PayoffIntegrable (E.runHistoryFor chooser horizon history) payoff,
-      E.historyBackwardValue certificate chooser payoff history hback =
-        expect (E.runHistoryFor chooser horizon history) payoff hrun := by
+    PayoffIntegrable (E.runHistoryFor chooser horizon history) payoff ∧
+      E.historyBackwardValue certificate chooser payoff history =
+        expect (E.runHistoryFor chooser horizon history) payoff := by
   let hrun : PayoffIntegrable (E.runHistoryFor chooser horizon history) payoff := by
     rw [← E.historyBackwardLaw_eq_runHistoryFor hstop]
     exact hback
-  exact ⟨hrun, E.historyBackwardValue_eq_expect_runHistoryFor hstop hback hrun⟩
+  exact ⟨hrun, E.historyBackwardValue_eq_expect_runHistoryFor hstop⟩
 
 /-- Unbounded reachability between histories, expressed through the existing
 finite path witness rather than a second transition relation. -/
@@ -313,11 +302,9 @@ theorem historyBackwardValue_congr_of_reaches
     {payoff : E.History → ℝ} (start : E.History)
     (hagree : ∀ later, E.HistoryReaches start later →
       ∀ hterm : ¬ E.terminal later.state,
-        first later hterm = second later hterm)
-    (hfirst : PayoffIntegrable (E.historyBackwardLaw certificate first start) payoff)
-    (hsecond : PayoffIntegrable (E.historyBackwardLaw certificate second start) payoff) :
-    E.historyBackwardValue certificate first payoff start hfirst =
-      E.historyBackwardValue certificate second payoff start hsecond := by
+        first later hterm = second later hterm) :
+    E.historyBackwardValue certificate first payoff start =
+      E.historyBackwardValue certificate second payoff start := by
   unfold historyBackwardValue expect
   rw [E.historyBackwardLaw_congr_of_reaches start hagree]
 

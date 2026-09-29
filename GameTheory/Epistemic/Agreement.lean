@@ -27,9 +27,7 @@ private theorem expect_indicator_inter_eq_report_mul_mass
     (hreport : ∀ state ∈ publicEvent,
       posterior prior partition event state = report) :
     expect prior
-        ((publicEvent ∩ event).indicator (fun _ => (1 : ℝ)))
-        (payoffIntegrable_indicator (publicEvent ∩ event)
-          (payoffIntegrable_constant prior 1)) =
+        ((publicEvent ∩ event).indicator (fun _ => (1 : ℝ))) =
       report * (prior.toOuterMeasure publicEvent).toReal := by
   classical
   let obs := observation partition
@@ -45,15 +43,9 @@ private theorem expect_indicator_inter_eq_report_mul_mass
   have hbind : PayoffIntegrable (marginal.bindOnSupport kernel) integrand :=
     payoffIntegrable_congr_law (fiberPosterior_reconstruct prior obs).symm
       hsource
-  have houterValue : PayoffIntegrable marginal outerValue := by
-    exact payoffIntegrable_const_mul
-      (payoffIntegrable_indicator qPublic
-        (payoffIntegrable_constant marginal 1))
   have hconditional : ∀ b, ∀ hb : b ∈ marginal.support,
       outerValue b =
-        expect (kernel b hb) integrand
-          (payoffIntegrable_bindOnSupport_conditional_on_support
-            marginal kernel integrand hbind b hb) := by
+        expect (kernel b hb) integrand := by
     intro b hb
     rcases (PMF.mem_support_map_iff (f := obs) (p := prior) (b := b)).mp hb
       with ⟨representative,
@@ -99,37 +91,24 @@ private theorem expect_indicator_inter_eq_report_mul_mass
         intro other hother
         have hpublic := hconditionalSupport other hother
         simp [integrand, Set.indicator, hpublic]
-      have hconstGuard : PayoffIntegrable (kernel b hb)
-          (fun _ : Ω => (1 : ℝ)) := payoffIntegrable_constant _ 1
-      have heventGuard : PayoffIntegrable (kernel b hb)
-          (fun other => if other ∈ event then 1 else 0) :=
-        payoffIntegrable_indicator event hconstGuard
       have heqExpect := expect_congr_on_support hintegrandEq
-        (payoffIntegrable_bindOnSupport_conditional_on_support
-          marginal kernel integrand hbind b hb) heventGuard
       have hposteriorValue : expect (kernel b hb) integrand
-          (payoffIntegrable_bindOnSupport_conditional_on_support
-            marginal kernel integrand hbind b hb) = report := by
-        have hfiberGuard := payoffIntegrable_congr_law hkernelEq heventGuard
+           = report := by
         calc
-          expect (kernel b hb) integrand
-              (payoffIntegrable_bindOnSupport_conditional_on_support
-                marginal kernel integrand hbind b hb) =
+          expect (kernel b hb) integrand =
               expect (kernel b hb)
-                (fun other => if other ∈ event then 1 else 0) heventGuard :=
+                (fun other => if other ∈ event then 1 else 0) :=
             heqExpect
           _ = expect (fiberPosterior prior obs (obs representative) _)
-                (fun other => if other ∈ event then 1 else 0) hfiberGuard :=
-            expect_congr_law hkernelEq _ _ _
+                (fun other => if other ∈ event then 1 else 0) :=
+            expect_congr_law hkernelEq _
           _ = report := by
             simpa only [kernel] using hposteriorBridge.symm.trans hposterior
       calc
         outerValue b = report := by
           have hpublic : b ∈ qPublic := ⟨publicState, hpublicState, hpublicEq⟩
           simp [outerValue, hpublic]
-        _ = expect (kernel b hb) integrand
-              (payoffIntegrable_bindOnSupport_conditional_on_support
-                marginal kernel integrand hbind b hb) := hposteriorValue.symm
+        _ = expect (kernel b hb) integrand := hposteriorValue.symm
     · have hzeroOnSupport : ∀ other ∈ (kernel b hb).support,
           integrand other = 0 := by
         intro other hother
@@ -138,22 +117,17 @@ private theorem expect_indicator_inter_eq_report_mul_mass
           intro hotherPublic
           exact hbPublic ⟨other, hotherPublic, hother.1⟩
         simp [integrand, hnotPublic]
-      have hzeroGuard : PayoffIntegrable (kernel b hb)
-          (fun _ : Ω => (0 : ℝ)) := payoffIntegrable_zero _
       have hzero := expect_congr_on_support hzeroOnSupport
-        (payoffIntegrable_bindOnSupport_conditional_on_support
-          marginal kernel integrand hbind b hb) hzeroGuard
-      have hzero' : expect (kernel b hb) (fun _ => (0 : ℝ)) hzeroGuard = 0 := by
-        exact expect_constant _ 0 hzeroGuard
+      have hzero' : expect (kernel b hb) (fun _ => (0 : ℝ)) = 0 := by
+        exact expect_constant _ 0
       calc
         outerValue b = 0 := by simp [outerValue, hbPublic]
         _ = expect (kernel b hb) integrand
-              (payoffIntegrable_bindOnSupport_conditional_on_support
-                marginal kernel integrand hbind b hb) := (hzero.trans hzero').symm
+               := (hzero.trans hzero').symm
   have htower := expect_bindOnSupport_tower_on_support marginal kernel
     integrand hbind outerValue hconditional
   have hboundLaw := fiberPosterior_reconstruct prior obs
-  have hsourceEq := expect_congr_law hboundLaw integrand hbind hsource
+  have hsourceEq := expect_congr_law hboundLaw integrand
   have hpreimage : obs ⁻¹' qPublic = publicEvent := by
     ext state
     constructor
@@ -167,23 +141,20 @@ private theorem expect_indicator_inter_eq_report_mul_mass
   have hmass : (marginal.toOuterMeasure qPublic).toReal =
       (prior.toOuterMeasure publicEvent).toReal := by
     rw [PMF.toOuterMeasure_map_apply, hpreimage]
-  have houterEval : expect marginal outerValue houterValue =
+  have houterEval : expect marginal outerValue =
       report * (prior.toOuterMeasure publicEvent).toReal := by
-    have hind : PayoffIntegrable marginal
-        (fun b => if b ∈ qPublic then (1 : ℝ) else 0) :=
-      payoffIntegrable_indicator qPublic (payoffIntegrable_constant marginal 1)
     calc
-      expect marginal outerValue houterValue =
-          report * expect marginal (fun b => if b ∈ qPublic then (1 : ℝ) else 0) hind := by
-        simpa only [outerValue] using expect_const_mul hind
+      expect marginal outerValue =
+          report * expect marginal (fun b => if b ∈ qPublic then (1 : ℝ) else 0) := by
+        simpa only [outerValue] using expect_const_mul
       _ = report * (marginal.toOuterMeasure qPublic).toReal := by
-        rw [expect_indicator marginal qPublic hind]
+        rw [expect_indicator marginal qPublic]
       _ = report * (prior.toOuterMeasure publicEvent).toReal := by
         rw [hmass]
   calc
-    expect prior integrand hsource =
-        expect (marginal.bindOnSupport kernel) integrand hbind := hsourceEq.symm
-    _ = expect marginal outerValue houterValue := by
+    expect prior integrand =
+        expect (marginal.bindOnSupport kernel) integrand := hsourceEq.symm
+    _ = expect marginal outerValue := by
       simpa only [marginal, kernel] using htower
     _ = report * (prior.toOuterMeasure publicEvent).toReal := houterEval
 

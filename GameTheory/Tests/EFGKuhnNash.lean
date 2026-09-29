@@ -425,15 +425,12 @@ theorem coordinationIntegrable (law : PMF execution.History) (who : Player) :
 theorem coordinated_value (who : Player) :
     expectedUtility coordinationUtility who
         (information.runBehavioral (behavioralProfile true true) 2)
-        (coordinationIntegrable
-          (information.runBehavioral (behavioralProfile true true) 2) who) = 1 := by
+         = 1 := by
   rw [runBehavioral_actionProfile]
   calc
-    expectedUtility coordinationUtility who (PMF.pure (terminalHistory true true)) _ =
-        expectedUtility coordinationUtility who (PMF.pure (terminalHistory true true))
-          (payoffIntegrable_pure (terminalHistory true true)
-            (fun history => coordinationUtility history who)) :=
-      expectedUtility_congr_law coordinationUtility who rfl _ _
+    expectedUtility coordinationUtility who (PMF.pure (terminalHistory true true)) =
+        expectedUtility coordinationUtility who (PMF.pure (terminalHistory true true)) :=
+      expectedUtility_congr_law coordinationUtility who rfl
     _ = coordinationUtility (terminalHistory true true) who := expectedUtility_pure ..
     _ = 1 := by rfl
 
@@ -451,13 +448,13 @@ theorem coordinated_behavioral_isNash :
   let hdeviation := coordinationIntegrable deviationLaw who
   refine ⟨hbase, hdeviation, ?_⟩
   calc
-    expectedUtility coordinationUtility who deviationLaw hdeviation ≤
-        expect deviationLaw (fun _ => 1) (payoffIntegrable_constant deviationLaw 1) :=
+    expectedUtility coordinationUtility who deviationLaw ≤
+        expect deviationLaw (fun _ => 1) :=
       expect_mono (fun history _ => coordinationUtility_le_one history who)
         hdeviation (payoffIntegrable_constant deviationLaw 1)
-    _ = 1 := expect_constant deviationLaw 1 (payoffIntegrable_constant deviationLaw 1)
+    _ = 1 := expect_constant deviationLaw 1
     _ = expectedUtility coordinationUtility who
-        (information.runBehavioral (behavioralProfile true true) 2) hbase := by
+        (information.runBehavioral (behavioralProfile true true) 2) := by
       symm
       exact coordinated_value who
 

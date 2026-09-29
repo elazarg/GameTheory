@@ -82,12 +82,10 @@ theorem exists_sequentialEquilibriumWithin
       (hlaw : law ∈ M.uniformTrembleLaws (weight n)
         (hpositive n).le (hone n) i site.1) :
       ((sequence n).continuationContext site (payoff i) (fuel + 1)).value
-          (((sequence n).strategy i).withLaw site.1 law)
-            (payoffIntegrable_of_finite _ _) ≤
+          (((sequence n).strategy i).withLaw site.1 law) ≤
         ((sequence n).continuationContext site (payoff i) (fuel + 1)).value
-          ((sequence n).strategy i) (payoffIntegrable_of_finite _ _) := by
-    obtain ⟨_halt, _hbase, hle⟩ := hlocal n i site law hlaw
-    exact hle
+          ((sequence n).strategy i) := by
+    exact (hlocal n i site law hlaw).2.2
   refine ⟨assessment, ?_, ?_⟩
   · apply BehavioralAssessment.isSequentiallyRationalWithin_of_converging_deviations
       hstrategy (fun i site => hconvergence.belief i site) repair hrepair payoff (fuel + 1)

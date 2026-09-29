@@ -72,24 +72,16 @@ theorem expectedUtility_update
         (Profile.update mixedProfile 0 replacement))) :
     expectedUtility game.utility 0
         (game.form.mixed.play
-          (Profile.update mixedProfile 0 replacement)) hwhole =
-      expect replacement reward (payoffIntegrable_of_bounded
-        replacement reward (C := 1) fun action => by
-          cases action <;> norm_num [reward]) := by
+          (Profile.update mixedProfile 0 replacement)) =
+      expect replacement reward := by
   let updatedProfile := Profile.update mixedProfile 0 replacement
-  let hcond : ∀ action, UtilityIntegrable game.utility 0
-      (game.form.mixed.play
-        (Profile.update updatedProfile 0 (PMF.pure action))) := by
-    intro action
-    exact payoffIntegrable_of_bounded _ _ (C := 1) fun outcome => by
-      cases outcome <;> norm_num [game, reward]
   have havg := expectedUtility_mixed_eq_expect game.form game.utility
-    updatedProfile 0 hwhole hcond
+    updatedProfile 0 hwhole
   have hpureValue : ∀ action,
       expectedUtility game.utility 0
         (game.form.mixed.play
           (Profile.update updatedProfile 0 (PMF.pure action)))
-          (hcond action) = reward action := by
+           = reward action := by
     intro action
     have hprofile :
         Profile.update updatedProfile 0 (PMF.pure action) =
@@ -101,21 +93,17 @@ theorem expectedUtility_update
     have hlaw : game.form.mixed.play
         (Profile.update updatedProfile 0 (PMF.pure action)) = PMF.pure action := by
       rw [hprofile, GameForm.mixed_play_purify]
-    have hguard := payoffIntegrable_congr_law hlaw (hcond action)
-    rw [expectedUtility_congr_law game.utility 0 hlaw (hcond action) hguard,
+    rw [expectedUtility_congr_law game.utility 0 hlaw,
       expectedUtility_pure]
   calc
     expectedUtility game.utility 0
         (game.form.mixed.play
-          (Profile.update mixedProfile 0 replacement)) hwhole =
+          (Profile.update mixedProfile 0 replacement)) =
       expect replacement
         (fun action => expectedUtility game.utility 0
           (game.form.mixed.play
-            (Profile.update updatedProfile 0 (PMF.pure action)))
-          (hcond action)) _ := havg
-    _ = expect replacement reward
-        (payoffIntegrable_of_bounded replacement reward (C := 1)
-          (by intro action; cases action <;> norm_num [reward])) := by
+            (Profile.update updatedProfile 0 (PMF.pure action)))) := havg
+    _ = expect replacement reward := by
       apply expect_congr_on_support
       · intro action _
         exact hpureValue action
@@ -153,11 +141,11 @@ theorem isFictitiousPlay : game.IsFictitiousPlay history := by
   rw [expect_pure] at hPrefVal
   norm_num [reward] at hPrefVal
   calc
-    expectedUtility game.utility 0 alternative halternative =
-        expect replacement reward _ := by
+    expectedUtility game.utility 0 alternative =
+        expect replacement reward := by
           simpa [alternative, belief] using hAltVal
     _ ≤ 1 := hle
-    _ = expectedUtility game.utility 0 preferred hpreferred := by
+    _ = expectedUtility game.utility 0 preferred := by
       simpa [preferred, game, reward, hplayed] using hPrefVal.symm
 
 theorem potential_abs_bound (profile : Profile signature) :
@@ -167,16 +155,7 @@ theorem potential_abs_bound (profile : Profile signature) :
 
 /-- The first action chosen against the inferior empirical belief gains one. -/
 theorem firstPlayedGain : game.playedGain history 0 0
-    (payoffIntegrable_of_bounded
-      (game.form.mixed.play (game.form.empiricalBelief history 1))
-      (fun outcome => game.utility outcome 0) (C := 1)
-      (by intro outcome; cases outcome <;> norm_num [game, reward]))
-    (payoffIntegrable_of_bounded
-      (game.form.mixed.play
-        (Profile.update (game.form.empiricalBelief history 1) 0
-          (PMF.pure (history 1 0))))
-      (fun outcome => game.utility outcome 0) (C := 1)
-      (by intro outcome; cases outcome <;> norm_num [game, reward])) = 1 := by
+     = 1 := by
   rw [UtilityGame.playedGain, firstBelief]
   unfold UtilityGame.mixedGain
   have hprofile :
@@ -195,26 +174,8 @@ theorem firstPlayedGain : game.playedGain history 0 0
         PMF.pure true := by
     rw [hprofile, GameForm.mixed_play_purify]
     rfl
-  have hplayedSource := payoffIntegrable_of_bounded
-    (game.form.mixed.play
-      (Profile.update (game.form.empiricalBelief history 1) 0
-        (PMF.pure (history 1 0))))
-    (fun outcome => game.utility outcome 0) (C := 1)
-    (by intro outcome; cases outcome <;> norm_num [game, reward])
-  have hbase := payoffIntegrable_congr_law hbaseLaw.symm
-    (payoffIntegrable_of_bounded (PMF.pure false)
-      (fun outcome => game.utility outcome 0) (C := 1)
-      (by intro outcome; cases outcome <;> norm_num [game, reward]))
-  have hplayedPure := payoffIntegrable_of_bounded (PMF.pure true)
-    (fun outcome => game.utility outcome 0) (C := 1)
-    (by intro outcome; cases outcome <;> norm_num [game, reward])
-  have hbasePure := payoffIntegrable_of_bounded (PMF.pure false)
-    (fun outcome => game.utility outcome 0) (C := 1)
-    (by intro outcome; cases outcome <;> norm_num [game, reward])
   have hplayedEq := expectedUtility_congr_law game.utility 0 hplayedLaw
-    hplayedSource hplayedPure
   have hbaseEq := expectedUtility_congr_law game.utility 0 hbaseLaw
-    hbase hbasePure
   simp [history]
   rw [hplayedEq, hbaseEq]
   simp [expectedUtility_pure, game, form, reward]
@@ -224,16 +185,9 @@ by the general recurrence. -/
 theorem firstPotentialStep :
     game.form.mixedPotential potential
         (Profile.update (game.form.empiricalBelief history 1) 0
-          (game.form.empiricalMarginal history 0 2))
-        (payoffIntegrable_of_bounded
-          (independentProduct (Profile.update
-            (game.form.empiricalBelief history 1) 0
-            (game.form.empiricalMarginal history 0 2))) potential
-          potential_abs_bound) -
+          (game.form.empiricalMarginal history 0 2)) -
       game.form.mixedPotential potential (game.form.empiricalBelief history 1)
-        (payoffIntegrable_of_bounded
-          (independentProduct (game.form.empiricalBelief history 1)) potential
-          potential_abs_bound) = 1 / 2 := by
+         = 1 / 2 := by
   have hplay : game.IsFictitiousPlay history := isFictitiousPlay
   obtain ⟨hnext, hstep⟩ :=
     UtilityGame.IsExactPotential.mixedPotential_belief_update_empiricalMarginal_succ_sub
@@ -252,20 +206,9 @@ theorem firstPotentialStep :
   have hstep' :
       game.form.mixedPotential potential
           (Profile.update (game.form.empiricalBelief history 1) 0
-            (game.form.empiricalMarginal history 0 2))
-          (payoffIntegrable_of_bounded
-            (independentProduct (Profile.update
-              (game.form.empiricalBelief history 1) 0
-              (game.form.empiricalMarginal history 0 2))) potential
-            potential_abs_bound) -
-        game.form.mixedPotential potential (game.form.empiricalBelief history 1)
-          (payoffIntegrable_of_bounded
-            (independentProduct (game.form.empiricalBelief history 1)) potential
-            potential_abs_bound) =
-      (1 / (0 + 2 : ℝ)) * game.playedGain history 0 0
-          (UtilityGame.IsFictitiousPlay.incumbent_integrable (G := game) hplay 0 0)
-          (UtilityGame.IsFictitiousPlay.deviation_integrable (G := game) hplay 0 0
-            (PMF.pure (history 1 0))) := by
+            (game.form.empiricalMarginal history 0 2)) -
+        game.form.mixedPotential potential (game.form.empiricalBelief history 1) =
+      (1 / (0 + 2 : ℝ)) * game.playedGain history 0 0 := by
     simpa using hstep
   rw [hvalue] at hstep'
   norm_num at hstep' ⊢
@@ -274,15 +217,8 @@ theorem firstPotentialStep :
 /-- The generic aggregate-improvement bound specializes to a process with a
 strictly positive first played gain. -/
 theorem firstImprovementBound :
-    game.mixedImprovement (game.form.empiricalBelief history 1)
-        (fun who action => UtilityGame.IsFictitiousPlay.deviation_integrable
-          (G := game) isFictitiousPlay 0 who (PMF.pure action)) ≤
-      game.weightedPlayedGain history 0
-        (fun who => UtilityGame.IsFictitiousPlay.incumbent_integrable
-          (G := game) isFictitiousPlay 0 who)
-        (fun who => UtilityGame.IsFictitiousPlay.deviation_integrable
-          (G := game) isFictitiousPlay 0 who
-            (PMF.pure (history 1 who))) :=
+    game.mixedImprovement (game.form.empiricalBelief history 1) ≤
+      game.weightedPlayedGain history 0 :=
   UtilityGame.IsFictitiousPlay.mixedImprovement_le_weightedPlayedGain
     (G := game) isFictitiousPlay 0
 
@@ -291,16 +227,8 @@ step; it is not proved only for constant trajectories. -/
 theorem firstPotentialStep_abs_bound :
     |game.form.mixedPotential potential
           (Profile.update (game.form.empiricalBelief history 1) 0
-            (game.form.empiricalMarginal history 0 2))
-          (payoffIntegrable_of_bounded
-            (independentProduct (Profile.update
-              (game.form.empiricalBelief history 1) 0
-              (game.form.empiricalMarginal history 0 2))) potential
-            potential_abs_bound) -
-        game.form.mixedPotential potential (game.form.empiricalBelief history 1)
-          (payoffIntegrable_of_bounded
-            (independentProduct (game.form.empiricalBelief history 1)) potential
-            potential_abs_bound)| ≤
+            (game.form.empiricalMarginal history 0 2)) -
+        game.form.mixedPotential potential (game.form.empiricalBelief history 1)| ≤
       (1 / (0 + 2 : ℝ)) * (2 * 1) := by
   simpa using
     (game.mixedPotential_update_empiricalMarginal_succ_abs_sub_le
@@ -310,10 +238,10 @@ theorem firstPotentialStep_abs_bound :
 /-- The uniform `4C/(t+2)` gain-stability estimate includes the changed
 player's own coordinate. -/
 theorem firstGainStep_abs_bound :
-    |game.mixedPotentialGainOfAbsBound potential potential_abs_bound
+    |game.mixedPotentialGain potential
           (Profile.update (game.form.empiricalBelief history 1) 0
             (game.form.empiricalMarginal history 0 2)) 0 true -
-        game.mixedPotentialGainOfAbsBound potential potential_abs_bound
+        game.mixedPotentialGain potential
           (game.form.empiricalBelief history 1) 0 true| ≤
       (1 / (0 + 2 : ℝ)) * (4 * 1) := by
   simpa using
@@ -323,11 +251,7 @@ theorem firstGainStep_abs_bound :
 
 theorem firstAggregatePlayedGain :
     game.aggregatePlayedGain history 0
-      (fun who => UtilityGame.IsFictitiousPlay.incumbent_integrable
-        (G := game) isFictitiousPlay 0 who)
-      (fun who => UtilityGame.IsFictitiousPlay.deviation_integrable
-        (G := game) isFictitiousPlay 0 who
-          (PMF.pure (history 1 who))) = 1 := by
+       = 1 := by
   rw [UtilityGame.aggregatePlayedGain]
   simpa using firstPlayedGain
 
@@ -342,22 +266,11 @@ theorem firstAdvanceAll :
 /-- The Lyapunov lower bound is exercised on the same path whose first-order
 played-gain term is nonzero. -/
 theorem firstLyapunovBound :
-    (1 / (0 + 2 : ℝ)) * game.aggregatePlayedGain history 0
-        (fun who => UtilityGame.IsFictitiousPlay.incumbent_integrable
-          (G := game) isFictitiousPlay 0 who)
-        (fun who => UtilityGame.IsFictitiousPlay.deviation_integrable
-          (G := game) isFictitiousPlay 0 who
-            (PMF.pure (history 1 who))) -
+    (1 / (0 + 2 : ℝ)) * game.aggregatePlayedGain history 0 -
         ((Fintype.card (Fin 1) : ℝ) * (Fintype.card (Fin 1) : ℝ)) *
           ((1 / (0 + 2 : ℝ)) ^ 2 * (4 * 1)) ≤
-      game.form.mixedPotential potential (game.form.empiricalBelief history 2)
-          (payoffIntegrable_of_bounded
-            (independentProduct (game.form.empiricalBelief history 2)) potential
-            potential_abs_bound) -
-        game.form.mixedPotential potential (game.form.empiricalBelief history 1)
-          (payoffIntegrable_of_bounded
-            (independentProduct (game.form.empiricalBelief history 1)) potential
-            potential_abs_bound) := by
+      game.form.mixedPotential potential (game.form.empiricalBelief history 2) -
+        game.form.mixedPotential potential (game.form.empiricalBelief history 1) := by
   simpa using
     (UtilityGame.IsExactPotential.mixedPotential_empiricalBelief_succ_sub_ge
       (G := game) exactPotential potential_abs_bound isFictitiousPlay 0)

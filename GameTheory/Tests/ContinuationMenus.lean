@@ -56,11 +56,11 @@ private theorem sourcePlan_optimal_of_le (u : Outcome → Unit → ℝ)
   refine ⟨hbase, hdev, ?_⟩
   simp only [source, Profile.update_same, sourcePlan, expectedUtility_pure, add_zero]
   calc
-    expectedUtility u () replacement hdev ≤
-        expect replacement (fun _ => u .a ()) (payoffIntegrable_constant _ _) := by
+    expectedUtility u () replacement ≤
+        expect replacement (fun _ => u .a ()) := by
       exact expect_mono (fun outcome _ => hmax outcome)
         hdev (payoffIntegrable_constant _ _)
-    _ = u .a () := expect_constant _ _ _
+    _ = u .a () := expect_constant _ _
 
 theorem sourcePlan_optimal_for_both :
     IsεNash source utilityB 0 sourcePlan ∧ IsεNash source utilityC 0 sourcePlan := by
@@ -73,10 +73,9 @@ theorem sourcePlan_optimal_for_both :
     cases outcome <;> norm_num [utilityC]
 
 theorem continuation_utility_sum (profile : Profile continuation.sig) :
-    expectedUtility utilityB () (continuation.play profile)
-        (payoffIntegrable_of_finite _ _) +
+    expectedUtility utilityB () (continuation.play profile) +
       expectedUtility utilityC () (continuation.play profile)
-        (payoffIntegrable_of_finite _ _) = 3 := by
+         = 3 := by
   let hB := payoffIntegrable_of_finite (continuation.play profile)
     (fun outcome => utilityB outcome ())
   let hC := payoffIntegrable_of_finite (continuation.play profile)
@@ -86,24 +85,18 @@ theorem continuation_utility_sum (profile : Profile continuation.sig) :
       fun _ => (3 : ℝ) := by
     funext choice
     cases choice <;> norm_num [remainingOutcome, utilityB, utilityC]
-  let hmap : PayoffIntegrable (profile ()) (fun choice =>
-      utilityB (remainingOutcome choice) () + utilityC (remainingOutcome choice) ()) :=
-    payoffIntegrable_of_finite _ _
   calc
     _ = expect (continuation.play profile)
         (fun outcome => utilityB outcome () + utilityC outcome ())
-        (payoffIntegrable_add hB hC) := (expect_add hB hC).symm
+         := (expect_add hB hC).symm
     _ = expect (profile ())
         (fun choice => utilityB (remainingOutcome choice) () +
-          utilityC (remainingOutcome choice) ()) hmap := by
+          utilityC (remainingOutcome choice) ()) := by
       exact expect_map remainingOutcome (profile ())
         (fun outcome => utilityB outcome () + utilityC outcome ())
-        hmap (payoffIntegrable_add hB hC)
-    _ = expect (profile ()) (fun _ => (3 : ℝ))
-        (payoffIntegrable_constant _ _) := by
+    _ = expect (profile ()) (fun _ => (3 : ℝ)) := by
       exact expect_congr_on_support (fun choice _ => congrFun values choice)
-        hmap (payoffIntegrable_constant _ _)
-    _ = 3 := expect_constant _ _ _
+    _ = 3 := expect_constant _ _
 
 theorem no_common_optimal_continuation :
     ¬ ∃ profile : Profile continuation.sig,
@@ -115,23 +108,21 @@ theorem no_common_optimal_continuation :
   obtain ⟨hbaseB, hdevB, hleB⟩ := prefersB
   obtain ⟨hbaseC, hdevC, hleC⟩ := prefersC
   have hvalueB : expectedUtility utilityB ()
-      (continuation.play (Profile.update profile () (PMF.pure true))) hdevB = 2 := by
+      (continuation.play (Profile.update profile () (PMF.pure true))) = 2 := by
     simp [continuation, expectedUtility_pure, remainingOutcome, utilityB]
   have hvalueC : expectedUtility utilityC ()
-      (continuation.play (Profile.update profile () (PMF.pure false))) hdevC = 2 := by
+      (continuation.play (Profile.update profile () (PMF.pure false))) = 2 := by
     simp [continuation, expectedUtility_pure, remainingOutcome, utilityC]
   rw [hvalueB] at hleB
   rw [hvalueC] at hleC
   simp only [add_zero] at hleB hleC
   have total := continuation_utility_sum profile
-  have hsameB : expectedUtility utilityB () (continuation.play profile) hbaseB =
-      expectedUtility utilityB () (continuation.play profile)
-        (payoffIntegrable_of_finite _ _) := by
-    exact expect_proof_irrel _ _ _ _
-  have hsameC : expectedUtility utilityC () (continuation.play profile) hbaseC =
-      expectedUtility utilityC () (continuation.play profile)
-        (payoffIntegrable_of_finite _ _) := by
-    exact expect_proof_irrel _ _ _ _
+  have hsameB : expectedUtility utilityB () (continuation.play profile) =
+      expectedUtility utilityB () (continuation.play profile) := by
+    rfl
+  have hsameC : expectedUtility utilityC () (continuation.play profile) =
+      expectedUtility utilityC () (continuation.play profile) := by
+    rfl
   rw [hsameB] at hleB
   rw [hsameC] at hleC
   linarith

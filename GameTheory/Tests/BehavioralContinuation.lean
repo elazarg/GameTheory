@@ -71,12 +71,10 @@ theorem simultaneous_behavioral_perfect :
       (behavioralProfile allTrueActions) 1 terminal
     have halternativeLaw := source.information.runBehavioralFrom_of_terminal
       (Profile.update (behavioralProfile allTrueActions) who replacement) 1 terminal
-    have hpure : UtilityIntegrable sourceUtility who (PMF.pure history) :=
-      payoffIntegrable_pure history (fun outcome => sourceUtility outcome who)
     have hpreferredValue := expectedUtility_congr_law sourceUtility who
-      hpreferredLaw hpreferred hpure
+      hpreferredLaw
     have halternativeValue := expectedUtility_congr_law sourceUtility who
-      halternativeLaw halternative hpure
+      halternativeLaw
     rw [expectedUtility_pure] at hpreferredValue halternativeValue
     rw [hpreferredValue, halternativeValue]
 

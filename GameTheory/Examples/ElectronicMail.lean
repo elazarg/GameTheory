@@ -294,12 +294,10 @@ theorem not_commonPBeliefAt_attackStateEvent_bothConfirmed_of_half_lt
 theorem expectedUtility_attackOnMessage_true :
     expectedUtility game.utility true
       (game.toForm.play attackOnMessage)
-      (payoffIntegrable_of_finite _ _) = (-1 / 3 : ℝ) := by
-  rw [game.expectedUtility_eq_prior true attackOnMessage
-    (payoffIntegrable_of_finite _ _)]
+       = (-1 / 3 : ℝ) := by
+  rw [game.expectedUtility_eq_prior true attackOnMessage]
   simp only [game, emailPrior]
-  rw [expect_map typeProfile worldPrior _ (payoffIntegrable_of_finite _ _)
-    (payoffIntegrable_of_finite _ _)]
+  rw [expect_map typeProfile worldPrior _]
   have hplan :
       (game.planPayoff true attackOnMessage) ∘ typeProfile =
         fun world : EmailWorld =>
@@ -314,8 +312,7 @@ theorem expectedUtility_attackOnMessage_true :
     expect worldPrior
         (fun world : EmailWorld =>
           emailPayoff (typeProfile world)
-            (fun i => attackOnMessage i (typeProfile world i)) true)
-        (payoffIntegrable_of_finite _ _) =
+            (fun i => attackOnMessage i (typeProfile world i)) true) =
       (∑ world : EmailWorld,
         emailPayoff (typeProfile world)
           (fun i => attackOnMessage i (typeProfile world i)) true) /
@@ -334,13 +331,11 @@ theorem expectedUtility_trueNeverAttack :
     expectedUtility game.utility true
       (game.toForm.play
         (Profile.update attackOnMessage true trueNeverAttack))
-      (payoffIntegrable_of_finite _ _) = 0 := by
+       = 0 := by
   rw [game.expectedUtility_eq_prior true
-    (Profile.update attackOnMessage true trueNeverAttack)
-    (payoffIntegrable_of_finite _ _)]
+    (Profile.update attackOnMessage true trueNeverAttack)]
   simp only [game, emailPrior]
-  rw [expect_map typeProfile worldPrior _ (payoffIntegrable_of_finite _ _)
-    (payoffIntegrable_of_finite _ _)]
+  rw [expect_map typeProfile worldPrior _]
   have hplan :
       (game.planPayoff true
         (Profile.update attackOnMessage true trueNeverAttack)) ∘ typeProfile =
@@ -360,8 +355,7 @@ theorem expectedUtility_trueNeverAttack :
           emailPayoff (typeProfile world)
             (fun i =>
               (Profile.update attackOnMessage true trueNeverAttack i)
-                (typeProfile world i)) true)
-        (payoffIntegrable_of_finite _ _) =
+                (typeProfile world i)) true) =
       (∑ world : EmailWorld,
         emailPayoff (typeProfile world)
           (fun i =>
@@ -388,27 +382,24 @@ theorem attackOnMessage_not_isNash :
   have hdeviation := hnash true trueNeverAttack
   rcases hdeviation with ⟨hpreferred, halternative, hle⟩
   have hpreferredValue : expectedUtility game.utility true
-      (game.toForm.play attackOnMessage) hpreferred = -1 / 3 := by
+      (game.toForm.play attackOnMessage) = -1 / 3 := by
     calc
       expectedUtility game.utility true (game.toForm.play attackOnMessage)
-          hpreferred = expectedUtility game.utility true
-            (game.toForm.play attackOnMessage) (payoffIntegrable_of_finite _ _) :=
-          expectedUtility_congr_law game.utility true rfl hpreferred
-            (payoffIntegrable_of_finite _ _)
+           = expectedUtility game.utility true
+            (game.toForm.play attackOnMessage) :=
+          expectedUtility_congr_law game.utility true rfl
       _ = -1 / 3 := expectedUtility_attackOnMessage_true
   have halternativeValue : expectedUtility game.utility true
       (game.toForm.play
-        (Profile.update attackOnMessage true trueNeverAttack)) halternative = 0 := by
+        (Profile.update attackOnMessage true trueNeverAttack)) = 0 := by
     calc
       expectedUtility game.utility true
           (game.toForm.play
-            (Profile.update attackOnMessage true trueNeverAttack)) halternative =
+            (Profile.update attackOnMessage true trueNeverAttack)) =
         expectedUtility game.utility true
           (game.toForm.play
-            (Profile.update attackOnMessage true trueNeverAttack))
-          (payoffIntegrable_of_finite _ _) :=
-            expectedUtility_congr_law game.utility true rfl halternative
-              (payoffIntegrable_of_finite _ _)
+            (Profile.update attackOnMessage true trueNeverAttack)) :=
+            expectedUtility_congr_law game.utility true rfl
       _ = 0 := expectedUtility_trueNeverAttack
   rw [halternativeValue, hpreferredValue] at hle
   norm_num at hle

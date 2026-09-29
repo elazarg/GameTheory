@@ -178,11 +178,9 @@ theorem trembling_continuation_value_tendsto
     (C : ℝ) (hC : 0 ≤ C) (hbound : ∀ history, |payoff history| ≤ C) :
     Tendsto (fun n =>
       ((fixedBeliefAssessment (trembleLaw n)).continuationContext
-        decisionSite payoff fuel).value (localBehavioral (trembleLaw n))
-        (payoffIntegrable_of_bounded _ payoff hbound)) atTop
+        decisionSite payoff fuel).value (localBehavioral (trembleLaw n))) atTop
       (nhds (((fixedBeliefAssessment (PMF.pure 0)).continuationContext
-        decisionSite payoff fuel).value (localBehavioral (PMF.pure 0))
-        (payoffIntegrable_of_bounded _ payoff hbound))) := by
+        decisionSite payoff fuel).value (localBehavioral (PMF.pure 0)))) := by
   exact canonicalInformation.continuationContext_value_tendsto_of_bounded
     (sequence := fun n => fixedBeliefAssessment (trembleLaw n))
     (target := fixedBeliefAssessment (PMF.pure 0))

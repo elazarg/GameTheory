@@ -475,7 +475,7 @@ def continuationValue (profile : Profile information.strategicSignature)
     (history : twoStage.History) : ℝ :=
   twoStage.historyBackwardValue wellFoundedPlay
     (information.historyChooser profile)
-    (fun outcome => utility outcome ()) history (utility_integrable _)
+    (fun outcome => utility outcome ()) history
 
 private theorem continuationValue_of_step_constant
     (profile : Profile information.strategicSignature)
@@ -506,7 +506,7 @@ private theorem continuationValue_terminal
       if firstAction && secondAction then 1 else 0 := by
   rw [continuationValue,
     twoStage.historyBackwardValue_of_terminal
-      (by simp [State.isTerminal]) (utility_integrable _)]
+      (by simp [State.isTerminal])]
   exact done_utility_match hidden firstAction secondAction
 
 theorem infoOf_firstHistory (hidden : Bool) :

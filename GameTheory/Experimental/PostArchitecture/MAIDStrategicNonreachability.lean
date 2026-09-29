@@ -205,20 +205,18 @@ private theorem siteRuleExpectedUtility_eq_sum_termFullScore
     [∀ term : view.UtilitySite owner, Fintype (TermConfig view term)]
     (rule : MAIDReplacementInvariantUtility.FullContext target →
       PMF (diagram.Value target.1)) :
-    siteRuleExpectedUtility semantics base owner replacement target rule
-        (payoffIntegrable_of_finite _ _) =
+    siteRuleExpectedUtility semantics base owner replacement target rule =
       ∑ full : TargetAtom target, ∑ term : view.UtilitySite owner,
         siteTermFullScore semantics base owner replacement target rule view
           term full := by
   unfold siteRuleExpectedUtility expectedUtility
   let law := siteReplacementLaw semantics base owner replacement target rule
   calc
-    expect law (fun assignment => semantics.utility owner assignment)
-        (payoffIntegrable_of_finite _ _) =
+    expect law (fun assignment => semantics.utility owner assignment) =
         expect law (fun assignment => ∑ term : view.UtilitySite owner,
           (view.term term).payoff
             (Assignment.restrict diagram assignment
-              (view.term term).parents)) (payoffIntegrable_of_finite _ _) := by
+              (view.term term).parents)) := by
       apply expect_congr_on_support
       intro assignment _
       simpa [UtilityView.term, UtilityTerm.value] using
@@ -227,7 +225,7 @@ private theorem siteRuleExpectedUtility_eq_sum_termFullScore
         expect law (fun assignment =>
           (view.term term).payoff
             (Assignment.restrict diagram assignment
-              (view.term term).parents)) (payoffIntegrable_of_finite _ _) := by
+              (view.term term).parents)) := by
       exact expect_sum law (fun term : view.UtilitySite owner =>
         fun assignment => (view.term term).payoff
           (Assignment.restrict diagram assignment (view.term term).parents))
@@ -289,7 +287,6 @@ private def siteNonrelevantValue
     expect ((siteReplacementLaw semantics base owner replacement target rule).map
       (fun assignment => Assignment.restrict diagram assignment
         (view.term term).parents)) (view.term term).payoff
-      (payoffIntegrable_of_finite _ _)
 
 private def siteRelevantProbeScore
     [DecidableEq Player] [Fintype Node] [DecidableEq Node]
@@ -347,8 +344,7 @@ private theorem siteRuleExpectedUtility_eq_relevant_add_nonrelevant
     [∀ term : view.UtilitySite owner, Fintype (TermConfig view term)]
     (rule : MAIDReplacementInvariantUtility.FullContext target →
       PMF (diagram.Value target.1)) :
-    siteRuleExpectedUtility semantics base owner replacement target rule
-        (payoffIntegrable_of_finite _ _) =
+    siteRuleExpectedUtility semantics base owner replacement target rule =
       siteRelevantValue semantics base owner replacement target view rule +
         siteNonrelevantValue semantics base owner replacement target view
           rule := by
@@ -362,8 +358,7 @@ private theorem siteRuleExpectedUtility_eq_relevant_add_nonrelevant
             term full) =
         expect ((siteReplacementLaw semantics base owner replacement target rule).map
           (fun assignment => Assignment.restrict diagram assignment
-            (view.term term).parents)) (view.term term).payoff
-          (payoffIntegrable_of_finite _ _) := by
+            (view.term term).parents)) (view.term term).payoff := by
     intro term
     rw [expect_map]
     let law := siteReplacementLaw semantics base owner replacement target rule
@@ -397,8 +392,7 @@ private theorem siteRuleExpectedUtility_eq_relevant_add_nonrelevant
     ∑ term ∈ Finset.univ.filter (view.IsRelevantUtilityTerm target),
         expect ((siteReplacementLaw semantics base owner replacement target rule).map
           (fun assignment => Assignment.restrict diagram assignment
-            (view.term term).parents)) (view.term term).payoff
-          (payoffIntegrable_of_finite _ _) =
+            (view.term term).parents)) (view.term term).payoff =
       ∑ term ∈ Finset.univ.filter (view.IsRelevantUtilityTerm target),
         ∑ full : TargetAtom target,
           siteTermFullScore semantics base owner replacement target rule view
@@ -443,7 +437,7 @@ private theorem siteNonrelevantValue_eq
     simpa using (Finset.mem_filter.mp hterm).2
   exact expect_congr_law
     (nonrelevantTerm_site_marginal_eq topological view base owner replacement
-      target term hnonrelevant first second) _ _ _
+      target term hnonrelevant first second) _
 
 /-! ## Mechanism components as site-replacement probes -/
 
@@ -745,9 +739,9 @@ private theorem siteRelevantProbeScore_le_of_optimal
   let alternative := replaceContextWithPure target targetRule context action
   have hutility :
       siteRuleExpectedUtility semantics base owner replacement target
-          alternative (payoffIntegrable_of_finite _ _) ≤
+          alternative ≤
         siteRuleExpectedUtility semantics base owner replacement target
-          targetRule (payoffIntegrable_of_finite _ _) := by
+          targetRule := by
     exact (euPreference_iff _ owner _ _
       (payoffIntegrable_of_finite _ _)
       (payoffIntegrable_of_finite _ _)).mp (hoptimal alternative)
@@ -1046,7 +1040,7 @@ theorem IsOptimalSiteRule.transport_replaceSiteRule_of_not_sReachable
             ∑ action : diagram.Value target.1,
               ((alternative context) action).toReal = 1 := by
           have hconstant := expect_eq_sum (alternative context)
-            (fun _ => (1 : ℝ)) (payoffIntegrable_of_finite _ _)
+            (fun _ => (1 : ℝ))
           rw [expect_constant] at hconstant
           simpa only [mul_one] using hconstant.symm
         rw [← Finset.sum_mul, hmass, one_mul]
@@ -1057,10 +1051,8 @@ theorem IsOptimalSiteRule.transport_replaceSiteRule_of_not_sReachable
   have hnonrelevant := siteNonrelevantValue_eq topological view base owner
     changed target alternative targetRule
   have hcomparison :
-      siteRuleExpectedUtility semantics base owner changed target alternative
-          (payoffIntegrable_of_finite _ _) ≤
-        siteRuleExpectedUtility semantics base owner changed target targetRule
-          (payoffIntegrable_of_finite _ _) := by
+      siteRuleExpectedUtility semantics base owner changed target alternative ≤
+        siteRuleExpectedUtility semantics base owner changed target targetRule := by
     rw [siteRuleExpectedUtility_eq_relevant_add_nonrelevant semantics base owner
       changed target view alternative]
     rw [siteRuleExpectedUtility_eq_relevant_add_nonrelevant semantics base owner

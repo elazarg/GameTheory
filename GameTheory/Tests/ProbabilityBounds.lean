@@ -34,14 +34,14 @@ theorem witness_event_probability :
     PMF.map_apply, PMF.uniformOfFintype_apply, tsum_fintype, Fin.sum_univ_succ]
 
 theorem witness_expectation :
-    expect witnessLaw witnessObservable witnessIntegrable = 1 := by
+    expect witnessLaw witnessObservable = 1 := by
   rw [expect_eq_sum]
   norm_num [witnessLaw, witnessObservable, Fintype.sum_bool,
     PMF.map_apply, PMF.uniformOfFintype_apply, tsum_fintype, Fin.sum_univ_succ]
 
 theorem witness_markov_bound :
     (witnessLaw.toOuterMeasure witnessEvent).toReal ≤
-      expect witnessLaw witnessObservable witnessIntegrable / 4 := by
+      expect witnessLaw witnessObservable / 4 := by
   apply eventMass_toReal_le_expect_div witnessLaw witnessEvent
     witnessObservable (by norm_num) witnessIntegrable
   · intro value _
@@ -53,7 +53,7 @@ theorem witness_markov_bound :
 
 theorem witness_markov_bound_is_exact :
     (witnessLaw.toOuterMeasure witnessEvent).toReal =
-      expect witnessLaw witnessObservable witnessIntegrable / 4 := by
+      expect witnessLaw witnessObservable / 4 := by
   rw [witness_event_probability, witness_expectation]
 
 end GameTheory.Tests.ProbabilityBounds

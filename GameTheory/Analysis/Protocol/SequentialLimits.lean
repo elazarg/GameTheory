@@ -36,11 +36,9 @@ theorem BehavioralAssessment.isSequentiallyRationalWithin_of_converging_deviatio
     (bound : ι → ℝ) (hbound : ∀ i history, |payoff i history| ≤ bound i)
     (hoptimal : ∀ n i site alternative,
       ((sequence n).continuationContext site (payoff i) fuel).value
-          (repair n i alternative)
-          (payoffIntegrable_of_bounded _ _ (hbound i)) ≤
+          (repair n i alternative) ≤
         ((sequence n).continuationContext site (payoff i) fuel).value
-          ((sequence n).strategy i)
-          (payoffIntegrable_of_bounded _ _ (hbound i))) :
+          ((sequence n).strategy i)) :
     target.IsSequentiallyRationalWithin payoff fuel := by
   intro i site
   simp only [BehavioralAssessment.IsSequentiallyRationalAt,
@@ -48,7 +46,7 @@ theorem BehavioralAssessment.isSequentiallyRationalWithin_of_converging_deviatio
   refine ⟨payoffIntegrable_of_bounded _ _ (hbound i), ?_, ?_⟩
   · intro alternative _
     exact payoffIntegrable_of_bounded _ _ (hbound i)
-  · intro alternative _ hincumbent halternative
+  · intro alternative _
     have hnonneg : 0 ≤ bound i :=
       (abs_nonneg (payoff i E.initHistory)).trans (hbound i E.initHistory)
     have hdeviation := M.continuationContext_value_tendsto_of_bounded
@@ -59,7 +57,7 @@ theorem BehavioralAssessment.isSequentiallyRationalWithin_of_converging_deviatio
       (payoff i) fuel (bound i) hnonneg (hbound i)
     have hlimit := le_of_tendsto_of_tendsto hdeviation hbaseline
       (Eventually.of_forall fun n => hoptimal n i site alternative)
-    simpa only [Context.value, expect_proof_irrel] using hlimit
+    exact hlimit
 
 /-- On finite history carriers, full continuation-policy optimality passes to the
 limit when every deviation can be approximated by deviations allowed at the corresponding
@@ -77,11 +75,9 @@ theorem BehavioralAssessment.isSequentiallyRationalWithin_of_converging_deviatio
     (payoff : ι → E.History → ℝ) (fuel : ℕ)
     (hoptimal : ∀ n i site alternative,
       ((sequence n).continuationContext site (payoff i) fuel).value
-          (repair n i alternative)
-          (payoffIntegrable_of_finite _ (payoff i)) ≤
+          (repair n i alternative) ≤
         ((sequence n).continuationContext site (payoff i) fuel).value
-          ((sequence n).strategy i)
-          (payoffIntegrable_of_finite _ (payoff i))) :
+          ((sequence n).strategy i)) :
     target.IsSequentiallyRationalWithin payoff fuel := by
   let bound (i : ι) := ∑ history : E.History, |payoff i history|
   have hbound (i : ι) (history : E.History) : |payoff i history| ≤ bound i := by

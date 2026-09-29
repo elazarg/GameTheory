@@ -112,7 +112,7 @@ theorem zeroHorizon_expectedUtility (profile : game.RepeatedProfile)
     (who : Fin 2) :
     expectedUtility game.finiteAverageOutcomeUtility who
       ((game.finiteAverageForm 0).play profile)
-      (payoffIntegrable_pure none _) = 0 := by
+       = 0 := by
   exact expectedUtility_pure game.finiteAverageOutcomeUtility who
     (none : Option ℕ)
 

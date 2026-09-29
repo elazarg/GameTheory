@@ -403,14 +403,10 @@ def latestStageUtility (initial : G.State) (who : ι)
 
 /-- Expected time-`time` stage utility under behavioral play. -/
 def behavioralStageExpectation (initial : G.State)
-    (behavioral : G.PublicProfile initial) (who : ι) (time : ℕ)
-    (hintegrable : PayoffIntegrable
-      ((G.perfectMonitoring initial).runBehavioral
-        (G.toBehaviorProfile initial behavioral) (time + 1))
-      (G.latestStageUtility initial who)) : ℝ :=
+    (behavioral : G.PublicProfile initial) (who : ι) (time : ℕ) : ℝ :=
   (G.perfectMonitoring initial).behavioralPrefixExpectation
     (G.toBehaviorProfile initial behavioral)
-    (fun _ => G.latestStageUtility initial who) time hintegrable
+    (fun _ => G.latestStageUtility initial who) time
 
 /-- Expected time-`time` stage utility after one ex-ante draw from the total
 pure-policy profile measure. -/
@@ -428,14 +424,10 @@ def policyMeasureStageExpectation (initial : G.State)
 stage expectations. -/
 def behavioralDiscountedPayoff (initial : G.State)
     (discount : ℝ) (behavioral : G.PublicProfile initial) (who : ι)
-    (hstage : ∀ time, PayoffIntegrable
-      ((G.perfectMonitoring initial).runBehavioral
-        (G.toBehaviorProfile initial behavioral) (time + 1))
-      (G.latestStageUtility initial who))
     (_hsum : Summable (fun time => discount ^ time *
-      G.behavioralStageExpectation initial behavioral who time (hstage time))) : ℝ :=
+      G.behavioralStageExpectation initial behavioral who time)) : ℝ :=
   GameTheory.Math.normalizedDiscountedSum discount
-    (fun time => G.behavioralStageExpectation initial behavioral who time (hstage time))
+    (fun time => G.behavioralStageExpectation initial behavioral who time)
 
 /-- The corresponding normalized discounted payoff under the one total
 pure-policy profile law. -/
@@ -484,16 +476,12 @@ theorem abs_behavioralStageExpectation_le (initial : G.State)
     (behavioral : G.PublicProfile initial) (who : ι) (bound : ℝ)
     (hbound : ∀ state actions,
       |G.stageUtility state actions who| ≤ bound) (time : ℕ) :
-    |G.behavioralStageExpectation initial behavioral who time
-      (G.behavioralStageIntegrable_of_bounded initial behavioral who bound
-        hbound time)| ≤ bound := by
+    |G.behavioralStageExpectation initial behavioral who time| ≤ bound := by
   have hnonneg : 0 ≤ bound :=
     (abs_nonneg (G.stageUtility initial
       (fun i => Classical.choice inferInstance) who)).trans (hbound _ _)
   exact expect_abs_le_of_bounded hnonneg
     (fun history => G.abs_latestStageUtility_le initial who bound hbound history)
-    (G.behavioralStageIntegrable_of_bounded initial behavioral who bound
-      hbound time)
 
 omit [∀ i, Fintype (G.Action i)] in
 /-- Bounded stochastic stage utility makes the behavioral discounted series
@@ -506,9 +494,7 @@ theorem summable_discounted_behavioralStageExpectation
     (hbound : ∀ state actions,
       |G.stageUtility state actions who| ≤ bound) :
     Summable fun time => discount ^ time *
-      G.behavioralStageExpectation initial behavioral who time
-        (G.behavioralStageIntegrable_of_bounded initial behavioral who bound
-          hbound time) := by
+      G.behavioralStageExpectation initial behavioral who time := by
   have hgeom : Summable fun time : ℕ => bound * discount ^ time :=
     (summable_geometric_of_lt_one hdiscount0 hdiscount1).mul_left bound
   refine Summable.of_norm_bounded hgeom ?_
@@ -516,13 +502,9 @@ theorem summable_discounted_behavioralStageExpectation
   rw [Real.norm_eq_abs]
   calc
     |discount ^ time *
-        G.behavioralStageExpectation initial behavioral who time
-          (G.behavioralStageIntegrable_of_bounded initial behavioral who bound
-            hbound time)| =
+        G.behavioralStageExpectation initial behavioral who time| =
         discount ^ time *
-          |G.behavioralStageExpectation initial behavioral who time
-            (G.behavioralStageIntegrable_of_bounded initial behavioral who bound
-              hbound time)| := by
+          |G.behavioralStageExpectation initial behavioral who time| := by
       rw [abs_mul, abs_of_nonneg (pow_nonneg hdiscount0 time)]
     _ ≤ discount ^ time * bound :=
       mul_le_mul_of_nonneg_left
@@ -560,9 +542,7 @@ theorem policyMeasureStageExpectation_eq_behavioral_of_bounded
     G.policyMeasureStageExpectation initial behavioral who time
         (G.policyMeasureStageIntegrable_of_bounded initial behavioral who bound
           hbound time) =
-      G.behavioralStageExpectation initial behavioral who time
-        (G.behavioralStageIntegrable_of_bounded initial behavioral who bound
-          hbound time) := by
+      G.behavioralStageExpectation initial behavioral who time := by
   exact (G.perfectMonitoring initial).pureMeasurePrefixExpectation_eq_behavioral
     (G.perfectMonitoring_actsOnceWhereItMatters initial)
     (G.toBehaviorProfile initial behavioral) time
@@ -606,8 +586,6 @@ theorem kuhn_policyMeasure_discountedPayoff (initial : G.State)
         (G.summable_discounted_policyMeasureStageExpectation initial
           hdiscount0 hdiscount1 behavioral who hbound) =
       G.behavioralDiscountedPayoff initial discount behavioral who
-        (fun time => G.behavioralStageIntegrable_of_bounded initial behavioral
-          who bound hbound time)
         (G.summable_discounted_behavioralStageExpectation initial hdiscount0
           hdiscount1 behavioral who hbound) := by
   unfold policyMeasureDiscountedPayoff behavioralDiscountedPayoff
@@ -684,24 +662,19 @@ theorem arbitraryPolicyMeasureStageExpectation_eq_behavioral_of_bounded
         (G.arbitraryPolicyMeasureStageIntegrable_of_bounded initial laws
           fallback who bound hbound time) =
       G.behavioralStageExpectation initial
-        (G.policyMeasuresToPublicBehavioralWith initial laws fallback) who time
-        (G.behavioralStageIntegrable_of_bounded initial
-          (G.policyMeasuresToPublicBehavioralWith initial laws fallback)
-          who bound hbound time) := by
+        (G.policyMeasuresToPublicBehavioralWith initial laws fallback) who time := by
   let profile := G.policyMeasuresToPublicBehavioralWith initial laws fallback
   have hlaw := G.kuhn_arbitraryPolicyMeasure_allFinitePrefixes initial laws
     fallback (time + 1)
   rw [G.publicHorizonForm_play] at hlaw
-  have hbehavioral := G.behavioralStageIntegrable_of_bounded initial profile
-    who bound hbound time
   have hvalue := (expect_eq_integral
     ((G.perfectMonitoring initial).runBehavioral
       (G.toBehaviorProfile initial profile) (time + 1))
-    (G.latestStageUtility initial who) hbehavioral).symm
+    (G.latestStageUtility initial who)).symm
   have hmeasure :
       (∫ history, G.latestStageUtility initial who history
         ∂G.protocolPolicyMeasureRun initial laws (time + 1)) =
-      G.behavioralStageExpectation initial profile who time hbehavioral := by
+      G.behavioralStageExpectation initial profile who time := by
     rw [hlaw]
     simpa only [behavioralStageExpectation,
       InformationModel.behavioralPrefixExpectation] using hvalue
@@ -753,9 +726,6 @@ theorem kuhn_arbitraryPolicyMeasure_discountedPayoff (initial : G.State)
           hdiscount0 hdiscount1 laws fallback who hbound) =
       G.behavioralDiscountedPayoff initial discount
         (G.policyMeasuresToPublicBehavioralWith initial laws fallback) who
-        (fun time => G.behavioralStageIntegrable_of_bounded initial
-          (G.policyMeasuresToPublicBehavioralWith initial laws fallback)
-          who bound hbound time)
         (G.summable_discounted_behavioralStageExpectation initial hdiscount0
           hdiscount1 (G.policyMeasuresToPublicBehavioralWith initial laws fallback)
           who hbound) := by
@@ -808,19 +778,17 @@ theorem arbitraryStageExpectation_eq_of_prefixLaw (initial : G.State)
     G.arbitraryPolicyMeasureStageExpectation initial laws who time
         (G.arbitraryStageIntegrable_of_prefixLaw initial laws behavioral
           hlaw who time hbehavioral) =
-      G.behavioralStageExpectation initial behavioral who time
-        hbehavioral := by
+      G.behavioralStageExpectation initial behavioral who time := by
   have hprefix := hlaw (time + 1)
   rw [G.publicHorizonForm_play] at hprefix
   have hvalue := (expect_eq_integral
     ((G.perfectMonitoring initial).runBehavioral
       (G.toBehaviorProfile initial behavioral) (time + 1))
-    (G.latestStageUtility initial who) hbehavioral).symm
+    (G.latestStageUtility initial who)).symm
   have hmeasure :
       (∫ history, G.latestStageUtility initial who history
         ∂G.protocolPolicyMeasureRun initial laws (time + 1)) =
-      G.behavioralStageExpectation initial behavioral who time
-        hbehavioral := by
+      G.behavioralStageExpectation initial behavioral who time := by
     rw [hprefix]
     simpa only [behavioralStageExpectation,
       InformationModel.behavioralPrefixExpectation] using hvalue
@@ -844,8 +812,7 @@ theorem discountedPayoff_eq_of_prefixLaw (initial : G.State)
         (G.toBehaviorProfile initial behavioral) (time + 1))
       (G.latestStageUtility initial who))
     (hsummable : Summable (fun time => discount ^ time *
-      G.behavioralStageExpectation initial behavioral who time
-        (hbehavioral time))) :
+      G.behavioralStageExpectation initial behavioral who time)) :
     let hmeasure : ∀ time, Integrable (G.latestStageUtility initial who)
         ((G.perfectMonitoring initial).runPolicyMeasure laws (time + 1)) :=
       fun time => G.arbitraryStageIntegrable_of_prefixLaw initial laws
@@ -859,14 +826,13 @@ theorem discountedPayoff_eq_of_prefixLaw (initial : G.State)
         G.arbitraryPolicyMeasureDiscountedPayoff initial discount laws who
             hmeasure hsum =
           G.behavioralDiscountedPayoff initial discount behavioral who
-            hbehavioral hsummable := by
+             hsummable := by
   dsimp only
   have hpointwise (time : ℕ) :
       G.arbitraryPolicyMeasureStageExpectation initial laws who time
           (G.arbitraryStageIntegrable_of_prefixLaw initial laws behavioral
             hlaw who time (hbehavioral time)) =
-        G.behavioralStageExpectation initial behavioral who time
-          (hbehavioral time) :=
+        G.behavioralStageExpectation initial behavioral who time :=
     G.arbitraryStageExpectation_eq_of_prefixLaw initial laws behavioral
       hlaw who time (hbehavioral time)
   constructor
@@ -1110,8 +1076,7 @@ theorem kuhn_policyMeasure_update_discountedPayoff (initial : G.State)
       (G.latestStageUtility initial who))
     (hsummable : Summable (fun time => discount ^ time *
       G.behavioralStageExpectation initial
-        (Profile.update behavioral who replacement) who time
-          (hbehavioral time))) :
+        (Profile.update behavioral who replacement) who time)) :
     let revised := Profile.update behavioral who replacement
     let hmeasure : ∀ time, Integrable (G.latestStageUtility initial who)
         ((G.perfectMonitoring initial).runPureMeasure
@@ -1129,7 +1094,7 @@ theorem kuhn_policyMeasure_update_discountedPayoff (initial : G.State)
         G.policyMeasureDiscountedPayoff initial discount revised who
             hmeasure hsum =
           G.behavioralDiscountedPayoff initial discount revised who
-            hbehavioral hsummable := by
+             hsummable := by
   dsimp only
   have hpointwise (time : ℕ) :
       G.policyMeasureStageExpectation initial
@@ -1140,8 +1105,7 @@ theorem kuhn_policyMeasure_update_discountedPayoff (initial : G.State)
                 (Profile.update behavioral who replacement)) (time + 1)
               (G.latestStageUtility initial who)).2 (hbehavioral time)) =
         G.behavioralStageExpectation initial
-          (Profile.update behavioral who replacement) who time
-          (hbehavioral time) :=
+          (Profile.update behavioral who replacement) who time :=
     (G.perfectMonitoring initial).pureMeasurePrefixExpectation_eq_behavioral
       (G.perfectMonitoring_actsOnceWhereItMatters initial)
       (G.toBehaviorProfile initial
@@ -1172,13 +1136,12 @@ theorem kuhn_arbitraryPolicyMeasure_opponents_behavioralDeviation_discountedPayo
     let revised := Profile.update
       (G.policyMeasuresToPublicBehavioralWith initial laws fallback)
       who replacement
-    ∀ (hbehavioral : ∀ time, PayoffIntegrable
+    (∀ time, PayoffIntegrable
         ((G.perfectMonitoring initial).runBehavioral
           (G.toBehaviorProfile initial revised) (time + 1))
-        (G.latestStageUtility initial who))
-      (hsummable : Summable (fun time => discount ^ time *
-        G.behavioralStageExpectation initial revised who time
-          (hbehavioral time))),
+        (G.latestStageUtility initial who)) →
+      ∀ hsummable : Summable (fun time => discount ^ time *
+        G.behavioralStageExpectation initial revised who time),
       ∃ (hmeasure : ∀ time, Integrable (G.latestStageUtility initial who)
           ((G.perfectMonitoring initial).runPolicyMeasure changedLaws
             (time + 1))),
@@ -1188,7 +1151,7 @@ theorem kuhn_arbitraryPolicyMeasure_opponents_behavioralDeviation_discountedPayo
           G.arbitraryPolicyMeasureDiscountedPayoff initial discount changedLaws
               who hmeasure hsum =
             G.behavioralDiscountedPayoff initial discount revised who
-              hbehavioral hsummable := by
+               hsummable := by
   dsimp only
   intro hbehavioral hsummable
   let changedLaws := Profile.update
@@ -1234,13 +1197,12 @@ theorem kuhn_behavioral_opponents_arbitraryPolicyMeasureDeviation_discountedPayo
         (Protocol.InformationModel.PolicyMeasure.toBehavioralWith
           (M := G.perfectMonitoring initial) replacement
           ((G.purePolicyEquiv initial who).symm replacementFallback)))
-    ∀ (hbehavioral : ∀ time, PayoffIntegrable
+    (∀ time, PayoffIntegrable
         ((G.perfectMonitoring initial).runBehavioral
           (G.toBehaviorProfile initial revised) (time + 1))
-        (G.latestStageUtility initial who))
-      (hsummable : Summable (fun time => discount ^ time *
-        G.behavioralStageExpectation initial revised who time
-          (hbehavioral time))),
+        (G.latestStageUtility initial who)) →
+      ∀ hsummable : Summable (fun time => discount ^ time *
+        G.behavioralStageExpectation initial revised who time),
       ∃ (hmeasure : ∀ time, Integrable (G.latestStageUtility initial who)
           ((G.perfectMonitoring initial).runPolicyMeasure changedLaws
             (time + 1))),
@@ -1250,7 +1212,7 @@ theorem kuhn_behavioral_opponents_arbitraryPolicyMeasureDeviation_discountedPayo
           G.arbitraryPolicyMeasureDiscountedPayoff initial discount changedLaws
               who hmeasure hsum =
             G.behavioralDiscountedPayoff initial discount revised who
-              hbehavioral hsummable := by
+               hsummable := by
   dsimp only
   intro hbehavioral hsummable
   let changedLaws := Profile.update

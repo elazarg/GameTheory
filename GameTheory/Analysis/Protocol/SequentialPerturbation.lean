@@ -56,14 +56,14 @@ theorem exists_uniformTremble_locallyOptimal_bayesAssessment
       (∀ i info, assessment.strategy i info ∈ M.uniformTrembleLaws ε hε.le h1 i info) ∧
       ∀ i (site : M.InformationSite i) (law : PMF (M.Choice i site.1)),
         law ∈ M.uniformTrembleLaws ε hε.le h1 i site.1 →
-        ∃ halt : (assessment.continuationContext site (payoff i) (fuel + 1)).IntegrableAt
-            ((assessment.strategy i).withLaw site.1 law),
-          ∃ hbase : (assessment.continuationContext site (payoff i) (fuel + 1)).IntegrableAt
-              (assessment.strategy i),
+        (assessment.continuationContext site (payoff i) (fuel + 1)).IntegrableAt
+            ((assessment.strategy i).withLaw site.1 law) ∧
+          (assessment.continuationContext site (payoff i) (fuel + 1)).IntegrableAt
+              (assessment.strategy i) ∧
             (assessment.continuationContext site (payoff i) (fuel + 1)).value
-                ((assessment.strategy i).withLaw site.1 law) halt ≤
+                ((assessment.strategy i).withLaw site.1 law) ≤
               (assessment.continuationContext site (payoff i) (fuel + 1)).value
-                (assessment.strategy i) hbase := by
+                (assessment.strategy i) := by
   classical
   let Coordinate := (i : ι) × M.InfoState i
   let Action (c : Coordinate) := M.Choice c.1 c.2
@@ -118,7 +118,7 @@ theorem exists_uniformTremble_locallyOptimal_bayesAssessment
   let scoreValue (x : Domain) (i : ι) (site : M.InformationSite i)
       (alternative : M.BehavioralPolicy i) : ℝ :=
     ((assessment x).continuationContext site (payoff i) (fuel + 1)).value
-      alternative (hintegrable x i site alternative)
+      alternative
   let score (x : Domain) (c : Coordinate) (choice : Action c) : ℝ :=
     if hsite : M.IsDecisionInfo c.1 c.2 then
       scoreValue x c.1 ⟨c.2, hsite⟩ ((profile x c.1).commit c.2 choice)
@@ -156,14 +156,13 @@ theorem exists_uniformTremble_locallyOptimal_bayesAssessment
   let value := fun choice => scoreValue x i site ((profile x i).commit site.1 choice)
   let hAlt := hintegrable x i site ((profile x i).withLaw site.1 altLaw)
   let hBase := hintegrable x i site (profile x i)
-  have hbest : expect alternative (score x ⟨i, site.1⟩)
-        (payoffIntegrable_of_finite _ _) ≤
+  have hbest : expect alternative (score x ⟨i, site.1⟩) ≤
       expect (residual x i site.1) (score x ⟨i, site.1⟩)
-        (payoffIntegrable_of_finite _ _) := hx ⟨i, site.1⟩ alternative
+         := hx ⟨i, site.1⟩ alternative
   have hscore_eq := funext (hscore_site x i site)
   rw [hscore_eq] at hbest
-  have hbestValue : expect alternative value (payoffIntegrable_of_finite _ _) ≤
-      expect (residual x i site.1) value (payoffIntegrable_of_finite _ _) := by
+  have hbestValue : expect alternative value ≤
+      expect (residual x i site.1) value := by
     simpa only [scoreValue, hscore_site] using hbest
   have hAltValue := BehavioralAssessment.continuationContext_withLaw_eq_expect
     M hactsOnce (assessment x) site (profile x i) altLaw (payoff i) fuel hAlt
@@ -182,17 +181,17 @@ theorem exists_uniformTremble_locallyOptimal_bayesAssessment
   have hbaseMix := expect_mix ε hε.le h1
     (PMF.uniformOfFintype (M.Choice i site.1)) (residual x i site.1) value
     huniform (payoffIntegrable_of_finite _ _)
-  obtain ⟨hAltExpectation, hAltValue⟩ := hAltValue
-  obtain ⟨hBaseExpectation, hBaseValue⟩ := hBaseValue
+  obtain ⟨-, hAltValue⟩ := hAltValue
+  obtain ⟨-, hBaseValue⟩ := hBaseValue
   refine ⟨?_, ?_, ?_⟩
   · simpa only [assessment, M.bayesAssessment_strategy] using hAlt
   · simpa only [assessment, M.bayesAssessment_strategy] using hBase
   · simpa only [assessment, M.bayesAssessment_strategy] using (show
-      context.value ((profile x i).withLaw site.1 altLaw) hAlt ≤
-        context.value (profile x i) hBase from by
+      context.value ((profile x i).withLaw site.1 altLaw) ≤
+        context.value (profile x i) from by
       rw [hAltValue]
-      have hbaseValue' : context.value (profile x i) hBase =
-          expect baseLaw value hBaseExpectation := by
+      have hbaseValue' : context.value (profile x i) =
+          expect baseLaw value := by
         simpa only [hbaseLaw] using hBaseValue
       rw [hbaseValue']
       rw [haltMix, hbaseMix]

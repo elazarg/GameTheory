@@ -30,9 +30,8 @@ theorem payoffIntegrable_mix {α : Type*} (t : ℝ) (h0 : 0 ≤ t)
 theorem expect_mix {α : Type*} (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1)
     (μ ν : PMF α) (f : α → ℝ)
     (hμ : PayoffIntegrable μ f) (hν : PayoffIntegrable ν f) :
-    expect (mix t h0 h1 μ ν) f
-        (payoffIntegrable_mix t h0 h1 μ ν f hμ hν) =
-      t * expect μ f hμ + (1 - t) * expect ν f hν := by
+    expect (mix t h0 h1 μ ν) f =
+      t * expect μ f + (1 - t) * expect ν f := by
   have hμsum := hμ.summable
   have hνsum := hν.summable
   have hμscale := hμsum.mul_left t
@@ -48,13 +47,13 @@ theorem expect_mix {α : Type*} (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1)
     _ = (∑' a, t * ((μ a).toReal * f a)) +
         (∑' a, (1 - t) * ((ν a).toReal * f a)) :=
       Summable.tsum_add hμscale hνscale
-    _ = t * expect μ f hμ + (1 - t) * expect ν f hν := by
+    _ = t * expect μ f + (1 - t) * expect ν f := by
       rw [tsum_mul_left, tsum_mul_left]
       rfl
 
 private theorem expect_ofReal_tsum {α : Type*} (μ : PMF α)
     (f : α → ℝ) (hf : PayoffIntegrable μ f) (h0 : ∀ a, 0 ≤ f a) :
-    ENNReal.ofReal (expect μ f hf) =
+    ENNReal.ofReal (expect μ f) =
       ∑' a, μ a * ENNReal.ofReal (f a) := by
   unfold expect
   rw [ENNReal.ofReal_tsum_of_nonneg]
@@ -77,8 +76,8 @@ theorem bind_mix_expect {α β : Type*} (μ : PMF α)
         rw [abs_of_nonneg (h0 a)]
         exact h1 a)
     μ.bind (fun a => mix (weight a) (h0 a) (h1 a) ν ξ) =
-      mix (expect μ weight hw)
-        (expect_nonneg μ weight hw (fun a _ => h0 a))
+      mix (expect μ weight)
+        (expect_nonneg μ weight (fun a _ => h0 a))
         (expect_le_const μ weight hw 1 (fun a _ => h1 a)) ν ξ := by
   dsimp only
   let hw : PayoffIntegrable μ weight :=
@@ -88,14 +87,14 @@ theorem bind_mix_expect {α β : Type*} (μ : PMF α)
   let hc : PayoffIntegrable μ (fun a => 1 - weight a) :=
     payoffIntegrable_sub (payoffIntegrable_constant μ 1) hw
   have hc0 : ∀ a, 0 ≤ 1 - weight a := fun a => by linarith [h1 a]
-  have hcomp : expect μ (fun a => 1 - weight a) hc =
-      1 - expect μ weight hw := by
+  have hcomp : expect μ (fun a => 1 - weight a) =
+      1 - expect μ weight := by
     calc
-      expect μ (fun a => 1 - weight a) hc =
-          expect μ (fun _ => 1) (payoffIntegrable_constant μ 1) -
-            expect μ weight hw := by
+      expect μ (fun a => 1 - weight a) =
+          expect μ (fun _ => 1) -
+            expect μ weight := by
         exact expect_sub (payoffIntegrable_constant μ 1) hw
-      _ = 1 - expect μ weight hw := by rw [expect_constant]
+      _ = 1 - expect μ weight := by rw [expect_constant]
   ext b
   rw [PMF.bind_apply, mix_apply]
   simp_rw [mix_apply]
@@ -113,8 +112,8 @@ theorem bind_mix_expect {α β : Type*} (μ : PMF α)
     _ = (∑' a, μ a * ENNReal.ofReal (weight a)) * ν b +
           (∑' a, μ a * ENNReal.ofReal (1 - weight a)) * ξ b := by
       rw [ENNReal.tsum_mul_right, ENNReal.tsum_mul_right]
-    _ = ENNReal.ofReal (expect μ weight hw) * ν b +
-          ENNReal.ofReal (1 - expect μ weight hw) * ξ b := by
+    _ = ENNReal.ofReal (expect μ weight) * ν b +
+          ENNReal.ofReal (1 - expect μ weight) * ξ b := by
       rw [← expect_ofReal_tsum μ weight hw h0,
         ← expect_ofReal_tsum μ (fun a => 1 - weight a) hc hc0, hcomp]
     _ = _ := by ring

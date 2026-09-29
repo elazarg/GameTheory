@@ -23,10 +23,8 @@ namespace UtilityGame
 
 /-- Average stage payoff of a nonempty finite cycle. -/
 def cycleAveragePayoff (G : UtilityGame ι) {n : ℕ}
-    (cycle : Fin n → Profile G.form.sig) (who : ι)
-    (hcycle : ∀ t, UtilityIntegrable G.utility who
-      (G.form.play (cycle t))) : ℝ :=
-  (n : ℝ)⁻¹ * ∑ t : Fin n, G.stagePayoff (cycle t) who (hcycle t)
+    (cycle : Fin n → Profile G.form.sig) (who : ι) : ℝ :=
+  (n : ℝ)⁻¹ * ∑ t : Fin n, G.stagePayoff (cycle t) who
 
 /-- A finite cycle supplies the integration certificate for every repeated
 stage on its periodic path. -/
@@ -45,20 +43,18 @@ certificate without a separately assumed global payoff bound. -/
 theorem periodicDiscountedSummable (G : UtilityGame ι)
     {n : ℕ} [NeZero n] {discount : ℝ}
     (hdiscount0 : 0 ≤ discount) (hdiscount1 : discount < 1)
-    (cycle : Fin n → Profile G.form.sig) (who : ι)
-    (hcycle : ∀ j, UtilityIntegrable G.utility who
-      (G.form.play (cycle j))) :
+    (cycle : Fin n → Profile G.form.sig) (who : ι) :
     Summable fun t : ℕ => discount ^ t *
       G.stagePayoff (G.repeatedPlay (G.periodicRepeatedProfile cycle) t)
-        who (G.periodicStageIntegrable cycle who hcycle t) := by
+        who := by
   let bound := ∑ j : Fin n,
-    |G.stagePayoff (cycle j) who (hcycle j)|
+    |G.stagePayoff (cycle j) who|
   apply G.summable_discounted_stagePayoff_of_abs_bound
-    hdiscount0 hdiscount1 who (G.periodicStageIntegrable cycle who hcycle)
+    hdiscount0 hdiscount1 who
   intro t
   have hsingle := Finset.single_le_sum
     (s := Finset.univ)
-    (f := fun j : Fin n => |G.stagePayoff (cycle j) who (hcycle j)|)
+    (f := fun j : Fin n => |G.stagePayoff (cycle j) who|)
     (fun j _ => abs_nonneg _)
     (Finset.mem_univ (Fin.ofNat n t))
   simpa only [G.repeatedPlay_periodicRepeatedProfile] using hsingle
@@ -68,24 +64,19 @@ theorem discountedPayoff_periodicRepeatedProfile_eq
     (G : UtilityGame ι) {n : ℕ} [NeZero n]
     {discount : ℝ}
     (hdiscount0 : 0 ≤ discount) (hdiscount1 : discount < 1)
-    (cycle : Fin n → Profile G.form.sig) (who : ι)
-    (hcycle : ∀ j, UtilityIntegrable G.utility who
-      (G.form.play (cycle j))) :
+    (cycle : Fin n → Profile G.form.sig) (who : ι) :
     G.discountedPayoff discount (G.periodicRepeatedProfile cycle)
-        who (G.periodicStageIntegrable cycle who hcycle)
+        who
         (G.periodicDiscountedSummable hdiscount0 hdiscount1
-          cycle who hcycle) =
+          cycle who) =
       (∑ j : Fin n,
-          discount ^ (j : ℕ) * G.stagePayoff (cycle j) who (hcycle j)) /
+          discount ^ (j : ℕ) * G.stagePayoff (cycle j) who) /
         (∑ j : Fin n, discount ^ (j : ℕ)) := by
   let profile : G.RepeatedProfile := G.periodicRepeatedProfile cycle
-  let hpath : ∀ t, UtilityIntegrable G.utility who
-      (G.form.play (G.repeatedPlay profile t)) :=
-    G.periodicStageIntegrable cycle who hcycle
   have hs : Summable fun t : ℕ =>
       discount ^ t * G.stagePayoff (G.repeatedPlay profile t)
-        who (hpath t) :=
-    G.periodicDiscountedSummable hdiscount0 hdiscount1 cycle who hcycle
+        who :=
+    G.periodicDiscountedSummable hdiscount0 hdiscount1 cycle who
   have hpow : discount ^ n < 1 :=
     pow_lt_one₀ hdiscount0 hdiscount1 (NeZero.ne n)
   have hdenPos : 0 < ∑ j : Fin n, discount ^ (j : ℕ) := by
@@ -104,18 +95,16 @@ theorem discountedPayoff_periodicRepeatedProfile_eq
       geom_sum_mul_of_le_one hdiscount1.le n
   have hone : 1 - discount ≠ 0 := by linarith
   have hvalue (t : ℕ) :
-      G.stagePayoff (G.repeatedPlay profile t) who (hpath t) =
-        G.stagePayoff (cycle (Fin.ofNat n t)) who
-          (hcycle (Fin.ofNat n t)) := by
+      G.stagePayoff (G.repeatedPlay profile t) who =
+        G.stagePayoff (cycle (Fin.ofNat n t)) who := by
     simp only [profile, G.repeatedPlay_periodicRepeatedProfile]
   have hsplit :
       (∑' t : ℕ,
           discount ^ t * G.stagePayoff (G.repeatedPlay profile t)
-            who (hpath t)) =
+            who) =
         ∑ j : ZMod n, ∑' m : ℕ,
           discount ^ (j.val + n * m) *
-            G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who
-              (hcycle ⟨j.val, j.val_lt⟩) := by
+            G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who := by
     rw [Nat.sumByResidueClasses hs n]
     refine Finset.sum_congr rfl ?_
     intro j _
@@ -127,60 +116,50 @@ theorem discountedPayoff_periodicRepeatedProfile_eq
   have hinner : ∀ j : ZMod n,
       (∑' m : ℕ,
           discount ^ (j.val + n * m) *
-            G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who
-              (hcycle ⟨j.val, j.val_lt⟩)) =
+            G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who) =
         (discount ^ j.val *
-          G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who
-            (hcycle ⟨j.val, j.val_lt⟩)) *
+          G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who) *
             (1 - discount ^ n)⁻¹ := by
     intro j
     calc
       (∑' m : ℕ,
           discount ^ (j.val + n * m) *
-            G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who
-              (hcycle ⟨j.val, j.val_lt⟩)) =
+            G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who) =
         ∑' m : ℕ,
           (discount ^ j.val *
-            G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who
-              (hcycle ⟨j.val, j.val_lt⟩)) *
+            G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who) *
               (discount ^ n) ^ m := by
         apply tsum_congr
         intro m
         rw [pow_add, pow_mul]
         ring
       _ = (discount ^ j.val *
-            G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who
-              (hcycle ⟨j.val, j.val_lt⟩)) *
+            G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who) *
           (∑' m : ℕ, (discount ^ n) ^ m) := by
         rw [tsum_mul_left]
       _ = (discount ^ j.val *
-            G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who
-              (hcycle ⟨j.val, j.val_lt⟩)) *
+            G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who) *
           (1 - discount ^ n)⁻¹ := by
         rw [tsum_geometric_of_lt_one (pow_nonneg hdiscount0 n) hpow]
   have hzsum :
       (∑ j : ZMod n,
           discount ^ j.val *
-            G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who
-              (hcycle ⟨j.val, j.val_lt⟩)) =
+            G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who) =
         ∑ j : Fin n,
-          discount ^ (j : ℕ) * G.stagePayoff (cycle j) who
-            (hcycle j) := by
+          discount ^ (j : ℕ) * G.stagePayoff (cycle j) who := by
     exact Fintype.sum_equiv (GameTheory.Math.zmodFinEquiv n)
       (fun j : ZMod n =>
         discount ^ j.val *
-          G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who
-            (hcycle ⟨j.val, j.val_lt⟩))
+          G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who)
       (fun j : Fin n =>
-        discount ^ (j : ℕ) * G.stagePayoff (cycle j) who (hcycle j))
+        discount ^ (j : ℕ) * G.stagePayoff (cycle j) who)
       (fun _ => rfl)
   calc
     G.discountedPayoff discount (G.periodicRepeatedProfile cycle)
-        who hpath hs =
+        who hs =
         (1 - discount) * (∑ j : ZMod n,
           (discount ^ j.val *
-            G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who
-              (hcycle ⟨j.val, j.val_lt⟩)) *
+            G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who) *
               (1 - discount ^ n)⁻¹) := by
       simp only [discountedPayoff, GameTheory.Math.normalizedDiscountedSum]
       rw [hsplit]
@@ -189,13 +168,11 @@ theorem discountedPayoff_periodicRepeatedProfile_eq
     _ = (1 - discount) *
         ((∑ j : ZMod n,
           discount ^ j.val *
-            G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who
-              (hcycle ⟨j.val, j.val_lt⟩)) *
+            G.stagePayoff (cycle ⟨j.val, j.val_lt⟩) who) *
               (1 - discount ^ n)⁻¹) := by
       rw [Finset.sum_mul]
     _ = (∑ j : Fin n,
-          discount ^ (j : ℕ) * G.stagePayoff (cycle j) who
-            (hcycle j)) /
+          discount ^ (j : ℕ) * G.stagePayoff (cycle j) who) /
         (∑ j : Fin n, discount ^ (j : ℕ)) := by
       rw [hzsum, ← hgeom]
       field_simp [hden, hone]
@@ -214,20 +191,16 @@ theorem periodicContinuationStageIntegrable (G : UtilityGame ι)
 theorem periodicContinuationSummable (G : UtilityGame ι)
     {n : ℕ} [NeZero n] {discount : ℝ}
     (hdiscount0 : 0 ≤ discount) (hdiscount1 : discount < 1)
-    (cycle : Fin n → Profile G.form.sig) (start : ℕ) (who : ι)
-    (hcycle : ∀ j, UtilityIntegrable G.utility who
-      (G.form.play (cycle j))) :
+    (cycle : Fin n → Profile G.form.sig) (start : ℕ) (who : ι) :
     Summable fun k : ℕ => discount ^ k *
-      G.stagePayoff (cycle (Fin.ofNat n (start + k))) who
-        (G.periodicContinuationStageIntegrable cycle start who hcycle k) := by
-  let bound := ∑ j : Fin n, |G.stagePayoff (cycle j) who (hcycle j)|
+      G.stagePayoff (cycle (Fin.ofNat n (start + k))) who := by
+  let bound := ∑ j : Fin n, |G.stagePayoff (cycle j) who|
   apply G.summable_discounted_continuation_of_abs_bound
     hdiscount0 hdiscount1 (fun t => cycle (Fin.ofNat n t)) start who
-    (G.periodicContinuationStageIntegrable cycle start who hcycle)
   intro k
   exact Finset.single_le_sum
     (s := Finset.univ)
-    (f := fun j : Fin n => |G.stagePayoff (cycle j) who (hcycle j)|)
+    (f := fun j : Fin n => |G.stagePayoff (cycle j) who|)
     (fun j _ => abs_nonneg _)
     (Finset.mem_univ (Fin.ofNat n (start + k)))
 
@@ -235,34 +208,25 @@ theorem discountedContinuationPayoff_periodicPath_eq
     (G : UtilityGame ι) {n : ℕ} [NeZero n]
     {discount : ℝ}
     (hdiscount0 : 0 ≤ discount) (hdiscount1 : discount < 1)
-    (cycle : Fin n → Profile G.form.sig) (start : ℕ) (who : ι)
-    (hcycle : ∀ j, UtilityIntegrable G.utility who
-      (G.form.play (cycle j))) :
+    (cycle : Fin n → Profile G.form.sig) (start : ℕ) (who : ι) :
     G.discountedContinuationPayoff discount
         (fun t => cycle (Fin.ofNat n t)) start who
-        (G.periodicContinuationStageIntegrable cycle start who hcycle)
         (G.periodicContinuationSummable
-          hdiscount0 hdiscount1 cycle start who hcycle) =
+          hdiscount0 hdiscount1 cycle start who) =
       (∑ j : Fin n, discount ^ (j : ℕ) *
-          G.stagePayoff (cycle (Fin.ofNat n (start + j))) who
-            (hcycle (Fin.ofNat n (start + j)))) /
+          G.stagePayoff (cycle (Fin.ofNat n (start + j))) who) /
         (∑ j : Fin n, discount ^ (j : ℕ)) := by
   let rotated : Fin n → Profile G.form.sig :=
     fun j => cycle (Fin.ofNat n (start + j))
-  let hrotated : ∀ j, UtilityIntegrable G.utility who
-      (G.form.play (rotated j)) :=
-    fun j => hcycle (Fin.ofNat n (start + j))
   have hcontinuation :
       G.discountedContinuationPayoff discount
           (fun t => cycle (Fin.ofNat n t)) start who
-          (G.periodicContinuationStageIntegrable cycle start who hcycle)
           (G.periodicContinuationSummable
-            hdiscount0 hdiscount1 cycle start who hcycle) =
+            hdiscount0 hdiscount1 cycle start who) =
         G.discountedPayoff discount
           (G.periodicRepeatedProfile rotated) who
-          (G.periodicStageIntegrable rotated who hrotated)
           (G.periodicDiscountedSummable
-            hdiscount0 hdiscount1 rotated who hrotated) := by
+            hdiscount0 hdiscount1 rotated who) := by
     simp only [discountedContinuationPayoff, discountedPayoff,
       GameTheory.Math.normalizedDiscountedSum]
     congr 1
@@ -274,7 +238,7 @@ theorem discountedContinuationPayoff_periodicPath_eq
     simp [Fin.ofNat, Nat.add_mod]
   rw [hcontinuation]
   exact G.discountedPayoff_periodicRepeatedProfile_eq
-    hdiscount0 hdiscount1 rotated who hrotated
+    hdiscount0 hdiscount1 rotated who
 
 /-- Finite discounted phase weights converge to uniform cycle weights as the
 discount factor tends to one from below. -/
@@ -353,8 +317,6 @@ sufficiently patient players. -/
 theorem exists_discountFactor_threshold_periodicContinuation
     (G : UtilityGame ι) {n : ℕ} [NeZero n]
     (cycle : Fin n → Profile G.form.sig) (start : ℕ) (who : ι)
-    (hcycle : ∀ j, UtilityIntegrable G.utility who
-      (G.form.play (cycle j)))
     {ε : ℝ}
     (hε : 0 < ε) :
     ∃ threshold : ℝ, 0 ≤ threshold ∧ threshold < 1 ∧
@@ -362,36 +324,31 @@ theorem exists_discountFactor_threshold_periodicContinuation
         threshold < discount → (hdiscount1 : discount < 1) →
         |G.discountedContinuationPayoff discount
             (fun t => cycle (Fin.ofNat n t)) start who
-            (G.periodicContinuationStageIntegrable cycle start who hcycle)
             (G.periodicContinuationSummable
-              hdiscount0 hdiscount1 cycle start who hcycle) -
-          G.cycleAveragePayoff cycle who hcycle| < ε := by
+              hdiscount0 hdiscount1 cycle start who) -
+          G.cycleAveragePayoff cycle who| < ε := by
   obtain ⟨threshold, hthreshold0, hthreshold1, hthreshold⟩ :=
     exists_discountFactor_threshold_weighted_cycleAverage
       (fun j : Fin n =>
-        G.stagePayoff (cycle (Fin.ofNat n (start + j))) who
-          (hcycle (Fin.ofNat n (start + j)))) hε
+        G.stagePayoff (cycle (Fin.ofNat n (start + j))) who) hε
   refine ⟨threshold, hthreshold0, hthreshold1, ?_⟩
   intro discount hdiscount0 hdiscount hdiscount1
   have hclose := hthreshold discount hdiscount hdiscount1
   have hrotate :
       (∑ j : Fin n,
-          G.stagePayoff (cycle (Fin.ofNat n (start + j))) who
-            (hcycle (Fin.ofNat n (start + j)))) =
-        ∑ j : Fin n, G.stagePayoff (cycle j) who (hcycle j) :=
+          G.stagePayoff (cycle (Fin.ofNat n (start + j))) who) =
+        ∑ j : Fin n, G.stagePayoff (cycle j) who :=
     GameTheory.Math.sum_finRotate start fun j : Fin n =>
-      G.stagePayoff (cycle j) who (hcycle j)
+      G.stagePayoff (cycle j) who
   rw [hrotate] at hclose
   rw [G.discountedContinuationPayoff_periodicPath_eq
-    hdiscount0 hdiscount1 cycle start who hcycle]
+    hdiscount0 hdiscount1 cycle start who]
   simpa [cycleAveragePayoff] using hclose
 
 /-- One threshold works for every player and every phase of a finite cycle. -/
 theorem exists_discountFactor_threshold_periodicAllContinuations
     (G : UtilityGame ι) [Fintype ι]
     {n : ℕ} [NeZero n] (cycle : Fin n → Profile G.form.sig)
-    (hcycle : ∀ (who : ι) (j : Fin n),
-      UtilityIntegrable G.utility who (G.form.play (cycle j)))
     {ε : ℝ}
     (hε : 0 < ε) :
     ∃ threshold : ℝ, 0 ≤ threshold ∧ threshold < 1 ∧
@@ -400,22 +357,18 @@ theorem exists_discountFactor_threshold_periodicAllContinuations
         ∀ (who : ι) (start : ℕ),
           |G.discountedContinuationPayoff discount
               (fun t => cycle (Fin.ofNat n t)) start who
-              (G.periodicContinuationStageIntegrable cycle start who
-                (hcycle who))
               (G.periodicContinuationSummable
                 hdiscount0
-                hdiscount1 cycle start who (hcycle who)) -
-            G.cycleAveragePayoff cycle who (hcycle who)| < ε := by
+                hdiscount1 cycle start who) -
+            G.cycleAveragePayoff cycle who| < ε := by
   let phase := ι × Fin n
   let property : phase → ℝ → Prop := fun a discount =>
     ∀ (hdiscount0 : 0 ≤ discount) (hdiscount1 : discount < 1),
       |G.discountedContinuationPayoff discount
           (fun t => cycle (Fin.ofNat n t)) (a.2 : ℕ) a.1
-          (G.periodicContinuationStageIntegrable cycle (a.2 : ℕ)
-            a.1 (hcycle a.1))
           (G.periodicContinuationSummable hdiscount0
-            hdiscount1 cycle (a.2 : ℕ) a.1 (hcycle a.1)) -
-        G.cycleAveragePayoff cycle a.1 (hcycle a.1)| < ε
+            hdiscount1 cycle (a.2 : ℕ) a.1) -
+        G.cycleAveragePayoff cycle a.1| < ε
   have hphase : ∀ a : phase, ∃ threshold : ℝ,
       0 ≤ threshold ∧ threshold < 1 ∧
         ∀ discount : ℝ, threshold < discount → discount < 1 →
@@ -423,7 +376,7 @@ theorem exists_discountFactor_threshold_periodicAllContinuations
     intro a
     obtain ⟨candidate, hc0, hc1, hc⟩ :=
       G.exists_discountFactor_threshold_periodicContinuation
-        cycle (a.2 : ℕ) a.1 (hcycle a.1) hε
+        cycle (a.2 : ℕ) a.1 hε
     refine ⟨candidate, hc0, hc1, ?_⟩
     intro discount hcandidate hdiscount1 hdiscount0 _
     exact hc discount hdiscount0 hcandidate hdiscount1
@@ -437,16 +390,13 @@ theorem exists_discountFactor_threshold_periodicAllContinuations
   have hstart :
       G.discountedContinuationPayoff discount
           (fun t => cycle (Fin.ofNat n t)) start who
-          (G.periodicContinuationStageIntegrable cycle start who (hcycle who))
           (G.periodicContinuationSummable hdiscount0 hdiscount1
-            cycle start who (hcycle who)) =
+            cycle start who) =
         G.discountedContinuationPayoff discount
           (fun t => cycle (Fin.ofNat n t))
           ((Fin.ofNat n start).val) who
-          (G.periodicContinuationStageIntegrable cycle
-            ((Fin.ofNat n start).val) who (hcycle who))
           (G.periodicContinuationSummable hdiscount0 hdiscount1
-            cycle ((Fin.ofNat n start).val) who (hcycle who)) := by
+            cycle ((Fin.ofNat n start).val) who) := by
     simp only [discountedContinuationPayoff,
       GameTheory.Math.normalizedDiscountedSum]
     congr 1

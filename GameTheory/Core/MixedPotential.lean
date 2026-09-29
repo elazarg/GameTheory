@@ -1,7 +1,7 @@
 /-
 # Mixed extensions of exact potential games
 
-The multilinear extension of a pure-profile potential is its guarded
+The multilinear extension of a pure-profile potential is its
 expectation under the canonical independent PMF profile law. Exact potential
 differences survive pure and randomized unilateral changes when the compared
 outcome laws are integrable.
@@ -33,9 +33,8 @@ theorem independentProduct_purify (G : GameForm ι)
 /-- The multilinear extension of a pure-profile potential, when its profile
 law is integrable. -/
 def mixedPotential (G : GameForm ι) (potential : Profile G.sig → ℝ)
-    (mixedProfile : Profile G.sig.mixed)
-    (hpotential : PayoffIntegrable (independentProduct mixedProfile) potential) : ℝ :=
-  expect (independentProduct mixedProfile) potential hpotential
+    (mixedProfile : Profile G.sig.mixed) : ℝ :=
+  expect (independentProduct mixedProfile) potential
 
 omit [DecidableEq ι] in
 /-- The mixed potential agrees with the original potential on the canonical
@@ -44,16 +43,12 @@ pure embedding. -/
 theorem mixedPotential_purify (G : GameForm ι)
     (potential : Profile G.sig → ℝ) (profile : Profile G.sig) :
     G.mixedPotential potential (G.purify profile)
-      (by
-        exact payoffIntegrable_congr_law
-          (independentProduct_purify G profile).symm
-          (payoffIntegrable_pure profile potential)) = potential profile := by
+       = potential profile := by
   have hlaw := independentProduct_purify G profile
   calc
-    _ = expect (PMF.pure profile) potential
-        (payoffIntegrable_pure profile potential) :=
-      expect_congr_law hlaw potential _ _
-    _ = potential profile := expect_pure profile potential _
+    _ = expect (PMF.pure profile) potential :=
+      expect_congr_law hlaw potential
+    _ = potential profile := expect_pure profile potential
 
 /-- The mixed potential is affine in every player's own mixed strategy. -/
 private theorem mixedPotential_update_exists (G : GameForm ι)
@@ -64,15 +59,15 @@ private theorem mixedPotential_update_exists (G : GameForm ι)
       (independentProduct (Profile.update mixedProfile who replacement)) potential)
     (g : G.sig.Strategy who → ℝ)
     (hconditional : ∀ action, ∀ _ha : action ∈ replacement.support,
-      ∃ h : PayoffIntegrable
+      PayoffIntegrable
         (independentProduct
-          (Profile.update mixedProfile who (PMF.pure action))) potential,
+          (Profile.update mixedProfile who (PMF.pure action))) potential ∧
         g action = expect
           (independentProduct
-            (Profile.update mixedProfile who (PMF.pure action))) potential h) :
-    ∃ houter : PayoffIntegrable replacement g,
+            (Profile.update mixedProfile who (PMF.pure action))) potential) :
+    PayoffIntegrable replacement g ∧
       G.mixedPotential potential (Profile.update mixedProfile who replacement)
-          hpotential = expect replacement g houter := by
+           = expect replacement g := by
   let q := fun action => independentProduct
     (Profile.update mixedProfile who (PMF.pure action))
   have hlaw : independentProduct (Profile.update mixedProfile who replacement) =
@@ -82,20 +77,16 @@ private theorem mixedPotential_update_exists (G : GameForm ι)
   have hbind : PayoffIntegrable (replacement.bind q) potential := by
     simpa only [hlaw] using hpotential
   have hcond' : ∀ action, ∀ ha : action ∈ replacement.support,
-      g action = expect (q action) potential
-        (payoffIntegrable_bind_conditional_on_support
-          replacement q potential hbind action ha) := by
+      g action = expect (q action) potential := by
     intro action ha
     obtain ⟨h, heq⟩ := hconditional action ha
     rw [heq]
   refine ⟨payoffIntegrable_bind_conditionalValue_on_support
     replacement q potential hbind g hcond', ?_⟩
   calc
-    _ = expect (replacement.bind q) potential hbind :=
-      expect_congr_law hlaw potential hpotential hbind
-    _ = expect replacement g
-        (payoffIntegrable_bind_conditionalValue_on_support
-          replacement q potential hbind g hcond') :=
+    _ = expect (replacement.bind q) potential :=
+      expect_congr_law hlaw potential
+    _ = expect replacement g :=
       expect_bind_tower_on_support replacement q potential hbind g hcond'
 
 /-- The conditional potential values are integrable under the replacement
@@ -108,15 +99,15 @@ theorem mixedPotential_update_integrable (G : GameForm ι)
       (independentProduct (Profile.update mixedProfile who replacement)) potential)
     (g : G.sig.Strategy who → ℝ)
     (hconditional : ∀ action, ∀ _ha : action ∈ replacement.support,
-      ∃ h : PayoffIntegrable
+      PayoffIntegrable
         (independentProduct
-          (Profile.update mixedProfile who (PMF.pure action))) potential,
+          (Profile.update mixedProfile who (PMF.pure action))) potential ∧
         g action = expect
           (independentProduct
-            (Profile.update mixedProfile who (PMF.pure action))) potential h) :
+            (Profile.update mixedProfile who (PMF.pure action))) potential) :
     PayoffIntegrable replacement g :=
   (G.mixedPotential_update_exists potential mixedProfile who replacement
-    hpotential g hconditional).choose
+    hpotential g hconditional).1
 
 /-- A player's replacement expectation directly equals the mixed potential
 of the updated profile, using any equivalent integrability certificate. -/
@@ -128,15 +119,14 @@ theorem mixedPotential_update (G : GameForm ι)
       (independentProduct (Profile.update mixedProfile who replacement)) potential)
     (g : G.sig.Strategy who → ℝ)
     (hconditional : ∀ action, ∀ _ha : action ∈ replacement.support,
-      ∃ h : PayoffIntegrable
+      PayoffIntegrable
         (independentProduct
-          (Profile.update mixedProfile who (PMF.pure action))) potential,
+          (Profile.update mixedProfile who (PMF.pure action))) potential ∧
         g action = expect
           (independentProduct
-            (Profile.update mixedProfile who (PMF.pure action))) potential h)
-    (houter : PayoffIntegrable replacement g) :
+            (Profile.update mixedProfile who (PMF.pure action))) potential) :
     G.mixedPotential potential (Profile.update mixedProfile who replacement)
-        hpotential = expect replacement g houter := by
+         = expect replacement g := by
   obtain ⟨h, heq⟩ := G.mixedPotential_update_exists potential mixedProfile who
     replacement hpotential g hconditional
   exact heq
@@ -192,25 +182,22 @@ private theorem selectProfile_law (anchor : Profile G.form.sig)
       · simp only [f, selectMixed, hi, ite_false]
         exact PMF.map_const (p := mixedProfile i) (b := anchor i)
 
+omit [DecidableEq ι] in
 private theorem pureExpectedUtility_integrable
-    (hpotential : IsExactPotential G.form G.utility potential)
     (hactual : ∀ (mixedProfile : Profile G.form.sig.mixed) (who : ι),
       UtilityIntegrable G.utility who (G.form.mixed.play mixedProfile))
     (mixedProfile : Profile G.form.sig.mixed) (who : ι) :
     PayoffIntegrable (independentProduct mixedProfile)
-      (fun profile => expectedUtility G.utility who (G.form.play profile)
-        (hpotential.integrable profile who)) := by
+      (fun profile => expectedUtility G.utility who (G.form.play profile)) := by
   have hbind : UtilityIntegrable G.utility who
       ((independentProduct mixedProfile).bind G.form.play) := by
     exact hactual mixedProfile who
   exact payoffIntegrable_bind_conditionalExpectation
     (independentProduct mixedProfile) G.form.play
     (fun outcome => G.utility outcome who) hbind
-    (fun profile => hpotential.integrable profile who)
 
 set_option maxHeartbeats 1500000 in
 private theorem selectedPureUtility_integrable
-    (hpotential : IsExactPotential G.form G.utility potential)
     (hactual : ∀ (mixedProfile : Profile G.form.sig.mixed) (who : ι),
       UtilityIntegrable G.utility who (G.form.mixed.play mixedProfile))
     (anchor : Profile G.form.sig)
@@ -218,15 +205,13 @@ private theorem selectedPureUtility_integrable
     (players : Finset ι) (who : ι) :
     PayoffIntegrable (independentProduct mixedProfile)
       (fun profile => expectedUtility G.utility who
-        (G.form.play (selectProfile anchor profile players))
-        (hpotential.integrable (selectProfile anchor profile players) who)) := by
-  have hselected := pureExpectedUtility_integrable hpotential hactual
+        (G.form.play (selectProfile anchor profile players))) := by
+  have hselected := pureExpectedUtility_integrable hactual
     (selectMixed anchor mixedProfile players) who
   have hmapped : PayoffIntegrable
       ((independentProduct mixedProfile).map
         (fun profile => selectProfile anchor profile players))
-      (fun profile => expectedUtility G.utility who (G.form.play profile)
-        (hpotential.integrable profile who)) := by
+      (fun profile => expectedUtility G.utility who (G.form.play profile)) := by
     rw [selectProfile_law]
     exact hselected
   exact (payoffIntegrable_map_iff _ _ _).mp hmapped
@@ -267,12 +252,11 @@ theorem IsExactPotential.mixedPotentialIntegrable
           selectProfile anchor profile (insert who players)
         let ownValue := fun profile : Profile G.form.sig =>
           expectedUtility G.utility who (G.form.play profile)
-            (hpotential.integrable profile who)
         have hnew : PayoffIntegrable law (fun profile => ownValue (newProfile profile)) :=
-          selectedPureUtility_integrable hpotential hactual anchor mixedProfile
+          selectedPureUtility_integrable hactual anchor mixedProfile
             (insert who players) who
         have hold : PayoffIntegrable law (fun profile => ownValue (oldProfile profile)) :=
-          selectedPureUtility_integrable hpotential hactual anchor mixedProfile
+          selectedPureUtility_integrable hactual anchor mixedProfile
             players who
         have hsum := payoffIntegrable_add ih hnew
         have hdiff := payoffIntegrable_add hsum (payoffIntegrable_neg hold)
@@ -318,19 +302,17 @@ theorem IsExactPotential.mixed_pure_diff
         (Profile.update mixedProfile who (PMF.pure action))) potential) :
     expectedUtility G.utility who
         (G.form.mixed.play
-          (Profile.update mixedProfile who (PMF.pure action))) hnewUtility -
-      expectedUtility G.utility who (G.form.mixed.play mixedProfile)
-        hbaseUtility =
+          (Profile.update mixedProfile who (PMF.pure action))) -
+      expectedUtility G.utility who (G.form.mixed.play mixedProfile) =
     G.form.mixedPotential potential
-        (Profile.update mixedProfile who (PMF.pure action)) hnewPotential -
-      G.form.mixedPotential potential mixedProfile hbasePotential := by
+        (Profile.update mixedProfile who (PMF.pure action)) -
+      G.form.mixedPotential potential mixedProfile := by
   let μ := independentProduct mixedProfile
   let respond : Profile G.form.sig → Profile G.form.sig :=
     fun profile => Profile.update profile who action
   let updated := Profile.update mixedProfile who (PMF.pure action)
   let u : Profile G.form.sig → ℝ := fun profile =>
     expectedUtility G.utility who (G.form.play profile)
-      (hpotential.integrable profile who)
   have hmap : μ.map respond = independentProduct updated := by
     have h := GameForm.pi_map_recommendation G.form.sig mixedProfile who
       (fun _ => action)
@@ -346,16 +328,13 @@ theorem IsExactPotential.mixed_pure_diff
       (G.form.outcomeLaw (μ.map respond)) := by
     rw [GameForm.outcomeLaw, hmap]
     exact hnewUtility
-  have hcond (profile : Profile G.form.sig) :
-      UtilityIntegrable G.utility who (G.form.play profile) :=
-    hpotential.integrable profile who
   have hbaseU : PayoffIntegrable μ u := by
     exact payoffIntegrable_bind_conditionalExpectation μ G.form.play
-      (fun outcome => G.utility outcome who) hbaseBind hcond
+      (fun outcome => G.utility outcome who) hbaseBind
   have hnewUMap : PayoffIntegrable (μ.map respond) u := by
     exact payoffIntegrable_bind_conditionalExpectation
       (μ.map respond) G.form.play
-      (fun outcome => G.utility outcome who) hnewBind hcond
+      (fun outcome => G.utility outcome who) hnewBind
   have hnewU : PayoffIntegrable μ (fun profile => u (respond profile)) :=
     (payoffIntegrable_map_iff respond μ u).mp hnewUMap
   have hnewPMap : PayoffIntegrable (μ.map respond) potential := by
@@ -366,52 +345,48 @@ theorem IsExactPotential.mixed_pure_diff
     (payoffIntegrable_map_iff respond μ potential).mp hnewPMap
   have hbaseValue :
       expectedUtility G.utility who (G.form.mixed.play mixedProfile)
-          hbaseUtility = expect μ u hbaseU := by
-    exact expectedUtility_outcomeLaw G.form G.utility who μ hbaseBind hcond
+           = expect μ u := by
+    exact expectedUtility_outcomeLaw G.form G.utility who μ hbaseBind
   have hnewValue :
-      expectedUtility G.utility who (G.form.mixed.play updated)
-          hnewUtility =
-        expect μ (fun profile => u (respond profile)) hnewU := by
+      expectedUtility G.utility who (G.form.mixed.play updated) =
+        expect μ (fun profile => u (respond profile)) := by
     have hread := expectedUtility_outcomeLaw_map G.form
-      G.utility who μ respond hnewBind (fun profile => hcond (respond profile))
+      G.utility who μ respond hnewBind
     have hlaw : G.form.mixed.play updated =
         G.form.outcomeLaw (μ.map respond) := by
       simp only [GameForm.outcomeLaw, hmap]
     calc
       _ = expectedUtility G.utility who
-            (G.form.outcomeLaw (μ.map respond)) hnewBind :=
-        expectedUtility_congr_law G.utility who hlaw hnewUtility hnewBind
-      _ = expect μ (fun profile => u (respond profile)) hnewU := hread
+            (G.form.outcomeLaw (μ.map respond)) :=
+        expectedUtility_congr_law G.utility who hlaw
+      _ = expect μ (fun profile => u (respond profile)) := hread
   have hnewPotentialValue :
-      G.form.mixedPotential potential updated hnewPotential =
-        expect μ (fun profile => potential (respond profile)) hnewP := by
+      G.form.mixedPotential potential updated =
+        expect μ (fun profile => potential (respond profile)) := by
     unfold GameForm.mixedPotential
     calc
-      _ = expect (μ.map respond) potential hnewPMap :=
-        expect_congr_law hmap.symm potential _ _
-      _ = _ := expect_map respond μ potential hnewP hnewPMap
+      _ = expect (μ.map respond) potential :=
+        expect_congr_law hmap.symm potential
+      _ = _ := expect_map respond μ potential
   have hpoint (profile : Profile G.form.sig) :
       u (respond profile) - u profile =
         potential (respond profile) - potential profile :=
     hpotential.difference who profile action
   calc
-    expectedUtility G.utility who (G.form.mixed.play updated) hnewUtility -
-        expectedUtility G.utility who (G.form.mixed.play mixedProfile)
-          hbaseUtility =
-        expect μ (fun profile => u (respond profile)) hnewU -
-          expect μ u hbaseU := by rw [hnewValue, hbaseValue]
-    _ = expect μ (fun profile => u (respond profile) - u profile)
-          (payoffIntegrable_sub hnewU hbaseU) :=
+    expectedUtility G.utility who (G.form.mixed.play updated) -
+        expectedUtility G.utility who (G.form.mixed.play mixedProfile) =
+        expect μ (fun profile => u (respond profile)) -
+          expect μ u := by rw [hnewValue, hbaseValue]
+    _ = expect μ (fun profile => u (respond profile) - u profile) :=
       (expect_sub hnewU hbaseU).symm
     _ = expect μ (fun profile =>
-          potential (respond profile) - potential profile)
-          (payoffIntegrable_sub hnewP hbasePotential) :=
-      expect_congr_on_support (fun profile _ => hpoint profile) _ _
-    _ = expect μ (fun profile => potential (respond profile)) hnewP -
-          expect μ potential hbasePotential :=
+          potential (respond profile) - potential profile) :=
+      expect_congr_on_support (fun profile _ => hpoint profile)
+    _ = expect μ (fun profile => potential (respond profile)) -
+          expect μ potential :=
       expect_sub hnewP hbasePotential
-    _ = G.form.mixedPotential potential updated hnewPotential -
-          G.form.mixedPotential potential mixedProfile hbasePotential := by
+    _ = G.form.mixedPotential potential updated -
+          G.form.mixedPotential potential mixedProfile := by
       rw [hnewPotentialValue]
       rfl
 
@@ -430,13 +405,11 @@ theorem IsExactPotential.mixed_update_diff
     (hnewPotential : PayoffIntegrable
       (independentProduct (Profile.update mixedProfile who replacement)) potential) :
     expectedUtility G.utility who
-        (G.form.mixed.play (Profile.update mixedProfile who replacement))
-        hnewUtility -
-      expectedUtility G.utility who (G.form.mixed.play mixedProfile)
-        hbaseUtility =
+        (G.form.mixed.play (Profile.update mixedProfile who replacement)) -
+      expectedUtility G.utility who (G.form.mixed.play mixedProfile) =
     G.form.mixedPotential potential
-        (Profile.update mixedProfile who replacement) hnewPotential -
-      G.form.mixedPotential potential mixedProfile hbasePotential := by
+        (Profile.update mixedProfile who replacement) -
+      G.form.mixedPotential potential mixedProfile := by
   classical
   let qU : G.form.sig.Strategy who → PMF G.form.sig.Outcome := fun action =>
     G.form.mixed.play (Profile.update mixedProfile who (PMF.pure action))
@@ -464,19 +437,19 @@ theorem IsExactPotential.mixed_update_diff
       potential hPbind action ha
   let gU : G.form.sig.Strategy who → ℝ := fun action =>
     if ha : action ∈ replacement.support then
-      expectedUtility G.utility who (qU action) (hUc action ha) else 0
+      expectedUtility G.utility who (qU action) else 0
   let gP : G.form.sig.Strategy who → ℝ := fun action =>
     if ha : action ∈ replacement.support then
-      expect (qP action) potential (hPc action ha) else 0
+      expect (qP action) potential else 0
   have hcondU : ∀ action, ∀ ha : action ∈ replacement.support,
       gU action = expect (qU action)
-        (fun outcome => G.utility outcome who) (hUc action ha) := by
+        (fun outcome => G.utility outcome who) := by
     intro action ha
     have hne : replacement action ≠ 0 := (replacement.mem_support_iff action).mp ha
     simp [gU, hne, expectedUtility]
-  have hcondP : ∀ action, ∀ ha : action ∈ replacement.support,
-      ∃ h : PayoffIntegrable (qP action) potential,
-        gP action = expect (qP action) potential h := by
+  have hcondP : ∀ action, action ∈ replacement.support →
+      PayoffIntegrable (qP action) potential ∧
+        gP action = expect (qP action) potential := by
     intro action ha
     have hne : replacement action ≠ 0 := (replacement.mem_support_iff action).mp ha
     exact ⟨hPc action ha, by simp [gP, hne]⟩
@@ -489,23 +462,23 @@ theorem IsExactPotential.mixed_update_diff
   have hEUupdate :
       expectedUtility G.utility who
           (G.form.mixed.play (Profile.update mixedProfile who replacement))
-          hnewUtility = expect replacement gU houterU := by
+           = expect replacement gU := by
     calc
-      _ = expectedUtility G.utility who (replacement.bind qU) hUbind :=
-        expectedUtility_congr_law G.utility who hUlaw hnewUtility hUbind
-      _ = expect replacement gU houterU := by
+      _ = expectedUtility G.utility who (replacement.bind qU) :=
+        expectedUtility_congr_law G.utility who hUlaw
+      _ = expect replacement gU := by
         unfold expectedUtility
         exact expect_bind_tower_on_support replacement qU
           (fun outcome => G.utility outcome who) hUbind gU hcondU
   have hPupdate :
       G.form.mixedPotential potential
-          (Profile.update mixedProfile who replacement) hnewPotential =
-        expect replacement gP houterP :=
+          (Profile.update mixedProfile who replacement) =
+        expect replacement gP :=
     G.form.mixedPotential_update potential mixedProfile who replacement
-      hnewPotential gP hcondP houterP
+      hnewPotential gP hcondP
   let baseU := expectedUtility G.utility who
-    (G.form.mixed.play mixedProfile) hbaseUtility
-  let baseP := G.form.mixedPotential potential mixedProfile hbasePotential
+    (G.form.mixed.play mixedProfile)
+  let baseP := G.form.mixedPotential potential mixedProfile
   have hpoint (action : G.form.sig.Strategy who)
       (ha : action ∈ replacement.support) :
       gU action - baseU = gP action - baseP := by
@@ -513,7 +486,7 @@ theorem IsExactPotential.mixed_update_diff
       hbaseUtility (hUc action ha) hbasePotential (hPc action ha)
     have hne : replacement action ≠ 0 := (replacement.mem_support_iff action).mp ha
     have hgu := hcondU action ha
-    have hgp : gP action = expect (qP action) potential (hPc action ha) := by
+    have hgp : gP action = expect (qP action) potential := by
       simp [gP, hne]
     simpa only [hgu, hgp, qU, qP, baseU, baseP, GameForm.mixedPotential,
       expectedUtility]
@@ -523,20 +496,18 @@ theorem IsExactPotential.mixed_update_diff
   calc
     expectedUtility G.utility who
         (G.form.mixed.play (Profile.update mixedProfile who replacement))
-        hnewUtility - baseU =
-        expect replacement gU houterU - baseU := by rw [hEUupdate]
-    _ = expect replacement (fun action => gU action - baseU)
-          (payoffIntegrable_sub houterU hconstU) := by
+         - baseU =
+        expect replacement gU - baseU := by rw [hEUupdate]
+    _ = expect replacement (fun action => gU action - baseU) := by
       rw [expect_sub houterU hconstU,
-        expect_constant replacement baseU hconstU]
-    _ = expect replacement (fun action => gP action - baseP)
-          (payoffIntegrable_sub houterP hconstP) :=
-      expect_congr_on_support hpoint _ _
-    _ = expect replacement gP houterP - baseP := by
+        expect_constant replacement baseU]
+    _ = expect replacement (fun action => gP action - baseP) :=
+      expect_congr_on_support hpoint
+    _ = expect replacement gP - baseP := by
       rw [expect_sub houterP hconstP,
-        expect_constant replacement baseP hconstP]
+        expect_constant replacement baseP]
     _ = G.form.mixedPotential potential
-          (Profile.update mixedProfile who replacement) hnewPotential -
+          (Profile.update mixedProfile who replacement) -
           baseP := by rw [hPupdate]
 
 /-- Actual mixed utility integrability suffices to extend an exact potential:
@@ -546,8 +517,7 @@ theorem IsExactPotential.mixed
     (hactual : ∀ (mixedProfile : Profile G.form.sig.mixed) (who : ι),
       UtilityIntegrable G.utility who (G.form.mixed.play mixedProfile)) :
     IsExactPotential G.form.mixed G.utility
-      (fun mixedProfile => G.form.mixedPotential potential mixedProfile
-        (IsExactPotential.mixedPotentialIntegrable hpotential hactual mixedProfile)) := by
+      (fun mixedProfile => G.form.mixedPotential potential mixedProfile) := by
   refine ⟨hactual, ?_⟩
   intro who mixedProfile replacement
   exact IsExactPotential.mixed_update_diff hpotential mixedProfile who replacement
@@ -576,9 +546,7 @@ theorem IsExactPotential.mixed_of_finite
     [∀ i, Finite (G.form.sig.Strategy i)]
     (hpotential : IsExactPotential G.form G.utility potential) :
     IsExactPotential G.form.mixed G.utility
-      (fun mixedProfile => G.form.mixedPotential potential mixedProfile
-        (IsExactPotential.mixedPotentialIntegrable hpotential
-          (mixedUtilityIntegrable_of_finite hpotential) mixedProfile)) :=
+      (fun mixedProfile => G.form.mixedPotential potential mixedProfile) :=
   IsExactPotential.mixed hpotential (mixedUtilityIntegrable_of_finite hpotential)
 
 end UtilityGame

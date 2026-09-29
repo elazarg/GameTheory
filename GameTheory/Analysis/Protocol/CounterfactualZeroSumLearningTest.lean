@@ -267,8 +267,7 @@ set_option backward.isDefEq.respectTransparency false in
 theorem expectedUtility_behavioralProfile (actions : Bool → Bool)
     (who : Bool) :
     expectedUtility protocolUtility who
-        (information.runBehavioral (behavioralProfile actions) 1)
-        (protocolUtility_integrable who _) =
+        (information.runBehavioral (behavioralProfile actions) 1) =
       if who then score true (actions true) - score false (actions false)
       else score false (actions false) - score true (actions true) := by
   let policies := NFG.OneShotFOSG.policyProfile
@@ -279,11 +278,9 @@ theorem expectedUtility_behavioralProfile (actions : Bool → Bool)
   calc
     expectedUtility protocolUtility who
         ((information.toBehavioralGameForm 1).play
-          (fun player => (policies player).toBehavioral))
-        (protocolUtility_integrable who _) =
+          (fun player => (policies player).toBehavioral)) =
       expectedUtility protocolUtility who
-        ((information.toGameForm 1).play policies)
-        (protocolUtility_integrable who _) := by
+        ((information.toGameForm 1).play policies) := by
           rw [InformationModel.toBehavioralGameForm_play_toBehavioral]
     _ = expectedUtility
         (NFG.OneShotFOSG.utilityOfOutcome
@@ -291,8 +288,7 @@ theorem expectedUtility_behavioralProfile (actions : Bool → Bool)
         (PMF.map
           (fun history => NFG.OneShotFOSG.outcomeOfState
             GameTheory.Examples.FOSG.twoBitSource history.state)
-          ((information.toGameForm 1).play policies))
-        (outcomeUtility_integrable who _) := by
+          ((information.toGameForm 1).play policies)) := by
             rw [expectedUtility_map]
             rfl
     _ = expectedUtility
@@ -301,8 +297,7 @@ theorem expectedUtility_behavioralProfile (actions : Bool → Bool)
         ((NFG.OneShotFOSG.toProtocolForm
           GameTheory.Examples.FOSG.twoBitSource).play
             (NFG.OneShotFOSG.policyProfile
-              GameTheory.Examples.FOSG.twoBitSource actions))
-        (outcomeUtility_integrable who _) := rfl
+              GameTheory.Examples.FOSG.twoBitSource actions)) := rfl
     _ = _ := by
       rw [NFG.OneShotFOSG.toProtocolForm_play_policyProfile]
       simp only [PMF.pure_map, expectedUtility_pure,
@@ -368,36 +363,19 @@ def localUtility (who : Bool)
 def localPayoff (who : Bool) (_ : Unit) : execution.History → ℝ :=
   fun history => protocolUtility history who
 
-noncomputable def finiteExpect {α : Type*} [Fintype α]
-    (law : PMF α) (payoff : α → ℝ) : ℝ :=
-  expect law payoff (payoffIntegrable_of_finite law payoff)
-
-theorem initialActionGuard (who : Bool)
-    (choice : information.Choice who (initialSite who).1) :
-    information.CounterfactualContinuationIntegrable baselineProfile who
-      (initialSite who)
-      ((baselineProfile who).commit (initialSite who).1 choice)
-      (fun history => protocolUtility history who) 1 := by
-  intro history _
-  exact protocolUtility_integrable who _
-
-theorem localGuard (who : Bool)
+theorem incumbentContinuationIntegrable (who : Bool)
     (law : PMF (information.Choice who (initialSite who).1))
     (environment : Unit) :
-    information.LocalCounterfactualRegretsIntegrable
+    information.CounterfactualContinuationIntegrable
       (localStrategyOf who law environment) who (initialSite who)
-      (localPayoff who environment) 1 := by
-  constructor
-  · intro choice history _
-    exact protocolUtility_integrable who _
-  · intro history _
-    exact protocolUtility_integrable who _
+      (localStrategyOf who law environment who)
+      (localPayoff who environment) 1 :=
+  fun _ _ => protocolUtility_integrable who _
 
 theorem initial_counterfactualActionUtility (who : Bool)
     (choice : information.Choice who (initialSite who).1) :
     counterfactualActionUtility information baselineProfile who
-        (initialSite who) (fun history => protocolUtility history who) 1 choice
-        (initialActionGuard who choice) =
+        (initialSite who) (fun history => protocolUtility history who) 1 choice =
       score who (actionOfChoice who choice) := by
   unfold counterfactualActionUtility counterfactualContinuationValue
   rw [Fintype.sum_unique]
@@ -410,10 +388,9 @@ theorem initial_counterfactualActionUtility (who : Bool)
     rw [initialInformationHistory_eq who
       (default : information.InformationHistory who (initialSite who).1)]
     rfl
-  simp only [hreach, one_mul, dite_eq_left (by norm_num : (1 : ℝ) ≠ 0)]
+  simp only [hreach, one_mul]
   have hrun := congrArg
-    (fun law => expectedUtility protocolUtility who law
-      (protocolUtility_integrable who law))
+    (fun law => expectedUtility protocolUtility who law)
     (run_updatedBaseline_eq_behavioralProfile who choice)
   rw [expectedUtility_behavioralProfile] at hrun
   unfold expectedUtility at hrun
@@ -425,15 +402,13 @@ theorem local_realization (who : Bool)
     (environment : Unit) :
     localCounterfactualRegretVector information
         (localStrategyOf who law environment) who (initialSite who)
-          (localPayoff who environment) 1 (localGuard who law environment) =
-      regretPayoff (localUtility who) law environment
-        (payoffIntegrable_of_finite _ _) := by
+          (localPayoff who environment) 1 =
+      regretPayoff (localUtility who) law environment := by
   have h := information.localCounterfactualRegretVector_strategyWithLocalLaw
     information_actsOnce baselineProfile who (initialSite who)
       (initialSite_allNonterminal who) law
       (fun history => protocolUtility history who) 0 environment
-      (localGuard who law environment)
-      (initialActionGuard who)
+      (incumbentContinuationIntegrable who law environment)
   unfold localStrategyOf localPayoff
   rw [h]
   congr 2
@@ -449,8 +424,7 @@ theorem localUtility_mem_Icc (who : Bool)
 theorem local_regretPayoff_norm_le (who : Bool)
     (law : PMF (information.Choice who (initialSite who).1))
     (environment : Unit) :
-    ‖regretPayoff (localUtility who) law environment
-      (payoffIntegrable_of_finite _ _)‖ ≤
+    ‖regretPayoff (localUtility who) law environment‖ ≤
       (Fintype.card (information.Choice who (initialSite who).1) : ℝ) := by
   simpa using regretPayoff_norm_le_card_mul_width (localUtility who)
     (lo := 0) (hi := 1) (localUtility_mem_Icc who) law environment
@@ -458,7 +432,7 @@ theorem local_regretPayoff_norm_le (who : Bool)
 def localAverage (who : Bool) (t : ℕ) :
     EuclideanSpace ℝ (information.Choice who (initialSite who).1) :=
   counterfactualRegretMatchAverage information who (initialSite who)
-    (localStrategyOf who) (localPayoff who) 1 (localGuard who)
+    (localStrategyOf who) (localPayoff who) 1
     (fun _ => ()) t
 
 def learnedLaw (who : Bool) (round : ℕ) :
@@ -469,7 +443,7 @@ def localGain (who : Bool)
     (deviation : information.Choice who (initialSite who).1)
     (round : ℕ) : ℝ :=
   localUtility who deviation () -
-    finiteExpect (learnedLaw who round)
+    expect (learnedLaw who round)
       (fun current => localUtility who current ())
 
 theorem localVector_coordinate_eq_gain (who : Bool)
@@ -477,8 +451,7 @@ theorem localVector_coordinate_eq_gain (who : Bool)
     (round : ℕ) :
     (localCounterfactualRegretVector information
       (localStrategyOf who (learnedLaw who round) ()) who (initialSite who)
-        (localPayoff who ()) 1
-        (localGuard who (learnedLaw who round) ())).ofLp deviation =
+        (localPayoff who ()) 1).ofLp deviation =
       localGain who deviation round := by
   rw [local_realization, regretPayoff_ofLp]
   rfl
@@ -492,7 +465,7 @@ theorem learnedLaw_zero (who : Bool) :
 theorem localGain_improving_zero (who : Bool) :
     localGain who (improvingChoice who) 0 = 1 := by
   rw [localGain, learnedLaw_zero]
-  simp only [finiteExpect, expect_pure]
+  simp only [expect_pure]
   rw [fallbackChoice_eq_choiceOfAction]
   simp [localUtility, improvingChoice]
 
@@ -517,7 +490,7 @@ theorem localAverage_one_positiveSum (who : Bool) :
   exact lt_of_lt_of_le zero_lt_one hle
 
 theorem learnedLaw_one_expectedUtility_pos (who : Bool) :
-    0 < finiteExpect (learnedLaw who 1)
+    0 < expect (learnedLaw who 1)
       (fun choice => localUtility who choice ()) := by
   have hnumer : 0 < ∑ choice,
       max ((localAverage who 1).ofLp choice) 0 *
@@ -535,16 +508,15 @@ theorem learnedLaw_one_expectedUtility_pos (who : Bool) :
     rw [localAverage_one_improving] at hle
     simp [localUtility, improvingChoice] at hle
     exact lt_of_lt_of_le zero_lt_one hle
-  unfold finiteExpect
   rw [learnedLaw,
     expect_regretMatch_pos (localAverage_one_positiveSum who)]
   exact div_pos hnumer (localAverage_one_positiveSum who)
 
 theorem learnedLaw_zero_expectedUtility (who : Bool) :
-    finiteExpect (learnedLaw who 0)
+    expect (learnedLaw who 0)
       (fun choice => localUtility who choice ()) = 0 := by
   rw [learnedLaw_zero, fallbackChoice_eq_choiceOfAction]
-  simp only [finiteExpect, expect_pure]
+  simp only [expect_pure]
   simp [localUtility]
 
 /-- The hostile fixture genuinely learns: after observing the initial round,
@@ -554,7 +526,7 @@ theorem learnedLaw_one_ne_zero (who : Bool) :
   intro heq
   have hexpect := congrArg
     (fun law : PMF (information.Choice who (initialSite who).1) =>
-      finiteExpect law (fun choice => localUtility who choice ())) heq
+      expect law (fun choice => localUtility who choice ())) heq
   rw [learnedLaw_zero_expectedUtility] at hexpect
   linarith [learnedLaw_one_expectedUtility_pos who]
 
@@ -578,7 +550,7 @@ noncomputable def matrixRegret
     (replacement :
       (MatrixGame.utilityGame matrixPayoff).form.sig.Strategy who) : ℝ :=
   (MatrixGame.utilityGame matrixPayoff).externalRegret law who replacement
-    (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
+
 
 theorem matrixRegret_pi
     (mixed : Profile (MatrixGame.utilityGame matrixPayoff).form.sig.mixed)
@@ -588,23 +560,21 @@ theorem matrixRegret_pi
     matrixRegret (independentProduct mixed) who replacement =
       expectedUtility (MatrixGame.utilityGame matrixPayoff).utility who
           ((MatrixGame.utilityGame matrixPayoff).form.mixed.play
-            (Profile.update mixed who (PMF.pure replacement)))
-          (payoffIntegrable_of_finite _ _) -
+            (Profile.update mixed who (PMF.pure replacement))) -
         expectedUtility (MatrixGame.utilityGame matrixPayoff).utility who
-          ((MatrixGame.utilityGame matrixPayoff).form.mixed.play mixed)
-          (payoffIntegrable_of_finite _ _) := by
+          ((MatrixGame.utilityGame matrixPayoff).form.mixed.play mixed) := by
   simpa only [matrixRegret] using
     (MatrixGame.utilityGame matrixPayoff).externalRegret_pi
       mixed who replacement
-      (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
+
 
 theorem expectedPayoff_eq_scoreDifference
     (row : PMF (information.Choice false (initialSite false).1))
     (col : PMF (information.Choice true (initialSite true).1)) :
-    MatrixGame.expectedPayoffOfFinite matrixPayoff row col =
-      finiteExpect row (fun choice => localUtility false choice ()) -
-        finiteExpect col (fun choice => localUtility true choice ()) := by
-  unfold MatrixGame.expectedPayoffOfFinite finiteExpect matrixPayoff localUtility
+    MatrixGame.expectedPayoff matrixPayoff row col =
+      expect row (fun choice => localUtility false choice ()) -
+        expect col (fun choice => localUtility true choice ()) := by
+  unfold matrixPayoff localUtility
   exact MatrixGame.expectedPayoff_sub
     (fun choice => score false (actionOfChoice false choice))
     (fun choice => score true (actionOfChoice true choice)) row col
@@ -619,7 +589,6 @@ theorem local_approaches (who : Bool) :
   simpa only [localAverage, counterfactualRegretMatchAverage] using
     counterfactualRegretMatch_approaches information who (initialSite who)
       (localUtility who) (localStrategyOf who) (localPayoff who) 1
-      (localGuard who)
       (local_realization who) (bound :=
         Fintype.card (information.Choice who (initialSite who).1))
       (by positivity) (local_regretPayoff_norm_le who) (fun _ => ())
@@ -634,8 +603,7 @@ theorem localGain_positiveAverage_tendsto_zero (who : Bool) :
   apply counterfactualRegretMatches_positiveRootGains_tendsto_zero
     information (fun _ : Unit => Unit) who (fun _ => initialSite who)
     (fun _ => localStrategyOf who) (fun _ => localPayoff who)
-    (fun _ => 1) (fun _ _ => ())
-    (fun _ law current => localGuard who law current) (localGain who)
+    (fun _ => 1) (fun _ _ => ()) (localGain who)
     (fun _ _ => 1) (fun _ _ => by exact ⟨by norm_num, by norm_num⟩)
     (fun deviation _ => deviation)
   · intro deviation round
@@ -655,32 +623,32 @@ theorem rowExternalRegret_roundLaw_eq_localGain
   rw [MatrixGame.mixedProfile_update_zero,
     MatrixGame.expectedUtility_zero_mixedProfile,
     MatrixGame.expectedUtility_zero_mixedProfile]
-  show MatrixGame.expectedPayoffOfFinite matrixPayoff
+  show MatrixGame.expectedPayoff matrixPayoff
       (PMF.pure row) (learnedLaw true round) -
-    MatrixGame.expectedPayoffOfFinite matrixPayoff
+    MatrixGame.expectedPayoff matrixPayoff
       (learnedLaw false round) (learnedLaw true round) = _
   rw [expectedPayoff_eq_scoreDifference,
     expectedPayoff_eq_scoreDifference]
   unfold localGain
-  have hpure : finiteExpect (PMF.pure row)
+  have hpure : expect (PMF.pure row)
       (fun choice => localUtility false choice ()) =
         localUtility false row () := by
-    simp only [finiteExpect, expect_pure]
+    simp only [expect_pure]
   calc
-    _ = finiteExpect (PMF.pure row)
+    _ = expect (PMF.pure row)
           (fun choice => localUtility false choice ()) -
-        finiteExpect (learnedLaw false round)
+        expect (learnedLaw false round)
           (fun choice => localUtility false choice ()) := by
-            let a : ℝ := finiteExpect (PMF.pure row)
+            let a : ℝ := expect (PMF.pure row)
               (fun choice => localUtility false choice ())
-            let b : ℝ := finiteExpect (learnedLaw false round)
+            let b : ℝ := expect (learnedLaw false round)
               (fun choice => localUtility false choice ())
-            let c : ℝ := finiteExpect (learnedLaw true round)
+            let c : ℝ := expect (learnedLaw true round)
               (fun choice => localUtility true choice ())
             show (a - c) - (b - c) = a - b
             ring
     _ = _ := congrArg (fun value => value -
-      finiteExpect (learnedLaw false round)
+      expect (learnedLaw false round)
         (fun choice => localUtility false choice ())) hpure
 
 set_option backward.isDefEq.respectTransparency false in
@@ -693,32 +661,32 @@ theorem columnExternalRegret_roundLaw_eq_localGain
   rw [MatrixGame.mixedProfile_update_one,
     MatrixGame.expectedUtility_one_mixedProfile,
     MatrixGame.expectedUtility_one_mixedProfile]
-  show -MatrixGame.expectedPayoffOfFinite matrixPayoff
+  show -MatrixGame.expectedPayoff matrixPayoff
       (learnedLaw false round) (PMF.pure col) -
-    -MatrixGame.expectedPayoffOfFinite matrixPayoff
+    -MatrixGame.expectedPayoff matrixPayoff
       (learnedLaw false round) (learnedLaw true round) = _
   rw [expectedPayoff_eq_scoreDifference,
     expectedPayoff_eq_scoreDifference]
   unfold localGain
-  have hpure : finiteExpect (PMF.pure col)
+  have hpure : expect (PMF.pure col)
       (fun choice => localUtility true choice ()) =
         localUtility true col () := by
-    simp only [finiteExpect, expect_pure]
+    simp only [expect_pure]
   calc
-    _ = finiteExpect (PMF.pure col)
+    _ = expect (PMF.pure col)
           (fun choice => localUtility true choice ()) -
-        finiteExpect (learnedLaw true round)
+        expect (learnedLaw true round)
           (fun choice => localUtility true choice ()) := by
-            let a : ℝ := finiteExpect (PMF.pure col)
+            let a : ℝ := expect (PMF.pure col)
               (fun choice => localUtility true choice ())
-            let b : ℝ := finiteExpect (learnedLaw false round)
+            let b : ℝ := expect (learnedLaw false round)
               (fun choice => localUtility false choice ())
-            let c : ℝ := finiteExpect (learnedLaw true round)
+            let c : ℝ := expect (learnedLaw true round)
               (fun choice => localUtility true choice ())
             show -(b - a) - -(b - c) = a - c
             ring
     _ = _ := congrArg (fun value => value -
-      finiteExpect (learnedLaw true round)
+      expect (learnedLaw true round)
         (fun choice => localUtility true choice ())) hpure
 
 theorem rowExternalRegret_round_zero_eq_one :
@@ -736,17 +704,15 @@ theorem columnExternalRegret_round_zero_eq_one :
 /-- Both local learners contribute to the shared initial exploitability gap;
 the D51 cancellation theorem computes the exact value `2`. -/
 theorem initial_saddleGap_eq_two :
-    MatrixGame.expectedPayoffOfFinite matrixPayoff
+    MatrixGame.expectedPayoff matrixPayoff
           (PMF.pure (improvingChoice false))
           (MatrixGame.columnMarginal (roundLaw 0)) -
-        MatrixGame.expectedPayoffOfFinite matrixPayoff
+        MatrixGame.expectedPayoff matrixPayoff
           (MatrixGame.rowMarginal (roundLaw 0))
           (PMF.pure (improvingChoice true)) = 2 := by
   have hgap := MatrixGame.saddleGap_eq_externalRegret_add
     matrixPayoff (roundLaw 0) (improvingChoice false)
-      (improvingChoice true) (payoffIntegrable_of_finite _ _)
-      (payoffIntegrable_of_finite _ _)
-      (payoffIntegrable_of_finite _ _)
+      (improvingChoice true)
   rw [hgap]
   show matrixRegret (roundLaw 0) 0 (improvingChoice false) +
     matrixRegret (roundLaw 0) 1 (improvingChoice true) = 2
@@ -889,9 +855,6 @@ theorem empiricalMarginals_isεNash (t : ℕ) :
         (MatrixGame.columnMarginal (averageLaw t))) :=
   MatrixGame.marginalProfile_isεNash_of_externalRegret_le
     matrixPayoff (averageLaw t)
-      (payoffIntegrable_of_finite _ _)
-      (fun _ => payoffIntegrable_of_finite _ _)
-      (fun _ => payoffIntegrable_of_finite _ _)
       (externalRegret_le_rowRegretBound t)
       (externalRegret_le_columnRegretBound t)
       (fun _ => payoffIntegrable_of_finite _ _)

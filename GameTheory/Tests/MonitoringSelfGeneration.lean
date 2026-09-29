@@ -98,7 +98,7 @@ private theorem signal_integrable (profile : Profile signature)
       (fun signal => continuation signal who))
 
 theorem stagePayoff_eq (profile : Profile signature) (who : Player) :
-    game.stagePayoff profile who (game_integrable who profile) =
+    game.stagePayoff profile who =
       stageUtility profile who := by
   simp [UtilityGame.stagePayoff, form, expectedUtility_pure]
 
@@ -228,7 +228,7 @@ theorem payoffSet_bounded :
 theorem stagePayoff_bounded :
     ∀ who : Player, ∃ bound : ℝ,
       ∀ profile : Profile signature,
-        |game.stagePayoff profile who (game_integrable who profile)| ≤ bound := by
+        |game.stagePayoff profile who| ≤ bound := by
   intro who
   refine ⟨4, ?_⟩
   intro profile
@@ -242,8 +242,6 @@ stopping at an algebraic decomposition certificate. -/
 theorem cooperativePayoff_mem_perfectPublicEquilibriumPayoffs :
     cooperativePayoff ∈
       monitoring.perfectPublicEquilibriumPayoffs (1 / 2)
-        (monitoring.discountedStageIntegrableOfBounded
-          game_integrable stagePayoff_bounded)
         (monitoring.discountedSummableOfBounded
           (by norm_num) (by norm_num)
           game_integrable stagePayoff_bounded) := by

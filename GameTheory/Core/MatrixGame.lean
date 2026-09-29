@@ -209,20 +209,9 @@ theorem mixedProfile_update_one {I J : Type u}
 
 /-- Expected payoff to the row player under independent mixed play. -/
 def expectedPayoff {I J : Type u} (A : I → J → ℝ)
-    (row : PMF I) (col : PMF J)
-    (h : UtilityIntegrable (utility A) 0
-      ((form I J).mixed.play (mixedProfile row col))) : ℝ :=
+    (row : PMF I) (col : PMF J) : ℝ :=
   expectedUtility (utility A) 0
-    ((form I J).mixed.play (mixedProfile row col)) h
-
-/-- The expected payoff for a finite matrix. Finite action carriers make its
-outcome law finite, so this specialization needs no explicit guard. -/
-abbrev expectedPayoffOfFinite {I J : Type u} [Fintype I] [Fintype J]
-    (A : I → J → ℝ) (row : PMF I) (col : PMF J) : ℝ :=
-  expectedPayoff A row col
-    (payoffIntegrable_of_finite
-      ((form I J).mixed.play (mixedProfile row col))
-      (fun outcome => utility A outcome 0))
+    ((form I J).mixed.play (mixedProfile row col))
 
 /-- A fixed row leaves only the column draw random. -/
 theorem mixed_play_pure_row {I J : Type u} (row : I) (col : PMF J) :
@@ -301,34 +290,31 @@ theorem integrable_pure_column {I J : Type u} (A : I → J → ℝ)
 
 /-- With a pure row, payoff is expectation against the actual column law. -/
 theorem expectedPayoff_pure_row {I J : Type u} (A : I → J → ℝ)
-    (row : I) (col : PMF J) (h : PayoffIntegrable col (A row)) :
-    expectedPayoff A (PMF.pure row) col (integrable_pure_row A row col h) =
-      expect col (A row) h := by
+    (row : I) (col : PMF J) :
+    expectedPayoff A (PMF.pure row) col =
+      expect col (A row) := by
   calc
-    expectedPayoff A (PMF.pure row) col (integrable_pure_row A row col h) =
+    expectedPayoff A (PMF.pure row) col =
         expectedUtility (utility A) 0
-          (col.map (fun current => (row, current)))
-          ((payoffIntegrable_map_iff _ _ _).2 h) :=
+          (col.map (fun current => (row, current))) :=
       expectedUtility_congr_law (utility A) 0
-        (mixed_play_pure_row row col) _ _
-    _ = expect col (A row) h := by
+        (mixed_play_pure_row row col)
+    _ = expect col (A row) := by
       rw [expectedUtility_map]
       rfl
 
 /-- With a pure column, payoff is expectation against the actual row law. -/
 theorem expectedPayoff_pure_column {I J : Type u} (A : I → J → ℝ)
-    (row : PMF I) (col : J)
-    (h : PayoffIntegrable row (fun current => A current col)) :
-    expectedPayoff A row (PMF.pure col) (integrable_pure_column A row col h) =
-      expect row (fun current => A current col) h := by
+    (row : PMF I) (col : J) :
+    expectedPayoff A row (PMF.pure col) =
+      expect row (fun current => A current col) := by
   calc
-    expectedPayoff A row (PMF.pure col) (integrable_pure_column A row col h) =
+    expectedPayoff A row (PMF.pure col) =
         expectedUtility (utility A) 0
-          (row.map (fun current => (current, col)))
-          ((payoffIntegrable_map_iff _ _ _).2 h) :=
+          (row.map (fun current => (current, col))) :=
       expectedUtility_congr_law (utility A) 0
-        (mixed_play_pure_column row col) _ _
-    _ = expect row (fun current => A current col) h := by
+        (mixed_play_pure_column row col)
+    _ = expect row (fun current => A current col) := by
       rw [expectedUtility_map]
       rfl
 
@@ -336,12 +322,10 @@ theorem expectedPayoff_pure_column {I J : Type u} (A : I → J → ℝ)
 theorem expectedPayoff_eq_expect_rows {I J : Type u} (A : I → J → ℝ)
     (row : PMF I) (col : PMF J)
     (hjoint : UtilityIntegrable (utility A) 0
-      ((form I J).mixed.play (mixedProfile row col)))
-    (hrows : ∀ current, PayoffIntegrable col (A current)) :
-    ∃ houter : PayoffIntegrable row
-        (fun current => expect col (A current) (hrows current)),
-      expectedPayoff A row col hjoint =
-        expect row (fun current => expect col (A current) (hrows current)) houter := by
+      ((form I J).mixed.play (mixedProfile row col))) :
+    PayoffIntegrable row (fun current => expect col (A current)) ∧
+      expectedPayoff A row col =
+        expect row (fun current => expect col (A current)) := by
   let q : I → PMF (I × J) := fun current =>
     col.map (fun currentCol => (current, currentCol))
   let f : I × J → ℝ := fun outcome => A outcome.1 outcome.2
@@ -360,43 +344,34 @@ theorem expectedPayoff_eq_expect_rows {I J : Type u} (A : I → J → ℝ)
         exact mixed_play_pure_row current col
   have hbind : PayoffIntegrable (row.bind q) f :=
     payoffIntegrable_congr_law hplay hjoint
-  have hcond (current : I) : PayoffIntegrable (q current) f :=
-    (payoffIntegrable_map_iff (fun currentCol => (current, currentCol)) col f).2
-      (hrows current)
   have hbranch (current : I) :
-      expect (q current) f (hcond current) =
-        expect col (A current) (hrows current) := by
+      expect (q current) f =
+        expect col (A current) := by
     exact expect_map (fun currentCol => (current, currentCol)) col f
-      (hrows current) (hcond current)
-  have houter := payoffIntegrable_bind_conditionalExpectation row q f hbind hcond
+  have houter := payoffIntegrable_bind_conditionalExpectation row q f hbind
   have houter' : PayoffIntegrable row
-      (fun current => expect col (A current) (hrows current)) :=
+      (fun current => expect col (A current)) :=
     payoffIntegrable_congr_on_support (fun current _ => hbranch current) houter
   refine ⟨houter', ?_⟩
   calc
-    expectedPayoff A row col hjoint = expect (row.bind q) f hbind := by
-      exact expectedUtility_congr_law (utility A) 0 hplay _ _
-    _ = expect row (fun current => expect (q current) f (hcond current))
-          houter := expect_bind_tower row q f hbind hcond
-    _ = expect row (fun current => expect col (A current) (hrows current))
-          houter' := by
-      exact expect_congr_on_support (fun current _ => hbranch current) houter houter'
+    expectedPayoff A row col = expect (row.bind q) f := by
+      exact expectedUtility_congr_law (utility A) 0 hplay
+    _ = expect row (fun current => expect (q current) f)
+           := expect_bind_tower row q f hbind
+    _ = expect row (fun current => expect col (A current)) := by
+      exact expect_congr_on_support (fun current _ => hbranch current)
 
 /-- Matrix payoff is affine in the column law under the actual joint and
 conditional guards. -/
 theorem expectedPayoff_eq_expect_columns {I J : Type u} (A : I → J → ℝ)
     (row : PMF I) (col : PMF J)
     (hjoint : UtilityIntegrable (utility A) 0
-      ((form I J).mixed.play (mixedProfile row col)))
-    (hcols : ∀ current, PayoffIntegrable row
-      (fun currentRow => A currentRow current)) :
-    ∃ houter : PayoffIntegrable col
-        (fun current => expect row (fun currentRow => A currentRow current)
-          (hcols current)),
-      expectedPayoff A row col hjoint =
+      ((form I J).mixed.play (mixedProfile row col))) :
+    PayoffIntegrable col
+        (fun current => expect row (fun currentRow => A currentRow current)) ∧
+      expectedPayoff A row col =
         expect col (fun current =>
-          expect row (fun currentRow => A currentRow current) (hcols current))
-          houter := by
+          expect row (fun currentRow => A currentRow current)) := by
   let q : J → PMF (I × J) := fun current =>
     row.map (fun currentRow => (currentRow, current))
   let f : I × J → ℝ := fun outcome => A outcome.1 outcome.2
@@ -415,29 +390,23 @@ theorem expectedPayoff_eq_expect_columns {I J : Type u} (A : I → J → ℝ)
         exact mixed_play_pure_column row current
   have hbind : PayoffIntegrable (col.bind q) f :=
     payoffIntegrable_congr_law hplay hjoint
-  have hcond (current : J) : PayoffIntegrable (q current) f :=
-    (payoffIntegrable_map_iff (fun currentRow => (currentRow, current)) row f).2
-      (hcols current)
   have hbranch (current : J) :
-      expect (q current) f (hcond current) =
-        expect row (fun currentRow => A currentRow current) (hcols current) := by
+      expect (q current) f =
+        expect row (fun currentRow => A currentRow current) := by
     exact expect_map (fun currentRow => (currentRow, current)) row f
-      (hcols current) (hcond current)
-  have houter := payoffIntegrable_bind_conditionalExpectation col q f hbind hcond
+  have houter := payoffIntegrable_bind_conditionalExpectation col q f hbind
   have houter' : PayoffIntegrable col
-      (fun current => expect row (fun currentRow => A currentRow current)
-        (hcols current)) :=
+      (fun current => expect row (fun currentRow => A currentRow current)) :=
     payoffIntegrable_congr_on_support (fun current _ => hbranch current) houter
   refine ⟨houter', ?_⟩
   calc
-    expectedPayoff A row col hjoint = expect (col.bind q) f hbind := by
-      exact expectedUtility_congr_law (utility A) 0 hplay _ _
-    _ = expect col (fun current => expect (q current) f (hcond current))
-          houter := expect_bind_tower col q f hbind hcond
+    expectedPayoff A row col = expect (col.bind q) f := by
+      exact expectedUtility_congr_law (utility A) 0 hplay
+    _ = expect col (fun current => expect (q current) f)
+           := expect_bind_tower col q f hbind
     _ = expect col (fun current =>
-          expect row (fun currentRow => A currentRow current) (hcols current))
-          houter' := by
-      exact expect_congr_on_support (fun current _ => hbranch current) houter houter'
+          expect row (fun currentRow => A currentRow current)) := by
+      exact expect_congr_on_support (fun current _ => hbranch current)
 
 /-- A separable matrix payoff is the difference of its marginal values. -/
 theorem expectedPayoff_sub {I J : Type u} (rowValue : I → ℝ)
@@ -449,71 +418,57 @@ theorem expectedPayoff_sub {I J : Type u} (rowValue : I → ℝ)
     (hrow : PayoffIntegrable row rowValue)
     (hcol : PayoffIntegrable col colValue) :
     expectedPayoff (fun currentRow currentCol =>
-        rowValue currentRow - colValue currentCol) row col hjoint =
-      expect row rowValue hrow - expect col colValue hcol := by
-  let c := expect col colValue hcol
-  have hconditional (current : I) :
-      PayoffIntegrable col (fun currentCol =>
-        rowValue current - colValue currentCol) :=
-    payoffIntegrable_sub (payoffIntegrable_constant col (rowValue current)) hcol
+        rowValue currentRow - colValue currentCol) row col =
+      expect row rowValue - expect col colValue := by
+  let c := expect col colValue
   obtain ⟨houter, haverage⟩ := expectedPayoff_eq_expect_rows
     (fun currentRow currentCol => rowValue currentRow - colValue currentCol)
-    row col hjoint hconditional
+    row col hjoint
   have hbranch (current : I) :
       expect col (fun currentCol => rowValue current - colValue currentCol)
-          (hconditional current) = rowValue current - c := by
+           = rowValue current - c := by
     calc
-      _ = expect col (fun _ => rowValue current)
-            (payoffIntegrable_constant col (rowValue current)) -
-          expect col colValue hcol :=
+      _ = expect col (fun _ => rowValue current) -
+          expect col colValue :=
         expect_sub (payoffIntegrable_constant col (rowValue current)) hcol
       _ = _ := by rw [expect_constant]
-  have houter' : PayoffIntegrable row (fun current => rowValue current - c) :=
-    payoffIntegrable_sub hrow (payoffIntegrable_constant row c)
   calc
     _ = expect row (fun current =>
-          expect col (fun currentCol => rowValue current - colValue currentCol)
-            (hconditional current)) houter := haverage
-    _ = expect row (fun current => rowValue current - c) houter' :=
-      expect_congr_on_support (fun current _ => hbranch current) houter houter'
-    _ = expect row rowValue hrow -
-          expect row (fun _ => c) (payoffIntegrable_constant row c) :=
+          expect col (fun currentCol => rowValue current - colValue currentCol)) := haverage
+    _ = expect row (fun current => rowValue current - c) :=
+      expect_congr_on_support (fun current _ => hbranch current)
+    _ = expect row rowValue -
+          expect row (fun _ => c) :=
       expect_sub hrow (payoffIntegrable_constant row c)
     _ = _ := by rw [expect_constant]
 
 theorem expectedUtility_zero_mixedProfile {I J : Type u}
-    (A : I → J → ℝ) (row : PMF I) (col : PMF J)
-    (h : UtilityIntegrable (utility A) 0
-      ((form I J).mixed.play (mixedProfile row col))) :
+    (A : I → J → ℝ) (row : PMF I) (col : PMF J) :
     expectedUtility (utility A) 0
-        ((form I J).mixed.play (mixedProfile row col)) h =
-      expectedPayoff A row col h :=
+        ((form I J).mixed.play (mixedProfile row col)) =
+      expectedPayoff A row col :=
   rfl
 
 theorem expectedUtility_one_mixedProfile {I J : Type u}
-    (A : I → J → ℝ) (row : PMF I) (col : PMF J)
-    (hzero : UtilityIntegrable (utility A) 0
-      ((form I J).mixed.play (mixedProfile row col)))
-    (hone : UtilityIntegrable (utility A) 1
-      ((form I J).mixed.play (mixedProfile row col))) :
+    (A : I → J → ℝ) (row : PMF I) (col : PMF J) :
     expectedUtility (utility A) 1
-        ((form I J).mixed.play (mixedProfile row col)) hone =
-      -expectedPayoff A row col hzero := by
-  exact (utility_isZeroSum A).expectedUtility_one _ hzero hone
+        ((form I J).mixed.play (mixedProfile row col)) =
+      -expectedPayoff A row col := by
+  exact (utility_isZeroSum A).expectedUtility_one _
 
 /-- A mixed row guarantees payoff at least `v` against every mixed column. -/
 def RowGuarantees {I J : Type u} (A : I → J → ℝ)
     (row : PMF I) (v : ℝ) : Prop :=
-  ∀ col : PMF J, ∃ h : UtilityIntegrable (utility A) 0
-    ((form I J).mixed.play (mixedProfile row col)),
-      v ≤ expectedPayoff A row col h
+  ∀ col : PMF J, UtilityIntegrable (utility A) 0
+    ((form I J).mixed.play (mixedProfile row col)) ∧
+      v ≤ expectedPayoff A row col
 
 /-- A mixed column caps the row payoff at `v` against every mixed row. -/
 def ColumnCaps {I J : Type u} (A : I → J → ℝ)
     (col : PMF J) (v : ℝ) : Prop :=
-  ∀ row : PMF I, ∃ h : UtilityIntegrable (utility A) 0
-    ((form I J).mixed.play (mixedProfile row col)),
-      expectedPayoff A row col h ≤ v
+  ∀ row : PMF I, UtilityIntegrable (utility A) 0
+    ((form I J).mixed.play (mixedProfile row col)) ∧
+      expectedPayoff A row col ≤ v
 
 /-- Some mixed row guarantees `v`. -/
 def IsRowGuarantee {I J : Type u} (A : I → J → ℝ) (v : ℝ) : Prop :=
@@ -528,10 +483,10 @@ column capping at the realized payoff. -/
 theorem isSaddlePoint_iff_guarantees_caps {I J : Type u}
     (A : I → J → ℝ) (row : PMF I) (col : PMF J) :
     IsSaddlePoint (F := form I J) (utility A) (mixedProfile row col) ↔
-      ∃ hbase : UtilityIntegrable (utility A) 0
-          ((form I J).mixed.play (mixedProfile row col)),
-        RowGuarantees A row (expectedPayoff A row col hbase) ∧
-          ColumnCaps A col (expectedPayoff A row col hbase) := by
+      UtilityIntegrable (utility A) 0
+          ((form I J).mixed.play (mixedProfile row col)) ∧
+        RowGuarantees A row (expectedPayoff A row col) ∧
+          ColumnCaps A col (expectedPayoff A row col) := by
   constructor
   · intro hsaddle
     rcases hsaddle with ⟨hbase, hrow, hcol⟩

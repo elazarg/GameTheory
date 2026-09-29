@@ -2,7 +2,7 @@
 # PMFs and probability measures
 
 Mathlib provides `PMF.toMeasure` and the inverse `Measure.toPMF` on countable
-measurable carriers. This file relates guarded real expectations and PMF
+measurable carriers. This file relates real expectations and PMF
 composition to those canonical measure constructions.
 -/
 
@@ -66,14 +66,17 @@ theorem payoffIntegrable_iff_integrable {α : Type u}
     rw [summable_subtype_iff_indicator, hsame]
   )
 
-/-- A guarded expectation equals integration against the canonical PMF
-measure. -/
+/-- Expectation equals integration against the canonical PMF measure. Both
+sides vanish on a non-integrable payoff. -/
 theorem expect_eq_integral {α : Type u}
     [MeasurableSpace α] [MeasurableSingletonClass α]
-    (μ : PMF α) (f : α → ℝ) (h : PayoffIntegrable μ f) :
-    expect μ f h = ∫ a, f a ∂μ.toMeasure := by
-  rw [PMF.integral_eq_tsum μ f ((payoffIntegrable_iff_integrable μ f).1 h)]
-  simp only [expect, smul_eq_mul]
+    (μ : PMF α) (f : α → ℝ) :
+    expect μ f = ∫ a, f a ∂μ.toMeasure := by
+  by_cases h : PayoffIntegrable μ f
+  · rw [PMF.integral_eq_tsum μ f ((payoffIntegrable_iff_integrable μ f).1 h)]
+    simp only [expect, smul_eq_mul]
+  · rw [expect_of_not_payoffIntegrable h, MeasureTheory.integral_undef]
+    exact fun hi => h ((payoffIntegrable_iff_integrable μ f).2 hi)
 
 /-- Reading a countable discrete probability measure as a PMF preserves the
 mass of each measurable event. -/

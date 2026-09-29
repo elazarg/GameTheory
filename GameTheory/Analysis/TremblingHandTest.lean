@@ -80,12 +80,8 @@ private theorem pmfBool_sum_toReal_one (μ : PMF Bool) :
 theorem dominated_expectedUtility_zero
     (mixedProfile : Profile dominatedForm.sig.mixed) :
     expectedUtility dominatedUtility 0
-        (dominatedForm.mixed.play mixedProfile)
-        (payoffIntegrable_of_finite (dominatedForm.mixed.play mixedProfile)
-          (fun outcome => dominatedUtility outcome 0)) =
+        (dominatedForm.mixed.play mixedProfile) =
       (mixedProfile 0 true).toReal * (mixedProfile 1 true).toReal := by
-  let hproduct := payoffIntegrable_of_finite (independentProduct mixedProfile)
-    (fun outcome => dominatedUtility outcome 0)
   have hlaw : dominatedForm.mixed.play mixedProfile =
       independentProduct mixedProfile := by
     rw [GameForm.mixed_play]
@@ -93,11 +89,9 @@ theorem dominated_expectedUtility_zero
   calc
     expectedUtility dominatedUtility 0
         (dominatedForm.mixed.play mixedProfile)
-        (payoffIntegrable_of_finite (dominatedForm.mixed.play mixedProfile)
-          (fun outcome => dominatedUtility outcome 0))
         = expectedUtility dominatedUtility 0
-            (independentProduct mixedProfile) hproduct :=
-          expectedUtility_congr_law dominatedUtility 0 hlaw _ hproduct
+            (independentProduct mixedProfile) :=
+          expectedUtility_congr_law dominatedUtility 0 hlaw
     _ = ∑ profile, (independentProduct mixedProfile profile).toReal *
           dominatedUtility profile 0 := by
         rw [expectedUtility, expect_eq_sum]
@@ -180,26 +174,20 @@ theorem weakMixedProfile_not_isTremblingHandPerfect :
     rcases hpref with ⟨hpreferred, halternative, hle⟩
     have hpreferredFormula :
         expectedUtility dominatedUtility 0
-          (dominatedForm.mixed.play (approximating n)) hpreferred =
+          (dominatedForm.mixed.play (approximating n)) =
           (approximating n 0 true).toReal *
           (approximating n 1 true).toReal := by
       let hcanonical := payoffIntegrable_of_finite
         (dominatedForm.mixed.play (approximating n))
         (fun outcome => dominatedUtility outcome 0)
-      rw [expectedUtility_congr_law dominatedUtility 0 rfl hpreferred
-        hcanonical]
+      rw [expectedUtility_congr_law dominatedUtility 0 rfl]
       exact dominated_expectedUtility_zero (approximating n)
     have halternativeFormula :
         expectedUtility dominatedUtility 0
-          (dominatedForm.mixed.play ((approximating n).update 0 (shifted n)))
-          halternative =
+          (dominatedForm.mixed.play ((approximating n).update 0 (shifted n))) =
           ((approximating n).update 0 (shifted n) 0 true).toReal *
           ((approximating n).update 0 (shifted n) 1 true).toReal := by
-      let hcanonical := payoffIntegrable_of_finite
-        (dominatedForm.mixed.play ((approximating n).update 0 (shifted n)))
-        (fun outcome => dominatedUtility outcome 0)
-      rw [expectedUtility_congr_law dominatedUtility 0 rfl halternative
-        hcanonical]
+      rw [expectedUtility_congr_law dominatedUtility 0 rfl]
       exact dominated_expectedUtility_zero _
     rw [hpreferredFormula, halternativeFormula] at hle
     have hopponentPos : 0 < (approximating n 1 true).toReal :=

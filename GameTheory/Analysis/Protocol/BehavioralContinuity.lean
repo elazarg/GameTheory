@@ -183,13 +183,7 @@ theorem continuous_continuationContext_value
       Continuous fun x => ((alternative x info choice).toReal))
     (payoff : E.History → ℝ) (fuel : ℕ) :
     Continuous fun x =>
-      ((assessment x).continuationContext site payoff fuel).value (alternative x)
-        (by
-          simpa only [Context.IntegrableAt, Context.ofBelief,
-            BehavioralAssessment.continuationContext] using
-            (payoffIntegrable_of_finite
-              (((assessment x).continuationContext site payoff fuel).outcome
-                (alternative x)) payoff)) := by
+      ((assessment x).continuationContext site payoff fuel).value (alternative x) := by
   simp only [Context.value, BehavioralAssessment.continuationContext]
   apply continuous_pmf_expect
   · intro target

@@ -52,12 +52,12 @@ theorem isNash_truthfulPlan_of_isIncentiveCompatible
   rw [euPreference_apply]
   refine ⟨htruth who, hdeviation who deviation, ?_⟩
   rw [(M.toBayesianGame prior).expectedUtility_eq_prior who
-      (Profile.update (M.truthfulPlan prior) who deviation)
-      (hdeviation who deviation),
+      (Profile.update (M.truthfulPlan prior) who deviation) ,
     (M.toBayesianGame prior).expectedUtility_eq_prior who
-      (M.truthfulPlan prior) (htruth who)]
-  apply expect_mono
-  intro types _
+      (M.truthfulPlan prior)]
+  refine expect_mono (fun types _ => ?_)
+    ((M.toBayesianGame prior).planPayoff_integrable who _ (hdeviation who deviation))
+    ((M.toBayesianGame prior).planPayoff_integrable who _ (htruth who))
   simp only [BayesianGame.planPayoff]
   rw [M.actionsOf_update_truthfulPlan, M.actionsOf_truthfulPlan]
   have hpoint :=

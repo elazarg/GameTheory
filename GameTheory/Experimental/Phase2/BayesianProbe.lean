@@ -33,11 +33,10 @@ local instance (who : Bool) : DecidableEq (binaryProbeGame.Ty who) := by
 observable on the probe's common prior. -/
 example (who : Bool) (f : (∀ i, binaryProbeGame.Ty i) → ℝ)
     (hf : PayoffIntegrable binaryProbeGame.prior f) :
-    expect binaryProbeGame.prior f hf =
+    expect binaryProbeGame.prior f =
       ∑ ownType : binaryProbeGame.Ty who,
         expect binaryProbeGame.prior
-          (((fun types => types who) ⁻¹' {ownType}).indicator f)
-          (payoffIntegrable_indicator _ hf) :=
+          (((fun types => types who) ⁻¹' {ownType}).indicator f) :=
   binaryProbeGame.prior_expect_eq_sum who f hf
 
 /-- The canonical updated-plan decomposition has a local guard for the actual
@@ -47,10 +46,9 @@ example (plan : Profile binaryProbeGame.signature) (who : Bool)
     (hdeviation : UtilityIntegrable binaryProbeGame.utility who
       (binaryProbeGame.toForm.play (Profile.update plan who deviation))) :
     expectedUtility binaryProbeGame.utility who
-        (binaryProbeGame.toForm.play (Profile.update plan who deviation)) hdeviation =
+        (binaryProbeGame.toForm.play (Profile.update plan who deviation)) =
       ∑ ownType : binaryProbeGame.Ty who,
-        binaryProbeGame.interimValueOfDeviation who ownType plan (deviation ownType)
-          deviation rfl hdeviation :=
+        binaryProbeGame.interimValueOfDeviation who ownType plan (deviation ownType) :=
   binaryProbeGame.expectedUtility_update plan who deviation hdeviation
 
 /-- The canonical theorem applies to arbitrary contingent plans in the hostile
@@ -60,24 +58,9 @@ theorem binaryProbe_interim_characterization
     IsNash binaryProbeGame.toForm (euPreference binaryProbeGame.utility) plan ↔
       ∀ (who : Bool) (ownType : binaryProbeGame.Ty who)
         (respond : binaryProbeGame.Act who),
-        binaryProbeGame.interimValueOfDeviation who ownType plan respond
-          (binaryProbeGame.singleTypeDeviation plan who ownType respond) (by
-            simp [BayesianGame.singleTypeDeviation])
-          (by
-            apply payoffIntegrable_of_bounded _ _ (C := 1)
-            intro outcome
-            rcases outcome with ⟨types, actions⟩
-            simp [binaryProbeGame, BayesianGame.utility]
-            split_ifs <;> norm_num) ≤
+        binaryProbeGame.interimValueOfDeviation who ownType plan respond ≤
         binaryProbeGame.interimValueOfDeviation who ownType plan
-          (plan who ownType) (fun t => plan who t) rfl (by
-            simpa only [Profile.update_eq_self] using
-              (by
-                apply payoffIntegrable_of_bounded _ _ (C := 1)
-                intro outcome
-                rcases outcome with ⟨types, actions⟩
-                simp [binaryProbeGame, BayesianGame.utility]
-                split_ifs <;> norm_num)) := by
+          (plan who ownType) := by
   apply binaryProbeGame.isNash_iff_interim plan
   intro who deviation
   apply payoffIntegrable_of_bounded _ _ (C := 1)

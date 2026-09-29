@@ -43,16 +43,16 @@ theorem isBehavioralSubgamePerfect_iff [Fintype ι] [DecidableEq ι]
     (profile : Profile M.behavioralSignature) (utility : E.History → ι → ℝ) :
     M.IsBehavioralSubgamePerfect bounded profile utility ↔
       ∀ history, M.IsSubgameRoot history → ∀ who (alternative : M.BehavioralPolicy who),
-        ∃ hbase : UtilityIntegrable utility who
-            (M.runBehavioralFrom profile bound history),
-          ∃ hdev : UtilityIntegrable utility who
+        UtilityIntegrable utility who
+            (M.runBehavioralFrom profile bound history) ∧
+          UtilityIntegrable utility who
               (M.runBehavioralFrom (Profile.update profile who alternative)
-                bound history),
+                bound history) ∧
             expectedUtility utility who
                 (M.runBehavioralFrom (Profile.update profile who alternative)
-                  bound history) hdev ≤
+                  bound history) ≤
               expectedUtility utility who
-                (M.runBehavioralFrom profile bound history) hbase :=
+                (M.runBehavioralFrom profile bound history) :=
   M.isContinuationNash_iff _ _ _
 
 /-- Evaluation fuel is not a semantic deadline. -/
@@ -116,16 +116,16 @@ theorem isSingleMoverBehavioralSubgamePerfect_iff {bound : ℕ}
     (utility : E.History → ι → ℝ) :
     M.IsSingleMoverBehavioralSubgamePerfect single bounded profile utility ↔
       ∀ history, M.IsSubgameRoot history → ∀ who (alternative : M.BehavioralPolicy who),
-        ∃ hbase : UtilityIntegrable utility who
-            (M.runSingleMoverBehavioralFrom single profile bound history),
-          ∃ hdev : UtilityIntegrable utility who
+        UtilityIntegrable utility who
+            (M.runSingleMoverBehavioralFrom single profile bound history) ∧
+          UtilityIntegrable utility who
               (M.runSingleMoverBehavioralFrom single
-                (Profile.update profile who alternative) bound history),
+                (Profile.update profile who alternative) bound history) ∧
             expectedUtility utility who
                 (M.runSingleMoverBehavioralFrom single
-                  (Profile.update profile who alternative) bound history) hdev ≤
+                  (Profile.update profile who alternative) bound history) ≤
               expectedUtility utility who
-                (M.runSingleMoverBehavioralFrom single profile bound history) hbase :=
+                (M.runSingleMoverBehavioralFrom single profile bound history) :=
   M.isContinuationNash_iff _ _ _
 
 /-- Single-mover behavioral SPE is also independent of the certified bound. -/

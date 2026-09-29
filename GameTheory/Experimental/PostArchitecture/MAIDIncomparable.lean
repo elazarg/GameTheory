@@ -366,13 +366,11 @@ theorem runState_integrable
 
 private theorem expect_runState_eq_intendedOutcome
     (profile : (who : Agent) → model.Policy who) (score : State → ℝ) :
-    expect (PMF.map History.state (model.run profile 3)) score
-        (runState_integrable profile score) =
+    expect (PMF.map History.state (model.run profile 3)) score =
       expect (intendedOutcome
           (ruleOf .left (profile .left))
-          (ruleOf .right (profile .right))) score
-        (intendedOutcome_integrable _ _ score) :=
-  expect_congr_law (map_state_run_eq_intendedOutcome profile) score _ _
+          (ruleOf .right (profile .right))) score :=
+  expect_congr_law (map_state_run_eq_intendedOutcome profile) score
 
 /-- The simultaneous decision transition records both actions at once. Every
 supported target has both decisions, so no hidden serialization state exists. -/
@@ -414,7 +412,7 @@ def constant (value : Bool) : Bool → Bool := fun _ => value
 def responsive : Bool → Bool := fun signal => signal
 
 theorem expect_fairCoin (score : Bool → ℝ) :
-    expect fairCoin score (payoffIntegrable_of_finite _ _) =
+    expect fairCoin score =
       1 / 2 * score false + (1 - 1 / 2) * score true := by
   have hfalse : PayoffIntegrable (PMF.pure false) score :=
     payoffIntegrable_pure _ _
@@ -426,30 +424,24 @@ theorem expect_fairCoin (score : Bool → ℝ) :
 
 theorem expect_payoff_intendedOutcome
     (leftRule rightRule : Bool → Bool) :
-    expect (intendedOutcome leftRule rightRule) payoffValue
-        (intendedOutcome_integrable leftRule rightRule payoffValue) =
+    expect (intendedOutcome leftRule rightRule) payoffValue =
       expect fairCoin (fun signal =>
-        payoff signal (leftRule signal) (rightRule signal))
-        (payoffIntegrable_of_finite _ _) := by
-  exact expect_map _ _ _ _ _
+        payoff signal (leftRule signal) (rightRule signal)) := by
+  exact expect_map _ _ _
 
 theorem expect_left_intendedOutcome
     (leftRule rightRule : Bool → Bool) :
-    expect (intendedOutcome leftRule rightRule) leftValue
-        (intendedOutcome_integrable leftRule rightRule leftValue) =
+    expect (intendedOutcome leftRule rightRule) leftValue =
       expect fairCoin (fun signal =>
-        if leftRule signal then 1 else 0)
-        (payoffIntegrable_of_finite _ _) := by
-  exact expect_map _ _ _ _ _
+        if leftRule signal then 1 else 0) := by
+  exact expect_map _ _ _
 
 theorem expect_right_intendedOutcome
     (leftRule rightRule : Bool → Bool) :
-    expect (intendedOutcome leftRule rightRule) rightValue
-        (intendedOutcome_integrable leftRule rightRule rightValue) =
+    expect (intendedOutcome leftRule rightRule) rightValue =
       expect fairCoin (fun signal =>
-        if rightRule signal then 1 else 0)
-        (payoffIntegrable_of_finite _ _) := by
-  exact expect_map _ _ _ _ _
+        if rightRule signal then 1 else 0) := by
+  exact expect_map _ _ _
 
 theorem outcome_law_depends_on_left :
     PMF.map History.state
@@ -460,8 +452,6 @@ theorem outcome_law_depends_on_left :
   rw [map_state_run_eq_intendedOutcome,
     map_state_run_eq_intendedOutcome] at hequal
   have hscore := expect_congr_law hequal leftValue
-    (intendedOutcome_integrable _ _ leftValue)
-    (intendedOutcome_integrable _ _ leftValue)
   rw [
     expect_left_intendedOutcome, expect_left_intendedOutcome,
     expect_fairCoin, expect_fairCoin] at hscore
@@ -476,8 +466,6 @@ theorem outcome_law_depends_on_right :
   rw [map_state_run_eq_intendedOutcome,
     map_state_run_eq_intendedOutcome] at hequal
   have hscore := expect_congr_law hequal rightValue
-    (intendedOutcome_integrable _ _ rightValue)
-    (intendedOutcome_integrable _ _ rightValue)
   rw [
     expect_right_intendedOutcome, expect_right_intendedOutcome,
     expect_fairCoin, expect_fairCoin] at hscore
@@ -485,8 +473,7 @@ theorem outcome_law_depends_on_right :
 
 theorem expect_responsive :
     expect (PMF.map History.state
-      (model.run (profileOfRules responsive responsive) 3)) payoffValue
-      (runState_integrable (profileOfRules responsive responsive) payoffValue) =
+      (model.run (profileOfRules responsive responsive) 3)) payoffValue =
         2 := by
   rw [expect_runState_eq_intendedOutcome,
     expect_payoff_intendedOutcome, expect_fairCoin]
@@ -496,8 +483,7 @@ theorem expect_both_constant_false :
     expect (PMF.map History.state
       (model.run
         (profileOfRules (constant false) (constant false)) 3)) payoffValue
-      (runState_integrable
-        (profileOfRules (constant false) (constant false)) payoffValue) = 1 := by
+       = 1 := by
   rw [expect_runState_eq_intendedOutcome,
     expect_payoff_intendedOutcome, expect_fairCoin]
   norm_num [profileOfRules, constant, payoff]
@@ -511,9 +497,6 @@ theorem outcome_law_depends_on_observation :
           (profileOfRules (constant false) (constant false)) 3) := by
   intro hequal
   have hscore := expect_congr_law hequal payoffValue
-    (runState_integrable (profileOfRules responsive responsive) payoffValue)
-    (runState_integrable
-      (profileOfRules (constant false) (constant false)) payoffValue)
   rw [expect_responsive, expect_both_constant_false] at hscore
   norm_num at hscore
 

@@ -87,27 +87,27 @@ def LocalUtilityFactorsAt
         Config diagram (pruning.kept target.1) →
           diagram.Value target.1 → ℝ,
       (∀ replacement : OwnerPolicy diagram owner,
-        ∃ hplay : UtilityIntegrable
+        UtilityIntegrable
             (fun assignment who => semantics.utility who assignment)
             owner
             ((nativeBehavioralGameForm semantics).play
               (Profile.update (pruning.expandPolicy policy)
-                owner replacement)),
-          ∃ hjoint : PayoffIntegrable
+                owner replacement)) ∧
+          PayoffIntegrable
             (fullJoint contextLaw
               (Config.restrict (pruning.kept_sub_observed target.1))
               (replacement target))
-            (fun result => continuation result.1 result.2),
+            (fun result => continuation result.1 result.2) ∧
             expectedUtility
                 (fun assignment who => semantics.utility who assignment)
                 owner
                 ((nativeBehavioralGameForm semantics).play
                   (Profile.update (pruning.expandPolicy policy)
-                    owner replacement)) hplay =
+                    owner replacement)) =
               expect (fullJoint contextLaw
                 (Config.restrict (pruning.kept_sub_observed target.1))
                 (replacement target))
-                (fun result => continuation result.1 result.2) hjoint) ∧
+                (fun result => continuation result.1 result.2)) ∧
       (∀ (other : Player), other ≠ owner →
         ∀ replacement : OwnerPolicy diagram other,
           UtilityIntegrable
@@ -198,11 +198,6 @@ theorem coversFullDeviationsAt_of_localUtilityFactorsAt
           fullJoint contextLaw keep
             (fun context => averaged (keep context)) :=
       congrArg (fullJoint contextLaw keep) hexpandedTarget
-    have hredJoint' : PayoffIntegrable
-        (fullJoint contextLaw keep
-          (fun context => averaged (keep context)))
-        (fun result => continuation result.1 result.2) :=
-      payoffIntegrable_congr_law hredLaw hredJoint
     refine ⟨hredPlay, hfullPlay, le_of_eq ?_⟩
     calc
       expectedUtility
@@ -210,26 +205,24 @@ theorem coversFullDeviationsAt_of_localUtilityFactorsAt
           owner
           ((nativeBehavioralGameForm semantics).play
             (Profile.update (pruning.expandPolicy policy)
-              owner fullReplacement)) hfullPlay =
+              owner fullReplacement)) =
           expect (fullJoint contextLaw keep (fullReplacement target))
-            (fun result => continuation result.1 result.2) hfullJoint := hfullEq
+            (fun result => continuation result.1 result.2) := hfullEq
       _ = expect (fullJoint contextLaw keep
             (fun context => averaged (keep context)))
-            (fun result => continuation result.1 result.2) hredJoint' :=
-        expect_congr_law hjoint _ hfullJoint hredJoint'
+            (fun result => continuation result.1 result.2) :=
+        expect_congr_law hjoint _
       _ = expectedUtility
             (fun assignment who => semantics.utility who assignment)
             owner
             ((nativeBehavioralGameForm semantics).play
               (Profile.update (pruning.expandPolicy policy) owner
-                (pruning.expandOwnerPolicy owner reducedReplacement)))
-            hredPlay := by
+                (pruning.expandOwnerPolicy owner reducedReplacement))) := by
         calc
           _ = expect (fullJoint contextLaw keep
                 (pruning.expandOwnerPolicy owner reducedReplacement target))
-                (fun result => continuation result.1 result.2)
-                hredJoint :=
-            (expect_congr_law hredLaw _ hredJoint hredJoint').symm
+                (fun result => continuation result.1 result.2) :=
+            (expect_congr_law hredLaw _).symm
           _ = _ := hredEq.symm
   · have hkept : ∀ site : DecisionSite diagram deviator,
         pruning.kept site.1 = diagram.observedParents site.1 :=

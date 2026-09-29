@@ -223,9 +223,9 @@ theorem finiteAveragePayoff_zero_of_controllerFalse
     (hcontroller : ∀ info,
       policies false info = PMF.pure (falseChoice false false info))
     (horizon : ℕ) :
-    ∃ h : UtilityIntegrable (hostileGame.horizonUtility false horizon) true
-        ((hostileGame.horizonForm false horizon).play policies),
-      hostileGame.finiteAveragePayoff false horizon policies true h = 0 := by
+    UtilityIntegrable (hostileGame.horizonUtility false horizon) true
+        ((hostileGame.horizonForm false horizon).play policies) ∧
+      hostileGame.finiteAveragePayoff false horizon policies true = 0 := by
   let law := (hostileGame.perfectMonitoring false).runBehavioral policies horizon
   have hzero : ∀ history ∈ law.support,
       hostileGame.horizonUtility false horizon history true = 0 := by
@@ -246,8 +246,8 @@ theorem finiteAveragePayoff_zero_of_controllerFalse
   refine ⟨hguard, ?_⟩
   simpa [Game.finiteAveragePayoff, Game.horizonForm_play,
     expectedUtility, law] using
-    (expect_congr_on_support hzero hguard hconstant).trans
-      (expect_constant law 0 hconstant)
+    (expect_congr_on_support hzero).trans
+      (expect_constant law 0)
 
 theorem trace_controller_valueSum_zero (initial : Bool) :
     ∀ {state : Bool}
@@ -265,9 +265,9 @@ theorem finiteAveragePayoff_controller_zero
     (policies : (i : Bool) →
       (hostileGame.perfectMonitoring initial).BehavioralPolicy i)
     (horizon : ℕ) :
-    ∃ h : UtilityIntegrable (hostileGame.horizonUtility initial horizon) false
-        ((hostileGame.horizonForm initial horizon).play policies),
-      hostileGame.finiteAveragePayoff initial horizon policies false h = 0 := by
+    UtilityIntegrable (hostileGame.horizonUtility initial horizon) false
+        ((hostileGame.horizonForm initial horizon).play policies) ∧
+      hostileGame.finiteAveragePayoff initial horizon policies false = 0 := by
   let law := (hostileGame.perfectMonitoring initial).runBehavioral policies horizon
   have hzero : ∀ history ∈ law.support,
       hostileGame.horizonUtility initial horizon history false = 0 := by
@@ -285,8 +285,8 @@ theorem finiteAveragePayoff_controller_zero
   refine ⟨hguard, ?_⟩
   simpa [Game.finiteAveragePayoff, Game.horizonForm_play,
     expectedUtility, law] using
-    (expect_congr_on_support hzero hguard hconstant).trans
-      (expect_constant law 0 hconstant)
+    (expect_congr_on_support hzero).trans
+      (expect_constant law 0)
 
 theorem updated_controller_constantFalse
     (replacement :
@@ -401,9 +401,9 @@ theorem finiteAveragePayoff_zero_of_targetFalse
     (htarget : ∀ info,
       policies true info = PMF.pure (falseChoice initial true info))
     (horizon : ℕ) :
-    ∃ h : UtilityIntegrable (hostileGame.horizonUtility initial horizon) true
-        ((hostileGame.horizonForm initial horizon).play policies),
-      hostileGame.finiteAveragePayoff initial horizon policies true h = 0 := by
+    UtilityIntegrable (hostileGame.horizonUtility initial horizon) true
+        ((hostileGame.horizonForm initial horizon).play policies) ∧
+      hostileGame.finiteAveragePayoff initial horizon policies true = 0 := by
   let law := (hostileGame.perfectMonitoring initial).runBehavioral policies horizon
   have hzero : ∀ history ∈ law.support,
       hostileGame.horizonUtility initial horizon history true = 0 := by
@@ -424,8 +424,8 @@ theorem finiteAveragePayoff_zero_of_targetFalse
   refine ⟨hguard, ?_⟩
   simpa [Game.finiteAveragePayoff, Game.horizonForm_play,
     expectedUtility, law] using
-    (expect_congr_on_support hzero hguard hconstant).trans
-      (expect_constant law 0 hconstant)
+    (expect_congr_on_support hzero).trans
+      (expect_constant law 0)
 
 def offPhaseActions : ∀ i : Bool, hostileGame.Action i :=
   fun i => if i then false else true
@@ -586,9 +586,9 @@ theorem finiteAveragePayoff_two
     (htarget : ∀ info,
       policies true info = PMF.pure (trueChoice true true info))
     (horizon : ℕ) (hpositive : 0 < horizon) :
-    ∃ h : UtilityIntegrable (hostileGame.horizonUtility true horizon) true
-        ((hostileGame.horizonForm true horizon).play policies),
-      hostileGame.finiteAveragePayoff true horizon policies true h = 2 := by
+    UtilityIntegrable (hostileGame.horizonUtility true horizon) true
+        ((hostileGame.horizonForm true horizon).play policies) ∧
+      hostileGame.finiteAveragePayoff true horizon policies true = 2 := by
   let law := (hostileGame.perfectMonitoring true).runBehavioral policies horizon
   have hvalue : ∀ history ∈ law.support,
       hostileGame.horizonUtility true horizon history true = 2 := by
@@ -621,8 +621,8 @@ theorem finiteAveragePayoff_two
   refine ⟨hguard, ?_⟩
   simpa [Game.finiteAveragePayoff, Game.horizonForm_play,
     expectedUtility, law] using
-    (expect_congr_on_support hvalue hguard hconstant).trans
-      (expect_constant law 2 hconstant)
+    (expect_congr_on_support hvalue).trans
+      (expect_constant law 2)
 
 def offPhaseObserved : hostileGame.PublicHistory :=
   hostileGame.publicHistoryOfTrace false offPhaseHistory.trace
@@ -654,19 +654,19 @@ theorem updated_offPhase_target_true
   rfl
 
 theorem offPhaseContinuation_payoff_zero (horizon : ℕ) :
-    ∃ h : UtilityIntegrable (hostileGame.horizonUtility true horizon) true
-      ((hostileGame.horizonForm true horizon).play offPhaseContinuation),
-      hostileGame.finiteAveragePayoff true horizon offPhaseContinuation true h = 0 := by
+    UtilityIntegrable (hostileGame.horizonUtility true horizon) true
+      ((hostileGame.horizonForm true horizon).play offPhaseContinuation) ∧
+      hostileGame.finiteAveragePayoff true horizon offPhaseContinuation true = 0 := by
   exact finiteAveragePayoff_zero_of_targetFalse true offPhaseContinuation
     (fun info => offPhaseContinuation_apply true info) horizon
 
 theorem offPhaseDeviation_payoff_two (horizon : ℕ)
     (hpositive : 0 < horizon) :
-    ∃ h : UtilityIntegrable (hostileGame.horizonUtility true horizon) true
+    UtilityIntegrable (hostileGame.horizonUtility true horizon) true
       ((hostileGame.horizonForm true horizon).play
-        (Profile.update offPhaseContinuation true (constantTruePolicy true))),
+        (Profile.update offPhaseContinuation true (constantTruePolicy true))) ∧
       hostileGame.finiteAveragePayoff true horizon
-        (Profile.update offPhaseContinuation true (constantTruePolicy true)) true h = 2 := by
+        (Profile.update offPhaseContinuation true (constantTruePolicy true)) true = 2 := by
   exact finiteAveragePayoff_two
     (Profile.update offPhaseContinuation true (constantTruePolicy true))
     updated_offPhase_controller_false updated_offPhase_target_true
@@ -678,14 +678,9 @@ theorem offPhase_not_horizonNash (horizon : ℕ) (hpositive : 0 < horizon) :
   have hdeviation :=
     (hostileGame.isεHorizonNash_iff true horizon 1
       offPhaseContinuation).mp hnash true (constantTruePolicy true)
-  rcases hdeviation with ⟨hbase, hdeviation, hineq⟩
-  obtain ⟨hbaseProof, hbaseValue⟩ := offPhaseContinuation_payoff_zero horizon
-  obtain ⟨hdeviationProof, hdeviationValue⟩ :=
-    offPhaseDeviation_payoff_two horizon hpositive
-  have hbaseEq : hbaseProof = hbase := Subsingleton.elim _ _
-  have hdeviationEq : hdeviationProof = hdeviation := Subsingleton.elim _ _
-  rw [hbaseEq] at hbaseValue
-  rw [hdeviationEq] at hdeviationValue
+  rcases hdeviation with ⟨-, -, hineq⟩
+  obtain ⟨-, hbaseValue⟩ := offPhaseContinuation_payoff_zero horizon
+  obtain ⟨-, hdeviationValue⟩ := offPhaseDeviation_payoff_two horizon hpositive
   rw [hdeviationValue, hbaseValue] at hineq
   exact (by norm_num : ¬ (2 : ℝ) ≤ 0 + 1) hineq
 

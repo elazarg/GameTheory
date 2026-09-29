@@ -285,14 +285,12 @@ theorem BehavioralAssessment.continuationContext_withLaw_eq_expect
     (hbase : (assessment.continuationContext site payoff (fuel + 1)).IntegrableAt
       (policy.withLaw site.1 law))
     (value : M.Choice i site.1 → ℝ)
-    (hvalue : ∀ choice, ∀ hchoice : choice ∈ law.support,
+    (hvalue : ∀ choice ∈ law.support,
       value choice = (assessment.continuationContext site payoff (fuel + 1)).value
-        (policy.commit site.1 choice)
-        (assessment.continuationContext_withLaw_commit_integrable M hactsOnce
-          site policy law payoff fuel hbase choice hchoice)) :
-    ∃ hout : PayoffIntegrable law value,
+        (policy.commit site.1 choice)) :
+    PayoffIntegrable law value ∧
       (assessment.continuationContext site payoff (fuel + 1)).value
-          (policy.withLaw site.1 law) hbase = expect law value hout := by
+          (policy.withLaw site.1 law) = expect law value := by
   let belief := assessment.belief i site
   let q := fun choice : M.Choice i site.1 =>
     belief.bind fun history =>
@@ -307,10 +305,8 @@ theorem BehavioralAssessment.continuationContext_withLaw_eq_expect
   have hbind : PayoffIntegrable (law.bind q) payoff := by
     rw [← hlaw]
     exact hbase
-  have hconditional := payoffIntegrable_bind_conditional_on_support
-    law q payoff hbind
-  have hvalue' : ∀ choice, ∀ hchoice : choice ∈ law.support,
-      value choice = expect (q choice) payoff (hconditional choice hchoice) := by
+  have hvalue' : ∀ choice ∈ law.support,
+      value choice = expect (q choice) payoff := by
     intro choice hchoice
     rw [hvalue choice hchoice]
     rfl
@@ -318,8 +314,8 @@ theorem BehavioralAssessment.continuationContext_withLaw_eq_expect
     law q payoff hbind value hvalue'
   have htower := expect_bind_tower_on_support law q payoff hbind value hvalue'
   refine ⟨houter, ?_⟩
-  show expect _ payoff hbase = expect law value houter
-  exact (expect_congr_law hlaw payoff hbase hbind).trans htower
+  show expect _ payoff = expect law value
+  exact (expect_congr_law hlaw payoff).trans htower
 
 
 end InformationModel

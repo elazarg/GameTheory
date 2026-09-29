@@ -200,25 +200,21 @@ theorem expect_eq_sum_joint_fibres
     {Ω X Y : Type*} [Fintype Ω] [Fintype X] [Fintype Y]
     (law : PMF Ω) (first : Ω → X) (second : Ω → Y)
     (value : Y → ℝ) :
-    expect law (fun omega => value (second omega))
-      (payoffIntegrable_of_finite _ _) =
+    expect law (fun omega => value (second omega)) =
       ∑ firstValue : X, ∑ secondValue : Y,
         ((law.map (fun omega => (first omega, second omega)))
           (firstValue, secondValue)).toReal * value secondValue := by
   calc
-    expect law (fun omega => value (second omega))
-        (payoffIntegrable_of_finite _ _) =
+    expect law (fun omega => value (second omega)) =
         expect (law.map (fun omega => (first omega, second omega)))
-          (fun pair => value pair.2) (payoffIntegrable_of_finite _ _) := by
+          (fun pair => value pair.2) := by
       symm
       simpa only [Function.comp_def] using
         (expect_map (fun omega => (first omega, second omega)) law
-          (fun pair => value pair.2)
-          (payoffIntegrable_of_finite _ _)
-          (payoffIntegrable_of_finite _ _))
+          (fun pair => value pair.2))
     _ = ∑ pair : X × Y,
         ((law.map (fun omega => (first omega, second omega))) pair).toReal *
-          value pair.2 := expect_eq_sum _ _ _
+          value pair.2 := expect_eq_sum _ _
     _ = ∑ firstValue : X, ∑ secondValue : Y,
         ((law.map (fun omega => (first omega, second omega)))
           (firstValue, secondValue)).toReal * value secondValue := by
@@ -228,16 +224,14 @@ theorem expect_eq_sum_joint_triples
     {Ω X Y Z : Type*} [Fintype Ω] [Fintype X] [Fintype Y] [Fintype Z]
     (law : PMF Ω) (first : Ω → X) (second : Ω → Y)
     (third : Ω → Z) (value : Z → ℝ) :
-    expect law (fun omega => value (third omega))
-      (payoffIntegrable_of_finite _ _) =
+    expect law (fun omega => value (third omega)) =
       ∑ firstValue : X, ∑ secondValue : Y, ∑ thirdValue : Z,
         ((law.map (fun omega =>
           (first omega, (second omega, third omega))))
             (firstValue, (secondValue, thirdValue))).toReal *
               value thirdValue := by
   calc
-    expect law (fun omega => value (third omega))
-        (payoffIntegrable_of_finite _ _) =
+    expect law (fun omega => value (third omega)) =
         ∑ firstValue : X, ∑ pair : Y × Z,
           ((law.map (fun omega =>
             (first omega, (second omega, third omega))))
@@ -267,22 +261,19 @@ theorem siteRuleExpectedUtility_eq_sum_context_action
     (view : UtilityView semantics)
     [∀ term : view.UtilitySite owner, Fintype (TermConfig view term)]
     (rule : FullContext target → PMF (diagram.Value target.1)) :
-    siteRuleExpectedUtility semantics base owner replacement target rule
-      (siteReplacementLaw_integrable_of_finite semantics base owner
-        replacement target rule) =
+    siteRuleExpectedUtility semantics base owner replacement target rule =
       ∑ context : FullContext target, ∑ action : diagram.Value target.1,
         siteRuleContextActionScore semantics base owner replacement target
           rule view context action := by
   unfold siteRuleExpectedUtility expectedUtility
   calc
     expect (siteReplacementLaw semantics base owner replacement target rule)
-        (fun assignment => semantics.utility owner assignment)
-        (payoffIntegrable_of_finite _ _) =
+        (fun assignment => semantics.utility owner assignment) =
       expect (siteReplacementLaw semantics base owner replacement target rule)
         (fun assignment => ∑ term : view.UtilitySite owner,
           (view.term term).payoff
             (Assignment.restrict diagram assignment
-              (view.term term).parents)) (payoffIntegrable_of_finite _ _) := by
+              (view.term term).parents)) := by
       apply expect_congr_on_support
       intro assignment _
       simpa [UtilityView.term, UtilityTerm.value] using
@@ -292,8 +283,7 @@ theorem siteRuleExpectedUtility_eq_sum_context_action
           (fun assignment =>
             (view.term term).payoff
               (Assignment.restrict diagram assignment
-                (view.term term).parents))
-          (payoffIntegrable_of_finite _ _) := by
+                (view.term term).parents)) := by
       simpa only [] using expect_sum
         (siteReplacementLaw semantics base owner replacement target rule)
         (fun term assignment => (view.term term).payoff

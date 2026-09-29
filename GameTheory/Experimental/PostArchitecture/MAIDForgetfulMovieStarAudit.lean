@@ -92,7 +92,7 @@ def fairBool : PMF Bool :=
     (PMF.pure false) (PMF.pure true)
 
 theorem fairBool_expect (score : Bool → ℝ) :
-    expect fairBool score (payoffIntegrable_of_finite _ _) =
+    expect fairBool score =
       (score false + score true) / 2 := by
   have hmix := expect_mix (1 / 2) (by norm_num) (by norm_num)
     (PMF.pure false) (PMF.pure true) score
@@ -673,8 +673,7 @@ theorem native_play_eq (policy : Policy diagram) :
 theorem star_expectedUtility (policy : Policy diagram) :
     expectedUtility
         (fun assignment player => semantics.utility player assignment)
-        .star ((nativeBehavioralGameForm semantics).play policy)
-        (payoffIntegrable_of_finite _ _) =
+        .star ((nativeBehavioralGameForm semantics).play policy) =
       expect fairBool (fun signal =>
         expect (policy .star firstSite (firstObservation signal))
           (fun first =>
@@ -682,11 +681,7 @@ theorem star_expectedUtility (policy : Policy diagram) :
               (fun second =>
                 expect (policy .robot robotSite robotObservation)
                   (fun robot =>
-                    avoidScore first robot + consistencyScore first second)
-                  (payoffIntegrable_of_finite _ _))
-              (payoffIntegrable_of_finite _ _))
-          (payoffIntegrable_of_finite _ _))
-        (payoffIntegrable_of_finite _ _) := by
+                    avoidScore first robot + consistencyScore first second)))) := by
   unfold expectedUtility
   let utility := fun assignment : Assignment diagram =>
     semantics.utility .star assignment
@@ -698,35 +693,27 @@ theorem star_expectedUtility (policy : Policy diagram) :
   let tail := fun signal first second =>
     robotLaw.map (assignmentOf signal first second)
   have hrobot (signal first second) :
-      expect (tail signal first second) utility
-          (payoffIntegrable_of_finite _ _) =
+      expect (tail signal first second) utility =
         expect robotLaw (fun robot =>
-          avoidScore first robot + consistencyScore first second)
-          (payoffIntegrable_of_finite _ _) := by
+          avoidScore first robot + consistencyScore first second) := by
     calc
       _ = expect robotLaw
-          (utility ∘ assignmentOf signal first second)
-          (payoffIntegrable_of_finite _ _) := by
-            exact expect_map _ _ _ _ _
+          (utility ∘ assignmentOf signal first second) := by
+            exact expect_map _ _ _
       _ = _ := by
         apply expect_congr_on_support
         intro robot _
         rfl
   have hsecond (signal first) :
       expect ((secondLaw signal).bind fun second => tail signal first second)
-          utility (payoffIntegrable_of_finite _ _) =
+          utility =
         expect (secondLaw signal) (fun second =>
           expect robotLaw (fun robot =>
-            avoidScore first robot + consistencyScore first second)
-            (payoffIntegrable_of_finite _ _))
-          (payoffIntegrable_of_finite _ _) := by
+            avoidScore first robot + consistencyScore first second)) := by
     calc
       _ = expect (secondLaw signal) (fun second =>
-            expect (tail signal first second) utility
-              (payoffIntegrable_of_finite _ _))
-            (payoffIntegrable_of_finite _ _) := by
-              exact expect_bind_tower _ _ _ _
-                (fun _ => payoffIntegrable_of_finite _ _)
+            expect (tail signal first second) utility) := by
+              exact expect_bind_tower _ _ _ (payoffIntegrable_of_finite _ _)
       _ = _ := by
         apply expect_congr_on_support
         intro second _
@@ -734,41 +721,32 @@ theorem star_expectedUtility (policy : Policy diagram) :
   have hfirst (signal) :
       expect ((firstLaw signal).bind fun first =>
           (secondLaw signal).bind fun second => tail signal first second)
-        utility (payoffIntegrable_of_finite _ _) =
+        utility =
       expect (firstLaw signal) (fun first =>
         expect (secondLaw signal) (fun second =>
           expect robotLaw (fun robot =>
-            avoidScore first robot + consistencyScore first second)
-            (payoffIntegrable_of_finite _ _))
-          (payoffIntegrable_of_finite _ _))
-        (payoffIntegrable_of_finite _ _) := by
+            avoidScore first robot + consistencyScore first second))) := by
     calc
       _ = expect (firstLaw signal) (fun first =>
             expect ((secondLaw signal).bind fun second =>
-              tail signal first second) utility
-              (payoffIntegrable_of_finite _ _))
-            (payoffIntegrable_of_finite _ _) := by
-              exact expect_bind_tower _ _ _ _
-                (fun _ => payoffIntegrable_of_finite _ _)
+              tail signal first second) utility) := by
+              exact expect_bind_tower _ _ _ (payoffIntegrable_of_finite _ _)
       _ = _ := by
         apply expect_congr_on_support
         intro first _
         exact hsecond signal first
   calc
-    expect ((nativeBehavioralGameForm semantics).play policy) utility
-        (payoffIntegrable_of_finite _ _) =
+    expect ((nativeBehavioralGameForm semantics).play policy) utility =
       expect (fairBool.bind fun signal =>
         (firstLaw signal).bind fun first =>
           (secondLaw signal).bind fun second => tail signal first second)
-        utility (payoffIntegrable_of_finite _ _) :=
-      expect_congr_law (native_play_eq policy) utility _ _
+        utility :=
+      expect_congr_law (native_play_eq policy) utility
     _ = expect fairBool (fun signal =>
           expect ((firstLaw signal).bind fun first =>
             (secondLaw signal).bind fun second => tail signal first second)
-            utility (payoffIntegrable_of_finite _ _))
-          (payoffIntegrable_of_finite _ _) := by
-            exact expect_bind_tower _ _ _ _
-              (fun _ => payoffIntegrable_of_finite _ _)
+            utility) := by
+            exact expect_bind_tower _ _ _ (payoffIntegrable_of_finite _ _)
     _ = _ := by
       apply expect_congr_on_support
       intro signal _
@@ -827,7 +805,7 @@ theorem uniform_star_expectedUtility :
         (fun assignment player => semantics.utility player assignment)
         .star
         ((pruning.reducedNativeGameForm semantics).play
-          uniformReducedPolicy) (payoffIntegrable_of_finite _ _) = 3 / 2 := by
+          uniformReducedPolicy) = 3 / 2 := by
   rw [star_expectedUtility]
   simp only [expanded_uniform_star, expanded_uniform_robot]
   simp_rw [fairBool_expect]
@@ -841,7 +819,7 @@ theorem constant_deviation_star_expectedUtility :
         ((pruning.reducedNativeGameForm semantics).play
           (Profile.update (sig := pruning.reducedBehavioralSignature)
             uniformReducedPolicy .star constantEqualReplacement))
-        (payoffIntegrable_of_finite _ _) = 2 := by
+         = 2 := by
   rw [star_expectedUtility]
   simp only [expanded_constant_star, expanded_constant_robot,
     expect_pure]

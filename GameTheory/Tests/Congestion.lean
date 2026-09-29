@@ -80,10 +80,8 @@ theorem split_potential : fixture.potential split = -2 := by
 /-- The canonical Rosenthal theorem applies to a deviation with a nonzero
 utility and potential change. -/
 theorem rosenthal_identity_nonzero :
-    expectedUtility fixture.utility 1 (fixture.toGameForm.play split)
-        (payoffIntegrable_pure split (fun profile => fixture.utility profile 1)) -
-      expectedUtility fixture.utility 1 (fixture.toGameForm.play crowded)
-        (payoffIntegrable_pure crowded (fun profile => fixture.utility profile 1)) =
+    expectedUtility fixture.utility 1 (fixture.toGameForm.play split) -
+      expectedUtility fixture.utility 1 (fixture.toGameForm.play crowded) =
       fixture.potential split - fixture.potential crowded := by
   have h := fixture.isExactPotential.difference 1 crowded true
   simpa [split] using h

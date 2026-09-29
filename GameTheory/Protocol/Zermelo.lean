@@ -97,9 +97,6 @@ def historyChoiceValue [DecidableEq ι]
     (fallback : E.HistoryChooser)
     (certificate : E.WellFoundedPlay)
     (utility : E.History → ι → ℝ)
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (recurse : ∀ later : E.History,
       E.HistorySuccessor later history → E.HistoryChooser)
@@ -108,18 +105,15 @@ def historyChoiceValue [DecidableEq ι]
   let chooser := M.historyChoiceChooser singleMover fallback history hterm
     recurse who hactive choice
   expect (E.historyBackwardLaw certificate chooser history)
-    (fun outcome => utility outcome who) (hglobal chooser history who)
+    (fun outcome => utility outcome who)
 
-/-- Maximize the guarded expected payoff over the mover's finite menu. -/
+/-- Maximize the expected payoff over the mover's finite menu. -/
 def bestHistoryChoice [DecidableEq ι]
     (singleMover : ∀ (state : E.State) {first second : ι},
       E.active state first → E.active state second → first = second)
     (fallback : E.HistoryChooser)
     (certificate : E.WellFoundedPlay)
     (utility : E.History → ι → ℝ)
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (recurse : ∀ later : E.History,
       E.HistorySuccessor later history → E.HistoryChooser)
@@ -128,7 +122,7 @@ def bestHistoryChoice [DecidableEq ι]
     [Nonempty (M.Choice who (M.infoOf who history.trace))] :
     M.Choice who (M.infoOf who history.trace) :=
   Classical.choose (Finite.exists_max
-    (M.historyChoiceValue singleMover fallback certificate utility hglobal
+    (M.historyChoiceValue singleMover fallback certificate utility
       history hterm recurse who hactive))
 
 theorem historyChoiceValue_le_bestHistoryChoice [DecidableEq ι]
@@ -137,9 +131,6 @@ theorem historyChoiceValue_le_bestHistoryChoice [DecidableEq ι]
     (fallback : E.HistoryChooser)
     (certificate : E.WellFoundedPlay)
     (utility : E.History → ι → ℝ)
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (recurse : ∀ later : E.History,
       E.HistorySuccessor later history → E.HistoryChooser)
@@ -147,17 +138,17 @@ theorem historyChoiceValue_le_bestHistoryChoice [DecidableEq ι]
     [Finite (M.Choice who (M.infoOf who history.trace))]
     [Nonempty (M.Choice who (M.infoOf who history.trace))]
     (choice : M.Choice who (M.infoOf who history.trace)) :
-    M.historyChoiceValue singleMover fallback certificate utility hglobal
+    M.historyChoiceValue singleMover fallback certificate utility
       history hterm recurse who hactive choice ≤
-      M.historyChoiceValue singleMover fallback certificate utility hglobal
+      M.historyChoiceValue singleMover fallback certificate utility
         history hterm recurse who hactive
-        (M.bestHistoryChoice singleMover fallback certificate utility hglobal
+        (M.bestHistoryChoice singleMover fallback certificate utility
           history hterm recurse who hactive) :=
   Classical.choose_spec (Finite.exists_max
-    (M.historyChoiceValue singleMover fallback certificate utility hglobal
+    (M.historyChoiceValue singleMover fallback certificate utility
       history hterm recurse who hactive)) choice
 
-/-- The Bellman joint is chosen by guarded maximization when someone moves;
+/-- The Bellman joint is chosen by maximizing expected payoff when someone moves;
 otherwise it is the unique legal no-op. -/
 def backwardJoint [DecidableEq ι]
     (singleMover : ∀ (state : E.State) {first second : ι},
@@ -166,9 +157,6 @@ def backwardJoint [DecidableEq ι]
     (finiteChoices : M.HasFiniteDecisionChoices)
     (certificate : E.WellFoundedPlay)
     (utility : E.History → ι → ℝ)
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (recurse : ∀ later : E.History,
       E.HistorySuccessor later history → E.HistoryChooser) :
@@ -184,7 +172,7 @@ def backwardJoint [DecidableEq ι]
         ⟨fallback who (M.infoOf who history.trace)⟩
       M.jointOfChoice singleMover history hterm who whoActive
         (M.bestHistoryChoice singleMover (M.historyChooser fallback)
-          certificate utility hglobal history hterm recurse who whoActive)
+          certificate utility history hterm recurse who whoActive)
     else
       ⟨E.noop, E.noop_isLegal hterm fun who active => hactive ⟨who, active⟩⟩
 
@@ -195,15 +183,12 @@ theorem backwardJoint_of_active [DecidableEq ι]
     (finiteChoices : M.HasFiniteDecisionChoices)
     (certificate : E.WellFoundedPlay)
     (utility : E.History → ι → ℝ)
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (recurse : ∀ later : E.History,
       E.HistorySuccessor later history → E.HistoryChooser)
     (who : ι) (hactive : E.active history.state who) :
     M.backwardJoint singleMover fallback finiteChoices certificate utility
-        hglobal history hterm recurse =
+         history hterm recurse =
       M.jointOfChoice singleMover history hterm who hactive
         (by
           letI : Finite (M.Choice who (M.infoOf who history.trace)) :=
@@ -212,7 +197,7 @@ theorem backwardJoint_of_active [DecidableEq ι]
           letI : Nonempty (M.Choice who (M.infoOf who history.trace)) :=
             ⟨fallback who (M.infoOf who history.trace)⟩
           exact M.bestHistoryChoice singleMover (M.historyChooser fallback)
-            certificate utility hglobal history hterm recurse who hactive) := by
+            certificate utility history hterm recurse who hactive) := by
   classical
   let hexists : ∃ player, E.active history.state player := ⟨who, hactive⟩
   simp only [backwardJoint, dite_eq_left hexists]
@@ -229,17 +214,14 @@ def backwardChooserBundle [DecidableEq ι]
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
     (certificate : E.WellFoundedPlay)
-    (utility : E.History → ι → ℝ)
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who)) :
+    (utility : E.History → ι → ℝ) :
     E.History → E.HistoryChooser := by
   classical
   exact E.historyBackwardRec certificate fun history recurse =>
     if hterm : E.terminal history.state then M.historyChooser fallback
     else
       let chosen := M.backwardJoint singleMover fallback finiteChoices
-        certificate utility hglobal history hterm recurse
+        certificate utility history hterm recurse
       E.graftHistoryChooser (M.historyChooser fallback) history chosen
         fun _target realized =>
           recurse (history.extend chosen.2 realized)
@@ -252,22 +234,19 @@ theorem backwardChooserBundle_of_not_terminal [DecidableEq ι]
     (finiteChoices : M.HasFiniteDecisionChoices)
     {certificate : E.WellFoundedPlay}
     {utility : E.History → ι → ℝ}
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     {history : E.History} (hterm : ¬ E.terminal history.state) :
     M.backwardChooserBundle singleMover fallback finiteChoices certificate
-        utility hglobal history =
+        utility history =
       let recurse : ∀ later : E.History,
           E.HistorySuccessor later history → E.HistoryChooser :=
         fun later _ => M.backwardChooserBundle singleMover fallback
-          finiteChoices certificate utility hglobal later
+          finiteChoices certificate utility later
       let chosen := M.backwardJoint singleMover fallback finiteChoices
-        certificate utility hglobal history hterm recurse
+        certificate utility history hterm recurse
       E.graftHistoryChooser (M.historyChooser fallback) history chosen
         fun _target realized =>
           M.backwardChooserBundle singleMover fallback finiteChoices
-            certificate utility hglobal (history.extend chosen.2 realized) := by
+            certificate utility (history.extend chosen.2 realized) := by
   rw [backwardChooserBundle, E.historyBackwardRec_eq, dite_eq_right hterm]
 
 /-- The selected legal action at each complete history. -/
@@ -277,13 +256,10 @@ def backwardChooser [DecidableEq ι]
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
     (certificate : E.WellFoundedPlay)
-    (utility : E.History → ι → ℝ)
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who)) : E.HistoryChooser :=
+    (utility : E.History → ι → ℝ) : E.HistoryChooser :=
   fun history hterm =>
     (M.backwardChooserBundle singleMover fallback finiteChoices certificate
-      utility hglobal history) history hterm
+      utility history) history hterm
 
 theorem backwardChooser_eq_joint [DecidableEq ι]
     (singleMover : ∀ (state : E.State) {first second : ι},
@@ -292,18 +268,15 @@ theorem backwardChooser_eq_joint [DecidableEq ι]
     (finiteChoices : M.HasFiniteDecisionChoices)
     {certificate : E.WellFoundedPlay}
     {utility : E.History → ι → ℝ}
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     (history : E.History) (hterm : ¬ E.terminal history.state) :
     M.backwardChooser singleMover fallback finiteChoices certificate utility
-        hglobal history hterm =
+         history hterm =
       M.backwardJoint singleMover fallback finiteChoices certificate utility
-        hglobal history hterm
+         history hterm
         (fun later _ => M.backwardChooserBundle singleMover fallback
-          finiteChoices certificate utility hglobal later) := by
+          finiteChoices certificate utility later) := by
   rw [backwardChooser, M.backwardChooserBundle_of_not_terminal
-    singleMover fallback finiteChoices hglobal hterm,
+    singleMover fallback finiteChoices hterm,
     E.graftHistoryChooser_at_parent]
 
 /-- At a genuine decision information state, select the unique corresponding
@@ -315,9 +288,6 @@ def backwardPolicy [DecidableEq ι]
     (finiteChoices : M.HasFiniteDecisionChoices)
     (certificate : E.WellFoundedPlay)
     (utility : E.History → ι → ℝ)
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     (who : ι) : M.Policy who :=
   fun info => by
     classical
@@ -327,7 +297,7 @@ def backwardPolicy [DecidableEq ι]
       have hterm : ¬ E.terminal history.state := hh.1
       have hinfo : M.infoOf who history.trace = info := hh.2.2
       let chosen := M.backwardChooser singleMover fallback finiteChoices
-        certificate utility hglobal history hterm
+        certificate utility history hterm
       refine ⟨chosen.1 who, ?_⟩
       rw [← hinfo]
       exact (M.menu_adequate who history.trace (chosen.1 who)).mpr
@@ -341,13 +311,10 @@ theorem backwardPolicy_eq_fallback_of_no_decision_history [DecidableEq ι]
     (finiteChoices : M.HasFiniteDecisionChoices)
     {certificate : E.WellFoundedPlay}
     {utility : E.History → ι → ℝ}
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     (who : ι) (info : M.InfoState who)
     (hunreachable : ¬ ∃ history, M.IsDecisionHistory who info history) :
     M.backwardPolicy singleMover fallback finiteChoices certificate utility
-        hglobal who info = fallback who info := by
+         who info = fallback who info := by
   simp [backwardPolicy, hunreachable]
 
 /-- The information-local pure profile assembled from backward induction. -/
@@ -357,12 +324,9 @@ def backwardProfile [DecidableEq ι]
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
     (certificate : E.WellFoundedPlay)
-    (utility : E.History → ι → ℝ)
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who)) : Profile M.strategicSignature :=
+    (utility : E.History → ι → ℝ) : Profile M.strategicSignature :=
   fun who => M.backwardPolicy singleMover fallback finiteChoices certificate
-    utility hglobal who
+    utility who
 
 private theorem backwardChooser_action_eq_of_history_eq [DecidableEq ι]
     (singleMover : ∀ (state : E.State) {first second : ι},
@@ -371,16 +335,13 @@ private theorem backwardChooser_action_eq_of_history_eq [DecidableEq ι]
     (finiteChoices : M.HasFiniteDecisionChoices)
     {certificate : E.WellFoundedPlay}
     {utility : E.History → ι → ℝ}
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     {first second : E.History} (heq : first = second)
     (hfirst : ¬ E.terminal first.state)
     (hsecond : ¬ E.terminal second.state) (who : ι) :
     (M.backwardChooser singleMover fallback finiteChoices certificate utility
-        hglobal first hfirst).1 who =
+         first hfirst).1 who =
       (M.backwardChooser singleMover fallback finiteChoices certificate utility
-        hglobal second hsecond).1 who := by
+         second hsecond).1 who := by
   subst second
   rfl
 
@@ -391,16 +352,13 @@ theorem backwardPolicy_act_at_decision [DecidableEq ι]
     (finiteChoices : M.HasFiniteDecisionChoices)
     {certificate : E.WellFoundedPlay}
     {utility : E.History → ι → ℝ}
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     (hperfect : M.SeparatesDecisionHistories)
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (who : ι) (hactive : E.active history.state who) :
     (M.backwardPolicy singleMover fallback finiteChoices certificate utility
-        hglobal who).act (M.infoOf who history.trace) =
+         who).act (M.infoOf who history.trace) =
       (M.backwardChooser singleMover fallback finiteChoices certificate utility
-        hglobal history hterm).1 who := by
+         history hterm).1 who := by
   classical
   let hreached : ∃ prior,
       M.IsDecisionHistory who (M.infoOf who history.trace) prior :=
@@ -411,7 +369,7 @@ theorem backwardPolicy_act_at_decision [DecidableEq ι]
   have heq : prior = history :=
     hperfect who prior history hprior.1 hprior.2.1 hterm hactive hprior.2.2
   exact M.backwardChooser_action_eq_of_history_eq singleMover fallback
-    finiteChoices hglobal heq hprior.1 hterm who
+    finiteChoices heq hprior.1 hterm who
 
 theorem historyChooser_backwardProfile [DecidableEq ι]
     (singleMover : ∀ (state : E.State) {first second : ι},
@@ -420,38 +378,35 @@ theorem historyChooser_backwardProfile [DecidableEq ι]
     (finiteChoices : M.HasFiniteDecisionChoices)
     {certificate : E.WellFoundedPlay}
     {utility : E.History → ι → ℝ}
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     (hperfect : M.SeparatesDecisionHistories)
     (history : E.History) (hterm : ¬ E.terminal history.state) :
     M.historyChooser
         (M.backwardProfile singleMover fallback finiteChoices certificate
-          utility hglobal) history hterm =
+          utility) history hterm =
       M.backwardChooser singleMover fallback finiteChoices certificate utility
-        hglobal history hterm := by
+         history hterm := by
   apply Subtype.ext
   funext who
   by_cases hactive : E.active history.state who
   · simpa [backwardProfile, InformationModel.historyChooser,
       InformationModel.jointAt] using
       M.backwardPolicy_act_at_decision singleMover fallback finiteChoices
-        hglobal hperfect history hterm who hactive
+         hperfect history hterm who hactive
   · have hprofile := LegalOption.eq_none_of_inactive
       ((M.historyChooser
         (M.backwardProfile singleMover fallback finiteChoices certificate
-          utility hglobal) history hterm).1 who)
+          utility) history hterm).1 who)
       (ExecutionProtocol.legalOption_of_legal
         (M.historyChooser
           (M.backwardProfile singleMover fallback finiteChoices certificate
-            utility hglobal) history hterm).2 who)
+            utility) history hterm).2 who)
       hactive
     have hbackward := LegalOption.eq_none_of_inactive
       ((M.backwardChooser singleMover fallback finiteChoices certificate
-        utility hglobal history hterm).1 who)
+        utility history hterm).1 who)
       (ExecutionProtocol.legalOption_of_legal
         (M.backwardChooser singleMover fallback finiteChoices certificate
-          utility hglobal history hterm).2 who)
+          utility history hterm).2 who)
       hactive
     exact hprofile.trans hbackward.symm
 
@@ -464,17 +419,14 @@ theorem historyBackwardLaw_backwardProfile [DecidableEq ι]
     (finiteChoices : M.HasFiniteDecisionChoices)
     {certificate : E.WellFoundedPlay}
     {utility : E.History → ι → ℝ}
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     (hperfect : M.SeparatesDecisionHistories) :
     ∀ history : E.History,
       E.historyBackwardLaw certificate
           (M.historyChooser (M.backwardProfile singleMover fallback
-            finiteChoices certificate utility hglobal)) history =
+            finiteChoices certificate utility)) history =
         E.historyBackwardLaw certificate
           (M.backwardChooserBundle singleMover fallback finiteChoices
-            certificate utility hglobal history) history := by
+            certificate utility history) history := by
   intro history
   induction history using
       (E.wellFounded_historySuccessor certificate).induction with
@@ -485,44 +437,44 @@ theorem historyBackwardLaw_backwardProfile [DecidableEq ι]
       · let recurse : ∀ later : E.History,
             E.HistorySuccessor later current → E.HistoryChooser :=
           fun later _ => M.backwardChooserBundle singleMover fallback
-            finiteChoices certificate utility hglobal later
+            finiteChoices certificate utility later
         let chosen := M.backwardJoint singleMover fallback finiteChoices
-          certificate utility hglobal current hterm recurse
+          certificate utility current hterm recurse
         have hchosen : M.historyChooser
               (M.backwardProfile singleMover fallback finiteChoices
-                certificate utility hglobal) current hterm = chosen := by
+                certificate utility) current hterm = chosen := by
           calc
             _ = M.backwardChooser singleMover fallback finiteChoices
-                certificate utility hglobal current hterm :=
+                certificate utility current hterm :=
               M.historyChooser_backwardProfile singleMover fallback
-                finiteChoices hglobal hperfect current hterm
+                finiteChoices hperfect current hterm
             _ = chosen := M.backwardChooser_eq_joint singleMover fallback
-              finiteChoices hglobal current hterm
+              finiteChoices current hterm
         have hbundle :
             M.backwardChooserBundle singleMover fallback finiteChoices
-                certificate utility hglobal current =
+                certificate utility current =
               E.graftHistoryChooser (M.historyChooser fallback) current chosen
                 (fun _target realized =>
                   M.backwardChooserBundle singleMover fallback finiteChoices
-                    certificate utility hglobal
+                    certificate utility
                     (current.extend chosen.2 realized)) :=
           M.backwardChooserBundle_of_not_terminal singleMover fallback
-            finiteChoices hglobal hterm
+            finiteChoices hterm
         calc
           E.historyBackwardLaw certificate
               (M.historyChooser (M.backwardProfile singleMover fallback
-                finiteChoices certificate utility hglobal)) current =
+                finiteChoices certificate utility)) current =
             (E.step current.state chosen).bindOnSupport fun _target realized =>
               E.historyBackwardLaw certificate
                 (M.historyChooser (M.backwardProfile singleMover fallback
-                  finiteChoices certificate utility hglobal))
+                  finiteChoices certificate utility))
                 (current.extend chosen.2 realized) :=
             E.historyBackwardLaw_of_not_terminal_of_chooser_eq hterm chosen hchosen
           _ = (E.step current.state chosen).bindOnSupport
               (fun _target realized =>
                 E.historyBackwardLaw certificate
                   (M.backwardChooserBundle singleMover fallback finiteChoices
-                    certificate utility hglobal
+                    certificate utility
                     (current.extend chosen.2 realized))
                   (current.extend chosen.2 realized)) := by
             apply bindOnSupport_congr
@@ -531,16 +483,16 @@ theorem historyBackwardLaw_backwardProfile [DecidableEq ι]
               ⟨chosen.1, chosen.2, realized⟩
           _ = E.historyBackwardLaw certificate
               (M.backwardChooserBundle singleMover fallback finiteChoices
-                certificate utility hglobal current) current := by
+                certificate utility current) current := by
             rw [hbundle]
             exact (E.historyBackwardLaw_graft certificate
               (M.historyChooser fallback) current hterm chosen
               (fun _target realized =>
                 M.backwardChooserBundle singleMover fallback finiteChoices
-                  certificate utility hglobal
+                  certificate utility
                   (current.extend chosen.2 realized))).symm
 
-/-- The guarded real value of the recursively selected terminal law. -/
+/-- The expected payoff of the recursively selected terminal law. -/
 def backwardOutcome [DecidableEq ι]
     (singleMover : ∀ (state : E.State) {first second : ι},
       E.active state first → E.active state second → first = second)
@@ -548,14 +500,11 @@ def backwardOutcome [DecidableEq ι]
     (finiteChoices : M.HasFiniteDecisionChoices)
     (certificate : E.WellFoundedPlay)
     (utility : E.History → ι → ℝ)
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     (history : E.History) (who : ι) : ℝ :=
   let chooser := M.backwardChooserBundle singleMover fallback finiteChoices
-    certificate utility hglobal history
+    certificate utility history
   expect (E.historyBackwardLaw certificate chooser history)
-    (fun outcome => utility outcome who) (hglobal chooser history who)
+    (fun outcome => utility outcome who)
 
 theorem backwardOutcome_of_terminal [DecidableEq ι]
     (singleMover : ∀ (state : E.State) {first second : ι},
@@ -564,12 +513,9 @@ theorem backwardOutcome_of_terminal [DecidableEq ι]
     (finiteChoices : M.HasFiniteDecisionChoices)
     {certificate : E.WellFoundedPlay}
     {utility : E.History → ι → ℝ}
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     {history : E.History} (hterm : E.terminal history.state) (who : ι) :
     M.backwardOutcome singleMover fallback finiteChoices certificate utility
-      hglobal history who = utility history who := by
+       history who = utility history who := by
   dsimp only [backwardOutcome]
   simp only [E.historyBackwardLaw_of_terminal hterm, expect_pure]
 
@@ -593,48 +539,48 @@ theorem backwardOutcome_of_not_terminal [DecidableEq ι]
       ∀ realized : target ∈
         (E.step history.state
           (M.backwardJoint singleMover fallback finiteChoices certificate
-            utility hglobal history hterm
+            utility history hterm
             (fun later _ => M.backwardChooserBundle singleMover fallback
-              finiteChoices certificate utility hglobal later))).support,
+              finiteChoices certificate utility later))).support,
       successorValue target =
         M.backwardOutcome singleMover fallback finiteChoices certificate
-          utility hglobal
+          utility
           (history.extend
             (M.backwardJoint singleMover fallback finiteChoices certificate
-              utility hglobal history hterm
+              utility history hterm
               (fun later _ => M.backwardChooserBundle singleMover fallback
-                finiteChoices certificate utility hglobal later)).2 realized)
+                finiteChoices certificate utility later)).2 realized)
           who) :
     let chosen := M.backwardJoint singleMover fallback finiteChoices
-      certificate utility hglobal history hterm
+      certificate utility history hterm
       (fun later _ => M.backwardChooserBundle singleMover fallback
-        finiteChoices certificate utility hglobal later)
-    ∃ houter : PayoffIntegrable
-        (E.step history.state chosen) successorValue,
+        finiteChoices certificate utility later)
+    PayoffIntegrable
+        (E.step history.state chosen) successorValue ∧
       M.backwardOutcome singleMover fallback finiteChoices certificate utility
-          hglobal history who =
-        expect (E.step history.state chosen) successorValue houter := by
+           history who =
+        expect (E.step history.state chosen) successorValue := by
   let bundle := M.backwardChooserBundle singleMover fallback finiteChoices
-    certificate utility hglobal history
+    certificate utility history
   let chosen := M.backwardJoint singleMover fallback finiteChoices
-    certificate utility hglobal history hterm
+    certificate utility history hterm
     (fun later _ => M.backwardChooserBundle singleMover fallback finiteChoices
-      certificate utility hglobal later)
+      certificate utility later)
   let p := E.step history.state chosen
   let q : ∀ target, target ∈ p.support → PMF E.History :=
     fun _target realized =>
       E.historyBackwardLaw certificate
         (M.backwardChooserBundle singleMover fallback finiteChoices
-          certificate utility hglobal (history.extend chosen.2 realized))
+          certificate utility (history.extend chosen.2 realized))
         (history.extend chosen.2 realized)
   let f : E.History → ℝ := fun outcome => utility outcome who
   have hbundle : bundle = E.graftHistoryChooser
       (M.historyChooser fallback) history chosen
       (fun _target realized =>
         M.backwardChooserBundle singleMover fallback finiteChoices
-          certificate utility hglobal (history.extend chosen.2 realized)) :=
+          certificate utility (history.extend chosen.2 realized)) :=
     M.backwardChooserBundle_of_not_terminal singleMover fallback
-      finiteChoices hglobal hterm
+      finiteChoices hterm
   have hlaw : E.historyBackwardLaw certificate bundle history =
       p.bindOnSupport q := by
     rw [hbundle]
@@ -642,14 +588,12 @@ theorem backwardOutcome_of_not_terminal [DecidableEq ι]
       history hterm chosen
       (fun _target realized =>
         M.backwardChooserBundle singleMover fallback finiteChoices
-          certificate utility hglobal (history.extend chosen.2 realized))
+          certificate utility (history.extend chosen.2 realized))
   have hbind : PayoffIntegrable (p.bindOnSupport q) f := by
     rw [← hlaw]
     exact hglobal bundle history who
   have hcond : ∀ target, ∀ realized : target ∈ p.support,
-      successorValue target = expect (q target realized) f
-        (payoffIntegrable_bindOnSupport_conditional_on_support
-          p q f hbind target realized) := by
+      successorValue target = expect (q target realized) f := by
     intro target realized
     rw [hagree target realized]
     dsimp only [backwardOutcome, q, f]
@@ -657,11 +601,9 @@ theorem backwardOutcome_of_not_terminal [DecidableEq ι]
     p q f hbind successorValue hcond, ?_⟩
   calc
     M.backwardOutcome singleMover fallback finiteChoices certificate utility
-        hglobal history who = expect (p.bindOnSupport q) f hbind :=
-      expectedUtility_congr_law utility who hlaw (hglobal bundle history who) hbind
-    _ = expect p successorValue
-          (payoffIntegrable_bindOnSupport_conditionalValue_on_support
-            p q f hbind successorValue hcond) :=
+         history who = expect (p.bindOnSupport q) f :=
+      expectedUtility_congr_law utility who hlaw
+    _ = expect p successorValue :=
       expect_bindOnSupport_tower_on_support p q f hbind successorValue hcond
 
 theorem historyBackwardValue_backwardProfile [DecidableEq ι]
@@ -671,22 +613,17 @@ theorem historyBackwardValue_backwardProfile [DecidableEq ι]
     (finiteChoices : M.HasFiniteDecisionChoices)
     {certificate : E.WellFoundedPlay}
     {utility : E.History → ι → ℝ}
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     (hperfect : M.SeparatesDecisionHistories)
     (history : E.History) (who : ι) :
     E.historyBackwardValue certificate
         (M.historyChooser (M.backwardProfile singleMover fallback finiteChoices
-          certificate utility hglobal))
-        (fun outcome => utility outcome who) history
-        (hglobal (M.historyChooser (M.backwardProfile singleMover fallback
-          finiteChoices certificate utility hglobal)) history who) =
+          certificate utility))
+        (fun outcome => utility outcome who) history =
       M.backwardOutcome singleMover fallback finiteChoices certificate utility
-        hglobal history who := by
+         history who := by
   simp only [ExecutionProtocol.historyBackwardValue, backwardOutcome]
   simp only [M.historyBackwardLaw_backwardProfile singleMover fallback
-    finiteChoices hglobal hperfect history]
+    finiteChoices hperfect history]
 
 /-- One-shot replacement at the current history gives exactly the legal
 joint constructed from the replacement choice. -/
@@ -698,16 +635,13 @@ theorem historyChooser_oneShot_backwardProfile [DecidableEq ι]
     (finiteChoices : M.HasFiniteDecisionChoices)
     {certificate : E.WellFoundedPlay}
     {utility : E.History → ι → ℝ}
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (who : ι) (hactive : E.active history.state who)
     (choice : M.Choice who (M.infoOf who history.trace)) :
     M.historyChooser
         (M.oneShotProfile
           (M.backwardProfile singleMover fallback finiteChoices certificate
-            utility hglobal) history who choice) history hterm =
+            utility) history who choice) history hterm =
       M.jointOfChoice singleMover history hterm who hactive choice := by
   apply Subtype.ext
   funext other
@@ -721,12 +655,12 @@ theorem historyChooser_oneShot_backwardProfile [DecidableEq ι]
       ((M.historyChooser
         (M.oneShotProfile
           (M.backwardProfile singleMover fallback finiteChoices certificate
-            utility hglobal) history who choice) history hterm).1 other)
+            utility) history who choice) history hterm).1 other)
       (ExecutionProtocol.legalOption_of_legal
         (M.historyChooser
           (M.oneShotProfile
             (M.backwardProfile singleMover fallback finiteChoices certificate
-              utility hglobal) history who choice) history hterm).2 other)
+              utility) history who choice) history hterm).2 other)
       hinactive
     have halternative := LegalOption.eq_none_of_inactive
       ((M.jointOfChoice singleMover history hterm who hactive choice).1 other)
@@ -745,80 +679,77 @@ theorem oneShotHistoryLaw_backwardProfile [DecidableEq ι]
     (finiteChoices : M.HasFiniteDecisionChoices)
     {certificate : E.WellFoundedPlay}
     {utility : E.History → ι → ℝ}
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     (hperfect : M.SeparatesDecisionHistories)
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (who : ι) (hactive : E.active history.state who)
     (choice : M.Choice who (M.infoOf who history.trace)) :
     M.oneShotHistoryLaw certificate
         (M.backwardProfile singleMover fallback finiteChoices certificate
-          utility hglobal) who history hterm choice =
+          utility) who history hterm choice =
       E.historyBackwardLaw certificate
         (M.historyChoiceChooser singleMover (M.historyChooser fallback)
           history hterm
           (fun later _ => M.backwardChooserBundle singleMover fallback
-            finiteChoices certificate utility hglobal later)
+            finiteChoices certificate utility later)
           who hactive choice) history := by
   let chosen := M.jointOfChoice singleMover history hterm who hactive choice
   have hchanged : M.historyChooser
       (M.oneShotProfile
         (M.backwardProfile singleMover fallback finiteChoices certificate
-          utility hglobal) history who choice) history hterm = chosen :=
+          utility) history who choice) history hterm = chosen :=
     M.historyChooser_oneShot_backwardProfile singleMover fallback
-      finiteChoices hglobal history hterm who hactive choice
+      finiteChoices history hterm who hactive choice
   have hchoice : M.historyChoiceChooser singleMover (M.historyChooser fallback)
       history hterm
       (fun later _ => M.backwardChooserBundle singleMover fallback
-        finiteChoices certificate utility hglobal later)
+        finiteChoices certificate utility later)
       who hactive choice =
       E.graftHistoryChooser (M.historyChooser fallback) history chosen
         (fun _target realized => M.backwardChooserBundle singleMover fallback
-          finiteChoices certificate utility hglobal
+          finiteChoices certificate utility
           (history.extend chosen.2 realized)) := rfl
   calc
     M.oneShotHistoryLaw certificate
         (M.backwardProfile singleMover fallback finiteChoices certificate
-          utility hglobal) who history hterm choice =
+          utility) who history hterm choice =
       (E.step history.state chosen).bindOnSupport fun _target realized =>
         E.historyBackwardLaw certificate
           (M.historyChooser (M.backwardProfile singleMover fallback
-            finiteChoices certificate utility hglobal))
+            finiteChoices certificate utility))
           (history.extend chosen.2 realized) :=
       congrArg (fun selected : {joint : ∀ i, Option (E.Action i) //
         E.Legal history.state joint} =>
         (E.step history.state selected).bindOnSupport fun _target realized =>
           E.historyBackwardLaw certificate
             (M.historyChooser (M.backwardProfile singleMover fallback
-              finiteChoices certificate utility hglobal))
+              finiteChoices certificate utility))
             (history.extend selected.2 realized)) hchanged
     _ = (E.step history.state chosen).bindOnSupport
           (fun _target realized =>
             E.historyBackwardLaw certificate
               (M.backwardChooserBundle singleMover fallback finiteChoices
-                certificate utility hglobal
+                certificate utility
                 (history.extend chosen.2 realized))
               (history.extend chosen.2 realized)) := by
       apply bindOnSupport_congr
       intro target realized
       exact M.historyBackwardLaw_backwardProfile singleMover fallback
-        finiteChoices hglobal hperfect (history.extend chosen.2 realized)
+        finiteChoices hperfect (history.extend chosen.2 realized)
     _ = E.historyBackwardLaw certificate
           (M.historyChoiceChooser singleMover (M.historyChooser fallback)
             history hterm
             (fun later _ => M.backwardChooserBundle singleMover fallback
-              finiteChoices certificate utility hglobal later)
+              finiteChoices certificate utility later)
             who hactive choice) history := by
       rw [hchoice]
       exact (E.historyBackwardLaw_graft certificate
         (M.historyChooser fallback) history hterm chosen
         (fun _target realized => M.backwardChooserBundle singleMover fallback
-          finiteChoices certificate utility hglobal
+          finiteChoices certificate utility
           (history.extend chosen.2 realized))).symm
 
 /-- At a decision history the recursively selected value is exactly the
-guarded score of the maximizing current choice. -/
+expected payoff of the maximizing current choice. -/
 theorem backwardOutcome_eq_bestHistoryChoiceValue [DecidableEq ι]
     (singleMover : ∀ (state : E.State) {first second : ι},
       E.active state first → E.active state second → first = second)
@@ -826,9 +757,6 @@ theorem backwardOutcome_eq_bestHistoryChoiceValue [DecidableEq ι]
     (finiteChoices : M.HasFiniteDecisionChoices)
     {certificate : E.WellFoundedPlay}
     {utility : E.History → ι → ℝ}
-    (hglobal : ∀ chooser history who,
-      PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
-        (fun outcome => utility outcome who))
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (who : ι) (hactive : E.active history.state who) :
     letI : Finite (M.Choice who (M.infoOf who history.trace)) :=
@@ -837,16 +765,16 @@ theorem backwardOutcome_eq_bestHistoryChoiceValue [DecidableEq ι]
     letI : Nonempty (M.Choice who (M.infoOf who history.trace)) :=
       ⟨fallback who (M.infoOf who history.trace)⟩
     M.backwardOutcome singleMover fallback finiteChoices certificate utility
-        hglobal history who =
+         history who =
       M.historyChoiceValue singleMover (M.historyChooser fallback)
-        certificate utility hglobal history hterm
+        certificate utility history hterm
         (fun later _ => M.backwardChooserBundle singleMover fallback
-          finiteChoices certificate utility hglobal later)
+          finiteChoices certificate utility later)
         who hactive
         (M.bestHistoryChoice singleMover (M.historyChooser fallback)
-          certificate utility hglobal history hterm
+          certificate utility history hterm
           (fun later _ => M.backwardChooserBundle singleMover fallback
-            finiteChoices certificate utility hglobal later)
+            finiteChoices certificate utility later)
           who hactive) := by
   classical
   have : Finite (M.Choice who (M.infoOf who history.trace)) :=
@@ -855,27 +783,27 @@ theorem backwardOutcome_eq_bestHistoryChoiceValue [DecidableEq ι]
   have : Nonempty (M.Choice who (M.infoOf who history.trace)) :=
     ⟨fallback who (M.infoOf who history.trace)⟩
   let best := M.bestHistoryChoice singleMover (M.historyChooser fallback)
-    certificate utility hglobal history hterm
+    certificate utility history hterm
     (fun later _ => M.backwardChooserBundle singleMover fallback finiteChoices
-      certificate utility hglobal later) who hactive
+      certificate utility later) who hactive
   have hchooser : M.backwardChooserBundle singleMover fallback finiteChoices
-        certificate utility hglobal history =
+        certificate utility history =
       M.historyChoiceChooser singleMover (M.historyChooser fallback)
         history hterm
         (fun later _ => M.backwardChooserBundle singleMover fallback
-          finiteChoices certificate utility hglobal later)
+          finiteChoices certificate utility later)
         who hactive best := by
     rw [M.backwardChooserBundle_of_not_terminal singleMover fallback
-      finiteChoices hglobal hterm]
+      finiteChoices hterm]
     dsimp only
     rw [M.backwardJoint_of_active singleMover fallback finiteChoices
-      certificate utility hglobal history hterm
+      certificate utility history hterm
       (fun later _ => M.backwardChooserBundle singleMover fallback
-        finiteChoices certificate utility hglobal later) who hactive]
+        finiteChoices certificate utility later) who hactive]
     rfl
   exact congrArg (fun chooser =>
     expect (E.historyBackwardLaw certificate chooser history)
-      (fun outcome => utility outcome who) (hglobal chooser history who)) hchooser
+      (fun outcome => utility outcome who)) hchooser
 
 /-- Exact all-chooser integrability makes every local candidate value
 well-defined, and finite-menu Bellman maximization prevents a profitable
@@ -894,10 +822,10 @@ theorem backwardProfile_hasNoProfitableOneShotDeviation [DecidableEq ι]
     (hperfect : M.SeparatesDecisionHistories) :
     M.HasNoProfitableOneShotDeviation certificate
       (M.backwardProfile singleMover fallback finiteChoices certificate
-        utility hglobal) utility := by
+        utility) utility := by
   intro who history hterm
   let profile := M.backwardProfile singleMover fallback finiteChoices
-    certificate utility hglobal
+    certificate utility
   let ctx := M.oneShotHistoryContext certificate profile utility who history hterm
   have hinc : ctx.IntegrableAt
       (profile who (M.infoOf who history.trace)) := by
@@ -910,12 +838,12 @@ theorem backwardProfile_hasNoProfitableOneShotDeviation [DecidableEq ι]
     · let candidate := M.historyChoiceChooser singleMover
         (M.historyChooser fallback) history hterm
         (fun later _ => M.backwardChooserBundle singleMover fallback
-          finiteChoices certificate utility hglobal later)
+          finiteChoices certificate utility later)
         who hactive choice
       have hlaw : M.oneShotHistoryLaw certificate profile who history hterm
           choice = E.historyBackwardLaw certificate candidate history :=
         M.oneShotHistoryLaw_backwardProfile singleMover fallback
-          finiteChoices hglobal hperfect history hterm who hactive choice
+          finiteChoices hperfect history hterm who hactive choice
       dsimp only [ctx, Context.IntegrableAt, oneShotHistoryContext]
       rw [hlaw]
       exact hglobal candidate history who
@@ -924,7 +852,7 @@ theorem backwardProfile_hasNoProfitableOneShotDeviation [DecidableEq ι]
         (M.subsingleton_choice_of_not_active history.trace hactive).elim _ _
       subst choice
       exact hinc
-  · intro choice _ hinc' halt
+  · intro choice _
     by_cases hactive : E.active history.state who
     · have hfinite : Finite (M.Choice who (M.infoOf who history.trace)) :=
         finiteChoices who (M.infoOf who history.trace) history
@@ -935,58 +863,56 @@ theorem backwardProfile_hasNoProfitableOneShotDeviation [DecidableEq ι]
       let recurse : ∀ later : E.History,
           E.HistorySuccessor later history → E.HistoryChooser :=
         fun later _ => M.backwardChooserBundle singleMover fallback
-          finiteChoices certificate utility hglobal later
+          finiteChoices certificate utility later
       let candidate := M.historyChoiceChooser singleMover
         (M.historyChooser fallback) history hterm recurse who hactive choice
       have hlaw : M.oneShotHistoryLaw certificate profile who history hterm
           choice = E.historyBackwardLaw certificate candidate history :=
         M.oneShotHistoryLaw_backwardProfile singleMover fallback
-          finiteChoices hglobal hperfect history hterm who hactive choice
-      have hleft : ctx.value choice halt =
+          finiteChoices hperfect history hterm who hactive choice
+      have hleft : ctx.value choice =
           M.historyChoiceValue singleMover (M.historyChooser fallback)
-            certificate utility hglobal history hterm recurse who hactive
+            certificate utility history hterm recurse who hactive
             choice := by
         simp only [ctx, Context.value, oneShotHistoryContext,
           historyChoiceValue, hlaw]
         dsimp only [candidate, recurse]
       have hright : ctx.value
-          (profile who (M.infoOf who history.trace)) hinc' =
+          (profile who (M.infoOf who history.trace)) =
           M.backwardOutcome singleMover fallback finiteChoices certificate
-            utility hglobal history who := by
+            utility history who := by
         have hlaw : ctx.outcome
             (profile who (M.infoOf who history.trace)) =
             E.historyBackwardLaw certificate
               (M.backwardChooserBundle singleMover fallback finiteChoices
-                certificate utility hglobal history) history := by
+                certificate utility history) history := by
           exact (M.oneShotHistoryLaw_self certificate profile who history hterm).trans
             (M.historyBackwardLaw_backwardProfile singleMover fallback
-              finiteChoices hglobal hperfect history)
-        exact expectedUtility_congr_law utility who hlaw hinc'
-          (hglobal (M.backwardChooserBundle singleMover fallback finiteChoices
-            certificate utility hglobal history) history who)
+              finiteChoices hperfect history)
+        exact expectedUtility_congr_law utility who hlaw
       calc
-        ctx.value choice halt =
+        ctx.value choice =
             M.historyChoiceValue singleMover (M.historyChooser fallback)
-              certificate utility hglobal history hterm recurse who hactive
+              certificate utility history hterm recurse who hactive
               choice := hleft
         _ ≤ M.historyChoiceValue singleMover (M.historyChooser fallback)
-              certificate utility hglobal history hterm recurse who hactive
+              certificate utility history hterm recurse who hactive
               (M.bestHistoryChoice singleMover (M.historyChooser fallback)
-                certificate utility hglobal history hterm recurse who hactive) :=
+                certificate utility history hterm recurse who hactive) :=
           M.historyChoiceValue_le_bestHistoryChoice singleMover
-            (M.historyChooser fallback) certificate utility hglobal history
+            (M.historyChooser fallback) certificate utility history
             hterm recurse who hactive choice
         _ = M.backwardOutcome singleMover fallback finiteChoices certificate
-              utility hglobal history who :=
+              utility history who :=
           (M.backwardOutcome_eq_bestHistoryChoiceValue singleMover
-            fallback finiteChoices hglobal history hterm who hactive).symm
-        _ = ctx.value (profile who (M.infoOf who history.trace)) hinc' :=
+            fallback finiteChoices history hterm who hactive).symm
+        _ = ctx.value (profile who (M.infoOf who history.trace)) :=
           hright.symm
     · have hchoice : choice =
           profile who (M.infoOf who history.trace) :=
         (M.subsingleton_choice_of_not_active history.trace hactive).elim _ _
       subst choice
-      exact le_of_eq (expect_proof_irrel _ _ _ _)
+      exact le_rfl
 
 /-- Well-founded perfect-information backward induction yields a pure
 subgame-perfect profile when every actual history-chooser terminal law has a
@@ -1007,7 +933,7 @@ theorem exists_isSubgamePerfect [DecidableEq ι]
     ∃ profile : Profile M.strategicSignature,
       M.IsSubgamePerfect certificate profile utility := by
   let profile := M.backwardProfile singleMover fallback finiteChoices
-    certificate utility hglobal
+    certificate utility
   refine ⟨profile, ?_⟩
   apply IsHistorywiseOptimal.isSubgamePerfect
   apply M.isHistorywiseOptimal_of_hasNoProfitableOneShotDeviation

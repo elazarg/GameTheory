@@ -108,20 +108,17 @@ theorem rootGain_eq_prefixExpectation
       (M.runBehavioral first (depth + fuel)) payoff)
     (hsecond : PayoffIntegrable
       (M.runBehavioral second (depth + fuel)) payoff) :
-    ∃ (gain : E.History → ℝ)
-      (hgain : PayoffIntegrable (M.runBehavioral second depth) gain),
+    ∃ gain : E.History → ℝ,
+      PayoffIntegrable (M.runBehavioral second depth) gain ∧
       (∀ history ∈ (M.runBehavioral second depth).support,
-        ∃ (hfirstCond : PayoffIntegrable
-            (M.runBehavioralFrom first fuel history) payoff)
-          (hsecondCond : PayoffIntegrable
-            (M.runBehavioralFrom second fuel history) payoff),
+        PayoffIntegrable (M.runBehavioralFrom first fuel history) payoff ∧
+          PayoffIntegrable (M.runBehavioralFrom second fuel history) payoff ∧
           gain history =
-            expect (M.runBehavioralFrom first fuel history) payoff hfirstCond -
-              expect (M.runBehavioralFrom second fuel history) payoff
-                hsecondCond) ∧
-      expect (M.runBehavioral first (depth + fuel)) payoff hfirst -
-          expect (M.runBehavioral second (depth + fuel)) payoff hsecond =
-        expect (M.runBehavioral second depth) gain hgain := by
+            expect (M.runBehavioralFrom first fuel history) payoff -
+              expect (M.runBehavioralFrom second fuel history) payoff) ∧
+      expect (M.runBehavioral first (depth + fuel)) payoff -
+          expect (M.runBehavioral second (depth + fuel)) payoff =
+        expect (M.runBehavioral second depth) gain := by
   classical
   let cut := M.runBehavioral second depth
   let firstKernel := fun history => M.runBehavioralFrom first fuel history
@@ -150,22 +147,12 @@ theorem rootGain_eq_prefixExpectation
     cut firstKernel payoff hfirstBind
   let hsecondCond := payoffIntegrable_bind_conditional_on_support
     cut secondKernel payoff hsecondBind
-  let firstValue := extendFromSupport cut (fun history hhistory =>
-    expect (firstKernel history) payoff (hfirstCond history hhistory))
-  let secondValue := extendFromSupport cut (fun history hhistory =>
-    expect (secondKernel history) payoff (hsecondCond history hhistory))
-  have hfirstPoint : ∀ history (hhistory : history ∈ cut.support),
-      firstValue history = expect (firstKernel history) payoff
-        (payoffIntegrable_bind_conditional_on_support cut firstKernel payoff
-          hfirstBind history hhistory) := by
-    intro history hhistory
-    simp [firstValue, extendFromSupport, hhistory]
-  have hsecondPoint : ∀ history (hhistory : history ∈ cut.support),
-      secondValue history = expect (secondKernel history) payoff
-        (payoffIntegrable_bind_conditional_on_support cut secondKernel payoff
-          hsecondBind history hhistory) := by
-    intro history hhistory
-    simp [secondValue, extendFromSupport, hhistory]
+  let firstValue := fun history => expect (firstKernel history) payoff
+  let secondValue := fun history => expect (secondKernel history) payoff
+  have hfirstPoint : ∀ history ∈ cut.support,
+      firstValue history = expect (firstKernel history) payoff := fun _ _ => rfl
+  have hsecondPoint : ∀ history ∈ cut.support,
+      secondValue history = expect (secondKernel history) payoff := fun _ _ => rfl
   have hfirstOuter := payoffIntegrable_bind_conditionalValue_on_support
     cut firstKernel payoff hfirstBind firstValue hfirstPoint
   have hsecondOuter := payoffIntegrable_bind_conditionalValue_on_support
@@ -175,23 +162,21 @@ theorem rootGain_eq_prefixExpectation
     payoffIntegrable_sub hfirstOuter hsecondOuter
   refine ⟨gain, hgain, ?_, ?_⟩
   · intro history hhistory
-    refine ⟨hfirstCond history hhistory, hsecondCond history hhistory, ?_⟩
-    have hnz : cut history ≠ 0 := (cut.mem_support_iff history).mp hhistory
-    simp [gain, firstValue, secondValue, extendFromSupport, hnz]
-    rfl
-  · have hfirstExpect := expect_congr_law hfirstLaw payoff hfirst hfirstBind
-    have hsecondExpect := expect_congr_law hsecondLaw payoff hsecond hsecondBind
+    exact ⟨hfirstCond history hhistory, hsecondCond history hhistory, rfl⟩
+  · have hfirstExpect := expect_congr_law hfirstLaw payoff
+    have hsecondExpect := expect_congr_law hsecondLaw payoff
     calc
-      expect (M.runBehavioral first (depth + fuel)) payoff hfirst -
-          expect (M.runBehavioral second (depth + fuel)) payoff hsecond =
-          expect cut firstValue hfirstOuter -
-            expect cut secondValue hsecondOuter := by
+      expect (M.runBehavioral first (depth + fuel)) payoff -
+          expect (M.runBehavioral second (depth + fuel)) payoff =
+          expect cut firstValue -
+            expect cut secondValue := by
         rw [hfirstExpect, hsecondExpect]
         rw [expect_bind_tower_on_support cut firstKernel payoff hfirstBind
           firstValue hfirstPoint]
         rw [expect_bind_tower_on_support cut secondKernel payoff hsecondBind
           secondValue hsecondPoint]
-      _ = expect cut gain hgain := (expect_sub hfirstOuter hsecondOuter).symm
+      _ = expect cut gain := (expect_sub hfirstOuter hsecondOuter).symm
+
 /-- Reindexing a common-depth cut law over one information fiber exposes the
 canonical counterfactual coefficient. Histories outside the fiber need only
 have zero gain on the finite support actually reached at the cut. -/
@@ -206,13 +191,12 @@ theorem prefixExpectation_eq_ownReach_mul_counterfactualSum
       M.playerReachProbability strategy who history.1.trace = ownReach)
     (gain : E.History → ℝ)
     (localGain : M.InformationHistory who site.1 → ℝ)
-    (hgain : PayoffIntegrable (M.runBehavioral strategy depth) gain)
     (hzero : ∀ history ∈ (M.runBehavioral strategy depth).support,
       M.infoOf who history.trace ≠ site.1 → gain history = 0)
     (hlocal : ∀ history : M.InformationHistory who site.1,
       history.1 ∈ (M.runBehavioral strategy depth).support →
         gain history.1 = localGain history) :
-    expect (M.runBehavioral strategy depth) gain hgain =
+    expect (M.runBehavioral strategy depth) gain =
       ownReach *
         ∑ history : M.InformationHistory who site.1,
           M.counterfactualReachProbability strategy who history.1.trace *
@@ -361,33 +345,20 @@ theorem counterfactualActionRegret_eq_of_agree_off_pastSite
     (hlater : ∀ history : M.InformationHistory who laterSite.1,
       pastDepth < history.1.trace.length)
     (payoff : E.History → ℝ) (fuel : ℕ)
-    (choice : M.Choice who laterSite.1)
-    (hfirstAction : M.CounterfactualContinuationIntegrable first who laterSite
-      ((first who).commit laterSite.1 choice) payoff fuel)
-    (hfirstBase : M.CounterfactualContinuationIntegrable first who laterSite
-      (first who) payoff fuel)
-    (hsecondAction : M.CounterfactualContinuationIntegrable second who laterSite
-      ((second who).commit laterSite.1 choice) payoff fuel)
-    (hsecondBase : M.CounterfactualContinuationIntegrable second who laterSite
-      (second who) payoff fuel) :
-    M.counterfactualActionRegret first who laterSite payoff fuel choice
-        hfirstAction hfirstBase =
-      M.counterfactualActionRegret second who laterSite payoff fuel choice
-        hsecondAction hsecondBase := by
+    (choice : M.Choice who laterSite.1) :
+    M.counterfactualActionRegret first who laterSite payoff fuel choice =
+      M.counterfactualActionRegret second who laterSite payoff fuel choice := by
   have hcontinuation : ∀
       (firstPolicy secondPolicy : M.BehavioralPolicy who),
       (∀ {info : M.InfoState who}, info ≠ pastSite.1 →
         firstPolicy info = secondPolicy info) →
-      (hfirst : M.CounterfactualContinuationIntegrable first who laterSite
-        firstPolicy payoff fuel) →
-      (hsecond : M.CounterfactualContinuationIntegrable second who laterSite
-        secondPolicy payoff fuel) →
       M.counterfactualContinuationValue first who laterSite firstPolicy
-          payoff fuel hfirst =
+          payoff fuel =
         M.counterfactualContinuationValue second who laterSite secondPolicy
-          payoff fuel hsecond := by
-    intro firstPolicy secondPolicy hpolicy hfirst hsecond
+          payoff fuel := by
+    intro firstPolicy secondPolicy hpolicy
     unfold InformationModel.counterfactualContinuationValue
+      InformationModel.behavioralContinuationValue
     apply Finset.sum_congr rfl
     intro history _
     have hreachEq := M.counterfactualReachProbability_eq_of_eq_off
@@ -403,19 +374,7 @@ theorem counterfactualActionRegret_eq_of_agree_off_pastSite
         rw [Profile.update_same, Profile.update_same]
         exact hpolicy hinfo)
       history.1 (hlater history) fuel
-    by_cases hreach : M.counterfactualReachProbability first who
-        history.1.trace = 0
-    · have hreachSecond : M.counterfactualReachProbability second who
-          history.1.trace = 0 := by rw [← hreachEq]; exact hreach
-      simp [hreach, hreachSecond]
-    · have hreachSecond : M.counterfactualReachProbability second who
-          history.1.trace ≠ 0 := by rw [← hreachEq]; exact hreach
-      simp only [dite_eq_left hreach, dite_eq_left hreachSecond]
-      rw [hreachEq]
-      exact congrArg (fun value : ℝ =>
-        M.counterfactualReachProbability second who history.1.trace * value)
-        (expect_congr_law hrun payoff
-          (hfirst history hreach) (hsecond history hreachSecond))
+    rw [hreachEq, hrun]
   have hcommitted : ∀ {info : M.InfoState who}, info ≠ pastSite.1 →
       (first who).commit laterSite.1 choice info =
         (second who).commit laterSite.1 choice info := by
@@ -429,9 +388,8 @@ theorem counterfactualActionRegret_eq_of_agree_off_pastSite
   unfold InformationModel.counterfactualActionRegret
     InformationModel.counterfactualRegret
   rw [hcontinuation ((first who).commit laterSite.1 choice)
-      ((second who).commit laterSite.1 choice) hcommitted
-      hfirstAction hsecondAction,
-    hcontinuation (first who) (second who) hwho hfirstBase hsecondBase]
+      ((second who).commit laterSite.1 choice) hcommitted,
+    hcontinuation (first who) (second who) hwho]
 
 /-- The bounded cut gain vanishes on every reached history outside the local
 replacement site, including histories absorbed before the cut depth. -/
@@ -447,16 +405,11 @@ theorem cutGain_eq_zero_of_info_ne
     (payoff : E.History → ℝ)
     (history : E.History)
     (hsupport : history ∈ (M.runBehavioral strategy depth).support)
-    (hinfo : M.infoOf who history.trace ≠ site.1)
-    (hupdated : PayoffIntegrable (M.runBehavioralFrom
-        (Profile.update (sig := M.behavioralSignature)
-          strategy who alternative) fuel history) payoff)
-    (hbaseline : PayoffIntegrable
-      (M.runBehavioralFrom strategy fuel history) payoff) :
+    (hinfo : M.infoOf who history.trace ≠ site.1) :
     expect (M.runBehavioralFrom
         (Profile.update (sig := M.behavioralSignature)
-          strategy who alternative) fuel history) payoff hupdated -
-      expect (M.runBehavioralFrom strategy fuel history) payoff hbaseline = 0 := by
+          strategy who alternative) fuel history) payoff -
+      expect (M.runBehavioralFrom strategy fuel history) payoff = 0 := by
   let updated := Profile.update (sig := M.behavioralSignature)
     strategy who alternative
   have hruns : M.runBehavioralFrom updated fuel history =
@@ -476,48 +429,38 @@ theorem cutGain_eq_zero_of_info_ne
         exact M.runBehavioralFrom_update_eq_of_outside_commonDepth
           strategy who site alternative depth hdepth hagree history hlength'
             hinfo fuel
-  have hvalues := expect_congr_law hruns payoff hupdated hbaseline
+  have hvalues := expect_congr_law hruns payoff
   rw [hvalues, sub_self]
 
-/-- D45 whole-policy regret is the counterfactual sum of the corresponding
-ordinary behavioral continuation gains. -/
+/-- Whole-policy counterfactual regret is the counterfactual sum of the
+corresponding ordinary behavioral continuation gains. -/
 theorem counterfactualRegret_eq_sum_behavioralContinuationGain
     [Fintype ι] [DecidableEq ι]
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (who : ι) (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
     (alternative : M.BehavioralPolicy who)
-    (payoff : E.History → ℝ) (fuel : ℕ)
-    (halternative : M.CounterfactualContinuationIntegrable
-      strategy who site alternative payoff fuel)
-    (hincumbent : M.CounterfactualContinuationIntegrable
-      strategy who site (strategy who) payoff fuel) :
-    M.counterfactualRegret strategy who site payoff fuel alternative
-      halternative hincumbent =
+    (payoff : E.History → ℝ) (fuel : ℕ) :
+    M.counterfactualRegret strategy who site payoff fuel alternative =
       ∑ history : M.InformationHistory who site.1,
-        if hreach : M.counterfactualReachProbability strategy who
-            history.1.trace ≠ 0 then
-          M.counterfactualReachProbability strategy who history.1.trace *
-            (expect (M.runBehavioralFrom
-                (Profile.update (sig := M.behavioralSignature)
-                  strategy who alternative) fuel history.1) payoff
-                (halternative history hreach) -
-              expect (M.runBehavioralFrom
-                (Profile.update (sig := M.behavioralSignature)
-                  strategy who (strategy who)) fuel history.1) payoff
-                (hincumbent history hreach))
-        else 0 := by
+        M.counterfactualReachProbability strategy who history.1.trace *
+          (expect (M.runBehavioralFrom
+              (Profile.update (sig := M.behavioralSignature)
+                strategy who alternative) fuel history.1) payoff -
+            expect (M.runBehavioralFrom
+              (Profile.update (sig := M.behavioralSignature)
+                strategy who (strategy who)) fuel history.1) payoff) := by
   unfold InformationModel.counterfactualRegret
     InformationModel.counterfactualContinuationValue
     InformationModel.behavioralContinuationValue
   rw [← Finset.sum_sub_distrib]
   apply Finset.sum_congr rfl
   intro history _
-  split_ifs <;> ring
+  ring
 
 /-- **Single-site root decomposition.** For a local policy replacement at a
 common-depth information site, the exact bounded root gain is alternative own
-reach times the existing D45 counterfactual regret. Early terminal histories
+reach times the existing counterfactual regret. Early terminal histories
 are absorbed; no separate runner or payoff semantics is introduced. -/
 theorem rootGain_eq_ownReach_mul_counterfactualRegret
     [Fintype ι] [DecidableEq ι]
@@ -537,90 +480,50 @@ theorem rootGain_eq_ownReach_mul_counterfactualRegret
         (Profile.update (sig := M.behavioralSignature)
           strategy who alternative) (depth + fuel)) payoff)
     (hbaseline : PayoffIntegrable
-      (M.runBehavioral strategy (depth + fuel)) payoff)
-    (halternative : M.CounterfactualContinuationIntegrable
-      strategy who site alternative payoff fuel)
-    (hincumbent : M.CounterfactualContinuationIntegrable
-      strategy who site (strategy who) payoff fuel) :
+      (M.runBehavioral strategy (depth + fuel)) payoff) :
     expect (M.runBehavioral
         (Profile.update (sig := M.behavioralSignature)
-          strategy who alternative) (depth + fuel)) payoff hupdated -
-      expect (M.runBehavioral strategy (depth + fuel)) payoff hbaseline =
+          strategy who alternative) (depth + fuel)) payoff -
+      expect (M.runBehavioral strategy (depth + fuel)) payoff =
         ownReach *
-          M.counterfactualRegret strategy who site payoff fuel alternative
-            halternative hincumbent := by
+          M.counterfactualRegret strategy who site payoff fuel alternative := by
   let updated := Profile.update (sig := M.behavioralSignature)
     strategy who alternative
   have hprefix : M.runBehavioral updated depth =
       M.runBehavioral strategy depth :=
     M.runBehavioral_prefix_eq_of_agree_off_site strategy who site
       alternative depth hdepth hagree
-  obtain ⟨gain, hgain, hpoint, hroot⟩ :=
+  obtain ⟨gain, -, hpoint, hroot⟩ :=
     M.rootGain_eq_prefixExpectation updated strategy payoff depth fuel
       hprefix hupdated hbaseline
   let localGain : M.InformationHistory who site.1 → ℝ := fun history =>
-    if hreach : M.counterfactualReachProbability strategy who
-        history.1.trace ≠ 0 then
-      expect (M.runBehavioralFrom updated fuel history.1) payoff
-          (halternative history hreach) -
-        expect (M.runBehavioralFrom strategy fuel history.1) payoff
-          (by simpa only [Profile.update_eq_self] using
-            hincumbent history hreach)
-    else 0
+    expect (M.runBehavioralFrom updated fuel history.1) payoff -
+      expect (M.runBehavioralFrom strategy fuel history.1) payoff
   have hzero : ∀ history ∈ (M.runBehavioral strategy depth).support,
       M.infoOf who history.trace ≠ site.1 → gain history = 0 := by
     intro history hsupport hinfo
-    obtain ⟨hfirst, hsecond, hvalue⟩ := hpoint history hsupport
-    rw [hvalue]
+    rw [(hpoint history hsupport).2.2]
     exact M.cutGain_eq_zero_of_info_ne strategy who site alternative depth
-      fuel hdepth hagree payoff history hsupport hinfo hfirst hsecond
+      fuel hdepth hagree payoff history hsupport hinfo
   have hlocal : ∀ history : M.InformationHistory who site.1,
       history.1 ∈ (M.runBehavioral strategy depth).support →
-        gain history.1 = localGain history := by
-    intro history hsupport
-    have hmass : 0 < M.runBehavioral strategy depth history.1 := by
-      exact pos_iff_ne_zero.mpr
-        (((M.runBehavioral strategy depth).mem_support_iff history.1).mp
-          hsupport)
-    have hreal : 0 < (M.runBehavioral strategy depth history.1).toReal :=
-      ENNReal.toReal_pos (ne_of_gt hmass)
-        ((M.runBehavioral strategy depth).apply_ne_top history.1)
-    have hprob : (M.runBehavioral strategy depth history.1).toReal =
-        (M.historyReachWeight strategy history.1).toReal := by
-      unfold InformationModel.historyReachWeight
-      rw [hdepth history]
-    have hreach : M.counterfactualReachProbability strategy who
-        history.1.trace ≠ 0 := by
-      intro hzero'
-      rw [hprob, M.historyReachProbability_eq_player_mul_counterfactual,
-        hown history, hzero'] at hreal
-      norm_num at hreal
-    obtain ⟨hfirst, hsecond, hvalue⟩ := hpoint history.1 hsupport
-    rw [hvalue]
-    simp only [localGain, dite_eq_left hreach]
+        gain history.1 = localGain history :=
+    fun history hsupport => (hpoint history.1 hsupport).2.2
   calc
-    expect (M.runBehavioral updated (depth + fuel)) payoff hupdated -
-        expect (M.runBehavioral strategy (depth + fuel)) payoff hbaseline =
-      expect (M.runBehavioral strategy depth) gain hgain := hroot
+    expect (M.runBehavioral updated (depth + fuel)) payoff -
+        expect (M.runBehavioral strategy (depth + fuel)) payoff =
+      expect (M.runBehavioral strategy depth) gain := hroot
     _ = ownReach *
         ∑ history : M.InformationHistory who site.1,
           M.counterfactualReachProbability strategy who history.1.trace *
             localGain history := by
       exact M.prefixExpectation_eq_ownReach_mul_counterfactualSum
-        strategy who site depth hdepth ownReach hown gain localGain hgain
+        strategy who site depth hdepth ownReach hown gain localGain
           hzero hlocal
     _ = ownReach *
-        M.counterfactualRegret strategy who site payoff fuel alternative
-          halternative hincumbent := by
+        M.counterfactualRegret strategy who site payoff fuel alternative := by
       rw [M.counterfactualRegret_eq_sum_behavioralContinuationGain]
-      congr 1
-      apply Finset.sum_congr rfl
-      intro history _
-      by_cases hreach : M.counterfactualReachProbability strategy who
-          history.1.trace ≠ 0
-      · simp only [localGain, dite_eq_left hreach, updated,
-          Profile.update_eq_self]
-      · simp only [localGain, dite_eq_right hreach, mul_zero]
+      simp only [localGain, updated, Profile.update_eq_self]
 
 /-- Decision recall supplies the common own-reach coefficient in the
 single-site root decomposition. The coefficient is read at the decision
@@ -641,21 +544,15 @@ theorem rootGain_eq_representativeReach_mul_counterfactualRegret_of_decisionReca
         (Profile.update (sig := M.behavioralSignature)
           strategy who alternative) (depth + fuel)) payoff)
     (hbaseline : PayoffIntegrable
-      (M.runBehavioral strategy (depth + fuel)) payoff)
-    (halternative : M.CounterfactualContinuationIntegrable
-      strategy who site alternative payoff fuel)
-    (hincumbent : M.CounterfactualContinuationIntegrable
-      strategy who site (strategy who) payoff fuel) :
+      (M.runBehavioral strategy (depth + fuel)) payoff) :
     expect (M.runBehavioral
         (Profile.update (sig := M.behavioralSignature)
-          strategy who alternative) (depth + fuel)) payoff hupdated -
-      expect (M.runBehavioral strategy (depth + fuel)) payoff hbaseline =
+          strategy who alternative) (depth + fuel)) payoff -
+      expect (M.runBehavioral strategy (depth + fuel)) payoff =
         M.playerReachProbability strategy who site.2.choose.1.trace *
-          M.counterfactualRegret strategy who site payoff fuel alternative
-            halternative hincumbent := by
+          M.counterfactualRegret strategy who site payoff fuel alternative := by
   apply M.rootGain_eq_ownReach_mul_counterfactualRegret strategy who site
     alternative depth fuel hdepth hagree _ _ payoff hupdated hbaseline
-      halternative hincumbent
   intro history
   exact M.playerReachProbability_eq_of_decisionRecall hrecall strategy who site
     history site.2.choose
@@ -677,24 +574,19 @@ theorem rootGain_eq_representativeReach_mul_counterfactualActionRegret_of_decisi
           ((strategy who).commit site.1 choice))
         (depth + fuel)) payoff)
     (hbaselineRoot : PayoffIntegrable
-      (M.runBehavioral strategy (depth + fuel)) payoff)
-    (haction : M.CounterfactualContinuationIntegrable
-      strategy who site ((strategy who).commit site.1 choice) payoff fuel)
-    (hincumbent : M.CounterfactualContinuationIntegrable
-      strategy who site (strategy who) payoff fuel) :
+      (M.runBehavioral strategy (depth + fuel)) payoff) :
     expect (M.runBehavioral
         (Profile.update (sig := M.behavioralSignature) strategy who
           ((strategy who).commit site.1 choice))
-        (depth + fuel)) payoff hactionRoot -
-      expect (M.runBehavioral strategy (depth + fuel)) payoff hbaselineRoot =
+        (depth + fuel)) payoff -
+      expect (M.runBehavioral strategy (depth + fuel)) payoff =
         M.playerReachProbability strategy who site.2.choose.1.trace *
-          M.counterfactualActionRegret strategy who site payoff fuel choice
-            haction hincumbent := by
+          M.counterfactualActionRegret strategy who site payoff fuel choice := by
   exact M.rootGain_eq_representativeReach_mul_counterfactualRegret_of_decisionRecall
     hrecall strategy who site ((strategy who).commit site.1 choice)
       depth fuel hdepth (fun hne =>
         BehavioralPolicy.commit_of_ne (strategy who) site.1 choice hne)
-      payoff hactionRoot hbaselineRoot haction hincumbent
+      payoff hactionRoot hbaselineRoot
 
 /-- A finite topological chain of single-site root identities telescopes to a
 whole-policy root-gain decomposition. Callers obtain each premise from
@@ -705,33 +597,26 @@ theorem rootGain_eq_sum_stepCounterfactualTerms
     (strategies : ℕ → (i : ι) → M.BehavioralPolicy i)
     (payoff : E.History → ℝ) (horizon steps : ℕ)
     (ownReach localRegret : ℕ → ℝ)
-    (hguard : ∀ step ≤ steps,
-      PayoffIntegrable (M.runBehavioral (strategies step) horizon) payoff)
-    (hstep : ∀ (step : ℕ) (hlt : step < steps),
-      expect (M.runBehavioral (strategies (step + 1)) horizon) payoff
-          (hguard (step + 1) (Nat.succ_le_of_lt hlt)) -
-        expect (M.runBehavioral (strategies step) horizon) payoff
-          (hguard step hlt.le) =
+    (hstep : ∀ step < steps,
+      expect (M.runBehavioral (strategies (step + 1)) horizon) payoff -
+        expect (M.runBehavioral (strategies step) horizon) payoff =
         ownReach step * localRegret step) :
-    expect (M.runBehavioral (strategies steps) horizon) payoff
-        (hguard steps le_rfl) -
-      expect (M.runBehavioral (strategies 0) horizon) payoff
-        (hguard 0 (Nat.zero_le steps)) =
+    expect (M.runBehavioral (strategies steps) horizon) payoff -
+      expect (M.runBehavioral (strategies 0) horizon) payoff =
       ∑ step ∈ Finset.range steps,
         ownReach step * localRegret step := by
   let value : ℕ → ℝ := fun step =>
     if h : step ≤ steps then
-      expect (M.runBehavioral (strategies step) horizon) payoff (hguard step h)
+      expect (M.runBehavioral (strategies step) horizon) payoff
     else 0
   have hvalue (step : ℕ) (hle : step ≤ steps) :
       value step = expect (M.runBehavioral (strategies step) horizon)
-        payoff (hguard step hle) := by
+        payoff := by
     simp [value, hle]
   calc
-    expect (M.runBehavioral (strategies steps) horizon) payoff
-        (hguard steps le_rfl) -
+    expect (M.runBehavioral (strategies steps) horizon) payoff -
       expect (M.runBehavioral (strategies 0) horizon) payoff
-        (hguard 0 (Nat.zero_le steps)) = value steps - value 0 := by
+         = value steps - value 0 := by
       rw [hvalue steps le_rfl, hvalue 0 (Nat.zero_le steps)]
     _ = ∑ step ∈ Finset.range steps, (value (step + 1) - value step) :=
       (Finset.sum_range_sub value steps).symm

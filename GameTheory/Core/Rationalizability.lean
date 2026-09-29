@@ -64,16 +64,16 @@ theorem expectedUtility_randomizedDeviationOutcome (F : GameForm ι)
     (replacement : PMF (F.sig.Strategy who))
     (hmixed : UtilityIntegrable utility who
       (randomizedDeviationOutcome F profile who replacement)) :
-    ∃ hconditional : ∀ action, action ∈ replacement.support →
-        UtilityIntegrable utility who (F.play (Profile.update profile who action)),
+    (∀ action, action ∈ replacement.support →
+        UtilityIntegrable utility who (F.play (Profile.update profile who action))) ∧
       ∃ values : F.sig.Strategy who → ℝ,
-        (∀ action, ∀ ha : action ∈ replacement.support,
+        (∀ action, action ∈ replacement.support →
           values action = expectedUtility utility who
-            (F.play (Profile.update profile who action)) (hconditional action ha)) ∧
-        ∃ houter : PayoffIntegrable replacement values,
+            (F.play (Profile.update profile who action))) ∧
+        PayoffIntegrable replacement values ∧
           expectedUtility utility who
-              (randomizedDeviationOutcome F profile who replacement) hmixed =
-            expect replacement values houter := by
+              (randomizedDeviationOutcome F profile who replacement) =
+            expect replacement values := by
   classical
   let kernel := fun action => F.play (Profile.update profile who action)
   have hbind : PayoffIntegrable (replacement.bind kernel)
@@ -84,10 +84,9 @@ theorem expectedUtility_randomizedDeviationOutcome (F : GameForm ι)
     (fun outcome => utility outcome who) hbind
   let values : F.sig.Strategy who → ℝ := fun action =>
     if ha : action ∈ replacement.support then
-      expectedUtility utility who (kernel action) (hconditional action ha) else 0
+      expectedUtility utility who (kernel action) else 0
   have hvalues (action : F.sig.Strategy who) (ha : action ∈ replacement.support) :
-      values action = expect (kernel action) (fun outcome => utility outcome who)
-        (hconditional action ha) := by
+      values action = expect (kernel action) (fun outcome => utility outcome who) := by
     have hne : replacement action ≠ 0 :=
       (PMF.mem_support_iff replacement action).mp ha
     simp [values, hne, expectedUtility]
@@ -135,23 +134,21 @@ private theorem strictRandomized_not_isBestResponse
   have hlt := (euPreference_strict_iff utility who _ _ hmixed hbase).mp hstrict
   obtain ⟨hconditional, values, hvalues, houter, heq⟩ :=
     expectedUtility_randomizedDeviationOutcome F utility profile who replacement hmixed
-  have hle : expect replacement values houter ≤
-      expectedUtility utility who (F.play (Profile.update profile who alternative))
-        hbase := by
+  have hle : expect replacement values ≤
+      expectedUtility utility who (F.play (Profile.update profile who alternative)) := by
     calc
-      expect replacement values houter ≤
+      expect replacement values ≤
           expect replacement
             (fun _ => expectedUtility utility who
-              (F.play (Profile.update profile who alternative)) hbase)
-            (payoffIntegrable_constant replacement _) := by
-        apply expect_mono (μ := replacement)
-        · intro action ha
-          rw [hvalues action ha]
-          exact (euPreference_iff utility who _ _ hbase (hconditional action ha)).mp
-            (hbest action)
+              (F.play (Profile.update profile who alternative))) := by
+        refine expect_mono (μ := replacement) (fun action ha => ?_) houter
+          (payoffIntegrable_constant _ _)
+        rw [hvalues action ha]
+        exact (euPreference_iff utility who _ _ hbase (hconditional action ha)).mp
+          (hbest action)
       _ = expectedUtility utility who
-            (F.play (Profile.update profile who alternative)) hbase :=
-        expect_constant replacement _ _
+            (F.play (Profile.update profile who alternative)) :=
+        expect_constant replacement _
   rw [← heq] at hle
   exact (not_lt_of_ge hle) hlt
 
@@ -251,16 +248,16 @@ theorem expectedUtility_mixed_play_update_pure
     (who : ι) (strategy : F.sig.Strategy who)
     (hmixed : UtilityIntegrable utility who
       (F.mixed.play (Profile.update beliefs who (PMF.pure strategy)))) :
-    ∃ hconditional : ∀ profile, profile ∈ (independentProduct beliefs).support →
-        UtilityIntegrable utility who (F.play (Profile.update profile who strategy)),
+    (∀ profile, profile ∈ (independentProduct beliefs).support →
+        UtilityIntegrable utility who (F.play (Profile.update profile who strategy))) ∧
       ∃ values : Profile F.sig → ℝ,
-        (∀ profile, ∀ hp : profile ∈ (independentProduct beliefs).support,
+        (∀ profile, profile ∈ (independentProduct beliefs).support →
           values profile = expectedUtility utility who
-            (F.play (Profile.update profile who strategy)) (hconditional profile hp)) ∧
-        ∃ houter : PayoffIntegrable (independentProduct beliefs) values,
+            (F.play (Profile.update profile who strategy))) ∧
+        PayoffIntegrable (independentProduct beliefs) values ∧
           expectedUtility utility who
-              (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) hmixed =
-            expect (independentProduct beliefs) values houter := by
+              (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) =
+            expect (independentProduct beliefs) values := by
   classical
   let profileLaw := independentProduct beliefs
   let kernel := fun profile => F.play (Profile.update profile who strategy)
@@ -272,10 +269,9 @@ theorem expectedUtility_mixed_play_update_pure
     (fun outcome => utility outcome who) hbind
   let values : Profile F.sig → ℝ := fun profile =>
     if hp : profile ∈ profileLaw.support then
-      expectedUtility utility who (kernel profile) (hconditional profile hp) else 0
+      expectedUtility utility who (kernel profile) else 0
   have hvalues (profile : Profile F.sig) (hp : profile ∈ profileLaw.support) :
-      values profile = expect (kernel profile) (fun outcome => utility outcome who)
-        (hconditional profile hp) := by
+      values profile = expect (kernel profile) (fun outcome => utility outcome who) := by
     have hne : profileLaw profile ≠ 0 := (PMF.mem_support_iff profileLaw profile).mp hp
     simp [values, hne, expectedUtility]
   have houter := payoffIntegrable_bind_conditionalValue_on_support profileLaw kernel
@@ -287,11 +283,11 @@ theorem expectedUtility_mixed_play_update_pure
     (fun outcome => utility outcome who) hbind values hvalues
   calc
     expectedUtility utility who
-        (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) hmixed =
-        expect (profileLaw.bind kernel) (fun outcome => utility outcome who) hbind := by
+        (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) =
+        expect (profileLaw.bind kernel) (fun outcome => utility outcome who) := by
       exact expectedUtility_congr_law utility who
-        (mixed_play_update_pure_eq_bind (F := F) beliefs who strategy) hmixed hbind
-    _ = expect profileLaw values houter := htower
+        (mixed_play_update_pure_eq_bind (F := F) beliefs who strategy)
+    _ = expect profileLaw values := htower
 
 /-- A pointwise strict mixed improvement on the supported product belief
 contradicts independent best response when its actual joint outcome law is
@@ -327,13 +323,13 @@ theorem IsIndependentBestResponse.not_strict_mixed_on_support
     exact hjoint
   have hleAction :
       expectedUtility utility who
-          (F.mixed.play (Profile.update beliefs who replacement)) hjoint ≤
+          (F.mixed.play (Profile.update beliefs who replacement)) ≤
         expectedUtility utility who
-          (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) hbase := by
+          (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) := by
     have hbound := expect_bind_le_of_forall_on_support replacement actionKernel f
       hjointAction
       (expectedUtility utility who
-        (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) hbase)
+        (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))))
       (fun action ha => by
         have hconditional := payoffIntegrable_bind_conditional_on_support
           replacement actionKernel f hjointAction action ha
@@ -341,21 +337,16 @@ theorem IsIndependentBestResponse.not_strict_mixed_on_support
           (hbest action))
     calc
       expectedUtility utility who
-          (F.mixed.play (Profile.update beliefs who replacement)) hjoint =
-          expect (replacement.bind actionKernel) f hjointAction := by
+          (F.mixed.play (Profile.update beliefs who replacement)) =
+          expect (replacement.bind actionKernel) f := by
         exact expectedUtility_congr_law utility who
           (GameForm.mixed_play_update F beliefs who replacement)
-          hjoint hjointAction
       _ ≤ expectedUtility utility who
-            (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) hbase :=
+            (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) :=
         hbound
   have hpoint (profile : Profile F.sig) (hp : profile ∈ profileLaw.support) :
-      expect (baseKernel profile) f
-          (payoffIntegrable_bind_conditional_on_support profileLaw baseKernel f
-            hbaseBind profile hp) <
-        expect (mixedKernel profile) f
-          (payoffIntegrable_bind_conditional_on_support profileLaw mixedKernel f
-            hjointProfile profile hp) := by
+      expect (baseKernel profile) f <
+        expect (mixedKernel profile) f := by
     exact (euPreference_strict_iff utility who _ _
       (payoffIntegrable_bind_conditional_on_support profileLaw mixedKernel f
         hjointProfile profile hp)
@@ -368,22 +359,21 @@ theorem IsIndependentBestResponse.not_strict_mixed_on_support
     (hpoint witness hwitness)
   have hstrictMean :
       expectedUtility utility who
-          (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) hbase <
+          (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) <
         expectedUtility utility who
-          (F.mixed.play (Profile.update beliefs who replacement)) hjoint := by
+          (F.mixed.play (Profile.update beliefs who replacement)) := by
     calc
       expectedUtility utility who
-          (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) hbase =
-          expect (profileLaw.bind baseKernel) f hbaseBind := by
+          (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) =
+          expect (profileLaw.bind baseKernel) f := by
         exact expectedUtility_congr_law utility who
           (mixed_play_update_pure_eq_bind (F := F) beliefs who strategy)
-          hbase hbaseBind
-      _ < expect (profileLaw.bind mixedKernel) f hjointProfile := hstrictBind
+      _ < expect (profileLaw.bind mixedKernel) f := hstrictBind
       _ = expectedUtility utility who
-            (F.mixed.play (Profile.update beliefs who replacement)) hjoint := by
+            (F.mixed.play (Profile.update beliefs who replacement)) := by
         exact (expectedUtility_congr_law utility who
           (mixed_play_update_eq_bind_randomizedDeviation (F := F)
-            beliefs who replacement) hjoint hjointProfile).symm
+            beliefs who replacement)).symm
   exact (not_lt_of_ge hleAction) hstrictMean
 
 /-- Strategies surviving iterated independent-belief best response.  Each

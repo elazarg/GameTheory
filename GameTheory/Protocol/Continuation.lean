@@ -47,12 +47,12 @@ theorem isContinuationNash_iff [DecidableEq ι]
     (profile : Profile sig) (utility : sig.Outcome → ι → ℝ) :
     M.IsContinuationNash play profile utility ↔
       ∀ history, M.IsSubgameRoot history → ∀ who replacement,
-        ∃ hbase : UtilityIntegrable utility who (play history profile),
-          ∃ hdev : UtilityIntegrable utility who
-              (play history (Profile.update profile who replacement)),
+        UtilityIntegrable utility who (play history profile) ∧
+          UtilityIntegrable utility who
+              (play history (Profile.update profile who replacement)) ∧
             expectedUtility utility who
-                (play history (Profile.update profile who replacement)) hdev ≤
-              expectedUtility utility who (play history profile) hbase := by
+                (play history (Profile.update profile who replacement)) ≤
+              expectedUtility utility who (play history profile) := by
   simp only [IsContinuationNash, isNash_iff]
   rfl
 
@@ -161,14 +161,11 @@ information-local policies; the prefix is supplied and is never replayed. -/
 theorem historyBackwardValue_eq_expect_runFrom_of_bound
     (certificate : E.WellFoundedPlay) {bound : ℕ} (bounded : E.BoundedHorizon bound)
     (profile : Profile M.strategicSignature) (payoff : E.History → ℝ)
-    (history : E.History)
-    (hback : PayoffIntegrable
-      (E.historyBackwardLaw certificate (M.historyChooser profile) history) payoff)
-    (hrun : PayoffIntegrable (M.runFrom profile bound history) payoff) :
-    E.historyBackwardValue certificate (M.historyChooser profile) payoff history hback =
-      expect (M.runFrom profile bound history) payoff hrun :=
+    (history : E.History) :
+    E.historyBackwardValue certificate (M.historyChooser profile) payoff history =
+      expect (M.runFrom profile bound history) payoff :=
   E.historyBackwardValue_eq_expect_runHistoryFor
-    (E.stopsHistoryWithin_of_bound bounded _ _) hback hrun
+    (E.stopsHistoryWithin_of_bound bounded _ _)
 
 theorem isSubgamePerfect_iff_isNash_continuation [DecidableEq ι]
     (certificate : E.WellFoundedPlay) {bound : ℕ} (bounded : E.BoundedHorizon bound)
@@ -201,9 +198,9 @@ theorem isSubgamePerfect_iff_isNash_continuation [DecidableEq ι]
     refine ⟨hrunBase, hrunDev, ?_⟩
     simp only [toContinuationGameForm, expectedUtility]
     rw [← M.historyBackwardValue_eq_expect_runFrom_of_bound
-      certificate bounded _ _ history hbackDev hrunDev,
+      certificate bounded _ _ history,
       ← M.historyBackwardValue_eq_expect_runFrom_of_bound
-        certificate bounded _ _ history hbackBase hrunBase]
+        certificate bounded _ _ history]
     exact hle
   · intro optimal history proper who alternative
     have bound := optimal history proper
@@ -232,9 +229,9 @@ theorem isSubgamePerfect_iff_isNash_continuation [DecidableEq ι]
     refine ⟨hbackDev, hbackBase, ?_⟩
     simp only [toContinuationGameForm, expectedUtility] at hle
     rw [M.historyBackwardValue_eq_expect_runFrom_of_bound
-      certificate bounded _ _ history hbackDev hrunDev,
+      certificate bounded _ _ history,
       M.historyBackwardValue_eq_expect_runFrom_of_bound
-        certificate bounded _ _ history hbackBase hrunBase]
+        certificate bounded _ _ history]
     exact hle
 
 variable {T : ExecutionProtocol.{uι, us', ua'} ι}

@@ -38,11 +38,11 @@ theorem isLocallyOptimal_univ_iff_holds (ctx : Context Choice Outcome) (choice :
   constructor
   · rintro ⟨hchoice, halternatives, hoptimal⟩ alternative
     exact ⟨hchoice, halternatives alternative (Set.mem_univ _),
-      hoptimal alternative (Set.mem_univ _) _ _⟩
+      hoptimal alternative (Set.mem_univ _)⟩
   · intro holds
     obtain ⟨hchoice, -, -⟩ := holds choice
     refine ⟨hchoice, fun alternative _ => (holds alternative).2.1, ?_⟩
-    intro alternative _ _ _
+    intro alternative _
     obtain ⟨_, _, hle⟩ := holds alternative
     exact hle
 

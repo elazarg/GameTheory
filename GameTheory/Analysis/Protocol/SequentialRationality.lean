@@ -22,63 +22,12 @@ variable (M : InformationModel.{uι, us, ua, up, uq, uk} E)
 
 namespace InformationModel
 
-/-- The conditional one-step continuation expectation, extended by zero off
-the current root-run support. Its certificate comes from the next-run law. -/
-noncomputable def runBehavioralStepContinuation
-    [Fintype ι] (strategy : (i : ι) → M.BehavioralPolicy i)
-    (value : E.History → ℝ) (time : ℕ)
-    (hintegrable : PayoffIntegrable (M.runBehavioral strategy (time + 1)) value) :
-    E.History → ℝ := by
-  classical
-  let law := M.runBehavioral strategy time
-  let kernel := fun history => M.runBehavioralFrom strategy 1 history
-  have hbind : PayoffIntegrable (law.bind kernel) value := by
-    simpa only [law, kernel, runBehavioral, M.runBehavioralFrom_add] using hintegrable
-  exact extendFromSupport law (fun history hs =>
-    expect (kernel history) value
-      (payoffIntegrable_bind_conditional_on_support law kernel value hbind history hs))
-
-/-- On root-run support, the continuation helper is the actual conditional
-expectation with its guard derived from the next-run law. -/
-theorem runBehavioralStepContinuation_eq_on_support
-    [Fintype ι] (strategy : (i : ι) → M.BehavioralPolicy i)
-    (value : E.History → ℝ) (time : ℕ)
-    (hintegrable : PayoffIntegrable (M.runBehavioral strategy (time + 1)) value)
-    (history : E.History) (hsupport :
-      history ∈ (M.runBehavioral strategy time).support) :
-    M.runBehavioralStepContinuation strategy value time hintegrable history =
-      expect (M.runBehavioralFrom strategy 1 history) value
-        (payoffIntegrable_bind_conditional_on_support
-          (M.runBehavioral strategy time)
-          (M.runBehavioralFrom strategy 1) value
-          (by simpa only [runBehavioral, M.runBehavioralFrom_add] using hintegrable)
-          history hsupport) := by
-  simp [runBehavioralStepContinuation, extendFromSupport, hsupport]
-
-/-- The expected one-step gain, with its conditional and outer guards derived
-from the two consecutive root-run laws. -/
+/-- The expected one-step change of `value` along the canonical behavioral run. -/
 noncomputable def runBehavioralStepGain
     [Fintype ι] (strategy : (i : ι) → M.BehavioralPolicy i)
-    (value : E.History → ℝ) (time : ℕ)
-    (hcurrent : PayoffIntegrable (M.runBehavioral strategy time) value)
-    (hnext : PayoffIntegrable (M.runBehavioral strategy (time + 1)) value) : ℝ := by
-  classical
-  let law := M.runBehavioral strategy time
-  let kernel := fun history => M.runBehavioralFrom strategy 1 history
-  have hbind : PayoffIntegrable (law.bind kernel) value := by
-    simpa only [law, kernel, runBehavioral, M.runBehavioralFrom_add] using hnext
-  let continuation := M.runBehavioralStepContinuation strategy value time hnext
-  have hcontinuation : ∀ history, ∀ hs : history ∈ law.support,
-      continuation history = expect (kernel history) value
-        (payoffIntegrable_bind_conditional_on_support law kernel value hbind history hs) := by
-    intro history hs
-    exact M.runBehavioralStepContinuation_eq_on_support strategy value time hnext
-      history (by simpa only [law] using hs)
-  exact expect law (fun history => continuation history - value history)
-    (payoffIntegrable_sub
-      (payoffIntegrable_bind_conditionalValue_on_support law kernel value hbind
-        continuation hcontinuation)
-      hcurrent)
+    (value : E.History → ℝ) (time : ℕ) : ℝ :=
+  expect (M.runBehavioral strategy time) (fun history =>
+    expect (M.runBehavioralFrom strategy 1 history) value - value history)
 
 /-- Expected one-step changes telescope along the canonical behavioral run. -/
 theorem runBehavioral_expect_sub_eq_sum_stepGains
@@ -87,31 +36,24 @@ theorem runBehavioral_expect_sub_eq_sum_stepGains
     (value : E.History → ℝ) (fuel : ℕ)
     (hintegrable : ∀ time, time ≤ fuel →
       PayoffIntegrable (M.runBehavioral strategy time) value) :
-    expect (M.runBehavioral strategy fuel) value (hintegrable fuel le_rfl) -
+    expect (M.runBehavioral strategy fuel) value -
         value E.initHistory =
-      ∑ time : Fin fuel, M.runBehavioralStepGain strategy value time.val
-        (hintegrable time.val (Nat.le_of_lt time.isLt))
-        (hintegrable (time.val + 1) (Nat.succ_le_of_lt time.isLt)) := by
+      ∑ time : Fin fuel, M.runBehavioralStepGain strategy value time.val := by
   induction fuel with
   | zero =>
       have hzero : expect (M.runBehavioral strategy 0) value
-          (hintegrable 0 (Nat.zero_le _)) = value E.initHistory := by
+           = value E.initHistory := by
         simp only [runBehavioral, runBehavioralFrom, E.runRandomizedFor_zero]
-        exact expect_pure _ _ _
+        exact expect_pure _ _
       simp only [Finset.univ_eq_empty, Finset.sum_empty]
       rw [hzero, sub_self]
   | succ fuel ih =>
     have hstep (time : ℕ) (htime : time < fuel + 1) :
-        expect (M.runBehavioral strategy (time + 1)) value
-            (hintegrable (time + 1) (by omega)) -
-          expect (M.runBehavioral strategy time) value (hintegrable time (by omega)) =
-        M.runBehavioralStepGain strategy value time
-          (hintegrable time (by omega)) (hintegrable (time + 1) (by omega)) := by
-      classical
+        expect (M.runBehavioral strategy (time + 1)) value -
+          expect (M.runBehavioral strategy time) value =
+        M.runBehavioralStepGain strategy value time := by
       let law := M.runBehavioral strategy time
       let kernel := fun history => M.runBehavioralFrom strategy 1 history
-      let continuation := M.runBehavioralStepContinuation strategy value time
-        (hintegrable (time + 1) (by omega))
       have hbindLaw : law.bind kernel = M.runBehavioral strategy (time + 1) := by
         show (M.runBehavioralFrom strategy time E.initHistory).bind
           (M.runBehavioralFrom strategy 1) =
@@ -120,25 +62,9 @@ theorem runBehavioral_expect_sub_eq_sum_stepGains
       have hbind : PayoffIntegrable (law.bind kernel) value := by
         rw [hbindLaw]
         exact hintegrable (time + 1) (by omega)
-      have hcontinuation : ∀ history, ∀ hs : history ∈ law.support,
-          continuation history = expect (kernel history) value
-            (payoffIntegrable_bind_conditional_on_support law kernel value hbind
-              history hs) := by
-        intro history hs
-        exact M.runBehavioralStepContinuation_eq_on_support strategy value time
-          (hintegrable (time + 1) (by omega)) history
-          (by simpa only [law] using hs)
-      have htower := expect_bind_tower_on_support law kernel value hbind continuation
-        hcontinuation
-      have hnextEq :
-          expect (M.runBehavioral strategy (time + 1)) value
-              (hintegrable (time + 1) (by omega)) =
-            expect (law.bind kernel) value hbind := by
-        exact expect_congr_law hbindLaw.symm value _ hbind
-      rw [hnextEq, htower]
-      unfold runBehavioralStepGain
-      simp only [law, continuation]
-      rw [← expect_sub]
+      rw [← expect_congr_law hbindLaw value, expect_bind_tower law kernel value hbind]
+      exact (expect_sub (payoffIntegrable_bind_conditionalExpectation law kernel value hbind)
+        (hintegrable time (by omega))).symm
     have ih' := ih (fun time htime => hintegrable time (by omega))
     rw [Fin.sum_univ_castSucc]
     simp only [Fin.val_castSucc, Fin.val_last]
@@ -171,12 +97,11 @@ theorem sum_runBehavioral_expect_eq_sum_historyReach
     (hbound : E.BoundedHorizon bound)
     (hterminal : ∀ history : E.History, E.terminal history.state → value history = 0) :
     (∑ time ∈ Finset.range bound,
-      expect (M.runBehavioral strategy time) value
-        (payoffIntegrable_of_finite _ _)) =
+      expect (M.runBehavioral strategy time) value) =
       ∑ history : E.History,
         (M.historyReachWeight strategy history).toReal * value history := by
   classical
-  simp_rw [expect_eq_sum _ _ (payoffIntegrable_of_finite _ _)]
+  simp_rw [expect_eq_sum _ _]
   rw [Finset.sum_comm]
   apply Finset.sum_congr rfl
   intro history _
@@ -202,26 +127,17 @@ theorem runBehavioral_expect_sub_eq_sum_historyStepGains
     (value : E.History → ℝ) {bound : ℕ}
     (hbound : E.BoundedHorizon bound) :
     expect (M.runBehavioral strategy bound) value
-        (payoffIntegrable_of_finite _ _) - value E.initHistory =
+         - value E.initHistory =
       ∑ history : E.History,
         (M.historyReachWeight strategy history).toReal *
           (expect (M.runBehavioralFrom strategy 1 history) value
-              (payoffIntegrable_of_finite _ _) - value history) := by
+               - value history) := by
   let delta : E.History → ℝ := fun history =>
     expect (M.runBehavioralFrom strategy 1 history) value
-      (payoffIntegrable_of_finite _ _) - value history
+       - value history
   have hgain (time : ℕ) :
-      M.runBehavioralStepGain strategy value time
-          (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _) =
-        expect (M.runBehavioral strategy time) delta
-          (payoffIntegrable_of_finite _ _) := by
-    unfold runBehavioralStepGain
-    refine expect_congr_on_support ?_ (payoffIntegrable_of_finite _ _)
-      (payoffIntegrable_of_finite _ _)
-    · intro history hs
-      dsimp [delta]
-      rw [M.runBehavioralStepContinuation_eq_on_support strategy value time
-        (payoffIntegrable_of_finite _ _) history hs]
+      M.runBehavioralStepGain strategy value time =
+        expect (M.runBehavioral strategy time) delta := rfl
   have hdelta (history : E.History) (hterm : E.terminal history.state) :
       delta history = 0 := by
     dsimp [delta]
@@ -230,130 +146,51 @@ theorem runBehavioral_expect_sub_eq_sum_historyStepGains
   rw [M.runBehavioral_expect_sub_eq_sum_stepGains strategy value bound
     (fun time _ => payoffIntegrable_of_finite _ _)]
   rw [Fin.sum_univ_eq_sum_range (fun time =>
-    M.runBehavioralStepGain strategy value time
-      (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)) bound]
+    M.runBehavioralStepGain strategy value time) bound]
   simp_rw [hgain]
   exact M.sum_runBehavioral_expect_eq_sum_historyReach strategy delta hbound hdelta
 
-/-- The supported one-step continuation values of a certified terminal payoff. -/
-noncomputable def runBehavioralFromStepContinuation
-    [Fintype ι] (strategy : (i : ι) → M.BehavioralPolicy i)
-    (payoff : E.History → ℝ) {bound : ℕ}
-    (hbound : E.BoundedHorizon bound) (history : E.History)
-    (hpayoff : PayoffIntegrable
-      (M.runBehavioralFrom strategy bound history) payoff) : E.History → ℝ := by
-  classical
-  let law := M.runBehavioralFrom strategy 1 history
-  let kernel := M.runBehavioralFrom strategy bound
-  have hlaw : law.bind kernel = M.runBehavioralFrom strategy bound history := by
-    calc
-      law.bind kernel = M.runBehavioralFrom strategy (1 + bound) history := by
-        exact (M.runBehavioralFrom_add strategy 1 bound history).symm
-      _ = M.runBehavioralFrom strategy (bound + 1) history := by
-        rw [Nat.add_comm]
-      _ = M.runBehavioralFrom strategy bound history :=
-        M.runBehavioralFrom_bound_add strategy hbound 1 history
-  have hbind : PayoffIntegrable (law.bind kernel) payoff :=
-    payoffIntegrable_congr_law hlaw.symm hpayoff
-  exact extendFromSupport law (fun next hn =>
-    expect (kernel next) payoff
-      (payoffIntegrable_bind_conditional_on_support law kernel payoff hbind next hn))
+private theorem runBehavioralFrom_one_bind_bound
+    [Fintype ι] (strategy : (i : ι) → M.BehavioralPolicy i) {bound : ℕ}
+    (hbound : E.BoundedHorizon bound) (history : E.History) :
+    (M.runBehavioralFrom strategy 1 history).bind (M.runBehavioralFrom strategy bound) =
+      M.runBehavioralFrom strategy bound history :=
+  calc
+    (M.runBehavioralFrom strategy 1 history).bind (M.runBehavioralFrom strategy bound) =
+        M.runBehavioralFrom strategy (1 + bound) history :=
+      (M.runBehavioralFrom_add strategy 1 bound history).symm
+    _ = M.runBehavioralFrom strategy (bound + 1) history := by
+      rw [Nat.add_comm]
+    _ = M.runBehavioralFrom strategy bound history :=
+      M.runBehavioralFrom_bound_add strategy hbound 1 history
 
-theorem runBehavioralFromStepContinuation_integrable
-    [Fintype ι] (strategy : (i : ι) → M.BehavioralPolicy i)
-    (payoff : E.History → ℝ) {bound : ℕ}
-    (hbound : E.BoundedHorizon bound) (history : E.History)
-    (hpayoff : PayoffIntegrable
-      (M.runBehavioralFrom strategy bound history) payoff) :
-    PayoffIntegrable (M.runBehavioralFrom strategy 1 history)
-      (M.runBehavioralFromStepContinuation strategy payoff hbound history hpayoff) := by
-  classical
-  let law := M.runBehavioralFrom strategy 1 history
-  let kernel := M.runBehavioralFrom strategy bound
-  have hlaw : law.bind kernel = M.runBehavioralFrom strategy bound history := by
-    calc
-      law.bind kernel = M.runBehavioralFrom strategy (1 + bound) history := by
-        exact (M.runBehavioralFrom_add strategy 1 bound history).symm
-      _ = M.runBehavioralFrom strategy (bound + 1) history := by
-        rw [Nat.add_comm]
-      _ = M.runBehavioralFrom strategy bound history :=
-        M.runBehavioralFrom_bound_add strategy hbound 1 history
-  have hbind : PayoffIntegrable (law.bind kernel) payoff :=
-    payoffIntegrable_congr_law hlaw.symm hpayoff
-  have hcond : ∀ next, ∀ hn : next ∈ law.support,
-      M.runBehavioralFromStepContinuation strategy payoff hbound history hpayoff next =
-        expect (kernel next) payoff
-          (payoffIntegrable_bind_conditional_on_support law kernel payoff hbind next hn) := by
-    intro next hn
-    simp [runBehavioralFromStepContinuation, extendFromSupport, law, kernel, hn]
-  exact payoffIntegrable_bind_conditionalValue_on_support law kernel payoff hbind
-    (M.runBehavioralFromStepContinuation strategy payoff hbound history hpayoff) hcond
-
+/-- After a bounded horizon, averaging the continuation values over one more
+step recovers the value of the whole run. -/
 theorem runBehavioralFrom_expect_continuation_eq
     [Fintype ι] (strategy : (i : ι) → M.BehavioralPolicy i)
     (payoff : E.History → ℝ) {bound : ℕ}
     (hbound : E.BoundedHorizon bound) (history : E.History)
     (hpayoff : PayoffIntegrable
-      (M.runBehavioralFrom strategy bound history) payoff)
-    (houter : PayoffIntegrable (M.runBehavioralFrom strategy 1 history)
-      (M.runBehavioralFromStepContinuation strategy payoff hbound history hpayoff)) :
+      (M.runBehavioralFrom strategy bound history) payoff) :
     expect (M.runBehavioralFrom strategy 1 history)
-        (M.runBehavioralFromStepContinuation strategy payoff hbound history hpayoff)
-        houter = expect (M.runBehavioralFrom strategy bound history) payoff hpayoff := by
-  classical
-  let law := M.runBehavioralFrom strategy 1 history
-  let kernel := M.runBehavioralFrom strategy bound
-  have hlaw : law.bind kernel = M.runBehavioralFrom strategy bound history := by
-    calc
-      law.bind kernel = M.runBehavioralFrom strategy (1 + bound) history := by
-        exact (M.runBehavioralFrom_add strategy 1 bound history).symm
-      _ = M.runBehavioralFrom strategy (bound + 1) history := by
-        rw [Nat.add_comm]
-      _ = M.runBehavioralFrom strategy bound history :=
-        M.runBehavioralFrom_bound_add strategy hbound 1 history
-  have hbind : PayoffIntegrable (law.bind kernel) payoff :=
-    payoffIntegrable_congr_law hlaw.symm hpayoff
-  have hcond : ∀ next, ∀ hn : next ∈ law.support,
-      M.runBehavioralFromStepContinuation strategy payoff hbound history hpayoff next =
-        expect (kernel next) payoff
-          (payoffIntegrable_bind_conditional_on_support law kernel payoff hbind next hn) := by
-    intro next hn
-    simp [runBehavioralFromStepContinuation, extendFromSupport, law, kernel, hn]
-  rw [← expect_bind_tower_on_support law kernel payoff hbind _ hcond]
-  exact expect_congr_law hlaw payoff hbind hpayoff
+      (fun next => expect (M.runBehavioralFrom strategy bound next) payoff) =
+      expect (M.runBehavioralFrom strategy bound history) payoff := by
+  have hlaw := M.runBehavioralFrom_one_bind_bound strategy hbound history
+  rw [← expect_bind_tower _ _ payoff (payoffIntegrable_congr_law hlaw.symm hpayoff)]
+  exact expect_congr_law hlaw payoff
 
-/-- Under finite-history integration, the supported conditional continuation
-can be replaced by the total expectation function. -/
+/-- The finite-history specialization of
+`runBehavioralFrom_expect_continuation_eq`. -/
 theorem runBehavioralFrom_expect_raw_continuation_eq
     [Fintype ι] [Fintype E.History]
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (payoff : E.History → ℝ) {bound : ℕ}
     (hbound : E.BoundedHorizon bound) (history : E.History) :
     expect (M.runBehavioralFrom strategy 1 history)
-      (fun next => expect (M.runBehavioralFrom strategy bound next) payoff
-        (payoffIntegrable_of_finite _ _)) (payoffIntegrable_of_finite _ _) =
-      expect (M.runBehavioralFrom strategy bound history) payoff
-        (payoffIntegrable_of_finite _ _) := by
-  let helper := M.runBehavioralFromStepContinuation strategy payoff hbound history
+      (fun next => expect (M.runBehavioralFrom strategy bound next) payoff) =
+      expect (M.runBehavioralFrom strategy bound history) payoff :=
+  M.runBehavioralFrom_expect_continuation_eq strategy payoff hbound history
     (payoffIntegrable_of_finite _ _)
-  have hhelper : PayoffIntegrable (M.runBehavioralFrom strategy 1 history) helper :=
-    M.runBehavioralFromStepContinuation_integrable strategy payoff hbound history
-      (payoffIntegrable_of_finite _ _)
-  have hpoint (next : E.History)
-      (hnext : next ∈ (M.runBehavioralFrom strategy 1 history).support) :
-      expect (M.runBehavioralFrom strategy bound next) payoff
-        (payoffIntegrable_of_finite _ _) = helper next := by
-    simp [helper, runBehavioralFromStepContinuation, extendFromSupport, hnext]
-  calc
-    expect (M.runBehavioralFrom strategy 1 history)
-        (fun next => expect (M.runBehavioralFrom strategy bound next) payoff
-          (payoffIntegrable_of_finite _ _)) (payoffIntegrable_of_finite _ _) =
-      expect (M.runBehavioralFrom strategy 1 history) helper hhelper :=
-        expect_congr_on_support hpoint (payoffIntegrable_of_finite _ _) hhelper
-    _ = expect (M.runBehavioralFrom strategy bound history) payoff
-        (payoffIntegrable_of_finite _ _) :=
-      M.runBehavioralFrom_expect_continuation_eq strategy payoff hbound history
-        (payoffIntegrable_of_finite _ _) hhelper
 
 /-- The gain of replacing an entire profile is the alternative profile's
 reach-weighted sum of one-step changes in the baseline continuation value. -/
@@ -362,26 +199,18 @@ theorem behavioralGain_eq_sum_historyStepGains
     (baseline alternative : (i : ι) → M.BehavioralPolicy i)
     (payoff : E.History → ℝ) {bound : ℕ}
     (hbound : E.BoundedHorizon bound) :
-    expect (M.runBehavioral alternative bound) payoff
-        (payoffIntegrable_of_finite _ _) -
-      expect (M.runBehavioral baseline bound) payoff
-        (payoffIntegrable_of_finite _ _) =
+    expect (M.runBehavioral alternative bound) payoff -
+      expect (M.runBehavioral baseline bound) payoff =
       ∑ history : E.History,
         (M.historyReachWeight alternative history).toReal *
           (expect (M.runBehavioralFrom alternative 1 history)
-              (fun next => expect (M.runBehavioralFrom baseline bound next) payoff
-                (payoffIntegrable_of_finite _ _))
-              (payoffIntegrable_of_finite _ _) -
-            expect (M.runBehavioralFrom baseline bound history) payoff
-              (payoffIntegrable_of_finite _ _)) := by
+              (fun next => expect (M.runBehavioralFrom baseline bound next) payoff) -
+            expect (M.runBehavioralFrom baseline bound history) payoff) := by
   let continuation : E.History → ℝ := fun next =>
     expect (M.runBehavioralFrom baseline bound next) payoff
-      (payoffIntegrable_of_finite _ _)
   have hvalue :
-      expect (M.runBehavioral alternative bound) continuation
-          (payoffIntegrable_of_finite _ _) =
-        expect (M.runBehavioral alternative bound) payoff
-          (payoffIntegrable_of_finite _ _) := by
+      expect (M.runBehavioral alternative bound) continuation =
+        expect (M.runBehavioral alternative bound) payoff := by
     apply expect_congr_on_support
     · intro next hnext
       have hterm := M.runBehavioralFrom_terminal_of_bound alternative hbound
@@ -425,17 +254,17 @@ theorem continuation_withLaw_eq_step_expect
         (Profile.update (sig := M.behavioralSignature) baseline who
           ((baseline who).withLaw (M.infoOf who history.trace)
             (alternative (M.infoOf who history.trace)))) bound history) payoff) :
-    ∃ hbind : PayoffIntegrable
+    PayoffIntegrable
       ((M.runBehavioralFrom
           (Profile.update (sig := M.behavioralSignature) baseline who alternative)
-            1 history).bind (M.runBehavioralFrom baseline bound)) payoff,
+            1 history).bind (M.runBehavioralFrom baseline bound)) payoff ∧
       expect (M.runBehavioralFrom
           (Profile.update (sig := M.behavioralSignature) baseline who
             ((baseline who).withLaw (M.infoOf who history.trace)
-              (alternative (M.infoOf who history.trace)))) bound history) payoff hpayoff =
+              (alternative (M.infoOf who history.trace)))) bound history) payoff =
         expect ((M.runBehavioralFrom
             (Profile.update (sig := M.behavioralSignature) baseline who alternative)
-              1 history).bind (M.runBehavioralFrom baseline bound)) payoff hbind := by
+              1 history).bind (M.runBehavioralFrom baseline bound)) payoff := by
   by_cases hterm : E.terminal history.state
   · have hlaw :
         M.runBehavioralFrom
@@ -447,8 +276,7 @@ theorem continuation_withLaw_eq_step_expect
                 1 history).bind (M.runBehavioralFrom baseline bound) := by
       simp [M.runBehavioralFrom_of_terminal _ _ hterm]
     refine ⟨payoffIntegrable_congr_law hlaw hpayoff, ?_⟩
-    exact expect_congr_law hlaw payoff hpayoff
-      (payoffIntegrable_congr_law hlaw hpayoff)
+    exact expect_congr_law hlaw payoff
   let changed := Profile.update (sig := M.behavioralSignature) baseline who
     ((baseline who).withLaw (M.infoOf who history.trace)
       (alternative (M.infoOf who history.trace)))
@@ -505,8 +333,7 @@ theorem continuation_withLaw_eq_step_expect
     apply hkernel
     simpa only [hone] using hnext
   refine ⟨payoffIntegrable_congr_law hlaw hpayoff, ?_⟩
-  exact expect_congr_law hlaw payoff hpayoff
-    (payoffIntegrable_congr_law hlaw hpayoff)
+  exact expect_congr_law hlaw payoff
 
 /-- The focal player's own contribution to history reach is nonnegative. -/
 theorem playerReachProbability_nonneg
@@ -531,21 +358,17 @@ theorem behavioralRootGain_nonpos_of_counterfactualLocalGain_nonpos
     (hbound : E.BoundedHorizon bound)
     (hlocal : ∀ site : M.InformationSite who,
       M.counterfactualRegret baseline who site payoff bound
-        ((baseline who).withLaw site.1 (alternative site.1))
-        (fun _ _ => payoffIntegrable_of_finite _ _)
-        (fun _ _ => payoffIntegrable_of_finite _ _) ≤ 0) :
+        ((baseline who).withLaw site.1 (alternative site.1)) ≤ 0) :
     expect (M.runBehavioral
         (Profile.update (sig := M.behavioralSignature) baseline who alternative)
-          bound) payoff (payoffIntegrable_of_finite _ _) ≤
-      expect (M.runBehavioral baseline bound) payoff (payoffIntegrable_of_finite _ _) := by
+          bound) payoff ≤
+      expect (M.runBehavioral baseline bound) payoff := by
   classical
   let changed := Profile.update (sig := M.behavioralSignature) baseline who alternative
   let gain : E.History → ℝ := fun history =>
     expect (M.runBehavioralFrom changed 1 history)
-        (fun next => expect (M.runBehavioralFrom baseline bound next) payoff
-          (payoffIntegrable_of_finite _ _)) (payoffIntegrable_of_finite _ _) -
+        (fun next => expect (M.runBehavioralFrom baseline bound next) payoff) -
       expect (M.runBehavioralFrom baseline bound history) payoff
-        (payoffIntegrable_of_finite _ _)
   have hterminal (history : E.History) (hterm : E.terminal history.state) :
       gain history = 0 := by
     dsimp [gain]
@@ -588,9 +411,8 @@ theorem behavioralRootGain_nonpos_of_counterfactualLocalGain_nonpos
             expect (M.runBehavioralFrom
                 (Profile.update (sig := M.behavioralSignature) baseline who
                   ((baseline who).withLaw info (alternative info)))
-                  bound history.1) payoff (payoffIntegrable_of_finite _ _) -
-              expect (M.runBehavioralFrom baseline bound history.1) payoff
-                (payoffIntegrable_of_finite _ _) := by
+                  bound history.1) payoff -
+              expect (M.runBehavioralFrom baseline bound history.1) payoff := by
         have heq := M.continuation_withLaw_eq_step_expect hrecall baseline who
           alternative history.1 (InformationSite.active M site history) payoff hbound
           (payoffIntegrable_of_finite _ _)
@@ -601,22 +423,19 @@ theorem behavioralRootGain_nonpos_of_counterfactualLocalGain_nonpos
             1 history.1)
           (M.runBehavioralFrom baseline bound) payoff
           (payoffIntegrable_of_finite _ _)
-          (fun _ => payoffIntegrable_of_finite _ _)
         have hfirst :
             expect (M.runBehavioralFrom
               (Profile.update (sig := M.behavioralSignature) baseline who alternative)
               1 history.1)
-              (fun next => expect (M.runBehavioralFrom baseline bound next) payoff
-                (payoffIntegrable_of_finite _ _)) (payoffIntegrable_of_finite _ _) =
+              (fun next => expect (M.runBehavioralFrom baseline bound next) payoff) =
             expect (M.runBehavioralFrom
               (Profile.update (sig := M.behavioralSignature) baseline who
                 ((baseline who).withLaw info (alternative info))) bound history.1)
-              payoff (payoffIntegrable_of_finite _ _) := by
+              payoff := by
           rw [← htower]
           exact heq.2.symm
         exact congrArg (fun x => x -
-          expect (M.runBehavioralFrom baseline bound history.1) payoff
-            (payoffIntegrable_of_finite _ _)) hfirst
+          expect (M.runBehavioralFrom baseline bound history.1) payoff) hfirst
       let reach := M.playerReachProbability changed who site.2.choose.1.trace
       have hfactor (history : M.InformationHistory who info) :
           (M.historyReachWeight changed history.1).toReal =
@@ -631,20 +450,14 @@ theorem behavioralRootGain_nonpos_of_counterfactualLocalGain_nonpos
           (∑ history : M.InformationHistory who info,
             (M.historyReachWeight changed history.1).toReal * gain history.1) =
           reach * M.counterfactualRegret baseline who site payoff bound
-            ((baseline who).withLaw info (alternative info))
-            (fun history hreach => payoffIntegrable_of_finite _ _)
-            (fun history hreach => payoffIntegrable_of_finite _ _) := by
+            ((baseline who).withLaw info (alternative info)) := by
         unfold counterfactualRegret counterfactualContinuationValue
           behavioralContinuationValue
         rw [Profile.update_eq_self, ← Finset.sum_sub_distrib, Finset.mul_sum]
         apply Finset.sum_congr rfl
         intro history _
         rw [hfactor, hgain]
-        by_cases hcf :
-            M.counterfactualReachProbability baseline who history.1.trace = 0
-        · simp [hcf]
-        · simp [hcf]
-          ring
+        ring
       rw [heq]
       exact mul_nonpos_of_nonneg_of_nonpos
         (M.playerReachProbability_nonneg changed who _) (hlocal site)
@@ -778,23 +591,20 @@ theorem rootGain_spliceAfter_eq_sum_informationGain
     expect (M.runBehavioral
         (Profile.update (sig := M.behavioralSignature) baseline who
           ((baseline who).spliceAfter M alternative site.1)) bound)
-      payoff (payoffIntegrable_of_finite _ _) -
-        expect (M.runBehavioral baseline bound) payoff (payoffIntegrable_of_finite _ _) =
+      payoff -
+        expect (M.runBehavioral baseline bound) payoff =
       ∑ history : M.InformationHistory who site.1,
         (M.historyReachWeight baseline history.1).toReal *
           (expect (M.runBehavioralFrom
               (Profile.update (sig := M.behavioralSignature) baseline who alternative)
-                bound history.1) payoff (payoffIntegrable_of_finite _ _) -
-            expect (M.runBehavioralFrom baseline bound history.1) payoff
-              (payoffIntegrable_of_finite _ _)) := by
+                bound history.1) payoff -
+            expect (M.runBehavioralFrom baseline bound history.1) payoff) := by
   classical
   let changed := Profile.update (sig := M.behavioralSignature) baseline who
     ((baseline who).spliceAfter M alternative site.1)
   let difference : E.History → ℝ := fun history =>
-    expect (M.runBehavioralFrom changed bound history) payoff
-        (payoffIntegrable_of_finite _ _) -
+    expect (M.runBehavioralFrom changed bound history) payoff -
       expect (M.runBehavioralFrom baseline bound history) payoff
-        (payoffIntegrable_of_finite _ _)
   let stopped : E.History → ℝ := fun history =>
     if site.1 ∈ M.actedAt who history.trace then 0 else difference history
   have hterminal (history : E.History) (hterm : E.terminal history.state) :
@@ -809,7 +619,7 @@ theorem rootGain_spliceAfter_eq_sum_informationGain
     simp [stopped, hterminal history hterm]
   have hresidual (history : E.History) :
       expect (M.runBehavioralFrom baseline 1 history) stopped
-        (payoffIntegrable_of_finite _ _) - stopped history =
+         - stopped history =
         if M.infoOf who history.trace = site.1 then -difference history else 0 := by
     by_cases hterm : E.terminal history.state
     · have hrun := M.runBehavioralFrom_of_terminal baseline 1 hterm
@@ -823,9 +633,8 @@ theorem rootGain_spliceAfter_eq_sum_informationGain
         rw [heq] at hnot
         exact hnot hpast
       have hnext : expect (M.runBehavioralFrom baseline 1 history) stopped
-          (payoffIntegrable_of_finite _ _) = 0 := by
-        rw [← expect_constant (M.runBehavioralFrom baseline 1 history) 0
-          (payoffIntegrable_of_finite _ _)]
+           = 0 := by
+        rw [← expect_constant (M.runBehavioralFrom baseline 1 history) 0]
         apply expect_congr_on_support
         · intro next hnext
           have hreach := E.runRandomizedFor_reachesWithin
@@ -834,9 +643,8 @@ theorem rootGain_spliceAfter_eq_sum_informationGain
       rw [hnext, show stopped history = 0 from ite_eq_left hpast, ite_eq_right hinfo, sub_self]
     · by_cases hinfo : M.infoOf who history.trace = site.1
       · have hnext : expect (M.runBehavioralFrom baseline 1 history) stopped
-            (payoffIntegrable_of_finite _ _) = 0 := by
-          rw [← expect_constant (M.runBehavioralFrom baseline 1 history) 0
-            (payoffIntegrable_of_finite _ _)]
+             = 0 := by
+          rw [← expect_constant (M.runBehavioralFrom baseline 1 history) 0]
           apply expect_congr_on_support
           · intro next hnext
             obtain ⟨draw, reached, realized, rfl⟩ :=
@@ -867,10 +675,8 @@ theorem rootGain_spliceAfter_eq_sum_informationGain
             · simp [changed, Profile.update_of_ne _ _ hplayer]
           rw [hjoint]
           rfl
-        have hnext : expect (M.runBehavioralFrom baseline 1 history) stopped
-              (payoffIntegrable_of_finite _ _) =
-            expect (M.runBehavioralFrom baseline 1 history) difference
-              (payoffIntegrable_of_finite _ _) := by
+        have hnext : expect (M.runBehavioralFrom baseline 1 history) stopped =
+            expect (M.runBehavioralFrom baseline 1 history) difference := by
           apply expect_congr_on_support
           · intro next hnext
             obtain ⟨draw, reached, realized, rfl⟩ :=
@@ -885,16 +691,12 @@ theorem rootGain_spliceAfter_eq_sum_informationGain
         dsimp [difference]
         have hdecomp := expect_sub
           (μ := M.runBehavioralFrom baseline 1 history)
-          (f := fun next => expect (M.runBehavioralFrom changed bound next) payoff
-            (payoffIntegrable_of_finite _ _))
-          (g := fun next => expect (M.runBehavioralFrom baseline bound next) payoff
-            (payoffIntegrable_of_finite _ _))
+          (f := fun next => expect (M.runBehavioralFrom changed bound next) payoff)
+          (g := fun next => expect (M.runBehavioralFrom baseline bound next) payoff)
           (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
         rw [hdecomp]
         have hfirst := expect_congr_law hone
-          (fun next => expect (M.runBehavioralFrom changed bound next) payoff
-            (payoffIntegrable_of_finite _ _))
-          (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
+          (fun next => expect (M.runBehavioralFrom changed bound next) payoff)
         rw [← hfirst,
           M.runBehavioralFrom_expect_raw_continuation_eq changed payoff hbound history,
           M.runBehavioralFrom_expect_raw_continuation_eq baseline payoff hbound history]
@@ -910,9 +712,8 @@ theorem rootGain_spliceAfter_eq_sum_informationGain
       (fun history => (M.historyReachWeight baseline history).toReal * difference history)
   have hid := M.runBehavioral_expect_sub_eq_sum_historyStepGains baseline stopped hbound
   have hend : expect (M.runBehavioral baseline bound) stopped
-      (payoffIntegrable_of_finite _ _) = 0 := by
-    rw [← expect_constant (M.runBehavioral baseline bound) 0
-      (payoffIntegrable_of_finite _ _)]
+       = 0 := by
+    rw [← expect_constant (M.runBehavioral baseline bound) 0]
     apply expect_congr_on_support
     · intro history hhistory
       exact hstoppedTerminal history
@@ -923,7 +724,7 @@ theorem rootGain_spliceAfter_eq_sum_informationGain
       (∑ history : E.History,
         (M.historyReachWeight baseline history).toReal *
           (expect (M.runBehavioralFrom baseline 1 history) stopped
-            (payoffIntegrable_of_finite _ _) - stopped history)) =
+             - stopped history)) =
         -(∑ history : M.InformationHistory who site.1,
           (M.historyReachWeight baseline history.1).toReal * difference history.1) := by
     rw [← hsum, ← Finset.sum_neg_distrib]
@@ -986,14 +787,10 @@ theorem BehavioralAssessment.continuationContext_value_eq_bayesContinuationValue
     (hmass : 0 < M.informationMass assessment.strategy who site)
     (hbayes : BehavioralAssessment.IsBayesConsistentAt (M := M) assessment who site
       hantichain hmass)
-    (alternative : M.BehavioralPolicy who) (payoff : E.History → ℝ) (fuel : ℕ)
-    (hctx : (assessment.continuationContext site payoff fuel).IntegrableAt alternative)
-    :
-    (assessment.continuationContext site payoff fuel).value alternative hctx =
+    (alternative : M.BehavioralPolicy who) (payoff : E.History → ℝ) (fuel : ℕ) :
+    (assessment.continuationContext site payoff fuel).value alternative =
       M.bayesContinuationValue assessment.strategy who site hantichain hmass
-        alternative payoff fuel
-          (assessment.continuationContext_integrable_iff_bayesContinuation M who site
-            hantichain hmass hbayes alternative payoff fuel |>.mp hctx) := by
+        alternative payoff fuel := by
   have hbelief : assessment.belief who site =
       M.bayesBelief assessment.strategy who site hantichain hmass := by
     apply PMF.ext
@@ -1012,9 +809,7 @@ theorem BehavioralAssessment.continuationContext_value_eq_bayesContinuationValue
     rw [hbelief]
   rw [BehavioralAssessment.continuationContext_value]
   unfold bayesContinuationValue
-  exact expect_congr_law hlaw payoff hctx
-    ((assessment.continuationContext_integrable_iff_bayesContinuation M who site
-      hantichain hmass hbayes alternative payoff fuel).mp hctx)
+  exact expect_congr_law hlaw payoff
 
 /-- Conditional payoff guards on a finite information fiber imply the
 corresponding whole continuation-context guard. -/
@@ -1058,21 +853,17 @@ theorem BehavioralAssessment.informationMass_mul_continuationGain_eq_sum
         (Profile.update (sig := M.behavioralSignature) assessment.strategy who
           (assessment.strategy who)) fuel history.1) payoff) :
     (M.informationMass assessment.strategy who site).toReal *
-        ((assessment.continuationContext site payoff fuel).value alternative
-            (assessment.continuationContext_integrable_of_conditional M who site
-              alternative payoff fuel hcondAlt) -
+        ((assessment.continuationContext site payoff fuel).value alternative -
           (assessment.continuationContext site payoff fuel).value
-            (assessment.strategy who)
-            (assessment.continuationContext_integrable_of_conditional M who site
-              (assessment.strategy who) payoff fuel hcondBase)) =
+            (assessment.strategy who)) =
       ∑ history : M.InformationHistory who site.1,
         (M.historyReachWeight assessment.strategy history.1).toReal *
           (expect (M.runBehavioralFrom
               (Profile.update (sig := M.behavioralSignature) assessment.strategy who alternative)
-                fuel history.1) payoff (hcondAlt history) -
+                fuel history.1) payoff -
             expect (M.runBehavioralFrom
               (Profile.update (sig := M.behavioralSignature) assessment.strategy who
-                (assessment.strategy who)) fuel history.1) payoff (hcondBase history)) := by
+                (assessment.strategy who)) fuel history.1) payoff) := by
   let belief := assessment.belief who site
   let altKernel := fun history : M.InformationHistory who site.1 =>
     M.runBehavioralFrom
@@ -1086,43 +877,31 @@ theorem BehavioralAssessment.informationMass_mul_continuationGain_eq_sum
     alternative payoff fuel hcondAlt
   have hbase := assessment.continuationContext_integrable_of_conditional M who site
     (assessment.strategy who) payoff fuel hcondBase
-  have hvalAlt : (assessment.continuationContext site payoff fuel).value alternative halt =
+  have hvalAlt : (assessment.continuationContext site payoff fuel).value alternative =
       ∑ history : M.InformationHistory who site.1,
-        (belief history).toReal * expect (altKernel history) payoff
-          (hcondAlt history) := by
+        (belief history).toReal * expect (altKernel history) payoff := by
     calc
-      _ = expect (belief.bind altKernel) payoff halt :=
+      _ = expect (belief.bind altKernel) payoff :=
         BehavioralAssessment.continuationContext_value assessment site payoff fuel
-          alternative halt
-      _ = expect belief (fun history => expect (altKernel history) payoff
-          (hcondAlt history))
-          (payoffIntegrable_bind_conditionalExpectation belief altKernel payoff halt
-            hcondAlt) :=
+          alternative
+      _ = expect belief (fun history => expect (altKernel history) payoff) :=
         expect_bind_tower belief altKernel payoff halt
-          hcondAlt
       _ = ∑ history : M.InformationHistory who site.1,
-          (belief history).toReal * expect (altKernel history) payoff
-            (hcondAlt history) :=
-        expect_eq_sum belief _ _
+          (belief history).toReal * expect (altKernel history) payoff :=
+        expect_eq_sum belief _
   have hvalBase : (assessment.continuationContext site payoff fuel).value
-        (assessment.strategy who) hbase =
+        (assessment.strategy who) =
       ∑ history : M.InformationHistory who site.1,
-        (belief history).toReal * expect (baseKernel history) payoff
-          (hcondBase history) := by
+        (belief history).toReal * expect (baseKernel history) payoff := by
     calc
-      _ = expect (belief.bind baseKernel) payoff hbase :=
+      _ = expect (belief.bind baseKernel) payoff :=
         BehavioralAssessment.continuationContext_value assessment site payoff fuel
-          (assessment.strategy who) hbase
-      _ = expect belief (fun history => expect (baseKernel history) payoff
-          (hcondBase history))
-          (payoffIntegrable_bind_conditionalExpectation belief baseKernel payoff hbase
-            hcondBase) :=
+          (assessment.strategy who)
+      _ = expect belief (fun history => expect (baseKernel history) payoff) :=
         expect_bind_tower belief baseKernel payoff hbase
-          hcondBase
       _ = ∑ history : M.InformationHistory who site.1,
-          (belief history).toReal * expect (baseKernel history) payoff
-            (hcondBase history) :=
-        expect_eq_sum belief _ _
+          (belief history).toReal * expect (baseKernel history) payoff :=
+        expect_eq_sum belief _
   rw [hvalAlt, hvalBase, mul_sub, Finset.mul_sum, Finset.mul_sum,
     ← Finset.sum_sub_distrib]
   have hmassRealPos : 0 < (M.informationMass assessment.strategy who site).toReal :=
@@ -1144,17 +923,17 @@ theorem BehavioralAssessment.informationMass_mul_continuationGain_eq_sum
     exact mul_div_cancel₀ _ (ne_of_gt hmassRealPos)
   calc
     (M.informationMass assessment.strategy who site).toReal *
-        ((belief history).toReal * expect (altKernel history) payoff (hcondAlt history)) -
+        ((belief history).toReal * expect (altKernel history) payoff) -
       (M.informationMass assessment.strategy who site).toReal *
-        ((belief history).toReal * expect (baseKernel history) payoff (hcondBase history)) =
+        ((belief history).toReal * expect (baseKernel history) payoff) =
         ((M.informationMass assessment.strategy who site).toReal *
-            (belief history).toReal) * expect (altKernel history) payoff (hcondAlt history) -
+            (belief history).toReal) * expect (altKernel history) payoff -
           ((M.informationMass assessment.strategy who site).toReal *
-            (belief history).toReal) * expect (baseKernel history) payoff (hcondBase history) := by
+            (belief history).toReal) * expect (baseKernel history) payoff := by
       rw [← mul_assoc, ← mul_assoc]
     _ = (M.historyReachWeight assessment.strategy history.1).toReal *
-          (expect (altKernel history) payoff (hcondAlt history) -
-            expect (baseKernel history) payoff (hcondBase history)) := by
+          (expect (altKernel history) payoff -
+            expect (baseKernel history) payoff) := by
       rw [hnormalized, ← mul_sub]
 
 /-- In a finite perfect-recall protocol with a certified terminal horizon,
@@ -1180,16 +959,15 @@ theorem BehavioralAssessment.continuation_value_le_of_locallyOptimal
     (hlocal : ∀ (i : ι) (site : M.InformationSite i)
       (law : PMF (M.Choice i site.1)), Allowed i site.1 law →
         (assessment.continuationContext site (payoff i) bound).value
-            ((assessment.strategy i).withLaw site.1 law) (payoffIntegrable_of_finite _ _) ≤
+            ((assessment.strategy i).withLaw site.1 law) ≤
           (assessment.continuationContext site (payoff i) bound).value
-            (assessment.strategy i) (payoffIntegrable_of_finite _ _))
+            (assessment.strategy i))
     (who : ι) (site : M.InformationSite who)
     (alternative : M.BehavioralPolicy who)
     (halternative : ∀ info, Allowed who info (alternative info)) :
-    (assessment.continuationContext site (payoff who) bound).value alternative
-      (payoffIntegrable_of_finite _ _) ≤
+    (assessment.continuationContext site (payoff who) bound).value alternative ≤
       (assessment.continuationContext site (payoff who) bound).value
-        (assessment.strategy who) (payoffIntegrable_of_finite _ _) := by
+        (assessment.strategy who) := by
   classical
   let spliced := (assessment.strategy who).spliceAfter M alternative site.1
   have hspliced (info : M.InfoState who) : Allowed who info (spliced info) := by
@@ -1199,24 +977,16 @@ theorem BehavioralAssessment.continuation_value_le_of_locallyOptimal
     · exact hfeasible who info
   have hcounterfactual (later : M.InformationSite who) :
       M.counterfactualRegret assessment.strategy who later (payoff who) bound
-        ((assessment.strategy who).withLaw later.1 (spliced later.1))
-        (fun _ _ => payoffIntegrable_of_finite _ _)
-        (fun _ _ => payoffIntegrable_of_finite _ _) ≤ 0 := by
+        ((assessment.strategy who).withLaw later.1 (spliced later.1)) ≤ 0 := by
     have hmass := M.informationMass_pos_of_fullSupport assessment.strategy hfull who later
     have hantichain := hrecall.decisionInformationAntichain who later
     have hle := hlocal who later (spliced later.1) (hspliced later.1)
-    have hguardAlt : (assessment.continuationContext later (payoff who) bound).IntegrableAt
-        ((assessment.strategy who).withLaw later.1 (spliced later.1)) :=
-      payoffIntegrable_of_finite _ _
-    have hguardBase : (assessment.continuationContext later (payoff who) bound).IntegrableAt
-        (assessment.strategy who) := payoffIntegrable_of_finite _ _
     rw [assessment.continuationContext_value_eq_bayesContinuationValue M who later
         hantichain hmass (hbayes who later hmass)
-        ((assessment.strategy who).withLaw later.1 (spliced later.1)) (payoff who) bound
-        hguardAlt,
+        ((assessment.strategy who).withLaw later.1 (spliced later.1)) (payoff who) bound,
       assessment.continuationContext_value_eq_bayesContinuationValue M who later
         hantichain hmass (hbayes who later hmass) (assessment.strategy who) (payoff who)
-        bound hguardBase] at hle
+        bound] at hle
     apply le_of_not_gt
     intro hpositive
     have hgain := (M.counterfactualRegret_pos_iff_bayesGain_pos_of_decisionRecall hrecall
@@ -1236,10 +1006,9 @@ theorem BehavioralAssessment.continuation_value_le_of_locallyOptimal
     (fun _ => payoffIntegrable_of_finite _ _)
     (fun _ => payoffIntegrable_of_finite _ _)
   have hgain : (M.informationMass assessment.strategy who site).toReal *
-      ((assessment.continuationContext site (payoff who) bound).value alternative
-          (payoffIntegrable_of_finite _ _) -
+      ((assessment.continuationContext site (payoff who) bound).value alternative -
         (assessment.continuationContext site (payoff who) bound).value
-          (assessment.strategy who) (payoffIntegrable_of_finite _ _)) ≤ 0 := by
+          (assessment.strategy who)) ≤ 0 := by
     rw [hnormalized]
     simp only [Profile.update_eq_self]
     rw [← hcut]
@@ -1253,10 +1022,9 @@ theorem BehavioralAssessment.continuation_value_le_of_locallyOptimal
   apply le_of_not_gt
   intro hpositive
   have hpositiveDiff : 0 <
-      (assessment.continuationContext site (payoff who) bound).value alternative
-          (payoffIntegrable_of_finite _ _) -
+      (assessment.continuationContext site (payoff who) bound).value alternative -
         (assessment.continuationContext site (payoff who) bound).value
-          (assessment.strategy who) (payoffIntegrable_of_finite _ _) :=
+          (assessment.strategy who) :=
     sub_pos.mpr hpositive
   have hmulPositive := mul_pos hmassRealPos hpositiveDiff
   linarith

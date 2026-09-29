@@ -72,10 +72,10 @@ theorem principal_payment_undefined :
   exact exploding_not_integrable
 
 theorem principal_net_defined :
-    ∃ hnet : PayoffIntegrable (principal.outcomeLaw ())
+    PayoffIntegrable (principal.outcomeLaw ())
         (fun outcome => principal.reward outcome -
-          principal.linearPayment 1 outcome),
-      principal.principalUtility (principal.linearPayment 1) () hnet = 0 :=
+          principal.linearPayment 1 outcome) ∧
+      principal.principalUtility (principal.linearPayment 1) () = 0 :=
   principal.principalUtility_linearPayment_one ()
 
 /-- The `true` message occurs only at state zero. -/

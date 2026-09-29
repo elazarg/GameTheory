@@ -11,8 +11,7 @@ namespace GameTheory.Math.Probability
 /-- Expected value under a finite uniform law is the arithmetic mean. -/
 theorem expect_uniformOfFintype {α : Type*} [Fintype α] [Nonempty α]
     (f : α → ℝ) :
-    expect (PMF.uniformOfFintype α) f
-        (payoffIntegrable_of_finite _ f) =
+    expect (PMF.uniformOfFintype α) f =
       (∑ a, f a) / Fintype.card α := by
   rw [expect_eq_sum]
   simp only [PMF.uniformOfFintype_apply, ENNReal.toReal_inv,
@@ -23,7 +22,7 @@ theorem expect_uniformOfFintype {α : Type*} [Fintype α] [Nonempty α]
 /-- The uniform expectation formula specialized to `Fin T`. -/
 theorem expect_uniformFin {T : ℕ} [NeZero T] (f : Fin T → ℝ) :
     expect (PMF.uniformOfFintype (Fin T)) f
-        (payoffIntegrable_of_finite _ f) = (∑ t, f t) / T := by
+         = (∑ t, f t) / T := by
   simpa only [Fintype.card_fin] using expect_uniformOfFintype f
 
 /-- The mass of an atom under the image of a finite uniform law is its fiber

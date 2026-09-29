@@ -114,31 +114,24 @@ theorem fullJoint_eq_fullJoint_averagedKernel
   rw [PMF.bind_map]
   rfl
 
-/-- Exact joint-law equality transports the actual observable guard. -/
+/-- Exact joint-law equality transports every observable's expectation. -/
 theorem expect_fullJoint_eq_averagedJoint (contextLaw : PMF Context)
     (keep : Context → Kept) (kernel : Context → PMF Action)
-    (observable : Kept × Action → ℝ)
-    (hfull : PayoffIntegrable (fullJoint contextLaw keep kernel) observable) :
-    expect (fullJoint contextLaw keep kernel) observable hfull =
-      expect (averagedJoint contextLaw keep kernel) observable
-        (payoffIntegrable_congr_law
-          (fullJoint_eq_averagedJoint contextLaw keep kernel) hfull) :=
+    (observable : Kept × Action → ℝ) :
+    expect (fullJoint contextLaw keep kernel) observable =
+      expect (averagedJoint contextLaw keep kernel) observable :=
   expect_congr_law (fullJoint_eq_averagedJoint contextLaw keep kernel)
-    observable hfull _
+    observable
 
 /-- The same statement for a continuation value on kept context and action. -/
 theorem expect_kernel_eq_averagedKernel (contextLaw : PMF Context)
     (keep : Context → Kept) (kernel : Context → PMF Action)
-    (continuationValue : Kept → Action → ℝ)
-    (hfull : PayoffIntegrable (fullJoint contextLaw keep kernel)
-      (fun pair => continuationValue pair.1 pair.2)) :
+    (continuationValue : Kept → Action → ℝ) :
     expect (fullJoint contextLaw keep kernel)
-        (fun pair => continuationValue pair.1 pair.2) hfull =
+        (fun pair => continuationValue pair.1 pair.2) =
       expect (averagedJoint contextLaw keep kernel)
-        (fun pair => continuationValue pair.1 pair.2)
-        (payoffIntegrable_congr_law
-          (fullJoint_eq_averagedJoint contextLaw keep kernel) hfull) :=
-  expect_fullJoint_eq_averagedJoint contextLaw keep kernel _ hfull
+        (fun pair => continuationValue pair.1 pair.2) :=
+  expect_fullJoint_eq_averagedJoint contextLaw keep kernel _
 
 /-- A kept-rule's actual joint law. -/
 def keptJoint (contextLaw : PMF Context) (keep : Context → Kept)
@@ -159,10 +152,10 @@ structure ContinuationFactorsThrough (contextLaw : PMF Context)
     (fun pair => continuationValue pair.1 pair.2)
   full_eq : ∀ kernel,
     fullValue kernel = expect (fullJoint contextLaw keep kernel)
-      (fun pair => continuationValue pair.1 pair.2) (fullGuard kernel)
+      (fun pair => continuationValue pair.1 pair.2)
   kept_eq : ∀ kernel,
     keptValue kernel = expect (keptJoint contextLaw keep kernel)
-      (fun pair => continuationValue pair.1 pair.2) (keptGuard kernel)
+      (fun pair => continuationValue pair.1 pair.2)
 
 /-- The conditional average covers every full-context rule's actual value. -/
 theorem exists_keptRule_value_eq_of_continuationFactorsThrough
@@ -179,7 +172,7 @@ theorem exists_keptRule_value_eq_of_continuationFactorsThrough
   exact expect_congr_law
     (fullJoint_eq_averagedJoint contextLaw keep fullRule)
     (fun pair => hfactor.continuationValue pair.1 pair.2)
-    (hfactor.fullGuard fullRule) (hfactor.keptGuard keptRule)
+
 
 /-! ## Fair-signal control -/
 
@@ -192,16 +185,10 @@ def copySignal (signal : Bool) : PMF Bool := PMF.pure signal
 def fullActionValue (kernel : Bool → PMF Bool) : ℝ :=
   expect (fullJoint fairSignal (fun _ : Bool => ()) kernel)
     (fun pair => if pair.2 then 1 else 0)
-    (payoffIntegrable_of_bounded _ _ (C := 1) (by
-      intro pair
-      cases pair.2 <;> norm_num))
 
 def keptActionValue (kernel : Unit → PMF Bool) : ℝ :=
   expect (keptJoint fairSignal (fun _ : Bool => ()) kernel)
     (fun pair => if pair.2 then 1 else 0)
-    (payoffIntegrable_of_bounded _ _ (C := 1) (by
-      intro pair
-      cases pair.2 <;> norm_num))
 
 /-- Both finite-control evaluators use the same guarded joint observable. -/
 def actionValueFactors : ContinuationFactorsThrough fairSignal

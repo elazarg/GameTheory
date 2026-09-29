@@ -28,42 +28,23 @@ omit [DecidableEq ι] in
 private theorem expectedUtility_mixed_eq_profile_expect
     (hintegrable : GameForm.HasIntegrableUtility G.form G.utility)
     (profile : Profile G.form.sig.mixed) (who : ι) :
-    expectedUtility G.utility who (G.form.mixed.play profile)
-        (hintegrable.mixed_of_finite who profile) =
+    expectedUtility G.utility who (G.form.mixed.play profile) =
       expect (independentProduct profile)
         (fun pureProfile =>
-          expectedUtility G.utility who (G.form.play pureProfile)
-            (hintegrable who pureProfile))
-        (payoffIntegrable_of_finite (independentProduct profile)
-          (fun pureProfile =>
-            expectedUtility G.utility who (G.form.play pureProfile)
-              (hintegrable who pureProfile))) := by
+          expectedUtility G.utility who (G.form.play pureProfile)) := by
   let hbind := hintegrable.mixed_of_finite who profile
   have htower := expectedUtility_bind G.utility who
     (independentProduct profile) G.form.play
     (by simpa only [GameForm.mixed_play, UtilityIntegrable] using hbind)
-    (hintegrable who)
   calc
-    expectedUtility G.utility who (G.form.mixed.play profile) hbind =
+    expectedUtility G.utility who (G.form.mixed.play profile) =
         expect (independentProduct profile)
           (fun pureProfile =>
-            expectedUtility G.utility who (G.form.play pureProfile)
-              (hintegrable who pureProfile))
-          (payoffIntegrable_bind_conditionalExpectation
-            (independentProduct profile) G.form.play
-            (fun outcome => G.utility outcome who)
-            (by simpa only [GameForm.mixed_play, UtilityIntegrable] using hbind)
-            (hintegrable who)) := by
+            expectedUtility G.utility who (G.form.play pureProfile)) := by
       simpa only [GameForm.mixed_play, hbind] using htower
     _ = expect (independentProduct profile)
           (fun pureProfile =>
-            expectedUtility G.utility who (G.form.play pureProfile)
-              (hintegrable who pureProfile))
-          (payoffIntegrable_of_finite (independentProduct profile)
-            (fun pureProfile =>
-              expectedUtility G.utility who (G.form.play pureProfile)
-                (hintegrable who pureProfile))) :=
-      expect_proof_irrel _ _ _ _
+            expectedUtility G.utility who (G.form.play pureProfile)) := rfl
 
 /-- Expected utility in the finite mixed extension is continuous under
 coordinatewise pointwise convergence of ordinary PMFs. Pure-play integration
@@ -76,14 +57,11 @@ theorem expectedUtility_mixed_tendsto
     (hintegrable : GameForm.HasIntegrableUtility G.form G.utility) (who : ι) :
     Tendsto
       (fun n => expectedUtility G.utility who
-        (G.form.mixed.play (sequence n))
-        (hintegrable.mixed_of_finite who (sequence n)))
+        (G.form.mixed.play (sequence n)))
       atTop
-      (nhds (expectedUtility G.utility who (G.form.mixed.play target)
-        (hintegrable.mixed_of_finite who target))) := by
+      (nhds (expectedUtility G.utility who (G.form.mixed.play target))) := by
   let observable := fun pureProfile =>
     expectedUtility G.utility who (G.form.play pureProfile)
-      (hintegrable who pureProfile)
   have hproduct := PMFConvergesPointwise.independentProduct hconverges
   have hexpect := hproduct.expect_finite observable
   have heq (profile : Profile G.form.sig.mixed) :=
@@ -105,14 +83,10 @@ theorem expectedUtility_update_pure_tendsto
     Tendsto
       (fun n => expectedUtility G.utility who
         (G.form.mixed.play
-          (Profile.update (sequence n) who (PMF.pure action)))
-        (hintegrable.mixed_of_finite who
           (Profile.update (sequence n) who (PMF.pure action))))
       atTop
       (nhds (expectedUtility G.utility who
         (G.form.mixed.play
-          (Profile.update target who (PMF.pure action)))
-        (hintegrable.mixed_of_finite who
           (Profile.update target who (PMF.pure action))))) := by
   apply expectedUtility_mixed_tendsto
   · intro other

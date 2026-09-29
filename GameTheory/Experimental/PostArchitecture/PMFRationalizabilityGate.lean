@@ -35,9 +35,8 @@ private theorem integrable_two_points {α : Type*} [DecidableEq α]
 
 private theorem expect_two_points {α : Type*} [DecidableEq α]
     (μ : PMF α) (f : α → ℝ) (a b : α) (hab : a ≠ b)
-    (hzero : ∀ x, x ≠ a → x ≠ b → f x = 0)
-    (hi : PayoffIntegrable μ f) :
-    expect μ f hi = (μ a).toReal * f a + (μ b).toReal * f b := by
+    (hzero : ∀ x, x ≠ a → x ≠ b → f x = 0) :
+    expect μ f = (μ a).toReal * f a + (μ b).toReal * f b := by
   unfold expect
   rw [tsum_eq_sum (s := {a, b})]
   · simp [hab]
@@ -86,7 +85,7 @@ theorem column_integrable (m : ℕ) :
   exact matrix_col_support n m hnm hnnext
 
 theorem row_expect_zero :
-    expect geometric (matrix 0) (row_integrable 0) = -1 / weight 0 := by
+    expect geometric (matrix 0) = -1 / weight 0 := by
   have hne := (weight_pos 0).ne'
   rw [expect_two_points geometric (matrix 0) 0 1 (by omega)]
   · simp [matrix, weight]
@@ -95,7 +94,7 @@ theorem row_expect_zero :
     exact matrix_row_support 0 m hm0 (by omega)
 
 theorem row_expect_succ (k : ℕ) :
-    expect geometric (matrix (k + 1)) (row_integrable (k + 1)) = 0 := by
+    expect geometric (matrix (k + 1)) = 0 := by
   have hk := (weight_pos k).ne'
   have hks := (weight_pos (k + 1)).ne'
   rw [expect_two_points geometric (matrix (k + 1)) k (k + 1) (by omega)]
@@ -107,7 +106,7 @@ theorem row_expect_succ (k : ℕ) :
     exact matrix_row_support (k + 1) m hmkn (by omega)
 
 theorem column_expect (m : ℕ) :
-    expect geometric (fun n => matrix n m) (column_integrable m) =
+    expect geometric (fun n => matrix n m) =
       1 / weight m := by
   have hm := (weight_pos m).ne'
   have hms := (weight_pos (m + 1)).ne'
@@ -187,31 +186,22 @@ theorem pure_action_integrable (action : ℕ) :
 theorem pure_action_value_zero :
     expectedUtility utility false
       (form.mixed.play (Profile.update beliefs false (PMF.pure 0)))
-      (pure_action_integrable 0) = 0 := by
-  have hmap : UtilityIntegrable utility false
-      (geometric.map (fun m => (0, m))) := by
-    rw [← pure_action_law]
-    exact pure_action_integrable 0
+       = 0 := by
   calc
-    _ = expectedUtility utility false (geometric.map (fun m => (0, m))) hmap :=
-      expectedUtility_congr_law utility false (pure_action_law 0) _ hmap
+    _ = expectedUtility utility false (geometric.map (fun m => (0, m))) :=
+      expectedUtility_congr_law utility false (pure_action_law 0)
     _ = 0 := by
       rw [expectedUtility_map]
-      exact expect_constant geometric (0 : ℝ) _
+      exact expect_constant geometric (0 : ℝ)
 
 theorem pure_action_value_succ (n : ℕ) :
     expectedUtility utility false
-      (form.mixed.play (Profile.update beliefs false (PMF.pure (n + 1))))
-      (pure_action_integrable (n + 1)) =
-        expect geometric (matrix n) (row_integrable n) := by
-  have hmap : UtilityIntegrable utility false
-      (geometric.map (fun m => (n + 1, m))) := by
-    rw [← pure_action_law]
-    exact pure_action_integrable (n + 1)
+      (form.mixed.play (Profile.update beliefs false (PMF.pure (n + 1)))) =
+        expect geometric (matrix n) := by
   calc
-    _ = expectedUtility utility false (geometric.map (fun m => (n + 1, m))) hmap :=
-      expectedUtility_congr_law utility false (pure_action_law (n + 1)) _ hmap
-    _ = expect geometric (matrix n) (row_integrable n) := by
+    _ = expectedUtility utility false (geometric.map (fun m => (n + 1, m))) :=
+      expectedUtility_congr_law utility false (pure_action_law (n + 1))
+    _ = expect geometric (matrix n) := by
       rw [expectedUtility_map]
       rfl
 
@@ -226,15 +216,11 @@ theorem randomized_integrable (profile : Profile sig) :
 theorem randomized_value (profile : Profile sig) :
     expectedUtility utility false
       (randomizedDeviationOutcome form profile false replacement)
-      (randomized_integrable profile) = 1 / weight (profile true) := by
-  have hmap : UtilityIntegrable utility false
-      (geometric.map (fun n => (n + 1, profile true))) := by
-    rw [← randomized_law]
-    exact randomized_integrable profile
+       = 1 / weight (profile true) := by
   calc
     _ = expectedUtility utility false
-          (geometric.map (fun n => (n + 1, profile true))) hmap :=
-      expectedUtility_congr_law utility false (randomized_law profile) _ hmap
+          (geometric.map (fun n => (n + 1, profile true))) :=
+      expectedUtility_congr_law utility false (randomized_law profile)
     _ = 1 / weight (profile true) := by
       rw [expectedUtility_map]
       exact column_expect (profile true)
@@ -242,7 +228,7 @@ theorem randomized_value (profile : Profile sig) :
 theorem pure_action_value_le_zero (action : ℕ) :
     expectedUtility utility false
       (form.mixed.play (Profile.update beliefs false (PMF.pure action)))
-      (pure_action_integrable action) ≤ 0 := by
+       ≤ 0 := by
   cases action with
   | zero => rw [pure_action_value_zero]
   | succ n =>
@@ -275,7 +261,7 @@ theorem replacement_strict (profile : Profile sig) :
     (randomized_integrable profile) hbase).mpr
   rw [randomized_value]
   have hzero : expectedUtility utility false
-      (form.play (Profile.update profile false 0)) hbase = 0 := by
+      (form.play (Profile.update profile false 0)) = 0 := by
     simp [form, expectedUtility_pure, utility, focalPayoff,
       Profile.update_same, Profile.update_of_ne]
   rw [hzero]
@@ -297,9 +283,9 @@ theorem opponent_best (action : ℕ) :
   intro alternative
   have hi (law : PMF sig.Outcome) : UtilityIntegrable utility true law :=
     payoffIntegrable_constant law 0
-  have hvalue (law : PMF sig.Outcome) (hlaw : UtilityIntegrable utility true law) :
-      expectedUtility utility true law hlaw = 0 := by
-    exact expect_constant law 0 hlaw
+  have hvalue (law : PMF sig.Outcome) :
+      expectedUtility utility true law = 0 := by
+    exact expect_constant law 0
   exact (euPreference_iff utility true _ _ (hi _) (hi _)).mpr (by
     rw [hvalue, hvalue])
 

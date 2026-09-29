@@ -69,8 +69,7 @@ theorem hostileGame_hasStationarySaddle {β : ℝ≥0} (hβ : β < 1)
     IsSaddlePoint
       (MatrixGame.utility
         (hostileGame.auxiliaryMatrix (β : ℝ)
-          (hostileGame.discountedValue hβ) state
-          (fun _ _ => payoffIntegrable_of_finite _ _)))
+          (hostileGame.discountedValue hβ) state))
       (hostileGame.stationarySaddleProfile hβ state) :=
   hostileGame.stationarySaddleProfile_isSaddlePoint hβ state
 

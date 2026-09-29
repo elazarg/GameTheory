@@ -334,16 +334,16 @@ private theorem backwardValue_of_constant_successors
     (hchild : ∀ target
       (realized : target ∈ (arena.step history.state
         (chooser history hterm)).support)
-      (hguard : PayoffIntegrable
+      (_ : PayoffIntegrable
         (arena.historyBackwardLaw arena_wellFoundedPlay chooser
           (history.extend (chooser history hterm).2 realized))
         (fun outcome => payoff outcome ())),
       arena.historyBackwardValue arena_wellFoundedPlay chooser
         (fun outcome => payoff outcome ())
-        (history.extend (chooser history hterm).2 realized) hguard = c) :
+        (history.extend (chooser history hterm).2 realized) = c) :
     arena.historyBackwardValue arena_wellFoundedPlay chooser
       (fun outcome => payoff outcome ()) history
-      (payoff_integrable _) = c := by
+       = c := by
   obtain ⟨houter, heq⟩ := arena.historyBackwardValue_of_not_terminal
     hterm (payoff_integrable _) (fun _ => c)
       (by intro target realized hguard
@@ -354,14 +354,14 @@ theorem incumbent_value_decision :
     arena.historyBackwardValue arena_wellFoundedPlay
         (model.historyChooser incumbentProfile)
         (fun history => payoff history ()) decisionHistory
-        (payoff_integrable _) = 0 := by
+         = 0 := by
   apply backwardValue_of_constant_successors _ _ decision_not_terminal 0
   intro target realized hguard
   have htarget : target = .punished := by
     rw [incumbent_step_decision, PMF.mem_support_pure_iff] at realized
     exact realized
   subst target
-  rw [arena.historyBackwardValue_of_terminal terminal_punished hguard]
+  rw [arena.historyBackwardValue_of_terminal terminal_punished]
   rfl
 
 theorem rewarding_value_decision :
@@ -369,14 +369,14 @@ theorem rewarding_value_decision :
         (model.historyChooser
           (Profile.update incumbentProfile () rewardingPolicy))
         (fun history => payoff history ()) decisionHistory
-        (payoff_integrable _) = 1 := by
+         = 1 := by
   apply backwardValue_of_constant_successors _ _ decision_not_terminal 1
   intro target realized hguard
   have htarget : target = .rewarded := by
     rw [rewarding_step_decision, PMF.mem_support_pure_iff] at realized
     exact realized
   subst target
-  rw [arena.historyBackwardValue_of_terminal terminal_rewarded hguard]
+  rw [arena.historyBackwardValue_of_terminal terminal_rewarded]
   rfl
 
 theorem payoff_le_two (history : arena.History) :
@@ -389,23 +389,23 @@ theorem historyBackwardValue_le_two
     (chooser : arena.HistoryChooser) (history : arena.History) :
     arena.historyBackwardValue arena_wellFoundedPlay chooser
         (fun outcome => payoff outcome ()) history
-        (payoff_integrable _) ≤ 2 := by
+         ≤ 2 := by
   unfold ExecutionProtocol.historyBackwardValue
   calc
     expect (arena.historyBackwardLaw arena_wellFoundedPlay chooser history)
-        (fun outcome => payoff outcome ()) (payoff_integrable _) ≤
+        (fun outcome => payoff outcome ()) ≤
       expect (arena.historyBackwardLaw arena_wellFoundedPlay chooser history)
-        (fun _ => 2) (payoffIntegrable_constant _ 2) := by
-      apply expect_mono
+        (fun _ => 2) := by
+      refine expect_mono ?_ (payoff_integrable _) (payoffIntegrable_constant _ _)
       intro outcome _
       exact payoff_le_two outcome
-    _ = 2 := expect_constant _ 2 _
+    _ = 2 := expect_constant _ 2
 
 theorem incumbent_value_root :
     arena.historyBackwardValue arena_wellFoundedPlay
         (model.historyChooser incumbentProfile)
         (fun history => payoff history ()) arena.initHistory
-        (payoff_integrable _) = 2 := by
+         = 2 := by
   have hinit : ¬ arena.terminal arena.initHistory.state := by
     simpa only [ExecutionProtocol.initHistory_state] using root_not_terminal
   apply backwardValue_of_constant_successors _ _ hinit 2
@@ -414,7 +414,7 @@ theorem incumbent_value_root :
     rw [incumbent_step_root, PMF.mem_support_pure_iff] at realized
     exact realized
   subst target
-  rw [arena.historyBackwardValue_of_terminal terminal_exited hguard]
+  rw [arena.historyBackwardValue_of_terminal terminal_exited]
   rfl
 
 /-- From the initial history the incumbent is optimal against every whole
@@ -424,12 +424,10 @@ theorem incumbent_optimal_from_initial
     arena.historyBackwardValue arena_wellFoundedPlay
         (model.historyChooser
           (Profile.update incumbentProfile () alternative))
-        (fun history => payoff history ()) arena.initHistory
-        (payoff_integrable _) ≤
+        (fun history => payoff history ()) arena.initHistory ≤
       arena.historyBackwardValue arena_wellFoundedPlay
         (model.historyChooser incumbentProfile)
-        (fun history => payoff history ()) arena.initHistory
-        (payoff_integrable _) := by
+        (fun history => payoff history ()) arena.initHistory := by
   rw [incumbent_value_root]
   exact historyBackwardValue_le_two
     (model.historyChooser
@@ -457,11 +455,11 @@ theorem incumbent_not_historywiseOptimal :
   obtain ⟨hother, hinc, hdecision⟩ := hdecision
   have hreward : arena.historyBackwardValue arena_wellFoundedPlay
       (model.historyChooser (Profile.update incumbentProfile () rewardingPolicy))
-      (fun history => payoff history ()) decisionHistory hother = 1 := by
+      (fun history => payoff history ()) decisionHistory = 1 := by
     simpa only using rewarding_value_decision
   have hincumbent : arena.historyBackwardValue arena_wellFoundedPlay
       (model.historyChooser incumbentProfile)
-      (fun history => payoff history ()) decisionHistory hinc = 0 := by
+      (fun history => payoff history ()) decisionHistory = 0 := by
     simpa only using incumbent_value_decision
   rw [hreward, hincumbent] at hdecision
   norm_num at hdecision

@@ -182,13 +182,13 @@ theorem backward_eq {source : Bool} (profile : Profile (model source).strategicS
       (fun h => payoff source prefer h ())) :
     (arena source).historyBackwardValue (terminates source)
       ((model source).historyChooser profile) (fun h => payoff source prefer h ())
-      history hback =
+      history =
         continuationPayoff profile prefer history.state := by
   induction history using ((arena source).wellFounded_historySuccessor
       (terminates source)).induction with
   | _ history ih =>
       by_cases stopped : (arena source).terminal history.state
-      · rw [(arena source).historyBackwardValue_of_terminal stopped hback]
+      · rw [(arena source).historyBackwardValue_of_terminal stopped]
         exact (continuationPayoff_terminal profile prefer history.state stopped).symm
       · have step : (arena source).step history.state
             ((model source).historyChooser profile history stopped) =
@@ -209,10 +209,10 @@ theorem backward_eq {source : Bool} (profile : Profile (model source).strategicS
         calc
           _ = expect ((arena source).step history.state
                 ((model source).historyChooser profile history stopped))
-                value houter := heq
+                value := heq
           _ = expect (PMF.pure (pick profile history.state :: history.state))
-                value (payoffIntegrable_pure _ _) :=
-            expect_congr_law step value houter (payoffIntegrable_pure _ _)
+                value :=
+            expect_congr_law step value
           _ = continuationPayoff profile prefer history.state := by
             rw [expect_pure]
 
@@ -373,7 +373,7 @@ theorem failedRoot_best (prefer : Bool) (profile : Profile (model false).strateg
       (fun h => payoff false prefer h ())) :
     (arena false).historyBackwardValue (terminates false)
       ((model false).historyChooser (Profile.update profile () (targetPolicy prefer)))
-      (fun h => payoff false prefer h ()) failedRoot hback = 2 := by
+      (fun h => payoff false prefer h ()) failedRoot = 2 := by
   rw [backward_eq _ prefer failedRoot hback]
   simp [failedRoot, History.extend, continuationPayoff, pick, Profile.update_same,
     InformationModel.Policy.act, targetPolicy, outcome, utility]
@@ -395,10 +395,10 @@ theorem failedRoot_value_sum (profile : Profile (model false).strategicSignature
       (fun h => payoff false true h ())) :
     (arena false).historyBackwardValue (terminates false)
         ((model false).historyChooser profile) (fun h => payoff false false h ())
-        failedRoot hfirst +
+        failedRoot +
       (arena false).historyBackwardValue (terminates false)
         ((model false).historyChooser profile) (fun h => payoff false true h ())
-        failedRoot hsecond ≤
+        failedRoot ≤
       3 := by
   rw [backward_eq _ false failedRoot hfirst, backward_eq _ true failedRoot hsecond]
   simpa only [failedRoot, History.extend, continuationPayoff, outcome, Bool.false_and] using
@@ -439,20 +439,19 @@ theorem no_utility_independent_spe_compiler :
 two utilities sum to at most three, while each has an attainable value two. -/
 theorem no_randomized_common_completion (law : PMF (Option Bool)) :
     ¬ (2 ≤ expect law (fun choice => utility false (false, choice))
-          (payoffIntegrable_of_finite _ _) ∧
-      2 ≤ expect law (fun choice => utility true (false, choice))
-          (payoffIntegrable_of_finite _ _)) := by
+           ∧
+      2 ≤ expect law (fun choice => utility true (false, choice))) := by
   rintro ⟨first, second⟩
   let hf := payoffIntegrable_of_finite law (fun choice => utility false (false, choice))
   let hg := payoffIntegrable_of_finite law (fun choice => utility true (false, choice))
   have total : expect law (fun choice =>
       utility false (false, choice) + utility true (false, choice))
-        (payoffIntegrable_add hf hg) ≤ 3 := by
+         ≤ 3 := by
     calc
-      _ ≤ expect law (fun _ => (3 : ℝ)) (payoffIntegrable_constant _ _) := by
+      _ ≤ expect law (fun _ => (3 : ℝ)) := by
         exact expect_mono (fun choice _ => failed_utility_sum choice)
           (payoffIntegrable_add hf hg) (payoffIntegrable_constant _ _)
-      _ = 3 := expect_constant _ _ _
+      _ = 3 := expect_constant _ _
   rw [expect_add hf hg] at total
   linarith
 

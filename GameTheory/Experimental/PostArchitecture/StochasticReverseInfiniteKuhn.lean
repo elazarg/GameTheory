@@ -202,22 +202,21 @@ theorem discounted_consumer :
       ∃ hsum : Summable (fun time => (2 : ℝ)⁻¹ ^ time *
         offPathGame.arbitraryPolicyMeasureStageExpectation false
           correlatedLaws () time (hstage time)),
-        ∃ hbehavioral : ∀ time, PayoffIntegrable
+        (∀ time, PayoffIntegrable
           ((offPathGame.perfectMonitoring false).runBehavioral
             (offPathGame.toBehaviorProfile false
               (offPathGame.policyMeasuresToPublicBehavioralWith false
                 correlatedLaws falseFallback)) (time + 1))
-          (offPathGame.latestStageUtility false ()),
+          (offPathGame.latestStageUtility false ())) ∧
           ∃ hbehavioralSum : Summable (fun time => (2 : ℝ)⁻¹ ^ time *
             offPathGame.behavioralStageExpectation false
               (offPathGame.policyMeasuresToPublicBehavioralWith false
-                correlatedLaws falseFallback) () time (hbehavioral time)),
+                correlatedLaws falseFallback) () time),
             offPathGame.arbitraryPolicyMeasureDiscountedPayoff false
                 (2 : ℝ)⁻¹ correlatedLaws () hstage hsum =
               offPathGame.behavioralDiscountedPayoff false (2 : ℝ)⁻¹
                 (offPathGame.policyMeasuresToPublicBehavioralWith false
-                  correlatedLaws falseFallback) () hbehavioral
-                hbehavioralSum := by
+                  correlatedLaws falseFallback) () hbehavioralSum := by
   let hbound : ∀ state actions,
       |offPathGame.stageUtility state actions ()| ≤ 1 :=
     stageUtility_abs_le_one

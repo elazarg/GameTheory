@@ -680,23 +680,17 @@ protocol carries no payoff of its own; the utility node's value is an
 observable on states, and its expectation under the run law is the diagram's
 expected utility. -/
 theorem expect_payoffValue_runFor (D : Diagram)
-    (policy : (model D).Policy Agent.planner)
-    (hforecast : PayoffIntegrable D.forecastLaw
-      (fun forecast => D.payoff forecast (ruleOf D policy forecast))) :
+    (policy : (model D).Policy Agent.planner) :
     expect ((protocol D).runFor (chooserOf D policy) 3 (protocol D).init)
-        Stage.payoffValue (payoffIntegrable_runFor D policy hforecast) =
+        Stage.payoffValue =
       expect D.forecastLaw
-        (fun forecast => D.payoff forecast (ruleOf D policy forecast))
-        hforecast := by
-  have hmap : PayoffIntegrable
-      (intendedOutcome D (ruleOf D policy)) Stage.payoffValue := by
-    exact (payoffIntegrable_map_iff _ _ _).mpr hforecast
+        (fun forecast => D.payoff forecast (ruleOf D policy forecast)) := by
   calc
     _ = expect (intendedOutcome D (ruleOf D policy)) Stage.payoffValue
-        hmap := expect_congr_law (runFor_eq_intendedOutcome D policy)
-          Stage.payoffValue (payoffIntegrable_runFor D policy hforecast) hmap
+         := expect_congr_law (runFor_eq_intendedOutcome D policy)
+          Stage.payoffValue
     _ = _ := by
-      exact expect_map _ _ _ _ _
+      exact expect_map _ _ _
 
 /-! ## A concrete diagram
 
@@ -788,7 +782,7 @@ theorem ruleOf_responsiveRule (sky : Sky) :
 
 /-- The expectation of any observable under the chance node's law. -/
 theorem expect_skyLaw (score : Sky → ℝ) :
-    expect skyLaw score (payoffIntegrable_of_finite _ _) =
+    expect skyLaw score =
       1 / 3 * score .rain + (1 - 1 / 3) * score .shine := by
   have hleft : PayoffIntegrable (PMF.pure Sky.rain) score :=
     payoffIntegrable_pure _ _
@@ -809,24 +803,24 @@ theorem picnicRunIntegrable
 theorem expect_constant_indoors :
     expect ((protocol picnic).runFor (chooserOf picnic (constantRule .indoors)) 3
       (protocol picnic).init) Stage.payoffValue
-      (picnicRunIntegrable (constantRule .indoors)) = 1 / 3 := by
-  rw [expect_payoffValue_runFor picnic _ (payoffIntegrable_of_finite _ _),
+       = 1 / 3 := by
+  rw [expect_payoffValue_runFor picnic _,
     expect_skyLaw]
   norm_num [ruleOf_constantRule, picnic_payoff, picnicPayoff]
 
 theorem expect_constant_outdoors :
     expect ((protocol picnic).runFor (chooserOf picnic (constantRule .outdoors)) 3
       (protocol picnic).init) Stage.payoffValue
-      (picnicRunIntegrable (constantRule .outdoors)) = 2 / 3 := by
-  rw [expect_payoffValue_runFor picnic _ (payoffIntegrable_of_finite _ _),
+       = 2 / 3 := by
+  rw [expect_payoffValue_runFor picnic _,
     expect_skyLaw]
   norm_num [ruleOf_constantRule, picnic_payoff, picnicPayoff]
 
 theorem expect_responsive :
     expect ((protocol picnic).runFor (chooserOf picnic responsiveRule) 3
       (protocol picnic).init) Stage.payoffValue
-      (picnicRunIntegrable responsiveRule) = 1 := by
-  rw [expect_payoffValue_runFor picnic _ (payoffIntegrable_of_finite _ _),
+       = 1 := by
+  rw [expect_payoffValue_runFor picnic _,
     expect_skyLaw]
   norm_num [ruleOf_responsiveRule, responsiveVenue, picnic_payoff, picnicPayoff]
 
@@ -848,8 +842,6 @@ theorem outcome_law_depends_on_decision :
         (protocol picnic).init := by
   intro hequal
   have hscore := expect_congr_law hequal Stage.payoffValue
-    (picnicRunIntegrable (constantRule .indoors))
-    (picnicRunIntegrable (constantRule .outdoors))
   rw [expect_constant_indoors, expect_constant_outdoors] at hscore
   norm_num at hscore
 
@@ -863,8 +855,6 @@ theorem outcome_law_depends_on_observation (venue : Venue) :
         (protocol picnic).init := by
   intro hequal
   have hscore := expect_congr_law hequal Stage.payoffValue
-    (picnicRunIntegrable responsiveRule)
-    (picnicRunIntegrable (constantRule venue))
   rw [expect_responsive] at hscore
   cases venue with
   | indoors => rw [expect_constant_indoors] at hscore; norm_num at hscore

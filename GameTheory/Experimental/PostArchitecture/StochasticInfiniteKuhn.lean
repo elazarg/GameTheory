@@ -130,8 +130,6 @@ theorem discounted_consumer :
           stageUtility_abs_le_one) =
       offPathGame.behavioralDiscountedPayoff false (2 : ℝ)⁻¹
         (baseline false) ()
-        (fun time => offPathGame.behavioralStageIntegrable_of_bounded
-          false (baseline false) () 1 stageUtility_abs_le_one time)
         (offPathGame.summable_discounted_behavioralStageExpectation
           false (by norm_num) (by norm_num) (baseline false) ()
           stageUtility_abs_le_one) := by
@@ -152,9 +150,6 @@ theorem unilateral_discounted_consumer :
           stageUtility_abs_le_one) =
       offPathGame.behavioralDiscountedPayoff false (2 : ℝ)⁻¹
         (Profile.update (baseline false) () deviation) ()
-        (fun time => offPathGame.behavioralStageIntegrable_of_bounded
-          false (Profile.update (baseline false) () deviation) () 1
-          stageUtility_abs_le_one time)
         (offPathGame.summable_discounted_behavioralStageExpectation
           false (by norm_num) (by norm_num)
           (Profile.update (baseline false) () deviation) ()

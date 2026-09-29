@@ -73,14 +73,10 @@ expectation of the utility generated at each recommended profile. -/
 theorem expectedUtility_outcomeLaw (F : GameForm ι)
     (utility : F.sig.Outcome → ι → ℝ) (agent : ι)
     (μ : PMF (Profile F.sig))
-    (hbind : UtilityIntegrable utility agent (F.outcomeLaw μ))
-    (hcond : ∀ profile, UtilityIntegrable utility agent (F.play profile)) :
-    expectedUtility utility agent (F.outcomeLaw μ) hbind =
-      expect μ (fun profile => expectedUtility utility agent (F.play profile)
-        (hcond profile))
-        (payoffIntegrable_bind_conditionalExpectation μ F.play
-          (fun outcome => utility outcome agent) hbind hcond) := by
-  exact expectedUtility_bind utility agent μ F.play hbind hcond
+    (hbind : UtilityIntegrable utility agent (F.outcomeLaw μ)) :
+    expectedUtility utility agent (F.outcomeLaw μ) =
+      expect μ (fun profile => expectedUtility utility agent (F.play profile)) := by
+  exact expectedUtility_bind utility agent μ F.play hbind
 
 /-- Mapping every recommendation before play maps the integrand in the same
 way. This covers both constant and recommendation-dependent deviations. -/
@@ -88,25 +84,16 @@ theorem expectedUtility_outcomeLaw_map (F : GameForm ι)
     (utility : F.sig.Outcome → ι → ℝ) (agent : ι)
     (μ : PMF (Profile F.sig)) (respond : Profile F.sig → Profile F.sig)
     (hbind : UtilityIntegrable utility agent
-      (F.outcomeLaw (μ.map respond)))
-    (hcond : ∀ profile, UtilityIntegrable utility agent
-      (F.play (respond profile))) :
-    expectedUtility utility agent (F.outcomeLaw (μ.map respond)) hbind =
+      (F.outcomeLaw (μ.map respond))) :
+    expectedUtility utility agent (F.outcomeLaw (μ.map respond)) =
       expect μ (fun profile => expectedUtility utility agent
-        (F.play (respond profile)) (hcond profile))
-        (payoffIntegrable_bind_conditionalExpectation μ
-          (fun profile => F.play (respond profile))
-          (fun outcome => utility outcome agent)
-          (show UtilityIntegrable utility agent
-            (μ.bind fun profile => F.play (respond profile)) from by
-              simpa only [GameForm.outcomeLaw, PMF.bind_map, Function.comp_def]
-                using hbind) hcond) := by
+        (F.play (respond profile))) := by
   have hbind' : UtilityIntegrable utility agent
       (μ.bind fun profile => F.play (respond profile)) := by
     simpa only [GameForm.outcomeLaw, PMF.bind_map, Function.comp_def] using hbind
   simpa only [GameForm.outcomeLaw, PMF.bind_map, Function.comp_def] using
     expectedUtility_bind utility agent μ
-      (fun profile => F.play (respond profile)) hbind' hcond
+      (fun profile => F.play (respond profile)) hbind'
 
 /-- The preference package of a bundled utility game. -/
 def UtilityGame.preference (G : UtilityGame ι) : WeakPreference ι G.form.sig.Outcome :=
@@ -151,37 +138,21 @@ theorem IsTeamGame.isNash_deviation_nonimproving [DecidableEq ι]
     {F : GameForm ι} {utility : F.sig.Outcome → ι → ℝ}
     (hteam : IsTeamGame utility) {profile : Profile F.sig}
     (hnash : IsNash F (euPreference utility) profile)
-    (who : ι) (replacement : F.sig.Strategy who) (observer : ι)
-    (hbase : UtilityIntegrable utility who (F.play profile))
-    (hdev : UtilityIntegrable utility who
-      (F.play (Profile.update profile who replacement))) :
+    (who : ι) (replacement : F.sig.Strategy who) (observer : ι) :
     expectedUtility utility observer
-        (F.play (Profile.update profile who replacement))
-        (by
-          exact payoffIntegrable_congr_on_support
-            (fun outcome _ => hteam outcome who observer) hdev) ≤
-      expectedUtility utility observer (F.play profile)
-        (by
-          exact payoffIntegrable_congr_on_support
-            (fun outcome _ => hteam outcome who observer) hbase) := by
+        (F.play (Profile.update profile who replacement)) ≤
+      expectedUtility utility observer (F.play profile) := by
   have hrel := (isNash_iff profile).mp hnash who replacement
   rcases hrel with ⟨_, _, hle⟩
-  have hbaseObserver : UtilityIntegrable utility observer (F.play profile) := by
-    exact payoffIntegrable_congr_on_support
-      (fun outcome _ => hteam outcome who observer) hbase
-  have hdevObserver : UtilityIntegrable utility observer
-      (F.play (Profile.update profile who replacement)) := by
-    exact payoffIntegrable_congr_on_support
-      (fun outcome _ => hteam outcome who observer) hdev
   calc
     expectedUtility utility observer
-        (F.play (Profile.update profile who replacement)) hdevObserver =
+        (F.play (Profile.update profile who replacement)) =
       expectedUtility utility who
-        (F.play (Profile.update profile who replacement)) hdev :=
-      hteam.expectedUtility_eq _ observer who hdevObserver hdev
-    _ ≤ expectedUtility utility who (F.play profile) hbase := hle
-    _ = expectedUtility utility observer (F.play profile) hbaseObserver :=
-      hteam.expectedUtility_eq _ who observer hbase hbaseObserver
+        (F.play (Profile.update profile who replacement)) :=
+      hteam.expectedUtility_eq _ observer who
+    _ ≤ expectedUtility utility who (F.play profile) := hle
+    _ = expectedUtility utility observer (F.play profile) :=
+      hteam.expectedUtility_eq _ who observer
 
 section Relabel
 
@@ -237,51 +208,43 @@ theorem isCoarseCorrelatedEq_randomized {statusQuo : PMF (Profile F.sig)}
     intro s
     obtain ⟨-, hc, -⟩ := hpure s
     exact hc
-  have hle : ∀ s, expectedUtility utility who (q s) (hcond s) ≤
-      expectedUtility utility who (F.outcomeLaw statusQuo) hbase := by
+  have hle : ∀ s, expectedUtility utility who (q s) ≤
+      expectedUtility utility who (F.outcomeLaw statusQuo) := by
     intro s
     exact (euPreference_iff utility who (F.outcomeLaw statusQuo) (q s)
       hbase (hcond s)).mp (hpure s)
   have hbind : UtilityIntegrable utility who (replacementPMF.bind q) := by
     simpa only [hlaw] using hdev who replacementPMF
-  have htower := expectedUtility_bind utility who replacementPMF q hbind hcond
+  have htower := expectedUtility_bind utility who replacementPMF q hbind
   have houter := payoffIntegrable_bind_conditionalExpectation replacementPMF q
-    (fun outcome => utility outcome who) hbind hcond
+    (fun outcome => utility outcome who) hbind
   have hconstant := payoffIntegrable_of_bounded replacementPMF
-    (fun _ => expectedUtility utility who (F.outcomeLaw statusQuo) hbase)
-    (C := |expectedUtility utility who (F.outcomeLaw statusQuo) hbase|)
+    (fun _ => expectedUtility utility who (F.outcomeLaw statusQuo))
+    (C := |expectedUtility utility who (F.outcomeLaw statusQuo)|)
     (fun _ => le_rfl)
   have hmean := expect_mono (fun s _ => hle s) houter hconstant
-  have hdev' : UtilityIntegrable utility who (replacementPMF.bind q) := by
-    simpa only [hlaw] using hdev who replacementPMF
   have hvalue := calc
       expectedUtility utility who
           (F.outcomeLaw
-            ((DeviationScheme.unilateralRandomized F.sig).apply statusQuo who replacementPMF))
-          (hdev who replacementPMF) =
-        expectedUtility utility who (replacementPMF.bind q) hbind := by
+            ((DeviationScheme.unilateralRandomized F.sig).apply statusQuo who replacementPMF)) =
+        expectedUtility utility who (replacementPMF.bind q) := by
             simp only [expectedUtility, hlaw]
-      _ = expect replacementPMF (fun s => expectedUtility utility who (q s) (hcond s))
-          (payoffIntegrable_bind_conditionalExpectation replacementPMF q
-            (fun outcome => utility outcome who) hbind hcond) := htower
+      _ = expect replacementPMF (fun s => expectedUtility utility who (q s)) := htower
   have hleFinal : expectedUtility utility who
       (F.outcomeLaw ((DeviationScheme.unilateralRandomized F.sig).apply
-        statusQuo who replacementPMF)) (hdev who replacementPMF) ≤
-      expectedUtility utility who (F.outcomeLaw statusQuo) hbase := by
+        statusQuo who replacementPMF)) ≤
+      expectedUtility utility who (F.outcomeLaw statusQuo) := by
     calc
       expectedUtility utility who
           (F.outcomeLaw
-            ((DeviationScheme.unilateralRandomized F.sig).apply statusQuo who replacement))
-          (hdev who replacement) =
-        expect replacement (fun s => expectedUtility utility who (q s) (hcond s))
-          (payoffIntegrable_bind_conditionalExpectation replacement q
-            (fun outcome => utility outcome who) hbind hcond) := hvalue
-      _ ≤ expectedUtility utility who (F.outcomeLaw statusQuo) hbase := by
+            ((DeviationScheme.unilateralRandomized F.sig).apply statusQuo who replacement)) =
+        expect replacement (fun s => expectedUtility utility who (q s)) := hvalue
+      _ ≤ expectedUtility utility who (F.outcomeLaw statusQuo) := by
         calc
           _ ≤ expect replacementPMF (fun _ =>
-              expectedUtility utility who (F.outcomeLaw statusQuo) hbase) hconstant := hmean
-          _ = expectedUtility utility who (F.outcomeLaw statusQuo) hbase :=
-            expect_constant replacementPMF _ hconstant
+              expectedUtility utility who (F.outcomeLaw statusQuo)) := hmean
+          _ = expectedUtility utility who (F.outcomeLaw statusQuo) :=
+            expect_constant replacementPMF _
   exact (euPreference_iff utility who (F.outcomeLaw statusQuo)
     (F.outcomeLaw ((DeviationScheme.unilateralRandomized F.sig).apply
       statusQuo who replacement)) hbase (hdev who replacement)).2 hleFinal
@@ -309,41 +272,36 @@ theorem isNash_mixed_iff [Fintype ι] (mixedProfile : Profile F.sig.mixed)
     intro s
     obtain ⟨-, hc, -⟩ := hpure s
     exact hc
-  have hle : ∀ s, expectedUtility utility who (q s) (hcond s) ≤
-      expectedUtility utility who (F.mixed.play mixedProfile) hbase := by
+  have hle : ∀ s, expectedUtility utility who (q s) ≤
+      expectedUtility utility who (F.mixed.play mixedProfile) := by
     intro s
     exact (euPreference_iff utility who (F.mixed.play mixedProfile) (q s)
       hbase (hcond s)).mp (hpure s)
   have hbind : UtilityIntegrable utility who (replacementPMF.bind q) := by
     rw [← GameForm.mixed_play_update]
     exact hdev who replacementPMF
-  have htower := expectedUtility_bind utility who replacementPMF q hbind hcond
+  have htower := expectedUtility_bind utility who replacementPMF q hbind
   have houter := payoffIntegrable_bind_conditionalExpectation replacementPMF q
-    (fun outcome => utility outcome who) hbind hcond
+    (fun outcome => utility outcome who) hbind
   have hconstant := payoffIntegrable_of_bounded replacementPMF
-    (fun _ => expectedUtility utility who (F.mixed.play mixedProfile) hbase)
-    (C := |expectedUtility utility who (F.mixed.play mixedProfile) hbase|)
+    (fun _ => expectedUtility utility who (F.mixed.play mixedProfile))
+    (C := |expectedUtility utility who (F.mixed.play mixedProfile)|)
     (fun _ => le_rfl)
   have hmean := expect_mono (fun s _ => hle s) houter hconstant
-  have hleFinal : expectedUtility utility who (F.mixed.play mixedProfile) hbase ≥
-      expectedUtility utility who (F.mixed.play (Profile.update mixedProfile who replacement))
-        (hdev who replacement) := by
+  have hleFinal : expectedUtility utility who (F.mixed.play mixedProfile) ≥
+      expectedUtility utility who (F.mixed.play (Profile.update mixedProfile who replacement)) := by
     calc
-      expectedUtility utility who (F.mixed.play (Profile.update mixedProfile who replacementPMF))
-          (hdev who replacementPMF) =
-        expectedUtility utility who (replacementPMF.bind q) hbind := by
+      expectedUtility utility who (F.mixed.play (Profile.update mixedProfile who replacementPMF)) =
+        expectedUtility utility who (replacementPMF.bind q) := by
           have heq := GameForm.mixed_play_update F mixedProfile who replacementPMF
           exact expectedUtility_congr_law utility who heq
-            (hdev who replacementPMF) hbind
-      _ = expect replacementPMF (fun s => expectedUtility utility who (q s) (hcond s))
-          (payoffIntegrable_bind_conditionalExpectation replacementPMF q
-            (fun outcome => utility outcome who) hbind hcond) := htower
-      _ ≤ expectedUtility utility who (F.mixed.play mixedProfile) hbase := by
+      _ = expect replacementPMF (fun s => expectedUtility utility who (q s)) := htower
+      _ ≤ expectedUtility utility who (F.mixed.play mixedProfile) := by
         calc
           _ ≤ expect replacementPMF (fun _ =>
-              expectedUtility utility who (F.mixed.play mixedProfile) hbase) hconstant := hmean
-          _ = expectedUtility utility who (F.mixed.play mixedProfile) hbase :=
-            expect_constant replacementPMF _ hconstant
+              expectedUtility utility who (F.mixed.play mixedProfile)) := hmean
+          _ = expectedUtility utility who (F.mixed.play mixedProfile) :=
+            expect_constant replacementPMF _
   exact (euPreference_iff utility who (F.mixed.play mixedProfile)
     (F.mixed.play (Profile.update mixedProfile who replacement)) hbase
     (hdev who replacement)).2 hleFinal

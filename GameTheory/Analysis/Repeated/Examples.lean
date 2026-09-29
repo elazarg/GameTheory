@@ -37,24 +37,20 @@ instance repeatedDilemmaStrategyNonempty (i : Fin 2) :
 @[simp]
 theorem repeatedDilemma_stagePayoff_bothCooperate (who : Fin 2) :
     repeatedDilemma.stagePayoff bothCooperate who
-      (repeatedDilemma.form.hasIntegrableUtility_of_finiteOutcome
-        repeatedDilemma.utility who bothCooperate) = 3 := by
+       = 3 := by
   rw [UtilityGame.stagePayoff]
   show expectedUtility prisonersDilemma.utility who
-    (prisonersDilemma.toForm.play bothCooperate) _ = 3
+    (prisonersDilemma.toForm.play bothCooperate) = 3
   simp only [expectedUtility_pure]
   fin_cases who <;>
     simp [TableGame.utility_apply, bothCooperate, prisonersDilemma,
       dilemmaPayoff, opponent]
 
 theorem cooperationPayoff_feasible :
-    cooperationPayoff ∈ repeatedDilemma.feasibleSet
-      (repeatedDilemma.form.hasIntegrableUtility_of_finiteOutcome
-        repeatedDilemma.utility) := by
+    cooperationPayoff ∈ repeatedDilemma.feasibleSet := by
   have hmember :=
     repeatedDilemma.payoffVector_mem_feasibleSet
-      (repeatedDilemma.form.hasIntegrableUtility_of_finiteOutcome
-        repeatedDilemma.utility) bothCooperate
+       bothCooperate
   convert hmember using 1
   funext who
   simp [cooperationPayoff]
@@ -72,8 +68,7 @@ private theorem payoff_against_defect_le_one
     (own : repeatedDilemma.mixed.form.sig.Strategy who) :
     repeatedDilemma.mixed.stagePayoff
         (Profile.update defectPunishment who own) who
-        (repeatedDilemma.mixed.form.hasIntegrableUtility_of_finiteOutcome
-          repeatedDilemma.mixed.utility who _) ≤ 1 := by
+         ≤ 1 := by
   let F := prisonersDilemma.toForm
   let mixedProfile : Profile F.mixed.sig :=
     Profile.update (F.purify bothDefect) who own
@@ -83,7 +78,7 @@ private theorem payoff_against_defect_le_one
       expectedUtility prisonersDilemma.utility who
           (F.mixed.play
             (Profile.update mixedProfile who (PMF.pure action)))
-          (hH who _) ≤ 1 := by
+           ≤ 1 := by
     have hlaw :
         F.mixed.play
             (Profile.update mixedProfile who (PMF.pure action)) =
@@ -95,15 +90,13 @@ private theorem payoff_against_defect_le_one
     have hvalue :
         expectedUtility prisonersDilemma.utility who
             (F.mixed.play
-              (Profile.update mixedProfile who (PMF.pure action)))
-            (hH who _) =
+              (Profile.update mixedProfile who (PMF.pure action))) =
           prisonersDilemma.utility
             (Profile.update bothDefect who action) who := by
       calc
         _ = expectedUtility prisonersDilemma.utility who
-            (F.play (Profile.update bothDefect who action))
-            (prisonersDilemma.utilityIntegrable who _) :=
-          expectedUtility_congr_law _ _ hlaw _ _
+            (F.play (Profile.update bothDefect who action)) :=
+          expectedUtility_congr_law _ _ hlaw
         _ = _ := by rw [prisonersDilemma.toForm_play, expectedUtility_pure]
     rw [hvalue, TableGame.utility_apply]
     show ((dilemmaPayoff
@@ -114,38 +107,24 @@ private theorem payoff_against_defect_le_one
     cases action <;> norm_num [bothDefect, dilemmaPayoff]
   have hmean := expectedUtility_mixed_eq_expect F prisonersDilemma.utility
     mixedProfile who (hH who mixedProfile)
-    (fun action => hH who _)
   have hupper := expect_le_const own
     (f := fun action => expectedUtility prisonersDilemma.utility who
-      (F.mixed.play (Profile.update mixedProfile who (PMF.pure action)))
-      (hH who _))
+      (F.mixed.play (Profile.update mixedProfile who (PMF.pure action))))
     (payoffIntegrable_of_finite _ _) 1
     (fun action _ => hrow action)
   have hupper' :
       expect (mixedProfile who)
         (fun action => expectedUtility prisonersDilemma.utility who
-          (F.mixed.play (Profile.update mixedProfile who (PMF.pure action)))
-          (hH who _))
-        (payoffIntegrable_bind_conditionalExpectation
-          (mixedProfile who)
-          (fun action => F.mixed.play
-            (Profile.update mixedProfile who (PMF.pure action)))
-          (fun outcome => prisonersDilemma.utility outcome who)
-          (by
-            rw [← mixed_play_update_self F mixedProfile who]
-            exact hH who mixedProfile)
-          (fun action => hH who _)) ≤ 1 := by
+          (F.mixed.play (Profile.update mixedProfile who (PMF.pure action))))
+         ≤ 1 := by
     simpa only [mixedProfile, Profile.update_same] using hupper
   simpa [UtilityGame.stagePayoff, F, mixedProfile, defectPunishment] using
     hmean.trans_le hupper'
 
 private theorem opponentMinmax_lt_cooperation (who : Fin 2) :
     repeatedDilemma.mixed.opponentMinmaxLevel
-      (repeatedDilemma.mixed.form.hasIntegrableUtility_of_finiteOutcome
-        repeatedDilemma.mixed.utility) who < 3 := by
+       who < 3 := by
   let H := repeatedDilemma.mixed
-  let hH : H.form.HasIntegrableUtility H.utility :=
-    H.form.hasIntegrableUtility_of_finiteOutcome H.utility
   let : ∀ i, Nonempty (H.form.sig.Strategy i) :=
     fun _ => ⟨PMF.pure Choice.cooperate⟩
   obtain ⟨bound, _hbound0, hbound⟩ :=
@@ -153,14 +132,13 @@ private theorem opponentMinmax_lt_cooperation (who : Fin 2) :
   have hlower :
       BddBelow
         (Set.range fun punishment : Profile H.form.sig =>
-          H.bestResponseValueAgainstPunishment hH who punishment) := by
+          H.bestResponseValueAgainstPunishment who punishment) := by
     refine ⟨-bound, ?_⟩
     rintro _ ⟨punishment, rfl⟩
     have hbdd :
         BddAbove
           (Set.range fun own : H.form.sig.Strategy who =>
-            H.stagePayoff (Profile.update punishment who own) who
-              (hH who _)) := by
+            H.stagePayoff (Profile.update punishment who own) who) := by
       refine ⟨bound, ?_⟩
       rintro _ ⟨own, rfl⟩
       exact (abs_le.mp (hbound
@@ -169,14 +147,14 @@ private theorem opponentMinmax_lt_cooperation (who : Fin 2) :
       -bound ≤
           H.stagePayoff
             (Profile.update punishment who
-              (PMF.pure Choice.defect)) who (hH who _) :=
+              (PMF.pure Choice.defect)) who :=
         (abs_le.mp (hbound
           (Profile.update punishment who
             (PMF.pure Choice.defect)) who)).1
-      _ ≤ H.bestResponseValueAgainstPunishment hH who punishment :=
+      _ ≤ H.bestResponseValueAgainstPunishment who punishment :=
         le_ciSup hbdd (PMF.pure Choice.defect)
   have hbest :
-      H.bestResponseValueAgainstPunishment hH who defectPunishment ≤ 1 :=
+      H.bestResponseValueAgainstPunishment who defectPunishment ≤ 1 :=
     ciSup_le (payoff_against_defect_le_one who)
   exact (ciInf_le_of_le hlower defectPunishment hbest).trans_lt
     (by norm_num)
@@ -184,11 +162,7 @@ private theorem opponentMinmax_lt_cooperation (who : Fin 2) :
 theorem cooperationPayoff_strictly_individuallyRational :
     cooperationPayoff ∈
       repeatedDilemma.strictIndividuallyRationalPayoffSet
-        (repeatedDilemma.form.hasIntegrableUtility_of_finiteOutcome
-          repeatedDilemma.utility)
-        (repeatedDilemma.mixed.opponentMinmaxVector
-          (repeatedDilemma.mixed.form.hasIntegrableUtility_of_finiteOutcome
-            repeatedDilemma.mixed.utility)) := by
+        (repeatedDilemma.mixed.opponentMinmaxVector) := by
   refine ⟨cooperationPayoff_feasible, ?_⟩
   intro who
   simpa [cooperationPayoff, UtilityGame.opponentMinmaxVector] using

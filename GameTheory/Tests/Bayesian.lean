@@ -72,9 +72,9 @@ theorem truthful_isNash :
   apply (euPreference_iff bitGame.utility who
     (bitGame.toForm.play truthful) (bitGame.toForm.play dev)
     htruth hdev).2
-  rw [bitGame.expectedUtility_eq_prior who truthful htruth,
-    bitGame.expectedUtility_eq_prior who dev hdev]
-  apply expect_mono
+  rw [bitGame.expectedUtility_eq_prior who truthful,
+    bitGame.expectedUtility_eq_prior who dev]
+  refine expect_mono ?_ (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
   intro types _
   cases who
   simp [BayesianGame.planPayoff, dev, bitGame, truthful,
@@ -84,15 +84,9 @@ theorem truthful_isNash :
 /-- The general infinite-type interim theorem specializes to this fair bit. -/
 theorem truthful_interim_optimal :
     ∀ (who : Unit) (ownType : bitGame.Ty who) (respond : bitGame.Act who),
-      bitGame.interimValueOfDeviation who ownType truthful respond
-        (bitGame.singleTypeDeviation truthful who ownType respond) (by
-          simp [BayesianGame.singleTypeDeviation])
-        (bit_deviation_integrable who
-          (bitGame.singleTypeDeviation truthful who ownType respond)) ≤
+      bitGame.interimValueOfDeviation who ownType truthful respond ≤
       bitGame.interimValueOfDeviation who ownType truthful
-        (truthful who ownType) (fun t => truthful who t) rfl
-        (by simpa only [Profile.update_eq_self] using
-          bit_deviation_integrable who (truthful who)) :=
+        (truthful who ownType) :=
   (bitGame.isNash_iff_interim truthful bit_deviation_integrable).1
     truthful_isNash
 
@@ -153,9 +147,9 @@ theorem truthful_isNash :
   apply (euPreference_iff coordinationGame.utility who
     (coordinationGame.toForm.play truthful) (coordinationGame.toForm.play dev)
     htruth hdev).2
-  rw [coordinationGame.expectedUtility_eq_prior who truthful htruth,
-    coordinationGame.expectedUtility_eq_prior who dev hdev]
-  apply expect_mono
+  rw [coordinationGame.expectedUtility_eq_prior who truthful,
+    coordinationGame.expectedUtility_eq_prior who dev]
+  refine expect_mono ?_ (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
   intro types _
   cases who <;>
     simp [BayesianGame.planPayoff, dev, coordinationGame, truthful,
@@ -165,15 +159,9 @@ theorem truthful_isNash :
 theorem truthful_interim_optimal :
     ∀ (who : Bool) (ownType : coordinationGame.Ty who)
       (respond : coordinationGame.Act who),
-      coordinationGame.interimValueOfDeviation who ownType truthful respond
-        (coordinationGame.singleTypeDeviation truthful who ownType respond) (by
-          simp [BayesianGame.singleTypeDeviation])
-        (deviation_integrable who
-          (coordinationGame.singleTypeDeviation truthful who ownType respond)) ≤
+      coordinationGame.interimValueOfDeviation who ownType truthful respond ≤
       coordinationGame.interimValueOfDeviation who ownType truthful
-        (truthful who ownType) (fun t => truthful who t) rfl
-        (by simpa only [Profile.update_eq_self] using
-          deviation_integrable who (truthful who)) :=
+        (truthful who ownType) :=
   (coordinationGame.isNash_iff_interim truthful deviation_integrable).1
     truthful_isNash
 

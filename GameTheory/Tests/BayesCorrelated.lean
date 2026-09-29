@@ -84,9 +84,9 @@ theorem matchingPlan_isNash :
     (information.inducedBayesianGame.toForm.play matchingPlan)
     (information.inducedBayesianGame.toForm.play dev) hmatch hdev).2
   rw [information.inducedBayesianGame.expectedUtility_eq_prior
-      who matchingPlan hmatch,
-    information.inducedBayesianGame.expectedUtility_eq_prior who dev hdev]
-  apply expect_mono
+      who matchingPlan,
+    information.inducedBayesianGame.expectedUtility_eq_prior who dev]
+  refine expect_mono ?_ (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
   intro observed _
   simp [BayesianGame.planPayoff, dev, matchingPlan, information, game,
     BayesianGame.actionsOf]
@@ -141,57 +141,45 @@ theorem hDeviating :
   payoffIntegrable_of_bounded _ _ (gameUtility_bounded 0)
 
 theorem mismatchingRecommendation_recommendedValue :
-    game.recommendedValue mismatchingRecommendation 0 hRecommended = 0 := by
-  have hplan : UtilityIntegrable game.utility 0
-      (game.toForm.play mismatchingPlan) := hRecommended
+    game.recommendedValue mismatchingRecommendation 0 = 0 := by
   have hpoint : ∀ types, game.planPayoff 0 mismatchingPlan types = 0 := by
     intro types
     simp [BayesianGame.planPayoff, mismatchingPlan,
       BayesianGame.actionsOf]
   calc
-    game.recommendedValue mismatchingRecommendation 0 hRecommended =
-      expect game.prior (game.planPayoff 0 mismatchingPlan)
-        (game.planPayoff_integrable 0 mismatchingPlan hplan) :=
-      game.expectedUtility_eq_prior 0 mismatchingPlan hplan
-    _ = expect game.prior (fun _ => 0)
-        (payoffIntegrable_constant game.prior 0) :=
-      expect_congr_on_support (fun types _ => hpoint types) _ _
-    _ = 0 := expect_constant game.prior 0 _
+    game.recommendedValue mismatchingRecommendation 0 =
+      expect game.prior (game.planPayoff 0 mismatchingPlan) :=
+      game.expectedUtility_eq_prior 0 mismatchingPlan
+    _ = expect game.prior (fun _ => 0) :=
+      expect_congr_on_support (fun types _ => hpoint types)
+    _ = 0 := expect_constant game.prior 0
 
 theorem mismatchingRecommendation_deviatingValue :
     game.deviatingValue mismatchingRecommendation 0 flipDeviation
-        hDeviating = 1 := by
+         = 1 := by
   let devPlan := Profile.update mismatchingPlan 0
     (fun ownType => flipDeviation ownType (mismatchingPlan 0 ownType))
-  have hplan : UtilityIntegrable game.utility 0 (game.toForm.play devPlan) :=
-    payoffIntegrable_congr_law
-      (game.recordDeviation_strategyRecommendationLaw
-        mismatchingPlan 0 flipDeviation) hDeviating
   have hpoint : ∀ types, game.planPayoff 0 devPlan types = 1 := by
     intro types
     simp [BayesianGame.planPayoff, devPlan, game, mismatchingPlan,
       flipDeviation, BayesianGame.actionsOf]
   calc
-    game.deviatingValue mismatchingRecommendation 0 flipDeviation
-        hDeviating =
-      expect game.prior (game.planPayoff 0 devPlan)
-        (game.planPayoff_integrable 0 devPlan hplan) := by
+    game.deviatingValue mismatchingRecommendation 0 flipDeviation =
+      expect game.prior (game.planPayoff 0 devPlan) := by
           exact (game.deviatingValue_strategyRecommendationLaw
-            mismatchingPlan 0 flipDeviation hDeviating).trans
-            (game.expectedUtility_eq_prior 0 devPlan hplan)
-    _ = expect game.prior (fun _ => 1)
-        (payoffIntegrable_constant game.prior 1) :=
-      expect_congr_on_support (fun types _ => hpoint types) _ _
-    _ = 1 := expect_constant game.prior 1 _
+            mismatchingPlan 0 flipDeviation).trans
+            (game.expectedUtility_eq_prior 0 devPlan)
+    _ = expect game.prior (fun _ => 1) :=
+      expect_congr_on_support (fun types _ => hpoint types)
+    _ = 1 := expect_constant game.prior 1
 
 theorem mismatchingRecommendation_not_isBayesCorrelatedEq :
     ¬ game.IsBayesCorrelatedEq mismatchingRecommendation := by
   intro hBCE
   have hobey := hBCE.2 0 flipDeviation
   have hle :
-      game.deviatingValue mismatchingRecommendation 0 flipDeviation
-          hDeviating ≤
-        game.recommendedValue mismatchingRecommendation 0 hRecommended :=
+      game.deviatingValue mismatchingRecommendation 0 flipDeviation ≤
+        game.recommendedValue mismatchingRecommendation 0 :=
     (euPreference_iff game.utility 0 mismatchingRecommendation
       (mismatchingRecommendation.map
         (game.recordDeviation 0 flipDeviation))

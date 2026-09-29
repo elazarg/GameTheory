@@ -138,10 +138,8 @@ theorem continuationContext_value_tendsto_of_bounded
     (hC : 0 ≤ C) (hbound : ∀ history, |payoff history| ≤ C) :
     Tendsto
       (fun n => ((sequence n).continuationContext site payoff fuel).value
-        (alternative n) (by
-          exact payoffIntegrable_of_bounded _ payoff hbound)) atTop
-      (nhds ((target.continuationContext site payoff fuel).value replacement
-        (payoffIntegrable_of_bounded _ payoff hbound))) := by
+        (alternative n)) atTop
+      (nhds ((target.continuationContext site payoff fuel).value replacement)) := by
   let kernel (n : ℕ) (history : M.InformationHistory who site.1) : PMF E.History :=
     M.runBehavioralFrom
       (Profile.update (sig := M.behavioralSignature)
@@ -156,10 +154,8 @@ theorem continuationContext_value_tendsto_of_bounded
       (M.update_convergesPointwise hstrategy who halternative) fuel history.1
   let conditionalValue (n : ℕ) (history : M.InformationHistory who site.1) : ℝ :=
     expect (kernel n history) payoff
-      (payoffIntegrable_of_bounded (kernel n history) payoff hbound)
   let conditionalValueLimit (history : M.InformationHistory who site.1) : ℝ :=
     expect (kernelLimit history) payoff
-      (payoffIntegrable_of_bounded (kernelLimit history) payoff hbound)
   have hconditional (history : M.InformationHistory who site.1) :
       Tendsto (fun n => conditionalValue n history) atTop
         (nhds (conditionalValueLimit history)) := by
@@ -169,7 +165,6 @@ theorem continuationContext_value_tendsto_of_bounded
   have hconditionalBound (n : ℕ) (history : M.InformationHistory who site.1) :
       |conditionalValue n history| ≤ C :=
     expect_abs_le_of_bounded hC hbound
-      (payoffIntegrable_of_bounded (kernel n history) payoff hbound)
   have hconditionalLimitBound (history : M.InformationHistory who site.1) :
       |conditionalValueLimit history| ≤ C := by
     exact le_of_tendsto ((hconditional history).abs)
@@ -181,12 +176,8 @@ theorem continuationContext_value_tendsto_of_bounded
     (sequence n).continuationContext_value_tower site payoff fuel
       (alternative n)
       (payoffIntegrable_of_bounded _ payoff hbound)
-      (fun history => payoffIntegrable_of_bounded
-        (kernel n history) payoff hbound)
   have htarget := target.continuationContext_value_tower site payoff fuel
     replacement (payoffIntegrable_of_bounded _ payoff hbound)
-    (fun history => payoffIntegrable_of_bounded
-      (kernelLimit history) payoff hbound)
   simpa only [hseq, htarget, kernel, kernelLimit, conditionalValue,
     conditionalValueLimit] using hresult
 
@@ -206,9 +197,8 @@ theorem continuationContext_value_tendsto
       (fun n => alternative n info) (replacement info))
     (payoff : E.History → ℝ) (fuel : ℕ) :
     Tendsto (fun n => ((sequence n).continuationContext site payoff fuel).value
-      (alternative n) (by exact payoffIntegrable_of_finite _ payoff)) atTop
-      (nhds ((target.continuationContext site payoff fuel).value replacement
-        (by exact payoffIntegrable_of_finite _ payoff))) := by
+      (alternative n)) atTop
+      (nhds ((target.continuationContext site payoff fuel).value replacement)) := by
   let C := ∑ history : E.History, |payoff history|
   have hC : 0 ≤ C := by
     apply Finset.sum_nonneg
@@ -218,8 +208,7 @@ theorem continuationContext_value_tendsto
     dsimp [C]
     exact Finset.single_le_sum (fun history _ => abs_nonneg (payoff history))
       (Finset.mem_univ history)
-  have hresult := M.continuationContext_value_tendsto_of_bounded
+  exact M.continuationContext_value_tendsto_of_bounded
     hstrategy who site hbelief halternative payoff fuel C hC hbound
-  simpa only [Context.value, expect_proof_irrel] using hresult
 
 end GameTheory.Protocol.InformationModel

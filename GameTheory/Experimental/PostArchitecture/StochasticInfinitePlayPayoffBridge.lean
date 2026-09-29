@@ -138,9 +138,7 @@ private theorem integral_canonicalStageUtility_eq_expect
     (∫ play, canonicalStageUtility G initial who play n ∂
       infinitePlayMeasure G initial profile) =
       expect (G.chronologicalHistoryLaw initial profile (n + 1))
-        (chronologicalStageUtility G who n)
-        (chronologicalStageUtility_integrable G who n hstage_bound
-          (G.chronologicalHistoryLaw initial profile (n + 1))) := by
+        (chronologicalStageUtility G who n) := by
   let projection :
       (∀ k, PathHistory G initial k) → G.ChronologicalHistory (n + 1) :=
     chronologicalProjection G initial (n + 1)
@@ -159,13 +157,8 @@ private theorem integral_canonicalStageUtility_eq_expect
       ‖observable history‖ ≤ C := by
     intro history
     exact chronologicalStageUtility_bound G who n hstage_bound history
-  have hμ : PayoffIntegrable
-      (G.chronologicalHistoryLaw initial profile (n + 1)) observable := by
-    apply payoffIntegrable_of_bounded _ _ (C := C)
-    intro history
-    simpa only [Real.norm_eq_abs] using hbound history
   rw [expect_eq_integral
-    (G.chronologicalHistoryLaw initial profile (n + 1)) observable hμ]
+    (G.chronologicalHistoryLaw initial profile (n + 1)) observable]
   rw [← map_chronologicalProjection_infinitePlayMeasure
     G initial profile (n + 1)]
   rw [MeasureTheory.integral_map hprojection.aemeasurable
@@ -217,9 +210,7 @@ theorem integral_canonicalProjectedAverage_eq_finiteAveragePayoff
           (G.publicHistoryOfChronological history) who‖ ≤ C) :
     (∫ play, canonicalProjectedAverage G initial who play horizon ∂
       infinitePlayMeasure G initial profile) =
-      G.finiteAveragePayoff initial horizon profile who
-        (canonicalProjectedAverage_integrable G initial profile who horizon
-          hobservable_bound) := by
+      G.finiteAveragePayoff initial horizon profile who := by
   let projection :
       (∀ k, PathHistory G initial k) → G.ChronologicalHistory horizon :=
     chronologicalProjection G initial horizon
@@ -237,27 +228,6 @@ theorem integral_canonicalProjectedAverage_eq_finiteAveragePayoff
   have hbound : ∀ history : G.ChronologicalHistory horizon,
       ‖observable history‖ ≤ C := by
     exact hobservable_bound
-  have hchron : PayoffIntegrable
-      (G.chronologicalHistoryLaw initial profile horizon) observable := by
-    apply payoffIntegrable_of_bounded _ _ (C := C)
-    intro history
-    simpa only [Real.norm_eq_abs] using hbound history
-  let hcanonical :=
-    canonicalProjectedAverage_integrable G initial profile who horizon
-      hobservable_bound
-  have hpublic : UtilityIntegrable
-      (G.publicHistoryAverageUtility horizon) who
-      (G.publicHistoryLaw initial profile horizon) :=
-    (G.publicFiniteAverageIntegrable_iff
-      initial horizon profile who).mpr hcanonical
-  have hmap : PayoffIntegrable
-      ((G.chronologicalHistoryLaw initial profile horizon).map
-        G.publicHistoryOfChronological)
-      (fun history => G.publicHistoryAverageUtility horizon history who) := by
-    apply (payoffIntegrable_map_iff G.publicHistoryOfChronological
-      (G.chronologicalHistoryLaw initial profile horizon)
-      (fun history => G.publicHistoryAverageUtility horizon history who)).mpr
-    simpa only [observable, Function.comp_def] using hchron
   calc
     (∫ play, canonicalProjectedAverage G initial who play horizon ∂
         infinitePlayMeasure G initial profile) =
@@ -273,27 +243,24 @@ theorem integral_canonicalProjectedAverage_eq_finiteAveragePayoff
       rw [map_chronologicalProjection_infinitePlayMeasure
         G initial profile horizon]
     _ = expect (G.chronologicalHistoryLaw initial profile horizon)
-        observable hchron :=
-      (expect_eq_integral _ observable hchron).symm
+        observable :=
+      (expect_eq_integral _ observable).symm
     _ = expect
         ((G.chronologicalHistoryLaw initial profile horizon).map
           G.publicHistoryOfChronological)
-        (fun history => G.publicHistoryAverageUtility horizon history who)
-        hmap := by
+        (fun history => G.publicHistoryAverageUtility horizon history who) := by
           symm
           exact expect_map G.publicHistoryOfChronological
             (G.chronologicalHistoryLaw initial profile horizon)
             (fun history => G.publicHistoryAverageUtility horizon history who)
-            (by simpa only [observable, Function.comp_def] using hchron) hmap
-    _ = G.publicFiniteAveragePayoff initial horizon profile who hpublic := by
+    _ = G.publicFiniteAveragePayoff initial horizon profile who := by
       exact expect_congr_law
         (G.map_publicHistoryOfChronological_chronologicalHistoryLaw
           initial profile horizon)
         (fun history => G.publicHistoryAverageUtility horizon history who)
-        hmap hpublic
-    _ = G.finiteAveragePayoff initial horizon profile who hcanonical :=
+    _ = G.finiteAveragePayoff initial horizon profile who :=
       G.publicFiniteAveragePayoff_eq_finiteAveragePayoff
-        initial horizon profile who hpublic hcanonical
+        initial horizon profile who
 
 
 omit [Countable (CanonicalHistory G initial)] in
@@ -310,9 +277,7 @@ theorem integral_canonicalPathAverage_eq_marginal_sum
       if horizon = 0 then 0 else
         (horizon : ℝ)⁻¹ * ∑ n ∈ Finset.range horizon,
           expect (G.chronologicalHistoryLaw initial profile (n + 1))
-            (chronologicalStageUtility G who n)
-            (chronologicalStageUtility_integrable G who n hstage_bound
-              (G.chronologicalHistoryLaw initial profile (n + 1))) := by
+            (chronologicalStageUtility G who n) := by
   classical
   by_cases hhorizon : horizon = 0
   · simp [hhorizon, canonicalPathAverage]
@@ -352,9 +317,7 @@ theorem integral_canonicalPathAverage_eq_finiteAveragePayoff_of_ae_stagewiseCons
           canonicalProjectedAverage G initial who play horizon) :
     (∫ play, canonicalPathAverage G initial who play horizon ∂
       infinitePlayMeasure G initial profile) =
-      G.finiteAveragePayoff initial horizon profile who
-        (canonicalProjectedAverage_integrable G initial profile who horizon
-          hstage_bound) := by
+      G.finiteAveragePayoff initial horizon profile who := by
   rw [integral_congr_ae hstagewise]
   exact integral_canonicalProjectedAverage_eq_finiteAveragePayoff
     G initial profile who horizon hstage_measurable hstage_bound

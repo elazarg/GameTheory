@@ -302,11 +302,9 @@ theorem historyAverageUtility_eq_publicHistoryAverageUtility
 history law. -/
 def publicFiniteAveragePayoff (initial : G.State)
     [∀ i, Nonempty (G.Action i)] (horizon : ℕ)
-    (profile : G.BehaviorProfile initial) (who : ι)
-    (hintegrable : UtilityIntegrable (G.publicHistoryAverageUtility horizon) who
-      (G.publicHistoryLaw initial profile horizon)) : ℝ :=
+    (profile : G.BehaviorProfile initial) (who : ι) : ℝ :=
   expectedUtility (G.publicHistoryAverageUtility horizon) who
-    (G.publicHistoryLaw initial profile horizon) hintegrable
+    (G.publicHistoryLaw initial profile horizon)
 
 /-- Public-history payoff is defined exactly when the compiled history payoff is. -/
 theorem publicFiniteAverageIntegrable_iff (initial : G.State)
@@ -325,13 +323,9 @@ theorem publicFiniteAverageIntegrable_iff (initial : G.State)
 /-- The proof-free evaluator is exactly the canonical finite-average payoff. -/
 theorem publicFiniteAveragePayoff_eq_finiteAveragePayoff
     (initial : G.State) [∀ i, Nonempty (G.Action i)]
-    (horizon : ℕ) (profile : G.BehaviorProfile initial) (who : ι)
-    (hpublic : UtilityIntegrable (G.publicHistoryAverageUtility horizon) who
-      (G.publicHistoryLaw initial profile horizon))
-    (hcanonical : UtilityIntegrable (G.horizonUtility initial horizon) who
-      ((G.horizonForm initial horizon).play profile)) :
-    G.publicFiniteAveragePayoff initial horizon profile who hpublic =
-      G.finiteAveragePayoff initial horizon profile who hcanonical := by
+    (horizon : ℕ) (profile : G.BehaviorProfile initial) (who : ι) :
+    G.publicFiniteAveragePayoff initial horizon profile who =
+      G.finiteAveragePayoff initial horizon profile who := by
   let μ := (G.perfectMonitoring initial).runBehavioral profile horizon
   let projection := fun history : (G.toExecution initial).History =>
     G.publicHistoryOfTrace initial history.trace
@@ -339,18 +333,13 @@ theorem publicFiniteAveragePayoff_eq_finiteAveragePayoff
     G.publicHistoryAverageUtility horizon history who
   let v := fun history : (G.toExecution initial).History =>
     G.horizonUtility initial horizon history who
-  have hp : PayoffIntegrable (μ.map projection) u := hpublic
-  have hpu : PayoffIntegrable μ (u ∘ projection) :=
-    (payoffIntegrable_map_iff projection μ u).mp hp
-  have hv : PayoffIntegrable μ v := by
-    simpa only [G.horizonForm_play] using hcanonical
   have hpoint : ∀ history ∈ μ.support, u (projection history) = v history := by
     intro history _
     exact (G.historyAverageUtility_eq_publicHistoryAverageUtility
       initial horizon history who).symm
-  have heq : expect (μ.map projection) u hp = expect μ v hv :=
-    (expect_map projection μ u hpu hp).trans
-      (expect_congr_on_support hpoint hpu hv)
+  have heq : expect (μ.map projection) u = expect μ v :=
+    (expect_map projection μ u).trans
+      (expect_congr_on_support hpoint)
   exact heq
 
 /-- Uniform deviation-cap certificates can be written entirely with the
@@ -364,19 +353,19 @@ theorem hasUniformDeviationCapConstructor_iff_publicHistoryPayoff
         ∃ (profile : G.BehaviorProfile initial) (threshold : ℕ),
           ∀ horizon, threshold ≤ horizon →
             (∀ who,
-              ∃ hpublic : UtilityIntegrable
+              UtilityIntegrable
                   (G.publicHistoryAverageUtility horizon) who
-                  (G.publicHistoryLaw initial profile horizon),
-                |G.publicFiniteAveragePayoff initial horizon profile who hpublic -
+                  (G.publicHistoryLaw initial profile horizon) ∧
+                |G.publicFiniteAveragePayoff initial horizon profile who -
                   value who| ≤ delta) ∧
             ∀ who (deviation :
               (G.perfectMonitoring initial).BehavioralPolicy who),
-              ∃ hpublic : UtilityIntegrable
+              UtilityIntegrable
                   (G.publicHistoryAverageUtility horizon) who
                   (G.publicHistoryLaw initial
-                    (Profile.update profile who deviation) horizon),
+                    (Profile.update profile who deviation) horizon) ∧
                 G.publicFiniteAveragePayoff initial horizon
-                  (Profile.update profile who deviation) who hpublic ≤
+                  (Profile.update profile who deviation) who ≤
                   value who + delta := by
   unfold HasUniformDeviationCapConstructor
   constructor
@@ -391,7 +380,7 @@ theorem hasUniformDeviationCapConstructor_iff_publicHistoryPayoff
         profile who).2 hcanonical
       refine ⟨hpublic, ?_⟩
       rw [G.publicFiniteAveragePayoff_eq_finiteAveragePayoff
-        initial horizon profile who hpublic hcanonical]
+        initial horizon profile who]
       exact hclose
     · intro who deviation
       obtain ⟨hcanonical, hbound⟩ := hdeviation who deviation
@@ -399,8 +388,7 @@ theorem hasUniformDeviationCapConstructor_iff_publicHistoryPayoff
         (Profile.update profile who deviation) who).2 hcanonical
       refine ⟨hpublic, ?_⟩
       rw [G.publicFiniteAveragePayoff_eq_finiteAveragePayoff
-        initial horizon (Profile.update profile who deviation) who
-        hpublic hcanonical]
+        initial horizon (Profile.update profile who deviation) who]
       exact hbound
   · intro hcertificate delta hdelta
     obtain ⟨profile, threshold, hprofile⟩ := hcertificate delta hdelta
@@ -413,7 +401,7 @@ theorem hasUniformDeviationCapConstructor_iff_publicHistoryPayoff
         profile who).1 hpublic
       refine ⟨hcanonical, ?_⟩
       rw [← G.publicFiniteAveragePayoff_eq_finiteAveragePayoff
-        initial horizon profile who hpublic hcanonical]
+        initial horizon profile who]
       exact hclose
     · intro who deviation
       obtain ⟨hpublic, hbound⟩ := hdeviation who deviation
@@ -421,8 +409,7 @@ theorem hasUniformDeviationCapConstructor_iff_publicHistoryPayoff
         (Profile.update profile who deviation) who).1 hpublic
       refine ⟨hcanonical, ?_⟩
       rw [← G.publicFiniteAveragePayoff_eq_finiteAveragePayoff
-        initial horizon (Profile.update profile who deviation) who
-        hpublic hcanonical]
+        initial horizon (Profile.update profile who deviation) who]
       exact hbound
 
 /-! ## Proof-free restart inputs -/

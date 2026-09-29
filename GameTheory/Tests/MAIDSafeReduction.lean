@@ -29,12 +29,6 @@ open GameTheory.Languages.MAID.ToEFG
 open GameTheory.Languages.MAID.Order
 open GameTheory.Languages.MAID.FrontierEquivalence
 
-local syntax:max "expectedUtility" term:max term:max term:max : term
-local macro_rules
-  | `(expectedUtility $utility $who $law) =>
-      `(GameTheory.expectedUtility $utility $who $law
-        (payoffIntegrable_of_finite $law _))
-
 set_option backward.isDefEq.respectTransparency false in
 inductive Node
   | signal
@@ -79,14 +73,14 @@ def fairSignal : PMF Bool :=
     (PMF.pure false) (PMF.pure true)
 
 theorem fairSignal_expect (score : Bool → ℝ) :
-    expect fairSignal score (payoffIntegrable_of_finite fairSignal score) =
+    expect fairSignal score =
       (score false + score true) / 2 := by
   rw [fairSignal]
   rw [expect_mix (1 / 2) (by norm_num) (by norm_num)
     (PMF.pure false) (PMF.pure true) score
     (payoffIntegrable_pure false score) (payoffIntegrable_pure true score)]
-  rw [expect_pure false score (payoffIntegrable_pure false score),
-    expect_pure true score (payoffIntegrable_pure true score)]
+  rw [expect_pure false score,
+    expect_pure true score]
   norm_num
   ring
 
@@ -211,17 +205,14 @@ theorem irrelevant_expectedUtility (policy : Policy diagram) :
         () ((nativeBehavioralGameForm irrelevantSemantics).play policy) =
       expect fairSignal (fun signal =>
         expect (policy () decisionSite (observedConfig signal))
-          (fun action => if action then 1 else 0)
-          (payoffIntegrable_of_finite _ _))
-        (payoffIntegrable_of_finite _ _) := by
+          (fun action => if action then 1 else 0)) := by
   rw [native_play_eq false]
   rw [expectedUtility_bind
     (fun assignment owner => irrelevantSemantics.utility owner assignment)
     () fairSignal
     (fun signal =>
       (policy () decisionSite (observedConfig signal)).map (assignmentOf signal))
-    (payoffIntegrable_of_finite _ _)
-    (fun signal => payoffIntegrable_of_finite _ _)]
+    (payoffIntegrable_of_finite _ _)]
   apply expect_congr_on_support
   intro signal _
   rw [expectedUtility_map]
@@ -235,17 +226,14 @@ theorem matching_expectedUtility (policy : Policy diagram) :
         () ((nativeBehavioralGameForm matchingSemantics).play policy) =
       expect fairSignal (fun signal =>
         expect (policy () decisionSite (observedConfig signal))
-          (fun action => if action = signal then 1 else 0)
-          (payoffIntegrable_of_finite _ _))
-        (payoffIntegrable_of_finite _ _) := by
+          (fun action => if action = signal then 1 else 0)) := by
   rw [native_play_eq true]
   rw [expectedUtility_bind
     (fun assignment owner => matchingSemantics.utility owner assignment)
     () fairSignal
     (fun signal =>
       (policy () decisionSite (observedConfig signal)).map (assignmentOf signal))
-    (payoffIntegrable_of_finite _ _)
-    (fun signal => payoffIntegrable_of_finite _ _)]
+    (payoffIntegrable_of_finite _ _)]
   apply expect_congr_on_support
   intro signal _
   rw [expectedUtility_map]
@@ -265,23 +253,20 @@ theorem expanded_reduced_ignores_signal (policy : pruning.ReducedPolicy)
 
 /-- The two Boolean match indicators partition probability one. -/
 theorem expect_match_false_add_true (law : PMF Bool) :
-    expect law (fun action => if action = false then 1 else 0)
-        (payoffIntegrable_of_finite law _) +
-        expect law (fun action => if action = true then 1 else 0)
-          (payoffIntegrable_of_finite law _) =
+    expect law (fun action => if action = false then 1 else 0) +
+        expect law (fun action => if action = true then 1 else 0) =
       1 := by
   rw [← expect_add (payoffIntegrable_of_finite law _)
     (payoffIntegrable_of_finite law _)]
   calc
     expect law (fun action =>
         (if action = false then 1 else 0) +
-          (if action = true then 1 else 0))
-        (payoffIntegrable_of_finite law _) =
-        expect law (fun _ => 1) (payoffIntegrable_of_finite law _) := by
+          (if action = true then 1 else 0)) =
+        expect law (fun _ => 1) := by
       apply expect_congr_on_support
       intro action _
       cases action <;> norm_num
-    _ = 1 := expect_constant law 1 (payoffIntegrable_of_finite law _)
+    _ = 1 := expect_constant law 1
 
 /-- Signal-blind policies earn exactly one half when payoff rewards matching. -/
 theorem matching_expanded_reduced_expectedUtility
@@ -313,9 +298,9 @@ theorem irrelevant_expectedUtility_le_one (policy : Policy diagram) :
         () ((nativeBehavioralGameForm irrelevantSemantics).play policy) ≤
       1 := by
   rw [irrelevant_expectedUtility]
-  apply expect_le_const
+  apply expect_le_const _ _ (payoffIntegrable_of_finite _ _)
   intro signal _
-  apply expect_le_const
+  apply expect_le_const _ _ (payoffIntegrable_of_finite _ _)
   intro action _
   cases action <;> norm_num
 
@@ -470,9 +455,7 @@ theorem matching_expanded_false_not_isNash :
           (pruning.expandPolicy (reducedPure false)) := rfl
   have hbase' := expectedUtility_congr_law
     (fun assignment owner => matchingSemantics.utility owner assignment) ()
-    hbaseLaw hbase (payoffIntegrable_of_finite
-      ((nativeBehavioralGameForm matchingSemantics).play
-        (pruning.expandPolicy (reducedPure false))) _)
+    hbaseLaw
   have hcopyLaw :
       (nativeBehavioralGameForm matchingSemantics).play
           (Profile.update (pruning.expandPolicy (reducedPure false)) ()
@@ -482,8 +465,7 @@ theorem matching_expanded_false_not_isNash :
       update_expanded_false_to_copy
   have hcopy' := expectedUtility_congr_law
     (fun assignment owner => matchingSemantics.utility owner assignment) ()
-    hcopyLaw hcopy (payoffIntegrable_of_finite
-      ((nativeBehavioralGameForm matchingSemantics).play fullCopySignal) _)
+    hcopyLaw
   rw [hcopy', hbase', matching_copy_expectedUtility,
     matching_expanded_reduced_expectedUtility] at hle
   norm_num at hle

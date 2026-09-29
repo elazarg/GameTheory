@@ -82,9 +82,7 @@ theorem summable_expect_of_majorant {α : Type*} (μ : PMF α)
     (hsum : Summable majorant)
     (hbound : ∀ n, ∀ a ∈ μ.support, |term n a| ≤ majorant n) :
     Summable fun n =>
-      expect μ (term n)
-        (payoffIntegrable_of_bounded_on_support μ (term n)
-          (hbound n)) := by
+      expect μ (term n) := by
   have hprod := summable_weight_term μ term majorant
     hsum hbound
   simpa [expect] using hprod.prod_symm.prod
@@ -96,18 +94,12 @@ theorem expect_tsum_of_majorant {α : Type*} (μ : PMF α)
     (term : ℕ → α → ℝ) (majorant : ℕ → ℝ)
     (hsum : Summable majorant)
     (hbound : ∀ n, ∀ a ∈ μ.support, |term n a| ≤ majorant n) :
-    (∑' n, expect μ (term n)
-      (payoffIntegrable_of_bounded_on_support μ (term n)
-        (hbound n))) =
-      expect μ (fun a => ∑' n, term n a)
-        (payoffIntegrable_tsum_of_majorant μ term majorant
-          hsum hbound) := by
+    (∑' n, expect μ (term n)) =
+      expect μ (fun a => ∑' n, term n a) := by
   have hprod := summable_weight_term μ term majorant
     hsum hbound
   calc
-    (∑' n, expect μ (term n)
-        (payoffIntegrable_of_bounded_on_support μ (term n)
-          (hbound n))) =
+    (∑' n, expect μ (term n)) =
         ∑' n, ∑' a, (μ a).toReal * term n a := rfl
     _ = ∑' a, ∑' n, (μ a).toReal * term n a :=
       hprod.tsum_comm
@@ -119,8 +111,6 @@ theorem expect_tsum_of_majorant {α : Type*} (μ : PMF α)
           hsum hbound a ha).tsum_mul_left (μ a).toReal
       · have hzero : μ a = 0 := not_ne_iff.mp ha
         simp [hzero]
-    _ = expect μ (fun a => ∑' n, term n a)
-        (payoffIntegrable_tsum_of_majorant μ term majorant
-          hsum hbound) := rfl
+    _ = expect μ (fun a => ∑' n, term n a) := rfl
 
 end GameTheory.Math.Probability

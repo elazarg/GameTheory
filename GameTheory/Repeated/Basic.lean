@@ -110,54 +110,45 @@ theorem repeatedPlay_update_stationaryRepeatedProfile
 
 /-- Expected payoff of one chosen stage profile. -/
 def stagePayoff (G : UtilityGame ι) (profile : Profile G.form.sig)
-    (who : ι)
-    (hstage : UtilityIntegrable G.utility who (G.form.play profile)) : ℝ :=
-  expectedUtility G.utility who (G.form.play profile) hstage
+    (who : ι) : ℝ :=
+  expectedUtility G.utility who (G.form.play profile)
 
 /-- Average expected payoff over the first `T` generated stages. -/
 def finiteAveragePayoff (G : UtilityGame ι) (T : ℕ)
-    (profile : G.RepeatedProfile) (who : ι)
-    (hstage : ∀ t < T,
-      UtilityIntegrable G.utility who (G.form.play (G.repeatedPlay profile t))) : ℝ :=
+    (profile : G.RepeatedProfile) (who : ι) : ℝ :=
   (T : ℝ)⁻¹ *
     ∑ t : Fin T,
-      G.stagePayoff (G.repeatedPlay profile t) who (hstage t t.isLt)
+      G.stagePayoff (G.repeatedPlay profile t) who
 
 @[simp]
 theorem finiteAveragePayoff_one (G : UtilityGame ι)
-    (profile : G.RepeatedProfile) (who : ι)
-    (hstage : ∀ t < 1,
-      UtilityIntegrable G.utility who (G.form.play (G.repeatedPlay profile t))) :
-    G.finiteAveragePayoff 1 profile who hstage =
-      G.stagePayoff (G.repeatedPlay profile 0) who (hstage 0 (by omega)) := by
+    (profile : G.RepeatedProfile) (who : ι) :
+    G.finiteAveragePayoff 1 profile who =
+      G.stagePayoff (G.repeatedPlay profile 0) who := by
   simp [finiteAveragePayoff]
 
 /-- A nonempty finite average of stationary play is its stage payoff. -/
 theorem finiteAveragePayoff_stationaryRepeatedProfile
     (G : UtilityGame ι) {T : ℕ} (hT : T ≠ 0)
-    (profile : Profile G.form.sig) (who : ι)
-    (hstage : UtilityIntegrable G.utility who (G.form.play profile)) :
-    G.finiteAveragePayoff T (G.stationaryRepeatedProfile profile) who
-      (fun t _ => by simpa using hstage) =
-      G.stagePayoff profile who hstage := by
+    (profile : Profile G.form.sig) (who : ι) :
+    G.finiteAveragePayoff T (G.stationaryRepeatedProfile profile) who =
+      G.stagePayoff profile who := by
   have hT' : (T : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr hT
   simp only [finiteAveragePayoff]
   have hsum :
       (∑ t : Fin T,
         G.stagePayoff
-          (G.repeatedPlay (G.stationaryRepeatedProfile profile) t) who
-          (by simpa using hstage)) =
-        (T : ℝ) * G.stagePayoff profile who hstage := by
+          (G.repeatedPlay (G.stationaryRepeatedProfile profile) t) who) =
+        (T : ℝ) * G.stagePayoff profile who := by
     calc
       (∑ t : Fin T,
         G.stagePayoff
-          (G.repeatedPlay (G.stationaryRepeatedProfile profile) t) who
-          (by simpa using hstage)) =
-          ∑ _t : Fin T, G.stagePayoff profile who hstage := by
+          (G.repeatedPlay (G.stationaryRepeatedProfile profile) t) who) =
+          ∑ _t : Fin T, G.stagePayoff profile who := by
         apply Finset.sum_congr rfl
         intro t _
         simp only [G.repeatedPlay_stationaryRepeatedProfile]
-      _ = (T : ℝ) * G.stagePayoff profile who hstage := by
+      _ = (T : ℝ) * G.stagePayoff profile who := by
         rw [Finset.sum_const, Finset.card_fin, nsmul_eq_mul]
   rw [hsum, ← mul_assoc, inv_mul_cancel₀ hT', one_mul]
 
@@ -165,15 +156,13 @@ theorem finiteAveragePayoff_stationaryRepeatedProfile
 theorem finiteAveragePayoff_le_of_forall_stagePayoff_le
     (G : UtilityGame ι) {profile : G.RepeatedProfile} {bound : ℝ}
     {who : ι} {T : ℕ}
-    (hstage : ∀ t < T,
-      UtilityIntegrable G.utility who (G.form.play (G.repeatedPlay profile t)))
     (hle : ∀ t : Fin T,
-      G.stagePayoff (G.repeatedPlay profile t) who (hstage t t.isLt) ≤ bound)
+      G.stagePayoff (G.repeatedPlay profile t) who ≤ bound)
     (hT : T ≠ 0) :
-    G.finiteAveragePayoff T profile who hstage ≤ bound := by
+    G.finiteAveragePayoff T profile who ≤ bound := by
   have hT' : (T : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr hT
   calc
-    G.finiteAveragePayoff T profile who hstage ≤
+    G.finiteAveragePayoff T profile who ≤
         (T : ℝ)⁻¹ * ∑ _t : Fin T, bound := by
       unfold finiteAveragePayoff
       gcongr with t _
@@ -186,31 +175,24 @@ theorem finiteAveragePayoff_le_of_forall_stagePayoff_le
 averages converge coordinatewise. -/
 def HasLongRunAveragePayoff (G : UtilityGame ι)
     (profile : G.RepeatedProfile)
-    (hstage : ∀ t who,
-      UtilityIntegrable G.utility who (G.form.play (G.repeatedPlay profile t)))
     (value : ι → ℝ) : Prop :=
   ∀ who, Filter.Tendsto (fun horizon =>
-    G.finiteAveragePayoff horizon profile who
-      (fun t _ => hstage t who))
+    G.finiteAveragePayoff horizon profile who)
       Filter.atTop (nhds (value who))
 
 /-- Stationary repetition converges to its stage payoff. -/
 theorem hasLongRunAveragePayoff_stationaryRepeatedProfile
-    (G : UtilityGame ι) (profile : Profile G.form.sig)
-    (hstage : ∀ who,
-      UtilityIntegrable G.utility who (G.form.play profile)) :
+    (G : UtilityGame ι) (profile : Profile G.form.sig) :
     G.HasLongRunAveragePayoff (G.stationaryRepeatedProfile profile)
-      (fun t who => by simpa using hstage who)
-      (fun who => G.stagePayoff profile who (hstage who)) := by
+      (fun who => G.stagePayoff profile who) := by
   intro who
   have heventually :
-      (fun _ : ℕ => G.stagePayoff profile who (hstage who)) =ᶠ[Filter.atTop]
+      (fun _ : ℕ => G.stagePayoff profile who) =ᶠ[Filter.atTop]
         fun horizon => G.finiteAveragePayoff horizon
-          (G.stationaryRepeatedProfile profile) who
-          (fun t _ => by simpa using hstage who) := by
+          (G.stationaryRepeatedProfile profile) who := by
     filter_upwards [Filter.eventually_ge_atTop 1] with horizon hhorizon
     exact (G.finiteAveragePayoff_stationaryRepeatedProfile
-      (by omega) profile who (hstage who)).symm
+      (by omega) profile who).symm
   exact Filter.Tendsto.congr' heventually tendsto_const_nhds
 
 end UtilityGame

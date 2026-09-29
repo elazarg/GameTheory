@@ -29,52 +29,42 @@ variable {ι : Type uι} [Fintype ι] [DecidableEq ι] {F : GameForm ι}
 variable [∀ i, Fintype (F.sig.Strategy i)]
 
 variable {utility : F.sig.Outcome → ι → ℝ}
-variable (pureIntegrable : F.HasIntegrableUtility utility)
 
 variable (F) in
 /-- The expected utility of a mixed profile, written as a polynomial in the
 players' weight vectors. -/
 def payoff (utility : F.sig.Outcome → ι → ℝ)
-    (pureIntegrable : F.HasIntegrableUtility utility)
     (who : ι) (x : Profile F.sig.weights) : ℝ :=
   ∑ s : Profile F.sig, (∏ i, x i (s i)) *
-    expectedUtility utility who (F.play s) (pureIntegrable who s)
-
-variable {pureIntegrable : F.HasIntegrableUtility utility}
+    expectedUtility utility who (F.play s)
 
 /-- On the weights of an actual mixed profile the polynomial *is* the expected
 utility. Everything proved about the polynomial therefore transfers back. -/
-theorem payoff_probs (μ : Profile F.sig.mixed) (who : ι) :
-    payoff F utility pureIntegrable who (probs F.sig μ) =
-      expectedUtility utility who (F.mixed.play μ)
-        ((GameForm.HasIntegrableUtility.mixed_of_finite pureIntegrable) who μ) := by
+theorem payoff_probs (pureIntegrable : F.HasIntegrableUtility utility)
+    (μ : Profile F.sig.mixed) (who : ι) :
+    payoff F utility who (probs F.sig μ) =
+      expectedUtility utility who (F.mixed.play μ) := by
   let product := independentProduct μ
   let hmixed := (GameForm.HasIntegrableUtility.mixed_of_finite pureIntegrable) who μ
   have hbind : UtilityIntegrable utility who (product.bind F.play) := by
     simpa only [product, GameTheory.GameForm.mixed_play] using hmixed
-  let houter : PayoffIntegrable product
-      (fun s => expectedUtility utility who (F.play s) (pureIntegrable who s)) :=
-    payoffIntegrable_of_finite product _
   calc
-    payoff F utility pureIntegrable who (probs F.sig μ) =
+    payoff F utility who (probs F.sig μ) =
         expect product
-          (fun s => expectedUtility utility who (F.play s) (pureIntegrable who s))
-          houter := by
+          (fun s => expectedUtility utility who (F.play s)) := by
       unfold payoff
       rw [expect_eq_sum]
       simp [product, independentProduct_apply, ENNReal.toReal_prod, probs]
-    _ = expectedUtility utility who (product.bind F.play) hbind := by
+    _ = expectedUtility utility who (product.bind F.play) := by
       symm
       exact expectedUtility_bind utility who product F.play hbind
-        (pureIntegrable who)
-    _ = expectedUtility utility who (F.mixed.play μ) hmixed := by
-      exact expectedUtility_congr_law utility who rfl hbind hmixed
+    _ = expectedUtility utility who (F.mixed.play μ) := by
+      exact expectedUtility_congr_law utility who rfl
 
 /-- The polynomial is continuous, being a finite sum of finite products of
 coordinates. -/
-theorem continuous_payoff (pureIntegrable :
-    F.HasIntegrableUtility utility)
-    (who : ι) : Continuous (payoff F utility pureIntegrable who) :=
+theorem continuous_payoff
+    (who : ι) : Continuous (payoff F utility who) :=
   continuous_finsetSum _ fun s _ =>
     (continuous_finsetProd _ fun i _ =>
       (continuous_apply (s i)).comp (continuous_apply i)).mul continuous_const
@@ -101,19 +91,19 @@ theorem prod_update (x : Profile F.sig.weights) (who : ι) (v : F.sig.Strategy w
 /-- **The payoff is linear in the deviator's own weights**: their weight on a
 strategy multiplies a coefficient that does not mention it. -/
 theorem payoff_update (x : Profile F.sig.weights) (who : ι) (v : F.sig.Strategy who → ℝ) :
-    payoff F utility pureIntegrable who (Profile.update x who v) =
+    payoff F utility who (Profile.update x who v) =
       ∑ s : Profile F.sig, v (s who) *
         ((∏ i ∈ Finset.univ.erase who, x i (s i)) *
-          expectedUtility utility who (F.play s) (pureIntegrable who s)) := by
+          expectedUtility utility who (F.play s)) := by
   exact Finset.sum_congr rfl fun s _ => by rw [prod_update, mul_assoc]
 
 /-- Hence the deviator's payoff, as a function of their own weights, is affine —
 which is all the convexity argument uses. -/
 theorem payoff_update_mix (x : Profile F.sig.weights) (who : ι)
     (v w : F.sig.Strategy who → ℝ) (a b : ℝ) :
-    payoff F utility pureIntegrable who (Profile.update x who (a • v + b • w)) =
-      a * payoff F utility pureIntegrable who (Profile.update x who v) +
-        b * payoff F utility pureIntegrable who (Profile.update x who w) := by
+    payoff F utility who (Profile.update x who (a • v + b • w)) =
+      a * payoff F utility who (Profile.update x who v) +
+        b * payoff F utility who (Profile.update x who w) := by
   simp only [payoff_update, Finset.mul_sum, ← Finset.sum_add_distrib]
   refine Finset.sum_congr rfl fun s _ => ?_
   show (a * v (s who) + b * w (s who)) * _ = _

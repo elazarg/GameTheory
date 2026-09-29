@@ -61,14 +61,12 @@ theorem selective_stopping_bound
         if stops then quit state else proceed state) utility)
     (hproceed : PayoffIntegrable (states.bind proceed) utility)
     (hmargin : ∀ state ∈ states.support, true ∈ (stop state).support →
-      ∀ (hquit : PayoffIntegrable (quit state) utility)
-        (hcontinue : PayoffIntegrable (proceed state) utility),
-      expect (quit state) utility hquit + margin ≤
-        expect (proceed state) utility hcontinue) :
+      PayoffIntegrable (quit state) utility → PayoffIntegrable (proceed state) utility →
+      expect (quit state) utility + margin ≤ expect (proceed state) utility) :
     expect (states.bind fun state => (stop state).bind fun stops =>
-      if stops then quit state else proceed state) utility hselected +
+      if stops then quit state else proceed state) utility +
       margin * ((states.bind stop).toOuterMeasure {true}).toReal ≤
-    expect (states.bind proceed) utility hproceed := by
+    expect (states.bind proceed) utility := by
   classical
   let decisions := decisionLaw states stop
   let selected := selectedKernel quit proceed
@@ -83,24 +81,12 @@ theorem selective_stopping_bound
     payoffIntegrable_congr_law hselectedLaw.symm hselected
   have hp : PayoffIntegrable (decisions.bind continuing) utility :=
     payoffIntegrable_congr_law hproceedLaw.symm hproceed
-  let selectedValue := extendFromSupport decisions (fun d hd =>
-    expect (selected d) utility
-      (payoffIntegrable_bind_conditional_on_support decisions selected utility hs d hd))
-  let proceedValue := extendFromSupport decisions (fun d hd =>
-    expect (continuing d) utility
-      (payoffIntegrable_bind_conditional_on_support decisions continuing utility hp d hd))
-  have hselectedValue : ∀ d, ∀ hd : d ∈ decisions.support,
-      selectedValue d = expect (selected d) utility
-        (payoffIntegrable_bind_conditional_on_support
-          decisions selected utility hs d hd) := by
-    intro d hd
-    simp [selectedValue, extendFromSupport, hd]
-  have hproceedValue : ∀ d, ∀ hd : d ∈ decisions.support,
-      proceedValue d = expect (continuing d) utility
-        (payoffIntegrable_bind_conditional_on_support
-          decisions continuing utility hp d hd) := by
-    intro d hd
-    simp [proceedValue, extendFromSupport, hd]
+  let selectedValue : State × Bool → ℝ := fun d => expect (selected d) utility
+  let proceedValue : State × Bool → ℝ := fun d => expect (continuing d) utility
+  have hselectedValue : ∀ d ∈ decisions.support,
+      selectedValue d = expect (selected d) utility := fun _ _ => rfl
+  have hproceedValue : ∀ d ∈ decisions.support,
+      proceedValue d = expect (continuing d) utility := fun _ _ => rfl
   have hsi : PayoffIntegrable decisions selectedValue :=
     payoffIntegrable_bind_conditionalValue_on_support
       decisions selected utility hs selectedValue hselectedValue
@@ -108,8 +94,8 @@ theorem selective_stopping_bound
     payoffIntegrable_bind_conditionalValue_on_support
       decisions continuing utility hp proceedValue hproceedValue
   let event : Set (State × Bool) := {d | d.2 = true}
-  have hbound : expect decisions selectedValue hsi ≤
-      expect decisions proceedValue hpi -
+  have hbound : expect decisions selectedValue ≤
+      expect decisions proceedValue -
         margin * (decisions.toOuterMeasure event).toReal := by
     have hgap := expect_le_add_event_gap decisions event
       proceedValue selectedValue (-margin) hpi hsi
@@ -117,7 +103,7 @@ theorem selective_stopping_bound
         intro d hd hnot
         have hfalse : d.2 = false := by
           cases hd' : d.2 <;> simp [event, hd'] at hnot ⊢
-        simp only [selectedValue, proceedValue, extendFromSupport, hd,
+        simp only [selectedValue, proceedValue,
           selected, continuing, selectedKernel, proceedKernel, hfalse]
         exact le_rfl)
       (by
@@ -144,7 +130,7 @@ theorem selective_stopping_bound
               decisions continuing utility hp d hd
         have hpoint := hmargin d.1 hsupport.1 hstops hquit hcontinue
         have hvalue : selectedValue d + margin ≤ proceedValue d := by
-          simpa [selectedValue, proceedValue, extendFromSupport, hd,
+          simpa [selectedValue, proceedValue,
             selected, continuing, selectedKernel, proceedKernel, htrue]
             using hpoint
         linarith)
@@ -158,12 +144,12 @@ theorem selective_stopping_bound
   have hptower := expect_bind_tower_on_support decisions continuing utility hp
     proceedValue hproceedValue
   have hsexpect : expect (states.bind fun state => (stop state).bind fun stops =>
-        if stops then quit state else proceed state) utility hselected =
-      expect decisions selectedValue hsi := by
-    exact (expect_congr_law hselectedLaw.symm utility hselected hs).trans hstower
-  have hpexpect : expect (states.bind proceed) utility hproceed =
-      expect decisions proceedValue hpi := by
-    exact (expect_congr_law hproceedLaw.symm utility hproceed hp).trans hptower
+        if stops then quit state else proceed state) utility =
+      expect decisions selectedValue := by
+    exact (expect_congr_law hselectedLaw.symm utility).trans hstower
+  have hpexpect : expect (states.bind proceed) utility =
+      expect decisions proceedValue := by
+    exact (expect_congr_law hproceedLaw.symm utility).trans hptower
   rw [hsexpect, hpexpect, ← hevent]
   linarith
 
@@ -177,13 +163,11 @@ theorem selective_stopping_le
         if stops then quit state else proceed state) utility)
     (hproceed : PayoffIntegrable (states.bind proceed) utility)
     (hcontinue : ∀ state ∈ states.support, true ∈ (stop state).support →
-      ∀ (hquit : PayoffIntegrable (quit state) utility)
-        (hproceedState : PayoffIntegrable (proceed state) utility),
-      expect (quit state) utility hquit ≤
-        expect (proceed state) utility hproceedState) :
+      PayoffIntegrable (quit state) utility → PayoffIntegrable (proceed state) utility →
+      expect (quit state) utility ≤ expect (proceed state) utility) :
     expect (states.bind fun state => (stop state).bind fun stops =>
-      if stops then quit state else proceed state) utility hselected ≤
-    expect (states.bind proceed) utility hproceed := by
+      if stops then quit state else proceed state) utility ≤
+    expect (states.bind proceed) utility := by
   simpa using selective_stopping_bound states stop quit proceed utility 0
     hselected hproceed (fun state hs ht hq hp => by
       simpa using hcontinue state hs ht hq hp)
@@ -198,15 +182,13 @@ theorem selective_stopping_lt
         if stops then quit state else proceed state) utility)
     (hproceed : PayoffIntegrable (states.bind proceed) utility)
     (hmargin : ∀ state ∈ states.support, true ∈ (stop state).support →
-      ∀ (hquit : PayoffIntegrable (quit state) utility)
-        (hproceedState : PayoffIntegrable (proceed state) utility),
-      expect (quit state) utility hquit + margin ≤
-        expect (proceed state) utility hproceedState)
+      PayoffIntegrable (quit state) utility → PayoffIntegrable (proceed state) utility →
+      expect (quit state) utility + margin ≤ expect (proceed state) utility)
     (hpositive : 0 < margin)
     (hstops : 0 < ((states.bind stop).toOuterMeasure {true}).toReal) :
     expect (states.bind fun state => (stop state).bind fun stops =>
-      if stops then quit state else proceed state) utility hselected <
-    expect (states.bind proceed) utility hproceed := by
+      if stops then quit state else proceed state) utility <
+    expect (states.bind proceed) utility := by
   have hbound := selective_stopping_bound states stop quit proceed utility margin
     hselected hproceed hmargin
   have hcost := mul_pos hpositive hstops
@@ -223,7 +205,7 @@ theorem stopIndicator_integrable (law : PMF State) (stopped : State → Bool) :
   cases hstop : stopped state <;> norm_num [stopIndicator, hstop]
 
 theorem expect_stopIndicator (law : PMF State) (stopped : State → Bool) :
-    expect law (stopIndicator stopped) (stopIndicator_integrable law stopped) =
+    expect law (stopIndicator stopped) =
       ((law.map stopped).toOuterMeasure {true}).toReal := by
   classical
   let event : Set State := {state | stopped state = true}
@@ -232,17 +214,12 @@ theorem expect_stopIndicator (law : PMF State) (stopped : State → Bool) :
         (@ite ℝ (state ∈ event) (Classical.propDecidable _) 1 0) := by
     intro state _
     cases hstop : stopped state <;> simp [stopIndicator, event, hstop]
-  have hind : PayoffIntegrable law
-      (fun state => @ite ℝ (state ∈ event) (Classical.propDecidable _) 1 0) := by
-    exact payoffIntegrable_congr_on_support hvalue
-      (stopIndicator_integrable law stopped)
   calc
-    expect law (stopIndicator stopped) (stopIndicator_integrable law stopped) =
+    expect law (stopIndicator stopped) =
         expect law
-          (fun state => @ite ℝ (state ∈ event) (Classical.propDecidable _) 1 0)
-          hind :=
-      expect_congr_on_support hvalue _ _
-    _ = (law.toOuterMeasure event).toReal := expect_indicator law event hind
+          (fun state => @ite ℝ (state ∈ event) (Classical.propDecidable _) 1 0) :=
+      expect_congr_on_support hvalue
+    _ = (law.toOuterMeasure event).toReal := expect_indicator law event
     _ = ((law.map stopped).toOuterMeasure {true}).toReal := by
       rw [PMF.toOuterMeasure_map_apply]
       rfl
@@ -263,20 +240,18 @@ theorem stoppingCharge_integrable (law : PMF State) (stopped : State → Bool)
 theorem expect_stoppingCharge (law : PMF State) (stopped : State → Bool)
     (target : State → ℝ) (margin : ℝ)
     (htarget : PayoffIntegrable law target) :
-    expect law (stoppingCharge stopped target margin)
-      (stoppingCharge_integrable law stopped target margin htarget) =
-    expect law target htarget +
+    expect law (stoppingCharge stopped target margin) =
+    expect law target +
       margin * ((law.map stopped).toOuterMeasure {true}).toReal := by
-  rw [show expect law (stoppingCharge stopped target margin)
-      (stoppingCharge_integrable law stopped target margin htarget) =
-      expect law target htarget +
+  rw [show expect law (stoppingCharge stopped target margin) =
+      expect law target +
         margin * expect law (stopIndicator stopped)
-          (stopIndicator_integrable law stopped) by
+           by
     unfold stoppingCharge
     rw [expect_add htarget
       (payoffIntegrable_const_mul (c := margin)
         (stopIndicator_integrable law stopped))]
-    rw [expect_const_mul (c := margin) (stopIndicator_integrable law stopped)]]
+    rw [expect_const_mul (c := margin)]]
   rw [expect_stopIndicator]
 
 /-- Fiberwise comparison of the charged target against the source gives the
@@ -289,14 +264,11 @@ theorem stopping_information_fiber_bound {Information : Type*}
     (htarget : PayoffIntegrable law targetValue)
     (hfiber : ∀ observed ∈ (law.map information).support,
       expect law ((information ⁻¹' {observed}).indicator
-        (stoppingCharge stopped targetValue margin))
-        (payoffIntegrable_indicator (information ⁻¹' {observed})
-          (stoppingCharge_integrable law stopped targetValue margin htarget)) ≤
-      expect law ((information ⁻¹' {observed}).indicator sourceValue)
-        (payoffIntegrable_indicator (information ⁻¹' {observed}) hsource)) :
-    expect law targetValue htarget +
+        (stoppingCharge stopped targetValue margin)) ≤
+      expect law ((information ⁻¹' {observed}).indicator sourceValue)) :
+    expect law targetValue +
       margin * ((law.map stopped).toOuterMeasure {true}).toReal ≤
-    expect law sourceValue hsource := by
+    expect law sourceValue := by
   rw [← expect_stoppingCharge law stopped targetValue margin htarget]
   apply expect_le_of_fiber_expect_le law information sourceValue
     (stoppingCharge stopped targetValue margin) hsource
@@ -306,19 +278,13 @@ theorem stopping_information_fiber_bound {Information : Type*}
   let fiber : Set State := information ⁻¹' {observed}
   calc
     expect law (fun state => if state ∈ fiber then
-        stoppingCharge stopped targetValue margin state else 0)
-        (payoffIntegrable_indicator fiber
-          (stoppingCharge_integrable law stopped targetValue margin htarget)) =
-      expect law (fiber.indicator (stoppingCharge stopped targetValue margin))
-        (payoffIntegrable_indicator fiber
-          (stoppingCharge_integrable law stopped targetValue margin htarget)) := by
+        stoppingCharge stopped targetValue margin state else 0) =
+      expect law (fiber.indicator (stoppingCharge stopped targetValue margin)) := by
         apply expect_congr_on_support
         intro state _
         by_cases hstate : state ∈ fiber <;> simp [Set.indicator, hstate]
-    _ ≤ expect law (fiber.indicator sourceValue)
-        (payoffIntegrable_indicator fiber hsource) := hfiber observed hs
-    _ = expect law (fun state => if state ∈ fiber then sourceValue state else 0)
-        (payoffIntegrable_indicator fiber hsource) := by
+    _ ≤ expect law (fiber.indicator sourceValue) := hfiber observed hs
+    _ = expect law (fun state => if state ∈ fiber then sourceValue state else 0) := by
         apply expect_congr_on_support
         intro state _
         by_cases hstate : state ∈ fiber <;> simp [Set.indicator, hstate]
@@ -338,14 +304,11 @@ theorem stopping_information_fiber_bound_of_stopped {Information : Type*}
       let stoppedFiber : Set State :=
         {state | information state = observed ∧ stopped state = true}
       expect law (stoppedFiber.indicator
-        (stoppingCharge stopped targetValue margin))
-        (payoffIntegrable_indicator stoppedFiber
-          (stoppingCharge_integrable law stopped targetValue margin htarget)) ≤
-      expect law (stoppedFiber.indicator sourceValue)
-        (payoffIntegrable_indicator stoppedFiber hsource)) :
-    expect law targetValue htarget +
+        (stoppingCharge stopped targetValue margin)) ≤
+      expect law (stoppedFiber.indicator sourceValue)) :
+    expect law targetValue +
       margin * ((law.map stopped).toOuterMeasure {true}).toReal ≤
-    expect law sourceValue hsource := by
+    expect law sourceValue := by
   classical
   apply stopping_information_fiber_bound law stopped information
     sourceValue targetValue margin hsource htarget
@@ -356,11 +319,9 @@ theorem stopping_information_fiber_bound_of_stopped {Information : Type*}
   let continuedFiber : Set State :=
     {state | information state = observed ∧ stopped state = false}
   have hsplit (f : State → ℝ) (hf : PayoffIntegrable law f) :
-      expect law (fiber.indicator f) (payoffIntegrable_indicator fiber hf) =
-        expect law (stoppedFiber.indicator f)
-          (payoffIntegrable_indicator stoppedFiber hf) +
-        expect law (continuedFiber.indicator f)
-          (payoffIntegrable_indicator continuedFiber hf) := by
+      expect law (fiber.indicator f) =
+        expect law (stoppedFiber.indicator f) +
+        expect law (continuedFiber.indicator f) := by
     have hpoint (state : State) :
         fiber.indicator f state =
           stoppedFiber.indicator f state +
@@ -370,23 +331,20 @@ theorem stopping_information_fiber_bound_of_stopped {Information : Type*}
           simp [fiber, stoppedFiber, continuedFiber, hinfo, hstop]
       · simp [fiber, stoppedFiber, continuedFiber, hinfo]
     calc
-      expect law (fiber.indicator f) (payoffIntegrable_indicator fiber hf) =
+      expect law (fiber.indicator f) =
         expect law (fun state =>
-          stoppedFiber.indicator f state + continuedFiber.indicator f state)
-          (payoffIntegrable_add
-            (payoffIntegrable_indicator stoppedFiber hf)
-            (payoffIntegrable_indicator continuedFiber hf)) := by
-              exact expect_congr_on_support (fun state _ => hpoint state) _ _
-      _ = _ := expect_add _ _
+          stoppedFiber.indicator f state + continuedFiber.indicator f state) := by
+              exact expect_congr_on_support (fun state _ => hpoint state)
+      _ = _ := expect_add (payoffIntegrable_indicator _ hf)
+        (payoffIntegrable_indicator _ hf)
   have hcontinued :
       expect law (continuedFiber.indicator
-        (stoppingCharge stopped targetValue margin))
-        (payoffIntegrable_indicator continuedFiber
-          (stoppingCharge_integrable law stopped targetValue margin htarget)) ≤
-      expect law (continuedFiber.indicator sourceValue)
-        (payoffIntegrable_indicator continuedFiber hsource) := by
-    apply expect_mono
-    intro state hstate
+        (stoppingCharge stopped targetValue margin)) ≤
+      expect law (continuedFiber.indicator sourceValue) := by
+    refine expect_mono (fun state hstate => ?_)
+      (payoffIntegrable_indicator _
+        (stoppingCharge_integrable law stopped targetValue margin htarget))
+      (payoffIntegrable_indicator _ hsource)
     by_cases hc : state ∈ continuedFiber
     · have hfalse : stopped state = false := hc.2
       simp only [Set.indicator_of_mem hc, stoppingCharge,
@@ -399,147 +357,114 @@ theorem stopping_information_fiber_bound_of_stopped {Information : Type*}
     hsplit sourceValue hsource]
   exact add_le_add (hstopped observed hs) hcontinued
 
-/-- The fully informed branch value on reached states, extended by zero
-elsewhere. Both candidate branches must be defined where a decision occurs. -/
-def informedStoppingValue (states : PMF State)
-    (quit proceed : State → PMF Outcome) (utility : Outcome → ℝ)
-    (hquit : ∀ state ∈ states.support, PayoffIntegrable (quit state) utility)
-    (hproceed : ∀ state ∈ states.support,
-      PayoffIntegrable (proceed state) utility) : State → ℝ :=
-  extendFromSupport states (fun state hs =>
-    max (expect (quit state) utility (hquit state hs))
-      (expect (proceed state) utility (hproceed state hs)))
+/-- The fully informed branch value: the better of the two branches. -/
+def informedStoppingValue (quit proceed : State → PMF Outcome) (utility : Outcome → ℝ) :
+    State → ℝ :=
+  fun state => max (expect (quit state) utility) (expect (proceed state) utility)
 
 /-- The best informed stopping policy takes the better branch at every
 reached state. All policies in the comparison family have defined payoffs. -/
 theorem selective_stopping_optimal
     (states : PMF State) (quit proceed : State → PMF Outcome)
     (utility : Outcome → ℝ)
-    (hquit : ∀ state ∈ states.support, PayoffIntegrable (quit state) utility)
-    (hproceed : ∀ state ∈ states.support,
-      PayoffIntegrable (proceed state) utility)
-    (hvalue : PayoffIntegrable states
-      (informedStoppingValue states quit proceed utility hquit hproceed))
+    (hvalue : PayoffIntegrable states (informedStoppingValue quit proceed utility))
     (hall : ∀ stop : State → PMF Bool, PayoffIntegrable
       (states.bind fun state => (stop state).bind fun stops =>
         if stops then quit state else proceed state) utility) :
     ∃ stop : State → PMF Bool,
       expect (states.bind fun state => (stop state).bind fun stops =>
-        if stops then quit state else proceed state) utility (hall stop) =
+        if stops then quit state else proceed state) utility =
         expect states
-          (informedStoppingValue states quit proceed utility hquit hproceed)
-          hvalue ∧
+          (informedStoppingValue quit proceed utility)
+           ∧
       ∀ alternative : State → PMF Bool,
         expect (states.bind fun state => (alternative state).bind fun stops =>
-          if stops then quit state else proceed state) utility
-            (hall alternative) ≤
+          if stops then quit state else proceed state) utility ≤
         expect states
-          (informedStoppingValue states quit proceed utility hquit hproceed)
-          hvalue := by
+          (informedStoppingValue quit proceed utility) := by
   classical
   let branch : State → Bool → PMF Outcome :=
     fun state stops => if stops then quit state else proceed state
   let best : State → PMF Bool := fun state =>
     if hs : state ∈ states.support then
       PMF.pure (decide
-        (expect (proceed state) utility (hproceed state hs) ≤
-          expect (quit state) utility (hquit state hs)))
+        (expect (proceed state) utility ≤
+          expect (quit state) utility))
     else PMF.pure false
   have hbest (state : State) (hs : state ∈ states.support) :
-      expect ((best state).bind (branch state)) utility
-          (payoffIntegrable_bind_conditional_on_support states
-            (fun state => (best state).bind (branch state)) utility
-            (hall best) state hs) =
-        informedStoppingValue states quit proceed utility hquit hproceed state := by
+      expect ((best state).bind (branch state)) utility =
+        informedStoppingValue quit proceed utility state := by
     by_cases h :
-        expect (proceed state) utility (hproceed state hs) ≤
-          expect (quit state) utility (hquit state hs)
+        expect (proceed state) utility ≤
+          expect (quit state) utility
     · have hlaw : (best state).bind (branch state) = quit state := by
         simp only [best, dite_eq_left hs, PMF.pure_bind, branch]
         simp [h]
       calc
-        _ = expect (quit state) utility (hquit state hs) :=
-          expect_congr_law hlaw utility _ _
-        _ = _ := by simp [informedStoppingValue, extendFromSupport, hs, max_eq_left h]
+        _ = expect (quit state) utility :=
+          expect_congr_law hlaw utility
+        _ = _ := by simp [informedStoppingValue, max_eq_left h]
     · have hlaw : (best state).bind (branch state) = proceed state := by
         simp only [best, dite_eq_left hs, PMF.pure_bind, branch]
         simp [h]
       calc
-        _ = expect (proceed state) utility (hproceed state hs) :=
-          expect_congr_law hlaw utility _ _
+        _ = expect (proceed state) utility :=
+          expect_congr_law hlaw utility
         _ = _ := by
-          simp [informedStoppingValue, extendFromSupport, hs,
-            max_eq_right (le_of_lt (lt_of_not_ge h))]
+          simp [informedStoppingValue, max_eq_right (le_of_lt (lt_of_not_ge h))]
   refine ⟨best, ?_, ?_⟩
   · exact expect_bind_tower_on_support states
       (fun state => (best state).bind (branch state)) utility (hall best)
-      (informedStoppingValue states quit proceed utility hquit hproceed)
+      (informedStoppingValue quit proceed utility)
       (fun state hs => (hbest state hs).symm)
   · intro alternative
     let kernel : State → PMF Outcome :=
       fun state => (alternative state).bind (branch state)
     have hbranch (state : State) (hs : state ∈ states.support) :
-        expect (kernel state) utility
-            (payoffIntegrable_bind_conditional_on_support states kernel utility
-              (hall alternative) state hs) ≤
-          informedStoppingValue states quit proceed utility hquit hproceed state := by
+        expect (kernel state) utility ≤
+          informedStoppingValue quit proceed utility state := by
       have hcond : PayoffIntegrable
           ((alternative state).bind (branch state)) utility :=
         payoffIntegrable_bind_conditional_on_support
           states kernel utility (hall alternative) state hs
-      have hmax : ∀ stops, ∀ hstops : stops ∈ (alternative state).support,
-          expect (branch state stops) utility
-            (payoffIntegrable_bind_conditional_on_support
-              (alternative state) (branch state) utility hcond stops hstops) ≤
-          informedStoppingValue states quit proceed utility hquit hproceed state := by
+      have hmax : ∀ stops ∈ (alternative state).support,
+          expect (branch state stops) utility ≤
+          informedStoppingValue quit proceed utility state := by
         intro stops hstops
         cases stops with
         | false =>
             have hlaw : branch state false = proceed state := rfl
-            rw [expect_congr_law hlaw utility _ (hproceed state hs)]
-            simp [informedStoppingValue, extendFromSupport, hs]
+            rw [expect_congr_law hlaw utility]
+            simp [informedStoppingValue]
         | true =>
             have hlaw : branch state true = quit state := rfl
-            rw [expect_congr_law hlaw utility _ (hquit state hs)]
-            simp [informedStoppingValue, extendFromSupport, hs]
+            rw [expect_congr_law hlaw utility]
+            simp [informedStoppingValue]
       exact expect_bind_le_constant_on_support
         (alternative state) (branch state) utility _ hcond hmax
-    let values := extendFromSupport states (fun state hs =>
-      expect (kernel state) utility
-        (payoffIntegrable_bind_conditional_on_support states kernel utility
-          (hall alternative) state hs))
-    have hvalues : PayoffIntegrable states values :=
-      payoffIntegrable_bind_conditionalValue_on_support
-        states kernel utility (hall alternative) values
-        (fun state hs => by simp [values, extendFromSupport, hs])
-    have htower := expect_bind_tower_on_support states kernel utility
-      (hall alternative) values
-      (fun state hs => by simp [values, extendFromSupport, hs])
     calc
-      _ = expect states values hvalues := htower
-      _ ≤ expect states
-          (informedStoppingValue states quit proceed utility hquit hproceed)
-          hvalue := by
-        apply expect_mono
-        intro state hs
-        simpa [values, extendFromSupport, hs] using hbranch state hs
+      _ = expect states (fun state => expect (kernel state) utility) :=
+        expect_bind_tower states kernel utility (hall alternative)
+      _ ≤ expect states (informedStoppingValue quit proceed utility) :=
+        expect_mono hbranch
+          (payoffIntegrable_bind_conditionalExpectation states kernel utility
+            (hall alternative)) hvalue
 
 /-- Uniform elimination of the stopping option is equivalent to continuation
 dominance at every state where both branch payoffs are defined. -/
 theorem selective_stopping_le_iff
     (quit proceed : State → PMF Outcome) (utility : Outcome → ℝ) :
-    (∀ (states : PMF State) (stop : State → PMF Bool)
-      (hselected : PayoffIntegrable
+    (∀ (states : PMF State) (stop : State → PMF Bool),
+      PayoffIntegrable
         (states.bind fun state => (stop state).bind fun stops =>
-          if stops then quit state else proceed state) utility)
-      (hproceed : PayoffIntegrable (states.bind proceed) utility),
+          if stops then quit state else proceed state) utility →
+      PayoffIntegrable (states.bind proceed) utility →
       expect (states.bind fun state => (stop state).bind fun stops =>
-        if stops then quit state else proceed state) utility hselected ≤
-        expect (states.bind proceed) utility hproceed) ↔
-    ∀ state (hquit : PayoffIntegrable (quit state) utility)
-      (hproceed : PayoffIntegrable (proceed state) utility),
-      expect (quit state) utility hquit ≤
-        expect (proceed state) utility hproceed := by
+        if stops then quit state else proceed state) utility ≤
+        expect (states.bind proceed) utility) ↔
+    ∀ state, PayoffIntegrable (quit state) utility →
+      PayoffIntegrable (proceed state) utility →
+      expect (quit state) utility ≤ expect (proceed state) utility := by
   constructor
   · intro hall state hquit hproceed
     let states : PMF State := PMF.pure state

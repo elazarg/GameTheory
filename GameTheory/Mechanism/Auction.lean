@@ -106,10 +106,7 @@ theorem auctionGame_expectedUtility {Bid : ι → Type} {Alloc : Type}
     (payment : (∀ bidder, Bid bidder) → ι → ℝ)
     (valuation : ι → Alloc → ℝ) (bids : ∀ bidder, Bid bidder) (bidder : ι) :
     expectedUtility (auctionGame allocation payment valuation).utility bidder
-      ((auctionGame allocation payment valuation).form.play bids)
-      (payoffIntegrable_pure bids
-        (fun outcome =>
-          (auctionGame allocation payment valuation).utility outcome bidder)) =
+      ((auctionGame allocation payment valuation).form.play bids) =
         valuation bidder (allocation bids) - payment bids bidder :=
   expectedUtility_pure ..
 

@@ -9231,3 +9231,90 @@ memory.
   and deep phase 3 audits pass.
 - **Outcome:** no kill condition fired. D61 now states existence under
   decision recall. Finite carriers are unchanged; relaxing them is separate.
+
+### EXP-146: total expectation with guarded predicates
+
+- **Date / status:** 2026-09-28 – 2026-09-29; accepted.
+- **Question:** must a real expectation take its integrability certificate as
+  an argument, or can the value be total (Mathlib's `integral` convention)
+  while every semantic predicate carries integrability as an explicit
+  conjunct, with no change of meaning?
+- **Hypothesis:** the certificate argument of `expect` is never used by its
+  value, so moving the guard from the term into the predicates preserves every
+  definition and theorem statement. The dependent argument causes
+  certificate-transport lemmas, `∃ h, value … h = …` statements, and
+  `rw` motive failures without adding any semantic protection that the
+  predicate conjuncts do not already give.
+- **Baseline measurements (`6a9a848e`):** 101 value definitions take an
+  integrability certificate; about 2,900 `PayoffIntegrable`/`payoffIntegrable_`
+  tokens; 128 proof-irrelevance transports (`expect_proof_irrel`,
+  `expectedUtility_congr_law`, `_of_cert`); 137 results of the form
+  `∃ h : …Integrable…, …`.
+- **Competing designs:** keep the dependent certificate (EXP-123's interface);
+  total real value with guarded predicates; extended-real values (a semantic
+  change, deliberately out of scope here).
+- **Kill conditions:** any predicate that changes meaning (in particular a
+  non-integrable deviation that stops failing its comparison, or an incumbent
+  certificate that disappears when the deviation set is empty); EXP-122's
+  divergent-payoff control accepted by a guarded predicate; a public theorem
+  about values whose statement becomes vacuous or junk-dependent because a
+  needed integrability hypothesis was dropped.
+- **Artifacts:** `Math/Probability/Expectation.lean` (`expect` total,
+  `payoffIntegrable_iff_summable`, `expect_of_not_payoffIntegrable`);
+  `Core/ExpectedUtility.lean` (`euPreference`, `euPreferenceWithin` with
+  integrability conjuncts); `Protocol/Context.lean` (`IsLocallyOptimal`,
+  `IsProfitableDeviation` with integrability conjuncts); every value
+  definition downstream. Validation: `lake build GameTheory` (4238 jobs),
+  `lake build GameTheory.Math`, and `lake lint` (clean).
+- **Measurements after:** across `GameTheory/` (tests and experiments
+  included), `PayoffIntegrable`/`payoffIntegrable_` occurrences fell from
+  3,432 to 1,839, `expect_proof_irrel` uses from 35 to 0 (the lemma is gone),
+  and `∃ h : …Integrable…, …` statements from 163 to 3. The three that remain
+  are measure-theoretic `Integrable` witnesses used dependently by the
+  policy-measure API. The diff touches 237 files, with about 11,300 lines
+  removed and 6,100 added.
+- **Observations:**
+  - The hypothesis held: no value definition used its certificate. All
+    value definitions lost the argument, and every `∃ h : …Integrable…, P`
+    whose body did not mention `h` became `…Integrable… ∧ P`, which keeps the
+    same content. Destructuring patterns were unaffected.
+  - Predicates keep exactly the old guards. `IsLocallyOptimal` still demands
+    an incumbent certificate even when the allowed set is empty, and a
+    non-integrable deviation still fails `euPreference` and
+    `IsProfitableDeviation`, so EXP-122's divergent-payoff control is rejected
+    as before.
+  - Certificates inside *hypotheses* were kept (weaker hypotheses, stronger
+    theorems), now written as implications.
+  - Several lemmas turned out to need no integrability at all once values were
+    total, and were strengthened rather than transcribed:
+    `expect_map`, `expect_pure`, `expect_constant`, `expect_neg`,
+    `expect_const_mul`, `expect_congr_on_support`, `expect_nonneg`,
+    `expect_abs_le_of_bounded`, `expect_eq_integral`,
+    `expect_observed_law_eq`, `expectedUtility_map`,
+    `backwardValue_of_terminal`, `historyBackwardValue_of_terminal`,
+    `counterfactualContinuationValue_eq_of_eq_off`, the counterfactual
+    action-regret identities, and the Zermelo construction (which no longer
+    needs global integrability to *define* the backward profile, only to prove
+    it subgame perfect). The tower law needs only integrability of the bind.
+  - Certificate-only scaffolding disappeared: `expect_proof_irrel`, the
+    `IsFictitiousPlay.*PlayedGain` wrappers, `mixedPotentialGainOfAbsBound`,
+    `expectedPayoffOfFinite`, `valueProfileIntegrable`,
+    `LocalCounterfactualRegretsIntegrable`, the step-continuation helpers of
+    the sequential-rationality proof, and test-local `finiteExpect` macros.
+  - Counterfactual continuation value is now `∑ reach * value` instead of a
+    `dite` on nonzero reach; the two agree because a zero coefficient kills the
+    term.
+  - Mechanical argument dropping was the main hazard: named arguments shift
+    positional counts, and the defining module appears among its own
+    importers. Every wrong drop surfaced as a type error, because the removed
+    arguments were proofs and the kept ones were not interchangeable.
+  - Tactic-mode `have`s that built a now-unneeded certificate are not flagged
+    by any linter here; left alone they hid hypotheses that the statement no
+    longer needs. They were found by a textual scan and removed only when the
+    file still compiled.
+- **Outcome:** accepted. `expect` is total and every semantic predicate states
+  integrability explicitly, as a conjunct or a hypothesis.
+- **Follow-ups:** the `Summable` guards of discounted payoffs (`_hsum`
+  arguments) and the measure-side `Integrable` guards of policy-measure
+  expectations are the same pattern in other value families and remain
+  dependent; extended-real values are a separate semantic question.

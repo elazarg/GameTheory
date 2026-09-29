@@ -1,7 +1,7 @@
 /-
 # Information-local one-shot deviations
 
-The finite-horizon history context and its guarded comparison with whole
+The finite-horizon history context and its comparison with whole
 policy changes. This leaf consumes the generic assessment interface.
 -/
 
@@ -115,13 +115,10 @@ theorem historyContext_value (profile : Profile M.strategicSignature) (who : ι)
     [DecidableEq (M.InfoState who)]
     (payoff : E.History → ℝ) (fuel : ℕ) (h : E.History)
     (hterm : ¬ E.terminal h.state)
-    (choice : M.Choice who (M.infoOf who h.trace))
-    (hintegrable :
-      (M.historyContext profile who payoff fuel h hterm).IntegrableAt choice) :
-    (M.historyContext profile who payoff fuel h hterm).value
-        choice hintegrable =
+    (choice : M.Choice who (M.infoOf who h.trace)) :
+    (M.historyContext profile who payoff fuel h hterm).value choice =
       expect (M.oneShotLaw profile fuel h hterm who choice)
-        payoff hintegrable := rfl
+        payoff := rfl
 
 /-- Replacing the current choice by the choice already prescribed by the
 profile leaves the current joint action unchanged. -/
@@ -221,10 +218,8 @@ theorem expect_runFrom_update_le_of_isOneShotOptimalWithin
     (hcandidate : PayoffIntegrable
       (M.runFrom (Profile.update profile who alternative) fuel h) payoff) :
     expect (M.runFrom (Profile.update profile who alternative) fuel h)
-        payoff hcandidate ≤
-      expect (M.runFrom profile fuel h) payoff
-        (M.runFrom_integrable_of_isOneShotOptimalWithin
-          profile who payoff horizon hopt h hdepth) := by
+        payoff ≤
+      expect (M.runFrom profile fuel h) payoff := by
   induction fuel generalizing h with
   | zero =>
       unfold expect
@@ -272,31 +267,27 @@ theorem expect_runFrom_update_le_of_isOneShotOptimalWithin
           exact (hopt fuel h (by omega) hterm).2.1 choice (Set.mem_univ _)
         have hlocal := (hopt fuel h (by omega) hterm).2.2 choice
           (Set.mem_univ _)
-          (hopt fuel h (by omega) hterm).1
-          ((hopt fuel h (by omega) hterm).2.1 choice (Set.mem_univ _))
         calc
           expect (M.runFrom (Profile.update profile who alternative)
-              (fuel + 1) h) payoff hcandidate =
+              (fuel + 1) h) payoff =
             expect (stepLaw.bindOnSupport fun _ realized =>
               M.runFrom (Profile.update profile who alternative) fuel
-                (h.extend chosen.2 realized)) payoff hleft := by
+                (h.extend chosen.2 realized)) payoff := by
                   unfold expect
                   rw [hleftLaw]
           _ ≤ expect (stepLaw.bindOnSupport fun _ realized =>
                 M.runFrom profile fuel (h.extend chosen.2 realized))
-                payoff hright := by
-              apply expect_bindOnSupport_mono_on_support
+                payoff := by
+              refine expect_bindOnSupport_mono_on_support _ _ _ _ hleft hright ?_
               intro reached hreached hconditional _
               have hchildDepth :
                   (h.extend chosen.2 hreached).trace.length + fuel = horizon := by
                 simp only [ExecutionProtocol.History.extend,
                   ExecutionProtocol.Trace.length]
                 omega
-              simpa only [expect_proof_irrel] using
+              simpa using
                 ih (h.extend chosen.2 hreached) hchildDepth hconditional
-          _ ≤ expect (M.runFrom profile (fuel + 1) h) payoff
-                (M.runFrom_integrable_of_isOneShotOptimalWithin
-                  profile who payoff horizon hopt h hdepth) := by
+          _ ≤ expect (M.runFrom profile (fuel + 1) h) payoff := by
               unfold Context.value at hlocal
               unfold expect at hlocal ⊢
               simpa only [historyContext, hrightLaw, M.oneShotLaw_self]

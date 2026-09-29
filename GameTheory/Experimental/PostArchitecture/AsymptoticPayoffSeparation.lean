@@ -70,7 +70,7 @@ theorem fairTwoPointIntegrable (stage : ℕ → ℝ) (f : (ℕ → ℝ) → ℝ)
 
 /-- The fair selector expectation is the average of its two point masses. -/
 theorem expect_fairTwoPointLaw (stage : ℕ → ℝ) (f : (ℕ → ℝ) → ℝ) :
-    expect (fairTwoPointLaw stage) f (fairTwoPointIntegrable stage f) =
+    expect (fairTwoPointLaw stage) f =
       (1 / 2 : ℝ) * f stage + (1 / 2 : ℝ) * f (complementSequence stage) := by
   classical
   let hstage := payoffIntegrable_of_finite_support (PMF.pure stage) f
@@ -79,12 +79,11 @@ theorem expect_fairTwoPointLaw (stage : ℕ → ℝ) (f : (ℕ → ℝ) → ℝ)
     (PMF.pure (complementSequence stage)) f
     (by simp)
   calc
-    expect (fairTwoPointLaw stage) f (fairTwoPointIntegrable stage f) =
+    expect (fairTwoPointLaw stage) f =
         expect (mix (1 / 2) (by norm_num) (by norm_num)
-          (PMF.pure stage) (PMF.pure (complementSequence stage))) f
-          (payoffIntegrable_mix _ _ _ _ _ f hstage hcomplement) := rfl
-    _ = (1 / 2 : ℝ) * expect (PMF.pure stage) f hstage +
-        (1 / 2 : ℝ) * expect (PMF.pure (complementSequence stage)) f hcomplement :=
+          (PMF.pure stage) (PMF.pure (complementSequence stage))) f := rfl
+    _ = (1 / 2 : ℝ) * expect (PMF.pure stage) f +
+        (1 / 2 : ℝ) * expect (PMF.pure (complementSequence stage)) f :=
       by
         simpa only [show 1 - (1 / 2 : ℝ) = 1 / 2 by norm_num] using
           (expect_mix (1 / 2) (by norm_num) (by norm_num)
@@ -105,14 +104,14 @@ theorem cesaroAverage_complement (stage : ℕ → ℝ) (n : ℕ) :
 @[simp]
 theorem expect_fair_cesaroAverage (stage : ℕ → ℝ) (n : ℕ) :
     expect (fairTwoPointLaw stage) (fun path => cesaroAverage path n)
-        (fairTwoPointIntegrable stage _) = (1 / 2 : ℝ) := by
+         = (1 / 2 : ℝ) := by
   rw [expect_fairTwoPointLaw, cesaroAverage_complement]
   ring
 
 theorem tendsto_expect_fair_cesaroAverage (stage : ℕ → ℝ) :
     Tendsto
       (fun n => expect (fairTwoPointLaw stage)
-        (fun path => cesaroAverage path n) (fairTwoPointIntegrable stage _))
+        (fun path => cesaroAverage path n))
       atTop (𝓝 (1 / 2 : ℝ)) := by
   convert (tendsto_const_nhds :
     Tendsto (fun _ : ℕ => (1 / 2 : ℝ)) atTop (𝓝 (1 / 2))) using 1
@@ -141,47 +140,41 @@ theorem fair_two_point_order_limits (stage : ℕ → ℝ)
         atTop = 1) :
     expect (fairTwoPointLaw stage)
         (fun path => Filter.liminf (fun n => cesaroAverage path n) atTop)
-        (fairTwoPointIntegrable stage _) = 0 ∧
+         = 0 ∧
     (∀ n, expect (fairTwoPointLaw stage)
-      (fun path => cesaroAverage path n) (fairTwoPointIntegrable stage _) = (1 / 2 : ℝ)) ∧
+      (fun path => cesaroAverage path n) = (1 / 2 : ℝ)) ∧
     Tendsto
       (fun n => expect (fairTwoPointLaw stage)
-        (fun path => cesaroAverage path n) (fairTwoPointIntegrable stage _))
+        (fun path => cesaroAverage path n))
       atTop (𝓝 (1 / 2 : ℝ)) ∧
     expect (fairTwoPointLaw stage)
         (fun path => Filter.limsup (fun n => cesaroAverage path n) atTop)
-        (fairTwoPointIntegrable stage _) = 1 ∧
+         = 1 ∧
     expect (fairTwoPointLaw stage)
-        (fun path => Filter.liminf (fun n => cesaroAverage path n) atTop)
-        (fairTwoPointIntegrable stage _) ≠
+        (fun path => Filter.liminf (fun n => cesaroAverage path n) atTop) ≠
       (1 / 2 : ℝ) ∧
     expect (fairTwoPointLaw stage)
-        (fun path => Filter.limsup (fun n => cesaroAverage path n) atTop)
-        (fairTwoPointIntegrable stage _) ≠
+        (fun path => Filter.limsup (fun n => cesaroAverage path n) atTop) ≠
       (1 / 2 : ℝ) := by
   have hLiminf :
       expect (fairTwoPointLaw stage)
-          (fun path => Filter.liminf (fun n => cesaroAverage path n) atTop)
-          (fairTwoPointIntegrable stage _) =
+          (fun path => Filter.liminf (fun n => cesaroAverage path n) atTop) =
         (1 / 2 : ℝ) * 0 + (1 / 2 : ℝ) * 0 := by
     rw [expect_fairTwoPointLaw, hstage_liminf, hcomplement_liminf]
   have hLimsup :
       expect (fairTwoPointLaw stage)
-          (fun path => Filter.limsup (fun n => cesaroAverage path n) atTop)
-          (fairTwoPointIntegrable stage _) =
+          (fun path => Filter.limsup (fun n => cesaroAverage path n) atTop) =
         (1 / 2 : ℝ) * 1 + (1 / 2 : ℝ) * 1 := by
     rw [expect_fairTwoPointLaw, hstage_limsup, hcomplement_limsup]
   have hLiminfZero :
       expect (fairTwoPointLaw stage)
-          (fun path => Filter.liminf (fun n => cesaroAverage path n) atTop)
-          (fairTwoPointIntegrable stage _) =
+          (fun path => Filter.liminf (fun n => cesaroAverage path n) atTop) =
         0 := by
     rw [hLiminf]
     norm_num
   have hLimsupOne :
       expect (fairTwoPointLaw stage)
-          (fun path => Filter.limsup (fun n => cesaroAverage path n) atTop)
-          (fairTwoPointIntegrable stage _) =
+          (fun path => Filter.limsup (fun n => cesaroAverage path n) atTop) =
         1 := by
     rw [hLimsup]
     norm_num

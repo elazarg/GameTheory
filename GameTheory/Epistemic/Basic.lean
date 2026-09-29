@@ -72,16 +72,7 @@ theorem posterior_eq_fiberPosterior_expect
             obtain ⟨other, hother, hsupport⟩ := hcell
             refine ⟨other, hsupport, ?_⟩
             exact Quotient.eq.mpr (partition.symm hother)))
-        (fun other => if other ∈ event then 1 else 0)
-        (payoffIntegrable_fiberPosterior prior (observation partition)
-          (fun other => if other ∈ event then 1 else 0)
-          (payoffIntegrable_indicator event
-            (payoffIntegrable_constant prior 1))
-          (observation partition state) (by
-            rw [PMF.support_map]
-            obtain ⟨other, hother, hsupport⟩ := hcell
-            refine ⟨other, hsupport, ?_⟩
-            exact Quotient.eq.mpr (partition.symm hother))) := by
+        (fun other => if other ∈ event then 1 else 0) := by
   classical
   let obs := observation partition
   let observed := obs state
@@ -91,20 +82,12 @@ theorem posterior_eq_fiberPosterior_expect
     exact ⟨other, hsupport, Quotient.eq.mpr (partition.symm hother)⟩
   let conditional := fiberPosterior prior obs observed hobs
   let indicator : Ω → ℝ := fun other => if other ∈ event then 1 else 0
-  have hpriorIndicator : PayoffIntegrable prior indicator :=
-    payoffIntegrable_indicator event (payoffIntegrable_constant prior 1)
-  have hconditional := payoffIntegrable_fiberPosterior prior obs indicator
-    hpriorIndicator observed hobs
   have hfiber : obs ⁻¹' {observed} = cell partition state := by
     simpa only [obs, observed] using observation_fiber partition state
   have hnum :
-      expect prior ((obs ⁻¹' {observed}).indicator indicator)
-        (payoffIntegrable_indicator (obs ⁻¹' {observed}) hpriorIndicator) =
+      expect prior ((obs ⁻¹' {observed}).indicator indicator) =
       (prior.toOuterMeasure (event ∩ cell partition state)).toReal := by
     let rhs := (event ∩ cell partition state).indicator (fun _ => (1 : ℝ))
-    have hrhs : PayoffIntegrable prior rhs :=
-      payoffIntegrable_indicator (event ∩ cell partition state)
-        (payoffIntegrable_constant prior 1)
     have hfunc : ∀ other ∈ prior.support,
         (obs ⁻¹' {observed}).indicator indicator other = rhs other := by
       intro other _
@@ -113,16 +96,15 @@ theorem posterior_eq_fiberPosterior_expect
           simp [rhs, Set.indicator, indicator, hfiber, hcell', hevent]
       · simp [rhs, Set.indicator, indicator, hfiber, hcell']
     calc
-      expect prior ((obs ⁻¹' {observed}).indicator indicator)
-          (payoffIntegrable_indicator (obs ⁻¹' {observed}) hpriorIndicator) =
-        expect prior rhs hrhs := expect_congr_on_support hfunc _ _
+      expect prior ((obs ⁻¹' {observed}).indicator indicator) =
+        expect prior rhs := expect_congr_on_support hfunc
       _ = (prior.toOuterMeasure (event ∩ cell partition state)).toReal :=
-        expect_indicator prior (event ∩ cell partition state) hrhs
+        expect_indicator prior (event ∩ cell partition state)
   have hden :
       (∑' other, (obs ⁻¹' {observed}).indicator prior other) =
         prior.toOuterMeasure (cell partition state) := by
     rw [← PMF.toOuterMeasure_apply prior, hfiber]
-  have hformula := expect_fiberPosterior prior obs indicator hpriorIndicator
+  have hformula := expect_fiberPosterior prior obs indicator
     observed hobs
   unfold posterior
   simpa only [conditional, hnum, hden, obs, observed, ENNReal.toReal_div] using

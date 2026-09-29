@@ -39,25 +39,25 @@ player's half, and the second cannot hold the first below it. Any other saddle
 point gives the same number, which is why it deserves the name *value*. -/
 theorem exists_value (hzero : IsZeroSum utility)
     (hintegrable : F.HasIntegrableUtility utility) :
-    ∃ (value : ℝ) (σ : Profile F.sig.mixed)
-      (hbase : UtilityIntegrable utility 0 (F.mixed.play σ)),
-      expectedUtility utility 0 (F.mixed.play σ) hbase = value ∧
+    ∃ (value : ℝ) (σ : Profile F.sig.mixed),
+      UtilityIntegrable utility 0 (F.mixed.play σ) ∧
+      expectedUtility utility 0 (F.mixed.play σ) = value ∧
       (∀ μ : PMF (F.sig.Strategy 0),
-        ∃ hdev : UtilityIntegrable utility 0
-          (F.mixed.play (Profile.update σ 0 μ)),
+        UtilityIntegrable utility 0
+          (F.mixed.play (Profile.update σ 0 μ)) ∧
           expectedUtility utility 0
-            (F.mixed.play (Profile.update σ 0 μ)) hdev ≤ value) ∧
+            (F.mixed.play (Profile.update σ 0 μ)) ≤ value) ∧
       (∀ ν : PMF (F.sig.Strategy 1),
-        ∃ hdev : UtilityIntegrable utility 0
-          (F.mixed.play (Profile.update σ 1 ν)),
+        UtilityIntegrable utility 0
+          (F.mixed.play (Profile.update σ 1 ν)) ∧
           value ≤ expectedUtility utility 0
-            (F.mixed.play (Profile.update σ 1 ν)) hdev) ∧
+            (F.mixed.play (Profile.update σ 1 ν))) ∧
       (∀ other : Profile F.sig.mixed, IsSaddlePoint utility other →
-        ∃ hother : UtilityIntegrable utility 0 (F.mixed.play other),
-          expectedUtility utility 0 (F.mixed.play other) hother = value) := by
+        UtilityIntegrable utility 0 (F.mixed.play other) ∧
+          expectedUtility utility 0 (F.mixed.play other) = value) := by
   obtain ⟨σ, hsaddle⟩ := exists_isSaddlePoint utility hzero hintegrable
   rcases hsaddle with ⟨hbase, hrowSaddle, hcolumnSaddle⟩
-  let value := expectedUtility utility 0 (F.mixed.play σ) hbase
+  let value := expectedUtility utility 0 (F.mixed.play σ)
   refine ⟨value, σ, hbase, rfl, ?_, ?_, ?_⟩
   · intro μ
     obtain ⟨hdev, hle⟩ := hrowSaddle μ
@@ -76,23 +76,23 @@ dependent two-player strategy family without casts. -/
 def lowerSecurityPayoffs (base : Profile F.sig.mixed) : Set ℝ :=
   {value | ∃ row : PMF (F.sig.Strategy 0),
     ∀ column : PMF (F.sig.Strategy 1),
-      ∃ h : UtilityIntegrable utility 0
+      UtilityIntegrable utility 0
         (F.mixed.play
-          (Profile.update (Profile.update base 0 row) 1 column)),
+          (Profile.update (Profile.update base 0 row) 1 column)) ∧
         value ≤ expectedUtility utility 0
           (F.mixed.play
-            (Profile.update (Profile.update base 0 row) 1 column)) h}
+            (Profile.update (Profile.update base 0 row) 1 column))}
 
 /-- Payoff caps that some mixed column can impose against every mixed row. -/
 def upperSecurityPayoffs (base : Profile F.sig.mixed) : Set ℝ :=
   {value | ∃ column : PMF (F.sig.Strategy 1),
     ∀ row : PMF (F.sig.Strategy 0),
-      ∃ h : UtilityIntegrable utility 0
+      UtilityIntegrable utility 0
         (F.mixed.play
-          (Profile.update (Profile.update base 0 row) 1 column)),
+          (Profile.update (Profile.update base 0 row) 1 column)) ∧
         expectedUtility utility 0
             (F.mixed.play
-              (Profile.update (Profile.update base 0 row) 1 column)) h ≤
+              (Profile.update (Profile.update base 0 row) 1 column)) ≤
           value}
 
 /-- **The textbook maximin--minimax equality.** The supremum of the payoffs
@@ -106,7 +106,7 @@ theorem sup_lowerSecurityPayoffs_eq_inf_upperSecurityPayoffs
         sInf (upperSecurityPayoffs utility base) := by
   obtain ⟨base, hsaddle⟩ := exists_isSaddlePoint utility hzero hintegrable
   rcases hsaddle with ⟨hbase, hrowSaddle, hcolumnSaddle⟩
-  let value := expectedUtility utility 0 (F.mixed.play base) hbase
+  let value := expectedUtility utility 0 (F.mixed.play base)
   have hreplaceColumn (row : PMF (F.sig.Strategy 0)) :
       Profile.update (Profile.update base 0 row) 1 (base 1) =
         Profile.update base 0 row := by
@@ -127,20 +127,19 @@ theorem sup_lowerSecurityPayoffs_eq_inf_upperSecurityPayoffs
       refine ⟨hcandidate, ?_⟩
       dsimp [value]
       exact hle.trans_eq
-        (expectedUtility_congr_law utility 0 hlaw hcandidate hdev).symm
+        (expectedUtility_congr_law utility 0 hlaw).symm
     · rintro candidate ⟨row, hrow⟩
       obtain ⟨hsource, hguarantee⟩ := hrow (base 1)
       have hlaw : F.mixed.play
           (Profile.update (Profile.update base 0 row) 1 (base 1)) =
           F.mixed.play (Profile.update base 0 row) :=
         congrArg F.mixed.play (hreplaceColumn row)
-      have hrowGuard := payoffIntegrable_congr_law hlaw hsource
       have hrowValue :=
-        expectedUtility_congr_law utility 0 hlaw hsource hrowGuard
+        expectedUtility_congr_law utility 0 hlaw
       obtain ⟨hdev, hle⟩ := hrowSaddle row
       calc
         candidate ≤ expectedUtility utility 0
-            (F.mixed.play (Profile.update base 0 row)) hrowGuard := by
+            (F.mixed.play (Profile.update base 0 row)) := by
           exact hguarantee.trans_eq hrowValue.symm
         _ ≤ value := by simpa [value] using hle
   have hupperLeast : IsLeast (upperSecurityPayoffs utility base) value := by
@@ -153,12 +152,11 @@ theorem sup_lowerSecurityPayoffs_eq_inf_upperSecurityPayoffs
       obtain ⟨hdev, hle⟩ := hrowSaddle row
       have hcandidate := payoffIntegrable_congr_law hlaw.symm hdev
       refine ⟨hcandidate, ?_⟩
-      have hvalue := expectedUtility_congr_law utility 0 hlaw hcandidate hdev
+      have hvalue := expectedUtility_congr_law utility 0 hlaw
       calc
         expectedUtility utility 0
-            (F.mixed.play (Profile.update (Profile.update base 0 row) 1 (base 1)))
-            hcandidate =
-          expectedUtility utility 0 (F.mixed.play (Profile.update base 0 row)) hdev :=
+            (F.mixed.play (Profile.update (Profile.update base 0 row) 1 (base 1))) =
+          expectedUtility utility 0 (F.mixed.play (Profile.update base 0 row)) :=
             hvalue
         _ ≤ value := by simpa [value] using hle
     · rintro candidate ⟨column, hcolumn⟩
@@ -167,16 +165,15 @@ theorem sup_lowerSecurityPayoffs_eq_inf_upperSecurityPayoffs
           (Profile.update (Profile.update base 0 (base 0)) 1 column) =
           F.mixed.play (Profile.update base 1 column) := by
         rw [hreplaceRow]
-      have hdevGuard := payoffIntegrable_congr_law hlaw hsource
-      have hdevValue := expectedUtility_congr_law utility 0 hlaw hsource hdevGuard
+      have hdevValue := expectedUtility_congr_law utility 0 hlaw
       obtain ⟨hdev, hle⟩ := hcolumnSaddle column
       calc
         value ≤ expectedUtility utility 0
-            (F.mixed.play (Profile.update base 1 column)) hdevGuard := by
+            (F.mixed.play (Profile.update base 1 column)) := by
           simpa [value] using hle
         _ = expectedUtility utility 0
             (F.mixed.play
-              (Profile.update (Profile.update base 0 (base 0)) 1 column)) hsource :=
+              (Profile.update (Profile.update base 0 (base 0)) 1 column)) :=
           hdevValue.symm
         _ ≤ candidate := hcap
   exact ⟨base, hlowerGreatest.csSup_eq.trans hupperLeast.csInf_eq.symm⟩

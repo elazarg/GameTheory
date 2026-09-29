@@ -98,8 +98,7 @@ theorem runHistoryFor_one_decision_fixed (action hidden : Bool) :
     expect (execution.runHistoryFor
       (information.historyChooser (fixedProfile action)) 1
       (decisionHistory hidden))
-        (fun history => preferFalse history .player)
-        (payoffIntegrable_of_finite _ _) =
+        (fun history => preferFalse history .player) =
       (if action = false then 1 else 0) := by
   rw [ExecutionProtocol.runHistoryFor_succ_of_not_terminal
     _ 0 (decision_not_terminal hidden)]
@@ -107,8 +106,7 @@ theorem runHistoryFor_one_decision_fixed (action hidden : Bool) :
 
 theorem fixed_value (action : Bool) :
     expectedUtility preferFalse .player
-      (information.run (fixedProfile action) 2)
-        (preferFalse_integrable _) =
+      (information.run (fixedProfile action) 2) =
         (if action = false then 1 else 0) := by
   let joint := information.historyChooser (fixedProfile action)
     execution.initHistory initial_not_terminal
@@ -124,9 +122,8 @@ theorem fixed_value (action : Bool) :
       _ 1 initial_not_terminal]
   let payoff := fun history : game.History => preferFalse history .player
   let value : ℝ := if action = false then 1 else 0
-  have hbranch (state : State) (hstate : state ∈ stepLaw.support)
-      (h : PayoffIntegrable (continuation state hstate) payoff) :
-      expect (continuation state hstate) payoff h = value := by
+  have hbranch (state : State) (hstate : state ∈ stepLaw.support) :
+      expect (continuation state hstate) payoff = value := by
     have hmapped : state ∈
         (PMF.map (fun hidden => State.decision hidden execution.noop)
           fairCoin).support := by
@@ -143,50 +140,42 @@ theorem fixed_value (action : Bool) :
     simpa only [continuation, payoff, value, hhistory] using hvalue
   calc
     expectedUtility preferFalse .player
-        (information.run (fixedProfile action) 2)
-          (preferFalse_integrable _) =
-      expect (stepLaw.bindOnSupport continuation) payoff
-        (payoffIntegrable_of_finite _ _) := by
+        (information.run (fixedProfile action) 2) =
+      expect (stepLaw.bindOnSupport continuation) payoff := by
         exact expectedUtility_congr_law preferFalse .player hlaw
-          (preferFalse_integrable _) (payoffIntegrable_of_finite _ _)
-    _ = expect stepLaw (fun _ => value)
-          (payoffIntegrable_bindOnSupport_conditionalValue_on_support
-            stepLaw continuation payoff (payoffIntegrable_of_finite _ _)
-            (fun _ => value) (fun state hstate =>
-              (hbranch state hstate _).symm)) := by
+    _ = expect stepLaw (fun _ => value) := by
         exact expect_bindOnSupport_tower_on_support stepLaw continuation
           payoff (payoffIntegrable_of_finite _ _) (fun _ => value)
-          (fun state hstate => (hbranch state hstate _).symm)
-    _ = value := expect_constant stepLaw value _
+          (fun state hstate => (hbranch state hstate).symm)
+    _ = value := expect_constant stepLaw value
 
 theorem fixedFalse_value :
     expectedUtility preferFalse .player
       (information.run (fixedProfile false) 2)
-        (preferFalse_integrable _) = 1 := by
+         = 1 := by
   simpa using fixed_value false
 
 theorem fixedTrue_value :
     expectedUtility preferFalse .player
       (information.run (fixedProfile true) 2)
-        (preferFalse_integrable _) = 0 := by
+         = 0 := by
   simpa using fixed_value true
 
 theorem anyPlan_value_le_one (profile : Profile game.strategicSignature) :
     expectedUtility preferFalse .player
-      (information.run profile 2) (preferFalse_integrable _) ≤ 1 := by
+      (information.run profile 2) ≤ 1 := by
   unfold expectedUtility
   calc
     expect (information.run profile 2)
-        (fun history => preferFalse history .player)
-        (preferFalse_integrable _) ≤
-      expect (information.run profile 2) (fun _history => 1)
-        (payoffIntegrable_constant _ 1) := by
-        apply expect_mono
+        (fun history => preferFalse history .player) ≤
+      expect (information.run profile 2) (fun _history => 1) := by
+        refine expect_mono ?_ (payoffIntegrable_of_finite _ _)
+          (payoffIntegrable_of_finite _ _)
         intro history _
         rcases history with ⟨state, trace⟩
         cases state <;> simp [preferFalse]
         split <;> norm_num
-    _ = 1 := expect_constant _ 1 _
+    _ = 1 := expect_constant _ 1
 
 theorem fixedFalse_isNash :
     IsNash (game.toGameForm 2) (euPreference preferFalse)
@@ -199,11 +188,10 @@ theorem fixedFalse_isNash :
     expectedUtility preferFalse .player
         (information.run
           (Profile.update (fixedProfile false) .player replacement) 2)
-          (preferFalse_integrable _) ≤ 1 :=
+           ≤ 1 :=
       anyPlan_value_le_one _
     _ = expectedUtility preferFalse .player
-        (information.run (fixedProfile false) 2)
-          (preferFalse_integrable _) :=
+        (information.run (fixedProfile false) 2) :=
       fixedFalse_value.symm
 
 def halfMixedProfile : Profile game.strategicSignature.mixed :=
@@ -218,8 +206,7 @@ theorem fixedMixedDeviation_value (action : Bool) :
     expectedUtility preferFalse .player
         ((game.toGameForm 2).mixed.play
           (Profile.update halfMixedProfile .player
-            (PMF.pure (fixedPolicy action))))
-          (preferFalse_integrable _) =
+            (PMF.pure (fixedPolicy action)))) =
       (if action = false then 1 else 0) := by
   have hprofile :
       Profile.update halfMixedProfile .player
@@ -235,36 +222,29 @@ theorem fixedMixedDeviation_value (action : Bool) :
 theorem halfMixed_value :
     expectedUtility preferFalse .player
       (information.runMixed halfMixedProfile 2)
-        (preferFalse_integrable _) = 1 / 2 := by
+         = 1 / 2 := by
   rw [← game.toGameForm_mixed_play]
   let payoff := fun policy : game.ContingentPlan .player =>
     expectedUtility preferFalse .player
       ((game.toGameForm 2).mixed.play
         (Profile.update halfMixedProfile .player (PMF.pure policy)))
-      (preferFalse_integrable _)
   have htower : expectedUtility preferFalse .player
-      ((game.toGameForm 2).mixed.play halfMixedProfile)
-        (preferFalse_integrable _) =
-      expect (halfMixedProfile .player) payoff
-        (payoffIntegrable_of_finite _ _) := by
+      ((game.toGameForm 2).mixed.play halfMixedProfile) =
+      expect (halfMixedProfile .player) payoff := by
     simpa only [payoff] using
       (expectedUtility_mixed_eq_expect (game.toGameForm 2)
         preferFalse halfMixedProfile .player
-        (preferFalse_integrable _)
-        (fun _ => preferFalse_integrable _))
+        (preferFalse_integrable _))
   calc
     expectedUtility preferFalse .player
-        ((game.toGameForm 2).mixed.play halfMixedProfile)
-          (preferFalse_integrable _) =
-      expect (halfMixedProfile .player) payoff
-        (payoffIntegrable_of_finite _ _) := htower
+        ((game.toGameForm 2).mixed.play halfMixedProfile) =
+      expect (halfMixedProfile .player) payoff := htower
     _ = 1 / 2 := by
       have hmix := expect_mix (1 / 2) (by norm_num) (by norm_num)
         (PMF.pure (fixedPolicy false)) (PMF.pure (fixedPolicy true)) payoff
         (payoffIntegrable_pure _ payoff) (payoffIntegrable_pure _ payoff)
       have hsplit :
-          expect (halfMixedProfile .player) payoff
-              (payoffIntegrable_of_finite _ _) =
+          expect (halfMixedProfile .player) payoff =
             1 / 2 * payoff (fixedPolicy false) +
               (1 - 1 / 2) * payoff (fixedPolicy true) := by
         simpa only [halfMixedProfile, expect_pure] using hmix
@@ -279,7 +259,7 @@ theorem fixedFalseMixedDeviation_value :
       (information.runMixed
         (Profile.update halfMixedProfile .player
           (PMF.pure (fixedPolicy false))) 2)
-        (preferFalse_integrable _) = 1 := by
+         = 1 := by
   rw [← game.toGameForm_mixed_play]
   simpa using fixedMixedDeviation_value false
 

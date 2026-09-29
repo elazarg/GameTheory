@@ -1,9 +1,9 @@
 /-
 # Probability bounds for ordinary PMFs
 
-Real-valued expectations carry integrability certificates. Event mass is the
-canonical PMF outer-measure value, converted to a real only when compared with
-an expected payoff.
+Comparisons of real-valued expectations state the integrability they need.
+Event mass is the canonical PMF outer-measure value, converted to a real only
+when compared with an expected payoff.
 -/
 
 import GameTheory.Math.Probability.ExpectationAlgebra
@@ -16,9 +16,8 @@ open scoped ENNReal
 
 open Classical in
 /-- The expectation of an event indicator is its real probability mass. -/
-theorem expect_indicator {α : Type*} (μ : PMF α) (event : Set α)
-    (h : PayoffIntegrable μ (fun value => if value ∈ event then (1 : ℝ) else 0)) :
-    expect μ (fun value => if value ∈ event then (1 : ℝ) else 0) h =
+theorem expect_indicator {α : Type*} (μ : PMF α) (event : Set α) :
+    expect μ (fun value => if value ∈ event then (1 : ℝ) else 0) =
       (μ.toOuterMeasure event).toReal := by
   classical
   rw [PMF.toOuterMeasure_apply, ENNReal.tsum_toReal_eq (fun value => by
@@ -40,7 +39,7 @@ theorem expect_le_add_event_gap {α : Type*}
     (houtside : ∀ value ∈ μ.support, value ∉ event → target value ≤ source value)
     (hinside : ∀ value ∈ μ.support, value ∈ event →
       target value ≤ source value + gap) :
-    expect μ target htarget ≤ expect μ source hsource +
+    expect μ target ≤ expect μ source +
       gap * (μ.toOuterMeasure event).toReal := by
   classical
   let indicator : α → ℝ := fun value => if value ∈ event then 1 else 0
@@ -53,16 +52,15 @@ theorem expect_le_add_event_gap {α : Type*}
     payoffIntegrable_const_mul hind
   have hsum : PayoffIntegrable μ (fun value => source value + gap * indicator value) :=
     payoffIntegrable_add hsource hgap
-  have hpointwise : expect μ target htarget ≤
-      expect μ (fun value => source value + gap * indicator value) hsum := by
-    apply expect_mono
-    intro value hsupport
+  have hpointwise : expect μ target ≤
+      expect μ (fun value => source value + gap * indicator value) := by
+    refine expect_mono (fun value hsupport => ?_) htarget hsum
     by_cases hevent : value ∈ event
     · simpa [indicator, hevent] using hinside value hsupport hevent
     · simpa [indicator, hevent] using houtside value hsupport hevent
-  rw [expect_add hsource hgap, expect_const_mul hind] at hpointwise
-  have hindvalue : expect μ indicator hind = (μ.toOuterMeasure event).toReal :=
-    expect_indicator μ event hind
+  rw [expect_add hsource hgap, expect_const_mul] at hpointwise
+  have hindvalue : expect μ indicator = (μ.toOuterMeasure event).toReal :=
+    expect_indicator μ event
   rw [hindvalue] at hpointwise
   exact hpointwise
 
@@ -72,9 +70,8 @@ of an observation map. -/
 theorem expect_eq_tsum_fibers {α β : Type*}
     (μ : PMF α) (information : α → β) (u : α → ℝ)
     (h : PayoffIntegrable μ u) :
-    expect μ u h = ∑' observed : β,
-      expect μ (fun value => if value ∈ information ⁻¹' {observed} then u value else 0)
-        (payoffIntegrable_indicator (information ⁻¹' {observed}) h) := by
+    expect μ u = ∑' observed : β,
+      expect μ (fun value => if value ∈ information ⁻¹' {observed} then u value else 0) := by
   classical
   have hsigned : Summable (fun value : α => (μ value).toReal * u value) := by
     have hnorm : Summable (fun value : α => ‖(μ value).toReal * u value‖) := by
@@ -103,18 +100,16 @@ theorem expect_le_of_fiber_expect_le {α β : Type*}
     (htarget : PayoffIntegrable μ target)
     (hfiber : ∀ observed ∈ (μ.map information).support,
       expect μ (fun value =>
-        if value ∈ information ⁻¹' {observed} then target value else 0)
-        (payoffIntegrable_indicator (information ⁻¹' {observed}) htarget) ≤
+        if value ∈ information ⁻¹' {observed} then target value else 0) ≤
       expect μ (fun value =>
-        if value ∈ information ⁻¹' {observed} then source value else 0)
-        (payoffIntegrable_indicator (information ⁻¹' {observed}) hsource)) :
-    expect μ target htarget ≤ expect μ source hsource := by
+        if value ∈ information ⁻¹' {observed} then source value else 0)) :
+    expect μ target ≤ expect μ source := by
   rw [expect_eq_tsum_fibers μ information target htarget,
     expect_eq_tsum_fibers μ information source hsource]
-  have hzero (u : α → ℝ) (hu : PayoffIntegrable μ u)
+  have hzero (u : α → ℝ)
       (observed : β) (hnotsupport : observed ∉ (μ.map information).support) :
       expect μ (fun value => if value ∈ information ⁻¹' {observed} then u value else 0)
-        (payoffIntegrable_indicator (information ⁻¹' {observed}) hu) = 0 := by
+         = 0 := by
     classical
     have heq : ∀ value ∈ μ.support,
         (if value ∈ information ⁻¹' {observed} then u value else 0) = 0 := by
@@ -126,12 +121,9 @@ theorem expect_le_of_fiber_expect_le {α β : Type*}
           ⟨value, hvalue, hequal⟩
       simp [Set.mem_preimage, Set.mem_singleton_iff, hne]
     have hcongr := expect_congr_on_support heq
-      (payoffIntegrable_indicator (information ⁻¹' {observed}) hu)
-      (payoffIntegrable_zero μ)
     simpa only [expect_zero] using hcongr
   have htargetSum : Summable (fun observed : β =>
-      expect μ (fun value => if value ∈ information ⁻¹' {observed} then target value else 0)
-        (payoffIntegrable_indicator (information ⁻¹' {observed}) htarget)) := by
+      expect μ (fun value => if value ∈ information ⁻¹' {observed} then target value else 0)) := by
     have hsigned : Summable (fun value : α => (μ value).toReal * target value) := by
       have hnorm : Summable (fun value : α => ‖(μ value).toReal * target value‖) := by
         simpa [PayoffIntegrable, Real.norm_eq_abs, abs_mul,
@@ -147,8 +139,7 @@ theorem expect_le_of_fiber_expect_le {α β : Type*}
     intro value
     by_cases hv : information value = observed <;> simp [Set.indicator, hv]
   have hsourceSum : Summable (fun observed : β =>
-      expect μ (fun value => if value ∈ information ⁻¹' {observed} then source value else 0)
-        (payoffIntegrable_indicator (information ⁻¹' {observed}) hsource)) := by
+      expect μ (fun value => if value ∈ information ⁻¹' {observed} then source value else 0)) := by
     have hsigned : Summable (fun value : α => (μ value).toReal * source value) := by
       have hnorm : Summable (fun value : α => ‖(μ value).toReal * source value‖) := by
         simpa [PayoffIntegrable, Real.norm_eq_abs, abs_mul,
@@ -166,7 +157,7 @@ theorem expect_le_of_fiber_expect_le {α β : Type*}
   exact htargetSum.tsum_le_tsum (fun observed => by
     by_cases hs : observed ∈ (μ.map information).support
     · exact hfiber observed hs
-    · rw [hzero target htarget observed hs, hzero source hsource observed hs])
+    · rw [hzero target observed hs, hzero source observed hs])
     hsourceSum
 
 /-- A nonnegative observable that exceeds a positive threshold on an event
@@ -177,7 +168,7 @@ theorem eventMass_toReal_le_expect_div {α : Type*}
     (hobs : PayoffIntegrable μ observable)
     (hnonnegative : ∀ value ∈ μ.support, 0 ≤ observable value)
     (hlower : ∀ value ∈ μ.support, value ∈ event → threshold ≤ observable value) :
-    (μ.toOuterMeasure event).toReal ≤ expect μ observable hobs / threshold := by
+    (μ.toOuterMeasure event).toReal ≤ expect μ observable / threshold := by
   classical
   let indicator : α → ℝ := fun value => if value ∈ event then 1 else 0
   have hindBound : ∀ value, |indicator value| ≤ 1 := by
@@ -187,16 +178,15 @@ theorem eventMass_toReal_le_expect_div {α : Type*}
     payoffIntegrable_of_bounded μ indicator hindBound
   have hscaled : PayoffIntegrable μ (fun value => threshold * indicator value) :=
     payoffIntegrable_const_mul hind
-  have hpointwise : expect μ (fun value => threshold * indicator value) hscaled ≤
-      expect μ observable hobs := by
-    apply expect_mono
-    intro value hsupport
+  have hpointwise : expect μ (fun value => threshold * indicator value) ≤
+      expect μ observable := by
+    refine expect_mono (fun value hsupport => ?_) hscaled hobs
     by_cases hevent : value ∈ event
     · simpa [indicator, hevent] using hlower value hsupport hevent
     · simpa [indicator, hevent] using hnonnegative value hsupport
-  rw [expect_const_mul hind] at hpointwise
-  have hmass : expect μ indicator hind = (μ.toOuterMeasure event).toReal :=
-    expect_indicator μ event hind
+  rw [expect_const_mul] at hpointwise
+  have hmass : expect μ indicator = (μ.toOuterMeasure event).toReal :=
+    expect_indicator μ event
   rw [hmass] at hpointwise
   exact (le_div_iff₀ hthreshold).2 (by simpa [mul_comm] using hpointwise)
 
@@ -206,7 +196,7 @@ theorem markov_inequality {α : Type*} (μ : PMF α) (observable : α → ℝ)
     (hobs : PayoffIntegrable μ observable)
     (hnonnegative : ∀ value ∈ μ.support, 0 ≤ observable value) :
     (μ.toOuterMeasure {value | threshold ≤ observable value}).toReal ≤
-      expect μ observable hobs / threshold :=
+      expect μ observable / threshold :=
   eventMass_toReal_le_expect_div μ _ observable hthreshold hobs hnonnegative
     (fun _ _ hlower => hlower)
 

@@ -1,9 +1,9 @@
 /-
-# Guarded PMF fictitious-play trajectories
+# PMF fictitious-play trajectories
 
 Fictitious play repeatedly chooses a pure best response to the independent
 PMF empirical marginals of past play. This file owns the topology-free state
-and guarded expected-utility recurrence. Claims about limits of these beliefs
+and expected-utility recurrence. Claims about limits of these beliefs
 live in the analytic consumer.
 
 Primary reference for the process: G. W. Brown, “Iterative Solution of Games
@@ -59,15 +59,11 @@ theorem empiricalMarginal_prob (history : ℕ → Profile G.sig) (who : ι)
 /-- Expectation under an empirical marginal is the ordinary finite average. -/
 theorem empiricalMarginal_expect (history : ℕ → Profile G.sig) (who : ι)
     (T : ℕ) [NeZero T] (observable : G.sig.Strategy who → ℝ) :
-    expect (G.empiricalMarginal history who T) observable
-        (G.empiricalMarginal_integrable history who T observable) =
+    expect (G.empiricalMarginal history who T) observable =
       (∑ round : Fin T, observable (history round who)) / T := by
   have hmap := expect_map
     (fun round : Fin T => history round.val who)
     (PMF.uniformOfFintype (Fin T)) observable
-    ((payoffIntegrable_map_iff _ _ _).mp
-      (G.empiricalMarginal_integrable history who T observable))
-    (G.empiricalMarginal_integrable history who T observable)
   simpa only [empiricalMarginal, expect_uniformFin, Function.comp_apply] using hmap
 
 /-- Adding one observation is a mixture of the previous empirical law and the
@@ -127,11 +123,9 @@ theorem empiricalProduct_succ_mix [Fintype ι] [DecidableEq ι]
 running-average recurrence. -/
 theorem empiricalMarginal_succ_expect (history : ℕ → Profile G.sig)
     (who : ι) (t : ℕ) (observable : G.sig.Strategy who → ℝ) :
-    expect (G.empiricalMarginal history who (t + 2)) observable
-        (G.empiricalMarginal_integrable history who (t + 2) observable) =
+    expect (G.empiricalMarginal history who (t + 2)) observable =
       ((t + 1 : ℝ) / (t + 2 : ℝ)) *
-          expect (G.empiricalMarginal history who (t + 1)) observable
-            (G.empiricalMarginal_integrable history who (t + 1) observable) +
+          expect (G.empiricalMarginal history who (t + 1)) observable +
         (1 / (t + 2 : ℝ)) * observable (history (t + 1) who) := by
   rw [G.empiricalMarginal_expect, G.empiricalMarginal_expect]
   have hsum :
@@ -292,7 +286,6 @@ noncomputable def pureBestResponse
     expectedUtility G.utility who
       (G.form.mixed.play
         (Profile.update mixedProfile who (PMF.pure action)))
-      (hpure' who action)
 
 /-- The selected pure action is a best response even against arbitrary mixed
 replacements, because mixed replacement utility averages pure replacement
@@ -318,15 +311,14 @@ theorem pureBestResponse_isBestResponse
       (G.form.mixed.play (Profile.update mixedProfile who (PMF.pure chosen))) :=
     hcond chosen
   have hmax : ∀ action, expectedUtility G.utility who (q action)
-      (hcond action) ≤ expectedUtility G.utility who (q chosen) hchosen := by
+       ≤ expectedUtility G.utility who (q chosen) := by
     intro action
     dsimp [chosen, q]
     unfold pureBestResponse
     exact Classical.choose_spec (Finite.exists_max fun action =>
       expectedUtility G.utility who
         (G.form.mixed.play
-          (Profile.update mixedProfile who (PMF.pure action)))
-      (hpure who action)) action
+          (Profile.update mixedProfile who (PMF.pure action)))) action
   have hpreferred : UtilityIntegrable G.utility who
       (G.form.mixed.play (Profile.update mixedProfile who (PMF.pure chosen))) :=
     hchosen
@@ -344,33 +336,30 @@ theorem pureBestResponse_isBestResponse
     payoffIntegrable_congr_law halternativeLaw.symm haltBind
   refine ⟨hpreferred, halt, ?_⟩
   have hconst : PayoffIntegrable alternative
-      (fun _ => expectedUtility G.utility who (q chosen) hchosen) :=
+      (fun _ => expectedUtility G.utility who (q chosen)) :=
     payoffIntegrable_constant _ _
   have houter := payoffIntegrable_bind_conditionalExpectation alternative q
-    (fun outcome => G.utility outcome who) haltBind hcond
+    (fun outcome => G.utility outcome who) haltBind
   have hineq := expect_mono (fun action _ => hmax action) houter hconst
   calc
     expectedUtility G.utility who
-        (G.form.mixed.play (Profile.update mixedProfile who alternative)) halt
-        = expectedUtility G.utility who (alternative.bind q) haltBind :=
-      (expectedUtility_congr_law G.utility who halternativeLaw.symm haltBind halt).symm
-    _ = expect alternative (fun action => expectedUtility G.utility who (q action)
-        (hcond action))
-        houter :=
-      expectedUtility_bind G.utility who alternative q haltBind hcond
-    _ ≤ expectedUtility G.utility who (q chosen) hchosen := by
+        (G.form.mixed.play (Profile.update mixedProfile who alternative))
+        = expectedUtility G.utility who (alternative.bind q) :=
+      (expectedUtility_congr_law G.utility who halternativeLaw.symm).symm
+    _ = expect alternative (fun action => expectedUtility G.utility who (q action)) :=
+      expectedUtility_bind G.utility who alternative q haltBind
+    _ ≤ expectedUtility G.utility who (q chosen) := by
       calc
         expect alternative (fun action => expectedUtility G.utility who
-          (q action) (hcond action)) houter ≤
+          (q action)) ≤
             expect alternative (fun _ => expectedUtility G.utility who
-              (q chosen) hchosen) hconst := hineq
-        _ = expectedUtility G.utility who (q chosen) hchosen :=
-          expect_constant alternative _ hconst
+              (q chosen)) := hineq
+        _ = expectedUtility G.utility who (q chosen) :=
+          expect_constant alternative _
     _ = expectedUtility G.utility who
-        (G.form.mixed.play (Profile.update mixedProfile who (PMF.pure chosen)))
-        hpreferred := by
+        (G.form.mixed.play (Profile.update mixedProfile who (PMF.pure chosen))) := by
       symm
-      exact expectedUtility_congr_law G.utility who hpreferredEq hpreferred hchosen
+      exact expectedUtility_congr_law G.utility who hpreferredEq
 
 /-- A canonical fictitious-play trajectory generated from an arbitrary
 initial profile. At a positive round, recursive calls are made only for the
@@ -450,15 +439,9 @@ theorem exists_isFictitiousPlay
 
 /-- The gain of the pure action actually played at the next round, measured
 against the empirical belief entering that round. -/
-def playedGain (history : ℕ → Profile G.form.sig) (t : ℕ) (who : ι)
-    (hbase : UtilityIntegrable G.utility who
-      (G.form.mixed.play (G.form.empiricalBelief history (t + 1))))
-    (hplayed : UtilityIntegrable G.utility who
-      (G.form.mixed.play
-        (Profile.update (G.form.empiricalBelief history (t + 1)) who
-          (PMF.pure (history (t + 1) who))))) : ℝ :=
+def playedGain (history : ℕ → Profile G.form.sig) (t : ℕ) (who : ι) : ℝ :=
   G.mixedGain (G.form.empiricalBelief history (t + 1)) who
-    (history (t + 1) who) hbase hplayed
+    (history (t + 1) who)
 
 /-- Advancing one coordinate to its next empirical marginal is affine at the
 expected-utility level. -/
@@ -473,24 +456,24 @@ theorem expectedUtility_update_empiricalMarginal_succ
       (G.form.mixed.play
         (Profile.update mixedProfile who
           (PMF.pure (history (t + 1) who))))) :
-    ∃ hnext : UtilityIntegrable G.utility who
+    UtilityIntegrable G.utility who
       (G.form.mixed.play
         (Profile.update mixedProfile who
-          (G.form.empiricalMarginal history who ((t + 1) + 1)))),
+          (G.form.empiricalMarginal history who ((t + 1) + 1)))) ∧
       expectedUtility G.utility who
         (G.form.mixed.play
           (Profile.update mixedProfile who
-            (G.form.empiricalMarginal history who ((t + 1) + 1)))) hnext =
+            (G.form.empiricalMarginal history who ((t + 1) + 1)))) =
       ((t + 1 : ℝ) / ((t + 1) + 1 : ℝ)) *
           expectedUtility G.utility who
             (G.form.mixed.play
               (Profile.update mixedProfile who
-                (G.form.empiricalMarginal history who (t + 1)))) hprev +
+                (G.form.empiricalMarginal history who (t + 1)))) +
         (1 / ((t + 1) + 1 : ℝ)) *
           expectedUtility G.utility who
             (G.form.mixed.play
               (Profile.update mixedProfile who
-                (PMF.pure (history (t + 1) who)))) hpure := by
+                (PMF.pure (history (t + 1) who)))) := by
   let q := fun action => G.form.mixed.play
     (Profile.update mixedProfile who (PMF.pure action))
   let μ := G.form.empiricalMarginal history who (t + 1)
@@ -528,15 +511,15 @@ theorem expectedUtility_update_empiricalMarginal_succ
         (G.form.mixed.play
           (Profile.update mixedProfile who
             (G.form.empiricalMarginal history who ((t + 1) + 1))))
-        hnext = expectedUtility G.utility who
+         = expectedUtility G.utility who
           (mix w hw0 hw1
             (G.form.mixed.play (Profile.update mixedProfile who μ))
-            (G.form.mixed.play (Profile.update mixedProfile who ν))) hmix :=
-      expectedUtility_congr_law G.utility who hlaw hnext hmix
+            (G.form.mixed.play (Profile.update mixedProfile who ν))) :=
+      expectedUtility_congr_law G.utility who hlaw
     _ = w * expectedUtility G.utility who
-          (G.form.mixed.play (Profile.update mixedProfile who μ)) hprev +
+          (G.form.mixed.play (Profile.update mixedProfile who μ)) +
         (1 - w) * expectedUtility G.utility who
-          (G.form.mixed.play (Profile.update mixedProfile who ν)) hpure := by
+          (G.form.mixed.play (Profile.update mixedProfile who ν)) := by
       exact expect_mix w hw0 hw1 _ _ (fun outcome => G.utility outcome who)
         hprev hpure
     _ = _ := by
@@ -561,9 +544,8 @@ theorem empirical_update_integrable
       (G.form.mixed.play
         (Profile.update mixedProfile who
           (G.form.empiricalMarginal history who ((t + 1) + 1)))) := by
-  exact Classical.choose
-    (G.expectedUtility_update_empiricalMarginal_succ
-      history mixedProfile who t hprev hpure)
+  exact (G.expectedUtility_update_empiricalMarginal_succ
+    history mixedProfile who t hprev hpure).1
 
 /-- Difference form of the one-coordinate empirical expected-utility
 recurrence. -/
@@ -574,10 +556,6 @@ theorem expectedUtility_update_empiricalMarginal_succ_sub
       (G.form.mixed.play
         (Profile.update mixedProfile who
           (G.form.empiricalMarginal history who (t + 1)))))
-    (hnext : UtilityIntegrable G.utility who
-      (G.form.mixed.play
-        (Profile.update mixedProfile who
-          (G.form.empiricalMarginal history who ((t + 1) + 1)))))
     (hpure : UtilityIntegrable G.utility who
       (G.form.mixed.play
         (Profile.update mixedProfile who
@@ -585,25 +563,24 @@ theorem expectedUtility_update_empiricalMarginal_succ_sub
       expectedUtility G.utility who
         (G.form.mixed.play
           (Profile.update mixedProfile who
-            (G.form.empiricalMarginal history who ((t + 1) + 1)))) hnext -
+            (G.form.empiricalMarginal history who ((t + 1) + 1)))) -
       expectedUtility G.utility who
         (G.form.mixed.play
           (Profile.update mixedProfile who
-            (G.form.empiricalMarginal history who (t + 1)))) hprev =
+            (G.form.empiricalMarginal history who (t + 1)))) =
       (1 / ((t + 1) + 1 : ℝ)) *
         (expectedUtility G.utility who
             (G.form.mixed.play
               (Profile.update mixedProfile who
-                (PMF.pure (history (t + 1) who)))) hpure -
+                (PMF.pure (history (t + 1) who)))) -
           expectedUtility G.utility who
             (G.form.mixed.play
               (Profile.update mixedProfile who
-                (G.form.empiricalMarginal history who (t + 1)))) hprev) := by
-  obtain ⟨hnext', hrecurrence⟩ :=
+                (G.form.empiricalMarginal history who (t + 1))))) := by
+  obtain ⟨-, hrecurrence⟩ :=
     G.expectedUtility_update_empiricalMarginal_succ history mixedProfile who t
       hprev hpure
-  have hnextEq : hnext' = hnext := Subsingleton.elim _ _
-  rw [← hnextEq, hrecurrence]
+  rw [hrecurrence]
   have hnonzero : ((t + 1) + 1 : ℝ) ≠ 0 := by positivity
   field_simp [hnonzero]
   ring
@@ -613,23 +590,18 @@ that player's expected utility by the step size times its played gain. -/
 theorem expectedUtility_belief_update_empiricalMarginal_succ_sub
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) (who : ι) (t : ℕ) :
-    ∃ hnext : UtilityIntegrable G.utility who
+    UtilityIntegrable G.utility who
       (G.form.mixed.play
         (Profile.update (G.form.empiricalBelief history (t + 1)) who
-          (G.form.empiricalMarginal history who ((t + 1) + 1)))),
+          (G.form.empiricalMarginal history who ((t + 1) + 1)))) ∧
     expectedUtility G.utility who
         (G.form.mixed.play
           (Profile.update (G.form.empiricalBelief history (t + 1)) who
-            (G.form.empiricalMarginal history who ((t + 1) + 1)))) hnext -
+            (G.form.empiricalMarginal history who ((t + 1) + 1)))) -
       expectedUtility G.utility who
-        (G.form.mixed.play (G.form.empiricalBelief history (t + 1)))
-          (UtilityGame.IsFictitiousPlay.incumbent_integrable (G := G) hplay t who) =
+        (G.form.mixed.play (G.form.empiricalBelief history (t + 1))) =
       (1 / ((t + 1) + 1 : ℝ)) *
-        G.playedGain history t who
-          (UtilityGame.IsFictitiousPlay.incumbent_integrable (G := G)
-            hplay t who)
-          (IsFictitiousPlay.deviation_integrable (G := G) hplay t who
-            (PMF.pure (history (t + 1) who))) := by
+        G.playedGain history t who := by
   let belief := G.form.empiricalBelief history (t + 1)
   let hbase := UtilityGame.IsFictitiousPlay.incumbent_integrable (G := G) hplay t who
   let hpure := IsFictitiousPlay.deviation_integrable (G := G) hplay t who
@@ -649,21 +621,19 @@ theorem expectedUtility_belief_update_empiricalMarginal_succ_sub
         G.form.empiricalBelief history (t + 1) :=
     Profile.update_eq_self _ _
   refine ⟨hnext, ?_⟩
-  have hplayed := IsFictitiousPlay.deviation_integrable (G := G) hplay t who
-    (PMF.pure (history (t + 1) who))
   have hrecurrence' :
       expectedUtility G.utility who
           (G.form.mixed.play
             (Profile.update (G.form.empiricalBelief history (t + 1)) who
-              (G.form.empiricalMarginal history who ((t + 1) + 1)))) hnext =
+              (G.form.empiricalMarginal history who ((t + 1) + 1)))) =
         ((t + 1 : ℝ) / ((t + 1) + 1)) *
             expectedUtility G.utility who
-              (G.form.mixed.play (G.form.empiricalBelief history (t + 1))) hbase +
+              (G.form.mixed.play (G.form.empiricalBelief history (t + 1))) +
           (1 / ((t + 1) + 1 : ℝ)) *
             expectedUtility G.utility who
               (G.form.mixed.play
                 (Profile.update (G.form.empiricalBelief history (t + 1)) who
-                  (PMF.pure (history (t + 1) who)))) hpure := by
+                  (PMF.pure (history (t + 1) who)))) := by
     simpa only [belief, hsame] using hrecurrence
   simp only [playedGain, mixedGain]
   rw [hrecurrence']
@@ -676,116 +646,55 @@ theorem IsTeamGame.expectedUtility_belief_update_empiricalMarginal_succ_sub
     (hteam : IsTeamGame G.utility)
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) (observer who : ι) (t : ℕ) :
-    ∃ hnext : UtilityIntegrable G.utility observer
+    UtilityIntegrable G.utility observer
       (G.form.mixed.play
         (Profile.update (G.form.empiricalBelief history (t + 1)) who
-          (G.form.empiricalMarginal history who ((t + 1) + 1)))),
+          (G.form.empiricalMarginal history who ((t + 1) + 1)))) ∧
     expectedUtility G.utility observer
         (G.form.mixed.play
           (Profile.update (G.form.empiricalBelief history (t + 1)) who
-            (G.form.empiricalMarginal history who ((t + 1) + 1)))) hnext -
+            (G.form.empiricalMarginal history who ((t + 1) + 1)))) -
       expectedUtility G.utility observer
-        (G.form.mixed.play (G.form.empiricalBelief history (t + 1)))
-        (payoffIntegrable_congr_on_support
-          (fun outcome _ => hteam outcome who observer)
-          (UtilityGame.IsFictitiousPlay.incumbent_integrable (G := G)
-            hplay t who)) =
-      (1 / ((t + 1) + 1 : ℝ)) * G.playedGain history t who
-        (UtilityGame.IsFictitiousPlay.incumbent_integrable (G := G)
-          hplay t who)
-        (UtilityGame.IsFictitiousPlay.deviation_integrable (G := G)
-          hplay t who (PMF.pure (history (t + 1) who))) := by
+        (G.form.mixed.play (G.form.empiricalBelief history (t + 1))) =
+      (1 / ((t + 1) + 1 : ℝ)) * G.playedGain history t who := by
   obtain ⟨hnextWho, hresult⟩ :=
     G.expectedUtility_belief_update_empiricalMarginal_succ_sub hplay who t
   let hnextObserver := payoffIntegrable_congr_on_support
     (fun outcome _ => hteam outcome who observer) hnextWho
   refine ⟨hnextObserver, ?_⟩
-  have hbaseWho :=
-    UtilityGame.IsFictitiousPlay.incumbent_integrable (G := G) hplay t who
-  have hbaseObserver := payoffIntegrable_congr_on_support
-    (fun outcome _ => hteam outcome who observer) hbaseWho
   calc
     expectedUtility G.utility observer
         (G.form.mixed.play
           (Profile.update (G.form.empiricalBelief history (t + 1)) who
-            (G.form.empiricalMarginal history who ((t + 1) + 1)))) hnextObserver -
+            (G.form.empiricalMarginal history who ((t + 1) + 1)))) -
       expectedUtility G.utility observer
-        (G.form.mixed.play (G.form.empiricalBelief history (t + 1))) hbaseObserver =
+        (G.form.mixed.play (G.form.empiricalBelief history (t + 1))) =
       expectedUtility G.utility who
         (G.form.mixed.play
           (Profile.update (G.form.empiricalBelief history (t + 1)) who
-            (G.form.empiricalMarginal history who ((t + 1) + 1)))) hnextWho -
+            (G.form.empiricalMarginal history who ((t + 1) + 1)))) -
       expectedUtility G.utility who
-        (G.form.mixed.play (G.form.empiricalBelief history (t + 1))) hbaseWho := by
+        (G.form.mixed.play (G.form.empiricalBelief history (t + 1))) := by
           rw [hteam.expectedUtility_eq _ observer who,
             hteam.expectedUtility_eq _ observer who]
     _ = _ := hresult
 
 /-- The aggregate gain of the actions played at one fictitious-play round. -/
-def aggregatePlayedGain (history : ℕ → Profile G.form.sig) (t : ℕ)
-    (hbase : ∀ who, UtilityIntegrable G.utility who
-      (G.form.mixed.play (G.form.empiricalBelief history (t + 1))))
-    (hplayed : ∀ who, UtilityIntegrable G.utility who
-      (G.form.mixed.play
-        (Profile.update (G.form.empiricalBelief history (t + 1)) who
-          (PMF.pure (history (t + 1) who))))) : ℝ :=
-  ∑ who, G.playedGain history t who (hbase who) (hplayed who)
+def aggregatePlayedGain (history : ℕ → Profile G.form.sig) (t : ℕ) : ℝ :=
+  ∑ who, G.playedGain history t who
 
 /-- Played gain weighted by each player's number of pure actions. -/
 def weightedPlayedGain [∀ who, Fintype (G.form.sig.Strategy who)]
-    (history : ℕ → Profile G.form.sig) (t : ℕ)
-    (hbase : ∀ who, UtilityIntegrable G.utility who
-      (G.form.mixed.play (G.form.empiricalBelief history (t + 1))))
-    (hplayed : ∀ who, UtilityIntegrable G.utility who
-      (G.form.mixed.play
-        (Profile.update (G.form.empiricalBelief history (t + 1)) who
-          (PMF.pure (history (t + 1) who))))) : ℝ :=
+    (history : ℕ → Profile G.form.sig) (t : ℕ) : ℝ :=
   ∑ who, (Fintype.card (G.form.sig.Strategy who) : ℝ) *
-    G.playedGain history t who (hbase who) (hplayed who)
-
-/-- Played gain with the incumbent and played-action certificates supplied by
-the fictitious-play witness. -/
-abbrev IsFictitiousPlay.playedGain
-    {G₀ : UtilityGame.{uι, us, uo} ι}
-    {history : ℕ → Profile G₀.form.sig}
-    (hplay : G₀.IsFictitiousPlay history) (t : ℕ) (who : ι) : ℝ :=
-  G₀.playedGain history t who
-    (IsFictitiousPlay.incumbent_integrable (G := G₀) hplay t who)
-    (IsFictitiousPlay.deviation_integrable (G := G₀) hplay t who
-      (PMF.pure (history (t + 1) who)))
-
-/-- Aggregate played gain using the integration certificates carried by a
-fictitious-play witness. -/
-abbrev IsFictitiousPlay.aggregatePlayedGain
-    {G₀ : UtilityGame.{uι, us, uo} ι}
-    {history : ℕ → Profile G₀.form.sig}
-    (hplay : G₀.IsFictitiousPlay history) (t : ℕ) : ℝ :=
-  G₀.aggregatePlayedGain history t
-    (fun who => IsFictitiousPlay.incumbent_integrable (G := G₀) hplay t who)
-    (fun who => IsFictitiousPlay.deviation_integrable (G := G₀) hplay t who
-      (PMF.pure (history (t + 1) who)))
-
-/-- Strategy-cardinality weighted played gain with certificates supplied by
-fictitious play. -/
-abbrev IsFictitiousPlay.weightedPlayedGain
-    {G₀ : UtilityGame.{uι, us, uo} ι}
-    [∀ who, Fintype (G₀.form.sig.Strategy who)]
-    {history : ℕ → Profile G₀.form.sig}
-    (hplay : G₀.IsFictitiousPlay history) (t : ℕ) : ℝ :=
-  G₀.weightedPlayedGain history t
-    (fun who => IsFictitiousPlay.incumbent_integrable (G := G₀) hplay t who)
-    (fun who => IsFictitiousPlay.deviation_integrable (G := G₀) hplay t who
-      (PMF.pure (history (t + 1) who)))
+    G.playedGain history t who
 
 /-- A best-response action has nonnegative gain by averaging its guarded pure
 deviations under the current mixed coordinate. -/
 theorem IsFictitiousPlay.playedGain_nonneg
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) (t : ℕ) (who : ι) :
-    0 ≤ G.playedGain history t who
-      (UtilityGame.IsFictitiousPlay.incumbent_integrable (G := G) hplay t who)
-      (UtilityGame.IsFictitiousPlay.deviation_integrable (G := G) hplay t who
-        (PMF.pure (history (t + 1) who))) := by
+    0 ≤ G.playedGain history t who := by
   let belief := G.form.empiricalBelief history (t + 1)
   let played := history (t + 1) who
   let hbase := UtilityGame.IsFictitiousPlay.incumbent_integrable (G := G) hplay t who
@@ -797,8 +706,8 @@ theorem IsFictitiousPlay.playedGain_nonneg
   let q := fun action => G.form.mixed.play
     (Profile.update belief who (PMF.pure action))
   let values := fun action => expectedUtility G.utility who
-    (q action) (hpure action)
-  let playedValue := expectedUtility G.utility who (q played) hplayed
+    (q action)
+  let playedValue := expectedUtility G.utility who (q played)
   have hlaw : G.form.mixed.play belief = (belief who).bind q := by
     calc
       G.form.mixed.play belief =
@@ -808,7 +717,7 @@ theorem IsFictitiousPlay.playedGain_nonneg
   have hbind : UtilityIntegrable G.utility who ((belief who).bind q) :=
     payoffIntegrable_congr_law hlaw hbase
   have houter := payoffIntegrable_bind_conditionalExpectation
-    (belief who) q (fun outcome => G.utility outcome who) hbind hpure
+    (belief who) q (fun outcome => G.utility outcome who) hbind
   have hvalues : PayoffIntegrable (belief who) values := by
     simpa only [values, expectedUtility] using houter
   have hconstant : PayoffIntegrable (belief who) (fun _ => playedValue) :=
@@ -822,9 +731,9 @@ theorem IsFictitiousPlay.playedGain_nonneg
   have havg := expect_mono hle hvalues hconstant
   rw [expect_constant] at havg
   have hmean := expectedUtility_mixed_eq_expect
-    G.form G.utility belief who hbase hpure
+    G.form G.utility belief who hbase
   have hbase_le : expectedUtility G.utility who
-      (G.form.mixed.play belief) hbase ≤ playedValue := by
+      (G.form.mixed.play belief) ≤ playedValue := by
     rw [hmean]
     exact havg
   unfold UtilityGame.playedGain UtilityGame.mixedGain
@@ -833,10 +742,7 @@ theorem IsFictitiousPlay.playedGain_nonneg
 theorem IsFictitiousPlay.aggregatePlayedGain_nonneg
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) (t : ℕ) :
-    0 ≤ G.aggregatePlayedGain history t
-      (fun who => UtilityGame.IsFictitiousPlay.incumbent_integrable (G := G) hplay t who)
-      (fun who => UtilityGame.IsFictitiousPlay.deviation_integrable (G := G) hplay t who
-        (PMF.pure (history (t + 1) who))) := by
+    0 ≤ G.aggregatePlayedGain history t := by
   rw [UtilityGame.aggregatePlayedGain]
   exact Finset.sum_nonneg fun who _ =>
     UtilityGame.IsFictitiousPlay.playedGain_nonneg (G := G) hplay t who
@@ -847,30 +753,16 @@ theorem IsFictitiousPlay.mixedImprovement_le_weightedPlayedGain
     [∀ who, Fintype (G.form.sig.Strategy who)]
     {history : ℕ → Profile G.form.sig}
     (hplay : G.IsFictitiousPlay history) (t : ℕ) :
-    G.mixedImprovement (G.form.empiricalBelief history (t + 1))
-        (fun who action =>
-          UtilityGame.IsFictitiousPlay.deviation_integrable (G := G) hplay t who
-            (PMF.pure action)) ≤
-      G.weightedPlayedGain history t
-        (fun who => UtilityGame.IsFictitiousPlay.incumbent_integrable (G := G)
-          hplay t who)
-        (fun who => UtilityGame.IsFictitiousPlay.deviation_integrable (G := G)
-          hplay t who (PMF.pure (history (t + 1) who))) := by
-  let hpure := fun who action =>
-    UtilityGame.IsFictitiousPlay.deviation_integrable (G := G) hplay t who
-      (PMF.pure action)
+    G.mixedImprovement (G.form.empiricalBelief history (t + 1)) ≤
+      G.weightedPlayedGain history t := by
   rw [UtilityGame.mixedImprovement, UtilityGame.weightedPlayedGain]
   refine Finset.sum_le_sum fun who _ => ?_
-  have hbase := UtilityGame.IsFictitiousPlay.incumbent_integrable
-    (G := G) hplay t who
-  have hplayedCert := UtilityGame.IsFictitiousPlay.deviation_integrable
-    (G := G) hplay t who (PMF.pure (history (t + 1) who))
-  have hplayed : 0 ≤ G.playedGain history t who hbase hplayedCert :=
+  have hplayed : 0 ≤ G.playedGain history t who :=
     UtilityGame.IsFictitiousPlay.playedGain_nonneg (G := G) hplay t who
   have hpoint :
       ∀ action : G.form.sig.Strategy who,
-        max (G.mixedGain (G.form.empiricalBelief history (t + 1)) who action
-          hbase (hpure who action)) 0 ≤ G.playedGain history t who hbase hplayedCert := by
+        max (G.mixedGain (G.form.empiricalBelief history (t + 1)) who action) 0 ≤
+          G.playedGain history t who := by
     intro action
     have hbest :=
       UtilityGame.IsFictitiousPlay.isBestResponse (G := G) hplay t who
@@ -883,13 +775,12 @@ theorem IsFictitiousPlay.mixedImprovement_le_weightedPlayedGain
     · exact hplayed
   calc
     (∑ action : G.form.sig.Strategy who,
-        max (G.mixedGain (G.form.empiricalBelief history (t + 1)) who action
-          hbase (hpure who action)) 0) ≤
+        max (G.mixedGain (G.form.empiricalBelief history (t + 1)) who action) 0) ≤
         ∑ _action : G.form.sig.Strategy who,
-          G.playedGain history t who hbase hplayedCert :=
+          G.playedGain history t who :=
       Finset.sum_le_sum fun action _ => hpoint action
     _ = (Fintype.card (G.form.sig.Strategy who) : ℝ) *
-        G.playedGain history t who hbase hplayedCert := by
+        G.playedGain history t who := by
       simp [Finset.sum_const, nsmul_eq_mul]
 
 end UtilityGame

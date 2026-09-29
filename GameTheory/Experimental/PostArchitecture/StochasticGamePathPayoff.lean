@@ -198,7 +198,7 @@ theorem pathGame_horizonIntegrable_two :
 set_option backward.isDefEq.respectTransparency false in
 theorem pathGame_finite_average_two :
     pathGame.finiteAveragePayoff none 2 pathProfile ()
-      pathGame_horizonIntegrable_two = (1 / 4 : ℝ) := by
+       = (1 / 4 : ℝ) := by
   norm_num [Stochastic.Game.finiteAveragePayoff, Stochastic.Game.horizonUtility,
     Stochastic.Game.historyAverageUtility, Stochastic.Game.eventUtility,
     Stochastic.Game.horizonForm, InformationModel.runBehavioral,
@@ -212,9 +212,11 @@ theorem pathGame_finite_average_two :
   unfold expectedUtility
   calc
     _ = expect fairBit
-        (fun state : Option Bool => if state = some true then 1 / 2 else 0)
-        (payoffIntegrable_of_finite fairBit _) := by
-      apply expect_bindOnSupport_tower_on_support
+        (fun state : Option Bool => if state = some true then 1 / 2 else 0) := by
+      refine expect_bindOnSupport_tower_on_support _ _ _
+        (payoffIntegrable_bindOnSupport_of_finite _ _ _ fun state hstate => ?_) _ ?_
+      · rcases (fairBit_support_iff state).mp hstate with rfl | rfl <;>
+          exact payoffIntegrable_of_finite_support _ _ (by simp)
       intro state hstate
       rcases (fairBit_support_iff state).mp hstate with rfl | rfl
       · simp [expect_pure, Stochastic.Game.horizonUtility,

@@ -220,42 +220,34 @@ theorem backwardLaw_support_terminal (state : E.State) :
           ⟨(chooser source hterm).1, (chooser source hterm).2, hrealized⟩
         exact hcontinue
 
-/-- A finite real backward value exists only for an integrable terminal-law
-payoff. The terminal law remains meaningful when this guard fails. -/
+/-- The expected payoff of the terminal law. Like `expect`, it is `0` for a
+non-integrable payoff, so comparisons state integrability separately. -/
 def backwardValue (certificate : E.WellFoundedPlay) (chooser : E.Chooser)
-    (payoff : E.State → ℝ) (state : E.State)
-    (hintegrable : PayoffIntegrable (E.backwardLaw certificate chooser state) payoff) :
+    (payoff : E.State → ℝ) (state : E.State) :
     ℝ :=
-  expect (E.backwardLaw certificate chooser state) payoff hintegrable
+  expect (E.backwardLaw certificate chooser state) payoff
 
 theorem backwardValue_eq_expect_runFor
     {certificate : E.WellFoundedPlay} {chooser : E.Chooser}
     {payoff : E.State → ℝ} {horizon : ℕ} {state : E.State}
-    (hstop : E.StopsWithin chooser horizon state)
-    (hback : PayoffIntegrable (E.backwardLaw certificate chooser state) payoff)
-    (hforward : PayoffIntegrable (E.runFor chooser horizon state) payoff) :
-    E.backwardValue certificate chooser payoff state hback =
-      expect (E.runFor chooser horizon state) payoff hforward := by
+    (hstop : E.StopsWithin chooser horizon state) :
+    E.backwardValue certificate chooser payoff state =
+      expect (E.runFor chooser horizon state) payoff := by
   unfold backwardValue expect
   rw [E.backwardLaw_eq_runFor hstop]
 
 theorem backwardValue_of_terminal
     {certificate : E.WellFoundedPlay} {chooser : E.Chooser}
     {payoff : E.State → ℝ} {source : E.State}
-    (hterm : E.terminal source)
-    (hintegrable : PayoffIntegrable
-      (E.backwardLaw certificate chooser source) payoff) :
-    E.backwardValue certificate chooser payoff source hintegrable =
+    (hterm : E.terminal source) :
+    E.backwardValue certificate chooser payoff source =
       payoff source := by
-  have hpure : PayoffIntegrable (PMF.pure source) payoff := by
-    rw [← E.backwardLaw_of_terminal hterm]
-    exact hintegrable
   calc
-    E.backwardValue certificate chooser payoff source hintegrable =
-        expect (PMF.pure source) payoff hpure := by
+    E.backwardValue certificate chooser payoff source =
+        expect (PMF.pure source) payoff := by
           unfold backwardValue expect
           rw [E.backwardLaw_of_terminal hterm]
-    _ = payoff source := expect_pure source payoff hpure
+    _ = payoff source := expect_pure source payoff
 
 /-- Numerical Bellman equation at the supported successors of a nonterminal
 state. The joint terminal-law guard derives every conditional and outer guard. -/
@@ -265,26 +257,20 @@ theorem backwardValue_of_not_terminal
     (hterm : ¬ E.terminal source)
     (hsource : PayoffIntegrable (E.backwardLaw certificate chooser source) payoff)
     (successorValue : E.State → ℝ)
-    (hvalue : ∀ target, ∀ ht :
-      target ∈ (E.step source (chooser source hterm)).support,
+    (hvalue : ∀ target, target ∈ (E.step source (chooser source hterm)).support →
       successorValue target =
-        E.backwardValue certificate chooser payoff target
-          (payoffIntegrable_bind_conditional_on_support
-            (E.step source (chooser source hterm))
-            (E.backwardLaw certificate chooser) payoff
-            (by rwa [← E.backwardLaw_of_not_terminal_bind hterm]) target ht)) :
-    ∃ houter : PayoffIntegrable
-        (E.step source (chooser source hterm)) successorValue,
-      E.backwardValue certificate chooser payoff source hsource =
-        expect (E.step source (chooser source hterm)) successorValue houter := by
+        E.backwardValue certificate chooser payoff target) :
+    PayoffIntegrable
+        (E.step source (chooser source hterm)) successorValue ∧
+      E.backwardValue certificate chooser payoff source =
+        expect (E.step source (chooser source hterm)) successorValue := by
   let p := E.step source (chooser source hterm)
   let q := E.backwardLaw certificate chooser
   have hbind : PayoffIntegrable (p.bind q) payoff := by
     rw [← E.backwardLaw_of_not_terminal_bind hterm]
     exact hsource
   have hcond : ∀ target, ∀ ht : target ∈ p.support,
-      successorValue target = expect (q target) payoff
-        (payoffIntegrable_bind_conditional_on_support p q payoff hbind target ht) := by
+      successorValue target = expect (q target) payoff := by
     intro target ht
     simpa only [backwardValue] using hvalue target ht
   let houter := payoffIntegrable_bind_conditionalValue_on_support
@@ -358,8 +344,8 @@ theorem backwardValue_le_of_isOneShotOptimal
     (state : E.State)
     (hother : PayoffIntegrable
       (E.backwardLaw certificate other state) payoff) :
-    E.backwardValue certificate other payoff state hother ≤
-      E.backwardValue certificate optimal payoff state (hopt.integrable state) := by
+    E.backwardValue certificate other payoff state ≤
+      E.backwardValue certificate optimal payoff state := by
   induction state using certificate.induction with
   | _ source ih =>
       by_cases hterm : E.terminal source
@@ -370,9 +356,8 @@ theorem backwardValue_le_of_isOneShotOptimal
         have hlocal := hopt source hterm
         have hright : ctx.IntegrableAt (other source hterm) :=
           hlocal.2.1 _ (Set.mem_univ _)
-        have hinc : ctx.IntegrableAt (optimal source hterm) := hlocal.1
         have hbound := hlocal.2.2 (other source hterm)
-          (Set.mem_univ _) hinc hright
+          (Set.mem_univ _)
         have hleft : PayoffIntegrable
             ((E.step source (other source hterm)).bind
               (E.backwardLaw certificate other)) payoff := by
@@ -380,23 +365,22 @@ theorem backwardValue_le_of_isOneShotOptimal
           exact hother
         unfold backwardValue
         calc
-          expect (E.backwardLaw certificate other source) payoff hother =
+          expect (E.backwardLaw certificate other source) payoff =
               expect ((E.step source (other source hterm)).bind
-                (E.backwardLaw certificate other)) payoff hleft := by
+                (E.backwardLaw certificate other)) payoff := by
               unfold expect
               rw [E.backwardLaw_of_not_terminal_bind hterm]
           _ ≤ expect ((E.step source (other source hterm)).bind
-                (E.backwardLaw certificate optimal)) payoff hright := by
-              apply expect_bind_mono_on_support
-              intro reached hreached
+                (E.backwardLaw certificate optimal)) payoff := by
+              refine expect_bind_mono_on_support _ _ _ _ hleft hright
+                (fun reached hreached => ?_)
               have hstep : E.Successor reached source :=
                 ⟨(other source hterm).1, (other source hterm).2, hreached⟩
               have hconditional := payoffIntegrable_bind_conditional_on_support
                 (E.step source (other source hterm))
                 (E.backwardLaw certificate other) payoff hleft reached hreached
               simpa only [backwardValue] using ih reached hstep hconditional
-          _ ≤ expect (E.backwardLaw certificate optimal source) payoff
-                (hopt.integrable source) := by
+          _ ≤ expect (E.backwardLaw certificate optimal source) payoff := by
               unfold Context.value at hbound
               unfold expect at hbound ⊢
               rw [E.oneShotContext_incumbentLaw hterm] at hbound
@@ -467,11 +451,9 @@ theorem backwardValue_congr_of_reaches {certificate : E.WellFoundedPlay}
     {first second : E.Chooser} {payoff : E.State → ℝ} (start : E.State)
     (hagree : ∀ source, E.Reaches start source →
       ∀ hterm : ¬ E.terminal source,
-        first source hterm = second source hterm)
-    (hfirst : PayoffIntegrable (E.backwardLaw certificate first start) payoff)
-    (hsecond : PayoffIntegrable (E.backwardLaw certificate second start) payoff) :
-    E.backwardValue certificate first payoff start hfirst =
-      E.backwardValue certificate second payoff start hsecond := by
+        first source hterm = second source hterm) :
+    E.backwardValue certificate first payoff start =
+      E.backwardValue certificate second payoff start := by
   unfold backwardValue expect
   rw [E.backwardLaw_congr_of_reaches start hagree]
 
@@ -519,12 +501,12 @@ theorem isOneShotOptimal_of_backwardValue_le
     {certificate : E.WellFoundedPlay} {optimal : E.Chooser}
     {payoff : E.State → ℝ}
     (hbest : ∀ (other : E.Chooser) (state : E.State),
-      ∃ hother : PayoffIntegrable
-          (E.backwardLaw certificate other state) payoff,
-        ∃ hoptimal : PayoffIntegrable
-          (E.backwardLaw certificate optimal state) payoff,
-          E.backwardValue certificate other payoff state hother ≤
-            E.backwardValue certificate optimal payoff state hoptimal) :
+      PayoffIntegrable
+          (E.backwardLaw certificate other state) payoff ∧
+        PayoffIntegrable
+          (E.backwardLaw certificate optimal state) payoff ∧
+          E.backwardValue certificate other payoff state ≤
+            E.backwardValue certificate optimal payoff state) :
     E.IsOneShotOptimal certificate optimal payoff := by
   intro source hterm
   let ctx := E.oneShotContext certificate optimal payoff source hterm
@@ -544,15 +526,15 @@ theorem isOneShotOptimal_of_backwardValue_le
         alternative) payoff
     rw [E.oneShotContext_deviateAtLaw hterm alternative]
     exact hdev
-  · intro alternative _ hinc' halt
+  · intro alternative _
     obtain ⟨hdev, hopt', hle⟩ :=
       hbest (E.deviateAt source alternative optimal) source
     show expect
         ((E.oneShotContext certificate optimal payoff source hterm).outcome
-          alternative) payoff halt ≤
+          alternative) payoff ≤
       expect
         ((E.oneShotContext certificate optimal payoff source hterm).outcome
-          (optimal source hterm)) payoff hinc'
+          (optimal source hterm)) payoff
     unfold backwardValue expect at hle
     unfold expect
     rw [E.oneShotContext_deviateAtLaw hterm alternative,
@@ -569,9 +551,9 @@ theorem expect_runFor_le_of_isOneShotOptimal
     (hotherStop : E.StopsWithin other horizon state)
     (hoptimalStop : E.StopsWithin optimal horizon state)
     (hother : PayoffIntegrable (E.runFor other horizon state) payoff) :
-    ∃ hoptimal : PayoffIntegrable (E.runFor optimal horizon state) payoff,
-      expect (E.runFor other horizon state) payoff hother ≤
-        expect (E.runFor optimal horizon state) payoff hoptimal := by
+    PayoffIntegrable (E.runFor optimal horizon state) payoff ∧
+      expect (E.runFor other horizon state) payoff ≤
+        expect (E.runFor optimal horizon state) payoff := by
   have hotherBack : PayoffIntegrable
       (E.backwardLaw certificate other state) payoff := by
     rw [E.backwardLaw_eq_runFor hotherStop]

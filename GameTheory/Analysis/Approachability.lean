@@ -27,15 +27,13 @@ variable {ι Q : Type*}
 
 /-- External-regret vector against an environment action.  Coordinate `i` is
 the payoff from committing to `i` minus the current law's expected payoff. -/
-def regretPayoff (u : ι → Q → ℝ) (p : PMF ι) (q : Q)
-    (h : PayoffIntegrable p (fun a => u a q)) : EuclideanSpace ℝ ι :=
-  WithLp.toLp 2 fun i => u i q - expect p (fun a => u a q) h
+def regretPayoff (u : ι → Q → ℝ) (p : PMF ι) (q : Q) : EuclideanSpace ℝ ι :=
+  WithLp.toLp 2 fun i => u i q - expect p (fun a => u a q)
 
 @[simp]
-theorem regretPayoff_ofLp (u : ι → Q → ℝ) (p : PMF ι) (q : Q)
-    (h : PayoffIntegrable p (fun a => u a q)) (i : ι) :
-    (regretPayoff u p q h).ofLp i = u i q -
-      expect p (fun a => u a q) h := rfl
+theorem regretPayoff_ofLp (u : ι → Q → ℝ) (p : PMF ι) (q : Q) (i : ι) :
+    (regretPayoff u p q).ofLp i = u i q -
+      expect p (fun a => u a q) := rfl
 
 variable [Fintype ι]
 
@@ -48,15 +46,14 @@ theorem regretPayoff_norm_le_card_mul_width [Nonempty ι]
     (hrange : ∀ action environment,
       u action environment ∈ Set.Icc lo hi)
     (law : PMF ι) (environment : Q) :
-    ‖regretPayoff u law environment (payoffIntegrable_of_finite law _)‖ ≤
+    ‖regretPayoff u law environment‖ ≤
       (Fintype.card ι : ℝ) * (hi - lo) := by
   let witness : ι := Classical.choice inferInstance
   have hwidth : 0 ≤ hi - lo := by
     have h := hrange witness environment
     exact sub_nonneg.mpr (h.1.trans h.2)
   have hexpectLower : lo ≤
-      expect law (fun action => u action environment)
-        (payoffIntegrable_of_finite law _) := by
+      expect law (fun action => u action environment) := by
     have h := expect_mono (μ := law)
       (f := fun _action : ι => lo)
       (g := fun action => u action environment)
@@ -65,23 +62,23 @@ theorem regretPayoff_norm_le_card_mul_width [Nonempty ι]
     simpa only [expect_constant] using h
   have hexpectUpper :
       expect law (fun action => u action environment)
-        (payoffIntegrable_of_finite law _) ≤ hi := by
+         ≤ hi := by
     exact expect_le_const law (fun action => u action environment)
       (payoffIntegrable_of_finite law _) hi
       (fun action _ => (hrange action environment).2)
   have hcoord : ∀ action,
       |(regretPayoff u law environment
-        (payoffIntegrable_of_finite law _)).ofLp action| ≤ hi - lo := by
+        ).ofLp action| ≤ hi - lo := by
     intro action
     rw [regretPayoff_ofLp, abs_le]
     have hvalue := hrange action environment
     constructor <;> linarith [hvalue.1, hvalue.2]
-  have hsq : ‖regretPayoff u law environment (payoffIntegrable_of_finite law _)‖ ^ 2 ≤
+  have hsq : ‖regretPayoff u law environment‖ ^ 2 ≤
       (Fintype.card ι : ℝ) * (hi - lo) ^ 2 := by
     rw [norm_sq_eq_sum]
     calc
       (∑ action : ι,
-          (regretPayoff u law environment (payoffIntegrable_of_finite law _)).ofLp action ^ 2) ≤
+          (regretPayoff u law environment).ofLp action ^ 2) ≤
           ∑ _action : ι, (hi - lo) ^ 2 := by
         apply Finset.sum_le_sum
         intro action _
@@ -93,7 +90,7 @@ theorem regretPayoff_norm_le_card_mul_width [Nonempty ι]
     exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
   have hbound0 : 0 ≤ (Fintype.card ι : ℝ) * (hi - lo) :=
     mul_nonneg (by positivity) hwidth
-  nlinarith [norm_nonneg (regretPayoff u law environment (payoffIntegrable_of_finite law _)),
+  nlinarith [norm_nonneg (regretPayoff u law environment),
     sq_nonneg ((Fintype.card ι : ℝ) * (hi - lo)),
     mul_nonneg (sub_nonneg.mpr hcard) (sq_nonneg (hi - lo))]
 
@@ -118,7 +115,7 @@ def regretMatch [Nonempty ι] (x : EuclideanSpace ℝ ι) : PMF ι :=
 weighted average of an observable. -/
 theorem expect_regretMatch_pos [Nonempty ι] {x : EuclideanSpace ℝ ι}
     (h : 0 < ∑ i, max (x.ofLp i) 0) (g : ι → ℝ) :
-    expect (regretMatch x) g (payoffIntegrable_of_finite _ _) =
+    expect (regretMatch x) g =
       (∑ i, max (x.ofLp i) 0 * g i) / ∑ i, max (x.ofLp i) 0 := by
   rw [expect_eq_sum, regretMatch, dite_eq_left h, Finset.sum_div]
   refine Finset.sum_congr rfl fun i _ => ?_
@@ -131,18 +128,17 @@ theorem expect_regretMatch_pos [Nonempty ι] {x : EuclideanSpace ℝ ι}
 makes the supporting-hyperplane inner product nonpositive. -/
 theorem regretMatch_steering [Nonempty ι] (u : ι → Q → ℝ)
     (x : EuclideanSpace ℝ ι) (q : Q) :
-    inner ℝ (regretPayoff u (regretMatch x) q (payoffIntegrable_of_finite _ _) - orthantProj x)
+    inner ℝ (regretPayoff u (regretMatch x) q - orthantProj x)
       (x - orthantProj x) ≤ 0 := by
   have hmaxmin : ∀ i, max (x.ofLp i) 0 * min (x.ofLp i) 0 = 0 := fun i => by
     rcases le_total (x.ofLp i) 0 with h | h
     · rw [max_eq_right h, zero_mul]
     · rw [min_eq_right h, mul_zero]
   have key : inner ℝ (regretPayoff u (regretMatch x) q
-      (payoffIntegrable_of_finite _ _) - orthantProj x)
+       - orthantProj x)
       (x - orthantProj x) =
       (∑ i, max (x.ofLp i) 0 * u i q) -
-        expect (regretMatch x) (fun a => u a q)
-          (payoffIntegrable_of_finite _ _) *
+        expect (regretMatch x) (fun a => u a q) *
           ∑ i, max (x.ofLp i) 0 := by
     rw [PiLp.inner_apply, Finset.mul_sum, ← Finset.sum_sub_distrib]
     refine Finset.sum_congr rfl fun i _ => ?_
@@ -165,30 +161,24 @@ theorem regretMatch_steering [Nonempty ι] (u : ι → Q → ℝ)
 squared distance at most `(2M)^2 / t` from the nonpositive orthant. -/
 theorem regretMatch_sq_infDist_avg_le [Nonempty ι] (u : ι → Q → ℝ)
     {M : ℝ} (hM0 : 0 ≤ M)
-    (hM : ∀ p q, ‖regretPayoff u p q
-      (payoffIntegrable_of_finite p _)‖ ≤ M)
+    (hM : ∀ p q, ‖regretPayoff u p q‖ ≤ M)
     (qseq : ℕ → Q) (t : ℕ) :
     Metric.infDist
-        (avgVec (fun p q => regretPayoff u p q
-          (payoffIntegrable_of_finite p _)) regretMatch qseq t)
+        (avgVec (fun p q => regretPayoff u p q) regretMatch qseq t)
         nonposOrthant ^ 2 *
       (t : ℝ) ≤ (2 * M) ^ 2 := by
   have hraw := sq_infDist_avg_le (S := nonposOrthant) (C := 2 * M)
-    (avgVec_succ (fun p q => regretPayoff u p q
-      (payoffIntegrable_of_finite p _)) regretMatch qseq) (fun n => by
-      refine ⟨orthantProj (avgVec (fun p q => regretPayoff u p q
-        (payoffIntegrable_of_finite p _)) regretMatch qseq n),
+    (avgVec_succ (fun p q => regretPayoff u p q) regretMatch qseq) (fun n => by
+      refine ⟨orthantProj (avgVec (fun p q => regretPayoff u p q) regretMatch qseq n),
         orthantProj_mem _, (infDist_eq_norm_sub_orthantProj _).symm,
         regretMatch_steering u _ (qseq n), ?_⟩
-      set current := avgVec (fun p q => regretPayoff u p q
-        (payoffIntegrable_of_finite p _)) regretMatch qseq n
+      set current := avgVec (fun p q => regretPayoff u p q) regretMatch qseq n
       have hcurrent : ‖current‖ ≤ M :=
-        avgVec_norm_le (fun p q => regretPayoff u p q
-          (payoffIntegrable_of_finite p _)) regretMatch qseq hM0 hM n
+        avgVec_norm_le (fun p q => regretPayoff u p q) regretMatch qseq hM0 hM n
       calc
-        ‖regretPayoff u (regretMatch current) (qseq n) (payoffIntegrable_of_finite _ _) -
+        ‖regretPayoff u (regretMatch current) (qseq n) -
             orthantProj current‖ ≤
-          ‖regretPayoff u (regretMatch current) (qseq n) (payoffIntegrable_of_finite _ _)‖ +
+          ‖regretPayoff u (regretMatch current) (qseq n)‖ +
             ‖orthantProj current‖ := norm_sub_le _ _
         _ ≤ M + ‖current‖ :=
           add_le_add (hM _ _) (norm_orthantProj_le current)
@@ -198,39 +188,31 @@ theorem regretMatch_sq_infDist_avg_le [Nonempty ι] (u : ι → Q → ℝ)
     simp [sq_nonneg]
   · have htpos : (0 : ℝ) < t := by exact_mod_cast Nat.pos_of_ne_zero ht
     nlinarith [sq_nonneg
-       (Metric.infDist (avgVec (fun p q => regretPayoff u p q
-         (payoffIntegrable_of_finite p _)) regretMatch qseq t)
+       (Metric.infDist (avgVec (fun p q => regretPayoff u p q) regretMatch qseq t)
         nonposOrthant)]
 
 /-- Regret matching drives the average external-regret vector to the
 nonpositive orthant against every environment sequence. -/
 theorem regretMatch_approaches [Nonempty ι] (u : ι → Q → ℝ)
     {M : ℝ} (hM0 : 0 ≤ M)
-    (hM : ∀ p q, ‖regretPayoff u p q
-      (payoffIntegrable_of_finite p _)‖ ≤ M)
+    (hM : ∀ p q, ‖regretPayoff u p q‖ ≤ M)
     (qseq : ℕ → Q) :
     Tendsto
       (fun t => Metric.infDist
-        (avgVec (fun p q => regretPayoff u p q
-          (payoffIntegrable_of_finite p _)) regretMatch qseq t) nonposOrthant)
+        (avgVec (fun p q => regretPayoff u p q) regretMatch qseq t) nonposOrthant)
       atTop (nhds 0) := by
   refine infDist_avg_tendsto_zero (C := 2 * M)
-    (avgVec_succ (fun p q => regretPayoff u p q
-      (payoffIntegrable_of_finite p _)) regretMatch qseq) (fun t => ?_)
-  refine ⟨orthantProj (avgVec (fun p q => regretPayoff u p q
-    (payoffIntegrable_of_finite p _)) regretMatch qseq t),
+    (avgVec_succ (fun p q => regretPayoff u p q) regretMatch qseq) (fun t => ?_)
+  refine ⟨orthantProj (avgVec (fun p q => regretPayoff u p q) regretMatch qseq t),
     orthantProj_mem _, (infDist_eq_norm_sub_orthantProj _).symm,
     regretMatch_steering u _ (qseq t), ?_⟩
-  set z := avgVec (fun p q => regretPayoff u p q
-    (payoffIntegrable_of_finite p _)) regretMatch qseq t with hz_def
+  set z := avgVec (fun p q => regretPayoff u p q) regretMatch qseq t with hz_def
   have hz : ‖z‖ ≤ M := avgVec_norm_le
-    (fun p q => regretPayoff u p q (payoffIntegrable_of_finite p _))
+    (fun p q => regretPayoff u p q)
     regretMatch qseq hM0 hM t
   calc
-    ‖regretPayoff u (regretMatch z) (qseq t)
-        (payoffIntegrable_of_finite _ _) - orthantProj z‖ ≤
-        ‖regretPayoff u (regretMatch z) (qseq t)
-          (payoffIntegrable_of_finite _ _)‖ + ‖orthantProj z‖ :=
+    ‖regretPayoff u (regretMatch z) (qseq t) - orthantProj z‖ ≤
+        ‖regretPayoff u (regretMatch z) (qseq t)‖ + ‖orthantProj z‖ :=
       norm_sub_le _ _
     _ ≤ M + ‖z‖ := add_le_add (hM _ _) (norm_orthantProj_le z)
     _ ≤ 2 * M := by linarith

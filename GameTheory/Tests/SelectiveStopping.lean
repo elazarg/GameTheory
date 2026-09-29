@@ -30,13 +30,9 @@ def margin : ℝ := 1 / 2
 theorem integrable (f : Fin 3 → ℝ) : PayoffIntegrable law f :=
   payoffIntegrable_of_finite law f
 
-private theorem law_expect (f : Fin 3 → ℝ) (hf : PayoffIntegrable law f) :
-    expect law f hf = (∑ state : Fin 3, f state) / 3 := by
-  calc
-    expect law f hf =
-        expect law f (payoffIntegrable_of_finite law f) :=
-      expect_proof_irrel law f _ _
-    _ = _ := expect_uniformFin f
+private theorem law_expect (f : Fin 3 → ℝ) :
+    expect law f = (∑ state : Fin 3, f state) / 3 :=
+  expect_uniformFin f
 
 /-- Information values one and two have no reached stopped state. -/
 theorem unsupported_stopped_fibers :
@@ -51,13 +47,8 @@ theorem unsupported_stopped_fibers :
 theorem stopped_fiber_comparison (observed : Fin 3)
     (hobserved : observed ∈ (law.map information).support) :
     expect law ((information ⁻¹' {observed}).indicator
-      (stoppingCharge stopped targetValue margin))
-      (payoffIntegrable_indicator (information ⁻¹' {observed})
-        (stoppingCharge_integrable law stopped targetValue margin
-          (integrable targetValue))) ≤
-    expect law ((information ⁻¹' {observed}).indicator sourceValue)
-      (payoffIntegrable_indicator (information ⁻¹' {observed})
-        (integrable sourceValue)) := by
+      (stoppingCharge stopped targetValue margin)) ≤
+    expect law ((information ⁻¹' {observed}).indicator sourceValue) := by
   classical
   rw [law_expect, law_expect]
   fin_cases observed <;>
@@ -69,13 +60,8 @@ theorem reached_stopped_fiber_comparison (observed : Fin 3)
     let stoppedFiber : Set (Fin 3) :=
       {state | information state = observed ∧ stopped state = true}
     expect law (stoppedFiber.indicator
-      (stoppingCharge stopped targetValue margin))
-      (payoffIntegrable_indicator stoppedFiber
-        (stoppingCharge_integrable law stopped targetValue margin
-          (integrable targetValue))) ≤
-    expect law (stoppedFiber.indicator sourceValue)
-      (payoffIntegrable_indicator stoppedFiber
-        (integrable sourceValue)) := by
+      (stoppingCharge stopped targetValue margin)) ≤
+    expect law (stoppedFiber.indicator sourceValue) := by
   classical
   dsimp only
   rw [law_expect, law_expect]
@@ -104,9 +90,9 @@ theorem pointwise_comparison_fails :
 comparison despite failure of stopped-state pointwise dominance. -/
 theorem randomized_positive_margin_bound :
     0 < margin ∧ 0 < ((law.map stopped).toOuterMeasure {true}).toReal ∧
-      expect law targetValue (integrable targetValue) +
+      expect law targetValue +
         margin * ((law.map stopped).toOuterMeasure {true}).toReal ≤
-      expect law sourceValue (integrable sourceValue) := by
+      expect law sourceValue := by
   refine ⟨by norm_num [margin], ?_, ?_⟩
   · rw [← expect_stopIndicator law stopped, law_expect]
     have hsum : (∑ state : Fin 3, stopIndicator stopped state) = 2 := by
@@ -130,12 +116,10 @@ private def gapTarget (state : Fin 2) : ℝ := if state = 0 then 0 else 3
 /-- A unit event discrepancy is attained on a half-mass event. -/
 theorem event_gap_sharp :
     let pair := PMF.uniformOfFintype (Fin 2)
-    let hs := payoffIntegrable_of_finite pair gapSource
-    let ht := payoffIntegrable_of_finite pair gapTarget
     ((pair.map gapEvent).toOuterMeasure {true}).toReal = 1 / 2 ∧
-      expect pair gapSource hs = 1 ∧ expect pair gapTarget ht = 3 / 2 ∧
-      expect pair gapTarget ht ≤
-        expect pair gapSource hs +
+      expect pair gapSource = 1 ∧ expect pair gapTarget = 3 / 2 ∧
+      expect pair gapTarget ≤
+        expect pair gapSource +
           ((pair.map gapEvent).toOuterMeasure {true}).toReal := by
   dsimp only
   have hmass : ((PMF.uniformOfFintype (Fin 2)).map gapEvent
@@ -177,14 +161,11 @@ private theorem selectedLaw2 :
       fin_cases state <;> simp [stop2, quit2, proceed2, selectedValue2]
     _ = states2.map selectedValue2 := PMF.bind_pure_comp _ _
 
-private theorem expect_map_states2 (f : Fin 2 → ℝ)
-    (hf : PayoffIntegrable (states2.map f) id) :
-    expect (states2.map f) id hf = (∑ state : Fin 2, f state) / 2 := by
-  have hsource : PayoffIntegrable states2 (id ∘ f) :=
-    payoffIntegrable_of_finite states2 _
+private theorem expect_map_states2 (f : Fin 2 → ℝ) :
+    expect (states2.map f) id = (∑ state : Fin 2, f state) / 2 := by
   calc
-    expect (states2.map f) id hf = expect states2 (id ∘ f) hsource :=
-      expect_map f states2 id hsource hf
+    expect (states2.map f) id = expect states2 (id ∘ f) :=
+      expect_map f states2 id
     _ = _ := by
       simpa [states2, Function.comp_def] using
         (expect_uniformFin f)
@@ -192,21 +173,13 @@ private theorem expect_map_states2 (f : Fin 2 → ℝ)
 /-- Unconditional quit and continuation means agree, but selecting quit at
 the favorable state strictly improves the realized mean. -/
 theorem unconditional_comparison_insufficient :
-    let hquit := (payoffIntegrable_map_iff quitValue2 states2 id).2
-      (payoffIntegrable_of_finite states2 (id ∘ quitValue2))
-    let hproceed := (payoffIntegrable_map_iff (fun _ : Fin 2 => (1 : ℝ))
-      states2 id).2
-      (payoffIntegrable_of_finite states2 (id ∘ fun _ : Fin 2 => (1 : ℝ)))
-    let hselected := (payoffIntegrable_map_iff selectedValue2 states2 id).2
-      (payoffIntegrable_of_finite states2 (id ∘ selectedValue2))
-    expect (states2.map quitValue2) id hquit =
-      expect (states2.map fun _ : Fin 2 => (1 : ℝ)) id hproceed ∧
-    expect (states2.map fun _ : Fin 2 => (1 : ℝ)) id hproceed <
-      expect (states2.map selectedValue2) id hselected ∧
+    expect (states2.map quitValue2) id =
+      expect (states2.map fun _ : Fin 2 => (1 : ℝ)) id ∧
+    expect (states2.map fun _ : Fin 2 => (1 : ℝ)) id <
+      expect (states2.map selectedValue2) id ∧
     (states2.bind fun state => (stop2 state).bind fun stops =>
       if stops then quit2 state else proceed2 state) =
       states2.map selectedValue2 := by
-  dsimp only
   refine ⟨?_, ?_, selectedLaw2⟩
   · rw [expect_map_states2, expect_map_states2]
     norm_num [Fin.sum_univ_succ, quitValue2]
@@ -218,16 +191,16 @@ theorem negative_event_gap :
     let states := PMF.uniformOfFintype (Fin 2)
     let event : Set (Fin 2) := {0}
     let target := fun state : Fin 2 => if state = 0 then (-2 : ℝ) else 0
-    let ht := payoffIntegrable_of_finite states target
-    expect states target ht = -1 ∧
-      expect states target ht ≤
-        expect states (fun _ => 0) (payoffIntegrable_zero states) +
+    expect states target = -1 ∧
+      expect states target ≤
+        expect states (fun _ => 0) +
           (-2) * (states.toOuterMeasure event).toReal := by
   dsimp only
   constructor
   · rw [expect_uniformFin]
     norm_num [Fin.sum_univ_succ]
-  · apply expect_le_add_event_gap
+  · refine expect_le_add_event_gap _ _ _ _ _ (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _) ?_ ?_
     · intro state _ hstate
       simp only [Set.mem_singleton_iff] at hstate
       simp [hstate]

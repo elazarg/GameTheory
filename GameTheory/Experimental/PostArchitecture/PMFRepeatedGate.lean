@@ -55,28 +55,25 @@ theorem stage_integrable : game.form.HasIntegrableUtility game.utility := by
 
 private def noiseMean : ℝ :=
   expectedUtility linearUtility (0 : Fin 2) geometric
-    linearUtility_integrable_geometric
 
 private theorem noiseMean_nonneg : 0 ≤ noiseMean := by
   exact expect_nonneg geometric (fun noise => linearUtility noise 0)
-    linearUtility_integrable_geometric (fun noise _ => by
+     (fun noise _ => by
       unfold linearUtility
       positivity)
 
 /-- The actual stage expected payoff adds the chosen action to a finite noise mean. -/
 private theorem stagePayoff_eq (profile : Profile game.form.sig) :
-    game.stagePayoff profile () (stage_integrable () profile) =
+    game.stagePayoff profile () =
       (profile () : ℝ) + noiseMean := by
   have hmap := expectedUtility_map game.utility ()
     (fun noise : ℕ => (profile (), noise)) geometric
-    (stage_integrable () profile)
   have hconst := payoffIntegrable_constant geometric (profile () : ℝ)
   have hlinear := linearUtility_integrable_geometric
-  have hsum := payoffIntegrable_add hconst hlinear
   calc
-    game.stagePayoff profile () (stage_integrable () profile) =
+    game.stagePayoff profile () =
         expect geometric (fun noise =>
-          (profile () : ℝ) + ((noise : ℝ) + 1)) hsum := by
+          (profile () : ℝ) + ((noise : ℝ) + 1)) := by
       simpa [UtilityGame.stagePayoff, form, game, linearUtility,
         expectedUtility] using hmap
     _ = (profile () : ℝ) + noiseMean := by
@@ -90,8 +87,7 @@ def stationary : game.RepeatedProfile :=
 /-- The stationary profile has a summable half-discounted expected-payoff series. -/
 theorem stationary_summable :
     Summable fun t : ℕ => (1 / 2 : ℝ) ^ t *
-      game.stagePayoff (game.repeatedPlay stationary t) ()
-        (stage_integrable () (game.repeatedPlay stationary t)) := by
+      game.stagePayoff (game.repeatedPlay stationary t) () := by
   have hgeom := (summable_geometric_of_lt_one
     (by norm_num : 0 ≤ (1 / 2 : ℝ)) (by norm_num : (1 / 2 : ℝ) < 1))
       |>.mul_right noiseMean
@@ -107,8 +103,7 @@ theorem exponential_action (t : ℕ) :
 /-- Every discounted term on the exponential path is at least one. -/
 theorem exponential_weighted_term_ge_one (t : ℕ) :
     1 ≤ (1 / 2 : ℝ) ^ t *
-      game.stagePayoff (game.repeatedPlay exponential t) ()
-        (stage_integrable () (game.repeatedPlay exponential t)) := by
+      game.stagePayoff (game.repeatedPlay exponential t) () := by
   rw [stagePayoff_eq, exponential_action]
   have hpow : (1 / 2 : ℝ) ^ t * (2 ^ t : ℕ) = 1 := by
     norm_num [Nat.cast_pow, ← mul_pow]
@@ -121,8 +116,7 @@ theorem exponential_weighted_term_ge_one (t : ℕ) :
 /-- Stagewise integration does not define the nonsummable discounted payoff. -/
 theorem exponential_not_summable :
     ¬ Summable (fun t : ℕ => (1 / 2 : ℝ) ^ t *
-      game.stagePayoff (game.repeatedPlay exponential t) ()
-        (stage_integrable () (game.repeatedPlay exponential t))) := by
+      game.stagePayoff (game.repeatedPlay exponential t) ()) := by
   intro hsum
   have hone : Summable (fun _ : ℕ => (1 : ℝ)) :=
     Summable.of_nonneg_of_le (fun _ => by norm_num)

@@ -2,7 +2,7 @@
 # Bayesian strategic-form transfer
 
 The solution-concept-free compiler identifies local policies with contingent
-plans. This leaf transports guarded expected utility and Nash equilibrium.
+plans. This leaf transports expected utility and Nash equilibrium.
 -/
 
 import GameTheory.Languages.Bayesian
@@ -28,44 +28,25 @@ def protocolUtility (B : BayesianGame ι) [∀ i, Nonempty (B.Act i)] :
 
 theorem expectedUtility_protocolUtility_map (B : BayesianGame ι)
     [∀ i, Nonempty (B.Act i)] (who : ι)
-    (law : PMF B.signature.Outcome)
-    (h : UtilityIntegrable B.utility who law) :
-    expectedUtility (protocolUtility B) who (law.map some)
-        ((payoffIntegrable_map_iff some law
-          (fun outcome => protocolUtility B outcome who)).mpr
-          (by simpa only [Function.comp_def, protocolUtility] using h)) =
-      expectedUtility B.utility who law h := by
+    (law : PMF B.signature.Outcome) :
+    expectedUtility (protocolUtility B) who (law.map some) =
+      expectedUtility B.utility who law := by
   simpa only [protocolUtility, BayesianGame.utility, expectedUtility] using
     expectedUtility_map (protocolUtility B) who some law
-      ((payoffIntegrable_map_iff some law
-        (fun outcome => protocolUtility B outcome who)).mpr
-        (by simpa only [Function.comp_def, protocolUtility] using h))
 
 theorem expectedUtility_toProtocolForm (B : BayesianGame ι)
     [∀ i, Nonempty (B.Act i)] (who : ι)
-    (policies : Profile (informationModel B).strategicSignature)
-    (h : UtilityIntegrable B.utility who
-      (B.toForm.play (planOfPolicyProfile B policies))) :
+    (policies : Profile (informationModel B).strategicSignature) :
     expectedUtility (protocolUtility B) who
-        ((toProtocolForm B).play policies)
-        (payoffIntegrable_congr_law
-          (toProtocolForm_play B policies).symm
-          ((payoffIntegrable_map_iff some
-            (B.toForm.play (planOfPolicyProfile B policies))
-            (fun outcome => protocolUtility B outcome who)).mpr
-            (by simpa only [Function.comp_def, protocolUtility] using h))) =
+        ((toProtocolForm B).play policies) =
       expectedUtility B.utility who
-        (B.toForm.play (planOfPolicyProfile B policies)) h := by
+        (B.toForm.play (planOfPolicyProfile B policies)) := by
   calc
     _ = expectedUtility (protocolUtility B) who
-          ((B.toForm.play (planOfPolicyProfile B policies)).map some)
-          ((payoffIntegrable_map_iff some
-            (B.toForm.play (planOfPolicyProfile B policies))
-            (fun outcome => protocolUtility B outcome who)).mpr
-            (by simpa only [Function.comp_def, protocolUtility] using h)) :=
+          ((B.toForm.play (planOfPolicyProfile B policies)).map some) :=
       expectedUtility_congr_law (protocolUtility B) who
-        (toProtocolForm_play B policies) _ _
-    _ = _ := expectedUtility_protocolUtility_map B who _ h
+        (toProtocolForm_play B policies)
+    _ = _ := expectedUtility_protocolUtility_map B who _
 
 variable [DecidableEq ι]
 

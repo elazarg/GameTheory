@@ -437,7 +437,7 @@ theorem isεNash_native_iff_compiled
         expectedUtility_congr_law
           (fun assignment owner => semantics.utility owner assignment) owner
           (native_play_symm_eq_compiled_play topological semantics
-            targetProfile).symm htarget hsource)
+            targetProfile).symm)
       ε policy).symm
 
 /-- Native behavioral Nash equilibrium is exactly

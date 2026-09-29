@@ -100,22 +100,19 @@ def recordDeviation (B : BayesianGame.{uι, ut, ua} ι)
     (∀ i, B.Ty i) × Profile B.actionSignature :=
   (rec.1, B.applyObedienceDeviation rec.1 rec.2 who deviation)
 
-/-- Guarded value of following recommendations. -/
+/-- Expected value of following recommendations. -/
 def recommendedValue (B : BayesianGame.{uι, ut, ua} ι)
-    (recommendation : B.RecommendationLaw) (who : ι)
-    (h : UtilityIntegrable B.utility who recommendation) : ℝ :=
-  expectedUtility B.utility who recommendation h
+    (recommendation : B.RecommendationLaw) (who : ι) : ℝ :=
+  expectedUtility B.utility who recommendation
 
-/-- Guarded value of one entire obedience-deviation law. -/
+/-- Expected value of one entire obedience-deviation law. -/
 def deviatingValue (B : BayesianGame.{uι, ut, ua} ι)
     (recommendation : B.RecommendationLaw) (who : ι)
-    (deviation : B.ObedienceDeviation who)
-    (h : UtilityIntegrable B.utility who
-      (recommendation.map (B.recordDeviation who deviation))) : ℝ :=
+    (deviation : B.ObedienceDeviation who) : ℝ :=
   expectedUtility B.utility who
-    (recommendation.map (B.recordDeviation who deviation)) h
+    (recommendation.map (B.recordDeviation who deviation))
 
-/-- Bayes plausibility and guarded expected-utility obedience. -/
+/-- Bayes plausibility and expected-utility obedience between integrable laws. -/
 def IsBayesCorrelatedEq (B : BayesianGame.{uι, ut, ua} ι)
     (recommendation : B.RecommendationLaw) : Prop :=
   B.IsBayesPlausible recommendation ∧
@@ -179,41 +176,29 @@ theorem recommendation_integrable_of_deviation
   exact payoffIntegrable_congr_law hlaw
     (hdeviation (B.identityObedienceDeviation who))
 
-/-- Guarded posterior payoff from following a positive-mass cell. -/
+/-- Posterior payoff from following a positive-mass cell. -/
 def interimRecommendedValue (B : BayesianGame.{uι, ut, ua} ι)
     (recommendation : B.RecommendationLaw) (who : ι)
     (ownType : B.Ty who) (recommended : B.Act who)
     (hObserved :
       ∃ rec ∈ B.obedienceEvent who ownType recommended,
-        rec ∈ recommendation.support)
-    (hconditional : PayoffIntegrable
-      (recommendation.filter
-        (B.obedienceEvent who ownType recommended) hObserved)
-      (fun rec => B.utility rec who)) : ℝ :=
+        rec ∈ recommendation.support) : ℝ :=
   expect (recommendation.filter
       (B.obedienceEvent who ownType recommended) hObserved)
-    (fun rec => B.utility rec who) hconditional
+    (fun rec => B.utility rec who)
 
-/-- Guarded posterior payoff from a fixed replacement on one cell. The
-certificate covers only this actual filtered law. -/
+/-- Posterior payoff from a fixed replacement on one cell. -/
 def interimDeviatingValue (B : BayesianGame.{uι, ut, ua} ι)
     (recommendation : B.RecommendationLaw) (who : ι)
     (ownType : B.Ty who) (recommended replacement : B.Act who)
     (hObserved :
       ∃ rec ∈ B.obedienceEvent who ownType recommended,
-        rec ∈ recommendation.support)
-    (hconditional : PayoffIntegrable
-      (recommendation.filter
-        (B.obedienceEvent who ownType recommended) hObserved)
-      (fun rec =>
-        B.utility (B.recordDeviation who
-          (B.fixedReplacementDeviation who replacement) rec) who)) : ℝ :=
+        rec ∈ recommendation.support) : ℝ :=
   expect (recommendation.filter
       (B.obedienceEvent who ownType recommended) hObserved)
     (fun rec =>
       B.utility (B.recordDeviation who
         (B.fixedReplacementDeviation who replacement) rec) who)
-    hconditional
 
 omit [DecidableEq ι] in
 theorem interimRecommended_integrable_of_whole
@@ -257,24 +242,17 @@ theorem interimDeviating_integrable_of_whole
 obedience-deviation law. The follow-law guard follows from identity obedience. -/
 def InterimObedienceTests (B : BayesianGame.{uι, ut, ua} ι)
     (recommendation : B.RecommendationLaw) : Prop :=
-  ∀ who, ∃ hdeviation : ∀ deviation : B.ObedienceDeviation who,
+  ∀ who, (∀ deviation : B.ObedienceDeviation who,
       UtilityIntegrable B.utility who
-        (recommendation.map (B.recordDeviation who deviation)),
-    let hfollow :=
-      B.recommendation_integrable_of_deviation recommendation who hdeviation
+        (recommendation.map (B.recordDeviation who deviation))) ∧
     ∀ ownType recommended replacement
       (hObserved :
         ∃ rec ∈ B.obedienceEvent who ownType recommended,
           rec ∈ recommendation.support),
       B.interimDeviatingValue recommendation who ownType recommended
-          replacement hObserved
-          (B.interimDeviating_integrable_of_whole recommendation who
-            ownType recommended replacement hObserved
-            (hdeviation (B.fixedReplacementDeviation who replacement))) ≤
+          replacement hObserved ≤
         B.interimRecommendedValue recommendation who ownType recommended
           hObserved
-          (B.interimRecommended_integrable_of_whole recommendation who
-            ownType recommended hObserved hfollow)
 
 theorem recordDeviation_strategyRecommendationLaw
     (B : BayesianGame.{uι, ut, ua} ι)
@@ -295,27 +273,19 @@ theorem recordDeviation_strategyRecommendationLaw
 omit [DecidableEq ι] in
 theorem recommendedValue_strategyRecommendationLaw
     (B : BayesianGame.{uι, ut, ua} ι) (plan : Profile B.signature)
-    (who : ι)
-    (h : UtilityIntegrable B.utility who
-      (B.strategyRecommendationLaw plan)) :
-    B.recommendedValue (B.strategyRecommendationLaw plan) who h =
-      expectedUtility B.utility who (B.toForm.play plan)
-        (payoffIntegrable_congr_law rfl h) := rfl
+    (who : ι) :
+    B.recommendedValue (B.strategyRecommendationLaw plan) who =
+      expectedUtility B.utility who (B.toForm.play plan) := rfl
 
 theorem deviatingValue_strategyRecommendationLaw
     (B : BayesianGame.{uι, ut, ua} ι) (plan : Profile B.signature)
-    (who : ι) (deviation : B.ObedienceDeviation who)
-    (h : UtilityIntegrable B.utility who
-      ((B.strategyRecommendationLaw plan).map
-        (B.recordDeviation who deviation))) :
-    B.deviatingValue (B.strategyRecommendationLaw plan) who deviation h =
+    (who : ι) (deviation : B.ObedienceDeviation who) :
+    B.deviatingValue (B.strategyRecommendationLaw plan) who deviation =
       expectedUtility B.utility who
         (B.toForm.play (Profile.update plan who
-          (fun ownType => deviation ownType (plan who ownType))))
-        (payoffIntegrable_congr_law
-          (B.recordDeviation_strategyRecommendationLaw plan who deviation) h) := by
+          (fun ownType => deviation ownType (plan who ownType)))) := by
   exact expectedUtility_congr_law B.utility who
-    (B.recordDeviation_strategyRecommendationLaw plan who deviation) _ _
+    (B.recordDeviation_strategyRecommendationLaw plan who deviation)
 
 /-- Nash obedience transports along equality of the actual outcome laws. -/
 theorem isBayesCorrelatedEq_strategyRecommendationLaw_of_isNash
@@ -346,7 +316,8 @@ theorem isBayesCorrelatedEq_implies_interim
         (recommendation.map (B.recordDeviation who deviation)) :=
     fun deviation => (hBCE.2 who deviation).2.1
   refine ⟨hdeviation, ?_⟩
-  intro hfollow ownType recommended replacement hObserved
+  intro ownType recommended replacement hObserved
+  have hfollow := B.recommendation_integrable_of_deviation recommendation who hdeviation
   let event := B.obedienceEvent who ownType recommended
   let localDeviation : B.ObedienceDeviation who :=
     fun candidateType candidateAction =>
@@ -363,11 +334,8 @@ theorem isBayesCorrelatedEq_implies_interim
   have hf : PayoffIntegrable recommendation f :=
     (payoffIntegrable_map_iff (B.recordDeviation who localDeviation)
       recommendation g).mp (hdeviation localDeviation)
-  have hfixed : PayoffIntegrable recommendation ffixed :=
-    (payoffIntegrable_map_iff (B.recordDeviation who fixed)
-      recommendation g).mp (hdeviation fixed)
-  have hle : expect recommendation f hf ≤
-      expect recommendation g hfollow := by
+  have hle : expect recommendation f ≤
+      expect recommendation g := by
     have hglobal := (hBCE.2 who localDeviation).2.2
     rw [expectedUtility_map] at hglobal
     exact hglobal
@@ -396,13 +364,10 @@ theorem isBayesCorrelatedEq_implies_interim
       fixedReplacementDeviation, fixed, localDeviation, hpair]
   unfold interimDeviatingValue interimRecommendedValue
   calc
-    expect (recommendation.filter event hObserved) ffixed
-        (payoffIntegrable_filter recommendation event hObserved ffixed hfixed) =
-      expect (recommendation.filter event hObserved) f
-        (payoffIntegrable_filter recommendation event hObserved f hf) :=
-      expect_congr_on_support hpoint _ _
-    _ ≤ expect (recommendation.filter event hObserved) g
-        (payoffIntegrable_filter recommendation event hObserved g hfollow) :=
+    expect (recommendation.filter event hObserved) ffixed =
+      expect (recommendation.filter event hObserved) f :=
+      expect_congr_on_support hpoint
+    _ ≤ expect (recommendation.filter event hObserved) g :=
       hconditional
 
 /-- Whole-law integrability and all positive-cell tests imply obedience. -/
@@ -427,17 +392,14 @@ theorem interim_implies_isBayesCorrelatedEq
   have hf : PayoffIntegrable recommendation f :=
     (payoffIntegrable_map_iff (B.recordDeviation who deviation)
       recommendation g).mp (hdeviation deviation)
-  have hle : expect recommendation f hf ≤
-      expect recommendation g hfollow := by
+  have hle : expect recommendation f ≤
+      expect recommendation g := by
     apply expect_fiberwise_le recommendation observation f g hf hfollow
     intro observed hb
     let replacement := deviation observed.1 observed.2
     let fixed := B.fixedReplacementDeviation who replacement
     let ffixed : (∀ i, B.Ty i) × Profile B.actionSignature → ℝ :=
       fun rec => B.utility (B.recordDeviation who fixed rec) who
-    have hfixed : PayoffIntegrable recommendation ffixed :=
-      (payoffIntegrable_map_iff (B.recordDeviation who fixed)
-        recommendation g).mp (hdeviation fixed)
     have hObserved :
         ∃ rec ∈ B.obedienceEvent who observed.1 observed.2,
           rec ∈ recommendation.support := by
@@ -470,22 +432,14 @@ theorem interim_implies_isBayesCorrelatedEq
       simp [f, ffixed, recordDeviation, applyObedienceDeviation,
         fixedReplacementDeviation, fixed, replacement, hpair]
     have hvalueEq :
-        expect (fiberPosterior recommendation observation observed hb) f
-            (payoffIntegrable_fiberPosterior recommendation observation
-              f hf observed hb) =
+        expect (fiberPosterior recommendation observation observed hb) f =
           expect (fiberPosterior recommendation observation observed hb)
-            ffixed
-            (payoffIntegrable_fiberPosterior recommendation observation
-              ffixed hfixed observed hb) :=
-      expect_congr_on_support hpoint _ _
+            ffixed :=
+      expect_congr_on_support hpoint
     have hfixedLe :
         expect (fiberPosterior recommendation observation observed hb)
-            ffixed
-            (payoffIntegrable_fiberPosterior recommendation observation
-              ffixed hfixed observed hb) ≤
-          expect (fiberPosterior recommendation observation observed hb) g
-            (payoffIntegrable_fiberPosterior recommendation observation
-              g hfollow observed hb) := by
+            ffixed ≤
+          expect (fiberPosterior recommendation observation observed hb) g := by
       have h := hcond observed.1 observed.2 replacement hObserved
       unfold interimDeviatingValue interimRecommendedValue at h
       simpa only [hposterior] using h
@@ -493,15 +447,14 @@ theorem interim_implies_isBayesCorrelatedEq
   refine ⟨hfollow, hdeviation deviation, ?_⟩
   have hmap :=
     expectedUtility_map B.utility who (B.recordDeviation who deviation)
-      recommendation (hdeviation deviation)
+      recommendation
   calc
     expectedUtility B.utility who
-        (recommendation.map (B.recordDeviation who deviation))
-        (hdeviation deviation) =
-      expect recommendation f hf := by
+        (recommendation.map (B.recordDeviation who deviation)) =
+      expect recommendation f := by
         exact hmap
-    _ ≤ expect recommendation g hfollow := hle
-    _ = expectedUtility B.utility who recommendation hfollow := rfl
+    _ ≤ expect recommendation g := hle
+    _ = expectedUtility B.utility who recommendation := rfl
 
 theorem isBayesCorrelatedEq_iff_interim_obedience
     (B : BayesianGame.{uι, ut, ua} ι)
@@ -573,12 +526,10 @@ theorem recommendedValue_outcomeLaw_integrable_iff
 omit [DecidableEq ι] in
 theorem recommendedValue_outcomeLaw
     (S : InformationStructure B Signal)
-    (plan : Profile S.inducedBayesianGame.signature) (who : ι)
-    (h : UtilityIntegrable B.utility who (S.outcomeLaw plan)) :
-    B.recommendedValue (S.outcomeLaw plan) who h =
+    (plan : Profile S.inducedBayesianGame.signature) (who : ι) :
+    B.recommendedValue (S.outcomeLaw plan) who =
       expectedUtility S.inducedBayesianGame.utility who
-        (S.inducedBayesianGame.toForm.play plan)
-        ((S.recommendedValue_outcomeLaw_integrable_iff plan who).mp h) := by
+        (S.inducedBayesianGame.toForm.play plan) := by
   let f : ((∀ i, B.Ty i) × (∀ i, Signal i)) →
       B.signature.Outcome :=
     fun rec => (rec.1, fun i => plan i (rec.1 i, rec.2 i))
@@ -593,23 +544,17 @@ theorem recommendedValue_outcomeLaw
       S.inducedBayesianGame.toForm.play plan = S.law.map g := by
     rw [S.inducedBayesianGame.toForm_play, PMF.map_comp]
     rfl
-  let hf : UtilityIntegrable B.utility who (S.law.map f) :=
-    payoffIntegrable_congr_law hleft h
-  let hg : UtilityIntegrable S.inducedBayesianGame.utility who (S.law.map g) :=
-    payoffIntegrable_congr_law hright
-      ((S.recommendedValue_outcomeLaw_integrable_iff plan who).mp h)
   calc
-    B.recommendedValue (S.outcomeLaw plan) who h =
-        expectedUtility B.utility who (S.law.map f) hf :=
-      expectedUtility_congr_law B.utility who hleft h hf
-    _ = expectedUtility S.inducedBayesianGame.utility who (S.law.map g) hg :=
-      expectedUtility_two_maps_eq S.law f g B.utility
-        S.inducedBayesianGame.utility who (fun rec => rfl) hf hg
+    B.recommendedValue (S.outcomeLaw plan) who =
+        expectedUtility B.utility who (S.law.map f) :=
+      expectedUtility_congr_law B.utility who hleft
+    _ = expectedUtility S.inducedBayesianGame.utility who (S.law.map g) :=
+      expectedUtility_two_maps S.law f g B.utility
+        S.inducedBayesianGame.utility who (fun rec => rfl)
     _ = expectedUtility S.inducedBayesianGame.utility who
-        (S.inducedBayesianGame.toForm.play plan)
-        ((S.recommendedValue_outcomeLaw_integrable_iff plan who).mp h) :=
+        (S.inducedBayesianGame.toForm.play plan) :=
       expectedUtility_congr_law S.inducedBayesianGame.utility who
-        hright.symm hg _
+        hright.symm
 
 theorem deviatingValue_outcomeLaw_integrable_iff
     (S : InformationStructure B Signal)
@@ -658,16 +603,12 @@ theorem deviatingValue_outcomeLaw_integrable_iff
 theorem deviatingValue_outcomeLaw
     (S : InformationStructure B Signal)
     (plan : Profile S.inducedBayesianGame.signature) (who : ι)
-    (deviation : B.ObedienceDeviation who)
-    (h : UtilityIntegrable B.utility who
-      ((S.outcomeLaw plan).map (B.recordDeviation who deviation))) :
-    B.deviatingValue (S.outcomeLaw plan) who deviation h =
+    (deviation : B.ObedienceDeviation who) :
+    B.deviatingValue (S.outcomeLaw plan) who deviation =
       expectedUtility S.inducedBayesianGame.utility who
         (S.inducedBayesianGame.toForm.play
           (Profile.update plan who
-            (fun observed => deviation observed.1 (plan who observed))))
-        ((S.deviatingValue_outcomeLaw_integrable_iff
-          plan who deviation).mp h) := by
+            (fun observed => deviation observed.1 (plan who observed)))) := by
   let f : ((∀ i, B.Ty i) × (∀ i, Signal i)) →
       B.signature.Outcome :=
     fun rec =>
@@ -693,11 +634,6 @@ theorem deviatingValue_outcomeLaw
         S.law.map g := by
     rw [S.inducedBayesianGame.toForm_play, PMF.map_comp]
     rfl
-  let hf : UtilityIntegrable B.utility who (S.law.map f) :=
-    payoffIntegrable_congr_law hleft h
-  let hg : UtilityIntegrable S.inducedBayesianGame.utility who (S.law.map g) :=
-    payoffIntegrable_congr_law hright
-      ((S.deviatingValue_outcomeLaw_integrable_iff plan who deviation).mp h)
   have heq : ∀ rec, B.utility (f rec) who =
       S.inducedBayesianGame.utility (g rec) who := by
     intro rec
@@ -706,20 +642,18 @@ theorem deviatingValue_outcomeLaw
       BayesianGame.actionsOf_update]
     rfl
   calc
-    B.deviatingValue (S.outcomeLaw plan) who deviation h =
-        expectedUtility B.utility who (S.law.map f) hf :=
-      expectedUtility_congr_law B.utility who hleft h hf
-    _ = expectedUtility S.inducedBayesianGame.utility who (S.law.map g) hg :=
-      expectedUtility_two_maps_eq S.law f g B.utility
-        S.inducedBayesianGame.utility who heq hf hg
+    B.deviatingValue (S.outcomeLaw plan) who deviation =
+        expectedUtility B.utility who (S.law.map f) :=
+      expectedUtility_congr_law B.utility who hleft
+    _ = expectedUtility S.inducedBayesianGame.utility who (S.law.map g) :=
+      expectedUtility_two_maps S.law f g B.utility
+        S.inducedBayesianGame.utility who heq
     _ = expectedUtility S.inducedBayesianGame.utility who
         (S.inducedBayesianGame.toForm.play
           (Profile.update plan who
-            (fun observed => deviation observed.1 (plan who observed))))
-        ((S.deviatingValue_outcomeLaw_integrable_iff
-          plan who deviation).mp h) :=
+            (fun observed => deviation observed.1 (plan who observed)))) :=
       expectedUtility_congr_law S.inducedBayesianGame.utility who
-        hright.symm hg _
+        hright.symm
 
 /-- Obedience in the original recommendation law is exactly the corresponding
 contingent-plan comparison in the induced private-signal game. -/

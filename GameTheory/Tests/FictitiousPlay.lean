@@ -53,18 +53,16 @@ theorem alternating_prob_true :
 `false, true, false`, the expected Boolean value is `1/3`. -/
 theorem alternating_expect_three :
     expect (game.form.empiricalMarginal alternatingHistory 0 3) trueValue
-      (payoffIntegrable_of_finite _ _) = 1 / 3 := by
+       = 1 / 3 := by
   rw [game.form.empiricalMarginal_expect]
   rw [Fin.sum_univ_succ, Fin.sum_univ_succ, Fin.sum_univ_one]
   norm_num [alternatingHistory, trueValue]
 
 /-- The successor theorem specializes to the nonconstant alternating trace. -/
 theorem alternating_successor_identity :
-    expect (game.form.empiricalMarginal alternatingHistory 0 3) trueValue
-        (payoffIntegrable_of_finite _ _) =
+    expect (game.form.empiricalMarginal alternatingHistory 0 3) trueValue =
       ((1 + 1 : ℝ) / (1 + 2 : ℝ)) *
-          expect (game.form.empiricalMarginal alternatingHistory 0 2) trueValue
-            (payoffIntegrable_of_finite _ _) +
+          expect (game.form.empiricalMarginal alternatingHistory 0 2) trueValue +
         (1 / (1 + 2 : ℝ)) * trueValue (alternatingHistory 2 0) :=
   by
     convert game.form.empiricalMarginal_succ_expect alternatingHistory 0 1 trueValue using 1

@@ -36,8 +36,8 @@ theorem coordination_sees_correlation :
     ¬ ∀ first second : PMF (Bool × Bool),
       first.map Prod.fst = second.map Prod.fst →
       first.map Prod.snd = second.map Prod.snd →
-      expect first coordination (payoffIntegrable_of_bounded _ _ abs_coordination_le) =
-        expect second coordination (payoffIntegrable_of_bounded _ _ abs_coordination_le) :=
+      expect first coordination =
+        expect second coordination :=
   fun hpreserves => coordination_not_additive
     ((expect_eq_of_marginals_iff_additive abs_coordination_le).1 hpreserves)
 
@@ -52,8 +52,8 @@ theorem abs_bonuses_le (outcome : Bool × Bool) : |bonuses outcome| ≤ 5 := by
 theorem bonuses_ignore_correlation (first second : PMF (Bool × Bool))
     (hleft : first.map Prod.fst = second.map Prod.fst)
     (hright : first.map Prod.snd = second.map Prod.snd) :
-    expect first bonuses (payoffIntegrable_of_bounded _ _ abs_bonuses_le) =
-      expect second bonuses (payoffIntegrable_of_bounded _ _ abs_bonuses_le) :=
+    expect first bonuses =
+      expect second bonuses :=
   (expect_eq_of_marginals_iff_additive abs_bonuses_le).2
     ⟨fun first => if first then 2 else 0, fun second => if second then 3 else 0,
       fun _ => rfl⟩ first second hleft hright

@@ -40,9 +40,8 @@ theorem toReal_multiplicativeWeights (eta : ℝ) (gain : ℕ → A → ℝ)
     OnlineLearning.probability_nonneg]
 
 theorem expect_multiplicativeWeights
-    (eta : ℝ) (gain : ℕ → A → ℝ) (t : ℕ) (f : A → ℝ)
-    (h : PayoffIntegrable (multiplicativeWeights eta gain t) f) :
-    expect (multiplicativeWeights eta gain t) f h =
+    (eta : ℝ) (gain : ℕ → A → ℝ) (t : ℕ) (f : A → ℝ) :
+    expect (multiplicativeWeights eta gain t) f =
       OnlineLearning.expected eta gain t f := by
   rw [expect_eq_sum]
   simp [OnlineLearning.expected, toReal_multiplicativeWeights]

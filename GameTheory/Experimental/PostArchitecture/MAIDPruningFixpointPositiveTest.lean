@@ -897,46 +897,41 @@ theorem expanded_expectedUtility :
         (fun assignment owner => semantics.utility owner assignment) ()
         ((nativeBehavioralGameForm semantics).play
           (pruning.expandPolicy reducedPolicy))
-        (payoffIntegrable_of_finite _ _) = 1 := by
+         = 1 := by
   unfold expectedUtility
   calc
     expect ((nativeBehavioralGameForm semantics).play
         (pruning.expandPolicy reducedPolicy))
-        (fun assignment => semantics.utility () assignment)
-        (payoffIntegrable_of_finite _ _) =
+        (fun assignment => semantics.utility () assignment) =
       expect (fairSignal.map fun signal => assignmentOf signal false false)
-        (fun assignment => semantics.utility () assignment)
-        (payoffIntegrable_of_finite _ _) :=
-      expect_congr_law expanded_play _ _ _
+        (fun assignment => semantics.utility () assignment) :=
+      expect_congr_law expanded_play _
     _ = expect fairSignal (fun signal =>
         (fun assignment owner => semantics.utility owner assignment)
-          (assignmentOf signal false false) ())
-        (payoffIntegrable_of_finite _ _) := by
-      exact expect_map _ _ _ _ _
-    _ = expect fairSignal (fun _ => 1)
-          (payoffIntegrable_of_finite _ _) := by
+          (assignmentOf signal false false) ()) := by
+      exact expect_map _ _ _
+    _ = expect fairSignal (fun _ => 1) := by
       apply expect_congr_on_support
       intro signal _
       simp [assignmentOf]
-    _ = 1 := expect_constant fairSignal 1 _
+    _ = 1 := expect_constant fairSignal 1
 
 theorem expectedUtility_le_one (policy : Policy diagram) :
     expectedUtility
         (fun assignment owner => semantics.utility owner assignment) ()
         ((nativeBehavioralGameForm semantics).play policy)
-        (payoffIntegrable_of_finite _ _) ≤ 1 := by
+         ≤ 1 := by
   unfold expectedUtility
   calc
     expect ((nativeBehavioralGameForm semantics).play policy)
-        (fun assignment => semantics.utility () assignment)
-        (payoffIntegrable_of_finite _ _) ≤
+        (fun assignment => semantics.utility () assignment) ≤
       expect ((nativeBehavioralGameForm semantics).play policy)
-        (fun _ => 1) (payoffIntegrable_of_finite _ _) := by
-      apply expect_mono
+        (fun _ => 1) := by
+      refine expect_mono ?_ (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
       intro assignment _
       by_cases hmatch : assignment .early = assignment .late <;>
         simp [hmatch]
-    _ = 1 := expect_constant _ 1 _
+    _ = 1 := expect_constant _ 1
 
 theorem coversFullDeviations :
     pruning.CoversFullDeviationsAt semantics reducedPolicy := by

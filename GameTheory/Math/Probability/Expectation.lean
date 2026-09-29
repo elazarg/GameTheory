@@ -54,10 +54,24 @@ noncomputable def extendFromSupport {α : Type*} (μ : PMF α)
   classical
   exact fun a => if ha : a ∈ μ.support then value a ha else 0
 
-/-- The expected payoff, defined only with an absolute-summability certificate. -/
-noncomputable def expect {α : Type*} (μ : PMF α) (f : α → ℝ)
-    (_h : PayoffIntegrable μ f) : ℝ :=
+/-- The expected payoff. Like Mathlib's `integral`, the value is total: it is
+the expectation when `PayoffIntegrable μ f` holds and `0` otherwise. Every
+semantic comparison of expectations therefore states that integrability
+explicitly, so a divergent payoff can never be read as the value `0`. -/
+noncomputable def expect {α : Type*} (μ : PMF α) (f : α → ℝ) : ℝ :=
   ∑' a, (μ a).toReal * f a
+
+/-- Absolute integrability is exactly summability of the weighted payoff. -/
+theorem payoffIntegrable_iff_summable {α : Type*} {μ : PMF α} {f : α → ℝ} :
+    PayoffIntegrable μ f ↔ Summable (fun a => (μ a).toReal * f a) := by
+  unfold PayoffIntegrable
+  rw [← summable_abs_iff (f := fun a => (μ a).toReal * f a)]
+  simp only [abs_mul, abs_of_nonneg ENNReal.toReal_nonneg]
+
+/-- A payoff without a finite expectation has the conventional value `0`. -/
+theorem expect_of_not_payoffIntegrable {α : Type*} {μ : PMF α} {f : α → ℝ}
+    (hf : ¬ PayoffIntegrable μ f) : expect μ f = 0 :=
+  tsum_eq_zero_of_not_summable (mt payoffIntegrable_iff_summable.mpr hf)
 
 theorem pmf_weight_summable {α : Type*} (μ : PMF α) :
     Summable (fun a => (μ a).toReal) := by
@@ -117,9 +131,8 @@ theorem payoffIntegrable_pure {α : Type*} (a : α) (f : α → ℝ) :
   subst b
   rfl
 
-theorem expect_pure {α : Type*} (a : α) (f : α → ℝ)
-    (h : PayoffIntegrable (PMF.pure a) f) :
-    expect (PMF.pure a) f h = f a := by
+theorem expect_pure {α : Type*} (a : α) (f : α → ℝ) :
+    expect (PMF.pure a) f = f a := by
   classical
   unfold expect
   rw [tsum_eq_single a]
@@ -130,25 +143,22 @@ theorem expect_pure {α : Type*} (a : α) (f : α → ℝ)
     rw [hzero]
     simp
 
-theorem expect_eq_sum {α : Type*} [Fintype α] (μ : PMF α) (f : α → ℝ)
-    (h : PayoffIntegrable μ f) :
-    expect μ f h = ∑ a, (μ a).toReal * f a := by
+theorem expect_eq_sum {α : Type*} [Fintype α] (μ : PMF α) (f : α → ℝ) :
+    expect μ f = ∑ a, (μ a).toReal * f a := by
   simp [expect, tsum_fintype]
 
 /-- A constant payoff has its constant value under every probability mass
 function. -/
-theorem expect_constant {α : Type*} (μ : PMF α) (c : ℝ)
-    (h : PayoffIntegrable μ (fun _ => c)) :
-    expect μ (fun _ => c) h = c := by
+theorem expect_constant {α : Type*} (μ : PMF α) (c : ℝ) :
+    expect μ (fun _ => c) = c := by
   have hmass : (∑' a, (μ a).toReal) = 1 := by
     exact pmf_weight_tsum_one μ
   simp only [expect]
   rw [tsum_mul_right, hmass, one_mul]
 
 theorem expect_congr_on_support {α : Type*} {μ : PMF α}
-    {f g : α → ℝ} (hfg : ∀ a ∈ μ.support, f a = g a)
-    (hf : PayoffIntegrable μ f) (hg : PayoffIntegrable μ g) :
-    expect μ f hf = expect μ g hg := by
+    {f g : α → ℝ} (hfg : ∀ a ∈ μ.support, f a = g a) :
+    expect μ f = expect μ g := by
   apply tsum_congr
   intro a
   by_cases ha : a ∈ μ.support
@@ -175,23 +185,14 @@ theorem payoffIntegrable_congr_law {α : Type*} {μ ν : PMF α}
   exact congrArg (fun mass : ENNReal => mass.toReal * |f a|)
     (congrArg (fun law : PMF α => law a) hlaw)
 
-theorem expect_proof_irrel {α : Type*} (μ : PMF α) (f : α → ℝ)
-    (h₁ h₂ : PayoffIntegrable μ f) :
-    expect μ f h₁ = expect μ f h₂ := rfl
-
 theorem expect_congr_law {α : Type*} {μ ν : PMF α} (hlaw : μ = ν)
-    (f : α → ℝ) (hμ : PayoffIntegrable μ f) (hν : PayoffIntegrable ν f) :
-    expect μ f hμ = expect ν f hν := by
-  unfold expect
-  apply tsum_congr
-  intro a
-  exact congrArg (fun (mass : ENNReal) => mass.toReal * f a)
-    (congrArg (fun law : PMF α => law a) hlaw)
+    (f : α → ℝ) : expect μ f = expect ν f := by
+  rw [hlaw]
 
 theorem expect_mono {α : Type*} {μ : PMF α} {f g : α → ℝ}
     (hfg : ∀ a ∈ μ.support, f a ≤ g a)
     (hf : PayoffIntegrable μ f) (hg : PayoffIntegrable μ g) :
-    expect μ f hf ≤ expect μ g hg := by
+    expect μ f ≤ expect μ g := by
   have hfs := hf.summable
   have hgs := hg.summable
   rw [expect, expect]
@@ -207,7 +208,7 @@ theorem expect_lt_of_mem_support {α : Type*} {μ : PMF α} {f g : α → ℝ}
     (hf : PayoffIntegrable μ f) (hg : PayoffIntegrable μ g)
     (hle : ∀ a ∈ μ.support, f a ≤ g a)
     (a : α) (ha : a ∈ μ.support) (hlt : f a < g a) :
-    expect μ f hf < expect μ g hg := by
+    expect μ f < expect μ g := by
   have hmass : 0 < (μ a).toReal :=
     ENNReal.toReal_pos ((μ.mem_support_iff a).mp ha) (μ.apply_ne_top a)
   unfold expect
@@ -221,43 +222,43 @@ theorem expect_lt_of_mem_support {α : Type*} {μ : PMF α} {f g : α → ℝ}
   · exact hf.summable
   · exact hg.summable
 
-/-- The absolute value of an integrable expected payoff inherits a uniform bound. -/
+/-- The absolute value of an expected payoff inherits a uniform bound. -/
 theorem expect_abs_le_of_bounded {α : Type*} {μ : PMF α}
     {f : α → ℝ} {C : ℝ} (hC : 0 ≤ C)
-    (hbound : ∀ a, |f a| ≤ C) (hf : PayoffIntegrable μ f) :
-    |expect μ f hf| ≤ C := by
+    (hbound : ∀ a, |f a| ≤ C) :
+    |expect μ f| ≤ C := by
+  have hf : PayoffIntegrable μ f := payoffIntegrable_of_bounded μ f hbound
   have hplus : PayoffIntegrable μ (fun _ => C) :=
     payoffIntegrable_of_bounded μ _ (C := C)
       (fun _ => by simp [abs_of_nonneg hC])
   have hminus : PayoffIntegrable μ (fun _ => -C) :=
     payoffIntegrable_of_bounded μ _ (C := C) (fun _ => by
       simp [abs_of_nonpos (neg_nonpos.mpr hC)])
-  have hupper : expect μ f hf ≤ expect μ (fun _ => C) hplus :=
+  have hupper : expect μ f ≤ expect μ (fun _ => C) :=
     expect_mono (fun a _ => (abs_le.mp (hbound a)).2) hf hplus
-  have hlower : expect μ (fun _ => -C) hminus ≤ expect μ f hf :=
+  have hlower : expect μ (fun _ => -C) ≤ expect μ f :=
     expect_mono (fun a _ => (abs_le.mp (hbound a)).1) hminus hf
-  have hvalplus := expect_constant μ C hplus
-  have hvalminus := expect_constant μ (-C) hminus
+  have hvalplus := expect_constant μ C
+  have hvalminus := expect_constant μ (-C)
   rw [hvalplus] at hupper
   rw [hvalminus] at hlower
   exact abs_le.mpr ⟨by linarith, by linarith⟩
 
-/-- An integrable payoff nonnegative on the support has nonnegative expectation. -/
+/-- A payoff nonnegative on the support has nonnegative expectation. -/
 theorem expect_nonneg {α : Type*} (μ : PMF α)
-    (f : α → ℝ) (hf : PayoffIntegrable μ f)
-    (h0 : ∀ a ∈ μ.support, 0 ≤ f a) : 0 ≤ expect μ f hf := by
-  have hzero := payoffIntegrable_constant μ 0
-  have h := expect_mono (μ := μ) (f := fun _ => 0) (g := f)
-    h0 hzero hf
-  simpa [expect_constant μ 0 hzero] using h
+    (f : α → ℝ) (h0 : ∀ a ∈ μ.support, 0 ≤ f a) : 0 ≤ expect μ f := by
+  by_cases hf : PayoffIntegrable μ f
+  · have h := expect_mono (μ := μ) (f := fun _ => 0) (g := f)
+      h0 (payoffIntegrable_constant μ 0) hf
+    simpa [expect_constant μ 0] using h
+  · exact (expect_of_not_payoffIntegrable hf).ge
 
 /-- An integrable payoff bounded above on the support has that expectation bound. -/
 theorem expect_le_const {α : Type*} (μ : PMF α)
     (f : α → ℝ) (hf : PayoffIntegrable μ f) (c : ℝ)
-    (hfc : ∀ a ∈ μ.support, f a ≤ c) : expect μ f hf ≤ c := by
-  have hc := payoffIntegrable_constant μ c
+    (hfc : ∀ a ∈ μ.support, f a ≤ c) : expect μ f ≤ c := by
   have h := expect_mono (μ := μ) (f := f) (g := fun _ => c)
-    hfc hf hc
-  simpa [expect_constant μ c hc] using h
+    hfc hf (payoffIntegrable_constant μ c)
+  simpa [expect_constant μ c] using h
 
 end GameTheory.Math.Probability

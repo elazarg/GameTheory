@@ -34,28 +34,28 @@ private theorem score_positive :
 
 theorem regretMatch_score_prob_zero :
     expect (regretMatch score) (fun action => if action = 0 then 1 else 0)
-      (payoffIntegrable_of_finite _ _) = 1 / 4 := by
+       = 1 / 4 := by
   rw [expect_regretMatch_pos score_positive]
   rw [Fin.sum_univ_two]
   norm_num [score]
 
 theorem regretMatch_score_prob_one :
     expect (regretMatch score) (fun action => if action = 1 then 1 else 0)
-      (payoffIntegrable_of_finite _ _) = 3 / 4 := by
+       = 3 / 4 := by
   rw [expect_regretMatch_pos score_positive]
   rw [Fin.sum_univ_two]
   norm_num [score]
 
 theorem regretPayoff_false_zero :
     (regretPayoff utility (regretMatch score) false
-      (payoffIntegrable_of_finite _ _)).ofLp 0 = 3 / 4 := by
+      ).ofLp 0 = 3 / 4 := by
   rw [regretPayoff_ofLp, expect_regretMatch_pos score_positive,
     Fin.sum_univ_two]
   norm_num [utility, score]
 
 theorem regretPayoff_true_one :
     (regretPayoff utility (regretMatch score) true
-      (payoffIntegrable_of_finite _ _)).ofLp 1 = 1 / 2 := by
+      ).ofLp 1 = 1 / 2 := by
   rw [regretPayoff_ofLp, expect_regretMatch_pos score_positive,
     Fin.sum_univ_two]
   norm_num [utility, score]
@@ -63,13 +63,12 @@ theorem regretPayoff_true_one :
 theorem score_steers (environment : Bool) :
     inner ℝ
       (regretPayoff utility (regretMatch score) environment
-        (payoffIntegrable_of_finite _ _) - orthantProj score)
+         - orthantProj score)
       (score - orthantProj score) ≤ 0 :=
   regretMatch_steering utility score environment
 
 theorem regretPayoff_norm_le (p : PMF (Fin 2)) (environment : Bool) :
-    ‖regretPayoff utility p environment
-      (payoffIntegrable_of_finite p _)‖ ≤ 6 := by
+    ‖regretPayoff utility p environment‖ ≤ 6 := by
   have hrange (action : Fin 2) (q : Bool) :
       utility action q ∈ Set.Icc (0 : ℝ) 2 := by
     fin_cases action <;> cases q <;> norm_num [utility]
@@ -84,8 +83,7 @@ def alternatingEnvironment (t : ℕ) : Bool := t % 2 == 0
 theorem alternating_regretMatch_approaches :
     Tendsto
       (fun t => Metric.infDist
-        (avgVec (fun p q => regretPayoff utility p q
-          (payoffIntegrable_of_finite p _)) regretMatch
+        (avgVec (fun p q => regretPayoff utility p q) regretMatch
           alternatingEnvironment t)
         (nonposOrthant (ι := Fin 2)))
       atTop (nhds 0) :=

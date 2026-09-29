@@ -39,7 +39,7 @@ theorem resident_self_integrable :
       (fun pair => payoff pair.1 pair.2))
 
 theorem resident_self_value :
-    mixedPayoff payoff resident resident resident_self_integrable = 1 := by
+    mixedPayoff payoff resident resident = 1 := by
   unfold mixedPayoff
   simp [resident, bindPairLaw, PMF.pure_bind, PMF.pure_map,
     expect_pure, payoff]
@@ -79,17 +79,16 @@ theorem mutant_resident_integrable :
   exact payoffIntegrable_congr_on_support hpoint hzero
 
 theorem mutant_resident_value :
-    mixedPayoff payoff mutant resident mutant_resident_integrable = 0 := by
+    mixedPayoff payoff mutant resident = 0 := by
   unfold mixedPayoff
   have hzero := expect_congr_on_support
-    mutant_resident_score_zero mutant_resident_integrable
-    (payoffIntegrable_zero (bindPairLaw mutant (fun _ => resident)))
+    mutant_resident_score_zero
   simpa only [expect_zero] using hzero
 
 /-- The resident wins the defined first-order test strictly. -/
 theorem resident_strict_first_order :
-    mixedPayoff payoff resident resident resident_self_integrable >
-      mixedPayoff payoff mutant resident mutant_resident_integrable := by
+    mixedPayoff payoff resident resident >
+      mixedPayoff payoff mutant resident := by
   rw [resident_self_value, mutant_resident_value]
   norm_num
 
@@ -124,32 +123,23 @@ theorem own_resident_integrable (own : PMF (Option ℕ)) :
   cases pair.1 <;> norm_num
 
 theorem own_resident_value (own : PMF (Option ℕ)) :
-    mixedPayoff payoff own resident (own_resident_integrable own) =
+    mixedPayoff payoff own resident =
       (own none).toReal := by
   let joint := bindPairLaw own (fun _ => resident)
   let score : Option ℕ → ℝ := fun action => if action = none then 1 else 0
-  have hown : PayoffIntegrable own score := by
-    apply payoffIntegrable_of_bounded own score (C := 1)
-    intro action
-    cases action <;> simp [score]
-  have hmap : PayoffIntegrable (joint.map Prod.fst) score :=
-    payoffIntegrable_congr_law
-      (bindPairLaw_map_fst own (fun _ => resident)).symm hown
-  have hjoint : PayoffIntegrable joint (fun pair => score pair.1) :=
-    (payoffIntegrable_map_iff Prod.fst joint score).mp hmap
   have hpoint : ∀ pair ∈ joint.support,
       payoff pair.1 pair.2 = score pair.1 := by
     intro pair hpair
     exact own_resident_score own pair hpair
   calc
-    mixedPayoff payoff own resident (own_resident_integrable own) =
-        expect joint (fun pair => score pair.1) hjoint :=
-      expect_congr_on_support hpoint (own_resident_integrable own) hjoint
-    _ = expect (joint.map Prod.fst) score hmap := by
-      exact (expect_map Prod.fst joint score hjoint hmap).symm
-    _ = expect own score hown :=
+    mixedPayoff payoff own resident =
+        expect joint (fun pair => score pair.1) :=
+      expect_congr_on_support hpoint
+    _ = expect (joint.map Prod.fst) score := by
+      exact (expect_map Prod.fst joint score).symm
+    _ = expect own score :=
       expect_congr_law (bindPairLaw_map_fst own (fun _ => resident))
-        score hmap hown
+        score
     _ = (own none).toReal := by
       unfold expect
       rw [tsum_eq_single none]
@@ -161,8 +151,8 @@ theorem own_resident_value (own : PMF (Option ℕ)) :
 
 theorem own_resident_strict_first_order (own : PMF (Option ℕ))
     (hne : own ≠ resident) :
-    mixedPayoff payoff resident resident (own_resident_integrable resident) >
-      mixedPayoff payoff own resident (own_resident_integrable own) := by
+    mixedPayoff payoff resident resident >
+      mixedPayoff payoff own resident := by
   rw [own_resident_value, own_resident_value]
   have hnotone : own none ≠ 1 := by
     intro hone

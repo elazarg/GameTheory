@@ -23,6 +23,11 @@ the realization adapter.
 `LocalCounterfactualRegretsIntegrable` certifies the incumbent continuation and
 every pure-action continuation used by the regret vector. Finiteness of the
 action vector does not imply integration of those continuation payoffs.
+
+*Later change (EXP-146):* once expectations became total, the regret vector
+needed no certificate, and `LocalCounterfactualRegretsIntegrable` was removed.
+The realization theorem now assumes only integrability of the incumbent
+continuation.
 The generic vector aggregation remains probability-free; its Protocol
 realization supplies the actual-law certificates under
 [D62](D62-general-pmf-restoration.md).

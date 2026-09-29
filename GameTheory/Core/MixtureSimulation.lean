@@ -28,18 +28,18 @@ private theorem isεNash_of_compiled_deviations
         (source.play profile).map sourceObserve)
     (value : Observation → Player → ℝ) (ε : ℝ) (profile : Profile source.sig)
     (hcompiled : ∀ who (replacement : source.sig.Strategy who),
-      ∃ hbase : UtilityIntegrable
+      UtilityIntegrable
           (fun outcome player => value (targetObserve outcome) player) who
-          (target.play (Profile.map compile profile)),
-        ∃ hdev : UtilityIntegrable
+          (target.play (Profile.map compile profile)) ∧
+        UtilityIntegrable
             (fun outcome player => value (targetObserve outcome) player) who
             (target.play (Profile.update (Profile.map compile profile) who
-              (compile who replacement))),
+              (compile who replacement))) ∧
           expectedUtility (fun outcome player => value (targetObserve outcome) player) who
               (target.play (Profile.update (Profile.map compile profile) who
-                (compile who replacement))) hdev ≤
+                (compile who replacement))) ≤
             expectedUtility (fun outcome player => value (targetObserve outcome) player) who
-              (target.play (Profile.map compile profile)) hbase + ε) :
+              (target.play (Profile.map compile profile)) + ε) :
     IsεNash source (fun outcome who => value (sourceObserve outcome) who) ε profile := by
   rw [GameTheory.isεNash_iff]
   intro who replacement
@@ -63,26 +63,25 @@ private theorem isεNash_of_compiled_deviations
   refine ⟨hsbase, hsdev, ?_⟩
   calc
     expectedUtility (fun outcome player => value (sourceObserve outcome) player) who
-        (source.play (Profile.update profile who replacement)) hsdev =
+        (source.play (Profile.update profile who replacement)) =
       expectedUtility (fun outcome player => value (targetObserve outcome) player) who
-        (target.play (Profile.map compile (Profile.update profile who replacement)))
-        htdev' := by
+        (target.play (Profile.map compile (Profile.update profile who replacement))) := by
           symm
           exact expect_observed_law_eq _ _ targetObserve sourceObserve
             (fun observation => value observation who)
-            (honest_law (Profile.update profile who replacement)) htdev' hsdev
+            (honest_law (Profile.update profile who replacement))
     _ = expectedUtility (fun outcome player => value (targetObserve outcome) player) who
         (target.play (Profile.update (Profile.map compile profile) who
-          (compile who replacement))) htdev := by
+          (compile who replacement))) := by
             apply expectedUtility_congr_law
             exact congrArg target.play hmap
     _ ≤ expectedUtility (fun outcome player => value (targetObserve outcome) player) who
-        (target.play (Profile.map compile profile)) htbase + ε := hle
+        (target.play (Profile.map compile profile)) + ε := hle
     _ = expectedUtility (fun outcome player => value (sourceObserve outcome) player) who
-        (source.play profile) hsbase + ε := by
+        (source.play profile) + ε := by
           congr 1
           exact expect_observed_law_eq _ _ targetObserve sourceObserve
-            (fun observation => value observation who) (honest_law profile) htbase hsbase
+            (fun observation => value observation who) (honest_law profile)
 
 /-- Honest observed-law equality reflects approximate Nash; no target
 strategy representation is needed in this direction. -/
@@ -132,16 +131,16 @@ theorem considered_deviations_of_isεNash_of_mixtures
     (hsource : IsεNash source
       (fun outcome who => value (sourceObserve outcome) who) ε profile) :
     ∀ who replacement, Considered who replacement →
-      ∃ hbase : UtilityIntegrable
+      UtilityIntegrable
           (fun outcome player => value (targetObserve outcome) player) who
-          (target.play targetProfile),
-        ∃ halternative : UtilityIntegrable
+          (target.play targetProfile) ∧
+        UtilityIntegrable
             (fun outcome player => value (targetObserve outcome) player) who
-            (target.play (Profile.update targetProfile who replacement)),
+            (target.play (Profile.update targetProfile who replacement)) ∧
           expectedUtility (fun outcome player => value (targetObserve outcome) player) who
-              (target.play (Profile.update targetProfile who replacement)) halternative ≤
+              (target.play (Profile.update targetProfile who replacement)) ≤
             expectedUtility (fun outcome player => value (targetObserve outcome) player) who
-              (target.play targetProfile) hbase + ε := by
+              (target.play targetProfile) + ε := by
   rw [GameTheory.isεNash_iff] at hsource
   intro who replacement hconsidered
   let f : Observation → ℝ := fun observation => value observation who
@@ -161,43 +160,37 @@ theorem considered_deviations_of_isεNash_of_mixtures
       (target.play targetProfile) := by
     exact (payoffIntegrable_observed_law_iff _ _ targetObserve sourceObserve f
       honest_law).mpr hsbase
-  have hbound : expect (alternatives.bind kernel) f hbind ≤
+  have hbound : expect (alternatives.bind kernel) f ≤
       expectedUtility (fun outcome player => value (sourceObserve outcome) player) who
-        (source.play profile) hsbase + ε := by
+        (source.play profile) + ε := by
     apply expect_bind_le_constant_on_support alternatives kernel f _ hbind
-    intro alternative ha
-    have hcond := payoffIntegrable_bind_conditional_on_support
-      alternatives kernel f hbind alternative ha
-    have hsdev : UtilityIntegrable
-        (fun outcome player => value (sourceObserve outcome) player) who
-        (source.play (Profile.update profile who alternative)) :=
-      (payoffIntegrable_map_iff sourceObserve _ f).mp hcond
-    obtain ⟨_, hsdev', hle⟩ := hsource who alternative
+    intro alternative _
+    obtain ⟨_, _, hle⟩ := hsource who alternative
     calc
-      expect (kernel alternative) f hcond =
+      expect (kernel alternative) f =
           expectedUtility
             (fun outcome player => value (sourceObserve outcome) player) who
-            (source.play (Profile.update profile who alternative)) hsdev := by
-              exact expect_map sourceObserve _ f hsdev hcond
+            (source.play (Profile.update profile who alternative)) := by
+              exact expect_map sourceObserve _ f
       _ ≤ expectedUtility (fun outcome player => value (sourceObserve outcome) player)
-          who (source.play profile) hsbase + ε := by
+          who (source.play profile) + ε := by
             exact hle
   refine ⟨htbase, htdev, ?_⟩
   calc
     expectedUtility (fun outcome player => value (targetObserve outcome) player) who
-        (target.play (Profile.update targetProfile who replacement)) htdev =
+        (target.play (Profile.update targetProfile who replacement)) =
       expect ((target.play (Profile.update targetProfile who replacement)).map targetObserve)
-        f htobs := by
-          exact (expect_map targetObserve _ f htdev htobs).symm
-    _ = expect (alternatives.bind kernel) f hbind :=
-      expect_congr_law hlaw f htobs hbind
+        f := by
+          exact (expect_map targetObserve _ f).symm
+    _ = expect (alternatives.bind kernel) f :=
+      expect_congr_law hlaw f
     _ ≤ expectedUtility (fun outcome player => value (sourceObserve outcome) player) who
-        (source.play profile) hsbase + ε := hbound
+        (source.play profile) + ε := hbound
     _ = expectedUtility (fun outcome player => value (targetObserve outcome) player) who
-        (target.play targetProfile) htbase + ε := by
+        (target.play targetProfile) + ε := by
           congr 1
           exact (expect_observed_law_eq _ _ targetObserve sourceObserve f
-            honest_law htbase hsbase).symm
+            honest_law).symm
 
 end DirectTransfer
 
@@ -296,33 +289,30 @@ theorem integrable_compile_iff (profile : Profile source.sig)
   payoffIntegrable_observed_law_iff _ _ targetObserve sourceObserve value
     (simulation.honest_law profile)
 
-theorem expect_compile (profile : Profile source.sig) (value : Observation → ℝ)
-    (htarget : PayoffIntegrable (target.play (simulation.compileProfile profile))
-      (value ∘ targetObserve))
-    (hsource : PayoffIntegrable (source.play profile) (value ∘ sourceObserve)) :
+theorem expect_compile (profile : Profile source.sig) (value : Observation → ℝ) :
     expect (target.play (simulation.compileProfile profile))
-        (value ∘ targetObserve) htarget =
-      expect (source.play profile) (value ∘ sourceObserve) hsource :=
+        (value ∘ targetObserve) =
+      expect (source.play profile) (value ∘ sourceObserve) :=
   expect_observed_law_eq _ _ targetObserve sourceObserve value
-    (simulation.honest_law profile) htarget hsource
+    (simulation.honest_law profile)
 
 /-- A lower bound on every source deviation transfers to a considered target
 mixture once that actual target deviation is integrable. -/
 theorem guarantee (profile : Profile source.sig) (who : Player)
     (value : Observation → ℝ) (bound : ℝ)
     (hbound : ∀ alternative : source.sig.Strategy who,
-      ∀ hsource : PayoffIntegrable
+      PayoffIntegrable
           (source.play (Profile.update profile who alternative))
-          (value ∘ sourceObserve),
+          (value ∘ sourceObserve) →
         bound ≤ expect (source.play (Profile.update profile who alternative))
-          (value ∘ sourceObserve) hsource)
+          (value ∘ sourceObserve))
     (replacement : target.sig.Strategy who) (hconsidered : Considered who replacement)
     (htarget : PayoffIntegrable
       (target.play (Profile.update (simulation.compileProfile profile) who replacement))
       (value ∘ targetObserve)) :
     bound ≤ expect
       (target.play (Profile.update (simulation.compileProfile profile) who replacement))
-      (value ∘ targetObserve) htarget := by
+      (value ∘ targetObserve) := by
   let kernel : source.sig.Strategy who → PMF Observation := fun alternative =>
     (source.play (Profile.update profile who alternative)).map sourceObserve
   obtain ⟨alternatives, hlaw⟩ :=
@@ -334,7 +324,7 @@ theorem guarantee (profile : Profile source.sig) (who : Player)
   have hbind : PayoffIntegrable (alternatives.bind kernel) value := by
     rw [← hlaw]
     exact htobs
-  have hmean : bound ≤ expect (alternatives.bind kernel) value hbind := by
+  have hmean : bound ≤ expect (alternatives.bind kernel) value := by
     apply expect_bind_ge_constant_on_support alternatives kernel value bound hbind
     intro alternative ha
     have hcond := payoffIntegrable_bind_conditional_on_support
@@ -344,16 +334,16 @@ theorem guarantee (profile : Profile source.sig) (who : Player)
         (value ∘ sourceObserve) :=
       (payoffIntegrable_map_iff sourceObserve _ value).mp hcond
     exact (hbound alternative hsource).trans_eq
-      (expect_map sourceObserve _ value hsource hcond).symm
+      (expect_map sourceObserve _ value).symm
   calc
-    bound ≤ expect (alternatives.bind kernel) value hbind := hmean
+    bound ≤ expect (alternatives.bind kernel) value := hmean
     _ = expect ((target.play (Profile.update
         (simulation.compileProfile profile) who replacement)).map targetObserve)
-        value htobs := (expect_congr_law hlaw value htobs hbind).symm
+        value := (expect_congr_law hlaw value).symm
     _ = expect (target.play (Profile.update
         (simulation.compileProfile profile) who replacement))
-        (value ∘ targetObserve) htarget :=
-      expect_map targetObserve _ value htarget htobs
+        (value ∘ targetObserve) :=
+      expect_map targetObserve _ value
 
 /-- The considered target comparisons are equivalent to source approximate
 Nash together with integration of every actual considered target deviation. -/

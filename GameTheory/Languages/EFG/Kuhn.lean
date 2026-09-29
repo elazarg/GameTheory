@@ -67,16 +67,16 @@ theorem isNash_toBehavioralGameForm_iff
     (behavioral : Profile G.behavioralSignature) (horizon : ℕ) :
     IsNash (G.toBehavioralGameForm horizon) (euPreference utility) behavioral ↔
       ∀ who replacement,
-        ∃ hbase : UtilityIntegrable utility who
-          (G.information.runBehavioral behavioral horizon),
-        ∃ hdeviation : UtilityIntegrable utility who
+        UtilityIntegrable utility who
+          (G.information.runBehavioral behavioral horizon) ∧
+        UtilityIntegrable utility who
           (G.information.runBehavioral
-            (Profile.update behavioral who replacement) horizon),
+            (Profile.update behavioral who replacement) horizon) ∧
         expectedUtility utility who
             (G.information.runBehavioral
-              (Profile.update behavioral who replacement) horizon) hdeviation ≤
+              (Profile.update behavioral who replacement) horizon) ≤
           expectedUtility utility who
-            (G.information.runBehavioral behavioral horizon) hbase := by
+            (G.information.runBehavioral behavioral horizon) := by
   rw [isNash_iff, G.toBehavioralGameForm_play]
   simp only [euPreference_apply]
 
@@ -312,18 +312,18 @@ theorem kuhn_behavioral_to_mixed_expectedUtility
         (G.information.runBehavioral behavioral horizon)) :
     ∃ mixed : Profile G.strategicSignature.mixed,
       ∀ who,
-        ∃ hmixed : UtilityIntegrable utility who
-          (G.information.runMixed mixed horizon),
+        UtilityIntegrable utility who
+          (G.information.runMixed mixed horizon) ∧
         expectedUtility utility who
-            (G.information.runMixed mixed horizon) hmixed =
+            (G.information.runMixed mixed horizon) =
           expectedUtility utility who
-            (G.information.runBehavioral behavioral horizon) (hintegrable who) := by
+            (G.information.runBehavioral behavioral horizon) := by
   obtain ⟨mixed, hmixed⟩ :=
     G.kuhn_behavioral_to_mixed hactsOnce behavioral horizon hfinite
   refine ⟨mixed, fun who => ?_⟩
   have hmixedIntegrable := payoffIntegrable_congr_law hmixed.symm (hintegrable who)
   exact ⟨hmixedIntegrable,
-    expectedUtility_congr_law utility who hmixed hmixedIntegrable (hintegrable who)⟩
+    expectedUtility_congr_law utility who hmixed⟩
 
 /-- The mixed-to-behavioral witness preserves every player's expected utility. -/
 theorem kuhn_mixed_to_behavioral_expectedUtility
@@ -334,20 +334,19 @@ theorem kuhn_mixed_to_behavioral_expectedUtility
       UtilityIntegrable utility who (G.information.runMixed mixed horizon)) :
     ∃ behavioral : Profile G.behavioralSignature,
       ∀ who,
-        ∃ hbehavioral : UtilityIntegrable utility who
-          (G.information.runBehavioral behavioral horizon),
+        UtilityIntegrable utility who
+          (G.information.runBehavioral behavioral horizon) ∧
         expectedUtility utility who
-            (G.information.runBehavioral behavioral horizon) hbehavioral =
+            (G.information.runBehavioral behavioral horizon) =
           expectedUtility utility who
-            (G.information.runMixed mixed horizon) (hintegrable who) := by
+            (G.information.runMixed mixed horizon) := by
   obtain ⟨behavioral, hbehavioral⟩ :=
     G.kuhn_mixed_to_behavioral hrecall mixed horizon
   refine ⟨behavioral, fun who => ?_⟩
   have hbehavioralIntegrable := payoffIntegrable_congr_law
     hbehavioral.symm (hintegrable who)
   exact ⟨hbehavioralIntegrable,
-    expectedUtility_congr_law utility who hbehavioral
-      hbehavioralIntegrable (hintegrable who)⟩
+    expectedUtility_congr_law utility who hbehavioral⟩
 
 end Game
 

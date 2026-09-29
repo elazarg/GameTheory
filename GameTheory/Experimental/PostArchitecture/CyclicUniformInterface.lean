@@ -116,11 +116,10 @@ theorem isUniformεEquilibrium_of_unitAction
     payoffIntegrable_congr_law hlaw.symm hbase
   refine ⟨hbase, hdeviation, ?_⟩
   show expectedUtility (G.horizonUtility initial horizon) who
-      ((G.horizonForm initial horizon).play (Profile.update profile who replacement))
-      hdeviation ≤
+      ((G.horizonForm initial horizon).play (Profile.update profile who replacement)) ≤
     expectedUtility (G.horizonUtility initial horizon) who
-      ((G.horizonForm initial horizon).play profile) hbase + epsilon
-  rw [expectedUtility_congr_law _ _ hlaw hdeviation hbase]
+      ((G.horizonForm initial horizon).play profile) + epsilon
+  rw [expectedUtility_congr_law _ _ hlaw]
   linarith
 
 /-- The cyclic unit-action game used as the positive witness. Its state loops

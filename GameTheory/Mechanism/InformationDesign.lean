@@ -111,15 +111,13 @@ def senderWeighted (P : PersuasionProblem State Message Action)
 
 /-- Unnormalized receiver value at a message. -/
 def receiverScore (P : PersuasionProblem State Message Action)
-    (message : Message) (action : Action)
-    (hscore : PayoffIntegrable P.prior (P.receiverWeighted message action)) : ℝ :=
-  expect P.prior (P.receiverWeighted message action) hscore
+    (message : Message) (action : Action) : ℝ :=
+  expect P.prior (P.receiverWeighted message action)
 
 /-- Unnormalized sender contribution at a message. -/
 def senderScore (P : PersuasionProblem State Message Action)
-    (message : Message) (action : Action)
-    (hscore : PayoffIntegrable P.prior (P.senderWeighted message action)) : ℝ :=
-  expect P.prior (P.senderWeighted message action) hscore
+    (message : Message) (action : Action) : ℝ :=
+  expect P.prior (P.senderWeighted message action)
 
 /-- A null message has zero weighted payoff on every reached state. -/
 private theorem weighted_zero_of_null
@@ -144,8 +142,8 @@ theorem receiverScore_null
     (P : PersuasionProblem State Message Action)
     (message : Message) (action : Action)
     (hnull : P.signal.messageMarginal P.prior message = 0) :
-    ∃ hscore : PayoffIntegrable P.prior (P.receiverWeighted message action),
-      P.receiverScore message action hscore = 0 := by
+    PayoffIntegrable P.prior (P.receiverWeighted message action) ∧
+      P.receiverScore message action = 0 := by
   have hzero : ∀ state ∈ P.prior.support,
       P.receiverWeighted message action state = 0 :=
     P.weighted_zero_of_null message hnull
@@ -157,18 +155,18 @@ theorem receiverScore_null
   refine ⟨hscore, ?_⟩
   unfold receiverScore
   calc
-    expect P.prior (P.receiverWeighted message action) hscore =
-        expect P.prior (fun _ => 0) (payoffIntegrable_zero P.prior) :=
-      expect_congr_on_support hzero hscore (payoffIntegrable_zero P.prior)
-    _ = 0 := expect_zero _ _
+    expect P.prior (P.receiverWeighted message action) =
+        expect P.prior (fun _ => 0) :=
+      expect_congr_on_support hzero
+    _ = 0 := expect_zero _
 
 /-- The sender's contribution at a null message is also defined and zero. -/
 theorem senderScore_null
     (P : PersuasionProblem State Message Action)
     (message : Message) (action : Action)
     (hnull : P.signal.messageMarginal P.prior message = 0) :
-    ∃ hscore : PayoffIntegrable P.prior (P.senderWeighted message action),
-      P.senderScore message action hscore = 0 := by
+    PayoffIntegrable P.prior (P.senderWeighted message action) ∧
+      P.senderScore message action = 0 := by
   have hzero : ∀ state ∈ P.prior.support,
       P.senderWeighted message action state = 0 :=
     P.weighted_zero_of_null message hnull
@@ -180,20 +178,17 @@ theorem senderScore_null
   refine ⟨hscore, ?_⟩
   unfold senderScore
   calc
-    expect P.prior (P.senderWeighted message action) hscore =
-        expect P.prior (fun _ => 0) (payoffIntegrable_zero P.prior) :=
-      expect_congr_on_support hzero hscore (payoffIntegrable_zero P.prior)
-    _ = 0 := expect_zero _ _
+    expect P.prior (P.senderWeighted message action) =
+        expect P.prior (fun _ => 0) :=
+      expect_congr_on_support hzero
+    _ = 0 := expect_zero _
 
 /-- An optimal receiver action requires defined scores for every alternative.
 Undefined alternatives are not silently removed from the comparison. -/
 def IsReceiverOptimal (P : PersuasionProblem State Message Action)
     (message : Message) (action : Action) : Prop :=
-  ∃ hscore : ∀ alternative,
-      PayoffIntegrable P.prior (P.receiverWeighted message alternative),
-    ∀ alternative,
-      P.receiverScore message alternative (hscore alternative) ≤
-        P.receiverScore message action (hscore action)
+  (∀ alternative, PayoffIntegrable P.prior (P.receiverWeighted message alternative)) ∧
+    ∀ alternative, P.receiverScore message alternative ≤ P.receiverScore message action
 
 /-- Receiver obedience is automatic at a null message. -/
 theorem isReceiverOptimal_null (P : PersuasionProblem State Message Action)
@@ -202,11 +197,11 @@ theorem isReceiverOptimal_null (P : PersuasionProblem State Message Action)
     P.IsReceiverOptimal message action := by
   let hscore : ∀ alternative,
       PayoffIntegrable P.prior (P.receiverWeighted message alternative) :=
-    fun alternative => (P.receiverScore_null message alternative hnull).choose
+    fun alternative => (P.receiverScore_null message alternative hnull).1
   refine ⟨hscore, ?_⟩
   intro alternative
-  have hfirst := (P.receiverScore_null message alternative hnull).choose_spec
-  have hsecond := (P.receiverScore_null message action hnull).choose_spec
+  have hfirst := (P.receiverScore_null message alternative hnull).2
+  have hsecond := (P.receiverScore_null message action hnull).2
   simpa only [hfirst, hsecond] using (le_refl (0 : ℝ))
 
 /-- A public-message contingent receiver decision rule. -/
@@ -228,22 +223,20 @@ theorem exists_isPersuasive [Finite Action] [Nonempty Action]
   let rule : P.DecisionRule := fun message =>
     Classical.choose
       (Finite.exists_max fun action : Action =>
-        P.receiverScore message action (hscore message action))
+        P.receiverScore message action)
   refine ⟨rule, fun message => ⟨hscore message, ?_⟩⟩
   intro alternative
   simpa only [rule] using
     (Classical.choose_spec
       (Finite.exists_max fun action : Action =>
-        P.receiverScore message action (hscore message action))
+        P.receiverScore message action)
       alternative)
 
 /-- The sender payoff under the actual joint state-message law. -/
 def senderEU (P : PersuasionProblem State Message Action)
-    (rule : P.DecisionRule)
-    (hactual : PayoffIntegrable (P.signal.joint P.prior)
-      (fun outcome => P.senderUtility outcome.1 (rule outcome.2))) : ℝ :=
+    (rule : P.DecisionRule) : ℝ :=
   expect (P.signal.joint P.prior)
-    (fun outcome => P.senderUtility outcome.1 (rule outcome.2)) hactual
+    (fun outcome => P.senderUtility outcome.1 (rule outcome.2))
 
 /-- An actual joint-law guard supplies conditional integration at every
 reached state. -/
@@ -262,66 +255,42 @@ theorem senderConditionalIntegrable
     (P.signal.kernel state)
     (fun outcome => P.senderUtility outcome.1 (rule outcome.2))).mp hmap
 
-/-- The supported conditional sender values are integrable under the prior. -/
+/-- The conditional sender values are integrable under the prior. -/
 theorem senderOuterIntegrable
     (P : PersuasionProblem State Message Action) (rule : P.DecisionRule)
     (hactual : PayoffIntegrable (P.signal.joint P.prior)
       (fun outcome => P.senderUtility outcome.1 (rule outcome.2))) :
-    PayoffIntegrable P.prior (extendFromSupport P.prior
-      (fun state hs =>
-        expect (P.signal.kernel state)
-          (fun message => P.senderUtility state (rule message))
-          (P.senderConditionalIntegrable rule hactual state hs))) := by
-  let kernel : State → PMF (State × Message) :=
-    fun state => (P.signal.kernel state).map (state, ·)
-  let payoff : State × Message → ℝ :=
-    fun outcome => P.senderUtility outcome.1 (rule outcome.2)
-  have hcond (state : State) (hs : state ∈ P.prior.support) :
+    PayoffIntegrable P.prior (fun state =>
       expect (P.signal.kernel state)
-          (fun message => P.senderUtility state (rule message))
-          (P.senderConditionalIntegrable rule hactual state hs) =
-        expect (kernel state) payoff
-          (payoffIntegrable_bind_conditional_on_support
-            P.prior kernel payoff hactual state hs) := by
-    exact (expect_map (fun message => (state, message))
-      (P.signal.kernel state) payoff
-      (P.senderConditionalIntegrable rule hactual state hs) _).symm
-  apply payoffIntegrable_bind_conditionalValue_on_support
-    P.prior kernel payoff hactual
-  intro state hs
-  simp only [extendFromSupport, dite_eq_left hs]
-  exact hcond state hs
+        (fun message => P.senderUtility state (rule message))) :=
+  payoffIntegrable_bind_conditionalValue_on_support P.prior
+    (fun state => (P.signal.kernel state).map (state, ·))
+    (fun outcome => P.senderUtility outcome.1 (rule outcome.2)) hactual _
+    (fun state _ => (expect_map (fun message => (state, message))
+      (P.signal.kernel state)
+      (fun outcome => P.senderUtility outcome.1 (rule outcome.2))).symm)
 
 /-- Iterated sender expectation, using only the actual joint-law guard. -/
 theorem senderEU_eq_expect
     (P : PersuasionProblem State Message Action) (rule : P.DecisionRule)
     (hactual : PayoffIntegrable (P.signal.joint P.prior)
       (fun outcome => P.senderUtility outcome.1 (rule outcome.2))) :
-    P.senderEU rule hactual =
-      expect P.prior (extendFromSupport P.prior
-        (fun state hs =>
-          expect (P.signal.kernel state)
-            (fun message => P.senderUtility state (rule message))
-            (P.senderConditionalIntegrable rule hactual state hs)))
-        (P.senderOuterIntegrable rule hactual) := by
-  let kernel : State → PMF (State × Message) :=
-    fun state => (P.signal.kernel state).map (state, ·)
-  let payoff : State × Message → ℝ :=
-    fun outcome => P.senderUtility outcome.1 (rule outcome.2)
+    P.senderEU rule =
+      expect P.prior (fun state =>
+        expect (P.signal.kernel state)
+          (fun message => P.senderUtility state (rule message))) := by
   unfold senderEU
-  apply expect_bind_tower_on_support P.prior kernel payoff hactual
-  intro state hs
-  simp only [extendFromSupport, dite_eq_left hs]
-  exact (expect_map (fun message => (state, message))
-    (P.signal.kernel state) payoff
-    (P.senderConditionalIntegrable rule hactual state hs) _).symm
+  exact expect_bind_tower_on_support P.prior
+    (fun state => (P.signal.kernel state).map (state, ·))
+    (fun outcome => P.senderUtility outcome.1 (rule outcome.2)) hactual _
+    (fun state _ => (expect_map (fun message => (state, message))
+      (P.signal.kernel state)
+      (fun outcome => P.senderUtility outcome.1 (rule outcome.2))).symm)
 
 /-- Finite-state and finite-message sender payoff formula. -/
 theorem senderEU_eq_sum [Fintype State] [Fintype Message]
-    (P : PersuasionProblem State Message Action) (rule : P.DecisionRule)
-    (hactual : PayoffIntegrable (P.signal.joint P.prior)
-      (fun outcome => P.senderUtility outcome.1 (rule outcome.2))) :
-    P.senderEU rule hactual =
+    (P : PersuasionProblem State Message Action) (rule : P.DecisionRule) :
+    P.senderEU rule =
       ∑ state : State, ∑ message : Message,
         ((P.prior state).toReal * (P.signal.kernel state message).toReal) *
           P.senderUtility state (rule message) := by
@@ -353,9 +322,8 @@ theorem senderEU_eq_sum_senderScore [Fintype Message]
     (P : PersuasionProblem State Message Action) (rule : P.DecisionRule)
     (hactual : PayoffIntegrable (P.signal.joint P.prior)
       (fun outcome => P.senderUtility outcome.1 (rule outcome.2))) :
-    P.senderEU rule hactual =
-      ∑ message : Message, P.senderScore message (rule message)
-        (P.senderScore_integrable_of_senderEU rule hactual message) := by
+    P.senderEU rule =
+      ∑ message : Message, P.senderScore message (rule message) := by
   let term : Message → State → ℝ := fun message state =>
     ((P.signal.joint P.prior) (state, message)).toReal *
       P.senderUtility state (rule message)
@@ -380,12 +348,12 @@ alternative, including alternatives with otherwise divergent outcomes. -/
 def IsOptimalPersuasive (P : PersuasionProblem State Message Action)
     (rule : P.DecisionRule) : Prop :=
   P.IsPersuasive rule ∧
-    ∃ hactual : PayoffIntegrable (P.signal.joint P.prior)
-        (fun outcome => P.senderUtility outcome.1 (rule outcome.2)),
+    PayoffIntegrable (P.signal.joint P.prior)
+        (fun outcome => P.senderUtility outcome.1 (rule outcome.2)) ∧
       ∀ alternative, P.IsPersuasive alternative →
-        ∃ halt : PayoffIntegrable (P.signal.joint P.prior)
-            (fun outcome => P.senderUtility outcome.1 (alternative outcome.2)),
-          P.senderEU alternative halt ≤ P.senderEU rule hactual
+        PayoffIntegrable (P.signal.joint P.prior)
+            (fun outcome => P.senderUtility outcome.1 (alternative outcome.2)) ∧
+          P.senderEU alternative ≤ P.senderEU rule
 
 /-- Existence requires actual-law integration throughout the feasible family
 being compared. -/
@@ -401,7 +369,7 @@ theorem exists_optimalPersuasive [Finite Message] [Finite Action]
     ⟨⟨Classical.choose hfeasible, Classical.choose_spec hfeasible⟩⟩
   obtain ⟨best, hbest⟩ :=
     Finite.exists_max fun candidate : FeasibleRule =>
-      P.senderEU candidate.1 (hall candidate.1 candidate.2)
+      P.senderEU candidate.1
   exact ⟨best.1, best.2, hall best.1 best.2,
     fun alternative halternative =>
       ⟨hall alternative halternative, hbest ⟨alternative, halternative⟩⟩⟩

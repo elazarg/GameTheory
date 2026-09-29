@@ -169,19 +169,13 @@ theorem expectedUtility_serialized_eq_source
     (utility : G.History → ι → ℝ) (who : ι)
     (target : (player : ι) →
       (information G order).BehavioralPolicy player)
-    (rounds : ℕ)
-    (htarget : UtilityIntegrable (serializedUtility G order utility) who
-      ((information G order).runBehavioral target
-        (rounds * roundWidth order)))
-    (hsource : UtilityIntegrable utility who
-      (G.information.runBehavioral
-        (projectBehavioral G order target) rounds)) :
+    (rounds : ℕ) :
     expectedUtility (serializedUtility G order utility) who
         ((information G order).runBehavioral target
-          (rounds * roundWidth order)) htarget =
+          (rounds * roundWidth order)) =
       expectedUtility utility who
         (G.information.runBehavioral
-          (projectBehavioral G order target) rounds) hsource := by
+          (projectBehavioral G order target) rounds) := by
   have hlaw :
       PMF.map (eraseHistory G order)
           ((information G order).runBehavioral target
@@ -189,28 +183,21 @@ theorem expectedUtility_serialized_eq_source
         G.information.runBehavioral
           (projectBehavioral G order target) rounds :=
     map_erase_runBehavioral_eq_source G order target rounds
-  have htarget' := (utilityIntegrable_serialized_iff_source
-    G order utility who target rounds).2 hsource
-  have hmap : UtilityIntegrable utility who
-      (PMF.map (eraseHistory G order)
-        ((information G order).runBehavioral target
-          (rounds * roundWidth order))) := by
-    exact payoffIntegrable_congr_law hlaw.symm hsource
   calc
     _ = expectedUtility utility who
         (PMF.map (eraseHistory G order)
           ((information G order).runBehavioral target
-            (rounds * roundWidth order))) hmap := by
+            (rounds * roundWidth order))) := by
       have hforward := expectedUtility_map utility who
         (eraseHistory G order)
         ((information G order).runBehavioral target
-          (rounds * roundWidth order)) hmap
+          (rounds * roundWidth order))
       exact (expectedUtility_congr_law (serializedUtility G order utility)
-        who rfl htarget htarget').trans hforward.symm
+        who rfl).trans hforward.symm
     _ = expectedUtility utility who
         (G.information.runBehavioral
-          (projectBehavioral G order target) rounds) hsource :=
-      expectedUtility_congr_law utility who hlaw hmap hsource
+          (projectBehavioral G order target) rounds) :=
+      expectedUtility_congr_law utility who hlaw
 
 /-- Behavioral approximate Nash is invariant under explicit-order FOSG
 serialization at the same real slack. -/
@@ -293,15 +280,13 @@ theorem isεNash_serialized_iff_source
             (equivalence.symm targetProfile))),
         expectedUtility (serializedUtility G order utility) who
             (((information G order).toBehavioralGameForm
-              (rounds * roundWidth order)).play targetProfile) htarget =
+              (rounds * roundWidth order)).play targetProfile) =
           expectedUtility utility who
             ((G.information.toBehavioralGameForm rounds).play
-              (equivalence.symm targetProfile)) hsource := by
+              (equivalence.symm targetProfile)) := by
     intro targetProfile who htarget hsource
     exact expectedUtility_serialized_eq_source G order utility who
       targetProfile rounds
-      (by simpa [equivalence, behavioralProfileEquiv] using htarget)
-      (by simpa [equivalence, behavioralProfileEquiv] using hsource)
   have htransport :=
     isεNash_iff_of_profileEquiv_of_expectedUtility_eq
       (G.information.toBehavioralGameForm rounds)

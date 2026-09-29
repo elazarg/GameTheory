@@ -81,8 +81,8 @@ theorem pmf_overlap_tendsto {α : Type*}
 the two laws' non-overlap mass. -/
 theorem abs_expect_sub_le_two_mul_bound_mul_one_sub_overlap {α : Type*}
     (μ ν : PMF α) (f : α → ℝ) {C : ℝ} (hbd : ∀ value, |f value| ≤ C) :
-    |expect μ f (payoffIntegrable_of_bounded μ f hbd) -
-      expect ν f (payoffIntegrable_of_bounded ν f hbd)| ≤
+    |expect μ f -
+      expect ν f| ≤
       2 * C * (1 - ∑' value : α,
         min ((μ value).toReal) ((ν value).toReal)) := by
   let r : α → ℝ := fun value => min ((μ value).toReal) ((ν value).toReal)
@@ -121,7 +121,7 @@ theorem abs_expect_sub_le_two_mul_bound_mul_one_sub_overlap {α : Type*}
         abs_of_nonneg ENNReal.toReal_nonneg] using h
     exact hnorm.of_norm
   have hμ_tail_hasSum : HasSum (fun value : α => ((μ value).toReal - r value) * f value)
-      (expect μ f (payoffIntegrable_of_bounded μ f hbd) -
+      (expect μ f -
         ∑' value : α, r value * f value) := by
     have h := hμf_sum.hasSum.sub hrf_sum.hasSum
     have hfun : (fun value : α => (μ value).toReal * f value - r value * f value) =
@@ -131,7 +131,7 @@ theorem abs_expect_sub_le_two_mul_bound_mul_one_sub_overlap {α : Type*}
     rw [hfun] at h
     simpa [expect] using h
   have hν_tail_hasSum : HasSum (fun value : α => ((ν value).toReal - r value) * f value)
-      (expect ν f (payoffIntegrable_of_bounded ν f hbd) -
+      (expect ν f -
         ∑' value : α, r value * f value) := by
     have h := hνf_sum.hasSum.sub hrf_sum.hasSum
     have hfun : (fun value : α => (ν value).toReal * f value - r value * f value) =
@@ -155,7 +155,7 @@ theorem abs_expect_sub_le_two_mul_bound_mul_one_sub_overlap {α : Type*}
       simpa [pmf_weight_tsum_one ν] using hbase
     simpa [mul_sub] using hbase'.mul_left C
   have hμ_tail_bound :
-      |expect μ f (payoffIntegrable_of_bounded μ f hbd) -
+      |expect μ f -
         ∑' value : α, r value * f value| ≤
         C * (1 - ∑' value : α, r value) := by
     have hle := hμ_tail_hasSum.norm_le_of_bounded hμ_tail_mass ?_
@@ -172,7 +172,7 @@ theorem abs_expect_sub_le_two_mul_bound_mul_one_sub_overlap {α : Type*}
         mul_le_mul_of_nonneg_left (hbd value) htail_nonneg
       _ = C * ((μ value).toReal - r value) := by ring
   have hν_tail_bound :
-      |expect ν f (payoffIntegrable_of_bounded ν f hbd) -
+      |expect ν f -
         ∑' value : α, r value * f value| ≤
         C * (1 - ∑' value : α, r value) := by
     have hle := hν_tail_hasSum.norm_le_of_bounded hν_tail_mass ?_
@@ -189,13 +189,13 @@ theorem abs_expect_sub_le_two_mul_bound_mul_one_sub_overlap {α : Type*}
         mul_le_mul_of_nonneg_left (hbd value) htail_nonneg
       _ = C * ((ν value).toReal - r value) := by ring
   calc
-    _ = |(expect μ f (payoffIntegrable_of_bounded μ f hbd) -
+    _ = |(expect μ f -
           ∑' value : α, r value * f value) -
-          (expect ν f (payoffIntegrable_of_bounded ν f hbd) -
+          (expect ν f -
             ∑' value : α, r value * f value)| := by ring_nf
-    _ ≤ |expect μ f (payoffIntegrable_of_bounded μ f hbd) -
+    _ ≤ |expect μ f -
           ∑' value : α, r value * f value| +
-          |expect ν f (payoffIntegrable_of_bounded ν f hbd) -
+          |expect ν f -
             ∑' value : α, r value * f value| := abs_sub _ _
     _ ≤ C * (1 - ∑' value : α, r value) +
           C * (1 - ∑' value : α, r value) :=
@@ -208,9 +208,8 @@ theorem PMFConvergesPointwise.expect_of_bounded {α : Type*}
     {sequence : ℕ → PMF α} {target : PMF α}
     (h : PMFConvergesPointwise sequence target)
     (f : α → ℝ) {C : ℝ} (hbd : ∀ value, |f value| ≤ C) :
-    Tendsto (fun n => expect (sequence n) f
-      (payoffIntegrable_of_bounded (sequence n) f hbd)) atTop
-      (nhds (expect target f (payoffIntegrable_of_bounded target f hbd))) := by
+    Tendsto (fun n => expect (sequence n) f) atTop
+      (nhds (expect target f)) := by
   have hoverlap := pmf_overlap_tendsto h
   have hgap : Tendsto (fun n => 2 * C *
       (1 - ∑' value : α,
@@ -222,8 +221,8 @@ theorem PMFConvergesPointwise.expect_of_bounded {α : Type*}
           min ((sequence n value).toReal) ((target value).toReal)) atTop (nhds (1 - 1)))
     simpa [mul_assoc] using hsub.const_mul (2 * C)
   have habs : Tendsto (fun n =>
-      |expect (sequence n) f (payoffIntegrable_of_bounded (sequence n) f hbd) -
-        expect target f (payoffIntegrable_of_bounded target f hbd)|) atTop (nhds 0) := by
+      |expect (sequence n) f -
+        expect target f|) atTop (nhds 0) := by
     refine squeeze_zero (fun n => abs_nonneg _) ?_ hgap
     intro n
     exact abs_expect_sub_le_two_mul_bound_mul_one_sub_overlap (sequence n) target f hbd
@@ -235,8 +234,8 @@ convergence gives expectation convergence without a caller-supplied bound. -/
 theorem PMFConvergesPointwise.expect_finite {α : Type*} [Fintype α]
     {sequence : ℕ → PMF α} {target : PMF α}
     (h : PMFConvergesPointwise sequence target) (f : α → ℝ) :
-    Tendsto (fun n => expect (sequence n) f (payoffIntegrable_of_finite (sequence n) f))
-      atTop (nhds (expect target f (payoffIntegrable_of_finite target f))) := by
+    Tendsto (fun n => expect (sequence n) f)
+      atTop (nhds (expect target f)) := by
   have hfinite : (Set.range fun value : α => |f value|).Finite := Set.finite_range _
   obtain ⟨C, hC⟩ := hfinite.bddAbove
   have hbd : ∀ value, |f value| ≤ C := fun value => hC ⟨value, rfl⟩
@@ -251,24 +250,23 @@ theorem PMFConvergesPointwise.expect_bind_finite {α β : Type*} [Fintype α]
     (q : α → PMF β) (f : β → ℝ)
     (hsequence : ∀ n, PayoffIntegrable ((sequence n).bind q) f)
     (htarget : PayoffIntegrable (target.bind q) f) :
-    Tendsto (fun n => expect ((sequence n).bind q) f (hsequence n)) atTop
-      (nhds (expect (target.bind q) f htarget)) := by
+    Tendsto (fun n => expect ((sequence n).bind q) f) atTop
+      (nhds (expect (target.bind q) f)) := by
   classical
   let g : α → ℝ := fun a =>
-    if ha : PayoffIntegrable (q a) f then expect (q a) f ha else 0
+    if ha : PayoffIntegrable (q a) f then expect (q a) f else 0
   have hrow (p : PMF α) (hp : PayoffIntegrable (p.bind q) f)
       (a : α) (ha : a ∈ p.support) :
-      g a = expect (q a) f
-        (payoffIntegrable_bind_conditional_on_support p q f hp a ha) := by
+      g a = expect (q a) f := by
     have hc := payoffIntegrable_bind_conditional_on_support p q f hp a ha
     simp [g, hc]
   have hseq (n : ℕ) :
-      expect ((sequence n).bind q) f (hsequence n) =
-        expect (sequence n) g (payoffIntegrable_of_finite _ _) := by
+      expect ((sequence n).bind q) f =
+        expect (sequence n) g := by
     exact expect_bind_tower_on_support (sequence n) q f (hsequence n)
       g (hrow (sequence n) (hsequence n))
-  have ht : expect (target.bind q) f htarget =
-      expect target g (payoffIntegrable_of_finite _ _) := by
+  have ht : expect (target.bind q) f =
+      expect target g := by
     exact expect_bind_tower_on_support target q f htarget g (hrow target htarget)
   simpa only [hseq, ht] using h.expect_finite g
 
@@ -305,9 +303,8 @@ theorem PMFConvergesPointwise.expect_bind_finite_of_sequence_integrable
     (h : PMFConvergesPointwise sequence target)
     (q : α → PMF β) (f : β → ℝ)
     (hsequence : ∀ n, PayoffIntegrable ((sequence n).bind q) f) :
-    Tendsto (fun n => expect ((sequence n).bind q) f (hsequence n)) atTop
-      (nhds (expect (target.bind q) f
-        (h.payoffIntegrable_bind_finite q f hsequence))) :=
+    Tendsto (fun n => expect ((sequence n).bind q) f) atTop
+      (nhds (expect (target.bind q) f)) :=
   h.expect_bind_finite q f hsequence
     (h.payoffIntegrable_bind_finite q f hsequence)
 
@@ -319,9 +316,8 @@ theorem PMFConvergesPointwise.expect_varying_finite {α : Type*} [Fintype α]
     {observable : ℕ → α → ℝ} {limit : α → ℝ}
     (hobservable : ∀ value,
       Tendsto (fun n => observable n value) atTop (nhds (limit value))) :
-    Tendsto (fun n => expect (sequence n) (observable n)
-      (payoffIntegrable_of_finite (sequence n) (observable n))) atTop
-      (nhds (expect target limit (payoffIntegrable_of_finite target limit))) := by
+    Tendsto (fun n => expect (sequence n) (observable n)) atTop
+      (nhds (expect target limit)) := by
   simp_rw [expect_eq_sum]
   exact tendsto_finsetSum Finset.univ fun value _ =>
     (h.toReal value).mul (hobservable value)
@@ -335,20 +331,14 @@ theorem PMFConvergesPointwise.expect_varying_of_bounded {α : Type*}
     (hbd : ∀ n value, |observable n value| ≤ C)
     (hobservable : ∀ value,
       Tendsto (fun n => observable n value) atTop (nhds (limit value))) :
-    Tendsto (fun n => expect (sequence n) (observable n)
-      (payoffIntegrable_of_bounded (sequence n) (observable n) (hbd n))) atTop
-      (nhds (expect target limit (payoffIntegrable_of_bounded target limit (by
-        intro value
-        exact le_of_tendsto ((hobservable value).abs)
-          (Eventually.of_forall fun n => hbd n value))))) := by
+    Tendsto (fun n => expect (sequence n) (observable n)) atTop
+      (nhds (expect target limit)) := by
   have hlimitBound : ∀ value, |limit value| ≤ C := by
     intro value
     exact le_of_tendsto ((hobservable value).abs)
       (Eventually.of_forall fun n => hbd n value)
-  have hfixed : Tendsto (fun n => expect target (observable n)
-      (payoffIntegrable_of_bounded target (observable n) (hbd n))) atTop
-      (nhds (expect target limit
-        (payoffIntegrable_of_bounded target limit hlimitBound))) := by
+  have hfixed : Tendsto (fun n => expect target (observable n)) atTop
+      (nhds (expect target limit)) := by
     have hsum : Summable (fun value : α => (target value).toReal * C) :=
       (pmf_weight_summable target).mul_right C
     have ht := tendsto_tsum_of_dominated_convergence
@@ -376,16 +366,12 @@ theorem PMFConvergesPointwise.expect_varying_of_bounded {α : Type*}
           min ((sequence n value).toReal) ((target value).toReal)) atTop (nhds (1 - 1)))
     simpa [mul_assoc] using hsub.const_mul (2 * C)
   have hdelta : Tendsto (fun n =>
-      expect (sequence n) (observable n)
-          (payoffIntegrable_of_bounded (sequence n) (observable n) (hbd n)) -
-        expect target (observable n)
-          (payoffIntegrable_of_bounded target (observable n) (hbd n))) atTop (nhds 0) := by
+      expect (sequence n) (observable n) -
+        expect target (observable n)) atTop (nhds 0) := by
     rw [tendsto_iff_norm_sub_tendsto_zero]
     have habs : Tendsto (fun n =>
-        |expect (sequence n) (observable n)
-            (payoffIntegrable_of_bounded (sequence n) (observable n) (hbd n)) -
-          expect target (observable n)
-            (payoffIntegrable_of_bounded target (observable n) (hbd n))|)
+        |expect (sequence n) (observable n) -
+          expect target (observable n)|)
         atTop (nhds 0) := by
       refine squeeze_zero (fun n => abs_nonneg _) ?_ hgap
       intro n
@@ -396,10 +382,9 @@ theorem PMFConvergesPointwise.expect_varying_of_bounded {α : Type*}
   simpa only [sub_add_cancel, zero_add] using htotal
 
 private theorem pmf_bind_apply_toReal_eq_expect {α β : Type*}
-    (μ : PMF α) (kernel : α → PMF β) (value : β)
-    (h : PayoffIntegrable μ (fun source => (kernel source value).toReal)) :
+    (μ : PMF α) (kernel : α → PMF β) (value : β) :
     (μ.bind kernel value).toReal =
-      expect μ (fun source => (kernel source value).toReal) h := by
+      expect μ (fun source => (kernel source value).toReal) := by
   rw [PMF.bind_apply, ENNReal.tsum_toReal_eq
     (fun source => ENNReal.mul_ne_top (μ.apply_ne_top source)
       ((kernel source).apply_ne_top value))]

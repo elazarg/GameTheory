@@ -49,9 +49,8 @@ private theorem map_profile_mass (law : PMF (Profile F.sig))
 
 /-- Reindex an expectation over pure profiles by the four Boolean labels. -/
 theorem expect_eq_sum_profile (law : PMF (Profile F.sig))
-    (observable : Profile F.sig → ℝ)
-    (hintegrable : PayoffIntegrable law observable) :
-    expect law observable hintegrable =
+    (observable : Profile F.sig → ℝ) :
+    expect law observable =
       ∑ bits : Fin 2 → Bool,
         (law (h.profile bits)).toReal * observable (h.profile bits) := by
   classical
@@ -60,14 +59,10 @@ theorem expect_eq_sum_profile (law : PMF (Profile F.sig))
   have hvalue : ∀ profile, observable profile = value (h.encodeProfile profile) := by
     intro profile
     simp [value, h.profile_encodeProfile]
-  have hpull : PayoffIntegrable law (value ∘ h.encodeProfile) :=
-    payoffIntegrable_congr_on_support (fun profile _ => hvalue profile) hintegrable
-  have hν : PayoffIntegrable ν value :=
-    (payoffIntegrable_map_iff h.encodeProfile law value).2 hpull
   calc
-    expect law observable hintegrable = expect law (value ∘ h.encodeProfile) hpull :=
-      expect_congr_on_support (fun profile _ => hvalue profile) hintegrable hpull
-    _ = expect ν value hν := (expect_map h.encodeProfile law value hpull hν).symm
+    expect law observable = expect law (value ∘ h.encodeProfile) :=
+      expect_congr_on_support (fun profile _ => hvalue profile)
+    _ = expect ν value := (expect_map h.encodeProfile law value).symm
     _ = ∑ bits : Fin 2 → Bool,
           (law (h.profile bits)).toReal * observable (h.profile bits) := by
       rw [expect_eq_sum]
@@ -121,45 +116,38 @@ private theorem boolProfiles :
   decide
 
 private theorem expect_eq_four (law : PMF (Profile F.sig))
-    (observable : Profile F.sig → ℝ) (hintegrable : PayoffIntegrable law observable) :
-    expect law observable hintegrable =
+    (observable : Profile F.sig → ℝ) :
+    expect law observable =
       (law (h.profile bitsTT)).toReal * observable (h.profile bitsTT) +
       ((law (h.profile bitsTF)).toReal * observable (h.profile bitsTF) +
       ((law (h.profile bitsFT)).toReal * observable (h.profile bitsFT) +
        (law (h.profile bitsFF)).toReal * observable (h.profile bitsFF))) := by
-  rw [h.expect_eq_sum_profile law observable hintegrable, boolProfiles,
+  rw [h.expect_eq_sum_profile law observable, boolProfiles,
     Finset.sum_insert (by decide), Finset.sum_insert (by decide),
     Finset.sum_insert (by decide), Finset.sum_singleton]
 
 private theorem expectedUtility_bind_eq_four
     (law : PMF (Profile F.sig)) (who : Fin 2)
     (q : Profile F.sig → PMF F.sig.Outcome)
-    (hbind : UtilityIntegrable utility who (law.bind q))
-    (hcond : ∀ profile, UtilityIntegrable utility who (q profile)) :
-    expectedUtility utility who (law.bind q) hbind =
+    (hbind : UtilityIntegrable utility who (law.bind q)) :
+    expectedUtility utility who (law.bind q) =
       (law (h.profile bitsTT)).toReal *
-          expectedUtility utility who (q (h.profile bitsTT))
-            (hcond (h.profile bitsTT)) +
+          expectedUtility utility who (q (h.profile bitsTT)) +
       ((law (h.profile bitsTF)).toReal *
-          expectedUtility utility who (q (h.profile bitsTF))
-            (hcond (h.profile bitsTF)) +
+          expectedUtility utility who (q (h.profile bitsTF)) +
       ((law (h.profile bitsFT)).toReal *
-          expectedUtility utility who (q (h.profile bitsFT))
-            (hcond (h.profile bitsFT)) +
+          expectedUtility utility who (q (h.profile bitsFT)) +
        (law (h.profile bitsFF)).toReal *
-          expectedUtility utility who (q (h.profile bitsFF))
-            (hcond (h.profile bitsFF)))) := by
-  let value := fun profile => expectedUtility utility who (q profile) (hcond profile)
-  let houter := payoffIntegrable_bind_conditionalExpectation law q
-    (fun outcome => utility outcome who) hbind hcond
+          expectedUtility utility who (q (h.profile bitsFF)))) := by
+  let value := fun profile => expectedUtility utility who (q profile)
   calc
-    expectedUtility utility who (law.bind q) hbind =
-        expect law value houter := expectedUtility_bind utility who law q hbind hcond
+    expectedUtility utility who (law.bind q) =
+        expect law value := expectedUtility_bind utility who law q hbind
     _ = (law (h.profile bitsTT)).toReal * value (h.profile bitsTT) +
         ((law (h.profile bitsTF)).toReal * value (h.profile bitsTF) +
         ((law (h.profile bitsFT)).toReal * value (h.profile bitsFT) +
          (law (h.profile bitsFF)).toReal * value (h.profile bitsFF))) :=
-      expect_eq_four h law value houter
+      expect_eq_four h law value
 
 private theorem ce_prob_true_true_ge_true_false
     {law : PMF (Profile F.sig)}
@@ -176,9 +164,7 @@ private theorem ce_prob_true_true_ge_true_false
   have hineq := (euPreference_iff utility 0 (F.outcomeLaw law) (law.bind q)
     hbase hdeviation).1 hpref
   have hbaseValue := h.expectedUtility_bind_eq_four law 0 F.play hbase
-    (fun profile => h.integrable 0 profile)
   have hdeviationValue := h.expectedUtility_bind_eq_four law 0 q hdeviation
-    (fun profile => h.integrable 0 (Profile.update profile 0 (dev (profile 0))))
   unfold GameForm.outcomeLaw at hineq
   rw [hbaseValue, hdeviationValue] at hineq
   simp only [q, GameTheory.GameForm.MatchingPenniesLike.profile,
@@ -205,9 +191,7 @@ private theorem ce_prob_true_false_ge_false_false
   have hineq := (euPreference_iff utility 1 (F.outcomeLaw law) (law.bind q)
     hbase hdeviation).1 hpref
   have hbaseValue := h.expectedUtility_bind_eq_four law 1 F.play hbase
-    (fun profile => h.integrable 1 profile)
   have hdeviationValue := h.expectedUtility_bind_eq_four law 1 q hdeviation
-    (fun profile => h.integrable 1 (Profile.update profile 1 (dev (profile 1))))
   unfold GameForm.outcomeLaw at hineq
   rw [hbaseValue, hdeviationValue] at hineq
   simp only [q, GameTheory.GameForm.MatchingPenniesLike.profile,
@@ -235,9 +219,7 @@ private theorem ce_prob_false_false_ge_false_true
   have hineq := (euPreference_iff utility 0 (F.outcomeLaw law) (law.bind q)
     hbase hdeviation).1 hpref
   have hbaseValue := h.expectedUtility_bind_eq_four law 0 F.play hbase
-    (fun profile => h.integrable 0 profile)
   have hdeviationValue := h.expectedUtility_bind_eq_four law 0 q hdeviation
-    (fun profile => h.integrable 0 (Profile.update profile 0 (dev (profile 0))))
   unfold GameForm.outcomeLaw at hineq
   rw [hbaseValue, hdeviationValue] at hineq
   simp only [q, GameTheory.GameForm.MatchingPenniesLike.profile,
@@ -264,9 +246,7 @@ private theorem ce_prob_false_true_ge_true_true
   have hineq := (euPreference_iff utility 1 (F.outcomeLaw law) (law.bind q)
     hbase hdeviation).1 hpref
   have hbaseValue := h.expectedUtility_bind_eq_four law 1 F.play hbase
-    (fun profile => h.integrable 1 profile)
   have hdeviationValue := h.expectedUtility_bind_eq_four law 1 q hdeviation
-    (fun profile => h.integrable 1 (Profile.update profile 1 (dev (profile 1))))
   unfold GameForm.outcomeLaw at hineq
   rw [hbaseValue, hdeviationValue] at hineq
   simp only [q, GameTheory.GameForm.MatchingPenniesLike.profile,

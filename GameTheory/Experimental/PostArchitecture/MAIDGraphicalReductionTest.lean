@@ -92,7 +92,7 @@ def fairSignal : PMF Bool :=
     (PMF.pure false) (PMF.pure true)
 
 theorem fairSignal_expect (score : Bool → ℝ) :
-    expect fairSignal score (payoffIntegrable_of_finite _ _) =
+    expect fairSignal score =
       (score false + score true) / 2 := by
   have hmix := expect_mix (1 / 2) (by norm_num) (by norm_num)
     (PMF.pure false) (PMF.pure true) score
@@ -613,17 +613,13 @@ theorem relay_native_play_eq (policy : Policy (diagram true)) :
 theorem relay_owner_expectedUtility (policy : Policy (diagram true)) :
     expectedUtility
         (fun assignment player => (semantics true).utility player assignment)
-        .owner ((nativeBehavioralGameForm (semantics true)).play policy)
-        (payoffIntegrable_of_finite _ _) =
+        .owner ((nativeBehavioralGameForm (semantics true)).play policy) =
       expect fairSignal (fun signal =>
         expect (policy .owner (ownerSite true) (ownerObservation signal))
           (fun ownerAction =>
             expect (policy .rival (rivalSite true) (rivalObservation signal))
               (fun rivalAction =>
-                coordinationScore ownerAction rivalAction + bitScore signal)
-              (payoffIntegrable_of_finite _ _))
-          (payoffIntegrable_of_finite _ _))
-        (payoffIntegrable_of_finite _ _) := by
+                coordinationScore ownerAction rivalAction + bitScore signal))) := by
   unfold expectedUtility
   let utility := fun assignment : Assignment (diagram true) =>
     (semantics true).utility .owner assignment
@@ -634,54 +630,42 @@ theorem relay_owner_expectedUtility (policy : Policy (diagram true)) :
   let tail := fun signal ownerAction =>
     (rivalLaw signal).map (assignmentOf signal ownerAction)
   have hrival (signal ownerAction) :
-      expect (tail signal ownerAction) utility
-          (payoffIntegrable_of_finite _ _) =
+      expect (tail signal ownerAction) utility =
         expect (rivalLaw signal)
           (fun rivalAction =>
-            coordinationScore ownerAction rivalAction + bitScore signal)
-          (payoffIntegrable_of_finite _ _) := by
+            coordinationScore ownerAction rivalAction + bitScore signal) := by
     calc
       _ = expect (rivalLaw signal)
-          (utility ∘ assignmentOf signal ownerAction)
-          (payoffIntegrable_of_finite _ _) := by
-            exact expect_map _ _ _ _ _
+          (utility ∘ assignmentOf signal ownerAction) := by
+            exact expect_map _ _ _
       _ = _ := by
         apply expect_congr_on_support
         intro rivalAction _
         rfl
   have howner (signal) :
       expect ((ownerLaw signal).bind fun ownerAction => tail signal ownerAction)
-          utility (payoffIntegrable_of_finite _ _) =
+          utility =
         expect (ownerLaw signal) (fun ownerAction =>
           expect (rivalLaw signal) (fun rivalAction =>
-            coordinationScore ownerAction rivalAction + bitScore signal)
-            (payoffIntegrable_of_finite _ _))
-          (payoffIntegrable_of_finite _ _) := by
+            coordinationScore ownerAction rivalAction + bitScore signal)) := by
     calc
       _ = expect (ownerLaw signal) (fun ownerAction =>
-            expect (tail signal ownerAction) utility
-              (payoffIntegrable_of_finite _ _))
-            (payoffIntegrable_of_finite _ _) := by
-              exact expect_bind_tower _ _ _ _
-                (fun _ => payoffIntegrable_of_finite _ _)
+            expect (tail signal ownerAction) utility) := by
+              exact expect_bind_tower _ _ _ (payoffIntegrable_of_finite _ _)
       _ = _ := by
         apply expect_congr_on_support
         intro ownerAction _
         exact hrival signal ownerAction
   calc
-    expect ((nativeBehavioralGameForm (semantics true)).play policy) utility
-        (payoffIntegrable_of_finite _ _) =
+    expect ((nativeBehavioralGameForm (semantics true)).play policy) utility =
       expect (fairSignal.bind fun signal =>
         (ownerLaw signal).bind fun ownerAction => tail signal ownerAction)
-        utility (payoffIntegrable_of_finite _ _) :=
-      expect_congr_law (relay_native_play_eq policy) utility _ _
+        utility :=
+      expect_congr_law (relay_native_play_eq policy) utility
     _ = expect fairSignal (fun signal =>
           expect ((ownerLaw signal).bind fun ownerAction =>
-            tail signal ownerAction) utility
-            (payoffIntegrable_of_finite _ _))
-          (payoffIntegrable_of_finite _ _) := by
-            exact expect_bind_tower _ _ _ _
-              (fun _ => payoffIntegrable_of_finite _ _)
+            tail signal ownerAction) utility) := by
+            exact expect_bind_tower _ _ _ (payoffIntegrable_of_finite _ _)
     _ = _ := by
       apply expect_congr_on_support
       intro signal _
@@ -758,8 +742,7 @@ theorem relay_copy_expectedUtility :
         ((nativeBehavioralGameForm (semantics true)).play
           (Profile.update (sig := nativeBehavioralSignature (diagram true))
             ((pruning true).expandPolicy relayReducedPolicy)
-            Player.owner ownerCopiesSignal))
-        (payoffIntegrable_of_finite _ _) =
+            Player.owner ownerCopiesSignal)) =
       3 / 2 := by
   rw [relay_owner_expectedUtility, fairSignal_expect]
   simp [coordinationScore, bitScore, expect_pure]
@@ -808,23 +791,19 @@ theorem expanded_updated_reduced_rival
   exact relayReducedPolicy_rival signal
 
 theorem expect_coordination_false_add_true (law : PMF Bool) :
-    expect law (fun action => coordinationScore action false)
-        (payoffIntegrable_of_finite _ _) +
-        expect law (fun action => coordinationScore action true)
-          (payoffIntegrable_of_finite _ _) =
+    expect law (fun action => coordinationScore action false) +
+        expect law (fun action => coordinationScore action true) =
       1 := by
   calc
     _ = expect law (fun action =>
-        coordinationScore action false + coordinationScore action true)
-        (payoffIntegrable_of_finite _ _) := by
+        coordinationScore action false + coordinationScore action true) := by
       exact (expect_add (payoffIntegrable_of_finite law _)
         (payoffIntegrable_of_finite law _)).symm
-    _ = expect law (fun _ => 1)
-        (payoffIntegrable_of_finite _ _) := by
+    _ = expect law (fun _ => 1) := by
       apply expect_congr_on_support
       intro action _
       cases action <;> norm_num [coordinationScore]
-    _ = 1 := expect_constant law 1 _
+    _ = 1 := expect_constant law 1
 
 theorem reduced_owner_replacement_expectedUtility
     (replacement : (pruning true).ReducedOwnerPolicy Player.owner) :
@@ -833,8 +812,7 @@ theorem reduced_owner_replacement_expectedUtility
         .owner
         (((pruning true).reducedNativeGameForm (semantics true)).play
           (Profile.update (sig := (pruning true).reducedBehavioralSignature)
-            relayReducedPolicy Player.owner replacement))
-        (payoffIntegrable_of_finite _ _) =
+            relayReducedPolicy Player.owner replacement)) =
       1 := by
   rw [relay_owner_expectedUtility, fairSignal_expect]
   rw [expanded_reduced_owner_blind replacement false true]
@@ -844,33 +822,26 @@ theorem reduced_owner_replacement_expectedUtility
       relayReducedPolicy Player.owner replacement) Player.owner
       (ownerSite true) (ownerObservation true)
   show (expect law (fun action =>
-      coordinationScore action false + bitScore false)
-      (payoffIntegrable_of_finite _ _) +
+      coordinationScore action false + bitScore false) +
     expect law (fun action =>
-      coordinationScore action true + bitScore true)
-      (payoffIntegrable_of_finite _ _)) / 2 = 1
+      coordinationScore action true + bitScore true)) / 2 = 1
   have hfalse : expect law (fun action =>
-      coordinationScore action false + bitScore false)
-      (payoffIntegrable_of_finite _ _) =
-      expect law (fun action => coordinationScore action false)
-        (payoffIntegrable_of_finite _ _) := by
+      coordinationScore action false + bitScore false) =
+      expect law (fun action => coordinationScore action false) := by
     apply expect_congr_on_support
     intro action _
     simp [bitScore]
   have htrue : expect law (fun action =>
-      coordinationScore action true + bitScore true)
-      (payoffIntegrable_of_finite _ _) =
+      coordinationScore action true + bitScore true) =
       expect law (fun action => coordinationScore action true)
-        (payoffIntegrable_of_finite _ _) + 1 := by
+         + 1 := by
     calc
-      _ = expect law (fun action => coordinationScore action true + 1)
-            (payoffIntegrable_of_finite _ _) := by
+      _ = expect law (fun action => coordinationScore action true + 1) := by
           apply expect_congr_on_support
           intro action _
           simp [bitScore]
-      _ = expect law (fun action => coordinationScore action true)
-            (payoffIntegrable_of_finite _ _) +
-          expect law (fun _ => 1) (payoffIntegrable_of_finite _ _) := by
+      _ = expect law (fun action => coordinationScore action true) +
+          expect law (fun _ => 1) := by
             exact expect_add (payoffIntegrable_of_finite law _)
               (payoffIntegrable_of_finite law _)
       _ = _ := by rw [expect_constant]

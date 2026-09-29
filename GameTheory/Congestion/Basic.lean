@@ -111,8 +111,7 @@ def toUtilityGame [Fintype ι] (C : CongestionGame ι) : UtilityGame ι where
 
 theorem expectedUtility_toGameForm [Fintype ι] (C : CongestionGame ι)
     (σ : C.Profile) (i : ι) :
-    expectedUtility C.utility i (C.toGameForm.play σ)
-      (payoffIntegrable_pure σ (fun profile => C.utility profile i)) =
+    expectedUtility C.utility i (C.toGameForm.play σ) =
         -C.playerCost σ i := by
   simp [toGameForm, utility]
 

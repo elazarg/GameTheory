@@ -33,7 +33,6 @@ universe uι us uo
 variable {ι : Type uι} [Fintype ι] [DecidableEq ι] {F : GameForm ι}
 variable [∀ i, Fintype (F.sig.Strategy i)]
 variable (utility : F.sig.Outcome → ι → ℝ)
-variable (pureIntegrable : F.HasIntegrableUtility utility)
 
 /-! ## Continuity of replacing one player's weights
 
@@ -73,36 +72,36 @@ the set lives in the vector space the fixed-point theorem works in. -/
 def bestReply (who : ι) (x : Profile F.sig.weights) : Set (F.sig.Strategy who → ℝ) :=
   {v | v ∈ simplexWeights (F.sig.Strategy who) ∧
     ∀ w ∈ simplexWeights (F.sig.Strategy who),
-      payoff F utility pureIntegrable who (Profile.update x who w) ≤
-        payoff F utility pureIntegrable who (Profile.update x who v)}
+      payoff F utility who (Profile.update x who w) ≤
+        payoff F utility who (Profile.update x who v)}
 
 theorem bestReply_subset (who : ι) (x : Profile F.sig.weights) :
-    bestReply F utility pureIntegrable who x ⊆ simplexWeights (F.sig.Strategy who) :=
+    bestReply F utility who x ⊆ simplexWeights (F.sig.Strategy who) :=
   fun _ hv => hv.1
 
 /-- **A best reply set is convex**, because the payoff is affine in the
 deviator's own weights: a mixture of two best replies is worth their mixed
 value, which is still at least anything else. -/
 theorem convex_bestReply (who : ι) (x : Profile F.sig.weights) :
-    Convex ℝ (bestReply F utility pureIntegrable who x) := by
+    Convex ℝ (bestReply F utility who x) := by
   rintro v ⟨hv, hvmax⟩ w ⟨hw, hwmax⟩ a b ha hb hab
   refine ⟨convex_simplexWeights _ hv hw ha hb hab, fun u hu => ?_⟩
   rw [payoff_update_mix]
-  calc payoff F utility pureIntegrable who (Profile.update x who u)
-      = a * payoff F utility pureIntegrable who (Profile.update x who u) +
-          b * payoff F utility pureIntegrable who (Profile.update x who u) := by
+  calc payoff F utility who (Profile.update x who u)
+      = a * payoff F utility who (Profile.update x who u) +
+          b * payoff F utility who (Profile.update x who u) := by
         rw [← add_mul, hab, one_mul]
-    _ ≤ a * payoff F utility pureIntegrable who (Profile.update x who v) +
-          b * payoff F utility pureIntegrable who (Profile.update x who w) :=
+    _ ≤ a * payoff F utility who (Profile.update x who v) +
+          b * payoff F utility who (Profile.update x who w) :=
         add_le_add (by gcongr; exact hvmax u hu) (by gcongr; exact hwmax u hu)
 
 /-- **A best reply exists**, because a continuous payoff attains its maximum on
 the compact simplex. -/
 theorem bestReply_nonempty [∀ i, Nonempty (F.sig.Strategy i)] (who : ι)
-    (x : Profile F.sig.weights) : (bestReply F utility pureIntegrable who x).Nonempty := by
+    (x : Profile F.sig.weights) : (bestReply F utility who x).Nonempty := by
   obtain ⟨v, hv, hmax⟩ := (isCompact_simplexWeights (F.sig.Strategy who)).exists_isMaxOn
     PMF.simplexWeights_nonempty
-    ((continuous_payoff pureIntegrable who).comp (continuous_update_reply who x)).continuousOn
+    ((continuous_payoff who).comp (continuous_update_reply who x)).continuousOn
   exact ⟨v, hv, fun w hw => hmax hw⟩
 
 omit [Fintype ι] [∀ i, Fintype (F.sig.Strategy i)] in
@@ -123,10 +122,11 @@ theorem probs_update (mu : Profile F.sig.mixed) (who : ι)
 `IsBestResponse` predicate after transporting finite laws to their probability
 vectors.  This is the bridge between the fixed-point proof and the concepts in
 `Core.Response`. -/
-theorem prob_mem_bestReply_iff_isBestResponse (opponents : Profile F.sig.mixed)
+theorem prob_mem_bestReply_iff_isBestResponse
+    (pureIntegrable : F.HasIntegrableUtility utility) (opponents : Profile F.sig.mixed)
     (who : ι) (candidate : PMF (F.sig.Strategy who)) :
     (fun action => (candidate action).toReal) ∈
-      bestReply F utility pureIntegrable who (probs F.sig opponents) ↔
+      bestReply F utility who (probs F.sig opponents) ↔
       IsBestResponse F.mixed (euPreference utility) who opponents candidate := by
   constructor
   · rintro ⟨_, hmax⟩ alternative
@@ -142,8 +142,8 @@ theorem prob_mem_bestReply_iff_isBestResponse (opponents : Profile F.sig.mixed)
           who (Profile.update opponents who alternative), ?_⟩
       rw [← probs_update] at hle
       rw [← probs_update] at hle
-      rw [payoff_probs] at hle
-      rw [payoff_probs] at hle
+      rw [payoff_probs pureIntegrable] at hle
+      rw [payoff_probs pureIntegrable] at hle
       exact hle
     exact hpref
   · intro hbest
@@ -152,33 +152,34 @@ theorem prob_mem_bestReply_iff_isBestResponse (opponents : Profile F.sig.mixed)
     have hle := hbest alternative
     rw [euPreference_apply] at hle
     rcases hle with ⟨hpref, halt, hvalue⟩
-    rw [← payoff_probs (μ := Profile.update opponents who alternative) who,
-      ← payoff_probs (μ := Profile.update opponents who candidate) who] at hvalue
+    rw [← payoff_probs pureIntegrable (Profile.update opponents who alternative) who,
+      ← payoff_probs pureIntegrable (Profile.update opponents who candidate) who] at hvalue
     simpa only [alternative, probs_update, PMF.ofSimplex_toReal] using hvalue
 
 variable (F) in
 /-- Every player best replying at once. A fixed point of this correspondence is
 an equilibrium. -/
 def bestReplies (x : Profile F.sig.weights) : Set (Profile F.sig.weights) :=
-  Set.pi Set.univ fun i => bestReply F utility pureIntegrable i x
+  Set.pi Set.univ fun i => bestReply F utility i x
 
 theorem bestReplies_subset (x : Profile F.sig.weights) :
-    bestReplies F utility pureIntegrable x ⊆ mixedPolytope F.sig := fun _ hy i _ =>
-  bestReply_subset utility pureIntegrable i x (hy i (Set.mem_univ i))
+    bestReplies F utility x ⊆ mixedPolytope F.sig := fun _ hy i _ =>
+  bestReply_subset utility i x (hy i (Set.mem_univ i))
 
 theorem convex_bestReplies (x : Profile F.sig.weights) :
-    Convex ℝ (bestReplies F utility pureIntegrable x) :=
-  convex_pi fun i _ => convex_bestReply utility pureIntegrable i x
+    Convex ℝ (bestReplies F utility x) :=
+  convex_pi fun i _ => convex_bestReply utility i x
 
 theorem bestReplies_nonempty [∀ i, Nonempty (F.sig.Strategy i)] (x : Profile F.sig.weights) :
-    (bestReplies F utility pureIntegrable x).Nonempty := by
-  choose v hv using fun i => bestReply_nonempty utility pureIntegrable i x
+    (bestReplies F utility x).Nonempty := by
+  choose v hv using fun i => bestReply_nonempty utility i x
   exact ⟨v, fun i _ => hv i⟩
 
 /-- Membership in the product correspondence is simultaneous semantic best
 response. -/
-theorem probs_mem_bestReplies_iff (opponents candidates : Profile F.sig.mixed) :
-    probs F.sig candidates ∈ bestReplies F utility pureIntegrable
+theorem probs_mem_bestReplies_iff (pureIntegrable : F.HasIntegrableUtility utility)
+    (opponents candidates : Profile F.sig.mixed) :
+    probs F.sig candidates ∈ bestReplies F utility
         (probs F.sig opponents) ↔
       ∀ who, IsBestResponse F.mixed (euPreference utility) who opponents
         (candidates who) := by
@@ -188,10 +189,11 @@ theorem probs_mem_bestReplies_iff (opponents candidates : Profile F.sig.mixed) :
 
 /-- A fixed point of the analytic correspondence is exactly a mixed Nash
 equilibrium under the canonical core predicate. -/
-theorem probs_mem_bestReplies_self_iff_isNash (profile : Profile F.sig.mixed) :
-    probs F.sig profile ∈ bestReplies F utility pureIntegrable (probs F.sig profile) ↔
+theorem probs_mem_bestReplies_self_iff_isNash (pureIntegrable : F.HasIntegrableUtility utility)
+    (profile : Profile F.sig.mixed) :
+    probs F.sig profile ∈ bestReplies F utility (probs F.sig profile) ↔
       IsNash F.mixed (euPreference utility) profile := by
-  rw [probs_mem_bestReplies_iff]
+  rw [probs_mem_bestReplies_iff utility pureIntegrable]
   exact (isNash_iff_isBestResponse (F := F.mixed)
     (weaklyPrefers := euPreference utility) profile).symm
 
@@ -200,16 +202,16 @@ non-strict inequality between two continuous functions of the profile and the
 reply jointly, and an intersection of closed sets is closed however large the
 family is. -/
 theorem closedGraph_bestReplies :
-    closedGraph fun x : mixedPolytope F.sig => bestReplies F utility pureIntegrable x.1 := by
+    closedGraph fun x : mixedPolytope F.sig => bestReplies F utility x.1 := by
   show IsClosed _
   have hset : {z : mixedPolytope F.sig × Profile F.sig.weights |
-        z.2 ∈ bestReplies F utility pureIntegrable z.1.1} =
+        z.2 ∈ bestReplies F utility z.1.1} =
       (⋂ i : ι, {z : mixedPolytope F.sig × Profile F.sig.weights |
           z.2 i ∈ simplexWeights (F.sig.Strategy i)}) ∩
         ⋂ i : ι, ⋂ w ∈ simplexWeights (F.sig.Strategy i),
           {z : mixedPolytope F.sig × Profile F.sig.weights |
-            payoff F utility pureIntegrable i (Profile.update z.1.1 i w) ≤
-              payoff F utility pureIntegrable i (Profile.update z.1.1 i (z.2 i))} := by
+            payoff F utility i (Profile.update z.1.1 i w) ≤
+              payoff F utility i (Profile.update z.1.1 i (z.2 i))} := by
     ext z
     simp only [Set.mem_ofPred_eq, Set.mem_inter_iff, Set.mem_iInter, bestReplies, bestReply,
       Set.mem_pi, Set.mem_univ, forall_const]
@@ -219,9 +221,9 @@ theorem closedGraph_bestReplies :
     (isClosed_iInter fun i => isClosed_iInter fun w => isClosed_iInter fun _ => ?_)
   · exact (isClosed_simplexWeights _).preimage ((continuous_apply i).comp continuous_snd)
   · refine isClosed_le ?_ ?_
-    · exact ((continuous_payoff pureIntegrable i).comp (continuous_update_profile i w)).comp
+    · exact ((continuous_payoff i).comp (continuous_update_profile i w)).comp
         (continuous_subtype_val.comp continuous_fst)
-    · exact (continuous_payoff pureIntegrable i).comp ((continuous_profileUpdate i).comp
+    · exact (continuous_payoff i).comp ((continuous_profileUpdate i).comp
         ((continuous_subtype_val.comp continuous_fst).prodMk
           ((continuous_apply i).comp continuous_snd)))
 
@@ -233,11 +235,11 @@ theorem exists_isNash_mixed (pureIntegrable : F.HasIntegrableUtility utility)
     ∃ μ : Profile F.sig.mixed, IsNash F.mixed (euPreference utility) μ := by
   obtain ⟨x, hx⟩ := kakutani_fixed_point (mixedPolytope F.sig) (convex_mixedPolytope F.sig)
     (isCompact_mixedPolytope F.sig) (mixedPolytope_nonempty F.sig)
-    (fun x => bestReplies F utility pureIntegrable x.1)
-    (closedGraph_bestReplies utility pureIntegrable)
-    fun x => ⟨bestReplies_subset utility pureIntegrable x.1,
-      convex_bestReplies utility pureIntegrable x.1,
-      bestReplies_nonempty utility pureIntegrable x.1⟩
+    (fun x => bestReplies F utility x.1)
+    (closedGraph_bestReplies utility)
+    fun x => ⟨bestReplies_subset utility x.1,
+      convex_bestReplies utility x.1,
+      bestReplies_nonempty utility x.1⟩
   refine ⟨ofPolytope F.sig x.2,
     (probs_mem_bestReplies_self_iff_isNash utility pureIntegrable _).mp ?_⟩
   rw [probs_ofPolytope]

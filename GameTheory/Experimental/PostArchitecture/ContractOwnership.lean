@@ -51,37 +51,37 @@ theorem bonusNetIntegrable (action : Bool) :
 
 theorem expectedPayment_zero (action : Bool) :
     environment.expectedPayment zeroPayment action
-      (zeroPaymentIntegrable action) = 0 := by
+       = 0 := by
   rw [PrincipalAgent.expectedPayment]
-  exact expect_constant _ 0 (payoffIntegrable_constant _ 0)
+  exact expect_constant _ 0
 
 theorem expectedPayment_bonus_safe :
-    environment.expectedPayment successBonus false (paymentIntegrable false) = 0 := by
+    environment.expectedPayment successBonus false = 0 := by
   rw [PrincipalAgent.expectedPayment, expect_eq_sum]
   norm_num [environment, successBonus, PMF.pure_apply]
 
 theorem expectedPayment_bonus_productive :
-    environment.expectedPayment successBonus true (paymentIntegrable true) = 3 / 2 := by
+    environment.expectedPayment successBonus true = 3 / 2 := by
   rw [PrincipalAgent.expectedPayment, expect_eq_sum]
   norm_num [environment, successBonus, mix_apply, PMF.pure_apply]
 
 theorem agentUtility_zero_safe :
-    environment.agentUtility zeroPayment false (zeroPaymentIntegrable false) = 0 := by
+    environment.agentUtility zeroPayment false = 0 := by
   rw [PrincipalAgent.agentUtility, expectedPayment_zero]
   norm_num [environment]
 
 theorem agentUtility_zero_productive :
-    environment.agentUtility zeroPayment true (zeroPaymentIntegrable true) = -1 := by
+    environment.agentUtility zeroPayment true = -1 := by
   rw [PrincipalAgent.agentUtility, expectedPayment_zero]
   norm_num [environment]
 
 theorem agentUtility_bonus_safe :
-    environment.agentUtility successBonus false (paymentIntegrable false) = 0 := by
+    environment.agentUtility successBonus false = 0 := by
   rw [PrincipalAgent.agentUtility, expectedPayment_bonus_safe]
   norm_num [environment]
 
 theorem agentUtility_bonus_productive :
-    environment.agentUtility successBonus true (paymentIntegrable true) = 1 / 2 := by
+    environment.agentUtility successBonus true = 1 / 2 := by
   rw [PrincipalAgent.agentUtility, expectedPayment_bonus_productive]
   norm_num [environment]
 
@@ -112,9 +112,8 @@ theorem productive_participates_quarter :
 
 theorem productive_rejects_three_quarters :
     ¬environment.Participates (3 / 4) successBonus true := by
-  rintro ⟨hpayment, hparticipates⟩
-  have heq : hpayment = paymentIntegrable true := Subsingleton.elim _ _
-  rw [heq, PrincipalAgent.agentUtility, expectedPayment_bonus_productive] at hparticipates
+  rintro ⟨-, hparticipates⟩
+  rw [PrincipalAgent.agentUtility, expectedPayment_bonus_productive] at hparticipates
   norm_num [environment] at hparticipates
 
 theorem bonus_has_participation_option :
@@ -131,11 +130,11 @@ theorem incentivized_action_exists :
   exact environment.exists_incentivized successBonus paymentIntegrable
 
 theorem productive_welfare_identity :
-    environment.principalUtility successBonus true (bonusNetIntegrable true) +
-        environment.agentUtility successBonus true (paymentIntegrable true) =
-      environment.socialSurplus true (rewardIntegrable true) := by
+    environment.principalUtility successBonus true +
+        environment.agentUtility successBonus true =
+      environment.socialSurplus true := by
   exact environment.principalUtility_add_agentUtility successBonus true
-    (rewardIntegrable true) (paymentIntegrable true) (bonusNetIntegrable true)
+    (rewardIntegrable true) (paymentIntegrable true)
 
 def negativeControl : PrincipalAgent Unit Bool where
   outcomeLaw _ := PMF.pure false
@@ -161,12 +160,10 @@ theorem negative_incentivized :
 
 theorem negative_not_participating :
     ¬negativeControl.Participates 0 negativePayment () := by
-  rintro ⟨hpayment, hparticipates⟩
-  have hproof : hpayment = negativePaymentIntegrable := Subsingleton.elim _ _
-  rw [hproof, PrincipalAgent.agentUtility, PrincipalAgent.expectedPayment] at hparticipates
-  have hvalue : expect (negativeControl.outcomeLaw ()) negativePayment hpayment = 0 := by
-    rw [expect_proof_irrel _ _ hpayment (payoffIntegrable_constant _ 0)]
-    exact expect_constant _ 0 (payoffIntegrable_constant _ 0)
+  rintro ⟨-, hparticipates⟩
+  rw [PrincipalAgent.agentUtility, PrincipalAgent.expectedPayment] at hparticipates
+  have hvalue : expect (negativeControl.outcomeLaw ()) negativePayment = 0 :=
+    expect_constant _ 0
   rw [hvalue] at hparticipates
   norm_num [negativeControl] at hparticipates
 

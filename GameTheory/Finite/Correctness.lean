@@ -313,8 +313,7 @@ theorem toMixed_update (G : TableGame ι) (mixed : Profile G.mixedSig)
 mixed extension. -/
 theorem expectedUtility_toMixed (G : TableGame ι) (mixed : Profile G.mixedSig)
     (hmixed : G.isMixed mixed = true) (who : ι) :
-    expectedUtility G.utility who (G.toForm.mixed.play (G.toMixed mixed hmixed))
-        (utilityIntegrable G who _) =
+    expectedUtility G.utility who (G.toForm.mixed.play (G.toMixed mixed hmixed)) =
       ((G.expectedPayoff mixed who : ℚ) : ℝ) := by
   have hplay : G.toForm.mixed.play (G.toMixed mixed hmixed) =
       independentProduct (G.toMixed mixed hmixed) := by

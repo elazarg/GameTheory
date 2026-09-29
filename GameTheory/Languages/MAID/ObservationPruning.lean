@@ -342,11 +342,11 @@ theorem isεNash_expanded_of_isεNash_reduced
       have heq : expectedUtility
           (fun assignment who => semantics.utility who assignment) owner
           ((pruning.reducedNativeGameForm semantics).play
-            (Profile.update policy owner alternative)) hcovered =
+            (Profile.update policy owner alternative)) =
           expectedUtility
             (fun assignment who => semantics.utility who assignment) owner
             ((pruning.reducedNativeGameForm semantics).play
-              (Profile.update policy owner alternative)) hsource := by
+              (Profile.update policy owner alternative)) := by
         rfl
       exact hle.trans_eq heq) ε hnash
 

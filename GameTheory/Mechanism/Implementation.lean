@@ -52,28 +52,23 @@ theorem withProfileTransfer_integrable (G : UtilityGame.{uι, us, uo} ι)
 
 theorem expectedUtility_withProfileTransfer (G : UtilityGame.{uι, us, uo} ι)
     (transfer : G.ProfileTransfer) (profile : Profile G.form.sig) (who : ι) :
-    ∀ (h : UtilityIntegrable G.utility who (G.form.play profile)),
+    UtilityIntegrable G.utility who (G.form.play profile) →
     expectedUtility (G.withProfileTransfer transfer).utility who
-        ((G.withProfileTransfer transfer).form.play profile)
-        (G.withProfileTransfer_integrable transfer profile who h) =
-      expectedUtility G.utility who (G.form.play profile) h +
+        ((G.withProfileTransfer transfer).form.play profile) =
+      expectedUtility G.utility who (G.form.play profile) +
         transfer profile who := by
   intro h
   have hconst := payoffIntegrable_constant (G.form.play profile)
     (transfer profile who)
-  have hadd := payoffIntegrable_add h hconst
   calc
     expectedUtility (G.withProfileTransfer transfer).utility who
-        ((G.withProfileTransfer transfer).form.play profile)
-        (G.withProfileTransfer_integrable transfer profile who h) =
+        ((G.withProfileTransfer transfer).form.play profile) =
       expect (G.form.play profile)
-        (fun outcome => G.utility outcome who + transfer profile who) hadd := by
+        (fun outcome => G.utility outcome who + transfer profile who) := by
           exact expect_map (fun outcome => (profile, outcome))
             (G.form.play profile)
             (fun observed => (G.withProfileTransfer transfer).utility observed who)
-            (by simpa only [withProfileTransfer, Function.comp_def] using hadd)
-            (G.withProfileTransfer_integrable transfer profile who h)
-    _ = expectedUtility G.utility who (G.form.play profile) h +
+    _ = expectedUtility G.utility who (G.form.play profile) +
         transfer profile who := by
           rw [expect_add h hconst, expect_constant]
           rfl

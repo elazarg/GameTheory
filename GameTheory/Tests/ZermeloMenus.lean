@@ -203,9 +203,9 @@ theorem exists_subgamePerfect :
 caller's fallback rather than the result of an impossible maximization. -/
 theorem backwardPolicy_two_eq_fallback :
     information.backwardPolicy singleMover fallback finiteDecisionChoices
-        wellFoundedPlay utility backwardIntegrable () 2 = fallback () 2 := by
+        wellFoundedPlay utility () 2 = fallback () 2 := by
   apply information.backwardPolicy_eq_fallback_of_no_decision_history
-    singleMover fallback finiteDecisionChoices backwardIntegrable () 2
+    singleMover fallback finiteDecisionChoices () 2
   rintro ⟨history, _, hactive, hinfo⟩
   have hstate : history.state = false := by
     simpa [execution] using hactive
