@@ -50,4 +50,5 @@ exercised on a game with no uniform horizon.
 All counterfactual consumers, including the regret-matching and zero-sum
 learning tests, compile against the truncated instances. On the countdown game
 the generic root decomposition with the terminal runner gives counterfactual
-regret one, equal to the exact root gain. These results support the decision.
+regret one, equal to the exact root gain, while play cut off after any number
+of steps scores it strictly lower. These results support the decision.

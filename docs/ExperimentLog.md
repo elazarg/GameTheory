@@ -9673,7 +9673,11 @@ memory.
     every site history to be nonterminal.
   - The finite existence proof still telescopes over time steps, so it uses
     the truncated instance of the generic identities.
+  - On the countdown game every truncation strictly underestimates the
+    terminal counterfactual regret: after any number of steps some play that
+    chose `true` is still counting down and has earned nothing. A larger
+    step count therefore never substitutes for the terminal runner there;
+    this is stronger than the absence of a uniform horizon, which only
+    shows that no step count is guaranteed to suffice.
 - **Outcome:** accepted with design (c); recorded as D65.
-- **Next action:** a guard that on the countdown game every truncation
-  strictly underestimates the terminal counterfactual regret is not
-  formalized.
+- **Next action:** none.
