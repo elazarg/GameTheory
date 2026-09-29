@@ -143,7 +143,7 @@ theorem auctionGame_ic_isNash {Bid : ι → Type} {Alloc : Type}
   apply IsDominantProfile.isNash
   intro bidder alternative profile
   rw [euPreference_apply]
-  refine ⟨payoffIntegrable_pure _ _, payoffIntegrable_pure _ _, ?_⟩
+  refine (euPreference_iff _ _ _ _ (payoffIntegrable_pure _ _) (payoffIntegrable_pure _ _)).2 ?_
   simpa only [expectedUtility_pure] using hIC bidder profile alternative
 
 /-- The payoff of the strict-winner second-price presentation.  The price is
@@ -175,7 +175,7 @@ theorem secondPrice_truthful_isDominant (value : ι → ℝ) (who : ι) :
       who (value who) := by
   intro alternative bids
   rw [euPreference_apply]
-  refine ⟨payoffIntegrable_pure _ _, payoffIntegrable_pure _ _, ?_⟩
+  refine (euPreference_iff _ _ _ _ (payoffIntegrable_pure _ _) (payoffIntegrable_pure _ _)).2 ?_
   simp only [expectedUtility_pure, secondPriceGame, secondPricePayoff]
   exact secondPrice_truthful_payoff_ge value who bids alternative
 
@@ -254,10 +254,8 @@ theorem firstPrice_not_isDominant (value : ι → ℝ) (who : ι) (bid : ℝ) :
       who bid := by
   intro hdominant
   let bids : BidProfile ι := fun _ => bid - 2
-  have h := hdominant (bid - 1) bids
-  rw [euPreference_apply] at h
-  rcases h with ⟨_, _, h⟩
-  simp only [expectedUtility_pure, firstPriceGame] at h
+  have h := (euPreference_pure_iff _ _ _ _).1 (hdominant (bid - 1) bids)
+  simp only [firstPriceGame] at h
   have hwinBid : who = winner (Profile.update bids who bid) := by
     apply eq_winner_of_bid_gt
     intro other hother

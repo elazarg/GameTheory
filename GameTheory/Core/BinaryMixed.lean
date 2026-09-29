@@ -295,7 +295,7 @@ theorem isNash_iff_half (mixedProfile : Profile F.sig.mixed) :
     intro who replacement
     exact mixedUtilityIntegrable h (Profile.update mixedProfile who replacement) who
   have hnash_iff := isNash_mixed_iff (F := F) (utility := utility)
-    mixedProfile hdev
+    mixedProfile fun who replacement => (hdev who replacement).hasExpectation
   constructor
   · intro hnash
     rw [hnash_iff] at hnash

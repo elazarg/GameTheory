@@ -342,6 +342,36 @@ theorem publicFiniteAveragePayoff_eq_finiteAveragePayoff
       (expect_congr_on_support hpoint)
   exact heq
 
+/-- Public-history payoff has an expectation exactly when the compiled history
+payoff does. -/
+theorem publicFiniteAverageHasExpectation_iff (initial : G.State)
+    [∀ i, Nonempty (G.Action i)] (horizon : ℕ)
+    (profile : G.BehaviorProfile initial) (who : ι) :
+    UtilityHasExpectation (G.publicHistoryAverageUtility horizon) who
+        (G.publicHistoryLaw initial profile horizon) ↔
+      UtilityHasExpectation (G.horizonUtility initial horizon) who
+        ((G.horizonForm initial horizon).play profile) := by
+  rw [G.horizonForm_play]
+  unfold publicHistoryLaw UtilityHasExpectation
+  rw [hasExpectation_map_iff]
+  simp only [Function.comp_def, horizonUtility,
+    G.historyAverageUtility_eq_publicHistoryAverageUtility]
+
+/-- The proof-free evaluator has exactly the canonical extended finite-average
+payoff. -/
+theorem publicExtendedExpectedUtility_eq (initial : G.State)
+    [∀ i, Nonempty (G.Action i)] (horizon : ℕ)
+    (profile : G.BehaviorProfile initial) (who : ι) :
+    extendedExpectedUtility (G.publicHistoryAverageUtility horizon) who
+        (G.publicHistoryLaw initial profile horizon) =
+      extendedExpectedUtility (G.horizonUtility initial horizon) who
+        ((G.horizonForm initial horizon).play profile) := by
+  rw [G.horizonForm_play]
+  unfold publicHistoryLaw extendedExpectedUtility
+  rw [extendedExpect_map]
+  simp only [Function.comp_def, horizonUtility,
+    G.historyAverageUtility_eq_publicHistoryAverageUtility]
+
 /-- Uniform deviation-cap certificates can be written entirely with the
 proof-free public-history evaluator.  This is a characterization of the one
 canonical certificate, not a second uniform-equilibrium predicate. -/
@@ -360,13 +390,14 @@ theorem hasUniformDeviationCapConstructor_iff_publicHistoryPayoff
                   value who| ≤ delta) ∧
             ∀ who (deviation :
               (G.perfectMonitoring initial).BehavioralPolicy who),
-              UtilityIntegrable
+              UtilityHasExpectation
                   (G.publicHistoryAverageUtility horizon) who
                   (G.publicHistoryLaw initial
                     (Profile.update profile who deviation) horizon) ∧
-                G.publicFiniteAveragePayoff initial horizon
-                  (Profile.update profile who deviation) who ≤
-                  value who + delta := by
+                extendedExpectedUtility (G.publicHistoryAverageUtility horizon) who
+                    (G.publicHistoryLaw initial
+                      (Profile.update profile who deviation) horizon) ≤
+                  ((value who + delta : ℝ) : EReal) := by
   unfold HasUniformDeviationCapConstructor
   constructor
   · intro hcertificate delta hdelta
@@ -384,10 +415,9 @@ theorem hasUniformDeviationCapConstructor_iff_publicHistoryPayoff
       exact hclose
     · intro who deviation
       obtain ⟨hcanonical, hbound⟩ := hdeviation who deviation
-      let hpublic := (G.publicFiniteAverageIntegrable_iff initial horizon
-        (Profile.update profile who deviation) who).2 hcanonical
-      refine ⟨hpublic, ?_⟩
-      rw [G.publicFiniteAveragePayoff_eq_finiteAveragePayoff
+      refine ⟨(G.publicFiniteAverageHasExpectation_iff initial horizon
+        (Profile.update profile who deviation) who).2 hcanonical, ?_⟩
+      rw [G.publicExtendedExpectedUtility_eq
         initial horizon (Profile.update profile who deviation) who]
       exact hbound
   · intro hcertificate delta hdelta
@@ -405,10 +435,9 @@ theorem hasUniformDeviationCapConstructor_iff_publicHistoryPayoff
       exact hclose
     · intro who deviation
       obtain ⟨hpublic, hbound⟩ := hdeviation who deviation
-      let hcanonical := (G.publicFiniteAverageIntegrable_iff initial horizon
-        (Profile.update profile who deviation) who).1 hpublic
-      refine ⟨hcanonical, ?_⟩
-      rw [← G.publicFiniteAveragePayoff_eq_finiteAveragePayoff
+      refine ⟨(G.publicFiniteAverageHasExpectation_iff initial horizon
+        (Profile.update profile who deviation) who).1 hpublic, ?_⟩
+      rw [← G.publicExtendedExpectedUtility_eq
         initial horizon (Profile.update profile who deviation) who]
       exact hbound
 

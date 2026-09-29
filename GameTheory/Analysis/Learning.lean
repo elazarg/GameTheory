@@ -288,11 +288,13 @@ theorem mwSelfPlay_exists_isεCoarseCorrelatedEq_of_pos {L : ℝ}
     independentProduct (mwProfile G eta₀ lo width hband (round : ℕ))), ?_⟩
   have hMW := mwSelfPlay_timeAverage_isεCoarseCorrelatedEq G eta₀ lo width heta₀pos hwidth
     hband hL (T' + 1)
-  rw [G.isεCoarseCorrelatedEq_iff_externalRegret_le] at hMW ⊢
+  have hintegrable : ∀ law : PMF (Profile G.form.sig),
+      G.form.HasIntegrableCoarseDeviations G.utility law := fun _ =>
+    ⟨fun who => utilityIntegrable_of_band G lo width hband who _,
+      fun who _ => utilityIntegrable_of_band G lo width hband who _⟩
+  rw [G.isεCoarseCorrelatedEq_iff_externalRegret_le (hintegrable _)] at hMW ⊢
   intro who action
-  obtain ⟨hbase, hdeviation, hregret⟩ := hMW who action
-  refine ⟨hbase, hdeviation, ?_⟩
-  apply le_trans hregret
+  apply le_trans (hMW who action)
   have hremainder : (Real.exp eta₀ - 1 - eta₀) / eta₀ ≤ eta₀ := by
     rw [div_le_iff₀ heta₀pos]
     have hsq := OnlineLearning.exp_sub_one_sub_self_le_sq heta₀pos.le heta₀one
@@ -451,6 +453,7 @@ theorem expectedUtility_update_pure_tendsto_of_actual_guards
 
 theorem IsFictitiousPlay.limit_isNash
     {history : ℕ → Profile G.form.sig} (hplay : G.IsFictitiousPlay history)
+    (hintegrable : G.HasIntegrableBeliefDeviations history)
     {target : Profile G.form.sig.mixed}
     (hconverges : ∀ i, PMFConvergesPointwise
       (fun t => G.form.empiricalBelief history (t + 1) i) (target i)) :
@@ -474,8 +477,7 @@ theorem IsFictitiousPlay.limit_isNash
           (G.form.mixed.play
             (Profile.update (G.form.empiricalBelief history (t + 1)) who
               (PMF.pure candidate))) :=
-      UtilityGame.IsFictitiousPlay.deviation_integrable (G := G) hplay t who
-        (PMF.pure candidate)
+      hintegrable t who (PMF.pure candidate)
     obtain ⟨hactionGuard, hactionTendsto⟩ :=
       G.expectedUtility_update_pure_tendsto_of_actual_guards
         (fun i => hconverges i) who action (hsequence action)
@@ -515,11 +517,10 @@ theorem IsFictitiousPlay.limit_isNash
                 (Profile.update (G.form.empiricalBelief history (t + 1)) who
                   (PMF.pure alternative))) := by
       refine hfrequent.mono fun t ht => ?_
-      have hround :=
-        (UtilityGame.IsFictitiousPlay.isBestResponse (G := G) hplay t who)
-          (PMF.pure alternative)
-      rw [euPreference_apply, ht] at hround
-      rcases hround with ⟨_, _, hround⟩
+      have hround := (euPreference_iff _ _ _ _ (hintegrable t who _) (hintegrable t who _)).1
+        ((UtilityGame.IsFictitiousPlay.isBestResponse (G := G) hplay t who)
+          (PMF.pure alternative))
+      rw [ht] at hround
       linarith
     obtain ⟨t, hnonnegative, hnegativeAt⟩ :=
       (hfrequentlyNonnegative.and_eventually heventuallyNegative).exists
@@ -529,15 +530,14 @@ theorem IsFictitiousPlay.limit_isNash
     intro who action
     obtain ⟨hguard, -⟩ := G.expectedUtility_update_pure_tendsto_of_actual_guards
       (fun i => hconverges i) who action
-        (fun t => UtilityGame.IsFictitiousPlay.deviation_integrable (G := G)
-          hplay t who (PMF.pure action))
+        (fun t => hintegrable t who (PMF.pure action))
     exact hguard
   have hbase : ∀ who, UtilityIntegrable G.utility who (G.form.mixed.play target) :=
     G.mixedUtilityIntegrable_of_finite_actions target hpure
   have hdeviation : ∀ who replacement, UtilityIntegrable G.utility who
       (G.form.mixed.play (Profile.update target who replacement)) :=
     G.mixedDeviationIntegrable_of_finite_actions target hpure
-  rw [isNash_mixed_iff target hdeviation]
+  rw [isNash_mixed_iff target fun who replacement => (hdeviation who replacement).hasExpectation]
   intro who alternative
   let value : G.form.sig.Strategy who → ℝ := fun action =>
     expectedUtility G.utility who

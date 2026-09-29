@@ -1,8 +1,12 @@
 /-
 EXP-134: finite-average play samples one stage and its actual outcome. An
-unrelated profile may have an undefined geometric payoff while stationary
-all-false play remains uniform. A unilateral deviation into that undefined
-law is rejected, and the empty horizon pays zero.
+unrelated profile may have a nonintegrable geometric payoff while stationary
+all-false play remains uniform. A unilateral deviation into that law is
+rejected, and the empty horizon pays zero.
+
+Under EXP-147's extended expectation the geometric payoff is worth `⊤`, so the
+deviation is rejected because it is infinitely profitable rather than because
+its value is undefined.
 -/
 
 import GameTheory.Repeated.Uniform
@@ -46,19 +50,17 @@ theorem allFalse_stageNash :
     IsNash game.form (euPreference game.utility) allFalse := by
   rw [isNash_iff]
   intro who own
-  rw [euPreference_apply]
-  have hinc := allFalse_play
-  have hdev := allFalse_update_play who own
-  rw [hinc, hdev]
-  refine ⟨payoffIntegrable_pure 0 _, payoffIntegrable_pure 0 _, ?_⟩
-  simp
+  rw [allFalse_play, allFalse_update_play who own]
+  exact (euPreference_pure_iff _ _ _ _).2 le_rfl
 
 /-- The stationary profile satisfies the canonical uniform property without
 any certificate for the unrelated all-true profile. -/
 theorem allFalse_uniform :
     game.IsUniformEquilibrium (game.stationaryRepeatedProfile allFalse) :=
   game.stationaryRepeatedProfile_isUniformEquilibrium_of_isNash
-    allFalse_stageNash
+    allFalse_stageNash fun who own => by
+      rw [allFalse_update_play]
+      exact payoffIntegrable_pure _ _
 
 theorem allTrue_play :
     game.form.play (fun _ => true) = geometric := by
@@ -84,24 +86,53 @@ theorem falseTrue_deviation_not_integrable :
 
 def deviatesTrue : game.RepeatedStrategy 0 := fun _ => true
 
-/-- An undefined unilateral stage law invalidates approximate Nash at every
-positive horizon, independent of the numerical epsilon. -/
+/-- A unilateral deviation into the geometric stage law is worth `⊤` in the
+finite-average form, so it invalidates approximate Nash at every positive
+horizon, independent of the numerical epsilon. -/
 theorem falseTrue_not_approximate (horizon : ℕ) (hpositive : 0 < horizon)
     (epsilon : ℝ) :
     ¬ game.IsεFiniteRepeatedNash horizon epsilon
       (game.stationaryRepeatedProfile falseTrue) := by
   intro happrox
-  obtain ⟨_, hdev, _⟩ :=
-    (game.isεFiniteRepeatedNash_iff).1 happrox 0 deviatesTrue
-  have hpath :
-      game.repeatedPlay
-          (Profile.update (game.stationaryRepeatedProfile falseTrue)
-            0 deviatesTrue) 0 =
-        Profile.update falseTrue 0 true := by
+  have hne : horizon ≠ 0 := Nat.pos_iff_ne_zero.1 hpositive
+  have : NeZero horizon := ⟨hne⟩
+  have hdevStage : ∀ t, game.form.play (game.repeatedPlay
+      (Profile.update (game.stationaryRepeatedProfile falseTrue) 0 deviatesTrue) t) =
+        geometric := by
+    intro t
     rw [game.repeatedPlay_update_stationaryRepeatedProfile]
-    rfl
-  apply falseTrue_deviation_not_integrable
-  simpa only [hpath] using hdev 0 hpositive
+    exact (congrArg game.form.play falseTrue_update_true).trans allTrue_play
+  have hbaseStage : ∀ t, game.form.play
+      (game.repeatedPlay (game.stationaryRepeatedProfile falseTrue) t) = PMF.pure 0 := by
+    intro t
+    rw [game.repeatedPlay_stationaryRepeatedProfile]
+    simp [game, form, falseTrue]
+  have hdevLaw : (game.finiteAverageForm horizon).play
+      (Profile.update (game.stationaryRepeatedProfile falseTrue) 0 deviatesTrue) =
+        geometric.map some := by
+    rw [UtilityGame.finiteAverageForm_play_pos]
+    calc
+      _ = (PMF.uniformOfFintype (Fin horizon)).bind fun _ => geometric.map some := by
+        congr 1
+        funext t
+        exact congrArg (PMF.map some) (hdevStage t)
+      _ = _ := PMF.bind_const _ _
+  have hbaseLaw : (game.finiteAverageForm horizon).play
+      (game.stationaryRepeatedProfile falseTrue) = PMF.pure (some 0) := by
+    rw [UtilityGame.finiteAverageForm_play_pos]
+    calc
+      _ = (PMF.uniformOfFintype (Fin horizon)).bind fun _ => PMF.pure (some 0) := by
+        congr 1
+        funext t
+        exact (congrArg (PMF.map some) (hbaseStage t)).trans (PMF.pure_map _ _)
+      _ = _ := PMF.bind_const _ _
+  obtain ⟨-, -, hle⟩ := (isεNash_iff _ _).1 happrox 0 deviatesTrue
+  rw [hdevLaw, hbaseLaw, extendedExpectedUtility_map, extendedExpectedUtility_pure] at hle
+  have htop : extendedExpectedUtility
+      (fun outcome => game.finiteAverageOutcomeUtility (some outcome)) 0 geometric = ⊤ :=
+    exploding_extendedExpect
+  rw [htop, top_le_iff, ← EReal.coe_add] at hle
+  exact EReal.coe_ne_top _ hle
 
 /-- The zero-horizon form uses its explicit zero-payoff outcome. -/
 theorem zeroHorizon_play (profile : game.RepeatedProfile) :
@@ -121,10 +152,8 @@ nonnegative slack makes the two zero values comparable. -/
 theorem zeroHorizon_approximate (profile : game.RepeatedProfile)
     (epsilon : ℝ) (hepsilon : 0 ≤ epsilon) :
     game.IsεFiniteRepeatedNash 0 epsilon profile := by
-  rw [game.isεFiniteRepeatedNash_iff]
+  rw [game.isεFiniteRepeatedNash_iff fun _ _ t ht => (Nat.not_lt_zero t ht).elim]
   intro who deviation
-  refine ⟨fun t ht => (Nat.not_lt_zero t ht).elim,
-    fun t ht => (Nat.not_lt_zero t ht).elim, ?_⟩
   simpa [UtilityGame.finiteAveragePayoff] using hepsilon
 
 end GameTheory.Experimental.PMFUniformGate

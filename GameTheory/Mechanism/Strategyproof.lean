@@ -49,15 +49,12 @@ theorem isStrategyproof_iff (utility : M.Outcome → ι → ℝ)
             (Profile.update reports who (truth who))) who := by
   constructor
   · intro hproof who misreport reports
-    obtain ⟨hpreferred, halternative, hbound⟩ :=
-      hproof who misreport reports
-    simpa only [M.utility_toForm utility] using hbound
+    simpa only [M.utility_toForm utility, extendedExpectedUtility_pure,
+      EReal.coe_le_coe_iff] using (hproof who misreport reports).2.2
   · intro hbeat who misreport reports
-    refine ⟨?_, ?_, ?_⟩
-    · exact payoffIntegrable_pure _ _
-    · exact payoffIntegrable_pure _ _
-    · simpa only [M.utility_toForm] using
-        hbeat who misreport reports
+    refine (euPreference_iff _ _ _ _ (payoffIntegrable_pure _ _)
+      (payoffIntegrable_pure _ _)).2 ?_
+    simpa only [M.utility_toForm] using hbeat who misreport reports
 
 end Mechanism
 

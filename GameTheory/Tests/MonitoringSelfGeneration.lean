@@ -107,17 +107,7 @@ private theorem pure_preference_iff (who : Player)
     euPreference stageUtility who (form.play preferred)
         (form.play alternative) ↔
       stageUtility alternative who ≤ stageUtility preferred who := by
-  constructor
-  · rintro ⟨hpreferred, halternative, hle⟩
-    simpa [form, expectedUtility_pure] using hle
-  · intro hle
-    refine ⟨by simpa [form] using
-      (payoffIntegrable_pure preferred
-        (fun outcome => stageUtility outcome who)),
-      by simpa [form] using
-        (payoffIntegrable_pure alternative
-          (fun outcome => stageUtility outcome who)), ?_⟩
-    simpa [form, expectedUtility_pure] using hle
+  exact euPreference_pure_iff stageUtility who preferred alternative
 
 theorem punish_isNash :
     IsNash form (euPreference stageUtility) punish := by
@@ -141,7 +131,7 @@ theorem cooperate_constant_not_enforceable :
     ¬ monitoring.IsEnforceable (1 / 2) cooperate
       (monitoring.constantContinuation cooperativePayoff) := by
   rw [monitoring.isEnforceable_constant_iff_isNash (by norm_num)]
-  exact cooperate_not_isNash
+  exact fun h => cooperate_not_isNash h.1
 
 theorem rewardOrPunish_mem (signal : monitoring.Signal) :
     rewardOrPunish signal ∈ payoffSet := by
@@ -200,7 +190,8 @@ theorem punish_enforceable :
     monitoring.IsEnforceable (1 / 2) punish
       (monitoring.constantContinuation punishmentPayoff) :=
   (monitoring.isEnforceable_constant_iff_isNash (by norm_num)
-    punish punishmentPayoff).2 punish_isNash
+    punish punishmentPayoff).2
+      ⟨punish_isNash, fun _ _ => payoffIntegrable_pure _ _⟩
 
 /-- The cooperative and punishment promises form a genuinely two-state
 self-generating set. -/

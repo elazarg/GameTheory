@@ -153,7 +153,7 @@ theorem truthfulStrategy_isExPostNash [Fintype ι] [DecidableEq ι]
   rw [isNash_iff]
   intro who alternative
   rw [euPreference_apply]
-  refine ⟨payoffIntegrable_pure _ _, payoffIntegrable_pure _ _, ?_⟩
+  refine (euPreference_iff _ _ _ _ (payoffIntegrable_pure _ _) (payoffIntegrable_pure _ _)).2 ?_
   simp only [toUtilityGame, expectedUtility_pure]
   have htruth := V.groves_truthful alloc_efficient h_independent trueTypes who
     (trueTypes who) alternative

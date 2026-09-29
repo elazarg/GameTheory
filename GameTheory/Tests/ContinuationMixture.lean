@@ -476,14 +476,15 @@ theorem sourcePerfect : (model false).IsSubgamePerfect (terminates false) (profi
     (terminates false) (bounded false) (profile false)
     (fun history who => utility (readout history.state) who)).mpr
   intro history _
+  refine ⟨?_, fun _ _ => history_utility_guard _⟩
   rw [isNash_iff]
   intro who alternative
   cases who
   let hrdev := history_utility_guard
     ((model false).runFrom (Profile.update (profile false) () alternative) 2 history)
   let hrbase := history_utility_guard ((model false).runFrom (profile false) 2 history)
-  refine ⟨hrbase, hrdev, ?_⟩
-  simp only [InformationModel.toContinuationGameForm, expectedUtility]
+  refine (euPreference_iff _ _ _ _ hrbase hrdev).2 ?_
+  simp only [expectedUtility]
   have hdevValue : expect
       ((model false).runFrom (Profile.update (profile false) () alternative) 2 history)
       (fun final => utility (readout final.state) ()) =

@@ -857,7 +857,8 @@ theorem relay_not_coversFullDeviations :
       relayReducedPolicy := by
   intro hcover
   obtain ⟨replacement, hcovered⟩ := hcover .owner ownerCopiesSignal
-  obtain ⟨hpreferred, halternative, hle⟩ := hcovered
+  have hle := (euPreference_iff _ _ _ _ (payoffIntegrable_of_finite _ _)
+    (payoffIntegrable_of_finite _ _)).1 hcovered
   rw [relay_copy_expectedUtility,
     reduced_owner_replacement_expectedUtility replacement] at hle
   norm_num at hle

@@ -459,16 +459,18 @@ theorem expectedUtility_one_mixedProfile {I J : Type u}
 /-- A mixed row guarantees payoff at least `v` against every mixed column. -/
 def RowGuarantees {I J : Type u} (A : I → J → ℝ)
     (row : PMF I) (v : ℝ) : Prop :=
-  ∀ col : PMF J, UtilityIntegrable (utility A) 0
+  ∀ col : PMF J, UtilityHasExpectation (utility A) 0
     ((form I J).mixed.play (mixedProfile row col)) ∧
-      v ≤ expectedPayoff A row col
+      (v : EReal) ≤ extendedExpectedUtility (utility A) 0
+        ((form I J).mixed.play (mixedProfile row col))
 
 /-- A mixed column caps the row payoff at `v` against every mixed row. -/
 def ColumnCaps {I J : Type u} (A : I → J → ℝ)
     (col : PMF J) (v : ℝ) : Prop :=
-  ∀ row : PMF I, UtilityIntegrable (utility A) 0
+  ∀ row : PMF I, UtilityHasExpectation (utility A) 0
     ((form I J).mixed.play (mixedProfile row col)) ∧
-      expectedPayoff A row col ≤ v
+      extendedExpectedUtility (utility A) 0
+        ((form I J).mixed.play (mixedProfile row col)) ≤ v
 
 /-- Some mixed row guarantees `v`. -/
 def IsRowGuarantee {I J : Type u} (A : I → J → ℝ) (v : ℝ) : Prop :=
@@ -478,32 +480,24 @@ def IsRowGuarantee {I J : Type u} (A : I → J → ℝ) (v : ℝ) : Prop :=
 def IsColumnCap {I J : Type u} (A : I → J → ℝ) (v : ℝ) : Prop :=
   ∃ col : PMF J, ColumnCaps A col v
 
-/-- The canonical saddle inequalities are exactly mutual row security and
-column capping at the realized payoff. -/
+/-- At an integrable profile, the canonical saddle inequalities are exactly
+mutual row security and column capping at the realized payoff. -/
 theorem isSaddlePoint_iff_guarantees_caps {I J : Type u}
-    (A : I → J → ℝ) (row : PMF I) (col : PMF J) :
+    (A : I → J → ℝ) (row : PMF I) (col : PMF J)
+    (hbase : UtilityIntegrable (utility A) 0
+      ((form I J).mixed.play (mixedProfile row col))) :
     IsSaddlePoint (F := form I J) (utility A) (mixedProfile row col) ↔
-      UtilityIntegrable (utility A) 0
-          ((form I J).mixed.play (mixedProfile row col)) ∧
-        RowGuarantees A row (expectedPayoff A row col) ∧
-          ColumnCaps A col (expectedPayoff A row col) := by
+      RowGuarantees A row (expectedPayoff A row col) ∧
+        ColumnCaps A col (expectedPayoff A row col) := by
+  have hvalue : extendedExpectedUtility (utility A) 0
+      ((form I J).mixed.play (mixedProfile row col)) = (expectedPayoff A row col : EReal) :=
+    extendedExpectedUtility_eq hbase
   constructor
-  · intro hsaddle
-    rcases hsaddle with ⟨hbase, hrow, hcol⟩
-    refine ⟨hbase, ?_, ?_⟩
-    · intro col'
-      obtain ⟨hdev, hle⟩ := hcol col'
-      exact ⟨hdev, hle⟩
-    · intro row'
-      obtain ⟨hdev, hle⟩ := hrow row'
-      exact ⟨hdev, hle⟩
-  · rintro ⟨hbase, hrow, hcol⟩
-    refine ⟨hbase, ?_, ?_⟩
-    · intro row'
-      obtain ⟨hdev, hle⟩ := hcol row'
-      exact ⟨hdev, hle⟩
-    · intro col'
-      obtain ⟨hdev, hle⟩ := hrow col'
-      exact ⟨hdev, hle⟩
+  · rintro ⟨hrow, hcol⟩
+    exact ⟨fun col' => ⟨(hcol col').1, hvalue.symm.le.trans (hcol col').2.2⟩,
+      fun row' => ⟨(hrow row').2.1, (hrow row').2.2.trans hvalue.le⟩⟩
+  · rintro ⟨hrow, hcol⟩
+    exact ⟨fun row' => ⟨hbase.hasExpectation, (hcol row').1, (hcol row').2.trans hvalue.symm.le⟩,
+      fun col' => ⟨(hrow col').1, hbase.hasExpectation, hvalue.le.trans (hrow col').2⟩⟩
 
 end GameTheory.MatrixGame

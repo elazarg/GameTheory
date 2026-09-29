@@ -114,7 +114,7 @@ theorem isUniformεEquilibrium_of_unitAction
   have hdeviation : UtilityIntegrable (G.horizonUtility initial horizon) who
       ((G.horizonForm initial horizon).play (Profile.update profile who replacement)) :=
     payoffIntegrable_congr_law hlaw.symm hbase
-  refine ⟨hbase, hdeviation, ?_⟩
+  refine (euPreferenceWithin_iff _ _ _ _ _ hbase hdeviation).2 ?_
   show expectedUtility (G.horizonUtility initial horizon) who
       ((G.horizonForm initial horizon).play (Profile.update profile who replacement)) ≤
     expectedUtility (G.horizonUtility initial horizon) who

@@ -113,17 +113,14 @@ theorem weakProfile_isNash :
     IsNash dominatedForm (euPreference dominatedUtility) weakProfile := by
   rw [isNash_iff]
   intro who alternative
-  rw [euPreference_apply]
+  refine (euPreference_pure_iff _ _ _ _).2 ?_
   fin_cases who <;> cases alternative <;>
-    refine ⟨payoffIntegrable_pure weakProfile _,
-      payoffIntegrable_pure (weakProfile.update _ _) _, ?_⟩ <;>
-      simp [expectedUtility_pure, dominatedForm, dominatedUtility,
-        weakProfile]
+    simp [dominatedForm, dominatedUtility, weakProfile]
 
 theorem weakMixedProfile_isNash :
     IsNash dominatedForm.mixed (euPreference dominatedUtility)
       weakMixedProfile :=
-  weakProfile_isNash.purify_of_finite
+  weakProfile_isNash.purify_of_finite fun _ _ => payoffIntegrable_pure _ _
 
 /-- The weakly dominated Nash equilibrium is not trembling-hand perfect.
 Against every positive tremble by player one, player zero strictly benefits by
@@ -171,7 +168,8 @@ theorem weakMixedProfile_not_isTremblingHandPerfect :
       ((dominatedForm.isPerturbedEq_iff (euPreference dominatedUtility)
         (lower n) (approximating n)).mp (hequilibria n).2).2
         0 (shifted n) (hshiftedRespects n)
-    rcases hpref with ⟨hpreferred, halternative, hle⟩
+    have hle := (euPreference_iff _ _ _ _ (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _)).1 hpref
     have hpreferredFormula :
         expectedUtility dominatedUtility 0
           (dominatedForm.mixed.play (approximating n)) =

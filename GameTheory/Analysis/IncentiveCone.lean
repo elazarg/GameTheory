@@ -67,26 +67,8 @@ theorem euPreference_iff_holds {Unit' : Type v} (utility : Outcome → Unit' →
 theorem holds_map_iff {Source : Type v} (observe : Source → Outcome)
     (prescribed alternative : PMF Source) (utility : Outcome → ℝ) :
     (IncentiveComparison.mk (prescribed.map observe) (alternative.map observe)).Holds utility ↔
-      (IncentiveComparison.mk prescribed alternative).Holds (utility ∘ observe) := by
-  constructor
-  · rintro ⟨hprescribed, halternative, hle⟩
-    have hp := (payoffIntegrable_map_iff observe prescribed utility).1 hprescribed
-    have ha := (payoffIntegrable_map_iff observe alternative utility).1 halternative
-    refine ⟨hp, ha, ?_⟩
-    have hpe := expect_map observe prescribed utility
-    have hae := expect_map observe alternative utility
-    simp only [expectedUtility] at hle ⊢
-    rw [hpe, hae] at hle
-    exact hle
-  · rintro ⟨hp, ha, hle⟩
-    have hprescribed := (payoffIntegrable_map_iff observe prescribed utility).2 hp
-    have halternative := (payoffIntegrable_map_iff observe alternative utility).2 ha
-    refine ⟨hprescribed, halternative, ?_⟩
-    have hpe := expect_map observe prescribed utility
-    have hae := expect_map observe alternative utility
-    simp only [expectedUtility] at hle ⊢
-    rw [hpe, hae]
-    exact hle
+      (IncentiveComparison.mk prescribed alternative).Holds (utility ∘ observe) :=
+  euPreference_map (fun outcome (_ : Unit) => utility outcome) () observe prescribed alternative
 
 variable [Fintype Outcome]
 

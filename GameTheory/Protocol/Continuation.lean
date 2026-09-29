@@ -47,12 +47,12 @@ theorem isContinuationNash_iff [DecidableEq ι]
     (profile : Profile sig) (utility : sig.Outcome → ι → ℝ) :
     M.IsContinuationNash play profile utility ↔
       ∀ history, M.IsSubgameRoot history → ∀ who replacement,
-        UtilityIntegrable utility who (play history profile) ∧
-          UtilityIntegrable utility who
+        UtilityHasExpectation utility who (play history profile) ∧
+          UtilityHasExpectation utility who
               (play history (Profile.update profile who replacement)) ∧
-            expectedUtility utility who
+            extendedExpectedUtility utility who
                 (play history (Profile.update profile who replacement)) ≤
-              expectedUtility utility who (play history profile) := by
+              extendedExpectedUtility utility who (play history profile) := by
   simp only [IsContinuationNash, isNash_iff]
   rfl
 
@@ -120,11 +120,12 @@ theorem isContinuationNash_of_laws
     (target := { sig := targetSig, play := targetPlay targetRoot })
     profile (Profile.map compile profile) (fun _ _ => True) honest
     (fun who replacement _ => deviations who replacement) utility 0
-    (fun who replacement _ => hdev targetRoot proper who replacement) sourceNash
+    (fun who replacement _ => (hdev targetRoot proper who replacement).hasExpectation)
+    sourceNash
   rw [isNash_iff]
   exact fun who replacement => by
     obtain ⟨hbase, halt, hle⟩ := bounds who replacement trivial
-    exact ⟨hbase, halt, by simpa only [add_zero] using hle⟩
+    exact ⟨hbase, halt, by simpa only [EReal.coe_zero, add_zero] using hle⟩
 
 /-- Reflection covers proper source roots and only uses honest compiled laws.
 It imposes no coverage premise on arbitrary target deviations. -/
@@ -167,71 +168,57 @@ theorem historyBackwardValue_eq_expect_runFrom_of_bound
   E.historyBackwardValue_eq_expect_runHistoryFor
     (E.stopsHistoryWithin_of_bound bounded _ _)
 
+/-- Subgame perfection, which compares integrable continuation values, is
+Nash in every proper continuation game together with integrable unilateral
+deviations there. -/
 theorem isSubgamePerfect_iff_isNash_continuation [DecidableEq ι]
     (certificate : E.WellFoundedPlay) {bound : ℕ} (bounded : E.BoundedHorizon bound)
     (profile : Profile M.strategicSignature) (utility : E.History → ι → ℝ) :
     M.IsSubgamePerfect certificate profile utility ↔
       ∀ history, M.IsSubgameRoot history →
-        IsNash (M.toContinuationGameForm bound history) (euPreference utility) profile := by
+        IsNash (M.toContinuationGameForm bound history) (euPreference utility) profile ∧
+          (M.toContinuationGameForm bound history).HasIntegrableDeviations utility profile := by
+  have hlaw : ∀ (policies : Profile M.strategicSignature) history,
+      E.historyBackwardLaw certificate (M.historyChooser policies) history =
+        M.runFrom policies bound history := fun policies history =>
+    E.historyBackwardLaw_eq_runHistoryFor (certificate := certificate)
+      (E.stopsHistoryWithin_of_bound bounded (M.historyChooser policies) history)
+  have hvalue : ∀ (policies : Profile M.strategicSignature) history who,
+      E.historyBackwardValue certificate (M.historyChooser policies)
+          (fun outcome => utility outcome who) history =
+        expectedUtility utility who (M.runFrom policies bound history) :=
+    fun policies history who =>
+      M.historyBackwardValue_eq_expect_runFrom_of_bound certificate bounded _ _ history
   constructor
   · intro perfect history proper
-    rw [isNash_iff]
-    intro who alternative
-    obtain ⟨hbackDev, hbackBase, hle⟩ := perfect history proper who alternative
-    have hdevLaw := E.historyBackwardLaw_eq_runHistoryFor
-      (certificate := certificate)
-      (E.stopsHistoryWithin_of_bound bounded
-        (M.historyChooser (Profile.update profile who alternative)) history)
-    have hbaseLaw := E.historyBackwardLaw_eq_runHistoryFor
-      (certificate := certificate)
-      (E.stopsHistoryWithin_of_bound bounded (M.historyChooser profile) history)
-    have hrunDev : UtilityIntegrable utility who
-        (M.runFrom (Profile.update profile who alternative) bound history) := by
-      simp only [InformationModel.runFrom]
-      rw [← hdevLaw]
+    have hintegrable : (M.toContinuationGameForm bound history).HasIntegrableDeviations
+        utility profile := by
+      intro who alternative
+      obtain ⟨hbackDev, -, -⟩ := perfect history proper who alternative
+      show UtilityIntegrable utility who
+        (M.runFrom (Profile.update profile who alternative) bound history)
+      rw [← hlaw]
       exact hbackDev
-    have hrunBase : UtilityIntegrable utility who
-        (M.runFrom profile bound history) := by
-      simp only [InformationModel.runFrom]
-      rw [← hbaseLaw]
-      exact hbackBase
-    refine ⟨hrunBase, hrunDev, ?_⟩
-    simp only [toContinuationGameForm, expectedUtility]
-    rw [← M.historyBackwardValue_eq_expect_runFrom_of_bound
-      certificate bounded _ _ history,
-      ← M.historyBackwardValue_eq_expect_runFrom_of_bound
-        certificate bounded _ _ history]
+    refine ⟨(hintegrable.isNash_iff).2 fun who alternative => ?_, hintegrable⟩
+    obtain ⟨-, -, hle⟩ := perfect history proper who alternative
+    rw [hvalue, hvalue] at hle
     exact hle
   · intro optimal history proper who alternative
-    have bound := optimal history proper
-    rw [isNash_iff] at bound
-    obtain ⟨hrunBase, hrunDev, hle⟩ := bound who alternative
-    have hdevLaw := E.historyBackwardLaw_eq_runHistoryFor
-      (certificate := certificate)
-      (E.stopsHistoryWithin_of_bound bounded
-        (M.historyChooser (Profile.update profile who alternative)) history)
-    have hbaseLaw := E.historyBackwardLaw_eq_runHistoryFor
-      (certificate := certificate)
-      (E.stopsHistoryWithin_of_bound bounded (M.historyChooser profile) history)
+    obtain ⟨hnash, hintegrable⟩ := optimal history proper
+    have hle := (hintegrable.isNash_iff).1 hnash who alternative
     have hbackDev : PayoffIntegrable
         (E.historyBackwardLaw certificate
           (M.historyChooser (Profile.update profile who alternative)) history)
         (fun outcome => utility outcome who) := by
-      rw [hdevLaw]
-      simp only [InformationModel.runFrom] at hrunDev
-      exact hrunDev
+      rw [hlaw]
+      exact hintegrable who alternative
     have hbackBase : PayoffIntegrable
         (E.historyBackwardLaw certificate (M.historyChooser profile) history)
         (fun outcome => utility outcome who) := by
-      rw [hbaseLaw]
-      simp only [InformationModel.runFrom] at hrunBase
-      exact hrunBase
+      rw [hlaw]
+      exact hintegrable.base who
     refine ⟨hbackDev, hbackBase, ?_⟩
-    simp only [toContinuationGameForm, expectedUtility] at hle
-    rw [M.historyBackwardValue_eq_expect_runFrom_of_bound
-      certificate bounded _ _ history,
-      M.historyBackwardValue_eq_expect_runFrom_of_bound
-        certificate bounded _ _ history]
+    rw [hvalue, hvalue]
     exact hle
 
 variable {T : ExecutionProtocol.{uι, us', ua'} ι}
@@ -275,13 +262,15 @@ theorem isSubgamePerfect_of_continuation_laws [DecidableEq ι]
   apply (N.isSubgamePerfect_iff_isNash_continuation targetTerminates targetBounded
     (Profile.map (target := N.strategicSignature) compile profile)
     (fun history who => utility (targetObserve history) who)).mpr
-  exact M.isContinuationNash_of_laws N
+  have sourceOptimal := (M.isSubgamePerfect_iff_isNash_continuation sourceTerminates
+    sourceBounded profile (fun history who => utility (sourceObserve history) who)).mp perfect
+  have targetNash := M.isContinuationNash_of_laws N
     (sourceSig := M.strategicSignature) (targetSig := N.strategicSignature)
     (sourcePlay := fun history policies => M.runFrom policies sourceBound history)
     (targetPlay := fun history policies => N.runFrom policies targetBound history)
     compile sourceObserve targetObserve profile coverage utility hdev
-    ((M.isSubgamePerfect_iff_isNash_continuation sourceTerminates sourceBounded
-      profile (fun history who => utility (sourceObserve history) who)).mp perfect)
+    (fun history proper => (sourceOptimal history proper).1)
+  exact fun targetRoot proper => ⟨targetNash targetRoot proper, hdev targetRoot proper⟩
 
 /-- Reflection needs coverage of proper source roots. At a matching proper
 target root, honest laws for all source profiles also realize every compiled
@@ -312,13 +301,20 @@ theorem isSubgamePerfect_of_compiled_of_continuation_laws [DecidableEq ι]
   have targetEquiv := N.isSubgamePerfect_iff_isNash_continuation
     targetTerminates targetBounded (Profile.map (target := N.strategicSignature) compile profile)
     (fun history who => utility (targetObserve history) who)
-  have targetOptimal := targetEquiv.mp perfect
-  have targetNash := targetOptimal targetRoot targetProper
-  exact GameForm.isNash_of_honest_law
+  obtain ⟨targetNash, targetIntegrable⟩ := targetEquiv.mp perfect targetRoot targetProper
+  refine ⟨GameForm.isNash_of_honest_law
     (source := M.toContinuationGameForm sourceBound sourceRoot)
     (target := N.toContinuationGameForm targetBound targetRoot)
     (sourceObserve := sourceObserve) (targetObserve := targetObserve)
-    compile laws utility profile targetNash
+    compile laws utility profile targetNash, fun who alternative => ?_⟩
+  have htarget : UtilityIntegrable (fun history who => utility (targetObserve history) who)
+      who (N.runFrom (Profile.map (target := N.strategicSignature) compile
+        (Profile.update profile who alternative)) targetBound targetRoot) := by
+    rw [Profile.map_update]
+    exact targetIntegrable who (compile who alternative)
+  exact (payoffIntegrable_observed_law_iff _ _ targetObserve sourceObserve
+    (fun observation => utility observation who)
+    (laws (Profile.update profile who alternative))).1 htarget
 
 end InformationModel
 end GameTheory.Protocol

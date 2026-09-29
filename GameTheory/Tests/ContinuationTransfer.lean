@@ -34,7 +34,7 @@ example (source : Bool) (profile : Profile (model source).strategicSignature)
   · intro root proper who alternative
     have hroot := ((model source).isSubgamePerfect_iff_isNash_continuation
       (terminates source) (bounded source) profile value).mp perfect root proper
-    exact ((isNash_iff _).mp hroot who alternative).2.1
+    exact hroot.2 who alternative
 
 private theorem utility_bounded (prefer : Bool) (result : Bool × Option Bool) :
     |utility prefer result| ≤ 3 := by

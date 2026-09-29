@@ -446,8 +446,8 @@ theorem matching_expanded_false_not_isNash :
         matchingSemantics.utility owner assignment)
       (pruning.expandPolicy (reducedPure false)) := by
   intro hnash
-  have hdeviation := (isNash_iff _).mp hnash () (fullCopySignal ())
-  rcases hdeviation with ⟨hbase, hcopy, hle⟩
+  have hle := (euPreference_iff _ _ _ _ (payoffIntegrable_of_finite _ _)
+    (payoffIntegrable_of_finite _ _)).1 ((isNash_iff _).mp hnash () (fullCopySignal ()))
   have hbaseLaw :
       (nativeBehavioralGameForm matchingSemantics).play
           (pruning.expandPolicy (reducedPure false)) =

@@ -3,6 +3,10 @@ EXP-138: the stationary Bellman predicate uses actual one-step laws on
 infinite states. An unrelated pure joint action has divergent continuation
 utility, while each unilateral deviation from the all-false profile remains
 on a point-mass transition.
+
+Under EXP-147's extended expectation the divergent continuation is worth `⊤`,
+so a unilateral deviation into it defeats the Bellman predicate because it is
+infinitely profitable rather than because its value is undefined.
 -/
 
 import GameTheory.Stochastic.OneStep
@@ -172,7 +176,7 @@ theorem allFalse_bellman :
     obtain ⟨hdeviation, hdeviation_value⟩ :=
       deviation_value state who replacement
     simp only [deviated_self] at hbase hbase_value
-    refine ⟨hbase, hdeviation, ?_⟩
+    refine (euPreference_iff _ _ _ _ hbase hdeviation).2 ?_
     rw [hbase_value, hdeviation_value]
   · intro state who
     obtain ⟨hbase, hbase_value⟩ :=
@@ -214,6 +218,21 @@ theorem unrelated_oneStep_not_integrable :
   apply unrelated_transition_not_integrable
   rwa [allTrueLaw_eq_oneStep]
 
+/-- The divergent continuation of the all-true joint action is worth `⊤`. -/
+theorem allTrue_value :
+    extendedExpect allTrueLaw (fun outcome =>
+      (1 - (1 / 2 : ℝ)) * exploding 0 + (1 / 2 : ℝ) * exploding outcome.2) = ⊤ := by
+  rw [allTrueLaw, extendedExpect_map]
+  have hshape : ((fun outcome : (∀ _ : Player, Bool) × ℕ =>
+      (1 - (1 / 2 : ℝ)) * exploding 0 + (1 / 2 : ℝ) * exploding outcome.2) ∘
+        fun next => (allTrueJoint, next)) =
+      fun next => (1 / 2 : ℝ) * exploding next + (1 - 1 / 2) * exploding 0 := by
+    funext next
+    simp only [Function.comp_apply]
+    ring
+  rw [hshape, extendedExpect_affine geometric exploding _ (by norm_num),
+    exploding_extendedExpect, EReal.coe_mul_top_of_pos (by norm_num), EReal.top_add_coe]
+
 set_option maxHeartbeats 1000000 in
 theorem trueFalse_not_bellman :
     ¬ game.IsDiscountedStationaryBellmanEq (1 / 2) trueFalse value := by
@@ -223,15 +242,19 @@ theorem trueFalse_not_bellman :
       (game.oneStepForm (0 : ℕ)).purify allTrueJoint := by
     funext who
     fin_cases who <;> rfl
-  have hdeviation := (hbellman.1 (0 : ℕ)).deviationIntegrable
-    (1 : Player) (PMF.pure true)
+  obtain ⟨-, -, hle⟩ := (isNash_iff _).1 (hbellman.1 (0 : ℕ)) (1 : Player) (PMF.pure true)
+  obtain ⟨hbase, -⟩ := hbellman.2 (0 : ℕ) (1 : Player)
   have hlaw :
       (game.discountedAuxGame (1 / 2) value (0 : ℕ)).form.mixed.play
         (Profile.update (trueFalse (0 : ℕ)) (1 : Player) (PMF.pure true)) =
       (game.discountedAuxGame (1 / 2) value (0 : ℕ)).form.play allTrueJoint := by
     rw [hprofile]
     exact (game.oneStepForm (0 : ℕ)).mixed_play_purify allTrueJoint
-  exact unrelated_oneStep_not_integrable 1
-    (payoffIntegrable_congr_law hlaw hdeviation)
+  rw [hlaw] at hle
+  have htop : extendedExpectedUtility (game.discountedAuxGame (1 / 2) value (0 : ℕ)).utility 1
+      ((game.discountedAuxGame (1 / 2) value (0 : ℕ)).form.play allTrueJoint) = ⊤ :=
+    allTrue_value
+  rw [htop, top_le_iff, extendedExpectedUtility_eq hbase] at hle
+  exact EReal.coe_ne_top _ hle
 
 end GameTheory.Experimental.PostArchitecture.PMFStochasticBellmanGate

@@ -73,11 +73,10 @@ theorem coordinated_isNash :
     IsNash game.form (euPreference game.utility) coordinated := by
   rw [isNash_iff]
   intro who replacement
-  rw [euPreference_apply]
-  simp only [game, form, expectedUtility_pure, coordinated]
+  refine (euPreference_pure_iff _ _ _ _).2 ?_
+  simp only [coordinated]
   unfold utility
-  split <;> norm_num <;>
-    exact ⟨payoffIntegrable_pure _ _, payoffIntegrable_pure _ _⟩
+  split <;> norm_num
 
 /-- Every positive-horizon empirical belief of the constant history is the
 canonical pure embedding of the coordinated profile. -/
@@ -95,7 +94,7 @@ not unfold a second payoff comparison: it consumes the canonical mixed Nash
 best-response theorem. -/
 theorem constant_isFictitiousPlay : game.IsFictitiousPlay constantHistory := by
   intro t who
-  have hmixed := coordinated_isNash.purify_of_finite
+  have hmixed := coordinated_isNash.purify_of_finite fun _ _ => payoffIntegrable_of_finite _ _
   rw [isNash_iff_isBestResponse] at hmixed
   rw [constant_empiricalBelief]
   have hplayed : PMF.pure (constantHistory (t + 1) who) =
@@ -133,8 +132,9 @@ theorem alternating_not_isFictitiousPlay :
   have hbest := hplay 0 0 (PMF.pure false)
   have hplayed : alternatingHistory 1 0 = true := by
     norm_num [alternatingHistory]
-  rw [hempirical, hplayed, euPreference_apply] at hbest
-  rcases hbest with ⟨_, _, hbest⟩
+  rw [hempirical, hplayed] at hbest
+  replace hbest := (euPreference_iff _ _ _ _ (payoffIntegrable_of_finite _ _)
+    (payoffIntegrable_of_finite _ _)).1 hbest
   have hfalseLaw : game.form.mixed.play
       (Profile.update (game.form.purify coordinated) 0 (PMF.pure false)) =
       PMF.pure (false, false) := by

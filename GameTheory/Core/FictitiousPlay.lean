@@ -243,32 +243,31 @@ theorem IsFictitiousPlay.isBestResponse {history : ℕ → Profile G.form.sig}
       (PMF.pure (history (t + 1) who)) :=
   hplay t who
 
-/-- Every actual replacement law compared by fictitious play is integrable. -/
-theorem IsFictitiousPlay.deviation_integrable
-    {history : ℕ → Profile G.form.sig}
-    (hplay : G.IsFictitiousPlay history) (t : ℕ) (who : ι)
-    (replacement : PMF (G.form.sig.Strategy who)) :
+/-- Every replacement fictitious play compares has an integrable payoff: the
+empirical belief with one player's mixed strategy replaced. -/
+def HasIntegrableBeliefDeviations (history : ℕ → Profile G.form.sig) : Prop :=
+  ∀ (t : ℕ) (who : ι) (replacement : PMF (G.form.sig.Strategy who)),
     UtilityIntegrable G.utility who
       (G.form.mixed.play
-        (Profile.update (G.form.empiricalBelief history (t + 1)) who
-          replacement)) := by
-  have hbest := hplay t who replacement
-  rw [euPreference_apply] at hbest
-  exact hbest.2.1
+        (Profile.update (G.form.empiricalBelief history (t + 1)) who replacement))
 
-/-- Fictitious play's actual incumbent law is among the certified deviations. -/
-theorem IsFictitiousPlay.incumbent_integrable
+variable {G} in
+/-- The incumbent belief law is one of the integrable replacements. -/
+theorem HasIntegrableBeliefDeviations.incumbent
     {history : ℕ → Profile G.form.sig}
-    (hplay : G.IsFictitiousPlay history) (t : ℕ) (who : ι) :
+    (hintegrable : G.HasIntegrableBeliefDeviations history) (t : ℕ) (who : ι) :
     UtilityIntegrable G.utility who
       (G.form.mixed.play (G.form.empiricalBelief history (t + 1))) := by
-  let belief := G.form.empiricalBelief history (t + 1)
-  have hdev := IsFictitiousPlay.deviation_integrable (G := G) hplay t who
-    (belief who)
-  have hprofile : Profile.update belief who (belief who) = belief :=
-    Profile.update_eq_self _ _
-  exact payoffIntegrable_congr_law
-    (congrArg G.form.mixed.play hprofile) hdev
+  simpa only [Profile.update_eq_self] using
+    hintegrable t who (G.form.empiricalBelief history (t + 1) who)
+
+/-- With finite strategy carriers, integrable pure play integrates every
+belief replacement. -/
+theorem hasIntegrableBeliefDeviations_of_hasIntegrableUtility
+    [∀ who, Finite (G.form.sig.Strategy who)]
+    (hintegrable : G.form.HasIntegrableUtility G.utility)
+    (history : ℕ → Profile G.form.sig) : G.HasIntegrableBeliefDeviations history :=
+  fun _ who _ => hintegrable.mixed_of_finite who _
 
 /-! ## Finite existence -/
 
@@ -300,7 +299,6 @@ theorem pureBestResponse_isBestResponse
     IsBestResponse G.form.mixed (euPreference G.utility) who mixedProfile
       (PMF.pure (G.pureBestResponse mixedProfile hpure who)) := by
   intro alternative
-  rw [euPreference_apply]
   let q := fun action => G.form.mixed.play
     (Profile.update mixedProfile who (PMF.pure action))
   have hcond : ∀ action, UtilityIntegrable G.utility who (q action) := by
@@ -334,7 +332,7 @@ theorem pureBestResponse_isBestResponse
   have halt : UtilityIntegrable G.utility who
       (G.form.mixed.play (Profile.update mixedProfile who alternative)) :=
     payoffIntegrable_congr_law halternativeLaw.symm haltBind
-  refine ⟨hpreferred, halt, ?_⟩
+  refine (euPreference_iff _ _ _ _ hpreferred halt).2 ?_
   have hconst : PayoffIntegrable alternative
       (fun _ => expectedUtility G.utility who (q chosen)) :=
     payoffIntegrable_constant _ _
@@ -589,7 +587,7 @@ theorem expectedUtility_update_empiricalMarginal_succ_sub
 that player's expected utility by the step size times its played gain. -/
 theorem expectedUtility_belief_update_empiricalMarginal_succ_sub
     {history : ℕ → Profile G.form.sig}
-    (hplay : G.IsFictitiousPlay history) (who : ι) (t : ℕ) :
+    (hintegrable : G.HasIntegrableBeliefDeviations history) (who : ι) (t : ℕ) :
     UtilityIntegrable G.utility who
       (G.form.mixed.play
         (Profile.update (G.form.empiricalBelief history (t + 1)) who
@@ -603,8 +601,8 @@ theorem expectedUtility_belief_update_empiricalMarginal_succ_sub
       (1 / ((t + 1) + 1 : ℝ)) *
         G.playedGain history t who := by
   let belief := G.form.empiricalBelief history (t + 1)
-  let hbase := UtilityGame.IsFictitiousPlay.incumbent_integrable (G := G) hplay t who
-  let hpure := IsFictitiousPlay.deviation_integrable (G := G) hplay t who
+  let hbase := hintegrable.incumbent t who
+  let hpure := hintegrable t who
     (PMF.pure (history (t + 1) who))
   have hprev : UtilityIntegrable G.utility who
       (G.form.mixed.play
@@ -645,7 +643,7 @@ observer's common payoff. -/
 theorem IsTeamGame.expectedUtility_belief_update_empiricalMarginal_succ_sub
     (hteam : IsTeamGame G.utility)
     {history : ℕ → Profile G.form.sig}
-    (hplay : G.IsFictitiousPlay history) (observer who : ι) (t : ℕ) :
+    (hintegrable : G.HasIntegrableBeliefDeviations history) (observer who : ι) (t : ℕ) :
     UtilityIntegrable G.utility observer
       (G.form.mixed.play
         (Profile.update (G.form.empiricalBelief history (t + 1)) who
@@ -658,7 +656,7 @@ theorem IsTeamGame.expectedUtility_belief_update_empiricalMarginal_succ_sub
         (G.form.mixed.play (G.form.empiricalBelief history (t + 1))) =
       (1 / ((t + 1) + 1 : ℝ)) * G.playedGain history t who := by
   obtain ⟨hnextWho, hresult⟩ :=
-    G.expectedUtility_belief_update_empiricalMarginal_succ_sub hplay who t
+    G.expectedUtility_belief_update_empiricalMarginal_succ_sub hintegrable who t
   let hnextObserver := payoffIntegrable_congr_on_support
     (fun outcome _ => hteam outcome who observer) hnextWho
   refine ⟨hnextObserver, ?_⟩
@@ -693,15 +691,16 @@ def weightedPlayedGain [∀ who, Fintype (G.form.sig.Strategy who)]
 deviations under the current mixed coordinate. -/
 theorem IsFictitiousPlay.playedGain_nonneg
     {history : ℕ → Profile G.form.sig}
-    (hplay : G.IsFictitiousPlay history) (t : ℕ) (who : ι) :
+    (hplay : G.IsFictitiousPlay history)
+    (hintegrable : G.HasIntegrableBeliefDeviations history) (t : ℕ) (who : ι) :
     0 ≤ G.playedGain history t who := by
   let belief := G.form.empiricalBelief history (t + 1)
   let played := history (t + 1) who
-  let hbase := UtilityGame.IsFictitiousPlay.incumbent_integrable (G := G) hplay t who
+  let hbase := hintegrable.incumbent t who
   let hpure : ∀ action, UtilityIntegrable G.utility who
       (G.form.mixed.play
         (Profile.update belief who (PMF.pure action))) := fun action =>
-    UtilityGame.IsFictitiousPlay.deviation_integrable (G := G) hplay t who (PMF.pure action)
+    hintegrable t who (PMF.pure action)
   let hplayed := hpure played
   let q := fun action => G.form.mixed.play
     (Profile.update belief who (PMF.pure action))
@@ -724,9 +723,8 @@ theorem IsFictitiousPlay.playedGain_nonneg
     payoffIntegrable_constant (belief who) playedValue
   have hle : ∀ action ∈ (belief who).support, values action ≤ playedValue := by
     intro action _
-    have hbest := hplay t who (PMF.pure action)
-    rw [euPreference_apply] at hbest
-    rcases hbest with ⟨_, _, hbest⟩
+    have hbest := (euPreference_iff _ _ _ _ hplayed (hpure action)).1
+      (hplay t who (PMF.pure action))
     simpa only [values, q, playedValue] using hbest
   have havg := expect_mono hle hvalues hconstant
   rw [expect_constant] at havg
@@ -741,34 +739,33 @@ theorem IsFictitiousPlay.playedGain_nonneg
 
 theorem IsFictitiousPlay.aggregatePlayedGain_nonneg
     {history : ℕ → Profile G.form.sig}
-    (hplay : G.IsFictitiousPlay history) (t : ℕ) :
+    (hplay : G.IsFictitiousPlay history)
+    (hintegrable : G.HasIntegrableBeliefDeviations history) (t : ℕ) :
     0 ≤ G.aggregatePlayedGain history t := by
   rw [UtilityGame.aggregatePlayedGain]
   exact Finset.sum_nonneg fun who _ =>
-    UtilityGame.IsFictitiousPlay.playedGain_nonneg (G := G) hplay t who
+    UtilityGame.IsFictitiousPlay.playedGain_nonneg (G := G) hplay hintegrable t who
 
 /-- Under fictitious play, the total positive pure-deviation gap is bounded by
 the strategy-cardinality-weighted gain of the actions actually played. -/
 theorem IsFictitiousPlay.mixedImprovement_le_weightedPlayedGain
     [∀ who, Fintype (G.form.sig.Strategy who)]
     {history : ℕ → Profile G.form.sig}
-    (hplay : G.IsFictitiousPlay history) (t : ℕ) :
+    (hplay : G.IsFictitiousPlay history)
+    (hintegrable : G.HasIntegrableBeliefDeviations history) (t : ℕ) :
     G.mixedImprovement (G.form.empiricalBelief history (t + 1)) ≤
       G.weightedPlayedGain history t := by
   rw [UtilityGame.mixedImprovement, UtilityGame.weightedPlayedGain]
   refine Finset.sum_le_sum fun who _ => ?_
   have hplayed : 0 ≤ G.playedGain history t who :=
-    UtilityGame.IsFictitiousPlay.playedGain_nonneg (G := G) hplay t who
+    UtilityGame.IsFictitiousPlay.playedGain_nonneg (G := G) hplay hintegrable t who
   have hpoint :
       ∀ action : G.form.sig.Strategy who,
         max (G.mixedGain (G.form.empiricalBelief history (t + 1)) who action) 0 ≤
           G.playedGain history t who := by
     intro action
-    have hbest :=
-      UtilityGame.IsFictitiousPlay.isBestResponse (G := G) hplay t who
-        (PMF.pure action)
-    rw [euPreference_apply] at hbest
-    rcases hbest with ⟨_, _, hbest⟩
+    have hbest := (euPreference_iff _ _ _ _ (hintegrable t who _) (hintegrable t who _)).1
+      (UtilityGame.IsFictitiousPlay.isBestResponse (G := G) hplay t who (PMF.pure action))
     apply max_le
     · unfold UtilityGame.playedGain UtilityGame.mixedGain
       linarith [hbest]

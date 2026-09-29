@@ -110,10 +110,14 @@ correctness modules connect them to the real-valued semantics.
 ## Scope
 
 Discrete semantics uses `PMF` on arbitrary carriers; each law may have countably
-infinite support. Real expected utility requires integrability of the actual
-compared laws. An undefined alternative fails its equilibrium comparison,
-rather than disappearing from the deviation quantifier. Finite support and
-bounded payoffs are sufficient ways to discharge these requirements.
+infinite support. Expected-utility comparisons use the extended-real
+expectation, so a law with infinite expected gains or losses is worth `+∞` or
+`−∞` and is compared like any other. Only a law whose gains and losses are both
+infinite has no expectation; such an alternative fails its equilibrium
+comparison, rather than disappearing from the deviation quantifier. Theorems
+that compute with real expected utilities request integrability of the laws
+they compute with; finite support and bounded payoffs are sufficient ways to
+discharge it.
 
 Ordinary measures represent infinite policy products and arbitrary independent
 per-player policy laws, with exact finite-prefix behavioral correspondences.

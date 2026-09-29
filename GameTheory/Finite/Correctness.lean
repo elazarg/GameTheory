@@ -352,11 +352,11 @@ theorem verifyMixedNash_eq_true_iff (G : TableGame ι) (mixed : Profile G.mixedS
     G.verifyMixedNash mixed = true ↔
       IsNash G.toForm.mixed (euPreference G.utility) (G.toMixed mixed hmixed) := by
   have hdev : ∀ who (replacement : PMF (G.Action who)),
-      UtilityIntegrable G.utility who
+      UtilityHasExpectation G.utility who
         (G.toForm.mixed.play
           (Profile.update (G.toMixed mixed hmixed) who replacement)) := by
     intro who replacement
-    exact utilityIntegrable G who _
+    exact (utilityIntegrable G who _).hasExpectation
   have hiff := isNash_mixed_iff (F := G.toForm) (utility := G.utility)
     (mixedProfile := G.toMixed mixed hmixed) hdev
   rw [verifyMixedNash, hmixed, Bool.true_and, decide_eq_true_eq]

@@ -17,7 +17,7 @@ theorem prisonersDilemma_defect_isUniformEquilibrium :
     prisonersDilemmaGame.IsUniformEquilibrium
       (prisonersDilemmaGame.stationaryRepeatedProfile bothDefect) :=
   prisonersDilemmaGame.stationaryRepeatedProfile_isUniformEquilibrium_of_isNash
-    prisonersDilemmaGame_bothDefect_isNash
+    prisonersDilemmaGame_bothDefect_isNash fun _ _ => Math.Probability.payoffIntegrable_pure _ _
 
 def permanentDefection : prisonersDilemmaGame.RepeatedStrategy 0 :=
   fun _ => .defect
@@ -27,9 +27,9 @@ theorem prisonersDilemma_cooperate_not_oneStageApproximateNash :
     ¬ prisonersDilemmaGame.IsεFiniteRepeatedNash 1 1
       (prisonersDilemmaGame.stationaryRepeatedProfile bothCooperate) := by
   intro happroximate
-  obtain ⟨hinc, hdev, hdeviation⟩ :=
-    (prisonersDilemmaGame.isεFiniteRepeatedNash_iff).1 happroximate
-      0 permanentDefection
+  have hdeviation :=
+    (prisonersDilemmaGame.isεFiniteRepeatedNash_iff fun _ _ _ _ =>
+      Math.Probability.payoffIntegrable_pure _ _).1 happroximate 0 permanentDefection
   have hpath :
       prisonersDilemmaGame.repeatedPlay
           (Profile.update
@@ -61,9 +61,9 @@ theorem prisonersDilemma_cooperate_not_approximateNash
     ¬ prisonersDilemmaGame.IsεFiniteRepeatedNash horizon 1
       (prisonersDilemmaGame.stationaryRepeatedProfile bothCooperate) := by
   intro happroximate
-  obtain ⟨hinc, hdev, hdeviation⟩ :=
-    (prisonersDilemmaGame.isεFiniteRepeatedNash_iff).1 happroximate
-      0 permanentDefection
+  have hdeviation :=
+    (prisonersDilemmaGame.isεFiniteRepeatedNash_iff fun _ _ _ _ =>
+      Math.Probability.payoffIntegrable_pure _ _).1 happroximate 0 permanentDefection
   have hprofile :
       Profile.update
           (prisonersDilemmaGame.stationaryRepeatedProfile bothCooperate)

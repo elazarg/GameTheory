@@ -37,7 +37,9 @@ theorem constant_limit_isNash :
     IsNash game.form.mixed (euPreference game.utility)
       (game.form.purify coordinated) :=
   UtilityGame.IsFictitiousPlay.limit_isNash
-    (G := game) constant_isFictitiousPlay constant_empiricalBelief_converges
+    (G := game) constant_isFictitiousPlay
+    (fun _ _ _ => Math.Probability.payoffIntegrable_of_finite _ _)
+    constant_empiricalBelief_converges
 
 /-! ## A genuinely nonconstant trajectory -/
 
@@ -124,7 +126,8 @@ theorem cycling_isFictitiousPlay :
     cyclingGame.IsFictitiousPlay cyclingHistory := by
   intro t who alternative
   rw [euPreference_apply]
-  refine ⟨payoffIntegrable_of_finite _ _, payoffIntegrable_of_finite _ _, ?_⟩
+  refine (euPreference_iff _ _ _ _ (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _)).2 ?_
   fin_cases who
   · show
       expectedUtility cyclingUtility 0
@@ -231,6 +234,8 @@ theorem cycling_limit_isNash :
     IsNash cyclingGame.form.mixed (euPreference cyclingGame.utility)
       cyclingTarget :=
   UtilityGame.IsFictitiousPlay.limit_isNash
-    (G := cyclingGame) cycling_isFictitiousPlay cycling_empiricalBelief_converges
+    (G := cyclingGame) cycling_isFictitiousPlay
+    (fun _ _ _ => Math.Probability.payoffIntegrable_of_finite _ _)
+    cycling_empiricalBelief_converges
 
 end GameTheory.Tests.FictitiousPlay

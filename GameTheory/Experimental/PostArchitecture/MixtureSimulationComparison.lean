@@ -52,7 +52,7 @@ theorem transfer (utility : source.sig.Outcome → Player → ℝ) (ε : ℝ)
     IsεNash source.mixed utility ε (source.purify profile) ↔
       IsεNash source utility ε profile ∧
         ∀ who replacement,
-          UtilityIntegrable utility who
+          UtilityHasExpectation utility who
             (source.mixed.play
               (Profile.update (source.purify profile) who replacement)) := by
   constructor
@@ -89,7 +89,7 @@ theorem transfer (utility : source.sig.Outcome → Player → ℝ) (ε : ℝ)
     IsεNash source.mixed utility ε (source.purify profile) ↔
       IsεNash source utility ε profile ∧
         ∀ who replacement,
-          UtilityIntegrable utility who
+          UtilityHasExpectation utility who
             (source.mixed.play
               (Profile.update (source.purify profile) who replacement)) :=
   (simulation source).isεNash_compileProfile_iff utility ε profile (fun _ _ => trivial)

@@ -49,8 +49,7 @@ theorem isNash_truthfulPlan_of_isIncentiveCompatible
       (M.truthfulPlan prior) := by
   rw [isNash_iff]
   intro who deviation
-  rw [euPreference_apply]
-  refine ⟨htruth who, hdeviation who deviation, ?_⟩
+  refine (euPreference_iff _ _ _ _ (htruth who) (hdeviation who deviation)).2 ?_
   rw [(M.toBayesianGame prior).expectedUtility_eq_prior who
       (Profile.update (M.truthfulPlan prior) who deviation) ,
     (M.toBayesianGame prior).expectedUtility_eq_prior who

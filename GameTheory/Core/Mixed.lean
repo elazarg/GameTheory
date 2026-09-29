@@ -88,29 +88,32 @@ theorem purify_update (F : GameForm ι) (σ : Profile F.sig) (who : ι)
 
 /-- **A pure equilibrium stays one in the mixed extension.** The deviator gains
 nothing by randomizing, because randomizing averages deviations it already could
-not gain from. The guard certifies each actual randomized outcome law; pure
-integrability alone does not imply integrability under arbitrary randomization. -/
+not gain from. Each randomized deviation must have an expected utility: mixing a
+pure deviation worth `+∞` with one worth `−∞` leaves none. -/
 theorem IsNash.purify {σ : Profile F.sig}
     (hnash : IsNash F (euPreference utility) σ)
-    (hintegrable : ∀ who (replacement : PMF (F.sig.Strategy who)),
-      UtilityIntegrable utility who
+    (hdeviation : ∀ who (replacement : PMF (F.sig.Strategy who)),
+      UtilityHasExpectation utility who
         (F.mixed.play (Profile.update (F.purify σ) who replacement))) :
     IsNash F.mixed (euPreference utility) (F.purify σ) := by
   apply (isNash_mixed_iff (F := F) (utility := utility)
-    (F.purify σ) hintegrable).2
+    (F.purify σ) hdeviation).2
   intro who s
   have hpure := (isNash_iff σ).1 hnash who s
   rw [GameForm.mixed_play_purify, purify_update, GameForm.mixed_play_purify]
   exact hpure
 
-/-- Finite strategy carriers derive the randomized outcome-law certificates
-from the pure Nash certificates. Outcome carriers may remain infinite. -/
+/-- With finite strategy carriers, integrable pure deviations make every
+randomized deviation integrable. Outcome carriers may remain infinite. The
+integrability is needed: a pure deviation worth `+∞` mixed with one worth `−∞`
+has no expected utility. -/
 theorem IsNash.purify_of_finite {σ : Profile F.sig}
     [∀ who, Finite (F.sig.Strategy who)]
-    (hnash : IsNash F (euPreference utility) σ) :
+    (hnash : IsNash F (euPreference utility) σ)
+    (hdeviation : ∀ who replacement,
+      UtilityIntegrable utility who (F.play (Profile.update σ who replacement))) :
     IsNash F.mixed (euPreference utility) (F.purify σ) := by
-  apply hnash.purify
-  intro who replacement
+  refine hnash.purify fun who replacement => UtilityIntegrable.hasExpectation ?_
   rw [GameForm.mixed_play_update]
   apply payoffIntegrable_bind_of_finite (replacement)
     (fun s => F.mixed.play (Profile.update (F.purify σ) who (PMF.pure s)))
@@ -119,7 +122,7 @@ theorem IsNash.purify_of_finite {σ : Profile F.sig}
   have heq : F.mixed.play (Profile.update (F.purify σ) who (PMF.pure s)) =
       F.play (Profile.update σ who s) := by
     rw [purify_update, GameForm.mixed_play_purify]
-  simpa only [← heq] using hnash.deviationIntegrable who s
+  simpa only [← heq] using hdeviation who s
 
 /-- **A mixed Nash profile induces a correlated equilibrium** on its
 independent law of pure profiles. A recommendation-dependent response merely
@@ -181,46 +184,27 @@ it gives positive weight is worth exactly what the mixture is worth — so none 
 them is a strict loss, and none is a missed gain. -/
 theorem IsNash.expectedUtility_eq_of_mem_support
     (hnash : IsNash F.mixed (euPreference utility) mixedProfile) (who : ι)
+    (hbase : UtilityIntegrable utility who (F.mixed.play mixedProfile))
     {s : F.sig.Strategy who} (hs : s ∈ (mixedProfile who).support) :
     expectedUtility utility who
         (F.mixed.play (Profile.update mixedProfile who (PMF.pure s))) =
       expectedUtility utility who (F.mixed.play mixedProfile) := by
-  have hbase := hnash.utilityIntegrable who
-  have hpure : ∀ t, UtilityIntegrable utility who
-      (F.mixed.play (Profile.update mixedProfile who (PMF.pure t))) := by
-    intro t
-    exact hnash.deviationIntegrable who (PMF.pure t)
+  let q := fun t => F.mixed.play (Profile.update mixedProfile who (PMF.pure t))
+  have hbind : UtilityIntegrable utility who ((mixedProfile who).bind q) := by
+    rw [← mixed_play_update_self F mixedProfile who]
+    exact hbase
+  have hpure : ∀ t ∈ (mixedProfile who).support, UtilityIntegrable utility who (q t) :=
+    fun t ht => payoffIntegrable_bind_conditional_on_support _ q _ hbind t ht
+  have houter := payoffIntegrable_bind_conditionalExpectation (mixedProfile who) q
+    (fun outcome => utility outcome who) hbind
   rw [isNash_iff] at hnash
-  have houter := payoffIntegrable_bind_conditionalExpectation (mixedProfile who)
-    (fun t => F.mixed.play (Profile.update mixedProfile who (PMF.pure t)))
-    (fun outcome => utility outcome who)
-    (by
-      have heq : F.mixed.play mixedProfile = (mixedProfile who).bind fun t =>
-          F.mixed.play (Profile.update mixedProfile who (PMF.pure t)) := by
-        calc
-          F.mixed.play mixedProfile = F.mixed.play
-              (Profile.update mixedProfile who (mixedProfile who)) := by
-                rw [Profile.update_eq_self]
-          _ = _ := GameForm.mixed_play_update F mixedProfile who (mixedProfile who)
-      rw [← heq]
-      exact hbase)
-  let value := fun t => expectedUtility utility who
-    (F.mixed.play (Profile.update mixedProfile who (PMF.pure t)))
+  let value := fun t => expectedUtility utility who (q t)
   let base := expectedUtility utility who (F.mixed.play mixedProfile)
-  have hle : ∀ t, expectedUtility utility who
-      (F.mixed.play (Profile.update mixedProfile who (PMF.pure t))) ≤
-      base := by
-    intro t
-    exact (euPreference_iff utility who (F.mixed.play mixedProfile)
-      (F.mixed.play (Profile.update mixedProfile who (PMF.pure t))) hbase (hpure t)).mp
-      (hnash who (PMF.pure t))
-  have havg := expectedUtility_mixed_eq_expect F utility mixedProfile who hbase
-  have havg' : expect (mixedProfile who) value = base := by
-    simpa only [value, base] using havg.symm
-  have hvalue := expect_eq_const_of_le_on_support
-    (mixedProfile who) value base houter
-    (fun t ht => hle t) havg' s hs
-  simpa only [value, base] using hvalue
+  have hle : ∀ t ∈ (mixedProfile who).support, value t ≤ base := fun t ht =>
+    (euPreference_iff utility who _ (q t) hbase (hpure t ht)).mp (hnash who (PMF.pure t))
+  have havg : expect (mixedProfile who) value = base :=
+    (expectedUtility_mixed_eq_expect F utility mixedProfile who hbase).symm
+  exact expect_eq_const_of_le_on_support (mixedProfile who) value base houter hle havg s hs
 
 omit [DecidableEq ι] in
 /-- And the embedding is faithful on outcomes, so the two equilibria describe the

@@ -831,7 +831,7 @@ theorem IsExactPotential.mixedGain_empiricalBelief_succ_abs_sub_le
     (hpotential : IsExactPotential G.form G.utility potential)
     {C : ℝ} (hbound : ∀ profile, |potential profile| ≤ C)
     {history : ℕ → Profile G.form.sig}
-    (hplay : G.IsFictitiousPlay history) (who : ι)
+    (hintegrable : G.HasIntegrableBeliefDeviations history) (who : ι)
     (action : G.form.sig.Strategy who) (t : ℕ) :
     |G.mixedGain (G.form.empiricalBelief history (t + 2)) who action -
         G.mixedGain (G.form.empiricalBelief history (t + 1)) who action| ≤
@@ -840,8 +840,8 @@ theorem IsExactPotential.mixedGain_empiricalBelief_succ_abs_sub_le
     potential hbound history who action t
   have hnew := UtilityGame.IsExactPotential.mixedPotentialGain_eq_mixedGain
     (G := G) hpotential (G.form.empiricalBelief history (t + 2)) who action
-    (IsFictitiousPlay.incumbent_integrable (G := G) hplay (t + 1) who)
-    (IsFictitiousPlay.deviation_integrable (G := G) hplay (t + 1) who
+    (hintegrable.incumbent (t + 1) who)
+    (hintegrable (t + 1) who
       (PMF.pure action))
     (payoffIntegrable_of_bounded (independentProduct
       (G.form.empiricalBelief history (t + 2))) potential hbound)
@@ -850,8 +850,8 @@ theorem IsExactPotential.mixedGain_empiricalBelief_succ_abs_sub_le
         (PMF.pure action))) potential hbound)
   have hold := UtilityGame.IsExactPotential.mixedPotentialGain_eq_mixedGain
     (G := G) hpotential (G.form.empiricalBelief history (t + 1)) who action
-    (IsFictitiousPlay.incumbent_integrable (G := G) hplay t who)
-    (IsFictitiousPlay.deviation_integrable (G := G) hplay t who
+    (hintegrable.incumbent t who)
+    (hintegrable t who
       (PMF.pure action))
     (payoffIntegrable_of_bounded (independentProduct
       (G.form.empiricalBelief history (t + 1))) potential hbound)
@@ -868,7 +868,8 @@ theorem IsExactPotential.aggregatePlayedGain_succ_abs_sub_le
     (hpotential : IsExactPotential G.form G.utility potential)
     {C : ℝ} (hbound : ∀ profile, |potential profile| ≤ C)
     {history : ℕ → Profile G.form.sig}
-    (hplay : G.IsFictitiousPlay history) (t : ℕ) :
+    (hplay : G.IsFictitiousPlay history)
+    (hintegrable : G.HasIntegrableBeliefDeviations history) (t : ℕ) :
     |G.aggregatePlayedGain history (t + 1) -
         G.aggregatePlayedGain history t| ≤
       ((Fintype.card ι : ℝ) * (Fintype.card ι : ℝ)) *
@@ -883,11 +884,11 @@ theorem IsExactPotential.aggregatePlayedGain_succ_abs_sub_le
     intro who
     have hnewBound :=
       UtilityGame.IsExactPotential.mixedGain_empiricalBelief_succ_abs_sub_le
-        (G := G) hpotential hbound (history := history) hplay who
+        (G := G) hpotential hbound (history := history) hintegrable who
         (history (t + 2) who) t
     have holdBound :=
       UtilityGame.IsExactPotential.mixedGain_empiricalBelief_succ_abs_sub_le
-        (G := G) hpotential hbound (history := history) hplay who
+        (G := G) hpotential hbound (history := history) hintegrable who
         (history (t + 1) who) t
     have hbestOld :=
       UtilityGame.IsFictitiousPlay.isBestResponse (G := G) hplay t who
@@ -895,9 +896,10 @@ theorem IsExactPotential.aggregatePlayedGain_succ_abs_sub_le
     have hbestNew :=
       UtilityGame.IsFictitiousPlay.isBestResponse (G := G) hplay (t + 1) who
         (PMF.pure (history (t + 1) who))
-    rw [euPreference_apply] at hbestOld hbestNew
-    rcases hbestOld with ⟨_, _, hpreferOld⟩
-    rcases hbestNew with ⟨_, _, hpreferNew⟩
+    have hpreferOld := (euPreference_iff _ _ _ _ (hintegrable t who _)
+      (hintegrable t who _)).1 hbestOld
+    have hpreferNew := (euPreference_iff _ _ _ _ (hintegrable (t + 1) who _)
+      (hintegrable (t + 1) who _)).1 hbestNew
     have holdComparison :
         G.mixedGain (G.form.empiricalBelief history (t + 1)) who
             (history (t + 2) who) ≤
@@ -949,7 +951,7 @@ theorem IsExactPotential.mixedPotential_empiricalBelief_succ_sub_ge
     (hpotential : IsExactPotential G.form G.utility potential)
     {C : ℝ} (hbound : ∀ profile, |potential profile| ≤ C)
     {history : ℕ → Profile G.form.sig}
-    (hplay : G.IsFictitiousPlay history) (t : ℕ) :
+    (hintegrable : G.HasIntegrableBeliefDeviations history) (t : ℕ) :
     (1 / (t + 2 : ℝ)) * G.aggregatePlayedGain history t -
         ((Fintype.card ι : ℝ) * (Fintype.card ι : ℝ)) *
           ((1 / (t + 2 : ℝ)) ^ 2 * (4 * C)) ≤
@@ -973,8 +975,8 @@ theorem IsExactPotential.mixedPotential_empiricalBelief_succ_sub_ge
       exact UtilityGame.IsExactPotential.mixedPotentialGain_eq_mixedGain
         (G := G) hpotential (G.form.empiricalBelief history (t + 1)) who
         (history (t + 1) who)
-        (IsFictitiousPlay.incumbent_integrable (G := G) hplay t who)
-        (IsFictitiousPlay.deviation_integrable (G := G) hplay t who
+        (hintegrable.incumbent t who)
+        (hintegrable t who
           (PMF.pure (history (t + 1) who)))
         (payoffIntegrable_of_bounded (independentProduct
           (G.form.empiricalBelief history (t + 1))) potential hbound)

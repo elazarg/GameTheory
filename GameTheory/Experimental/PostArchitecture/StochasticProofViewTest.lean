@@ -384,7 +384,18 @@ theorem constantProfile_not_isZeroHorizonNash :
   intro hNash
   have hdeviation := hNash false
     (Game.toBehavioralPolicy signalGame none followSignalPolicy)
-  obtain ⟨hprofile, hchanged, hle⟩ := hdeviation
+  have hchanged : UtilityIntegrable (signalGame.horizonUtility none 2) false
+      ((signalGame.horizonForm none 2).play
+        (Profile.update (Game.toBehaviorProfile signalGame none constantProfile) false
+          (Game.toBehavioralPolicy signalGame none followSignalPolicy))) := by
+    rw [← canonical_contingent_update]
+    exact contingentProfileIntegrable
+  have hle : signalGame.finiteAveragePayoff none 2
+      (Profile.update (Game.toBehaviorProfile signalGame none constantProfile) false
+        (Game.toBehavioralPolicy signalGame none followSignalPolicy)) false ≤
+      signalGame.finiteAveragePayoff none 2
+        (Game.toBehaviorProfile signalGame none constantProfile) false + 0 :=
+    (euPreferenceWithin_iff _ _ _ _ _ constantProfileIntegrable hchanged).1 hdeviation
   have hchangedValue : signalGame.finiteAveragePayoff none 2
       (Profile.update (Game.toBehaviorProfile signalGame none constantProfile)
         false (Game.toBehavioralPolicy signalGame none followSignalPolicy))

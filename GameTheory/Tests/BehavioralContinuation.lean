@@ -66,7 +66,7 @@ theorem simultaneous_behavioral_perfect :
       (source.information.runBehavioralFrom
         (Profile.update (behavioralProfile allTrueActions) who replacement)
         1 history) who
-    refine ⟨hpreferred, halternative, ?_⟩
+    refine (euPreference_iff _ _ _ _ hpreferred halternative).2 ?_
     have hpreferredLaw := source.information.runBehavioralFrom_of_terminal
       (behavioralProfile allTrueActions) 1 terminal
     have halternativeLaw := source.information.runBehavioralFrom_of_terminal
@@ -113,6 +113,7 @@ theorem simultaneous_pure_embedding :
       (policyProfile GameTheory.Examples.FOSG.twoBitSource allTrueActions) sourceUtility :=
   source.information.isSubgamePerfect_of_behavioral simultaneous_bounded
     simultaneous_terminates _ sourceUtility simultaneous_behavioral_perfect
+    fun _ _ who _ => sourceUtility_integrable _ who
 
 /-- Behavioral continuations inherit the same shared mixture-transfer theorem
 as pure continuations. The identity compiler has point-mass deviation coverage. -/
@@ -182,8 +183,9 @@ theorem random_profile_perfect :
     model.IsSingleMoverBehavioralSubgamePerfect single bounded profile (fun _ _ => 0) := by
   rw [model.isSingleMoverBehavioralSubgamePerfect_iff single bounded]
   intro history _ who replacement
-  refine ⟨payoffIntegrable_zero _, payoffIntegrable_zero _, ?_⟩
-  simp [expectedUtility, expect_constant]
+  refine ⟨hasExpectation_of_payoffIntegrable (payoffIntegrable_zero _),
+    hasExpectation_of_payoffIntegrable (payoffIntegrable_zero _), ?_⟩
+  simp [extendedExpectedUtility]
 
 theorem bounded_four : protocol.BoundedHorizon 4 := by
   intro state trace enough
@@ -202,10 +204,12 @@ example (certificate : protocol.WellFoundedPlay)
     (policies : Profile model.strategicSignature) (utility : protocol.History → ℕ → ℝ)
     (perfect : model.IsSingleMoverBehavioralSubgamePerfect single bounded
       (Profile.map (target := model.behavioralSignature)
-        (fun who (policy : model.Policy who) => policy.toBehavioral) policies) utility) :
+        (fun who (policy : model.Policy who) => policy.toBehavioral) policies) utility)
+    (hintegrable : ∀ history, model.IsSubgameRoot history →
+      (model.toContinuationGameForm 2 history).HasIntegrableDeviations utility policies) :
     model.IsSubgamePerfect certificate policies utility :=
   model.isSubgamePerfect_of_singleMoverBehavioral single bounded certificate
-    policies utility perfect
+    policies utility perfect hintegrable
 
 end InfinitePlayers
 

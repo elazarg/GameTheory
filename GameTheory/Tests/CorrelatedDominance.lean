@@ -52,6 +52,12 @@ theorem trueFalse_isNash :
     (euPreference_pure_iff utility player trueFalse
       (Profile.update trueFalse player replacement)).2 hle
 
+/-- Finitely many outcomes integrate every response law. -/
+theorem responses_integrable (u : boolForm.sig.Outcome → Bool → ℝ)
+    (recommendations : PMF (Profile boolForm.sig)) :
+    boolForm.HasIntegrableResponses u recommendations :=
+  fun _ _ => payoffIntegrable_of_finite _ _
+
 theorem law_isCorrelatedEq : IsCorrelatedEq boolForm (euPreference utility) law :=
   trueFalse_isNash.isCorrelatedEq
 
@@ -72,7 +78,8 @@ theorem law_conditional_obedience_true :
       ((fiberPosterior law (fun profile => profile false) true
         true_recommended_supported).bind fun profile =>
           boolForm.play (Profile.update profile false false)) :=
-  law_isCorrelatedEq.conditional_obedience false true false true_recommended_supported
+  law_isCorrelatedEq.conditional_obedience (responses_integrable _ _) false true false
+    true_recommended_supported
 
 theorem law_support_subset_allowed :
     ∀ profile ∈ law.support, ∀ player, profile player ∈ allowed player := by
@@ -98,7 +105,7 @@ theorem true_strictlyDominates_false_on_allowed :
 
 theorem law_support_avoids_false :
     ∀ profile ∈ law.support, profile false ≠ false :=
-  law_isCorrelatedEq.support_avoids_strictlyDominatedOn allowed
+  law_isCorrelatedEq.support_avoids_strictlyDominatedOn (responses_integrable _ _) allowed
     law_support_subset_allowed false true_strictlyDominates_false_on_allowed
 
 theorem true_not_globally_strictlyDominates_false :
@@ -196,7 +203,8 @@ theorem diagonalLaw_isCorrelatedEq :
     IsCorrelatedEq boolForm (euPreference coordinationUtility) diagonalLaw :=
   by
     simpa [diagonalLaw] using
-      (IsCorrelatedEq.mix (euPreference_convex coordinationUtility)
+      (IsCorrelatedEq.mix (euPreference_convex coordinationUtility
+          fun _ law => payoffIntegrable_of_finite law _)
         bothFalse_isCorrelatedEq bothTrue_isCorrelatedEq
         (1 / 2) (by norm_num) (by norm_num))
 
@@ -211,8 +219,8 @@ theorem diagonalLaw_local_obedience :
             recommended hrecommended).bind fun profile =>
               boolForm.play (Profile.update profile who replacement)) := by
   intro who recommended replacement hrecommended
-  exact diagonalLaw_isCorrelatedEq.conditional_obedience who recommended replacement
-    hrecommended
+  exact diagonalLaw_isCorrelatedEq.conditional_obedience (responses_integrable _ _) who
+    recommended replacement hrecommended
 theorem crossedRecommendedFalse :
     ∃ profile : Profile boolForm.sig,
       profile ∈ {candidate | candidate false = false} ∧
@@ -236,7 +244,8 @@ theorem pure_crossed_not_isCorrelatedEq :
     rw [fiberPosterior_support] at hprofile
     apply Set.mem_singleton_iff.mpr
     simpa [crossed] using hprofile.2
-  have hpref := hce.conditional_obedience false false true hrecommended
+  have hpref := hce.conditional_obedience (responses_integrable _ _) false false true
+    hrecommended
   rw [hposterior] at hpref
   have hpref' : euPreference coordinationUtility false (PMF.pure crossed)
       (PMF.pure (Profile.update crossed false true)) := by

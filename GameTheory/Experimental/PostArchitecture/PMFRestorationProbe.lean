@@ -8,6 +8,7 @@ totalized real sum as an expected payoff. It introduces no game interface.
 -/
 
 import GameTheory.Math.Probability.Expectation
+import GameTheory.Math.Probability.ExtendedExpectation
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 import Mathlib.Analysis.SpecificLimits.Basic
 
@@ -146,6 +147,31 @@ theorem exploding_nonnegative_expectation_infinite :
     (∑' n, ENNReal.ofReal ((geometric n).toReal * exploding n)) = ∞ := by
   simp_rw [exploding_weighted_term, ENNReal.ofReal_one]
   exact ENNReal.tsum_const_eq_top_of_ne_zero one_ne_zero
+
+/-- The exploding reward has infinite expected gains. -/
+theorem exploding_positiveExpect : positiveExpect geometric exploding = ∞ := by
+  unfold positiveExpect
+  rw [← exploding_nonnegative_expectation_infinite]
+  refine tsum_congr fun n => ?_
+  rw [ENNReal.ofReal_mul ENNReal.toReal_nonneg, ENNReal.ofReal_toReal (PMF.apply_ne_top _ _)]
+
+/-- The exploding reward has no expected losses. -/
+theorem exploding_negativeExpect : negativeExpect geometric exploding = 0 := by
+  unfold negativeExpect
+  refine ENNReal.tsum_eq_zero.2 fun n => ?_
+  have hpos : 0 ≤ exploding n := by
+    rw [exploding]
+    positivity
+  rw [ENNReal.ofReal_eq_zero.2 (neg_nonpos.2 hpos), mul_zero]
+
+theorem exploding_hasExpectation : HasExpectation geometric exploding :=
+  Or.inr (by rw [exploding_negativeExpect]; exact ENNReal.zero_ne_top)
+
+/-- The extended expectation of the exploding reward is the defined value `⊤`,
+although the reward is not integrable. -/
+theorem exploding_extendedExpect : extendedExpect geometric exploding = ⊤ :=
+  extendedExpect_eq_top exploding_positiveExpect
+    (by rw [exploding_negativeExpect]; exact ENNReal.zero_ne_top)
 
 /-- Unguarded real `tsum` returns zero here, so it cannot certify finite utility. -/
 theorem exploding_totalized_sum_zero :

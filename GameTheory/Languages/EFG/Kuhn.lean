@@ -67,15 +67,15 @@ theorem isNash_toBehavioralGameForm_iff
     (behavioral : Profile G.behavioralSignature) (horizon : ℕ) :
     IsNash (G.toBehavioralGameForm horizon) (euPreference utility) behavioral ↔
       ∀ who replacement,
-        UtilityIntegrable utility who
+        UtilityHasExpectation utility who
           (G.information.runBehavioral behavioral horizon) ∧
-        UtilityIntegrable utility who
+        UtilityHasExpectation utility who
           (G.information.runBehavioral
             (Profile.update behavioral who replacement) horizon) ∧
-        expectedUtility utility who
+        extendedExpectedUtility utility who
             (G.information.runBehavioral
               (Profile.update behavioral who replacement) horizon) ≤
-          expectedUtility utility who
+          extendedExpectedUtility utility who
             (G.information.runBehavioral behavioral horizon) := by
   rw [isNash_iff, G.toBehavioralGameForm_play]
   simp only [euPreference_apply]

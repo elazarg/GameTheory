@@ -310,7 +310,8 @@ theorem constantFalse_initial_uniform :
         false constantFalseProfile horizon
       obtain ⟨hdeviation, hdeviationEq⟩ := finiteAveragePayoff_controller_zero
         false (Profile.update constantFalseProfile false replacement) horizon
-      refine ⟨hbase, hdeviation, ?_⟩
+      refine (euPreferenceWithin_iff _ _ _ _ _ hbase hdeviation).2 ?_
+      simp only [Game.finiteAveragePayoff] at hbaseEq hdeviationEq
       rw [hbaseEq, hdeviationEq]
       norm_num
 
@@ -321,7 +322,8 @@ theorem constantFalse_initial_uniform :
       obtain ⟨hdeviation, hdeviationEq⟩ := finiteAveragePayoff_zero_of_controllerFalse
         (Profile.update constantFalseProfile true replacement)
         (updated_controller_constantFalse replacement) horizon
-      refine ⟨hbase, hdeviation, ?_⟩
+      refine (euPreferenceWithin_iff _ _ _ _ _ hbase hdeviation).2 ?_
+      simp only [Game.finiteAveragePayoff] at hbaseEq hdeviationEq
       rw [hbaseEq, hdeviationEq]
       norm_num
 
@@ -675,12 +677,14 @@ theorem offPhaseDeviation_payoff_two (horizon : ℕ)
 theorem offPhase_not_horizonNash (horizon : ℕ) (hpositive : 0 < horizon) :
     ¬ hostileGame.IsεHorizonNash true horizon 1 offPhaseContinuation := by
   intro hnash
-  have hdeviation :=
-    (hostileGame.isεHorizonNash_iff true horizon 1
-      offPhaseContinuation).mp hnash true (constantTruePolicy true)
-  rcases hdeviation with ⟨-, -, hineq⟩
-  obtain ⟨-, hbaseValue⟩ := offPhaseContinuation_payoff_zero horizon
-  obtain ⟨-, hdeviationValue⟩ := offPhaseDeviation_payoff_two horizon hpositive
+  obtain ⟨hbaseInt, hbaseValue⟩ := offPhaseContinuation_payoff_zero horizon
+  obtain ⟨hdevInt, hdeviationValue⟩ := offPhaseDeviation_payoff_two horizon hpositive
+  have hineq : hostileGame.finiteAveragePayoff true horizon
+      (Profile.update offPhaseContinuation true (constantTruePolicy true)) true ≤
+      hostileGame.finiteAveragePayoff true horizon offPhaseContinuation true + 1 :=
+    (euPreferenceWithin_iff _ _ _ _ _ hbaseInt hdevInt).1
+      ((hostileGame.isεHorizonNash_iff true horizon 1
+        offPhaseContinuation).mp hnash true (constantTruePolicy true))
   rw [hdeviationValue, hbaseValue] at hineq
   exact (by norm_num : ¬ (2 : ℝ) ≤ 0 + 1) hineq
 

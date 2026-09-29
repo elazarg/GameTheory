@@ -238,14 +238,20 @@ theorem interimDeviating_integrable_of_whole
       (B.recordDeviation who (B.fixedReplacementDeviation who replacement))
       recommendation (fun rec => B.utility rec who)).mp hwhole)
 
-/-- Positive-cell tests together with integration of every actual whole
-obedience-deviation law. The follow-law guard follows from identity obedience. -/
+/-- Every whole obedience-deviation law has an integrable payoff for the
+deviator. Identity obedience is one of them, so the followed law is integrable
+too. -/
+def HasIntegrableObedienceDeviations (B : BayesianGame.{uι, ut, ua} ι)
+    (recommendation : B.RecommendationLaw) : Prop :=
+  ∀ who (deviation : B.ObedienceDeviation who),
+    UtilityIntegrable B.utility who
+      (recommendation.map (B.recordDeviation who deviation))
+
+/-- Positive-cell tests: after every observable own type and recommendation, no
+fixed replacement beats obedience in posterior expected utility. -/
 def InterimObedienceTests (B : BayesianGame.{uι, ut, ua} ι)
     (recommendation : B.RecommendationLaw) : Prop :=
-  ∀ who, (∀ deviation : B.ObedienceDeviation who,
-      UtilityIntegrable B.utility who
-        (recommendation.map (B.recordDeviation who deviation))) ∧
-    ∀ ownType recommended replacement
+  ∀ who ownType recommended replacement
       (hObserved :
         ∃ rec ∈ B.obedienceEvent who ownType recommended,
           rec ∈ recommendation.support),
@@ -301,22 +307,19 @@ theorem isBayesCorrelatedEq_strategyRecommendationLaw_of_isNash
   rw [B.recordDeviation_strategyRecommendationLaw]
   exact hdeviation
 
-/-- Global guarded obedience implies every positive-cell fixed-action test. -/
+/-- Global obedience with integrable deviations implies every positive-cell
+fixed-action test. -/
 theorem isBayesCorrelatedEq_implies_interim
     (B : BayesianGame.{uι, ut, ua} ι)
     (recommendation : B.RecommendationLaw)
+    (hintegrable : B.HasIntegrableObedienceDeviations recommendation)
     (hBCE : B.IsBayesCorrelatedEq recommendation) :
     B.IsBayesPlausible recommendation ∧
       B.InterimObedienceTests recommendation := by
   classical
   refine ⟨hBCE.1, ?_⟩
-  intro who
-  let hdeviation : ∀ deviation : B.ObedienceDeviation who,
-      UtilityIntegrable B.utility who
-        (recommendation.map (B.recordDeviation who deviation)) :=
-    fun deviation => (hBCE.2 who deviation).2.1
-  refine ⟨hdeviation, ?_⟩
-  intro ownType recommended replacement hObserved
+  intro who ownType recommended replacement hObserved
+  have hdeviation := hintegrable who
   have hfollow := B.recommendation_integrable_of_deviation recommendation who hdeviation
   let event := B.obedienceEvent who ownType recommended
   let localDeviation : B.ObedienceDeviation who :=
@@ -336,7 +339,8 @@ theorem isBayesCorrelatedEq_implies_interim
       recommendation g).mp (hdeviation localDeviation)
   have hle : expect recommendation f ≤
       expect recommendation g := by
-    have hglobal := (hBCE.2 who localDeviation).2.2
+    have hglobal := (euPreference_iff B.utility who _ _ hfollow (hdeviation localDeviation)).1
+      (hBCE.2 who localDeviation)
     rw [expectedUtility_map] at hglobal
     exact hglobal
   have hoff : ∀ rec ∈ recommendation.support, rec ∉ event → f rec = g rec := by
@@ -374,6 +378,7 @@ theorem isBayesCorrelatedEq_implies_interim
 theorem interim_implies_isBayesCorrelatedEq
     (B : BayesianGame.{uι, ut, ua} ι)
     (recommendation : B.RecommendationLaw)
+    (hintegrable : B.HasIntegrableObedienceDeviations recommendation)
     (hinterim :
       B.IsBayesPlausible recommendation ∧
         B.InterimObedienceTests recommendation) :
@@ -381,7 +386,8 @@ theorem interim_implies_isBayesCorrelatedEq
   classical
   refine ⟨hinterim.1, ?_⟩
   intro who deviation
-  obtain ⟨hdeviation, hcond⟩ := hinterim.2 who
+  have hdeviation := hintegrable who
+  have hcond := hinterim.2 who
   let hfollow :=
     B.recommendation_integrable_of_deviation recommendation who hdeviation
   let observation := B.ownObservation who
@@ -444,7 +450,7 @@ theorem interim_implies_isBayesCorrelatedEq
       unfold interimDeviatingValue interimRecommendedValue at h
       simpa only [hposterior] using h
     exact hvalueEq.trans_le hfixedLe
-  refine ⟨hfollow, hdeviation deviation, ?_⟩
+  refine (euPreference_iff B.utility who _ _ hfollow (hdeviation deviation)).2 ?_
   have hmap :=
     expectedUtility_map B.utility who (B.recordDeviation who deviation)
       recommendation
@@ -456,15 +462,18 @@ theorem interim_implies_isBayesCorrelatedEq
     _ ≤ expect recommendation g := hle
     _ = expectedUtility B.utility who recommendation := rfl
 
+/-- With integrable deviations, Bayes correlated equilibrium is Bayes
+plausibility together with every positive-cell obedience test. -/
 theorem isBayesCorrelatedEq_iff_interim_obedience
     (B : BayesianGame.{uι, ut, ua} ι)
-    (recommendation : B.RecommendationLaw) :
+    (recommendation : B.RecommendationLaw)
+    (hintegrable : B.HasIntegrableObedienceDeviations recommendation) :
     B.IsBayesCorrelatedEq recommendation ↔
       B.IsBayesPlausible recommendation ∧
         B.InterimObedienceTests recommendation := by
   constructor
-  · exact B.isBayesCorrelatedEq_implies_interim recommendation
-  · exact B.interim_implies_isBayesCorrelatedEq recommendation
+  · exact B.isBayesCorrelatedEq_implies_interim recommendation hintegrable
+  · exact B.interim_implies_isBayesCorrelatedEq recommendation hintegrable
 
 namespace InformationStructure
 

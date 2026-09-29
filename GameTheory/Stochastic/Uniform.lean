@@ -30,21 +30,23 @@ abbrev IsεHorizonNash [DecidableEq ι] (initial : G.State)
   IsεNash (G.horizonForm initial horizon) (G.horizonUtility initial horizon)
     epsilon profile
 
-/-- The source-shaped deviation inequality is exactly canonical approximate
-Nash on the Protocol horizon form. -/
+/-- The source-shaped deviation inequality, between extended finite-horizon
+averages, is exactly canonical approximate Nash on the Protocol horizon form. -/
 theorem isεHorizonNash_iff [DecidableEq ι] (initial : G.State)
     [∀ i, Nonempty (G.Action i)] (horizon : ℕ) (epsilon : ℝ)
     (profile : G.BehaviorProfile initial) :
     G.IsεHorizonNash initial horizon epsilon profile ↔
       ∀ who (deviation : (G.perfectMonitoring initial).BehavioralPolicy who),
-        UtilityIntegrable (G.horizonUtility initial horizon) who
+        UtilityHasExpectation (G.horizonUtility initial horizon) who
             ((G.horizonForm initial horizon).play profile) ∧
-          UtilityIntegrable (G.horizonUtility initial horizon) who
+          UtilityHasExpectation (G.horizonUtility initial horizon) who
               ((G.horizonForm initial horizon).play
                 (Profile.update profile who deviation)) ∧
-            G.finiteAveragePayoff initial horizon
-                (Profile.update profile who deviation) who ≤
-              G.finiteAveragePayoff initial horizon profile who + epsilon := by
+            extendedExpectedUtility (G.horizonUtility initial horizon) who
+                ((G.horizonForm initial horizon).play
+                  (Profile.update profile who deviation)) ≤
+              extendedExpectedUtility (G.horizonUtility initial horizon) who
+                ((G.horizonForm initial horizon).play profile) + epsilon := by
   exact isεNash_iff (F := G.horizonForm initial horizon)
     (utility := G.horizonUtility initial horizon)
 
@@ -92,7 +94,8 @@ theorem IsUniformεEquilibrium.mono [DecidableEq ι] {initial : G.State}
 
 /-- A proof-facing certificate for a uniform equilibrium payoff. At every
 positive accuracy it supplies one profile whose on-path payoff is close to the
-claimed value and whose unilateral deviations are capped by that value. -/
+claimed value and whose unilateral deviations have extended expected payoffs
+capped by that value. -/
 def HasUniformDeviationCapConstructor [DecidableEq ι] (initial : G.State)
     [∀ i, Nonempty (G.Action i)] (value : ι → ℝ) : Prop :=
   ∀ delta : ℝ, 0 < delta →
@@ -104,11 +107,13 @@ def HasUniformDeviationCapConstructor [DecidableEq ι] (initial : G.State)
             |G.finiteAveragePayoff initial horizon profile who -
               value who| ≤ delta) ∧
         ∀ who (deviation : (G.perfectMonitoring initial).BehavioralPolicy who),
-          UtilityIntegrable (G.horizonUtility initial horizon) who
+          UtilityHasExpectation (G.horizonUtility initial horizon) who
               ((G.horizonForm initial horizon).play
                 (Profile.update profile who deviation)) ∧
-            G.finiteAveragePayoff initial horizon
-              (Profile.update profile who deviation) who ≤ value who + delta
+            extendedExpectedUtility (G.horizonUtility initial horizon) who
+                ((G.horizonForm initial horizon).play
+                  (Profile.update profile who deviation)) ≤
+              ((value who + delta : ℝ) : EReal)
 
 /-- A uniform deviation-cap constructor yields the semantic uniform-payoff
 property. -/
@@ -126,7 +131,8 @@ theorem isUniformEquilibriumPayoff_of_deviation_caps [DecidableEq ι]
     intro who deviation
     obtain ⟨hprofile, hclose⟩ := honPath who
     obtain ⟨hdeviation, hupper⟩ := hdeviation who deviation
-    refine ⟨hprofile, hdeviation, ?_⟩
+    refine ⟨hprofile.hasExpectation, hdeviation, hupper.trans ?_⟩
+    rw [extendedExpectedUtility_eq hprofile, ← EReal.coe_add, EReal.coe_le_coe_iff]
     have hlower := (abs_le.mp hclose).1
     linarith
   · intro who
@@ -155,7 +161,8 @@ theorem hasUniformDeviationCapConstructor_iff [DecidableEq ι]
       obtain ⟨_, hdeviation, hle⟩ :=
         (G.isεHorizonNash_iff initial horizon (delta / 2) profile).mp
           hnash who deviation
-      refine ⟨hdeviation, ?_⟩
+      refine ⟨hdeviation, hle.trans ?_⟩
+      rw [extendedExpectedUtility_eq hprofile, ← EReal.coe_add, EReal.coe_le_coe_iff]
       have honUpper := (abs_le.mp hclose).2
       linarith
 

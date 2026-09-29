@@ -130,27 +130,12 @@ private theorem strictRandomized_not_isBestResponse
       (F.play (Profile.update profile who alternative)))
     (hbest : IsBestResponse F (euPreference utility) who profile alternative) :
     False := by
-  obtain ⟨hmixed, hbase, _⟩ := hstrict.1
-  have hlt := (euPreference_strict_iff utility who _ _ hmixed hbase).mp hstrict
-  obtain ⟨hconditional, values, hvalues, houter, heq⟩ :=
-    expectedUtility_randomizedDeviationOutcome F utility profile who replacement hmixed
-  have hle : expect replacement values ≤
-      expectedUtility utility who (F.play (Profile.update profile who alternative)) := by
-    calc
-      expect replacement values ≤
-          expect replacement
-            (fun _ => expectedUtility utility who
-              (F.play (Profile.update profile who alternative))) := by
-        refine expect_mono (μ := replacement) (fun action ha => ?_) houter
-          (payoffIntegrable_constant _ _)
-        rw [hvalues action ha]
-        exact (euPreference_iff utility who _ _ hbase (hconditional action ha)).mp
-          (hbest action)
-      _ = expectedUtility utility who
-            (F.play (Profile.update profile who alternative)) :=
-        expect_constant replacement _
-  rw [← heq] at hle
-  exact (not_lt_of_ge hle) hlt
+  have hle : extendedExpectedUtility utility who
+      (randomizedDeviationOutcome F profile who replacement) ≤
+        extendedExpectedUtility utility who (F.play (Profile.update profile who alternative)) := by
+    rw [randomizedDeviationOutcome_eq_bind]
+    exact extendedExpect_bind_le fun action _ => (hbest action).2.2
+  exact hstrict.2 ⟨hstrict.1.2.1, hstrict.1.1, hle⟩
 
 /-- Mixed strict dominance rules out best-response status under expected
 utility. -/
@@ -291,7 +276,10 @@ theorem expectedUtility_mixed_play_update_pure
 
 /-- A pointwise strict mixed improvement on the supported product belief
 contradicts independent best response when its actual joint outcome law is
-integrable. Separate conditional integrals do not supply this guard. -/
+integrable. Separate conditional integrals do not supply this guard. The
+incumbent law then needs no guard: it is worth at least the integrable joint
+law, and pointwise it is worth less than the joint law's components, which
+together bound both of its parts. -/
 theorem IsIndependentBestResponse.not_strict_mixed_on_support
     {utility : Utility F.sig} {beliefs : Profile F.sig.mixed}
     {who : ι} {strategy : F.sig.Strategy who}
@@ -309,15 +297,24 @@ theorem IsIndependentBestResponse.not_strict_mixed_on_support
   let mixedKernel := fun profile => randomizedDeviationOutcome F profile who replacement
   let actionKernel := fun action : F.sig.Strategy who =>
     F.mixed.play (Profile.update beliefs who (PMF.pure action))
-  have hbase : UtilityIntegrable utility who
-      (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) :=
-    (hbest strategy).1
-  have hbaseBind : PayoffIntegrable (profileLaw.bind baseKernel) f := by
-    rw [← mixed_play_update_pure_eq_bind]
-    exact hbase
   have hjointProfile : PayoffIntegrable (profileLaw.bind mixedKernel) f := by
     rw [← mixed_play_update_eq_bind_randomizedDeviation]
     exact hjoint
+  have hjointValue : extendedExpectedUtility utility who
+      (F.mixed.play (Profile.update beliefs who replacement)) ≤
+        extendedExpectedUtility utility who
+          (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) := by
+    rw [GameForm.mixed_play_update]
+    exact extendedExpect_bind_le fun action _ => (hbest action).2.2
+  have hbaseBind : PayoffIntegrable (profileLaw.bind baseKernel) f := by
+    refine payoffIntegrable_bind_of_extendedExpect_le
+      (fun profile hp => (hstrict profile hp).1.2.2) hjointProfile ?_
+    rw [← mixed_play_update_pure_eq_bind]
+    exact ne_bot_of_le_ne_bot (extendedExpect_ne_bot_of_payoffIntegrable hjoint) hjointValue
+  have hbase : UtilityIntegrable utility who
+      (F.mixed.play (Profile.update beliefs who (PMF.pure strategy))) := by
+    rw [mixed_play_update_pure_eq_bind]
+    exact hbaseBind
   have hjointAction : PayoffIntegrable (replacement.bind actionKernel) f := by
     rw [← GameForm.mixed_play_update]
     exact hjoint

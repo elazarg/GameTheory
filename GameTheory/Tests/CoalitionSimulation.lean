@@ -81,7 +81,8 @@ def unilateralSimulation :
     UtilitySimulation baseGame channelGame matchUtility matchUtility
       (singletonGroups (Fin 2)) :=
   UtilitySimulation.ofUnilateral compileConstant
-    (fun _ _ => ⟨fun _ => matchGuard _ _, fun _ => matchGuard _ _⟩)
+    (fun _ _ => ⟨fun _ => (matchGuard _ _).hasExpectation,
+      fun _ => (matchGuard _ _).hasExpectation⟩)
     (fun profile who _ _ => by
       obtain ⟨guess, hplay⟩ := update_compileConstant_play profile who
         (compileConstant who (profile who))
@@ -90,6 +91,8 @@ def unilateralSimulation :
         simpa only [Profile.map_apply] using
           Profile.update_eq_self (Profile.map compileConstant profile) who
       rw [hself] at hplay
+      rw [extendedExpectedUtility_eq (matchGuard _ _), extendedExpectedUtility_eq (matchGuard _ _),
+        EReal.coe_eq_coe_iff]
       calc
         _ = expectedUtility matchUtility who
               (fairCoin.map fun coin => ((coin, guess) : Bool × Bool)) :=
@@ -104,7 +107,9 @@ def unilateralSimulation :
           (channelGame.play (Profile.update
             (Profile.map compileConstant profile) who replacement)) :=
         matchGuard _ _
-      refine ⟨htarget, le_of_eq ?_⟩
+      refine ⟨htarget.hasExpectation, le_of_eq ?_⟩
+      rw [extendedExpectedUtility_eq htarget, extendedExpectedUtility_eq (matchGuard _ _),
+        EReal.coe_eq_coe_iff]
       calc
         _ = expectedUtility matchUtility who
               (fairCoin.map fun coin => ((coin, guess) : Bool × Bool)) :=
@@ -135,9 +140,12 @@ theorem isEmpty_coalitionSimulation :
       (nonemptyGroups (Fin 2))) :=
   UtilitySimulation.isEmpty_of_grandCoalitionValue Finset.univ_nonempty
     (fun _ => false) 0 copyProfile (1 / 2)
-    (fun alternative =>
-      ⟨matchGuard _ _, le_of_eq (base_expect alternative 0)⟩)
-    (fun _ => by rw [copyProfile_expect 0]; norm_num)
+    (fun alternative => ⟨(matchGuard _ _).hasExpectation, by
+      rw [extendedExpectedUtility_eq (matchGuard _ _), base_expect alternative 0]⟩)
+    (fun _ => by
+      rw [extendedExpectedUtility_eq (matchGuard _ _), copyProfile_expect 0,
+        EReal.coe_lt_coe_iff]
+      norm_num)
 
 /-- Every base profile is strong Nash: no coalition can beat one half. -/
 theorem base_isStrongNash (profile : Profile baseGame.sig) :
@@ -145,7 +153,7 @@ theorem base_isStrongNash (profile : Profile baseGame.sig) :
   rw [isStrongNash_iff]
   intro coalition hne replacement
   obtain ⟨member, hmember⟩ := hne
-  refine ⟨member, hmember, matchGuard _ _, matchGuard _ _, ?_⟩
+  refine ⟨member, hmember, (euPreference_iff _ _ _ _ (matchGuard _ _) (matchGuard _ _)).2 ?_⟩
   rw [base_expect profile member, base_expect _ member]
 
 /-- The channel lets the grand coalition improve from one half to one. -/
@@ -154,8 +162,9 @@ theorem compiled_not_isStrongNash (profile : Profile baseGame.sig) :
       (Profile.map compileConstant profile) := by
   rw [isStrongNash_iff]
   intro h
-  obtain ⟨member, _, -, -, hprefer⟩ :=
+  obtain ⟨member, _, hprefer⟩ :=
     h Finset.univ Finset.univ_nonempty (fun i => copyProfile i.1)
+  replace hprefer := (euPreference_iff _ _ _ _ (matchGuard _ _) (matchGuard _ _)).1 hprefer
   have hdevlaw : channelGame.play
       (Profile.override Finset.univ (fun i => copyProfile i.1)
         (Profile.map compileConstant profile)) = channelGame.play copyProfile := by
@@ -202,10 +211,11 @@ def coalitionSimulation :
     UtilitySimulation coordinationGame redundantGame
       coordinationUtility coordinationUtility (nonemptyGroups (Fin 2)) where
   compileStrategy _ strategy := (strategy, false)
-  honest_integrable profile who := by
-    exact ⟨fun _ => payoffIntegrable_pure _ _, fun _ => payoffIntegrable_pure _ _⟩
+  honest_expectation profile who := by
+    exact ⟨fun _ => hasExpectation_of_payoffIntegrable (payoffIntegrable_pure _ _),
+      fun _ => hasExpectation_of_payoffIntegrable (payoffIntegrable_pure _ _)⟩
   honest_utility profile who _ _ := by
-    simp [coordinationGame, redundantGame, expectedUtility_pure, Profile.map_apply]
+    simp [coordinationGame, redundantGame, Profile.map_apply]
   deviation_bound members _ profile replacement := by
     refine ⟨fun i => (replacement i).1, ?_⟩
     intro member _ hsource
@@ -222,8 +232,8 @@ def coalitionSimulation :
         (redundantGame.play (Profile.override members replacement
           (Profile.map (fun _ strategy => (strategy, false)) profile))) :=
       payoffIntegrable_pure _ _
-    refine ⟨htarget, le_of_eq ?_⟩
-    exact expectedUtility_congr_law coordinationUtility member hlaw
+    refine ⟨htarget.hasExpectation, le_of_eq ?_⟩
+    exact extendedExpectedUtility_congr_law coordinationUtility member hlaw
 
 theorem coordination_isStrongNash :
     IsStrongNash coordinationGame (euPreference coordinationUtility)

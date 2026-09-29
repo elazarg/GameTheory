@@ -34,18 +34,18 @@ def IsεBestResponse (ε : ℝ) (who : ι) (opponents : Profile F.sig)
 theorem isεNash_iff {ε : ℝ} {profile : Profile F.sig} :
     IsεNash F utility ε profile ↔
       ∀ who replacement,
-        UtilityIntegrable utility who (F.play profile) ∧
-          UtilityIntegrable utility who
+        UtilityHasExpectation utility who (F.play profile) ∧
+          UtilityHasExpectation utility who
             (F.play (Profile.update profile who replacement)) ∧
-            expectedUtility utility who
+            extendedExpectedUtility utility who
                 (F.play (Profile.update profile who replacement)) ≤
-              expectedUtility utility who (F.play profile) + ε := by
+              extendedExpectedUtility utility who (F.play profile) + ε := by
   rw [IsεNash, isNash_iff]
   rfl
 
 /-- Approximate Nash is invariant under a profile equivalence that reflects
-unilateral updates in both directions and preserves every player's expected
-utility. -/
+unilateral updates in both directions and preserves every player's extended
+expected utility. -/
 theorem isεNash_iff_of_profileEquiv_of_expectedUtility_eq
     (source : GameForm.{uι, usSource, uoSource} ι)
     (target : GameForm.{uι, usTarget, uoTarget} ι)
@@ -64,120 +64,42 @@ theorem isεNash_iff_of_profileEquiv_of_expectedUtility_eq
         ∃ replacement : source.sig.Strategy who,
           profileEquiv (Profile.update sourceProfile who replacement) =
             Profile.update (profileEquiv sourceProfile) who targetReplacement)
-    (integrable_iff :
+    (hasExpectation_iff :
       ∀ (targetProfile : Profile target.sig) (who : ι),
-        UtilityIntegrable targetUtility who (target.play targetProfile) ↔
-          UtilityIntegrable sourceUtility who
+        UtilityHasExpectation targetUtility who (target.play targetProfile) ↔
+          UtilityHasExpectation sourceUtility who
             (source.play (profileEquiv.symm targetProfile)))
-    (expectedUtility_eq :
-      ∀ (targetProfile : Profile target.sig) (who : ι)
-        (_ : UtilityIntegrable targetUtility who (target.play targetProfile))
-        (_ : UtilityIntegrable sourceUtility who
-          (source.play (profileEquiv.symm targetProfile))),
-        expectedUtility targetUtility who (target.play targetProfile) =
-          expectedUtility sourceUtility who
+    (extendedExpectedUtility_eq :
+      ∀ (targetProfile : Profile target.sig) (who : ι),
+        extendedExpectedUtility targetUtility who (target.play targetProfile) =
+          extendedExpectedUtility sourceUtility who
             (source.play (profileEquiv.symm targetProfile)))
     (ε : ℝ) (profile : Profile source.sig) :
     IsεNash target targetUtility ε (profileEquiv profile) ↔
       IsεNash source sourceUtility ε profile := by
+  have hexpectation : ∀ sourceProfile who,
+      UtilityHasExpectation targetUtility who (target.play (profileEquiv sourceProfile)) ↔
+        UtilityHasExpectation sourceUtility who (source.play sourceProfile) := by
+    intro sourceProfile who
+    simpa using hasExpectation_iff (profileEquiv sourceProfile) who
+  have hvalue : ∀ sourceProfile who,
+      extendedExpectedUtility targetUtility who (target.play (profileEquiv sourceProfile)) =
+        extendedExpectedUtility sourceUtility who (source.play sourceProfile) := by
+    intro sourceProfile who
+    simpa using extendedExpectedUtility_eq (profileEquiv sourceProfile) who
   rw [isεNash_iff, isεNash_iff]
   constructor
   · intro htarget who replacement
-    obtain ⟨targetReplacement, hupdate⟩ :=
-      hforward profile who replacement
-    obtain ⟨htBase, htAlternative, hle⟩ :=
-      htarget who targetReplacement
-    have htMapped : UtilityIntegrable targetUtility who
-        (target.play (profileEquiv (Profile.update profile who replacement))) := by
-      simpa [hupdate] using htAlternative
-    have hsBase : UtilityIntegrable sourceUtility who (source.play profile) := by
-      simpa using (integrable_iff (profileEquiv profile) who).mp htBase
-    have hsAlternative : UtilityIntegrable sourceUtility who
-        (source.play (Profile.update profile who replacement)) := by
-      simpa using (integrable_iff
-        (profileEquiv (Profile.update profile who replacement)) who).mp htMapped
-    have hsBaseAt : UtilityIntegrable sourceUtility who
-        (source.play (profileEquiv.symm (profileEquiv profile))) := by
-      simpa using hsBase
-    have hsAlternativeAt : UtilityIntegrable sourceUtility who
-        (source.play (profileEquiv.symm
-          (profileEquiv (Profile.update profile who replacement)))) := by
-      simpa using hsAlternative
-    have hLaw : target.play (profileEquiv (Profile.update profile who replacement)) =
-        target.play (Profile.update (profileEquiv profile) who targetReplacement) :=
-      congrArg target.play hupdate
-    refine ⟨hsBase, hsAlternative, ?_⟩
-    calc
-      expectedUtility sourceUtility who (source.play
-          (Profile.update profile who replacement)) =
-          expectedUtility targetUtility who (target.play
-            (profileEquiv (Profile.update profile who replacement))) := by
-        symm
-        have hv := expectedUtility_eq
-          (profileEquiv (Profile.update profile who replacement)) who
-          htMapped hsAlternativeAt
-        simpa using hv
-      _ = expectedUtility targetUtility who
-          (target.play (Profile.update (profileEquiv profile) who targetReplacement)) := by
-        exact expectedUtility_congr_law targetUtility who hLaw
-      _ ≤ expectedUtility targetUtility who (target.play (profileEquiv profile))
-           + ε := hle
-      _ = expectedUtility sourceUtility who (source.play profile) + ε := by
-        have hv := expectedUtility_eq
-          (profileEquiv profile) who htBase hsBaseAt
-        simpa using hv
+    obtain ⟨targetReplacement, hupdate⟩ := hforward profile who replacement
+    obtain ⟨hbase, halternative, hle⟩ := htarget who targetReplacement
+    rw [← hupdate] at halternative hle
+    rw [hvalue, hvalue] at hle
+    exact ⟨(hexpectation _ _).1 hbase, (hexpectation _ _).1 halternative, hle⟩
   · intro hsource who targetReplacement
-    obtain ⟨replacement, hupdate⟩ :=
-      hbackward profile who targetReplacement
-    obtain ⟨hsBase, hsAlternative, hle⟩ := hsource who replacement
-    have hsBaseAt : UtilityIntegrable sourceUtility who
-        (source.play (profileEquiv.symm (profileEquiv profile))) := by
-      simpa using hsBase
-    have htBase : UtilityIntegrable targetUtility who
-        (target.play (profileEquiv profile)) := by
-      exact (integrable_iff (profileEquiv profile) who).mpr hsBaseAt
-    have hsMapped : UtilityIntegrable sourceUtility who
-        (source.play (profileEquiv.symm
-          (Profile.update (profileEquiv profile) who targetReplacement))) := by
-      have hinv : profileEquiv.symm
-          (Profile.update (profileEquiv profile) who targetReplacement) =
-            Profile.update profile who replacement := by
-        apply profileEquiv.injective
-        simpa using hupdate.symm
-      simpa [hinv] using hsAlternative
-    have htAlternative : UtilityIntegrable targetUtility who
-        (target.play (Profile.update (profileEquiv profile) who targetReplacement)) := by
-      exact (integrable_iff
-        (Profile.update (profileEquiv profile) who targetReplacement) who).mpr hsMapped
-    have hinv : profileEquiv.symm
-        (Profile.update (profileEquiv profile) who targetReplacement) =
-          Profile.update profile who replacement := by
-      apply profileEquiv.injective
-      simpa using hupdate.symm
-    refine ⟨htBase, htAlternative, ?_⟩
-    calc
-      expectedUtility targetUtility who
-          (target.play
-            (Profile.update (profileEquiv profile) who targetReplacement))
-             = expectedUtility sourceUtility who
-              (source.play (Profile.update profile who replacement)) := by
-        have hv := expectedUtility_eq
-          (Profile.update (profileEquiv profile) who targetReplacement) who
-          htAlternative hsMapped
-        have hLaw := congrArg source.play hinv
-        have htransport := expectedUtility_congr_law sourceUtility who hLaw
-        exact hv.trans htransport
-      _ ≤ expectedUtility sourceUtility who
-          (source.play profile) + ε := by
-        exact hle
-      _ = expectedUtility targetUtility who
-          (target.play (profileEquiv profile)) + ε := by
-        have hsBaseAt : UtilityIntegrable sourceUtility who
-            (source.play (profileEquiv.symm (profileEquiv profile))) := by
-          simpa using hsBase
-        have hv := expectedUtility_eq
-          (profileEquiv profile) who htBase hsBaseAt
-        simpa using hv.symm
+    obtain ⟨replacement, hupdate⟩ := hbackward profile who targetReplacement
+    obtain ⟨hbase, halternative, hle⟩ := hsource who replacement
+    rw [← hupdate, hvalue, hvalue]
+    exact ⟨(hexpectation _ _).2 hbase, (hexpectation _ _).2 halternative, hle⟩
 
 /-- Every Nash equilibrium is an `ε`-Nash equilibrium when `ε` is nonnegative. -/
 theorem IsεNash.of_isNash {profile : Profile F.sig}
@@ -187,19 +109,15 @@ theorem IsεNash.of_isNash {profile : Profile F.sig}
   intro who replacement
   rcases (isNash_iff profile).1 hN who replacement with
     ⟨hpreferred, halternative, hle⟩
-  exact ⟨hpreferred, halternative, by linarith⟩
+  exact ⟨hpreferred, halternative,
+    hle.trans (le_add_of_nonneg_right (EReal.coe_nonneg.2 hε))⟩
 
 /-- Zero slack recovers exactly ordinary expected-utility Nash. -/
 theorem isNash_iff_isεNash_zero {profile : Profile F.sig} :
     IsNash F (euPreference utility) profile ↔ IsεNash F utility 0 profile := by
-  constructor
-  · exact fun h => IsεNash.of_isNash F utility h le_rfl
-  · intro h
-    rw [isNash_iff]
-    intro who replacement
-    rcases (isεNash_iff F utility).1 h who replacement with
-      ⟨hpreferred, halternative, hle⟩
-    exact ⟨hpreferred, halternative, by simpa using hle⟩
+  rw [isεNash_iff, isNash_iff]
+  simp only [EReal.coe_zero, add_zero]
+  rfl
 
 /-- Relaxing the error bound preserves approximate Nash. -/
 theorem IsεNash.mono {profile : Profile F.sig} {ε₁ ε₂ : ℝ}
@@ -207,8 +125,9 @@ theorem IsεNash.mono {profile : Profile F.sig} {ε₁ ε₂ : ℝ}
     IsεNash F utility ε₂ profile := by
   rw [isεNash_iff] at h ⊢
   intro who replacement
-  rcases h who replacement with ⟨hpreferred, halternative, hle⟩
-  exact ⟨hpreferred, halternative, by linarith⟩
+  rcases h who replacement with ⟨hpreferred, halternative, hvalue⟩
+  exact ⟨hpreferred, halternative,
+    hvalue.trans (add_le_add_right (EReal.coe_le_coe_iff.2 hle) _)⟩
 
 /-- Approximate Nash is mutual approximate best response. -/
 theorem isεNash_iff_εBestResponse {ε : ℝ} {profile : Profile F.sig} :
@@ -221,25 +140,15 @@ theorem IsStrictNash.isεNash {profile : Profile F.sig} (h : IsStrictNash F util
     {ε : ℝ} (hε : 0 ≤ ε) : IsεNash F utility ε profile := by
   rw [isεNash_iff]
   intro who replacement
+  have hslack : extendedExpectedUtility utility who (F.play profile) ≤
+      extendedExpectedUtility utility who (F.play profile) + ε :=
+    le_add_of_nonneg_right (EReal.coe_nonneg.2 hε)
+  obtain ⟨hbase, hstrict⟩ := h who
   by_cases hsame : replacement = profile who
   · subst replacement
-    obtain ⟨hbase, hstrict⟩ := h who
-    have heq : F.play (Profile.update profile who (profile who)) =
-        F.play profile := by simp
-    have hsame : UtilityIntegrable utility who
-        (F.play (Profile.update profile who (profile who))) := by
-      simpa [heq] using hbase
-    refine ⟨hbase, hsame, ?_⟩
-    have hv := expectedUtility_congr_law utility who heq
-    rw [hv]
-    linarith
-  · obtain ⟨hbase, hstrict⟩ := h who
-    obtain ⟨hdev, hlt⟩ := hstrict replacement hsame
-    refine ⟨hbase, hdev, ?_⟩
-    calc
-      expectedUtility utility who
-          (F.play (Profile.update profile who replacement)) ≤
-          expectedUtility utility who (F.play profile) := le_of_lt hlt
-      _ ≤ expectedUtility utility who (F.play profile) + ε := by linarith
+    rw [Profile.update_eq_self]
+    exact ⟨hbase, hbase, hslack⟩
+  · obtain ⟨hdev, hlt⟩ := hstrict replacement hsame
+    exact ⟨hbase, hdev, hlt.le.trans hslack⟩
 
 end GameTheory

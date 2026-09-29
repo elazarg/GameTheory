@@ -433,8 +433,8 @@ theorem isεNash_native_iff_compiled
       (fun targetProfile owner => by
         rw [native_play_symm_eq_compiled_play topological semantics
           targetProfile])
-      (fun targetProfile owner htarget hsource =>
-        expectedUtility_congr_law
+      (fun targetProfile owner =>
+        extendedExpectedUtility_congr_law
           (fun assignment owner => semantics.utility owner assignment) owner
           (native_play_symm_eq_compiled_play topological semantics
             targetProfile).symm)

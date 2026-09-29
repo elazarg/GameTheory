@@ -115,15 +115,15 @@ theorem optimalPure_isNash :
   rw [isNash_iff]
   intro who replacement
   rcases who with ⟨⟩
-  rw [euPreference_apply]
-  refine ⟨payoffIntegrable_of_finite _ _, payoffIntegrable_of_finite _ _, ?_⟩
+  refine (euPreference_iff _ _ _ _ (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _)).2 ?_
   cases replacement <;>
     norm_num [choiceGame, choiceForm, choiceUtility, optimalPure,
       expectedUtility_pure, Profile.update]
 
 theorem optimalMixed_isNash :
     IsNash choiceGame.form.mixed (euPreference choiceGame.utility) optimalMixed :=
-  optimalPure_isNash.purify_of_finite
+  optimalPure_isNash.purify_of_finite fun _ _ => payoffIntegrable_of_finite _ _
 
 theorem optimalMixed_improvement :
     choiceScore optimalMixed = 0 :=
@@ -163,10 +163,9 @@ theorem exploitableMixed_improvement :
 theorem exploitableMixed_not_isOneNash :
     ¬ IsεNash choiceGame.form.mixed choiceGame.utility 1 exploitableMixed := by
   intro h
-  have hdeviation :=
-    (isεNash_iff choiceGame.form.mixed choiceGame.utility).1 h ()
-      (PMF.pure true)
-  rcases hdeviation with ⟨_, _, hdeviation⟩
+  have hdeviation := (euPreferenceWithin_iff _ _ _ _ _ (payoffIntegrable_of_finite _ _)
+    (payoffIntegrable_of_finite _ _)).1
+      ((isεNash_iff choiceGame.form.mixed choiceGame.utility).1 h () (PMF.pure true))
   have hgain := choice_mixedGain_purify exploitablePure true
   have hle : choiceGame.mixedGain exploitableMixed () true
        ≤ 1 := by

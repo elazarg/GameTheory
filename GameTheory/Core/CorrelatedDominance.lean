@@ -28,21 +28,29 @@ universe uι
 variable {ι : Type uι} [DecidableEq ι]
 variable {F : GameForm ι} {utility : F.sig.Outcome → ι → ℝ}
 
-/-- Conditional obedience: after a positive-probability recommendation,
-following it weakly beats every fixed replacement in conditional expected
-utility. -/
-theorem IsCorrelatedEq.conditional_obedience
+/-- Conditional obedience with its integrability: both conditional laws are
+integrable, and the real comparison holds. -/
+private theorem IsCorrelatedEq.conditional_obedience_integrable
     {law : PMF (Profile F.sig)}
     (hce : IsCorrelatedEq F (euPreference utility) law)
+    (hintegrable : F.HasIntegrableResponses utility law)
     (who : ι) (recommended replacement : F.sig.Strategy who)
     (hrecommended : recommended ∈
       (law.map fun profile => profile who).support) :
-    euPreference utility who
-      (F.outcomeLaw (fiberPosterior law (fun profile => profile who)
-        recommended hrecommended))
-      ((fiberPosterior law (fun profile => profile who)
-        recommended hrecommended).bind fun profile =>
-          F.play (Profile.update profile who replacement)) := by
+    UtilityIntegrable utility who
+        (F.outcomeLaw (fiberPosterior law (fun profile => profile who)
+          recommended hrecommended)) ∧
+      UtilityIntegrable utility who
+        ((fiberPosterior law (fun profile => profile who)
+          recommended hrecommended).bind fun profile =>
+            F.play (Profile.update profile who replacement)) ∧
+      expectedUtility utility who
+          ((fiberPosterior law (fun profile => profile who)
+            recommended hrecommended).bind fun profile =>
+              F.play (Profile.update profile who replacement)) ≤
+        expectedUtility utility who
+          (F.outcomeLaw (fiberPosterior law (fun profile => profile who)
+            recommended hrecommended)) := by
   classical
   let respond : F.sig.Strategy who → F.sig.Strategy who :=
     fun action => if action = recommended then replacement else action
@@ -71,8 +79,10 @@ theorem IsCorrelatedEq.conditional_obedience
       _ = law.bind (fun profile =>
           F.play (Profile.update profile who (respond (profile who)))) := by
         rw [fiberPosterior_reconstruct]
-  have hglobal := (isCorrelatedEq_iff law).mp hce who respond
-  rcases hglobal with ⟨hbase, hresponse, hle⟩
+  have hbase := hintegrable.base who
+  have hresponse := hintegrable who respond
+  have hle := (euPreference_iff utility who _ _ hbase hresponse).1
+    ((isCorrelatedEq_iff law).mp hce who respond)
   have hbase' : UtilityIntegrable utility who
       (marginal.bindOnSupport baseKernel) :=
     payoffIntegrable_congr_law hbaseDecomp.symm hbase
@@ -136,10 +146,30 @@ theorem IsCorrelatedEq.conditional_obedience
   · exact payoffIntegrable_congr_law hresponseEq hresponseLocal
   · simpa only [expectedUtility, hbaseEq, hresponseEq] using hlocal
 
-/-- For expected utility, correlated equilibrium is exactly obedience after
-each recommendation that can actually be observed, together with integration
-of every actual ex-ante response law. Local obedience alone does not supply
-integrability under an arbitrary mixture of recommendation cells.
+/-- Conditional obedience: after a positive-probability recommendation,
+following it weakly beats every fixed replacement in conditional expected
+utility. The responses must be integrable: a law whose obedient payoff is `−∞`
+off one recommendation satisfies every ex-ante comparison while disobeying at
+that recommendation. -/
+theorem IsCorrelatedEq.conditional_obedience
+    {law : PMF (Profile F.sig)}
+    (hce : IsCorrelatedEq F (euPreference utility) law)
+    (hintegrable : F.HasIntegrableResponses utility law)
+    (who : ι) (recommended replacement : F.sig.Strategy who)
+    (hrecommended : recommended ∈
+      (law.map fun profile => profile who).support) :
+    euPreference utility who
+      (F.outcomeLaw (fiberPosterior law (fun profile => profile who)
+        recommended hrecommended))
+      ((fiberPosterior law (fun profile => profile who)
+        recommended hrecommended).bind fun profile =>
+          F.play (Profile.update profile who replacement)) := by
+  obtain ⟨hbase, hdeviation, hle⟩ :=
+    hce.conditional_obedience_integrable hintegrable who recommended replacement hrecommended
+  exact (euPreference_iff utility who _ _ hbase hdeviation).2 hle
+
+/-- For expected utility with integrable responses, correlated equilibrium is
+exactly obedience after each recommendation that can actually be observed.
 Recommendations outside the law's support impose no condition.
 
 The reverse implication disintegrates the law by the deviator's observed
@@ -147,12 +177,8 @@ recommendation.  Thus the local replacement checks jointly cover an arbitrary
 recommendation-dependent response without requiring the strategy type itself
 to be finite. -/
 theorem isCorrelatedEq_iff_conditional_obedience
-    (law : PMF (Profile F.sig)) :
+    (law : PMF (Profile F.sig)) (hguards : F.HasIntegrableResponses utility law) :
     IsCorrelatedEq F (euPreference utility) law ↔
-      (∀ who (respond : F.sig.Strategy who → F.sig.Strategy who),
-        UtilityIntegrable utility who
-          (law.bind fun profile =>
-            F.play (Profile.update profile who (respond (profile who))))) ∧
       (∀ who recommended replacement,
         ∀ hrecommended : recommended ∈
           (law.map fun profile => profile who).support,
@@ -163,15 +189,9 @@ theorem isCorrelatedEq_iff_conditional_obedience
               recommended hrecommended).bind fun profile =>
                 F.play (Profile.update profile who replacement))) := by
   constructor
-  · intro hce
-    constructor
-    · intro who respond
-      rcases (isCorrelatedEq_iff law).mp hce who respond with
-        ⟨_, hresponse, _⟩
-      exact hresponse
-    · intro who recommended replacement hrecommended
-      exact hce.conditional_obedience who recommended replacement hrecommended
-  · rintro ⟨hguards, hobedient⟩
+  · intro hce who recommended replacement hrecommended
+    exact hce.conditional_obedience hguards who recommended replacement hrecommended
+  · intro hobedient
     rw [isCorrelatedEq_iff]
     intro who respond
     classical
@@ -247,7 +267,7 @@ theorem isCorrelatedEq_iff_conditional_obedience
     have hle := expect_bindOnSupport_mono_on_support marginal responseKernel
       baseKernel (fun outcome => utility outcome who) hresponse' hbase'
       (fun action ha hresp hbase => hpointwise action ha hbase hresp)
-    refine ⟨hbase, hresponse, ?_⟩
+    refine (euPreference_iff utility who _ _ hbase hresponse).2 ?_
     have hle' : expect (law.bind (fun profile =>
         F.play (Profile.update profile who (respond (profile who)))))
         (fun outcome => utility outcome who) ≤
@@ -271,6 +291,7 @@ rounds. -/
 theorem IsCorrelatedEq.support_avoids_strictlyDominatedOn
     {law : PMF (Profile F.sig)}
     (hce : IsCorrelatedEq F (euPreference utility) law)
+    (hintegrable : F.HasIntegrableResponses utility law)
     (allowed : ∀ j, Set (F.sig.Strategy j))
     (hsupport : ∀ profile ∈ law.support, ∀ j, profile j ∈ allowed j)
     (who : ι) {preferred dominated : F.sig.Strategy who}
@@ -288,7 +309,8 @@ theorem IsCorrelatedEq.support_avoids_strictlyDominatedOn
   have hwitnessPosterior : witness ∈ posterior.support := by
     rw [fiberPosterior_support]
     exact ⟨heq, hwitness⟩
-  have hobey := hce.conditional_obedience who dominated preferred hrecommended
+  have hobey :=
+    hce.conditional_obedience_integrable hintegrable who dominated preferred hrecommended
   rcases hobey with ⟨hbase, hdeviation, hle⟩
   have hbaseCond := payoffIntegrable_bind_conditional_on_support
     posterior baseKernel (fun outcome => utility outcome who) hbase
@@ -404,6 +426,7 @@ dominant actions is concentrated coordinatewise at those actions. -/
 theorem IsCoarseCorrelatedEq.support_plays_strictDominant
     {law : PMF (Profile F.sig)}
     (hcce : IsCoarseCorrelatedEq F (euPreference utility) law)
+    (hintegrable : F.HasIntegrableCoarseDeviations utility law)
     (who : ι) (dominant : F.sig.Strategy who)
     (hdom : IsStrictDominant F (euPreference utility) who dominant) :
     ∀ profile ∈ law.support, profile who = dominant := by
@@ -412,8 +435,10 @@ theorem IsCoarseCorrelatedEq.support_plays_strictDominant
   let baseKernel : Profile F.sig → PMF F.sig.Outcome := F.play
   let deviationKernel : Profile F.sig → PMF F.sig.Outcome := fun profile =>
     F.play (Profile.update profile who dominant)
-  have hglobal := (isCoarseCorrelatedEq_iff law).mp hcce who dominant
-  rcases hglobal with ⟨hbase, hdeviation, hle⟩
+  have hbase := hintegrable.1 who
+  have hdeviation := hintegrable.2 who dominant
+  have hle := (euPreference_iff utility who _ _ hbase hdeviation).1
+    ((isCoarseCorrelatedEq_iff law).mp hcce who dominant)
   have hbase' : UtilityIntegrable utility who (law.bind baseKernel) := by
     simpa only [GameForm.outcomeLaw] using hbase
   have hdeviation' : UtilityIntegrable utility who (law.bind deviationKernel) :=
@@ -479,12 +504,13 @@ theorem IsCoarseCorrelatedEq.support_plays_strictDominant
   exact (not_le_of_gt hstrictAggregate) hglobalOrder
 
 /-- If every coordinate of a profile is strictly dominant, that profile's
-point mass is the unique coarse correlated equilibrium. -/
+point mass is the unique coarse correlated equilibrium among laws with
+integrable coarse deviations. -/
 theorem strictDominant_isCoarseCorrelatedEq_iff
     {profile : Profile F.sig}
     (hdom : ∀ who, IsStrictDominant F (euPreference utility) who (profile who))
-    (hincumbent : ∀ who, UtilityIntegrable utility who (F.play profile))
-    {law : PMF (Profile F.sig)} :
+    (hincumbent : ∀ who, UtilityHasExpectation utility who (F.play profile))
+    {law : PMF (Profile F.sig)} (hintegrable : F.HasIntegrableCoarseDeviations utility law) :
     IsCoarseCorrelatedEq F (euPreference utility) law ↔ law = PMF.pure profile := by
   constructor
   · intro hcce
@@ -492,7 +518,7 @@ theorem strictDominant_isCoarseCorrelatedEq_iff
       intro candidate hcandidate
       apply Set.mem_singleton_iff.mpr
       funext who
-      exact hcce.support_plays_strictDominant who (profile who) (hdom who)
+      exact hcce.support_plays_strictDominant hintegrable who (profile who) (hdom who)
         candidate hcandidate
     have hsupport : law.support = ({profile} : Set (Profile F.sig)) := by
       apply Set.Subset.antisymm hsubset
@@ -512,32 +538,27 @@ theorem strictDominant_isCoarseCorrelatedEq_iff
         exact heq (Set.mem_singleton_iff.mp (hsubset hcandidate))
       exact law.apply_eq_zero_iff candidate |>.2 hnot
   · rintro rfl
-    have hself : ∀ who,
-        euPreference utility who (F.play profile) (F.play profile) := by
-      intro who
-      exact (euPreference_iff utility who (F.play profile) (F.play profile)
-        (hincumbent who) (hincumbent who)).mpr le_rfl
+    have hself : ∀ who, euPreference utility who (F.play profile) (F.play profile) :=
+      fun who => ⟨hincumbent who, hincumbent who, le_rfl⟩
     have hnash := isNash_of_forall_isStrictDominant hself hdom
     exact hnash.isCorrelatedEq.isCoarseCorrelatedEq
 
-/-- Strictly dominant actions also pin the unique correlated equilibrium, as
-an immediate consequence of the coarse result. -/
+/-- Strictly dominant actions also pin the unique correlated equilibrium among
+laws with integrable responses, as an immediate consequence of the coarse
+result. -/
 theorem strictDominant_isCorrelatedEq_iff
     {profile : Profile F.sig}
     (hdom : ∀ who, IsStrictDominant F (euPreference utility) who (profile who))
-    (hincumbent : ∀ who, UtilityIntegrable utility who (F.play profile))
-    {law : PMF (Profile F.sig)} :
+    (hincumbent : ∀ who, UtilityHasExpectation utility who (F.play profile))
+    {law : PMF (Profile F.sig)} (hintegrable : F.HasIntegrableResponses utility law) :
     IsCorrelatedEq F (euPreference utility) law ↔ law = PMF.pure profile := by
   constructor
   · intro hce
-    exact (strictDominant_isCoarseCorrelatedEq_iff hdom hincumbent).mp
-      hce.isCoarseCorrelatedEq
+    exact (strictDominant_isCoarseCorrelatedEq_iff hdom hincumbent
+      hintegrable.hasIntegrableCoarseDeviations).mp hce.isCoarseCorrelatedEq
   · rintro rfl
-    have hself : ∀ who,
-        euPreference utility who (F.play profile) (F.play profile) := by
-      intro who
-      exact (euPreference_iff utility who (F.play profile) (F.play profile)
-        (hincumbent who) (hincumbent who)).mpr le_rfl
+    have hself : ∀ who, euPreference utility who (F.play profile) (F.play profile) :=
+      fun who => ⟨hincumbent who, hincumbent who, le_rfl⟩
     exact (isNash_of_forall_isStrictDominant hself hdom).isCorrelatedEq
 
 end GameTheory

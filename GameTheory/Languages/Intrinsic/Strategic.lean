@@ -62,11 +62,9 @@ theorem isNash_toGameForm_iff
   rw [isNash_iff]
   constructor
   · intro h who replacement
-    have hcompare := h who replacement
-    obtain ⟨_, _, hvalue⟩ := hcompare
-    simpa [expectedUtility_pure] using hvalue
+    simpa using (h who replacement).2.2
   · intro h who replacement
-    refine ⟨payoffIntegrable_pure _ _, payoffIntegrable_pure _ _, ?_⟩
+    refine (euPreference_iff _ _ _ _ (payoffIntegrable_pure _ _) (payoffIntegrable_pure _ _)).2 ?_
     simpa [expectedUtility_pure] using h who replacement
 
 end GameTheory.Languages.Intrinsic.Model

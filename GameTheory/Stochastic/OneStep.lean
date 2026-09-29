@@ -46,8 +46,9 @@ abbrev discountedAuxGame (β : ℝ)
   form := G.oneStepForm state
   utility := G.oneStepUtility β value state
 
-/-- Stationary mixed Nash and Bellman equality. Only actual incumbent and
-unilateral-deviation laws need be integrable. -/
+/-- Stationary mixed Nash and Bellman equality. Only the actual incumbent law
+need be integrable, because its value is a real number; unilateral deviations
+need only an expected utility. -/
 def IsDiscountedStationaryBellmanEq [Fintype ι] [DecidableEq ι]
     (β : ℝ) (profile : G.StationaryMixedProfile)
     (value : G.State → ι → ℝ) : Prop :=

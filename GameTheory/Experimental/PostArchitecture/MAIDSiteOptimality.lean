@@ -143,18 +143,17 @@ theorem IsOptimalSiteRule.upperBound [DecidableEq Player] [Fintype Node]
     (hoptimal : IsOptimalSiteRule semantics base owner replacement target rule)
     (alternative : Config diagram (diagram.observedParents target.1) →
       PMF (diagram.Value target.1)) :
-    UtilityIntegrable
+    UtilityHasExpectation
         (fun assignment who => semantics.utility who assignment) owner
         (siteReplacementLaw semantics base owner replacement target rule) ∧
-      UtilityIntegrable
+      UtilityHasExpectation
           (fun assignment who => semantics.utility who assignment) owner
           (siteReplacementLaw semantics base owner replacement target alternative) ∧
-        siteRuleExpectedUtility semantics base owner replacement target
-            alternative ≤
-          siteRuleExpectedUtility semantics base owner replacement target
-            rule := by
-  obtain ⟨hbest, halt, hle⟩ := hoptimal alternative
-  exact ⟨hbest, halt, hle⟩
+        extendedExpectedUtility (fun assignment who => semantics.utility who assignment) owner
+            (siteReplacementLaw semantics base owner replacement target alternative) ≤
+          extendedExpectedUtility (fun assignment who => semantics.utility who assignment) owner
+            (siteReplacementLaw semantics base owner replacement target rule) :=
+  hoptimal alternative
 
 theorem IsOptimalSiteRule.currentRule_le [DecidableEq Player]
     [Fintype Node] [DecidableEq Node] {semantics : Semantics diagram}
@@ -164,17 +163,17 @@ theorem IsOptimalSiteRule.currentRule_le [DecidableEq Player]
     {rule : Config diagram (diagram.observedParents target.1) →
       PMF (diagram.Value target.1)}
     (hoptimal : IsOptimalSiteRule semantics base owner replacement target rule) :
-    UtilityIntegrable
+    UtilityHasExpectation
         (fun assignment who => semantics.utility who assignment) owner
         (siteReplacementLaw semantics base owner replacement target rule) ∧
-      UtilityIntegrable
+      UtilityHasExpectation
           (fun assignment who => semantics.utility who assignment) owner
           (siteReplacementLaw semantics base owner replacement target
             (replacement target)) ∧
-        siteRuleExpectedUtility semantics base owner replacement target
-            (replacement target) ≤
-          siteRuleExpectedUtility semantics base owner replacement target
-            rule :=
+        extendedExpectedUtility (fun assignment who => semantics.utility who assignment) owner
+            (siteReplacementLaw semantics base owner replacement target (replacement target)) ≤
+          extendedExpectedUtility (fun assignment who => semantics.utility who assignment) owner
+            (siteReplacementLaw semantics base owner replacement target rule) :=
   hoptimal.upperBound (replacement target)
 
 /-- A deterministic action choice at every target context. -/
@@ -420,7 +419,7 @@ theorem exists_isOptimalSiteRule
       replacement target alternative
   have hbind : UtilityIntegrable utility owner (pureRules.bind branches) :=
     payoffIntegrable_congr_law hlaw haltGuard
-  refine ⟨hbestGuard, haltGuard, ?_⟩
+  refine (euPreference_iff _ _ _ _ hbestGuard haltGuard).2 ?_
   calc
     expectedUtility utility owner
         (siteReplacementLaw semantics base owner replacement target alternative) =

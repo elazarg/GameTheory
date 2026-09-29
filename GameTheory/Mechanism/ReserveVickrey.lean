@@ -248,7 +248,7 @@ theorem valuation_is_dominant (value : ι → ℝ) (reserve : ℝ) (who : ι) :
       (euPreference (reserveVickreyGame value reserve).utility) who (value who) := by
   intro alternative bids
   rw [euPreference_apply]
-  refine ⟨payoffIntegrable_pure _ _, payoffIntegrable_pure _ _, ?_⟩
+  refine (euPreference_iff _ _ _ _ (payoffIntegrable_pure _ _) (payoffIntegrable_pure _ _)).2 ?_
   simp only [expectedUtility_pure]
   exact truthful_weakly_dominant value reserve who bids alternative
 

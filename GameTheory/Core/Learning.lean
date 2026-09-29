@@ -73,34 +73,20 @@ theorem externalRegret_eq_expect_gain (G : UtilityGame.{uι, us, uo} ι)
     (payoffIntegrable_bind_conditionalExpectation statusQuo _ _ hbase')).symm
 
 /-- The learning-facing external-regret characterization of the canonical
-approximate coarse-correlated-equilibrium predicate. -/
+approximate coarse-correlated-equilibrium predicate, when the compared laws
+are integrable. -/
 theorem isεCoarseCorrelatedEq_iff_externalRegret_le
     (G : UtilityGame.{uι, us, uo} ι) {ε : ℝ}
-    {statusQuo : PMF (Profile G.form.sig)} :
+    {statusQuo : PMF (Profile G.form.sig)}
+    (hintegrable : G.form.HasIntegrableCoarseDeviations G.utility statusQuo) :
     IsεCoarseCorrelatedEq G.form G.utility ε statusQuo ↔
-      ∀ who replacement,
-        UtilityIntegrable G.utility who (G.form.outcomeLaw statusQuo) ∧
-          UtilityIntegrable G.utility who
-              (statusQuo.bind fun profile =>
-                G.form.play (Profile.update profile who replacement)) ∧
-            G.externalRegret statusQuo who replacement ≤ ε := by
+      ∀ who replacement, G.externalRegret statusQuo who replacement ≤ ε := by
   unfold IsεCoarseCorrelatedEq
   rw [isCoarseCorrelatedEq_iff]
-  constructor
-  · intro h who replacement
-    obtain ⟨hbase, hdeviation, hle⟩ := by
-      simpa only [euPreferenceWithin_apply] using h who replacement
-    refine ⟨hbase, hdeviation, ?_⟩
-    unfold externalRegret
-    dsimp only [expectedUtility]
-    dsimp only [expectedUtility] at hle
-    linarith
-  · intro h who replacement
-    obtain ⟨hbase, hdeviation, hle⟩ := h who replacement
-    refine ⟨hbase, hdeviation, ?_⟩
-    dsimp only [externalRegret, expectedUtility] at hle
-    dsimp only [expectedUtility]
-    linarith
+  refine forall_congr' fun who => forall_congr' fun replacement => ?_
+  rw [euPreferenceWithin_iff _ _ _ _ _ (hintegrable.1 who) (hintegrable.2 who replacement),
+    externalRegret]
+  constructor <;> intro h <;> linarith
 
 /-- Exact CCE is the zero-tolerance case of the regret formulation. -/
 theorem isCoarseCorrelatedEq_iff_isεCoarseCorrelatedEq_zero
@@ -261,11 +247,11 @@ theorem timeAverage_isεCoarseCorrelatedEq_of_regret_le
         (∑ t, G.externalRegret (roundLaw t) who replacement) ≤ R) :
     IsεCoarseCorrelatedEq G.form G.utility (R / T)
       (G.form.timeAverage roundLaw) := by
-  rw [G.isεCoarseCorrelatedEq_iff_externalRegret_le]
+  rw [G.isεCoarseCorrelatedEq_iff_externalRegret_le
+    ⟨fun who => timeAverage_base_integrable G roundLaw who (fun t => hbase t who),
+      fun who replacement => timeAverage_deviation_integrable G roundLaw who replacement
+        (fun t => hdev t who replacement)⟩]
   intro who replacement
-  refine ⟨timeAverage_base_integrable G roundLaw who (fun t => hbase t who),
-    timeAverage_deviation_integrable G roundLaw who replacement
-      (fun t => hdev t who replacement), ?_⟩
   rw [externalRegret_timeAverage G roundLaw who replacement
     (fun t => hbase t who) (fun t => hdev t who replacement)]
   have hT : (0 : ℝ) < T := by

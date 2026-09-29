@@ -337,18 +337,8 @@ theorem isεNash_expanded_of_isεNash_reduced
       obtain ⟨alternative, hbound⟩ := hcover owner replacement
       refine ⟨alternative, ?_⟩
       intro hsource
-      rcases hbound with ⟨hcovered, htarget, hle⟩
-      refine ⟨htarget, ?_⟩
-      have heq : expectedUtility
-          (fun assignment who => semantics.utility who assignment) owner
-          ((pruning.reducedNativeGameForm semantics).play
-            (Profile.update policy owner alternative)) =
-          expectedUtility
-            (fun assignment who => semantics.utility who assignment) owner
-            ((pruning.reducedNativeGameForm semantics).play
-              (Profile.update policy owner alternative)) := by
-        rfl
-      exact hle.trans_eq heq) ε hnash
+      obtain ⟨-, htarget, hle⟩ := hbound
+      exact ⟨htarget, hle⟩) ε hnash
 
 /-- Every expanded full-space Nash profile covers all full deviations: choose
 the owner's current reduced policy as the covering replacement.  Thus coverage

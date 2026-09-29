@@ -127,77 +127,38 @@ theorem translateBehavioral_project_update
 
 variable [Fintype ι]
 
-/-- Integrability is preserved in both directions by the exact erased-history
-law, with no bound on the source-history utility. -/
-theorem utilityIntegrable_serialized_iff_source
+/-- Whether a payoff has an expectation is preserved in both directions by the
+exact erased-history law, with no bound on the source-history utility. -/
+theorem utilityHasExpectation_serialized_iff_source
     (utility : G.History → ι → ℝ) (who : ι)
     (target : (player : ι) →
       (information G order).BehavioralPolicy player)
     (rounds : ℕ) :
-    UtilityIntegrable (serializedUtility G order utility) who
+    UtilityHasExpectation (serializedUtility G order utility) who
         ((information G order).runBehavioral target
           (rounds * roundWidth order)) ↔
-      UtilityIntegrable utility who
+      UtilityHasExpectation utility who
         (G.information.runBehavioral
           (projectBehavioral G order target) rounds) := by
-  have hlaw :
-      PMF.map (eraseHistory G order)
-          ((information G order).runBehavioral target
-            (rounds * roundWidth order)) =
-        G.information.runBehavioral
-          (projectBehavioral G order target) rounds :=
-    map_erase_runBehavioral_eq_source G order target rounds
-  constructor
-  · intro htarget
-    have hmap := (payoffIntegrable_map_iff (eraseHistory G order)
-      ((information G order).runBehavioral target
-        (rounds * roundWidth order)) (fun history => utility history who)).mpr
-      (by simpa only [UtilityIntegrable, serializedUtility,
-        Function.comp_def] using htarget)
-    exact payoffIntegrable_congr_law hlaw hmap
-  · intro hsource
-    have hmap := payoffIntegrable_congr_law hlaw.symm hsource
-    have hcomposed := (payoffIntegrable_map_iff (eraseHistory G order)
-      ((information G order).runBehavioral target
-        (rounds * roundWidth order)) (fun history => utility history who)).mp hmap
-    simpa only [UtilityIntegrable, serializedUtility,
-      Function.comp_def] using hcomposed
+  rw [← map_erase_runBehavioral_eq_source G order target rounds]
+  exact (hasExpectation_map_iff (eraseHistory G order) _ (fun history => utility history who)).symm
 
-/-- Erasing serialized microsteps preserves each player's expected utility for
-an arbitrary target behavioral profile. -/
-theorem expectedUtility_serialized_eq_source
+/-- Erasing serialized microsteps preserves each player's extended expected
+utility for an arbitrary target behavioral profile. -/
+theorem extendedExpectedUtility_serialized_eq_source
     (utility : G.History → ι → ℝ) (who : ι)
     (target : (player : ι) →
       (information G order).BehavioralPolicy player)
     (rounds : ℕ) :
-    expectedUtility (serializedUtility G order utility) who
+    extendedExpectedUtility (serializedUtility G order utility) who
         ((information G order).runBehavioral target
           (rounds * roundWidth order)) =
-      expectedUtility utility who
+      extendedExpectedUtility utility who
         (G.information.runBehavioral
           (projectBehavioral G order target) rounds) := by
-  have hlaw :
-      PMF.map (eraseHistory G order)
-          ((information G order).runBehavioral target
-            (rounds * roundWidth order)) =
-        G.information.runBehavioral
-          (projectBehavioral G order target) rounds :=
-    map_erase_runBehavioral_eq_source G order target rounds
-  calc
-    _ = expectedUtility utility who
-        (PMF.map (eraseHistory G order)
-          ((information G order).runBehavioral target
-            (rounds * roundWidth order))) := by
-      have hforward := expectedUtility_map utility who
-        (eraseHistory G order)
-        ((information G order).runBehavioral target
-          (rounds * roundWidth order))
-      exact (expectedUtility_congr_law (serializedUtility G order utility)
-        who rfl).trans hforward.symm
-    _ = expectedUtility utility who
-        (G.information.runBehavioral
-          (projectBehavioral G order target) rounds) :=
-      expectedUtility_congr_law utility who hlaw
+  rw [← map_erase_runBehavioral_eq_source G order target rounds,
+    extendedExpectedUtility_map]
+  rfl
 
 /-- Behavioral approximate Nash is invariant under explicit-order FOSG
 serialization at the same real slack. -/
@@ -260,33 +221,25 @@ theorem isεNash_serialized_iff_source
           targetReplacement := rfl
   have hexpected :
       ∀ targetProfile who,
-        UtilityIntegrable (serializedUtility G order utility) who
+        UtilityHasExpectation (serializedUtility G order utility) who
             (((information G order).toBehavioralGameForm
               (rounds * roundWidth order)).play targetProfile) ↔
-          UtilityIntegrable utility who
+          UtilityHasExpectation utility who
             ((G.information.toBehavioralGameForm rounds).play
               (equivalence.symm targetProfile)) := by
     intro targetProfile who
     simpa [GameForm.play, equivalence, behavioralProfileEquiv] using
-      utilityIntegrable_serialized_iff_source G order utility who
+      utilityHasExpectation_serialized_iff_source G order utility who
         targetProfile rounds
   have hexpectedValue :
-      ∀ targetProfile who
-        (htarget : UtilityIntegrable (serializedUtility G order utility) who
-          (((information G order).toBehavioralGameForm
-            (rounds * roundWidth order)).play targetProfile))
-        (hsource : UtilityIntegrable utility who
-          ((G.information.toBehavioralGameForm rounds).play
-            (equivalence.symm targetProfile))),
-        expectedUtility (serializedUtility G order utility) who
+      ∀ targetProfile who,
+        extendedExpectedUtility (serializedUtility G order utility) who
             (((information G order).toBehavioralGameForm
               (rounds * roundWidth order)).play targetProfile) =
-          expectedUtility utility who
+          extendedExpectedUtility utility who
             ((G.information.toBehavioralGameForm rounds).play
-              (equivalence.symm targetProfile)) := by
-    intro targetProfile who htarget hsource
-    exact expectedUtility_serialized_eq_source G order utility who
-      targetProfile rounds
+              (equivalence.symm targetProfile)) := fun targetProfile who =>
+    extendedExpectedUtility_serialized_eq_source G order utility who targetProfile rounds
   have htransport :=
     isεNash_iff_of_profileEquiv_of_expectedUtility_eq
       (G.information.toBehavioralGameForm rounds)

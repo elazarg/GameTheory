@@ -44,7 +44,8 @@ theorem equilibriumPlan_isNash :
   intro who replacement
   cases who
   rw [euPreference_apply]
-  refine ⟨payoffIntegrable_of_finite _ _, payoffIntegrable_of_finite _ _, ?_⟩
+  refine (euPreference_iff _ _ _ _ (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _)).2 ?_
   rw [game.expectedUtility_eq_prior ()
       (Profile.update equilibriumPlan () replacement),
     game.expectedUtility_eq_prior () equilibriumPlan]
@@ -108,7 +109,8 @@ theorem twoPlayerPlan_isNash :
   rw [isNash_iff]
   intro who replacement
   rw [euPreference_apply]
-  refine ⟨payoffIntegrable_of_finite _ _, payoffIntegrable_of_finite _ _, ?_⟩
+  refine (euPreference_iff _ _ _ _ (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _)).2 ?_
   rw [twoPlayerGame.expectedUtility_eq_prior who
       (Profile.update twoPlayerPlan who replacement),
     twoPlayerGame.expectedUtility_eq_prior who twoPlayerPlan]

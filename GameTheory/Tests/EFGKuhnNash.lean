@@ -446,7 +446,8 @@ theorem coordinated_behavioral_isNash :
   let hbase := coordinationIntegrable
     (information.runBehavioral (behavioralProfile true true) 2) who
   let hdeviation := coordinationIntegrable deviationLaw who
-  refine ⟨hbase, hdeviation, ?_⟩
+  refine ⟨hbase.hasExpectation, hdeviation.hasExpectation,
+    (extendedExpectedUtility_le_iff hdeviation hbase).2 ?_⟩
   calc
     expectedUtility coordinationUtility who deviationLaw ≤
         expect deviationLaw (fun _ => 1) :=

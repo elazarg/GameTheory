@@ -2,8 +2,12 @@
 # EXP-140: ordinary-PMF typed MAID gate
 
 An infinite chance node and a Boolean decision site exercise native and
-compiled assignment laws, guarded Nash transfer, and an undefined actual
-deviation. The value carrier at the chance node remains infinite.
+compiled assignment laws, Nash transfer, and a nonintegrable actual deviation.
+The value carrier at the chance node remains infinite.
+
+Under EXP-147's extended expectation the nonintegrable deviation is worth the
+defined value `⊤`, so Nash fails because that deviation is infinitely
+profitable rather than because it is incomparable.
 -/
 
 import GameTheory.Languages.MAID.Strategic
@@ -270,8 +274,22 @@ theorem true_deviation_not_integrable :
     chance_marginal true
   exact exploding_not_integrable (payoffIntegrable_congr_law heq hmap)
 
-/-- Nash fails because the actual true-policy deviation has no expected
-utility, despite the incumbent's defined zero payoff. -/
+/-- The true-policy deviation is worth `⊤` under the infinite chance draw. -/
+theorem true_deviation_value :
+    extendedExpect trueLaw (semantics.utility ()) = ⊤ := by
+  let μ := frontierLaw diagram semantics (purePolicy true) initial
+  have hlaw : trueLaw = μ.map fun draw => (initial.extend draw).values :=
+    native_play_eq_frontier_map true
+  rw [hlaw, extendedExpect_map]
+  have hpoint : ∀ draw ∈ μ.support,
+      (semantics.utility () ∘ fun draw => (initial.extend draw).values) draw =
+        (exploding ∘ chanceDraw) draw := fun draw hdraw => by
+    simpa using utility_on_supported_draw true draw hdraw
+  rw [extendedExpect_congr_on_support hpoint, ← extendedExpect_map, chance_marginal true]
+  exact exploding_extendedExpect
+
+/-- Nash fails because the actual true-policy deviation is worth `⊤`, while the
+incumbent is worth zero. -/
 theorem divergent_false_not_native_nash :
     ¬ IsNash (nativeBehavioralGameForm semantics)
       (euPreference fun assignment owner => semantics.utility owner assignment)
@@ -283,13 +301,17 @@ theorem divergent_false_not_native_nash :
     funext owner
     cases owner
     exact Profile.update_same _ _ _
-  obtain ⟨_, htrue, _⟩ :=
+  obtain ⟨-, -, hle⟩ :=
     (isNash_iff (F := nativeBehavioralGameForm semantics)
       (weaklyPrefers := euPreference
         fun assignment owner => semantics.utility owner assignment)
       (purePolicy false)).mp hnash () (purePolicy true ())
-  apply true_deviation_not_integrable
-  simpa only [hupdate, trueLaw] using htrue
+  rw [hupdate] at hle
+  have hvalues : extendedExpect trueLaw (semantics.utility ()) ≤
+      extendedExpect falseLaw (semantics.utility ()) := hle
+  rw [true_deviation_value, extendedExpect_eq_expect false_incumbent_integrable,
+    false_incumbent_value_zero, top_le_iff] at hvalues
+  exact EReal.coe_ne_top _ hvalues
 
 theorem divergent_false_not_compiled_nash :
     ¬ IsNash (compiledBehavioralGameForm topological semantics)
@@ -324,8 +346,7 @@ theorem bounded_native_nash (action : Bool) :
       (purePolicy action) := by
   rw [isNash_iff]
   intro who replacement
-  rw [euPreference_apply]
-  refine ⟨?_, ?_, ?_⟩
+  refine (euPreference_iff _ _ _ _ ?_ ?_).2 ?_
   · simpa [boundedSemantics] using
       (payoffIntegrable_zero
         ((nativeBehavioralGameForm boundedSemantics).play (purePolicy action)))

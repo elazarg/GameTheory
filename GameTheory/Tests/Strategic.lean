@@ -122,7 +122,8 @@ theorem taking_is_preferred :
     euPreference takeIsBetter ()
       ((coinThenMove.toGameForm 2).play takeProfile)
       ((coinThenMove.toGameForm 2).play leaveProfile) := by
-  refine ⟨payoffIntegrable_of_finite _ _, payoffIntegrable_of_finite _ _, ?_⟩
+  refine (euPreference_iff _ _ _ _ (payoffIntegrable_of_finite _ _)
+    (payoffIntegrable_of_finite _ _)).2 ?_
   rw [expectedUtility_takeProfile, expectedUtility_leaveProfile]
   norm_num
 

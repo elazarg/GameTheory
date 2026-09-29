@@ -139,7 +139,7 @@ theorem prisonersDilemma_existsUniqueNash_of_strictDominance :
       IsNash prisonersDilemma.toForm (euPreference prisonersDilemma.utility) profile :=
   prisonersDilemma_isDominantStrategySolvable.existsUniqueNash
     (euPreference_reflexive prisonersDilemma.utility
-      prisonersDilemma.utilityIntegrable)
+      fun who law => (prisonersDilemma.utilityIntegrable who law).hasExpectation)
 
 /-- Strict dominance pins every coarse correlated equilibrium, not only every
 pure Nash profile: arbitrary correlation still concentrates on mutual
@@ -151,8 +151,10 @@ theorem prisonersDilemma_isCoarseCorrelatedEq_iff
       law = PMF.pure bothDefect :=
   strictDominant_isCoarseCorrelatedEq_iff
     (fun who => prisonersDilemma_defect_isStrictDominant who)
-    (fun who => prisonersDilemma.utilityIntegrable who
-      (prisonersDilemma.toForm.play bothDefect))
+    (fun who => (prisonersDilemma.utilityIntegrable who
+      (prisonersDilemma.toForm.play bothDefect)).hasExpectation)
+    ⟨fun who => prisonersDilemma.utilityIntegrable who _,
+      fun who _ => prisonersDilemma.utilityIntegrable who _⟩
 
 /-- The same point mass is therefore the unique correlated equilibrium of the
 Prisoner's Dilemma. -/
@@ -163,8 +165,9 @@ theorem prisonersDilemma_isCorrelatedEq_iff
       law = PMF.pure bothDefect :=
   strictDominant_isCorrelatedEq_iff
     (fun who => prisonersDilemma_defect_isStrictDominant who)
-    (fun who => prisonersDilemma.utilityIntegrable who
-      (prisonersDilemma.toForm.play bothDefect))
+    (fun who => (prisonersDilemma.utilityIntegrable who
+      (prisonersDilemma.toForm.play bothDefect)).hasExpectation)
+    (fun who _ => prisonersDilemma.utilityIntegrable who _)
 
 /-- Hence cooperation survives no round of elimination — from the abstract
 theorem, not from a second computation. -/
@@ -224,7 +227,7 @@ theorem prisonersDilemma_bothDefect_not_isStrongNash :
   exact prisonersDilemma_bothDefect_not_isWeaklyParetoEfficient
     (hstrong.isWeaklyParetoEfficient
       (euPreference_total prisonersDilemma.utility
-        (fun who law => prisonersDilemma.utilityIntegrable who law)))
+        (fun who law => (prisonersDilemma.utilityIntegrable who law).hasExpectation)))
 
 /-- Mutual defection stays an equilibrium once the players may randomize. Mixed
 Nash is not a separate predicate here — it is `IsNash` of the mixed extension —
@@ -233,9 +236,10 @@ theorem prisonersDilemma_bothDefect_isNash_mixed :
     IsNash prisonersDilemma.toForm.mixed (euPreference prisonersDilemma.utility)
       (prisonersDilemma.toForm.purify bothDefect) :=
   prisonersDilemma_bothDefect_isNash.purify (fun who replacement =>
-    prisonersDilemma.utilityIntegrable who
+    (prisonersDilemma.utilityIntegrable who
       (prisonersDilemma.toForm.mixed.play
-        (Profile.update (prisonersDilemma.toForm.purify bothDefect) who replacement)))
+        (Profile.update (prisonersDilemma.toForm.purify bothDefect) who
+          replacement))).hasExpectation)
 
 /-! ## Matching Pennies -/
 

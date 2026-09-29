@@ -172,19 +172,21 @@ theorem isPromiseKeeping_constant_stagePayoff
     _ = G.stagePayoff profile who := by ring
 
 /-- With a constant continuation and `discount < 1`, APS enforceability is
-exactly ordinary stage-game Nash. -/
+exactly ordinary stage-game Nash with integrable unilateral deviations. -/
 theorem isEnforceable_constant_iff_isNash
     (M : G.PublicMonitoring) [DecidableEq ι]
     {discount : ℝ} (hdiscount1 : discount < 1)
     (profile : Profile G.form.sig) (payoff : ι → ℝ) :
     M.IsEnforceable discount profile (M.constantContinuation payoff) ↔
-      IsNash G.form (euPreference G.utility) profile := by
+      IsNash G.form (euPreference G.utility) profile ∧
+        G.form.HasIntegrableDeviations G.utility profile := by
   rw [IsEnforceable, isNash_iff]
   constructor
-  · intro henforce who action
+  · intro henforce
+    refine ⟨fun who action => ?_, fun who action => (henforce who action).2.2.1⟩
     obtain ⟨hbase, _hbaseSignal, hupdate, _hupdateSignal,
       hdeviation⟩ := henforce who action
-    refine ⟨hbase, hupdate, ?_⟩
+    refine (euPreference_iff _ _ _ _ hbase hupdate).2 ?_
     have hdeviation' :
         (1 - discount) * G.stagePayoff
             (Profile.update profile who action) who +
@@ -202,8 +204,10 @@ theorem isEnforceable_constant_iff_isNash
           discount profile payoff who
     dsimp only [stagePayoff] at hdeviation'
     nlinarith
-  · intro hnash who action
-    obtain ⟨hbase, hupdate, hdeviation⟩ := hnash who action
+  · rintro ⟨hnash, hintegrable⟩ who action
+    have hbase := hintegrable.base who
+    have hupdate := hintegrable who action
+    have hdeviation := (euPreference_iff _ _ _ _ hbase hupdate).1 (hnash who action)
     refine ⟨hbase, payoffIntegrable_constant _ _,
       hupdate, payoffIntegrable_constant _ _, ?_⟩
     calc
@@ -223,41 +227,41 @@ theorem isEnforceable_constant_iff_isNash
         (M.decomposedPayoff_constant
           discount profile payoff who).symm
 
-/-- A stage-Nash payoff decomposes on its singleton through stationary
-continuation promises. -/
+/-- A stage-Nash payoff with integrable unilateral deviations decomposes on
+its singleton through stationary continuation promises. -/
 theorem decomposesOn_singleton_stagePayoff_of_isNash
     (M : G.PublicMonitoring) [DecidableEq ι]
     {discount : ℝ} (hdiscount1 : discount < 1)
     {profile : Profile G.form.sig}
-    (hnash : IsNash G.form (euPreference G.utility) profile) :
+    (hnash : IsNash G.form (euPreference G.utility) profile)
+    (hintegrable : G.form.HasIntegrableDeviations G.utility profile) :
     M.DecomposesOn discount
       ({fun who => G.stagePayoff profile who} : Set (ι → ℝ))
       (fun who => G.stagePayoff profile who) := by
   have hstage : ∀ who,
-      UtilityIntegrable G.utility who (G.form.play profile) :=
-    fun who => ((isNash_iff
-      (F := G.form) (weaklyPrefers := euPreference G.utility)
-      profile).mp hnash who (profile who)).1
+      UtilityIntegrable G.utility who (G.form.play profile) := hintegrable.base
   let payoff : ι → ℝ := fun who => G.stagePayoff profile who
   refine ⟨profile, M.constantContinuation payoff, ?_, ?_, ?_⟩
   · intro signal
     simp [payoff]
   · exact M.isPromiseKeeping_constant_stagePayoff discount profile hstage
   · exact (M.isEnforceable_constant_iff_isNash
-      hdiscount1 profile payoff).2 hnash
+      hdiscount1 profile payoff).2 ⟨hnash, hintegrable⟩
 
-/-- Every singleton stage-Nash payoff is self-generating. -/
+/-- Every singleton stage-Nash payoff with integrable unilateral deviations is
+self-generating. -/
 theorem selfGenerating_singleton_stagePayoff_of_isNash
     (M : G.PublicMonitoring) [DecidableEq ι]
     {discount : ℝ} (hdiscount1 : discount < 1)
     {profile : Profile G.form.sig}
-    (hnash : IsNash G.form (euPreference G.utility) profile) :
+    (hnash : IsNash G.form (euPreference G.utility) profile)
+    (hintegrable : G.form.HasIntegrableDeviations G.utility profile) :
     M.SelfGenerating discount
       ({fun who => G.stagePayoff profile who} : Set (ι → ℝ)) := by
   intro promise hpromise
   rw [Set.mem_singleton_iff] at hpromise
   subst promise
-  exact M.decomposesOn_singleton_stagePayoff_of_isNash hdiscount1 hnash
+  exact M.decomposesOn_singleton_stagePayoff_of_isNash hdiscount1 hnash hintegrable
 
 end UtilityGame.PublicMonitoring
 

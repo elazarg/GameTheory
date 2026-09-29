@@ -36,10 +36,10 @@ def MixtureSimulationOn.toUtilitySimulation
       (fun outcome who => utility (targetObserve outcome) who)
       (singletonGroups Player) :=
   UtilitySimulation.ofUnilateral simulation.compileStrategy
-    (fun profile who => simulation.integrable_compile_iff profile
-      (fun observation => utility observation who))
-    (fun profile who _ _ =>
-      simulation.expect_compile profile (fun observation => utility observation who))
+    (fun profile who => hasExpectation_observed_law_iff _ _ targetObserve sourceObserve
+      (fun observation => utility observation who) (simulation.honest_law profile))
+    (fun profile who _ _ => extendedExpect_observed_law_eq _ _ targetObserve sourceObserve
+      (fun observation => utility observation who) (simulation.honest_law profile))
     (by
       intro profile who replacement
       let value : Observation → ℝ := fun observation => utility observation who
@@ -69,9 +69,15 @@ def MixtureSimulationOn.toUtilitySimulation
         alternatives kernel value hbind g hagree
       obtain ⟨alternative, ha, hmean⟩ :=
         exists_expect_le_support alternatives g hg
-      refine ⟨alternative, ?_⟩
-      intro hsource
-      refine ⟨htarget, ?_⟩
+      have hsource : UtilityIntegrable
+          (fun outcome player => utility (sourceObserve outcome) player) who
+          (source.play (Profile.update profile who alternative)) :=
+        (payoffIntegrable_map_iff sourceObserve _ value).mp
+          (payoffIntegrable_bind_conditional_on_support alternatives kernel value hbind
+            alternative ha)
+      refine ⟨alternative, fun _ => ⟨htarget.hasExpectation,
+        (extendedExpectedUtility_eq htarget).le.trans ((EReal.coe_le_coe_iff.2 ?_).trans
+          (extendedExpectedUtility_eq hsource).ge)⟩⟩
       calc
         expectedUtility (fun outcome player => utility (targetObserve outcome) player) who
             (target.play (Profile.update

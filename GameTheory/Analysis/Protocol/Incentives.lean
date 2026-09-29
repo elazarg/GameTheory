@@ -29,22 +29,25 @@ namespace Context
 
 variable {Choice : Type*} {Outcome : Type*}
 
-/-- Local optimality against every alternative is the family of comparisons of
-the chosen continuation law with each alternative's law. -/
+/-- Local optimality against every alternative, which compares integrable
+continuation values, is the family of comparisons of the chosen continuation
+law with each alternative's law together with integrability of each
+alternative's law. -/
 theorem isLocallyOptimal_univ_iff_holds (ctx : Context Choice Outcome) (choice : Choice) :
     ctx.IsLocallyOptimal Set.univ choice ↔
-      ∀ alternative, (IncentiveComparison.mk (ctx.outcome choice)
-        (ctx.outcome alternative)).Holds ctx.continuation := by
+      ∀ alternative, ctx.IntegrableAt alternative ∧
+        (IncentiveComparison.mk (ctx.outcome choice)
+          (ctx.outcome alternative)).Holds ctx.continuation := by
   constructor
   · rintro ⟨hchoice, halternatives, hoptimal⟩ alternative
-    exact ⟨hchoice, halternatives alternative (Set.mem_univ _),
-      hoptimal alternative (Set.mem_univ _)⟩
+    have halternative := halternatives alternative (Set.mem_univ _)
+    exact ⟨halternative, (euPreference_iff (fun outcome (_ : Unit) => ctx.continuation outcome)
+      () _ _ hchoice halternative).2 (hoptimal alternative (Set.mem_univ _))⟩
   · intro holds
-    obtain ⟨hchoice, -, -⟩ := holds choice
-    refine ⟨hchoice, fun alternative _ => (holds alternative).2.1, ?_⟩
-    intro alternative _
-    obtain ⟨_, _, hle⟩ := holds alternative
-    exact hle
+    have hchoice := (holds choice).1
+    refine ⟨hchoice, fun alternative _ => (holds alternative).1, fun alternative _ => ?_⟩
+    exact (euPreference_iff (fun outcome (_ : Unit) => ctx.continuation outcome)
+      () _ _ hchoice (holds alternative).1).1 (holds alternative).2
 
 end Context
 
@@ -137,19 +140,39 @@ def assessmentComparison (observe : E.History → Observation) (fuel : ℕ)
   prescribed := (M.assessmentLaw fuel assessment deviation.1 (assessment.strategy who)).map observe
   alternative := (M.assessmentLaw fuel assessment deviation.1 deviation.2).map observe
 
-/-- Sequential rationality for observed payoffs is its comparison family. -/
+/-- Sequential rationality for observed payoffs, which compares integrable
+continuation values, is its comparison family together with integrability of
+every compared continuation law. -/
 theorem isSequentiallyRationalWithin_iff_holds (observe : E.History → Observation)
     (fuel : ℕ) (assessment : M.BehavioralAssessment) (utility : Observation → ι → ℝ) :
     assessment.IsSequentiallyRationalWithin
         (fun who history => utility (observe history) who) fuel ↔
       ∀ who deviation,
-        (M.assessmentComparison observe fuel assessment who deviation).Holds (utility · who) := by
+        PayoffIntegrable (M.assessmentLaw fuel assessment deviation.1 deviation.2)
+            (fun history => utility (observe history) who) ∧
+          (M.assessmentComparison observe fuel assessment who deviation).Holds
+            (utility · who) := by
   simp only [BehavioralAssessment.IsSequentiallyRationalWithin,
     BehavioralAssessment.IsSequentiallyRational, BehavioralAssessment.IsSequentiallyRationalAt,
     Context.isLocallyOptimal_univ_iff_holds, assessmentComparison,
     IncentiveComparison.holds_map_iff]
   exact ⟨fun rational who deviation => rational who deviation.1 deviation.2,
     fun holds who site alternative => holds who (site, alternative)⟩
+
+/-- On a finite observation carrier every compared law is integrable, so
+sequential rationality is exactly its comparison family. -/
+theorem isSequentiallyRationalWithin_iff_holds_of_finite [Finite Observation]
+    (observe : E.History → Observation)
+    (fuel : ℕ) (assessment : M.BehavioralAssessment) (utility : Observation → ι → ℝ) :
+    assessment.IsSequentiallyRationalWithin
+        (fun who history => utility (observe history) who) fuel ↔
+      ∀ who deviation,
+        (M.assessmentComparison observe fuel assessment who deviation).Holds (utility · who) := by
+  rw [isSequentiallyRationalWithin_iff_holds]
+  refine forall_congr' fun who => forall_congr' fun deviation =>
+    and_iff_right_of_imp fun _ => ?_
+  exact (payoffIntegrable_map_iff observe _ (fun observation => utility observation who)).1
+    (payoffIntegrable_of_finite _ _)
 
 variable {T : ExecutionProtocol ι} (N : InformationModel T)
 
@@ -168,7 +191,7 @@ theorem sequentialRationality_preservation_iff_cone [Fintype Observation]
         (N.assessmentComparison targetObserve targetFuel target who deviation).difference ∈
           IncentiveComparison.cone
             (M.assessmentComparison sourceObserve sourceFuel source who) := by
-  simp only [isSequentiallyRationalWithin_iff_holds]
+  simp only [isSequentiallyRationalWithin_iff_holds_of_finite]
   exact IncentiveComparison.forall_holds_imp_iff_cone _ _
 
 /-- Exact transport of sequential rationality over a linear class of joint
@@ -191,10 +214,12 @@ theorem sequentialRationality_preservation_iff_coneWithin [Fintype Observation]
             fun deviation : Σ who, M.AssessmentDeviation who =>
               (M.assessmentComparison sourceObserve sourceFuel source deviation.1
                 deviation.2).tag deviation.1 := by
-  have hsource (utility : utilities) := M.isSequentiallyRationalWithin_iff_holds sourceObserve
-    sourceFuel source fun observation who => WithLp.ofLp utility.val (who, observation)
-  have htarget (utility : utilities) := N.isSequentiallyRationalWithin_iff_holds targetObserve
-    targetFuel target fun observation who => WithLp.ofLp utility.val (who, observation)
+  have hsource (utility : utilities) := M.isSequentiallyRationalWithin_iff_holds_of_finite
+    sourceObserve sourceFuel source fun observation who =>
+      WithLp.ofLp utility.val (who, observation)
+  have htarget (utility : utilities) := N.isSequentiallyRationalWithin_iff_holds_of_finite
+    targetObserve targetFuel target fun observation who =>
+      WithLp.ofLp utility.val (who, observation)
   simp only [hsource, htarget]
   exact IncentiveComparison.forall_holds_imp_iff_coneWithin utilities _ _
 

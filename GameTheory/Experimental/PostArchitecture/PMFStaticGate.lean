@@ -1,6 +1,11 @@
 /-
 EXP-122 consumer: an infinite correlated law is tested against the canonical
 static game, preference, and equilibrium definitions.
+
+EXP-147 revised the singleton fixture. Its geometric payoff has infinite gains
+and no losses, so its extended expected utility is the defined value `⊤`: the
+one-strategy profile is Nash, and the infinite law strictly beats every finite
+one. Under the integrability-guarded preference both were rejected.
 -/
 
 import GameTheory.Core.Utility
@@ -164,35 +169,40 @@ theorem singleton_action_is_strictlyDominant :
   intro who alternative halternative
   exact (halternative (Subsingleton.elim _ _)).elim
 
-theorem singleton_profile_not_nash :
-    ¬ IsNash singletonForm (euPreference explodingUtility) singletonProfile := by
-  intro hnash
-  obtain ⟨hincumbent, _, _⟩ :=
-    (isNash_iff (F := singletonForm)
-      (weaklyPrefers := euPreference explodingUtility) singletonProfile).mp hnash 0 ()
-  exact explodingUtility_not_integrable (by
-    simpa [singletonForm] using hincumbent)
+theorem explodingUtility_hasExpectation (who : Player) :
+    UtilityHasExpectation explodingUtility who geometric :=
+  exploding_hasExpectation
 
-theorem singleton_profile_not_coarse_correlated_eq :
-    ¬ IsCoarseCorrelatedEq singletonForm (euPreference explodingUtility)
-      (PMF.pure singletonProfile) := by
-  intro hcce
-  obtain ⟨hincumbent, _, _⟩ :=
-    (isCoarseCorrelatedEq_iff (F := singletonForm)
-      (weaklyPrefers := euPreference explodingUtility)
-      (PMF.pure singletonProfile)).mp hcce 0 ()
-  exact explodingUtility_not_integrable (by
-    simpa [singletonForm, GameForm.outcomeLaw] using hincumbent)
+/-- The nonintegrable geometric payoff has the defined value `⊤`. -/
+theorem explodingUtility_value (who : Player) :
+    extendedExpectedUtility explodingUtility who geometric = ⊤ :=
+  exploding_extendedExpect
 
-theorem euPreference_rejects_undefined_incumbent :
-    ¬ euPreference explodingUtility 0 geometric (PMF.pure 0) := by
-  rintro ⟨hbase, _, _⟩
-  exact explodingUtility_not_integrable hbase
+/-- With no alternative to compare, the infinite-valued profile is Nash. -/
+theorem singleton_profile_nash :
+    IsNash singletonForm (euPreference explodingUtility) singletonProfile := by
+  rw [isNash_iff]
+  intro who _
+  exact ⟨explodingUtility_hasExpectation who, explodingUtility_hasExpectation who, le_rfl⟩
 
-theorem euPreference_rejects_undefined_alternative :
+theorem singleton_profile_coarse_correlated_eq :
+    IsCoarseCorrelatedEq singletonForm (euPreference explodingUtility)
+      (PMF.pure singletonProfile) :=
+  (isNash_iff_isCoarseCorrelatedEq_pure singletonProfile).1 singleton_profile_nash
+
+/-- The infinite law is weakly preferred to a finite one. -/
+theorem euPreference_infinite_over_finite :
+    euPreference explodingUtility 0 geometric (PMF.pure 0) :=
+  ⟨explodingUtility_hasExpectation 0,
+    hasExpectation_of_payoffIntegrable (payoffIntegrable_pure _ _),
+    by rw [explodingUtility_value]; exact le_top⟩
+
+/-- A finite law is not weakly preferred to the infinite one. -/
+theorem not_euPreference_finite_over_infinite :
     ¬ euPreference explodingUtility 0 (PMF.pure 0) geometric := by
-  rintro ⟨_, halt, _⟩
-  exact explodingUtility_not_integrable halt
+  rintro ⟨-, -, hle⟩
+  rw [explodingUtility_value, extendedExpectedUtility_pure, top_le_iff] at hle
+  exact EReal.coe_ne_top _ hle
 
 def linearUtility (n : ℕ) (_player : Player) : ℝ := n + 1
 
@@ -326,7 +336,7 @@ theorem coordination_optimal_of_always_coordinated (player : Player)
   have hlePref : expect alternative payoff ≤ expect preferred payoff := by
     rw [hval]
     exact hle
-  exact ⟨hpref, halt, by simpa [expectedUtility, payoff] using hlePref⟩
+  exact (euPreference_iff _ _ _ _ hpref halt).2 (by simpa [expectedUtility, payoff] using hlePref)
 
 theorem diagonal_is_coarse_correlated_equilibrium :
     IsCoarseCorrelatedEq coordinationForm (euPreference coordinationUtility)
@@ -355,6 +365,7 @@ theorem diagonal_is_randomized_equilibrium :
       (DeviationScheme.unilateralRandomized coordinationSignature) := by
   apply isCoarseCorrelatedEq_randomized diagonal_is_coarse_correlated_equilibrium
   intro player replacement
+  refine UtilityIntegrable.hasExpectation ?_
   exact payoffIntegrable_of_bounded
     (coordinationForm.outcomeLaw
       ((DeviationScheme.unilateralRandomized coordinationSignature).apply
@@ -375,7 +386,8 @@ theorem even_mixed_profile_is_nash :
         (Profile.update evenMixedProfile player replacement))
       (fun outcome => coordinationUtility outcome player) (C := 1)
       (fun outcome => bounded_coordination_utility outcome player)
-  apply (isNash_mixed_iff evenMixedProfile hdev).2
+  apply (isNash_mixed_iff evenMixedProfile fun player replacement =>
+    (hdev player replacement).hasExpectation).2
   intro player strategy
   apply coordination_optimal_of_always_coordinated
     player (coordinationForm.mixed.play evenMixedProfile)

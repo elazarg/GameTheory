@@ -44,8 +44,8 @@ def MixtureContinuous (weaklyPrefers : WeakPreference Agent Outcome) : Prop :=
         Rank.Indifferent (weaklyPrefers agent) middle
           (mix t h0 h1 best worst)
 
-/-- `utility` represents the weak preference by expected utility, between
-integrable laws. Only the compared laws need to be integrable. -/
+/-- `utility` represents the weak preference by expected utility, possibly
+infinite; a law without an expectation is never ranked. -/
 def RepresentsExpectedUtility (weaklyPrefers : WeakPreference Agent Outcome)
     (utility : Outcome → Agent → ℝ) : Prop :=
   ∀ agent preferred alternative,
@@ -125,11 +125,19 @@ theorem mixtureIndependent (hrep : RepresentsExpectedUtility weaklyPrefers utili
   exact hrep.mixtureIndependent_of_integrable agent first second common t hpos h1
     (hintegrable agent first) (hintegrable agent second) (hintegrable agent common)
 
-theorem mixtureContinuous (hrep : RepresentsExpectedUtility weaklyPrefers utility) :
+/-- Mixture continuity needs integrable laws: with unbounded utility, a best
+law worth `+∞` cannot be mixed down to a finite middle law. -/
+theorem mixtureContinuous (hrep : RepresentsExpectedUtility weaklyPrefers utility)
+    (hintegrable : ∀ agent law, UtilityIntegrable utility agent law) :
     MixtureContinuous weaklyPrefers := by
   intro agent best middle worst hbest hworst
-  obtain ⟨hbestGuard, hmiddleGuard, hba⟩ := (hrep agent best middle).mp hbest
-  obtain ⟨_, hworstGuard, hcb⟩ := (hrep agent middle worst).mp hworst
+  have hbestGuard := hintegrable agent best
+  have hmiddleGuard := hintegrable agent middle
+  have hworstGuard := hintegrable agent worst
+  have hba := (euPreference_iff utility agent best middle hbestGuard hmiddleGuard).mp
+    ((hrep agent best middle).mp hbest)
+  have hcb := (euPreference_iff utility agent middle worst hmiddleGuard hworstGuard).mp
+    ((hrep agent middle worst).mp hworst)
   let a := expectedUtility utility agent best
   let b := expectedUtility utility agent middle
   let c := expectedUtility utility agent worst
@@ -184,7 +192,7 @@ theorem vnmAxioms (hrep : RepresentsExpectedUtility weaklyPrefers utility)
     Preference.Total weaklyPrefers ∧ Preference.Transitive weaklyPrefers ∧
       MixtureIndependent weaklyPrefers ∧ MixtureContinuous weaklyPrefers :=
   ⟨hrep.total hintegrable, hrep.transitive, hrep.mixtureIndependent hintegrable,
-    hrep.mixtureContinuous⟩
+    hrep.mixtureContinuous hintegrable⟩
 
 end RepresentsExpectedUtility
 

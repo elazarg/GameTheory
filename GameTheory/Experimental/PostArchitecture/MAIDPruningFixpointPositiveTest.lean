@@ -938,7 +938,8 @@ theorem coversFullDeviations :
   intro owner fullReplacement
   refine ⟨reducedPolicy owner, ?_⟩
   rw [euPreference_apply, Profile.update_eq_self]
-  refine ⟨payoffIntegrable_of_finite _ _, payoffIntegrable_of_finite _ _, ?_⟩
+  refine (euPreference_iff _ _ _ _ (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _)).2 ?_
   rw [expanded_expectedUtility]
   exact expectedUtility_le_one _
 
@@ -955,7 +956,8 @@ theorem reduced_isNash :
   rw [isNash_iff]
   intro owner replacement
   rw [euPreference_apply]
-  refine ⟨payoffIntegrable_of_finite _ _, payoffIntegrable_of_finite _ _, ?_⟩
+  refine (euPreference_iff _ _ _ _ (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _)).2 ?_
   rw [expanded_expectedUtility]
   exact expectedUtility_le_one _
 

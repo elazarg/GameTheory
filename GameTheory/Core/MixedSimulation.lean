@@ -43,15 +43,16 @@ def mixedSimulation (source : GameForm.{uι, us, uo} Player) :
       rw [purify_update, mixed_play_purify]
     exact (congrArg (fun law => law.map id) hfull).trans (PMF.map_bind _ _ _)
 
-/-- The pure embedding has the exact guarded approximate-Nash
-characterization, with no finite strategy-carrier premise. -/
+/-- The pure embedding has an exact approximate-Nash characterization, with no
+finite strategy-carrier premise: every randomized deviation must have an
+expected utility. -/
 theorem isεNash_purify_iff (source : GameForm.{uι, us, uo} Player)
     (utility : source.sig.Outcome → Player → ℝ) (ε : ℝ)
     (profile : Profile source.sig) :
     IsεNash source.mixed utility ε (source.purify profile) ↔
       IsεNash source utility ε profile ∧
         ∀ (who : Player) (replacement : PMF (source.sig.Strategy who)),
-          UtilityIntegrable utility who
+          UtilityHasExpectation utility who
             (source.mixed.play (Profile.update
               (source.purify profile) who replacement)) := by
   have hprofile : (source.mixedSimulation).compileProfile profile =

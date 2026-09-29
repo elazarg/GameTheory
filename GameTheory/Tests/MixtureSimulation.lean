@@ -72,7 +72,7 @@ theorem native_mixed_embedding_isNash :
       simpa only [source, Profile.update_same] using hpoint
     exact (isNash_iff_isεNash_zero _ _).mp hsource
   · intro who replacement
-    apply payoffIntegrable_of_bounded _ _ (C := 1)
+    refine UtilityIntegrable.hasExpectation (payoffIntegrable_of_bounded _ _ (C := 1) ?_)
     intro outcome
     cases outcome with
     | observed bit => cases bit <;> norm_num [sourceObserve]

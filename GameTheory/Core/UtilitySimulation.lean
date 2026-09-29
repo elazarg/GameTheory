@@ -33,7 +33,7 @@ universe uPlayer uSource uTarget uMiddle uSourceOutcome uTargetOutcome uMiddleOu
 
 variable {Player : Type uPlayer} [DecidableEq Player]
 
-/-- A strategy translation preserving honest integrability and values, and
+/-- A strategy translation preserving honest expectations and values, and
 bounding each considered joint deviation by one legal source deviation. The
 source witness must serve every member of the coalition. -/
 structure UtilitySimulation
@@ -44,29 +44,29 @@ structure UtilitySimulation
     (groups : Set (Finset Player)) where
   /-- Translate each player's source strategy into a target strategy. -/
   compileStrategy : (who : Player) → source.sig.Strategy who → target.sig.Strategy who
-  honest_integrable : ∀ profile who,
-    UtilityIntegrable targetUtility who
+  honest_expectation : ∀ profile who,
+    UtilityHasExpectation targetUtility who
         (target.play (Profile.map compileStrategy profile)) ↔
-      UtilityIntegrable sourceUtility who (source.play profile)
+      UtilityHasExpectation sourceUtility who (source.play profile)
   honest_utility : ∀ profile who
-    (_ : UtilityIntegrable targetUtility who
+    (_ : UtilityHasExpectation targetUtility who
       (target.play (Profile.map compileStrategy profile)))
-    (_ : UtilityIntegrable sourceUtility who (source.play profile)),
-    expectedUtility targetUtility who
+    (_ : UtilityHasExpectation sourceUtility who (source.play profile)),
+    extendedExpectedUtility targetUtility who
         (target.play (Profile.map compileStrategy profile)) =
-      expectedUtility sourceUtility who (source.play profile)
+      extendedExpectedUtility sourceUtility who (source.play profile)
   deviation_bound : ∀ members ∈ groups, ∀ (profile : Profile source.sig)
       (replacement : Subprofile target.sig members),
     ∃ alternative : Subprofile source.sig members, ∀ member ∈ members,
-      UtilityIntegrable sourceUtility member
+      UtilityHasExpectation sourceUtility member
           (source.play (Profile.override members alternative profile)) →
-        UtilityIntegrable targetUtility member
+        UtilityHasExpectation targetUtility member
             (target.play (Profile.override members replacement
               (Profile.map compileStrategy profile))) ∧
-          expectedUtility targetUtility member
+          extendedExpectedUtility targetUtility member
               (target.play (Profile.override members replacement
                 (Profile.map compileStrategy profile))) ≤
-            expectedUtility sourceUtility member
+            extendedExpectedUtility sourceUtility member
               (source.play (Profile.override members alternative profile))
 
 variable {source : GameForm.{uPlayer, uSource, uSourceOutcome} Player}
@@ -100,7 +100,7 @@ theorem isεGroupNash_compileProfile_iff
     IsεGroupNash target targetUtility groups ε (simulation.compileProfile profile) ↔
       IsεGroupNash source sourceUtility groups ε profile :=
   isεGroupNash_compileProfile_iff_of_utility_bounds simulation.compileStrategy
-    simulation.honest_integrable simulation.honest_utility groups profile
+    simulation.honest_expectation simulation.honest_utility groups profile
     (fun members hmembers replacement =>
       simulation.deviation_bound members hmembers profile replacement) ε
 
@@ -143,7 +143,7 @@ theorem isStrongNash_of_compileProfile
     IsStrongNash source (euPreferenceWithin ε sourceUtility) profile := by
   rw [← isεGroupNash_nonemptyGroups_iff] at h ⊢
   exact isεGroupNash_of_compileProfile simulation.compileStrategy
-    simulation.honest_integrable simulation.honest_utility
+    simulation.honest_expectation simulation.honest_utility
     (nonemptyGroups Player) ε profile h
 
 /-- The one-player case of the coalition bound, in unilateral form. -/
@@ -153,15 +153,15 @@ theorem unilateral_bound
     (profile : Profile source.sig) (who : Player)
     (replacement : target.sig.Strategy who) :
     ∃ alternative : source.sig.Strategy who,
-      UtilityIntegrable sourceUtility who
+      UtilityHasExpectation sourceUtility who
           (source.play (Profile.update profile who alternative)) →
-        UtilityIntegrable targetUtility who
+        UtilityHasExpectation targetUtility who
             (target.play (Profile.update
               (simulation.compileProfile profile) who replacement)) ∧
-          expectedUtility targetUtility who
+          extendedExpectedUtility targetUtility who
               (target.play (Profile.update
                 (simulation.compileProfile profile) who replacement)) ≤
-            expectedUtility sourceUtility who
+            extendedExpectedUtility sourceUtility who
               (source.play (Profile.update profile who alternative)) := by
   obtain ⟨alternative, hbound⟩ := simulation.deviation_bound {who} (hsingle ⟨who, rfl⟩)
     profile (Subprofile.single who replacement)
@@ -202,15 +202,15 @@ theorem isBestResponse_compileProfile
   rw [euPreference_apply, Profile.update_eq_self] at hbest
   obtain ⟨hsbase, hsdev, hsource⟩ := hbest
   obtain ⟨htdev, htarget⟩ := hbound hsdev
-  have htbase := (simulation.honest_integrable profile who).mpr hsbase
+  have htbase := (simulation.honest_expectation profile who).mpr hsbase
   rw [euPreference_apply, simulation.compileProfile_update profile who (profile who),
     Profile.update_eq_self]
   refine ⟨htbase, htdev, ?_⟩
   calc
-    _ ≤ expectedUtility sourceUtility who
+    _ ≤ extendedExpectedUtility sourceUtility who
         (source.play (Profile.update profile who alternative)) := htarget
-    _ ≤ expectedUtility sourceUtility who (source.play profile) := hsource
-    _ = expectedUtility targetUtility who
+    _ ≤ extendedExpectedUtility sourceUtility who (source.play profile) := hsource
+    _ = extendedExpectedUtility targetUtility who
         (target.play (simulation.compileProfile profile)) := by
       exact (simulation.honest_utility profile who htbase hsbase).symm
 
@@ -259,13 +259,13 @@ theorem isEmpty_of_unmatchedValue {groups : Set (Finset Player)}
     (profile : Profile source.sig) (replacement : Subprofile target.sig members)
     (hgain : ∀ (opponents : Profile target.sig)
       (alternative : Subprofile source.sig members),
-      UtilityIntegrable sourceUtility member
+      UtilityHasExpectation sourceUtility member
           (source.play (Profile.override members alternative profile)) ∧
-        (UtilityIntegrable targetUtility member
+        (UtilityHasExpectation targetUtility member
             (target.play (Profile.override members replacement opponents)) →
-          expectedUtility sourceUtility member
+          extendedExpectedUtility sourceUtility member
               (source.play (Profile.override members alternative profile)) <
-            expectedUtility targetUtility member
+            extendedExpectedUtility targetUtility member
               (target.play (Profile.override members replacement opponents)))) :
     IsEmpty (UtilitySimulation source target sourceUtility targetUtility groups) := by
   constructor
@@ -283,11 +283,11 @@ theorem isEmpty_of_grandCoalitionValue [Fintype Player] {groups : Set (Finset Pl
     (hgroups : Finset.univ ∈ groups) (profile : Profile source.sig) (member : Player)
     (targetProfile : Profile target.sig) (bound : ℝ)
     (hsource : ∀ alternative : Profile source.sig,
-      UtilityIntegrable sourceUtility member (source.play alternative) ∧
-        expectedUtility sourceUtility member (source.play alternative) ≤ bound)
-    (htarget : UtilityIntegrable targetUtility member
+      UtilityHasExpectation sourceUtility member (source.play alternative) ∧
+        extendedExpectedUtility sourceUtility member (source.play alternative) ≤ bound)
+    (htarget : UtilityHasExpectation targetUtility member
         (target.play targetProfile) →
-      bound < expectedUtility targetUtility member (target.play targetProfile)) :
+      bound < extendedExpectedUtility targetUtility member (target.play targetProfile)) :
     IsEmpty (UtilitySimulation source target sourceUtility targetUtility groups) := by
   refine isEmpty_of_unmatchedValue Finset.univ hgroups member (Finset.mem_univ member)
     profile (fun i => targetProfile i.1) ?_
@@ -301,32 +301,32 @@ theorem isEmpty_of_grandCoalitionValue [Fintype Player] {groups : Set (Finset Pl
 player. -/
 def ofUnilateral
     (compileStrategy : (who : Player) → source.sig.Strategy who → target.sig.Strategy who)
-    (honestIntegrable : ∀ profile who,
-      UtilityIntegrable targetUtility who
+    (honestExpectation : ∀ profile who,
+      UtilityHasExpectation targetUtility who
           (target.play (Profile.map compileStrategy profile)) ↔
-        UtilityIntegrable sourceUtility who (source.play profile))
+        UtilityHasExpectation sourceUtility who (source.play profile))
     (honestUtility : ∀ profile who
-      (_ : UtilityIntegrable targetUtility who
+      (_ : UtilityHasExpectation targetUtility who
         (target.play (Profile.map compileStrategy profile)))
-      (_ : UtilityIntegrable sourceUtility who (source.play profile)),
-      expectedUtility targetUtility who
+      (_ : UtilityHasExpectation sourceUtility who (source.play profile)),
+      extendedExpectedUtility targetUtility who
           (target.play (Profile.map compileStrategy profile)) =
-        expectedUtility sourceUtility who (source.play profile))
+        extendedExpectedUtility sourceUtility who (source.play profile))
     (deviationBound : ∀ profile who replacement,
       ∃ alternative : source.sig.Strategy who,
-        UtilityIntegrable sourceUtility who
+        UtilityHasExpectation sourceUtility who
             (source.play (Profile.update profile who alternative)) →
-          UtilityIntegrable targetUtility who
+          UtilityHasExpectation targetUtility who
               (target.play (Profile.update
                 (Profile.map compileStrategy profile) who replacement)) ∧
-            expectedUtility targetUtility who
+            extendedExpectedUtility targetUtility who
                 (target.play (Profile.update
                   (Profile.map compileStrategy profile) who replacement)) ≤
-              expectedUtility sourceUtility who
+              extendedExpectedUtility sourceUtility who
                 (source.play (Profile.update profile who alternative))) :
     UtilitySimulation source target sourceUtility targetUtility (singletonGroups Player) where
   compileStrategy := compileStrategy
-  honest_integrable := honestIntegrable
+  honest_expectation := honestExpectation
   honest_utility := honestUtility
   deviation_bound := by
     rintro members ⟨who, rfl⟩ profile replacement
@@ -345,30 +345,30 @@ def congrUtilities
     (simulation : UtilitySimulation source target sourceUtility targetUtility groups)
     (sourceValue : source.sig.Outcome → Player → ℝ)
     (targetValue : target.sig.Outcome → Player → ℝ)
-    (hsourceIntegrable : ∀ profile who,
-      UtilityIntegrable sourceUtility who (source.play profile) ↔
-        UtilityIntegrable sourceValue who (source.play profile))
+    (hsourceExpectation : ∀ profile who,
+      UtilityHasExpectation sourceUtility who (source.play profile) ↔
+        UtilityHasExpectation sourceValue who (source.play profile))
     (hsource : ∀ profile who
-      (_ : UtilityIntegrable sourceUtility who (source.play profile))
-      (_ : UtilityIntegrable sourceValue who (source.play profile)),
-      expectedUtility sourceUtility who (source.play profile) =
-        expectedUtility sourceValue who (source.play profile))
-    (htargetIntegrable : ∀ profile who,
-      UtilityIntegrable targetUtility who (target.play profile) ↔
-        UtilityIntegrable targetValue who (target.play profile))
+      (_ : UtilityHasExpectation sourceUtility who (source.play profile))
+      (_ : UtilityHasExpectation sourceValue who (source.play profile)),
+      extendedExpectedUtility sourceUtility who (source.play profile) =
+        extendedExpectedUtility sourceValue who (source.play profile))
+    (htargetExpectation : ∀ profile who,
+      UtilityHasExpectation targetUtility who (target.play profile) ↔
+        UtilityHasExpectation targetValue who (target.play profile))
     (htarget : ∀ profile who
-      (_ : UtilityIntegrable targetUtility who (target.play profile))
-      (_ : UtilityIntegrable targetValue who (target.play profile)),
-      expectedUtility targetUtility who (target.play profile) =
-        expectedUtility targetValue who (target.play profile)) :
+      (_ : UtilityHasExpectation targetUtility who (target.play profile))
+      (_ : UtilityHasExpectation targetValue who (target.play profile)),
+      extendedExpectedUtility targetUtility who (target.play profile) =
+        extendedExpectedUtility targetValue who (target.play profile)) :
     UtilitySimulation source target sourceValue targetValue groups where
   compileStrategy := simulation.compileStrategy
-  honest_integrable profile who := by
-    exact (htargetIntegrable _ who).symm.trans
-      ((simulation.honest_integrable profile who).trans (hsourceIntegrable profile who))
+  honest_expectation profile who := by
+    exact (htargetExpectation _ who).symm.trans
+      ((simulation.honest_expectation profile who).trans (hsourceExpectation profile who))
   honest_utility profile who htnew hsnew := by
-    have htold := (htargetIntegrable _ who).mpr htnew
-    have hsold := (hsourceIntegrable profile who).mpr hsnew
+    have htold := (htargetExpectation _ who).mpr htnew
+    have hsold := (hsourceExpectation profile who).mpr hsnew
     exact (htarget _ who htold htnew).symm.trans
       ((simulation.honest_utility profile who htold hsold).trans
         (hsource profile who hsold hsnew))
@@ -376,16 +376,16 @@ def congrUtilities
     obtain ⟨alternative, hbound⟩ := simulation.deviation_bound members hmembers profile replacement
     refine ⟨alternative, ?_⟩
     intro member hmember hsnew
-    have hsold := (hsourceIntegrable _ member).mpr hsnew
+    have hsold := (hsourceExpectation _ member).mpr hsnew
     obtain ⟨htold, hle⟩ := hbound member hmember hsold
-    have htnew := (htargetIntegrable _ member).mp htold
+    have htnew := (htargetExpectation _ member).mp htold
     refine ⟨htnew, ?_⟩
     calc
-      expectedUtility targetValue member _ =
-          expectedUtility targetUtility member _ :=
+      extendedExpectedUtility targetValue member _ =
+          extendedExpectedUtility targetUtility member _ :=
         (htarget _ member htold htnew).symm
-      _ ≤ expectedUtility sourceUtility member _ := hle
-      _ = expectedUtility sourceValue member _ :=
+      _ ≤ extendedExpectedUtility sourceUtility member _ := hle
+      _ = extendedExpectedUtility sourceValue member _ :=
         hsource _ member hsold hsnew
 
 /-- Utility comparisons compose through independently verified target layers. -/
@@ -395,11 +395,11 @@ def trans {middle : GameForm.{uPlayer, uMiddle, uMiddleOutcome} Player}
     (right : UtilitySimulation middle target middleUtility targetUtility groups) :
     UtilitySimulation source target sourceUtility targetUtility groups where
   compileStrategy who strategy := right.compileStrategy who (left.compileStrategy who strategy)
-  honest_integrable profile who := by
-    exact (right.honest_integrable (left.compileProfile profile) who).trans
-      (left.honest_integrable profile who)
+  honest_expectation profile who := by
+    exact (right.honest_expectation (left.compileProfile profile) who).trans
+      (left.honest_expectation profile who)
   honest_utility profile who ht hs := by
-    have hm := (left.honest_integrable profile who).mpr hs
+    have hm := (left.honest_expectation profile who).mpr hs
     exact (right.honest_utility (left.compileProfile profile) who ht hm).trans
       (left.honest_utility profile who hm hs)
   deviation_bound members hmembers profile replacement := by

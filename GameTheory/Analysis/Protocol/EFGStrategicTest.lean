@@ -183,7 +183,8 @@ theorem fixedFalse_isNash :
   rw [game.isNash_toGameForm_iff]
   intro who replacement
   cases who
-  refine ⟨preferFalse_integrable _, preferFalse_integrable _, ?_⟩
+  refine ⟨(preferFalse_integrable _).hasExpectation, (preferFalse_integrable _).hasExpectation,
+    (extendedExpectedUtility_le_iff (preferFalse_integrable _) (preferFalse_integrable _)).2 ?_⟩
   calc
     expectedUtility preferFalse .player
         (information.run
@@ -268,8 +269,8 @@ theorem halfMixed_not_isNash :
       halfMixedProfile := by
   rw [game.isNash_mixed_toGameForm_iff]
   intro hnash
-  obtain ⟨_, _, hdeviation⟩ :=
-    hnash .player (PMF.pure (fixedPolicy false))
+  have hdeviation := (extendedExpectedUtility_le_iff (preferFalse_integrable _)
+    (preferFalse_integrable _)).1 (hnash .player (PMF.pure (fixedPolicy false))).2.2
   rw [fixedFalseMixedDeviation_value, halfMixed_value] at hdeviation
   norm_num at hdeviation
 

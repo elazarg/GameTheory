@@ -53,8 +53,8 @@ private theorem sourcePlan_optimal_of_le (u : Outcome → Unit → ℝ)
   cases who
   let hbase := payoffIntegrable_pure Outcome.a (fun outcome => u outcome ())
   let hdev := payoffIntegrable_of_finite replacement (fun outcome => u outcome ())
-  refine ⟨hbase, hdev, ?_⟩
-  simp only [source, Profile.update_same, sourcePlan, expectedUtility_pure, add_zero]
+  refine (euPreferenceWithin_iff _ _ _ _ _ hbase hdev).2 ?_
+  simp only [expectedUtility_pure, add_zero]
   calc
     expectedUtility u () replacement ≤
         expect replacement (fun _ => u .a ()) := by
@@ -105,8 +105,10 @@ theorem no_common_optimal_continuation :
   rw [isεNash_iff] at bestB bestC
   have prefersB := bestB () (PMF.pure true)
   have prefersC := bestC () (PMF.pure false)
-  obtain ⟨hbaseB, hdevB, hleB⟩ := prefersB
-  obtain ⟨hbaseC, hdevC, hleC⟩ := prefersC
+  have hleB := (euPreferenceWithin_iff _ _ _ _ _ (payoffIntegrable_of_finite _ _)
+    (payoffIntegrable_of_finite _ _)).1 prefersB
+  have hleC := (euPreferenceWithin_iff _ _ _ _ _ (payoffIntegrable_of_finite _ _)
+    (payoffIntegrable_of_finite _ _)).1 prefersC
   have hvalueB : expectedUtility utilityB ()
       (continuation.play (Profile.update profile () (PMF.pure true))) = 2 := by
     simp [continuation, expectedUtility_pure, remainingOutcome, utilityB]

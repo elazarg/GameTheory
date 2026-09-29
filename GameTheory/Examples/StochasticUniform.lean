@@ -58,15 +58,16 @@ theorem hostile_horizon_nash_is_canonical (initial : Bool) (horizon : ℕ)
     (epsilon : ℝ) (profile : hostile.BehaviorProfile initial) :
     hostile.IsεHorizonNash initial horizon epsilon profile ↔
       ∀ who (deviation : (hostile.perfectMonitoring initial).BehavioralPolicy who),
-        UtilityIntegrable (hostile.horizonUtility initial horizon) who
+        UtilityHasExpectation (hostile.horizonUtility initial horizon) who
             ((hostile.horizonForm initial horizon).play profile) ∧
-          UtilityIntegrable (hostile.horizonUtility initial horizon)
+          UtilityHasExpectation (hostile.horizonUtility initial horizon)
               who ((hostile.horizonForm initial horizon).play
                 (Profile.update profile who deviation)) ∧
-            hostile.finiteAveragePayoff initial horizon
-                (Profile.update profile who deviation) who ≤
-              hostile.finiteAveragePayoff initial horizon profile who +
-                epsilon :=
+            extendedExpectedUtility (hostile.horizonUtility initial horizon) who
+                ((hostile.horizonForm initial horizon).play
+                  (Profile.update profile who deviation)) ≤
+              extendedExpectedUtility (hostile.horizonUtility initial horizon) who
+                ((hostile.horizonForm initial horizon).play profile) + epsilon :=
   hostile.isεHorizonNash_iff initial horizon epsilon profile
 
 /-! The same nondegenerate dynamics with zero stage utility provide an exact
@@ -145,9 +146,13 @@ theorem zeroPayoff_isUniformEquilibriumPayoff (initial : Bool) :
   constructor
   · rw [zeroPayoff.isεHorizonNash_iff]
     intro who deviation
-    refine ⟨zeroPayoff_horizonIntegrable initial horizon (zeroProfile initial) who,
-      zeroPayoff_horizonIntegrable initial horizon
-        (Profile.update (zeroProfile initial) who deviation) who, ?_⟩
+    refine (euPreferenceWithin_iff _ _ _ _ _
+      (zeroPayoff_horizonIntegrable initial horizon (zeroProfile initial) who)
+      (zeroPayoff_horizonIntegrable initial horizon
+        (Profile.update (zeroProfile initial) who deviation) who)).2 ?_
+    show zeroPayoff.finiteAveragePayoff initial horizon
+        (Profile.update (zeroProfile initial) who deviation) who ≤
+      zeroPayoff.finiteAveragePayoff initial horizon (zeroProfile initial) who + epsilon
     simp only [zeroPayoff_finiteAveragePayoff, zero_add]
     exact le_of_lt hepsilon
   · intro who
@@ -327,8 +332,10 @@ theorem transientPayoff_hasUniformDeviationCapConstructor :
     simpa only [Pi.zero_apply, sub_zero, abs_of_nonneg hbounds.1] using
       hbounds.2.trans hsmall
   · intro who deviation
-    refine ⟨transientPayoff_horizonIntegrable horizon
-      (Profile.update transientProfile who deviation) who, ?_⟩
+    have hdeviation := transientPayoff_horizonIntegrable horizon
+      (Profile.update transientProfile who deviation) who
+    refine ⟨hdeviation.hasExpectation, ?_⟩
+    rw [extendedExpectedUtility_eq hdeviation, EReal.coe_le_coe_iff]
     simpa only [Pi.zero_apply, zero_add] using
       (transientPayoff_finiteAveragePayoff_bounds horizon
         (Profile.update transientProfile who deviation) who).2.trans

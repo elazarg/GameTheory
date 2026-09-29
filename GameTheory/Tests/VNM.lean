@@ -257,7 +257,8 @@ theorem lexicographic_not_representsExpectedUtility :
     ¬ ∃ represented : Fin 3 → Unit → ℝ,
       Preference.RepresentsExpectedUtility lexicographic represented := by
   rintro ⟨represented, hrepresentation⟩
-  exact lexicographic_not_mixtureContinuous hrepresentation.mixtureContinuous
+  exact lexicographic_not_mixtureContinuous
+    (hrepresentation.mixtureContinuous fun _ law => payoffIntegrable_of_finite law _)
 
 theorem lexicographic_characterization_fails :
     ¬ (Preference.Total lexicographic ∧ Preference.Transitive lexicographic ∧

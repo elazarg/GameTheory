@@ -46,16 +46,8 @@ theorem allFalse_isStrongNash :
   rw [isStrongNash_iff]
   intro coalition hnonempty replacement
   obtain ⟨member, hmember⟩ := hnonempty
-  refine ⟨member, hmember, ?_⟩
-  simp only [euPreference_apply]
-  refine ⟨by simpa [coordinationForm] using
-    (payoffIntegrable_pure allFalse
-      (fun outcome => coordination.utility outcome member)),
-    by simpa [coordinationForm] using
-      (payoffIntegrable_pure
-        (Profile.override coalition replacement allFalse)
-        (fun outcome => coordination.utility outcome member)), ?_⟩
-  simp [expectedUtility_pure, allFalse]
+  refine ⟨member, hmember, (euPreference_pure_iff _ _ _ _).2 ?_⟩
+  simp [allFalse]
   split <;> norm_num
 
 def fairCoin : PMF Bool :=

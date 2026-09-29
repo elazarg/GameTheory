@@ -124,9 +124,9 @@ theorem timeAverage_not_coarseCorrelatedEq :
       (game.form.timeAverage roundLaw) := by
   rw [game.isCoarseCorrelatedEq_iff_isεCoarseCorrelatedEq_zero]
   intro h
-  rw [game.isεCoarseCorrelatedEq_iff_externalRegret_le] at h
-  have hnonpos := h 0 false
-  rcases hnonpos with ⟨hbase, hdev, hle⟩
+  rw [game.isεCoarseCorrelatedEq_iff_externalRegret_le ⟨fun who => baseIntegrable who _,
+    fun who action => deviationIntegrable who action _⟩] at h
+  have hle := h 0 false
   have hvalue : game.externalRegret (game.form.timeAverage roundLaw) 0 false
        = 1 / 2 := by
     rw [game.externalRegret_timeAverage

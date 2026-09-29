@@ -833,8 +833,8 @@ theorem uniformReducedPolicy_not_isNash :
       uniformReducedPolicy := by
   intro hnash
   rw [isNash_iff] at hnash
-  have hdeviation := hnash .star constantEqualReplacement
-  obtain ⟨hbase, hchange, hdeviation⟩ := hdeviation
+  have hdeviation := (euPreference_iff _ _ _ _ (payoffIntegrable_of_finite _ _)
+    (payoffIntegrable_of_finite _ _)).1 (hnash .star constantEqualReplacement)
   rw [uniform_star_expectedUtility,
     constant_deviation_star_expectedUtility] at hdeviation
   norm_num at hdeviation

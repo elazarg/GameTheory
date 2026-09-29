@@ -51,7 +51,7 @@ theorem IsESS.isNash_symmetric {payoff : S → S → ℝ} {resident : S}
   rw [isNash_iff]
   intro who replacement
   rw [euPreference_apply]
-  refine ⟨payoffIntegrable_pure _ _, payoffIntegrable_pure _ _, ?_⟩
+  refine (euPreference_iff _ _ _ _ (payoffIntegrable_pure _ _) (payoffIntegrable_pure _ _)).2 ?_
   fin_cases who <;>
     simpa [symmetricForm, symmetricUtility, residentProfile, opponent,
       expectedUtility_pure] using

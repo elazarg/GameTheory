@@ -231,8 +231,8 @@ theorem marginalProfile_isεNash_of_externalRegret_le {I J : Type u}
   rcases (by decide : ∀ player : Fin 2, player = 0 ∨ player = 1) who with rfl | rfl
   · let base := hrowMixed (rowMarginal statusQuo)
     let dev := hrowMixed replacement
-    refine ⟨base, ?_, ?_⟩
-    · simpa only [mixedProfile_update_zero] using dev
+    refine (euPreferenceWithin_iff _ _ _ _ _ base
+      (by simpa only [mixedProfile_update_zero] using dev)).2 ?_
     · have hgap := mixedSaddleGap_le_of_externalRegret_le A statusQuo
          hrow hcol replacement (columnMarginal statusQuo)
         dev (hcolMixed (columnMarginal statusQuo))
@@ -260,8 +260,8 @@ theorem marginalProfile_isεNash_of_externalRegret_le {I J : Type u}
         ((form I J).mixed.play
           (mixedProfile (rowMarginal statusQuo) replacement)) :=
       payoffIntegrable_neg devZero
-    refine ⟨baseOne, ?_, ?_⟩
-    · simpa only [mixedProfile_update_one] using devOne
+    refine (euPreferenceWithin_iff _ _ _ _ _ baseOne
+      (by simpa only [mixedProfile_update_one] using devOne)).2 ?_
     · have hgap := mixedSaddleGap_le_of_externalRegret_le A statusQuo
          hrow hcol (rowMarginal statusQuo) replacement
         baseZero devZero

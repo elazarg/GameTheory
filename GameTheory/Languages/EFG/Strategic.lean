@@ -73,15 +73,15 @@ theorem isNash_toGameForm_iff
     (profile : Profile G.strategicSignature) (horizon : ℕ) :
     IsNash (G.toGameForm horizon) (euPreference utility) profile ↔
       ∀ who replacement,
-        UtilityIntegrable utility who
+        UtilityHasExpectation utility who
           (G.information.run profile horizon) ∧
-        UtilityIntegrable utility who
+        UtilityHasExpectation utility who
           (G.information.run
             (Profile.update profile who replacement) horizon) ∧
-        expectedUtility utility who
+        extendedExpectedUtility utility who
             (G.information.run
               (Profile.update profile who replacement) horizon) ≤
-          expectedUtility utility who
+          extendedExpectedUtility utility who
             (G.information.run profile horizon) := by
   rw [isNash_iff, G.toGameForm_play]
   simp only [euPreference_apply]
@@ -105,15 +105,15 @@ theorem isNash_mixed_toGameForm_iff
     (mixed : Profile G.strategicSignature.mixed) (horizon : ℕ) :
     IsNash (G.toGameForm horizon).mixed (euPreference utility) mixed ↔
       ∀ who replacement,
-        UtilityIntegrable utility who
+        UtilityHasExpectation utility who
           (G.information.runMixed mixed horizon) ∧
-        UtilityIntegrable utility who
+        UtilityHasExpectation utility who
           (G.information.runMixed
             (Profile.update mixed who replacement) horizon) ∧
-        expectedUtility utility who
+        extendedExpectedUtility utility who
             (G.information.runMixed
               (Profile.update mixed who replacement) horizon) ≤
-          expectedUtility utility who
+          extendedExpectedUtility utility who
             (G.information.runMixed mixed horizon) := by
   rw [isNash_iff, G.toGameForm_mixed_play]
   simp only [euPreference_apply, InformationModel.runMixed,

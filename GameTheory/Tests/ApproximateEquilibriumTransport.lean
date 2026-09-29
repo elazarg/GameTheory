@@ -79,7 +79,7 @@ theorem target_isεNash_zero :
   let baseGuard := targetUtility_integrable (profileEquiv baseProfile) who
   let deviationGuard := targetUtility_integrable
     (Profile.update (profileEquiv baseProfile) who replacement) who
-  refine ⟨baseGuard, deviationGuard, ?_⟩
+  refine (euPreferenceWithin_iff _ _ _ _ _ baseGuard deviationGuard).2 ?_
   have hbase : expectedUtility targetUtility who
       (targetForm.play (profileEquiv baseProfile)) = 0 := by
     simp [expectedUtility, expect_pure, targetUtility, sourceUtility,
@@ -98,8 +98,8 @@ switching its own coordinate to `true`. -/
 theorem source_not_isεNash_zero :
     ¬ IsεNash sourceForm sourceUtility 0 baseProfile := by
   intro hNash
-  have hdeviation :=
-    (isεNash_iff sourceForm sourceUtility).1 hNash false true
+  have hdeviation := (euPreferenceWithin_iff _ _ _ _ _ (sourceUtility_integrable _ _)
+    (sourceUtility_integrable _ _)).1 ((isεNash_iff sourceForm sourceUtility).1 hNash false true)
   norm_num [sourceUtility, sourceForm, baseProfile] at hdeviation
 
 /-- The exact same-player forward update-reflection witness already fails for

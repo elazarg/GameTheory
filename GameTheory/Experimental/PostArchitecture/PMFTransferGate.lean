@@ -1,5 +1,10 @@
 /-
 EXP-131: PMF-mixture transfer and the integration boundary.
+
+EXP-147 revised the exploding fixture. The added target action has infinite
+expected loss, so under the extended expectation it is worth `⊥`: it never
+improves on the incumbent, and the source equilibrium transfers. Under the
+integrability-guarded preference the same action blocked the transfer.
 -/
 
 import GameTheory.Core.MixtureSimulation
@@ -134,7 +139,8 @@ theorem linear_target_nash :
       (mixture.compileProfile sourceProfile) := by
   apply (mixture.isNash_compileProfile_iff linearLoss sourceProfile
     (fun _ _ => trivial)).mpr
-  exact ⟨linear_source_nash, linear_target_deviation_integrable⟩
+  exact ⟨linear_source_nash, fun who replacement =>
+    (linear_target_deviation_integrable who replacement).hasExpectation⟩
 
 theorem exploding_every_source_deviation_integrable (n : ℕ) :
     UtilityIntegrable explodingLoss ()
@@ -166,12 +172,40 @@ theorem exploding_none_not_integrable :
   rw [target_none_play]
   exact exploding_map_not_integrable
 
-theorem exploding_target_not_nash :
-    ¬ IsNash target (euPreference explodingLoss)
+/-- The added target action has infinite expected loss and no expected gain, so
+its payoff has an expectation although it is not integrable. -/
+theorem exploding_none_hasExpectation :
+    UtilityHasExpectation explodingLoss ()
+      (target.play (Profile.update
+        (mixture.compileProfile sourceProfile) () none)) := by
+  rw [target_none_play]
+  show HasExpectation (geometric.map Nat.succ) (fun outcome => explodingLoss outcome ())
+  rw [hasExpectation_map_iff]
+  have hgain : positiveExpect geometric ((fun outcome => explodingLoss outcome ()) ∘ Nat.succ) =
+      0 := by
+    unfold positiveExpect
+    refine ENNReal.tsum_eq_zero.2 fun n => ?_
+    have hpos : 0 ≤ exploding n := by
+      rw [exploding]
+      positivity
+    rw [Function.comp_apply, explodingLoss_succ, ENNReal.ofReal_eq_zero.2 (neg_nonpos.2 hpos),
+      mul_zero]
+  exact Or.inl (by rw [hgain]; exact ENNReal.zero_ne_top)
+
+/-- The divergent target action is worth `⊥`, so it is never a profitable
+deviation and the source equilibrium transfers. -/
+theorem exploding_target_nash :
+    IsNash target (euPreference explodingLoss)
       (mixture.compileProfile sourceProfile) := by
-  intro htarget
-  have hguards := (mixture.isNash_compileProfile_iff explodingLoss sourceProfile
-    (fun _ _ => trivial)).mp htarget
-  exact exploding_none_not_integrable (hguards.2 () none)
+  apply (mixture.isNash_compileProfile_iff explodingLoss sourceProfile
+    (fun _ _ => trivial)).mpr
+  refine ⟨exploding_source_nash, fun who replacement => ?_⟩
+  cases who
+  cases replacement with
+  | some n =>
+      exact hasExpectation_of_payoffIntegrable (by
+        simpa [target, Profile.update_same] using
+          (payoffIntegrable_pure n (fun outcome => explodingLoss outcome ())))
+  | none => exact exploding_none_hasExpectation
 
 end GameTheory.Experimental.PMFTransferGate

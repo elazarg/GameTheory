@@ -135,11 +135,11 @@ theorem prob_mem_bestReply_iff_isBestResponse
     have hpref : euPreference utility who
         (F.mixed.play (Profile.update opponents who candidate))
         (F.mixed.play (Profile.update opponents who alternative)) := by
-      rw [euPreference_apply]
-      refine ⟨(GameForm.HasIntegrableUtility.mixed_of_finite pureIntegrable)
-          who (Profile.update opponents who candidate),
-        (GameForm.HasIntegrableUtility.mixed_of_finite pureIntegrable)
-          who (Profile.update opponents who alternative), ?_⟩
+      refine (euPreference_iff _ _ _ _
+        ((GameForm.HasIntegrableUtility.mixed_of_finite pureIntegrable)
+          who (Profile.update opponents who candidate))
+        ((GameForm.HasIntegrableUtility.mixed_of_finite pureIntegrable)
+          who (Profile.update opponents who alternative))).2 ?_
       rw [← probs_update] at hle
       rw [← probs_update] at hle
       rw [payoff_probs pureIntegrable] at hle
@@ -149,9 +149,11 @@ theorem prob_mem_bestReply_iff_isBestResponse
   · intro hbest
     refine ⟨PMF.toReal_mem_simplexWeights candidate, fun weights hweights => ?_⟩
     let alternative : PMF (F.sig.Strategy who) := PMF.ofSimplex hweights
-    have hle := hbest alternative
-    rw [euPreference_apply] at hle
-    rcases hle with ⟨hpref, halt, hvalue⟩
+    have hvalue := (euPreference_iff _ _ _ _
+      ((GameForm.HasIntegrableUtility.mixed_of_finite pureIntegrable)
+        who (Profile.update opponents who candidate))
+      ((GameForm.HasIntegrableUtility.mixed_of_finite pureIntegrable)
+        who (Profile.update opponents who alternative))).1 (hbest alternative)
     rw [← payoff_probs pureIntegrable (Profile.update opponents who alternative) who,
       ← payoff_probs pureIntegrable (Profile.update opponents who candidate) who] at hvalue
     simpa only [alternative, probs_update, PMF.ofSimplex_toReal] using hvalue

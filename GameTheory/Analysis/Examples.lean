@@ -82,7 +82,9 @@ theorem matchingPennies_value_eq_uniform (σ : Profile matchingPennies.toForm.si
       expectedUtility matchingPennies.utility 0 (matchingPennies.toForm.mixed.play
         (matchingPennies.toMixed uniformPennies uniformPennies_isMixed)) := by
   obtain ⟨_, _, hvalue⟩ := hσ.value_eq matchingPennies_uniform_isSaddlePoint
-  exact hvalue
+  rwa [extendedExpectedUtility_eq (Math.Probability.payoffIntegrable_of_finite _ _),
+    extendedExpectedUtility_eq (Math.Probability.payoffIntegrable_of_finite _ _),
+    EReal.coe_eq_coe_iff] at hvalue
 
 /-! ## A nontrivial pure security certificate -/
 
@@ -116,7 +118,8 @@ theorem securityMatrix_pure_isSaddlePoint :
       (MatrixGame.utility securityMatrix)
       (MatrixGame.mixedProfile (PMF.pure 1) (PMF.pure 1)) := by
   rw [MatrixGame.mixedProfile_pure]
-  exact securityMatrix_pure_isNash.purify_of_finite.isSaddlePoint
+  exact (securityMatrix_pure_isNash.purify_of_finite
+    fun _ _ => Math.Probability.payoffIntegrable_of_finite _ _).isSaddlePoint
     (MatrixGame.utility_isZeroSum securityMatrix)
 
 @[simp]
@@ -139,9 +142,9 @@ theorem securityMatrix_pure_expectedPayoff :
 /-- The bottom row guarantees the nonzero value against every mixed column. -/
 theorem securityMatrix_row_guarantees :
     MatrixGame.RowGuarantees securityMatrix (PMF.pure 1) 1 := by
-  obtain ⟨-, hrow, -⟩ :=
+  obtain ⟨hrow, -⟩ :=
     (MatrixGame.isSaddlePoint_iff_guarantees_caps securityMatrix
-    (PMF.pure 1) (PMF.pure 1)).1
+    (PMF.pure 1) (PMF.pure 1) (Math.Probability.payoffIntegrable_of_finite _ _)).1
     securityMatrix_pure_isSaddlePoint
   rw [securityMatrix_pure_expectedPayoff] at hrow
   exact hrow
@@ -149,9 +152,9 @@ theorem securityMatrix_row_guarantees :
 /-- The right column caps the row payoff at the same nonzero value. -/
 theorem securityMatrix_column_caps :
     MatrixGame.ColumnCaps securityMatrix (PMF.pure 1) 1 := by
-  obtain ⟨-, -, hcol⟩ :=
+  obtain ⟨-, hcol⟩ :=
     (MatrixGame.isSaddlePoint_iff_guarantees_caps securityMatrix
-    (PMF.pure 1) (PMF.pure 1)).1
+    (PMF.pure 1) (PMF.pure 1) (Math.Probability.payoffIntegrable_of_finite _ _)).1
     securityMatrix_pure_isSaddlePoint
   rw [securityMatrix_pure_expectedPayoff] at hcol
   exact hcol

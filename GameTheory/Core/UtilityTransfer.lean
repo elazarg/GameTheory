@@ -21,23 +21,24 @@ variable {sourceUtility : source.sig.Outcome → Player → ℝ}
 variable {targetUtility : target.sig.Outcome → Player → ℝ}
 
 /-- Profile-local utility coverage transfers approximate Nash. Each target
-unilateral deviation needs only the integration used by its source comparison. -/
+unilateral deviation needs an expectation only when its source comparison has
+one. -/
 theorem isεNash_of_deviation_bounds
     (profile : Profile source.sig) (targetProfile : Profile target.sig)
     (honestUtility : ∀ who
-      (_ : UtilityIntegrable sourceUtility who (source.play profile)),
-      UtilityIntegrable targetUtility who (target.play targetProfile) ∧
-        expectedUtility targetUtility who (target.play targetProfile) =
-          expectedUtility sourceUtility who (source.play profile))
+      (_ : UtilityHasExpectation sourceUtility who (source.play profile)),
+      UtilityHasExpectation targetUtility who (target.play targetProfile) ∧
+        extendedExpectedUtility targetUtility who (target.play targetProfile) =
+          extendedExpectedUtility sourceUtility who (source.play profile))
     (deviationBound : ∀ who replacement,
       ∃ alternative : source.sig.Strategy who,
-        UtilityIntegrable sourceUtility who
+        UtilityHasExpectation sourceUtility who
             (source.play (Profile.update profile who alternative)) →
-          UtilityIntegrable targetUtility who
+          UtilityHasExpectation targetUtility who
               (target.play (Profile.update targetProfile who replacement)) ∧
-            expectedUtility targetUtility who
+            extendedExpectedUtility targetUtility who
                 (target.play (Profile.update targetProfile who replacement)) ≤
-              expectedUtility sourceUtility who
+              extendedExpectedUtility sourceUtility who
                 (source.play (Profile.update profile who alternative)))
     (ε : ℝ) (h : IsεNash source sourceUtility ε profile) :
     IsεNash target targetUtility ε targetProfile := by
@@ -49,50 +50,50 @@ theorem isεNash_of_deviation_bounds
   obtain ⟨htdev, htarget⟩ := hbound hsdev
   refine ⟨htbase, htdev, ?_⟩
   calc
-    _ ≤ expectedUtility sourceUtility who
+    _ ≤ extendedExpectedUtility sourceUtility who
         (source.play (Profile.update profile who alternative)) := htarget
-    _ ≤ expectedUtility sourceUtility who (source.play profile) + ε := hsource
-    _ = expectedUtility targetUtility who (target.play targetProfile) + ε := by
+    _ ≤ extendedExpectedUtility sourceUtility who (source.play profile) + ε := hsource
+    _ = extendedExpectedUtility targetUtility who (target.play targetProfile) + ε := by
       rw [hhonest]
 
 /-- Exact Nash is the zero-slack instance of profile-local utility coverage. -/
 theorem isNash_of_deviation_bounds
     (profile : Profile source.sig) (targetProfile : Profile target.sig)
     (honestUtility : ∀ who
-      (_ : UtilityIntegrable sourceUtility who (source.play profile)),
-      UtilityIntegrable targetUtility who (target.play targetProfile) ∧
-        expectedUtility targetUtility who (target.play targetProfile) =
-          expectedUtility sourceUtility who (source.play profile))
+      (_ : UtilityHasExpectation sourceUtility who (source.play profile)),
+      UtilityHasExpectation targetUtility who (target.play targetProfile) ∧
+        extendedExpectedUtility targetUtility who (target.play targetProfile) =
+          extendedExpectedUtility sourceUtility who (source.play profile))
     (deviationBound : ∀ who replacement,
       ∃ alternative : source.sig.Strategy who,
-        UtilityIntegrable sourceUtility who
+        UtilityHasExpectation sourceUtility who
             (source.play (Profile.update profile who alternative)) →
-          UtilityIntegrable targetUtility who
+          UtilityHasExpectation targetUtility who
               (target.play (Profile.update targetProfile who replacement)) ∧
-            expectedUtility targetUtility who
+            extendedExpectedUtility targetUtility who
                 (target.play (Profile.update targetProfile who replacement)) ≤
-              expectedUtility sourceUtility who
+              extendedExpectedUtility sourceUtility who
                 (source.play (Profile.update profile who alternative)))
     (h : IsNash source (euPreference sourceUtility) profile) :
     IsNash target (euPreference targetUtility) targetProfile := by
   rw [isNash_iff_isεNash_zero] at h ⊢
   exact isεNash_of_deviation_bounds profile targetProfile honestUtility deviationBound 0 h
 
-/-- Honest integrability and value agreement reflect selected-coalition
+/-- Honest expectations and value agreement reflect selected-coalition
 approximate equilibrium from a compiled profile. -/
 theorem isεGroupNash_of_compileProfile
     (compileStrategy : (who : Player) → source.sig.Strategy who → target.sig.Strategy who)
-    (honestIntegrable : ∀ profile who,
-      UtilityIntegrable targetUtility who
+    (honestExpectation : ∀ profile who,
+      UtilityHasExpectation targetUtility who
           (target.play (Profile.map compileStrategy profile)) ↔
-        UtilityIntegrable sourceUtility who (source.play profile))
+        UtilityHasExpectation sourceUtility who (source.play profile))
     (honestUtility : ∀ profile who
-      (_ : UtilityIntegrable targetUtility who
+      (_ : UtilityHasExpectation targetUtility who
         (target.play (Profile.map compileStrategy profile)))
-      (_ : UtilityIntegrable sourceUtility who (source.play profile)),
-      expectedUtility targetUtility who
+      (_ : UtilityHasExpectation sourceUtility who (source.play profile)),
+      extendedExpectedUtility targetUtility who
           (target.play (Profile.map compileStrategy profile)) =
-        expectedUtility sourceUtility who (source.play profile))
+        extendedExpectedUtility sourceUtility who (source.play profile))
     (groups : Set (Finset Player)) (ε : ℝ) (profile : Profile source.sig)
     (h : IsεGroupNash target targetUtility groups ε
       (Profile.map compileStrategy profile)) :
@@ -102,70 +103,70 @@ theorem isεGroupNash_of_compileProfile
   obtain ⟨member, hmember, htbase, htdev, hbound⟩ :=
     h members hmembers hne (fun i => compileStrategy i.1 (replacement i))
   have hmap := Profile.map_override compileStrategy members replacement profile
-  have htdev' : UtilityIntegrable targetUtility member
+  have htdev' : UtilityHasExpectation targetUtility member
       (target.play (Profile.map compileStrategy
         (Profile.override members replacement profile))) := by
     simpa only [hmap] using htdev
-  have hsbase := (honestIntegrable profile member).mp htbase
-  have hsdev := (honestIntegrable
+  have hsbase := (honestExpectation profile member).mp htbase
+  have hsdev := (honestExpectation
     (Profile.override members replacement profile) member).mp htdev'
   refine ⟨member, hmember, hsbase, hsdev, ?_⟩
   have hvalue := honestUtility (Profile.override members replacement profile)
     member htdev' hsdev
   have hbase := honestUtility profile member htbase hsbase
   calc
-    expectedUtility sourceUtility member
+    extendedExpectedUtility sourceUtility member
         (source.play (Profile.override members replacement profile)) =
-      expectedUtility targetUtility member
+      extendedExpectedUtility targetUtility member
         (target.play (Profile.map compileStrategy
           (Profile.override members replacement profile))) := hvalue.symm
-    _ = expectedUtility targetUtility member
+    _ = extendedExpectedUtility targetUtility member
         (target.play (Profile.override members
           (fun i => compileStrategy i.1 (replacement i))
           (Profile.map compileStrategy profile))) := by
-      apply expectedUtility_congr_law
+      apply extendedExpectedUtility_congr_law
       exact congrArg target.play hmap
-    _ ≤ expectedUtility targetUtility member
+    _ ≤ extendedExpectedUtility targetUtility member
         (target.play (Profile.map compileStrategy profile)) + ε :=
       hbound
-    _ = expectedUtility sourceUtility member (source.play profile) + ε := by
+    _ = extendedExpectedUtility sourceUtility member (source.play profile) + ε := by
       rw [hbase]
 
-/-- Guarded honest equality and one source replacement per target coalition
+/-- Honest value equality and one source replacement per target coalition
 give the same additive error on both sides. -/
 theorem isεGroupNash_compileProfile_iff_of_utility_bounds
     (compileStrategy : (who : Player) → source.sig.Strategy who → target.sig.Strategy who)
-    (honestIntegrable : ∀ profile who,
-      UtilityIntegrable targetUtility who
+    (honestExpectation : ∀ profile who,
+      UtilityHasExpectation targetUtility who
           (target.play (Profile.map compileStrategy profile)) ↔
-        UtilityIntegrable sourceUtility who (source.play profile))
+        UtilityHasExpectation sourceUtility who (source.play profile))
     (honestUtility : ∀ profile who
-      (_ : UtilityIntegrable targetUtility who
+      (_ : UtilityHasExpectation targetUtility who
         (target.play (Profile.map compileStrategy profile)))
-      (_ : UtilityIntegrable sourceUtility who (source.play profile)),
-      expectedUtility targetUtility who
+      (_ : UtilityHasExpectation sourceUtility who (source.play profile)),
+      extendedExpectedUtility targetUtility who
           (target.play (Profile.map compileStrategy profile)) =
-        expectedUtility sourceUtility who (source.play profile))
+        extendedExpectedUtility sourceUtility who (source.play profile))
     (groups : Set (Finset Player)) (profile : Profile source.sig)
     (deviationBound : ∀ members ∈ groups,
       ∀ replacement : Subprofile target.sig members,
       ∃ alternative : Subprofile source.sig members, ∀ member ∈ members,
-        UtilityIntegrable sourceUtility member
+        UtilityHasExpectation sourceUtility member
             (source.play (Profile.override members alternative profile)) →
-          UtilityIntegrable targetUtility member
+          UtilityHasExpectation targetUtility member
               (target.play (Profile.override members replacement
                 (Profile.map compileStrategy profile))) ∧
-            expectedUtility targetUtility member
+            extendedExpectedUtility targetUtility member
                 (target.play (Profile.override members replacement
                   (Profile.map compileStrategy profile))) ≤
-              expectedUtility sourceUtility member
+              extendedExpectedUtility sourceUtility member
                 (source.play (Profile.override members alternative profile)))
     (ε : ℝ) :
     IsεGroupNash target targetUtility groups ε
         (Profile.map compileStrategy profile) ↔
       IsεGroupNash source sourceUtility groups ε profile := by
   constructor
-  · exact isεGroupNash_of_compileProfile compileStrategy honestIntegrable
+  · exact isεGroupNash_of_compileProfile compileStrategy honestExpectation
       honestUtility groups ε profile
   · rw [isεGroupNash_iff, isεGroupNash_iff]
     intro h members hmembers hne replacement
@@ -173,13 +174,13 @@ theorem isεGroupNash_compileProfile_iff_of_utility_bounds
     obtain ⟨member, hmember, hsbase, hsdev, hsource⟩ :=
       h members hmembers hne alternative
     obtain ⟨htdev, htarget⟩ := hbound member hmember hsdev
-    have htbase := (honestIntegrable profile member).mpr hsbase
+    have htbase := (honestExpectation profile member).mpr hsbase
     refine ⟨member, hmember, htbase, htdev, ?_⟩
     calc
-      _ ≤ expectedUtility sourceUtility member
+      _ ≤ extendedExpectedUtility sourceUtility member
           (source.play (Profile.override members alternative profile)) := htarget
-      _ ≤ expectedUtility sourceUtility member (source.play profile) + ε := hsource
-      _ = expectedUtility targetUtility member
+      _ ≤ extendedExpectedUtility sourceUtility member (source.play profile) + ε := hsource
+      _ = extendedExpectedUtility targetUtility member
           (target.play (Profile.map compileStrategy profile)) + ε := by
         rw [honestUtility profile member htbase hsbase]
 

@@ -189,7 +189,7 @@ theorem allTrue_isNash :
   have halternative := sourceUtility_integrable
     (source.information.runBehavioral
       (Profile.update (behavioralProfile allTrueActions) who replacement) 1) who
-  refine ⟨hpreferred, halternative, ?_⟩
+  refine (euPreference_iff _ _ _ _ hpreferred halternative).2 ?_
   have hpreferredValue : expectedUtility sourceUtility who
       (source.information.runBehavioral (behavioralProfile allTrueActions) 1)
        = 1 := by
@@ -214,8 +214,8 @@ theorem allFalse_not_isNash :
     ¬ IsNash (source.information.toBehavioralGameForm 1)
       (euPreference sourceUtility) (behavioralProfile allFalseActions) := by
   intro hnash
-  rcases (isNash_iff _).1 hnash false (actionPolicy false true) with
-    ⟨hpreferred, halternative, hle⟩
+  have hle := (euPreference_iff _ _ _ _ (sourceUtility_integrable _ _)
+    (sourceUtility_integrable _ _)).1 ((isNash_iff _).1 hnash false (actionPolicy false true))
   let deviatedActions : Bool → Bool :=
     Profile.update (sig := GameTheory.Examples.FOSG.twoBitSource.signature)
       allFalseActions false true

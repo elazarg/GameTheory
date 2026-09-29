@@ -95,38 +95,147 @@ theorem expectedUtility_outcomeLaw_map (F : GameForm ι)
     expectedUtility_bind utility agent μ
       (fun profile => F.play (respond profile)) hbind'
 
+/-! ## Integrable deviations
+
+Expected-utility equilibria compare extended expected utilities, which may be
+infinite. The predicates below say that every law an equilibrium concept
+compares has an integrable payoff for the player who compares it, so all of
+those comparisons are between real numbers. An equilibrium together with the
+matching predicate is exactly an equilibrium of real-valued expected utility.
+-/
+
+section IntegrableDeviations
+
+variable [DecidableEq ι]
+
+/-- Every unilateral replacement at `profile`, staying included, has an
+integrable payoff for the deviator. -/
+def GameForm.HasIntegrableDeviations (F : GameForm ι)
+    (utility : F.sig.Outcome → ι → ℝ) (profile : Profile F.sig) : Prop :=
+  ∀ who replacement,
+    UtilityIntegrable utility who (F.play (Profile.update profile who replacement))
+
+/-- The recommended law and every constant unilateral replacement against it
+have integrable payoffs for the deviator. -/
+def GameForm.HasIntegrableCoarseDeviations (F : GameForm ι)
+    (utility : F.sig.Outcome → ι → ℝ) (statusQuo : PMF (Profile F.sig)) : Prop :=
+  (∀ who, UtilityIntegrable utility who (F.outcomeLaw statusQuo)) ∧
+    ∀ who replacement, UtilityIntegrable utility who
+      (statusQuo.bind fun profile => F.play (Profile.update profile who replacement))
+
+/-- Every recommendation-dependent response to `statusQuo`, obedience included,
+has an integrable payoff for the responder. -/
+def GameForm.HasIntegrableResponses (F : GameForm ι)
+    (utility : F.sig.Outcome → ι → ℝ) (statusQuo : PMF (Profile F.sig)) : Prop :=
+  ∀ who (respond : F.sig.Strategy who → F.sig.Strategy who),
+    UtilityIntegrable utility who
+      (statusQuo.bind fun profile => F.play (Profile.update profile who (respond (profile who))))
+
+variable {F : GameForm ι} {utility : F.sig.Outcome → ι → ℝ}
+
+theorem GameForm.HasIntegrableDeviations.base {profile : Profile F.sig}
+    (h : F.HasIntegrableDeviations utility profile) (who : ι) :
+    UtilityIntegrable utility who (F.play profile) := by
+  simpa only [Profile.update_eq_self] using h who (profile who)
+
+theorem GameForm.HasIntegrableUtility.hasIntegrableDeviations
+    (h : F.HasIntegrableUtility utility) (profile : Profile F.sig) :
+    F.HasIntegrableDeviations utility profile :=
+  fun who _ => h who _
+
+theorem GameForm.HasIntegrableResponses.base {statusQuo : PMF (Profile F.sig)}
+    (h : F.HasIntegrableResponses utility statusQuo) (who : ι) :
+    UtilityIntegrable utility who (F.outcomeLaw statusQuo) := by
+  simpa only [id, Profile.update_eq_self, GameForm.outcomeLaw] using h who id
+
+theorem GameForm.HasIntegrableResponses.hasIntegrableCoarseDeviations
+    {statusQuo : PMF (Profile F.sig)} (h : F.HasIntegrableResponses utility statusQuo) :
+    F.HasIntegrableCoarseDeviations utility statusQuo :=
+  ⟨h.base, fun who replacement => h who fun _ => replacement⟩
+
+/-- A pure profile's point mass has integrable coarse deviations exactly when
+the profile has integrable deviations. -/
+theorem GameForm.hasIntegrableCoarseDeviations_pure_iff {profile : Profile F.sig} :
+    F.HasIntegrableCoarseDeviations utility (PMF.pure profile) ↔
+      F.HasIntegrableDeviations utility profile := by
+  simp only [GameForm.HasIntegrableCoarseDeviations, GameForm.HasIntegrableDeviations,
+    GameForm.outcomeLaw, PMF.pure_bind]
+  exact ⟨fun h => h.2, fun h => ⟨fun who => by
+    simpa only [Profile.update_eq_self] using h who (profile who), h⟩⟩
+
+/-- With integrable deviations, expected-utility Nash is the real-valued
+comparison of expected utilities. -/
+theorem GameForm.HasIntegrableDeviations.isNash_iff {profile : Profile F.sig}
+    (h : F.HasIntegrableDeviations utility profile) :
+    IsNash F (euPreference utility) profile ↔
+      ∀ who replacement,
+        expectedUtility utility who (F.play (Profile.update profile who replacement)) ≤
+          expectedUtility utility who (F.play profile) := by
+  rw [GameTheory.isNash_iff]
+  exact forall_congr' fun who => forall_congr' fun replacement =>
+    euPreference_iff utility who _ _ (h.base who) (h who replacement)
+
+/-- With integrable coarse deviations, expected-utility coarse correlated
+equilibrium is the real-valued comparison of expected utilities. -/
+theorem GameForm.HasIntegrableCoarseDeviations.isCoarseCorrelatedEq_iff
+    {statusQuo : PMF (Profile F.sig)}
+    (h : F.HasIntegrableCoarseDeviations utility statusQuo) :
+    IsCoarseCorrelatedEq F (euPreference utility) statusQuo ↔
+      ∀ who replacement,
+        expectedUtility utility who
+            (statusQuo.bind fun profile => F.play (Profile.update profile who replacement)) ≤
+          expectedUtility utility who (F.outcomeLaw statusQuo) := by
+  rw [GameTheory.isCoarseCorrelatedEq_iff]
+  exact forall_congr' fun who => forall_congr' fun replacement =>
+    euPreference_iff utility who _ _ (h.1 who) (h.2 who replacement)
+
+/-- With integrable responses, expected-utility correlated equilibrium is the
+real-valued comparison of expected utilities. -/
+theorem GameForm.HasIntegrableResponses.isCorrelatedEq_iff
+    {statusQuo : PMF (Profile F.sig)}
+    (h : F.HasIntegrableResponses utility statusQuo) :
+    IsCorrelatedEq F (euPreference utility) statusQuo ↔
+      ∀ who (respond : F.sig.Strategy who → F.sig.Strategy who),
+        expectedUtility utility who
+            (statusQuo.bind fun profile =>
+              F.play (Profile.update profile who (respond (profile who)))) ≤
+          expectedUtility utility who (F.outcomeLaw statusQuo) := by
+  rw [GameTheory.isCorrelatedEq_iff]
+  exact forall_congr' fun who => forall_congr' fun respond =>
+    euPreference_iff utility who _ _ (h.base who) (h who respond)
+
+end IntegrableDeviations
+
 /-- The preference package of a bundled utility game. -/
 def UtilityGame.preference (G : UtilityGame ι) : WeakPreference ι G.form.sig.Outcome :=
   euPreference G.utility
 
-/-! ## Guard projections and team utilities -/
+/-! ## Expectation projections and team utilities -/
 
-/-- A guarded Nash relation includes integrability of the incumbent payoff for
-each player. -/
-theorem IsNash.utilityIntegrable [DecidableEq ι] {F : GameForm ι}
+/-- At a Nash profile every player's incumbent payoff has an expectation. -/
+theorem IsNash.utilityHasExpectation [DecidableEq ι] {F : GameForm ι}
     {utility : F.sig.Outcome → ι → ℝ} {profile : Profile F.sig}
     (hnash : IsNash F (euPreference utility) profile) (who : ι) :
-    UtilityIntegrable utility who (F.play profile) := by
+    UtilityHasExpectation utility who (F.play profile) := by
   obtain ⟨hbase, -, -⟩ := (isNash_iff profile).1 hnash who (profile who)
   exact hbase
 
-/-- A guarded coarse correlated equilibrium includes integrability of each
-player's payoff under the recommended outcome law. -/
-theorem IsCoarseCorrelatedEq.utilityIntegrable [DecidableEq ι] {F : GameForm ι}
+/-- At a coarse correlated equilibrium every player's payoff under the
+recommended outcome law has an expectation. -/
+theorem IsCoarseCorrelatedEq.utilityHasExpectation [DecidableEq ι] {F : GameForm ι}
     {utility : F.sig.Outcome → ι → ℝ} {law : PMF (Profile F.sig)}
     (hcce : IsCoarseCorrelatedEq F (euPreference utility) law) (who : ι) :
-    UtilityIntegrable utility who (F.outcomeLaw law) := by
+    UtilityHasExpectation utility who (F.outcomeLaw law) := by
   obtain ⟨hbase, -, -⟩ := (isCoarseCorrelatedEq_iff law).1 hcce who
     (law.support_nonempty.some who)
   exact hbase
 
-/-- A guarded Nash relation includes integrability of every compared unilateral
-outcome law. -/
-theorem IsNash.deviationIntegrable [DecidableEq ι] {F : GameForm ι}
+/-- At a Nash profile every unilateral deviation's payoff has an expectation. -/
+theorem IsNash.deviationHasExpectation [DecidableEq ι] {F : GameForm ι}
     {utility : F.sig.Outcome → ι → ℝ} {profile : Profile F.sig}
     (hnash : IsNash F (euPreference utility) profile) (who : ι)
     (replacement : F.sig.Strategy who) :
-    UtilityIntegrable utility who
+    UtilityHasExpectation utility who
       (F.play (Profile.update profile who replacement)) := by
   obtain ⟨-, hdeviation, -⟩ :=
     (isNash_iff profile).1 hnash who replacement
@@ -139,20 +248,13 @@ theorem IsTeamGame.isNash_deviation_nonimproving [DecidableEq ι]
     (hteam : IsTeamGame utility) {profile : Profile F.sig}
     (hnash : IsNash F (euPreference utility) profile)
     (who : ι) (replacement : F.sig.Strategy who) (observer : ι) :
-    expectedUtility utility observer
+    extendedExpectedUtility utility observer
         (F.play (Profile.update profile who replacement)) ≤
-      expectedUtility utility observer (F.play profile) := by
-  have hrel := (isNash_iff profile).mp hnash who replacement
-  rcases hrel with ⟨_, _, hle⟩
-  calc
-    expectedUtility utility observer
-        (F.play (Profile.update profile who replacement)) =
-      expectedUtility utility who
-        (F.play (Profile.update profile who replacement)) :=
-      hteam.expectedUtility_eq _ observer who
-    _ ≤ expectedUtility utility who (F.play profile) := hle
-    _ = expectedUtility utility observer (F.play profile) :=
-      hteam.expectedUtility_eq _ who observer
+      extendedExpectedUtility utility observer (F.play profile) := by
+  obtain ⟨_, _, hle⟩ := (isNash_iff profile).mp hnash who replacement
+  rw [hteam.extendedExpectedUtility_eq _ observer who,
+    hteam.extendedExpectedUtility_eq _ observer who]
+  exact hle
 
 section Relabel
 
@@ -185,7 +287,7 @@ variable [DecidableEq ι] {F : GameForm ι} {utility : Utility F.sig}
 theorem isCoarseCorrelatedEq_randomized {statusQuo : PMF (Profile F.sig)}
     (h : IsCoarseCorrelatedEq F (euPreference utility) statusQuo)
     (hdev : ∀ who (replacement : PMF (F.sig.Strategy who)),
-      UtilityIntegrable utility who
+      UtilityHasExpectation utility who
         (F.outcomeLaw ((DeviationScheme.unilateralRandomized F.sig).apply
           statusQuo who replacement))) :
     IsEquilibrium F (euPreference utility) statusQuo
@@ -202,59 +304,17 @@ theorem isCoarseCorrelatedEq_randomized {statusQuo : PMF (Profile F.sig)}
     exact PMF.bind_comm statusQuo replacementPMF fun profile s =>
       F.play (Profile.update profile who s)
   have hpure := (isCoarseCorrelatedEq_iff statusQuo).mp h who
-  obtain ⟨s₀, hs₀⟩ := replacementPMF.support_nonempty
-  obtain ⟨hbase, -, -⟩ := hpure s₀
-  have hcond : ∀ s, UtilityIntegrable utility who (q s) := by
-    intro s
-    obtain ⟨-, hc, -⟩ := hpure s
-    exact hc
-  have hle : ∀ s, expectedUtility utility who (q s) ≤
-      expectedUtility utility who (F.outcomeLaw statusQuo) := by
-    intro s
-    exact (euPreference_iff utility who (F.outcomeLaw statusQuo) (q s)
-      hbase (hcond s)).mp (hpure s)
-  have hbind : UtilityIntegrable utility who (replacementPMF.bind q) := by
+  have hbind : UtilityHasExpectation utility who (replacementPMF.bind q) := by
     simpa only [hlaw] using hdev who replacementPMF
-  have htower := expectedUtility_bind utility who replacementPMF q hbind
-  have houter := payoffIntegrable_bind_conditionalExpectation replacementPMF q
-    (fun outcome => utility outcome who) hbind
-  have hconstant := payoffIntegrable_of_bounded replacementPMF
-    (fun _ => expectedUtility utility who (F.outcomeLaw statusQuo))
-    (C := |expectedUtility utility who (F.outcomeLaw statusQuo)|)
-    (fun _ => le_rfl)
-  have hmean := expect_mono (fun s _ => hle s) houter hconstant
-  have hvalue := calc
-      expectedUtility utility who
-          (F.outcomeLaw
-            ((DeviationScheme.unilateralRandomized F.sig).apply statusQuo who replacementPMF)) =
-        expectedUtility utility who (replacementPMF.bind q) := by
-            simp only [expectedUtility, hlaw]
-      _ = expect replacementPMF (fun s => expectedUtility utility who (q s)) := htower
-  have hleFinal : expectedUtility utility who
-      (F.outcomeLaw ((DeviationScheme.unilateralRandomized F.sig).apply
-        statusQuo who replacementPMF)) ≤
-      expectedUtility utility who (F.outcomeLaw statusQuo) := by
-    calc
-      expectedUtility utility who
-          (F.outcomeLaw
-            ((DeviationScheme.unilateralRandomized F.sig).apply statusQuo who replacement)) =
-        expect replacement (fun s => expectedUtility utility who (q s)) := hvalue
-      _ ≤ expectedUtility utility who (F.outcomeLaw statusQuo) := by
-        calc
-          _ ≤ expect replacementPMF (fun _ =>
-              expectedUtility utility who (F.outcomeLaw statusQuo)) := hmean
-          _ = expectedUtility utility who (F.outcomeLaw statusQuo) :=
-            expect_constant replacementPMF _
-  exact (euPreference_iff utility who (F.outcomeLaw statusQuo)
-    (F.outcomeLaw ((DeviationScheme.unilateralRandomized F.sig).apply
-      statusQuo who replacement)) hbase (hdev who replacement)).2 hleFinal
+  have hresult := euPreference_bind replacementPMF q (fun s _ => hpure s) hbind
+  rwa [← hlaw] at hresult
 
 /-- In the mixed extension a randomized deviation is a mixture of pure ones, so
 mixed Nash is decided by pure deviations alone. This is what lets an executable
 checker verify a supplied mixed profile against finitely many tests. -/
 theorem isNash_mixed_iff [Fintype ι] (mixedProfile : Profile F.sig.mixed)
     (hdev : ∀ who (replacement : PMF (F.sig.Strategy who)),
-      UtilityIntegrable utility who
+      UtilityHasExpectation utility who
         (F.mixed.play (Profile.update mixedProfile who replacement))) :
     IsNash F.mixed (euPreference utility) mixedProfile ↔
       ∀ (who : ι) (s : F.sig.Strategy who),
@@ -265,46 +325,12 @@ theorem isNash_mixed_iff [Fintype ι] (mixedProfile : Profile F.sig.mixed)
   let replacementPMF : PMF (F.sig.Strategy who) := replacement
   let q : F.sig.Strategy who → PMF F.sig.Outcome := fun s =>
     F.mixed.play (Profile.update mixedProfile who (PMF.pure s))
-  have hpure := fun s => h who s
-  obtain ⟨s₀, hs₀⟩ := (mixedProfile who).support_nonempty
-  obtain ⟨hbase, -, -⟩ := hpure s₀
-  have hcond : ∀ s, UtilityIntegrable utility who (q s) := by
-    intro s
-    obtain ⟨-, hc, -⟩ := hpure s
-    exact hc
-  have hle : ∀ s, expectedUtility utility who (q s) ≤
-      expectedUtility utility who (F.mixed.play mixedProfile) := by
-    intro s
-    exact (euPreference_iff utility who (F.mixed.play mixedProfile) (q s)
-      hbase (hcond s)).mp (hpure s)
-  have hbind : UtilityIntegrable utility who (replacementPMF.bind q) := by
-    rw [← GameForm.mixed_play_update]
+  have heq := GameForm.mixed_play_update F mixedProfile who replacementPMF
+  have hbind : UtilityHasExpectation utility who (replacementPMF.bind q) := by
+    rw [← heq]
     exact hdev who replacementPMF
-  have htower := expectedUtility_bind utility who replacementPMF q hbind
-  have houter := payoffIntegrable_bind_conditionalExpectation replacementPMF q
-    (fun outcome => utility outcome who) hbind
-  have hconstant := payoffIntegrable_of_bounded replacementPMF
-    (fun _ => expectedUtility utility who (F.mixed.play mixedProfile))
-    (C := |expectedUtility utility who (F.mixed.play mixedProfile)|)
-    (fun _ => le_rfl)
-  have hmean := expect_mono (fun s _ => hle s) houter hconstant
-  have hleFinal : expectedUtility utility who (F.mixed.play mixedProfile) ≥
-      expectedUtility utility who (F.mixed.play (Profile.update mixedProfile who replacement)) := by
-    calc
-      expectedUtility utility who (F.mixed.play (Profile.update mixedProfile who replacementPMF)) =
-        expectedUtility utility who (replacementPMF.bind q) := by
-          have heq := GameForm.mixed_play_update F mixedProfile who replacementPMF
-          exact expectedUtility_congr_law utility who heq
-      _ = expect replacementPMF (fun s => expectedUtility utility who (q s)) := htower
-      _ ≤ expectedUtility utility who (F.mixed.play mixedProfile) := by
-        calc
-          _ ≤ expect replacementPMF (fun _ =>
-              expectedUtility utility who (F.mixed.play mixedProfile)) := hmean
-          _ = expectedUtility utility who (F.mixed.play mixedProfile) :=
-            expect_constant replacementPMF _
-  exact (euPreference_iff utility who (F.mixed.play mixedProfile)
-    (F.mixed.play (Profile.update mixedProfile who replacement)) hbase
-    (hdev who replacement)).2 hleFinal
+  have hresult := euPreference_bind replacementPMF q (fun s _ => h who s) hbind
+  rwa [← heq] at hresult
 
 end Linearity
 

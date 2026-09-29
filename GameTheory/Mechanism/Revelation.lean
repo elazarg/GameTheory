@@ -67,7 +67,7 @@ theorem toDirectMechanism_choose_update_truthfulReports
     simp [BayesianGame.actionsOf]
   · simp [BayesianGame.actionsOf, Profile.update_of_ne _ _ hi]
 
-/-- **Guarded revelation principle.** Every pure Bayes-Nash plan induces
+/-- **Revelation principle.** Every pure Bayes-Nash plan induces
 a direct mechanism whose truthful plan is ordinary Nash of the compiled
 Bayesian form.  No separate BNE or BIC predicate is introduced. -/
 theorem revelation_principle
@@ -83,8 +83,7 @@ theorem revelation_principle
   let D := direct.toBayesianGame B.prior
   have hdeviation :=
     hNash who (fun ownType => plan who (misreport ownType))
-  rw [euPreference_apply] at hdeviation ⊢
-  rcases hdeviation with ⟨hbase, hdev, hle⟩
+  obtain ⟨hbase, hdev, hle⟩ := hdeviation
   have htruthPayoff (types : ∀ i, B.Ty i) :
       D.planPayoff who (direct.truthfulPlan B.prior) types =
         B.planPayoff who plan types := by
@@ -102,53 +101,33 @@ theorem revelation_principle
     exact congrArg (fun actions => B.payoff types actions who)
       (B.toDirectMechanism_choose_update_truthfulReports
         plan types who misreport)
-  have htruthPrior : PayoffIntegrable B.prior
-      (D.planPayoff who (direct.truthfulPlan B.prior)) :=
-    payoffIntegrable_congr_on_support
-      (fun types _ => (htruthPayoff types).symm)
-      (B.planPayoff_integrable who plan hbase)
-  have hdevPrior : PayoffIntegrable B.prior
-      (D.planPayoff who
-        (Profile.update (direct.truthfulPlan B.prior) who misreport)) :=
-    payoffIntegrable_congr_on_support
-      (fun types _ => (hdevPayoff types).symm)
-      (B.planPayoff_integrable who
-        (Profile.update plan who
-          (fun ownType => plan who (misreport ownType))) hdev)
-  have htruth : UtilityIntegrable D.utility who
+  have htruthValue : extendedExpectedUtility D.utility who
+      (D.toForm.play (direct.truthfulPlan B.prior)) =
+        extendedExpectedUtility B.utility who (B.toForm.play plan) := by
+    rw [D.extendedExpectedUtility_eq_prior, B.extendedExpectedUtility_eq_prior]
+    exact extendedExpect_congr_on_support fun types _ => htruthPayoff types
+  have hdevValue : extendedExpectedUtility D.utility who
+      (D.toForm.play (Profile.update (direct.truthfulPlan B.prior) who misreport)) =
+        extendedExpectedUtility B.utility who
+          (B.toForm.play (Profile.update plan who
+            (fun ownType => plan who (misreport ownType)))) := by
+    rw [D.extendedExpectedUtility_eq_prior, B.extendedExpectedUtility_eq_prior]
+    exact extendedExpect_congr_on_support fun types _ => hdevPayoff types
+  have htruth : UtilityHasExpectation D.utility who
       (D.toForm.play (direct.truthfulPlan B.prior)) := by
-    exact (payoffIntegrable_map_iff
-      (fun types => (types, D.actionsOf (direct.truthfulPlan B.prior) types))
-      B.prior (fun outcome => D.utility outcome who)).mpr htruthPrior
-  have hdirectDev : UtilityIntegrable D.utility who
-      (D.toForm.play
-        (Profile.update (direct.truthfulPlan B.prior) who misreport)) := by
-    exact (payoffIntegrable_map_iff
-      (fun types => (types,
-        D.actionsOf
-          (Profile.update (direct.truthfulPlan B.prior) who misreport) types))
-      B.prior (fun outcome => D.utility outcome who)).mpr hdevPrior
+    rw [D.utilityHasExpectation_iff_prior,
+      hasExpectation_congr_on_support fun types _ => htruthPayoff types,
+      ← B.utilityHasExpectation_iff_prior]
+    exact hbase
+  have hdirectDev : UtilityHasExpectation D.utility who
+      (D.toForm.play (Profile.update (direct.truthfulPlan B.prior) who misreport)) := by
+    rw [D.utilityHasExpectation_iff_prior,
+      hasExpectation_congr_on_support fun types _ => hdevPayoff types,
+      ← B.utilityHasExpectation_iff_prior]
+    exact hdev
   refine ⟨htruth, hdirectDev, ?_⟩
-  rw [D.expectedUtility_eq_prior who
-      (Profile.update (direct.truthfulPlan B.prior) who misreport),
-    D.expectedUtility_eq_prior who (direct.truthfulPlan B.prior),
-    B.expectedUtility_eq_prior who
-      (Profile.update plan who
-        (fun ownType => plan who (misreport ownType))),
-    B.expectedUtility_eq_prior who plan] at *
-  calc
-    expect B.prior
-        (D.planPayoff who
-          (Profile.update (direct.truthfulPlan B.prior) who misreport)) =
-      expect B.prior
-        (B.planPayoff who
-          (Profile.update plan who
-            (fun ownType => plan who (misreport ownType)))) :=
-          expect_congr_on_support (fun types _ => hdevPayoff types)
-    _ ≤ expect B.prior (B.planPayoff who plan) := hle
-    _ = expect B.prior (D.planPayoff who (direct.truthfulPlan B.prior)) :=
-          expect_congr_on_support
-            (fun types _ => (htruthPayoff types).symm)
+  rw [htruthValue, hdevValue]
+  exact hle
 
 end BayesianGame
 

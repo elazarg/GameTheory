@@ -255,10 +255,11 @@ private theorem exists_reducedOwnerPolicy_dominates_on_sourceFirst
               ((nativeBehavioralGameForm semantics).play
                 (Profile.update (pruning.expandPolicy policy) owner
                   nextFull)) := by
-        obtain ⟨hbest, halt, hle⟩ :=
+        obtain ⟨-, -, hle⟩ :=
           htransported.upperBound (fullReplacement target)
-        simpa only [siteRuleExpectedUtility, siteReplacementLaw, hleft,
-          nextFull] using hle
+        rw [extendedExpectedUtility_le_iff (payoffIntegrable_of_finite _ _)
+          (payoffIntegrable_of_finite _ _)] at hle
+        simpa only [siteReplacementLaw, hleft, nextFull] using hle
       have hmixedUpdated : ∀ site, site ∈ sites →
           FullyMixedAt (pruning.expandOwnerPolicy owner updated) site := by
         intro site hsite
@@ -368,7 +369,7 @@ theorem coversFullDeviationsAt_of_edgeAdditionFixpoint
             (pruning.expandOwnerPolicy owner reducedReplacement)) by
     exact congrArg (nativeBehavioralGameForm semantics).play
       (pruning.expandPolicy_update policy owner reducedReplacement)]
-  exact ⟨payoffIntegrable_of_finite _ _, payoffIntegrable_of_finite _ _,
-    hdominates⟩
+  exact (euPreference_iff _ _ _ _ (payoffIntegrable_of_finite _ _)
+    (payoffIntegrable_of_finite _ _)).2 hdominates
 
 end GameTheory.Experimental.PostArchitecture.MAIDPruningGlobalReduction

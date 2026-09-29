@@ -556,9 +556,9 @@ theorem matching_expanded_fineFalse_not_isNash :
         matchingSemantics.utility owner assignment)
       (fine.expandPolicy fineFalse) := by
   intro hnash
-  have hdeviation := (isNash_iff _).mp hnash ()
-    ((coarse.expandPolicy coarseCopyFirst) ())
-  rcases hdeviation with ⟨-, -, hle⟩
+  have hle := (euPreference_iff _ _ _ _ (payoffIntegrable_of_finite _ _)
+    (payoffIntegrable_of_finite _ _)).1
+      ((isNash_iff _).mp hnash () ((coarse.expandPolicy coarseCopyFirst) ()))
   have hcopyLaw :
       (nativeBehavioralGameForm matchingSemantics).play
           (Profile.update (fine.expandPolicy fineFalse) ()

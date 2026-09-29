@@ -189,21 +189,19 @@ theorem socialCost_nash_le [DecidableEq ι] (C : CongestionGame ι)
   linarith
 
 /-- **Robust price of anarchy of affine congestion games.**  The `5/2` bound
-extends from pure Nash equilibria to every coarse correlated equilibrium. -/
+extends from pure Nash equilibria to every coarse correlated equilibrium whose
+compared laws are integrable. -/
 theorem coarseCorrelated_socialCost_le [DecidableEq ι] (C : CongestionGame ι)
     {a b : C.Resource → ℝ} (h : C.IsAffine a b) {law : PMF C.Profile}
     (hlaw : IsCoarseCorrelatedEq C.toGameForm (euPreference C.utility) law)
+    (hintegrable : C.toUtilityGame.form.HasIntegrableCoarseDeviations
+      C.toUtilityGame.utility law)
     (target : C.Profile) :
     expect law C.socialCost ≤
       5 / 2 * C.socialCost target := by
   have hbound := UtilityGame.IsSmooth.coarseCorrelated_bound
-    (C.isSmooth_of_isAffine h) hlaw target
-  have hintegrable : ∀ i, UtilityIntegrable C.utility i
-      (C.toUtilityGame.form.outcomeLaw law) := fun i =>
-    ((C.toUtilityGame.isεCoarseCorrelatedEq_iff_externalRegret_le.mp
-      ((C.toUtilityGame.isCoarseCorrelatedEq_iff_isεCoarseCorrelatedEq_zero
-        (statusQuo := law)).mp hlaw)) i (target i)).1
-  rw [C.expectedSocialWelfare_toUtilityGame law hintegrable,
+    (C.isSmooth_of_isAffine h) hlaw hintegrable target
+  rw [C.expectedSocialWelfare_toUtilityGame law hintegrable.1,
     C.socialWelfare_toUtilityGame] at hbound
   linarith
 

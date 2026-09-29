@@ -49,6 +49,12 @@ private theorem saddleProfile_isSaddlePoint (A : I → J → ℝ) :
   Classical.choose_spec (exists_isSaddlePoint (F := form I J) (utility A)
     (utility_isZeroSum A) (hasIntegrableUtility A))
 
+omit [Nonempty I] [Nonempty J] in
+/-- A finite matrix integrates every outcome law. -/
+private theorem lawIntegrable (A : I → J → ℝ) (who : Fin 2)
+    (law : PMF (form I J).sig.Outcome) : UtilityIntegrable (utility A) who law :=
+  payoffIntegrable_of_finite law (fun outcome => utility A outcome who)
+
 private theorem saddleProfile_spec (A : I → J → ℝ) :
     (∀ row : PMF I,
       UtilityIntegrable (utility A) 0
@@ -67,17 +73,29 @@ private theorem saddleProfile_spec (A : I → J → ℝ) :
           ((form I J).mixed.play (saddleProfile A)) ≤
           expectedUtility (utility A) 0
             ((form I J).mixed.play
-              (Profile.update (saddleProfile A) 1 col))) := by
-  exact (saddleProfile_isSaddlePoint A).2
+              (Profile.update (saddleProfile A) 1 col))) :=
+  ⟨fun row => ⟨lawIntegrable A 0 _, (euPreference_iff _ _ _ _ (lawIntegrable A 0 _)
+      (lawIntegrable A 0 _)).1 ((saddleProfile_isSaddlePoint A).1 row)⟩,
+    fun col => ⟨lawIntegrable A 0 _, (euPreference_iff _ _ _ _ (lawIntegrable A 0 _)
+      (lawIntegrable A 0 _)).1 ((saddleProfile_isSaddlePoint A).2 col)⟩⟩
 
 omit [Nonempty I] [Nonempty J] in
-private theorem matrixLawIntegrable (A : I → J → ℝ)
-    (row : PMF I) (col : PMF J) :
-    UtilityIntegrable (utility A) 0
-      ((form I J).mixed.play (mixedProfile row col)) :=
-  payoffIntegrable_of_finite
-    ((form I J).mixed.play (mixedProfile row col))
-    (fun outcome => utility A outcome 0)
+/-- For a finite matrix, row security is the real comparison against every
+column. -/
+theorem rowGuarantees_iff (A : I → J → ℝ) (row : PMF I) (v : ℝ) :
+    RowGuarantees A row v ↔ ∀ col : PMF J, v ≤ expectedPayoff A row col := by
+  refine forall_congr' fun col => ?_
+  rw [extendedExpectedUtility_eq (lawIntegrable A 0 _), EReal.coe_le_coe_iff]
+  exact ⟨fun h => h.2, fun h => ⟨(lawIntegrable A 0 _).hasExpectation, h⟩⟩
+
+omit [Nonempty I] [Nonempty J] in
+/-- For a finite matrix, column capping is the real comparison against every
+row. -/
+theorem columnCaps_iff (A : I → J → ℝ) (col : PMF J) (v : ℝ) :
+    ColumnCaps A col v ↔ ∀ row : PMF I, expectedPayoff A row col ≤ v := by
+  refine forall_congr' fun row => ?_
+  rw [extendedExpectedUtility_eq (lawIntegrable A 0 _), EReal.coe_le_coe_iff]
+  exact ⟨fun h => h.2, fun h => ⟨(lawIntegrable A 0 _).hasExpectation, h⟩⟩
 
 /-- A saddle profile witnessing `value`. -/
 noncomputable def valueProfile (A : I → J → ℝ) :
@@ -142,18 +160,20 @@ theorem expectedPayoff_valueProfile (A : I → J → ℝ) :
 /-- The selected row guarantees the matrix value against every column. -/
 theorem valueRow_guarantees (A : I → J → ℝ) :
     RowGuarantees A (valueRow A) (value A) := by
+  rw [rowGuarantees_iff]
   intro col
   have h := (value_spec A).2 col
   rw [← mixedProfile_valueProfile A, mixedProfile_update_one] at h
-  simpa only [expectedPayoff] using h
+  simpa only [expectedPayoff] using h.2
 
 /-- The selected column caps the row payoff at the matrix value. -/
 theorem valueColumn_caps (A : I → J → ℝ) :
     ColumnCaps A (valueColumn A) (value A) := by
+  rw [columnCaps_iff]
   intro row
   have h := (value_spec A).1 row
   rw [← mixedProfile_valueProfile A, mixedProfile_update_zero] at h
-  simpa only [expectedPayoff] using h
+  simpa only [expectedPayoff] using h.2
 
 /-- Any saddle point realizes the selected matrix value. -/
 theorem expectedPayoff_eq_value_of_isSaddlePoint (A : I → J → ℝ)
@@ -161,8 +181,10 @@ theorem expectedPayoff_eq_value_of_isSaddlePoint (A : I → J → ℝ)
     (hsaddle : IsSaddlePoint (F := form I J) (utility A)
       (mixedProfile row col)) :
     expectedPayoff A row col = value A := by
-  obtain ⟨hσ, hτ, heq⟩ :=
+  obtain ⟨-, -, heq⟩ :=
     IsSaddlePoint.value_eq hsaddle (valueProfile_isSaddlePoint A)
+  rw [extendedExpectedUtility_eq (lawIntegrable A 0 _),
+    extendedExpectedUtility_eq (lawIntegrable A 0 _), EReal.coe_eq_coe_iff] at heq
   simpa only [expectedPayoff, value,
     valueProfile, saddleProfile] using heq
 
@@ -173,19 +195,11 @@ theorem common_guarantee_eq_value (A : I → J → ℝ) {w : ℝ}
     w = value A := by
   obtain ⟨row, hrow⟩ := hrow
   obtain ⟨col, hcol⟩ := hcol
+  rw [rowGuarantees_iff] at hrow
+  rw [columnCaps_iff] at hcol
   apply le_antisymm
-  · obtain ⟨hrowGuard, hrowLe⟩ := hrow (valueColumn A)
-    obtain ⟨hcapGuard, hcap⟩ := valueColumn_caps A row
-    exact (show w ≤ expectedPayoff A row (valueColumn A) by
-      simpa only [expectedPayoff] using hrowLe).trans
-      (show expectedPayoff A row (valueColumn A) ≤ value A by
-        simpa only [expectedPayoff] using hcap)
-  · obtain ⟨hrowGuard, hrowLe⟩ := valueRow_guarantees A col
-    obtain ⟨hcapGuard, hcap⟩ := hcol (valueRow A)
-    exact (show value A ≤ expectedPayoff A (valueRow A) col by
-      simpa only [expectedPayoff] using hrowLe).trans
-      (show expectedPayoff A (valueRow A) col ≤ w by
-        simpa only [expectedPayoff] using hcap)
+  · exact (hrow (valueColumn A)).trans ((columnCaps_iff A _ _).1 (valueColumn_caps A) row)
+  · exact ((rowGuarantees_iff A _ _).1 (valueRow_guarantees A) col).trans (hcol (valueRow A))
 
 /-- Mixed rows that guarantee the selected value. -/
 def optimalRowStrategies (A : I → J → ℝ) : Set (PMF I) :=
@@ -198,26 +212,12 @@ def optimalColumnStrategies (A : I → J → ℝ) : Set (PMF J) :=
 theorem mem_optimalRowStrategies_iff (A : I → J → ℝ) (row : PMF I) :
     row ∈ optimalRowStrategies A ↔
       ∀ col : PMF J, value A ≤ expectedPayoff A row col :=
-  by
-    constructor
-    · intro h col
-      obtain ⟨hguard, hle⟩ := h col
-      simpa only [expectedPayoff] using hle
-    · intro h col
-      exact ⟨matrixLawIntegrable A row col,
-        by simpa only [expectedPayoff] using h col⟩
+  rowGuarantees_iff A row (value A)
 
 theorem mem_optimalColumnStrategies_iff (A : I → J → ℝ) (col : PMF J) :
     col ∈ optimalColumnStrategies A ↔
       ∀ row : PMF I, expectedPayoff A row col ≤ value A :=
-  by
-    constructor
-    · intro h row
-      obtain ⟨hguard, hle⟩ := h row
-      simpa only [expectedPayoff] using hle
-    · intro h row
-      exact ⟨matrixLawIntegrable A row col,
-        by simpa only [expectedPayoff] using h row⟩
+  columnCaps_iff A col (value A)
 
 /-- A row/column pair is optimal exactly when its canonical mixed profile is a
 saddle point. -/
@@ -227,47 +227,18 @@ theorem optimal_pairs_iff_isSaddlePoint (A : I → J → ℝ)
       IsSaddlePoint (F := form I J) (utility A) (mixedProfile row col) := by
   constructor
   · rintro ⟨hrow, hcol⟩
-    have hrow' := (mem_optimalRowStrategies_iff A row).1 hrow
-    have hcol' := (mem_optimalColumnStrategies_iff A col).1 hcol
-    have hp : expectedPayoff A row col = value A :=
-      le_antisymm (hcol' row) (hrow' col)
-    rw [isSaddlePoint_iff_guarantees_caps]
-    refine ⟨matrixLawIntegrable A row col, ?_, ?_⟩
-    · intro col'
-      refine ⟨matrixLawIntegrable A row col', ?_⟩
-      have hbaseVal :
-          expectedPayoff A row col = value A :=
-        by exact hp
-      have hdev := (hrow' col')
-      have hdev' : value A ≤
-          expectedPayoff A row col' :=
-        by exact hdev
-      exact hbaseVal.le.trans hdev'
-    · intro row'
-      refine ⟨matrixLawIntegrable A row' col, ?_⟩
-      have hbaseVal :
-          expectedPayoff A row col = value A :=
-        by exact hp
-      have hdev := (hcol' row')
-      have hdev' :
-          expectedPayoff A row' col ≤ value A :=
-        by exact hdev
-      exact hdev'.trans hbaseVal.symm.le
+    rw [mem_optimalRowStrategies_iff] at hrow
+    rw [mem_optimalColumnStrategies_iff] at hcol
+    have hp : expectedPayoff A row col = value A := le_antisymm (hcol row) (hrow col)
+    rw [isSaddlePoint_iff_guarantees_caps A row col (lawIntegrable A 0 _),
+      rowGuarantees_iff, columnCaps_iff, hp]
+    exact ⟨hrow, hcol⟩
   · intro hsaddle
     have hp := expectedPayoff_eq_value_of_isSaddlePoint A hsaddle
-    rw [isSaddlePoint_iff_guarantees_caps] at hsaddle
-    rcases hsaddle with ⟨hbase, hrow, hcol⟩
-    apply And.intro
-    · apply (mem_optimalRowStrategies_iff A row).2
-      intro col'
-      obtain ⟨hguard, hle⟩ := hrow col'
-      rw [← hp]
-      simpa only [expectedPayoff] using hle
-    · apply (mem_optimalColumnStrategies_iff A col).2
-      intro row'
-      obtain ⟨hguard, hle⟩ := hcol row'
-      rw [← hp]
-      simpa only [expectedPayoff] using hle
+    rw [isSaddlePoint_iff_guarantees_caps A row col (lawIntegrable A 0 _),
+      rowGuarantees_iff, columnCaps_iff, hp] at hsaddle
+    exact ⟨(mem_optimalRowStrategies_iff A row).2 hsaddle.1,
+      (mem_optimalColumnStrategies_iff A col).2 hsaddle.2⟩
 
 /-- Matrix-optimal pairs are exactly canonical mixed Nash equilibria. -/
 theorem optimal_pairs_iff_isNash (A : I → J → ℝ)
@@ -296,7 +267,10 @@ theorem expectedUtility_eq_value_of_isCoarseCorrelatedEq (A : I → J → ℝ)
     expectedUtility (utility A) 0 ((form I J).mixed.outcomeLaw law)
          = value A := by
   have hnash := (valueProfile_isSaddlePoint A).isNash (utility_isZeroSum A)
-  exact hcce.expectedUtility_eq_of_zeroSum (utility_isZeroSum A) hnash 0
+  have hvalue := hcce.extendedExpectedUtility_eq_of_zeroSum (utility_isZeroSum A) hnash 0
+  rw [extendedExpectedUtility_eq (lawIntegrable A 0 _),
+    extendedExpectedUtility_eq (lawIntegrable A 0 _), EReal.coe_eq_coe_iff] at hvalue
+  exact hvalue
 
 /-- At least one mixed row guarantees the matrix value. -/
 theorem optimalRowStrategies_nonempty (A : I → J → ℝ) :

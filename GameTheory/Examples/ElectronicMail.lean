@@ -380,7 +380,8 @@ theorem attackOnMessage_not_isNash :
   intro hnash
   rw [isNash_iff] at hnash
   have hdeviation := hnash true trueNeverAttack
-  rcases hdeviation with ⟨hpreferred, halternative, hle⟩
+  have hle := (euPreference_iff _ _ _ _ (payoffIntegrable_of_finite _ _)
+    (payoffIntegrable_of_finite _ _)).1 hdeviation
   have hpreferredValue : expectedUtility game.utility true
       (game.toForm.play attackOnMessage) = -1 / 3 := by
     calc

@@ -97,17 +97,19 @@ theorem outcomeLaw_isBayesCorrelatedEq :
   information.isBayesCorrelatedEq_outcomeLaw_of_isNash
     matchingPlan matchingPlan_isNash
 
-/-- The fixture exercises the full guarded interim characterization. -/
+/-- The fixture exercises the full interim characterization. -/
 theorem outcomeLaw_interim_obedience :
     game.IsBayesPlausible (information.outcomeLaw matchingPlan) ∧
       game.InterimObedienceTests (information.outcomeLaw matchingPlan) :=
   (game.isBayesCorrelatedEq_iff_interim_obedience
-    (information.outcomeLaw matchingPlan)).1 outcomeLaw_isBayesCorrelatedEq
+    (information.outcomeLaw matchingPlan)
+    fun _ _ => payoffIntegrable_of_finite _ _).1 outcomeLaw_isBayesCorrelatedEq
 
 theorem outcomeLaw_isBayesCorrelatedEq_via_interim :
     game.IsBayesCorrelatedEq (information.outcomeLaw matchingPlan) :=
   (game.isBayesCorrelatedEq_iff_interim_obedience
-    (information.outcomeLaw matchingPlan)).2 outcomeLaw_interim_obedience
+    (information.outcomeLaw matchingPlan)
+    fun _ _ => payoffIntegrable_of_finite _ _).2 outcomeLaw_interim_obedience
 
 def mismatchingPlan : Profile game.signature :=
   fun _ ownType => !ownType
@@ -193,7 +195,7 @@ theorem mismatchingRecommendation_not_interim_obedient :
   intro hinterim
   apply mismatchingRecommendation_not_isBayesCorrelatedEq
   exact (game.isBayesCorrelatedEq_iff_interim_obedience
-    mismatchingRecommendation).2
+    mismatchingRecommendation fun _ _ => payoffIntegrable_of_finite _ _).2
       ⟨mismatchingRecommendation_isBayesPlausible, hinterim⟩
 
 end GameTheory.Tests.BayesCorrelated

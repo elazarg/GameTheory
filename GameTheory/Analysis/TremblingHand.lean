@@ -135,7 +135,8 @@ theorem _root_.GameTheory.IsNash.isTremblingHandPerfect_of_fullSupport
       vanishingWeight_tendsto_zero.mul_const ((profile i action).toReal)
   · exact Analysis.mixedProfileConvergesPointwise_const profile
 
-/-- A trembling-hand perfect profile is mixed Nash.  Finite action carriers
+/-- With integrable pure play, a trembling-hand perfect profile is mixed Nash.
+Finite action carriers
 let an arbitrary mixed deviation be repaired to satisfy each positive lower
 bound; those repairs converge back to the original deviation as the bounds
 vanish. Expected-utility continuity then passes the perturbed equilibrium
@@ -144,11 +145,11 @@ theorem IsTremblingHandPerfect.isNash
     [∀ i, Fintype (F.sig.Strategy i)]
     {utility : F.sig.Outcome → ι → ℝ}
     {profile : Profile F.sig.mixed}
-    (hperfect : F.IsTremblingHandPerfect (euPreference utility) profile) :
+    (hperfect : F.IsTremblingHandPerfect (euPreference utility) profile)
+    (hintegrable : F.HasIntegrableUtility utility) :
     IsNash F.mixed (euPreference utility) profile := by
   rw [isNash_iff]
   intro who replacement
-  rw [euPreference_apply]
   rcases hperfect with ⟨lower, approximating, hequilibria, hzero, hconverges⟩
   have hprobSum (n : ℕ) :
       ∑ action, (approximating n who action).toReal = 1 := by
@@ -221,32 +222,6 @@ theorem IsTremblingHandPerfect.isNash
     · subst hother
       simpa only [Profile.update_same] using hrepairedConverges
     · simpa only [Profile.update_of_ne _ _ hother] using hconverges other
-  have hintegrable : F.HasIntegrableUtility utility := by
-    intro player pureProfile
-    have hprofileSupport :
-        pureProfile ∈ (independentProduct (approximating 0)).support := by
-      apply (independentProduct_support_iff (approximating 0) pureProfile).2
-      intro other
-      exact GameForm.Perturbation.Positive.fullSupport_of_respects F
-        (hequilibria 0).1 (hequilibria 0).2.1 other (pureProfile other)
-    have hbase : UtilityIntegrable utility player
-        (F.mixed.play (approximating 0)) := by
-      have hrelation :=
-        ((F.isPerturbedEq_iff (euPreference utility) (lower 0)
-          (approximating 0)).mp (hequilibria 0).2).2 player
-          (approximating 0 player) ((hequilibria 0).2.1 player)
-      rw [Profile.update_eq_self] at hrelation
-      rcases (euPreference_apply utility player
-        (F.mixed.play (approximating 0))
-        (F.mixed.play (approximating 0))).mp hrelation with
-        ⟨hpreferred, _⟩
-      exact hpreferred
-    have hconditional := payoffIntegrable_bind_conditional_on_support
-      (independentProduct (approximating 0)) F.play
-      (fun outcome => utility outcome player)
-      (by simpa only [GameForm.mixed_play, UtilityIntegrable] using hbase)
-      pureProfile hprofileSupport
-    simpa only [GameForm.mixed_play, UtilityIntegrable] using hconditional
   let G : UtilityGame ι := ⟨F, utility⟩
   have hstatusTendsto :
       Tendsto
@@ -266,18 +241,15 @@ theorem IsTremblingHandPerfect.isNash
     simpa only [G] using
       (UtilityGame.expectedUtility_mixed_tendsto (G := G)
         hupdatedConverges hintegrable who)
-  refine ⟨hintegrable.mixed_of_finite who profile,
-    hintegrable.mixed_of_finite who (Profile.update profile who replacement), ?_⟩
+  refine (euPreference_iff _ _ _ _ (hintegrable.mixed_of_finite who profile)
+    (hintegrable.mixed_of_finite who (Profile.update profile who replacement))).2 ?_
   apply le_of_tendsto_of_tendsto hdeviationTendsto hstatusTendsto
   exact Eventually.of_forall fun n => by
     have hpref :=
       ((F.isPerturbedEq_iff (euPreference utility) (lower n) (approximating n)).mp
         (hequilibria n).2).2 who (repaired n) (hrepairedRespects n)
-    rcases (euPreference_apply utility who
-      (F.mixed.play (approximating n))
-      (F.mixed.play (Profile.update (approximating n) who (repaired n)))).mp
-      hpref with ⟨_, _, hle⟩
-    exact hle
+    exact (euPreference_iff _ _ _ _ (hintegrable.mixed_of_finite who _)
+      (hintegrable.mixed_of_finite who _)).1 hpref
 
 end GameForm
 
@@ -294,14 +266,16 @@ theorem isTremblingHandPerfect_iff (G : UtilityGame ι)
       G.form.IsTremblingHandPerfect (euPreference G.utility) profile :=
   Iff.rfl
 
-/-- Expected-utility trembling-hand perfection refines ordinary mixed Nash. -/
+/-- Expected-utility trembling-hand perfection refines ordinary mixed Nash when
+pure play is integrable. -/
 theorem IsTremblingHandPerfect.isNash
     (G : UtilityGame ι)
     [∀ i, Fintype (G.form.sig.Strategy i)]
     {profile : Profile G.form.sig.mixed}
-    (hperfect : G.IsTremblingHandPerfect profile) :
+    (hperfect : G.IsTremblingHandPerfect profile)
+    (hintegrable : G.form.HasIntegrableUtility G.utility) :
     IsNash G.form.mixed (euPreference G.utility) profile :=
-  GameForm.IsTremblingHandPerfect.isNash G.form hperfect
+  GameForm.IsTremblingHandPerfect.isNash G.form hperfect hintegrable
 
 end UtilityGame
 

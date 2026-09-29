@@ -105,7 +105,7 @@ theorem exists_reduced_isOptimalSiteRule
   refine ⟨reducedRule, ?_⟩
   intro alternative
   obtain ⟨hbestSite, haltSite, hle⟩ := hbest alternative
-  obtain ⟨_, hbestJoint, hbestEq⟩ := factors.utility_eq best
+  obtain ⟨hbestInt, hbestJoint, hbestEq⟩ := factors.utility_eq best
   obtain ⟨hredSite, hredJoint, hredEq⟩ :=
     factors.utility_eq (expandKeptSiteRule pruning target reducedRule)
   have hjointLaw :
@@ -128,6 +128,8 @@ theorem exists_reduced_isOptimalSiteRule
           (fun pair => factors.continuationValue pair.1 pair.2)
            := expect_congr_law hjointLaw _
       _ = _ := hredEq.symm
-  exact ⟨hredSite, haltSite, hle.trans hvalue.le⟩
+  refine ⟨hredSite.hasExpectation, haltSite, hle.trans ?_⟩
+  rw [extendedExpectedUtility_eq hbestInt, extendedExpectedUtility_eq hredSite]
+  exact_mod_cast hvalue.le
 
 end GameTheory.Experimental.PostArchitecture.MAIDSiteLocalReduction

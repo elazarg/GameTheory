@@ -211,7 +211,7 @@ theorem IsExactPotential.isStrictNash_of_strict_maximal
     (hmax : ∀ other : Profile F.sig, other ≠ profile → potential other < potential profile) :
     IsStrictNash F utility profile := by
   intro who
-  refine ⟨hpotential.integrable profile who, ?_⟩
+  refine ⟨(hpotential.integrable profile who).hasExpectation, ?_⟩
   intro replacement hreplacement
   have hupdate_ne : Profile.update profile who replacement ≠ profile := by
     intro hupdate
@@ -220,16 +220,20 @@ theorem IsExactPotential.isStrictNash_of_strict_maximal
     simpa using hcoordinate
   have hlt := hmax (Profile.update profile who replacement) hupdate_ne
   have hdiff := hpotential.difference who profile replacement
-  refine ⟨hpotential.integrable (Profile.update profile who replacement) who, ?_⟩
+  refine ⟨(hpotential.integrable (Profile.update profile who replacement) who).hasExpectation,
+    (extendedExpectedUtility_lt_iff (hpotential.integrable _ who)
+      (hpotential.integrable profile who)).2 ?_⟩
   linarith
 
 /-- Every improving step strictly raises an exact potential. -/
 theorem IsExactPotential.improvingStep_increases_potential
     (hpotential : IsExactPotential F utility potential) {source target : Profile F.sig}
     (hstep : ImprovingStep F utility source target) : potential source < potential target := by
-  obtain ⟨who, replacement, htarget, hsource, htargetInt, himprove⟩ := hstep
+  obtain ⟨who, replacement, htarget, -, -, himprove⟩ := hstep
   subst target
-  exact hpotential.improving_deviation_increases_potential himprove
+  exact hpotential.improving_deviation_increases_potential
+    ((extendedExpectedUtility_lt_iff (hpotential.integrable _ who)
+      (hpotential.integrable _ who)).1 himprove)
 
 /-- A finite exact-potential game admits no infinite path of strict unilateral
 expected-utility improvements. -/
@@ -251,9 +255,11 @@ theorem IsExactPotential.no_infinite_improving_path [Finite (Profile F.sig)]
 theorem IsOrdinalPotential.improvingStep_increases_potential
     (hpotential : IsOrdinalPotential F utility potential) {source target : Profile F.sig}
     (hstep : ImprovingStep F utility source target) : potential source < potential target := by
-  obtain ⟨who, replacement, htarget, hsource, htargetInt, himprove⟩ := hstep
+  obtain ⟨who, replacement, htarget, -, -, himprove⟩ := hstep
   subst target
-  exact (hpotential.comparison who source replacement).1 himprove
+  exact (hpotential.comparison who source replacement).1
+    ((extendedExpectedUtility_lt_iff (hpotential.integrable _ who)
+      (hpotential.integrable _ who)).1 himprove)
 
 /-- An ordinal-potential improving step strictly reduces the number of profiles
 whose potential is higher. -/
@@ -274,8 +280,8 @@ theorem IsOrdinalPotential.improvingStep_filter_card_lt [Fintype (Profile F.sig)
 
 /-- Well-founded strict improvement is sufficient for weak acyclicity. -/
 theorem weaklyAcyclic_of_wellFounded
-    (hintegrable : ∀ profile : Profile F.sig, ∀ who,
-      UtilityIntegrable utility who (F.play profile))
+    (hexpectation : ∀ profile : Profile F.sig, ∀ who,
+      UtilityHasExpectation utility who (F.play profile))
     (hwellFounded : WellFounded (fun target source : Profile F.sig =>
       ImprovingStep F utility source target)) :
     WeaklyAcyclic F utility := by
@@ -286,8 +292,8 @@ theorem weaklyAcyclic_of_wellFounded
     · exact ⟨source, Relation.ReflTransGen.refl, hnash⟩
     · obtain ⟨next, hstep⟩ :=
         (not_isNash_iff_exists_improvingStep
-          (fun who => hintegrable source who)
-          (fun who replacement => hintegrable (Profile.update source who replacement) who)).mp
+          (fun who => hexpectation source who)
+          (fun who replacement => hexpectation (Profile.update source who replacement) who)).mp
           hnash
       obtain ⟨target, hreach, htarget⟩ := ih next hstep
       exact ⟨target, Relation.ReflTransGen.head hstep hreach, htarget⟩
@@ -306,7 +312,9 @@ theorem IsOrdinalPotential.improvement_wellFounded [Finite (Profile F.sig)]
 /-- Every finite ordinal-potential game is weakly acyclic. -/
 theorem IsOrdinalPotential.weaklyAcyclic [Finite (Profile F.sig)]
     (hpotential : IsOrdinalPotential F utility potential) : WeaklyAcyclic F utility :=
-  weaklyAcyclic_of_wellFounded hpotential.integrable hpotential.improvement_wellFounded
+  weaklyAcyclic_of_wellFounded
+    (fun profile who => (hpotential.integrable profile who).hasExpectation)
+    hpotential.improvement_wellFounded
 
 /-- The exact-potential special case of ordinal-potential weak acyclicity. -/
 theorem IsExactPotential.weaklyAcyclic [Finite (Profile F.sig)]

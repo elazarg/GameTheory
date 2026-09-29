@@ -28,18 +28,18 @@ theorem bundled_transfer (ε : ℝ) (profile : Profile source.sig) :
 
 theorem bundled_bound (profile : Profile source.sig) (replacement : target.sig.Strategy ()) :
     ∃ alternative : source.sig.Strategy (),
-      UtilityIntegrable
+      UtilityHasExpectation
           (fun outcome player => booleanUtility (sourceObserve outcome) player) ()
           (source.play (Profile.update profile () alternative)) →
-        UtilityIntegrable
+        UtilityHasExpectation
             (fun outcome player => booleanUtility (targetObserve outcome) player) ()
             (target.play (Profile.update
               (bundled.compileProfile profile) () replacement)) ∧
-          expectedUtility
+          extendedExpectedUtility
               (fun outcome player => booleanUtility (targetObserve outcome) player) ()
               (target.play (Profile.update
                 (bundled.compileProfile profile) () replacement)) ≤
-            expectedUtility
+            extendedExpectedUtility
               (fun outcome player => booleanUtility (sourceObserve outcome) player) ()
               (source.play (Profile.update profile () alternative)) :=
   bundled.unilateral_bound subset_rfl profile () replacement
@@ -53,10 +53,10 @@ theorem direct_transfer (ε : ℝ) (profile : Profile source.sig) :
   apply isεGroupNash_compileProfile_iff_of_utility_bounds compileLayered ?_ ?_
     (singletonGroups Unit) profile ?_ ε
   · intro sourceProfile who
-    exact (secondUtility.honest_integrable (firstUtility.compileProfile sourceProfile) who).trans
-      (firstUtility.honest_integrable sourceProfile who)
+    exact (secondUtility.honest_expectation (firstUtility.compileProfile sourceProfile) who).trans
+      (firstUtility.honest_expectation sourceProfile who)
   · intro sourceProfile who htarget hsource
-    have hmiddle := (firstUtility.honest_integrable sourceProfile who).mpr hsource
+    have hmiddle := (firstUtility.honest_expectation sourceProfile who).mpr hsource
     exact (secondUtility.honest_utility
       (firstUtility.compileProfile sourceProfile) who htarget hmiddle).trans
       (firstUtility.honest_utility sourceProfile who hmiddle hsource)
@@ -74,18 +74,18 @@ theorem direct_transfer (ε : ℝ) (profile : Profile source.sig) :
 
 theorem direct_bound (profile : Profile source.sig) (replacement : target.sig.Strategy ()) :
     ∃ alternative : source.sig.Strategy (),
-      UtilityIntegrable
+      UtilityHasExpectation
           (fun outcome player => booleanUtility (sourceObserve outcome) player) ()
           (source.play (Profile.update profile () alternative)) →
-        UtilityIntegrable
+        UtilityHasExpectation
             (fun outcome player => booleanUtility (targetObserve outcome) player) ()
             (target.play (Profile.update
               (fun who => compileLayered who (profile who)) () replacement)) ∧
-          expectedUtility
+          extendedExpectedUtility
               (fun outcome player => booleanUtility (targetObserve outcome) player) ()
               (target.play (Profile.update
                 (fun who => compileLayered who (profile who)) () replacement)) ≤
-            expectedUtility
+            extendedExpectedUtility
               (fun outcome player => booleanUtility (sourceObserve outcome) player) ()
               (source.play (Profile.update profile () alternative)) := by
   obtain ⟨middleAlternative, hright⟩ :=

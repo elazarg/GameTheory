@@ -127,7 +127,7 @@ theorem isFictitiousPlay : game.IsFictitiousPlay history := by
   have halternative : UtilityIntegrable game.utility 0 alternative :=
     payoffIntegrable_of_bounded alternative _ (C := 1) fun outcome => by
       cases outcome <;> norm_num [game, reward]
-  refine ⟨hpreferred, halternative, ?_⟩
+  refine (euPreference_iff _ _ _ _ hpreferred halternative).2 ?_
   have hAltVal := expectedUtility_update belief replacement halternative
   have hPrefVal := expectedUtility_update belief (PMF.pure (history (t + 1) 0))
     hpreferred
@@ -147,6 +147,11 @@ theorem isFictitiousPlay : game.IsFictitiousPlay history := by
     _ ≤ 1 := hle
     _ = expectedUtility game.utility 0 preferred := by
       simpa [preferred, game, reward, hplayed] using hPrefVal.symm
+
+/-- The bounded reward integrates every replacement fictitious play compares. -/
+theorem beliefDeviations_integrable : game.HasIntegrableBeliefDeviations history :=
+  fun _ _ _ => payoffIntegrable_of_bounded _ _ (C := 1) fun outcome => by
+    cases outcome <;> norm_num [game, reward]
 
 theorem potential_abs_bound (profile : Profile signature) :
     |potential profile| ≤ 1 := by
@@ -188,13 +193,11 @@ theorem firstPotentialStep :
           (game.form.empiricalMarginal history 0 2)) -
       game.form.mixedPotential potential (game.form.empiricalBelief history 1)
          = 1 / 2 := by
-  have hplay : game.IsFictitiousPlay history := isFictitiousPlay
   obtain ⟨hnext, hstep⟩ :=
     UtilityGame.IsExactPotential.mixedPotential_belief_update_empiricalMarginal_succ_sub
       (G := game) exactPotential history 0 0
-      (UtilityGame.IsFictitiousPlay.incumbent_integrable (G := game) hplay 0 0)
-      (UtilityGame.IsFictitiousPlay.deviation_integrable (G := game) hplay 0 0
-        (PMF.pure (history 1 0)))
+      (beliefDeviations_integrable.incumbent 0 0)
+      (beliefDeviations_integrable 0 0 (PMF.pure (history 1 0)))
       (payoffIntegrable_of_bounded
         (independentProduct (game.form.empiricalBelief history 1)) potential
         potential_abs_bound)
@@ -220,7 +223,7 @@ theorem firstImprovementBound :
     game.mixedImprovement (game.form.empiricalBelief history 1) ≤
       game.weightedPlayedGain history 0 :=
   UtilityGame.IsFictitiousPlay.mixedImprovement_le_weightedPlayedGain
-    (G := game) isFictitiousPlay 0
+    (G := game) isFictitiousPlay beliefDeviations_integrable 0
 
 /-- The quantitative one-coordinate estimate applies to the same nonzero first
 step; it is not proved only for constant trajectories. -/
@@ -273,6 +276,6 @@ theorem firstLyapunovBound :
         game.form.mixedPotential potential (game.form.empiricalBelief history 1) := by
   simpa using
     (UtilityGame.IsExactPotential.mixedPotential_empiricalBelief_succ_sub_ge
-      (G := game) exactPotential potential_abs_bound isFictitiousPlay 0)
+      (G := game) exactPotential potential_abs_bound beliefDeviations_integrable 0)
 
 end GameTheory.Tests.FictitiousPlayPotential

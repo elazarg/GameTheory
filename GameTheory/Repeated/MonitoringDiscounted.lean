@@ -498,14 +498,9 @@ theorem isDiscountedPublicNash_iff [DecidableEq ι]
         M.discountedPayoff discount profile who
            (hsum profile who) := by
   rw [IsDiscountedPublicNash, isNash_iff]
-  constructor
-  · intro h who deviation
-    simpa [monitoredForm, expectedUtility, expect_pure,
-      discountedUtility] using (h who deviation).2.2
-  · intro h who deviation
-    refine ⟨payoffIntegrable_pure _ _, payoffIntegrable_pure _ _, ?_⟩
-    simpa [monitoredForm, expectedUtility, expect_pure,
-      discountedUtility] using h who deviation
+  refine forall_congr' fun who => forall_congr' fun deviation => ?_
+  rw [euPreference_iff _ _ _ _ (payoffIntegrable_pure _ _) (payoffIntegrable_pure _ _)]
+  simp [monitoredForm, expectedUtility, expect_pure, discountedUtility]
 
 theorem isεDiscountedPublicNash_iff [DecidableEq ι]
     (ε : ℝ) (profile : M.MonitoredProfile) :
@@ -516,15 +511,10 @@ theorem isεDiscountedPublicNash_iff [DecidableEq ι]
           who (hsum _ who) ≤
         M.discountedPayoff discount profile who
            (hsum profile who) + ε := by
-  rw [IsεDiscountedPublicNash, isεNash_iff]
-  constructor
-  · intro h who deviation
-    simpa [monitoredForm, expectedUtility, expect_pure,
-      discountedUtility] using (h who deviation).2.2
-  · intro h who deviation
-    refine ⟨payoffIntegrable_pure _ _, payoffIntegrable_pure _ _, ?_⟩
-    simpa [monitoredForm, expectedUtility, expect_pure,
-      discountedUtility] using h who deviation
+  rw [IsεDiscountedPublicNash, IsεNash, isNash_iff]
+  refine forall_congr' fun who => forall_congr' fun deviation => ?_
+  rw [euPreferenceWithin_iff _ _ _ _ _ (payoffIntegrable_pure _ _) (payoffIntegrable_pure _ _)]
+  simp [monitoredForm, expectedUtility, expect_pure, discountedUtility]
 
 /-- Exact public Nash implies approximate public Nash for every nonnegative
 error allowance. -/

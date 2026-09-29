@@ -52,7 +52,9 @@ private theorem finiteAverageForm_play_zero (G : UtilityGame ι)
     (G.finiteAverageForm 0).play profile = PMF.pure none := by
   simp [finiteAverageForm]
 
-private theorem finiteAverageForm_play_pos (G : UtilityGame ι)
+/-- At a positive horizon, finite-average play is the uniform mixture of the
+sampled stage laws. -/
+theorem finiteAverageForm_play_pos (G : UtilityGame ι)
     {horizon : ℕ} [NeZero horizon]
     (profile : G.RepeatedProfile) :
     (G.finiteAverageForm horizon).play profile =
@@ -164,70 +166,32 @@ def IsεFiniteRepeatedNash (G : UtilityGame ι) [DecidableEq ι]
   IsεNash (G.finiteAverageForm horizon) G.finiteAverageOutcomeUtility
     epsilon profile
 
-/-- Approximate Nash in the sampled form compares the averages of
-the incumbent and each unilateral deviation. -/
+/-- Approximate Nash in the sampled form compares the averages of the
+incumbent and each unilateral deviation, when every sampled stage is
+integrable. -/
 theorem isεFiniteRepeatedNash_iff
     (G : UtilityGame ι) [DecidableEq ι]
-    {horizon : ℕ} {epsilon : ℝ} {profile : G.RepeatedProfile} :
+    {horizon : ℕ} {epsilon : ℝ} {profile : G.RepeatedProfile}
+    (hstage : ∀ who deviation, ∀ t < horizon,
+      UtilityIntegrable G.utility who
+        (G.form.play (G.repeatedPlay (Profile.update profile who deviation) t))) :
     G.IsεFiniteRepeatedNash horizon epsilon profile ↔
       ∀ who deviation,
-        (∀ t < horizon,
-            UtilityIntegrable G.utility who
-              (G.form.play (G.repeatedPlay profile t))) ∧
-          (∀ t < horizon,
-              UtilityIntegrable G.utility who
-                (G.form.play (G.repeatedPlay
-                  (Profile.update profile who deviation) t))) ∧
-            G.finiteAveragePayoff horizon
-                (Profile.update profile who deviation) who ≤
-              G.finiteAveragePayoff horizon profile who + epsilon := by
-  rw [IsεFiniteRepeatedNash, isεNash_iff]
-  constructor
-  · intro h who deviation
-    rcases h who deviation with ⟨hincumbent, hdeviation, hle⟩
-    let hi : ∀ t < horizon, UtilityIntegrable G.utility who
-        (G.form.play (G.repeatedPlay profile t)) :=
-      fun t ht => (G.finiteAverageForm_integrable_iff
-        horizon profile who).1 hincumbent ⟨t, ht⟩
-    let hd : ∀ t < horizon, UtilityIntegrable G.utility who
-        (G.form.play (G.repeatedPlay
-          (Profile.update profile who deviation) t)) :=
-      fun t ht => (G.finiteAverageForm_integrable_iff
-        horizon (Profile.update profile who deviation) who).1
-          hdeviation ⟨t, ht⟩
-    refine ⟨hi, hd, ?_⟩
-    calc
-      G.finiteAveragePayoff horizon
-          (Profile.update profile who deviation) who =
-          expectedUtility G.finiteAverageOutcomeUtility who
-            ((G.finiteAverageForm horizon).play
-              (Profile.update profile who deviation)) :=
-        (G.finiteAverageForm_expectedUtility_eq horizon
-          (Profile.update profile who deviation) who hd).symm
-      _ ≤ expectedUtility G.finiteAverageOutcomeUtility who
-          ((G.finiteAverageForm horizon).play profile) +
-          epsilon := hle
-      _ = G.finiteAveragePayoff horizon profile who + epsilon := by
-        rw [G.finiteAverageForm_expectedUtility_eq horizon profile who hi]
-  · intro h who deviation
-    rcases h who deviation with ⟨hi, hd, hle⟩
-    refine ⟨(G.finiteAverageForm_integrable_iff
-        horizon profile who).2 (fun t => hi t t.isLt),
-      (G.finiteAverageForm_integrable_iff
-        horizon (Profile.update profile who deviation) who).2
-          (fun t => hd t t.isLt), ?_⟩
-    calc
-      expectedUtility G.finiteAverageOutcomeUtility who
-          ((G.finiteAverageForm horizon).play
-            (Profile.update profile who deviation)) =
-          G.finiteAveragePayoff horizon
-            (Profile.update profile who deviation) who :=
-        G.finiteAverageForm_expectedUtility_eq horizon
-          (Profile.update profile who deviation) who hd
-      _ ≤ G.finiteAveragePayoff horizon profile who + epsilon := hle
-      _ = expectedUtility G.finiteAverageOutcomeUtility who
-          ((G.finiteAverageForm horizon).play profile) + epsilon := by
-        rw [G.finiteAverageForm_expectedUtility_eq horizon profile who hi]
+        G.finiteAveragePayoff horizon
+            (Profile.update profile who deviation) who ≤
+          G.finiteAveragePayoff horizon profile who + epsilon := by
+  have hincumbent : ∀ who, ∀ t < horizon,
+      UtilityIntegrable G.utility who (G.form.play (G.repeatedPlay profile t)) :=
+    fun who t ht => by simpa only [Profile.update_eq_self] using hstage who (profile who) t ht
+  rw [IsεFiniteRepeatedNash, IsεNash, isNash_iff]
+  refine forall_congr' fun who => forall_congr' fun deviation => ?_
+  refine (euPreferenceWithin_iff _ _ _ _ _
+      ((G.finiteAverageForm_integrable_iff horizon profile who).2
+        fun t => hincumbent who t t.isLt)
+      ((G.finiteAverageForm_integrable_iff horizon (Profile.update profile who deviation)
+        who).2 fun t => hstage who deviation t t.isLt)).trans ?_
+  rw [G.finiteAverageForm_expectedUtility_eq horizon profile who (hincumbent who),
+    G.finiteAverageForm_expectedUtility_eq horizon _ who (hstage who deviation)]
 
 /-- A single horizon threshold makes the profile approximately Nash at every
 longer truncation. -/
@@ -263,25 +227,24 @@ theorem IsUniformεEquilibrium.mono
     G.IsUniformεEquilibrium epsilon' profile :=
   GameTheory.Math.EventuallyAtAll.mono h fun _ hhorizon => hhorizon.mono hle
 
-/-- Stationary repetition of a stage Nash equilibrium is uniform: every
-nonempty finite truncation is exact Nash and its average is constant. -/
+/-- Stationary repetition of an integrable stage Nash equilibrium is uniform:
+every nonempty finite truncation is exact Nash and its average is constant. -/
 theorem stationaryRepeatedProfile_isUniformEquilibrium_of_isNash
     (G : UtilityGame ι) [DecidableEq ι]
     {profile : Profile G.form.sig}
-    (hnash : IsNash G.form (euPreference G.utility) profile) :
+    (hnash : IsNash G.form (euPreference G.utility) profile)
+    (hintegrable : G.form.HasIntegrableDeviations G.utility profile) :
     G.IsUniformEquilibrium (G.stationaryRepeatedProfile profile) := by
-  have hinc (who : ι) :
-      UtilityIntegrable G.utility who (G.form.play profile) := by
-    rcases (isNash_iff profile).1 hnash who (profile who) with ⟨hi, _, _⟩
-    exact hi
-  refine ⟨⟨(fun t who => by simpa using hinc who),
+  refine ⟨⟨(fun t who => by simpa using hintegrable.base who),
     (fun who => G.stagePayoff profile who),
     G.hasLongRunAveragePayoff_stationaryRepeatedProfile profile⟩, ?_⟩
   intro epsilon hepsilon
   refine ⟨1, fun horizon hhorizon => ?_⟩
   show G.IsεFiniteRepeatedNash horizon epsilon
     (G.stationaryRepeatedProfile profile)
-  rw [G.isεFiniteRepeatedNash_iff]
+  rw [G.isεFiniteRepeatedNash_iff fun who deviation t _ => by
+    rw [G.repeatedPlay_update_stationaryRepeatedProfile profile who deviation t]
+    exact hintegrable who _]
   intro who deviation
   have hhorizon0 : horizon ≠ 0 := by omega
   let updated := Profile.update
@@ -289,28 +252,17 @@ theorem stationaryRepeatedProfile_isUniformEquilibrium_of_isNash
   let own (t : ℕ) : G.form.sig.Strategy who :=
     deviation (List.ofFn fun k : Fin t => G.repeatedPlay updated k)
   have hstageNash (t : ℕ) :=
-    (isNash_iff profile).1 hnash who (own t)
+    (euPreference_iff _ _ _ _ (hintegrable.base who) (hintegrable who (own t))).1
+      ((isNash_iff profile).1 hnash who (own t))
   have hupdated (t : ℕ) :
       G.repeatedPlay updated t = Profile.update profile who (own t) := by
     exact G.repeatedPlay_update_stationaryRepeatedProfile
       profile who deviation t
-  let hi : ∀ t < horizon,
-      UtilityIntegrable G.utility who
-        (G.form.play (G.repeatedPlay
-          (G.stationaryRepeatedProfile profile) t)) :=
-    fun t _ => by simpa using hinc who
-  let hd : ∀ t < horizon,
-      UtilityIntegrable G.utility who
-        (G.form.play (G.repeatedPlay updated t)) := by
-    intro t _
-    rw [hupdated t]
-    exact (hstageNash t).2.1
-  refine ⟨hi, hd, ?_⟩
   have hdeviation : G.finiteAveragePayoff horizon updated who ≤
       G.stagePayoff profile who := by
     apply G.finiteAveragePayoff_le_of_forall_stagePayoff_le
        (fun t => ?_) hhorizon0
-    simpa only [hupdated t, stagePayoff] using (hstageNash t).2.2
+    simpa only [hupdated t, stagePayoff] using hstageNash t
   rw [G.finiteAveragePayoff_stationaryRepeatedProfile
     hhorizon0 profile who]
   exact hdeviation.trans (le_add_of_nonneg_right hepsilon.le)

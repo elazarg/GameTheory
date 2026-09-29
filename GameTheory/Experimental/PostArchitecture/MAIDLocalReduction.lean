@@ -198,7 +198,7 @@ theorem coversFullDeviationsAt_of_localUtilityFactorsAt
           fullJoint contextLaw keep
             (fun context => averaged (keep context)) :=
       congrArg (fullJoint contextLaw keep) hexpandedTarget
-    refine ⟨hredPlay, hfullPlay, le_of_eq ?_⟩
+    refine (euPreference_iff _ _ _ _ hredPlay hfullPlay).2 (le_of_eq ?_)
     calc
       expectedUtility
           (fun assignment who => semantics.utility who assignment)
@@ -234,6 +234,6 @@ theorem coversFullDeviationsAt_of_localUtilityFactorsAt
     rw [euPreference_apply, reducedNativeGameForm_play,
       pruning.expandPolicy_update, hexpand]
     have hguard := hother deviator hdeviator fullReplacement
-    exact ⟨hguard, hguard, le_refl _⟩
+    exact ⟨hguard.hasExpectation, hguard.hasExpectation, le_refl _⟩
 
 end GameTheory.Experimental.PostArchitecture.MAIDLocalReduction

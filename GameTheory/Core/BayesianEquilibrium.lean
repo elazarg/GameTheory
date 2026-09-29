@@ -149,6 +149,20 @@ theorem expectedUtility_eq_prior (B : BayesianGame ι)
     _ = expect B.prior (B.planPayoff who plan) := by
           rfl
 
+/-- The extended expected utility of a plan is the prior's extended
+expectation of its payoff. -/
+theorem extendedExpectedUtility_eq_prior (B : BayesianGame ι)
+    (who : ι) (plan : Profile B.signature) :
+    extendedExpectedUtility B.utility who (B.toForm.play plan) =
+      extendedExpect B.prior (B.planPayoff who plan) :=
+  extendedExpect_map (fun types => (types, B.actionsOf plan types)) B.prior _
+
+theorem utilityHasExpectation_iff_prior (B : BayesianGame ι)
+    (who : ι) (plan : Profile B.signature) :
+    UtilityHasExpectation B.utility who (B.toForm.play plan) ↔
+      HasExpectation B.prior (B.planPayoff who plan) :=
+  hasExpectation_map_iff (fun types => (types, B.actionsOf plan types)) B.prior _
+
 /-- A prior-weighted interim value obtained from an actual contingent
 plan deviation. -/
 noncomputable def interimValueOfDeviation (B : BayesianGame ι)

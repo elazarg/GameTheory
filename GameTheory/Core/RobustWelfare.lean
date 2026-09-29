@@ -26,12 +26,13 @@ namespace UtilityGame
 variable {ι : Type uι}
 
 /-- **Robust smoothness for approximate coarse correlated equilibrium.**
-The actual incumbent and deviation laws are integrated by the CCE guard;
+The actual incumbent and deviation laws are integrable by hypothesis;
 smoothness supplies the pure-profile conditional guards. -/
 theorem IsSmooth.epsilonCoarseCorrelated_bound [Fintype ι] [DecidableEq ι]
     {G : UtilityGame ι} {lam mu ε : ℝ} (hsmooth : G.IsSmooth lam mu)
     {law : PMF (Profile G.form.sig)}
     (hlaw : IsεCoarseCorrelatedEq G.form G.utility ε law)
+    (hintegrable : G.form.HasIntegrableCoarseDeviations G.utility law)
     (target : Profile G.form.sig) :
     lam * G.socialWelfare target ≤
       (1 + mu) * G.expectedSocialWelfare law
@@ -41,8 +42,8 @@ theorem IsSmooth.epsilonCoarseCorrelated_bound [Fintype ι] [DecidableEq ι]
         (law.bind fun profile => G.form.play (Profile.update profile i (target i))) ∧
       G.externalRegret law i (target i) ≤ ε := by
     intro i
-    exact (G.isεCoarseCorrelatedEq_iff_externalRegret_le.mp hlaw) i
-      (target i)
+    exact ⟨hintegrable.1 i, hintegrable.2 i (target i),
+      (G.isεCoarseCorrelatedEq_iff_externalRegret_le hintegrable).mp hlaw i (target i)⟩
   choose hbase hdev hregret using hcert
   let devKernel (i : ι) (profile : Profile G.form.sig) :=
     G.form.play (Profile.update profile i (target i))
@@ -123,12 +124,13 @@ theorem IsSmooth.coarseCorrelated_bound [Fintype ι] [DecidableEq ι]
     {G : UtilityGame ι} {lam mu : ℝ} (hsmooth : G.IsSmooth lam mu)
     {law : PMF (Profile G.form.sig)}
     (hlaw : IsCoarseCorrelatedEq G.form G.preference law)
+    (hintegrable : G.form.HasIntegrableCoarseDeviations G.utility law)
     (target : Profile G.form.sig) :
     lam * G.socialWelfare target ≤
       (1 + mu) * G.expectedSocialWelfare law := by
   have hbound := hsmooth.epsilonCoarseCorrelated_bound
     ((G.isCoarseCorrelatedEq_iff_isεCoarseCorrelatedEq_zero
-      (statusQuo := law)).mp hlaw) target
+      (statusQuo := law)).mp hlaw) hintegrable target
   simpa using hbound
 
 end UtilityGame

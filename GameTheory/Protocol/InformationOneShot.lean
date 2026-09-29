@@ -317,7 +317,7 @@ theorem isNash_toGameForm_of_isOneShotOptimalWithin
   have hle := M.expect_runFrom_update_le_of_isOneShotOptimalWithin
     profile who (fun h => utility h who) horizon (hopt who) alternative
     E.initHistory hdepth hcand
-  refine ⟨hinc, hcand, ?_⟩
+  refine (euPreference_iff _ _ _ _ hinc hcand).2 ?_
   simpa only [expectedUtility, InformationModel.run] using hle
 
 end InformationModel

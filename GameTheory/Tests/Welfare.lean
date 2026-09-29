@@ -91,8 +91,9 @@ theorem expectedUtility_improved (player : Bool) :
 theorem low_isIndividuallyRational :
     IsIndividuallyRational fixtureForm fixtureUtility reservation low := by
   intro player
-  refine ⟨fixtureIntegrable player (fixtureForm.play low), ?_⟩
-  rw [expectedUtility_low]
+  refine ⟨(fixtureIntegrable player (fixtureForm.play low)).hasExpectation, ?_⟩
+  rw [extendedExpectedUtility_eq (fixtureIntegrable player (fixtureForm.play low)),
+    expectedUtility_low, EReal.coe_le_coe_iff]
   cases player <;> norm_num [reservation]
 
 theorem improved_paretoDominates_low :
@@ -129,15 +130,17 @@ theorem improved_isIndividuallyRational_lower :
 theorem improved_isIndividuallyRational_first :
     IsIndividuallyRational fixtureForm fixtureUtility firstReservation improved := by
   intro player
-  refine ⟨fixtureIntegrable player (fixtureForm.play improved), ?_⟩
-  rw [expectedUtility_improved]
+  refine ⟨(fixtureIntegrable player (fixtureForm.play improved)).hasExpectation, ?_⟩
+  rw [extendedExpectedUtility_eq (fixtureIntegrable player (fixtureForm.play improved)),
+    expectedUtility_improved, EReal.coe_le_coe_iff]
   cases player <;> norm_num [firstReservation]
 
 theorem improved_isIndividuallyRational_second :
     IsIndividuallyRational fixtureForm fixtureUtility secondReservation improved := by
   intro player
-  refine ⟨fixtureIntegrable player (fixtureForm.play improved), ?_⟩
-  rw [expectedUtility_improved]
+  refine ⟨(fixtureIntegrable player (fixtureForm.play improved)).hasExpectation, ?_⟩
+  rw [extendedExpectedUtility_eq (fixtureIntegrable player (fixtureForm.play improved)),
+    expectedUtility_improved, EReal.coe_le_coe_iff]
   cases player <;> norm_num [secondReservation]
 
 theorem improved_isIndividuallyRational_sup :
@@ -151,7 +154,8 @@ theorem improved_not_isIndividuallyRational_excessive :
       excessiveReservation improved := by
   intro hir
   obtain ⟨hint, hvalue⟩ := hir false
-  rw [expectedUtility_improved] at hvalue
+  rw [extendedExpectedUtility_eq (fixtureIntegrable false (fixtureForm.play improved)),
+    expectedUtility_improved, EReal.coe_le_coe_iff] at hvalue
   norm_num [excessiveReservation] at hvalue
 
 end GameTheory.Tests.Welfare

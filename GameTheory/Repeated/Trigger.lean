@@ -334,14 +334,15 @@ theorem triggerRepeatedProfile_isNash
   let deviatingProfile := Profile.update statusQuo who deviation
   let deviatingPath : ℕ → Profile G.form.sig :=
     fun t => G.repeatedPlay deviatingProfile t
-  refine ⟨by simpa [repeatedForm] using
-    (payoffIntegrable_pure statusQuo
-      (fun profile => G.discountedUtilityOfBounded
-        hdiscount0 hdiscount1 hbounds profile who)),
-    by simpa [repeatedForm] using
+  refine (euPreference_iff _ _ _ _
+    (by simpa [repeatedForm] using
+      (payoffIntegrable_pure statusQuo
+        (fun profile => G.discountedUtilityOfBounded
+          hdiscount0 hdiscount1 hbounds profile who)))
+    (by simpa [repeatedForm] using
       (payoffIntegrable_pure deviatingProfile
         (fun profile => G.discountedUtilityOfBounded
-          hdiscount0 hdiscount1 hbounds profile who)), ?_⟩
+          hdiscount0 hdiscount1 hbounds profile who)))).2 ?_
   simp only [repeatedForm, expectedUtility_pure,
     discountedUtilityOfBounded, discountedUtility]
   by_cases hnever : ∀ t, deviatingPath t = path t

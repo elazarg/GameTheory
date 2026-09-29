@@ -359,7 +359,7 @@ theorem isεNash_of_mixedImprovement_le
     mixedDeviationIntegrable_of_finite_actions G mixedProfile hpure
   rw [isεNash_iff]
   intro who replacement
-  refine ⟨hbase who, hdeviation who replacement, ?_⟩
+  refine (euPreferenceWithin_iff _ _ _ _ _ (hbase who) (hdeviation who replacement)).2 ?_
   let q := fun action => G.form.mixed.play
     (Profile.update mixedProfile who (PMF.pure action))
   have hlaw : G.form.mixed.play (Profile.update mixedProfile who replacement) =

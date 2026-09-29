@@ -90,18 +90,18 @@ private theorem target_value (profile : Profile target.sig) (replacement : Fin 3
 the source action worth two. -/
 example :
     ∃ alternative : source.sig.Strategy (), alternative = true ∧
-      (UtilityIntegrable
+      (UtilityHasExpectation
           (fun outcome player => booleanUtility (sourceObserve outcome) player) ()
           (source.play (Profile.update (fun _ => false) () alternative)) →
-        UtilityIntegrable
+        UtilityHasExpectation
             (fun outcome player => booleanUtility (targetObserve outcome) player) ()
             (target.play (Profile.update
               (layeredUtility.compileProfile (fun _ => false)) () (2 : Fin 3))) ∧
-          expectedUtility
+          extendedExpectedUtility
               (fun outcome player => booleanUtility (targetObserve outcome) player) ()
               (target.play (Profile.update
                 (layeredUtility.compileProfile (fun _ => false)) () (2 : Fin 3))) ≤
-            expectedUtility
+            extendedExpectedUtility
               (fun outcome player => booleanUtility (sourceObserve outcome) player) ()
               (source.play (Profile.update (fun _ => false) () alternative))) := by
   obtain ⟨alternative, bound⟩ :=
@@ -111,8 +111,10 @@ example :
   | false =>
       have hs := observed_integrable
         (source.play (Profile.update (fun _ => false) () false)) sourceObserve
-      obtain ⟨-, hle⟩ := bound hs
-      rw [target_value _ 2, source_value _ false] at hle
+      obtain ⟨-, hle⟩ := bound hs.hasExpectation
+      rw [extendedExpectedUtility_eq (observed_integrable _ targetObserve),
+        extendedExpectedUtility_eq hs, target_value _ 2, source_value _ false,
+        EReal.coe_le_coe_iff] at hle
       norm_num [booleanUtility] at hle
   | true => rfl
 
@@ -127,7 +129,7 @@ example : IsεNash target
   let hbase := observed_integrable (source.play (fun _ => false)) sourceObserve
   let hdev := observed_integrable
     (source.play (Profile.update (fun _ => false) () alternative)) sourceObserve
-  refine ⟨hbase, hdev, ?_⟩
+  refine (euPreferenceWithin_iff _ _ _ _ _ hbase hdev).2 ?_
   rw [source_value _ alternative]
   have hbaseValue : expectedUtility
       (fun outcome player => booleanUtility (sourceObserve outcome) player) ()
@@ -152,7 +154,7 @@ theorem compiled_dominant_isBestResponse :
       (fun outcome player => booleanUtility (sourceObserve outcome) player) ()
       (source.play (Profile.update profile () alternative)) :=
     observed_integrable _ sourceObserve
-  refine ⟨hbase, hdev, ?_⟩
+  refine (euPreference_iff _ _ _ _ hbase hdev).2 ?_
   rw [source_value profile alternative, source_value profile true]
   cases alternative <;> norm_num [booleanUtility]
 
