@@ -165,46 +165,81 @@ expected utilities are fixed; outcome laws and sequential incentives are not. -/
 variable {F : GameForm (Fin 2)} {utility : F.sig.Outcome → Fin 2 → ℝ}
   {profile : Profile F.sig}
 
+/-- **Strategies unimprovable within a class are secure against it.** If
+neither player can gain by deviating to a strategy of a considered class, each
+player's strategy guarantees the shared value against every opponent strategy
+in the class. -/
+theorem zeroSum_security_of_considered (hzero : IsZeroSum utility)
+    {Considered : (who : Fin 2) → F.sig.Strategy who → Prop}
+    (hnash : ∀ who replacement, Considered who replacement →
+      euPreference utility who (F.play profile) (F.play (Profile.update profile who replacement)))
+    (other : Profile F.sig) (other₀ : Considered 0 (other 0)) (other₁ : Considered 1 (other 1)) :
+    euPreference utility 0 (F.play (Profile.update other 0 (profile 0))) (F.play profile) ∧
+      euPreference utility 0 (F.play profile)
+        (F.play (Profile.update other 1 (profile 1))) := by
+  constructor
+  · have hle := hnash 1 (other 1) other₁
+    rwa [hzero.euPreference_one_iff, update_one_eq_update_zero profile other] at hle
+  · have hle := hnash 0 (other 0) other₀
+    rwa [← update_one_eq_update_zero other profile] at hle
+
 /-- **Nash strategies are secure in zero-sum games.** Each player's equilibrium
 strategy guarantees the equilibrium value against every opponent strategy. -/
 theorem IsNash.zeroSum_security (hzero : IsZeroSum utility)
     (hnash : IsNash F (euPreference utility) profile) (other : Profile F.sig) :
     euPreference utility 0 (F.play (Profile.update other 0 (profile 0))) (F.play profile) ∧
       euPreference utility 0 (F.play profile)
-        (F.play (Profile.update other 1 (profile 1))) := by
-  constructor
-  · have hle := (isNash_iff profile).1 hnash 1 (other 1)
-    rwa [hzero.euPreference_one_iff, update_one_eq_update_zero profile other] at hle
-  · have hle := (isNash_iff profile).1 hnash 0 (other 0)
-    rwa [← update_one_eq_update_zero other profile] at hle
+        (F.play (Profile.update other 1 (profile 1))) :=
+  zeroSum_security_of_considered hzero (Considered := fun _ _ => True)
+    (fun who replacement _ => (isNash_iff profile).1 hnash who replacement) other trivial trivial
 
-/-- **Coarse correlation cannot change a zero-sum value.** If a two-player
-zero-sum game has a Nash equilibrium in its strategy carrier, every coarse
-correlated equilibrium gives each player exactly the equilibrium payoff, even
-when it recommends profiles far from that equilibrium. The payoffs need not be
-integrable: an infinite equilibrium value is shared in the same way. -/
-theorem IsCoarseCorrelatedEq.extendedExpectedUtility_eq_of_zeroSum
+/-- **Coarse correlation cannot change a zero-sum value.** Suppose neither
+player can gain by deviating to a strategy of a considered class, and a coarse
+correlated equilibrium recommends only profiles in that class. Then it gives
+each player exactly the value of the unimprovable profile, even when it
+recommends profiles far from it. The payoffs need not be integrable: an
+infinite value is shared in the same way. -/
+theorem IsCoarseCorrelatedEq.extendedExpectedUtility_eq_of_zeroSum_considered
     (hzero : IsZeroSum utility) {law : PMF (Profile F.sig)}
     (hcce : IsCoarseCorrelatedEq F (euPreference utility) law)
-    (hnash : IsNash F (euPreference utility) profile) (who : Fin 2) :
+    {Considered : (who : Fin 2) → F.sig.Strategy who → Prop}
+    (hnash : ∀ who replacement, Considered who replacement →
+      euPreference utility who (F.play profile) (F.play (Profile.update profile who replacement)))
+    (recommended : ∀ other ∈ law.support, ∀ who, Considered who (other who)) (who : Fin 2) :
     extendedExpectedUtility utility who (F.outcomeLaw law) =
       extendedExpectedUtility utility who (F.play profile) := by
+  have secure (other : Profile F.sig) (hother : other ∈ law.support) :=
+    zeroSum_security_of_considered hzero hnash other (recommended other hother 0)
+      (recommended other hother 1)
   have lower : euPreference utility 0 (F.outcomeLaw law) (F.play profile) := by
     have hdev := (isCoarseCorrelatedEq_iff law).1 hcce 0 (profile 0)
     exact euPreference_transitive utility 0 _ _ _
       hdev (euPreference_bind_left law _
-        (fun other _ => (hnash.zeroSum_security hzero other).1) hdev.2.1)
+        (fun other hother => (secure other hother).1) hdev.2.1)
   have upper : euPreference utility 0 (F.play profile) (F.outcomeLaw law) := by
     have hdev := (isCoarseCorrelatedEq_iff law).1 hcce 1 (profile 1)
     rw [hzero.euPreference_one_iff] at hdev
     exact euPreference_transitive utility 0 _ _ _
-      (euPreference_bind law _ (fun other _ => (hnash.zeroSum_security hzero other).2)
+      (euPreference_bind law _ (fun other hother => (secure other hother).2)
         hdev.1) hdev
   have hsame := le_antisymm upper.2.2 lower.2.2
   rcases (by decide : ∀ i : Fin 2, i = 0 ∨ i = 1) who with rfl | rfl
   · exact hsame
   · rw [hzero.extendedExpectedUtility_one lower.1,
       hzero.extendedExpectedUtility_one upper.1, hsame]
+
+/-- **Coarse correlation cannot change a zero-sum value.** If a two-player
+zero-sum game has a Nash equilibrium in its strategy carrier, every coarse
+correlated equilibrium gives each player exactly the equilibrium payoff. -/
+theorem IsCoarseCorrelatedEq.extendedExpectedUtility_eq_of_zeroSum
+    (hzero : IsZeroSum utility) {law : PMF (Profile F.sig)}
+    (hcce : IsCoarseCorrelatedEq F (euPreference utility) law)
+    (hnash : IsNash F (euPreference utility) profile) (who : Fin 2) :
+    extendedExpectedUtility utility who (F.outcomeLaw law) =
+      extendedExpectedUtility utility who (F.play profile) :=
+  hcce.extendedExpectedUtility_eq_of_zeroSum_considered hzero (Considered := fun _ _ => True)
+    (fun who replacement _ => (isNash_iff profile).1 hnash who replacement)
+    (fun _ _ _ => trivial) who
 
 /-- **All zero-sum Nash equilibria are worth the same**, in any strategy
 carrier. For mixed extensions this is also `IsSaddlePoint.value_eq`, which needs
