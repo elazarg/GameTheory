@@ -9321,160 +9321,69 @@ memory.
 
 ### EXP-147: extended-real expectation in semantic comparisons
 
-- **Date / status:** 2026-09-29; positive. Stage 1 covers the static layer
-  and every predicate built from `euPreference`; stage 2 covers the standalone
-  real-valued predicates.
-- **Question:** can the semantic comparisons (preferences, local optimality,
-  profitable deviation, and the predicates built from them) compare laws whose
-  expectation is `+∞` or `−∞`, while keeping laws whose expectation is
-  genuinely undefined (`∞ − ∞`) incomparable?
-- **Motivation:** EXP-146 kept the integrability conjuncts of the predicates.
-  They reject every non-integrable law, including laws with a definite
-  infinite value. `ephemeral/infinite-expectation/Witness.lean` checks a
-  one-player game in which staying home pays `0` and the only deviation is a
-  gamble with expected loss `∞`: the current `euPreference` proves staying home
-  is *not* Nash.
+- **Date / status:** 2026-09-29; accepted.
+- **Question:** can the semantic comparisons compare laws whose expectation is
+  `+∞` or `−∞`, while keeping laws whose expectation is genuinely undefined
+  (`∞ − ∞`) incomparable?
+- **Motivation:** EXP-146 kept the integrability conjuncts of the predicates,
+  which reject every non-integrable law, including laws with a definite
+  infinite value. In a one-player game where staying home pays `0` and the only
+  deviation is a gamble with expected loss `∞`, staying home was *not* Nash.
 - **Design:** `extendedExpect μ f : EReal`, the expected positive part minus
-  the expected negative part (both in `ℝ≥0∞`); `HasExpectation μ f`, not both
-  parts infinite; predicates compare `extendedExpect` under `HasExpectation`.
-  Bridge: under `PayoffIntegrable`, `extendedExpect = ↑expect`. Real `expect`
-  and its theory stay unchanged.
-- **Competing designs:** keep real guards (the bug); a real-valued comparison
-  defined by cases on the infinite parts (re-implements the `EReal` order).
+  the expected negative part (both in `ℝ≥0∞`); `HasExpectation μ f`, the two
+  parts are not both infinite. Predicates compare `extendedExpect` under
+  `HasExpectation`; under `PayoffIntegrable`, `extendedExpect = ↑expect`, so
+  real `expect` and its theory stay unchanged.
+- **Competing designs:** keep the real guards (the bug); a real-valued
+  comparison defined by cases on the infinite parts (re-implements the `EReal`
+  order).
 - **Kill conditions:** the witness does not become Nash; a law with undefined
-  expectation becomes comparable; a finite-game theorem cannot be restated;
-  any theorem weakened rather than restated with the integrability its old
-  statement obtained from the buggy predicate.
-- **Spike (2026-09-29):** `Math/Probability/ExtendedExpectation.lean` defines
-  `positiveExpect`, `negativeExpect` (in `ℝ≥0∞`), `HasExpectation`, and
-  `extendedExpect`, with `payoffIntegrable_iff_parts`, the bridge
-  `extendedExpect_eq_expect`, unconditional monotonicity (the junk value `⊥`
-  is least), `extendedExpect_map`, and positive-affine invariance in every case.
-  `euPreference`/`euPreferenceWithin` now compare `extendedExpectedUtility`
-  under `UtilityHasExpectation`; `euPreference_iff` keeps the real reading
-  between integrable laws. The witness now proves `stayHome_nash`, and
-  `undefined_incomparable` checks that a law with both parts infinite still
-  has no expectation. Convexity of `euPreference` holds only among integrable
-  laws (mixing `+∞` with `−∞` leaves no expectation) and is restated so.
-- **Migration (2026-09-29):** every comparison built from `euPreference` or
-  `euPreferenceWithin` now uses the extended expectation: Nash, CCE, CE,
-  strong and group Nash, best response, dominance, strict Nash, improving steps,
-  individual rationality, saddle points, row security and column caps, Bayes
-  correlated equilibrium, trembling-hand and perturbed equilibria, incentive
-  cones, continuation Nash and behavioral SPE, and the approximate variants.
-  Mixture lemmas carry the new semantics: `extendedExpect_bind_le` holds with
-  no hypothesis (a mixture without an expectation is worth the junk `⊥`), and
-  `le_extendedExpect_bind` needs only that the mixture has an expectation.
-- **Strengthened, not merely restated:** `euPreference_bind`,
-  `isCoarseCorrelatedEq_randomized`, `isNash_mixed_iff`, and `IsNash.purify`
-  need only expectations, not integrability. Zero-sum security, the CCE value
-  of a zero-sum game, value equality of Nash equilibria and of saddle points,
-  and the revelation principle hold with no integrability at all. Mixture
-  simulation transfers (`considered_deviations_iff_isεNash`,
-  `isεNash_compileProfile_iff`, `isεNash_purify_iff`) require target
-  deviations to have expectations rather than to be integrable.
-  `IsIndependentBestResponse.not_strict_mixed_on_support` no longer needs the
-  incumbent to be integrable: it follows from the integrable joint deviation
-  and pointwise strict dominance
-  (`payoffIntegrable_bind_of_extendedExpect_le`).
-- **Restated with exactly the extracted integrability:** the old predicates
-  were the new ones plus integrability of the compared laws. New named
-  predicates state that part: `GameForm.HasIntegrableDeviations` (Nash),
-  `HasIntegrableCoarseDeviations` (CCE), `HasIntegrableResponses` (CE),
-  `BayesianGame.HasIntegrableObedienceDeviations`, and
-  `UtilityGame.HasIntegrableBeliefDeviations` (fictitious play). Theorems
-  whose real-valued conclusions consumed the old integrability take the
-  matching predicate: conditional obedience and the CE/CCE dominance results,
-  the interim BCE characterization, external-regret CCE, robust smoothness and
-  the affine congestion price of anarchy, fictitious-play gains and limits,
-  finite-average repeated Nash and stationary uniform equilibrium, APS
-  enforceability (`IsEnforceable ↔ IsNash ∧ HasIntegrableDeviations`),
-  trembling-hand refinement of Nash (integrable pure play), and the
-  subgame-perfection bridge (`IsSubgamePerfect ↔` continuation Nash and
-  integrable deviations at every proper root). Finite-strategy exact-potential
-  fictitious play derives its predicate, so the Monderer–Shapley convergence
-  theorems keep their hypotheses.
-- **Evidence revised:** four gate fixtures changed verdict and now record the
-  corrected behavior. The PMFStaticGate singleton (`+∞` payoff, one strategy)
-  is Nash; PMFTransferGate's divergent target action is worth `⊥` and the
-  source equilibrium now transfers (the original bug in a second form);
-  PMFMAIDGate's divergent deviation and PMFUniformGate's and
-  PMFStochasticBellmanGate's divergent continuations are worth `⊤`, so they
-  still defeat equilibrium, now by being infinitely profitable.
-  `Tests/InfiniteExpectation.lean` is the tracked regression test: staying home
-  is Nash, and a locally defined integrable-payoff preference rejects the same
-  profile, so the test separates the two semantics.
-- **Validation:** `lake build GameTheory` (4240 jobs) and `lake lint` pass.
-- **Outcome:** positive for the static layer; kill conditions not met.
-- **Next action:** migrate the standalone real-valued comparison predicates,
-  which are defined apart from `euPreference` and still carry integrability
-  guards: `Protocol.Context.IsLocallyOptimal`/`IsProfitableDeviation`,
-  `IsHistorywiseOptimal`/`IsSubgamePerfect` and the one-shot principle and
-  Zermelo existence built on them, sequential rationality, APS
-  `IsEnforceable`/`IsPromiseKeeping`, `IsDiscountedStationaryBellmanEq`, and
-  the mechanism, information-design, and evolutionary stability predicates.
-  The bridges to `euPreference` concepts are already stated exactly, so each
-  migration is local.
-- **Stage 2 (2026-09-29): sequential layer.** `Context` gains `HasValueAt`
-  and `extendedValue`; `IsLocallyOptimal` and `IsProfitableDeviation` compare
-  extended values of choices that have expectations, and
-  `isLocallyOptimal_iff_of_integrable` keeps the real reading.
-  `IsHistorywiseOptimal`/`IsSubgamePerfect` compare
-  `historyBackwardExtendedValue`, and `IsOneShotOptimal`,
-  `IsOneShotOptimalWithin`, and sequential rationality inherit the new
-  `Context`. New mixture lemmas `extendedExpect_bindOnSupport_mono` and
-  `extendedExpect_bind_mono` compare mixtures with only the larger mixture
-  required to have an expectation.
-- **Stage 2: strengthened.** The history-, state-, and information-local
-  one-shot deviation principles (`historyBackwardExtendedValue_update_le_…`,
-  `backwardExtendedValue_le_of_isOneShotOptimal`,
-  `extendedExpect_runFrom_update_le_of_isOneShotOptimalWithin`) hold with no
-  integrability hypothesis at all; the real corollaries take exactly the
-  integrability of the two compared laws. The one-shot ⇔ historywise
-  equivalence and `isNash_toGameForm_of_isOneShotOptimalWithin` require
-  deviations to have expectations rather than to be integrable.
-  `isSubgamePerfect_iff_isNash_continuation` is now a plain equivalence with
-  continuation Nash at every proper root (the stage-1 integrable-deviations
-  conjunct is gone), behavioral SPE transfer drops its integrability
-  hypotheses, and the continuation-law transfer theorems need only
-  deviation expectations. Zermelo existence keeps its integrability hypothesis:
-  it maximizes real values.
-- **Stage 2: repeated, mechanism, evolutionary.** APS deterrence
-  (`IsEnforceable`, now `∀ who action, Deters …`) compares the extended
-  decomposed payoff: the current-stage and continuation expectations may each
-  be infinite, and `HasDecomposedPayoff` excludes only a sum of opposite
-  infinities (`HasDefinedSum`). Promise keeping stays real, because a promise
-  is a real vector. `isEnforceable_constant_iff_isNash` is now a plain `↔ IsNash`,
-  and the singleton stage-Nash decomposition needs only an integrable
-  incumbent. `IsDiscountedStationaryBellmanEq` already used `euPreference`; its
-  value equation is a real equality and is unchanged. Principal–agent
-  incentives and participation compare `extendedAgentUtility`: existence of
-  an incentivized action needs only payment expectations, a limited-liability
-  payment always offers zero participation to a costless action (no
-  integrability hypothesis), and the principal accounting bounds take the
-  payment integrability the old participation predicate carried. Receiver
-  obedience and sender optimality compare `extendedReceiverScore` and
-  `extendedSenderEU`, and both existence theorems need only expectations.
-  Small-invasion ESS/NSS compare `extendedMixedPayoff`, and the small-invasion
-  characterization `actualSmallInvasionPayoffs_iff_allPairs` holds for
-  expectations (`hasExpectation_of_scaled_weight_le`). The static
-  `IsMixedESS`/`IsMixedNSS` stay the classical finite-fitness notions:
-  with infinite fitness the static and dynamic notions disagree (a mutant with
-  a `+∞` self encounter wins every positive invasion while losing the static
-  first-order test; the PMFEvolutionaryGate fixture is such a game), so the
-  equivalence is stated as `IsMixedESS ↔ (all pairs integrable) ∧
-  IsActualSmallInvasionESS`, which is the old theorem's exact content.
-- **Stage 2: evidence revised.** PMFSequentialGate's divergent incumbent
-  (`+∞`, no alternatives) is now locally optimal. PMFMechanismGate's divergent
-  alternatives and PMFEvolutionaryGate's invading mutant are worth `+∞`, so
-  they still refute optimality and stability, now by being infinitely better;
-  the gate proofs show this directly. The new
-  `losing_agent_alternative_keeps_incentives` control is an alternative whose
-  expected payment is `−∞`: it no longer refutes the incumbent's incentives,
-  which the old integrability guard did.
-- **Stage 2 validation:** `lake build GameTheory` (4240 jobs) and `lake lint`
-  pass.
-- **Stage 2 outcome:** positive; kill conditions not met. No standalone
-  real-valued comparison predicate carries an integrability guard for the laws
-  it compares; the remaining integrability hypotheses sit in theorems whose
-  conclusions are real equalities or real bounds.
+  expectation becomes comparable; a theorem is weakened rather than restated
+  with exactly the integrability it used to obtain from a guarded predicate.
+- **Artifacts:** `Math/Probability/ExtendedExpectation.lean`;
+  `Tests/InfiniteExpectation.lean` (the witness, plus a locally defined
+  integrable-guard preference that rejects the same profile, so the test
+  separates the two semantics); the PMF gate fixtures under
+  `Experimental/PostArchitecture/`. Validation: `lake build GameTheory` and
+  `lake lint`.
+- **Observations:**
+  - The old guarded predicates are exactly the new ones plus integrability of
+    the compared laws. Every theorem that consumed that integrability could be
+    restated with it as a named hypothesis (`HasIntegrableDeviations` and its
+    CCE, CE, obedience, and belief analogues), so no statement was weakened.
+  - Many results needed no integrability at all once infinite values are
+    ranked: the one-shot deviation principles (history-, state-, and
+    information-local), zero-sum security and value equality, and the
+    revelation principle. Subgame perfection became exactly continuation Nash,
+    and APS enforceability with a constant continuation exactly stage Nash,
+    each with no side condition. Existence theorems need only expectations.
+  - Mixtures are asymmetric: an upper bound on a mixture needs no hypothesis
+    (a mixture without an expectation takes the junk value `⊥`), while a lower
+    bound needs the mixture to have an expectation. For the same reason,
+    convexity of expected-utility preference holds only among integrable laws:
+    mixing `+∞` with `−∞` leaves no expectation.
+  - A payoff that adds two separately taken expectations (APS: a current-stage
+    and a continuation term) is undefined exactly when they are opposite
+    infinities. `EReal` addition hides this by sending `⊤ + ⊥` to `⊥`, so the
+    definedness condition must be stated (`HasDefinedSum`).
+  - Static and dynamic evolutionary stability come apart with infinite
+    fitness: a mutant with a `+∞` self encounter wins every positive invasion
+    while losing the static first-order test (PMFEvolutionaryGate's fixture).
+    Small-invasion ESS is the extended notion; the classical static mixed ESS
+    stays a finite-fitness notion, equivalent to small-invasion ESS exactly
+    when every pair encounter is integrable.
+  - Gate fixtures changed verdict and now record the corrected behavior. The
+    PMFStaticGate singleton (`+∞` payoff, one strategy) is Nash, and
+    PMFSequentialGate's divergent incumbent with no alternatives is locally
+    optimal. PMFTransferGate's divergent target action is worth `⊥`, so the
+    source equilibrium now transfers (the original bug in a second form).
+    The divergent deviations and continuations of the MAID, uniform,
+    stochastic-Bellman, mechanism, and evolutionary gates are worth `⊤`: they
+    still defeat equilibrium, now by being infinitely better.
+    PMFMechanismGate's `losing_agent_alternative_keeps_incentives` shows the
+    changed case: an alternative worth `−∞` no longer refutes incentives.
+- **Outcome:** accepted; kill conditions not met. No semantic comparison
+  predicate guards the laws it compares with integrability. The remaining
+  integrability hypotheses sit in theorems whose conclusions are real
+  equalities or real bounds (Zermelo existence, promise keeping, the Bellman
+  value equation, principal accounting).
