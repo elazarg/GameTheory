@@ -9,8 +9,11 @@ lightweight `GameTheory` umbrella.
 
 import GameTheory.Analysis.Approachability
 import GameTheory.Analysis.Correlated
+import GameTheory.Analysis.CorrelationHierarchy
+import GameTheory.Analysis.DominanceHierarchy
 import GameTheory.Analysis.FictitiousPlayPotential
 import GameTheory.Analysis.IncentiveCone
+import GameTheory.Analysis.IncentiveHierarchy
 import GameTheory.Analysis.Learning
 import GameTheory.Analysis.MatrixValue
 import GameTheory.Analysis.Protocol

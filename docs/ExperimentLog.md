@@ -9387,3 +9387,99 @@ memory.
   integrability hypotheses sit in theorems whose conclusions are real
   equalities or real bounds (Zermelo existence, promise keeping, the Bellman
   value equation, principal accounting).
+
+### EXP-148: implications between preservation properties
+
+- **Date / status:** 2026-09-29; positive for the characterization and for
+  subgame perfection versus Nash; the simulation-record design is rejected.
+- **Question:** when does preservation of one solution concept by a
+  compilation imply preservation of another? Is there a structure common to
+  the preservation proofs, and a hierarchy among preservation properties?
+- **Setting:** every concept here is a unitwise family of incentive
+  comparisons (prescribed law versus alternative law), and preservation for
+  every utility is one cone criterion (`forall_holds_imp_iff_cone`). A
+  concept pair (fine `F`, coarse `C`) is a refinement: `F` implies `C` for
+  every utility.
+- **Hypotheses:**
+  - *H1 (characterization).* Preserving `F` implies preserving `C` for every
+    target exactly when `C` implies `F` on the source (the two coincide there);
+    preserving `C` implies preserving `F` for every source exactly when they
+    coincide on the target. Necessity needs a witness counterpart of the same
+    game class.
+  - *H2 (localizable refinements).* When the coarse concept's deviations can
+    condition on the fine concept's points, a fine comparison at a point
+    reached with probability `p > 0` is `p` times a coarse comparison, so the
+    two coincide where every point is reached.
+  - *H3 (aggregated refinements).* When the coarse deviations cannot condition
+    on the fine points, coarse comparisons are sums of fine ones and no
+    reachability condition makes them coincide.
+- **Competing designs:** a point-indexed simulation record with an
+  aggregation map (point-uniform, weight-preserving certificates); pairwise
+  implication lemmas per concept pair; the coincidence characterization.
+- **Kill conditions:** the necessity witness of H1 cannot be realized by games
+  of the same class; the reach decomposition of H2 needs hypotheses beyond
+  subgame closure; some concept is not a unitwise comparison family; the
+  simulation record adds nothing to the cone criterion.
+- **Artifacts:** `Analysis/IncentiveHierarchy.lean` (`Implies`, descent and
+  ascent, `descend_iff`/`ascend_iff`, `IsLocalizedIn`);
+  `Analysis/Protocol/SubgameLocalization.lean`;
+  `Analysis/CorrelationHierarchy.lean`; `Analysis/DominanceHierarchy.lean`;
+  the three matching `*Test.lean` fixtures. Validation: `lake build GameTheory`
+  and `lake lint`.
+- **Observations:**
+  - H1 holds and is the whole abstract content: sufficiency is transitivity
+    and necessity takes the fixed side's fine family as both concepts of the
+    counterpart. Descent and ascent are therefore properties of one side of a
+    compilation, not of the compiler. The substance is realizing the
+    witnesses within the game class and deciding coincidence.
+  - The witnesses are standard constructions of the library's own classes. For
+    subgame perfection versus Nash, the continuation game of a failing proper
+    subgame (as a one-shot game form) is the descent witness, and the strategic
+    form is the ascent witness. For correlated versus coarse correlated
+    equilibrium, the mediated extension (Nash at obedience is CE) is the
+    descent witness and the commitment form (Nash at universal obedience is
+    CCE, the Moulin–Vial game) the ascent witness. No kill condition fired.
+  - H2 holds for subgame perfection with no hypothesis beyond subgame closure:
+    no perfect recall, finite game, or bounded horizon. Splicing a subgame
+    deviation into the incumbent policy gives an exact mass identity on the
+    well-founded terminal-history law, so a subgame comparison is the root
+    comparison of the spliced deviation scaled by the root's reach
+    probability. Consequently subgame perfection is exactly Nash plus the
+    subgame comparisons at unreached proper roots, the two coincide at profiles
+    reaching every proper root, and a failing subgame is always unreached. A
+    finite observation carrier is used only to read comparisons as
+    inner products.
+  - H3 holds on a checked fixture: a uniform device recommending the same one
+    of three actions to both players gives every recommendation positive
+    probability, yet is CCE and not CE for one utility. Only a point-mass
+    device removes the aggregation (then Nash, CCE, and CE coincide).
+    Dominance versus Nash has the same character: a Nash deviation cannot
+    reach other opponent profiles. The truthfulness fixture adds an opponent
+    action that matters only after a lie; Nash of the truthful profile is
+    preserved for every utility and dominance is not.
+  - The deciding property is whether the coarse deviations can condition on
+    the fine concept's points, not the names of the concepts. Localizable:
+    subgame perfection, and by the same argument sequential rationality under
+    decision recall and interim versus ex-ante Bayesian equilibrium (not
+    formalized here). Aggregated: CE versus CCE, dominance versus Nash.
+  - The simulation record is rejected. For a fixed compilation, preservation
+    of any concept is already exactly cone inclusion of its families; for the
+    relation between concepts, the answer depends only on coincidence on the
+    fixed side, which no certificate on the compiler can supply.
+  - The library's continuation-law transfer theorem matches each target
+    proper root with some source proper root. By the gap theorem, its
+    hypotheses give Nash transfer from source Nash exactly when the target's
+    initial root is matched with a source root reached by incumbent play.
+    This corollary is derived, not separately formalized.
+  - The hierarchy layer needs no convexity: `Implies`, descent and ascent,
+    and localization are cone-free except for reading a comparison as an inner
+    product. It sits in `Analysis` only because `IncentiveComparison` does.
+- **Outcome:** accepted as evidence; the characterization and the localization
+  theorem are candidate API. Whether `IncentiveComparison` and the hierarchy
+  move to the core is a separate decision.
+- **Next action:** localize sequential rationality at reached information sets
+  under decision recall, which would give sequential equilibrium versus Nash
+  the same modulo-reach description; the interim versus ex-ante Bayesian pair;
+  a descent witness for dominance, which needs a game whose Nash comparisons
+  are every opponent profile's dominance comparisons on a common observation
+  carrier and was not constructed.
