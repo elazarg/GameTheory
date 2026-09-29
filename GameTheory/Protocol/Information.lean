@@ -1082,19 +1082,23 @@ def runMixedFrom (mixed : (i : ι) → M.MixedPolicy i) (fuel : ℕ) (h : E.Hist
 def runMixed (mixed : (i : ι) → M.MixedPolicy i) (fuel : ℕ) : PMF E.History :=
   M.runMixedFrom mixed fuel E.initHistory
 
+/-- A deterministic profile read as behavioral chooses by point masses. -/
+theorem randomizedChooser_toBehavioral (policies : (i : ι) → M.Policy i) :
+    M.randomizedChooser (fun i => (policies i).toBehavioral) =
+      (M.historyChooser policies).toRandomized := by
+  funext h' hterm
+  rw [randomizedChooser, behavioralJoint, ExecutionProtocol.HistoryChooser.toRandomized]
+  simp only [Policy.toBehavioral, independentProduct_pure, PMF.pure_map]
+  rfl
+
 /-- **Behavioral play extends deterministic play.** Reading a deterministic
 profile as behavioral changes nothing about the law it induces. -/
 theorem runBehavioralFrom_toBehavioral (policies : (i : ι) → M.Policy i)
     (fuel : ℕ) (h : E.History) :
     M.runBehavioralFrom (fun i => (policies i).toBehavioral) fuel h =
       M.runFrom policies fuel h := by
-  have hchooser : M.randomizedChooser (fun i => (policies i).toBehavioral) =
-      (M.historyChooser policies).toRandomized := by
-    funext h' hterm
-    rw [randomizedChooser, behavioralJoint, ExecutionProtocol.HistoryChooser.toRandomized]
-    simp only [Policy.toBehavioral, independentProduct_pure, PMF.pure_map]
-    rfl
-  rw [runBehavioralFrom, hchooser, runFrom, ExecutionProtocol.runRandomizedFor_toRandomized]
+  rw [runBehavioralFrom, M.randomizedChooser_toBehavioral, runFrom,
+    ExecutionProtocol.runRandomizedFor_toRandomized]
 
 /-- **Mixed play extends deterministic play**, for the same reason and by the
 other route. -/

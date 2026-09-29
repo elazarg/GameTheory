@@ -136,6 +136,91 @@ theorem implies_unilateralRandomized_iff [Fintype Observation] (statusQuo : PMF 
           ((DeviationScheme.constantToRandomized F.sig).apply_eq statusQuo who replacement)
     exact (IncentiveComparison.holds_iff_of_eq hsame _).1 (holds who _)
 
+/-! ## The mixed extension -/
+
+section Mixed
+
+variable [Fintype ι]
+
+/-- In the mixed extension a mixed deviation's comparison is the mixture of the
+pure deviations' comparisons, so pure deviations imply mixed ones for every
+utility. -/
+theorem implies_mixed_of_pure [Fintype Observation] (profile : Profile F.sig.mixed)
+    (observe : F.sig.Outcome → Observation) :
+    IncentiveComparison.Implies
+      (fun who (strategy : F.sig.Strategy who) =>
+        equilibriumComparison F.mixed (PMF.pure profile)
+          (DeviationScheme.unilateralConstant _) observe who (PMF.pure strategy))
+      (equilibriumComparison F.mixed (PMF.pure profile)
+        (DeviationScheme.unilateralConstant _) observe) := by
+  intro utility holds who replacement
+  have hstatus (mixed : PMF (F.sig.Strategy who)) :
+      (DeviationScheme.unilateralConstant F.mixed.sig).apply (PMF.pure profile) who mixed =
+        PMF.pure (Profile.update profile who mixed) :=
+    (DeviationScheme.unilateralConstant_apply _ _ _ _).trans (PMF.pure_map _ _)
+  have halternative : (equilibriumComparison F.mixed (PMF.pure profile)
+      (DeviationScheme.unilateralConstant _) observe who replacement).alternative =
+      replacement.bind fun strategy => (equilibriumComparison F.mixed (PMF.pure profile)
+        (DeviationScheme.unilateralConstant _) observe who (PMF.pure strategy)).alternative := by
+    change (F.mixed.outcomeLaw _).map observe = _
+    simp only [equilibriumComparison]
+    rw [hstatus replacement, GameForm.outcomeLaw, PMF.pure_bind,
+      GameForm.mixed_play_update F profile who replacement]
+    refine (PMF.map_bind _ _ _).trans (congrArg _ (funext fun strategy => ?_))
+    rw [hstatus (PMF.pure strategy), GameForm.outcomeLaw, PMF.pure_bind]
+  change euPreference _ () _ _
+  refine ⟨hasExpectation_of_payoffIntegrable (payoffIntegrable_of_finite _ _),
+    hasExpectation_of_payoffIntegrable (payoffIntegrable_of_finite _ _), ?_⟩
+  rw [halternative]
+  exact extendedExpect_bind_le fun strategy _ => (holds who strategy).2.2
+
+/-- At a profile of point masses, the mixed extension's pure-deviation
+comparisons are the original game's Nash comparisons. -/
+theorem equilibriumComparison_mixed_pure (profile : Profile F.sig)
+    (observe : F.sig.Outcome → Observation) (who : ι) (strategy : F.sig.Strategy who) :
+    equilibriumComparison F.mixed (PMF.pure fun player => PMF.pure (profile player))
+        (DeviationScheme.unilateralConstant _) observe who (PMF.pure strategy) =
+      equilibriumComparison F (PMF.pure profile) (DeviationScheme.unilateralConstant F.sig)
+        observe who strategy := by
+  have hupdate : (Profile.update (sig := F.mixed.sig) (fun player => PMF.pure (profile player))
+      who (PMF.pure strategy)) =
+        fun player => PMF.pure (Profile.update profile who strategy player) := by
+    funext player
+    by_cases hplayer : player = who
+    · subst player
+      simp
+    · simp [Profile.update_of_ne _ _ hplayer]
+  simp only [equilibriumComparison, DeviationScheme.unilateralConstant_apply, PMF.pure_map,
+    GameForm.outcomeLaw, PMF.pure_bind]
+  simp only [independentProduct_pure, PMF.pure_bind]
+  congr 2
+  exact (congrArg (fun law => (independentProduct law).bind F.play) hupdate).trans
+    (by rw [independentProduct_pure, PMF.pure_bind])
+
+/-- **Pure and mixed Nash are one family.** At a pure profile, the original
+game's Nash family and the mixed extension's Nash family imply each other for
+every utility. -/
+theorem implies_mixed_iff [Fintype Observation] (profile : Profile F.sig)
+    (observe : F.sig.Outcome → Observation) :
+    IncentiveComparison.Implies
+        (equilibriumComparison F (PMF.pure profile) (DeviationScheme.unilateralConstant F.sig)
+          observe)
+        (equilibriumComparison F.mixed (PMF.pure fun player => PMF.pure (profile player))
+          (DeviationScheme.unilateralConstant _) observe) ∧
+      IncentiveComparison.Implies
+        (equilibriumComparison F.mixed (PMF.pure fun player => PMF.pure (profile player))
+          (DeviationScheme.unilateralConstant _) observe)
+        (equilibriumComparison F (PMF.pure profile) (DeviationScheme.unilateralConstant F.sig)
+          observe) := by
+  have hsame (utility : Observation → ι → ℝ) (who : ι) (strategy : F.sig.Strategy who) :=
+    IncentiveComparison.holds_iff_of_eq
+      (F.equilibriumComparison_mixed_pure profile observe who strategy) (utility · who)
+  refine ⟨fun utility holds => F.implies_mixed_of_pure _ observe utility
+      fun who strategy => (hsame utility who strategy).2 (holds who strategy),
+    fun utility holds who strategy => (hsame utility who strategy).1 (holds who _)⟩
+
+end Mixed
+
 /-! ## The mediated extension -/
 
 /-- The mediated extension: the device draws a recommendation profile and each

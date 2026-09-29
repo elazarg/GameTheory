@@ -11,6 +11,7 @@ lying, but not in the target: against the new action, lying pays.
 -/
 
 import GameTheory.Analysis.DominanceHierarchy
+import Mathlib.Probability.Distributions.Uniform
 
 noncomputable section
 
@@ -91,5 +92,40 @@ theorem dominance_not_preserved :
     ¬ IncentiveComparison.Implies (source.dominanceComparison truthful id)
       (target.dominanceComparison truthful id) :=
   fun himplies => target_not_dominant (himplies utility source_dominant false _)
+
+/-! ## The revealing form separates Nash from dominance -/
+
+/-- The truthful profile is Nash in the target mechanism. -/
+theorem target_nash :
+    ∀ who alternative, (equilibriumComparison target (PMF.pure truthful)
+      (DeviationScheme.unilateralConstant _) id who alternative).Holds (utility · who) := by
+  intro who alternative
+  cases who <;> cases alternative <;>
+    simp [equilibriumComparison, GameForm.outcomeLaw, PMF.pure_map, holds_pure, truthful,
+      utility, Profile.update, Function.update]
+
+theorem target_nash_not_implies_dominance :
+    ¬ IncentiveComparison.Implies
+      (equilibriumComparison target (PMF.pure truthful) (DeviationScheme.unilateralConstant _) id)
+      (target.dominanceComparison truthful id) :=
+  fun himplies => target_not_dominant (himplies utility target_nash false _)
+
+/-- A uniform selection of the player and the revealed profile. -/
+def selector : PMF (Bool × Profile target.sig) := PMF.uniformOfFintype _
+
+theorem selector_full (selected : Bool × Profile target.sig) : selector selected ≠ 0 := by
+  simp [selector]
+
+/-- **Compiling into the revealing form preserves truthfulness but not Nash.** -/
+theorem revealing_separates :
+    IncentiveComparison.Implies (target.dominanceComparison truthful id)
+        ((target.revealing selector).dominanceComparison (target.ignoring selector truthful) id) ∧
+      ¬ IncentiveComparison.Implies
+        (equilibriumComparison target (PMF.pure truthful) (DeviationScheme.unilateralConstant _) id)
+        (equilibriumComparison (target.revealing selector)
+          (PMF.pure (target.ignoring selector truthful)) (DeviationScheme.unilateralConstant _)
+          id) := by
+  obtain ⟨hdominance, hiff⟩ := target.revealing_preservation selector selector_full truthful id
+  exact ⟨hdominance, fun h => target_nash_not_implies_dominance (hiff.1 h)⟩
 
 end GameTheory.Tests.DominanceHierarchy

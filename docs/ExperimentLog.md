@@ -9429,7 +9429,8 @@ memory.
   `Analysis/BayesianHierarchy.lean`; `Analysis/CorrelationHierarchy.lean`;
   `Analysis/DominanceHierarchy.lean`; fixtures `SubgameLocalizationTest`,
   `CorrelationHierarchyTest`, `DominanceHierarchyTest`,
-  `TremblingHandBoundaryTest`, `StrongNashBoundaryTest`. Validation:
+  `TremblingHandBoundaryTest`, `StrongNashBoundaryTest`,
+  `InformationLocalizationTest`. Validation:
   `lake build GameTheory`, `lake lint`, and `#print axioms` on the headline
   theorems (standard axioms only).
 - **Observations:**
@@ -9476,6 +9477,27 @@ memory.
     recall and a bounded horizon, sequential rationality implies Nash, and Nash
     plus the sites of mass zero implies sequential rationality; the two coincide
     when every site has positive mass.
+  - The sequential-rationality results hold for every well-founded game, with
+    no uniform horizon. A history's reach weight (a finite-prefix probability)
+    is the terminal law's mass on that history's cone, because the terminal law
+    splits at any finite prefix. The results compare terminal-law continuations,
+    the same semantics as `terminalContinuationContext`; the fuel-indexed
+    sequential-rationality predicate agrees with it only under a sufficient
+    horizon, and with too little fuel it is a different predicate (D61's
+    boundary test). The entry-deterrence game read as a Bayes-consistent
+    assessment with decision recall is behavioral Nash and not sequentially
+    rational, failing at a site of mass zero, so the zero-mass term is not
+    vacuous.
+  - Dominance now has a same-class separating counterpart: the revealing form,
+    in which chance selects a player and an opponent profile with full support
+    and reveals the profile to that player. Base-game dominance, the revealing
+    form's dominance, and the revealing form's Nash imply one another, so
+    dominance (truthfulness) is Nash of the revealing form for every utility,
+    and compiling into it preserves dominance and preserves Nash exactly when
+    Nash already implies dominance. The construction needs a full-support
+    selection, so it covers countable strategy sets; whether a same-class
+    counterpart exists for uncountable ones is open. At a pure profile the
+    mixed extension's Nash family is the pure game's.
   - Bayes-Nash and posterior interim optimality coincide with no gap: an
     ex-ante deviation confined to one own type localizes the interim
     comparison, and an ex-ante comparison is the prior mixture of interim ones.
@@ -9508,9 +9530,7 @@ memory.
 - **Outcome:** accepted as evidence; the characterization and the localization
   theorem are candidate API. Whether `IncentiveComparison` and the hierarchy
   move to the core is a separate decision.
-- **Next action:** a same-class descent witness for dominance (a game whose
-  Nash comparisons are every opponent profile's dominance comparisons on a
-  common observation carrier) was not constructed; a separation fixture for
-  sequential rationality at a zero-mass site; the relation of the mixed
-  extension's Nash family to the pure one at the family level (the library
-  has it per utility, `isNash_mixed_iff`).
+- **Next action:** a separating counterpart for dominance over uncountable
+  strategy sets; the library's own sequential-rationality predicate and
+  preservation criteria are still fuel-indexed (see the observation above),
+  which is a separate design question.

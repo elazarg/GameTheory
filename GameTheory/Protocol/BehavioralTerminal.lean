@@ -29,6 +29,15 @@ def runBehavioralTerminalFrom (M : InformationModel E)
     PMF E.History :=
   E.randomizedBackwardLaw certificate (M.randomizedChooser policies) history
 
+/-- Terminal behavioral play of a deterministic profile is the terminal law of
+its point-mass chooser. -/
+theorem runBehavioralTerminalFrom_toBehavioral (M : InformationModel E)
+    (certificate : E.WellFoundedPlay) (policies : (i : ι) → M.Policy i)
+    (history : E.History) :
+    M.runBehavioralTerminalFrom certificate (fun i => (policies i).toBehavioral) history =
+      E.randomizedBackwardLaw certificate (M.historyChooser policies).toRandomized history := by
+  rw [runBehavioralTerminalFrom, M.randomizedChooser_toBehavioral]
+
 /-- A certified global horizon makes terminal-law play equal the existing
 fuelled behavioral runner, from every starting history. -/
 theorem runBehavioralTerminalFrom_eq_runBehavioralFrom_of_bounded
