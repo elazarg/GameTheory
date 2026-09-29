@@ -335,6 +335,54 @@ theorem historyBackwardValue_congr_of_reaches
   unfold historyBackwardValue expect
   rw [E.historyBackwardLaw_congr_of_reaches start hagree]
 
+variable {E}
+
+/-- Randomized choosers agreeing on the reachable history cone have the same
+terminal law. -/
+theorem randomizedBackwardLaw_congr_of_reaches {certificate : E.WellFoundedHistories}
+    {first second : E.RandomizedChooser} :
+    ∀ start : E.History,
+      (∀ later, E.HistoryReaches start later →
+        ∀ hterm : ¬ E.terminal later.state, first later hterm = second later hterm) →
+      E.randomizedBackwardLaw certificate first start =
+        E.randomizedBackwardLaw certificate second start := by
+  intro start
+  induction start using certificate.induction with
+  | _ history ih =>
+      intro hagree
+      by_cases hterm : E.terminal history.state
+      · rw [E.randomizedBackwardLaw_of_terminal hterm, E.randomizedBackwardLaw_of_terminal hterm]
+      · rw [E.randomizedBackwardLaw_of_not_terminal hterm,
+          E.randomizedBackwardLaw_of_not_terminal hterm,
+          hagree history (HistoryReaches.refl E history) hterm]
+        refine congrArg _ (funext fun drawn => ?_)
+        apply bindOnSupport_congr
+        intro target realized
+        exact ih (history.extend drawn.2 realized) ⟨drawn.1, drawn.2, realized⟩
+          (fun later hreach =>
+            hagree later (HistoryReaches.step E drawn.2 realized hreach))
+
+/-- The terminal law splits at any finite prefix: run the prefix, then continue
+with the terminal law. -/
+theorem randomizedBackwardLaw_eq_bind_runRandomizedFor (certificate : E.WellFoundedHistories)
+    (chooser : E.RandomizedChooser) :
+    ∀ (fuel : ℕ) (history : E.History),
+      E.randomizedBackwardLaw certificate chooser history =
+        (E.runRandomizedFor chooser fuel history).bind
+          (E.randomizedBackwardLaw certificate chooser) := by
+  intro fuel
+  induction fuel with
+  | zero => intro history; rw [runRandomizedFor_zero, PMF.pure_bind]
+  | succ fuel ih =>
+      intro history
+      by_cases hterm : E.terminal history.state
+      · rw [runRandomizedFor_of_terminal _ _ hterm, PMF.pure_bind]
+      · rw [E.randomizedBackwardLaw_of_not_terminal hterm,
+          runRandomizedFor_succ_of_not_terminal _ fuel hterm, PMF.bind_bind]
+        refine congrArg _ (funext fun drawn => ?_)
+        rw [bindOnSupport_bind]
+        exact bindOnSupport_congr _ fun target realized => ih _
+
 end ExecutionProtocol
 
 

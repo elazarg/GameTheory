@@ -1,8 +1,8 @@
 /-
 # Hostile local-CFR witness
 
-The EXP-082 hidden-information site is now equipped with an arbitrary current
-action law.  Its D45 action-regret vector is exactly the ordinary regret-payoff
+The hidden-information site is equipped with an arbitrary current action law.
+Its counterfactual action-regret vector is exactly the ordinary regret-payoff
 vector for every law, so the cumulative regret matcher receives a genuine
 Protocol consumer rather than one named distribution.
 -/
@@ -80,7 +80,7 @@ theorem continuationIntegrable
     (strategy : (who : Player) → information.BehavioralPolicy who)
     (alternative : information.BehavioralPolicy .player) :
     information.CounterfactualContinuationIntegrable strategy .player
-      localSite alternative weightedMatchingPayoff 2 := by
+      localSite alternative weightedMatchingPayoff (information.truncatedRunner 2) := by
   intro history _
   exact payoffIntegrable_of_finite _ _
 
@@ -128,7 +128,7 @@ theorem behavioralContinuationValue_policyOfLaw
     (law : PMF LocalAction)
     (alternative : information.BehavioralPolicy .player) (hidden : Bool) :
     information.behavioralContinuationValue (profileOfLaw law) .player
-      alternative weightedMatchingPayoff 2 (decisionHistory hidden) =
+      alternative weightedMatchingPayoff (information.truncatedRunner 2) (decisionHistory hidden) =
         expect (alternative localSite.1) (fun choice =>
           if choice.1 = some hidden then if hidden then 2 else 1 else 0) := by
   unfold InformationModel.behavioralContinuationValue
@@ -149,7 +149,7 @@ theorem counterfactualContinuationValue_policyOfLaw
     (law : PMF LocalAction)
     (alternative : information.BehavioralPolicy .player) :
     information.counterfactualContinuationValue (profileOfLaw law) .player
-      localSite alternative weightedMatchingPayoff 2 =
+      localSite alternative weightedMatchingPayoff (information.truncatedRunner 2) =
       (1 / 2) * expect (alternative localSite.1) (fun choice =>
         if choice.1 = some true then 2 else 0) +
       (1 / 2) * expect (alternative localSite.1) (fun choice =>
@@ -160,12 +160,13 @@ theorem counterfactualContinuationValue_policyOfLaw
         information.counterfactualReachProbability (profileOfLaw law) .player
             history.1.trace *
           information.behavioralContinuationValue (profileOfLaw law) .player
-            alternative weightedMatchingPayoff 2 history.1) =
+            alternative weightedMatchingPayoff (information.truncatedRunner 2) history.1) =
       ∑ hidden : Bool,
         information.counterfactualReachProbability (profileOfLaw law) .player
             (decisionHistory hidden).trace *
           information.behavioralContinuationValue (profileOfLaw law) .player
-            alternative weightedMatchingPayoff 2 (decisionHistory hidden) := by
+            alternative weightedMatchingPayoff (information.truncatedRunner 2) (decisionHistory
+                hidden) := by
       exact Fintype.sum_equiv localHistoryEquivBool _ _ (fun history => by
         have hinverse := localHistoryEquivBool.symm_apply_apply history
         exact congrArg
@@ -174,7 +175,7 @@ theorem counterfactualContinuationValue_policyOfLaw
                 (profileOfLaw law) .player current.1.trace *
               information.behavioralContinuationValue
                 (profileOfLaw law) .player alternative
-                  weightedMatchingPayoff 2 current.1)
+                  weightedMatchingPayoff (information.truncatedRunner 2) current.1)
           hinverse.symm)
     _ = ∑ hidden : Bool, (1 / 2 : ℝ) *
           expect (alternative localSite.1) (fun choice =>
@@ -189,7 +190,7 @@ theorem counterfactualContinuationValue_policyOfLaw
 
 theorem baselineCounterfactualValue_policyOfLaw (law : PMF LocalAction) :
     information.counterfactualContinuationValue (profileOfLaw law) .player
-      localSite (policyOfLaw law) weightedMatchingPayoff 2 =
+      localSite (policyOfLaw law) weightedMatchingPayoff (information.truncatedRunner 2) =
         expect law (fun choice => localUtility choice ()) := by
   rw [counterfactualContinuationValue_policyOfLaw]
   simp only [policyOfLaw, BehavioralPolicy.withLaw_self]
@@ -208,7 +209,7 @@ theorem committedCounterfactualValue_policyOfLaw
     (law : PMF LocalAction) (choice : LocalAction) :
     information.counterfactualContinuationValue (profileOfLaw law) .player
       localSite ((policyOfLaw law).commit localSite.1 choice)
-        weightedMatchingPayoff 2 =
+        weightedMatchingPayoff (information.truncatedRunner 2) =
       localUtility choice () := by
   rw [counterfactualContinuationValue_policyOfLaw]
   rw [BehavioralPolicy.commit_self (M := information)]
@@ -224,7 +225,7 @@ theorem committedCounterfactualValue_policyOfLaw
 theorem counterfactualActionRegret_policyOfLaw
     (law : PMF LocalAction) (choice : LocalAction) :
     information.counterfactualActionRegret (profileOfLaw law) .player
-      localSite weightedMatchingPayoff 2 choice =
+      localSite weightedMatchingPayoff (information.truncatedRunner 2) choice =
         localUtility choice () -
           expect law (fun current => localUtility current ()) := by
   rw [InformationModel.counterfactualActionRegret,
@@ -236,7 +237,7 @@ theorem counterfactualActionRegret_policyOfLaw
 theorem localCounterfactualRegretVector_eq_regretPayoff
     (law : PMF LocalAction) (environment : Unit) :
     localCounterfactualRegretVector information (profileOfLaw law) .player
-        localSite weightedMatchingPayoff 2 =
+        localSite weightedMatchingPayoff (information.truncatedRunner 2) =
       regretPayoff localUtility law environment := by
   ext choice
   exact counterfactualActionRegret_policyOfLaw law choice
@@ -313,7 +314,7 @@ theorem regretPayoff_norm_le_one (law : PMF LocalAction)
 theorem fixedFalse_positiveCounterfactualRegret :
     information.counterfactualActionRegret
       (profileOfLaw (PMF.pure (localChoice false))) .player
-      localSite weightedMatchingPayoff 2 (localChoice true) =
+      localSite weightedMatchingPayoff (information.truncatedRunner 2) (localChoice true) =
       1 / 2 := by
   rw [counterfactualActionRegret_policyOfLaw]
   simp [expect_pure, localUtility, localChoice]
@@ -371,13 +372,14 @@ theorem hiddenCounterfactualRegretMatch_sq_infDist_avg_le (t : ℕ) :
         (avgVec
           (fun law _environment =>
             localCounterfactualRegretVector information
-              (profileOfLaw law) .player localSite weightedMatchingPayoff 2)
+              (profileOfLaw law) .player localSite weightedMatchingPayoff
+                  (information.truncatedRunner 2))
           regretMatch (fun _ => ()) t)
         nonposOrthant ^ 2 * (t : ℝ) ≤ 4 := by
   have hbound :=
     counterfactualRegretMatch_sq_infDist_avg_le information .player localSite
       localUtility (fun law _environment => profileOfLaw law)
-      (fun _environment => weightedMatchingPayoff) 2
+      (fun _environment => weightedMatchingPayoff) (information.truncatedRunner 2)
       localCounterfactualRegretVector_eq_regretPayoff
       (bound := 1) (by norm_num) regretPayoff_norm_le_one (fun _ => ()) t
   norm_num at hbound
@@ -391,13 +393,14 @@ theorem hiddenCounterfactualRegretMatch_approaches :
         (avgVec
           (fun law _environment =>
             localCounterfactualRegretVector information
-              (profileOfLaw law) .player localSite weightedMatchingPayoff 2)
+              (profileOfLaw law) .player localSite weightedMatchingPayoff
+                  (information.truncatedRunner 2))
           regretMatch (fun _ => ()) t)
         nonposOrthant)
       atTop (nhds 0) :=
   counterfactualRegretMatch_approaches information .player localSite
     localUtility (fun law _environment => profileOfLaw law)
-    (fun _environment => weightedMatchingPayoff) 2
+    (fun _environment => weightedMatchingPayoff) (information.truncatedRunner 2)
     localCounterfactualRegretVector_eq_regretPayoff
     (bound := 1) (by norm_num) regretPayoff_norm_le_one (fun _ => ())
 

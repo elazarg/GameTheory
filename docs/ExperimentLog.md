@@ -9617,3 +9617,63 @@ memory.
 - **Next action:** counterfactual regret and the Bayes continuation value are
   still indexed by a horizon; whether they restate on terminal laws is a
   separate question.
+
+### EXP-150: counterfactual regret over a continuation runner
+
+- **Date / status:** 2026-09-30; positive, with one hypothesis narrowed.
+- **Question:** can counterfactual continuation values, counterfactual regret,
+  and the Bayes continuation value be stated over an arbitrary continuation
+  runner, so that their identities and the regret-matching guarantees hold on
+  terminal play without a horizon, while truncation remains an instance?
+- **Setting:** unlike the retired sequential-rationality predicate, the
+  truncated counterfactual identities are internally consistent at every
+  fuel: the root is cut at depth plus fuel and each continuation at fuel, so
+  they are exact identities of the truncated game rather than a mismatched
+  predicate.
+- **Hypotheses:**
+  - *H1.* Only two identities use the runner's structure: affinity in a law
+    installed at a no-revisit site, and the split of root play at a
+    common-depth cut. Every other identity (Bayes scaling, sign
+    equivalences, regret matching, root aggregation) is runner-agnostic.
+  - *H2.* Both structural properties hold for the terminal runner on
+    well-founded histories with no horizon, and for the truncated runner in
+    the form the current proofs use.
+- **Competing designs:** (a) keep the fuel family (truncation-consistent, so
+  not wrong, but silent about well-founded games without a horizon);
+  (b) a terminal copy beside it; (c) runner-generic definitions with the two
+  structural properties as named hypotheses.
+- **Kill conditions:** a runner-generic theorem needs a hypothesis beyond
+  the named structural properties that its fuel form did not; the terminal
+  runner fails a structural property without a horizon.
+- **Artifacts:** `RunnerFactorsAt` and `RunnerReadsReachable` (the named
+  structural properties), the root-split hypothesis of
+  `rootGain_eq_ownReach_mul_counterfactualRegret`, and
+  `CounterfactualTerminalTest` (the countdown game, which has no uniform
+  horizon). Validation: `lake build GameTheory`, `lake lint`.
+- **Observations:**
+  - H1 undercounted. Besides affinity at a site and the split at a cut, the
+    cut-gain and earlier-site invariance arguments use a third property: the
+    runner reads a profile only at nonterminal histories reachable from the
+    start. Every other identity, including the Bayes scaling and sign
+    theorems, regret matching, and root aggregation, is runner-agnostic.
+  - H2 held. The terminal runner has all three properties with no horizon:
+    it splits at every depth, factors a law installed at a site that cannot
+    matter twice, and is congruent on the reachable cone. On the countdown
+    game the generic root decomposition gives counterfactual regret one on
+    terminal play, equal to the exact root gain.
+  - The truncated family is recovered exactly as instances. Truncated play
+    factors only after at least one step, and splits only with a rolling
+    deadline: the root is cut at the site depth plus the continuation's
+    steps, so the root law is a separate parameter rather than the runner
+    applied at the root. Terminal play is the runner for which the two
+    coincide.
+  - No kill condition fired. Stating affinity at one history with that
+    history's factorization equation, rather than the site-wide property,
+    kept its original hypothesis; the site-wide property would have required
+    every site history to be nonterminal.
+  - The finite existence proof still telescopes over time steps, so it uses
+    the truncated instance of the generic identities.
+- **Outcome:** accepted with design (c); recorded as D65.
+- **Next action:** a guard that on the countdown game every truncation
+  strictly underestimates the terminal counterfactual regret is not
+  formalized.

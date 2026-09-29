@@ -369,13 +369,14 @@ theorem incumbentContinuationIntegrable (who : Bool)
     information.CounterfactualContinuationIntegrable
       (localStrategyOf who law environment) who (initialSite who)
       (localStrategyOf who law environment who)
-      (localPayoff who environment) 1 :=
+      (localPayoff who environment) (information.truncatedRunner 1) :=
   fun _ _ => protocolUtility_integrable who _
 
 theorem initial_counterfactualActionUtility (who : Bool)
     (choice : information.Choice who (initialSite who).1) :
     counterfactualActionUtility information baselineProfile who
-        (initialSite who) (fun history => protocolUtility history who) 1 choice =
+        (initialSite who) (fun history => protocolUtility history who) (information.truncatedRunner
+            1) choice =
       score who (actionOfChoice who choice) := by
   unfold counterfactualActionUtility counterfactualContinuationValue
   rw [Fintype.sum_unique]
@@ -402,12 +403,13 @@ theorem local_realization (who : Bool)
     (environment : Unit) :
     localCounterfactualRegretVector information
         (localStrategyOf who law environment) who (initialSite who)
-          (localPayoff who environment) 1 =
+          (localPayoff who environment) (information.truncatedRunner 1) =
       regretPayoff (localUtility who) law environment := by
   have h := information.localCounterfactualRegretVector_strategyWithLocalLaw
-    information_actsOnce baselineProfile who (initialSite who)
-      (initialSite_allNonterminal who) law
-      (fun history => protocolUtility history who) 0 environment
+    baselineProfile who (initialSite who) law
+      (fun history => protocolUtility history who) (information.truncatedRunner 1)
+      (information.runnerFactorsAt_truncated information_actsOnce
+        (initialSite_allNonterminal who) 0) environment
       (incumbentContinuationIntegrable who law environment)
   unfold localStrategyOf localPayoff
   rw [h]
@@ -432,7 +434,7 @@ theorem local_regretPayoff_norm_le (who : Bool)
 def localAverage (who : Bool) (t : ℕ) :
     EuclideanSpace ℝ (information.Choice who (initialSite who).1) :=
   counterfactualRegretMatchAverage information who (initialSite who)
-    (localStrategyOf who) (localPayoff who) 1
+    (localStrategyOf who) (localPayoff who) (information.truncatedRunner 1)
     (fun _ => ()) t
 
 def learnedLaw (who : Bool) (round : ℕ) :
@@ -451,7 +453,7 @@ theorem localVector_coordinate_eq_gain (who : Bool)
     (round : ℕ) :
     (localCounterfactualRegretVector information
       (localStrategyOf who (learnedLaw who round) ()) who (initialSite who)
-        (localPayoff who ()) 1).ofLp deviation =
+        (localPayoff who ()) (information.truncatedRunner 1)).ofLp deviation =
       localGain who deviation round := by
   rw [local_realization, regretPayoff_ofLp]
   rfl
@@ -588,7 +590,7 @@ theorem local_approaches (who : Bool) :
       atTop (nhds 0) := by
   simpa only [localAverage, counterfactualRegretMatchAverage] using
     counterfactualRegretMatch_approaches information who (initialSite who)
-      (localUtility who) (localStrategyOf who) (localPayoff who) 1
+      (localUtility who) (localStrategyOf who) (localPayoff who) (information.truncatedRunner 1)
       (local_realization who) (bound :=
         Fintype.card (information.Choice who (initialSite who).1))
       (by positivity) (local_regretPayoff_norm_le who) (fun _ => ())
@@ -603,7 +605,7 @@ theorem localGain_positiveAverage_tendsto_zero (who : Bool) :
   apply counterfactualRegretMatches_positiveRootGains_tendsto_zero
     information (fun _ : Unit => Unit) who (fun _ => initialSite who)
     (fun _ => localStrategyOf who) (fun _ => localPayoff who)
-    (fun _ => 1) (fun _ _ => ()) (localGain who)
+    (fun _ => (information.truncatedRunner 1)) (fun _ _ => ()) (localGain who)
     (fun _ _ => 1) (fun _ _ => by exact ⟨by norm_num, by norm_num⟩)
     (fun deviation _ => deviation)
   · intro deviation round
@@ -702,7 +704,7 @@ theorem columnExternalRegret_round_zero_eq_one :
     localGain_improving_zero]
 
 /-- Both local learners contribute to the shared initial exploitability gap;
-the D51 cancellation theorem computes the exact value `2`. -/
+the zero-sum cancellation theorem computes the exact value `2`. -/
 theorem initial_saddleGap_eq_two :
     MatrixGame.expectedPayoff matrixPayoff
           (PMF.pure (improvingChoice false))
@@ -840,9 +842,9 @@ theorem externalRegret_le_columnRegretBound (t : ℕ)
   exact Finset.single_le_sum
     (fun current _ => le_max_right _ _) (Finset.mem_univ col)
 
-/-- **Same-trace CFR-to-Nash consumer.** Both D50 bounds concern the one
-time-average law assembled from the two actual local learners, and D51 turns
-them into the canonical approximate mixed Nash certificate. -/
+/-- **Same-trace CFR-to-Nash consumer.** Both root-regret bounds concern
+the one time-average law assembled from the two actual local learners, and
+zero-sum cancellation turns them into the canonical approximate mixed Nash certificate. -/
 theorem empiricalMarginals_isεNash (t : ℕ) :
     IsεNash
       (MatrixGame.form

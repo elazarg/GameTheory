@@ -33,10 +33,10 @@ def localCounterfactualRegretVector
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
-    (payoff : E.History → ℝ) (fuel : ℕ) :
+    (payoff : E.History → ℝ) (run : M.ContinuationRunner) :
     EuclideanSpace ℝ (M.Choice who site.1) :=
   WithLp.toLp 2 fun choice =>
-    M.counterfactualActionRegret strategy who site payoff fuel choice
+    M.counterfactualActionRegret strategy who site payoff run choice
 
 /-- Install the learner's current law at one information site of an otherwise
 fixed behavioral profile.  This is a transparent specialization of the sole
@@ -82,15 +82,15 @@ theorem counterfactualActionUtility_strategyWithLocalLaw
     (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
     (law : PMF (M.Choice who site.1))
-    (payoff : E.History → ℝ) (fuel : ℕ)
+    (payoff : E.History → ℝ) (run : M.ContinuationRunner)
     (choice : M.Choice who site.1) :
     counterfactualActionUtility M
         (strategyWithLocalLaw M strategy who site law)
-        who site payoff fuel choice =
-      counterfactualActionUtility M strategy who site payoff fuel choice := by
+        who site payoff run choice =
+      counterfactualActionUtility M strategy who site payoff run choice := by
   have hvalue := M.counterfactualContinuationValue_eq_of_eq_off
     (fun other hne => strategyWithLocalLaw_of_ne M strategy who site law hne)
-      site ((strategy who).commit site.1 choice) payoff fuel
+      site ((strategy who).commit site.1 choice) payoff run
   simpa only [counterfactualActionUtility, strategyWithLocalLaw,
     Profile.update_same, BehavioralPolicy.withLaw_commit] using hvalue
 
@@ -99,26 +99,25 @@ current site law is the mixed action and pure-commitment continuation values
 are the ordinary finite-action utilities. -/
 theorem localCounterfactualRegretVector_eq_regretPayoff_actionUtility
     [Fintype ι] [DecidableEq ι]
-    (hactsOnce : M.ActsOnceWhereItMatters)
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
-    (hallNonterminal : InformationSite.AllNonterminal M site)
-    (payoff : E.History → ℝ) (fuel : ℕ)
+    (payoff : E.History → ℝ) (run : M.ContinuationRunner)
+    (hfactor : M.RunnerFactorsAt run who site)
     (hbase : M.CounterfactualContinuationIntegrable strategy who site
-      (strategy who) payoff (fuel + 1)) :
-    localCounterfactualRegretVector M strategy who site payoff (fuel + 1) =
+      (strategy who) payoff run) :
+    localCounterfactualRegretVector M strategy who site payoff run =
       regretPayoff
         (fun choice (_environment : Unit) =>
           counterfactualActionUtility M strategy who site
-            payoff (fuel + 1) choice)
+            payoff run choice)
         (strategy who site.1) () := by
   ext choice
   simp only [localCounterfactualRegretVector, WithLp.ofLp_toLp,
     regretPayoff_ofLp]
-  exact (M.counterfactualActionRegret_eq_sub_expect hactsOnce strategy who site
-    hallNonterminal payoff fuel choice hbase).2
+  exact (M.counterfactualActionRegret_eq_sub_expect strategy who site
+    payoff run hfactor choice hbase).2
 
 /-- Installing an arbitrary current law in a fixed environment realizes the
 ordinary regret-payoff vector for the environment's pure-commitment
@@ -126,29 +125,28 @@ counterfactual utilities. -/
 theorem localCounterfactualRegretVector_strategyWithLocalLaw
     {Q : Type*}
     [Fintype ι] [DecidableEq ι]
-    (hactsOnce : M.ActsOnceWhereItMatters)
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
-    (hallNonterminal : InformationSite.AllNonterminal M site)
     (law : PMF (M.Choice who site.1))
-    (payoff : E.History → ℝ) (fuel : ℕ) (environment : Q)
+    (payoff : E.History → ℝ) (run : M.ContinuationRunner)
+    (hfactor : M.RunnerFactorsAt run who site) (environment : Q)
     (hupdated : M.CounterfactualContinuationIntegrable
       (strategyWithLocalLaw M strategy who site law) who site
-      (strategyWithLocalLaw M strategy who site law who) payoff (fuel + 1)) :
+      (strategyWithLocalLaw M strategy who site law who) payoff run) :
     localCounterfactualRegretVector M
         (strategyWithLocalLaw M strategy who site law)
-        who site payoff (fuel + 1) =
+        who site payoff run =
       regretPayoff
         (fun choice (_current : Q) =>
           counterfactualActionUtility M strategy who site
-            payoff (fuel + 1) choice)
+            payoff run choice)
         law environment := by
   ext choice
   have hlocal := M.localCounterfactualRegretVector_eq_regretPayoff_actionUtility
-    hactsOnce (strategyWithLocalLaw M strategy who site law) who site
-      hallNonterminal payoff fuel hupdated
+    (strategyWithLocalLaw M strategy who site law) who site
+      payoff run hfactor hupdated
   have hcoord := congrArg (fun vector : EuclideanSpace ℝ
       (M.Choice who site.1) => vector.ofLp choice) hlocal
   simp only [regretPayoff_ofLp, strategyWithLocalLaw_same,
@@ -168,10 +166,10 @@ theorem counterfactualRegretMatch_sq_infDist_avg_le
     (utility : M.Choice who site.1 → Q → ℝ)
     (strategyOf : PMF (M.Choice who site.1) → Q →
       (player : ι) → M.BehavioralPolicy player)
-    (payoffOf : Q → E.History → ℝ) (fuel : ℕ)
+    (payoffOf : Q → E.History → ℝ) (run : M.ContinuationRunner)
     (hrealize : ∀ law environment,
       localCounterfactualRegretVector M (strategyOf law environment)
-          who site (payoffOf environment) fuel =
+          who site (payoffOf environment) run =
         regretPayoff utility law environment)
     {bound : ℝ} (hbound0 : 0 ≤ bound)
     (hbound : ∀ law environment,
@@ -181,12 +179,12 @@ theorem counterfactualRegretMatch_sq_infDist_avg_le
     Metric.infDist
         (avgVec
           (fun law current => localCounterfactualRegretVector M
-            (strategyOf law current) who site (payoffOf current) fuel)
+            (strategyOf law current) who site (payoffOf current) run)
           regretMatch environment t)
         nonposOrthant ^ 2 * (t : ℝ) ≤ (2 * bound) ^ 2 := by
   have hpayoff :
       (fun law current => localCounterfactualRegretVector M
-        (strategyOf law current) who site (payoffOf current) fuel) =
+        (strategyOf law current) who site (payoffOf current) run) =
         (fun law current => regretPayoff utility law current) := by
     funext law current
     exact hrealize law current
@@ -205,10 +203,10 @@ theorem counterfactualRegretMatch_approaches
     (utility : M.Choice who site.1 → Q → ℝ)
     (strategyOf : PMF (M.Choice who site.1) → Q →
       (player : ι) → M.BehavioralPolicy player)
-    (payoffOf : Q → E.History → ℝ) (fuel : ℕ)
+    (payoffOf : Q → E.History → ℝ) (run : M.ContinuationRunner)
     (hrealize : ∀ law environment,
       localCounterfactualRegretVector M (strategyOf law environment)
-          who site (payoffOf environment) fuel =
+          who site (payoffOf environment) run =
         regretPayoff utility law environment)
     {bound : ℝ} (hbound0 : 0 ≤ bound)
     (hbound : ∀ law environment,
@@ -219,13 +217,13 @@ theorem counterfactualRegretMatch_approaches
       (fun t => Metric.infDist
         (avgVec
           (fun law current => localCounterfactualRegretVector M
-            (strategyOf law current) who site (payoffOf current) fuel)
+            (strategyOf law current) who site (payoffOf current) run)
           regretMatch environment t)
         nonposOrthant)
       atTop (nhds 0) := by
   have hpayoff :
       (fun law current => localCounterfactualRegretVector M
-        (strategyOf law current) who site (payoffOf current) fuel) =
+        (strategyOf law current) who site (payoffOf current) run) =
         (fun law current => regretPayoff utility law current) := by
     funext law current
     exact hrealize law current

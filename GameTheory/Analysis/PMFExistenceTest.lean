@@ -1,5 +1,5 @@
 /-
-EXP-128 consumer: finite strategic choices, an infinite outcome law, and an
+Finite strategic choices, an infinite outcome law, and an
 unbounded but integrable utility are fed directly to mixed Nash existence.
 -/
 

@@ -203,7 +203,7 @@ private def bayesValue
   bayesContinuationValue information fullyMixedBehavioralProfile .player
     actingSite (information_decisionInformationAntichain .player actingSite)
     (informationMass_fullyMixed_pos actingSite) alternative
-    weightedMatchingPayoff 2
+    weightedMatchingPayoff (information.truncatedRunner 2)
 
 private theorem bayesValue_eq_average
     (alternative : information.BehavioralPolicy Player.player) :
@@ -266,7 +266,7 @@ theorem counterfactual_integrable
     (alternative : information.BehavioralPolicy Player.player) :
   information.CounterfactualContinuationIntegrable
       fullyMixedBehavioralProfile Player.player actingSite alternative
-      weightedMatchingPayoff 2 := by
+      weightedMatchingPayoff (information.truncatedRunner 2) := by
   intro history _hreach
   exact payoffIntegrable_of_finite
     (information.runBehavioralFrom
@@ -297,7 +297,7 @@ theorem bayesContinuationValue_alwaysTrue :
     bayesContinuationValue information fullyMixedBehavioralProfile .player
       actingSite (information_decisionInformationAntichain .player actingSite)
       (informationMass_fullyMixed_pos actingSite) alwaysTruePolicy
-      weightedMatchingPayoff 2 = 1 := by
+      weightedMatchingPayoff (information.truncatedRunner 2) = 1 := by
   have hvalue : bayesValue alwaysTruePolicy = 1 := by
     rw [bayesValue_eq_average]
     norm_num [alwaysTruePolicy, expect_pure]
@@ -308,7 +308,7 @@ theorem bayesContinuationValue_fullyMixed :
     bayesContinuationValue information fullyMixedBehavioralProfile .player
       actingSite (information_decisionInformationAntichain .player actingSite)
       (informationMass_fullyMixed_pos actingSite) fullyMixedBehavioralPolicy
-      weightedMatchingPayoff 2 = 3 / 4 := by
+      weightedMatchingPayoff (information.truncatedRunner 2) = 3 / 4 := by
   have hvalue : bayesValue fullyMixedBehavioralPolicy = 3 / 4 := by
     rw [bayesValue_eq_average]
     simp only [fullyMixedBehavioralPolicy, expect_map]
@@ -323,7 +323,7 @@ theorem bayesContinuationValue_alwaysFalse :
     bayesContinuationValue information fullyMixedBehavioralProfile .player
       actingSite (information_decisionInformationAntichain .player actingSite)
       (informationMass_fullyMixed_pos actingSite) behavioralPolicy
-      weightedMatchingPayoff 2 = 1 / 2 := by
+      weightedMatchingPayoff (information.truncatedRunner 2) = 1 / 2 := by
   have hvalue : bayesValue behavioralPolicy = 1 / 2 := by
     rw [bayesValue_eq_average]
     norm_num [behavioralPolicy, expect_pure]
@@ -333,13 +333,14 @@ theorem bayesContinuationValue_alwaysFalse :
 directly consumes the scaled canonical Bayes-gain identity. -/
 theorem counterfactualRegret_alwaysTrue :
     counterfactualRegret information fullyMixedBehavioralProfile .player
-      actingSite weightedMatchingPayoff 2 alwaysTruePolicy = 1 / 4 := by
+      actingSite weightedMatchingPayoff (information.truncatedRunner 2) alwaysTruePolicy = 1 / 4 :=
+          by
   have hscaled :=
     informationMass_mul_bayesGain_eq_ownReach_mul_counterfactualRegret
       information fullyMixedBehavioralProfile .player actingSite
       (information_decisionInformationAntichain .player actingSite)
       (informationMass_fullyMixed_pos actingSite) 1 commonPlayerReach_acting
-      alwaysTruePolicy weightedMatchingPayoff 2
+      alwaysTruePolicy weightedMatchingPayoff (information.truncatedRunner 2)
       (counterfactual_integrable alwaysTruePolicy)
       (counterfactual_integrable fullyMixedBehavioralPolicy)
   simp only [fullyMixedBehavioralProfile, informationMass_fullyMixed_acting,
@@ -350,13 +351,14 @@ theorem counterfactualRegret_alwaysTrue :
 /-- The losing control has exact negative counterfactual regret. -/
 theorem counterfactualRegret_alwaysFalse :
     counterfactualRegret information fullyMixedBehavioralProfile .player
-      actingSite weightedMatchingPayoff 2 behavioralPolicy = -(1 / 4) := by
+      actingSite weightedMatchingPayoff (information.truncatedRunner 2)
+        behavioralPolicy = -(1 / 4) := by
   have hscaled :=
     informationMass_mul_bayesGain_eq_ownReach_mul_counterfactualRegret
       information fullyMixedBehavioralProfile .player actingSite
       (information_decisionInformationAntichain .player actingSite)
       (informationMass_fullyMixed_pos actingSite) 1 commonPlayerReach_acting
-      behavioralPolicy weightedMatchingPayoff 2
+      behavioralPolicy weightedMatchingPayoff (information.truncatedRunner 2)
       (counterfactual_integrable behavioralPolicy)
       (counterfactual_integrable fullyMixedBehavioralPolicy)
   simp only [fullyMixedBehavioralProfile, informationMass_fullyMixed_acting,
@@ -368,36 +370,37 @@ theorem counterfactualRegret_alwaysFalse :
 /-- The action-local API retains the profitable control exactly. -/
 theorem counterfactualActionRegret_true :
     counterfactualActionRegret information fullyMixedBehavioralProfile .player
-      actingSite weightedMatchingPayoff 2 trueChoice = 1 / 4 := by
+      actingSite weightedMatchingPayoff (information.truncatedRunner 2) trueChoice = 1 / 4 := by
   simpa only [counterfactualActionRegret, fullyMixedBehavioralProfile,
     commit_true_eq_alwaysTrue] using counterfactualRegret_alwaysTrue
 
 /-- The action-local API also retains the strictly harmful control. -/
 theorem counterfactualActionRegret_false :
     counterfactualActionRegret information fullyMixedBehavioralProfile .player
-      actingSite weightedMatchingPayoff 2 falseChoice = -(1 / 4) := by
+      actingSite weightedMatchingPayoff (information.truncatedRunner 2) falseChoice = -(1 / 4) := by
   simpa only [counterfactualActionRegret, fullyMixedBehavioralProfile,
     commit_false_eq_alwaysFalse] using counterfactualRegret_alwaysFalse
 
 /-- The sign bridge itself is exercised on the profitable replacement. -/
 theorem profitable_counterfactual_iff_profitable_bayes :
     0 < counterfactualRegret information fullyMixedBehavioralProfile .player
-        actingSite weightedMatchingPayoff 2 alwaysTruePolicy ↔
+        actingSite weightedMatchingPayoff (information.truncatedRunner 2) alwaysTruePolicy ↔
       0 < bayesContinuationValue information fullyMixedBehavioralProfile .player
           actingSite
           (information_decisionInformationAntichain .player actingSite)
           (informationMass_fullyMixed_pos actingSite) alwaysTruePolicy
-          weightedMatchingPayoff 2 -
+          weightedMatchingPayoff (information.truncatedRunner 2) -
         bayesContinuationValue information fullyMixedBehavioralProfile .player
           actingSite
           (information_decisionInformationAntichain .player actingSite)
           (informationMass_fullyMixed_pos actingSite)
-          (fullyMixedBehavioralProfile .player) weightedMatchingPayoff 2 :=
+          (fullyMixedBehavioralProfile .player) weightedMatchingPayoff (information.truncatedRunner
+              2) :=
   counterfactualRegret_pos_iff_bayesGain_pos information
     fullyMixedBehavioralProfile .player actingSite
     (information_decisionInformationAntichain .player actingSite)
     (informationMass_fullyMixed_pos actingSite) 1 (by norm_num)
-    commonPlayerReach_acting alwaysTruePolicy weightedMatchingPayoff 2
+    commonPlayerReach_acting alwaysTruePolicy weightedMatchingPayoff (information.truncatedRunner 2)
     (counterfactual_integrable alwaysTruePolicy)
     (counterfactual_integrable fullyMixedBehavioralPolicy)
 
@@ -405,22 +408,24 @@ theorem profitable_counterfactual_iff_profitable_bayes :
 this fixture does not claim global perfect recall. -/
 theorem profitable_counterfactual_iff_profitable_bayes_of_commonReach :
     0 < counterfactualRegret information fullyMixedBehavioralProfile .player
-        actingSite weightedMatchingPayoff 2 alwaysTruePolicy ↔
+        actingSite weightedMatchingPayoff (information.truncatedRunner 2) alwaysTruePolicy ↔
       0 < bayesContinuationValue information fullyMixedBehavioralProfile .player
           actingSite
           (information_decisionInformationAntichain .player actingSite)
           (informationMass_fullyMixed_pos actingSite) alwaysTruePolicy
-          weightedMatchingPayoff 2 -
+          weightedMatchingPayoff (information.truncatedRunner 2) -
         bayesContinuationValue information fullyMixedBehavioralProfile .player
           actingSite
           (information_decisionInformationAntichain .player actingSite)
           (informationMass_fullyMixed_pos actingSite)
-          (fullyMixedBehavioralProfile .player) weightedMatchingPayoff 2 :=
+          (fullyMixedBehavioralProfile .player) weightedMatchingPayoff (information.truncatedRunner
+              2) :=
   counterfactualRegret_pos_iff_bayesGain_pos_of_commonReach information
     fullyMixedBehavioralProfile .player actingSite
     (information_decisionInformationAntichain .player actingSite)
     (informationMass_fullyMixed_pos actingSite)
-    ⟨1, commonPlayerReach_acting⟩ alwaysTruePolicy weightedMatchingPayoff 2
+    ⟨1, commonPlayerReach_acting⟩ alwaysTruePolicy weightedMatchingPayoff
+        (information.truncatedRunner 2)
     (counterfactual_integrable alwaysTruePolicy)
     (counterfactual_integrable fullyMixedBehavioralPolicy)
 

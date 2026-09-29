@@ -125,6 +125,10 @@ play from `history` under the behavioral profile `profile`. -/
 abbrev ContinuationRunner :=
   ((i : ι) → M.BehavioralPolicy i) → E.History → PMF E.History
 
+/-- Behavioral play cut off after `fuel` steps. -/
+abbrev truncatedRunner [Fintype ι] (fuel : ℕ) : M.ContinuationRunner :=
+  fun policies => M.runBehavioralFrom policies fuel
+
 namespace BehavioralAssessment
 
 variable {M}
@@ -252,7 +256,7 @@ def truncatedContinuationContext [Fintype ι] [DecidableEq ι]
     (A : M.BehavioralAssessment) {i : ι}
     (site : M.InformationSite i) (payoff : E.History → ℝ) (fuel : ℕ) :
     GameTheory.Protocol.Context (M.BehavioralPolicy i) E.History :=
-  A.continuationContextWith (fun policies => M.runBehavioralFrom policies fuel) site payoff
+  A.continuationContextWith (M.truncatedRunner fuel) site payoff
 
 @[simp]
 theorem truncatedContinuationContext_value [Fintype ι] [DecidableEq ι]

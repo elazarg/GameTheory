@@ -359,7 +359,7 @@ theorem behavioralRootGain_nonpos_of_counterfactualLocalGain_nonpos
     (payoff : E.History → ℝ) {bound : ℕ}
     (hbound : E.BoundedHorizon bound)
     (hlocal : ∀ site : M.InformationSite who,
-      M.counterfactualRegret baseline who site payoff bound
+      M.counterfactualRegret baseline who site payoff (M.truncatedRunner bound)
         ((baseline who).withLaw site.1 (alternative site.1)) ≤ 0) :
     expect (M.runBehavioral
         (Profile.update (sig := M.behavioralSignature) baseline who alternative)
@@ -451,7 +451,7 @@ theorem behavioralRootGain_nonpos_of_counterfactualLocalGain_nonpos
       have heq :
           (∑ history : M.InformationHistory who info,
             (M.historyReachWeight changed history.1).toReal * gain history.1) =
-          reach * M.counterfactualRegret baseline who site payoff bound
+          reach * M.counterfactualRegret baseline who site payoff (M.truncatedRunner bound)
             ((baseline who).withLaw info (alternative info)) := by
         unfold counterfactualRegret counterfactualContinuationValue
           behavioralContinuationValue
@@ -744,7 +744,7 @@ theorem rootGain_spliceAfter_eq_sum_informationGain
 
 /-- A Bayes-consistent assessment evaluates a positive-mass information set
 with the canonical normalized-reach continuation value. -/
-theorem BehavioralAssessment.truncatedContinuationContext_integrable_iff_bayesContinuation
+theorem BehavioralAssessment.continuationContextWith_integrable_iff_bayesContinuation
     [Fintype ι] [DecidableEq ι]
     (assessment : M.BehavioralAssessment)
     (who : ι) (site : M.InformationSite who)
@@ -752,13 +752,13 @@ theorem BehavioralAssessment.truncatedContinuationContext_integrable_iff_bayesCo
     (hmass : 0 < M.informationMass assessment.strategy who site)
     (hbayes : BehavioralAssessment.IsBayesConsistentAt (M := M) assessment who site
       hantichain hmass)
-    (alternative : M.BehavioralPolicy who) (payoff : E.History → ℝ) (fuel : ℕ) :
-    (assessment.truncatedContinuationContext site payoff fuel).IntegrableAt alternative ↔
+    (alternative : M.BehavioralPolicy who) (payoff : E.History → ℝ) (run : M.ContinuationRunner) :
+    (assessment.continuationContextWith run site payoff).IntegrableAt alternative ↔
       (Context.ofBelief
         (M.bayesBelief assessment.strategy who site hantichain hmass)
-        (fun history _alternative => M.runBehavioralFrom
+        (fun history _alternative => run
           (Profile.update (sig := M.behavioralSignature) assessment.strategy who _alternative)
-          fuel history.1) payoff).IntegrableAt alternative := by
+          history.1) payoff).IntegrableAt alternative := by
   have hbelief : assessment.belief who site =
       M.bayesBelief assessment.strategy who site hantichain hmass := by
     apply PMF.ext
@@ -767,13 +767,13 @@ theorem BehavioralAssessment.truncatedContinuationContext_integrable_iff_bayesCo
       (M.bayesBelief_apply assessment.strategy who site hantichain hmass history).symm
   have hlaw :
       (assessment.belief who site).bind (fun history =>
-        M.runBehavioralFrom
+        run
           (Profile.update (sig := M.behavioralSignature) assessment.strategy who alternative)
-          fuel history.1) =
+          history.1) =
       (M.bayesBelief assessment.strategy who site hantichain hmass).bind (fun history =>
-        M.runBehavioralFrom
+        run
           (Profile.update (sig := M.behavioralSignature) assessment.strategy who alternative)
-          fuel history.1) := by
+          history.1) := by
     rw [hbelief]
   constructor
   · intro hctx
@@ -781,7 +781,7 @@ theorem BehavioralAssessment.truncatedContinuationContext_integrable_iff_bayesCo
   · intro hctx
     exact payoffIntegrable_congr_law hlaw.symm hctx
 
-theorem BehavioralAssessment.truncatedContinuationContext_value_eq_bayesContinuationValue
+theorem BehavioralAssessment.continuationContextWith_value_eq_bayesContinuationValue
     [Fintype ι] [DecidableEq ι]
     (assessment : M.BehavioralAssessment)
     (who : ι) (site : M.InformationSite who)
@@ -789,10 +789,10 @@ theorem BehavioralAssessment.truncatedContinuationContext_value_eq_bayesContinua
     (hmass : 0 < M.informationMass assessment.strategy who site)
     (hbayes : BehavioralAssessment.IsBayesConsistentAt (M := M) assessment who site
       hantichain hmass)
-    (alternative : M.BehavioralPolicy who) (payoff : E.History → ℝ) (fuel : ℕ) :
-    (assessment.truncatedContinuationContext site payoff fuel).value alternative =
+    (alternative : M.BehavioralPolicy who) (payoff : E.History → ℝ) (run : M.ContinuationRunner) :
+    (assessment.continuationContextWith run site payoff).value alternative =
       M.bayesContinuationValue assessment.strategy who site hantichain hmass
-        alternative payoff fuel := by
+        alternative payoff run := by
   have hbelief : assessment.belief who site =
       M.bayesBelief assessment.strategy who site hantichain hmass := by
     apply PMF.ext
@@ -801,36 +801,35 @@ theorem BehavioralAssessment.truncatedContinuationContext_value_eq_bayesContinua
       (M.bayesBelief_apply assessment.strategy who site hantichain hmass history).symm
   have hlaw :
       (assessment.belief who site).bind (fun history =>
-        M.runBehavioralFrom
+        run
           (Profile.update (sig := M.behavioralSignature) assessment.strategy who alternative)
-          fuel history.1) =
+          history.1) =
       (M.bayesBelief assessment.strategy who site hantichain hmass).bind (fun history =>
-        M.runBehavioralFrom
+        run
           (Profile.update (sig := M.behavioralSignature) assessment.strategy who alternative)
-          fuel history.1) := by
+          history.1) := by
     rw [hbelief]
-  rw [BehavioralAssessment.truncatedContinuationContext_value]
+  rw [BehavioralAssessment.continuationContextWith_value]
   unfold bayesContinuationValue
   exact expect_congr_law hlaw payoff
 
 /-- Conditional payoff guards on a finite information fiber imply the
 corresponding whole continuation-context guard. -/
-theorem BehavioralAssessment.truncatedContinuationContext_integrable_of_conditional
-    [Fintype ι] [DecidableEq ι]
+theorem BehavioralAssessment.continuationContextWith_integrable_of_conditional
+    [DecidableEq ι]
     (assessment : M.BehavioralAssessment)
     (who : ι) (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
-    (alternative : M.BehavioralPolicy who) (payoff : E.History → ℝ) (fuel : ℕ)
+    (alternative : M.BehavioralPolicy who) (payoff : E.History → ℝ) (run : M.ContinuationRunner)
     (hcond : ∀ history : M.InformationHistory who site.1,
-      PayoffIntegrable (M.runBehavioralFrom
+      PayoffIntegrable (run
         (Profile.update (sig := M.behavioralSignature) assessment.strategy who alternative)
-        fuel history.1) payoff) :
-    (assessment.truncatedContinuationContext site payoff fuel).IntegrableAt alternative := by
+        history.1) payoff) :
+    (assessment.continuationContextWith run site payoff).IntegrableAt alternative := by
   let belief := assessment.belief who site
   let kernel := fun history : M.InformationHistory who site.1 =>
-    M.runBehavioralFrom
-      (Profile.update (sig := M.behavioralSignature) assessment.strategy who alternative)
-      fuel history.1
+    run
+      (Profile.update (sig := M.behavioralSignature) assessment.strategy who alternative) history.1
   exact payoffIntegrable_bind_of_finite_support belief kernel payoff (Set.toFinite _)
     (fun history _ => hcond history)
 
@@ -845,59 +844,58 @@ theorem BehavioralAssessment.informationMass_mul_continuationGain_eq_sum
     (hmass : 0 < M.informationMass assessment.strategy who site)
     (hbayes : BehavioralAssessment.IsBayesConsistentAt (M := M) assessment who site
       hantichain hmass)
-    (alternative : M.BehavioralPolicy who) (payoff : E.History → ℝ) (fuel : ℕ)
+    (alternative : M.BehavioralPolicy who) (payoff : E.History → ℝ) (run : M.ContinuationRunner)
     (hcondAlt : ∀ history : M.InformationHistory who site.1,
-      PayoffIntegrable (M.runBehavioralFrom
+      PayoffIntegrable (run
         (Profile.update (sig := M.behavioralSignature) assessment.strategy who alternative)
-        fuel history.1) payoff)
+        history.1) payoff)
     (hcondBase : ∀ history : M.InformationHistory who site.1,
-      PayoffIntegrable (M.runBehavioralFrom
+      PayoffIntegrable (run
         (Profile.update (sig := M.behavioralSignature) assessment.strategy who
-          (assessment.strategy who)) fuel history.1) payoff) :
+          (assessment.strategy who)) history.1) payoff) :
     (M.informationMass assessment.strategy who site).toReal *
-        ((assessment.truncatedContinuationContext site payoff fuel).value alternative -
-          (assessment.truncatedContinuationContext site payoff fuel).value
+        ((assessment.continuationContextWith run site payoff).value alternative -
+          (assessment.continuationContextWith run site payoff).value
             (assessment.strategy who)) =
       ∑ history : M.InformationHistory who site.1,
         (M.historyReachWeight assessment.strategy history.1).toReal *
-          (expect (M.runBehavioralFrom
+          (expect (run
               (Profile.update (sig := M.behavioralSignature) assessment.strategy who alternative)
-                fuel history.1) payoff -
-            expect (M.runBehavioralFrom
+              history.1) payoff -
+            expect (run
               (Profile.update (sig := M.behavioralSignature) assessment.strategy who
-                (assessment.strategy who)) fuel history.1) payoff) := by
+                (assessment.strategy who)) history.1) payoff) := by
   let belief := assessment.belief who site
   let altKernel := fun history : M.InformationHistory who site.1 =>
-    M.runBehavioralFrom
-      (Profile.update (sig := M.behavioralSignature) assessment.strategy who alternative)
-      fuel history.1
+    run
+      (Profile.update (sig := M.behavioralSignature) assessment.strategy who alternative) history.1
   let baseKernel := fun history : M.InformationHistory who site.1 =>
-    M.runBehavioralFrom
+    run
       (Profile.update (sig := M.behavioralSignature) assessment.strategy who
-        (assessment.strategy who)) fuel history.1
-  have halt := assessment.truncatedContinuationContext_integrable_of_conditional M who site
-    alternative payoff fuel hcondAlt
-  have hbase := assessment.truncatedContinuationContext_integrable_of_conditional M who site
-    (assessment.strategy who) payoff fuel hcondBase
-  have hvalAlt : (assessment.truncatedContinuationContext site payoff fuel).value alternative =
+        (assessment.strategy who)) history.1
+  have halt := assessment.continuationContextWith_integrable_of_conditional M who site
+    alternative payoff run hcondAlt
+  have hbase := assessment.continuationContextWith_integrable_of_conditional M who site
+    (assessment.strategy who) payoff run hcondBase
+  have hvalAlt : (assessment.continuationContextWith run site payoff).value alternative =
       ∑ history : M.InformationHistory who site.1,
         (belief history).toReal * expect (altKernel history) payoff := by
     calc
       _ = expect (belief.bind altKernel) payoff :=
-        BehavioralAssessment.truncatedContinuationContext_value assessment site payoff fuel
+        BehavioralAssessment.continuationContextWith_value assessment run site payoff
           alternative
       _ = expect belief (fun history => expect (altKernel history) payoff) :=
         expect_bind_tower belief altKernel payoff halt
       _ = ∑ history : M.InformationHistory who site.1,
           (belief history).toReal * expect (altKernel history) payoff :=
         expect_eq_sum belief _
-  have hvalBase : (assessment.truncatedContinuationContext site payoff fuel).value
+  have hvalBase : (assessment.continuationContextWith run site payoff).value
         (assessment.strategy who) =
       ∑ history : M.InformationHistory who site.1,
         (belief history).toReal * expect (baseKernel history) payoff := by
     calc
       _ = expect (belief.bind baseKernel) payoff :=
-        BehavioralAssessment.truncatedContinuationContext_value assessment site payoff fuel
+        BehavioralAssessment.continuationContextWith_value assessment run site payoff
           (assessment.strategy who)
       _ = expect belief (fun history => expect (baseKernel history) payoff) :=
         expect_bind_tower belief baseKernel payoff hbase
@@ -952,15 +950,16 @@ private theorem BehavioralAssessment.truncated_value_le_of_locallyOptimal
     (hbound : E.BoundedHorizon bound)
     (hlocal : ∀ (i : ι) (site : M.InformationSite i)
       (law : PMF (M.Choice i site.1)), Allowed i site.1 law →
-        (assessment.truncatedContinuationContext site (payoff i) bound).value
+        (assessment.continuationContextWith (M.truncatedRunner bound) site (payoff i)).value
             ((assessment.strategy i).withLaw site.1 law) ≤
-          (assessment.truncatedContinuationContext site (payoff i) bound).value
+          (assessment.continuationContextWith (M.truncatedRunner bound) site (payoff i)).value
             (assessment.strategy i))
     (who : ι) (site : M.InformationSite who)
     (alternative : M.BehavioralPolicy who)
     (halternative : ∀ info, Allowed who info (alternative info)) :
-    (assessment.truncatedContinuationContext site (payoff who) bound).value alternative ≤
-      (assessment.truncatedContinuationContext site (payoff who) bound).value
+    (assessment.continuationContextWith (M.truncatedRunner bound) site (payoff who)).value
+        alternative ≤
+      (assessment.continuationContextWith (M.truncatedRunner bound) site (payoff who)).value
         (assessment.strategy who) := by
   classical
   let spliced := (assessment.strategy who).spliceAfter M alternative site.1
@@ -970,22 +969,24 @@ private theorem BehavioralAssessment.truncated_value_le_of_locallyOptimal
     · exact halternative info
     · exact hfeasible who info
   have hcounterfactual (later : M.InformationSite who) :
-      M.counterfactualRegret assessment.strategy who later (payoff who) bound
+      M.counterfactualRegret assessment.strategy who later (payoff who) (M.truncatedRunner bound)
         ((assessment.strategy who).withLaw later.1 (spliced later.1)) ≤ 0 := by
     have hmass := M.informationMass_pos_of_fullSupport assessment.strategy hfull who later
     have hantichain := hrecall.decisionInformationAntichain who later
     have hle := hlocal who later (spliced later.1) (hspliced later.1)
-    rw [assessment.truncatedContinuationContext_value_eq_bayesContinuationValue M who later
+    rw [assessment.continuationContextWith_value_eq_bayesContinuationValue M who later
         hantichain hmass (hbayes who later hmass)
-        ((assessment.strategy who).withLaw later.1 (spliced later.1)) (payoff who) bound,
-      assessment.truncatedContinuationContext_value_eq_bayesContinuationValue M who later
+        ((assessment.strategy who).withLaw later.1 (spliced later.1)) (payoff who)
+            (M.truncatedRunner bound),
+      assessment.continuationContextWith_value_eq_bayesContinuationValue M who later
         hantichain hmass (hbayes who later hmass) (assessment.strategy who) (payoff who)
-        bound] at hle
+        (M.truncatedRunner bound)] at hle
     apply le_of_not_gt
     intro hpositive
     have hgain := (M.counterfactualRegret_pos_iff_bayesGain_pos_of_decisionRecall hrecall
       assessment.strategy who later hantichain hmass
-      ((assessment.strategy who).withLaw later.1 (spliced later.1)) (payoff who) bound
+      ((assessment.strategy who).withLaw later.1 (spliced later.1)) (payoff who) (M.truncatedRunner
+          bound)
       (fun _ _ => payoffIntegrable_of_finite _ _)
       (fun _ _ => payoffIntegrable_of_finite _ _)).mp hpositive
     linarith
@@ -996,12 +997,13 @@ private theorem BehavioralAssessment.truncated_value_le_of_locallyOptimal
   have hmass := M.informationMass_pos_of_fullSupport assessment.strategy hfull who site
   have hnormalized := assessment.informationMass_mul_continuationGain_eq_sum M who site
     (hrecall.decisionInformationAntichain who site)
-    hmass (hbayes who site hmass) alternative (payoff who) bound
+    hmass (hbayes who site hmass) alternative (payoff who) (M.truncatedRunner bound)
     (fun _ => payoffIntegrable_of_finite _ _)
     (fun _ => payoffIntegrable_of_finite _ _)
   have hgain : (M.informationMass assessment.strategy who site).toReal *
-      ((assessment.truncatedContinuationContext site (payoff who) bound).value alternative -
-        (assessment.truncatedContinuationContext site (payoff who) bound).value
+      ((assessment.continuationContextWith (M.truncatedRunner bound) site (payoff who)).value
+          alternative -
+        (assessment.continuationContextWith (M.truncatedRunner bound) site (payoff who)).value
           (assessment.strategy who)) ≤ 0 := by
     rw [hnormalized]
     simp only [Profile.update_eq_self]
@@ -1016,8 +1018,9 @@ private theorem BehavioralAssessment.truncated_value_le_of_locallyOptimal
   apply le_of_not_gt
   intro hpositive
   have hpositiveDiff : 0 <
-      (assessment.truncatedContinuationContext site (payoff who) bound).value alternative -
-        (assessment.truncatedContinuationContext site (payoff who) bound).value
+      (assessment.continuationContextWith (M.truncatedRunner bound) site (payoff who)).value
+          alternative -
+        (assessment.continuationContextWith (M.truncatedRunner bound) site (payoff who)).value
           (assessment.strategy who) :=
     sub_pos.mpr hpositive
   have hmulPositive := mul_pos hmassRealPos hpositiveDiff

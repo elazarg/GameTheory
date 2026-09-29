@@ -8,7 +8,8 @@ contexts.
 -/
 
 import GameTheory.Protocol.BehavioralAssessment
-import GameTheory.Protocol.RandomizedBackward
+import GameTheory.Protocol.BehavioralMixture
+import GameTheory.Protocol.HistoryBackward
 
 noncomputable section
 
@@ -58,6 +59,76 @@ theorem runBehavioralTerminalFrom_support_terminal
     ∀ final ∈ (M.runBehavioralTerminalFrom certificate policies history).support,
       E.terminal final.state :=
   E.randomizedBackwardLaw_support_terminal history
+
+/-- One step of terminal behavioral play: draw the joint action, step, and
+continue from the extended history. -/
+theorem runBehavioralTerminalFrom_of_not_terminal (M : InformationModel E)
+    (certificate : E.WellFoundedHistories) (policies : (i : ι) → M.BehavioralPolicy i)
+    {h : E.History} (hterm : ¬ E.terminal h.state) :
+    M.runBehavioralTerminalFrom certificate policies h =
+      (M.behavioralJoint policies h.trace hterm).bind fun draw =>
+        (E.step h.state draw).bindOnSupport fun _ realized =>
+          M.runBehavioralTerminalFrom certificate policies (h.extend draw.2 realized) :=
+  E.randomizedBackwardLaw_of_not_terminal hterm
+
+/-- Terminal behavioral play splits after any number of steps: play that many
+steps, then continue with terminal play. -/
+theorem runBehavioralTerminalFrom_eq_bind_runBehavioralFrom (M : InformationModel E)
+    (certificate : E.WellFoundedHistories) (policies : (i : ι) → M.BehavioralPolicy i)
+    (fuel : ℕ) (h : E.History) :
+    M.runBehavioralTerminalFrom certificate policies h =
+      (M.runBehavioralFrom policies fuel h).bind
+        (M.runBehavioralTerminalFrom certificate policies) :=
+  E.randomizedBackwardLaw_eq_bind_runRandomizedFor certificate _ fuel h
+
+/-- Behavioral profiles that answer alike at every history play can reach
+induce the same terminal law. -/
+theorem runBehavioralTerminalFrom_congr (M : InformationModel E)
+    (certificate : E.WellFoundedHistories) {first second : (i : ι) → M.BehavioralPolicy i}
+    (h : E.History)
+    (hagree : ∀ later, E.HistoryReaches h later → ¬ E.terminal later.state →
+      ∀ i, first i (M.infoOf i later.trace) = second i (M.infoOf i later.trace)) :
+    M.runBehavioralTerminalFrom certificate first h =
+      M.runBehavioralTerminalFrom certificate second h :=
+  E.randomizedBackwardLaw_congr_of_reaches h fun later hreach hterm =>
+    M.behavioralJoint_congr later.trace hterm (hagree later hreach hterm)
+
+/-- Terminal behavioral play from a nonterminal selected decision is affine in
+the law installed there when that information state cannot matter twice: it
+draws a choice from the law and plays the corresponding pure commitment. -/
+theorem runBehavioralTerminalFrom_update_withLaw_eq_bind [DecidableEq ι]
+    (M : InformationModel E) (certificate : E.WellFoundedHistories)
+    (hactsOnce : M.ActsOnceWhereItMatters)
+    (profile : (i : ι) → M.BehavioralPolicy i) (who : ι)
+    (policy : M.BehavioralPolicy who)
+    [DecidableEq (M.InfoState who)]
+    (info : M.InfoState who) (law : PMF (M.Choice who info))
+    (h : E.History) (hinfo : M.infoOf who h.trace = info)
+    (hterm : ¬ E.terminal h.state) (hactive : E.active h.state who) :
+    M.runBehavioralTerminalFrom certificate
+        (Profile.update (sig := M.behavioralSignature) profile who
+          (policy.withLaw info law)) h =
+      law.bind fun choice =>
+        M.runBehavioralTerminalFrom certificate
+          (Profile.update (sig := M.behavioralSignature) profile who
+            (policy.commit info choice)) h := by
+  rw [M.runBehavioralTerminalFrom_of_not_terminal _ _ hterm,
+    M.behavioralJoint_update_withLaw_eq_bind profile who policy info law
+      h.trace hterm hinfo,
+    PMF.bind_bind]
+  refine bind_congr_on_support law fun choice _ => ?_
+  rw [M.runBehavioralTerminalFrom_of_not_terminal _ _ hterm]
+  refine bind_congr_on_support _ fun draw _ => ?_
+  refine bindOnSupport_congr _ fun target realized => ?_
+  refine M.runBehavioralTerminalFrom_congr certificate _ fun later hreach hlater player => ?_
+  obtain ⟨fuel, hreach⟩ := hreach
+  by_cases hplayer : player = who
+  · subst player
+    rw [Profile.update_same, Profile.update_same]
+    exact M.withLaw_eq_commit_after_actsOnce hactsOnce policy
+      info law choice (h := h) hinfo hactive draw.2 realized later hreach hlater
+  · rw [Profile.update_of_ne _ _ hplayer,
+      Profile.update_of_ne _ _ hplayer]
 
 /-- Terminal-only payoff bounds integrate every behavioral terminal law. -/
 theorem payoffIntegrable_runBehavioralTerminalFrom_of_bounded_terminal

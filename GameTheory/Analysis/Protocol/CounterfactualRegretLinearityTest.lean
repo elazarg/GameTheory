@@ -114,7 +114,7 @@ theorem incumbentContinuationIntegrable (law : PMF FirstAction) :
       (strategyWithLocalLaw information baselineStrategy () firstSite law)
       () firstSite
       (strategyWithLocalLaw information baselineStrategy () firstSite law ())
-      terminalPayoff 2 :=
+      terminalPayoff (information.truncatedRunner 2) :=
   fun _ _ => terminalPayoff_integrable _
 
 /-- The downstream continuation is genuinely action-sensitive: with the same
@@ -154,15 +154,16 @@ theorem twoStage_localRealization
     (law : PMF FirstAction) (environment : Unit) :
     localCounterfactualRegretVector information
         (strategyWithLocalLaw information baselineStrategy () firstSite law)
-        () firstSite terminalPayoff 2 =
+        () firstSite terminalPayoff (information.truncatedRunner 2) =
       regretPayoff
         (fun choice (_current : Unit) =>
           counterfactualActionUtility information baselineStrategy ()
-            firstSite terminalPayoff 2 choice)
+            firstSite terminalPayoff (information.truncatedRunner 2) choice)
         law environment :=
   localCounterfactualRegretVector_strategyWithLocalLaw information
-    information_actsOnce baselineStrategy () firstSite
-      firstSite_allNonterminal law terminalPayoff 1 environment
+    baselineStrategy () firstSite law terminalPayoff (information.truncatedRunner 2)
+      (information.runnerFactorsAt_truncated information_actsOnce
+        firstSite_allNonterminal 1) environment
         (incumbentContinuationIntegrable law)
 
 /-- With the ordinary boundedness premise required by regret matching, the
@@ -174,7 +175,7 @@ theorem twoStage_regretMatch_approaches
       ‖regretPayoff
         (fun choice (_current : Unit) =>
           counterfactualActionUtility information baselineStrategy ()
-            firstSite terminalPayoff 2 choice)
+            firstSite terminalPayoff (information.truncatedRunner 2) choice)
         law environment‖ ≤ bound) :
     Tendsto
       (fun t => Metric.infDist
@@ -183,17 +184,17 @@ theorem twoStage_regretMatch_approaches
             localCounterfactualRegretVector information
               (strategyWithLocalLaw information baselineStrategy ()
                 firstSite law)
-              () firstSite terminalPayoff 2)
+              () firstSite terminalPayoff (information.truncatedRunner 2))
           regretMatch (fun _ => ()) t)
         nonposOrthant)
       atTop (nhds 0) :=
   counterfactualRegretMatch_approaches information () firstSite
     (fun choice (_current : Unit) =>
       counterfactualActionUtility information baselineStrategy ()
-        firstSite terminalPayoff 2 choice)
+        firstSite terminalPayoff (information.truncatedRunner 2) choice)
     (fun law _environment =>
       strategyWithLocalLaw information baselineStrategy () firstSite law)
-    (fun _environment => terminalPayoff) 2
+    (fun _environment => terminalPayoff) (information.truncatedRunner 2)
     twoStage_localRealization
     hbound0 hbound (fun _ => ())
 

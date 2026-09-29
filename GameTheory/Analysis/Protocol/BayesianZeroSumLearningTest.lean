@@ -564,7 +564,8 @@ theorem incumbentContinuationIntegrable
     (strategy : (who : Fin 2) → information.BehavioralPolicy who)
     (who : Fin 2) (ty : Bool) :
     information.CounterfactualContinuationIntegrable strategy who
-      (site who ty) (strategy who) (fun history => terminalPayoff history who) 1 :=
+      (site who ty) (strategy who) (fun history => terminalPayoff history who)
+          (information.truncatedRunner 1) :=
   fun _ _ => terminalPayoff_integrable who _
 
 structure LearningState where
@@ -601,10 +602,10 @@ theorem strategyOfState_at_site (state : LearningState) (who : Fin 2)
 def instantaneous (state : LearningState) (who : Fin 2) (ty : Bool) :
     EuclideanSpace ℝ (LocalChoice who ty) :=
   localCounterfactualRegretVector information (strategyOfState state) who
-    (site who ty) (fun history => terminalPayoff history who) 1
+    (site who ty) (fun history => terminalPayoff history who) (information.truncatedRunner 1)
 
 /-- All four local sites update simultaneously by the same Cesaro recurrence
-used in the canonical D46 average. -/
+used in the canonical local regret-matching average. -/
 def learningState : ℕ → LearningState
   | 0 => ⟨0, 0, 0, 0⟩
   | n + 1 =>
@@ -647,28 +648,31 @@ theorem localStrategyOf_current_eq (state : LearningState) (who : Fin 2)
 def localUtility (who : Fin 2) (ty : Bool)
     (choice : LocalChoice who ty) (state : LearningState) : ℝ :=
   information.counterfactualActionUtility (strategyOfState state) who
-    (site who ty) (fun history => terminalPayoff history who) 1 choice
+    (site who ty) (fun history => terminalPayoff history who) (information.truncatedRunner 1) choice
 
 theorem local_realization (who : Fin 2) (ty : Bool)
     (law : PMF (LocalChoice who ty)) (state : LearningState) :
     localCounterfactualRegretVector information
         (localStrategyOf who ty law state) who (site who ty)
-          (localPayoffOf who ty state) 1 =
+          (localPayoffOf who ty state) (information.truncatedRunner 1) =
       regretPayoff (localUtility who ty) law state := by
   have h := information.localCounterfactualRegretVector_strategyWithLocalLaw
-    information_actsOnce (strategyOfState state) who (site who ty)
-      (site_allNonterminal who ty) law
-      (fun history => terminalPayoff history who) 0 state
+    (strategyOfState state) who (site who ty) law
+      (fun history => terminalPayoff history who) (information.truncatedRunner 1)
+      (information.runnerFactorsAt_truncated information_actsOnce
+        (site_allNonterminal who ty) 0) state
       (incumbentContinuationIntegrable _ who ty)
   calc
     _ = localCounterfactualRegretVector information
         (strategyWithLocalLaw information (strategyOfState state) who
           (site who ty) law)
-        who (site who ty) (fun history => terminalPayoff history who) 1 := rfl
+        who (site who ty) (fun history => terminalPayoff history who) (information.truncatedRunner
+            1) := rfl
     _ = regretPayoff
         (fun choice (_current : LearningState) =>
           information.counterfactualActionUtility (strategyOfState state) who
-            (site who ty) (fun history => terminalPayoff history who) 1 choice)
+            (site who ty) (fun history => terminalPayoff history who) (information.truncatedRunner
+                1) choice)
         law state := h
     _ = regretPayoff (localUtility who ty) law state := by
       ext choice
@@ -677,7 +681,7 @@ theorem local_realization (who : Fin 2) (ty : Bool)
 def localAverage (who : Fin 2) (ty : Bool) (round : ℕ) :
     EuclideanSpace ℝ (LocalChoice who ty) :=
   counterfactualRegretMatchAverage information who (site who ty)
-    (localStrategyOf who ty) (localPayoffOf who ty) 1
+    (localStrategyOf who ty) (localPayoffOf who ty) (information.truncatedRunner 1)
       (scheduleEnvironment who ty) round
 
 theorem localAverage_succ (who : Fin 2) (ty : Bool) (round : ℕ) :
@@ -687,11 +691,12 @@ theorem localAverage_succ (who : Fin 2) (ty : Bool) (round : ℕ) :
           localCounterfactualRegretVector information
             (localStrategyOf who ty
               (regretMatch (localAverage who ty round)) (learningState round))
-            who (site who ty) (fun history => terminalPayoff history who) 1 :=
+            who (site who ty) (fun history => terminalPayoff history who)
+                (information.truncatedRunner 1) :=
   rfl
 
-/-- The explicit four-coordinate recurrence is exactly the family of D46
-averages. This is the scheduling invariant the one-site experiment lacked. -/
+/-- The explicit four-coordinate recurrence is exactly the family of local
+regret-matching averages, so all four sites update on one schedule. -/
 theorem localAverage_eq_state (who : Fin 2) (ty : Bool) (round : ℕ) :
     localAverage who ty round = averageOfState (learningState round) who ty := by
   induction round with
@@ -769,7 +774,7 @@ theorem behavioralContinuationValue_mem_Icc
     (who : Fin 2) (alternative : information.BehavioralPolicy who)
     (fuel : ℕ) (history : execution.History) :
     information.behavioralContinuationValue strategy who alternative
-        (fun final => terminalPayoff final who) fuel history ∈
+        (fun final => terminalPayoff final who) (information.truncatedRunner fuel) history ∈
       Set.Icc (-1 : ℝ) 1 := by
   unfold InformationModel.behavioralContinuationValue
   exact abs_le.mp (expect_abs_le_of_bounded (by norm_num)
@@ -804,7 +809,8 @@ theorem local_approaches (who : Fin 2) (ty : Bool) :
       atTop (nhds 0) := by
   simpa only [localAverage, counterfactualRegretMatchAverage] using
     counterfactualRegretMatch_approaches information who (site who ty)
-      (localUtility who ty) (localStrategyOf who ty) (localPayoffOf who ty) 1
+      (localUtility who ty) (localStrategyOf who ty) (localPayoffOf who ty)
+          (information.truncatedRunner 1)
       (local_realization who ty) (bound := Fintype.card (LocalChoice who ty))
       (by positivity) (local_regretPayoff_norm_le who ty)
       (scheduleEnvironment who ty)
@@ -1072,7 +1078,8 @@ theorem localVector_coordinate_eq_gain (who : Fin 2) (ty : Bool)
     (localCounterfactualRegretVector information
       (localStrategyOf who ty (learnedLaw who ty round)
         (learningState round))
-      who (site who ty) (localPayoffOf who ty (learningState round)) 1).ofLp
+      who (site who ty) (localPayoffOf who ty (learningState round)) (information.truncatedRunner
+          1)).ofLp
         deviation = localGain who ty deviation round := by
   rw [local_realization, regretPayoff_ofLp]
   rfl
@@ -1081,7 +1088,7 @@ def contingentGain (who : Fin 2) (deviation : ContingentChoice who)
     (round : ℕ) : ℝ :=
   ∑ ty : Bool, localGain who ty (deviation ty) round
 
-/-- Both positive-probability sites of one player feed one D50 bound for every
+/-- Both positive-probability sites of one player feed one uniform root-regret bound for every
 complete contingent deviation; no sitewise convergence premise is smuggled in
 at the strategic layer. -/
 theorem contingentGain_positiveAverage_tendsto_zero (who : Fin 2) :
@@ -1094,7 +1101,8 @@ theorem contingentGain_positiveAverage_tendsto_zero (who : Fin 2) :
   apply counterfactualRegretMatches_positiveRootGains_tendsto_zero
     information (fun _ : Bool => LearningState) who (site who)
     (fun ty => localStrategyOf who ty) (fun ty => localPayoffOf who ty)
-    (fun _ => 1) (fun _ round => learningState round) (contingentGain who)
+    (fun _ => (information.truncatedRunner 1)) (fun _ round => learningState round) (contingentGain
+        who)
     (fun _ _ => 1) (fun _ _ => by exact ⟨by norm_num, by norm_num⟩)
     (fun deviation ty => deviation ty)
   · intro deviation round
@@ -1410,8 +1418,9 @@ theorem externalRegret_le_columnRegretBound (t : ℕ)
     (fun current _ => le_max_right _ _) (Finset.mem_univ col)
 
 /-- The same four Protocol learners induce one empirical law over complete
-Bayesian plans. D50 controls both players' strategic deviations, and D51 turns
-those bounds into the canonical approximate mixed Nash certificate. -/
+Bayesian plans. The uniform root-regret bound controls both players' strategic
+deviations, and zero-sum cancellation turns those bounds into the canonical
+approximate mixed Nash certificate. -/
 theorem empiricalMarginals_isεNash (t : ℕ) :
     IsεNash
       (MatrixGame.form (ContingentChoice 0) (ContingentChoice 1)).mixed

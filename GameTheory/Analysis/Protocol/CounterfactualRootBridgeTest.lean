@@ -34,8 +34,8 @@ def guardedActionRegret
     (site : information.InformationSite ())
     [Fintype (information.InformationHistory () site.1)]
     (fuel : ℕ) (choice : information.Choice () site.1) : ℝ :=
-  information.counterfactualActionRegret strategy () site terminalPayoff fuel
-    choice
+  information.counterfactualActionRegret strategy () site terminalPayoff
+    (information.truncatedRunner fuel) choice
 
 theorem incumbentOwnReach_first (hidden : Bool) :
     information.playerReachProbability incumbentBehavioralStrategy ()
@@ -70,7 +70,10 @@ theorem firstCommit_perfectRecallRootBridge :
     rootGain_eq_representativeReach_mul_counterfactualActionRegret_of_decisionRecall
       information (information.decisionRecall_of_perfectRecall information_perfectRecall)
       incumbentBehavioralStrategy ()
-      firstSite (firstChoice true) 1 2 firstSite_commonDepth terminalPayoff
+      firstSite (firstChoice true) 1 firstSite_commonDepth terminalPayoff
+      (fun policies => information.runBehavioral policies 3)
+      (information.truncatedRunner 2) (information.runnerReadsReachable_truncated 2)
+      (fun policies => information.runBehavioral_add_eq_bind policies 1 2)
       (terminalPayoff_integrable _) (terminalPayoff_integrable _)
 
 /-- The generic single-site theorem proves at the root, not merely inside the
@@ -125,11 +128,14 @@ theorem secondCommit_rootGain_eq_counterfactualActionRegret :
     information.rootGain_eq_ownReach_mul_counterfactualRegret
       firstCommittedStrategy () (secondSite true)
         (firstCommittedPolicy.commit (secondSite true).1
-          (secondChoice true true)) 2 1 (secondSite_commonDepth true)
+          (secondChoice true true)) 2 (secondSite_commonDepth true)
         (fun hne =>
           InformationModel.BehavioralPolicy.commit_of_ne firstCommittedPolicy
             (secondSite true).1 (secondChoice true true) hne)
         1 firstCommittedCommonOwnReach_secondTrue terminalPayoff
+        (fun policies => information.runBehavioral policies 3)
+        (information.truncatedRunner 1) (information.runnerReadsReachable_truncated 1)
+        (fun policies => information.runBehavioral_add_eq_bind policies 2 1)
         (terminalPayoff_integrable _) (terminalPayoff_integrable _)
   simpa [rootValue, guardedActionRegret,
     InformationModel.counterfactualActionRegret,
@@ -187,10 +193,11 @@ theorem firstCommitted_second_counterfactualActionRegret :
       (secondChoice true true) = 1 := by
   have halternative :
       information.counterfactualContinuationValue firstCommittedStrategy ()
-          (secondSite true) firstCommittedSecondTruePolicy terminalPayoff 1 =
+          (secondSite true) firstCommittedSecondTruePolicy terminalPayoff
+              (information.truncatedRunner 1) =
         information.counterfactualContinuationValue
           incumbentBehavioralStrategy () (secondSite true)
-            incumbentSecondTruePolicy terminalPayoff 1 := by
+            incumbentSecondTruePolicy terminalPayoff (information.truncatedRunner 1) := by
     unfold InformationModel.counterfactualContinuationValue
     apply Finset.sum_congr rfl
     intro history _
@@ -204,7 +211,8 @@ theorem firstCommitted_second_counterfactualActionRegret :
     apply congrArg
       (fun law : PMF twoStage.History =>
         expect law terminalPayoff)
-    exact information.runBehavioralFrom_eq_of_agree_off_pastSite
+    exact information.run_eq_of_agree_off_pastSite (information.truncatedRunner 1)
+      (information.runnerReadsReachable_truncated 1)
       (Profile.update (sig := information.behavioralSignature)
         firstCommittedStrategy () firstCommittedSecondTruePolicy)
       (Profile.update (sig := information.behavioralSignature)
@@ -214,13 +222,13 @@ theorem firstCommitted_second_counterfactualActionRegret :
       (fun hinfo => by
         rw [Profile.update_same, Profile.update_same]
         exact secondTruePolicies_eq_off_first hinfo)
-      history.1 (secondInformationHistory_after_firstDepth history) 1
+      history.1 (secondInformationHistory_after_firstDepth history)
   have hbaseline :
       information.counterfactualContinuationValue firstCommittedStrategy ()
-          (secondSite true) firstCommittedPolicy terminalPayoff 1 =
+          (secondSite true) firstCommittedPolicy terminalPayoff (information.truncatedRunner 1) =
         information.counterfactualContinuationValue
           incumbentBehavioralStrategy () (secondSite true)
-            incumbentBehavioralPolicy terminalPayoff 1 := by
+            incumbentBehavioralPolicy terminalPayoff (information.truncatedRunner 1) := by
     unfold InformationModel.counterfactualContinuationValue
     apply Finset.sum_congr rfl
     intro history _
@@ -234,7 +242,8 @@ theorem firstCommitted_second_counterfactualActionRegret :
     apply congrArg
       (fun law : PMF twoStage.History =>
         expect law terminalPayoff)
-    exact information.runBehavioralFrom_eq_of_agree_off_pastSite
+    exact information.run_eq_of_agree_off_pastSite (information.truncatedRunner 1)
+      (information.runnerReadsReachable_truncated 1)
       (Profile.update (sig := information.behavioralSignature)
         firstCommittedStrategy () firstCommittedPolicy)
       (Profile.update (sig := information.behavioralSignature)
@@ -244,21 +253,23 @@ theorem firstCommitted_second_counterfactualActionRegret :
       (fun hinfo => by
         rw [Profile.update_same, Profile.update_same]
         exact firstCommitted_eq_incumbent_off_first hinfo)
-      history.1 (secondInformationHistory_after_firstDepth history) 1
+      history.1 (secondInformationHistory_after_firstDepth history)
   calc
     guardedActionRegret firstCommittedStrategy (secondSite true) 1
         (secondChoice true true) =
       information.counterfactualContinuationValue firstCommittedStrategy ()
-          (secondSite true) firstCommittedSecondTruePolicy terminalPayoff 1 -
+          (secondSite true) firstCommittedSecondTruePolicy terminalPayoff
+              (information.truncatedRunner 1) -
         information.counterfactualContinuationValue firstCommittedStrategy ()
-          (secondSite true) firstCommittedPolicy terminalPayoff 1 := by
+          (secondSite true) firstCommittedPolicy terminalPayoff (information.truncatedRunner 1) :=
+              by
         rfl
     _ = information.counterfactualContinuationValue
           incumbentBehavioralStrategy () (secondSite true)
-          incumbentSecondTruePolicy terminalPayoff 1 -
+          incumbentSecondTruePolicy terminalPayoff (information.truncatedRunner 1) -
         information.counterfactualContinuationValue
           incumbentBehavioralStrategy () (secondSite true)
-          incumbentBehavioralPolicy terminalPayoff 1 := by
+          incumbentBehavioralPolicy terminalPayoff (information.truncatedRunner 1) := by
         rw [halternative, hbaseline]
     _ = 1 := by
       simpa [InformationModel.counterfactualActionRegret,
@@ -338,7 +349,8 @@ theorem wholeDeviation_rootGain_eq_localSum :
       ∑ step ∈ Finset.range 2, 1 * pathLocalRegret step := by
   have hsum := information.rootGain_eq_sum_stepCounterfactualTerms
       deviationPath
-      terminalPayoff 3 2 (fun _ => 1) pathLocalRegret
+      terminalPayoff (fun policies => information.runBehavioral policies 3) 2
+      (fun _ => 1) pathLocalRegret
       (by
         intro step hstep
         simpa only [rootValue] using deviationPath_stepRootGain step hstep)
