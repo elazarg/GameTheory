@@ -70,6 +70,15 @@ theorem holds_map_iff {Source : Type v} (observe : Source → Outcome)
       (IncentiveComparison.mk prescribed alternative).Holds (utility ∘ observe) :=
   euPreference_map (fun outcome (_ : Unit) => utility outcome) () observe prescribed alternative
 
+/-- When both laws give the utility a finite expectation, a comparison is the
+inequality of its real expectations, whatever the outcome carrier. -/
+theorem holds_iff_of_integrable (comparison : IncentiveComparison Outcome)
+    (utility : Outcome → ℝ) (prescribed : PayoffIntegrable comparison.prescribed utility)
+    (alternative : PayoffIntegrable comparison.alternative utility) :
+    comparison.Holds utility ↔
+      expect comparison.alternative utility ≤ expect comparison.prescribed utility :=
+  euPreference_iff (fun outcome (_ : Unit) => utility outcome) () _ _ prescribed alternative
+
 variable [Fintype Outcome]
 
 /-- On a finite carrier every expectation is defined, so a comparison is the

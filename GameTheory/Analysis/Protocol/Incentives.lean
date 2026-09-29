@@ -16,6 +16,7 @@ together with the incentive criterion.
 -/
 
 import GameTheory.Analysis.IncentiveCone
+import GameTheory.Analysis.IncentiveSimulation
 import GameTheory.Analysis.Protocol.Sequential
 import GameTheory.Protocol.Continuation
 
@@ -107,6 +108,65 @@ theorem isContinuationNash_preservation_iff_cone [Fintype Observation]
             (M.continuationComparison sourcePlay sourceObserve source who) := by
   simp only [isContinuationNash_iff_holds]
   exact IncentiveComparison.forall_holds_imp_iff_cone _ _
+
+/-- **Subgame perfection from randomly matched roots.** Each target
+continuation deviation is matched with a lottery over proper source roots and,
+at every matched root, a lottery of source replacements: the target's honest
+continuation law is the root lottery of source honest laws, and its deviating
+law the same root lottery of mixed source deviations. Source subgame perfection
+then transfers for every utility integrable against the continuation laws. The
+matching may depend on the deviation, and the target profile need not be
+compiled from the source one. -/
+theorem isContinuationNash_of_root_mixture_laws
+    (sourcePlay : E.History → Profile sig → PMF sig.Outcome)
+    (targetPlay : T.History → Profile sig' → PMF sig'.Outcome)
+    (sourceObserve : sig.Outcome → Observation) (targetObserve : sig'.Outcome → Observation)
+    (source : Profile sig) (target : Profile sig')
+    (coverage : ∀ who (deviation : N.ContinuationDeviation sig' who),
+      ∃ (roots : PMF {root : E.History // M.IsSubgameRoot root})
+        (replacements : {root : E.History // M.IsSubgameRoot root} → PMF (sig.Strategy who)),
+        (targetPlay deviation.1.1 target).map targetObserve =
+            roots.bind (fun root => (sourcePlay root.1 source).map sourceObserve) ∧
+          (targetPlay deviation.1.1 (Profile.update target who deviation.2)).map
+              targetObserve =
+            roots.bind fun root => (replacements root).bind fun replacement =>
+              (sourcePlay root.1 (Profile.update source who replacement)).map sourceObserve)
+    (utility : Observation → ι → ℝ)
+    (sourceIntegrable : ∀ who deviation,
+      PayoffIntegrable (M.continuationComparison sourcePlay sourceObserve source who
+          deviation).prescribed (utility · who) ∧
+        PayoffIntegrable (M.continuationComparison sourcePlay sourceObserve source who
+          deviation).alternative (utility · who))
+    (targetIntegrable : ∀ who deviation,
+      PayoffIntegrable (N.continuationComparison targetPlay targetObserve target who
+          deviation).prescribed (utility · who) ∧
+        PayoffIntegrable (N.continuationComparison targetPlay targetObserve target who
+          deviation).alternative (utility · who))
+    (perfect : M.IsContinuationNash sourcePlay source
+      (fun outcome who => utility (sourceObserve outcome) who)) :
+    N.IsContinuationNash targetPlay target
+      (fun outcome who => utility (targetObserve outcome) who) := by
+  rw [N.isContinuationNash_iff_holds targetPlay targetObserve target utility]
+  rw [M.isContinuationNash_iff_holds sourcePlay sourceObserve source utility] at perfect
+  choose roots replacements honest deviated using coverage
+  let simulation : IncentiveSimulation (M.continuationComparison sourcePlay sourceObserve source)
+      (N.continuationComparison targetPlay targetObserve target) :=
+    { mixing := fun who deviation => (roots who deviation).bind fun root =>
+        (replacements who deviation root).map fun replacement => (root, replacement)
+      prescribed := fun who deviation => by
+        change (targetPlay deviation.1.1 target).map targetObserve = _
+        rw [honest who deviation, PMF.bind_bind]
+        refine congrArg _ (funext fun root => ?_)
+        rw [PMF.bind_map]
+        exact (PMF.bind_const _ _).symm
+      alternative := fun who deviation => by
+        change (targetPlay deviation.1.1 (Profile.update target who deviation.2)).map
+          targetObserve = _
+        rw [deviated who deviation, PMF.bind_bind]
+        refine congrArg _ (funext fun root => ?_)
+        rw [PMF.bind_map]
+        rfl }
+  exact simulation.preserves utility perfect sourceIntegrable targetIntegrable
 
 end Continuation
 
@@ -330,6 +390,68 @@ theorem sequentialEquilibrium_preservation_iff_coneWithin [Fintype ι] [Fintype 
     exact ⟨(M.sequentialRationality_preservation_iff_coneWithin N utilities sourceRun
       targetRun sourceObserve targetObserve source target).2 included utility rational,
       hconsistent⟩
+
+/-- A law-pair simulation between the continuation comparisons of two
+assessments transfers sequential rationality for every utility integrable
+against the source and target continuation laws, whatever the runners and the
+outcome carrier. It constructs neither the assessments nor their consistency. -/
+theorem sequentialRationality_of_simulation
+    (sourceRun : M.ContinuationRunner) (targetRun : N.ContinuationRunner)
+    (sourceObserve : E.History → Observation) (targetObserve : T.History → Observation)
+    (source : M.BehavioralAssessment) (target : N.BehavioralAssessment)
+    (simulation : IncentiveSimulation (M.assessmentComparisonWith sourceRun sourceObserve source)
+      (N.assessmentComparisonWith targetRun targetObserve target))
+    (utility : Observation → ι → ℝ)
+    (rational : source.IsSequentiallyRationalWith sourceRun
+      (fun who history => utility (sourceObserve history) who))
+    (integrable : ∀ who deviation,
+      PayoffIntegrable (M.assessmentComparisonWith sourceRun sourceObserve source who
+          deviation).prescribed (utility · who) ∧
+        PayoffIntegrable (M.assessmentComparisonWith sourceRun sourceObserve source who
+          deviation).alternative (utility · who))
+    (targetIntegrable : ∀ who deviation,
+      PayoffIntegrable (N.assessmentComparisonWith targetRun targetObserve target who
+          deviation).prescribed (utility · who) ∧
+        PayoffIntegrable (N.assessmentComparisonWith targetRun targetObserve target who
+          deviation).alternative (utility · who)) :
+    target.IsSequentiallyRationalWith targetRun
+      (fun who history => utility (targetObserve history) who) := by
+  rw [N.isSequentiallyRationalWith_iff_holds targetRun targetObserve target utility]
+  exact simulation.preserves utility
+    ((M.isSequentiallyRationalWith_iff_holds sourceRun sourceObserve source utility).mp rational)
+    integrable targetIntegrable
+
+/-- Once target consistency is established, a simulation transfers sequential
+equilibrium for every utility integrable against the continuation laws. -/
+theorem sequentialEquilibrium_of_simulation [Fintype ι]
+    (sourceAntichain : M.DecisionInformationAntichain)
+    (targetAntichain : N.DecisionInformationAntichain)
+    (sourceRun : M.ContinuationRunner) (targetRun : N.ContinuationRunner)
+    (sourceObserve : E.History → Observation) (targetObserve : T.History → Observation)
+    (source : M.BehavioralAssessment) (target : N.BehavioralAssessment)
+    (simulation : IncentiveSimulation (M.assessmentComparisonWith sourceRun sourceObserve source)
+      (N.assessmentComparisonWith targetRun targetObserve target))
+    (targetConsistent : target.IsSequentiallyConsistent targetAntichain)
+    (utility : Observation → ι → ℝ)
+    (equilibrium : source.IsSequentialEquilibriumFor sourceAntichain fun who site =>
+      source.continuationContextWith sourceRun site
+        (fun history => utility (sourceObserve history) who))
+    (integrable : ∀ who deviation,
+      PayoffIntegrable (M.assessmentComparisonWith sourceRun sourceObserve source who
+          deviation).prescribed (utility · who) ∧
+        PayoffIntegrable (M.assessmentComparisonWith sourceRun sourceObserve source who
+          deviation).alternative (utility · who))
+    (targetIntegrable : ∀ who deviation,
+      PayoffIntegrable (N.assessmentComparisonWith targetRun targetObserve target who
+          deviation).prescribed (utility · who) ∧
+        PayoffIntegrable (N.assessmentComparisonWith targetRun targetObserve target who
+          deviation).alternative (utility · who)) :
+    target.IsSequentialEquilibriumFor targetAntichain fun who site =>
+      target.continuationContextWith targetRun site
+        (fun history => utility (targetObserve history) who) :=
+  ⟨M.sequentialRationality_of_simulation N sourceRun targetRun sourceObserve targetObserve
+    source target simulation utility equilibrium.1 integrable targetIntegrable,
+    targetConsistent⟩
 
 end Assessment
 

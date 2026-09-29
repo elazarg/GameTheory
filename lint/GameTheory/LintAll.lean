@@ -24,6 +24,7 @@ import GameTheory.Analysis.ExpectedUtility
 import GameTheory.Analysis.FictitiousPlayPotential
 import GameTheory.Analysis.IncentiveCone
 import GameTheory.Analysis.IncentiveHierarchy
+import GameTheory.Analysis.IncentiveSimulation
 import GameTheory.Analysis.Learning
 import GameTheory.Analysis.LocalChoiceFixedPoint
 import GameTheory.Analysis.MatrixValue
