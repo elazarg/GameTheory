@@ -9562,20 +9562,12 @@ memory.
 - **Kill conditions:** a terminal restatement needs a hypothesis the fuel
   statement did not have; a downstream result uses the fuel predicate as a
   meaningful concept without a sufficient horizon.
-- **Artifacts:** `Protocol/RandomizedBackward.lean` (`WellFoundedHistories`,
-  `BoundedHorizon.wellFoundedHistories`), `Protocol/FiniteHorizon.lean`
-  (`wellFoundedHistories_of_fintype`), `Protocol/BehavioralAssessment.lean`
-  (`ContinuationRunner`, `continuationContextWith`,
-  `IsSequentiallyRationalWith`, `truncatedContinuationContext`),
-  `Protocol/BehavioralTerminal.lean` (`continuationContext`,
-  `IsSequentiallyRational`, `isSequentiallyRational_iff_truncated_of_bounded`),
-  `Analysis/Protocol/Incentives.lean`, `SequentialExistence.lean`,
-  `SequentialLimits.lean`, `EFG.lean`, `EFGExistence.lean`; tests
-  `EFGTest`, `SequentialExistenceTest`, `SequentialExistenceBoundaryTest`,
-  `DecisionRecallExistenceTest`. Validation: `lake build GameTheory`,
-  `lake build GameTheory.LintAll`, `lake lint`; a scratch reachability probe
-  confirms `kakutani_fixed_point` is absent from `SequentialLimits`'s
-  environment and present in `SequentialExistence`'s.
+- **Artifacts:** the history certificate (`WellFoundedHistories`), the
+  runner-parametric context (`continuationContextWith`), and the truncation
+  boundary (`SequentialExistenceTest.boundary_equilibrium_not_truncated_rational`).
+  Validation: `lake build GameTheory`, `lake lint`, and a reachability probe
+  showing `kakutani_fixed_point` absent from `SequentialLimits` and present in
+  `SequentialExistence`.
 - **First observation:** the terminal law is certified by `WellFoundedPlay`,
   well-foundedness of the successor relation on states. A bounded horizon does
   not imply it (an unreachable cycle of states is allowed), so restating the
@@ -9586,11 +9578,8 @@ memory.
   well-foundedness on histories.
 - **Observations:**
   - Certifying histories is a strict generalization: state well-foundedness
-    implies it, and so does a bounded horizon. Every history-level theorem
-    (terminal laws, Zermelo, subgame perfection, localization) moved to the
-    history certificate without change of proof beyond the recursion
-    principle, and test fixtures proved by a state rank derive it from their
-    state certificate.
+    implies it, and so does a bounded horizon. No history-level proof needed
+    more than the change of recursion principle.
   - H1 held for the finite existence chain and failed for three families.
     Finite existence, the EFG predicate and existence, the whole-policy
     upgrade from local optimality, and the concrete EFG tests were all paired
