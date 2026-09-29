@@ -192,7 +192,7 @@ individually; deleting every reported argument together can break a proof.
 Run the environment linter as well as the compiler. The completed build still
 exposed four missing docstrings and unused section assumptions during
 `lake lint`; these were fixed before the final commit. The 4.33 transparency
-and enum-deriving workarounds in [the historical notes](../CLAUDE.md#toolchain-bump-lessons-lean-433--mathlib-v4331)
+and enum-deriving workarounds in [the historical notes](../AGENTS.md#toolchain-bump-lessons-lean-433--mathlib-v4331)
 are evidence for that release. This bump did not need another blanket round of
 those changes: `Core/Signature`, `Core/Equilibrium`, `Core/MatrixGame`, and
 the fixed-point theorem sources compiled unchanged.

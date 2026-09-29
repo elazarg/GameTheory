@@ -72,6 +72,32 @@ or code instead of pasting them. Preserve surprising failures; do not rewrite
 the original hypothesis or kill condition after seeing the outcome. Decision
 records cite experiment IDs and synthesize their evidence. The RFC records the
 current design, not the only surviving account of how it was chosen.
+Decision records and RFC changes must cite the experiment ID; do not erase a
+failed hypothesis by quietly rewriting the design document. When an RFC choice
+fails its kill condition, record the failure and narrow or replace the design.
+Do not patch around it to preserve sunk work.
+
+An EXP entry records an experiment on the design (a question, competing
+designs, kill conditions, and what the evidence showed), not a changelog. Do
+not open an entry for ordinary feature work, and do not inventory migrated
+predicates, renamed lemmas, or touched files inside one: that belongs in the
+commit message. Keep only observations that would change a future design
+decision.
+
+## Documentation boundary
+
+Phases, experiment IDs (`EXP-NNN`), decision IDs (`D0`–`D12`), and RFC section
+or kill-criterion citations are **plan and history**. They belong in
+`docs/ExperimentLog.md`, `docs/decisions/`, and the phase gate documents.
+
+Do not put them in Lean docstrings. Code outlives the plan: a reader a year from
+now should learn from a module docstring *what the design is and why*, stated in
+timeless terms, without needing the planning documents to decode it. Write "a
+`Prop`-valued reachability relation would make this vacuous" rather than "RFC
+9.1.7 makes this a core-invalidating failure".
+
+The `GameTheory/Experimental/` tree is the exception: those files exist only as
+recorded evidence for a named experiment, and their directory names say so.
 
 ## Working discipline
 
@@ -135,6 +161,39 @@ Game source belongs under `GameTheory/` and public declarations below the
 `GameTheory` namespace. Package boundaries in the RFC are logical dependency
 roots; create a new one only when its first hostile slice validates the need.
 
+The static semantic core lives under `GameTheory/Core`, probability under
+`GameTheory/Math/Probability`, the sequential layer under `GameTheory/Protocol`,
+native encodings under `GameTheory/Languages`, the executable rational frontend
+under `GameTheory/Finite`, everything needing convexity or topology under
+`GameTheory/Analysis`, and architecture spikes under `GameTheory/Experimental`
+(never re-exported).
+
+`GameTheory/Analysis` is a one-way boundary. It is the only root allowed to
+import the external fixed-point package, and no module outside it may import it
+back; a file that does can reach `Convexity.StdSimplex` and `Polynomial`, which the
+core and the executable frontend must never see. Both directions are checked by
+`scripts/phase2-audit.ps1`; its explicit `-DeepReachability` release mode also
+asserts that the analytic root *does* reach them. See
+`docs/Phase2IncentiveSlice.md` and
+`docs/Phase3SequentialSlice.md` for what the gates guarantee and, more usefully,
+for the recorded limits they do not, and `docs/Phase4StaticHarvest.md` for the
+theorem families recovered on the settled API.
+
+## Architectural reminders
+
+- `GameTheory` is the public namespace; `GameTheory2` is only the repository and
+  RFC generation label.
+- Static forms, execution protocols, and information models are distinct until
+  their experiments justify sharing more.
+- Equilibrium deviations are local and law-linear by construction; response
+  and dominance concepts keep their profile-quantified logical shape.
+- Finite-support probability is the stable default. Infinite stochastic path
+  laws wait for a measurable layer.
+- Executable finite algorithms and real-valued correctness proofs live in
+  separate dependency roots.
+- D0 is decided from measured dependency baselines and a small hybrid
+  prototype—not by rebuilding the hardest theorem three times.
+
 ## Verification
 
 Use `rg`/`rg --files` for local search. Prefer Lean language-server diagnostics
@@ -146,13 +205,80 @@ Toolchain checks after dependency or environment changes:
 ```text
 lake update
 lake env lean --version
+lake exe cache get
 ```
 
-Once source exists, warnings are failures and the relevant target must build
-without placeholders. Keep `.lake/` and local tool state ignored.
+Warnings are failures and the relevant target must build without placeholders.
+Keep `.lake/` and local tool state ignored.
+
+- The working directory is already the project root; do not prepend `cd` to
+  commands.
+- Compile one definition or theorem at a time.
+- Inspect the actual goal before writing proof tactics; test small candidate
+  tactics before committing a proof.
+- Search Mathlib APIs before inspecting or recreating general-purpose proofs.
+- Address all diagnostics and linter warnings before calling a slice complete.
+- `lake lint` sees only what `lint/GameTheory/LintAll.lean` imports, and that
+  target is not built by default. After adding, moving, or deleting a library
+  module, update its import list (every module outside `Experimental/`,
+  `Tests/`, and `*Test` fixtures), remove a deleted module's `.lake/build`
+  artifacts, and run `lake build GameTheory.LintAll` before `lake lint`.
+  Otherwise new modules go unlinted and deleted ones break the driver.
+- During design validation, do not broaden scope with adjacent theorem
+  families. During theorem delivery, work only against the assigned scope and
+  accepted shared API.
 
 ## Scope and repository hygiene
 
 Preserve unrelated user changes. Do not modify generated dependency trees or
 `lake-manifest.json` by hand. Keep commits focused on one
 decision or vertical slice, and report the exact validation performed.
+
+## Current toolchain-bump reference
+
+The completed Lean 4.34 / Mathlib v4.34.0 bump and its client migration lessons
+are in [docs/Lean434BumpLessons.md](docs/Lean434BumpLessons.md): published pins,
+mechanical renames, simplex and measure API changes, tooling limits, and final
+validation. Keep bump plans and raw diagnostics local.
+
+## Toolchain-bump lessons (Lean 4.33 / mathlib v4.33.1)
+
+These notes describe the earlier 4.33 bump. Diagnose current failures before
+carrying its transparency or deriving workarounds into another release.
+
+- **Two different failure modes, two different fixes.** Lean 4.33 stopped
+  unfolding semireducible definitions in two places, and they need opposite
+  responses. A `rw`/`simp` that reports *"Did not find an occurrence of the
+  pattern"* is a **matching** failure: fix it at the definition by marking the
+  type-synonym or fixture wrapper `@[reducible]` (or `abbrev`). An error whose
+  note says *"the target expression is not type-correct under the `implicit`
+  transparency level"* is a **different, stricter check that `@[reducible]`
+  does not satisfy**; only
+  `set_option backward.isDefEq.respectTransparency false in` on the
+  declaration clears it. Do not rewrite the proof for the second kind — keep
+  the original tactic script and add the option. Enumerate the sites with
+  `rg -n "respectTransparency" --type lean -g '!.lake'`.
+- **Try `exact` before reaching for either.** Many of these goals are `rfl`-true
+  (possibly after a trivial `rw [one_mul]`), and `exact` elaborates at default
+  transparency, so it sees through everything. It is smaller than a `simp` set,
+  needs no option, and is often shorter than the proof it replaces.
+- **A `whnf` heartbeat timeout may mean divergence, not slowness.** If raising
+  `maxHeartbeats` an order of magnitude still times out, the elaboration is
+  running away; replace the offending `simp`/`simpa`, do not raise the limit.
+- **Never bulk-apply `linter.unusedSimpArgs` suggestions.** It flags each
+  argument as individually removable when several are redundant with each
+  other, or when the real progress comes from beta/delta reduction rather than
+  any named lemma. Removing every flagged argument on a line can empty the simp
+  set and break the proof; for a single-element `simp only [X]` it often means
+  `dsimp only`, not deletion. Re-check every file whose simp set you touch.
+- **`deriving Fintype` on plain enums is broken at this toolchain.** It
+  reproduces in four lines with no project code. Mathlib's own
+  `MathlibTest/DeriveFintype.lean` works around it with
+  `set_option backward.isDefEq.respectTransparency false in` before each
+  inductive; this repo does the same at every enum site.
+- **Never edit files while `lake build` is running.** Lake reads each module's
+  source as it schedules that target, so a mid-build edit yields a mixed
+  snapshot whose failure list cannot be trusted. Finish editing, then build.
+- **`lake env lean` reads the *oleans* of imports.** After changing a module
+  that others import, `lake build <that module>` first or every downstream
+  single-file check is stale — a fix can look like it failed when it worked.
