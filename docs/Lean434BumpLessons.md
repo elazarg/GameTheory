@@ -83,7 +83,7 @@ namespace replacements, and rejection of stale or ambiguous edits.
 
 **Client limitation:** the helper currently accepts tracked sources only under
 `GameTheory/` and `lint/`. Passing another repository with `--root` does not
-change that allowlist. To reuse it for a client such as VegasCore, adapt both
+change that allowlist. To reuse it for a downstream client, adapt both
 `tracked_sources` and `source_path` to the client's authored source roots and
 run the regression tests with a client-root case. Keep dependency, untracked,
 and external paths excluded. The commands below describe the current helper's

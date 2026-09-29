@@ -7621,7 +7621,7 @@ memory.
   communication counterexample all compile. `IsεGroupNash` uses canonical
   `IsEquilibrium` and ignores empty coalitions by its deviator type. MAID's
   profile-local coverage consumes the direct exact/approximate transfer theorem.
-  No VegasCore import or runtime dependency is introduced. The finite-law ports
+  No import or runtime dependency on the source development is introduced. The finite-law ports
   reuse existing probability semantics and extract general event/fiber tools.
   A shared fair coin at infinitely many sites machine-refutes the source's
   claimed impossibility of finite-support coupling. A separate stopping control

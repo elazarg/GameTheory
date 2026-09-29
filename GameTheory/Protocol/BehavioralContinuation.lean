@@ -1,4 +1,4 @@
-/- Copyright (c) 2026 VegasCore contributors. All rights reserved. -/
+/- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
 /-
 # Behavioral Nash at proper continuation roots

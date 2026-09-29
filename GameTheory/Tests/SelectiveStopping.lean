@@ -1,4 +1,4 @@
-/- Copyright (c) 2026 VegasCore contributors. All rights reserved. -/
+/- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
 import GameTheory.Math.Probability.SelectiveStopping
 import GameTheory.Math.Probability.Uniform
