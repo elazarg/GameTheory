@@ -9534,3 +9534,97 @@ memory.
   strategy sets; the library's own sequential-rationality predicate and
   preservation criteria are still fuel-indexed (see the observation above),
   which is a separate design question.
+
+### EXP-149: retiring fuel-indexed sequential rationality
+
+- **Date / status:** 2026-09-29; positive, narrowed for one theorem family.
+- **Question:** can the terminal-law (well-founded) semantics be the only
+  semantics of sequential rationality and sequential equilibrium, with fuel
+  kept only for finite-prefix quantities (reach weights) and as a
+  sufficient-horizon identification, without weakening any theorem?
+- **Motivation:** D63 introduced terminal continuation contexts but kept the
+  fuel-indexed predicate as the primary one; the finite existence theorems,
+  the EFG predicate, and the preservation criteria are stated with fuel. With
+  insufficient fuel the fuel predicate is a different predicate (D61's boundary
+  test), so a fuel-indexed statement is sequential rationality only when paired
+  with a sufficient horizon.
+- **Hypotheses:**
+  - *H1.* Every public fuel-indexed sequential-rationality statement is
+    paired with a sufficient horizon, so it restates exactly on terminal laws.
+  - *H2.* Fuel is otherwise needed only for finite-prefix quantities and as
+    an internal computation tool under a bound.
+- **Competing designs:** (a) keep both predicates, the fuel one primary
+  (D63's state); (b) terminal predicate only, with every fuel statement
+  restated through the sufficient-horizon identification; (c) terminal
+  predicate only, with statements that never used the continuation's meaning
+  stated over an arbitrary continuation runner, so the terminal and truncated
+  runners are both instances.
+- **Kill conditions:** a terminal restatement needs a hypothesis the fuel
+  statement did not have; a downstream result uses the fuel predicate as a
+  meaningful concept without a sufficient horizon.
+- **Artifacts:** `Protocol/RandomizedBackward.lean` (`WellFoundedHistories`,
+  `BoundedHorizon.wellFoundedHistories`), `Protocol/FiniteHorizon.lean`
+  (`wellFoundedHistories_of_fintype`), `Protocol/BehavioralAssessment.lean`
+  (`ContinuationRunner`, `continuationContextWith`,
+  `IsSequentiallyRationalWith`, `truncatedContinuationContext`),
+  `Protocol/BehavioralTerminal.lean` (`continuationContext`,
+  `IsSequentiallyRational`, `isSequentiallyRational_iff_truncated_of_bounded`),
+  `Analysis/Protocol/Incentives.lean`, `SequentialExistence.lean`,
+  `SequentialLimits.lean`, `EFG.lean`, `EFGExistence.lean`; tests
+  `EFGTest`, `SequentialExistenceTest`, `SequentialExistenceBoundaryTest`,
+  `DecisionRecallExistenceTest`. Validation: `lake build GameTheory`,
+  `lake build GameTheory.LintAll`, `lake lint`; a scratch reachability probe
+  confirms `kakutani_fixed_point` is absent from `SequentialLimits`'s
+  environment and present in `SequentialExistence`'s.
+- **First observation:** the terminal law is certified by `WellFoundedPlay`,
+  well-foundedness of the successor relation on states. A bounded horizon does
+  not imply it (an unreachable cycle of states is allowed), so restating the
+  finite existence theorem on terminal laws would add a hypothesis, which
+  fires the first kill condition. The terminal law only recurses on histories,
+  whose states are all reachable; a bounded horizon does make the successor
+  relation on histories well-founded. The design is repaired by certifying
+  well-foundedness on histories.
+- **Observations:**
+  - Certifying histories is a strict generalization: state well-foundedness
+    implies it, and so does a bounded horizon. Every history-level theorem
+    (terminal laws, Zermelo, subgame perfection, localization) moved to the
+    history certificate without change of proof beyond the recursion
+    principle, and test fixtures proved by a state rank derive it from their
+    state certificate.
+  - H1 held for the finite existence chain and failed for three families.
+    Finite existence, the EFG predicate and existence, the whole-policy
+    upgrade from local optimality, and the concrete EFG tests were all paired
+    with a sufficient horizon (the EFG fixture's horizon is two, now proved).
+    The perturbation theorem, the limit theorems, and the preservation
+    criteria were stated at arbitrary fuel.
+  - With terminal semantics the finite existence theorem loses its horizon
+    hypothesis rather than gaining one: finite histories supply a bound, and
+    the certificate is derivable from finiteness. The perturbation theorem
+    already assumed finite histories, so its terminal restatement adds nothing.
+  - The preservation criteria never depended on how continuations are
+    computed. The cone characterization holds for continuation laws produced
+    by any runner, so design (c) keeps them hypothesis-free; sequential
+    rationality is the terminal-runner instance and the truncated game is
+    another. Design (b) would have fired the first kill condition here.
+  - The fuel limit theorems are narrowed, not restated: at insufficient fuel
+    their conclusion is rationality in the truncated game. The terminal limit
+    theorem replaces them with weaker convergence and payoff hypotheses
+    (convergence only at decision sites, bounds only on terminal payoffs, and
+    vanishing optimality errors) but needs a history certificate. A
+    runner-generic limit theorem would need a runner-continuity hypothesis and
+    has no consumer.
+  - The second kill condition did not fire. The only uses of fuel-indexed
+    rationality without a sufficient horizon are the truncation boundary
+    fixture and the general-PMF gate, whose point is that truncation changes
+    the game; both are now stated on truncated contexts through the generic
+    predicate.
+  - Folding the tightness-based existence theorem into the finite existence
+    module would have made it reach the fixed-point theorem; it lives with the
+    limit theorems, which need compactness only.
+- **Outcome:** accepted with design (c). Sequential rationality and sequential
+  equilibrium have one semantics, terminal play; truncation survives only as
+  a finite-prefix quantity identified with it under a sufficient horizon.
+  Recorded as D64.
+- **Next action:** counterfactual regret and the Bayes continuation value are
+  still indexed by a horizon; whether they restate on terminal laws is a
+  separate question.

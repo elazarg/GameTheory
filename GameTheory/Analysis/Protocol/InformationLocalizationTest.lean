@@ -25,9 +25,9 @@ def assessment : model.BehavioralAssessment :=
   BehavioralAssessment.ofStrategy fun who => (incumbentProfile who).toBehavioral
 
 theorem terminal_eq (profile : Profile model.strategicSignature) (history : arena.History) :
-    model.runBehavioralTerminalFrom arena_wellFoundedPlay
+    model.runBehavioralTerminalFrom arena_wellFoundedHistories
         (fun who => (profile who).toBehavioral) history =
-      arena.historyBackwardLaw arena_wellFoundedPlay (model.historyChooser profile) history :=
+      arena.historyBackwardLaw arena_wellFoundedHistories (model.historyChooser profile) history :=
   model.runBehavioralTerminalFrom_toBehavioral _ _ _
 
 theorem expect_observe (law : PMF arena.History) :
@@ -44,12 +44,12 @@ theorem expect_le_two (law : PMF arena.History) :
 
 /-- Exiting is behavioral Nash for the exit-preferring utility. -/
 theorem root_holds (who : Unit) (deviation : model.BehavioralPolicy who) :
-    (model.behavioralRootComparison arena_wellFoundedPlay observe assessment.strategy who
+    (model.behavioralRootComparison arena_wellFoundedHistories observe assessment.strategy who
       deviation).Holds (utility · who) := by
   cases who
   rw [IncentiveComparison.holds_iff]
-  change expect ((model.runBehavioralTerminalFrom arena_wellFoundedPlay _ _).map observe) _ ≤
-    expect ((model.runBehavioralTerminalFrom arena_wellFoundedPlay
+  change expect ((model.runBehavioralTerminalFrom arena_wellFoundedHistories _ _).map observe) _ ≤
+    expect ((model.runBehavioralTerminalFrom arena_wellFoundedHistories
       (fun who => (incumbentProfile who).toBehavioral) arena.initHistory).map observe) _
   rw [expect_observe, expect_observe, terminal_eq]
   have hvalue := incumbent_value_root
@@ -75,11 +75,11 @@ theorem belief_decisionSite :
 
 /-- Punishing at the unreached decision is not sequentially rational. -/
 theorem decision_fails :
-    ¬ (model.terminalAssessmentComparison arena_wellFoundedPlay observe assessment ()
+    ¬ (model.assessmentComparison arena_wellFoundedHistories observe assessment ()
       (decisionSite, (rewardingPolicy).toBehavioral)).Holds (utility · ()) := by
   rw [IncentiveComparison.holds_iff]
-  simp only [terminalAssessmentComparison, terminalAssessmentLaw, belief_decisionSite,
-    PMF.pure_bind]
+  simp only [assessmentComparison_prescribed, assessmentComparison_alternative,
+    assessmentLaw, assessmentLawWith, belief_decisionSite, PMF.pure_bind]
   have hincumbent : Profile.update (sig := model.behavioralSignature) assessment.strategy ()
       (assessment.strategy ()) = fun who => (incumbentProfile who).toBehavioral :=
     Profile.update_eq_self _ _
@@ -162,8 +162,8 @@ assessment with decision recall; the failing comparison sits at a site of mass
 zero, as the gap theorem requires. -/
 theorem nash_not_implies_sequentiallyRational :
     ¬ IncentiveComparison.Implies
-      (model.behavioralRootComparison arena_wellFoundedPlay observe assessment.strategy)
-      (model.terminalAssessmentComparison arena_wellFoundedPlay observe assessment) :=
+      (model.behavioralRootComparison arena_wellFoundedHistories observe assessment.strategy)
+      (model.assessmentComparison arena_wellFoundedHistories observe assessment) :=
   fun himplies => decision_fails (himplies utility root_holds () _)
 
 end GameTheory.Tests.InformationLocalization

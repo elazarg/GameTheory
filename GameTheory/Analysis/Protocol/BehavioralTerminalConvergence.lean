@@ -23,7 +23,7 @@ namespace ExecutionProtocol
 /-- Pointwise convergence of randomized choices passes through the
 well-founded terminal-history law, even with unbounded finite play lengths. -/
 theorem randomizedBackwardLaw_convergesPointwise
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     {sequence : ℕ → E.RandomizedChooser} {target : E.RandomizedChooser}
     (hchooser : ∀ history hterm,
       PMFConvergesPointwise (fun n => sequence n history hterm)
@@ -33,7 +33,7 @@ theorem randomizedBackwardLaw_convergesPointwise
       (E.randomizedBackwardLaw certificate target history) := by
   classical
   induction history using
-      (E.wellFounded_historySuccessor certificate).induction with
+      certificate.induction with
   | _ current ih =>
       by_cases hterm : E.terminal current.state
       · simpa only [E.randomizedBackwardLaw_of_terminal hterm] using
@@ -144,7 +144,7 @@ theorem behavioralJoint_convergesPointwise_of_sites
 /-- Coordinate convergence of behavioral laws passes through every
 well-founded terminal continuation without finite history or action carriers. -/
 theorem runBehavioralTerminalFrom_convergesPointwise
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     {sequence : ℕ → (i : ι) → M.BehavioralPolicy i}
     {target : (i : ι) → M.BehavioralPolicy i}
     (hlimit : ∀ i (site : M.InformationSite i),

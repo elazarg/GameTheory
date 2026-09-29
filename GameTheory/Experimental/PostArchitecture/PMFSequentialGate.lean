@@ -731,17 +731,18 @@ theorem assessmentContinuationFuelStable
     (extra : ℕ) {i : PUnit}
     (site : canonicalInformation.InformationSite i)
     (payoff : canonicalDecision.History → ℝ) :
-    A.continuationContext site payoff (3 + extra) =
-      A.continuationContext site payoff 3 := by
-  exact A.continuationContext_bound_add 3 boundedHorizonThree extra site payoff
+    A.truncatedContinuationContext site payoff (3 + extra) =
+      A.truncatedContinuationContext site payoff 3 := by
+  exact A.truncatedContinuationContext_bound_add 3 boundedHorizonThree extra site payoff
 
 theorem assessmentRationalityFuelStable
     (A : canonicalInformation.BehavioralAssessment)
     (extra : ℕ) (payoff : PUnit → canonicalDecision.History → ℝ) :
-    A.IsSequentiallyRationalWithin payoff (3 + extra) ↔
-      A.IsSequentiallyRationalWithin payoff 3 := by
-  exact A.isSequentiallyRationalWithin_bound_add
-    3 boundedHorizonThree extra payoff
+    (A.IsSequentiallyRationalFor fun i site =>
+        A.truncatedContinuationContext site (payoff i) (3 + extra)) ↔
+      A.IsSequentiallyRationalFor fun i site =>
+        A.truncatedContinuationContext site (payoff i) 3 := by
+  simp only [A.truncatedContinuationContext_bound_add 3 boundedHorizonThree extra]
 
 namespace OffPath
 
@@ -1063,11 +1064,12 @@ theorem payoff_bounded (history : execution.History) :
   statePayoff_bounded history.state
 
 theorem contextStateLaw (rootChoice secondChoice : Bool) :
-    ((incumbentAssessment.continuationContext secondSite payoff 2).outcome
+    ((incumbentAssessment.truncatedContinuationContext secondSite payoff 2).outcome
       ((policy rootChoice secondChoice).toBehavioral)).map
         (fun history => history.state) =
       PMF.pure (.done secondChoice) := by
-  rw [InformationModel.BehavioralAssessment.continuationContext,
+  rw [InformationModel.BehavioralAssessment.truncatedContinuationContext,
+    InformationModel.BehavioralAssessment.continuationContextWith,
     Context.ofBelief, PMF.map_bind]
   have hprofile : Profile.update
       (sig := information.behavioralSignature)
@@ -1105,18 +1107,19 @@ theorem expect_of_stateLaw (law : PMF execution.History) (result : Bool)
     _ = if result then 1 else 0 := expect_constant law _
 
 theorem contextValue (rootChoice secondChoice : Bool) :
-    (incumbentAssessment.continuationContext secondSite payoff 2).value
+    (incumbentAssessment.truncatedContinuationContext secondSite payoff 2).value
       ((policy rootChoice secondChoice).toBehavioral) =
         if secondChoice then 1 else 0 := by
   exact expect_of_stateLaw _ secondChoice
     (contextStateLaw rootChoice secondChoice)
 
 theorem incumbent_not_locallyOptimalAtSecond :
-    ¬ (incumbentAssessment.continuationContext secondSite payoff 2).IsLocallyOptimal
+    ¬ (incumbentAssessment.truncatedContinuationContext secondSite payoff 2).IsLocallyOptimal
       Set.univ (incumbentAssessment.strategy ()) := by
   intro hoptimal
   have hbounded : ∀ alternative,
-      (incumbentAssessment.continuationContext secondSite payoff 2).IntegrableAt alternative :=
+      (incumbentAssessment.truncatedContinuationContext secondSite payoff 2).IntegrableAt
+        alternative :=
     fun _ => payoffIntegrable_of_bounded _ _ (C := 1) fun history =>
       statePayoff_bounded history.state
   have hcompare := (GameTheory.Protocol.Context.isLocallyOptimal_iff_of_integrable
@@ -1128,9 +1131,9 @@ theorem incumbent_not_locallyOptimalAtSecond :
   rw [hincValue, haltValue] at hcompare
   norm_num at hcompare
 
-theorem incumbent_not_sequentiallyRationalWithin :
-    ¬ incumbentAssessment.IsSequentiallyRationalWithin
-      (fun _ => payoff) 2 := by
+theorem incumbent_not_sequentiallyRational_truncated :
+    ¬ incumbentAssessment.IsSequentiallyRationalFor fun _ site =>
+      incumbentAssessment.truncatedContinuationContext site payoff 2 := by
   intro hrational
   exact incumbent_not_locallyOptimalAtSecond (hrational () secondSite)
 

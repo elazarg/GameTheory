@@ -8,7 +8,7 @@ subgame perfection: a proper subgame may start only where its continuation is
 closed under every decision information set.
 
 This module defines that closure directly over canonical protocol histories,
-without adding an EFG evaluator. `WellFoundedPlay` lifts from states to
+without adding an EFG evaluator. `WellFoundedHistories` lifts from states to
 histories, and the resulting recursion evaluates the same protocol step law
 while retaining the history an information-local policy may observe. Under
 `ActsOnceWhereItMatters`, a persistent policy replacement at the current
@@ -166,7 +166,7 @@ theorem historyChooser_oneShotProfile_eq_of_actsOnce
 /-- A changed current choice followed by the original profile's complete
 history-preserving terminal law. -/
 def oneShotHistoryLaw [DecidableEq ι]
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (profile : Profile M.strategicSignature) (who : ι)
     [DecidableEq (M.InfoState who)]
     (history : E.History) (hterm : ¬ E.terminal history.state)
@@ -180,7 +180,7 @@ def oneShotHistoryLaw [DecidableEq ι]
 /-- The actual one-choice history context uses the same continuation
 comparison as the generic protocol context. -/
 def oneShotHistoryContext [DecidableEq ι]
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (profile : Profile M.strategicSignature)
     (utility : E.History → ι → ℝ) (who : ι)
     [DecidableEq (M.InfoState who)]
@@ -191,7 +191,7 @@ def oneShotHistoryContext [DecidableEq ι]
   continuation outcome := utility outcome who
 
 theorem oneShotHistoryLaw_self [DecidableEq ι]
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (profile : Profile M.strategicSignature) (who : ι)
     [DecidableEq (M.InfoState who)]
     (history : E.History) (hterm : ¬ E.terminal history.state) :
@@ -221,7 +221,7 @@ theorem oneShotHistoryLaw_self [DecidableEq ι]
 payoffs, and no one-choice change improves the incumbent. -/
 def HasNoProfitableOneShotDeviation [DecidableEq ι]
     [∀ i, DecidableEq (M.InfoState i)]
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (profile : Profile M.strategicSignature)
     (utility : E.History → ι → ℝ) : Prop :=
   ∀ (who : ι) (history : E.History)
@@ -233,7 +233,7 @@ def HasNoProfitableOneShotDeviation [DecidableEq ι]
 Each comparison requires both payoff laws to have expectations and compares
 their extended values. -/
 def IsHistorywiseOptimal [DecidableEq ι]
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (profile : Profile M.strategicSignature)
     (utility : E.History → ι → ℝ) : Prop :=
   ∀ (who : ι) (alternative : M.Policy who) (history : E.History),
@@ -252,7 +252,7 @@ def IsHistorywiseOptimal [DecidableEq ι]
 
 /-- Whole-policy optimality at every information-set-closed subgame root. -/
 def IsSubgamePerfect [DecidableEq ι]
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (profile : Profile M.strategicSignature)
     (utility : E.History → ι → ℝ) : Prop :=
   ∀ (history : E.History), M.IsSubgameRoot history →
@@ -271,7 +271,7 @@ def IsSubgamePerfect [DecidableEq ι]
               (fun outcome => utility outcome who) history
 
 theorem IsHistorywiseOptimal.isSubgamePerfect [DecidableEq ι]
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {profile : Profile M.strategicSignature}
     {utility : E.History → ι → ℝ}
     (hoptimal : M.IsHistorywiseOptimal certificate profile utility) :
@@ -283,7 +283,7 @@ theorem IsHistorywiseOptimal.isSubgamePerfect [DecidableEq ι]
 history, including terminal and off-path histories. -/
 theorem historyBackwardLaw_hasExpectation_of_hasNoProfitableOneShotDeviation
     [DecidableEq ι] [∀ i, DecidableEq (M.InfoState i)]
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {profile : Profile M.strategicSignature}
     {utility : E.History → ι → ℝ}
     (hopt : M.HasNoProfitableOneShotDeviation certificate profile utility)
@@ -302,7 +302,7 @@ theorem historyBackwardLaw_hasExpectation_of_hasNoProfitableOneShotDeviation
 history: no replacement has a larger extended value. -/
 theorem historyBackwardExtendedValue_update_le_of_hasNoProfitableOneShotDeviation
     [DecidableEq ι] [∀ i, DecidableEq (M.InfoState i)]
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {profile : Profile M.strategicSignature}
     {utility : E.History → ι → ℝ}
     (hopt : M.HasNoProfitableOneShotDeviation certificate profile utility)
@@ -313,7 +313,7 @@ theorem historyBackwardExtendedValue_update_le_of_hasNoProfitableOneShotDeviatio
       E.historyBackwardExtendedValue certificate (M.historyChooser profile)
         (fun outcome => utility outcome who) history := by
   induction history using
-      (E.wellFounded_historySuccessor certificate).induction with
+      certificate.induction with
   | _ current ih =>
       by_cases hterm : E.terminal current.state
       · unfold ExecutionProtocol.historyBackwardExtendedValue
@@ -379,7 +379,7 @@ theorem historyBackwardExtendedValue_update_le_of_hasNoProfitableOneShotDeviatio
 policy being compared has an expectation. -/
 theorem isHistorywiseOptimal_of_hasNoProfitableOneShotDeviation
     [DecidableEq ι] [∀ i, DecidableEq (M.InfoState i)]
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {profile : Profile M.strategicSignature}
     {utility : E.History → ι → ℝ}
     (hopt : M.HasNoProfitableOneShotDeviation certificate profile utility)
@@ -400,7 +400,7 @@ one-choice continuation law is the law of the persistent replacement policy. -/
 theorem oneShotHistoryLaw_eq_changed_of_actsOnce
     [DecidableEq ι] {who : ι} [DecidableEq (M.InfoState who)]
     (hactsOnce : M.ActsOnceWhereItMatters)
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (profile : Profile M.strategicSignature)
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (choice : M.Choice who (M.infoOf who history.trace)) :
@@ -426,7 +426,7 @@ information state cannot be revisited with a genuine choice. -/
 theorem hasNoProfitableOneShotDeviation_of_isHistorywiseOptimal
     [DecidableEq ι] [∀ i, DecidableEq (M.InfoState i)]
     (hactsOnce : M.ActsOnceWhereItMatters)
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {profile : Profile M.strategicSignature}
     {utility : E.History → ι → ℝ}
     (hoptimal : M.IsHistorywiseOptimal certificate profile utility) :
@@ -476,7 +476,7 @@ expectation. -/
 theorem isHistorywiseOptimal_iff_hasNoProfitableOneShotDeviation
     [DecidableEq ι] [∀ i, DecidableEq (M.InfoState i)]
     (hactsOnce : M.ActsOnceWhereItMatters)
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (profile : Profile M.strategicSignature)
     (utility : E.History → ι → ℝ)
     (hcandidate : ∀ (who : ι) (alternative : M.Policy who)

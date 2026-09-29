@@ -105,36 +105,36 @@ theorem decisionHistory_isSubgameRoot : model.IsSubgameRoot decisionHistory := b
   exact ExecutionProtocol.HistoryReaches.refl _ _
 
 theorem root_holds (who : Unit) (deviation : model.Policy who) :
-    (model.rootComparison arena_wellFoundedPlay observe incumbentProfile who deviation).Holds
+    (model.rootComparison arena_wellFoundedHistories observe incumbentProfile who deviation).Holds
       (utility · who) := by
   cases who
   rw [IncentiveComparison.holds_iff]
   simp only [InformationModel.rootComparison, InformationModel.continuationComparison,
     InformationModel.historyPlay, expect_map, Function.comp_def]
   rw [utility_observe]
-  change arena.historyBackwardValue arena_wellFoundedPlay _ _ _ ≤
-    arena.historyBackwardValue arena_wellFoundedPlay _ _ _
+  change arena.historyBackwardValue arena_wellFoundedHistories _ _ _ ≤
+    arena.historyBackwardValue arena_wellFoundedHistories _ _ _
   rw [incumbent_value_root]
   exact historyBackwardValue_le_two _ _
 
 theorem decision_fails :
-    ¬ (model.continuationComparison (model.historyPlay arena_wellFoundedPlay) observe
+    ¬ (model.continuationComparison (model.historyPlay arena_wellFoundedHistories) observe
         incumbentProfile () (⟨decisionHistory, decisionHistory_isSubgameRoot⟩,
           rewardingPolicy)).Holds (utility · ()) := by
   rw [IncentiveComparison.holds_iff]
   simp only [InformationModel.continuationComparison, InformationModel.historyPlay, expect_map,
     Function.comp_def]
   rw [utility_observe]
-  change ¬ arena.historyBackwardValue arena_wellFoundedPlay _ _ _ ≤
-    arena.historyBackwardValue arena_wellFoundedPlay _ _ _
+  change ¬ arena.historyBackwardValue arena_wellFoundedHistories _ _ _ ≤
+    arena.historyBackwardValue arena_wellFoundedHistories _ _ _
   rw [incumbent_value_decision, rewarding_value_decision]
   norm_num
 
 /-- Nash does not imply subgame perfection at the exiting incumbent. -/
 theorem nash_not_implies_subgamePerfect :
     ¬ IncentiveComparison.Implies
-      (model.rootComparison arena_wellFoundedPlay observe incumbentProfile)
-      (model.continuationComparison (model.historyPlay arena_wellFoundedPlay) observe
+      (model.rootComparison arena_wellFoundedHistories observe incumbentProfile)
+      (model.continuationComparison (model.historyPlay arena_wellFoundedHistories) observe
         incumbentProfile) :=
   fun himplies => decision_fails (himplies utility root_holds () _)
 
@@ -142,32 +142,32 @@ theorem nash_not_implies_subgamePerfect :
 equilibria implied by subgame perfection but not by Nash. -/
 theorem descent_fails :
     ∃ (root : arena.History) (_ : model.IsSubgameRoot root),
-      model.rootReach arena_wellFoundedPlay incumbentProfile root = 0 ∧
+      model.rootReach arena_wellFoundedHistories incumbentProfile root = 0 ∧
       IncentiveComparison.Implies
-        (model.continuationComparison (model.historyPlay arena_wellFoundedPlay) observe
+        (model.continuationComparison (model.historyPlay arena_wellFoundedHistories) observe
           incumbentProfile)
-        (equilibriumComparison (model.subgameForm arena_wellFoundedPlay root)
+        (equilibriumComparison (model.subgameForm arena_wellFoundedHistories root)
           (PMF.pure incumbentProfile) (DeviationScheme.unilateralConstant _) observe) ∧
       ¬ IncentiveComparison.Implies
-        (model.rootComparison arena_wellFoundedPlay observe incumbentProfile)
-        (equilibriumComparison (model.subgameForm arena_wellFoundedPlay root)
+        (model.rootComparison arena_wellFoundedHistories observe incumbentProfile)
+        (equilibriumComparison (model.subgameForm arena_wellFoundedHistories root)
           (PMF.pure incumbentProfile) (DeviationScheme.unilateralConstant _) observe) :=
-  model.exists_subgameForm_separating arena_wellFoundedPlay observe incumbentProfile
+  model.exists_subgameForm_separating arena_wellFoundedHistories observe incumbentProfile
     nash_not_implies_subgamePerfect
 
 /-- **Ascent fails.** Compiling the strategic form into the sequential game
 preserves Nash for every utility but not subgame perfection. -/
 theorem ascent_fails :
     IncentiveComparison.Implies
-        (equilibriumComparison (model.subgameForm arena_wellFoundedPlay arena.initHistory)
+        (equilibriumComparison (model.subgameForm arena_wellFoundedHistories arena.initHistory)
           (PMF.pure incumbentProfile) (DeviationScheme.unilateralConstant _) observe)
-        (model.rootComparison arena_wellFoundedPlay observe incumbentProfile) ∧
+        (model.rootComparison arena_wellFoundedHistories observe incumbentProfile) ∧
       ¬ IncentiveComparison.Implies
-        (equilibriumComparison (model.subgameForm arena_wellFoundedPlay arena.initHistory)
+        (equilibriumComparison (model.subgameForm arena_wellFoundedHistories arena.initHistory)
           (PMF.pure incumbentProfile) (DeviationScheme.unilateralConstant _) observe)
-        (model.continuationComparison (model.historyPlay arena_wellFoundedPlay) observe
+        (model.continuationComparison (model.historyPlay arena_wellFoundedHistories) observe
           incumbentProfile) := by
-  obtain ⟨hnash, hiff⟩ := model.strategicForm_implies_iff arena_wellFoundedPlay observe
+  obtain ⟨hnash, hiff⟩ := model.strategicForm_implies_iff arena_wellFoundedHistories observe
     incumbentProfile
   exact ⟨hnash, fun h => nash_not_implies_subgamePerfect (hiff.1 h)⟩
 

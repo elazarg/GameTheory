@@ -1,5 +1,5 @@
 /-
-# EXP-142: fully mixed assessments on the unbounded countdown
+# Fully mixed assessments on the unbounded countdown
 
 The root Boolean decision has a vanishing false-action tremble. Bayes beliefs
 are built from the actual fully supported behavioral profiles. The repair
@@ -7,7 +7,7 @@ mixes every whole-policy alternative with that same positive tremble.
 -/
 
 import GameTheory.Experimental.PostArchitecture.WellFoundedTerminalGate
-import GameTheory.Analysis.Protocol.SequentialTerminalExistence
+import GameTheory.Analysis.Protocol.SequentialLimits
 import GameTheory.Analysis.Protocol.BehavioralBayes
 
 noncomputable section

@@ -120,6 +120,11 @@ structure BehavioralAssessment where
   belief : (i : ι) → (site : M.InformationSite i) →
     PMF (M.InformationHistory i site.1)
 
+/-- A continuation runner: `run profile history` is the law of the outcome of
+play from `history` under the behavioral profile `profile`. -/
+abbrev ContinuationRunner :=
+  ((i : ι) → M.BehavioralPolicy i) → E.History → PMF E.History
+
 namespace BehavioralAssessment
 
 variable {M}
@@ -167,63 +172,109 @@ def IsSequentiallyRationalAt (A : M.BehavioralAssessment)
 /-- Sequential rationality at every information state for a supplied family of
 continuation contexts. The contexts are the only game-specific input; the
 optimality predicate is not redefined. -/
-def IsSequentiallyRational (A : M.BehavioralAssessment)
+def IsSequentiallyRationalFor (A : M.BehavioralAssessment)
     (context : (i : ι) → (site : M.InformationSite i) →
       GameTheory.Protocol.Context
         (M.BehavioralPolicy i) E.History) : Prop :=
   ∀ (i : ι) (site : M.InformationSite i),
     A.IsSequentiallyRationalAt site (context i site)
 
-/-- The continuation context induced by an assessment belief. An alternative
-is a whole behavioral policy for the player; all other policies remain fixed,
-and play begins from the history sampled by the belief. -/
-def continuationContext [Fintype ι] [DecidableEq ι]
-    (A : M.BehavioralAssessment) {i : ι}
-    (site : M.InformationSite i) (payoff : E.History → ℝ) (fuel : ℕ) :
+/-- The continuation context induced by an assessment belief under a supplied
+continuation runner. An alternative is a whole behavioral policy for the
+player; all other policies remain fixed, and play begins from the history
+sampled by the belief. -/
+def continuationContextWith [DecidableEq ι]
+    (A : M.BehavioralAssessment)
+    (run : M.ContinuationRunner) {i : ι}
+    (site : M.InformationSite i) (payoff : E.History → ℝ) :
     GameTheory.Protocol.Context (M.BehavioralPolicy i) E.History :=
   GameTheory.Protocol.Context.ofBelief (A.belief i site)
     (fun history alternative =>
-      M.runBehavioralFrom
-        (Profile.update (sig := M.behavioralSignature)
-          A.strategy i alternative) fuel history.1) payoff
+      run (Profile.update (sig := M.behavioralSignature)
+        A.strategy i alternative) history.1) payoff
 
 @[simp]
-theorem continuationContext_value [Fintype ι] [DecidableEq ι]
+theorem continuationContextWith_value [DecidableEq ι]
+    (A : M.BehavioralAssessment)
+    (run : M.ContinuationRunner) {i : ι}
+    (site : M.InformationSite i) (payoff : E.History → ℝ)
+    (alternative : M.BehavioralPolicy i) :
+    (A.continuationContextWith run site payoff).value alternative =
+      expect ((A.belief i site).bind fun history =>
+        run (Profile.update (sig := M.behavioralSignature)
+          A.strategy i alternative) history.1) payoff :=
+  rfl
+
+/-- The belief average of conditional continuation values equals the guarded
+value of the whole policy deviation. -/
+theorem continuationContextWith_value_tower [DecidableEq ι]
+    (A : M.BehavioralAssessment)
+    (run : M.ContinuationRunner) {i : ι}
+    (site : M.InformationSite i) (payoff : E.History → ℝ)
+    (alternative : M.BehavioralPolicy i)
+    (hbind : (A.continuationContextWith run site payoff).IntegrableAt alternative) :
+    (A.continuationContextWith run site payoff).value alternative =
+      expect (A.belief i site)
+        (fun history => expect
+          (run (Profile.update (sig := M.behavioralSignature)
+            A.strategy i alternative) history.1)
+          payoff) := by
+  exact expect_bind_tower _ _ _ hbind
+
+/-- Sequential rationality against the continuations computed by `run`. -/
+def IsSequentiallyRationalWith [DecidableEq ι]
+    (A : M.BehavioralAssessment)
+    (run : M.ContinuationRunner)
+    (payoff : ι → E.History → ℝ) : Prop :=
+  A.IsSequentiallyRationalFor fun i site =>
+    A.continuationContextWith run site (payoff i)
+
+/-- With identically zero continuation payoff, every behavioral assessment is
+sequentially rational against whole continuation-policy deviations, whatever
+the continuation runner. -/
+theorem isSequentiallyRationalWith_zero [DecidableEq ι]
+    (A : M.BehavioralAssessment)
+    (run : M.ContinuationRunner) :
+    A.IsSequentiallyRationalWith run (fun _ _ => 0) := by
+  intro i site
+  refine ⟨hasExpectation_of_payoffIntegrable (payoffIntegrable_zero _), ?_, ?_⟩
+  · intro alternative _
+    exact hasExpectation_of_payoffIntegrable (payoffIntegrable_zero _)
+  · intro alternative _
+    simp [GameTheory.Protocol.Context.extendedValue, continuationContextWith,
+      GameTheory.Protocol.Context.ofBelief]
+
+/-- The continuation context of play cut off after `fuel` steps. This is a
+finite-prefix quantity: once every legal history has stopped within `fuel`
+steps it is the terminal continuation context, and with fewer steps it scores
+the truncated game rather than the original one. -/
+def truncatedContinuationContext [Fintype ι] [DecidableEq ι]
+    (A : M.BehavioralAssessment) {i : ι}
+    (site : M.InformationSite i) (payoff : E.History → ℝ) (fuel : ℕ) :
+    GameTheory.Protocol.Context (M.BehavioralPolicy i) E.History :=
+  A.continuationContextWith (fun policies => M.runBehavioralFrom policies fuel) site payoff
+
+@[simp]
+theorem truncatedContinuationContext_value [Fintype ι] [DecidableEq ι]
     (A : M.BehavioralAssessment) {i : ι}
     (site : M.InformationSite i) (payoff : E.History → ℝ) (fuel : ℕ)
     (alternative : M.BehavioralPolicy i) :
-    (A.continuationContext site payoff fuel).value alternative =
+    (A.truncatedContinuationContext site payoff fuel).value alternative =
       expect ((A.belief i site).bind fun history =>
         M.runBehavioralFrom
           (Profile.update (sig := M.behavioralSignature)
             A.strategy i alternative) fuel history.1) payoff :=
   rfl
 
-/-- The belief average of conditional continuation values equals the guarded
-value of the whole policy deviation. -/
-theorem continuationContext_value_tower [Fintype ι] [DecidableEq ι]
-    (A : M.BehavioralAssessment) {i : ι}
-    (site : M.InformationSite i) (payoff : E.History → ℝ) (fuel : ℕ)
-    (alternative : M.BehavioralPolicy i)
-    (hbind : (A.continuationContext site payoff fuel).IntegrableAt alternative) :
-    (A.continuationContext site payoff fuel).value alternative =
-      expect (A.belief i site)
-        (fun history => expect
-          (M.runBehavioralFrom
-            (Profile.update (sig := M.behavioralSignature)
-              A.strategy i alternative) fuel history.1)
-          payoff) := by
-  exact expect_bind_tower _ _ _ hbind
-
 /-- Once every legal history has stopped by `bound`, extra fuel leaves every
 whole-policy continuation law and its guarded value domain unchanged. -/
-theorem continuationContext_bound_add [Fintype ι] [DecidableEq ι]
+theorem truncatedContinuationContext_bound_add [Fintype ι] [DecidableEq ι]
     (A : M.BehavioralAssessment) (bound : ℕ)
     (hbound : E.BoundedHorizon bound)
     (extra : ℕ) {i : ι} (site : M.InformationSite i)
     (payoff : E.History → ℝ) :
-    A.continuationContext site payoff (bound + extra) =
-      A.continuationContext site payoff bound := by
+    A.truncatedContinuationContext site payoff (bound + extra) =
+      A.truncatedContinuationContext site payoff bound := by
   apply congrArg₂ (fun outcome continuation =>
     GameTheory.Protocol.Context.mk outcome continuation)
   · funext alternative
@@ -233,44 +284,6 @@ theorem continuationContext_bound_add [Fintype ι] [DecidableEq ι]
       (Profile.update (sig := M.behavioralSignature)
         A.strategy i alternative) hbound extra history.1
   · rfl
-
-/-- Sequential rationality in the assessment's own finite-horizon
-continuation contexts. -/
-def IsSequentiallyRationalWithin [Fintype ι] [DecidableEq ι]
-    (A : M.BehavioralAssessment)
-    (payoff : ι → E.History → ℝ) (fuel : ℕ) : Prop :=
-  A.IsSequentiallyRational fun i site =>
-    A.continuationContext site (payoff i) fuel
-
-/-- Certified horizon stabilization also stabilizes the guarded whole-policy
-sequential-rationality predicate, including its integrability obligations. -/
-theorem isSequentiallyRationalWithin_bound_add
-    [Fintype ι] [DecidableEq ι]
-    (A : M.BehavioralAssessment) (bound : ℕ)
-    (hbound : E.BoundedHorizon bound)
-    (extra : ℕ) (payoff : ι → E.History → ℝ) :
-    A.IsSequentiallyRationalWithin payoff (bound + extra) ↔
-      A.IsSequentiallyRationalWithin payoff bound := by
-  simp only [IsSequentiallyRationalWithin, IsSequentiallyRational,
-    IsSequentiallyRationalAt]
-  constructor <;> intro h i site
-  · simpa only [A.continuationContext_bound_add bound hbound extra site (payoff i)]
-      using h i site
-  · simpa only [A.continuationContext_bound_add bound hbound extra site (payoff i)]
-      using h i site
-
-/-- With identically zero continuation payoff, every behavioral assessment is
-sequentially rational against whole continuation-policy deviations. -/
-theorem isSequentiallyRationalWithin_zero [Fintype ι] [DecidableEq ι]
-    (A : M.BehavioralAssessment) (fuel : ℕ) :
-    A.IsSequentiallyRationalWithin (fun _ _ => 0) fuel := by
-  intro i site
-  refine ⟨hasExpectation_of_payoffIntegrable (payoffIntegrable_zero _), ?_, ?_⟩
-  · intro alternative _
-    exact hasExpectation_of_payoffIntegrable (payoffIntegrable_zero _)
-  · intro alternative _
-    simp [GameTheory.Protocol.Context.extendedValue, continuationContext,
-      GameTheory.Protocol.Context.ofBelief]
 
 /-- A topology-free limit schema. The analytic bridge supplies pointwise
 convergence; other consumers may supply a different convergence relation

@@ -167,7 +167,7 @@ theorem continuous_update_prob [DecidableEq ι]
 
 /-- Belief-averaged continuation values are jointly continuous in the
 assessment and the deviating player's whole policy. -/
-theorem continuous_continuationContext_value
+theorem continuous_truncatedContinuationContext_value
     [DecidableEq ι] [Fintype E.State] [Fintype E.History]
     [∀ i, Fintype (E.Action i)]
     (assessment : X → M.BehavioralAssessment)
@@ -183,8 +183,8 @@ theorem continuous_continuationContext_value
       Continuous fun x => ((alternative x info choice).toReal))
     (payoff : E.History → ℝ) (fuel : ℕ) :
     Continuous fun x =>
-      ((assessment x).continuationContext site payoff fuel).value (alternative x) := by
-  simp only [Context.value, BehavioralAssessment.continuationContext]
+      ((assessment x).truncatedContinuationContext site payoff fuel).value (alternative x) := by
+  simp only [Context.value, BehavioralAssessment.truncatedContinuationContext]
   apply continuous_pmf_expect
   · intro target
     apply continuous_pmf_bind_mass

@@ -56,7 +56,7 @@ theorem matchingPolicy_is_history_dependent :
 
 /-- A guarded terminal-law value cannot exceed a bound on terminal outcomes. -/
 theorem historyBackwardValue_le_of_terminal_le
-    {E : ExecutionProtocol Unit} {certificate : E.WellFoundedPlay}
+    {E : ExecutionProtocol Unit} {certificate : E.WellFoundedHistories}
     {chooser : E.HistoryChooser} {payoff : E.History → ℝ} {bound : ℝ}
     (hbound : ∀ history, E.terminal history.state → payoff history ≤ bound)
     (history : E.History)
@@ -96,17 +96,17 @@ private theorem matchUtility_terminal_bound
 /-- The bounded terminal matching payoff integrates every backward history law. -/
 theorem matchIntegrable (chooser : twice.HistoryChooser)
     (history : twice.History) :
-    PayoffIntegrable (twice.historyBackwardLaw twice_wellFoundedPlay
+    PayoffIntegrable (twice.historyBackwardLaw twice_wellFoundedHistories
       chooser history) (fun outcome => matchUtility outcome ()) :=
   twice.payoffIntegrable_historyBackwardLaw_of_bounded_terminal
     (C := 1) matchUtility_terminal_bound history
 
 def matchingValue (history : twice.History) : ℝ :=
-  twice.historyBackwardValue twice_wellFoundedPlay matchingChooser
+  twice.historyBackwardValue twice_wellFoundedHistories matchingChooser
     (fun outcome => matchUtility outcome ()) history
 
 def mismatchingValue (history : twice.History) : ℝ :=
-  twice.historyBackwardValue twice_wellFoundedPlay mismatchingChooser
+  twice.historyBackwardValue twice_wellFoundedHistories mismatchingChooser
     (fun outcome => matchUtility outcome ()) history
 
 theorem matching_step_start (trace : twice.Trace .start)
@@ -172,13 +172,13 @@ private theorem value_of_constant_successors (chooser : twice.HistoryChooser)
       (realized : target ∈ (twice.step history.state
         (chooser history hterm)).support)
       (_ : PayoffIntegrable
-        (twice.historyBackwardLaw twice_wellFoundedPlay chooser
+        (twice.historyBackwardLaw twice_wellFoundedHistories chooser
           (history.extend (chooser history hterm).2 realized))
         (fun outcome => matchUtility outcome ())),
-      twice.historyBackwardValue twice_wellFoundedPlay chooser
+      twice.historyBackwardValue twice_wellFoundedHistories chooser
         (fun outcome => matchUtility outcome ())
         (history.extend (chooser history hterm).2 realized) = c) :
-    twice.historyBackwardValue twice_wellFoundedPlay chooser
+    twice.historyBackwardValue twice_wellFoundedHistories chooser
       (fun outcome => matchUtility outcome ()) history
        = c := by
   obtain ⟨houter, heq⟩ := twice.historyBackwardValue_of_not_terminal
@@ -238,7 +238,7 @@ theorem matchingValue_of_not_terminal (history : twice.History)
   | done first second => exact False.elim (hterm (by simp [Round.stopped]))
 
 theorem everyValue_le_one (chooser : twice.HistoryChooser) (history : twice.History) :
-    twice.historyBackwardValue twice_wellFoundedPlay chooser
+    twice.historyBackwardValue twice_wellFoundedHistories chooser
         (fun outcome => matchUtility outcome ()) history
          ≤ 1 := by
   apply historyBackwardValue_le_of_terminal_le (history := history)
@@ -253,7 +253,7 @@ theorem everyValue_le_one (chooser : twice.HistoryChooser) (history : twice.Hist
 /-! ## Canonical historywise optimality and subgame perfection -/
 
 theorem matching_isHistorywiseOptimal :
-    recallGame.IsHistorywiseOptimal twice_wellFoundedPlay matchingProfile matchUtility := by
+    recallGame.IsHistorywiseOptimal twice_wellFoundedHistories matchingProfile matchUtility := by
   intro who alternative history
   rcases who with ⟨⟩
   have hdev := matchIntegrable
@@ -265,19 +265,19 @@ theorem matching_isHistorywiseOptimal :
   · rw [twice.historyBackwardValue_of_terminal hterm,
       twice.historyBackwardValue_of_terminal hterm]
   · calc
-      twice.historyBackwardValue twice_wellFoundedPlay
+      twice.historyBackwardValue twice_wellFoundedHistories
           (recallModel.historyChooser
             (Profile.update matchingProfile () alternative))
           (fun outcome => matchUtility outcome ()) history
            ≤ 1 :=
         everyValue_le_one _ history
-      _ = twice.historyBackwardValue twice_wellFoundedPlay matchingChooser
+      _ = twice.historyBackwardValue twice_wellFoundedHistories matchingChooser
           (fun outcome => matchUtility outcome ()) history := by
         symm
         exact matchingValue_of_not_terminal history hterm
 
 theorem matching_isSubgamePerfect :
-    recallGame.IsSubgamePerfect twice_wellFoundedPlay matchingProfile matchUtility :=
+    recallGame.IsSubgamePerfect twice_wellFoundedHistories matchingProfile matchUtility :=
   matching_isHistorywiseOptimal.isSubgamePerfect
 
 /-! ## Falsifying control -/
@@ -295,7 +295,7 @@ theorem update_unit_eq_profile (profile : Profile recallGame.strategicSignature)
 raises continuation value from zero to one. -/
 theorem mismatching_not_isHistorywiseOptimal :
     ¬ recallGame.IsHistorywiseOptimal
-      twice_wellFoundedPlay mismatchingProfile matchUtility := by
+      twice_wellFoundedHistories mismatchingProfile matchUtility := by
   intro hoptimal
   have hcomparison := hoptimal () matchingPolicy afterUpHistory
   rw [update_unit_eq_profile, show (fun _ => matchingPolicy) = matchingProfile from rfl]

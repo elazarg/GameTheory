@@ -8,6 +8,8 @@ information sets need not lie at a common trace depth.
 
 import GameTheory.Analysis.Protocol.CounterfactualRegret
 import GameTheory.Analysis.Protocol.BehavioralBayes
+import GameTheory.Protocol.BehavioralTerminal
+import GameTheory.Protocol.FiniteHorizon
 
 noncomputable section
 
@@ -742,7 +744,7 @@ theorem rootGain_spliceAfter_eq_sum_informationGain
 
 /-- A Bayes-consistent assessment evaluates a positive-mass information set
 with the canonical normalized-reach continuation value. -/
-theorem BehavioralAssessment.continuationContext_integrable_iff_bayesContinuation
+theorem BehavioralAssessment.truncatedContinuationContext_integrable_iff_bayesContinuation
     [Fintype ι] [DecidableEq ι]
     (assessment : M.BehavioralAssessment)
     (who : ι) (site : M.InformationSite who)
@@ -751,7 +753,7 @@ theorem BehavioralAssessment.continuationContext_integrable_iff_bayesContinuatio
     (hbayes : BehavioralAssessment.IsBayesConsistentAt (M := M) assessment who site
       hantichain hmass)
     (alternative : M.BehavioralPolicy who) (payoff : E.History → ℝ) (fuel : ℕ) :
-    (assessment.continuationContext site payoff fuel).IntegrableAt alternative ↔
+    (assessment.truncatedContinuationContext site payoff fuel).IntegrableAt alternative ↔
       (Context.ofBelief
         (M.bayesBelief assessment.strategy who site hantichain hmass)
         (fun history _alternative => M.runBehavioralFrom
@@ -779,7 +781,7 @@ theorem BehavioralAssessment.continuationContext_integrable_iff_bayesContinuatio
   · intro hctx
     exact payoffIntegrable_congr_law hlaw.symm hctx
 
-theorem BehavioralAssessment.continuationContext_value_eq_bayesContinuationValue
+theorem BehavioralAssessment.truncatedContinuationContext_value_eq_bayesContinuationValue
     [Fintype ι] [DecidableEq ι]
     (assessment : M.BehavioralAssessment)
     (who : ι) (site : M.InformationSite who)
@@ -788,7 +790,7 @@ theorem BehavioralAssessment.continuationContext_value_eq_bayesContinuationValue
     (hbayes : BehavioralAssessment.IsBayesConsistentAt (M := M) assessment who site
       hantichain hmass)
     (alternative : M.BehavioralPolicy who) (payoff : E.History → ℝ) (fuel : ℕ) :
-    (assessment.continuationContext site payoff fuel).value alternative =
+    (assessment.truncatedContinuationContext site payoff fuel).value alternative =
       M.bayesContinuationValue assessment.strategy who site hantichain hmass
         alternative payoff fuel := by
   have hbelief : assessment.belief who site =
@@ -807,13 +809,13 @@ theorem BehavioralAssessment.continuationContext_value_eq_bayesContinuationValue
           (Profile.update (sig := M.behavioralSignature) assessment.strategy who alternative)
           fuel history.1) := by
     rw [hbelief]
-  rw [BehavioralAssessment.continuationContext_value]
+  rw [BehavioralAssessment.truncatedContinuationContext_value]
   unfold bayesContinuationValue
   exact expect_congr_law hlaw payoff
 
 /-- Conditional payoff guards on a finite information fiber imply the
 corresponding whole continuation-context guard. -/
-theorem BehavioralAssessment.continuationContext_integrable_of_conditional
+theorem BehavioralAssessment.truncatedContinuationContext_integrable_of_conditional
     [Fintype ι] [DecidableEq ι]
     (assessment : M.BehavioralAssessment)
     (who : ι) (site : M.InformationSite who)
@@ -823,7 +825,7 @@ theorem BehavioralAssessment.continuationContext_integrable_of_conditional
       PayoffIntegrable (M.runBehavioralFrom
         (Profile.update (sig := M.behavioralSignature) assessment.strategy who alternative)
         fuel history.1) payoff) :
-    (assessment.continuationContext site payoff fuel).IntegrableAt alternative := by
+    (assessment.truncatedContinuationContext site payoff fuel).IntegrableAt alternative := by
   let belief := assessment.belief who site
   let kernel := fun history : M.InformationHistory who site.1 =>
     M.runBehavioralFrom
@@ -853,8 +855,8 @@ theorem BehavioralAssessment.informationMass_mul_continuationGain_eq_sum
         (Profile.update (sig := M.behavioralSignature) assessment.strategy who
           (assessment.strategy who)) fuel history.1) payoff) :
     (M.informationMass assessment.strategy who site).toReal *
-        ((assessment.continuationContext site payoff fuel).value alternative -
-          (assessment.continuationContext site payoff fuel).value
+        ((assessment.truncatedContinuationContext site payoff fuel).value alternative -
+          (assessment.truncatedContinuationContext site payoff fuel).value
             (assessment.strategy who)) =
       ∑ history : M.InformationHistory who site.1,
         (M.historyReachWeight assessment.strategy history.1).toReal *
@@ -873,29 +875,29 @@ theorem BehavioralAssessment.informationMass_mul_continuationGain_eq_sum
     M.runBehavioralFrom
       (Profile.update (sig := M.behavioralSignature) assessment.strategy who
         (assessment.strategy who)) fuel history.1
-  have halt := assessment.continuationContext_integrable_of_conditional M who site
+  have halt := assessment.truncatedContinuationContext_integrable_of_conditional M who site
     alternative payoff fuel hcondAlt
-  have hbase := assessment.continuationContext_integrable_of_conditional M who site
+  have hbase := assessment.truncatedContinuationContext_integrable_of_conditional M who site
     (assessment.strategy who) payoff fuel hcondBase
-  have hvalAlt : (assessment.continuationContext site payoff fuel).value alternative =
+  have hvalAlt : (assessment.truncatedContinuationContext site payoff fuel).value alternative =
       ∑ history : M.InformationHistory who site.1,
         (belief history).toReal * expect (altKernel history) payoff := by
     calc
       _ = expect (belief.bind altKernel) payoff :=
-        BehavioralAssessment.continuationContext_value assessment site payoff fuel
+        BehavioralAssessment.truncatedContinuationContext_value assessment site payoff fuel
           alternative
       _ = expect belief (fun history => expect (altKernel history) payoff) :=
         expect_bind_tower belief altKernel payoff halt
       _ = ∑ history : M.InformationHistory who site.1,
           (belief history).toReal * expect (altKernel history) payoff :=
         expect_eq_sum belief _
-  have hvalBase : (assessment.continuationContext site payoff fuel).value
+  have hvalBase : (assessment.truncatedContinuationContext site payoff fuel).value
         (assessment.strategy who) =
       ∑ history : M.InformationHistory who site.1,
         (belief history).toReal * expect (baseKernel history) payoff := by
     calc
       _ = expect (belief.bind baseKernel) payoff :=
-        BehavioralAssessment.continuationContext_value assessment site payoff fuel
+        BehavioralAssessment.truncatedContinuationContext_value assessment site payoff fuel
           (assessment.strategy who)
       _ = expect belief (fun history => expect (baseKernel history) payoff) :=
         expect_bind_tower belief baseKernel payoff hbase
@@ -936,15 +938,7 @@ theorem BehavioralAssessment.informationMass_mul_continuationGain_eq_sum
             expect (baseKernel history) payoff) := by
       rw [hnormalized, ← mul_sub]
 
-/-- In a finite perfect-recall protocol with a certified terminal horizon,
-local optimality against every allowed law implies optimality against every
-whole continuation policy whose local laws are allowed. The allowed sets may
-vary by player and information state; only their product structure is used.
-
-Full support makes all information events positive, and Bayes consistency
-supplies their conditional beliefs. No common-depth or nonterminal-fiber
-assumption is imposed. -/
-theorem BehavioralAssessment.continuation_value_le_of_locallyOptimal
+private theorem BehavioralAssessment.truncated_value_le_of_locallyOptimal
     [Fintype ι] [DecidableEq ι] [Fintype E.History]
     [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)]
     (hrecall : M.DecisionRecall)
@@ -958,15 +952,15 @@ theorem BehavioralAssessment.continuation_value_le_of_locallyOptimal
     (hbound : E.BoundedHorizon bound)
     (hlocal : ∀ (i : ι) (site : M.InformationSite i)
       (law : PMF (M.Choice i site.1)), Allowed i site.1 law →
-        (assessment.continuationContext site (payoff i) bound).value
+        (assessment.truncatedContinuationContext site (payoff i) bound).value
             ((assessment.strategy i).withLaw site.1 law) ≤
-          (assessment.continuationContext site (payoff i) bound).value
+          (assessment.truncatedContinuationContext site (payoff i) bound).value
             (assessment.strategy i))
     (who : ι) (site : M.InformationSite who)
     (alternative : M.BehavioralPolicy who)
     (halternative : ∀ info, Allowed who info (alternative info)) :
-    (assessment.continuationContext site (payoff who) bound).value alternative ≤
-      (assessment.continuationContext site (payoff who) bound).value
+    (assessment.truncatedContinuationContext site (payoff who) bound).value alternative ≤
+      (assessment.truncatedContinuationContext site (payoff who) bound).value
         (assessment.strategy who) := by
   classical
   let spliced := (assessment.strategy who).spliceAfter M alternative site.1
@@ -981,10 +975,10 @@ theorem BehavioralAssessment.continuation_value_le_of_locallyOptimal
     have hmass := M.informationMass_pos_of_fullSupport assessment.strategy hfull who later
     have hantichain := hrecall.decisionInformationAntichain who later
     have hle := hlocal who later (spliced later.1) (hspliced later.1)
-    rw [assessment.continuationContext_value_eq_bayesContinuationValue M who later
+    rw [assessment.truncatedContinuationContext_value_eq_bayesContinuationValue M who later
         hantichain hmass (hbayes who later hmass)
         ((assessment.strategy who).withLaw later.1 (spliced later.1)) (payoff who) bound,
-      assessment.continuationContext_value_eq_bayesContinuationValue M who later
+      assessment.truncatedContinuationContext_value_eq_bayesContinuationValue M who later
         hantichain hmass (hbayes who later hmass) (assessment.strategy who) (payoff who)
         bound] at hle
     apply le_of_not_gt
@@ -1006,8 +1000,8 @@ theorem BehavioralAssessment.continuation_value_le_of_locallyOptimal
     (fun _ => payoffIntegrable_of_finite _ _)
     (fun _ => payoffIntegrable_of_finite _ _)
   have hgain : (M.informationMass assessment.strategy who site).toReal *
-      ((assessment.continuationContext site (payoff who) bound).value alternative -
-        (assessment.continuationContext site (payoff who) bound).value
+      ((assessment.truncatedContinuationContext site (payoff who) bound).value alternative -
+        (assessment.truncatedContinuationContext site (payoff who) bound).value
           (assessment.strategy who)) ≤ 0 := by
     rw [hnormalized]
     simp only [Profile.update_eq_self]
@@ -1022,12 +1016,49 @@ theorem BehavioralAssessment.continuation_value_le_of_locallyOptimal
   apply le_of_not_gt
   intro hpositive
   have hpositiveDiff : 0 <
-      (assessment.continuationContext site (payoff who) bound).value alternative -
-        (assessment.continuationContext site (payoff who) bound).value
+      (assessment.truncatedContinuationContext site (payoff who) bound).value alternative -
+        (assessment.truncatedContinuationContext site (payoff who) bound).value
           (assessment.strategy who) :=
     sub_pos.mpr hpositive
   have hmulPositive := mul_pos hmassRealPos hpositiveDiff
   linarith
+
+/-- In a finite decision-recall protocol, local optimality against every allowed
+law implies optimality against every whole continuation policy whose local laws
+are allowed. The allowed sets may vary by player and information state; only
+their product structure is used.
+
+Full support makes all information events positive, and Bayes consistency
+supplies their conditional beliefs. No common-depth or nonterminal-fiber
+assumption is imposed. -/
+theorem BehavioralAssessment.continuation_value_le_of_locallyOptimal
+    [Fintype ι] [DecidableEq ι] [Fintype E.History]
+    [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)]
+    (hrecall : M.DecisionRecall)
+    (assessment : M.BehavioralAssessment)
+    (hfull : assessment.IsFullyMixed)
+    (hbayes : BehavioralAssessment.IsBayesConsistent M assessment
+      (hrecall.decisionInformationAntichain))
+    (Allowed : (i : ι) → (info : M.InfoState i) → PMF (M.Choice i info) → Prop)
+    (hfeasible : ∀ i info, Allowed i info (assessment.strategy i info))
+    (payoff : ι → E.History → ℝ) (certificate : E.WellFoundedHistories)
+    (hlocal : ∀ (i : ι) (site : M.InformationSite i)
+      (law : PMF (M.Choice i site.1)), Allowed i site.1 law →
+        (assessment.continuationContext certificate site (payoff i)).value
+            ((assessment.strategy i).withLaw site.1 law) ≤
+          (assessment.continuationContext certificate site (payoff i)).value
+            (assessment.strategy i))
+    (who : ι) (site : M.InformationSite who)
+    (alternative : M.BehavioralPolicy who)
+    (halternative : ∀ info, Allowed who info (alternative info)) :
+    (assessment.continuationContext certificate site (payoff who)).value alternative ≤
+      (assessment.continuationContext certificate site (payoff who)).value
+        (assessment.strategy who) := by
+  obtain ⟨bound, -, hbound⟩ := E.exists_pos_boundedHorizon
+  simp only [assessment.continuationContext_eq_truncated_of_bounded certificate hbound]
+    at hlocal ⊢
+  exact assessment.truncated_value_le_of_locallyOptimal M hrecall hfull hbayes Allowed
+    hfeasible payoff hbound hlocal who site alternative halternative
 
 end InformationModel
 

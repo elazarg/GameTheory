@@ -1,8 +1,9 @@
 /-
-Insufficient continuation fuel can make sequential rationality inconsistent.
-One player first takes a forced step, then chooses a short payoff of one or a
-long payoff of two. Two steps of fuel see different terminal opportunities at
-the two decision sites. This is EXP-121's hostile finite EFG boundary.
+Truncating continuations below the horizon changes the game. One player first
+takes a forced step, then chooses a short payoff of one or a long payoff of
+two. Play cut off after two steps sees different terminal opportunities at the
+two decision sites, so no assessment is rational against it, and the
+truncated game has no sequential equilibrium.
 -/
 
 import GameTheory.Analysis.Protocol.EFG
@@ -362,13 +363,13 @@ private theorem continuationValue_eq_constant
     (assessment : information.BehavioralAssessment)
     (site : information.InformationSite ())
     (alternative : information.BehavioralPolicy ())
-    (hbase : (assessment.continuationContext site (payoff ()) 2).IntegrableAt alternative)
+    (hbase : (assessment.truncatedContinuationContext site (payoff ()) 2).IntegrableAt alternative)
     (value : ℝ)
     (hvalue : ∀ history : information.InformationHistory () site.1,
       expect
         (information.runBehavioralFrom (fun _ => alternative) 2 history.1)
         (payoff ()) = value) :
-    (assessment.continuationContext site (payoff ()) 2).value alternative = value := by
+    (assessment.truncatedContinuationContext site (payoff ()) 2).value alternative = value := by
   let belief := assessment.belief () site
   let q := fun history : information.InformationHistory () site.1 =>
     information.runBehavioralFrom (fun _ => alternative) 2 history.1
@@ -385,7 +386,7 @@ private theorem continuationValue_eq_constant
   have hcanonical : PayoffIntegrable canonicalLaw (payoff ()) :=
     payoffIntegrable_congr_law hlaw hbase
   have hctx :=
-    InformationModel.BehavioralAssessment.continuationContext_value
+    InformationModel.BehavioralAssessment.truncatedContinuationContext_value
       assessment site (payoff ()) 2 alternative
   calc
     _ = expect actualLaw (payoff ()) := hctx
@@ -401,8 +402,9 @@ private theorem continuationValue_eq_constant
 
 theorem context_value_root (assessment : information.BehavioralAssessment)
     (alternative : information.BehavioralPolicy ())
-    (h : (assessment.continuationContext rootSite (payoff ()) 2).IntegrableAt alternative) :
-  (assessment.continuationContext rootSite (payoff ()) 2).value alternative =
+    (h : (assessment.truncatedContinuationContext rootSite (payoff ()) 2).IntegrableAt
+      alternative) :
+  (assessment.truncatedContinuationContext rootSite (payoff ()) 2).value alternative =
       shortWeight (fun _ => alternative) := by
   apply continuationValue_eq_constant assessment rootSite alternative h
     (shortWeight (fun _ => alternative))
@@ -413,8 +415,9 @@ theorem context_value_root (assessment : information.BehavioralAssessment)
 
 theorem context_value_choice (assessment : information.BehavioralAssessment)
     (alternative : information.BehavioralPolicy ())
-    (h : (assessment.continuationContext choiceSite (payoff ()) 2).IntegrableAt alternative) :
-  (assessment.continuationContext choiceSite (payoff ()) 2).value alternative =
+    (h : (assessment.truncatedContinuationContext choiceSite (payoff ()) 2).IntegrableAt
+      alternative) :
+  (assessment.truncatedContinuationContext choiceSite (payoff ()) 2).value alternative =
       2 - shortWeight (fun _ => alternative) := by
   apply continuationValue_eq_constant assessment choiceSite alternative h
     (2 - shortWeight (fun _ => alternative))
@@ -430,14 +433,15 @@ theorem context_value_choice (assessment : information.BehavioralAssessment)
   simp [shortWeight, localLaw, policy, PMF.pure_map, expect_pure]
 
 /-- The two decision sites impose incompatible whole-policy optimality
-conditions when each is evaluated with only two steps of continuation fuel. -/
+conditions when each is evaluated with only two steps of continuation. -/
 theorem no_sequentially_rational_assessment
     (assessment : information.BehavioralAssessment) :
-    ¬ assessment.IsSequentiallyRationalWithin payoff 2 := by
+    ¬ assessment.IsSequentiallyRationalFor fun i site =>
+      assessment.truncatedContinuationContext site (payoff i) 2 := by
   intro rational
   have hfinite : ∀ (site : information.InformationSite ())
       (alternative : information.BehavioralPolicy ()),
-      (assessment.continuationContext site (payoff ()) 2).IntegrableAt alternative :=
+      (assessment.truncatedContinuationContext site (payoff ()) 2).IntegrableAt alternative :=
     fun _ _ => payoffIntegrable_of_finite _ _
   have atRoot := (GameTheory.Protocol.Context.isLocallyOptimal_iff_of_integrable
     (hfinite _ _) fun alternative _ => hfinite _ alternative).1 (rational () rootSite)
@@ -453,11 +457,13 @@ theorem no_sequentially_rational_assessment
     shortWeight_long] at atChoice
   linarith
 
-/-- Even finite, perfectly informed, perfect-recall EFGs with nonempty menus
-need a sufficient-horizon hypothesis for sequential-equilibrium existence. -/
+/-- Even a finite, perfectly informed, perfect-recall EFG with nonempty menus
+has no sequential equilibrium once continuations are cut off below its
+horizon. -/
 theorem no_sequential_equilibrium_with_insufficient_fuel :
     ¬ ∃ assessment : information.BehavioralAssessment,
-      game.IsSequentialEquilibriumWithin antichain assessment payoff 2 := by
+      assessment.IsSequentialEquilibriumFor antichain fun i site =>
+        assessment.truncatedContinuationContext site (payoff i) 2 := by
   rintro ⟨assessment, equilibrium⟩
   exact no_sequentially_rational_assessment assessment equilibrium.1
 

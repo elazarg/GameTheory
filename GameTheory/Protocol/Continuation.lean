@@ -160,7 +160,7 @@ information-local policies; the prefix is supplied and is never replayed. -/
   play profile := M.runFrom profile fuel history
 
 theorem historyBackwardValue_eq_expect_runFrom_of_bound
-    (certificate : E.WellFoundedPlay) {bound : ℕ} (bounded : E.BoundedHorizon bound)
+    (certificate : E.WellFoundedHistories) {bound : ℕ} (bounded : E.BoundedHorizon bound)
     (profile : Profile M.strategicSignature) (payoff : E.History → ℝ)
     (history : E.History) :
     E.historyBackwardValue certificate (M.historyChooser profile) payoff history =
@@ -170,7 +170,7 @@ theorem historyBackwardValue_eq_expect_runFrom_of_bound
 
 /-- Subgame perfection is Nash in every proper continuation game. -/
 theorem isSubgamePerfect_iff_isNash_continuation [DecidableEq ι]
-    (certificate : E.WellFoundedPlay) {bound : ℕ} (bounded : E.BoundedHorizon bound)
+    (certificate : E.WellFoundedHistories) {bound : ℕ} (bounded : E.BoundedHorizon bound)
     (profile : Profile M.strategicSignature) (utility : E.History → ι → ℝ) :
     M.IsSubgamePerfect certificate profile utility ↔
       ∀ history, M.IsSubgameRoot history →
@@ -195,7 +195,7 @@ the deviator or replacement. Every target root is covered, including roots
 outside the prescribed profile's support. No finiteness of players or action
 carriers, nor an equilibrium-existence premise, is required. -/
 theorem isSubgamePerfect_of_continuation_laws [DecidableEq ι]
-    (sourceTerminates : E.WellFoundedPlay) (targetTerminates : T.WellFoundedPlay)
+    (sourceTerminates : E.WellFoundedHistories) (targetTerminates : T.WellFoundedHistories)
     {sourceBound targetBound : ℕ} (sourceBounded : E.BoundedHorizon sourceBound)
     (targetBounded : T.BoundedHorizon targetBound)
     (compile : ∀ who, M.Policy who → N.Policy who)
@@ -240,7 +240,7 @@ target root, honest laws for all source profiles also realize every compiled
 source replacement. No simulation of arbitrary target deviations is needed
 for this direction. -/
 theorem isSubgamePerfect_of_compiled_of_continuation_laws [DecidableEq ι]
-    (sourceTerminates : E.WellFoundedPlay) (targetTerminates : T.WellFoundedPlay)
+    (sourceTerminates : E.WellFoundedHistories) (targetTerminates : T.WellFoundedHistories)
     {sourceBound targetBound : ℕ} (sourceBounded : E.BoundedHorizon sourceBound)
     (targetBounded : T.BoundedHorizon targetBound)
     (compile : ∀ who, M.Policy who → N.Policy who)

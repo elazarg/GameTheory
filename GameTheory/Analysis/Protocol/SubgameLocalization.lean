@@ -83,11 +83,11 @@ theorem historyReaches_of_extend {root history : E.History}
 
 /-- Every terminal history in the support of the law from a history is reached
 from it. -/
-theorem historyBackwardLaw_support_reaches {certificate : E.WellFoundedPlay}
+theorem historyBackwardLaw_support_reaches {certificate : E.WellFoundedHistories}
     {chooser : E.HistoryChooser} (start : E.History) :
     ∀ final ∈ (E.historyBackwardLaw certificate chooser start).support,
       E.HistoryReaches start final := by
-  induction start using (E.wellFounded_historySuccessor certificate).induction with
+  induction start using certificate.induction with
   | _ current ih =>
       intro final hfinal
       by_cases hterm : E.terminal current.state
@@ -106,19 +106,19 @@ variable (E)
 
 /-- The probability that play from `start` passes through `root`, as the mass
 of the terminal histories continuing `root`. -/
-def subtreeMass (certificate : E.WellFoundedPlay) (chooser : E.HistoryChooser)
+def subtreeMass (certificate : E.WellFoundedHistories) (chooser : E.HistoryChooser)
     (root start : E.History) : ℝ≥0∞ :=
   (E.historyBackwardLaw certificate chooser start).toOuterMeasure
     {final | E.HistoryReaches root final}
 
 variable {E}
 
-theorem subtreeMass_self (certificate : E.WellFoundedPlay) (chooser : E.HistoryChooser)
+theorem subtreeMass_self (certificate : E.WellFoundedHistories) (chooser : E.HistoryChooser)
     (root : E.History) : E.subtreeMass certificate chooser root root = 1 := by
   rw [subtreeMass, PMF.toOuterMeasure_apply_eq_one_iff]
   exact E.historyBackwardLaw_support_reaches root
 
-theorem subtreeMass_le_one (certificate : E.WellFoundedPlay) (chooser : E.HistoryChooser)
+theorem subtreeMass_le_one (certificate : E.WellFoundedHistories) (chooser : E.HistoryChooser)
     (root start : E.History) : E.subtreeMass certificate chooser root start ≤ 1 := by
   rw [subtreeMass, PMF.toOuterMeasure_apply]
   calc
@@ -131,7 +131,7 @@ every history continuing `root` and a base chooser everywhere else. From any
 history that is `root` or does not continue it, the combined law plus the
 subtree mass times the base law at `root` equals the base law plus the subtree
 mass times the local law at `root`. -/
-theorem historyBackwardLaw_add_subtreeMass (certificate : E.WellFoundedPlay)
+theorem historyBackwardLaw_add_subtreeMass (certificate : E.WellFoundedHistories)
     {base inside combined : E.HistoryChooser} {root : E.History}
     (hinside : ∀ later, E.HistoryReaches root later →
       ∀ hterm, combined later hterm = inside later hterm)
@@ -145,7 +145,7 @@ theorem historyBackwardLaw_add_subtreeMass (certificate : E.WellFoundedPlay)
           E.subtreeMass certificate base root start *
             E.historyBackwardLaw certificate inside root final := by
   intro start
-  induction start using (E.wellFounded_historySuccessor certificate).induction with
+  induction start using certificate.induction with
   | _ current ih =>
       intro hcurrent final
       by_cases hroot : current = root
@@ -264,17 +264,17 @@ theorem historyChooser_splice_of_not_reaches (profile : Profile M.strategicSigna
 /-! ## Subgame and root comparisons -/
 
 /-- The well-founded terminal-history law of a pure profile from each history. -/
-def historyPlay (certificate : E.WellFoundedPlay) :
+def historyPlay (certificate : E.WellFoundedHistories) :
     E.History → Profile M.strategicSignature → PMF E.History :=
   fun history profile => E.historyBackwardLaw certificate (M.historyChooser profile) history
 
 /-- The probability that incumbent play from the start reaches `root`. -/
-def rootReach (certificate : E.WellFoundedPlay) (profile : Profile M.strategicSignature)
+def rootReach (certificate : E.WellFoundedHistories) (profile : Profile M.strategicSignature)
     (root : E.History) : ℝ≥0∞ :=
   E.subtreeMass certificate (M.historyChooser profile) root E.initHistory
 
 omit [DecidableEq ι] in
-theorem rootReach_ne_top (certificate : E.WellFoundedPlay)
+theorem rootReach_ne_top (certificate : E.WellFoundedHistories)
     (profile : Profile M.strategicSignature) (root : E.History) :
     M.rootReach certificate profile root ≠ ⊤ :=
   ne_top_of_le_ne_top ENNReal.one_ne_top (E.subtreeMass_le_one _ _ _ _)
@@ -282,7 +282,7 @@ theorem rootReach_ne_top (certificate : E.WellFoundedPlay)
 /-- **Splice decomposition.** From the start of play, the spliced deviation's
 law plus the reach of the root times the incumbent's subgame law equals the
 incumbent's law plus the reach times the deviation's subgame law. -/
-theorem historyPlay_splice_add (certificate : E.WellFoundedPlay)
+theorem historyPlay_splice_add (certificate : E.WellFoundedHistories)
     (profile : Profile M.strategicSignature) {root : E.History} (hroot : M.IsSubgameRoot root)
     {who : ι} (deviation : M.Policy who) (final : E.History) :
     M.historyPlay certificate E.initHistory
@@ -309,7 +309,7 @@ variable {Observation : Type*}
 
 /-- The root comparison of one whole-policy deviation: the Nash family of the
 terminal-history law. -/
-def rootComparison (certificate : E.WellFoundedPlay) (observe : E.History → Observation)
+def rootComparison (certificate : E.WellFoundedHistories) (observe : E.History → Observation)
     (profile : Profile M.strategicSignature) (who : ι) (deviation : M.Policy who) :
     IncentiveComparison Observation :=
   M.continuationComparison (M.historyPlay certificate) observe profile who
@@ -329,7 +329,7 @@ private theorem map_add_mul {μ ν : PMF E.History} (observe : E.History → Obs
 the root comparison of its spliced deviation, with weight the probability that
 incumbent play reaches the root. -/
 theorem continuationComparison_isLocalizedIn_rootComparison
-    (certificate : E.WellFoundedPlay) (observe : E.History → Observation)
+    (certificate : E.WellFoundedHistories) (observe : E.History → Observation)
     (profile : Profile M.strategicSignature) {root : E.History} (hroot : M.IsSubgameRoot root)
     {who : ι} (deviation : M.Policy who) :
     (M.continuationComparison (M.historyPlay certificate) observe profile who
@@ -349,7 +349,7 @@ theorem continuationComparison_isLocalizedIn_rootComparison
 
 /-- The root comparisons are the subgame comparisons at the initial history:
 subgame perfection refines Nash of the terminal-history law. -/
-theorem implies_rootComparison (certificate : E.WellFoundedPlay)
+theorem implies_rootComparison (certificate : E.WellFoundedHistories)
     (observe : E.History → Observation) (profile : Profile M.strategicSignature) :
     IncentiveComparison.Implies
       (M.continuationComparison (M.historyPlay certificate) observe profile)
@@ -360,7 +360,7 @@ theorem implies_rootComparison (certificate : E.WellFoundedPlay)
 subgame perfection is Nash together with the subgame comparisons at proper
 roots that incumbent play does not reach. Comparisons at reached roots are
 positive multiples of Nash comparisons. -/
-theorem holds_continuation_iff [Fintype Observation] (certificate : E.WellFoundedPlay)
+theorem holds_continuation_iff [Fintype Observation] (certificate : E.WellFoundedHistories)
     (observe : E.History → Observation) (profile : Profile M.strategicSignature)
     (utility : Observation → ι → ℝ) :
     (∀ who deviation, (M.continuationComparison (M.historyPlay certificate) observe profile
@@ -387,7 +387,7 @@ theorem holds_continuation_iff [Fintype Observation] (certificate : E.WellFounde
 every proper subgame root with positive probability, Nash implies subgame
 perfection for every utility, so the two concepts coincide. -/
 theorem implies_continuation_of_reached [Fintype Observation]
-    (certificate : E.WellFoundedPlay) (observe : E.History → Observation)
+    (certificate : E.WellFoundedHistories) (observe : E.History → Observation)
     (profile : Profile M.strategicSignature)
     (hreached : ∀ root, M.IsSubgameRoot root → M.rootReach certificate profile root ≠ 0) :
     IncentiveComparison.Implies (M.rootComparison certificate observe profile)
@@ -396,7 +396,7 @@ theorem implies_continuation_of_reached [Fintype Observation]
     ⟨hroot, fun _ deviation hzero => absurd hzero (hreached _ deviation.1.2)⟩
 
 /-- Subgame perfection is continuation Nash of the terminal-history law. -/
-theorem isSubgamePerfect_iff_isContinuationNash (certificate : E.WellFoundedPlay)
+theorem isSubgamePerfect_iff_isContinuationNash (certificate : E.WellFoundedHistories)
     (profile : Profile M.strategicSignature) (utility : E.History → ι → ℝ) :
     M.IsSubgamePerfect certificate profile utility ↔
       M.IsContinuationNash (M.historyPlay certificate) profile utility := by
@@ -418,13 +418,13 @@ perfection. -/
 
 /-- A continuation game as a one-shot game form over whole policies. -/
 @[reducible]
-def subgameForm (certificate : E.WellFoundedPlay) (root : E.History) : GameForm ι where
+def subgameForm (certificate : E.WellFoundedHistories) (root : E.History) : GameForm ι where
   sig := M.strategicSignature
   play := M.historyPlay certificate root
 
 /-- Nash comparisons of a continuation game are the subgame comparisons at
 its root. -/
-theorem equilibriumComparison_subgameForm (certificate : E.WellFoundedPlay)
+theorem equilibriumComparison_subgameForm (certificate : E.WellFoundedHistories)
     (observe : E.History → Observation) (profile : Profile M.strategicSignature)
     {root : E.History} (hroot : M.IsSubgameRoot root) (who : ι) (deviation : M.Policy who) :
     equilibriumComparison (M.subgameForm certificate root) (PMF.pure profile)
@@ -435,7 +435,7 @@ theorem equilibriumComparison_subgameForm (certificate : E.WellFoundedPlay)
     DeviationScheme.unilateralConstant_apply, PMF.pure_map]
 
 /-- The strategic form's Nash comparisons are the root comparisons. -/
-theorem equilibriumComparison_strategicForm (certificate : E.WellFoundedPlay)
+theorem equilibriumComparison_strategicForm (certificate : E.WellFoundedHistories)
     (observe : E.History → Observation) (profile : Profile M.strategicSignature)
     (who : ι) (deviation : M.Policy who) :
     equilibriumComparison (M.subgameForm certificate E.initHistory) (PMF.pure profile)
@@ -449,7 +449,7 @@ subgame perfection at a profile, some proper subgame is unreached and its
 continuation game is a target whose equilibria are implied by subgame
 perfection of the source but not by its Nash equilibria. -/
 theorem exists_subgameForm_separating [Fintype Observation]
-    (certificate : E.WellFoundedPlay) (observe : E.History → Observation)
+    (certificate : E.WellFoundedHistories) (observe : E.History → Observation)
     (profile : Profile M.strategicSignature)
     (hfails : ¬ IncentiveComparison.Implies (M.rootComparison certificate observe profile)
       (M.continuationComparison (M.historyPlay certificate) observe profile)) :
@@ -482,7 +482,7 @@ theorem exists_subgameForm_separating [Fintype Observation]
 one-shot game, is implied by exactly the root comparisons: compiling it into
 the sequential game preserves Nash, and preserves subgame perfection only when
 Nash already implies it. -/
-theorem strategicForm_implies_iff (certificate : E.WellFoundedPlay)
+theorem strategicForm_implies_iff (certificate : E.WellFoundedHistories)
     (observe : E.History → Observation) (profile : Profile M.strategicSignature) :
     IncentiveComparison.Implies
         (equilibriumComparison (M.subgameForm certificate E.initHistory) (PMF.pure profile)
@@ -508,7 +508,7 @@ theorem strategicForm_implies_iff (certificate : E.WellFoundedPlay)
 omit [DecidableEq ι] in
 /-- Under a bounded horizon the terminal-history law is the bounded run, so
 the strategic form is the library's compiled game form. -/
-theorem historyPlay_eq_runFrom (certificate : E.WellFoundedPlay) {bound : ℕ}
+theorem historyPlay_eq_runFrom (certificate : E.WellFoundedHistories) {bound : ℕ}
     (bounded : E.BoundedHorizon bound) (history : E.History)
     (profile : Profile M.strategicSignature) :
     M.historyPlay certificate history profile = M.runFrom profile bound history :=

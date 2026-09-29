@@ -1,6 +1,6 @@
 # D61: finite perfect-recall sequential-equilibrium existence
 
-- **Status:** adopted
+- **Status:** adopted; restated on terminal play by [D64](D64-terminal-sequential-rationality.md)
 - **Date:** 2026-09-24
 - **Experiment IDs:** EXP-121; decision-recall generalization under EXP-145
 

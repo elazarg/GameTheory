@@ -54,8 +54,8 @@ theorem twiceRank_decreases
   | done first second =>
       exact False.elim (isLegal.1 (by simp [Round.stopped]))
 
-theorem twice_wellFoundedPlay : twice.WellFoundedPlay :=
-  wellFoundedPlay_of_rank twiceRank twiceRank_decreases
+theorem twice_wellFoundedHistories : twice.WellFoundedHistories :=
+  (wellFoundedPlay_of_rank twiceRank twiceRank_decreases).wellFoundedHistories
 
 end GameTheory.Tests.EFGSubgamePerfect
 
@@ -70,11 +70,11 @@ theorem oneShotDeviation_iff_historywiseOptimal
     (profile : Profile EFGKuhn.recallGame.strategicSignature)
     (utility : EFGKuhn.recallGame.History → Unit → ℝ) :
     EFGKuhn.recallGame.IsHistorywiseOptimal
-        twice_wellFoundedPlay profile utility ↔
+        twice_wellFoundedHistories profile utility ↔
       EFGKuhn.recallGame.HasNoProfitableOneShotDeviation
-        twice_wellFoundedPlay profile utility :=
+        twice_wellFoundedHistories profile utility :=
   EFGKuhn.recallGame.isHistorywiseOptimal_iff_hasNoProfitableOneShotDeviation
-    EFGKuhn.recallGame_actsOnce twice_wellFoundedPlay profile utility
+    EFGKuhn.recallGame_actsOnce twice_wellFoundedHistories profile utility
       (fun _ _ _ => hasExpectation_of_payoffIntegrable (@payoffIntegrable_of_finite _
         (@Fintype.finite _ EFGKuhn.recallHistoryFintype) _ _))
 

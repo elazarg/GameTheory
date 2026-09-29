@@ -75,11 +75,11 @@ theorem historyReaches_comparable {first second final : E.History}
 
 /-- Every terminal history in the support of a randomized law from a history is
 reached from it. -/
-theorem randomizedBackwardLaw_support_reaches {certificate : E.WellFoundedPlay}
+theorem randomizedBackwardLaw_support_reaches {certificate : E.WellFoundedHistories}
     {chooser : E.RandomizedChooser} (start : E.History) :
     ∀ final ∈ (E.randomizedBackwardLaw certificate chooser start).support,
       E.HistoryReaches start final := by
-  induction start using (E.wellFounded_historySuccessor certificate).induction with
+  induction start using certificate.induction with
   | _ current ih =>
       intro final hfinal
       by_cases hterm : E.terminal current.state
@@ -96,7 +96,7 @@ theorem randomizedBackwardLaw_support_reaches {certificate : E.WellFoundedPlay}
 
 /-- Randomized choosers agreeing on the reachable history cone have the same
 terminal law. -/
-theorem randomizedBackwardLaw_congr_of_reaches {certificate : E.WellFoundedPlay}
+theorem randomizedBackwardLaw_congr_of_reaches {certificate : E.WellFoundedHistories}
     {first second : E.RandomizedChooser} :
     ∀ start : E.History,
       (∀ later, E.HistoryReaches start later →
@@ -104,7 +104,7 @@ theorem randomizedBackwardLaw_congr_of_reaches {certificate : E.WellFoundedPlay}
       E.randomizedBackwardLaw certificate first start =
         E.randomizedBackwardLaw certificate second start := by
   intro start
-  induction start using (E.wellFounded_historySuccessor certificate).induction with
+  induction start using certificate.induction with
   | _ history ih =>
       intro hagree
       by_cases hterm : E.terminal history.state
@@ -122,7 +122,7 @@ theorem randomizedBackwardLaw_congr_of_reaches {certificate : E.WellFoundedPlay}
 variable (E)
 
 /-- The probability that play from `start` passes through `root`. -/
-def coneMass (certificate : E.WellFoundedPlay) (chooser : E.RandomizedChooser)
+def coneMass (certificate : E.WellFoundedHistories) (chooser : E.RandomizedChooser)
     (root start : E.History) : ℝ≥0∞ :=
   (E.randomizedBackwardLaw certificate chooser start).toOuterMeasure
     {final | E.HistoryReaches root final}
@@ -134,7 +134,7 @@ follow a local chooser at every history continuing some root and a base
 chooser everywhere else. From any root, or any history continuing no root, the
 combined law plus the root-mass-weighted base laws at the roots equals the base
 law plus the root-mass-weighted local laws at the roots. -/
-theorem randomizedBackwardLaw_add_coneMass (certificate : E.WellFoundedPlay)
+theorem randomizedBackwardLaw_add_coneMass (certificate : E.WellFoundedHistories)
     {base inside combined : E.RandomizedChooser} (IsRoot : E.History → Prop)
     (hanti : ∀ first second, IsRoot first → IsRoot second →
       E.HistoryReaches first second → first = second)
@@ -152,7 +152,7 @@ theorem randomizedBackwardLaw_add_coneMass (certificate : E.WellFoundedPlay)
               E.randomizedBackwardLaw certificate inside root final := by
   classical
   intro start
-  induction start using (E.wellFounded_historySuccessor certificate).induction with
+  induction start using certificate.induction with
   | _ current ih =>
       intro hcurrent final
       rcases hcurrent with hroot | houter
@@ -229,7 +229,7 @@ theorem randomizedBackwardLaw_add_coneMass (certificate : E.WellFoundedPlay)
 
 /-- The terminal law splits at any finite prefix: run the prefix, then continue
 with the terminal law. -/
-theorem randomizedBackwardLaw_eq_bind_runRandomizedFor (certificate : E.WellFoundedPlay)
+theorem randomizedBackwardLaw_eq_bind_runRandomizedFor (certificate : E.WellFoundedHistories)
     (chooser : E.RandomizedChooser) :
     ∀ (fuel : ℕ) (history : E.History),
       E.randomizedBackwardLaw certificate chooser history =
@@ -348,7 +348,7 @@ theorem randomizedChooser_splice_of_not_below (profile : Profile M.behavioralSig
 variable {Observation : Type*}
 
 /-- The Nash comparison of one whole behavioral deviation at the start of play. -/
-def behavioralRootComparison (certificate : E.WellFoundedPlay)
+def behavioralRootComparison (certificate : E.WellFoundedHistories)
     (observe : E.History → Observation) (profile : Profile M.behavioralSignature)
     (who : ι) (deviation : M.BehavioralPolicy who) : IncentiveComparison Observation where
   prescribed := (M.runBehavioralTerminalFrom certificate profile E.initHistory).map observe
@@ -357,7 +357,7 @@ def behavioralRootComparison (certificate : E.WellFoundedPlay)
       E.initHistory).map observe
 
 /-- **Splice decomposition at a site.** -/
-theorem runBehavioralTerminalFrom_splice_add (certificate : E.WellFoundedPlay)
+theorem runBehavioralTerminalFrom_splice_add (certificate : E.WellFoundedHistories)
     (profile : Profile M.behavioralSignature) {who : ι} {site : M.InformationSite who}
     (hanti : site.IsHistoryAntichain) (hclosed : M.IsClosedBelow site)
     (deviation : M.BehavioralPolicy who) (final : E.History) :
@@ -391,7 +391,7 @@ theorem runBehavioralTerminalFrom_splice_add (certificate : E.WellFoundedPlay)
 
 omit [DecidableEq ι] in
 /-- A history's reach weight is the mass of terminal play passing through it. -/
-theorem coneMass_eq_historyReachWeight (certificate : E.WellFoundedPlay)
+theorem coneMass_eq_historyReachWeight (certificate : E.WellFoundedHistories)
     (profile : Profile M.behavioralSignature) (root : E.History) :
     E.coneMass certificate (M.randomizedChooser profile) root E.initHistory =
       M.historyReachWeight profile root := by
@@ -450,47 +450,16 @@ private theorem map_add_mul {μ ν : PMF E.History} (observe : E.History → Obs
   refine tsum_congr fun final => ?_
   split_ifs <;> simp
 
-/-- The terminal continuation law of a whole-policy deviation at a site, under
-the assessment's belief. -/
-def terminalAssessmentLaw (certificate : E.WellFoundedPlay) (A : M.BehavioralAssessment)
-    {who : ι} (site : M.InformationSite who) (policy : M.BehavioralPolicy who) :
-    PMF E.History :=
-  (A.belief who site).bind fun history => M.runBehavioralTerminalFrom certificate
-    (Profile.update (sig := M.behavioralSignature) A.strategy who policy) history.1
-
-/-- The sequential-rationality comparison of one whole-policy deviation at a site,
-evaluated on terminal play. -/
-def terminalAssessmentComparison (certificate : E.WellFoundedPlay)
-    (observe : E.History → Observation) (A : M.BehavioralAssessment) (who : ι)
-    (deviation : M.AssessmentDeviation who) : IncentiveComparison Observation where
-  prescribed := (M.terminalAssessmentLaw certificate A deviation.1 (A.strategy who)).map observe
-  alternative := (M.terminalAssessmentLaw certificate A deviation.1 deviation.2).map observe
-
-/-- Terminal sequential rationality of observed payoffs is its comparison family. -/
-theorem isSequentiallyRational_terminal_iff_holds (certificate : E.WellFoundedPlay)
-    (observe : E.History → Observation) (A : M.BehavioralAssessment)
-    (utility : Observation → ι → ℝ) :
-    A.IsSequentiallyRational (fun who site => A.terminalContinuationContext certificate site
-        fun history => utility (observe history) who) ↔
-      ∀ who deviation,
-        (M.terminalAssessmentComparison certificate observe A who deviation).Holds
-          (utility · who) := by
-  simp only [BehavioralAssessment.IsSequentiallyRational,
-    BehavioralAssessment.IsSequentiallyRationalAt, Context.isLocallyOptimal_univ_iff_holds,
-    terminalAssessmentComparison, IncentiveComparison.holds_map_iff]
-  exact ⟨fun rational who deviation => rational who deviation.1 deviation.2,
-    fun holds who site alternative => holds who (site, alternative)⟩
-
 /-- The site's mass times a Bayes belief-weighted continuation law is the
 reach-weighted sum of the site histories' continuation laws. -/
-theorem informationMass_mul_terminalAssessmentLaw (certificate : E.WellFoundedPlay)
+theorem informationMass_mul_assessmentLaw (certificate : E.WellFoundedHistories)
     (A : M.BehavioralAssessment) {who : ι}
     (site : M.InformationSite who) (hanti : site.IsHistoryAntichain)
     (hmass : 0 < M.informationMass A.strategy who site)
     (hbayes : BehavioralAssessment.IsBayesConsistentAt M A who site hanti hmass)
     (policy : M.BehavioralPolicy who) (final : E.History) :
     M.informationMass A.strategy who site *
-        M.terminalAssessmentLaw certificate A site policy final =
+        M.assessmentLaw certificate A site policy final =
       ∑' root : M.InformationHistory who site.1,
         E.coneMass certificate (M.randomizedChooser A.strategy) root E.initHistory *
           M.runBehavioralTerminalFrom certificate
@@ -498,7 +467,7 @@ theorem informationMass_mul_terminalAssessmentLaw (certificate : E.WellFoundedPl
   have hfinite : M.informationMass A.strategy who site ≠ ⊤ :=
     ne_of_lt (lt_of_le_of_lt (M.informationMass_le_one A.strategy who site hanti)
       ENNReal.one_lt_top)
-  rw [terminalAssessmentLaw, PMF.bind_apply, ← ENNReal.tsum_mul_left]
+  rw [assessmentLaw, assessmentLawWith, PMF.bind_apply, ← ENNReal.tsum_mul_left]
   refine tsum_congr fun root => ?_
   rw [hbayes root, ← mul_assoc, ENNReal.mul_div_cancel hmass.ne' hfinite,
     M.coneMass_eq_historyReachWeight certificate]
@@ -507,14 +476,14 @@ theorem informationMass_mul_terminalAssessmentLaw (certificate : E.WellFoundedPl
 positive mass whose deviator information is closed below it, a
 sequential-rationality comparison is localized in the Nash comparison of the
 spliced deviation, with weight the site's mass. -/
-theorem terminalAssessmentComparison_isLocalizedIn (certificate : E.WellFoundedPlay)
+theorem assessmentComparison_isLocalizedIn (certificate : E.WellFoundedHistories)
     (observe : E.History → Observation)
     (A : M.BehavioralAssessment) {who : ι} (site : M.InformationSite who)
     (hanti : site.IsHistoryAntichain) (hclosed : M.IsClosedBelow site)
     (hmass : 0 < M.informationMass A.strategy who site)
     (hbayes : BehavioralAssessment.IsBayesConsistentAt M A who site hanti hmass)
     (policy : M.BehavioralPolicy who) :
-    (M.terminalAssessmentComparison certificate observe A who (site, policy)).IsLocalizedIn
+    (M.assessmentComparison certificate observe A who (site, policy)).IsLocalizedIn
       (M.behavioralRootComparison certificate observe A.strategy who
         (M.spliceBehavioral site policy (A.strategy who)))
       (M.informationMass A.strategy who site).toReal := by
@@ -524,14 +493,15 @@ theorem terminalAssessmentComparison_isLocalizedIn (certificate : E.WellFoundedP
   apply IncentiveComparison.isLocalizedIn_of_mass ENNReal.toReal_nonneg
   intro outcome
   rw [ENNReal.ofReal_toReal hfinite]
-  simp only [behavioralRootComparison, terminalAssessmentComparison]
+  simp only [behavioralRootComparison, assessmentComparison_prescribed,
+    assessmentComparison_alternative]
   rw [map_add_mul, map_add_mul]
   refine tsum_congr fun final => ?_
   split_ifs
   · have hsplice := M.runBehavioralTerminalFrom_splice_add certificate A.strategy hanti hclosed
       policy final
-    rw [M.informationMass_mul_terminalAssessmentLaw certificate A site hanti hmass hbayes,
-      M.informationMass_mul_terminalAssessmentLaw certificate A site hanti hmass hbayes]
+    rw [M.informationMass_mul_assessmentLaw certificate A site hanti hmass hbayes,
+      M.informationMass_mul_assessmentLaw certificate A site hanti hmass hbayes]
     simp only [Profile.update_eq_self] at hsplice ⊢
     exact hsplice.symm
   · rfl
@@ -541,7 +511,7 @@ consistent assessment whose deviator information is closed below every site,
 a utility satisfying every behavioral Nash comparison and every
 sequential-rationality comparison at sites of mass zero satisfies every
 sequential-rationality comparison. -/
-theorem holds_assessment_of_root [Fintype Observation] (certificate : E.WellFoundedPlay)
+theorem holds_assessment_of_root [Fintype Observation] (certificate : E.WellFoundedHistories)
     (observe : E.History → Observation)
     (A : M.BehavioralAssessment) (hanti : M.DecisionInformationAntichain)
     (hclosed : ∀ who (site : M.InformationSite who), M.IsClosedBelow site)
@@ -551,10 +521,10 @@ theorem holds_assessment_of_root [Fintype Observation] (certificate : E.WellFoun
       deviation).Holds (utility · who))
     (hunreached : ∀ who (deviation : M.AssessmentDeviation who),
       M.informationMass A.strategy who deviation.1 = 0 →
-        (M.terminalAssessmentComparison certificate observe A who deviation).Holds
+        (M.assessmentComparison certificate observe A who deviation).Holds
           (utility · who)) :
     ∀ who deviation,
-      (M.terminalAssessmentComparison certificate observe A who deviation).Holds
+      (M.assessmentComparison certificate observe A who deviation).Holds
         (utility · who) := by
   rintro who ⟨site, policy⟩
   by_cases hzero : M.informationMass A.strategy who site = 0
@@ -563,21 +533,21 @@ theorem holds_assessment_of_root [Fintype Observation] (certificate : E.WellFoun
     have hfinite : M.informationMass A.strategy who site ≠ ⊤ :=
       ne_of_lt (lt_of_le_of_lt (M.informationMass_le_one A.strategy who site (hanti who site))
         ENNReal.one_lt_top)
-    exact ((M.terminalAssessmentComparison_isLocalizedIn certificate observe A site
+    exact ((M.assessmentComparison_isLocalizedIn certificate observe A site
       (hanti who site) (hclosed who site) hmass (hbayes who site hmass) policy).holds_iff
         (ENNReal.toReal_pos hzero hfinite) _).1 (hroot who _)
 
 /-- **Coincidence at fully reached sites.** When every decision information
 site has positive mass, behavioral Nash implies sequential rationality for
 every utility. -/
-theorem implies_assessment_of_positive [Fintype Observation] (certificate : E.WellFoundedPlay)
+theorem implies_assessment_of_positive [Fintype Observation] (certificate : E.WellFoundedHistories)
     (observe : E.History → Observation)
     (A : M.BehavioralAssessment) (hanti : M.DecisionInformationAntichain)
     (hclosed : ∀ who (site : M.InformationSite who), M.IsClosedBelow site)
     (hbayes : BehavioralAssessment.IsBayesConsistent M A hanti)
     (hpositive : ∀ who (site : M.InformationSite who), 0 < M.informationMass A.strategy who site) :
     IncentiveComparison.Implies (M.behavioralRootComparison certificate observe A.strategy)
-      (M.terminalAssessmentComparison certificate observe A) :=
+      (M.assessmentComparison certificate observe A) :=
   fun utility hroot => M.holds_assessment_of_root certificate observe A hanti hclosed
     hbayes utility hroot fun who deviation hzero => absurd hzero (hpositive who deviation.1).ne'
 
@@ -643,13 +613,13 @@ theorem isClosedBelow_of_decisionRecall (hrecall : M.DecisionRecall) {who : ι}
 a game with decision recall whose every decision site has positive mass,
 behavioral Nash implies sequential rationality for every utility. -/
 theorem implies_assessment_of_decisionRecall [Fintype Observation]
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (observe : E.History → Observation) (A : M.BehavioralAssessment)
     (hrecall : M.DecisionRecall)
     (hbayes : BehavioralAssessment.IsBayesConsistent M A (hrecall.decisionInformationAntichain))
     (hpositive : ∀ who (site : M.InformationSite who), 0 < M.informationMass A.strategy who site) :
     IncentiveComparison.Implies (M.behavioralRootComparison certificate observe A.strategy)
-      (M.terminalAssessmentComparison certificate observe A) :=
+      (M.assessmentComparison certificate observe A) :=
   M.implies_assessment_of_positive certificate observe A
     (hrecall.decisionInformationAntichain)
     (fun _ site => M.isClosedBelow_of_decisionRecall hrecall site) hbayes hpositive
@@ -750,7 +720,7 @@ theorem randomizedChooser_update_of_not_initial (profile : Profile M.behavioralS
   · simp only [Profile.update_of_ne _ _ hplayer]
 
 /-- **Decomposition over initial decisions.** -/
-theorem runBehavioralTerminalFrom_update_add (certificate : E.WellFoundedPlay)
+theorem runBehavioralTerminalFrom_update_add (certificate : E.WellFoundedHistories)
     (profile : Profile M.behavioralSignature) (who : ι) (deviation : M.BehavioralPolicy who)
     (final : E.History) :
     M.runBehavioralTerminalFrom certificate
@@ -781,7 +751,7 @@ theorem runBehavioralTerminalFrom_update_add (certificate : E.WellFoundedPlay)
 
 omit [Fintype ι] [DecidableEq ι] in
 /-- Roots forming an antichain carry total mass at most one. -/
-theorem tsum_coneMass_le_one (certificate : E.WellFoundedPlay) (chooser : E.RandomizedChooser)
+theorem tsum_coneMass_le_one (certificate : E.WellFoundedHistories) (chooser : E.RandomizedChooser)
     (IsRoot : E.History → Prop)
     (hanti : ∀ first second, IsRoot first → IsRoot second →
       E.HistoryReaches first second → first = second) (start : E.History) :
@@ -864,13 +834,13 @@ well-founded play, a Bayes-consistent assessment that is sequentially rational
 for a utility is a behavioral Nash equilibrium for it: every whole-policy
 deviation's root comparison is the mass-weighted sum of the comparisons at the
 player's initial decision sites. -/
-theorem holds_root_of_assessment [Fintype Observation] (certificate : E.WellFoundedPlay)
+theorem holds_root_of_assessment [Fintype Observation] (certificate : E.WellFoundedHistories)
     (observe : E.History → Observation)
     (A : M.BehavioralAssessment) (hrecall : M.DecisionRecall)
     (hbayes : BehavioralAssessment.IsBayesConsistent M A hrecall.decisionInformationAntichain)
     (utility : Observation → ι → ℝ)
     (hrational : ∀ who deviation,
-      (M.terminalAssessmentComparison certificate observe A who deviation).Holds (utility · who)) :
+      (M.assessmentComparison certificate observe A who deviation).Holds (utility · who)) :
     ∀ who deviation, (M.behavioralRootComparison certificate observe A.strategy who
       deviation).Holds (utility · who) := by
   classical
@@ -956,12 +926,12 @@ theorem holds_root_of_assessment [Fintype Observation] (certificate : E.WellFoun
                   (Profile.update (sig := M.behavioralSignature) A.strategy who policy)
                     history.1) =
               M.informationMass A.strategy who site *
-                value (M.terminalAssessmentLaw certificate A site policy) := by
+                value (M.assessmentLaw certificate A site policy) := by
           simp only [value, ← ENNReal.tsum_mul_left]
           simp only [← mul_assoc]
           rw [ENNReal.tsum_comm]
           refine tsum_congr fun final => ?_
-          rw [ENNReal.tsum_mul_right, M.informationMass_mul_terminalAssessmentLaw certificate A
+          rw [ENNReal.tsum_mul_right, M.informationMass_mul_assessmentLaw certificate A
             site hanti hpositive hbayesSite policy final]
         have hincumbent := haggregate (A.strategy who)
         rw [Profile.update_eq_self] at hincumbent
@@ -969,7 +939,8 @@ theorem holds_root_of_assessment [Fintype Observation] (certificate : E.WellFoun
         refine mul_le_mul' le_rfl ?_
         have hholds := (hshift _).1 (hrational who (site, deviation))
         rw [IncentiveComparison.holds_iff_ennreal _ _ hshifted] at hholds
-        simp only [terminalAssessmentComparison, hvalue] at hholds
+        simp only [assessmentComparison_prescribed, assessmentComparison_alternative,
+          hvalue] at hholds
         exact hholds
     · push Not at hinitial
       simp [hinitial]
@@ -1013,15 +984,15 @@ theorem holds_root_of_assessment [Fintype Observation] (certificate : E.WellFoun
 decision recall, well-founded play, and Bayes beliefs at every site of positive
 mass, sequential rationality implies behavioral Nash for every utility; when
 every decision site has positive mass the converse holds too. -/
-theorem assessment_iff_root_of_positive [Fintype Observation] (certificate : E.WellFoundedPlay)
+theorem assessment_iff_root_of_positive [Fintype Observation] (certificate : E.WellFoundedHistories)
     (observe : E.History → Observation)
     (A : M.BehavioralAssessment) (hrecall : M.DecisionRecall)
     (hbayes : BehavioralAssessment.IsBayesConsistent M A hrecall.decisionInformationAntichain)
     (hpositive : ∀ who (site : M.InformationSite who), 0 < M.informationMass A.strategy who site) :
-    IncentiveComparison.Implies (M.terminalAssessmentComparison certificate observe A)
+    IncentiveComparison.Implies (M.assessmentComparison certificate observe A)
         (M.behavioralRootComparison certificate observe A.strategy) ∧
       IncentiveComparison.Implies (M.behavioralRootComparison certificate observe A.strategy)
-        (M.terminalAssessmentComparison certificate observe A) :=
+        (M.assessmentComparison certificate observe A) :=
   ⟨fun utility hrational => M.holds_root_of_assessment certificate observe A hrecall
       hbayes utility hrational,
     M.implies_assessment_of_decisionRecall certificate observe A hrecall hbayes hpositive⟩

@@ -81,8 +81,9 @@ theorem rank_decreases (source : Bool) (before after : State)
   simp only [List.length_cons]
   omega
 
-theorem terminates (source : Bool) : (arena source).WellFoundedPlay :=
-  wellFoundedPlay_of_rank (fun state => 4 - state.length) (rank_decreases source)
+theorem terminates (source : Bool) : (arena source).WellFoundedHistories :=
+  (wellFoundedPlay_of_rank (fun state : State => 4 - state.length)
+    (rank_decreases source)).wellFoundedHistories
 
 theorem history_length (source : Bool) : ∀ {state : State} (trace : (arena source).Trace state),
     trace.length = state.length
@@ -184,8 +185,7 @@ theorem backward_eq {source : Bool} (profile : Profile (model source).strategicS
       ((model source).historyChooser profile) (fun h => payoff source prefer h ())
       history =
         continuationPayoff profile prefer history.state := by
-  induction history using ((arena source).wellFounded_historySuccessor
-      (terminates source)).induction with
+  induction history using (terminates source).induction with
   | _ history ih =>
       by_cases stopped : (arena source).terminal history.state
       · rw [(arena source).historyBackwardValue_of_terminal stopped]

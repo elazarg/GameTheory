@@ -95,7 +95,7 @@ def historyChoiceValue [DecidableEq ι]
     (singleMover : ∀ (state : E.State) {first second : ι},
       E.active state first → E.active state second → first = second)
     (fallback : E.HistoryChooser)
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (utility : E.History → ι → ℝ)
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (recurse : ∀ later : E.History,
@@ -112,7 +112,7 @@ def bestHistoryChoice [DecidableEq ι]
     (singleMover : ∀ (state : E.State) {first second : ι},
       E.active state first → E.active state second → first = second)
     (fallback : E.HistoryChooser)
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (utility : E.History → ι → ℝ)
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (recurse : ∀ later : E.History,
@@ -129,7 +129,7 @@ theorem historyChoiceValue_le_bestHistoryChoice [DecidableEq ι]
     (singleMover : ∀ (state : E.State) {first second : ι},
       E.active state first → E.active state second → first = second)
     (fallback : E.HistoryChooser)
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (utility : E.History → ι → ℝ)
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (recurse : ∀ later : E.History,
@@ -155,7 +155,7 @@ def backwardJoint [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (utility : E.History → ι → ℝ)
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (recurse : ∀ later : E.History,
@@ -181,7 +181,7 @@ theorem backwardJoint_of_active [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (utility : E.History → ι → ℝ)
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (recurse : ∀ later : E.History,
@@ -213,7 +213,7 @@ def backwardChooserBundle [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (utility : E.History → ι → ℝ) :
     E.History → E.HistoryChooser := by
   classical
@@ -232,7 +232,7 @@ theorem backwardChooserBundle_of_not_terminal [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {utility : E.History → ι → ℝ}
     {history : E.History} (hterm : ¬ E.terminal history.state) :
     M.backwardChooserBundle singleMover fallback finiteChoices certificate
@@ -255,7 +255,7 @@ def backwardChooser [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (utility : E.History → ι → ℝ) : E.HistoryChooser :=
   fun history hterm =>
     (M.backwardChooserBundle singleMover fallback finiteChoices certificate
@@ -266,7 +266,7 @@ theorem backwardChooser_eq_joint [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {utility : E.History → ι → ℝ}
     (history : E.History) (hterm : ¬ E.terminal history.state) :
     M.backwardChooser singleMover fallback finiteChoices certificate utility
@@ -286,7 +286,7 @@ def backwardPolicy [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (utility : E.History → ι → ℝ)
     (who : ι) : M.Policy who :=
   fun info => by
@@ -309,7 +309,7 @@ theorem backwardPolicy_eq_fallback_of_no_decision_history [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {utility : E.History → ι → ℝ}
     (who : ι) (info : M.InfoState who)
     (hunreachable : ¬ ∃ history, M.IsDecisionHistory who info history) :
@@ -323,7 +323,7 @@ def backwardProfile [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (utility : E.History → ι → ℝ) : Profile M.strategicSignature :=
   fun who => M.backwardPolicy singleMover fallback finiteChoices certificate
     utility who
@@ -333,7 +333,7 @@ private theorem backwardChooser_action_eq_of_history_eq [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {utility : E.History → ι → ℝ}
     {first second : E.History} (heq : first = second)
     (hfirst : ¬ E.terminal first.state)
@@ -350,7 +350,7 @@ theorem backwardPolicy_act_at_decision [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {utility : E.History → ι → ℝ}
     (hperfect : M.SeparatesDecisionHistories)
     (history : E.History) (hterm : ¬ E.terminal history.state)
@@ -376,7 +376,7 @@ theorem historyChooser_backwardProfile [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {utility : E.History → ι → ℝ}
     (hperfect : M.SeparatesDecisionHistories)
     (history : E.History) (hterm : ¬ E.terminal history.state) :
@@ -417,7 +417,7 @@ theorem historyBackwardLaw_backwardProfile [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {utility : E.History → ι → ℝ}
     (hperfect : M.SeparatesDecisionHistories) :
     ∀ history : E.History,
@@ -429,7 +429,7 @@ theorem historyBackwardLaw_backwardProfile [DecidableEq ι]
             certificate utility history) history := by
   intro history
   induction history using
-      (E.wellFounded_historySuccessor certificate).induction with
+      certificate.induction with
   | _ current ih =>
       by_cases hterm : E.terminal current.state
       · rw [E.historyBackwardLaw_of_terminal hterm,
@@ -498,7 +498,7 @@ def backwardOutcome [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (utility : E.History → ι → ℝ)
     (history : E.History) (who : ι) : ℝ :=
   let chooser := M.backwardChooserBundle singleMover fallback finiteChoices
@@ -511,7 +511,7 @@ theorem backwardOutcome_of_terminal [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {utility : E.History → ι → ℝ}
     {history : E.History} (hterm : E.terminal history.state) (who : ι) :
     M.backwardOutcome singleMover fallback finiteChoices certificate utility
@@ -527,7 +527,7 @@ theorem backwardOutcome_of_not_terminal [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {utility : E.History → ι → ℝ}
     (hglobal : ∀ chooser history who,
       PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
@@ -611,7 +611,7 @@ theorem historyBackwardValue_backwardProfile [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {utility : E.History → ι → ℝ}
     (hperfect : M.SeparatesDecisionHistories)
     (history : E.History) (who : ι) :
@@ -633,7 +633,7 @@ theorem historyChooser_oneShot_backwardProfile [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {utility : E.History → ι → ℝ}
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (who : ι) (hactive : E.active history.state who)
@@ -677,7 +677,7 @@ theorem oneShotHistoryLaw_backwardProfile [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {utility : E.History → ι → ℝ}
     (hperfect : M.SeparatesDecisionHistories)
     (history : E.History) (hterm : ¬ E.terminal history.state)
@@ -755,7 +755,7 @@ theorem backwardOutcome_eq_bestHistoryChoiceValue [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {utility : E.History → ι → ℝ}
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (who : ι) (hactive : E.active history.state who) :
@@ -814,7 +814,7 @@ theorem backwardProfile_hasNoProfitableOneShotDeviation [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {utility : E.History → ι → ℝ}
     (hglobal : ∀ chooser history who,
       PayoffIntegrable (E.historyBackwardLaw certificate chooser history)
@@ -926,7 +926,7 @@ theorem exists_isSubgamePerfect [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (hperfect : M.SeparatesDecisionHistories)
     (utility : E.History → ι → ℝ)
     (hglobal : ∀ chooser history who,
@@ -953,7 +953,7 @@ theorem exists_isSubgamePerfect_of_finite_step_support [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (hperfect : M.SeparatesDecisionHistories)
     (utility : E.History → ι → ℝ)
     (hfinite : ∀ (history : E.History)
@@ -977,7 +977,7 @@ theorem exists_isSubgamePerfect_of_bounded_terminal [DecidableEq ι]
       E.active state first → E.active state second → first = second)
     (fallback : Profile M.strategicSignature)
     (finiteChoices : M.HasFiniteDecisionChoices)
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (hperfect : M.SeparatesDecisionHistories)
     (utility : E.History → ι → ℝ)
     (hbounded : ∀ who, ∃ C : ℝ,

@@ -24,12 +24,12 @@ variable (E)
 
 /-- The deterministic terminal-history law specializes the randomized law to
 point-mass choices. -/
-def historyBackwardLaw (certificate : E.WellFoundedPlay)
+def historyBackwardLaw (certificate : E.WellFoundedHistories)
     (chooser : E.HistoryChooser) : E.History → PMF E.History :=
   E.randomizedBackwardLaw certificate chooser.toRandomized
 
 open Classical in
-theorem historyBackwardLaw_eq (certificate : E.WellFoundedPlay)
+theorem historyBackwardLaw_eq (certificate : E.WellFoundedHistories)
     (chooser : E.HistoryChooser) (history : E.History) :
     E.historyBackwardLaw certificate chooser history =
       if hterm : E.terminal history.state then PMF.pure history
@@ -44,13 +44,13 @@ theorem historyBackwardLaw_eq (certificate : E.WellFoundedPlay)
   · simp only [dite_eq_right hterm, HistoryChooser.toRandomized, PMF.pure_bind]
 
 theorem historyBackwardLaw_of_terminal
-    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
+    {certificate : E.WellFoundedHistories} {chooser : E.HistoryChooser}
     {history : E.History} (hterm : E.terminal history.state) :
     E.historyBackwardLaw certificate chooser history = PMF.pure history := by
   rw [historyBackwardLaw_eq, dite_eq_left hterm]
 
 theorem historyBackwardLaw_of_not_terminal
-    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
+    {certificate : E.WellFoundedHistories} {chooser : E.HistoryChooser}
     {history : E.History} (hterm : ¬ E.terminal history.state) :
     E.historyBackwardLaw certificate chooser history =
       (E.step history.state (chooser history hterm)).bindOnSupport
@@ -62,7 +62,7 @@ theorem historyBackwardLaw_of_not_terminal
 /-- Rewrite the nonterminal law using an equal chosen joint action without
 exposing dependent legality proofs at callers. -/
 theorem historyBackwardLaw_of_not_terminal_of_chooser_eq
-    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
+    {certificate : E.WellFoundedHistories} {chooser : E.HistoryChooser}
     {history : E.History} (hterm : ¬ E.terminal history.state)
     (chosen : { joint : ∀ i, Option (E.Action i) //
       E.Legal history.state joint })
@@ -88,7 +88,7 @@ theorem historyBackwardLaw_of_not_terminal_of_chooser_eq
 
 /-- Every supported outcome of the well-founded history law is terminal. -/
 theorem historyBackwardLaw_support_terminal
-    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
+    {certificate : E.WellFoundedHistories} {chooser : E.HistoryChooser}
     (history : E.History) :
     ∀ final ∈ (E.historyBackwardLaw certificate chooser history).support,
       E.terminal final.state := by
@@ -97,7 +97,7 @@ theorem historyBackwardLaw_support_terminal
 /-- Boundedness only on terminal histories is sufficient for any well-founded
 history chooser's real payoff to be defined. -/
 theorem payoffIntegrable_historyBackwardLaw_of_bounded_terminal
-    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
+    {certificate : E.WellFoundedHistories} {chooser : E.HistoryChooser}
     {payoff : E.History → ℝ} {C : ℝ}
     (hbound : ∀ final, E.terminal final.state → |payoff final| ≤ C)
     (history : E.History) :
@@ -107,7 +107,7 @@ theorem payoffIntegrable_historyBackwardLaw_of_bounded_terminal
 /-- Finite support at each legal transition also makes every well-founded
 terminal payoff integrable, without any bound on the payoff itself. -/
 theorem payoffIntegrable_historyBackwardLaw_of_finite_step_support
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     (hfinite : ∀ (history : E.History) (_hterm : ¬ E.terminal history.state)
       (chosen : {joint : ∀ i, Option (E.Action i) //
         E.Legal history.state joint}),
@@ -116,7 +116,7 @@ theorem payoffIntegrable_historyBackwardLaw_of_finite_step_support
     (history : E.History) :
     PayoffIntegrable (E.historyBackwardLaw certificate chooser history) payoff := by
   induction history using
-      (E.wellFounded_historySuccessor certificate).induction with
+      certificate.induction with
   | _ current ih =>
       by_cases hterm : E.terminal current.state
       · rw [E.historyBackwardLaw_of_terminal hterm]
@@ -151,7 +151,7 @@ theorem stopsHistoryWithin_of_bound {bound : ℕ} (bounded : E.BoundedHorizon bo
 
 /-- The well-founded history law agrees with any forward run that has stopped. -/
 theorem historyBackwardLaw_eq_runHistoryFor
-    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
+    {certificate : E.WellFoundedHistories} {chooser : E.HistoryChooser}
     {horizon : ℕ} {history : E.History}
     (hstop : E.StopsHistoryWithin chooser horizon history) :
     E.historyBackwardLaw certificate chooser history =
@@ -166,19 +166,19 @@ theorem historyBackwardLaw_eq_runHistoryFor
     (E.randomizedBackwardLaw_eq_runRandomizedFor hstopRandomized)
 
 /-- A real history value requires finite integrability under its terminal law. -/
-def historyBackwardValue (certificate : E.WellFoundedPlay)
+def historyBackwardValue (certificate : E.WellFoundedHistories)
     (chooser : E.HistoryChooser) (payoff : E.History → ℝ)
     (history : E.History) : ℝ :=
   expect (E.historyBackwardLaw certificate chooser history) payoff
 
 /-- The extended-real value of a history under its terminal law, meaningful when
 the payoff has an expectation there. -/
-def historyBackwardExtendedValue (certificate : E.WellFoundedPlay)
+def historyBackwardExtendedValue (certificate : E.WellFoundedHistories)
     (chooser : E.HistoryChooser) (payoff : E.History → ℝ)
     (history : E.History) : EReal :=
   extendedExpect (E.historyBackwardLaw certificate chooser history) payoff
 
-theorem historyBackwardExtendedValue_eq {certificate : E.WellFoundedPlay}
+theorem historyBackwardExtendedValue_eq {certificate : E.WellFoundedHistories}
     {chooser : E.HistoryChooser} {payoff : E.History → ℝ} {history : E.History}
     (h : PayoffIntegrable (E.historyBackwardLaw certificate chooser history) payoff) :
     E.historyBackwardExtendedValue certificate chooser payoff history =
@@ -186,7 +186,7 @@ theorem historyBackwardExtendedValue_eq {certificate : E.WellFoundedPlay}
   extendedExpect_eq_expect h
 
 /-- Between integrable history values, the extended comparison is the real one. -/
-theorem historyBackwardExtendedValue_le_iff {certificate : E.WellFoundedPlay}
+theorem historyBackwardExtendedValue_le_iff {certificate : E.WellFoundedHistories}
     {left right : E.HistoryChooser} {payoff : E.History → ℝ} {history : E.History}
     (hleft : PayoffIntegrable (E.historyBackwardLaw certificate left history) payoff)
     (hright : PayoffIntegrable (E.historyBackwardLaw certificate right history) payoff) :
@@ -198,7 +198,7 @@ theorem historyBackwardExtendedValue_le_iff {certificate : E.WellFoundedPlay}
     EReal.coe_le_coe_iff]
 
 theorem historyBackwardValue_of_terminal
-    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
+    {certificate : E.WellFoundedHistories} {chooser : E.HistoryChooser}
     {payoff : E.History → ℝ} {history : E.History}
     (hterm : E.terminal history.state) :
     E.historyBackwardValue certificate chooser payoff history =
@@ -210,7 +210,7 @@ theorem historyBackwardValue_of_terminal
 /-- Numerical history Bellman equation on supported realized successors.
 The source law guard supplies the conditional and outer guards. -/
 theorem historyBackwardValue_of_not_terminal
-    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
+    {certificate : E.WellFoundedHistories} {chooser : E.HistoryChooser}
     {payoff : E.History → ℝ} {history : E.History}
     (hterm : ¬ E.terminal history.state)
     (hsource : PayoffIntegrable
@@ -252,7 +252,7 @@ theorem historyBackwardValue_of_not_terminal
   exact htower
 
 theorem historyBackwardValue_eq_expect_runHistoryFor
-    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
+    {certificate : E.WellFoundedHistories} {chooser : E.HistoryChooser}
     {payoff : E.History → ℝ} {horizon : ℕ} {history : E.History}
     (hstop : E.StopsHistoryWithin chooser horizon history) :
     E.historyBackwardValue certificate chooser payoff history =
@@ -261,7 +261,7 @@ theorem historyBackwardValue_eq_expect_runHistoryFor
   rw [E.historyBackwardLaw_eq_runHistoryFor hstop]
 
 theorem historyBackwardValue_eq_expect_runHistoryFor_guarded
-    {certificate : E.WellFoundedPlay} {chooser : E.HistoryChooser}
+    {certificate : E.WellFoundedHistories} {chooser : E.HistoryChooser}
     {payoff : E.History → ℝ} {horizon : ℕ} {history : E.History}
     (hstop : E.StopsHistoryWithin chooser horizon history)
     (hback : PayoffIntegrable
@@ -296,7 +296,7 @@ theorem HistoryReaches.step {start target : E.History}
 
 /-- Choosers agreeing on the reachable history cone have the same terminal law. -/
 theorem historyBackwardLaw_congr_of_reaches
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {first second : E.HistoryChooser} :
     ∀ start : E.History,
       (∀ later, E.HistoryReaches start later →
@@ -306,7 +306,7 @@ theorem historyBackwardLaw_congr_of_reaches
         E.historyBackwardLaw certificate second start := by
   intro start
   induction start using
-      (E.wellFounded_historySuccessor certificate).induction with
+      certificate.induction with
   | _ history ih =>
       intro hagree
       by_cases hterm : E.terminal history.state
@@ -324,7 +324,7 @@ theorem historyBackwardLaw_congr_of_reaches
             hagree later (HistoryReaches.step E chosen.2 realized hreach))
 
 theorem historyBackwardValue_congr_of_reaches
-    {certificate : E.WellFoundedPlay}
+    {certificate : E.WellFoundedHistories}
     {first second : E.HistoryChooser}
     {payoff : E.History → ℝ} (start : E.History)
     (hagree : ∀ later, E.HistoryReaches start later →

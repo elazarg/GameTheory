@@ -10,6 +10,7 @@ live behind this one-way bridge.
 
 import GameTheory.Math.Probability.Convergence
 import GameTheory.Protocol.BehavioralBayes
+import GameTheory.Protocol.BehavioralTerminal
 
 noncomputable section
 
@@ -105,7 +106,7 @@ def BehavioralAssessment.IsSequentialEquilibriumFor
     (context : (i : ι) → (site : M.InformationSite i) →
       GameTheory.Protocol.Context
         (M.BehavioralPolicy i) E.History) : Prop :=
-  A.IsSequentiallyRational context ∧ A.IsSequentiallyConsistent hantichain
+  A.IsSequentiallyRationalFor context ∧ A.IsSequentiallyConsistent hantichain
 
 theorem BehavioralAssessment.isSequentialEquilibriumFor_iff
     [Fintype ι] (A : M.BehavioralAssessment)
@@ -114,7 +115,24 @@ theorem BehavioralAssessment.isSequentialEquilibriumFor_iff
       GameTheory.Protocol.Context
         (M.BehavioralPolicy i) E.History) :
     A.IsSequentialEquilibriumFor hantichain context ↔
-      A.IsSequentiallyRational context ∧ A.IsSequentiallyConsistent hantichain :=
+      A.IsSequentiallyRationalFor context ∧ A.IsSequentiallyConsistent hantichain :=
+  Iff.rfl
+
+/-- Sequential equilibrium: sequential rationality on terminal play together
+with Kreps-Wilson consistency. -/
+def BehavioralAssessment.IsSequentialEquilibrium
+    [Fintype ι] [DecidableEq ι] (A : M.BehavioralAssessment)
+    (hantichain : M.DecisionInformationAntichain)
+    (certificate : E.WellFoundedHistories) (payoff : ι → E.History → ℝ) : Prop :=
+  A.IsSequentialEquilibriumFor hantichain fun i site =>
+    A.continuationContext certificate site (payoff i)
+
+theorem BehavioralAssessment.isSequentialEquilibrium_iff
+    [Fintype ι] [DecidableEq ι] (A : M.BehavioralAssessment)
+    (hantichain : M.DecisionInformationAntichain)
+    (certificate : E.WellFoundedHistories) (payoff : ι → E.History → ℝ) :
+    A.IsSequentialEquilibrium hantichain certificate payoff ↔
+      A.IsSequentiallyRational certificate payoff ∧ A.IsSequentiallyConsistent hantichain :=
   Iff.rfl
 
 end InformationModel

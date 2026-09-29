@@ -14,6 +14,8 @@ import GameTheory.Analysis.LocalChoiceFixedPoint
 import GameTheory.Analysis.Protocol.BehavioralBayes
 import GameTheory.Analysis.Protocol.BehavioralContinuity
 import GameTheory.Protocol.BehavioralMixture
+import GameTheory.Protocol.BehavioralTerminal
+import GameTheory.Protocol.FiniteHorizon
 import GameTheory.Math.Probability.ExpectationMixture
 import GameTheory.Math.Probability.Uniform
 
@@ -36,11 +38,7 @@ def uniformTrembleLaws (ε : ℝ) (h0 : 0 ≤ ε) (h1 : ε ≤ 1)
     Set (PMF (M.Choice i info)) :=
   {law | ∃ residual, law = mix ε h0 h1 (PMF.uniformOfFintype _) residual}
 
-/-- Every positive uniform perturbation has a fully mixed Bayes assessment
-whose local law is optimal against every feasible perturbed replacement.
-The conclusion is for local replacements only; scores use the existing whole
-continuation runner with horizon `fuel + 1`. -/
-theorem exists_uniformTremble_locallyOptimal_bayesAssessment
+private theorem exists_uniformTremble_locallyOptimal_bayesAssessment_truncated
     [Fintype ι] [DecidableEq ι]
     [Fintype E.State] [Fintype E.History] [∀ i, Fintype (E.Action i)]
     [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)]
@@ -56,13 +54,13 @@ theorem exists_uniformTremble_locallyOptimal_bayesAssessment
       (∀ i info, assessment.strategy i info ∈ M.uniformTrembleLaws ε hε.le h1 i info) ∧
       ∀ i (site : M.InformationSite i) (law : PMF (M.Choice i site.1)),
         law ∈ M.uniformTrembleLaws ε hε.le h1 i site.1 →
-        (assessment.continuationContext site (payoff i) (fuel + 1)).IntegrableAt
+        (assessment.truncatedContinuationContext site (payoff i) (fuel + 1)).IntegrableAt
             ((assessment.strategy i).withLaw site.1 law) ∧
-          (assessment.continuationContext site (payoff i) (fuel + 1)).IntegrableAt
+          (assessment.truncatedContinuationContext site (payoff i) (fuel + 1)).IntegrableAt
               (assessment.strategy i) ∧
-            (assessment.continuationContext site (payoff i) (fuel + 1)).value
+            (assessment.truncatedContinuationContext site (payoff i) (fuel + 1)).value
                 ((assessment.strategy i).withLaw site.1 law) ≤
-              (assessment.continuationContext site (payoff i) (fuel + 1)).value
+              (assessment.truncatedContinuationContext site (payoff i) (fuel + 1)).value
                 (assessment.strategy i) := by
   classical
   let Coordinate := (i : ι) × M.InfoState i
@@ -112,12 +110,12 @@ theorem exists_uniformTremble_locallyOptimal_bayesAssessment
       history
   have hintegrable (x : Domain) (i : ι) (site : M.InformationSite i)
       (alternative : M.BehavioralPolicy i) :
-      ((assessment x).continuationContext site (payoff i) (fuel + 1)).IntegrableAt
+      ((assessment x).truncatedContinuationContext site (payoff i) (fuel + 1)).IntegrableAt
         alternative := by
     exact payoffIntegrable_of_finite _ _
   let scoreValue (x : Domain) (i : ι) (site : M.InformationSite i)
       (alternative : M.BehavioralPolicy i) : ℝ :=
-    ((assessment x).continuationContext site (payoff i) (fuel + 1)).value
+    ((assessment x).truncatedContinuationContext site (payoff i) (fuel + 1)).value
       alternative
   let score (x : Domain) (c : Coordinate) (choice : Action c) : ℝ :=
     if hsite : M.IsDecisionInfo c.1 c.2 then
@@ -133,7 +131,7 @@ theorem exists_uniformTremble_locallyOptimal_bayesAssessment
       Continuous fun x : Domain => score x c choice := by
     by_cases hsite : M.IsDecisionInfo c.1 c.2
     · simp only [score, dite_eq_left hsite]
-      apply M.continuous_continuationContext_value assessment hprofile c.1 ⟨c.2, hsite⟩
+      apply M.continuous_truncatedContinuationContext_value assessment hprofile c.1 ⟨c.2, hsite⟩
         (hbelief c.1 ⟨c.2, hsite⟩) (fun x => (profile x c.1).commit c.2 choice)
       intro info action
       by_cases hinfo : info = c.2
@@ -150,7 +148,7 @@ theorem exists_uniformTremble_locallyOptimal_bayesAssessment
     (fun i info => ⟨residual x i info, rfl⟩), ?_⟩
   intro i site law hlaw
   obtain ⟨alternative, rfl⟩ := hlaw
-  let context := (assessment x).continuationContext site (payoff i) (fuel + 1)
+  let context := (assessment x).truncatedContinuationContext site (payoff i) (fuel + 1)
   let altLaw := mix ε hε.le h1 (PMF.uniformOfFintype _) alternative
   let baseLaw := profile x i site.1
   let value := fun choice => scoreValue x i site ((profile x i).commit site.1 choice)
@@ -164,10 +162,10 @@ theorem exists_uniformTremble_locallyOptimal_bayesAssessment
   have hbestValue : expect alternative value ≤
       expect (residual x i site.1) value := by
     simpa only [scoreValue, hscore_site] using hbest
-  have hAltValue := BehavioralAssessment.continuationContext_withLaw_eq_expect
+  have hAltValue := BehavioralAssessment.truncatedContinuationContext_withLaw_eq_expect
     M hactsOnce (assessment x) site (profile x i) altLaw (payoff i) fuel hAlt
     value (by intro choice _; rfl)
-  have hBaseValue := BehavioralAssessment.continuationContext_withLaw_eq_expect
+  have hBaseValue := BehavioralAssessment.truncatedContinuationContext_withLaw_eq_expect
     M hactsOnce (assessment x) site (profile x i) baseLaw (payoff i) fuel
     (hintegrable x i site ((profile x i).withLaw site.1 baseLaw))
     value (by intro choice _; rfl)
@@ -197,5 +195,42 @@ theorem exists_uniformTremble_locallyOptimal_bayesAssessment
       rw [haltMix, hbaseMix]
       exact add_le_add le_rfl
         (mul_le_mul_of_nonneg_left hbestValue (sub_nonneg.mpr h1)))
+
+/-- Every positive uniform perturbation has a fully mixed Bayes assessment
+whose local law is optimal against every feasible perturbed replacement.
+The conclusion is for local replacements only, scored by whole terminal
+continuations. -/
+theorem exists_uniformTremble_locallyOptimal_bayesAssessment
+    [Fintype ι] [DecidableEq ι]
+    [Fintype E.State] [Fintype E.History] [∀ i, Fintype (E.Action i)]
+    [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)]
+    [∀ i info, Fintype (M.Choice i info)] [∀ i info, Nonempty (M.Choice i info)]
+    [∀ i (site : M.InformationSite i), Fintype (M.InformationHistory i site.1)]
+    (hactsOnce : M.ActsOnceWhereItMatters)
+    (hantichain : M.DecisionInformationAntichain)
+    (ε : ℝ) (hε : 0 < ε) (h1 : ε ≤ 1)
+    (payoff : ι → E.History → ℝ) (certificate : E.WellFoundedHistories) :
+    ∃ assessment : M.BehavioralAssessment,
+      assessment.IsFullyMixed ∧
+      BehavioralAssessment.IsBayesConsistent M assessment hantichain ∧
+      (∀ i info, assessment.strategy i info ∈ M.uniformTrembleLaws ε hε.le h1 i info) ∧
+      ∀ i (site : M.InformationSite i) (law : PMF (M.Choice i site.1)),
+        law ∈ M.uniformTrembleLaws ε hε.le h1 i site.1 →
+        (assessment.continuationContext certificate site (payoff i)).IntegrableAt
+            ((assessment.strategy i).withLaw site.1 law) ∧
+          (assessment.continuationContext certificate site (payoff i)).IntegrableAt
+              (assessment.strategy i) ∧
+            (assessment.continuationContext certificate site (payoff i)).value
+                ((assessment.strategy i).withLaw site.1 law) ≤
+              (assessment.continuationContext certificate site (payoff i)).value
+                (assessment.strategy i) := by
+  obtain ⟨bound, hpositive, hbound⟩ := E.exists_pos_boundedHorizon
+  obtain ⟨fuel, rfl⟩ := Nat.exists_eq_succ_of_ne_zero (Nat.ne_of_gt hpositive)
+  obtain ⟨assessment, hfull, hbayes, hfeasible, hlocal⟩ :=
+    exists_uniformTremble_locallyOptimal_bayesAssessment_truncated M hactsOnce hantichain
+      ε hε h1 payoff fuel
+  refine ⟨assessment, hfull, hbayes, hfeasible, ?_⟩
+  simp only [assessment.continuationContext_eq_truncated_of_bounded certificate hbound]
+  exact hlocal
 
 end GameTheory.Protocol.InformationModel

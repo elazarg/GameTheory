@@ -419,8 +419,8 @@ theorem rank_decreases (source target : State)
   | done hidden firstAction secondAction =>
       exact False.elim (isLegal.1 trivial)
 
-theorem wellFoundedPlay : twoStage.WellFoundedPlay :=
-  wellFoundedPlay_of_rank rank rank_decreases
+theorem wellFoundedHistories : twoStage.WellFoundedHistories :=
+  (wellFoundedPlay_of_rank rank rank_decreases).wellFoundedHistories
 
 def prescribedPolicy (firstAction secondAction : Bool) :
     information.Policy () :=
@@ -473,7 +473,7 @@ def profileOf (policy : information.Policy ()) :
 
 def continuationValue (profile : Profile information.strategicSignature)
     (history : twoStage.History) : ℝ :=
-  twoStage.historyBackwardValue wellFoundedPlay
+  twoStage.historyBackwardValue wellFoundedHistories
     (information.historyChooser profile)
     (fun outcome => utility outcome ()) history
 
@@ -489,7 +489,7 @@ private theorem continuationValue_of_step_constant
           (information.historyChooser profile history hnot).2 realized) = c) :
     continuationValue profile history = c := by
   obtain ⟨houter, heq⟩ := twoStage.historyBackwardValue_of_not_terminal
-    (certificate := wellFoundedPlay)
+    (certificate := wellFoundedHistories)
     (chooser := information.historyChooser profile)
     (payoff := fun outcome => utility outcome ())
     (history := history) hnot (utility_integrable _)
@@ -828,7 +828,7 @@ theorem jointAlternative_value :
 /-- The incumbent is not SPE: changing both information-state actions is
 strictly profitable in the initial (and always proper) subgame. -/
 theorem incumbent_not_isSubgamePerfect :
-    ¬ information.IsSubgamePerfect wellFoundedPlay incumbent utility := by
+    ¬ information.IsSubgamePerfect wellFoundedHistories incumbent utility := by
   intro hspe
   obtain ⟨-, -, hdeviation⟩ := hspe twoStage.initHistory
     information.initHistory_isSubgameRoot () jointAlternative
@@ -987,7 +987,7 @@ theorem incumbent_hasNoProfitableSingleInformationDeviationInSubgames :
 false even on finite well-founded perfect-recall play. -/
 theorem singleInformationDeviations_do_not_characterize_subgamePerfection :
     HasNoProfitableSingleInformationDeviationInSubgames incumbent ∧
-      ¬ information.IsSubgamePerfect wellFoundedPlay incumbent utility :=
+      ¬ information.IsSubgamePerfect wellFoundedHistories incumbent utility :=
   ⟨incumbent_hasNoProfitableSingleInformationDeviationInSubgames,
     incumbent_not_isSubgamePerfect⟩
 

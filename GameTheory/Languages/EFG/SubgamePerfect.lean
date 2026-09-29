@@ -30,7 +30,7 @@ abbrev IsSubgameRoot (history : G.History) : Prop :=
 /-- EFG subgame perfection is the canonical information-model predicate over
 information-set-closed subgame roots. -/
 abbrev IsSubgamePerfect [DecidableEq ι]
-    (certificate : G.execution.WellFoundedPlay)
+    (certificate : G.execution.WellFoundedHistories)
     (profile : Profile G.strategicSignature)
     (utility : G.History → ι → ℝ) : Prop :=
   G.information.IsSubgamePerfect certificate profile utility
@@ -38,7 +38,7 @@ abbrev IsSubgamePerfect [DecidableEq ι]
 /-- The stronger continuation predicate compares whole replacement plans after
 every complete history, whether or not that history starts a proper subgame. -/
 abbrev IsHistorywiseOptimal [DecidableEq ι]
-    (certificate : G.execution.WellFoundedPlay)
+    (certificate : G.execution.WellFoundedHistories)
     (profile : Profile G.strategicSignature)
     (utility : G.History → ι → ℝ) : Prop :=
   G.information.IsHistorywiseOptimal certificate profile utility
@@ -46,7 +46,7 @@ abbrev IsHistorywiseOptimal [DecidableEq ι]
 /-- EFG one-shot optimality is the canonical typed, history-local predicate. -/
 abbrev HasNoProfitableOneShotDeviation [DecidableEq ι]
     [∀ who, DecidableEq (G.information.InfoState who)]
-    (certificate : G.execution.WellFoundedPlay)
+    (certificate : G.execution.WellFoundedHistories)
     (profile : Profile G.strategicSignature)
     (utility : G.History → ι → ℝ) : Prop :=
   G.information.HasNoProfitableOneShotDeviation
@@ -54,7 +54,7 @@ abbrev HasNoProfitableOneShotDeviation [DecidableEq ι]
 
 /-- Historywise optimality implies textbook subgame perfection. -/
 theorem IsHistorywiseOptimal.isSubgamePerfect [DecidableEq ι]
-    {certificate : G.execution.WellFoundedPlay}
+    {certificate : G.execution.WellFoundedHistories}
     {profile : Profile G.strategicSignature}
     {utility : G.History → ι → ℝ}
     (hoptimal : G.IsHistorywiseOptimal certificate profile utility) :
@@ -70,7 +70,7 @@ theorem isHistorywiseOptimal_iff_hasNoProfitableOneShotDeviation
     [DecidableEq ι]
     [∀ who, DecidableEq (G.information.InfoState who)]
     (hactsOnce : G.information.ActsOnceWhereItMatters)
-    (certificate : G.execution.WellFoundedPlay)
+    (certificate : G.execution.WellFoundedHistories)
     (profile : Profile G.strategicSignature)
     (utility : G.History → ι → ℝ)
     (hcandidate : ∀ (who : ι) (alternative : G.information.Policy who)

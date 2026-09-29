@@ -201,7 +201,7 @@ theorem twoStage_regretMatch_approaches
 one-site deviations do not imply global equilibrium. -/
 theorem localTestsStillDoNotImplySPE :
     HasNoProfitableSingleInformationDeviationInSubgames incumbent ∧
-      ¬ information.IsSubgamePerfect wellFoundedPlay incumbent utility :=
+      ¬ information.IsSubgamePerfect wellFoundedHistories incumbent utility :=
   ⟨incumbent_hasNoProfitableSingleInformationDeviationInSubgames,
     incumbent_not_isSubgamePerfect⟩
 

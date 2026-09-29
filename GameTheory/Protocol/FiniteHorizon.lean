@@ -7,7 +7,7 @@ data. Finiteness here concerns histories, so finite-state protocols with cycles
 do not satisfy the premise merely because their state carrier is finite.
 -/
 
-import GameTheory.Protocol.History
+import GameTheory.Protocol.RandomizedBackward
 
 namespace GameTheory.Protocol.ExecutionProtocol
 
@@ -28,5 +28,10 @@ theorem exists_pos_boundedHorizon [Fintype E.History] :
     Finset.le_sup (f := fun history : E.History => history.trace.length)
       (Finset.mem_univ (⟨state, trace⟩ : E.History))
   exact False.elim (by omega)
+
+/-- Finite complete histories certify terminal play. -/
+theorem wellFoundedHistories_of_fintype [Fintype E.History] : E.WellFoundedHistories := by
+  obtain ⟨_, _, hbound⟩ := E.exists_pos_boundedHorizon
+  exact hbound.wellFoundedHistories
 
 end GameTheory.Protocol.ExecutionProtocol

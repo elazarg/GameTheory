@@ -72,7 +72,7 @@ theorem isBehavioralSubgamePerfect_bound_iff [Fintype ι] [DecidableEq ι]
 /-- A point-mass behavioral SPE defeats every pure replacement. -/
 theorem isSubgamePerfect_of_behavioral [Fintype ι] [DecidableEq ι]
     {bound : ℕ} (bounded : E.BoundedHorizon bound)
-    (certificate : E.WellFoundedPlay) (profile : Profile M.strategicSignature)
+    (certificate : E.WellFoundedHistories) (profile : Profile M.strategicSignature)
     (utility : E.History → ι → ℝ)
     (perfect : M.IsBehavioralSubgamePerfect bounded
       (Profile.map (target := M.behavioralSignature)
@@ -160,7 +160,7 @@ theorem isSingleMoverBehavioralSubgamePerfect_iff_behavioral [Fintype ι]
 
 /-- The pure implication does not require finitely many possible players. -/
 theorem isSubgamePerfect_of_singleMoverBehavioral {bound : ℕ}
-    (bounded : E.BoundedHorizon bound) (certificate : E.WellFoundedPlay)
+    (bounded : E.BoundedHorizon bound) (certificate : E.WellFoundedHistories)
     (profile : Profile M.strategicSignature) (utility : E.History → ι → ℝ)
     (perfect : M.IsSingleMoverBehavioralSubgamePerfect single bounded
       (Profile.map (target := M.behavioralSignature)

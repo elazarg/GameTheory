@@ -15,13 +15,17 @@ New library modules must be added here, or the linters will not see them.
 -/
 import GameTheory.Analysis
 import GameTheory.Analysis.Approachability
+import GameTheory.Analysis.BayesianHierarchy
 import GameTheory.Analysis.Correlated
+import GameTheory.Analysis.CorrelationHierarchy
+import GameTheory.Analysis.DominanceHierarchy
 import GameTheory.Analysis.Examples
 import GameTheory.Analysis.ExpectedUtility
 import GameTheory.Analysis.FictitiousPlayPotential
+import GameTheory.Analysis.IncentiveCone
+import GameTheory.Analysis.IncentiveHierarchy
 import GameTheory.Analysis.Learning
 import GameTheory.Analysis.LocalChoiceFixedPoint
-import GameTheory.Analysis.IncentiveCone
 import GameTheory.Analysis.MatrixValue
 import GameTheory.Analysis.Minimax
 import GameTheory.Analysis.Nash
@@ -41,13 +45,13 @@ import GameTheory.Analysis.Protocol.EFG
 import GameTheory.Analysis.Protocol.EFGExistence
 import GameTheory.Analysis.Protocol.Examples
 import GameTheory.Analysis.Protocol.Incentives
+import GameTheory.Analysis.Protocol.InformationLocalization
 import GameTheory.Analysis.Protocol.Sequential
 import GameTheory.Analysis.Protocol.SequentialExistence
 import GameTheory.Analysis.Protocol.SequentialLimits
 import GameTheory.Analysis.Protocol.SequentialPerturbation
 import GameTheory.Analysis.Protocol.SequentialRationality
-import GameTheory.Analysis.Protocol.SequentialTerminalExistence
-import GameTheory.Analysis.Protocol.SequentialTerminalLimits
+import GameTheory.Analysis.Protocol.SubgameLocalization
 import GameTheory.Analysis.Repeated
 import GameTheory.Analysis.Repeated.Examples
 import GameTheory.Analysis.Repeated.Feasible
@@ -194,6 +198,7 @@ import GameTheory.Math.Probability.ExpectationConditioning
 import GameTheory.Math.Probability.ExpectationMap
 import GameTheory.Math.Probability.ExpectationMixture
 import GameTheory.Math.Probability.ExpectationSeries
+import GameTheory.Math.Probability.ExtendedExpectation
 import GameTheory.Math.Probability.FiniteSampling
 import GameTheory.Math.Probability.InfiniteProductBoundary
 import GameTheory.Math.Probability.Interaction
@@ -255,9 +260,9 @@ import GameTheory.Protocol.BehavioralContinuation
 import GameTheory.Protocol.BehavioralMixture
 import GameTheory.Protocol.BehavioralTerminal
 import GameTheory.Protocol.Context
-import GameTheory.Protocol.DecisionRecall
 import GameTheory.Protocol.Continuation
 import GameTheory.Protocol.ContinuationLaw
+import GameTheory.Protocol.DecisionRecall
 import GameTheory.Protocol.Execution
 import GameTheory.Protocol.Extraction
 import GameTheory.Protocol.FiniteHorizon

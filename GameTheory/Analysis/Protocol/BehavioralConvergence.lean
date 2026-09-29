@@ -122,7 +122,7 @@ theorem update_convergesPointwise [DecidableEq ι]
 /-- Continuation values converge on arbitrary carriers when the payoff has a
 uniform absolute bound. The belief fiber, state space, and action spaces need
 not be finite. -/
-theorem continuationContext_value_tendsto_of_bounded
+theorem truncatedContinuationContext_value_tendsto_of_bounded
     [DecidableEq ι]
     {sequence : ℕ → M.BehavioralAssessment} {target : M.BehavioralAssessment}
     (hstrategy : ∀ i info, PMFConvergesPointwise
@@ -137,9 +137,9 @@ theorem continuationContext_value_tendsto_of_bounded
     (payoff : E.History → ℝ) (fuel : ℕ) (C : ℝ)
     (hC : 0 ≤ C) (hbound : ∀ history, |payoff history| ≤ C) :
     Tendsto
-      (fun n => ((sequence n).continuationContext site payoff fuel).value
+      (fun n => ((sequence n).truncatedContinuationContext site payoff fuel).value
         (alternative n)) atTop
-      (nhds ((target.continuationContext site payoff fuel).value replacement)) := by
+      (nhds ((target.truncatedContinuationContext site payoff fuel).value replacement)) := by
   let kernel (n : ℕ) (history : M.InformationHistory who site.1) : PMF E.History :=
     M.runBehavioralFrom
       (Profile.update (sig := M.behavioralSignature)
@@ -172,18 +172,21 @@ theorem continuationContext_value_tendsto_of_bounded
   have hresult := hbelief.expect_varying_of_bounded
     (observable := conditionalValue) (limit := conditionalValueLimit)
     (fun n history => hconditionalBound n history) hconditional
-  have hseq (n : ℕ) :=
-    (sequence n).continuationContext_value_tower site payoff fuel
-      (alternative n)
+  have hseq (n : ℕ) :
+      ((sequence n).truncatedContinuationContext site payoff fuel).value (alternative n) =
+        expect ((sequence n).belief who site) (conditionalValue n) :=
+    (sequence n).continuationContextWith_value_tower _ site payoff (alternative n)
       (payoffIntegrable_of_bounded _ payoff hbound)
-  have htarget := target.continuationContext_value_tower site payoff fuel
-    replacement (payoffIntegrable_of_bounded _ payoff hbound)
-  simpa only [hseq, htarget, kernel, kernelLimit, conditionalValue,
-    conditionalValueLimit] using hresult
+  have htarget :
+      (target.truncatedContinuationContext site payoff fuel).value replacement =
+        expect (target.belief who site) conditionalValueLimit :=
+    target.continuationContextWith_value_tower _ site payoff replacement
+      (payoffIntegrable_of_bounded _ payoff hbound)
+  simpa only [hseq, htarget] using hresult
 
 /-- Finite terminal carriers bound every payoff, so the general bounded-payoff
 continuity theorem specializes to arbitrary finite-history payoffs. -/
-theorem continuationContext_value_tendsto
+theorem truncatedContinuationContext_value_tendsto
     [DecidableEq ι] [Fintype E.History]
     {sequence : ℕ → M.BehavioralAssessment} {target : M.BehavioralAssessment}
     (hstrategy : ∀ i info, PMFConvergesPointwise
@@ -196,9 +199,9 @@ theorem continuationContext_value_tendsto
     (halternative : ∀ info, PMFConvergesPointwise
       (fun n => alternative n info) (replacement info))
     (payoff : E.History → ℝ) (fuel : ℕ) :
-    Tendsto (fun n => ((sequence n).continuationContext site payoff fuel).value
+    Tendsto (fun n => ((sequence n).truncatedContinuationContext site payoff fuel).value
       (alternative n)) atTop
-      (nhds ((target.continuationContext site payoff fuel).value replacement)) := by
+      (nhds ((target.truncatedContinuationContext site payoff fuel).value replacement)) := by
   let C := ∑ history : E.History, |payoff history|
   have hC : 0 ≤ C := by
     apply Finset.sum_nonneg
@@ -208,7 +211,7 @@ theorem continuationContext_value_tendsto
     dsimp [C]
     exact Finset.single_le_sum (fun history _ => abs_nonneg (payoff history))
       (Finset.mem_univ history)
-  exact M.continuationContext_value_tendsto_of_bounded
+  exact M.truncatedContinuationContext_value_tendsto_of_bounded
     hstrategy who site hbelief halternative payoff fuel C hC hbound
 
 end GameTheory.Protocol.InformationModel

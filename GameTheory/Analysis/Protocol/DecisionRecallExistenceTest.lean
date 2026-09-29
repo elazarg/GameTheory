@@ -97,12 +97,9 @@ def payoff (_ : Unit) (history : once.History) : ℝ :=
 
 /-- **A sequential equilibrium exists without perfect recall.** -/
 theorem exists_sequentialEquilibrium :
-    ∃ (fuel : ℕ) (assessment : singleModel.BehavioralAssessment),
-      assessment.IsSequentiallyRationalWithin payoff (fuel + 1) ∧
-        assessment.IsSequentiallyConsistent single_decisionRecall.decisionInformationAntichain := by
-  obtain ⟨bound, hpositive, hbound⟩ := once.exists_pos_boundedHorizon
-  obtain ⟨fuel, rfl⟩ := Nat.exists_eq_succ_of_ne_zero (Nat.ne_of_gt hpositive)
-  exact ⟨fuel, singleModel.exists_sequentialEquilibriumWithin single_decisionRecall
-    fallback payoff fuel hbound⟩
+    ∃ assessment : singleModel.BehavioralAssessment,
+      assessment.IsSequentiallyRational once.wellFoundedHistories_of_fintype payoff ∧
+        assessment.IsSequentiallyConsistent single_decisionRecall.decisionInformationAntichain :=
+  singleModel.exists_sequentialEquilibrium single_decisionRecall fallback payoff _
 
 end GameTheory.Analysis.Protocol.DecisionRecallExistenceTest

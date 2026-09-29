@@ -194,17 +194,17 @@ theorem runBehavioralFrom_update_withLaw_eq_bind
 
 /-- Installing a local law factors the belief-averaged outcome law into a
 choice draw followed by the corresponding committed continuation. -/
-theorem BehavioralAssessment.continuationContext_withLaw_outcome_eq_bind
+theorem BehavioralAssessment.truncatedContinuationContext_withLaw_outcome_eq_bind
     [Fintype ι] [DecidableEq ι]
     (hactsOnce : M.ActsOnceWhereItMatters)
     (assessment : M.BehavioralAssessment)
     {i : ι} [DecidableEq (M.InfoState i)] (site : M.InformationSite i)
     (policy : M.BehavioralPolicy i) (law : PMF (M.Choice i site.1))
     (payoff : E.History → ℝ) (fuel : ℕ) :
-    (assessment.continuationContext site payoff (fuel + 1)).outcome
+    (assessment.truncatedContinuationContext site payoff (fuel + 1)).outcome
         (policy.withLaw site.1 law) =
       law.bind (fun choice =>
-        (assessment.continuationContext site payoff (fuel + 1)).outcome
+        (assessment.truncatedContinuationContext site payoff (fuel + 1)).outcome
           (policy.commit site.1 choice)) := by
   let belief := assessment.belief i site
   have hkernel (history : M.InformationHistory i site.1) :
@@ -244,28 +244,28 @@ theorem BehavioralAssessment.continuationContext_withLaw_outcome_eq_bind
 
 /-- The installed-law guard supplies supported committed continuation guards
 after the outcome-law factorization. -/
-theorem BehavioralAssessment.continuationContext_withLaw_commit_integrable
+theorem BehavioralAssessment.truncatedContinuationContext_withLaw_commit_integrable
     [Fintype ι] [DecidableEq ι]
     (hactsOnce : M.ActsOnceWhereItMatters)
     (assessment : M.BehavioralAssessment)
     {i : ι} [DecidableEq (M.InfoState i)] (site : M.InformationSite i)
     (policy : M.BehavioralPolicy i) (law : PMF (M.Choice i site.1))
     (payoff : E.History → ℝ) (fuel : ℕ)
-    (hbase : (assessment.continuationContext site payoff (fuel + 1)).IntegrableAt
+    (hbase : (assessment.truncatedContinuationContext site payoff (fuel + 1)).IntegrableAt
       (policy.withLaw site.1 law))
     (choice : M.Choice i site.1) (hchoice : choice ∈ law.support) :
-    (assessment.continuationContext site payoff (fuel + 1)).IntegrableAt
+    (assessment.truncatedContinuationContext site payoff (fuel + 1)).IntegrableAt
       (policy.commit site.1 choice) := by
   let q := fun choice : M.Choice i site.1 =>
     (assessment.belief i site).bind fun history =>
       M.runBehavioralFrom
         (Profile.update (sig := M.behavioralSignature) assessment.strategy i
           (policy.commit site.1 choice)) (fuel + 1) history.1
-  have hlaw := assessment.continuationContext_withLaw_outcome_eq_bind
+  have hlaw := assessment.truncatedContinuationContext_withLaw_outcome_eq_bind
     M hactsOnce site policy law payoff fuel
   have hbind : PayoffIntegrable (law.bind q) payoff := by
     show PayoffIntegrable (law.bind fun choice =>
-      (assessment.continuationContext site payoff (fuel + 1)).outcome
+      (assessment.truncatedContinuationContext site payoff (fuel + 1)).outcome
         (policy.commit site.1 choice)) payoff
     rw [← hlaw]
     exact hbase
@@ -275,21 +275,21 @@ theorem BehavioralAssessment.continuationContext_withLaw_commit_integrable
 /-- Belief averaging preserves local-law affinity when decision information is
 not revisited. Supported commit values are integrated from the installed-law
 guard; no extra branch-integrability premise is required. -/
-theorem BehavioralAssessment.continuationContext_withLaw_eq_expect
+theorem BehavioralAssessment.truncatedContinuationContext_withLaw_eq_expect
     [Fintype ι] [DecidableEq ι]
     (hactsOnce : M.ActsOnceWhereItMatters)
     (assessment : M.BehavioralAssessment)
     {i : ι} [DecidableEq (M.InfoState i)] (site : M.InformationSite i)
     (policy : M.BehavioralPolicy i) (law : PMF (M.Choice i site.1))
     (payoff : E.History → ℝ) (fuel : ℕ)
-    (hbase : (assessment.continuationContext site payoff (fuel + 1)).IntegrableAt
+    (hbase : (assessment.truncatedContinuationContext site payoff (fuel + 1)).IntegrableAt
       (policy.withLaw site.1 law))
     (value : M.Choice i site.1 → ℝ)
     (hvalue : ∀ choice ∈ law.support,
-      value choice = (assessment.continuationContext site payoff (fuel + 1)).value
+      value choice = (assessment.truncatedContinuationContext site payoff (fuel + 1)).value
         (policy.commit site.1 choice)) :
     PayoffIntegrable law value ∧
-      (assessment.continuationContext site payoff (fuel + 1)).value
+      (assessment.truncatedContinuationContext site payoff (fuel + 1)).value
           (policy.withLaw site.1 law) = expect law value := by
   let belief := assessment.belief i site
   let q := fun choice : M.Choice i site.1 =>
@@ -298,9 +298,9 @@ theorem BehavioralAssessment.continuationContext_withLaw_eq_expect
         (Profile.update (sig := M.behavioralSignature) assessment.strategy i
           (policy.commit site.1 choice)) (fuel + 1) history.1
   have hlaw :
-      (assessment.continuationContext site payoff (fuel + 1)).outcome
+      (assessment.truncatedContinuationContext site payoff (fuel + 1)).outcome
           (policy.withLaw site.1 law) = law.bind q := by
-    exact assessment.continuationContext_withLaw_outcome_eq_bind
+    exact assessment.truncatedContinuationContext_withLaw_outcome_eq_bind
       M hactsOnce site policy law payoff fuel
   have hbind : PayoffIntegrable (law.bind q) payoff := by
     rw [← hlaw]

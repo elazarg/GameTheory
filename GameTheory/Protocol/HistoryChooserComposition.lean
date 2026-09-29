@@ -122,7 +122,7 @@ theorem graftHistoryChooser_on_child_cone
 child's own terminal law. This is the realization equation used by guarded
 backward induction. -/
 theorem historyBackwardLaw_graft
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (fallback : E.HistoryChooser)
     (history : E.History)
     (hterm : ¬ E.terminal history.state)

@@ -1,14 +1,11 @@
 /-
-# Existence of finite sequential equilibria under decision recall
+# Existence of sequential equilibria
 
 Positive uniform perturbations have locally optimal Bayes assessments.
 Recall at decision information states upgrades those exact local inequalities
 to whole-policy inequalities; observations made while a player cannot act may
 forget its own play. Compactness supplies one joint strategy/belief limit, and
 vanishingly perturbed deviations recover unrestricted sequential rationality.
-
-The conclusion uses the existing assessment predicates and continuation
-runner. The horizon is certified to reach termination, not a rolling deadline.
 -/
 
 import GameTheory.Analysis.Protocol.AssessmentCompactness
@@ -29,17 +26,16 @@ variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
     (M : InformationModel.{uι, us, ua, up, uq, uk} E)
 
 /-- Every finite decision-recall protocol with inhabited total policies has a
-consistent, sequentially rational assessment at any positive certified
-terminal horizon. The fallback inhabits menus even at unused information
-states; no equilibrium or approximation witness is assumed. -/
-theorem exists_sequentialEquilibriumWithin
+consistent, sequentially rational assessment. The fallback inhabits menus even
+at unused information states; no equilibrium or approximation witness is
+assumed. -/
+theorem exists_sequentialEquilibrium
     [Fintype E.State] [Fintype E.History] [∀ i, Fintype (E.Action i)]
     [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)]
     (hrecall : M.DecisionRecall) (fallback : (i : ι) → M.Policy i)
-    (payoff : ι → E.History → ℝ) (fuel : ℕ)
-    (hbound : E.BoundedHorizon (fuel + 1)) :
+    (payoff : ι → E.History → ℝ) (certificate : E.WellFoundedHistories) :
     ∃ assessment : M.BehavioralAssessment,
-      assessment.IsSequentiallyRationalWithin payoff (fuel + 1) ∧
+      assessment.IsSequentiallyRational certificate payoff ∧
         assessment.IsSequentiallyConsistent
           (hrecall.decisionInformationAntichain) := by
   classical
@@ -65,7 +61,7 @@ theorem exists_sequentialEquilibriumWithin
     M.exists_uniformTremble_locallyOptimal_bayesAssessment
       hrecall.actsOnceWhereItMatters
       (hrecall.decisionInformationAntichain)
-      (weight n) (hpositive n) (hone n) payoff fuel
+      (weight n) (hpositive n) (hone n) payoff certificate
   obtain ⟨assessment, subseq, hsubseq, hstrategy, hconvergence⟩ :=
     M.exists_subseq_behavioralAssessmentConvergesPointwise sequence
   let repair (n : ℕ) (i : ι) (alternative : M.BehavioralPolicy i) :
@@ -81,20 +77,21 @@ theorem exists_sequentialEquilibriumWithin
       (law : PMF (M.Choice i site.1))
       (hlaw : law ∈ M.uniformTrembleLaws (weight n)
         (hpositive n).le (hone n) i site.1) :
-      ((sequence n).continuationContext site (payoff i) (fuel + 1)).value
+      ((sequence n).continuationContext certificate site (payoff i)).value
           (((sequence n).strategy i).withLaw site.1 law) ≤
-        ((sequence n).continuationContext site (payoff i) (fuel + 1)).value
+        ((sequence n).continuationContext certificate site (payoff i)).value
           ((sequence n).strategy i) := by
     exact (hlocal n i site law hlaw).2.2
   refine ⟨assessment, ?_, ?_⟩
-  · apply BehavioralAssessment.isSequentiallyRationalWithin_of_converging_deviations
-      hstrategy (fun i site => hconvergence.belief i site) repair hrepair payoff (fuel + 1)
+  · apply BehavioralAssessment.isSequentiallyRational_of_converging_deviations M certificate
+      (fun i site => hstrategy i site.1) (fun i site => hconvergence.belief i site) repair
+      (fun i alternative site => hrepair i alternative site.1) payoff
     intro n who site alternative
     apply BehavioralAssessment.continuation_value_le_of_locallyOptimal M hrecall
       (sequence (subseq n)) (hfull (subseq n)) (hbayes (subseq n))
       (fun i info law => law ∈ M.uniformTrembleLaws
         (weight (subseq n)) (hpositive (subseq n)).le (hone (subseq n)) i info)
-      (hfeasible (subseq n)) payoff hbound (hlocalFinite (subseq n)) who site
+      (hfeasible (subseq n)) payoff certificate (hlocalFinite (subseq n)) who site
     intro info
     exact ⟨alternative info, rfl⟩
   · exact hconvergence.isSequentiallyConsistent

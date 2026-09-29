@@ -162,7 +162,8 @@ def rank : Bool → Nat
   | false => 1
   | true => 0
 
-theorem wellFoundedPlay : execution.WellFoundedPlay := by
+theorem wellFoundedHistories : execution.WellFoundedHistories := by
+  apply ExecutionProtocol.WellFoundedPlay.wellFoundedHistories
   apply execution.wellFoundedPlay_of_rank rank
   intro source target successor
   rcases successor with ⟨joint, isLegal, realized⟩
@@ -185,25 +186,25 @@ def utility : execution.History → Unit → ℝ := fun _ _ => 0
 
 theorem backwardIntegrable (chooser : execution.HistoryChooser)
     (history : execution.History) (who : Unit) :
-    PayoffIntegrable (execution.historyBackwardLaw wellFoundedPlay chooser history)
+    PayoffIntegrable (execution.historyBackwardLaw wellFoundedHistories chooser history)
       (fun outcome => utility outcome who) :=
   execution.payoffIntegrable_historyBackwardLaw_of_finite_step_support
-    (certificate := wellFoundedPlay) finiteStepSupport chooser
+    (certificate := wellFoundedHistories) finiteStepSupport chooser
     (fun outcome => utility outcome who) history
 
 /-- Backward induction constructs an SPE despite the infinite unreachable
 choice carrier; only the explicit total fallback supplies its unused value. -/
 theorem exists_subgamePerfect :
   ∃ profile : Profile information.strategicSignature,
-      information.IsSubgamePerfect wellFoundedPlay profile utility :=
+      information.IsSubgamePerfect wellFoundedHistories profile utility :=
   information.exists_isSubgamePerfect_of_finite_step_support singleMover fallback
-    finiteDecisionChoices wellFoundedPlay perfect utility finiteStepSupport
+    finiteDecisionChoices wellFoundedHistories perfect utility finiteStepSupport
 
 /-- At the infinite unreachable menu, the constructed policy is exactly the
 caller's fallback rather than the result of an impossible maximization. -/
 theorem backwardPolicy_two_eq_fallback :
     information.backwardPolicy singleMover fallback finiteDecisionChoices
-        wellFoundedPlay utility () 2 = fallback () 2 := by
+        wellFoundedHistories utility () 2 = fallback () 2 := by
   apply information.backwardPolicy_eq_fallback_of_no_decision_history
     singleMover fallback finiteDecisionChoices () 2
   rintro ⟨history, _, hactive, hinfo⟩

@@ -94,7 +94,8 @@ theorem simultaneous_larger_bound :
   (source.information.isBehavioralSubgamePerfect_bound_iff simultaneous_bounded
     simultaneous_bounded_three _ _).mp simultaneous_behavioral_perfect
 
-private theorem simultaneous_terminates : source.execution.WellFoundedPlay := by
+private theorem simultaneous_terminates : source.execution.WellFoundedHistories := by
+  apply ExecutionProtocol.WellFoundedPlay.wellFoundedHistories
   apply source.execution.wellFoundedPlay_of_rank
     (fun state => match state with | .initial => 1 | .finished _ => 0)
   intro state target successor
@@ -204,8 +205,8 @@ example (certificate : protocol.WellFoundedPlay)
     (perfect : model.IsSingleMoverBehavioralSubgamePerfect single bounded
       (Profile.map (target := model.behavioralSignature)
         (fun who (policy : model.Policy who) => policy.toBehavioral) policies) utility) :
-    model.IsSubgamePerfect certificate policies utility :=
-  model.isSubgamePerfect_of_singleMoverBehavioral single bounded certificate
+    model.IsSubgamePerfect certificate.wellFoundedHistories policies utility :=
+  model.isSubgamePerfect_of_singleMoverBehavioral single bounded certificate.wellFoundedHistories
     policies utility perfect
 
 end InfinitePlayers

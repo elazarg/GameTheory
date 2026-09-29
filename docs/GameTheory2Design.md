@@ -890,6 +890,14 @@ assumes fully mixed Bayes approximants and their approximate whole-policy
 optimality; it does not construct those inputs for arbitrary infinite games.
 Cyclic almost-sure termination requires a separate terminal-law construction.
 
+EXP-149 and [D64](decisions/D64-terminal-sequential-rationality.md) make
+terminal play the only semantics of sequential rationality and equilibrium.
+The terminal law is certified on histories, which a bounded horizon implies;
+finite existence then needs no horizon hypothesis. Contexts are formed from a
+continuation runner, so the preservation criteria hold for any runner, and
+play truncated at a fixed step count remains only as a finite-prefix quantity
+identified with terminal play under a sufficient horizon.
+
 Information locality must hold by construction. A player's policy may receive
 its `InfoState`, recommendation, and a legal-menu value determined by that
 `InfoState`, but not the hidden execution state or a proof from which that state

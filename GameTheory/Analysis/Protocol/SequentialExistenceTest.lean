@@ -320,24 +320,29 @@ def payoff (_ : Unit) (history : execution.History) : ℝ :=
 depths. All structural hypotheses are discharged by this concrete fixture. -/
 theorem exists_sequential_equilibrium :
     ∃ assessment : information.BehavioralAssessment,
-      game.IsSequentialEquilibriumWithin antichain assessment payoff 3 :=
-  game.exists_isSequentialEquilibriumWithin (information.decisionRecall_of_perfectRecall
-    perfectRecall) fallback payoff 3
-    (by decide) bounded_three
+      game.IsSequentialEquilibrium antichain assessment game.wellFoundedHistories payoff :=
+  game.exists_isSequentialEquilibrium (information.decisionRecall_of_perfectRecall
+    perfectRecall) fallback payoff _
 
-/-- The truncation counterexample has an equilibrium at its certified full
-horizon. This uses the general existence theorem, alongside the earlier
-proof that the same game's two-step predicate has no assessment. -/
-theorem boundary_exists_at_full_horizon :
+/-- The truncation counterexample has a sequential equilibrium, although no
+assessment is rational against play cut off after two steps: truncating
+continuations below the horizon changes the game. -/
+theorem boundary_equilibrium_not_truncated_rational :
     ∃ assessment : SequentialExistenceBoundary.information.BehavioralAssessment,
-      SequentialExistenceBoundary.game.IsSequentialEquilibriumWithin
-        SequentialExistenceBoundary.antichain assessment
-        SequentialExistenceBoundary.payoff 3 :=
-  SequentialExistenceBoundary.game.exists_isSequentialEquilibriumWithin
-    (SequentialExistenceBoundary.information.decisionRecall_of_perfectRecall
-      SequentialExistenceBoundary.perfectRecall)
-    (fun _ => SequentialExistenceBoundary.forcedChoice)
-    SequentialExistenceBoundary.payoff 3 (by decide)
-    SequentialExistenceBoundary.bounded_three
+      SequentialExistenceBoundary.game.IsSequentialEquilibrium
+          SequentialExistenceBoundary.antichain assessment
+          SequentialExistenceBoundary.game.wellFoundedHistories
+          SequentialExistenceBoundary.payoff ∧
+        ¬ assessment.IsSequentiallyRationalFor fun i site =>
+          assessment.truncatedContinuationContext site
+            (SequentialExistenceBoundary.payoff i) 2 := by
+  obtain ⟨assessment, hequilibrium⟩ :=
+    SequentialExistenceBoundary.game.exists_isSequentialEquilibrium
+      (SequentialExistenceBoundary.information.decisionRecall_of_perfectRecall
+        SequentialExistenceBoundary.perfectRecall)
+      (fun _ => SequentialExistenceBoundary.forcedChoice)
+      SequentialExistenceBoundary.payoff _
+  exact ⟨assessment, hequilibrium,
+    SequentialExistenceBoundary.no_sequentially_rational_assessment assessment⟩
 
 end GameTheory.Tests.SequentialExistence

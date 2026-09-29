@@ -40,8 +40,10 @@ wherever recall is used at decisions.
 at reached decision sites and forms continuation contexts from whole replacement
 policies. `BehavioralBayes` normalizes the reach masses of information-history
 antichains without importing the project's analytic equilibrium layer.
-`BehavioralTerminal` forms fuel-free continuation contexts for well-founded
-play, with integration required on each actual comparison law.
+`BehavioralTerminal` scores those contexts by terminal play whenever histories
+are well-founded, with integration required on each actual comparison law;
+this is the semantics of sequential rationality. Play cut off after a fixed
+number of steps agrees with it under a sufficient horizon.
 `SubgamePerfect` separates textbook subgame perfection over information-set-closed roots from
 the stronger historywise continuation predicate.  The latter is equivalent to
 information-local one-shot optimality under the same no-revisit condition used

@@ -165,6 +165,41 @@ decreasing_by simp [ExecutionProtocol.Trace.length]
 theorem execution_treeShaped : execution.IsTreeShaped :=
   fun _ => ⟨trace_unique⟩
 
+/-- The number of steps from the root to a state. -/
+def stage : State → ℕ
+  | .initial => 0
+  | .decision _ _ => 1
+  | .terminal _ _ _ => 2
+
+theorem trace_length : ∀ {state : State} (trace : execution.Trace state),
+    trace.length = stage state
+  | _, .start => rfl
+  | _, .extend (source := source) (target := target) prior joint legal realized => by
+      have ih := trace_length prior
+      cases source with
+      | initial =>
+          rw [PMF.support_map] at realized
+          obtain ⟨side, _, rfl⟩ := realized
+          simp [ExecutionProtocol.Trace.length, ih, stage]
+      | decision hidden arrival =>
+          have htarget : target = .terminal hidden arrival joint := by
+            simpa [execution] using realized
+          subst target
+          simp [ExecutionProtocol.Trace.length, ih, stage]
+      | terminal hidden arrival action => exact False.elim (legal.1 trivial)
+
+/-- Every play stops after chance and one decision. -/
+theorem bounded_two : execution.BoundedHorizon 2 := by
+  intro state trace hlength
+  rw [trace_length trace] at hlength
+  cases state with
+  | initial => simp [stage] at hlength
+  | decision hidden arrival => simp [stage] at hlength
+  | terminal hidden arrival action => trivial
+
+theorem wellFoundedHistories : execution.WellFoundedHistories :=
+  bounded_two.wellFoundedHistories
+
 /-- Only one player can move because there is only one player. -/
 theorem execution_singleMover (state : State) {first second : Player}
     (_hfirst : execution.active state first)
@@ -837,11 +872,11 @@ theorem fullyMixedAssessment_belief_acting :
 /-- Every whole continuation policy has value `1 / 2`: after projecting legal
 choices to their Boolean action, the two hidden states contribute
 complementary indicators. -/
-theorem continuationContext_matchingPayoff_value
+theorem truncatedContinuationContext_matchingPayoff_value
     (alternative : information.BehavioralPolicy .player)
-    (hvalue : (fullyMixedAssessment.continuationContext actingSite
+    (hvalue : (fullyMixedAssessment.truncatedContinuationContext actingSite
       (matchingPayoff .player) 2).IntegrableAt alternative) :
-    (fullyMixedAssessment.continuationContext actingSite
+    (fullyMixedAssessment.truncatedContinuationContext actingSite
       (matchingPayoff .player) 2).value alternative = 1 / 2 := by
   let kernel : information.InformationHistory .player actingSite.1 →
       PMF execution.History := fun history =>
@@ -854,7 +889,7 @@ theorem continuationContext_matchingPayoff_value
     dsimp [belief]
     exact fullyMixedAssessment_belief_acting
   have hbind : PayoffIntegrable (belief.bind kernel) (matchingPayoff .player) := by
-    show (fullyMixedAssessment.continuationContext actingSite
+    show (fullyMixedAssessment.truncatedContinuationContext actingSite
       (matchingPayoff .player) 2).IntegrableAt alternative
     exact hvalue
   let branchValue := fun history =>
@@ -943,13 +978,15 @@ theorem continuationContext_matchingPayoff_value
 
 /-- The fair hidden state makes every whole continuation policy optimal, even
 though the terminal payoff itself is nonconstant. -/
-theorem fullyMixedAssessment_isSequentiallyRationalWithin_matchingPayoff :
-    fullyMixedAssessment.IsSequentiallyRationalWithin matchingPayoff 2 := by
+theorem fullyMixedAssessment_isSequentiallyRational_matchingPayoff :
+    fullyMixedAssessment.IsSequentiallyRational wellFoundedHistories matchingPayoff := by
+  rw [fullyMixedAssessment.isSequentiallyRational_iff_truncated_of_bounded
+    wellFoundedHistories bounded_two]
   intro who site
   cases who
   have hsite := informationSite_eq_actingSite site
   subst site
-  let context := fullyMixedAssessment.continuationContext actingSite
+  let context := fullyMixedAssessment.truncatedContinuationContext actingSite
     (matchingPayoff .player) 2
   have hfinite (alternative : information.BehavioralPolicy .player) :
       context.IntegrableAt alternative :=
@@ -959,8 +996,8 @@ theorem fullyMixedAssessment_isSequentiallyRationalWithin_matchingPayoff :
     (fullyMixedAssessment.strategy .player)
   refine (GameTheory.Protocol.Context.isLocallyOptimal_iff_of_integrable (hfinite _)
     fun alternative _ => hfinite alternative).2 fun alternative _ => ?_
-  rw [continuationContext_matchingPayoff_value alternative (hfinite alternative),
-    continuationContext_matchingPayoff_value
+  rw [truncatedContinuationContext_matchingPayoff_value alternative (hfinite alternative),
+    truncatedContinuationContext_matchingPayoff_value
       (fullyMixedAssessment.strategy .player) (hfinite _)]
 
 theorem fullyMixedAssessment_isSequentiallyConsistent :
@@ -977,25 +1014,25 @@ Zero continuation payoff makes every whole continuation policy optimal; full
 mixing and finite Bayes consistency make the assessment its own valid
 approximating sequence. -/
 theorem fullyMixedAssessment_isSequentialEquilibrium :
-    game.IsSequentialEquilibriumWithin information_decisionInformationAntichain
-      fullyMixedAssessment payoff 2 := by
-  rw [game.isSequentialEquilibriumWithin_iff
+    game.IsSequentialEquilibrium information_decisionInformationAntichain
+      fullyMixedAssessment wellFoundedHistories payoff := by
+  rw [game.isSequentialEquilibrium_iff
     information_decisionInformationAntichain]
   exact
-    ⟨fullyMixedAssessment.isSequentiallyRationalWithin_zero 2,
+    ⟨fullyMixedAssessment.isSequentiallyRational_zero wellFoundedHistories,
       fullyMixedAssessment_isSequentiallyConsistent⟩
 
 /-- The same fully mixed Bayes assessment is a sequential equilibrium for the
 nonconstant matching payoff. Rationality quantifies over arbitrary replacement
 policies, so this is not a fixed-strategy payoff calculation. -/
 theorem fullyMixedAssessment_isSequentialEquilibrium_matchingPayoff :
-    game.IsSequentialEquilibriumWithin
+    game.IsSequentialEquilibrium
       information_decisionInformationAntichain fullyMixedAssessment
-        matchingPayoff 2 := by
-  rw [game.isSequentialEquilibriumWithin_iff
+        wellFoundedHistories matchingPayoff := by
+  rw [game.isSequentialEquilibrium_iff
     information_decisionInformationAntichain]
   exact
-    ⟨fullyMixedAssessment_isSequentiallyRationalWithin_matchingPayoff,
+    ⟨fullyMixedAssessment_isSequentiallyRational_matchingPayoff,
       fullyMixedAssessment_isSequentiallyConsistent⟩
 
 /-! A falsifying assessment reuses the same continuation runner. Its belief
@@ -1025,11 +1062,11 @@ def alwaysTruePolicy : information.BehavioralPolicy .player
 
 /-- Under the dogmatic belief, continuation value is exactly the probability
 of choosing `true` at the acting information state. -/
-theorem wrongAssessment_continuationContext_value
+theorem wrongAssessment_truncatedContinuationContext_value
     (alternative : information.BehavioralPolicy .player)
-    (hvalue : (wrongAssessment.continuationContext actingSite
+    (hvalue : (wrongAssessment.truncatedContinuationContext actingSite
       (matchingPayoff .player) 2).IntegrableAt alternative) :
-    (wrongAssessment.continuationContext actingSite
+    (wrongAssessment.truncatedContinuationContext actingSite
       (matchingPayoff .player) 2).value alternative =
       expect (alternative .acting) fun choice =>
           if choice.1 = some true then 1 else 0 := by
@@ -1041,7 +1078,7 @@ theorem wrongAssessment_continuationContext_value
   let belief : PMF (information.InformationHistory .player actingSite.1) :=
     wrongAssessment.belief .player actingSite
   have hbind : PayoffIntegrable (belief.bind kernel) (matchingPayoff .player) := by
-    show (wrongAssessment.continuationContext actingSite
+    show (wrongAssessment.truncatedContinuationContext actingSite
       (matchingPayoff .player) 2).IntegrableAt alternative
     exact hvalue
   let branchValue := fun history =>
@@ -1096,10 +1133,12 @@ theorem wrongAssessment_continuationContext_value
 
 /-- The prescribed `false` policy has value zero, while the whole-policy
 alternative choosing `true` has value one. -/
-theorem wrongAssessment_not_isSequentiallyRationalWithin_matchingPayoff :
-    ¬ wrongAssessment.IsSequentiallyRationalWithin matchingPayoff 2 := by
+theorem wrongAssessment_not_isSequentiallyRational_matchingPayoff :
+    ¬ wrongAssessment.IsSequentiallyRational wellFoundedHistories matchingPayoff := by
+  rw [wrongAssessment.isSequentiallyRational_iff_truncated_of_bounded
+    wellFoundedHistories bounded_two]
   intro hrational
-  let context := wrongAssessment.continuationContext actingSite
+  let context := wrongAssessment.truncatedContinuationContext actingSite
     (matchingPayoff .player) 2
   have hlocal : context.IsLocallyOptimal Set.univ
       (wrongAssessment.strategy .player) := hrational .player actingSite
@@ -1109,9 +1148,9 @@ theorem wrongAssessment_not_isSequentiallyRationalWithin_matchingPayoff :
   have hdeviation' := (GameTheory.Protocol.Context.isLocallyOptimal_iff_of_integrable
     (hfinite _) fun alternative _ => hfinite alternative).1 hlocal alwaysTruePolicy
     (Set.mem_univ _)
-  have htrue := wrongAssessment_continuationContext_value alwaysTruePolicy
+  have htrue := wrongAssessment_truncatedContinuationContext_value alwaysTruePolicy
     (hfinite alwaysTruePolicy)
-  have hincumbent' := wrongAssessment_continuationContext_value
+  have hincumbent' := wrongAssessment_truncatedContinuationContext_value
     (wrongAssessment.strategy .player) (hfinite _)
   have hvalues :
       expect (alwaysTruePolicy .acting) (fun choice =>
@@ -1137,26 +1176,26 @@ theorem wrongAssessment_not_isSequentiallyRationalWithin_matchingPayoff :
 /-- Failed sequential rationality is already enough to refute sequential
 equilibrium, independently of the assessment's consistency status. -/
 theorem wrongAssessment_not_isSequentialEquilibrium_matchingPayoff :
-    ¬ game.IsSequentialEquilibriumWithin information_decisionInformationAntichain
-      wrongAssessment matchingPayoff 2 := by
+    ¬ game.IsSequentialEquilibrium information_decisionInformationAntichain
+      wrongAssessment wellFoundedHistories matchingPayoff := by
   intro hequilibrium
-  apply wrongAssessment_not_isSequentiallyRationalWithin_matchingPayoff
-  exact (game.isSequentialEquilibriumWithin_iff
-    information_decisionInformationAntichain wrongAssessment matchingPayoff 2).mp
-      hequilibrium |>.1
+  apply wrongAssessment_not_isSequentiallyRational_matchingPayoff
+  exact (game.isSequentialEquilibrium_iff
+    information_decisionInformationAntichain wrongAssessment wellFoundedHistories
+      matchingPayoff).mp hequilibrium |>.1
 
 /-- The fixture supplies finite history fibers; the language adapter
 specializes canonical full-policy contexts and consistency predicates. -/
 def sequentialEquilibriumTarget : Prop :=
-  game.IsSequentialEquilibriumWithin information_decisionInformationAntichain
-    assessment payoff 2
+  game.IsSequentialEquilibrium information_decisionInformationAntichain
+    assessment wellFoundedHistories payoff
 
 theorem sequentialEquilibriumTarget_iff :
     sequentialEquilibriumTarget ↔
-      assessment.IsSequentiallyRationalWithin payoff 2 ∧
+      assessment.IsSequentiallyRational wellFoundedHistories payoff ∧
         game.IsSequentiallyConsistent information_decisionInformationAntichain
           assessment := by
-  exact game.isSequentialEquilibriumWithin_iff
-    information_decisionInformationAntichain assessment payoff 2
+  exact game.isSequentialEquilibrium_iff
+    information_decisionInformationAntichain assessment wellFoundedHistories payoff
 
 end GameTheory.Tests.EFG

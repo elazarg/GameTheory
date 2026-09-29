@@ -37,7 +37,7 @@ theorem exists_isSubgamePerfect
     [∀ who, DecidableEq (G.information.InfoState who)]
     (fallback : Profile G.strategicSignature)
     (finiteChoices : G.information.HasFiniteDecisionChoices)
-    (certificate : G.execution.WellFoundedPlay)
+    (certificate : G.execution.WellFoundedHistories)
     (hperfect : G.HasPerfectInformation)
     (utility : G.History → ι → ℝ)
     (hglobal : ∀ chooser history who,
@@ -55,7 +55,7 @@ theorem exists_isSubgamePerfect_of_finite_step_support
     [∀ who, DecidableEq (G.information.InfoState who)]
     (fallback : Profile G.strategicSignature)
     (finiteChoices : G.information.HasFiniteDecisionChoices)
-    (certificate : G.execution.WellFoundedPlay)
+    (certificate : G.execution.WellFoundedHistories)
     (hperfect : G.HasPerfectInformation)
     (utility : G.History → ι → ℝ)
     (hfinite : ∀ (history : G.History)

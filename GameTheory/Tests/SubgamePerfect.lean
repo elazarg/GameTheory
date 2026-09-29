@@ -203,8 +203,8 @@ theorem rank_decreases
   | punished => exact False.elim (hlegal.1 terminal_punished)
   | rewarded => exact False.elim (hlegal.1 terminal_rewarded)
 
-theorem arena_wellFoundedPlay : arena.WellFoundedPlay :=
-  wellFoundedPlay_of_rank rank rank_decreases
+theorem arena_wellFoundedHistories : arena.WellFoundedHistories :=
+  (wellFoundedPlay_of_rank rank rank_decreases).wellFoundedHistories
 
 theorem rank_lt_of_mem_actedAt :
     ∀ {state : State} (trace : arena.Trace state)
@@ -335,13 +335,13 @@ private theorem backwardValue_of_constant_successors
       (realized : target ∈ (arena.step history.state
         (chooser history hterm)).support)
       (_ : PayoffIntegrable
-        (arena.historyBackwardLaw arena_wellFoundedPlay chooser
+        (arena.historyBackwardLaw arena_wellFoundedHistories chooser
           (history.extend (chooser history hterm).2 realized))
         (fun outcome => payoff outcome ())),
-      arena.historyBackwardValue arena_wellFoundedPlay chooser
+      arena.historyBackwardValue arena_wellFoundedHistories chooser
         (fun outcome => payoff outcome ())
         (history.extend (chooser history hterm).2 realized) = c) :
-    arena.historyBackwardValue arena_wellFoundedPlay chooser
+    arena.historyBackwardValue arena_wellFoundedHistories chooser
       (fun outcome => payoff outcome ()) history
        = c := by
   obtain ⟨houter, heq⟩ := arena.historyBackwardValue_of_not_terminal
@@ -351,7 +351,7 @@ private theorem backwardValue_of_constant_successors
   simpa only [expect_constant] using heq
 
 theorem incumbent_value_decision :
-    arena.historyBackwardValue arena_wellFoundedPlay
+    arena.historyBackwardValue arena_wellFoundedHistories
         (model.historyChooser incumbentProfile)
         (fun history => payoff history ()) decisionHistory
          = 0 := by
@@ -365,7 +365,7 @@ theorem incumbent_value_decision :
   rfl
 
 theorem rewarding_value_decision :
-    arena.historyBackwardValue arena_wellFoundedPlay
+    arena.historyBackwardValue arena_wellFoundedHistories
         (model.historyChooser
           (Profile.update incumbentProfile () rewardingPolicy))
         (fun history => payoff history ()) decisionHistory
@@ -387,14 +387,14 @@ theorem payoff_le_two (history : arena.History) :
 /-- No policy can earn more than the exit payoff `2` from any history. -/
 theorem historyBackwardValue_le_two
     (chooser : arena.HistoryChooser) (history : arena.History) :
-    arena.historyBackwardValue arena_wellFoundedPlay chooser
+    arena.historyBackwardValue arena_wellFoundedHistories chooser
         (fun outcome => payoff outcome ()) history
          ≤ 2 := by
   unfold ExecutionProtocol.historyBackwardValue
   calc
-    expect (arena.historyBackwardLaw arena_wellFoundedPlay chooser history)
+    expect (arena.historyBackwardLaw arena_wellFoundedHistories chooser history)
         (fun outcome => payoff outcome ()) ≤
-      expect (arena.historyBackwardLaw arena_wellFoundedPlay chooser history)
+      expect (arena.historyBackwardLaw arena_wellFoundedHistories chooser history)
         (fun _ => 2) := by
       refine expect_mono ?_ (payoff_integrable _) (payoffIntegrable_constant _ _)
       intro outcome _
@@ -402,7 +402,7 @@ theorem historyBackwardValue_le_two
     _ = 2 := expect_constant _ 2
 
 theorem incumbent_value_root :
-    arena.historyBackwardValue arena_wellFoundedPlay
+    arena.historyBackwardValue arena_wellFoundedHistories
         (model.historyChooser incumbentProfile)
         (fun history => payoff history ()) arena.initHistory
          = 2 := by
@@ -421,11 +421,11 @@ theorem incumbent_value_root :
 replacement policy; the failure below is therefore genuinely off path. -/
 theorem incumbent_optimal_from_initial
     (alternative : model.Policy ()) :
-    arena.historyBackwardValue arena_wellFoundedPlay
+    arena.historyBackwardValue arena_wellFoundedHistories
         (model.historyChooser
           (Profile.update incumbentProfile () alternative))
         (fun history => payoff history ()) arena.initHistory ≤
-      arena.historyBackwardValue arena_wellFoundedPlay
+      arena.historyBackwardValue arena_wellFoundedHistories
         (model.historyChooser incumbentProfile)
         (fun history => payoff history ()) arena.initHistory := by
   rw [incumbent_value_root]
@@ -437,30 +437,30 @@ theorem incumbent_optimal_from_initial
 /-- Both directions of the generic theorem specialize to the finite arena
 without an EFG-specific solution concept. -/
 theorem historywiseOptimal_iff_noProfitableOneShotDeviation :
-    model.IsHistorywiseOptimal arena_wellFoundedPlay
+    model.IsHistorywiseOptimal arena_wellFoundedHistories
         incumbentProfile payoff ↔
       model.HasNoProfitableOneShotDeviation
-        arena_wellFoundedPlay incumbentProfile payoff :=
+        arena_wellFoundedHistories incumbentProfile payoff :=
   model.isHistorywiseOptimal_iff_hasNoProfitableOneShotDeviation
-    model_actsOnceWhereItMatters arena_wellFoundedPlay
+    model_actsOnceWhereItMatters arena_wellFoundedHistories
     incumbentProfile payoff
     (fun _ _ _ => hasExpectation_of_payoffIntegrable (payoff_integrable _))
 
 /-- The incumbent's bad continuation is rejected at the off-path decision
 history, even though the incumbent exits before reaching it. -/
 theorem incumbent_not_historywiseOptimal :
-    ¬ model.IsHistorywiseOptimal arena_wellFoundedPlay
+    ¬ model.IsHistorywiseOptimal arena_wellFoundedHistories
       incumbentProfile payoff := by
   intro hoptimal
   have hdecision := hoptimal () rewardingPolicy decisionHistory
   obtain ⟨-, -, hdecision⟩ := hdecision
   rw [ExecutionProtocol.historyBackwardExtendedValue_le_iff _ (payoff_integrable _)
     (payoff_integrable _)] at hdecision
-  have hreward : arena.historyBackwardValue arena_wellFoundedPlay
+  have hreward : arena.historyBackwardValue arena_wellFoundedHistories
       (model.historyChooser (Profile.update incumbentProfile () rewardingPolicy))
       (fun history => payoff history ()) decisionHistory = 1 := by
     simpa only using rewarding_value_decision
-  have hincumbent : arena.historyBackwardValue arena_wellFoundedPlay
+  have hincumbent : arena.historyBackwardValue arena_wellFoundedHistories
       (model.historyChooser incumbentProfile)
       (fun history => payoff history ()) decisionHistory = 0 := by
     simpa only using incumbent_value_decision
@@ -470,7 +470,7 @@ theorem incumbent_not_historywiseOptimal :
 /-- Equivalently, the bad off-path threat is a profitable one-shot deviation. -/
 theorem incumbent_has_profitableOneShotDeviation :
     ¬ model.HasNoProfitableOneShotDeviation
-      arena_wellFoundedPlay incumbentProfile payoff := by
+      arena_wellFoundedHistories incumbentProfile payoff := by
   intro hnone
   exact incumbent_not_historywiseOptimal
     (historywiseOptimal_iff_noProfitableOneShotDeviation.mpr hnone)

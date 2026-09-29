@@ -482,7 +482,7 @@ def historyUtility (history : execution.History) (_ : PUnit) : ℝ :=
 theorem backwardIntegrable (historyChooser : execution.HistoryChooser)
     (history : execution.History) (who : PUnit) :
     PayoffIntegrable
-      (execution.historyBackwardLaw wellFounded historyChooser history)
+      (execution.historyBackwardLaw wellFounded.wellFoundedHistories historyChooser history)
       (fun outcome => historyUtility outcome who) :=
   payoffIntegrable_of_bounded _ _ (C := 1)
     (fun outcome => payoff_bounded outcome.state)
@@ -491,8 +491,8 @@ theorem backwardIntegrable (historyChooser : execution.HistoryChooser)
 having infinitely many terminal successors. -/
 theorem exists_subgamePerfect :
     ∃ profile : Profile information.strategicSignature,
-      information.IsSubgamePerfect wellFounded profile historyUtility :=
+      information.IsSubgamePerfect wellFounded.wellFoundedHistories profile historyUtility :=
   information.exists_isSubgamePerfect singleMover fallbackProfile
-    finiteDecisionChoices wellFounded perfect historyUtility backwardIntegrable
+    finiteDecisionChoices wellFounded.wellFoundedHistories perfect historyUtility backwardIntegrable
 
 end GameTheory.Experimental.PMFBackwardGate.ChoiceChance

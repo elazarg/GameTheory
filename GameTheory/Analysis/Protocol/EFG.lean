@@ -29,28 +29,28 @@ def IsSequentiallyConsistent
     (assessment : G.information.BehavioralAssessment) : Prop :=
   assessment.IsSequentiallyConsistent hantichain
 
-/-- Sequential equilibrium of an EFG assessment over a supplied finite-horizon
-payoff. The predicate is the generic Protocol predicate specialized to the
-assessment's canonical continuation contexts. -/
-def IsSequentialEquilibriumWithin
+/-- Sequential equilibrium of an EFG assessment: the Protocol predicate on
+terminal play, specialized to the game's information model. -/
+def IsSequentialEquilibrium
     (G : Game ι)
     [Fintype ι] [DecidableEq ι]
     (hantichain : G.information.DecisionInformationAntichain)
     (assessment : G.information.BehavioralAssessment)
-    (payoff : ι → G.History → ℝ) (fuel : ℕ) : Prop :=
-  assessment.IsSequentialEquilibriumFor hantichain fun i site =>
-    assessment.continuationContext site (payoff i) fuel
+    (certificate : G.execution.WellFoundedHistories)
+    (payoff : ι → G.History → ℝ) : Prop :=
+  assessment.IsSequentialEquilibrium hantichain certificate payoff
 
-/-- The adapter unfolds to full-policy rationality in the assessment's
-continuation contexts and generic Kreps-Wilson consistency. -/
-theorem isSequentialEquilibriumWithin_iff
+/-- The adapter unfolds to whole-policy sequential rationality on terminal play
+and generic Kreps-Wilson consistency. -/
+theorem isSequentialEquilibrium_iff
     (G : Game ι)
     [Fintype ι] [DecidableEq ι]
     (hantichain : G.information.DecisionInformationAntichain)
     (assessment : G.information.BehavioralAssessment)
-    (payoff : ι → G.History → ℝ) (fuel : ℕ) :
-    G.IsSequentialEquilibriumWithin hantichain assessment payoff fuel ↔
-      assessment.IsSequentiallyRationalWithin payoff fuel ∧
+    (certificate : G.execution.WellFoundedHistories)
+    (payoff : ι → G.History → ℝ) :
+    G.IsSequentialEquilibrium hantichain assessment certificate payoff ↔
+      assessment.IsSequentiallyRational certificate payoff ∧
         G.IsSequentiallyConsistent hantichain assessment :=
   Iff.rfl
 

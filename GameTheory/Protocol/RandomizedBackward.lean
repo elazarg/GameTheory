@@ -26,25 +26,67 @@ variable (E)
 def HistorySuccessor (later earlier : E.History) : Prop :=
   E.Successor later.state earlier.state
 
+/-- **The terminal-history certificate.** Every play from the initial state
+descends: the successor relation is well-founded on complete histories, whose
+states are exactly the reachable ones. Terminal-history laws recurse on
+histories, so this is all they need. -/
+def WellFoundedHistories : Prop := WellFounded E.HistorySuccessor
+
+variable {E}
+
 /-- A well-founded state protocol is also well-founded on complete histories. -/
-theorem wellFounded_historySuccessor
-    (certificate : E.WellFoundedPlay) :
-    WellFounded E.HistorySuccessor :=
+theorem WellFoundedPlay.wellFoundedHistories (certificate : E.WellFoundedPlay) :
+    E.WellFoundedHistories :=
   certificate.onFun
+
+/-- The successor relation on histories sees only states, so accessibility
+transfers between histories with the same state. -/
+private theorem acc_of_state_eq {first second : E.History}
+    (hfirst : Acc E.HistorySuccessor first) (hstate : second.state = first.state) :
+    Acc E.HistorySuccessor second := by
+  refine Acc.intro _ fun later hlater => hfirst.inv ?_
+  change E.Successor later.state first.state
+  rw [← hstate]
+  exact hlater
+
+/-- **A bounded horizon certifies terminal histories**, although it does not
+make the successor relation on all states well-founded: an unreachable cycle of
+states is allowed. -/
+theorem BoundedHorizon.wellFoundedHistories {bound : ℕ} (bounded : E.BoundedHorizon bound) :
+    E.WellFoundedHistories := by
+  have hacc : ∀ remaining (history : E.History),
+      bound - history.trace.length ≤ remaining → Acc E.HistorySuccessor history := by
+    intro remaining
+    induction remaining with
+    | zero =>
+        intro history hremaining
+        refine Acc.intro _ fun later hlater => ?_
+        exact absurd hlater (not_successor_of_terminal
+          (bounded history.state history.trace (by omega)))
+    | succ remaining ih =>
+        intro history hremaining
+        refine Acc.intro _ fun later hlater => ?_
+        obtain ⟨joint, isLegal, realized⟩ := hlater
+        let extended := history.extend isLegal realized
+        have hlength : extended.trace.length = history.trace.length + 1 := rfl
+        exact acc_of_state_eq (ih extended (by omega)) rfl
+  exact ⟨fun history => hacc _ history le_rfl⟩
+
+variable (E)
 
 /-- Well-founded recursion whose argument retains the complete history. -/
 def historyBackwardRec {motive : E.History → Sort*}
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (rule : ∀ history : E.History,
       (∀ later : E.History,
         E.HistorySuccessor later history → motive later) →
       motive history)
     (history : E.History) : motive history :=
-  WellFounded.fix (E.wellFounded_historySuccessor certificate) rule history
+  WellFounded.fix certificate rule history
 
 /-- The unfolding equation for history-indexed backward recursion. -/
 theorem historyBackwardRec_eq {motive : E.History → Sort*}
-    (certificate : E.WellFoundedPlay)
+    (certificate : E.WellFoundedHistories)
     (rule : ∀ history : E.History,
       (∀ later : E.History,
         E.HistorySuccessor later history → motive later) →
@@ -53,12 +95,11 @@ theorem historyBackwardRec_eq {motive : E.History → Sort*}
     E.historyBackwardRec certificate rule history =
       rule history fun later _relation =>
         E.historyBackwardRec certificate rule later :=
-  WellFounded.fix_eq
-    (E.wellFounded_historySuccessor certificate) rule history
+  WellFounded.fix_eq certificate rule history
 
 open Classical in
 /-- The terminal-history law of a randomized history chooser. -/
-def randomizedBackwardLaw (certificate : E.WellFoundedPlay)
+def randomizedBackwardLaw (certificate : E.WellFoundedHistories)
     (chooser : E.RandomizedChooser) : E.History → PMF E.History :=
   E.historyBackwardRec certificate fun history recurse =>
     if hterm : E.terminal history.state then PMF.pure history
@@ -69,7 +110,7 @@ def randomizedBackwardLaw (certificate : E.WellFoundedPlay)
             ⟨drawn.1, drawn.2, realized⟩
 
 open Classical in
-theorem randomizedBackwardLaw_eq (certificate : E.WellFoundedPlay)
+theorem randomizedBackwardLaw_eq (certificate : E.WellFoundedHistories)
     (chooser : E.RandomizedChooser) (history : E.History) :
     E.randomizedBackwardLaw certificate chooser history =
       if hterm : E.terminal history.state then PMF.pure history
@@ -81,13 +122,13 @@ theorem randomizedBackwardLaw_eq (certificate : E.WellFoundedPlay)
   rw [randomizedBackwardLaw, historyBackwardRec_eq]
 
 theorem randomizedBackwardLaw_of_terminal
-    {certificate : E.WellFoundedPlay} {chooser : E.RandomizedChooser}
+    {certificate : E.WellFoundedHistories} {chooser : E.RandomizedChooser}
     {history : E.History} (hterm : E.terminal history.state) :
     E.randomizedBackwardLaw certificate chooser history = PMF.pure history := by
   rw [randomizedBackwardLaw_eq, dite_eq_left hterm]
 
 theorem randomizedBackwardLaw_of_not_terminal
-    {certificate : E.WellFoundedPlay} {chooser : E.RandomizedChooser}
+    {certificate : E.WellFoundedHistories} {chooser : E.RandomizedChooser}
     {history : E.History} (hterm : ¬ E.terminal history.state) :
     E.randomizedBackwardLaw certificate chooser history =
       (chooser history hterm).bind fun drawn =>
@@ -98,12 +139,12 @@ theorem randomizedBackwardLaw_of_not_terminal
 
 /-- Every outcome of the well-founded randomized law has terminated. -/
 theorem randomizedBackwardLaw_support_terminal
-    {certificate : E.WellFoundedPlay} {chooser : E.RandomizedChooser}
+    {certificate : E.WellFoundedHistories} {chooser : E.RandomizedChooser}
     (history : E.History) :
     ∀ final ∈ (E.randomizedBackwardLaw certificate chooser history).support,
       E.terminal final.state := by
   induction history using
-      (E.wellFounded_historySuccessor certificate).induction with
+      certificate.induction with
   | _ current ih =>
       intro final hfinal
       by_cases hterm : E.terminal current.state
@@ -121,7 +162,7 @@ theorem randomizedBackwardLaw_support_terminal
 
 /-- The terminal law equals a forward randomized run once that run has stopped. -/
 theorem randomizedBackwardLaw_eq_runRandomizedFor
-    {certificate : E.WellFoundedPlay} {chooser : E.RandomizedChooser}
+    {certificate : E.WellFoundedHistories} {chooser : E.RandomizedChooser}
     {horizon : ℕ} {history : E.History}
     (hstop : ∀ final ∈ (E.runRandomizedFor chooser horizon history).support,
       E.terminal final.state) :
@@ -155,7 +196,7 @@ theorem randomizedBackwardLaw_eq_runRandomizedFor
 
 /-- A global history horizon identifies the terminal law with the bounded runner. -/
 theorem randomizedBackwardLaw_eq_runRandomizedFor_of_bound
-    {certificate : E.WellFoundedPlay} {bound : ℕ}
+    {certificate : E.WellFoundedHistories} {bound : ℕ}
     (bounded : E.BoundedHorizon bound) (chooser : E.RandomizedChooser)
     (history : E.History) :
     E.randomizedBackwardLaw certificate chooser history =
@@ -169,7 +210,7 @@ theorem randomizedBackwardLaw_eq_runRandomizedFor_of_bound
 
 /-- A terminal payoff bound integrates under every randomized terminal law. -/
 theorem payoffIntegrable_randomizedBackwardLaw_of_bounded_terminal
-    {certificate : E.WellFoundedPlay} {chooser : E.RandomizedChooser}
+    {certificate : E.WellFoundedHistories} {chooser : E.RandomizedChooser}
     {payoff : E.History → ℝ} {C : ℝ}
     (hbound : ∀ final, E.terminal final.state → |payoff final| ≤ C)
     (history : E.History) :

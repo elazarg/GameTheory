@@ -114,165 +114,221 @@ end Continuation
 
 section Assessment
 
-variable [Fintype ι] [DecidableEq ι] {E : ExecutionProtocol ι} (M : InformationModel E)
+variable [DecidableEq ι] {E : ExecutionProtocol ι} (M : InformationModel E)
   {Observation : Type uo}
 
 /-- A whole replacement policy at an information site. -/
 abbrev AssessmentDeviation (who : ι) := M.InformationSite who × M.BehavioralPolicy who
 
 /-- The continuation law of a policy at an information site under the
-assessment's belief, with all opponents fixed. -/
-def assessmentLaw (fuel : ℕ) (assessment : M.BehavioralAssessment) {who : ι}
+assessment's belief, with all opponents fixed and continued play computed by
+`run`. -/
+def assessmentLawWith (run : M.ContinuationRunner)
+    (assessment : M.BehavioralAssessment) {who : ι}
     (site : M.InformationSite who) (policy : M.BehavioralPolicy who) : PMF E.History :=
   (assessment.belief who site).bind fun history =>
-    M.runBehavioralFrom (Profile.update (sig := M.behavioralSignature)
-      assessment.strategy who policy) fuel history.1
+    run (Profile.update (sig := M.behavioralSignature) assessment.strategy who policy) history.1
 
 /-- The comparison behind one whole-policy deviation at an information site. -/
-def assessmentComparison (observe : E.History → Observation) (fuel : ℕ)
-    (assessment : M.BehavioralAssessment) (who : ι) (deviation : M.AssessmentDeviation who) :
-    IncentiveComparison Observation where
-  prescribed := (M.assessmentLaw fuel assessment deviation.1 (assessment.strategy who)).map observe
-  alternative := (M.assessmentLaw fuel assessment deviation.1 deviation.2).map observe
+def assessmentComparisonWith (run : M.ContinuationRunner)
+    (observe : E.History → Observation) (assessment : M.BehavioralAssessment) (who : ι)
+    (deviation : M.AssessmentDeviation who) : IncentiveComparison Observation where
+  prescribed := (M.assessmentLawWith run assessment deviation.1 (assessment.strategy who)).map
+    observe
+  alternative := (M.assessmentLawWith run assessment deviation.1 deviation.2).map observe
 
-/-- Sequential rationality for observed payoffs is its comparison family. -/
-theorem isSequentiallyRationalWithin_iff_holds (observe : E.History → Observation)
-    (fuel : ℕ) (assessment : M.BehavioralAssessment) (utility : Observation → ι → ℝ) :
-    assessment.IsSequentiallyRationalWithin
-        (fun who history => utility (observe history) who) fuel ↔
+/-- Rationality against a continuation runner, for observed payoffs, is its
+comparison family. -/
+theorem isSequentiallyRationalWith_iff_holds (run : M.ContinuationRunner)
+    (observe : E.History → Observation) (assessment : M.BehavioralAssessment)
+    (utility : Observation → ι → ℝ) :
+    assessment.IsSequentiallyRationalWith run (fun who history => utility (observe history) who) ↔
       ∀ who deviation,
-        (M.assessmentComparison observe fuel assessment who deviation).Holds (utility · who) := by
-  simp only [BehavioralAssessment.IsSequentiallyRationalWithin,
-    BehavioralAssessment.IsSequentiallyRational, BehavioralAssessment.IsSequentiallyRationalAt,
-    Context.isLocallyOptimal_univ_iff_holds, assessmentComparison,
+        (M.assessmentComparisonWith run observe assessment who deviation).Holds
+          (utility · who) := by
+  simp only [BehavioralAssessment.IsSequentiallyRationalWith,
+    BehavioralAssessment.IsSequentiallyRationalFor, BehavioralAssessment.IsSequentiallyRationalAt,
+    Context.isLocallyOptimal_univ_iff_holds, assessmentComparisonWith,
     IncentiveComparison.holds_map_iff]
   exact ⟨fun rational who deviation => rational who deviation.1 deviation.2,
     fun holds who site alternative => holds who (site, alternative)⟩
 
+/-- The terminal continuation law of a whole-policy deviation at a site, under
+the assessment's belief. -/
+def assessmentLaw [Fintype ι]
+    (certificate : E.WellFoundedHistories) (assessment : M.BehavioralAssessment)
+    {who : ι} (site : M.InformationSite who) (policy : M.BehavioralPolicy who) :
+    PMF E.History :=
+  M.assessmentLawWith (M.runBehavioralTerminalFrom certificate) assessment site policy
+
+/-- The sequential-rationality comparison of one whole-policy deviation at a
+site, evaluated on terminal play. -/
+def assessmentComparison [Fintype ι]
+    (certificate : E.WellFoundedHistories)
+    (observe : E.History → Observation) (assessment : M.BehavioralAssessment) (who : ι)
+    (deviation : M.AssessmentDeviation who) : IncentiveComparison Observation :=
+  M.assessmentComparisonWith (M.runBehavioralTerminalFrom certificate) observe assessment who
+    deviation
+
+@[simp]
+theorem assessmentComparison_prescribed [Fintype ι]
+    (certificate : E.WellFoundedHistories)
+    (observe : E.History → Observation) (assessment : M.BehavioralAssessment) (who : ι)
+    (deviation : M.AssessmentDeviation who) :
+    (M.assessmentComparison certificate observe assessment who deviation).prescribed =
+      (M.assessmentLaw certificate assessment deviation.1 (assessment.strategy who)).map
+        observe :=
+  rfl
+
+@[simp]
+theorem assessmentComparison_alternative [Fintype ι]
+    (certificate : E.WellFoundedHistories)
+    (observe : E.History → Observation) (assessment : M.BehavioralAssessment) (who : ι)
+    (deviation : M.AssessmentDeviation who) :
+    (M.assessmentComparison certificate observe assessment who deviation).alternative =
+      (M.assessmentLaw certificate assessment deviation.1 deviation.2).map observe :=
+  rfl
+
+/-- Sequential rationality of observed payoffs is its comparison family. -/
+theorem isSequentiallyRational_iff_holds [Fintype ι]
+    (certificate : E.WellFoundedHistories)
+    (observe : E.History → Observation) (assessment : M.BehavioralAssessment)
+    (utility : Observation → ι → ℝ) :
+    assessment.IsSequentiallyRational certificate
+        (fun who history => utility (observe history) who) ↔
+      ∀ who deviation,
+        (M.assessmentComparison certificate observe assessment who deviation).Holds
+          (utility · who) :=
+  M.isSequentiallyRationalWith_iff_holds (M.runBehavioralTerminalFrom certificate) observe
+    assessment utility
+
 variable {T : ExecutionProtocol ι} (N : InformationModel T)
 
 /-- **Exact transport of sequential rationality** for fixed assessments and
-every observed utility. Neither belief system need be consistent. -/
+every observed utility. Neither belief system need be consistent, and the
+criterion does not depend on how continued play is computed: sequential
+rationality is the instance `M.runBehavioralTerminalFrom certificate`, and play
+cut off after a fixed number of steps is another. -/
 theorem sequentialRationality_preservation_iff_cone [Fintype Observation]
+    (sourceRun : M.ContinuationRunner) (targetRun : N.ContinuationRunner)
     (sourceObserve : E.History → Observation) (targetObserve : T.History → Observation)
-    (sourceFuel targetFuel : ℕ)
     (source : M.BehavioralAssessment) (target : N.BehavioralAssessment) :
     (∀ utility : Observation → ι → ℝ,
-      source.IsSequentiallyRationalWithin
-          (fun who history => utility (sourceObserve history) who) sourceFuel →
-        target.IsSequentiallyRationalWithin
-          (fun who history => utility (targetObserve history) who) targetFuel) ↔
+      source.IsSequentiallyRationalWith sourceRun
+          (fun who history => utility (sourceObserve history) who) →
+        target.IsSequentiallyRationalWith targetRun
+          (fun who history => utility (targetObserve history) who)) ↔
       ∀ who deviation,
-        (N.assessmentComparison targetObserve targetFuel target who deviation).difference ∈
+        (N.assessmentComparisonWith targetRun targetObserve target who deviation).difference ∈
           IncentiveComparison.cone
-            (M.assessmentComparison sourceObserve sourceFuel source who) := by
-  simp only [isSequentiallyRationalWithin_iff_holds]
+            (M.assessmentComparisonWith sourceRun sourceObserve source who) := by
+  simp only [isSequentiallyRationalWith_iff_holds]
   exact IncentiveComparison.forall_holds_imp_iff_cone _ _
 
 /-- Exact transport of sequential rationality over a linear class of joint
 utilities, including classes coupling different players' payoffs. -/
-theorem sequentialRationality_preservation_iff_coneWithin [Fintype Observation]
+theorem sequentialRationality_preservation_iff_coneWithin [Fintype ι] [Fintype Observation]
     (utilities : Submodule ℝ (EuclideanSpace ℝ (ι × Observation)))
+    (sourceRun : M.ContinuationRunner) (targetRun : N.ContinuationRunner)
     (sourceObserve : E.History → Observation) (targetObserve : T.History → Observation)
-    (sourceFuel targetFuel : ℕ)
     (source : M.BehavioralAssessment) (target : N.BehavioralAssessment) :
     (∀ utility : utilities,
-      source.IsSequentiallyRationalWithin
-          (fun who history => WithLp.ofLp utility.val (who, sourceObserve history)) sourceFuel →
-        target.IsSequentiallyRationalWithin
-          (fun who history => WithLp.ofLp utility.val (who, targetObserve history)) targetFuel) ↔
+      source.IsSequentiallyRationalWith sourceRun
+          (fun who history => WithLp.ofLp utility.val (who, sourceObserve history)) →
+        target.IsSequentiallyRationalWith targetRun
+          (fun who history => WithLp.ofLp utility.val (who, targetObserve history))) ↔
       ∀ deviation : Σ who, N.AssessmentDeviation who,
         utilities.orthogonalProjectionOnto
-            ((N.assessmentComparison targetObserve targetFuel target deviation.1
+            ((N.assessmentComparisonWith targetRun targetObserve target deviation.1
               deviation.2).tag deviation.1).difference ∈
           IncentiveComparison.coneWithin utilities
             fun deviation : Σ who, M.AssessmentDeviation who =>
-              (M.assessmentComparison sourceObserve sourceFuel source deviation.1
+              (M.assessmentComparisonWith sourceRun sourceObserve source deviation.1
                 deviation.2).tag deviation.1 := by
-  have hsource (utility : utilities) := M.isSequentiallyRationalWithin_iff_holds sourceObserve
-    sourceFuel source fun observation who => WithLp.ofLp utility.val (who, observation)
-  have htarget (utility : utilities) := N.isSequentiallyRationalWithin_iff_holds targetObserve
-    targetFuel target fun observation who => WithLp.ofLp utility.val (who, observation)
+  have hsource (utility : utilities) := M.isSequentiallyRationalWith_iff_holds sourceRun
+    sourceObserve source fun observation who => WithLp.ofLp utility.val (who, observation)
+  have htarget (utility : utilities) := N.isSequentiallyRationalWith_iff_holds targetRun
+    targetObserve target fun observation who => WithLp.ofLp utility.val (who, observation)
   simp only [hsource, htarget]
   exact IncentiveComparison.forall_holds_imp_iff_coneWithin utilities _ _
 
 /-- **Exact transport of sequential equilibrium.** From a consistent source
 assessment, every observed-utility sequential equilibrium maps to one of the
 target exactly when the target is consistent and its incentive differences lie
-in the source cones. The zero utility separates the two obligations. -/
-theorem sequentialEquilibrium_preservation_iff [Fintype Observation]
+in the source cones. The zero utility separates the two obligations. As for
+sequential rationality, the runners are arbitrary. -/
+theorem sequentialEquilibrium_preservation_iff [Fintype ι] [Fintype Observation]
     (sourceAntichain : M.DecisionInformationAntichain)
     (targetAntichain : N.DecisionInformationAntichain)
+    (sourceRun : M.ContinuationRunner) (targetRun : N.ContinuationRunner)
     (sourceObserve : E.History → Observation) (targetObserve : T.History → Observation)
-    (sourceFuel targetFuel : ℕ)
     (source : M.BehavioralAssessment) (target : N.BehavioralAssessment)
     (sourceConsistent : source.IsSequentiallyConsistent sourceAntichain) :
     (∀ utility : Observation → ι → ℝ,
       source.IsSequentialEquilibriumFor sourceAntichain (fun who site =>
-          source.continuationContext site (fun history => utility (sourceObserve history) who)
-            sourceFuel) →
+          source.continuationContextWith sourceRun site
+            (fun history => utility (sourceObserve history) who)) →
         target.IsSequentialEquilibriumFor targetAntichain (fun who site =>
-          target.continuationContext site (fun history => utility (targetObserve history) who)
-            targetFuel)) ↔
+          target.continuationContextWith targetRun site
+            (fun history => utility (targetObserve history) who))) ↔
       target.IsSequentiallyConsistent targetAntichain ∧
         ∀ who deviation,
-          (N.assessmentComparison targetObserve targetFuel target who deviation).difference ∈
+          (N.assessmentComparisonWith targetRun targetObserve target who deviation).difference ∈
             IncentiveComparison.cone
-              (M.assessmentComparison sourceObserve sourceFuel source who) := by
+              (M.assessmentComparisonWith sourceRun sourceObserve source who) := by
   constructor
   · intro preserves
     have hconsistent := (preserves (fun _ _ => 0)
-      ⟨source.isSequentiallyRationalWithin_zero sourceFuel, sourceConsistent⟩).2
+      ⟨source.isSequentiallyRationalWith_zero sourceRun, sourceConsistent⟩).2
     refine ⟨hconsistent, ?_⟩
-    apply (M.sequentialRationality_preservation_iff_cone N sourceObserve targetObserve
-      sourceFuel targetFuel source target).1
+    apply (M.sequentialRationality_preservation_iff_cone N sourceRun targetRun sourceObserve
+      targetObserve source target).1
     intro utility rational
     exact (preserves utility ⟨rational, sourceConsistent⟩).1
   · rintro ⟨hconsistent, included⟩ utility ⟨rational, _⟩
-    exact ⟨(M.sequentialRationality_preservation_iff_cone N sourceObserve targetObserve
-      sourceFuel targetFuel source target).2 included utility rational, hconsistent⟩
+    exact ⟨(M.sequentialRationality_preservation_iff_cone N sourceRun targetRun sourceObserve
+      targetObserve source target).2 included utility rational, hconsistent⟩
 
 /-- Sequential-equilibrium transport over a linear class of joint utilities.
 The zero utility lies in every class, so consistency is again forced. -/
-theorem sequentialEquilibrium_preservation_iff_coneWithin [Fintype Observation]
+theorem sequentialEquilibrium_preservation_iff_coneWithin [Fintype ι] [Fintype Observation]
     (utilities : Submodule ℝ (EuclideanSpace ℝ (ι × Observation)))
     (sourceAntichain : M.DecisionInformationAntichain)
     (targetAntichain : N.DecisionInformationAntichain)
+    (sourceRun : M.ContinuationRunner) (targetRun : N.ContinuationRunner)
     (sourceObserve : E.History → Observation) (targetObserve : T.History → Observation)
-    (sourceFuel targetFuel : ℕ)
     (source : M.BehavioralAssessment) (target : N.BehavioralAssessment)
     (sourceConsistent : source.IsSequentiallyConsistent sourceAntichain) :
     (∀ utility : utilities,
       source.IsSequentialEquilibriumFor sourceAntichain (fun who site =>
-          source.continuationContext site
-            (fun history => WithLp.ofLp utility.val (who, sourceObserve history)) sourceFuel) →
+          source.continuationContextWith sourceRun site
+            (fun history => WithLp.ofLp utility.val (who, sourceObserve history))) →
         target.IsSequentialEquilibriumFor targetAntichain (fun who site =>
-          target.continuationContext site
-            (fun history => WithLp.ofLp utility.val (who, targetObserve history)) targetFuel)) ↔
+          target.continuationContextWith targetRun site
+            (fun history => WithLp.ofLp utility.val (who, targetObserve history)))) ↔
       target.IsSequentiallyConsistent targetAntichain ∧
         ∀ deviation : Σ who, N.AssessmentDeviation who,
           utilities.orthogonalProjectionOnto
-              ((N.assessmentComparison targetObserve targetFuel target deviation.1
+              ((N.assessmentComparisonWith targetRun targetObserve target deviation.1
                 deviation.2).tag deviation.1).difference ∈
             IncentiveComparison.coneWithin utilities
               fun deviation : Σ who, M.AssessmentDeviation who =>
-                (M.assessmentComparison sourceObserve sourceFuel source deviation.1
+                (M.assessmentComparisonWith sourceRun sourceObserve source deviation.1
                   deviation.2).tag deviation.1 := by
-  have hzero : source.IsSequentiallyRationalWithin
-      (fun who history => WithLp.ofLp (0 : utilities).val (who, sourceObserve history))
-      sourceFuel := by
-    simpa using source.isSequentiallyRationalWithin_zero sourceFuel
+  have hzero : source.IsSequentiallyRationalWith sourceRun
+      (fun who history => WithLp.ofLp (0 : utilities).val (who, sourceObserve history)) := by
+    simpa using source.isSequentiallyRationalWith_zero sourceRun
   constructor
   · intro preserves
     have hconsistent := (preserves 0 ⟨hzero, sourceConsistent⟩).2
     refine ⟨hconsistent, ?_⟩
-    apply (M.sequentialRationality_preservation_iff_coneWithin N utilities sourceObserve
-      targetObserve sourceFuel targetFuel source target).1
+    apply (M.sequentialRationality_preservation_iff_coneWithin N utilities sourceRun targetRun
+      sourceObserve targetObserve source target).1
     intro utility rational
     exact (preserves utility ⟨rational, sourceConsistent⟩).1
   · rintro ⟨hconsistent, included⟩ utility ⟨rational, _⟩
-    exact ⟨(M.sequentialRationality_preservation_iff_coneWithin N utilities sourceObserve
-      targetObserve sourceFuel targetFuel source target).2 included utility rational,
+    exact ⟨(M.sequentialRationality_preservation_iff_coneWithin N utilities sourceRun
+      targetRun sourceObserve targetObserve source target).2 included utility rational,
       hconsistent⟩
 
 end Assessment

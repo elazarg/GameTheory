@@ -1,6 +1,6 @@
 # D63: well-founded sequential limits and tight assessment extraction
 
-- **Status:** adopted
+- **Status:** adopted; terminal contexts made the only sequential semantics by [D64](D64-terminal-sequential-rationality.md)
 - **Date:** 2026-09-27
 - **Evidence:** [EXP-142/143](../ExperimentLog.md)
 

@@ -98,8 +98,8 @@ theorem rank_decreases (lottery : Bool) (before after : State)
       norm_num [rank]
   | done value => exact False.elim (legal.1 rfl)
 
-theorem terminates (lottery : Bool) : (arena lottery).WellFoundedPlay :=
-  wellFoundedPlay_of_rank rank (rank_decreases lottery)
+theorem terminates (lottery : Bool) : (arena lottery).WellFoundedHistories :=
+  (wellFoundedPlay_of_rank rank (rank_decreases lottery)).wellFoundedHistories
 
 theorem trace_rank (lottery : Bool) : ∀ {state : State} (trace : (arena lottery).Trace state),
     trace.length + rank state ≤ 2
@@ -418,7 +418,7 @@ private theorem history_utility_guard {lottery : Bool}
 theorem value_law {lottery : Bool} (certificate : (arena lottery).WellFoundedPlay)
     (policies : Profile (model lottery).strategicSignature)
     (history : (arena lottery).History) :
-    (arena lottery).historyBackwardValue certificate
+    (arena lottery).historyBackwardValue certificate.wellFoundedHistories
       ((model lottery).historyChooser policies)
       (fun final => utility (readout final.state) ()) history =
         expect (law policies history.state) (utility · ()) := by
@@ -431,7 +431,7 @@ theorem value_law {lottery : Bool} (certificate : (arena lottery).WellFoundedPla
     _ = expect ((model lottery).runFrom policies 2 history)
         (fun final => utility (readout final.state) ()) :=
       (model lottery).historyBackwardValue_eq_expect_runFrom_of_bound
-        certificate (bounded lottery) policies _ history
+        certificate.wellFoundedHistories (bounded lottery) policies _ history
     _ = expect (law policies history.state) (utility · ()) := by
       exact expect_observed_law_eq
         ((model lottery).runFrom policies 2 history) (law policies history.state)

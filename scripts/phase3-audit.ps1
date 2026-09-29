@@ -404,10 +404,10 @@ if ($DeepReachability) {
   # criterion is an analytic leaf that needs no finite-game fixed point.
   $terminalInputs = @(
     'GameTheory.Protocol.ExecutionProtocol.randomizedBackwardLaw',
-    'GameTheory.Protocol.InformationModel.BehavioralAssessment.terminalContinuationContext',
-    'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsSequentiallyRationalTerminal')
+    'GameTheory.Protocol.InformationModel.BehavioralAssessment.continuationContext',
+    'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsSequentiallyRational')
   $terminalExistence =
-    'GameTheory.Protocol.InformationModel.exists_sequentialEquilibriumTerminal_of_uniformlyTight'
+    'GameTheory.Protocol.InformationModel.exists_sequentialEquilibrium_of_uniformlyTight'
   $terminalOutput = Run-Probe 'GameTheory.Protocol.BehavioralTerminal' `
     ($terminalInputs + @($terminalExistence, 'kakutani_fixed_point'))
   $terminalInputsReached = 0
@@ -423,7 +423,7 @@ if ($DeepReachability) {
   $tightInputs = @(
     'GameTheory.Math.Probability.exists_subseq_pmfConvergesPointwise_pi_of_uniformlyTight',
     $terminalExistence)
-  $tightOutput = Run-Probe 'GameTheory.Analysis.Protocol.SequentialTerminalExistence' `
+  $tightOutput = Run-Probe 'GameTheory.Analysis.Protocol.SequentialLimits' `
     ($tightInputs + @('kakutani_fixed_point'))
   $tightInputsReached = 0
   foreach ($constant in $tightInputs) {
