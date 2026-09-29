@@ -1,9 +1,13 @@
 /-
-# Finite continuation optimality
+# Finite continuation gains
 
-The proof uses the canonical behavioral runner throughout. Its occupation
-identity sums one-step value differences over complete histories, so decision
-information sets need not lie at a common trace depth.
+Whole-policy gains decompose over the canonical behavioral runner. Its
+occupation identity sums one-step value differences over complete histories,
+so decision information sets need not lie at a common trace depth. Grouping
+those differences by information bounds a root gain by allowances on local
+counterfactual regrets, and splicing a policy after a site isolates the site's
+fiber; Bayes beliefs turn the spliced root gain into the site's mass times its
+continuation gain.
 -/
 
 import GameTheory.Analysis.Protocol.CounterfactualRegret
@@ -347,10 +351,12 @@ theorem playerReachProbability_nonneg
   | extend prior joint isLegal realized ih =>
       exact mul_nonneg ih ENNReal.toReal_nonneg
 
-/-- Whole-policy root optimality follows from counterfactual optimality of
-every local replacement. Decision recall makes the alternative own reach a
-common nonnegative factor on each information fiber. -/
-theorem behavioralRootGain_nonpos_of_counterfactualLocalGain_nonpos
+/-- **Whole-policy root gain from bounded local gains.** If every local
+replacement's counterfactual regret is at most an allowance times the
+counterfactual mass of its site, the whole deviation gains at most the
+allowances met along its own reached histories. Decision recall makes the
+alternative own reach a common nonnegative factor on each information fiber. -/
+theorem behavioralRootGain_le_of_counterfactualLocalGain_le
     [Fintype ι] [DecidableEq ι] [Fintype E.History]
     (hrecall : M.DecisionRecall)
     (baseline : (i : ι) → M.BehavioralPolicy i)
@@ -358,13 +364,20 @@ theorem behavioralRootGain_nonpos_of_counterfactualLocalGain_nonpos
     (alternative : M.BehavioralPolicy who)
     (payoff : E.History → ℝ) {bound : ℕ}
     (hbound : E.BoundedHorizon bound)
+    (allowance : M.InfoState who → ℝ) (hallowance : ∀ info, 0 ≤ allowance info)
     (hlocal : ∀ site : M.InformationSite who,
       M.counterfactualRegret baseline who site payoff (M.truncatedRunner bound)
-        ((baseline who).withLaw site.1 (alternative site.1)) ≤ 0) :
+        ((baseline who).withLaw site.1 (alternative site.1)) ≤
+      allowance site.1 * ∑ history : M.InformationHistory who site.1,
+        M.counterfactualReachProbability baseline who history.1.trace) :
     expect (M.runBehavioral
         (Profile.update (sig := M.behavioralSignature) baseline who alternative)
-          bound) payoff ≤
-      expect (M.runBehavioral baseline bound) payoff := by
+          bound) payoff -
+        expect (M.runBehavioral baseline bound) payoff ≤
+      ∑ history : E.History,
+        (M.historyReachWeight
+          (Profile.update (sig := M.behavioralSignature) baseline who alternative)
+            history).toReal * allowance (M.infoOf who history.trace) := by
   classical
   let changed := Profile.update (sig := M.behavioralSignature) baseline who alternative
   let gain : E.History → ℝ := fun history =>
@@ -401,9 +414,11 @@ theorem behavioralRootGain_nonpos_of_counterfactualLocalGain_nonpos
     rw [hone]
     rw [M.runBehavioralFrom_expect_raw_continuation_eq baseline payoff hbound history]
     ring
-  have hnonpos (info : M.InfoState who) :
+  have hle (info : M.InfoState who) :
       (∑ history : M.InformationHistory who info,
-        (M.historyReachWeight changed history.1).toReal * gain history.1) ≤ 0 := by
+        (M.historyReachWeight changed history.1).toReal * gain history.1) ≤
+      ∑ history : M.InformationHistory who info,
+        (M.historyReachWeight changed history.1).toReal * allowance info := by
     by_cases hsite : ∃ history : M.InformationHistory who info,
         ¬ E.terminal history.1.state ∧
           ∃ action : E.Action who, some action ∈ M.menu who info
@@ -461,10 +476,17 @@ theorem behavioralRootGain_nonpos_of_counterfactualLocalGain_nonpos
         rw [hfactor, hgain]
         ring
       rw [heq]
-      exact mul_nonpos_of_nonneg_of_nonpos
-        (M.playerReachProbability_nonneg changed who _) (hlocal site)
-    · apply Finset.sum_nonpos
-      intro history _
+      calc
+        _ ≤ reach * (allowance info * ∑ history : M.InformationHistory who info,
+              M.counterfactualReachProbability baseline who history.1.trace) :=
+          mul_le_mul_of_nonneg_left (hlocal site) (M.playerReachProbability_nonneg changed who _)
+        _ = _ := by
+          rw [Finset.mul_sum, Finset.mul_sum]
+          refine Finset.sum_congr rfl fun history _ => ?_
+          rw [hfactor]
+          ring
+    · refine Finset.sum_le_sum fun history _ => ?_
+      refine le_of_eq_of_le ?_ (mul_nonneg ENNReal.toReal_nonneg (hallowance info))
       by_cases hterm : E.terminal history.1.state
       · rw [hterminal history.1 hterm, mul_zero]
       · have hnot : ¬ E.active history.1.state who := by
@@ -477,17 +499,22 @@ theorem behavioralRootGain_nonpos_of_counterfactualLocalGain_nonpos
           apply hsite
           exact ⟨history, hterm, action, by rw [← ha]; exact draw.2⟩
         rw [hinactive history.1 hnot, mul_zero]
-  apply sub_nonpos.mp
+  have hsplit (value : E.History → ℝ) :
+      ∑ history : E.History, value history =
+        ∑ info ∈ Finset.univ.image (fun history : E.History => M.infoOf who history.trace),
+          ∑ history : M.InformationHistory who info, value history.1 := by
+    rw [← Finset.sum_fiberwise_of_maps_to
+      (t := Finset.univ.image fun history : E.History => M.infoOf who history.trace)
+      (fun history _ => Finset.mem_image_of_mem _ (Finset.mem_univ history))]
+    refine Finset.sum_congr rfl fun info _ => ?_
+    rw [Finset.sum_subtype (p := fun history : E.History => M.infoOf who history.trace = info)
+      _ (fun history => by simp)]
   rw [M.behavioralGain_eq_sum_historyStepGains baseline changed payoff hbound]
-  show (∑ history : E.History,
-    (M.historyReachWeight changed history).toReal * gain history) ≤ 0
-  rw [← Finset.sum_fiberwise_of_maps_to
-    (t := Finset.univ.image fun history : E.History => M.infoOf who history.trace)
-    (fun history _ => Finset.mem_image_of_mem _ (Finset.mem_univ history))]
-  refine Finset.sum_nonpos fun info _ => ?_
-  rw [Finset.sum_subtype (p := fun history : E.History => M.infoOf who history.trace = info)
-    _ (fun history => by simp)]
-  convert hnonpos info
+  change (∑ history : E.History,
+    (M.historyReachWeight changed history).toReal * gain history) ≤ _
+  rw [hsplit, hsplit]
+  exact Finset.sum_le_sum fun info _ => (hle info).trans_eq
+    (Finset.sum_congr rfl fun history _ => by rw [history.2])
 
 /-- Use an alternative policy at a selected information state and after that
 decision. Decision recall identifies the remembered decision history with the
@@ -940,139 +967,6 @@ theorem BehavioralAssessment.informationMass_mul_continuationGain_eq_sum
           (expect (altKernel history) payoff -
             expect (baseKernel history) payoff) := by
       rw [hnormalized, ← mul_sub]
-
-private theorem BehavioralAssessment.truncated_value_le_of_locallyOptimal
-    [Fintype ι] [DecidableEq ι] [Fintype E.History]
-    [∀ i, DecidableEq (M.InfoState i)]
-    (hrecall : M.DecisionRecall)
-    (assessment : M.BehavioralAssessment)
-    (hfull : assessment.IsFullyMixed)
-    (hbayes : BehavioralAssessment.IsBayesConsistent M assessment
-      (hrecall.decisionInformationAntichain))
-    (Allowed : (i : ι) → (info : M.InfoState i) → PMF (M.Choice i info) → Prop)
-    (hfeasible : ∀ i (site : M.InformationSite i),
-      Allowed i site.1 (assessment.strategy i site.1))
-    (payoff : ι → E.History → ℝ) {bound : ℕ}
-    (hbound : E.BoundedHorizon bound)
-    (hlocal : ∀ (i : ι) (site : M.InformationSite i)
-      (law : PMF (M.Choice i site.1)), Allowed i site.1 law →
-        (assessment.continuationContextWith (M.truncatedRunner bound) site (payoff i)).value
-            ((assessment.strategy i).withLaw site.1 law) ≤
-          (assessment.continuationContextWith (M.truncatedRunner bound) site (payoff i)).value
-            (assessment.strategy i))
-    (who : ι) (site : M.InformationSite who)
-    (alternative : M.BehavioralPolicy who)
-    (halternative : ∀ later : M.InformationSite who,
-      Allowed who later.1 (alternative later.1)) :
-    (assessment.continuationContextWith (M.truncatedRunner bound) site (payoff who)).value
-        alternative ≤
-      (assessment.continuationContextWith (M.truncatedRunner bound) site (payoff who)).value
-        (assessment.strategy who) := by
-  classical
-  let spliced := (assessment.strategy who).spliceAfter M alternative site.1
-  have hspliced (later : M.InformationSite who) : Allowed who later.1 (spliced later.1) := by
-    dsimp [spliced, BehavioralPolicy.spliceAfter]
-    split_ifs
-    · exact halternative later
-    · exact hfeasible who later
-  have hcounterfactual (later : M.InformationSite who) :
-      M.counterfactualRegret assessment.strategy who later (payoff who) (M.truncatedRunner bound)
-        ((assessment.strategy who).withLaw later.1 (spliced later.1)) ≤ 0 := by
-    have hmass := M.informationMass_pos_of_fullSupport assessment.strategy hfull who later
-    have hantichain := hrecall.decisionInformationAntichain who later
-    have hle := hlocal who later (spliced later.1) (hspliced later)
-    rw [assessment.continuationContextWith_value_eq_bayesContinuationValue M who later
-        hantichain hmass (hbayes who later hmass)
-        ((assessment.strategy who).withLaw later.1 (spliced later.1)) (payoff who)
-            (M.truncatedRunner bound),
-      assessment.continuationContextWith_value_eq_bayesContinuationValue M who later
-        hantichain hmass (hbayes who later hmass) (assessment.strategy who) (payoff who)
-        (M.truncatedRunner bound)] at hle
-    apply le_of_not_gt
-    intro hpositive
-    have hgain := (M.counterfactualRegret_pos_iff_bayesGain_pos_of_decisionRecall hrecall
-      assessment.strategy who later hantichain hmass
-      ((assessment.strategy who).withLaw later.1 (spliced later.1)) (payoff who)
-      (M.truncatedRunner bound)
-      (fun _ _ => payoffIntegrable_of_finite _ _)
-      (fun _ _ => payoffIntegrable_of_finite _ _)).mp hpositive
-    linarith
-  have hroot := M.behavioralRootGain_nonpos_of_counterfactualLocalGain_nonpos hrecall
-    assessment.strategy who spliced (payoff who) hbound hcounterfactual
-  have hcut := M.rootGain_spliceAfter_eq_sum_informationGain hrecall assessment.strategy
-    who site alternative (payoff who) hbound
-  have hmass := M.informationMass_pos_of_fullSupport assessment.strategy hfull who site
-  have hnormalized := assessment.informationMass_mul_continuationGain_eq_sum M who site
-    (hrecall.decisionInformationAntichain who site)
-    hmass (hbayes who site hmass) alternative (payoff who) (M.truncatedRunner bound)
-    (fun _ => payoffIntegrable_of_finite _ _)
-    (fun _ => payoffIntegrable_of_finite _ _)
-  have hgain : (M.informationMass assessment.strategy who site).toReal *
-      ((assessment.continuationContextWith (M.truncatedRunner bound) site (payoff who)).value
-          alternative -
-        (assessment.continuationContextWith (M.truncatedRunner bound) site (payoff who)).value
-          (assessment.strategy who)) ≤ 0 := by
-    rw [hnormalized]
-    simp only [Profile.update_eq_self]
-    rw [← hcut]
-    exact sub_nonpos.mpr hroot
-  have hmassRealPos : 0 < (M.informationMass assessment.strategy who site).toReal :=
-    ENNReal.toReal_pos (ne_of_gt hmass) (ne_of_lt
-      (lt_of_le_of_lt
-        (M.informationMass_le_one assessment.strategy who site
-          (hrecall.decisionInformationAntichain who site))
-        ENNReal.one_lt_top))
-  apply le_of_not_gt
-  intro hpositive
-  have hpositiveDiff : 0 <
-      (assessment.continuationContextWith (M.truncatedRunner bound) site (payoff who)).value
-          alternative -
-        (assessment.continuationContextWith (M.truncatedRunner bound) site (payoff who)).value
-          (assessment.strategy who) :=
-    sub_pos.mpr hpositive
-  have hmulPositive := mul_pos hmassRealPos hpositiveDiff
-  linarith
-
-/-- In a decision-recall protocol with finitely many histories, local optimality
-against every allowed law implies optimality against every whole continuation
-policy whose local laws are allowed. The allowed sets may vary by player and
-decision site; only their product structure is used, and information values
-that no history reaches are unconstrained.
-
-Full support makes all information events positive, and Bayes consistency
-supplies their conditional beliefs. No common-depth or nonterminal-fiber
-assumption is imposed. -/
-theorem BehavioralAssessment.continuation_value_le_of_locallyOptimal
-    [Fintype ι] [DecidableEq ι] [Finite E.History]
-    [∀ i, DecidableEq (M.InfoState i)]
-    (hrecall : M.DecisionRecall)
-    (assessment : M.BehavioralAssessment)
-    (hfull : assessment.IsFullyMixed)
-    (hbayes : BehavioralAssessment.IsBayesConsistent M assessment
-      (hrecall.decisionInformationAntichain))
-    (Allowed : (i : ι) → (info : M.InfoState i) → PMF (M.Choice i info) → Prop)
-    (hfeasible : ∀ i (site : M.InformationSite i),
-      Allowed i site.1 (assessment.strategy i site.1))
-    (payoff : ι → E.History → ℝ) (certificate : E.WellFoundedHistories)
-    (hlocal : ∀ (i : ι) (site : M.InformationSite i)
-      (law : PMF (M.Choice i site.1)), Allowed i site.1 law →
-        (assessment.continuationContext certificate site (payoff i)).value
-            ((assessment.strategy i).withLaw site.1 law) ≤
-          (assessment.continuationContext certificate site (payoff i)).value
-            (assessment.strategy i))
-    (who : ι) (site : M.InformationSite who)
-    (alternative : M.BehavioralPolicy who)
-    (halternative : ∀ later : M.InformationSite who,
-      Allowed who later.1 (alternative later.1)) :
-    (assessment.continuationContext certificate site (payoff who)).value alternative ≤
-      (assessment.continuationContext certificate site (payoff who)).value
-        (assessment.strategy who) := by
-  let _ := Fintype.ofFinite E.History
-  obtain ⟨bound, -, hbound⟩ := E.exists_pos_boundedHorizon
-  simp only [assessment.continuationContext_eq_truncated_of_bounded certificate hbound]
-    at hlocal ⊢
-  exact assessment.truncated_value_le_of_locallyOptimal M hrecall hfull hbayes Allowed
-    hfeasible payoff hbound hlocal who site alternative halternative
 
 end InformationModel
 

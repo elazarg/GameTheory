@@ -50,6 +50,7 @@ import GameTheory.Analysis.Protocol.InformationLocalization
 import GameTheory.Analysis.Protocol.Sequential
 import GameTheory.Analysis.Protocol.SequentialExistence
 import GameTheory.Analysis.Protocol.SequentialLimits
+import GameTheory.Analysis.Protocol.SequentialOneShot
 import GameTheory.Analysis.Protocol.SequentialPerturbation
 import GameTheory.Analysis.Protocol.SequentialRationality
 import GameTheory.Analysis.Protocol.SubgameLocalization

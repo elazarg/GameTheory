@@ -139,23 +139,30 @@ theorem site_history_unique (site : model.InformationSite ())
 theorem decisionRecall : model.DecisionRecall := fun _ site first second => by
   rw [site_history_unique site first second]
 
-theorem bayes :
-    BehavioralAssessment.IsBayesConsistent model assessment
+/-- Every assessment carrying the only possible beliefs is Bayes consistent,
+whatever its strategy. -/
+theorem bayes_ofStrategy (strategy : (who : Unit) → model.BehavioralPolicy who) :
+    BehavioralAssessment.IsBayesConsistent model (BehavioralAssessment.ofStrategy strategy)
       decisionRecall.decisionInformationAntichain := by
   intro who site hmass history
   cases who
   have hsingle (other : model.InformationHistory () site.1) : other = history :=
     Subtype.ext (site_history_unique site other history)
-  have hbelief : assessment.belief () site history = 1 := by
+  have hbelief : (BehavioralAssessment.ofStrategy strategy).belief () site history = 1 := by
     change PMF.pure _ history = 1
     rw [hsingle (Classical.choose site.2)]
     exact PMF.pure_apply_self _
-  have hmassEq : model.informationMass assessment.strategy () site =
-      model.historyReachWeight assessment.strategy history.1 :=
+  have hmassEq : model.informationMass (BehavioralAssessment.ofStrategy strategy).strategy () site =
+      model.historyReachWeight (BehavioralAssessment.ofStrategy strategy).strategy history.1 :=
     tsum_eq_single history fun other hne => absurd (hsingle other) hne
   rw [hbelief, ← hmassEq, ENNReal.div_self hmass.ne'
     (ne_of_lt (lt_of_le_of_lt (model.informationMass_le_one _ () site
       (decisionRecall.decisionInformationAntichain () site)) ENNReal.one_lt_top))]
+
+theorem bayes :
+    BehavioralAssessment.IsBayesConsistent model assessment
+      decisionRecall.decisionInformationAntichain :=
+  bayes_ofStrategy _
 
 /-- **Nash does not imply sequential rationality** for this Bayes-consistent
 assessment with decision recall; the failing comparison sits at a site of mass

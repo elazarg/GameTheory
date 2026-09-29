@@ -10,7 +10,7 @@ vanishingly perturbed deviations recover unrestricted sequential rationality.
 
 import GameTheory.Analysis.Protocol.AssessmentCompactness
 import GameTheory.Analysis.Protocol.SequentialPerturbation
-import GameTheory.Analysis.Protocol.SequentialRationality
+import GameTheory.Analysis.Protocol.SequentialOneShot
 import GameTheory.Analysis.Protocol.SequentialLimits
 
 noncomputable section
@@ -89,7 +89,7 @@ theorem exists_sequentialEquilibrium [Finite E.History]
       (fun i info law => ∀ [Finite (M.Choice i info)] [Nonempty (M.Choice i info)],
         law ∈ M.uniformTrembleLaws
           (weight (subseq n)) (hpositive (subseq n)).le (hone (subseq n)) i info)
-      (fun i site _ _ => hfeasible (subseq n) i site) payoff certificate
+      payoff certificate
       (fun i site law hlaw => (hlocal (subseq n) i site law hlaw).2.2) who site
     intro later _ _
     exact ⟨alternative later.1, hrepair_site n who alternative later⟩

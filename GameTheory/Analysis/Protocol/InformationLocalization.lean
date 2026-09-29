@@ -508,13 +508,14 @@ theorem implies_assessment_of_positive [Fintype Observation] (certificate : E.We
 /-! ## Decision recall closes information below a site -/
 
 omit [Fintype ι] [DecidableEq ι] in
-/-- Every entry of an own-play record was made at an ancestor with that
-information state. -/
-theorem exists_ancestor_of_mem_ownPlay (who : ι) :
+/-- Every entry of an own-play record was made at a nonterminal ancestor with
+that information state, at which the player was active. -/
+theorem exists_decision_ancestor_of_mem_ownPlay (who : ι) :
     ∀ {state : E.State} (trace : E.Trace state) {entry : M.InfoState who × E.Action who},
       entry ∈ M.ownPlay who trace →
         ∃ ancestor : E.History, M.infoOf who ancestor.trace = entry.1 ∧
-          E.HistoryReaches ancestor ⟨state, trace⟩
+          E.active ancestor.state who ∧ ¬ E.terminal ancestor.state ∧
+            E.HistoryReaches ancestor ⟨state, trace⟩
   | _, .start, _, hmem => by simp [InfoSignals.ownPlay] at hmem
   | _, .extend prior joint isLegal realized, entry, hmem => by
       have hstep : E.ReachesWithin 1 ⟨_, prior⟩ ⟨_, .extend prior joint isLegal realized⟩ :=
@@ -523,15 +524,28 @@ theorem exists_ancestor_of_mem_ownPlay (who : ι) :
       cases hjoint : joint who with
       | none =>
           simp only [hjoint] at hmem
-          obtain ⟨ancestor, hinfo, fuel, hreach⟩ := exists_ancestor_of_mem_ownPlay who prior hmem
-          exact ⟨ancestor, hinfo, fuel + 1, hreach.trans hstep⟩
+          obtain ⟨ancestor, hinfo, hactive, hterm, fuel, hreach⟩ :=
+            exists_decision_ancestor_of_mem_ownPlay who prior hmem
+          exact ⟨ancestor, hinfo, hactive, hterm, fuel + 1, hreach.trans hstep⟩
       | some action =>
           simp only [hjoint, List.mem_cons] at hmem
           rcases hmem with rfl | hmem
-          · exact ⟨⟨_, prior⟩, rfl, 1, hstep⟩
-          · obtain ⟨ancestor, hinfo, fuel, hreach⟩ :=
-              exists_ancestor_of_mem_ownPlay who prior hmem
-            exact ⟨ancestor, hinfo, fuel + 1, hreach.trans hstep⟩
+          · have hlegal := E.legalOption_of_legal isLegal who
+            rw [hjoint] at hlegal
+            exact ⟨⟨_, prior⟩, rfl, hlegal.1, isLegal.1, 1, hstep⟩
+          · obtain ⟨ancestor, hinfo, hactive, hterm, fuel, hreach⟩ :=
+              exists_decision_ancestor_of_mem_ownPlay who prior hmem
+            exact ⟨ancestor, hinfo, hactive, hterm, fuel + 1, hreach.trans hstep⟩
+
+omit [Fintype ι] [DecidableEq ι] in
+/-- Every entry of an own-play record was made at an ancestor with that
+information state. -/
+theorem exists_ancestor_of_mem_ownPlay (who : ι) {state : E.State} (trace : E.Trace state)
+    {entry : M.InfoState who × E.Action who} (hmem : entry ∈ M.ownPlay who trace) :
+    ∃ ancestor : E.History, M.infoOf who ancestor.trace = entry.1 ∧
+      E.HistoryReaches ancestor ⟨state, trace⟩ :=
+  let ⟨ancestor, hinfo, _, _, hreach⟩ := M.exists_decision_ancestor_of_mem_ownPlay who trace hmem
+  ⟨ancestor, hinfo, hreach⟩
 
 omit [Fintype ι] [DecidableEq ι] in
 /-- **Decision recall closes information below every site.** -/
@@ -704,34 +718,67 @@ theorem runBehavioralTerminalFrom_update_add (certificate : E.WellFoundedHistori
     E.initHistory hstart final
 
 omit [Fintype ι] [DecidableEq ι] in
+/-- The cones of an antichain of roots add up to the probability that play
+passes through some root. -/
+theorem tsum_coneMass_eq (certificate : E.WellFoundedHistories) (chooser : E.RandomizedChooser)
+    (IsRoot : E.History → Prop)
+    (hanti : ∀ first second, IsRoot first → IsRoot second →
+      E.HistoryReaches first second → first = second) (start : E.History) :
+    ∑' root : {root // IsRoot root}, E.coneMass certificate chooser root start =
+      (E.randomizedBackwardLaw certificate chooser start).toOuterMeasure
+        {final | ∃ root, IsRoot root ∧ E.HistoryReaches root final} := by
+  classical
+  simp only [ExecutionProtocol.coneMass, PMF.toOuterMeasure_apply]
+  rw [ENNReal.tsum_comm]
+  refine tsum_congr fun final => ?_
+  by_cases hsome : ∃ root : {root // IsRoot root}, E.HistoryReaches root final
+  · obtain ⟨root, hroot⟩ := hsome
+    rw [tsum_eq_single root fun other hother => Set.indicator_of_notMem (fun hreach =>
+      hother (Subtype.ext ?_)) _]
+    · rw [Set.indicator_of_mem (s := {final | E.HistoryReaches root final}) hroot,
+        Set.indicator_of_mem (s := {final | ∃ root, IsRoot root ∧ E.HistoryReaches root final})
+          ⟨root.1, root.2, hroot⟩]
+    · rcases ExecutionProtocol.historyReaches_comparable hreach hroot with hforward | hbackward
+      · exact hanti _ _ other.2 root.2 hforward
+      · exact (hanti _ _ root.2 other.2 hbackward).symm
+  · push Not at hsome
+    have hzero (root : {root // IsRoot root}) :
+        {final | E.HistoryReaches root final}.indicator
+          (E.randomizedBackwardLaw certificate chooser start) final = 0 :=
+      Set.indicator_of_notMem (s := {final | E.HistoryReaches root final}) (hsome root) _
+    rw [tsum_congr hzero, tsum_zero, Set.indicator_of_notMem]
+    rintro ⟨root, hroot, hreach⟩
+    exact hsome ⟨root, hroot⟩ hreach
+
+omit [Fintype ι] [DecidableEq ι] in
 /-- Roots forming an antichain carry total mass at most one. -/
 theorem tsum_coneMass_le_one (certificate : E.WellFoundedHistories) (chooser : E.RandomizedChooser)
     (IsRoot : E.History → Prop)
     (hanti : ∀ first second, IsRoot first → IsRoot second →
       E.HistoryReaches first second → first = second) (start : E.History) :
     ∑' root : {root // IsRoot root}, E.coneMass certificate chooser root start ≤ 1 := by
-  classical
-  simp only [ExecutionProtocol.coneMass, PMF.toOuterMeasure_apply]
-  rw [ENNReal.tsum_comm]
-  calc
-    _ ≤ ∑' final, E.randomizedBackwardLaw certificate chooser start final := by
-      refine ENNReal.tsum_le_tsum fun final => ?_
-      by_cases hsome : ∃ root : {root // IsRoot root}, E.HistoryReaches root final
-      · obtain ⟨root, hroot⟩ := hsome
-        rw [tsum_eq_single root fun other hother => Set.indicator_of_notMem (fun hreach =>
-          hother (Subtype.ext ?_)) _]
-        · exact Set.indicator_le_self _ _ _
-        · rcases ExecutionProtocol.historyReaches_comparable hreach hroot with hforward | hbackward
-          · exact hanti _ _ other.2 root.2 hforward
-          · exact (hanti _ _ root.2 other.2 hbackward).symm
-      · push Not at hsome
-        have hzero (root : {root // IsRoot root}) :
-            {final | E.HistoryReaches root final}.indicator
-              (E.randomizedBackwardLaw certificate chooser start) final = 0 :=
-          Set.indicator_of_notMem (s := {final | E.HistoryReaches root final}) (hsome root) _
-        rw [tsum_congr hzero, tsum_zero]
-        exact bot_le
-    _ = 1 := PMF.tsum_coe _
+  rw [tsum_coneMass_eq certificate chooser IsRoot hanti start,
+    ← (PMF.toOuterMeasure_apply_eq_one_iff _ Set.univ).2 (Set.subset_univ _)]
+  exact MeasureTheory.measure_mono (Set.subset_univ _)
+
+omit [Fintype ι] [DecidableEq ι] in
+/-- **Cone domination.** An antichain of roots, each continuing a root of a
+second antichain, carries at most the second antichain's mass. -/
+theorem tsum_coneMass_le_of_reaches (certificate : E.WellFoundedHistories)
+    (chooser : E.RandomizedChooser) (Inner Outer : E.History → Prop)
+    (hinner : ∀ first second, Inner first → Inner second →
+      E.HistoryReaches first second → first = second)
+    (houter : ∀ first second, Outer first → Outer second →
+      E.HistoryReaches first second → first = second)
+    (hcover : ∀ root, Inner root → ∃ ancestor, Outer ancestor ∧ E.HistoryReaches ancestor root)
+    (start : E.History) :
+    ∑' root : {root // Inner root}, E.coneMass certificate chooser root start ≤
+      ∑' root : {root // Outer root}, E.coneMass certificate chooser root start := by
+  rw [tsum_coneMass_eq certificate chooser Inner hinner start,
+    tsum_coneMass_eq certificate chooser Outer houter start]
+  refine MeasureTheory.measure_mono fun final ⟨root, hroot, rootFuel, hreach⟩ => ?_
+  obtain ⟨ancestor, hancestor, ancestorFuel, hcovered⟩ := hcover root hroot
+  exact ⟨ancestor, hancestor, ancestorFuel + rootFuel, hcovered.trans hreach⟩
 
 omit [Fintype ι] [DecidableEq ι] in
 open Classical in

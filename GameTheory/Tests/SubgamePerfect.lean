@@ -328,7 +328,8 @@ theorem decisionHistory_offPath :
     congrArg (fun history : arena.History => history.state) hmem
   simp [decisionHistory, exitedHistory] at hstate
 
-private theorem backwardValue_of_constant_successors
+/-- A history whose successors all have one backward value has that value. -/
+theorem backwardValue_of_constant_successors
     (chooser : arena.HistoryChooser) (history : arena.History)
     (hterm : ¬ arena.terminal history.state) (c : ℝ)
     (hchild : ∀ target
