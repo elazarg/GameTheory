@@ -150,7 +150,7 @@ theorem BehavioralAssessment.isSequentiallyRational_of_converging_deviations_bou
 optimality of approximating assessments against converging deviations passes
 to the limit with no payoff hypothesis. -/
 theorem BehavioralAssessment.isSequentiallyRational_of_converging_deviations
-    [Fintype E.History]
+    [Finite E.History]
     (certificate : E.WellFoundedHistories)
     {sequence : ℕ → M.BehavioralAssessment}
     {target : M.BehavioralAssessment}
@@ -171,6 +171,7 @@ theorem BehavioralAssessment.isSequentiallyRational_of_converging_deviations
       ((sequence n).continuationContext
         certificate site (payoff i)).value ((sequence n).strategy i)) :
     target.IsSequentiallyRational certificate payoff := by
+  let _ := Fintype.ofFinite E.History
   let bound (i : ι) := ∑ history : E.History, |payoff i history|
   have hbound (i : ι) (history : E.History) : |payoff i history| ≤ bound i :=
     Finset.single_le_sum (fun other _ => abs_nonneg (payoff i other))

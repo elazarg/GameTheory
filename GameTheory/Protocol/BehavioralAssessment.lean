@@ -47,6 +47,12 @@ inactive; neither is an information set requiring an assessment belief. -/
 def InformationSite (i : ι) :=
   { info : M.InfoState i // M.IsDecisionInfo i info }
 
+/-- A decision site offers at least one choice. -/
+instance InformationSite.nonempty_choice {i : ι} (site : M.InformationSite i) :
+    Nonempty (M.Choice i site.1) := by
+  obtain ⟨_, _, action, haction⟩ := site.2
+  exact ⟨⟨some action, haction⟩⟩
+
 /-- Every history in this information fiber occurs at one trace depth. -/
 def InformationSite.CommonDepth {i : ι}
     (site : M.InformationSite i) (depth : ℕ) : Prop :=

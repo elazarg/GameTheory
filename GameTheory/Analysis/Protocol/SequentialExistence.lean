@@ -25,13 +25,13 @@ variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
     {E : ExecutionProtocol.{uι, us, ua} ι}
     (M : InformationModel.{uι, us, ua, up, uq, uk} E)
 
-/-- Every finite decision-recall protocol with inhabited total policies has a
-consistent, sequentially rational assessment. The fallback inhabits menus even
-at unused information states; no equilibrium or approximation witness is
-assumed. -/
-theorem exists_sequentialEquilibrium
-    [Fintype E.State] [Fintype E.History] [∀ i, Fintype (E.Action i)]
-    [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)]
+/-- Every decision-recall protocol with finitely many histories and inhabited
+total policies has a consistent, sequentially rational assessment. Decision
+sites and their menus are then finite, while the state, action, and
+information-state carriers may be infinite; the fallback inhabits menus at
+information values that no history reaches. No equilibrium or approximation
+witness is assumed. -/
+theorem exists_sequentialEquilibrium [Finite E.History]
     (hrecall : M.DecisionRecall) (fallback : (i : ι) → M.Policy i)
     (payoff : ι → E.History → ℝ) (certificate : E.WellFoundedHistories) :
     ∃ assessment : M.BehavioralAssessment,
@@ -39,10 +39,6 @@ theorem exists_sequentialEquilibrium
         assessment.IsSequentiallyConsistent
           (hrecall.decisionInformationAntichain) := by
   classical
-  let (i : ι) (info : M.InfoState i) : Fintype (M.Choice i info) := inferInstance
-  let (i : ι) (info : M.InfoState i) : Nonempty (M.Choice i info) := ⟨fallback i info⟩
-  let (i : ι) (site : M.InformationSite i) :
-      Fintype (M.InformationHistory i site.1) := inferInstance
   let weight (n : ℕ) : ℝ := 1 / ((n : ℝ) + 2)
   have hpositive (n : ℕ) : 0 < weight n := by
     exact one_div_pos.mpr (add_pos_of_nonneg_of_pos (Nat.cast_nonneg n) (by norm_num))
@@ -58,42 +54,45 @@ theorem exists_sequentialEquilibrium
     simp [weight, Nat.cast_add]
     ring
   choose sequence hfull hbayes hfeasible hlocal using fun n =>
-    M.exists_uniformTremble_locallyOptimal_bayesAssessment
+    M.exists_uniformTremble_locallyOptimal_bayesAssessment fallback
       hrecall.actsOnceWhereItMatters
       (hrecall.decisionInformationAntichain)
       (weight n) (hpositive n) (hone n) payoff certificate
-  obtain ⟨assessment, subseq, hsubseq, hstrategy, hconvergence⟩ :=
-    M.exists_subseq_behavioralAssessmentConvergesPointwise sequence
-  let repair (n : ℕ) (i : ι) (alternative : M.BehavioralPolicy i) :
-    M.BehavioralPolicy i := fun info =>
+  obtain ⟨assessment, subseq, hsubseq, hconvergence⟩ :=
+    M.exists_subseq_behavioralAssessmentConvergesPointwise_atSites_of_uniformlyTight sequence
+      (fun _ _ => uniformlyTight_of_finite _) (fun _ _ => uniformlyTight_of_finite _)
+  let tremble (n : ℕ) {i : ι} (site : M.InformationSite i) (law : PMF (M.Choice i site.1)) :
+      PMF (M.Choice i site.1) :=
     mix (weight (subseq n)) (hpositive (subseq n)).le (hone (subseq n))
-      (PMF.uniformOfFintype _) (alternative info)
-  have hrepair (i : ι) (alternative : M.BehavioralPolicy i) (info : M.InfoState i) :
-      PMFConvergesPointwise (fun n => repair n i alternative info) (alternative info) :=
-    pmfConvergesPointwise_mix_zero (fun n => weight (subseq n))
+      (@PMF.uniformOfFintype _ (Fintype.ofFinite _) _) law
+  let repair (n : ℕ) (i : ι) (alternative : M.BehavioralPolicy i) :
+      M.BehavioralPolicy i := fun info =>
+    if hsite : M.IsDecisionInfo i info then tremble n ⟨info, hsite⟩ (alternative info)
+    else alternative info
+  have hrepair_site (n : ℕ) (i : ι) (alternative : M.BehavioralPolicy i)
+      (site : M.InformationSite i) :
+      repair n i alternative site.1 = tremble n site (alternative site.1) :=
+    dite_eq_left site.2
+  have hrepair (i : ι) (alternative : M.BehavioralPolicy i) (site : M.InformationSite i) :
+      PMFConvergesPointwise (fun n => repair n i alternative site.1) (alternative site.1) := by
+    simp only [hrepair_site]
+    exact pmfConvergesPointwise_mix_zero (fun n => weight (subseq n))
       (fun n => (hpositive (subseq n)).le) (fun n => hone (subseq n))
       (hzero.comp hsubseq.tendsto_atTop) _ _
-  have hlocalFinite (n : ℕ) (i : ι) (site : M.InformationSite i)
-      (law : PMF (M.Choice i site.1))
-      (hlaw : law ∈ M.uniformTrembleLaws (weight n)
-        (hpositive n).le (hone n) i site.1) :
-      ((sequence n).continuationContext certificate site (payoff i)).value
-          (((sequence n).strategy i).withLaw site.1 law) ≤
-        ((sequence n).continuationContext certificate site (payoff i)).value
-          ((sequence n).strategy i) := by
-    exact (hlocal n i site law hlaw).2.2
   refine ⟨assessment, ?_, ?_⟩
   · apply BehavioralAssessment.isSequentiallyRational_of_converging_deviations M certificate
-      (fun i site => hstrategy i site.1) (fun i site => hconvergence.belief i site) repair
-      (fun i alternative site => hrepair i alternative site.1) payoff
+      (fun i site => hconvergence.strategy i site) (fun i site => hconvergence.belief i site)
+      repair hrepair payoff
     intro n who site alternative
     apply BehavioralAssessment.continuation_value_le_of_locallyOptimal M hrecall
       (sequence (subseq n)) (hfull (subseq n)) (hbayes (subseq n))
-      (fun i info law => law ∈ M.uniformTrembleLaws
-        (weight (subseq n)) (hpositive (subseq n)).le (hone (subseq n)) i info)
-      (hfeasible (subseq n)) payoff certificate (hlocalFinite (subseq n)) who site
-    intro info
-    exact ⟨alternative info, rfl⟩
+      (fun i info law => ∀ [Finite (M.Choice i info)] [Nonempty (M.Choice i info)],
+        law ∈ M.uniformTrembleLaws
+          (weight (subseq n)) (hpositive (subseq n)).le (hone (subseq n)) i info)
+      (fun i site _ _ => hfeasible (subseq n) i site) payoff certificate
+      (fun i site law hlaw => (hlocal (subseq n) i site law hlaw).2.2) who site
+    intro later _ _
+    exact ⟨alternative later.1, hrepair_site n who alternative later⟩
   · exact hconvergence.isSequentiallyConsistent
       (hrecall.decisionInformationAntichain)
       (fun n => hfull (subseq n)) (fun n => hbayes (subseq n))

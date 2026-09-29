@@ -266,6 +266,7 @@ import GameTheory.Protocol.DecisionRecall
 import GameTheory.Protocol.Execution
 import GameTheory.Protocol.Extraction
 import GameTheory.Protocol.FiniteHorizon
+import GameTheory.Protocol.FiniteInformation
 import GameTheory.Protocol.History
 import GameTheory.Protocol.HistoryBackward
 import GameTheory.Protocol.HistoryChooserComposition

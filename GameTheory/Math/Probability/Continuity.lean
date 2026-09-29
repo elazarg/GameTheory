@@ -43,4 +43,27 @@ theorem continuous_pmf_bind_mass [Fintype α]
   exact continuous_finsetSum _ fun source _ =>
     (hlaw source).mul (hkernel source value)
 
+/-- A fixed finitely supported source law binds continuously varying kernels
+to continuously varying masses; only kernels on the support matter. -/
+theorem continuous_pmf_bind_mass_of_support_finite
+    (law : PMF α) (hfinite : law.support.Finite) (kernel : X → α → PMF β)
+    (hkernel : ∀ source ∈ law.support, ∀ value,
+      Continuous fun x => (kernel x source value).toReal)
+    (value : β) :
+    Continuous fun x => (law.bind (kernel x) value).toReal := by
+  have hformula (x : X) :
+      (law.bind (kernel x) value).toReal =
+        ∑ source ∈ hfinite.toFinset, (law source).toReal * (kernel x source value).toReal := by
+    rw [PMF.bind_apply, tsum_eq_sum (s := hfinite.toFinset), ENNReal.toReal_sum]
+    · simp only [ENNReal.toReal_mul]
+    · intro source _
+      exact ENNReal.mul_ne_top (law.apply_ne_top source) ((kernel x source).apply_ne_top value)
+    · intro source hsource
+      have hzero : law source = 0 := by
+        simpa [Set.Finite.mem_toFinset, PMF.mem_support_iff] using hsource
+      simp [hzero]
+  simp_rw [hformula]
+  exact continuous_finsetSum _ fun source hsource =>
+    continuous_const.mul (hkernel source (hfinite.mem_toFinset.mp hsource) value)
+
 end GameTheory.Math.Probability

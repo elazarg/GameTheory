@@ -1,12 +1,15 @@
 /-
 # Continuity of canonical behavioral play
 
-Finite actions and states make bounded execution a finite composition of
-continuous probability operations. All evaluations below use the existing
-Protocol runner, including its absorbing terminal histories.
+Finite menus at decision sites and finitely many outcomes of each legal
+transition make bounded execution a finite composition of continuous
+probability operations; the state, action, and information-state carriers may
+be infinite. All evaluations below use the existing Protocol runner, including
+its absorbing terminal histories.
 -/
 
 import GameTheory.Analysis.Protocol.CounterfactualReach
+import GameTheory.Protocol.FiniteInformation
 import GameTheory.Analysis.Protocol.BehavioralBayes
 import GameTheory.Math.Probability.Continuity
 
@@ -36,9 +39,11 @@ theorem continuous_behavioralJoint_prob
   exact continuous_finsetProd _ fun i _ => hprofile i _ _
 
 /-- Bounded behavioral execution is continuous in all local action masses.
-No recall or finiteness of the information-state carrier is needed. -/
+No recall and no finiteness of the state, action, or information-state carrier
+is needed. -/
 theorem continuous_runBehavioralFrom_prob
-    [Fintype E.State] [∀ i, Fintype (E.Action i)]
+    (transitions : E.FiniteTransitions)
+    [∀ i (site : M.InformationSite i), Finite (M.Choice i site.1)]
     (profile : X → (i : ι) → M.BehavioralPolicy i)
     (hprofile : ∀ i info choice,
       Continuous fun x => ((profile x i info choice).toReal))
@@ -56,6 +61,9 @@ theorem continuous_runBehavioralFrom_prob
       · simp_rw [M.runBehavioralFrom_of_terminal _ _ hterm]
         exact continuous_const
       · simp_rw [M.runBehavioralFrom_succ_of_not_terminal _ _ hterm]
+        have := M.finite_legalJoint history hterm
+        let _ := Fintype.ofFinite
+          {joint : ∀ i, Option (E.Action i) // E.Legal history.state joint}
         let branch (x : X) (draw :
             {action : ∀ i, Option (E.Action i) // E.Legal history.state action})
             (state : E.State) : PMF E.History :=
@@ -76,29 +84,27 @@ theorem continuous_runBehavioralFrom_prob
             intro state realized
             simp only [branch, dite_eq_left realized]
           simp_rw [hstep]
-          apply continuous_pmf_bind_mass
-          · intro state
-            exact continuous_const
-          · intro state terminal
-            by_cases realized : state ∈ (E.step history.state draw).support
-            · simpa only [branch, dite_eq_left realized] using
-                ih (history.extend draw.2 realized) terminal
-            · simp only [branch, dite_eq_right realized]
-              exact continuous_const
+          apply continuous_pmf_bind_mass_of_support_finite _
+            (transitions history hterm draw)
+          intro state realized terminal
+          simpa only [branch, dite_eq_left realized] using
+            ih (history.extend draw.2 realized) terminal
 
 /-- Reach probabilities and information-event masses inherit runner continuity. -/
 theorem continuous_historyReachProbability
-    [Fintype E.State] [∀ i, Fintype (E.Action i)]
+    (transitions : E.FiniteTransitions)
+    [∀ i (site : M.InformationSite i), Finite (M.Choice i site.1)]
     (profile : X → (i : ι) → M.BehavioralPolicy i)
     (hprofile : ∀ i info choice,
       Continuous fun x => ((profile x i info choice).toReal))
     (history : E.History) :
     Continuous fun x => (M.historyReachWeight (profile x) history).toReal :=
-  M.continuous_runBehavioralFrom_prob profile hprofile
+  M.continuous_runBehavioralFrom_prob transitions profile hprofile
     history.trace.length E.initHistory history
 
 theorem continuous_informationMass
-    [Fintype E.State] [∀ i, Fintype (E.Action i)]
+    (transitions : E.FiniteTransitions)
+    [∀ i (site : M.InformationSite i), Finite (M.Choice i site.1)]
     (profile : X → (i : ι) → M.BehavioralPolicy i)
     (hprofile : ∀ i info choice,
       Continuous fun x => ((profile x i info choice).toReal))
@@ -123,11 +129,12 @@ theorem continuous_informationMass
     exact hsum x
   rw [hsum]
   exact continuous_finsetSum _ fun history _ =>
-    M.continuous_historyReachProbability profile hprofile history.1
+    M.continuous_historyReachProbability transitions profile hprofile history.1
 
 /-- Bayes normalization is continuous where the information event has positive mass. -/
 theorem continuous_bayesBelief_prob
-    [Fintype E.State] [∀ i, Fintype (E.Action i)]
+    (transitions : E.FiniteTransitions)
+    [∀ i (site : M.InformationSite i), Finite (M.Choice i site.1)]
     (profile : X → (i : ι) → M.BehavioralPolicy i)
     (hprofile : ∀ i info choice,
       Continuous fun x => ((profile x i info choice).toReal))
@@ -139,8 +146,8 @@ theorem continuous_bayesBelief_prob
     Continuous fun x =>
       (M.bayesBelief (profile x) i site hantichain (hmass x) history).toReal := by
   simp_rw [M.bayesBelief_apply, ENNReal.toReal_div]
-  exact (M.continuous_historyReachProbability profile hprofile history.1).div
-    (M.continuous_informationMass profile hprofile i site)
+  exact (M.continuous_historyReachProbability transitions profile hprofile history.1).div
+    (M.continuous_informationMass transitions profile hprofile i site)
     (fun x => by
       apply ENNReal.toReal_ne_zero.mpr
       exact ⟨(hmass x).ne', (ne_of_lt
@@ -168,8 +175,7 @@ theorem continuous_update_prob [DecidableEq ι]
 /-- Belief-averaged continuation values are jointly continuous in the
 assessment and the deviating player's whole policy. -/
 theorem continuous_truncatedContinuationContext_value
-    [DecidableEq ι] [Fintype E.State] [Fintype E.History]
-    [∀ i, Fintype (E.Action i)]
+    [DecidableEq ι] [Finite E.History]
     (assessment : X → M.BehavioralAssessment)
     (hstrategy : ∀ i info choice,
       Continuous fun x =>
@@ -184,13 +190,15 @@ theorem continuous_truncatedContinuationContext_value
     (payoff : E.History → ℝ) (fuel : ℕ) :
     Continuous fun x =>
       ((assessment x).truncatedContinuationContext site payoff fuel).value (alternative x) := by
+  let _ := Fintype.ofFinite E.History
   simp only [Context.value, BehavioralAssessment.truncatedContinuationContext]
   apply continuous_pmf_expect
   · intro target
     apply continuous_pmf_bind_mass
     · exact hbelief
     · intro history target
-      exact M.continuous_runBehavioralFrom_prob _
+      exact M.continuous_runBehavioralFrom_prob
+        ExecutionProtocol.FiniteTransitions.of_finite_history _
         (M.continuous_update_prob _ hstrategy who alternative halternative)
         fuel history.1 target
   · intro target

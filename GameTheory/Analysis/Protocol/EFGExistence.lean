@@ -21,12 +21,11 @@ universe uι us ua up uq uk
 
 variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
     (G : Game.{uι, us, ua, up, uq, uk} ι)
-    [Fintype G.execution.State] [∀ i, Fintype (G.execution.Action i)]
-    [∀ i, Fintype (G.information.InfoState i)]
-    [∀ i, DecidableEq (G.information.InfoState i)]
+    [Fintype G.execution.State]
 
-/-- Finite decision-recall EFGs have a sequential equilibrium. The conclusion is
-the existing EFG predicate. -/
+/-- Decision-recall EFGs with finitely many states have a sequential equilibrium.
+Actions and information states may range over infinite carriers. The conclusion
+is the existing EFG predicate. -/
 theorem exists_isSequentialEquilibrium
     (hrecall : G.information.DecisionRecall)
     (fallback : (i : ι) → G.information.Policy i)
@@ -38,9 +37,7 @@ theorem exists_isSequentialEquilibrium
   let : Fintype G.History := G.historyFintype
   exact G.information.exists_sequentialEquilibrium hrecall fallback payoff certificate
 
-omit [Fintype ι] [DecidableEq ι] [∀ i, Fintype (G.execution.Action i)]
-  [∀ i, Fintype (G.information.InfoState i)]
-  [∀ i, DecidableEq (G.information.InfoState i)] in
+omit [Fintype ι] [DecidableEq ι] in
 /-- The finite tree certifies terminal play. -/
 theorem wellFoundedHistories : G.execution.WellFoundedHistories :=
   let : Fintype G.History := G.historyFintype

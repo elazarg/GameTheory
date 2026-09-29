@@ -1,6 +1,6 @@
 # D61: finite perfect-recall sequential-equilibrium existence
 
-- **Status:** adopted; restated on terminal play by [D64](D64-terminal-sequential-rationality.md)
+- **Status:** adopted; restated on terminal play by [D64](D64-terminal-sequential-rationality.md); since 2026-09-30 the Protocol theorem assumes only finitely many histories (states, actions, and information states may be infinite)
 - **Date:** 2026-09-24
 - **Experiment IDs:** EXP-121; decision-recall generalization under EXP-145
 
