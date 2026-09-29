@@ -145,25 +145,22 @@ an exhausted transcript, whose next action is the default. -/
 def conditionOnHead (law : PMF (List Action)) (action : Action) :
     PMF (List Action) := by
   classical
-  exact if h : action ∈ (law.map (List.headD · default)).support then
-    fiberPosterior law (List.headD · default) action h
+  exact if action ∈ (law.map (List.headD · default)).support then
+    fiberPosterior law (List.headD · default) action
   else PMF.pure []
 
 theorem conditionOnHead_eq_fiberPosterior (law : PMF (List Action))
     (action : Action)
     (h : action ∈ (law.map (List.headD · default)).support) :
-    conditionOnHead law action =
-      fiberPosterior law (List.headD · default) action h := by
+    conditionOnHead law action = fiberPosterior law (List.headD · default) action := by
   classical
   unfold conditionOnHead
-  exact dite_eq_left h
+  exact ite_eq_left h
 
 private theorem conditionOnHead_reconstruct (law : PMF (List Action)) :
     (law.map (List.headD · default)).bind (conditionOnHead law) = law := by
-  rw [← PMF.bindOnSupport_eq_bind]
-  exact fiberPosterior_reconstruct_irrelevant law (List.headD · default)
-    (fun action _ => conditionOnHead law action)
-    (fun action h => conditionOnHead_eq_fiberPosterior law action h)
+  conv_rhs => rw [← fiberPosterior_reconstruct law (List.headD · default)]
+  exact bind_congr_on_support _ fun action h => conditionOnHead_eq_fiberPosterior law action h
 
 /-- A total conditional policy for a transcript law. Its off-path behavior is
 defined by the default action. -/
@@ -201,7 +198,7 @@ theorem run_next (law : PMF (List Action)) (count : Nat)
         rw [PMF.support_map] at member
         obtain ⟨actions, conditioned, rfl⟩ := member
         have hcond : actions ∈
-            (fiberPosterior law (List.headD · default) action hsupported).support := by
+            (fiberPosterior law (List.headD · default) action).support := by
           simpa only [conditionOnHead_eq_fiberPosterior law action hsupported] using
             conditioned
         have hmem : actions ∈
@@ -219,7 +216,7 @@ theorem run_next (law : PMF (List Action)) (count : Nat)
           action :: actions.tail = actions := by
         intro actions conditioned
         have hcond : actions ∈
-            (fiberPosterior law (List.headD · default) action hsupported).support := by
+            (fiberPosterior law (List.headD · default) action).support := by
           simpa only [conditionOnHead_eq_fiberPosterior law action hsupported] using
             conditioned
         have hmem : actions ∈

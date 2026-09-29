@@ -420,17 +420,18 @@ theorem interim_implies_isBayesCorrelatedEq
       | mk ownType recommended =>
           exact B.obedienceEvent_eq_fiber who ownType recommended
     have hposterior :
-        fiberPosterior recommendation observation observed hb =
+        fiberPosterior recommendation observation observed =
           recommendation.filter
             (B.obedienceEvent who observed.1 observed.2) hObserved := by
-      simp only [fiberPosterior, ← hevent]
+      rw [fiberPosterior_of_mem_support _ _ hb]
+      simp only [← hevent]
     have hpoint :
-        ∀ rec ∈ (fiberPosterior recommendation observation observed hb).support,
+        ∀ rec ∈ (fiberPosterior recommendation observation observed).support,
           f rec = ffixed rec := by
       intro rec hrec
       have hcell : observation rec = observed := by
         have hmem := hrec
-        rw [fiberPosterior_support] at hmem
+        rw [fiberPosterior_support _ _ _ hb] at hmem
         exact hmem.1
       have hpair :
           rec.1 who = observed.1 ∧ rec.2 who = observed.2 := by
@@ -438,14 +439,14 @@ theorem interim_implies_isBayesCorrelatedEq
       simp [f, ffixed, recordDeviation, applyObedienceDeviation,
         fixedReplacementDeviation, fixed, replacement, hpair]
     have hvalueEq :
-        expect (fiberPosterior recommendation observation observed hb) f =
-          expect (fiberPosterior recommendation observation observed hb)
+        expect (fiberPosterior recommendation observation observed) f =
+          expect (fiberPosterior recommendation observation observed)
             ffixed :=
       expect_congr_on_support hpoint
     have hfixedLe :
-        expect (fiberPosterior recommendation observation observed hb)
+        expect (fiberPosterior recommendation observation observed)
             ffixed ≤
-          expect (fiberPosterior recommendation observation observed hb) g := by
+          expect (fiberPosterior recommendation observation observed) g := by
       have h := hcond observed.1 observed.2 replacement hObserved
       unfold interimDeviatingValue interimRecommendedValue at h
       simpa only [hposterior] using h

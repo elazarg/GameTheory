@@ -124,6 +124,12 @@ theorem bind_congr_on_support {α β : Type*} (μ : PMF α)
   · have hzero : μ a = 0 := μ.apply_eq_zero_iff a |>.2 ha
     simp [hzero]
 
+/-- Pushforwards agree when their functions agree everywhere the law can draw. -/
+theorem map_congr_on_support {α β : Type*} (μ : PMF α) {f g : α → β}
+    (h : ∀ a ∈ μ.support, f a = g a) : μ.map f = μ.map g := by
+  rw [← PMF.bind_pure_comp, ← PMF.bind_pure_comp]
+  exact bind_congr_on_support μ fun a ha => by rw [Function.comp_apply, h a ha]; rfl
+
 theorem bindOnSupport_congr {α β : Type*} (μ : PMF α)
     {f g : ∀ a ∈ μ.support, PMF β}
     (hfg : ∀ a ha, f a ha = g a ha) :

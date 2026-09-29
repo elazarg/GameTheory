@@ -30,10 +30,8 @@ variable {Action : Type uAction}
 /-- The actual fiber posterior on positive kept observations. Null fibers use
 the source law as a total fallback, which is never charged by the marginal. -/
 private def conditionedContext (contextLaw : PMF Context) (keep : Context → Kept)
-    (kept : Kept) : PMF Context := by
-  classical
-  exact if h : kept ∈ (contextLaw.map keep).support then
-    fiberPosterior contextLaw keep kept h else contextLaw
+    (kept : Kept) : PMF Context :=
+  fiberPosterior contextLaw keep kept
 
 /-- Average a full-context action kernel over the actual fiber posterior. -/
 def averagedKernel (contextLaw : PMF Context) (keep : Context → Kept)
@@ -64,16 +62,7 @@ theorem fullJoint_eq_averagedJoint (contextLaw : PMF Context)
   have hdecompose :
       (contextLaw.map keep).bind
         (conditionedContext contextLaw keep) = contextLaw := by
-    calc
-      (contextLaw.map keep).bind (conditionedContext contextLaw keep) =
-          (contextLaw.map keep).bindOnSupport
-            (fun kept hkept => fiberPosterior contextLaw keep kept hkept) := by
-        symm
-        apply bindOnSupport_eq_bind_of_eq_on_support
-        intro kept hkept
-        unfold conditionedContext
-        rw [dite_eq_left hkept]
-      _ = contextLaw := fiberPosterior_reconstruct contextLaw keep
+    exact fiberPosterior_reconstruct contextLaw keep
   calc
     fullJoint contextLaw keep kernel =
         (contextLaw.map keep).bind fun kept =>
@@ -91,8 +80,7 @@ theorem fullJoint_eq_averagedJoint (contextLaw : PMF Context)
       intro context hcontext
       have hcontextFibre :
           context ∈ {value | keep value = kept} ∩ contextLaw.support := by
-        simpa only [conditionedContext, dite_eq_left hkept,
-          fiberPosterior_support] using hcontext
+        simpa only [conditionedContext, fiberPosterior_support _ _ _ hkept] using hcontext
       have hkeep : keep context = kept := hcontextFibre.1
       rw [hkeep]
     _ = averagedJoint contextLaw keep kernel := by
@@ -215,10 +203,8 @@ theorem averagedKernel_copySignal :
   unfold averagedKernel conditionedContext
   have hsupport : () ∈ (fairSignal.map fun _ : Bool => ()).support := by
     simp
-  rw [dite_eq_left hsupport]
-  have hposterior : fiberPosterior fairSignal (fun _ : Bool => ()) ()
-      hsupport = fairSignal := by
-    unfold fiberPosterior
+  have hposterior : fiberPosterior fairSignal (fun _ : Bool => ()) () = fairSignal := by
+    rw [fiberPosterior_of_mem_support _ _ hsupport]
     apply filter_of_support_subset
     intro signal _
     simp

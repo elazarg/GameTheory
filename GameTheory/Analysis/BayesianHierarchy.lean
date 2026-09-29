@@ -41,7 +41,7 @@ abbrev PositiveType (who : ι) : Type ut :=
 
 /-- The posterior over type profiles given one's own type. -/
 def ownPosterior (who : ι) (ownType : B.PositiveType who) : PMF (∀ i, B.Ty i) :=
-  fiberPosterior B.prior (fun types => types who) ownType.1 ownType.2
+  fiberPosterior B.prior (fun types => types who) ownType.1
 
 /-- The interim comparison of responding with `respond` at one own type, under
 the posterior given that type. -/
@@ -155,7 +155,7 @@ theorem interimComparison_implies [Fintype Observation]
           ((B.ownPosterior who ⟨ownType, hown⟩).map (B.outcomeOf profile)).map observe := by
     simp only [GameForm.outcomeLaw, PMF.pure_bind, PMF.map_comp]
     conv_lhs => rw [← fiberPosterior_reconstruct B.prior (fun types => types who)]
-    rw [map_bindOnSupport]
+    rw [PMF.map_bind, ← PMF.bindOnSupport_eq_bind]
     rfl
   have hfiber (ownType : B.Ty who) (hown : ownType ∈ marginal.support) :
       ((B.ownPosterior who ⟨ownType, hown⟩).map
@@ -166,7 +166,7 @@ theorem interimComparison_implies [Fintype Observation]
     congr 1
     apply map_congr_on_support
     intro types htypes
-    rw [ownPosterior, fiberPosterior_support] at htypes
+    rw [ownPosterior, fiberPosterior_support _ _ _ hown] at htypes
     have hown' : types who = ownType := htypes.1
     simp only [outcomeOf, B.actionsOf_update, singleTypeDeviation, hown', ↓reduceIte]
     exact congrArg (Prod.mk types) ((B.actionsOf_update plan who deviation types).trans

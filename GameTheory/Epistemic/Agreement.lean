@@ -33,7 +33,7 @@ private theorem expect_indicator_inter_eq_report_mul_mass
   let obs := observation partition
   let marginal := PMF.map obs prior
   let qPublic : Set (Quotient partition) := obs '' publicEvent
-  let kernel := fun b hb => fiberPosterior prior obs b hb
+  let kernel := fun b (_ : b ∈ marginal.support) => fiberPosterior prior obs b
   let integrand : Ω → ℝ :=
     (publicEvent ∩ event).indicator (fun _ => (1 : ℝ))
   let outerValue : Quotient partition → ℝ := fun b =>
@@ -41,8 +41,8 @@ private theorem expect_indicator_inter_eq_report_mul_mass
   have hsource : PayoffIntegrable prior integrand :=
     payoffIntegrable_indicator _ (payoffIntegrable_constant prior 1)
   have hbind : PayoffIntegrable (marginal.bindOnSupport kernel) integrand :=
-    payoffIntegrable_congr_law (fiberPosterior_reconstruct prior obs).symm
-      hsource
+    payoffIntegrable_congr_law
+      ((PMF.bindOnSupport_eq_bind _ _).trans (fiberPosterior_reconstruct prior obs)).symm hsource
   have hconditional : ∀ b, ∀ hb : b ∈ marginal.support,
       outerValue b =
         expect (kernel b hb) integrand := by
@@ -52,7 +52,7 @@ private theorem expect_indicator_inter_eq_report_mul_mass
       hrepresentative, hrepresentativeEq⟩
     have hkSupport : (kernel b hb).support =
         {other | obs other = b} ∩ prior.support := by
-      simp only [kernel, fiberPosterior_support]
+      exact fiberPosterior_support prior obs b hb
     by_cases hbPublic : b ∈ qPublic
     · obtain ⟨publicState, hpublicState, hpublicEq⟩ := hbPublic
       have hclass : obs representative = obs publicState :=
@@ -70,9 +70,7 @@ private theorem expect_indicator_inter_eq_report_mul_mass
       have hposteriorBridge := posterior_eq_fiberPosterior_expect
         prior partition event representative hcellWitness
       have hkernelEq : kernel b hb =
-          fiberPosterior prior obs (obs representative) (by
-            rw [PMF.support_map]
-            exact ⟨representative, hrepresentative, rfl⟩) := by
+          fiberPosterior prior obs (obs representative) := by
         subst b
         rfl
       have hconditionalSupport :
@@ -99,7 +97,7 @@ private theorem expect_indicator_inter_eq_report_mul_mass
               expect (kernel b hb)
                 (fun other => if other ∈ event then 1 else 0) :=
             heqExpect
-          _ = expect (fiberPosterior prior obs (obs representative) _)
+          _ = expect (fiberPosterior prior obs (obs representative))
                 (fun other => if other ∈ event then 1 else 0) :=
             expect_congr_law hkernelEq _
           _ = report := by
@@ -126,7 +124,8 @@ private theorem expect_indicator_inter_eq_report_mul_mass
                := (hzero.trans hzero').symm
   have htower := expect_bindOnSupport_tower_on_support marginal kernel
     integrand hbind outerValue hconditional
-  have hboundLaw := fiberPosterior_reconstruct prior obs
+  have hboundLaw : marginal.bindOnSupport kernel = prior :=
+    (PMF.bindOnSupport_eq_bind _ _).trans (fiberPosterior_reconstruct prior obs)
   have hsourceEq := expect_congr_law hboundLaw integrand
   have hpreimage : obs ⁻¹' qPublic = publicEvent := by
     ext state

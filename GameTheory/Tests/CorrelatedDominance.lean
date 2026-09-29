@@ -73,10 +73,8 @@ theorem true_recommended_supported :
 
 theorem law_conditional_obedience_true :
     euPreference utility false
-      (boolForm.outcomeLaw (fiberPosterior law (fun profile => profile false) true
-        true_recommended_supported))
-      ((fiberPosterior law (fun profile => profile false) true
-        true_recommended_supported).bind fun profile =>
+      (boolForm.outcomeLaw (fiberPosterior law (fun profile => profile false) true))
+      ((fiberPosterior law (fun profile => profile false) true).bind fun profile =>
           boolForm.play (Profile.update profile false false)) :=
   law_isCorrelatedEq.conditional_obedience (responses_integrable _ _) false true false
     true_recommended_supported
@@ -210,13 +208,12 @@ theorem diagonalLaw_isCorrelatedEq :
 
 theorem diagonalLaw_local_obedience :
     ∀ who recommended replacement,
-      ∀ hrecommended : recommended ∈
-        (diagonalLaw.map fun profile => profile who).support,
+      recommended ∈ (diagonalLaw.map fun profile => profile who).support →
         euPreference coordinationUtility who
           (boolForm.outcomeLaw (fiberPosterior diagonalLaw (fun profile => profile who)
-            recommended hrecommended))
+            recommended))
           ((fiberPosterior diagonalLaw (fun profile => profile who)
-            recommended hrecommended).bind fun profile =>
+            recommended).bind fun profile =>
               boolForm.play (Profile.update profile who replacement)) := by
   intro who recommended replacement hrecommended
   exact diagonalLaw_isCorrelatedEq.conditional_obedience (responses_integrable _ _) who
@@ -238,10 +235,10 @@ theorem pure_crossed_not_isCorrelatedEq :
     simp [crossed]
   have hposterior :
       fiberPosterior (PMF.pure crossed) (fun profile => profile false)
-        false hrecommended = PMF.pure crossed := by
+        false = PMF.pure crossed := by
     apply pmf_eq_pure_of_support_subset_singleton
     intro profile hprofile
-    rw [fiberPosterior_support] at hprofile
+    rw [fiberPosterior_support _ _ _ hrecommended] at hprofile
     apply Set.mem_singleton_iff.mpr
     simpa [crossed] using hprofile.2
   have hpref := hce.conditional_obedience (responses_integrable _ _) false false true

@@ -59,9 +59,8 @@ def continuation (law : PMF Ω) (context : Ω → Full) (term : Ω → Term)
   classical
   let keptTermLaw := law.map fun omega => (keep (context omega), term omega)
   let keptLaw := law.map (keep ∘ context)
-  exact if hkept : kept ∈ keptLaw.support then
-    (fiberPosterior keptTermLaw Prod.fst kept (by
-      simpa [keptTermLaw, keptLaw, PMF.map_comp] using hkept)).map Prod.snd
+  exact if kept ∈ keptLaw.support then
+    (fiberPosterior keptTermLaw Prod.fst kept).map Prod.snd
   else keptTermLaw.map Prod.snd
 
 private theorem joint_kept_marginal (law : PMF Ω)
@@ -85,7 +84,7 @@ private theorem continuation_apply_of_mem (law : PMF Ω)
     rw [hmarginal]
     exact hkept
   unfold continuation
-  simp only [dite_eq_left hkept]
+  simp only [ite_eq_left hkept]
   simpa only [keptTermLaw, hmarginal] using
     fiberPosterior_map_snd_apply keptTermLaw kept hkeptTerm termValue
 

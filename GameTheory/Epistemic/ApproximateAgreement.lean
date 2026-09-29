@@ -192,10 +192,10 @@ private theorem commonPBelief_core_bound
   have hDneg : PayoffIntegrable prior (fun state => -difference state) :=
     payoffIntegrable_neg hD
   have hboundFiber : ∀ b (hb : b ∈ (PMF.map (observation partition) prior).support),
-      |expect (fiberPosterior prior (observation partition) b hb) difference| ≤
-      expect (fiberPosterior prior (observation partition) b hb) bound := by
+      |expect (fiberPosterior prior (observation partition) b) difference| ≤
+      expect (fiberPosterior prior (observation partition) b) bound := by
     intro b hb
-    let conditional := fiberPosterior prior (observation partition) b hb
+    let conditional := fiberPosterior prior (observation partition) b
     have hconditionalSupport := fiberPosterior_support prior
       (observation partition) b hb
     let share := eventMass conditional witness
@@ -219,10 +219,7 @@ private theorem commonPBelief_core_bound
         prior partition reportEvent state ⟨state, hcell, hstatePrior⟩
       have hobservation : observation partition state = b := hstateSupport'.1
       have hconditionalEq : conditional =
-          fiberPosterior prior (observation partition)
-            (observation partition state) (by
-              rw [hobservation]
-              exact hb) := by
+          fiberPosterior prior (observation partition) (observation partition state) := by
         dsimp [conditional]
         cases hobservation
         rfl
@@ -232,9 +229,7 @@ private theorem commonPBelief_core_bound
           share = expect conditional (eventIndicator witness) :=
             (eventMass_indicator conditional witness).symm
           _ = expect (fiberPosterior prior (observation partition)
-              (observation partition state) (by
-                rw [hobservation]
-                exact hb)) (eventIndicator witness) := by
+              (observation partition state)) (eventIndicator witness) := by
             rw [hconditionalEq]
           _ = posterior prior partition witness state :=
             hposteriorWitness.symm
@@ -363,24 +358,24 @@ private theorem commonPBelief_core_bound
       simp
   have hnegativeFiber : ∀ b (hb : b ∈
       (PMF.map (observation partition) prior).support),
-      expect (fiberPosterior prior (observation partition) b hb)
+      expect (fiberPosterior prior (observation partition) b)
         (fun state => -difference state) ≤
-      expect (fiberPosterior prior (observation partition) b hb) bound := by
+      expect (fiberPosterior prior (observation partition) b) bound := by
     intro b hb
     have hpositive := hboundFiber b hb
     have hnegative := (abs_le.mp hpositive).1
     calc
-      expect (fiberPosterior prior (observation partition) b hb)
+      expect (fiberPosterior prior (observation partition) b)
           (fun state => -difference state) =
-          -expect (fiberPosterior prior (observation partition) b hb)
+          -expect (fiberPosterior prior (observation partition) b)
             difference := by
         rw [expect_neg]
-      _ ≤ expect (fiberPosterior prior (observation partition) b hb) bound := by
+      _ ≤ expect (fiberPosterior prior (observation partition) b) bound := by
         linarith [hnegative]
   have hpositiveFiber : ∀ b (hb : b ∈
       (PMF.map (observation partition) prior).support),
-      expect (fiberPosterior prior (observation partition) b hb) difference ≤
-      expect (fiberPosterior prior (observation partition) b hb) bound := by
+      expect (fiberPosterior prior (observation partition) b) difference ≤
+      expect (fiberPosterior prior (observation partition) b) bound := by
     intro b hb
     exact (abs_le.mp (hboundFiber b hb)).2
   have hglobal := expect_fiberwise_le prior (observation partition)

@@ -1034,12 +1034,11 @@ theorem runMixedFrom_toBehavioralWith [Fintype ι]
       conv_lhs =>
         rw [runMixedFrom,
           ← fiberPosterior_reconstruct (independentProduct mixed) (M.answerAt h),
-          bindOnSupport_bind]
+          PMF.bind_bind]
       rw [M.runBehavioralFrom_succ_of_not_terminal _ fuel hterm,
         behavioralJoint, hdraw]
-      rw [PMF.bind_map]
-      rw [← PMF.bindOnSupport_eq_bind]
-      apply bindOnSupport_congr
+      conv_rhs => rw [PMF.bind_map]
+      apply bind_congr_on_support
       intro answer hanswer
       obtain ⟨p, hp, hpa⟩ :=
         (PMF.mem_support_map_iff (M.answerAt h)
@@ -1054,7 +1053,7 @@ theorem runMixedFrom_toBehavioralWith [Fintype ι]
         · exact congrFun hpa i
         · exact (independentProduct_support_iff mixed p).1 hp i
       have hpost : fiberPosterior (independentProduct mixed)
-          (M.answerAt h) answer hanswer =
+          (M.answerAt h) answer =
           independentProduct (fun i =>
             (mixed i).filter (M.AnsweredBy h answer i) (hcoord i)) := by
         have hset : ({a | M.answerAt h a = answer} :
@@ -1062,7 +1061,8 @@ theorem runMixedFrom_toBehavioralWith [Fintype ι]
             M.answerAt h ⁻¹' {answer} := by
           ext q
           rfl
-        simpa only [fiberPosterior, hset] using
+        rw [fiberPosterior_of_mem_support _ _ hanswer]
+        simpa only [hset] using
           (M.filter_answerAt mixed h answer hfib hcoord)
       rw [hpost]
       have hlegal : E.Legal h.state (fun i => (answer i).1) :=

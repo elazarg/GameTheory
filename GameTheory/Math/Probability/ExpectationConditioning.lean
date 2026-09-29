@@ -225,35 +225,32 @@ theorem expect_eq_sum_fibers {α κ : Type*} [Fintype κ] (μ : PMF α)
     _ = ∑ k, expect μ (pieces k) :=
       expect_sum μ pieces hpieces
 
-/-- Whole-law integrability supplies every positive-fiber posterior guard. -/
+/-- Conditioning on a fiber keeps a payoff integrable: on a fiber of positive
+mass it rescales the law, and on a null fiber it is the law itself. -/
 theorem payoffIntegrable_fiberPosterior {α κ : Type*} (μ : PMF α)
     (observation : α → κ) (f : α → ℝ)
-    (hf : PayoffIntegrable μ f) (b : κ)
-    (hb : b ∈ (PMF.map observation μ).support) :
-    PayoffIntegrable (fiberPosterior μ observation b hb) f := by
-  exact payoffIntegrable_bindOnSupport_conditional_on_support
-    (PMF.map observation μ)
-    (fun b hb => fiberPosterior μ observation b hb) f
-    (payoffIntegrable_congr_law
-      (fiberPosterior_reconstruct μ observation).symm hf) b hb
+    (hf : PayoffIntegrable μ f) (b : κ) :
+    PayoffIntegrable (fiberPosterior μ observation b) f := by
+  by_cases hb : b ∈ (PMF.map observation μ).support
+  · exact payoffIntegrable_bind_conditional_on_support (PMF.map observation μ)
+      (fiberPosterior μ observation) f
+      (payoffIntegrable_congr_law (fiberPosterior_reconstruct μ observation).symm hf) b hb
+  · rwa [fiberPosterior_of_not_mem_support μ observation hb]
 
 /-- A posterior expectation is the unnormalised fiber expectation divided by
 the positive marginal mass. -/
 theorem expect_fiberPosterior {α κ : Type*} (μ : PMF α)
     (observation : α → κ) (f : α → ℝ)
     (b : κ) (hb : b ∈ (PMF.map observation μ).support) :
-    expect (fiberPosterior μ observation b hb) f =
+    expect (fiberPosterior μ observation b) f =
       expect μ ((observation ⁻¹' {b}).indicator f) /
         (∑' a, (observation ⁻¹' {b}).indicator μ a).toReal := by
   classical
-  have hsupport : ∃ a ∈ observation ⁻¹' {b}, a ∈ μ.support := by
-    rw [PMF.support_map] at hb
-    obtain ⟨a, ha, hab⟩ := hb
-    exact ⟨a, hab, ha⟩
-  have hlaw : fiberPosterior μ observation b hb =
-      μ.filter (observation ⁻¹' {b}) hsupport := by
-    unfold fiberPosterior
-    congr 1
+  have hsupport : ∃ a ∈ observation ⁻¹' {b}, a ∈ μ.support :=
+    exists_mem_fiber_of_mem_support_map hb
+  have hlaw : fiberPosterior μ observation b =
+      μ.filter (observation ⁻¹' {b}) hsupport :=
+    fiberPosterior_of_mem_support μ observation hb
   rw [expect_congr_law hlaw]
   exact expect_filter μ (observation ⁻¹' {b}) hsupport f
 
@@ -284,78 +281,22 @@ Only positive-mass observation fibers need conditional expectations. -/
 theorem expect_fiberwise_le {α κ : Type*} (μ : PMF α)
     (observation : α → κ) (f g : α → ℝ)
     (hf : PayoffIntegrable μ f) (hg : PayoffIntegrable μ g)
-    (hcond : ∀ b (hb : b ∈ (PMF.map observation μ).support),
-      expect (fiberPosterior μ observation b hb) f ≤
-      expect (fiberPosterior μ observation b hb) g) :
+    (hcond : ∀ b (_ : b ∈ (PMF.map observation μ).support),
+      expect (fiberPosterior μ observation b) f ≤
+      expect (fiberPosterior μ observation b) g) :
     expect μ f ≤ expect μ g := by
-  classical
-  let marginal := PMF.map observation μ
-  let posterior := fun b hb => fiberPosterior μ observation b hb
-  have hμf : PayoffIntegrable (marginal.bindOnSupport posterior) f :=
-    payoffIntegrable_congr_law
-      (fiberPosterior_reconstruct μ observation).symm hf
-  have hμg : PayoffIntegrable (marginal.bindOnSupport posterior) g :=
-    payoffIntegrable_congr_law
-      (fiberPosterior_reconstruct μ observation).symm hg
-  let vf : κ → ℝ := fun b =>
-    if hb : b ∈ marginal.support then
-      expect (posterior b hb) f
-    else 0
-  let vg : κ → ℝ := fun b =>
-    if hb : b ∈ marginal.support then
-      expect (posterior b hb) g
-    else 0
-  have hvf : PayoffIntegrable marginal vf :=
-    payoffIntegrable_bindOnSupport_conditionalValue_on_support
-      marginal posterior f hμf vf (by
-        intro b hb
-        have hmem : marginal b ≠ 0 := (marginal.mem_support_iff b).mp hb
-        simp [vf, hmem])
-  have hvg : PayoffIntegrable marginal vg :=
-    payoffIntegrable_bindOnSupport_conditionalValue_on_support
-      marginal posterior g hμg vg (by
-        intro b hb
-        have hmem : marginal b ≠ 0 := (marginal.mem_support_iff b).mp hb
-        simp [vg, hmem])
-  have htf := expect_bindOnSupport_tower_on_support
-    marginal posterior f hμf vf (by
-      intro b hb
-      have hmem : marginal b ≠ 0 := (marginal.mem_support_iff b).mp hb
-      simp [vf, hmem])
-  have htg := expect_bindOnSupport_tower_on_support
-    marginal posterior g hμg vg (by
-      intro b hb
-      have hmem : marginal b ≠ 0 := (marginal.mem_support_iff b).mp hb
-      simp [vg, hmem])
-  have hle : expect marginal vf ≤ expect marginal vg := by
-    apply expect_mono _ hvf hvg
-    intro b hb
-    have hb' : b ∈ (PMF.map observation μ).support := by
-      simpa only [marginal] using hb
-    have hmem : marginal b ≠ 0 := (marginal.mem_support_iff b).mp hb
-    have hvfb : vf b = expect (posterior b hb) f := by
-      simp [vf, hmem]
-    have hcondb := hcond b hb'
-    rw [hvfb]
-    have hvgv : vg b = expect (posterior b hb) g := by
-      simp [vg, hmem]
-    rw [hvgv]
-    exact hcondb
-  have hμf' := expect_congr_law
-    (fiberPosterior_reconstruct μ observation) f
-  have hμg' := expect_congr_law
-    (fiberPosterior_reconstruct μ observation) g
-  have htf' : expect (marginal.bindOnSupport posterior) f =
-      expect marginal vf := by simpa only [marginal, posterior] using htf
-  have htg' : expect (marginal.bindOnSupport posterior) g =
-      expect marginal vg := by simpa only [marginal, posterior] using htg
-  calc
-    expect μ f = expect (marginal.bindOnSupport posterior) f :=
-      hμf'.symm
-    _ = expect marginal vf := htf'
-    _ ≤ expect marginal vg := hle
-    _ = expect (marginal.bindOnSupport posterior) g := htg'.symm
-    _ = expect μ g := hμg'
+  have hbind (h : α → ℝ) (hh : PayoffIntegrable μ h) :
+      PayoffIntegrable ((PMF.map observation μ).bind (fiberPosterior μ observation)) h :=
+    payoffIntegrable_congr_law (fiberPosterior_reconstruct μ observation).symm hh
+  have htower (h : α → ℝ) (hh : PayoffIntegrable μ h) :
+      expect μ h = expect (PMF.map observation μ)
+        (fun b => expect (fiberPosterior μ observation b) h) :=
+    (expect_congr_law (fiberPosterior_reconstruct μ observation) h).symm.trans
+      (expect_bind_tower _ _ h (hbind h hh))
+  rw [htower f hf, htower g hg]
+  exact expect_mono (fun b hb => hcond b hb)
+    (payoffIntegrable_bind_conditionalExpectation _ _ f (hbind f hf))
+    (payoffIntegrable_bind_conditionalExpectation _ _ g (hbind g hg))
 
 theorem expect_bindOnSupport_le_of_le_of_eq_off
     {α β : Type*} (p : PMF α) (q₁ q₂ : ∀ a, a ∈ p.support → PMF β)

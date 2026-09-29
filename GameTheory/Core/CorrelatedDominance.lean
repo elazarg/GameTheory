@@ -39,24 +39,24 @@ private theorem IsCorrelatedEq.conditional_obedience_integrable
       (law.map fun profile => profile who).support) :
     UtilityIntegrable utility who
         (F.outcomeLaw (fiberPosterior law (fun profile => profile who)
-          recommended hrecommended)) ∧
+          recommended)) ∧
       UtilityIntegrable utility who
         ((fiberPosterior law (fun profile => profile who)
-          recommended hrecommended).bind fun profile =>
+          recommended).bind fun profile =>
             F.play (Profile.update profile who replacement)) ∧
       expectedUtility utility who
           ((fiberPosterior law (fun profile => profile who)
-            recommended hrecommended).bind fun profile =>
+            recommended).bind fun profile =>
               F.play (Profile.update profile who replacement)) ≤
         expectedUtility utility who
           (F.outcomeLaw (fiberPosterior law (fun profile => profile who)
-            recommended hrecommended)) := by
+            recommended)) := by
   classical
   let respond : F.sig.Strategy who → F.sig.Strategy who :=
     fun action => if action = recommended then replacement else action
   let marginal := law.map fun profile => profile who
-  let posterior := fun action ha =>
-    fiberPosterior law (fun profile => profile who) action ha
+  let posterior := fun action (_ : action ∈ marginal.support) =>
+    fiberPosterior law (fun profile => profile who) action
   let baseKernel : ∀ action, action ∈ marginal.support → PMF F.sig.Outcome :=
     fun action ha => (posterior action ha).bind F.play
   let responseKernel : ∀ action, action ∈ marginal.support → PMF F.sig.Outcome :=
@@ -67,7 +67,9 @@ private theorem IsCorrelatedEq.conditional_obedience_integrable
       marginal.bindOnSupport baseKernel =
           (marginal.bindOnSupport posterior).bind F.play := by
         rw [bindOnSupport_bind]
-      _ = law.bind F.play := by rw [fiberPosterior_reconstruct]
+      _ = law.bind F.play :=
+        congrArg (fun μ => PMF.bind μ _)
+          ((PMF.bindOnSupport_eq_bind _ _).trans (fiberPosterior_reconstruct _ _))
   have hresponseDecomp : marginal.bindOnSupport responseKernel =
       law.bind (fun profile =>
         F.play (Profile.update profile who (respond (profile who)))) := by
@@ -77,8 +79,9 @@ private theorem IsCorrelatedEq.conditional_obedience_integrable
             F.play (Profile.update profile who (respond (profile who))) := by
         rw [bindOnSupport_bind]
       _ = law.bind (fun profile =>
-          F.play (Profile.update profile who (respond (profile who)))) := by
-        rw [fiberPosterior_reconstruct]
+          F.play (Profile.update profile who (respond (profile who)))) :=
+        congrArg (fun μ => PMF.bind μ _)
+          ((PMF.bindOnSupport_eq_bind _ _).trans (fiberPosterior_reconstruct _ _))
   have hbase := hintegrable.base who
   have hresponse := hintegrable who respond
   have hle := (euPreference_iff utility who _ _ hbase hresponse).1
@@ -118,7 +121,7 @@ private theorem IsCorrelatedEq.conditional_obedience_integrable
       intro profile hprofile
       have hfiber : profile who = action := by
         have hmem := hprofile
-        rw [fiberPosterior_support] at hmem
+        rw [fiberPosterior_support _ _ _ ha] at hmem
         simpa only [Set.mem_ofPred_eq] using hmem.1
       have hne' : profile who ≠ recommended := by rw [hfiber]; exact hne
       simp [respond, hne', Profile.update_eq_self])
@@ -132,7 +135,7 @@ private theorem IsCorrelatedEq.conditional_obedience_integrable
     intro profile hprofile
     have hfiber : profile who = recommended := by
       have hmem := hprofile
-      rw [fiberPosterior_support] at hmem
+      rw [fiberPosterior_support _ _ _ hrecommended] at hmem
       simpa only [Set.mem_ofPred_eq] using hmem.1
     simp [respond, hfiber]
   have hbaseLocal := payoffIntegrable_bindOnSupport_conditional_on_support
@@ -160,9 +163,9 @@ theorem IsCorrelatedEq.conditional_obedience
       (law.map fun profile => profile who).support) :
     euPreference utility who
       (F.outcomeLaw (fiberPosterior law (fun profile => profile who)
-        recommended hrecommended))
+        recommended))
       ((fiberPosterior law (fun profile => profile who)
-        recommended hrecommended).bind fun profile =>
+        recommended).bind fun profile =>
           F.play (Profile.update profile who replacement)) := by
   obtain ⟨hbase, hdeviation, hle⟩ :=
     hce.conditional_obedience_integrable hintegrable who recommended replacement hrecommended
@@ -180,13 +183,12 @@ theorem isCorrelatedEq_iff_conditional_obedience
     (law : PMF (Profile F.sig)) (hguards : F.HasIntegrableResponses utility law) :
     IsCorrelatedEq F (euPreference utility) law ↔
       (∀ who recommended replacement,
-        ∀ hrecommended : recommended ∈
-          (law.map fun profile => profile who).support,
+        recommended ∈ (law.map fun profile => profile who).support →
           euPreference utility who
             (F.outcomeLaw (fiberPosterior law (fun profile => profile who)
-              recommended hrecommended))
+              recommended))
             ((fiberPosterior law (fun profile => profile who)
-              recommended hrecommended).bind fun profile =>
+              recommended).bind fun profile =>
                 F.play (Profile.update profile who replacement))) := by
   constructor
   · intro hce who recommended replacement hrecommended
@@ -196,8 +198,8 @@ theorem isCorrelatedEq_iff_conditional_obedience
     intro who respond
     classical
     let marginal := law.map fun profile => profile who
-    let posterior := fun action ha =>
-      fiberPosterior law (fun profile => profile who) action ha
+    let posterior := fun action (_ : action ∈ marginal.support) =>
+      fiberPosterior law (fun profile => profile who) action
     let baseKernel : ∀ action, action ∈ marginal.support → PMF F.sig.Outcome :=
       fun action ha => (posterior action ha).bind F.play
     let responseKernel : ∀ action, action ∈ marginal.support → PMF F.sig.Outcome :=
@@ -211,7 +213,9 @@ theorem isCorrelatedEq_iff_conditional_obedience
         marginal.bindOnSupport baseKernel =
             (marginal.bindOnSupport posterior).bind F.play := by
           rw [bindOnSupport_bind]
-        _ = law.bind F.play := by rw [fiberPosterior_reconstruct]
+        _ = law.bind F.play :=
+          congrArg (fun μ => PMF.bind μ _)
+            ((PMF.bindOnSupport_eq_bind _ _).trans (fiberPosterior_reconstruct _ _))
     have hresponseDecomp : marginal.bindOnSupport responseKernel =
         law.bind (fun profile =>
           F.play (Profile.update profile who (respond (profile who)))) := by
@@ -221,8 +225,9 @@ theorem isCorrelatedEq_iff_conditional_obedience
               F.play (Profile.update profile who (respond (profile who))) := by
           rw [bindOnSupport_bind]
         _ = law.bind (fun profile =>
-            F.play (Profile.update profile who (respond (profile who)))) := by
-          rw [fiberPosterior_reconstruct]
+            F.play (Profile.update profile who (respond (profile who)))) :=
+          congrArg (fun μ => PMF.bind μ _)
+            ((PMF.bindOnSupport_eq_bind _ _).trans (fiberPosterior_reconstruct _ _))
     have hidLaw : law.bind (fun profile =>
         F.play (Profile.update profile who (profile who))) = law.bind F.play := by
       apply bind_congr_on_support
@@ -251,7 +256,7 @@ theorem isCorrelatedEq_iff_conditional_obedience
         intro profile hprofile
         have hfiber : profile who = action := by
           have hmem := hprofile
-          rw [fiberPosterior_support] at hmem
+          rw [fiberPosterior_support _ _ _ ha] at hmem
           simpa only [Set.mem_ofPred_eq] using hmem.1
         simp [hfiber]
       have hresponseFixed := payoffIntegrable_congr_law hresponseEq hresponseAction
@@ -302,12 +307,12 @@ theorem IsCorrelatedEq.support_avoids_strictlyDominatedOn
   have hrecommended : dominated ∈ (law.map observation).support := by
     rw [PMF.support_map]
     exact ⟨witness, hwitness, heq⟩
-  let posterior := fiberPosterior law observation dominated hrecommended
+  let posterior := fiberPosterior law observation dominated
   let baseKernel : Profile F.sig → PMF F.sig.Outcome := F.play
   let deviationKernel : Profile F.sig → PMF F.sig.Outcome := fun profile =>
     F.play (Profile.update profile who preferred)
   have hwitnessPosterior : witness ∈ posterior.support := by
-    rw [fiberPosterior_support]
+    rw [fiberPosterior_support _ _ _ hrecommended]
     exact ⟨heq, hwitness⟩
   have hobey :=
     hce.conditional_obedience_integrable hintegrable who dominated preferred hrecommended
@@ -341,11 +346,11 @@ theorem IsCorrelatedEq.support_avoids_strictlyDominatedOn
     intro profile hprofile
     have hmem : profile ∈ law.support := by
       have hmem := hprofile
-      rw [fiberPosterior_support] at hmem
+      rw [fiberPosterior_support _ _ _ hrecommended] at hmem
       exact hmem.2
     have hfiber : profile who = dominated := by
       have hmem' := hprofile
-      rw [fiberPosterior_support] at hmem'
+      rw [fiberPosterior_support _ _ _ hrecommended] at hmem'
       simpa only [Set.mem_ofPred_eq] using hmem'.1
     have hstrict := hdom profile (hsupport profile hmem)
     have hself : Profile.update profile who dominated = profile := by

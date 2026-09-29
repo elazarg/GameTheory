@@ -65,13 +65,7 @@ theorem posterior_eq_fiberPosterior_expect
     (prior : PMF Ω) (partition : Setoid Ω) (event : Set Ω) (state : Ω)
     (hcell : ∃ other ∈ cell partition state, other ∈ prior.support) :
     posterior prior partition event state =
-      expect
-        (fiberPosterior prior (observation partition)
-          (observation partition state) (by
-            rw [PMF.support_map]
-            obtain ⟨other, hother, hsupport⟩ := hcell
-            refine ⟨other, hsupport, ?_⟩
-            exact Quotient.eq.mpr (partition.symm hother)))
+      expect (fiberPosterior prior (observation partition) (observation partition state))
         (fun other => if other ∈ event then 1 else 0) := by
   classical
   let obs := observation partition
@@ -80,7 +74,7 @@ theorem posterior_eq_fiberPosterior_expect
     rw [PMF.support_map]
     obtain ⟨other, hother, hsupport⟩ := hcell
     exact ⟨other, hsupport, Quotient.eq.mpr (partition.symm hother)⟩
-  let conditional := fiberPosterior prior obs observed hobs
+  let conditional := fiberPosterior prior obs observed
   let indicator : Ω → ℝ := fun other => if other ∈ event then 1 else 0
   have hfiber : obs ⁻¹' {observed} = cell partition state := by
     simpa only [obs, observed] using observation_fiber partition state
