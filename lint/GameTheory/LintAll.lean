@@ -52,6 +52,7 @@ import GameTheory.Analysis.Protocol.SequentialLimits
 import GameTheory.Analysis.Protocol.SequentialPerturbation
 import GameTheory.Analysis.Protocol.SequentialRationality
 import GameTheory.Analysis.Protocol.SubgameLocalization
+import GameTheory.Analysis.Protocol.SupportedChoices
 import GameTheory.Analysis.Repeated
 import GameTheory.Analysis.Repeated.Examples
 import GameTheory.Analysis.Repeated.Feasible
