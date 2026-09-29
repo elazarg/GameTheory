@@ -214,6 +214,81 @@ theorem implies_of_localized [Fintype Outcome]
 
 end Localization
 
+/-! ## Comparison families have convex utility cones -/
+
+section Cone
+
+variable [Fintype Outcome]
+
+theorem holds_add {comparison : IncentiveComparison Outcome} {first second : Outcome → ℝ}
+    (hfirst : comparison.Holds first) (hsecond : comparison.Holds second) :
+    comparison.Holds (first + second) := by
+  rw [holds_iff_inner] at hfirst hsecond ⊢
+  rw [WithLp.toLp_add, inner_add_right]
+  exact add_nonneg hfirst hsecond
+
+theorem holds_smul {comparison : IncentiveComparison Outcome} {utility : Outcome → ℝ}
+    {scale : ℝ} (hscale : 0 ≤ scale) (hholds : comparison.Holds utility) :
+    comparison.Holds (scale • utility) := by
+  rw [holds_iff_inner] at hholds ⊢
+  rw [WithLp.toLp_smul, inner_smul_right]
+  exact mul_nonneg hscale hholds
+
+/-- Both laws of a comparison are probability laws, so a constant shift of the
+utility changes nothing. -/
+theorem holds_add_const (comparison : IncentiveComparison Outcome) (utility : Outcome → ℝ)
+    (shift : ℝ) :
+    comparison.Holds (fun outcome => utility outcome + shift) ↔ comparison.Holds utility := by
+  rw [holds_iff, holds_iff, expect_add (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _), expect_add (payoffIntegrable_of_finite _ _)
+      (payoffIntegrable_of_finite _ _), expect_constant, expect_constant, add_le_add_iff_right]
+
+/-- For a nonnegative utility a comparison is an inequality of `ℝ≥0∞`-valued
+expectations, which can be summed without summability side conditions. -/
+theorem holds_iff_ennreal (comparison : IncentiveComparison Outcome) (utility : Outcome → ℝ)
+    (hnonneg : ∀ outcome, 0 ≤ utility outcome) :
+    comparison.Holds utility ↔
+      ∑ outcome, comparison.alternative outcome * ENNReal.ofReal (utility outcome) ≤
+        ∑ outcome, comparison.prescribed outcome * ENNReal.ofReal (utility outcome) := by
+  have hreal (law : PMF Outcome) :
+      expect law utility =
+        (∑ outcome, law outcome * ENNReal.ofReal (utility outcome)).toReal := by
+    rw [expect_eq_sum, ENNReal.toReal_sum fun outcome _ =>
+      ENNReal.mul_ne_top (law.apply_ne_top outcome) ENNReal.ofReal_ne_top]
+    refine Finset.sum_congr rfl fun outcome _ => ?_
+    rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal (hnonneg outcome)]
+  have hfinite (law : PMF Outcome) :
+      ∑ outcome, law outcome * ENNReal.ofReal (utility outcome) ≠ ⊤ :=
+    ENNReal.sum_ne_top.2 fun outcome _ =>
+      ENNReal.mul_ne_top (law.apply_ne_top outcome) ENNReal.ofReal_ne_top
+  rw [holds_iff, hreal, hreal, ENNReal.toReal_le_toReal (hfinite _) (hfinite _)]
+
+variable {Index : ι → Type us}
+
+/-- The utility profiles satisfying a comparison family are closed under
+addition. -/
+theorem family_holds_add (family : (who : ι) → Index who → IncentiveComparison Outcome)
+    {first second : Outcome → ι → ℝ}
+    (hfirst : ∀ who deviation, (family who deviation).Holds (first · who))
+    (hsecond : ∀ who deviation, (family who deviation).Holds (second · who)) :
+    ∀ who deviation, (family who deviation).Holds ((first + second) · who) :=
+  fun who deviation => holds_add (hfirst who deviation) (hsecond who deviation)
+
+/-- **A guard for concepts outside the framework.** A concept whose supporting
+utilities are not closed under addition is the concept of no comparison family,
+so no cone criterion characterizes its preservation. -/
+theorem not_exists_family_of_not_add (concept : (Outcome → ι → ℝ) → Prop)
+    {first second : Outcome → ι → ℝ} (hfirst : concept first) (hsecond : concept second)
+    (hsum : ¬ concept (first + second)) :
+    ¬ ∃ (Index : ι → Type us) (family : (who : ι) → Index who → IncentiveComparison Outcome),
+      ∀ utility, (∀ who deviation, (family who deviation).Holds (utility · who)) ↔
+        concept utility := by
+  rintro ⟨Index, family, hfamily⟩
+  exact hsum ((hfamily _).1 (family_holds_add family ((hfamily _).2 hfirst)
+    ((hfamily _).2 hsecond)))
+
+end Cone
+
 end IncentiveComparison
 
 end GameTheory

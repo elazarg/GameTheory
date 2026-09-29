@@ -8,6 +8,7 @@ lightweight `GameTheory` umbrella.
 -/
 
 import GameTheory.Analysis.Approachability
+import GameTheory.Analysis.BayesianHierarchy
 import GameTheory.Analysis.Correlated
 import GameTheory.Analysis.CorrelationHierarchy
 import GameTheory.Analysis.DominanceHierarchy

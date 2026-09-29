@@ -9390,8 +9390,10 @@ memory.
 
 ### EXP-148: implications between preservation properties
 
-- **Date / status:** 2026-09-29; positive for the characterization and for
-  subgame perfection versus Nash; the simulation-record design is rejected.
+- **Date / status:** 2026-09-29; positive for the characterization, for
+  subgame perfection, sequential rationality, and Bayes-Nash versus Nash, and
+  for the aggregated and non-family boundaries; the simulation-record design is
+  rejected.
 - **Question:** when does preservation of one solution concept by a
   compilation imply preservation of another? Is there a structure common to
   the preservation proofs, and a hierarchy among preservation properties?
@@ -9423,9 +9425,13 @@ memory.
 - **Artifacts:** `Analysis/IncentiveHierarchy.lean` (`Implies`, descent and
   ascent, `descend_iff`/`ascend_iff`, `IsLocalizedIn`);
   `Analysis/Protocol/SubgameLocalization.lean`;
-  `Analysis/CorrelationHierarchy.lean`; `Analysis/DominanceHierarchy.lean`;
-  the three matching `*Test.lean` fixtures. Validation: `lake build GameTheory`
-  and `lake lint`.
+  `Analysis/Protocol/InformationLocalization.lean`;
+  `Analysis/BayesianHierarchy.lean`; `Analysis/CorrelationHierarchy.lean`;
+  `Analysis/DominanceHierarchy.lean`; fixtures `SubgameLocalizationTest`,
+  `CorrelationHierarchyTest`, `DominanceHierarchyTest`,
+  `TremblingHandBoundaryTest`, `StrongNashBoundaryTest`. Validation:
+  `lake build GameTheory`, `lake lint`, and `#print axioms` on the headline
+  theorems (standard axioms only).
 - **Observations:**
   - H1 holds and is the whole abstract content: sufficiency is transitivity
     and necessity takes the fixed side's fine family as both concepts of the
@@ -9457,11 +9463,36 @@ memory.
     reach other opponent profiles. The truthfulness fixture adds an opponent
     action that matters only after a lie; Nash of the truthful profile is
     preserved for every utility and dominance is not.
+  - Sequential rationality localizes the same way, with an antichain of roots
+    in place of one root: the mass identity generalizes to randomized choosers
+    and to any antichain of roots. Splicing a whole-policy deviation below an
+    information site is legal exactly when the deviator's information met
+    below the site does not recur outside its subtrees; decision recall implies
+    this. Under Bayes beliefs a site comparison is the site's mass times a
+    behavioral Nash comparison. The converse is an aggregation, not a
+    localization: a whole-policy Nash comparison is the mass-weighted sum of the
+    comparisons at the player's initial decision sites (an antichain under
+    decision recall). Together, for a Bayes-consistent assessment with decision
+    recall and a bounded horizon, sequential rationality implies Nash, and Nash
+    plus the sites of mass zero implies sequential rationality; the two coincide
+    when every site has positive mass.
+  - Bayes-Nash and posterior interim optimality coincide with no gap: an
+    ex-ante deviation confined to one own type localizes the interim
+    comparison, and an ex-ante comparison is the prior mixture of interim ones.
+    Randomized unilateral deviations add nothing to constant ones.
   - The deciding property is whether the coarse deviations can condition on
     the fine concept's points, not the names of the concepts. Localizable:
-    subgame perfection, and by the same argument sequential rationality under
-    decision recall and interim versus ex-ante Bayesian equilibrium (not
-    formalized here). Aggregated: CE versus CCE, dominance versus Nash.
+    subgame perfection, sequential rationality, interim optimality.
+    Aggregated: CE versus CCE, dominance versus Nash.
+  - Some standard concepts are not comparison families at all. The utilities
+    supporting a comparison family form a convex cone, so a concept whose
+    supporting utilities are not closed under addition has no family and no
+    cone criterion for its preservation. Checked fixtures: trembling-hand
+    perfection (two gains each make `(T, L)` perfect by a balancing tremble,
+    their sum makes `T` weakly dominated) and strong Nash (each utility is
+    blocked by a different coalition member, the sum by none). Their
+    preservation needs other tools, such as mapping perturbed equilibria and
+    commuting with the limit for trembling-hand perfection.
   - The simulation record is rejected. For a fixed compilation, preservation
     of any concept is already exactly cone inclusion of its families; for the
     relation between concepts, the answer depends only on coincidence on the
@@ -9477,9 +9508,9 @@ memory.
 - **Outcome:** accepted as evidence; the characterization and the localization
   theorem are candidate API. Whether `IncentiveComparison` and the hierarchy
   move to the core is a separate decision.
-- **Next action:** localize sequential rationality at reached information sets
-  under decision recall, which would give sequential equilibrium versus Nash
-  the same modulo-reach description; the interim versus ex-ante Bayesian pair;
-  a descent witness for dominance, which needs a game whose Nash comparisons
-  are every opponent profile's dominance comparisons on a common observation
-  carrier and was not constructed.
+- **Next action:** a same-class descent witness for dominance (a game whose
+  Nash comparisons are every opponent profile's dominance comparisons on a
+  common observation carrier) was not constructed; a separation fixture for
+  sequential rationality at a zero-mass site; the relation of the mixed
+  extension's Nash family to the pure one at the family level (the library
+  has it per utility, `isNash_mixed_iff`).

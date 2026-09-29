@@ -88,6 +88,54 @@ theorem implies_unilateralConstant (device : PMF (Profile F.sig))
     rfl
   exact (IncentiveComparison.holds_iff_of_eq hsame _).1 (holds who _)
 
+/-! ## Randomized deviations -/
+
+/-- A randomized deviation's law is the mixture, over its draws, of the constant
+deviations' laws. -/
+theorem outcomeLaw_unilateralRandomized (statusQuo : PMF (Profile F.sig)) (who : ι)
+    (replacement : PMF (F.sig.Strategy who)) :
+    F.outcomeLaw ((DeviationScheme.unilateralRandomized F.sig).apply statusQuo who
+        replacement) =
+      replacement.bind fun strategy => F.outcomeLaw
+        ((DeviationScheme.unilateralConstant F.sig).apply statusQuo who strategy) := by
+  simp only [DeviationScheme.unilateralRandomized_apply,
+    DeviationScheme.unilateralConstant_apply, GameForm.outcomeLaw, PMF.bind_bind,
+    PMF.bind_map, Function.comp_def]
+  exact PMF.bind_comm _ _ _
+
+/-- **Randomized deviations add nothing.** Against any status quo, constant and
+randomized unilateral deviations give families that imply each other for every
+utility: a randomized comparison is a mixture of constant ones. -/
+theorem implies_unilateralRandomized_iff [Fintype Observation] (statusQuo : PMF (Profile F.sig))
+    (observe : F.sig.Outcome → Observation) :
+    IncentiveComparison.Implies
+        (equilibriumComparison F statusQuo (DeviationScheme.unilateralConstant F.sig) observe)
+        (equilibriumComparison F statusQuo (DeviationScheme.unilateralRandomized F.sig) observe) ∧
+      IncentiveComparison.Implies
+        (equilibriumComparison F statusQuo (DeviationScheme.unilateralRandomized F.sig) observe)
+        (equilibriumComparison F statusQuo (DeviationScheme.unilateralConstant F.sig) observe) := by
+  refine ⟨fun utility holds who replacement => ?_, fun utility holds who replacement => ?_⟩
+  · have halternative : (equilibriumComparison F statusQuo
+        (DeviationScheme.unilateralRandomized F.sig) observe who replacement).alternative =
+        replacement.bind fun strategy => (equilibriumComparison F statusQuo
+          (DeviationScheme.unilateralConstant F.sig) observe who strategy).alternative := by
+      exact (congrArg (PMF.map observe)
+        (F.outcomeLaw_unilateralRandomized statusQuo who replacement)).trans (PMF.map_bind _ _ _)
+    change euPreference _ () _ _
+    refine ⟨hasExpectation_of_payoffIntegrable (payoffIntegrable_of_finite _ _),
+      hasExpectation_of_payoffIntegrable (payoffIntegrable_of_finite _ _), ?_⟩
+    rw [halternative]
+    exact extendedExpect_bind_le fun strategy _ => (holds who strategy).2.2
+  · have hsame : equilibriumComparison F statusQuo (DeviationScheme.unilateralRandomized F.sig)
+        observe who (PMF.pure replacement) =
+        equilibriumComparison F statusQuo (DeviationScheme.unilateralConstant F.sig) observe
+          who replacement := by
+      unfold equilibriumComparison
+      exact congrArg (fun law => IncentiveComparison.mk ((F.outcomeLaw statusQuo).map observe)
+        ((F.outcomeLaw law).map observe))
+          ((DeviationScheme.constantToRandomized F.sig).apply_eq statusQuo who replacement)
+    exact (IncentiveComparison.holds_iff_of_eq hsame _).1 (holds who _)
+
 /-! ## The mediated extension -/
 
 /-- The mediated extension: the device draws a recommendation profile and each

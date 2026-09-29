@@ -8,6 +8,7 @@ back into Protocol.
 
 import GameTheory.Analysis.Protocol.Sequential
 import GameTheory.Analysis.Protocol.Incentives
+import GameTheory.Analysis.Protocol.InformationLocalization
 import GameTheory.Analysis.Protocol.SubgameLocalization
 import GameTheory.Analysis.Protocol.EFG
 import GameTheory.Analysis.Protocol.CounterfactualReach
