@@ -184,7 +184,7 @@ theorem prisonersDilemma_cooperation_approached_by_repeatedNash :
             ∀ who,
               |repeatedDilemma.mixed.discountedPayoffOfFiniteOutcome
                   hdiscount0 hdiscount1 profile who - cooperationPayoff who| < ε :=
-  repeatedDilemma.discounted_folk_theorem_approx
+  repeatedDilemma.discounted_folk_theorem_approx_of_finiteOutcome
     cooperationPayoff_strictly_individuallyRational
 
 end GameTheory.Examples

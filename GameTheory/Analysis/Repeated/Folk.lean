@@ -32,12 +32,14 @@ namespace UtilityGame
 /-- **Approximate discounted folk theorem.**
 
 The repeated stage game is the observable mixed extension: each public stage
-profile records one independent mixed action per player. -/
+profile records one independent mixed action per player. Outcome utilities need
+only a uniform bound; the outcome and strategy carriers may be infinite. -/
 theorem discounted_folk_theorem_approx
     (G : UtilityGame ι)
     [Fintype ι] [DecidableEq ι]
     [∀ i, Nonempty (G.form.sig.Strategy i)]
-    [Fintype G.form.sig.Outcome]
+    {utilityBound : ℝ}
+    (hutility : ∀ outcome who, |G.utility outcome who| ≤ utilityBound)
     {value : PayoffVector ι}
     (hvalue :
       value ∈ G.strictIndividuallyRationalPayoffSet
@@ -48,13 +50,19 @@ theorem discounted_folk_theorem_approx
           threshold < discount → (hdiscount1 : discount < 1) →
           ∃ profile : G.mixed.RepeatedProfile,
             IsNash G.mixed.repeatedForm
-              (euPreference (G.mixed.discountedUtilityOfFiniteOutcome
-                hdiscount0 hdiscount1)) profile ∧
+              (euPreference (G.mixed.discountedUtilityOfBounded
+                hdiscount0 hdiscount1 fun who =>
+                  ⟨utilityBound, G.mixed.stagePayoff_abs_le_of_utility_abs_le
+                    who (hutility · who)⟩)) profile ∧
             ∀ who,
-              |G.mixed.discountedPayoffOfFiniteOutcome
-                hdiscount0 hdiscount1 profile who - value who| < ε := by
+              |G.mixed.discountedPayoffOfBounded hdiscount0 hdiscount1
+                profile who (G.mixed.stagePayoff_abs_le_of_utility_abs_le
+                  who (hutility · who)) - value who| < ε := by
   classical
   let H : UtilityGame ι := G.mixed
+  have hstage (who : ι) : ∀ stage : Profile H.form.sig,
+      |H.stagePayoff stage who| ≤ utilityBound :=
+    H.stagePayoff_abs_le_of_utility_abs_le who (hutility · who)
   let : ∀ i, Nonempty (H.form.sig.Strategy i) :=
     fun i => ⟨PMF.pure (Classical.arbitrary (G.form.sig.Strategy i))⟩
   have hprofileNonempty : Nonempty (Profile H.form.sig) :=
@@ -71,24 +79,17 @@ theorem discounted_folk_theorem_approx
     min_le_left _ _
   have haccuracyMargin : accuracy ≤ margin / 8 :=
     min_le_right _ _
-  obtain ⟨boundG, hboundG0, hboundG⟩ :=
-    G.exists_uniform_stagePayoff_abs_bound
-  obtain ⟨boundH, hboundH0, hboundH⟩ :=
-    H.exists_uniform_stagePayoff_abs_bound
-  let bound : ℝ := max (max boundG boundH) 0
+  let bound : ℝ := max utilityBound 0
   have hbound0 : 0 ≤ bound := le_max_right _ _
   have hboundG' :
       ∀ (stage : Profile G.form.sig) (who : ι),
-        |G.stagePayoff stage who| ≤ bound := by
-    intro stage who
-    exact (hboundG stage who).trans
-      ((le_max_left boundG boundH).trans (le_max_left _ 0))
+        |G.stagePayoff stage who| ≤ bound := fun stage who =>
+    (G.stagePayoff_abs_le_of_utility_abs_le who (hutility · who) stage).trans
+      (le_max_left _ _)
   have hboundH' :
       ∀ (who : ι) (stage : Profile H.form.sig),
-        |H.stagePayoff stage who| ≤ bound := by
-    intro who stage
-    exact (hboundH stage who).trans
-      ((le_max_right boundG boundH).trans (le_max_left _ 0))
+        |H.stagePayoff stage who| ≤ bound := fun who stage =>
+    (hstage who stage).trans (le_max_left _ _)
   obtain ⟨n, hn, cycle, hcycleClose⟩ :=
     G.exists_cycleAveragePayoff_close_of_mem_feasibleSet
        hvalue.1 hboundG' hbound0 haccuracy
@@ -214,17 +215,14 @@ theorem discounted_folk_theorem_approx
         (fun who stage => hboundH' who stage)
         hpunishment hpath hpatient
     refine ⟨H.triggerRepeatedProfile path punishment, ?_, ?_⟩
-    · simpa only [UtilityGame.discountedUtilityOfFiniteOutcome,
-        UtilityGame.discountedUtilityOfBounded,
-        UtilityGame.discountedUtility] using hnash
+    · exact hnash
     intro who
     have hpayoff :
-        H.discountedPayoffOfFiniteOutcome hdiscount0 hdiscount1
-            (H.triggerRepeatedProfile path punishment) who =
+        H.discountedPayoffOfBounded hdiscount0 hdiscount1
+            (H.triggerRepeatedProfile path punishment) who (hstage who) =
           H.discountedContinuationPayoffOfBounded hdiscount0 hdiscount1
             path 0 who (hboundH' who) := by
-      simp only [UtilityGame.discountedPayoffOfFiniteOutcome,
-        UtilityGame.discountedPayoffOfBounded]
+      simp only [UtilityGame.discountedPayoffOfBounded]
       rw [H.discountedPayoff_eq_discountedContinuationPayoff_zero]
       apply congrArg
         (fun generated =>
@@ -234,8 +232,8 @@ theorem discounted_folk_theorem_approx
       exact H.repeatedPlay_triggerRepeatedProfile_eq_path
         path punishment t
     have hfirst :
-        |H.discountedPayoffOfFiniteOutcome hdiscount0 hdiscount1
-            (H.triggerRepeatedProfile path punishment) who -
+        |H.discountedPayoffOfBounded hdiscount0 hdiscount1
+            (H.triggerRepeatedProfile path punishment) who (hstage who) -
           H.cycleAveragePayoff mixedCycle who| < accuracy := by
       rw [hpayoff]
       exact hcontinuationClose who 0
@@ -245,11 +243,39 @@ theorem discounted_folk_theorem_approx
       hmixedCycleClose who
     have htriangle :=
       abs_sub_le
-        (H.discountedPayoffOfFiniteOutcome hdiscount0 hdiscount1
-          (H.triggerRepeatedProfile path punishment) who)
+        (H.discountedPayoffOfBounded hdiscount0 hdiscount1
+          (H.triggerRepeatedProfile path punishment) who (hstage who))
         (H.cycleAveragePayoff mixedCycle who)
         (value who)
     nlinarith
+
+/-- **Approximate discounted folk theorem for finite outcomes.** Finite
+outcomes supply the utility bound, so the canonical finite-outcome discounted
+evaluators apply. -/
+theorem discounted_folk_theorem_approx_of_finiteOutcome
+    (G : UtilityGame ι)
+    [Fintype ι] [DecidableEq ι]
+    [∀ i, Nonempty (G.form.sig.Strategy i)]
+    [Finite G.form.sig.Outcome]
+    {value : PayoffVector ι}
+    (hvalue :
+      value ∈ G.strictIndividuallyRationalPayoffSet
+        (G.mixed.opponentMinmaxVector)) :
+    ∀ ε > 0, ∃ threshold : ℝ,
+      0 ≤ threshold ∧ threshold < 1 ∧
+        ∀ (discount : ℝ) (hdiscount0 : 0 ≤ discount),
+          threshold < discount → (hdiscount1 : discount < 1) →
+          ∃ profile : G.mixed.RepeatedProfile,
+            IsNash G.mixed.repeatedForm
+              (euPreference (G.mixed.discountedUtilityOfFiniteOutcome
+                hdiscount0 hdiscount1)) profile ∧
+            ∀ who,
+              |G.mixed.discountedPayoffOfFiniteOutcome
+                hdiscount0 hdiscount1 profile who - value who| < ε := by
+  obtain ⟨bound, hbound⟩ := (Set.finite_range fun pair : G.form.sig.Outcome × ι =>
+    |G.utility pair.1 pair.2|).bddAbove
+  exact G.discounted_folk_theorem_approx
+    (fun outcome who => hbound ⟨(outcome, who), rfl⟩) hvalue
 
 end UtilityGame
 

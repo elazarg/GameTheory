@@ -154,6 +154,16 @@ abbrev discountedUtilityOfBounded (G : UtilityGame ι)
         hdiscount0 hdiscount1 who
         (fun t => (hbound who).choose_spec (G.repeatedPlay profile t)))
 
+/-- A bound on a player's outcome utility bounds that player's stage expected
+payoff, whatever the outcome carrier. -/
+theorem stagePayoff_abs_le_of_utility_abs_le
+    (G : UtilityGame ι) {bound : ℝ} (who : ι)
+    (hutility : ∀ outcome, |G.utility outcome who| ≤ bound)
+    (stage : Profile G.form.sig) :
+    |G.stagePayoff stage who| ≤ bound := by
+  obtain ⟨outcome, _⟩ := (G.form.play stage).support_nonempty
+  exact expect_abs_le_of_bounded ((abs_nonneg _).trans (hutility outcome)) hutility
+
 /-- With finite outcomes, each player's stage expected payoff has a finite
 absolute bound, even when there are infinitely many players or strategies. -/
 theorem exists_stagePayoff_abs_bound_of_finiteOutcome
