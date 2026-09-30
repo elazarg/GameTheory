@@ -106,6 +106,27 @@ theorem sampleOn_map_eval_of_mem [DecidableEq ι]
   rw [heq]
   exact independentProduct_map_eval (fun j : sites => laws j) ⟨i, hi⟩
 
+/-- A continuation reading one selected coordinate sees exactly that
+coordinate's law. -/
+theorem sampleOn_bind_eval_of_mem [DecidableEq ι] {β : Type*}
+    (laws : ∀ i, PMF (A i)) (sites : Finset ι)
+    (fallback : ∀ i, A i) {i : ι} (hi : i ∈ sites) (next : A i → PMF β) :
+    (sampleOn laws sites fallback).bind (fun assignment => next (assignment i)) =
+      (laws i).bind next := by
+  rw [← sampleOn_map_eval_of_mem laws sites fallback hi, PMF.bind_map]
+  rfl
+
+/-- Finitely supported laws at the selected coordinates sample finitely many
+assignments. -/
+theorem sampleOn_support_finite [DecidableEq ι] (laws : ∀ i, PMF (A i))
+    (sites : Finset ι) (fallback : ∀ i, A i)
+    (finite : ∀ i ∈ sites, (laws i).support.Finite) :
+    (sampleOn laws sites fallback).support.Finite := by
+  rw [sampleOn, PMF.support_map]
+  refine Set.Finite.image _ ((Set.Finite.pi fun i : sites => finite i.1 i.2).subset ?_)
+  intro draw supported
+  exact fun i _ => (independentProduct_support_iff _ draw).mp supported i
+
 theorem sampleOn_map_eval_of_not_mem [DecidableEq ι]
     (laws : ∀ i, PMF (A i)) (sites : Finset ι)
     (fallback : ∀ i, A i) {i : ι} (hi : i ∉ sites) :

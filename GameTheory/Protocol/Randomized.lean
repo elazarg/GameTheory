@@ -96,6 +96,30 @@ theorem runRandomizedFor_add (chooser : E.RandomizedChooser)
         exact bindOnSupport_congr (E.step history.state draw) fun reached realized =>
           ih (history.extend draw.2 realized)
 
+/-- A history map commuting with one randomized step of two protocols commutes
+with every finite run. -/
+theorem runRandomizedFor_map_of_oneStep {κ : Type*} {T : ExecutionProtocol κ}
+    (chooser : E.RandomizedChooser) (target : T.RandomizedChooser)
+    (project : E.History → T.History)
+    (oneStep : ∀ history,
+      (E.runRandomizedFor chooser 1 history).map project =
+        T.runRandomizedFor target 1 (project history))
+    (fuel : ℕ) (history : E.History) :
+    (E.runRandomizedFor chooser fuel history).map project =
+      T.runRandomizedFor target fuel (project history) := by
+  induction fuel generalizing history with
+  | zero => simp only [runRandomizedFor_zero, PMF.pure_map]
+  | succ fuel ih =>
+      rw [show fuel + 1 = 1 + fuel by omega, runRandomizedFor_add, runRandomizedFor_add,
+        PMF.map_bind]
+      calc
+        _ = (E.runRandomizedFor chooser 1 history).bind fun next =>
+            T.runRandomizedFor target fuel (project next) :=
+          bind_congr_on_support _ fun next _ => ih next
+        _ = ((E.runRandomizedFor chooser 1 history).map project).bind
+            (T.runRandomizedFor target fuel) := (PMF.bind_map ..).symm
+        _ = _ := by rw [oneStep]
+
 /-- Every supported run either stops at a terminal history or consumes all its
 fuel. This holds from any starting history, including terminal ones. -/
 theorem runRandomizedFor_terminal_or_length

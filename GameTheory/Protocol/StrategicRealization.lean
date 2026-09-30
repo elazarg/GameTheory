@@ -64,7 +64,7 @@ theorem toBehavioralGameForm_play_image_eq_mixed_play_image
   ext law
   constructor
   · rintro ⟨behavioral, hbehavioral⟩
-    obtain ⟨mixed, hmixed⟩ := M.exists_mixed_runMixed_eq_runBehavioral
+    obtain ⟨mixed, -, hmixed⟩ := M.exists_mixed_runMixed_eq_runBehavioral
       hactsOnce behavioral horizon (hfinite behavioral)
     exact ⟨mixed, hmixed.trans hbehavioral⟩
   · rintro ⟨mixed, hmixed⟩

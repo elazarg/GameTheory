@@ -114,8 +114,8 @@ theorem kuhn_behavioral_to_mixed
     ∃ mixed : Profile G.strategicSignature.mixed,
       G.information.runMixed mixed horizon =
         G.information.runBehavioral behavioral horizon :=
-  G.information.exists_mixed_runMixed_eq_runBehavioral
-    hactsOnce behavioral horizon hfinite
+  (G.information.exists_mixed_runMixed_eq_runBehavioral
+    hactsOnce behavioral horizon hfinite).imp fun _ realized => realized.2
 
 /-- **Mixed-to-behavioral Kuhn direction.** Under perfect recall, the canonical
 behavioral reading of a mixed contingent plan has exactly the same history

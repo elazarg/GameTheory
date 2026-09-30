@@ -203,37 +203,6 @@ theorem pinnedTremble_fullSupport (free : Finset ι)
     exact mem_support_mix_left _ _ _ positive (referenceFull who active action)
   · simpa only [pinnedTremble, active, ↓reduceIte] using pinnedFull who active action
 
-/-- A law giving every point at least a fixed fraction of a reference's mass
-is that fraction of the reference mixed with some other law. -/
-theorem exists_mix_eq_of_le {α : Type*} (law reference : PMF α) (t : ℝ) (h0 : 0 ≤ t)
-    (h1 : t < 1) (lower : ∀ a, t * (reference a).toReal ≤ (law a).toReal) :
-    ∃ residual : PMF α, mix t h0 h1.le reference residual = law := by
-  have below (a : α) : ENNReal.ofReal t * reference a ≤ law a := by
-    have := ENNReal.ofReal_le_ofReal (lower a)
-    rwa [ENNReal.ofReal_mul h0, ENNReal.ofReal_toReal (PMF.apply_ne_top _ _),
-      ENNReal.ofReal_toReal (PMF.apply_ne_top _ _)] at this
-  have scale : ENNReal.ofReal (1 - t) ≠ 0 := by
-    rw [ne_eq, ENNReal.ofReal_eq_zero, not_le]
-    linarith
-  have finite : ∑' a, ENNReal.ofReal t * reference a ≠ ⊤ := by
-    rw [ENNReal.tsum_mul_left, PMF.tsum_coe, mul_one]
-    exact ENNReal.ofReal_ne_top
-  have split : ∑' a, (law a - ENNReal.ofReal t * reference a) +
-      ∑' a, ENNReal.ofReal t * reference a = 1 := by
-    rw [← ENNReal.tsum_add]
-    simp only [tsub_add_cancel_of_le (below _), PMF.tsum_coe]
-  have total : ∑' a, (law a - ENNReal.ofReal t * reference a) = ENNReal.ofReal (1 - t) := by
-    rw [ENNReal.eq_sub_of_add_eq finite split, ENNReal.tsum_mul_left, PMF.tsum_coe, mul_one,
-      ENNReal.ofReal_sub _ h0, ENNReal.ofReal_one]
-  let residual : PMF α := ⟨fun a => (law a - ENNReal.ofReal t * reference a) *
-      (ENNReal.ofReal (1 - t))⁻¹, ENNReal.summable.hasSum_iff.mpr (by
-    rw [ENNReal.tsum_mul_right, total, ENNReal.mul_inv_cancel scale ENNReal.ofReal_ne_top])⟩
-  refine ⟨residual, PMF.ext fun a => ?_⟩
-  change ENNReal.ofReal t * reference a + ENNReal.ofReal (1 - t) *
-    ((law a - ENNReal.ofReal t * reference a) * (ENNReal.ofReal (1 - t))⁻¹) = law a
-  rw [mul_comm ((law a - _)), ← mul_assoc, ENNReal.mul_inv_cancel scale ENNReal.ofReal_ne_top,
-    one_mul, add_tsub_cancel_of_le (below a)]
-
 /-- **Perturbed equilibria exist.** With finite strategy sets, every tremble
 weight in `[0, 1)` and every reference profile, some profile is an equilibrium
 of the perturbation whose lower bounds are the weight times the reference. -/

@@ -163,41 +163,8 @@ theorem twoRound_realization :
     intro i
     cases i
     exact reachableSites_finite
-  let sites : (i : Unit) → Finset (model.InfoState i) :=
-    fun i => (hfinite i).toFinset
-  let fallback : (i : Unit) → model.Policy i :=
-    fun i => (policy i).supportFallback model
-  let finitePolicy : (i : Unit) → model.BehavioralPolicy i :=
-    fun i => (policy i).restrictRandomization model (sites i) (fallback i)
-  let mixed : (i : Unit) → model.MixedPolicy i :=
-    fun i => (finitePolicy i).toMixedOn (sites i) (fallback i)
-  refine ⟨mixed, ?_, ?_⟩
-  · intro i
-    have hsource : (independentProduct fun info : sites i =>
-        (finitePolicy i) info.1).support.Finite := Set.toFinite _
-    have hmixed : ((finitePolicy i).toMixedOn (sites i) (fallback i)).support.Finite := by
-      unfold InformationModel.BehavioralPolicy.toMixedOn
-      rw [FiniteAssignment.sampleOn, PMF.support_map]
-      exact hsource.image _
-    simpa only [mixed] using hmixed
-  · have hoff : ∀ i info, info ∉ sites i →
-    finitePolicy i info = PMF.pure (fallback i info) := by
-      intro i info hinfo
-      simp only [finitePolicy, InformationModel.BehavioralPolicy.restrictRandomization,
-        ite_eq_right hinfo]
-    have hpredraw := model.runMixedFrom_toMixedOn actsOnce 2 finitePolicy
-      sites fallback execution.initHistory hoff
-    have hsame : model.runBehavioralFrom finitePolicy 2 execution.initHistory =
-        model.runBehavioralFrom policy 2 execution.initHistory := by
-      apply (model.runBehavioralFrom_congr_on_support 2 execution.initHistory ?_).symm
-      intro elapsed helapsed later hlater hterminal i
-      have hsites : model.infoOf i later.trace ∈
-          model.behavioralSupportSitesFrom policy 2 execution.initHistory i :=
-        ⟨elapsed, helapsed, later, hlater, hterminal, rfl⟩
-      have hmem : model.infoOf i later.trace ∈ sites i :=
-        (Set.Finite.mem_toFinset (hfinite i)).2 hsites
-      simp only [finitePolicy, InformationModel.BehavioralPolicy.restrictRandomization,
-        ite_eq_left hmem]
-    exact hpredraw.trans hsame
+  obtain ⟨mixed, finite, realized⟩ :=
+    model.exists_mixed_runMixed_eq_runBehavioral actsOnce policy 2 hfinite
+  exact ⟨mixed, fun i => finite i fun _ _ => Set.toFinite _, realized⟩
 
 end GameTheory.Experimental.KuhnFiniteSupport

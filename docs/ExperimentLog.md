@@ -9924,3 +9924,53 @@ memory.
   that ancestors of embedded histories are embedded; both remain open. The
   only test so far uses the identity restriction; a fixture adding an action
   would exercise the completion of new sites.
+
+### EXP-156: execution utilities for private memory, finite mixtures and trembled plans
+
+- **Date / status:** 2026-09-30; positive.
+- **Question:** can the utilities for executing strategies be stated once, in
+  the library's existing conventions, without parallel notions of trembling or
+  of finite predrawing?
+- **Competing designs:** (a) a separate tremble operator with a per-action
+  floor and its own removal construction; (b) trembles as mixtures with the
+  uniform law, with the per-site tremble mass as a parameter and residual laws
+  obtained from the general mixture decomposition.
+- **Hypotheses:**
+  - *H1.* Conditioning on the player's own transcript turns private memory
+    into one behavioral policy with the same external law against every
+    adaptive environment, using the total fiber posterior with no support side
+    conditions.
+  - *H2.* The finite-site predrawing already in the library yields finitely
+    supported mixed policies when the reachable local laws are finitely
+    supported, so no second realization theorem is needed.
+  - *H3.* Under decision recall, independent per-site trembles of correlated
+    plans keep every site's share of its tremble mass in the behavioral
+    reading; perfect recall is not needed.
+  - *H4.* Uniform-tremble laws are exactly the laws with a uniform floor.
+- **Kill conditions:** the tremble floor needs perfect recall; residual plans
+  need a construction separate from the mixture decomposition.
+- **Artifacts:** `Protocol/PrivateStrategy.lean`, `Protocol/DecisionPlan.lean`,
+  `Protocol/TremblingPlans.lean`, `Math/Probability/UniformTremble.lean`,
+  `Math/Probability/ProductConditioning.lean`, the finite-support conjunct of
+  `exists_mixed_runMixedFrom_eq_runBehavioralFrom`, `sampleOn_support_finite`,
+  `sampleOn_bind_eval_of_mem`, `runRandomizedFor_map_of_oneStep`,
+  `behavioralJoint_map_val`, `mem_uniformTrembleLaws_iff`, `bind_mix_pure`;
+  tests `Tests/PrivateStrategy.lean` and
+  `Analysis/Protocol/TremblingPlansTest.lean`. Validation:
+  `lake build GameTheory`, `lake lint`.
+- **Observations:**
+  - H1 held.
+  - H2 held: the existing realization theorem gained a finite-support
+    conjunct, requiring finiteness only at reachable sites, and the
+    experimental finite-support example became its corollary.
+  - H3 held. Decision recall already identifies the record at a decision site
+    with the own play along every history reaching it, which is all the floor
+    argument uses.
+  - H4 held for tremble mass below one.
+  - Sampling a prescription and trembling it is trembling its law for any
+    mixture component, not only the uniform one.
+  - Site-indexed choice instances (`Finite`, `Nonempty`) are not found by
+    instance search on concrete models; fixtures supply them explicitly.
+- **Outcome:** accepted with design (b).
+- **Next action:** none required. The site-indexed choice instances would
+  need an instance form whose key survives concrete models.

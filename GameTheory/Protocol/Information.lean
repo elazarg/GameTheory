@@ -748,6 +748,15 @@ theorem behavioralJoint_congr {first second : (i : ι) → M.BehavioralPolicy i}
   rw [behavioralJoint, behavioralJoint]
   exact congrArg _ (congrArg independentProduct (funext hagree))
 
+/-- Forgetting legality, a behavioral joint law is the independent product of
+the players' draws. -/
+theorem behavioralJoint_map_val (policies : (i : ι) → M.BehavioralPolicy i)
+    {state : E.State} (trace : Trace E state) (hterm : ¬ E.terminal state) :
+    (M.behavioralJoint policies trace hterm).map Subtype.val =
+      independentProduct fun i => (policies i (M.infoOf i trace)).map Subtype.val := by
+  rw [behavioralJoint, PMF.map_comp, ← independentProduct_map]
+  rfl
+
 /-- A legal joint action belongs to the behavioral joint support whenever each
 of its local choices belongs to the corresponding behavioral support. -/
 theorem mem_support_behavioralJoint

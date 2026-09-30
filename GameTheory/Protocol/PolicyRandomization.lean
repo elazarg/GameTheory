@@ -915,16 +915,29 @@ theorem behavioralSupportSitesFrom_finite_covers_of_fullSupport [Fintype ι]
     (M.behavioralSupportSitesFrom_covers_of_fullSupport
       policy fuel start hfull later hreach hterm i)
 
+/-- Finitely supported laws at the predrawn sites give a finitely supported
+mixed policy. -/
+theorem BehavioralPolicy.toMixedWithin_support_finite {i : ι}
+    (policy : M.BehavioralPolicy i) (sites : Finset (M.InfoState i))
+    (fallback : M.Policy i) (finite : ∀ info ∈ sites, (policy info).support.Finite) :
+    (policy.toMixedWithin M sites fallback).support.Finite := by
+  classical
+  rw [BehavioralPolicy.toMixedWithin_eq_sampleOn]
+  exact FiniteAssignment.sampleOn_support_finite policy sites fallback finite
+
 /-- Finite reachable support sites suffice to realize one bounded behavioral
-law as a mixed law without requiring a finite ambient information carrier. -/
+law as a mixed law without requiring a finite ambient information carrier. The
+mixed policy of a player whose local laws are finitely supported at its
+reachable sites is a finite mixture of pure policies. -/
 theorem exists_mixed_runMixedFrom_eq_runBehavioralFrom [Fintype ι]
     (hactsOnce : M.ActsOnceWhereItMatters)
     (policy : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ)
     (start : E.History)
     (hfinite : ∀ i, (M.behavioralSupportSitesFrom policy fuel start i).Finite) :
     ∃ mixed : (i : ι) → M.MixedPolicy i,
-      M.runMixedFrom mixed fuel start =
-        M.runBehavioralFrom policy fuel start := by
+      (∀ i, (∀ info ∈ M.behavioralSupportSitesFrom policy fuel start i,
+          (policy i info).support.Finite) → (mixed i).support.Finite) ∧
+        M.runMixedFrom mixed fuel start = M.runBehavioralFrom policy fuel start := by
   classical
   let sites : (i : ι) → Finset (M.InfoState i) :=
     fun i => (hfinite i).toFinset
@@ -932,7 +945,14 @@ theorem exists_mixed_runMixedFrom_eq_runBehavioralFrom [Fintype ι]
     fun i => (policy i).supportFallback M
   let finitePolicy : (i : ι) → M.BehavioralPolicy i :=
     fun i => (policy i).restrictRandomization M (sites i) (fallback i)
-  refine ⟨fun i => (finitePolicy i).toMixedOn (sites i) (fallback i), ?_⟩
+  refine ⟨fun i => (finitePolicy i).toMixedOn (sites i) (fallback i), ?_, ?_⟩
+  · intro i localFinite
+    have same : (finitePolicy i).toMixedOn (sites i) (fallback i) =
+        (policy i).toMixedWithin M (sites i) (fallback i) := rfl
+    change ((finitePolicy i).toMixedOn (sites i) (fallback i)).support.Finite
+    rw [same]
+    exact BehavioralPolicy.toMixedWithin_support_finite M (policy i) (sites i) (fallback i)
+      fun info member => localFinite info ((Set.Finite.mem_toFinset (hfinite i)).1 member)
   have hoff : ∀ i info, info ∉ sites i →
       finitePolicy i info = PMF.pure (fallback i info) := by
     intro i info hinfo
@@ -954,7 +974,9 @@ theorem exists_mixed_runMixed_eq_runBehavioral [Fintype ι]
     (hfinite : ∀ i,
       (M.behavioralSupportSitesFrom policy fuel E.initHistory i).Finite) :
     ∃ mixed : (i : ι) → M.MixedPolicy i,
-      M.runMixed mixed fuel = M.runBehavioral policy fuel :=
+      (∀ i, (∀ info ∈ M.behavioralSupportSitesFrom policy fuel E.initHistory i,
+          (policy i info).support.Finite) → (mixed i).support.Finite) ∧
+        M.runMixed mixed fuel = M.runBehavioral policy fuel :=
   M.exists_mixed_runMixedFrom_eq_runBehavioralFrom
     hactsOnce policy fuel E.initHistory hfinite
 
@@ -1162,7 +1184,7 @@ theorem runBehavioral_image_eq_runMixed_image [Fintype ι]
   ext law
   constructor
   · rintro ⟨policy, rfl⟩
-    obtain ⟨mixed, hmixed⟩ := M.exists_mixed_runMixed_eq_runBehavioral
+    obtain ⟨mixed, -, hmixed⟩ := M.exists_mixed_runMixed_eq_runBehavioral
       hactsOnce policy fuel (hfinite policy)
     exact ⟨mixed, hmixed⟩
   · rintro ⟨mixed, rfl⟩

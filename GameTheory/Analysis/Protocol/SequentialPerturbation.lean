@@ -22,6 +22,7 @@ import GameTheory.Protocol.FiniteHorizon
 import GameTheory.Protocol.FiniteInformation
 import GameTheory.Math.Probability.ExpectationMixture
 import GameTheory.Math.Probability.Uniform
+import GameTheory.Math.Probability.UniformTremble
 
 noncomputable section
 
@@ -42,6 +43,22 @@ def uniformTrembleLaws (ε : ℝ) (h0 : 0 ≤ ε) (h1 : ε ≤ 1)
     Set (PMF (M.Choice i info)) :=
   {law | ∃ residual, law = mix ε h0 h1
     (@PMF.uniformOfFintype _ (Fintype.ofFinite _) _) residual}
+
+/-- Below full mass, the uniform-tremble laws are exactly the laws giving every
+choice at least its share of the tremble. -/
+theorem mem_uniformTrembleLaws_iff (ε : ℝ) (h0 : 0 ≤ ε) (h1 : ε < 1)
+    (i : ι) (info : M.InfoState i)
+    [Finite (M.Choice i info)] [Nonempty (M.Choice i info)] (law : PMF (M.Choice i info)) :
+    law ∈ M.uniformTrembleLaws ε h0 h1.le i info ↔
+      ∀ choice, ε / Nat.card (M.Choice i info) ≤ (law choice).toReal := by
+  let _ := Fintype.ofFinite (M.Choice i info)
+  rw [← Fintype.card_eq_nat_card]
+  constructor
+  · rintro ⟨residual, rfl⟩ choice
+    exact div_card_le_mix_uniform_apply ε h0 h1.le residual choice
+  · intro floor
+    obtain ⟨residual, same⟩ := exists_mix_uniform_eq_of_floor law ε h0 h1 floor
+    exact ⟨residual, same.symm⟩
 
 private theorem exists_uniformTremble_locallyOptimal_bayesAssessment_truncated
     [Fintype ι] [DecidableEq ι] [Finite E.History]

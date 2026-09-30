@@ -171,4 +171,45 @@ theorem support_mix_eq_univ_of_left {α : Type u} (t : ℝ)
   rw [hμ]
   trivial
 
+/-- A law giving every point at least a fixed fraction of a reference's mass
+is that fraction of the reference mixed with some other law. -/
+theorem exists_mix_eq_of_le {α : Type*} (law reference : PMF α) (t : ℝ) (h0 : 0 ≤ t)
+    (h1 : t < 1) (lower : ∀ a, t * (reference a).toReal ≤ (law a).toReal) :
+    ∃ residual : PMF α, mix t h0 h1.le reference residual = law := by
+  have below (a : α) : ENNReal.ofReal t * reference a ≤ law a := by
+    have := ENNReal.ofReal_le_ofReal (lower a)
+    rwa [ENNReal.ofReal_mul h0, ENNReal.ofReal_toReal (PMF.apply_ne_top _ _),
+      ENNReal.ofReal_toReal (PMF.apply_ne_top _ _)] at this
+  have scale : ENNReal.ofReal (1 - t) ≠ 0 := by
+    rw [ne_eq, ENNReal.ofReal_eq_zero, not_le]
+    linarith
+  have finite : ∑' a, ENNReal.ofReal t * reference a ≠ ⊤ := by
+    rw [ENNReal.tsum_mul_left, PMF.tsum_coe, mul_one]
+    exact ENNReal.ofReal_ne_top
+  have split : ∑' a, (law a - ENNReal.ofReal t * reference a) +
+      ∑' a, ENNReal.ofReal t * reference a = 1 := by
+    rw [← ENNReal.tsum_add]
+    simp only [tsub_add_cancel_of_le (below _), PMF.tsum_coe]
+  have total : ∑' a, (law a - ENNReal.ofReal t * reference a) = ENNReal.ofReal (1 - t) := by
+    rw [ENNReal.eq_sub_of_add_eq finite split, ENNReal.tsum_mul_left, PMF.tsum_coe, mul_one,
+      ENNReal.ofReal_sub _ h0, ENNReal.ofReal_one]
+  let residual : PMF α := ⟨fun a => (law a - ENNReal.ofReal t * reference a) *
+      (ENNReal.ofReal (1 - t))⁻¹, ENNReal.summable.hasSum_iff.mpr (by
+    rw [ENNReal.tsum_mul_right, total, ENNReal.mul_inv_cancel scale ENNReal.ofReal_ne_top])⟩
+  refine ⟨residual, PMF.ext fun a => ?_⟩
+  change ENNReal.ofReal t * reference a + ENNReal.ofReal (1 - t) *
+    ((law a - ENNReal.ofReal t * reference a) * (ENNReal.ofReal (1 - t))⁻¹) = law a
+  rw [mul_comm ((law a - _)), ← mul_assoc, ENNReal.mul_inv_cancel scale ENNReal.ofReal_ne_top,
+    one_mul, add_tsub_cancel_of_le (below a)]
+
+/-- Mixing each outcome of a law with a common first law is mixing the whole
+law with it. -/
+theorem bind_mix_pure {α : Type u} (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) (μ law : PMF α) :
+    law.bind (fun a => mix t h0 h1 μ (PMF.pure a)) = mix t h0 h1 μ law := by
+  ext a
+  have pure : ∑' b, law b * (PMF.pure b) a = law a := by
+    rw [← PMF.bind_apply, PMF.bind_pure]
+  simp only [PMF.bind_apply, mix_apply, mul_add, ENNReal.tsum_add, ENNReal.tsum_mul_right,
+    PMF.tsum_coe, one_mul, mul_left_comm _ (ENNReal.ofReal (1 - t)), ENNReal.tsum_mul_left, pure]
+
 end GameTheory.Math.Probability

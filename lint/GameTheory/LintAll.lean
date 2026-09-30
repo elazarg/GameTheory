@@ -223,6 +223,7 @@ import GameTheory.Math.Probability.Measure
 import GameTheory.Math.Probability.Mixture
 import GameTheory.Math.Probability.OnlineLearning
 import GameTheory.Math.Probability.Product
+import GameTheory.Math.Probability.ProductConditioning
 import GameTheory.Math.Probability.RelativeTremble
 import GameTheory.Math.Probability.SelectiveStopping
 import GameTheory.Math.Probability.SequentialSampling
@@ -230,6 +231,7 @@ import GameTheory.Math.Probability.Simplex
 import GameTheory.Math.Probability.Support
 import GameTheory.Math.Probability.Tightness
 import GameTheory.Math.Probability.Uniform
+import GameTheory.Math.Probability.UniformTremble
 import GameTheory.Math.RegretAggregation
 import GameTheory.Math.SimplexApproximation
 import GameTheory.Mechanism
@@ -280,6 +282,7 @@ import GameTheory.Protocol.BehavioralTerminal
 import GameTheory.Protocol.Context
 import GameTheory.Protocol.Continuation
 import GameTheory.Protocol.ContinuationLaw
+import GameTheory.Protocol.DecisionPlan
 import GameTheory.Protocol.DecisionRecall
 import GameTheory.Protocol.Execution
 import GameTheory.Protocol.Extraction
@@ -297,6 +300,7 @@ import GameTheory.Protocol.OwnPlayRecall
 import GameTheory.Protocol.PolicyMeasure
 import GameTheory.Protocol.PolicyRandomization
 import GameTheory.Protocol.Predraw
+import GameTheory.Protocol.PrivateStrategy
 import GameTheory.Protocol.Randomized
 import GameTheory.Protocol.RandomizedBackward
 import GameTheory.Protocol.RestrictionExecution
@@ -307,6 +311,7 @@ import GameTheory.Protocol.Strategic
 import GameTheory.Protocol.StrategicRealization
 import GameTheory.Protocol.SubgamePerfect
 import GameTheory.Protocol.Tree
+import GameTheory.Protocol.TremblingPlans
 import GameTheory.Protocol.Zermelo
 import GameTheory.Repeated
 import GameTheory.Repeated.Basic

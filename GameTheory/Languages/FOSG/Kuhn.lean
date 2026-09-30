@@ -65,8 +65,8 @@ theorem kuhn_behavioral_to_mixed
     ∃ mixed : Profile G.information.strategicSignature.mixed,
       G.information.runMixed mixed horizon =
         G.information.runBehavioral behavioral horizon :=
-  G.information.exists_mixed_runMixed_eq_runBehavioral
-    hactsOnce behavioral horizon hfinite
+  (G.information.exists_mixed_runMixed_eq_runBehavioral
+    hactsOnce behavioral horizon hfinite).imp fun _ realized => realized.2
 
 /-- Under perfect recall, the behavioral reading of a mixed FOSG plan
 preserves the complete history law. -/
