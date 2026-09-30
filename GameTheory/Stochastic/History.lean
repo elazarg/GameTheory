@@ -518,7 +518,8 @@ theorem behavioralJoint_afterPublicHistory_init
           (G.publicHistoryOfTrace initial start.trace))
         (G.toExecution start.state).initHistory.trace (by simp) =
       (G.perfectMonitoring initial).behavioralJoint profile start.trace (by simp) := by
-  unfold InformationModel.behavioralJoint
+  rw [InformationModel.behavioralJoint_eq_independentProduct,
+    InformationModel.behavioralJoint_eq_independentProduct]
   congr 1
   apply congrArg independentProduct
   funext i

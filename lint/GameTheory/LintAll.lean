@@ -234,6 +234,7 @@ import GameTheory.Math.Probability.MeanComparisonExpectation
 import GameTheory.Math.Probability.Measure
 import GameTheory.Math.Probability.Mixture
 import GameTheory.Math.Probability.OnlineLearning
+import GameTheory.Math.Probability.FinitaryProduct
 import GameTheory.Math.Probability.Product
 import GameTheory.Math.Probability.ProductConditioning
 import GameTheory.Math.Probability.RademacherWalk

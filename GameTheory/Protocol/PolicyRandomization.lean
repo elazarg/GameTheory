@@ -663,7 +663,7 @@ theorem runMixedFrom_toMixedOn [Fintype ι] [∀ i, DecidableEq (M.InfoState i)]
         rw [hlocal, ← independentProduct_bind]
       rw [runMixedFrom, hfactor, PMF.bind_bind,
         M.runBehavioralFrom_succ_of_not_terminal policy fuel hterm,
-        behavioralJoint, PMF.bind_map]
+        behavioralJoint_eq_independentProduct, PMF.bind_map]
       apply bind_congr_on_support
       intro draw hdraw
       let chosen :
@@ -1058,7 +1058,7 @@ theorem runMixedFrom_toBehavioralWith [Fintype ι]
           ← fiberPosterior_reconstruct (independentProduct mixed) (M.answerAt h),
           PMF.bind_bind]
       rw [M.runBehavioralFrom_succ_of_not_terminal _ fuel hterm,
-        behavioralJoint, hdraw]
+        behavioralJoint_eq_independentProduct, hdraw]
       conv_rhs => rw [PMF.bind_map]
       apply bind_congr_on_support
       intro answer hanswer

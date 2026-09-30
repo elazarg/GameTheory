@@ -100,6 +100,24 @@ theorem exists_legal {state : E.State} (hterm : ¬ E.terminal state) :
   obtain ⟨joint, hjoint⟩ := E.progress state hterm
   exact ⟨joint, hterm, hjoint⟩
 
+/-- At every state only finitely many players must move. An independent draw
+of the movers' choices then has finitely many random coordinates. Finitely many
+players is one sufficient condition; a single mover per state is another. -/
+class FiniteMovers : Prop where
+  finite_active : ∀ state, {i | E.active state i}.Finite
+
+instance finiteMovers_of_finite [Finite ι] : E.FiniteMovers :=
+  ⟨fun _ => Set.toFinite _⟩
+
+/-- The players who must move at a state. -/
+def movers [E.FiniteMovers] (state : E.State) : Finset ι :=
+  (FiniteMovers.finite_active (E := E) state).toFinset
+
+@[simp]
+theorem mem_movers [E.FiniteMovers] {state : E.State} {i : ι} :
+    i ∈ E.movers state ↔ E.active state i :=
+  Set.Finite.mem_toFinset _
+
 /-- The no-op joint action. -/
 def noop : ∀ i, Option (E.Action i) := fun _ => none
 

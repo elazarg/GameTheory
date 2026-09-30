@@ -1452,7 +1452,7 @@ theorem source_runBehavioralFrom_one_eq_ordered (first : Bool)
   rw [InformationModel.runBehavioralFrom,
     ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ 0 hterm]
   unfold InformationModel.randomizedChooser
-  unfold InformationModel.behavioralJoint
+  rw [InformationModel.behavioralJoint_eq_independentProduct]
   rw [PMF.bind_map]
   unfold orderedSourceHistoryLaw
   simp_rw [ExecutionProtocol.runRandomizedFor_zero]

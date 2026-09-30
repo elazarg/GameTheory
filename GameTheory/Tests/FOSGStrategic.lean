@@ -232,6 +232,7 @@ theorem allFalse_not_isNash :
       (source.information.runBehavioral (behavioralProfile deviatedActions) 1) ≤
     expectedUtility sourceUtility false
       (source.information.runBehavioral (behavioralProfile allFalseActions) 1) := by
+    rw [hdeviationLaw, InformationModel.toBehavioralGameForm_play] at hle
     exact hle
   rw [hdeviationValue, hpreferredValue] at hle'
   norm_num [allFalseActions, deviatedActions, Profile.update_same] at hle'

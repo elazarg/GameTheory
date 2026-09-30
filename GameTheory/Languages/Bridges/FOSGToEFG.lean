@@ -1373,11 +1373,9 @@ private theorem map_erase_runBehavioralFrom_resolve [Fintype ι] [DecidableEq ι
     exact eq_pure_of_subsingleton _ (idle player)
   unfold InformationModel.behavioralJoint
   simp_rw [hpolicy]
-  rw [independentProduct_pure, PMF.pure_map]
+  rw [finitaryProduct_pure, PMF.pure_map]
   have hdraw :
-      (⟨fun player => (idle player).1, idleJoint.2⟩ :
-        { joint : ∀ player, Option (G.execution.Action player) //
-          (execution G order).Legal (.stage history order.slots collected) joint }) =
+      (information G order).legalJointOfChoices trace htargetTerm idle =
       idleJoint := by
     apply Subtype.ext
     funext player
@@ -1746,7 +1744,7 @@ private theorem source_runBehavioralFrom_one_eq_choiceAtPi
     ExecutionProtocol.runRandomizedFor_succ_of_not_terminal
       (E := G.execution) _ 0 (h := history) hterm]
   unfold InformationModel.randomizedChooser
-  unfold InformationModel.behavioralJoint
+  rw [InformationModel.behavioralJoint_eq_independentProduct]
   simp_rw [ExecutionProtocol.runRandomizedFor_zero]
   rw [PMF.bind_map]
   unfold sourceChoiceAtLaw

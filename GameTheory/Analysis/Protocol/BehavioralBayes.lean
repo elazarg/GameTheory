@@ -33,7 +33,7 @@ theorem behavioralJoint_fullSupport
   let draws : (i : ι) → M.Choice i (M.infoOf i trace) :=
     fun i => ⟨joint.1 i, (M.menu_adequate i trace (joint.1 i)).mpr
       (E.legalOption_of_legal joint.2 i)⟩
-  rw [behavioralJoint, PMF.support_map]
+  rw [behavioralJoint_eq_independentProduct, PMF.support_map]
   refine ⟨draws, ?_, ?_⟩
   · rw [independentProduct_support_iff]
     intro i

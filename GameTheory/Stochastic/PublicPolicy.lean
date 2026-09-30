@@ -295,7 +295,8 @@ theorem behavioralJoint_toBehaviorProfile
       PMF.map (canonicalJoint G initial state)
         (independentProduct fun i =>
           profile i ((G.perfectMonitoring initial).infoOf i trace)) := by
-  unfold InformationModel.behavioralJoint toBehaviorProfile toBehavioralPolicy
+  rw [InformationModel.behavioralJoint_eq_independentProduct]
+  unfold toBehaviorProfile toBehavioralPolicy
   rw [← independentProduct_map, PMF.map_comp]
   apply congrArg (fun f => PMF.map f _)
   funext actions

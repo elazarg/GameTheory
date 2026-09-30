@@ -59,7 +59,7 @@ fields. `InformationModel extends InfoSignals` keeps that a private detail:
 
 import GameTheory.Protocol.Randomized
 import GameTheory.Core.Signature
-import GameTheory.Math.Probability.Product
+import GameTheory.Math.Probability.FinitaryProduct
 
 noncomputable section
 
@@ -720,23 +720,55 @@ theorem behavioral_eq_of_not_active {i : ι} (first second : M.BehavioralPolicy 
   rw [eq_pure_of_subsingleton (first (M.infoOf i trace)) choice,
     eq_pure_of_subsingleton (second (M.infoOf i trace)) choice]
 
+/-- A player who need not move has a single choice, so every local law there
+is a point mass. -/
+theorem isPointMass_of_not_active {i : ι} (policy : M.BehavioralPolicy i)
+    {state : E.State} (trace : Trace E state) (hinactive : ¬ E.active state i) :
+    IsPointMass (policy (M.infoOf i trace)) := by
+  have := M.subsingleton_choice_of_not_active trace hinactive
+  exact isPointMass_of_subsingleton _
+
 section Profiles
 
-variable [Fintype ι]
+variable [E.FiniteMovers]
+
+/-- Read one information-local choice per player as a legal joint action. -/
+def legalJointOfChoices {state : E.State} (trace : Trace E state)
+    (hterm : ¬ E.terminal state) (draws : (i : ι) → M.Choice i (M.infoOf i trace)) :
+    { joint : ∀ i, Option (E.Action i) // E.Legal state joint } :=
+  ⟨fun i => (draws i).1,
+    ExecutionProtocol.legal_of_legalOption hterm fun i =>
+      (M.menu_adequate i trace (draws i).1).mp (draws i).2⟩
 
 /-- The law over legal joint actions a behavioral profile induces after a
 history: every player draws from its own menu, and the draws are independent
-because nothing couples them. Menu adequacy is what makes each drawn joint
-action legal, so randomizing needs no legality argument the deterministic case
-did not already have. -/
+because nothing couples them. Only the finitely many players who must move
+randomize; everybody else has a single choice. Menu adequacy is what makes each
+drawn joint action legal, so randomizing needs no legality argument the
+deterministic case did not already have. -/
 def behavioralJoint (policies : (i : ι) → M.BehavioralPolicy i) {state : E.State}
     (trace : Trace E state) (hterm : ¬ E.terminal state) :
     PMF { joint : ∀ i, Option (E.Action i) // E.Legal state joint } :=
-  PMF.map
-    (fun draws => ⟨fun i => (draws i).1,
-      ExecutionProtocol.legal_of_legalOption hterm fun i =>
-        (M.menu_adequate i trace (draws i).1).mp (draws i).2⟩)
-    (independentProduct fun i => policies i (M.infoOf i trace))
+  PMF.map (M.legalJointOfChoices trace hterm)
+    (finitaryProduct (fun i => policies i (M.infoOf i trace)) (E.movers state))
+
+/-- Every local law outside the movers is a point mass. -/
+theorem isPointMass_of_not_mem_movers (policies : (i : ι) → M.BehavioralPolicy i)
+    {state : E.State} (trace : Trace E state) :
+    ∀ i ∉ E.movers state, IsPointMass (policies i (M.infoOf i trace)) :=
+  fun i hi => M.isPointMass_of_not_active (policies i) trace
+    (fun hactive => hi ((E.mem_movers).2 hactive))
+
+/-- With finitely many players, the behavioral joint law is the image of the
+independent product of every player's local law. -/
+theorem behavioralJoint_eq_independentProduct [Fintype ι]
+    (policies : (i : ι) → M.BehavioralPolicy i) {state : E.State}
+    (trace : Trace E state) (hterm : ¬ E.terminal state) :
+    M.behavioralJoint policies trace hterm =
+      PMF.map (M.legalJointOfChoices trace hterm)
+        (independentProduct fun i => policies i (M.infoOf i trace)) := by
+  rw [behavioralJoint, finitaryProduct_eq_independentProduct _
+    (M.isPointMass_of_not_mem_movers policies trace)]
 
 /-- Behavioral profiles that agree at one information history induce the same
 local joint-action law there.  This is the one-step congruence used by the
@@ -746,15 +778,17 @@ theorem behavioralJoint_congr {first second : (i : ι) → M.BehavioralPolicy i}
     (hagree : ∀ i, first i (M.infoOf i trace) = second i (M.infoOf i trace)) :
     M.behavioralJoint first trace hterm = M.behavioralJoint second trace hterm := by
   rw [behavioralJoint, behavioralJoint]
-  exact congrArg _ (congrArg independentProduct (funext hagree))
+  exact congrArg _ (congrArg (finitaryProduct · _) (funext hagree))
 
-/-- Forgetting legality, a behavioral joint law is the independent product of
-the players' draws. -/
+/-- Forgetting legality, a behavioral joint law is the finitary product of the
+players' draws. -/
 theorem behavioralJoint_map_val (policies : (i : ι) → M.BehavioralPolicy i)
     {state : E.State} (trace : Trace E state) (hterm : ¬ E.terminal state) :
     (M.behavioralJoint policies trace hterm).map Subtype.val =
-      independentProduct fun i => (policies i (M.infoOf i trace)).map Subtype.val := by
-  rw [behavioralJoint, PMF.map_comp, ← independentProduct_map]
+      finitaryProduct (fun i => (policies i (M.infoOf i trace)).map Subtype.val)
+        (E.movers state) := by
+  rw [behavioralJoint, PMF.map_comp, ← finitaryProduct_map _ _
+    (M.isPointMass_of_not_mem_movers policies trace)]
   rfl
 
 /-- A legal joint action belongs to the behavioral joint support whenever each
@@ -777,8 +811,9 @@ theorem mem_support_behavioralJoint
       (E.legalOption_of_legal isLegal i)⟩
   rw [behavioralJoint, PMF.support_map]
   refine ⟨draws,
-    (independentProduct_support_iff
-      (fun i => policies i (M.infoOf i trace)) draws).mpr ?_, ?_⟩
+    (mem_support_finitaryProduct_iff_of_isPointMass
+      (fun i => policies i (M.infoOf i trace))
+      (M.isPointMass_of_not_mem_movers policies trace) draws).mpr ?_, ?_⟩
   · exact hsupport
   · apply Subtype.ext
     rfl
@@ -812,7 +847,8 @@ theorem behavioralJoint_eq_pure_of_no_active
     exact eq_pure_of_subsingleton _ (idle i)
   unfold behavioralJoint
   simp_rw [hpolicy]
-  rw [independentProduct_pure, PMF.pure_map]
+  rw [finitaryProduct_pure, PMF.pure_map]
+  rfl
 
 /-- If at most one player can act, the behavioral product is that player's
 local law embedded in the only possibly active joint coordinate. -/
@@ -875,18 +911,22 @@ theorem behavioralJoint_eq_map_of_at_most_one_active
   have hfunctions : assemble = embed ∘ (fun draws => draws active) := by
     funext draws
     exact hcollapse draws
+  let product :=
+    finitaryProduct (fun i => policies i (M.infoOf i trace)) (E.movers state)
+  have hmarginal : product.map (fun draws => draws active) =
+      policies active (M.infoOf active trace) := by
+    apply finitaryProduct_map_eval
+    by_cases hactive : E.active state active
+    · exact Or.inl ((E.mem_movers).2 hactive)
+    · exact Or.inr (M.isPointMass_of_not_active (policies active) trace hactive)
   calc
-    M.behavioralJoint policies trace hterminal =
-        PMF.map assemble
-          (independentProduct fun i => policies i (M.infoOf i trace)) := rfl
-    _ = PMF.map (embed ∘ fun draws => draws active)
-          (independentProduct fun i => policies i (M.infoOf i trace)) := by
+    M.behavioralJoint policies trace hterminal = PMF.map assemble product := rfl
+    _ = PMF.map (embed ∘ fun draws => draws active) product := by
       rw [hfunctions]
-    _ = PMF.map embed
-          ((independentProduct fun i => policies i (M.infoOf i trace)).map
-            (fun draws => draws active)) := (PMF.map_comp _ _ _).symm
+    _ = PMF.map embed (product.map (fun draws => draws active)) :=
+      (PMF.map_comp _ _ _).symm
     _ = PMF.map embed (policies active (M.infoOf active trace)) := by
-      rw [independentProduct_map_eval]
+      rw [hmarginal]
     _ = _ := rfl
 
 end SingleMoverBehavioralJoint
@@ -1081,23 +1121,13 @@ theorem runBehavioralFrom_congr_on_support
         exact Set.mem_iUnion₂.mpr ⟨next, hnext, hlater⟩
         exact hlaterTerm
 
-/-- The law a mixed profile induces: draw a deterministic profile once, then
-play it. The single draw is the whole difference from the behavioral case. -/
-def runMixedFrom (mixed : (i : ι) → M.MixedPolicy i) (fuel : ℕ) (h : E.History) :
-    PMF E.History :=
-  (independentProduct mixed).bind fun policies => M.runFrom policies fuel h
-
-/-- The law a mixed profile induces from the start. -/
-def runMixed (mixed : (i : ι) → M.MixedPolicy i) (fuel : ℕ) : PMF E.History :=
-  M.runMixedFrom mixed fuel E.initHistory
-
 /-- A deterministic profile read as behavioral chooses by point masses. -/
 theorem randomizedChooser_toBehavioral (policies : (i : ι) → M.Policy i) :
     M.randomizedChooser (fun i => (policies i).toBehavioral) =
       (M.historyChooser policies).toRandomized := by
   funext h' hterm
   rw [randomizedChooser, behavioralJoint, ExecutionProtocol.HistoryChooser.toRandomized]
-  simp only [Policy.toBehavioral, independentProduct_pure, PMF.pure_map]
+  simp only [Policy.toBehavioral, finitaryProduct_pure, PMF.pure_map]
   rfl
 
 /-- **Behavioral play extends deterministic play.** Reading a deterministic
@@ -1109,6 +1139,22 @@ theorem runBehavioralFrom_toBehavioral (policies : (i : ι) → M.Policy i)
   rw [runBehavioralFrom, M.randomizedChooser_toBehavioral, runFrom,
     ExecutionProtocol.runRandomizedFor_toRandomized]
 
+end Profiles
+
+section MixedProfiles
+
+variable [Fintype ι]
+
+/-- The law a mixed profile induces: draw a deterministic profile once, then
+play it. The single draw is the whole difference from the behavioral case. -/
+def runMixedFrom (mixed : (i : ι) → M.MixedPolicy i) (fuel : ℕ) (h : E.History) :
+    PMF E.History :=
+  (independentProduct mixed).bind fun policies => M.runFrom policies fuel h
+
+/-- The law a mixed profile induces from the start. -/
+def runMixed (mixed : (i : ι) → M.MixedPolicy i) (fuel : ℕ) : PMF E.History :=
+  M.runMixedFrom mixed fuel E.initHistory
+
 /-- **Mixed play extends deterministic play**, for the same reason and by the
 other route. -/
 theorem runMixedFrom_pure (policies : (i : ι) → M.Policy i)
@@ -1116,7 +1162,7 @@ theorem runMixedFrom_pure (policies : (i : ι) → M.Policy i)
     M.runMixedFrom (fun i => PMF.pure (policies i)) fuel h = M.runFrom policies fuel h := by
   rw [runMixedFrom, independentProduct_pure, PMF.pure_bind]
 
-end Profiles
+end MixedProfiles
 
 /-! ## Information sets and beliefs
 

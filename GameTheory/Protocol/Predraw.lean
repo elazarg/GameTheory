@@ -65,13 +65,17 @@ theorem behavioralJoint_update_bind {α : Type*}
     M.behavioralJoint
         (Profile.update profile who (fun state =>
           μ.bind fun a => policies a state)) trace hterm =
-      PMF.map jointOf (independentProduct mixed) := rfl
+      PMF.map jointOf (independentProduct mixed) :=
+        M.behavioralJoint_eq_independentProduct _ _ _
     _ = μ.bind (fun a => PMF.map jointOf
         (independentProduct (fun i =>
           (Profile.update profile who (policies a)) i (info i)))) := by
       rw [hproduct, PMF.map_bind]
     _ = μ.bind (fun a =>
-        M.behavioralJoint (Profile.update profile who (policies a)) trace hterm) := rfl
+        M.behavioralJoint (Profile.update profile who (policies a)) trace hterm) := by
+      congr 1
+      funext a
+      exact (M.behavioralJoint_eq_independentProduct _ _ _).symm
 
 /-- Predrawing one finite table preserves the complete history law. Freshness
 ranges over all histories of different lengths, including unrelated and
@@ -233,8 +237,7 @@ theorem runBehavioralFrom_support_finite_of_finite_branching
           (Set.Finite.pi' fun i => hchoices start (fun h => hterm h) i).subset
             (fun draws hdraws =>
               (independentProduct_support_iff _ draws).1 hdraws)
-        unfold InformationModel.behavioralJoint
-        rw [PMF.support_map]
+        rw [InformationModel.behavioralJoint_eq_independentProduct, PMF.support_map]
         exact hdraws.image _
       apply hjoint.biUnion
       intro draw hdraw

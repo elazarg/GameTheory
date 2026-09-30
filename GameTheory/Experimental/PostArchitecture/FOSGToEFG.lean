@@ -198,7 +198,8 @@ theorem map_behavioralJoint_start
           (.start : execution.Trace .start) start_not_terminal) =
       bindPairLaw (actionLaw policies false)
         (fun _ => actionLaw policies true) := by
-  unfold InformationModel.behavioralJoint actionLaw
+  rw [InformationModel.behavioralJoint_eq_independentProduct]
+  unfold actionLaw
   rw [PMF.map_comp]
   show PMF.map
       ((fun pair => (actionOfChoice pair.1, actionOfChoice pair.2)) ∘

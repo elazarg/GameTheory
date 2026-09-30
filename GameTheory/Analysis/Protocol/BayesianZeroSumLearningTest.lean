@@ -509,7 +509,7 @@ theorem behavioralJoint_typed
         (by simp [typedHistory]) =
       PMF.map (typedJointOfDraws ty)
         (independentProduct fun player => strategy player (.acting ty)) := by
-  unfold InformationModel.behavioralJoint
+  refine (InformationModel.behavioralJoint_eq_independentProduct _ _ _ _).trans ?_
   have hlaws :
       (fun player => strategy player
         (information.infoOf player (typedHistory ty).trace)) =

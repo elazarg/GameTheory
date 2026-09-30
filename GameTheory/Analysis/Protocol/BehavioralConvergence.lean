@@ -44,7 +44,8 @@ theorem runBehavioralFrom_convergesPointwise
           M.behavioralJoint (sequence n) history.trace hterm
         let jointTarget := M.behavioralJoint target history.trace hterm
         have hjoint : PMFConvergesPointwise jointLaw jointTarget := by
-          unfold jointLaw jointTarget InformationModel.behavioralJoint
+          unfold jointLaw jointTarget
+          simp only [InformationModel.behavioralJoint_eq_independentProduct]
           exact (PMFConvergesPointwise.independentProduct fun i =>
             hlimit i (M.infoOf i history.trace)).map _
         let continuation (n : ℕ) (draw :

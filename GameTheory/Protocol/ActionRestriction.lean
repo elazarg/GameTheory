@@ -48,7 +48,8 @@ theorem runBehavioralFrom_succ_localStep [Fintype ι]
       M.runBehavioralFrom_of_terminal profile _ stopped,
       M.runBehavioralFrom_of_terminal profile _ stopped]
   · rw [M.runBehavioralFrom_succ_of_not_terminal profile fuel stopped]
-    simp only [behavioralJoint, PMF.bind_map, Function.comp_def, localStep, dite_eq_right stopped,
+    simp only [behavioralJoint_eq_independentProduct, legalJointOfChoices, PMF.bind_map,
+      Function.comp_def, localStep, dite_eq_right stopped,
       PMF.bind_bind, bindOnSupport_bind, PMF.pure_bind]
 
 /-- **Action restriction.** Histories, information values and legal choices of

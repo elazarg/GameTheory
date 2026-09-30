@@ -262,7 +262,8 @@ theorem mem_support_randomizedChooser {state : Round} (trace : Trace twice state
       { joint : ∀ i, Option (twice.Action i) //
         twice.Legal (History.state ⟨state, trace⟩) joint }) ∈
       (model.randomizedChooser (fun _ => coinPolicy) ⟨state, trace⟩ hterm).support := by
-  rw [InformationModel.randomizedChooser, InformationModel.behavioralJoint, PMF.support_map]
+  rw [InformationModel.randomizedChooser,
+    InformationModel.behavioralJoint_eq_independentProduct, PMF.support_map]
   exact ⟨draws, (independentProduct_support_iff _ draws).2 hmem, rfl⟩
 
 /-- **The behavioral law does.** Two independent draws can disagree, and this

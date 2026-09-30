@@ -755,7 +755,7 @@ theorem runBehavioralFrom_decision_matchingPayoff
     ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ 1
       (decision_not_terminal hidden),
     expect_bind_of_finite, InformationModel.randomizedChooser,
-    InformationModel.behavioralJoint, expect_map]
+    InformationModel.behavioralJoint_eq_independentProduct, expect_map]
   have hmarginal :
       PMF.map (fun draws => (draws Player.player).1) drawLaw =
         PMF.map (fun choice => choice.1) (alternative .acting) := by
@@ -794,7 +794,8 @@ theorem runBehavioralFrom_decision_matchingPayoff
                 simp [information, signals_infoOf, viewOfState, hdraw] at hlegal
             | some action =>
                 cases action <;> cases hidden <;>
-                  simp [hdraw, expect_pure, execution, decisionHistory, matchingPayoff,
+                  simp [InformationModel.legalJointOfChoices, hdraw, expect_pure, execution,
+                    decisionHistory, matchingPayoff,
                     PMF.pure_bindOnSupport,
                     ExecutionProtocol.History.extend_state,
                     ExecutionProtocol.runRandomizedFor_of_terminal]

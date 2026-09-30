@@ -83,7 +83,7 @@ theorem behavioralJoint_update_withLaw_eq_bind
         otherLaws := by
     funext other
     rw [Profile.update_of_ne _ _ other.2]
-  unfold behavioralJoint
+  simp only [behavioralJoint_eq_independentProduct]
   rw [← PMF.map_bind]
   apply congrArg (PMF.map jointOf)
   rw [independentProduct_splitAt _ who, hwithWho, hwithOthers]

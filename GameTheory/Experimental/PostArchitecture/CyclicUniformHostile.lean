@@ -84,7 +84,7 @@ theorem behavioralJoint_coord_eq_false
     (hdraw : draw ∈ ((hostileGame.perfectMonitoring initial).behavioralJoint
       policies trace hterm).support) :
     draw.1 owner = some false := by
-  rw [behavioralJoint, PMF.support_map] at hdraw
+  rw [behavioralJoint_eq_independentProduct, PMF.support_map] at hdraw
   obtain ⟨draws, hdraws, hdraw⟩ := hdraw
   have hcoord := (independentProduct_support_iff _ draws).mp hdraws owner
   rw [hpolicy] at hcoord
@@ -96,7 +96,7 @@ theorem behavioralJoint_coord_eq_false
         ((hostileGame.perfectMonitoring initial).infoOf owner trace)).1 =
         some false := rfl
   rw [hfalse] at hcoord'
-  simpa using hcoord'
+  simpa [legalJointOfChoices] using hcoord'
 
 theorem shifted_constantFalse_apply (restart : Bool)
     (observed : hostileGame.PublicHistory) (i : Bool)
@@ -455,7 +455,7 @@ theorem behavioralJoint_coord_eq_true
       ((hostileGame.perfectMonitoring initial).behavioralJoint
         policies trace hterm).support) :
     draw.1 true = some true := by
-  rw [behavioralJoint, PMF.support_map] at hdraw
+  rw [behavioralJoint_eq_independentProduct, PMF.support_map] at hdraw
   obtain ⟨draws, hdraws, hdraw⟩ := hdraw
   have hcoord := (independentProduct_support_iff _ draws).mp hdraws true
   rw [hpolicy] at hcoord
@@ -467,7 +467,7 @@ theorem behavioralJoint_coord_eq_true
         ((hostileGame.perfectMonitoring initial).infoOf true trace)).1 =
         some true := rfl
   rw [htrue] at hcoord'
-  simpa using hcoord'
+  simpa [legalJointOfChoices] using hcoord'
 
 def offPhaseHistory : (hostileGame.toExecution false).History :=
   let realized : true ∈

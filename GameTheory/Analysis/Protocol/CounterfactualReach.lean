@@ -137,7 +137,7 @@ theorem behavioralJoint_prob_eq_prod [Fintype ι]
       PMF.map (jointOfChoices M trace hterm)
         (independentProduct fun player =>
           policies player (M.infoOf player trace)) := by
-    unfold InformationModel.behavioralJoint
+    rw [InformationModel.behavioralJoint_eq_independentProduct]
     apply congrArg (fun assemble =>
       PMF.map assemble
         (independentProduct fun player =>

@@ -138,7 +138,7 @@ theorem behavioralJoint_convergesPointwise_of_sites
           history.trace hactive
       simpa only [heq] using
         pmfConvergesPointwise_const (target i (M.infoOf i history.trace))
-  unfold InformationModel.behavioralJoint
+  simp only [InformationModel.behavioralJoint_eq_independentProduct]
   exact (PMFConvergesPointwise.independentProduct hcoordinate).map _
 
 /-- Coordinate convergence of behavioral laws passes through every
