@@ -23,7 +23,7 @@ namespace InformationModel
 variable (M : InformationModel E)
 section Bayes
 
-variable [Fintype ι]
+variable [E.FiniteMovers]
 
 /-- The atomic occupancy mass of a decision information fiber. The
 history-antichain premise in the Bayes theorem below is what makes this tsum

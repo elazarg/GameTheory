@@ -320,7 +320,7 @@ theorem counterfactualActionRegret_eq_sub_expect
 
 /-- The ordinary continuation value under the canonical Bayes belief at a
 positive-mass information site. -/
-def bayesContinuationValue [Fintype ι] [DecidableEq ι]
+def bayesContinuationValue [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
     (hantichain : site.IsHistoryAntichain)
@@ -500,7 +500,7 @@ theorem bayesContinuationIntegrable_of_counterfactual
     (Set.finite_univ.subset (Set.subset_univ _)) hcond
 
 private theorem informationMass_toReal_pos
-    [Fintype ι] (strategy : (player : ι) → M.BehavioralPolicy player)
+    [E.FiniteMovers] (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
     (hantichain : site.IsHistoryAntichain)
     (hmass : 0 < M.informationMass strategy who site) :

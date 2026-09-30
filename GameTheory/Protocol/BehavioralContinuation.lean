@@ -25,20 +25,20 @@ variable {ι : Type uι} {E : ExecutionProtocol.{uι, us, ua} ι}
 
 /-- Behavioral strategies evaluated from a retained history. Simultaneous
 decisions use the same independent product as the canonical behavioral runner. -/
-@[reducible] def toBehavioralContinuationGameForm [Fintype ι]
+@[reducible] def toBehavioralContinuationGameForm [E.FiniteMovers]
     (fuel : ℕ) (history : E.History) : GameForm ι where
   sig := M.behavioralSignature
   play profile := M.runBehavioralFrom profile fuel history
 
 /-- Behavioral SPE is canonical Nash in every information-set-closed subgame.
 The bound covers every legal history, including deviations and off-path roots. -/
-abbrev IsBehavioralSubgamePerfect [Fintype ι] [DecidableEq ι] {bound : ℕ}
+abbrev IsBehavioralSubgamePerfect [E.FiniteMovers] [DecidableEq ι] {bound : ℕ}
     (_bounded : E.BoundedHorizon bound) (profile : Profile M.behavioralSignature)
     (utility : E.History → ι → ℝ) : Prop :=
   M.IsContinuationNash (fun history policies => M.runBehavioralFrom policies bound history)
     profile utility
 
-theorem isBehavioralSubgamePerfect_iff [Fintype ι] [DecidableEq ι]
+theorem isBehavioralSubgamePerfect_iff [E.FiniteMovers] [DecidableEq ι]
     {bound : ℕ} (bounded : E.BoundedHorizon bound)
     (profile : Profile M.behavioralSignature) (utility : E.History → ι → ℝ) :
     M.IsBehavioralSubgamePerfect bounded profile utility ↔
@@ -56,7 +56,7 @@ theorem isBehavioralSubgamePerfect_iff [Fintype ι] [DecidableEq ι]
   M.isContinuationNash_iff _ _ _
 
 /-- Evaluation fuel is not a semantic deadline. -/
-theorem isBehavioralSubgamePerfect_bound_iff [Fintype ι] [DecidableEq ι]
+theorem isBehavioralSubgamePerfect_bound_iff [E.FiniteMovers] [DecidableEq ι]
     {first second : ℕ} (firstBound : E.BoundedHorizon first)
     (secondBound : E.BoundedHorizon second)
     (profile : Profile M.behavioralSignature) (utility : E.History → ι → ℝ) :
@@ -70,7 +70,7 @@ theorem isBehavioralSubgamePerfect_bound_iff [Fintype ι] [DecidableEq ι]
       (max first second) (Nat.le_max_right _ _))
 
 /-- A point-mass behavioral SPE defeats every pure replacement. -/
-theorem isSubgamePerfect_of_behavioral [Fintype ι] [DecidableEq ι]
+theorem isSubgamePerfect_of_behavioral [E.FiniteMovers] [DecidableEq ι]
     {bound : ℕ} (bounded : E.BoundedHorizon bound)
     (certificate : E.WellFoundedHistories) (profile : Profile M.strategicSignature)
     (utility : E.History → ι → ℝ)
@@ -142,14 +142,14 @@ theorem isSingleMoverBehavioralSubgamePerfect_bound_iff {first second : ℕ}
       (max first second) (Nat.le_max_right _ _))
 
 /-- The two constructions agree whenever both apply. -/
-theorem toSingleMoverBehavioralContinuationGameForm_eq [Fintype ι]
+theorem toSingleMoverBehavioralContinuationGameForm_eq [E.FiniteMovers]
     (fuel : ℕ) (history : E.History) :
     M.toSingleMoverBehavioralContinuationGameForm single fuel history =
       M.toBehavioralContinuationGameForm fuel history := by
   simp only [toSingleMoverBehavioralContinuationGameForm, toBehavioralContinuationGameForm,
     M.runSingleMoverBehavioralFrom_eq_runBehavioralFrom]
 
-theorem isSingleMoverBehavioralSubgamePerfect_iff_behavioral [Fintype ι]
+theorem isSingleMoverBehavioralSubgamePerfect_iff_behavioral [E.FiniteMovers]
     {bound : ℕ} (bounded : E.BoundedHorizon bound)
     (profile : Profile M.behavioralSignature) (utility : E.History → ι → ℝ) :
     M.IsSingleMoverBehavioralSubgamePerfect single bounded profile utility ↔

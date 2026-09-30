@@ -132,7 +132,7 @@ abbrev ContinuationRunner :=
   ((i : ι) → M.BehavioralPolicy i) → E.History → PMF E.History
 
 /-- Behavioral play cut off after `fuel` steps. -/
-abbrev truncatedRunner [Fintype ι] (fuel : ℕ) : M.ContinuationRunner :=
+abbrev truncatedRunner [E.FiniteMovers] (fuel : ℕ) : M.ContinuationRunner :=
   fun policies => M.runBehavioralFrom policies fuel
 
 namespace BehavioralAssessment
@@ -258,14 +258,14 @@ theorem isSequentiallyRationalWith_zero [DecidableEq ι]
 finite-prefix quantity: once every legal history has stopped within `fuel`
 steps it is the terminal continuation context, and with fewer steps it scores
 the truncated game rather than the original one. -/
-def truncatedContinuationContext [Fintype ι] [DecidableEq ι]
+def truncatedContinuationContext [E.FiniteMovers] [DecidableEq ι]
     (A : M.BehavioralAssessment) {i : ι}
     (site : M.InformationSite i) (payoff : E.History → ℝ) (fuel : ℕ) :
     GameTheory.Protocol.Context (M.BehavioralPolicy i) E.History :=
   A.continuationContextWith (M.truncatedRunner fuel) site payoff
 
 @[simp]
-theorem truncatedContinuationContext_value [Fintype ι] [DecidableEq ι]
+theorem truncatedContinuationContext_value [E.FiniteMovers] [DecidableEq ι]
     (A : M.BehavioralAssessment) {i : ι}
     (site : M.InformationSite i) (payoff : E.History → ℝ) (fuel : ℕ)
     (alternative : M.BehavioralPolicy i) :
@@ -278,7 +278,7 @@ theorem truncatedContinuationContext_value [Fintype ι] [DecidableEq ι]
 
 /-- Once every legal history has stopped by `bound`, extra fuel leaves every
 whole-policy continuation law and its guarded value domain unchanged. -/
-theorem truncatedContinuationContext_bound_add [Fintype ι] [DecidableEq ι]
+theorem truncatedContinuationContext_bound_add [E.FiniteMovers] [DecidableEq ι]
     (A : M.BehavioralAssessment) (bound : ℕ)
     (hbound : E.BoundedHorizon bound)
     (extra : ℕ) {i : ι} (site : M.InformationSite i)

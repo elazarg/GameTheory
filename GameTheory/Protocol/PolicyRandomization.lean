@@ -461,14 +461,14 @@ def CoversInformationSites
 /-- Information sites at nonterminal histories with positive probability at
 some time up to the bounded horizon. Arbitrary PMF branching makes this a set,
 not generally a finite set. -/
-def behavioralSupportSitesFrom [Fintype ι]
+def behavioralSupportSitesFrom [E.FiniteMovers]
     (policy : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ)
     (start : E.History) (i : ι) : Set (M.InfoState i) :=
   {info | ∃ elapsed ≤ fuel, ∃ later : E.History,
     later ∈ (M.runBehavioralFrom policy elapsed start).support ∧
       ¬ E.terminal later.state ∧ M.infoOf i later.trace = info}
 
-theorem mem_behavioralSupportSitesFrom [Fintype ι]
+theorem mem_behavioralSupportSitesFrom [E.FiniteMovers]
     (policy : (i : ι) → M.BehavioralPolicy i) (fuel elapsed : ℕ)
     (helapsed : elapsed ≤ fuel) (start later : E.History)
     (hlater : later ∈ (M.runBehavioralFrom policy elapsed start).support)
@@ -479,7 +479,7 @@ theorem mem_behavioralSupportSitesFrom [Fintype ι]
 
 /-- Reachable behavioral information coordinates through a finite horizon
 form a countable set, even when the chance and action carriers are infinite. -/
-theorem behavioralSupportSitesFrom_countable [Fintype ι]
+theorem behavioralSupportSitesFrom_countable [E.FiniteMovers]
     (policy : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ)
     (start : E.History) (i : ι) :
     (M.behavioralSupportSitesFrom policy fuel start i).Countable := by
@@ -496,7 +496,7 @@ theorem behavioralSupportSitesFrom_countable [Fintype ι]
 
 /-- Under local full support, every nonterminal counterfactual history reached
 within the horizon belongs to the support-site set. -/
-theorem behavioralSupportSitesFrom_covers_of_fullSupport [Fintype ι]
+theorem behavioralSupportSitesFrom_covers_of_fullSupport [E.FiniteMovers]
     (policy : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ)
     (start : E.History)
     (hfull : ∀ i info (choice : M.Choice i info),
@@ -902,7 +902,7 @@ theorem runMixed_toMixedWithin [Fintype ι]
 
 /-- A finite reachable-support certificate becomes a finite site cover under
 full local support. -/
-theorem behavioralSupportSitesFrom_finite_covers_of_fullSupport [Fintype ι]
+theorem behavioralSupportSitesFrom_finite_covers_of_fullSupport [E.FiniteMovers]
     (policy : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ)
     (start : E.History)
     (hfinite : ∀ i, (M.behavioralSupportSitesFrom policy fuel start i).Finite)

@@ -79,7 +79,7 @@ theorem behavioralAssessmentConvergesPointwise_const
 Bayes-consistent behavioral assessments. No finite action or history carrier
 is required. The approximating laws themselves witness full support. -/
 def BehavioralAssessment.IsSequentiallyConsistent
-    [Fintype ι] (A : M.BehavioralAssessment)
+    [E.FiniteMovers] (A : M.BehavioralAssessment)
     (hantichain : M.DecisionInformationAntichain) : Prop :=
   A.IsLimitConsistent
     BehavioralAssessment.IsFullyMixed
@@ -90,7 +90,7 @@ def BehavioralAssessment.IsSequentiallyConsistent
 /-- A fully mixed assessment that already obeys Bayes' rule is
 sequentially consistent, witnessed by the constant approximating sequence. -/
 theorem BehavioralAssessment.IsSequentiallyConsistent.of_fullyMixed_bayes
-    [Fintype ι] {A : M.BehavioralAssessment}
+    [E.FiniteMovers] {A : M.BehavioralAssessment}
     (hantichain : M.DecisionInformationAntichain)
     (hfull : A.IsFullyMixed)
     (hbayes : BehavioralAssessment.IsBayesConsistent M A hantichain) :
@@ -101,7 +101,7 @@ theorem BehavioralAssessment.IsSequentiallyConsistent.of_fullyMixed_bayes
 /-- Sequential equilibrium is the existing context-local rationality predicate
 paired with Kreps-Wilson consistency. -/
 def BehavioralAssessment.IsSequentialEquilibriumFor
-    [Fintype ι] (A : M.BehavioralAssessment)
+    [E.FiniteMovers] (A : M.BehavioralAssessment)
     (hantichain : M.DecisionInformationAntichain)
     (context : (i : ι) → (site : M.InformationSite i) →
       GameTheory.Protocol.Context
@@ -109,7 +109,7 @@ def BehavioralAssessment.IsSequentialEquilibriumFor
   A.IsSequentiallyRationalFor context ∧ A.IsSequentiallyConsistent hantichain
 
 theorem BehavioralAssessment.isSequentialEquilibriumFor_iff
-    [Fintype ι] (A : M.BehavioralAssessment)
+    [E.FiniteMovers] (A : M.BehavioralAssessment)
     (hantichain : M.DecisionInformationAntichain)
     (context : (i : ι) → (site : M.InformationSite i) →
       GameTheory.Protocol.Context

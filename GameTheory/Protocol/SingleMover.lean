@@ -103,7 +103,7 @@ theorem singleMoverJoint_marginal (profile : ∀ who, M.BehavioralPolicy who)
 
 /-- The single-mover construction is the canonical behavioral product when
 the ambient player universe is finite. -/
-theorem singleMoverJoint_eq_behavioralJoint [Fintype ι]
+theorem singleMoverJoint_eq_behavioralJoint [E.FiniteMovers]
     (profile : ∀ who, M.BehavioralPolicy who) (history : E.History)
     (running : ¬ E.terminal history.state) :
     M.singleMoverJoint single profile history running =
@@ -117,7 +117,7 @@ theorem singleMoverJoint_eq_behavioralJoint [Fintype ι]
     exact (M.behavioralJoint_eq_pure_of_no_active profile history.trace running
       (fun who acts => active ⟨who, acts⟩)).symm
 
-theorem runSingleMoverBehavioralFrom_eq_runBehavioralFrom [Fintype ι]
+theorem runSingleMoverBehavioralFrom_eq_runBehavioralFrom [E.FiniteMovers]
     (profile : ∀ who, M.BehavioralPolicy who) (fuel : ℕ) (history : E.History) :
     M.runSingleMoverBehavioralFrom single profile fuel history =
       M.runBehavioralFrom profile fuel history := by

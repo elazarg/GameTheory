@@ -30,14 +30,14 @@ namespace InformationModel
 
 /-- The expected one-step change of `value` along the canonical behavioral run. -/
 noncomputable def runBehavioralStepGain
-    [Fintype ι] (strategy : (i : ι) → M.BehavioralPolicy i)
+    [E.FiniteMovers] (strategy : (i : ι) → M.BehavioralPolicy i)
     (value : E.History → ℝ) (time : ℕ) : ℝ :=
   expect (M.runBehavioral strategy time) (fun history =>
     expect (M.runBehavioralFrom strategy 1 history) value - value history)
 
 /-- Expected one-step changes telescope along the canonical behavioral run. -/
 theorem runBehavioral_expect_sub_eq_sum_stepGains
-    [Fintype ι]
+    [E.FiniteMovers]
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (value : E.History → ℝ) (fuel : ℕ)
     (hintegrable : ∀ time, time ≤ fuel →
@@ -79,7 +79,7 @@ theorem runBehavioral_expect_sub_eq_sum_stepGains
 
 /-- A nonterminal history can occur in a root run only at its own trace length. -/
 theorem runBehavioral_prob_eq_zero_of_length_ne
-    [Fintype ι]
+    [E.FiniteMovers]
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (fuel : ℕ) (history : E.History)
     (hterminal : ¬ E.terminal history.state)
@@ -97,7 +97,7 @@ theorem runBehavioral_prob_eq_zero_of_length_ne
 /-- In bounded play, summing a function that vanishes at terminal histories
 over elapsed times gives its complete-history reach-weighted sum. -/
 theorem sum_runBehavioral_expect_eq_sum_historyReach
-    [Fintype ι] [Fintype E.History]
+    [E.FiniteMovers] [Fintype E.History]
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (value : E.History → ℝ) {bound : ℕ}
     (hbound : E.BoundedHorizon bound)
@@ -128,7 +128,7 @@ theorem sum_runBehavioral_expect_eq_sum_historyReach
 /-- The finite occupation identity, with no synchrony assumption on the
 histories being grouped by an information model. -/
 theorem runBehavioral_expect_sub_eq_sum_historyStepGains
-    [Fintype ι] [Fintype E.History]
+    [E.FiniteMovers] [Fintype E.History]
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (value : E.History → ℝ) {bound : ℕ}
     (hbound : E.BoundedHorizon bound) :
@@ -157,7 +157,7 @@ theorem runBehavioral_expect_sub_eq_sum_historyStepGains
   exact M.sum_runBehavioral_expect_eq_sum_historyReach strategy delta hbound hdelta
 
 private theorem runBehavioralFrom_one_bind_bound
-    [Fintype ι] (strategy : (i : ι) → M.BehavioralPolicy i) {bound : ℕ}
+    [E.FiniteMovers] (strategy : (i : ι) → M.BehavioralPolicy i) {bound : ℕ}
     (hbound : E.BoundedHorizon bound) (history : E.History) :
     (M.runBehavioralFrom strategy 1 history).bind (M.runBehavioralFrom strategy bound) =
       M.runBehavioralFrom strategy bound history :=
@@ -173,7 +173,7 @@ private theorem runBehavioralFrom_one_bind_bound
 /-- After a bounded horizon, averaging the continuation values over one more
 step recovers the value of the whole run. -/
 theorem runBehavioralFrom_expect_continuation_eq
-    [Fintype ι] (strategy : (i : ι) → M.BehavioralPolicy i)
+    [E.FiniteMovers] (strategy : (i : ι) → M.BehavioralPolicy i)
     (payoff : E.History → ℝ) {bound : ℕ}
     (hbound : E.BoundedHorizon bound) (history : E.History)
     (hpayoff : PayoffIntegrable
@@ -188,7 +188,7 @@ theorem runBehavioralFrom_expect_continuation_eq
 /-- The finite-history specialization of
 `runBehavioralFrom_expect_continuation_eq`. -/
 theorem runBehavioralFrom_expect_raw_continuation_eq
-    [Fintype ι] [Fintype E.History]
+    [E.FiniteMovers] [Fintype E.History]
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (payoff : E.History → ℝ) {bound : ℕ}
     (hbound : E.BoundedHorizon bound) (history : E.History) :
@@ -201,7 +201,7 @@ theorem runBehavioralFrom_expect_raw_continuation_eq
 /-- The gain of replacing an entire profile is the alternative profile's
 reach-weighted sum of one-step changes in the baseline continuation value. -/
 theorem behavioralGain_eq_sum_historyStepGains
-    [Fintype ι] [Fintype E.History]
+    [E.FiniteMovers] [Fintype E.History]
     (baseline alternative : (i : ι) → M.BehavioralPolicy i)
     (payoff : E.History → ℝ) {bound : ℕ}
     (hbound : E.BoundedHorizon bound) :
@@ -231,7 +231,7 @@ theorem behavioralGain_eq_sum_historyStepGains
 /-- Installing one local law changes the current draw and then leaves the
 baseline continuation unchanged, because perfect recall excludes a revisit. -/
 private theorem supported_one_step_eq_extend_early
-    [Fintype ι]
+    [E.FiniteMovers]
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (next : E.History) (hnext : next ∈ (M.runBehavioralFrom strategy 1 history).support) :
@@ -247,7 +247,7 @@ private theorem supported_one_step_eq_extend_early
   exact (PMF.mem_support_pure_iff _ _).mp hnext
 
 theorem continuation_withLaw_eq_step_expect
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (hrecall : M.DecisionRecall)
     (baseline : (i : ι) → M.BehavioralPolicy i)
     (who : ι) [DecidableEq (M.InfoState who)]
@@ -543,7 +543,7 @@ theorem BehavioralPolicy.spliceAfter_at_history
 /-- The current decision is absent from the player's past decisions under
 decision recall. Nonterminality ensures that a genuine action can be taken. -/
 theorem infoOf_not_mem_actedAt_of_decisionRecall
-    [Fintype ι] (hrecall : M.DecisionRecall)
+    [E.FiniteMovers] (hrecall : M.DecisionRecall)
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (who : ι) (history : E.History)
     (hterm : ¬ E.terminal history.state) (hactive : E.active history.state who) :
@@ -559,7 +559,7 @@ theorem infoOf_not_mem_actedAt_of_decisionRecall
   exact hnodup.1
 
 private theorem supported_one_step_eq_extend
-    [Fintype ι]
+    [E.FiniteMovers]
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (next : E.History) (hnext : next ∈ (M.runBehavioralFrom strategy 1 history).support) :
@@ -577,7 +577,7 @@ private theorem supported_one_step_eq_extend
 /-- Once play starts at the selected information set, the spliced policy is
 indistinguishable from the entire alternative continuation policy. -/
 theorem runBehavioralFrom_spliceAfter_eq
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (hrecall : M.DecisionRecall)
     (baseline : (i : ι) → M.BehavioralPolicy i)
     (who : ι) (site : M.InformationSite who)
@@ -615,7 +615,7 @@ theorem runBehavioralFrom_spliceAfter_eq
 reach-weighted sum of gains on its entire fiber, even if its histories occur
 at different trace depths. -/
 theorem rootGain_spliceAfter_eq_sum_informationGain
-    [Fintype ι] [DecidableEq ι] [Fintype E.History]
+    [E.FiniteMovers] [DecidableEq ι] [Fintype E.History]
     (hrecall : M.DecisionRecall)
     (baseline : (i : ι) → M.BehavioralPolicy i)
     (who : ι) [DecidableEq (M.InfoState who)] (site : M.InformationSite who)
@@ -777,7 +777,7 @@ theorem rootGain_spliceAfter_eq_sum_informationGain
 /-- A Bayes-consistent assessment evaluates a positive-mass information set
 with the canonical normalized-reach continuation value. -/
 theorem BehavioralAssessment.continuationContextWith_integrable_iff_bayesContinuation
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (assessment : M.BehavioralAssessment)
     (who : ι) (site : M.InformationSite who)
     (hantichain : site.IsHistoryAntichain)
@@ -814,7 +814,7 @@ theorem BehavioralAssessment.continuationContextWith_integrable_iff_bayesContinu
     exact payoffIntegrable_congr_law hlaw.symm hctx
 
 theorem BehavioralAssessment.continuationContextWith_value_eq_bayesContinuationValue
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (assessment : M.BehavioralAssessment)
     (who : ι) (site : M.InformationSite who)
     (hantichain : site.IsHistoryAntichain)
@@ -868,7 +868,7 @@ theorem BehavioralAssessment.continuationContextWith_integrable_of_conditional
 /-- Multiplying a Bayes continuation gain by the information-event mass
 recovers the unnormalized sum on that information fiber. -/
 theorem BehavioralAssessment.informationMass_mul_continuationGain_eq_sum
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (assessment : M.BehavioralAssessment)
     (who : ι) (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]

@@ -50,7 +50,7 @@ private theorem historyLastJoint?_extend (history : E.History)
 used the entire fuel budget. This is the bounded-cut fact needed to compare a
 root run with continuation values at one information depth. -/
 theorem terminal_or_trace_length_eq_of_mem_support_runBehavioralFrom
-    [Fintype ι]
+    [E.FiniteMovers]
     (policies : (player : ι) → M.BehavioralPolicy player) :
     ∀ (fuel : ℕ) (start target : E.History),
       target ∈ (M.runBehavioralFrom policies fuel start).support →
@@ -177,7 +177,7 @@ def opponentsStepProb [Fintype ι] [DecidableEq ι]
       (choicesOfLegal M trace joint other)).toReal
 
 /-- The actual probability coefficient of one joint/transition pair. -/
-def stepProb [Fintype ι]
+def stepProb [E.FiniteMovers]
     (policies : (player : ι) → M.BehavioralPolicy player)
     {state : E.State} (trace : E.Trace state)
     (joint : { action : ∀ i, Option (E.Action i) // E.Legal state action })
@@ -187,7 +187,7 @@ def stepProb [Fintype ι]
 
 /-- The PMF mass of an extended history factors into its joint and transition
 masses in the canonical one-step continuation law. -/
-private theorem runBehavioralFrom_one_apply_extend [Fintype ι]
+private theorem runBehavioralFrom_one_apply_extend [E.FiniteMovers]
     (policies : (player : ι) → M.BehavioralPolicy player)
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (joint : { action : ∀ i, Option (E.Action i) //
@@ -252,7 +252,7 @@ private theorem runBehavioralFrom_one_apply_extend [Fintype ι]
 
 /-- The step coefficient is exactly the mass of the corresponding extended
 history in the canonical one-step continuation law. -/
-theorem runBehavioralFrom_one_prob_extend [Fintype ι]
+theorem runBehavioralFrom_one_prob_extend [E.FiniteMovers]
     (policies : (player : ι) → M.BehavioralPolicy player)
     (history : E.History) (hterm : ¬ E.terminal history.state)
     (joint : { action : ∀ i, Option (E.Action i) // E.Legal history.state action })
@@ -268,7 +268,7 @@ theorem runBehavioralFrom_one_prob_extend [Fintype ι]
 
 /-- Canonical history reach has the continuation equation: prior reach times
 the exact one-step joint/transition coefficient. -/
-theorem historyReachProbability_extend [Fintype ι]
+theorem historyReachProbability_extend [E.FiniteMovers]
     (policies : (player : ι) → M.BehavioralPolicy player)
     {source target : E.State} (prior : E.Trace source)
     (joint : ∀ i, Option (E.Action i)) (isLegal : E.Legal source joint)

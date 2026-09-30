@@ -136,7 +136,7 @@ theorem BehavioralPolicy.extend_restrict_at_history {who : ι}
   · exact M.behavioral_eq_of_not_active _ _ history.trace active
 
 /-- Behavioral decision tables preserve every complete continuation law. -/
-theorem runBehavioralFrom_extend_restrict [Fintype ι]
+theorem runBehavioralFrom_extend_restrict [E.FiniteMovers]
     (policies fallback : (who : ι) → M.BehavioralPolicy who)
     (fuel : ℕ) (history : E.History) :
     M.runBehavioralFrom

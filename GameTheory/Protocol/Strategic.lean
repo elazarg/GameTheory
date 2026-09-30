@@ -142,7 +142,7 @@ theorem toGameForm_play (horizon : ℕ) (profile : Profile M.strategicSignature)
 theorem toGameForm_sig (horizon : ℕ) :
     (M.toGameForm horizon).sig = M.strategicSignature := rfl
 
-variable [Fintype ι]
+variable [E.FiniteMovers]
 
 /-- Present behavioral strategies to the static core without defining another
 runner: evaluation is exactly `InformationModel.runBehavioral`. -/
@@ -174,10 +174,11 @@ when the two presentations induce the same law; the hypotheses cannot be
 dropped, as the repeated-information-set test demonstrates.
 -/
 
+omit [E.FiniteMovers] in
 /-- Static mixing of the pure-policy compilation is exactly the existing mixed
 history evaluator, not a parallel semantics. -/
 @[simp]
-theorem toGameForm_mixed_play (horizon : ℕ)
+theorem toGameForm_mixed_play [Fintype ι] (horizon : ℕ)
     (mixed : (i : ι) → M.MixedPolicy i) :
     ((M.toGameForm horizon).mixed).play mixed = M.runMixed mixed horizon := rfl
 

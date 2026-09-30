@@ -302,7 +302,7 @@ theorem runFrom_apply_congr_of_queriedInfos
 /-- The same finite target-trace coordinates determine the exact-depth
 behavioral point mass. -/
 theorem runBehavioralFrom_apply_congr_of_queriedInfos
-    [Fintype ι]
+    [E.FiniteMovers]
     (first second : (i : ι) → M.BehavioralPolicy i)
     (fuel : ℕ) (start target : E.History)
     (hdepth : target.trace.length = start.trace.length + fuel)
@@ -343,7 +343,7 @@ theorem run_apply_congr_of_queriedInfos
 
 /-- The same finite target-trace agreement fixes a behavioral point mass at
 any fuel from the initial history. -/
-theorem runBehavioral_apply_congr_of_queriedInfos [Fintype ι]
+theorem runBehavioral_apply_congr_of_queriedInfos [E.FiniteMovers]
     (first second : (i : ι) → M.BehavioralPolicy i)
     (fuel : ℕ) (target : E.History)
     (hagree : ∀ i info, info ∈ M.queriedInfos i target.trace →

@@ -37,7 +37,7 @@ variable (M : InformationModel E)
 
 section ReachWeight
 
-variable [Fintype ι]
+variable [E.FiniteMovers]
 
 /-- The probability weight of one complete history, evaluated at exactly its
 trace depth in the canonical behavioral runner. -/
@@ -51,7 +51,7 @@ end ReachWeight
 /-- The finite-depth runner's support contains only histories reachable from
 its starting history within the supplied fuel. -/
 theorem runBehavioralFrom_reachesWithin
-    [Fintype ι]
+    [E.FiniteMovers]
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (fuel : ℕ) (start target : E.History)
     (h : target ∈ (M.runBehavioralFrom strategy fuel start).support) :
@@ -91,7 +91,7 @@ theorem mem_historyCone_of_reachesWithin {history target : E.History}
 /-- A depth-`d` run can contribute to a history cone rooted at depth `d`
 only from that root itself. Terminal absorption handles early stopping. -/
 theorem eq_of_runBehavioral_support_and_cone
-    [Fintype ι]
+    [E.FiniteMovers]
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (history prior target : E.History)
     (hdepth : prior ∈ (M.runBehavioral strategy history.trace.length).support)
@@ -123,7 +123,7 @@ theorem eq_of_runBehavioral_support_and_cone
 /-- At any later depth, a history cone has exactly the reach weight of its
 root at the root's own depth. -/
 theorem runBehavioral_cone_mass
-    [Fintype ι] (strategy : (i : ι) → M.BehavioralPolicy i)
+    [E.FiniteMovers] (strategy : (i : ι) → M.BehavioralPolicy i)
     (history : E.History) (extra : ℕ) :
     (M.runBehavioral strategy (history.trace.length + extra)).toOuterMeasure
         (historyCone history) =
@@ -172,7 +172,7 @@ local instance : MeasurableSpace E.History := ⊤
 
 /-- Any finite collection of histories in an information antichain has total
 reach weight at most one. Branching and the history carrier may be infinite. -/
-theorem InformationSite.sum_reach_le_one [Fintype ι] {i : ι}
+theorem InformationSite.sum_reach_le_one [E.FiniteMovers] {i : ι}
     (site : M.InformationSite i) (hanti : site.IsHistoryAntichain)
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (s : Finset (M.InformationHistory i site.1)) :
@@ -214,7 +214,7 @@ theorem InformationSite.sum_reach_le_one [Fintype ι] {i : ι}
 
 /-- A disjoint outside history consumes probability mass in addition to a
 finite part of an information antichain. -/
-theorem InformationSite.sum_reach_add_outside_le_one [Fintype ι] {i : ι}
+theorem InformationSite.sum_reach_add_outside_le_one [E.FiniteMovers] {i : ι}
     (site : M.InformationSite i) (hanti : site.IsHistoryAntichain)
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (outside : E.History)

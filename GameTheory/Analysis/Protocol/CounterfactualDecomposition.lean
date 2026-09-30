@@ -32,7 +32,7 @@ namespace InformationModel
 still be taken. In particular, policies may first differ exactly at the end of
 the supplied fuel block. -/
 theorem runBehavioralFrom_congr_before
-    [Fintype ι]
+    [E.FiniteMovers]
     {first second : (i : ι) → M.BehavioralPolicy i} :
     ∀ (fuel : ℕ) (history : E.History),
       (∀ (later : E.History),
@@ -74,7 +74,7 @@ theorem runBehavioralFrom_congr_before
 before a common-depth site. The alternative need agree with the baseline only
 away from that one information state. -/
 theorem runBehavioral_prefix_eq_of_agree_off_site
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (who : ι) (site : M.InformationSite who)
     (alternative : M.BehavioralPolicy who) (depth : ℕ)
@@ -110,7 +110,7 @@ def RunnerReadsReachable (run : M.ContinuationRunner) : Prop :=
       ∀ i, first i (M.infoOf i later.trace) = second i (M.infoOf i later.trace)) →
     run first history = run second history
 
-theorem runnerReadsReachable_truncated [Fintype ι] (fuel : ℕ) :
+theorem runnerReadsReachable_truncated [E.FiniteMovers] (fuel : ℕ) :
     M.RunnerReadsReachable (M.truncatedRunner fuel) :=
   fun _ _ history hagree => M.runBehavioralFrom_congr fuel history
     fun later hreach hterm i => hagree later ⟨fuel, hreach⟩ hterm i
@@ -121,7 +121,7 @@ theorem runnerReadsReachable_terminal [Fintype ι] (certificate : E.WellFoundedH
 
 /-- Play cut off at `depth + fuel` splits at `depth` into the prefix law and
 play cut off after `fuel` more steps. -/
-theorem runBehavioral_add_eq_bind [Fintype ι]
+theorem runBehavioral_add_eq_bind [E.FiniteMovers]
     (policies : (i : ι) → M.BehavioralPolicy i) (depth fuel : ℕ) :
     M.runBehavioral policies (depth + fuel) =
       (M.runBehavioral policies depth).bind (M.truncatedRunner fuel policies) :=
@@ -142,7 +142,7 @@ theorem runBehavioralTerminalFrom_init_eq_bind [Fintype ι]
 into the prefix law and a continuation runner, whole-law integrability derives
 both supported continuation values and their integrable cut-law difference. -/
 theorem rootGain_eq_prefixExpectation
-    [Fintype ι]
+    [E.FiniteMovers]
     (first second : (i : ι) → M.BehavioralPolicy i)
     (payoff : E.History → ℝ) (depth : ℕ)
     (root : ((i : ι) → M.BehavioralPolicy i) → PMF E.History)
@@ -428,7 +428,7 @@ theorem counterfactualActionRegret_eq_of_agree_off_pastSite
 /-- The cut gain vanishes on every reached history outside the local
 replacement site, including histories absorbed before the cut depth. -/
 theorem cutGain_eq_zero_of_info_ne
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (run : M.ContinuationRunner) (hrun : M.RunnerReadsReachable run)
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (who : ι) (site : M.InformationSite who)

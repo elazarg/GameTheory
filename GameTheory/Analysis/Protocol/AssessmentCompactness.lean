@@ -124,7 +124,7 @@ theorem exists_subseq_behavioralAssessmentConvergesPointwise
 witnesses sequential consistency of its limit. This applies in particular to
 the common subsequence extracted by assessment compactness. -/
 theorem BehavioralAssessmentConvergesPointwise.isSequentiallyConsistent
-    [Fintype ι]
+    [E.FiniteMovers]
     {sequence : ℕ → M.BehavioralAssessment} {target : M.BehavioralAssessment}
     (hlimit : BehavioralAssessmentConvergesPointwise sequence target)
     (hantichain : M.DecisionInformationAntichain)
