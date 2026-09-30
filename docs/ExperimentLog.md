@@ -9827,3 +9827,51 @@ memory.
 - **Next action:** whether a site's Bayes belief is the law of the site
   ancestor of terminal play conditioned on passing through the site, which
   would give clock-free forms of the fixed-depth conditioning corollaries.
+
+### EXP-154: the agent normal form on terminal play and extensive-form perfection
+
+- **Date / status:** 2026-09-30; positive, scoped to finite histories.
+- **Question:** can the agent normal form be stated on terminal play and used
+  both to complete free information agents and to obtain extensive-form
+  trembling-hand perfection, with existence and the implication to sequential
+  equilibrium, without a common decision depth?
+- **Competing designs:** (a) evaluate agent play at a fixed horizon and compare
+  local deviations through depth-indexed continuation contexts; (b) evaluate
+  agent play on terminal histories and turn each agent's ex ante comparison
+  into a continuation comparison by the site's mass at fully mixed Bayes
+  assessments.
+- **Hypotheses:**
+  - *H1.* Mixed agent play equals behavioral terminal play whenever no
+    information value is revisited consequentially and the agents cover a
+    horizon bounding play.
+  - *H2.* At fully mixed Bayes assessments, an agent's deviation changes its
+    player's expected payoff by the site's mass times the change of the site's
+    continuation value, with no clock.
+  - *H3.* Perturbed equilibria exist for every tremble toward a reference, so
+    finite games have trembling-hand perfect equilibria, and under decision
+    recall a perfect profile of the agent form is the strategy of a sequential
+    equilibrium.
+- **Kill conditions:** the realization needs a common decision depth; the
+  local comparison loses a reach factor that cannot be divided out; the
+  perfect-to-sequential passage needs whole-policy optimality of the
+  approximants.
+- **Artifacts:** `Analysis/PerturbedEquilibrium.lean`, `Analysis/Protocol/AgentForm.lean`,
+  `Analysis/Protocol/ExtensiveFormPerfection.lean`,
+  `Analysis/Protocol/AgentCompletion.lean`, the repair lemma in
+  `Analysis/TremblingHand.lean`, `Analysis/Protocol/ExtensiveFormPerfectionTest.lean`.
+  Validation: `lake build GameTheory`, `lake lint`.
+- **Observations:**
+  - H1 held by composing the bounded-horizon identification of terminal play
+    with the finite-site mixed realization.
+  - H2 held: splicing a single-site law change after its own site changes
+    nothing, so the splice decomposition gives the identity directly.
+  - H3 held. The strategies respecting a lower bound of a weight times a
+    reference are exactly the reference mixtures, so simultaneous residual
+    best responses are perturbed equilibria. Only local optimality of the
+    approximants is needed: it passes to the consistent limit, and the
+    one-shot principle for consistent assessments supplies sequential
+    rationality.
+  - No kill condition fired.
+- **Outcome:** accepted for finitely many histories.
+- **Next action:** none planned. The agent completion is the input for
+  extending equilibria across action restrictions.

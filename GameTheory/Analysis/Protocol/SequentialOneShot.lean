@@ -349,6 +349,58 @@ theorem BehavioralAssessment.continuationGain_le_of_localGain_le
     _ ≤ _ := hroot.trans hsum
     _ = _ := by ring
 
+omit [Fintype ι] [DecidableEq ι] in
+/-- Splicing a single-site law change after its own site changes nothing. -/
+theorem spliceAfter_withLaw {who : ι} [DecidableEq (M.InfoState who)]
+    (policy : M.BehavioralPolicy who) (site : M.InformationSite who)
+    (law : PMF (M.Choice who site.1)) :
+    policy.spliceAfter M (policy.withLaw site.1 law) site.1 = policy.withLaw site.1 law := by
+  funext info
+  simp only [BehavioralPolicy.spliceAfter]
+  split
+  · rfl
+  · rename_i outside
+    exact (BehavioralPolicy.withLaw_of_ne _ _ _ fun same => outside (Or.inl same)).symm
+
+/-- **Local deviations at the root.** At a fully mixed Bayes assessment of a
+decision-recall protocol with finitely many histories, changing one site's law
+changes the value of terminal play by the site's mass times the change of that
+site's continuation value. -/
+theorem BehavioralAssessment.rootGain_withLaw_eq_mass_mul
+    [Finite E.History] (hrecall : M.DecisionRecall) (assessment : M.BehavioralAssessment)
+    (hfull : assessment.IsFullyMixed)
+    (hbayes : BehavioralAssessment.IsBayesConsistent M assessment
+      hrecall.decisionInformationAntichain)
+    (certificate : E.WellFoundedHistories) (who : ι) [DecidableEq (M.InfoState who)]
+    (payoff : E.History → ℝ) (site : M.InformationSite who) (law : PMF (M.Choice who site.1)) :
+    expect (M.runBehavioralTerminalFrom certificate (Profile.update (sig := M.behavioralSignature)
+        assessment.strategy who ((assessment.strategy who).withLaw site.1 law))
+          E.initHistory) payoff -
+      expect (M.runBehavioralTerminalFrom certificate assessment.strategy E.initHistory) payoff =
+    (M.informationMass assessment.strategy who site).toReal *
+      ((assessment.continuationContext certificate site payoff).value
+          ((assessment.strategy who).withLaw site.1 law) -
+        (assessment.continuationContext certificate site payoff).value
+          (assessment.strategy who)) := by
+  let _ := Fintype.ofFinite E.History
+  obtain ⟨horizon, -, hhorizon⟩ := E.exists_pos_boundedHorizon
+  rw [M.runBehavioralTerminalFrom_eq_runBehavioralFrom_of_bounded certificate hhorizon,
+    M.runBehavioralTerminalFrom_eq_runBehavioralFrom_of_bounded certificate hhorizon]
+  simp only [assessment.continuationContext_eq_truncated_of_bounded certificate hhorizon]
+  change _ = _ * ((assessment.continuationContextWith (M.truncatedRunner horizon) site
+    payoff).value _ - (assessment.continuationContextWith (M.truncatedRunner horizon) site
+      payoff).value _)
+  have hcut := M.rootGain_spliceAfter_eq_sum_informationGain hrecall assessment.strategy who
+    site ((assessment.strategy who).withLaw site.1 law) payoff hhorizon
+  rw [M.spliceAfter_withLaw] at hcut
+  have hmass := M.informationMass_pos_of_fullSupport assessment.strategy hfull who site
+  rw [assessment.informationMass_mul_continuationGain_eq_sum M who site
+    (hrecall.decisionInformationAntichain who site) hmass (hbayes who site hmass) _ payoff
+    (M.truncatedRunner horizon) (fun _ => payoffIntegrable_of_finite _ _)
+    (fun _ => payoffIntegrable_of_finite _ _)]
+  simp only [Profile.update_eq_self]
+  exact hcut
+
 /-- **One-shot deviation principle for fully mixed Bayes assessments.** In a
 decision-recall protocol with finitely many histories, optimality against
 every allowed single-site law implies optimality against every whole

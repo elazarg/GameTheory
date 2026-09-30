@@ -105,10 +105,6 @@ private def scaledPerturbation (profile : Profile F.sig.mixed)
     (n : ℕ) : F.Perturbation :=
   fun i action => vanishingWeight n * (profile i action).toReal
 
-private def perturbationMass [∀ i, Fintype (F.sig.Strategy i)]
-    (lower : F.Perturbation) (who : ι) : ℝ :=
-  ∑ action, lower who action
-
 /-- Every full-support mixed Nash equilibrium is trembling-hand perfect.  Its
 own profile is feasible and remains optimal in each restricted game; scaling
 its positive masses supplies a vanishing perturbation certificate. -/
@@ -135,75 +131,54 @@ theorem _root_.GameTheory.IsNash.isTremblingHandPerfect_of_fullSupport
       vanishingWeight_tendsto_zero.mul_const ((profile i action).toReal)
   · exact Analysis.mixedProfileConvergesPointwise_const profile
 
-/-- With integrable pure play, a trembling-hand perfect profile is mixed Nash.
-Finite action carriers
-let an arbitrary mixed deviation be repaired to satisfy each positive lower
-bound; those repairs converge back to the original deviation as the bounds
-vanish. Expected-utility continuity then passes the perturbed equilibrium
-inequalities to the limit. -/
-theorem IsTremblingHandPerfect.isNash
-    [∀ i, Fintype (F.sig.Strategy i)]
-    {utility : F.sig.Outcome → ι → ℝ}
-    {profile : Profile F.sig.mixed}
-    (hperfect : F.IsTremblingHandPerfect (euPreference utility) profile)
-    (hintegrable : F.HasIntegrableUtility utility) :
-    IsNash F.mixed (euPreference utility) profile := by
-  rw [isNash_iff]
-  intro who replacement
-  rcases hperfect with ⟨lower, approximating, hequilibria, hzero, hconverges⟩
+omit [Fintype ι] [DecidableEq ι] in
+/-- **Repairing a deviation.** Along lower bounds that some mixed strategies
+respect and that vanish, every mixed strategy is the limit of mixed strategies
+respecting the bounds. -/
+theorem exists_repair_convergesPointwise {who : ι} [Fintype (F.sig.Strategy who)]
+    (lower : ℕ → F.sig.Strategy who → ℝ) (approximating : ℕ → PMF (F.sig.Strategy who))
+    (nonnegative : ∀ n action, 0 ≤ lower n action)
+    (respects : ∀ n, F.StrategyRespectsPerturbation (lower n) (approximating n))
+    (vanishes : ∀ action, Tendsto (fun n => lower n action) atTop (nhds 0))
+    (replacement : PMF (F.sig.Strategy who)) :
+    ∃ repaired : ℕ → PMF (F.sig.Strategy who),
+      (∀ n, F.StrategyRespectsPerturbation (lower n) (repaired n)) ∧
+        PMFConvergesPointwise repaired replacement := by
   have hprobSum (n : ℕ) :
-      ∑ action, (approximating n who action).toReal = 1 := by
-    simpa only [tsum_fintype] using pmf_weight_tsum_one (approximating n who)
+      ∑ action, (approximating n action).toReal = 1 := by
+    simpa only [tsum_fintype] using pmf_weight_tsum_one (approximating n)
   have hreplacementSum : ∑ action, (replacement action).toReal = 1 := by
     simpa only [tsum_fintype] using pmf_weight_tsum_one replacement
-  have hlowerNonneg (n : ℕ) (action : F.sig.Strategy who) :
-      0 ≤ lower n who action :=
-    (hequilibria n).1 who action |>.le
-  have hmassLe (n : ℕ) :
-      perturbationMass F (lower n) who ≤ 1 := by
+  have hmassLe (n : ℕ) : ∑ action, lower n action ≤ 1 := by
     calc
-      ∑ action, lower n who action ≤
-          ∑ action, (approximating n who action).toReal := by
-        apply Finset.sum_le_sum
-        intro action _
-        exact (hequilibria n).2.1 who action
+      ∑ action, lower n action ≤ ∑ action, (approximating n action).toReal :=
+        Finset.sum_le_sum fun action _ => respects n action
       _ = 1 := hprobSum n
   let weight : ℕ → F.sig.Strategy who → ℝ := fun n action =>
-    lower n who action +
-      (1 - perturbationMass F (lower n) who) * (replacement action).toReal
+    lower n action + (1 - ∑ other, lower n other) * (replacement action).toReal
   have hweightNonneg (n : ℕ) (action : F.sig.Strategy who) :
       0 ≤ weight n action := by
-    apply add_nonneg (hlowerNonneg n action)
-    exact mul_nonneg (sub_nonneg.mpr (hmassLe n))
-      ENNReal.toReal_nonneg
+    apply add_nonneg (nonnegative n action)
+    exact mul_nonneg (sub_nonneg.mpr (hmassLe n)) ENNReal.toReal_nonneg
   have hweightSum (n : ℕ) : ∑ action, weight n action = 1 := by
-    simp only [weight, Finset.sum_add_distrib, ← Finset.mul_sum,
-      perturbationMass, hreplacementSum]
+    simp only [weight, Finset.sum_add_distrib, ← Finset.mul_sum, hreplacementSum]
     ring
   let repaired : ℕ → PMF (F.sig.Strategy who) := fun n =>
     PMF.ofFintype (fun action => ENNReal.ofReal (weight n action)) (by
       rw [← ENNReal.ofReal_sum_of_nonneg
         (fun action _ => hweightNonneg n action), hweightSum]
       norm_num)
-  have hrepairedRespects (n : ℕ) :
-      F.StrategyRespectsPerturbation (lower n who) (repaired n) := by
-    intro action
-    rw [show (repaired n action).toReal = weight n action by
-      simp [repaired, PMF.ofFintype_apply, ENNReal.toReal_ofReal,
-        hweightNonneg]]
+  refine ⟨repaired, fun n action => ?_, fun action => ?_⟩
+  · rw [show (repaired n action).toReal = weight n action by
+      simp [repaired, PMF.ofFintype_apply, ENNReal.toReal_ofReal, hweightNonneg]]
     exact le_add_of_nonneg_right
-      (mul_nonneg (sub_nonneg.mpr (hmassLe n))
-        ENNReal.toReal_nonneg)
-  have hmassZero :
-      Tendsto (fun n => perturbationMass F (lower n) who) atTop (nhds 0) := by
-    unfold perturbationMass
-    simpa using tendsto_finsetSum Finset.univ fun action _ => hzero who action
-  have hrepairedConverges :
-      PMFConvergesPointwise repaired replacement := by
-    intro action
+      (mul_nonneg (sub_nonneg.mpr (hmassLe n)) ENNReal.toReal_nonneg)
+  · have hmassZero :
+        Tendsto (fun n => ∑ other, lower n other) atTop (nhds 0) := by
+      simpa using tendsto_finsetSum Finset.univ fun other _ => vanishes other
     have hone : Tendsto (fun _ : ℕ => (1 : ℝ)) atTop (nhds 1) :=
       tendsto_const_nhds
-    have hlimit := (hzero who action).add
+    have hlimit := (vanishes action).add
       ((hone.sub hmassZero).mul_const ((replacement action).toReal))
     have hweight : Tendsto (fun n => weight n action) atTop
         (nhds ((replacement action).toReal)) := by
@@ -214,6 +189,26 @@ theorem IsTremblingHandPerfect.isNash
     rw [← htarget]
     simpa only [repaired, PMF.ofFintype_apply] using
       ENNReal.tendsto_ofReal hweight
+
+/-- With integrable pure play, a trembling-hand perfect profile is mixed Nash.
+Finite action carriers let an arbitrary mixed deviation be repaired to satisfy
+each positive lower bound; those repairs converge back to the original
+deviation as the bounds vanish. Expected-utility continuity then passes the
+perturbed equilibrium inequalities to the limit. -/
+theorem IsTremblingHandPerfect.isNash
+    [∀ i, Fintype (F.sig.Strategy i)]
+    {utility : F.sig.Outcome → ι → ℝ}
+    {profile : Profile F.sig.mixed}
+    (hperfect : F.IsTremblingHandPerfect (euPreference utility) profile)
+    (hintegrable : F.HasIntegrableUtility utility) :
+    IsNash F.mixed (euPreference utility) profile := by
+  rw [isNash_iff]
+  intro who replacement
+  rcases hperfect with ⟨lower, approximating, hequilibria, hzero, hconverges⟩
+  obtain ⟨repaired, hrepairedRespects, hrepairedConverges⟩ :=
+    F.exists_repair_convergesPointwise (fun n => lower n who) (fun n => approximating n who)
+      (fun n action => ((hequilibria n).1 who action).le)
+      (fun n => (hequilibria n).2.1 who) (hzero who) replacement
   have hupdatedConverges (other : ι) :
       PMFConvergesPointwise
         (fun n => Profile.update (approximating n) who (repaired n) other)

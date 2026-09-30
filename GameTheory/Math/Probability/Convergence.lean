@@ -23,6 +23,13 @@ def PMFConvergesPointwise {α : Type*}
     (sequence : ℕ → PMF α) (target : PMF α) : Prop :=
   ∀ value : α, Tendsto (fun n => sequence n value) atTop (nhds (target value))
 
+/-- A sequence of laws has at most one pointwise limit. -/
+theorem PMFConvergesPointwise.unique {α : Type*}
+    {sequence : ℕ → PMF α} {first second : PMF α}
+    (firstLimit : PMFConvergesPointwise sequence first)
+    (secondLimit : PMFConvergesPointwise sequence second) : first = second :=
+  PMF.ext fun value => tendsto_nhds_unique (firstLimit value) (secondLimit value)
+
 theorem pmfConvergesPointwise_const {α : Type*} (law : PMF α) :
     PMFConvergesPointwise (fun _ => law) law :=
   fun _ => tendsto_const_nhds
@@ -476,5 +483,30 @@ theorem PMFConvergesPointwise.subseq {α : Type*}
     {subseq : ℕ → ℕ} (hsubseq : StrictMono subseq) :
     PMFConvergesPointwise (fun n => sequence (subseq n)) target :=
   fun value => (h value).comp hsubseq.tendsto_atTop
+
+/-- Removing a vanishing tremble toward a fixed reference keeps the limit, even
+when the untrembled laws vary along the sequence. -/
+theorem PMFConvergesPointwise.of_mix_vanishing {α : Type*}
+    (reference : PMF α) (responses : ℕ → PMF α) (limit : PMF α)
+    (weight : ℕ → ℝ) (nonnegative : ∀ n, 0 ≤ weight n)
+    (belowOne : ∀ n, weight n < 1) (vanishes : Tendsto weight atTop (nhds 0))
+    (converges : PMFConvergesPointwise
+      (fun n => mix (weight n) (nonnegative n) (belowOne n).le reference (responses n))
+      limit) : PMFConvergesPointwise responses limit := by
+  rw [pmfConvergesPointwise_iff_toReal] at converges ⊢
+  intro value
+  have numerator := (converges value).sub (vanishes.mul_const ((reference value).toReal))
+  have denominator := (tendsto_const_nhds (x := (1 : ℝ))).sub vanishes
+  have quotient := numerator.div denominator (by norm_num : (1 : ℝ) - 0 ≠ 0)
+  have same (n : ℕ) :
+      (((mix (weight n) (nonnegative n) (belowOne n).le reference (responses n)) value).toReal -
+          weight n * (reference value).toReal) / (1 - weight n) =
+        ((responses n) value).toReal := by
+    rw [mix_apply_toReal]
+    have nonzero : 1 - weight n ≠ 0 := (sub_pos.mpr (belowOne n)).ne'
+    field_simp
+    ring
+  simp only [zero_mul, sub_zero, div_one] at quotient
+  exact quotient.congr' (Filter.Eventually.of_forall same)
 
 end GameTheory.Math.Probability

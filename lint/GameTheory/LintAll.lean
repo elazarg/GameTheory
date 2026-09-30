@@ -31,7 +31,10 @@ import GameTheory.Analysis.MatrixValue
 import GameTheory.Analysis.Minimax
 import GameTheory.Analysis.Nash
 import GameTheory.Analysis.Payoff
+import GameTheory.Analysis.PerturbedEquilibrium
 import GameTheory.Analysis.Protocol
+import GameTheory.Analysis.Protocol.AgentCompletion
+import GameTheory.Analysis.Protocol.AgentForm
 import GameTheory.Analysis.Protocol.AssessmentCompactness
 import GameTheory.Analysis.Protocol.BehavioralBayes
 import GameTheory.Analysis.Protocol.BehavioralContinuity
@@ -46,6 +49,7 @@ import GameTheory.Analysis.Protocol.CounterfactualRootRegret
 import GameTheory.Analysis.Protocol.EFG
 import GameTheory.Analysis.Protocol.EFGExistence
 import GameTheory.Analysis.Protocol.Examples
+import GameTheory.Analysis.Protocol.ExtensiveFormPerfection
 import GameTheory.Analysis.Protocol.Incentives
 import GameTheory.Analysis.Protocol.InformationLocalization
 import GameTheory.Analysis.Protocol.Sequential
