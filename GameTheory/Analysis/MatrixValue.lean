@@ -328,6 +328,17 @@ theorem value_le_of_entrywise_le {A B : I → J → ℝ} {δ : ℝ}
   exact (hA'.trans (expected_mono h law)).trans
     (by simpa only [add_comm] using add_le_add_right hB' δ)
 
+/-- A constant matrix has that constant as its value. -/
+theorem value_const (c : ℝ) : value (fun (_ : I) (_ : J) => c) = c :=
+  expect_constant _ c
+
+/-- An entrywise absolute bound also bounds the matrix value. -/
+theorem abs_value_le_of_entrywise_abs_le {A : I → J → ℝ} {bound : ℝ}
+    (h : ∀ i j, |A i j| ≤ bound) : |value A| ≤ bound :=
+  expect_abs_le_of_bounded
+    ((abs_nonneg _).trans (h (Classical.arbitrary I) (Classical.arbitrary J)))
+    fun outcome => h outcome.1 outcome.2
+
 /-- The finite matrix-game value is nonexpansive in its entries. -/
 theorem abs_value_sub_le_of_entrywise_abs_le {A B : I → J → ℝ} {δ : ℝ}
     (h : ∀ i j, |A i j - B i j| ≤ δ) : |value A - value B| ≤ δ := by

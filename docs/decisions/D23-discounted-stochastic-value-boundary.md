@@ -123,9 +123,13 @@ imports stable stochastic data in one direction.
 Under D62, transition laws are ordinary PMFs. The auxiliary matrix requires
 integration of the continuation value under each transition law it evaluates;
 its definition needs no finite state carrier. The promoted Shapley contraction
-and stationary-selector theorems retain finite state and action spaces as
-local hypotheses. Those hypotheses supply the required integration and the
-finite matrix/sup-metric arguments; they are not fields of the stochastic game.
+and stationary-selector theorems keep finite action spaces for the matrix value
+and take a uniform bound on the row player's stage utility; the state space is
+arbitrary. The contraction acts on `ℓ^∞` over states, so bounded continuation
+values supply the integration, and uniqueness is among bounded values. The
+drift witness in `Analysis/Stochastic/Examples.lean` shows that the Bellman
+equation on countably many states also has an unbounded solution. None of these
+hypotheses is a field of the stochastic game.
 
 The structural stochastic root excludes the Shapley operator and Kakutani.
 The analytic owner combines matrix value, contraction, stationary selection,

@@ -4,7 +4,9 @@
 This two-state zero-sum game has state-dependent payoffs and two distinct,
 genuinely nondegenerate controlled transition laws.  It exercises the complete
 stable-to-Analysis path through the Shapley contraction, unique value, and
-stationary saddle selector.
+stationary saddle selector. A drift game on the natural numbers exercises the
+same value on infinitely many states and exhibits an unbounded solution of its
+Bellman equation.
 -/
 
 import GameTheory.Analysis.Stochastic.Discounted
@@ -57,11 +59,14 @@ theorem hostileGame_isZeroSum : hostileGame.IsZeroSum := by
   rw [Fin.sum_univ_two]
   simp [hostileGame, stageUtility]
 
-/-- The hostile game has a unique normalized discounted Shapley value. -/
+/-- The hostile game has a unique bounded normalized discounted Shapley value;
+on two states every value is bounded. -/
 theorem hostileGame_hasUnique_shapleyValue {β : ℝ≥0} (hβ : β < 1) :
     ∃! value : Bool → ℝ,
-      hostileGame.shapleyOperator (β : ℝ) value = value :=
-  hostileGame.existsUnique_shapleyValue hβ
+      (∃ bound : ℝ, ∀ state, |value state| ≤ bound) ∧
+        hostileGame.shapleyOperator (β : ℝ) value = value :=
+  hostileGame.existsUnique_shapleyValue
+    hostileGame.hasBoundedRowStageUtility_of_finite hβ
 
 /-- Its selected statewise actions are genuine canonical saddle points. -/
 theorem hostileGame_hasStationarySaddle {β : ℝ≥0} (hβ : β < 1)
@@ -69,9 +74,67 @@ theorem hostileGame_hasStationarySaddle {β : ℝ≥0} (hβ : β < 1)
     IsSaddlePoint
       (MatrixGame.utility
         (hostileGame.auxiliaryMatrix (β : ℝ)
-          (hostileGame.discountedValue hβ) state))
-      (hostileGame.stationarySaddleProfile hβ state) :=
-  hostileGame.stationarySaddleProfile_isSaddlePoint hβ state
+          (hostileGame.discountedValue
+            hostileGame.hasBoundedRowStageUtility_of_finite hβ) state))
+      (hostileGame.stationarySaddleProfile
+        hostileGame.hasBoundedRowStageUtility_of_finite hβ state) :=
+  hostileGame.stationarySaddleProfile_isSaddlePoint _ hβ state
+
+/-! ## Infinite-state witness
+
+The Shapley value needs only bounded stage utility, not finitely many states.
+On an infinite state space the Bellman equation also has unbounded solutions,
+so the bounded qualifier in `existsUnique_shapleyValue` cannot be dropped. -/
+
+/-- Play drifts deterministically through the natural numbers, with zero stage
+utility. -/
+def driftGame : Game (Fin 2) where
+  State := ℕ
+  Action _ := Bool
+  transition state _ := PMF.pure (state + 1)
+  stageUtility _ _ _ := 0
+
+/-- Each player in the drift game has two Boolean actions. -/
+instance driftActionFintype : ∀ i, Fintype (driftGame.Action i) :=
+  fun _ => inferInstanceAs (Fintype Bool)
+
+/-- Every player in the drift game has an available action. -/
+instance driftActionNonempty : ∀ i, Nonempty (driftGame.Action i) :=
+  fun _ => inferInstanceAs (Nonempty Bool)
+
+theorem driftGame_hasBoundedRowStageUtility :
+    driftGame.HasBoundedRowStageUtility :=
+  ⟨0, fun _ _ => by simp [driftGame]⟩
+
+/-- The drift game has a unique bounded discounted value on infinitely many
+states. -/
+theorem driftGame_hasUnique_shapleyValue {β : ℝ≥0} (hβ : β < 1) :
+    ∃! value : ℕ → ℝ,
+      (∃ bound : ℝ, ∀ state, |value state| ≤ bound) ∧
+        driftGame.shapleyOperator (β : ℝ) value = value :=
+  driftGame.existsUnique_shapleyValue driftGame_hasBoundedRowStageUtility hβ
+
+/-- Growth at the inverse discount rate also solves the drift game's Bellman
+equation, and it is unbounded. -/
+theorem driftGame_unbounded_shapleySolution {β : ℝ} (hβ0 : 0 < β) (hβ1 : β < 1) :
+    driftGame.shapleyOperator β (fun state : ℕ => β⁻¹ ^ state) =
+        (fun state : ℕ => β⁻¹ ^ state) ∧
+      ¬ ∃ bound : ℝ, ∀ state : ℕ, |β⁻¹ ^ state| ≤ bound := by
+  refine ⟨funext fun state : ℕ => ?_, ?_⟩
+  · have hmatrix :
+        driftGame.auxiliaryMatrix β (fun state : ℕ => β⁻¹ ^ state) state =
+          fun _ _ => β⁻¹ ^ state := by
+      funext row col
+      simp only [Game.auxiliaryMatrix, Game.normalizedOneStepUtility, driftGame,
+        expect_pure, mul_zero, zero_add]
+      rw [pow_succ, mul_comm, mul_assoc, inv_mul_cancel₀ hβ0.ne', mul_one]
+    change MatrixGame.value (driftGame.auxiliaryMatrix β _ state) = _
+    rw [hmatrix, MatrixGame.value_const]
+  · rintro ⟨bound, hbound⟩
+    obtain ⟨state, hstate⟩ :=
+      ((tendsto_pow_atTop_atTop_of_one_lt ((one_lt_inv₀ hβ0).2 hβ1)).eventually_gt_atTop
+        bound).exists
+    exact (not_le.2 hstate) ((le_abs_self _).trans (hbound state))
 
 /-! ## General-sum Fink witness -/
 
