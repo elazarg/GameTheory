@@ -109,6 +109,12 @@ class FiniteMovers : Prop where
 instance finiteMovers_of_finite [Finite ι] : E.FiniteMovers :=
   ⟨fun _ => Set.toFinite _⟩
 
+/-- At most one mover per state gives finitely many movers, whatever the
+player set. -/
+theorem FiniteMovers.of_subsingleton
+    (hsingle : ∀ state, {i | E.active state i}.Subsingleton) : E.FiniteMovers :=
+  ⟨fun state => (hsingle state).finite⟩
+
 /-- The players who must move at a state. -/
 def movers [E.FiniteMovers] (state : E.State) : Finset ι :=
   (FiniteMovers.finite_active (E := E) state).toFinset

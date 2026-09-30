@@ -335,6 +335,7 @@ Keep these capabilities separate:
 ```text
 finite support of a particular PMF  -- sufficient for real payoff integration
 finite player carrier              -- needed for the discrete independent product
+finitely many movers per state     -- enough for behavioral joint laws (D66)
 finite strategy carrier            -- needed for enumeration or finite existence
 finite outcome carrier             -- sufficient for payoff integration
 explicit finite rational tables    -- executable algorithms
@@ -897,6 +898,12 @@ finite existence then needs no horizon hypothesis. Contexts are formed from a
 continuation runner, so the preservation criteria hold for any runner, and
 play truncated at a fixed step count remains only as a finite-prefix quantity
 identified with terminal play under a sufficient horizon.
+
+[D66](decisions/D66-finitely-many-movers.md) draws a behavioral joint action
+only over the players who must move, so behavioral execution, assessments, and
+sequential rationality need finitely many movers per state rather than
+finitely many players; mixed profiles and counterfactual reach keep the finite
+player product.
 
 Information locality must hold by construction. A player's policy may receive
 its `InfoState`, recommendation, and a legal-menu value determined by that

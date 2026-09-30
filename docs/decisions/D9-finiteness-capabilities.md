@@ -24,6 +24,7 @@ non-finiteness premises.
 | `Profile.update`, `Profile.override` | no | no | no | yes |
 | PMF operations and guarded expectation/tower laws | no | no | no | no |
 | `independentProduct` over player laws | yes | no | no | no |
+| `behavioralJoint`, behavioral runs, assessments ([D66](D66-finitely-many-movers.md)) | finitely many movers | no | no | no |
 | `PMF.ofFintype` | no | finite carrier | n/a | no |
 | `GameForm`, `GameForm.outcomeLaw` | no | no | no | no |
 | `GameForm.mapOutcome` | no | no | no | no |

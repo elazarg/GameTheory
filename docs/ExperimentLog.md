@@ -9974,3 +9974,47 @@ memory.
 - **Outcome:** accepted with design (b).
 - **Next action:** none required. The site-indexed choice instances would
   need an instance form whose key survives concrete models.
+
+### EXP-157: behavioral joint laws over finitely many movers
+
+- **Date / status:** 2026-10-01; positive.
+- **Question:** can behavioral execution and the sequential solution concepts
+  built on it drop the finite player carrier, needing only finitely many
+  players who must move at each state?
+- **Competing designs:** (a) keep `[Fintype ι]` and the independent product
+  over every player; (b) draw only the movers, through a finitary product that
+  fixes point-mass coordinates, with a proposition-valued `FiniteMovers`
+  capability that finitely many players supply by instance.
+- **Hypotheses:**
+  - *H1.* Every finite-player consumer compiles against design (b) through one
+    bridge identifying the new joint law with the old independent product.
+  - *H2.* Declarations that use the joint law only through its API relax from
+    `[Fintype ι]` to `[E.FiniteMovers]` without proof changes.
+  - *H3.* One player's installed law still splits off the joint law, so
+    behavioral mixtures and terminal play relax.
+- **Kill conditions:** a finite-player consumer needs a new argument; the
+  relaxed declarations need restated conclusions.
+- **Artifacts:** `Math/Probability/FinitaryProduct.lean`,
+  `ExecutionProtocol.FiniteMovers`, `FiniteMovers.of_subsingleton`,
+  `InformationModel.behavioralJoint`, `behavioralJoint_eq_independentProduct`,
+  `finitaryProduct_update_bind`, fixture `Tests/InfiniteMovers.lean`.
+  Validation: `lake build`, `lake lint`.
+- **Observations:**
+  - H1 held: about two dozen proofs that unfolded the joint law now rewrite
+    with the bridge; one test needed an explicit law transport because
+    definitional unfolding no longer computes the finitary product.
+  - H2 held for the behavioral runner, path mass, history events,
+    assessments, continuations, Bayes beliefs, eighteen of nineteen
+    declarations in `SequentialRationality`, and four of six in `Sequential`.
+    Declarations were
+    relaxed mechanically and kept `[Fintype ι]` wherever the build failed.
+  - H3 held after proving the one-coordinate split for finitary products.
+  - Counterfactual reach factors reach player by player over all players, so
+    counterfactual regret, the one-shot deviation principle, extensive-form
+    perfection, and existence keep `[Fintype ι]`. Mixed profiles, Kuhn,
+    predrawing, and policy measures keep it by necessity.
+  - The cascade fixture runs nondegenerate behavioral play with the player
+    set `ℕ`.
+- **Outcome:** accepted with design (b); see D66.
+- **Next action:** restate counterfactual reach as a product over movers to
+  relax the counterfactual and one-shot-deviation layer.
