@@ -37,6 +37,22 @@ theorem outerMeasure_ne_top {α : Type*} (μ : PMF α) (event : Set α) :
   exact ne_of_lt (lt_of_le_of_lt (outerMeasure_le_one μ event)
     ENNReal.one_lt_top)
 
+/-- Real atom masses are at most one. -/
+theorem pmf_toReal_apply_le_one {α : Type*} (μ : PMF α) (a : α) : (μ a).toReal ≤ 1 :=
+  ENNReal.toReal_le_of_le_ofReal zero_le_one (by simpa using μ.coe_le_one a)
+
+/-- An atom has positive real mass exactly when it is in the support. -/
+theorem pmf_toReal_pos_iff {α : Type*} {μ : PMF α} {a : α} :
+    0 < (μ a).toReal ↔ a ∈ μ.support := by
+  rw [ENNReal.toReal_pos_iff, PMF.mem_support_iff, pos_iff_ne_zero]
+  exact and_iff_left (μ.apply_lt_top a)
+
+/-- Laws with the same real atom masses are equal. -/
+theorem pmf_ext_toReal {α : Type*} {μ ν : PMF α} (same : ∀ a, (μ a).toReal = (ν a).toReal) :
+    μ = ν :=
+  PMF.ext fun a => (ENNReal.toReal_eq_toReal_iff' (μ.apply_ne_top a) (ν.apply_ne_top a)).mp
+    (same a)
+
 /-- Real event masses inherit monotonicity from a PMF outer measure. -/
 theorem outerMeasure_toReal_mono {α : Type*} (μ : PMF α)
     {smaller larger : Set α} (hsubset : smaller ⊆ larger) :
@@ -129,6 +145,43 @@ theorem map_congr_on_support {α β : Type*} (μ : PMF α) {f g : α → β}
     (h : ∀ a ∈ μ.support, f a = g a) : μ.map f = μ.map g := by
   rw [← PMF.bind_pure_comp, ← PMF.bind_pure_comp]
   exact bind_congr_on_support μ fun a ha => by rw [Function.comp_apply, h a ha]; rfl
+
+/-- Equal summary laws may be composed with continuations agreeing on every
+pair of supported inputs with the same summary. -/
+theorem bind_eq_of_map_eq {α β γ δ : Type*} (μ : PMF α) (ν : PMF β)
+    (f : α → γ) (g : β → γ) (hmap : μ.map f = ν.map g)
+    (F : α → PMF δ) (H : β → PMF δ)
+    (hagree : ∀ a ∈ μ.support, ∀ b ∈ ν.support, f a = g b → F a = H b) :
+    μ.bind F = ν.bind H := by
+  classical
+  let representative (c : γ) : β :=
+    if h : ∃ b ∈ ν.support, g b = c then h.choose else ν.support_nonempty.choose
+  let kernel (c : γ) := H (representative c)
+  have hrep (c : γ) (hc : c ∈ (ν.map g).support) :
+      representative c ∈ ν.support ∧ g (representative c) = c := by
+    have hex : ∃ b ∈ ν.support, g b = c := by simpa using hc
+    simp only [representative, hex, ↓reduceDIte]
+    exact hex.choose_spec
+  have hfirst (a : α) (ha : a ∈ μ.support) : F a = kernel (f a) := by
+    have hc : f a ∈ (ν.map g).support := by
+      rw [← hmap, PMF.support_map]
+      exact ⟨a, ha, rfl⟩
+    exact hagree a ha _ (hrep _ hc).1 (hrep _ hc).2.symm
+  have hsecond (b : β) (hb : b ∈ ν.support) : H b = kernel (g b) := by
+    have hc : g b ∈ (μ.map f).support := by
+      rw [hmap, PMF.support_map]
+      exact ⟨b, hb, rfl⟩
+    obtain ⟨a, ha, hab⟩ := (show g b ∈ f '' μ.support by simpa using hc)
+    rw [← hagree a ha b hb hab, ← hab]
+    exact hfirst a ha
+  calc
+    μ.bind F = (μ.map f).bind kernel := by
+      rw [PMF.bind_map]
+      exact bind_congr_on_support μ hfirst
+    _ = (ν.map g).bind kernel := congrArg (fun law => law.bind kernel) hmap
+    _ = ν.bind H := by
+      rw [PMF.bind_map]
+      exact bind_congr_on_support ν fun b hb => (hsecond b hb).symm
 
 theorem bindOnSupport_congr {α β : Type*} (μ : PMF α)
     {f g : ∀ a ∈ μ.support, PMF β}

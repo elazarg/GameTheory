@@ -175,16 +175,25 @@ theorem mem_support_map_of_exists_mem_fiber {α β : Type*} {μ : PMF α} {f : �
   obtain ⟨a, rfl, ha⟩ := meets
   exact (PMF.mem_support_map_iff f μ _).mpr ⟨a, ha, rfl⟩
 
+theorem fiberPosterior_eq_filter {α β : Type*} (μ : PMF α) (f : α → β) {b : β}
+    (meets : ∃ a ∈ {a | f a = b}, a ∈ μ.support) :
+    fiberPosterior μ f b = μ.filter {a | f a = b} meets := by
+  classical
+  rw [fiberPosterior, dite_eq_left meets]
+
+theorem fiberPosterior_eq_self {α β : Type*} (μ : PMF α) (f : α → β) {b : β}
+    (absent : ¬ ∃ a ∈ {a | f a = b}, a ∈ μ.support) : fiberPosterior μ f b = μ := by
+  classical
+  rw [fiberPosterior, dite_eq_right absent]
+
 theorem fiberPosterior_of_mem_support {α β : Type*} (μ : PMF α) (f : α → β) {b : β}
     (hb : b ∈ (PMF.map f μ).support) :
-    fiberPosterior μ f b = μ.filter {a | f a = b} (exists_mem_fiber_of_mem_support_map hb) := by
-  classical
-  rw [fiberPosterior, dite_eq_left (exists_mem_fiber_of_mem_support_map hb)]
+    fiberPosterior μ f b = μ.filter {a | f a = b} (exists_mem_fiber_of_mem_support_map hb) :=
+  fiberPosterior_eq_filter μ f _
 
 theorem fiberPosterior_of_not_mem_support {α β : Type*} (μ : PMF α) (f : α → β) {b : β}
-    (hb : b ∉ (PMF.map f μ).support) : fiberPosterior μ f b = μ := by
-  classical
-  rw [fiberPosterior, dite_eq_right fun meets => hb (mem_support_map_of_exists_mem_fiber meets)]
+    (hb : b ∉ (PMF.map f μ).support) : fiberPosterior μ f b = μ :=
+  fiberPosterior_eq_self μ f fun meets => hb (mem_support_map_of_exists_mem_fiber meets)
 
 theorem fiberPosterior_apply {α β : Type*} (μ : PMF α)
     (f : α → β) (b : β) (hb : b ∈ (PMF.map f μ).support) (a : α) :

@@ -9781,3 +9781,49 @@ memory.
 - **Next action:** whether the principle holds at consistent assessments with
   infinitely many decision sites, where one error sequence need not cover all
   single-site gains, is not settled.
+
+### EXP-153: one conditioning operator and clock-free belief transport
+
+- **Date / status:** 2026-09-30; positive.
+- **Question:** can a single conditioning operator serve both positive-mass
+  posteriors and total kernels, and can the transport of Bayes beliefs
+  between laws and protocols be stated without a common decision depth or a
+  finite carrier?
+- **Competing designs:** (a) keep a proof-carrying posterior beside a second,
+  total conditional; (b) make the posterior itself total, returning the law on
+  a null fiber, and take positivity as a hypothesis only in lemmas that read
+  the conditioned law.
+- **Hypotheses:**
+  - *H1.* Design (b) loses no statement: every existing consumer of the
+    proof-carrying posterior still proves its result, and reconstruction
+    becomes an ordinary bind.
+  - *H2.* Domination bounds, event comparisons and their limits hold on
+    arbitrary carriers once integrability replaces finiteness.
+  - *H3.* Belief transport by history maps and readouts needs only
+    reach-weight identities; common depths enter only when those identities
+    are derived from behavioral laws at fixed depths.
+- **Kill conditions:** some consumer needs the proof argument for more than
+  positivity; a domination bound fails without a finite carrier; a transport
+  theorem needs a clock in its core.
+- **Artifacts:** `fiberPosterior` in `Math/Probability/Conditioning.lean`;
+  `Math/Probability/Domination.lean`, `ConditionalComparison.lean`,
+  `ConditionalObservation.lean`; `Analysis/Protocol/BeliefTransport.lean`;
+  `Analysis/Protocol/BeliefTransportTest.lean`. Validation:
+  `lake build GameTheory`, `lake lint`.
+- **Observations:**
+  - H1 held. Every consumer used the proof only for positivity. Two
+    consumers carried private total wrappers with the same fallback, and these
+    became the operator itself. One deliberately returns a different law on
+    null fibers and remains a separate definition.
+  - H2 held: expectation domination needs integrability of the dominating
+    law only, and event limits follow from bounded expectation limits.
+  - H3 held: the site mass is the probability that terminal play passes
+    through the site, by the cone decomposition over its antichain, and
+    projection and readout transports take reach-weight identities as their
+    only hypotheses.
+  - A consistent assessment obeys Bayes' rule wherever its limit reaches a
+    site with finitely many histories.
+- **Outcome:** accepted.
+- **Next action:** whether a site's Bayes belief is the law of the site
+  ancestor of terminal play conditioned on passing through the site, which
+  would give clock-free forms of the fixed-depth conditioning corollaries.

@@ -37,6 +37,7 @@ import GameTheory.Analysis.Protocol.BehavioralBayes
 import GameTheory.Analysis.Protocol.BehavioralContinuity
 import GameTheory.Analysis.Protocol.BehavioralConvergence
 import GameTheory.Analysis.Protocol.BehavioralTerminalConvergence
+import GameTheory.Analysis.Protocol.BeliefTransport
 import GameTheory.Analysis.Protocol.CounterfactualDecomposition
 import GameTheory.Analysis.Protocol.CounterfactualReach
 import GameTheory.Analysis.Protocol.CounterfactualRegret
@@ -190,9 +191,12 @@ import GameTheory.Math.OrthantProjection
 import GameTheory.Math.PositivePartFixedPoint
 import GameTheory.Math.Probability.Bounds
 import GameTheory.Math.Probability.Compactness
+import GameTheory.Math.Probability.ConditionalComparison
+import GameTheory.Math.Probability.ConditionalObservation
 import GameTheory.Math.Probability.Conditioning
 import GameTheory.Math.Probability.Continuity
 import GameTheory.Math.Probability.Convergence
+import GameTheory.Math.Probability.Domination
 import GameTheory.Math.Probability.Expectation
 import GameTheory.Math.Probability.ExpectationAlgebra
 import GameTheory.Math.Probability.ExpectationBind

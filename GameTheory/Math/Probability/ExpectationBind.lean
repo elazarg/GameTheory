@@ -419,4 +419,27 @@ theorem expect_bind_ge_constant_on_support {α β : Type*}
       expect_mono hle (payoffIntegrable_constant μ c)
         (payoffIntegrable_bind_conditionalExpectation μ kernel f hbind)
 
+/-- The atom masses of a kernel are integrable against every law. -/
+theorem payoffIntegrable_toReal_apply {α β : Type*} (μ : PMF α) (f : α → PMF β) (b : β) :
+    PayoffIntegrable μ fun a => ((f a) b).toReal :=
+  payoffIntegrable_of_bounded μ _ (C := 1) fun a => by
+    rw [abs_of_nonneg ENNReal.toReal_nonneg]
+    exact pmf_toReal_apply_le_one _ _
+
+/-- The real mass of an atom of a bind is the expected real mass of that atom
+under the branches. -/
+theorem toReal_bind_apply {α β : Type*} (μ : PMF α) (f : α → PMF β) (b : β) :
+    ((μ.bind f) b).toReal = expect μ fun a => ((f a) b).toReal := by
+  rw [PMF.bind_apply, ENNReal.tsum_toReal_eq fun a =>
+    ENNReal.mul_ne_top (μ.apply_ne_top a) ((f a).apply_ne_top b)]
+  simp only [ENNReal.toReal_mul, expect]
+
+/-- A mixture integrates the mass of each branch's event. -/
+theorem toReal_toOuterMeasure_bind {α β : Type*} (μ : PMF α) (f : α → PMF β) (event : Set β) :
+    ((μ.bind f).toOuterMeasure event).toReal =
+      expect μ fun a => ((f a).toOuterMeasure event).toReal := by
+  rw [PMF.toOuterMeasure_bind_apply, ENNReal.tsum_toReal_eq fun a =>
+    ENNReal.mul_ne_top (μ.apply_ne_top a) (outerMeasure_ne_top (f a) event)]
+  simp only [ENNReal.toReal_mul, expect]
+
 end GameTheory.Math.Probability
