@@ -362,4 +362,39 @@ theorem IsCorrelatedEq.mix (hconvex : Preference.Convex weaklyPrefers)
 
 end Relations
 
+/-! ## Transfer between forms
+
+A Nash profile of one form yields a Nash profile of another whenever every
+unilateral replacement in the target is covered by one in the source: the
+source comparison against the covering replacement implies the target
+comparison. Neither preference is constrained. Expected-utility bounds,
+additive allowances, and indistinguishable utility ensembles all supply such a
+coverage. -/
+
+section Transfer
+
+universe us' uo'
+
+variable [DecidableEq ι]
+
+/-- **Nash transfers along profile-local coverage.** -/
+theorem IsNash.of_coverage {source : GameForm.{uι, us, uo} ι}
+    {target : GameForm.{uι, us', uo'} ι}
+    {sourcePrefers : WeakPreference ι source.sig.Outcome}
+    {targetPrefers : WeakPreference ι target.sig.Outcome}
+    {profile : Profile source.sig} {targetProfile : Profile target.sig}
+    (hcover : ∀ who (replacement : target.sig.Strategy who),
+      ∃ alternative : source.sig.Strategy who,
+        sourcePrefers who (source.play profile)
+            (source.play (Profile.update profile who alternative)) →
+          targetPrefers who (target.play targetProfile)
+            (target.play (Profile.update targetProfile who replacement)))
+    (h : IsNash source sourcePrefers profile) : IsNash target targetPrefers targetProfile := by
+  rw [isNash_iff] at h ⊢
+  intro who replacement
+  obtain ⟨alternative, himp⟩ := hcover who replacement
+  exact himp (h who alternative)
+
+end Transfer
+
 end GameTheory

@@ -42,10 +42,10 @@ theorem isεNash_of_deviation_bounds
                 (source.play (Profile.update profile who alternative)))
     (ε : ℝ) (h : IsεNash source sourceUtility ε profile) :
     IsεNash target targetUtility ε targetProfile := by
-  rw [isεNash_iff] at h ⊢
-  intro who replacement
+  refine IsNash.of_coverage (fun who replacement => ?_) h
   obtain ⟨alternative, hbound⟩ := deviationBound who replacement
-  obtain ⟨hsbase, hsdev, hsource⟩ := h who alternative
+  refine ⟨alternative, fun hcompare => ?_⟩
+  obtain ⟨hsbase, hsdev, hsource⟩ := hcompare
   obtain ⟨htbase, hhonest⟩ := honestUtility who hsbase
   obtain ⟨htdev, htarget⟩ := hbound hsdev
   refine ⟨htbase, htdev, ?_⟩

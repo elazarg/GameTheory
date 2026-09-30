@@ -329,6 +329,7 @@ private theorem lottery_play_jackpot (κ : ℕ) :
 
 /-- Taking the coin is a pseudo-Nash equilibrium. -/
 theorem lottery_isPseudoNash_takeCoin : lottery.IsPseudoNash takeCoin := by
+  rw [ParameterizedGame.isPseudoNash_iff]
   intro who replacement
   cases who
   rw [lottery_utilityLaw, lottery_utilityLaw,
@@ -490,6 +491,7 @@ private theorem guessingGame_play_update (who : GuessRole)
 /-- **Uniform guessing is a pseudo-Nash equilibrium** of the ideal guessing
 game, although utilities are exponential in the size. -/
 theorem guessingGame_isPseudoNash_uniformGuess : guessingGame.IsPseudoNash uniformGuess := by
+  rw [ParameterizedGame.isPseudoNash_iff]
   intro who replacement
   have hsame : guessingGame.utilityLaw who (Profile.update uniformGuess who replacement) =
       guessingGame.utilityLaw who uniformGuess := by

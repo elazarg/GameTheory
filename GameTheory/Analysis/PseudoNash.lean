@@ -51,7 +51,8 @@ theorem empiricalMeanPreference_eq_euPreference (utility : Outcome → ι → �
     rw [lawMean, expect_map]
     rfl
   apply propext
-  rw [euPreference_iff_of_bounded utility who preferred alternative hC, empiricalMeanPreference,
+  rw [euPreference_iff_of_bounded utility who preferred alternative hC,
+    empiricalMeanPreference_apply,
     computationallyMeanDominates_const_iff (hsupport preferred) (hsupport alternative),
     hmean, hmean]
 
