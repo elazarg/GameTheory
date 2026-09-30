@@ -11,6 +11,7 @@ negligibility of a difference of advantages bounds it in both directions.
 -/
 import Mathlib.Analysis.Asymptotics.SuperpolynomialDecay
 import Mathlib.Analysis.SpecificLimits.Basic
+import Mathlib.Analysis.SpecificLimits.Normed
 
 namespace GameTheory.Math
 
@@ -71,5 +72,11 @@ theorem negligible_zero : Negligible (fun _ => 0) :=
 theorem Negligible.of_eventually_abs_le {f g : ℕ → ℝ} (hg : Negligible g)
     (hfg : ∀ᶠ κ : ℕ in atTop, |f κ| ≤ |g κ|) : Negligible f :=
   hg.trans_eventually_abs_le hfg
+
+/-- `2 ^ (-κ)` is negligible. -/
+theorem negligible_inv_two_pow : Negligible fun κ : ℕ => 1 / (2 : ℝ) ^ κ := by
+  intro n
+  exact (tendsto_pow_const_div_const_pow_of_one_lt n (by norm_num : (1 : ℝ) < 2)).congr
+    fun κ => (mul_one_div _ _).symm
 
 end GameTheory.Math

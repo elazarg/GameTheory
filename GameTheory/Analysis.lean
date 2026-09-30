@@ -18,6 +18,7 @@ import GameTheory.Analysis.IncentiveHierarchy
 import GameTheory.Analysis.Learning
 import GameTheory.Analysis.MatrixValue
 import GameTheory.Analysis.Protocol
+import GameTheory.Analysis.PseudoCorrelated
 import GameTheory.Analysis.PseudoNash
 import GameTheory.Analysis.Repeated
 import GameTheory.Analysis.Stochastic

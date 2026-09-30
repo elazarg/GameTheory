@@ -17,13 +17,16 @@ import GameTheory.Math.Probability.Convergence
 import GameTheory.Math.Probability.ExtendedExpectation
 import GameTheory.Math.Probability.Indistinguishability
 import GameTheory.Math.Probability.Interaction
+import GameTheory.Math.Probability.MeanComparisonAffine
 import GameTheory.Math.Probability.Measure
 import GameTheory.Math.Probability.MeanComparisonExpectation
 import GameTheory.Math.Probability.OnlineLearning
+import GameTheory.Math.Probability.SampleSumEvents
 import GameTheory.Math.Probability.SelectiveStopping
 import GameTheory.Math.Probability.SequentialSampling
 import GameTheory.Math.Probability.Simplex
 import GameTheory.Math.PositivePartFixedPoint
+import GameTheory.Math.Probability.StatisticalCloseness
 import GameTheory.Math.RegretAggregation
 import GameTheory.Math.SimplexApproximation
 

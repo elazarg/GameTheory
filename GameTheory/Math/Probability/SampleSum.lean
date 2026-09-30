@@ -98,6 +98,33 @@ theorem sampleSum_map_mul (c : ℝ) (μ : PMF ℝ) (m : ℕ) :
     sampleSum (μ.map (c * ·)) m = (sampleSum μ m).map (c * ·) :=
   sampleSum_map_of_map_add (fun a b => mul_add c a b) (mul_zero c) μ m
 
+/-- Shifting every draw by `e` shifts the sum of `m` draws by `m e`. -/
+theorem sampleSum_map_add_const (μ : PMF ℝ) (e : ℝ) (m : ℕ) :
+    sampleSum (μ.map (· + e)) m = (sampleSum μ m).map (· + m * e) := by
+  induction m with
+  | zero => simp [PMF.pure_map]
+  | succ m ih =>
+    rw [sampleSum_succ, ih, sampleSum_succ, addLaw_eq_bind_bind, addLaw_eq_bind_bind]
+    simp only [PMF.map, Function.comp_def, PMF.bind_bind, PMF.pure_bind]
+    congr 1
+    funext s
+    congr 1
+    funext x
+    congr 1
+    push_cast
+    ring
+
+/-- `m` draws of a sure payoff `y` sum to `m y`. -/
+theorem sampleSum_pure (y : ℝ) (m : ℕ) : sampleSum (PMF.pure y) m = PMF.pure (m * y) := by
+  induction m with
+  | zero => simp
+  | succ m ih =>
+    rw [sampleSum_succ, ih, addLaw]
+    simp only [PMF.pure_bind, PMF.pure_map]
+    congr 1
+    push_cast
+    ring
+
 theorem mem_support_addLaw {μ ν : PMF ℝ} {x : ℝ} :
     x ∈ (addLaw μ ν).support ↔
       ∃ a ∈ μ.support, ∃ b ∈ ν.support, a + b = x := by

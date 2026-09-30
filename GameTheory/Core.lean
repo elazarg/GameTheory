@@ -19,6 +19,8 @@ opt-in leaves: `Core.UtilitySimulation` and `Core.MixtureUtilitySimulation`.
 The direct profile-local transfer theorems are included here.
 -/
 
+import GameTheory.Core.PseudoNashCoalition
+import GameTheory.Core.PseudoNashTolerance
 import GameTheory.Core.Signature
 import GameTheory.Core.Form
 import GameTheory.Core.Bayesian

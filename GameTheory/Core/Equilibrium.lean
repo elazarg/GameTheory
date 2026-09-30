@@ -369,7 +369,8 @@ unilateral replacement in the target is covered by one in the source: the
 source comparison against the covering replacement implies the target
 comparison. Neither preference is constrained. Expected-utility bounds,
 additive allowances, and indistinguishable utility ensembles all supply such a
-coverage. -/
+coverage. Strong Nash transfers in the same way when each joint replacement of
+a coalition is covered by one source replacement serving every member. -/
 
 section Transfer
 
@@ -394,6 +395,29 @@ theorem IsNash.of_coverage {source : GameForm.{uι, us, uo} ι}
   intro who replacement
   obtain ⟨alternative, himp⟩ := hcover who replacement
   exact himp (h who alternative)
+
+/-- **Strong Nash transfers along coalition coverage**: every target joint
+replacement has a source joint replacement whose comparison implies the target
+comparison for each member. -/
+theorem IsStrongNash.of_coverage {source : GameForm.{uι, us, uo} ι}
+    {target : GameForm.{uι, us', uo'} ι}
+    {sourcePrefers : WeakPreference ι source.sig.Outcome}
+    {targetPrefers : WeakPreference ι target.sig.Outcome}
+    {profile : Profile source.sig} {targetProfile : Profile target.sig}
+    (hcover : ∀ coalition : Finset ι, coalition.Nonempty →
+      ∀ replacement : Subprofile target.sig coalition,
+        ∃ alternative : Subprofile source.sig coalition, ∀ member ∈ coalition,
+          sourcePrefers member (source.play profile)
+              (source.play (Profile.override coalition alternative profile)) →
+            targetPrefers member (target.play targetProfile)
+              (target.play (Profile.override coalition replacement targetProfile)))
+    (h : IsStrongNash source sourcePrefers profile) :
+    IsStrongNash target targetPrefers targetProfile := by
+  rw [isStrongNash_iff] at h ⊢
+  intro coalition hne replacement
+  obtain ⟨alternative, himp⟩ := hcover coalition hne replacement
+  obtain ⟨member, hmember, hprefers⟩ := h coalition hne alternative
+  exact ⟨member, hmember, himp member hmember hprefers⟩
 
 end Transfer
 

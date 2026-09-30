@@ -65,6 +65,7 @@ import GameTheory.Analysis.Protocol.SequentialPerturbation
 import GameTheory.Analysis.Protocol.SequentialRationality
 import GameTheory.Analysis.Protocol.SubgameLocalization
 import GameTheory.Analysis.Protocol.SupportedChoices
+import GameTheory.Analysis.PseudoCorrelated
 import GameTheory.Analysis.PseudoNash
 import GameTheory.Analysis.Repeated
 import GameTheory.Analysis.Repeated.Examples
@@ -123,6 +124,8 @@ import GameTheory.Core.MixtureUtilitySimulation
 import GameTheory.Core.Potential
 import GameTheory.Core.Preference
 import GameTheory.Core.PseudoNash
+import GameTheory.Core.PseudoNashCoalition
+import GameTheory.Core.PseudoNashTolerance
 import GameTheory.Core.Rank
 import GameTheory.Core.Rationalizability
 import GameTheory.Core.Response
@@ -226,6 +229,7 @@ import GameTheory.Math.Probability.Interaction
 import GameTheory.Math.Probability.Joint
 import GameTheory.Math.Probability.Lindeberg
 import GameTheory.Math.Probability.MeanComparison
+import GameTheory.Math.Probability.MeanComparisonAffine
 import GameTheory.Math.Probability.MeanComparisonExpectation
 import GameTheory.Math.Probability.Measure
 import GameTheory.Math.Probability.Mixture
@@ -235,10 +239,12 @@ import GameTheory.Math.Probability.ProductConditioning
 import GameTheory.Math.Probability.RademacherWalk
 import GameTheory.Math.Probability.RelativeTremble
 import GameTheory.Math.Probability.SampleSum
+import GameTheory.Math.Probability.SampleSumEvents
 import GameTheory.Math.Probability.SelectiveStopping
 import GameTheory.Math.Probability.SequentialSampling
 import GameTheory.Math.Probability.SignBalance
 import GameTheory.Math.Probability.Simplex
+import GameTheory.Math.Probability.StatisticalCloseness
 import GameTheory.Math.Probability.Support
 import GameTheory.Math.Probability.Tightness
 import GameTheory.Math.Probability.Uniform

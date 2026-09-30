@@ -64,7 +64,7 @@ theorem lawMean_differenceLaw {X Y : PMF ℝ} {R : ℝ}
   rw [expect_sub hXint (payoffIntegrable_constant _ _), expect_constant]
 
 /-- Chebyshev's bound on the gap when `X` has the larger expectation. -/
-private theorem meanComparisonGap_le_of_lt {X Y : PMF ℝ} {R : ℝ}
+theorem meanComparisonGap_le_of_lt {X Y : PMF ℝ} {R : ℝ}
     (hX : ∀ x ∈ X.support, |x| ≤ R) (hY : ∀ y ∈ Y.support, |y| ≤ R)
     (hlt : lawMean Y < lawMean X) {m : ℕ} (hm : 1 ≤ m) :
     meanComparisonGap X Y m ≤
@@ -106,7 +106,7 @@ private theorem meanComparisonGap_le_of_lt {X Y : PMF ℝ} {R : ℝ}
       field_simp
 
 /-- The gap tends to one when `Y` has the larger expectation. -/
-private theorem one_sub_le_meanComparisonGap_of_lt {X Y : PMF ℝ} {R : ℝ}
+theorem one_sub_le_meanComparisonGap_of_lt {X Y : PMF ℝ} {R : ℝ}
     (hX : ∀ x ∈ X.support, |x| ≤ R) (hY : ∀ y ∈ Y.support, |y| ≤ R)
     (hlt : lawMean X < lawMean Y) {m : ℕ} (hm : 1 ≤ m) :
     1 - 2 * (lawVariance (differenceLaw X Y) / (m * (lawMean Y - lawMean X) ^ 2)) ≤
@@ -247,5 +247,170 @@ theorem computationallyMeanDominates_const_iff {X Y : PMF ℝ} {R : ℝ}
         _ < ((κ : ℝ) ^ c)⁻¹ := by
           rw [← one_div, lt_div_iff₀ hκc]
           exact hsmall
+
+/-! ## Laws of bounded support -/
+
+theorem abs_lawMean_le {μ : PMF ℝ} {R : ℝ} (h : ∀ x ∈ μ.support, |x| ≤ R) :
+    |lawMean μ| ≤ R := by
+  have hint : PayoffIntegrable μ id := payoffIntegrable_of_support_abs_le h id fun x hx => hx
+  refine abs_le.mpr ⟨?_, expect_le_const μ id hint R fun x hx => (abs_le.mp (h x hx)).2⟩
+  have hlow := expect_mono (μ := μ) (f := fun _ => -R) (g := id)
+    (fun x hx => (abs_le.mp (h x hx)).1) (payoffIntegrable_constant μ _) hint
+  rwa [expect_constant] at hlow
+
+theorem lawVariance_le {μ : PMF ℝ} {R : ℝ} (h : ∀ x ∈ μ.support, |x| ≤ R) :
+    lawVariance μ ≤ (2 * R) ^ 2 := by
+  have hmean := abs_lawMean_le h
+  have hbound : ∀ x ∈ μ.support, (x - lawMean μ) ^ 2 ≤ (2 * R) ^ 2 := by
+    intro x hx
+    have hx := h x hx
+    rw [← sq_abs]
+    have : |x - lawMean μ| ≤ 2 * R := (abs_sub _ _).trans (by linarith)
+    exact pow_le_pow_left₀ (abs_nonneg _) this 2
+  exact expect_le_const μ _
+    (payoffIntegrable_of_bounded_on_support μ _ (C := (2 * R) ^ 2) fun x hx => by
+      rw [abs_of_nonneg (sq_nonneg _)]
+      exact hbound x hx) _ hbound
+
+/-! ## Ensembles bounded by a polynomial in the size
+
+With payoffs bounded by `κ ^ b`, computational mean dominance sits between two
+comparisons of expectations: it forces the dominated mean to exceed the
+dominating one by at most a negligible amount, and it follows from a mean
+margin of `κ ^ (-a)` for a fixed exponent `a`. Neither implication reverses;
+a margin that is negligible, or polynomial with an exponent growing with the
+size, need not give dominance. -/
+
+/-- **Dominance forces expectations up to negligible slack**, for laws bounded
+by a polynomial in the size. -/
+theorem lawMean_le_of_computationallyMeanDominates {X Y : ℕ → PMF ℝ} {b : ℕ}
+    (hbound : ∀ᶠ κ : ℕ in atTop,
+      (∀ x ∈ (X κ).support, |x| ≤ (κ : ℝ) ^ b) ∧ ∀ y ∈ (Y κ).support, |y| ≤ (κ : ℝ) ^ b)
+    (h : ComputationallyMeanDominates X Y) (a : ℕ) :
+    ∀ᶠ κ : ℕ in atTop, lawMean (Y κ) ≤ lawMean (X κ) + ((κ : ℝ) ^ a)⁻¹ := by
+  by_contra hnot
+  rw [not_eventually] at hnot
+  obtain ⟨d, hd, hev⟩ := h (2 * a + 2 * b + 2) (by omega)
+  obtain ⟨κ, hbad, hgap, hbd, hκ⟩ :=
+    (hnot.and_eventually (hev.and (hbound.and (eventually_ge_atTop 4)))).exists
+  obtain ⟨hX, hY⟩ := hbd
+  rw [not_le] at hbad
+  have hκpos : (0 : ℝ) < κ := by exact_mod_cast (show 0 < κ by omega)
+  have hκ4 : (4 : ℝ) ≤ κ := by exact_mod_cast hκ
+  set Δ := lawMean (Y κ) - lawMean (X κ)
+  have hinv : 0 < ((κ : ℝ) ^ a)⁻¹ := by positivity
+  have hΔ : ((κ : ℝ) ^ a)⁻¹ < Δ := by simp only [Δ]; linarith
+  have hlt : lawMean (X κ) < lawMean (Y κ) := by simp only [Δ] at hΔ; linarith
+  have hm : 1 ≤ κ ^ d := Nat.one_le_pow _ _ (by omega)
+  have hlower := one_sub_le_meanComparisonGap_of_lt hX hY hlt hm
+  set V := lawVariance (differenceLaw (X κ) (Y κ))
+  have hlower' : 1 - 2 * (V / (((κ ^ d : ℕ) : ℝ) * Δ ^ 2)) ≤
+      meanComparisonGap (X κ) (Y κ) (κ ^ d) := hlower
+  have hV : V ≤ 16 * ((κ : ℝ) ^ b) ^ 2 := by
+    have := lawVariance_le (abs_le_of_mem_support_differenceLaw hX hY)
+    nlinarith [this]
+  have hΔsq : ((κ : ℝ) ^ (2 * a))⁻¹ ≤ Δ ^ 2 :=
+    calc
+      ((κ : ℝ) ^ (2 * a))⁻¹ = (((κ : ℝ) ^ a)⁻¹) ^ 2 := by
+        rw [inv_pow, ← pow_mul, mul_comm a 2]
+      _ ≤ Δ ^ 2 := pow_le_pow_left₀ hinv.le hΔ.le 2
+  have hmpow : (κ : ℝ) ^ (2 * a + 2 * b + 3) ≤ ((κ ^ d : ℕ) : ℝ) := by
+    push_cast
+    exact pow_le_pow_right₀ (by linarith) (by omega)
+  have hden : (κ : ℝ) ^ (2 * b + 3) ≤ ((κ ^ d : ℕ) : ℝ) * Δ ^ 2 := by
+    calc
+      (κ : ℝ) ^ (2 * b + 3) = (κ : ℝ) ^ (2 * a + 2 * b + 3) * ((κ : ℝ) ^ (2 * a))⁻¹ := by
+        rw [show 2 * a + 2 * b + 3 = 2 * a + (2 * b + 3) by ring, pow_add]
+        field_simp
+        ring
+      _ ≤ ((κ ^ d : ℕ) : ℝ) * Δ ^ 2 :=
+        mul_le_mul hmpow hΔsq (by positivity) (by positivity)
+  have hdenpos : 0 < ((κ ^ d : ℕ) : ℝ) * Δ ^ 2 := by
+    have : (0 : ℝ) < (κ : ℝ) ^ (2 * b + 3) := by positivity
+    linarith
+  have hratio : V / (((κ ^ d : ℕ) : ℝ) * Δ ^ 2) ≤ 1 / 4 := by
+    rw [div_le_iff₀ hdenpos]
+    have hκ3 : (64 : ℝ) ≤ (κ : ℝ) ^ 3 := by
+      have := pow_le_pow_left₀ (by norm_num : (0 : ℝ) ≤ 4) hκ4 3
+      norm_num at this
+      exact this
+    have hsplit : (κ : ℝ) ^ (2 * b + 3) = ((κ : ℝ) ^ b) ^ 2 * (κ : ℝ) ^ 3 := by ring
+    have hpowb : 0 ≤ ((κ : ℝ) ^ b) ^ 2 := sq_nonneg _
+    nlinarith [hden, hsplit, hV, hκ3, hpowb]
+  have hsmall : ((κ : ℝ) ^ (2 * a + 2 * b + 2))⁻¹ ≤ 1 / 4 := by
+    rw [inv_eq_one_div]
+    apply one_div_le_one_div_of_le (by norm_num)
+    calc
+      (4 : ℝ) ≤ κ := hκ4
+      _ = (κ : ℝ) ^ 1 := (pow_one _).symm
+      _ ≤ (κ : ℝ) ^ (2 * a + 2 * b + 2) := pow_le_pow_right₀ (by linarith) (by omega)
+  linarith
+
+/-- **A polynomial mean margin forces computational mean dominance**, for laws
+bounded by a polynomial in the size. -/
+theorem computationallyMeanDominates_of_polyMargin {X Y : ℕ → PMF ℝ} {a b : ℕ}
+    (hbound : ∀ᶠ κ : ℕ in atTop,
+      (∀ x ∈ (X κ).support, |x| ≤ (κ : ℝ) ^ b) ∧ ∀ y ∈ (Y κ).support, |y| ≤ (κ : ℝ) ^ b)
+    (hmargin : ∀ᶠ κ : ℕ in atTop,
+      Y κ = X κ ∨ lawMean (Y κ) + ((κ : ℝ) ^ a)⁻¹ ≤ lawMean (X κ)) :
+    ComputationallyMeanDominates X Y := by
+  intro c _
+  refine ⟨c + 2 * a + 2 * b + 5, by omega, ?_⟩
+  filter_upwards [hbound, hmargin, eventually_ge_atTop 2] with κ hbd hm hκ
+  have hK : (2 : ℝ) ≤ κ := by exact_mod_cast hκ
+  have htol : 0 < ((κ : ℝ) ^ c)⁻¹ := by positivity
+  rcases hm with heq | hle
+  · rw [heq, meanComparisonGap_self]
+    exact htol
+  obtain ⟨hX, hY⟩ := hbd
+  have hinv : 0 < ((κ : ℝ) ^ a)⁻¹ := by positivity
+  have hlt : lawMean (Y κ) < lawMean (X κ) := by linarith
+  have hupper := meanComparisonGap_le_of_lt hX hY hlt (m := κ ^ (c + 2 * a + 2 * b + 5))
+    (Nat.one_le_pow _ _ (by omega))
+  set V := lawVariance (differenceLaw (X κ) (Y κ))
+  set Δ := lawMean (X κ) - lawMean (Y κ)
+  set B : ℝ := (κ : ℝ) ^ b
+  have hB : 1 ≤ B := one_le_pow₀ (by linarith)
+  have hV : V ≤ 16 * B ^ 2 := by
+    have := lawVariance_le (abs_le_of_mem_support_differenceLaw hX hY)
+    nlinarith [this]
+  have hΔ : ((κ : ℝ) ^ a)⁻¹ ≤ Δ := by
+    simp only [Δ]
+    linarith
+  have hΔsq : ((κ : ℝ) ^ (2 * a))⁻¹ ≤ Δ ^ 2 :=
+    calc
+      ((κ : ℝ) ^ (2 * a))⁻¹ = (((κ : ℝ) ^ a)⁻¹) ^ 2 := by
+        rw [inv_pow, ← pow_mul, mul_comm a 2]
+      _ ≤ Δ ^ 2 := pow_le_pow_left₀ hinv.le hΔ 2
+  have hden : (κ : ℝ) ^ (c + 2 * b + 5) ≤
+      ((κ ^ (c + 2 * a + 2 * b + 5) : ℕ) : ℝ) * Δ ^ 2 := by
+    push_cast
+    calc
+      (κ : ℝ) ^ (c + 2 * b + 5) =
+          (κ : ℝ) ^ (c + 2 * a + 2 * b + 5) * ((κ : ℝ) ^ (2 * a))⁻¹ := by
+        rw [show c + 2 * a + 2 * b + 5 = 2 * a + (c + 2 * b + 5) by ring, pow_add]
+        field_simp
+        ring
+      _ ≤ (κ : ℝ) ^ (c + 2 * a + 2 * b + 5) * Δ ^ 2 :=
+        mul_le_mul_of_nonneg_left hΔsq (by positivity)
+  have hdenpos : 0 < ((κ ^ (c + 2 * a + 2 * b + 5) : ℕ) : ℝ) * Δ ^ 2 := by
+    have : (0 : ℝ) < (κ : ℝ) ^ (c + 2 * b + 5) := by positivity
+    linarith
+  have hkey : ((κ : ℝ) ^ c)⁻¹ * (κ : ℝ) ^ (c + 2 * b + 5) = B ^ 2 * (κ : ℝ) ^ 5 := by
+    simp only [B]
+    rw [pow_add, pow_add]
+    field_simp
+    ring
+  have hK5 : (32 : ℝ) ≤ (κ : ℝ) ^ 5 := by
+    have := pow_le_pow_left₀ (by norm_num : (0 : ℝ) ≤ 2) hK 5
+    norm_num at this
+    exact this
+  refine lt_of_le_of_lt hupper ?_
+  rw [div_lt_iff₀ hdenpos]
+  have hscaled : ((κ : ℝ) ^ c)⁻¹ * (κ : ℝ) ^ (c + 2 * b + 5) ≤
+      ((κ : ℝ) ^ c)⁻¹ * (((κ ^ (c + 2 * a + 2 * b + 5) : ℕ) : ℝ) * Δ ^ 2) :=
+    mul_le_mul_of_nonneg_left hden htol.le
+  have hB2 : 0 < B ^ 2 := by positivity
+  nlinarith
 
 end GameTheory.Math.Probability

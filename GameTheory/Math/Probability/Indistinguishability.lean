@@ -163,7 +163,7 @@ def beatenByMeanTest (Y : ℕ → PMF ℝ) (d : ℕ) : SampleTest ℝ where
 def ContainsMeanTests (tests : Set (SampleTest ℝ)) (Y : ℕ → PMF ℝ) : Prop :=
   ∀ d, beatsMeanTest Y d ∈ tests ∧ beatenByMeanTest Y d ∈ tests
 
-private theorem aheadProb_eq_bind (X Y : PMF ℝ) (m : ℕ) :
+theorem aheadProb_eq_bind (X Y : PMF ℝ) (m : ℕ) :
     aheadProb X Y m =
       (((sampleSum X m).bind fun s => (sampleSum Y m).map fun t => decide (t < s))
         true).toReal := by
@@ -225,7 +225,7 @@ difference. -/
 def statisticalDistance (μ ν : PMF α) : ℝ :=
   (∑' a, |(μ a).toReal - (ν a).toReal|) / 2
 
-private theorem summable_abs_sub_mass (μ ν : PMF α) :
+theorem summable_abs_sub_mass (μ ν : PMF α) :
     Summable fun a => |(μ a).toReal - (ν a).toReal| := by
   refine Summable.of_nonneg_of_le (fun _ => abs_nonneg _) (fun a => ?_)
     ((pmf_weight_summable μ).add (pmf_weight_summable ν))

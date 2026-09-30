@@ -22,6 +22,7 @@ Game,” arXiv:2506.22089 (2025).
 import GameTheory.Core.ExpectedUtility
 import GameTheory.Core.PseudoNash
 import GameTheory.Math.Probability.MeanComparisonExpectation
+import GameTheory.Math.Probability.SampleSumEvents
 import GameTheory.Math.Probability.Uniform
 import Mathlib.Analysis.SpecificLimits.Normed
 
@@ -31,22 +32,12 @@ namespace GameTheory.Examples.PseudoEquilibria
 
 open Filter GameTheory.Math.Probability
 
-/-! ## Probability tools for nonnegative draws -/
+/-! ## Paired sums of draws -/
 
 section Nonnegative
 
-/-- The probability of an event, as the expectation of its indicator. -/
-private abbrev probOf (μ : PMF ℝ) (event : ℝ → Prop) [DecidablePred event] : ℝ :=
-  expect μ fun x => if event x then 1 else 0
-
-private theorem abs_indicator_le (p : Prop) [Decidable p] :
-    |(if p then (1 : ℝ) else 0)| ≤ 1 := by
-  split_ifs <;> simp
-
-private theorem indicator_nonneg (p : Prop) [Decidable p] : 0 ≤ (if p then (1 : ℝ) else 0) := by
-  split_ifs <;> norm_num
-
-private theorem expect_pair (A B : PMF ℝ) (m : ℕ) (f : ℝ × ℝ → ℝ) (hf : ∀ p, |f p| ≤ 1) :
+/-- An expectation over the two sums is an iterated expectation. -/
+theorem expect_pair (A B : PMF ℝ) (m : ℕ) (f : ℝ × ℝ → ℝ) (hf : ∀ p, |f p| ≤ 1) :
     expect (sampleSumPair A B m) f =
       expect (sampleSum A m) fun s => expect (sampleSum B m) fun t => f (s, t) := by
   rw [sampleSumPair, expect_bind_tower _ _ _ (payoffIntegrable_of_bounded _ _ hf)]
@@ -55,90 +46,13 @@ private theorem expect_pair (A B : PMF ℝ) (m : ℕ) (f : ℝ × ℝ → ℝ) (
   rw [expect_map]
   rfl
 
-/-- The sum of `m` draws is nonzero only if some draw is: a union bound. -/
-private theorem probOf_sampleSum_ne_zero_le (μ : PMF ℝ) (m : ℕ) :
-    probOf (sampleSum μ m) (· ≠ 0) ≤ m * probOf μ (· ≠ 0) := by
-  induction m with
-  | zero => simp [expect_pure]
-  | succ m ih =>
-    rw [sampleSum_succ, probOf, expect_addLaw _ _ _
-      (payoffIntegrable_of_bounded _ _ fun _ => abs_indicator_le _)]
-    have hpoint : ∀ s, expect μ (fun y => if s + y ≠ 0 then (1 : ℝ) else 0) ≤
-        (if s ≠ 0 then 1 else 0) + probOf μ (· ≠ 0) := by
-      intro s
-      rw [← expect_constant μ (if s ≠ 0 then (1 : ℝ) else 0),
-        ← expect_add (payoffIntegrable_constant _ _)
-          (payoffIntegrable_of_bounded _ _ fun _ => abs_indicator_le _)]
-      refine expect_mono (fun y _ => ?_)
-        (payoffIntegrable_of_bounded _ _ fun _ => abs_indicator_le _)
-        (payoffIntegrable_add (payoffIntegrable_constant _ _)
-          (payoffIntegrable_of_bounded _ _ fun _ => abs_indicator_le _))
-      by_cases hs : s = 0
-      · subst hs
-        simp only [zero_add, ne_eq, not_true_eq_false, ite_false]
-        rfl
-      · have := indicator_nonneg (y ≠ 0)
-        split_ifs <;> simp_all
-    calc
-      _ ≤ expect (sampleSum μ m) (fun s => (if s ≠ 0 then (1 : ℝ) else 0) + probOf μ (· ≠ 0)) :=
-        expect_mono (fun s _ => hpoint s)
-          (payoffIntegrable_of_bounded _ _ (C := 1) fun _ =>
-            expect_abs_le_of_bounded zero_le_one fun _ => abs_indicator_le _)
-          (payoffIntegrable_add (payoffIntegrable_of_bounded _ _ fun _ => abs_indicator_le _)
-            (payoffIntegrable_constant _ _))
-      _ = probOf (sampleSum μ m) (· ≠ 0) + probOf μ (· ≠ 0) := by
-        rw [expect_add (payoffIntegrable_of_bounded _ _ fun _ => abs_indicator_le _)
-          (payoffIntegrable_constant _ _), expect_constant]
-      _ ≤ m * probOf μ (· ≠ 0) + probOf μ (· ≠ 0) := by linarith
-      _ = ((m + 1 : ℕ) : ℝ) * probOf μ (· ≠ 0) := by push_cast; ring
-
-/-- A sum of nonnegative draws vanishes only if every draw does. -/
-private theorem probOf_sampleSum_eq_zero_le {μ : PMF ℝ} (hμ : ∀ x ∈ μ.support, 0 ≤ x)
-    (m : ℕ) : probOf (sampleSum μ m) (· = 0) ≤ probOf μ (· = 0) ^ m := by
-  induction m with
-  | zero => simp [expect_pure]
-  | succ m ih =>
-    have hnonneg := fun s hs => nonneg_of_mem_support_sampleSum hμ m s hs
-    rw [sampleSum_succ, probOf, expect_addLaw _ _ _
-      (payoffIntegrable_of_bounded _ _ fun _ => abs_indicator_le _)]
-    have hpoint : ∀ s ∈ (sampleSum μ m).support,
-        expect μ (fun y => if s + y = 0 then (1 : ℝ) else 0) ≤
-          (if s = 0 then 1 else 0) * probOf μ (· = 0) := by
-      intro s hs
-      rw [← expect_const_mul]
-      refine expect_mono (fun y hy => ?_)
-        (payoffIntegrable_of_bounded _ _ fun _ => abs_indicator_le _)
-        (payoffIntegrable_const_mul (payoffIntegrable_of_bounded _ _ fun _ => abs_indicator_le _))
-      have h0 := hnonneg s hs
-      have h1 := hμ y hy
-      by_cases hsy : s + y = 0
-      · have hs0 : s = 0 := by linarith
-        have hy0 : y = 0 := by linarith
-        simp [hs0, hy0]
-      · simp only [hsy, ite_false]
-        exact mul_nonneg (indicator_nonneg _) (indicator_nonneg _)
-    have hprob0 : 0 ≤ probOf μ (· = 0) := expect_nonneg _ _ fun _ _ => indicator_nonneg _
-    calc
-      _ ≤ expect (sampleSum μ m) (fun s => (if s = 0 then (1 : ℝ) else 0) * probOf μ (· = 0)) :=
-        expect_mono hpoint
-          (payoffIntegrable_of_bounded _ _ (C := 1) fun _ =>
-            expect_abs_le_of_bounded zero_le_one fun _ => abs_indicator_le _)
-          (payoffIntegrable_of_bounded _ _ (C := |probOf μ (· = 0)|) fun _ => by
-            rw [abs_mul]
-            exact mul_le_of_le_one_left (abs_nonneg _) (abs_indicator_le _))
-      _ = probOf (sampleSum μ m) (· = 0) * probOf μ (· = 0) := by
-        simp only [mul_comm _ (probOf μ (· = 0))]
-        rw [expect_const_mul, mul_comm]
-      _ ≤ probOf μ (· = 0) ^ m * probOf μ (· = 0) := mul_le_mul_of_nonneg_right ih hprob0
-      _ = probOf μ (· = 0) ^ (m + 1) := (pow_succ _ _).symm
-
 end Nonnegative
 
 /-! ## Ahead probabilities of nonnegative draws -/
 
 section Ahead
 
-private theorem aheadProb_eq_expect (A B : PMF ℝ) (m : ℕ) :
+theorem aheadProb_eq_expect (A B : PMF ℝ) (m : ℕ) :
     aheadProb A B m =
       expect (sampleSum A m) fun s => expect (sampleSum B m) fun t => if t < s then 1 else 0 := by
   classical
@@ -146,7 +60,7 @@ private theorem aheadProb_eq_expect (A B : PMF ℝ) (m : ℕ) :
   rfl
 
 /-- A nonnegative sum beats `ΣY` only when `ΣY` is nonzero. -/
-private theorem aheadProb_le {X Y : PMF ℝ} (hX : ∀ x ∈ X.support, 0 ≤ x) (m : ℕ) :
+theorem aheadProb_le {X Y : PMF ℝ} (hX : ∀ x ∈ X.support, 0 ≤ x) (m : ℕ) :
     aheadProb Y X m ≤ probOf (sampleSum Y m) (· ≠ 0) := by
   rw [aheadProb_eq_expect]
   refine expect_mono (fun s _ => ?_)
@@ -164,7 +78,7 @@ private theorem aheadProb_le {X Y : PMF ℝ} (hX : ∀ x ∈ X.support, 0 ≤ x)
 
 /-- A nonnegative sum beats a nonnegative `ΣY` whenever `ΣY` vanishes and it
 does not. -/
-private theorem one_sub_le_aheadProb {X Y : PMF ℝ} (hX : ∀ x ∈ X.support, 0 ≤ x)
+theorem one_sub_le_aheadProb {X Y : PMF ℝ} (hX : ∀ x ∈ X.support, 0 ≤ x)
     (hY : ∀ y ∈ Y.support, 0 ≤ y) (m : ℕ) :
     1 - probOf (sampleSum Y m) (· ≠ 0) - probOf (sampleSum X m) (· = 0) ≤ aheadProb X Y m := by
   rw [aheadProb_eq_expect]
@@ -197,11 +111,13 @@ private theorem one_sub_le_aheadProb {X Y : PMF ℝ} (hX : ∀ x ∈ X.support, 
         exact indicator_nonneg _
   have hmono := expect_mono hinner
     (payoffIntegrable_sub (payoffIntegrable_sub (payoffIntegrable_constant _ _)
-      (payoffIntegrable_of_bounded _ _ fun _ => abs_indicator_le _)) (payoffIntegrable_constant _ _))
+      (payoffIntegrable_of_bounded _ _ fun _ => abs_indicator_le _))
+      (payoffIntegrable_constant _ _))
     (payoffIntegrable_of_bounded _ _ (C := 1) fun _ =>
       expect_abs_le_of_bounded zero_le_one fun _ => abs_indicator_le _)
   rw [expect_sub (payoffIntegrable_sub (payoffIntegrable_constant _ _)
-      (payoffIntegrable_of_bounded _ _ fun _ => abs_indicator_le _)) (payoffIntegrable_constant _ _),
+      (payoffIntegrable_of_bounded _ _ fun _ => abs_indicator_le _))
+      (payoffIntegrable_constant _ _),
     expect_sub (payoffIntegrable_constant _ _)
       (payoffIntegrable_of_bounded _ _ fun _ => abs_indicator_le _),
     expect_constant, expect_constant] at hmono
@@ -237,23 +153,23 @@ theorem lawMean_coinPayoff_lt_lawMean_jackpot {κ : ℕ} (hκ : 1 ≤ κ) :
   rw [lawMean_coinPayoff, lawMean_jackpot]
   exact one_lt_pow₀ (by norm_num) (by omega)
 
-private theorem coinPayoff_nonneg : ∀ x ∈ coinPayoff.support, 0 ≤ x := by
+theorem coinPayoff_nonneg : ∀ x ∈ coinPayoff.support, 0 ≤ x := by
   intro x hx
   rw [coinPayoff, PMF.mem_support_map_iff] at hx
   obtain ⟨b, _, rfl⟩ := hx
   cases b <;> norm_num
 
-private theorem jackpot_nonneg (κ : ℕ) : ∀ x ∈ (jackpot κ).support, 0 ≤ x := by
+theorem jackpot_nonneg (κ : ℕ) : ∀ x ∈ (jackpot κ).support, 0 ≤ x := by
   intro x hx
   rw [jackpot, PMF.mem_support_map_iff] at hx
   obtain ⟨i, _, rfl⟩ := hx
   split_ifs <;> positivity
 
-private theorem probOf_coinPayoff_eq_zero : probOf coinPayoff (· = 0) = 1 / 2 := by
+theorem probOf_coinPayoff_eq_zero : probOf coinPayoff (· = 0) = 1 / 2 := by
   rw [probOf, coinPayoff, expect_map, expect_uniformOfFintype]
   norm_num
 
-private theorem probOf_jackpot_ne_zero (κ : ℕ) : probOf (jackpot κ) (· ≠ 0) = 1 / 2 ^ κ := by
+theorem probOf_jackpot_ne_zero (κ : ℕ) : probOf (jackpot κ) (· ≠ 0) = 1 / 2 ^ κ := by
   rw [probOf, jackpot, expect_map, expect_uniformOfFintype]
   have hne : ∀ i : Fin (2 ^ κ), ((if i = 0 then (4 : ℝ) ^ κ else 0) ≠ 0) ↔ i = 0 := by
     intro i
@@ -308,20 +224,20 @@ def lottery : ParameterizedGame Unit where
 /-- Choosing the coin. -/
 def takeCoin : Profile lottery.sig := fun _ => true
 
-private theorem lottery_utilityLaw (profile : Profile lottery.sig) :
+theorem lottery_utilityLaw (profile : Profile lottery.sig) :
     lottery.utilityLaw () profile = fun κ => lottery.play κ profile := by
   funext κ
   exact PMF.map_id _
 
-private theorem lottery_play_takeCoin (κ : ℕ) : lottery.play κ takeCoin = coinPayoff := rfl
+theorem lottery_play_takeCoin (κ : ℕ) : lottery.play κ takeCoin = coinPayoff := rfl
 
-private theorem lottery_play_coin (κ : ℕ) :
+theorem lottery_play_coin (κ : ℕ) :
     lottery.play κ (Profile.update takeCoin () true) = coinPayoff := by
   change (if Profile.update takeCoin () true () then coinPayoff else jackpot κ) = _
   rw [Profile.update_same]
   rfl
 
-private theorem lottery_play_jackpot (κ : ℕ) :
+theorem lottery_play_jackpot (κ : ℕ) :
     lottery.play κ (Profile.update takeCoin () false) = jackpot κ := by
   change (if Profile.update takeCoin () false () then coinPayoff else jackpot κ) = _
   rw [Profile.update_same]

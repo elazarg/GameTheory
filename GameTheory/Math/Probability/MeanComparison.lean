@@ -24,7 +24,7 @@ Primary reference: A. Psomas, A. Terzoglou, Y. Wei, and V. Zikas,
 “Pseudo-Equilibria, or: How to Stop Worrying About Crypto and Just Analyze the
 Game,” arXiv:2506.22089 (2025).
 -/
-import GameTheory.Math.Probability.SampleSum
+import GameTheory.Math.Probability.SampleSumEvents
 import GameTheory.Math.Negligible
 import Mathlib.Basic.Real.Sign
 
@@ -78,10 +78,6 @@ theorem differenceLaw_swap (X Y : PMF ℝ) :
   simp only [Function.comp_def, neg_neg]
   rw [show (fun x : ℝ => x) = id from rfl, PMF.map_id]
   exact addLaw_comm _ _
-
-private theorem abs_indicator_le (p : Prop) [Decidable p] :
-    |(if p then (1 : ℝ) else 0)| ≤ 1 := by
-  split_ifs <;> simp
 
 open Classical in
 private theorem pair_prob_eq (X Y : PMF ℝ) (m : ℕ) (event : Set ℝ) :

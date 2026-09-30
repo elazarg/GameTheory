@@ -26,22 +26,30 @@ ones. If that class can compare empirical means with the games' utility
 ensembles, then each real deviation is covered by its simulation, and Nash
 transfer along coverage turns an ideal pseudo-Nash equilibrium into a real
 one. With every test seeing polynomially many draws, negligible statistical
-distance of the utility ensembles suffices. With polynomial-time tests, it is the utility-level consequence of simulation-based
-security plus efficient sampling of play; when both games compute utility from
-a common view, indistinguishable views suffice.
+distance of the utility ensembles suffices. With polynomial-time tests, it is
+the utility-level consequence of simulation-based security plus efficient
+sampling of play; when both games compute utility from a common view,
+indistinguishable views suffice. Simulations compose along chains of games.
+
+Pseudo-Nash depends on each player's utilities only up to a positive affine map
+chosen separately at each size, so no condition on payoff magnitudes decides
+it. It is blind to play of negligible probability: profiles whose utility
+ensembles, and those of all unilateral deviations, are negligibly close in
+statistical distance are pseudo-Nash together.
 
 Primary reference: A. Psomas, A. Terzoglou, Y. Wei, and V. Zikas,
 “Pseudo-Equilibria, or: How to Stop Worrying About Crypto and Just Analyze the
 Game,” arXiv:2506.22089 (2025).
 -/
 import GameTheory.Core.Equilibrium
-import GameTheory.Math.Probability.Indistinguishability
+import GameTheory.Math.Probability.MeanComparisonAffine
+import GameTheory.Math.Probability.StatisticalCloseness
 
 noncomputable section
 
 namespace GameTheory
 
-open GameTheory.Math.Probability
+open GameTheory.Math GameTheory.Math.Probability
 
 universe uι us uo
 
@@ -174,6 +182,57 @@ theorem ParameterizedGame.isPseudoNash_constant_iff [DecidableEq ι] (F : GameFo
   exact forall_congr' fun who => forall_congr' fun replacement =>
     (empiricalMeanPreference_apply _ _ _ _).symm
 
+/-! ## Invariance -/
+
+/-- **Mean-dominance preferences ignore positive affine rescaling**, chosen
+separately for each size and each player. -/
+theorem meanDominancePreference_affine {Outcome : Type*} {a : ℕ → ι → ℝ}
+    (ha : ∀ κ who, 0 < a κ who) (b : ℕ → ι → ℝ) (utility : ℕ → Outcome → ι → ℝ) :
+    meanDominancePreference (fun κ outcome who => a κ who * utility κ outcome who + b κ who) =
+      meanDominancePreference utility := by
+  funext who preferred alternative
+  have hsplit : ∀ (κ : ℕ) (law : PMF Outcome),
+      law.map (fun outcome => a κ who * utility κ outcome who + b κ who) =
+        (law.map fun outcome => utility κ outcome who).map fun x => a κ who * x + b κ who :=
+    fun κ law => by rw [PMF.map_comp]; rfl
+  simp only [meanDominancePreference, hsplit]
+  exact propext (computationallyMeanDominates_map_affine (fun κ => ha κ who) (b · who) _ _)
+
+/-- A parameterized game with each player's utility rescaled at each size. -/
+@[reducible]
+def ParameterizedGame.rescale (G : ParameterizedGame.{uι, us, uo} ι) (a b : ℕ → ι → ℝ) :
+    ParameterizedGame.{uι, us, uo} ι where
+  sig := G.sig
+  play := G.play
+  utility κ outcome who := a κ who * G.utility κ outcome who + b κ who
+
+/-- **Pseudo-Nash is invariant under per-size positive affine rescaling.** So no
+condition on payoff magnitudes, such as a polynomial bound, can decide whether
+pseudo-Nash equilibria exist. -/
+theorem ParameterizedGame.isPseudoNash_rescale_iff [DecidableEq ι]
+    (G : ParameterizedGame.{uι, us, uo} ι)
+    {a : ℕ → ι → ℝ} (ha : ∀ κ who, 0 < a κ who) (b : ℕ → ι → ℝ) (profile : Profile G.sig) :
+    (G.rescale a b).IsPseudoNash profile ↔ G.IsPseudoNash profile := by
+  change IsNash G.ensembleForm (meanDominancePreference fun κ outcome who =>
+    a κ who * G.utility κ outcome who + b κ who) profile ↔ _
+  rw [meanDominancePreference_affine ha]
+
+/-- **Pseudo-Nash is blind to negligibly reached play.** Profiles whose utility
+laws, and those of every unilateral deviation from them, are negligibly close
+are pseudo-Nash together. -/
+theorem ParameterizedGame.isPseudoNash_congr_of_negligible [DecidableEq ι]
+    (G : ParameterizedGame.{uι, us, uo} ι) {profile profile' : Profile G.sig}
+    (hhonest : ∀ who, Negligible fun κ =>
+      statisticalDistance (G.utilityLaw who profile κ) (G.utilityLaw who profile' κ))
+    (hdeviation : ∀ who (replacement : G.sig.Strategy who), Negligible fun κ =>
+      statisticalDistance (G.utilityLaw who (Profile.update profile who replacement) κ)
+        (G.utilityLaw who (Profile.update profile' who replacement) κ)) :
+    G.IsPseudoNash profile ↔ G.IsPseudoNash profile' := by
+  rw [ParameterizedGame.isPseudoNash_iff, ParameterizedGame.isPseudoNash_iff]
+  refine forall_congr' fun who => forall_congr' fun replacement => ?_
+  exact ((computationallyMeanDominates_congr_of_negligible (hhonest who)).1).trans
+    ((computationallyMeanDominates_congr_of_negligible (hdeviation who replacement)).2)
+
 /-! ## Views and utilities -/
 
 section Views
@@ -232,6 +291,22 @@ structure SecureImplementation [DecidableEq ι] (tests : Set (SampleTest ℝ))
       IndistinguishableBy tests
         (real.utilityLaw who (Profile.update (Profile.map compile profile) who deviation))
         (ideal.utilityLaw who (Profile.update profile who simulated))
+
+/-- Simulations compose: a real game simulated by an intermediate game that is
+itself simulated by an ideal game is simulated by the ideal game. -/
+def SecureImplementation.trans [DecidableEq ι] {tests : Set (SampleTest ℝ)}
+    {ideal middle real : ParameterizedGame.{uι, us, uo} ι}
+    (first : SecureImplementation tests ideal middle)
+    (second : SecureImplementation tests middle real) :
+    SecureImplementation tests ideal real where
+  compile who strategy := second.compile who (first.compile who strategy)
+  honest profile who :=
+    (second.honest (Profile.map first.compile profile) who).trans (first.honest profile who)
+  simulate profile who deviation := by
+    obtain ⟨intermediate, hsecond⟩ :=
+      second.simulate (Profile.map first.compile profile) who deviation
+    obtain ⟨simulated, hfirst⟩ := first.simulate profile who intermediate
+    exact ⟨simulated, hsecond.trans hfirst⟩
 
 /-- **Ideal to real.** Compiling a pseudo-Nash equilibrium of the ideal game
 yields a pseudo-Nash equilibrium of the real game, provided the tests can

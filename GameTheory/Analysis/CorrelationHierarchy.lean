@@ -259,6 +259,30 @@ theorem equilibriumComparison_mediated (device : PMF (Profile F.sig))
     PMF.bind_map, Function.comp_def, hresponse]
   rfl
 
+/-- **Obedience in the mediated extension is correlated equilibrium**, for any
+preference. -/
+theorem isNash_mediated_obedient_iff (weaklyPrefers : WeakPreference ι F.sig.Outcome)
+    (device : PMF (Profile F.sig)) :
+    IsNash (F.mediated device) weaklyPrefers (F.obedient device) ↔
+      IsCorrelatedEq F weaklyPrefers device := by
+  rw [isNash_iff, isCorrelatedEq_iff]
+  refine forall_congr' fun who => forall_congr' fun respond => ?_
+  have hresponse (recommended : Profile F.sig) :
+      (fun player => Profile.update (F.obedient device) who respond player
+          (recommended player)) =
+        Profile.update recommended who (respond (recommended who)) := by
+    funext player
+    by_cases hplayer : player = who
+    · subst player
+      simp
+    · simp [Profile.update_of_ne _ _ hplayer, GameForm.obedient]
+  have hhonest : (F.mediated device).play (F.obedient device) = F.outcomeLaw device := rfl
+  have hdeviation : (F.mediated device).play (Profile.update (F.obedient device) who respond) =
+      device.bind fun recommended =>
+        F.play (Profile.update recommended who (respond (recommended who))) := by
+    simp only [GameForm.mediated, hresponse]
+  rw [hhonest, hdeviation]
+
 /-- **Descent through the mediated extension.** Compiling a device into its
 mediated extension preserves correlated equilibrium for every utility, and
 preserves coarse correlated equilibrium exactly when coarse correlated
