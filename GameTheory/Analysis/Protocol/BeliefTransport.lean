@@ -345,7 +345,8 @@ variable (raw : (i : ι) → M.BehavioralPolicy i) (source : (i : ι) → N.Beha
 
 section Reach
 
-variable [DecidableEq T.History] (who : ι) (rawSite : M.InformationSite who) (sourceSite : N.InformationSite who)
+variable [DecidableEq T.History] (who : ι) (rawSite : M.InformationSite who)
+  (sourceSite : N.InformationSite who)
   (maps : ∀ history, M.infoOf who history.trace = rawSite.1 →
     N.infoOf who (project history).trace = sourceSite.1)
   (fiber : ∀ history : N.InformationHistory who sourceSite.1,
