@@ -237,6 +237,40 @@ theorem finitaryProduct_map {B : ι → Type uB} (laws : ∀ i, PMF (A i))
       (hpoint i hi).eq_pure_supportPoint, PMF.pure_map, supportPoint_pure,
       supportPoint_pure]
 
+/-- Drawing one coordinate first and fixing it as a point mass gives the same
+product, when that coordinate is drawn or its law is a point mass. -/
+theorem finitaryProduct_update_bind [DecidableEq ι] (laws : ∀ i, PMF (A i))
+    {moving : Finset ι} {who : ι} (law : PMF (A who))
+    (hwho : who ∈ moving ∨ IsPointMass law) :
+    finitaryProduct (Function.update laws who law) moving =
+      law.bind fun choice =>
+        finitaryProduct (Function.update laws who (PMF.pure choice)) moving := by
+  classical
+  rcases hwho with hwho | ⟨atom, rfl⟩
+  · ext assignment
+    rw [PMF.bind_apply]
+    have hfixed (μ : PMF (A who)) :
+        (∀ i ∉ moving, assignment i = supportPoint (Function.update laws who μ i)) ↔
+          ∀ i ∉ moving, assignment i = supportPoint (laws i) := by
+      refine forall₂_congr fun i hi => ?_
+      rw [Function.update_of_ne (ne_of_mem_of_not_mem hwho hi).symm]
+    have hproduct (μ : PMF (A who)) :
+        ∏ i ∈ moving, Function.update laws who μ i (assignment i) =
+          μ (assignment who) * ∏ i ∈ moving.erase who, laws i (assignment i) := by
+      rw [← Finset.mul_prod_erase moving _ hwho, Function.update_self]
+      congr 1
+      apply Finset.prod_congr rfl
+      intro i hi
+      rw [Function.update_of_ne (Finset.ne_of_mem_erase hi)]
+    simp only [finitaryProduct_apply, hfixed, hproduct]
+    split_ifs
+    · rw [tsum_eq_single (assignment who)]
+      · simp [PMF.pure_apply]
+      · intro choice hchoice
+        simp [PMF.pure_apply, Ne.symm hchoice]
+    · simp
+  · rw [PMF.pure_bind]
+
 /-- A drawn coordinate, or a point-mass one, keeps its own law as marginal. -/
 theorem finitaryProduct_map_eval (laws : ∀ i, PMF (A i)) (moving : Finset ι)
     (j : ι) (hj : j ∈ moving ∨ IsPointMass (laws j)) :

@@ -22,13 +22,13 @@ variable (M : InformationModel.{uι, us, ua, up, uq, uk} E)
 
 namespace InformationModel
 /-- At a history in the selected information state, installing a local law
-commutes with the one-step independent product: equivalently, first draw the
-selected player's choice and then use the corresponding pure commitment.
+commutes with the one-step joint law: equivalently, first draw the selected
+player's choice and then use the corresponding pure commitment.
 
 This is a law identity, not merely an expectation calculation, and it needs
-only the finite player product already used by behavioral execution. -/
+only the finitely many movers already used by behavioral execution. -/
 theorem behavioralJoint_update_withLaw_eq_bind
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (profile : (i : ι) → M.BehavioralPolicy i) (who : ι)
     (policy : M.BehavioralPolicy who)
     [DecidableEq (M.InfoState who)]
@@ -45,61 +45,34 @@ theorem behavioralJoint_update_withLaw_eq_bind
             profile who (policy.commit info choice))
           trace hterm := by
   subst info
-  let jointOf :
-      ((i : ι) → M.Choice i (M.infoOf i trace)) →
-        { joint : (i : ι) → Option (E.Action i) // E.Legal state joint } :=
-    fun draws => ⟨fun i => (draws i).1,
-      ExecutionProtocol.legal_of_legalOption hterm fun i =>
-        (M.menu_adequate i trace (draws i).1).mp (draws i).2⟩
-  let otherLaws :
-      (other : {other : ι // other ≠ who}) →
-        PMF (M.Choice other.1 (M.infoOf other.1 trace)) :=
-    fun other => profile other.1 (M.infoOf other.1 trace)
-  let split :=
-    Equiv.piSplitAt who fun i => M.Choice i (M.infoOf i trace)
-  have hwithWho :
-      Profile.update (sig := M.behavioralSignature) profile who
-          (policy.withLaw (M.infoOf who trace) law) who
-            (M.infoOf who trace) = law := by
-    rw [Profile.update_same, BehavioralPolicy.withLaw_self]
-  have hwithOthers :
-      (fun other : {other : ι // other ≠ who} =>
-          Profile.update (sig := M.behavioralSignature) profile who
-              (policy.withLaw (M.infoOf who trace) law)
-            other.1 (M.infoOf other.1 trace)) =
-        otherLaws := by
-    funext other
-    rw [Profile.update_of_ne _ _ other.2]
-  have hcommitWho (choice : M.Choice who (M.infoOf who trace)) :
-      Profile.update (sig := M.behavioralSignature) profile who
-          (policy.commit (M.infoOf who trace) choice) who
-          (M.infoOf who trace) = PMF.pure choice := by
-    rw [Profile.update_same, BehavioralPolicy.commit_self]
-  have hcommitOthers (choice : M.Choice who (M.infoOf who trace)) :
-      (fun other : {other : ι // other ≠ who} =>
-          Profile.update (sig := M.behavioralSignature) profile who
-              (policy.commit (M.infoOf who trace) choice)
-            other.1 (M.infoOf other.1 trace)) =
-        otherLaws := by
-    funext other
-    rw [Profile.update_of_ne _ _ other.2]
-  simp only [behavioralJoint_eq_independentProduct]
-  rw [← PMF.map_bind]
-  apply congrArg (PMF.map jointOf)
-  rw [independentProduct_splitAt _ who, hwithWho, hwithOthers]
-  have hbranches :
-      (fun choice : M.Choice who (M.infoOf who trace) =>
-            independentProduct fun i =>
-            Profile.update (sig := M.behavioralSignature) profile who
-                (policy.commit (M.infoOf who trace) choice) i
-              (M.infoOf i trace)) =
-        fun choice => PMF.map (fun rest => split.symm (choice, rest))
-          (independentProduct otherLaws) := by
-    funext choice
-    rw [independentProduct_splitAt _ who, hcommitWho choice,
-      hcommitOthers choice]
-    simp only [PMF.pure_bind, split]
-  rw [hbranches]
+  let current : (i : ι) → PMF (M.Choice i (M.infoOf i trace)) :=
+    fun i => profile i (M.infoOf i trace)
+  have hwithLaw :
+      (fun i => Profile.update (sig := M.behavioralSignature) profile who
+          (policy.withLaw (M.infoOf who trace) law) i (M.infoOf i trace)) =
+        Function.update current who law := by
+    funext i
+    by_cases hi : i = who
+    · subst i
+      rw [Profile.update_same, BehavioralPolicy.withLaw_self, Function.update_self]
+    · rw [Profile.update_of_ne _ _ hi, Function.update_of_ne hi]
+  have hcommit (choice : M.Choice who (M.infoOf who trace)) :
+      (fun i => Profile.update (sig := M.behavioralSignature) profile who
+          (policy.commit (M.infoOf who trace) choice) i (M.infoOf i trace)) =
+        Function.update current who (PMF.pure choice) := by
+    funext i
+    by_cases hi : i = who
+    · subst i
+      rw [Profile.update_same, BehavioralPolicy.commit_self, Function.update_self]
+    · rw [Profile.update_of_ne _ _ hi, Function.update_of_ne hi]
+  have hdrawn : who ∈ E.movers state ∨ IsPointMass law := by
+    by_cases hactive : E.active state who
+    · exact Or.inl ((E.mem_movers).2 hactive)
+    · have := M.subsingleton_choice_of_not_active trace hactive
+      exact Or.inr (isPointMass_of_subsingleton law)
+  unfold behavioralJoint
+  rw [hwithLaw, finitaryProduct_update_bind current law hdrawn, PMF.map_bind]
+  simp only [hcommit]
 
 /-- After leaving a genuine decision at `info`, a persistent installed law and
 one of its pure commitments are observationally identical to the remaining
@@ -159,7 +132,7 @@ the law installed there.  No global finiteness of information states is used:
 the proof factors only the current finite player product, then uses no-revisit
 to make the selected coordinate invisible downstream. -/
 theorem runBehavioralFrom_update_withLaw_eq_bind
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (hactsOnce : M.ActsOnceWhereItMatters)
     (profile : (i : ι) → M.BehavioralPolicy i) (who : ι)
     (policy : M.BehavioralPolicy who)
@@ -195,7 +168,7 @@ theorem runBehavioralFrom_update_withLaw_eq_bind
 /-- Installing a local law factors the belief-averaged outcome law into a
 choice draw followed by the corresponding committed continuation. -/
 theorem BehavioralAssessment.truncatedContinuationContext_withLaw_outcome_eq_bind
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (hactsOnce : M.ActsOnceWhereItMatters)
     (assessment : M.BehavioralAssessment)
     {i : ι} [DecidableEq (M.InfoState i)] (site : M.InformationSite i)
@@ -245,7 +218,7 @@ theorem BehavioralAssessment.truncatedContinuationContext_withLaw_outcome_eq_bin
 /-- The installed-law guard supplies supported committed continuation guards
 after the outcome-law factorization. -/
 theorem BehavioralAssessment.truncatedContinuationContext_withLaw_commit_integrable
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (hactsOnce : M.ActsOnceWhereItMatters)
     (assessment : M.BehavioralAssessment)
     {i : ι} [DecidableEq (M.InfoState i)] (site : M.InformationSite i)
@@ -276,7 +249,7 @@ theorem BehavioralAssessment.truncatedContinuationContext_withLaw_commit_integra
 not revisited. Supported commit values are integrated from the installed-law
 guard; no extra branch-integrability premise is required. -/
 theorem BehavioralAssessment.truncatedContinuationContext_withLaw_eq_expect
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (hactsOnce : M.ActsOnceWhereItMatters)
     (assessment : M.BehavioralAssessment)
     {i : ι} [DecidableEq (M.InfoState i)] (site : M.InformationSite i)

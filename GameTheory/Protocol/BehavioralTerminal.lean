@@ -19,7 +19,8 @@ open GameTheory.Math.Probability
 
 universe uι
 
-variable {ι : Type uι} [Fintype ι] {E : ExecutionProtocol ι}
+variable {ι : Type uι} {E : ExecutionProtocol ι}
+variable [E.FiniteMovers]
 
 namespace InformationModel
 
