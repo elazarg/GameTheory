@@ -52,6 +52,11 @@ import GameTheory.Analysis.Protocol.Examples
 import GameTheory.Analysis.Protocol.ExtensiveFormPerfection
 import GameTheory.Analysis.Protocol.Incentives
 import GameTheory.Analysis.Protocol.InformationLocalization
+import GameTheory.Analysis.Protocol.RestrictionBeliefs
+import GameTheory.Analysis.Protocol.RestrictionCompletion
+import GameTheory.Analysis.Protocol.RestrictionDomination
+import GameTheory.Analysis.Protocol.RestrictionExtension
+import GameTheory.Analysis.Protocol.RestrictionIncentives
 import GameTheory.Analysis.Protocol.Sequential
 import GameTheory.Analysis.Protocol.SequentialExistence
 import GameTheory.Analysis.Protocol.SequentialLimits
@@ -218,6 +223,7 @@ import GameTheory.Math.Probability.Measure
 import GameTheory.Math.Probability.Mixture
 import GameTheory.Math.Probability.OnlineLearning
 import GameTheory.Math.Probability.Product
+import GameTheory.Math.Probability.RelativeTremble
 import GameTheory.Math.Probability.SelectiveStopping
 import GameTheory.Math.Probability.SequentialSampling
 import GameTheory.Math.Probability.Simplex
@@ -263,6 +269,7 @@ import GameTheory.Mechanism.Revelation
 import GameTheory.Mechanism.SingleParameter
 import GameTheory.Mechanism.Strategyproof
 import GameTheory.Protocol
+import GameTheory.Protocol.ActionRestriction
 import GameTheory.Protocol.Assessment
 import GameTheory.Protocol.Backward
 import GameTheory.Protocol.BehavioralAssessment
@@ -292,6 +299,8 @@ import GameTheory.Protocol.PolicyRandomization
 import GameTheory.Protocol.Predraw
 import GameTheory.Protocol.Randomized
 import GameTheory.Protocol.RandomizedBackward
+import GameTheory.Protocol.RestrictionExecution
+import GameTheory.Protocol.RestrictionProfile
 import GameTheory.Protocol.SingleMover
 import GameTheory.Protocol.StateKernel
 import GameTheory.Protocol.Strategic

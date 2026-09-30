@@ -9875,3 +9875,52 @@ memory.
 - **Outcome:** accepted for finitely many histories.
 - **Next action:** none planned. The agent completion is the input for
   extending equilibria across action restrictions.
+
+### EXP-155: extending sequential equilibria across action restrictions on terminal play
+
+- **Date / status:** 2026-09-30; positive, with retained-site clocks.
+- **Question:** can a sequential equilibrium of a protocol be extended to a
+  protocol offering additional actions, on terminal play, with the general
+  structure separated from any particular deterrence mechanism, and with fewer
+  common-depth hypotheses than a depth-indexed treatment needs?
+- **Competing designs:** (a) require a common decision depth at every site of
+  the larger protocol and compare continuations at the remaining depth;
+  (b) state rationality on terminal play, complete new sites by the clock-free
+  agent completion, and use common depths only to transport beliefs at retained
+  sites.
+- **Hypotheses:**
+  - *H1.* The one-step square determines complete behavioral and terminal
+    laws, and a horizon bounding the larger protocol bounds the smaller one.
+  - *H2.* Retained-site incentives follow from sequential rationality of the
+    smaller protocol and a whole-policy bound on each new action, on terminal
+    contexts, with no integrability premise when histories are finitely many.
+  - *H3.* New sites need no common depth: the agent completion and the
+    one-shot principle for consistent assessments are clock-free.
+- **Kill conditions:** retained beliefs cannot be transported without a
+  global clock; terminal contexts lose the local-lottery decomposition.
+- **Artifacts:** `Protocol/ActionRestriction.lean`,
+  `Protocol/RestrictionExecution.lean`, `Protocol/RestrictionProfile.lean`,
+  `Analysis/Protocol/RestrictionDomination.lean`,
+  `Analysis/Protocol/RestrictionBeliefs.lean`,
+  `Analysis/Protocol/RestrictionIncentives.lean`,
+  `Analysis/Protocol/RestrictionCompletion.lean`,
+  `Analysis/Protocol/RestrictionExtension.lean`,
+  `Math/Probability/RelativeTremble.lean`,
+  `Analysis/Protocol/RestrictionExtensionTest.lean`. Validation:
+  `lake build GameTheory`, `lake lint`.
+- **Observations:**
+  - H1 held; the bound transfers through the length-preserving embedding.
+  - H2 held. In this library a committed choice is not definitionally a
+    local law with a point mass, so pure choices are compared through an
+    extension lemma for commitments; local lotteries reduce to them by the
+    affine decomposition over terminal play.
+  - H3 held: common depths are needed only at retained sites, where the
+    belief transport conditions behavioral play at that depth.
+  - Domination of execution laws needs no finite carrier.
+- **Outcome:** accepted with common depths at retained sites.
+- **Next action:** retained-site beliefs without a clock would follow from
+  expressing a Bayes belief as the law of the site ancestor of terminal play
+  conditioned on passing through the site (EXP-153), together with the fact
+  that ancestors of embedded histories are embedded; both remain open. The
+  only test so far uses the identity restriction; a fixture adding an action
+  would exercise the completion of new sites.
