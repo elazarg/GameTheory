@@ -210,27 +210,30 @@ theorem signWalk_window_le (m H : ℕ) :
       push_cast
       rw [inv_pow, div_eq_mul_inv]
 
-/-- After `n ^ 8` steps the fair `±1` walk lies in `[-n ^ 3, n ^ 3]` with
-probability at most `2 / n`. -/
-theorem signWalk_window_pow_eight_le (n : ℕ) (hn : 1 ≤ n) :
-    ((sampleSum (signLaw 1) (n ^ 8)).toOuterMeasure {x | |x| ≤ (n ^ 3 : ℕ)}).toReal ≤
+/-- After at least `n ^ 8` steps the fair `±1` walk lies in `[-n ^ 3, n ^ 3]`
+with probability at most `2 / n`. -/
+theorem signWalk_window_le_of_pow_eight_le {n m : ℕ} (hn : 1 ≤ n) (hm : n ^ 8 ≤ m) :
+    ((sampleSum (signLaw 1) m).toOuterMeasure {x | |x| ≤ (n ^ 3 : ℕ)}).toReal ≤
       2 / n := by
-  have hwin := signWalk_window_le (n ^ 8) (n ^ 3)
-  set a := ((n ^ 8).choose (n ^ 8 / 2) : ℝ) / 2 ^ (n ^ 8)
+  have hwin := signWalk_window_le m (n ^ 3)
+  set a := (m.choose (m / 2) : ℝ) / 2 ^ m
   have hnpos : (0 : ℝ) < n := by exact_mod_cast hn
   have ha0 : 0 ≤ a := by positivity
-  have hsq : a ^ 2 * (n : ℝ) ^ 8 ≤ 1 := by
-    have h := choose_middle_sq_mul_le (n ^ 8)
-    have hcast : ((n ^ 8).choose (n ^ 8 / 2) : ℝ) ^ 2 * (n : ℝ) ^ 8 ≤ 4 ^ (n ^ 8) := by
+  have hsqm : a ^ 2 * (m : ℝ) ≤ 1 := by
+    have h := choose_middle_sq_mul_le m
+    have hcast : (m.choose (m / 2) : ℝ) ^ 2 * (m : ℝ) ≤ 4 ^ m := by
       exact_mod_cast h
-    have h4 : (4 : ℝ) ^ (n ^ 8) = (2 ^ (n ^ 8)) ^ 2 := by
+    have h4 : (4 : ℝ) ^ m = (2 ^ m) ^ 2 := by
       rw [← pow_mul, mul_comm, pow_mul]
       norm_num
     rw [h4] at hcast
-    have h2pos : (0 : ℝ) < (2 ^ (n ^ 8)) ^ 2 := by positivity
+    have h2pos : (0 : ℝ) < (2 ^ m) ^ 2 := by positivity
     simp only [a, div_pow]
     rw [div_mul_eq_mul_div, div_le_one h2pos]
     exact hcast
+  have hsq : a ^ 2 * (n : ℝ) ^ 8 ≤ 1 := by
+    have hnm : (n : ℝ) ^ 8 ≤ m := by exact_mod_cast hm
+    exact (mul_le_mul_of_nonneg_left hnm (sq_nonneg a)).trans hsqm
   clear_value a
   have ha : a ≤ 1 / (n : ℝ) ^ 4 := by
     have hb : 0 ≤ 1 / (n : ℝ) ^ 4 := by positivity

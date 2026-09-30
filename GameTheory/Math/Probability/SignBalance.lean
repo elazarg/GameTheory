@@ -3,7 +3,8 @@
 
 A sum of `m` independent draws from a centred law of bounded support is
 positive about as often as it is negative: the expected sign of the sum is
-`O(m ^ (-1 / 8))`. This is the quantitative content of the central limit
+`O(m ^ (-1 / 8))`, stated without real powers as a uniform bound on its eighth
+power times `m`. This is the quantitative content of the central limit
 theorem needed to compare empirical means of laws with equal expectations, and
 it is proved without any Gaussian.
 
@@ -11,8 +12,9 @@ The sign lies below a smooth step that rises over `[-h, 0]`. Lindeberg
 replacement moves the step's expectation to the sum of symmetric `±σ` draws
 with the same variance, whose expected sign is zero by symmetry, at a cost of
 order `m / h ^ 3`. The step exceeds the sign only on `[-h, 0]`, which the
-symmetric walk rarely visits. Taking `m = n ^ 8` draws and `h = σ n ^ 3` makes
-both errors of order `1 / n`; the reflected law bounds the sign from below.
+symmetric walk rarely visits. With `n` the integer eighth root of `m` and
+`h = σ n ^ 3`, both errors are of order `1 / n`; the reflected law bounds the
+sign from below.
 -/
 import GameTheory.Math.Probability.Lindeberg
 import GameTheory.Math.Probability.RademacherWalk
@@ -154,11 +156,13 @@ private theorem abs_le_max_left {x R σ : ℝ} (hx : |x| ≤ R) : |x| ≤ max R 
   hx.trans (le_max_left _ _)
 
 /-- For a centred law of bounded support with positive variance, the sum of
-`n ^ 8` draws has expected sign at most `C / n`. -/
+`m` draws has expected sign at most `C / n` whenever `m` is between `n ^ 8` and
+`256 n ^ 8`. -/
 private theorem exists_expect_sign_sampleSum_le {μ : PMF ℝ} {R : ℝ}
     (hbound : ∀ x ∈ μ.support, |x| ≤ R) (hmean : expect μ id = 0)
     (hvar : 0 < expect μ (fun x => x ^ 2)) :
-    ∃ C, ∀ n : ℕ, 1 ≤ n → expect (sampleSum μ (n ^ 8)) Real.sign ≤ C / n := by
+    ∃ C, ∀ n m : ℕ, 1 ≤ n → n ^ 8 ≤ m → m ≤ 256 * n ^ 8 →
+      expect (sampleSum μ m) Real.sign ≤ C / n := by
   set v := expect μ (fun x => x ^ 2)
   set σ := Real.sqrt v
   have hσ : 0 < σ := Real.sqrt_pos.mpr hvar
@@ -178,11 +182,10 @@ private theorem exists_expect_sign_sampleSum_le {μ : PMF ℝ} {R : ℝ}
     (expect_nonneg _ _ fun _ _ => by positivity)
   obtain ⟨M, ⟨hΦ⟩⟩ := exists_smoothTransition_control
   have hM : 0 ≤ M := hΦ.nonneg
-  refine ⟨2 * M * K / σ ^ 3 + 4, fun n hn => ?_⟩
+  refine ⟨512 * M * K / σ ^ 3 + 4, fun n m hn hlow hhigh => ?_⟩
   have hnpos : (0 : ℝ) < n := by exact_mod_cast hn
   set h := σ * (n : ℝ) ^ 3
   have hh : 0 < h := by positivity
-  set m := n ^ 8
   let hU := hΦ.affine 2 h⁻¹ 1 (-1)
   have hUfun : (fun x => 2 * Real.smoothTransition (h⁻¹ * x + 1) + -1) = upperStep h := rfl
   have hUbound : ∀ x, |upperStep h x| ≤ 1 := abs_upperStep_le h
@@ -223,28 +226,41 @@ private theorem exists_expect_sign_sampleSum_le {μ : PMF ℝ} {R : ℝ}
       push_cast
       exact mul_le_mul_iff_right₀ hσ
     rw [hlaw, PMF.toOuterMeasure_map_apply, hpre]
-    exact signWalk_window_pow_eight_le n hn
+    exact signWalk_window_le_of_pow_eight_le hn hlow
   have hlindUpper := (abs_le.mp hlind).2
-  have hconst : (m : ℝ) * (|(2 : ℝ)| * |h⁻¹| ^ 3 * M * K) = 2 * M * K / σ ^ 3 / n := by
-    simp only [m, h]
-    rw [abs_of_pos two_pos, abs_of_pos (inv_pos.mpr hh)]
-    push_cast
-    field_simp
-    ring
+  have hcoef : 0 ≤ 2 * M * K / σ ^ 3 / (n : ℝ) ^ 9 :=
+    div_nonneg (div_nonneg (mul_nonneg (mul_nonneg zero_le_two hM) hK) (by positivity))
+      (by positivity)
+  have hconst : (m : ℝ) * (|(2 : ℝ)| * |h⁻¹| ^ 3 * M * K) ≤ 512 * M * K / σ ^ 3 / n := by
+    have hform : (m : ℝ) * (|(2 : ℝ)| * |h⁻¹| ^ 3 * M * K) =
+        m * (2 * M * K / σ ^ 3 / (n : ℝ) ^ 9) := by
+      simp only [h]
+      rw [abs_of_pos two_pos, abs_of_pos (inv_pos.mpr hh)]
+      field_simp
+      ring
+    have hmle : (m : ℝ) ≤ 256 * (n : ℝ) ^ 8 := by exact_mod_cast hhigh
+    rw [hform]
+    calc
+      (m : ℝ) * (2 * M * K / σ ^ 3 / (n : ℝ) ^ 9) ≤
+          256 * (n : ℝ) ^ 8 * (2 * M * K / σ ^ 3 / (n : ℝ) ^ 9) :=
+        mul_le_mul_of_nonneg_right hmle hcoef
+      _ = 512 * M * K / σ ^ 3 / n := by
+        field_simp
+        ring
   calc
     expect (sampleSum μ m) Real.sign ≤ expect (sampleSum μ m) (upperStep h) := hS
     _ ≤ expect (sampleSum ρ m) (upperStep h) + (m : ℝ) * (|(2 : ℝ)| * |h⁻¹| ^ 3 * M * K) := by
       linarith
-    _ ≤ 2 * (2 / n) + 2 * M * K / σ ^ 3 / n := by
-      rw [hconst]
+    _ ≤ 2 * (2 / n) + 512 * M * K / σ ^ 3 / n := by
       linarith
-    _ = (2 * M * K / σ ^ 3 + 4) / n := by ring
+    _ = (512 * M * K / σ ^ 3 + 4) / n := by ring
 
-/-- **Sign balance.** For a centred law of bounded support, the sum of `n ^ 8`
-independent draws has expected sign `O(1 / n)`. -/
-theorem exists_abs_expect_sign_sampleSum_le {μ : PMF ℝ} {R : ℝ}
+/-- Both signs of the sum: `|E sign| ≤ C / n` for `m` between `n ^ 8` and
+`256 n ^ 8`. -/
+private theorem exists_abs_expect_sign_sampleSum_le {μ : PMF ℝ} {R : ℝ}
     (hbound : ∀ x ∈ μ.support, |x| ≤ R) (hmean : expect μ id = 0) :
-    ∃ C, ∀ n : ℕ, 1 ≤ n → |expect (sampleSum μ (n ^ 8)) Real.sign| ≤ C / n := by
+    ∃ C, 0 ≤ C ∧ ∀ n m : ℕ, 1 ≤ n → n ^ 8 ≤ m → m ≤ 256 * n ^ 8 →
+      |expect (sampleSum μ m) Real.sign| ≤ C / n := by
   by_cases hvar : 0 < expect μ (fun x => x ^ 2)
   · obtain ⟨C₁, hC₁⟩ := exists_expect_sign_sampleSum_le hbound hmean hvar
     have hbound' : ∀ x ∈ (μ.map Neg.neg).support, |x| ≤ R := by
@@ -260,18 +276,20 @@ theorem exists_abs_expect_sign_sampleSum_le {μ : PMF ℝ} {R : ℝ}
       rw [expect_map]
       simpa [Function.comp_def] using hvar
     obtain ⟨C₂, hC₂⟩ := exists_expect_sign_sampleSum_le hbound' hmean' hvar'
-    refine ⟨max C₁ C₂, fun n hn => abs_le.mpr ⟨?_, ?_⟩⟩
-    · have h := hC₂ n hn
+    refine ⟨max (max C₁ C₂) 0, le_max_right _ _, fun n m hn hlow hhigh => abs_le.mpr ⟨?_, ?_⟩⟩
+    · have h := hC₂ n m hn hlow hhigh
       rw [sampleSum_map_neg, expect_map] at h
       have hneg : (Real.sign ∘ Neg.neg : ℝ → ℝ) = fun x => -Real.sign x := by
         funext x
         exact Real.sign_neg
       rw [hneg, expect_neg] at h
       have hnpos : (0 : ℝ) < n := by exact_mod_cast hn
-      have : C₂ / n ≤ max C₁ C₂ / n := div_le_div_of_nonneg_right (le_max_right _ _) hnpos.le
+      have : C₂ / n ≤ max (max C₁ C₂) 0 / n :=
+        div_le_div_of_nonneg_right ((le_max_right _ _).trans (le_max_left _ _)) hnpos.le
       linarith
     · have hnpos : (0 : ℝ) < n := by exact_mod_cast hn
-      exact (hC₁ n hn).trans (div_le_div_of_nonneg_right (le_max_left _ _) hnpos.le)
+      exact (hC₁ n m hn hlow hhigh).trans
+        (div_le_div_of_nonneg_right ((le_max_left _ _).trans (le_max_left _ _)) hnpos.le)
   · -- zero variance: every draw is zero
     have hzero : ∀ x ∈ μ.support, x = 0 := by
       intro x hx
@@ -286,7 +304,7 @@ theorem exists_abs_expect_sign_sampleSum_le {μ : PMF ℝ} {R : ℝ}
       exact hvar hlt
     have hpure : μ = PMF.pure 0 :=
       pmf_eq_pure_of_support_subset_singleton μ 0 (fun x hx => hzero x hx)
-    refine ⟨0, fun n _ => ?_⟩
+    refine ⟨0, le_rfl, fun n m _ _ _ => ?_⟩
     have hsum : ∀ k, sampleSum (PMF.pure (0 : ℝ)) k = PMF.pure 0 := by
       intro k
       induction k with
@@ -294,5 +312,59 @@ theorem exists_abs_expect_sign_sampleSum_le {μ : PMF ℝ} {R : ℝ}
       | succ k ih => rw [sampleSum_succ, ih, addLaw_pure_zero]
     rw [hpure, hsum, expect_pure, Real.sign_zero]
     simp
+
+/-- Every count of draws lies between consecutive eighth powers. -/
+private theorem exists_pow_eight_le_lt (m : ℕ) : ∃ n : ℕ, n ^ 8 ≤ m ∧ m < (n + 1) ^ 8 := by
+  refine ⟨m.sqrt.sqrt.sqrt, ?_, ?_⟩
+  · have h1 := Nat.sqrt_le' m
+    have h2 := Nat.sqrt_le' m.sqrt
+    have h3 := Nat.sqrt_le' m.sqrt.sqrt
+    calc
+      m.sqrt.sqrt.sqrt ^ 8 = ((m.sqrt.sqrt.sqrt ^ 2) ^ 2) ^ 2 := by ring
+      _ ≤ (m.sqrt.sqrt ^ 2) ^ 2 := by gcongr
+      _ ≤ m.sqrt ^ 2 := by gcongr
+      _ ≤ m := h1
+  · have h1 := Nat.lt_succ_sqrt' m
+    have h2 := Nat.lt_succ_sqrt' m.sqrt
+    have h3 := Nat.lt_succ_sqrt' m.sqrt.sqrt
+    simp only [Nat.succ_eq_add_one] at h1 h2 h3
+    calc
+      m < (m.sqrt + 1) ^ 2 := h1
+      _ ≤ ((m.sqrt.sqrt + 1) ^ 2) ^ 2 := by gcongr; exact h2
+      _ ≤ (((m.sqrt.sqrt.sqrt + 1) ^ 2) ^ 2) ^ 2 := by gcongr; exact h3
+      _ = (m.sqrt.sqrt.sqrt + 1) ^ 8 := by ring
+
+/-- **Sign balance.** For a centred law of bounded support, the expected sign of
+the sum of `m` independent draws is `O(m ^ (-1 / 8))`: its eighth power times
+`m` is bounded. -/
+theorem exists_abs_expect_sign_sampleSum_pow_mul_le {μ : PMF ℝ} {R : ℝ}
+    (hbound : ∀ x ∈ μ.support, |x| ≤ R) (hmean : expect μ id = 0) :
+    ∃ C, ∀ m : ℕ, |expect (sampleSum μ m) Real.sign| ^ 8 * m ≤ C := by
+  obtain ⟨C, hC0, hC⟩ := exists_abs_expect_sign_sampleSum_le hbound hmean
+  refine ⟨256 * C ^ 8, fun m => ?_⟩
+  rcases Nat.eq_zero_or_pos m with rfl | hm
+  · simp only [Nat.cast_zero, mul_zero]
+    positivity
+  obtain ⟨n, hlow, hup⟩ := exists_pow_eight_le_lt m
+  have hn : 1 ≤ n := by
+    by_contra h0
+    have : n = 0 := by omega
+    subst this
+    simp at hup
+    omega
+  have hhigh : m ≤ 256 * n ^ 8 := by
+    have : (n + 1) ^ 8 ≤ (2 * n) ^ 8 := Nat.pow_le_pow_left (by omega) 8
+    have h256 : (2 * n) ^ 8 = 256 * n ^ 8 := by ring
+    omega
+  have hnpos : (0 : ℝ) < n := by exact_mod_cast hn
+  have habs := hC n m hn hlow hhigh
+  have hpow : |expect (sampleSum μ m) Real.sign| ^ 8 ≤ (C / n) ^ 8 :=
+    pow_le_pow_left₀ (abs_nonneg _) habs 8
+  have hmle : (m : ℝ) ≤ 256 * (n : ℝ) ^ 8 := by exact_mod_cast hhigh
+  calc
+    |expect (sampleSum μ m) Real.sign| ^ 8 * m ≤ (C / n) ^ 8 * (256 * (n : ℝ) ^ 8) :=
+      mul_le_mul hpow hmle (Nat.cast_nonneg _) (by positivity)
+    _ = 256 * C ^ 8 := by
+      field_simp
 
 end GameTheory.Math.Probability

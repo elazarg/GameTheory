@@ -6,8 +6,8 @@ computational mean dominance is exactly the order of expectations.
 
 * If `E X > E Y`, Chebyshev's inequality makes the `m`-sample mean of `X - Y`
   nonpositive with probability `O(1 / m)`, so the gap vanishes polynomially.
-* If `E X = E Y`, the sum of `n ^ 8` draws of `X - Y` has expected sign
-  `O(1 / n)` (sign balance), so again the gap vanishes polynomially.
+* If `E X = E Y`, the sum of `m` draws of `X - Y` has expected sign
+  `O(m ^ (-1 / 8))` (sign balance), so again the gap vanishes polynomially.
 * If `E X < E Y`, the sample mean of `X - Y` is eventually negative with
   probability near one, so the gap tends to one and dominance fails.
 -/
@@ -159,14 +159,14 @@ private theorem one_sub_le_meanComparisonGap_of_lt {X Y : PMF ℝ} {R : ℝ}
 private theorem meanComparisonGap_le_of_eq {X Y : PMF ℝ} {R : ℝ}
     (hX : ∀ x ∈ X.support, |x| ≤ R) (hY : ∀ y ∈ Y.support, |y| ≤ R)
     (heq : lawMean X = lawMean Y) :
-    ∃ C, ∀ n : ℕ, 1 ≤ n → meanComparisonGap X Y (n ^ 8) ≤ C / n := by
+    ∃ C, ∀ m : ℕ, |meanComparisonGap X Y m| ^ 8 * m ≤ C := by
   have hmean : expect (differenceLaw X Y) id = 0 := by
     rw [← lawMean, lawMean_differenceLaw hX hY, heq, sub_self]
-  obtain ⟨C, hC⟩ := exists_abs_expect_sign_sampleSum_le
+  obtain ⟨C, hC⟩ := exists_abs_expect_sign_sampleSum_pow_mul_le
     (abs_le_of_mem_support_differenceLaw hX hY) hmean
-  refine ⟨C, fun n hn => ?_⟩
-  rw [meanComparisonGap_eq_neg_expect_sign]
-  exact (neg_le_abs _).trans (hC n hn)
+  refine ⟨C, fun m => ?_⟩
+  rw [meanComparisonGap_eq_neg_expect_sign, abs_neg]
+  exact hC m
 
 private theorem eventually_div_lt_inv_pow {C : ℝ} (c : ℕ) :
     ∀ᶠ κ : ℕ in atTop, C / (κ : ℝ) ^ (c + 1) < ((κ : ℝ) ^ c)⁻¹ := by
@@ -223,14 +223,29 @@ theorem computationallyMeanDominates_const_iff {X Y : PMF ℝ} {R : ℝ}
       field_simp
     · obtain ⟨C, hC⟩ := meanComparisonGap_le_of_eq hX hY heq.symm
       intro c hc
-      refine ⟨8 * (c + 1), by omega, ?_⟩
-      filter_upwards [eventually_div_lt_inv_pow (C := C) c, eventually_ge_atTop 1]
-        with κ hκ hκ1
-      have hn : 1 ≤ κ ^ (c + 1) := Nat.one_le_pow _ _ (by omega)
-      have := hC (κ ^ (c + 1)) hn
-      rw [← pow_mul, mul_comm] at this
-      refine this.trans_lt ?_
-      push_cast
-      exact hκ
+      refine ⟨8 * c + 1, by omega, ?_⟩
+      filter_upwards [eventually_gt_atTop ⌈C⌉₊, eventually_ge_atTop 1] with κ hκC hκ1
+      have hpos : (0 : ℝ) < κ := by exact_mod_cast hκ1
+      have hCκ : C < κ := Nat.lt_of_ceil_lt hκC
+      set gap := meanComparisonGap X Y (κ ^ (8 * c + 1))
+      have hbound := hC (κ ^ (8 * c + 1))
+      push_cast at hbound
+      have hscaled : (|gap| * (κ : ℝ) ^ c) ^ 8 < 1 := by
+        have hsplit : (|gap| * (κ : ℝ) ^ c) ^ 8 * κ = |gap| ^ 8 * (κ : ℝ) ^ (8 * c + 1) := by
+          ring
+        have hlt : (|gap| * (κ : ℝ) ^ c) ^ 8 * κ < 1 * κ := by
+          rw [hsplit, one_mul]
+          linarith
+        exact lt_of_mul_lt_mul_right hlt hpos.le
+      have hsmall : |gap| * (κ : ℝ) ^ c < 1 := by
+        by_contra hge
+        rw [not_lt] at hge
+        exact absurd (one_le_pow₀ hge) (not_le.mpr hscaled)
+      have hκc : (0 : ℝ) < (κ : ℝ) ^ c := by positivity
+      calc
+        gap ≤ |gap| := le_abs_self _
+        _ < ((κ : ℝ) ^ c)⁻¹ := by
+          rw [← one_div, lt_div_iff₀ hκc]
+          exact hsmall
 
 end GameTheory.Math.Probability
