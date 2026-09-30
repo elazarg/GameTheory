@@ -6,10 +6,14 @@ size `κ` and accepts with some probability. Two ensembles of laws on a common
 carrier are indistinguishable by a class of tests when every test in the class
 has negligible advantage between them.
 
-The class is a parameter. The class of all tests gives statistical
-indistinguishability; restricting it to the tests a probabilistic
-polynomial-time machine can run gives computational indistinguishability once a
-machine model fixes that class. What follows needs no machine model:
+The class is a parameter. Every class used here bounds the number of draws
+polynomially: a test seeing exponentially many draws detects events of
+negligible probability, which no notion of indistinguishability ignores. The
+tests seeing polynomially many draws, with unrestricted computation, give
+statistical indistinguishability, which negligible statistical distance
+implies. Restricting further to what a probabilistic polynomial-time machine
+can run gives computational indistinguishability once a machine model fixes
+that class. What follows needs no machine model:
 computational mean dominance performs one kind of test only, comparing the
 empirical mean of the draws with that of fresh draws from a reference
 ensemble. Any class containing those comparisons makes indistinguishable
@@ -132,10 +136,6 @@ def ClosedUnderComap (tests : Set (SampleTest α)) (f : ℕ → α → β)
     (targetTests : Set (SampleTest β)) : Prop :=
   ∀ T ∈ targetTests, T.comap f ∈ tests
 
-theorem closedUnderComap_univ (f : ℕ → α → β) (targetTests : Set (SampleTest β)) :
-    ClosedUnderComap Set.univ f targetTests :=
-  fun _ _ => Set.mem_univ _
-
 /-- Indistinguishability survives post-processing by any map whose
 precompositions the source class contains. -/
 theorem IndistinguishableBy.map {tests : Set (SampleTest α)} {targetTests : Set (SampleTest β)}
@@ -162,9 +162,6 @@ def beatenByMeanTest (Y : ℕ → PMF ℝ) (d : ℕ) : SampleTest ℝ where
 `Y`. -/
 def ContainsMeanTests (tests : Set (SampleTest ℝ)) (Y : ℕ → PMF ℝ) : Prop :=
   ∀ d, beatsMeanTest Y d ∈ tests ∧ beatenByMeanTest Y d ∈ tests
-
-theorem containsMeanTests_univ (Y : ℕ → PMF ℝ) : ContainsMeanTests Set.univ Y :=
-  fun _ => ⟨Set.mem_univ _, Set.mem_univ _⟩
 
 private theorem aheadProb_eq_bind (X Y : PMF ℝ) (m : ℕ) :
     aheadProb X Y m =
@@ -206,5 +203,132 @@ theorem IndistinguishableBy.meanTestIndistinguishable {tests : Set (SampleTest �
   constructor
   · simpa only [acceptProb_beatsMeanTest] using h _ (hY d).1
   · simpa only [acceptProb_beatenByMeanTest] using h _ (hY d).2
+
+/-! ## Statistical indistinguishability -/
+
+/-- The tests seeing polynomially many draws, with no bound on what they compute
+from them. -/
+def polySampleTests (α : Type u) : Set (SampleTest α) :=
+  {T | ∃ d : ℕ, ∀ᶠ κ : ℕ in Filter.atTop, T.samples κ ≤ κ ^ d}
+
+theorem closedUnderComap_polySampleTests (f : ℕ → α → β) :
+    ClosedUnderComap (polySampleTests α) f (polySampleTests β) :=
+  fun _ hT => hT
+
+theorem containsMeanTests_polySampleTests (Y : ℕ → PMF ℝ) :
+    ContainsMeanTests (polySampleTests ℝ) Y :=
+  fun d => ⟨⟨d, Filter.Eventually.of_forall fun _ => le_rfl⟩,
+    ⟨d, Filter.Eventually.of_forall fun _ => le_rfl⟩⟩
+
+/-- The statistical distance between two laws: half their total absolute mass
+difference. -/
+def statisticalDistance (μ ν : PMF α) : ℝ :=
+  (∑' a, |(μ a).toReal - (ν a).toReal|) / 2
+
+private theorem summable_abs_sub_mass (μ ν : PMF α) :
+    Summable fun a => |(μ a).toReal - (ν a).toReal| := by
+  refine Summable.of_nonneg_of_le (fun _ => abs_nonneg _) (fun a => ?_)
+    ((pmf_weight_summable μ).add (pmf_weight_summable ν))
+  refine (abs_sub _ _).trans ?_
+  rw [abs_of_nonneg ENNReal.toReal_nonneg, abs_of_nonneg ENNReal.toReal_nonneg]
+
+theorem statisticalDistance_nonneg (μ ν : PMF α) : 0 ≤ statisticalDistance μ ν :=
+  div_nonneg (tsum_nonneg fun _ => abs_nonneg _) zero_le_two
+
+/-- A test with values in `[-1, 1]` separates two laws by at most twice their
+statistical distance. -/
+theorem abs_expect_sub_le_statisticalDistance {μ ν : PMF α} {f : α → ℝ}
+    (hf : ∀ a, |f a| ≤ 1) :
+    |expect μ f - expect ν f| ≤ 2 * statisticalDistance μ ν := by
+  have hμ := (payoffIntegrable_of_bounded μ f hf).summable
+  have hν := (payoffIntegrable_of_bounded ν f hf).summable
+  have hterm : ∀ a, ‖(μ a).toReal * f a - (ν a).toReal * f a‖ ≤
+      |(μ a).toReal - (ν a).toReal| := by
+    intro a
+    rw [Real.norm_eq_abs, ← sub_mul, abs_mul]
+    exact mul_le_of_le_one_right (abs_nonneg _) (hf a)
+  have hnorm : Summable fun a => ‖(μ a).toReal * f a - (ν a).toReal * f a‖ :=
+    Summable.of_nonneg_of_le (fun _ => norm_nonneg _) hterm (summable_abs_sub_mass μ ν)
+  rw [statisticalDistance, mul_div_cancel₀ _ two_ne_zero, expect, expect, ← hμ.tsum_sub hν,
+    ← Real.norm_eq_abs]
+  exact (norm_tsum_le_tsum_norm hnorm).trans
+    (hnorm.tsum_le_tsum hterm (summable_abs_sub_mass μ ν))
+
+/-- **Hybrid bound.** A test with values in `[-1, 1]` on `n` independent draws
+separates two laws by at most `n` times twice their statistical distance. -/
+theorem abs_expect_iidLaw_sub_le (μ ν : PMF α) (n : ℕ) :
+    ∀ g : (Fin n → α) → ℝ, (∀ z, |g z| ≤ 1) →
+      |expect (iidLaw μ n) g - expect (iidLaw ν n) g| ≤
+        n * (2 * statisticalDistance μ ν) := by
+  induction n with
+  | zero =>
+    intro g _
+    rw [eq_pure_of_subsingleton (iidLaw μ 0) Fin.elim0,
+      eq_pure_of_subsingleton (iidLaw ν 0) Fin.elim0]
+    simp
+  | succ n ih =>
+    intro g hg
+    have hsplit : ∀ ρ : PMF α, expect (iidLaw ρ (n + 1)) g =
+        expect (iidLaw ρ n) fun z => expect ρ fun x => g (Fin.cons x z) := by
+      intro ρ
+      rw [iidLaw_succ, expect_bind_tower _ _ _ (payoffIntegrable_of_bounded _ _ hg)]
+      apply expect_congr_on_support
+      intro z _
+      rw [expect_map]
+      rfl
+    have hbounded : ∀ ρ : PMF α, ∀ z : Fin n → α,
+        |expect ρ fun x => g (Fin.cons x z)| ≤ 1 :=
+      fun ρ z => expect_abs_le_of_bounded zero_le_one fun x => hg _
+    have hD : 0 ≤ 2 * statisticalDistance μ ν :=
+      mul_nonneg zero_le_two (statisticalDistance_nonneg μ ν)
+    have hfirst : |expect (iidLaw μ n) (fun z => expect μ fun x => g (Fin.cons x z)) -
+        expect (iidLaw μ n) (fun z => expect ν fun x => g (Fin.cons x z))| ≤
+          2 * statisticalDistance μ ν := by
+      rw [← expect_sub (payoffIntegrable_of_bounded _ _ (hbounded μ))
+        (payoffIntegrable_of_bounded _ _ (hbounded ν))]
+      exact expect_abs_le_of_bounded hD fun z =>
+        abs_expect_sub_le_statisticalDistance fun x => hg _
+    have hsecond := ih (fun z => expect ν fun x => g (Fin.cons x z)) (hbounded ν)
+    rw [hsplit μ, hsplit ν]
+    calc
+      _ ≤ |expect (iidLaw μ n) (fun z => expect μ fun x => g (Fin.cons x z)) -
+            expect (iidLaw μ n) (fun z => expect ν fun x => g (Fin.cons x z))| +
+          |expect (iidLaw μ n) (fun z => expect ν fun x => g (Fin.cons x z)) -
+            expect (iidLaw ν n) (fun z => expect ν fun x => g (Fin.cons x z))| :=
+        abs_sub_le _ _ _
+      _ ≤ 2 * statisticalDistance μ ν + n * (2 * statisticalDistance μ ν) :=
+        add_le_add hfirst hsecond
+      _ = ((n + 1 : ℕ) : ℝ) * (2 * statisticalDistance μ ν) := by
+        push_cast
+        ring
+
+theorem SampleTest.acceptProb_eq_expect (T : SampleTest α) (X : ℕ → PMF α) (κ : ℕ) :
+    T.acceptProb X κ =
+      expect (iidLaw (X κ) (T.samples κ)) fun z => ((T.accept κ z) true).toReal :=
+  toReal_bind_apply _ _ _
+
+/-- **Negligible statistical distance is statistical indistinguishability**:
+every test seeing polynomially many draws has negligible advantage. -/
+theorem indistinguishableBy_polySampleTests_of_statisticalDistance {X X' : ℕ → PMF α}
+    (h : Negligible fun κ => statisticalDistance (X κ) (X' κ)) :
+    IndistinguishableBy (polySampleTests α) X X' := by
+  rintro T ⟨d, hd⟩
+  have hbound : Negligible fun κ =>
+      2 * ((κ : ℝ) ^ d * statisticalDistance (X κ) (X' κ)) :=
+    (h.param_pow_mul d).const_mul 2
+  refine hbound.of_eventually_abs_le ?_
+  filter_upwards [hd] with κ hκ
+  have hSD := statisticalDistance_nonneg (X κ) (X' κ)
+  rw [T.acceptProb_eq_expect, T.acceptProb_eq_expect,
+    abs_of_nonneg (by positivity : (0 : ℝ) ≤ 2 * ((κ : ℝ) ^ d * statisticalDistance (X κ) (X' κ)))]
+  have hsamples : (T.samples κ : ℝ) ≤ (κ : ℝ) ^ d := by exact_mod_cast hκ
+  calc
+    _ ≤ T.samples κ * (2 * statisticalDistance (X κ) (X' κ)) :=
+      abs_expect_iidLaw_sub_le (X κ) (X' κ) (T.samples κ) _ fun z => by
+        rw [abs_of_nonneg ENNReal.toReal_nonneg]
+        exact pmf_toReal_apply_le_one _ _
+    _ ≤ (κ : ℝ) ^ d * (2 * statisticalDistance (X κ) (X' κ)) :=
+      mul_le_mul_of_nonneg_right hsamples (by positivity)
+    _ = 2 * ((κ : ℝ) ^ d * statisticalDistance (X κ) (X' κ)) := by ring
 
 end GameTheory.Math.Probability

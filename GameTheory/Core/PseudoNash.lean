@@ -25,8 +25,8 @@ play whose utility ensembles a class of tests cannot tell apart from the real
 ones. If that class can compare empirical means with the games' utility
 ensembles, then each real deviation is covered by its simulation, and Nash
 transfer along coverage turns an ideal pseudo-Nash equilibrium into a real
-one. With all tests, the requirement is statistical closeness. With
-polynomial-time tests, it is the utility-level consequence of simulation-based
+one. With every test seeing polynomially many draws, negligible statistical
+distance of the utility ensembles suffices. With polynomial-time tests, it is the utility-level consequence of simulation-based
 security plus efficient sampling of play; when both games compute utility from
 a common view, indistinguishable views suffice.
 
@@ -258,12 +258,16 @@ theorem SecureImplementation.isPseudoNash [DecidableEq ι] {tests : Set (SampleT
     ((ComputationallyMeanDominates.congr_right hdeviation).mpr
       ((ComputationallyMeanDominates.congr_left hhonest).mpr hdominates))
 
-/-- With statistically close utility ensembles no test needs to be efficient. -/
+/-- Statistically simulated utilities need no efficiency assumption: the tests
+seeing polynomially many draws contain every mean comparison. Negligible
+statistical distance supplies such a certificate
+(`indistinguishableBy_polySampleTests_of_statisticalDistance`). -/
 theorem SecureImplementation.isPseudoNash_of_statistical [DecidableEq ι]
     {ideal real : ParameterizedGame.{uι, us, uo} ι}
-    (impl : SecureImplementation Set.univ ideal real)
+    (impl : SecureImplementation (polySampleTests ℝ) ideal real)
     {profile : Profile ideal.sig} (h : ideal.IsPseudoNash profile) :
     real.IsPseudoNash (Profile.map impl.compile profile) :=
-  impl.isPseudoNash (fun _ _ => containsMeanTests_univ _) (fun _ _ => containsMeanTests_univ _) h
+  impl.isPseudoNash (fun _ _ => containsMeanTests_polySampleTests _)
+    (fun _ _ => containsMeanTests_polySampleTests _) h
 
 end GameTheory
