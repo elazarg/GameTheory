@@ -15,8 +15,10 @@ import GameTheory.Math.OnlineLearning
 import GameTheory.Math.Probability.Bounds
 import GameTheory.Math.Probability.Convergence
 import GameTheory.Math.Probability.ExtendedExpectation
+import GameTheory.Math.Probability.Indistinguishability
 import GameTheory.Math.Probability.Interaction
 import GameTheory.Math.Probability.Measure
+import GameTheory.Math.Probability.MeanComparisonExpectation
 import GameTheory.Math.Probability.OnlineLearning
 import GameTheory.Math.Probability.SelectiveStopping
 import GameTheory.Math.Probability.SequentialSampling

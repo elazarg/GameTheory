@@ -279,6 +279,12 @@ carrying its transparency or deriving workarounds into another release.
 - **Never edit files while `lake build` is running.** Lake reads each module's
   source as it schedules that target, so a mid-build edit yields a mixed
   snapshot whose failure list cannot be trusted. Finish editing, then build.
+- **A type ascription inside a lambda can silently change a PMF's carrier.**
+  `(headCount m).map fun k => 2 * (k : ℝ) - m` with `headCount m : PMF ℕ`
+  infers `k : ℝ` from the ascription and elaborates the law as
+  `Nat.cast <$> headCount m`, so every later `rw` about `headCount` fails on a
+  `do` block. Annotate the binder (`fun k : ℕ => 2 * (k : ℝ) - m`) whenever a
+  lambda over a PMF's values casts its argument.
 - **`lake env lean` reads the *oleans* of imports.** After changing a module
   that others import, `lake build <that module>` first or every downstream
   single-file check is stale — a fix can look like it failed when it worked.
