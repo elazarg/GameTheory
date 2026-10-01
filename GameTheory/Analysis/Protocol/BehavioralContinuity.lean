@@ -25,7 +25,7 @@ variable {ι : Type uι}
     {E : ExecutionProtocol.{uι, us, ua} ι}
     (M : InformationModel.{uι, us, ua, up, uq, uk} E)
     {X : Type*} [TopologicalSpace X]
-variable [Fintype ι]
+variable [E.FiniteMovers]
 
 /-- Behavioral joint masses are finite products of local policy masses. -/
 theorem continuous_behavioralJoint_prob
@@ -155,7 +155,7 @@ theorem continuous_bayesBelief_prob
         (lt_of_le_of_lt (M.informationMass_le_one (profile x) i site hantichain)
           ENNReal.one_lt_top))⟩)
 
-omit [Fintype ι] in
+omit [E.FiniteMovers] in
 /-- Unilateral profile replacement preserves coordinate continuity. -/
 theorem continuous_update_prob [DecidableEq ι]
     (profile : X → (i : ι) → M.BehavioralPolicy i)

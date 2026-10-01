@@ -113,22 +113,30 @@ theorem finite_choice_of_nonterminal
   · have := M.subsingleton_choice_of_not_active history.trace hactive
     infer_instance
 
-/-- Finitely many players with finite menus at decision sites have finitely
-many legal joint actions at every nonterminal history. -/
-theorem finite_legalJoint [Finite ι]
+/-- Finitely many movers with finite menus at decision sites have finitely
+many legal joint actions at every nonterminal history: every other player
+supplies no action. -/
+theorem finite_legalJoint [E.FiniteMovers]
     [∀ who (site : M.InformationSite who), Finite (M.Choice who site.1)]
     (history : E.History) (hterm : ¬ E.terminal history.state) :
     Finite {joint : ∀ i, Option (E.Action i) // E.Legal history.state joint} := by
   have (i : ι) := M.finite_choice_of_nonterminal history hterm i
   let draws (joint : {joint : ∀ i, Option (E.Action i) // E.Legal history.state joint}) :
-      (i : ι) → M.Choice i (M.infoOf i history.trace) := fun i =>
+      (i : E.movers history.state) → M.Choice i (M.infoOf i history.trace) := fun i =>
     ⟨joint.1 i, (M.menu_adequate i history.trace (joint.1 i)).mpr
       (ExecutionProtocol.legalOption_of_legal joint.2 i)⟩
   apply Finite.of_injective draws
   intro first second same
   apply Subtype.ext
   funext i
-  exact congrArg Subtype.val (congrFun same i)
+  by_cases hmover : i ∈ E.movers history.state
+  · exact congrArg Subtype.val (congrFun same ⟨i, hmover⟩)
+  · have hinactive : ¬ E.active history.state i := fun hactive =>
+      hmover ((E.mem_movers).2 hactive)
+    rw [LegalOption.eq_none_of_inactive (first.1 i)
+        (ExecutionProtocol.legalOption_of_legal first.2 i) hinactive,
+      LegalOption.eq_none_of_inactive (second.1 i)
+        (ExecutionProtocol.legalOption_of_legal second.2 i) hinactive]
 
 end InformationModel
 
