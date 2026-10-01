@@ -66,14 +66,14 @@ theorem counterfactualReach_first (hidden : Bool) :
   rw [firstHistory, InformationModel.counterfactualReachProbability]
   simp only [InformationModel.counterfactualReachProbability_start, one_mul]
   unfold InformationModel.counterfactualStepProb
-    InformationModel.opponentsStepProb
+  rw [InformationModel.opponentsStepProb_eq_prod_univ]
   simp only [Finset.univ_unique, Finset.erase_singleton,
     Finset.prod_empty]
   rw [pmf_map_apply_of_injective natureLaw
     (fun _ _ h => State.first.inj h) hidden]
   cases hidden <;>
     norm_num [InformationModel.counterfactualStepProb,
-      InformationModel.opponentsStepProb, twoStage, natureLaw,
+      InformationModel.opponentsStepProb_eq_prod_univ, twoStage, natureLaw,
       mix_apply, PMF.pure_apply]
 
 /-- The second decision site after a specified first action. -/
@@ -199,7 +199,7 @@ theorem counterfactualReach_second (hidden firstAction : Bool) :
   rw [secondHistory, InformationModel.counterfactualReachProbability,
     counterfactualReach_first]
   unfold InformationModel.counterfactualStepProb
-    InformationModel.opponentsStepProb
+  rw [InformationModel.opponentsStepProb_eq_prod_univ]
   simp only [Finset.univ_unique, Finset.erase_singleton,
     Finset.prod_empty, one_mul]
   simp [chosenAction, moveJoint]

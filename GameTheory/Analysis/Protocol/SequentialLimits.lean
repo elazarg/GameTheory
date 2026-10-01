@@ -24,9 +24,10 @@ open Filter GameTheory.Math.Probability
 
 universe uι us ua up uq uk
 
-variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
+variable {ι : Type uι} [DecidableEq ι]
     {E : ExecutionProtocol.{uι, us, ua} ι}
     (M : InformationModel.{uι, us, ua, up, uq, uk} E)
+variable [E.FiniteMovers]
 
 /-- Bounded terminal payoffs have continuous terminal continuation values on
 arbitrary history and action carriers. Nonterminal payoff values are irrelevant. -/
@@ -188,7 +189,7 @@ sequential-equilibrium limit. The hypotheses explicitly supply the perturbed
 assessments and their approximate optimality; this theorem extracts their
 common limit and proves its two assessment properties. -/
 theorem exists_sequentialEquilibrium_of_uniformlyTight
-    [∀ i, Countable (M.InformationSite i)]
+    [Countable ι] [∀ i, Countable (M.InformationSite i)]
     (certificate : E.WellFoundedHistories)
     (hantichain : M.DecisionInformationAntichain)
     (sequence : ℕ → M.BehavioralAssessment)

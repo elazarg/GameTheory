@@ -357,7 +357,7 @@ counterfactual mass of its site, the whole deviation gains at most the
 allowances met along its own reached histories. Decision recall makes the
 alternative own reach a common nonnegative factor on each information fiber. -/
 theorem behavioralRootGain_le_of_counterfactualLocalGain_le
-    [Fintype ι] [DecidableEq ι] [Fintype E.History]
+    [E.FiniteMovers] [DecidableEq ι] [Fintype E.History]
     (hrecall : M.DecisionRecall)
     (baseline : (i : ι) → M.BehavioralPolicy i)
     (who : ι) [DecidableEq (M.InfoState who)]

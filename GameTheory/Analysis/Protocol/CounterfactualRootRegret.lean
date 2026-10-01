@@ -32,7 +32,7 @@ namespace InformationModel
 when regret matching selects the current law. -/
 def counterfactualRegretMatchAverage
     {Q : Type uv}
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
@@ -51,7 +51,7 @@ def counterfactualRegretMatchAverage
 counterfactual-regret vectors played by its regret matcher. -/
 theorem counterfactualRegretMatchAverage_smul_eq_sum
     {Q : Type uv}
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
@@ -81,7 +81,7 @@ positive average is bounded by the sum of the local orthant distances. -/
 theorem counterfactualRegretMatches_positiveRootGain_le
     {Site : Type*} [Fintype Site]
     (Q : Site → Type uv)
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : Site → M.InformationSite who)
     [∀ key, Fintype (M.InformationHistory who (site key).1)]
@@ -141,7 +141,7 @@ theorem counterfactualRegretMatches_positiveRootGains_le
     {Site : Type*} [Fintype Site]
     {Deviation : Type*}
     (Q : Site → Type uv)
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : Site → M.InformationSite who)
     [∀ key, Fintype (M.InformationHistory who (site key).1)]
@@ -202,7 +202,7 @@ theorem counterfactualRegretMatches_positiveRootGains_tendsto_zero
     {Site : Type*} [Fintype Site]
     {Deviation : Type*}
     (Q : Site → Type uv)
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : Site → M.InformationSite who)
     [∀ key, Fintype (M.InformationHistory who (site key).1)]

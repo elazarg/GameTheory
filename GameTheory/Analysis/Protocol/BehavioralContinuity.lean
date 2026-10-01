@@ -21,10 +21,11 @@ open GameTheory.Math.Probability
 
 universe uι us ua up uq uk
 
-variable {ι : Type uι} [Fintype ι]
+variable {ι : Type uι}
     {E : ExecutionProtocol.{uι, us, ua} ι}
     (M : InformationModel.{uι, us, ua, up, uq, uk} E)
     {X : Type*} [TopologicalSpace X]
+variable [Fintype ι]
 
 /-- Behavioral joint masses are finite products of local policy masses. -/
 theorem continuous_behavioralJoint_prob

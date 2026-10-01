@@ -18,9 +18,10 @@ open Filter GameTheory.Math.Probability
 
 universe uι us ua up uq uk
 
-variable {ι : Type uι} [Fintype ι]
+variable {ι : Type uι}
     {E : ExecutionProtocol.{uι, us, ua} ι}
     (M : InformationModel.{uι, us, ua, up, uq, uk} E)
+variable [E.FiniteMovers]
 
 /-- Local probability convergence passes through every bounded continuation.
 The information carriers themselves need not be finite. -/
@@ -44,10 +45,13 @@ theorem runBehavioralFrom_convergesPointwise
           M.behavioralJoint (sequence n) history.trace hterm
         let jointTarget := M.behavioralJoint target history.trace hterm
         have hjoint : PMFConvergesPointwise jointLaw jointTarget := by
-          unfold jointLaw jointTarget
-          simp only [InformationModel.behavioralJoint_eq_independentProduct]
-          exact (PMFConvergesPointwise.independentProduct fun i =>
-            hlimit i (M.infoOf i history.trace)).map _
+          unfold jointLaw jointTarget InformationModel.behavioralJoint
+          exact (PMFConvergesPointwise.finitaryProduct _
+            (fun i _ => hlimit i (M.infoOf i history.trace))
+            (fun i hi n => by
+              have := M.subsingleton_choice_of_not_active history.trace
+                (fun hactive => hi ((E.mem_movers).2 hactive))
+              exact Subsingleton.elim _ _)).map _
         let continuation (n : ℕ) (draw :
             {action : ∀ i, Option (E.Action i) // E.Legal history.state action}) :=
           (E.step history.state draw).bindOnSupport fun state realized =>
@@ -99,7 +103,7 @@ theorem runBehavioralFrom_convergesPointwise
           jointLaw, jointTarget, continuation, targetContinuation] using
           hjoint.bind hcontinuation
 
-omit [Fintype ι] in
+omit [E.FiniteMovers] in
 /-- Unilateral replacement preserves coordinate convergence. -/
 theorem update_convergesPointwise [DecidableEq ι]
     {sequence : ℕ → (i : ι) → M.BehavioralPolicy i}

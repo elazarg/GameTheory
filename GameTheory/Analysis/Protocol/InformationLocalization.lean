@@ -206,7 +206,7 @@ end ExecutionProtocol
 
 namespace InformationModel
 
-variable [Fintype ι] [DecidableEq ι] (M : InformationModel.{uι, us, ua, up, uq, uk} E)
+variable [E.FiniteMovers] [DecidableEq ι] (M : InformationModel.{uι, us, ua, up, uq, uk} E)
 
 /-! ## Splicing a deviation below an information site -/
 
@@ -214,7 +214,7 @@ variable [Fintype ι] [DecidableEq ι] (M : InformationModel.{uι, us, ua, up, u
 abbrev IsSiteHistory {who : ι} (site : M.InformationSite who) (history : E.History) : Prop :=
   M.infoOf who history.trace = site.1
 
-omit [Fintype ι] [DecidableEq ι] in
+omit [E.FiniteMovers] [DecidableEq ι] in
 theorem siteHistory_antichain {who : ι} {site : M.InformationSite who}
     (hanti : site.IsHistoryAntichain) :
     ∀ first second, M.IsSiteHistory site first → M.IsSiteHistory site second →
@@ -247,7 +247,7 @@ def spliceBehavioral {who : ι} (site : M.InformationSite who)
     (inside outside : M.BehavioralPolicy who) : M.BehavioralPolicy who :=
   fun info => if M.IsBelowInfo site info then inside info else outside info
 
-omit [Fintype ι] [DecidableEq ι] in
+omit [E.FiniteMovers] [DecidableEq ι] in
 private theorem policy_eq_of_not_active {who : ι} (first second : M.BehavioralPolicy who)
     {later : E.History} (hactive : ¬ E.active later.state who) :
     first (M.infoOf who later.trace) = second (M.infoOf who later.trace) := by
@@ -394,7 +394,7 @@ theorem coneMass_eq_historyReachWeight (certificate : E.WellFoundedHistories)
 
 /-! ## Localization of sequential rationality -/
 
-omit [Fintype ι] [DecidableEq ι] in
+omit [E.FiniteMovers] [DecidableEq ι] in
 open Classical in
 private theorem map_add_mul {μ ν : PMF E.History} (observe : E.History → Observation)
     (weight : ℝ≥0∞) (outcome : Observation) :
@@ -507,7 +507,7 @@ theorem implies_assessment_of_positive [Fintype Observation] (certificate : E.We
 
 /-! ## Decision recall closes information below a site -/
 
-omit [Fintype ι] [DecidableEq ι] in
+omit [E.FiniteMovers] [DecidableEq ι] in
 /-- Every entry of an own-play record was made at a nonterminal ancestor with
 that information state, at which the player was active. -/
 theorem exists_decision_ancestor_of_mem_ownPlay (who : ι) :
@@ -537,7 +537,7 @@ theorem exists_decision_ancestor_of_mem_ownPlay (who : ι) :
               exists_decision_ancestor_of_mem_ownPlay who prior hmem
             exact ⟨ancestor, hinfo, hactive, hterm, fuel + 1, hreach.trans hstep⟩
 
-omit [Fintype ι] [DecidableEq ι] in
+omit [E.FiniteMovers] [DecidableEq ι] in
 /-- Every entry of an own-play record was made at an ancestor with that
 information state. -/
 theorem exists_ancestor_of_mem_ownPlay (who : ι) {state : E.State} (trace : E.Trace state)
@@ -547,7 +547,7 @@ theorem exists_ancestor_of_mem_ownPlay (who : ι) {state : E.State} (trace : E.T
   let ⟨ancestor, hinfo, _, _, hreach⟩ := M.exists_decision_ancestor_of_mem_ownPlay who trace hmem
   ⟨ancestor, hinfo, hreach⟩
 
-omit [Fintype ι] [DecidableEq ι] in
+omit [E.FiniteMovers] [DecidableEq ι] in
 /-- **Decision recall closes information below every site.** -/
 theorem isClosedBelow_of_decisionRecall (hrecall : M.DecisionRecall) {who : ι}
     (site : M.InformationSite who) : M.IsClosedBelow site := by
@@ -594,7 +594,7 @@ theorem implies_assessment_of_decisionRecall [Fintype Observation]
 
 /-! ## Aggregation: sequential rationality implies Nash -/
 
-omit [Fintype ι] [DecidableEq ι] in
+omit [E.FiniteMovers] [DecidableEq ι] in
 /-- A nonempty own-play record was made at a strictly earlier nonterminal
 ancestor at which the player was active. -/
 theorem exists_acting_ancestor_of_mem_ownPlay (who : ι) :
@@ -626,7 +626,7 @@ def IsInitialDecision (who : ι) (history : E.History) : Prop :=
   E.active history.state who ∧ M.ownPlay who history.trace = [] ∧
     ∃ site : M.InformationSite who, site.1 = M.infoOf who history.trace
 
-omit [Fintype ι] [DecidableEq ι] in
+omit [E.FiniteMovers] [DecidableEq ι] in
 theorem initialDecision_antichain (who : ι) :
     ∀ first second, M.IsInitialDecision who first → M.IsInitialDecision who second →
       E.HistoryReaches first second → first = second := by
@@ -644,7 +644,7 @@ theorem initialDecision_antichain (who : ι) :
       rw [hempty] at hlater
       simp at hlater
 
-omit [Fintype ι] [DecidableEq ι] in
+omit [E.FiniteMovers] [DecidableEq ι] in
 /-- Every nonterminal history at which the player is active continues an
 initial decision. -/
 theorem exists_initialDecision_of_active (who : ι) :
@@ -717,7 +717,7 @@ theorem runBehavioralTerminalFrom_update_add (certificate : E.WellFoundedHistori
       hnot hterm)
     E.initHistory hstart final
 
-omit [Fintype ι] [DecidableEq ι] in
+omit [E.FiniteMovers] [DecidableEq ι] in
 /-- The cones of an antichain of roots add up to the probability that play
 passes through some root. -/
 theorem tsum_coneMass_eq (certificate : E.WellFoundedHistories) (chooser : E.RandomizedChooser)
@@ -750,7 +750,7 @@ theorem tsum_coneMass_eq (certificate : E.WellFoundedHistories) (chooser : E.Ran
     rintro ⟨root, hroot, hreach⟩
     exact hsome ⟨root, hroot⟩ hreach
 
-omit [Fintype ι] [DecidableEq ι] in
+omit [E.FiniteMovers] [DecidableEq ι] in
 /-- Roots forming an antichain carry total mass at most one. -/
 theorem tsum_coneMass_le_one (certificate : E.WellFoundedHistories) (chooser : E.RandomizedChooser)
     (IsRoot : E.History → Prop)
@@ -761,7 +761,7 @@ theorem tsum_coneMass_le_one (certificate : E.WellFoundedHistories) (chooser : E
     ← (PMF.toOuterMeasure_apply_eq_one_iff _ Set.univ).2 (Set.subset_univ _)]
   exact MeasureTheory.measure_mono (Set.subset_univ _)
 
-omit [Fintype ι] [DecidableEq ι] in
+omit [E.FiniteMovers] [DecidableEq ι] in
 /-- **Cone domination.** An antichain of roots, each continuing a root of a
 second antichain, carries at most the second antichain's mass. -/
 theorem tsum_coneMass_le_of_reaches (certificate : E.WellFoundedHistories)
@@ -780,7 +780,7 @@ theorem tsum_coneMass_le_of_reaches (certificate : E.WellFoundedHistories)
   obtain ⟨ancestor, hancestor, ancestorFuel, hcovered⟩ := hcover root hroot
   exact ⟨ancestor, hancestor, ancestorFuel + rootFuel, hcovered.trans hreach⟩
 
-omit [Fintype ι] [DecidableEq ι] in
+omit [E.FiniteMovers] [DecidableEq ι] in
 open Classical in
 /-- Sums over initial decisions regroup by decision information site. -/
 theorem tsum_initialDecision_eq (who : ι) (value : E.History → ℝ≥0∞) :
@@ -818,7 +818,7 @@ theorem historyReachWeight_le_informationMass (A : M.BehavioralAssessment) {who 
   ENNReal.le_tsum (f := fun history : M.InformationHistory who site.1 =>
     M.historyReachWeight A.strategy history.1) history
 
-omit [Fintype ι] [DecidableEq ι] in
+omit [E.FiniteMovers] [DecidableEq ι] in
 private theorem sum_map_mul [Fintype Observation] (law : PMF E.History)
     (observe : E.History → Observation) (weight : Observation → ℝ≥0∞) :
     ∑ outcome, law.map observe outcome * weight outcome =

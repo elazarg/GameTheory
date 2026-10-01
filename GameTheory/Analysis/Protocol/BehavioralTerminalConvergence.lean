@@ -100,7 +100,7 @@ end ExecutionProtocol
 
 namespace InformationModel
 
-variable [Fintype ι] (M : InformationModel E)
+variable [E.FiniteMovers] (M : InformationModel E)
 
 /-- Local laws need converge only at decision sites. At a nonterminal history,
 inactive players have a unique legal choice and hence a fixed law. -/
@@ -138,8 +138,12 @@ theorem behavioralJoint_convergesPointwise_of_sites
           history.trace hactive
       simpa only [heq] using
         pmfConvergesPointwise_const (target i (M.infoOf i history.trace))
-  simp only [InformationModel.behavioralJoint_eq_independentProduct]
-  exact (PMFConvergesPointwise.independentProduct hcoordinate).map _
+  unfold InformationModel.behavioralJoint
+  exact (PMFConvergesPointwise.finitaryProduct _ (fun i _ => hcoordinate i)
+    (fun i hi n => by
+      have := M.subsingleton_choice_of_not_active history.trace
+        (fun hactive => hi ((E.mem_movers).2 hactive))
+      exact Subsingleton.elim _ _)).map _
 
 /-- Coordinate convergence of behavioral laws passes through every
 well-founded terminal continuation without finite history or action carriers. -/
@@ -157,7 +161,7 @@ theorem runBehavioralTerminalFrom_convergesPointwise
   intro current hterm
   exact M.behavioralJoint_convergesPointwise_of_sites hlimit current hterm
 
-omit [Fintype ι] in
+omit [E.FiniteMovers] in
 /-- Whole-profile update preserves convergence at decision sites. -/
 theorem update_convergesPointwise_on_sites [DecidableEq ι]
     {sequence : ℕ → (i : ι) → M.BehavioralPolicy i}

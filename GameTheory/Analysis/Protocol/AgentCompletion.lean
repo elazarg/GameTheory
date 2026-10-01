@@ -19,8 +19,9 @@ namespace GameTheory.Protocol.InformationModel
 
 open GameTheory.Math.Probability Filter
 
-variable {ι : Type*} [Fintype ι] [DecidableEq ι] {E : ExecutionProtocol ι}
+variable {ι : Type*} [DecidableEq ι] {E : ExecutionProtocol ι}
   (M : InformationModel E) [Fintype E.History] [∀ i, DecidableEq (M.InfoState i)]
+variable [Fintype ι]
 
 /-- **Consistent completion of free agents.** -/
 theorem exists_consistent_free_agent_completion (hrecall : M.DecisionRecall)

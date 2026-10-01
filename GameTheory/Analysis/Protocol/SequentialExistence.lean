@@ -21,9 +21,10 @@ open Filter GameTheory.Math.Probability
 
 universe uι us ua up uq uk
 
-variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
+variable {ι : Type uι} [DecidableEq ι]
     {E : ExecutionProtocol.{uι, us, ua} ι}
     (M : InformationModel.{uι, us, ua, up, uq, uk} E)
+variable [Fintype ι]
 
 /-- Every decision-recall protocol with finitely many histories and inhabited
 total policies has a consistent, sequentially rational assessment. Decision

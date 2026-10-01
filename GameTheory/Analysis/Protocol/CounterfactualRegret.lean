@@ -42,7 +42,7 @@ def behavioralContinuationValue [DecidableEq ι]
 /-- Integrability of the continuation law at every history with positive
 counterfactual weight. Histories with zero counterfactual coefficient
 contribute nothing to the counterfactual value. -/
-def CounterfactualContinuationIntegrable [Fintype ι] [DecidableEq ι]
+def CounterfactualContinuationIntegrable [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
     (alternative : M.BehavioralPolicy who)
@@ -56,7 +56,7 @@ def CounterfactualContinuationIntegrable [Fintype ι] [DecidableEq ι]
 
 /-- A continuation value at an information site weighted by everybody except
 the focal player's reach. -/
-def counterfactualContinuationValue [Fintype ι] [DecidableEq ι]
+def counterfactualContinuationValue [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
@@ -71,7 +71,7 @@ continuation value unchanged when the supplied continuation policy is fixed.
 Counterfactual reach omits that baseline coordinate, and the continuation
 runner overwrites it. -/
 theorem counterfactualContinuationValue_eq_of_eq_off
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     {first second : (player : ι) → M.BehavioralPolicy player}
     {who : ι}
     (hagree : ∀ other, other ≠ who → first other = second other)
@@ -114,7 +114,7 @@ def RunnerFactorsAt [DecidableEq ι] (run : M.ContinuationRunner) (who : ι)
 
 /-- Play cut off after at least one step factors a law installed at a
 nonterminal site that cannot matter twice. -/
-theorem runnerFactorsAt_truncated [Fintype ι] [DecidableEq ι]
+theorem runnerFactorsAt_truncated [E.FiniteMovers] [DecidableEq ι]
     (hactsOnce : M.ActsOnceWhereItMatters)
     {who : ι} [DecidableEq (M.InfoState who)] {site : M.InformationSite who}
     (hallNonterminal : InformationSite.AllNonterminal M site) (fuel : ℕ) :
@@ -126,7 +126,7 @@ theorem runnerFactorsAt_truncated [Fintype ι] [DecidableEq ι]
 
 /-- Terminal play factors a law installed at a nonterminal site that cannot
 matter twice. -/
-theorem runnerFactorsAt_terminal [Fintype ι] [DecidableEq ι]
+theorem runnerFactorsAt_terminal [E.FiniteMovers] [DecidableEq ι]
     (certificate : E.WellFoundedHistories)
     (hactsOnce : M.ActsOnceWhereItMatters)
     {who : ι} [DecidableEq (M.InfoState who)] {site : M.InformationSite who}
@@ -180,7 +180,7 @@ theorem behavioralContinuationValue_withLaw_eq_expect
 where the runner factors it. The reach weights stay canonical; only the
 continuation is factored. -/
 theorem counterfactualContinuationValue_withLaw_eq_expect
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
@@ -228,7 +228,7 @@ theorem counterfactualContinuationValue_withLaw_eq_expect
 /-- Counterfactual regret of a whole continuation-policy replacement. Positive
 values mean that the replacement improves the counterfactual continuation
 value at the information site. -/
-def counterfactualRegret [Fintype ι] [DecidableEq ι]
+def counterfactualRegret [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
@@ -239,7 +239,7 @@ def counterfactualRegret [Fintype ι] [DecidableEq ι]
 
 /-- Counterfactual regret for committing to one pure choice at the selected
 information site while preserving the behavioral policy everywhere else. -/
-def counterfactualActionRegret [Fintype ι] [DecidableEq ι]
+def counterfactualActionRegret [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
@@ -252,7 +252,7 @@ def counterfactualActionRegret [Fintype ι] [DecidableEq ι]
 /-- Counterfactual continuation payoff of one pure local commitment.  This is
 the ordinary finite-action utility whose external regret is the counterfactual
 action regret when the selected information state is not revisited. -/
-def counterfactualActionUtility [Fintype ι] [DecidableEq ι]
+def counterfactualActionUtility [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
@@ -266,7 +266,7 @@ def counterfactualActionUtility [Fintype ι] [DecidableEq ι]
 counterfactual continuation value is the expectation of its pure-commitment
 continuation utilities. -/
 theorem counterfactualContinuationValue_eq_expect_actionUtility
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
@@ -295,7 +295,7 @@ theorem counterfactualContinuationValue_eq_expect_actionUtility
 /-- Counterfactual action regret is exactly external regret for the
 pure-commitment continuation utility. -/
 theorem counterfactualActionRegret_eq_sub_expect
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
@@ -337,7 +337,7 @@ def bayesContinuationValue [E.FiniteMovers] [DecidableEq ι]
 /-- A normalized counterfactual-reach fiber turns pointwise continuation
 payoff bounds into the same bounds on pure-action counterfactual utility. -/
 theorem counterfactualActionUtility_mem_Icc
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
@@ -412,7 +412,7 @@ theorem commonPlayerReachAt_of_decisionRecall
 /-- Positive information mass forces the certified common own reach to be
 positive; a zero-own-reach fiber cannot have positive actual mass. -/
 theorem commonPlayerReach_pos
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     {strategy : (player : ι) → M.BehavioralPolicy player}
     {who : ι} {site : M.InformationSite who}
     (reach : ℝ)
@@ -434,7 +434,7 @@ theorem commonPlayerReach_pos
 
 /-- A supported Bayesian history has nonzero counterfactual reach. -/
 theorem counterfactualReach_ne_zero_of_bayesSupport
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
     (hantichain : site.IsHistoryAntichain)
@@ -466,7 +466,7 @@ theorem counterfactualReach_ne_zero_of_bayesSupport
 /-- Counterfactual integration at positive-weight histories integrates the
 actual posterior continuation law on a finite information fiber. -/
 theorem bayesContinuationIntegrable_of_counterfactual
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
@@ -514,7 +514,7 @@ private theorem informationMass_toReal_pos
 the canonical Bayes continuation value and the counterfactual value differ by
 exactly the expected normalization factors. -/
 theorem informationMass_mul_bayesContinuationValue_eq
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
@@ -585,7 +585,7 @@ theorem informationMass_mul_bayesContinuationValue_eq
 counterfactual regret. This is the theorem-level consumer missing from a bare
 counterfactual-regret definition. -/
 theorem informationMass_mul_bayesGain_eq_ownReach_mul_counterfactualRegret
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
@@ -615,7 +615,7 @@ theorem informationMass_mul_bayesGain_eq_ownReach_mul_counterfactualRegret
 
 /-- Action-local specialization of the exact deviation-gain decomposition. -/
 theorem informationMass_mul_bayesActionGain_eq_ownReach_mul_counterfactualActionRegret
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
@@ -645,7 +645,7 @@ theorem informationMass_mul_bayesActionGain_eq_ownReach_mul_counterfactualAction
 /-- With positive common own reach, counterfactual regret detects exactly the
 same profitable deviations as the ordinary canonical Bayes continuation. -/
 theorem counterfactualRegret_pos_iff_bayesGain_pos
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
@@ -676,7 +676,7 @@ theorem counterfactualRegret_pos_iff_bayesGain_pos
 
 /-- Common-reach form of the exact deviation-gain decomposition. -/
 theorem informationMass_mul_bayesGain_eq_commonReach_mul_counterfactualRegret
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
@@ -706,7 +706,7 @@ theorem informationMass_mul_bayesGain_eq_commonReach_mul_counterfactualRegret
 /-- At any positive-mass site carrying common own reach, counterfactual regret
 detects exactly the profitable canonical Bayes continuation deviations. -/
 theorem counterfactualRegret_pos_iff_bayesGain_pos_of_commonReach
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
@@ -733,7 +733,7 @@ theorem counterfactualRegret_pos_iff_bayesGain_pos_of_commonReach
 /-- Decision-recall specialization: no fiberwise reach proof remains at the
 call site. Perfect recall supplies it through `decisionRecall_of_perfectRecall`. -/
 theorem counterfactualRegret_pos_iff_bayesGain_pos_of_decisionRecall
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (hrecall : M.DecisionRecall)
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
@@ -760,7 +760,7 @@ theorem counterfactualRegret_pos_iff_bayesGain_pos_of_decisionRecall
 action regret is exactly an ordinary profitable pure commitment at the
 canonical Bayes continuation game. -/
 theorem counterfactualActionRegret_pos_iff_bayesActionGain_pos_of_decisionRecall
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (hrecall : M.DecisionRecall)
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]

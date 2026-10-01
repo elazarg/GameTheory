@@ -215,7 +215,7 @@ theorem isSequentiallyRationalWith_iff_holds (run : M.ContinuationRunner)
 
 /-- The terminal continuation law of a whole-policy deviation at a site, under
 the assessment's belief. -/
-def assessmentLaw [Fintype ι]
+def assessmentLaw [E.FiniteMovers]
     (certificate : E.WellFoundedHistories) (assessment : M.BehavioralAssessment)
     {who : ι} (site : M.InformationSite who) (policy : M.BehavioralPolicy who) :
     PMF E.History :=
@@ -223,7 +223,7 @@ def assessmentLaw [Fintype ι]
 
 /-- The sequential-rationality comparison of one whole-policy deviation at a
 site, evaluated on terminal play. -/
-def assessmentComparison [Fintype ι]
+def assessmentComparison [E.FiniteMovers]
     (certificate : E.WellFoundedHistories)
     (observe : E.History → Observation) (assessment : M.BehavioralAssessment) (who : ι)
     (deviation : M.AssessmentDeviation who) : IncentiveComparison Observation :=
@@ -231,7 +231,7 @@ def assessmentComparison [Fintype ι]
     deviation
 
 @[simp]
-theorem assessmentComparison_prescribed [Fintype ι]
+theorem assessmentComparison_prescribed [E.FiniteMovers]
     (certificate : E.WellFoundedHistories)
     (observe : E.History → Observation) (assessment : M.BehavioralAssessment) (who : ι)
     (deviation : M.AssessmentDeviation who) :
@@ -241,7 +241,7 @@ theorem assessmentComparison_prescribed [Fintype ι]
   rfl
 
 @[simp]
-theorem assessmentComparison_alternative [Fintype ι]
+theorem assessmentComparison_alternative [E.FiniteMovers]
     (certificate : E.WellFoundedHistories)
     (observe : E.History → Observation) (assessment : M.BehavioralAssessment) (who : ι)
     (deviation : M.AssessmentDeviation who) :
@@ -250,7 +250,7 @@ theorem assessmentComparison_alternative [Fintype ι]
   rfl
 
 /-- Sequential rationality of observed payoffs is its comparison family. -/
-theorem isSequentiallyRational_iff_holds [Fintype ι]
+theorem isSequentiallyRational_iff_holds [E.FiniteMovers]
     (certificate : E.WellFoundedHistories)
     (observe : E.History → Observation) (assessment : M.BehavioralAssessment)
     (utility : Observation → ι → ℝ) :

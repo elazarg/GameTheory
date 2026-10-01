@@ -7,7 +7,7 @@ controls escaping tails, so bounded expectations converge on arbitrary carriers.
 
 import GameTheory.Math.Probability.ExpectationAlgebra
 import GameTheory.Math.Probability.ExpectationBind
-import GameTheory.Math.Probability.Product
+import GameTheory.Math.Probability.FinitaryProduct
 import GameTheory.Math.Probability.Mixture
 import Mathlib.Analysis.Normed.Group.Tannery
 import Mathlib.Topology.Instances.Real.Lemmas
@@ -444,6 +444,30 @@ theorem PMFConvergesPointwise.independentProduct {ι : Type*} [Fintype ι]
   intro assignment
   simp only [independentProduct_apply, ENNReal.toReal_prod]
   exact tendsto_finsetProd Finset.univ fun i _ => (h i).toReal (assignment i)
+
+/-- Coordinatewise convergence of the drawn coordinates passes to the finitary
+product, when every undrawn coordinate keeps one support point. -/
+theorem PMFConvergesPointwise.finitaryProduct {ι : Type*} {A : ι → Type*}
+    {sequence : ℕ → ∀ i, PMF (A i)} {target : ∀ i, PMF (A i)} (moving : Finset ι)
+    (h : ∀ i ∈ moving, PMFConvergesPointwise (fun n => sequence n i) (target i))
+    (hfixed : ∀ i ∉ moving, ∀ n, supportPoint (sequence n i) = supportPoint (target i)) :
+    PMFConvergesPointwise (fun n => finitaryProduct (sequence n) moving)
+      (finitaryProduct target moving) := by
+  have hextend (n : ℕ) :
+      extendFrom moving (fun i => supportPoint (sequence n i)) =
+        extendFrom moving (fun i => supportPoint (target i)) := by
+    funext draw i
+    by_cases hi : i ∈ moving
+    · rw [extendFrom_of_mem _ _ hi, extendFrom_of_mem _ _ hi]
+    · rw [extendFrom_of_not_mem _ _ hi, extendFrom_of_not_mem _ _ hi, hfixed i hi n]
+  have hsequence : (fun n => GameTheory.Math.Probability.finitaryProduct (sequence n) moving) =
+      fun n => (GameTheory.Math.Probability.independentProduct
+        fun i : moving => sequence n i).map
+        (extendFrom moving fun i => supportPoint (target i)) := by
+    funext n
+    rw [GameTheory.Math.Probability.finitaryProduct, hextend n]
+  rw [hsequence]
+  exact (PMFConvergesPointwise.independentProduct fun i => h i.1 i.2).map _
 
 /-- A vanishing mixture with a fixed PMF converges pointwise to its other
 branch on any carrier. -/

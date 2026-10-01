@@ -120,43 +120,50 @@ private theorem jointOfChoices_choicesOfLegal {state : E.State}
   apply Subtype.ext
   rfl
 
-/-- The canonical behavioral joint law factors into its information-local
-coordinate masses. -/
-theorem behavioralJoint_prob_eq_prod [Fintype ι]
+/-- A player who need not move draws its single choice with probability one. -/
+theorem choiceProb_eq_one_of_not_active
+    (policies : (player : ι) → M.BehavioralPolicy player)
+    {state : E.State} (trace : E.Trace state)
+    (joint : { action : ∀ i, Option (E.Action i) // E.Legal state action })
+    {player : ι} (hinactive : ¬ E.active state player) :
+    ((policies player (M.infoOf player trace))
+      (choicesOfLegal M trace joint player)).toReal = 1 := by
+  have := M.subsingleton_choice_of_not_active trace hinactive
+  rw [eq_pure_of_subsingleton (policies player (M.infoOf player trace))
+    (M.choicesOfLegal trace joint player)]
+  simp
+
+/-- The canonical behavioral joint law factors into the information-local
+coordinate masses of the players who must move. -/
+theorem behavioralJoint_prob_eq_prod [E.FiniteMovers]
     (policies : (player : ι) → M.BehavioralPolicy player)
     {state : E.State} (trace : E.Trace state)
     (hterm : ¬ E.terminal state)
     (joint : { action : ∀ i, Option (E.Action i) // E.Legal state action }) :
     ((M.behavioralJoint policies trace hterm) joint).toReal =
-      ∏ player,
+      ∏ player ∈ E.movers state,
         ((policies player (M.infoOf player trace))
           (choicesOfLegal M trace joint player)).toReal := by
   classical
+  let laws := fun player => policies player (M.infoOf player trace)
   let choices := fun player => choicesOfLegal M trace joint player
   have hbehavioral : M.behavioralJoint policies trace hterm =
-      PMF.map (jointOfChoices M trace hterm)
-        (independentProduct fun player =>
-          policies player (M.infoOf player trace)) := by
-    rw [InformationModel.behavioralJoint_eq_independentProduct]
-    apply congrArg (fun assemble =>
-      PMF.map assemble
-        (independentProduct fun player =>
-          policies player (M.infoOf player trace)))
-    funext draws
-    apply Subtype.ext
+      PMF.map (jointOfChoices M trace hterm) (finitaryProduct laws (E.movers state)) :=
     rfl
+  have hfixed : ∀ player ∉ E.movers state, choices player = supportPoint (laws player) := by
+    intro player hplayer
+    have := M.subsingleton_choice_of_not_active trace
+      (fun hactive => hplayer ((E.mem_movers).2 hactive))
+    exact Subsingleton.elim _ _
   calc
     ((M.behavioralJoint policies trace hterm) joint).toReal =
-        ((independentProduct fun player =>
-          policies player (M.infoOf player trace)) choices).toReal := by
+        ((finitaryProduct laws (E.movers state)) choices).toReal := by
       rw [hbehavioral, ← jointOfChoices_choicesOfLegal M trace joint]
       exact congrArg ENNReal.toReal
-        (pmf_map_apply_of_injective
-          (independentProduct fun player =>
-            policies player (M.infoOf player trace))
+        (pmf_map_apply_of_injective (finitaryProduct laws (E.movers state))
           (jointOfChoices_injective M trace hterm) choices)
     _ = _ := by
-      rw [independentProduct_apply, ENNReal.toReal_prod]
+      rw [finitaryProduct_apply, ite_eq_left_of_eq_true _ _ (eq_true hfixed), ENNReal.toReal_prod]
 
 /-- The focal player's own contribution to one selected legal joint. -/
 def playerStepProb (policies : (player : ι) → M.BehavioralPolicy player)
@@ -167,14 +174,31 @@ def playerStepProb (policies : (player : ι) → M.BehavioralPolicy player)
     (choicesOfLegal M trace joint who)).toReal
 
 /-- The other players' independent contribution to one selected legal joint. -/
-def opponentsStepProb [Fintype ι] [DecidableEq ι]
+def opponentsStepProb [E.FiniteMovers] [DecidableEq ι]
     (policies : (player : ι) → M.BehavioralPolicy player)
     (who : ι) {state : E.State} (trace : E.Trace state)
     (joint : { action : ∀ i, Option (E.Action i) // E.Legal state action }) :
   ℝ :=
-  ∏ other ∈ Finset.univ.erase who,
+  ∏ other ∈ (E.movers state).erase who,
     ((policies other (M.infoOf other trace))
       (choicesOfLegal M trace joint other)).toReal
+
+/-- With finitely many players, the other players' contribution is the product
+over all of them: players who need not move contribute probability one. -/
+theorem opponentsStepProb_eq_prod_univ [Fintype ι] [DecidableEq ι]
+    (policies : (player : ι) → M.BehavioralPolicy player)
+    (who : ι) {state : E.State} (trace : E.Trace state)
+    (joint : { action : ∀ i, Option (E.Action i) // E.Legal state action }) :
+    opponentsStepProb M policies who trace joint =
+      ∏ other ∈ Finset.univ.erase who,
+        ((policies other (M.infoOf other trace))
+          (choicesOfLegal M trace joint other)).toReal := by
+  apply Finset.prod_subset (Finset.erase_subset_erase who (Finset.subset_univ _))
+  intro other hother hnot
+  apply M.choiceProb_eq_one_of_not_active policies trace joint
+  intro hactive
+  exact hnot (Finset.mem_erase.2
+    ⟨Finset.ne_of_mem_erase hother, (E.mem_movers).2 hactive⟩)
 
 /-- The actual probability coefficient of one joint/transition pair. -/
 def stepProb [E.FiniteMovers]
@@ -310,7 +334,7 @@ theorem historyReachProbability_extend [E.FiniteMovers]
 /-- Counterfactual one-step reach for `who`: every other player's action
 factor together with the stochastic transition, excluding `who`'s own action
 factor. -/
-def counterfactualStepProb [Fintype ι] [DecidableEq ι]
+def counterfactualStepProb [E.FiniteMovers] [DecidableEq ι]
     (policies : (player : ι) → M.BehavioralPolicy player)
   (who : ι) {state : E.State} (trace : E.Trace state)
     (joint : { action : ∀ i, Option (E.Action i) // E.Legal state action })
@@ -321,7 +345,7 @@ def counterfactualStepProb [Fintype ι] [DecidableEq ι]
 /-- Actual one-step reach factors into the focal player's contribution and
 the counterfactual coefficient. -/
 theorem stepProb_eq_player_mul_counterfactual
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (policies : (player : ι) → M.BehavioralPolicy player)
     (who : ι) {state : E.State} (trace : E.Trace state)
     (joint : { action : ∀ i, Option (E.Action i) // E.Legal state action })
@@ -332,18 +356,24 @@ theorem stepProb_eq_player_mul_counterfactual
   classical
   rw [stepProb,
     behavioralJoint_prob_eq_prod M policies trace joint.2.1 joint]
-  rw [← Finset.mul_prod_erase Finset.univ
-    (fun player =>
-      ((policies player (M.infoOf player trace))
-        (choicesOfLegal M trace joint player)).toReal)
-    (Finset.mem_univ who)]
-  simp only [playerStepProb, counterfactualStepProb, opponentsStepProb]
-  ring
+  by_cases hwho : who ∈ E.movers state
+  · rw [← Finset.mul_prod_erase (E.movers state)
+      (fun player =>
+        ((policies player (M.infoOf player trace))
+          (choicesOfLegal M trace joint player)).toReal) hwho]
+    simp only [playerStepProb, counterfactualStepProb, opponentsStepProb]
+    ring
+  · have hone : playerStepProb M policies who trace joint = 1 :=
+      M.choiceProb_eq_one_of_not_active policies trace joint
+        (fun hactive => hwho ((E.mem_movers).2 hactive))
+    rw [hone, one_mul]
+    simp only [counterfactualStepProb, opponentsStepProb,
+      Finset.erase_eq_of_notMem hwho]
 
 /-- Counterfactual one-step reach is invariant under changing only the focal
 player's behavioral policy. -/
 theorem counterfactualStepProb_eq_of_eq_off
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     {first second : (player : ι) → M.BehavioralPolicy player}
     {who : ι} (hagree : ∀ other, other ≠ who → first other = second other)
     {state : E.State} (trace : E.Trace state)
@@ -368,7 +398,7 @@ def playerReachProbability
 
 /-- Product of all nonfocal action and transition factors along a canonical
 trace. This is the finite-history counterfactual reach coefficient. -/
-def counterfactualReachProbability [Fintype ι] [DecidableEq ι]
+def counterfactualReachProbability [E.FiniteMovers] [DecidableEq ι]
     (policies : (player : ι) → M.BehavioralPolicy player) (who : ι) :
     {state : E.State} → E.Trace state → ℝ
   | _, .start => 1
@@ -384,7 +414,7 @@ theorem playerReachProbability_start
   rfl
 
 @[simp]
-theorem counterfactualReachProbability_start [Fintype ι] [DecidableEq ι]
+theorem counterfactualReachProbability_start [E.FiniteMovers] [DecidableEq ι]
     (policies : (player : ι) → M.BehavioralPolicy player) (who : ι) :
     counterfactualReachProbability M policies who
       (ExecutionProtocol.Trace.start : E.Trace E.init) = 1 :=
@@ -393,7 +423,7 @@ theorem counterfactualReachProbability_start [Fintype ι] [DecidableEq ι]
 /-- Full counterfactual reach, not merely its last step, is unchanged when
 only the focal behavioral policy changes. -/
 theorem counterfactualReachProbability_eq_of_eq_off
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     {first second : (player : ι) → M.BehavioralPolicy player}
     {who : ι} (hagree : ∀ other, other ≠ who → first other = second other)
     {state : E.State} (trace : E.Trace state) :
@@ -408,7 +438,7 @@ theorem counterfactualReachProbability_eq_of_eq_off
 /-- Canonical behavioral history reach factors into the focal player's own
 reach and the counterfactual reach used by continuation and regret analyses. -/
 theorem historyReachProbability_eq_player_mul_counterfactual
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (policies : (player : ι) → M.BehavioralPolicy player) (who : ι)
     {state : E.State} (trace : E.Trace state) :
     (M.historyReachWeight policies ⟨state, trace⟩).toReal =
@@ -517,7 +547,7 @@ theorem playerReachProbability_eq_of_decisionRecall
 /-- Counterfactual reach is nonnegative because every recursive factor is a
 finite product of distribution masses. -/
 theorem counterfactualReachProbability_nonneg
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player) (who : ι)
     {state : E.State} (trace : E.Trace state) :
     0 ≤ M.counterfactualReachProbability strategy who trace := by

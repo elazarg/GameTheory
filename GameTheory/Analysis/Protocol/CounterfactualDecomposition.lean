@@ -115,7 +115,7 @@ theorem runnerReadsReachable_truncated [E.FiniteMovers] (fuel : ℕ) :
   fun _ _ history hagree => M.runBehavioralFrom_congr fuel history
     fun later hreach hterm i => hagree later ⟨fuel, hreach⟩ hterm i
 
-theorem runnerReadsReachable_terminal [Fintype ι] (certificate : E.WellFoundedHistories) :
+theorem runnerReadsReachable_terminal [E.FiniteMovers] (certificate : E.WellFoundedHistories) :
     M.RunnerReadsReachable (M.runBehavioralTerminalFrom certificate) :=
   fun _ _ history hagree => M.runBehavioralTerminalFrom_congr certificate history hagree
 
@@ -129,7 +129,7 @@ theorem runBehavioral_add_eq_bind [E.FiniteMovers]
 
 /-- Terminal play from the root splits at every depth into the prefix law and
 terminal play from there. -/
-theorem runBehavioralTerminalFrom_init_eq_bind [Fintype ι]
+theorem runBehavioralTerminalFrom_init_eq_bind [E.FiniteMovers]
     (certificate : E.WellFoundedHistories)
     (policies : (i : ι) → M.BehavioralPolicy i) (depth : ℕ) :
     M.runBehavioralTerminalFrom certificate policies E.initHistory =
@@ -214,7 +214,7 @@ theorem rootGain_eq_prefixExpectation
 canonical counterfactual coefficient. Histories outside the fiber need only
 have zero gain on the finite support actually reached at the cut. -/
 theorem prefixExpectation_eq_ownReach_mul_counterfactualSum
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (who : ι) (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
@@ -365,7 +365,7 @@ action regret at a strictly later site. Counterfactual reach already omits the
 focal player's policy, and the continuation cannot revisit the earlier
 site. -/
 theorem counterfactualActionRegret_eq_of_agree_off_pastSite
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (first second : (i : ι) → M.BehavioralPolicy i)
     (who : ι) [DecidableEq (M.InfoState who)]
     (pastSite : M.InformationSite who) (pastDepth : ℕ)
@@ -470,7 +470,7 @@ theorem cutGain_eq_zero_of_info_ne
 /-- Whole-policy counterfactual regret is the counterfactual sum of the
 corresponding ordinary behavioral continuation gains. -/
 theorem counterfactualRegret_eq_sum_behavioralContinuationGain
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (who : ι) (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
@@ -499,7 +499,7 @@ the prefix law and a continuation runner that reads only reachable histories,
 the exact root gain is own reach times the counterfactual regret for that
 runner. Early terminal histories are absorbed. -/
 theorem rootGain_eq_ownReach_mul_counterfactualRegret
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (who : ι) (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
@@ -567,7 +567,7 @@ theorem rootGain_eq_ownReach_mul_counterfactualRegret
 single-site root decomposition. The coefficient is read at the decision
 history already carried by `InformationSite`. -/
 theorem rootGain_eq_representativeReach_mul_counterfactualRegret_of_decisionRecall
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (hrecall : M.DecisionRecall)
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (who : ι) (site : M.InformationSite who)
@@ -600,7 +600,7 @@ theorem rootGain_eq_representativeReach_mul_counterfactualRegret_of_decisionReca
 
 /-- Pure-action specialization of the decision-recall root bridge. -/
 theorem rootGain_eq_representativeReach_mul_counterfactualActionRegret_of_decisionRecall
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (hrecall : M.DecisionRecall)
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (who : ι) [DecidableEq (M.InfoState who)]

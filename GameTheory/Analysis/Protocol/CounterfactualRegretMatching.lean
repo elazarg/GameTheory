@@ -28,7 +28,7 @@ namespace InformationModel
 /-- The vector of counterfactual pure-action regrets at one information
 site. -/
 def localCounterfactualRegretVector
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
@@ -76,7 +76,7 @@ theorem strategyWithLocalLaw_of_ne
 /-- The pure-commitment counterfactual utility is independent of which law is
 currently installed at the focal site. -/
 theorem counterfactualActionUtility_strategyWithLocalLaw
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
@@ -98,7 +98,7 @@ theorem counterfactualActionUtility_strategyWithLocalLaw
 current site law is the mixed action and pure-commitment continuation values
 are the ordinary finite-action utilities. -/
 theorem localCounterfactualRegretVector_eq_regretPayoff_actionUtility
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
@@ -124,7 +124,7 @@ ordinary regret-payoff vector for the environment's pure-commitment
 counterfactual utilities. -/
 theorem localCounterfactualRegretVector_strategyWithLocalLaw
     {Q : Type*}
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
@@ -158,7 +158,7 @@ inherits the finite regret-matching estimate.  The premise is pointwise in
 every current action law and environment; it does not assume convergence. -/
 theorem counterfactualRegretMatch_sq_infDist_avg_le
     {Q : Type*}
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]
@@ -195,7 +195,7 @@ theorem counterfactualRegretMatch_sq_infDist_avg_le
 counterfactual-regret process approaches the nonpositive orthant. -/
 theorem counterfactualRegretMatch_approaches
     {Q : Type*}
-    [Fintype ι] [DecidableEq ι]
+    [E.FiniteMovers] [DecidableEq ι]
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
     [Fintype (M.InformationHistory who site.1)]

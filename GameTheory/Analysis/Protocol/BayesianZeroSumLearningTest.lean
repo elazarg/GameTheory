@@ -744,7 +744,7 @@ theorem opponentsStepProb_initial_noop (state : LearningState) (who : Fin 2) :
         ExecutionProtocol.Trace.start
         ⟨execution.noop, initial_noop_legal⟩ = 1 := by
   classical
-  unfold opponentsStepProb
+  rw [opponentsStepProb_eq_prod_univ]
   apply Finset.prod_eq_one
   intro other hother
   exact congrArg ENNReal.toReal (initial_noop_choice_prob state other)

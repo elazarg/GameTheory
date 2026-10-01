@@ -16,9 +16,10 @@ open GameTheory.Math.Probability
 
 universe uι us ua up uq uk
 
-variable {ι : Type uι} [Fintype ι]
+variable {ι : Type uι}
     {E : ExecutionProtocol.{uι, us, ua} ι}
     (M : InformationModel.{uι, us, ua, up, uq, uk} E)
+variable [E.FiniteMovers]
 
 /-- Full support at decision sites suffices for all legal joint actions;
 inactive coordinates have a unique legal choice. -/
@@ -33,9 +34,10 @@ theorem behavioralJoint_fullSupport
   let draws : (i : ι) → M.Choice i (M.infoOf i trace) :=
     fun i => ⟨joint.1 i, (M.menu_adequate i trace (joint.1 i)).mpr
       (E.legalOption_of_legal joint.2 i)⟩
-  rw [behavioralJoint_eq_independentProduct, PMF.support_map]
+  rw [behavioralJoint, PMF.support_map]
   refine ⟨draws, ?_, ?_⟩
-  · rw [independentProduct_support_iff]
+  · rw [mem_support_finitaryProduct_iff_of_isPointMass _
+      (M.isPointMass_of_not_mem_movers strategy trace)]
     intro i
     cases hchoice : joint.1 i with
     | none =>

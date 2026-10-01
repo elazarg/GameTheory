@@ -31,11 +31,12 @@ open scoped ENNReal
 
 universe uι us ua up uq uk
 
-variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
+variable {ι : Type uι} [DecidableEq ι]
     {E : ExecutionProtocol.{uι, us, ua} ι}
     (M : InformationModel.{uι, us, ua, up, uq, uk} E)
+variable [E.FiniteMovers]
 
-omit [Fintype ι] [DecidableEq ι] in
+omit [E.FiniteMovers] [DecidableEq ι] in
 /-- The probability of an own-action record reads the policy only at the
 recorded information states. -/
 theorem ownPlayReachProbability_congr {who : ι} {first second : M.BehavioralPolicy who} :
@@ -111,7 +112,7 @@ theorem historyReachWeight_spliceAfter (hrecall : M.DecisionRecall)
   exact M.ownPlayReachProbability_congr _ fun entry hentry =>
     M.spliceAfter_eq_of_mem_ownPlay hrecall profile alternative site history hentry
 
-omit [Fintype ι] [DecidableEq ι] in
+omit [E.FiniteMovers] [DecidableEq ι] in
 /-- Each history of a site on the branch after `site` continues a history of
 `site`. -/
 theorem exists_site_ancestor_of_branch (hrecall : M.DecisionRecall) {who : ι}
@@ -349,7 +350,7 @@ theorem BehavioralAssessment.continuationGain_le_of_localGain_le
     _ ≤ _ := hroot.trans hsum
     _ = _ := by ring
 
-omit [Fintype ι] [DecidableEq ι] in
+omit [E.FiniteMovers] [DecidableEq ι] in
 /-- Splicing a single-site law change after its own site changes nothing. -/
 theorem spliceAfter_withLaw {who : ι} [DecidableEq (M.InfoState who)]
     (policy : M.BehavioralPolicy who) (site : M.InformationSite who)

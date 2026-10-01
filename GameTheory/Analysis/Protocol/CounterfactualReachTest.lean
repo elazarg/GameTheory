@@ -150,7 +150,7 @@ theorem counterfactual_factor_eq_one :
       chosenJoint target = 1 := by
   classical
   rw [InformationModel.counterfactualStepProb,
-    InformationModel.opponentsStepProb,
+    InformationModel.opponentsStepProb_eq_prod_univ,
     show Finset.univ.erase false = {true} by decide,
     Finset.prod_singleton, chosenJoint_transition]
   norm_num [InformationModel.choicesOfLegal, focalTrueOpponentTrue,
@@ -164,7 +164,7 @@ theorem opponent_false_counterfactual_factor_eq_zero :
       chosenJoint target = 0 := by
   classical
   rw [InformationModel.counterfactualStepProb,
-    InformationModel.opponentsStepProb,
+    InformationModel.opponentsStepProb_eq_prod_univ,
     show Finset.univ.erase false = {true} by decide,
     Finset.prod_singleton, chosenJoint_transition]
   norm_num [InformationModel.choicesOfLegal, focalTrueOpponentFalse,
@@ -335,7 +335,8 @@ theorem first_counterfactual_factor :
   classical
   rw [InformationModel.counterfactualStepProb, firstTransition,
     PMF.pure_apply_self]
-  simp [InformationModel.opponentsStepProb]
+  rw [InformationModel.opponentsStepProb_eq_prod_univ]
+  simp
 
 theorem second_counterfactual_factor :
     information.counterfactualStepProb profile () firstTrace secondJoint
@@ -343,7 +344,8 @@ theorem second_counterfactual_factor :
   classical
   rw [InformationModel.counterfactualStepProb, secondTransition,
     PMF.pure_apply_self]
-  simp [InformationModel.opponentsStepProb]
+  rw [InformationModel.opponentsStepProb_eq_prod_univ]
+  simp
 
 theorem first_player_reach :
     information.playerReachProbability profile () firstTrace = 1 / 2 := by
