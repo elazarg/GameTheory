@@ -766,6 +766,261 @@ private theorem exists_representsExpectedUtility_pointwise
       u hu0 hu1 hpure
       (standardLottery_order htotal hindependent hbestWorst hdegenerate)⟩
 
+/-! ### Finitely supported lotteries over an arbitrary outcome type -/
+
+/-- `utility` represents `pref` on the lotteries supported in `support`. -/
+private def RepresentsOn (pref : PMF Outcome → PMF Outcome → Prop)
+    (support : Finset Outcome) (utility : Outcome → ℝ) : Prop :=
+  ∀ preferred alternative : PMF Outcome,
+    preferred.support ⊆ support → alternative.support ⊆ support →
+      (pref preferred alternative ↔ expect alternative utility ≤ expect preferred utility)
+
+private theorem RepresentsOn.mono {support larger : Finset Outcome} {utility : Outcome → ℝ}
+    (hrep : RepresentsOn pref larger utility) (hsubset : support ⊆ larger) :
+    RepresentsOn pref support utility :=
+  fun preferred alternative hpreferred halternative =>
+    hrep preferred alternative (hpreferred.trans (Finset.coe_subset.2 hsubset))
+      (halternative.trans (Finset.coe_subset.2 hsubset))
+
+private theorem support_mix_pure_subset {first second : Outcome} (t : ℝ) (h0 : 0 ≤ t)
+    (h1 : t ≤ 1) :
+    (mix t h0 h1 (PMF.pure first) (PMF.pure second)).support ⊆ {first, second} := by
+  intro outcome houtcome
+  rw [PMF.mem_support_iff, mix_apply] at houtcome
+  by_contra hnot
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff, not_or] at hnot
+  simp [PMF.pure_apply, hnot.1, hnot.2] at houtcome
+
+private theorem expect_mix_pure (f : Outcome → ℝ) (first second : Outcome) (t : ℝ)
+    (h0 : 0 ≤ t) (h1 : t ≤ 1) :
+    expect (mix t h0 h1 (PMF.pure first) (PMF.pure second)) f =
+      t * f first + (1 - t) * f second := by
+  rw [expect_mix t h0 h1 _ _ f (payoffIntegrable_pure _ _) (payoffIntegrable_pure _ _),
+    expect_pure, expect_pure]
+
+/-- On every finite nonempty outcome set the axioms give a representation of
+the lotteries supported there. -/
+private theorem exists_representsOn
+    (htotal : Rank.Total pref) (htrans : Rank.Transitive pref)
+    (hindependent : ∀ first second common (t : ℝ) (hpos : 0 < t) (h1 : t ≤ 1),
+      pref first second ↔
+        pref (mix t hpos.le h1 first common)
+          (mix t hpos.le h1 second common))
+    (hcontinuous : ∀ best middle worst,
+      pref best middle → pref middle worst →
+        ∃ (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1),
+          Rank.Indifferent pref middle (mix t h0 h1 best worst))
+    (support : Finset Outcome) (hnonempty : support.Nonempty) :
+    ∃ utility : Outcome → ℝ, RepresentsOn pref support utility := by
+  classical
+  obtain ⟨point, hpoint⟩ := hnonempty
+  let restricted : PMF support → PMF support → Prop := fun first second =>
+    pref (first.map Subtype.val) (second.map Subtype.val)
+  have : Nonempty support := ⟨⟨point, hpoint⟩⟩
+  obtain ⟨siteUtility, hsite⟩ := exists_representsExpectedUtility_pointwise (pref := restricted)
+    (fun first second => htotal _ _)
+    (fun first middle last hfirst hlast => htrans _ _ _ hfirst hlast)
+    (fun first second common t hpos h1 => by
+      simp only [restricted, mix_map]
+      exact hindependent _ _ _ t hpos h1)
+    (fun best middle worst hbest hworst => by
+      obtain ⟨t, h0, h1, hindifferent⟩ := hcontinuous _ _ _ hbest hworst
+      exact ⟨t, h0, h1, by simpa only [Rank.Indifferent, restricted, mix_map] using hindifferent⟩)
+  let project : Outcome → support := fun outcome =>
+    if houtcome : outcome ∈ support then ⟨outcome, houtcome⟩ else ⟨point, hpoint⟩
+  have hround (law : PMF Outcome) (hlaw : law.support ⊆ support) :
+      (law.map project).map Subtype.val = law := by
+    rw [PMF.map_comp]
+    conv_rhs => rw [← PMF.map_id law]
+    apply map_congr_on_support
+    intro outcome houtcome
+    have hmem : outcome ∈ support := hlaw houtcome
+    simp [project, hmem]
+  refine ⟨fun outcome => siteUtility (project outcome), fun preferred alternative hpreferred
+    halternative => ?_⟩
+  have h := hsite (preferred.map project) (alternative.map project)
+  simp only [restricted, hround preferred hpreferred, hround alternative halternative,
+    expect_map] at h
+  exact h
+
+/-- Two representations of the lotteries over a set holding a strictly ranked
+pair normalize every outcome of the set alike. -/
+private theorem normalized_eq_of_representsOn {support : Finset Outcome}
+    {first second : Outcome → ℝ}
+    (hfirst : RepresentsOn pref support first) (hsecond : RepresentsOn pref support second)
+    {best worst outcome : Outcome} (hbest : best ∈ support) (hworst : worst ∈ support)
+    (houtcome : outcome ∈ support)
+    (hstrict : ¬ pref (PMF.pure worst) (PMF.pure best)) :
+    (first outcome - first worst) / (first best - first worst) =
+      (second outcome - second worst) / (second best - second worst) := by
+  have hpure (point : Outcome) (hmem : point ∈ support) :
+      (PMF.pure point).support ⊆ support := by
+    rw [PMF.support_pure, Set.singleton_subset_iff]
+    exact hmem
+  have hmix {left right : Outcome} (hleft : left ∈ support) (hright : right ∈ support)
+      (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) :
+      (mix t h0 h1 (PMF.pure left) (PMF.pure right)).support ⊆ support := by
+    refine (support_mix_pure_subset t h0 h1).trans ?_
+    intro point hpoint
+    rcases hpoint with rfl | rfl
+    · exact hleft
+    · exact hright
+  have htransfer {preferred alternative : PMF Outcome} (hpreferred : preferred.support ⊆ support)
+      (halternative : alternative.support ⊆ support)
+      (hequal : expect preferred first = expect alternative first) :
+      expect preferred second = expect alternative second := by
+    have hforward := (hfirst preferred alternative hpreferred halternative).2 hequal.ge
+    have hbackward := (hfirst alternative preferred halternative hpreferred).2 hequal.le
+    exact le_antisymm ((hsecond alternative preferred halternative hpreferred).1 hbackward)
+      ((hsecond preferred alternative hpreferred halternative).1 hforward)
+  have hgap (utility : Outcome → ℝ) (hrep : RepresentsOn pref support utility) :
+      utility worst < utility best := by
+    by_contra hle
+    apply hstrict
+    rw [hrep _ _ (hpure worst hworst) (hpure best hbest), expect_pure, expect_pure]
+    exact not_lt.1 hle
+  have hfirstGap := sub_pos.2 (hgap first hfirst)
+  have hsecondGap := sub_pos.2 (hgap second hsecond)
+  set t := (first outcome - first worst) / (first best - first worst) with ht
+  have hfirstOutcome : first outcome = first worst + t * (first best - first worst) := by
+    rw [ht]
+    field_simp
+    ring
+  rcases le_or_gt t 1 with hle | hgt
+  · rcases le_or_gt 0 t with hge | hlt
+    · -- `outcome` is indifferent to the mixture of `best` and `worst` at `t`.
+      have h := htransfer (hpure outcome houtcome) (hmix hbest hworst t hge hle)
+        (by rw [expect_pure, expect_mix_pure, hfirstOutcome]; ring)
+      rw [expect_pure, expect_mix_pure] at h
+      rw [h]
+      field_simp
+      ring
+    · -- `worst` is indifferent to a mixture of `best` and `outcome`.
+      have hone : 0 < 1 - t := by linarith
+      set s := -t / (1 - t) with hs
+      have hs0 : 0 ≤ s := div_nonneg (by linarith) hone.le
+      have hs1 : s ≤ 1 := by rw [hs, div_le_one hone]; linarith
+      have h := htransfer (hmix hbest houtcome s hs0 hs1) (hpure worst hworst)
+        (by rw [expect_pure, expect_mix_pure, hfirstOutcome, hs]; field_simp; ring)
+      rw [expect_pure, expect_mix_pure] at h
+      have hsecondOutcome : second outcome =
+          second worst - s * (second best - second worst) / (1 - s) := by
+        have hslt : s < 1 := by rw [hs, div_lt_one hone]; linarith
+        have hsone : 1 - s ≠ 0 := (sub_pos.2 hslt).ne'
+        field_simp
+        linarith
+      rw [hsecondOutcome, hs]
+      field_simp
+      ring
+  · -- `best` is indifferent to a mixture of `outcome` and `worst`.
+    have htpos : 0 < t := by linarith
+    set s := 1 / t with hs
+    have hs0 : 0 ≤ s := by positivity
+    have hs1 : s ≤ 1 := by rw [hs, div_le_one htpos]; exact hgt.le
+    have h := htransfer (hmix houtcome hworst s hs0 hs1) (hpure best hbest)
+      (by rw [expect_pure, expect_mix_pure, hfirstOutcome, hs]; field_simp; ring)
+    rw [expect_pure, expect_mix_pure] at h
+    have hsecondOutcome : second outcome =
+        second worst + (second best - second worst) / s := by
+      have hspos : 0 < s := by positivity
+      field_simp
+      linarith
+    rw [hsecondOutcome, hs]
+    field_simp
+    ring
+
+/-- The vNM axioms represent the preference on every finitely supported
+lottery, whatever the outcome type. -/
+private theorem exists_representsOnFiniteSupport_pointwise
+    (htotal : Rank.Total pref) (htrans : Rank.Transitive pref)
+    (hindependent : ∀ first second common (t : ℝ) (hpos : 0 < t) (h1 : t ≤ 1),
+      pref first second ↔
+        pref (mix t hpos.le h1 first common)
+          (mix t hpos.le h1 second common))
+    (hcontinuous : ∀ best middle worst,
+      pref best middle → pref middle worst →
+        ∃ (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1),
+          Rank.Indifferent pref middle (mix t h0 h1 best worst)) :
+    ∃ utility : Outcome → ℝ, ∀ preferred alternative : PMF Outcome,
+      preferred.support.Finite → alternative.support.Finite →
+        (pref preferred alternative ↔
+          expect alternative utility ≤ expect preferred utility) := by
+  classical
+  by_cases hdegenerate : ∀ best worst : Outcome, pref (PMF.pure worst) (PMF.pure best)
+  · refine ⟨fun _ => 0, fun preferred alternative hpreferred halternative => ?_⟩
+    obtain ⟨anchor, -⟩ := preferred.support_nonempty
+    have hanchor (law : PMF Outcome) (hlaw : law.support.Finite) :
+        Rank.Indifferent pref law (PMF.pure anchor) := by
+      have h := compoundIndifferent htrans hindependent law hlaw
+        (fun outcome => PMF.pure outcome) (fun _ => PMF.pure anchor)
+        (fun outcome _ => ⟨hdegenerate anchor outcome, hdegenerate outcome anchor⟩)
+      simpa using h
+    simp only [expect_constant, le_refl, iff_true]
+    exact htrans _ _ _ (hanchor preferred hpreferred).1 (hanchor alternative halternative).2
+  push Not at hdegenerate
+  obtain ⟨best, worst, hstrict⟩ := hdegenerate
+  have hlocal (outcome : Outcome) : ∃ utility : Outcome → ℝ,
+      RepresentsOn pref {best, worst, outcome} utility :=
+    exists_representsOn htotal htrans hindependent hcontinuous _ ⟨best, by simp⟩
+  choose triple htriple using hlocal
+  refine ⟨fun outcome => (triple outcome outcome - triple outcome worst) /
+    (triple outcome best - triple outcome worst), fun preferred alternative hpreferred
+      halternative => ?_⟩
+  let support : Finset Outcome :=
+    hpreferred.toFinset ∪ halternative.toFinset ∪ {best, worst}
+  have hbest : best ∈ support := by simp [support]
+  have hworst : worst ∈ support := by simp [support]
+  obtain ⟨joint, hjoint⟩ :=
+    exists_representsOn htotal htrans hindependent hcontinuous support ⟨best, hbest⟩
+  have hpreferredSub : preferred.support ⊆ support := by
+    intro outcome houtcome
+    simp [support, houtcome]
+  have halternativeSub : alternative.support ⊆ support := by
+    intro outcome houtcome
+    simp [support, houtcome]
+  have hgap : 0 < joint best - joint worst := by
+    apply sub_pos.2
+    by_contra hle
+    apply hstrict
+    have hpure (point : Outcome) (hmem : point ∈ support) :
+        (PMF.pure point).support ⊆ support := by
+      rw [PMF.support_pure, Set.singleton_subset_iff]
+      exact hmem
+    rw [hjoint _ _ (hpure worst hworst) (hpure best hbest), expect_pure, expect_pure]
+    exact not_lt.1 hle
+  let normalized : Outcome → ℝ := fun outcome =>
+    (joint best - joint worst)⁻¹ * (joint outcome - joint worst)
+  have hagree (outcome : Outcome) (houtcome : outcome ∈ support) :
+      (triple outcome outcome - triple outcome worst) /
+          (triple outcome best - triple outcome worst) = normalized outcome := by
+    have hsub : ({best, worst, outcome} : Finset Outcome) ⊆ support := by
+      intro point hpoint
+      simp only [Finset.mem_insert, Finset.mem_singleton] at hpoint
+      rcases hpoint with rfl | rfl | rfl
+      · exact hbest
+      · exact hworst
+      · exact houtcome
+    rw [normalized_eq_of_representsOn (htriple outcome) ((hjoint).mono hsub)
+      (by simp) (by simp) (by simp) hstrict]
+    simp only [normalized]
+    field_simp
+  have hexpect (law : PMF Outcome) (hlaw : law.support ⊆ support) :
+      expect law (fun outcome => (triple outcome outcome - triple outcome worst) /
+        (triple outcome best - triple outcome worst)) =
+        (joint best - joint worst)⁻¹ * (expect law joint - joint worst) := by
+    have hfinite : law.support.Finite := (Finset.finite_toSet support).subset hlaw
+    rw [expect_congr_on_support (fun outcome houtcome => hagree outcome (hlaw houtcome)),
+      expect_const_mul, expect_sub (payoffIntegrable_of_finite_support law _ hfinite)
+        (payoffIntegrable_constant law _), expect_constant]
+  rw [hjoint preferred alternative hpreferredSub halternativeSub,
+    hexpect preferred hpreferredSub, hexpect alternative halternativeSub]
+  constructor
+  · intro hle
+    exact mul_le_mul_of_nonneg_left (by linarith) (inv_nonneg.2 hgap.le)
+  · intro hle
+    have := le_of_mul_le_mul_left hle (inv_pos.2 hgap)
+    linarith
+
 end VNMProof
 
 /-- Binary mixture independence permits substitution of indifferent branches
@@ -781,6 +1036,36 @@ theorem MixtureIndependent.indifferent_bind_of_finite_support
     Rank.Indifferent (weaklyPrefers agent) (outer.bind first) (outer.bind second) :=
   VNMProof.compoundIndifferent htrans (hindependent agent)
     outer hfinite first second hlocal
+
+/-- `utility` represents the weak preference by expected utility on every
+finitely supported lottery. -/
+def RepresentsExpectedUtilityOnFiniteSupport
+    (weaklyPrefers : WeakPreference Agent Outcome)
+    (utility : Outcome → Agent → ℝ) : Prop :=
+  ∀ agent (preferred alternative : PMF Outcome),
+    preferred.support.Finite → alternative.support.Finite →
+      (weaklyPrefers agent preferred alternative ↔
+        expect alternative (utility · agent) ≤ expect preferred (utility · agent))
+
+/-- **von Neumann--Morgenstern on any outcome type.** The vNM axioms give one
+expected-utility index per agent representing the preference on every
+finitely supported lottery. The outcome type may be infinite; the axioms are
+stated through finite mixtures, and the representation covers the lotteries
+that finite mixtures of outcomes reach. -/
+theorem exists_representsExpectedUtilityOnFiniteSupport
+    (weaklyPrefers : WeakPreference Agent Outcome)
+    (htotal : Preference.Total weaklyPrefers)
+    (htrans : Preference.Transitive weaklyPrefers)
+    (hindependent : MixtureIndependent weaklyPrefers)
+    (hcontinuous : MixtureContinuous weaklyPrefers) :
+    ∃ utility : Outcome → Agent → ℝ,
+      RepresentsExpectedUtilityOnFiniteSupport weaklyPrefers utility := by
+  choose utility hutility using fun agent =>
+    VNMProof.exists_representsOnFiniteSupport_pointwise (htotal agent) (htrans agent)
+      (fun first second common t hpos h1 =>
+        hindependent agent first second common t hpos h1)
+      (fun best middle worst => hcontinuous agent best middle worst)
+  exact ⟨fun outcome agent => utility agent outcome, hutility⟩
 
 /-- Finite-outcome vNM axioms produce one expected-utility index per agent. -/
 theorem exists_representsExpectedUtility [Finite Outcome]

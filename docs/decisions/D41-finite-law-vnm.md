@@ -103,3 +103,15 @@ Ordinal rankings remain separate from lottery preferences.
 
 Validation details are recorded in EXP-074 and the exact
 `S-FOUND-vnm` coverage ledger.
+
+## Arbitrary outcome types
+
+`exists_representsExpectedUtilityOnFiniteSupport` drops the finite outcome
+type and represents the preference on finitely supported lotteries. It applies
+the finite construction to the lotteries over each finite outcome set and glues
+the resulting indices after normalizing a strictly ranked pair to one and zero.
+Two representations of the lotteries over a set holding that pair normalize
+each of its outcomes alike: depending on where the normalized value falls, the
+outcome, the better endpoint, or the worse endpoint is indifferent to a mixture
+of the other two. The gluing uses only the representations, not continuity.
+

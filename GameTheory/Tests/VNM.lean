@@ -4,7 +4,9 @@ Hostile finite-law VNM fixture.
 The positive example has three distinct utility levels and an interior
 standard-lottery indifference.  The lexicographic control keeps completeness,
 transitivity, and mixture independence while rejecting mixture continuity, so
-the representation theorem cannot omit its continuity premise.
+the representation theorem cannot omit its continuity premise.  A bounded
+expected-utility preference over the natural numbers exercises the
+representation of finitely supported lotteries on an infinite outcome type.
 -/
 
 import GameTheory.Core.VNM
@@ -268,5 +270,30 @@ theorem lexicographic_characterization_fails :
   obtain ⟨represented, hrepresentation⟩ :=
     (Preference.vnmAxioms_iff_exists_representsExpectedUtility lexicographic).mp haxioms
   exact lexicographic_not_representsExpectedUtility ⟨represented, hrepresentation⟩
+
+/-- A bounded utility on infinitely many outcomes. -/
+def countableUtility : ℕ → Unit → ℝ := fun outcome _ => (outcome : ℝ) / (outcome + 1)
+
+theorem countableUtility_integrable (law : PMF ℕ) :
+    UtilityIntegrable countableUtility () law := by
+  apply payoffIntegrable_of_bounded law _ (C := 1)
+  intro outcome
+  have hpos : (0 : ℝ) < outcome + 1 := by positivity
+  show |(outcome : ℝ) / (outcome + 1)| ≤ 1
+  rw [abs_of_nonneg (by positivity), div_le_one hpos]
+  linarith
+
+/-- The vNM axioms hold for the expected-utility preference of the bounded
+utility, so the finitely supported representation theorem applies on `ℕ`. -/
+theorem countable_representsOnFiniteSupport :
+    ∃ represented : ℕ → Unit → ℝ,
+      Preference.RepresentsExpectedUtilityOnFiniteSupport
+        (euPreference countableUtility) represented := by
+  obtain ⟨htotal, htrans, hindependent, hcontinuous⟩ :=
+    Preference.RepresentsExpectedUtility.vnmAxioms
+      (weaklyPrefers := euPreference countableUtility) (fun _ _ _ => Iff.rfl)
+      (fun _ law => countableUtility_integrable law)
+  exact Preference.exists_representsExpectedUtilityOnFiniteSupport _ htotal htrans
+    hindependent hcontinuous
 
 end GameTheory.Tests.VNM
