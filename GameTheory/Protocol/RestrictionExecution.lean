@@ -18,20 +18,30 @@ namespace GameTheory.Protocol.InformationModel.ActionRestriction
 
 open GameTheory.Math.Probability ExecutionProtocol
 
-variable {ι : Type*} [Fintype ι] {E T : ExecutionProtocol ι}
+variable {ι : Type*} {E T : ExecutionProtocol ι}
   {M : InformationModel E} {N : InformationModel T} (restriction : M.ActionRestriction N)
+variable [E.FiniteMovers] [T.FiniteMovers]
+
+/-- An embedded history has exactly the movers of its original. -/
+theorem movers_history (original : E.History) :
+    T.movers (restriction.history original).state = E.movers original.state := by
+  ext who
+  rw [ExecutionProtocol.mem_movers, ExecutionProtocol.mem_movers, restriction.active]
 
 theorem joint_law (source : (i : ι) → M.BehavioralPolicy i)
     (target : (i : ι) → N.BehavioralPolicy i)
     (agrees : restriction.ExtendsProfile source target)
     (original : E.History) (running : ¬ E.terminal original.state) :
-    (independentProduct fun who => target who (N.infoOf who (restriction.history original).trace)) =
-      (independentProduct fun who => source who (M.infoOf who original.trace)).map
+    finitaryProduct (fun who => target who (N.infoOf who (restriction.history original).trace))
+        (T.movers (restriction.history original).state) =
+      (finitaryProduct (fun who => source who (M.infoOf who original.trace))
+          (E.movers original.state)).map
         (fun draws who => restriction.choiceAt who original (draws who)) := by
   have localLaws := funext (restriction.extends_at_history source target agrees original running)
-  rw [localLaws]
-  exact (independentProduct_map (fun who => source who (M.infoOf who original.trace))
-    (fun who => ⇑(restriction.choiceAt who original))).symm
+  rw [localLaws, restriction.movers_history]
+  exact (finitaryProduct_map (fun who => source who (M.infoOf who original.trace))
+    (fun who => ⇑(restriction.choiceAt who original))
+    (M.isPointMass_of_not_mem_movers source original.trace)).symm
 
 /-- Complete behavioral laws follow from the local square. -/
 theorem runFrom_law (source : (i : ι) → M.BehavioralPolicy i)
@@ -65,7 +75,7 @@ theorem initialized_law (source : (i : ι) → M.BehavioralPolicy i)
   simpa only [runBehavioral, restriction.initial] using
     restriction.runFrom_law source target agrees fuel E.initHistory
 
-omit [Fintype ι] in
+omit [E.FiniteMovers] [T.FiniteMovers] in
 include restriction in
 /-- A horizon bounding the larger protocol bounds the smaller one. -/
 theorem boundedHorizon {bound : ℕ} (bounded : T.BoundedHorizon bound) : E.BoundedHorizon bound := by
@@ -92,7 +102,7 @@ theorem terminal_law [Finite T.History] (sourceCertificate : E.WellFoundedHistor
     N.runBehavioralTerminalFrom_eq_runBehavioralFrom_of_bounded targetCertificate bounded]
   exact restriction.runFrom_law source target agrees bound original
 
-omit [Fintype ι] in
+omit [E.FiniteMovers] [T.FiniteMovers] in
 /-- A retained belief fiber embeds into the full fiber of the larger protocol,
 which may also contain histories that take a new action. -/
 def informationHistory (who : ι) (site : M.InformationSite who) :
@@ -104,12 +114,12 @@ def informationHistory (who : ι) (site : M.InformationSite who) :
     intro first second same
     exact Subtype.ext (restriction.history.injective (congrArg Subtype.val same))
 
-omit [Fintype ι] in
+omit [E.FiniteMovers] [T.FiniteMovers] in
 theorem informationHistory_val (who : ι) (site : M.InformationSite who)
     (original : M.InformationHistory who site.1) :
     (restriction.informationHistory who site original).1 = restriction.history original.1 := rfl
 
-omit [Fintype ι] in
+omit [E.FiniteMovers] [T.FiniteMovers] in
 /-- A retained site of the larger protocol at a common depth is at that depth
 in the smaller protocol too. -/
 theorem source_commonDepth (who : ι) (site : M.InformationSite who) (depth : ℕ)

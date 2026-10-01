@@ -31,7 +31,8 @@ open scoped ENNReal
 
 section Single
 
-variable {ι : Type*} [Fintype ι] {E : ExecutionProtocol ι} (M : InformationModel E)
+variable {ι : Type*} {E : ExecutionProtocol ι} (M : InformationModel E)
+variable [E.FiniteMovers]
 
 /-! ## Own strategy cancels -/
 
@@ -281,8 +282,9 @@ end Single
 
 section Transport
 
-variable {ι : Type*} [Fintype ι] {E T : ExecutionProtocol ι}
+variable {ι : Type*} {E T : ExecutionProtocol ι}
   (M : InformationModel E) (N : InformationModel T)
+variable [E.FiniteMovers] [T.FiniteMovers]
 
 section Fiber
 
@@ -292,7 +294,7 @@ variable (project : E.History → T.History) (who : ι)
   (maps : ∀ history, M.infoOf who history.trace = rawSite.1 →
     N.infoOf who (project history).trace = sourceSite.1)
 
-omit [Fintype ι] in
+omit [E.FiniteMovers] [T.FiniteMovers] in
 /-- Restrict a projected weight sum to the chosen raw fiber: histories of
 positive weight projecting into the source fiber lie in the raw fiber. -/
 private theorem fiber_sum [DecidableEq T.History]
@@ -316,7 +318,7 @@ private theorem fiber_sum [DecidableEq T.History]
       exact reflects original present (by rw [same]; exact history.2)
     · exact absurd (ite_eq_right same) present
 
-omit [Fintype ι] in
+omit [E.FiniteMovers] [T.FiniteMovers] in
 include maps in
 private theorem fiber_mass [DecidableEq T.History]
     (fiber : ∀ history : N.InformationHistory who sourceSite.1,

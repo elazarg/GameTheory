@@ -32,12 +32,13 @@ def localStep (history : E.History)
         (M.menu_adequate who history.trace (choices who).1).mp (choices who).2)⟩).bindOnSupport
       (fun _ realized => PMF.pure (history.extend _ realized))
 
-/-- Behavioral play draws the current local choices independently and then
-takes one local step. -/
-theorem runBehavioralFrom_succ_localStep [Fintype ι]
+/-- Behavioral play draws the current local choices of the movers
+independently and then takes one local step. -/
+theorem runBehavioralFrom_succ_localStep [E.FiniteMovers]
     (profile : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) (history : E.History) :
     M.runBehavioralFrom profile (fuel + 1) history =
-      ((independentProduct fun who => profile who (M.infoOf who history.trace)).bind
+      ((finitaryProduct (fun who => profile who (M.infoOf who history.trace))
+          (E.movers history.state)).bind
         (M.localStep history)).bind (M.runBehavioralFrom profile fuel) := by
   classical
   by_cases stopped : E.terminal history.state
@@ -48,7 +49,7 @@ theorem runBehavioralFrom_succ_localStep [Fintype ι]
       M.runBehavioralFrom_of_terminal profile _ stopped,
       M.runBehavioralFrom_of_terminal profile _ stopped]
   · rw [M.runBehavioralFrom_succ_of_not_terminal profile fuel stopped]
-    simp only [behavioralJoint_eq_independentProduct, legalJointOfChoices, PMF.bind_map,
+    simp only [behavioralJoint, legalJointOfChoices, PMF.bind_map,
       Function.comp_def, localStep, dite_eq_right stopped,
       PMF.bind_bind, bindOnSupport_bind, PMF.pure_bind]
 

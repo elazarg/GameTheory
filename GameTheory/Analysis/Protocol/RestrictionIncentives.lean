@@ -20,14 +20,15 @@ namespace GameTheory.Protocol.InformationModel
 
 open GameTheory.Math.Probability ExecutionProtocol
 
-variable {ι : Type*} [Fintype ι] [DecidableEq ι]
+variable {ι : Type*} [DecidableEq ι]
 
 /-- **Local lotteries are mixtures of committed choices.** With finitely many
 histories and no consequential revisit of decisions, a site's continuation
 value of a local law is the law's expectation of the values of committing to
 each choice. -/
 theorem BehavioralAssessment.continuationContext_withLaw_eq_expect {E : ExecutionProtocol ι}
-    {M : InformationModel E} [Finite E.History] (hactsOnce : M.ActsOnceWhereItMatters)
+    {M : InformationModel E} [E.FiniteMovers] [Finite E.History]
+    (hactsOnce : M.ActsOnceWhereItMatters)
     (assessment : M.BehavioralAssessment) (certificate : E.WellFoundedHistories)
     {who : ι} [DecidableEq (M.InfoState who)] (site : M.InformationSite who)
     (policy : M.BehavioralPolicy who) (law : PMF (M.Choice who site.1))
@@ -46,8 +47,9 @@ namespace ActionRestriction
 
 variable {E T : ExecutionProtocol ι} {M : InformationModel E} {N : InformationModel T}
   (restriction : M.ActionRestriction N)
+variable [E.FiniteMovers] [T.FiniteMovers]
 
-omit [Fintype ι] in
+omit [E.FiniteMovers] [T.FiniteMovers] in
 /-- Installing corresponding local laws preserves the extension. -/
 theorem extends_withLaw (source : (i : ι) → M.BehavioralPolicy i)
     (target : (i : ι) → N.BehavioralPolicy i)
@@ -75,7 +77,7 @@ theorem extends_withLaw (source : (i : ι) → M.BehavioralPolicy i)
   · rw [Profile.update_of_ne _ _ samePlayer, Profile.update_of_ne _ _ samePlayer]
     exact agrees other current
 
-omit [Fintype ι] in
+omit [E.FiniteMovers] [T.FiniteMovers] in
 /-- Committing to corresponding choices preserves the extension. -/
 theorem extends_commit (source : (i : ι) → M.BehavioralPolicy i)
     (target : (i : ι) → N.BehavioralPolicy i)

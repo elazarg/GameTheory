@@ -26,7 +26,8 @@ theorem runBehavioralFrom_one_localStep (profile : (i : ι) → M.BehavioralPoli
     M.runBehavioralFrom profile 1 history =
       (independentProduct fun who => profile who (M.infoOf who history.trace)).bind
         (M.localStep history) := by
-  rw [M.runBehavioralFrom_succ_localStep profile 0]
+  rw [M.runBehavioralFrom_succ_localStep profile 0, finitaryProduct_eq_independentProduct _
+    (M.isPointMass_of_not_mem_movers profile history.trace)]
   exact PMF.bind_pure _
 
 /-- Behavioral play of a given length iterates single steps. -/

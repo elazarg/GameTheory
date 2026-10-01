@@ -18,8 +18,9 @@ namespace GameTheory.Protocol.InformationModel
 
 open GameTheory.Math.Probability Filter
 
-variable {ι : Type*} [Fintype ι] {E T : ExecutionProtocol ι}
+variable {ι : Type*} {E T : ExecutionProtocol ι}
   {M : InformationModel E} {N : InformationModel T}
+variable [E.FiniteMovers] [T.FiniteMovers]
 
 private theorem information_event_meets (assessment : M.BehavioralAssessment)
     (mixed : assessment.IsFullyMixed) (who : ι) (site : M.InformationSite who)
@@ -46,7 +47,7 @@ namespace ActionRestriction
 
 variable (restriction : M.ActionRestriction N)
 
-omit [Fintype ι] in
+omit [E.FiniteMovers] [T.FiniteMovers] in
 /-- Convergent laws of the smaller protocol and vanishing retained trembles
 force the limit of the larger protocol to extend the limit profile. -/
 theorem extendsProfile_of_perturbs_converges
@@ -79,7 +80,7 @@ theorem extendsProfile_of_perturbs_converges
   exact tendsto_nhds_unique (targetLaws.toReal action)
     (convergence.congr' (Eventually.of_forall fun n => (same n).symm))
 
-omit [Fintype ι] in
+omit [E.FiniteMovers] [T.FiniteMovers] in
 /-- Embedded histories reflect the entire retained information event,
 including histories that a particular profile does not reach. -/
 theorem information_event_preimage (who : ι) (site : M.InformationSite who) :
