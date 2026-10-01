@@ -33,14 +33,18 @@ consumer can state and check locally. Keeping `[Fintype ι]` on the runner would
 exclude every infinite-player sequential game, including those with one mover
 per stage.
 
+Counterfactual reach factors a step's joint mass player by player. The
+factorization runs over the movers, since every other player draws its single
+choice with probability one; `opponentsStepProb_eq_prod_univ` recovers the
+all-player product for finitely many players.
+
 Mixed profiles, which draw a whole deterministic policy for every player at
 once, still need the independent product over all players and keep
 `[Fintype ι]`: the Kuhn correspondence, predrawing, strategic realization, and
-policy measures. So do counterfactual reach and the results built on its
-player-by-player factorization (counterfactual regret, the one-shot deviation
-principle, extensive-form perfection, existence). Restating counterfactual
-reach as a product over movers would lift those; it is not part of this
-decision.
+policy measures. Existence of sequential and extensive-form perfect equilibria
+keeps it too, because its fixed point ranges over every player's local
+choices; extracting a sequential equilibrium from a tight sequence of
+assessments needs only countably many players.
 
 ## Admission and rejection criteria
 
@@ -52,8 +56,12 @@ over every player. Finite-player users must not need new arguments.
 
 The behavioral runner, history path mass, history events, behavioral
 assessments and Bayes beliefs, behavioral continuations and mixtures, terminal
-behavioral play, and most sequential-rationality and sequential-equilibrium
-declarations compile with `[E.FiniteMovers]`; every
+behavioral play, sequential rationality and equilibrium, counterfactual reach,
+regret, and its decomposition, the one-shot deviation principle, information
+localization, and behavioral continuity and convergence compile with
+`[E.FiniteMovers]`. EFG games and compiled MAIDs have at most one mover per
+state, so their sequential-equilibrium and compilation theorems need no
+finiteness of the player set at all; every
 finite-player consumer compiles unchanged. A cascade protocol with the player
 set `ℕ` and one mover per stage runs genuinely random behavioral play, which no
 finite-player hypothesis admits. These results support the decision.

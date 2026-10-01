@@ -10009,12 +10009,21 @@ memory.
     Declarations were
     relaxed mechanically and kept `[Fintype ι]` wherever the build failed.
   - H3 held after proving the one-coordinate split for finitary products.
-  - Counterfactual reach factors reach player by player over all players, so
-    counterfactual regret, the one-shot deviation principle, extensive-form
-    perfection, and existence keep `[Fintype ι]`. Mixed profiles, Kuhn,
-    predrawing, and policy measures keep it by necessity.
+  - Restating counterfactual reach as a product over movers relaxed
+    counterfactual regret and its decomposition, regret matching, root regret,
+    information localization, and the one-shot deviation principle. A
+    pointwise convergence law for finitary products relaxed behavioral and
+    terminal convergence and the sequential limit theorems; tight-sequence
+    extraction needs countably many players.
+  - EFG games and compiled MAIDs carry `FiniteMovers` for any player set, so
+    EFG sequential equilibrium and every MAID compilation theorem lost their
+    player finiteness.
+  - Existence (whose fixed point ranges over every player's choices), the
+    agent normal form, mixed profiles, Kuhn, predrawing, and policy measures
+    keep `[Fintype ι]`.
   - The cascade fixture runs nondegenerate behavioral play with the player
     set `ℕ`.
 - **Outcome:** accepted with design (b); see D66.
-- **Next action:** restate counterfactual reach as a product over movers to
-  relax the counterfactual and one-shot-deviation layer.
+- **Next action:** none required. Existence for infinitely many players with
+  finitely many decision sites would need a fixed point over sites rather
+  than players.
