@@ -785,7 +785,7 @@ theorem localUtility_mem_Icc (who : Fin 2) (ty : Bool)
     localUtility who ty choice state ∈ Set.Icc (-(1 / 2) : ℝ) (1 / 2) := by
   unfold localUtility counterfactualActionUtility
     counterfactualContinuationValue
-  rw [Fintype.sum_unique]
+  rw [tsum_fintype, Fintype.sum_unique]
   dsimp only [default, informationHistoryUnique]
   simp only [counterfactualReach_typedHistory]
   have hcontinuation := behavioralContinuationValue_mem_Icc
@@ -982,7 +982,7 @@ theorem localUtility_row_eq (ty : Bool) (choice : LocalChoice 0 ty)
           (actionOfChoice 1 ty other)) := by
   unfold localUtility counterfactualActionUtility
     counterfactualContinuationValue
-  rw [Fintype.sum_unique]
+  rw [tsum_fintype, Fintype.sum_unique]
   dsimp only [default, informationHistoryUnique]
   simp only [counterfactualReach_typedHistory]
   unfold behavioralContinuationValue
@@ -997,7 +997,7 @@ theorem localUtility_column_eq (ty : Bool) (choice : LocalChoice 1 ty)
           (actionOfChoice 1 ty choice)) := by
   unfold localUtility counterfactualActionUtility
     counterfactualContinuationValue
-  rw [Fintype.sum_unique]
+  rw [tsum_fintype, Fintype.sum_unique]
   dsimp only [default, informationHistoryUnique]
   simp only [counterfactualReach_typedHistory]
   unfold behavioralContinuationValue

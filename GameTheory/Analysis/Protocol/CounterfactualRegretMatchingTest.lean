@@ -155,6 +155,7 @@ theorem counterfactualContinuationValue_policyOfLaw
       (1 / 2) * expect (alternative localSite.1) (fun choice =>
         if choice.1 = some false then 1 else 0) := by
   unfold InformationModel.counterfactualContinuationValue
+  rw [tsum_fintype]
   calc
     (∑ history : information.InformationHistory .player localSite.1,
         information.counterfactualReachProbability (profileOfLaw law) .player

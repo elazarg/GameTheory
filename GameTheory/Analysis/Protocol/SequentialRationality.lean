@@ -470,7 +470,8 @@ theorem behavioralRootGain_le_of_counterfactualLocalGain_le
             ((baseline who).withLaw info (alternative info)) := by
         unfold counterfactualRegret counterfactualContinuationValue
           behavioralContinuationValue
-        rw [Profile.update_eq_self, ← Finset.sum_sub_distrib, Finset.mul_sum]
+        rw [Profile.update_eq_self, tsum_fintype, tsum_fintype, ← Finset.sum_sub_distrib,
+          Finset.mul_sum]
         apply Finset.sum_congr rfl
         intro history _
         rw [hfactor, hgain]

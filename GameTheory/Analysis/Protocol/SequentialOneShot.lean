@@ -154,7 +154,7 @@ theorem BehavioralAssessment.counterfactualRegret_le_of_continuationGain_le
       history witness
   have hscaled := M.informationMass_mul_bayesGain_eq_ownReach_mul_counterfactualRegret
     assessment.strategy who site hantichain hmass _ hown replacement payoff run
-    (fun _ _ => payoffIntegrable_of_finite _ _) (fun _ _ => payoffIntegrable_of_finite _ _)
+    (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
   rw [← assessment.continuationContextWith_value_eq_bayesContinuationValue M who site
       hantichain hmass (hbayes who site hmass) replacement payoff run,
     ← assessment.continuationContextWith_value_eq_bayesContinuationValue M who site

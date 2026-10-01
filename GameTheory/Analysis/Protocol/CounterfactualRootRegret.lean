@@ -35,7 +35,7 @@ def counterfactualRegretMatchAverage
     [E.FiniteMovers] [DecidableEq ι]
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
+   
     [Fintype (M.Choice who site.1)] [Nonempty (M.Choice who site.1)]
     (strategyOf : PMF (M.Choice who site.1) → Q →
       (player : ι) → M.BehavioralPolicy player)
@@ -54,7 +54,7 @@ theorem counterfactualRegretMatchAverage_smul_eq_sum
     [E.FiniteMovers] [DecidableEq ι]
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
+   
     [Fintype (M.Choice who site.1)] [Nonempty (M.Choice who site.1)]
     (strategyOf : PMF (M.Choice who site.1) → Q →
       (player : ι) → M.BehavioralPolicy player)
@@ -84,7 +84,6 @@ theorem counterfactualRegretMatches_positiveRootGain_le
     [E.FiniteMovers] [DecidableEq ι]
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : Site → M.InformationSite who)
-    [∀ key, Fintype (M.InformationHistory who (site key).1)]
     [∀ key, Fintype (M.Choice who (site key).1)]
     [∀ key, Nonempty (M.Choice who (site key).1)]
     (strategyOf : ∀ key,
@@ -144,7 +143,6 @@ theorem counterfactualRegretMatches_positiveRootGains_le
     [E.FiniteMovers] [DecidableEq ι]
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : Site → M.InformationSite who)
-    [∀ key, Fintype (M.InformationHistory who (site key).1)]
     [∀ key, Fintype (M.Choice who (site key).1)]
     [∀ key, Nonempty (M.Choice who (site key).1)]
     (strategyOf : ∀ key,
@@ -205,7 +203,6 @@ theorem counterfactualRegretMatches_positiveRootGains_tendsto_zero
     [E.FiniteMovers] [DecidableEq ι]
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : Site → M.InformationSite who)
-    [∀ key, Fintype (M.InformationHistory who (site key).1)]
     [∀ key, Fintype (M.Choice who (site key).1)]
     [∀ key, Nonempty (M.Choice who (site key).1)]
     (strategyOf : ∀ key,

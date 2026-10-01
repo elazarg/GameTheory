@@ -32,7 +32,6 @@ def localCounterfactualRegretVector
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
     (payoff : E.History → ℝ) (run : M.ContinuationRunner) :
     EuclideanSpace ℝ (M.Choice who site.1) :=
   WithLp.toLp 2 fun choice =>
@@ -80,7 +79,6 @@ theorem counterfactualActionUtility_strategyWithLocalLaw
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
     (law : PMF (M.Choice who site.1))
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
     (choice : M.Choice who site.1) :
@@ -161,7 +159,6 @@ theorem counterfactualRegretMatch_sq_infDist_avg_le
     [E.FiniteMovers] [DecidableEq ι]
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
     [Fintype (M.Choice who site.1)] [Nonempty (M.Choice who site.1)]
     (utility : M.Choice who site.1 → Q → ℝ)
     (strategyOf : PMF (M.Choice who site.1) → Q →
@@ -198,7 +195,6 @@ theorem counterfactualRegretMatch_approaches
     [E.FiniteMovers] [DecidableEq ι]
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
     [Fintype (M.Choice who site.1)] [Nonempty (M.Choice who site.1)]
     (utility : M.Choice who site.1 → Q → ℝ)
     (strategyOf : PMF (M.Choice who site.1) → Q →

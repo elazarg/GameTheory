@@ -379,7 +379,7 @@ theorem initial_counterfactualActionUtility (who : Bool)
             1) choice =
       score who (actionOfChoice who choice) := by
   unfold counterfactualActionUtility counterfactualContinuationValue
-  rw [Fintype.sum_unique]
+  rw [tsum_fintype, Fintype.sum_unique]
   unfold behavioralContinuationValue
   simp only [initialInformationHistory_eq who
     (default : information.InformationHistory who (initialSite who).1)]

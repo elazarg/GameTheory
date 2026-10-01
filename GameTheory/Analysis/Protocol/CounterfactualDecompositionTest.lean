@@ -307,7 +307,7 @@ theorem counterfactualActionUtility_second
               history.1
   calc
     _ = ∑ history : information.InformationHistory ()
-        (secondSite firstAction).1, value history := rfl
+        (secondSite firstAction).1, value history := tsum_fintype _
     _ = ∑ hidden : Bool,
         value (secondInformationHistory firstAction hidden) := by
       exact Fintype.sum_equiv (secondHistoryEquivBool firstAction)
@@ -503,7 +503,7 @@ theorem counterfactualActionUtility_first (action : Bool) :
         terminalPayoff (information.truncatedRunner 2) history.1
   calc
     _ = ∑ history : information.InformationHistory () firstSite.1,
-        value history := rfl
+        value history := tsum_fintype _
     _ = ∑ hidden : Bool, value (firstInformationHistory hidden) := by
       exact Fintype.sum_equiv firstHistoryEquivBool
         value (fun hidden => value (firstInformationHistory hidden))

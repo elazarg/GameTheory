@@ -199,8 +199,8 @@ theorem firstCommitted_second_counterfactualActionRegret :
           incumbentBehavioralStrategy () (secondSite true)
             incumbentSecondTruePolicy terminalPayoff (information.truncatedRunner 1) := by
     unfold InformationModel.counterfactualContinuationValue
-    apply Finset.sum_congr rfl
-    intro history _
+    apply tsum_congr
+    intro history
     have hreach := counterfactualReach_firstCommitted_eq_incumbent history
     rw [hreach]
     apply congrArg
@@ -230,8 +230,8 @@ theorem firstCommitted_second_counterfactualActionRegret :
           incumbentBehavioralStrategy () (secondSite true)
             incumbentBehavioralPolicy terminalPayoff (information.truncatedRunner 1) := by
     unfold InformationModel.counterfactualContinuationValue
-    apply Finset.sum_congr rfl
-    intro history _
+    apply tsum_congr
+    intro history
     have hreach := counterfactualReach_firstCommitted_eq_incumbent history
     rw [hreach]
     apply congrArg

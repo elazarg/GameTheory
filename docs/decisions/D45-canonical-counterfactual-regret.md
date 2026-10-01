@@ -19,8 +19,14 @@ exactly the histories with nonzero counterfactual reach. A zero focal-player
 reach does not remove this requirement: such histories can still contribute
 to counterfactual regret. The named `CounterfactualContinuationIntegrable`
 certificate records this domain without requiring a global payoff bound.
-The information-fiber sum remains finite at this theorem boundary; the
-underlying continuation laws may have infinite support. See
+The counterfactual value sums over the information fiber with `tsum`, so the
+fiber may be countably infinite and the continuation laws may have infinite
+support. The gain decomposition below takes `BayesContinuationIntegrable`,
+integrability of the posterior continuation law; on a finite fiber
+`bayesContinuationIntegrable_of_counterfactual` derives it from the
+counterfactual certificate, while on an infinite fiber fiberwise integrability
+alone does not suffice. Results that interchange the fiber sum with an
+installed law or use the fiber's total reach keep a finite fiber. See
 [D62](D62-general-pmf-restoration.md) for the shared expectation contract.
 
 The useful contract is not the definition alone. At a positive-mass history

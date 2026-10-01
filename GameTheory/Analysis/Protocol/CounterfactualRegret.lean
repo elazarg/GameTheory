@@ -59,10 +59,9 @@ the focal player's reach. -/
 def counterfactualContinuationValue [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
     (alternative : M.BehavioralPolicy who)
     (payoff : E.History → ℝ) (run : M.ContinuationRunner) : ℝ :=
-  ∑ history : M.InformationHistory who site.1,
+  ∑' history : M.InformationHistory who site.1,
     M.counterfactualReachProbability strategy who history.1.trace *
       behavioralContinuationValue M strategy who alternative payoff run history.1
 
@@ -76,7 +75,6 @@ theorem counterfactualContinuationValue_eq_of_eq_off
     {who : ι}
     (hagree : ∀ other, other ≠ who → first other = second other)
     (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
     (alternative : M.BehavioralPolicy who)
     (payoff : E.History → ℝ) (run : M.ContinuationRunner) :
     counterfactualContinuationValue M first who site alternative payoff run =
@@ -91,8 +89,8 @@ theorem counterfactualContinuationValue_eq_of_eq_off
     · rw [Profile.update_of_ne _ _ hplayer,
         Profile.update_of_ne _ _ hplayer, hagree player hplayer]
   unfold counterfactualContinuationValue behavioralContinuationValue
-  apply Finset.sum_congr rfl
-  intro history _
+  apply tsum_congr
+  intro history
   rw [M.counterfactualReachProbability_eq_of_eq_off hagree history.1.trace,
     hupdated]
 
@@ -220,9 +218,9 @@ theorem counterfactualContinuationValue_withLaw_eq_expect
   obtain ⟨houter, houter_expect⟩ :=
     expect_eq_sum_on_support law term (fun choice => counterfactualContinuationValue
       M strategy who site (policy.commit site.1 choice) payoff run)
-      (fun history => (hterm history).1) (fun _ _ => rfl)
+      (fun history => (hterm history).1) (fun _ _ => tsum_fintype _)
   refine ⟨houter, ?_⟩
-  rw [houter_expect, counterfactualContinuationValue]
+  rw [houter_expect, counterfactualContinuationValue, tsum_fintype]
   exact Finset.sum_congr rfl fun history _ => (hterm history).2.symm
 
 /-- Counterfactual regret of a whole continuation-policy replacement. Positive
@@ -231,7 +229,6 @@ value at the information site. -/
 def counterfactualRegret [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
     (alternative : M.BehavioralPolicy who) : ℝ :=
   counterfactualContinuationValue M strategy who site alternative payoff run -
@@ -243,7 +240,6 @@ def counterfactualActionRegret [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
     (choice : M.Choice who site.1) : ℝ :=
   counterfactualRegret M strategy who site payoff run
@@ -256,7 +252,6 @@ def counterfactualActionUtility [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
     (choice : M.Choice who site.1) : ℝ :=
   counterfactualContinuationValue M strategy who site
@@ -334,6 +329,23 @@ def bayesContinuationValue [E.FiniteMovers] [DecidableEq ι]
         strategy who _alternative) history.1)
     payoff).value alternative
 
+/-- The posterior continuation law of the Bayes context integrates the payoff.
+This is the certificate the canonical Bayes continuation value needs; on a
+finite information fiber it follows from counterfactual integrability. -/
+def BayesContinuationIntegrable [E.FiniteMovers] [DecidableEq ι]
+    (strategy : (player : ι) → M.BehavioralPolicy player)
+    (who : ι) (site : M.InformationSite who)
+    (hantichain : site.IsHistoryAntichain)
+    (hmass : 0 < M.informationMass strategy who site)
+    (alternative : M.BehavioralPolicy who)
+    (payoff : E.History → ℝ) (run : M.ContinuationRunner) : Prop :=
+  (GameTheory.Protocol.Context.ofBelief
+    (M.bayesBelief strategy who site hantichain hmass)
+    (fun history _alternative => run
+      (Profile.update (sig := M.behavioralSignature)
+        strategy who _alternative) history.1)
+    payoff).IntegrableAt alternative
+
 /-- A normalized counterfactual-reach fiber turns pointwise continuation
 payoff bounds into the same bounds on pure-action counterfactual utility. -/
 theorem counterfactualActionUtility_mem_Icc
@@ -355,6 +367,7 @@ theorem counterfactualActionUtility_mem_Icc
     counterfactualActionUtility M strategy who site payoff run choice ∈
       Set.Icc lo hi := by
   unfold counterfactualActionUtility counterfactualContinuationValue
+  rw [tsum_fintype]
   have hweighted (history : M.InformationHistory who site.1) :
       M.counterfactualReachProbability strategy who history.1.trace * lo ≤
           M.counterfactualReachProbability strategy who history.1.trace *
@@ -476,12 +489,8 @@ theorem bayesContinuationIntegrable_of_counterfactual
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
     (hcounter : CounterfactualContinuationIntegrable M strategy who site
       alternative payoff run) :
-    (GameTheory.Protocol.Context.ofBelief
-      (M.bayesBelief strategy who site hantichain hmass)
-      (fun history _alternative => run
-        (Profile.update (sig := M.behavioralSignature)
-          strategy who _alternative) history.1)
-      payoff).IntegrableAt alternative := by
+    BayesContinuationIntegrable M strategy who site hantichain hmass
+      alternative payoff run := by
   let belief := M.bayesBelief strategy who site hantichain hmass
   have hcond : ∀ history : M.InformationHistory who site.1,
       history ∈ belief.support →
@@ -517,7 +526,6 @@ theorem informationMass_mul_bayesContinuationValue_eq
     [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
     (hantichain : site.IsHistoryAntichain)
     (hmass : 0 < M.informationMass strategy who site)
     (ownReach : ℝ)
@@ -525,7 +533,7 @@ theorem informationMass_mul_bayesContinuationValue_eq
       M.playerReachProbability strategy who history.1.trace = ownReach)
     (alternative : M.BehavioralPolicy who)
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
-    (hcounter : CounterfactualContinuationIntegrable M strategy who site
+    (hbayes : BayesContinuationIntegrable M strategy who site hantichain hmass
       alternative payoff run) :
     (M.informationMass strategy who site).toReal *
         bayesContinuationValue M strategy who site hantichain hmass
@@ -540,8 +548,6 @@ theorem informationMass_mul_bayesContinuationValue_eq
         strategy who alternative) history.1
   let value : M.InformationHistory who site.1 → ℝ := fun history =>
     behavioralContinuationValue M strategy who alternative payoff run history.1
-  have hbayes := M.bayesContinuationIntegrable_of_counterfactual
-    strategy who site hantichain hmass alternative payoff run hcounter
   have htower : bayesContinuationValue M strategy who site hantichain hmass
       alternative payoff run = expect belief value :=
     expect_bind_tower_on_support belief kernel payoff hbayes value fun _ _ => rfl
@@ -565,20 +571,21 @@ theorem informationMass_mul_bayesContinuationValue_eq
         bayesContinuationValue M strategy who site hantichain hmass
           alternative payoff run =
       (M.informationMass strategy who site).toReal *
-        ∑ history, (belief history).toReal * value history := by
-          rw [htower, expect_eq_sum]
-    _ = ∑ history : M.InformationHistory who site.1,
+        ∑' history, (belief history).toReal * value history := by
+          rw [htower]
+          rfl
+    _ = ∑' history : M.InformationHistory who site.1,
           ownReach * M.counterfactualReachProbability strategy who
             history.1.trace * value history := by
-          rw [Finset.mul_sum]
-          apply Finset.sum_congr rfl
-          intro history _
+          rw [← tsum_mul_left]
+          apply tsum_congr
+          intro history
           rw [← mul_assoc, hatom history]
     _ = ownReach * counterfactualContinuationValue M strategy who site
           alternative payoff run := by
-          rw [counterfactualContinuationValue, Finset.mul_sum]
-          apply Finset.sum_congr rfl
-          intro history _
+          rw [counterfactualContinuationValue, ← tsum_mul_left]
+          apply tsum_congr
+          intro history
           rw [mul_assoc]
 
 /-- The scaled ordinary behavioral-policy deviation gain is exactly the scaled
@@ -588,7 +595,6 @@ theorem informationMass_mul_bayesGain_eq_ownReach_mul_counterfactualRegret
     [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
     (hantichain : site.IsHistoryAntichain)
     (hmass : 0 < M.informationMass strategy who site)
     (ownReach : ℝ)
@@ -596,9 +602,9 @@ theorem informationMass_mul_bayesGain_eq_ownReach_mul_counterfactualRegret
       M.playerReachProbability strategy who history.1.trace = ownReach)
     (alternative : M.BehavioralPolicy who)
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
-    (halternative : CounterfactualContinuationIntegrable M strategy who site
+    (halternative : BayesContinuationIntegrable M strategy who site hantichain hmass
       alternative payoff run)
-    (hincumbent : CounterfactualContinuationIntegrable M strategy who site
+    (hincumbent : BayesContinuationIntegrable M strategy who site hantichain hmass
       (strategy who) payoff run) :
     (M.informationMass strategy who site).toReal *
         (bayesContinuationValue M strategy who site hantichain hmass
@@ -619,7 +625,6 @@ theorem informationMass_mul_bayesActionGain_eq_ownReach_mul_counterfactualAction
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
     (hantichain : site.IsHistoryAntichain)
     (hmass : 0 < M.informationMass strategy who site)
     (ownReach : ℝ)
@@ -627,9 +632,9 @@ theorem informationMass_mul_bayesActionGain_eq_ownReach_mul_counterfactualAction
       M.playerReachProbability strategy who history.1.trace = ownReach)
     (choice : M.Choice who site.1)
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
-    (haction : CounterfactualContinuationIntegrable M strategy who site
+    (haction : BayesContinuationIntegrable M strategy who site hantichain hmass
       ((strategy who).commit site.1 choice) payoff run)
-    (hincumbent : CounterfactualContinuationIntegrable M strategy who site
+    (hincumbent : BayesContinuationIntegrable M strategy who site hantichain hmass
       (strategy who) payoff run) :
     (M.informationMass strategy who site).toReal *
         (bayesContinuationValue M strategy who site hantichain hmass
@@ -648,7 +653,6 @@ theorem counterfactualRegret_pos_iff_bayesGain_pos
     [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
     (hantichain : site.IsHistoryAntichain)
     (hmass : 0 < M.informationMass strategy who site)
     (ownReach : ℝ) (hownpos : 0 < ownReach)
@@ -656,9 +660,9 @@ theorem counterfactualRegret_pos_iff_bayesGain_pos
       M.playerReachProbability strategy who history.1.trace = ownReach)
     (alternative : M.BehavioralPolicy who)
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
-    (halternative : CounterfactualContinuationIntegrable M strategy who site
+    (halternative : BayesContinuationIntegrable M strategy who site hantichain hmass
       alternative payoff run)
-    (hincumbent : CounterfactualContinuationIntegrable M strategy who site
+    (hincumbent : BayesContinuationIntegrable M strategy who site hantichain hmass
       (strategy who) payoff run) :
     0 < counterfactualRegret M strategy who site payoff run alternative ↔
       0 < bayesContinuationValue M strategy who site hantichain hmass
@@ -679,15 +683,14 @@ theorem informationMass_mul_bayesGain_eq_commonReach_mul_counterfactualRegret
     [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
     (hantichain : site.IsHistoryAntichain)
     (hmass : 0 < M.informationMass strategy who site)
     (common : CommonPlayerReachAt M strategy who site)
     (alternative : M.BehavioralPolicy who)
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
-    (halternative : CounterfactualContinuationIntegrable M strategy who site
+    (halternative : BayesContinuationIntegrable M strategy who site hantichain hmass
       alternative payoff run)
-    (hincumbent : CounterfactualContinuationIntegrable M strategy who site
+    (hincumbent : BayesContinuationIntegrable M strategy who site hantichain hmass
       (strategy who) payoff run) :
     ∃ reach : ℝ,
       (M.informationMass strategy who site).toReal *
@@ -709,15 +712,14 @@ theorem counterfactualRegret_pos_iff_bayesGain_pos_of_commonReach
     [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
     (hantichain : site.IsHistoryAntichain)
     (hmass : 0 < M.informationMass strategy who site)
     (common : CommonPlayerReachAt M strategy who site)
     (alternative : M.BehavioralPolicy who)
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
-    (halternative : CounterfactualContinuationIntegrable M strategy who site
+    (halternative : BayesContinuationIntegrable M strategy who site hantichain hmass
       alternative payoff run)
-    (hincumbent : CounterfactualContinuationIntegrable M strategy who site
+    (hincumbent : BayesContinuationIntegrable M strategy who site hantichain hmass
       (strategy who) payoff run) :
     0 < counterfactualRegret M strategy who site payoff run alternative ↔
       0 < bayesContinuationValue M strategy who site hantichain hmass
@@ -737,14 +739,13 @@ theorem counterfactualRegret_pos_iff_bayesGain_pos_of_decisionRecall
     (hrecall : M.DecisionRecall)
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
     (hantichain : site.IsHistoryAntichain)
     (hmass : 0 < M.informationMass strategy who site)
     (alternative : M.BehavioralPolicy who)
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
-    (halternative : CounterfactualContinuationIntegrable M strategy who site
+    (halternative : BayesContinuationIntegrable M strategy who site hantichain hmass
       alternative payoff run)
-    (hincumbent : CounterfactualContinuationIntegrable M strategy who site
+    (hincumbent : BayesContinuationIntegrable M strategy who site hantichain hmass
       (strategy who) payoff run) :
     0 < counterfactualRegret M strategy who site payoff run alternative ↔
       0 < bayesContinuationValue M strategy who site hantichain hmass
@@ -765,14 +766,13 @@ theorem counterfactualActionRegret_pos_iff_bayesActionGain_pos_of_decisionRecall
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
     (hantichain : site.IsHistoryAntichain)
     (hmass : 0 < M.informationMass strategy who site)
     (choice : M.Choice who site.1)
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
-    (haction : CounterfactualContinuationIntegrable M strategy who site
+    (haction : BayesContinuationIntegrable M strategy who site hantichain hmass
       ((strategy who).commit site.1 choice) payoff run)
-    (hincumbent : CounterfactualContinuationIntegrable M strategy who site
+    (hincumbent : BayesContinuationIntegrable M strategy who site hantichain hmass
       (strategy who) payoff run) :
     0 < counterfactualActionRegret M strategy who site payoff run choice ↔
       0 < bayesContinuationValue M strategy who site hantichain hmass

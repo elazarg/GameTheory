@@ -263,17 +263,14 @@ private theorem bayesValue_eq_average
       norm_num
 
 /-- Every counterfactual continuation of the finite fixture is integrable. -/
-theorem counterfactual_integrable
+theorem bayes_integrable
     (alternative : information.BehavioralPolicy Player.player) :
-  information.CounterfactualContinuationIntegrable
-      fullyMixedBehavioralProfile Player.player actingSite alternative
-      weightedMatchingPayoff (information.truncatedRunner 2) := by
-  intro history _hreach
-  exact payoffIntegrable_of_finite
-    (information.runBehavioralFrom
-      (Profile.update (sig := information.behavioralSignature)
-        fullyMixedBehavioralProfile Player.player alternative) 2 history.1)
-    weightedMatchingPayoff
+  information.BayesContinuationIntegrable
+      fullyMixedBehavioralProfile Player.player actingSite
+      (information_decisionInformationAntichain .player actingSite)
+      (informationMass_fullyMixed_pos actingSite) alternative
+      weightedMatchingPayoff (information.truncatedRunner 2) :=
+  payoffIntegrable_of_finite _ _
 
 theorem commit_true_eq_alwaysTrue :
     fullyMixedBehavioralPolicy.commit actingSite.1 trueChoice =
@@ -342,8 +339,8 @@ theorem counterfactualRegret_alwaysTrue :
       (information_decisionInformationAntichain .player actingSite)
       (informationMass_fullyMixed_pos actingSite) 1 commonPlayerReach_acting
       alwaysTruePolicy weightedMatchingPayoff (information.truncatedRunner 2)
-      (counterfactual_integrable alwaysTruePolicy)
-      (counterfactual_integrable fullyMixedBehavioralPolicy)
+      (bayes_integrable alwaysTruePolicy)
+      (bayes_integrable fullyMixedBehavioralPolicy)
   simp only [fullyMixedBehavioralProfile, informationMass_fullyMixed_acting,
     bayesContinuationValue_alwaysTrue, bayesContinuationValue_fullyMixed] at hscaled
   norm_num at hscaled
@@ -360,8 +357,8 @@ theorem counterfactualRegret_alwaysFalse :
       (information_decisionInformationAntichain .player actingSite)
       (informationMass_fullyMixed_pos actingSite) 1 commonPlayerReach_acting
       behavioralPolicy weightedMatchingPayoff (information.truncatedRunner 2)
-      (counterfactual_integrable behavioralPolicy)
-      (counterfactual_integrable fullyMixedBehavioralPolicy)
+      (bayes_integrable behavioralPolicy)
+      (bayes_integrable fullyMixedBehavioralPolicy)
   simp only [fullyMixedBehavioralProfile, informationMass_fullyMixed_acting,
     bayesContinuationValue_alwaysFalse,
     bayesContinuationValue_fullyMixed] at hscaled
@@ -402,8 +399,8 @@ theorem profitable_counterfactual_iff_profitable_bayes :
     (information_decisionInformationAntichain .player actingSite)
     (informationMass_fullyMixed_pos actingSite) 1 (by norm_num)
     commonPlayerReach_acting alwaysTruePolicy weightedMatchingPayoff (information.truncatedRunner 2)
-    (counterfactual_integrable alwaysTruePolicy)
-    (counterfactual_integrable fullyMixedBehavioralPolicy)
+    (bayes_integrable alwaysTruePolicy)
+    (bayes_integrable fullyMixedBehavioralPolicy)
 
 /-- The named weaker certificate is enough for the sign theorem even though
 this fixture does not claim global perfect recall. -/
@@ -427,7 +424,7 @@ theorem profitable_counterfactual_iff_profitable_bayes_of_commonReach :
     (informationMass_fullyMixed_pos actingSite)
     ⟨1, commonPlayerReach_acting⟩ alwaysTruePolicy weightedMatchingPayoff
         (information.truncatedRunner 2)
-    (counterfactual_integrable alwaysTruePolicy)
-    (counterfactual_integrable fullyMixedBehavioralPolicy)
+    (bayes_integrable alwaysTruePolicy)
+    (bayes_integrable fullyMixedBehavioralPolicy)
 
 end GameTheory.Analysis.Protocol.CounterfactualRegretTest

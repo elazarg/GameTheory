@@ -374,7 +374,6 @@ theorem counterfactualActionRegret_eq_of_agree_off_pastSite
     (hwho : ∀ {info : M.InfoState who}, info ≠ pastSite.1 →
       first who info = second who info)
     (laterSite : M.InformationSite who)
-    [Fintype (M.InformationHistory who laterSite.1)]
     (hlater : ∀ history : M.InformationHistory who laterSite.1,
       pastDepth < history.1.trace.length)
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
@@ -393,8 +392,8 @@ theorem counterfactualActionRegret_eq_of_agree_off_pastSite
     intro firstPolicy secondPolicy hpolicy
     unfold InformationModel.counterfactualContinuationValue
       InformationModel.behavioralContinuationValue
-    apply Finset.sum_congr rfl
-    intro history _
+    apply tsum_congr
+    intro history
     have hreachEq := M.counterfactualReachProbability_eq_of_eq_off
       hplayers history.1.trace
     have hcont := M.run_eq_of_agree_off_pastSite run hrun
@@ -488,7 +487,7 @@ theorem counterfactualRegret_eq_sum_behavioralContinuationGain
   unfold InformationModel.counterfactualRegret
     InformationModel.counterfactualContinuationValue
     InformationModel.behavioralContinuationValue
-  rw [← Finset.sum_sub_distrib]
+  rw [tsum_fintype, tsum_fintype, ← Finset.sum_sub_distrib]
   apply Finset.sum_congr rfl
   intro history _
   ring
