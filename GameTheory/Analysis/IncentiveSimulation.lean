@@ -226,7 +226,7 @@ theorem preserves (simulation : IncentiveSimulation source target)
     deviation (targetIntegrable who deviation)
 
 /-- On a finite carrier a simulation is an implication between the families. -/
-theorem implies [Fintype Outcome] (simulation : IncentiveSimulation source target) :
+theorem implies [Finite Outcome] (simulation : IncentiveSimulation source target) :
     IncentiveComparison.Implies source target :=
   fun utility respected => simulation.preserves utility respected
     (fun _ _ => ⟨payoffIntegrable_of_finite _ _, payoffIntegrable_of_finite _ _⟩)

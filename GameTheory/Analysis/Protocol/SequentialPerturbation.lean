@@ -61,7 +61,7 @@ theorem mem_uniformTrembleLaws_iff (ε : ℝ) (h0 : 0 ≤ ε) (h1 : ε < 1)
     exact ⟨residual, same.symm⟩
 
 private theorem exists_uniformTremble_locallyOptimal_bayesAssessment_truncated
-    [Fintype ι] [DecidableEq ι] [Finite E.History]
+    [Finite ι] [DecidableEq ι] [Finite E.History]
     [∀ i, DecidableEq (M.InfoState i)]
     (fallback : (i : ι) → M.Policy i)
     (hactsOnce : M.ActsOnceWhereItMatters)
@@ -219,7 +219,7 @@ perturbed replacement. The conclusion is for local replacements only, scored by
 whole terminal continuations. Finitely many histories suffice; the fallback
 supplies a choice at information values that no history reaches. -/
 theorem exists_uniformTremble_locallyOptimal_bayesAssessment
-    [Fintype ι] [DecidableEq ι] [Finite E.History]
+    [Finite ι] [DecidableEq ι] [Finite E.History]
     [∀ i, DecidableEq (M.InfoState i)]
     (fallback : (i : ι) → M.Policy i)
     (hactsOnce : M.ActsOnceWhereItMatters)

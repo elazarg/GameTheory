@@ -238,7 +238,7 @@ theorem PMFConvergesPointwise.expect_of_bounded {α : Type*}
 
 /-- On a finite carrier every real observable is bounded, so pointwise mass
 convergence gives expectation convergence without a caller-supplied bound. -/
-theorem PMFConvergesPointwise.expect_finite {α : Type*} [Fintype α]
+theorem PMFConvergesPointwise.expect_finite {α : Type*} [Finite α]
     {sequence : ℕ → PMF α} {target : PMF α}
     (h : PMFConvergesPointwise sequence target) (f : α → ℝ) :
     Tendsto (fun n => expect (sequence n) f)
@@ -251,7 +251,7 @@ theorem PMFConvergesPointwise.expect_finite {α : Type*} [Fintype α]
 /-- For a fixed kernel, integrable bind expectations converge when the outer
 PMFs converge on a finite carrier. Conditional integration is needed only at
 atoms supported by the actual outer laws. -/
-theorem PMFConvergesPointwise.expect_bind_finite {α β : Type*} [Fintype α]
+theorem PMFConvergesPointwise.expect_bind_finite {α β : Type*} [Finite α]
     {sequence : ℕ → PMF α} {target : PMF α}
     (h : PMFConvergesPointwise sequence target)
     (q : α → PMF β) (f : β → ℝ)
@@ -280,7 +280,7 @@ theorem PMFConvergesPointwise.expect_bind_finite {α β : Type*} [Fintype α]
 /-- On a finite outer carrier, sequence bind integration plus pointwise PMF
 convergence also forces integration of the limiting bind. -/
 theorem PMFConvergesPointwise.payoffIntegrable_bind_finite
-    {α β : Type*} [Fintype α]
+    {α β : Type*} [Finite α]
     {sequence : ℕ → PMF α} {target : PMF α}
     (h : PMFConvergesPointwise sequence target)
     (q : α → PMF β) (f : β → ℝ)
@@ -305,7 +305,7 @@ theorem PMFConvergesPointwise.payoffIntegrable_bind_finite
 /-- The limiting bind guard is derived from sequence integration, so the
 caller need only certify the actual sequence laws. -/
 theorem PMFConvergesPointwise.expect_bind_finite_of_sequence_integrable
-    {α β : Type*} [Fintype α]
+    {α β : Type*} [Finite α]
     {sequence : ℕ → PMF α} {target : PMF α}
     (h : PMFConvergesPointwise sequence target)
     (q : α → PMF β) (f : β → ℝ)

@@ -46,6 +46,7 @@ private theorem expectedUtility_mixed_eq_profile_expect
           (fun pureProfile =>
             expectedUtility G.utility who (G.form.play pureProfile)) := rfl
 
+omit [DecidableEq ι] in
 /-- Expected utility in the finite mixed extension is continuous under
 coordinatewise pointwise convergence of ordinary PMFs. Pure-play integration
 is the only utility premise, and the outcome carrier may be arbitrary. -/

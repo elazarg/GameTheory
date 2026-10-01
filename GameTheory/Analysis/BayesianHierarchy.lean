@@ -141,7 +141,7 @@ private theorem map_congr_on_support {α β : Type*} (μ : PMF α) {f g : α →
 /-- Interim optimality at every own type of positive probability implies ex-ante
 optimality, for every utility: an ex-ante comparison is the prior mixture of
 interim comparisons. -/
-theorem interimComparison_implies [Fintype Observation]
+theorem interimComparison_implies [Finite Observation]
     [∀ i, DecidableEq (B.Ty i)] (observe : B.signature.Outcome → Observation)
     (plan : Profile B.signature) :
     IncentiveComparison.Implies (B.interimComparison observe plan)

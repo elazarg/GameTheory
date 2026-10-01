@@ -482,7 +482,7 @@ theorem bayesContinuationIntegrable_of_counterfactual
     [E.FiniteMovers] [DecidableEq ι]
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
+    [Finite (M.InformationHistory who site.1)]
     (hantichain : site.IsHistoryAntichain)
     (hmass : 0 < M.informationMass strategy who site)
     (alternative : M.BehavioralPolicy who)

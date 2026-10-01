@@ -106,7 +106,7 @@ theorem outcomeLaw_unilateralRandomized (statusQuo : PMF (Profile F.sig)) (who :
 /-- **Randomized deviations add nothing.** Against any status quo, constant and
 randomized unilateral deviations give families that imply each other for every
 utility: a randomized comparison is a mixture of constant ones. -/
-theorem implies_unilateralRandomized_iff [Fintype Observation] (statusQuo : PMF (Profile F.sig))
+theorem implies_unilateralRandomized_iff [Finite Observation] (statusQuo : PMF (Profile F.sig))
     (observe : F.sig.Outcome → Observation) :
     IncentiveComparison.Implies
         (equilibriumComparison F statusQuo (DeviationScheme.unilateralConstant F.sig) observe)
@@ -145,7 +145,7 @@ variable [Fintype ι]
 /-- In the mixed extension a mixed deviation's comparison is the mixture of the
 pure deviations' comparisons, so pure deviations imply mixed ones for every
 utility. -/
-theorem implies_mixed_of_pure [Fintype Observation] (profile : Profile F.sig.mixed)
+theorem implies_mixed_of_pure [Finite Observation] (profile : Profile F.sig.mixed)
     (observe : F.sig.Outcome → Observation) :
     IncentiveComparison.Implies
       (fun who (strategy : F.sig.Strategy who) =>
@@ -200,7 +200,7 @@ theorem equilibriumComparison_mixed_pure (profile : Profile F.sig)
 /-- **Pure and mixed Nash are one family.** At a pure profile, the original
 game's Nash family and the mixed extension's Nash family imply each other for
 every utility. -/
-theorem implies_mixed_iff [Fintype Observation] (profile : Profile F.sig)
+theorem implies_mixed_iff [Finite Observation] (profile : Profile F.sig)
     (observe : F.sig.Outcome → Observation) :
     IncentiveComparison.Implies
         (equilibriumComparison F (PMF.pure profile) (DeviationScheme.unilateralConstant F.sig)

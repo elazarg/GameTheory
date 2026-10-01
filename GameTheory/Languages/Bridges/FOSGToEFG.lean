@@ -1226,7 +1226,7 @@ private def targetJointOfViewChoice [DecidableEq ι]
 
 /-- At a selection stage, the generic behavioral joint is exactly the local
 scheduled law embedded into its unique target coordinate. -/
-private theorem behavioralJoint_stage [Fintype ι] [DecidableEq ι]
+private theorem behavioralJoint_stage [Finite ι] [DecidableEq ι]
     (target : (player : ι) →
       (information G order).BehavioralPolicy player)
     {history : History G} {count : ℕ}
@@ -1318,7 +1318,7 @@ private theorem choiceOfJoint_targetJointOfViewChoice
 
 /-- The resolver microstep erases exactly to the source transition selected by
 the completed prefix. -/
-private theorem map_erase_runBehavioralFrom_resolve [Fintype ι] [DecidableEq ι]
+private theorem map_erase_runBehavioralFrom_resolve [Finite ι] [DecidableEq ι]
     (target : (player : ι) →
       (information G order).BehavioralPolicy player)
     (history : History G)
@@ -1421,7 +1421,7 @@ the resolver erase to the recursive source-history law above.  The theorem is
 trace-parametric: target administrative traces affect neither future source
 information nor the erased result. -/
 private theorem map_erase_runBehavioralFrom_stage
-    [Fintype ι] [DecidableEq ι]
+    [Finite ι] [DecidableEq ι]
     (target : (player : ι) →
       (information G order).BehavioralPolicy player)
     (history : History G)
@@ -1842,7 +1842,7 @@ private theorem map_erase_runBehavioralFrom_boundary_any
 set_option backward.isDefEq.respectTransparency false in
 /-- A complete serialized suffix always returns to a round boundary. -/
 private theorem state_of_mem_runBehavioralFrom_stage
-    [Fintype ι] [DecidableEq ι]
+    [Finite ι] [DecidableEq ι]
     (target : (player : ι) →
       (information G order).BehavioralPolicy player)
     (history : History G)
@@ -1923,7 +1923,7 @@ private theorem state_of_mem_runBehavioralFrom_stage
         hreached
 
 private theorem state_of_mem_runBehavioralFrom_boundary_any
-    [Fintype ι] [DecidableEq ι]
+    [Finite ι] [DecidableEq ι]
     (target : (player : ι) →
       (information G order).BehavioralPolicy player)
     (history : History G)
@@ -1962,7 +1962,7 @@ private theorem state_of_mem_runBehavioralFrom_boundary_any
 is the support invariant needed to continue serialized play from a reached
 history without exposing a partially collected source joint. -/
 theorem state_of_mem_runBehavioralFrom_rounds
-    [Fintype ι] [DecidableEq ι]
+    [Finite ι] [DecidableEq ι]
     (target : (player : ι) →
       (information G order).BehavioralPolicy player) :
     ∀ (rounds : ℕ) (history : History G)
@@ -2007,7 +2007,7 @@ theorem state_of_mem_runBehavioralFrom_rounds
 /-- Whole serialized rounds started at the target root end at a round
 boundary. -/
 theorem state_of_mem_runBehavioral_rounds
-    [Fintype ι] [DecidableEq ι]
+    [Finite ι] [DecidableEq ι]
     (target : (player : ι) →
       (information G order).BehavioralPolicy player)
     (rounds : ℕ) {reached : (execution G order).History}

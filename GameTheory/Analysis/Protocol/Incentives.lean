@@ -423,7 +423,7 @@ theorem sequentialRationality_of_simulation
 
 /-- Once target consistency is established, a simulation transfers sequential
 equilibrium for every utility integrable against the continuation laws. -/
-theorem sequentialEquilibrium_of_simulation [Fintype ι]
+theorem sequentialEquilibrium_of_simulation [Finite ι]
     (sourceAntichain : M.DecisionInformationAntichain)
     (targetAntichain : N.DecisionInformationAntichain)
     (sourceRun : M.ContinuationRunner) (targetRun : N.ContinuationRunner)

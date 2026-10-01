@@ -171,7 +171,7 @@ theorem revealing_implies_dominance [Fintype Observation]
 
 /-- The base game's dominance comparisons imply the revealing form's dominance
 comparisons: each is a selection-weighted mixture of them. -/
-theorem dominance_implies_revealing_dominance [Fintype Observation] (profile : Profile F.sig)
+theorem dominance_implies_revealing_dominance [Finite Observation] (profile : Profile F.sig)
     (observe : F.sig.Outcome → Observation) :
     IncentiveComparison.Implies (F.dominanceComparison profile observe)
       ((F.revealing selector).dominanceComparison (F.ignoring selector profile) observe) := by

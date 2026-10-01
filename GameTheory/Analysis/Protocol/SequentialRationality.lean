@@ -188,7 +188,7 @@ theorem runBehavioralFrom_expect_continuation_eq
 /-- The finite-history specialization of
 `runBehavioralFrom_expect_continuation_eq`. -/
 theorem runBehavioralFrom_expect_raw_continuation_eq
-    [E.FiniteMovers] [Fintype E.History]
+    [E.FiniteMovers] [Finite E.History]
     (strategy : (i : ι) → M.BehavioralPolicy i)
     (payoff : E.History → ℝ) {bound : ℕ}
     (hbound : E.BoundedHorizon bound) (history : E.History) :
@@ -852,7 +852,7 @@ theorem BehavioralAssessment.continuationContextWith_integrable_of_conditional
     [DecidableEq ι]
     (assessment : M.BehavioralAssessment)
     (who : ι) (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
+    [Finite (M.InformationHistory who site.1)]
     (alternative : M.BehavioralPolicy who) (payoff : E.History → ℝ) (run : M.ContinuationRunner)
     (hcond : ∀ history : M.InformationHistory who site.1,
       PayoffIntegrable (run
