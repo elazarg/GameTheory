@@ -261,7 +261,6 @@ theorem ae_stagewiseConsistency (who : ι) (horizon : ℕ) :
 
 theorem integral_canonicalPathAverage_eq_finiteAveragePayoff
     (who : ι) (horizon : ℕ) {C : ℝ}
-    [Countable (G.ChronologicalHistory horizon)]
     (hstage_measurable :
       Measurable (fun history : G.ChronologicalHistory horizon =>
         G.publicHistoryAverageUtility horizon

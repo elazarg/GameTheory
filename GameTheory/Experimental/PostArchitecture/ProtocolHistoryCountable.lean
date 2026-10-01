@@ -67,8 +67,7 @@ private theorem countable_stepEvent_list [Fintype ι] [Countable E.State]
   let : Countable E.StepEvent := countable_stepEvent E
   infer_instance
 
-private theorem history_code_injective [Fintype ι] [Countable E.State]
-    [∀ i, Countable (E.Action i)] :
+private theorem history_code_injective :
     Function.Injective (fun history : E.History =>
       (Trace.reverseEvents E history.trace, history.state)) := by
   intro first second hcode
@@ -120,7 +119,7 @@ theorem historyCountable [Fintype ι] [Countable E.State]
   exact Function.Injective.countable
     (f := fun history : E.History =>
       (Trace.reverseEvents E history.trace, history.state))
-    (@history_code_injective ι E inferInstance inferInstance inferInstance)
+    (history_code_injective (E := E))
 
 private def finiteUnitOptionBool : ExecutionProtocol Unit where
   State := Option Bool

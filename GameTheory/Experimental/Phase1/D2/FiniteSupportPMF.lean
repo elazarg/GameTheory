@@ -314,7 +314,7 @@ end Pi
 
 /-! ## Finite-simplex bridge -/
 
-def pmfToVector [Fintype α] (μ : PMF α) : α → ℝ := fun a => (μ a).toReal
+def pmfToVector (μ : PMF α) : α → ℝ := fun a => (μ a).toReal
 
 theorem pmf_toReal_tsum_one (μ : PMF α) : ∑' a, (μ a).toReal = 1 := by
   have key := @ENNReal.tsum_toReal_eq α (fun a => μ a) (fun a => PMF.apply_ne_top μ a)

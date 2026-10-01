@@ -138,7 +138,6 @@ theorem IsOptimalSiteRule.transport_applySourceChanges_of_distinct
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
     [∀ node, Fintype (diagram.Value node)]
     [∀ node, DecidableEq (diagram.Value node)]
-    [Fintype (Assignment diagram)]
     (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (semantics : Semantics diagram) (view : UtilityView semantics)
     (base : Policy diagram) (owner : Player)

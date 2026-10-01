@@ -56,7 +56,7 @@ private theorem pathStepLaw_support_coherent
   exact ⟨draw.1, draw.2, realized, rfl⟩
 
 private theorem trajectoryKernel_ae_support
-    [Countable (CanonicalHistory G initial)] (n : ℕ)
+    (n : ℕ)
     (historyPrefix : ∀ i : Finset.Iic n, PathHistory G initial i) :
     ∀ᵐ result ∂trajectoryKernel G initial profile n historyPrefix,
       result ∈ (pathStepLaw G initial profile n

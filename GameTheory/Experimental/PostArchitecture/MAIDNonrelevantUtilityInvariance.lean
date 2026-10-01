@@ -191,8 +191,6 @@ private theorem augmentedKernels_update_eqOn_utilityAncestors
 
 private theorem replacementAugmentedLaw_factorizes
     [DecidableEq Player] [Fintype Node] [DecidableEq Node]
-    [∀ node, Fintype (diagram.Value node)]
-    [∀ node, DecidableEq (diagram.Value node)]
     (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (view : UtilityView semantics) (owner : Player) (policy : Policy diagram)
     (replacement : OwnerPolicy diagram owner) :

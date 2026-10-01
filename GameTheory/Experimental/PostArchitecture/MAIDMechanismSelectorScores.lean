@@ -43,7 +43,6 @@ context/action.  It is the joint finite expectation, so it remains defined
 when the target atom has zero mass. -/
 def componentTermScore
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
-    [∀ node, Fintype (diagram.Value node)]
     (view : UtilityView semantics) (owner : Player)
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
@@ -194,7 +193,7 @@ private theorem localFactor_pos_of_factorProduct_pos
     ENNReal.toReal_nonneg hne.symm
 
 private theorem baseline_source_localFactor_pos
-    [Fintype Node] [DecidableEq Player] [DecidableEq Node]
+    [DecidableEq Player] [DecidableEq Node]
     (semantics : Semantics diagram) (base : Policy diagram)
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
@@ -222,8 +221,6 @@ private theorem baseline_source_localFactor_pos
 
 private theorem baseline_factorProduct_pos_of_changed_support
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
-    [∀ node, Fintype (diagram.Value node)]
-    [∀ node, DecidableEq (diagram.Value node)]
     (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (semantics : Semantics diagram) (base : Policy diagram)
     (owner : Player) (replacement : OwnerPolicy diagram owner)
@@ -283,7 +280,6 @@ private theorem baseline_factorProduct_pos_of_changed_support
 baseline law when the baseline source rule is fully mixed. -/
 theorem componentFullAction_support_subset_of_fullyMixed
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
-    [∀ node, Fintype (diagram.Value node)]
     [∀ node, DecidableEq (diagram.Value node)]
     (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (semantics : Semantics diagram) (view : UtilityView semantics)

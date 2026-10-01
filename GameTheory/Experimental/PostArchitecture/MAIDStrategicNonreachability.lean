@@ -123,7 +123,6 @@ private theorem nonrelevantTerm_site_marginal_eq
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
     [∀ node, Fintype (diagram.Value node)]
     [∀ node, DecidableEq (diagram.Value node)]
-    [Fintype (Assignment diagram)]
     (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (view : UtilityView semantics) (base : Policy diagram)
     (owner : Player) (replacement : OwnerPolicy diagram owner)
@@ -152,7 +151,6 @@ private theorem nonrelevantTerm_site_marginal_eq
 
 private def siteTermFullScore
     [DecidableEq Player] [Fintype Node] [DecidableEq Node]
-    [∀ node, Fintype (diagram.Value node)]
     (semantics : Semantics diagram) (base : Policy diagram)
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
@@ -167,7 +165,6 @@ private def siteTermFullScore
 
 private theorem siteTermFullScore_rule_mul_constant
     [DecidableEq Player] [Fintype Node] [DecidableEq Node]
-    [∀ node, Fintype (diagram.Value node)]
     (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (semantics : Semantics diagram) (base : Policy diagram)
     (owner : Player) (replacement : OwnerPolicy diagram owner)
@@ -201,7 +198,6 @@ private theorem siteRuleExpectedUtility_eq_sum_termFullScore
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner) (view : UtilityView semantics)
     [Fintype (MAIDReplacementInvariantUtility.FullContext target)]
-    [Fintype (Assignment diagram)]
     [∀ term : view.UtilitySite owner, Fintype (TermConfig view term)]
     (rule : MAIDReplacementInvariantUtility.FullContext target →
       PMF (diagram.Value target.1)) :
@@ -278,7 +274,6 @@ private def siteNonrelevantValue
     (semantics : Semantics diagram) (base : Policy diagram)
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner) (view : UtilityView semantics)
-    [∀ term : view.UtilitySite owner, Fintype (TermConfig view term)]
     (rule : MAIDReplacementInvariantUtility.FullContext target →
       PMF (diagram.Value target.1)) : ℝ := by
   classical
@@ -290,7 +285,6 @@ private def siteNonrelevantValue
 
 private def siteRelevantProbeScore
     [DecidableEq Player] [Fintype Node] [DecidableEq Node]
-    [∀ node, Fintype (diagram.Value node)]
     (semantics : Semantics diagram) (base : Policy diagram)
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner) (view : UtilityView semantics)
@@ -336,7 +330,6 @@ private theorem siteRuleExpectedUtility_eq_relevant_add_nonrelevant
     [DecidableEq Player] [Fintype Node] [DecidableEq Node]
     [∀ node, Fintype (diagram.Value node)]
     [∀ node, DecidableEq (diagram.Value node)]
-    [Fintype (Assignment diagram)]
     (semantics : Semantics diagram) (base : Policy diagram)
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner) (view : UtilityView semantics)
@@ -418,7 +411,6 @@ private theorem siteNonrelevantValue_eq
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
     [∀ node, Fintype (diagram.Value node)]
     [∀ node, DecidableEq (diagram.Value node)]
-    [Fintype (Assignment diagram)]
     (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (view : UtilityView semantics) (base : Policy diagram)
     (owner : Player) (replacement : OwnerPolicy diagram owner)
@@ -479,7 +471,6 @@ private theorem componentPolicy_one_eq_siteReplacement
 
 private theorem componentTermScore_eq_siteTermFullScore
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
-    [∀ node, Fintype (diagram.Value node)]
     (view : UtilityView semantics) (owner : Player)
     (base : Policy diagram) (replacement : OwnerPolicy diagram owner)
     (source : DecisionSite diagram owner)
@@ -637,7 +628,6 @@ private theorem siteRelevantProbeScore_cross_product
 
 private theorem siteContextMass_pos_of_changed
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
-    [∀ node, Fintype (diagram.Value node)]
     [∀ node, DecidableEq (diagram.Value node)]
     (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (semantics : Semantics diagram) (view : UtilityView semantics)
@@ -715,7 +705,6 @@ private theorem siteRelevantProbeScore_le_of_optimal
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
     [∀ node, Fintype (diagram.Value node)]
     [∀ node, DecidableEq (diagram.Value node)]
-    [Fintype (Assignment diagram)]
     (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (semantics : Semantics diagram) (view : UtilityView semantics)
     (base : Policy diagram) (owner : Player)
@@ -815,7 +804,6 @@ private theorem siteRelevantProbeScore_le_of_optimal
 
 private theorem siteRelevantProbeScore_eq_zero_of_contextMass_eq_zero
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
-    [∀ node, Fintype (diagram.Value node)]
     [∀ node, DecidableEq (diagram.Value node)]
     (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (semantics : Semantics diagram) (view : UtilityView semantics)
@@ -878,7 +866,6 @@ private theorem siteRelevantProbeScore_le_after_source_change
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
     [∀ node, Fintype (diagram.Value node)]
     [∀ node, DecidableEq (diagram.Value node)]
-    [Fintype (Assignment diagram)]
     (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (semantics : Semantics diagram) (view : UtilityView semantics)
     (base : Policy diagram) (owner : Player)
@@ -984,7 +971,6 @@ theorem IsOptimalSiteRule.transport_replaceSiteRule_of_not_sReachable
     [Fintype Node] [DecidableEq Player] [DecidableEq Node]
     [∀ node, Fintype (diagram.Value node)]
     [∀ node, DecidableEq (diagram.Value node)]
-    [Fintype (Assignment diagram)]
     (topological : GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (semantics : Semantics diagram) (view : UtilityView semantics)
     (base : Policy diagram) (owner : Player)

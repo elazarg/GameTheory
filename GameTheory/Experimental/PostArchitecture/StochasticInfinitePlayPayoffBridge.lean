@@ -130,7 +130,6 @@ private theorem canonicalStageUtility_measurable (who : ι) (n : ℕ)
 omit [Countable (CanonicalHistory G initial)] in
 private theorem integral_canonicalStageUtility_eq_expect
     (who : ι) (n : ℕ) {C : ℝ}
-    [Countable (G.ChronologicalHistory (n + 1))]
     (hstage_measurable :
       Measurable (fun record : G.StageRecord => G.stageRecordUtility record who))
     (hstage_bound :
@@ -199,7 +198,6 @@ theorem canonicalProjectedAverage_integrable
 omit [Countable (CanonicalHistory G initial)] in
 theorem integral_canonicalProjectedAverage_eq_finiteAveragePayoff
     (who : ι) (horizon : ℕ) {C : ℝ}
-    [Countable (G.ChronologicalHistory horizon)]
     (hobservable_measurable :
       Measurable (fun history : G.ChronologicalHistory horizon =>
         G.publicHistoryAverageUtility horizon
@@ -302,7 +300,6 @@ omit [Countable (CanonicalHistory G initial)] in
 /-- Stagewise consistency remains an explicit consumer seam; this transports it. -/
 theorem integral_canonicalPathAverage_eq_finiteAveragePayoff_of_ae_stagewiseConsistency
     (who : ι) (horizon : ℕ) {C : ℝ}
-    [Countable (G.ChronologicalHistory horizon)]
     (hstage_measurable :
       Measurable (fun history : G.ChronologicalHistory horizon =>
         G.publicHistoryAverageUtility horizon

@@ -161,7 +161,6 @@ theorem joint_mass_eq_zero_of_fullAction_mass_eq_zero_at
 
 def siteRuleTermScore
     [DecidableEq Player] [Fintype Node] [DecidableEq Node]
-    [∀ node, Fintype (diagram.Value node)]
     (semantics : Semantics diagram) (base : Policy diagram)
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
@@ -183,7 +182,6 @@ def siteRuleTermScore
 
 def siteRuleContextActionScore
     [DecidableEq Player] [Fintype Node] [DecidableEq Node]
-    [∀ node, Fintype (diagram.Value node)]
     (semantics : Semantics diagram) (base : Policy diagram)
     (owner : Player) (replacement : OwnerPolicy diagram owner)
     (target : DecisionSite diagram owner)
@@ -197,7 +195,7 @@ def siteRuleContextActionScore
       context action
 
 theorem expect_eq_sum_joint_fibres
-    {Ω X Y : Type*} [Fintype Ω] [Fintype X] [Fintype Y]
+    {Ω X Y : Type*} [Fintype X] [Fintype Y]
     (law : PMF Ω) (first : Ω → X) (second : Ω → Y)
     (value : Y → ℝ) :
     expect law (fun omega => value (second omega)) =
