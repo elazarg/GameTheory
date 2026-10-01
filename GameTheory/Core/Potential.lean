@@ -83,14 +83,23 @@ theorem IsExactPotential.isNash_of_maximal (hpotential : IsExactPotential F util
     IsNash F (euPreference utility) profile :=
   hpotential.isOrdinalPotential.isNash_of_maximal hmax
 
-/-- **A finite potential game has a pure equilibrium.** The potential attains a
-maximum on a finite nonempty profile space, and that maximizer is one. No
-fixed-point theorem is used, and none is available at this layer. -/
+/-- **A potential with finitely many values has a pure equilibrium.** The
+potential attains its largest value, and a profile attaining it is one. Strategy
+and profile carriers may be infinite. No fixed-point theorem is used, and none
+is available at this layer. -/
+theorem IsOrdinalPotential.exists_isNash_of_finite_range [Nonempty (Profile F.sig)]
+    (hpotential : IsOrdinalPotential F utility potential)
+    (hrange : (Set.range potential).Finite) :
+    ∃ profile : Profile F.sig, IsNash F (euPreference utility) profile := by
+  obtain ⟨_, ⟨best, rfl⟩, hmax⟩ :=
+    Set.exists_max_image _ id hrange (Set.range_nonempty potential)
+  exact ⟨best, hpotential.isNash_of_maximal fun other => hmax _ ⟨other, rfl⟩⟩
+
+/-- **A finite potential game has a pure equilibrium.** -/
 theorem IsOrdinalPotential.exists_isNash [Finite (Profile F.sig)] [Nonempty (Profile F.sig)]
     (hpotential : IsOrdinalPotential F utility potential) :
-    ∃ profile : Profile F.sig, IsNash F (euPreference utility) profile := by
-  obtain ⟨best, hmax⟩ := Finite.exists_max potential
-  exact ⟨best, hpotential.isNash_of_maximal hmax⟩
+    ∃ profile : Profile F.sig, IsNash F (euPreference utility) profile :=
+  hpotential.exists_isNash_of_finite_range (Set.finite_range potential)
 
 theorem IsExactPotential.exists_isNash [Finite (Profile F.sig)] [Nonempty (Profile F.sig)]
     (hpotential : IsExactPotential F utility potential) :
@@ -298,23 +307,42 @@ theorem weaklyAcyclic_of_wellFounded
       obtain ⟨target, hreach, htarget⟩ := ih next hstep
       exact ⟨target, Relation.ReflTransGen.head hstep hreach, htarget⟩
 
+/-- Strict improvement is well-founded when an ordinal potential takes finitely
+many values: each step raises the potential. -/
+theorem IsOrdinalPotential.improvement_wellFounded_of_finite_range
+    (hpotential : IsOrdinalPotential F utility potential)
+    (hrange : (Set.range potential).Finite) :
+    WellFounded (fun target source : Profile F.sig => ImprovingStep F utility source target) := by
+  have := hrange.to_subtype
+  have hvalues : WellFounded (fun later earlier : Set.range potential => earlier.1 < later.1) :=
+    Finite.wellFounded_of_trans_of_irrefl _
+  have hsubrelation : Subrelation
+      (fun target source : Profile F.sig => ImprovingStep F utility source target)
+      (InvImage (fun later earlier : Set.range potential => earlier.1 < later.1)
+        fun profile => ⟨potential profile, profile, rfl⟩) := by
+    intro target source hstep
+    exact hpotential.improvingStep_increases_potential hstep
+  exact hsubrelation.wf (InvImage.wf _ hvalues)
+
 /-- In a finite ordinal-potential game, strict improvement is well-founded. -/
 theorem IsOrdinalPotential.improvement_wellFounded [Finite (Profile F.sig)]
     (hpotential : IsOrdinalPotential F utility potential) :
-    WellFounded (fun target source : Profile F.sig => ImprovingStep F utility source target) := by
-  have hsubrelation : Subrelation
-      (fun target source : Profile F.sig => ImprovingStep F utility source target)
-      (fun target source => potential source < potential target) := by
-    intro target source hstep
-    exact hpotential.improvingStep_increases_potential hstep
-  exact hsubrelation.wf (Finite.wellFounded_of_trans_of_irrefl _)
+    WellFounded (fun target source : Profile F.sig => ImprovingStep F utility source target) :=
+  hpotential.improvement_wellFounded_of_finite_range (Set.finite_range potential)
+
+/-- An ordinal-potential game whose potential takes finitely many values is
+weakly acyclic. -/
+theorem IsOrdinalPotential.weaklyAcyclic_of_finite_range
+    (hpotential : IsOrdinalPotential F utility potential)
+    (hrange : (Set.range potential).Finite) : WeaklyAcyclic F utility :=
+  weaklyAcyclic_of_wellFounded
+    (fun profile who => (hpotential.integrable profile who).hasExpectation)
+    (hpotential.improvement_wellFounded_of_finite_range hrange)
 
 /-- Every finite ordinal-potential game is weakly acyclic. -/
 theorem IsOrdinalPotential.weaklyAcyclic [Finite (Profile F.sig)]
     (hpotential : IsOrdinalPotential F utility potential) : WeaklyAcyclic F utility :=
-  weaklyAcyclic_of_wellFounded
-    (fun profile who => (hpotential.integrable profile who).hasExpectation)
-    hpotential.improvement_wellFounded
+  hpotential.weaklyAcyclic_of_finite_range (Set.finite_range potential)
 
 /-- The exact-potential special case of ordinal-potential weak acyclicity. -/
 theorem IsExactPotential.weaklyAcyclic [Finite (Profile F.sig)]

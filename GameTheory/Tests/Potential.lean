@@ -3,7 +3,9 @@
 
 This one-player fixture scales a strictly increasing utility by two.  The
 scaled function preserves every improvement direction, so it is an ordinal
-potential, but its nonzero difference cannot be an exact potential.
+potential, but its nonzero difference cannot be an exact potential.  A second
+one-player game chooses among the natural numbers; its two-valued payoff gives
+a potential with finitely many values on infinitely many profiles.
 -/
 
 import GameTheory.Core.Potential
@@ -65,5 +67,34 @@ theorem trueProfile_isNash :
   intro other
   simp only [scaledPotential, trueProfile]
   split <;> norm_num
+
+/-- One player chooses a natural number. -/
+@[reducible]
+def countableSignature : GameSignature Unit where
+  Strategy _ := ℕ
+  Outcome := ℕ
+
+@[reducible]
+def countableForm : GameForm Unit :=
+  GameForm.deterministic countableSignature fun profile => profile ()
+
+/-- Even choices pay one, odd choices nothing. -/
+def parityPayoff (outcome : ℕ) : ℝ := if Even outcome then 1 else 0
+
+/-- Infinitely many profiles, a two-valued potential, and so a pure
+equilibrium without finitely many profiles. -/
+theorem countable_exists_isNash :
+    ∃ profile : Profile countableSignature,
+      IsNash countableForm (euPreference fun outcome _ => parityPayoff outcome) profile := by
+  have hintegrable (profile : Profile countableSignature) :
+      PayoffIntegrable (countableForm.play profile) parityPayoff := by
+    rw [GameForm.deterministic_play]
+    exact payoffIntegrable_pure _ _
+  apply (isExactPotential_of_identicalInterests (F := countableForm) parityPayoff
+    hintegrable).isOrdinalPotential.exists_isNash_of_finite_range
+  apply (Set.toFinite ({0, 1} : Set ℝ)).subset
+  rintro _ ⟨profile, rfl⟩
+  simp only [expect_pure, parityPayoff]
+  split_ifs <;> simp
 
 end GameTheory.Tests.Potential
