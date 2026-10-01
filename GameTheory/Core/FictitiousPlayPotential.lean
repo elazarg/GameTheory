@@ -297,9 +297,10 @@ theorem mixedPotential_abs_le_of_abs_bound
 /-- Every real observable on a finite pure-profile space has a uniform
 absolute bound. -/
 theorem exists_profile_abs_bound
-    [∀ who, Fintype (G.form.sig.Strategy who)]
+    [∀ who, Finite (G.form.sig.Strategy who)]
     (potential : Profile G.form.sig → ℝ) :
     ∃ C : ℝ, ∀ profile, |potential profile| ≤ C := by
+  let _ : ∀ who, Fintype (G.form.sig.Strategy who) := fun _ => Fintype.ofFinite _
   refine ⟨∑ profile : Profile G.form.sig, |potential profile|, ?_⟩
   intro profile
   exact Finset.single_le_sum

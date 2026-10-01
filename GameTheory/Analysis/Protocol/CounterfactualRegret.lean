@@ -182,7 +182,7 @@ theorem counterfactualContinuationValue_withLaw_eq_expect
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
+    [Finite (M.InformationHistory who site.1)]
     (policy : M.BehavioralPolicy who)
     (law : PMF (M.Choice who site.1))
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
@@ -195,6 +195,7 @@ theorem counterfactualContinuationValue_withLaw_eq_expect
           (policy.withLaw site.1 law) payoff run =
         expect law (fun choice => counterfactualContinuationValue M strategy who
           site (policy.commit site.1 choice) payoff run) := by
+  let _ : Fintype (M.InformationHistory who site.1) := Fintype.ofFinite _
   classical
   let term : M.InformationHistory who site.1 → M.Choice who site.1 → ℝ :=
     fun history choice =>
@@ -265,7 +266,7 @@ theorem counterfactualContinuationValue_eq_expect_actionUtility
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
+    [Finite (M.InformationHistory who site.1)]
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
     (hfactor : M.RunnerFactorsAt run who site)
     (hbase : CounterfactualContinuationIntegrable M strategy who site
@@ -276,6 +277,7 @@ theorem counterfactualContinuationValue_eq_expect_actionUtility
           (strategy who) payoff run =
         expect (strategy who site.1)
           (counterfactualActionUtility M strategy who site payoff run) := by
+  let _ : Fintype (M.InformationHistory who site.1) := Fintype.ofFinite _
   have hsame : (strategy who).withLaw site.1 (strategy who site.1) =
       strategy who := BehavioralPolicy.withLaw_eq_self _ _
   have hwith : CounterfactualContinuationIntegrable M strategy who site
@@ -294,7 +296,7 @@ theorem counterfactualActionRegret_eq_sub_expect
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
+    [Finite (M.InformationHistory who site.1)]
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
     (hfactor : M.RunnerFactorsAt run who site)
     (choice : M.Choice who site.1)
@@ -306,6 +308,7 @@ theorem counterfactualActionRegret_eq_sub_expect
         counterfactualActionUtility M strategy who site payoff run choice -
           expect (strategy who site.1)
             (counterfactualActionUtility M strategy who site payoff run) := by
+  let _ : Fintype (M.InformationHistory who site.1) := Fintype.ofFinite _
   obtain ⟨hvalue, heq⟩ :=
     M.counterfactualContinuationValue_eq_expect_actionUtility
       strategy who site payoff run hfactor hbase

@@ -192,7 +192,7 @@ theorem truncatedContinuationContext_value_tendsto_of_bounded
 /-- Finite terminal carriers bound every payoff, so the general bounded-payoff
 continuity theorem specializes to arbitrary finite-history payoffs. -/
 theorem truncatedContinuationContext_value_tendsto
-    [DecidableEq ι] [Fintype E.History]
+    [DecidableEq ι] [Finite E.History]
     {sequence : ℕ → M.BehavioralAssessment} {target : M.BehavioralAssessment}
     (hstrategy : ∀ i info, PMFConvergesPointwise
       (fun n => (sequence n).strategy i info) (target.strategy i info))
@@ -207,6 +207,7 @@ theorem truncatedContinuationContext_value_tendsto
     Tendsto (fun n => ((sequence n).truncatedContinuationContext site payoff fuel).value
       (alternative n)) atTop
       (nhds ((target.truncatedContinuationContext site payoff fuel).value replacement)) := by
+  let _ : Fintype E.History := Fintype.ofFinite _
   let C := ∑ history : E.History, |payoff history|
   have hC : 0 ≤ C := by
     apply Finset.sum_nonneg

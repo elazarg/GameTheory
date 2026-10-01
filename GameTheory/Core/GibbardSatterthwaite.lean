@@ -330,13 +330,14 @@ private theorem IsTop.unique {ranks : Alternative → Alternative → Prop}
   hlinear.2.2.2 first second (hfirst second) (hsecond first)
 
 /-- Strategyproofness plus full range implies unanimity. -/
-theorem IsStrategyProof.unanimous [Fintype Voter]
+theorem IsStrategyProof.unanimous [Finite Voter]
     {choice : SocialChoiceFunction Voter Alternative}
     (hstrategy : choice.IsStrategyProof) (honto : choice.IsOnto)
     {ranks : Ranking Voter Alternative} (hlinear : Preference.Linear ranks)
     {alternative : Alternative}
     (htop : ∀ voter other, ranks voter alternative other) :
     choice ranks = alternative := by
+  let _ : Fintype Voter := Fintype.ofFinite _
   obtain ⟨source, hsourceLinear, hsourceChoice⟩ := honto alternative
   have hraised : ∀ voter other,
       source voter (choice source) other → ranks voter (choice source) other := by
@@ -347,7 +348,7 @@ theorem IsStrategyProof.unanimous [Fintype Voter]
 
 /-- Strategyproofness and full range imply weak Pareto: an alternative that
 everyone ranks strictly below another cannot be selected. -/
-theorem IsStrategyProof.pareto [Fintype Voter]
+theorem IsStrategyProof.pareto [Finite Voter]
     {choice : SocialChoiceFunction Voter Alternative}
     (hstrategy : choice.IsStrategyProof) (honto : choice.IsOnto)
     {ranks : Ranking Voter Alternative} (hlinear : Preference.Linear ranks)
@@ -355,6 +356,7 @@ theorem IsStrategyProof.pareto [Fintype Voter]
     (hne : preferred ≠ dominated)
     (hdom : ∀ voter, Rank.strict (ranks voter) preferred dominated) :
     choice ranks ≠ dominated := by
+  let _ : Fintype Voter := Fintype.ofFinite _
   intro hchoice
   let raised : Ranking Voter Alternative :=
     fun voter => raiseTop (fun alternative => alternative = preferred) (ranks voter)
@@ -400,13 +402,14 @@ private theorem pairLift_swap (choice : SocialChoiceFunction Voter Alternative)
   funext voter
   exact raiseTop_congr (fun alternative => or_comm) (ranks voter)
 
-private theorem pairLift_choice [Fintype Voter]
+private theorem pairLift_choice [Finite Voter]
     {choice : SocialChoiceFunction Voter Alternative}
     (hstrategy : choice.IsStrategyProof) (honto : choice.IsOnto)
     {ranks : Ranking Voter Alternative} (hlinear : Preference.Linear ranks)
     (first second : Alternative) :
     choice (pairLift ranks first second) = first ∨
       choice (pairLift ranks first second) = second := by
+  let _ : Fintype Voter := Fintype.ofFinite _
   by_contra hneither
   push Not at hneither
   obtain ⟨hfirst, hsecond⟩ := hneither
@@ -432,7 +435,7 @@ private theorem tripleLift_linear {ranks : Ranking Voter Alternative}
     Preference.Linear (tripleLift ranks first second third) :=
   fun voter => raiseTop_linear (hlinear voter)
 
-private theorem tripleLift_choice [Fintype Voter]
+private theorem tripleLift_choice [Finite Voter]
     {choice : SocialChoiceFunction Voter Alternative}
     (hstrategy : choice.IsStrategyProof) (honto : choice.IsOnto)
     {ranks : Ranking Voter Alternative} (hlinear : Preference.Linear ranks)
@@ -440,6 +443,7 @@ private theorem tripleLift_choice [Fintype Voter]
     choice (tripleLift ranks first second third) = first ∨
       choice (tripleLift ranks first second third) = second ∨
       choice (tripleLift ranks first second third) = third := by
+  let _ : Fintype Voter := Fintype.ofFinite _
   by_contra hnone
   push Not at hnone
   obtain ⟨hfirst, hsecond, hthird⟩ := hnone
@@ -457,7 +461,7 @@ private theorem tripleLift_choice [Fintype Voter]
     · exact Ne.symm hfirst
   exact hstrategy.pareto honto hliftLinear (Ne.symm hfirst) hdom rfl
 
-private theorem lift_winner_beats [Fintype Voter]
+private theorem lift_winner_beats [Finite Voter]
     {choice : SocialChoiceFunction Voter Alternative}
     (hstrategy : choice.IsStrategyProof)
     {ranks : Ranking Voter Alternative} (hlinear : Preference.Linear ranks)
@@ -465,6 +469,7 @@ private theorem lift_winner_beats [Fintype Voter]
     (hwinner : selected winner) (hother : selected other)
     (hchoice : choice (fun voter => raiseTop selected (ranks voter)) = winner) :
     choice (pairLift ranks winner other) = winner := by
+  let _ : Fintype Voter := Fintype.ofFinite _
   let lifted : Ranking Voter Alternative :=
     fun voter => raiseTop selected (ranks voter)
   have hliftedLinear : Preference.Linear lifted :=
@@ -548,11 +553,12 @@ private theorem strict_weakOfStrict {relation : Alternative → Alternative → 
       exact hlinear.irrefl first hrelation
     · exact hlinear.asymm hrelation hreverse
 
-private theorem strictInduced_linear [Fintype Voter]
+private theorem strictInduced_linear [Finite Voter]
     {choice : SocialChoiceFunction Voter Alternative}
     (hstrategy : choice.IsStrategyProof) (honto : choice.IsOnto)
     {ranks : Ranking Voter Alternative} (hlinear : Preference.Linear ranks) :
     StrictLinear (strictInduced choice ranks) := by
+  let _ : Fintype Voter := Fintype.ofFinite _
   refine ⟨?_, ?_, ?_⟩
   · intro alternative h
     exact h.1 rfl
@@ -598,17 +604,19 @@ private def inducedAggregator (choice : SocialChoiceFunction Voter Alternative) 
     Aggregator Voter Alternative :=
   fun ranks => weakOfStrict (strictInduced choice ranks)
 
-private theorem induced_collectivelyRational [Fintype Voter]
+private theorem induced_collectivelyRational [Finite Voter]
     {choice : SocialChoiceFunction Voter Alternative}
     (hstrategy : choice.IsStrategyProof) (honto : choice.IsOnto) :
     (inducedAggregator choice).IsCollectivelyRational := by
+  let _ : Fintype Voter := Fintype.ofFinite _
   intro ranks hlinear
   exact weakOfStrict_linear (strictInduced_linear hstrategy honto hlinear)
 
-private theorem induced_pareto [Nonempty Voter] [Fintype Voter]
+private theorem induced_pareto [Nonempty Voter] [Finite Voter]
     {choice : SocialChoiceFunction Voter Alternative}
     (hstrategy : choice.IsStrategyProof) (honto : choice.IsOnto) :
     (inducedAggregator choice).IsPareto := by
+  let _ : Fintype Voter := Fintype.ofFinite _
   intro ranks hlinear preferred dominated hdom
   have hne : preferred ≠ dominated := by
     let voter : Voter := Classical.choice inferInstance
@@ -633,7 +641,7 @@ private theorem induced_pareto [Nonempty Voter] [Fintype Voter]
       · exact raiseTop_above (Or.inl rfl) (fun h => h.elim hp hd)
   exact hstrategy.unanimous honto hliftLinear htop
 
-private theorem pairLift_choice_eq_of_agree [Fintype Voter]
+private theorem pairLift_choice_eq_of_agree [Finite Voter]
     {choice : SocialChoiceFunction Voter Alternative}
     (hstrategy : choice.IsStrategyProof) (honto : choice.IsOnto)
     {ranks ranks' : Ranking Voter Alternative}
@@ -645,6 +653,7 @@ private theorem pairLift_choice_eq_of_agree [Fintype Voter]
       (ranks voter second first ↔ ranks' voter second first)) :
     choice (pairLift ranks first second) =
       choice (pairLift ranks' first second) := by
+  let _ : Fintype Voter := Fintype.ofFinite _
   have hliftLinear := pairLift_linear hlinear first second
   have hliftLinear' := pairLift_linear hlinear' first second
   rcases pairLift_choice hstrategy honto hlinear first second with hchoice | hchoice
@@ -681,10 +690,11 @@ private theorem pairLift_choice_eq_of_agree [Fintype Voter]
               (iff_of_true (Or.inr rfl) (Or.inl rfl))).mp hranks))
       · exact raiseTop_above (Or.inr rfl) (fun h => h.elim hfirst hsecond)
 
-private theorem induced_iia [Fintype Voter]
+private theorem induced_iia [Finite Voter]
     {choice : SocialChoiceFunction Voter Alternative}
     (hstrategy : choice.IsStrategyProof) (honto : choice.IsOnto) :
     (inducedAggregator choice).IsIIA := by
+  let _ : Fintype Voter := Fintype.ofFinite _
   intro ranks ranks' hlinear hlinear' first second hagree
   have hweakAgree : ∀ voter,
       (ranks voter first second ↔ ranks' voter first second) ∧
@@ -732,12 +742,13 @@ private theorem induced_iia [Fintype Voter]
       strict_weakOfStrict hstrict', strictInduced]
     rw [hreverse]
 
-private theorem dictator_transfer [Fintype Voter]
+private theorem dictator_transfer [Finite Voter]
     {choice : SocialChoiceFunction Voter Alternative}
     (hstrategy : choice.IsStrategyProof) (honto : choice.IsOnto)
     {dictator : Voter}
     (hdictator : (inducedAggregator choice).IsDictator dictator) :
     choice.IsDictator dictator := by
+  let _ : Fintype Voter := Fintype.ofFinite _
   intro ranks hlinear alternative
   by_cases heq : alternative = choice ranks
   · subst alternative
@@ -783,11 +794,12 @@ variable {Voter : Type uv} {Alternative : Type ua}
 on the unrestricted domain of linear rankings is dictatorial when the finite
 nonempty electorate faces at least three alternatives.  The alternative
 carrier itself need not be finite. -/
-theorem impossibility [Nonempty Voter] [Fintype Voter]
+theorem impossibility [Nonempty Voter] [Finite Voter]
     {choice : SocialChoiceFunction Voter Alternative}
     (hstrategy : choice.IsStrategyProof) (honto : choice.IsOnto)
     (hatLeastThree : Arrow.HasAtLeastThree Alternative) :
     ∃ dictator, choice.IsDictator dictator := by
+  let _ : Fintype Voter := Fintype.ofFinite _
   have hcollective :=
     SocialChoiceFunction.induced_collectivelyRational hstrategy honto
   have hpareto := SocialChoiceFunction.induced_pareto hstrategy honto

@@ -135,7 +135,7 @@ omit [Fintype ι] [DecidableEq ι] in
 /-- **Repairing a deviation.** Along lower bounds that some mixed strategies
 respect and that vanish, every mixed strategy is the limit of mixed strategies
 respecting the bounds. -/
-theorem exists_repair_convergesPointwise {who : ι} [Fintype (F.sig.Strategy who)]
+theorem exists_repair_convergesPointwise {who : ι} [Finite (F.sig.Strategy who)]
     (lower : ℕ → F.sig.Strategy who → ℝ) (approximating : ℕ → PMF (F.sig.Strategy who))
     (nonnegative : ∀ n action, 0 ≤ lower n action)
     (respects : ∀ n, F.StrategyRespectsPerturbation (lower n) (approximating n))
@@ -144,6 +144,7 @@ theorem exists_repair_convergesPointwise {who : ι} [Fintype (F.sig.Strategy who
     ∃ repaired : ℕ → PMF (F.sig.Strategy who),
       (∀ n, F.StrategyRespectsPerturbation (lower n) (repaired n)) ∧
         PMFConvergesPointwise repaired replacement := by
+  let _ : Fintype (F.sig.Strategy who) := Fintype.ofFinite _
   have hprobSum (n : ℕ) :
       ∑ action, (approximating n action).toReal = 1 := by
     simpa only [tsum_fintype] using pmf_weight_tsum_one (approximating n)
@@ -196,12 +197,13 @@ each positive lower bound; those repairs converge back to the original
 deviation as the bounds vanish. Expected-utility continuity then passes the
 perturbed equilibrium inequalities to the limit. -/
 theorem IsTremblingHandPerfect.isNash
-    [∀ i, Fintype (F.sig.Strategy i)]
+    [∀ i, Finite (F.sig.Strategy i)]
     {utility : F.sig.Outcome → ι → ℝ}
     {profile : Profile F.sig.mixed}
     (hperfect : F.IsTremblingHandPerfect (euPreference utility) profile)
     (hintegrable : F.HasIntegrableUtility utility) :
     IsNash F.mixed (euPreference utility) profile := by
+  let _ : ∀ i, Fintype (F.sig.Strategy i) := fun _ => Fintype.ofFinite _
   rw [isNash_iff]
   intro who replacement
   rcases hperfect with ⟨lower, approximating, hequilibria, hzero, hconverges⟩

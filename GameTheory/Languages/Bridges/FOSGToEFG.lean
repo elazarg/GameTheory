@@ -2106,7 +2106,7 @@ theorem map_erase_runBehavioralFrom_eq_source
 
 /-- Exact scaled behavioral-history law from the initial state. -/
 theorem map_erase_runBehavioral_eq_source
-    [Fintype ι] [DecidableEq ι]
+    [Finite ι] [DecidableEq ι]
     (target : (player : ι) →
       (information G order).BehavioralPolicy player)
     (rounds : ℕ) :
@@ -2115,6 +2115,7 @@ theorem map_erase_runBehavioral_eq_source
           (rounds * roundWidth order)) =
       G.information.runBehavioral
         (projectBehavioral G order target) rounds := by
+  let _ : Fintype ι := Fintype.ofFinite _
   unfold InformationModel.runBehavioral
   have hinit : (execution G order).initHistory =
       ⟨.stage G.execution.initHistory 0
@@ -2153,7 +2154,7 @@ theorem mem_support_runBehavioralFrom_projected_iff
 /-- Initial-state support form of
 `mem_support_runBehavioralFrom_projected_iff`. -/
 theorem mem_support_runBehavioral_projected_iff
-    [Fintype ι] [DecidableEq ι]
+    [Finite ι] [DecidableEq ι]
     (target : (player : ι) →
       (information G order).BehavioralPolicy player)
     (rounds : ℕ) (sourceReached : History G) :
@@ -2164,6 +2165,7 @@ theorem mem_support_runBehavioral_projected_iff
           ((information G order).runBehavioral target
             (rounds * roundWidth order)).support,
         eraseHistory G order targetReached = sourceReached := by
+  let _ : Fintype ι := Fintype.ofFinite _
   rw [← map_erase_runBehavioral_eq_source G order target rounds,
     PMF.support_map]
   rfl
@@ -2207,7 +2209,7 @@ theorem exists_terminal_mem_support_runBehavioralFrom_iff
 /-- Initial-state terminal-support form of
 `exists_terminal_mem_support_runBehavioralFrom_iff`. -/
 theorem exists_terminal_mem_support_runBehavioral_iff
-    [Fintype ι] [DecidableEq ι]
+    [Finite ι] [DecidableEq ι]
     (target : (player : ι) →
       (information G order).BehavioralPolicy player)
     (rounds : ℕ) :
@@ -2219,6 +2221,7 @@ theorem exists_terminal_mem_support_runBehavioral_iff
         (G.information.runBehavioral
           (projectBehavioral G order target) rounds).support,
         G.execution.terminal sourceReached.state := by
+  let _ : Fintype ι := Fintype.ofFinite _
   constructor
   · rintro ⟨targetReached, htarget, hterm⟩
     refine ⟨eraseHistory G order targetReached, ?_, ?_⟩
@@ -2236,7 +2239,7 @@ theorem exists_terminal_mem_support_runBehavioral_iff
 
 /-- Forward translation preserves every finite source history law. -/
 theorem map_erase_runBehavioral_translate
-    [Fintype ι] [DecidableEq ι]
+    [Finite ι] [DecidableEq ι]
     (source : (player : ι) → G.information.BehavioralPolicy player)
     (rounds : ℕ) :
     PMF.map (eraseHistory G order)
@@ -2244,13 +2247,14 @@ theorem map_erase_runBehavioral_translate
           (translateBehavioral G order source)
           (rounds * roundWidth order)) =
       G.information.runBehavioral source rounds := by
+  let _ : Fintype ι := Fintype.ofFinite _
   rw [map_erase_runBehavioral_eq_source,
     project_translate_profile]
 
 /-- Arbitrary target play transports through its source projection to any
 other explicit order without changing the erased history law. -/
 theorem map_erase_runBehavioral_order_transport
-    [Fintype ι] [DecidableEq ι]
+    [Finite ι] [DecidableEq ι]
     (first second : ExplicitOrder ι)
     (target : (player : ι) →
       (information G first).BehavioralPolicy player)
@@ -2263,6 +2267,7 @@ theorem map_erase_runBehavioral_order_transport
           (translateBehavioral G second
             (projectBehavioral G first target))
           (rounds * roundWidth second)) := by
+  let _ : Fintype ι := Fintype.ofFinite _
   rw [map_erase_runBehavioral_eq_source,
     map_erase_runBehavioral_translate]
 

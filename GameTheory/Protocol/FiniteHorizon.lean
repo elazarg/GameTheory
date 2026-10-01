@@ -18,8 +18,9 @@ variable {ι : Type uι} (E : ExecutionProtocol.{uι, us, ua} ι)
 /-- Finite complete histories admit a positive certified execution bound.
 Taking one more than the greatest legal trace length makes any history of
 that length impossible, and in particular rules out nonterminal ones. -/
-theorem exists_pos_boundedHorizon [Fintype E.History] :
+theorem exists_pos_boundedHorizon [Finite E.History] :
     ∃ bound, 0 < bound ∧ E.BoundedHorizon bound := by
+  let _ : Fintype E.History := Fintype.ofFinite _
   classical
   let longest := Finset.univ.sup (fun history : E.History => history.trace.length)
   refine ⟨longest + 1, Nat.succ_pos _, ?_⟩
@@ -30,7 +31,8 @@ theorem exists_pos_boundedHorizon [Fintype E.History] :
   exact False.elim (by omega)
 
 /-- Finite complete histories certify terminal play. -/
-theorem wellFoundedHistories_of_fintype [Fintype E.History] : E.WellFoundedHistories := by
+theorem wellFoundedHistories_of_fintype [Finite E.History] : E.WellFoundedHistories := by
+  let _ : Fintype E.History := Fintype.ofFinite _
   obtain ⟨_, _, hbound⟩ := E.exists_pos_boundedHorizon
   exact hbound.wellFoundedHistories
 

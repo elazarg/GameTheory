@@ -317,7 +317,7 @@ theorem PMFConvergesPointwise.expect_bind_finite_of_sequence_integrable
 
 /-- On a finite carrier, jointly pointwise-convergent masses and observables
 have convergent expectations without a separate uniform bound. -/
-theorem PMFConvergesPointwise.expect_varying_finite {α : Type*} [Fintype α]
+theorem PMFConvergesPointwise.expect_varying_finite {α : Type*} [Finite α]
     {sequence : ℕ → PMF α} {target : PMF α}
     (h : PMFConvergesPointwise sequence target)
     {observable : ℕ → α → ℝ} {limit : α → ℝ}
@@ -325,6 +325,7 @@ theorem PMFConvergesPointwise.expect_varying_finite {α : Type*} [Fintype α]
       Tendsto (fun n => observable n value) atTop (nhds (limit value))) :
     Tendsto (fun n => expect (sequence n) (observable n)) atTop
       (nhds (expect target limit)) := by
+  let _ : Fintype α := Fintype.ofFinite _
   simp_rw [expect_eq_sum]
   exact tendsto_finsetSum Finset.univ fun value _ =>
     (h.toReal value).mul (hobservable value)

@@ -132,11 +132,12 @@ theorem acyclic_of_topologicalOrder
 /-- Every finite acyclic predecessor relation has a topological order.
 
 The proof repeatedly removes a well-founded-minimal remaining vertex. -/
-theorem topologicalOrder_of_acyclic [Fintype α] [DecidableEq α]
+theorem topologicalOrder_of_acyclic [Finite α] [DecidableEq α]
     {predecessors : α → Finset α}
     (hacyclic :
       Acyclic (fun first second => first ∈ predecessors second)) :
     Nonempty (TopologicalOrder predecessors) := by
+  let _ : Fintype α := Fintype.ofFinite _
   classical
   have wellFounded := hacyclic.wellFounded
   suffices key : ∀ vertices : Finset α,

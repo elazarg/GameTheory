@@ -32,10 +32,12 @@ namespace UtilityGame
 /-- Finite players and outcomes give one nonnegative absolute payoff bound for
 every stage profile and player. Strategy carriers need not be finite. -/
 theorem exists_uniform_stagePayoff_abs_bound
-    (G : UtilityGame ι) [Fintype ι] [Fintype G.form.sig.Outcome] :
+    (G : UtilityGame ι) [Finite ι] [Finite G.form.sig.Outcome] :
     ∃ bound : ℝ, 0 ≤ bound ∧
       ∀ (profile : Profile G.form.sig) (who : ι),
         |G.stagePayoff profile who| ≤ bound := by
+  let _ : Fintype ι := Fintype.ofFinite _
+  let _ : Fintype G.form.sig.Outcome := Fintype.ofFinite _
   let bound : ℝ :=
     ∑ who : ι, ∑ outcome : G.form.sig.Outcome,
       |G.utility outcome who|
@@ -213,10 +215,11 @@ theorem exists_approx_punishmentProfiles
 /-- Strict coordinatewise domination over finitely many players has a common
 positive slack. -/
 theorem exists_pos_margin_of_mem_strictReservationSet
-    [Fintype ι] {reservation value : PayoffVector ι}
+    [Finite ι] {reservation value : PayoffVector ι}
     (hvalue : value ∈ strictReservationSet reservation) :
     ∃ margin : ℝ, 0 < margin ∧
       ∀ who, reservation who + margin ≤ value who := by
+  let _ : Fintype ι := Fintype.ofFinite _
   by_cases hplayers : Nonempty ι
   · let : Nonempty ι := hplayers
     let minimum : ℝ :=

@@ -674,10 +674,11 @@ together, and that is exactly the deviation a strong equilibrium forbids.
 Only the *weak* form follows, and the reason is visible in the statement: an
 equilibrium against coalitions objects when every member gains, while Pareto
 domination allows some to be indifferent. -/
-theorem IsStrongNash.isWeaklyParetoEfficient [Fintype ι] [Nonempty ι]
+theorem IsStrongNash.isWeaklyParetoEfficient [Finite ι] [Nonempty ι]
     (htotal : Preference.Total weaklyPrefers) {profile : Profile F.sig}
     (hstrong : IsStrongNash F weaklyPrefers profile) :
     IsWeaklyParetoEfficient F weaklyPrefers profile := by
+  let _ : Fintype ι := Fintype.ofFinite _
   rintro ⟨other, hstrict⟩
   refine (isStrongNash_iff_not_all_gain htotal profile).1 hstrong Finset.univ
     Finset.univ_nonempty (Profile.restrict Finset.univ other) fun member _ => ?_

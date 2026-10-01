@@ -352,9 +352,10 @@ theorem equilibriumComparison_commitment_some (device : PMF (Profile F.sig))
 
 theorem equilibriumComparison_commitment_none_holds (device : PMF (Profile F.sig))
     (observe : F.sig.Outcome → Observation) (who : ι) (utility : Observation → ℝ)
-    [Fintype Observation] :
+    [Finite Observation] :
     (equilibriumComparison (F.commitment device) (PMF.pure fun _ => none)
         (DeviationScheme.unilateralConstant _) observe who none).Holds utility := by
+  let _ : Fintype Observation := Fintype.ofFinite _
   rw [IncentiveComparison.holds_iff]
   simp [equilibriumComparison]
 
@@ -363,7 +364,7 @@ universal obedience into the device preserves coarse correlated equilibrium for
 every utility, and preserves correlated equilibrium exactly when coarse
 correlated equilibrium already implies correlated equilibrium at the
 device. -/
-theorem commitment_preservation [Fintype Observation] (device : PMF (Profile F.sig))
+theorem commitment_preservation [Finite Observation] (device : PMF (Profile F.sig))
     (observe : F.sig.Outcome → Observation) :
     IncentiveComparison.Implies
         (equilibriumComparison (F.commitment device) (PMF.pure fun _ => none)
@@ -376,6 +377,7 @@ theorem commitment_preservation [Fintype Observation] (device : PMF (Profile F.s
         IncentiveComparison.Implies
           (equilibriumComparison F device (DeviationScheme.unilateralConstant F.sig) observe)
           (equilibriumComparison F device (DeviationScheme.recommendation F.sig) observe)) := by
+  let _ : Fintype Observation := Fintype.ofFinite _
   have hcoarse (utility : Observation → ι → ℝ) :
       (∀ who replacement, (equilibriumComparison (F.commitment device)
           (PMF.pure fun _ => none) (DeviationScheme.unilateralConstant _) observe who

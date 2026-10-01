@@ -1049,13 +1049,14 @@ private theorem dictator_reference_preferred
 /-! ## The private strict-order theorem -/
 
 private theorem strict_arrow_impossibility
-    [Fintype Agent]
+    [Finite Agent]
     {aggregate : StrictAggregator Agent α}
     (hrational : IsStrictCollectivelyRational aggregate)
     (hpareto : IsStrictPareto aggregate)
     (hiia : IsStrictIIA aggregate)
     (hα : HasAtLeastThree α) :
     ∃ dictator, IsStrictDictator aggregate dictator := by
+  let _ : Fintype Agent := Fintype.ofFinite _
   classical
   obtain ⟨hαNonempty, hthird⟩ := hα
   obtain ⟨reference⟩ := hαNonempty
@@ -1234,13 +1235,14 @@ linear-ranking profiles has an exact dictator.
 The alternative type need not be finite. The result quantifies over the
 canonical weak `Ranking` relation; the strict-order pivotal proof is private and
 connected to that relation by `Rank.strict`. -/
-theorem impossibility [Fintype Agent]
+theorem impossibility [Finite Agent]
     {aggregate : Aggregator Agent α}
     (hrational : aggregate.IsCollectivelyRational)
     (hpareto : aggregate.IsPareto)
     (hiia : aggregate.IsIIA)
     (hα : HasAtLeastThree α) :
     ∃ dictator, aggregate.IsDictator dictator := by
+  let _ : Fintype Agent := Fintype.ofFinite _
   let strictAggregate := strictAggregatorOf aggregate
   have hstrictRational :
       IsStrictCollectivelyRational strictAggregate :=

@@ -100,7 +100,7 @@ theorem localCounterfactualRegretVector_eq_regretPayoff_actionUtility
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
+    [Finite (M.InformationHistory who site.1)]
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
     (hfactor : M.RunnerFactorsAt run who site)
     (hbase : M.CounterfactualContinuationIntegrable strategy who site
@@ -111,6 +111,7 @@ theorem localCounterfactualRegretVector_eq_regretPayoff_actionUtility
           counterfactualActionUtility M strategy who site
             payoff run choice)
         (strategy who site.1) () := by
+  let _ : Fintype (M.InformationHistory who site.1) := Fintype.ofFinite _
   ext choice
   simp only [localCounterfactualRegretVector, WithLp.ofLp_toLp,
     regretPayoff_ofLp]
@@ -126,7 +127,7 @@ theorem localCounterfactualRegretVector_strategyWithLocalLaw
     (strategy : (player : ι) → M.BehavioralPolicy player)
     (who : ι) [DecidableEq (M.InfoState who)]
     (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
+    [Finite (M.InformationHistory who site.1)]
     (law : PMF (M.Choice who site.1))
     (payoff : E.History → ℝ) (run : M.ContinuationRunner)
     (hfactor : M.RunnerFactorsAt run who site) (environment : Q)
@@ -141,6 +142,7 @@ theorem localCounterfactualRegretVector_strategyWithLocalLaw
           counterfactualActionUtility M strategy who site
             payoff run choice)
         law environment := by
+  let _ : Fintype (M.InformationHistory who site.1) := Fintype.ofFinite _
   ext choice
   have hlocal := M.localCounterfactualRegretVector_eq_regretPayoff_actionUtility
     (strategyWithLocalLaw M strategy who site law) who site

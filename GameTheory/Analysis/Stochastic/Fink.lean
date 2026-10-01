@@ -74,9 +74,10 @@ theorem isCompact_finkDomain
   (isCompact_mixedPolytope G.finkSignature).prod isCompact_Icc
 
 theorem nonempty_finkDomain
-    [∀ player, Fintype (G.Action player)]
+    [∀ player, Finite (G.Action player)]
     [∀ player, Nonempty (G.Action player)] {bound : ℝ}
     (hbound : 0 ≤ bound) : (G.finkDomain bound).Nonempty := by
+  let _ : ∀ player, Fintype (G.Action player) := fun _ => Fintype.ofFinite _
   refine ⟨(probs G.finkSignature fun agent =>
       PMF.pure (Classical.arbitrary (G.Action agent.2)), 0), ?_, ?_⟩
   · exact probs_mem_mixedPolytope G.finkSignature _

@@ -360,7 +360,7 @@ theorem implies_rootComparison (certificate : E.WellFoundedHistories)
 subgame perfection is Nash together with the subgame comparisons at proper
 roots that incumbent play does not reach. Comparisons at reached roots are
 positive multiples of Nash comparisons. -/
-theorem holds_continuation_iff [Fintype Observation] (certificate : E.WellFoundedHistories)
+theorem holds_continuation_iff [Finite Observation] (certificate : E.WellFoundedHistories)
     (observe : E.History → Observation) (profile : Profile M.strategicSignature)
     (utility : Observation → ι → ℝ) :
     (∀ who deviation, (M.continuationComparison (M.historyPlay certificate) observe profile
@@ -371,6 +371,7 @@ theorem holds_continuation_iff [Fintype Observation] (certificate : E.WellFounde
           M.rootReach certificate profile deviation.1.1 = 0 →
             (M.continuationComparison (M.historyPlay certificate) observe profile who
               deviation).Holds (utility · who) := by
+  let _ : Fintype Observation := Fintype.ofFinite _
   constructor
   · intro holds
     exact ⟨M.implies_rootComparison certificate observe profile utility holds,
@@ -448,7 +449,7 @@ theorem equilibriumComparison_strategicForm (certificate : E.WellFoundedHistorie
 subgame perfection at a profile, some proper subgame is unreached and its
 continuation game is a target whose equilibria are implied by subgame
 perfection of the source but not by its Nash equilibria. -/
-theorem exists_subgameForm_separating [Fintype Observation]
+theorem exists_subgameForm_separating [Finite Observation]
     (certificate : E.WellFoundedHistories) (observe : E.History → Observation)
     (profile : Profile M.strategicSignature)
     (hfails : ¬ IncentiveComparison.Implies (M.rootComparison certificate observe profile)
@@ -462,6 +463,7 @@ theorem exists_subgameForm_separating [Fintype Observation]
       ¬ IncentiveComparison.Implies (M.rootComparison certificate observe profile)
         (equilibriumComparison (M.subgameForm certificate root) (PMF.pure profile)
           (DeviationScheme.unilateralConstant _) observe) := by
+  let _ : Fintype Observation := Fintype.ofFinite _
   simp only [IncentiveComparison.Implies, not_forall] at hfails
   obtain ⟨utility, hroot, who, ⟨⟨root, proper⟩, deviation⟩, hfail⟩ := hfails
   have hunreached : M.rootReach certificate profile root = 0 := by

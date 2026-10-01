@@ -167,11 +167,12 @@ def IsLocalizedIn (fine coarse : IncentiveComparison Outcome) (weight : ℝ) : P
 
 /-- A comparison localized with positive weight holds exactly when its
 localizing comparison does. -/
-theorem IsLocalizedIn.holds_iff [Fintype Outcome] {fine coarse : IncentiveComparison Outcome}
+theorem IsLocalizedIn.holds_iff [Finite Outcome] {fine coarse : IncentiveComparison Outcome}
     {weight : ℝ}
     (hlocal : fine.IsLocalizedIn coarse weight) (hpositive : 0 < weight)
     (utility : Outcome → ℝ) :
     coarse.Holds utility ↔ fine.Holds utility := by
+  let _ : Fintype Outcome := Fintype.ofFinite _
   rw [holds_iff_inner, holds_iff_inner, hlocal, inner_smul_left]
   simp only [conj_trivial]
   exact ⟨fun h => nonneg_of_mul_nonneg_right (by linarith) hpositive,
@@ -202,12 +203,13 @@ variable {Fine : ι → Type us} {Coarse : ι → Type ut}
 /-- **Positive localization gives implication.** When every fine comparison is
 localized with positive weight in some comparison of the same unit's coarse
 family, the coarse family implies the fine one. -/
-theorem implies_of_localized [Fintype Outcome]
+theorem implies_of_localized [Finite Outcome]
     (fine : (who : ι) → Fine who → IncentiveComparison Outcome)
     (coarse : (who : ι) → Coarse who → IncentiveComparison Outcome)
     (hlocal : ∀ who deviation, ∃ (localizing : Coarse who) (weight : ℝ), 0 < weight ∧
       (fine who deviation).IsLocalizedIn (coarse who localizing) weight) :
     Implies coarse fine := by
+  let _ : Fintype Outcome := Fintype.ofFinite _
   intro utility respected who deviation
   obtain ⟨localizing, weight, hpositive, hlocalized⟩ := hlocal who deviation
   exact (hlocalized.holds_iff hpositive _).1 (respected who localizing)

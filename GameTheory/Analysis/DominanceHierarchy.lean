@@ -216,7 +216,7 @@ theorem revealing_equivalence [Fintype Observation]
 /-- **Descent fails through the revealing form.** Compiling a profile into the
 revealing form preserves dominance for every utility, and preserves Nash exactly
 when Nash already implies dominance in the base game. -/
-theorem revealing_preservation [Fintype Observation]
+theorem revealing_preservation [Finite Observation]
     (hfull : ∀ selected, selector selected ≠ 0) (profile : Profile F.sig)
     (observe : F.sig.Outcome → Observation) :
     IncentiveComparison.Implies (F.dominanceComparison profile observe)
@@ -230,6 +230,7 @@ theorem revealing_preservation [Fintype Observation]
           (equilibriumComparison F (PMF.pure profile) (DeviationScheme.unilateralConstant F.sig)
             observe)
           (F.dominanceComparison profile observe)) := by
+  let _ : Fintype Observation := Fintype.ofFinite _
   obtain ⟨hdominance, hrevealed, hnash⟩ := F.revealing_equivalence selector hfull profile observe
   exact ⟨hdominance, ⟨fun h => h.trans hnash, fun h => (h.trans hdominance).trans hrevealed⟩⟩
 

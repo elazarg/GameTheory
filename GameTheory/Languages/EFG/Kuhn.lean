@@ -248,7 +248,7 @@ theorem isNash_toMixed_of_isNash_behavioral
 canonical conditional behavioral reading. Arbitrary behavioral deviations are
 covered by unilateral realization with the nondeviators fixed. -/
 theorem isNash_toBehavioral_of_isNash_mixed
-    [∀ i, Fintype (G.information.InfoState i)]
+    [∀ i, Finite (G.information.InfoState i)]
     [∀ i, DecidableEq (G.information.InfoState i)]
     (hrecall : G.information.PerfectRecall)
     (utility : G.History → ι → ℝ)
@@ -258,6 +258,7 @@ theorem isNash_toBehavioral_of_isNash_mixed
     IsNash (G.toBehavioralGameForm horizon) (euPreference utility)
       (fun i => InformationModel.MixedPolicy.toBehavioral
         (M := G.information) (mixed i)) := by
+  let _ : ∀ i, Fintype (G.information.InfoState i) := fun _ => Fintype.ofFinite _
   rw [G.isNash_toBehavioralGameForm_iff]
   rw [G.isNash_mixed_toGameForm_iff] at hnash
   intro who replacement

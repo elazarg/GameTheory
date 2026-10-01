@@ -465,7 +465,7 @@ consistent assessment whose deviator information is closed below every site,
 a utility satisfying every behavioral Nash comparison and every
 sequential-rationality comparison at sites of mass zero satisfies every
 sequential-rationality comparison. -/
-theorem holds_assessment_of_root [Fintype Observation] (certificate : E.WellFoundedHistories)
+theorem holds_assessment_of_root [Finite Observation] (certificate : E.WellFoundedHistories)
     (observe : E.History → Observation)
     (A : M.BehavioralAssessment) (hanti : M.DecisionInformationAntichain)
     (hclosed : ∀ who (site : M.InformationSite who), M.IsClosedBelow site)
@@ -480,6 +480,7 @@ theorem holds_assessment_of_root [Fintype Observation] (certificate : E.WellFoun
     ∀ who deviation,
       (M.assessmentComparison certificate observe A who deviation).Holds
         (utility · who) := by
+  let _ : Fintype Observation := Fintype.ofFinite _
   rintro who ⟨site, policy⟩
   by_cases hzero : M.informationMass A.strategy who site = 0
   · exact hunreached who (site, policy) hzero

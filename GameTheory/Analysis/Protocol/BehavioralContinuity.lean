@@ -110,8 +110,9 @@ theorem continuous_informationMass
     (hprofile : ∀ i info choice,
       Continuous fun x => ((profile x i info choice).toReal))
     (i : ι) (site : M.InformationSite i)
-    [Fintype (M.InformationHistory i site.1)] :
+    [Finite (M.InformationHistory i site.1)] :
     Continuous fun x => (M.informationMass (profile x) i site).toReal := by
+  let _ : Fintype (M.InformationHistory i site.1) := Fintype.ofFinite _
   classical
   have hsum :
       (fun x => (M.informationMass (profile x) i site).toReal) =
@@ -140,12 +141,13 @@ theorem continuous_bayesBelief_prob
     (hprofile : ∀ i info choice,
       Continuous fun x => ((profile x i info choice).toReal))
     (i : ι) (site : M.InformationSite i)
-    [Fintype (M.InformationHistory i site.1)]
+    [Finite (M.InformationHistory i site.1)]
     (hantichain : site.IsHistoryAntichain)
     (hmass : ∀ x, 0 < M.informationMass (profile x) i site)
     (history : M.InformationHistory i site.1) :
     Continuous fun x =>
       (M.bayesBelief (profile x) i site hantichain (hmass x) history).toReal := by
+  let _ : Fintype (M.InformationHistory i site.1) := Fintype.ofFinite _
   simp_rw [M.bayesBelief_apply, ENNReal.toReal_div]
   exact (M.continuous_historyReachProbability transitions profile hprofile history.1).div
     (M.continuous_informationMass transitions profile hprofile i site)
@@ -182,7 +184,7 @@ theorem continuous_truncatedContinuationContext_value
       Continuous fun x =>
         (((assessment x).strategy i info choice).toReal))
     (who : ι) (site : M.InformationSite who)
-    [Fintype (M.InformationHistory who site.1)]
+    [Finite (M.InformationHistory who site.1)]
     (hbelief : ∀ history,
       Continuous fun x => (((assessment x).belief who site history).toReal))
     (alternative : X → M.BehavioralPolicy who)
@@ -191,6 +193,7 @@ theorem continuous_truncatedContinuationContext_value
     (payoff : E.History → ℝ) (fuel : ℕ) :
     Continuous fun x =>
       ((assessment x).truncatedContinuationContext site payoff fuel).value (alternative x) := by
+  let _ : Fintype (M.InformationHistory who site.1) := Fintype.ofFinite _
   let _ := Fintype.ofFinite E.History
   simp only [Context.value, BehavioralAssessment.truncatedContinuationContext]
   apply continuous_pmf_expect

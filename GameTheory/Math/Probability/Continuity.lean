@@ -15,23 +15,25 @@ variable {X α β : Type*} [TopologicalSpace X]
 
 /-- Expectation is jointly continuous in finite-carrier masses and payoff
 coordinates. -/
-theorem continuous_pmf_expect [Fintype α]
+theorem continuous_pmf_expect [Finite α]
     (law : X → PMF α) (observable : X → α → ℝ)
     (hlaw : ∀ value, Continuous fun x => (law x value).toReal)
     (hobservable : ∀ value, Continuous fun x => observable x value) :
     Continuous fun x => expect (law x) (observable x) := by
+  let _ : Fintype α := Fintype.ofFinite _
   simp_rw [expect_eq_sum]
   exact continuous_finsetSum _ fun value _ =>
     (hlaw value).mul (hobservable value)
 
 /-- A finite-source PMF bind has continuously varying real mass at each
 target atom when source and kernel masses vary continuously. -/
-theorem continuous_pmf_bind_mass [Fintype α]
+theorem continuous_pmf_bind_mass [Finite α]
     (law : X → PMF α) (kernel : X → α → PMF β)
     (hlaw : ∀ source, Continuous fun x => (law x source).toReal)
     (hkernel : ∀ source value, Continuous fun x => (kernel x source value).toReal)
     (value : β) :
     Continuous fun x => ((law x).bind (kernel x) value).toReal := by
+  let _ : Fintype α := Fintype.ofFinite _
   have hformula (x : X) :
       ((law x).bind (kernel x) value).toReal =
         ∑ source : α, (law x source).toReal * (kernel x source value).toReal := by

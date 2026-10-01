@@ -249,10 +249,11 @@ theorem exists_isPerturbedEq [∀ who, Finite (F.sig.Strategy who)]
 /-- **Selten's existence theorem.** Every game with finitely many players and
 finite nonempty strategy sets, and with integrable pure play, has a
 trembling-hand perfect equilibrium. -/
-theorem exists_isTremblingHandPerfect [∀ who, Fintype (F.sig.Strategy who)]
+theorem exists_isTremblingHandPerfect [∀ who, Finite (F.sig.Strategy who)]
     [∀ who, Nonempty (F.sig.Strategy who)]
     (utility : F.sig.Outcome → ι → ℝ) (integrable : F.HasIntegrableUtility utility) :
     ∃ profile : Profile F.sig.mixed, F.IsTremblingHandPerfect (euPreference utility) profile := by
+  let _ : ∀ who, Fintype (F.sig.Strategy who) := fun _ => Fintype.ofFinite _
   let weight (n : ℕ) : ℝ := 1 / ((n : ℝ) + 2)
   have positive (n : ℕ) : 0 < weight n := by
     dsimp only [weight]

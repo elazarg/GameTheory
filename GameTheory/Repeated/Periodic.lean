@@ -285,7 +285,7 @@ theorem exists_discountFactor_threshold_weighted_cycleAverage
 
 /-- Combine finitely many discount thresholds into one. -/
 theorem exists_common_discountFactor_threshold
-    {α : Type*} [Fintype α] {property : α → ℝ → Prop}
+    {α : Type*} [Finite α] {property : α → ℝ → Prop}
     (hproperty : ∀ a : α, ∃ threshold : ℝ,
       0 ≤ threshold ∧ threshold < 1 ∧
         ∀ discount : ℝ, threshold < discount → discount < 1 →
@@ -293,6 +293,7 @@ theorem exists_common_discountFactor_threshold
     ∃ threshold : ℝ, 0 ≤ threshold ∧ threshold < 1 ∧
       ∀ discount : ℝ, threshold < discount → discount < 1 →
         ∀ a : α, property a discount := by
+  let _ : Fintype α := Fintype.ofFinite _
   classical
   choose candidate hc0 hc1 hc using hproperty
   by_cases hnonempty : (Finset.univ : Finset α).Nonempty
@@ -347,7 +348,7 @@ theorem exists_discountFactor_threshold_periodicContinuation
 
 /-- One threshold works for every player and every phase of a finite cycle. -/
 theorem exists_discountFactor_threshold_periodicAllContinuations
-    (G : UtilityGame ι) [Fintype ι]
+    (G : UtilityGame ι) [Finite ι]
     {n : ℕ} [NeZero n] (cycle : Fin n → Profile G.form.sig)
     {ε : ℝ}
     (hε : 0 < ε) :
@@ -361,6 +362,7 @@ theorem exists_discountFactor_threshold_periodicAllContinuations
                 hdiscount0
                 hdiscount1 cycle start who) -
             G.cycleAveragePayoff cycle who| < ε := by
+  let _ : Fintype ι := Fintype.ofFinite _
   let phase := ι × Fin n
   let property : phase → ℝ → Prop := fun a discount =>
     ∀ (hdiscount0 : 0 ≤ discount) (hdiscount1 : discount < 1),
