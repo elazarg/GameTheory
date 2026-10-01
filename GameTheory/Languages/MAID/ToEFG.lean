@@ -853,6 +853,14 @@ theorem execution_singleMover
   exact GameTheory.Languages.MAID.NodeKind.decision.inj
     (hfirstKind.symm.trans hsecondKind)
 
+/-- At most one decision owner moves at each compiled stage, so behavioral play
+of the compiled game needs no finiteness of the player set. -/
+instance execution_finiteMovers [DecidableEq Player] [DecidableEq Node]
+    (semantics : GameTheory.Languages.MAID.Semantics diagram) :
+    (execution topological semantics).FiniteMovers :=
+  ExecutionProtocol.FiniteMovers.of_subsingleton _ fun state _ hfirst _ hsecond =>
+    execution_singleMover topological semantics state hfirst hsecond
+
 /-- The compiled extensive-form game, with its tree-shape and single-mover
 certificates. -/
 @[reducible]

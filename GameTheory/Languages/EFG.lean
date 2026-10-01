@@ -80,6 +80,12 @@ theorem active_eq {state : G.execution.State} {first second : ι}
     first = second :=
   G.singleMover state hfirst hsecond
 
+/-- At most one player moves at each EFG state, so behavioral play needs no
+finiteness of the player set. -/
+instance finiteMovers : G.execution.FiniteMovers :=
+  ExecutionProtocol.FiniteMovers.of_subsingleton _ fun _ _ hfirst _ hsecond =>
+    G.active_eq hfirst hsecond
+
 end Game
 
 end GameTheory.Languages.EFG

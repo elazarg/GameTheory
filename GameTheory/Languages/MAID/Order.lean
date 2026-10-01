@@ -527,7 +527,7 @@ theorem serialRun_topological_order_independent
 /-- The mapped behavioral product of the compiled EFG is the source serial
 joint law for arbitrary finite source-player carriers. -/
 theorem behavioralJoint_eq_serialJointLaw
-    [Fintype Player] [DecidableEq Player] [DecidableEq Node]
+    [DecidableEq Player] [DecidableEq Node]
     (topological :
       GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
@@ -649,7 +649,7 @@ theorem behavioralJoint_eq_serialJointLaw
 /-- One actual behavioral step of the compiled EFG is one serialized source
 step for arbitrary finite source-player carriers. -/
 theorem behavioralJoint_bind_transition
-    [Fintype Player] [DecidableEq Player] [DecidableEq Node]
+    [DecidableEq Player] [DecidableEq Node]
     (topological :
       GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
@@ -673,7 +673,7 @@ theorem behavioralJoint_bind_transition
 /-- Forgetting histories from the compiled behavioral runner yields the
 serialized stage runner for arbitrary finite source-player carriers. -/
 theorem map_state_runBehavioralFrom_eq_serialRun
-    [Fintype Player] [DecidableEq Player] [DecidableEq Node]
+    [DecidableEq Player] [DecidableEq Node]
     (topological :
       GameTheory.Math.DAG.TopologicalOrder diagram.parents)
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
@@ -743,7 +743,7 @@ theorem map_state_runBehavioralFrom_eq_serialRun
 /-- The actual compiled-EFG behavioral assignment law is independent of the
 supplied topological order for arbitrary finite source-player carriers. -/
 theorem behavioralRun_topological_order_independent
-    [Fintype Player] [DecidableEq Player] [DecidableEq Node]
+    [DecidableEq Player] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (policy : GameTheory.Languages.MAID.Policy diagram)
     (first second :

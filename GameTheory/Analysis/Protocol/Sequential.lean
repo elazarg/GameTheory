@@ -121,14 +121,14 @@ theorem BehavioralAssessment.isSequentialEquilibriumFor_iff
 /-- Sequential equilibrium: sequential rationality on terminal play together
 with Kreps-Wilson consistency. -/
 def BehavioralAssessment.IsSequentialEquilibrium
-    [Fintype ι] [DecidableEq ι] (A : M.BehavioralAssessment)
+    [E.FiniteMovers] [DecidableEq ι] (A : M.BehavioralAssessment)
     (hantichain : M.DecisionInformationAntichain)
     (certificate : E.WellFoundedHistories) (payoff : ι → E.History → ℝ) : Prop :=
   A.IsSequentialEquilibriumFor hantichain fun i site =>
     A.continuationContext certificate site (payoff i)
 
 theorem BehavioralAssessment.isSequentialEquilibrium_iff
-    [Fintype ι] [DecidableEq ι] (A : M.BehavioralAssessment)
+    [E.FiniteMovers] [DecidableEq ι] (A : M.BehavioralAssessment)
     (hantichain : M.DecisionInformationAntichain)
     (certificate : E.WellFoundedHistories) (payoff : ι → E.History → ℝ) :
     A.IsSequentialEquilibrium hantichain certificate payoff ↔

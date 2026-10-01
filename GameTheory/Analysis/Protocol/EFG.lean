@@ -24,7 +24,6 @@ namespace Game
 /-- Generic Kreps-Wilson consistency for an EFG assessment. -/
 def IsSequentiallyConsistent
     (G : Game ι)
-    [Fintype ι]
     (hantichain : G.information.DecisionInformationAntichain)
     (assessment : G.information.BehavioralAssessment) : Prop :=
   assessment.IsSequentiallyConsistent hantichain
@@ -33,7 +32,7 @@ def IsSequentiallyConsistent
 terminal play, specialized to the game's information model. -/
 def IsSequentialEquilibrium
     (G : Game ι)
-    [Fintype ι] [DecidableEq ι]
+    [DecidableEq ι]
     (hantichain : G.information.DecisionInformationAntichain)
     (assessment : G.information.BehavioralAssessment)
     (certificate : G.execution.WellFoundedHistories)
@@ -44,7 +43,7 @@ def IsSequentialEquilibrium
 and generic Kreps-Wilson consistency. -/
 theorem isSequentialEquilibrium_iff
     (G : Game ι)
-    [Fintype ι] [DecidableEq ι]
+    [DecidableEq ι]
     (hantichain : G.information.DecisionInformationAntichain)
     (assessment : G.information.BehavioralAssessment)
     (certificate : G.execution.WellFoundedHistories)

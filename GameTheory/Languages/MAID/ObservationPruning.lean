@@ -164,7 +164,7 @@ theorem reducedNative_play_expandPolicyTo (fine coarse : Pruning diagram)
 def reducedCompiledGameForm (pruning : Pruning diagram)
     (topological :
       GameTheory.Math.DAG.TopologicalOrder diagram.parents)
-    [Fintype Player] [DecidableEq Player]
+    [DecidableEq Player]
     [DecidableEq Node] (semantics : Semantics diagram) : GameForm Player where
   sig := reducedBehavioralSignature pruning
   play policy :=
@@ -195,7 +195,7 @@ theorem reducedNative_play_eq_reducedCompiled_play
     (pruning : Pruning diagram)
     (topological :
       GameTheory.Math.DAG.TopologicalOrder diagram.parents)
-    [Fintype Player] [DecidableEq Player]
+    [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : ReducedPolicy pruning) :
     (pruning.reducedNativeGameForm semantics).play policy =
@@ -220,7 +220,7 @@ theorem compiled_play_eq_reducedCompiled_play_of_expands
     (pruning : Pruning diagram)
     (topological :
       GameTheory.Math.DAG.TopologicalOrder diagram.parents)
-    [Fintype Player] [DecidableEq Player]
+    [DecidableEq Player]
     [DecidableEq Node] (semantics : Semantics diagram)
     (full : Policy diagram) (reduced : ReducedPolicy pruning)
     (hexpands : pruning.expandPolicy reduced = full) :
@@ -436,7 +436,7 @@ theorem isNash_reducedNative_iff_reducedCompiled
     (pruning : Pruning diagram)
     (topological :
       GameTheory.Math.DAG.TopologicalOrder diagram.parents)
-    [Fintype Player] [DecidableEq Player]
+    [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : ReducedPolicy pruning) :
     IsNash (pruning.reducedNativeGameForm semantics)
@@ -473,7 +473,7 @@ theorem isNash_expanded_iff_reducedCompiled_of_covers
     (pruning : Pruning diagram)
     (topological :
       GameTheory.Math.DAG.TopologicalOrder diagram.parents)
-    [Fintype Player] [DecidableEq Player]
+    [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
     (semantics : Semantics diagram) (policy : ReducedPolicy pruning)
     (hcover : pruning.CoversFullDeviationsAt semantics policy) :

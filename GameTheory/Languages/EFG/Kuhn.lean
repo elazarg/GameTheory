@@ -41,8 +41,6 @@ abbrev MixedPlan (who : ι) :=
 abbrev behavioralSignature : GameSignature ι :=
   G.information.behavioralSignature
 
-variable [Fintype ι]
-
 /-- Present behavioral EFG plans through the canonical behavioral runner. -/
 @[reducible]
 def toBehavioralGameForm (horizon : ℕ) : GameForm ι :=
@@ -80,6 +78,8 @@ theorem isNash_toBehavioralGameForm_iff
   rw [isNash_iff, G.toBehavioralGameForm_play]
   simp only [euPreference_apply]
 
+variable [Fintype ι]
+
 /-- A player's mixed strategy may be read behaviorally and redrawn as mixed
 without changing the history law against the other players' fixed mixed
 strategies. This EFG-facing theorem specializes the protocol-level unilateral
@@ -100,6 +100,8 @@ theorem kuhn_mixed_roundTrip_update
     hrecall mixed who replacement horizon
 
 end Unilateral
+
+variable [Fintype ι]
 
 /-- **Behavioral-to-mixed Kuhn direction.** Predrawing the finitely many local
 choices exposed by this bounded behavioral run gives a mixed contingent-plan
