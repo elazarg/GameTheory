@@ -61,7 +61,7 @@ theorem coarse_holds (who : Bool) (replacement : Fin 3) :
   simp only [equilibriumComparison, DeviationScheme.unilateralConstant_apply, device,
     PMF.map_comp, outcomeLaw_map, Function.comp_def]
   rw [expect_uniform_map, expect_uniform_map]
-  cases who <;> fin_cases replacement <;> simp [utility, Profile.update, Function.update] <;>
+  cases who <;> fin_cases replacement <;> simp [utility, Profile.update_of_ne] <;>
     norm_num
 
 theorem correlated_fails :
@@ -72,7 +72,7 @@ theorem correlated_fails :
   simp only [equilibriumComparison, DeviationScheme.recommendation_apply, device,
     PMF.map_comp, outcomeLaw_map, Function.comp_def]
   rw [expect_uniform_map, expect_uniform_map]
-  simp [utility, Profile.update, Function.update]
+  simp [utility, Profile.update_of_ne]
   norm_num
 
 /-- Every recommendation has positive probability for every player. -/

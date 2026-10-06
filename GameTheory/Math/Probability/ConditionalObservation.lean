@@ -142,11 +142,12 @@ theorem conditional_observation_kernel_recovered (prior : PMF State)
     (prior.bind fun state => (noise (observe state)).map fun signal => (state, signal))
     (fun pair => (observe pair.1, pair.2)) Prod.snd (observed, extra) extra (by
       intro pair member
-      obtain ⟨state, stateSupport, member⟩ :=
-        Set.mem_iUnion₂.mp (PMF.support_bind .. ▸ member)
-      obtain ⟨signal, signalSupport, rfl⟩ := PMF.support_map .. ▸ member
+      rw [PMF.support_bind] at member
+      obtain ⟨state, stateSupport, member⟩ := Set.mem_iUnion₂.mp member
+      rw [PMF.support_map] at member
+      obtain ⟨signal, signalSupport, rfl⟩ := member
       exact ⟨fun equal => (Prod.mk.inj equal).2, fun equal =>
-        Prod.ext (recovers state stateSupport (equal ▸ signalSupport)) equal⟩)
+        Prod.ext (recovers state stateSupport (by rw [← equal]; exact signalSupport)) equal⟩)
   rw [conditioning] at ordinary
   exact ordinary
 
@@ -224,8 +225,10 @@ theorem exists_updated_observation_kernel
     (noise (observe pair.1)).bind (channel pair.1 pair.2)
   have supported (pair : State × Action) (member : pair ∈ pairs.support) :
       pair.1 ∈ prior.support ∧ pair.2 ∈ (choice pair.1).support := by
-    obtain ⟨state, stateSupport, member⟩ := Set.mem_iUnion₂.mp (PMF.support_bind .. ▸ member)
-    obtain ⟨action, actionSupport, same⟩ := PMF.support_map .. ▸ member
+    rw [PMF.support_bind] at member
+    obtain ⟨state, stateSupport, member⟩ := Set.mem_iUnion₂.mp member
+    rw [PMF.support_map] at member
+    obtain ⟨action, actionSupport, same⟩ := member
     cases same
     exact ⟨stateSupport, actionSupport⟩
   have same (left : State × Action) (leftSupport : left ∈ pairs.support)
@@ -341,9 +344,10 @@ theorem exists_updated_observation_kernel_of_readout
       apply bind_eq_of_map_eq law joint (fun point => (state point, read point)) id
         (factor.trans (PMF.map_id joint).symm)
       intro point pointSupport pair pairSupport equal
-      obtain ⟨source, sourceSupport, member⟩ :=
-        Set.mem_iUnion₂.mp (PMF.support_bind .. ▸ pairSupport)
-      obtain ⟨extra, extraSupport, pairEq⟩ := PMF.support_map .. ▸ member
+      rw [PMF.support_bind] at pairSupport
+      obtain ⟨source, sourceSupport, member⟩ := Set.mem_iUnion₂.mp pairSupport
+      rw [PMF.support_map] at member
+      obtain ⟨extra, extraSupport, pairEq⟩ := member
       cases pairEq
       have sourceEq : state point = source := (Prod.mk.inj equal).1
       have extraEq : read point = extra := (Prod.mk.inj equal).2
@@ -387,7 +391,8 @@ theorem map_fiberPosterior_readout {A B Info : Type*} (law : PMF A)
     (fiberPosterior law (observe ∘ read) observed).map read =
       fiberPosterior (law.map read) observe observed := by
   classical
-  obtain ⟨point, supported, equal⟩ := PMF.support_map .. ▸ present
+  rw [PMF.support_map] at present
+  obtain ⟨point, supported, equal⟩ := present
   have originalMeets : ∃ a ∈ {a | (observe ∘ read) a = observed}, a ∈ law.support :=
     ⟨point, equal, supported⟩
   have imageMeets : ∃ b ∈ {b | observe b = observed}, b ∈ (law.map read).support := by
@@ -410,7 +415,7 @@ theorem map_fiberPosterior_readout {A B Info : Type*} (law : PMF A)
       ext point
       simp only [Set.mem_inter_iff, Set.mem_preimage, Set.mem_singleton_iff, Set.mem_ofPred_eq,
         Function.comp_apply]
-      exact ⟨And.left, fun equal => ⟨equal, equal ▸ same⟩⟩
+      exact ⟨And.left, fun equal => ⟨equal, by rw [equal]; exact same⟩⟩
     rw [Set.indicator_of_mem inside, massMap, fiber]
   · have outside : value ∉ {b | observe b = observed} := same
     have empty : read ⁻¹' {value} ∩ {a | (observe ∘ read) a = observed} = ∅ := by
@@ -418,7 +423,7 @@ theorem map_fiberPosterior_readout {A B Info : Type*} (law : PMF A)
       simp only [Set.mem_inter_iff, Set.mem_preimage, Set.mem_singleton_iff, Set.mem_ofPred_eq,
         Set.mem_empty_iff_false, iff_false, not_and, Function.comp_apply]
       intro projected matching
-      exact same (projected ▸ matching)
+      exact same (by rw [← projected]; exact matching)
     rw [Set.indicator_of_notMem outside, empty, MeasureTheory.measure_empty, zero_mul]
 
 /-- **Retraction.** Conditioning an expanded state and retracting it recovers
@@ -453,8 +458,11 @@ theorem conditional_retraction {Source Native SourceInfo NativeInfo : Type*}
     apply map_congr_on_support _
     intro a member
     exact Prod.ext (restores s supported a member) rfl
-  obtain ⟨a, aSupport, aView⟩ := PMF.support_map .. ▸ present
-  obtain ⟨s, sSupport, member⟩ := Set.mem_iUnion₂.mp (PMF.support_bind .. ▸ aSupport)
+  rw [PMF.support_map] at present
+  obtain ⟨a, aSupport, aView⟩ := present
+  have sourceSupport := aSupport
+  rw [PMF.support_bind] at sourceSupport
+  obtain ⟨s, sSupport, member⟩ := Set.mem_iUnion₂.mp sourceSupport
   have sourceView : sourceObserve s = project observed := by
     rw [← restores s sSupport a member, commutes, aView]
   have noisePresent : ∃ s ∈ prior.support,

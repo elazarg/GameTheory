@@ -238,31 +238,37 @@ theorem finitaryProduct_map {B : ι → Type uB} (laws : ∀ i, PMF (A i))
       supportPoint_pure]
 
 /-- Drawing one coordinate first and fixing it as a point mass gives the same
-product, when that coordinate is drawn or its law is a point mass. -/
-theorem finitaryProduct_update_bind [DecidableEq ι] (laws : ∀ i, PMF (A i))
+product, when that coordinate is drawn or its law is a point mass. Every other
+coordinate keeps its law independently of the draw. -/
+theorem finitaryProduct_bind_of_coordinate (laws : ∀ i, PMF (A i))
     {moving : Finset ι} {who : ι} (law : PMF (A who))
+    (pureLaws : A who → ∀ i, PMF (A i))
+    (hselected : laws who = law)
+    (hpure : ∀ choice, pureLaws choice who = PMF.pure choice)
+    (hother : ∀ choice i, i ≠ who → pureLaws choice i = laws i)
     (hwho : who ∈ moving ∨ IsPointMass law) :
-    finitaryProduct (Function.update laws who law) moving =
-      law.bind fun choice =>
-        finitaryProduct (Function.update laws who (PMF.pure choice)) moving := by
+    finitaryProduct laws moving =
+      law.bind fun choice => finitaryProduct (pureLaws choice) moving := by
   classical
   rcases hwho with hwho | ⟨atom, rfl⟩
   · ext assignment
     rw [PMF.bind_apply]
-    have hfixed (μ : PMF (A who)) :
-        (∀ i ∉ moving, assignment i = supportPoint (Function.update laws who μ i)) ↔
+    have hfixed (choice : A who) :
+        (∀ i ∉ moving, assignment i = supportPoint (pureLaws choice i)) ↔
           ∀ i ∉ moving, assignment i = supportPoint (laws i) := by
       refine forall₂_congr fun i hi => ?_
-      rw [Function.update_of_ne (ne_of_mem_of_not_mem hwho hi).symm]
-    have hproduct (μ : PMF (A who)) :
-        ∏ i ∈ moving, Function.update laws who μ i (assignment i) =
-          μ (assignment who) * ∏ i ∈ moving.erase who, laws i (assignment i) := by
-      rw [← Finset.mul_prod_erase moving _ hwho, Function.update_self]
+      rw [hother choice i (ne_of_mem_of_not_mem hwho hi).symm]
+    have hproduct (choice : A who) :
+        ∏ i ∈ moving, pureLaws choice i (assignment i) =
+          PMF.pure choice (assignment who) *
+            ∏ i ∈ moving.erase who, laws i (assignment i) := by
+      rw [← Finset.mul_prod_erase moving _ hwho, hpure]
       congr 1
       apply Finset.prod_congr rfl
       intro i hi
-      rw [Function.update_of_ne (Finset.ne_of_mem_erase hi)]
+      rw [hother choice i (Finset.ne_of_mem_erase hi)]
     simp only [finitaryProduct_apply, hfixed, hproduct]
+    rw [← Finset.mul_prod_erase moving _ hwho, hselected]
     split_ifs
     · rw [tsum_eq_single (assignment who)]
       · simp [PMF.pure_apply]
@@ -270,6 +276,12 @@ theorem finitaryProduct_update_bind [DecidableEq ι] (laws : ∀ i, PMF (A i))
         simp [PMF.pure_apply, Ne.symm hchoice]
     · simp
   · rw [PMF.pure_bind]
+    congr 1
+    funext i
+    by_cases hi : i = who
+    · subst i
+      rw [hselected, hpure]
+    · exact (hother atom i hi).symm
 
 /-- A drawn coordinate, or a point-mass one, keeps its own law as marginal. -/
 theorem finitaryProduct_map_eval (laws : ∀ i, PMF (A i)) (moving : Finset ι)

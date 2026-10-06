@@ -67,11 +67,11 @@ theorem historyReaches_comparable {first second final : E.History}
   · obtain ⟨ancestor, fuel, hlength, hancestor⟩ := E.exists_ancestor_of_le second hle
     have hsame := ReachesWithin.eq_start_of_same_length hfirstReach
       (hancestor.trans hsecondReach) hlength.symm
-    exact Or.inl ⟨fuel, hsame ▸ hancestor⟩
+    exact Or.inl ⟨fuel, by simpa only [← hsame] using hancestor⟩
   · obtain ⟨ancestor, fuel, hlength, hancestor⟩ := E.exists_ancestor_of_le first hle
     have hsame := ReachesWithin.eq_start_of_same_length hsecondReach
       (hancestor.trans hfirstReach) hlength.symm
-    exact Or.inr ⟨fuel, hsame ▸ hancestor⟩
+    exact Or.inr ⟨fuel, by simpa only [← hsame] using hancestor⟩
 
 /-- Every terminal history in the support of a randomized law from a history is
 reached from it. -/
@@ -198,7 +198,8 @@ theorem randomizedBackwardLaw_add_coneMass (certificate : E.WellFoundedHistories
             by_cases hisRoot : IsRoot child
             · exact Or.inl hisRoot
             · refine Or.inr fun root hroot hreach => ?_
-              have hne : child ≠ root := fun hsame => hisRoot (hsame ▸ hroot)
+              have hne : child ≠ root := fun hsame => hisRoot (by
+                simpa only [← hsame] using hroot)
               exact houter root hroot (historyReaches_of_extend hreach hne)
           exact ih child ⟨drawn.1, drawn.2, hmem⟩ hchild final
 
@@ -916,8 +917,9 @@ theorem holds_root_of_assessment [Fintype Observation] (certificate : E.WellFoun
       by_cases hzero : M.informationMass A.strategy who site = 0
       · have hnull (history : M.InformationHistory who site.1) : mass history.1 = 0 := by
           rw [hmassEq]
-          exact le_antisymm (hzero ▸ M.historyReachWeight_le_informationMass A site history)
-            bot_le
+          have upper := M.historyReachWeight_le_informationMass A site history
+          rw [hzero] at upper
+          exact le_antisymm upper bot_le
         simp [hnull]
       · have hpositive : 0 < M.informationMass A.strategy who site := pos_iff_ne_zero.2 hzero
         have hanti := hrecall.decisionInformationAntichain who site

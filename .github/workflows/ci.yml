@@ -58,6 +58,9 @@ jobs:
 
       # Source-level checks stay fast for local iteration. CI additionally
       # exercises the intentionally expensive compiler reachability probes.
+      - name: Verify architecture audit regression tests
+        run: python -m unittest discover -s scripts/tests -p test_architecture_audit.py
+
       - name: Verify Phase 1 architecture measurements
         run: ./scripts/phase1-audit.ps1 -VerifyExpected
 

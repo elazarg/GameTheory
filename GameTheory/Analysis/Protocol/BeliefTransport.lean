@@ -226,7 +226,9 @@ theorem bayesBelief_map_eq_filter (antichain : site.IsHistoryAntichain)
   · rw [Set.indicator_of_notMem (show history ∉ {history | M.infoOf who history.trace = site.1}
       from observed), zero_mul, PMF.apply_eq_zero_iff, PMF.support_map]
     rintro ⟨compatible, _, same⟩
-    exact observed (same ▸ compatible.2)
+    apply observed
+    rw [← same]
+    exact compatible.2
 
 end Depth
 

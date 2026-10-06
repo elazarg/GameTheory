@@ -71,21 +71,19 @@ theorem nash_preserved :
   have hsource := holds who alternative
   cases who <;> cases alternative <;>
     simp_all [equilibriumComparison, GameForm.outcomeLaw, PMF.pure_map, holds_pure,
-      truthful, Profile.update, Function.update]
+      truthful, Profile.update_of_ne]
 
 theorem source_dominant :
     ∀ who deviation,
       (source.dominanceComparison truthful id who deviation).Holds (utility · who) := by
   rintro who ⟨opponents, alternative⟩
   cases who <;> cases alternative <;>
-    simp [dominanceComparison, PMF.map_id, holds_pure, truthful, utility, Profile.update,
-      Function.update]
+    simp [dominanceComparison, PMF.map_id, holds_pure, truthful, utility, Profile.update_of_ne]
 
 theorem target_not_dominant :
     ¬ (target.dominanceComparison truthful id false (fun _ => true, false)).Holds
       (utility · false) := by
-  simp [dominanceComparison, PMF.map_id, holds_pure, truthful, utility, Profile.update,
-    Function.update]
+  simp [dominanceComparison, PMF.map_id, holds_pure, truthful, utility, Profile.update_of_ne]
 
 /-- **Truthfulness is not preserved**, although Nash is. -/
 theorem dominance_not_preserved :
@@ -102,7 +100,7 @@ theorem target_nash :
   intro who alternative
   cases who <;> cases alternative <;>
     simp [equilibriumComparison, GameForm.outcomeLaw, PMF.pure_map, holds_pure, truthful,
-      utility, Profile.update, Function.update]
+      utility, Profile.update_of_ne]
 
 theorem target_nash_not_implies_dominance :
     ¬ IncentiveComparison.Implies

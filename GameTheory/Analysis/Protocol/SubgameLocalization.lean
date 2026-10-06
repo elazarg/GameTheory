@@ -78,7 +78,7 @@ theorem historyReaches_of_extend {root history : E.History}
       .step joint isLegal realized (.refl 0 _)
     have hsame : root = ancestor :=
       ReachesWithin.eq_start_of_same_length hroot (hancestor.trans hone) hlength.symm
-    exact ⟨ancestorFuel, hsame ▸ hancestor⟩
+    exact ⟨ancestorFuel, by simpa only [← hsame] using hancestor⟩
   · exact absurd (hroot.eq_of_trace_length_eq (by omega)) hne
 
 /-- Every terminal history in the support of the law from a history is reached

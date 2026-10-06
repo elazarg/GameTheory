@@ -266,7 +266,10 @@ theorem IsExtensiveFormPerfect.exists_sequentialEquilibrium (hrecall : M.Decisio
         exact ENNReal.toReal_pos positive.ne' (ne_top_of_le_ne_top ENNReal.one_ne_top
           (M.informationMass_le_one _ i site (antichain i site)))
       rw [sequenceStrategy]
-      exact nonpos_of_mul_nonpos_right (identity ▸ sub_nonpos.mpr compared) massPositive
+      have nonpositive := sub_nonpos.mpr compared
+      set_option backward.isDefEq.respectTransparency false in
+      rw [identity] at nonpositive
+      exact nonpos_of_mul_nonpos_right nonpositive massPositive
     have value (replacement : ℕ → M.BehavioralPolicy i) (target : M.BehavioralPolicy i)
         (hreplacement : ∀ decision : M.InformationSite i,
           PMFConvergesPointwise (fun n => replacement n decision.1) (target decision.1)) :=

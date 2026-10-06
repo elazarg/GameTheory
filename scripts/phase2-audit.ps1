@@ -211,6 +211,24 @@ $RepresentationModules = @(
   'GameTheory/Math/Probability/Tightness.lean',
   'GameTheory/Math/Probability/TightnessTest.lean',
   'GameTheory/Math/Probability/Bounds.lean',
+  # Observation/conditioning identities compare native fiber and product masses.
+  'GameTheory/Math/Probability/ConditionalComparison.lean',
+  'GameTheory/Math/Probability/ConditionalObservation.lean',
+  'GameTheory/Math/Probability/ProductConditioning.lean',
+  # Extended expectations and domination own extended-real mass arithmetic.
+  'GameTheory/Math/Probability/ExtendedExpectation.lean',
+  'GameTheory/Math/Probability/Domination.lean',
+  # Finitely many random coordinates are assembled by native product masses.
+  'GameTheory/Math/Probability/FinitaryProduct.lean',
+  # Sample tests and statistical distance compare exact event/atom probabilities.
+  'GameTheory/Math/Probability/Indistinguishability.lean',
+  'GameTheory/Math/Probability/StatisticalCloseness.lean',
+  'GameTheory/Math/Probability/MeanComparison.lean',
+  'GameTheory/Math/Probability/SampleSum.lean',
+  'GameTheory/Math/Probability/RademacherWalk.lean',
+  'GameTheory/Math/Probability/SignBalance.lean',
+  # Uniform trembles identify the real floor of each atom's mass.
+  'GameTheory/Math/Probability/UniformTremble.lean',
   # Stopping margins are weighted by the actual event's real probability.
   'GameTheory/Math/Probability/SelectiveStopping.lean',
   # Finite online-learning vectors are converted to native PMF mass coordinates here.
@@ -222,13 +240,24 @@ $RepresentationModules = @(
   'GameTheory/Analysis/Approachability.lean',
   # Fink's finite fixed-point map uses real action-simplex coordinates.
   'GameTheory/Analysis/Stochastic/Fink.lean',
+  # Shapley continuation values are weighted by native transition probabilities.
+  'GameTheory/Analysis/Stochastic/Discounted.lean',
   # Incentive differences are the real vectors of two laws' atom-mass differences.
   'GameTheory/Analysis/IncentiveCone.lean',
   'GameTheory/Analysis/IncentiveConeTest.lean',
+  # Comparison-family localization and simulation match native law differences.
+  'GameTheory/Analysis/IncentiveHierarchy.lean',
+  'GameTheory/Analysis/IncentiveSimulation.lean',
+  'GameTheory/Analysis/BayesianHierarchy.lean',
+  'GameTheory/Analysis/DominanceHierarchy.lean',
   # Finite trembling-hand repairs normalize and compare local PMF mass coordinates.
   'GameTheory/Analysis/TremblingHand.lean',
   # Coordination-game separation compares exact Boolean tremble masses.
   'GameTheory/Analysis/TremblingHandTest.lean',
+  # Perturbed equilibrium reserves reference mass at every action.
+  'GameTheory/Analysis/PerturbedEquilibrium.lean',
+  # The separation fixture checks exact tremble masses for its three-action game.
+  'GameTheory/Analysis/TremblingHandBoundaryTest.lean',
   # Fictitious-play support limits compare empirical real mass coordinates.
   'GameTheory/Analysis/Learning.lean',
   # The alternating-play fixture bounds exact empirical-frequency errors.
@@ -245,6 +274,20 @@ $RepresentationModules = @(
   'GameTheory/Analysis/Protocol/CounterfactualDecomposition.lean',
   # Finite occupation identities use real coefficients of native history reach masses.
   'GameTheory/Analysis/Protocol/SequentialRationality.lean',
+  # Local/global incentive identities scale by actual site and subtree reach masses.
+  'GameTheory/Analysis/Protocol/InformationLocalization.lean',
+  'GameTheory/Analysis/Protocol/SubgameLocalization.lean',
+  'GameTheory/Analysis/Protocol/SequentialOneShot.lean',
+  'GameTheory/Analysis/Protocol/InformationLocalizationTest.lean',
+  # Belief transport and restriction completion control conditional reach masses.
+  'GameTheory/Analysis/Protocol/BeliefTransport.lean',
+  'GameTheory/Analysis/Protocol/RestrictionBeliefs.lean',
+  'GameTheory/Analysis/Protocol/RestrictionCompletion.lean',
+  'GameTheory/Analysis/Protocol/RestrictionDomination.lean',
+  # Agent perfection/completion sets explicit reference-law mass floors.
+  'GameTheory/Analysis/Protocol/ExtensiveFormPerfection.lean',
+  'GameTheory/Analysis/Protocol/AgentCompletion.lean',
+  'GameTheory/Analysis/Protocol/TremblingPlansTest.lean',
   # The Bayesian learning fixture computes exact chance and local-choice atom masses.
   'GameTheory/Analysis/Protocol/BayesianZeroSumLearningTest.lean',
   'GameTheory/Analysis/Protocol/BehavioralContinuity.lean',
@@ -291,12 +334,17 @@ $RepresentationModules = @(
   'GameTheory/Tests/PMFExtensions.lean',
   'GameTheory/Tests/PMFProbabilityLemmas.lean',
   'GameTheory/Tests/SelectiveStopping.lean',
+  # Divergent-expectation and rare-jackpot fixtures check exact native atom masses.
+  'GameTheory/Tests/InfiniteExpectation.lean',
+  'GameTheory/Analysis/PseudoNashExistenceTest.lean',
   # Finite separation fixture expands independent Boolean masses as polynomials.
   'GameTheory/Tests/Rationalizability.lean',
   'GameTheory/Protocol/HistoryEvents.lean',
   'GameTheory/Protocol/HistoryPathMass.lean',
   # Target-local realization compares native masses of finite policy cylinders.
   'GameTheory/Protocol/StrategicRealization.lean',
+  # Predrawn-policy conditioning carries each local uniform tremble's mass floor.
+  'GameTheory/Protocol/TremblingPlans.lean',
   'GameTheory/Protocol/PolicyMeasure.lean',
   'GameTheory/Protocol/BehavioralBayes.lean')
 $Phase1Prefix = 'GameTheory/Experimental/Phase1'
@@ -308,6 +356,8 @@ $RepresentationBoundary = @(
   'GameTheory/Experimental/PostArchitecture/PMFRestorationProbe.lean',
   'GameTheory/Experimental/PostArchitecture/PMFProductGate.lean',
   'GameTheory/Experimental/PostArchitecture/PMFStaticGate.lean',
+  # Mixture transfer compares the actual extended expectation of divergent losses.
+  'GameTheory/Experimental/PostArchitecture/PMFTransferGate.lean',
   'GameTheory/Experimental/PostArchitecture/PMFBackwardGate.lean',
   'GameTheory/Experimental/PostArchitecture/PMFRationalizabilityGate.lean',
   # Mechanism controls compare actual event masses and posterior coordinate tails.
@@ -379,6 +429,10 @@ $AlgorithmFiles = @(
   'GameTheory/Mechanism/Knapsack/Aggregate.lean',
   'GameTheory/Mechanism/Knapsack/Algorithm.lean',
   'GameTheory/Mechanism/Knapsack/ApproximationAlgorithm.lean')
+# D9 permits proof-local enumeration from Finite; executable algorithms must
+# consistently use their supplied enumeration. The library total is informational.
+Report 'ALGORITHM_FINTYPE_OF_FINITE' `
+  (Count-Pattern $AlgorithmFiles 'Fintype\.ofFinite')
 Report 'ALGORITHM_OPEN_CLASSICAL' `
   (Count-Pattern $AlgorithmFiles '(?<![A-Za-z0-9_])(open\s+Classical|classical|noncomputable)(?![A-Za-z0-9_])')
 Report 'SORRY_OR_ADMIT' `
@@ -1921,7 +1975,7 @@ if ($DeepReachability) {
   # Repeated remain unrelated and unreachable.
   $stochasticAnalysisInputs = @(
     'GameTheory.Stochastic.Game.shapleyOperator',
-    'GameTheory.Stochastic.Game.contractingWith_shapleyOperator',
+    'GameTheory.Stochastic.Game.contractingWith_boundedShapleyOperator',
     'GameTheory.Stochastic.Game.stationarySaddleProfile_isSaddlePoint',
     'GameTheory.Stochastic.Game.auxiliaryUtility_one_eq',
     'GameTheory.MatrixGame.abs_value_sub_le_of_entrywise_abs_le',
@@ -1988,7 +2042,7 @@ if ($VerifyExpected) {
     FIXED_POINT_IMPORTERS = 2
     UNBUCKETED_FILES = 0
     CARRIER_INSTANCES_NOT_REDUCIBLE = 0
-    FINTYPE_OF_FINITE = 0
+    ALGORITHM_FINTYPE_OF_FINITE = 0
     ALGORITHM_OPEN_CLASSICAL = 0
     SORRY_OR_ADMIT = 0
     CUSTOM_AXIOM = 0
@@ -2004,11 +2058,12 @@ if ($VerifyExpected) {
     STOCHASTIC_FORBIDDEN_IMPORTS = 0
     MATH_FORBIDDEN_IMPORTS = 0
     CONCEPTS_NOT_DEFINED_EXACTLY_ONCE = 0
-    # EXP-129: reviewed named PMF, event-mass, and finite-BN experiment owners.
-    REPRESENTATION_EXPERIMENT_BOUNDARY_FILES = 39
+    # Reviewed named PMF, event-mass, finite-BN, and mixture-transfer experiments.
+    REPRESENTATION_EXPERIMENT_BOUNDARY_FILES = 40
     WEIGHT_INTERNAL_TOKENS_OUTSIDE_OWNERS = 0
     TOPMF_OUTSIDE_OWNERS = 0
-    WEIGHT_INTERNAL_TOKENS_EXPERIMENT_BOUNDARY = 319
+    # Extended-expectation restoration adds seven tokens; transfer adds three.
+    WEIGHT_INTERNAL_TOKENS_EXPERIMENT_BOUNDARY = 329
     TOPMF_EXPERIMENT_BOUNDARY = 0
     VNM_WEIGHT_INTERNAL_TOKENS = 0
   }

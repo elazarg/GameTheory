@@ -71,7 +71,8 @@ theorem spliceAfter_eq_of_mem_ownPlay (hrecall : M.DecisionRecall)
     have hfresh := M.infoOf_not_mem_actedAt_of_decisionRecall hrecall profile who witness.1 hterm
       (InformationSite.active M site witness)
     rwa [witness.2, M.actedAt_eq_map_ownPlay] at hfresh
-  have hmem : entry ∈ M.ownPlay who witness.1.trace := hsame ▸ hentry
+  have hmem : entry ∈ M.ownPlay who witness.1.trace := by
+    simpa only [hsame] using hentry
   obtain ⟨ancestor, hinfo, hactive, hancestorTerm, fuel, hreach⟩ :=
     M.exists_decision_ancestor_of_mem_ownPlay who witness.1.trace hmem
   have hrecord : M.recordAt who entry.1 = M.ownPlay who ancestor.trace := by

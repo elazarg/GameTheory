@@ -45,34 +45,29 @@ theorem behavioralJoint_update_withLaw_eq_bind
             profile who (policy.commit info choice))
           trace hterm := by
   subst info
-  let current : (i : ι) → PMF (M.Choice i (M.infoOf i trace)) :=
-    fun i => profile i (M.infoOf i trace)
-  have hwithLaw :
-      (fun i => Profile.update (sig := M.behavioralSignature) profile who
-          (policy.withLaw (M.infoOf who trace) law) i (M.infoOf i trace)) =
-        Function.update current who law := by
-    funext i
-    by_cases hi : i = who
-    · subst i
-      rw [Profile.update_same, BehavioralPolicy.withLaw_self, Function.update_self]
-    · rw [Profile.update_of_ne _ _ hi, Function.update_of_ne hi]
-  have hcommit (choice : M.Choice who (M.infoOf who trace)) :
-      (fun i => Profile.update (sig := M.behavioralSignature) profile who
-          (policy.commit (M.infoOf who trace) choice) i (M.infoOf i trace)) =
-        Function.update current who (PMF.pure choice) := by
-    funext i
-    by_cases hi : i = who
-    · subst i
-      rw [Profile.update_same, BehavioralPolicy.commit_self, Function.update_self]
-    · rw [Profile.update_of_ne _ _ hi, Function.update_of_ne hi]
+  let installed : (i : ι) → PMF (M.Choice i (M.infoOf i trace)) :=
+    fun i => Profile.update (sig := M.behavioralSignature) profile who
+      (policy.withLaw (M.infoOf who trace) law) i (M.infoOf i trace)
+  let committed (choice : M.Choice who (M.infoOf who trace)) :
+      (i : ι) → PMF (M.Choice i (M.infoOf i trace)) :=
+    fun i => Profile.update (sig := M.behavioralSignature) profile who
+      (policy.commit (M.infoOf who trace) choice) i (M.infoOf i trace)
+  have hselected : installed who = law := by
+    simp [installed]
+  have hpure (choice : M.Choice who (M.infoOf who trace)) :
+      committed choice who = PMF.pure choice := by
+    simp [committed]
+  have hother (choice : M.Choice who (M.infoOf who trace)) (i : ι) (hi : i ≠ who) :
+      committed choice i = installed i := by
+    simp [committed, installed, Profile.update_of_ne, hi]
   have hdrawn : who ∈ E.movers state ∨ IsPointMass law := by
     by_cases hactive : E.active state who
     · exact Or.inl ((E.mem_movers).2 hactive)
     · have := M.subsingleton_choice_of_not_active trace hactive
       exact Or.inr (isPointMass_of_subsingleton law)
   unfold behavioralJoint
-  rw [hwithLaw, finitaryProduct_update_bind current law hdrawn, PMF.map_bind]
-  simp only [hcommit]
+  rw [finitaryProduct_bind_of_coordinate installed law committed hselected hpure hother hdrawn,
+    PMF.map_bind]
 
 /-- After leaving a genuine decision at `info`, a persistent installed law and
 one of its pure commitments are observationally identical to the remaining

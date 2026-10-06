@@ -84,7 +84,9 @@ theorem InformationSite.recordChoices_self (recall : M.DecisionRecall)
   ext choice
   simp only [InformationSite.recordChoices, Set.mem_ofPred_eq, Set.mem_univ, iff_true]
   intro recorded member same
-  exact (current.not_mem_recordAt recall recorded.2 (same ▸ member)).elim
+  apply (current.not_mem_recordAt recall recorded.2).elim
+  change (recorded.1, recorded.2) ∈ M.recordAt who current.1 at member
+  simpa only [same] using member
 
 /-- Decision recall makes the record's restrictions jointly satisfiable: no
 coordinate is required to record two different own actions. -/
@@ -98,7 +100,8 @@ theorem InformationSite.recordChoices_nonempty (recall : M.DecisionRecall)
     exact recall.actsOnceAtEachInfoState who _
   by_cases visited : ∃ recorded ∈ M.recordAt who current.1, recorded.1 = site.1
   · obtain ⟨recorded, member, same⟩ := visited
-    have past : recorded ∈ M.ownPlay who history.1.trace := record ▸ member
+    have past : recorded ∈ M.ownPlay who history.1.trace := by
+      simpa only [record] using member
     obtain ⟨earlier, earlierSame, permitted⟩ :=
       M.exists_informationSite_of_mem_ownPlay history.1.trace past
     have legal : some recorded.2 ∈ M.menu who site.1 := by

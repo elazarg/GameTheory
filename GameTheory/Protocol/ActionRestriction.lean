@@ -133,7 +133,7 @@ def site (who : ι) (original : M.InformationSite who) : N.InformationSite who :
   have same : target.1 = restriction.information who original.1 :=
     observed.trans ((restriction.observed who witness.1).trans
       (congrArg (restriction.information who) witness.2))
-  exact same ▸ target.2
+  simpa only [same] using target.2
 
 @[simp] theorem site_val (who : ι) (original : M.InformationSite who) :
     (restriction.site who original).1 = restriction.information who original.1 := rfl
