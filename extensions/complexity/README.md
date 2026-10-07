@@ -20,6 +20,13 @@ clock independent of the samples. FP preprocessing is certified rather than
 inferred from output length. A user-supplied encoder is never
 classified as efficient merely because its result has polynomial length.
 
+The payoff-constrained Nash slice certifies SAT reduction to explicit symmetric
+integer payoff tables and proves NP-hardness of mixed Nash existence with both
+payoffs at least one. The writer has an actual fixed polynomial-time machine
+certificate and exact agreement with the table decoder. Base game semantics,
+the satisfiability characterization and serialization remain dependency-free.
+NP membership and PPAD/FIXP search results are separate work.
+
 ## Use as a dependency
 
 In a downstream `lakefile.lean`, select a published commit containing this
@@ -34,17 +41,22 @@ Import only the modules needed by the client:
 
 ```lean
 import GameTheoryComplexity.SampleTest
--- Or import GameTheoryComplexity for the complete small integration surface.
+-- The umbrella contains the random-sample integration surface.
+-- Import this leaf separately for payoff-constrained Nash NP-hardness:
+import GameTheoryComplexity.Backend.SATReduction
 ```
 
 The default dependency configuration fetches the base GameTheory commit
-`71a6547d9491953f4a4f5a28e18f7eac81e2f8c8`; it does not assume a sibling checkout.
+`3132599983a6baf0d67fa2e41e0da1c8e7521405`; it does not assume a sibling checkout.
 All packages must share Lean/Mathlib 4.34.1. ComplexityLib is pinned to the public
-upstream commit `257ad90ec5f547894cc20f27bd828839b1bf7bbf`, and CSLib to
+fork `elazarg/complexitylib@c5f2acf1a35d5b00db04cd1bd337a8ce57d66a40`, and CSLib to
 `94ea80f41a5678fce997a004f0d8d12dbe47cc4b`. Their declared upstream toolchains are
 newer, so compatibility claims cover only the dependency closure of this
 extension's selected imports. They do not cover upstream umbrella modules,
 unrelated theorem families, or CSLib interoperability.
+The fork adds only a two-line Cook–Levin proof repair to upstream
+`257ad90ec5f547894cc20f27bd828839b1bf7bbf`; definitions and theorem statements
+are unchanged. See EXP-159 in the repository's experiment log.
 
 Import modules use the disjoint prefix `GameTheoryComplexity` because the base
 package owns every `GameTheory.*` module through its default Lake globs.

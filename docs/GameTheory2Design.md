@@ -1479,6 +1479,11 @@ by the base package's broad `GameTheory` glob, while public declarations remain
 under `GameTheory.Complexity`. A small client facade uses canonical sample-test
 types; machine-specific types live in explicit backend leaves. This introduces
 no universal computation interface or cross-model equivalence assumption.
+EXP-159 extends that boundary to explicit SAT hardness reductions. Canonical
+payoff-constrained Nash, numeric payoff evaluation and table decoding stay in
+the base; actual machine certificates and complexity-class transfer stay in
+backend leaves. The expanded Cook–Levin closure requires the public proof-only
+compatibility patch recorded in D67, without a base toolchain change.
 
 EXP-031 fixes one instance of the last two rules. Continuation, periodic-path,
 and trigger-incentive theorems remain in `GameTheory.Repeated`; feasible-payoff

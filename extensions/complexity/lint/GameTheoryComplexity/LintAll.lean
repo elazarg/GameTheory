@@ -8,3 +8,13 @@ import GameTheoryComplexity.Backend.CompiledSampleTest
 import GameTheoryComplexity.RandomTapeComposition
 import GameTheoryComplexity.RandomTape
 import GameTheoryComplexity.SampleTest
+import GameTheoryComplexity.Backend.SATGame
+import GameTheoryComplexity.Backend.SATSyntaxMachine
+import GameTheoryComplexity.Backend.SATTableEmission
+import GameTheoryComplexity.Backend.SATTableScanner
+import GameTheoryComplexity.Backend.SATTableScannerCorrectness
+import GameTheoryComplexity.Backend.SATTableMachine
+import GameTheoryComplexity.Backend.SATTablePayoff
+import GameTheoryComplexity.Backend.SATTablePayoffCorrectness
+import GameTheoryComplexity.Backend.SATReductionSemantic
+import GameTheoryComplexity.Backend.SATReduction

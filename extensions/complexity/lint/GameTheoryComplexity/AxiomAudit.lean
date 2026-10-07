@@ -5,6 +5,7 @@ import GameTheoryComplexity.Tests.RandomTape
 import GameTheoryComplexity.Tests.Facade
 import GameTheoryComplexity.Tests.Serializer
 import GameTheoryComplexity.Tests.Composition
+import GameTheoryComplexity.Tests.SATReduction
 import Lean.Util.CollectAxioms
 
 /-! Reject placeholders and nonstandard axioms in every public extension
