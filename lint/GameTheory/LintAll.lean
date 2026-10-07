@@ -124,6 +124,7 @@ import GameTheory.Core.MixtureUtilitySimulation
 import GameTheory.Core.Potential
 import GameTheory.Core.Preference
 import GameTheory.Core.PseudoNash
+import GameTheory.Core.PseudoNashHybrid
 import GameTheory.Core.PseudoNashCoalition
 import GameTheory.Core.PseudoNashTolerance
 import GameTheory.Core.Rank
@@ -224,6 +225,7 @@ import GameTheory.Math.Probability.ExpectationSeries
 import GameTheory.Math.Probability.ExtendedExpectation
 import GameTheory.Math.Probability.FiniteSampling
 import GameTheory.Math.Probability.Indistinguishability
+import GameTheory.Math.Probability.HybridIndistinguishability
 import GameTheory.Math.Probability.InfiniteProductBoundary
 import GameTheory.Math.Probability.Interaction
 import GameTheory.Math.Probability.Joint

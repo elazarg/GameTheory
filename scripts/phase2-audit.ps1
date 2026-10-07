@@ -222,6 +222,8 @@ $RepresentationModules = @(
   'GameTheory/Math/Probability/FinitaryProduct.lean',
   # Sample tests and statistical distance compare exact event/atom probabilities.
   'GameTheory/Math/Probability/Indistinguishability.lean',
+  # The moving-hybrid fixture computes the one-draw Boolean acceptance scalar.
+  'GameTheory/Math/Probability/HybridIndistinguishabilityTest.lean',
   'GameTheory/Math/Probability/StatisticalCloseness.lean',
   'GameTheory/Math/Probability/MeanComparison.lean',
   'GameTheory/Math/Probability/SampleSum.lean',
