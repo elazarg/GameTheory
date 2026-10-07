@@ -10177,3 +10177,40 @@ memory.
   retains the finite/machine separation and small search-reduction interface.
   Next: normalize against the usual raw End-of-Line convention before freezing
   a PPAD class or recovering Nash search completeness.
+
+## EXP-161: standard End-of-Line witnesses and normalization cost
+
+- **Question:** Can the consistent-edge endpoint relation be reconciled with the
+  standard asymmetric raw witness condition without weakening the machine
+  requirements on search reductions? Compare compiling normalized circuit
+  instances with using the standard raw relation directly as the PPAD target.
+- **Representative slice:** weak source promises, broken initial links and
+  isolated inconsistent pointers; generic normalization followed by actual FP
+  normalized-pointer evaluation and a standard raw-witness verifier.
+- **Kill conditions:** excluding the origin from both inconsistency branches,
+  replacing a polynomial-time instance emitter with a circuit-size bound, or
+  claiming search equivalence from semantic normalization alone.
+- **Artifacts and commands:** `Math.EndOfLineNormalization`, its fixtures,
+  `Backend.RawEndOfLine`, `Backend.EndOfLinePointerNormalization`,
+  `Backend.RawEndOfLineReduction`, `GameTheoryComplexity.PPAD` and raw/PPAD
+  fixtures. Base `lake build GameTheory GameTheory.LintAll
+  GameTheory.Tests.EndOfLineNormalization` passes 4,368 jobs; `lake lint` passes.
+  Companion local-path library/lint/axiom build passes 3,835 jobs and audits
+  1,024 owned declarations with standard axioms only; lint, optional isolation
+  and all 19 boundary regressions pass. Released-mode endpoint/fixture smoke
+  passes 3,821 jobs at public base `790fbe3f`, then local-path mode is restored.
+  Phase 1 and Phase 2/3 `-VerifyExpected -DeepReachability` audits pass
+  (Phase 1 uses its ordinary measurement mode).
+- **Observations:** Generic normalization preserves the selected edges and
+  endpoints, and normalized word evaluation is genuinely FP. The raw relation
+  has a polynomial verifier and totality under weak promises, returning the
+  origin for a broken initial link. Actual FP/FPn raw-to-endpoint reduction
+  handles every target solution, including both invalid-promise cases.
+  Upstream has machine-to-uniform-circuit compilation and typed prefix
+  hardwiring, but no certified serialized input restriction/substitution
+  transformation has been found. Circuit-size bounds do not fill this gap.
+- **Outcome:** adopt the standard raw relation as the PPAD reference target,
+  with independent source FNP evidence. Raw completeness is by definition;
+  filtered-edge search is PPAD-hard. No reverse reduction or endpoint membership
+  is claimed. [D69](decisions/D69-standard-end-of-line-ppad.md) keeps serialized
+  circuit emission as the next computational gate, before concrete reductions.

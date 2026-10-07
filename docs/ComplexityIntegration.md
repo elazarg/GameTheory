@@ -334,9 +334,10 @@ Composition gives each decoder its own instance. A reduction transports totality
 backward, but TFNP membership also requires independent FNP membership of the
 source: its other accepted witnesses need not be bounded or efficiently checked.
 
-This establishes the search foundation. A PPAD class matching the usual
-End-of-Line convention, circuit normalization, Brouwer/Sperner reductions, Nash
-search completeness and approximation conventions remain further obligations.
+This establishes the filtered-edge search foundation. The next section supplies
+the standard raw convention and PPAD class. Serialized circuit normalization,
+Brouwer/Sperner reductions, Nash search completeness and approximation
+conventions remain further obligations.
 
 The base build passes 4,366 jobs and the full companion build 3,827 jobs. All
 937 owned declarations have only standard transitive axioms. Both linters,
@@ -346,3 +347,42 @@ End-of-Line endpoints and fixtures in 3,814 jobs against public base commit
 `81ab22b375b12a8f869484deb982ac9b5c845803`, without a local-path override.
 Dependency-mode switches use `lake -R update` to re-elaborate cached
 configuration; CI asserts both local-path and released-git manifest modes.
+
+## Standard End-of-Line and PPAD
+
+`GameTheoryComplexity.PPAD` uses the standard raw condition
+`P (S x) ≠ x ∨ (x ≠ origin ∧ S (P x) ≠ x)` under the weak source
+promises `P origin = origin` and `S origin ≠ origin`. An outgoing
+inconsistency may return the origin. Invalid promises accept exactly `[]`;
+valid inputs require exact-width witnesses and canonical paired verification.
+The relation has a genuine polynomial-time verifier, balance and totality,
+including the broken-initial-link case, so it belongs to TFNP.
+
+PPAD membership consists of independent source FNP evidence and a certified
+search reduction to this raw relation. This gives containment in TFNP and
+closure under reductions with source FNP supplied. Raw End-of-Line is complete
+by definition of the class; this is the reference problem, not a Nash
+completeness theorem.
+
+The certified raw-to-endpoint reduction keeps the instance and decodes every
+filtered-edge solution. With a genuine source it keeps the endpoint. When only
+the initial link is broken it maps the target fallback to the origin; invalid
+weak promises retain the empty fallback. Its instance map is FP and its
+original-instance decoder is FPn. Thus filtered-edge search is PPAD-hard.
+
+Generic normalization replaces inconsistent pointers by self-loops, preserving
+edges and endpoints. Its pointer-word evaluators are FP-certified. This does
+not yet generate serialized normalized circuit instances: upstream uniform
+machine unrolling and typed prefix restriction do not supply an FP-certified
+serialized restriction/substitution operation. Reverse reduction and endpoint
+PPAD membership require that compiler step. No equivalence or endpoint
+completeness is claimed from semantic normalization alone. EXP-161 and D69
+record this boundary.
+
+Validation: the base build and lint pass 4,368 jobs. The optional library,
+lint scope and transitive axiom audit pass 3,835 jobs; all 1,024 owned declarations
+use only standard axioms. Optional lint, isolation and 19 boundary regression
+cases pass. Fixtures cover broken initial links, asymmetric origin handling,
+isolated malformed pointers, exact widths, canonical pairs and actual decoder
+behavior. Released-mode validation resolves public base commit
+`790fbe3f8d0b745b1c111dd3cea508dd399a335f` and passes 3,821 jobs.

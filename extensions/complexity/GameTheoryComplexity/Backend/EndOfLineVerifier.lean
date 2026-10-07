@@ -1,4 +1,4 @@
-import GameTheoryComplexity.Backend.EndOfLineProblem
+import GameTheoryComplexity.Backend.EndOfLineMachineOps
 import Complexitylib.Classes.Containments.Internal.FPBridge
 import Complexitylib.Classes.P.NormalForm
 
@@ -9,36 +9,7 @@ and rejects noncanonical paired verifier inputs. -/
 namespace GameTheory.Complexity.Backend
 
 open _root_.Complexity _root_.Complexity.Cobham
-
-private theorem vectorFn_mem_FP {codes vertex : List Bool → List Bool}
-    (hc : codes ∈ FP) (hv : vertex ∈ FP) :
-    (fun z => evaluateCircuitVector (codes z) (vertex z)) ∈ FP := by
-  have h := mem_FP_comp (pairFn_mem_FP hc hv) evaluateCircuitVector_pair_mem_FP
-  simpa only [Function.comp_def, pairFst_pair, pairSnd_pair] using h
-
-private theorem predecessorFn_mem_FP {input vertex : List Bool → List Bool}
-    (hi : input ∈ FP) (hv : vertex ∈ FP) :
-    (fun z => endOfLinePredecessor (input z) (vertex z)) ∈ FP :=
-  vectorFn_mem_FP (mem_FP_comp (mem_FP_comp hi pairSnd_mem_FP) pairFst_mem_FP) hv
-
-private theorem successorFn_mem_FP {input vertex : List Bool → List Bool}
-    (hi : input ∈ FP) (hv : vertex ∈ FP) :
-    (fun z => endOfLineSuccessor (input z) (vertex z)) ∈ FP :=
-  vectorFn_mem_FP (mem_FP_comp (mem_FP_comp hi pairSnd_mem_FP) pairSnd_mem_FP) hv
-
-private theorem originFn_mem_FP {input : List Bool → List Bool} (hi : input ∈ FP) :
-    (fun z => endOfLineOrigin (input z)) ∈ FP := by
-  have h := mulLenFn_mem_FP (constFn_mem_FP [false]) (mem_FP_comp hi pairFst_mem_FP)
-  simpa only [List.length_cons, List.length_nil, Nat.zero_add, Nat.one_mul, Function.comp_def,
-    endOfLineOrigin, endOfLineWidth] using h
-
-private theorem negFlag_accept {x : List Bool} (hx : x = [true] ∨ x = [false]) :
-    notBit x = [true] ↔ ¬x = [true] := by
-  rcases hx with rfl | rfl <;> decide
-
-private theorem negFlag_flag {x : List Bool} (hx : x = [true] ∨ x = [false]) :
-    notBit x = [true] ∨ notBit x = [false] := by
-  rcases hx with rfl | rfl <;> decide
+open EndOfLineMachineOps
 
 /-- Check the distinguished source and agreement across its first edge. -/
 def endOfLineSourceFlag (input : List Bool) : List Bool :=
@@ -60,28 +31,6 @@ theorem endOfLineSourceFlag_accept (input : List Bool) :
     andBit_eq_true_iff (negFlag_flag (eqFlag_flag _ _)) (eqFlag_flag _ _),
     negFlag_accept (eqFlag_flag _ _)]
   simp only [eqFlag_eq_true_iff, endOfLineSourceValid]
-
-private def successorFlag (input vertex : List Bool) : List Bool :=
-  andBit (notBit (eqFlag (endOfLineSuccessor input vertex) vertex))
-    (eqFlag (endOfLinePredecessor input (endOfLineSuccessor input vertex)) vertex)
-
-private def predecessorFlag (input vertex : List Bool) : List Bool :=
-  andBit (notBit (eqFlag (endOfLinePredecessor input vertex) vertex))
-    (eqFlag (endOfLineSuccessor input (endOfLinePredecessor input vertex)) vertex)
-
-private theorem successorFlag_accept (input vertex : List Bool) :
-    successorFlag input vertex = [true] ↔ GameTheory.Math.EndOfLine.HasSuccessor
-      (endOfLinePredecessor input) (endOfLineSuccessor input) vertex := by
-  rw [successorFlag, andBit_eq_true_iff (negFlag_flag (eqFlag_flag _ _))
-    (eqFlag_flag _ _), negFlag_accept (eqFlag_flag _ _)]
-  simp only [eqFlag_eq_true_iff, GameTheory.Math.EndOfLine.HasSuccessor]
-
-private theorem predecessorFlag_accept (input vertex : List Bool) :
-    predecessorFlag input vertex = [true] ↔ GameTheory.Math.EndOfLine.HasPredecessor
-      (endOfLinePredecessor input) (endOfLineSuccessor input) vertex := by
-  rw [predecessorFlag, andBit_eq_true_iff (negFlag_flag (eqFlag_flag _ _))
-    (eqFlag_flag _ _), negFlag_accept (eqFlag_flag _ _)]
-  simp only [eqFlag_eq_true_iff, GameTheory.Math.EndOfLine.HasPredecessor]
 
 /-- Exactly one consistent incident edge makes a candidate an endpoint. -/
 def endOfLineEndpointFlag (input vertex : List Bool) : List Bool :=
@@ -118,14 +67,6 @@ theorem endOfLineVerdict_flag (input witness : List Bool) :
     endOfLineVerdict input witness = [true] ∨ endOfLineVerdict input witness = [false] :=
   orBit_flag (andBit_flag _ _) (andBit_flag _ _)
 
-private theorem zeroWords_eq_iff (a b : ℕ) :
-    List.replicate a false = List.replicate b false ↔ a = b := by
-  constructor
-  · intro h
-    simpa only [List.length_replicate] using congrArg List.length h
-  · rintro rfl
-    rfl
-
 theorem endOfLineVerdict_accept (input witness : List Bool) :
     endOfLineVerdict input witness = [true] ↔ endOfLineRelation input witness := by
   rw [endOfLineVerdict, orBit_eq_true_iff (andBit_flag _ _) (andBit_flag _ _),
@@ -137,7 +78,7 @@ theorem endOfLineVerdict_accept (input witness : List Bool) :
   simp only [eqFlag_eq_true_iff, endOfLineSourceFlag_accept, endOfLineEndpointFlag_accept,
     endOfLineOrigin, zeroWords_eq_iff, endOfLineRelation]
 
-private theorem sourceFlagFn_mem_FP {input : List Bool → List Bool} (hi : input ∈ FP) :
+theorem endOfLineSourceFlagFn_mem_FP {input : List Bool → List Bool} (hi : input ∈ FP) :
     (fun z => endOfLineSourceFlag (input z)) ∈ FP := by
   have ho := originFn_mem_FP hi
   have hs := successorFn_mem_FP hi ho
@@ -148,14 +89,8 @@ private theorem sourceFlagFn_mem_FP {input : List Bool → List Bool} (hi : inpu
 private theorem endpointFlagFn_mem_FP {input vertex : List Bool → List Bool}
     (hi : input ∈ FP) (hv : vertex ∈ FP) :
     (fun z => endOfLineEndpointFlag (input z) (vertex z)) ∈ FP := by
-  have hs := successorFn_mem_FP hi hv
-  have hp := predecessorFn_mem_FP hi hv
-  have hsflag : (fun z => successorFlag (input z) (vertex z)) ∈ FP :=
-    andBitFn_mem_FP (notBitFn_mem_FP (eqFlagFn_mem_FP hs hv))
-      (eqFlagFn_mem_FP (predecessorFn_mem_FP hi hs) hv)
-  have hpflag : (fun z => predecessorFlag (input z) (vertex z)) ∈ FP :=
-    andBitFn_mem_FP (notBitFn_mem_FP (eqFlagFn_mem_FP hp hv))
-      (eqFlagFn_mem_FP (successorFn_mem_FP hi hp) hv)
+  have hsflag := successorFlagFn_mem_FP hi hv
+  have hpflag := predecessorFlagFn_mem_FP hi hv
   exact orBitFn_mem_FP (andBitFn_mem_FP hsflag (notBitFn_mem_FP hpflag))
     (andBitFn_mem_FP hpflag (notBitFn_mem_FP hsflag))
 
@@ -164,7 +99,7 @@ private theorem verdict_pair_mem_FP :
   have hi := pairFst_mem_FP
   have hv := pairSnd_mem_FP
   have ho := originFn_mem_FP hi
-  have hsource := sourceFlagFn_mem_FP hi
+  have hsource := endOfLineSourceFlagFn_mem_FP hi
   have hzero : (fun z => List.replicate (pairSnd z).length false) ∈ FP := by
     simpa only [List.length_cons, List.length_nil, Nat.zero_add, Nat.one_mul] using
       mulLenFn_mem_FP (constFn_mem_FP [false]) hv

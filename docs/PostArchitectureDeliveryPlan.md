@@ -418,15 +418,14 @@ table in the companion. The target decoder reads that table directly, and the
 companion proves its decision language NP-complete. Membership uses bounded
 rational witnesses and an actual polynomial-time binary verifier, with exact
 agreement against the same total decoder and canonical Nash predicate.
-The End-of-Line foundation supplies a total circuit-encoded endpoint relation in
-TFNP and solution-preserving polynomial search reductions. Its consistent-edge
-endpoint convention still needs normalization against the usual raw
-pointer-inconsistency witness formulation before a PPAD class is frozen. PPAD
-requires that agreement and concrete search reductions before Nash search
-completeness; FIXP and
-approximation variants
-need their own precise output and accuracy conventions. None follows from the
-payoff-constrained decision characterization.
+The End-of-Line foundation now supplies both filtered-edge and standard raw
+TFNP relations, with actual polynomial verifiers. The raw convention anchors
+PPAD; a certified reduction proves filtered-edge search PPAD-hard. The next
+compiler gate is FP-certified serialized circuit prefix restriction or
+substitution, followed by emitted normalized instances and the reverse
+reduction. Semantic pointer normalization alone does not discharge this gate.
+Concrete Sperner/Brouwer and Nash search completeness follow in dependency
+order; approximation conventions and FIXP remain distinct obligations.
 
 ## 3. Stable boundaries
 

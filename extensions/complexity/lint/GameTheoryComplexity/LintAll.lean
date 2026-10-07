@@ -35,3 +35,8 @@ import GameTheoryComplexity.Backend.EndOfLineTotality
 import GameTheoryComplexity.Backend.EndOfLineProblem
 import GameTheoryComplexity.Backend.EndOfLineVerifier
 import GameTheoryComplexity.Backend.SearchReduction
+import GameTheoryComplexity.Backend.EndOfLineMachineOps
+import GameTheoryComplexity.Backend.EndOfLinePointerNormalization
+import GameTheoryComplexity.Backend.RawEndOfLine
+import GameTheoryComplexity.Backend.RawEndOfLineReduction
+import GameTheoryComplexity.PPAD

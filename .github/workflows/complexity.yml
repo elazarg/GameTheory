@@ -97,5 +97,8 @@ jobs:
           GameTheoryComplexity.Backend.EndOfLineVerifier
           GameTheoryComplexity.Tests.EndOfLine
           GameTheoryComplexity.Tests.SearchReduction
+          GameTheoryComplexity.PPAD
+          GameTheoryComplexity.Tests.RawEndOfLine
+          GameTheoryComplexity.Tests.PPAD
       - name: Verify checks do not mutate tracked files
         run: git diff --exit-code

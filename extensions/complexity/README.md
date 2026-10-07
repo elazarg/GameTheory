@@ -37,8 +37,11 @@ endpoint relation in TFNP and its actual polynomial-time verifier.
 `Backend.SearchReduction` provides certified instance maps and decoders preserving
 every target solution. The generic finite endpoint theorem lives independently in
 the base `GameTheory.Math.EndOfLine` module. This slice uses mutually consistent
-edges; normalization against the usual raw inconsistency witnesses and Nash
-PPAD-completeness remain separate obligations.
+edges. Import `GameTheoryComplexity.PPAD` for the standard asymmetric raw
+End-of-Line relation, PPAD membership and closure, and a certified reduction
+showing consistent-edge endpoint search is PPAD-hard. Raw End-of-Line is complete
+by definition of the class. Endpoint membership needs a serialized circuit
+normalization machine; Nash PPAD-completeness remains separate work.
 
 ## Use as a dependency
 
@@ -60,7 +63,7 @@ import GameTheoryComplexity.Backend.NashNPComplete
 ```
 
 The default dependency configuration fetches the base GameTheory commit
-`81ab22b375b12a8f869484deb982ac9b5c845803`; it does not assume a sibling checkout.
+`790fbe3f8d0b745b1c111dd3cea508dd399a335f`; it does not assume a sibling checkout.
 All packages must share Lean/Mathlib 4.34.1. ComplexityLib is pinned to the public
 fork `elazarg/complexitylib@c5f2acf1a35d5b00db04cd1bd337a8ce57d66a40`, and CSLib to
 `94ea80f41a5678fce997a004f0d8d12dbe47cc4b`. Their declared upstream toolchains are

@@ -67,12 +67,17 @@ private theorem pairFst_length_le : ∀ input : List Bool,
   | true :: false :: input => by simp [pairFst]
 
 /-- The unary width ruler bounds every accepted endpoint witness. -/
+theorem endOfLineWidth_le_length (input : List Bool) :
+    endOfLineWidth input ≤ input.length :=
+  pairFst_length_le input
+
+/-- Every accepted endpoint witness has at most the input length. -/
 theorem endOfLineRelation_polyBalanced : PolyBalanced endOfLineRelation := by
   refine ⟨Polynomial.X, fun input witness h => ?_⟩
   simp only [Polynomial.eval_X]
   rcases h with ⟨_, hlen, _, _⟩ | ⟨_, rfl⟩
   · rw [hlen]
-    exact pairFst_length_le input
+    exact endOfLineWidth_le_length input
   · exact Nat.zero_le _
 
 /-- Every serialized instance has a witness, including invalid source promises. -/
