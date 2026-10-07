@@ -130,6 +130,7 @@ the local Sperner graph, source promises and every-endpoint decoding. Import
 `Backend.SpernerGridCodecMachine` and `Backend.SpernerBinarySteps` for actual
 FP certificates for codec fields, exact acceptance and fixed-width arithmetic.
 Import `Backend.SpernerPointerMachine` for the composed pointer, its actual
-uniform FP certificate, source promises and endpoint decoding. Circuit-instance
-generation and the answer-decoder certificate remain before succinct Sperner
-PPAD membership.
+uniform FP certificate, source promises and endpoint decoding. Import `GameTheoryComplexity.Sperner` for succinct Sperner PPAD membership,
+TFNP totality and the independently verified trichromatic-triangle relation.
+`Backend.SpernerReduction` supplies actual FP circuit-instance emission and
+FPn every-answer decoding. Sperner hardness remains a separate obligation.

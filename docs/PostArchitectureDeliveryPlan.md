@@ -433,10 +433,12 @@ preserves source promises and every endpoint, with malformed words isolated.
 Coordinate extraction, exact acceptance and fixed-width increment/decrement
 have actual FP certificates. The composed pointer word machine now has an
 actual FP certificate uniform in the color circuit seed, boundary-aware corner
-colors and exact all-word agreement. Next emit the circuit instance and
-certify every-answer word decoding to reduce succinct Sperner search to
-End-of-Line. Brouwer and Nash
-search results follow in dependency order;
+colors and exact all-word agreement. Shared uniform circuit generation now
+emits the End-of-Line instance, and a certified projection decodes every
+answer. An independent FNP verifier closes succinct Sperner PPAD membership
+and TFNP totality. Next establish Sperner hardness with its explicit geometry
+and decoding convention, then deliver Brouwer and Nash search reductions
+in dependency order;
 approximation conventions and FIXP remain distinct obligations.
 
 ## 3. Stable boundaries

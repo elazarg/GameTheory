@@ -617,3 +617,51 @@ cover all zero-coordinate-width words, boundary carry and query order, color
 normalization, source paths, upper endpoints, malformed codes, a disconnected
 six-triangle cycle and actual uniform FP certification. Independent semantic,
 software and proof-simplification reviews found no gaps.
+
+
+## Succinct Sperner PPAD membership
+
+`Backend.SpernerProblem.spernerRelation` asks for a triangle word whose three
+canonical vertex colors are distinct. Decoding enforces coordinates inside the
+power-of-two grid; witnesses have exactly `2*b+2` bits and linear balance in
+the serialized input. Boundary enforcement makes every circuit input a total
+coloring problem, including malformed codes under the established total circuit
+evaluation convention. This is not a promise problem for arbitrary boundary
+colorings.
+
+`Backend.SpernerVerifier` supplies an independent actual FP verifier, its
+single deterministic machine certificate and FNP membership. It checks exact
+node acceptance, the triangle tag and pairwise distinct canonical corner
+colors. Its outer pair guard accepts precisely the encoded pair language;
+malformed verifier inputs do not become witnesses through permissive decoding.
+
+`Backend.PointerCircuitGeneration` extracts the shared uniform compiler from
+normalized End-of-Line generation. It specializes each scalar pointer query
+and emits both circuit vectors with actual FP certificates and exact
+positive-width agreement. Existing normalized End-of-Line generation now uses
+this same implementation, preserving its invalid-source fallback.
+
+`Backend.SpernerReduction.exists_spernerEndOfLineInstance` applies the compiler
+to the certified Sperner pointer. The node width is always positive, including
+zero coordinate bits, and the emitted instance has the proved source promises.
+Every target endpoint yields the same trichromatic triangle word, independently
+of its graph component. The decoder is the actual FPn second projection.
+No path traversal, grid enumeration or selected-solution assumption is used.
+
+`GameTheoryComplexity.Sperner.spernerRelation_mem_PPAD` combines that reduction
+with the independent FNP certificate and the established End-of-Line PPAD
+membership. TFNP membership and totality follow. A reverse reduction proving
+Sperner hardness remains open, as do arbitrary-boundary padding and downstream
+Brouwer/Nash search completeness.
+
+
+Validation: the full optional library, lint scope and axiom driver pass 4,125
+jobs, auditing all 1,511 owned declarations using only standard axioms. Optional
+lint, architecture checks, dependency isolation and all 19 boundary regressions
+pass. Released-pin smoke passes 4,104 jobs, including existing normalized
+End-of-Line controls and the new Sperner classifier/verifier fixtures; local
+path mode is restored. Controls cover zero/nonzero coordinate widths, both
+triangle orientations, source exclusion, malformed node and verifier encodings,
+malformed color circuits, semantic verifier agreement, and the actual FP
+instance mapper's exact width. Independent semantic/software/proof-simplification
+reviews found no gaps or unsupported completeness claims.
