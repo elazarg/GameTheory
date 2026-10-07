@@ -194,6 +194,7 @@ $RepresentationModules = @(
   'GameTheory/Math/Probability/InfiniteProductBoundary.lean',
   'GameTheory/Math/Probability/Mixture.lean',
   'GameTheory/Math/Probability/Uniform.lean',
+  'GameTheory/Math/Probability/UniformProjection.lean',
   'GameTheory/Math/Probability/Conditioning.lean',
   'GameTheory/Math/Probability/Expectation.lean',
   'GameTheory/Math/Probability/ExpectationComposition.lean',

@@ -251,6 +251,7 @@ import GameTheory.Math.Probability.StatisticalCloseness
 import GameTheory.Math.Probability.Support
 import GameTheory.Math.Probability.Tightness
 import GameTheory.Math.Probability.Uniform
+import GameTheory.Math.Probability.UniformProjection
 import GameTheory.Math.Probability.UniformTremble
 import GameTheory.Math.RegretAggregation
 import GameTheory.Math.SimplexApproximation

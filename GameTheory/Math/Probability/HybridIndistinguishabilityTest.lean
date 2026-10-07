@@ -94,4 +94,25 @@ theorem movingJump_not_uniform :
   exact movingJump_endpoints_distinguishable
     (indistinguishableBy_of_uniform_hybrid movingJump_steps_polynomial h)
 
+/-- Only the first stage changes the law; later stages keep the new law. -/
+def singleChange {α : Type*} (X X' : ℕ → PMF α) (κ j : ℕ) : PMF α :=
+  if j = 0 then X κ else X' κ
+
+/-- A negligible first change tolerates exponentially many zero-cost stages.
+The summed-error theorem needs no polynomial bound on the stage count. -/
+theorem single_change_exponential_chain {α : Type*} {tests : Set (SampleTest α)}
+    {X X' : ℕ → PMF α} (h : IndistinguishableBy tests X X') :
+    IndistinguishableBy tests (fun κ => singleChange X X' κ 0)
+      (fun κ => singleChange X X' κ (2 ^ κ)) := by
+  apply indistinguishableBy_of_hybrid_sum
+  intro T hT
+  apply (h T hT).of_eventually_abs_le
+  exact Eventually.of_forall fun κ => by
+    rw [Finset.sum_eq_single 0]
+    · simp [singleChange]
+    · intro j _ hj
+      simp [singleChange, hj]
+    · intro hzero
+      exact (hzero (by simp only [Finset.mem_range]; positivity)).elim
+
 end GameTheory.Math.Probability.HybridTest

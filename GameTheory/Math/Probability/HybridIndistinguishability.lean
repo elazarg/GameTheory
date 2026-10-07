@@ -41,6 +41,25 @@ theorem SampleTest.abs_acceptProb_hybrid_le (T : SampleTest α)
   simpa only [abs_sub_comm] using Finset.abs_sum_le_sum_abs
     (fun j => a (j + 1) - a j) (Finset.range steps)
 
+/-- A negligible sum of adjacent advantages gives indistinguishable endpoints.
+The number of stages need not be polynomial when their total error is negligible. -/
+theorem indistinguishableBy_of_hybrid_sum
+    {tests : Set (SampleTest α)} {H : ℕ → ℕ → PMF α} {steps : ℕ → ℕ}
+    (h : ∀ T ∈ tests, Negligible fun κ =>
+      ∑ j ∈ Finset.range (steps κ),
+        |T.acceptProb (fun κ => H κ j) κ -
+          T.acceptProb (fun κ => H κ (j + 1)) κ|) :
+    IndistinguishableBy tests (fun κ => H κ 0) (fun κ => H κ (steps κ)) := by
+  intro T hT
+  apply (h T hT).of_eventually_abs_le
+  exact Eventually.of_forall fun κ => by
+    have hsum : 0 ≤ ∑ j ∈ Finset.range (steps κ),
+        |T.acceptProb (fun κ => H κ j) κ -
+          T.acceptProb (fun κ => H κ (j + 1)) κ| :=
+      Finset.sum_nonneg fun _ _ => abs_nonneg _
+    rw [abs_of_nonneg hsum]
+    exact T.abs_acceptProb_hybrid_le H (steps κ) κ
+
 /-- Polynomially many uniformly negligible adjacent changes give
 indistinguishable endpoint ensembles. -/
 theorem indistinguishableBy_of_uniform_hybrid
@@ -48,6 +67,7 @@ theorem indistinguishableBy_of_uniform_hybrid
     (hsteps : ∃ d : ℕ, ∀ᶠ κ in atTop, steps κ ≤ κ ^ d)
     (h : UniformHybridBound tests H steps) :
     IndistinguishableBy tests (fun κ => H κ 0) (fun κ => H κ (steps κ)) := by
+  apply indistinguishableBy_of_hybrid_sum
   obtain ⟨d, hd⟩ := hsteps
   intro T hT
   obtain ⟨ε, hε, hbound⟩ := h.bound T hT
@@ -55,11 +75,8 @@ theorem indistinguishableBy_of_uniform_hybrid
   refine hpoly.of_eventually_abs_le ?_
   filter_upwards [hd, hbound] with κ hκ hgap
   have hcount : (steps κ : ℝ) ≤ (κ : ℝ) ^ d := by exact_mod_cast hκ
+  rw [abs_of_nonneg (Finset.sum_nonneg fun _ _ => abs_nonneg _)]
   calc
-    _ ≤ ∑ j ∈ Finset.range (steps κ),
-        |T.acceptProb (fun κ => H κ j) κ -
-          T.acceptProb (fun κ => H κ (j + 1)) κ| :=
-      T.abs_acceptProb_hybrid_le H (steps κ) κ
     _ ≤ ∑ _j ∈ Finset.range (steps κ), |ε κ| :=
       Finset.sum_le_sum fun j hj => hgap j (Finset.mem_range.mp hj)
     _ = (steps κ : ℝ) * |ε κ| := by simp
