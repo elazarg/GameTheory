@@ -10214,3 +10214,45 @@ memory.
   filtered-edge search is PPAD-hard. No reverse reduction or endpoint membership
   is claimed. [D69](decisions/D69-standard-end-of-line-ppad.md) keeps serialized
   circuit emission as the next computational gate, before concrete reductions.
+
+## EXP-162: serialized prefix restriction through uniform wire relocation
+
+- **Question:** Does a slightly larger prefix layout make actual FP serialized
+  hardwiring simpler than conditionally remapping input references? Compare
+  seed constants alone with seed constants plus copies of all live inputs.
+- **Representative slice:** positive live width, arbitrary seed and shared raw
+  circuit; malformed/truncated serialized codes and empty circuits must not
+  acquire unintended output gates.
+- **Hypothesis:** prepend constants and live-input copies, then shift every old
+  reference by the live width. Terminated unary references require only a
+  fixed ruler prefix; upstream shift semantics should discharge correctness.
+- **Kill conditions:** an exponentially large generated word, treating length
+  alone as machine evidence, accepting malformed code as a new valid function,
+  or replacing a missing output with a prefix gate's value.
+- **Artifacts and commands:** backend `CircuitPrefixRestriction`,
+  `CircuitPrefixEmitter`, `CircuitCodeShift`, `CircuitCodeShiftCorrectness`,
+  `CircuitCodeValidation`, `CircuitCodeRestriction`, `CircuitPrefixCompiler`
+  and `Tests.CircuitPrefixCompiler`. From the companion directory, local-path
+  `lake '-KgameTheoryPath=../..' build GameTheoryComplexity
+  GameTheoryComplexity.LintAll GameTheoryComplexity.AxiomAudit` passes 3,843 jobs;
+  `lake '-KgameTheoryPath=../..' lint` passes.
+  The transitive axiom audit checks all 1,194 owned declarations with standard
+  axioms only. Structural Phase 2, optional isolation and all 19 boundary
+  regressions pass. Released-git facade/composed/NP/PPAD/compiler fixture smoke
+  passes 3,829 jobs at public base `790fbe3f`, with exact git/path manifest
+  assertions and Lean 4.34.1 checked before restoring local mode.
+- **Observations:** the larger prefix preserves shared gates, and upstream
+  relocation proves exact optional evaluation even for invalid topology.
+  Constant/copy emission and the declared-count scanner have actual FP
+  certificates. Exact syntax validation handles count mismatches, missing
+  terminators and trailing garbage. Unguarded empty-source restriction returns
+  the last copied live input, violating the intended absence of an output;
+  this failure is preserved as a probe and the final compiler rejects empty
+  gate lists. Zero live width also requires rejection because constants need
+  an anchor wire. The adopted evaluation theorem states positive live width.
+- **Outcome:** supported, with explicit syntax and output guards. No kill
+  condition remains in the adopted compiler. [D70](decisions/D70-serialized-circuit-prefix-restriction.md)
+  adopts uniform relocation rather than conditional input remapping. The next
+  obligation is integration with uniform machine unrolling and normalized
+  End-of-Line vector emission, then the reverse search reduction. Local probes
+  and diagnostics remain in `.codex/scratch/`.

@@ -100,5 +100,6 @@ jobs:
           GameTheoryComplexity.PPAD
           GameTheoryComplexity.Tests.RawEndOfLine
           GameTheoryComplexity.Tests.PPAD
+          GameTheoryComplexity.Tests.CircuitPrefixCompiler
       - name: Verify checks do not mutate tracked files
         run: git diff --exit-code

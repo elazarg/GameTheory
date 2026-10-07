@@ -386,3 +386,36 @@ cases pass. Fixtures cover broken initial links, asymmetric origin handling,
 isolated malformed pointers, exact widths, canonical pairs and actual decoder
 behavior. Released-mode validation resolves public base commit
 `790fbe3f8d0b745b1c111dd3cea508dd399a335f` and passes 3,821 jobs.
+
+## Certified serialized prefix restriction
+
+Import `GameTheoryComplexity.Backend.CircuitPrefixCompiler` to hardwire a seed
+into a raw scalar circuit code. `restrictCircuitCode ruler seed code` uses the
+ruler's length as the live input width. For positive live width and an input of
+that width, `restrictCircuitCode_eval` proves exact `evalCode` agreement with the
+original code evaluated on `seed ++ input`, for every source code. This includes
+malformed syntax and invalid topology. Empty circuits and zero live width return
+empty code; the evaluation theorem requires positive live width.
+
+The compiler first validates exact raw syntax. It emits seed constants and
+live-input copies, then shifts every original wire reference uniformly. This
+preserves sharing, while the upstream shift theorem preserves evaluation
+failures. The full compiler and validator have actual FP certificates. The
+private bounded scanner's intermediate states are polynomially bounded; no
+runtime claim is inferred from output size alone.
+
+The local companion/lint/axiom build passes 3,843 jobs and audits all 1,194 owned
+declarations with standard axioms only. Lint, structural architecture, optional
+isolation and all 19 boundary regression controls pass. Fixtures cover a shared
+diamond's entire two-input truth table, a forward reference, empty syntax,
+empty-output guarding, zero live width, malformed fields, garbage and incorrect
+input width. EXP-162 and D70 record the validated layout.
+
+This closes prefix restriction as a component. Uniform machine-to-circuit
+compilation must still be joined to it, and normalized scalar outputs must be
+emitted as a circuit vector, before the reverse End-of-Line reduction is proved.
+Filtered endpoint PPAD membership and Nash search completeness remain open.
+
+Released-git smoke passes 3,829 jobs against public base `790fbe3f`; its
+compiler fixture runs alongside the existing facade, composed machine, NP and
+PPAD endpoints. Local-path mode is restored after the check.

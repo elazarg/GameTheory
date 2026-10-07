@@ -40,8 +40,13 @@ the base `GameTheory.Math.EndOfLine` module. This slice uses mutually consistent
 edges. Import `GameTheoryComplexity.PPAD` for the standard asymmetric raw
 End-of-Line relation, PPAD membership and closure, and a certified reduction
 showing consistent-edge endpoint search is PPAD-hard. Raw End-of-Line is complete
-by definition of the class. Endpoint membership needs a serialized circuit
-normalization machine; Nash PPAD-completeness remains separate work.
+by definition of the class. Endpoint membership needs a complete normalized circuit-instance emitter;
+Nash PPAD-completeness remains separate work.
+
+`Backend.CircuitPrefixCompiler` provides an actual polynomial-time serialized
+prefix restriction component. It preserves exact optional evaluation on all
+source codes at positive live width, rejects malformed syntax and guards empty
+outputs. Uniform generation and normalized vector emission still need integration.
 
 ## Use as a dependency
 

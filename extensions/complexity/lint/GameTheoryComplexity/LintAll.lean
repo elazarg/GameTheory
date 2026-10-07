@@ -40,3 +40,10 @@ import GameTheoryComplexity.Backend.EndOfLinePointerNormalization
 import GameTheoryComplexity.Backend.RawEndOfLine
 import GameTheoryComplexity.Backend.RawEndOfLineReduction
 import GameTheoryComplexity.PPAD
+import GameTheoryComplexity.Backend.CircuitCodeShift
+import GameTheoryComplexity.Backend.CircuitCodeShiftCorrectness
+import GameTheoryComplexity.Backend.CircuitPrefixRestriction
+import GameTheoryComplexity.Backend.CircuitPrefixEmitter
+import GameTheoryComplexity.Backend.CircuitCodeRestriction
+import GameTheoryComplexity.Backend.CircuitCodeValidation
+import GameTheoryComplexity.Backend.CircuitPrefixCompiler
