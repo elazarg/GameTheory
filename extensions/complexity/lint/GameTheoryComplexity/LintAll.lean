@@ -52,3 +52,7 @@ import GameTheoryComplexity.Backend.CircuitVectorEmission
 import GameTheoryComplexity.Backend.EndOfLineScalarQueries
 import GameTheoryComplexity.Backend.NormalizedEndOfLineReduction
 import GameTheoryComplexity.Backend.EndOfLineCircuitGeneration
+import GameTheoryComplexity.Backend.SpernerBinarySteps
+import GameTheoryComplexity.Backend.SpernerGridCodec
+import GameTheoryComplexity.Backend.SpernerGridCodecMachine
+import GameTheoryComplexity.Backend.SpernerGridWords

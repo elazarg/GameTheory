@@ -428,9 +428,13 @@ The dependency-free square-grid Sperner theorem now proves trichromatic-cell
 existence under general boundary exclusions, with local boundary enforcement
 and exact oriented-count cancellation. Local directed neighbors now have
 reciprocal edge proofs, a known added source, invalid-coordinate isolation and
-every-endpoint decoding for canonical boundary colors. Next encode binary grid
-coordinates and certify the pointer word machines, then emit the circuit
-instance and reduce succinct Sperner search to End-of-Line. Brouwer and Nash
+every-endpoint decoding for canonical boundary colors. Binary node encoding now
+preserves source promises and every endpoint, with malformed words isolated.
+Coordinate extraction, exact acceptance and fixed-width increment/decrement
+have actual FP certificates. Next compose the pointer word machine, handling
+boundary corners before coordinate overflow, then emit the circuit instance
+and certify every-answer word decoding to reduce succinct Sperner search to
+End-of-Line. Brouwer and Nash
 search results follow in dependency order;
 approximation conventions and FIXP remain distinct obligations.
 

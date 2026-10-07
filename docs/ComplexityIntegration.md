@@ -531,3 +531,47 @@ not a padding reduction from arbitrary boundary colorings. Succinct binary cell
 encoding, actual FP pointer machines, polynomial-time circuit emission and the
 word answer decoder remain the next obligations before claiming Sperner PPAD
 membership. The base mathematical modules have no ComplexityLib dependency.
+
+
+## Binary Sperner graph and FP primitives
+
+`Backend.SpernerGridCodec` uses a `2*b+2`-bit word: a source/triangle tag,
+an orientation bit and two little-endian `b`-bit coordinates. The unique
+source is all zero. Every triangle-tagged word denotes a valid triangle in
+a grid of side `2^b`; unused source-tagged words and incorrect lengths are
+rejected. Encoding and decoding are exact inverses on their valid domains.
+At `b=0` the grid has side one, with distinct source and triangle codes.
+
+`Backend.SpernerGridWords.wordGridPointer` transports the established local
+graph to words and isolates rejected codes. Its proofs establish unconditional
+length preservation, source promises, endpoint correspondence and bounded
+endpoint existence. `word_grid_endpoint_decodes` covers every non-source word
+endpoint, including components disconnected from the source.
+
+`Backend.SpernerGridCodecMachine` supplies actual FP certificates for source
+word production, field extraction, orientation reading and exact acceptance.
+`Backend.SpernerBinarySteps` supplies actual FP certificates for ripple-carry
+increment and borrow decrement. Their recursion is over the input bits, with
+fixed output length, never over the coordinate's numeric value. Arithmetic
+correctness requires no overflow for increment and a positive value for
+decrement; execution wraps at the fixed width.
+
+The optional package's released base pin advances to
+`a58d028f7fe4161782169c7f8c32dd793426b29c`, which publishes the prerequisite
+Sperner mathematics. Clients of the base library still need no ComplexityLib.
+
+The semantic word pointer has no composed FP certificate yet. That next
+certificate must enforce canonical boundary colors before incrementing corner
+coordinates: a boundary corner can equal `2^b`, outside a `b`-bit field.
+Uniform circuit-instance generation and an FPn every-answer decoder then
+complete the remaining reduction obligations. This slice does not establish
+succinct Sperner PPAD membership.
+
+
+Validation: the full companion, lint scope and axiom driver build pass 4,114
+jobs, auditing 1,356 owned declarations with standard axioms only. Optional
+lint, structural checks, dependency isolation and all 19 isolation controls
+pass. The released-git smoke builds the facade, Nash NP-completeness, PPAD,
+normalized End-of-Line and binary Sperner controls in 4,093 jobs against the
+new pin; local-path mode is restored. Read-only proof/software review found
+no gaps and identified the boundary-overflow requirement for the next slice.

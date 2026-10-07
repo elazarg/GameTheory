@@ -72,7 +72,7 @@ import GameTheoryComplexity.Backend.NashNPComplete
 ```
 
 The default dependency configuration fetches the base GameTheory commit
-`790fbe3f8d0b745b1c111dd3cea508dd399a335f`; it does not assume a sibling checkout.
+`a58d028f7fe4161782169c7f8c32dd793426b29c`; it does not assume a sibling checkout.
 All packages must share Lean/Mathlib 4.34.1. ComplexityLib is pinned to the public
 fork `elazarg/complexitylib@c5f2acf1a35d5b00db04cd1bd337a8ce57d66a40`, and CSLib to
 `94ea80f41a5678fce997a004f0d8d12dbe47cc4b`. Their declared upstream toolchains are
@@ -123,3 +123,10 @@ modules cannot import the optional surface and that resolved Mathlib revisions
 are identical. The axiom audit checks every extension declaration's transitive
 axioms, rejecting placeholders and all axioms except `propext`,
 `Classical.choice`, and `Quot.sound`.
+
+
+Import `GameTheoryComplexity.Backend.SpernerGridWords` for binary encoding of
+the local Sperner graph, source promises and every-endpoint decoding. Import
+`Backend.SpernerGridCodecMachine` and `Backend.SpernerBinarySteps` for actual
+FP certificates for codec fields, exact acceptance and fixed-width arithmetic.
+The composed pointer machine and succinct Sperner PPAD reduction remain open.
