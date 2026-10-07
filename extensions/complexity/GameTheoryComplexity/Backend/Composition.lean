@@ -28,7 +28,7 @@ theorem machineLaw_start_halted {n : ℕ} (machine : NTM n)
   exact PMF.map_const _ _
 
 /-- A composed trace has exactly the original acceptance law after its deterministic
-prefixSteps, with a clock bounded by the preprocessing and test execution budgets. -/
+prefix, with a clock bounded by the preprocessing and test execution budgets. -/
 theorem composition_machineLaw {nf ng : ℕ} (preprocessor : TM nf) (machine : NTM ng)
     {f : List Bool → List Bool} {preprocessTime : ℕ → ℕ}
     (computes : preprocessor.ComputesInTime f preprocessTime) (clock : PolynomialClock machine)
@@ -45,13 +45,8 @@ theorem composition_machineLaw {nf ng : ℕ} (preprocessor : TM nf) (machine : N
     NTM.compositionNTM_trace_run preprocessor machine computes input nontrivial
   let run := clock.steps (f input).length + 1
   have hhaltRun : ∀ choices : Fin run → Bool,
-      machine.halted (machine.trace run choices (machine.initCfg (f input))) := by
-    intro choices
-    have heq := machine.trace_mono (Nat.le_succ _)
-      (choices := fun i => choices ⟨i.val, by omega⟩) (choices' := choices)
-      (c := machine.initCfg (f input)) (fun _ => rfl) (clock.halts (f input) _)
-    rw [heq]
-    exact clock.halts (f input) _
+      machine.halted (machine.trace run choices (machine.initCfg (f input))) :=
+    (clock.halts.mono (fun _ => Nat.le_succ _)) (f input)
   refine ⟨run + prefixSteps, by dsimp [run]; omega, ?_, ?_⟩
   · intro choices
     rw [hrun (clock.steps (f input).length) choices]
@@ -96,14 +91,10 @@ theorem composition_polynomial_certificate {nf ng : ℕ} (preprocessor : TM nf)
       Polynomial.eval_pow]
     omega
   refine ⟨bound, ?_, ?_⟩
-  · intro input choices
+  · intro input
     obtain ⟨steps, hsteps, hhalt, _⟩ := composition_machineLaw preprocessor machine computes clock nontrivial input
-    have hle := hsteps.trans (hbudget input)
-    have heq := (NTM.compositionNTM preprocessor machine).trace_mono hle
-      (choices := fun i => choices ⟨i.val, lt_of_lt_of_le i.isLt hle⟩) (choices' := choices)
-      (c := (NTM.compositionNTM preprocessor machine).initCfg input) (fun _ => rfl) (hhalt _)
-    rw [heq]
-    exact hhalt _
+    exact machine_halts_of_le (NTM.compositionNTM preprocessor machine) input
+      (hsteps.trans (hbudget input)) hhalt
   · intro input
     obtain ⟨steps, hsteps, hhalt, hlaw⟩ := composition_machineLaw preprocessor machine computes clock nontrivial input
     exact (machineLaw_of_le_of_halts (NTM.compositionNTM preprocessor machine) input

@@ -1,4 +1,4 @@
-import GameTheoryComplexity.Backend.CompiledSampleTest
+import GameTheoryComplexity.Backend.Complexitylib
 
 /-! A small sample-test facade for the selected computational backend.
 Client statements use the library's existing tests and indistinguishability relation;

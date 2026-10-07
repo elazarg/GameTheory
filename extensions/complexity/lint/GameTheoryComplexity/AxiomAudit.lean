@@ -1,4 +1,5 @@
 import GameTheoryComplexity
+import GameTheoryComplexity.LintAll
 import GameTheoryComplexity.Backend.Negligible
 import GameTheoryComplexity.Tests.RandomTape
 import GameTheoryComplexity.Tests.Facade
@@ -15,7 +16,10 @@ run_cmd do
   let allowed := #[``propext, ``Classical.choice, ``Quot.sound]
   let mut checked : ℕ := 0
   for (name, _) in env.constants.toList do
-    if (`GameTheory.Complexity).isPrefixOf name then
+    let owned := match env.getModuleIdxFor? name with
+      | some idx => (`GameTheoryComplexity).isPrefixOf env.header.moduleNames[idx.toNat]!
+      | none => false
+    if owned then
       checked := checked + 1
       for axiomName in (← collectAxioms name) do
         unless allowed.contains axiomName do

@@ -32,18 +32,10 @@ theorem serializeBoolean_mem_FPn : FPn serializeBoolean := by
   have h1 : (fun z => pair (b z) z) ∈ FP := mem_FP_pairWithInput hb
   have h2 : (fun w => pair (a (pairSnd w)) w) ∈ FP :=
     mem_FP_pairWithInput (mem_FP_comp sndBlock_mem_FP ha)
-  have h12 := mem_FP_comp h1 h2
-  have heq : ((fun w => pair (a (pairSnd w)) w) ∘ fun z => pair (b z) z) =
-      fun z => pair (a z) (pair (b z) z) := by
-    funext z
-    simp [Function.comp, pairSnd_pair]
-  rw [heq] at h12
-  have hr := mem_FP_comp h12 reorder_mem_FP
-  have heq' : (reorder ∘ fun z => pair (a z) (pair (b z) z)) =
-      fun z => pair (a z) (b z) := by
-    funext z
-    simp [Function.comp, reorder_pair_pair]
-  rw [heq'] at hr
+  have h12 : (fun z => pair (a z) (pair (b z) z)) ∈ FP := by
+    simpa only [Function.comp_def, pairSnd_pair] using mem_FP_comp h1 h2
+  have hr : (fun z => pair (a z) (b z)) ∈ FP := by
+    simpa only [Function.comp_def, reorder_pair_pair] using mem_FP_comp h12 reorder_mem_FP
   refine ⟨catBlocks ∘ (fun z => pair (a z) (b z)), mem_FP_comp hr catBlocks_mem_FP, ?_⟩
   intro v
   simp [a, b, serializeBoolean, Function.comp, encodeVec, List.append_assoc]
@@ -61,19 +53,21 @@ theorem serializeBoolean_booleanTuple (sampleDegree κ : ℕ)
     serializeBoolean (booleanTuple sampleDegree κ draws) = booleanInput sampleDegree κ draws := by
   simp [serializeBoolean, booleanTuple, booleanInput]
 
+/-- The fixed-arity encoding has an exact linear size formula. -/
+theorem booleanTuple_encode_length (sampleDegree κ : ℕ)
+    (draws : Fin ((κ + 1) ^ sampleDegree) → Bool) :
+    (encodeVec (booleanTuple sampleDegree κ draws)).length = κ + 2 * (κ + 1) ^ sampleDegree + 6 := by
+  simp [encodeVec, booleanTuple, Fin.tail]
+  omega
+
 /-- The encoded tuple has polynomial length in the unary security parameter. -/
 theorem booleanTuple_encode_length_bound (sampleDegree κ : ℕ)
     (draws : Fin ((κ + 1) ^ sampleDegree) → Bool) :
     (encodeVec (booleanTuple sampleDegree κ draws)).length ≤
       24 * (κ + 1) ^ (sampleDegree + 1) := by
-  have h := encodeVec_length_le (booleanTuple sampleDegree κ draws)
   have hlength := booleanInput_length_bound sampleDegree κ draws
   have hpow : 1 ≤ (κ + 1) ^ (sampleDegree + 1) := one_le_pow₀ (by omega)
-  have hvec : vectorLength (booleanTuple sampleDegree κ draws) = κ + (κ + 1) ^ sampleDegree := by
-    simp [vectorLength, booleanTuple, Fin.sum_univ_succ]
-  change (encodeVec (booleanTuple sampleDegree κ draws)).length ≤
-    4 * (vectorLength (booleanTuple sampleDegree κ draws) + 4) at h
-  rw [hvec] at h
+  rw [booleanTuple_encode_length]
   rw [booleanInput_length] at hlength
   omega
 

@@ -101,6 +101,43 @@ require GameTheoryComplexity from git \\"ignored\\"
                    "import Mathlib Complexitylib.Classes.Randomized\n")
         self.assert_rejects("Base module imports optional complexity surface")
 
+    def test_rejects_meta_imports_and_quoted_module_components(self):
+        for imported in [
+            "meta import GameTheoryComplexity.SampleTest",
+            "public meta import Complexitylib.Classes.Randomized",
+            "meta import all Cslib.Models",
+            "import «GameTheoryComplexity».SampleTest",
+            "public import «Complexitylib».Classes.Randomized",
+            "public meta import «GameTheory».«Complexity».SampleTest",
+            "import «Cslib».«Models With Spaces»",
+        ]:
+            with self.subTest(imported=imported):
+                self.write("GameTheory/Core/Fixture.lean", f"module\n{imported}\n")
+                self.assert_rejects("Base module imports optional complexity surface")
+
+    def test_quoted_literal_dot_is_not_a_module_component_separator(self):
+        self.write("GameTheory/Core/Fixture.lean",
+                   "module\nimport «GameTheoryComplexity.SampleTest»\n")
+        self.assert_passes()
+
+    def test_comment_markers_and_quotes_inside_identifiers_are_literal(self):
+        self.write("GameTheory/Core/Fixture.lean", '''module
+import «GameTheoryComplexity--ordinary-module»
+import «GameTheoryComplexity/-ordinary-/module»
+import «GameTheoryComplexity"ordinary"module»
+''')
+        self.assert_passes()
+
+    def test_meta_imports_inside_comments_and_strings_are_ignored(self):
+        self.write("GameTheory/Core/Fixture.lean", '''module
+meta import Lean
+/- public meta import «Complexitylib».Classes.Randomized -/
+def ignoredString := "
+meta import GameTheoryComplexity.SampleTest
+"
+''')
+        self.assert_passes()
+
     def test_comments_cannot_join_import_tokens_and_hide_dependencies(self):
         self.write("GameTheory/Core/Fixture.lean",
                    "import/- separator -/Complexitylib.Classes.Randomized\n")
@@ -146,6 +183,29 @@ require GameTheoryComplexity from git \\"ignored\\"
             "url": "https://github.com/gili-b/VI-NP-verification",
         }])
         self.assert_rejects("Private compatibility fork is not a distributable dependency")
+
+    def test_rejects_new_public_module_omitted_from_lint_driver(self):
+        self.write("extensions/complexity/GameTheoryComplexity/Known.lean", "import Init\n")
+        self.write("extensions/complexity/lint/GameTheoryComplexity/LintAll.lean",
+                   "import GameTheoryComplexity.Known\n")
+        self.assert_passes()
+        self.write("extensions/complexity/GameTheoryComplexity/NewLeaf.lean",
+                   "namespace GameTheory.Complexity\naxiom unaudited : False\n")
+        self.assert_rejects("Complexity public module missing from lint imports")
+
+    def test_lint_coverage_includes_umbrella_and_requires_driver(self):
+        self.write("extensions/complexity/GameTheoryComplexity.lean", "import Init\n")
+        self.assert_rejects("Complexity public modules have no lint import driver")
+        self.write("extensions/complexity/lint/GameTheoryComplexity/LintAll.lean", "import Init\n")
+        self.assert_rejects("Complexity public module missing from lint imports")
+        self.write("extensions/complexity/lint/GameTheoryComplexity/LintAll.lean",
+                   "import «GameTheoryComplexity»\n")
+        self.assert_passes()
+
+    def test_lint_coverage_excludes_opt_in_experiments_and_test_fixtures(self):
+        for module in ["Tests/Consumer", "Experimental/Spike", "ConsumerTest"]:
+            self.write(f"extensions/complexity/GameTheoryComplexity/{module}.lean", "import Init\n")
+        self.assert_passes()
 
 
 if __name__ == "__main__":

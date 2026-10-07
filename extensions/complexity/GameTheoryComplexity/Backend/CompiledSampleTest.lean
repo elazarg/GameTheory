@@ -37,12 +37,7 @@ theorem exists_composed_booleanMachine {ng : ℕ} (machine : NTM ng)
     rw [hbound]
     exact polynomial_eval_mono_nat p (booleanTuple_encode_length_bound sampleDegree κ draws)
   constructor
-  · intro choices
-    have heq := composite.trace_mono hle
-      (choices := fun i => choices ⟨i.val, by omega⟩) (choices' := choices)
-      (c := composite.initCfg input) (fun _ => rfl) (hhalt input _)
-    rw [heq]
-    exact hhalt input _
+  · exact machine_halts_of_le composite input hle (hhalt input)
   · have hencoded : f input = booleanInput sampleDegree κ draws :=
       (hspec _).trans (serializeBoolean_booleanTuple sampleDegree κ draws)
     have h := (machineLaw_of_le_of_halts composite input hle (hhalt input)).trans (hlaw input)

@@ -79,4 +79,8 @@ instantiation follows from this boundary.
 Uniform hybrid composition remains dependency-free, reusing the existing
 negligible-advantage semantics and producing canonical `SecureImplementation`
 certificates. A moving-jump counterexample rejects fixed-index negligible gaps
-as a substitute for a uniform bound over the active indices.
+as a substitute for controlling the total adjacent error. The proof-mining
+review generalizes composition to negligible summed error, retaining uniform
+polynomial composition as a corollary. General finite-uniform transport and
+tuple projections belong to the base probability layer; the companion reuses
+them. These theorem refinements do not change the adopted package boundary.

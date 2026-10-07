@@ -1,2 +1,4 @@
 import GameTheoryComplexity.RandomTape
 import GameTheoryComplexity.SampleTest
+import GameTheoryComplexity.Backend.CompiledSampleTest
+import GameTheoryComplexity.Backend.Negligible

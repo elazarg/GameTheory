@@ -73,5 +73,16 @@ jobs:
         run: ../../scripts/complexity-audit.ps1
       - name: Verify optional-boundary regression cases
         run: python -m unittest discover -s ../../scripts/tests -p test_complexity_audit.py
+      - name: Resolve the released base pin without a local override
+        run: |
+          lake -R update
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $manifest = Get-Content -LiteralPath lake-manifest.json -Raw | ConvertFrom-Json
+          $base = @($manifest.packages | Where-Object name -eq 'GameTheory')
+          if ($base.Count -ne 1 -or $base[0].type -ne 'git') {
+            throw 'Released consumer smoke still resolves a local GameTheory path'
+          }
+      - name: Build the facade and composed implementation against the released base
+        run: lake build GameTheoryComplexity.Tests.Facade GameTheoryComplexity.Backend.CompiledSampleTest
       - name: Verify checks do not mutate tracked files
         run: git diff --exit-code

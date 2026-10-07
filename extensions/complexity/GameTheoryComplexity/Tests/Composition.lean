@@ -87,4 +87,64 @@ theorem composed_immediate_rejection :
   rw [hlaw]
   exact machineLaw_start_halted stoppedMachine rfl _ _
 
+/-- Read the third serialized bit, overwriting verdict cell one as input advances.
+At unary parameter one this is the first sample, after the parameter and delimiter. -/
+def payloadReader : NTM 0 where
+  Q := Fin 5
+  qstart := 0
+  qhalt := 4
+  δ _ state input _ output :=
+    (if state = 0 then 1 else if state = 1 then 2 else if state = 2 then 3 else 4,
+      fun _ => Γw.blank, if input = Γ.one then Γw.one else Γw.zero,
+      Dir3.right, fun _ => Dir3.right, if output = Γ.start then Dir3.right else Dir3.stay)
+  δ_right_of_start := by
+    intros
+    exact ⟨fun _ => rfl, fun _ _ => rfl, fun h => by simp [h]⟩
+
+theorem payloadReader_halts : payloadReader.AllPathsHaltIn (fun _ => 4) := by
+  intro input choices
+  simp [NTM.trace, payloadReader]
+
+def payloadClock : PolynomialClock payloadReader where
+  steps _ := 4
+  halts := payloadReader_halts
+  degree := 0
+  asymptotic := BigO.const_le_pow 4 0
+  constant := 4
+  bound := by intro len; simp
+
+theorem payloadReader_verdict (b : Bool) (choices : Fin 4 → Bool) :
+    machineVerdict payloadReader [true, false, b] 4 choices = b := by
+  cases b <;> simp [machineVerdict, NTM.trace, payloadReader, Tape.read, Tape.write, Tape.move,
+    Tape.init, Γ.ofBool]
+
+theorem payloadReader_law (b : Bool) :
+    machineLaw payloadReader [true, false, b] 4 = PMF.pure b := by
+  have hfun : machineVerdict payloadReader [true, false, b] 4 = fun _ => b := by
+    funext choices
+    exact payloadReader_verdict b choices
+  simp only [machineLaw, randomTapeLaw, hfun]
+  exact PMF.map_const _ _
+
+/-- One compiled machine distinguishes the two payloads after reading the unary
+parameter and delimiter, so serialization correctness is observable end to end. -/
+theorem composed_payload_reader :
+    ∃ (n : ℕ) (composite : NTM n), composite.IsPPT ∧ ∃ bound : Polynomial ℕ,
+      ∀ b : Bool,
+        (∀ choices : Fin (bound.eval 1) → Bool,
+          composite.halted (composite.trace (bound.eval 1) choices
+            (composite.initCfg (encodeVec (booleanTuple 0 1 (fun _ => b)))))) ∧
+        machineLaw composite (encodeVec (booleanTuple 0 1 (fun _ => b))) (bound.eval 1) = PMF.pure b := by
+  obtain ⟨n, composite, hppt, hdegrees⟩ := exists_composed_booleanMachine payloadReader payloadClock
+  obtain ⟨bound, hcert⟩ := hdegrees 0
+  refine ⟨n, composite, hppt, bound, fun b => ?_⟩
+  obtain ⟨hhalt, hlaw⟩ := hcert 1 (fun _ => b)
+  refine ⟨hhalt, ?_⟩
+  rw [hlaw]
+  change machineLaw payloadReader (booleanInput 0 1 (fun _ => b)) 4 = PMF.pure b
+  have hinput : booleanInput 0 1 (fun _ => b) = [true, false, b] := by
+    simp [booleanInput, List.ofFn_succ]
+  rw [hinput]
+  exact payloadReader_law b
+
 end GameTheory.Complexity.Tests

@@ -10,6 +10,7 @@ function Remove-LeanCommentsAndStrings([string] $Source, [switch] $PreserveStrin
   $stringValue = [Text.StringBuilder]::new()
   $depth = 0
   $inString = $false
+  $inIdentifier = $false
   $escaped = $false
   for ($i = 0; $i -lt $Source.Length; $i++) {
     $c = $Source[$i]
@@ -18,6 +19,11 @@ function Remove-LeanCommentsAndStrings([string] $Source, [switch] $PreserveStrin
       if ($c -eq '/' -and $next -eq '-') { $depth++; $i++ }
       elseif ($c -eq '-' -and $next -eq '/') { $depth--; $i++ }
       elseif ($c -eq "`n") { [void] $result.Append("`n") }
+      continue
+    }
+    if ($inIdentifier) {
+      [void] $result.Append($c)
+      if ($c -eq '»') { $inIdentifier = $false }
       continue
     }
     if ($inString) {
@@ -35,6 +41,11 @@ function Remove-LeanCommentsAndStrings([string] $Source, [switch] $PreserveStrin
         elseif ($c -eq '\') { $escaped = $true }
         if (-not $PreserveStrings -and $c -eq "`n") { [void] $result.Append("`n") }
       }
+      continue
+    }
+    if ($c -eq '«') {
+      $inIdentifier = $true
+      [void] $result.Append($c)
       continue
     }
     if ($c -eq '/' -and $next -eq '-') {
@@ -56,14 +67,36 @@ function Remove-LeanCommentsAndStrings([string] $Source, [switch] $PreserveStrin
   $result.ToString()
 }
 
-$forbidden = '^(?:GameTheory\.Complexity(?:\.|$)|GameTheoryComplexity(?:\.|$)|Complexitylib(?:\.|$)|Cslib(?:\.|$))'
+function Get-LeanImports([string] $Source) {
+  $text = Remove-LeanCommentsAndStrings $Source
+  $header = '(?m)^\s*(?:public\s+)?(?:meta\s+)?import\s+(?:all\s+)?([^\r\n]+)'
+  $component = '«[^»\r\n]*»|[^\s.«»]+'
+  $identifier = "(?:$component)(?:\.(?:$component))*"
+  foreach ($import in [regex]::Matches($text, $header)) {
+    foreach ($module in [regex]::Matches($import.Groups[1].Value, $identifier)) {
+      $components = @([regex]::Matches($module.Value, $component) | ForEach-Object {
+        if ($_.Value.StartsWith('«')) { $_.Value.Substring(1, $_.Value.Length - 2) }
+        else { $_.Value }
+      })
+      # Components distinguish a quoted identifier containing a literal dot
+      # from two actual module-name components.
+      [pscustomobject]@{
+        Name = $module.Value
+        Components = $components
+        Key = $components -join ([char]0x1f)
+      }
+    }
+  }
+}
+
 $baseSources = @(Get-ChildItem -LiteralPath (Join-Path $RepoRoot 'GameTheory') -Recurse -Filter '*.lean')
 $baseSources += Get-Item -LiteralPath (Join-Path $RepoRoot 'GameTheory.lean')
 foreach ($source in $baseSources) {
-  $text = Remove-LeanCommentsAndStrings (Get-Content -LiteralPath $source.FullName -Raw)
-  foreach ($import in [regex]::Matches($text, '(?m)^\s*(?:public\s+)?import\s+([^\r\n]+)')) {
-    foreach ($module in ($import.Groups[1].Value -split '\s+')) {
-      if ($module -match $forbidden) { throw "Base module imports optional complexity surface: $($source.FullName) ($module)" }
+  foreach ($module in (Get-LeanImports (Get-Content -LiteralPath $source.FullName -Raw))) {
+    $components = $module.Components
+    if ($components[0] -cin @('GameTheoryComplexity', 'Complexitylib', 'Cslib') -or
+        ($components.Count -ge 2 -and $components[0] -ceq 'GameTheory' -and $components[1] -ceq 'Complexity')) {
+      throw "Base module imports optional complexity surface: $($source.FullName) ($($module.Name))"
     }
   }
 }
@@ -80,6 +113,31 @@ foreach ($dependency in $baseManifest.packages) {
   }
 }
 $extensionRoot = Join-Path $RepoRoot 'extensions/complexity'
+$publicSources = @()
+$sourceRoot = Join-Path $extensionRoot 'GameTheoryComplexity'
+if (Test-Path -LiteralPath $sourceRoot) {
+  $publicSources += Get-ChildItem -LiteralPath $sourceRoot -Recurse -Filter '*.lean' | Where-Object {
+    $_.FullName -notmatch '[\\/](Tests|Experimental)[\\/]' -and $_.BaseName -notlike '*Test'
+  }
+}
+$umbrella = Join-Path $extensionRoot 'GameTheoryComplexity.lean'
+if (Test-Path -LiteralPath $umbrella) { $publicSources += Get-Item -LiteralPath $umbrella }
+if ($publicSources.Count -gt 0) {
+  $lintPath = Join-Path $extensionRoot 'lint/GameTheoryComplexity/LintAll.lean'
+  if (-not (Test-Path -LiteralPath $lintPath)) { throw 'Complexity public modules have no lint import driver' }
+  $lintImports = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+  foreach ($module in (Get-LeanImports (Get-Content -LiteralPath $lintPath -Raw))) {
+    [void] $lintImports.Add($module.Key)
+  }
+  foreach ($source in $publicSources) {
+    $relative = [IO.Path]::GetRelativePath($extensionRoot, $source.FullName)
+    $parts = @($relative -split '[\\/]')
+    $parts[-1] = [IO.Path]::GetFileNameWithoutExtension($parts[-1])
+    if (-not $lintImports.Contains($parts -join ([char]0x1f))) {
+      throw "Complexity public module missing from lint imports: $($parts -join '.')"
+    }
+  }
+}
 if ((Get-Content -LiteralPath (Join-Path $RepoRoot 'lean-toolchain') -Raw).Trim() -ne
     (Get-Content -LiteralPath (Join-Path $extensionRoot 'lean-toolchain') -Raw).Trim()) {
   throw 'Base and complexity toolchains differ'

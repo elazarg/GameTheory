@@ -36,9 +36,13 @@ ComplexityLib. See the companion README for local and consumer commands.
 - `GameTheoryComplexity.SampleTest`: a small client facade exposing the Boolean
   test class, its polynomial sample-count property, and indistinguishability
   implications using only canonical GameTheory types in declaration signatures.
-- `GameTheory.Math.Probability.HybridIndistinguishability`: a uniform adjacent
-  advantage certificate, finite telescoping bound, and indistinguishable
-  endpoints after polynomially many uniformly negligible changes.
+- `GameTheory.Math.Probability.UniformProjection`: bijective transport, independent
+  product factorization, and uniform prefix/suffix projections over any finite
+  nonempty alphabet. The random-tape composition proofs reuse these base results.
+- `GameTheory.Math.Probability.HybridIndistinguishability`: a finite telescoping
+  bound and indistinguishable endpoints whenever the sum of adjacent advantages
+  is negligible, without a polynomial stage-count assumption. Polynomially many
+  uniformly negligible changes are a corollary.
 - `GameTheory.Core.PseudoNashHybrid`: construction of the existing
   `SecureImplementation` certificate from honest and deviation utility hybrids.
 
@@ -82,7 +86,9 @@ For hybrids, a separate negligible bound for every fixed index is insufficient.
 `HybridIndistinguishabilityTest.movingJump` moves a perfectly visible jump to
 index `κ`: every fixed adjacent pair is eventually identical, while the
 polynomial-length chain has distinguishable endpoints. The accepted certificate
-uses one eventual bound for every active index at each security parameter.
+can bound the summed adjacent error directly, or use one eventual bound for
+every active index when the number of stages is polynomial. An exponentially
+long chain with only one nonzero change exercises the more general theorem.
 
 ## Source selection
 
@@ -103,13 +109,44 @@ distinguished from their actual solution modules before any future recovery.
 
 Integration measurements are recorded in EXP-158 in `ExperimentLog.md` and the
 optional-package decision record. The companion CI builds only its own root and
-lint target, checks dependency isolation, and audits selected theorem axioms.
+lint target, checks dependency isolation, and audits the transitive axioms of
+every extension-owned declaration, including private and generated declarations.
 The base CI remains independent of the companion dependency resolution.
 
 The combined serialization and composition slice builds the companion library,
-fixtures, lint driver and axiom audit with 3,110 jobs on Lean/Mathlib 4.34.1. All
-113 extension declarations pass the transitive axiom audit. The fair-coin consumer
+fixtures, lint driver and axiom audit with 3,111 jobs on Lean/Mathlib 4.34.1. All
+134 extension declarations pass the transitive axiom audit. The fair-coin consumer
 has exact acceptance probability `1/2` even with a nonmonotone source clock, and a
 zero-step source test exercises immediate rejection. Selected FP and machine
 composition dependencies compile unchanged, without importing the full Cobham
 characterization.
+
+## Proof-mining and implementation review
+
+The review moved general finite-uniform projection mathematics into the base
+library and generalized hybrid composition to negligible total error. Neither
+result depends on a machine backend. Clock proofs now share monotone halting
+preservation and upstream clock monotonicity; serializer composition proofs use
+ordinary function composition, and an exact encoded-length formula replaces
+repeated encoding arithmetic. Existing client theorem statements are preserved.
+
+The software review found that import modifiers and quoted module identifiers
+could bypass the dependency scanner. The corrected scanner handles both and
+requires every public companion module to appear in the lint driver. The axiom
+audit follows declaration origin rather than namespace spelling. Nineteen
+mutation regressions pass. The small facade avoids importing serializer and
+composition proofs; the umbrella explicitly includes the full delivered surface.
+
+The input-sensitive consumer uses one compiled machine for both Boolean payloads
+and proves that its complete verdict law is the corresponding point mass. This
+checks serialization observably, alongside the existing fair-coin and halted-start
+controls. The base library and lint driver build in 4,342 jobs; the exponential
+hybrid fixture, both linters, and the expected-value architecture audit pass.
+The companion CI also resolves the published base pin without a local path
+override and builds the facade and composed implementation against that pin.
+
+The local released-mode update was attempted but GitHub HTTPS fetches failed
+with connection timeouts. The published base commit is confirmed through the
+GitHub API; local builds use the same committed sources through the path override.
+The new hosted released-pin consumer check remains the validation for git-mode
+resolution; it is not counted as a local pass.

@@ -38,7 +38,7 @@ import GameTheoryComplexity.SampleTest
 ```
 
 The default dependency configuration fetches the base GameTheory commit
-`13792d1733dac14122862d0aff2eac76acbd253e`; it does not assume a sibling checkout.
+`71a6547d9491953f4a4f5a28e18f7eac81e2f8c8`; it does not assume a sibling checkout.
 All packages must share Lean/Mathlib 4.34.1. ComplexityLib is pinned to the public
 upstream commit `257ad90ec5f547894cc20f27bd828839b1bf7bbf`, and CSLib to
 `94ea80f41a5678fce997a004f0d8d12dbe47cc4b`. Their declared upstream toolchains are

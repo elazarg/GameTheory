@@ -404,7 +404,8 @@ encodings, efficient sampling of reference utilities, certified strategy and
 simulator implementations, and full computational equilibrium specialization
 remain distinct obligations. Do not infer these from machine execution bounds.
 
-The dependency-free adjacent slice is uniform polynomial hybrid composition,
+The dependency-free adjacent slice is summed-error hybrid composition, with
+uniform polynomial hybrid composition as a corollary,
 with a canonical `SecureImplementation` constructor and a moving-jump
 counterexample to merely fixed-index negligible differences. Mean-payoff and
 matroid prophet results from `openai/math` remain source candidates for future
