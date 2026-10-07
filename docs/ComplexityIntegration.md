@@ -490,3 +490,44 @@ dependency isolation pass. This establishes mathematical totality; binary cell
 encoding, local predecessor/successor machines and a polynomial-time every-answer
 reduction are still required for succinct Sperner PPAD membership. No such
 classification or Brouwer/Nash reduction follows from this existence proof alone.
+
+## Local directed Sperner graph
+
+`GameTheory.Math.SpernerDoors` selects an incoming side with zero/one flux `+1`
+and an outgoing side with flux `-1`. Each sign occurs on at most one side.
+Exactly one sign is present precisely when the triangle is trichromatic.
+`SpernerGridGeometry` represents a triangle by two natural coordinates and its
+half-square bit. Crossing a numbered side computes the adjacent triangle and
+its reversed side, or reports an exterior edge. The proofs certify coordinate
+bounds, reciprocal crossing, distinct neighbors and opposite edge orientation.
+
+The graph uses `standardGridColor` to enforce its boundary locally. The only
+exterior zero/one door is the first lower triangle's incoming bottom side.
+`SpernerGridGraph.gridPointer` connects that entrance to one added source node,
+returns a self-loop for an absent door, and isolates out-of-range coordinates.
+For every selected door, the opposite pointer returns to the original node.
+This links local door presence to the canonical `Math.EndOfLine` edge predicates.
+
+`grid_endpoint_iff` identifies valid triangle endpoints exactly with
+trichromatic cells. `grid_endpoint_decodes` establishes that every endpoint
+other than the added source is valid and trichromatic, independently of its
+component. `grid_source` proves the source promises at positive size, including
+size one when the entrance triangle itself can be the answer.
+`exists_grid_endpoint` obtains a bounded endpoint from the established grid
+Sperner theorem. The local functions inspect three corners and one neighbor;
+they do not traverse a path or enumerate the grid.
+
+The graph/control/lint-scope build passes 4,072 jobs, and base lint passes.
+Controls execute a closed
+six-triangle cycle disconnected from the source, both endpoint orientations,
+size-one source and sink behavior, invalid-coordinate isolation and zero-size
+source failure. Independent semantic and proof-simplification reviews found no
+gaps; structural checks and optional dependency isolation pass. A transitive
+axiom audit checks all 89 declarations owned by the four new mathematical
+modules and their fixtures, allowing only standard axioms.
+
+This supplies the semantic local graph for canonical boundary colors. It is
+not a padding reduction from arbitrary boundary colorings. Succinct binary cell
+encoding, actual FP pointer machines, polynomial-time circuit emission and the
+word answer decoder remain the next obligations before claiming Sperner PPAD
+membership. The base mathematical modules have no ComplexityLib dependency.

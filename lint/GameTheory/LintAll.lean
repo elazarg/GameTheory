@@ -382,3 +382,7 @@ import GameTheory.Math.EndOfLineNormalization
 import GameTheory.Math.SpernerTriangle
 import GameTheory.Math.GridFlux
 import GameTheory.Math.GridSperner
+import GameTheory.Math.SpernerDoors
+import GameTheory.Math.SpernerGridGeometry
+import GameTheory.Math.SpernerGridDoors
+import GameTheory.Math.SpernerGridGraph

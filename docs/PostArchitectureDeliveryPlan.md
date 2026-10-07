@@ -426,9 +426,12 @@ restriction and bounded vector emission provide the reverse reduction's actual
 polynomial-time instance map. Filtered endpoint search is therefore PPAD-complete.
 The dependency-free square-grid Sperner theorem now proves trichromatic-cell
 existence under general boundary exclusions, with local boundary enforcement
-and exact oriented-count cancellation. Next encode binary grid coordinates
-and certified local directed neighbors, then reduce succinct Sperner search
-to End-of-Line. Brouwer and Nash search results follow in dependency order;
+and exact oriented-count cancellation. Local directed neighbors now have
+reciprocal edge proofs, a known added source, invalid-coordinate isolation and
+every-endpoint decoding for canonical boundary colors. Next encode binary grid
+coordinates and certify the pointer word machines, then emit the circuit
+instance and reduce succinct Sperner search to End-of-Line. Brouwer and Nash
+search results follow in dependency order;
 approximation conventions and FIXP remain distinct obligations.
 
 ## 3. Stable boundaries
