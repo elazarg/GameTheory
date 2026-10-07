@@ -21,11 +21,15 @@ inferred from output length. A user-supplied encoder is never
 classified as efficient merely because its result has polynomial length.
 
 The payoff-constrained Nash slice certifies SAT reduction to explicit symmetric
-integer payoff tables and proves NP-hardness of mixed Nash existence with both
+integer payoff tables and proves NP-completeness of mixed Nash existence with both
 payoffs at least one. The writer has an actual fixed polynomial-time machine
 certificate and exact agreement with the table decoder. Base game semantics,
 the satisfiability characterization and serialization remain dependency-free.
-NP membership and PPAD/FIXP search results are separate work.
+Membership uses bounded rational witnesses and a polynomial-time binary verifier
+for the same total decoder and canonical Nash predicate. Import
+`GameTheoryComplexity.Backend.NashNPComplete` for the headline theorem,
+`Backend.NashNP` for membership alone, or `Backend.SATReduction` for hardness
+alone. PPAD/FIXP search results remain separate work.
 
 ## Use as a dependency
 
@@ -42,12 +46,12 @@ Import only the modules needed by the client:
 ```lean
 import GameTheoryComplexity.SampleTest
 -- The umbrella contains the random-sample integration surface.
--- Import this leaf separately for payoff-constrained Nash NP-hardness:
-import GameTheoryComplexity.Backend.SATReduction
+-- Import this leaf separately for payoff-constrained Nash NP-completeness:
+import GameTheoryComplexity.Backend.NashNPComplete
 ```
 
 The default dependency configuration fetches the base GameTheory commit
-`3132599983a6baf0d67fa2e41e0da1c8e7521405`; it does not assume a sibling checkout.
+`15b05259fabcc79f5b8b33630fd223a9a799e0f3`; it does not assume a sibling checkout.
 All packages must share Lean/Mathlib 4.34.1. ComplexityLib is pinned to the public
 fork `elazarg/complexitylib@c5f2acf1a35d5b00db04cd1bd337a8ce57d66a40`, and CSLib to
 `94ea80f41a5678fce997a004f0d8d12dbe47cc4b`. Their declared upstream toolchains are

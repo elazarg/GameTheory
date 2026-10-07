@@ -232,3 +232,66 @@ scanner output, that table agreement uses only emitted indices, and that the
 scanner's packed-state width bound is distinct from its polynomial runtime
 certificate. No broader machine interface or second equilibrium semantics is
 introduced.
+
+## NP-completeness and bounded rational witnesses
+
+`Backend.NashNPComplete.unitPayoffLanguage_NPComplete` combines the existing
+whole-table SAT reduction with NP membership of the same explicit symmetric
+integer-table language. The condition is a mixed Nash equilibrium with both
+expected payoffs at least one. The target remains the canonical PMF game
+predicate, including the total decoder's interpretation of malformed inputs.
+
+The base package owns integer numerator certificates and their correctness.
+Each player supplies natural weights with a positive common denominator. The
+weights sum to that denominator; every pure action has payoff at most the
+claimed utility numerator, and positively weighted actions attain it. The two
+utility numerators meet the payoff-one thresholds. Generic PMF normalization
+and exact weighted expectations live in `Math.Probability.Numerator`.
+
+Completeness fixes the original equilibrium supports and solves two integer
+linear systems with nonnegative variables. Each system has `2q + 2` variables
+and `3q + 2` equations: normalization, best-response slacks, support tightness,
+forbidden weights and the payoff threshold. Generic support elimination selects
+independent columns; the Gram matrix and Cramer determinants supply bounded
+integer numerators and a positive denominator. This replaces an unbounded real
+equilibrium witness by an exact rational certificate without changing Nash
+semantics.
+
+For input length `L`, every certificate field fits
+`W(L) = 14L² + 36L + 23` bits. The certificate has exactly `(2q + 4)W(L)` bits,
+so every accepted witness has cubic length. The shared little-endian parser and
+encoder have an exact roundtrip theorem. The verifier scans each payoff's
+positive and negative tally bits and adds the corresponding binary weight;
+carry addition and unsigned comparison have actual machine certificates. Its
+loops depend on field widths and table dimensions, with no loop over a binary
+field's numeric value. `binaryCertificateVerifier_eq_true_iff` proves exact
+agreement with the base certificate constraints.
+
+`Backend.NashNP` also validates canonical pair encodings and certifies one
+deterministic polynomial-time machine for the full paired verifier. Its
+polynomially balanced FNP witness relation characterizes the canonical target,
+and the upstream guess-and-verify construction gives NP membership. The
+membership leaf does not import the SAT reduction; only the NP-completeness
+leaf combines them. Ordinary game and certificate clients need no ComplexityLib.
+
+PPAD is the next search interface, not a consequence of this decision theorem.
+The selected upstream version provides FNP and TFNP but no End-of-Line or PPAD
+API. The next dependency gate is encoded End-of-Line totality with polynomial
+verification, followed by solution-preserving polynomial search reductions.
+
+The expanded base library and lint driver pass 4,364 jobs; the companion library,
+fixtures, lint driver and axiom audit pass 3,294 jobs. All 759 extension-owned
+declarations have only standard transitive axioms. Both linters, architecture
+checks, optional dependency isolation and all 19 boundary mutation regressions
+pass. Tests exercise binary carry and padding, exact roundtrips, actual decoded
+game acceptance, incorrect support payoffs, certificate length rejection, empty
+dimensions and malformed paired inputs. No unsafe evaluator or placeholder is
+used to certify the new fixture results.
+
+The released-mode consumer resolves `GameTheory` as a public git dependency at
+`15b05259fabcc79f5b8b33630fd223a9a799e0f3`, with no local-path override, and builds
+the facade, composed sample test and NP-completeness endpoint in 3,281 jobs.
+The same command-scoped local Git object mirror supplies the published objects;
+the manifest retains the public URL and exact revision. Lean 4.34.1 and the
+successful Mathlib cache hook are confirmed. Hosted CI checks direct HTTPS
+resolution and now includes the NP-completeness endpoint in its release smoke.

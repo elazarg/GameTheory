@@ -82,7 +82,7 @@ jobs:
           if ($base.Count -ne 1 -or $base[0].type -ne 'git') {
             throw 'Released consumer smoke still resolves a local GameTheory path'
           }
-      - name: Build clients and SAT hardness against the released base
-        run: lake build GameTheoryComplexity.Tests.Facade GameTheoryComplexity.Backend.CompiledSampleTest GameTheoryComplexity.Backend.SATReduction
+      - name: Build clients and Nash NP-completeness against the released base
+        run: lake build GameTheoryComplexity.Tests.Facade GameTheoryComplexity.Backend.CompiledSampleTest GameTheoryComplexity.Backend.NashNPComplete
       - name: Verify checks do not mutate tracked files
         run: git diff --exit-code
