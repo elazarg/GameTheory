@@ -31,6 +31,15 @@ for the same total decoder and canonical Nash predicate. Import
 `Backend.NashNP` for membership alone, or `Backend.SATReduction` for hardness
 alone. PPAD/FIXP search results remain separate work.
 
+Import `GameTheoryComplexity.Backend.EndOfLineVerifier` for a total circuit-encoded
+End-of-Line
+endpoint relation in TFNP and its actual polynomial-time verifier.
+`Backend.SearchReduction` provides certified instance maps and decoders preserving
+every target solution. The generic finite endpoint theorem lives independently in
+the base `GameTheory.Math.EndOfLine` module. This slice uses mutually consistent
+edges; normalization against the usual raw inconsistency witnesses and Nash
+PPAD-completeness remain separate obligations.
+
 ## Use as a dependency
 
 In a downstream `lakefile.lean`, select a published commit containing this
@@ -51,7 +60,7 @@ import GameTheoryComplexity.Backend.NashNPComplete
 ```
 
 The default dependency configuration fetches the base GameTheory commit
-`15b05259fabcc79f5b8b33630fd223a9a799e0f3`; it does not assume a sibling checkout.
+`81ab22b375b12a8f869484deb982ac9b5c845803`; it does not assume a sibling checkout.
 All packages must share Lean/Mathlib 4.34.1. ComplexityLib is pinned to the public
 fork `elazarg/complexitylib@c5f2acf1a35d5b00db04cd1bd337a8ce57d66a40`, and CSLib to
 `94ea80f41a5678fce997a004f0d8d12dbe47cc4b`. Their declared upstream toolchains are
@@ -80,7 +89,7 @@ Run these commands from `extensions/complexity`. Quote the configuration option
 in PowerShell so `../..` is passed to Lake intact:
 
 ```text
-lake '-KgameTheoryPath=../..' update
+lake -R '-KgameTheoryPath=../..' update
 lake '-KgameTheoryPath=../..' env lean --version
 lake '-KgameTheoryPath=../..' exe cache get
 lake '-KgameTheoryPath=../..' build
@@ -91,7 +100,7 @@ lake '-KgameTheoryPath=../..' build GameTheoryComplexity.AxiomAudit
 ```
 
 The extension's generated manifest is ignored because local development replaces
-the released base pin with a path. Run `lake update` after switching between
+the released base pin with a path. Run `lake -R update` after switching between
 local and released modes. Source dependencies remain explicitly pinned; never
 edit either package's manifest by hand.
 

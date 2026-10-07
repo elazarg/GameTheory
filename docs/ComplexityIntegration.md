@@ -274,10 +274,9 @@ and the upstream guess-and-verify construction gives NP membership. The
 membership leaf does not import the SAT reduction; only the NP-completeness
 leaf combines them. Ordinary game and certificate clients need no ComplexityLib.
 
-PPAD is the next search interface, not a consequence of this decision theorem.
-The selected upstream version provides FNP and TFNP but no End-of-Line or PPAD
-API. The next dependency gate is encoded End-of-Line totality with polynomial
-verification, followed by solution-preserving polynomial search reductions.
+PPAD search completeness is separate from this decision theorem. The selected
+upstream provides FNP and TFNP; the following slice supplies the missing
+End-of-Line totality and solution-preserving search-reduction interface.
 
 The expanded base library and lint driver pass 4,364 jobs; the companion library,
 fixtures, lint driver and axiom audit pass 3,294 jobs. All 759 extension-owned
@@ -295,3 +294,55 @@ The same command-scoped local Git object mirror supplies the published objects;
 the manifest retains the public URL and exact revision. Lean 4.34.1 and the
 successful Mathlib cache hook are confirmed. Hosted CI checks direct HTTPS
 resolution and now includes the NP-completeness endpoint in its release smoke.
+
+## Succinct End-of-Line and search reductions
+
+`GameTheory.Math.EndOfLine` defines a directed edge only when the successor and
+predecessor pointers agree and its endpoints differ. `IsEndpoint` means exactly
+one such incident edge. The finite theorem `exists_endpoint_ne_origin` obtains
+another endpoint from a known source by matching the cardinalities of vertices
+with incoming and outgoing edges. It permits disconnected cycles, self-loops
+and inconsistent pointers; no global inverse assumption is needed. This generic
+finite graph theorem has no ComplexityLib dependency.
+
+The optional `Backend.EndOfLineProblem` serializes a unary width ruler and two
+vectors of tagged Boolean circuit codes. Each vector has linear serialization
+overhead. Its total evaluator returns exactly one output per vertex bit, using
+zero for an invalid scalar code. Missing codes also produce zero. The existing
+total pairing projections determine the meaning of malformed vector framing.
+The ruler's length determines the width; its bit values have no semantic role.
+
+A valid source has `P(0)=0`, `S(0)≠0`, and `P(S(0))=0`. Accepted witnesses then
+have exactly that width, differ from zero, and satisfy the generic endpoint
+predicate. Invalid source promises accept precisely the empty witness. This
+convention makes the relation total on every input word. It uses consistent-edge
+endpoints, rather than the broader familiar raw pointer-inconsistency witness
+condition; equivalence with that formulation is a separate normalization step.
+
+`Backend.CircuitVectorMachine` proves actual FP evaluation through the verified
+scalar circuit machine, bounded code selection and a bitwise output compiler.
+`Backend.EndOfLineVerifier` checks the origin and immediate candidate neighbors,
+validates the witness width and canonical paired verifier input, and certifies
+a single deterministic polynomial-time machine. No computation enumerates the
+`2^n` vertices. Balance bounds every accepted witness by the input length;
+`endOfLineRelation_mem_TFNP` combines that bound, the verifier and finite totality.
+
+`Backend.SearchReduction` contains only an FP instance map, an FPn decoder taking
+the original instance and target solution, and preservation of **every** valid
+target solution. Identity and composition have genuine machine certificates.
+Composition gives each decoder its own instance. A reduction transports totality
+backward, but TFNP membership also requires independent FNP membership of the
+source: its other accepted witnesses need not be bounded or efficiently checked.
+
+This establishes the search foundation. A PPAD class matching the usual
+End-of-Line convention, circuit normalization, Brouwer/Sperner reductions, Nash
+search completeness and approximation conventions remain further obligations.
+
+The base build passes 4,366 jobs and the full companion build 3,827 jobs. All
+937 owned declarations have only standard transitive axioms. Both linters,
+architecture checks and 19 optional-boundary regression cases pass. The
+released-mode consumer builds the facade, composed machine, NP-completeness and
+End-of-Line endpoints and fixtures in 3,814 jobs against public base commit
+`81ab22b375b12a8f869484deb982ac9b5c845803`, without a local-path override.
+Dependency-mode switches use `lake -R update` to re-elaborate cached
+configuration; CI asserts both local-path and released-git manifest modes.

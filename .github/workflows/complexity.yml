@@ -58,7 +58,14 @@ jobs:
         run: |
           (Join-Path $env:USERPROFILE '.elan/bin') | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Resolve the extension against this checkout
-        run: lake '-KgameTheoryPath=../..' update
+        run: |
+          lake -R '-KgameTheoryPath=../..' update
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $manifest = Get-Content -LiteralPath lake-manifest.json -Raw | ConvertFrom-Json
+          $base = @($manifest.packages | Where-Object name -eq 'GameTheory')
+          if ($base.Count -ne 1 -or $base[0].type -ne 'path') {
+            throw 'Checkout verification did not resolve the local GameTheory path'
+          }
       - name: Fetch Mathlib cache
         run: lake '-KgameTheoryPath=../..' exe cache get
       - name: Build the optional library and hostile fixtures
@@ -82,7 +89,13 @@ jobs:
           if ($base.Count -ne 1 -or $base[0].type -ne 'git') {
             throw 'Released consumer smoke still resolves a local GameTheory path'
           }
-      - name: Build clients and Nash NP-completeness against the released base
-        run: lake build GameTheoryComplexity.Tests.Facade GameTheoryComplexity.Backend.CompiledSampleTest GameTheoryComplexity.Backend.NashNPComplete
+      - name: Build clients and complexity endpoints against the released base
+        run: >-
+          lake build GameTheoryComplexity.Tests.Facade
+          GameTheoryComplexity.Backend.CompiledSampleTest
+          GameTheoryComplexity.Backend.NashNPComplete
+          GameTheoryComplexity.Backend.EndOfLineVerifier
+          GameTheoryComplexity.Tests.EndOfLine
+          GameTheoryComplexity.Tests.SearchReduction
       - name: Verify checks do not mutate tracked files
         run: git diff --exit-code

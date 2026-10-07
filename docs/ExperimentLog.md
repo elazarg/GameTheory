@@ -10135,3 +10135,45 @@ memory.
 - **Next action:** use the repaired hardness theorem only with a certified
   polynomial-time table writer and exact semantic correctness, not output size
   alone. PPAD and other upstream closures need their own compatibility checks.
+
+## EXP-160: succinct End-of-Line verification and totality
+
+- **Question:** Can the optional computation boundary support a genuine total
+  End-of-Line search relation without enumerating its exponential vertex set?
+  Compare explicit successor tables with circuit-coded predecessor/successor
+  functions; keep finite graph totality independent of machine definitions.
+- **Representative slice:** a certified vector circuit evaluator and endpoint
+  verifier, plus finite totality with a distinguished source. Controls include
+  disconnected cycles, self-loops, inconsistent inverse pointers and invalid
+  source promises.
+- **Kill conditions:** runtime depending on `2^n`, a short output substituted
+  for an actual machine bound, endpoints justified by global inverse assumptions,
+  or a relation called total while excluding malformed inputs.
+- **Artifacts:** `GameTheory/Math/EndOfLine.lean` and selected companion backend
+  leaves on `feat/end-of-line-foundation`; probes in ignored `.codex/scratch/`.
+- **Commands:** `lake build GameTheory GameTheory.LintAll
+  GameTheory.Tests.EndOfLine`; companion `lake -R -KgameTheoryPath=../.. update
+  GameTheory`, then `lake -KgameTheoryPath=../.. build GameTheoryComplexity
+  GameTheoryComplexity.LintAll GameTheoryComplexity.AxiomAudit`; both `lake lint`;
+  `scripts/phase{1,2,3}-audit.ps1 -VerifyExpected` (2/3 also
+  `-DeepReachability`); `scripts/complexity-audit.ps1` and its 19 mutation tests.
+  Released consumer: `lake -R update GameTheory`, then `lake build` the facade,
+  composed machine, NP-completeness and End-of-Line verifier/fixture targets.
+- **Measurements:** 4,366 base jobs; 3,827 full companion jobs; 937 owned
+  declarations use only standard transitive axioms. A documentation-only field
+  fix passed the 3,826-job lint/axiom closure and the linter. Released-mode smoke
+  passed 3,814 jobs against public git base `81ab22b3`, with no path override.
+  Both linters, all architecture checks and optional-boundary controls pass.
+- **Observations:** vector serialization is `2*sum(code lengths)+2*output count`.
+  Actual bounded bitwise machine evaluation visits vertex bit positions, not
+  vertices. Every accepted witness has at most input length. A source without
+  the inverse-link condition can leave no endpoints. An isolated broken-pointer
+  vertex can satisfy raw inconsistency conditions while failing the selected
+  endpoint predicate; both failures are preserved as checked fixtures. Cached
+  Lake configuration also required `-R` when switching dependency modes; CI now
+  asserts the local mode as well as the released mode.
+- **Outcome:** supported, narrowed to consistent-edge endpoint search in TFNP.
+  No kill condition is triggered for this relation. [D68](decisions/D68-succinct-end-of-line.md)
+  retains the finite/machine separation and small search-reduction interface.
+  Next: normalize against the usual raw End-of-Line convention before freezing
+  a PPAD class or recovering Nash search completeness.

@@ -30,3 +30,8 @@ import GameTheoryComplexity.Backend.BimatrixCertificateVerifier
 import GameTheoryComplexity.Backend.BimatrixCertificateVerifierCorrectness
 import GameTheoryComplexity.Backend.NashNP
 import GameTheoryComplexity.Backend.NashNPComplete
+import GameTheoryComplexity.Backend.CircuitVectorMachine
+import GameTheoryComplexity.Backend.EndOfLineTotality
+import GameTheoryComplexity.Backend.EndOfLineProblem
+import GameTheoryComplexity.Backend.EndOfLineVerifier
+import GameTheoryComplexity.Backend.SearchReduction

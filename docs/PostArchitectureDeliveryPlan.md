@@ -418,9 +418,12 @@ table in the companion. The target decoder reads that table directly, and the
 companion proves its decision language NP-complete. Membership uses bounded
 rational witnesses and an actual polynomial-time binary verifier, with exact
 agreement against the same total decoder and canonical Nash predicate.
-The next seam is an encoded End-of-Line relation in TFNP, followed by
-solution-preserving polynomial search reductions. PPAD requires these search
-interfaces and End-of-Line totality before Nash search completeness; FIXP and
+The End-of-Line foundation supplies a total circuit-encoded endpoint relation in
+TFNP and solution-preserving polynomial search reductions. Its consistent-edge
+endpoint convention still needs normalization against the usual raw
+pointer-inconsistency witness formulation before a PPAD class is frozen. PPAD
+requires that agreement and concrete search reductions before Nash search
+completeness; FIXP and
 approximation variants
 need their own precise output and accuracy conventions. None follows from the
 payoff-constrained decision characterization.

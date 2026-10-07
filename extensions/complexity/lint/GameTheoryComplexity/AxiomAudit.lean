@@ -7,6 +7,8 @@ import GameTheoryComplexity.Tests.Serializer
 import GameTheoryComplexity.Tests.Composition
 import GameTheoryComplexity.Tests.SATReduction
 import GameTheoryComplexity.Tests.NashCertificate
+import GameTheoryComplexity.Tests.SearchReduction
+import GameTheoryComplexity.Tests.EndOfLine
 import Lean.Util.CollectAxioms
 
 /-! Reject placeholders and nonstandard axioms in every public extension
