@@ -9,6 +9,28 @@ noncomputable section
 
 namespace GameTheory.Finite.BimatrixTable
 
+/-- The unary header cannot exceed the total input length. -/
+theorem decodeDimension_le_length (input : List Bool) :
+    decodeDimension input ≤ input.length :=
+  List.Sublist.length_le (List.takeWhile_sublist id)
+
+/-- Every decoded cell is bounded, including cells in malformed inputs. -/
+theorem decodedPayoff_natAbs_le (input : List Bool) (i j : ℕ) :
+    (decodedPayoff input i j).natAbs ≤ decodeDimension input + 2 := by
+  let q := decodeDimension input
+  let entry := ((input.drop (q + 1)).drop
+    ((i * q + j) * (2 * (q + 2)))).take (2 * (q + 2))
+  have hp : (entry.take (q + 2)).count true ≤ q + 2 :=
+    le_trans List.count_le_length (List.length_take_le _ _)
+  have he : entry.length ≤ 2 * (q + 2) := List.length_take_le _ _
+  have hn : (entry.drop (q + 2)).count true ≤ q + 2 := by
+    have hh := List.count_le_length (a := true) (l := entry.drop (q + 2))
+    simp only [List.length_drop] at hh
+    omega
+  change ((↑((entry.take (q + 2)).count true) : ℤ) -
+    ↑((entry.drop (q + 2)).count true)).natAbs ≤ q + 2
+  omega
+
 /-- Reading the unary header recovers its exact dimension. -/
 theorem decodeDimension_encodeTable (q : ℕ) (A : ℕ → ℕ → ℤ) :
     decodeDimension (encodeTable q A) = q := by

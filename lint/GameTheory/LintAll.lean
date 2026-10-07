@@ -371,3 +371,9 @@ import GameTheory.Core.SatisfiabilityGamePayoff
 import GameTheory.Finite.BimatrixTable
 import GameTheory.Finite.BimatrixTableCorrectness
 import GameTheory.Finite.BimatrixTableProblem
+import GameTheory.Finite.BimatrixNashCertificate
+import GameTheory.Finite.BimatrixNashCertificateCorrectness
+import GameTheory.Core.BimatrixSupport
+import GameTheory.Math.FiniteLinearBitBound
+import GameTheory.Math.SmallRationalWitness
+import GameTheory.Math.Probability.Numerator
