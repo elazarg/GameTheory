@@ -66,9 +66,12 @@ certified machine execution, and the probability/predicate bridges. It does not
 characterize all PPT tests. The follow-up serializer slice supplies a
 deterministic machine witness for the exact canonical input, with polynomial
 runtime in the unary security parameter including tuple decoding; EXP-158
-records the original narrower validation separately.
-Efficient encodings, efficient reference utility samplers, postprocessing
-closure, and efficient strategy/compilation/simulation certificates remain
+records the original narrower validation separately. The subsequent composition
+slice supplies one PPT implementation of serialization plus testing, preserving
+the exact verdict law and providing a polynomial security clock independent of
+the observed samples.
+General efficient encodings, efficient reference utility samplers, general
+postprocessing closure, and efficient strategy/compilation/simulation certificates remain
 separate obligations. A class of efficient distinguishers does not restrict
 game deviations. No commitment primitive or full computational-equilibrium
 instantiation follows from this boundary.

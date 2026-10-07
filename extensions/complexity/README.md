@@ -14,7 +14,10 @@ cryptographic primitives, or complexity bounds for arbitrary Lean definitions.
 The canonical serializer also has a deterministic polynomial-time machine
 certificate, with exact output correctness and tuple decoding included in the
 cost. Its encoded input length and runtime are polynomial in the unary security
-parameter. A user-supplied encoder is never
+parameter. A composed probabilistic machine implements serialization plus
+testing with exactly the same verdict law, one fixed machine, and a polynomial
+clock independent of the samples. FP preprocessing is certified rather than
+inferred from output length. A user-supplied encoder is never
 classified as efficient merely because its result has polynomial length.
 
 ## Use as a dependency
@@ -49,7 +52,9 @@ Declarations keep the public namespace `GameTheory.Complexity`. Ordinary clients
 use the small `SampleTest` facade; machine-specific builders live under
 `GameTheoryComplexity.Backend.Complexitylib`, and the negligibility equivalence
 under `GameTheoryComplexity.Backend.Negligible`. The serializer machine
-certificate lives in `GameTheoryComplexity.Backend.Serializer`. This separates backend details
+certificate lives in `GameTheoryComplexity.Backend.Serializer`. Composition and
+its canonical sample-test specialization live in `Backend.Composition` and
+`Backend.CompiledSampleTest`, respectively. This separates backend details
 without introducing a general machine-interface framework. Swapping a backend
 still requires proofs that its implementation satisfies the facade contract.
 

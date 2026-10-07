@@ -22,6 +22,15 @@ ComplexityLib. See the companion README for local and consumer commands.
   parameter. `exists_uniform_booleanSerializer` supplies one machine for all
   sample degrees, parameters and sample tuples; each fixed sample degree has
   a polynomial runtime bound valid at every parameter, including zero.
+- `GameTheoryComplexity.RandomTapeComposition` and `Backend.ClockPadding`:
+  exact invariance of full verdict laws under unused fair bits and clock
+  extension after all paths halt.
+- `GameTheoryComplexity.Backend.Composition`: one probabilistic polynomial-time
+  machine for deterministic FP preprocessing followed by a clocked randomized
+  test, preserving its full acceptance law on every input.
+- `GameTheoryComplexity.Backend.CompiledSampleTest`: one fixed machine implementing
+  each canonical Boolean test, with a polynomial security clock uniform over
+  all sample tuples, exact law agreement, and immediate rejection covered.
 - `GameTheoryComplexity.Backend.Negligible`: equivalence of ComplexityLib's explicit
   inverse-power threshold predicate with the canonical Mathlib-based predicate.
 - `GameTheoryComplexity.SampleTest`: a small client facade exposing the Boolean
@@ -50,11 +59,17 @@ Machine bounds use encoded input length. The Boolean interface fixes sample
 count to a power of `κ + 1`, serializes `κ` in unary, and proves an explicit
 execution bound in `κ`. An arbitrary encoder with short outputs could hide an
 oracle; no such encoder is admitted as efficient preprocessing. The serializer
-certificate starts from a standard encoded pair containing the unary parameter and the sample bitstring. Its deterministic machine computes
+certificate starts from a standard encoded pair containing the unary parameter
+and the sample bitstring. Its deterministic machine computes
 exactly the input consumed by `booleanMachineTest`, with polynomial cost
 including pair decoding. General efficient postprocessing and general reference
-mean tests remain separate obligations. Serialization and test execution have
-separate machine certificates; this slice does not build one composed NTM.
+mean tests remain separate obligations. The composition certificate now supplies
+one probabilistic polynomial-time machine for serialization and testing together.
+Its global clock is polynomial in raw input length; its clock on canonical tuples
+is polynomial in the unary security parameter and independent of the samples.
+Unused prefix bits and padding after halting preserve the full verdict law.
+The initial encoded tuple remains the explicit machine input convention; this
+certificate does not construct a sampler or encode a binary security parameter.
 
 Finite fair random tapes give dyadic probabilities. Arbitrary rational laws
 require approximation or another sampling model. Arbitrary real utilities need
@@ -91,7 +106,10 @@ optional-package decision record. The companion CI builds only its own root and
 lint target, checks dependency isolation, and audits selected theorem axioms.
 The base CI remains independent of the companion dependency resolution.
 
-The serializer follow-up builds the companion library, fixtures, lint driver and
-axiom audit together with 3,099 jobs on Lean/Mathlib 4.34.1. All 76 extension
-declarations pass the transitive axiom audit. Its primitive FP dependency closure
-compiles unchanged, without importing the full Cobham characterization.
+The combined serialization and composition slice builds the companion library,
+fixtures, lint driver and axiom audit with 3,110 jobs on Lean/Mathlib 4.34.1. All
+113 extension declarations pass the transitive axiom audit. The fair-coin consumer
+has exact acceptance probability `1/2` even with a nonmonotone source clock, and a
+zero-step source test exercises immediate rejection. Selected FP and machine
+composition dependencies compile unchanged, without importing the full Cobham
+characterization.

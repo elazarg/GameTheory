@@ -397,7 +397,9 @@ Delivery proceeds through the finite random-tape law and concrete machine
 acceptance bridge, then canonical Boolean sample tests with explicit input
 length and execution bounds in the unary security parameter. The canonical
 serializer now has an exact deterministic machine certificate and a polynomial
-runtime bound that includes tuple decoding. General efficient
+runtime bound that includes tuple decoding. A single composed PPT machine now
+implements serialization plus testing, with full law agreement and a sample-uniform
+polynomial security clock. General efficient
 encodings, efficient sampling of reference utilities, certified strategy and
 simulator implementations, and full computational equilibrium specialization
 remain distinct obligations. Do not infer these from machine execution bounds.
