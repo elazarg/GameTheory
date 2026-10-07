@@ -129,4 +129,7 @@ Import `GameTheoryComplexity.Backend.SpernerGridWords` for binary encoding of
 the local Sperner graph, source promises and every-endpoint decoding. Import
 `Backend.SpernerGridCodecMachine` and `Backend.SpernerBinarySteps` for actual
 FP certificates for codec fields, exact acceptance and fixed-width arithmetic.
-The composed pointer machine and succinct Sperner PPAD reduction remain open.
+Import `Backend.SpernerPointerMachine` for the composed pointer, its actual
+uniform FP certificate, source promises and endpoint decoding. Circuit-instance
+generation and the answer-decoder certificate remain before succinct Sperner
+PPAD membership.

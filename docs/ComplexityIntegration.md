@@ -575,3 +575,45 @@ pass. The released-git smoke builds the facade, Nash NP-completeness, PPAD,
 normalized End-of-Line and binary Sperner controls in 4,093 jobs against the
 new pin; local-path mode is restored. Read-only proof/software review found
 no gaps and identified the boundary-overflow requirement for the next slice.
+
+
+## Uniform polynomial-time Sperner pointer
+
+`Backend.SpernerCornerMachine` appends a high zero bit before incrementing
+corner coordinates. Thus a right or top boundary coordinate `2^b` remains
+distinct from zero. Canonical colors give the bottom edge priority, then the
+right/top edges, then the left edge, and query the interior only otherwise.
+Interior queries receive two little-endian `(b+1)`-bit coordinates. Arbitrary
+query outputs are normalized to two color flags with color one taking priority.
+
+`Backend.SpernerCrossMachine` checks coordinate zero/max before taking an
+exterior edge or applying the fixed-width increment/decrement. Its word
+crossings agree with the geometric `across` operation on every valid triangle.
+`Backend.SpernerDoorMachine` checks three oriented zero/one edges in the same
+order as the mathematical door selector. Its FP certificate combines constant
+controls rather than enumerating vertices.
+
+`Backend.SpernerPointerMachine.gridPointerMachineUniformFn_mem_FP` composes
+these operations into one actual polynomial-time computation. Its certificate
+is uniform in the ruler, color-query seed and vertex. In particular,
+`spernerPointer_pair_mem_FP` accepts a serialized color circuit vector as part
+of its input; it does not assume one fixed coloring. The implementation agrees
+with `wordGridPointer` on all words, preserving lengths and rejected-word
+isolation. Source promises and every-endpoint trichromaticity therefore hold
+for the concrete serialized-circuit pointer itself.
+
+This closes the composed FP pointer obligation. Uniform generation of an
+End-of-Line circuit instance and the FPn every-answer word decoder remain
+before succinct Sperner PPAD membership. PPAD-hardness of Sperner is a further
+separate reduction obligation.
+
+
+Validation: the full optional library, lint scope and axiom driver pass 4,119
+jobs, auditing 1,468 owned declarations with standard axioms only. Optional
+lint, structural checks, dependency isolation and all 19 isolation regressions
+pass. Released-pin smoke passes 4,098 jobs against the published base pin,
+including the new pointer fixtures, then local-path mode is restored. Controls
+cover all zero-coordinate-width words, boundary carry and query order, color
+normalization, source paths, upper endpoints, malformed codes, a disconnected
+six-triangle cycle and actual uniform FP certification. Independent semantic,
+software and proof-simplification reviews found no gaps.

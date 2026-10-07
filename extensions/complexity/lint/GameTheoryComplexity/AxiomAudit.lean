@@ -14,6 +14,7 @@ import GameTheoryComplexity.Tests.PPAD
 import GameTheoryComplexity.Tests.CircuitPrefixCompiler
 import GameTheoryComplexity.Tests.NormalizedEndOfLine
 import GameTheoryComplexity.Tests.SpernerGridWords
+import GameTheoryComplexity.Tests.SpernerPointerMachine
 import Lean.Util.CollectAxioms
 
 /-! Reject placeholders and nonstandard axioms in every public extension

@@ -56,3 +56,7 @@ import GameTheoryComplexity.Backend.SpernerBinarySteps
 import GameTheoryComplexity.Backend.SpernerGridCodec
 import GameTheoryComplexity.Backend.SpernerGridCodecMachine
 import GameTheoryComplexity.Backend.SpernerGridWords
+import GameTheoryComplexity.Backend.SpernerCornerMachine
+import GameTheoryComplexity.Backend.SpernerCrossMachine
+import GameTheoryComplexity.Backend.SpernerDoorMachine
+import GameTheoryComplexity.Backend.SpernerPointerMachine

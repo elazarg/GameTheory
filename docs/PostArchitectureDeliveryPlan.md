@@ -431,9 +431,10 @@ reciprocal edge proofs, a known added source, invalid-coordinate isolation and
 every-endpoint decoding for canonical boundary colors. Binary node encoding now
 preserves source promises and every endpoint, with malformed words isolated.
 Coordinate extraction, exact acceptance and fixed-width increment/decrement
-have actual FP certificates. Next compose the pointer word machine, handling
-boundary corners before coordinate overflow, then emit the circuit instance
-and certify every-answer word decoding to reduce succinct Sperner search to
+have actual FP certificates. The composed pointer word machine now has an
+actual FP certificate uniform in the color circuit seed, boundary-aware corner
+colors and exact all-word agreement. Next emit the circuit instance and
+certify every-answer word decoding to reduce succinct Sperner search to
 End-of-Line. Brouwer and Nash
 search results follow in dependency order;
 approximation conventions and FIXP remain distinct obligations.

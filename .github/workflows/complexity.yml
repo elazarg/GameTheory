@@ -104,5 +104,6 @@ jobs:
           GameTheoryComplexity.Tests.CircuitPrefixCompiler
           GameTheoryComplexity.Tests.NormalizedEndOfLine
           GameTheoryComplexity.Tests.SpernerGridWords
+          GameTheoryComplexity.Tests.SpernerPointerMachine
       - name: Verify checks do not mutate tracked files
         run: git diff --exit-code
