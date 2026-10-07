@@ -149,4 +149,7 @@ The local released-mode update was attempted but GitHub HTTPS fetches failed
 with connection timeouts. The published base commit is confirmed through the
 GitHub API; local builds use the same committed sources through the path override.
 The new hosted released-pin consumer check remains the validation for git-mode
-resolution; it is not counted as a local pass.
+resolution; it is not counted as a local pass. Restoring the local path resolved
+the dependency configuration, but the automatic cache fetch stalled and was
+cancelled. Lean 4.34.1 was confirmed and the complete companion build passed
+again using existing compiled dependencies.
