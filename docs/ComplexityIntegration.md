@@ -698,3 +698,38 @@ pass. A transitive axiom audit checks all 137 declarations owned by the three
 new mathematical modules and their two fixture modules, accepting only standard
 axioms. Independent review found no semantic gaps; cycle fixtures explicitly
 check both original four-step returns and the switched eight-step return.
+
+## Directed wire routes and crossing ownership
+
+`Math.GridWire` routes an edge from vertex `(0, 6*i)` east to column
+`3*(n*i+j)`, vertically to row `6*j+3`, west to the boundary, then down to
+vertex `(0, 6*j)`. The local predecessor and successor are executable and
+work in either vertical direction. For a non-loop edge they are reciprocal
+on every nontrivial step, leave off-wire points isolated and have exactly the
+two original vertices as endpoints.
+
+`Math.GridWireLanes` proves that bounded vertex pairs have distinct columns
+below `3*n*n`, spaced at least three grid units apart. Incoming and outgoing
+rows are separated, and the route visits no unrelated original vertex.
+`Math.GridWireCrossings` uses reciprocal End-of-Line pointers to rule out
+shared source or target lanes between distinct active edges. Every intersection
+is either a common original vertex or a strict horizontal/vertical crossing.
+Crossings have three-step clearance from bends, disjoint three-by-three switch
+boxes and no third active wire inside a box. Neighboring boxes may have directly
+adjacent ports; the proofs do not assume an extra empty row between them.
+
+These are the geometric prerequisites for the global route, with no
+ComplexityLib dependency. The next slice must assemble globally consistent
+switched pointers, prove preservation and decoding of every original endpoint,
+and implement bounded local queries. Wire coloring, the canonical square-grid
+boundary/source hook and actual FP/FPn reduction certificates still follow
+before Sperner hardness. No completeness result is claimed by this slice.
+
+Validation: the wire controls and full base lint scope build pass 4,078 jobs.
+Base lint, structural architecture checks, dependency isolation and all 19
+boundary regressions pass. A transitive audit accepts all 173 declarations
+owned by the three new mathematical modules and their fixture module using
+only standard axioms. Independent semantic, software and proof-simplification
+reviews found no gaps. Controls exercise ascending and descending routes,
+endpoint and off-wire behavior, both crossing directions, adjacent switch
+ports, disjoint boxes and overlapping lanes when edge uniqueness is absent.

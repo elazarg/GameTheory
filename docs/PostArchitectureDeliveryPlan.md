@@ -438,7 +438,12 @@ emits the End-of-Line instance, and a certified projection decodes every
 answer. An independent FNP verifier closes succinct Sperner PPAD membership
 and TFNP totality. The planar crossing switch now has verified unit-grid
 geometry and endpoint preservation under arbitrary exterior attachments.
-Next construct uniform global routing, decode routed endpoints to original
+Individual directed wire routes now have reciprocal unit-grid pointers and
+exact endpoint characterization. Bounded pair allocation, lane separation and
+consistent-edge uniqueness classify all shared points; proper crossings have
+disjoint spacing-three switch boxes, clearance from bends and no third wire
+inside a box. Next assemble the global switched pointers with uniform local
+queries, decode routed endpoints to original
 nodes, and color the wires with an explicit canonical boundary/source hook
 to establish Sperner hardness, then deliver Brouwer and Nash search reductions
 in dependency order;

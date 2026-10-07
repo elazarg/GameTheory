@@ -389,3 +389,6 @@ import GameTheory.Math.SpernerGridGraph
 import GameTheory.Math.GridCrossing
 import GameTheory.Math.GridCrossingGeometry
 import GameTheory.Math.GridCrossingAttachment
+import GameTheory.Math.GridWire
+import GameTheory.Math.GridWireLanes
+import GameTheory.Math.GridWireCrossings
