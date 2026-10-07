@@ -378,3 +378,4 @@ import GameTheory.Math.FiniteLinearBitBound
 import GameTheory.Math.SmallRationalWitness
 import GameTheory.Math.Probability.Numerator
 import GameTheory.Math.EndOfLine
+import GameTheory.Math.EndOfLineNormalization
