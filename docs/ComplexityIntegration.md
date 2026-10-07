@@ -665,3 +665,36 @@ triangle orientations, source exclusion, malformed node and verifier encodings,
 malformed color circuits, semantic verifier agreement, and the actual FP
 instance mapper's exact width. Independent semantic/software/proof-simplification
 reviews found no gaps or unsupported completeness claims.
+
+
+## Planar crossing switch for Sperner hardness
+
+The [Chen–Deng construction](https://eccc.weizmann.ac.il/report/2006/037/download)
+uses crossing switches that preserve directed leaves while changing path
+connections. `Math.GridCrossing` implements all four orientations with two
+bends, reciprocal edges and preserved port roles. `Math.GridCrossingGeometry`
+embeds the nine nodes injectively in a three-by-three grid; every nontrivial
+pointer step is an axis-aligned unit edge.
+
+`Math.GridCrossingAttachment` compares switched and original strand
+connections in an arbitrary exterior graph. It proves equivalence of valid
+incoming-edge presence, outgoing-edge presence and endpoint status for every
+node. Exterior pointers may be inconsistent, and attachments may be absent
+or aliased. Used bends have two consistent edges; unused bends and the center
+remain isolated. A fixture closes the original strands into two cycles and
+shows that switching joins them into one cycle without introducing endpoints.
+
+This is a proved local routing prerequisite. Global succinct routing, original
+endpoint decoding, wire colors, a canonical boundary/source hook and actual
+FP/FPn reduction certificates remain before Sperner hardness. The mathematical
+modules have no ComplexityLib dependency. The source paper's triangular region,
+diagonal orientation and boundary convention require explicit translation;
+its coloring cannot be imported unchanged into the current square-grid problem.
+
+
+Validation: gadget fixtures and the full base lint scope build pass 4,076 jobs.
+Base lint, structural checks, dependency isolation and all 19 boundary controls
+pass. A transitive axiom audit checks all 137 declarations owned by the three
+new mathematical modules and their two fixture modules, accepting only standard
+axioms. Independent review found no semantic gaps; cycle fixtures explicitly
+check both original four-step returns and the switched eight-step return.

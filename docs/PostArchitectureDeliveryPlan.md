@@ -436,8 +436,11 @@ actual FP certificate uniform in the color circuit seed, boundary-aware corner
 colors and exact all-word agreement. Shared uniform circuit generation now
 emits the End-of-Line instance, and a certified projection decodes every
 answer. An independent FNP verifier closes succinct Sperner PPAD membership
-and TFNP totality. Next establish Sperner hardness with its explicit geometry
-and decoding convention, then deliver Brouwer and Nash search reductions
+and TFNP totality. The planar crossing switch now has verified unit-grid
+geometry and endpoint preservation under arbitrary exterior attachments.
+Next construct uniform global routing, decode routed endpoints to original
+nodes, and color the wires with an explicit canonical boundary/source hook
+to establish Sperner hardness, then deliver Brouwer and Nash search reductions
 in dependency order;
 approximation conventions and FIXP remain distinct obligations.
 

@@ -386,3 +386,6 @@ import GameTheory.Math.SpernerDoors
 import GameTheory.Math.SpernerGridGeometry
 import GameTheory.Math.SpernerGridDoors
 import GameTheory.Math.SpernerGridGraph
+import GameTheory.Math.GridCrossing
+import GameTheory.Math.GridCrossingGeometry
+import GameTheory.Math.GridCrossingAttachment
