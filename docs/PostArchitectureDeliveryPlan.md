@@ -411,6 +411,17 @@ counterexample to merely fixed-index negligible differences. Mean-payoff and
 matroid prophet results from `openai/math` remain source candidates for future
 consumer-gated recovery; this work adds no dependency on that collection.
 
+The game-hardness path starts with the dependency-free SAT characterization of
+two-player symmetric mixed Nash existence with both payoffs at least one,
+followed by a polynomial-time reduction emitting the entire explicit integer
+table in the companion. The target decoder reads that table directly. Complete
+this depth before adding other equilibrium decision problems. The next seam is
+NP membership through bounded rational witnesses and a certified verifier.
+PPAD requires encoded End-of-Line search problems, totality and solution-preserving
+reductions before Nash search completeness; FIXP and approximation variants
+need their own precise output and accuracy conventions. None follows from the
+payoff-constrained decision characterization.
+
 ## 3. Stable boundaries
 
 - `GameTheory.Core` owns static forms, preferences, deviations, equilibrium,

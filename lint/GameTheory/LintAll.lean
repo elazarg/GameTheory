@@ -359,3 +359,15 @@ import GameTheory.Stochastic.PerfectMonitoring
 import GameTheory.Stochastic.PublicPolicy
 import GameTheory.Stochastic.Uniform
 import GameTheory.Stochastic.ZeroSum
+import GameTheory.Math.Probability.JointMap
+import GameTheory.Core.BimatrixGame
+import GameTheory.Core.ConstrainedNash
+import GameTheory.Core.SatisfiabilityGame
+import GameTheory.Core.SatisfiabilityGameCompleteness
+import GameTheory.Core.SatisfiabilityGameSoundness
+import GameTheory.Core.SatisfiabilityGameReduction
+import GameTheory.Core.SatisfiabilityGameEncoding
+import GameTheory.Core.SatisfiabilityGamePayoff
+import GameTheory.Finite.BimatrixTable
+import GameTheory.Finite.BimatrixTableCorrectness
+import GameTheory.Finite.BimatrixTableProblem
