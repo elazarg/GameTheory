@@ -39,14 +39,18 @@ every target solution. The generic finite endpoint theorem lives independently i
 the base `GameTheory.Math.EndOfLine` module. This slice uses mutually consistent
 edges. Import `GameTheoryComplexity.PPAD` for the standard asymmetric raw
 End-of-Line relation, PPAD membership and closure, and a certified reduction
-showing consistent-edge endpoint search is PPAD-hard. Raw End-of-Line is complete
-by definition of the class. Endpoint membership needs a complete normalized circuit-instance emitter;
+showing consistent-edge endpoint search is PPAD-complete. Raw End-of-Line is complete
+by definition of the class. Uniformly generated normalized circuit instances
+give the reverse reduction with an actual FP instance map and every-answer decoder;
 Nash PPAD-completeness remains separate work.
 
 `Backend.CircuitPrefixCompiler` provides an actual polynomial-time serialized
 prefix restriction component. It preserves exact optional evaluation on all
 source codes at positive live width, rejects malformed syntax and guards empty
-outputs. Uniform generation and normalized vector emission still need integration.
+outputs. `Backend.UniformCircuitSpecialization` joins this compiler to actual
+uniform generation; `Backend.CircuitVectorEmission` serializes the output coordinates
+in polynomial time. `Backend.EndOfLineCircuitGeneration` specializes normalized
+pointer computations and preserves the invalid-source fallback.
 
 ## Use as a dependency
 

@@ -10256,3 +10256,48 @@ memory.
   obligation is integration with uniform machine unrolling and normalized
   End-of-Line vector emission, then the reverse search reduction. Local probes
   and diagnostics remain in `.codex/scratch/`.
+
+## EXP-163: uniform circuit emission for normalized End-of-Line
+
+- **Question:** Can actual uniform machine-to-circuit generation and validated
+  prefix restriction produce normalized End-of-Line instances in FP, rather
+  than merely proving small circuits exist?
+- **Representative slice:** an efficiently computed scalar output bit with a
+  fixed serialized instance and unary output index, followed by emitted
+  normalized predecessor/successor vectors and every-solution decoding.
+- **Alternatives:** direct gate substitution in arbitrary input codes versus
+  specializing a uniform circuit for the certified normalized word evaluator.
+- **Kill conditions:** conditional or nonuniform circuit-size existence in place
+  of an FP generator, exponential vertex enumeration, or malformed/source
+  fallback cases omitted from the certified reduction.
+- **Artifacts and commands:** `Backend.UniformCircuitSpecialization`,
+  `CircuitVectorEmission`, `EndOfLineScalarQueries`, `EndOfLineCircuitGeneration`,
+  `NormalizedEndOfLineReduction`, the PPAD classification and
+  `Tests.NormalizedEndOfLine` in the optional companion. From its root,
+  `lake -KgameTheoryPath=../.. build Complexitylib.Classes.PPoly.Uniform.Unrolling.Containment`
+  passes 3,361 jobs in about 15 minutes. Single-file `lake env lean` checks
+  validate each leaf before the full
+  `lake -KgameTheoryPath=../.. build GameTheoryComplexity GameTheoryComplexity.LintAll GameTheoryComplexity.AxiomAudit`.
+  The full build passes 4,102 jobs and checks all 1,257 owned declarations with
+  only standard transitive axioms; `lake -KgameTheoryPath=../.. lint` passes.
+  `scripts/phase2-audit.ps1 -VerifyExpected`, `scripts/complexity-audit.ps1` and
+  the 19 `test_complexity_audit.py` regressions pass. Released-git smoke passes
+  4,089 jobs, including the new controls, against base `790fbe3f`; local-path
+  mode is restored afterward with `lake -R`.
+- **Observations:** the unconditional uniform generator supplies actual FL
+  evidence, which transports to FP before prefix restriction. Its 435-module
+  source closure contains no placeholders, custom axioms, `native_decide` or
+  `ofReduceBool`. The specialized scalar query fixes only the instance and
+  unary coordinate. Bounded vector recursion emits ascending coordinates with
+  an accumulator bound derived from the scalar producer's FP output polynomial.
+  A genuine source forces positive live width. Invalid sources map to `[]`,
+  including zero width and malformed promises. Exact-width normalized outputs
+  keep nested evaluations in the semantic agreement theorem's scope.
+- **Outcome:** supported. Actual FP normalized instance generation and an
+  identity FPn decoder preserve every target solution, proving filtered
+  endpoint PPAD membership and completeness. [D71](decisions/D71-uniform-end-of-line-normalization.md)
+  adopts specialization of the certified evaluator. Independent semantic and
+  bound reviews found no gaps. The next obligation is a concrete Sperner/Brouwer
+  reduction; Nash search completeness remains separate. Prior hosted optional
+  runs took 45–46 minutes, so CI now allows 90 minutes for the additional uniform
+  proof closure. Local probes remain in `.codex/scratch/`.

@@ -420,12 +420,10 @@ rational witnesses and an actual polynomial-time binary verifier, with exact
 agreement against the same total decoder and canonical Nash predicate.
 The End-of-Line foundation now supplies both filtered-edge and standard raw
 TFNP relations, with actual polynomial verifiers. The raw convention anchors
-PPAD; a certified reduction proves filtered-edge search PPAD-hard. The
-compiler component for FP-certified serialized prefix restriction is delivered
-with exact arbitrary-code evaluation agreement at positive live width. Next
-integrate uniform machine-to-circuit generation and emit normalized instances
-for the reverse reduction. Semantic pointer normalization alone does not
-discharge this integration gate.
+PPAD; certified reductions connect it in both directions to filtered-edge
+search. Uniform machine-to-circuit generation, FP-certified serialized prefix
+restriction and bounded vector emission provide the reverse reduction's actual
+polynomial-time instance map. Filtered endpoint search is therefore PPAD-complete.
 Concrete Sperner/Brouwer and Nash search completeness follow in dependency
 order; approximation conventions and FIXP remain distinct obligations.
 

@@ -1,4 +1,6 @@
 import GameTheoryComplexity.Backend.RawEndOfLineReduction
+import GameTheoryComplexity.Backend.NormalizedEndOfLineReduction
+import GameTheoryComplexity.Backend.EndOfLineCircuitGeneration
 
 /-! Polynomial search classification through the standard asymmetric End-of-Line
 relation. Verifiability and balance are independent of solution-preserving
@@ -37,11 +39,21 @@ theorem rawEndOfLineRelation_PPADComplete : PPADComplete rawEndOfLineRelation :=
   ⟨⟨rawEndOfLineRelation_mem_FNP, ⟨SearchReduction.refl _⟩⟩, fun _ h => h.2⟩
 
 /-- Consistent-edge endpoint search is PPAD-hard through a certified identity
-instance map and source-aware solution decoder. Membership requires a separate
-efficient circuit-instance normalization theorem. -/
+instance map and source-aware solution decoder. -/
 theorem endOfLineRelation_PPADHard : PPADHard endOfLineRelation := by
   intro T hT
   obtain ⟨a⟩ := hT.2
   exact ⟨a.trans rawToEndpointReduction⟩
+
+/-- Uniformly generated normalized circuits give an actual polynomial instance
+map to standard raw End-of-Line; every target answer is retained. -/
+theorem endOfLineRelation_mem_PPAD : endOfLineRelation ∈ PPAD := by
+  obtain ⟨f, hf, hvalid, hinvalid⟩ := exists_normalizedEndOfLineInstance
+  exact ⟨endOfLineRelation_mem_FNP,
+    ⟨endpointToRawReductionOfNormalization f hf hvalid hinvalid⟩⟩
+
+/-- Consistent-edge endpoint search is complete for standard PPAD. -/
+theorem endOfLineRelation_PPADComplete : PPADComplete endOfLineRelation :=
+  ⟨endOfLineRelation_mem_PPAD, endOfLineRelation_PPADHard⟩
 
 end GameTheory.Complexity

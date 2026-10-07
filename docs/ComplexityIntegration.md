@@ -317,7 +317,7 @@ have exactly that width, differ from zero, and satisfy the generic endpoint
 predicate. Invalid source promises accept precisely the empty witness. This
 convention makes the relation total on every input word. It uses consistent-edge
 endpoints, rather than the broader familiar raw pointer-inconsistency witness
-condition; equivalence with that formulation is a separate normalization step.
+condition; the uniform normalization below proves their search equivalence.
 
 `Backend.CircuitVectorMachine` proves actual FP evaluation through the verified
 scalar circuit machine, bounded code selection and a bitwise output compiler.
@@ -335,9 +335,9 @@ backward, but TFNP membership also requires independent FNP membership of the
 source: its other accepted witnesses need not be bounded or efficiently checked.
 
 This establishes the filtered-edge search foundation. The next section supplies
-the standard raw convention and PPAD class. Serialized circuit normalization,
-Brouwer/Sperner reductions, Nash search completeness and approximation
-conventions remain further obligations.
+the standard raw convention and PPAD class. Uniform normalization then connects
+the encodings. Brouwer/Sperner reductions, Nash search completeness and
+approximation conventions remain further obligations.
 
 The base build passes 4,366 jobs and the full companion build 3,827 jobs. All
 937 owned declarations have only standard transitive axioms. Both linters,
@@ -371,13 +371,10 @@ weak promises retain the empty fallback. Its instance map is FP and its
 original-instance decoder is FPn. Thus filtered-edge search is PPAD-hard.
 
 Generic normalization replaces inconsistent pointers by self-loops, preserving
-edges and endpoints. Its pointer-word evaluators are FP-certified. This does
-not yet generate serialized normalized circuit instances: upstream uniform
-machine unrolling and typed prefix restriction do not supply an FP-certified
-serialized restriction/substitution operation. Reverse reduction and endpoint
-PPAD membership require that compiler step. No equivalence or endpoint
-completeness is claimed from semantic normalization alone. EXP-161 and D69
-record this boundary.
+edges and endpoints. Its pointer-word evaluators are FP-certified. The normalized
+circuit-instance compiler described below closes the reverse reduction and
+proves filtered endpoint PPAD membership and completeness. EXP-161 and D69
+record the original compilation obligation; EXP-163 and D71 discharge it.
 
 Validation: the base build and lint pass 4,368 jobs. The optional library,
 lint scope and transitive axiom audit pass 3,835 jobs; all 1,024 owned declarations
@@ -411,11 +408,49 @@ diamond's entire two-input truth table, a forward reference, empty syntax,
 empty-output guarding, zero live width, malformed fields, garbage and incorrect
 input width. EXP-162 and D70 record the validated layout.
 
-This closes prefix restriction as a component. Uniform machine-to-circuit
-compilation must still be joined to it, and normalized scalar outputs must be
-emitted as a circuit vector, before the reverse End-of-Line reduction is proved.
-Filtered endpoint PPAD membership and Nash search completeness remain open.
+This closes prefix restriction as a component. The following integration supplies
+the reverse End-of-Line reduction. Nash search completeness remains open.
 
 Released-git smoke passes 3,829 jobs against public base `790fbe3f`; its
 compiler fixture runs alongside the existing facade, composed machine, NP and
 PPAD endpoints. Local-path mode is restored after the check.
+
+## Uniform normalized End-of-Line instances
+
+`Backend.UniformCircuitSpecialization.exists_prefixCircuitGenerator` starts
+with a genuine FP one-bit computation. The upstream unconditional uniform
+containment theorem supplies an FL circuit-code generator; FL is contained in
+FP. Generating the full-input circuit, removing its family tag, compiling a
+fixed prefix, and restoring the tag are all polynomial-time word operations.
+The resulting generator preserves exact scalar evaluation at positive live width.
+
+`Backend.EndOfLineScalarQueries` queries a normalized pointer bit from a paired
+instance, unary output index and live vertex. The compiler fixes the instance
+and index as the circuit's prefix. `Backend.CircuitVectorEmission` emits one
+such circuit for each coordinate, in ascending order. Cobham bounded recursion
+certifies the serializer's runtime; a polynomial bound on each scalar producer
+bounds every intermediate accumulator. It never enumerates vertices.
+
+`Backend.EndOfLineCircuitGeneration.exists_normalizedEndOfLineInstance` combines
+the two vectors and a unary width ruler. On a genuine source its pointers agree
+with normalized evaluation at every exact-width vertex. A genuine source has
+positive width, so it meets the prefix compiler's requirement. Invalid source
+promises, including width zero, map directly to the empty invalid instance.
+
+`Backend.NormalizedEndOfLineReduction` certifies the reverse search reduction
+with an FP instance map and identity FPn answer decoder. Consistent pointers make
+every raw target witness precisely an original non-origin endpoint. Invalid
+inputs preserve the empty fallback. Together with the existing forward
+reduction, `endOfLineRelation_PPADComplete` classifies filtered endpoint search
+as complete for the standard raw End-of-Line definition of PPAD.
+
+This closes an encoding equivalence, not a concrete Sperner, Brouwer or Nash
+search reduction. Those results remain separate delivery obligations.
+
+Validation: the full companion/lint/axiom build passes 4,102 jobs, with all 1,257
+owned declarations using only standard transitive axioms. Lint, structural
+architecture, dependency isolation and all 19 boundary controls pass. New
+controls check ascending coordinate order, empty output vectors, scalar output
+indices and normalized isolated vertices. Released-git smoke passes 4,089 jobs
+against base `790fbe3f`, including the public PPAD classification and new fixtures.
+Local-path mode is restored. EXP-163 and D71 record the integration evidence.

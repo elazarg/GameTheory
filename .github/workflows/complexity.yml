@@ -35,7 +35,8 @@ concurrency:
 jobs:
   verify:
     runs-on: windows-latest
-    timeout-minutes: 60
+    # The uniform compiler adds a substantial serializer proof closure.
+    timeout-minutes: 90
     defaults:
       run:
         shell: pwsh
@@ -101,5 +102,6 @@ jobs:
           GameTheoryComplexity.Tests.RawEndOfLine
           GameTheoryComplexity.Tests.PPAD
           GameTheoryComplexity.Tests.CircuitPrefixCompiler
+          GameTheoryComplexity.Tests.NormalizedEndOfLine
       - name: Verify checks do not mutate tracked files
         run: git diff --exit-code
