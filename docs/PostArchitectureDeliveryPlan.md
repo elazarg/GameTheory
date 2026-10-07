@@ -424,8 +424,12 @@ PPAD; certified reductions connect it in both directions to filtered-edge
 search. Uniform machine-to-circuit generation, FP-certified serialized prefix
 restriction and bounded vector emission provide the reverse reduction's actual
 polynomial-time instance map. Filtered endpoint search is therefore PPAD-complete.
-Concrete Sperner/Brouwer and Nash search completeness follow in dependency
-order; approximation conventions and FIXP remain distinct obligations.
+The dependency-free square-grid Sperner theorem now proves trichromatic-cell
+existence under general boundary exclusions, with local boundary enforcement
+and exact oriented-count cancellation. Next encode binary grid coordinates
+and certified local directed neighbors, then reduce succinct Sperner search
+to End-of-Line. Brouwer and Nash search results follow in dependency order;
+approximation conventions and FIXP remain distinct obligations.
 
 ## 3. Stable boundaries
 

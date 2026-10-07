@@ -454,3 +454,39 @@ controls check ascending coordinate order, empty output vectors, scalar output
 indices and normalized isolated vertices. Released-git smoke passes 4,089 jobs
 against base `790fbe3f`, including the public PPAD classification and new fixtures.
 Local-path mode is restored. EXP-163 and D71 record the integration evidence.
+
+## Concrete square-grid Sperner totality
+
+The base mathematical leaf `GameTheory.Math.GridSperner` proves the
+two-dimensional square-grid Sperner theorem. Each square is split along its
+rising diagonal. Its color function has values in `Fin 3`; the left boundary
+forbids color one, the bottom forbids color two, and the top and right forbid
+color zero. These are the general boundary exclusions, rather than a requirement
+that each boundary have a fixed color.
+
+`SpernerTriangle` counts oriented zero/one transitions. A triangle has nonzero
+flux exactly when its colors are pairwise distinct. `GridFlux` cancels shared
+edges using Mathlib's existing telescoping identities. The diagonal cancels
+inside each square, and the entire grid leaves only its boundary. The bottom
+count telescopes to one; the remaining sides contribute zero. Thus
+`sum_gridFlux_eq_one` gives exact signed count one and
+`exists_grid_trichromatic` returns bounded square coordinates and a trichromatic
+lower or upper half. The argument supports multiple boundary transitions.
+The standard geometric setting and its directed-path interpretation are
+described in [the MIT Sperner lecture notes](https://www.mit.edu/~6.7980/brouwer.html).
+
+`standardGridColor` enforces a canonical boundary by inspecting only the given
+coordinates, preserving every strict interior value. It establishes the
+boundary condition at every positive size without enumerating vertices. All
+these definitions and proofs are independent of ComplexityLib and topology.
+
+The theorem/control/lint-scope build passes 4,068 jobs, and base lint passes.
+A transitive audit checks all 37 declarations owned by these modules and their
+fixtures, allowing only `propext`, `Classical.choice` and `Quot.sound`.
+Controls distinguish
+both triangular halves, arbitrary interiors, repeated boundary transitions,
+missing boundary assumptions and size zero. Structural checks and optional
+dependency isolation pass. This establishes mathematical totality; binary cell
+encoding, local predecessor/successor machines and a polynomial-time every-answer
+reduction are still required for succinct Sperner PPAD membership. No such
+classification or Brouwer/Nash reduction follows from this existence proof alone.

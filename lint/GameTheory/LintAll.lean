@@ -379,3 +379,6 @@ import GameTheory.Math.SmallRationalWitness
 import GameTheory.Math.Probability.Numerator
 import GameTheory.Math.EndOfLine
 import GameTheory.Math.EndOfLineNormalization
+import GameTheory.Math.SpernerTriangle
+import GameTheory.Math.GridFlux
+import GameTheory.Math.GridSperner
