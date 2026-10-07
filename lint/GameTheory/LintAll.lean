@@ -377,3 +377,4 @@ import GameTheory.Core.BimatrixSupport
 import GameTheory.Math.FiniteLinearBitBound
 import GameTheory.Math.SmallRationalWitness
 import GameTheory.Math.Probability.Numerator
+import GameTheory.Math.EndOfLine
