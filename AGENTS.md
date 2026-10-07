@@ -213,6 +213,9 @@ Keep `.lake/` and local tool state ignored.
 
 - The working directory is already the project root; do not prepend `cd` to
   commands.
+- Reserve `.lake/` for Lake-generated dependency and build state. Put local
+  probes, research checkouts, and scratch logs in ignored `.codex/scratch/`,
+  never in `.lake/`.
 - Compile one definition or theorem at a time.
 - Inspect the actual goal before writing proof tactics; test small candidate
   tactics before committing a proof.

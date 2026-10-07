@@ -1472,6 +1472,14 @@ the following dependency properties are mandatory:
 - executable modules do not import noncomputable analysis;
 - general mathematics can be tested and versioned without importing games.
 
+EXP-158/[D67](decisions/D67-optional-complexity-package.md) isolates certified
+computation in a companion Lake package: ordinary clients never resolve
+ComplexityLib. Its import modules use `GameTheoryComplexity`, avoiding ownership
+by the base package's broad `GameTheory` glob, while public declarations remain
+under `GameTheory.Complexity`. A small client facade uses canonical sample-test
+types; machine-specific types live in explicit backend leaves. This introduces
+no universal computation interface or cross-model equivalence assumption.
+
 EXP-031 fixes one instance of the last two rules. Continuation, periodic-path,
 and trigger-incentive theorems remain in `GameTheory.Repeated`; feasible-payoff
 geometry, opponent minmax, and the discounted folk theorem live in the one-way

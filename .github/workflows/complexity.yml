@@ -1,0 +1,73 @@
+name: Optional complexity extension
+
+on:
+  push:
+    paths:
+      - 'extensions/complexity/**'
+      - 'GameTheory/**'
+      - 'GameTheory.lean'
+      - 'lakefile.lean'
+      - 'lake-manifest.json'
+      - 'lean-toolchain'
+      - 'scripts/complexity-audit.ps1'
+      - 'scripts/tests/test_complexity_audit.py'
+      - '.github/workflows/complexity.yml'
+  pull_request:
+    paths:
+      - 'extensions/complexity/**'
+      - 'GameTheory/**'
+      - 'GameTheory.lean'
+      - 'lakefile.lean'
+      - 'lake-manifest.json'
+      - 'lean-toolchain'
+      - 'scripts/complexity-audit.ps1'
+      - 'scripts/tests/test_complexity_audit.py'
+      - '.github/workflows/complexity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: complexity-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: extensions/complexity
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9 # v1.5.0
+        with:
+          auto-config: false
+          lake-package-directory: extensions/complexity
+          build: false
+          test: false
+          lint: false
+          use-mathlib-cache: false
+      - name: Expose Lean shims to PowerShell
+        run: |
+          (Join-Path $env:USERPROFILE '.elan/bin') | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Resolve the extension against this checkout
+        run: lake '-KgameTheoryPath=../..' update
+      - name: Fetch Mathlib cache
+        run: lake '-KgameTheoryPath=../..' exe cache get
+      - name: Build the optional library and hostile fixtures
+        run: lake '-KgameTheoryPath=../..' build
+      - name: Build lint scope
+        run: lake '-KgameTheoryPath=../..' build GameTheoryComplexity.LintAll
+      - name: Lint optional public modules
+        run: lake '-KgameTheoryPath=../..' lint
+      - name: Reject placeholders and nonstandard axioms
+        run: lake '-KgameTheoryPath=../..' build GameTheoryComplexity.AxiomAudit
+      - name: Verify dependency isolation and identical Mathlib pins
+        run: ../../scripts/complexity-audit.ps1
+      - name: Verify optional-boundary regression cases
+        run: python -m unittest discover -s ../../scripts/tests -p test_complexity_audit.py
+      - name: Verify checks do not mutate tracked files
+        run: git diff --exit-code

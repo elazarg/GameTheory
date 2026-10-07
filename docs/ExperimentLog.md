@@ -10027,3 +10027,71 @@ memory.
 - **Next action:** none required. Existence for infinitely many players with
   finitely many decision sites would need a fixed point over sites rather
   than players.
+
+### EXP-158: optional certified computation package
+
+- **Date / status:** 2026-10-07; positive with a narrowed packaging/API boundary.
+- **Question:** can concrete probabilistic-machine certificates specialize the
+  existing sample-test semantics without making ordinary GameTheory clients
+  resolve or import ComplexityLib?
+- **Competing designs:** (a) unconditional root Lake dependency with leaf Lean
+  imports; (b) separate companion Lake package owning `GameTheory.Complexity`
+  modules, depending on the base library and narrow ComplexityLib modules.
+- **Representative slice:** a finite fair-random-tape acceptance law, equality
+  with the machine counting semantics, and its canonical `SampleTest` consumer;
+  a root dependency-boundary check and a Lean 4.34.1 dependency build.
+- **Kill conditions:** the companion needs a base dependency/toolchain change;
+  base clients resolve ComplexityLib; the acceptance bridge needs a parallel
+  probability or indistinguishability definition; or purported polynomial-time
+  tests permit unbounded encoded-input length in the security parameter.
+- **Artifacts:** `extensions/complexity` companion package; public client facade
+  `GameTheoryComplexity.SampleTest`; backend probability/predicate bridges;
+  `Tests.RandomTape` and `Tests.Facade`; `scripts/complexity-audit.ps1` and its
+  twelve regression cases; independent optional CI and transitive axiom driver.
+- **Commands:** from the companion package, `lake '-KgameTheoryPath=../..' update`,
+  `lake '-KgameTheoryPath=../..' env lean --version`,
+  `lake '-KgameTheoryPath=../..' exe cache get`,
+  `lake '-KgameTheoryPath=../..' build`,
+  `lake '-KgameTheoryPath=../..' build GameTheoryComplexity.LintAll`,
+  `lake '-KgameTheoryPath=../..' lint`, and
+  `lake '-KgameTheoryPath=../..' build GameTheoryComplexity.AxiomAudit`.
+  From the base, `./scripts/complexity-audit.ps1` and
+  `python -m unittest discover -s scripts/tests -p test_complexity_audit.py`.
+  A fresh ignored consumer configuration probe used `lake -R translate-config`
+  without the local override, verifying the pinned public base source.
+- **Observations:**
+  - The initial shared `GameTheory.Complexity` import prefix failed: Lake
+    assigned imports to the base's broad `GameTheory` glob and searched for
+    companion files in the base directory. Distinct `GameTheoryComplexity`
+    import modules fix ownership without changing the base configuration;
+    declarations retain `GameTheory.Complexity`.
+  - VI-NP-verification's compatibility fork is private. The public upstream
+    baseline `257ad90ec5f547894cc20f27bd828839b1bf7bbf` compiles its selected
+    Randomized/Negligible closure unchanged on Lean/Mathlib 4.34.1. Its declared
+    toolchain is 4.35.0-rc2; this evidence does not certify unused modules.
+  - The companion's resolved Mathlib hash matches the base. The base manifest,
+    Lake configuration, and toolchain are unchanged and contain no optional
+    computation dependency. The companion default build passes 3,031 jobs;
+    final combined library/lint/axiom build passes 3,035 jobs, lint passes,
+    and all 65 extension declarations have only standard axiom dependencies.
+  - A two-step machine halts on every input and has exact acceptance probability
+    `1/2`; machine-count and PMF-law probabilities agree. A fixed finite fair
+    tape cannot produce exact `1/3`, so arbitrary rational samplers are not
+    silently treated as exact bounded machines.
+  - A short-output encoder can still hide an oracle. The accepted class uses
+    canonical Boolean input serialization, with proved input and execution
+    bounds in the unary parameter. Serializer machine cost remains unproved.
+  - The facade has only canonical sample-test types in its client signatures.
+    The facade-only statistical-distance consumer compiles without mentioning
+    backend types. No generic machine abstraction or backend registry is added.
+  - Regression mutations exposed comment/string false positives and an
+    import/comment separator bypass in the first boundary scanner. The fixed
+    scanner passes all twelve cases, including both import prefixes, multiple
+    imports, dependency/toolchain mismatches, and private dependency sources.
+- **Outcome:** accept the separate companion, with disjoint module ownership
+  and the small canonical facade; see D67. An unconditional base dependency
+  fails the dependency-resolution requirement even with selective imports.
+- **Next action:** serializer machine certificate, general efficient encoding,
+  postprocessing closure, reference mean samplers, and certified strategy and
+  simulator carriers require their own consumer-gated slices. No full
+  computational-equilibrium or cryptographic primitive claim is made.

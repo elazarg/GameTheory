@@ -1,0 +1,3 @@
+/.lake/
+# Local development overrides the pinned base dependency with a path.
+/lake-manifest.json

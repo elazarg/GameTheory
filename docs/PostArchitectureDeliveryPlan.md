@@ -379,6 +379,33 @@ consumer-gated package.
 The present greedy knapsack approximation is not a mechanism. All-pay support
 is arithmetic, not an auction model.
 
+### I. Opt-in computational complexity
+
+The companion package under `extensions/complexity` owns
+`GameTheoryComplexity` import modules, with declarations under
+`GameTheory.Complexity`. The base package must neither require
+ComplexityLib nor import companion modules. Root consumers retain the existing
+`SampleTest`, `IndistinguishableBy`, `Negligible`, and `SecureImplementation`
+definitions. [The integration scope](ComplexityIntegration.md) records the
+dependency pin, acceptance bridge, controls, and validation.
+
+The client facade exposes the canonical sample-test class and its properties.
+ComplexityLib machine types and constructions stay in explicit backend leaves;
+there is no general backend abstraction or registry.
+
+Delivery proceeds through the finite random-tape law and concrete machine
+acceptance bridge, then canonical Boolean sample tests with explicit input
+length and execution bounds in the unary security parameter. General efficient
+encodings, efficient sampling of reference utilities, certified strategy and
+simulator implementations, and full computational equilibrium specialization
+remain distinct obligations. Do not infer these from machine execution bounds.
+
+The dependency-free adjacent slice is uniform polynomial hybrid composition,
+with a canonical `SecureImplementation` constructor and a moving-jump
+counterexample to merely fixed-index negligible differences. Mean-payoff and
+matroid prophet results from `openai/math` remain source candidates for future
+consumer-gated recovery; this work adds no dependency on that collection.
+
 ## 3. Stable boundaries
 
 - `GameTheory.Core` owns static forms, preferences, deviations, equilibrium,
