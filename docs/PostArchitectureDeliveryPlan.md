@@ -395,7 +395,9 @@ there is no general backend abstraction or registry.
 
 Delivery proceeds through the finite random-tape law and concrete machine
 acceptance bridge, then canonical Boolean sample tests with explicit input
-length and execution bounds in the unary security parameter. General efficient
+length and execution bounds in the unary security parameter. The canonical
+serializer now has an exact deterministic machine certificate and a polynomial
+runtime bound that includes tuple decoding. General efficient
 encodings, efficient sampling of reference utilities, certified strategy and
 simulator implementations, and full computational equilibrium specialization
 remain distinct obligations. Do not infer these from machine execution bounds.

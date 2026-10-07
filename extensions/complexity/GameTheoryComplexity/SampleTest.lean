@@ -1,4 +1,4 @@
-import GameTheoryComplexity.Backend.Complexitylib
+import GameTheoryComplexity.Backend.Serializer
 
 /-! A small sample-test facade for the selected computational backend.
 Client statements use the library's existing tests and indistinguishability relation;
@@ -10,8 +10,8 @@ namespace GameTheory.Complexity
 open GameTheory.Math.Probability
 
 /-- Canonically encoded Boolean tests with certified polynomial machine execution.
-The serialization algorithm has a polynomial length bound; its machine-level
-implementation is not yet certified. -/
+Canonical serialization has a deterministic machine certificate with polynomial
+runtime; the selected probabilistic machine has an all-path polynomial clock. -/
 def booleanMachineTests : Set (SampleTest Bool) := Backend.booleanMachineTests
 
 /-- Every exposed test sees only polynomially many samples. -/

@@ -69,7 +69,7 @@ theorem booleanInput_length_bound (sampleDegree κ : ℕ)
   nlinarith
 
 /-- A canonical sample test obtained by unary serialization and a certified machine clock.
-The machine execution is certified; no machine-level cost theorem for serialization is asserted. -/
+The deterministic serialization certificate is supplied by the separate serializer module. -/
 def booleanMachineTest {n : ℕ} (machine : NTM n) (clock : PolynomialClock machine)
     (sampleDegree : ℕ) : SampleTest Bool where
   samples κ := (κ + 1) ^ sampleDegree

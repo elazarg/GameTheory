@@ -63,7 +63,10 @@ transitive axiom checks. EXP-158 records exact commands and outcomes.
 
 The public API is deliberately limited to canonically encoded Boolean samples,
 certified machine execution, and the probability/predicate bridges. It does not
-assert a machine-level serializer cost theorem or characterize all PPT tests.
+characterize all PPT tests. The follow-up serializer slice supplies a
+deterministic machine witness for the exact canonical input, with polynomial
+runtime in the unary security parameter including tuple decoding; EXP-158
+records the original narrower validation separately.
 Efficient encodings, efficient reference utility samplers, postprocessing
 closure, and efficient strategy/compilation/simulation certificates remain
 separate obligations. A class of efficient distinguishers does not restrict

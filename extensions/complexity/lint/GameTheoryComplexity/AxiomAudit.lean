@@ -2,6 +2,7 @@ import GameTheoryComplexity
 import GameTheoryComplexity.Backend.Negligible
 import GameTheoryComplexity.Tests.RandomTape
 import GameTheoryComplexity.Tests.Facade
+import GameTheoryComplexity.Tests.Serializer
 import Lean.Util.CollectAxioms
 
 /-! Reject placeholders and nonstandard axioms in every public extension

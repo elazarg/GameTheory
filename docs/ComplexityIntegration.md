@@ -16,6 +16,12 @@ ComplexityLib. See the companion README for local and consumer commands.
   named all-path polynomial clock; canonical Boolean sample serialization with
   unary security parameter; polynomial encoded-input and execution bounds; and
   specialization through the existing `SampleTest` interface.
+- `GameTheoryComplexity.Backend.Serializer`: a deterministic polynomial-time
+  machine witness for the canonical Boolean serializer, including tuple
+  decoding, exact output correctness, and a runtime bound in the unary security
+  parameter. `exists_uniform_booleanSerializer` supplies one machine for all
+  sample degrees, parameters and sample tuples; each fixed sample degree has
+  a polynomial runtime bound valid at every parameter, including zero.
 - `GameTheoryComplexity.Backend.Negligible`: equivalence of ComplexityLib's explicit
   inverse-power threshold predicate with the canonical Mathlib-based predicate.
 - `GameTheoryComplexity.SampleTest`: a small client facade exposing the Boolean
@@ -43,10 +49,12 @@ boundary, not a universal computation interface or a backend registry.
 Machine bounds use encoded input length. The Boolean interface fixes sample
 count to a power of `κ + 1`, serializes `κ` in unary, and proves an explicit
 execution bound in `κ`. An arbitrary encoder with short outputs could hide an
-oracle; no such encoder is admitted as efficient preprocessing. The first slice
-does not assert a machine-level cost theorem for the serializer, closure under
-arbitrary efficient postprocessing, or inclusion of general reference mean
-tests. It certifies machine execution on the specified serialized samples.
+oracle; no such encoder is admitted as efficient preprocessing. The serializer
+certificate starts from a standard encoded pair containing the unary parameter and the sample bitstring. Its deterministic machine computes
+exactly the input consumed by `booleanMachineTest`, with polynomial cost
+including pair decoding. General efficient postprocessing and general reference
+mean tests remain separate obligations. Serialization and test execution have
+separate machine certificates; this slice does not build one composed NTM.
 
 Finite fair random tapes give dyadic probabilities. Arbitrary rational laws
 require approximation or another sampling model. Arbitrary real utilities need
@@ -82,3 +90,8 @@ Integration measurements are recorded in EXP-158 in `ExperimentLog.md` and the
 optional-package decision record. The companion CI builds only its own root and
 lint target, checks dependency isolation, and audits selected theorem axioms.
 The base CI remains independent of the companion dependency resolution.
+
+The serializer follow-up builds the companion library, fixtures, lint driver and
+axiom audit together with 3,099 jobs on Lean/Mathlib 4.34.1. All 76 extension
+declarations pass the transitive axiom audit. Its primitive FP dependency closure
+compiles unchanged, without importing the full Cobham characterization.

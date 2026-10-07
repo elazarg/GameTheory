@@ -11,8 +11,10 @@ polynomial input length and machine execution, and equivalence
 between the two libraries' negligibility predicates. It does not establish
 efficient sampling of arbitrary real-valued utilities, efficient game deviations,
 cryptographic primitives, or complexity bounds for arbitrary Lean definitions.
-The canonical serializer has a polynomial output-length proof; its machine
-running time remains a separate obligation. A user-supplied encoder is never
+The canonical serializer also has a deterministic polynomial-time machine
+certificate, with exact output correctness and tuple decoding included in the
+cost. Its encoded input length and runtime are polynomial in the unary security
+parameter. A user-supplied encoder is never
 classified as efficient merely because its result has polynomial length.
 
 ## Use as a dependency
@@ -46,7 +48,8 @@ package owns every `GameTheory.*` module through its default Lake globs.
 Declarations keep the public namespace `GameTheory.Complexity`. Ordinary clients
 use the small `SampleTest` facade; machine-specific builders live under
 `GameTheoryComplexity.Backend.Complexitylib`, and the negligibility equivalence
-under `GameTheoryComplexity.Backend.Negligible`. This separates backend details
+under `GameTheoryComplexity.Backend.Negligible`. The serializer machine
+certificate lives in `GameTheoryComplexity.Backend.Serializer`. This separates backend details
 without introducing a general machine-interface framework. Swapping a backend
 still requires proofs that its implementation satisfies the facade contract.
 
