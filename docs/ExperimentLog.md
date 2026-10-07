@@ -10095,3 +10095,43 @@ memory.
   postprocessing closure, reference mean samplers, and certified strategy and
   simulator carriers require their own consumer-gated slices. No full
   computational-equilibrium or cryptographic primitive claim is made.
+
+
+### EXP-159: SAT hardness closure on the optional toolchain
+
+- **Date / status:** 2026-10-07; complete, unchanged-closure hypothesis refuted.
+- **Question:** Does the public ComplexityLib pin used for randomized machines
+  also support its SAT NP-hardness closure unchanged on Lean/Mathlib 4.34.1?
+  Compare unchanged imports with a minimal portable proof repair, preserving
+  canonical SAT definitions and the optional dependency boundary.
+- **Representative slice:** `SAT.CookLevin.Assembly` and `Classes.NP.Reduction`,
+  followed by a SAT-to-explicit-bimatrix payoff-threshold consumer.
+- **Kill condition:** a compiler failure or nonstandard transitive axiom rejects
+  the unchanged import claim; short table outputs alone do not certify the
+  reduction's polynomial runtime.
+- **Initial observation:** the 2,213-job dependency build fails only at
+  `SAT/CookLevin.lean:107`: `congr 1` leaves equality of the literal evaluator
+  functions. The separate normal checkout's two-line `funext`/`simp` repair
+  compiles warning-free on Lean 4.34.1. No generated dependency source is edited.
+  SAT membership and reduction infrastructure compile; 7,327 upstream-owned
+  declarations in that closure have only standard transitive axioms.
+- **Artifacts:** public proof-only patch
+  [`c5f2acf1a35d5b00db04cd1bd337a8ce57d66a40`](https://github.com/elazarg/complexitylib/commit/c5f2acf1a35d5b00db04cd1bd337a8ce57d66a40),
+  based on the original upstream pin, and ignored `.codex/scratch/sat_gate`
+  compiler/axiom probes. `extensions/complexity/lakefile.lean` pins the patch.
+- **Final observations:** the complete repaired Cook–Levin closure builds;
+  9,600 upstream-owned declarations have only `propext`, `Classical.choice`
+  and `Quot.sound` dependencies. Against the Lake-resolved public patch,
+  `lake '-KgameTheoryPath=../..' build GameTheoryComplexity.Backend.SATTableMachine
+  GameTheoryComplexity.Backend.SATTableScannerCorrectness
+  Complexitylib.SAT.CookLevin.Assembly` passes 3,191 jobs. `lake update`,
+  `lake env lean --version` (4.34.1), and `lake exe cache get` pass; the cache
+  reports 8,908 already-decompressed files. A command-scoped local Git object
+  cache supplies the published revision when direct HTTPS fetches time out;
+  dependency sources and manifests are changed only by Lake.
+- **Outcome:** retain the companion boundary and canonical SAT semantics;
+  narrow the source claim to the pinned two-line portable proof repair. No
+  toolchain bump, axiom, or mathematical statement change is required; see D67.
+- **Next action:** use the repaired hardness theorem only with a certified
+  polynomial-time table writer and exact semantic correctness, not output size
+  alone. PPAD and other upstream closures need their own compatibility checks.

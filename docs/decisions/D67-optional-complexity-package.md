@@ -1,8 +1,9 @@
 # D67: optional certified computation package
 
-Status: adopted for the narrowed Boolean sample-test and packaging interface.
+Status: adopted for the separate companion boundary, Boolean sample-test
+interface and explicit SAT hardness reduction.
 
-Experiment: [EXP-158](../ExperimentLog.md).
+Experiments: [EXP-158 and EXP-159](../ExperimentLog.md).
 
 ## Question and competing designs
 
@@ -84,3 +85,18 @@ review generalizes composition to negligible summed error, retaining uniform
 polynomial composition as a corollary. General finite-uniform transport and
 tuple projections belong to the base probability layer; the companion reuses
 them. These theorem refinements do not change the adopted package boundary.
+
+The SAT hardness closure expands the selected backend imports while preserving
+this boundary. EXP-159 refutes unchanged compatibility of the original public
+ComplexityLib pin: one Cook–Levin function equality needs explicit `funext` and
+`simp [Lit.eval]` on Lean 4.34.1. The public proof-only patch
+`elazarg/complexitylib@c5f2acf1a35d5b00db04cd1bd337a8ce57d66a40` preserves all
+definitions and theorem statements. The full repaired closure compiles and its
+9,600 upstream declarations have only standard transitive axioms. This source
+selection does not certify unrelated upstream closures.
+
+Payoff-constrained Nash semantics and explicit table decoding belong to the base
+package. SAT syntax, machine execution certificates and NP-hardness transfer
+belong to backend leaves in the companion. The reduction must certify the
+machine that emits every cell and prove exact table agreement; a polynomial
+output-size bound alone would not pass the existing oracle kill condition.

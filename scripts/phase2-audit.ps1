@@ -198,6 +198,7 @@ $RepresentationModules = @(
   'GameTheory/Math/Probability/Conditioning.lean',
   'GameTheory/Math/Probability/Expectation.lean',
   'GameTheory/Math/Probability/ExpectationComposition.lean',
+  'GameTheory/Math/Probability/Numerator.lean',
   'GameTheory/Math/Probability/ExpectationMap.lean',
   'GameTheory/Math/Probability/ExpectationAlgebra.lean',
   'GameTheory/Math/Probability/ExpectationMixture.lean',

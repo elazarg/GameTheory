@@ -20,11 +20,11 @@ checkout with `-KgameTheoryPath=../..`. The base package never requires this one
   src? := some <| match get_config? gameTheoryPath with
     | some path => .path path
     | none => .git "https://github.com/elazarg/GameTheory"
-        (some "71a6547d9491953f4a4f5a28e18f7eac81e2f8c8") none
+        (some "15b05259fabcc79f5b8b33630fd223a9a799e0f3") none
 }
 
-require complexitylib from git "https://github.com/SamuelSchlesinger/complexitylib"
-  @ "257ad90ec5f547894cc20f27bd828839b1bf7bbf"
+require complexitylib from git "https://github.com/elazarg/complexitylib"
+  @ "c5f2acf1a35d5b00db04cd1bd337a8ce57d66a40"
 
 require cslib from git "https://github.com/leanprover/cslib.git"
   @ "94ea80f41a5678fce997a004f0d8d12dbe47cc4b"
