@@ -58,7 +58,8 @@ theorem encodeTable_length (q : ℕ) (A : ℕ → ℕ → ℤ)
       ((List.range q).flatMap (fun j => encodeEntry q (A i j))).length = q * (2 * (q + 2)) := by
     simpa only [List.length_range] using length_flatMap_fixed (List.range q)
       (fun j => encodeEntry q (A i j)) (2 * (q + 2))
-      (fun j hj => encodeEntry_length q (A i j) (hbound i (List.mem_range.mp hi) j (List.mem_range.mp hj)))
+      (fun j hj => encodeEntry_length q (A i j)
+        (hbound i (List.mem_range.mp hi) j (List.mem_range.mp hj)))
   have hb := length_flatMap_fixed (List.range q)
     (fun i => (List.range q).flatMap (fun j => encodeEntry q (A i j)))
     (q * (2 * (q + 2))) hr
@@ -69,14 +70,16 @@ theorem encodeTable_length (q : ℕ) (A : ℕ → ℕ → ℤ)
 private theorem encoded_cell (q : ℕ) (A : ℕ → ℕ → ℤ)
     (hbound : ∀ i < q, ∀ j < q, (A i j).natAbs ≤ q + 2)
     (i j : ℕ) (hi : i < q) (hj : j < q) :
-    (((List.range q).flatMap (fun r => (List.range q).flatMap (fun c => encodeEntry q (A r c)))).drop
+    (((List.range q).flatMap
+      (fun r => (List.range q).flatMap (fun c => encodeEntry q (A r c)))).drop
       ((i * q + j) * (2 * (q + 2)))).take (2 * (q + 2)) = encodeEntry q (A i j) := by
   let w := 2 * (q + 2)
   let rows := fun r => (List.range q).flatMap (fun c => encodeEntry q (A r c))
   have hlen (r : ℕ) (hr : r ∈ List.range q) : (rows r).length = q * w := by
     simpa only [List.length_range] using length_flatMap_fixed (List.range q)
       (fun c => encodeEntry q (A r c)) w
-      (fun c hc => encodeEntry_length q (A r c) (hbound r (List.mem_range.mp hr) c (List.mem_range.mp hc)))
+      (fun c hc => encodeEntry_length q (A r c)
+        (hbound r (List.mem_range.mp hr) c (List.mem_range.mp hc)))
   have hrow : (((List.range q).flatMap rows).drop (i * (q * w))).take (q * w) = rows i := by
     have h := block_flatMap_fixed (List.range q) rows (q * w) hlen i (by simpa using hi)
     rw [List.getElem_range] at h
@@ -120,7 +123,8 @@ theorem decode_encoded_table (q : ℕ) (A : ℕ → ℕ → ℤ)
     (i j : ℕ) (hi : i < q) (hj : j < q) :
     decodedPayoff (encodeTable q A) i j = A i j := by
   have hpayload : (encodeTable q A).drop (q + 1) =
-      (List.range q).flatMap (fun r => (List.range q).flatMap (fun c => encodeEntry q (A r c))) := by
+      (List.range q).flatMap
+        (fun r => (List.range q).flatMap (fun c => encodeEntry q (A r c))) := by
     simp [encodeTable, List.drop_append]
   simp only [decodedPayoff, decodeDimension_encodeTable, hpayload,
     encoded_cell q A hbound i j hi hj]

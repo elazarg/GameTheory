@@ -38,7 +38,8 @@ theorem contradictory_unsatisfiable : ¬ ∃ τ, Satisfies contradictory τ := b
 
 theorem contradictory_has_no_high_payoff_nash :
     ¬ ∃ p q, IsNash (game contradictory).form.mixed (euPreference (game contradictory).utility)
-      (MatrixGame.mixedProfile p q) ∧ 1 ≤ value contradictory p q ∧ 1 ≤ value contradictory q p := by
+      (MatrixGame.mixedProfile p q) ∧
+      1 ≤ value contradictory p q ∧ 1 ≤ value contradictory q p := by
   rw [← satisfiable_iff_exists_nash_threshold]
   exact contradictory_unsatisfiable
 
