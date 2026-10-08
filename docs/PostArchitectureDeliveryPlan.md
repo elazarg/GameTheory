@@ -405,9 +405,13 @@ source and certified coverage-preserving successor. Positive-payoff nonempty
 games now have an exit at every basis port, excluding secondary rays; the
 selected port pivot is an involution without fixed points. Complementary bases
 decode to nonnegative rational solutions, with zero exactly at the source.
-Global oriented pointers, endpoint label classification, rational answer
-serialization and machine costs remain before the End-of-Line reduction can
-be claimed.
+Determinant-colored path ports now give actual oriented predecessor/successor
+pointers and their internal inverse laws. Endpoints are exactly complementary
+bases; the source is a unique port with no incoming edge and every other endpoint
+supplies a nonzero rational solution. Finiteness yields mathematical rational
+solution existence without Analysis. Natural numerator/common-denominator
+encoding, polynomial bit bounds and machine-certified pointer/instance/answer
+maps remain before serialized PPAD membership or TFNP can be claimed.
 
 The companion package under `extensions/complexity` owns
 `GameTheoryComplexity` import modules, with declarations under

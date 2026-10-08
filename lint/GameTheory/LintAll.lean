@@ -446,3 +446,10 @@ import GameTheory.Math.BasisCoordinates
 import GameTheory.Finite.BimatrixBasisExit
 import GameTheory.Finite.BimatrixBasisSolution
 import GameTheory.Finite.BimatrixPivot
+import GameTheory.Math.ComplementaryPorts
+import GameTheory.Math.FacetOrientation
+import GameTheory.Math.ComplementaryPortOrder
+import GameTheory.Math.OrientedInvolutionPath
+import GameTheory.Finite.BimatrixPath
+import GameTheory.Finite.BimatrixPathOrientation
+import GameTheory.Finite.BimatrixPathEndOfLine

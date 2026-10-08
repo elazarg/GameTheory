@@ -1042,3 +1042,37 @@ structural audits pass, and 119 declarations in the updated proof scope pass
 transitive standard-axiom auditing. The companion source and base pin are
 unchanged. Proof review confirms reverse-row choice and the unoriented scope
 of the port operation.
+
+## Oriented bimatrix End-of-Line paths
+
+Four game-free Math leaves finish the graph prerequisites. `ComplementaryPorts`
+classifies the one terminal or two internal ports and proves closure under
+pivot exchange. `FacetOrientation` proves the signed-minor kernel identity and
+exact negative-pivot-factor relation. `ComplementaryPortOrder` proves twin port
+index equality and payoff parity reversal. `OrientedInvolutionPath` composes
+colored edge and node involutions into actual successor/predecessor pointers,
+with inverse laws and an exact End-of-Line endpoint predicate. Its controls
+include a source-to-sink path alongside an unrelated cycle.
+
+`Finite.BimatrixPath` gives finite certified path ports, a restricted pivot
+involution, internal switching and a unique artificial source port.
+`BimatrixPathOrientation` supplies an actual determinant-based rational color:
+facet orientation reverses across a positive pivot, complementary-label payoff
+parity reverses between internal twins, and source calibration is positive.
+`BimatrixPathEndOfLine` defines the directed pointers, proves their internal
+inverse laws, characterizes endpoints as complementary bases and proves the
+source pointer conditions. Every other endpoint decodes to a nonzero rational
+complementary solution; the finite graph theorem yields existence for nonempty
+positive-payoff integer games without importing Analysis.
+
+This closes the mathematical oriented graph and endpoint proof, including
+degeneracy and ray exclusion. Natural numerator/common-denominator endpoint
+encoding, polynomial bit bounds and actual serialized FP/FPn maps remain.
+The pointer definitions are noncomputable; no new PPAD classification or
+serialized totality is asserted, and the optional companion is unchanged.
+
+Validation: full base/lint-scope build, 4,477 jobs; base lint and both structural
+audits pass. All 184 declarations in the new path scope pass transitive
+standard-axiom auditing. Seven control modules and independent semantic review
+check the facet orientation, source uniqueness, endpoint decoding, degeneracy
+and unrelated cycles.

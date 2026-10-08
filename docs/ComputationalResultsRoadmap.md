@@ -168,18 +168,55 @@ audits pass. All 119 declarations in the updated proof scope pass transitive
 standard-axiom auditing. Independent review confirms sorted reverse-row choice,
 uniqueness-based selection and the explicitly unoriented scope of the port pivot.
 
+**Delivered oriented End-of-Line paths:**
+
+`Math.ComplementaryPorts` classifies the permitted nonbasic entering variables:
+a complementary node has one port at the dropped label, and an internal node
+has two at its unique duplicate. Switching pairs the internal ports and fixes
+exactly the complementary terminals; pivot exchange preserves port validity.
+`Finite.BimatrixPath` specializes these invariants, proves the restricted pivot
+involution and a unique artificial source port, and gives a finite carrier by
+injecting ports into their finite variable set and entering label.
+
+`Math.FacetOrientation` proves that signed maximal minors form a kernel vector.
+It derives an exact canonical facet identity: the opposite pivot facet is the
+original facet times the negative pivot direction. `ComplementaryPortOrder`
+proves twin inserted variables have the same canonical index, while the parity
+of payoff variables outside the dropped label reverses. These two facts give
+`Finite.BimatrixPathOrientation` a nonzero rational score that reverses across
+both types of internal edges. Calibration against the source score makes the
+source's direction bit true without an assumed coloring.
+
+`Math.OrientedInvolutionPath` builds actual successor/predecessor functions
+from the two colored involutions and proves their inverse laws and exact
+endpoint characterization using the existing End-of-Line owner. The generic
+control includes an unrelated cycle beside a source-to-sink path.
+`Finite.BimatrixPathEndOfLine` instantiates these pointers with the determinant
+color. Endpoints are exactly complementary bases; the source has a consistent
+nontrivial outgoing edge and no incoming edge. Every other endpoint supplies a
+nonzero rational complementary solution. Finiteness therefore yields such a
+solution for every positive-payoff integer bimatrix game with both dimensions
+nonzero, with no analytic existence import.
+
+These are mathematical pointer and endpoint proofs, including ray exclusion
+and degenerate games. The pointers are noncomputable definitions, not actual
+polynomial-time machines. The mathematical graph result is complete; its
+serialized complexity classification remains open.
+
+Validation: the full base/lint-scope build passes 4,477 jobs; lint and both
+structural audits pass. All 184 declarations in the new path scope pass the
+transitive standard-axiom audit. Seven control modules cover port classification,
+canonical facet signs, source uniqueness, degenerate terminals and unrelated
+cycles. Independent semantic review confirms the orientation and endpoint proof.
+
 **Remaining gates, in order:**
 
-1. Define oriented predecessor/successor pointers on these certified nodes,
-   choose canonical directional metadata, and prove global inverse laws.
-2. Prove the unique known source and that every other graph endpoint has
-   complementary nonbasic labels. Use the delivered rational extraction theorem,
-   represent its coordinates by natural numerators and common denominators, and
-   feed them to the existing shifted-game Nash decoder. Ray exclusion and
-   nonnegative original-point extraction are delivered above.
-3. Polynomial bit bounds, executable rational basis operations, binary node
-   codecs, and actual FP/FPn instance and answer maps. Feed the endpoint theorem
-   into the existing End-of-Line reduction interface, then derive PPAD and TFNP.
+1. Represent the rational endpoint by natural numerators and common denominators
+   and feed it to the existing shifted-game Nash decoder, preserving bit bounds.
+2. Polynomial node/coordinate bit bounds, executable rational basis operations,
+   binary node codecs and actual FP/FPn instance and answer maps. Certify the
+   oriented pointers at the machine level, feed their endpoint theorem into the
+   End-of-Line reduction interface, then derive PPAD membership and TFNP.
 
 The full base/lint-scope build passes 4,433 jobs. Lint, architecture and
 optional-dependency audits pass; the transitive audit checks all 88 new
@@ -193,8 +230,9 @@ base lint, both structural audits and a transitive standard-axiom audit of all
 coordinates, nonidentity bases, negative directions, reverse competition and
 absence of an eligible leaving row.
 
-The delivered decoding and local pivot proofs supply neither a global pivot
-graph nor a machine-certified reduction, and make no new PPAD claim.
+The delivered mathematical graph supplies actual oriented pointers and
+endpoint decoding. It does not yet supply a serialized machine-certified
+reduction or a new PPAD claim.
 
 ## 3. Bimatrix Nash PPAD hardness and completeness
 
