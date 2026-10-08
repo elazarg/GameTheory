@@ -478,13 +478,15 @@ contains the construction. Actual uniform FP binary coloring, shared circuit
 instance generation and a source-aware FPn row-label decoder now close the
 End-of-Line-to-Sperner reduction and standard PPAD-completeness. Invalid source
 promises retain their empty-witness fallback, and every target answer is covered.
-The next Brouwer slice now gives rational color displacement, the one-sixth
-residual decoder and square-preserving local affine triangle maps.
-The opt-in triangle-barycenter residual relation is PPAD-complete through
-certified reductions in both directions to succinct Sperner. Next deliver
-globally glued interpolation, normalized precision bounds and an unrestricted
-rational-point codec before claiming continuous approximate Brouwer search.
-Nash search reductions follow in dependency order; residual approximation,
+The Brouwer slice now supplies globally continuous piecewise affine unit-square
+self-maps, normalized precision bounds and an arbitrary output-grid point codec.
+For side `n = 2^b`, the actual real residual threshold is `1/(6n)` and points
+have denominator `6n`. Certified binary triangle location and barycenter
+emission give every-answer reductions in both directions to succinct Sperner.
+An independent polynomial verifier checks the point bounds and three corner
+colors; continuous approximate residual search for this succinct map family is
+PPAD-complete. The earlier triangle-barycenter formulation remains available.
+Nash search reductions follow in dependency order. Broader map representations,
 distance to an exact fixed point and FIXP remain distinct obligations.
 
 ## 3. Stable boundaries

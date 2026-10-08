@@ -166,3 +166,16 @@ uniform FP certificate, source promises and endpoint decoding. Import
 totality and the independently verified trichromatic-triangle relation.
 `Backend.SpernerReduction` and `Backend.EndOfLineSpernerReduction` supply both
 actual FP circuit-instance maps and FPn every-answer decoders.
+
+Import `GameTheoryComplexity.Brouwer` for continuous approximate fixed-point
+search PPAD-completeness. A serialized color circuit specifies a piecewise
+affine continuous self-map of the real unit square. With grid side `n = 2^b`,
+an answer is any bounded point `(X/(6n), Y/(6n))` whose actual coordinate
+residuals are at most `1/(6n)`; answers need not be triangle barycenters.
+`Backend.BrouwerVerifier` provides independent FNP membership and an actual
+polynomial-time verifier. `Backend.BrouwerReduction` supplies the certified
+reductions to and from succinct Sperner. The map continuity, square
+preservation and exact rational residual semantics are base mathematics and
+require no ComplexityLib. The theorem concerns this circuit-induced map
+family and output precision, rather than arbitrary continuous-map encodings,
+distance to an exact fixed point or FIXP.

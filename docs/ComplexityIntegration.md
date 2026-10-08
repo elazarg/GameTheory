@@ -806,3 +806,80 @@ flag. `EndOfLineSpernerReduction` joins these certificates into the concrete
 search reduction. The backend remains an opt-in package; the mathematical
 coloring imports no complexity dependency. Brouwer and Nash search reductions,
 approximation conventions and FIXP remain separate obligations.
+
+
+## Continuous approximate Brouwer search
+
+`GameTheoryComplexity.Brouwer.brouwerRelation_PPADComplete` proves the
+continuous rational-point classification following the earlier simplicial
+barycenter result. An instance consists of the existing width ruler and color
+circuit, with canonical boundary correction. Its grid side is `n = 2^b`.
+An answer encodes two numerators of `b+3` bits each, bounded by `6n`, denoting
+`p = (X/(6n), Y/(6n))`. Acceptance means exactly
+`|F(p).x - p.x| ≤ 1/(6n)` and `|F(p).y - p.y| ≤ 1/(6n)` for the actual real map.
+No triangle or barycenter certificate accompanies the point.
+
+The mathematical layer defines the map as a finite sum of continuous vertex
+hat functions, then proves agreement with affine interpolation on both halves
+of every square. Boundary colors make the vertex images stay in the square;
+convex interpolation and normalization give a continuous unit-square self-map,
+including seams and the closed top/right edges. The sixth-grid geometry
+reconstructs any represented point and proves that its exact rational local
+displacement is the real map residual multiplied by `n`.
+
+The two search reductions retain the instance unchanged. To solve Sperner
+using a Brouwer answer, binary division by six and boundary clamping locate
+the containing triangle; the small residual forces its three colors to be
+distinct. Conversely, every trichromatic triangle yields its rational
+barycenter, which has zero displacement. Both answer maps have actual FPn
+certificates and preserve every target answer. The existing Sperner
+PPAD-completeness theorem therefore supplies both directions of classification.
+
+Membership also has an independent verifier. It checks the exact answer length
+and numerator bounds, computes the triangle and two local offsets, evaluates
+three corner color circuits, and checks the exact weighted residual. The latter
+uses a fixed table over seven possible offsets in each coordinate and three
+colors at each corner (1,323 cases), independent of the grid size. Binary
+arithmetic and circuit evaluation have composed FP certificates, yielding an
+actual polynomial-time machine, linear witness balance and FNP membership.
+Totality holds for every serialized input under canonical boundary correction.
+
+The smallest-grid controls accept `(4/6, 1/6)`, whose residual is
+`(-1/6, 1/6)`, and the exact fixed barycenter `(4/6, 2/6)`. They reject
+`(5/6, 1/6)` even though it lies in a trichromatic cell, malformed words,
+out-of-square numerators and the far corner. Binary location handles diagonal
+equality and the closed far edge. Kernel-checked verifier correctness and exact
+rational arithmetic validate these controls without additional axioms.
+
+This classifies the stated succinct color-induced map family and finite output
+precision. It does not classify arbitrary piecewise affine input languages,
+unrestricted rational denominators, distance to an exact fixed point, or FIXP.
+Ordinary clients still require no complexity dependency; the public theorem
+lives in the optional companion package.
+
+Validation commands for the continuous slice (companion Lake commands run
+from `extensions/complexity`; the others run from the repository root):
+
+```text
+lake build GameTheory GameTheory.LintAll
+lake lint
+lake env lean .codex/scratch/BrouwerAxiomAudit.lean
+lake -KgameTheoryPath=../.. build GameTheoryComplexity GameTheoryComplexity.LintAll GameTheoryComplexity.AxiomAudit
+lake -KgameTheoryPath=../.. lint
+pwsh -File scripts/phase2-audit.ps1 -VerifyExpected
+pwsh -File scripts/complexity-audit.ps1
+python -m unittest discover -s scripts/tests
+```
+
+The base build passes 4,416 jobs; its Brouwer axiom audit checks 119 owned
+mathematical declarations. The companion build passes 4,198 jobs and audits
+2,351 owned extension declarations transitively. Both linters and both
+structural audits pass, as do all 30 boundary regressions. Only `propext`,
+`Classical.choice` and `Quot.sound` are admitted by the axiom audits.
+
+Published-pin validation also passes the full 4,198-job companion/lint/axiom
+build against base commit `b2a5e0982ce6755197bde4e86ed4a295a37fa30c`.
+`lake -R update GameTheory` resolves that git pin and completes the Mathlib
+cache hook; `lake env lean --version` confirms Lean 4.34.1. The build then uses
+`lake build GameTheoryComplexity GameTheoryComplexity.LintAll
+GameTheoryComplexity.AxiomAudit` without a local-path override.

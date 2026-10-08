@@ -94,3 +94,10 @@ import GameTheoryComplexity.Backend.SpernerRoutingDecoderMachine
 import GameTheoryComplexity.Backend.EndOfLineSpernerReduction
 import GameTheoryComplexity.Backend.SimplicialBrouwer
 import GameTheoryComplexity.SimplicialBrouwer
+import GameTheoryComplexity.Backend.BrouwerPointCodec
+import GameTheoryComplexity.Backend.BrouwerPointMachine
+import GameTheoryComplexity.Backend.BrouwerResidualMachine
+import GameTheoryComplexity.Backend.BrouwerProblem
+import GameTheoryComplexity.Backend.BrouwerVerifier
+import GameTheoryComplexity.Backend.BrouwerReduction
+import GameTheoryComplexity.Brouwer
