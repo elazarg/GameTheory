@@ -883,3 +883,44 @@ build against base commit `b2a5e0982ce6755197bde4e86ed4a295a37fa30c`.
 cache hook; `lake env lean --version` confirms Lean 4.34.1. The build then uses
 `lake build GameTheoryComplexity GameTheoryComplexity.LintAll
 GameTheoryComplexity.AxiomAudit` without a local-path override.
+
+## General rectangular binary Nash certificates
+
+`GameTheoryComplexity.BimatrixNash` supplies FNP membership for exact mixed Nash
+certificates of independent signed integer payoff matrices. Unlike the earlier
+payoff-constrained symmetric decision language, this relation has no utility
+threshold. The input has unary row, column and coefficient-width headers and
+two row-major matrices whose entries use positive and negative binary fields.
+The answer contains two denominators, two signed utility numerators and both
+probability-numerator vectors. For input length `L`, each unsigned field has
+width `(2*L+2)*(8*L+6)+1`; the total answer length is cubic in `L`.
+
+The verifier checks exact lengths, positive denominators, simplex equations,
+every pure deviation inequality and equality on positive support. Signed
+comparisons work directly on positive and negative sums. Generic bit-recursive
+multiplication avoids iterating over payoff magnitudes. Cobham composition
+certifies the whole paired-input machine, including outer-pair validation.
+Malformed game instances accept precisely the empty answer; malformed outer
+pairs are rejected. Decoding and verifier correctness are total, including
+short words and noncanonical simultaneous positive/negative fields.
+
+Accepted valid answers yield the base's ordinary PMF mixed Nash equilibria.
+Conversely, a supplied canonical equilibrium yields an exactly serialized
+bounded certificate. The mathematical existence theorem for every nonempty
+integer game remains inside `GameTheory.Analysis`; the companion imports no
+analytic existence result. Consequently this slice establishes FNP, while
+unconditional serialized totality, TFNP and PPAD membership remain the next
+reduction. Ordinary game clients acquire no new dependency.
+
+`Backend.BinaryWordMultiplication` and `Backend.PairedVerifier` have no game
+imports. The latter is shared with the older constrained Nash verifier, so
+canonical pairing has one implementation and correctness proof.
+
+Validation passes the full 4,218-job companion/lint/axiom build against both
+the local checkout and published base commit
+`e4b2d03957c70e27217d01e35d7076e9ada763be`. The final audit checks 2,615
+extension declarations transitively, admitting only `propext`,
+`Classical.choice` and `Quot.sound`. Companion lint, architecture and
+optional-dependency audits, and all 30 boundary regression tests pass.
+`lake -R update GameTheory`, `lake env lean --version` and `lake exe cache get`
+confirm the published pin, Lean 4.34.1 and successful cache resolution.

@@ -17,7 +17,7 @@ Gale–Shapley stability.
 The earlier machine-certified Nash certificates concern one square payoff
 matrix, its transpose, and payoff-one constraints. General rectangular
 certificates now have mathematical correctness and bounded-witness completeness;
-their serialized machine verifier remains the next delivery. Real learning and
+their serialized machine verifier is now delivered. Real learning and
 matching constructions are not automatically executable finite-bit algorithms.
 
 ## 1. Generic prerequisites and general bimatrix witnesses
@@ -42,12 +42,21 @@ equilibrium, and rejected simplex or best-response certificates. This slice
 claims bounded witnesses and exact verification, not polynomial runtime, TFNP
 or PPAD membership of serialized general Nash search.
 
-**Next slice.** Define explicit two-matrix binary input/output codecs, a precise
-malformed-input convention and an independent actual FP verifier. Prove witness
-balance, FNP membership and totality for nonempty games. Empty or malformed
-instances need an explicit fallback. Widths must depend on input bit length,
-not payoff magnitude. Any generic binary arithmetic or bounded-record verifier
-lemmas needed here belong in dedicated game-free companion modules.
+**Serialized verifier slice, delivered.** Explicit two-matrix binary input/output
+codecs have a precise malformed-input convention and an independent actual FP
+verifier. The proofs establish witness balance, FNP membership and encoding
+completeness from a supplied canonical equilibrium. Unary dimensions and coefficient-width
+headers bound scan clocks by input length; payoff magnitudes remain binary.
+Malformed instances accept precisely the empty answer. Widths depend on input
+bit length, not payoff magnitude. Generic bit-recursive multiplication and
+canonical paired-verifier machinery live in dedicated game-free companion
+modules, with correctness and actual polynomial-time certificates.
+
+Mathematical nonempty-game existence is already proved in `Analysis`. The
+companion preserves that one-way boundary: it does not import analytic existence
+back into its machine layer. Unconditional serialized totality and TFNP are
+therefore acceptance gates of the next PPAD membership reduction, rather than
+claims inferred from FNP verification alone.
 
 ## 2. Bimatrix Nash PPAD membership
 
@@ -58,6 +67,10 @@ and decoding in FP/FPn independently of FNP. No nondegeneracy premise may
 silently narrow the general theorem. An exact support-enumeration solver is
 an independent deliverable; its exponential runtime does not replace this
 reduction.
+
+The reduction must also supply unconditional serialized totality (including
+the malformed-input fallback), yielding TFNP for this same FNP relation without
+importing `Analysis` into the companion.
 
 ## 3. Bimatrix Nash PPAD hardness and completeness
 
@@ -141,6 +154,27 @@ The sole added representation owner is the Nash-to-linear-system bridge which
 extracts native atom weights. Raw probability representation tokens remain
 forbidden in the linear systems, certificates, algorithms and all other
 non-owner modules.
+
+## Validation of serialized verification
+
+The full companion/lint/axiom build passes 4,218 jobs against the local checkout
+and published base pin `e4b2d03957c70e27217d01e35d7076e9ada763be`.
+The final transitive audit checks 2,615 extension declarations using only the
+three standard Lean axioms. Companion lint and both structural audits pass;
+all 30 boundary regressions pass. Controls cover signed rectangular games with
+either column occupied, rejected utilities and dominated support, overlapping
+sign fields, malformed inputs and outer pairs, and binary multiplication.
+
+From `extensions/complexity`, release validation uses:
+
+    lake -R update GameTheory
+    lake env lean --version
+    lake exe cache get
+    lake build GameTheoryComplexity GameTheoryComplexity.LintAll GameTheoryComplexity.AxiomAudit
+    lake lint
+
+The local-checkout build selects `-KgameTheoryPath=../..`. The next active
+delivery is PPAD membership and serialized totality for the same relation.
 
 ## Primary proof references
 

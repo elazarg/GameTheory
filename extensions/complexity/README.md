@@ -31,6 +31,18 @@ for the same total decoder and canonical Nash predicate. Import
 `Backend.NashNP` for membership alone, or `Backend.SATReduction` for hardness
 alone. PPAD/FIXP search results remain separate work.
 
+Import `GameTheoryComplexity.BimatrixNash` for general rectangular games with
+two independently signed integer payoff matrices. The binary certificate
+verifier has an actual polynomial-time machine and proves FNP membership.
+Unary dimension and coefficient-width headers bound the scans; payoff and
+certificate magnitudes are binary. Accepted certificates give ordinary PMF
+mixed Nash equilibria, and every supplied equilibrium admits an exactly
+serialized bounded certificate. Malformed instances accept only the empty
+answer, and malformed outer pairs are rejected. Bit-recursive multiplication
+and canonical paired-verifier composition are separate game-free modules.
+Serialized totality, TFNP and general Nash PPAD membership remain the next
+reduction project; analytic existence is confined to the base `Analysis` root.
+
 Import `GameTheoryComplexity.Backend.EndOfLineVerifier` for a total circuit-encoded
 End-of-Line
 endpoint relation in TFNP and its actual polynomial-time verifier.

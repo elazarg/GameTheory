@@ -386,6 +386,13 @@ generic binary-width linear certificates, general bimatrix Nash witnesses and
 verification, PPAD membership, then hardness. Independent positive algorithms
 follow their established semantic prerequisites.
 
+The general rectangular Nash slice now includes exact binary serialization,
+an actual polynomial-time paired verifier and FNP membership. It preserves
+independent signed payoff matrices and connects the accepted certificates to
+canonical mixed Nash. The next gate is a complementary-pivot reduction proving
+PPAD membership and serialized totality on the same relation, including
+degenerate games; analytic existence remains confined to Analysis.
+
 The companion package under `extensions/complexity` owns
 `GameTheoryComplexity` import modules, with declarations under
 `GameTheory.Complexity`. The base package must neither require

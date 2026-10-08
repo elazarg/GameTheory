@@ -1,3 +1,4 @@
+import GameTheoryComplexity.Backend.PairedVerifier
 import GameTheoryComplexity.Backend.BinaryCertificateFold
 import GameTheoryComplexity.Backend.NashCertificateEncoding
 import GameTheoryComplexity.Backend.NashWitnessCompleteness
@@ -45,30 +46,6 @@ theorem unitPayoffLanguage_iff_exists_nashCertificate (input : List Bool) :
     rwa [decodeNashCertificate_encode _ c hDp hDq hU hV ha hb]
   · rintro ⟨certificate, _, hc⟩
     exact NumeratorCertificate.hasNash_of_valid _ _ hc
-
-private def canonicalPairedVerifier (f : (Fin 2 → List Bool) → List Bool)
-    (z : List Bool) : List Bool :=
-  andBit (eqFlag z (pair (pairFst z) (pairSnd z))) (f ![pairFst z, pairSnd z])
-
-private theorem canonicalPairedVerifier_mem_FP
-    (f : (Fin 2 → List Bool) → List Bool) (hf : FPn f) :
-    canonicalPairedVerifier f ∈ FP := by
-  obtain ⟨g, hg, heq⟩ := hf
-  have henc : (fun z => encodeVec ![pairFst z, pairSnd z]) ∈ FP := by
-    exact pairFn_mem_FP (pairFn_mem_FP const_nil_mem_FP pairSnd_mem_FP) pairFst_mem_FP
-  have hbody : (fun z => f ![pairFst z, pairSnd z]) ∈ FP := by
-    have hh := mem_FP_comp henc hg
-    simpa only [Function.comp_def, heq] using hh
-  exact andBitFn_mem_FP
-    (eqFlagFn_mem_FP id_mem_FP (pairFn_mem_FP pairFst_mem_FP pairSnd_mem_FP)) hbody
-
-private theorem canonicalPairedVerifier_eq_true_iff
-    (f : (Fin 2 → List Bool) → List Bool)
-    (hflag : ∀ v, f v = [true] ∨ f v = [false]) (z : List Bool) :
-    canonicalPairedVerifier f z = [true] ↔
-      z = pair (pairFst z) (pairSnd z) ∧ f ![pairFst z, pairSnd z] = [true] := by
-  rw [canonicalPairedVerifier, andBit_eq_true_iff (eqFlag_flag _ _) (hflag _),
-    eqFlag_eq_true_iff]
 
 /-- A deterministic paired-input verifier rejects malformed pair encodings and
 then checks the exact binary equilibrium certificate. -/
