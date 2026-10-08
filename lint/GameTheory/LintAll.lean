@@ -463,3 +463,6 @@ import GameTheory.Finite.BimatrixBasisBounds
 import GameTheory.Math.IntegerCramerEncoding
 import GameTheory.Finite.BimatrixComplementaryCertificateBounds
 import GameTheory.Finite.BimatrixCramerCertificate
+import GameTheory.Math.TabulatedBirdDeterminant
+import GameTheory.Math.BirdIterationBounds
+import GameTheory.Math.IntegerCramerComputation

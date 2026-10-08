@@ -117,7 +117,7 @@ example : (terminal.cramerCertificate 9 9).rowWeights 0 = 6 ∧
   have hcol : (finSumFinEquiv : Fin 1 ⊕ Fin 1 ≃ Fin 2) (.inr 0) = 1 := by decide
   norm_num [BimatrixBasis.cramerCertificate, complementaryNashCertificate,
     BimatrixCertificate.shiftPayoffs, Fin.sum_univ_one, hrow, hcol,
-    weights.1, weights.2, denominator_eq]
+    weights.1, weights.2, IntegerCramerComputation.denominator_eq, denominator_eq]
 
 example : bimatrixComplementaryPoint
       (fun i => terminal.cramerWeight (toLex (finSumFinEquiv (.inl i), true)))

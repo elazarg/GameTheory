@@ -304,9 +304,32 @@ published-base configurations (`6bb618ca`), auditing 2,624 owned declarations.
 Both linters, architecture/isolation audits, 19 optional-boundary regressions
 and the architecture regression fixture pass. Independent semantic review passes.
 
+**Delivered materialized determinant computation:**
+`Math.TabulatedBirdDeterminant` stores every division-free Bird stage as a
+row-major array, avoiding repeated evaluation of earlier function-valued stages.
+It reuses Mathlib's determinant correctness theorem. Each stage has `n*n`
+stored entries and each entry reads two finite tails of the previous stage;
+no Gaussian pivot search or exact division is needed.
+
+`Math.BirdIterationBounds` bounds the existing mathematical recurrence by
+`(2*n*B)^t*B` for input magnitude `B`. For `t ≤ n` and `B = 2^h`, every entry
+fits width `(n+1)*(h+n+2)+1`. `IntegerCramerComputation` transfers these bounds
+to the actual stored arrays and proves computed determinants, scales and
+numerators equal the canonical encoding. The existing bimatrix certificate
+producer now uses this computation, with its API and decoding contract unchanged.
+All three generic modules are independent of game and machine imports.
+
+Controls cover zero leading pivots, signed and singular matrices, dimension
+zero, multiple stored stages and a dense six-dimensional matrix. A scratch
+evaluation of the dense twenty-dimensional `I+J` matrix returns `21`.
+Full base/lint build: 4,500 jobs; lint and architecture/isolation audits pass.
+All 92 declarations in the new computation and changed certificate/control scope
+pass transitive standard-axiom auditing; independent semantic review passes.
+
 **Remaining gate:**
 
-1. Executable polynomial-time basis operations, binary node codecs and actual
+1. Binary-machine certificates for the materialized arithmetic, executable
+   ratio selection and basis operations, binary node codecs and actual
    FP/FPn instance and answer maps. Certify the
    oriented pointers at the machine level, feed their endpoint theorem into the
    End-of-Line reduction interface, then derive PPAD membership. Mathematical

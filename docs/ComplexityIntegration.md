@@ -1200,3 +1200,29 @@ standard Lean axioms. Both companion lint configurations, architecture and
 optional-isolation checks pass, as do all 19 optional-boundary regressions and
 the architecture regression fixture. Independent semantic review passes.
 Released-pin CI includes the endpoint control module.
+
+## Materialized determinant computation
+
+`Math.TabulatedBirdDeterminant` executes Bird's division-free recurrence with
+each stage stored in a row-major array. This prevents nested scalar functions
+from repeatedly evaluating earlier stages. Its determinant identity reuses
+Mathlib's correctness theorem. The implementation has no pivot search, division,
+classical choice or finite-instance synthesis.
+
+`Math.BirdIterationBounds` proves stage-entry magnitude at most `(2*n*B)^t*B`
+for input magnitude `B`, and polynomial binary width `(n+1)*(h+n+2)+1` through
+`n` stages for coefficients bounded by `2^h`. `IntegerCramerComputation` connects
+the stored arrays to those bounds and proves exact agreement of the computed
+Cramer fields with the canonical encoding. The existing bimatrix endpoint
+certificate producer uses these fields without a client API change.
+
+This supplies executable determinant arithmetic and bounds its stored integer
+entries. It does not yet supply a binary FP/FPn certificate. Machine-certified
+matrix loops, ratio selection, graph codecs and pointers remain before Nash PPAD
+membership. These generic leaves import only reusable mathematics.
+
+Validation: full base/lint build, 4,500 jobs; lint and architecture/isolation
+audits pass. All 92 declarations in the computation and changed endpoint/control
+scope pass transitive standard-axiom auditing. Independent semantic review
+passes. Kernel-checked controls include signed, singular and empty matrices,
+zero leading pivots, several stages and a dense six-dimensional matrix.

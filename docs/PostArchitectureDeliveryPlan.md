@@ -419,8 +419,10 @@ certificates also have a polynomial bound. Shared Cramer denominators now
 preserve each endpoint and fit the existing serialized field width after payoff
 unshifting. The optional endpoint word map now proves exact acceptance through
 the unchanged Nash codec and relation for each supplied complementary non-source
-basis. Efficient linear algebra, binary graph codecs and machine-certified
-maps remain before PPAD membership.
+basis. Materialized division-free determinant stages now compute the existing
+Cramer fields exactly, with polynomial bounds on every stored integer entry.
+Binary-machine certificates for these operations, ratio selection, binary graph
+codecs and machine-certified maps remain before PPAD membership.
 
 The companion package under `extensions/complexity` owns
 `GameTheoryComplexity` import modules, with declarations under

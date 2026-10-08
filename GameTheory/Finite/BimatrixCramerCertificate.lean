@@ -1,6 +1,6 @@
 import GameTheory.Finite.BimatrixBasisBounds
 import GameTheory.Finite.BimatrixComplementaryCertificateBounds
-import GameTheory.Math.IntegerCramerEncoding
+import GameTheory.Math.IntegerCramerComputation
 
 /-! Compact certificates for the equilibrium at a complementary basis.
 One absolute basis determinant clears all coordinates, avoiding a product of
@@ -16,7 +16,7 @@ variable {m n : ℕ} {A B : Fin m → Fin n → ℤ}
 /-- Extend the natural Cramer coordinates by zero outside the basis. -/
 def cramerWeight (basis : BimatrixBasis A B) (v : BimatrixVariable m n) : ℕ :=
   if hv : v ∈ basis.basic then
-    IntegerCramerEncoding.numerator basis.integerMatrix (fun _ => 1)
+    IntegerCramerComputation.numerator basis.integerMatrix (fun _ => 1)
       ((basis.basic.orderIsoOfFin basis.cardinality).symm ⟨v, hv⟩)
   else 0
 
@@ -32,7 +32,7 @@ theorem cramerWeight_decode (basis : BimatrixBasis A B) (v : BimatrixVariable m 
       basis.coordinates v := by
   by_cases hv : v ∈ basis.basic
   · simp only [cramerWeight, coordinates, BasisCoordinates.inverseCoordinates,
-      BasisCoordinates.lift, dite_eq_left hv]
+      BasisCoordinates.lift, dite_eq_left hv, IntegerCramerComputation.numerator_eq]
     have hh := IntegerCramerEncoding.decode basis.integerMatrix (fun _ => 1)
       basis.integerMatrix_det_ne_zero basis.integerSolution_nonneg
       ((basis.basic.orderIsoOfFin basis.cardinality).symm ⟨v, hv⟩)
@@ -46,7 +46,8 @@ theorem cramerWeight_lt (basis : BimatrixBasis A B) (h : ℕ)
     basis.cramerWeight v < 2 ^ IntegerBasisBounds.width (m + n) h := by
   unfold cramerWeight
   split
-  · exact IntegerCramerEncoding.numerator_lt basis.integerMatrix (fun _ => 1) h
+  · rw [IntegerCramerComputation.numerator_eq]
+    exact IntegerCramerEncoding.numerator_lt basis.integerMatrix (fun _ => 1) h
       (basis.integerMatrix_bound h hA hB) (fun _ => Nat.one_le_pow h 2 (by decide))
       basis.integerMatrix_det_ne_zero _
   · positivity
@@ -56,8 +57,8 @@ def cramerCertificate (basis : BimatrixBasis A B) (a b : ℤ) : BimatrixCertific
   (complementaryNashCertificate
     (fun i => basis.cramerWeight (toLex (finSumFinEquiv (.inl i), true)))
     (fun j => basis.cramerWeight (toLex (finSumFinEquiv (.inr j), true)))
-    (IntegerCramerEncoding.denominator basis.integerMatrix)
-    (IntegerCramerEncoding.denominator basis.integerMatrix)).shiftPayoffs (-a) (-b)
+    (IntegerCramerComputation.denominator basis.integerMatrix)
+    (IntegerCramerComputation.denominator basis.integerMatrix)).shiftPayoffs (-a) (-b)
 
 /-- The common-denominator payoff point is the original endpoint, coordinate by coordinate. -/
 theorem cramerPoint_eq (basis : BimatrixBasis A B) :
@@ -75,8 +76,10 @@ theorem cramerCertificate_fitsWidth (basis : BimatrixBasis A B) (a b : ℤ) (h s
     (hA : ∀ i j, (A i j).natAbs ≤ 2 ^ h) (hB : ∀ i j, (B i j).natAbs ≤ 2 ^ h)
     (ha : a.natAbs ≤ 2 ^ s) (hb : b.natAbs ≤ 2 ^ s) :
     (basis.cramerCertificate a b).FitsWidth
-      (IntegerBasisBounds.width (m + n) h + (m + n) + s + 2) :=
-  complementaryNashCertificate_fitsWidth _ _ _ a b _ s
+      (IntegerBasisBounds.width (m + n) h + (m + n) + s + 2) := by
+  unfold cramerCertificate
+  rw [IntegerCramerComputation.denominator_eq]
+  exact complementaryNashCertificate_fitsWidth _ _ _ a b _ s
     (fun _ => (basis.cramerWeight_lt h hA hB _).le)
     (fun _ => (basis.cramerWeight_lt h hA hB _).le)
     (IntegerCramerEncoding.denominator_lt basis.integerMatrix h
@@ -90,6 +93,8 @@ theorem cramerCertificate_valid {m n : ℕ} (A B : Fin m → Fin n → ℤ) (a b
     (hc : ComplementaryLabels.IsComplementary basis.nonbasic)
     (hs : basis ≠ bimatrixSourceBasis (fun i j => A i j + a) (fun i j => B i j + b)) :
     (basis.cramerCertificate a b).Valid A B := by
+  unfold BimatrixBasis.cramerCertificate
+  rw [IntegerCramerComputation.denominator_eq]
   obtain ⟨hne, hsol⟩ := basis.nonzero_payoffPoint_isSolution hc hs
   have hd := IntegerCramerEncoding.denominator_pos basis.integerMatrix
     basis.integerMatrix_det_ne_zero
