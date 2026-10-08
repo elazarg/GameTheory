@@ -401,9 +401,13 @@ pivots and reverse selection. The positive-payoff slack source has a proved
 unique, feasible successor, including tied ordinary ratios. Canonical finite-set bases now enforce size, invertibility and strict
 feasibility; path nodes enforce almost-complementary nonbasic label coverage.
 Sorted exchange and reverse selection are proved, with a canonical all-slack
-source and certified coverage-preserving successor. Global oriented pointers,
-secondary-ray exclusion, terminal point extraction and machine costs remain
-before the End-of-Line reduction can be claimed.
+source and certified coverage-preserving successor. Positive-payoff nonempty
+games now have an exit at every basis port, excluding secondary rays; the
+selected port pivot is an involution without fixed points. Complementary bases
+decode to nonnegative rational solutions, with zero exactly at the source.
+Global oriented pointers, endpoint label classification, rational answer
+serialization and machine costs remain before the End-of-Line reduction can
+be claimed.
 
 The companion package under `extensions/complexity` owns
 `GameTheoryComplexity` import modules, with declarations under

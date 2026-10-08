@@ -26,6 +26,27 @@ theorem basisMatrix_exchange (columns : Matrix (Fin n) α K)
   unfold exchangeEnumeration
   split <;> rfl
 
+omit [Field K] in
+/-- The entering variable occupies the reverse-pivot row after sorting. -/
+theorem exchanged_reverse_row (s : Finset α) (hs : s.card = n) (l : Fin n)
+    (entering : α) (he : entering ∉ s) :
+    (exchange s (s.orderEmbOfFin hs l) entering).orderEmbOfFin
+      ((card_exchange (Finset.orderEmbOfFin_mem s hs l) he).trans hs)
+      ((exchangePermutation s hs l entering he).symm l) = entering := by
+  rw [exchangePermutation_apply s hs l entering he, Equiv.apply_symm_apply]
+  simp [exchangeEnumeration]
+
+omit [Field K] in
+/-- The selected reverse row restores the original unordered basis exactly. -/
+theorem exchange_reverse_set (s : Finset α) (hs : s.card = n) (l : Fin n)
+    (entering : α) (he : entering ∉ s) :
+    exchange (exchange s (s.orderEmbOfFin hs l) entering)
+      ((exchange s (s.orderEmbOfFin hs l) entering).orderEmbOfFin
+        ((card_exchange (Finset.orderEmbOfFin_mem s hs l) he).trans hs)
+        ((exchangePermutation s hs l entering he).symm l)) (s.orderEmbOfFin hs l) = s := by
+  rw [exchanged_reverse_row s hs l entering he]
+  exact reverse_exchange (Finset.orderEmbOfFin_mem s hs l) he
+
 section Ordered
 variable [LinearOrder K] [IsStrictOrderedRing K]
 

@@ -441,3 +441,8 @@ import GameTheory.Math.DictionaryReindex
 import GameTheory.Math.ComplementaryLabels
 import GameTheory.Math.CanonicalDictionary
 import GameTheory.Finite.BimatrixBasis
+import GameTheory.Math.NonnegativeDictionary
+import GameTheory.Math.BasisCoordinates
+import GameTheory.Finite.BimatrixBasisExit
+import GameTheory.Finite.BimatrixBasisSolution
+import GameTheory.Finite.BimatrixPivot

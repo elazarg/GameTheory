@@ -138,14 +138,45 @@ audits pass; all 144 new declarations pass a transitive standard-axiom audit.
 Independent review confirms nonbasic exchange direction, permutation orientation,
 cardinality and certificate scope. The optional companion is unchanged.
 
+**Delivered exits, reversible ports and rational terminal extraction:**
+
+`Math.NonnegativeDictionary` proves a nonnegative invertible basis has a positive
+inverse direction whenever the entering column has a positive coordinate.
+`Finite.BimatrixBasisExit` applies this to every slack and payoff variable of a
+positive-payoff game with both player dimensions nonzero. Thus every nonbasic
+port of every certified basis has a unique symbolic leaving row; secondary rays
+of this representation are excluded without a hypothetical bounded solver.
+
+`Finite.BimatrixPivot` chooses that row and defines the opposite port by entering
+the old leaving variable in the sorted successor. Pivoting twice restores both
+the basis and entering variable; the pivot has no fixed points. This is an
+unoriented edge involution. It does not yet choose oriented path pointers.
+
+`Math.BasisCoordinates` lifts inverse coordinates to the full variable universe,
+sets nonbasic coordinates to zero, proves the ambient equations and derives
+nonnegative constant coordinates from symbolic feasibility.
+`Finite.BimatrixBasisSolution` extracts a rational complementary solution from
+any complementary basis and proves its payoff point is zero exactly at the
+all-slack source. The terminal control includes a degenerate 1×2 basis with
+constant coordinates `[1,0,1]`: a basic slack has zero constant and a strictly
+positive symbolic coefficient vector. Controls also cover nonpositive entering
+columns, negative basis entries, a nonbasic variable ignored by coordinate
+lifting, the exact source pivot, and reversal of the full port.
+
+Validation: full base/lint-scope build, 4,463 jobs; lint and both structural
+audits pass. All 119 declarations in the updated proof scope pass transitive
+standard-axiom auditing. Independent review confirms sorted reverse-row choice,
+uniqueness-based selection and the explicitly unoriented scope of the port pivot.
+
 **Remaining gates, in order:**
 
 1. Define oriented predecessor/successor pointers on these certified nodes,
    choose canonical directional metadata, and prove global inverse laws.
-2. Prove the unique known source and that every other endpoint supplies a
-   nonzero complementary solution. Exclude secondary rays using positive payoff
-   bounds; transport the symbolic basis to a nonnegative original-game point.
-   Decode the exact original-game answer.
+2. Prove the unique known source and that every other graph endpoint has
+   complementary nonbasic labels. Use the delivered rational extraction theorem,
+   represent its coordinates by natural numerators and common denominators, and
+   feed them to the existing shifted-game Nash decoder. Ray exclusion and
+   nonnegative original-point extraction are delivered above.
 3. Polynomial bit bounds, executable rational basis operations, binary node
    codecs, and actual FP/FPn instance and answer maps. Feed the endpoint theorem
    into the existing End-of-Line reduction interface, then derive PPAD and TFNP.

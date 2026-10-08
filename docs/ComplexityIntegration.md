@@ -1001,11 +1001,44 @@ dropped or duplicated nonbasic label. The successor satisfies the same node
 invariants. The all-slack source is unique by its set of variables, avoiding
 extra nodes created by reordered source columns.
 
-No graph orientation, global inverse pointer law, ray exclusion or endpoint
-solution extraction is asserted. The noncomputable mathematical certificates
-also do not supply binary node serialization or polynomial machine costs.
+The following slice supplies ray exclusion and rational terminal extraction.
+Graph orientation and global inverse pointer laws remain open. The
+noncomputable mathematical certificates do not supply binary node serialization
+or polynomial machine costs.
 
 Validation: full base and lint-scope build, 4,453 jobs; base lint and both
 structural audits pass. The transitive standard-axiom audit checks all 145 new
 declarations. Independent review confirms label orientation, sorted-coordinate
 transport and the explicitly local scope of the certificates.
+
+## Ray-free pivots and terminal extraction
+
+`Math.NonnegativeDictionary` gives the positive-direction theorem, and
+`Finite.BimatrixBasisExit` shows that every variable has a positive column entry
+when both game dimensions are nonzero and payoffs are strictly positive. Every
+certified basis therefore has a unique leaving row for every entering port.
+The theorem rules out secondary rays in this nonnegative-column representation.
+The dimension and payoff assumptions are on the operation, not basis data.
+
+`Finite.BimatrixPivot` supplies a deterministic noncomputable port pivot. Its
+opposite port enters the old leaving variable; a second pivot restores the full
+port. No fixed point is possible because the entering variable was nonbasic.
+This gives an unoriented edge involution, with path orientation still open.
+
+`Math.BasisCoordinates` extends inverse coordinates by zero outside the basis
+and proves ambient equations and nonnegative constant values.
+`Finite.BimatrixBasisSolution` extracts the original rational complementary
+solution from complementary labels. Its payoff block is zero if and only if the
+basis is the all-slack source, including degenerate constant coordinates.
+The explicit 1×2 terminal control has a basic slack coordinate zero while its
+symbolic coefficient vector remains strictly positive.
+
+These modules add no complexity backend dependency. Global oriented pointers,
+endpoint label classification, natural numerator/common-denominator encoding,
+polynomial bit bounds and actual End-of-Line machines remain outstanding.
+
+Validation: the full base/lint-scope build passes 4,463 jobs, lint and both
+structural audits pass, and 119 declarations in the updated proof scope pass
+transitive standard-axiom auditing. The companion source and base pin are
+unchanged. Proof review confirms reverse-row choice and the unoriented scope
+of the port operation.
