@@ -447,7 +447,12 @@ every-endpoint preservation. An injective live grid image and a decoder checking
 at most six local candidates supply actual global coordinate pointers. All
 nontrivial steps are reciprocal unit-grid edges; background is isolated, every
 endpoint decodes by row division to an original vertex, and known sources survive.
-Next establish coordinate word layouts and actual FP query certificates, then
+Binary coordinate layouts now preserve those source and endpoint semantics.
+Each coordinate takes `2*b+3` bits for `2^b` vertices; rectangle bounds prevent
+truncation during either pointer step. Exact-width acceptance, field extraction,
+binary division by 3 and 6, and the canonical original-endpoint label decoder
+have actual uniform FP certificates. The complete routing pointer still needs
+its own uniform FP certificate. Close that remaining query composition, then
 color the wires with an explicit canonical boundary/source translation
 to establish Sperner hardness, then deliver Brouwer and Nash search reductions
 in dependency order;

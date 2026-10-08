@@ -52,6 +52,16 @@ uniform generation; `Backend.CircuitVectorEmission` serializes the output coordi
 in polynomial time. `Backend.EndOfLineCircuitGeneration` specializes normalized
 pointer computations and preserves the invalid-source fallback.
 
+`Backend.GridRoutingWords` encodes the endpoint-preserving planar routed graph
+using two coordinate fields, totaling `4*b+6` bits for `2^b` original vertices.
+Reciprocal pointers, known sources and every-endpoint recovery are proved;
+malformed words remain isolated. `Backend.GridRoutingCodecMachine` certifies
+acceptance and field extraction in FP, and `Backend.GridRoutingDivision` supplies
+actual bitwise FP division by 3 and 6 and remainder modulo 3.
+`Backend.GridRoutingEndpointMachine` gives a uniform FP decoder returning the
+canonical original vertex label. These are certified primitives: the complete
+routing pointer FP certificate, wire coloring and Sperner hardness remain open.
+
 ## Use as a dependency
 
 In a downstream `lakefile.lean`, select a published commit containing this

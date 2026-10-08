@@ -65,3 +65,8 @@ import GameTheoryComplexity.Backend.SpernerProblem
 import GameTheoryComplexity.Backend.SpernerVerifier
 import GameTheoryComplexity.Backend.SpernerReduction
 import GameTheoryComplexity.Sperner
+import GameTheoryComplexity.Backend.GridRoutingCodec
+import GameTheoryComplexity.Backend.GridRoutingCodecMachine
+import GameTheoryComplexity.Backend.GridRoutingDivision
+import GameTheoryComplexity.Backend.GridRoutingEndpointMachine
+import GameTheoryComplexity.Backend.GridRoutingWords
