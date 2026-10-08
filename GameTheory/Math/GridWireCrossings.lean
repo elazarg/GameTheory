@@ -15,6 +15,15 @@ def verticalInterior (n i j : ℕ) (p : ℕ × ℕ) : Prop :=
   p.1 = wireColumn n i j ∧ min (6 * i) (6 * j + 3) < p.2 ∧
     p.2 < max (6 * i) (6 * j + 3)
 
+instance (n i j : ℕ) (p : ℕ × ℕ) : Decidable (horizontalInterior n i j p) :=
+  inferInstanceAs (Decidable
+    (0 < p.1 ∧ p.1 < wireColumn n i j ∧ (p.2 = 6 * i ∨ p.2 = 6 * j + 3)))
+
+instance (n i j : ℕ) (p : ℕ × ℕ) : Decidable (verticalInterior n i j p) :=
+  inferInstanceAs (Decidable
+    (p.1 = wireColumn n i j ∧ min (6 * i) (6 * j + 3) < p.2 ∧
+      p.2 < max (6 * i) (6 * j + 3)))
+
 /-- A shared positive-column point is a proper crossing, rather than a bend
 or overlapping segment, when both sources, targets and allocated columns differ. -/
 theorem onWire_intersection {n i j k l : ℕ} {p : ℕ × ℕ}

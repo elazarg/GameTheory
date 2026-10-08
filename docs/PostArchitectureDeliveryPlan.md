@@ -442,9 +442,13 @@ Individual directed wire routes now have reciprocal unit-grid pointers and
 exact endpoint characterization. Bounded pair allocation, lane separation and
 consistent-edge uniqueness classify all shared points; proper crossings have
 disjoint spacing-three switch boxes, clearance from bends and no third wire
-inside a box. Next assemble the global switched pointers with uniform local
-queries, decode routed endpoints to original
-nodes, and color the wires with an explicit canonical boundary/source hook
+inside a box. Global source-indexed routing now has reciprocal pointers and
+every-endpoint preservation. An injective live grid image and a decoder checking
+at most six local candidates supply actual global coordinate pointers. All
+nontrivial steps are reciprocal unit-grid edges; background is isolated, every
+endpoint decodes by row division to an original vertex, and known sources survive.
+Next establish coordinate word layouts and actual FP query certificates, then
+color the wires with an explicit canonical boundary/source translation
 to establish Sperner hardness, then deliver Brouwer and Nash search reductions
 in dependency order;
 approximation conventions and FIXP remain distinct obligations.

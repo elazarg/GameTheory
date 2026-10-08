@@ -392,3 +392,13 @@ import GameTheory.Math.GridCrossingAttachment
 import GameTheory.Math.GridWire
 import GameTheory.Math.GridWireLanes
 import GameTheory.Math.GridWireCrossings
+import GameTheory.Math.GridCrossingPlacement
+import GameTheory.Math.GridCrossingLocator
+import GameTheory.Math.EndOfLineTailSwitch
+import GameTheory.Math.GridWireGraph
+import GameTheory.Math.GridWireImage
+import GameTheory.Math.GridWireRealization
+import GameTheory.Math.GridWireDecoder
+import GameTheory.Math.GridWireSwitch
+import GameTheory.Math.GridWireImageSteps
+import GameTheory.Math.GridRoutedGraph

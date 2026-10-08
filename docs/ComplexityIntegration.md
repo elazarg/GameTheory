@@ -733,3 +733,50 @@ only standard axioms. Independent semantic, software and proof-simplification
 reviews found no gaps. Controls exercise ascending and descending routes,
 endpoint and off-wire behavior, both crossing directions, adjacent switch
 ports, disjoint boxes and overlapping lanes when edge uniqueness is absent.
+
+## Global routed grid pointers
+
+`Math.GridRoutedGraph` now supplies actual predecessor and successor functions
+on natural-number grid coordinates. Every nontrivial step is reciprocal and
+axis-aligned with unit length. Background points are self-loops. For original
+pointers preserving the bounded vertex set, every original vertex retains its
+endpoint status and every grid endpoint decodes to an original endpoint, even
+on components disconnected from the known source. The decoder simply reads
+the endpoint's row divided by six. A known original source remains a known
+grid source.
+
+The construction first uses `Math.GridWireGraph` to distinguish the two wire
+occurrences at each crossing. `Math.EndOfLineTailSwitch` proves that an
+involution exchanging internal continuations preserves incident-edge roles
+and endpoints; `Math.GridWireSwitch` verifies its hypotheses for every crossing
+simultaneously. It excludes old edges between exchanged occurrences, preventing
+new self-loops. No comparison-graph isomorphism or general graph framework is
+needed.
+
+`Math.GridCrossingPlacement` embeds and decodes each switch box.
+`Math.GridCrossingLocator` identifies its nearest spacing-three center and
+extracts the two possible owners from the row and column, using original
+pointer queries. `Math.GridWireImage` moves just the crossing centers to their
+assigned bends; `Math.GridWireRealization` proves coordinate injectivity on
+live labels and excludes collisions with original vertices.
+`Math.GridWireDecoder` validates at most six locally derived candidates and
+proves an exact inverse on the live image. Removed centers and unused bends
+are rejected. `Math.GridWireImageSteps` connects this coordinate map to the
+local switch, including directly adjacent ports of neighboring boxes.
+
+The modules have no ComplexityLib dependency. The six-candidate bound proves
+locality; it is not an actual FP machine certificate. Coordinate word layouts,
+certified FP arithmetic and queries, routed-wire colors, canonical square-grid
+boundary/source translation and the FP/FPn hardness reduction remain open.
+The current result does not yet prove Sperner PPAD-hardness.
+
+Validation: the global routing controls, prior individual-wire controls and
+full base lint scope build pass 4,089 jobs. Base lint, structural architecture
+checks, dependency isolation and all 19 boundary regressions pass. A transitive
+audit accepts all 365 declarations owned by the ten new mathematical modules,
+the updated crossing module and the new fixture module using only standard
+axioms. Independent semantic, software and proof-simplification reviews found
+no gaps. Controls execute adjacent switches in both pointer directions,
+ascending and descending crossing routes, displaced-center decoding, removed
+centers and unused bends, malformed reciprocity, zero-size and background
+inputs, and exact all-point endpoint sets including a disconnected cycle.
