@@ -463,8 +463,15 @@ Guarded original-node steps now have exact semantic agreement and proved
 coordinate bounds. The complete predecessor/successor machines compose decoding,
 crossing switches, those steps and coordinate encoding with actual uniform FP
 certificates and agreement on every external word. Malformed and background
-words remain isolated. Next, color the wires with an explicit canonical
-boundary/source translation
+words remain isolated. Fixed size-six coloring tiles now have kernel-checked
+boundary and triangle certificates: exactly one fixed trichromatic triangle
+marks an endpoint, and balanced/inactive tiles have none. Reciprocal two-cycles
+are removed by a local endpoint-preserving normalization before assigning ports.
+Global tile gluing now classifies every triangle, and reciprocal unit pointers
+supply valid matching ports. The actual routed coloring recovers every original
+endpoint and decodes every trichromatic witness by row division by 36. The zero
+source has an exact eastward first step. Next supply an explicit canonical
+boundary/source hookup that removes its witness, then certify binary FP coloring
 to establish Sperner hardness, then deliver Brouwer and Nash search reductions
 in dependency order;
 approximation conventions and FIXP remain distinct obligations.

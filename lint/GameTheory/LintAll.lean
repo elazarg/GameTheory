@@ -403,3 +403,9 @@ import GameTheory.Math.GridWireSwitch
 import GameTheory.Math.GridWireImageSteps
 import GameTheory.Math.GridRoutedGraph
 import GameTheory.Math.GridWireBounds
+import GameTheory.Math.EndOfLineTwoCycle
+import GameTheory.Math.GridWireColoringTile
+import GameTheory.Math.GridWireColoring
+import GameTheory.Math.GridWireColoringPorts
+import GameTheory.Math.GridRoutedColoring
+import GameTheory.Math.GridRoutedSourceStep
