@@ -413,3 +413,5 @@ import GameTheory.Math.SourceColoringTiles
 import GameTheory.Math.GridSpernerRouting
 import GameTheory.Math.GridSpernerRoutingBoundary
 import GameTheory.Math.GridSpernerRoutingBounds
+import GameTheory.Math.GridBrouwer
+import GameTheory.Math.GridBrouwerMap

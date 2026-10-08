@@ -4,6 +4,13 @@ This matrix describes recognizable workflows supported by the current public
 library. It is successor-native: evidence points to compiled modules and stable
 discriminating examples, not to declaration ancestry.
 
+Rational simplicial Brouwer displacement is available in
+[`Math.GridBrouwer`](../GameTheory/Math/GridBrouwer.lean) and
+[`Math.GridBrouwerMap`](../GameTheory/Math/GridBrouwerMap.lean): small local
+residuals decode to trichromatic cells, and convex triangle maps preserve the
+square. Global continuity and unrestricted rational-point search are not yet
+delivered.
+
 Discrete laws use ordinary Mathlib PMFs, including infinite support on arbitrary
 carriers. Real expected utility requires integration of each actual compared
 law. [D62](decisions/D62-general-pmf-restoration.md) records this restored scope;

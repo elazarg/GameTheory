@@ -478,9 +478,12 @@ contains the construction. Actual uniform FP binary coloring, shared circuit
 instance generation and a source-aware FPn row-label decoder now close the
 End-of-Line-to-Sperner reduction and standard PPAD-completeness. Invalid source
 promises retain their empty-witness fallback, and every target answer is covered.
-Next deliver Brouwer and Nash search reductions
-in dependency order;
-approximation conventions and FIXP remain distinct obligations.
+The next Brouwer slice now gives rational color displacement, the one-sixth
+residual decoder and square-preserving local affine triangle maps. Deliver
+globally glued interpolation, normalized precision bounds and an unrestricted
+rational-point codec before claiming continuous approximate Brouwer search.
+Nash search reductions follow in dependency order; residual approximation,
+distance to an exact fixed point and FIXP remain distinct obligations.
 
 ## 3. Stable boundaries
 
