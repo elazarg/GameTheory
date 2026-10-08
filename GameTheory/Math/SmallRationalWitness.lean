@@ -1,3 +1,4 @@
+import GameTheory.Math.IntegerDeterminantBound
 import Mathlib.LinearAlgebra.Matrix.Nonsingular
 import Mathlib.LinearAlgebra.Matrix.Rank
 import Mathlib.Data.Nat.Factorial.Basic
@@ -63,26 +64,6 @@ theorem exists_nonnegative_independent_representation {ι V : Type*}
   obtain ⟨t, z, hts, hz, htind, htz⟩ :=
     ih (s.erase k) (Finset.erase_ssubset hks) y hy
   exact ⟨t, z, hts.trans (Finset.erase_subset _ _), hz, htind, htz.trans hsum⟩
-
-/-- A determinant is bounded by the number of its permutation terms times their bounds. -/
-theorem natAbs_det_le {ι : Type*} [Fintype ι] [DecidableEq ι]
-    (A : Matrix ι ι ℤ) (K : ℕ) (hA : ∀ i j, (A i j).natAbs ≤ K) :
-    A.det.natAbs ≤ (Fintype.card ι).factorial * K ^ Fintype.card ι := by
-  classical
-  rw [Matrix.det_apply]
-  calc
-    (∑ σ : Equiv.Perm ι, Equiv.Perm.sign σ • ∏ i, A (σ i) i).natAbs ≤
-        ∑ σ : Equiv.Perm ι, (Equiv.Perm.sign σ • ∏ i, A (σ i) i).natAbs :=
-      Int.natAbs_sum_le _ _
-    _ ≤ ∑ _σ : Equiv.Perm ι, K ^ Fintype.card ι := by
-      apply Finset.sum_le_sum
-      intro σ _
-      simp only [Units.smul_def, zsmul_eq_mul, Int.cast_id, Int.natAbs_mul,
-        Int.units_natAbs, one_mul]
-      change Int.natAbsHom (∏ i, A (σ i) i) ≤ _
-      rw [map_prod]
-      simpa using Finset.prod_le_prod (fun i (_ : i ∈ Finset.univ) => hA (σ i) i)
-    _ = (Fintype.card ι).factorial * K ^ Fintype.card ι := by simp [Fintype.card_perm]
 
 private theorem gram_det_ne_zero {ρ κ : Type*} [Fintype ρ] [Fintype κ]
     [DecidableEq κ] (C : Matrix ρ κ ℝ) (hC : LinearIndependent ℝ C.col) :

@@ -455,3 +455,8 @@ import GameTheory.Finite.BimatrixPathOrientation
 import GameTheory.Finite.BimatrixPathEndOfLine
 import GameTheory.Math.FiniteRationalEncoding
 import GameTheory.Finite.BimatrixPathCertificate
+import GameTheory.Math.IntegerDeterminantBound
+import GameTheory.Math.RationalQuotientBounds
+import GameTheory.Math.IntegerBasisBounds
+import GameTheory.Finite.BimatrixEndpointBounds
+import GameTheory.Finite.BimatrixBasisBounds

@@ -241,10 +241,41 @@ extension declarations pass transitive standard-axiom auditing. Architecture and
 isolation audits and all 19 optional-boundary tests plus the architecture
 regression fixture pass. The class result is public in `BimatrixNash`.
 
+**Delivered basis and endpoint bit bounds:** `Math.IntegerDeterminantBound`
+owns the existing permutation-expansion estimate, extracted unchanged from
+`SmallRationalWitness`. `RationalQuotientBounds` shows fraction reduction cannot
+increase either field of a nonzero-denominator integer quotient.
+`IntegerBasisBounds` proves Cramer's identity and bounds determinants, inverse
+entries and inverse-system solutions by width `d*(d+h)+1`, for dimension `d`
+and entry/right-hand-side magnitudes at most `2^h`. These are Mathlib-only leaves.
+
+`Finite.BimatrixBasisBounds` proves the same reduced-fraction bounds for every
+certified basis's ambient coordinates, symbolic dictionary coefficients and
+entering directions. No path-length or positive-payoff assumption is needed.
+Its integer representation is obtained from the existing rational columns and
+proved exactly equal after coercion, rather than introducing another column
+semantics. `BimatrixEndpointBounds` bounds the directly decoded, unshifted
+certificate, retaining the supplied endpoint. Given coordinate width `W` and
+shift magnitudes at most `2^s`, its fields fit width
+`W*(m+n+1)+(m+n)+s+2`. This closes polynomial coordinate and direct endpoint
+size; it does not prove polynomial-time arithmetic or graph encoding.
+
+The product-denominator endpoint bound can exceed the existing serialized field
+width. The next decoder should share the basis's Cramer determinant denominator,
+avoiding the product of separately reduced denominators. Bounds on determinants
+do not make the permutation-expansion computation polynomial-time: certified
+efficient integer linear algebra is also required.
+
+Validation: full base/lint-scope build, 4,490 jobs; lint and both structural
+audits pass. All 58 declarations in the new bound/control scope pass transitive
+standard-axiom auditing; independent semantic review passes. The optional
+companion is unchanged.
+
 **Remaining gate:**
 
-1. Polynomial node/coordinate bit bounds, executable rational basis operations,
-   binary node codecs and actual FP/FPn instance and answer maps. Certify the
+1. A shared-determinant endpoint encoding within the existing serialized width,
+   executable polynomial-time basis operations, binary node codecs and actual
+   FP/FPn instance and answer maps. Certify the
    oriented pointers at the machine level, feed their endpoint theorem into the
    End-of-Line reduction interface, then derive PPAD membership. Mathematical
    path existence and the existing verifier now establish serialized totality

@@ -413,8 +413,11 @@ supplies a nonzero rational solution. Finiteness yields mathematical rational
 solution existence without Analysis. Exact natural numerator/common-denominator
 encoding and payoff unshifting now give signed-game Nash certificates. Bounded
 support-system witnesses and the existing verifier prove serialized TFNP.
-Polynomial path-node bit bounds and machine-certified pointer/instance/answer
-maps remain before PPAD membership can be claimed.
+Reduced rational fields of every certified basis, symbolic coefficient and
+entering direction now have width `d*(d+h)+1`; directly decoded endpoint
+certificates also have a polynomial bound. Sharing the Cramer denominator to
+meet the existing serialized width, efficient linear algebra, binary graph
+codecs and machine-certified maps remain before PPAD membership.
 
 The companion package under `extensions/complexity` owns
 `GameTheoryComplexity` import modules, with declarations under

@@ -1123,3 +1123,35 @@ All 2,620 owned extension declarations pass transitive standard-axiom auditing.
 Both linters, architecture/isolation audits, all 19 optional-boundary regression
 tests and the architecture regression fixture pass. Released-pin CI explicitly
 builds the new totality control module.
+
+## Uniform binary bounds along bimatrix paths
+
+`Math.IntegerDeterminantBound` owns the previously proved integer determinant
+estimate. `RationalQuotientBounds` controls numerator and denominator reduction,
+and `IntegerBasisBounds` gives exact Cramer quotients and binary field width
+`d*(d+h)+1` for integer matrices and right-hand sides bounded by `2^h`.
+These modules import only Mathlib and reusable mathematics.
+
+`Finite.BimatrixBasisBounds` applies this bound to all certified bases, not just
+the source or a selected equilibrium: constants, symbolic perturbation
+coefficients, entering directions and payoff coordinates all satisfy it.
+Integer columns are exact encodings of the existing canonical rational columns.
+The result requires no positivity of payoffs and is independent of path length.
+
+`BimatrixEndpointBounds` bounds the same endpoint's natural encoding after
+normalization and payoff unshifting. With coordinate width `W` and shift width
+`s`, fields fit `W*(m+n+1)+(m+n)+s+2`. Width checking does not imply validity;
+controls include a negative coordinate whose truncated encoding is bounded but
+invalid. Other controls cover negative determinants and reduced fractions,
+empty matrices, singular-premise rejection and a degenerate rectangular pivot.
+
+The direct product-denominator bound is polynomial but may exceed the existing
+serialized field width. Sharing the Cramer denominator is the next compression
+step. Binary graph codecs, efficient exact linear algebra and actual FP/FPn
+pointer and every-answer maps remain before PPAD membership. No runtime bound
+is inferred from the determinant expansion.
+
+Validation: full base/lint-scope build, 4,490 jobs; lint and both structural
+audits pass. All 58 declarations in the new bound/control scope pass transitive
+standard-axiom auditing. Independent semantic review passes. The companion
+source and released base pin are unchanged.
