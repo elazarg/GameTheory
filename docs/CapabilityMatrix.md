@@ -8,8 +8,11 @@ Rational simplicial Brouwer displacement is available in
 [`Math.GridBrouwer`](../GameTheory/Math/GridBrouwer.lean) and
 [`Math.GridBrouwerMap`](../GameTheory/Math/GridBrouwerMap.lean): small local
 residuals decode to trichromatic cells, and convex triangle maps preserve the
-square. Global continuity and unrestricted rational-point search are not yet
-delivered.
+square. The opt-in
+[`SimplicialBrouwer`](../extensions/complexity/GameTheoryComplexity/SimplicialBrouwer.lean)
+module proves PPAD-completeness for succinct triangle-barycenter residual
+search, with polynomial-time verification and reductions. Global continuity
+and unrestricted rational-point search are not yet delivered.
 
 Discrete laws use ordinary Mathlib PMFs, including infinite support on arbitrary
 carriers. Real expected utility requires integration of each actual compared

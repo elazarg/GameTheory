@@ -92,3 +92,5 @@ import GameTheoryComplexity.Backend.GridSpernerColorMachine
 import GameTheoryComplexity.Backend.SpernerCircuitGeneration
 import GameTheoryComplexity.Backend.SpernerRoutingDecoderMachine
 import GameTheoryComplexity.Backend.EndOfLineSpernerReduction
+import GameTheoryComplexity.Backend.SimplicialBrouwer
+import GameTheoryComplexity.SimplicialBrouwer

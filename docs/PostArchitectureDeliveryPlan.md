@@ -479,7 +479,9 @@ instance generation and a source-aware FPn row-label decoder now close the
 End-of-Line-to-Sperner reduction and standard PPAD-completeness. Invalid source
 promises retain their empty-witness fallback, and every target answer is covered.
 The next Brouwer slice now gives rational color displacement, the one-sixth
-residual decoder and square-preserving local affine triangle maps. Deliver
+residual decoder and square-preserving local affine triangle maps.
+The opt-in triangle-barycenter residual relation is PPAD-complete through
+certified reductions in both directions to succinct Sperner. Next deliver
 globally glued interpolation, normalized precision bounds and an unrestricted
 rational-point codec before claiming continuous approximate Brouwer search.
 Nash search reductions follow in dependency order; residual approximation,
