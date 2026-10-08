@@ -1179,3 +1179,24 @@ algebra, binary graph encodings and actual FP/FPn maps remain before PPAD.
 Validation: full base/lint-scope build, 4,496 jobs; lint and architecture audit
 pass. All 73 declarations in the compact-encoding/shared-bound/control scope
 pass transitive standard-axiom auditing.
+
+## Binary emission of supplied bimatrix endpoints
+
+`Backend.GeneralBimatrixEndpoint.generalBimatrixEndpointWord` uses the common
+Cramer denominator to serialize the supplied complementary non-source shifted
+basis. Its acceptance theorem round-trips the same certificate through the
+existing codec and proves the unchanged exact Nash relation for the original
+input. It does not select a replacement equilibrium. Signed rectangular controls
+exercise this contract; malformed inputs retain precisely their empty answer.
+
+The public `BimatrixNash` module imports this leaf. Endpoint emission has no
+polynomial-time certificate yet; efficient exact linear algebra and serialized
+graph pointers remain before the Nash PPAD reduction.
+
+Validation: full companion/lint/axiom build, 4,258 jobs against both the local
+checkout and published base pin `6bb618ca511f7f2edf3d105f0b20d7882870fa96`.
+The transitive audit checks all 2,624 owned extension declarations using only
+standard Lean axioms. Both companion lint configurations, architecture and
+optional-isolation checks pass, as do all 19 optional-boundary regressions and
+the architecture regression fixture. Independent semantic review passes.
+Released-pin CI includes the endpoint control module.

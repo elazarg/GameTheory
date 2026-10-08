@@ -112,4 +112,5 @@ import GameTheoryComplexity.Backend.GeneralBimatrixVerifierMachine
 import GameTheoryComplexity.Backend.GeneralBimatrixVerifierCorrectness
 import GameTheoryComplexity.Backend.GeneralBimatrixFNP
 import GameTheoryComplexity.Backend.GeneralBimatrixTotality
+import GameTheoryComplexity.Backend.GeneralBimatrixEndpoint
 import GameTheoryComplexity.BimatrixNash

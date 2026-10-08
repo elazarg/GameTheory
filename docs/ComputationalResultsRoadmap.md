@@ -291,6 +291,19 @@ Validation: full base/lint-scope build, 4,496 jobs; lint and architecture audit
 pass. All 73 declarations in the compact-encoding/shared-bound/control scope
 pass transitive standard-axiom auditing.
 
+**Delivered binary endpoint emission:** The optional
+`Backend.GeneralBimatrixEndpoint` now serializes each supplied
+complementary non-source shifted basis with the existing certificate codec.
+`generalBimatrixEndpointWord_accept` proves the unchanged binary relation accepts
+that exact endpoint's certificate. Signed rectangular and malformed-input
+controls compile. This is a mathematical emission map; polynomial runtime for
+its determinant computation is still an obligation.
+
+Validation: full companion/lint/axiom build, 4,258 jobs in both local and
+published-base configurations (`6bb618ca`), auditing 2,624 owned declarations.
+Both linters, architecture/isolation audits, 19 optional-boundary regressions
+and the architecture regression fixture pass. Independent semantic review passes.
+
 **Remaining gate:**
 
 1. Executable polynomial-time basis operations, binary node codecs and actual

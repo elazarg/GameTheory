@@ -417,7 +417,9 @@ Reduced rational fields of every certified basis, symbolic coefficient and
 entering direction now have width `d*(d+h)+1`; directly decoded endpoint
 certificates also have a polynomial bound. Shared Cramer denominators now
 preserve each endpoint and fit the existing serialized field width after payoff
-unshifting. Efficient linear algebra, binary graph codecs and machine-certified
+unshifting. The optional endpoint word map now proves exact acceptance through
+the unchanged Nash codec and relation for each supplied complementary non-source
+basis. Efficient linear algebra, binary graph codecs and machine-certified
 maps remain before PPAD membership.
 
 The companion package under `extensions/complexity` owns
