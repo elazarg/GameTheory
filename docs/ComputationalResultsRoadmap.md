@@ -360,6 +360,12 @@ computation/control scope pass transitive standard-axiom auditing. Independent
 semantic review passes. Compiled round-trip validation runs from ignored
 `.codex/scratch/BimatrixCompiledRoundtrip.lean`.
 
+Companion integration and the computed-pivot consumer pass 4,268 build jobs
+against both the local checkout and published base pin `9c0a2c22`. Both companion
+lint runs pass; the transitive audit checks 2,624 owned extension declarations.
+The isolation audit, all 19 optional-boundary regressions and the architecture
+regression fixture pass. Released-pin CI now builds the pivot control module.
+
 **Remaining gate:**
 
 1. Binary-machine certificates for the materialized arithmetic, integer ratio

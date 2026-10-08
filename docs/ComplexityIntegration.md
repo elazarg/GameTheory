@@ -1266,3 +1266,10 @@ audits pass. All 92 declarations in the scan/dictionary/pivot and changed signed
 computation/control scope pass transitive standard-axiom auditing. Independent
 semantic review passes. The compiled round-trip control runs with
 `lake env lean .codex/scratch/BimatrixCompiledRoundtrip.lean`.
+
+The full companion/lint/axiom and computed-pivot consumer build passes 4,268 jobs
+in both local and published-base configurations, using pin
+`9c0a2c223ec8eab2591c6c5ce6f509f7cccabae9`. Both companion lint runs pass;
+all 2,624 owned extension declarations pass transitive standard-axiom auditing.
+The isolation audit, 19 optional-boundary regressions and the architecture
+regression fixture pass. Released-pin CI includes the new pivot consumer.
