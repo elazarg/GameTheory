@@ -331,10 +331,39 @@ checkout and published base pin `14183a4c`, auditing 2,624 owned declarations.
 Both companion lint runs and the isolation audit pass; endpoint acceptance and
 its controls compile unchanged against the new determinant computation.
 
+**Delivered executable symbolic ratio selection:**
+`Math.FiniteLexicographicCompare` scans coefficients from left to right with the
+scalar's computable order, avoiding Mathlib's noncomputable function order.
+`IntegerRatioSelection` filters positive directions and compares integer
+cross-products. It returns `none` exactly when every direction is nonpositive;
+every selected row satisfies the existing rational `IsLeavingRow` predicate.
+Exact ties retain the earliest row; symbolic perturbations break ordinary ties.
+
+`IntegerCramerComputation` now exposes signed fields, preserving negative
+direction and perturbation coefficients. `IntegerDictionaryComputation`
+materializes all coefficients and direction fields over the same positive
+determinant denominator. Exact division recovers the canonical dictionary;
+canceling that common scale transfers integer selection to its ratio theorem.
+Magnitude fields retain width `d*(d+h)+1`, and comparison cross-products fit
+twice that width. No new mathematical leaving-row predicate is introduced.
+
+`Finite.BimatrixComputedPivot` computes the leaving row and exchanges the actual
+port. For nonempty positive-payoff games, both outputs agree with the canonical
+symbolic pivot. Controls cover negative determinants/directions, empty scans,
+ineligible rows, late symbolic differences, exact ties and a degenerate `1×2`
+source. Its selected row is kernel checked; formal and scratch compiled checks
+confirm pivot followed by reverse pivot restores the port data.
+
+Validation: full base/lint build, 4,506 jobs; lint and architecture/isolation
+audits pass. All 92 declarations in the scan/dictionary/pivot and changed signed
+computation/control scope pass transitive standard-axiom auditing. Independent
+semantic review passes. Compiled round-trip validation runs from ignored
+`.codex/scratch/BimatrixCompiledRoundtrip.lean`.
+
 **Remaining gate:**
 
-1. Binary-machine certificates for the materialized arithmetic, executable
-   ratio selection and basis operations, binary node codecs and actual
+1. Binary-machine certificates for the materialized arithmetic, integer ratio
+   scans and basis exchange, binary node codecs and actual
    FP/FPn instance and answer maps. Certify the
    oriented pointers at the machine level, feed their endpoint theorem into the
    End-of-Line reduction interface, then derive PPAD membership. Mathematical

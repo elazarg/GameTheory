@@ -466,3 +466,7 @@ import GameTheory.Finite.BimatrixCramerCertificate
 import GameTheory.Math.TabulatedBirdDeterminant
 import GameTheory.Math.BirdIterationBounds
 import GameTheory.Math.IntegerCramerComputation
+import GameTheory.Math.FiniteLexicographicCompare
+import GameTheory.Math.IntegerRatioSelection
+import GameTheory.Math.IntegerDictionaryComputation
+import GameTheory.Finite.BimatrixComputedPivot

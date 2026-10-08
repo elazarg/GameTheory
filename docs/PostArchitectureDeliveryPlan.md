@@ -421,8 +421,10 @@ unshifting. The optional endpoint word map now proves exact acceptance through
 the unchanged Nash codec and relation for each supplied complementary non-source
 basis. Materialized division-free determinant stages now compute the existing
 Cramer fields exactly, with polynomial bounds on every stored integer entry.
-Binary-machine certificates for these operations, ratio selection, binary graph
-codecs and machine-certified maps remain before PPAD membership.
+Signed dictionary fields and integer cross-product scans now compute leaving
+rows and actual basis exchange, agreeing with the canonical symbolic pivot even
+when ordinary ratios tie. Binary-machine certificates for these operations,
+binary graph codecs and machine-certified maps remain before PPAD membership.
 
 The companion package under `extensions/complexity` owns
 `GameTheoryComplexity` import modules, with declarations under

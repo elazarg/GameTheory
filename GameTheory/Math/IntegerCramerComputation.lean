@@ -41,9 +41,17 @@ theorem stages_bounds (M : Matrix (Fin n) (Fin n) ℤ) (h t : ℕ)
 /-- Compute the shared positive scale of a nonsingular integer system. -/
 def denominator (M : Matrix (Fin n) (Fin n) ℤ) : ℕ := (determinant M).natAbs
 
+/-- Compute a signed numerator over the shared positive determinant scale. -/
+def signedNumerator (M : Matrix (Fin n) (Fin n) ℤ) (b : Fin n → ℤ) (i : Fin n) : ℤ :=
+  Int.sign (determinant M) * determinant (M.updateCol i b)
+
 /-- Compute a sign-adjusted natural Cramer numerator. -/
 def numerator (M : Matrix (Fin n) (Fin n) ℤ) (b : Fin n → ℤ) (i : Fin n) : ℕ :=
-  (Int.sign (determinant M) * determinant (M.updateCol i b)).toNat
+  (signedNumerator M b i).toNat
+
+theorem signedNumerator_eq (M : Matrix (Fin n) (Fin n) ℤ) (b : Fin n → ℤ) (i : Fin n) :
+    signedNumerator M b i = Int.sign M.det * (M.updateCol i b).det := by
+  rw [signedNumerator, determinant_eq, determinant_eq]
 
 theorem denominator_eq (M : Matrix (Fin n) (Fin n) ℤ) :
     denominator M = IntegerCramerEncoding.denominator M := by
@@ -52,8 +60,36 @@ theorem denominator_eq (M : Matrix (Fin n) (Fin n) ℤ) :
 
 theorem numerator_eq (M : Matrix (Fin n) (Fin n) ℤ) (b : Fin n → ℤ) (i : Fin n) :
     numerator M b i = IntegerCramerEncoding.numerator M b i := by
-  rw [numerator, determinant_eq, determinant_eq]
+  rw [numerator, signedNumerator_eq]
   rfl
+
+/-- Signed fields recover arbitrary inverse-system coordinates, including negative ones. -/
+theorem signed_decode (M : Matrix (Fin n) (Fin n) ℤ) (b : Fin n → ℤ) (hdet : M.det ≠ 0)
+    (i : Fin n) :
+    (signedNumerator M b i : ℚ) / (denominator M : ℚ) =
+      (M.map (fun z : ℤ => (z : ℚ)))⁻¹.mulVec (fun j => (b j : ℚ)) i := by
+  have hs : ((Int.sign M.det : ℤ) : ℚ) * (M.det : ℚ) = (M.det.natAbs : ℚ) := by
+    have he := congrArg (fun z : ℤ => (z : ℚ)) (Int.sign_mul_self_eq_natAbs M.det)
+    simpa only [Int.cast_mul, Int.cast_natCast] using he
+  rw [signedNumerator_eq, denominator_eq, IntegerCramerEncoding.denominator,
+    IntegerBasisBounds.inv_mulVec_eq M b hdet i, Int.cast_mul]
+  apply (div_eq_div_iff (Nat.cast_ne_zero.mpr (Int.natAbs_pos.mpr hdet).ne')
+    (Int.cast_ne_zero.mpr hdet)).mpr
+  rw [← hs]
+  ring
+
+/-- Signed output fields have the same determinant width as nonnegative fields. -/
+theorem signedNumerator_bound (M : Matrix (Fin n) (Fin n) ℤ) (b : Fin n → ℤ) (h : ℕ)
+    (hM : ∀ i j, (M i j).natAbs ≤ 2 ^ h) (hb : ∀ i, (b i).natAbs ≤ 2 ^ h)
+    (hdet : M.det ≠ 0) (i : Fin n) :
+    (signedNumerator M b i).natAbs < 2 ^ IntegerBasisBounds.width n h := by
+  rw [signedNumerator_eq, Int.natAbs_mul, Int.natAbs_sign_of_ne_zero hdet, one_mul]
+  apply IntegerBasisBounds.determinant_natAbs_lt
+  intro j k
+  simp only [Matrix.updateCol_apply]
+  split
+  · exact hb j
+  · exact hM j k
 
 /-- Computed fields decode to the nonnegative solution of the original system. -/
 theorem decode (M : Matrix (Fin n) (Fin n) ℤ) (b : Fin n → ℤ) (hdet : M.det ≠ 0)

@@ -1233,3 +1233,36 @@ the local checkout and published base pin
 all 2,624 owned declarations pass transitive standard-axiom auditing.
 The isolation audit passes after the pin update. The existing endpoint acceptance
 proof and controls build against the new computation without binary API changes.
+
+## Executable symbolic ratio selection and pivot exchange
+
+`Math.FiniteLexicographicCompare` gives a computable coefficient scan with a
+proof of agreement with Mathlib's lexicographic relation.
+`IntegerRatioSelection` compares eligible rows by integer cross-products,
+excluding zero and negative directions. A selected row satisfies the existing
+rational `IsLeavingRow`; `none` exactly characterizes the absence of a positive
+direction. Ordinary and exact ties have distinct controls.
+
+Signed Cramer numerators and `IntegerDictionaryComputation` materialize the
+canonical symbolic coefficients and entering direction over one positive
+determinant scale. Canceling this scale proves the computed scan correct for
+the original rational dictionary. Each signed magnitude field fits
+`d*(d+h)+1` bits, and comparison cross-products fit twice that width.
+
+`Finite.BimatrixComputedPivot` computes both the leaving row and the actual
+exchange. Nonempty positive-payoff games obtain precisely the canonical
+mathematical pivot. A fully degenerate rectangular source selects the last
+eligible row using a perturbation coefficient; its computed forward and reverse
+exchanges restore the port data. The library contains formal controls; compiled
+evaluation lives in ignored scratch, as required by the architecture audit.
+
+These operations use integers and explicit finite scans. Rational inverses and
+noncomputable function orders occur only in proofs. Actual FP/FPn certificates
+for the binary arithmetic, scans, exchange and graph codecs remain before the
+Nash PPAD reduction.
+
+Validation: full base/lint build, 4,506 jobs; lint and architecture/isolation
+audits pass. All 92 declarations in the scan/dictionary/pivot and changed signed
+computation/control scope pass transitive standard-axiom auditing. Independent
+semantic review passes. The compiled round-trip control runs with
+`lake env lean .codex/scratch/BimatrixCompiledRoundtrip.lean`.
