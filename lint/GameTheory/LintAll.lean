@@ -413,3 +413,9 @@ import GameTheory.Math.SourceColoringTiles
 import GameTheory.Math.GridSpernerRouting
 import GameTheory.Math.GridSpernerRoutingBoundary
 import GameTheory.Math.GridSpernerRoutingBounds
+import GameTheory.Math.GridBrouwer
+import GameTheory.Math.GridBrouwerMap
+import GameTheory.Math.GridBrouwerContinuous
+import GameTheory.Math.GridBrouwerSixthPoints
+import GameTheory.Math.GridBrouwerSixthGeometry
+import GameTheory.Math.GridBrouwerSixthContinuous
