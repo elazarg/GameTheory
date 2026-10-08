@@ -924,3 +924,36 @@ extension declarations transitively, admitting only `propext`,
 optional-dependency audits, and all 30 boundary regression tests pass.
 `lake -R update GameTheory`, `lake env lean --version` and `lake exe cache get`
 confirm the published pin, Lean 4.34.1 and successful cache resolution.
+
+## Complementary decoding prerequisite
+
+The base now supplies the mathematical contract needed by the general Nash
+PPAD reduction. `Math.LinearComplementarity` is independently reusable ordered
+field mathematics. `Finite.BimatrixComplementarity` uses off-diagonal negative
+payoff blocks and unit affine constants. A represented nonzero complementary
+point has positive mass in both coordinate blocks and normalizes into the
+existing exact Nash certificate. Row coordinates use scale `Dx`, column
+coordinates use `Dy`; the cleared row utility is `Dy` and the column utility
+is `Dx`. Keeping these independent handles rectangular games and unequal
+scales.
+
+Payoff-shift invariance handles signed tables. Adding `2^h+1` to a coefficient
+of magnitude at most `2^h` gives a positive coefficient strictly below `2^(h+2)`.
+The correctness module undoes independent shifts in the decoded certificate
+and yields canonical PMF mixed Nash for the original game. Positive-payoff
+certificates also map back to nonzero complementary points. Degenerate and
+tied supports need no exceptional premise; the artificial zero solution is
+explicitly excluded from decoding.
+
+These base modules import no complexity package and no analytic existence
+theorem. The companion's FNP classification is unchanged. Feasible bases,
+lexicographic perturbation, oriented pivot pointers and actual polynomial
+instance/answer machines remain necessary to prove PPAD membership and
+serialized totality. The current result is exact complementary decoding,
+not a completed path-following algorithm.
+
+Validation passes the full 4,433-job base/lint-scope build, base lint, both
+structural audits and a transitive standard-axiom check for all 88 new
+declarations. The mathematical controls include direct exact rational
+complementarity with unequal scales, fully degenerate games and the strict
+positive-shift bit bound at `h = 0`.

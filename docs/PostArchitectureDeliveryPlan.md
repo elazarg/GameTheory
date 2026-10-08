@@ -393,6 +393,12 @@ canonical mixed Nash. The next gate is a complementary-pivot reduction proving
 PPAD membership and serialized totality on the same relation, including
 degenerate games; analytic existence remains confined to Analysis.
 
+The mathematical decoding step of that gate is now established: nonzero
+complementary points normalize to the canonical Nash certificate, and positive
+payoff shifts undo exactly for signed tables. Feasible basis dictionaries,
+lexicographic ratio choices, oriented pivot pointers and their machine costs
+remain before the End-of-Line reduction can be claimed.
+
 The companion package under `extensions/complexity` owns
 `GameTheoryComplexity` import modules, with declarations under
 `GameTheory.Complexity`. The base package must neither require

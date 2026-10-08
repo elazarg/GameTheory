@@ -72,6 +72,48 @@ The reduction must also supply unconditional serialized totality (including
 the malformed-input fallback), yielding TFNP for this same FNP relation without
 importing `Analysis` into the companion.
 
+**Complementary decoding, delivered.** The game-free
+`Math.LinearComplementarity` module defines affine slack and exact nonnegative
+complementarity over ordered fields. `Finite.BimatrixComplementarity` specializes
+it to the off-diagonal negative payoff blocks with unit constants. Independently
+scaled rational coordinates use row numerators divided by `Dx` and column
+numerators divided by `Dy`. Every nonzero solution has positive mass in both
+blocks; normalizing these masses yields the existing Nash certificate, with row
+utility numerator `Dy` and column utility numerator `Dx`. The converse holds for
+positive-payoff certificates. No nondegeneracy or nonempty-dimension premise is
+hidden in the decoding theorem.
+
+`Finite.BimatrixCertificateShift` proves exact constant-shift invariance and
+inverse-shift decoding. If coefficient magnitudes are at most `2^h`, adding
+`2^h+1` makes them positive with magnitude strictly below `2^(h+2)`, ready for an `h+2`-bit field.
+`BimatrixComplementarityCorrectness` therefore recovers canonical PMF mixed Nash
+for the original signed tables from any represented nonzero complementary
+solution. Controls include fully tied mixed equilibria, the artificial zero
+solution, a rejected single nonzero block, and an independent rational check
+with unequal scales `Dx=5`, `Dy=7`.
+
+**Remaining gates, in order:**
+
+1. Exact feasible-basis dictionaries with symbolic lexicographic perturbation;
+   prove unique ratio choices and preservation of feasibility through a pivot.
+   The original game may have repeated rows, columns, or tied best responses.
+2. Oriented predecessor/successor pointers on almost complementary bases;
+   prove their inverse laws, the known source, and that every other endpoint
+   supplies a nonzero complementary solution. Exclude secondary rays using
+   positive payoff bounds. Recover exact original-game answers from perturbation.
+3. Polynomial bit bounds, executable rational basis operations, binary node
+   codecs, and actual FP/FPn instance and answer maps. Feed the endpoint theorem
+   into the existing End-of-Line reduction interface, then derive PPAD and TFNP.
+
+The full base/lint-scope build passes 4,433 jobs. Lint, architecture and
+optional-dependency audits pass; the transitive audit checks all 88 new
+declarations using only standard Lean axioms. Independent proof review checks
+scale orientation, degeneracy and the zero-source boundary, and introduces the
+pointwise generic lemma that reduces the block-equivalence proof to seven lines.
+
+The delivered bridge is a mathematical decoding theorem. It supplies neither
+a pivot graph nor a machine-certified reduction, and makes no new PPAD claim.
+
 ## 3. Bimatrix Nash PPAD hardness and completeness
 
 Reduce the classified fixed-point problem to a finite game. Introduce generalized
@@ -178,6 +220,8 @@ delivery is PPAD membership and serialized totality for the same relation.
 
 ## Primary proof references
 
+- [Lemke–Howson: complementary paths for bimatrix games](https://epubs.siam.org/doi/10.1137/0112033).
+- [von Stengel: equilibrium computation and degeneracy](https://www.sciencedirect.com/science/article/pii/S1574000502030084).
 - [Chen–Deng–Teng: bimatrix Nash](https://arxiv.org/abs/0704.1678).
 - [Fabrikant–Papadimitriou–Talwar: congestion complexity](https://alex.fabrikant.us/papers/fpt04.pdf).
 - [Papadimitriou–Roughgarden: correlated equilibrium](https://timroughgarden.org/papers/cor.pdf).

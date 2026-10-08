@@ -427,3 +427,7 @@ import GameTheory.Math.GridBrouwerContinuous
 import GameTheory.Math.GridBrouwerSixthPoints
 import GameTheory.Math.GridBrouwerSixthGeometry
 import GameTheory.Math.GridBrouwerSixthContinuous
+import GameTheory.Math.LinearComplementarity
+import GameTheory.Finite.BimatrixCertificateShift
+import GameTheory.Finite.BimatrixComplementarity
+import GameTheory.Finite.BimatrixComplementarityCorrectness
