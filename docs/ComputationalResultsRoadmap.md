@@ -209,14 +209,37 @@ transitive standard-axiom audit. Seven control modules cover port classification
 canonical facet signs, source uniqueness, degenerate terminals and unrelated
 cycles. Independent semantic review confirms the orientation and endpoint proof.
 
-**Remaining gates, in order:**
+**Delivered endpoint encoding:** `Math.FiniteRationalEncoding` computes a positive
+product denominator and natural numerators for any finite nonnegative rational
+vector, proves exact decoding, and bounds the fields from reduced-fraction bounds.
+For `k` coordinates with numerator magnitudes and denominators at most `2^h`,
+the common denominator is at most `2^(h*k)` and numerators at most `2^(h*(k+1))`.
+Empty vectors and zero coordinates are covered; negative coordinates deliberately
+require a different signed representation. This module imports only Mathlib.
 
-1. Represent the rational endpoint by natural numerators and common denominators
-   and feed it to the existing shifted-game Nash decoder, preserving bit bounds.
-2. Polynomial node/coordinate bit bounds, executable rational basis operations,
+`Finite.BimatrixPathCertificate` clears every coordinate of a supplied endpoint
+and undoes independent payoff shifts, preserving that endpoint's normalized
+equilibrium. Finite-path existence now gives exact certificates for arbitrary
+signed nonempty integer games. The existing support-system bound then supplies
+polynomial-width certificates without analytic existence. This last certificate
+may use a different rational witness; it does not establish a bound on each
+original path node or endpoint. A degenerate signed rectangular control retains
+unequal column weights and negative utility numerators.
+
+Validation: full base/lint-scope build, 4,481 jobs; lint and architecture audit
+pass. All 29 new encoding/certificate/control declarations pass transitive
+standard-axiom auditing. The generic rational encoding uses only Mathlib; the
+generic signed-minor, complementary-port and involution graph lemmas likewise
+remain separate from the game-specific instantiation for future upstreaming.
+
+**Remaining gate:**
+
+1. Polynomial node/coordinate bit bounds, executable rational basis operations,
    binary node codecs and actual FP/FPn instance and answer maps. Certify the
    oriented pointers at the machine level, feed their endpoint theorem into the
-   End-of-Line reduction interface, then derive PPAD membership and TFNP.
+   End-of-Line reduction interface, then derive PPAD membership. Mathematical
+   path existence and the existing verifier suffice independently for serialized
+   totality; that integration is the next companion slice.
 
 The full base/lint-scope build passes 4,433 jobs. Lint, architecture and
 optional-dependency audits pass; the transitive audit checks all 88 new

@@ -1076,3 +1076,27 @@ audits pass. All 184 declarations in the new path scope pass transitive
 standard-axiom auditing. Seven control modules and independent semantic review
 check the facet orientation, source uniqueness, endpoint decoding, degeneracy
 and unrelated cycles.
+
+## Exact rational endpoint certificates
+
+`Math.FiniteRationalEncoding` is an independently reusable Mathlib-only module.
+It computes the product of the reduced denominators and clears every
+nonnegative coordinate to a natural numerator. The common denominator is
+positive even for an empty vector. Exact decoding preserves the supplied vector;
+uniform reduced-fraction bounds give explicit bounds on the cleared fields,
+including binary exponent bounds linear in the number of coordinates.
+
+`Finite.BimatrixPathCertificate` applies this encoding to a nonzero
+complementary endpoint, normalizes its masses and undoes independent payoff
+shifts. Finite graph totality therefore yields exact Nash certificates for
+nonempty signed integer games without importing Analysis. Composing with the
+existing support-system theorem gives polynomial-width certificate existence.
+The support-system witness may differ from the original endpoint: no bound on
+all path nodes, polynomial-time endpoint traversal or PPAD reduction follows.
+Controls preserve a degenerate rectangular endpoint with unequal column masses
+and negative unshifted utilities, and check empty vectors and negative encoding
+boundaries.
+
+Validation: full base/lint-scope build, 4,481 jobs; lint and architecture audit
+pass. All 29 new encoding/certificate/control declarations pass transitive
+standard-axiom auditing.
