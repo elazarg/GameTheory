@@ -374,6 +374,14 @@ import GameTheory.Finite.BimatrixTableProblem
 import GameTheory.Finite.BimatrixNashCertificate
 import GameTheory.Finite.BimatrixNashCertificateCorrectness
 import GameTheory.Core.BimatrixSupport
+import GameTheory.Core.BimatrixSupportSystem
+import GameTheory.Core.BimatrixSupportFeasibility
+import GameTheory.Finite.BimatrixCertificate
+import GameTheory.Finite.BimatrixCertificateCorrectness
+import GameTheory.Finite.BimatrixCertificateCompleteness
+import GameTheory.Analysis.BimatrixCertificateExistence
+import GameTheory.Math.FiniteLinearBinaryBound
+import GameTheory.Math.BoundedLinearCertificate
 import GameTheory.Math.FiniteLinearBitBound
 import GameTheory.Math.SmallRationalWitness
 import GameTheory.Math.Probability.Numerator

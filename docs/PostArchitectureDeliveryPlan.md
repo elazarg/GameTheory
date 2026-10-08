@@ -381,6 +381,11 @@ is arithmetic, not an auction model.
 
 ### I. Opt-in computational complexity
 
+The active successor order is [the computational results roadmap](ComputationalResultsRoadmap.md):
+generic binary-width linear certificates, general bimatrix Nash witnesses and
+verification, PPAD membership, then hardness. Independent positive algorithms
+follow their established semantic prerequisites.
+
 The companion package under `extensions/complexity` owns
 `GameTheoryComplexity` import modules, with declarations under
 `GameTheory.Complexity`. The base package must neither require
