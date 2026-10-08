@@ -110,16 +110,42 @@ has entering direction `[0,1,1]`, equal ordinary ratios, and successor constants
 `[1,0,1]`; the zero constant row remains symbolically positive. A generic reverse
 control has two eligible reverse rows and selects the original leaving row.
 
+**Delivered canonical basis nodes:**
+
+`Math.FiniteBasisExchange` represents a basis by a finite set and uses Mathlib's
+increasing enumeration, with a proved permutation relating a sorted exchange
+to raw column replacement. `DictionaryReindex` transports inverse coordinates,
+perturbation coefficients, feasibility and leaving rows while keeping
+perturbation powers attached to the equations. `CanonicalDictionary` therefore
+proves feasible canonical exchange and reverse selection after sorting.
+
+`ComplementaryLabels` proves the cardinality dichotomy for binding labels:
+exactly one variable of every label, or a missing designated label and exactly
+one duplicate. Removing a dropped-label variable or one of a duplicated pair
+preserves the remaining coverage. These predicates apply to nonbasic variables.
+
+`Finite.BimatrixBasis` provides basis certificates for cardinality, invertibility
+and strict symbolic feasibility, and path-node certificates for coverage except
+a fixed dropped label. Exchanges require a nonbasic entering variable and a
+valid leaving row; the dropped/duplicated label condition preserves the node
+certificate. The all-slack source is canonical and unique by its variable set.
+A degenerate rectangular game constructs a certified successor. A separate
+control forces sorting to move a column and proves the reverse exchange restores
+the original set; a noninvolutive three-cycle checks permutation orientation.
+
+The full base/lint-scope build passes 4,453 jobs. Base lint and both structural
+audits pass; all 144 new declarations pass a transitive standard-axiom audit.
+Independent review confirms nonbasic exchange direction, permutation orientation,
+cardinality and certificate scope. The optional companion is unchanged.
+
 **Remaining gates, in order:**
 
-1. Encode almost complementary game bases canonically, enforce distinct basis
-   labels and nonbasic entering columns, and connect the local dictionary
-   mathematics to those nodes. Repeated rows, columns and tied best responses
-   remain permitted.
-2. Oriented predecessor/successor pointers on almost complementary bases;
-   prove their inverse laws, the known source, and that every other endpoint
-   supplies a nonzero complementary solution. Exclude secondary rays using
-   positive payoff bounds. Recover exact original-game answers from perturbation.
+1. Define oriented predecessor/successor pointers on these certified nodes,
+   choose canonical directional metadata, and prove global inverse laws.
+2. Prove the unique known source and that every other endpoint supplies a
+   nonzero complementary solution. Exclude secondary rays using positive payoff
+   bounds; transport the symbolic basis to a nonnegative original-game point.
+   Decode the exact original-game answer.
 3. Polynomial bit bounds, executable rational basis operations, binary node
    codecs, and actual FP/FPn instance and answer maps. Feed the endpoint theorem
    into the existing End-of-Line reduction interface, then derive PPAD and TFNP.

@@ -982,3 +982,30 @@ Validation: the full base/lint/control build passes 4,443 jobs. Base lint,
 architecture and optional-dependency isolation pass; the transitive audit
 checks all 94 new declarations using only standard Lean axioms. The companion
 source and dependency pin are unchanged in this slice.
+
+## Canonical complementary bases
+
+`FiniteBasisExchange`, `DictionaryReindex`, `ComplementaryLabels` and
+`CanonicalDictionary` are independent Math leaves. A basis is a finite set,
+not a freely ordered list; Mathlib's sorted enumeration gives one matrix per
+set. Sorting an exchange permutes only inverse-system solution coordinates,
+leaving perturbation coefficients attached to their original equations.
+Feasibility and reverse selection survive this permutation. Complementary-label
+counting and coverage-preserving exchange are independent of matrix semantics.
+
+`Finite.BimatrixBasis` combines these proofs. Its basis certificate contains the
+size, nonzero determinant and strict symbolic feasibility. Its path node adds
+coverage of nonbasic binding labels except the fixed dropped label. A pivot
+requires an entering variable outside the basis, a symbolic leaving row, and a
+dropped or duplicated nonbasic label. The successor satisfies the same node
+invariants. The all-slack source is unique by its set of variables, avoiding
+extra nodes created by reordered source columns.
+
+No graph orientation, global inverse pointer law, ray exclusion or endpoint
+solution extraction is asserted. The noncomputable mathematical certificates
+also do not supply binary node serialization or polynomial machine costs.
+
+Validation: full base and lint-scope build, 4,453 jobs; base lint and both
+structural audits pass. The transitive standard-axiom audit checks all 145 new
+declarations. Independent review confirms label orientation, sorted-coordinate
+transport and the explicitly local scope of the certificates.

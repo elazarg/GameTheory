@@ -398,9 +398,12 @@ complementary points normalize to the canonical Nash certificate, and positive
 payoff shifts undo exactly for signed tables. Generic inverse-basis coefficient
 vectors now give unique symbolic ratio choices, feasibility-preserving matrix
 pivots and reverse selection. The positive-payoff slack source has a proved
-unique, feasible successor, including tied ordinary ratios. Canonical almost
-complementary game nodes, oriented pivot pointers, secondary-ray exclusion and
-machine costs remain before the End-of-Line reduction can be claimed.
+unique, feasible successor, including tied ordinary ratios. Canonical finite-set bases now enforce size, invertibility and strict
+feasibility; path nodes enforce almost-complementary nonbasic label coverage.
+Sorted exchange and reverse selection are proved, with a canonical all-slack
+source and certified coverage-preserving successor. Global oriented pointers,
+secondary-ray exclusion, terminal point extraction and machine costs remain
+before the End-of-Line reduction can be claimed.
 
 The companion package under `extensions/complexity` owns
 `GameTheoryComplexity` import modules, with declarations under

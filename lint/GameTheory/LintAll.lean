@@ -436,3 +436,8 @@ import GameTheory.Math.PerturbedDictionary
 import GameTheory.Math.DictionaryPivot
 import GameTheory.Math.LexicographicPivot
 import GameTheory.Finite.BimatrixPivotSource
+import GameTheory.Math.FiniteBasisExchange
+import GameTheory.Math.DictionaryReindex
+import GameTheory.Math.ComplementaryLabels
+import GameTheory.Math.CanonicalDictionary
+import GameTheory.Finite.BimatrixBasis
