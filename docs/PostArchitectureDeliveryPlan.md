@@ -395,9 +395,12 @@ degenerate games; analytic existence remains confined to Analysis.
 
 The mathematical decoding step of that gate is now established: nonzero
 complementary points normalize to the canonical Nash certificate, and positive
-payoff shifts undo exactly for signed tables. Feasible basis dictionaries,
-lexicographic ratio choices, oriented pivot pointers and their machine costs
-remain before the End-of-Line reduction can be claimed.
+payoff shifts undo exactly for signed tables. Generic inverse-basis coefficient
+vectors now give unique symbolic ratio choices, feasibility-preserving matrix
+pivots and reverse selection. The positive-payoff slack source has a proved
+unique, feasible successor, including tied ordinary ratios. Canonical almost
+complementary game nodes, oriented pivot pointers, secondary-ray exclusion and
+machine costs remain before the End-of-Line reduction can be claimed.
 
 The companion package under `extensions/complexity` owns
 `GameTheoryComplexity` import modules, with declarations under

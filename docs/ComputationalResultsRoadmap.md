@@ -92,11 +92,30 @@ solution. Controls include fully tied mixed equilibria, the artificial zero
 solution, a rejected single nonzero block, and an independent rational check
 with unequal scales `Dx=5`, `Dy=7`.
 
+**Delivered local pivot mathematics:**
+
+Four game-free Math leaves use finite coefficient vectors with Mathlib `Lex`.
+`PerturbedDictionary` represents each row by its inverse-basis constant and
+independent perturbation coefficients, and proves eligible ratios distinct.
+`DictionaryPivot` proves the determinant and inverse-coordinate formulas for
+actual basis-column replacement and its reversal. `LexicographicPivot` proves
+unique minimum-ratio selection, strict symbolic feasibility of the updated
+basis, and selection of the old column on reversal. These are ordered-field
+proofs, not an executable rational solver.
+
+`Finite.BimatrixPivotSource` supplies the first game consumer: positive-payoff,
+nonempty rectangular games have a unique pivot from the identity slack basis,
+with an invertible, strictly feasible successor. A fully degenerate 1×2 control
+has entering direction `[0,1,1]`, equal ordinary ratios, and successor constants
+`[1,0,1]`; the zero constant row remains symbolically positive. A generic reverse
+control has two eligible reverse rows and selects the original leaving row.
+
 **Remaining gates, in order:**
 
-1. Exact feasible-basis dictionaries with symbolic lexicographic perturbation;
-   prove unique ratio choices and preservation of feasibility through a pivot.
-   The original game may have repeated rows, columns, or tied best responses.
+1. Encode almost complementary game bases canonically, enforce distinct basis
+   labels and nonbasic entering columns, and connect the local dictionary
+   mathematics to those nodes. Repeated rows, columns and tied best responses
+   remain permitted.
 2. Oriented predecessor/successor pointers on almost complementary bases;
    prove their inverse laws, the known source, and that every other endpoint
    supplies a nonzero complementary solution. Exclude secondary rays using
@@ -111,8 +130,14 @@ declarations using only standard Lean axioms. Independent proof review checks
 scale orientation, degeneracy and the zero-source boundary, and introduces the
 pointwise generic lemma that reduces the block-equivalence proof to seven lines.
 
-The delivered bridge is a mathematical decoding theorem. It supplies neither
-a pivot graph nor a machine-certified reduction, and makes no new PPAD claim.
+The local pivot delivery passes a 4,443-job full base/lint/control build,
+base lint, both structural audits and a transitive standard-axiom audit of all
+94 new declarations. Five control modules test tied ratios, zero constant
+coordinates, nonidentity bases, negative directions, reverse competition and
+absence of an eligible leaving row.
+
+The delivered decoding and local pivot proofs supply neither a global pivot
+graph nor a machine-certified reduction, and make no new PPAD claim.
 
 ## 3. Bimatrix Nash PPAD hardness and completeness
 

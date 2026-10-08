@@ -946,14 +946,39 @@ tied supports need no exceptional premise; the artificial zero solution is
 explicitly excluded from decoding.
 
 These base modules import no complexity package and no analytic existence
-theorem. The companion's FNP classification is unchanged. Feasible bases,
-lexicographic perturbation, oriented pivot pointers and actual polynomial
-instance/answer machines remain necessary to prove PPAD membership and
-serialized totality. The current result is exact complementary decoding,
-not a completed path-following algorithm.
+theorem. The companion's FNP classification is unchanged. The local symbolic
+pivot mathematics below supplies the next prerequisite. Canonical complementary
+nodes, oriented pointers and actual polynomial instance/answer machines remain
+necessary to prove PPAD membership and serialized totality. These are local
+mathematical results, not a completed path-following algorithm.
 
 Validation passes the full 4,433-job base/lint-scope build, base lint, both
 structural audits and a transitive standard-axiom check for all 88 new
 declarations. The mathematical controls include direct exact rational
 complementarity with unequal scales, fully degenerate games and the strict
 positive-shift bit bound at `h = 0`.
+
+## Symbolic dictionary pivots
+
+The base supplies four independent Math leaves: `FiniteLexicographic`,
+`PerturbedDictionary`, `DictionaryPivot` and `LexicographicPivot`. Finite
+coefficient vectors use Mathlib's lexicographic order. Inverse-basis rows encode
+the constant followed by independent perturbation coefficients; eligible
+scaled rows are distinct. A minimum-ratio pivot is therefore unique and
+preserves strict symbolic feasibility. Matrix column replacement has an exact
+determinant and inverse-coordinate formula, and the same ratio rule selects
+the restored old column on reversal.
+
+`Finite.BimatrixPivotSource` instantiates these proofs at the identity slack
+basis for positive-payoff nonempty rectangular games. Its successor is
+invertible and strictly feasible. The degenerate 1×2 control resolves equal
+ordinary ratios and preserves a row with zero constant term. All these are
+mathematical proofs; no new executable basis solver or companion dependency
+is introduced. Canonical almost complementary nodes, global pointer laws,
+secondary-ray exclusion, perturbation decoding and polynomial machine costs
+remain required for PPAD membership.
+
+Validation: the full base/lint/control build passes 4,443 jobs. Base lint,
+architecture and optional-dependency isolation pass; the transitive audit
+checks all 94 new declarations using only standard Lean axioms. The companion
+source and dependency pin are unchanged in this slice.

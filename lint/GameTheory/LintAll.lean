@@ -431,3 +431,8 @@ import GameTheory.Math.LinearComplementarity
 import GameTheory.Finite.BimatrixCertificateShift
 import GameTheory.Finite.BimatrixComplementarity
 import GameTheory.Finite.BimatrixComplementarityCorrectness
+import GameTheory.Math.FiniteLexicographic
+import GameTheory.Math.PerturbedDictionary
+import GameTheory.Math.DictionaryPivot
+import GameTheory.Math.LexicographicPivot
+import GameTheory.Finite.BimatrixPivotSource
