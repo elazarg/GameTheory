@@ -427,7 +427,10 @@ when ordinary ratios tie. The optional generic arithmetic now has actual Cobham
 and FPn certificates for unsigned borrow subtraction, signed addition,
 subtraction, multiplication, negation, strict order and scalar cross-products.
 Exact decoding includes padding and negative zero; positive denominators give
-rational ratio order. Binary-machine certificates for matrix loops and full scans,
+rational ratio order. A uniform two-bit scan and packed signed-row machine now
+have actual Cobham/FPn certificates and exact agreement with the existing
+integer lexicographic ratio comparator, including late perturbations and ties.
+Binary-machine certificates for matrix loops and positive-direction minimum-row selection,
 binary graph codecs and machine-certified maps remain before PPAD membership.
 
 The companion package under `extensions/complexity` owns

@@ -1298,7 +1298,38 @@ declarations. Companion lint in both configurations, architecture/isolation audi
 19 optional-boundary regressions and the architecture fixture pass. Kernel controls and independent
 review cover sign, padding, borrow, cancellation and ratio orientation.
 
-The next step is to certify complete lexicographic row scans and materialized
-matrix loops using these primitives. Node codecs, basis exchange, oriented
+Complete lexicographic comparison is now certified as described below.
+Minimum-row selection and materialized matrix loops remain. Node codecs, basis exchange, oriented
 pointer machines and the every-answer End-of-Line reduction remain before Nash
 PPAD membership.
+
+## Packed binary lexicographic ratio comparison
+
+`Backend.BinaryIndexedLexicographic` implements a uniform indexed scan with a
+two-bit state: prefix equality and strict order. Cobham composition and a
+constant recursion bound give actual polynomial-time membership. Exact
+correctness detects a strict coordinate with every earlier coordinate equal.
+The clock uses its length, with no numeric-value loop or requirement that its
+bits are true.
+
+`BinarySignedRowComparison` takes six words: coefficient-count ruler,
+field-width ruler, two packed signed rows and their signed denominators. Field
+extraction uses certified length multiplication, dropping and taking; scalar
+comparison reuses signed cross-products. `binarySignedRowLT_compare` proves
+exact agreement with the existing `IntegerRatioSelection.compare` on the
+decoded data. Positive denominators give strict rational lexicographic order.
+Zero-width and missing fields decode as zero; padding and negative zero keep
+the signed arithmetic semantics. These are computation primitives, without a
+claim that a packed word is a valid path node or feasible dictionary.
+
+Full companion/lint/axiom and pivot-consumer builds pass 4,276 jobs against local
+and published base `9c0a2c22`; the transitive audit checks 2,777 declarations.
+Both companion lint runs, architecture/isolation checks, 19 optional-boundary
+regressions and the architecture fixture pass. Kernel controls cover first
+differences, later perturbations, scaled signed ties and malformed field sizes.
+Independent semantic review passes. The generic scan is game-free; only the
+row correctness bridge imports the existing generic mathematical comparator.
+
+Positive-direction minimum-row selection is the next scan obligation. Matrix
+loops, node codecs, exchange, oriented pointers and the every-answer reduction
+remain before Nash PPAD membership.

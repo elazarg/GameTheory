@@ -26,6 +26,7 @@ import GameTheoryComplexity.Tests.GeneralBimatrixCodec
 import GameTheoryComplexity.Tests.GeneralBimatrixTotality
 import GameTheoryComplexity.Tests.GeneralBimatrixEndpoint
 import GameTheoryComplexity.Tests.BinarySignedArithmetic
+import GameTheoryComplexity.Tests.BinarySignedRowComparison
 import Lean.Util.CollectAxioms
 
 /-! Reject placeholders and nonstandard axioms in every public extension

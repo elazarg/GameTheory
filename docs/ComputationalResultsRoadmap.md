@@ -388,10 +388,32 @@ architecture fixture pass. Kernel controls cover borrow cascades, underflow,
 opposite signs, carries, cancellation, padding, negative zero and scaled ratios;
 independent semantic and proof review passes.
 
+**Delivered full binary lexicographic comparison:**
+`Backend.BinaryIndexedLexicographic` composes any two certified indexed strict
+and equality flags into an actual Cobham/FPn scan. A constant two-bit state
+records prefix equality and strict order. Its correctness theorem detects the
+first strict witness with an equal earlier prefix; arbitrary clock bits work
+because producers use the clock's length.
+
+`BinarySignedRowComparison` extracts fixed-width signed fields from two packed
+rows and compares their denominator cross-products. Its actual uniform machine
+agrees exactly with `Math.IntegerRatioSelection.compare` on all decoded rows.
+Positive decoded denominators recover strict rational lexicographic ratio
+order. Empty scans, zero-width fields, truncation, padding and negative zero
+retain total decoding semantics. The generic scan has no game dependencies;
+the row bridge reuses the existing generic mathematical comparator.
+
+Full companion/lint/axiom and pivot-consumer builds pass 4,276 jobs in local and
+published-base configurations (`9c0a2c22`), with 2,777 owned declarations audited.
+Lint in both configurations, architecture/isolation audits, 19 optional-boundary
+regressions and the architecture fixture pass. Kernel controls cover late
+perturbations, opposite early/late differences, scaled signed ties, arbitrary
+ruler bits and malformed/truncated fields. Independent semantic review passes.
+
 **Remaining gate:**
 
-1. Binary-machine certificates for the materialized matrix loops, integer ratio
-   scans and basis exchange, binary node codecs and actual
+1. Binary-machine certificates for the materialized matrix loops,
+   positive-direction minimum-row selection and basis exchange, binary node codecs and actual
    FP/FPn instance and answer maps. Certify the
    oriented pointers at the machine level, feed their endpoint theorem into the
    End-of-Line reduction interface, then derive PPAD membership. Mathematical

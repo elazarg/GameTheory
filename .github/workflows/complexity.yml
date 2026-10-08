@@ -109,6 +109,7 @@ jobs:
           GameTheoryComplexity.Tests.GeneralBimatrixTotality
           GameTheoryComplexity.Tests.GeneralBimatrixEndpoint
           GameTheoryComplexity.Tests.BinarySignedArithmetic
+          GameTheoryComplexity.Tests.BinarySignedRowComparison
           GameTheory.Tests.BimatrixComputedPivot
       - name: Verify checks do not mutate tracked files
         run: git diff --exit-code
