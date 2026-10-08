@@ -402,3 +402,4 @@ import GameTheory.Math.GridWireDecoder
 import GameTheory.Math.GridWireSwitch
 import GameTheory.Math.GridWireImageSteps
 import GameTheory.Math.GridRoutedGraph
+import GameTheory.Math.GridWireBounds
