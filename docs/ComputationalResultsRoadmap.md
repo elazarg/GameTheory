@@ -260,21 +260,40 @@ shift magnitudes at most `2^s`, its fields fit width
 `W*(m+n+1)+(m+n)+s+2`. This closes polynomial coordinate and direct endpoint
 size; it does not prove polynomial-time arithmetic or graph encoding.
 
-The product-denominator endpoint bound can exceed the existing serialized field
-width. The next decoder should share the basis's Cramer determinant denominator,
-avoiding the product of separately reduced denominators. Bounds on determinants
-do not make the permutation-expansion computation polynomial-time: certified
-efficient integer linear algebra is also required.
+The arbitrary-vector product-denominator bound can exceed the existing serialized
+field width. The basis-specific shared-denominator decoder below resolves that
+size gap. Bounds on determinants do not make the permutation-expansion computation
+polynomial-time: certified efficient integer linear algebra is also required.
 
 Validation: full base/lint-scope build, 4,490 jobs; lint and both structural
 audits pass. All 58 declarations in the new bound/control scope pass transitive
 standard-axiom auditing; independent semantic review passes. The optional
 companion is unchanged.
 
+**Delivered shared Cramer certificates:** `Math.IntegerCramerEncoding` uses
+the absolute integer basis determinant as one positive denominator. Multiplying
+each Cramer numerator by the determinant sign and taking its natural value
+recovers every nonnegative solution coordinate exactly. Denominator and numerator
+fields retain width `d*(d+h)+1`; no product of reduced coordinate denominators is
+needed. Signed determinant, singular/empty and nonnegativity controls compile.
+
+`Finite.BimatrixCramerCertificate` lifts these weights to the existing variable
+universe, preserving the full supplied basis point. Complementary non-source
+bases yield valid normalized certificates after independent payoff unshifting.
+The compact fields fit the existing `bimatrixCertificateWidth m n h`, even after
+the positive shift `2^h+1`. This bound applies to every supplied endpoint and
+does not select a different equilibrium. `BimatrixComplementaryCertificateBounds`
+owns the shared mass and utility estimate; the arbitrary-vector endpoint bound
+now reuses it. A signed one-action terminal has determinant `-24`, common
+denominator `24`, weights `6/4` and original utility numerators `-12/-30`.
+
+Validation: full base/lint-scope build, 4,496 jobs; lint and architecture audit
+pass. All 73 declarations in the compact-encoding/shared-bound/control scope
+pass transitive standard-axiom auditing.
+
 **Remaining gate:**
 
-1. A shared-determinant endpoint encoding within the existing serialized width,
-   executable polynomial-time basis operations, binary node codecs and actual
+1. Executable polynomial-time basis operations, binary node codecs and actual
    FP/FPn instance and answer maps. Certify the
    oriented pointers at the machine level, feed their endpoint theorem into the
    End-of-Line reduction interface, then derive PPAD membership. Mathematical

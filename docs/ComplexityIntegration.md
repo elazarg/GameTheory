@@ -1155,3 +1155,27 @@ Validation: full base/lint-scope build, 4,490 jobs; lint and both structural
 audits pass. All 58 declarations in the new bound/control scope pass transitive
 standard-axiom auditing. Independent semantic review passes. The companion
 source and released base pin are unchanged.
+
+## Compact common-denominator endpoint certificates
+
+`Math.IntegerCramerEncoding` clears an integer system's nonnegative solution
+with one absolute determinant denominator and sign-adjusted Cramer numerators.
+Decoding recovers every coordinate exactly; all fields retain the generic
+quadratic bit bound. A negative-determinant control uses denominator `7`, compared
+with `49` for the product of reduced denominators.
+
+`Finite.BimatrixCramerCertificate` preserves the supplied basis point, normalizes
+its payoff masses and undoes payoff shifts. Every complementary non-source basis
+of a shifted signed game supplies a valid certificate within the existing
+`bimatrixCertificateWidth`; no support-system witness is reselected. Shared
+`BimatrixComplementaryCertificateBounds` controls mass sums and signed utilities,
+and the earlier arbitrary-rational-vector bound now reuses it.
+
+The signed one-action control has determinant `-24`, denominator `24`, payoff
+weights `6/4` and original utility numerators `-12/-30`. Source certificates are
+rejected. This closes the direct endpoint field-size gap. Efficient exact linear
+algebra, binary graph encodings and actual FP/FPn maps remain before PPAD.
+
+Validation: full base/lint-scope build, 4,496 jobs; lint and architecture audit
+pass. All 73 declarations in the compact-encoding/shared-bound/control scope
+pass transitive standard-axiom auditing.

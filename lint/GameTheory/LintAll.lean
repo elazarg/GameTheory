@@ -460,3 +460,6 @@ import GameTheory.Math.RationalQuotientBounds
 import GameTheory.Math.IntegerBasisBounds
 import GameTheory.Finite.BimatrixEndpointBounds
 import GameTheory.Finite.BimatrixBasisBounds
+import GameTheory.Math.IntegerCramerEncoding
+import GameTheory.Finite.BimatrixComplementaryCertificateBounds
+import GameTheory.Finite.BimatrixCramerCertificate

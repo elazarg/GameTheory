@@ -415,9 +415,10 @@ encoding and payoff unshifting now give signed-game Nash certificates. Bounded
 support-system witnesses and the existing verifier prove serialized TFNP.
 Reduced rational fields of every certified basis, symbolic coefficient and
 entering direction now have width `d*(d+h)+1`; directly decoded endpoint
-certificates also have a polynomial bound. Sharing the Cramer denominator to
-meet the existing serialized width, efficient linear algebra, binary graph
-codecs and machine-certified maps remain before PPAD membership.
+certificates also have a polynomial bound. Shared Cramer denominators now
+preserve each endpoint and fit the existing serialized field width after payoff
+unshifting. Efficient linear algebra, binary graph codecs and machine-certified
+maps remain before PPAD membership.
 
 The companion package under `extensions/complexity` owns
 `GameTheoryComplexity` import modules, with declarations under
