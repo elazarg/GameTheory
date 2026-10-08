@@ -1330,6 +1330,52 @@ differences, later perturbations, scaled signed ties and malformed field sizes.
 Independent semantic review passes. The generic scan is game-free; only the
 row correctness bridge imports the existing generic mathematical comparator.
 
-Positive-direction minimum-row selection is the next scan obligation. Matrix
-loops, node codecs, exchange, oriented pointers and the every-answer reduction
-remain before Nash PPAD membership.
+These primitives now feed the complete Nash reduction described below.
+
+## Exact bimatrix Nash PPAD membership
+
+Import `GameTheoryComplexity.BimatrixNash` and use
+`bimatrixNashRelation_mem_PPAD`. It classifies the existing
+`generalBimatrixRelation`: independently signed, rectangular integer payoff
+matrices with binary magnitudes and unary dimension/field-width headers. Valid
+answers decode to ordinary mixed Nash equilibria of the original payoff tables;
+malformed instances retain precisely the empty answer. There is no
+nondegeneracy assumption.
+
+The reduction reconstructs each queried complementary-path dictionary. Packed
+signed arithmetic computes division-free Bird determinants, Cramer
+coefficients, entering directions and the full lexicographic minimum ratio.
+The independent perturbation coefficients resolve degeneracy without changing
+the output game's equilibrium semantics. Fixed-width arithmetic is justified
+by bounds on every intermediate product and prefix sum, rather than only on
+the final determinant. All loops have actual Cobham/FPn certificates.
+
+The node codec records a sorted basis membership mask and a one-hot entering
+variable, relative to the distinguished source. Its arithmetic and syntax
+checks accept exactly genuine feasible ports. Invalid words have identity
+pointers. Integer determinant and label parity determine orientation;
+computing the source score with the same routine calibrates its sign. The
+certified pivot and internal switch agree with the existing mathematical
+involutions, and the uniform circuit compiler emits their predecessor and
+successor circuits in FP.
+
+`Backend.GeneralBimatrixReduction` proves an actual `SearchReduction` to raw
+End-of-Line. Every target answer, including answers on components disconnected
+from the known source, decodes to a complementary non-source basis. The FPn
+answer machine computes that basis's Cramer certificate, normalizes the two
+players' masses and undoes the positive payoff shift. It preserves the supplied
+endpoint and uses no path enumeration or reachability assumption. On malformed
+instances its explicit validity guard emits the designated empty answer.
+
+Generic minimum scans, sorted finite-set ranks, determinant-stage bounds and
+oriented-involution witness lemmas remain in dedicated base `Math` modules,
+without game or machine-library dependencies. The base codec and path theorems
+also require no ComplexityLib. Only the optional companion contains machine
+certificates and PPAD classification. Membership does not assert a
+polynomial-time equilibrium solver or Nash PPAD-hardness.
+
+Local validation: full base build passes 4,515 jobs; companion library/lint/axiom
+scope passes 4,332 jobs. Both linters pass. The companion audit checks all 3,779
+owned declarations, and the base slice audit checks 209 declarations, using only
+standard axioms. Isolation, 19 optional-boundary regressions and the architecture
+fixture pass. Published-base validation follows the release pin update.

@@ -1,9 +1,11 @@
 import GameTheoryComplexity.Backend.GeneralBimatrixTotality
 import GameTheoryComplexity.Backend.GeneralBimatrixEndpoint
+import GameTheoryComplexity.Backend.GeneralBimatrixReduction
+import GameTheoryComplexity.PPAD
 
 /-! Optional machine certificates for exact mixed Nash search in signed
 rectangular bimatrix games. Binary answers represent ordinary mixed equilibria;
-FNP verification does not by itself establish PPAD membership. -/
+certified complementary-path circuits establish membership in PPAD. -/
 namespace GameTheory.Complexity
 open _root_.Complexity Backend
 
@@ -14,6 +16,10 @@ theorem bimatrixNashRelation_mem_FNP : generalBimatrixRelation ∈ FNP :=
 /-- Serialized signed rectangular Nash search is total and polynomially verified. -/
 theorem bimatrixNashRelation_mem_TFNP : generalBimatrixRelation ∈ TFNP :=
   generalBimatrixRelation_mem_TFNP
+
+/-- Exact Nash search for independently signed rectangular bimatrix games is in PPAD. -/
+theorem bimatrixNashRelation_mem_PPAD : generalBimatrixRelation ∈ PPAD :=
+  ⟨generalBimatrixRelation_mem_FNP, exists_generalBimatrixToEndOfLineReduction⟩
 
 /-- Every serialized input has an answer, including malformed-input fallback. -/
 theorem exists_bimatrixNashCertificate (input : List Bool) :

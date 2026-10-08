@@ -140,4 +140,20 @@ theorem determinant_eq (A : Array R) (hA : A.size = n * n) :
   rw [determinant_eq_birdDet]
   exact (BirdDet.det_eq_birdDet A hA).symm
 
+/-- The first entry of the last mathematical stage determines a nonempty determinant. -/
+theorem det_eq_last_stage (M : Matrix (Fin n) (Fin n) R) (hn : 0 < n) :
+    M.det = (-1 : R) ^ (n - 1) *
+      ((BirdDet.Spec.stepEntry M)^[n - 1] M) ⟨0, hn⟩ ⟨0, hn⟩ := by
+  cases n with
+  | zero => omega
+  | succ k =>
+    let A := Array.ofFn fun p : Fin ((k + 1) * (k + 1)) => M p.divNat p.modNat
+    have hA : A.size = (k + 1) * (k + 1) := Array.size_ofFn
+    have hM : Matrix.ofArray A hA = M := Matrix.ofArray_ofFn M
+    have he := determinant_eq A hA
+    have hs := stages_get_eq_spec A hA k (0 : Fin (k + 1)) (0 : Fin (k + 1))
+    change BirdDet.get (k + 1) (stages (k + 1) A k) 0 0 = _ at hs
+    rw [determinant, hs, hM] at he
+    exact he.symm
+
 end GameTheory.Math.TabulatedBirdDeterminant

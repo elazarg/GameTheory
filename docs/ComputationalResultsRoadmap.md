@@ -55,22 +55,29 @@ modules, with correctness and actual polynomial-time certificates.
 Finite complementary paths now give nonempty-game existence without Analysis.
 The endpoint decoder and bounded support-system witnesses supply total serialized
 answers. The optional companion combines this theorem with its existing actual
-polynomial verifier to establish TFNP for the same relation. PPAD membership
-still requires machine-certified path pointers and reduction maps.
+polynomial verifier to establish TFNP for the same relation. The actual pointer
+machines and reduction completing PPAD membership are described in section 2.
 
 ## 2. Bimatrix Nash PPAD membership
 
-Use a complementary-label or complementary-pivot formulation with an explicit
-binary encoding. Validate a degenerate hostile game first, then prove every
-non-source endpoint supplies a canonical Nash certificate. Certify construction
-and decoding in FP/FPn independently of FNP. No nondegeneracy premise may
-silently narrow the general theorem. An exact support-enumeration solver is
-an independent deliverable; its exponential runtime does not replace this
-reduction.
+**Delivered and locally validated.** The public optional theorem
+`GameTheory.Complexity.bimatrixNashRelation_mem_PPAD` classifies exact Nash
+certificate search for independently signed rectangular integer payoff tables.
+It combines the existing FNP verifier with an actual FP instance map to standard
+raw End-of-Line and an actual FPn answer map. There is no nondegeneracy premise,
+assumed polynomial-time pivot operation, or bound on path length in the theorem.
+Full library, lint, axiom and released-pin validation of this final integration
+remains the release gate; the proof and its dependency slices have passed
+warning-free narrow checks.
 
-Unconditional serialized totality is delivered independently of the remaining
-PPAD reduction. It includes the malformed-input fallback and yields TFNP for
-the same FNP relation without importing `Analysis` into the companion.
+The relation retains its exact existing certificate codec and malformed-input
+fallback. Ordinary game clients continue to import the base library without
+ComplexityLib or CSLib. Finite-path totality and TFNP remain independently proved
+without an Analysis import. Nash PPAD hardness and completeness are the next
+separate reduction in section 3.
+
+The mathematical and executable prerequisites below explain the construction.
+Earlier validation records describe their individual delivery slices.
 
 **Complementary decoding, delivered.** The game-free
 `Math.LinearComplementarity` module defines affine slack and exact nonnegative
@@ -150,7 +157,8 @@ of this representation are excluded without a hypothetical bounded solver.
 `Finite.BimatrixPivot` chooses that row and defines the opposite port by entering
 the old leaving variable in the sorted successor. Pivoting twice restores both
 the basis and entering variable; the pivot has no fixed points. This is an
-unoriented edge involution. It does not yet choose oriented path pointers.
+unoriented edge involution. The determinant coloring below supplies oriented
+path pointers.
 
 `Math.BasisCoordinates` lifts inverse coordinates to the full variable universe,
 sets nonbasic coordinates to zero, proves the ambient equations and derives
@@ -198,10 +206,10 @@ nonzero rational complementary solution. Finiteness therefore yields such a
 solution for every positive-payoff integer bimatrix game with both dimensions
 nonzero, with no analytic existence import.
 
-These are mathematical pointer and endpoint proofs, including ray exclusion
-and degenerate games. The pointers are noncomputable definitions, not actual
-polynomial-time machines. The mathematical graph result is complete; its
-serialized complexity classification remains open.
+These modules provide mathematical pointer and endpoint proofs, including ray
+exclusion and degenerate games. Their pointers are noncomputable definitions.
+The binary machines below implement exactly these pointers and certify the
+serialized complexity classification independently of the mathematical graph.
 
 Validation: the full base/lint-scope build passes 4,477 jobs; lint and both
 structural audits pass. All 184 declarations in the new path scope pass the
@@ -296,8 +304,9 @@ pass transitive standard-axiom auditing.
 complementary non-source shifted basis with the existing certificate codec.
 `generalBimatrixEndpointWord_accept` proves the unchanged binary relation accepts
 that exact endpoint's certificate. Signed rectangular and malformed-input
-controls compile. This is a mathematical emission map; polynomial runtime for
-its determinant computation is still an obligation.
+controls compile. This module is the mathematical emission map. The dictionary
+and emission machines below discharge its determinant-runtime obligation while
+preserving the same supplied endpoint.
 
 Validation: full companion/lint/axiom build, 4,258 jobs in both local and
 published-base configurations (`6bb618ca`), auditing 2,624 owned declarations.
@@ -410,31 +419,99 @@ regressions and the architecture fixture pass. Kernel controls cover late
 perturbations, opposite early/late differences, scaled signed ties, arbitrary
 ruler bits and malformed/truncated fields. Independent semantic review passes.
 
-**Remaining gate:**
+**Implemented canonical binary nodes and generic scan prerequisites:**
 
-1. Binary-machine certificates for the materialized matrix loops,
-   positive-direction minimum-row selection and basis exchange, binary node codecs and actual
-   FP/FPn instance and answer maps. Certify the
-   oriented pointers at the machine level, feed their endpoint theorem into the
-   End-of-Line reduction interface, then derive PPAD membership. Mathematical
-   path existence and the existing verifier now establish serialized totality
-   independently in `Backend.GeneralBimatrixTotality`.
+`Math.FiniteMinimumScan` certifies finite prefix minimum selection, and
+`FiniteSetRank` identifies membership-prefix counts with Mathlib's increasing
+finite-set enumeration. They support the existing lexicographic ratio selector
+without introducing another leaving-row predicate. The generic leaves remain
+independent of game and complexity-machine imports.
 
-The full base/lint-scope build passes 4,433 jobs. Lint, architecture and
-optional-dependency audits pass; the transitive audit checks all 88 new
-declarations using only standard Lean axioms. Independent proof review checks
-scale orientation, degeneracy and the zero-source boundary, and introduces the
-pointwise generic lemma that reduces the block-equivalence proof to seven lines.
+`Finite.BimatrixPathBinaryCodec` encodes a port with `4*k` bits, where
+`k = m+n`: `2*k` basis-membership bits and `2*k` entering-variable one-hot bits.
+A fixed source mask makes the all-slack source word all false. Encoding is
+injective; canonical decoding checks length, basis cardinality, the unique
+nonbasic entering variable, complementary-label coverage, nonzero determinant,
+and strict lexicographic dictionary feasibility. The decoder checks symbolic
+coefficients, so a zero constant coordinate in a degenerate game is permitted
+only when its perturbation vector is strictly positive. Invalid words are
+isolated by identity pointers and cannot become raw End-of-Line witnesses.
+The representation stores neither all bases nor an inverse-matrix witness.
 
-The local pivot delivery passes a 4,443-job full base/lint/control build,
-base lint, both structural audits and a transitive standard-axiom audit of all
-94 new declarations. Five control modules test tied ratios, zero constant
-coordinates, nonidentity bases, negative directions, reverse competition and
-absence of an eligible leaving row.
+`Finite.BimatrixComputedOrientation` evaluates the determinant score and
+source calibration using integers and proves equality with the canonical path
+color. `Math.OrientedInvolutionPathWitness` proves that raw pointer inconsistency
+is exactly a switching terminal away from the calibrated source. In particular,
+the outgoing-inconsistency branch cannot falsely identify the source even though
+that branch has no explicit origin-exclusion clause. `Finite.BimatrixPathWitness`
+then supplies complementary and non-source basis certificates for every witness.
+These arguments apply to every graph component, including components unrelated
+to the source; internal cycles have no such witnesses.
 
-The delivered mathematical graph supplies actual oriented pointers and
-endpoint decoding. It does not yet supply a serialized machine-certified
-reduction or a new PPAD claim.
+**Implemented polynomial dictionary, pivot and endpoint machines:**
+
+The companion's generic signed fixed-width arithmetic, sum/table scans,
+subset tally/ordinal/parity machines, minimum-row scan and materialized Bird
+machines all carry actual Cobham/FPn certificates. `BinaryDictionaryCorrectness`
+connects computed determinants, sign-adjusted Cramer coefficients and entering
+directions to the existing integer dictionary. Feasibility tests use the same
+computed symbolic rows. `BirdIterationBounds.workWidth` covers stored stages,
+comparison products and accumulation prefixes; scan clocks count represented
+rows, columns and bits, rather than coefficient magnitudes.
+
+`Backend.GeneralBimatrixMatrixWord` assembles the canonically ordered integer
+matrix from membership ordinals. Its exact matrix theorem applies to any
+cardinality-correct candidate set, including singular or infeasible sets, so
+node validation does not assume the property it checks. The dictionary controller
+uses this matrix to compute the determinant, all `k*(k+1)` symbolic coefficients,
+entering direction and selected leaving row. The node-operation and pointer
+machines implement sorted exchange and internal switching, with exact agreement
+with the canonical typed pivot and source-calibrated predecessor/successor.
+No general-position or ordinary positive-coordinate assumption replaces strict
+symbolic feasibility.
+
+`Backend.GeneralBimatrixEndpointMachine` emits the supplied basis's payoff
+weights, their row/column masses, and utilities after undoing the positive shift.
+`GeneralBimatrixEndpointCapacity` proves the controller's working width suffices
+for every intermediate and the existing certificate field width suffices for
+its output. Clients supply no additional capacity proofs. The output is exactly
+`generalBimatrixEndpointWord` for the same basis; neither a support search nor
+selection of a different Nash witness occurs. `GeneralBimatrixPathEndpoint`
+therefore proves every non-source raw path witness emits an answer accepted by
+the unchanged Nash relation.
+
+**Implemented actual End-of-Line reduction:**
+
+`Backend.PointerCircuitGeneration` uniformly compiles polynomial pointer
+machines into serialized circuits. `GeneralBimatrixCircuitMachine` specializes
+it to both bimatrix pointers and proves circuit agreement at every vertex of
+the explicit node width, including invalid encodings. The all-false vertex is
+the canonical source, with a predecessor loop and a consistent nontrivial
+successor. The instance mapper itself belongs to FP; circuit existence alone
+is not used as a runtime certificate.
+
+`Backend.GeneralBimatrixReduction` supplies the actual FPn answer machine and
+`SearchReduction generalBimatrixRelation rawEndOfLineRelation`. Every accepted
+End-of-Line answer decodes through the exact word transport to a genuine typed
+path witness, then emits that endpoint's certificate. This proof imposes no
+reachability-from-source restriction. Invalid Nash instances return exactly
+`[]`; invalid vertex encodings are isolated and cannot supply false endpoints.
+The public `BimatrixNash` theorem composes this reduction with the existing FNP
+verifier to prove unconditional PPAD membership of the original serialized
+signed rectangular Nash relation.
+
+Validation scope: the generic/base helpers, dictionary and pointer semantics,
+endpoint equality/capacity/acceptance, and final reduction have passed
+warning-free narrow builds or standalone combined checks. Controls include tied
+ordinary ratios, zero basic constants with positive perturbations, singular
+candidate selections, negative determinants and utilities, signed rectangular
+games, source rejection, malformed inputs and arbitrary ruler bits. The final
+full base build passes 4,515 jobs; companion/lint/axiom scope passes 4,332 jobs.
+Both linters, isolation and boundary regressions pass; standard-axiom audits cover
+3,779 companion declarations and 209 base-slice declarations. Published-pin
+validation remains pending.
+Membership does not assert a polynomial bound on following the complementary
+path or a polynomial-time Nash solver. PPAD hardness remains separate.
 
 ## 3. Bimatrix Nash PPAD hardness and completeness
 

@@ -468,5 +468,11 @@ import GameTheory.Math.BirdIterationBounds
 import GameTheory.Math.IntegerCramerComputation
 import GameTheory.Math.FiniteLexicographicCompare
 import GameTheory.Math.IntegerRatioSelection
+import GameTheory.Math.FiniteMinimumScan
 import GameTheory.Math.IntegerDictionaryComputation
 import GameTheory.Finite.BimatrixComputedPivot
+import GameTheory.Math.FiniteSetRank
+import GameTheory.Finite.BimatrixPathBinaryCodec
+import GameTheory.Finite.BimatrixComputedOrientation
+import GameTheory.Math.OrientedInvolutionPathWitness
+import GameTheory.Finite.BimatrixPathWitness

@@ -191,3 +191,12 @@ preservation and exact rational residual semantics are base mathematics and
 require no ComplexityLib. The theorem concerns this circuit-induced map
 family and output precision, rather than arbitrary continuous-map encodings,
 distance to an exact fixed point or FIXP.
+
+Import `GameTheoryComplexity.BimatrixNash` for exact signed rectangular Nash
+search in PPAD (`bimatrixNashRelation_mem_PPAD`). The existing binary relation
+has an actual FP instance map to End-of-Line and an FPn decoder preserving
+every target answer. Full lexicographic perturbations handle degenerate games;
+malformed inputs retain the empty answer. The decoder computes the supplied
+endpoint's certificate and undoes payoff shifts. This is membership, without
+a polynomial-time equilibrium solver or a hardness claim. Ordinary base
+clients continue to require no ComplexityLib.

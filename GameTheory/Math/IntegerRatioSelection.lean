@@ -1,4 +1,5 @@
 import GameTheory.Math.FiniteLexicographicCompare
+import GameTheory.Math.FiniteMinimumScan
 import GameTheory.Math.LexicographicPivot
 import Mathlib.Data.List.FinRange
 
@@ -128,5 +129,59 @@ theorem select_some_spec (C : Fin n → Fin k → ℤ) (d : Fin n → ℤ) (l : 
   change (0 : ℚ) < (d i : ℚ) at hi
   have hiZ : 0 < d i := by exact_mod_cast hi
   exact hl.2 i (by simp [hiZ])
+
+/-- Extend the positive-direction guard to natural indices, rejecting out-of-range rows. -/
+def prefixEligible (d : Fin n → ℤ) (i : ℕ) : Bool :=
+  if hi : i < n then decide (0 < d ⟨i, hi⟩) else false
+
+/-- Extend cross-product comparison to natural row indices. -/
+def prefixCompare (C : Fin n → Fin k → ℤ) (d : Fin n → ℤ) (i j : ℕ) : Bool :=
+  if hi : i < n then if hj : j < n then compare C d ⟨i, hi⟩ ⟨j, hj⟩ else false else false
+
+/-- An increasing-index implementation of the same eligible minimum-ratio operation. -/
+def selectPrefix (C : Fin n → Fin k → ℤ) (d : Fin n → ℤ) : Option ℕ :=
+  FiniteMinimumScan.minimumPrefix (prefixEligible d) (prefixCompare C d) n
+
+theorem selectPrefix_none (C : Fin n → Fin k → ℤ) (d : Fin n → ℤ) :
+    selectPrefix C d = none ↔ ∀ i, d i ≤ 0 := by
+  rw [selectPrefix, FiniteMinimumScan.minimumPrefix_none]
+  constructor
+  · intro h i
+    have hi := h i.val i.isLt
+    simpa [prefixEligible, i.isLt] using hi
+  · intro h i hi
+    simp [prefixEligible, hi, not_lt_of_ge (h ⟨i, hi⟩)]
+
+theorem selectPrefix_mem (C : Fin n → Fin k → ℤ) (d : Fin n → ℤ) (s : ℕ)
+    (hs : selectPrefix C d = some s) : s < n :=
+  (FiniteMinimumScan.minimumPrefix_mem _ _ _ _ hs).1
+
+/-- Prefix selection satisfies the canonical rational leaving-row predicate. -/
+theorem selectPrefix_some_spec (C : Fin n → Fin k → ℤ) (d : Fin n → ℤ) (s : Fin n)
+    (hs : selectPrefix C d = some s.val) :
+    IsLeavingRow (fun i a => (C i a : ℚ)) (fun i => (d i : ℚ)) s := by
+  classical
+  let value : ℕ → Lex (Fin k → ℚ) := fun i =>
+    if hi : i < n then toLex (fun a => (C ⟨i, hi⟩ a : ℚ) / (d ⟨i, hi⟩ : ℚ))
+    else toLex (fun _ => 0)
+  have hcmp : ∀ i j, prefixEligible d i = true → prefixEligible d j = true →
+      (prefixCompare C d i j = true ↔ value i < value j) := by
+    intro i j hiE hjE
+    have hi : i < n := by by_contra hn; simp [prefixEligible, hn] at hiE
+    have hj : j < n := by by_contra hn; simp [prefixEligible, hn] at hjE
+    have hiZ : 0 < d ⟨i, hi⟩ := by simpa [prefixEligible, hi] using hiE
+    have hjZ : 0 < d ⟨j, hj⟩ := by simpa [prefixEligible, hj] using hjE
+    simpa [prefixCompare, value, hi, hj] using compare_eq_true C d ⟨i, hi⟩ ⟨j, hj⟩ hiZ hjZ
+  have hm := FiniteMinimumScan.minimumPrefix_mem _ _ _ _ hs
+  have hpos : 0 < d s := by simpa [prefixEligible, s.isLt] using hm.2
+  refine ⟨?_, ?_⟩
+  · change (0 : ℚ) < (d s : ℚ)
+    exact_mod_cast hpos
+  intro i hi
+  change (0 : ℚ) < (d i : ℚ) at hi
+  have hiZ : 0 < d i := by exact_mod_cast hi
+  have hiE : prefixEligible d i.val = true := by simp [prefixEligible, i.isLt, hiZ]
+  have hle := FiniteMinimumScan.minimumPrefix_minimal _ _ value hcmp n s.val hs i.val i.isLt hiE
+  simpa [value, s.isLt, i.isLt] using hle
 
 end GameTheory.Math.IntegerRatioSelection
