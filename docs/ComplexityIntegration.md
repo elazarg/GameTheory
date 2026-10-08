@@ -883,3 +883,196 @@ build against base commit `b2a5e0982ce6755197bde4e86ed4a295a37fa30c`.
 cache hook; `lake env lean --version` confirms Lean 4.34.1. The build then uses
 `lake build GameTheoryComplexity GameTheoryComplexity.LintAll
 GameTheoryComplexity.AxiomAudit` without a local-path override.
+
+## General rectangular binary Nash certificates
+
+`GameTheoryComplexity.BimatrixNash` supplies FNP membership for exact mixed Nash
+certificates of independent signed integer payoff matrices. Unlike the earlier
+payoff-constrained symmetric decision language, this relation has no utility
+threshold. The input has unary row, column and coefficient-width headers and
+two row-major matrices whose entries use positive and negative binary fields.
+The answer contains two denominators, two signed utility numerators and both
+probability-numerator vectors. For input length `L`, each unsigned field has
+width `(2*L+2)*(8*L+6)+1`; the total answer length is cubic in `L`.
+
+The verifier checks exact lengths, positive denominators, simplex equations,
+every pure deviation inequality and equality on positive support. Signed
+comparisons work directly on positive and negative sums. Generic bit-recursive
+multiplication avoids iterating over payoff magnitudes. Cobham composition
+certifies the whole paired-input machine, including outer-pair validation.
+Malformed game instances accept precisely the empty answer; malformed outer
+pairs are rejected. Decoding and verifier correctness are total, including
+short words and noncanonical simultaneous positive/negative fields.
+
+Accepted valid answers yield the base's ordinary PMF mixed Nash equilibria.
+Conversely, a supplied canonical equilibrium yields an exactly serialized
+bounded certificate. The mathematical existence theorem for every nonempty
+integer game remains inside `GameTheory.Analysis`; the companion imports no
+analytic existence result. Consequently this slice establishes FNP, while
+unconditional serialized totality, TFNP and PPAD membership remain the next
+reduction. Ordinary game clients acquire no new dependency.
+
+`Backend.BinaryWordMultiplication` and `Backend.PairedVerifier` have no game
+imports. The latter is shared with the older constrained Nash verifier, so
+canonical pairing has one implementation and correctness proof.
+
+Validation passes the full 4,218-job companion/lint/axiom build against both
+the local checkout and published base commit
+`e4b2d03957c70e27217d01e35d7076e9ada763be`. The final audit checks 2,615
+extension declarations transitively, admitting only `propext`,
+`Classical.choice` and `Quot.sound`. Companion lint, architecture and
+optional-dependency audits, and all 30 boundary regression tests pass.
+`lake -R update GameTheory`, `lake env lean --version` and `lake exe cache get`
+confirm the published pin, Lean 4.34.1 and successful cache resolution.
+
+## Complementary decoding prerequisite
+
+The base now supplies the mathematical contract needed by the general Nash
+PPAD reduction. `Math.LinearComplementarity` is independently reusable ordered
+field mathematics. `Finite.BimatrixComplementarity` uses off-diagonal negative
+payoff blocks and unit affine constants. A represented nonzero complementary
+point has positive mass in both coordinate blocks and normalizes into the
+existing exact Nash certificate. Row coordinates use scale `Dx`, column
+coordinates use `Dy`; the cleared row utility is `Dy` and the column utility
+is `Dx`. Keeping these independent handles rectangular games and unequal
+scales.
+
+Payoff-shift invariance handles signed tables. Adding `2^h+1` to a coefficient
+of magnitude at most `2^h` gives a positive coefficient strictly below `2^(h+2)`.
+The correctness module undoes independent shifts in the decoded certificate
+and yields canonical PMF mixed Nash for the original game. Positive-payoff
+certificates also map back to nonzero complementary points. Degenerate and
+tied supports need no exceptional premise; the artificial zero solution is
+explicitly excluded from decoding.
+
+These base modules import no complexity package and no analytic existence
+theorem. The companion's FNP classification is unchanged. The local symbolic
+pivot mathematics below supplies the next prerequisite. Canonical complementary
+nodes, oriented pointers and actual polynomial instance/answer machines remain
+necessary to prove PPAD membership and serialized totality. These are local
+mathematical results, not a completed path-following algorithm.
+
+Validation passes the full 4,433-job base/lint-scope build, base lint, both
+structural audits and a transitive standard-axiom check for all 88 new
+declarations. The mathematical controls include direct exact rational
+complementarity with unequal scales, fully degenerate games and the strict
+positive-shift bit bound at `h = 0`.
+
+## Symbolic dictionary pivots
+
+The base supplies four independent Math leaves: `FiniteLexicographic`,
+`PerturbedDictionary`, `DictionaryPivot` and `LexicographicPivot`. Finite
+coefficient vectors use Mathlib's lexicographic order. Inverse-basis rows encode
+the constant followed by independent perturbation coefficients; eligible
+scaled rows are distinct. A minimum-ratio pivot is therefore unique and
+preserves strict symbolic feasibility. Matrix column replacement has an exact
+determinant and inverse-coordinate formula, and the same ratio rule selects
+the restored old column on reversal.
+
+`Finite.BimatrixPivotSource` instantiates these proofs at the identity slack
+basis for positive-payoff nonempty rectangular games. Its successor is
+invertible and strictly feasible. The degenerate 1×2 control resolves equal
+ordinary ratios and preserves a row with zero constant term. All these are
+mathematical proofs; no new executable basis solver or companion dependency
+is introduced. Canonical almost complementary nodes, global pointer laws,
+secondary-ray exclusion, perturbation decoding and polynomial machine costs
+remain required for PPAD membership.
+
+Validation: the full base/lint/control build passes 4,443 jobs. Base lint,
+architecture and optional-dependency isolation pass; the transitive audit
+checks all 94 new declarations using only standard Lean axioms. The companion
+source and dependency pin are unchanged in this slice.
+
+## Canonical complementary bases
+
+`FiniteBasisExchange`, `DictionaryReindex`, `ComplementaryLabels` and
+`CanonicalDictionary` are independent Math leaves. A basis is a finite set,
+not a freely ordered list; Mathlib's sorted enumeration gives one matrix per
+set. Sorting an exchange permutes only inverse-system solution coordinates,
+leaving perturbation coefficients attached to their original equations.
+Feasibility and reverse selection survive this permutation. Complementary-label
+counting and coverage-preserving exchange are independent of matrix semantics.
+
+`Finite.BimatrixBasis` combines these proofs. Its basis certificate contains the
+size, nonzero determinant and strict symbolic feasibility. Its path node adds
+coverage of nonbasic binding labels except the fixed dropped label. A pivot
+requires an entering variable outside the basis, a symbolic leaving row, and a
+dropped or duplicated nonbasic label. The successor satisfies the same node
+invariants. The all-slack source is unique by its set of variables, avoiding
+extra nodes created by reordered source columns.
+
+The following slice supplies ray exclusion and rational terminal extraction.
+Graph orientation and global inverse pointer laws remain open. The
+noncomputable mathematical certificates do not supply binary node serialization
+or polynomial machine costs.
+
+Validation: full base and lint-scope build, 4,453 jobs; base lint and both
+structural audits pass. The transitive standard-axiom audit checks all 145 new
+declarations. Independent review confirms label orientation, sorted-coordinate
+transport and the explicitly local scope of the certificates.
+
+## Ray-free pivots and terminal extraction
+
+`Math.NonnegativeDictionary` gives the positive-direction theorem, and
+`Finite.BimatrixBasisExit` shows that every variable has a positive column entry
+when both game dimensions are nonzero and payoffs are strictly positive. Every
+certified basis therefore has a unique leaving row for every entering port.
+The theorem rules out secondary rays in this nonnegative-column representation.
+The dimension and payoff assumptions are on the operation, not basis data.
+
+`Finite.BimatrixPivot` supplies a deterministic noncomputable port pivot. Its
+opposite port enters the old leaving variable; a second pivot restores the full
+port. No fixed point is possible because the entering variable was nonbasic.
+This gives an unoriented edge involution, with path orientation still open.
+
+`Math.BasisCoordinates` extends inverse coordinates by zero outside the basis
+and proves ambient equations and nonnegative constant values.
+`Finite.BimatrixBasisSolution` extracts the original rational complementary
+solution from complementary labels. Its payoff block is zero if and only if the
+basis is the all-slack source, including degenerate constant coordinates.
+The explicit 1×2 terminal control has a basic slack coordinate zero while its
+symbolic coefficient vector remains strictly positive.
+
+These modules add no complexity backend dependency. Global oriented pointers,
+endpoint label classification, natural numerator/common-denominator encoding,
+polynomial bit bounds and actual End-of-Line machines remain outstanding.
+
+Validation: the full base/lint-scope build passes 4,463 jobs, lint and both
+structural audits pass, and 119 declarations in the updated proof scope pass
+transitive standard-axiom auditing. The companion source and base pin are
+unchanged. Proof review confirms reverse-row choice and the unoriented scope
+of the port operation.
+
+## Oriented bimatrix End-of-Line paths
+
+Four game-free Math leaves finish the graph prerequisites. `ComplementaryPorts`
+classifies the one terminal or two internal ports and proves closure under
+pivot exchange. `FacetOrientation` proves the signed-minor kernel identity and
+exact negative-pivot-factor relation. `ComplementaryPortOrder` proves twin port
+index equality and payoff parity reversal. `OrientedInvolutionPath` composes
+colored edge and node involutions into actual successor/predecessor pointers,
+with inverse laws and an exact End-of-Line endpoint predicate. Its controls
+include a source-to-sink path alongside an unrelated cycle.
+
+`Finite.BimatrixPath` gives finite certified path ports, a restricted pivot
+involution, internal switching and a unique artificial source port.
+`BimatrixPathOrientation` supplies an actual determinant-based rational color:
+facet orientation reverses across a positive pivot, complementary-label payoff
+parity reverses between internal twins, and source calibration is positive.
+`BimatrixPathEndOfLine` defines the directed pointers, proves their internal
+inverse laws, characterizes endpoints as complementary bases and proves the
+source pointer conditions. Every other endpoint decodes to a nonzero rational
+complementary solution; the finite graph theorem yields existence for nonempty
+positive-payoff integer games without importing Analysis.
+
+This closes the mathematical oriented graph and endpoint proof, including
+degeneracy and ray exclusion. Natural numerator/common-denominator endpoint
+encoding, polynomial bit bounds and actual serialized FP/FPn maps remain.
+The pointer definitions are noncomputable; no new PPAD classification or
+serialized totality is asserted, and the optional companion is unchanged.
+
+Validation: full base/lint-scope build, 4,477 jobs; base lint and both structural
+audits pass. All 184 declarations in the new path scope pass transitive
+standard-axiom auditing. Seven control modules and independent semantic review
+check the facet orientation, source uniqueness, endpoint decoding, degeneracy
+and unrelated cycles.

@@ -381,6 +381,38 @@ is arithmetic, not an auction model.
 
 ### I. Opt-in computational complexity
 
+The active successor order is [the computational results roadmap](ComputationalResultsRoadmap.md):
+generic binary-width linear certificates, general bimatrix Nash witnesses and
+verification, PPAD membership, then hardness. Independent positive algorithms
+follow their established semantic prerequisites.
+
+The general rectangular Nash slice now includes exact binary serialization,
+an actual polynomial-time paired verifier and FNP membership. It preserves
+independent signed payoff matrices and connects the accepted certificates to
+canonical mixed Nash. The next gate is a complementary-pivot reduction proving
+PPAD membership and serialized totality on the same relation, including
+degenerate games; analytic existence remains confined to Analysis.
+
+The mathematical decoding step of that gate is now established: nonzero
+complementary points normalize to the canonical Nash certificate, and positive
+payoff shifts undo exactly for signed tables. Generic inverse-basis coefficient
+vectors now give unique symbolic ratio choices, feasibility-preserving matrix
+pivots and reverse selection. The positive-payoff slack source has a proved
+unique, feasible successor, including tied ordinary ratios. Canonical finite-set bases now enforce size, invertibility and strict
+feasibility; path nodes enforce almost-complementary nonbasic label coverage.
+Sorted exchange and reverse selection are proved, with a canonical all-slack
+source and certified coverage-preserving successor. Positive-payoff nonempty
+games now have an exit at every basis port, excluding secondary rays; the
+selected port pivot is an involution without fixed points. Complementary bases
+decode to nonnegative rational solutions, with zero exactly at the source.
+Determinant-colored path ports now give actual oriented predecessor/successor
+pointers and their internal inverse laws. Endpoints are exactly complementary
+bases; the source is a unique port with no incoming edge and every other endpoint
+supplies a nonzero rational solution. Finiteness yields mathematical rational
+solution existence without Analysis. Natural numerator/common-denominator
+encoding, polynomial bit bounds and machine-certified pointer/instance/answer
+maps remain before serialized PPAD membership or TFNP can be claimed.
+
 The companion package under `extensions/complexity` owns
 `GameTheoryComplexity` import modules, with declarations under
 `GameTheory.Complexity`. The base package must neither require
