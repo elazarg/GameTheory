@@ -387,11 +387,12 @@ verification, PPAD membership, then hardness. Independent positive algorithms
 follow their established semantic prerequisites.
 
 The general rectangular Nash slice now includes exact binary serialization,
-an actual polynomial-time paired verifier and FNP membership. It preserves
+an actual polynomial-time paired verifier and FNP and TFNP membership. It preserves
 independent signed payoff matrices and connects the accepted certificates to
-canonical mixed Nash. The next gate is a complementary-pivot reduction proving
-PPAD membership and serialized totality on the same relation, including
-degenerate games; analytic existence remains confined to Analysis.
+canonical mixed Nash. Finite complementary paths supply serialized totality,
+including degenerate games, without importing analytic existence. The next gate
+is a complementary-pivot reduction proving PPAD membership on the same relation;
+analytic existence remains confined to Analysis.
 
 The mathematical decoding step of that gate is now established: nonzero
 complementary points normalize to the canonical Nash certificate, and positive
@@ -409,9 +410,11 @@ Determinant-colored path ports now give actual oriented predecessor/successor
 pointers and their internal inverse laws. Endpoints are exactly complementary
 bases; the source is a unique port with no incoming edge and every other endpoint
 supplies a nonzero rational solution. Finiteness yields mathematical rational
-solution existence without Analysis. Natural numerator/common-denominator
-encoding, polynomial bit bounds and machine-certified pointer/instance/answer
-maps remain before serialized PPAD membership or TFNP can be claimed.
+solution existence without Analysis. Exact natural numerator/common-denominator
+encoding and payoff unshifting now give signed-game Nash certificates. Bounded
+support-system witnesses and the existing verifier prove serialized TFNP.
+Polynomial path-node bit bounds and machine-certified pointer/instance/answer
+maps remain before PPAD membership can be claimed.
 
 The companion package under `extensions/complexity` owns
 `GameTheoryComplexity` import modules, with declarations under

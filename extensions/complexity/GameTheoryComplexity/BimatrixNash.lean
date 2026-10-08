@@ -1,4 +1,4 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixFNP
+import GameTheoryComplexity.Backend.GeneralBimatrixTotality
 
 /-! Optional machine certificates for exact mixed Nash search in signed
 rectangular bimatrix games. Binary answers represent ordinary mixed equilibria;
@@ -9,6 +9,15 @@ open _root_.Complexity Backend
 /-- Independently signed rectangular bimatrix Nash certificates belong to FNP. -/
 theorem bimatrixNashRelation_mem_FNP : generalBimatrixRelation ∈ FNP :=
   generalBimatrixRelation_mem_FNP
+
+/-- Serialized signed rectangular Nash search is total and polynomially verified. -/
+theorem bimatrixNashRelation_mem_TFNP : generalBimatrixRelation ∈ TFNP :=
+  generalBimatrixRelation_mem_TFNP
+
+/-- Every serialized input has an answer, including malformed-input fallback. -/
+theorem exists_bimatrixNashCertificate (input : List Bool) :
+    ∃ certificate, generalBimatrixRelation input certificate :=
+  generalBimatrixRelation_total input
 
 /-- The complete serialized verifier has an actual polynomial-time machine. -/
 theorem exists_bimatrixNashVerifier_machine :

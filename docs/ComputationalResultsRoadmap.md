@@ -52,11 +52,11 @@ bit length, not payoff magnitude. Generic bit-recursive multiplication and
 canonical paired-verifier machinery live in dedicated game-free companion
 modules, with correctness and actual polynomial-time certificates.
 
-Mathematical nonempty-game existence is already proved in `Analysis`. The
-companion preserves that one-way boundary: it does not import analytic existence
-back into its machine layer. Unconditional serialized totality and TFNP are
-therefore acceptance gates of the next PPAD membership reduction, rather than
-claims inferred from FNP verification alone.
+Finite complementary paths now give nonempty-game existence without Analysis.
+The endpoint decoder and bounded support-system witnesses supply total serialized
+answers. The optional companion combines this theorem with its existing actual
+polynomial verifier to establish TFNP for the same relation. PPAD membership
+still requires machine-certified path pointers and reduction maps.
 
 ## 2. Bimatrix Nash PPAD membership
 
@@ -68,9 +68,9 @@ silently narrow the general theorem. An exact support-enumeration solver is
 an independent deliverable; its exponential runtime does not replace this
 reduction.
 
-The reduction must also supply unconditional serialized totality (including
-the malformed-input fallback), yielding TFNP for this same FNP relation without
-importing `Analysis` into the companion.
+Unconditional serialized totality is delivered independently of the remaining
+PPAD reduction. It includes the malformed-input fallback and yields TFNP for
+the same FNP relation without importing `Analysis` into the companion.
 
 **Complementary decoding, delivered.** The game-free
 `Math.LinearComplementarity` module defines affine slack and exact nonnegative
@@ -232,14 +232,23 @@ standard-axiom auditing. The generic rational encoding uses only Mathlib; the
 generic signed-minor, complementary-port and involution graph lemmas likewise
 remain separate from the game-specific instantiation for future upstreaming.
 
+The companion integration is delivered in `Backend.GeneralBimatrixTotality`:
+every binary input has an accepted answer, and the unchanged machine-certified
+verifier gives TFNP membership. Signed rectangular and malformed controls pass.
+The full companion/lint/axiom build passes 4,248 jobs in both local and published
+base-pin configurations (`7f6fe653`); optional lint passes and all 2,620 owned
+extension declarations pass transitive standard-axiom auditing. Architecture and
+isolation audits and all 19 optional-boundary tests plus the architecture
+regression fixture pass. The class result is public in `BimatrixNash`.
+
 **Remaining gate:**
 
 1. Polynomial node/coordinate bit bounds, executable rational basis operations,
    binary node codecs and actual FP/FPn instance and answer maps. Certify the
    oriented pointers at the machine level, feed their endpoint theorem into the
    End-of-Line reduction interface, then derive PPAD membership. Mathematical
-   path existence and the existing verifier suffice independently for serialized
-   totality; that integration is the next companion slice.
+   path existence and the existing verifier now establish serialized totality
+   independently in `Backend.GeneralBimatrixTotality`.
 
 The full base/lint-scope build passes 4,433 jobs. Lint, architecture and
 optional-dependency audits pass; the transitive audit checks all 88 new
@@ -359,7 +368,7 @@ From `extensions/complexity`, release validation uses:
     lake lint
 
 The local-checkout build selects `-KgameTheoryPath=../..`. The next active
-delivery is PPAD membership and serialized totality for the same relation.
+delivery is PPAD membership for the same now-total relation.
 
 ## Primary proof references
 

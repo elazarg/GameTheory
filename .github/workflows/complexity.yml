@@ -106,5 +106,6 @@ jobs:
           GameTheoryComplexity.Tests.SpernerGridWords
           GameTheoryComplexity.Tests.SpernerPointerMachine
           GameTheoryComplexity.Tests.Sperner
+          GameTheoryComplexity.Tests.GeneralBimatrixTotality
       - name: Verify checks do not mutate tracked files
         run: git diff --exit-code

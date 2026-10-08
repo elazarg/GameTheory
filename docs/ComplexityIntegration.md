@@ -1100,3 +1100,26 @@ boundaries.
 Validation: full base/lint-scope build, 4,481 jobs; lint and architecture audit
 pass. All 29 new encoding/certificate/control declarations pass transitive
 standard-axiom auditing.
+
+## Total general bimatrix Nash search
+
+`Backend.GeneralBimatrixTotality` proves that the existing binary relation has
+an answer for every input. Valid nonempty games use finite-path certificate
+existence, the support-system bit bound and the existing exact certificate codec.
+Malformed instances retain precisely the empty answer. The relation, verifier
+and field widths are unchanged. Combining totality with the already certified
+FNP verifier proves membership in ComplexityLib's actual `TFNP` class.
+
+The public `BimatrixNash` module exports `bimatrixNashRelation_mem_TFNP` and
+`exists_bimatrixNashCertificate`. No Analysis dependency is added, and base
+clients still need no optional dependency. The mathematical endpoint proof is
+sufficient for totality; PPAD membership additionally needs polynomial-time
+serialized graph pointers and every-answer reduction maps. This totality proof
+does not provide an efficient Nash solver.
+
+Validation: the full companion/lint/axiom build passes 4,248 jobs against both
+the local checkout and published base pin `7f6fe6535a9af20d58300fb3bcfac8ce7478ee16`.
+All 2,620 owned extension declarations pass transitive standard-axiom auditing.
+Both linters, architecture/isolation audits, all 19 optional-boundary regression
+tests and the architecture regression fixture pass. Released-pin CI explicitly
+builds the new totality control module.
