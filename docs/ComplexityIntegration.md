@@ -1258,7 +1258,7 @@ evaluation lives in ignored scratch, as required by the architecture audit.
 
 These operations use integers and explicit finite scans. Rational inverses and
 noncomputable function orders occur only in proofs. Actual FP/FPn certificates
-for the binary arithmetic, scans, exchange and graph codecs remain before the
+for the binary matrix loops, scans, exchange and graph codecs remain before the
 Nash PPAD reduction.
 
 Validation: full base/lint build, 4,506 jobs; lint and architecture/isolation
@@ -1273,3 +1273,32 @@ in both local and published-base configurations, using pin
 all 2,624 owned extension declarations pass transitive standard-axiom auditing.
 The isolation audit, 19 optional-boundary regressions and the architecture
 regression fixture pass. Released-pin CI includes the new pivot consumer.
+
+## Signed binary arithmetic machines
+
+The optional generic leaves `Backend.BinaryWordSubtraction`,
+`BinarySignedArithmetic`, `BinarySignedAddition` and
+`BinarySignedCrossComparison` now have actual Cobham and FPn certificates.
+Subtraction scans the longer operand with one borrow bit and saturates on
+underflow. Signed words use a sign header followed by an arbitrary little-endian
+magnitude. Addition compares magnitudes for opposite signs; multiplication
+combines magnitude multiplication and exclusive-or signs. Negation flips the
+header, and comparison treats negative zero as zero.
+
+Exact decoding and linear output bounds hold without a canonical-padding
+assumption, including empty and sign-only words. Four-field cross comparison
+computes `x*dy < y*dx`; positive decoded denominators give exact rational ratio
+order. These modules depend on generic word machinery and Mathlib, not game
+semantics. The existing Nash certificate codec and relation are unchanged, and
+base clients continue to need no ComplexityLib dependency.
+
+Full companion/lint/axiom and pivot-consumer builds pass 4,273 jobs in both local
+and published-base configurations at `9c0a2c22`; the audit checks 2,732 owned
+declarations. Companion lint in both configurations, architecture/isolation audits,
+19 optional-boundary regressions and the architecture fixture pass. Kernel controls and independent
+review cover sign, padding, borrow, cancellation and ratio orientation.
+
+The next step is to certify complete lexicographic row scans and materialized
+matrix loops using these primitives. Node codecs, basis exchange, oriented
+pointer machines and the every-answer End-of-Line reduction remain before Nash
+PPAD membership.

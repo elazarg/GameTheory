@@ -366,9 +366,31 @@ lint runs pass; the transitive audit checks 2,624 owned extension declarations.
 The isolation audit, all 19 optional-boundary regressions and the architecture
 regression fixture pass. Released-pin CI now builds the pivot control module.
 
+**Delivered signed binary machines:** The optional, game-free
+`Backend.BinaryWordSubtraction` implements saturating subtraction with a
+bit-length-bounded borrow scan. `BinarySignedArithmetic` supplies sign-header
+multiplication, negation and strict comparison; `BinarySignedAddition` supplies
+addition and subtraction by comparing magnitudes when signs differ. Every
+operation has exact decoding, a linear output-length bound and actual Cobham
+and FPn certificates. Arbitrary padding, empty words and negative zero are
+accepted. This internal arithmetic representation does not change the Nash codec.
+
+`BinarySignedCrossComparison` composes multiplication and comparison on four
+signed fields. With positive decoded denominators, its singleton Boolean output
+is equivalent to strict rational ratio order. All four leaves depend only on
+generic word machines and Mathlib, making them candidates for upstreaming.
+
+Validation: full companion/lint/axiom and pivot-consumer builds pass 4,273 jobs
+against both local and published base configurations (`9c0a2c22`); 2,732 owned
+declarations pass the transitive standard-axiom audit. Companion lint in both configurations,
+architecture/isolation audits, 19 optional-boundary regressions and the
+architecture fixture pass. Kernel controls cover borrow cascades, underflow,
+opposite signs, carries, cancellation, padding, negative zero and scaled ratios;
+independent semantic and proof review passes.
+
 **Remaining gate:**
 
-1. Binary-machine certificates for the materialized arithmetic, integer ratio
+1. Binary-machine certificates for the materialized matrix loops, integer ratio
    scans and basis exchange, binary node codecs and actual
    FP/FPn instance and answer maps. Certify the
    oriented pointers at the machine level, feed their endpoint theorem into the

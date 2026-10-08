@@ -423,7 +423,11 @@ basis. Materialized division-free determinant stages now compute the existing
 Cramer fields exactly, with polynomial bounds on every stored integer entry.
 Signed dictionary fields and integer cross-product scans now compute leaving
 rows and actual basis exchange, agreeing with the canonical symbolic pivot even
-when ordinary ratios tie. Binary-machine certificates for these operations,
+when ordinary ratios tie. The optional generic arithmetic now has actual Cobham
+and FPn certificates for unsigned borrow subtraction, signed addition,
+subtraction, multiplication, negation, strict order and scalar cross-products.
+Exact decoding includes padding and negative zero; positive denominators give
+rational ratio order. Binary-machine certificates for matrix loops and full scans,
 binary graph codecs and machine-certified maps remain before PPAD membership.
 
 The companion package under `extensions/complexity` owns

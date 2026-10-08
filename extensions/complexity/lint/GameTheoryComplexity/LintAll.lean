@@ -102,6 +102,10 @@ import GameTheoryComplexity.Backend.BrouwerVerifier
 import GameTheoryComplexity.Backend.BrouwerReduction
 import GameTheoryComplexity.Brouwer
 import GameTheoryComplexity.Backend.BinaryWordMultiplication
+import GameTheoryComplexity.Backend.BinaryWordSubtraction
+import GameTheoryComplexity.Backend.BinarySignedArithmetic
+import GameTheoryComplexity.Backend.BinarySignedAddition
+import GameTheoryComplexity.Backend.BinarySignedCrossComparison
 import GameTheoryComplexity.Backend.PairedVerifier
 import GameTheoryComplexity.Backend.GeneralBimatrixCodec
 import GameTheoryComplexity.Backend.GeneralBimatrixCertificateCodec
