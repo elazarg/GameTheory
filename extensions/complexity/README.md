@@ -61,6 +61,12 @@ actual bitwise FP division by 3 and 6 and remainder modulo 3.
 `Backend.GridRoutingEndpointMachine` gives a uniform FP decoder returning the
 canonical original vertex label. These are certified primitives: the complete
 routing pointer FP certificate, wire coloring and Sperner hardness remain open.
+`Backend.GridRoutingGeometryMachine`, `GridRoutingGuards`, `GridRoutingQueries`,
+`GridRoutingCrossingMachine` and `GridRoutingWireMachine` supply certified local
+components for that pointer: exact route geometry, rectangle rejection,
+guarded seeded original queries, proper-crossing validation and both individual
+wire steps. Oversized candidate labels retain their value and remain isolated.
+Global image/switch selection and six-candidate decoding still need composition.
 
 ## Use as a dependency
 

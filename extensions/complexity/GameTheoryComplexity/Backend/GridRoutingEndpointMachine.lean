@@ -1,4 +1,5 @@
 import GameTheoryComplexity.Backend.GridRoutingCodecMachine
+import GameTheoryComplexity.Backend.GridRoutingBitFields
 import GameTheoryComplexity.Backend.GridRoutingDivision
 import GameTheory.Math.GridWire
 
@@ -13,23 +14,6 @@ open _root_.Complexity _root_.Complexity.Cobham GameTheory.Math.GridWire
 /-- Recover a `b`-bit vertex label from the routing word's vertical coordinate. -/
 def routingEndpointLabelBits (ruler word : List Bool) : List Bool :=
   (routingDivSixBits (routingPointYBits ruler word)).take ruler.length
-
-private theorem fromBitsLE_take_of_lt (width : ℕ) (bits : List Bool)
-    (h : Nat.fromBitsLE bits < 2 ^ width) :
-    Nat.fromBitsLE (bits.take width) = Nat.fromBitsLE bits := by
-  induction width generalizing bits with
-  | zero =>
-    change 0 = Nat.fromBitsLE bits
-    simp only [pow_zero] at h
-    omega
-  | succ width ih =>
-    cases bits with
-    | nil => rfl
-    | cons bit bits =>
-      have ht : Nat.fromBitsLE bits < 2 ^ width := by
-        rw [Nat.fromBitsLE_cons, pow_succ] at h
-        cases bit <;> simp only [Bool.false_eq_true, ite_false, ite_true] at h <;> omega
-      simp only [List.take_succ_cons, Nat.fromBitsLE_cons, ih bits ht]
 
 /-- An accepted routing word yields exactly the original vertex label width. -/
 theorem routingEndpointLabelBits_length {ruler word : List Bool}
@@ -53,7 +37,7 @@ theorem routingEndpointLabelBits_value {ruler word : List Bool} {i : ℕ}
     rw [routingDivSixBits_value, hy]
     simp
   unfold routingEndpointLabelBits
-  rw [fromBitsLE_take_of_lt ruler.length _ (by rw [hq]; exact hi), hq]
+  rw [routing_fromBitsLE_take, hq, Nat.mod_eq_of_lt hi]
 
 /-- The recovered label word is the canonical little-endian encoding of the vertex. -/
 theorem routingEndpointLabelBits_eq_bits {ruler word : List Bool} {i : ℕ}

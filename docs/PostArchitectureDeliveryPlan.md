@@ -451,8 +451,14 @@ Binary coordinate layouts now preserve those source and endpoint semantics.
 Each coordinate takes `2*b+3` bits for `2^b` vertices; rectangle bounds prevent
 truncation during either pointer step. Exact-width acceptance, field extraction,
 binary division by 3 and 6, and the canonical original-endpoint label decoder
-have actual uniform FP certificates. The complete routing pointer still needs
-its own uniform FP certificate. Close that remaining query composition, then
+have actual uniform FP certificates. Exact binary column and row construction,
+wire segment and strict crossing-interior tests, center rounding, rectangle
+guards, seeded original-pointer queries, proper-crossing validation and both
+individual wire steps now also have uniform FP certificates. Oversized labels
+remain isolated instead of
+being silently truncated into unrelated vertices. The complete routing pointer
+still needs image/switch selection and six-candidate decoder composition.
+Close that remaining query composition, then
 color the wires with an explicit canonical boundary/source translation
 to establish Sperner hardness, then deliver Brouwer and Nash search reductions
 in dependency order;

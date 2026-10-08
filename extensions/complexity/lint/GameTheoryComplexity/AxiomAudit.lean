@@ -17,6 +17,7 @@ import GameTheoryComplexity.Tests.SpernerGridWords
 import GameTheoryComplexity.Tests.SpernerPointerMachine
 import GameTheoryComplexity.Tests.Sperner
 import GameTheoryComplexity.Tests.GridRouting
+import GameTheoryComplexity.Tests.GridRoutingGeometry
 import Lean.Util.CollectAxioms
 
 /-! Reject placeholders and nonstandard axioms in every public extension
