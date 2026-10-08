@@ -455,11 +455,16 @@ have actual uniform FP certificates. Exact binary column and row construction,
 wire segment and strict crossing-interior tests, center rounding, rectangle
 guards, seeded original-pointer queries, proper-crossing validation and both
 individual wire steps now also have uniform FP certificates. Oversized labels
-remain isolated instead of
-being silently truncated into unrelated vertices. The complete routing pointer
-still needs image/switch selection and six-candidate decoder composition.
-Close that remaining query composition, then
-color the wires with an explicit canonical boundary/source translation
+remain isolated instead of being silently truncated into unrelated vertices. The complete routing pointer
+now has certified raw node framing, liveness, image fields, owner switching and
+six-candidate decoding. The decoder agrees with the mathematical inverse on
+every coordinate word and separates its found flag from vertex-zero data.
+Guarded original-node steps now have exact semantic agreement and proved
+coordinate bounds. The complete predecessor/successor machines compose decoding,
+crossing switches, those steps and coordinate encoding with actual uniform FP
+certificates and agreement on every external word. Malformed and background
+words remain isolated. Next, color the wires with an explicit canonical
+boundary/source translation
 to establish Sperner hardness, then deliver Brouwer and Nash search reductions
 in dependency order;
 approximation conventions and FIXP remain distinct obligations.
