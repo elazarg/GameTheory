@@ -7,6 +7,19 @@ import GameTheoryComplexity.Tests.Serializer
 import GameTheoryComplexity.Tests.Composition
 import GameTheoryComplexity.Tests.SATReduction
 import GameTheoryComplexity.Tests.NashCertificate
+import GameTheoryComplexity.Tests.SearchReduction
+import GameTheoryComplexity.Tests.EndOfLine
+import GameTheoryComplexity.Tests.RawEndOfLine
+import GameTheoryComplexity.Tests.PPAD
+import GameTheoryComplexity.Tests.CircuitPrefixCompiler
+import GameTheoryComplexity.Tests.NormalizedEndOfLine
+import GameTheoryComplexity.Tests.SpernerGridWords
+import GameTheoryComplexity.Tests.SpernerPointerMachine
+import GameTheoryComplexity.Tests.Sperner
+import GameTheoryComplexity.Tests.GridRouting
+import GameTheoryComplexity.Tests.GridRoutingGeometry
+import GameTheoryComplexity.Tests.GridRoutingNodes
+import GameTheoryComplexity.Tests.SpernerHardness
 import Lean.Util.CollectAxioms
 
 /-! Reject placeholders and nonstandard axioms in every public extension

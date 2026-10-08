@@ -10135,3 +10135,169 @@ memory.
 - **Next action:** use the repaired hardness theorem only with a certified
   polynomial-time table writer and exact semantic correctness, not output size
   alone. PPAD and other upstream closures need their own compatibility checks.
+
+## EXP-160: succinct End-of-Line verification and totality
+
+- **Question:** Can the optional computation boundary support a genuine total
+  End-of-Line search relation without enumerating its exponential vertex set?
+  Compare explicit successor tables with circuit-coded predecessor/successor
+  functions; keep finite graph totality independent of machine definitions.
+- **Representative slice:** a certified vector circuit evaluator and endpoint
+  verifier, plus finite totality with a distinguished source. Controls include
+  disconnected cycles, self-loops, inconsistent inverse pointers and invalid
+  source promises.
+- **Kill conditions:** runtime depending on `2^n`, a short output substituted
+  for an actual machine bound, endpoints justified by global inverse assumptions,
+  or a relation called total while excluding malformed inputs.
+- **Artifacts:** `GameTheory/Math/EndOfLine.lean` and selected companion backend
+  leaves on `feat/end-of-line-foundation`; probes in ignored `.codex/scratch/`.
+- **Commands:** `lake build GameTheory GameTheory.LintAll
+  GameTheory.Tests.EndOfLine`; companion `lake -R -KgameTheoryPath=../.. update
+  GameTheory`, then `lake -KgameTheoryPath=../.. build GameTheoryComplexity
+  GameTheoryComplexity.LintAll GameTheoryComplexity.AxiomAudit`; both `lake lint`;
+  `scripts/phase{1,2,3}-audit.ps1 -VerifyExpected` (2/3 also
+  `-DeepReachability`); `scripts/complexity-audit.ps1` and its 19 mutation tests.
+  Released consumer: `lake -R update GameTheory`, then `lake build` the facade,
+  composed machine, NP-completeness and End-of-Line verifier/fixture targets.
+- **Measurements:** 4,366 base jobs; 3,827 full companion jobs; 937 owned
+  declarations use only standard transitive axioms. A documentation-only field
+  fix passed the 3,826-job lint/axiom closure and the linter. Released-mode smoke
+  passed 3,814 jobs against public git base `81ab22b3`, with no path override.
+  Both linters, all architecture checks and optional-boundary controls pass.
+- **Observations:** vector serialization is `2*sum(code lengths)+2*output count`.
+  Actual bounded bitwise machine evaluation visits vertex bit positions, not
+  vertices. Every accepted witness has at most input length. A source without
+  the inverse-link condition can leave no endpoints. An isolated broken-pointer
+  vertex can satisfy raw inconsistency conditions while failing the selected
+  endpoint predicate; both failures are preserved as checked fixtures. Cached
+  Lake configuration also required `-R` when switching dependency modes; CI now
+  asserts the local mode as well as the released mode.
+- **Outcome:** supported, narrowed to consistent-edge endpoint search in TFNP.
+  No kill condition is triggered for this relation. [D68](decisions/D68-succinct-end-of-line.md)
+  retains the finite/machine separation and small search-reduction interface.
+  Next: normalize against the usual raw End-of-Line convention before freezing
+  a PPAD class or recovering Nash search completeness.
+
+## EXP-161: standard End-of-Line witnesses and normalization cost
+
+- **Question:** Can the consistent-edge endpoint relation be reconciled with the
+  standard asymmetric raw witness condition without weakening the machine
+  requirements on search reductions? Compare compiling normalized circuit
+  instances with using the standard raw relation directly as the PPAD target.
+- **Representative slice:** weak source promises, broken initial links and
+  isolated inconsistent pointers; generic normalization followed by actual FP
+  normalized-pointer evaluation and a standard raw-witness verifier.
+- **Kill conditions:** excluding the origin from both inconsistency branches,
+  replacing a polynomial-time instance emitter with a circuit-size bound, or
+  claiming search equivalence from semantic normalization alone.
+- **Artifacts and commands:** `Math.EndOfLineNormalization`, its fixtures,
+  `Backend.RawEndOfLine`, `Backend.EndOfLinePointerNormalization`,
+  `Backend.RawEndOfLineReduction`, `GameTheoryComplexity.PPAD` and raw/PPAD
+  fixtures. Base `lake build GameTheory GameTheory.LintAll
+  GameTheory.Tests.EndOfLineNormalization` passes 4,368 jobs; `lake lint` passes.
+  Companion local-path library/lint/axiom build passes 3,835 jobs and audits
+  1,024 owned declarations with standard axioms only; lint, optional isolation
+  and all 19 boundary regressions pass. Released-mode endpoint/fixture smoke
+  passes 3,821 jobs at public base `790fbe3f`, then local-path mode is restored.
+  Phase 1 and Phase 2/3 `-VerifyExpected -DeepReachability` audits pass
+  (Phase 1 uses its ordinary measurement mode).
+- **Observations:** Generic normalization preserves the selected edges and
+  endpoints, and normalized word evaluation is genuinely FP. The raw relation
+  has a polynomial verifier and totality under weak promises, returning the
+  origin for a broken initial link. Actual FP/FPn raw-to-endpoint reduction
+  handles every target solution, including both invalid-promise cases.
+  Upstream has machine-to-uniform-circuit compilation and typed prefix
+  hardwiring, but no certified serialized input restriction/substitution
+  transformation has been found. Circuit-size bounds do not fill this gap.
+- **Outcome:** adopt the standard raw relation as the PPAD reference target,
+  with independent source FNP evidence. Raw completeness is by definition;
+  filtered-edge search is PPAD-hard. No reverse reduction or endpoint membership
+  is claimed. [D69](decisions/D69-standard-end-of-line-ppad.md) keeps serialized
+  circuit emission as the next computational gate, before concrete reductions.
+
+## EXP-162: serialized prefix restriction through uniform wire relocation
+
+- **Question:** Does a slightly larger prefix layout make actual FP serialized
+  hardwiring simpler than conditionally remapping input references? Compare
+  seed constants alone with seed constants plus copies of all live inputs.
+- **Representative slice:** positive live width, arbitrary seed and shared raw
+  circuit; malformed/truncated serialized codes and empty circuits must not
+  acquire unintended output gates.
+- **Hypothesis:** prepend constants and live-input copies, then shift every old
+  reference by the live width. Terminated unary references require only a
+  fixed ruler prefix; upstream shift semantics should discharge correctness.
+- **Kill conditions:** an exponentially large generated word, treating length
+  alone as machine evidence, accepting malformed code as a new valid function,
+  or replacing a missing output with a prefix gate's value.
+- **Artifacts and commands:** backend `CircuitPrefixRestriction`,
+  `CircuitPrefixEmitter`, `CircuitCodeShift`, `CircuitCodeShiftCorrectness`,
+  `CircuitCodeValidation`, `CircuitCodeRestriction`, `CircuitPrefixCompiler`
+  and `Tests.CircuitPrefixCompiler`. From the companion directory, local-path
+  `lake '-KgameTheoryPath=../..' build GameTheoryComplexity
+  GameTheoryComplexity.LintAll GameTheoryComplexity.AxiomAudit` passes 3,843 jobs;
+  `lake '-KgameTheoryPath=../..' lint` passes.
+  The transitive axiom audit checks all 1,194 owned declarations with standard
+  axioms only. Structural Phase 2, optional isolation and all 19 boundary
+  regressions pass. Released-git facade/composed/NP/PPAD/compiler fixture smoke
+  passes 3,829 jobs at public base `790fbe3f`, with exact git/path manifest
+  assertions and Lean 4.34.1 checked before restoring local mode.
+- **Observations:** the larger prefix preserves shared gates, and upstream
+  relocation proves exact optional evaluation even for invalid topology.
+  Constant/copy emission and the declared-count scanner have actual FP
+  certificates. Exact syntax validation handles count mismatches, missing
+  terminators and trailing garbage. Unguarded empty-source restriction returns
+  the last copied live input, violating the intended absence of an output;
+  this failure is preserved as a probe and the final compiler rejects empty
+  gate lists. Zero live width also requires rejection because constants need
+  an anchor wire. The adopted evaluation theorem states positive live width.
+- **Outcome:** supported, with explicit syntax and output guards. No kill
+  condition remains in the adopted compiler. [D70](decisions/D70-serialized-circuit-prefix-restriction.md)
+  adopts uniform relocation rather than conditional input remapping. The next
+  obligation is integration with uniform machine unrolling and normalized
+  End-of-Line vector emission, then the reverse search reduction. Local probes
+  and diagnostics remain in `.codex/scratch/`.
+
+## EXP-163: uniform circuit emission for normalized End-of-Line
+
+- **Question:** Can actual uniform machine-to-circuit generation and validated
+  prefix restriction produce normalized End-of-Line instances in FP, rather
+  than merely proving small circuits exist?
+- **Representative slice:** an efficiently computed scalar output bit with a
+  fixed serialized instance and unary output index, followed by emitted
+  normalized predecessor/successor vectors and every-solution decoding.
+- **Alternatives:** direct gate substitution in arbitrary input codes versus
+  specializing a uniform circuit for the certified normalized word evaluator.
+- **Kill conditions:** conditional or nonuniform circuit-size existence in place
+  of an FP generator, exponential vertex enumeration, or malformed/source
+  fallback cases omitted from the certified reduction.
+- **Artifacts and commands:** `Backend.UniformCircuitSpecialization`,
+  `CircuitVectorEmission`, `EndOfLineScalarQueries`, `EndOfLineCircuitGeneration`,
+  `NormalizedEndOfLineReduction`, the PPAD classification and
+  `Tests.NormalizedEndOfLine` in the optional companion. From its root,
+  `lake -KgameTheoryPath=../.. build Complexitylib.Classes.PPoly.Uniform.Unrolling.Containment`
+  passes 3,361 jobs in about 15 minutes. Single-file `lake env lean` checks
+  validate each leaf before the full
+  `lake -KgameTheoryPath=../.. build GameTheoryComplexity GameTheoryComplexity.LintAll GameTheoryComplexity.AxiomAudit`.
+  The full build passes 4,102 jobs and checks all 1,257 owned declarations with
+  only standard transitive axioms; `lake -KgameTheoryPath=../.. lint` passes.
+  `scripts/phase2-audit.ps1 -VerifyExpected`, `scripts/complexity-audit.ps1` and
+  the 19 `test_complexity_audit.py` regressions pass. Released-git smoke passes
+  4,089 jobs, including the new controls, against base `790fbe3f`; local-path
+  mode is restored afterward with `lake -R`.
+- **Observations:** the unconditional uniform generator supplies actual FL
+  evidence, which transports to FP before prefix restriction. Its 435-module
+  source closure contains no placeholders, custom axioms, `native_decide` or
+  `ofReduceBool`. The specialized scalar query fixes only the instance and
+  unary coordinate. Bounded vector recursion emits ascending coordinates with
+  an accumulator bound derived from the scalar producer's FP output polynomial.
+  A genuine source forces positive live width. Invalid sources map to `[]`,
+  including zero width and malformed promises. Exact-width normalized outputs
+  keep nested evaluations in the semantic agreement theorem's scope.
+- **Outcome:** supported. Actual FP normalized instance generation and an
+  identity FPn decoder preserve every target solution, proving filtered
+  endpoint PPAD membership and completeness. [D71](decisions/D71-uniform-end-of-line-normalization.md)
+  adopts specialization of the certified evaluator. Independent semantic and
+  bound reviews found no gaps. The next obligation is a concrete Sperner/Brouwer
+  reduction; Nash search completeness remains separate. Prior hosted optional
+  runs took 45–46 minutes, so CI now allows 90 minutes for the additional uniform
+  proof closure. Local probes remain in `.codex/scratch/`.

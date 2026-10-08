@@ -274,10 +274,9 @@ and the upstream guess-and-verify construction gives NP membership. The
 membership leaf does not import the SAT reduction; only the NP-completeness
 leaf combines them. Ordinary game and certificate clients need no ComplexityLib.
 
-PPAD is the next search interface, not a consequence of this decision theorem.
-The selected upstream version provides FNP and TFNP but no End-of-Line or PPAD
-API. The next dependency gate is encoded End-of-Line totality with polynomial
-verification, followed by solution-preserving polynomial search reductions.
+PPAD search completeness is separate from this decision theorem. The selected
+upstream provides FNP and TFNP; the following slice supplies the missing
+End-of-Line totality and solution-preserving search-reduction interface.
 
 The expanded base library and lint driver pass 4,364 jobs; the companion library,
 fixtures, lint driver and axiom audit pass 3,294 jobs. All 759 extension-owned
@@ -295,3 +294,515 @@ The same command-scoped local Git object mirror supplies the published objects;
 the manifest retains the public URL and exact revision. Lean 4.34.1 and the
 successful Mathlib cache hook are confirmed. Hosted CI checks direct HTTPS
 resolution and now includes the NP-completeness endpoint in its release smoke.
+
+## Succinct End-of-Line and search reductions
+
+`GameTheory.Math.EndOfLine` defines a directed edge only when the successor and
+predecessor pointers agree and its endpoints differ. `IsEndpoint` means exactly
+one such incident edge. The finite theorem `exists_endpoint_ne_origin` obtains
+another endpoint from a known source by matching the cardinalities of vertices
+with incoming and outgoing edges. It permits disconnected cycles, self-loops
+and inconsistent pointers; no global inverse assumption is needed. This generic
+finite graph theorem has no ComplexityLib dependency.
+
+The optional `Backend.EndOfLineProblem` serializes a unary width ruler and two
+vectors of tagged Boolean circuit codes. Each vector has linear serialization
+overhead. Its total evaluator returns exactly one output per vertex bit, using
+zero for an invalid scalar code. Missing codes also produce zero. The existing
+total pairing projections determine the meaning of malformed vector framing.
+The ruler's length determines the width; its bit values have no semantic role.
+
+A valid source has `P(0)=0`, `S(0)≠0`, and `P(S(0))=0`. Accepted witnesses then
+have exactly that width, differ from zero, and satisfy the generic endpoint
+predicate. Invalid source promises accept precisely the empty witness. This
+convention makes the relation total on every input word. It uses consistent-edge
+endpoints, rather than the broader familiar raw pointer-inconsistency witness
+condition; the uniform normalization below proves their search equivalence.
+
+`Backend.CircuitVectorMachine` proves actual FP evaluation through the verified
+scalar circuit machine, bounded code selection and a bitwise output compiler.
+`Backend.EndOfLineVerifier` checks the origin and immediate candidate neighbors,
+validates the witness width and canonical paired verifier input, and certifies
+a single deterministic polynomial-time machine. No computation enumerates the
+`2^n` vertices. Balance bounds every accepted witness by the input length;
+`endOfLineRelation_mem_TFNP` combines that bound, the verifier and finite totality.
+
+`Backend.SearchReduction` contains only an FP instance map, an FPn decoder taking
+the original instance and target solution, and preservation of **every** valid
+target solution. Identity and composition have genuine machine certificates.
+Composition gives each decoder its own instance. A reduction transports totality
+backward, but TFNP membership also requires independent FNP membership of the
+source: its other accepted witnesses need not be bounded or efficiently checked.
+
+This establishes the filtered-edge search foundation. The next section supplies
+the standard raw convention and PPAD class. Uniform normalization then connects
+the encodings. Brouwer/Sperner reductions, Nash search completeness and
+approximation conventions remain further obligations.
+
+The base build passes 4,366 jobs and the full companion build 3,827 jobs. All
+937 owned declarations have only standard transitive axioms. Both linters,
+architecture checks and 19 optional-boundary regression cases pass. The
+released-mode consumer builds the facade, composed machine, NP-completeness and
+End-of-Line endpoints and fixtures in 3,814 jobs against public base commit
+`81ab22b375b12a8f869484deb982ac9b5c845803`, without a local-path override.
+Dependency-mode switches use `lake -R update` to re-elaborate cached
+configuration; CI asserts both local-path and released-git manifest modes.
+
+## Standard End-of-Line and PPAD
+
+`GameTheoryComplexity.PPAD` uses the standard raw condition
+`P (S x) ≠ x ∨ (x ≠ origin ∧ S (P x) ≠ x)` under the weak source
+promises `P origin = origin` and `S origin ≠ origin`. An outgoing
+inconsistency may return the origin. Invalid promises accept exactly `[]`;
+valid inputs require exact-width witnesses and canonical paired verification.
+The relation has a genuine polynomial-time verifier, balance and totality,
+including the broken-initial-link case, so it belongs to TFNP.
+
+PPAD membership consists of independent source FNP evidence and a certified
+search reduction to this raw relation. This gives containment in TFNP and
+closure under reductions with source FNP supplied. Raw End-of-Line is complete
+by definition of the class; this is the reference problem, not a Nash
+completeness theorem.
+
+The certified raw-to-endpoint reduction keeps the instance and decodes every
+filtered-edge solution. With a genuine source it keeps the endpoint. When only
+the initial link is broken it maps the target fallback to the origin; invalid
+weak promises retain the empty fallback. Its instance map is FP and its
+original-instance decoder is FPn. Thus filtered-edge search is PPAD-hard.
+
+Generic normalization replaces inconsistent pointers by self-loops, preserving
+edges and endpoints. Its pointer-word evaluators are FP-certified. The normalized
+circuit-instance compiler described below closes the reverse reduction and
+proves filtered endpoint PPAD membership and completeness. EXP-161 and D69
+record the original compilation obligation; EXP-163 and D71 discharge it.
+
+Validation: the base build and lint pass 4,368 jobs. The optional library,
+lint scope and transitive axiom audit pass 3,835 jobs; all 1,024 owned declarations
+use only standard axioms. Optional lint, isolation and 19 boundary regression
+cases pass. Fixtures cover broken initial links, asymmetric origin handling,
+isolated malformed pointers, exact widths, canonical pairs and actual decoder
+behavior. Released-mode validation resolves public base commit
+`790fbe3f8d0b745b1c111dd3cea508dd399a335f` and passes 3,821 jobs.
+
+## Certified serialized prefix restriction
+
+Import `GameTheoryComplexity.Backend.CircuitPrefixCompiler` to hardwire a seed
+into a raw scalar circuit code. `restrictCircuitCode ruler seed code` uses the
+ruler's length as the live input width. For positive live width and an input of
+that width, `restrictCircuitCode_eval` proves exact `evalCode` agreement with the
+original code evaluated on `seed ++ input`, for every source code. This includes
+malformed syntax and invalid topology. Empty circuits and zero live width return
+empty code; the evaluation theorem requires positive live width.
+
+The compiler first validates exact raw syntax. It emits seed constants and
+live-input copies, then shifts every original wire reference uniformly. This
+preserves sharing, while the upstream shift theorem preserves evaluation
+failures. The full compiler and validator have actual FP certificates. The
+private bounded scanner's intermediate states are polynomially bounded; no
+runtime claim is inferred from output size alone.
+
+The local companion/lint/axiom build passes 3,843 jobs and audits all 1,194 owned
+declarations with standard axioms only. Lint, structural architecture, optional
+isolation and all 19 boundary regression controls pass. Fixtures cover a shared
+diamond's entire two-input truth table, a forward reference, empty syntax,
+empty-output guarding, zero live width, malformed fields, garbage and incorrect
+input width. EXP-162 and D70 record the validated layout.
+
+This closes prefix restriction as a component. The following integration supplies
+the reverse End-of-Line reduction. Nash search completeness remains open.
+
+Released-git smoke passes 3,829 jobs against public base `790fbe3f`; its
+compiler fixture runs alongside the existing facade, composed machine, NP and
+PPAD endpoints. Local-path mode is restored after the check.
+
+## Uniform normalized End-of-Line instances
+
+`Backend.UniformCircuitSpecialization.exists_prefixCircuitGenerator` starts
+with a genuine FP one-bit computation. The upstream unconditional uniform
+containment theorem supplies an FL circuit-code generator; FL is contained in
+FP. Generating the full-input circuit, removing its family tag, compiling a
+fixed prefix, and restoring the tag are all polynomial-time word operations.
+The resulting generator preserves exact scalar evaluation at positive live width.
+
+`Backend.EndOfLineScalarQueries` queries a normalized pointer bit from a paired
+instance, unary output index and live vertex. The compiler fixes the instance
+and index as the circuit's prefix. `Backend.CircuitVectorEmission` emits one
+such circuit for each coordinate, in ascending order. Cobham bounded recursion
+certifies the serializer's runtime; a polynomial bound on each scalar producer
+bounds every intermediate accumulator. It never enumerates vertices.
+
+`Backend.EndOfLineCircuitGeneration.exists_normalizedEndOfLineInstance` combines
+the two vectors and a unary width ruler. On a genuine source its pointers agree
+with normalized evaluation at every exact-width vertex. A genuine source has
+positive width, so it meets the prefix compiler's requirement. Invalid source
+promises, including width zero, map directly to the empty invalid instance.
+
+`Backend.NormalizedEndOfLineReduction` certifies the reverse search reduction
+with an FP instance map and identity FPn answer decoder. Consistent pointers make
+every raw target witness precisely an original non-origin endpoint. Invalid
+inputs preserve the empty fallback. Together with the existing forward
+reduction, `endOfLineRelation_PPADComplete` classifies filtered endpoint search
+as complete for the standard raw End-of-Line definition of PPAD.
+
+This closes an encoding equivalence, not a concrete Sperner, Brouwer or Nash
+search reduction. Those results remain separate delivery obligations.
+
+Validation: the full companion/lint/axiom build passes 4,102 jobs, with all 1,257
+owned declarations using only standard transitive axioms. Lint, structural
+architecture, dependency isolation and all 19 boundary controls pass. New
+controls check ascending coordinate order, empty output vectors, scalar output
+indices and normalized isolated vertices. Released-git smoke passes 4,089 jobs
+against base `790fbe3f`, including the public PPAD classification and new fixtures.
+Local-path mode is restored. EXP-163 and D71 record the integration evidence.
+
+## Concrete square-grid Sperner totality
+
+The base mathematical leaf `GameTheory.Math.GridSperner` proves the
+two-dimensional square-grid Sperner theorem. Each square is split along its
+rising diagonal. Its color function has values in `Fin 3`; the left boundary
+forbids color one, the bottom forbids color two, and the top and right forbid
+color zero. These are the general boundary exclusions, rather than a requirement
+that each boundary have a fixed color.
+
+`SpernerTriangle` counts oriented zero/one transitions. A triangle has nonzero
+flux exactly when its colors are pairwise distinct. `GridFlux` cancels shared
+edges using Mathlib's existing telescoping identities. The diagonal cancels
+inside each square, and the entire grid leaves only its boundary. The bottom
+count telescopes to one; the remaining sides contribute zero. Thus
+`sum_gridFlux_eq_one` gives exact signed count one and
+`exists_grid_trichromatic` returns bounded square coordinates and a trichromatic
+lower or upper half. The argument supports multiple boundary transitions.
+The standard geometric setting and its directed-path interpretation are
+described in [the MIT Sperner lecture notes](https://www.mit.edu/~6.7980/brouwer.html).
+
+`standardGridColor` enforces a canonical boundary by inspecting only the given
+coordinates, preserving every strict interior value. It establishes the
+boundary condition at every positive size without enumerating vertices. All
+these definitions and proofs are independent of ComplexityLib and topology.
+
+The theorem/control/lint-scope build passes 4,068 jobs, and base lint passes.
+A transitive audit checks all 37 declarations owned by these modules and their
+fixtures, allowing only `propext`, `Classical.choice` and `Quot.sound`.
+Controls distinguish
+both triangular halves, arbitrary interiors, repeated boundary transitions,
+missing boundary assumptions and size zero. Structural checks and optional
+dependency isolation pass. This establishes mathematical totality; binary cell
+encoding, local predecessor/successor machines and a polynomial-time every-answer
+reduction are still required for succinct Sperner PPAD membership. No such
+classification or Brouwer/Nash reduction follows from this existence proof alone.
+
+## Local directed Sperner graph
+
+`GameTheory.Math.SpernerDoors` selects an incoming side with zero/one flux `+1`
+and an outgoing side with flux `-1`. Each sign occurs on at most one side.
+Exactly one sign is present precisely when the triangle is trichromatic.
+`SpernerGridGeometry` represents a triangle by two natural coordinates and its
+half-square bit. Crossing a numbered side computes the adjacent triangle and
+its reversed side, or reports an exterior edge. The proofs certify coordinate
+bounds, reciprocal crossing, distinct neighbors and opposite edge orientation.
+
+The graph uses `standardGridColor` to enforce its boundary locally. The only
+exterior zero/one door is the first lower triangle's incoming bottom side.
+`SpernerGridGraph.gridPointer` connects that entrance to one added source node,
+returns a self-loop for an absent door, and isolates out-of-range coordinates.
+For every selected door, the opposite pointer returns to the original node.
+This links local door presence to the canonical `Math.EndOfLine` edge predicates.
+
+`grid_endpoint_iff` identifies valid triangle endpoints exactly with
+trichromatic cells. `grid_endpoint_decodes` establishes that every endpoint
+other than the added source is valid and trichromatic, independently of its
+component. `grid_source` proves the source promises at positive size, including
+size one when the entrance triangle itself can be the answer.
+`exists_grid_endpoint` obtains a bounded endpoint from the established grid
+Sperner theorem. The local functions inspect three corners and one neighbor;
+they do not traverse a path or enumerate the grid.
+
+The graph/control/lint-scope build passes 4,072 jobs, and base lint passes.
+Controls execute a closed
+six-triangle cycle disconnected from the source, both endpoint orientations,
+size-one source and sink behavior, invalid-coordinate isolation and zero-size
+source failure. Independent semantic and proof-simplification reviews found no
+gaps; structural checks and optional dependency isolation pass. A transitive
+axiom audit checks all 89 declarations owned by the four new mathematical
+modules and their fixtures, allowing only standard axioms.
+
+This supplies the semantic local graph for canonical boundary colors. It is
+not a padding reduction from arbitrary boundary colorings. Succinct binary cell
+encoding, actual FP pointer machines, polynomial-time circuit emission and the
+word answer decoder remain the next obligations before claiming Sperner PPAD
+membership. The base mathematical modules have no ComplexityLib dependency.
+
+
+## Binary Sperner graph and FP primitives
+
+`Backend.SpernerGridCodec` uses a `2*b+2`-bit word: a source/triangle tag,
+an orientation bit and two little-endian `b`-bit coordinates. The unique
+source is all zero. Every triangle-tagged word denotes a valid triangle in
+a grid of side `2^b`; unused source-tagged words and incorrect lengths are
+rejected. Encoding and decoding are exact inverses on their valid domains.
+At `b=0` the grid has side one, with distinct source and triangle codes.
+
+`Backend.SpernerGridWords.wordGridPointer` transports the established local
+graph to words and isolates rejected codes. Its proofs establish unconditional
+length preservation, source promises, endpoint correspondence and bounded
+endpoint existence. `word_grid_endpoint_decodes` covers every non-source word
+endpoint, including components disconnected from the source.
+
+`Backend.SpernerGridCodecMachine` supplies actual FP certificates for source
+word production, field extraction, orientation reading and exact acceptance.
+`Backend.SpernerBinarySteps` supplies actual FP certificates for ripple-carry
+increment and borrow decrement. Their recursion is over the input bits, with
+fixed output length, never over the coordinate's numeric value. Arithmetic
+correctness requires no overflow for increment and a positive value for
+decrement; execution wraps at the fixed width.
+
+The optional package's released base pin advances to
+`a58d028f7fe4161782169c7f8c32dd793426b29c`, which publishes the prerequisite
+Sperner mathematics. Clients of the base library still need no ComplexityLib.
+
+The semantic word pointer has no composed FP certificate yet. That next
+certificate must enforce canonical boundary colors before incrementing corner
+coordinates: a boundary corner can equal `2^b`, outside a `b`-bit field.
+Uniform circuit-instance generation and an FPn every-answer decoder then
+complete the remaining reduction obligations. This slice does not establish
+succinct Sperner PPAD membership.
+
+
+Validation: the full companion, lint scope and axiom driver build pass 4,114
+jobs, auditing 1,356 owned declarations with standard axioms only. Optional
+lint, structural checks, dependency isolation and all 19 isolation controls
+pass. The released-git smoke builds the facade, Nash NP-completeness, PPAD,
+normalized End-of-Line and binary Sperner controls in 4,093 jobs against the
+new pin; local-path mode is restored. Read-only proof/software review found
+no gaps and identified the boundary-overflow requirement for the next slice.
+
+
+## Uniform polynomial-time Sperner pointer
+
+`Backend.SpernerCornerMachine` appends a high zero bit before incrementing
+corner coordinates. Thus a right or top boundary coordinate `2^b` remains
+distinct from zero. Canonical colors give the bottom edge priority, then the
+right/top edges, then the left edge, and query the interior only otherwise.
+Interior queries receive two little-endian `(b+1)`-bit coordinates. Arbitrary
+query outputs are normalized to two color flags with color one taking priority.
+
+`Backend.SpernerCrossMachine` checks coordinate zero/max before taking an
+exterior edge or applying the fixed-width increment/decrement. Its word
+crossings agree with the geometric `across` operation on every valid triangle.
+`Backend.SpernerDoorMachine` checks three oriented zero/one edges in the same
+order as the mathematical door selector. Its FP certificate combines constant
+controls rather than enumerating vertices.
+
+`Backend.SpernerPointerMachine.gridPointerMachineUniformFn_mem_FP` composes
+these operations into one actual polynomial-time computation. Its certificate
+is uniform in the ruler, color-query seed and vertex. In particular,
+`spernerPointer_pair_mem_FP` accepts a serialized color circuit vector as part
+of its input; it does not assume one fixed coloring. The implementation agrees
+with `wordGridPointer` on all words, preserving lengths and rejected-word
+isolation. Source promises and every-endpoint trichromaticity therefore hold
+for the concrete serialized-circuit pointer itself.
+
+This closes the composed FP pointer obligation. Uniform generation of an
+End-of-Line circuit instance and the FPn every-answer word decoder remain
+before succinct Sperner PPAD membership. PPAD-hardness of Sperner is a further
+separate reduction obligation.
+
+
+Validation: the full optional library, lint scope and axiom driver pass 4,119
+jobs, auditing 1,468 owned declarations with standard axioms only. Optional
+lint, structural checks, dependency isolation and all 19 isolation regressions
+pass. Released-pin smoke passes 4,098 jobs against the published base pin,
+including the new pointer fixtures, then local-path mode is restored. Controls
+cover all zero-coordinate-width words, boundary carry and query order, color
+normalization, source paths, upper endpoints, malformed codes, a disconnected
+six-triangle cycle and actual uniform FP certification. Independent semantic,
+software and proof-simplification reviews found no gaps.
+
+
+## Succinct Sperner PPAD membership
+
+`Backend.SpernerProblem.spernerRelation` asks for a triangle word whose three
+canonical vertex colors are distinct. Decoding enforces coordinates inside the
+power-of-two grid; witnesses have exactly `2*b+2` bits and linear balance in
+the serialized input. Boundary enforcement makes every circuit input a total
+coloring problem, including malformed codes under the established total circuit
+evaluation convention. This is not a promise problem for arbitrary boundary
+colorings.
+
+`Backend.SpernerVerifier` supplies an independent actual FP verifier, its
+single deterministic machine certificate and FNP membership. It checks exact
+node acceptance, the triangle tag and pairwise distinct canonical corner
+colors. Its outer pair guard accepts precisely the encoded pair language;
+malformed verifier inputs do not become witnesses through permissive decoding.
+
+`Backend.PointerCircuitGeneration` extracts the shared uniform compiler from
+normalized End-of-Line generation. It specializes each scalar pointer query
+and emits both circuit vectors with actual FP certificates and exact
+positive-width agreement. Existing normalized End-of-Line generation now uses
+this same implementation, preserving its invalid-source fallback.
+
+`Backend.SpernerReduction.exists_spernerEndOfLineInstance` applies the compiler
+to the certified Sperner pointer. The node width is always positive, including
+zero coordinate bits, and the emitted instance has the proved source promises.
+Every target endpoint yields the same trichromatic triangle word, independently
+of its graph component. The decoder is the actual FPn second projection.
+No path traversal, grid enumeration or selected-solution assumption is used.
+
+`GameTheoryComplexity.Sperner.spernerRelation_mem_PPAD` combines that reduction
+with the independent FNP certificate and the established End-of-Line PPAD
+membership. TFNP membership and totality follow. A reverse reduction proving
+Sperner hardness remains open, as do arbitrary-boundary padding and downstream
+Brouwer/Nash search completeness.
+
+
+Validation: the full optional library, lint scope and axiom driver pass 4,125
+jobs, auditing all 1,511 owned declarations using only standard axioms. Optional
+lint, architecture checks, dependency isolation and all 19 boundary regressions
+pass. Released-pin smoke passes 4,104 jobs, including existing normalized
+End-of-Line controls and the new Sperner classifier/verifier fixtures; local
+path mode is restored. Controls cover zero/nonzero coordinate widths, both
+triangle orientations, source exclusion, malformed node and verifier encodings,
+malformed color circuits, semantic verifier agreement, and the actual FP
+instance mapper's exact width. Independent semantic/software/proof-simplification
+reviews found no gaps or unsupported completeness claims.
+
+
+## Planar crossing switch for Sperner hardness
+
+The [Chen–Deng construction](https://eccc.weizmann.ac.il/report/2006/037/download)
+uses crossing switches that preserve directed leaves while changing path
+connections. `Math.GridCrossing` implements all four orientations with two
+bends, reciprocal edges and preserved port roles. `Math.GridCrossingGeometry`
+embeds the nine nodes injectively in a three-by-three grid; every nontrivial
+pointer step is an axis-aligned unit edge.
+
+`Math.GridCrossingAttachment` compares switched and original strand
+connections in an arbitrary exterior graph. It proves equivalence of valid
+incoming-edge presence, outgoing-edge presence and endpoint status for every
+node. Exterior pointers may be inconsistent, and attachments may be absent
+or aliased. Used bends have two consistent edges; unused bends and the center
+remain isolated. A fixture closes the original strands into two cycles and
+shows that switching joins them into one cycle without introducing endpoints.
+
+This is a proved local routing prerequisite. Global succinct routing, original
+endpoint decoding, wire colors, a canonical boundary/source hook and actual
+FP/FPn reduction certificates remain before Sperner hardness. The mathematical
+modules have no ComplexityLib dependency. The source paper's triangular region,
+diagonal orientation and boundary convention require explicit translation;
+its coloring cannot be imported unchanged into the current square-grid problem.
+
+
+Validation: gadget fixtures and the full base lint scope build pass 4,076 jobs.
+Base lint, structural checks, dependency isolation and all 19 boundary controls
+pass. A transitive axiom audit checks all 137 declarations owned by the three
+new mathematical modules and their two fixture modules, accepting only standard
+axioms. Independent review found no semantic gaps; cycle fixtures explicitly
+check both original four-step returns and the switched eight-step return.
+
+## Directed wire routes and crossing ownership
+
+`Math.GridWire` routes an edge from vertex `(0, 6*i)` east to column
+`3*(n*i+j)`, vertically to row `6*j+3`, west to the boundary, then down to
+vertex `(0, 6*j)`. The local predecessor and successor are executable and
+work in either vertical direction. For a non-loop edge they are reciprocal
+on every nontrivial step, leave off-wire points isolated and have exactly the
+two original vertices as endpoints.
+
+`Math.GridWireLanes` proves that bounded vertex pairs have distinct columns
+below `3*n*n`, spaced at least three grid units apart. Incoming and outgoing
+rows are separated, and the route visits no unrelated original vertex.
+`Math.GridWireCrossings` uses reciprocal End-of-Line pointers to rule out
+shared source or target lanes between distinct active edges. Every intersection
+is either a common original vertex or a strict horizontal/vertical crossing.
+Crossings have three-step clearance from bends, disjoint three-by-three switch
+boxes and no third active wire inside a box. Neighboring boxes may have directly
+adjacent ports; the proofs do not assume an extra empty row between them.
+
+These are the geometric prerequisites for the global route, with no
+ComplexityLib dependency. The next slice must assemble globally consistent
+switched pointers, prove preservation and decoding of every original endpoint,
+and implement bounded local queries. Wire coloring, the canonical square-grid
+boundary/source hook and actual FP/FPn reduction certificates still follow
+before Sperner hardness. No completeness result is claimed by this slice.
+
+Validation: the wire controls and full base lint scope build pass 4,078 jobs.
+Base lint, structural architecture checks, dependency isolation and all 19
+boundary regressions pass. A transitive audit accepts all 173 declarations
+owned by the three new mathematical modules and their fixture module using
+only standard axioms. Independent semantic, software and proof-simplification
+reviews found no gaps. Controls exercise ascending and descending routes,
+endpoint and off-wire behavior, both crossing directions, adjacent switch
+ports, disjoint boxes and overlapping lanes when edge uniqueness is absent.
+
+## Global routed grid pointers
+
+`Math.GridRoutedGraph` now supplies actual predecessor and successor functions
+on natural-number grid coordinates. Every nontrivial step is reciprocal and
+axis-aligned with unit length. Background points are self-loops. For original
+pointers preserving the bounded vertex set, every original vertex retains its
+endpoint status and every grid endpoint decodes to an original endpoint, even
+on components disconnected from the known source. The decoder simply reads
+the endpoint's row divided by six. A known original source remains a known
+grid source.
+
+The construction first uses `Math.GridWireGraph` to distinguish the two wire
+occurrences at each crossing. `Math.EndOfLineTailSwitch` proves that an
+involution exchanging internal continuations preserves incident-edge roles
+and endpoints; `Math.GridWireSwitch` verifies its hypotheses for every crossing
+simultaneously. It excludes old edges between exchanged occurrences, preventing
+new self-loops. No comparison-graph isomorphism or general graph framework is
+needed.
+
+`Math.GridCrossingPlacement` embeds and decodes each switch box.
+`Math.GridCrossingLocator` identifies its nearest spacing-three center and
+extracts the two possible owners from the row and column, using original
+pointer queries. `Math.GridWireImage` moves just the crossing centers to their
+assigned bends; `Math.GridWireRealization` proves coordinate injectivity on
+live labels and excludes collisions with original vertices.
+`Math.GridWireDecoder` validates at most six locally derived candidates and
+proves an exact inverse on the live image. Removed centers and unused bends
+are rejected. `Math.GridWireImageSteps` connects this coordinate map to the
+local switch, including directly adjacent ports of neighboring boxes.
+
+The modules have no ComplexityLib dependency. The six-candidate bound proves
+locality; it is not an actual FP machine certificate. Coordinate word layouts,
+certified FP arithmetic and queries, routed-wire colors, canonical square-grid
+boundary/source translation and the FP/FPn hardness reduction remain open.
+The current result does not yet prove Sperner PPAD-hardness.
+
+Validation: the global routing controls, prior individual-wire controls and
+full base lint scope build pass 4,089 jobs. Base lint, structural architecture
+checks, dependency isolation and all 19 boundary regressions pass. A transitive
+audit accepts all 365 declarations owned by the ten new mathematical modules,
+the updated crossing module and the new fixture module using only standard
+axioms. Independent semantic, software and proof-simplification reviews found
+no gaps. Controls execute adjacent switches in both pointer directions,
+ascending and descending crossing routes, displaced-center decoding, removed
+centers and unused bends, malformed reciprocity, zero-size and background
+inputs, and exact all-point endpoint sets including a disconnected cycle.
+
+## Succinct square-grid Sperner completeness
+
+`GameTheoryComplexity.Sperner.spernerRelation_PPADComplete` proves completeness
+for standard PPAD of the existing canonical succinct grid relation. Membership
+uses the previously certified directed triangle graph. The reverse reduction
+now has actual uniform FP color queries and circuit-instance generation, plus
+an FPn every-answer decoder.
+
+The dependency-free construction expands routed vertices into size-six color
+tiles. A boundary entrance replaces the known source witness; inactive two-color
+padding prevents extra answers when a power-of-two square cuts partial tiles.
+Every remaining trichromatic triangle decodes to a bounded original endpoint
+other than zero by row division by 36, regardless of its connected component.
+The square uses `2*b+8` coordinate bits for `b`-bit original vertices. Fixed-width
+normalization connects natural routing labels to the original circuit relation;
+invalid source promises retain its required empty-witness fallback.
+
+`Backend.GridSpernerColorMachine` supplies exact all-word query semantics and
+actual seeded uniform FP evidence. `SpernerCircuitGeneration` reuses the shared
+pointer compiler to serialize color circuits. `SpernerRoutingDecoderMachine`
+composes two certified divisions by six, canonical label padding and the source
+flag. `EndOfLineSpernerReduction` joins these certificates into the concrete
+search reduction. The backend remains an opt-in package; the mathematical
+coloring imports no complexity dependency. Brouwer and Nash search reductions,
+approximation conventions and FIXP remain separate obligations.

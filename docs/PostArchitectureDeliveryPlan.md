@@ -418,12 +418,69 @@ table in the companion. The target decoder reads that table directly, and the
 companion proves its decision language NP-complete. Membership uses bounded
 rational witnesses and an actual polynomial-time binary verifier, with exact
 agreement against the same total decoder and canonical Nash predicate.
-The next seam is an encoded End-of-Line relation in TFNP, followed by
-solution-preserving polynomial search reductions. PPAD requires these search
-interfaces and End-of-Line totality before Nash search completeness; FIXP and
-approximation variants
-need their own precise output and accuracy conventions. None follows from the
-payoff-constrained decision characterization.
+The End-of-Line foundation now supplies both filtered-edge and standard raw
+TFNP relations, with actual polynomial verifiers. The raw convention anchors
+PPAD; certified reductions connect it in both directions to filtered-edge
+search. Uniform machine-to-circuit generation, FP-certified serialized prefix
+restriction and bounded vector emission provide the reverse reduction's actual
+polynomial-time instance map. Filtered endpoint search is therefore PPAD-complete.
+The dependency-free square-grid Sperner theorem now proves trichromatic-cell
+existence under general boundary exclusions, with local boundary enforcement
+and exact oriented-count cancellation. Local directed neighbors now have
+reciprocal edge proofs, a known added source, invalid-coordinate isolation and
+every-endpoint decoding for canonical boundary colors. Binary node encoding now
+preserves source promises and every endpoint, with malformed words isolated.
+Coordinate extraction, exact acceptance and fixed-width increment/decrement
+have actual FP certificates. The composed pointer word machine now has an
+actual FP certificate uniform in the color circuit seed, boundary-aware corner
+colors and exact all-word agreement. Shared uniform circuit generation now
+emits the End-of-Line instance, and a certified projection decodes every
+answer. An independent FNP verifier closes succinct Sperner PPAD membership
+and TFNP totality. The planar crossing switch now has verified unit-grid
+geometry and endpoint preservation under arbitrary exterior attachments.
+Individual directed wire routes now have reciprocal unit-grid pointers and
+exact endpoint characterization. Bounded pair allocation, lane separation and
+consistent-edge uniqueness classify all shared points; proper crossings have
+disjoint spacing-three switch boxes, clearance from bends and no third wire
+inside a box. Global source-indexed routing now has reciprocal pointers and
+every-endpoint preservation. An injective live grid image and a decoder checking
+at most six local candidates supply actual global coordinate pointers. All
+nontrivial steps are reciprocal unit-grid edges; background is isolated, every
+endpoint decodes by row division to an original vertex, and known sources survive.
+Binary coordinate layouts now preserve those source and endpoint semantics.
+Each coordinate takes `2*b+3` bits for `2^b` vertices; rectangle bounds prevent
+truncation during either pointer step. Exact-width acceptance, field extraction,
+binary division by 3 and 6, and the canonical original-endpoint label decoder
+have actual uniform FP certificates. Exact binary column and row construction,
+wire segment and strict crossing-interior tests, center rounding, rectangle
+guards, seeded original-pointer queries, proper-crossing validation and both
+individual wire steps now also have uniform FP certificates. Oversized labels
+remain isolated instead of being silently truncated into unrelated vertices. The complete routing pointer
+now has certified raw node framing, liveness, image fields, owner switching and
+six-candidate decoding. The decoder agrees with the mathematical inverse on
+every coordinate word and separates its found flag from vertex-zero data.
+Guarded original-node steps now have exact semantic agreement and proved
+coordinate bounds. The complete predecessor/successor machines compose decoding,
+crossing switches, those steps and coordinate encoding with actual uniform FP
+certificates and agreement on every external word. Malformed and background
+words remain isolated. Fixed size-six coloring tiles now have kernel-checked
+boundary and triangle certificates: exactly one fixed trichromatic triangle
+marks an endpoint, and balanced/inactive tiles have none. Reciprocal two-cycles
+are removed by a local endpoint-preserving normalization before assigning ports.
+Global tile gluing now classifies every triangle, and reciprocal unit pointers
+supply valid matching ports. The actual routed coloring recovers every original
+endpoint and decodes every trichromatic witness by row division by 36. The zero
+source has an exact eastward first step. Canonical source/entrance tiles now
+remove its witness; two-color inactive padding prevents new answers at partial
+macrotiles cut by the top/right boundary. Every finite trichromatic triangle
+decodes to a nonzero original endpoint. A square of coordinate width `2*b+8`
+contains the construction. Actual uniform FP binary coloring, shared circuit
+instance generation and a source-aware FPn row-label decoder now close the
+End-of-Line-to-Sperner reduction and standard PPAD-completeness. Invalid source
+promises retain their empty-witness fallback, and every target answer is covered.
+Next deliver Brouwer and Nash search reductions
+in dependency order;
+approximation conventions and FIXP remain distinct obligations.
 
 ## 3. Stable boundaries
 
