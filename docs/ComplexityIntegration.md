@@ -1374,8 +1374,9 @@ also require no ComplexityLib. Only the optional companion contains machine
 certificates and PPAD classification. Membership does not assert a
 polynomial-time equilibrium solver or Nash PPAD-hardness.
 
-Local validation: full base build passes 4,515 jobs; companion library/lint/axiom
+Validation: full base build passes 4,515 jobs; companion library/lint/axiom
 scope passes 4,332 jobs. Both linters pass. The companion audit checks all 3,779
 owned declarations, and the base slice audit checks 209 declarations, using only
 standard axioms. Isolation, 19 optional-boundary regressions and the architecture
-fixture pass. Published-base validation follows the release pin update.
+fixture pass. The full companion/lint/axiom scope and lint also pass against
+published base pin `83c8e503`, auditing the same 3,779 declarations.

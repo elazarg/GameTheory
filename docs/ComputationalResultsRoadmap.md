@@ -60,7 +60,7 @@ machines and reduction completing PPAD membership are described in section 2.
 
 ## 2. Bimatrix Nash PPAD membership
 
-**Delivered and locally validated.** The public optional theorem
+**Delivered and validated.** The public optional theorem
 `GameTheory.Complexity.bimatrixNashRelation_mem_PPAD` classifies exact Nash
 certificate search for independently signed rectangular integer payoff tables.
 It combines the existing FNP verifier with an actual FP instance map to standard
@@ -508,8 +508,8 @@ candidate selections, negative determinants and utilities, signed rectangular
 games, source rejection, malformed inputs and arbitrary ruler bits. The final
 full base build passes 4,515 jobs; companion/lint/axiom scope passes 4,332 jobs.
 Both linters, isolation and boundary regressions pass; standard-axiom audits cover
-3,779 companion declarations and 209 base-slice declarations. Published-pin
-validation remains pending.
+3,779 companion declarations and 209 base-slice declarations. The full companion/lint/axiom scope and lint also pass in published-base mode
+at pin `83c8e503`, with the same 3,779-declaration audit.
 Membership does not assert a polynomial bound on following the complementary
 path or a polynomial-time Nash solver. PPAD hardness remains separate.
 
