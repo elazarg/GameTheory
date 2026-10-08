@@ -326,6 +326,11 @@ Full base/lint build: 4,500 jobs; lint and architecture/isolation audits pass.
 All 92 declarations in the new computation and changed certificate/control scope
 pass transitive standard-axiom auditing; independent semantic review passes.
 
+Companion integration: full 4,263-job library/lint/axiom builds against both local
+checkout and published base pin `14183a4c`, auditing 2,624 owned declarations.
+Both companion lint runs and the isolation audit pass; endpoint acceptance and
+its controls compile unchanged against the new determinant computation.
+
 **Remaining gate:**
 
 1. Binary-machine certificates for the materialized arithmetic, executable

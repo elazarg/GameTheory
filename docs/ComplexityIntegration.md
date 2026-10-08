@@ -1226,3 +1226,10 @@ audits pass. All 92 declarations in the computation and changed endpoint/control
 scope pass transitive standard-axiom auditing. Independent semantic review
 passes. Kernel-checked controls include signed, singular and empty matrices,
 zero leading pivots, several stages and a dense six-dimensional matrix.
+
+The companion passes its full 4,263-job library/lint/axiom build against both
+the local checkout and published base pin
+`14183a4c203cfbc18c4ec99234ebdf53ab2f92aa`. Both companion lint runs pass;
+all 2,624 owned declarations pass transitive standard-axiom auditing.
+The isolation audit passes after the pin update. The existing endpoint acceptance
+proof and controls build against the new computation without binary API changes.
