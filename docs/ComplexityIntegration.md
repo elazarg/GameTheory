@@ -780,3 +780,29 @@ no gaps. Controls execute adjacent switches in both pointer directions,
 ascending and descending crossing routes, displaced-center decoding, removed
 centers and unused bends, malformed reciprocity, zero-size and background
 inputs, and exact all-point endpoint sets including a disconnected cycle.
+
+## Succinct square-grid Sperner completeness
+
+`GameTheoryComplexity.Sperner.spernerRelation_PPADComplete` proves completeness
+for standard PPAD of the existing canonical succinct grid relation. Membership
+uses the previously certified directed triangle graph. The reverse reduction
+now has actual uniform FP color queries and circuit-instance generation, plus
+an FPn every-answer decoder.
+
+The dependency-free construction expands routed vertices into size-six color
+tiles. A boundary entrance replaces the known source witness; inactive two-color
+padding prevents extra answers when a power-of-two square cuts partial tiles.
+Every remaining trichromatic triangle decodes to a bounded original endpoint
+other than zero by row division by 36, regardless of its connected component.
+The square uses `2*b+8` coordinate bits for `b`-bit original vertices. Fixed-width
+normalization connects natural routing labels to the original circuit relation;
+invalid source promises retain its required empty-witness fallback.
+
+`Backend.GridSpernerColorMachine` supplies exact all-word query semantics and
+actual seeded uniform FP evidence. `SpernerCircuitGeneration` reuses the shared
+pointer compiler to serialize color circuits. `SpernerRoutingDecoderMachine`
+composes two certified divisions by six, canonical label padding and the source
+flag. `EndOfLineSpernerReduction` joins these certificates into the concrete
+search reduction. The backend remains an opt-in package; the mathematical
+coloring imports no complexity dependency. Brouwer and Nash search reductions,
+approximation conventions and FIXP remain separate obligations.

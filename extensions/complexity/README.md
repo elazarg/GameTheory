@@ -71,8 +71,17 @@ decoder, using an explicit found flag to distinguish failure from vertex zero.
 `Backend.GridRoutingPointerMachine` composes these with crossing switches and
 coordinate encoding into complete uniform FP predecessor/successor machines.
 Their agreement with the mathematical word pointers holds on every input word,
-including malformed and background inputs. Wire coloring, canonical
-boundary/source translation and Sperner hardness remain open.
+including malformed and background inputs.
+
+Import `GameTheoryComplexity.Sperner` for
+`spernerRelation_PPADComplete`: succinct canonical square-grid Sperner search is
+complete for standard PPAD. The reverse reduction uses an actual uniform FP
+coloring machine and circuit instance generator; its FPn decoder divides the
+triangle row by 36 and recovers every non-source original endpoint, including
+endpoints on disconnected components. Source entrance tiles and inactive
+two-color padding exclude the known source and spurious outer-boundary answers.
+Invalid source promises decode to the required empty witness. Brouwer and Nash
+search completeness remain separate results.
 
 ## Use as a dependency
 
@@ -152,7 +161,8 @@ the local Sperner graph, source promises and every-endpoint decoding. Import
 `Backend.SpernerGridCodecMachine` and `Backend.SpernerBinarySteps` for actual
 FP certificates for codec fields, exact acceptance and fixed-width arithmetic.
 Import `Backend.SpernerPointerMachine` for the composed pointer, its actual
-uniform FP certificate, source promises and endpoint decoding. Import `GameTheoryComplexity.Sperner` for succinct Sperner PPAD membership,
-TFNP totality and the independently verified trichromatic-triangle relation.
-`Backend.SpernerReduction` supplies actual FP circuit-instance emission and
-FPn every-answer decoding. Sperner hardness remains a separate obligation.
+uniform FP certificate, source promises and endpoint decoding. Import
+`GameTheoryComplexity.Sperner` for succinct Sperner PPAD-completeness, TFNP
+totality and the independently verified trichromatic-triangle relation.
+`Backend.SpernerReduction` and `Backend.EndOfLineSpernerReduction` supply both
+actual FP circuit-instance maps and FPn every-answer decoders.

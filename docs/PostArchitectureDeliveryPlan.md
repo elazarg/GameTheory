@@ -474,9 +474,11 @@ source has an exact eastward first step. Canonical source/entrance tiles now
 remove its witness; two-color inactive padding prevents new answers at partial
 macrotiles cut by the top/right boundary. Every finite trichromatic triangle
 decodes to a nonzero original endpoint. A square of coordinate width `2*b+8`
-contains the construction. The optional companion supplies binary FP coloring
-and circuit-instance compilation to establish Sperner hardness; then deliver
-Brouwer and Nash search reductions
+contains the construction. Actual uniform FP binary coloring, shared circuit
+instance generation and a source-aware FPn row-label decoder now close the
+End-of-Line-to-Sperner reduction and standard PPAD-completeness. Invalid source
+promises retain their empty-witness fallback, and every target answer is covered.
+Next deliver Brouwer and Nash search reductions
 in dependency order;
 approximation conventions and FIXP remain distinct obligations.
 
