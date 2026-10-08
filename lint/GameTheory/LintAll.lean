@@ -409,3 +409,7 @@ import GameTheory.Math.GridWireColoring
 import GameTheory.Math.GridWireColoringPorts
 import GameTheory.Math.GridRoutedColoring
 import GameTheory.Math.GridRoutedSourceStep
+import GameTheory.Math.SourceColoringTiles
+import GameTheory.Math.GridSpernerRouting
+import GameTheory.Math.GridSpernerRoutingBoundary
+import GameTheory.Math.GridSpernerRoutingBounds

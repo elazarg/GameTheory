@@ -470,9 +470,13 @@ are removed by a local endpoint-preserving normalization before assigning ports.
 Global tile gluing now classifies every triangle, and reciprocal unit pointers
 supply valid matching ports. The actual routed coloring recovers every original
 endpoint and decodes every trichromatic witness by row division by 36. The zero
-source has an exact eastward first step. Next supply an explicit canonical
-boundary/source hookup that removes its witness, then certify binary FP coloring
-to establish Sperner hardness, then deliver Brouwer and Nash search reductions
+source has an exact eastward first step. Canonical source/entrance tiles now
+remove its witness; two-color inactive padding prevents new answers at partial
+macrotiles cut by the top/right boundary. Every finite trichromatic triangle
+decodes to a nonzero original endpoint. A square of coordinate width `2*b+8`
+contains the construction. The optional companion supplies binary FP coloring
+and circuit-instance compilation to establish Sperner hardness; then deliver
+Brouwer and Nash search reductions
 in dependency order;
 approximation conventions and FIXP remain distinct obligations.
 
