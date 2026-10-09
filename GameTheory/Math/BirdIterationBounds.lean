@@ -1,3 +1,4 @@
+import GameTheory.Math.IntegerSumBounds
 import Mathlib.LinearAlgebra.Matrix.Determinant.Bird.Correctness
 import Mathlib.Data.Int.NatAbs
 import Mathlib.Tactic.Linarith
@@ -15,36 +16,30 @@ namespace GameTheory.Math.BirdIterationBounds
 open scoped BigOperators
 open Function
 
-private theorem sum_bound {n : ℕ} (s : Finset (Fin n)) (f : Fin n → ℤ) (T : ℕ)
-    (hf : ∀ k ∈ s, (f k).natAbs ≤ T) : (∑ k ∈ s, f k).natAbs ≤ n * T := by
-  calc
-    (∑ k ∈ s, f k).natAbs ≤ ∑ k ∈ s, (f k).natAbs := Int.natAbs_sum_le _ _
-    _ ≤ ∑ _k ∈ s, T := Finset.sum_le_sum hf
-    _ = s.card * T := by simp
-    _ ≤ n * T := Nat.mul_le_mul_right T (by simpa using Finset.card_le_univ s)
-
 /-- Every partial diagonal sum has the same dimension-times-entry bound. -/
 theorem diagonal_sum_bound {n : ℕ} (F : Matrix (Fin n) (Fin n) ℤ) (T : ℕ)
     (hF : ∀ i j, (F i j).natAbs ≤ T) (s : Finset (Fin n)) :
     (∑ k ∈ s, F k k).natAbs ≤ n * T :=
-  sum_bound s (fun k => F k k) T (fun k _ => hF k k)
+  by simpa using IntegerSumBounds.natAbs_sum_le_card s (fun k => F k k) T (fun k _ => hF k k)
 
 /-- Any partial row product sum is bounded before cancellation. -/
 theorem row_product_sum_bound {n : ℕ} (A F : Matrix (Fin n) (Fin n) ℤ) (B T : ℕ)
     (hA : ∀ i j, (A i j).natAbs ≤ B) (hF : ∀ i j, (F i j).natAbs ≤ T)
     (s : Finset (Fin n)) (i j : Fin n) :
     (∑ k ∈ s, F i k * A k j).natAbs ≤ n * T * B := by
-  have hs := sum_bound s (fun k => F i k * A k j) (T * B)
+  have hs := IntegerSumBounds.natAbs_sum_le_card s (fun k => F i k * A k j) (T * B)
     (fun k _ => by rw [Int.natAbs_mul]; exact Nat.mul_le_mul (hF i k) (hA k j))
-  simpa only [Nat.mul_assoc] using hs
+  simpa only [Nat.mul_assoc, Fintype.card_fin] using hs
 
 /-- One recurrence step has at most two sums of `n` products of bounded entries. -/
 theorem step_bound {n : ℕ} (A F : Matrix (Fin n) (Fin n) ℤ) (B T : ℕ)
     (hA : ∀ i j, (A i j).natAbs ≤ B) (hF : ∀ i j, (F i j).natAbs ≤ T)
     (i j : Fin n) : (BirdDet.Spec.stepEntry A F i j).natAbs ≤ 2 * n * T * B := by
-  have hdiag := sum_bound (Finset.Ioi i) (fun k => F k k) T (fun k _ => hF k k)
-  have hsum := sum_bound (Finset.Ioi i) (fun k => F i k * A k j) (T * B)
+  have hdiag := IntegerSumBounds.natAbs_sum_le_card
+    (Finset.Ioi i) (fun k => F k k) T (fun k _ => hF k k)
+  have hsum := IntegerSumBounds.natAbs_sum_le_card (Finset.Ioi i) (fun k => F i k * A k j) (T * B)
     (fun k _ => by rw [Int.natAbs_mul]; exact Nat.mul_le_mul (hF i k) (hA k j))
+  simp only [Fintype.card_fin] at hdiag hsum
   change ((-∑ k ∈ Finset.Ioi i, F k k) * A i j +
     ∑ k ∈ Finset.Ioi i, F i k * A k j).natAbs ≤ _
   calc

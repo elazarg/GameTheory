@@ -10,17 +10,7 @@ source-sign formula or rational inverse computation.
 namespace GameTheory.Complexity.Backend
 open _root_.Complexity _root_.Complexity.Cobham
 
-private theorem bitAt_value (r word : List Bool) : bitAt r word = [word[r.length]?.getD false] := by
-  simp only [bitAt]
-  induction r generalizing word with
-  | nil => cases word with
-    | nil => rfl
-    | cons b word => cases b <;> rfl
-  | cons b r ih =>
-    cases word with
-    | nil => simp [caseBit₀]
-    | cons c word => simpa only [List.length_cons, List.drop_succ_cons,
-        List.getElem?_cons_succ] using ih word
+
 private theorem lenLe_value (a b : List Bool) : lenLeFlag a b = [decide (b.length ≤ a.length)] := by
   rcases lenLeFlag_flag a b with h | h
   · rw [h]; simp [(lenLeFlag_eq_true_iff a b).mp h]
@@ -57,7 +47,7 @@ private theorem payoffBit_value (r basic entering : List Bool) :
         (basic[r.length]?.getD false = true ∨ r.length = entering.length))] := by
   change andBit (binaryLengthParity r)
     (andBit (lenLeFlag r [true, true, true]) (orBit (bitAt r basic) (lenEqFlag r entering))) = _
-  rw [binaryLengthParity_value, lenLe_value, bitAt_value, lenEq_value]
+  rw [binaryLengthParity_value, lenLe_value, bitAt_getElem?, lenEq_value]
   simp only [List.length_cons, List.length_nil]
   have ha (P Q : Prop) [Decidable P] [Decidable Q] :
       andBit [decide P] [decide Q] = [decide (P ∧ Q)] := by

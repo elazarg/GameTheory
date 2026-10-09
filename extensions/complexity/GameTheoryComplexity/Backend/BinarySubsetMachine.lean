@@ -101,18 +101,7 @@ private def position (state : List Bool) : Option ℕ :=
 /-- Decode the selected position, using the ruler's length. -/
 def binarySubsetNthPosition (v : Fin 2 → List Bool) : Option ℕ := position (binarySubsetNth v)
 
-private theorem bitAt_value (r word : List Bool) :
-    bitAt r word = [(word[r.length]?).getD false] := by
-  simp only [bitAt]
-  induction r generalizing word with
-  | nil => cases word with
-    | nil => rfl
-    | cons b word => cases b <;> rfl
-  | cons b r ih =>
-    cases word with
-    | nil => simp [caseBit₀]
-    | cons c word => simpa only [List.length_cons, List.drop_succ_cons,
-        List.getElem?_cons_succ] using ih word
+
 
 private theorem lenEqFlag_value (x y : List Bool) : lenEqFlag x y = [decide (x.length = y.length)] := by
   rcases lenEqFlag_flag x y with h | h
@@ -134,7 +123,7 @@ private theorem nthStep_value (r state word ordinal : List Bool) :
   change position (caseBit₀ (andBit (notBit (bitAt [] state))
     (andBit (bitAt r word)
       (lenEqFlag (binarySubsetTally (word.take r.length)) ordinal))) (true :: r) state) = _
-  rw [bitAt_value r word, lenEqFlag_value, binarySubsetTally_length]
+  rw [bitAt_getElem? r word, lenEqFlag_value, binarySubsetTally_length]
   cases state with
   | nil =>
     cases hb : (word[r.length]?).getD false <;>

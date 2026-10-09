@@ -1,3 +1,4 @@
+import GameTheory.Math.FiniteLinearBitBound
 import GameTheoryComplexity.Backend.BinaryCertificateFold
 import GameTheory.Finite.BimatrixNashCertificate
 import GameTheory.Finite.BimatrixTable
@@ -5,6 +6,7 @@ import GameTheory.Finite.BimatrixTable
 /-! A binary certificate verifier for the total signed-tally table decoder.
 All iteration clocks are word lengths, dimensions, or tally lengths. -/
 namespace GameTheory.Complexity.Backend
+open GameTheory.Math (constrainedNashCertificateWidth)
 open _root_.Complexity _root_.Complexity.Cobham
 
 /-- Binary certificate field width determined solely by the table input length. -/
@@ -93,8 +95,9 @@ def binaryCertificateVerifier (v : Fin 2 → List Bool) : List Bool :=
 
 /-- The width word has the prescribed quadratic length. -/
 theorem certificateWidthWord_length (input : List Bool) :
-    (certificateWidthWord input).length = 14 * input.length ^ 2 + 36 * input.length + 23 := by
-  simp only [certificateWidthWord, List.length_append, smash_length,
+    (certificateWidthWord input).length = constrainedNashCertificateWidth input.length := by
+  simp only [certificateWidthWord, constrainedNashCertificateWidth, List.length_append,
+    smash_length,
     List.length_replicate, pow_two]
 
 /-- The dimension word has exactly the total decoder's dimension. -/

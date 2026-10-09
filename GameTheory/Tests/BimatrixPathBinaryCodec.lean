@@ -2,7 +2,7 @@ import GameTheory.Finite.BimatrixPathBinaryCodec
 
 /-! Canonical source encoding, strict feasibility and malformed node controls. -/
 namespace GameTheory.Tests.BimatrixPathBinaryCodec
-open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
+open GameTheory.Math GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
 
 private def A : Fin 1 → Fin 1 → ℤ := fun _ _ => 1
 private def B : Fin 1 → Fin 1 → ℤ := fun _ _ => 2

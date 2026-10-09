@@ -184,18 +184,7 @@ private theorem lenEq_word (a b : List Bool) : lenEqFlag a b = [decide (a.length
       simp [h] at this
     simp [hn]
 
-private theorem bitAt_word (r word : List Bool) :
-    bitAt r word = [(word[r.length]?).getD false] := by
-  simp only [bitAt]
-  induction r generalizing word with
-  | nil => cases word with
-    | nil => rfl
-    | cons b word => cases b <;> rfl
-  | cons b r ih =>
-    cases word with
-    | nil => simp [caseBit₀]
-    | cons c word => simpa only [List.length_cons, List.drop_succ_cons,
-        List.getElem?_cons_succ] using ih word
+
 
 private theorem exchangeBit_value (r basic leaving entering : List Bool) :
     exchangeBit ![r, basic, leaving, entering] =
@@ -203,7 +192,7 @@ private theorem exchangeBit_value (r basic leaving entering : List Bool) :
         decide (r.length = entering.length) || basic[r.length]?.getD false] := by
   change caseBit₀ (lenEqFlag r leaving) [false]
     (orBit (lenEqFlag r entering) (bitAt r basic)) = _
-  rw [lenEq_word, lenEq_word, bitAt_word]
+  rw [lenEq_word, lenEq_word, bitAt_getElem?]
   by_cases hl : r.length = leaving.length
   · rw [decide_eq_true hl, ite_eq_left hl]
     rfl
@@ -376,7 +365,7 @@ private theorem switchPosition_length (v : Fin 3 → List Bool) :
           (bimatrixNodeBasicWord ![v 0, v 1])[2 * ((v 2).length / 2) + 1]?.getD false = false then
         if (v 2).length % 2 = 1 then (v 2).length - 1 else (v 2).length + 1
       else (v 2).length := by
-  rw [switchPosition, lenEq_word, bitAt_word, bitAt_word, binaryLengthParity_value]
+  rw [switchPosition, lenEq_word, bitAt_getElem?, bitAt_getElem?, binaryLengthParity_value]
   simp only [binaryHalfRuler_length, List.length_append, List.length_cons, List.length_nil]
   rw [case_head, case_head]
   simp only [andBit, notBit, orBit, List.headD_cons,

@@ -86,14 +86,14 @@ theorem generalBimatrixNodeFeasibleFlag_iff (v : Fin 2 → List Bool)
       (generalBimatrixDictionaryCoefficients (generalBimatrixNodeData v)) i.val j.val =
       GameTheory.Math.IntegerDictionaryComputation.coefficients M (fun _ => 1) i j) :
     generalBimatrixNodeFeasibleFlag v = [true] ↔
-      GameTheory.Finite.BimatrixPathBinaryCodec.IntegerFeasible M := by
+      GameTheory.Math.IntegerFeasible M := by
   have andTrue (a b : Bool) : andBit [a] [b] = [true] ↔ a = true ∧ b = true := by
     cases a <;> cases b <;> decide
   rw [generalBimatrixNodeFeasibleFlag, binarySignedNonzero_value, binaryDictionaryPositive_value,
     andTrue]
   simp only [decide_eq_true_eq,
     Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two, Matrix.cons_val_three, hd]
-  unfold GameTheory.Finite.BimatrixPathBinaryCodec.IntegerFeasible
+  unfold GameTheory.Math.IntegerFeasible
   constructor
   · rintro ⟨hdet, hrows⟩
     refine ⟨hdet, fun i => ?_⟩
@@ -190,7 +190,7 @@ theorem generalBimatrixNodeFeasibleFlag_candidate_iff (input node : List Bool)
     (hs : (basic (m := generalRowCount input) (n := generalColCount input) node).card =
       generalRowCount input + generalColCount input) :
     generalBimatrixNodeFeasibleFlag ![input, node] = [true] ↔
-      IntegerFeasible (generalBimatrixCandidateMatrix input (basic node) hs) := by
+      GameTheory.Math.IntegerFeasible (generalBimatrixCandidateMatrix input (basic node) hs) := by
   let s := basic (m := generalRowCount input) (n := generalColCount input) node
   let e := generalBimatrixNodeData ![input, node] 2
   let d := generalBimatrixDimensionWord input
@@ -220,7 +220,7 @@ theorem generalBimatrixNodeFeasibleFlag_candidate_iff (input node : List Bool)
       generalBimatrixCandidateMatrix input s hs := by
     funext i j
     exact generalBimatrixDictionaryCandidateMatrix_integer input s hs e i j
-  have he : IntegerFeasible M ↔ IntegerFeasible (generalBimatrixCandidateMatrix input s hs) := by
+  have he : GameTheory.Math.IntegerFeasible M ↔ GameTheory.Math.IntegerFeasible (generalBimatrixCandidateMatrix input s hs) := by
     unfold M binaryBirdMatrix
     generalize hdim : d.length = size
     have hsize : size = generalRowCount input + generalColCount input := hdim.symm.trans (generalBimatrixDimensionWord_length input)

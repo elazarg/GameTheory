@@ -30,19 +30,40 @@ the replacement determinant is -6, while the original determinant is zero
 and the stored sign-adjusted numerator is zero. Kernel-checked controls also
 exercise the unconditional dictionary storage bounds.
 
-## Further opportunities
+## Priority implementation
+
+The first six opportunities below are now implemented. Generic feasibility
+lives in `Math.IntegerDictionaryFeasibility`, integer sum estimates in
+`Math.IntegerSumBounds`, and equal-width block extraction in `Math.FixedBlockList`.
+Their existing consumers reuse the canonical statements, including packed
+binary matrix extraction. Linear feasibility existence no longer asks callers
+for `DecidableEq`; an abstract finite-carrier control checks this interface.
+`Math.constrainedNashCertificateWidth` owns the width formula, with executable
+ruler agreement. One indexed-bit specification now reuses ComplexityLib's
+`bitAt_eq` instead of six separate recursive proofs.
+
+The full base and lint-scope build passes 4,519 jobs, including the changed
+finite-carrier and codec tests. The full local-path companion/lint/axiom build
+passes 4,336 jobs, both linters pass, and transitive auditing accepts 164 base
+declarations and all 3,769 owned companion declarations using only the three
+standard Lean axioms. Regular architecture and optional-boundary audits pass,
+as do all 19 optional-boundary regression tests. The namespace move is checked
+against both the base codec and the concrete node-validation machine proofs.
+
+## Reviewed opportunities
 
 These are useful follow-ups, not defects in the supported membership claim.
-They were deliberately kept out of this focused refactor.
+The first six were implemented in the priority follow-up; the final facade
+suggestion remains consumer-gated.
 
 | Priority | Opportunity | Location and suggested boundary |
 |---|---|---|
-| First | Extract integer lexicographic feasibility into reusable mathematics. | `Finite/BimatrixPathBinaryCodec.lean` currently owns game-independent `IntegerFeasible` and `integerFeasible_iff`. Move their canonical definition and proof into a Math integer-dictionary leaf; keep basis specialization in the codec. |
-| Next | Share bounded finite absolute sums. | Bird iteration and endpoint capacity proofs can reuse Mathlib's `Int.natAbs_sum_le` and a small finite-sum bound. Search and reuse those APIs before adding a helper. |
-| Next | Extract fixed-block list encoding facts. | Private uniform flat-map length and extraction lemmas in `Finite/BimatrixTableCorrectness.lean` have independent binary-field consumers. |
-| Next | Remove theorem-only `DecidableEq` assumptions. | `Math/SmallRationalWitness.exists_small_nonnegative_solution` and bounded linear certificate existence wrappers already use classical proof reasoning. |
-| Next | Consolidate width accounting. | `Backend.NashNP`, `BoundedSupportWitness`, `NashWitnessCompleteness`, and the executable certificate ruler repeat the constrained-Nash width formula. Use one semantic formula and prove the executable ruler agrees with it. |
-| Later | Reuse the upstream bit-extraction specification. | Several backend arithmetic/node modules repeat `bitAt` semantics. ComplexityLib already provides `Extract.bitAt_eq`; prefer that primitive over another private recursive proof. |
+| Implemented | Extract integer lexicographic feasibility into reusable mathematics. | `Math.IntegerDictionaryFeasibility` now owns `IntegerFeasible` and `integerFeasible_iff`; basis specialization stays in the codec. |
+| Implemented | Share bounded finite absolute sums. | `Math.IntegerSumBounds` uses Mathlib's `Int.natAbs_sum_le`; Bird iteration and endpoint capacity proofs reuse it. |
+| Implemented | Extract fixed-block list encoding facts. | `Math.FixedBlockList` replaces private table lemmas and the packed binary table extraction induction. |
+| Implemented | Remove theorem-only `DecidableEq` assumptions. | `Math/SmallRationalWitness.exists_small_nonnegative_solution` and bounded linear certificate existence wrappers use classical proof reasoning internally. |
+| Implemented | Consolidate width accounting. | `Math.constrainedNashCertificateWidth` is shared by the relation, witness proofs and executable ruler agreement. |
+| Implemented | Reuse the upstream bit-extraction specification. | The arithmetic and node modules share `Backend.bitAt_getElem?`, proved from ComplexityLib's `bitAt_eq`. |
 | Later | Further insulate explicitly computational clients from backend details. | The semantic facade already separates the opt-in dependency, but clients naming concrete backend machines still couple to it. Add a narrower public specialization only when a real client needs it; avoid a general certificate hierarchy. |
 
 The independently reusable additions in this change need only Mathlib and

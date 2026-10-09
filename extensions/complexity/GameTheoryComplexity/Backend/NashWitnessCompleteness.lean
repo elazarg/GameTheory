@@ -8,6 +8,7 @@ certificates with a polynomial number of bits per field. -/
 noncomputable section
 
 namespace GameTheory.Complexity.Backend
+open GameTheory.Math (constrainedNashCertificateWidth)
 
 open GameTheory.Math.Probability
 open GameTheory.Finite
@@ -20,12 +21,12 @@ theorem exists_bounded_nashNumerators {q L : ℕ} (A : Fin q → Fin q → ℤ)
     (h : (MatrixGame.bimatrixGame (fun i j => (A i j : ℝ))
       (fun i j => (A j i : ℝ))).HasNashWithPayoffAtLeast (fun _ => 1)) :
     ∃ c : NumeratorCertificate q, c.Valid A ∧
-      c.rowDenominator < 2 ^ (14 * L ^ 2 + 36 * L + 23) ∧
-      c.colDenominator < 2 ^ (14 * L ^ 2 + 36 * L + 23) ∧
-      c.rowUtilityNumerator < 2 ^ (14 * L ^ 2 + 36 * L + 23) ∧
-      c.colUtilityNumerator < 2 ^ (14 * L ^ 2 + 36 * L + 23) ∧
-      (∀ i, c.rowWeights i < 2 ^ (14 * L ^ 2 + 36 * L + 23)) ∧
-      (∀ j, c.colWeights j < 2 ^ (14 * L ^ 2 + 36 * L + 23)) := by
+      c.rowDenominator < 2 ^ (constrainedNashCertificateWidth L) ∧
+      c.colDenominator < 2 ^ (constrainedNashCertificateWidth L) ∧
+      c.rowUtilityNumerator < 2 ^ (constrainedNashCertificateWidth L) ∧
+      c.colUtilityNumerator < 2 ^ (constrainedNashCertificateWidth L) ∧
+      (∀ i, c.rowWeights i < 2 ^ (constrainedNashCertificateWidth L)) ∧
+      (∀ j, c.colWeights j < 2 ^ (constrainedNashCertificateWidth L)) := by
   classical
   obtain ⟨p, r, hnash, hp, hr⟩ :=
     (MatrixGame.hasNashWithPayoffAtLeast_iff _ _).mp h
@@ -69,12 +70,12 @@ theorem exists_bounded_decoded_nashNumerators (input : List Bool)
     (h : input ∈ BimatrixTable.unitPayoffLanguage) :
     ∃ c : NumeratorCertificate (BimatrixTable.decodeDimension input),
       c.Valid (fun i j => BimatrixTable.decodedPayoff input i j) ∧
-      c.rowDenominator < 2 ^ (14 * input.length ^ 2 + 36 * input.length + 23) ∧
-      c.colDenominator < 2 ^ (14 * input.length ^ 2 + 36 * input.length + 23) ∧
-      c.rowUtilityNumerator < 2 ^ (14 * input.length ^ 2 + 36 * input.length + 23) ∧
-      c.colUtilityNumerator < 2 ^ (14 * input.length ^ 2 + 36 * input.length + 23) ∧
-      (∀ i, c.rowWeights i < 2 ^ (14 * input.length ^ 2 + 36 * input.length + 23)) ∧
-      (∀ j, c.colWeights j < 2 ^ (14 * input.length ^ 2 + 36 * input.length + 23)) :=
+      c.rowDenominator < 2 ^ (constrainedNashCertificateWidth input.length) ∧
+      c.colDenominator < 2 ^ (constrainedNashCertificateWidth input.length) ∧
+      c.rowUtilityNumerator < 2 ^ (constrainedNashCertificateWidth input.length) ∧
+      c.colUtilityNumerator < 2 ^ (constrainedNashCertificateWidth input.length) ∧
+      (∀ i, c.rowWeights i < 2 ^ (constrainedNashCertificateWidth input.length)) ∧
+      (∀ j, c.colWeights j < 2 ^ (constrainedNashCertificateWidth input.length)) :=
   exists_bounded_nashNumerators _
     (fun i j => BimatrixTable.decodedPayoff_natAbs_le input i j)
     (BimatrixTable.decodeDimension_le_length input) h

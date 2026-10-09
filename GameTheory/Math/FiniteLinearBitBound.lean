@@ -26,11 +26,16 @@ theorem factorial_mul_pow_lt_two_pow (n r H : ℕ) :
   rw [heq] at hbound
   exact hbound.trans_lt (Nat.pow_lt_pow_right (by decide) (Nat.lt_succ_self _))
 
+/-- Field width for certificates of payoff-constrained Nash existence, from a
+bound on the signed-tally table dimension or its input length. -/
+def constrainedNashCertificateWidth (L : ℕ) : ℕ := 14 * L ^ 2 + 36 * L + 23
+
 /-- The symmetric bimatrix feasibility dimensions give a quadratic bit width. -/
 theorem bimatrix_factorial_bound_lt_two_pow (q : ℕ) :
     (2 * q + 2).factorial *
         (((3 * q + 2) + 1) * ((q + 2) + 1) ^ 2) ^ (2 * q + 2) <
-      2 ^ (14 * q ^ 2 + 36 * q + 23) := by
+      2 ^ constrainedNashCertificateWidth q := by
+  unfold constrainedNashCertificateWidth
   have h := factorial_mul_pow_lt_two_pow (2 * q + 2) (3 * q + 2) (q + 2)
   convert h using 1
   ring
@@ -38,7 +43,7 @@ theorem bimatrix_factorial_bound_lt_two_pow (q : ℕ) :
 /-- Replacing the table dimension by an input-length upper bound preserves the
 quadratic certificate field width. -/
 theorem bimatrix_width_mono {q L : ℕ} (h : q ≤ L) :
-    14 * q ^ 2 + 36 * q + 23 ≤ 14 * L ^ 2 + 36 * L + 23 := by
+    constrainedNashCertificateWidth q ≤ constrainedNashCertificateWidth L := by
   exact Nat.add_le_add_right
     (Nat.add_le_add (Nat.mul_le_mul_left 14 (Nat.pow_le_pow_left h 2))
       (Nat.mul_le_mul_left 36 h)) 23
