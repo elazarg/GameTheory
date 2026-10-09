@@ -59,7 +59,8 @@ private def cornerYBits (ruler word : List Bool) (p : Fin 3) : List Bool :=
   if p = 0 then y else if p = 1 then
     caseBit₀ (gridNodeHalfFlag word) (gridSuccBits y) y else gridSuccBits y
 
-private def boundaryColorBits (ruler : List Bool) (query : List Bool → List Bool)
+/-- Enforce the canonical boundary on extended little-endian coordinate fields. -/
+def boundaryColorBits (ruler : List Bool) (query : List Bool → List Bool)
     (x y : List Bool) : List Bool :=
   let zero := List.replicate ruler.length false ++ [false]
   let limit := List.replicate ruler.length false ++ [true]
@@ -95,7 +96,8 @@ private theorem cornerYBitsFn_mem_FP {ruler word : List Bool → List Bool}
   · exact hh
   · exact hs
 
-private theorem boundaryColorBitsFn_mem_FP {ruler x y : List Bool → List Bool}
+/-- Boundary enforcement composes polynomial-time coordinate and query computations. -/
+theorem boundaryColorBitsFn_mem_FP {ruler x y : List Bool → List Bool}
     (hr : ruler ∈ FP) (hx : x ∈ FP) (hy : y ∈ FP)
     (query : List Bool → List Bool → List Bool)
     (hq : (fun z => query z (x z ++ y z)) ∈ FP) :
@@ -222,7 +224,8 @@ private theorem eqFlag_decide (a b : List Bool) : eqFlag a b = [decide (a = b)] 
       cases ht
     simp only [h, he, decide_false]
 
-private theorem boundaryColorBits_encode (ruler : List Bool) (query : List Bool → List Bool)
+/-- Extended coordinate encodings agree with the canonical boundary-corrected coloring. -/
+theorem boundaryColorBits_encode (ruler : List Bool) (query : List Bool → List Bool)
     (x y : ℕ) (hx : x ≤ 2 ^ ruler.length) (hy : y ≤ 2 ^ ruler.length) :
     boundaryColorBits ruler query (Nat.toBitsLE (ruler.length + 1) x)
         (Nat.toBitsLE (ruler.length + 1) y) =

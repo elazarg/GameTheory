@@ -54,6 +54,34 @@ def Valid {m n : ℕ} (A B : Fin m → Fin n → ℤ) (c : BimatrixCertificate m
 instance {m n : ℕ} (A B : Fin m → Fin n → ℤ) (c : BimatrixCertificate m n) :
     Decidable (Valid A B c) := by unfold Valid; infer_instance
 
+/-- Every positively weighted row weakly outperforms every alternative row. -/
+theorem rowScore_le_of_pos {m n : ℕ} {A B : Fin m → Fin n → ℤ}
+    {c : BimatrixCertificate m n} (hc : c.Valid A B) {i : Fin m}
+    (hi : 0 < c.rowWeights i) (j : Fin m) : rowScore A c j ≤ rowScore A c i := by
+  rw [(hc.2.2.2.2.1 i).2 hi]
+  exact (hc.2.2.2.2.1 j).1
+
+/-- Every positively weighted column weakly outperforms every alternative column. -/
+theorem colScore_le_of_pos {m n : ℕ} {A B : Fin m → Fin n → ℤ}
+    {c : BimatrixCertificate m n} (hc : c.Valid A B) {i : Fin n}
+    (hi : 0 < c.colWeights i) (j : Fin n) : colScore B c j ≤ colScore B c i := by
+  rw [(hc.2.2.2.2.2 i).2 hi]
+  exact (hc.2.2.2.2.2 j).1
+
+/-- A strictly inferior row has zero weight in every accepted certificate. -/
+theorem rowWeights_eq_zero_of_rowScore_lt {m n : ℕ} {A B : Fin m → Fin n → ℤ}
+    {c : BimatrixCertificate m n} (hc : c.Valid A B) {i j : Fin m}
+    (hij : rowScore A c i < rowScore A c j) : c.rowWeights i = 0 := by
+  by_contra hi
+  exact (not_lt_of_ge (rowScore_le_of_pos hc (Nat.pos_of_ne_zero hi) j)) hij
+
+/-- A strictly inferior column has zero weight in every accepted certificate. -/
+theorem colWeights_eq_zero_of_colScore_lt {m n : ℕ} {A B : Fin m → Fin n → ℤ}
+    {c : BimatrixCertificate m n} (hc : c.Valid A B) {i j : Fin n}
+    (hij : colScore B c i < colScore B c j) : c.colWeights i = 0 := by
+  by_contra hi
+  exact (not_lt_of_ge (colScore_le_of_pos hc (Nat.pos_of_ne_zero hi) j)) hij
+
 end BimatrixCertificate
 
 /-- Check a supplied rectangular bimatrix certificate using exact arithmetic. -/

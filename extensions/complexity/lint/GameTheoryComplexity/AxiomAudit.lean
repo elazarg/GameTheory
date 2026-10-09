@@ -1,3 +1,10 @@
+import GameTheoryComplexity.Tests.BinaryRatioExtraction
+import GameTheoryComplexity.Tests.BimatrixProgramEmission
+import GameTheoryComplexity.Tests.BimatrixRawGateMachine
+import GameTheoryComplexity.Tests.SpernerCoordinateColor
+import GameTheoryComplexity.Tests.BimatrixProgramPayoffs
+import GameTheoryComplexity.Tests.GeneralBimatrixPayoffEmission
+import GameTheoryComplexity.Tests.BimatrixRawGate
 import GameTheoryComplexity
 import GameTheoryComplexity.LintAll
 import GameTheoryComplexity.Backend.Negligible

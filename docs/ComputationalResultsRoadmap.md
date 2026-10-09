@@ -8,8 +8,8 @@ need neither ComplexityLib nor CSLib.
 ## Starting point
 
 Delivered: NP-completeness of payoff-constrained symmetric mixed Nash existence;
-standard End-of-Line, succinct Sperner and continuous approximate Brouwer
-PPAD-completeness; actual FP/FPn reductions and independent polynomial verifiers.
+standard End-of-Line, succinct Sperner, continuous approximate Brouwer and exact
+signed rectangular bimatrix Nash PPAD-completeness; actual FP/FPn reductions and independent polynomial verifiers.
 The base has bimatrix support identities, potential-game termination,
 multiplicative-weights regret bounds, zero-sum regret-to-Nash transfer and
 Gale–Shapley stability.
@@ -67,14 +67,13 @@ It combines the existing FNP verifier with an actual FP instance map to standard
 raw End-of-Line and an actual FPn answer map. There is no nondegeneracy premise,
 assumed polynomial-time pivot operation, or bound on path length in the theorem.
 Full library, lint, axiom and released-pin validation of this final integration
-remains the release gate; the proof and its dependency slices have passed
-warning-free narrow checks.
+has passed; the delivery ledger records the released consumer pin.
 
 The relation retains its exact existing certificate codec and malformed-input
 fallback. Ordinary game clients continue to import the base library without
 ComplexityLib or CSLib. Finite-path totality and TFNP remain independently proved
-without an Analysis import. Nash PPAD hardness and completeness are the next
-separate reduction in section 3.
+without an Analysis import. Nash PPAD hardness and completeness are delivered
+in section 3.
 
 The mathematical and executable prerequisites below explain the construction.
 Earlier validation records describe their individual delivery slices.
@@ -511,7 +510,7 @@ Both linters, isolation and boundary regressions pass; standard-axiom audits cov
 3,779 companion declarations and 209 base-slice declarations. The full companion/lint/axiom scope and lint also pass in published-base mode
 at pin `83c8e503`, with the same 3,779-declaration audit.
 Membership does not assert a polynomial bound on following the complementary
-path or a polynomial-time Nash solver. PPAD hardness remains separate.
+path or a polynomial-time Nash solver. PPAD hardness is delivered in section 3.
 
 ## 3. Bimatrix Nash PPAD hardness and completeness
 
@@ -522,8 +521,133 @@ verify every-answer soundness, accumulated error and ambiguous comparators.
 The current two-dimensional Brouwer family does not automatically classify
 another continuous-map language or generalized circuits.
 
-Certify actual polynomial serialization, then prove every target Nash answer
-decodes to a source answer. Combine membership and hardness on the same relation.
+**Paired-action gate slice, delivered.** `Finite.BimatrixBlockGame` proves
+that matching payoffs with `H > kD` force every block into support and keep
+both players' block masses within `D/H` of `1/k`. Individual actions may have
+zero weight. `BimatrixAffineGate` implements exact saturated affine equations
+against the actual block capacity; rescaling to unit capacity costs at most
+`kD/H`. `BimatrixComparatorGate` selects the upper or lower endpoint for a
+strictly positive or negative signal. All statements apply to every accepted
+canonical certificate, without selecting an equilibrium or graph component.
+
+The supporting generic Math leaves prove support-to-clamp implications,
+matching-mass uniformity, clipped-feedback residual bounds, exact binary cell
+extraction with quantitative trajectory errors, four-corner interpolation and
+polynomially coarse displacement Lipschitz bounds. Binary extraction handles
+the right endpoint as the last cell with residual one. Four-corner formulas
+include cell edges and the diagonal and reuse the existing Brouwer map.
+
+Controls validate concrete negative, interior and saturated affine targets,
+both comparator signs, nonuniform block masses with zero action weights, and
+unsupported blocks when the matching-payoff hypothesis fails. Full base and
+lint-scope validation passes 4,538 jobs; lint passes and all 331 selected
+new/changed declarations depend only on standard axioms.
+
+**Composed gates and robust sampling.** `Finite.BimatrixGateProgram` now
+implements both gate types in one game, preserving repeated input coefficients
+and adding explicit output feedback for comparators. `BimatrixBooleanGate`
+implements AND, OR and NOT with integer coefficients and normalized error
+bounds. `Math.GridJitter` bounds near-boundary samples by one per coordinate,
+and `Math.RobustAverage`/`RobustFeedback` combine exceptional-sample counts with
+projected-feedback errors. A kernel-accepted mixed-gate game has unequal row
+block masses and zero individual-action weights. Architecture/isolation audits
+and all 30 Python regressions pass.
+
+**Executable gates and game emission.** The raw-circuit correctness proof now
+uses one induction for arbitrary wire offsets, with no Boolean assumptions on
+unused preceding wires. Direct coordinate queries reuse the canonical boundary
+coloring; two actual FP generators produce well-formed raw circuits for its
+color flags, preserving the extra coordinate bit at grid boundaries. The
+coordinate-color bridge connects these circuits to actual accepted game outputs.
+Serialized raw-gate coefficient queries preserve aliases and inline negations.
+
+`Backend.BimatrixProgramCodec` decodes directly to the existing gate program.
+`BimatrixProgramPayoffs` has actual FPn entry queries, and
+`BimatrixProgramMachine` materializes the signed rectangular game in FP. Its
+chosen width fits every entry without an overflow assumption, including on
+malformed program tapes. `BimatrixProgramCorrectness.accepted_valid` connects
+every accepted serialized answer to the same canonical gate certificate.
+
+**Quantitative correctness.** Arithmetic, minimum, binary-extraction and dyadic
+halving gates now have actual-certificate error bounds. Halving uses the
+unchanged scale `C = 2k`, so exponentially small constants need only polynomially
+many blocks. Generic clipping lemmas justify the weighted-color minimum and
+three-step signed feedback without premature saturation. Approximate weights
+and ambiguous nonexclusive color flags have explicit separate error budgets.
+Two-coordinate jitter has at most two bad indices. Forty-one samples tolerate
+exceptional errors of twenty-five eighths; inward and Lipschitz bounds yield
+coordinate residuals at most one sixth. Exact binary cell selection turns such
+residuals into a valid trichromatic triangle, including edges and the diagonal.
+
+Validation of the expanded slice: full base/lint scope passes 4,551 jobs;
+companion/lint/axiom scope passes 4,360 jobs in local and published-base modes
+at pin `686dd908`. Both linters, architecture/isolation checks and all twenty
+architecture/optional-boundary regressions pass. Standard-axiom audits cover
+478 selected base and 4,095 companion declarations. Kernel controls check actual
+emitted payoff decoding, aliases, truncation defaults and high boundary bits.
+
+**Concrete error propagation.** The base now proves constant, jitter, binary
+extraction, interpolation, weighted-color minimum, mean and cyclic-feedback
+bounds for actual accepted gate certificates. Independent weighted-minimum wire
+errors accumulate four times in the mean, giving the concrete bound `77δ` from
+`19δ` per minimum. An integer reward `(102k² + 1) 2^Q`, with
+`Q = 100(b + k + 10)`, proves the dyadic precision, clear-sample and feedback
+budgets. Canonical interpolation weights support rational and real scalars,
+with a rational-to-real cast lemma that fixes the scalar before casting.
+The full base/lint build passes 4,556 jobs; base lint and the architecture audit
+pass, and the selected standard-axiom audit covers 557 declarations.
+
+**Concrete program and answer machines.** The companion allocates the entire
+source-dependent program and proves every region’s canonical gate placement
+and the uniform coefficient bound `100k`, including guarded malformed circuits.
+The header and integer reward producers have actual FPn certificates, exact
+values and polynomial output lengths. A generic fixed-width coefficient-table
+emitter has an actual FP certificate. The answer machine reads the actual game
+certificate width, extracts exact clipped binary ratios without division,
+selects the canonical dyadic triangle and emits its rational barycenter in FPn.
+Its every-answer correctness reduces solely to the generated program’s canonical
+residual bound. Interior fractions, dyadic ties, endpoints, clipping, shifted
+aliases and packed signs have kernel-checked controls.
+The released-consumer build/lint/axiom scope passes 4,385 jobs at published base
+pin `8f6d5344`; companion lint and optional isolation pass, and the standard-axiom
+audit covers 4,566 declarations. The earlier local scope passes 4,383 jobs.
+
+**Every-answer soundness and concrete queries.** The actual canonical program now
+proves the two source-map residuals are at most `1/6` for every accepted target
+certificate. The proof derives extraction, increment, corner-color, minimum,
+mean and feedback accuracy internally, handles both bad jitter samples, and
+uses the emitted reward to discharge all numerical budgets. The checked
+`BrouwerNashReduction.exists_reduction_of_selectors` composes the concrete code
+compiler, headers, game writer and answer decoder into a search reduction,
+conditional only on polynomial scalar/kind queries and their canonical equations.
+Shared/global, mean and jitter queries have actual FPn certificates and exact
+canonical coefficient agreement. Reusable signed indicators, fixed finite sums
+and bounded indexed lookup retain aliases and specify malformed inputs.
+
+The current full companion/lint/axiom build passes 4,406 jobs, companion lint
+and optional isolation pass, and all 5,301 owned declarations use only the
+standard axioms. The published base pin remains `8f6d5344`.
+
+**Complete actual reduction.** Extraction, ripple increment, color-circuit,
+interpolation and minimum queries now have actual Cobham/FPn certificates and
+canonical coefficient equations. `BrouwerNashSelector` adds the six disjoint
+coefficient families with the shared fixed-list signed query sum. Its scalar
+correctness theorem covers every program output, including unused padding;
+`BrouwerNashSelectorKind` proves exact comparator-kind agreement everywhere.
+The concrete compiled color circuits discharge both selectors' premises.
+
+`BrouwerNashHardness.exists_brouwerToBimatrixReduction` is an unconditional
+polynomial search reduction to the existing signed rectangular Nash relation.
+It preserves every accepted target answer through the actual emitted game,
+canonical program and binary source decoder. Public
+`bimatrixNashRelation_PPADHard` composes it with Brouwer hardness, and
+`bimatrixNashRelation_PPADComplete` combines this with the existing membership
+proof on the same relation. No caller-supplied machine or numerical certificate
+remains. Full companion/library/lint/axiom builds pass 4,416 jobs against both local
+and published base pin `8f6d5344`, auditing all 6,249 owned declarations using
+only standard axioms. Both companion linters, architecture/isolation audits
+and all 30 regression tests pass. Read-only semantic/proof review found no
+material blocker; the color query uses the shared fixed-list signed sum.
 Restricted-game corollaries (graphical, polymatrix, sparse or win/lose) follow
 only when their own reductions justify their scope.
 
@@ -614,9 +738,9 @@ From `extensions/complexity`, release validation uses:
     lake build GameTheoryComplexity GameTheoryComplexity.LintAll GameTheoryComplexity.AxiomAudit
     lake lint
 
-The local-checkout build selects `-KgameTheoryPath=../..`. The next active
-delivery is PPAD hardness for the same now-total relation, whose membership
-proof and machine-certified reduction are complete.
+The local-checkout build selects `-KgameTheoryPath=../..`. The signed rectangular Nash relation now has both PPAD membership and hardness
+through machine-certified every-answer reductions. Restricted representations
+and the independent positive algorithms above remain separate deliveries.
 
 ## Primary proof references
 

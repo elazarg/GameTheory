@@ -37,8 +37,8 @@ two independently signed integer payoff matrices. The binary certificate
 verifier has an actual polynomial-time machine and proves FNP membership.
 Unary dimension and coefficient-width headers bound the scans; payoff and
 certificate magnitudes are binary. Accepted certificates give ordinary PMF
-mixed Nash equilibria, and every supplied equilibrium admits an exactly
-serialized bounded certificate. Malformed instances accept only the empty
+mixed Nash equilibria, and equilibrium existence is equivalent to existence
+of an exactly serialized bounded certificate. Malformed instances accept only the empty
 answer, and malformed outer pairs are rejected. Bit-recursive multiplication
 and canonical paired-verifier composition are separate game-free modules.
 Serialized totality, TFNP and general Nash PPAD membership are proved through
@@ -56,7 +56,7 @@ End-of-Line relation, PPAD membership and closure, and a certified reduction
 showing consistent-edge endpoint search is PPAD-complete. Raw End-of-Line is complete
 by definition of the class. Uniformly generated normalized circuit instances
 give the reverse reduction with an actual FP instance map and every-answer decoder;
-Nash PPAD-completeness remains separate work.
+Signed rectangular Nash PPAD-completeness is supplied by `GameTheoryComplexity.BimatrixNash`.
 
 `Backend.CircuitPrefixCompiler` provides an actual polynomial-time serialized
 prefix restriction component. It preserves exact optional evaluation on all
@@ -95,7 +95,7 @@ triangle row by 36 and recovers every non-source original endpoint, including
 endpoints on disconnected components. Source entrance tiles and inactive
 two-color padding exclude the known source and spurious outer-boundary answers.
 Invalid source promises decode to the required empty witness. Continuous Brouwer
-search completeness is described below; Nash search hardness remains separate work.
+search completeness is described below; signed rectangular Nash search completeness is described below.
 
 ## Use as a dependency
 
@@ -117,7 +117,7 @@ import GameTheoryComplexity.Backend.NashNPComplete
 ```
 
 The default dependency configuration fetches the base GameTheory commit
-`2c8e70ebae382a0db21f2441ebff28c7b1e41689`; it does not assume a sibling checkout.
+`8f6d5344d3c24e0669ff30e71aa8a7e5eb25165d`; it does not assume a sibling checkout.
 All packages must share Lean/Mathlib 4.34.1. ComplexityLib is pinned to the public
 fork `elazarg/complexitylib@c5f2acf1a35d5b00db04cd1bd337a8ce57d66a40`, and CSLib to
 `94ea80f41a5678fce997a004f0d8d12dbe47cc4b`. Their declared upstream toolchains are
@@ -195,10 +195,13 @@ family and output precision, rather than arbitrary continuous-map encodings,
 distance to an exact fixed point or FIXP.
 
 Import `GameTheoryComplexity.BimatrixNash` for exact signed rectangular Nash
-search in PPAD (`bimatrixNashRelation_mem_PPAD`). The existing binary relation
+search PPAD-completeness (`bimatrixNashRelation_PPADComplete`). The existing binary relation
 has an actual FP instance map to End-of-Line and an FPn decoder preserving
 every target answer. Full lexicographic perturbations handle degenerate games;
 malformed inputs retain the empty answer. The decoder computes the supplied
-endpoint's certificate and undoes payoff shifts. This is membership, without
-a polynomial-time equilibrium solver or a hardness claim. Ordinary base
-clients continue to require no ComplexityLib.
+endpoint's certificate and undoes payoff shifts. Hardness uses an actual FP
+Brouwer-to-game instance map and FPn decoder. The canonical sampled program's
+coefficient/kind machines agree at every output, and its emitted reward proves
+that every accepted Nash certificate yields an accepted Brouwer answer.
+`bimatrixNashRelation_PPADHard` and the existing membership theorem classify the
+same binary relation. Ordinary base clients continue to require no ComplexityLib.

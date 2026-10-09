@@ -1,3 +1,15 @@
+import GameTheory.Finite.BimatrixFeedbackGate
+import GameTheory.Finite.BimatrixGateProgramBounds
+import GameTheory.Finite.BimatrixInterpolationGate
+import GameTheory.Finite.BimatrixDyadicGate
+import GameTheory.Finite.BimatrixBinaryExtraction
+import GameTheory.Finite.BimatrixBrouwerGateBounds
+import GameTheory.Math.GridBrouwerBinaryCell
+import GameTheory.Math.GridBrouwerJitter
+import GameTheory.Math.ClippedFeedbackComposition
+import GameTheory.Finite.BimatrixMinGate
+import GameTheory.Math.GridJitterPair
+import GameTheory.Math.ClippedArithmetic
 /-
 Lint scope for the public library.
 
@@ -479,3 +491,24 @@ import GameTheory.Finite.BimatrixPathBinaryCodec
 import GameTheory.Finite.BimatrixComputedOrientation
 import GameTheory.Math.OrientedInvolutionPathWitness
 import GameTheory.Finite.BimatrixPathWitness
+import GameTheory.Math.MatchingMass
+import GameTheory.Math.PairSupportGate
+import GameTheory.Math.ClampedFeedback
+import GameTheory.Math.GridBrouwerLipschitz
+import GameTheory.Math.GridBrouwerFourCorners
+import GameTheory.Math.BinaryExtraction
+import GameTheory.Finite.BimatrixBlockGame
+import GameTheory.Finite.BimatrixAffineGate
+import GameTheory.Finite.BimatrixComparatorGate
+import GameTheory.Math.RobustAverage
+import GameTheory.Math.BooleanThreshold
+import GameTheory.Math.GridJitter
+import GameTheory.Finite.BimatrixGateProgram
+import GameTheory.Math.RobustFeedback
+import GameTheory.Finite.BimatrixBooleanGate
+import GameTheory.Finite.BimatrixArithmeticGate
+import GameTheory.Math.GridBrouwerColorSignal
+import GameTheory.Math.GridBrouwerColorSample
+import GameTheory.Math.BinaryGridClearance
+import GameTheory.Finite.BimatrixColorMeanGate
+import GameTheory.Math.GridBrouwerErrorBudget
