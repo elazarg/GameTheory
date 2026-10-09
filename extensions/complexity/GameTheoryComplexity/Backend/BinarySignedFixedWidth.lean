@@ -10,14 +10,6 @@ preserved; larger magnitudes are truncated explicitly.
 namespace GameTheory.Complexity.Backend
 open _root_.Complexity _root_.Complexity.Cobham
 
-private theorem fromBitsLE_append (x y : List Bool) :
-    Nat.fromBitsLE (x ++ y) = Nat.fromBitsLE x + 2 ^ x.length * Nat.fromBitsLE y := by
-  induction x with
-  | nil => simp [Nat.fromBitsLE, Nat.fromBits]
-  | cons b x ih =>
-    simp only [List.cons_append, Nat.fromBitsLE_cons, List.length_cons, pow_succ, ih]
-    ring
-
 private theorem fromBitsLE_take (w : ℕ) (x : List Bool) :
     Nat.fromBitsLE (x.take w) = Nat.fromBitsLE x % 2 ^ w := by
   by_cases hw : w ≤ x.length

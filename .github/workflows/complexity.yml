@@ -107,6 +107,8 @@ jobs:
           GameTheoryComplexity.Tests.SpernerGridWords
           GameTheoryComplexity.Tests.SpernerPointerMachine
           GameTheoryComplexity.Tests.Sperner
+          GameTheoryComplexity.Tests.Brouwer
+          GameTheoryComplexity.SimplicialBrouwer
           GameTheoryComplexity.Tests.GeneralBimatrixTotality
           GameTheoryComplexity.Tests.GeneralBimatrixEndpoint
           GameTheoryComplexity.Tests.BinarySignedArithmetic

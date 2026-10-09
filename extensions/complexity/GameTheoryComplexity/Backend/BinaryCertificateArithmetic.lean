@@ -107,7 +107,8 @@ private theorem bitAt_eq (r x : List Bool) :
     | cons c x => simpa only [List.length_cons, List.drop_succ_cons,
         List.getElem?_cons_succ] using ih x
 
-private theorem fromBitsLE_append (x y : List Bool) :
+/-- Appending little-endian fields shifts the second field by the first field's width. -/
+theorem fromBitsLE_append (x y : List Bool) :
     Nat.fromBitsLE (x ++ y) = Nat.fromBitsLE x + 2 ^ x.length * Nat.fromBitsLE y := by
   induction x with
   | nil => simp [Nat.fromBitsLE, Nat.fromBits]

@@ -29,7 +29,8 @@ Membership uses bounded rational witnesses and a polynomial-time binary verifier
 for the same total decoder and canonical Nash predicate. Import
 `GameTheoryComplexity.Backend.NashNPComplete` for the headline theorem,
 `Backend.NashNP` for membership alone, or `Backend.SATReduction` for hardness
-alone. PPAD/FIXP search results remain separate work.
+alone. General Nash search and fixed-point results use separate relations and
+imports described below; FIXP results remain separate work.
 
 Import `GameTheoryComplexity.BimatrixNash` for general rectangular games with
 two independently signed integer payoff matrices. The binary certificate
@@ -40,8 +41,9 @@ mixed Nash equilibria, and every supplied equilibrium admits an exactly
 serialized bounded certificate. Malformed instances accept only the empty
 answer, and malformed outer pairs are rejected. Bit-recursive multiplication
 and canonical paired-verifier composition are separate game-free modules.
-Serialized totality, TFNP and general Nash PPAD membership remain the next
-reduction project; analytic existence is confined to the base `Analysis` root.
+Serialized totality, TFNP and general Nash PPAD membership are proved through
+finite complementary paths and actual polynomial-time pointer and answer
+machines. Analytic existence remains confined to the base `Analysis` root.
 
 Import `GameTheoryComplexity.Backend.EndOfLineVerifier` for a total circuit-encoded
 End-of-Line
@@ -92,8 +94,8 @@ coloring machine and circuit instance generator; its FPn decoder divides the
 triangle row by 36 and recovers every non-source original endpoint, including
 endpoints on disconnected components. Source entrance tiles and inactive
 two-color padding exclude the known source and spurious outer-boundary answers.
-Invalid source promises decode to the required empty witness. Brouwer and Nash
-search completeness remain separate results.
+Invalid source promises decode to the required empty witness. Continuous Brouwer
+search completeness is described below; Nash search hardness remains separate work.
 
 ## Use as a dependency
 
@@ -115,7 +117,7 @@ import GameTheoryComplexity.Backend.NashNPComplete
 ```
 
 The default dependency configuration fetches the base GameTheory commit
-`a58d028f7fe4161782169c7f8c32dd793426b29c`; it does not assume a sibling checkout.
+`83c8e503cd304db7c02ba5a2537dc0faf52e1794`; it does not assume a sibling checkout.
 All packages must share Lean/Mathlib 4.34.1. ComplexityLib is pinned to the public
 fork `elazarg/complexitylib@c5f2acf1a35d5b00db04cd1bd337a8ce57d66a40`, and CSLib to
 `94ea80f41a5678fce997a004f0d8d12dbe47cc4b`. Their declared upstream toolchains are

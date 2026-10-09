@@ -107,14 +107,6 @@ private theorem bitAt_eq (r x : List Bool) :
     | cons c x => simpa only [List.length_cons, List.drop_succ_cons,
         List.getElem?_cons_succ] using ih x
 
-private theorem fromBitsLE_append (x y : List Bool) :
-    Nat.fromBitsLE (x ++ y) = Nat.fromBitsLE x + 2 ^ x.length * Nat.fromBitsLE y := by
-  induction x with
-  | nil => simp [Nat.fromBitsLE, Nat.fromBits]
-  | cons b x ih =>
-    simp only [List.cons_append, Nat.fromBitsLE_cons, List.length_cons, ih, pow_succ]
-    ring
-
 private theorem prefix_succ (k : ℕ) (x : List Bool) :
     Nat.fromBitsLE (x.take (k + 1)) = Nat.fromBitsLE (x.take k) +
       2 ^ k * (if (x[k]?).getD false then 1 else 0) := by

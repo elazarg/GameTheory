@@ -89,13 +89,13 @@ theorem select_none (M : Matrix (Fin n) (Fin n) ℤ) (q c : Fin n → ℤ)
 /-- The stored symbolic numerator fields have the canonical determinant width. -/
 theorem coefficients_bound (M : Matrix (Fin n) (Fin n) ℤ) (q : Fin n → ℤ) (h : ℕ)
     (hM : ∀ i j, (M i j).natAbs ≤ 2 ^ h) (hq : ∀ i, (q i).natAbs ≤ 2 ^ h)
-    (hdet : M.det ≠ 0) (i : Fin n) (k : Fin (n + 1)) :
+    (i : Fin n) (k : Fin (n + 1)) :
     (coefficients M q i k).natAbs < 2 ^ IntegerBasisBounds.width n h := by
   rw [coefficients_eq]
   refine Fin.cases ?_ (fun j => ?_) k
-  · exact IntegerCramerComputation.signedNumerator_bound M q h hM hq hdet i
+  · exact IntegerCramerComputation.signedNumerator_bound M q h hM hq i
   · simp only [Fin.cons_succ]
-    apply IntegerCramerComputation.signedNumerator_bound M (Pi.single j 1) h hM _ hdet i
+    apply IntegerCramerComputation.signedNumerator_bound M (Pi.single j 1) h hM _ i
     intro a
     simp only [Pi.single_apply]
     split
@@ -104,20 +104,20 @@ theorem coefficients_bound (M : Matrix (Fin n) (Fin n) ℤ) (q : Fin n → ℤ) 
 
 theorem direction_bound (M : Matrix (Fin n) (Fin n) ℤ) (c : Fin n → ℤ) (h : ℕ)
     (hM : ∀ i j, (M i j).natAbs ≤ 2 ^ h) (hc : ∀ i, (c i).natAbs ≤ 2 ^ h)
-    (hdet : M.det ≠ 0) (i : Fin n) :
+    (i : Fin n) :
     (direction M c i).natAbs < 2 ^ IntegerBasisBounds.width n h := by
   rw [direction_eq]
-  exact IntegerCramerComputation.signedNumerator_bound M c h hM hc hdet i
+  exact IntegerCramerComputation.signedNumerator_bound M c h hM hc i
 
 /-- Cross-products used by the comparison retain polynomial binary width. -/
 theorem crossProduct_bound (M : Matrix (Fin n) (Fin n) ℤ) (q c : Fin n → ℤ) (h : ℕ)
     (hM : ∀ i j, (M i j).natAbs ≤ 2 ^ h) (hq : ∀ i, (q i).natAbs ≤ 2 ^ h)
-    (hc : ∀ i, (c i).natAbs ≤ 2 ^ h) (hdet : M.det ≠ 0)
+    (hc : ∀ i, (c i).natAbs ≤ 2 ^ h)
     (i j : Fin n) (k : Fin (n + 1)) :
     (coefficients M q i k * direction M c j).natAbs <
       2 ^ (2 * IntegerBasisBounds.width n h) := by
-  have ha := coefficients_bound M q h hM hq hdet i k
-  have hb := direction_bound M c h hM hc hdet j
+  have ha := coefficients_bound M q h hM hq i k
+  have hb := direction_bound M c h hM hc j
   rw [Int.natAbs_mul]
   calc
     _ ≤ 2 ^ IntegerBasisBounds.width n h * (direction M c j).natAbs :=
@@ -136,20 +136,17 @@ theorem select_some_spec (M : Matrix (Fin n) (Fin n) ℤ) (q c : Fin n → ℤ)
     rw [IntegerCramerComputation.denominator_eq]
     exact_mod_cast IntegerCramerEncoding.denominator_pos M hdet
   have hh := IntegerRatioSelection.select_some_spec (coefficients M q) (direction M c) l hsel
-  refine ⟨?_, ?_⟩
-  · rw [← direction_decode M c hdet l]
-    exact div_pos hh.1 hd
-  · intro i hi
-    rw [← direction_decode M c hdet i] at hi
-    have hp : (0 : ℚ) < (direction M c i : ℚ) := (div_pos_iff_of_pos_right hd).mp hi
-    have he := hh.2 i hp
-    have hc (j : Fin n) (k : Fin (n + 1)) :
-        PerturbedDictionary.dictionaryCoefficients (M.map (fun z : ℤ => (z : ℚ)))
-          (fun j => (q j : ℚ)) j k /
-          (M.map (fun z : ℤ => (z : ℚ)))⁻¹.mulVec (fun j => (c j : ℚ)) j =
-        (coefficients M q j k : ℚ) / (direction M c j : ℚ) := by
-      rw [← coefficients_decode M q hdet j k, ← direction_decode M c hdet j]
-      exact div_div_div_cancel_right₀ hd.ne' _ _
-    simpa only [hc] using he
+  have hcoeff : PerturbedDictionary.dictionaryCoefficients
+      (M.map (fun z : ℤ => (z : ℚ))) (fun j => (q j : ℚ)) =
+      fun i k => (coefficients M q i k : ℚ) /
+        (IntegerCramerComputation.denominator M : ℚ) := by
+    funext i k
+    exact (coefficients_decode M q hdet i k).symm
+  have hdir : (M.map (fun z : ℤ => (z : ℚ)))⁻¹.mulVec (fun j => (c j : ℚ)) =
+      fun i => (direction M c i : ℚ) / (IntegerCramerComputation.denominator M : ℚ) := by
+    funext i
+    exact (direction_decode M c hdet i).symm
+  rw [hcoeff, hdir]
+  exact (isLeavingRow_div_iff _ _ _ hd l).mpr hh
 
 end GameTheory.Math.IntegerDictionaryComputation

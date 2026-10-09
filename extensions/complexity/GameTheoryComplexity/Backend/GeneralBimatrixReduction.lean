@@ -99,11 +99,6 @@ def generalBimatrixToEndOfLineReductionOfCircuitInstance
       have hsource := compiledBimatrix_source f input hi hwidth hptr
       rcases hw with ⟨_, hlen, hw⟩ | ⟨hbad, _⟩
       · have hlen' := hlen.trans hwidth
-        have hv := hptr witness hlen'
-        have hp := hptr (generalBimatrixPredecessorWord ![input, witness])
-          ((generalBimatrixPredecessorWord_length _).trans hlen')
-        have hs := hptr (generalBimatrixSuccessorWord ![input, witness])
-          ((generalBimatrixSuccessorWord_length _).trans hlen')
         let d := generalBimatrixDistinguishedLabel input hi
         let origin : GeneralBimatrixShiftedPort input d := bimatrixSourcePort _ _ d
         have ho : endOfLineOrigin (f input) = encode origin := by
@@ -112,7 +107,13 @@ def generalBimatrixToEndOfLineReductionOfCircuitInstance
         have hword : GameTheory.Math.EndOfLine.RawWitness
             (fun node => generalBimatrixPredecessorWord ![input, node])
             (fun node => generalBimatrixSuccessorWord ![input, node]) (encode origin) witness := by
-          simpa only [GameTheory.Math.EndOfLine.RawWitness, hv.1, hv.2, hp.2, hs.1, ho] using hw
+          rw [ho] at hw
+          exact (GameTheory.Math.EndOfLine.rawWitness_congrOn _ _ _ _
+            (fun node => node.length = (generalBimatrixNodeRuler input).length)
+            (fun node hn => (hptr node hn).1) (fun node hn => (hptr node hn).2)
+            (fun node hn => (generalBimatrixPredecessorWord_length _).trans hn)
+            (fun node hn => (generalBimatrixSuccessorWord_length _).trans hn)
+            _ witness hlen').mp hw
         have hP : (fun node => generalBimatrixPredecessorWord ![input, node]) =
             transport (generalBimatrixPathPredecessor input hi d) :=
           funext fun node => generalBimatrixPredecessorWord_eq_transport input node hi d rfl

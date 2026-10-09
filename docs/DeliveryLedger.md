@@ -3,6 +3,13 @@
 This is the mutable successor-native delivery index. Status is determined by
 compiled public evidence and named remainders, never by module count.
 
+The complexity families received a proof-mining, software-engineering and
+proof-simplification review after Nash PPAD membership was merged. See
+[`ComplexityReview.md`](ComplexityReview.md) for the implemented storage-bound
+strengthening, shared pivot/path lemmas, validation and remaining extraction
+opportunities. These changes strengthen the compact Cramer and dictionary
+rows without changing the scope of the Nash membership claim.
+
 Status labels:
 
 - **complete**: the intended theorem family has no current remainder;

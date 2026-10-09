@@ -18,6 +18,15 @@ def IsLeavingRow (C : Fin n → Fin k → K) (d : Fin n → K) (l : Fin n) : Pro
   0 < d l ∧ ∀ i, 0 < d i →
     toLex (fun j => C l j / d l) ≤ toLex (fun j => C i j / d i)
 
+/-- A positive common denominator preserves eligible rows and their symbolic ratios. -/
+theorem isLeavingRow_div_iff (C : Fin n → Fin k → K) (d : Fin n → K)
+    (a : K) (ha : 0 < a) (l : Fin n) :
+    IsLeavingRow (fun i j => C i j / a) (fun i => d i / a) l ↔ IsLeavingRow C d l := by
+  have hpos (i : Fin n) : 0 < d i / a ↔ 0 < d i := div_pos_iff_of_pos_right ha
+  have hratio (i : Fin n) (j : Fin k) : (C i j / a) / (d i / a) = C i j / d i :=
+    div_div_div_cancel_right₀ ha.ne' _ _
+  simp only [IsLeavingRow, hpos, hratio]
+
 omit [IsStrictOrderedRing K] in
 /-- Distinct eligible ratios make the finite minimum unique. -/
 theorem exists_unique_leavingRow (C : Fin n → Fin k → K) (d : Fin n → K)

@@ -49,7 +49,7 @@ theorem cramerWeight_lt (basis : BimatrixBasis A B) (h : ℕ)
   · rw [IntegerCramerComputation.numerator_eq]
     exact IntegerCramerEncoding.numerator_lt basis.integerMatrix (fun _ => 1) h
       (basis.integerMatrix_bound h hA hB) (fun _ => Nat.one_le_pow h 2 (by decide))
-      basis.integerMatrix_det_ne_zero _
+      _
   · positivity
 
 /-- Normalize Cramer payoff weights and undo independent payoff shifts. -/

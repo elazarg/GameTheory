@@ -484,7 +484,6 @@ open _root_.Complexity _root_.Complexity.Cobham
 open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
 open GameTheory.Math
 
-set_option backward.isDefEq.respectTransparency false in
 theorem generalBimatrixDictionarySelectedRow_spec (input : List Bool)
     (basis : GeneralBimatrixShiftedBasis input) (entering : List Bool)
     (v : BimatrixVariable (generalRowCount input) (generalColCount input))
@@ -508,22 +507,19 @@ theorem generalBimatrixDictionarySelectedRow_spec (input : List Bool)
   have hd : (0 : ℚ) < (IntegerCramerComputation.denominator M : ℚ) := by
     rw [IntegerCramerComputation.denominator_eq]
     exact_mod_cast IntegerCramerEncoding.denominator_pos M hdet
-  refine ⟨?_, ?_⟩
-  · rw [← IntegerDictionaryComputation.direction_decode M c hdet l]
-    exact div_pos hh.1 hd
-  · intro i hi
-    rw [← IntegerDictionaryComputation.direction_decode M c hdet i] at hi
-    have hp : (0 : ℚ) < (IntegerDictionaryComputation.direction M c i : ℚ) := (div_pos_iff_of_pos_right hd).mp hi
-    have hratio := hh.2 i hp
-    have hc (j : Fin (generalRowCount input + generalColCount input)) (k : Fin (generalRowCount input + generalColCount input + 1)) :
-        PerturbedDictionary.dictionaryCoefficients (M.map (fun z : ℤ => (z : ℚ))) (fun _ => 1) j k /
-          (M.map (fun z : ℤ => (z : ℚ)))⁻¹.mulVec (fun a => (c a : ℚ)) j =
-        (IntegerDictionaryComputation.coefficients M (fun _ => 1) j k : ℚ) /
-          (IntegerDictionaryComputation.direction M c j : ℚ) := by
-      have hcoeff := IntegerDictionaryComputation.coefficients_decode M (fun _ => 1) hdet j k
-      simp only [Int.cast_one] at hcoeff
-      rw [← hcoeff, ← IntegerDictionaryComputation.direction_decode M c hdet j]
-      exact div_div_div_cancel_right₀ hd.ne' _ _
-    change (toLex fun k => PerturbedDictionary.dictionaryCoefficients (M.map (fun z : ℤ => (z : ℚ))) (fun _ => 1) l k / (M.map (fun z : ℤ => (z : ℚ)))⁻¹.mulVec (fun a => (c a : ℚ)) l) ≤ (toLex fun k => PerturbedDictionary.dictionaryCoefficients (M.map (fun z : ℤ => (z : ℚ))) (fun _ => 1) i k / (M.map (fun z : ℤ => (z : ℚ)))⁻¹.mulVec (fun a => (c a : ℚ)) i)
-    simpa only [hc] using hratio
+  have hcoeff : PerturbedDictionary.dictionaryCoefficients
+      (M.map (fun z : ℤ => (z : ℚ))) (fun _ => 1) =
+      fun i k => (IntegerDictionaryComputation.coefficients M (fun _ => 1) i k : ℚ) /
+        (IntegerCramerComputation.denominator M : ℚ) := by
+    funext i k
+    have h := IntegerDictionaryComputation.coefficients_decode M (fun _ => 1) hdet i k
+    simp only [Int.cast_one] at h
+    exact h.symm
+  have hdir : (M.map (fun z : ℤ => (z : ℚ)))⁻¹.mulVec (fun j => (c j : ℚ)) =
+      fun i => (IntegerDictionaryComputation.direction M c i : ℚ) /
+        (IntegerCramerComputation.denominator M : ℚ) := by
+    funext i
+    exact (IntegerDictionaryComputation.direction_decode M c hdet i).symm
+  rw [hcoeff, hdir]
+  exact (isLeavingRow_div_iff _ _ _ hd l).mpr hh
 end GameTheory.Complexity.Backend
