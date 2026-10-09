@@ -17,7 +17,8 @@ and centralizes constrained-Nash widths with executable ruler agreement.
 The full base/lint build passes 4,519 jobs, and companion/lint/axiom integration
 passes 4,336 jobs. Both linters, regular architecture/isolation checks and all
 19 optional-boundary regressions pass; transitive standard-axiom audits cover
-164 base and 3,769 companion declarations. Nash search hardness remains unsupported until its actual
+164 base and 3,769 companion declarations. The full released-git consumer build
+and lint also pass at pin `2c8e70eb`. Nash search hardness remains unsupported until its actual
 every-answer reduction is proved.
 
 Status labels:

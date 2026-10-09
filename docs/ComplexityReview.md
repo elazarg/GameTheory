@@ -49,6 +49,8 @@ declarations and all 3,769 owned companion declarations using only the three
 standard Lean axioms. Regular architecture and optional-boundary audits pass,
 as do all 19 optional-boundary regression tests. The namespace move is checked
 against both the base codec and the concrete node-validation machine proofs.
+The full companion/lint/axiom build and lint also pass without a local override
+against published base pin `2c8e70ebae382a0db21f2441ebff28c7b1e41689`.
 
 ## Reviewed opportunities
 
@@ -93,7 +95,10 @@ review, not a check implemented by that dependency script.
   and `scripts/complexity-audit.ps1`: passed. All 19 complexity boundary
   regression tests and the architecture mutation regression passed.
 - Lean version check: 4.34.1; targeted Mathlib cache check: no missing files.
-- The default base pin is `572e3b675ade7364d1cc86cb79e9c801eb47d47f`, the
+- The initial review base pin was `572e3b675ade7364d1cc86cb79e9c801eb47d47f`, the
   published review implementation. Lake resolved that git revision and the
   toolchain/cache checks passed. The released-pin build was stopped at the
   user's request to finish statically; it is not claimed as completed.
+  The subsequent implementation request advances the default pin to
+  `2c8e70ebae382a0db21f2441ebff28c7b1e41689`; its complete 4,336-job
+  companion/lint/axiom build and lint pass in released git mode.
