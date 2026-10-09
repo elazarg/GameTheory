@@ -387,11 +387,12 @@ verification, PPAD membership, then hardness. Independent positive algorithms
 follow their established semantic prerequisites.
 
 The general rectangular Nash slice now includes exact binary serialization,
-an actual polynomial-time paired verifier and FNP membership. It preserves
+an actual polynomial-time paired verifier and FNP and TFNP membership. It preserves
 independent signed payoff matrices and connects the accepted certificates to
-canonical mixed Nash. The next gate is a complementary-pivot reduction proving
-PPAD membership and serialized totality on the same relation, including
-degenerate games; analytic existence remains confined to Analysis.
+canonical mixed Nash. Finite complementary paths supply serialized totality,
+including degenerate games, without importing analytic existence. The next gate
+is a complementary-pivot reduction proving PPAD membership on the same relation;
+analytic existence remains confined to Analysis.
 
 The mathematical decoding step of that gate is now established: nonzero
 complementary points normalize to the canonical Nash certificate, and positive
@@ -409,9 +410,28 @@ Determinant-colored path ports now give actual oriented predecessor/successor
 pointers and their internal inverse laws. Endpoints are exactly complementary
 bases; the source is a unique port with no incoming edge and every other endpoint
 supplies a nonzero rational solution. Finiteness yields mathematical rational
-solution existence without Analysis. Natural numerator/common-denominator
-encoding, polynomial bit bounds and machine-certified pointer/instance/answer
-maps remain before serialized PPAD membership or TFNP can be claimed.
+solution existence without Analysis. Exact natural numerator/common-denominator
+encoding and payoff unshifting now give signed-game Nash certificates. Bounded
+support-system witnesses and the existing verifier prove serialized TFNP.
+Reduced rational fields of every certified basis, symbolic coefficient and
+entering direction now have width `d*(d+h)+1`; directly decoded endpoint
+certificates also have a polynomial bound. Shared Cramer denominators now
+preserve each endpoint and fit the existing serialized field width after payoff
+unshifting. The optional endpoint word map now proves exact acceptance through
+the unchanged Nash codec and relation for each supplied complementary non-source
+basis. Materialized division-free determinant stages now compute the existing
+Cramer fields exactly, with polynomial bounds on every stored integer entry.
+Signed dictionary fields and integer cross-product scans now compute leaving
+rows and actual basis exchange, agreeing with the canonical symbolic pivot even
+when ordinary ratios tie. The optional generic arithmetic now has actual Cobham
+and FPn certificates for unsigned borrow subtraction, signed addition,
+subtraction, multiplication, negation, strict order and scalar cross-products.
+Exact decoding includes padding and negative zero; positive denominators give
+rational ratio order. A uniform two-bit scan and packed signed-row machine now
+have actual Cobham/FPn certificates and exact agreement with the existing
+integer lexicographic ratio comparator, including late perturbations and ties.
+Binary-machine certificates for matrix loops and positive-direction minimum-row selection,
+binary graph codecs and machine-certified maps remain before PPAD membership.
 
 The companion package under `extensions/complexity` owns
 `GameTheoryComplexity` import modules, with declarations under

@@ -66,7 +66,8 @@ theorem exchange_reverse (port : BimatrixPivotPort A B) (l : Fin (m + n))
   apply ext
   · apply BimatrixBasis.ext
     exact exchange_reverse_set port.basis.basic port.basis.cardinality l port.entering port.nonbasic
-  · exact exchanged_reverse_row port.basis.basic port.basis.cardinality l port.entering port.nonbasic
+  · exact exchanged_reverse_row port.basis.basic port.basis.cardinality l port.entering
+      port.nonbasic
 
 /-- Equality of leaving rows identifies their exchanged ports independently of certificates. -/
 theorem exchange_congr (port : BimatrixPivotPort A B) {l r : Fin (m + n)}

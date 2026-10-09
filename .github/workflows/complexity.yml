@@ -35,8 +35,9 @@ concurrency:
 jobs:
   verify:
     runs-on: windows-latest
-    # The uniform compiler adds a substantial serializer proof closure.
-    timeout-minutes: 90
+    # Cold Windows compilation now takes about 83 minutes; leave time for
+    # lint, axiom auditing and the second build against the published base pin.
+    timeout-minutes: 180
     defaults:
       run:
         shell: pwsh
@@ -106,5 +107,14 @@ jobs:
           GameTheoryComplexity.Tests.SpernerGridWords
           GameTheoryComplexity.Tests.SpernerPointerMachine
           GameTheoryComplexity.Tests.Sperner
+          GameTheoryComplexity.Tests.GeneralBimatrixTotality
+          GameTheoryComplexity.Tests.GeneralBimatrixEndpoint
+          GameTheoryComplexity.Tests.BinarySignedArithmetic
+          GameTheoryComplexity.Tests.BinarySignedRowComparison
+          GameTheoryComplexity.Tests.GeneralBimatrixReduction
+          GameTheoryComplexity.Tests.GeneralBimatrixCircuitMachine
+          GameTheoryComplexity.Tests.GeneralBimatrixNodeValidation
+          GameTheoryComplexity.Tests.GeneralBimatrixEndpointCapacity
+          GameTheory.Tests.BimatrixComputedPivot
       - name: Verify checks do not mutate tracked files
         run: git diff --exit-code

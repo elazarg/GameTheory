@@ -96,7 +96,8 @@ theorem bimatrixComplementarity_iff {m n : ℕ} (A B : Fin m → Fin n → ℤ)
     (∀ i, BimatrixCertificate.rowScore A (complementaryNashCertificate r s Dx Dy) i ≤ Dy ∧
       (0 < r i → BimatrixCertificate.rowScore A (complementaryNashCertificate r s Dx Dy) i = Dy)) ∧
     (∀ j, BimatrixCertificate.colScore B (complementaryNashCertificate r s Dx Dy) j ≤ Dx ∧
-      (0 < s j → BimatrixCertificate.colScore B (complementaryNashCertificate r s Dx Dy) j = Dx)) := by
+      (0 < s j → BimatrixCertificate.colScore B
+        (complementaryNashCertificate r s Dx Dy) j = Dx)) := by
   rw [isSolution_iff_pointwise, Sum.forall]
   simp only [bimatrixComplementarySlack_row, bimatrixComplementarySlack_col,
     bimatrixComplementaryPoint]
