@@ -1,7 +1,9 @@
+import GameTheory.Finite.BimatrixFeedbackGate
 import GameTheory.Finite.BimatrixGateProgramBounds
 import GameTheory.Finite.BimatrixInterpolationGate
 import GameTheory.Finite.BimatrixDyadicGate
 import GameTheory.Finite.BimatrixBinaryExtraction
+import GameTheory.Finite.BimatrixBrouwerGateBounds
 import GameTheory.Math.GridBrouwerBinaryCell
 import GameTheory.Math.GridBrouwerJitter
 import GameTheory.Math.ClippedFeedbackComposition
@@ -506,4 +508,7 @@ import GameTheory.Math.RobustFeedback
 import GameTheory.Finite.BimatrixBooleanGate
 import GameTheory.Finite.BimatrixArithmeticGate
 import GameTheory.Math.GridBrouwerColorSignal
+import GameTheory.Math.GridBrouwerColorSample
 import GameTheory.Math.BinaryGridClearance
+import GameTheory.Finite.BimatrixColorMeanGate
+import GameTheory.Math.GridBrouwerErrorBudget

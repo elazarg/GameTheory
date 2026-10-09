@@ -586,11 +586,22 @@ architecture/optional-boundary regressions pass. Standard-axiom audits cover
 478 selected base and 4,095 companion declarations. Kernel controls check actual
 emitted payoff decoding, aliases, truncation defaults and high boundary bits.
 
-**Remaining reduction obligations.** Allocate and emit the complete Brouwer
-program, prove its concrete precision and feedback budgets, and implement the
-polynomial binary answer decoder. The general game writer is complete; its
-concrete source-dependent program remains to be constructed. These components
-alone do not establish Nash hardness or PPAD completeness.
+**Concrete error propagation.** The base now proves constant, jitter, binary
+extraction, interpolation, weighted-color minimum, mean and cyclic-feedback
+bounds for actual accepted gate certificates. Independent weighted-minimum wire
+errors accumulate four times in the mean, giving the concrete bound `77δ` from
+`19δ` per minimum. An integer reward `(102k² + 1) 2^Q`, with
+`Q = 100(b + k + 10)`, proves the dyadic precision, clear-sample and feedback
+budgets. Canonical interpolation weights support rational and real scalars,
+with a rational-to-real cast lemma that fixes the scalar before casting.
+The full base/lint build passes 4,556 jobs; base lint and the architecture audit
+pass, and the selected standard-axiom audit covers 557 declarations.
+
+**Remaining reduction obligations.** Certify emission of the complete concrete
+source-dependent Brouwer program and assemble its every-answer residual bound.
+The complete source reduction must then instantiate the polynomial binary
+answer decoder. These components alone do not establish Nash hardness or PPAD
+completeness.
 
 Certify actual polynomial serialization, then prove every target Nash answer
 decodes to a source answer. Combine membership and hardness on the same relation.

@@ -438,9 +438,9 @@ actual raw-circuit evaluation at arbitrary offsets, dyadic extraction and
 minimum-gate errors, robust sampling and canonical residual-to-triangle
 selection. Direct coordinate-color circuits and the signed rectangular game
 writer have actual FP certificates. Every accepted emitted-game answer decodes
-to a valid canonical gate certificate. The remaining gate is the concrete
-Brouwer program allocation, its precision/feedback proof, and the polynomial
-answer decoder. The roadmap tracks these separately; the current implementation
+to a valid canonical gate certificate. Concrete actual-gate error propagation and the integer reward/precision budgets
+are proved in the base. The remaining gate is polynomial emission of the
+source-dependent Brouwer program and its complete every-answer residual proof. The roadmap tracks these separately; the current implementation
 does not classify Nash as PPAD-hard.
 
 The companion package under `extensions/complexity` owns
