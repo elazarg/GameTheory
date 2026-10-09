@@ -433,12 +433,15 @@ integer lexicographic ratio comparator, including late perturbations and ties.
 Binary-machine certificates for matrix loops and positive-direction minimum-row selection,
 binary graph codecs and machine-certified maps close PPAD membership. The active
 next gate is Nash PPAD hardness through an every-answer fixed-point reduction.
-The first hardness slice proves paired-action block support and exact affine
-and comparator equations for every accepted Nash certificate. Independent Math
-leaves supply interpolation, extraction and error estimates. The roadmap's
-hardness section tracks the remaining composition, robust sampling and actual
-polynomial serialization/decoding obligations; this slice does not classify Nash
-as PPAD-hard.
+The hardness implementation proves composed affine/comparator/Boolean gates,
+actual raw-circuit evaluation at arbitrary offsets, dyadic extraction and
+minimum-gate errors, robust sampling and canonical residual-to-triangle
+selection. Direct coordinate-color circuits and the signed rectangular game
+writer have actual FP certificates. Every accepted emitted-game answer decodes
+to a valid canonical gate certificate. The remaining gate is the concrete
+Brouwer program allocation, its precision/feedback proof, and the polynomial
+answer decoder. The roadmap tracks these separately; the current implementation
+does not classify Nash as PPAD-hard.
 
 The companion package under `extensions/complexity` owns
 `GameTheoryComplexity` import modules, with declarations under

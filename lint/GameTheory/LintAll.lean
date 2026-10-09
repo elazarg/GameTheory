@@ -1,3 +1,13 @@
+import GameTheory.Finite.BimatrixGateProgramBounds
+import GameTheory.Finite.BimatrixInterpolationGate
+import GameTheory.Finite.BimatrixDyadicGate
+import GameTheory.Finite.BimatrixBinaryExtraction
+import GameTheory.Math.GridBrouwerBinaryCell
+import GameTheory.Math.GridBrouwerJitter
+import GameTheory.Math.ClippedFeedbackComposition
+import GameTheory.Finite.BimatrixMinGate
+import GameTheory.Math.GridJitterPair
+import GameTheory.Math.ClippedArithmetic
 /-
 Lint scope for the public library.
 
@@ -494,3 +504,6 @@ import GameTheory.Math.GridJitter
 import GameTheory.Finite.BimatrixGateProgram
 import GameTheory.Math.RobustFeedback
 import GameTheory.Finite.BimatrixBooleanGate
+import GameTheory.Finite.BimatrixArithmeticGate
+import GameTheory.Math.GridBrouwerColorSignal
+import GameTheory.Math.BinaryGridClearance

@@ -553,10 +553,44 @@ projected-feedback errors. A kernel-accepted mixed-gate game has unequal row
 block masses and zero individual-action weights. Architecture/isolation audits
 and all 30 Python regressions pass.
 
-**Remaining reduction obligations.** Connect the actual circuit translation
-to robust jittered color evaluation and feedback soundness, then provide
-actual polynomial instance serialization and an every-answer binary decoder.
-These gates alone do not establish Nash hardness or PPAD completeness.
+**Executable gates and game emission.** The raw-circuit correctness proof now
+uses one induction for arbitrary wire offsets, with no Boolean assumptions on
+unused preceding wires. Direct coordinate queries reuse the canonical boundary
+coloring; two actual FP generators produce well-formed raw circuits for its
+color flags, preserving the extra coordinate bit at grid boundaries. The
+coordinate-color bridge connects these circuits to actual accepted game outputs.
+Serialized raw-gate coefficient queries preserve aliases and inline negations.
+
+`Backend.BimatrixProgramCodec` decodes directly to the existing gate program.
+`BimatrixProgramPayoffs` has actual FPn entry queries, and
+`BimatrixProgramMachine` materializes the signed rectangular game in FP. Its
+chosen width fits every entry without an overflow assumption, including on
+malformed program tapes. `BimatrixProgramCorrectness.accepted_valid` connects
+every accepted serialized answer to the same canonical gate certificate.
+
+**Quantitative correctness.** Arithmetic, minimum, binary-extraction and dyadic
+halving gates now have actual-certificate error bounds. Halving uses the
+unchanged scale `C = 2k`, so exponentially small constants need only polynomially
+many blocks. Generic clipping lemmas justify the weighted-color minimum and
+three-step signed feedback without premature saturation. Approximate weights
+and ambiguous nonexclusive color flags have explicit separate error budgets.
+Two-coordinate jitter has at most two bad indices. Forty-one samples tolerate
+exceptional errors of twenty-five eighths; inward and Lipschitz bounds yield
+coordinate residuals at most one sixth. Exact binary cell selection turns such
+residuals into a valid trichromatic triangle, including edges and the diagonal.
+
+Validation of the expanded slice: full base/lint scope passes 4,551 jobs;
+companion/lint/axiom scope passes 4,360 jobs in local and published-base modes
+at pin `686dd908`. Both linters, architecture/isolation checks and all twenty
+architecture/optional-boundary regressions pass. Standard-axiom audits cover
+478 selected base and 4,095 companion declarations. Kernel controls check actual
+emitted payoff decoding, aliases, truncation defaults and high boundary bits.
+
+**Remaining reduction obligations.** Allocate and emit the complete Brouwer
+program, prove its concrete precision and feedback budgets, and implement the
+polynomial binary answer decoder. The general game writer is complete; its
+concrete source-dependent program remains to be constructed. These components
+alone do not establish Nash hardness or PPAD completeness.
 
 Certify actual polynomial serialization, then prove every target Nash answer
 decodes to a source answer. Combine membership and hardness on the same relation.

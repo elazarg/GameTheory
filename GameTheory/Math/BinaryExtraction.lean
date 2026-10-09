@@ -4,6 +4,7 @@ import Mathlib.Tactic.NormNum
 import Mathlib.Tactic.SplitIfs
 import Mathlib.Tactic.Ring
 import Mathlib.Algebra.Order.Ring.Abs
+import Mathlib.Algebra.Order.Group.MinMax
 
 /-!
 # Binary threshold extraction on the closed unit interval
@@ -168,5 +169,73 @@ theorem binaryPrefix_eq_trajectory (x : ℚ) (d : ℕ → Bool) (n : ℕ)
     change 2 * (Nat.rec 0 (fun j p => 2 * p + if d j then 1 else 0) n) +
       (if d n then 1 else 0) = binaryPrefix (n + 1) x
     rw [ih (fun j hj => hdigit j (by omega)), binaryPrefix, hdigit n (by omega)]
+
+private theorem abs_unit_clamp_sub_le (u v : ℚ) :
+    |max 0 (min 1 u) - max 0 (min 1 v)| ≤ |u - v| := by
+  have hmax := abs_max_sub_max_le_max (0 : ℚ) (min 1 u) 0 (min 1 v)
+  have hmin := abs_min_sub_min_le_max (1 : ℚ) u 1 v
+  simp only [sub_self, abs_zero, max_eq_right (abs_nonneg (min 1 u - min 1 v))] at hmax
+  simp only [sub_self, abs_zero, max_eq_right (abs_nonneg (u - v))] at hmin
+  exact hmax.trans hmin
+
+/-- Clipping residual updates preserves the geometric error bound for matching digits. -/
+theorem binaryRemainder_clipped_trajectory_error (x : ℚ) (y : ℕ → ℚ) (d : ℕ → Bool)
+    (ε η : ℚ) (n : ℕ) (hx : 0 ≤ x) (hx1 : x ≤ 1) (hinit : |y 0 - x| ≤ ε)
+    (hstep : ∀ j < n,
+      |y (j + 1) - max 0 (min 1 (2 * y j - if d j then 1 else 0))| ≤ η)
+    (hdigit : ∀ j < n, d j = binaryThreshold (binaryRemainder j x)) :
+    ∀ j ≤ n, |y j - binaryRemainder j x| ≤
+      (2 : ℚ) ^ j * ε + ((2 : ℚ) ^ j - 1) * η := by
+  intro j hj
+  induction j with
+  | zero => simpa [binaryRemainder] using hinit
+  | succ j ih =>
+    have hjn : j < n := by omega
+    have hi := ih (by omega)
+    have hs := hstep j hjn
+    rw [hdigit j hjn] at hs
+    have hr := binaryRemainder_bounds hx hx1 (j + 1)
+    have hfix : max 0 (min 1 (binaryRemainder (j + 1) x)) =
+        binaryRemainder (j + 1) x := by
+      rw [min_eq_right hr.2, max_eq_right hr.1]
+    have hc := abs_unit_clamp_sub_le
+      (2 * y j - if binaryThreshold (binaryRemainder j x) then 1 else 0)
+      (2 * binaryRemainder j x - if binaryThreshold (binaryRemainder j x) then 1 else 0)
+    change |max 0 (min 1 (2 * y j - if binaryThreshold (binaryRemainder j x) then 1 else 0)) -
+      max 0 (min 1 (binaryRemainder (j + 1) x))| ≤ _ at hc
+    rw [hfix] at hc
+    have hd : (2 * y j - if binaryThreshold (binaryRemainder j x) then 1 else 0) -
+        (2 * binaryRemainder j x - if binaryThreshold (binaryRemainder j x) then 1 else 0) =
+        2 * (y j - binaryRemainder j x) := by ring
+    rw [hd, abs_mul] at hc
+    norm_num only [abs_of_pos (by norm_num : (0 : ℚ) < 2)] at hc
+    have ht := abs_sub_le (y (j + 1))
+      (max 0 (min 1 (2 * y j - if binaryThreshold (binaryRemainder j x) then 1 else 0)))
+      (binaryRemainder (j + 1) x)
+    rw [pow_succ]
+    nlinarith
+
+/-- Strict exact threshold margins preserve all digits along a clipped noisy trajectory. -/
+theorem binaryThreshold_clipped_trajectory_stable (x : ℚ) (y : ℕ → ℚ)
+    (ε η : ℚ) (n : ℕ) (hx : 0 ≤ x) (hx1 : x ≤ 1)
+    (hε : 0 ≤ ε) (hη : 0 ≤ η) (hinit : |y 0 - x| ≤ ε)
+    (hstep : ∀ j < n, |y (j + 1) -
+      max 0 (min 1 (2 * y j - if binaryThreshold (y j) then 1 else 0))| ≤ η)
+    (hmargin : ∀ j < n, (2 : ℚ) ^ j * ε + ((2 : ℚ) ^ j - 1) * η <
+      |binaryRemainder j x - 1 / 2|) :
+    ∀ j < n, binaryThreshold (y j) = binaryThreshold (binaryRemainder j x) := by
+  intro j hj
+  induction j using Nat.strong_induction_on with
+  | h j ih =>
+    have he := binaryRemainder_clipped_trajectory_error x y (fun k => binaryThreshold (y k))
+      ε η j hx hx1 hinit (fun k hk => hstep k (by omega))
+      (fun k hk => ih k hk (by omega)) j le_rfl
+    have hp : (1 : ℚ) ≤ 2 ^ j := one_le_pow₀ (by norm_num)
+    have he0 : 0 ≤ (2 : ℚ) ^ j * ε + ((2 : ℚ) ^ j - 1) * η :=
+      add_nonneg (mul_nonneg (pow_nonneg (by norm_num) j) hε)
+        (mul_nonneg (sub_nonneg.mpr hp) hη)
+    apply binaryThreshold_stable he0
+    · simpa only [abs_sub_comm] using he
+    · exact hmargin j hj
 
 end GameTheory.Math

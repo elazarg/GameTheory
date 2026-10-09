@@ -1,3 +1,9 @@
+import GameTheoryComplexity.Backend.BimatrixProgramCorrectness
+import GameTheoryComplexity.Backend.BimatrixCoordinateColor
+import GameTheoryComplexity.Backend.BimatrixRawGateMachine
+import GameTheoryComplexity.Backend.SpernerCoordinateColor
+import GameTheoryComplexity.Backend.BimatrixProgramMachine
+import GameTheoryComplexity.Backend.BimatrixProgramPayoffs
 import GameTheoryComplexity
 import GameTheoryComplexity.Backend.Negligible
 import GameTheoryComplexity.Backend.Complexitylib
@@ -150,3 +156,9 @@ import GameTheoryComplexity.Backend.GeneralBimatrixEndpoint
 import GameTheoryComplexity.Backend.GeneralBimatrixEndpointCapacity
 import GameTheoryComplexity.Backend.GeneralBimatrixPathEndpoint
 import GameTheoryComplexity.BimatrixNash
+import GameTheoryComplexity.Backend.BimatrixRawGate
+import GameTheoryComplexity.Backend.BimatrixRawCircuit
+import GameTheoryComplexity.Backend.CircuitGateLookup
+import GameTheoryComplexity.Backend.BimatrixProgramCodec
+import GameTheoryComplexity.Backend.GeneralBimatrixPayoffEmission
+import GameTheoryComplexity.Backend.BinaryUnaryEncoding

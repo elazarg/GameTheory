@@ -1,4 +1,5 @@
 import Mathlib.Algebra.Order.Field.Basic
+import Mathlib.Algebra.Order.Group.MinMax
 import Mathlib.Tactic.Linarith
 
 /-! Strict Boolean threshold signals tolerate small scalar representation errors.
@@ -56,5 +57,18 @@ theorem booleanThreshold_min_weight (bit : Bool) (w z ε : F)
       linarith
     · have hm := min_le_left w z
       linarith
+
+/-- An imperfect weight adds its own error to the Boolean minimum estimate. -/
+theorem booleanThreshold_min_weight_approx (bit : Bool) (w w' z ε η : F)
+    (hw0 : 0 ≤ w) (hw1 : w ≤ 1) (hw : |w' - w| ≤ η)
+    (hz : |z - (if bit then 1 else 0)| ≤ ε) :
+    |min w' z - (if bit then w else 0)| ≤ η + ε := by
+  have hm := abs_min_sub_min_le_max w' z w z
+  simp only [sub_self, abs_zero] at hm
+  rw [max_eq_left (abs_nonneg _)] at hm
+  calc
+    _ ≤ |min w' z - min w z| + |min w z - (if bit then w else 0)| :=
+      abs_sub_le _ _ _
+    _ ≤ η + ε := add_le_add (hm.trans hw) (booleanThreshold_min_weight bit w z ε hw0 hw1 hz)
 
 end GameTheory.Math

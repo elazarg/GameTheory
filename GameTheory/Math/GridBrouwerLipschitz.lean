@@ -12,6 +12,7 @@ any regularity of the vertex coloring.
 -/
 
 namespace GameTheory.Math.Brouwer
+open Sperner
 open scoped BigOperators
 
 theorem lipschitzWith_vertexHat (i j : ℕ) : LipschitzWith 2 (vertexHat i j) := by
@@ -99,5 +100,69 @@ theorem globalGridMap_scaled_snd_displacement_lipschitz
       (globalGridMap color n ((n : ℝ) * p.1, (n : ℝ) * p.2)).2 - (n : ℝ) * p.2) := by
   have h := (globalGridMap_snd_displacement_lipschitz color n).comp (lipschitzWith_grid_scale n)
   simpa only [Function.comp_def, mul_right_comm] using h
+
+/-- The horizontal scaled displacement has quantitative inward bounds on the unit square. -/
+theorem globalGridMap_scaled_fst_displacement_inward
+    {color : ℕ → ℕ → Fin 3} {n : ℕ} (hb : GridBoundary color n) (hn : 0 < n)
+    {p : ℝ × ℝ} (hp : InRealGridSquare 1 p) :
+    -(2 * (n : ℝ) * (n + 1) ^ 2) * p.1 ≤
+      (globalGridMap color n ((n : ℝ) * p.1, (n : ℝ) * p.2)).1 - (n : ℝ) * p.1 ∧
+    (globalGridMap color n ((n : ℝ) * p.1, (n : ℝ) * p.2)).1 - (n : ℝ) * p.1 ≤
+      (2 * (n : ℝ) * (n + 1) ^ 2) * (1 - p.1) := by
+  have hn0 : (0 : ℝ) ≤ n := Nat.cast_nonneg n
+  have hy : 0 ≤ (n : ℝ) * p.2 ∧ (n : ℝ) * p.2 ≤ n := by
+    constructor
+    · exact mul_nonneg hn0 hp.2.1
+    · simpa using mul_le_mul_of_nonneg_left hp.2.2 hn0
+  have hleft := globalGridMap_mem_square hb hn (p := (0, (n : ℝ) * p.2))
+    (show InRealGridSquare n (0, (n : ℝ) * p.2) from ⟨⟨le_rfl, hn0⟩, hy⟩)
+  have hright := globalGridMap_mem_square hb hn (p := (n, (n : ℝ) * p.2))
+    (show InRealGridSquare n (n, (n : ℝ) * p.2) from ⟨⟨hn0, le_rfl⟩, hy⟩)
+  have h0 := (globalGridMap_scaled_fst_displacement_lipschitz color n).dist_le_mul p (0, p.2)
+  have h1 := (globalGridMap_scaled_fst_displacement_lipschitz color n).dist_le_mul p (1, p.2)
+  simp only [Prod.dist_eq, Real.dist_eq, sub_self, abs_zero,
+    sub_zero, abs_of_nonneg hp.1.1, max_eq_left hp.1.1, mul_zero,
+    NNReal.coe_mul, NNReal.coe_ofNat, NNReal.coe_natCast, NNReal.coe_pow,
+    NNReal.coe_add, NNReal.coe_one] at h0
+  simp only [Prod.dist_eq, Real.dist_eq, sub_self, abs_zero,
+    max_eq_left (abs_nonneg (p.1 - 1)),
+    mul_one, NNReal.coe_mul, NNReal.coe_ofNat, NNReal.coe_natCast, NNReal.coe_pow,
+    NNReal.coe_add, NNReal.coe_one] at h1
+  have hx1 : p.1 ≤ (1 : ℝ) := by simpa only [Nat.cast_one] using hp.1.2
+  simp only [abs_of_nonpos (sub_nonpos.mpr hx1)] at h1
+  rw [abs_le] at h0 h1
+  constructor <;> linarith [h0.1, h0.2, h1.1, h1.2, hleft.1.1, hright.1.2]
+
+/-- The vertical scaled displacement has quantitative inward bounds on the unit square. -/
+theorem globalGridMap_scaled_snd_displacement_inward
+    {color : ℕ → ℕ → Fin 3} {n : ℕ} (hb : GridBoundary color n) (hn : 0 < n)
+    {p : ℝ × ℝ} (hp : InRealGridSquare 1 p) :
+    -(2 * (n : ℝ) * (n + 1) ^ 2) * p.2 ≤
+      (globalGridMap color n ((n : ℝ) * p.1, (n : ℝ) * p.2)).2 - (n : ℝ) * p.2 ∧
+    (globalGridMap color n ((n : ℝ) * p.1, (n : ℝ) * p.2)).2 - (n : ℝ) * p.2 ≤
+      (2 * (n : ℝ) * (n + 1) ^ 2) * (1 - p.2) := by
+  have hn0 : (0 : ℝ) ≤ n := Nat.cast_nonneg n
+  have hx : 0 ≤ (n : ℝ) * p.1 ∧ (n : ℝ) * p.1 ≤ n := by
+    constructor
+    · exact mul_nonneg hn0 hp.1.1
+    · simpa using mul_le_mul_of_nonneg_left hp.1.2 hn0
+  have hlower := globalGridMap_mem_square hb hn (p := ((n : ℝ) * p.1, 0))
+    (show InRealGridSquare n ((n : ℝ) * p.1, 0) from ⟨hx, ⟨le_rfl, hn0⟩⟩)
+  have hupper := globalGridMap_mem_square hb hn (p := ((n : ℝ) * p.1, n))
+    (show InRealGridSquare n ((n : ℝ) * p.1, n) from ⟨hx, ⟨hn0, le_rfl⟩⟩)
+  have h0 := (globalGridMap_scaled_snd_displacement_lipschitz color n).dist_le_mul p (p.1, 0)
+  have h1 := (globalGridMap_scaled_snd_displacement_lipschitz color n).dist_le_mul p (p.1, 1)
+  simp only [Prod.dist_eq, Real.dist_eq, sub_self, abs_zero,
+    sub_zero, abs_of_nonneg hp.2.1, max_eq_right hp.2.1, mul_zero,
+    NNReal.coe_mul, NNReal.coe_ofNat, NNReal.coe_natCast, NNReal.coe_pow,
+    NNReal.coe_add, NNReal.coe_one] at h0
+  simp only [Prod.dist_eq, Real.dist_eq, sub_self, abs_zero,
+    max_eq_right (abs_nonneg (p.2 - 1)),
+    mul_one, NNReal.coe_mul, NNReal.coe_ofNat, NNReal.coe_natCast, NNReal.coe_pow,
+    NNReal.coe_add, NNReal.coe_one] at h1
+  have hy1 : p.2 ≤ (1 : ℝ) := by simpa only [Nat.cast_one] using hp.2.2
+  simp only [abs_of_nonpos (sub_nonpos.mpr hy1)] at h1
+  rw [abs_le] at h0 h1
+  constructor <;> linarith [h0.1, h0.2, h1.1, h1.2, hlower.2.1, hupper.2.2]
 
 end GameTheory.Math.Brouwer
