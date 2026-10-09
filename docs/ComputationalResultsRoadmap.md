@@ -67,8 +67,7 @@ It combines the existing FNP verifier with an actual FP instance map to standard
 raw End-of-Line and an actual FPn answer map. There is no nondegeneracy premise,
 assumed polynomial-time pivot operation, or bound on path length in the theorem.
 Full library, lint, axiom and released-pin validation of this final integration
-remains the release gate; the proof and its dependency slices have passed
-warning-free narrow checks.
+has passed; the delivery ledger records the released consumer pin.
 
 The relation retains its exact existing certificate codec and malformed-input
 fallback. Ordinary game clients continue to import the base library without
@@ -521,6 +520,43 @@ consumer. Fix gate semantics, fan-out and precision before gadget recovery;
 verify every-answer soundness, accumulated error and ambiguous comparators.
 The current two-dimensional Brouwer family does not automatically classify
 another continuous-map language or generalized circuits.
+
+**Paired-action gate slice, delivered.** `Finite.BimatrixBlockGame` proves
+that matching payoffs with `H > kD` force every block into support and keep
+both players' block masses within `D/H` of `1/k`. Individual actions may have
+zero weight. `BimatrixAffineGate` implements exact saturated affine equations
+against the actual block capacity; rescaling to unit capacity costs at most
+`kD/H`. `BimatrixComparatorGate` selects the upper or lower endpoint for a
+strictly positive or negative signal. All statements apply to every accepted
+canonical certificate, without selecting an equilibrium or graph component.
+
+The supporting generic Math leaves prove support-to-clamp implications,
+matching-mass uniformity, clipped-feedback residual bounds, exact binary cell
+extraction with quantitative trajectory errors, four-corner interpolation and
+polynomially coarse displacement Lipschitz bounds. Binary extraction handles
+the right endpoint as the last cell with residual one. Four-corner formulas
+include cell edges and the diagonal and reuse the existing Brouwer map.
+
+Controls validate concrete negative, interior and saturated affine targets,
+both comparator signs, nonuniform block masses with zero action weights, and
+unsupported blocks when the matching-payoff hypothesis fails. Full base and
+lint-scope validation passes 4,538 jobs; lint passes and all 331 selected
+new/changed declarations depend only on standard axioms.
+
+**Composed gates and robust sampling.** `Finite.BimatrixGateProgram` now
+implements both gate types in one game, preserving repeated input coefficients
+and adding explicit output feedback for comparators. `BimatrixBooleanGate`
+implements AND, OR and NOT with integer coefficients and normalized error
+bounds. `Math.GridJitter` bounds near-boundary samples by one per coordinate,
+and `Math.RobustAverage`/`RobustFeedback` combine exceptional-sample counts with
+projected-feedback errors. A kernel-accepted mixed-gate game has unequal row
+block masses and zero individual-action weights. Architecture/isolation audits
+and all 30 Python regressions pass.
+
+**Remaining reduction obligations.** Connect the actual circuit translation
+to robust jittered color evaluation and feedback soundness, then provide
+actual polynomial instance serialization and an every-answer binary decoder.
+These gates alone do not establish Nash hardness or PPAD completeness.
 
 Certify actual polynomial serialization, then prove every target Nash answer
 decodes to a source answer. Combine membership and hardness on the same relation.
