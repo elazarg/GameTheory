@@ -6,7 +6,8 @@ A Lean 4 library for finite and discrete game theory, built on Mathlib. Static
 and sequential games share one semantic core: a single deviation API carries
 Nash, correlated, Bayesian, and refinement results; the language encodings
 compile into that core; and the executable algorithms are tied to their
-specifications by correctness theorems.
+specifications by correctness theorems. An optional complexity package proves
+NP- and PPAD-completeness results for explicit game and fixed-point encodings.
 
 ## Getting started
 
@@ -90,6 +91,43 @@ Good entry points:
 
 The [capability matrix](docs/CapabilityMatrix.md) indexes the public workflows
 with their exact imports and compiled consumers.
+
+## Computational complexity
+
+The separate [GameTheoryComplexity package](extensions/complexity/README.md)
+provides machine-checked complexity classifications:
+
+| Problem | Result | Import |
+|---|---|---|
+| Exact two-player mixed Nash search for rectangular integer payoff tables, with independently signed payoffs | PPAD-complete | `GameTheoryComplexity.BimatrixNash` |
+| Mixed Nash existence with both expected payoffs at least one, for symmetric two-player integer payoff tables | NP-complete | `GameTheoryComplexity.Backend.NashNPComplete` |
+| Succinct grid Sperner search | PPAD-complete | `GameTheoryComplexity.Sperner` |
+| Approximate fixed-point search for circuit-induced continuous piecewise affine self maps of the unit square | PPAD-complete | `GameTheoryComplexity.Brouwer` |
+
+These results include polynomial-time verifier and reduction machines. Search
+reductions decode every accepted target answer; exact rational Nash certificates
+are connected to the library's mixed-equilibrium semantics.
+
+Add the optional package to your `lakefile.lean`, pinning a commit containing it:
+
+```lean
+require GameTheoryComplexity from git
+  "https://github.com/elazarg/GameTheory" @ "<extension-commit>" / "extensions/complexity"
+```
+
+Then import the result you need:
+
+```lean
+import GameTheoryComplexity.BimatrixNash
+
+#check GameTheory.Complexity.bimatrixNashRelation_PPADComplete
+```
+
+ComplexityLib and CSLib dependencies belong to this optional package; base
+GameTheory clients do not fetch them. The [package README](extensions/complexity/README.md)
+documents the precise encodings, dependency pins, and further probability and
+machine-composition APIs. The [computational roadmap](docs/ComputationalResultsRoadmap.md)
+tracks remaining results.
 
 ## Organization
 
