@@ -8,8 +8,8 @@ need neither ComplexityLib nor CSLib.
 ## Starting point
 
 Delivered: NP-completeness of payoff-constrained symmetric mixed Nash existence;
-standard End-of-Line, succinct Sperner and continuous approximate Brouwer
-PPAD-completeness; actual FP/FPn reductions and independent polynomial verifiers.
+standard End-of-Line, succinct Sperner, continuous approximate Brouwer and exact
+signed rectangular bimatrix Nash PPAD-completeness; actual FP/FPn reductions and independent polynomial verifiers.
 The base has bimatrix support identities, potential-game termination,
 multiplicative-weights regret bounds, zero-sum regret-to-Nash transfer and
 Gale–Shapley stability.
@@ -72,8 +72,8 @@ has passed; the delivery ledger records the released consumer pin.
 The relation retains its exact existing certificate codec and malformed-input
 fallback. Ordinary game clients continue to import the base library without
 ComplexityLib or CSLib. Finite-path totality and TFNP remain independently proved
-without an Analysis import. Nash PPAD hardness and completeness are the next
-separate reduction in section 3.
+without an Analysis import. Nash PPAD hardness and completeness are delivered
+in section 3.
 
 The mathematical and executable prerequisites below explain the construction.
 Earlier validation records describe their individual delivery slices.
@@ -510,7 +510,7 @@ Both linters, isolation and boundary regressions pass; standard-axiom audits cov
 3,779 companion declarations and 209 base-slice declarations. The full companion/lint/axiom scope and lint also pass in published-base mode
 at pin `83c8e503`, with the same 3,779-declaration audit.
 Membership does not assert a polynomial bound on following the complementary
-path or a polynomial-time Nash solver. PPAD hardness remains separate.
+path or a polynomial-time Nash solver. PPAD hardness is delivered in section 3.
 
 ## 3. Bimatrix Nash PPAD hardness and completeness
 
@@ -628,15 +628,26 @@ The current full companion/lint/axiom build passes 4,406 jobs, companion lint
 and optional isolation pass, and all 5,301 owned declarations use only the
 standard axioms. The published base pin remains `8f6d5344`.
 
-**Remaining reduction obligations.** Finish the extraction, increment, color,
-interpolation and minimum coefficient queries, prove their gate-kind agreement,
-and combine the disjoint regions into the concrete selector. Instantiate the
-checked reduction with that selector and derive hardness and completeness for
-the existing signed rectangular relation. Until those premises are discharged,
-Nash hardness and PPAD completeness remain open.
+**Complete actual reduction.** Extraction, ripple increment, color-circuit,
+interpolation and minimum queries now have actual Cobham/FPn certificates and
+canonical coefficient equations. `BrouwerNashSelector` adds the six disjoint
+coefficient families with the shared fixed-list signed query sum. Its scalar
+correctness theorem covers every program output, including unused padding;
+`BrouwerNashSelectorKind` proves exact comparator-kind agreement everywhere.
+The concrete compiled color circuits discharge both selectors' premises.
 
-Certify actual polynomial serialization, then prove every target Nash answer
-decodes to a source answer. Combine membership and hardness on the same relation.
+`BrouwerNashHardness.exists_brouwerToBimatrixReduction` is an unconditional
+polynomial search reduction to the existing signed rectangular Nash relation.
+It preserves every accepted target answer through the actual emitted game,
+canonical program and binary source decoder. Public
+`bimatrixNashRelation_PPADHard` composes it with Brouwer hardness, and
+`bimatrixNashRelation_PPADComplete` combines this with the existing membership
+proof on the same relation. No caller-supplied machine or numerical certificate
+remains. Full companion/library/lint/axiom builds pass 4,416 jobs against both local
+and published base pin `8f6d5344`, auditing all 6,249 owned declarations using
+only standard axioms. Both companion linters, architecture/isolation audits
+and all 30 regression tests pass. Read-only semantic/proof review found no
+material blocker; the color query uses the shared fixed-list signed sum.
 Restricted-game corollaries (graphical, polymatrix, sparse or win/lose) follow
 only when their own reductions justify their scope.
 
@@ -727,9 +738,9 @@ From `extensions/complexity`, release validation uses:
     lake build GameTheoryComplexity GameTheoryComplexity.LintAll GameTheoryComplexity.AxiomAudit
     lake lint
 
-The local-checkout build selects `-KgameTheoryPath=../..`. The next active
-delivery is PPAD hardness for the same now-total relation, whose membership
-proof and machine-certified reduction are complete.
+The local-checkout build selects `-KgameTheoryPath=../..`. The signed rectangular Nash relation now has both PPAD membership and hardness
+through machine-certified every-answer reductions. Restricted representations
+and the independent positive algorithms above remain separate deliveries.
 
 ## Primary proof references
 

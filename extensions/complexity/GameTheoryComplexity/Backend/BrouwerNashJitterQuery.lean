@@ -211,4 +211,83 @@ theorem coefficientWord_value (out action source code₀ code₁ : List Bool)
     apply Finset.sum_congr rfl
     intro t _
     exact term_coefficients true out action source code₀ code₁ t r hr
+private theorem jitter_injective (b ell₀ ell₁ : ℕ) (t t' : Fin 41) (a a' : Fin 2)
+    (he : BrouwerNashLayout.sampleBase b ell₀ ell₁ t + a.val =
+      BrouwerNashLayout.sampleBase b ell₀ ell₁ t' + a'.val) : t = t' ∧ a = a' := by
+  let w := BrouwerNashLayout.sampleWidth b ell₀ ell₁
+  have hw : 2 ≤ w := by dsimp [w, BrouwerNashLayout.sampleWidth]; omega
+  have ha := a.isLt
+  have ha' := a'.isLt
+  have ht : t = t' := by
+    apply Fin.ext
+    dsimp only [BrouwerNashLayout.sampleBase] at he
+    change _ + t.val * w + _ = _ + t'.val * w + _ at he
+    by_contra hne
+    rcases lt_or_gt_of_ne hne with hlt | hgt
+    · have hm := Nat.mul_le_mul_right w (show t.val + 1 ≤ t'.val by omega)
+      rw [Nat.add_mul, one_mul] at hm
+      omega
+    · have hm := Nat.mul_le_mul_right w (show t'.val + 1 ≤ t.val by omega)
+      rw [Nat.add_mul, one_mul] at hm
+      omega
+  subst t'
+  exact ⟨rfl, Fin.ext (by omega)⟩
+
+/-- A jitter output receives precisely its signed affine coefficients. -/
+theorem coefficientWord_at (out action source code₀ code₁ : List Bool)
+    (t : Fin 41) (axis : Fin 2)
+    (r : Fin (BrouwerNashLayout.dimension (pairFst source).length
+      (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length * 2))
+    (hr : action.length = r.val)
+    (ho : out.length = BrouwerNashLayout.sampleBase (pairFst source).length
+      (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length t + axis.val) :
+    binarySignedValue (coefficientWord ![out, action, source, code₀, code₁]) =
+      (BrouwerNashProgram.affine₂
+        (BrouwerNashProgram.slot (pairFst source).length
+          (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length axis.val)
+        (BrouwerNashProgram.slot (pairFst source).length
+          (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length
+          (BrouwerNashLayout.alpha (BrouwerNashLayout.precision (pairFst source).length)))
+        (2 * (BrouwerNashLayout.dimension (pairFst source).length
+          (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length : ℤ))
+        (2 * (BrouwerNashLayout.dimension (pairFst source).length
+          (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length : ℤ) *
+          ((t.val : ℤ) - 20)) 0).coefficients r := by
+  rw [coefficientWord_value out action source code₀ code₁ r hr, Finset.sum_eq_single axis]
+  · rw [Finset.sum_eq_single t]
+    · exact ite_eq_left ho
+    · intro t' _ hne
+      apply ite_eq_right
+      intro he
+      exact hne (jitter_injective _ _ _ t t' axis axis (ho.symm.trans he)).1.symm
+    · simp
+  · intro a' _ hne
+    apply Finset.sum_eq_zero
+    intro t' _
+    apply ite_eq_right
+    intro he
+    exact hne (jitter_injective _ _ _ t t' axis a' (ho.symm.trans he)).2.symm
+  · simp
+
+/-- Jitter emits zero outside the first two slots of every sample. -/
+theorem coefficientWord_eq_zero_of_outside (out action source code₀ code₁ : List Bool)
+    (r : Fin (BrouwerNashLayout.dimension (pairFst source).length
+      (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length * 2))
+    (hr : action.length = r.val)
+    (hno : ∀ t : Fin 41,
+      ¬ (BrouwerNashLayout.sampleBase (pairFst source).length
+        (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length t ≤ out.length ∧
+        out.length < BrouwerNashLayout.sampleBase (pairFst source).length
+          (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length t + 2)) :
+    binarySignedValue (coefficientWord ![out, action, source, code₀, code₁]) = 0 := by
+  rw [coefficientWord_value out action source code₀ code₁ r hr]
+  apply Finset.sum_eq_zero
+  intro axis _
+  apply Finset.sum_eq_zero
+  intro t _
+  apply ite_eq_right
+  intro he
+  apply hno t
+  have ha := axis.isLt
+  omega
 end GameTheory.Complexity.Backend.BrouwerNashJitterQuery

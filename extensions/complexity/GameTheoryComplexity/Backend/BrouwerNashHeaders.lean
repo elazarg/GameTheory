@@ -85,7 +85,8 @@ def baselineWord (v : Fin 3 → List Bool) : List Bool :=
 theorem dimensionRuler_length (v : Fin 3 → List Bool) :
     (dimensionRuler v).length = BrouwerNashLayout.dimension (pairFst (v 0)).length
       (circuitUnaryPrefix (v 1)).length (circuitUnaryPrefix (v 2)).length := by
-  simp only [dimensionRuler, unitsRuler, scale, globalRuler, precisionRuler, sampleRuler, cornerRuler, arityRuler, sourceDepthRuler,
+  simp only [dimensionRuler, unitsRuler, scale, globalRuler, precisionRuler, sampleRuler,
+    cornerRuler, arityRuler, sourceDepthRuler,
     smash_length, List.length_replicate, List.length_append, List.length_singleton,
     BrouwerNashLayout.dimension, BrouwerNashLayout.units, BrouwerNashLayout.globalCount,
     BrouwerNashLayout.precision, BrouwerNashLayout.sampleWidth, BrouwerNashLayout.cornerWidth,
@@ -146,7 +147,8 @@ theorem cornerRuler_cobham : Cobham cornerRuler :=
     (Cobham.comp (FP_subset_CobhamFP circuitUnaryPrefix_mem_FP) fun _ : Fin 1 => (.proj 1)))
     (Cobham.comp (FP_subset_CobhamFP circuitUnaryPrefix_mem_FP) fun _ : Fin 1 => (.proj 2))
 theorem sampleRuler_cobham : Cobham sampleRuler :=
-  appendFn (appendFn (Cobham.const (List.replicate 26 false)) (scale_cobham sourceDepthRuler_cobham))
+  appendFn (appendFn (Cobham.const (List.replicate 26 false))
+    (scale_cobham sourceDepthRuler_cobham))
     (scale_cobham cornerRuler_cobham)
 
 /-- The allocated-prefix ruler is produced by polynomial length operations. -/

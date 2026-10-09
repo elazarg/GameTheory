@@ -290,7 +290,8 @@ private theorem guardedRaw_bound {k : ℕ} (hk : 0 < k) (raw : RawGate)
   · exact (BimatrixRawGate.coefficients_bound raw h r).trans (by omega)
   · exact constant_bound r 0 (by simp)
 
-private theorem incrementGate_bound (b ell₀ ell₁ : ℕ) (t : Fin 41)
+/-- Every ripple stage fits the shared signed coefficient capacity, including aliased inputs. -/
+theorem incrementGate_bound (b ell₀ ell₁ : ℕ) (t : Fin 41)
     (axis : Fin 2) (j : ℕ) (stage : Fin 4) (r : Fin (dimension b ell₀ ell₁ * 2)) :
     |(incrementGate b ell₀ ell₁ t axis j stage).coefficients r| ≤
       100 * (dimension b ell₀ ell₁ : ℤ) := by

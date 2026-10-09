@@ -34,10 +34,45 @@ theorem binarySignedFiniteSum_mem_FPn {p : ℕ}
 theorem binarySignedFiniteSum_value {p : ℕ}
     (term : (Fin (p + 1) → List Bool) → List Bool) (n : ℕ) (params : Fin p → List Bool) :
     binarySignedValue (binarySignedFiniteSum term n params) =
-      ∑ i ∈ Finset.range n, binarySignedValue (term (Fin.cons (List.replicate i false) params)) := by
+      ∑ i ∈ Finset.range n,
+        binarySignedValue (term (Fin.cons (List.replicate i false) params)) := by
   induction n with
   | zero => rfl
   | succ n ih =>
     rw [binarySignedFiniteSum, binarySignedAdd_value, ih, Finset.sum_range_succ]
+
+/-- Add a fixed list of signed query machines; the list is fixed in its FP certificate. -/
+def binarySignedQuerySum {p : ℕ}
+    (queries : List ((Fin p → List Bool) → List Bool)) (v : Fin p → List Bool) : List Bool :=
+  queries.foldr (fun query rest => binarySignedAdd (query v) rest) []
+
+/-- A fixed finite collection of polynomial-time queries has a polynomial-time signed sum. -/
+theorem binarySignedQuerySum_cobham {p : ℕ}
+    (queries : List ((Fin p → List Bool) → List Bool))
+    (hq : ∀ query ∈ queries, Cobham query) : Cobham (binarySignedQuerySum queries) := by
+  induction queries with
+  | nil => exact Cobham.empty
+  | cons query queries ih =>
+    have ht : Cobham (binarySignedQuerySum queries) :=
+      ih (fun q h => hq q (List.mem_cons_of_mem _ h))
+    exact (Cobham.comp₂ binarySignedAdd_cobham (hq query (List.mem_cons_self)) ht).of_eq
+      fun _ => rfl
+
+theorem binarySignedQuerySum_mem_FPn {p : ℕ}
+    (queries : List ((Fin p → List Bool) → List Bool))
+    (hq : ∀ query ∈ queries, Cobham query) : FPn (binarySignedQuerySum queries) :=
+  cobham_iff_FPn.mp (binarySignedQuerySum_cobham queries hq)
+
+/-- Signed values add without overflow or representation assumptions. -/
+theorem binarySignedQuerySum_value {p : ℕ}
+    (queries : List ((Fin p → List Bool) → List Bool)) (v : Fin p → List Bool) :
+    binarySignedValue (binarySignedQuerySum queries v) =
+      (queries.map fun query => binarySignedValue (query v)).sum := by
+  induction queries with
+  | nil => rfl
+  | cons query queries ih =>
+    change binarySignedValue (binarySignedAdd (query v) (binarySignedQuerySum queries v)) = _
+    rw [binarySignedAdd_value, ih]
+    rfl
 
 end GameTheory.Complexity.Backend

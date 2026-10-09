@@ -431,23 +431,18 @@ rational ratio order. A uniform two-bit scan and packed signed-row machine now
 have actual Cobham/FPn certificates and exact agreement with the existing
 integer lexicographic ratio comparator, including late perturbations and ties.
 Binary-machine certificates for matrix loops and positive-direction minimum-row selection,
-binary graph codecs and machine-certified maps close PPAD membership. The active
-next gate is Nash PPAD hardness through an every-answer fixed-point reduction.
-The hardness implementation proves composed affine/comparator/Boolean gates,
-actual raw-circuit evaluation at arbitrary offsets, dyadic extraction and
-minimum-gate errors, robust sampling and canonical residual-to-triangle
-selection. Direct coordinate-color circuits and the signed rectangular game
-writer have actual FP certificates. Every accepted emitted-game answer decodes
-to a valid canonical gate certificate. Concrete actual-gate error propagation and the integer reward/precision budgets
-are proved in the base. The remaining gate is polynomial emission of the
-source-dependent Brouwer coefficient/kind selector. The actual canonical
-program now proves the complete every-answer residual bound using its emitted
-reward, and a checked conditional reduction composes the concrete compiler,
-headers, game writer and answer decoder. Global, mean and jitter coefficient
-queries already have actual FPn certificates and canonical coefficient equations.
-Extraction, increment, color, interpolation, minimum and kind-query assembly
-must discharge the remaining selector premises. The roadmap tracks these separately; the current implementation
-does not classify Nash as PPAD-hard.
+binary graph codecs and machine-certified maps close PPAD membership. The signed rectangular Nash search relation now has PPAD hardness and
+completeness through an every-answer Brouwer reduction. The canonical sampled
+program combines extraction, ripple increment, compiled corner colors,
+interpolation, weighted minima, means and cyclic feedback. Its emitted integer
+reward discharges all precision and error budgets. Actual FP/FPn machines emit
+the headers, coefficient table, comparator flags, signed game and decoded source
+answer; scalar and kind selectors agree with every canonical gate, including
+unused padding. `BrouwerNashHardness.exists_brouwerToBimatrixReduction` has no
+remaining selector premises. Public `bimatrixNashRelation_PPADHard` and
+`bimatrixNashRelation_PPADComplete` classify the same exact binary relation as
+the existing membership theorem. Restricted-game reductions and independent
+positive algorithms are the next consumer-gated deliveries.
 
 The companion package under `extensions/complexity` owns
 `GameTheoryComplexity` import modules, with declarations under
