@@ -71,7 +71,8 @@ private theorem terminal_not_source : terminal ≠ bimatrixSourceBasis shiftedA 
   rw [he] at hm
   simp [bimatrixSourceBasis, bimatrixSlackVariables] at hm
 
-private theorem integerMatrix_eq : terminal.integerMatrix = (!![0, 6; 4, 0] : Matrix (Fin 2) (Fin 2) ℤ) := by
+private theorem integerMatrix_eq :
+    terminal.integerMatrix = (!![0, 6; 4, 0] : Matrix (Fin 2) (Fin 2) ℤ) := by
   ext i j
   change bimatrixIntegerColumns shiftedA shiftedB i
     (payoffVariables.orderEmbOfFin payoff_card j) = _

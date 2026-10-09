@@ -18,7 +18,8 @@ private theorem determinant : signedBasis.det ≠ 0 := by
 example : denominator signedBasis = 7 ∧ numerator signedBasis rhs 0 = 3 ∧
     numerator signedBasis rhs 1 = 1 := by
   have hs : Int.sign (7 : ℤ) = 1 := rfl
-  norm_num [denominator, numerator, signedBasis, rhs, Matrix.det_fin_two, Matrix.updateCol_apply, hs]
+  norm_num [denominator, numerator, signedBasis, rhs, Matrix.det_fin_two,
+    Matrix.updateCol_apply, hs]
 
 example (i : Fin 2) :
     (numerator signedBasis rhs i : ℚ) / denominator signedBasis =

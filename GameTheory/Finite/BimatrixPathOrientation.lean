@@ -58,7 +58,8 @@ private theorem canonicalOrientation_congr
 theorem orientationScore_pivot (port : BimatrixPathPort A B d)
     (hm : 0 < m) (hn : 0 < n) (hA : ∀ i j, 0 < A i j) (hB : ∀ i j, 0 < B i j) :
     (port.pivot hm hn hA hB).orientationScore =
-      -((basisMatrix (bimatrixBasisColumns A B) port.node.basis.basic port.node.basis.cardinality)⁻¹.mulVec
+      -((basisMatrix (bimatrixBasisColumns A B)
+        port.node.basis.basic port.node.basis.cardinality)⁻¹.mulVec
         (fun i => bimatrixBasisColumns A B i port.entering)
           (port.toPivotPort.leavingRow hm hn hA hB)) * port.orientationScore := by
   let next := port.pivot hm hn hA hB
@@ -78,7 +79,8 @@ theorem orientationScore_pivot (port : BimatrixPathPort A B d)
     port.node.basis.basic port.node.basis.cardinality port.entering port.toPivotPort.nonbasic
     l port.node.basis.feasible.1
   exact (congrArg₂ (fun x y : ℚ => x * y) hfacet hpar).trans
-    ((congrArg (fun x : ℚ => x * payoffParity (insert port.entering port.node.basis.basic) d) h).trans
+    ((congrArg (fun x : ℚ =>
+      x * payoffParity (insert port.entering port.node.basis.basic) d) h).trans
       (mul_assoc _ _ _))
 
 private theorem twin_score (basis : BimatrixBasis A B) (k d : Fin (m + n))

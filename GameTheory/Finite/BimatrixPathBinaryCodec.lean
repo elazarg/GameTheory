@@ -399,7 +399,8 @@ theorem exists_decode_of_checks (d : Fin (m + n)) (word : List Bool)
   have hf (hs : (basic (encode port)).card = m + n) :
       IntegerFeasible (candidateMatrix A B (basic (encode port)) hs) := by
     have hfeas (s : Finset (BimatrixVariable m n)) (hs : s.card = m + n)
-        (he : s = port.node.basis.basic) : IsFeasible (bimatrixBasisColumns A B) (fun _ => 1) s hs := by
+        (he : s = port.node.basis.basic) :
+        IsFeasible (bimatrixBasisColumns A B) (fun _ => 1) s hs := by
       cases he
       exact port.node.basis.feasible
     rw [integerFeasible_iff, candidateMatrix_map]

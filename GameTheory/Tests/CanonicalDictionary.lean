@@ -55,7 +55,8 @@ example : IsFeasible columns rhs (exchange basis (basis.orderEmbOfFin basis_card
       basis_card) :=
   exchange_feasible columns rhs basis basis_card feasible 0 2 entering_new leaving
 
-private theorem reverse_slot : (exchangePermutation basis basis_card 0 2 entering_new).symm 0 = 1 := by
+private theorem reverse_slot :
+    (exchangePermutation basis basis_card 0 2 entering_new).symm 0 = 1 := by
   apply (exchangePermutation basis basis_card 0 2 entering_new).injective
   simp only [Equiv.apply_symm_apply]
   have h := exchangePermutation_apply basis basis_card 0 2 entering_new 1
@@ -77,11 +78,14 @@ private theorem reverse_slot : (exchangePermutation basis basis_card 0 2 enterin
 
 example : IsLeavingRow (dictionaryCoefficients (basisMatrix columns
     (exchange basis (basis.orderEmbOfFin basis_card 0) 2)
-    ((card_exchange (Finset.orderEmbOfFin_mem basis basis_card 0) entering_new).trans basis_card)) rhs)
+    ((card_exchange (Finset.orderEmbOfFin_mem basis basis_card 0) entering_new).trans
+      basis_card)) rhs)
     ((basisMatrix columns (exchange basis (basis.orderEmbOfFin basis_card 0) 2)
-    ((card_exchange (Finset.orderEmbOfFin_mem basis basis_card 0) entering_new).trans basis_card))⁻¹.mulVec
+    ((card_exchange (Finset.orderEmbOfFin_mem basis basis_card 0) entering_new).trans
+      basis_card))⁻¹.mulVec
       (fun i => columns i (basis.orderEmbOfFin basis_card 0))) 1 := by
-  have h := exchange_reverse_leavingRow columns rhs basis basis_card feasible 0 2 entering_new leaving
+  have h := exchange_reverse_leavingRow columns rhs basis basis_card feasible 0 2
+    entering_new leaving
   rw [reverse_slot] at h
   exact h
 

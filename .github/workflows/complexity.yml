@@ -35,8 +35,9 @@ concurrency:
 jobs:
   verify:
     runs-on: windows-latest
-    # The uniform compiler adds a substantial serializer proof closure.
-    timeout-minutes: 90
+    # Cold Windows compilation now takes about 83 minutes; leave time for
+    # lint, axiom auditing and the second build against the published base pin.
+    timeout-minutes: 180
     defaults:
       run:
         shell: pwsh

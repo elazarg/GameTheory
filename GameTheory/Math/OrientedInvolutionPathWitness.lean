@@ -17,7 +17,8 @@ theorem rawWitness_iff (flip turn : α → α) (color : α → Bool)
     (origin : α) (hfixed : turn origin = origin) (hcolor : color origin = true) (x : α) :
     EndOfLine.RawWitness (predecessor flip turn color) (successor flip turn color) origin x ↔
       turn x = x ∧ x ≠ origin := by
-  have hsource := (source_pointers flip turn color hflip hflip_ne hflip_color origin hfixed hcolor).2.2
+  have hsource :=
+    (source_pointers flip turn color hflip hflip_ne hflip_color origin hfixed hcolor).2.2
   constructor
   · intro hw
     refine ⟨(inverse_failure_iff flip turn color hflip hturn hflip_ne hflip_color hturn_color x).mp

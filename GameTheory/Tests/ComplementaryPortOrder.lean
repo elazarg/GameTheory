@@ -41,7 +41,8 @@ example : payoffParity (R := ℤ) (insert (toLex ((1 : Fin 3), true)) middle) 1 
 
 -- At an empty basis both ports have the sole canonical coordinate.
 example : ((insert (toLex ((0 : Fin 1), false)) (∅ : Finset (Fin 1 ×ₗ Bool))).orderIsoOfFin
-      (by decide : (insert (toLex ((0 : Fin 1), false)) (∅ : Finset (Fin 1 ×ₗ Bool))).card = 1)).symm
+      (by decide : (insert (toLex ((0 : Fin 1), false))
+        (∅ : Finset (Fin 1 ×ₗ Bool))).card = 1)).symm
         ⟨toLex ((0 : Fin 1), false), Finset.mem_insert_self _ _⟩ =
     ((insert (toLex ((0 : Fin 1), true)) (∅ : Finset (Fin 1 ×ₗ Bool))).orderIsoOfFin
       (by decide : (insert (toLex ((0 : Fin 1), true)) (∅ : Finset (Fin 1 ×ₗ Bool))).card = 1)).symm
