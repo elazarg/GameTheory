@@ -1,4 +1,5 @@
 import GameTheoryComplexity.Backend.BimatrixRawGate
+import Complexitylib.Circuits.Encoding.Shift.Defs
 import GameTheoryComplexity.Backend.CircuitGateLookup
 import GameTheoryComplexity.Backend.BinaryUnaryEncoding
 import GameTheoryComplexity.Backend.BinaryUnaryArithmetic
@@ -273,5 +274,163 @@ theorem selectedCoefficientWord_encode (dimension row index : List Bool) (raw : 
     ![dimension, circuitGateSuffix raw.encode index, row]) = _
   rw [circuitGateSuffix_encode, List.drop_eq_getElem_cons hi, List.flatMap_cons]
   exact coefficientWord_encode dimension row raw[index.length] href _ r hr
+
+/-- Arguments: output-count ruler, serialized first-gate suffix, offset ruler, row-action ruler. -/
+def shiftedCoefficientWord (v : Fin 4 → List Bool) : List Bool :=
+  binarySignedAdd
+    (binarySignedAdd
+      (contribution (v 0) (v 3) (v 2 ++ firstReference (v 1)) (bitAt [false] (v 1)))
+      (contribution (v 0) (v 3) (v 2 ++ secondReference (v 1)) (bitAt [false, false] (v 1))))
+    (binarySignedSub
+      (binarySignedAdd (caseBit₀ (bitAt [false] (v 1)) [false, false, true] [])
+        (caseBit₀ (bitAt [false, false] (v 1)) [false, false, true] []))
+      (caseBit₀ (bitAt [] (v 1)) [false, true, true] [false, true]))
+
+/-- Arguments: output-count ruler, circuit code, gate ordinal ruler, offset ruler,
+then row-action ruler. -/
+def selectedShiftedCoefficientWord (v : Fin 5 → List Bool) : List Bool :=
+  shiftedCoefficientWord ![v 0, circuitGateSuffix (v 1) (v 2), v 3, v 4]
+
+/-- Exact integer meaning of every query, including malformed and exhausted gate suffixes. -/
+theorem shiftedCoefficientWord_value (dimension suffix offset row : List Bool) :
+    binarySignedValue (shiftedCoefficientWord ![dimension, suffix, offset, row]) =
+      2 * (dimension.length : ℤ) *
+        (((if suffix[1]?.getD false then -1 else 1) *
+          (if row.length / 2 = (offset ++ firstReference suffix).length ∧ row.length % 2 = 1
+            then 1 else 0)) +
+         ((if suffix[2]?.getD false then -1 else 1) *
+          (if row.length / 2 = (offset ++ secondReference suffix).length ∧ row.length % 2 = 1
+            then 1 else 0))) +
+      (if suffix[1]?.getD false then 2 else 0) +
+      (if suffix[2]?.getD false then 2 else 0) - (if suffix[0]?.getD false then 3 else 1) := by
+  change binarySignedValue (binarySignedAdd
+    (binarySignedAdd (contribution dimension row (offset ++ firstReference suffix)
+      (bitAt [false] suffix))
+      (contribution dimension row (offset ++ secondReference suffix) (bitAt [false, false] suffix)))
+    (binarySignedSub
+      (binarySignedAdd (caseBit₀ (bitAt [false] suffix) [false, false, true] [])
+        (caseBit₀ (bitAt [false, false] suffix) [false, false, true] []))
+      (caseBit₀ (bitAt [] suffix) [false, true, true] [false, true]))) = _
+  rw [binarySignedAdd_value, binarySignedAdd_value, binarySignedSub_value, binarySignedAdd_value]
+  rw [bitAt_getElem?, bitAt_getElem?, bitAt_getElem?]
+  change binarySignedValue (contribution dimension row (offset ++ firstReference suffix)
+      [suffix[1]?.getD false]) +
+    binarySignedValue (contribution dimension row (offset ++ secondReference suffix)
+      [suffix[2]?.getD false]) +
+    (binarySignedValue (caseBit₀ [suffix[1]?.getD false] [false, false, true] []) +
+      binarySignedValue (caseBit₀ [suffix[2]?.getD false] [false, false, true] []) -
+      binarySignedValue (caseBit₀ [suffix[0]?.getD false] [false, true, true] [false, true])) = _
+  rw [contribution_value, contribution_value, twoFlag_value, twoFlag_value, thresholdFlag_value]
+  ring
+
+/-- The first-gate coefficient query has an actual polynomial-time certificate. -/
+theorem shiftedCoefficientWord_cobham : Cobham shiftedCoefficientWord := by
+  have hneg0 : Cobham fun v : Fin 4 → List Bool => bitAt [false] (v 1) :=
+    Cobham.comp₂ Cobham.bitAtFn (Cobham.const [false]) (.proj 1)
+  have hneg1 : Cobham fun v : Fin 4 → List Bool => bitAt [false, false] (v 1) :=
+    Cobham.comp₂ Cobham.bitAtFn (Cobham.const [false, false]) (.proj 1)
+  have hop : Cobham fun v : Fin 4 → List Bool => bitAt [] (v 1) :=
+    Cobham.comp₂ Cobham.bitAtFn (Cobham.const []) (.proj 1)
+  have hfirst : Cobham fun v : Fin 4 → List Bool => firstReference (v 1) :=
+    Cobham.comp firstReference_cobham fun _ : Fin 1 => .proj 1
+  have hsecond : Cobham fun v : Fin 4 → List Bool => secondReference (v 1) :=
+    Cobham.comp secondReference_cobham fun _ : Fin 1 => .proj 1
+  exact Cobham.comp₂ binarySignedAdd_cobham
+    (Cobham.comp₂ binarySignedAdd_cobham
+      (contribution_fn (.proj 0) (.proj 3) (appendFn (.proj 2) hfirst) hneg0)
+      (contribution_fn (.proj 0) (.proj 3) (appendFn (.proj 2) hsecond) hneg1))
+    (Cobham.comp₂ binarySignedSub_cobham
+      (Cobham.comp₂ binarySignedAdd_cobham
+        (Cobham.iteFn hneg0 (Cobham.const [false, false, true]) Cobham.empty)
+        (Cobham.iteFn hneg1 (Cobham.const [false, false, true]) Cobham.empty))
+      (Cobham.iteFn hop (Cobham.const [false, true, true]) (Cobham.const [false, true])))
+
+theorem shiftedCoefficientWord_mem_FPn : FPn shiftedCoefficientWord :=
+  cobham_iff_FPn.mp shiftedCoefficientWord_cobham
+
+/-- Selecting an ordinal gate before querying its coefficient remains polynomial time. -/
+theorem selectedShiftedCoefficientWord_cobham : Cobham selectedShiftedCoefficientWord := by
+  unfold selectedShiftedCoefficientWord
+  exact Cobham.comp shiftedCoefficientWord_cobham fun i : Fin 4 =>
+    by
+      fin_cases i
+      · exact .proj 0
+      · exact Cobham.comp₂ circuitGateSuffix_cobham (.proj 1) (.proj 2)
+      · exact .proj 3
+      · exact .proj 4
+
+theorem selectedShiftedCoefficientWord_mem_FPn : FPn selectedShiftedCoefficientWord :=
+  cobham_iff_FPn.mp selectedShiftedCoefficientWord_cobham
+
+/-- Query output length depends only linearly on the output-count ruler. -/
+theorem shiftedCoefficientWord_length (v : Fin 4 → List Bool) :
+    (shiftedCoefficientWord v).length ≤ (v 0).length + 10 := by
+  let a := contribution (v 0) (v 3) (v 2 ++ firstReference (v 1)) (bitAt [false] (v 1))
+  let b := contribution (v 0) (v 3) (v 2 ++ secondReference (v 1)) (bitAt [false, false] (v 1))
+  let x := caseBit₀ (bitAt [false] (v 1)) [false, false, true] []
+  let y := caseBit₀ (bitAt [false, false] (v 1)) [false, false, true] []
+  let z := caseBit₀ (bitAt [] (v 1)) [false, true, true] [false, true]
+  have ha : a.length ≤ (v 0).length + 4 := contribution_length _ _ _ _
+  have hb : b.length ≤ (v 0).length + 4 := contribution_length _ _ _ _
+  have hx : x.length ≤ 3 := by
+    exact (select_length _ _ _).trans (by decide)
+  have hy : y.length ≤ 3 := by
+    exact (select_length _ _ _).trans (by decide)
+  have hz : z.length ≤ 3 := by
+    exact (select_length _ _ _).trans (by decide)
+  have hab := binarySignedAdd_length a b
+  have hxy := binarySignedAdd_length x y
+  have hsub := binarySignedSub_length (binarySignedAdd x y) z
+  have h := binarySignedAdd_length (binarySignedAdd a b)
+    (binarySignedSub (binarySignedAdd x y) z)
+  exact h.trans (by omega)
+
+
+/-- Relocating both reference rulers agrees with the canonical raw-gate shift. -/
+theorem shiftedCoefficientWord_encode (dimension row offset : List Bool) (raw : RawGate)
+    (href : (raw.shift offset.length).WellFormedAt dimension.length) (rest : List Bool)
+    (r : Fin (dimension.length * 2)) (hr : row.length = r.val) :
+    binarySignedValue (shiftedCoefficientWord ![dimension, raw.encode ++ rest, offset, row]) =
+      BimatrixRawGate.coefficients (raw.shift offset.length) href r := by
+  have he : binarySignedValue
+      (shiftedCoefficientWord ![dimension, raw.encode ++ rest, offset, row]) =
+      binarySignedValue (coefficientWord ![dimension, (raw.shift offset.length).encode, row]) := by
+    obtain ⟨hop, hn0, hn1, hr0, hr1⟩ := fields_encode raw rest
+    obtain ⟨hop', hn0', hn1', hr0', hr1'⟩ := fields_encode (raw.shift offset.length) []
+    rw [List.append_nil] at hop' hn0' hn1' hr0' hr1'
+    rw [shiftedCoefficientWord_value, coefficientWord_value]
+    rw [hop, hn0, hn1, hop', hn0', hn1', hr0', hr1']
+    simp only [List.length_append, hr0, hr1, RawGate.shift]
+    rfl
+  rw [he]
+  simpa only [List.append_nil] using
+    coefficientWord_encode dimension row (raw.shift offset.length) href [] r hr
+
+/-- Gate selection and relocation retain the unconditional query-output bound. -/
+theorem selectedShiftedCoefficientWord_length (v : Fin 5 → List Bool) :
+    (selectedShiftedCoefficientWord v).length ≤ (v 0).length + 10 :=
+  shiftedCoefficientWord_length _
+
+/-- An exhausted relocated lookup uses the documented total empty-suffix query. -/
+theorem selectedShiftedCoefficientWord_encode_of_length_le
+    (dimension row index offset : List Bool) (raw : RawCircuit) (h : raw.length ≤ index.length) :
+    selectedShiftedCoefficientWord ![dimension, raw.encode, index, offset, row] =
+      shiftedCoefficientWord ![dimension, [], offset, row] := by
+  change shiftedCoefficientWord ![dimension, circuitGateSuffix raw.encode index, offset, row] = _
+  rw [circuitGateSuffix_encode_of_length_le raw index h]
+
+/-- A selected relocated gate has the exact canonical shifted coefficients. -/
+theorem selectedShiftedCoefficientWord_encode
+    (dimension row index offset : List Bool) (raw : RawCircuit)
+    (hi : index.length < raw.length)
+    (href : (raw[index.length].shift offset.length).WellFormedAt dimension.length)
+    (r : Fin (dimension.length * 2)) (hr : row.length = r.val) :
+    binarySignedValue
+      (selectedShiftedCoefficientWord ![dimension, raw.encode, index, offset, row]) =
+      BimatrixRawGate.coefficients (raw[index.length].shift offset.length) href r := by
+  change binarySignedValue (shiftedCoefficientWord
+    ![dimension, circuitGateSuffix raw.encode index, offset, row]) = _
+  rw [circuitGateSuffix_encode, List.drop_eq_getElem_cons hi, List.flatMap_cons]
+  exact shiftedCoefficientWord_encode dimension row offset raw[index.length] href _ r hr
 
 end GameTheory.Complexity.Backend.BimatrixRawGateMachine

@@ -597,11 +597,25 @@ with a rational-to-real cast lemma that fixes the scalar before casting.
 The full base/lint build passes 4,556 jobs; base lint and the architecture audit
 pass, and the selected standard-axiom audit covers 557 declarations.
 
-**Remaining reduction obligations.** Certify emission of the complete concrete
-source-dependent Brouwer program and assemble its every-answer residual bound.
-The complete source reduction must then instantiate the polynomial binary
-answer decoder. These components alone do not establish Nash hardness or PPAD
-completeness.
+**Concrete program and answer machines.** The companion allocates the entire
+source-dependent program and proves every region’s canonical gate placement
+and the uniform coefficient bound `100k`, including guarded malformed circuits.
+The header and integer reward producers have actual FPn certificates, exact
+values and polynomial output lengths. A generic fixed-width coefficient-table
+emitter has an actual FP certificate. The answer machine reads the actual game
+certificate width, extracts exact clipped binary ratios without division,
+selects the canonical dyadic triangle and emits its rational barycenter in FPn.
+Its every-answer correctness reduces solely to the generated program’s canonical
+residual bound. Interior fractions, dyadic ties, endpoints, clipping, shifted
+aliases and packed signs have kernel-checked controls.
+The released-consumer build/lint/axiom scope passes 4,385 jobs at published base
+pin `8f6d5344`; companion lint and optional isolation pass, and the standard-axiom
+audit covers 4,566 declarations. The earlier local scope passes 4,383 jobs.
+
+**Remaining reduction obligations.** Prove the concrete source-dependent
+coefficient selector polynomial, then assemble its every-answer residual bound
+and instantiate the answer decoder. These components alone do not establish
+Nash hardness or PPAD completeness.
 
 Certify actual polynomial serialization, then prove every target Nash answer
 decodes to a source answer. Combine membership and hardness on the same relation.

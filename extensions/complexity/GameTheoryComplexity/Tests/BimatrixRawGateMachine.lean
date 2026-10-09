@@ -27,4 +27,12 @@ example : binarySignedValue (BimatrixRawGateMachine.coefficientWord
 example : binarySignedValue (BimatrixRawGateMachine.selectedCoefficientWord
     ![[false, false], [], [false], []]) = -1 := by decide +kernel
 
+-- Shifted aliases select the copied coordinate region, preserving the offset.
+example : binarySignedValue (BimatrixRawGateMachine.shiftedCoefficientWord
+    ![[false, false], (aliased .and false).encode, [false], [false, false, false]]) = 5 := by
+  decide +kernel
+example : binarySignedValue (BimatrixRawGateMachine.shiftedCoefficientWord
+    ![[false, false], (aliased .and false).encode, [false], [false]]) = -3 := by
+  decide +kernel
+
 end GameTheory.Complexity.Tests.BimatrixRawGateMachine
