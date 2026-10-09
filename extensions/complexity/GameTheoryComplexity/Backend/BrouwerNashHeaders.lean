@@ -8,32 +8,84 @@ namespace GameTheory.Complexity.Backend.BrouwerNashHeaders
 open _root_.Complexity _root_.Complexity.Cobham
 
 private def scale (n : ℕ) (r : List Bool) : List Bool := smash r (List.replicate n true)
-private def b (v : Fin 3 → List Bool) : List Bool := pairFst (v 0)
-private def precision (v : Fin 3 → List Bool) : List Bool :=
-  scale 5 (b v ++ List.replicate 10 false)
-private def arity (v : Fin 3 → List Bool) : List Bool := scale 2 (b v ++ [false])
-private def global (v : Fin 3 → List Bool) : List Bool :=
-  scale 3 (precision v) ++ List.replicate 11 false
-private def corner (v : Fin 3 → List Bool) : List Bool :=
-  scale 2 (arity v) ++ circuitUnaryPrefix (v 1) ++ circuitUnaryPrefix (v 2)
-private def sample (v : Fin 3 → List Bool) : List Bool :=
-  List.replicate 26 false ++ scale 12 (b v) ++ scale 4 (corner v)
+/-- Source grid precision, supplied by the canonical outer pair. -/
+def sourceDepthRuler (v : Fin 3 → List Bool) : List Bool := pairFst (v 0)
+/-- Dyadic halving-chain length. -/
+def precisionRuler (v : Fin 3 → List Bool) : List Bool :=
+  scale 5 (sourceDepthRuler v ++ List.replicate 10 false)
+/-- Two extended coordinate fields for a compiled color circuit. -/
+def arityRuler (v : Fin 3 → List Bool) : List Bool := scale 2 (sourceDepthRuler v ++ [false])
+/-- Shared constant, mean, scaling and feedback region. -/
+def globalRuler (v : Fin 3 → List Bool) : List Bool :=
+  scale 3 (precisionRuler v) ++ List.replicate 11 false
+/-- Coordinate copies and the two compiled circuits for one corner. -/
+def cornerRuler (v : Fin 3 → List Bool) : List Bool :=
+  scale 2 (arityRuler v) ++ circuitUnaryPrefix (v 1) ++ circuitUnaryPrefix (v 2)
+/-- Extraction, increment, interpolation and color work for one jitter sample. -/
+def sampleRuler (v : Fin 3 → List Bool) : List Bool :=
+  List.replicate 26 false ++ scale 12 (sourceDepthRuler v) ++ scale 4 (cornerRuler v)
 
-/-- A positive multiple of123 reserves the complete source-dependent layout. -/
-def dimensionRuler (v : Fin 3 → List Bool) : List Bool :=
-  scale 123 (global v ++ scale 41 (sample v) ++ [false])
+/-- Allocated shared and sample wires, with one spare unit before dimension scaling. -/
+def unitsRuler (v : Fin 3 → List Bool) : List Bool :=
+  globalRuler v ++ scale 41 (sampleRuler v) ++ [false]
+
+/-- The allocated game dimension is one hundred twenty-three times the unit ruler. -/
+def dimensionRuler (v : Fin 3 → List Bool) : List Bool := scale 123 (unitsRuler v)
 /-- This width fits every coefficient bounded by one hundred times the dimension. -/
 def widthRuler (v : Fin 3 → List Bool) : List Bool :=
   dimensionRuler v ++ List.replicate 10 false
-/-- The signed reward uses the same dimension and source precision. -/
+/-- The signed reward uses the same dimension and source precisionRuler. -/
 def baselineWord (v : Fin 3 → List Bool) : List Bool :=
-  BrouwerNashRewardMachine.reward ![b v, dimensionRuler v]
+  BrouwerNashRewardMachine.reward ![sourceDepthRuler v, dimensionRuler v]
+
+@[simp] theorem sourceDepthRuler_length (v : Fin 3 → List Bool) :
+    (sourceDepthRuler v).length = (pairFst (v 0)).length := rfl
+
+@[simp] theorem precisionRuler_length (v : Fin 3 → List Bool) :
+    (precisionRuler v).length = BrouwerNashLayout.precision (pairFst (v 0)).length := by
+  simp only [precisionRuler, scale, sourceDepthRuler, smash_length,
+    List.length_append, List.length_replicate, BrouwerNashLayout.precision]
+  omega
+
+@[simp] theorem arityRuler_length (v : Fin 3 → List Bool) :
+    (arityRuler v).length = BrouwerNashLayout.arity (pairFst (v 0)).length := by
+  simp only [arityRuler, scale, sourceDepthRuler, smash_length,
+    List.length_append, List.length_singleton, List.length_replicate, BrouwerNashLayout.arity]
+  omega
+
+@[simp] theorem globalRuler_length (v : Fin 3 → List Bool) :
+    (globalRuler v).length = BrouwerNashLayout.globalCount (pairFst (v 0)).length := by
+  simp only [globalRuler, scale, smash_length, List.length_append, List.length_replicate,
+    precisionRuler_length, BrouwerNashLayout.globalCount]
+  omega
+
+@[simp] theorem cornerRuler_length (v : Fin 3 → List Bool) :
+    (cornerRuler v).length = BrouwerNashLayout.cornerWidth (pairFst (v 0)).length
+      (circuitUnaryPrefix (v 1)).length (circuitUnaryPrefix (v 2)).length := by
+  simp only [cornerRuler, scale, smash_length, List.length_append, List.length_replicate,
+    arityRuler_length, BrouwerNashLayout.cornerWidth]
+  omega
+
+@[simp] theorem sampleRuler_length (v : Fin 3 → List Bool) :
+    (sampleRuler v).length = BrouwerNashLayout.sampleWidth (pairFst (v 0)).length
+      (circuitUnaryPrefix (v 1)).length (circuitUnaryPrefix (v 2)).length := by
+  simp only [sampleRuler, scale, sourceDepthRuler, smash_length, List.length_append,
+    List.length_replicate, cornerRuler_length, BrouwerNashLayout.sampleWidth]
+  omega
+
+@[simp] theorem unitsRuler_length (v : Fin 3 → List Bool) :
+    (unitsRuler v).length = BrouwerNashLayout.units (pairFst (v 0)).length
+      (circuitUnaryPrefix (v 1)).length (circuitUnaryPrefix (v 2)).length := by
+  simp only [unitsRuler, scale, smash_length, List.length_append,
+    List.length_replicate, List.length_singleton, globalRuler_length, sampleRuler_length,
+    BrouwerNashLayout.units]
+  omega
 
 /-- The ruler length agrees with the single canonical wire allocation. -/
 theorem dimensionRuler_length (v : Fin 3 → List Bool) :
     (dimensionRuler v).length = BrouwerNashLayout.dimension (pairFst (v 0)).length
       (circuitUnaryPrefix (v 1)).length (circuitUnaryPrefix (v 2)).length := by
-  simp only [dimensionRuler, scale, global, precision, sample, corner, arity, b,
+  simp only [dimensionRuler, unitsRuler, scale, globalRuler, precisionRuler, sampleRuler, cornerRuler, arityRuler, sourceDepthRuler,
     smash_length, List.length_replicate, List.length_append, List.length_singleton,
     BrouwerNashLayout.dimension, BrouwerNashLayout.units, BrouwerNashLayout.globalCount,
     BrouwerNashLayout.precision, BrouwerNashLayout.sampleWidth, BrouwerNashLayout.cornerWidth,
@@ -73,37 +125,40 @@ theorem baselineWord_value (v : Fin 3 → List Bool) :
       ((dimensionRuler v).length *
         (100 * (dimensionRuler v).length + 2 * (dimensionRuler v).length) + 1 : ℤ) *
       2 ^ (100 * ((pairFst (v 0)).length + (dimensionRuler v).length + 10)) := by
-  simpa only [baselineWord, b, Matrix.cons_val_zero, Matrix.cons_val_one]
+  simpa only [baselineWord, sourceDepthRuler, Matrix.cons_val_zero, Matrix.cons_val_one]
     using BrouwerNashRewardMachine.reward_value ![pairFst (v 0), dimensionRuler v]
 
 private theorem scale_cobham {n a : ℕ} {f : (Fin a → List Bool) → List Bool}
     (hf : Cobham f) : Cobham fun v => scale n (f v) :=
   (Cobham.comp₂ Cobham.smash hf (Cobham.const (List.replicate n true))).of_eq fun _ => rfl
 
-private theorem b_cobham : Cobham b :=
+theorem sourceDepthRuler_cobham : Cobham sourceDepthRuler :=
   (Cobham.comp (FP_subset_CobhamFP pairFst_mem_FP) fun _ : Fin 1 =>
     (Cobham.proj 0 : Cobham fun v : Fin 3 → List Bool => v 0)).of_eq fun _ => rfl
-private theorem precision_cobham : Cobham precision :=
-  scale_cobham (appendFn b_cobham (Cobham.const (List.replicate 10 false)))
-private theorem arity_cobham : Cobham arity :=
-  scale_cobham (appendFn b_cobham (Cobham.const [false]))
-private theorem global_cobham : Cobham global :=
-  appendFn (scale_cobham precision_cobham) (Cobham.const (List.replicate 11 false))
-private theorem corner_cobham : Cobham corner :=
-  appendFn (appendFn (scale_cobham arity_cobham)
+theorem precisionRuler_cobham : Cobham precisionRuler :=
+  scale_cobham (appendFn sourceDepthRuler_cobham (Cobham.const (List.replicate 10 false)))
+theorem arityRuler_cobham : Cobham arityRuler :=
+  scale_cobham (appendFn sourceDepthRuler_cobham (Cobham.const [false]))
+theorem globalRuler_cobham : Cobham globalRuler :=
+  appendFn (scale_cobham precisionRuler_cobham) (Cobham.const (List.replicate 11 false))
+theorem cornerRuler_cobham : Cobham cornerRuler :=
+  appendFn (appendFn (scale_cobham arityRuler_cobham)
     (Cobham.comp (FP_subset_CobhamFP circuitUnaryPrefix_mem_FP) fun _ : Fin 1 => (.proj 1)))
     (Cobham.comp (FP_subset_CobhamFP circuitUnaryPrefix_mem_FP) fun _ : Fin 1 => (.proj 2))
-private theorem sample_cobham : Cobham sample :=
-  appendFn (appendFn (Cobham.const (List.replicate 26 false)) (scale_cobham b_cobham))
-    (scale_cobham corner_cobham)
+theorem sampleRuler_cobham : Cobham sampleRuler :=
+  appendFn (appendFn (Cobham.const (List.replicate 26 false)) (scale_cobham sourceDepthRuler_cobham))
+    (scale_cobham cornerRuler_cobham)
 
-theorem dimensionRuler_cobham : Cobham dimensionRuler :=
-  scale_cobham (appendFn (appendFn global_cobham (scale_cobham sample_cobham))
-    (Cobham.const [false]))
+/-- The allocated-prefix ruler is produced by polynomial length operations. -/
+theorem unitsRuler_cobham : Cobham unitsRuler :=
+  appendFn (appendFn globalRuler_cobham (scale_cobham sampleRuler_cobham))
+    (Cobham.const [false])
+
+theorem dimensionRuler_cobham : Cobham dimensionRuler := scale_cobham unitsRuler_cobham
 theorem widthRuler_cobham : Cobham widthRuler :=
   appendFn dimensionRuler_cobham (Cobham.const (List.replicate 10 false))
 theorem baselineWord_cobham : Cobham baselineWord :=
-  (Cobham.comp₂ BrouwerNashRewardMachine.reward_cobham b_cobham
+  (Cobham.comp₂ BrouwerNashRewardMachine.reward_cobham sourceDepthRuler_cobham
     dimensionRuler_cobham).of_eq fun _ => rfl
 
 theorem dimensionRuler_mem_FPn : FPn dimensionRuler := cobham_iff_FPn.mp dimensionRuler_cobham

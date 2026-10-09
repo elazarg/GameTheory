@@ -612,10 +612,28 @@ The released-consumer build/lint/axiom scope passes 4,385 jobs at published base
 pin `8f6d5344`; companion lint and optional isolation pass, and the standard-axiom
 audit covers 4,566 declarations. The earlier local scope passes 4,383 jobs.
 
-**Remaining reduction obligations.** Prove the concrete source-dependent
-coefficient selector polynomial, then assemble its every-answer residual bound
-and instantiate the answer decoder. These components alone do not establish
-Nash hardness or PPAD completeness.
+**Every-answer soundness and concrete queries.** The actual canonical program now
+proves the two source-map residuals are at most `1/6` for every accepted target
+certificate. The proof derives extraction, increment, corner-color, minimum,
+mean and feedback accuracy internally, handles both bad jitter samples, and
+uses the emitted reward to discharge all numerical budgets. The checked
+`BrouwerNashReduction.exists_reduction_of_selectors` composes the concrete code
+compiler, headers, game writer and answer decoder into a search reduction,
+conditional only on polynomial scalar/kind queries and their canonical equations.
+Shared/global, mean and jitter queries have actual FPn certificates and exact
+canonical coefficient agreement. Reusable signed indicators, fixed finite sums
+and bounded indexed lookup retain aliases and specify malformed inputs.
+
+The current full companion/lint/axiom build passes 4,406 jobs, companion lint
+and optional isolation pass, and all 5,301 owned declarations use only the
+standard axioms. The published base pin remains `8f6d5344`.
+
+**Remaining reduction obligations.** Finish the extraction, increment, color,
+interpolation and minimum coefficient queries, prove their gate-kind agreement,
+and combine the disjoint regions into the concrete selector. Instantiate the
+checked reduction with that selector and derive hardness and completeness for
+the existing signed rectangular relation. Until those premises are discharged,
+Nash hardness and PPAD completeness remain open.
 
 Certify actual polynomial serialization, then prove every target Nash answer
 decodes to a source answer. Combine membership and hardness on the same relation.

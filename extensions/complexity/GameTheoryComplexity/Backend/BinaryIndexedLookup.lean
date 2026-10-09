@@ -1,4 +1,5 @@
 import GameTheoryComplexity.Backend.BinarySignedMatrixMachine
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 
 /-! Indexed guarded lookup with fixed-width signed storage. -/
 namespace GameTheory.Complexity.Backend
@@ -113,5 +114,82 @@ theorem binaryIndexedLookup_value {p : ℕ}
         · rintro ⟨i, hi, hmatch⟩
           exact ⟨i, by simp only [List.length_cons]; omega, hmatch⟩
       simp only [he]
+
+/-- Without a matching index, the total bounded lookup retains its initial zero. -/
+theorem binaryIndexedLookup_value_zero {p : ℕ}
+    (test term : (Fin (p + 1) → List Bool) → List Bool)
+    (clock width : List Bool) (params : Fin p → List Bool) (hw : 0 < width.length)
+    (hno : ∀ r : List Bool, r.length < clock.length → test (Fin.cons r params) = [false]) :
+    binarySignedValue (binaryIndexedLookup test term clock width params) = 0 := by
+  revert hno
+  induction clock with
+  | nil =>
+    intro hno
+    simp only [binaryIndexedLookup, recNotation_nil, Fin.cons_zero]
+    rw [binarySignedFixed_value _ [] hw (by simp [binarySignedValue]; positivity)]
+    rfl
+  | cons b r ih =>
+    intro hno
+    simp only [binaryIndexedLookup, recNotation_cons, Bool.cond_self]
+    change binarySignedValue (caseBit₀ (test (Fin.cons r params))
+      (binarySignedFixed width (term (Fin.cons r params)))
+      (binaryIndexedLookup test term r width params)) = 0
+    rw [hno r (by simp only [List.length_cons]; omega)]
+    simp only [caseBit₀, Bool.cond_false]
+    exact ih (fun s hs => hno s (by simp only [List.length_cons]; omega))
+open scoped BigOperators
+/-- A scan with at most one matching index equals the guarded finite sum of its values. -/
+theorem binaryIndexedLookup_sum_value {p : ℕ}
+    (test term : (Fin (p + 1) → List Bool) → List Bool)
+    (width : List Bool) (params : Fin p → List Bool) (hit : ℕ → Bool) (value : ℕ → ℤ)
+    (htest : ∀ r, test (Fin.cons r params) = [hit r.length])
+    (hterm : ∀ r, hit r.length = true → binarySignedValue (term (Fin.cons r params)) =
+      value r.length) (hw : 0 < width.length) (clock : List Bool)
+    (hbound : ∀ i < clock.length, hit i = true → (value i).natAbs < 2 ^ (width.length - 1))
+    (hunique : ∀ i < clock.length, ∀ j < clock.length, hit i = true → hit j = true → i = j) :
+    binarySignedValue (binaryIndexedLookup test term clock width params) =
+      ∑ i ∈ Finset.range clock.length, if hit i then value i else 0 := by
+  induction clock with
+  | nil =>
+    change binarySignedValue (binarySignedFixed width []) = _
+    rw [binarySignedFixed_value width [] hw (by simp [binarySignedValue]; positivity)]
+    rfl
+  | cons b r ih =>
+    have hl : r.length < (b :: r).length := by simp
+    have hb : ∀ i < r.length, hit i = true →
+        (value i).natAbs < 2 ^ (width.length - 1) := by
+      intro i hi
+      exact hbound i (hi.trans hl)
+    have hu : ∀ i < r.length, ∀ j < r.length, hit i = true → hit j = true → i = j := by
+      intro i hi j hj
+      exact hunique i (hi.trans hl) j (hj.trans hl)
+    simp only [binaryIndexedLookup, recNotation_cons, Bool.cond_self]
+    change binarySignedValue (caseBit₀ (test (Fin.cons r params))
+      (binarySignedFixed width (term (Fin.cons r params)))
+      (binaryIndexedLookup test term r width params)) = _
+    rw [htest]
+    by_cases hm : hit r.length = true
+    · rw [hm]
+      change binarySignedValue (binarySignedFixed width (term (Fin.cons r params))) = _
+      rw [binarySignedFixed_value width _ hw
+        (by rw [hterm r hm]; exact hbound r.length hl hm), hterm r hm]
+      have hzero : ∀ i < r.length, hit i = false := by
+        intro i hi
+        apply Bool.eq_false_iff.mpr
+        intro hiHit
+        have he := hunique i (hi.trans hl) r.length hl hiHit hm
+        omega
+      have hsum : (∑ i ∈ Finset.range r.length, if hit i then value i else 0) = 0 := by
+        apply Finset.sum_eq_zero
+        intro i hi
+        simp only [hzero i (Finset.mem_range.mp hi), Bool.false_eq_true, ite_false]
+      simp only [List.length_cons, Finset.sum_range_succ, hsum, hm, ite_true, zero_add]
+    · have hf : hit r.length = false := Bool.eq_false_iff.mpr hm
+      rw [hf]
+      change binarySignedValue (binaryIndexedLookup test term r width params) = _
+      rw [ih hb hu]
+      simp only [List.length_cons, Finset.sum_range_succ, hf, Bool.false_eq_true,
+        ite_false, add_zero]
+
 
 end GameTheory.Complexity.Backend

@@ -440,9 +440,13 @@ selection. Direct coordinate-color circuits and the signed rectangular game
 writer have actual FP certificates. Every accepted emitted-game answer decodes
 to a valid canonical gate certificate. Concrete actual-gate error propagation and the integer reward/precision budgets
 are proved in the base. The remaining gate is polynomial emission of the
-source-dependent Brouwer coefficient selector and its complete every-answer
-residual proof. The full canonical program, polynomial headers/reward and
-binary triangle/barycenter decoder are implemented in the optional companion. The roadmap tracks these separately; the current implementation
+source-dependent Brouwer coefficient/kind selector. The actual canonical
+program now proves the complete every-answer residual bound using its emitted
+reward, and a checked conditional reduction composes the concrete compiler,
+headers, game writer and answer decoder. Global, mean and jitter coefficient
+queries already have actual FPn certificates and canonical coefficient equations.
+Extraction, increment, color, interpolation, minimum and kind-query assembly
+must discharge the remaining selector premises. The roadmap tracks these separately; the current implementation
 does not classify Nash as PPAD-hard.
 
 The companion package under `extensions/complexity` owns
