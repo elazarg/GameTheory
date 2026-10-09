@@ -1,3 +1,4 @@
+import GameTheory.Math.IntegerSumBounds
 import GameTheoryComplexity.Backend.BinaryBirdDeterminantMachine
 import GameTheory.Math.BirdIterationBounds
 import GameTheory.Math.TabulatedBirdDeterminant
@@ -12,16 +13,6 @@ open scoped BigOperators
 def binaryBirdMatrix (dim width packed : List Bool) :
     Matrix (Fin dim.length) (Fin dim.length) ℤ :=
   fun i j => binarySignedRowValue width packed (i.val * dim.length + j.val)
-
-private theorem prefix_sum_bound (f : ℕ → ℤ) (n t T : ℕ) (ht : t ≤ n)
-    (hf : ∀ k < n, (f k).natAbs ≤ T) :
-    (∑ k ∈ Finset.range t, f k).natAbs ≤ n * T := by
-  calc
-    _ ≤ ∑ k ∈ Finset.range t, (f k).natAbs := Int.natAbs_sum_le _ _
-    _ ≤ ∑ _k ∈ Finset.range t, T := Finset.sum_le_sum (fun k hk =>
-      hf k ((Finset.mem_range.mp hk).trans_le ht))
-    _ = t * T := by simp
-    _ ≤ n * T := Nat.mul_le_mul_right T ht
 
 private theorem tail_sum_eq (dim width F : List Bool) (i : Fin dim.length) :
     (∑ k ∈ Finset.range dim.length, if i.val < k then
@@ -74,7 +65,7 @@ theorem binaryBirdEntry_eq_step (dim width A F : List Bool) (B T : ℕ)
     · intro t ht
       change (∑ k ∈ Finset.range t, if ri.length < k then
         binarySignedRowValue width F (k * dim.length + k) else 0).natAbs < _
-      apply (prefix_sum_bound _ dim.length t T ht _).trans_lt (hs.trans_lt hcap)
+      apply (GameTheory.Math.IntegerSumBounds.natAbs_sum_range_le _ dim.length t T ht _).trans_lt (hs.trans_lt hcap)
       intro k hk
       split_ifs
       · exact hF ⟨k, hk⟩ ⟨k, hk⟩
@@ -88,7 +79,7 @@ theorem binaryBirdEntry_eq_step (dim width A F : List Bool) (B T : ℕ)
       change (∑ k ∈ Finset.range t, if ri.length < k then
         binarySignedRowValue width F (ri.length * dim.length + k) *
         binarySignedRowValue width A (k * dim.length + rj.length) else 0).natAbs < _
-      apply (prefix_sum_bound _ dim.length t (T * B) ht _).trans_lt _
+      apply (GameTheory.Math.IntegerSumBounds.natAbs_sum_range_le _ dim.length t (T * B) ht _).trans_lt _
       · intro k hk
         split_ifs
         · rw [hi, hj, Int.natAbs_mul]

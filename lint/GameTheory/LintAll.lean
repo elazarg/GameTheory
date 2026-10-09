@@ -470,6 +470,9 @@ import GameTheory.Math.FiniteLexicographicCompare
 import GameTheory.Math.IntegerRatioSelection
 import GameTheory.Math.FiniteMinimumScan
 import GameTheory.Math.IntegerDictionaryComputation
+import GameTheory.Math.IntegerDictionaryFeasibility
+import GameTheory.Math.IntegerSumBounds
+import GameTheory.Math.FixedBlockList
 import GameTheory.Finite.BimatrixComputedPivot
 import GameTheory.Math.FiniteSetRank
 import GameTheory.Finite.BimatrixPathBinaryCodec

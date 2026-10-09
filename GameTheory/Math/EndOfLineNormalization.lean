@@ -15,6 +15,14 @@ instance [DecidableEq α] (P S : α → α) (origin x : α) :
     Decidable (RawWitness P S origin x) :=
   inferInstanceAs (Decidable (P (S x) ≠ x ∨ (x ≠ origin ∧ S (P x) ≠ x)))
 
+/-- Pointer agreement on an invariant domain preserves raw witnesses in that domain. -/
+theorem rawWitness_congrOn (P S P' S' : α → α) (q : α → Prop)
+    (hP : ∀ x, q x → P x = P' x) (hS : ∀ x, q x → S x = S' x)
+    (hp : ∀ x, q x → q (P' x)) (hs : ∀ x, q x → q (S' x))
+    (origin x : α) (hx : q x) :
+    RawWitness P S origin x ↔ RawWitness P' S' origin x := by
+  simp only [RawWitness, hP x hx, hS x hx, hP (S' x) (hs x hx), hS (P' x) (hp x hx)]
+
 /-- Replace outgoing pointers that do not encode an edge by self-loops. -/
 def normalizeSuccessor [DecidableEq α] (P S : α → α) (x : α) : α :=
   if HasSuccessor P S x then S x else x

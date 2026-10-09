@@ -94,26 +94,7 @@ theorem binaryWordSub_mem_FPn :
     FPn (fun v : Fin 2 → List Bool => binaryWordSub (v 0) (v 1)) :=
   cobham_iff_FPn.mp binaryWordSub_cobham
 
-private theorem bitAt_eq (r x : List Bool) :
-    bitAt r x = [(x[r.length]?).getD false] := by
-  simp only [bitAt]
-  induction r generalizing x with
-  | nil => cases x with
-    | nil => rfl
-    | cons b x => cases b <;> rfl
-  | cons b r ih =>
-    cases x with
-    | nil => simp [caseBit₀]
-    | cons c x => simpa only [List.length_cons, List.drop_succ_cons,
-        List.getElem?_cons_succ] using ih x
 
-private theorem fromBitsLE_append (x y : List Bool) :
-    Nat.fromBitsLE (x ++ y) = Nat.fromBitsLE x + 2 ^ x.length * Nat.fromBitsLE y := by
-  induction x with
-  | nil => simp [Nat.fromBitsLE, Nat.fromBits]
-  | cons b x ih =>
-    simp only [List.cons_append, Nat.fromBitsLE_cons, List.length_cons, ih, pow_succ]
-    ring
 
 private theorem prefix_succ (k : ℕ) (x : List Bool) :
     Nat.fromBitsLE (x.take (k + 1)) = Nat.fromBitsLE (x.take k) +
@@ -137,7 +118,7 @@ private theorem subColumn_eq (r x y out : List Bool) (b : Bool) :
   change orBit (andBit (notBit (bitAt r x)) (bitAt r y))
     (andBit (bitAt [] (b :: out)) (orBit (notBit (bitAt r x)) (bitAt r y))) ++
     out ++ subXor (subXor (bitAt r x) (bitAt r y)) (bitAt [] (b :: out)) = _
-  simp only [bitAt_eq, List.length_nil, List.getElem?_cons_zero, Option.getD_some]
+  simp only [bitAt_getElem?, List.length_nil, List.getElem?_cons_zero, Option.getD_some]
   generalize (x[r.length]?).getD false = a
   generalize (y[r.length]?).getD false = c
   cases a <;> cases c <;> cases b <;>

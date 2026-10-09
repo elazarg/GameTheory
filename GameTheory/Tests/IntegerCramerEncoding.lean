@@ -40,7 +40,7 @@ example : (((signedBasis.map (fun z : ℤ => (z : ℚ)))⁻¹.mulVec
 
 example (i : Fin 2) : numerator signedBasis rhs i <
     2 ^ GameTheory.Math.IntegerBasisBounds.width 2 2 := by
-  apply numerator_lt signedBasis rhs 2 _ _ determinant
+  apply numerator_lt signedBasis rhs 2 _ _
   · intro i j
     fin_cases i <;> fin_cases j <;> norm_num [signedBasis]
   · intro i
@@ -52,6 +52,13 @@ example (M : Matrix (Fin 0) (Fin 0) ℤ) : denominator M = 1 := by
 -- Singular systems do not provide a positive determinant denominator.
 example : denominator (!![1, 1; 1, 1] : Matrix (Fin 2) (Fin 2) ℤ) = 0 := by
   norm_num [denominator, Matrix.det_fin_two]
+
+-- Singular systems still produce bounded natural fields before feasibility is checked.
+example (i : Fin 2) : numerator !![(1 : ℤ), 2; 2, 4] ![-1, 1] i <
+    2 ^ GameTheory.Math.IntegerBasisBounds.width 2 2 := by
+  apply numerator_lt _ _ 2
+  · decide +kernel
+  · decide +kernel
 
 -- Natural numerators require nonnegative solution coordinates for decoding.
 example : numerator (1 : Matrix (Fin 1) (Fin 1) ℤ) ![-1] 0 = 0 := by

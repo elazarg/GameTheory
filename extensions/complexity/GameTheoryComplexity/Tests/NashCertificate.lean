@@ -67,6 +67,7 @@ private theorem one_bounded (input : List Bool) :
     1 < 2 ^ (certificateWidthWord input).length := by
   have hw : 1 ≤ (certificateWidthWord input).length := by
     rw [certificateWidthWord_length]
+    unfold GameTheory.Math.constrainedNashCertificateWidth
     omega
   exact (by decide : 1 < (2 : ℕ) ^ 1).trans_le (pow_le_pow_right' (by decide) hw)
 
@@ -74,6 +75,7 @@ private theorem two_bounded (input : List Bool) :
     2 < 2 ^ (certificateWidthWord input).length := by
   have hw : 2 ≤ (certificateWidthWord input).length := by
     rw [certificateWidthWord_length]
+    unfold GameTheory.Math.constrainedNashCertificateWidth
     omega
   exact (by decide : 2 < (2 : ℕ) ^ 2).trans_le (pow_le_pow_right' (by decide) hw)
 
@@ -135,6 +137,7 @@ theorem missing_bit_machine_rejects :
   have hlen := positiveWord_length
   have hpositive : 0 < positiveWord.length := by
     rw [hlen, certificateWidthWord_length]
+    unfold GameTheory.Math.constrainedNashCertificateWidth
     apply Nat.mul_pos
     · omega
     · omega

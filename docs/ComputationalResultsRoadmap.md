@@ -615,7 +615,8 @@ From `extensions/complexity`, release validation uses:
     lake lint
 
 The local-checkout build selects `-KgameTheoryPath=../..`. The next active
-delivery is PPAD membership for the same now-total relation.
+delivery is PPAD hardness for the same now-total relation, whose membership
+proof and machine-certified reduction are complete.
 
 ## Primary proof references
 

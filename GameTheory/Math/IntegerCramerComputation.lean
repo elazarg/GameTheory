@@ -81,8 +81,11 @@ theorem signed_decode (M : Matrix (Fin n) (Fin n) ℤ) (b : Fin n → ℤ) (hdet
 /-- Signed output fields have the same determinant width as nonnegative fields. -/
 theorem signedNumerator_bound (M : Matrix (Fin n) (Fin n) ℤ) (b : Fin n → ℤ) (h : ℕ)
     (hM : ∀ i j, (M i j).natAbs ≤ 2 ^ h) (hb : ∀ i, (b i).natAbs ≤ 2 ^ h)
-    (hdet : M.det ≠ 0) (i : Fin n) :
+    (i : Fin n) :
     (signedNumerator M b i).natAbs < 2 ^ IntegerBasisBounds.width n h := by
+  by_cases hdet : M.det = 0
+  · rw [signedNumerator_eq, hdet, Int.sign_zero, zero_mul, Int.natAbs_zero]
+    positivity
   rw [signedNumerator_eq, Int.natAbs_mul, Int.natAbs_sign_of_ne_zero hdet, one_mul]
   apply IntegerBasisBounds.determinant_natAbs_lt
   intro j k
@@ -109,6 +112,6 @@ theorem fields_bounds (M : Matrix (Fin n) (Fin n) ℤ) (b : Fin n → ℤ) (h : 
   rw [denominator_eq, numerator_eq]
   exact ⟨IntegerCramerEncoding.denominator_pos M hdet,
     IntegerCramerEncoding.denominator_lt M h hM,
-    IntegerCramerEncoding.numerator_lt M b h hM hb hdet i⟩
+    IntegerCramerEncoding.numerator_lt M b h hM hb i⟩
 
 end GameTheory.Math.IntegerCramerComputation

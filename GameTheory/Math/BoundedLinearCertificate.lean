@@ -61,7 +61,7 @@ end BoundedLinearCertificate
 has a certificate whose binary width is polynomial in its dimensions and its
 coefficient bit bound. -/
 theorem exists_bounded_nonnegative_linear_certificate {ρ κ : Type*}
-    [Fintype ρ] [Fintype κ] [DecidableEq κ]
+    [Fintype ρ] [Fintype κ]
     (M : Matrix ρ κ ℤ) (b : ρ → ℤ) (h : ℕ)
     (hM : ∀ i j, (M i j).natAbs ≤ 2 ^ h) (hb : ∀ i, (b i).natAbs ≤ 2 ^ h)
     (x : κ → ℝ) (hx : ∀ j, 0 ≤ x j)
@@ -78,7 +78,7 @@ theorem exists_bounded_nonnegative_linear_certificate {ρ κ : Type*}
 /-- Nonnegative feasibility gives natural numerators and a common positive
 denominator, all fitting the polynomial binary width. -/
 theorem exists_bounded_nonnegative_linear_solution {ρ κ : Type*}
-    [Fintype ρ] [Fintype κ] [DecidableEq κ]
+    [Fintype ρ] [Fintype κ]
     (M : Matrix ρ κ ℤ) (b : ρ → ℤ) (h : ℕ)
     (hM : ∀ i j, (M i j).natAbs ≤ 2 ^ h) (hb : ∀ i, (b i).natAbs ≤ 2 ^ h)
     (x : κ → ℝ) (hx : ∀ j, 0 ≤ x j)

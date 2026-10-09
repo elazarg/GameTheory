@@ -1,3 +1,4 @@
+import GameTheory.Math.FixedBlockList
 import GameTheoryComplexity.Backend.BinarySignedFixedWidth
 import GameTheoryComplexity.Backend.BinarySignedRowComparison
 
@@ -188,6 +189,28 @@ theorem binarySignedTable_mem_FPn {p : ℕ}
       binarySignedTable term (v 0) (v 1) (Fin.tail (Fin.tail v))) :=
   cobham_iff_FPn.mp (binarySignedTable_cobham ht)
 
+/-- The materialized table concatenates its fixed-width fields in increasing index order. -/
+theorem binarySignedTable_eq_flatMap {p : ℕ} (term : (Fin (p + 1) → List Bool) → List Bool)
+    (clock width : List Bool) (params : Fin p → List Bool) :
+    binarySignedTable term clock width params = (List.range clock.length).flatMap
+      (fun i => binarySignedFixed width (term (Fin.cons (clock.drop (clock.length - i)) params))) := by
+  induction clock with
+  | nil => rfl
+  | cons b r ih =>
+    simp only [binarySignedTable, recNotation_cons, Bool.cond_self]
+    change binarySignedTable term r width params ++
+      binarySignedFixed width (term (Fin.cons r params)) = _
+    rw [ih, List.length_cons, List.range_succ, List.flatMap_append, List.flatMap_singleton]
+    congr 1
+    · simp only [List.flatMap_def]
+      apply congrArg List.flatten
+      apply List.map_congr_left
+      intro i hi
+      have hi : i < r.length := List.mem_range.mp hi
+      have he : r.length + 1 - i = (r.length - i) + 1 := by omega
+      rw [he, List.drop_succ_cons]
+    · simp
+
 theorem rowValue_append_left (width x y : List Bool) (i : ℕ)
     (h : (i + 1) * width.length ≤ x.length) :
     binarySignedRowValue width (x ++ y) i = binarySignedRowValue width x i := by
@@ -232,28 +255,12 @@ theorem binarySignedTable_field {p : ℕ}
     (clock width : List Bool) (params : Fin p → List Bool) (i : ℕ) (hi : i < clock.length) :
     ((binarySignedTable term clock width params).drop (i * width.length)).take width.length =
       binarySignedFixed width (term (Fin.cons (clock.drop (clock.length - i)) params)) := by
-  induction clock generalizing i with
-  | nil => simp at hi
-  | cons b r ih =>
-    simp only [binarySignedTable, recNotation_cons, Bool.cond_self]
-    change ((binarySignedTable term r width params ++
-      binarySignedFixed width (term (Fin.cons r params))).drop (i * width.length)).take width.length = _
-    rcases Nat.lt_succ_iff_lt_or_eq.mp hi with hi | rfl
-    · have ho : i * width.length ≤ (binarySignedTable term r width params).length := by
-        rw [binarySignedTable_length]
-        exact Nat.mul_le_mul_right _ (Nat.le_of_lt hi)
-      have ht : width.length ≤ ((binarySignedTable term r width params).drop (i * width.length)).length := by
-        rw [List.length_drop, binarySignedTable_length]
-        have h := Nat.mul_le_mul_right width.length (Nat.succ_le_of_lt hi)
-        rw [Nat.succ_mul] at h
-        omega
-      rw [List.drop_append_of_le_length ho, List.take_append_of_le_length ht, ih i hi]
-      congr 3
-      have he : (b :: r).length - i = (r.length - i) + 1 := by simp only [List.length_cons]; omega
-      rw [he, List.drop_succ_cons]
-    · rw [← binarySignedTable_length term r width params, List.drop_append_length,
-        List.take_of_length_le (binarySignedFixed_length _ _).le]
-      simp
+  rw [binarySignedTable_eq_flatMap]
+  have h := GameTheory.Math.FixedBlockList.block_flatMap_fixed (List.range clock.length)
+    (fun j => binarySignedFixed width (term (Fin.cons (clock.drop (clock.length - j)) params)))
+    width.length (fun _ _ => binarySignedFixed_length _ _) i (by simpa using hi)
+  simpa using h
+
 /-- Materializing singleton flags preserves their bytes, including true sign-only fields. -/
 theorem binarySignedTable_flags {p : ℕ}
     (term : (Fin (p + 1) → List Bool) → List Bool) (params : Fin p → List Bool)

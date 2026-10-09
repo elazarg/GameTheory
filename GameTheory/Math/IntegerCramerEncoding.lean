@@ -60,8 +60,10 @@ theorem denominator_lt (M : Matrix (Fin n) (Fin n) ℤ) (h : ℕ)
 /-- Even before checking nonnegativity, the stored numerator has the advertised width. -/
 theorem numerator_lt (M : Matrix (Fin n) (Fin n) ℤ) (b : Fin n → ℤ) (h : ℕ)
     (hM : ∀ i j, (M i j).natAbs ≤ 2 ^ h) (hb : ∀ i, (b i).natAbs ≤ 2 ^ h)
-    (hdet : M.det ≠ 0) (i : Fin n) :
-    numerator M b i < 2 ^ IntegerBasisBounds.width n h := by
+    (i : Fin n) : numerator M b i < 2 ^ IntegerBasisBounds.width n h := by
+  by_cases hdet : M.det = 0
+  · simp only [numerator, hdet, Int.sign_zero, zero_mul, Int.toNat_zero]
+    positivity
   have hu : ∀ j k, ((M.updateCol i b) j k).natAbs ≤ 2 ^ h := by
     intro j k
     simp only [Matrix.updateCol_apply]

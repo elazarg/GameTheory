@@ -49,16 +49,17 @@ def endpointToRawReductionOfNormalization (f : List Bool → List Bool) (hf : f 
         exact ⟨by rw [horigin, ho.1, hn.1], by rw [horigin, ho.2]; exact hn.2⟩
       rcases hw with ⟨_, hlen, hw⟩ | ⟨hbad, _⟩
       · have hlen' : witness.length = endOfLineWidth input := hlen.trans hwidth
-        have hv := hpointers witness hlen'
-        have hnp := hpointers (endOfLineNormalizedPredecessor input witness)
-          ((endOfLineNormalizedPredecessor_length input witness).trans hlen')
-        have hns := hpointers (endOfLineNormalizedSuccessor input witness)
-          ((endOfLineNormalizedSuccessor_length input witness).trans hlen')
         have hw' : GameTheory.Math.EndOfLine.RawWitness
             (endOfLineNormalizedPredecessor input) (endOfLineNormalizedSuccessor input)
             (endOfLineOrigin input) witness := by
-          simpa only [GameTheory.Math.EndOfLine.RawWitness, horigin,
-            hv.1, hv.2, hnp.2, hns.1] using hw
+          rw [horigin] at hw
+          exact (GameTheory.Math.EndOfLine.rawWitness_congrOn _ _ _ _
+            (fun vertex => vertex.length = endOfLineWidth input)
+            (fun vertex hv => (hpointers vertex hv).1)
+            (fun vertex hv => (hpointers vertex hv).2)
+            (fun vertex hv => (endOfLineNormalizedPredecessor_length input vertex).trans hv)
+            (fun vertex hv => (endOfLineNormalizedSuccessor_length input vertex).trans hv)
+            _ witness hlen').mp hw
         obtain ⟨hne, hend⟩ := (endOfLineNormalized_rawWitness_iff hsource).mp hw'
         exact Or.inl ⟨hsource, hlen', hne, hend⟩
       · exact False.elim (hbad hraw)

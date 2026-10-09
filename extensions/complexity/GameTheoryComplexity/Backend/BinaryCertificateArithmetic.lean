@@ -94,20 +94,14 @@ theorem binaryCertificateAdd_cobham : Cobham binaryCertificateAdd := by
 theorem binaryCertificateAdd_mem_FPn : FPn binaryCertificateAdd :=
   cobham_iff_FPn.mp binaryCertificateAdd_cobham
 
-private theorem bitAt_eq (r x : List Bool) :
-    bitAt r x = [(x[r.length]?).getD false] := by
-  simp only [bitAt]
-  induction r generalizing x with
-  | nil => cases x with
-    | nil => rfl
-    | cons b x => cases b <;> rfl
-  | cons b r ih =>
-    cases x with
-    | nil => simp [caseBit₀]
-    | cons c x => simpa only [List.length_cons, List.drop_succ_cons,
-        List.getElem?_cons_succ] using ih x
+/-- Bit extraction agrees with indexed lookup, defaulting to false out of range. -/
+theorem bitAt_getElem? (r x : List Bool) :
+    bitAt r x = [x[r.length]?.getD false] := by
+  simpa only [bitOf, List.headD_eq_head?_getD, List.head?_eq_getElem?,
+    List.getElem?_drop, Nat.add_zero] using _root_.Complexity.bitAt_eq r x
 
-private theorem fromBitsLE_append (x y : List Bool) :
+/-- Appending little-endian fields shifts the second field by the first field's width. -/
+theorem fromBitsLE_append (x y : List Bool) :
     Nat.fromBitsLE (x ++ y) = Nat.fromBitsLE x + 2 ^ x.length * Nat.fromBitsLE y := by
   induction x with
   | nil => simp [Nat.fromBitsLE, Nat.fromBits]
@@ -138,7 +132,7 @@ private theorem binaryAddColumn_eq (r x y out : List Bool) (c : Bool) :
   change orBit (andBit (bitAt r x) (bitAt r y))
     (andBit (bitAt [] (c :: out)) (orBit (bitAt r x) (bitAt r y))) ++
     out ++ flagXor (flagXor (bitAt r x) (bitAt r y)) (bitAt [] (c :: out)) = _
-  simp only [bitAt_eq, List.length_nil, List.getElem?_cons_zero, Option.getD_some]
+  simp only [bitAt_getElem?, List.length_nil, List.getElem?_cons_zero, Option.getD_some]
   generalize (x[r.length]?).getD false = a
   generalize (y[r.length]?).getD false = b
   cases a <;> cases b <;> cases c <;>
@@ -245,7 +239,7 @@ private theorem binaryLEScan_length (r x y : List Bool) :
       Fin.cons_zero]
     change (caseBit₀ (flagXor (bitAt r x) (bitAt r y))
       (notBit (bitAt r x)) (binaryLEScan r x y)).length = 1
-    rw [bitAt_eq, bitAt_eq]
+    rw [bitAt_getElem?, bitAt_getElem?]
     generalize hx : (x[r.length]?).getD false = a
     generalize hy : (y[r.length]?).getD false = c
     cases a <;> cases c <;> simp [flagXor, caseBit₀, notBit, orBit, andBit, ih]
@@ -282,7 +276,7 @@ private theorem binaryLEColumn_eq (r x y : List Bool) (previous : Bool) :
         else !((x[r.length]?).getD false)] := by
   change caseBit₀ (flagXor (bitAt r x) (bitAt r y))
     (notBit (bitAt r x)) [previous] = _
-  rw [bitAt_eq, bitAt_eq]
+  rw [bitAt_getElem?, bitAt_getElem?]
   generalize (x[r.length]?).getD false = a
   generalize (y[r.length]?).getD false = b
   cases a <;> cases b <;> cases previous <;> rfl

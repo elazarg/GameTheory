@@ -6,6 +6,7 @@ import GameTheory.Math.FiniteLinearBitBound
 whose common denominator and every coordinate have polynomial binary width. -/
 
 namespace GameTheory.Complexity.Backend
+open GameTheory.Math (constrainedNashCertificateWidth)
 
 open scoped BigOperators
 
@@ -15,8 +16,8 @@ theorem exists_bounded_support_solution {q : ℕ} (A : Fin q → Fin q → ℤ)
     (S T : Fin q → Bool) (hA : ∀ i j, (A i j).natAbs ≤ q + 2)
     (w : Fin q → ℝ) (u : ℝ) (h : realSupportFeasible A S T w u) :
     ∃ (D : ℕ) (N : SupportVariable q → ℕ), 0 < D ∧
-      D < 2 ^ (14 * q ^ 2 + 36 * q + 23) ∧
-      (∀ j, N j < 2 ^ (14 * q ^ 2 + 36 * q + 23)) ∧
+      D < 2 ^ (constrainedNashCertificateWidth q) ∧
+      (∀ j, N j < 2 ^ (constrainedNashCertificateWidth q)) ∧
       (∀ i, ∑ j, supportMatrix A S T i j * (N j : ℤ) =
         (D : ℤ) * supportRhs i) := by
   obtain ⟨D, N, hD, hDbound, hNbound, hEq⟩ :=
@@ -40,14 +41,14 @@ theorem exists_bounded_support_solution_of_le {q L : ℕ}
     (hA : ∀ i j, (A i j).natAbs ≤ q + 2) (hq : q ≤ L)
     (w : Fin q → ℝ) (u : ℝ) (h : realSupportFeasible A S T w u) :
     ∃ (D : ℕ) (N : SupportVariable q → ℕ), 0 < D ∧
-      D < 2 ^ (14 * L ^ 2 + 36 * L + 23) ∧
-      (∀ j, N j < 2 ^ (14 * L ^ 2 + 36 * L + 23)) ∧
+      D < 2 ^ (constrainedNashCertificateWidth L) ∧
+      (∀ j, N j < 2 ^ (constrainedNashCertificateWidth L)) ∧
       (∀ i, ∑ j, supportMatrix A S T i j * (N j : ℤ) =
         (D : ℤ) * supportRhs i) := by
   obtain ⟨D, N, hD, hDbound, hNbound, hEq⟩ :=
     exists_bounded_support_solution A S T hA w u h
-  have hwidth : 2 ^ (14 * q ^ 2 + 36 * q + 23) ≤
-      2 ^ (14 * L ^ 2 + 36 * L + 23) :=
+  have hwidth : 2 ^ (constrainedNashCertificateWidth q) ≤
+      2 ^ (constrainedNashCertificateWidth L) :=
     pow_le_pow_right' (by decide) (GameTheory.Math.bimatrix_width_mono hq)
   exact ⟨D, N, hD, hDbound.trans_le hwidth,
     fun j => (hNbound j).trans_le hwidth, hEq⟩

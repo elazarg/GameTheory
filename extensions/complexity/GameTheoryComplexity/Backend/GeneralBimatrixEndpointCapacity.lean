@@ -1,3 +1,4 @@
+import GameTheory.Math.IntegerSumBounds
 import GameTheoryComplexity.Backend.GeneralBimatrixEndpointMachine
 import GameTheoryComplexity.Backend.GeneralBimatrixDictionary
 
@@ -28,17 +29,6 @@ private theorem cramerWeight_bound (input : List Bool) (basis : GeneralBimatrixS
     (fun i j => shifted_bound input false i.val j.val)
     (fun i j => shifted_bound input true i.val j.val) v).le.trans
       (Nat.pow_le_pow_right (by decide) (cramerWidth_le_bird _ _))
-
-private theorem sum_natAbs_le (f : ℕ → ℤ) (t C : ℕ)
-    (hf : ∀ i < t, (f i).natAbs ≤ C) :
-    (∑ i ∈ Finset.range t, f i).natAbs ≤ t * C := by
-  induction t with
-  | zero => simp
-  | succ t ih =>
-    rw [Finset.sum_range_succ]
-    exact (Int.natAbs_add_le _ _).trans
-      ((Nat.add_le_add (ih (fun i hi => hf i (by omega))) (hf t (by omega))).trans_eq
-        (by ring))
 
 private theorem term_bound (input : List Bool) (basis : GeneralBimatrixShiftedBasis input)
     (det coeff width r : List Bool) (player : Bool)
@@ -82,7 +72,7 @@ private theorem prefix_bound (input : List Bool) (basis : GeneralBimatrixShifted
       (generalRowCount input + generalColCount input) *
         2 ^ BirdIterationBounds.width (generalRowCount input + generalColCount input)
           (generalCoefficientBits input + 2) := by
-  apply (sum_natAbs_le _ _ _ (fun i hi => term_bound input basis det coeff width
+  apply (IntegerSumBounds.natAbs_sum_range_le _ t t _ le_rfl (fun i hi => term_bound input basis det coeff width
     (List.replicate i false) player (by simpa only [List.length_replicate] using hi.trans_le ht) hf)).trans
   apply Nat.mul_le_mul_right
   cases player

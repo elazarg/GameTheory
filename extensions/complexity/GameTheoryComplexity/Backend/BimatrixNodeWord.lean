@@ -56,18 +56,7 @@ theorem bimatrixNodeEnteringWord_mem_FPn : FPn bimatrixNodeEnteringWord :=
     (bimatrixNodeEnteringWord v).length = 2 * (v 0).length := by
   simp [bimatrixNodeEnteringWord, two_mul]
 
-private theorem bitAt_value (r word : List Bool) :
-    bitAt r word = [(word[r.length]?).getD false] := by
-  simp only [bitAt]
-  induction r generalizing word with
-  | nil => cases word with
-    | nil => rfl
-    | cons b word => cases b <;> rfl
-  | cons b r ih =>
-    cases word with
-    | nil => simp [caseBit₀]
-    | cons c word => simpa only [List.length_cons, List.drop_succ_cons,
-        List.getElem?_cons_succ] using ih word
+
 
 private theorem lenEq_value (x y : List Bool) : lenEqFlag x y = [decide (x.length = y.length)] := by
   rcases lenEqFlag_flag x y with h | h
@@ -89,14 +78,14 @@ private theorem xor_decide (x y : Bool) : some (xor x y) = some (decide (xor x y
 private theorem basicBit_value (r node : List Bool) :
     basicBit ![r, node] = [xor (node[r.length]?.getD false) (!(decide (r.length % 2 = 1)))] := by
   change xorSuffix (bitAt r node) (notBit (binaryLengthParity r)) = _
-  rw [bitAt_value, binaryLengthParity_value]
+  rw [bitAt_getElem?, binaryLengthParity_value]
   generalize decide (r.length % 2 = 1) = b
   cases b <;> exact xor_value _ _
 
 private theorem enteringBit_value (r node : List Bool) :
     enteringBit ![r, node] = [xor (node[r.length]?.getD false) (decide (r.length = 1))] := by
   change xorSuffix (bitAt r node) (lenEqFlag r [false]) = _
-  rw [bitAt_value, lenEq_value]
+  rw [bitAt_getElem?, lenEq_value]
   exact xor_value _ _
 
 /-- Exact unmasked basis bytes, including zero padding for truncated nodes. -/
@@ -158,7 +147,7 @@ private theorem coverageBit_value (r basic : List Bool) :
     coverageBit ![r, basic] = [decide (CoveredAt basic r.length)] := by
   change orBit (lenEqFlag r []) (notBit (andBit (bitAt (r ++ r) basic)
     (bitAt (true :: (r ++ r)) basic))) = _
-  rw [lenEq_value, bitAt_value, bitAt_value]
+  rw [lenEq_value, bitAt_getElem?, bitAt_getElem?]
   simp only [List.length_nil, List.length_append, List.length_cons, ← two_mul]
   unfold CoveredAt
   by_cases hz : r.length = 0 <;>
@@ -173,7 +162,7 @@ private theorem portBit_value (r basic entering : List Bool) :
       (orBit (lenEqFlag (binaryHalfRuler r) []) (notBit (orBit
         (bitAt (binaryHalfRuler r ++ binaryHalfRuler r) basic)
         (bitAt (true :: (binaryHalfRuler r ++ binaryHalfRuler r)) basic))))) = _
-  rw [bitAt_value, bitAt_value, lenEq_value, bitAt_value, bitAt_value]
+  rw [bitAt_getElem?, bitAt_getElem?, lenEq_value, bitAt_getElem?, bitAt_getElem?]
   simp only [List.length_nil, List.length_append, List.length_cons,
     binaryHalfRuler_length, ← two_mul]
   unfold PermittedAt

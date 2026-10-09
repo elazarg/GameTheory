@@ -12,6 +12,7 @@ import Complexitylib.Classes.P.NormalForm
 verifier. Re-encoding rejects malformed pairs before consulting the verifier. -/
 
 namespace GameTheory.Complexity.Backend
+open GameTheory.Math (constrainedNashCertificateWidth)
 
 open _root_.Complexity _root_.Complexity.Cobham
 open GameTheory.Finite GameTheory.Finite.BimatrixTable
@@ -19,9 +20,9 @@ open GameTheory.Finite GameTheory.Finite.BimatrixTable
 /-- Exact-length binary witnesses checked against the actual total table decoder. -/
 def nashCertificateRelation (input certificate : List Bool) : Prop :=
   certificate.length = (2 * decodeDimension input + 4) *
-      (14 * input.length ^ 2 + 36 * input.length + 23) ∧
+      (constrainedNashCertificateWidth input.length) ∧
     (decodeNashCertificate (decodeDimension input)
-      (14 * input.length ^ 2 + 36 * input.length + 23) certificate).Valid
+      (constrainedNashCertificateWidth input.length) certificate).Valid
       (fun i j => decodedPayoff input i j)
 
 /-- Every accepted certificate is bounded by a cubic polynomial of input length. -/
@@ -31,6 +32,7 @@ theorem nashCertificateRelation_polyBalanced : PolyBalanced nashCertificateRelat
   rw [h.1]
   simp only [Polynomial.eval_mul, Polynomial.eval_add, Polynomial.eval_ofNat,
     Polynomial.eval_X, Polynomial.eval_pow]
+  unfold constrainedNashCertificateWidth
   exact Nat.mul_le_mul_right _ (by have hq := decodeDimension_le_length input; omega)
 
 /-- The finite binary witness relation characterizes canonical constrained Nash
@@ -41,9 +43,10 @@ theorem unitPayoffLanguage_iff_exists_nashCertificate (input : List Bool) :
   · intro h
     obtain ⟨c, hc, hDp, hDq, hU, hV, ha, hb⟩ :=
       exists_bounded_decoded_nashNumerators input h
-    refine ⟨encodeNashCertificate (14 * input.length ^ 2 + 36 * input.length + 23) c,
+    refine ⟨encodeNashCertificate (constrainedNashCertificateWidth input.length) c,
       encodeNashCertificate_length _ c, ?_⟩
-    rwa [decodeNashCertificate_encode _ c hDp hDq hU hV ha hb]
+    rwa [decodeNashCertificate_encode (constrainedNashCertificateWidth input.length)
+      c hDp hDq hU hV ha hb]
   · rintro ⟨certificate, _, hc⟩
     exact NumeratorCertificate.hasNash_of_valid _ _ hc
 

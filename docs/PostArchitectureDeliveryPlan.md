@@ -390,8 +390,8 @@ The general rectangular Nash slice now includes exact binary serialization,
 an actual polynomial-time paired verifier and FNP and TFNP membership. It preserves
 independent signed payoff matrices and connects the accepted certificates to
 canonical mixed Nash. Finite complementary paths supply serialized totality,
-including degenerate games, without importing analytic existence. The next gate
-is a complementary-pivot reduction proving PPAD membership on the same relation;
+including degenerate games, without importing analytic existence. A uniform
+complementary-pivot reduction now proves PPAD membership on the same relation;
 analytic existence remains confined to Analysis.
 
 The mathematical decoding step of that gate is now established: nonzero
@@ -431,7 +431,8 @@ rational ratio order. A uniform two-bit scan and packed signed-row machine now
 have actual Cobham/FPn certificates and exact agreement with the existing
 integer lexicographic ratio comparator, including late perturbations and ties.
 Binary-machine certificates for matrix loops and positive-direction minimum-row selection,
-binary graph codecs and machine-certified maps remain before PPAD membership.
+binary graph codecs and machine-certified maps close PPAD membership. The active
+next gate is Nash PPAD hardness through an every-answer fixed-point reduction.
 
 The companion package under `extensions/complexity` owns
 `GameTheoryComplexity` import modules, with declarations under

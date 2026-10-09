@@ -76,7 +76,7 @@ private theorem gram_det_ne_zero {ρ κ : Type*} [Fintype ρ] [Fintype κ]
   exact LinearMap.ker_eq_bot.mp ((Matrix.ker_mulVecLin_transpose_mul_self C).trans hker)
 
 private theorem exists_small_independent_solution {ρ κ : Type*}
-    [Fintype ρ] [Fintype κ] [DecidableEq κ]
+    [Fintype ρ] [Fintype κ]
     (C : Matrix ρ κ ℤ) (b : ρ → ℤ) (H : ℕ)
     (hC : ∀ i j, (C i j).natAbs ≤ H) (hb : ∀ i, (b i).natAbs ≤ H)
     (y : κ → ℝ) (hy : ∀ j, 0 ≤ y j)
@@ -185,7 +185,7 @@ private theorem exists_small_independent_solution {ρ κ : Type*}
 /-- A nonnegative real solution of a bounded integer linear system has nonnegative
 integer numerators with one positive, bounded common denominator. -/
 theorem exists_small_nonnegative_solution {ρ κ : Type*}
-    [Fintype ρ] [Fintype κ] [DecidableEq κ]
+    [Fintype ρ] [Fintype κ]
     (M : Matrix ρ κ ℤ) (b : ρ → ℤ) (H : ℕ)
     (hM : ∀ i j, (M i j).natAbs ≤ H) (hb : ∀ i, (b i).natAbs ≤ H)
     (x : κ → ℝ) (hx : ∀ j, 0 ≤ x j)

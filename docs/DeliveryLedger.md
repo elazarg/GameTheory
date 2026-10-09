@@ -3,6 +3,24 @@
 This is the mutable successor-native delivery index. Status is determined by
 compiled public evidence and named remainders, never by module count.
 
+The complexity families received a proof-mining, software-engineering and
+proof-simplification review after Nash PPAD membership was merged. See
+[`ComplexityReview.md`](ComplexityReview.md) for the implemented storage-bound
+strengthening, shared pivot/path lemmas, validation and remaining extraction
+opportunities. These changes strengthen the compact Cramer and dictionary
+rows without changing the scope of the Nash membership claim.
+
+The priority follow-up extracts canonical integer dictionary feasibility,
+finite absolute-sum bounds and fixed-block list lemmas into independent Math
+modules. It removes equality assumptions from linear-certificate existence
+and centralizes constrained-Nash widths with executable ruler agreement.
+The full base/lint build passes 4,519 jobs, and companion/lint/axiom integration
+passes 4,336 jobs. Both linters, regular architecture/isolation checks and all
+19 optional-boundary regressions pass; transitive standard-axiom audits cover
+164 base and 3,769 companion declarations. The full released-git consumer build
+and lint also pass at pin `2c8e70eb`. Nash search hardness remains unsupported until its actual
+every-answer reduction is proved.
+
 Status labels:
 
 - **complete**: the intended theorem family has no current remainder;
