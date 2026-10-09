@@ -1,4 +1,5 @@
 import GameTheory.Finite.BimatrixGateProgram
+import GameTheory.Math.ClippedArithmetic
 
 /-! One accepted game exercises affine and comparator outputs simultaneously,
 with nonuniform block masses and zero weights on individual actions. -/
@@ -42,4 +43,18 @@ example : blockMass (k := 2) certificate.rowWeights certificate.rowDenominator 0
     (4 : ℚ) / 9 ∧
     blockMass (k := 2) certificate.rowWeights certificate.rowDenominator 1 = (5 : ℚ) / 9 := by
   decide +kernel
+
+-- A nonnegative signal above one still computes the exact minimum of a unit weight.
+example : min (1 / 2 : ℚ) 2 =
+    max 0 (min 1 (1 / 2 - max 0 (min 1 (1 / 2 - 2)))) := by
+  exact GameTheory.Math.min_eq_clipped_sub (by norm_num) (by norm_num) (by norm_num)
+
+-- Perturbed signals above one obey the strengthened two-step error estimate.
+example : |(3 / 5 : ℚ) - min (1 / 2) 2| ≤ 2 / 5 := by
+  have h := GameTheory.Math.clippedSub_min_error
+    (1 / 2 : ℚ) 2 (3 / 5) (21 / 10) (1 / 20) (3 / 5) (1 / 10) (1 / 10) (1 / 20)
+    (by norm_num) (by norm_num) (by norm_num) (by norm_num)
+    (by norm_num) (by norm_num) (by norm_num)
+  convert h using 1; norm_num
+
 end GameTheory.Tests.BimatrixGateProgram

@@ -239,14 +239,11 @@ theorem clipped_color_min_error (H M : ℤ) (hk : 0 < k) (g : Fin k → Gate k)
       (δ : ℝ) := by exact_mod_cast ho'
   have z0 : (0 : ℝ) ≤ (((max 0 (min 1 ((k : ℚ) * value c iz)) : ℚ) : ℝ)) := by
     exact_mod_cast (le_max_left (0 : ℚ) (min 1 ((k : ℚ) * value c iz)))
-  have z1 : (((max 0 (min 1 ((k : ℚ) * value c iz)) : ℚ) : ℝ)) ≤ 1 := by
-    exact_mod_cast (max_le (by norm_num : (0 : ℚ) ≤ 1)
-      (min_le_left (1 : ℚ) ((k : ℚ) * value c iz)))
   have he := GameTheory.Math.clippedSub_min_error w
     (((max 0 (min 1 ((k : ℚ) * value c iz)) : ℚ) : ℝ))
     (((k : ℚ) * value c iw : ℚ) : ℝ) (((k : ℚ) * value c iz : ℚ) : ℝ)
     (((k : ℚ) * value c it : ℚ) : ℝ) (((k : ℚ) * value c out : ℚ) : ℝ)
-    ((8 * δ : ℚ) : ℝ) (δ : ℝ) (δ : ℝ) hw0 hw1 z0 z1 hw hz' htR hoR
+    ((8 * δ : ℚ) : ℝ) (δ : ℝ) (δ : ℝ) hw0 hw1 z0 hw hz' htR hoR
   push_cast at he ⊢
   linarith only [he]
 

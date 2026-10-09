@@ -102,3 +102,19 @@ review, not a check implemented by that dependency script.
   The subsequent implementation request advances the default pin to
   `2c8e70ebae382a0db21f2441ebff28c7b1e41689`; its complete 4,336-job
   companion/lint/axiom build and lint pass in released git mode.
+
+## Post-completeness proof mining
+
+PRs #79 and #80 are merged to `main` at `9765b42a`. The follow-up reviews the
+complete every-answer Nash reduction and its independently reusable mathematics.
+The mathematical refactor changes theorem assumptions; gate definitions and
+payoff semantics are unchanged.
+
+| Perspective | Finding | Implemented result |
+|---|---|---|
+| Proof mining | Feedback callers supplied nonnegativity of the inward scale and error budgets, although the inward and absolute-error bounds already imply it. | `clampedFeedback_residual_bound` derives `0 ≤ L`, `0 ≤ ρ` and `0 ≤ η`; robust feedback and jitter wrappers drop the redundant premises. |
+| Proof mining | Clipped minimum correctness unnecessarily restricted the signal to the unit interval. | `min_eq_clipped_sub` and `clippedSub_min_error` now require only a nonnegative signal. Minimum, interpolation and Brouwer-gate consumers use the stronger statements. |
+
+Existing tests now exercise both exact and perturbed signals above one. The
+full base/library/lint build passes 4,556 jobs, base lint passes, and the
+transitive standard-axiom audit accepts all 557 owned gate/math declarations.

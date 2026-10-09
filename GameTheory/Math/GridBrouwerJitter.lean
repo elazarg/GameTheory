@@ -43,7 +43,7 @@ theorem gridJitter_feedback_residual {color : ℕ → ℕ → Fin 3} {n : ℕ}
     (hbnd : Sperner.GridBoundary color n) (hn : 0 < n)
     (x y α : ℚ) (hx0 : 0 ≤ x) (hx1 : x ≤ 1) (hy0 : 0 ≤ y) (hy1 : y ≤ 1)
     (hα : 0 ≤ α) (bad : Finset (Fin 41)) (hb : bad.card ≤ 2)
-    (fx fy : Fin 41 → ℝ) (ε θ ρ : ℝ) (hε : 0 ≤ ε) (hθ : 0 < θ) (hρ : 0 ≤ ρ)
+    (fx fy : Fin 41 → ℝ) (ε θ ρ : ℝ) (hε : 0 ≤ ε) (hθ : 0 < θ)
     (hgood : ∀ t, t ∉ bad →
       |fx t - ((globalGridMap color n
         ((n : ℝ) * gridJitterSample x α 20 t, (n : ℝ) * gridJitterSample y α 20 t)).1 -
@@ -79,7 +79,7 @@ theorem gridJitter_feedback_residual {color : ℕ → ℕ → Fin 3} {n : ℕ}
   constructor
   · apply robustFeedback_fortyOne_residual bad hb fx (x : ℝ) θ _ _ ρ _
       hx0r hx1r hθ he0 hsample _ _ hfeedback.1 hf.1 hf.2
-      (by positivity) hρ hround
+      hround
     · intro t ht
       have hs := abs_sub_le (fx t)
         ((globalGridMap color n
@@ -90,7 +90,7 @@ theorem gridJitter_feedback_residual {color : ℕ → ℕ → Fin 3} {n : ℕ}
     · exact fun t ht => (hexceptional t ht).1
   · apply robustFeedback_fortyOne_residual bad hb fy (y : ℝ) θ _ _ ρ _
       hy0r hy1r hθ he0 hsample _ _ hfeedback.2 hg.1 hg.2
-      (by positivity) hρ hround
+      hround
     · intro t ht
       have hs := abs_sub_le (fy t)
         ((globalGridMap color n

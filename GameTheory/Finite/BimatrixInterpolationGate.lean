@@ -112,12 +112,12 @@ theorem fourCornerWeights_error (H M : ℤ) (hk : 0 < k) (g : Fin k → Gate k)
     hcv'.trans (add_le_add hδ le_rfl)
   have h00 := BimatrixMinGate.min_error H (2 * (k : ℤ)) M g c hc hC hM hg hscale
     cu cv t00 w00 ht00 hw00 (1 - u) (1 - v) (δ + E) (δ + E)
-    (by linarith) (by linarith) (by linarith) (by linarith) hcuE hcvE
+    (by linarith) (by linarith) (by linarith) hcuE hcvE
   rw [min_sub_sub_left] at h00
   have h00' : |(k : ℚ) * value c w00 - (1 - max u v)| ≤ 5 * δ + 3 * E := by
     linarith only [h00, hδ]
   have h11 := BimatrixMinGate.min_error H (2 * (k : ℤ)) M g c hc hC hM hg hscale
-    iu iv t11 w11 ht11 hw11 u v E E hu0 hu1 hv0 hv1 hu hv
+    iu iv t11 w11 ht11 hw11 u v E E hu0 hu1 hv0 hu hv
   have h11' : |(k : ℚ) * value c w11 - min u v| ≤ 5 * δ + 3 * E := by
     linarith only [h11, hδ, hδ0]
   have h10 := subtraction_error H M hk g c hc hM hg hscale iu iv w10 hw10
