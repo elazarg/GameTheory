@@ -172,6 +172,20 @@ def sourceFn (producer : (Fin 3 → List Bool) → List Bool)
     (codes : Fin 2 → List Bool → List Bool) (source : List Bool) : List Bool :=
   producer ![source, codes 0 source, codes 1 source]
 
+/-- Decoded circuit counts recover the canonical source-dependent program dimension. -/
+theorem sourceDimension_length_of_decode (codes : Fin 2 → List Bool → List Bool)
+    (source : List Bool) (raw₀ raw₁ : CircuitCode.RawCircuit)
+    (hd₀ : CircuitCode.RawCircuit.decode? (codes 0 source) = some raw₀)
+    (hd₁ : CircuitCode.RawCircuit.decode? (codes 1 source) = some raw₁) :
+    (sourceFn dimensionRuler codes source).length =
+      BrouwerNashLayout.dimension (pairFst source).length raw₀.length raw₁.length := by
+  have h := dimensionRuler_length ![source, codes 0 source, codes 1 source]
+  change (sourceFn dimensionRuler codes source).length = BrouwerNashLayout.dimension
+    (pairFst source).length (circuitUnaryPrefix (codes 0 source)).length
+      (circuitUnaryPrefix (codes 1 source)).length at h
+  rwa [circuitUnaryPrefix_length_of_decode _ _ hd₀,
+    circuitUnaryPrefix_length_of_decode _ _ hd₁] at h
+
 /-- Actual compiled-circuit producers compose with the uniform header machines. -/
 theorem sourceFn_mem_FP {producer : (Fin 3 → List Bool) → List Bool}
     (hp : Cobham producer) (codes : Fin 2 → List Bool → List Bool)

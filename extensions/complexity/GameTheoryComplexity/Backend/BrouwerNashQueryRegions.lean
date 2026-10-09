@@ -98,4 +98,17 @@ theorem sampleOutput_interval_unique (b ell₀ ell₁ out i : ℕ) (t t' : Fin 4
   apply (sampleOutput_injective b ell₀ ell₁ t t' i
     (out - BrouwerNashLayout.sampleBase b ell₀ ell₁ t') hi hi' ?_).1
   omega
+/-- A bounded output outside a local subregion belongs to no sample's copy of that subregion. -/
+theorem sampleOutput_interval_excluded (b ell₀ ell₁ out offset lo hi : ℕ) (t : Fin 41)
+    (hlocal : offset < BrouwerNashLayout.sampleWidth b ell₀ ell₁)
+    (hout : out = BrouwerNashLayout.sampleBase b ell₀ ell₁ t + offset)
+    (hhi : hi ≤ BrouwerNashLayout.sampleWidth b ell₀ ell₁)
+    (haway : offset < lo ∨ hi ≤ offset) :
+    ∀ s : Fin 41, ¬ (BrouwerNashLayout.sampleBase b ell₀ ell₁ s + lo ≤ out ∧
+      out < BrouwerNashLayout.sampleBase b ell₀ ell₁ s + hi) := by
+  intro s hs
+  have he := sampleOutput_interval_unique b ell₀ ell₁ out offset t s hlocal hout (by omega)
+  subst s
+  omega
+
 end GameTheory.Complexity.Backend.BrouwerNashQueryRegions

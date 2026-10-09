@@ -52,18 +52,9 @@ private theorem color_zero_at_noncolor (t : Fin 41) (i : ℕ)
     (hno : i < colorBase b ∨ minimumBase b e₀ e₁ ≤ i) :
     BrouwerNashColorQuery.kindWord ![out, action, source, code₀, code₁] = [false] := by
   apply BrouwerNashColorQuery.kindWord_zero_of_outside
-  intro t'
-  change ¬(sampleBase b e₀ e₁ t' + colorBase b ≤ out.length ∧
-    out.length < sampleBase b e₀ e₁ t' + minimumBase b e₀ e₁)
-  intro hin
-  have hw := minimumBase_le_width source code₀ code₁
-  have hin' : sampleBase b e₀ e₁ t' ≤ out.length ∧
-      out.length < sampleBase b e₀ e₁ t' + sampleWidth b e₀ e₁ := by omega
-  have ht := BrouwerNashQueryRegions.sampleOutput_interval_unique b e₀ e₁ out.length i
-    t t' hi ho hin'
-  subst t'
-  rcases hno with hbefore | hafter <;> omega
-
+  exact BrouwerNashQueryRegions.sampleOutput_interval_excluded b e₀ e₁ out.length i
+    (colorBase b) (minimumBase b e₀ e₁) t hi ho
+    (minimumBase_le_width source code₀ code₁) hno
 private theorem color_at_sample (raw₀ raw₁ : RawCircuit)
     (h₀ : e₀ = raw₀.length) (h₁ : e₁ = raw₁.length)
     (hw₀ : raw₀.WellFormed (arity b)) (hw₁ : raw₁.WellFormed (arity b))

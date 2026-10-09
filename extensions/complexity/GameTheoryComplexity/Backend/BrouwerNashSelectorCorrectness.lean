@@ -7,20 +7,8 @@ The theorem includes global wires, all sample regions, and unused padding blocks
 namespace GameTheory.Complexity.Backend.BrouwerNashSelectorCorrectness
 open _root_.Complexity _root_.Complexity.CircuitCode
 open GameTheory.Finite
-open BrouwerNashLayout BrouwerNashProgram
+open BrouwerNashLayout BrouwerNashProgram BrouwerNashQueryRegions
 open scoped BigOperators
-
-private theorem interval_excluded (b e₀ e₁ out offset lo hi : ℕ) (t : Fin 41)
-    (hlocal : offset < sampleWidth b e₀ e₁)
-    (hout : out = sampleBase b e₀ e₁ t + offset) (hhi : hi ≤ sampleWidth b e₀ e₁)
-    (haway : offset < lo ∨ hi ≤ offset) :
-    ∀ s : Fin 41, ¬ (sampleBase b e₀ e₁ s + lo ≤ out ∧
-      out < sampleBase b e₀ e₁ s + hi) := by
-  intro s hs
-  have he := BrouwerNashQueryRegions.sampleOutput_interval_unique b e₀ e₁ out offset t s
-    hlocal hout (by omega)
-  subst s
-  omega
 
 section Lengths
 variable (out action source code₀ code₁ : List Bool) (e₀ e₁ : ℕ)
@@ -137,10 +125,6 @@ private theorem extraction_at (t : Fin 41) (axis stage : Fin 2) (j : ℕ) (hj : 
   fin_cases axis <;> fin_cases stage <;> norm_num at he ⊢ <;> exact he
 end Lengths
 private theorem color_zero (out action source : List Bool) (raw₀ raw₁ : RawCircuit)
-    (hw₀ : raw₀.WellFormed (arity (pairFst source).length))
-    (hw₁ : raw₁.WellFormed (arity (pairFst source).length))
-    (r : Fin (dimension (pairFst source).length raw₀.length raw₁.length * 2))
-    (hr : action.length = r.val)
     (hno : ∀ t : Fin 41,
       ¬ (sampleBase (pairFst source).length raw₀.length raw₁.length t +
           colorBase (pairFst source).length ≤ out.length ∧
@@ -148,13 +132,8 @@ private theorem color_zero (out action source : List Bool) (raw₀ raw₁ : RawC
           minimumBase (pairFst source).length raw₀.length raw₁.length)) :
     binarySignedValue (BrouwerNashColorQuery.coefficientWord
       ![out, action, source, raw₀.encode, raw₁.encode]) = 0 := by
-  have hp (raw : RawCircuit) : (circuitUnaryPrefix raw.encode).length = raw.length := by
-    simp only [RawCircuit.encode, circuitUnaryPrefix_encode, List.length_replicate]
-  let r' : Fin (dimension (pairFst source).length
-      (circuitUnaryPrefix raw₀.encode).length (circuitUnaryPrefix raw₁.encode).length * 2) :=
-    ⟨r.val, by simpa only [hp] using r.isLt⟩
   apply BrouwerNashColorQuery.coefficientWord_zero_outside
-    ![out, action, source, raw₀.encode, raw₁.encode] raw₀ raw₁ rfl rfl hw₀ hw₁ r' hr
+    ![out, action, source, raw₀.encode, raw₁.encode]
   intro t corner offset hoff he
   have hv₂ : (![out, action, source, raw₀.encode, raw₁.encode] : Fin 5 → List Bool) 2 =
       source := rfl
@@ -162,7 +141,7 @@ private theorem color_zero (out action source : List Bool) (raw₀ raw₁ : RawC
       raw₀.encode := rfl
   have hv₄ : (![out, action, source, raw₀.encode, raw₁.encode] : Fin 5 → List Bool) 4 =
       raw₁.encode := rfl
-  simp only [hv₂, hv₃, hv₄, hp, Matrix.cons_val_zero] at hoff he
+  simp only [hv₂, hv₃, hv₄, circuitUnaryPrefix_rawEncode_length, Matrix.cons_val_zero] at hoff he
   apply hno t
   have hc := corner.isLt
   have hm := Nat.mul_le_mul_right (cornerWidth (pairFst source).length raw₀.length raw₁.length)
@@ -170,10 +149,6 @@ private theorem color_zero (out action source : List Bool) (raw₀ raw₁ : RawC
   rw [Nat.add_mul, one_mul] at hm
   dsimp only [minimumBase]
   omega
-private theorem prefix_length (raw : RawCircuit) :
-    (circuitUnaryPrefix raw.encode).length = raw.length := by
-  simp only [RawCircuit.encode, circuitUnaryPrefix_encode, List.length_replicate]
-
 section Samples
 variable (out action source : List Bool) (raw₀ raw₁ : RawCircuit)
 local notation "b" => List.length (pairFst source)
@@ -191,14 +166,16 @@ private theorem jitter_sample (t : Fin 41) (offset : ℕ)
   · rw [ite_eq_left h]
     let axis : Fin 2 := ⟨offset, h⟩
     have he := jitter_at out action source raw₀.encode raw₁.encode e₀ e₁
-      (prefix_length raw₀) (prefix_length raw₁) t axis r hr ho
+      (circuitUnaryPrefix_rawEncode_length raw₀)
+      (circuitUnaryPrefix_rawEncode_length raw₁) t axis r hr ho
     have haxis : jitter axis = offset := rfl
     rw [← haxis, sampleGate_jitter b raw₀ raw₁ t axis]
     exact he
   · rw [ite_eq_right h]
     apply jitter_zero out action source raw₀.encode raw₁.encode e₀ e₁
-      (prefix_length raw₀) (prefix_length raw₁) r hr
-    exact interval_excluded b e₀ e₁ out.length offset 0 2 t hi ho
+      (circuitUnaryPrefix_rawEncode_length raw₀)
+        (circuitUnaryPrefix_rawEncode_length raw₁) r hr
+    exact sampleOutput_interval_excluded b e₀ e₁ out.length offset 0 2 t hi ho
       (by dsimp only [sampleWidth]; omega) (by omega)
 
 private theorem extraction_sample (t : Fin 41) (offset : ℕ)
@@ -214,12 +191,15 @@ private theorem extraction_sample (t : Fin 41) (offset : ℕ)
       BrouwerNashExtractionQuery.sampleGate_extraction_of_interval b offset raw₀ raw₁ t h.1 h.2
     rw [hg]
     apply extraction_at out action source raw₀.encode raw₁.encode e₀ e₁
-      (prefix_length raw₀) (prefix_length raw₁) t axis stage j hj r hr
+      (circuitUnaryPrefix_rawEncode_length raw₀)
+      (circuitUnaryPrefix_rawEncode_length raw₁) t axis stage j hj r hr
     omega
   · rw [ite_eq_right h]
     apply extraction_zero out action source raw₀.encode raw₁.encode e₀ e₁
-      (prefix_length raw₀) (prefix_length raw₁)
-    simpa only [Nat.add_assoc] using interval_excluded b e₀ e₁ out.length offset 2
+      (circuitUnaryPrefix_rawEncode_length raw₀)
+      (circuitUnaryPrefix_rawEncode_length raw₁)
+    simpa only [Nat.add_assoc] using sampleOutput_interval_excluded
+      b e₀ e₁ out.length offset 2
       (2 + 4 * b) t hi ho (by dsimp only [sampleWidth]; omega) (by omega)
 
 private theorem increment_sample (t : Fin 41) (offset : ℕ)
@@ -235,12 +215,15 @@ private theorem increment_sample (t : Fin 41) (offset : ℕ)
       BrouwerNashIncrementQuery.sampleGate_increment_of_interval b offset raw₀ raw₁ t h.1 h.2
     rw [hg]
     apply increment_at out action source raw₀.encode raw₁.encode e₀ e₁
-      (prefix_length raw₀) (prefix_length raw₁) t axis stage j hj r hr
+      (circuitUnaryPrefix_rawEncode_length raw₀)
+      (circuitUnaryPrefix_rawEncode_length raw₁) t axis stage j hj r hr
     omega
   · rw [ite_eq_right h]
     apply increment_zero out action source raw₀.encode raw₁.encode e₀ e₁
-      (prefix_length raw₀) (prefix_length raw₁) r hr
-    simpa only [weightBase, Nat.add_assoc] using interval_excluded b e₀ e₁ out.length offset
+      (circuitUnaryPrefix_rawEncode_length raw₀)
+        (circuitUnaryPrefix_rawEncode_length raw₁) r hr
+    simpa only [weightBase, Nat.add_assoc] using sampleOutput_interval_excluded
+      b e₀ e₁ out.length offset
       (2 + 4 * b) (weightBase b) t hi ho
       (by dsimp only [weightBase, sampleWidth]; omega) (by omega)
 
@@ -257,7 +240,8 @@ private theorem fixed_sample (t : Fin 41) (offset : ℕ)
       b offset raw₀ raw₁ t h₀.1 h₀.2
     rw [hg]
     apply interpolation_at out action source raw₀.encode raw₁.encode e₀ e₁
-      (prefix_length raw₀) (prefix_length raw₁) t stage r hr
+      (circuitUnaryPrefix_rawEncode_length raw₀)
+      (circuitUnaryPrefix_rawEncode_length raw₁) t stage r hr
     omega
   · by_cases h₁ : minimumBase b e₀ e₁ ≤ offset
     · rw [ite_eq_left (Or.inr h₁)]
@@ -265,16 +249,19 @@ private theorem fixed_sample (t : Fin 41) (offset : ℕ)
         BrouwerNashQueryRegions.sampleGate_minimum_of_interval b offset raw₀ raw₁ t h₁ hi
       rw [hg]
       apply minimum_at out action source raw₀.encode raw₁.encode e₀ e₁
-        (prefix_length raw₀) (prefix_length raw₁) t corner flag temporary r hr
+        (circuitUnaryPrefix_rawEncode_length raw₀)
+        (circuitUnaryPrefix_rawEncode_length raw₁) t corner flag temporary r hr
       omega
     · rw [ite_eq_right (by tauto)]
       apply fixed_zero out action source raw₀.encode raw₁.encode e₀ e₁
-        (prefix_length raw₀) (prefix_length raw₁) r hr
+        (circuitUnaryPrefix_rawEncode_length raw₀)
+        (circuitUnaryPrefix_rawEncode_length raw₁) r hr
       intro s
       constructor
-      · exact interval_excluded b e₀ e₁ out.length offset (weightBase b) (colorBase b) t hi ho
+      · exact sampleOutput_interval_excluded b e₀ e₁ out.length offset
+          (weightBase b) (colorBase b) t hi ho
           (by dsimp only [colorBase, weightBase, sampleWidth]; omega) (by omega) s
-      · exact interval_excluded b e₀ e₁ out.length offset (minimumBase b e₀ e₁)
+      · exact sampleOutput_interval_excluded b e₀ e₁ out.length offset (minimumBase b e₀ e₁)
           (sampleWidth b e₀ e₁) t hi ho le_rfl (by omega) s
 
 private theorem color_sample
@@ -292,8 +279,9 @@ private theorem color_sample
       ![out, action, source, raw₀.encode, raw₁.encode] raw₀ raw₁ rfl rfl hw₀ hw₁
       r hr t offset h.1 h.2 ho
   · rw [ite_eq_right h]
-    apply color_zero out action source raw₀ raw₁ hw₀ hw₁ r hr
-    exact interval_excluded b e₀ e₁ out.length offset (colorBase b) (minimumBase b e₀ e₁)
+    apply color_zero out action source raw₀ raw₁
+    exact sampleOutput_interval_excluded b e₀ e₁ out.length offset (colorBase b)
+      (minimumBase b e₀ e₁)
       t hi ho (by dsimp only [minimumBase, colorBase, weightBase, sampleWidth]; omega)
       (by omega)
 
@@ -307,7 +295,8 @@ private theorem coefficientWord_sample
       (sampleGate b raw₀ raw₁ t offset).coefficients r := by
   rw [BrouwerNashSelector.coefficientWord_expansion,
     global_value out action source raw₀.encode raw₁.encode e₀ e₁
-      (prefix_length raw₀) (prefix_length raw₁) r hr,
+      (circuitUnaryPrefix_rawEncode_length raw₀)
+        (circuitUnaryPrefix_rawEncode_length raw₁) r hr,
     jitter_sample out action source raw₀ raw₁ t offset hi ho r hr,
     extraction_sample out action source raw₀ raw₁ t offset hi ho r hr,
     increment_sample out action source raw₀ raw₁ t offset hi ho r hr,
@@ -322,7 +311,6 @@ private theorem coefficientWord_sample
   split_ifs <;> dsimp only [weightBase] at * <;> omega
 
 private theorem coefficientWord_outside
-    (hw₀ : raw₀.WellFormed (arity b)) (hw₁ : raw₁.WellFormed (arity b))
     (hno : ∀ t : Fin 41,
       ¬ (sampleBase b e₀ e₁ t ≤ out.length ∧
         out.length < sampleBase b e₀ e₁ t + sampleWidth b e₀ e₁))
@@ -334,7 +322,8 @@ private theorem coefficientWord_outside
   have hj : binarySignedValue (BrouwerNashJitterQuery.coefficientWord
       ![out, action, source, raw₀.encode, raw₁.encode]) = 0 := by
     apply jitter_zero out action source raw₀.encode raw₁.encode e₀ e₁
-      (prefix_length raw₀) (prefix_length raw₁) r hr
+      (circuitUnaryPrefix_rawEncode_length raw₀)
+        (circuitUnaryPrefix_rawEncode_length raw₁) r hr
     intro t ht
     apply hno t
     dsimp only [sampleWidth]
@@ -342,7 +331,8 @@ private theorem coefficientWord_outside
   have he : binarySignedValue (BrouwerNashExtractionQuery.coefficientWord
       ![out, action, source, raw₀.encode, raw₁.encode]) = 0 := by
     apply extraction_zero out action source raw₀.encode raw₁.encode e₀ e₁
-      (prefix_length raw₀) (prefix_length raw₁)
+      (circuitUnaryPrefix_rawEncode_length raw₀)
+      (circuitUnaryPrefix_rawEncode_length raw₁)
     intro t ht
     apply hno t
     dsimp only [sampleWidth]
@@ -350,7 +340,8 @@ private theorem coefficientWord_outside
   have hn : binarySignedValue (BrouwerNashIncrementQuery.allCoefficientWord
       ![out, action, source, raw₀.encode, raw₁.encode]) = 0 := by
     apply increment_zero out action source raw₀.encode raw₁.encode e₀ e₁
-      (prefix_length raw₀) (prefix_length raw₁) r hr
+      (circuitUnaryPrefix_rawEncode_length raw₀)
+        (circuitUnaryPrefix_rawEncode_length raw₁) r hr
     intro t ht
     apply hno t
     dsimp only [sampleWidth]
@@ -358,7 +349,8 @@ private theorem coefficientWord_outside
   have hf : binarySignedValue (BrouwerNashInterpolationQuery.coefficientWord
       ![out, action, source, raw₀.encode, raw₁.encode]) = 0 := by
     apply fixed_zero out action source raw₀.encode raw₁.encode e₀ e₁
-      (prefix_length raw₀) (prefix_length raw₁) r hr
+      (circuitUnaryPrefix_rawEncode_length raw₀)
+        (circuitUnaryPrefix_rawEncode_length raw₁) r hr
     intro t
     constructor
     · intro ht
@@ -370,7 +362,7 @@ private theorem coefficientWord_outside
       omega
   have hc : binarySignedValue (BrouwerNashColorQuery.coefficientWord
       ![out, action, source, raw₀.encode, raw₁.encode]) = 0 := by
-    apply color_zero out action source raw₀ raw₁ hw₀ hw₁ r hr
+    apply color_zero out action source raw₀ raw₁
     intro t ht
     apply hno t
     dsimp only [minimumBase, colorBase, weightBase, sampleWidth] at ht ⊢
@@ -378,7 +370,8 @@ private theorem coefficientWord_outside
   rw [BrouwerNashSelector.coefficientWord_expansion, hj, he, hn, hf, hc]
   simp only [add_zero]
   exact global_value out action source raw₀.encode raw₁.encode e₀ e₁
-    (prefix_length raw₀) (prefix_length raw₁) r hr
+    (circuitUnaryPrefix_rawEncode_length raw₀)
+        (circuitUnaryPrefix_rawEncode_length raw₁) r hr
 end Samples
 private theorem outside_samples (b e₀ e₁ out : ℕ)
     (hglobal : ¬ out < globalCount b)
@@ -417,7 +410,7 @@ theorem coefficientWord_value (out action source code₀ code₁ : List Bool)
       intro t ht
       dsimp only [sampleBase] at ht
       omega
-    have he := coefficientWord_outside out action source raw₀ raw₁ hw₀ hw₁ hno r hr
+    have he := coefficientWord_outside out action source raw₀ raw₁ hno r hr
     rw [program, ite_eq_left hg]
     simpa only [ho, b, ite_eq_left hg] using he
   · by_cases hs : (i.val - globalCount b) / W < 41
@@ -435,7 +428,7 @@ theorem coefficientWord_value (out action source code₀ code₁ : List Bool)
       simpa only [b, W, t, offset] using he
     · have hno := outside_samples b raw₀.length raw₁.length out.length
         (by rwa [ho]) (by rwa [ho])
-      have he := coefficientWord_outside out action source raw₀ raw₁ hw₀ hw₁ hno r hr
+      have he := coefficientWord_outside out action source raw₀ raw₁ hno r hr
       rw [program, ite_eq_right hg, dite_eq_right hs]
       have hgout : ¬ out.length < globalCount (pairFst source).length := by rwa [ho]
       simpa only [ite_eq_right hgout, BimatrixArithmeticGate.gate,

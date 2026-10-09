@@ -6,9 +6,9 @@ import Mathlib.Tactic.Ring
 /-!
 # Clipped subtraction implements a minimum
 
-Two affine subtraction steps, each clipped to the unit interval, compute a minimum of unit
-inputs. Clipping is nonexpansive, so imperfect inputs and bounded step errors give an explicit
-output error bound. Approximate inputs need not themselves lie in the unit interval.
+Two affine subtraction steps, each clipped to the unit interval, compute the minimum of a unit
+weight and a nonnegative signal. Clipping is nonexpansive, so imperfect inputs and bounded step
+errors give an explicit output error bound. Approximate inputs may lie outside the unit interval.
 -/
 
 namespace GameTheory.Math
@@ -28,9 +28,10 @@ omit [IsStrictOrderedRing F] in
 theorem unitClamp_eq_self {x : F} (hx0 : 0 ≤ x) (hx1 : x ≤ 1) :
     max 0 (min 1 x) = x := by rw [min_eq_right hx1, max_eq_right hx0]
 
-/-- Two clipped affine subtractions compute the minimum of two unit inputs. -/
+/-- Two clipped affine subtractions compute the minimum of a unit weight
+and a nonnegative signal. -/
 theorem min_eq_clipped_sub {w z : F} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
-    (hz0 : 0 ≤ z) (hz1 : z ≤ 1) :
+    (hz0 : 0 ≤ z) :
     min w z = max 0 (min 1 (w - max 0 (min 1 (w - z)))) := by
   rcases le_total w z with h | h
   · have hc : max 0 (min 1 (w - z)) = 0 :=
@@ -40,11 +41,11 @@ theorem min_eq_clipped_sub {w z : F} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
     have hd1 : w - z ≤ 1 := by linarith
     rw [min_eq_right h, unitClamp_eq_self hd0 hd1]
     have he : w - (w - z) = z := by ring
-    rw [he, unitClamp_eq_self hz0 hz1]
+    rw [he, unitClamp_eq_self hz0 (h.trans hw1)]
 
 /-- Two approximate clipped subtractions propagate weight, signal and step errors. -/
 theorem clippedSub_min_error (w z w' z' t out η ε δ : F)
-    (hw0 : 0 ≤ w) (hw1 : w ≤ 1) (hz0 : 0 ≤ z) (hz1 : z ≤ 1)
+    (hw0 : 0 ≤ w) (hw1 : w ≤ 1) (hz0 : 0 ≤ z)
     (hw : |w' - w| ≤ η) (hz : |z' - z| ≤ ε)
     (ht : |t - max 0 (min 1 (w' - z'))| ≤ δ)
     (hout : |out - max 0 (min 1 (w' - t))| ≤ δ) :
@@ -57,7 +58,7 @@ theorem clippedSub_min_error (w z w' z' t out η ε δ : F)
     simp only [sub_zero, zero_sub, abs_neg] at hd
     have hs := abs_sub_le t (max 0 (min 1 (w' - z'))) (max 0 (min 1 (w - z)))
     linarith
-  rw [min_eq_clipped_sub hw0 hw1 hz0 hz1]
+  rw [min_eq_clipped_sub hw0 hw1 hz0]
   have hc := unitClamp_nonexpansive (w' - t) (w - max 0 (min 1 (w - z)))
   have he : (w' - t) - (w - max 0 (min 1 (w - z))) =
       (w' - w) - (t - max 0 (min 1 (w - z))) := by ring

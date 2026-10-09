@@ -90,6 +90,14 @@ theorem binarySignedFixed_value (ruler x : List Bool) (hr : 0 < ruler.length)
   rw [padTo_fromBitsLE, Nat.mod_eq_of_lt hmag]
   rfl
 
+/-- Fixed-width storage preserves zero, including when its ruler is empty. -/
+theorem binarySignedFixed_value_zero (ruler x : List Bool)
+    (hx : binarySignedValue x = 0) : binarySignedValue (binarySignedFixed ruler x) = 0 := by
+  cases ruler with
+  | nil => rfl
+  | cons b ruler =>
+    rw [binarySignedFixed_value (b :: ruler) x (by simp) (by rw [hx]; simp), hx]
+
 theorem binarySignedFixed_cobham : Cobham fun v : Fin 2 → List Bool =>
     binarySignedFixed (v 0) (v 1) :=
   Cobham.padFn (.proj 0) (Cobham.appendFn

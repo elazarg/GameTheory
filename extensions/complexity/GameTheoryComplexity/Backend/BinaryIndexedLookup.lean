@@ -31,7 +31,7 @@ def binaryIndexedLookup {p : ℕ}
       (binaryIndexedLookup test term r width params)).length = _
     cases h : test (Fin.cons r params) with
     | nil => simpa only [caseBit₀] using ih
-        | cons b tail =>
+    | cons b tail =>
       cases b
       · exact ih
       · exact binarySignedFixed_length _ _
@@ -86,8 +86,8 @@ theorem binaryIndexedLookup_value {p : ℕ}
   induction clock with
   | nil =>
     change binarySignedValue (binarySignedFixed width []) = _
-    rw [binarySignedFixed_value width [] hw (by simp [binarySignedValue]; positivity)]
-    simpa using (show binarySignedValue [] = (0 : ℤ) from rfl)
+    rw [binarySignedFixed_value_zero width [] rfl]
+    simp
   | cons b r ih =>
     simp only [binaryIndexedLookup, recNotation_cons, Bool.cond_self]
     change binarySignedValue (caseBit₀ (test (Fin.cons r params))
@@ -118,7 +118,7 @@ theorem binaryIndexedLookup_value {p : ℕ}
 /-- Without a matching index, the total bounded lookup retains its initial zero. -/
 theorem binaryIndexedLookup_value_zero {p : ℕ}
     (test term : (Fin (p + 1) → List Bool) → List Bool)
-    (clock width : List Bool) (params : Fin p → List Bool) (hw : 0 < width.length)
+    (clock width : List Bool) (params : Fin p → List Bool)
     (hno : ∀ r : List Bool, r.length < clock.length → test (Fin.cons r params) = [false]) :
     binarySignedValue (binaryIndexedLookup test term clock width params) = 0 := by
   revert hno
@@ -126,8 +126,7 @@ theorem binaryIndexedLookup_value_zero {p : ℕ}
   | nil =>
     intro hno
     simp only [binaryIndexedLookup, recNotation_nil, Fin.cons_zero]
-    rw [binarySignedFixed_value _ [] hw (by simp [binarySignedValue]; positivity)]
-    rfl
+    exact binarySignedFixed_value_zero width [] rfl
   | cons b r ih =>
     intro hno
     simp only [binaryIndexedLookup, recNotation_cons, Bool.cond_self]
@@ -152,7 +151,7 @@ theorem binaryIndexedLookup_sum_value {p : ℕ}
   induction clock with
   | nil =>
     change binarySignedValue (binarySignedFixed width []) = _
-    rw [binarySignedFixed_value width [] hw (by simp [binarySignedValue]; positivity)]
+    rw [binarySignedFixed_value_zero width [] rfl]
     rfl
   | cons b r ih =>
     have hl : r.length < (b :: r).length := by simp
@@ -190,6 +189,5 @@ theorem binaryIndexedLookup_sum_value {p : ℕ}
       rw [ih hb hu]
       simp only [List.length_cons, Finset.sum_range_succ, hf, Bool.false_eq_true,
         ite_false, add_zero]
-
 
 end GameTheory.Complexity.Backend

@@ -95,20 +95,21 @@ def sampleCoefficientWord (axis next : Bool) (v : Fin 6 → List Bool) : List Bo
     (BrouwerNashHeaders.sourceDepthRuler ![v 3, v 4, v 5])
     (BrouwerNashHeaders.widthRuler ![v 3, v 4, v 5]) v
 
-set_option maxRecDepth 4096 in
 private theorem sampleCoefficientWord_cobham (axis next : Bool) :
     Cobham (sampleCoefficientWord axis next) := by
   have hg := binaryIndexedLookup_cobham (test_cobham axis next)
     (indexedCoefficientWord_cobham axis next)
+  have hc : Cobham fun v : Fin 6 → List Bool =>
+      BrouwerNashHeaders.sourceDepthRuler ![v 3, v 4, v 5] :=
+    Cobham.comp₃ BrouwerNashHeaders.sourceDepthRuler_cobham (.proj 3) (.proj 4) (.proj 5)
+  have hw : Cobham fun v : Fin 6 → List Bool =>
+      BrouwerNashHeaders.widthRuler ![v 3, v 4, v 5] :=
+    Cobham.comp₃ BrouwerNashHeaders.widthRuler_cobham (.proj 3) (.proj 4) (.proj 5)
   have hv : ∀ i : Fin 8, Cobham fun v : Fin 6 → List Bool =>
       (Fin.cons (BrouwerNashHeaders.sourceDepthRuler ![v 3, v 4, v 5])
         (Fin.cons (BrouwerNashHeaders.widthRuler ![v 3, v 4, v 5]) v) : Fin 8 → List Bool) i := by
     intro i
-    exact Fin.cases
-      (Cobham.comp₃ BrouwerNashHeaders.sourceDepthRuler_cobham (.proj 3) (.proj 4) (.proj 5))
-      (fun j => Fin.cases
-        (Cobham.comp₃ BrouwerNashHeaders.widthRuler_cobham (.proj 3) (.proj 4) (.proj 5))
-        (fun a => .proj a) j) i
+    exact Fin.cases hc (fun j => Fin.cases hw (fun a => .proj a) j) i
   exact (Cobham.comp hg hv).of_eq fun v => rfl
 
 private def sample (v : Fin 6 → List Bool) : List Bool :=
@@ -126,7 +127,6 @@ private theorem sample_cobham : Cobham sample :=
 /-- Query alternating digit and remainder coefficients using bounded source-depth scans. -/
 def coefficientWord : (Fin 5 → List Bool) → List Bool := binarySignedFiniteSum sample 41
 
-set_option maxRecDepth 4096 in
 theorem coefficientWord_cobham : Cobham coefficientWord :=
   binarySignedFiniteSum_cobham sample_cobham 41
 

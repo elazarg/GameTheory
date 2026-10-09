@@ -13,9 +13,11 @@ theorem clampedFeedback_residual_bound (x θ a d η ρ L : F)
     (hx0 : 0 ≤ x) (hx1 : x ≤ 1) (hθ : 0 < θ)
     (hnoise : |a - d| ≤ η)
     (hstep : |x - max 0 (min 1 (x + θ * a))| ≤ ρ)
-    (hlo : -L * x ≤ d) (hhi : d ≤ L * (1 - x))
-    (hL : 0 ≤ L) (hρ : 0 ≤ ρ) (hη : 0 ≤ η) :
+    (hlo : -L * x ≤ d) (hhi : d ≤ L * (1 - x)) :
     |d| ≤ η + ρ / θ + L * ρ := by
+  have hL : 0 ≤ L := by linarith
+  have hρ : 0 ≤ ρ := (abs_nonneg _).trans hstep
+  have hη : 0 ≤ η := (abs_nonneg _).trans hnoise
   have hquot : 0 ≤ ρ / θ := div_nonneg hρ hθ.le
   have hmul : 0 ≤ L * ρ := mul_nonneg hL hρ
   obtain ⟨hnoiseLo, hnoiseHi⟩ := abs_le.mp hnoise

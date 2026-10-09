@@ -624,7 +624,7 @@ theorem canonical_residual (H : ℤ) (c : BimatrixCertificate (k * 2) (k * 2))
     (hc : c.Valid (BimatrixAffineGate.rowPayoff H (2 * (k : ℤ)))
       (columnPayoff H (2 * (k : ℤ)) g))
     (hscale : (k : ℤ) * (100 * (k : ℤ) + 2 * (k : ℤ)) < H)
-    (δ : ℚ) (hδ0 : 0 ≤ δ)
+    (δ : ℚ)
     (hδ : (k : ℚ) * (((100 * (k : ℤ) + 2 * (k : ℤ) : ℤ) : ℚ) / H) ≤ δ)
     (hprecision : δ ≤ 1 / (2 : ℚ) ^ (100 * (b + k + 10)))
     (color : ℕ → ℕ → Fin 3) (hboundary : GameTheory.Math.Sperner.GridBoundary color (2 ^ b))
@@ -638,6 +638,10 @@ theorem canonical_residual (H : ℤ) (c : BimatrixCertificate (k * 2) (k * 2))
       ((2 ^ b : ℕ) * (x : ℝ), (2 ^ b : ℕ) * (y : ℝ))).1 - (2 ^ b : ℕ) * (x : ℝ)| ≤ 1 / 6 ∧
     |(GameTheory.Math.Brouwer.globalGridMap color (2 ^ b)
       ((2 ^ b : ℕ) * (x : ℝ), (2 ^ b : ℕ) * (y : ℝ))).2 - (2 ^ b : ℕ) * (y : ℝ)| ≤ 1 / 6 := by
+  have hH : (0 : ℤ) < H := lt_of_le_of_lt (by positivity) hscale
+  have hHq : (0 : ℚ) < H := by exact_mod_cast hH
+  have hδ0 : 0 ≤ δ := (by positivity :
+    0 ≤ (k : ℚ) * (((100 * (k : ℤ) + 2 * (k : ℤ) : ℤ) : ℚ) / H)).trans hδ
   let x := coordinateValue b raw₀ raw₁ c 0
   let y := coordinateValue b raw₀ raw₁ c 1
   let α : ℚ := 1 / 2 ^ precision b
@@ -730,7 +734,7 @@ theorem canonical_residual (H : ℤ) (c : BimatrixCertificate (k * 2) (k * 2))
     (fun t => (sampleSignal b raw₀ raw₁ c t).1)
     (fun t => (sampleSignal b raw₀ raw₁ c t).2) ε θ ρ
     (by dsimp [ε]; positivity) (by dsimp [θ]; exact_mod_cast (div_pos hjit.1 (by norm_num)))
-    (by dsimp [ρ]; positivity) hgood hbaderr _ (by linarith only [hε, hvariation]) hround
+    hgood hbaderr _ (by linarith only [hε, hvariation]) hround
   exact ⟨(hfeed 0).trans hfeedbudget, (hfeed 1).trans hfeedbudget⟩
 
 private theorem encoded_color_bit (color : Fin 3) (flag : Fin 2) :
@@ -745,7 +749,7 @@ theorem source_residual (source : List Bool)
     (hc : c.Valid (BimatrixAffineGate.rowPayoff H (2 * (k : ℤ)))
       (columnPayoff H (2 * (k : ℤ)) g))
     (hscale : (k : ℤ) * (100 * (k : ℤ) + 2 * (k : ℤ)) < H)
-    (δ : ℚ) (hδ0 : 0 ≤ δ)
+    (δ : ℚ)
     (hδ : (k : ℚ) * (((100 * (k : ℤ) + 2 * (k : ℤ) : ℤ) : ℚ) / H) ≤ δ)
     (hprecision : δ ≤ 1 / (2 : ℚ) ^ (100 * (b + k + 10)))
     (hraw : ∀ flag : Fin 2, (if flag.val = 0 then raw₀ else raw₁).WellFormed (arity b))
@@ -762,7 +766,7 @@ theorem source_residual (source : List Bool)
   have hboundary : GameTheory.Math.Sperner.GridBoundary (spernerColor source) (2 ^ b) := by
     rw [← hb]
     exact GameTheory.Math.Sperner.standardGridColor_boundary _ _ (Nat.two_pow_pos _)
-  apply canonical_residual b raw₀ raw₁ H c hc hscale δ hδ0 hδ hprecision
+  apply canonical_residual b raw₀ raw₁ H c hc hscale δ hδ hprecision
     (spernerColor source) hboundary hraw
   intro qx qy a flag
   have he := BrouwerNashColor.cornerVertex_eval source
@@ -796,11 +800,13 @@ theorem reward_source_residual (source : List Bool)
   let H := binarySignedValue (BrouwerNashRewardMachine.reward rulers)
   let δ : ℚ := (k : ℚ) * (102 * k) / (H : ℚ)
   have hscale : (k : ℤ) * (100 * (k : ℤ) + 2 * (k : ℤ)) < H := by
-    exact hsize ▸ BrouwerNashRewardMachine.reward_dominates rulers
-  have hk : 1 ≤ (rulers 1).length := hsize.symm ▸ dimension_pos b raw₀.length raw₁.length
+    simpa only [hsize] using BrouwerNashRewardMachine.reward_dominates rulers
+  have hk : 1 ≤ (rulers 1).length := by
+    rw [hsize]
+    exact dimension_pos b raw₀.length raw₁.length
   have hbud := BrouwerNashRewardMachine.reward_error_bound rulers hk
   rw [hdepth, hsize] at hbud
-  apply source_residual b raw₀ raw₁ source hb H c hc hscale δ hbud.1 _ hbud.2 hraw hquery
+  apply source_residual b raw₀ raw₁ source hb H c hc hscale δ _ hbud.2 hraw hquery
   dsimp only [δ]
   push_cast
   ring_nf

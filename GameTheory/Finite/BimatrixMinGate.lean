@@ -52,7 +52,7 @@ theorem min_error (H C M : ℤ) (g : Fin k → Gate k)
     (hC : 0 < C) (hM : 0 ≤ M) (hg : ∀ j r, |(g j).coefficients r| ≤ M)
     (hscale : (k : ℤ) * (M + C) < H) (iw iz it out : Fin k)
     (ht : g it = subtractionGate C iw iz) (hout : g out = subtractionGate C iw it)
-    (w z η ε : ℚ) (hw0 : 0 ≤ w) (hw1 : w ≤ 1) (hz0 : 0 ≤ z) (hz1 : z ≤ 1)
+    (w z η ε : ℚ) (hw0 : 0 ≤ w) (hw1 : w ≤ 1) (hz0 : 0 ≤ z)
     (hw : |(k : ℚ) * value c iw - w| ≤ η)
     (hz : |(k : ℚ) * value c iz - z| ≤ ε) :
     |(k : ℚ) * value c out - min w z| ≤
@@ -60,7 +60,7 @@ theorem min_error (H C M : ℤ) (g : Fin k → Gate k)
   exact GameTheory.Math.clippedSub_min_error w z
     ((k : ℚ) * value c iw) ((k : ℚ) * value c iz)
     ((k : ℚ) * value c it) ((k : ℚ) * value c out)
-    η ε ((k : ℚ) * (((M + C : ℤ) : ℚ) / H)) hw0 hw1 hz0 hz1 hw hz
+    η ε ((k : ℚ) * (((M + C : ℤ) : ℚ) / H)) hw0 hw1 hz0 hw hz
     (subtraction_error H C M g c hc hC hM hg hscale iw iz it ht)
     (subtraction_error H C M g c hc hC hM hg hscale iw it out hout)
 
@@ -77,9 +77,8 @@ theorem min_weight_error (H C M : ℤ) (g : Fin k → Gate k)
     |(k : ℚ) * value c out - (if bit then w else 0)| ≤
       2 * ((k : ℚ) * (((M + C : ℤ) : ℚ) / H)) + 2 * η + ε := by
   have hz0 : (0 : ℚ) ≤ (if bit then 1 else 0) := by cases bit <;> norm_num
-  have hz1 : (if bit then 1 else 0) ≤ (1 : ℚ) := by cases bit <;> norm_num
   have h := min_error H C M g c hc hC hM hg hscale iw iz it out ht hout
-    w (if bit then 1 else 0) η ε hw0 hw1 hz0 hz1 hw hz
+    w (if bit then 1 else 0) η ε hw0 hw1 hz0 hw hz
   cases bit
   · simpa only [Bool.false_eq_true, ite_false, min_eq_right hw0] using h
   · simpa only [ite_true, min_eq_left hw1] using h

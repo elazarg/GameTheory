@@ -55,6 +55,18 @@ theorem circuitUnaryPrefix_encode (n : ℕ) (rest : List Bool) :
   | succ n ih => simpa [CircuitCode.NatCode.encode, List.replicate_succ,
       circuitUnaryPrefix] using congrArg (List.cons true) ih
 
+/-- An encoded raw circuit's unary header records exactly its gate count. -/
+theorem circuitUnaryPrefix_rawEncode_length (raw : CircuitCode.RawCircuit) :
+    (circuitUnaryPrefix raw.encode).length = raw.length := by
+  rw [CircuitCode.RawCircuit.encode, circuitUnaryPrefix_encode, List.length_replicate]
+
+/-- Successful decoding identifies the scanned header with the decoded gate count. -/
+theorem circuitUnaryPrefix_length_of_decode (code : List Bool) (raw : CircuitCode.RawCircuit)
+    (hd : CircuitCode.RawCircuit.decode? code = some raw) :
+    (circuitUnaryPrefix code).length = raw.length := by
+  rw [(CircuitCode.RawCircuit.decode?_eq_some_iff code raw).mp hd]
+  exact circuitUnaryPrefix_rawEncode_length raw
+
 /-- Skipping a canonical unary field recovers its unconsumed suffix. -/
 theorem circuitUnaryRest_encode (n : ℕ) (rest : List Bool) :
     circuitUnaryRest (CircuitCode.NatCode.encode n ++ rest) = rest := by

@@ -60,7 +60,6 @@ private theorem collect_cobham (n : ℕ) : Cobham (collect n) := by
 /-- The input layout is output ruler, action ruler, source and the two scalar color codes. -/
 def kindWord : (Fin 5 → List Bool) → List Bool := collect 41
 
-set_option maxRecDepth 4096 in
 theorem kindWord_cobham : Cobham kindWord := collect_cobham 41
 
 theorem kindWord_mem_FPn : FPn kindWord := cobham_iff_FPn.mp kindWord_cobham

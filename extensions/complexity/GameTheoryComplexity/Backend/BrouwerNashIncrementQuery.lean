@@ -117,7 +117,6 @@ private theorem indexedWord_cobham (axis : Fin 2) (stage : Fin 4) :
 /-- A ripple stage scans source-bit depth at each of the forty-one sample placements. -/
 def coefficientWord (axis : Fin 2) (stage : Fin 4) : (Fin 5 → List Bool) → List Bool :=
   binarySignedFiniteSum (indexedWord axis stage) 41
-set_option maxRecDepth 4096 in
 theorem coefficientWord_cobham (axis : Fin 2) (stage : Fin 4) :
     Cobham (coefficientWord axis stage) :=
   binarySignedFiniteSum_cobham (indexedWord_cobham axis stage) 41

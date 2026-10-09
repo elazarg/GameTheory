@@ -102,3 +102,45 @@ review, not a check implemented by that dependency script.
   The subsequent implementation request advances the default pin to
   `2c8e70ebae382a0db21f2441ebff28c7b1e41689`; its complete 4,336-job
   companion/lint/axiom build and lint pass in released git mode.
+
+## Post-completeness proof mining
+
+PRs #79 and #80 are merged to `main` at `9765b42a`. The follow-up reviews the
+complete every-answer Nash reduction and its independently reusable mathematics.
+The mathematical refactor changes theorem assumptions; gate definitions and
+payoff semantics are unchanged.
+
+| Perspective | Finding | Implemented result |
+|---|---|---|
+| Proof mining | Feedback callers supplied nonnegativity of the inward scale and error budgets, although the inward and absolute-error bounds already imply it. | `clampedFeedback_residual_bound` derives `0 ≤ L`, `0 ≤ ρ` and `0 ≤ η`; robust feedback and jitter wrappers drop the redundant premises. |
+| Proof mining | Clipped minimum correctness unnecessarily restricted the signal to the unit interval. | `min_eq_clipped_sub` and `clippedSub_min_error` now require only a nonnegative signal. Minimum, interpolation and Brouwer-gate consumers use the stronger statements. |
+
+Existing tests now exercise both exact and perturbed signals above one. The
+full base/library/lint build passes 4,556 jobs, base lint passes, and the
+transitive standard-axiom audit accepts all 557 owned gate/math declarations.
+
+The optional proof/engineering pass is also implemented:
+
+| Perspective | Finding | Implemented result |
+|---|---|---|
+| Proof mining | A no-hit lookup required a positive storage width even though it retains zero at every width. | `binarySignedFixed_value_zero` includes empty rulers and padded zero representations; `binaryIndexedLookup_value_zero` drops width positivity. Color-query leaf proofs reuse it. |
+| Proof mining | Inactive color queries required decoded circuits, well-formedness and a bounded action index. | `coefficientWord_zero_outside` now needs only the query and its outside-region condition. Inactive selector branches drop the unrelated premises. |
+| Software engineering | Circuit-header and source-dimension recovery were repeated across color queries and the two reduction assemblies. | Generic encoded/decoded prefix-length lemmas live beside the scanner; `sourceDimension_length_of_decode` owns the source-header specialization. |
+| Proof simplification | Scalar and kind selectors repeated exclusion of other sample intervals. | Both reuse `sampleOutput_interval_excluded` in the existing region module. |
+| Proof simplification | Residual bounds asked callers for nonnegative error even though the scaling and reciprocal-error bounds imply it. | Canonical/source residual proofs derive that inequality internally; the final reward theorem and public completeness signature are unchanged. |
+| Proof simplification | Several Cobham proofs raised the recursion limit unnecessarily. | Removed six overrides from extraction, increment, interpolation and sample-kind proofs; extraction pullbacks have explicit intermediate types. |
+| Proof simplification | Five source-visible equality transports repeated header/size rewrites. | Reduction and reward proofs now use `simpa only`; decoded-circuit validity is recovered once per assembly. |
+
+No material correctness issue was found in the reviewed every-answer soundness,
+word-machine composition or public completeness statement. The remaining local
+Jitter recursion option is retained: tested typed/default-limit variants still
+exceed the default limit. General NOT tolerance and normalization-implied
+positive-cardinality refinements are smaller consumer-gated opportunities;
+this pass does not broaden gate families or add a certificate hierarchy.
+
+Full companion/library/lint/axiom builds pass 4,416 jobs in local-path and
+published-base configurations at pin `9e16c2a5`; both companion linters pass.
+All 6,244 owned optional declarations use only `propext`, `Classical.choice`
+and `Quot.sound`. Architecture and optional isolation audits and all 30 Python
+regression tests pass. The toolchain check confirms Lean 4.34.1. The complete
+public `bimatrixNashRelation_PPADComplete` theorem is included in both builds.
