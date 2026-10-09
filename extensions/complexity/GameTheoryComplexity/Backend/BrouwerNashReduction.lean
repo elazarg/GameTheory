@@ -86,11 +86,6 @@ theorem answer_sound_of_fields
 
 end
 
-private theorem decoded_prefix_length (code : List Bool) (raw : RawCircuit)
-    (hd : RawCircuit.decode? code = some raw) : (circuitUnaryPrefix code).length = raw.length := by
-  have he := (RawCircuit.decode?_eq_some_iff code raw).mp hd
-  rw [he, RawCircuit.encode, circuitUnaryPrefix_encode, List.length_replicate]
-
 private def kindWord (query : (Fin 2 → List Bool) → List Bool)
     (ruler source : List Bool) : List Bool := binarySignedTable query ruler [false] ![source]
 
@@ -175,12 +170,8 @@ theorem exists_reduction_of_selectors
     let b := (pairFst source).length
     let K := dimension b raw₀.length raw₁.length
     let G := program b raw₀ raw₁
-    have hd : (d source).length = K := by
-      have hd := BrouwerNashHeaders.dimensionRuler_length ![source, codes 0 source, codes 1 source]
-      change (d source).length = dimension b
-        (circuitUnaryPrefix (codes 0 source)).length
-        (circuitUnaryPrefix (codes 1 source)).length at hd
-      rwa [decoded_prefix_length _ _ hd₀, decoded_prefix_length _ _ hd₁] at hd
+    have hd := BrouwerNashHeaders.sourceDimension_length_of_decode
+      codes source raw₀ raw₁ hd₀ hd₁
     have hf := BimatrixProgramEmission.programWord_fields d w h kinds query source
     have hsize : (BimatrixProgramCodec.dimension (tape source)).length = K :=
       (congrArg List.length hf.1).trans hd
@@ -198,8 +189,8 @@ theorem exists_reduction_of_selectors
       rfl
     · intro i r hi hr
       rw [hf.2.1, hf.2.2.2.2]
-      have hiD : i < (d source).length := hd.symm ▸ hi
-      have hrD : r < (d source).length * 2 := hd.symm ▸ hr
+      have hiD : i < (d source).length := by simpa only [hd] using hi
+      have hrD : r < (d source).length * 2 := by simpa only [hd] using hr
       have hp := BimatrixProgramEmission.coefficients_field query ![d source, w source, source]
         i r (by simpa only [Matrix.cons_val_zero] using hiD)
           (by simpa only [Matrix.cons_val_zero] using hrD)
@@ -225,7 +216,7 @@ theorem exists_reduction_of_selectors
         exact_mod_cast hb
     · intro i hi
       rw [hf.2.2.2.1]
-      have hiD : i < (d source).length := hd.symm ▸ hi
+      have hiD : i < (d source).length := by simpa only [hd] using hi
       have he := hkind source raw₀ raw₁ hd₀ hd₁ ⟨i, hi⟩
       have hat := kindWord_at kindQuery (d source) source i hiD _ he
       change (if (kindWord kindQuery (d source) source)[i]?.getD false then _ else _) = _

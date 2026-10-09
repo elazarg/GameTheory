@@ -643,11 +643,14 @@ canonical program and binary source decoder. Public
 `bimatrixNashRelation_PPADHard` composes it with Brouwer hardness, and
 `bimatrixNashRelation_PPADComplete` combines this with the existing membership
 proof on the same relation. No caller-supplied machine or numerical certificate
-remains. Full companion/library/lint/axiom builds pass 4,416 jobs against both local
-and published base pin `8f6d5344`, auditing all 6,249 owned declarations using
-only standard axioms. Both companion linters, architecture/isolation audits
-and all 30 regression tests pass. Read-only semantic/proof review found no
-material blocker; the color query uses the shared fixed-list signed sum.
+remains. The post-completeness proof-mining pass strengthens generic clipping and
+feedback lemmas, shares header/region invariants and simplifies actual word
+and selector proofs without changing the public completeness relation. Full
+companion/library/lint/axiom builds pass 4,416 jobs against both local and
+published base pin `9e16c2a5`, auditing all 6,244 owned declarations using only
+standard axioms. Both companion linters, architecture/isolation audits and
+all 30 regression tests pass. Findings and implementation are recorded in
+`ComplexityReview.md`.
 Restricted-game corollaries (graphical, polymatrix, sparse or win/lose) follow
 only when their own reductions justify their scope.
 

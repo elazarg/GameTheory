@@ -102,7 +102,6 @@ private theorem interpolationTerm_cobham (stage : Fin 8) : Cobham (interpolation
 /-- A fixed interpolation stage scans all forty-one sample placements. -/
 def interpolationWord (stage : Fin 8) : (Fin 5 → List Bool) → List Bool :=
   binarySignedFiniteSum (interpolationTerm stage) 41
-set_option maxRecDepth 4096 in
 theorem interpolationWord_cobham (stage : Fin 8) : Cobham (interpolationWord stage) :=
   binarySignedFiniteSum_cobham (interpolationTerm_cobham stage) 41
 theorem interpolationWord_mem_FPn (stage : Fin 8) : FPn (interpolationWord stage) :=
@@ -166,7 +165,6 @@ private theorem minimumTerm_cobham (corner : Fin 4) (flag : Fin 2) (temporary : 
 /-- A weighted-minimum stage scans its concrete placements in all forty-one samples. -/
 def minimumWord (corner : Fin 4) (flag : Fin 2) (temporary : Bool) :
     (Fin 5 → List Bool) → List Bool := binarySignedFiniteSum (minimumTerm corner flag temporary) 41
-set_option maxRecDepth 4096 in
 theorem minimumWord_cobham (corner : Fin 4) (flag : Fin 2) (temporary : Bool) :
     Cobham (minimumWord corner flag temporary) :=
   binarySignedFiniteSum_cobham (minimumTerm_cobham corner flag temporary) 41
