@@ -72,4 +72,7 @@ review, not a check implemented by that dependency script.
   and `scripts/complexity-audit.ps1`: passed. All 19 complexity boundary
   regression tests and the architecture mutation regression passed.
 - Lean version check: 4.34.1; targeted Mathlib cache check: no missing files.
-- Released-pin consumer validation is recorded with the final base pin below.
+- The default base pin is `572e3b675ade7364d1cc86cb79e9c801eb47d47f`, the
+  published review implementation. Lake resolved that git revision and the
+  toolchain/cache checks passed. The released-pin build was stopped at the
+  user's request to finish statically; it is not claimed as completed.
