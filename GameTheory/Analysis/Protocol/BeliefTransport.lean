@@ -11,7 +11,7 @@ share one depth, its belief is the behavioral law at that depth conditioned on
 the information event.
 
 Between two protocols, a history map whose reach weights sum over its fibers
-transports site masses and beliefs, and so does any readout whose joint law
+up to a positive finite multiplier scales site masses and preserves beliefs, and so does any readout whose joint law
 with the information event agrees. Each transport has a form stated with reach
 weights alone and a form at decision depths, which may differ between the two
 protocols.
@@ -344,6 +344,70 @@ private theorem fiber_mass [DecidableEq T.History]
 
 end Fiber
 
+section ProportionalReach
+
+variable {ι : Type*} {E T : ExecutionProtocol ι}
+  (M : InformationModel E) (N : InformationModel T)
+  [E.FiniteMovers] [T.FiniteMovers]
+  (raw : (i : ι) → M.BehavioralPolicy i) (source : (i : ι) → N.BehavioralPolicy i)
+  (project : E.History → T.History) [DecidableEq T.History]
+  (who : ι) (rawSite : M.InformationSite who) (sourceSite : N.InformationSite who)
+  (maps : ∀ history, M.infoOf who history.trace = rawSite.1 →
+    N.infoOf who (project history).trace = sourceSite.1)
+  (scale : ℝ≥0∞)
+  (fiber : ∀ history : N.InformationHistory who sourceSite.1,
+    scale * N.historyReachWeight source history.1 =
+      ∑' original : M.InformationHistory who rawSite.1,
+        if project original.1 = history.1 then M.historyReachWeight raw original.1 else 0)
+
+include maps fiber in
+/-- Proportional fiber sums scale the site's mass by the same multiplier. -/
+theorem informationMass_projection_of_proportional_reach :
+    M.informationMass raw who rawSite = scale * N.informationMass source who sourceSite := by
+  have mass := fiber_mass M N project who rawSite sourceSite (M.historyReachWeight raw)
+    (fun history => scale * N.historyReachWeight source history) maps fiber
+  simpa only [informationMass, ENNReal.tsum_mul_left] using mass
+
+include fiber in
+/-- **Proportional Bayes projection.** A history map whose fiber sums of reach
+weights are a fixed positive finite multiple of the target reach weights
+transports the Bayes belief. -/
+theorem bayesBelief_projection_of_proportional_reach
+    (scaleNonzero : scale ≠ 0) (scaleFinite : scale ≠ ∞)
+    (rawAntichain : rawSite.IsHistoryAntichain)
+    (sourceAntichain : sourceSite.IsHistoryAntichain)
+    (sourcePositive : 0 < N.informationMass source who sourceSite) :
+    (M.bayesBelief raw who rawSite rawAntichain (by
+      rw [M.informationMass_projection_of_proportional_reach N raw source project who
+        rawSite sourceSite maps scale fiber]
+      exact ENNReal.mul_pos scaleNonzero sourcePositive.ne')).map
+      (fun original : M.InformationHistory who rawSite.1 =>
+        (⟨project original.1, maps original.1 original.2⟩ :
+          N.InformationHistory who sourceSite.1)) =
+      N.bayesBelief source who sourceSite sourceAntichain sourcePositive := by
+  classical
+  have mass := M.informationMass_projection_of_proportional_reach N raw source project who
+    rawSite sourceSite maps scale fiber
+  ext history
+  rw [PMF.map_apply, N.bayesBelief_apply]
+  simp_rw [M.bayesBelief_apply]
+  rw [
+    ← ENNReal.mul_div_mul_left (N.historyReachWeight source history.1)
+      (N.informationMass source who sourceSite) scaleNonzero scaleFinite,
+    fiber history, ← mass, div_eq_mul_inv, ← ENNReal.tsum_mul_right]
+  apply tsum_congr
+  intro original
+  by_cases same : project original.1 = history.1
+  · have equal : history = ⟨project original.1, maps original.1 original.2⟩ :=
+      Subtype.ext same.symm
+    rw [ite_eq_left equal, ite_eq_left same, div_eq_mul_inv]
+  · have different : history ≠ ⟨project original.1, maps original.1 original.2⟩ :=
+      fun equal => same (congrArg Subtype.val equal).symm
+    rw [ite_eq_right different, ite_eq_right same, zero_mul]
+
+
+end ProportionalReach
+
 variable (raw : (i : ι) → M.BehavioralPolicy i) (source : (i : ι) → N.BehavioralPolicy i)
   (project : E.History → T.History)
 
@@ -378,23 +442,10 @@ theorem bayesBelief_projection_of_reach
       (fun original : M.InformationHistory who rawSite.1 =>
         (⟨project original.1, maps original.1 original.2⟩ :
           N.InformationHistory who sourceSite.1)) =
-      N.bayesBelief source who sourceSite sourceAntichain sourcePositive := by
-  classical
-  have mass := M.informationMass_projection_of_reach N raw source project who rawSite sourceSite
-    maps fiber
-  ext history
-  rw [PMF.map_apply, N.bayesBelief_apply, fiber history, ← mass, div_eq_mul_inv,
-    ← ENNReal.tsum_mul_right]
-  apply tsum_congr
-  intro original
-  rw [M.bayesBelief_apply]
-  by_cases same : project original.1 = history.1
-  · have equal : history = ⟨project original.1, maps original.1 original.2⟩ :=
-      Subtype.ext same.symm
-    rw [ite_eq_left equal, ite_eq_left same, div_eq_mul_inv]
-  · have different : history ≠ ⟨project original.1, maps original.1 original.2⟩ :=
-      fun equal => same (congrArg Subtype.val equal).symm
-    rw [ite_eq_right different, ite_eq_right same, zero_mul]
+      N.bayesBelief source who sourceSite sourceAntichain sourcePositive :=
+  M.bayesBelief_projection_of_proportional_reach N raw source project who rawSite sourceSite
+    maps 1 (fun history => by rw [one_mul]; exact fiber history) one_ne_zero ENNReal.one_ne_top
+    rawAntichain sourceAntichain sourcePositive
 
 end Reach
 
