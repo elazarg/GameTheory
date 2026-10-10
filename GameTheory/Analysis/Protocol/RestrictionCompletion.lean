@@ -23,21 +23,19 @@ open GameTheory.Math.Probability Filter
 
 variable {ι : Type*} [Fintype ι] [DecidableEq ι]
   {E T : ExecutionProtocol ι} {M : InformationModel E} {N : InformationModel T}
-  [Fintype T.History] [∀ i, DecidableEq (N.InfoState i)]
+  [Finite T.History] [∀ i, DecidableEq (N.InfoState i)]
   (restriction : M.ActionRestriction N)
 
-/-- **Consistent extension.** Keep a consistent assessment of the smaller
-protocol at retained sites and complete all new sites, with common decision
-depths required only at retained sites. -/
+/-- **Consistent extension without a common depth.** Keep a consistent
+assessment of the smaller protocol at retained sites and complete all new
+sites. Retained sites need no common decision depth: the dominating factor uses the
+global horizon that finite histories certify. -/
 theorem exists_consistent_extension
     (source : M.BehavioralAssessment) (sourceAntichain : M.DecisionInformationAntichain)
     (sourceConsistent : source.IsSequentiallyConsistent sourceAntichain)
     (reference : N.BehavioralAssessment) (referenceMixed : reference.IsFullyMixed)
     (decisionRecall : N.DecisionRecall) (certificate : T.WellFoundedHistories)
-    (payoff : ι → T.History → ℝ)
-    (depth : ∀ who, M.InformationSite who → ℕ)
-    (clock : ∀ who site, InformationSite.CommonDepth N (restriction.site who site)
-      (depth who site)) :
+    (payoff : ι → T.History → ℝ) :
     ∃ target : N.BehavioralAssessment,
       target.IsSequentiallyConsistent decisionRecall.decisionInformationAntichain ∧
       restriction.ExtendsProfile source.strategy target.strategy ∧
@@ -50,6 +48,7 @@ theorem exists_consistent_extension
             (target.continuationContext certificate site (payoff who)).value
               (target.strategy who) := by
   classical
+  let _ := Fintype.ofFinite T.History
   have _ : Finite E.History := Finite.of_injective restriction.history restriction.history.injective
   let _ := Fintype.ofFinite (Σ who, M.InformationSite who)
   obtain ⟨sourceSequence, sourceApproximates, sourceConverges⟩ := sourceConsistent
@@ -133,10 +132,12 @@ theorem exists_consistent_extension
       (fun n => epsilon (index n)) (fun n => (positive (index n)).le)
       (fun n => (small (index n)).le) (vanishes.comp increasing.tendsto_atTop)
       (fun n => perturbs (index n))
+  obtain ⟨bound, -, bounded⟩ := T.exists_pos_boundedHorizon
+  let sourceCertificate : E.WellFoundedHistories :=
+    (restriction.boundedHorizon bounded).wellFoundedHistories
   refine ⟨target, consistent, extendsTarget, ?_, ?_⟩
   · intro who site
-    let elapsed := depth who site
-    let steps := Fintype.card ι * elapsed
+    let steps := Fintype.card ι * bound
     let factor (n : ℕ) := (1 - epsilon n) ^ steps
     have factorPositive (n : ℕ) : 0 < factor n := pow_pos (sub_pos.mpr (small n)) _
     have factorBound (n : ℕ) : factor n ≤ 1 :=
@@ -153,14 +154,23 @@ theorem exists_consistent_extension
           (mul_pos (factorPositive n) (reachPositive n))
           (mul_le_mul_of_nonneg_left (reachBound n ⟨who, site⟩) (factorPositive n).le)
       · exact relativeTremble_power_ratio_tendsto reach reachPositive steps
-    have beliefs := restriction.retained_beliefs_converge sourceSequence sequence
-      sourceAntichain decisionRecall.decisionInformationAntichain
-      (fun n => (sourceApproximates n).1) mixed (fun n => (sourceApproximates n).2) bayes
-      who site elapsed (clock who site) factor factorPositive factorBound
-      (fun n history => restriction.perturbed_run_domination (sourceSequence n).strategy
+    have lower (n : ℕ) (final : T.History) : factor n *
+        (((M.runBehavioralTerminalFrom sourceCertificate (sourceSequence n).strategy
+          E.initHistory).map restriction.history) final).toReal ≤
+          ((N.runBehavioralTerminalFrom certificate (sequence n).strategy
+            T.initHistory) final).toReal := by
+      rw [M.runBehavioralTerminalFrom_eq_runBehavioralFrom_of_bounded sourceCertificate
+          (restriction.boundedHorizon bounded),
+        N.runBehavioralTerminalFrom_eq_runBehavioralFrom_of_bounded certificate bounded]
+      exact restriction.perturbed_run_domination (sourceSequence n).strategy
         reference.strategy (sequence n).strategy (epsilon n) (positive n).le (small n).le
-        (perturbs n) elapsed history)
-      negligible (source.belief who site) (sourceConverges.belief who site)
+        (perturbs n) bound final
+    have beliefs := restriction.retained_beliefs_converge sourceCertificate
+      certificate sourceSequence sequence sourceAntichain
+      decisionRecall.decisionInformationAntichain
+      (fun n => (sourceApproximates n).1) mixed (fun n => (sourceApproximates n).2) bayes
+      who site factor factorPositive factorBound lower negligible (source.belief who site)
+      (sourceConverges.belief who site)
     exact (converges.belief who (restriction.site who site)).unique
       (beliefs.subseq increasing)
   · intro who site newSite law
@@ -168,5 +178,6 @@ theorem exists_consistent_extension
       simp only [free, Finset.mem_filter, Finset.mem_univ, true_and]
       exact newSite
     exact freeOptimal who site member law
+
 
 end GameTheory.Protocol.InformationModel.ActionRestriction

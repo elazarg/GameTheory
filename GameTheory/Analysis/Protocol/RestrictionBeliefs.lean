@@ -6,7 +6,7 @@ laws at every retained decision site. If approximants of the larger protocol
 dominate the embedded play of the smaller one by factors whose loss is
 negligible relative to a retained site's mass, their Bayes beliefs at that site
 converge to the prescribed belief, even when the site is unreached in the limit.
-The belief statement uses a common decision depth at the retained site only.
+Terminal passage through the site supplies conditioning without a common decision depth.
 -/
 
 import GameTheory.Analysis.Protocol.BeliefTransport
@@ -21,17 +21,6 @@ open GameTheory.Math.Probability Filter
 variable {ι : Type*} {E T : ExecutionProtocol ι}
   {M : InformationModel E} {N : InformationModel T}
 variable [E.FiniteMovers] [T.FiniteMovers]
-
-private theorem information_event_meets (assessment : M.BehavioralAssessment)
-    (mixed : assessment.IsFullyMixed) (who : ι) (site : M.InformationSite who)
-    (depth : ℕ) (clock : InformationSite.CommonDepth M site depth) :
-    ∃ history ∈ {history : E.History | M.infoOf who history.trace = site.1},
-      history ∈ (M.runBehavioral assessment.strategy depth).support := by
-  let witness := site.2.choose
-  refine ⟨witness.1, witness.2, ?_⟩
-  have positive := M.historyReachWeight_pos_of_fullSupport assessment.strategy mixed witness.1
-  rw [historyReachWeight, clock witness] at positive
-  exact (PMF.apply_pos_iff _ _).mp positive
 
 private theorem bayes_belief_eq (assessment : M.BehavioralAssessment)
     (who : ι) (site : M.InformationSite who)
@@ -91,11 +80,14 @@ theorem information_event_preimage (who : ι) (site : M.InformationSite who) :
   simp only [Set.mem_preimage, Set.mem_ofPred_eq, restriction.observed,
     site_val, Function.Embedding.apply_eq_iff_eq]
 
-/-- **Retained beliefs converge.** Beliefs at a retained site follow from a
-bound on execution laws, not from an assumed translation of beliefs. The
-dominating factors' loss must be negligible relative to the retained site's
-mass in the smaller protocol. -/
+section TerminalPassage
+
+/-- **Retained beliefs converge without a common depth.** Beliefs at a
+retained site follow from a bound on terminal laws. The dominating factors'
+loss must be negligible relative to the retained site's mass in the smaller
+protocol. The histories of the site may lie at different depths. -/
 theorem retained_beliefs_converge
+    (sourceCertificate : E.WellFoundedHistories) (targetCertificate : T.WellFoundedHistories)
     (sourceSequence : ℕ → M.BehavioralAssessment)
     (targetSequence : ℕ → N.BehavioralAssessment)
     (sourceAntichain : M.DecisionInformationAntichain)
@@ -106,14 +98,14 @@ theorem retained_beliefs_converge
       (sourceSequence n) sourceAntichain)
     (targetBayes : ∀ n, BehavioralAssessment.IsBayesConsistent N
       (targetSequence n) targetAntichain)
-    (who : ι) (site : M.InformationSite who) (depth : ℕ)
-    (clock : InformationSite.CommonDepth N (restriction.site who site) depth)
+    (who : ι) (site : M.InformationSite who)
     (factor : ℕ → ℝ) (positive : ∀ n, 0 < factor n)
     (atMostOne : ∀ n, factor n ≤ 1)
-    (lower : ∀ n history,
-      factor n * (((M.runBehavioral (sourceSequence n).strategy depth).map
-        restriction.history) history).toReal ≤
-          ((N.runBehavioral (targetSequence n).strategy depth) history).toReal)
+    (lower : ∀ n final, factor n *
+      (((M.runBehavioralTerminalFrom sourceCertificate (sourceSequence n).strategy
+        E.initHistory).map restriction.history) final).toReal ≤
+          ((N.runBehavioralTerminalFrom targetCertificate (targetSequence n).strategy
+            T.initHistory) final).toReal)
     (negligible : Tendsto (fun n => (1 - factor n) /
       (factor n * (M.informationMass (sourceSequence n).strategy who site).toReal)) atTop
         (nhds 0))
@@ -123,75 +115,63 @@ theorem retained_beliefs_converge
       (fun n => (targetSequence n).belief who (restriction.site who site))
       (limit.map (restriction.informationHistory who site)) := by
   classical
-  let sourceEvent : Set E.History := {history | M.infoOf who history.trace = site.1}
-  let targetEvent : Set T.History :=
-    {history | N.infoOf who history.trace = (restriction.site who site).1}
-  have sourceClock := restriction.source_commonDepth who site depth clock
-  have sourceMeet (n : ℕ) := information_event_meets (sourceSequence n)
-    (sourceMixed n) who site depth sourceClock
-  have targetMeet (n : ℕ) := information_event_meets (targetSequence n)
-    (targetMixed n) who (restriction.site who site) depth clock
-  have preimage : restriction.history ⁻¹' targetEvent = sourceEvent :=
-    restriction.information_event_preimage who site
-  have encodedMeet (n : ℕ) : ∃ history ∈ targetEvent,
-      history ∈ ((M.runBehavioral (sourceSequence n).strategy depth).map
-        restriction.history).support := by
-    obtain ⟨history, observed, supported⟩ := sourceMeet n
-    refine ⟨restriction.history history, ?_, ?_⟩
-    · change history ∈ restriction.history ⁻¹' targetEvent
-      rwa [preimage]
-    · rw [PMF.support_map]
-      exact ⟨history, supported, rfl⟩
-  have sourcePositive (n : ℕ) :=
+  let sourceLaw (n : ℕ) := (M.runBehavioralTerminalFrom sourceCertificate
+    (sourceSequence n).strategy E.initHistory).map restriction.history
+  let targetLaw (n : ℕ) :=
+    N.runBehavioralTerminalFrom targetCertificate (targetSequence n).strategy T.initHistory
+  let passage : Set T.History := {final | ∃ history, N.infoOf who history.trace =
+    (restriction.site who site).1 ∧ T.HistoryReaches history final}
+  have sourceMass (n : ℕ) :=
     M.informationMass_pos_of_fullSupport _ (sourceMixed n) who site
-  have targetPositive (n : ℕ) :=
+  have targetMass (n : ℕ) :=
     N.informationMass_pos_of_fullSupport _ (targetMixed n) who (restriction.site who site)
-  have sourceConditioned (n : ℕ) :
-      (((M.runBehavioral (sourceSequence n).strategy depth).map restriction.history).filter
-        targetEvent (encodedMeet n)) =
-      ((sourceSequence n).belief who site).map
-        (fun history => restriction.history history.1) := by
-    rw [← map_filter_embedding
-      (M.runBehavioral (sourceSequence n).strategy depth) restriction.history
-      sourceEvent targetEvent (fun history => by
-        change history ∈ restriction.history ⁻¹' targetEvent ↔ history ∈ sourceEvent
-        rw [preimage]) (sourceMeet n) (encodedMeet n)]
-    rw [← M.bayesBelief_map_eq_filter (sourceSequence n).strategy who site depth
-      sourceClock (sourceAntichain who site) (sourcePositive n) (sourceMeet n),
-      ← bayes_belief_eq (sourceSequence n) who site (sourceAntichain who site)
-        (sourcePositive n) (sourceBayes n who site (sourcePositive n)), PMF.map_comp]
-    rfl
-  have targetConditioned (n : ℕ) :
-      (N.runBehavioral (targetSequence n).strategy depth).filter targetEvent (targetMeet n) =
-        ((targetSequence n).belief who (restriction.site who site)).map Subtype.val := by
-    rw [← N.bayesBelief_map_eq_filter (targetSequence n).strategy who
-      (restriction.site who site) depth clock (targetAntichain who (restriction.site who site))
-      (targetPositive n) (targetMeet n),
-      ← bayes_belief_eq (targetSequence n) who (restriction.site who site)
-        (targetAntichain who (restriction.site who site)) (targetPositive n)
-        (targetBayes n who (restriction.site who site) (targetPositive n))]
-  have mass (n : ℕ) :
-      (((M.runBehavioral (sourceSequence n).strategy depth).map
-        restriction.history).toOuterMeasure targetEvent).toReal =
-        (M.informationMass (sourceSequence n).strategy who site).toReal := by
-    rw [PMF.toOuterMeasure_map_apply, preimage,
-      M.informationMass_eq_fixedDepth_toOuterMeasure (sourceSequence n).strategy who site
-        depth sourceClock]
-  have conditioned := conditional_domination_converges
-    (fun n => (M.runBehavioral (sourceSequence n).strategy depth).map restriction.history)
-    (fun n => N.runBehavioral (targetSequence n).strategy depth) targetEvent encodedMeet targetMeet
-    factor positive atMostOne lower (by simpa only [mass] using negligible)
-    (limit.map (fun history => restriction.history history.1)) (by
-      simpa only [sourceConditioned] using
-        converges.map (fun history => restriction.history history.1))
-  rw [show (fun history : M.InformationHistory who site.1 =>
-      restriction.history history.1) =
-      Subtype.val ∘ restriction.informationHistory who site by rfl,
-    ← PMF.map_comp] at conditioned
+  have sourcePassage (n : ℕ) : (sourceLaw n).toOuterMeasure passage =
+      M.informationMass (sourceSequence n).strategy who site := by
+    rw [PMF.toOuterMeasure_map_apply, restriction.passage_preimage,
+      M.informationMass_eq_passage sourceCertificate _ who site (sourceAntichain who site)]
+  have targetPassage (n : ℕ) : (targetLaw n).toOuterMeasure passage =
+      N.informationMass (targetSequence n).strategy who (restriction.site who site) :=
+    (N.informationMass_eq_passage targetCertificate _ who _ (targetAntichain who _)).symm
+  have sourcePositive (n : ℕ) : 0 < ((sourceLaw n).toOuterMeasure passage).toReal := by
+    rw [sourcePassage]
+    exact ENNReal.toReal_pos (sourceMass n).ne' (ne_top_of_le_ne_top ENNReal.one_ne_top
+      (M.informationMass_le_one _ who site (sourceAntichain who site)))
+  rw [pmfConvergesPointwise_iff_toReal]
   intro history
-  have point := conditioned history.1
-  simpa only [targetConditioned, pmf_map_apply_of_injective _ Subtype.val_injective]
-    using point
+  let cone : Set T.History := {final | T.HistoryReaches history.1 final}
+  have inside : cone ⊆ passage := fun final reach => ⟨history.1, history.2, reach⟩
+  have targetRatio (n : ℕ) :
+      ((targetLaw n).toOuterMeasure cone).toReal / ((targetLaw n).toOuterMeasure passage).toReal =
+        ((targetSequence n).belief who (restriction.site who site) history).toReal := by
+    rw [bayes_belief_eq (targetSequence n) who _ (targetAntichain who _) (targetMass n)
+      (targetBayes n who _ (targetMass n)), N.bayesBelief_apply_eq_passage targetCertificate,
+      ENNReal.toReal_div]
+  have sourceLimit : Tendsto (fun n => ((sourceLaw n).toOuterMeasure cone).toReal /
+      ((sourceLaw n).toOuterMeasure passage).toReal) atTop
+        (nhds ((limit.map (restriction.informationHistory who site)) history).toReal) := by
+    by_cases embedded : history ∈ Set.range (restriction.informationHistory who site)
+    · obtain ⟨original, rfl⟩ := embedded
+      rw [pmf_map_apply_of_injective _ (restriction.informationHistory who site).injective]
+      refine (converges.toReal original).congr fun n => ?_
+      rw [bayes_belief_eq (sourceSequence n) who site (sourceAntichain who site) (sourceMass n)
+        (sourceBayes n who site (sourceMass n)), M.bayesBelief_apply_eq_passage sourceCertificate,
+        ENNReal.toReal_div, PMF.toOuterMeasure_map_apply, PMF.toOuterMeasure_map_apply,
+        restriction.passage_preimage]
+      simp only [cone, informationHistory_val, restriction.cone_preimage]
+    · have zero : (limit.map (restriction.informationHistory who site)) history = 0 := by
+        rw [PMF.apply_eq_zero_iff, PMF.support_map]
+        rintro ⟨original, -, same⟩
+        exact embedded ⟨original, same⟩
+      rw [zero, ENNReal.toReal_zero]
+      refine tendsto_const_nhds.congr fun n => ?_
+      rw [PMF.toOuterMeasure_map_apply, restriction.cone_preimage_eq_empty who site history
+        embedded, MeasureTheory.measure_empty, ENNReal.toReal_zero, zero_div]
+  exact (conditional_domination_converges_of_subset sourceLaw targetLaw passage cone inside
+    sourcePositive factor positive atMostOne lower
+    (by simpa only [sourcePassage] using negligible) _ sourceLimit).congr targetRatio
+
+
+end TerminalPassage
 
 end ActionRestriction
 

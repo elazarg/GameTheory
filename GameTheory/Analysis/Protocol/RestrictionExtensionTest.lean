@@ -8,6 +8,7 @@ same terminal play, beliefs and behavior at every decision.
 
 import GameTheory.Analysis.Protocol.RestrictionExtension
 import GameTheory.Analysis.Protocol.SequentialOneShotTest
+import GameTheory.Analysis.Protocol.SequentialExistenceTest
 
 noncomputable section
 
@@ -17,26 +18,6 @@ open GameTheory GameTheory.Protocol
 open GameTheory.Tests.SubgamePerfect GameTheory.Tests.SubgameLocalization
 open GameTheory.Tests.InformationLocalization GameTheory.Tests.SequentialOneShot
 open InformationModel
-
-/-- The root is decided at depth zero and the decision at depth one. -/
-def siteDepth (_ : Unit) (site : model.InformationSite ()) : ℕ :=
-  if site.1 = .root then 0 else 1
-
-theorem site_commonDepth (who : Unit) (site : model.InformationSite who) :
-    InformationSite.CommonDepth model site (siteDepth who site) := by
-  cases who
-  intro history
-  rcases site_cases site with hroot | hdecision
-  · have same := eq_initHistory_of_root history.1.trace
-      ((signals_infoOf_state history.1.trace).symm.trans (history.2.trans hroot))
-    simp only [siteDepth, hroot, ↓reduceIte]
-    rw [show history.1 = arena.initHistory from same]
-    rfl
-  · have same := eq_decisionHistory history.1
-      ((signals_infoOf_state history.1.trace).symm.trans (history.2.trans hdecision))
-    simp only [siteDepth, hdecision, reduceCtorEq, ↓reduceIte]
-    rw [same]
-    rfl
 
 /-- **Rewarding off path extends.** -/
 theorem rewarding_extends :
@@ -51,9 +32,44 @@ theorem rewarding_extends :
     (ActionRestriction.refl model).sequentialEquilibrium_extends_of_indifference
       decisionRecall.decisionInformationAntichain arena_wellFoundedHistories
       arena_wellFoundedHistories (trembleAssessment 0) (trembleAssessment_fullyMixed 0)
-      decisionRecall siteDepth site_commonDepth sePayoff sePayoff (fun _ _ => rfl)
+      decisionRecall sePayoff sePayoff (fun _ _ => rfl)
       (fun _ => Or.inl fun _ choice => ⟨choice, rfl⟩) rewardingAssessment
       rewardingAssessment_isSequentialEquilibrium
   exact ⟨target, equilibrium, law⟩
+
+
+namespace Asynchronous
+
+open GameTheory.Tests.SequentialExistence
+
+/-- Restriction extension applies to a hidden decision whose two histories
+have different depths; the common-depth premise is concretely impossible. -/
+theorem identity_extends_without_common_depth :
+    (¬ ∃ depth, InformationSite.CommonDepth information actingSite depth) ∧
+      ∃ source target : information.BehavioralAssessment,
+        source.IsSequentialEquilibrium antichain game.wellFoundedHistories GameTheory.Tests.SequentialExistence.payoff ∧
+        target.IsSequentialEquilibrium antichain game.wellFoundedHistories GameTheory.Tests.SequentialExistence.payoff ∧
+        information.runBehavioralTerminalFrom game.wellFoundedHistories source.strategy
+            execution.initHistory =
+          information.runBehavioralTerminalFrom game.wellFoundedHistories target.strategy
+            execution.initHistory := by
+  classical
+  let _ : Fintype execution.History := execution.historyFintype treeShaped
+  obtain ⟨source, equilibrium⟩ := exists_sequential_equilibrium
+  change source.IsSequentialEquilibrium antichain game.wellFoundedHistories GameTheory.Tests.SequentialExistence.payoff at equilibrium
+  obtain ⟨sequence, approximates, _⟩ := equilibrium.2
+  let decisionRecallCertificate := information.decisionRecall_of_perfectRecall perfectRecall
+  obtain ⟨target, targetEquilibrium, _, _, law, _⟩ :=
+    (ActionRestriction.refl information).sequentialEquilibrium_extends_of_indifference
+      antichain game.wellFoundedHistories game.wellFoundedHistories
+      (sequence 0) (approximates 0).1 decisionRecallCertificate GameTheory.Tests.SequentialExistence.payoff GameTheory.Tests.SequentialExistence.payoff (fun _ _ => rfl)
+      (fun _ => Or.inl fun _ choice => ⟨choice, rfl⟩) source equilibrium
+  refine ⟨no_commonDepth, source, target, equilibrium, targetEquilibrium, ?_⟩
+  change (information.runBehavioralTerminalFrom game.wellFoundedHistories source.strategy
+    execution.initHistory).map id = _ at law
+  rw [PMF.map_id] at law
+  exact law
+
+end Asynchronous
 
 end GameTheory.Tests.RestrictionExtension

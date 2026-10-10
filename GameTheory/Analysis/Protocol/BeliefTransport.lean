@@ -278,6 +278,24 @@ theorem BehavioralAssessment.belief_map_eq_run_of_full_reach
         member (seen history supported)).symm
   exact conditioned.trans unchanged
 
+/-- **Passage form of Bayes beliefs.** The Bayes belief in a site history is
+the probability that terminal play passes through it, divided by the
+probability that terminal play passes through the site. -/
+theorem bayesBelief_apply_eq_passage (certificate : E.WellFoundedHistories)
+    (strategy : (i : ι) → M.BehavioralPolicy i) (who : ι) (site : M.InformationSite who)
+    (antichain : site.IsHistoryAntichain) (positive : 0 < M.informationMass strategy who site)
+    (history : M.InformationHistory who site.1) :
+    M.bayesBelief strategy who site antichain positive history =
+      (M.runBehavioralTerminalFrom certificate strategy E.initHistory).toOuterMeasure
+          {final | E.HistoryReaches history.1 final} /
+        (M.runBehavioralTerminalFrom certificate strategy E.initHistory).toOuterMeasure
+          {final | ∃ history, M.infoOf who history.trace = site.1 ∧
+            E.HistoryReaches history final} := by
+  rw [M.bayesBelief_apply, ← M.informationMass_eq_passage certificate strategy who site antichain,
+    ← M.coneMass_eq_historyReachWeight certificate strategy history.1]
+  rfl
+
+
 end Single
 
 /-! ## Transport between protocols -/

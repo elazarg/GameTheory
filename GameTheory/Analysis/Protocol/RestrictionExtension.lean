@@ -26,21 +26,19 @@ open GameTheory.Math.Probability ExecutionProtocol
 
 variable {ι : Type*} [Fintype ι] [DecidableEq ι]
   {E T : ExecutionProtocol ι} {M : InformationModel E} {N : InformationModel T}
-  [Fintype T.History] [∀ i, DecidableEq (N.InfoState i)]
+  [Finite T.History] [∀ i, DecidableEq (N.InfoState i)]
   (restriction : M.ActionRestriction N)
 
-/-- **Extension from whole-policy bounds.** Every sequential equilibrium of the
-smaller protocol extends when each new action at a retained site is bounded,
-under every pair of extending profiles and every belief at the site, by the
-value of some whole continuation policy of the smaller protocol. -/
+/-- **Extension from whole-policy bounds, without a common depth.** Every
+sequential equilibrium of the smaller protocol extends when each new action at
+a retained site is bounded, under every pair of extending profiles and every
+belief at the site, by the value of some whole continuation policy of the
+smaller protocol. Retained sites need no common decision depth. -/
 theorem sequentialEquilibrium_extends_of_continuation
     (sourceAntichain : M.DecisionInformationAntichain)
     (sourceCertificate : E.WellFoundedHistories) (targetCertificate : T.WellFoundedHistories)
     (reference : N.BehavioralAssessment) (referenceMixed : reference.IsFullyMixed)
     (decisionRecall : N.DecisionRecall)
-    (depth : ∀ who, M.InformationSite who → ℕ)
-    (clock : ∀ who site, InformationSite.CommonDepth N (restriction.site who site)
-      (depth who site))
     (sourcePayoff : ι → E.History → ℝ) (targetPayoff : ι → T.History → ℝ)
     (matching : ∀ who history,
       targetPayoff who (restriction.history history) = sourcePayoff who history)
@@ -76,10 +74,11 @@ theorem sequentialEquilibrium_extends_of_continuation
         (N.runBehavioralTerminalFrom targetCertificate target.strategy T.initHistory).map
           (fun history => (history, fun who => targetPayoff who history)) := by
   classical
+  let _ := Fintype.ofFinite T.History
   have _ : Finite E.History := Finite.of_injective restriction.history restriction.history.injective
   obtain ⟨target, consistent, agrees, beliefs, newOptimal⟩ :=
     restriction.exists_consistent_extension source sourceAntichain sourceEquilibrium.2
-      reference referenceMixed decisionRecall targetCertificate targetPayoff depth clock
+      reference referenceMixed decisionRecall targetCertificate targetPayoff
   have localOptimal : ∀ who (site : N.InformationSite who) (law : PMF (N.Choice who site.1)),
       (target.continuationContext targetCertificate site (targetPayoff who)).value
           ((target.strategy who).withLaw site.1 law) ≤
@@ -133,9 +132,6 @@ theorem sequentialEquilibrium_extends_of_comparator
     (sourceCertificate : E.WellFoundedHistories) (targetCertificate : T.WellFoundedHistories)
     (reference : N.BehavioralAssessment) (referenceMixed : reference.IsFullyMixed)
     (decisionRecall : N.DecisionRecall)
-    (depth : ∀ who, M.InformationSite who → ℕ)
-    (clock : ∀ who site, InformationSite.CommonDepth N (restriction.site who site)
-      (depth who site))
     (sourcePayoff : ι → E.History → ℝ) (targetPayoff : ι → T.History → ℝ)
     (matching : ∀ who history,
       targetPayoff who (restriction.history history) = sourcePayoff who history)
@@ -172,9 +168,10 @@ theorem sequentialEquilibrium_extends_of_comparator
           (fun history => (restriction.history history, fun who => sourcePayoff who history)) =
         (N.runBehavioralTerminalFrom targetCertificate target.strategy T.initHistory).map
           (fun history => (history, fun who => targetPayoff who history)) := by
+  let _ := Fintype.ofFinite T.History
   have _ : Finite E.History := Finite.of_injective restriction.history restriction.history.injective
   apply restriction.sequentialEquilibrium_extends_of_continuation sourceAntichain
-    sourceCertificate targetCertificate reference referenceMixed decisionRecall depth clock
+    sourceCertificate targetCertificate reference referenceMixed decisionRecall
     sourcePayoff targetPayoff matching _ source sourceEquilibrium
   intro sourceProfile targetProfile agrees who site action extra belief
   refine ⟨(sourceProfile who).withLaw site.1 (comparator who site action), ?_⟩
@@ -182,19 +179,16 @@ theorem sequentialEquilibrium_extends_of_comparator
     comparison sourceProfile targetProfile agrees who site action extra history)
     (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
 
+omit [∀ i, DecidableEq (N.InfoState i)] in
 /-- **Extension when new choices are harmless.** Every sequential equilibrium
 extends when each player either keeps all its choices or is indifferent over
 all outcomes of the larger protocol. Indifference must hold at every history,
 not merely along equilibrium play. -/
 theorem sequentialEquilibrium_extends_of_indifference
-    [∀ i, DecidableEq (M.InfoState i)]
     (sourceAntichain : M.DecisionInformationAntichain)
     (sourceCertificate : E.WellFoundedHistories) (targetCertificate : T.WellFoundedHistories)
     (reference : N.BehavioralAssessment) (referenceMixed : reference.IsFullyMixed)
     (decisionRecall : N.DecisionRecall)
-    (depth : ∀ who, M.InformationSite who → ℕ)
-    (clock : ∀ who site, InformationSite.CommonDepth N (restriction.site who site)
-      (depth who site))
     (sourcePayoff : ι → E.History → ℝ) (targetPayoff : ι → T.History → ℝ)
     (matching : ∀ who history,
       targetPayoff who (restriction.history history) = sourcePayoff who history)
@@ -222,7 +216,7 @@ theorem sequentialEquilibrium_extends_of_indifference
       (_ : N.Choice who (restriction.site who site).1) : PMF (M.Choice who site.1) :=
     PMF.pure ⟨some site.2.choose_spec.2.choose, site.2.choose_spec.2.choose_spec⟩
   apply restriction.sequentialEquilibrium_extends_of_comparator sourceAntichain
-    sourceCertificate targetCertificate reference referenceMixed decisionRecall depth clock
+    sourceCertificate targetCertificate reference referenceMixed decisionRecall
     sourcePayoff targetPayoff matching comparator _ source sourceEquilibrium
   intro sourceProfile targetProfile _ who site action extra history
   rcases unchangedOrIndifferent who with unchanged | ⟨constant, indifferent⟩
@@ -233,5 +227,6 @@ theorem sequentialEquilibrium_extends_of_indifference
     rw [show targetPayoff who = fun _ => constant from funext indifferent,
       show sourcePayoff who = fun _ => constant from funext sourceConstant, expect_constant,
       expect_constant]
+
 
 end GameTheory.Protocol.InformationModel.ActionRestriction

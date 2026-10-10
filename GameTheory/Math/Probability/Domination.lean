@@ -438,4 +438,55 @@ theorem conditional_contamination_converges_of_bound (sequence : ℕ → PMF α)
 
 end Contamination
 
+section EventDomination
+
+variable {α : Type*}
+
+/-- **Conditional domination on a sub-event.** Domination by a near-unit
+source component bounds the error of the conditional probability of every part
+of the conditioning event, not only of its points, by the missing mass divided
+by the source mass of the event. -/
+theorem conditional_domination_bound_of_subset (source target : PMF α) (event part : Set α)
+    (inside : part ⊆ event)
+    (sourcePositive : 0 < (source.toOuterMeasure event).toReal)
+    (factor : ℝ) (positive : 0 < factor) (atMostOne : factor ≤ 1)
+    (lower : ∀ a, factor * (source a).toReal ≤ (target a).toReal) :
+    |(target.toOuterMeasure part).toReal / (target.toOuterMeasure event).toReal -
+      (source.toOuterMeasure part).toReal / (source.toOuterMeasure event).toReal| ≤
+        (1 - factor) / (factor * (source.toOuterMeasure event).toReal) := by
+  have targetPositive := (mul_pos positive sourcePositive).trans_le
+    (probOf_domination source target factor lower event)
+  exact ratio_domination_bound _ _ _ _ _ sourcePositive targetPositive ENNReal.toReal_nonneg
+    (ENNReal.toReal_mono (outerMeasure_ne_top source event)
+      (MeasureTheory.measure_mono inside))
+    positive atMostOne (probOf_domination source target factor lower part)
+    (probOf_domination_excess source target factor lower part)
+    (probOf_domination source target factor lower event)
+    (probOf_domination_excess source target factor lower event)
+
+/-- A vanishing relative loss transports the conditional probability of every
+part of the conditioning event, without any lower bound on the limiting
+probability of the event. -/
+theorem conditional_domination_converges_of_subset (source target : ℕ → PMF α)
+    (event part : Set α) (inside : part ⊆ event)
+    (sourcePositive : ∀ n, 0 < ((source n).toOuterMeasure event).toReal)
+    (factor : ℕ → ℝ) (positive : ∀ n, 0 < factor n) (atMostOne : ∀ n, factor n ≤ 1)
+    (lower : ∀ n a, factor n * ((source n) a).toReal ≤ ((target n) a).toReal)
+    (negligible : Tendsto (fun n =>
+      (1 - factor n) / (factor n * ((source n).toOuterMeasure event).toReal)) atTop (nhds 0))
+    (limit : ℝ)
+    (converges : Tendsto (fun n => ((source n).toOuterMeasure part).toReal /
+      ((source n).toOuterMeasure event).toReal) atTop (nhds limit)) :
+    Tendsto (fun n => ((target n).toOuterMeasure part).toReal /
+      ((target n).toOuterMeasure event).toReal) atTop (nhds limit) := by
+  apply converges.congr_dist
+  apply squeeze_zero (fun _ => dist_nonneg) _ negligible
+  intro n
+  simpa only [Real.dist_eq, abs_sub_comm] using
+    conditional_domination_bound_of_subset (source n) (target n) event part inside
+      (sourcePositive n) (factor n) (positive n) (atMostOne n) (lower n)
+
+
+end EventDomination
+
 end GameTheory.Math.Probability

@@ -129,4 +129,109 @@ theorem source_commonDepth (who : ι) (site : M.InformationSite who) (depth : �
   have target := clock (restriction.informationHistory who site original)
   exact (restriction.length original.1).symm.trans target
 
+omit [E.FiniteMovers] [T.FiniteMovers]
+
+/-- One legal step of the smaller protocol embeds as one step of the larger. -/
+theorem reachesWithin_step {start : E.History} {joint : ∀ i, Option (E.Action i)}
+    (isLegal : E.Legal start.state joint) {reached : E.State}
+    (realized : reached ∈ (E.step start.state ⟨joint, isLegal⟩).support) :
+    T.ReachesWithin 1 (restriction.history start)
+      (restriction.history (start.extend isLegal realized)) := by
+  classical
+  let choices (who : ι) : M.Choice who (M.infoOf who start.trace) :=
+    ⟨joint who, (M.menu_adequate who start.trace (joint who)).mpr
+      (ExecutionProtocol.legalOption_of_legal isLegal who)⟩
+  have source : start.extend isLegal realized ∈ (M.localStep start choices).support := by
+    rw [localStep, dite_eq_right isLegal.1, PMF.mem_support_bindOnSupport_iff]
+    exact ⟨reached, realized, by rw [PMF.support_pure]; rfl⟩
+  have image : restriction.history (start.extend isLegal realized) ∈
+      ((M.localStep start choices).map restriction.history).support :=
+    (PMF.mem_support_map_iff _ _ _).mpr ⟨_, source, rfl⟩
+  have running : ¬ T.terminal (restriction.history start).state :=
+    fun stopped => isLegal.1 ((restriction.terminal start).mp stopped)
+  rw [restriction.step start choices, localStep, dite_eq_right running,
+    PMF.mem_support_bindOnSupport_iff] at image
+  obtain ⟨next, step, landed⟩ := image
+  rw [PMF.support_pure, Set.mem_singleton_iff] at landed
+  rw [landed]
+  exact .step _ _ step (.refl 0 _)
+
+/-- The embedding of histories preserves bounded reachability. -/
+theorem reachesWithin_history {fuel : ℕ} {start final : E.History}
+    (reach : E.ReachesWithin fuel start final) :
+    T.ReachesWithin fuel (restriction.history start) (restriction.history final) := by
+  induction reach with
+  | refl fuel history => exact .refl fuel _
+  | step joint isLegal realized rest induction =>
+      simpa only [Nat.add_comm] using (restriction.reachesWithin_step isLegal realized).trans
+        induction
+
+theorem historyReaches_history {start final : E.History} (reach : E.HistoryReaches start final) :
+    T.HistoryReaches (restriction.history start) (restriction.history final) :=
+  let ⟨fuel, within⟩ := reach
+  ⟨fuel, restriction.reachesWithin_history within⟩
+
+/-- Every ancestor of an embedded history is itself embedded. -/
+theorem exists_of_historyReaches {ancestor : T.History} {final : E.History}
+    (reach : T.HistoryReaches ancestor (restriction.history final)) :
+    ∃ start, restriction.history start = ancestor ∧ E.HistoryReaches start final := by
+  obtain ⟨fuel, within⟩ := reach
+  have shorter : ancestor.trace.length ≤ final.trace.length :=
+    by rw [← restriction.length final]; exact within.trace_length_le
+  obtain ⟨start, steps, length, reaches⟩ := E.exists_ancestor_of_le final shorter
+  exact ⟨start, ReachesWithin.eq_start_of_same_length (restriction.reachesWithin_history reaches)
+    within ((restriction.length start).trans length), steps, reaches⟩
+
+/-- The embedding of histories reflects reachability. -/
+theorem historyReaches_history_iff {start final : E.History} :
+    T.HistoryReaches (restriction.history start) (restriction.history final) ↔
+      E.HistoryReaches start final := by
+  refine ⟨fun reach => ?_, restriction.historyReaches_history⟩
+  obtain ⟨other, same, reaches⟩ := restriction.exists_of_historyReaches reach
+  rwa [restriction.history.injective same] at reaches
+
+/-- Play passes through an embedded history exactly when its source play passes
+through the original. -/
+theorem cone_preimage (start : E.History) :
+    restriction.history ⁻¹' {final | T.HistoryReaches (restriction.history start) final} =
+      {final | E.HistoryReaches start final} :=
+  Set.ext fun _ => restriction.historyReaches_history_iff
+
+/-- No embedded play passes through a history of a retained site that takes a
+new action. -/
+theorem cone_preimage_eq_empty (who : ι) (site : M.InformationSite who)
+    (history : N.InformationHistory who (restriction.site who site).1)
+    (outside : history ∉ Set.range (restriction.informationHistory who site)) :
+    restriction.history ⁻¹' {final | T.HistoryReaches history.1 final} = ∅ := by
+  ext final
+  simp only [Set.mem_preimage, Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false]
+  intro reach
+  obtain ⟨start, same, -⟩ := restriction.exists_of_historyReaches reach
+  have observed : M.infoOf who start.trace = site.1 := by
+    apply (restriction.information who).injective
+    rw [← restriction.observed, same]
+    exact history.2
+  exact outside ⟨⟨start, observed⟩, Subtype.ext same⟩
+
+/-- Play passes through a retained site exactly when its source play passes
+through the original site. -/
+theorem passage_preimage (who : ι) (site : M.InformationSite who) :
+    restriction.history ⁻¹' {final | ∃ history, N.infoOf who history.trace =
+        (restriction.site who site).1 ∧ T.HistoryReaches history final} =
+      {final | ∃ history, M.infoOf who history.trace = site.1 ∧
+        E.HistoryReaches history final} := by
+  ext final
+  simp only [Set.mem_preimage, Set.mem_ofPred_eq]
+  constructor
+  · rintro ⟨ancestor, observed, reach⟩
+    obtain ⟨start, rfl, reaches⟩ := restriction.exists_of_historyReaches reach
+    refine ⟨start, (restriction.information who).injective ?_, reaches⟩
+    rw [← restriction.observed]
+    exact observed
+  · rintro ⟨start, observed, reaches⟩
+    refine ⟨restriction.history start, ?_, restriction.historyReaches_history reaches⟩
+    rw [restriction.observed, observed]
+    rfl
+
+
 end GameTheory.Protocol.InformationModel.ActionRestriction

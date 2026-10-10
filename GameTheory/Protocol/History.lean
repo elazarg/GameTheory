@@ -398,6 +398,28 @@ theorem runHistoryFor_congr {first second : E.HistoryChooser}
         runHistoryFor_succ_of_not_terminal second fuel hterm, hagree h hterm]
       exact bindOnSupport_congr _ fun _ _ => ih _
 
+/-- Every history has an ancestor at each smaller trace depth. -/
+theorem exists_ancestor_of_le (E : ExecutionProtocol ι) (history : E.History) {depth : ℕ}
+    (hdepth : depth ≤ history.trace.length) :
+    ∃ (ancestor : E.History) (fuel : ℕ),
+      ancestor.trace.length = depth ∧ E.ReachesWithin fuel ancestor history := by
+  rcases history with ⟨state, trace⟩
+  induction trace with
+  | start =>
+      simp only [Trace.length, Nat.le_zero] at hdepth
+      exact ⟨⟨_, .start⟩, 0, by simp [hdepth, Trace.length], .refl 0 _⟩
+  | @extend source target prior joint isLegal realized ih =>
+      simp only [Trace.length] at hdepth ih
+      rcases Nat.lt_or_ge depth (prior.length + 1) with hlt | hge
+      · obtain ⟨ancestor, fuel, hlength, hreach⟩ := ih (by omega)
+        have hone : E.ReachesWithin 1 ⟨source, prior⟩
+            ⟨target, Trace.extend prior joint isLegal realized⟩ :=
+          .step joint isLegal realized (.refl 0 _)
+        exact ⟨ancestor, fuel + 1, hlength, hreach.trans hone⟩
+      · exact ⟨⟨target, Trace.extend prior joint isLegal realized⟩, 0,
+          by simp only [Trace.length]; omega, .refl 0 _⟩
+
+
 end ExecutionProtocol
 
 end GameTheory.Protocol
