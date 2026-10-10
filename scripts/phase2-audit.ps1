@@ -287,6 +287,8 @@ $RepresentationModules = @(
   'GameTheory/Analysis/Protocol/InformationLocalizationTest.lean',
   # Belief transport and restriction completion control conditional reach masses.
   'GameTheory/Analysis/Protocol/BeliefTransport.lean',
+  # Proportional transport fixture explicitly certifies native reach-mass ratios.
+  'GameTheory/Analysis/Protocol/BeliefTransportTest.lean',
   'GameTheory/Analysis/Protocol/RestrictionBeliefs.lean',
   'GameTheory/Analysis/Protocol/RestrictionCompletion.lean',
   'GameTheory/Analysis/Protocol/RestrictionDomination.lean',

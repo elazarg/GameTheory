@@ -71,7 +71,7 @@ theorem tremble_decision_belief_eq_via_proportional (n m : ℕ) :
       (decisionRecall.decisionInformationAntichain () decisionSite))
   have unique (first second : model.InformationHistory () decisionSite.1) : first = second :=
     Subtype.ext (site_history_unique decisionSite first second)
-  have weight (profile : (who : Unit) → model.BehavioralPolicy who)
+  have mass_at_history (profile : (who : Unit) → model.BehavioralPolicy who)
       (history : model.InformationHistory () decisionSite.1) :
       model.informationMass profile () decisionSite = model.historyReachWeight profile history.1 :=
     tsum_eq_single history fun other different => absurd (unique other history) different
@@ -80,7 +80,7 @@ theorem tremble_decision_belief_eq_via_proportional (n m : ℕ) :
           model.historyReachWeight source history.1 =
         ∑' original : model.InformationHistory () decisionSite.1,
           if id original.1 = history.1 then model.historyReachWeight raw original.1 else 0 := by
-    rw [← weight source history, ENNReal.div_mul_cancel positive.ne' finite]
+    rw [← mass_at_history source history, ENNReal.div_mul_cancel positive.ne' finite]
     simp only [show ∀ original : model.InformationHistory () decisionSite.1,
       id original.1 = history.1 from fun original => congrArg Subtype.val (unique original history),
       ite_true]
