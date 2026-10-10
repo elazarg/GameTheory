@@ -99,8 +99,9 @@ theorem sequentiallyRational_never_plays_zero
     (information.runBehavioralTerminalFrom certificate) rootSite
     (information.runnerFactorsAt_terminal certificate decisionRecall.actsOnceWhereItMatters
       rootSite_allNonterminal)
-    (reward ()) (rational () rootSite) (fun _ => payoffIntegrable_of_finite _ _) zeroChoice
-    ((assessment.strategy ()).commit rootSite.1 oneChoice) 0 1 (by norm_num)
+    (reward ()) (rational () rootSite) (payoffIntegrable_of_finite _ _) zeroChoice
+    ((assessment.strategy ()).commit rootSite.1 oneChoice)
+    (payoffIntegrable_of_finite _ _) 0 1 (by norm_num)
     (fun history => ?_) (fun history => ?_)
   · rw [committed_value]
     simp [zeroChoice]

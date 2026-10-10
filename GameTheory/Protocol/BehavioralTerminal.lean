@@ -10,6 +10,7 @@ contexts.
 import GameTheory.Protocol.BehavioralAssessment
 import GameTheory.Protocol.BehavioralMixture
 import GameTheory.Protocol.HistoryBackward
+import GameTheory.Protocol.DecisionPlan
 
 noncomputable section
 
@@ -92,6 +93,31 @@ theorem runBehavioralTerminalFrom_congr (M : InformationModel E)
       M.runBehavioralTerminalFrom certificate second h :=
   E.randomizedBackwardLaw_congr_of_reaches h fun later hreach hterm =>
     M.behavioralJoint_congr later.trace hterm (hagree later hreach hterm)
+
+/-- Agreement at decision sites preserves the complete terminal history law. -/
+theorem runBehavioralTerminalFrom_eq_of_agreesAtDecisions
+    (certificate : E.WellFoundedHistories)
+    {first second : (i : ι) → M.BehavioralPolicy i}
+    (agree : ∀ who, (first who).AgreesAtDecisions (second who)) (history : E.History) :
+    M.runBehavioralTerminalFrom certificate first history =
+      M.runBehavioralTerminalFrom certificate second history := by
+  apply M.runBehavioralTerminalFrom_congr certificate history
+  intro later _ nonterminal who
+  exact (agree who).at_history later nonterminal
+
+/-- Terminal play of a behavioral decision plan is independent of its fallback. -/
+theorem runBehavioralTerminalFrom_extend_eq
+    (certificate : E.WellFoundedHistories)
+    (plans : (who : ι) → M.BehavioralDecisionPlan who)
+    (first second : (who : ι) → M.BehavioralPolicy who) (history : E.History) :
+    M.runBehavioralTerminalFrom certificate (fun who => (plans who).extend (first who))
+        history =
+      M.runBehavioralTerminalFrom certificate (fun who => (plans who).extend (second who))
+        history := by
+  apply runBehavioralTerminalFrom_eq_of_agreesAtDecisions
+  intro who
+  exact ((plans who).restrict_extend (first who)).trans
+    ((plans who).restrict_extend (second who)).symm
 
 /-- Terminal behavioral play from a nonterminal selected decision is affine in
 the law installed there when that information state cannot matter twice: it

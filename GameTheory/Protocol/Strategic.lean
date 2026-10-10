@@ -28,6 +28,8 @@ equilibrium predicate.
 import GameTheory.Protocol.Extraction
 import GameTheory.Protocol.Information
 import GameTheory.Core.Form
+import GameTheory.Core.Equilibrium
+import GameTheory.Protocol.DecisionPlan
 
 noncomputable section
 
@@ -192,6 +194,67 @@ theorem toBehavioralGameForm_play_toBehavioral
   simpa only [runBehavioral, run] using
     M.runBehavioralFrom_toBehavioral profile horizon E.initHistory
 
+
+omit [Fintype ι] in
+/-- Agreement at decision sites preserves every pure strategic outcome law. -/
+theorem toGameForm_play_eq_of_agreesAtDecisions
+    {first second : Profile M.strategicSignature}
+    (agree : ∀ who, (first who).AgreesAtDecisions (second who)) (horizon : ℕ) :
+    (M.toGameForm horizon).play first = (M.toGameForm horizon).play second :=
+  M.runFrom_eq_of_agreesAtDecisions agree horizon E.initHistory
+
+/-- Agreement at decision sites preserves every behavioral strategic outcome law. -/
+theorem toBehavioralGameForm_play_eq_of_agreesAtDecisions
+    {first second : Profile M.behavioralSignature}
+    (agree : ∀ who, (first who).AgreesAtDecisions (second who)) (horizon : ℕ) :
+    (M.toBehavioralGameForm horizon).play first =
+      (M.toBehavioralGameForm horizon).play second :=
+  M.runBehavioralFrom_eq_of_agreesAtDecisions agree horizon E.initHistory
+
+omit [Fintype ι] in
+/-- Pure Nash equilibrium depends only on the policies' decision-site choices. -/
+theorem isNash_toGameForm_iff_of_agreesAtDecisions [DecidableEq ι]
+    {first second : Profile M.strategicSignature}
+    (agree : ∀ who, (first who).AgreesAtDecisions (second who))
+    (horizon : ℕ) (preference : WeakPreference ι E.History) :
+    IsNash (M.toGameForm horizon) preference first ↔
+      IsNash (M.toGameForm horizon) preference second := by
+  rw [isNash_iff, isNash_iff]
+  have incumbent : M.run first horizon = M.run second horizon :=
+    M.toGameForm_play_eq_of_agreesAtDecisions agree horizon
+  have deviations : ∀ who replacement,
+      M.run (Profile.update first who replacement) horizon =
+        M.run (Profile.update second who replacement) horizon := by
+    intro who replacement
+    apply M.toGameForm_play_eq_of_agreesAtDecisions
+    intro player
+    by_cases same : player = who
+    · subst player
+      simp [Policy.AgreesAtDecisions]
+    · simpa only [Profile.update_of_ne _ _ same] using agree player
+  simp only [incumbent, deviations]
+
+/-- Behavioral Nash equilibrium depends only on the laws at decision sites. -/
+theorem isNash_toBehavioralGameForm_iff_of_agreesAtDecisions [DecidableEq ι]
+    {first second : Profile M.behavioralSignature}
+    (agree : ∀ who, (first who).AgreesAtDecisions (second who))
+    (horizon : ℕ) (preference : WeakPreference ι E.History) :
+    IsNash (M.toBehavioralGameForm horizon) preference first ↔
+      IsNash (M.toBehavioralGameForm horizon) preference second := by
+  rw [isNash_iff, isNash_iff]
+  have incumbent : M.runBehavioral first horizon = M.runBehavioral second horizon :=
+    M.toBehavioralGameForm_play_eq_of_agreesAtDecisions agree horizon
+  have deviations : ∀ who replacement,
+      M.runBehavioral (Profile.update first who replacement) horizon =
+        M.runBehavioral (Profile.update second who replacement) horizon := by
+    intro who replacement
+    apply M.toBehavioralGameForm_play_eq_of_agreesAtDecisions
+    intro player
+    by_cases same : player = who
+    · subst player
+      simp [BehavioralPolicy.AgreesAtDecisions]
+    · simpa only [Profile.update_of_ne _ _ same] using agree player
+  simp only [incumbent, deviations]
 
 end InformationModel
 

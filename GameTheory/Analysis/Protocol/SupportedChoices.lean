@@ -51,8 +51,9 @@ theorem BehavioralAssessment.supported_choice_value
     (payoff : E.History → ℝ)
     (rational : assessment.IsSequentiallyRationalAt site
       (assessment.continuationContextWith run site payoff))
-    (integrable : ∀ policy,
-      (assessment.continuationContextWith run site payoff).IntegrableAt policy)
+    (integrable :
+      (assessment.continuationContextWith run site payoff).IntegrableAt
+        (assessment.strategy who))
     (choice : M.Choice who site.1)
     (supported : choice ∈ (assessment.strategy who site.1).support) :
     (assessment.continuationContextWith run site payoff).value
@@ -62,9 +63,7 @@ theorem BehavioralAssessment.supported_choice_value
   have mixture := assessment.continuationContextWith_outcome_withLaw run site hfactor
     payoff (assessment.strategy who) (assessment.strategy who site.1)
   rw [BehavioralPolicy.withLaw_eq_self] at mixture
-  have optimal := (Context.isLocallyOptimal_iff_of_integrable (integrable _)
-    fun alternative _ => integrable alternative).mp rational
-  have hintegrable := integrable (assessment.strategy who)
+  have hintegrable := integrable
   unfold Context.IntegrableAt at hintegrable
   rw [mixture] at hintegrable
   have affine : (assessment.continuationContextWith run site payoff).value
@@ -76,8 +75,14 @@ theorem BehavioralAssessment.supported_choice_value
     exact expect_bind_tower _ _ _ hintegrable
   exact expect_eq_const_of_le_on_support (assessment.strategy who site.1) _ _
     (payoffIntegrable_bind_conditionalExpectation _ _ _ hintegrable)
-    (fun alternative _ => optimal ((assessment.strategy who).commit site.1 alternative)
-      (Set.mem_univ _)) affine.symm choice supported
+    (fun alternative supported => by
+      have branchIntegrable := payoffIntegrable_bind_conditional_on_support _ _ _
+        hintegrable alternative supported
+      have comparison := rational.2.2
+        ((assessment.strategy who).commit site.1 alternative) (Set.mem_univ _)
+      rwa [Context.extendedValue_eq branchIntegrable,
+        Context.extendedValue_eq integrable, EReal.coe_le_coe_iff] at comparison)
+    affine.symm choice supported
 
 /-- **Supported choices are optimal** against whole continuation-policy
 deviations, not merely against other current choices. -/
@@ -87,19 +92,22 @@ theorem BehavioralAssessment.supported_choice_optimal
     (payoff : E.History → ℝ)
     (rational : assessment.IsSequentiallyRationalAt site
       (assessment.continuationContextWith run site payoff))
-    (integrable : ∀ policy,
-      (assessment.continuationContextWith run site payoff).IntegrableAt policy)
+    (integrable :
+      (assessment.continuationContextWith run site payoff).IntegrableAt
+        (assessment.strategy who))
     (choice : M.Choice who site.1)
     (supported : choice ∈ (assessment.strategy who site.1).support)
-    (alternative : M.BehavioralPolicy who) :
+    (alternative : M.BehavioralPolicy who)
+    (alternativeIntegrable :
+      (assessment.continuationContextWith run site payoff).IntegrableAt alternative) :
     (assessment.continuationContextWith run site payoff).value alternative ≤
       (assessment.continuationContextWith run site payoff).value
         ((assessment.strategy who).commit site.1 choice) := by
   rw [assessment.supported_choice_value run site hfactor payoff rational integrable choice
     supported]
-  exact (Context.isLocallyOptimal_iff_of_integrable
-      (integrable _) fun alternative _ => integrable alternative).mp rational
-    alternative (Set.mem_univ _)
+  have comparison := rational.2.2 alternative (Set.mem_univ _)
+  rwa [Context.extendedValue_eq alternativeIntegrable,
+    Context.extendedValue_eq integrable, EReal.coe_le_coe_iff] at comparison
 
 /-- **Uniformly worse choices get no probability.** If committing to a choice
 scores at most `upper` from every history of the site while some policy scores
@@ -112,9 +120,12 @@ theorem BehavioralAssessment.not_supported_choice_of_uniform_gap
     (payoff : E.History → ℝ)
     (rational : assessment.IsSequentiallyRationalAt site
       (assessment.continuationContextWith run site payoff))
-    (integrable : ∀ policy,
-      (assessment.continuationContextWith run site payoff).IntegrableAt policy)
+    (integrable :
+      (assessment.continuationContextWith run site payoff).IntegrableAt
+        (assessment.strategy who))
     (choice : M.Choice who site.1) (alternative : M.BehavioralPolicy who)
+    (alternativeIntegrable :
+      (assessment.continuationContextWith run site payoff).IntegrableAt alternative)
     (upper lower : ℝ) (gap : upper < lower)
     (bad : ∀ history : M.InformationHistory who site.1,
       expect (run (Profile.update (sig := M.behavioralSignature) assessment.strategy who
@@ -125,9 +136,16 @@ theorem BehavioralAssessment.not_supported_choice_of_uniform_gap
     choice ∉ (assessment.strategy who site.1).support := by
   intro supported
   have best := assessment.supported_choice_optimal run site hfactor payoff rational
-    integrable choice supported alternative
-  have badIntegrable := integrable ((assessment.strategy who).commit site.1 choice)
-  have goodIntegrable := integrable alternative
+    integrable choice supported alternative alternativeIntegrable
+  have mixture := assessment.continuationContextWith_outcome_withLaw run site hfactor
+    payoff (assessment.strategy who) (assessment.strategy who site.1)
+  rw [BehavioralPolicy.withLaw_eq_self] at mixture
+  have incumbentIntegrable := integrable
+  unfold Context.IntegrableAt at incumbentIntegrable
+  rw [mixture] at incumbentIntegrable
+  have badIntegrable := payoffIntegrable_bind_conditional_on_support _ _ _
+    incumbentIntegrable choice supported
+  have goodIntegrable := alternativeIntegrable
   simp only [BehavioralAssessment.continuationContextWith_value] at best
   have badBound := expect_bind_le_constant_on_support _ _ _ upper badIntegrable
     (fun history _ => bad history)

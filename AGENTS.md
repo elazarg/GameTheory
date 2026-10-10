@@ -187,8 +187,9 @@ theorem families recovered on the settled API.
   their experiments justify sharing more.
 - Equilibrium deviations are local and law-linear by construction; response
   and dominance concepts keep their profile-quantified logical shape.
-- Finite-support probability is the stable default. Infinite stochastic path
-  laws wait for a measurable layer.
+- Ordinary Mathlib PMF is the stable discrete probability carrier. Request
+  payoff integrability or finite support only where needed. Infinite stochastic
+  path laws remain separate from stable execution semantics.
 - Executable finite algorithms and real-valued correctness proofs live in
   separate dependency roots.
 - D0 is decided from measured dependency baselines and a small hybrid

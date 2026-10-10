@@ -118,12 +118,23 @@ theorem isLocallyOptimal_iff_no_profitable_deviation
 extended values. -/
 theorem isLocallyOptimal_congr {first second : Context Choice Outcome}
     {allowed : Set Choice} {choice : Choice}
-    (hexpectation : ∀ option, first.HasValueAt option ↔ second.HasValueAt option)
-    (hvalue : ∀ option, first.extendedValue option = second.extendedValue option) :
+    (hexpectation : ∀ option, option = choice ∨ option ∈ allowed →
+      (first.HasValueAt option ↔ second.HasValueAt option))
+    (hvalue : ∀ option, option = choice ∨ option ∈ allowed →
+      first.extendedValue option = second.extendedValue option) :
     first.IsLocallyOptimal allowed choice ↔
       second.IsLocallyOptimal allowed choice := by
-  unfold IsLocallyOptimal
-  simp only [hexpectation, hvalue]
+  constructor <;> rintro ⟨incumbent, alternatives, optimal⟩
+  · refine ⟨(hexpectation choice (Or.inl rfl)).mp incumbent,
+      fun option mem => (hexpectation option (Or.inr mem)).mp (alternatives option mem),
+      fun option mem => ?_⟩
+    rw [← hvalue option (Or.inr mem), ← hvalue choice (Or.inl rfl)]
+    exact optimal option mem
+  · refine ⟨(hexpectation choice (Or.inl rfl)).mpr incumbent,
+      fun option mem => (hexpectation option (Or.inr mem)).mpr (alternatives option mem),
+      fun option mem => ?_⟩
+    rw [hvalue option (Or.inr mem), hvalue choice (Or.inl rfl)]
+    exact optimal option mem
 
 end Context
 

@@ -12,7 +12,7 @@ argument.
 | mixed Nash | `pure σ` in `F.mixed` | players | replacement mixed strategies |
 | CCE | arbitrary profile law | players | constant unilateral replacements |
 | CE | arbitrary profile law | players | recommendation-dependent maps |
-| strong Nash | `pure σ` | nonempty coalitions | joint member replacements |
+| strong Nash | `pure σ` | nonempty finite coalitions | joint member replacements |
 
 Mixed Nash is `IsNash F.mixed`, not a separate predicate.
 -/
@@ -205,7 +205,8 @@ recommendation. -/
 def IsCorrelatedEq (statusQuo : PMF (Profile F.sig)) : Prop :=
   IsEquilibrium F weaklyPrefers statusQuo (DeviationScheme.recommendation F.sig)
 
-/-- A strong Nash equilibrium: after every nonempty coalition replacement,
+/-- A strong Nash equilibrium against finite coalitions: after every nonempty
+finite coalition replacement,
 some member weakly prefers the status quo.  For total preferences this is
 equivalent to saying that no coalition replacement makes every member strictly
 better off; see `isStrongNash_iff_not_all_gain`. -/
@@ -261,7 +262,7 @@ theorem isStrongNash_iff (profile : Profile F.sig) :
     simp only [DeviationScheme.coalitionConstant_Dev] at replacement
     simpa [GameForm.outcomeLaw] using h coalition hne replacement
 
-/-- Aumann's reading of strong Nash — "no nonempty coalition has a joint
+/-- Aumann's reading of strong Nash — "no nonempty finite coalition has a joint
 replacement that *every* member strictly prefers" — is equivalent to
 `IsStrongNash` exactly when the preference is total. `Preference.coalition`
 documents why the two readings come apart for a partial preference; expected
