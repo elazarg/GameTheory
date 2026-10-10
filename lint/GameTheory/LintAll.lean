@@ -260,6 +260,8 @@ import GameTheory.Math.Probability.SequentialSampling
 import GameTheory.Math.Probability.SignBalance
 import GameTheory.Math.Probability.Simplex
 import GameTheory.Math.Probability.StatisticalCloseness
+import GameTheory.Math.Probability.StatisticalDistance
+import GameTheory.Math.Probability.StatisticalDistanceStability
 import GameTheory.Math.Probability.Support
 import GameTheory.Math.Probability.Tightness
 import GameTheory.Math.Probability.Uniform

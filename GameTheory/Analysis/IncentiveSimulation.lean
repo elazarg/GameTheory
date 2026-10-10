@@ -18,10 +18,15 @@ source differences. Every law-pair simulation is a balance, and a target
 whose difference is twice a source difference is a balance that no law-pair
 simulation represents. On a finite carrier a balance puts the target in the
 source cone.
+
+Approximate matching of both laws bounds the target gain by the sum of the two
+statistical distances times the utility range. Bounded utilities make the
+comparison integrable on arbitrary outcome carriers.
 -/
 
 import GameTheory.Analysis.IncentiveHierarchy
 import GameTheory.Math.Probability.ExpectationMixture
+import GameTheory.Math.Probability.StatisticalDistance
 
 noncomputable section
 
@@ -36,6 +41,43 @@ universe uι uo us ut ur uv
 namespace IncentiveComparison
 
 variable {Outcome : Type uo} {Index : Type us}
+
+/-- Approximate matching of both laws transfers an incentive with payoff-range error. -/
+theorem gain_le_of_statisticalDistance {Outcome : Type*}
+    (source target : IncentiveComparison Outcome) (utility : Outcome → ℝ)
+    (low range : ℝ)
+    (sourceBounds : ∀ a, a ∈ source.prescribed.support ∨ a ∈ source.alternative.support →
+      low ≤ utility a ∧ utility a ≤ low + range)
+    (targetBounds : ∀ a, a ∈ target.prescribed.support ∨ a ∈ target.alternative.support →
+      low ≤ utility a ∧ utility a ≤ low + range)
+    (respected : source.Holds utility) :
+    expect target.alternative utility - expect target.prescribed utility ≤
+      (statisticalDistance target.alternative source.alternative +
+        statisticalDistance target.prescribed source.prescribed) * range := by
+  have integrable (law : PMF Outcome)
+      (inside : ∀ a ∈ law.support, a ∈ source.prescribed.support ∨ a ∈ source.alternative.support) :
+      PayoffIntegrable law utility :=
+    payoffIntegrable_of_bounded_on_support law utility (C := |low| + |range|) fun a used => by
+      obtain ⟨lower, upper⟩ := sourceBounds a (inside a used)
+      rw [abs_le]
+      constructor
+      · linarith [neg_abs_le low, abs_nonneg range]
+      · linarith [le_abs_self low, le_abs_self range]
+  have sourceBound := (source.holds_iff_of_integrable utility
+    (integrable _ (fun _ used => Or.inl used))
+    (integrable _ (fun _ used => Or.inr used))).mp respected
+  have alternativeBound := abs_expect_sub_le_statisticalDistance_mul_range
+    target.alternative source.alternative utility low range
+    (fun a used => used.elim (fun used => targetBounds a (Or.inr used))
+      (fun used => sourceBounds a (Or.inr used)))
+  have prescribedBound := abs_expect_sub_le_statisticalDistance_mul_range
+    target.prescribed source.prescribed utility low range
+    (fun a used => used.elim (fun used => targetBounds a (Or.inl used))
+      (fun used => sourceBounds a (Or.inl used)))
+  have upper := (abs_le.mp alternativeBound).2
+  have lower := (abs_le.mp prescribedBound).1
+  nlinarith
+
 
 /-- `target` balances against a mixture of `source` comparisons: mixing
 its alternative law with the mixed source prescribed laws gives the same law as

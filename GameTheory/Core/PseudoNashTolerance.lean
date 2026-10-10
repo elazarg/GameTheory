@@ -16,7 +16,7 @@ but compares utilities exactly. Two further tolerances are useful.
   `IsEmpiricalPseudoNashAt` bounds each deviation's gap by `δ`. Replacing
   either side of a comparison moves the gap by at most the mean-test advantage
   of the replacement, so a simulation with advantages `ε₁` and `ε₂` turns
-  `(m, δ)` into `(m, δ + ε₁ + ε₂)`; each advantage is at most `4 m` times the
+  `(m, δ)` into `(m, δ + ε₁ + ε₂)`; each advantage is at most `2 m` times the
   statistical distance. This is the concrete-security form of the ideal-to-real
   theorem.
 -/
@@ -119,7 +119,7 @@ theorem isEmpiricalPseudoNashAt_of_simulation {ideal real : ParameterizedGame.{u
 /-- **Concrete statistical ideal to real.** If compiled honest play is within
 statistical distance `s₁` of ideal honest play and every real deviation within
 `s₂` of some ideal deviation, then `(m, δ)`-pseudo-Nash becomes
-`(m, δ + 4 m (s₁ + s₂))`-pseudo-Nash. -/
+`(m, δ + 2 m (s₁ + s₂))`-pseudo-Nash. -/
 theorem isEmpiricalPseudoNashAt_of_statisticalDistance
     {ideal real : ParameterizedGame.{uι, us, uo} ι}
     (compile : ∀ who, ideal.sig.Strategy who → real.sig.Strategy who)
@@ -132,11 +132,11 @@ theorem isEmpiricalPseudoNashAt_of_statisticalDistance
           (real.utilityLaw who (Profile.update (Profile.map compile profile) who deviation) κ) ≤
             s₂)
     (h : ideal.IsEmpiricalPseudoNashAt κ m δ profile) :
-    real.IsEmpiricalPseudoNashAt κ m (δ + 4 * m * s₁ + 4 * m * s₂)
+    real.IsEmpiricalPseudoNashAt κ m (δ + 2 * m * s₁ + 2 * m * s₂)
       (Profile.map compile profile) := by
   refine isEmpiricalPseudoNashAt_of_simulation compile (fun who deviation => ?_) h
   obtain ⟨simulated, hsim⟩ := hdeviation who deviation
-  have hm : (0 : ℝ) ≤ 4 * m := by positivity
+  have hm : (0 : ℝ) ≤ 2 * m := by positivity
   exact ⟨simulated,
     (meanTestAdvantage_le _ _ _ m).trans (mul_le_mul_of_nonneg_left (hhonest who) hm),
     (meanTestAdvantage_le _ _ _ m).trans (mul_le_mul_of_nonneg_left hsim hm)⟩

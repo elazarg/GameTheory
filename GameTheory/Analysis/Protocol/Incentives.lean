@@ -30,6 +30,24 @@ namespace Context
 
 variable {Choice : Type*} {Outcome : Type*}
 
+/-- Approximate matching of continuation laws bounds a local deviation's gain.
+The source comparison includes the requirement that both expectations exist. -/
+theorem value_sub_le_of_statisticalDistance (ctx : Context Choice Outcome)
+    (source : IncentiveComparison Outcome) (choice alternative : Choice)
+    (low range : ℝ)
+    (sourceBounds : ∀ outcome, outcome ∈ source.prescribed.support ∨
+      outcome ∈ source.alternative.support → low ≤ ctx.continuation outcome ∧
+        ctx.continuation outcome ≤ low + range)
+    (targetBounds : ∀ outcome, outcome ∈ (ctx.outcome choice).support ∨
+      outcome ∈ (ctx.outcome alternative).support → low ≤ ctx.continuation outcome ∧
+      ctx.continuation outcome ≤ low + range)
+    (respected : source.Holds ctx.continuation) :
+    ctx.value alternative - ctx.value choice ≤
+      (statisticalDistance (ctx.outcome alternative) source.alternative +
+        statisticalDistance (ctx.outcome choice) source.prescribed) * range :=
+  source.gain_le_of_statisticalDistance ⟨ctx.outcome choice, ctx.outcome alternative⟩
+    ctx.continuation low range sourceBounds targetBounds respected
+
 /-- Local optimality against every alternative is the family of comparisons of
 the chosen continuation law with each alternative's law. -/
 theorem isLocallyOptimal_univ_iff_holds (ctx : Context Choice Outcome) (choice : Choice) :

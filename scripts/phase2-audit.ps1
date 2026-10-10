@@ -229,6 +229,9 @@ $RepresentationModules = @(
   # The moving-hybrid fixture computes the one-draw Boolean acceptance scalar.
   'GameTheory/Math/Probability/HybridIndistinguishabilityTest.lean',
   'GameTheory/Math/Probability/StatisticalCloseness.lean',
+  # Statistical-distance calculus owns native atom and event mass arithmetic.
+  'GameTheory/Math/Probability/StatisticalDistance.lean',
+  'GameTheory/Math/Probability/StatisticalDistanceStability.lean',
   'GameTheory/Math/Probability/MeanComparison.lean',
   'GameTheory/Math/Probability/SampleSum.lean',
   'GameTheory/Math/Probability/RademacherWalk.lean',

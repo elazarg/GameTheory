@@ -30,6 +30,7 @@ utility is computed from the view.
 import GameTheory.Math.Probability.MeanComparison
 import GameTheory.Math.Probability.Product
 import GameTheory.Math.Probability.Support
+import GameTheory.Math.Probability.StatisticalDistance
 
 noncomputable section
 
@@ -220,87 +221,56 @@ theorem containsMeanTests_polySampleTests (Y : ℕ → PMF ℝ) :
   fun d => ⟨⟨d, Filter.Eventually.of_forall fun _ => le_rfl⟩,
     ⟨d, Filter.Eventually.of_forall fun _ => le_rfl⟩⟩
 
-/-- The statistical distance between two laws: half their total absolute mass
-difference. -/
-def statisticalDistance (μ ν : PMF α) : ℝ :=
-  (∑' a, |(μ a).toReal - (ν a).toReal|) / 2
+/-- Product sampling accumulates error by stochastic kernel composition. -/
+theorem statisticalDistance_iidLaw_le {α : Type*} (μ ν : PMF α) (n : ℕ) :
+    statisticalDistance (iidLaw μ n) (iidLaw ν n) ≤ n * statisticalDistance μ ν := by
+  induction n with
+  | zero =>
+    rw [eq_pure_of_subsingleton (iidLaw μ 0) Fin.elim0,
+      eq_pure_of_subsingleton (iidLaw ν 0) Fin.elim0]
+    simp [statisticalDistance]
+  | succ n previous =>
+    rw [iidLaw_succ, iidLaw_succ]
+    let first : (Fin n → α) → PMF (Fin (n + 1) → α) := fun z => μ.map fun x => Fin.cons x z
+    let second : (Fin n → α) → PMF (Fin (n + 1) → α) := fun z => ν.map fun x => Fin.cons x z
+    have inputBound := statisticalDistance_bind_left_le (iidLaw μ n) (iidLaw ν n) first
+    have kernelBound : statisticalDistance ((iidLaw ν n).bind first)
+        ((iidLaw ν n).bind second) ≤ statisticalDistance μ ν := by
+      apply statisticalDistance_bind_right_le_of_bound
+      intro z _
+      change statisticalDistance (μ.map (fun x : α => (Fin.cons x z : Fin (n + 1) → α)))
+        (ν.map (fun x : α => (Fin.cons x z : Fin (n + 1) → α))) ≤ statisticalDistance μ ν
+      exact statisticalDistance_map_le μ ν (fun x : α => (Fin.cons x z : Fin (n + 1) → α))
+    have composition := statisticalDistance_triangle ((iidLaw μ n).bind first)
+      ((iidLaw ν n).bind first) ((iidLaw ν n).bind second)
+    calc
+      _ ≤ statisticalDistance (iidLaw μ n) (iidLaw ν n) + statisticalDistance μ ν :=
+        composition.trans (add_le_add inputBound kernelBound)
+      _ ≤ n * statisticalDistance μ ν + statisticalDistance μ ν :=
+        add_le_add previous le_rfl
+      _ = ((n + 1 : ℕ) : ℝ) * statisticalDistance μ ν := by push_cast; ring
 
-theorem summable_abs_sub_mass (μ ν : PMF α) :
-    Summable fun a => |(μ a).toReal - (ν a).toReal| := by
-  refine Summable.of_nonneg_of_le (fun _ => abs_nonneg _) (fun a => ?_)
-    ((pmf_weight_summable μ).add (pmf_weight_summable ν))
-  refine (abs_sub _ _).trans ?_
-  rw [abs_of_nonneg ENNReal.toReal_nonneg, abs_of_nonneg ENNReal.toReal_nonneg]
 
-theorem statisticalDistance_nonneg (μ ν : PMF α) : 0 ≤ statisticalDistance μ ν :=
-  div_nonneg (tsum_nonneg fun _ => abs_nonneg _) zero_le_two
 
-/-- A test with values in `[-1, 1]` separates two laws by at most twice their
-statistical distance. -/
-theorem abs_expect_sub_le_statisticalDistance {μ ν : PMF α} {f : α → ℝ}
-    (hf : ∀ a, |f a| ≤ 1) :
-    |expect μ f - expect ν f| ≤ 2 * statisticalDistance μ ν := by
-  have hμ := (payoffIntegrable_of_bounded μ f hf).summable
-  have hν := (payoffIntegrable_of_bounded ν f hf).summable
-  have hterm : ∀ a, ‖(μ a).toReal * f a - (ν a).toReal * f a‖ ≤
-      |(μ a).toReal - (ν a).toReal| := by
-    intro a
-    rw [Real.norm_eq_abs, ← sub_mul, abs_mul]
-    exact mul_le_of_le_one_right (abs_nonneg _) (hf a)
-  have hnorm : Summable fun a => ‖(μ a).toReal * f a - (ν a).toReal * f a‖ :=
-    Summable.of_nonneg_of_le (fun _ => norm_nonneg _) hterm (summable_abs_sub_mass μ ν)
-  rw [statisticalDistance, mul_div_cancel₀ _ two_ne_zero, expect, expect, ← hμ.tsum_sub hν,
-    ← Real.norm_eq_abs]
-  exact (norm_tsum_le_tsum_norm hnorm).trans
-    (hnorm.tsum_le_tsum hterm (summable_abs_sub_mass μ ν))
+/-- Unit-interval tests on independent samples lose at most one distance per sample. -/
+theorem abs_expect_iidLaw_sub_le_of_mem_Icc (μ ν : PMF α) (n : ℕ)
+    (test : (Fin n → α) → ℝ) (bounded : ∀ z, 0 ≤ test z ∧ test z ≤ 1) :
+    |expect (iidLaw μ n) test - expect (iidLaw ν n) test| ≤ n * statisticalDistance μ ν :=
+  (abs_expect_sub_le_statisticalDistance_of_mem_Icc _ _ test bounded).trans
+    (statisticalDistance_iidLaw_le μ ν n)
 
-/-- **Hybrid bound.** A test with values in `[-1, 1]` on `n` independent draws
-separates two laws by at most `n` times twice their statistical distance. -/
+/-- Tests in `[-1, 1]` accumulate at most twice the distance per independent draw. -/
 theorem abs_expect_iidLaw_sub_le (μ ν : PMF α) (n : ℕ) :
     ∀ g : (Fin n → α) → ℝ, (∀ z, |g z| ≤ 1) →
       |expect (iidLaw μ n) g - expect (iidLaw ν n) g| ≤
         n * (2 * statisticalDistance μ ν) := by
-  induction n with
-  | zero =>
-    intro g _
-    rw [eq_pure_of_subsingleton (iidLaw μ 0) Fin.elim0,
-      eq_pure_of_subsingleton (iidLaw ν 0) Fin.elim0]
-    simp
-  | succ n ih =>
-    intro g hg
-    have hsplit : ∀ ρ : PMF α, expect (iidLaw ρ (n + 1)) g =
-        expect (iidLaw ρ n) fun z => expect ρ fun x => g (Fin.cons x z) := by
-      intro ρ
-      rw [iidLaw_succ, expect_bind_tower _ _ _ (payoffIntegrable_of_bounded _ _ hg)]
-      apply expect_congr_on_support
-      intro z _
-      rw [expect_map]
-      rfl
-    have hbounded : ∀ ρ : PMF α, ∀ z : Fin n → α,
-        |expect ρ fun x => g (Fin.cons x z)| ≤ 1 :=
-      fun ρ z => expect_abs_le_of_bounded zero_le_one fun x => hg _
-    have hD : 0 ≤ 2 * statisticalDistance μ ν :=
-      mul_nonneg zero_le_two (statisticalDistance_nonneg μ ν)
-    have hfirst : |expect (iidLaw μ n) (fun z => expect μ fun x => g (Fin.cons x z)) -
-        expect (iidLaw μ n) (fun z => expect ν fun x => g (Fin.cons x z))| ≤
-          2 * statisticalDistance μ ν := by
-      rw [← expect_sub (payoffIntegrable_of_bounded _ _ (hbounded μ))
-        (payoffIntegrable_of_bounded _ _ (hbounded ν))]
-      exact expect_abs_le_of_bounded hD fun z =>
-        abs_expect_sub_le_statisticalDistance fun x => hg _
-    have hsecond := ih (fun z => expect ν fun x => g (Fin.cons x z)) (hbounded ν)
-    rw [hsplit μ, hsplit ν]
-    calc
-      _ ≤ |expect (iidLaw μ n) (fun z => expect μ fun x => g (Fin.cons x z)) -
-            expect (iidLaw μ n) (fun z => expect ν fun x => g (Fin.cons x z))| +
-          |expect (iidLaw μ n) (fun z => expect ν fun x => g (Fin.cons x z)) -
-            expect (iidLaw ν n) (fun z => expect ν fun x => g (Fin.cons x z))| :=
-        abs_sub_le _ _ _
-      _ ≤ 2 * statisticalDistance μ ν + n * (2 * statisticalDistance μ ν) :=
-        add_le_add hfirst hsecond
-      _ = ((n + 1 : ℕ) : ℝ) * (2 * statisticalDistance μ ν) := by
-        push_cast
-        ring
+  intro test bounded
+  calc
+    _ ≤ 2 * statisticalDistance (iidLaw μ n) (iidLaw ν n) :=
+      abs_expect_sub_le_statisticalDistance bounded
+    _ ≤ 2 * (n * statisticalDistance μ ν) :=
+      mul_le_mul_of_nonneg_left (statisticalDistance_iidLaw_le μ ν n) zero_le_two
+    _ = n * (2 * statisticalDistance μ ν) := by ring
 
 theorem SampleTest.acceptProb_eq_expect (T : SampleTest α) (X : ℕ → PMF α) (κ : ℕ) :
     T.acceptProb X κ =
