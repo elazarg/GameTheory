@@ -10,7 +10,7 @@ an existing semantic concept. Preserve upstream attribution in `NOTICE`.
 | 1 | Proportional Bayes transport | Supported: `Analysis.Protocol.BeliefTransport` scales site mass, cancels the multiplier in Bayes beliefs, and derives raw positive mass. Exact transport specializes the proportional theorem. Only finite movers are assumed; history carriers are arbitrary. The tremble reach-ratio consumer and existing restriction-extension consumer compile warning-free. | Terminal passage transport. |
 | 2 | Depth-free action restrictions | Supported: canonical restriction-belief, completion and extension APIs use terminal passage, with depth parameters removed and only `Finite` target histories. The asynchronous hidden-decision consumer refutes common depth and preserves terminal play under extension. Structural ancestor existence moves to `Protocol.History`; restriction passage lemmas live in `Protocol.RestrictionExecution`. Event-level conditional domination reuses the existing scalar ratio bound. Full build, lint and architecture audit pass. | Statistical-distance calculus and approximate transport. |
 | 3 | Total variation and approximate transport | Supported mathematical slice: the existing half-L1 `statisticalDistance` moves to a dedicated PMF module and equals the uniform event-gap bound. Arbitrary-carrier observation contraction, expected kernel error, support-local payoff-range bounds, domination and discrete convergence are proved. Canonical incentive and continuation contexts bound deviation gain without a new equilibrium predicate. Sample tests and concrete pseudo-Nash transfer improve their constants by two. Full build, lint and architecture audit pass. | Information abstraction next. Copied-site sequential-limit consumers accompany component completion. |
-| 4 | Information-abstraction criteria | Planned: separate all-utility fact determination from fixed-payoff common maximizers. | Canonical decision semantics, separating examples and protocol correspondence. |
+| 4 | Information-abstraction criteria | Protected-law slice supported: supported fact recovery transparently specializes Mathlib `Function.FactorsThrough`; conditional averaging preserves arbitrary response laws. Perfect reporting and preservation of all informed reporting laws are equivalent to fact recovery. Guarded terminal-decision optimality specializes canonical contexts, and optimal retained-law sets coincide without finite carriers, finite-support priors or bounded utilities. Consumers cover an erased supported bit, an unreachable merge and infinite carriers. | Fixed-payoff common maximizers, all-utility optimality necessity and sequential decision consumers. |
 | 5 | Sanction feasibility and synthesis | Planned: incremental collection comparisons and rational least-deposit checker. | Separate executable finite checking from real correctness; signed coefficients where useful. |
 | 6 | Component and pooled-agent completion | Planned: generalize prescribed/free agent completion. | Component-mixture optimality, pooled-member conditions and sequential consumers. |
 
@@ -85,3 +85,35 @@ completed 4,199 jobs; lint passed and the audit reported `VERIFIED=1` with no
 transport or unowned mass arithmetic. Event equivalence, support-local range,
 kernel error, convergence equivalence, independent samples, incentive gain,
 continuation gain and sharpened pseudo-Nash transfer use only standard axioms.
+
+The fourth slice first separates probability-law abstraction from utility
+comparisons. `Math.Probability.ObservationAbstraction` contains the generic
+laws and supported factorization; `Protocol.ContextTransport` transports the
+existing guarded optimality through law coverage. `Analysis.DecisionExperiment`
+uses this context over whole response policies. There is no separate Bayesian
+equilibrium predicate that silently excludes undefined alternatives. Every
+compared alternative retains its expectation-existence obligation, and the
+transport covers finite or infinite extended values.
+
+Narrow validation:
+
+```text
+lake build GameTheory.Protocol.ContextTransport
+lake build GameTheory.Math.Probability.ObservationAbstraction
+lake build GameTheory.Analysis.DecisionExperimentTest
+lake build GameTheory GameTheory.LintAll
+lake lint
+pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected
+```
+
+The necessity argument uses reporting laws rather than numerical reporting
+values, eliminating finiteness and decidable-equality assumptions. The erased-bit
+consumer refutes law matching for every randomized policy; the unreachable
+merge checks that only prior-supported states matter. The infinite-carrier
+consumer quantifies over arbitrary priors and utilities on `Bool × ℕ` with
+natural-number actions.
+
+The protected-law checkpoint completed all 4,562 integration jobs, lint passed
+and the architecture audit reported `VERIFIED=1`. Reporting-law necessity,
+universal reporting-law preservation, guarded context coverage, optimal-law
+correspondence and the hostile consumers use only standard Lean axioms.

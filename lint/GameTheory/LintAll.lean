@@ -35,6 +35,7 @@ import GameTheory.Analysis.Examples
 import GameTheory.Analysis.ExpectedUtility
 import GameTheory.Analysis.FictitiousPlayPotential
 import GameTheory.Analysis.IncentiveCone
+import GameTheory.Analysis.DecisionExperiment
 import GameTheory.Analysis.IncentiveHierarchy
 import GameTheory.Analysis.IncentiveSimulation
 import GameTheory.Analysis.Learning
@@ -222,6 +223,7 @@ import GameTheory.Math.Probability.Bounds
 import GameTheory.Math.Probability.Compactness
 import GameTheory.Math.Probability.ConditionalComparison
 import GameTheory.Math.Probability.ConditionalObservation
+import GameTheory.Math.Probability.ObservationAbstraction
 import GameTheory.Math.Probability.Conditioning
 import GameTheory.Math.Probability.Continuity
 import GameTheory.Math.Probability.Convergence
@@ -315,6 +317,7 @@ import GameTheory.Protocol.BehavioralContinuation
 import GameTheory.Protocol.BehavioralMixture
 import GameTheory.Protocol.BehavioralTerminal
 import GameTheory.Protocol.Context
+import GameTheory.Protocol.ContextTransport
 import GameTheory.Protocol.Continuation
 import GameTheory.Protocol.ContinuationLaw
 import GameTheory.Protocol.DecisionPlan
