@@ -866,8 +866,7 @@ lake lint
 lake env lean .codex/scratch/BrouwerAxiomAudit.lean
 lake -KgameTheoryPath=../.. build GameTheoryComplexity GameTheoryComplexity.LintAll GameTheoryComplexity.AxiomAudit
 lake -KgameTheoryPath=../.. lint
-pwsh -File scripts/phase2-audit.ps1 -VerifyExpected
-pwsh -File scripts/complexity-audit.ps1
+python scripts/audit.py --source-only
 python -m unittest discover -s scripts/tests
 ```
 

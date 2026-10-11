@@ -75,8 +75,8 @@ The original probe design used `stdSimplex` and `Polynomial` as proxies for
 that dependency. EXP-129 replaces those proxies for probability-bearing
 semantic modules with actual project Analysis and external fixed-point
 declarations, as described below. The executable frontend retains the stronger
-restrictions. Positive Analysis probes verify that the forbidden dependency is
-present where the architecture permits it.
+restrictions. The original positive Analysis probes verified that the forbidden
+dependency was present where the architecture permitted it.
 
 The trust argument is separable from the convenience one. Version alignment and
 build cost decide whether taking the dependency is pleasant; the axiom profile
@@ -84,10 +84,30 @@ decides whether it is admissible at all. Had the package carried a single
 `sorryAx`, every theorem above it would be untrusted and no boundary would
 repair that.
 
+## Public build scope amendment
+
+[EXP-164](../ExperimentLog.md) selects root-only default globs for the existing
+`GameTheory` and `GameTheory.Math` targets instead of introducing overlapping
+validation libraries. The default authored import closure contains 146 modules
+and no fixtures, compared with 892 modules scheduled by broad globs. Explicit
+leaf imports remain buildable because Lake retains the same library roots.
+The existing lint and axiom drivers compile all public modules and all
+validation evidence; CI names both umbrellas and both drivers before caching.
+This is a scheduling change, not a weaker validation or trust boundary.
+
+Topology-free terminal decision transport lives in opt-in
+`Protocol.DecisionExperiment` and `Protocol.DecisionPayoff` leaves. They retain
+the canonical context and guarded expectation APIs, with no dependency on
+project Analysis. The source audit now applies shared trust and fixture rules
+to the companion as well as the base package, and keeps Analysis/fixed-point
+imports confined to their owner in either package.
+
 ## The boundary, as checked
 
-`scripts/phase2-audit.ps1` carries the rule rather than the prose. Four numbers,
-all verified:
+`scripts/audit.py` now enforces authored import boundaries, strict builds,
+complete public lint coverage, and transitive standard-axiom checks. The old
+phase scripts and fixed probe counts have been retired. The following numbers
+record the original experiment's verified measurements:
 
 | Check | Expected |
 |---|---:|
@@ -96,9 +116,9 @@ all verified:
 | `UNREACHABLE_PROBES_PASSED` | 6 |
 | `ANALYSIS_PROBES_REACHED` | 2 |
 
-The last is the unusual one and the one worth keeping. Every other probe asserts
-that something is *not* reachable; this one asserts that `stdSimplex` and
-`Polynomial` *are* reachable from the analytic root. A probe that only ever
+The last was the unusual one. Every other probe asserted
+that something was *not* reachable; this one asserted that `stdSimplex` and
+`Polynomial` *were* reachable from the analytic root. A probe that only ever
 checks absence cannot tell containment from the dependency having quietly
 stopped being used, and the two look identical from outside.
 

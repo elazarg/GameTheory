@@ -7284,7 +7284,7 @@ memory.
 ### EXP-114: cyclic all-phase uniform equilibrium
 
 - **Date / revision:** 2026-08-17, reservation on the EXP-113 working tree
-- **Status:** in progress; experiment-only; no public API adopted
+- **Status:** complete hostile slice; experiment-only; no public API adopted
 - **Decision / question:** can stochastic uniform equilibrium quantify every
   canonical restart phase without importing the well-founded terminal SPE
   interface or coercing between terminal, limiting-average, and uniform
@@ -7303,7 +7303,7 @@ memory.
 - **Kill conditions:** a second runner, terminal/SPE coercion, inference from
   only the chosen initial phase, hidden infinite-path assumptions, or a bundled
   hierarchy before the hostile consumer compiles.
-- **Evidence / outcome:** `CyclicUniformInterface.lean` currently compiles the
+- **Initial evidence / outcome:** `CyclicUniformInterface.lean` compiled the
   transparent all-phase predicate, its initial-phase consequence, and a cyclic
   unit-action positive control over the existing `afterPublicHistory`
   semantics. This is provisional evidence only. The attempted two-phase
@@ -7315,6 +7315,16 @@ memory.
   plumbing or visible transports. The broken fixture was deleted. The next
   action is a general public event/transition congruence seam, followed by the
   same hostile test; do not adopt the all-phase interface before it passes.
+
+- **Closure verification (2026-10-11):** the restored
+  `CyclicUniformHostile.lean` uses the public event joint-action identity and
+  transition-support theorem. `constantFalse_initial_uniform` proves the
+  positive initial control, while `offPhaseDeviation_payoff_two`,
+  `offPhase_not_uniform`, and `constantFalse_not_allPhase_uniform` prove the
+  profitable reachable off-phase control. `lake --iofail build
+  GameTheory.Experimental.PostArchitecture.CyclicUniformHostile` passes.
+  The original event-interface failure is retained above. The hostile gate is
+  closed; public adoption and general uniform existence remain separate.
 
 ### EXP-115: horizon-relative Kuhn realization
 
@@ -10301,3 +10311,46 @@ memory.
   reduction; Nash search completeness remains separate. Prior hosted optional
   runs took 45–46 minutes, so CI now allows 90 minutes for the additional uniform
   proof closure. Local probes remain in `.codex/scratch/`.
+
+## EXP-164: public build roots with complete validation coverage
+
+- **Question:** can root-only default globs reduce routine build scope while
+  preserving explicit leaf imports and complete public/evidence verification?
+- **Competing designs:** retain broad default submodule globs; add overlapping
+  validation libraries; or keep existing library ownership and select only the
+  public umbrellas by default, using the existing lint/axiom drivers for full
+  validation.
+- **Representative slice:** Protocol state compilation, opt-in terminal decision
+  experiments, finite bimatrix certificate clients, and companion pivot imports.
+- **Kill conditions:** an authored leaf stops being buildable/importable; a
+  fixture enters a public import closure; lint/axiom coverage shrinks; or CI
+  caches only the default closure instead of the complete validation build.
+- **Baseline:** 892 base modules, including 366 fixtures/evidence modules;
+  broad default globs schedule all of them. Measurements concern scheduled
+  scope, not cold-build timing.
+- **Artifacts and commands:** `lakefile.lean`, `.github/workflows/ci.yml`, the
+  existing lint/axiom drivers, and the local measurement probe
+  `.codex/scratch/exp164-scope.py`. `python .codex/scratch/exp164-scope.py`
+  measures authored closures through the maintained source parser.
+  `lake --iofail build GameTheory.Tests.Strategic GameTheory.Protocol.DecisionExperimentTest GameTheory.Finite.BimatrixCertificateCorrectness GameTheory.Finite.BimatrixCertificateShift GameTheory.Math.IntegerRatioSelection`
+  passes 3,137 jobs. `python scripts/audit.py` passes the default build
+  (3,816 jobs), complete validation build (4,593 jobs), public lint and
+  transitive standard-axiom checks. `python scripts/audit.py --complexity`
+  passes the local-base companion build (4,413 jobs), complete validation build
+  (4,416 jobs), lint and axiom checks. All 40 tooling regressions pass with
+  `python -m unittest discover -s scripts/tests`.
+- **Observations:** the default authored closure contains 146 modules and zero
+  fixtures; both drivers retain coverage of all 892 authored modules. Explicit
+  opt-in decision imports and companion bimatrix consumers remain buildable.
+  The relocated decision leaves and their controls have a 22-module authored
+  closure with no project Analysis import. CI explicitly compiles both
+  umbrellas and both drivers before saving its cache. No cold-build speedup
+  is claimed. The first complete build encountered a transient read failure
+  for the installed `Std.Data.DTreeMap.Internal.Lemmas.olean` while compiling
+  `BimatrixGateProgramBounds`; the file existed, the isolated
+  `lake --iofail build GameTheory.Finite.BimatrixGateProgramBounds` retry passed,
+  and the subsequent full audit passed without environment changes.
+- **Outcome:** supported. [D12](decisions/D12-dependency-boundaries.md) adopts
+  root-only scheduling with complete verification through the existing
+  drivers. No new semantic owner or library target is introduced. Keep the
+  coverage checks and explicit CI validation targets when adding modules.

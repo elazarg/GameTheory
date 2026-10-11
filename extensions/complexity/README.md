@@ -149,17 +149,18 @@ in PowerShell so `../..` is passed to Lake intact:
 lake -R '-KgameTheoryPath=../..' update
 lake '-KgameTheoryPath=../..' env lean --version
 lake '-KgameTheoryPath=../..' exe cache get
-lake '-KgameTheoryPath=../..' build
-lake '-KgameTheoryPath=../..' build GameTheoryComplexity.LintAll
-lake '-KgameTheoryPath=../..' lint
-lake '-KgameTheoryPath=../..' build GameTheoryComplexity.AxiomAudit
-../../scripts/complexity-audit.ps1
+python ../../scripts/audit.py --complexity
 ```
 
 The extension's generated manifest is ignored because local development replaces
 the released base pin with a path. Run `lake -R update` after switching between
 local and released modes. Source dependencies remain explicitly pinned; never
 edit either package's manifest by hand.
+
+The audit rejects warnings and info in every extension module's stored build
+diagnostics, including cached results. Dependency warnings also fail; upstream
+proof suggestions are allowed. CI runs the same audit against both the local
+checkout and the released base pin.
 
 The extension has its own CI workflow. Its default build targets only its own
 library and fixtures, together with their imported dependencies. It never builds

@@ -14,9 +14,9 @@ concurrency:
 
 jobs:
   verify:
-    name: Build and architecture audits
+    name: Build, lint, and audit
     runs-on: windows-latest
-    # Cold Windows builds exceeded 60 minutes before the deep audits began.
+    # Allow a cold build followed by whole-library lint and axiom checks.
     timeout-minutes: 120
     defaults:
       run:
@@ -25,28 +25,20 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - name: Verify package, toolchain, Mathlib, and release versions agree
-        run: |
-          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -match '^v\d+\.') {
-            ./scripts/check-release-version.ps1 -ExpectedVersion $env:GITHUB_REF_NAME
-          } else {
-            ./scripts/check-release-version.ps1
-          }
-
-      # lean-action reads the repository's pinned lean-toolchain.  The build is
-      # selected explicitly rather than inferred, and runs before the action
-      # saves its `.lake` cache.
+      # Compile every public module and all validation evidence before the
+      # cache is saved. Ordinary local builds only follow the public umbrellas.
       - uses: leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9 # v1.5.0
         with:
           auto-config: false
           build: true
+          build-args: '--iofail GameTheory GameTheory.Math GameTheory.LintAll GameTheory.AxiomAudit'
           test: false
           lint: false
           use-mathlib-cache: true
 
       # lean-action's internal Bash steps can see Elan, but on Windows its
       # shim directory is not currently propagated to later PowerShell steps.
-      # The deep audits invoke `lake env lean`, so expose the pinned shims once
+      # The audit invokes Lake, so expose the pinned shims once
       # and fail here with a useful message if the action layout changes.
       - name: Expose pinned Lean toolchain to audit steps
         run: |
@@ -57,19 +49,16 @@ jobs:
           }
           $elanBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      # Source-level checks stay fast for local iteration. CI additionally
-      # exercises the intentionally expensive compiler reachability probes.
-      - name: Verify architecture audit regression tests
-        run: python -m unittest discover -s scripts/tests -p test_architecture_audit.py
+      - name: Verify tooling regression tests
+        run: python -m unittest discover -s scripts/tests
 
-      - name: Verify Phase 1 architecture measurements
-        run: ./scripts/phase1-audit.ps1 -VerifyExpected
-
-      - name: Verify Phase 2 architecture measurements and reachability probes
-        run: ./scripts/phase2-audit.ps1 -VerifyExpected -DeepReachability
-
-      - name: Verify Phase 3 architecture measurements and reachability probes
-        run: ./scripts/phase3-audit.ps1 -VerifyExpected -DeepReachability
+      - name: Audit the library with warnings and info as errors
+        run: |
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -match '^v\d+\.') {
+            python scripts/audit.py --release-version $env:GITHUB_REF_NAME
+          } else {
+            python scripts/audit.py
+          }
 
       - name: Verify build and audits do not mutate tracked files
         run: git diff --exit-code

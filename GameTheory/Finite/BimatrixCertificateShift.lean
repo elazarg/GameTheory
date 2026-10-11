@@ -79,25 +79,33 @@ theorem positive_rowUtilityNumerator {m n : ℕ} (A B : Fin m → Fin n → ℤ)
     (c : BimatrixCertificate m n) (hc : c.Valid A B) (hA : ∀ i j, 0 < A i j) :
     0 < c.rowUtilityNumerator := by
   obtain ⟨i, _, hi⟩ := Finset.exists_ne_zero_of_sum_ne_zero
-    (show (∑ i, c.rowWeights i) ≠ 0 by rw [hc.2.2.1]; exact Nat.ne_of_gt hc.1)
+    (show (∑ i, c.rowWeights i) ≠ 0 by
+      rw [hc.sum_rowWeights]
+      exact Nat.ne_of_gt hc.rowDenominator_pos)
   obtain ⟨j, _, hj⟩ := Finset.exists_ne_zero_of_sum_ne_zero
-    (show (∑ j, c.colWeights j) ≠ 0 by rw [hc.2.2.2.1]; exact Nat.ne_of_gt hc.2.1)
+    (show (∑ j, c.colWeights j) ≠ 0 by
+      rw [hc.sum_colWeights]
+      exact Nat.ne_of_gt hc.colDenominator_pos)
   have hs : 0 < rowScore A c i := by
     apply Finset.sum_pos' (fun k _ => mul_nonneg (le_of_lt (hA i k)) (by positivity))
     exact ⟨j, Finset.mem_univ j, mul_pos (hA i j) (by exact_mod_cast Nat.pos_of_ne_zero hj)⟩
-  exact hs.trans_le (hc.2.2.2.2.1 i).1
+  exact hs.trans_le (hc.rowScore_le i)
 
 theorem positive_colUtilityNumerator {m n : ℕ} (A B : Fin m → Fin n → ℤ)
     (c : BimatrixCertificate m n) (hc : c.Valid A B) (hB : ∀ i j, 0 < B i j) :
     0 < c.colUtilityNumerator := by
   obtain ⟨i, _, hi⟩ := Finset.exists_ne_zero_of_sum_ne_zero
-    (show (∑ i, c.rowWeights i) ≠ 0 by rw [hc.2.2.1]; exact Nat.ne_of_gt hc.1)
+    (show (∑ i, c.rowWeights i) ≠ 0 by
+      rw [hc.sum_rowWeights]
+      exact Nat.ne_of_gt hc.rowDenominator_pos)
   obtain ⟨j, _, hj⟩ := Finset.exists_ne_zero_of_sum_ne_zero
-    (show (∑ j, c.colWeights j) ≠ 0 by rw [hc.2.2.2.1]; exact Nat.ne_of_gt hc.2.1)
+    (show (∑ j, c.colWeights j) ≠ 0 by
+      rw [hc.sum_colWeights]
+      exact Nat.ne_of_gt hc.colDenominator_pos)
   have hs : 0 < colScore B c j := by
     apply Finset.sum_pos' (fun k _ => mul_nonneg (le_of_lt (hB k j)) (by positivity))
     exact ⟨i, Finset.mem_univ i, mul_pos (hB i j) (by exact_mod_cast Nat.pos_of_ne_zero hi)⟩
-  exact hs.trans_le (hc.2.2.2.2.2 j).1
+  exact hs.trans_le (hc.colScore_le j)
 
 end BimatrixCertificate
 

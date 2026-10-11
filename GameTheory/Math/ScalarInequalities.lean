@@ -15,7 +15,8 @@ variable {Index : Type*}
 
 /-- The largest lower bound imposed by a positive slope, including zero. -/
 def candidate (rows : Finset Index) (gain slope : Index → ℚ) : ℚ :=
-  (insert 0 (rows.image (fun index => if 0 < slope index then gain index / slope index else 0))).max'
+  (insert 0 (rows.image (fun index => if 0 < slope index then gain index / slope index else
+    0))).max'
     (Finset.insert_nonempty ..)
 
 /-- Check the least possible nonnegative scalar against every row, including upper bounds

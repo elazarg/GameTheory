@@ -139,14 +139,17 @@ theorem IsBalanced.difference_mem_cone [Fintype Outcome]
 are integrable. The mixture index and support need not be finite. -/
 theorem holds_bind {Index Outcome : Type*} (weights : PMF Index)
     (comparisons : Index → IncentiveComparison Outcome) (utility : Outcome → ℝ)
-    (prescribed : PayoffIntegrable (weights.bind fun index => (comparisons index).prescribed) utility)
-    (alternative : PayoffIntegrable (weights.bind fun index => (comparisons index).alternative) utility)
+    (prescribed : PayoffIntegrable (weights.bind fun index => (comparisons index).prescribed)
+      utility)
+    (alternative : PayoffIntegrable (weights.bind fun index => (comparisons index).alternative)
+      utility)
     (holds : ∀ index ∈ weights.support, (comparisons index).Holds utility) :
     (IncentiveComparison.mk (weights.bind fun index => (comparisons index).prescribed)
       (weights.bind fun index => (comparisons index).alternative)).Holds utility := by
   refine (holds_iff_of_integrable
     (IncentiveComparison.mk (weights.bind fun index => (comparisons index).prescribed)
-      (weights.bind fun index => (comparisons index).alternative)) utility prescribed alternative).mpr ?_
+      (weights.bind fun index => (comparisons index).alternative)) utility prescribed
+        alternative).mpr ?_
   apply expect_bind_mono_on_support weights
     (fun index => (comparisons index).alternative)
     (fun index => (comparisons index).prescribed) utility alternative prescribed

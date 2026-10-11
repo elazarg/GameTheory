@@ -22,7 +22,7 @@ import GameTheory.Math.Probability.Mixture
 
 noncomputable section
 
-namespace GameTheory.Tests
+namespace GameTheory.Tests.History
 
 open GameTheory GameTheory.Protocol GameTheory.Math.Probability
 open GameTheory.Protocol.ExecutionProtocol (Trace History)
@@ -440,4 +440,4 @@ theorem run_stubborn_eq_runFor :
     runFor_init_eq_pure alwaysLeft runFor_alwaysLeft_mid]
   exact PMF.bind_const _ _
 
-end GameTheory.Tests
+end GameTheory.Tests.History

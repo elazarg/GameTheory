@@ -170,10 +170,9 @@ under `GameTheory/Finite`, everything needing convexity or topology under
 
 `GameTheory/Analysis` is a one-way boundary. It is the only root allowed to
 import the external fixed-point package, and no module outside it may import it
-back; a file that does can reach `Convexity.StdSimplex` and `Polynomial`, which the
-core and the executable frontend must never see. Both directions are checked by
-`scripts/phase2-audit.ps1`; its explicit `-DeepReachability` release mode also
-asserts that the analytic root *does* reach them. See
+back. The maintained dependency boundaries are checked by `scripts/audit.py`.
+Its full run builds every module with warnings and info as failures, runs the
+public linters, and checks transitive axioms in every authored module. See
 `docs/Phase2IncentiveSlice.md` and
 `docs/Phase3SequentialSlice.md` for what the gates guarantee and, more usefully,
 for the recorded limits they do not, and `docs/Phase4StaticHarvest.md` for the
@@ -187,8 +186,8 @@ theorem families recovered on the settled API.
   their experiments justify sharing more.
 - Equilibrium deviations are local and law-linear by construction; response
   and dominance concepts keep their profile-quantified logical shape.
-- Finite-support probability is the stable default. Infinite stochastic path
-  laws wait for a measurable layer.
+- Ordinary Mathlib PMF is the discrete semantic carrier. Finite support belongs
+  to operations that need it; infinite stochastic path laws remain experimental.
 - Executable finite algorithms and real-valued correctness proofs live in
   separate dependency roots.
 - D0 is decided from measured dependency baselines and a small hybrid
@@ -208,7 +207,9 @@ lake env lean --version
 lake exe cache get
 ```
 
-Warnings are failures and the relevant target must build without placeholders.
+Warnings and info are failures: use `lake --iofail build <target>` for focused
+checks and `python scripts/audit.py` for full verification. During edits,
+`python scripts/audit.py --source-only` checks source boundaries and coverage.
 Keep `.lake/` and local tool state ignored.
 
 - The working directory is already the project root; do not prepend `cd` to
@@ -227,6 +228,8 @@ Keep `.lake/` and local tool state ignored.
   `Tests/`, and `*Test` fixtures), remove a deleted module's `.lake/build`
   artifacts, and run `lake build GameTheory.LintAll` before `lake lint`.
   Otherwise new modules go unlinted and deleted ones break the driver.
+- Keep `lint/GameTheory/AxiomAudit.lean` covering every authored module, including
+  fixtures and experiments; the source audit checks both drivers' coverage.
 - During design validation, do not broaden scope with adjacent theorem
   families. During theorem delivery, work only against the assigned scope and
   accepted shared API.

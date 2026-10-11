@@ -9,8 +9,9 @@ on:
       - 'lakefile.lean'
       - 'lake-manifest.json'
       - 'lean-toolchain'
-      - 'scripts/complexity-audit.ps1'
-      - 'scripts/tests/test_complexity_audit.py'
+      - 'lint/**'
+      - 'scripts/audit.py'
+      - 'scripts/tests/test_audit.py'
       - '.github/workflows/complexity.yml'
   pull_request:
     paths:
@@ -20,8 +21,9 @@ on:
       - 'lakefile.lean'
       - 'lake-manifest.json'
       - 'lean-toolchain'
-      - 'scripts/complexity-audit.ps1'
-      - 'scripts/tests/test_complexity_audit.py'
+      - 'lint/**'
+      - 'scripts/audit.py'
+      - 'scripts/tests/test_audit.py'
       - '.github/workflows/complexity.yml'
   workflow_dispatch:
 
@@ -70,18 +72,10 @@ jobs:
           }
       - name: Fetch Mathlib cache
         run: lake '-KgameTheoryPath=../..' exe cache get
-      - name: Build the optional library and hostile fixtures
-        run: lake '-KgameTheoryPath=../..' build
-      - name: Build lint scope
-        run: lake '-KgameTheoryPath=../..' build GameTheoryComplexity.LintAll
-      - name: Lint optional public modules
-        run: lake '-KgameTheoryPath=../..' lint
-      - name: Reject placeholders and nonstandard axioms
-        run: lake '-KgameTheoryPath=../..' build GameTheoryComplexity.AxiomAudit
-      - name: Verify dependency isolation and identical Mathlib pins
-        run: ../../scripts/complexity-audit.ps1
-      - name: Verify optional-boundary regression cases
-        run: python -m unittest discover -s ../../scripts/tests -p test_complexity_audit.py
+      - name: Build, lint, and audit the optional package
+        run: python ../../scripts/audit.py --complexity
+      - name: Verify audit regression cases
+        run: python -m unittest discover -s ../../scripts/tests -p test_audit.py
       - name: Resolve the released base pin without a local override
         run: |
           lake -R update
@@ -91,32 +85,9 @@ jobs:
           if ($base.Count -ne 1 -or $base[0].type -ne 'git') {
             throw 'Released consumer smoke still resolves a local GameTheory path'
           }
-      - name: Build clients and complexity endpoints against the released base
-        run: >-
-          lake build GameTheoryComplexity.Tests.Facade
-          GameTheoryComplexity.Backend.CompiledSampleTest
-          GameTheoryComplexity.Backend.NashNPComplete
-          GameTheoryComplexity.Backend.EndOfLineVerifier
-          GameTheoryComplexity.Tests.EndOfLine
-          GameTheoryComplexity.Tests.SearchReduction
-          GameTheoryComplexity.PPAD
-          GameTheoryComplexity.Tests.RawEndOfLine
-          GameTheoryComplexity.Tests.PPAD
-          GameTheoryComplexity.Tests.CircuitPrefixCompiler
-          GameTheoryComplexity.Tests.NormalizedEndOfLine
-          GameTheoryComplexity.Tests.SpernerGridWords
-          GameTheoryComplexity.Tests.SpernerPointerMachine
-          GameTheoryComplexity.Tests.Sperner
-          GameTheoryComplexity.Tests.Brouwer
-          GameTheoryComplexity.SimplicialBrouwer
-          GameTheoryComplexity.Tests.GeneralBimatrixTotality
-          GameTheoryComplexity.Tests.GeneralBimatrixEndpoint
-          GameTheoryComplexity.Tests.BinarySignedArithmetic
-          GameTheoryComplexity.Tests.BinarySignedRowComparison
-          GameTheoryComplexity.Tests.GeneralBimatrixReduction
-          GameTheoryComplexity.Tests.GeneralBimatrixCircuitMachine
-          GameTheoryComplexity.Tests.GeneralBimatrixNodeValidation
-          GameTheoryComplexity.Tests.GeneralBimatrixEndpointCapacity
-          GameTheory.Tests.BimatrixComputedPivot
+      - name: Audit the optional package against the released base
+        run: python ../../scripts/audit.py --complexity
+      - name: Verify the released base pivot client
+        run: lake --iofail build GameTheory.Tests.BimatrixComputedPivot
       - name: Verify checks do not mutate tracked files
         run: git diff --exit-code

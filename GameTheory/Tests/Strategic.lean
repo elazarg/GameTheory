@@ -29,10 +29,10 @@ local instance strategicSpotFintype : Fintype Spot :=
     cases state <;> simp⟩
 
 /-- Always take, as a state policy. -/
-def takeState : coinThenMove.StatePolicy () := fun _ _ => ⟨.take, Set.mem_univ _⟩
+def takeState : coinThenMove.StatePolicy () := fun _ _ _ => ⟨.take, Set.mem_univ _⟩
 
 /-- Always leave, as a state policy. -/
-def leaveState : coinThenMove.StatePolicy () := fun _ _ => ⟨.leave, Set.mem_univ _⟩
+def leaveState : coinThenMove.StatePolicy () := fun _ _ _ => ⟨.leave, Set.mem_univ _⟩
 
 /-- The one-player profile that always takes. -/
 def takeProfile : Profile coinThenMove.strategicSignature := fun _ => takeState
@@ -88,6 +88,66 @@ theorem compiled_form_separates :
   intro hequal
   have hmass := congrArg (fun law : PMF Spot => law Spot.tookIt) hequal
   simp [PMF.pure_apply] at hmass
+
+/-! ## Terminal states with empty menus
+
+Terminal activity imposes no action obligation on state policies. The protocol
+below has a live decision followed by an active terminal state with no actions.
+A total active-state action family would be empty, but its compiled game has a
+profile and reaches the terminal state.
+-/
+
+namespace TerminalMenus
+
+abbrev execution : ExecutionProtocol Unit where
+  State := Bool
+  Action _ := Unit
+  init := false
+  active _ _ := True
+  available state _ := if state then ∅ else Set.univ
+  terminal state := state = true
+  step _ _ := PMF.pure true
+  progress := by
+    intro state hterm
+    cases state with
+    | false => exact ⟨fun _ => some (), fun _ => ⟨trivial, Set.mem_univ _⟩⟩
+    | true => exact False.elim (hterm rfl)
+
+def policy : execution.StatePolicy () := by
+  intro state hterm _
+  cases state with
+  | false => exact ⟨(), Set.mem_univ _⟩
+  | true => exact False.elim (hterm rfl)
+
+def profile : Profile execution.strategicSignature := fun _ => policy
+
+theorem no_total_active_action :
+    ¬ Nonempty ((state : execution.State) → execution.active state () →
+      {action : execution.Action () // action ∈ execution.available state ()}) := by
+  rintro ⟨total⟩
+  exact (total true trivial).property
+
+theorem compiled_profile_exists : Nonempty (Profile execution.strategicSignature) :=
+  ⟨profile⟩
+
+theorem play_one : (execution.toGameForm 1).play profile = PMF.pure true := by
+  rw [ExecutionProtocol.toGameForm_play,
+    ExecutionProtocol.runFor_succ_of_not_terminal _ 0 (by decide)]
+  change (PMF.pure true).bind PMF.pure = PMF.pure true
+  exact PMF.bind_pure _
+
+theorem play_after_stopping (extra : ℕ) :
+    (execution.toGameForm (1 + extra)).play profile = PMF.pure true := by
+  have stopped : execution.StopsWithin (execution.chooserOf profile) 1 false := by
+    intro state reached
+    change state ∈ ((execution.toGameForm 1).play profile).support at reached
+    rw [play_one, PMF.mem_support_pure_iff] at reached
+    exact reached
+  rw [ExecutionProtocol.toGameForm_play,
+    ExecutionProtocol.runFor_eq_of_stopsWithin stopped extra]
+  exact play_one
+
+end TerminalMenus
 
 /-! ## The static concepts apply unchanged
 

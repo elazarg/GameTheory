@@ -6,7 +6,8 @@ open GameTheory.Math.Probability
 private def conflictingValue (member action : Bool) : ℝ :=
   if member then (if action then 1 else 0) else (if action then 0 else 1)
 
-/-- An aggregate optimum can leave a member with a profitable deviation when their best actions conflict. -/
+/-- An aggregate optimum can leave a member with a profitable deviation when their best actions
+  conflict. -/
 theorem conflicting_members :
     (∀ alternative : PMF Bool, ∑ member ∈ ({false, true} : Finset Bool),
       (expect alternative (conflictingValue member) -
@@ -33,10 +34,12 @@ theorem conflicting_members :
     linarith
   · norm_num [expect_pure, conflictingValue]
 
-/-- An unbounded action space uses the same common-action bound; only the compared means are integrable. -/
+/-- An unbounded action space uses the same common-action bound; only the compared means are
+  integrable. -/
 theorem infinite_action_bound (current alternative : PMF ℕ) (value : Bool → ℕ → ℝ)
     (best : ℕ) (error tolerance : ℝ)
-    (currentIntegrable : ∀ member ∈ ({false, true} : Finset Bool), PayoffIntegrable current (value member))
+    (currentIntegrable : ∀ member ∈ ({false, true} : Finset Bool), PayoffIntegrable current (value
+      member))
     (nearBest : ∀ member ∈ ({false, true} : Finset Bool), ∀ action,
       value member action ≤ value member best + error)
     (aggregate : ∑ member ∈ ({false, true} : Finset Bool),
@@ -44,7 +47,8 @@ theorem infinite_action_bound (current alternative : PMF ℕ) (value : Bool → 
     (alternativeIntegrable : PayoffIntegrable alternative (value true)) :
     expect alternative (value true) - expect current (value true) ≤ tolerance + 2 * error := by
   have bound := member_gain_le_of_common_best ({false, true} : Finset Bool) value current
-    best error tolerance currentIntegrable nearBest aggregate (by simp : true ∈ ({false, true} : Finset Bool))
+    best error tolerance currentIntegrable nearBest aggregate (by simp : true ∈ ({false, true} :
+      Finset Bool))
     alternative alternativeIntegrable
   simpa using bound
 

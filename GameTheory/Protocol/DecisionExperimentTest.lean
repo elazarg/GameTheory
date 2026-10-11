@@ -6,14 +6,15 @@ unreachable state is harmless. Infinite hidden-state and action carriers use
 the same guarded optimal-law correspondence.
 -/
 
-import GameTheory.Analysis.DecisionPayoff
+import GameTheory.Protocol.DecisionPayoff
 import GameTheory.Math.Probability.Mixture
 noncomputable section
 namespace GameTheory.Tests.DecisionExperiment
 open GameTheory.Math.Probability GameTheory.Math.Probability.ObservationAbstraction
 open GameTheory.DecisionExperiment
 
-private def fair : PMF Bool := mix (1 / 2) (by norm_num) (by norm_num) (PMF.pure false) (PMF.pure true)
+private def fair : PMF Bool := mix (1 / 2) (by norm_num) (by norm_num) (PMF.pure false) (PMF.pure
+  true)
 
 private theorem erased_fact_not_determined : ¬ Determines fair (fun _ => ()) id := by
   intro determines

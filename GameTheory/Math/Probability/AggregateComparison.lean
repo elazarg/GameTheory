@@ -33,7 +33,8 @@ theorem weighted_member_gain_le_of_common_best {Member Part : Type*}
     sub_nonneg.mpr (expect_le_const current _ (currentIntegrable member inside) _
       (fun part _ => nearBest member inside part))
   have alternativeBound : expect alternative (value chosen) ≤ value chosen best + error :=
-    expect_le_const alternative _ alternativeIntegrable _ (fun part _ => nearBest chosen present part)
+    expect_le_const alternative _ alternativeIntegrable _ (fun part _ => nearBest chosen present
+      part)
   have single : weight chosen * gap chosen ≤ ∑ member ∈ members, weight member * gap member :=
     Finset.single_le_sum (fun member inside => mul_nonneg (nonnegative member inside)
       (gapNonnegative member inside)) present

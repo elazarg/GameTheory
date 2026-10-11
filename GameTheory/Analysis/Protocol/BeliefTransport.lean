@@ -11,7 +11,8 @@ share one depth, its belief is the behavioral law at that depth conditioned on
 the information event.
 
 Between two protocols, a history map whose reach weights sum over its fibers
-up to a positive finite multiplier scales site masses and preserves beliefs, and so does any readout whose joint law
+up to a positive finite multiplier scales site masses and preserves beliefs, and so does any
+  readout whose joint law
 with the information event agrees. Each transport has a form stated with reach
 weights alone and a form at decision depths, which may differ between the two
 protocols.

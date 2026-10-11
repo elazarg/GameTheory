@@ -1,3 +1,4 @@
+import GameTheory
 import GameTheory.Finite.BimatrixFeedbackGate
 import GameTheory.Finite.BimatrixGateProgramBounds
 import GameTheory.Finite.BimatrixInterpolationGate
@@ -35,7 +36,7 @@ import GameTheory.Analysis.Examples
 import GameTheory.Analysis.ExpectedUtility
 import GameTheory.Analysis.FictitiousPlayPotential
 import GameTheory.Analysis.IncentiveCone
-import GameTheory.Analysis.DecisionExperiment
+import GameTheory.Protocol.DecisionExperiment
 import GameTheory.Analysis.IncentiveHierarchy
 import GameTheory.Analysis.IncentiveSimulation
 import GameTheory.Analysis.Learning
@@ -520,7 +521,7 @@ import GameTheory.Math.GridBrouwerErrorBudget
 
 import GameTheory.Math.Probability.ExpectationAtoms
 import GameTheory.Math.Probability.ExpectationCommutation
-import GameTheory.Analysis.DecisionPayoff
+import GameTheory.Protocol.DecisionPayoff
 import GameTheory.Math.ScalarInequalities
 import GameTheory.Math.ScalarInequalitiesCorrectness
 import GameTheory.Math.Probability.EventPenalty

@@ -36,11 +36,12 @@ require «fixed-point-theorems» from git
   "https://github.com/elazarg/fixed-point-theorems-lean4" @
     "d9c3aba7340f21a13df59c61d92bfe9622e40da2"
 
-/-- The public library target. `andSubmodules` makes `lake build` a real phase
-gate: examples, architecture tests, and experiments must compile too. -/
+/-- Build the public umbrella and its imports. Other modules remain available
+by explicit import; the lint and axiom targets build the complete library and
+its validation evidence. -/
 @[default_target]
 lean_lib GameTheory where
-  globs := #[.andSubmodules `GameTheory]
+  globs := #[.one `GameTheory]
   leanOptions := gameTheoryLeanOptions
 
 /-- The lint scope. Not a default target: it exists so `lake lint` can see the
@@ -50,8 +51,13 @@ lean_lib GameTheory.LintAll where
   srcDir := "lint"
   leanOptions := gameTheoryLeanOptions
 
+/-- Transitive standard-axiom checks over every authored module. -/
+lean_lib GameTheory.AxiomAudit where
+  srcDir := "lint"
+  leanOptions := gameTheoryLeanOptions
+
 /-- Mathematical infrastructure used throughout the library. -/
 @[default_target]
 lean_lib GameTheory.Math where
-  globs := #[.andSubmodules `GameTheory.Math]
+  globs := #[.one `GameTheory.Math]
   leanOptions := gameTheoryLeanOptions

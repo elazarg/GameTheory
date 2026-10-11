@@ -42,30 +42,35 @@ variable {ι : Type uι} {E : ExecutionProtocol ι}
 namespace ExecutionProtocol
 
 variable (E) in
-/-- What one player does wherever it is active. This is the
-perfect-information strategy: it may read the state, because at perfect
-information the state is what the player knows. -/
+/-- What one player does wherever execution continues and it is active.
+Terminal states require no action, even when their activity predicate holds.
+This is the perfect-information strategy: it may read the state, because at
+perfect information the state is what the player knows. -/
 def StatePolicy (i : ι) : Type _ :=
-  (state : E.State) → E.active state i → { a : E.Action i // a ∈ E.available state i }
+  (state : E.State) → ¬ E.terminal state → E.active state i →
+    { a : E.Action i // a ∈ E.available state i }
 
 open Classical in
-/-- The joint action a profile of state policies produces: active players act,
-inactive players stand down. -/
-def jointOf (profile : (i : ι) → E.StatePolicy i) (state : E.State) :
+/-- The joint action at a nonterminal state: active players act, inactive
+players stand down. -/
+def jointOf (profile : (i : ι) → E.StatePolicy i) (state : E.State)
+    (hterm : ¬ E.terminal state) :
     ∀ i, Option (E.Action i) :=
-  fun i => if hactive : E.active state i then some (profile i state hactive).1 else none
+  fun i => if hactive : E.active state i then some (profile i state hterm hactive).1 else none
 
 open Classical in
-theorem jointOf_isLegal (profile : (i : ι) → E.StatePolicy i) (state : E.State) :
-    IsLegalJoint (E.active state) (E.available state) (E.jointOf profile state) := by
+theorem jointOf_isLegal (profile : (i : ι) → E.StatePolicy i) (state : E.State)
+    (hterm : ¬ E.terminal state) :
+    IsLegalJoint (E.active state) (E.available state) (E.jointOf profile state hterm) := by
   intro i
   by_cases hactive : E.active state i
-  · simp [jointOf, hactive, (profile i state hactive).2]
+  · simp [jointOf, hactive, (profile i state hterm hactive).2]
   · simp [jointOf, hactive]
 
 /-- A profile of state policies is a chooser. -/
 def chooserOf (profile : (i : ι) → E.StatePolicy i) : E.Chooser :=
-  fun state hterm => ⟨E.jointOf profile state, hterm, E.jointOf_isLegal profile state⟩
+  fun state hterm => ⟨E.jointOf profile state hterm, hterm,
+    E.jointOf_isLegal profile state hterm⟩
 
 variable (E) in
 /-- The signature of the compiled game: strategies are state policies, outcomes

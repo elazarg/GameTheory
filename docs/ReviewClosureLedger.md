@@ -78,10 +78,10 @@ The single-pass panel observations were re-derived separately before action:
 
 | ID | Finding | Status | Current disposition and evidence |
 |---|---|---|---|
-| X-01 | Stable source contained experiment IDs, repository-history comparisons, and local provenance paths. | closed | Stable source was swept; architecture history remains only in `docs/ExperimentLog.md` and decisions. Fast audits reject regression. |
+| X-01 | Stable source contained experiment IDs, repository-history comparisons, and local provenance paths. | closed | Stable source was swept; architecture history remains only in `docs/ExperimentLog.md` and decisions. The source audit rejects inspection commands; documentation review keeps planning history outside stable source. |
 | X-02 | Classical theorem modules named results without published sources. | closed | Owning module headers now cite primary published sources for rationalizability, social choice, vNM, learning, approachability, refinements, repeated/stochastic games, mechanisms, congestion, cooperative, and epistemic theory. Mechanical bridge files do not repeat citations. |
 | X-03 | Boundary rules needed verification. | retained | No direct `Function.update` outside the profile implementation, no `open Classical` or `Fintype.ofFinite` in executable algorithm modules, and no trusted placeholders/custom axioms. |
-| X-04 | Audit scripts obstructed the edit/build loop. | closed | Phase audits are fast structural checks by default; elaborated reachability is opt-in through `-DeepReachability` and reserved for CI/gates. |
+| X-04 | Audit scripts obstructed the edit/build loop. | closed | `scripts/audit.py --source-only` checks maintained boundaries and lint/axiom coverage during editing. Its full run builds with warnings/info as failures, runs public lint, and checks every authored declaration for transitive nonstandard axioms; historical phase metrics are retired. |
 | X-05 | Bootstrap coverage/provenance machinery was being mistaken for delivery status. | closed | Retired. `DeliveryLedger.md`, `CapabilityMatrix.md`, and `SupportEvidenceMatrix.md` are the current sources of truth. |
 
 ## Core solution concepts, potential, and learning
@@ -220,6 +220,24 @@ The single-pass panel observations were re-derived separately before action:
 | L-09 | MAID stored defaults without proving their semantic irrelevance. | closed | Order/frontier equivalence proves completed runs agree through the public semantics; defaults are initialization data for not-yet-assigned nodes, not an outcome-level parameter. |
 | L-10 | NFG-to-FOSG looked like an equivalence. | closed | The header explicitly calls it a one-round lift and disclaims characterization/inversion. |
 | L-11 | Stable language headers used validation/process terminology. | closed | Stable language documentation now describes syntax, compilation, hypotheses, and claims only. |
+
+## October design review follow-up
+
+| ID | Finding | Status | Current disposition and evidence |
+|---|---|---|---|
+| R3-01 | State-policy compilation required actions at terminal states. | closed | `StatePolicy` and `jointOf` now require nonterminality. `Tests.Strategic.TerminalMenus` proves a total active-state action family is impossible while the compiled profile exists, takes a live step and remains absorbed with extra fuel. |
+| R3-02 | Companion sources bypassed source trust and fixture checks. | closed | Shared source checks reject companion placeholders, custom axioms, unguarded inspection, excluded trust imports, public fixture imports, Analysis imports and direct profile updates. Regression controls retain backend imports and guarded fixture evaluations. |
+| R3-03 | Executability auditing missed new computation leaves. | closed | The executable scope now includes signed scalar inference, finite scans, symbolic ratio selection, dictionary feasibility, determinant stages and computed pivots/orientation. The unnecessary proof-local `classical` in ratio selection is removed; computability/import controls cover these leaves. |
+| R3-04 | Terminal-decision abstraction was stranded under Analysis. | closed | `Protocol.DecisionExperiment` and `Protocol.DecisionPayoff` are opt-in leaves over stable probability/context APIs; the original controls move with them. Their authored dependency closure, including controls, contains 22 modules and no project Analysis. |
+| R3-05 | Ordinary builds scheduled all validation evidence. | closed | EXP-164 measures root-only default globs while existing lint/axiom drivers retain complete coverage. CI explicitly compiles both umbrellas and both drivers before caching. |
+| R3-06 | Bimatrix validity consumers depended on positional projections. | closed | Eight named `BimatrixCertificate.Valid` accessors serve Nash correctness and payoff-shift consumers while the predicate itself remains canonical. |
+
+Validation: `python scripts/audit.py` and
+`python scripts/audit.py --complexity` pass complete builds, public lint,
+transitive standard-axiom checks and first-party diagnostic checks. All 40
+tooling tests pass with `python -m unittest discover -s scripts/tests`.
+[EXP-164](ExperimentLog.md) records build-scope measurements and the resolved
+environment read failure.
 
 ## Remaining delivery consequences
 

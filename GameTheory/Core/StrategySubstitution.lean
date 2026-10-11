@@ -17,7 +17,8 @@ open GameTheory.Math.Probability
 variable {ι : Type*} [Fintype ι] (F : GameForm ι) {Strategy : ι → Type*}
 
 /-- Substitute a stochastic strategy kernel independently at each coordinate. -/
-abbrev substituteStrategies (kernel : ∀ who, Strategy who → PMF (F.sig.Strategy who)) : GameForm ι where
+abbrev substituteStrategies (kernel : ∀ who, Strategy who → PMF (F.sig.Strategy who)) : GameForm ι
+  where
   sig := { Strategy := Strategy, Outcome := F.sig.Outcome }
   play choice := F.mixed.play fun who => kernel who (choice who)
 

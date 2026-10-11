@@ -54,19 +54,59 @@ def Valid {m n : ℕ} (A B : Fin m → Fin n → ℤ) (c : BimatrixCertificate m
 instance {m n : ℕ} (A B : Fin m → Fin n → ℤ) (c : BimatrixCertificate m n) :
     Decidable (Valid A B c) := by unfold Valid; infer_instance
 
+/-- A valid certificate has a positive row probability denominator. -/
+theorem Valid.rowDenominator_pos {m n : ℕ} {A B : Fin m → Fin n → ℤ}
+    {c : BimatrixCertificate m n} (hc : c.Valid A B) : 0 < c.rowDenominator := hc.1
+
+/-- A valid certificate has a positive column probability denominator. -/
+theorem Valid.colDenominator_pos {m n : ℕ} {A B : Fin m → Fin n → ℤ}
+    {c : BimatrixCertificate m n} (hc : c.Valid A B) : 0 < c.colDenominator := hc.2.1
+
+/-- Row probability numerators sum to the row denominator. -/
+theorem Valid.sum_rowWeights {m n : ℕ} {A B : Fin m → Fin n → ℤ}
+    {c : BimatrixCertificate m n} (hc : c.Valid A B) :
+    (∑ i, c.rowWeights i) = c.rowDenominator := hc.2.2.1
+
+/-- Column probability numerators sum to the column denominator. -/
+theorem Valid.sum_colWeights {m n : ℕ} {A B : Fin m → Fin n → ℤ}
+    {c : BimatrixCertificate m n} (hc : c.Valid A B) :
+    (∑ j, c.colWeights j) = c.colDenominator := hc.2.2.2.1
+
+/-- Every row score is bounded by the certified row utility numerator. -/
+theorem Valid.rowScore_le {m n : ℕ} {A B : Fin m → Fin n → ℤ}
+    {c : BimatrixCertificate m n} (hc : c.Valid A B) (i : Fin m) :
+    rowScore A c i ≤ c.rowUtilityNumerator := (hc.2.2.2.2.1 i).1
+
+/-- Every column score is bounded by the certified column utility numerator. -/
+theorem Valid.colScore_le {m n : ℕ} {A B : Fin m → Fin n → ℤ}
+    {c : BimatrixCertificate m n} (hc : c.Valid A B) (j : Fin n) :
+    colScore B c j ≤ c.colUtilityNumerator := (hc.2.2.2.2.2 j).1
+
+/-- A positively weighted row attains the certified row utility numerator. -/
+theorem Valid.rowScore_eq_of_pos {m n : ℕ} {A B : Fin m → Fin n → ℤ}
+    {c : BimatrixCertificate m n} (hc : c.Valid A B) {i : Fin m}
+    (hi : 0 < c.rowWeights i) : rowScore A c i = c.rowUtilityNumerator :=
+  (hc.2.2.2.2.1 i).2 hi
+
+/-- A positively weighted column attains the certified column utility numerator. -/
+theorem Valid.colScore_eq_of_pos {m n : ℕ} {A B : Fin m → Fin n → ℤ}
+    {c : BimatrixCertificate m n} (hc : c.Valid A B) {j : Fin n}
+    (hj : 0 < c.colWeights j) : colScore B c j = c.colUtilityNumerator :=
+  (hc.2.2.2.2.2 j).2 hj
+
 /-- Every positively weighted row weakly outperforms every alternative row. -/
 theorem rowScore_le_of_pos {m n : ℕ} {A B : Fin m → Fin n → ℤ}
     {c : BimatrixCertificate m n} (hc : c.Valid A B) {i : Fin m}
     (hi : 0 < c.rowWeights i) (j : Fin m) : rowScore A c j ≤ rowScore A c i := by
-  rw [(hc.2.2.2.2.1 i).2 hi]
-  exact (hc.2.2.2.2.1 j).1
+  rw [hc.rowScore_eq_of_pos hi]
+  exact hc.rowScore_le j
 
 /-- Every positively weighted column weakly outperforms every alternative column. -/
 theorem colScore_le_of_pos {m n : ℕ} {A B : Fin m → Fin n → ℤ}
     {c : BimatrixCertificate m n} (hc : c.Valid A B) {i : Fin n}
     (hi : 0 < c.colWeights i) (j : Fin n) : colScore B c j ≤ colScore B c i := by
-  rw [(hc.2.2.2.2.2 i).2 hi]
-  exact (hc.2.2.2.2.2 j).1
+  rw [hc.colScore_eq_of_pos hi]
+  exact hc.colScore_le j
 
 /-- A strictly inferior row has zero weight in every accepted certificate. -/
 theorem rowWeights_eq_zero_of_rowScore_lt {m n : ℕ} {A B : Fin m → Fin n → ℤ}

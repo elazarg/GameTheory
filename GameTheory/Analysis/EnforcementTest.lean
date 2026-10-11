@@ -34,7 +34,8 @@ theorem synthesized_penalty_deters : comparison.Holds (penalizedPayoff base {tru
     inferred (fun _ => comparison) base {true}
     (fun _ _ => payoffIntegrable_of_finite _ _) (fun _ _ => payoffIntegrable_of_finite _ _)
     (fun _ _ => by simpa only [Rat.cast_div, Rat.cast_ofNat, Rat.cast_one] using gain_bound)
-    (fun _ _ => by simpa only [Rat.cast_div, Rat.cast_ofNat, Rat.cast_one] using collection_bound) (Finset.mem_singleton_self _)
+    (fun _ _ => by simpa only [Rat.cast_div, Rat.cast_ofNat, Rat.cast_one] using collection_bound)
+      (Finset.mem_singleton_self _)
 
 /-- Charging every outcome cancels between plans, so no amount deters positive gain. -/
 theorem inevitable_charge_does_not_deter (penalty : ℝ) :
@@ -45,7 +46,8 @@ theorem inevitable_charge_does_not_deter (penalty : ℝ) :
     (payoffIntegrable_pure false base) (payoffIntegrable_pure true base)
     (by simp) (by norm_num [expect_pure, base])
 
-/-- Admitting every possible observation makes sound deterrence impossible for a profitable deviation. -/
+/-- Admitting every possible observation makes sound deterrence impossible for a profitable
+  deviation. -/
 theorem no_sound_deterrent_with_full_admission :
     ¬ ∃ alarm : Bool → PMF Bool, ∃ penalty : ℝ, 0 ≤ penalty ∧
       (∀ observation ∈ (Set.univ : Set Bool), ((alarm observation) true).toReal = 0) ∧
@@ -61,9 +63,11 @@ theorem no_sound_deterrent_with_full_admission :
 /-- Mixtures over infinite indices preserve actual deterrence comparisons. -/
 theorem infinite_mixture_preserves_deterrence (weights : PMF ℕ)
     (comparisons : ℕ → IncentiveComparison Bool)
-    (deters : ∀ index ∈ weights.support, (comparisons index).Holds (penalizedPayoff base {true} 3)) :
+    (deters : ∀ index ∈ weights.support, (comparisons index).Holds (penalizedPayoff base {true}
+      3)) :
     (IncentiveComparison.mk (weights.bind fun index => (comparisons index).prescribed)
-      (weights.bind fun index => (comparisons index).alternative)).Holds (penalizedPayoff base {true} 3) :=
+      (weights.bind fun index => (comparisons index).alternative)).Holds (penalizedPayoff base
+        {true} 3) :=
   IncentiveComparison.holds_bind weights comparisons _
     (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _) deters
 

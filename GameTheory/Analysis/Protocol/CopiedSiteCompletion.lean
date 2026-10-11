@@ -95,7 +95,8 @@ theorem exists_sequentialEquilibrium_of_shared_mixture_weight_certificates
   classical
   obtain ⟨weights, sequence, limit, index, played, mixed, bayes, increasing,
       converges, consistent, aggregateOptimal, limitFacts⟩ :=
-    N.exists_consistent_completion_with_shared_mixture_weights decisionRecall fallback certificate payoff groupOf
+    N.exists_consistent_completion_with_shared_mixture_weights decisionRecall fallback certificate
+      payoff groupOf
       component componentFull
   obtain ⟨error, vanishes, copiedBound, memberBound⟩ :=
     certify weights sequence played mixed bayes aggregateOptimal

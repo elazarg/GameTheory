@@ -15,7 +15,7 @@ import GameTheory.Protocol.Execution
 
 noncomputable section
 
-namespace GameTheory.Tests
+namespace GameTheory.Tests.Arena
 
 open GameTheory GameTheory.Protocol GameTheory.Math.Probability
 open GameTheory.Protocol.ExecutionProtocol (Trace)
@@ -167,4 +167,4 @@ theorem cyclicArena_not_boundedHorizon (horizon : ℕ) :
   intro hbound
   exact hbound .loop (loopTrace horizon) (by simp)
 
-end GameTheory.Tests
+end GameTheory.Tests.Arena

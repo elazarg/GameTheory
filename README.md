@@ -31,6 +31,11 @@ lake exe cache get
 lake build
 ```
 
+The default build follows the public `GameTheory` and `GameTheory.Math`
+umbrellas. Other modules build when explicitly imported or named as a Lake
+target. For complete source-boundary, build, lint, and transitive-axiom checks,
+including tests and experimental evidence, run `python scripts/audit.py`.
+
 Lake also fetches the other dependencies, including the fixed-point theorem
 library used by `GameTheory.Analysis`.
 
@@ -169,15 +174,19 @@ partial or planned.
 ## Development
 
 ```text
-lake build      # library, examples, tests, and experiments, warnings as errors
-lake lint       # Batteries environment linters over the public library
-pwsh -NoProfile -File scripts/phase1-audit.ps1 -VerifyExpected
-pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected
-pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
+python scripts/audit.py                 # strict build, lint, and transitive axiom audit
+python scripts/audit.py --source-only   # fast source and import checks while editing
+python scripts/audit.py --complexity    # audit the resolved optional package
+lake --iofail build <module>            # focused build; warnings and info fail
 ```
 
+The optional audit follows its resolved local or released base dependency. It
+rejects every info/warning in extension build logs, including cached diagnostics;
+upstream proof suggestions are allowed, while dependency warnings still fail.
+
 Before tagging a release, set the package `version` in `lakefile.lean` to the
-tag's version number (without the `v` prefix).
+tag's version number (without the `v` prefix). The audit verifies package,
+toolchain, and Mathlib version agreement; CI also checks the release tag.
 
 Architecture and contribution rules live in
 [`docs/GameTheory2Design.md`](docs/GameTheory2Design.md) and

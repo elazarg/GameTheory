@@ -56,7 +56,8 @@ theorem isOptimal_average (prior : PMF State) (observe : State → Signal) (fact
   exact ⟨fun state => alternative (observe state), Set.mem_univ _, rfl⟩
 
 /-- The complete sets of optimal retained outcome laws coincide, including extended values. -/
-theorem optimal_response_law_iff (prior : PMF State) (observe : State → Signal) (fact : State → Fact)
+theorem optimal_response_law_iff (prior : PMF State) (observe : State → Signal) (fact : State →
+  Fact)
     (determines : Determines prior observe fact) (utility : Fact → Action → ℝ)
     (law : PMF (Fact × Action)) :
     (∃ policy : Signal → PMF Action, IsOptimal prior observe fact utility policy ∧

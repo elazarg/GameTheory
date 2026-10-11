@@ -94,7 +94,8 @@ theorem exists_bestResponses_with_shared_mixture_weights
   let groupSig : GameSignature WeightGroup := { Strategy := Part, Outcome := Unit }
   let point (p : WeightGroup) (choice : Part p) : Part p → ℝ :=
     fun other => ((PMF.pure choice) other).toReal
-  let score (x : Set.pi Set.univ fun p => simplexWeights (Part p)) (p : WeightGroup) (choice : Part p) :
+  let score (x : Set.pi Set.univ fun p => simplexWeights (Part p)) (p : WeightGroup) (choice :
+    Part p) :
       ℝ :=
     ∑ who, if groupOf who = p then
       importance (spread x.1) who * payoff G utility who (Profile.update (spread x.1) who
@@ -123,7 +124,8 @@ theorem exists_bestResponses_with_shared_mixture_weights
   have member (who : ι) (p : WeightGroup) (h : groupOf who = p) (alternative : ∀ p, PMF (Part p)) :
       expect (alternative p) (fun choice => importance (spread x.1) who *
           payoff G utility who
-          (Profile.update (spread x.1) who ((Profile.update (sig := groupSig.weights) x.1 p (point p choice)) (groupOf who)))) =
+          (Profile.update (spread x.1) who ((Profile.update (sig := groupSig.weights) x.1 p (point
+            p choice)) (groupOf who)))) =
         importance (spread x.1) who * expectedUtility utility who (F.mixed.play
           (Profile.update (sig := F.sig.mixed)
             (fun player => (weights (groupOf player)).bind (component player))
@@ -179,20 +181,25 @@ theorem exists_component_bestResponses
         (fun outcome => utility outcome who)) :
     ∃ weights : ∀ who, PMF (Component who), ∀ who (alternative : PMF (Component who)),
       expectedUtility utility who (F.mixed.play
-        (Profile.update (sig := F.sig.mixed) (fun player => (weights player).bind (component player))
+        (Profile.update (sig := F.sig.mixed) (fun player => (weights player).bind (component
+          player))
           who (alternative.bind (component who)))) ≤
-        expectedUtility utility who (F.mixed.play fun player => (weights player).bind (component player)) := by
+        expectedUtility utility who (F.mixed.play fun player => (weights player).bind (component
+          player)) := by
   classical
   let G := F.substituteStrategies component
   let _ (who : ι) : Fintype (G.sig.Strategy who) := Fintype.ofFinite (Component who)
-  have integrable : G.HasIntegrableUtility utility := fun who choice => componentIntegrable choice who
+  have integrable : G.HasIntegrableUtility utility := fun who choice => componentIntegrable choice
+    who
   obtain ⟨weights, optimal⟩ := exists_isNash_mixed (F := G) utility integrable
   refine ⟨weights, fun who alternative => ?_⟩
-  have comparison := (isNash_iff (F := G.mixed) (weaklyPrefers := euPreference utility) weights).mp optimal who alternative
+  have comparison := (isNash_iff (F := G.mixed) (weaklyPrefers := euPreference utility)
+    weights).mp optimal who alternative
   have values := (euPreference_iff utility who _ _
     (integrable.mixed_of_finite who weights)
     (integrable.mixed_of_finite who (Profile.update weights who alternative))).mp comparison
-  rw [GameForm.substituteStrategies_mixed_play, GameForm.substituteStrategies_mixed_play, GameForm.substituteStrategies_update] at values
+  rw [GameForm.substituteStrategies_mixed_play, GameForm.substituteStrategies_mixed_play,
+    GameForm.substituteStrategies_update] at values
   exact values
 
 end GameTheory

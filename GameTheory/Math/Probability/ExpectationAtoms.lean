@@ -23,7 +23,8 @@ theorem expect_eq_sum_of_support_finite {α : Type*} (law : PMF α)
   unfold expect
   rw [tsum_eq_sum]
   intro a absent
-  have zero : law a = 0 := (law.apply_eq_zero_iff a).mpr (by simpa only [Set.Finite.mem_toFinset] using absent)
+  have zero : law a = 0 := (law.apply_eq_zero_iff a).mpr (by simpa only [Set.Finite.mem_toFinset]
+    using absent)
   rw [zero, ENNReal.toReal_zero, zero_mul]
 
 end GameTheory.Math.Probability

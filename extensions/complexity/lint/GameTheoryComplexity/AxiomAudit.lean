@@ -1,3 +1,5 @@
+import GameTheoryComplexity.SampleTest
+import GameTheoryComplexity.Backend.CompiledSampleTest
 import GameTheoryComplexity.Tests.BinaryRatioExtraction
 import GameTheoryComplexity.Tests.BimatrixProgramEmission
 import GameTheoryComplexity.Tests.BimatrixRawGateMachine
@@ -77,4 +79,3 @@ run_cmd do
           throwError "{name} depends on forbidden axiom {axiomName}"
   if checked == 0 then
     throwError "Complexity axiom audit found no declarations"
-  logInfo m!"Audited {checked} complexity declarations"

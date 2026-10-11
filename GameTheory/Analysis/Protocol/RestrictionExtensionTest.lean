@@ -47,8 +47,10 @@ have different depths; the common-depth premise is concretely impossible. -/
 theorem identity_extends_without_common_depth :
     (¬ ∃ depth, InformationSite.CommonDepth information actingSite depth) ∧
       ∃ source target : information.BehavioralAssessment,
-        source.IsSequentialEquilibrium antichain game.wellFoundedHistories GameTheory.Tests.SequentialExistence.payoff ∧
-        target.IsSequentialEquilibrium antichain game.wellFoundedHistories GameTheory.Tests.SequentialExistence.payoff ∧
+        source.IsSequentialEquilibrium antichain game.wellFoundedHistories
+          GameTheory.Tests.SequentialExistence.payoff ∧
+        target.IsSequentialEquilibrium antichain game.wellFoundedHistories
+          GameTheory.Tests.SequentialExistence.payoff ∧
         information.runBehavioralTerminalFrom game.wellFoundedHistories source.strategy
             execution.initHistory =
           information.runBehavioralTerminalFrom game.wellFoundedHistories target.strategy
@@ -56,13 +58,16 @@ theorem identity_extends_without_common_depth :
   classical
   let _ : Fintype execution.History := execution.historyFintype treeShaped
   obtain ⟨source, equilibrium⟩ := exists_sequential_equilibrium
-  change source.IsSequentialEquilibrium antichain game.wellFoundedHistories GameTheory.Tests.SequentialExistence.payoff at equilibrium
+  change source.IsSequentialEquilibrium antichain game.wellFoundedHistories
+    GameTheory.Tests.SequentialExistence.payoff at equilibrium
   obtain ⟨sequence, approximates, _⟩ := equilibrium.2
   let decisionRecallCertificate := information.decisionRecall_of_perfectRecall perfectRecall
   obtain ⟨target, targetEquilibrium, _, _, law, _⟩ :=
     (ActionRestriction.refl information).sequentialEquilibrium_extends_of_indifference
       antichain game.wellFoundedHistories game.wellFoundedHistories
-      (sequence 0) (approximates 0).1 decisionRecallCertificate GameTheory.Tests.SequentialExistence.payoff GameTheory.Tests.SequentialExistence.payoff (fun _ _ => rfl)
+      (sequence 0) (approximates 0).1 decisionRecallCertificate
+        GameTheory.Tests.SequentialExistence.payoff GameTheory.Tests.SequentialExistence.payoff
+        (fun _ _ => rfl)
       (fun _ => Or.inl fun _ choice => ⟨choice, rfl⟩) source equilibrium
   refine ⟨no_commonDepth, source, target, equilibrium, targetEquilibrium, ?_⟩
   change (information.runBehavioralTerminalFrom game.wellFoundedHistories source.strategy

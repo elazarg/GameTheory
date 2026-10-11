@@ -54,7 +54,8 @@ theorem responseLaw_fst (prior : PMF State) (observe : State → Signal) (fact :
       prior.map fact := by
   rw [responseLaw_eq_bind, PMF.map_bind]
   simp only [PMF.map_comp, Function.comp_def]
-  have constant (law : PMF Action) (a : Fact) : law.map (fun _ => a) = PMF.pure a := PMF.map_const _ _
+  have constant (law : PMF Action) (a : Fact) : law.map (fun _ => a) = PMF.pure a := PMF.map_const
+    _ _
   simp only [constant]
   exact PMF.bind_pure_comp _ _
 
@@ -74,7 +75,8 @@ def averagePolicy (prior : PMF State) (observe : State → Signal) (policy : Sta
   (fiberPosterior (responseLaw prior id observe policy) Prod.fst signal).map Prod.snd
 
 theorem averagePolicy_observation_law (prior : PMF State) (observe : State → Signal)
-    (policy : State → PMF Action) : responseLaw prior observe observe (averagePolicy prior observe policy) =
+    (policy : State → PMF Action) : responseLaw prior observe observe (averagePolicy prior observe
+      policy) =
       responseLaw prior id observe policy := by
   have disintegration := eq_bind_fst_fiberPosterior_snd (responseLaw prior id observe policy)
   rw [responseLaw_fst, PMF.bind_map] at disintegration
@@ -82,7 +84,8 @@ theorem averagePolicy_observation_law (prior : PMF State) (observe : State → S
   exact disintegration.symm
 
 /-- Averaging preserves the entire fact/action law, with no independence hypothesis. -/
-theorem averagePolicy_response_law (prior : PMF State) (observe : State → Signal) (fact : State → Fact)
+theorem averagePolicy_response_law (prior : PMF State) (observe : State → Signal) (fact : State →
+  Fact)
     (determines : Determines prior observe fact) (policy : State → PMF Action) :
     responseLaw prior observe fact (averagePolicy prior observe policy) =
       responseLaw prior id fact policy := by
@@ -108,7 +111,8 @@ theorem responseLaw_report_eq_map (prior : PMF State) (fact : State → Fact) :
   simp only [PMF.pure_map]
   exact PMF.bind_pure_comp _ _
 
-/-- Randomization can reproduce perfect fact reporting exactly when observation determines the fact. -/
+/-- Randomization can reproduce perfect fact reporting exactly when observation determines the
+  fact. -/
 theorem exists_report_law_iff_determines (prior : PMF State) (observe : State → Signal)
     (fact : State → Fact) :
     (∃ policy : Signal → PMF Fact, responseLaw prior observe fact policy =

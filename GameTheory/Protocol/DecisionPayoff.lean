@@ -14,7 +14,7 @@ the optimal-witness transport. Reporting utilities characterize universal
 preservation when the retained fact has a finite reporting menu.
 -/
 
-import GameTheory.Analysis.DecisionExperiment
+import GameTheory.Protocol.DecisionExperiment
 import GameTheory.Math.Probability.ExpectationCommutation
 import GameTheory.Math.Probability.Bounds
 
@@ -45,7 +45,8 @@ theorem context_value_eq (prior : PMF State) (observe : State → Signal)
     (integrable : (context prior observe fact utility).IntegrableAt policy) :
     (context prior observe fact utility).value policy =
       expect prior (fun state => expect (policy (observe state)) (utility (fact state))) := by
-  change PayoffIntegrable (responseLaw prior observe fact policy) (fun pair => utility pair.1 pair.2) at integrable
+  change PayoffIntegrable (responseLaw prior observe fact policy) (fun pair => utility pair.1
+    pair.2) at integrable
   change expect (responseLaw prior observe fact policy) (fun pair => utility pair.1 pair.2) = _
   rw [responseLaw_eq_bind] at integrable ⊢
   rw [expect_bind_tower _ _ _ integrable]
@@ -61,7 +62,8 @@ theorem isOptimal_iff_value_le (prior : PMF State) (observe : State → Signal)
         (context prior observe fact utility).value policy := by
   rw [IsOptimal, Context.isLocallyOptimal_iff_of_integrable
     (context_integrable_of_bounded prior observe fact utility bounded policy)
-    (fun alternative _ => context_integrable_of_bounded prior observe fact utility bounded alternative)]
+    (fun alternative _ => context_integrable_of_bounded prior observe fact utility bounded
+      alternative)]
   simp only [Set.mem_univ, forall_true_left]
 
 /-- Statewise response means remain integrable for arbitrary priors. -/
@@ -69,7 +71,8 @@ theorem response_means_integrable (prior : PMF State) (observe : State → Signa
     (fact : State → Fact) (utility : Fact → Action → ℝ) {C : ℝ}
     (bounded : ∀ state ∈ prior.support, ∀ action, |utility (fact state) action| ≤ C)
     (policy : Signal → PMF Action) :
-    PayoffIntegrable prior (fun state => expect (policy (observe state)) (utility (fact state))) := by
+    PayoffIntegrable prior (fun state => expect (policy (observe state)) (utility (fact state)))
+      := by
   apply payoffIntegrable_of_bounded_on_support (C := C)
   intro state supported
   obtain ⟨action, -⟩ := (policy (observe state)).support_nonempty
@@ -105,7 +108,8 @@ theorem fullInformation_optimal_iff (prior : PMF State) (fact : State → Fact)
       · simpa only [alternative, ite_eq_left rfl, expect_pure] using not_le.mp notOptimal
     have comparison := optimal alternative
     rw [context_value_eq _ _ _ _ _ (context_integrable_of_bounded _ _ _ _ bounded alternative),
-      context_value_eq _ _ _ _ _ (context_integrable_of_bounded _ _ _ _ bounded policy)] at comparison
+      context_value_eq _ _ _ _ _
+        (context_integrable_of_bounded _ _ _ _ bounded policy)] at comparison
     exact (not_lt_of_ge comparison) better
   · intro optimal alternative
     rw [context_value_eq _ _ _ _ _ (context_integrable_of_bounded _ _ _ _ bounded alternative),
@@ -262,7 +266,8 @@ theorem exists_optimal [Finite Action] [Nonempty Action] (prior : PMF State)
     by_cases observed : observe state = signal <;>
       simp only [Set.mem_preimage, Set.mem_singleton_iff, observed, ↓reduceIte]
   rw [same alternative, same (fun signal => PMF.pure (best signal)), expect_pure]
-  exact expect_le_const _ _ (payoffIntegrable_of_finite _ _) _ (fun action _ => maximal signal action)
+  exact expect_le_const _ _ (payoffIntegrable_of_finite _ _) _ (fun action _ => maximal signal
+    action)
 
 /-- Exact fixed-payoff classification for finite action menus. Every coarse optimum
 has a fully informed optimum with the same retained law exactly when supported
@@ -279,12 +284,14 @@ theorem preserves_fixed_payoff_iff_commonMaximizer [Finite Action] [Nonempty Act
   · intro preserves
     obtain ⟨source, optimal⟩ := exists_optimal prior observe fact utility bounded
     exact (exists_optimal_lift_iff_commonMaximizer prior observe fact utility bounded).mp
-      ⟨source, (optimal_match_iff_lift prior observe fact utility source).mp (preserves source optimal)⟩
+      ⟨source, (optimal_match_iff_lift prior observe fact utility source).mp (preserves source
+        optimal)⟩
   · intro common source sourceOptimal
     obtain ⟨witness, witnessOptimal⟩ :=
       (exists_optimal_lift_iff_commonMaximizer prior observe fact utility bounded).mpr common
     exact (optimal_match_iff_lift prior observe fact utility source).mpr
-      (isOptimal_lift_of_optimal_witness prior observe fact utility witness witnessOptimal source sourceOptimal)
+      (isOptimal_lift_of_optimal_witness prior observe fact utility witness witnessOptimal source
+        sourceOptimal)
 
 /-- Reporting utilities already detect every supported fact collision. With a finite
 reporting menu, preserving all utilities' coarse optimal laws is equivalent to fact recovery.
@@ -305,7 +312,8 @@ theorem all_utilities_optimal_laws_iff_determines [Finite Fact]
       intro state _ action
       simp only [utility]
       split <;> norm_num
-    have common := (preserves_fixed_payoff_iff_commonMaximizer prior observe fact utility bounded).mp
+    have common := (preserves_fixed_payoff_iff_commonMaximizer prior observe fact utility
+      bounded).mp
       (preserves utility)
     intro first second same
     have observed : observe first.1 ∈ (prior.map observe).support :=

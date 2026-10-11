@@ -20,11 +20,10 @@ theorem isNash_of_valid {m n : ℕ} (A B : Fin m → Fin n → ℤ)
       (euPreference (MatrixGame.bimatrixUtility
         (fun i j => (A i j : ℝ)) (fun i j => (B i j : ℝ))))
       (MatrixGame.mixedProfile
-        (numeratorLaw c.rowWeights c.rowDenominator hc.1 hc.2.2.1)
-        (numeratorLaw c.colWeights c.colDenominator hc.2.1 hc.2.2.2.1)) := by
-  rcases hc with ⟨hdp, hdq, hsp, hsq, hr, hc⟩
-  let p := numeratorLaw c.rowWeights c.rowDenominator hdp hsp
-  let q := numeratorLaw c.colWeights c.colDenominator hdq hsq
+        (numeratorLaw c.rowWeights c.rowDenominator hc.rowDenominator_pos hc.sum_rowWeights)
+        (numeratorLaw c.colWeights c.colDenominator hc.colDenominator_pos hc.sum_colWeights)) := by
+  let p := numeratorLaw c.rowWeights c.rowDenominator hc.rowDenominator_pos hc.sum_rowWeights
+  let q := numeratorLaw c.colWeights c.colDenominator hc.colDenominator_pos hc.sum_colWeights
   have er (i : Fin m) : expect q (fun j => (A i j : ℝ)) =
       (rowScore A c i : ℝ) / c.colDenominator := by
     rw [expect_numeratorLaw]
@@ -46,7 +45,7 @@ theorem isNash_of_valid {m n : ℕ} (A B : Fin m → Fin n → ℤ)
     rw [expect_bindPairLaw_tower _ _ _ (payoffIntegrable_of_finite _ _)]
     apply expect_numeratorLaw_eq
     intro i hi
-    rw [er, (hr i).2 hi]
+    rw [er, hc.rowScore_eq_of_pos hi]
   have vc : expect (bindPairLaw p (fun _ => q)) (fun x => (B x.1 x.2 : ℝ)) =
       (c.colUtilityNumerator : ℝ) / c.rowDenominator := by
     have hswap : expect (bindPairLaw p (fun _ => q)) (fun x => (B x.1 x.2 : ℝ)) =
@@ -56,17 +55,17 @@ theorem isNash_of_valid {m n : ℕ} (A B : Fin m → Fin n → ℤ)
     rw [hswap, expect_bindPairLaw_tower _ _ _ (payoffIntegrable_of_finite _ _)]
     apply expect_numeratorLaw_eq
     intro j hj
-    rw [ec, (hc j).2 hj]
+    rw [ec, hc.colScore_eq_of_pos hj]
   rw [MatrixGame.isNash_bimatrix_iff, vr, vc]
   constructor
   · intro i
     rw [er]
     apply div_le_div_of_nonneg_right _ (Nat.cast_nonneg _)
-    exact_mod_cast (hr i).1
+    exact_mod_cast hc.rowScore_le i
   · intro j
     rw [ec]
     apply div_le_div_of_nonneg_right _ (Nat.cast_nonneg _)
-    exact_mod_cast (hc j).1
+    exact_mod_cast hc.colScore_le j
 
 /-- Every valid certificate supplies ordinary PMF mixed strategies in equilibrium. -/
 theorem hasNash_of_valid {m n : ℕ} (A B : Fin m → Fin n → ℤ)

@@ -27,9 +27,11 @@ theorem candidate_nonnegative (rows : Finset Index) (gain slope : Index → ℚ)
 theorem ratio_le_candidate (rows : Finset Index) (gain slope : Index → ℚ)
     {index : Index} (member : index ∈ rows) (positive : 0 < slope index) :
     gain index / slope index ≤ candidate rows gain slope := by
-  have bound : (if 0 < slope index then gain index / slope index else 0) ≤ candidate rows gain slope :=
+  have bound : (if 0 < slope index then gain index / slope index else 0) ≤ candidate rows gain
+    slope :=
     Finset.le_max' _ _ (Finset.mem_insert_of_mem
-    (Finset.mem_image_of_mem (fun entry => if 0 < slope entry then gain entry / slope entry else 0) member))
+    (Finset.mem_image_of_mem (fun entry => if 0 < slope entry then gain entry / slope entry else
+      0) member))
   simpa only [ite_eq_left positive] using bound
 
 /-- Every nonnegative feasible real scalar is at least the rational candidate. -/
@@ -52,7 +54,8 @@ theorem candidate_le (rows : Finset Index) (gain slope : Index → ℚ)
     · simpa only [ite_eq_right positive, Rat.cast_zero] using nonnegative
 
 /-- If any nonnegative real solution exists, the candidate satisfies every row.
-Negative slopes reverse the comparison, so reducing to the candidate preserves their upper bounds. -/
+Negative slopes reverse the comparison, so reducing to the candidate preserves their upper bounds.
+  -/
 theorem candidate_feasible (rows : Finset Index) (gain slope : Index → ℚ)
     {scalar : ℝ} (nonnegative : 0 ≤ scalar)
     (feasible : ∀ index ∈ rows, (gain index : ℝ) ≤ (slope index : ℝ) * scalar) :

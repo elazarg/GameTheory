@@ -145,7 +145,8 @@ theorem exists_uniform_sanction_iff (rows : Finset Index)
     (comparisons : Index → IncentiveComparison Outcome)
     (base : Outcome → ℝ) (sanction : Set Outcome)
     (prescribedIntegrable : ∀ index ∈ rows, PayoffIntegrable (comparisons index).prescribed base)
-    (alternativeIntegrable : ∀ index ∈ rows, PayoffIntegrable (comparisons index).alternative base) :
+    (alternativeIntegrable : ∀ index ∈ rows, PayoffIntegrable (comparisons index).alternative
+      base) :
     (∃ cutoff : ℝ, 0 ≤ cutoff ∧ ∀ penalty, cutoff ≤ penalty → ∀ index ∈ rows,
       (comparisons index).Holds (penalizedPayoff base sanction penalty)) ↔
     ∀ index ∈ rows,
@@ -161,7 +162,8 @@ theorem exists_uniform_sanction_iff (rows : Finset Index)
       ((comparisons index).prescribed.toOuterMeasure sanction).toReal
   constructor
   · rintro ⟨cutoff, nonnegative, deters⟩
-    have condition := (Math.ScalarInequalities.exists_eventually_feasible_iff rows gain increment).mp
+    have condition := (Math.ScalarInequalities.exists_eventually_feasible_iff rows gain
+      increment).mp
       ⟨cutoff, nonnegative, fun penalty large index member =>
         (holds_iff_incremental_sanction _ _ _ _ (prescribedIntegrable index member)
           (alternativeIntegrable index member)).mp (deters penalty large index member)⟩
@@ -179,7 +181,8 @@ theorem exists_uniform_sanction_iff (rows : Finset Index)
         (prescribedIntegrable index member) (alternativeIntegrable index member)).mp
           ((condition index member).2 (sub_eq_zero.mp zero)))
     obtain ⟨cutoff, nonnegative, feasible⟩ :=
-      (Math.ScalarInequalities.exists_eventually_feasible_iff rows gain increment).mpr scalarCondition
+      (Math.ScalarInequalities.exists_eventually_feasible_iff rows gain increment).mpr
+        scalarCondition
     exact ⟨cutoff, nonnegative, fun penalty large index member =>
       (holds_iff_incremental_sanction _ _ _ _ (prescribedIntegrable index member)
         (alternativeIntegrable index member)).mpr (feasible penalty large index member)⟩

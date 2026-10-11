@@ -160,7 +160,6 @@ theorem selectPrefix_mem (C : Fin n → Fin k → ℤ) (d : Fin n → ℤ) (s : 
 theorem selectPrefix_some_spec (C : Fin n → Fin k → ℤ) (d : Fin n → ℤ) (s : Fin n)
     (hs : selectPrefix C d = some s.val) :
     IsLeavingRow (fun i a => (C i a : ℚ)) (fun i => (d i : ℚ)) s := by
-  classical
   let value : ℕ → Lex (Fin k → ℚ) := fun i =>
     if hi : i < n then toLex (fun a => (C ⟨i, hi⟩ a : ℚ) / (d ⟨i, hi⟩ : ℚ))
     else toLex (fun _ => 0)

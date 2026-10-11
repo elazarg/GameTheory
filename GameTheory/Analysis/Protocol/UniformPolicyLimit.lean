@@ -25,7 +25,8 @@ variable {Player : Type*} [DecidableEq Player]
 
 omit [DecidableEq Player] [E.FiniteMovers] in
 private theorem policy_subsequence (who : Player) [Countable (M.InformationSite who)]
-    [∀ site : M.InformationSite who, Finite (M.Choice who site.1)] (policies : ℕ → M.BehavioralPolicy who) :
+    [∀ site : M.InformationSite who, Finite (M.Choice who site.1)] (policies : ℕ →
+      M.BehavioralPolicy who) :
     ∃ policy : M.BehavioralPolicy who, ∃ index : ℕ → ℕ, StrictMono index ∧
       ∀ site : M.InformationSite who,
         PMFConvergesPointwise (fun n => policies (index n) site.1) (policy site.1) := by
@@ -70,9 +71,11 @@ theorem BehavioralAssessmentConvergesPointwise.exists_uniform_terminal_policy_ga
       -C ≤ (current.continuationContext certificate site payoff).value alternative ∧
         (current.continuationContext certificate site payoff).value alternative ≤ C := by
     have onSupport (final : E.History)
-        (supported : final ∈ ((current.continuationContext certificate site payoff).outcome alternative).support) :
+        (supported : final ∈ ((current.continuationContext certificate site payoff).outcome
+          alternative).support) :
         |payoff final| ≤ C := payoffBound final
-      (current.continuationContext_support_terminal certificate site payoff alternative final supported)
+      (current.continuationContext_support_terminal certificate site payoff alternative final
+        supported)
     exact abs_le.mp (expect_abs_le_of_bounded_on_support onSupport)
   have bounded (n : ℕ) : BddAbove (Set.range (gain n)) := by
     refine ⟨2 * C, ?_⟩
@@ -124,7 +127,8 @@ theorem BehavioralAssessmentConvergesPointwise.exists_uniform_terminal_policy_ga
       (Eventually.of_forall fun n => (greater (second n)).le)
     have optimal := (Context.isLocallyOptimal_iff_of_integrable
       (integrable assessment (assessment.strategy who))
-      fun alternative _ => integrable assessment alternative).mp rational alternative (Set.mem_univ _)
+      fun alternative _ => integrable assessment alternative).mp rational alternative
+        (Set.mem_univ _)
     linarith
 
 /-- With finitely many sites for the deviating player, one error controls every whole
@@ -148,7 +152,8 @@ theorem BehavioralAssessmentConvergesPointwise.exists_uniform_terminal_policy_ga
   classical
   let _ := Fintype.ofFinite (M.InformationSite who)
   choose errors nonnegative vanishes bounds using fun site =>
-    converges.exists_uniform_terminal_policy_gain_bound_at_site who site certificate payoff C nonnegativeBound payoffBound (rational site)
+    converges.exists_uniform_terminal_policy_gain_bound_at_site who site certificate payoff C
+      nonnegativeBound payoffBound (rational site)
   let error (n : ℕ) := ∑ site, errors site n
   refine ⟨error, (fun n => Finset.sum_nonneg fun site _ => nonnegative site n), ?_, ?_⟩
   · simpa only [Finset.sum_const_zero] using

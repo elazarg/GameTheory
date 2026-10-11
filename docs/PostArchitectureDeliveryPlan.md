@@ -189,9 +189,11 @@ Terminal, limiting-average, and uniform equilibrium concepts remain separate
 signatures; no coercion or expectation/limit interchange is admitted without
 its explicit hypotheses. EXP-108 does not change the current repeated or
 stochastic statuses; no stable infinite-path API has been promoted. EXP-114's
-provisional all-phase predicate still lacks its hostile off-phase deviation
-consumer because the public event API erases the joint action needed for the
-transition-support congruence.
+experiment-only all-phase predicate now has the compiled hostile
+consumer: initial uniformity holds, while the reachable off-phase deviation
+improves the average payoff from zero to two at every positive horizon.
+The event/transition support interface supplies the required joint-action
+identity. Stable admission and broader existence remain separate decisions.
 
 ### D. FOSG strategic and counterfactual analysis — transfer/support resolved
 
@@ -577,14 +579,13 @@ distance to an exact fixed point and FIXP remain distinct obligations.
 ## 4. Verification policy
 
 During iteration, run the narrowest relevant Lean file or Lake target. Run a
-full warning-clean build when imports, package configuration, public roots, or
-a delivery gate changes. The Phase 2 and Phase 3 audits default to fast
-source-level checks; their `-DeepReachability` mode is reserved for CI and
-release gates because it launches many independent Lean processes. A namespace
-or import change must update affected positive reachability declarations and
-probe roots in the same commit. Deep probes report each root/declaration result
-in addition to aggregate expectations so integration failures can be audited
-as a complete set rather than one serial mismatch at a time.
+full build when imports, package configuration, public roots, or a delivery
+gate changes. `python scripts/audit.py --source-only` checks the maintained
+source boundaries and lint/axiom coverage during edits. The full
+`python scripts/audit.py` run builds all modules with warnings and info as
+failures, runs the public linters, and checks every authored declaration's
+transitive axioms. Historical phase measurements remain experiment evidence;
+they are not current acceptance checks.
 
 Every completed package records:
 

@@ -6,7 +6,8 @@ namespace GameTheory.Math.Probability
 
 /-- The two orders of expectation agree whenever the independent joint payoff is integrable. -/
 theorem expect_comm {α β : Type*} (first : PMF α) (second : PMF β) (f : α → β → ℝ)
-    (integrable : PayoffIntegrable (bindPairLaw first (fun _ => second)) (fun pair => f pair.1 pair.2)) :
+    (integrable : PayoffIntegrable (bindPairLaw first (fun _ => second)) (fun pair => f pair.1
+      pair.2)) :
     expect first (fun a => expect second (f a)) =
       expect second (fun b => expect first (fun a => f a b)) := by
   have reversed : PayoffIntegrable (bindPairLaw second (fun _ => first))

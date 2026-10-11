@@ -19,9 +19,11 @@ theorem unequal_depth_equilibrium_from_components_of_terminal_range
   classical
   let _ : Fintype execution.History := execution.historyFintype treeShaped
   let F := information.agentForm fallback game.wellFoundedHistories
-  let _ (agent : information.InformationAgent information.playedInformation) : Fintype (F.sig.Strategy agent) :=
+  let _ (agent : information.InformationAgent information.playedInformation) : Fintype
+    (F.sig.Strategy agent) :=
     @Fintype.ofFinite _ (information.finite_choice_of_played agent.2.2)
-  have inhabited (agent : information.InformationAgent information.playedInformation) : Nonempty (F.sig.Strategy agent) :=
+  have inhabited (agent : information.InformationAgent information.playedInformation) : Nonempty
+    (F.sig.Strategy agent) :=
     information.nonempty_choice_of_played agent.2.2
   let weight (n : ℕ) : ℝ := 1 / ((n : ℝ) + 2)
   have positive (n : ℕ) : 0 < weight n := by
@@ -38,10 +40,12 @@ theorem unequal_depth_equilibrium_from_components_of_terminal_range
     funext n
     simp [weight, Nat.cast_add]
     ring
-  let reference (agent : information.InformationAgent information.playedInformation) : PMF (F.sig.Strategy agent) :=
+  let reference (agent : information.InformationAgent information.playedInformation) : PMF
+    (F.sig.Strategy agent) :=
     PMF.uniformOfFintype _
   let component (n : ℕ) (agent : information.InformationAgent information.playedInformation)
-      (part : F.sig.Strategy agent) := mix (weight n) (positive n).le (small n) (reference agent) (PMF.pure part)
+      (part : F.sig.Strategy agent) := mix (weight n) (positive n).le (small n) (reference agent)
+        (PMF.pure part)
   have full : ∀ n agent part, FullSupport (component n agent part) := by
     intro n agent part choice
     exact mem_support_mix_left _ _ _ (positive n)

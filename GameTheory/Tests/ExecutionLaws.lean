@@ -15,6 +15,7 @@ noncomputable section
 
 namespace GameTheory.Tests.ExecutionLaws
 
+open GameTheory.Tests.History
 open GameTheory.Protocol GameTheory.Math.Probability
 open GameTheory.Protocol.ExecutionProtocol
 

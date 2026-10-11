@@ -88,10 +88,12 @@ theorem statisticalDistance_eq_positive_event {α : Type*} (μ ν : PMF α) :
     intro a
     by_cases member : a ∈ event
     · have positive : 0 < difference a := sub_pos.mpr member
-      simp only [Set.indicator, member, Set.mem_compl_iff, not_true_eq_false, ↓reduceIte, sub_zero, abs_of_pos positive]
+      simp only [Set.indicator, member, Set.mem_compl_iff, not_true_eq_false, ↓reduceIte,
+        sub_zero, abs_of_pos positive]
       rfl
     · have negative : difference a ≤ 0 := sub_nonpos.mpr (le_of_not_gt member)
-      simp only [Set.indicator, member, Set.mem_compl_iff, not_false_eq_true, ↓reduceIte, zero_sub, abs_of_nonpos negative]
+      simp only [Set.indicator, member, Set.mem_compl_iff, not_false_eq_true, ↓reduceIte,
+        zero_sub, abs_of_nonpos negative]
       rfl
   have massDifference : (∑' a, event.indicator difference a) =
       (μ.toOuterMeasure event).toReal - (ν.toOuterMeasure event).toReal := by
@@ -191,7 +193,8 @@ theorem abs_expect_sub_le_statisticalDistance_of_mem_Icc {α : Type*}
     rw [expect_sub (payoffIntegrable_const_mul (integrable law))
       (payoffIntegrable_constant law 1), expect_const_mul, expect_constant]
   have bound := abs_expect_sub_le_statisticalDistance (μ := μ) (ν := ν)
-    (f := fun a => 2 * f a - 1) (fun a => by rw [abs_le]; constructor <;> linarith [(bounded a).1, (bounded a).2])
+    (f := fun a => 2 * f a - 1) (fun a => by rw [abs_le]; constructor <;> linarith [(bounded a).1,
+      (bounded a).2])
   rw [value μ, value ν] at bound
   have same : 2 * expect μ f - 1 - (2 * expect ν f - 1) =
       2 * (expect μ f - expect ν f) := by ring
@@ -205,7 +208,8 @@ theorem abs_expect_sub_le_statisticalDistance_mul_range {α : Type*}
     (bounded : ∀ a, a ∈ μ.support ∨ a ∈ ν.support → low ≤ f a ∧ f a ≤ low + range) :
     |expect μ f - expect ν f| ≤ statisticalDistance μ ν * range := by
   obtain ⟨a, used⟩ := μ.support_nonempty
-  have nonnegative : 0 ≤ range := by linarith [(bounded a (Or.inl used)).1, (bounded a (Or.inl used)).2]
+  have nonnegative : 0 ≤ range := by linarith [(bounded a (Or.inl used)).1, (bounded a (Or.inl
+    used)).2]
   by_cases zero : range = 0
   · have value (law : PMF α) (within : ∀ a ∈ law.support, a ∈ μ.support ∨ a ∈ ν.support) :
         expect law f = low := by
@@ -231,7 +235,8 @@ theorem abs_expect_sub_le_statisticalDistance_mul_range {α : Type*}
         expect law f = expect law (fun a => low + range * clipped a) :=
           expect_congr_on_support fun a used => by
             obtain ⟨lower, upper⟩ := bounded a (within a used)
-            have nonnegative : 0 ≤ (f a - low) / range := div_nonneg (sub_nonneg.mpr lower) positive.le
+            have nonnegative : 0 ≤ (f a - low) / range := div_nonneg (sub_nonneg.mpr lower)
+              positive.le
             have atMostOne : (f a - low) / range ≤ 1 := (div_le_one positive).mpr (by linarith)
             rw [show clipped a = (f a - low) / range from by
               simp only [clipped, min_eq_right atMostOne, max_eq_right nonnegative],
@@ -245,7 +250,8 @@ theorem abs_expect_sub_le_statisticalDistance_mul_range {α : Type*}
         range * (expect μ clipped - expect ν clipped) := by ring
     rw [same, abs_mul, abs_of_pos positive]
     exact (mul_le_mul_of_nonneg_left
-      (abs_expect_sub_le_statisticalDistance_of_mem_Icc μ ν clipped clipBounds) positive.le).trans_eq (mul_comm ..)
+      (abs_expect_sub_le_statisticalDistance_of_mem_Icc μ ν clipped clipBounds)
+        positive.le).trans_eq (mul_comm ..)
 
 
 /-- A common stochastic observation cannot increase statistical distance. -/

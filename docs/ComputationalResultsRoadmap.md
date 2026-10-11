@@ -714,8 +714,7 @@ Commands from the repository root:
     lake build GameTheory GameTheory.LintAll
     lake lint
     lake env lean .codex/scratch/BimatrixWitnessAxiomAudit.lean
-    pwsh -File scripts/phase2-audit.ps1 -VerifyExpected
-    pwsh -File scripts/complexity-audit.ps1
+    python scripts/audit.py --source-only
     python -m unittest discover -s scripts/tests
 
 The sole added representation owner is the Nash-to-linear-system bridge which

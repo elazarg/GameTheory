@@ -22,7 +22,7 @@ import GameTheory.Tests.Execution
 
 noncomputable section
 
-namespace GameTheory.Tests
+namespace GameTheory.Tests.Candidates
 
 open GameTheory GameTheory.Protocol GameTheory.Math.Probability
 
@@ -144,4 +144,4 @@ example : Fintype (Tree.PureStrategy coinTree) := inferInstance
 theorem card_pureStrategy_coinTree : Fintype.card (Tree.PureStrategy coinTree) = 4 := by
   rfl
 
-end GameTheory.Tests
+end GameTheory.Tests.Candidates

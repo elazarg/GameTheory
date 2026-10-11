@@ -21,12 +21,15 @@ caller-supplied approximate gain mixtures. No finite source-history instance,
 source clock, or common target decision depth is available. -/
 theorem unbounded_source_unequal_depth_target :
     (¬ ∃ horizon, execution.BoundedHorizon horizon) ∧
-      (¬ ∃ depth, InformationSite.CommonDepth N GameTheory.Tests.SequentialExistence.actingSite depth) ∧
+      (¬ ∃ depth, InformationSite.CommonDepth N GameTheory.Tests.SequentialExistence.actingSite
+        depth) ∧
         ∃ source : information.BehavioralAssessment,
-          ∀ (sequence : ℕ → GameTheory.Tests.SequentialExistence.information.BehavioralAssessment) (target : GameTheory.Tests.SequentialExistence.information.BehavioralAssessment),
+          ∀ (sequence : ℕ → GameTheory.Tests.SequentialExistence.information.BehavioralAssessment)
+            (target : GameTheory.Tests.SequentialExistence.information.BehavioralAssessment),
             BehavioralAssessmentConvergesPointwise sequence target →
             target.IsSequentiallyConsistent targetAntichain →
-            (∀ n who (site : GameTheory.Tests.SequentialExistence.information.InformationSite who) (law : PMF (GameTheory.Tests.SequentialExistence.information.Choice who site.1)),
+            (∀ n who (site : GameTheory.Tests.SequentialExistence.information.InformationSite who)
+              (law : PMF (GameTheory.Tests.SequentialExistence.information.Choice who site.1)),
               ∃ mixture : PMF (information.AssessmentDeviation who),
                 ((sequence n).continuationContext targetCertificate site (targetPayoff who)).value
                     (((sequence n).strategy who).withLaw site.1 law) -
@@ -39,7 +42,9 @@ theorem unbounded_source_unequal_depth_target :
                         (terminalPayoff who)).value (source.strategy who)) + trembleWeight n) →
             target.IsSequentialEquilibrium targetAntichain targetCertificate targetPayoff := by
   classical
-  let _ : Fintype GameTheory.Tests.SequentialExistence.execution.History := GameTheory.Tests.SequentialExistence.execution.historyFintype GameTheory.Tests.SequentialExistence.treeShaped
+  let _ : Fintype GameTheory.Tests.SequentialExistence.execution.History :=
+    GameTheory.Tests.SequentialExistence.execution.historyFintype
+    GameTheory.Tests.SequentialExistence.treeShaped
   have : ∀ who : Unit, Finite (information.InformationSite who) := by
     intro who
     cases who
@@ -53,7 +58,8 @@ theorem unbounded_source_unequal_depth_target :
   intro sequence target converges consistent comparisons
   apply sequentialEquilibrium_of_copied_comparisons_limit
     wellFounded.wellFoundedHistories targetCertificate
-    (GameTheory.Tests.SequentialExistence.information.decisionRecall_of_perfectRecall GameTheory.Tests.SequentialExistence.perfectRecall)
+    (GameTheory.Tests.SequentialExistence.information.decisionRecall_of_perfectRecall
+      GameTheory.Tests.SequentialExistence.perfectRecall)
     terminalPayoff targetPayoff (fun _ => 1) (fun _ => by norm_num) terminalPayoff_bound
     (behavioralAssessmentConvergesPointwise_const source) rational converges
     (fun _ _ => True) consistent (fun n _ _ => trembleWeight n)

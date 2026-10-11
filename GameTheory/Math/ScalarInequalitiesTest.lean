@@ -2,7 +2,8 @@ import GameTheory.Math.ScalarInequalitiesCorrectness
 namespace GameTheory.Tests.ScalarInequalities
 open GameTheory.Math.ScalarInequalities
 
-theorem empty_table : infer (∅ : Finset Bool) (fun _ => 17) (fun _ => -1) = some 0 := by norm_num [infer, candidate]
+theorem empty_table : infer (∅ : Finset Bool) (fun _ => 17) (fun _ => -1) = some 0 := by norm_num
+  [infer, candidate]
 
 theorem fractional_lower_and_upper :
     infer ({false, true} : Finset Bool) (fun i => if i then -2 else 3)
@@ -16,7 +17,8 @@ theorem profitable_constant_row :
     infer ({false} : Finset Bool) (fun _ => 1) (fun _ => 0) = none := by norm_num [infer, candidate]
 
 theorem negative_only_zero_suffices :
-    infer ({false} : Finset Bool) (fun _ => -2) (fun _ => -1) = some 0 := by norm_num [infer, candidate]
+    infer ({false} : Finset Bool) (fun _ => -2) (fun _ => -1) = some 0 := by norm_num [infer,
+      candidate]
 
 /-- A lower bound exceeding an upper bound excludes every nonnegative real solution. -/
 theorem signed_rows_have_no_real_solution :

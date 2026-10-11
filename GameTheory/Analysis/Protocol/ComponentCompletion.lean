@@ -223,7 +223,8 @@ theorem exists_consistent_completion_with_shared_mixture_weights (hrecall : M.De
     · simp only [importance, decision, ↓reduceIte]
       exact continuousOn_const
   choose weights optimal using fun n =>
-    exists_bestResponses_with_shared_mixture_weights (F := F) groupOf (M.agentUtility payoff) (component n)
+    exists_bestResponses_with_shared_mixture_weights (F := F) groupOf (M.agentUtility payoff)
+      (component n)
       (fun _ _ => payoffIntegrable_of_finite _ _) (importance n) (importanceContinuous n)
   let played (n : ℕ) : Profile F.sig.mixed := fun agent =>
     (weights n (groupOf agent)).bind (component n agent)
@@ -270,7 +271,8 @@ theorem exists_consistent_completion_with_shared_mixture_weights (hrecall : M.De
         simp only [mixtureOf, PMF.ofSimplex_toReal_weights, played]
       have mass := mass.trans (congrArg
         (fun laws : Profile F.sig.mixed =>
-          (M.informationMass (M.agentBehavior M.playedInformation fallback laws) agent.1 site).toReal)
+          (M.informationMass (M.agentBehavior M.playedInformation fallback laws) agent.1
+            site).toReal)
         lawsEq)
       have gain := M.agentGain_eq_mass_mul hrecall fallback certificate payoff (played n)
         (full n) site ((alternative (groupOf agent)).bind (component n agent))
@@ -395,7 +397,8 @@ theorem exists_consistent_component_completion (hrecall : M.DecisionRecall)
   classical
   obtain ⟨weights, sequence, limit, index, played, mixed, bayes, increasing, converges,
       consistent, aggregateOptimal, limitFacts⟩ :=
-    M.exists_consistent_completion_with_shared_mixture_weights hrecall fallback certificate payoff (Part := Component)
+    M.exists_consistent_completion_with_shared_mixture_weights hrecall fallback certificate payoff
+      (Part := Component)
       id component componentFull
   have stepOptimal (n : ℕ) (i : ι) (site : M.InformationSite i)
       (alternative : PMF (Component (M.agentAt site))) :
@@ -406,7 +409,8 @@ theorem exists_consistent_component_completion (hrecall : M.DecisionRecall)
           ((sequence n).strategy i) := by
     let componentSig : GameSignature (M.InformationAgent M.playedInformation) :=
       { Strategy := Component, Outcome := Unit }
-    have single := aggregateOptimal n (Profile.update (sig := componentSig.mixed) (weights n) (M.agentAt site) alternative)
+    have single := aggregateOptimal n (Profile.update (sig := componentSig.mixed) (weights n)
+      (M.agentAt site) alternative)
       (M.agentAt site)
     rw [show Finset.univ.filter (fun agent => id agent = M.agentAt site) = {M.agentAt site} by
       ext agent; simp, Finset.sum_singleton,

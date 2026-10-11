@@ -54,7 +54,8 @@ theorem exists_consistent_free_agent_completion (hrecall : M.DecisionRecall)
   let F := M.agentForm fallback certificate
   let _ (agent : M.InformationAgent M.playedInformation) : Fintype (F.sig.Strategy agent) :=
     @Fintype.ofFinite _ (M.finite_choice_of_played agent.2.2)
-  have inhabited (agent : M.InformationAgent M.playedInformation) : Nonempty (F.sig.Strategy agent) :=
+  have inhabited (agent : M.InformationAgent M.playedInformation) : Nonempty (F.sig.Strategy
+    agent) :=
     M.nonempty_choice_of_played agent.2.2
   let component (n : ℕ) := pinnedTrembleComponent (F := F) free (pinned n) reference
     (epsilon n) (positive n).le (small n).le
@@ -81,7 +82,8 @@ theorem exists_consistent_free_agent_completion (hrecall : M.DecisionRecall)
     have componentConverges (part : F.sig.Strategy (M.agentAt site)) :
         PMFConvergesPointwise (fun n => component n (M.agentAt site) part) (PMF.pure part) := by
       have same : (fun n => component n (M.agentAt site) part) =
-          (fun n => mix (epsilon n) (positive n).le (small n).le (reference (M.agentAt site)) (PMF.pure part)) := by
+          (fun n => mix (epsilon n) (positive n).le (small n).le (reference (M.agentAt site))
+            (PMF.pure part)) := by
         funext n
         exact ite_eq_left active
       rw [same]
