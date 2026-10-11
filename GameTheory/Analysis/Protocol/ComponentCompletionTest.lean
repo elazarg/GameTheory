@@ -1,4 +1,6 @@
 import GameTheory.Analysis.Protocol.ComponentCompletion
+import GameTheory.Analysis.Protocol.LocalDeviationBounds
+import GameTheory.Analysis.Protocol.LocalSimulationLimit
 import GameTheory.Analysis.Protocol.SequentialExistenceTest
 noncomputable section
 namespace GameTheory.Tests.ProtocolComponentCompletion
@@ -6,11 +8,14 @@ open GameTheory GameTheory.Protocol GameTheory.Protocol.InformationModel
 open GameTheory.Math.Probability Filter
 open GameTheory.Tests.SequentialExistence
 
-/-- Full-menu trembling components produce a sequential equilibrium even at unequal-depth sites. -/
-theorem unequal_depth_equilibrium_from_components :
+/-- Full-menu trembling components yield a sequential equilibrium from vanishing local gains. -/
+theorem unequal_depth_equilibrium_from_components_of_terminal_range
+    (terminalPayoff : Unit → execution.History → ℝ)
+    (payoffRange : ∀ who final, execution.terminal final.state →
+      0 ≤ terminalPayoff who final ∧ terminalPayoff who final ≤ 1) :
     (¬ ∃ depth, InformationSite.CommonDepth information actingSite depth) ∧
       ∃ limit : information.BehavioralAssessment,
-        limit.IsSequentialEquilibrium antichain game.wellFoundedHistories GameTheory.Tests.SequentialExistence.payoff := by
+        limit.IsSequentialEquilibrium antichain game.wellFoundedHistories terminalPayoff := by
   classical
   let _ : Fintype execution.History := execution.historyFintype treeShaped
   let F := information.agentForm fallback game.wellFoundedHistories
@@ -45,20 +50,69 @@ theorem unequal_depth_equilibrium_from_components :
   obtain ⟨weights, sequence, limit, index, played, mixed, bayes, increasing, converges,
       consistent, stepOptimal, limitFacts⟩ :=
     information.exists_consistent_component_completion decisionRecallCertificate fallback
-      game.wellFoundedHistories GameTheory.Tests.SequentialExistence.payoff component full
+      game.wellFoundedHistories terminalPayoff component full
+  have gainBound n who (site : information.InformationSite who)
+      (law : PMF (information.Choice who site.1)) :
+      ((sequence n).continuationContext game.wellFoundedHistories site
+          (terminalPayoff who)).value
+          (((sequence n).strategy who).withLaw site.1 law) -
+        ((sequence n).continuationContext game.wellFoundedHistories site
+          (terminalPayoff who)).value
+          ((sequence n).strategy who) ≤ weight n := by
+    have bound := (sequence n).withLaw_gain_le_of_trembling_component_bound
+      decisionRecallCertificate.actsOnceWhereItMatters game.wellFoundedHistories site
+      (terminalPayoff who) 0 1
+      (payoffRange who) (reference (information.agentAt site))
+      (weight n) (positive n).le (small n) 0
+      (fun alternative => sub_nonpos.mpr (stepOptimal n who site alternative)) law
+    simpa only [sub_zero, mul_one, zero_add] using bound
   refine ⟨no_commonDepth, limit, ?_⟩
-  apply (BehavioralAssessment.isSequentialEquilibrium_iff_locallyOptimal information
-    decisionRecallCertificate limit game.wellFoundedHistories GameTheory.Tests.SequentialExistence.payoff).mpr
-  refine ⟨consistent, ?_⟩
-  intro who site law
-  have componentConverges (part : F.sig.Strategy (information.agentAt site)) :
-      PMFConvergesPointwise (fun n => component n (information.agentAt site) part) (PMF.pure part) :=
-    pmfConvergesPointwise_mix_zero weight (fun n => (positive n).le) small vanishes _ _
-  obtain ⟨_, optimal⟩ := limitFacts who site (fun part => PMF.pure part) componentConverges
-  have bound := optimal law
-  exact ((congrArg (fun candidate : PMF (information.Choice who site.1) =>
-    (limit.continuationContext game.wellFoundedHistories site
-      (GameTheory.Tests.SequentialExistence.payoff who)).value
-        ((limit.strategy who).withLaw site.1 candidate)) (PMF.bind_pure law)).symm).le.trans bound
+  exact converges.sequentialEquilibrium_of_copied_gain_bounds decisionRecallCertificate
+    game.wellFoundedHistories terminalPayoff (fun _ _ => True)
+    consistent (fun n _ _ _ => weight (index n))
+    (fun _ _ _ _ => vanishes.comp increasing.tendsto_atTop)
+    (fun n who site _ law => gainBound (index n) who site law)
+    (fun _ _ impossible => False.elim (impossible trivial))
+
+/-- The original hidden-bit payoff is nonconstant on terminal histories. -/
+theorem unequal_depth_equilibrium_from_components :
+    (¬ ∃ depth, InformationSite.CommonDepth information actingSite depth) ∧
+      ∃ limit : information.BehavioralAssessment,
+        limit.IsSequentialEquilibrium antichain game.wellFoundedHistories
+          GameTheory.Tests.SequentialExistence.payoff := by
+  apply unequal_depth_equilibrium_from_components_of_terminal_range
+  intro who final _
+  cases stateEq : final.state <;> simp [GameTheory.Tests.SequentialExistence.payoff, stateEq]
+  all_goals split <;> norm_num
+
+/-- Strictly reward the action `true`, independently of nature's hidden bit. -/
+def actionPayoff (_ : Unit) (history : execution.History) : ℝ :=
+  match history.state with
+  | .terminal _ action => if action then 1 else 0
+  | _ => 0
+
+private def actionTerminal (action : Bool) : execution.History :=
+  earlyHistory.extend (joint := fun _ => some action) (target := .terminal false action)
+    (by
+      change execution.Legal (.decision false) (fun _ => some action)
+      simp [execution, ExecutionProtocol.Legal, IsLegalJoint,
+        State.stopped, State.active])
+    (by
+      change State.terminal false action ∈ (PMF.pure (.terminal false action)).support
+      simp)
+
+/-- Quantitative component comparisons also apply when the two actions have
+different terminal rewards, on the actual unequal-depth protocol. -/
+theorem strict_action_equilibrium_from_components :
+    actionPayoff () (actionTerminal true) = 1 ∧
+      actionPayoff () (actionTerminal false) = 0 ∧
+      ∃ limit : information.BehavioralAssessment,
+        limit.IsSequentialEquilibrium antichain game.wellFoundedHistories actionPayoff := by
+  have existsLimit := unequal_depth_equilibrium_from_components_of_terminal_range actionPayoff
+    (fun who final _ => by
+      cases stateEq : final.state <;> simp [actionPayoff, stateEq]
+      all_goals split <;> norm_num)
+  exact ⟨by simp [actionPayoff, actionTerminal], by simp [actionPayoff, actionTerminal],
+    existsLimit.2⟩
 
 end GameTheory.Tests.ProtocolComponentCompletion

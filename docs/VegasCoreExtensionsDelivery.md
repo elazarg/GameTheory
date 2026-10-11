@@ -403,3 +403,36 @@ architecture audit reported `VERIFIED=1`. Both the completion theorem and
 shared-pool control use only standard Lean axioms. The new public module is
 included in the explicit lint driver. No new probability representation owner
 or transparency option is required.
+`Analysis.Protocol.LocalDeviationBounds` recovers the local comparisons needed
+to construct certificates. A pure-choice gain bound covers every lottery.
+Adding reference weight `epsilon` costs at most
+`epsilon * (upper - lower)`, sharpening the source absolute-bound estimate.
+Only terminal utility values need lie in that interval; nonterminal values
+are unrestricted. Approximate member optimality among full-menu trembling
+components then bounds every local gain by the member error plus this cost.
+The results use canonical terminal continuation contexts and require neither
+Bayesian beliefs nor assessment rationality.
+
+The unequal-depth component consumer now obtains equilibrium through explicit
+vanishing copied-site gains, rather than menu optimality at the limit. It
+accepts arbitrary terminal utilities in `[0,1]`. Concrete specializations retain
+the hidden-bit payoff and strictly reward action `true`: actual legal terminal
+histories certify rewards one and zero. Independent member completion supplies
+the zero member error. Construction of nonconstant shared-pool member bounds,
+source simulation comparisons and sequential decision consumers remains pending.
+Validation:
+
+```text
+lake build GameTheory.Analysis.Protocol.LocalDeviationBounds
+lake env lean GameTheory/Analysis/Protocol/ComponentCompletionTest.lean
+lake build GameTheory GameTheory.LintAll
+lake lint
+pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected
+lake env lean .codex/scratch/LocalDeviationBoundsAxioms.lean
+```
+
+All 4,592 integration jobs passed, lint passed and the architecture audit
+reported `VERIFIED=1`. The three local-bound theorems and all three component
+consumer theorems use only standard Lean axioms. The public module is imported
+by the explicit lint driver; no new representation owner or transparency option
+is needed.
