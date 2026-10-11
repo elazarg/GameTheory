@@ -236,6 +236,7 @@ $RepresentationModules = @(
   'GameTheory/Math/Probability/ObservationAbstraction.lean',
   'GameTheory/Math/Probability/EventPenalty.lean',
   'GameTheory/Analysis/ComponentCompletion.lean',
+  'GameTheory/Analysis/Protocol/ComponentCompletion.lean',
   'GameTheory/Analysis/Protocol/PassageBayes.lean',
   'GameTheory/Analysis/Enforcement.lean',
   'GameTheory/Analysis/EnforcementTest.lean',

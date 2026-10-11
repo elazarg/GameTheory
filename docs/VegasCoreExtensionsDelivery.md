@@ -12,7 +12,7 @@ an existing semantic concept. Preserve upstream attribution in `NOTICE`.
 | 3 | Total variation and approximate transport | Supported mathematical slice: the existing half-L1 `statisticalDistance` moves to a dedicated PMF module and equals the uniform event-gap bound. Arbitrary-carrier observation contraction, expected kernel error, support-local payoff-range bounds, domination and discrete convergence are proved. Canonical incentive and continuation contexts bound deviation gain without a new equilibrium predicate. Sample tests and concrete pseudo-Nash transfer improve their constants by two. Full build, lint and architecture audit pass. | Information abstraction next. Copied-site sequential-limit consumers accompany component completion. |
 | 4 | Information-abstraction criteria | Protected-law and fixed-payoff slices supported: supported fact recovery transparently specializes Mathlib `Function.FactorsThrough`; conditional averaging preserves arbitrary response laws. Perfect reporting and preservation of all informed reporting laws are equivalent to fact recovery. Guarded terminal-decision optimality specializes canonical contexts, and optimal retained-law sets coincide without finite carriers, finite-support priors or bounded utilities. Consumers cover an erased supported bit, an unreachable merge and infinite carriers. `Analysis.DecisionPayoff` characterizes fixed-payoff preservation by common maximizing actions on supported fibers; a support-local utility bound replaces finite prior support. Only optimum existence and fixed-payoff necessity need finite actions. Universal reporting-utility preservation is equivalent to supported fact recovery for finite facts. | Sequential decision consumers accompany component completion. |
 | 5 | Sanction feasibility and synthesis | Supported: independent rational signed-slope inference is sound, complete and minimal against all nonnegative real solutions. Canonical comparison bridges use additional collection risk. Explicit finite tables characterize eventual deterrence, without a finite ambient row type. Sound observable alarms attain exactly the mass outside admitted observations. Sequential rationality specializes the actual continuation context with only finite movers. | Component and pooled-agent completion next. |
-| 6 | Component and pooled-agent completion | Static and passage slice supported: canonical stochastic strategy substitution, finite component-menu and pooled best-response existence for arbitrary underlying strategies/outcomes with integrable component plays, weighted approximate member bounds with arbitrary action carriers, and actual-passage Bayes conditioning with only finite movers. | Consistent pooled/component completion and copied-site sequential-limit consumers. |
+| 6 | Component and pooled-agent completion | Static, passage and consistent-completion slices supported: canonical stochastic strategy substitution, finite component-menu and pooled best-response existence for arbitrary underlying strategies/outcomes with integrable component plays, weighted approximate member bounds with arbitrary action carriers, and actual-passage Bayes conditioning with only finite movers, consistent pooled/component completion, and an unequal-depth full-menu sequential-equilibrium consumer. Free-agent completion now specializes the component theorem. | Copied-site sequential-limit and sequential decision consumers. |
 
 Validation for the first slice:
 
@@ -249,3 +249,39 @@ The integration build completed 4,583 jobs and the architecture audit reported
 Substitution, individual and pooled mixture existence, weighted member bounds,
 conflicting-preference and infinite-carrier controls, and unequal-depth passage
 use only the standard Lean axioms.
+
+The consistent-completion checkpoint adds
+`Analysis.Protocol.ComponentCompletion`. Fully supported time-varying components
+admit simultaneous pool weights and a common subsequence of fully mixed Bayes
+assessments. The limit is sequentially consistent; each convergent component
+menu retains its mixture representation. A vanishing member-gain error gives
+optimality among that menu's mixtures. Independent agents have exact zero error;
+shared-pool aggregate optimality alone does not establish member rationality.
+
+The existing free-agent completion theorem now specializes this construction,
+removing its separate fixed-point, assessment extraction and gain-limit proof.
+Its public statement is unchanged. A full-menu trembling-component consumer
+proves sequential-equilibrium existence at the unequal-depth hidden-decision
+site. Finite histories remain required by the canonical played-agent enumeration;
+the passage-law owner itself still needs only finite movers.
+
+One scoped transparency option addresses Lean's stricter implicit-transparency
+check in the pooled gain rewrite. Ordinary matching failures use explicit law
+and value equalities instead. No dependent casts, alternate equilibrium
+predicate or new trust assumption is introduced.
+
+Validation:
+
+```text
+lake build GameTheory.Analysis.Protocol.AgentCompletion GameTheory.Analysis.Protocol.ComponentCompletionTest
+lake build GameTheory GameTheory.LintAll
+lake lint
+pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected
+lake env lean .codex/scratch/ComponentCompletionAxioms.lean
+```
+
+All 4,585 integration jobs passed, including restriction completion and
+extension consumers. Lint passed, the architecture audit reported `VERIFIED=1`,
+and pooled, independent and free-agent completion plus the unequal-depth
+consumer use only the standard Lean axioms. Copied-site approximate simulation
+and sequential decision consumers remain the next obligations.
