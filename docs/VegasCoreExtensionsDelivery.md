@@ -12,7 +12,7 @@ an existing semantic concept. Preserve upstream attribution in `NOTICE`.
 | 3 | Total variation and approximate transport | Supported mathematical slice: the existing half-L1 `statisticalDistance` moves to a dedicated PMF module and equals the uniform event-gap bound. Arbitrary-carrier observation contraction, expected kernel error, support-local payoff-range bounds, domination and discrete convergence are proved. Canonical incentive and continuation contexts bound deviation gain without a new equilibrium predicate. Sample tests and concrete pseudo-Nash transfer improve their constants by two. Full build, lint and architecture audit pass. | Information abstraction next. Copied-site sequential-limit consumers accompany component completion. |
 | 4 | Information-abstraction criteria | Protected-law and fixed-payoff slices supported: supported fact recovery transparently specializes Mathlib `Function.FactorsThrough`; conditional averaging preserves arbitrary response laws. Perfect reporting and preservation of all informed reporting laws are equivalent to fact recovery. Guarded terminal-decision optimality specializes canonical contexts, and optimal retained-law sets coincide without finite carriers, finite-support priors or bounded utilities. Consumers cover an erased supported bit, an unreachable merge and infinite carriers. `Analysis.DecisionPayoff` characterizes fixed-payoff preservation by common maximizing actions on supported fibers; a support-local utility bound replaces finite prior support. Only optimum existence and fixed-payoff necessity need finite actions. Universal reporting-utility preservation is equivalent to supported fact recovery for finite facts. | Sequential decision consumers accompany component completion. |
 | 5 | Sanction feasibility and synthesis | Supported: independent rational signed-slope inference is sound, complete and minimal against all nonnegative real solutions. Canonical comparison bridges use additional collection risk. Explicit finite tables characterize eventual deterrence, without a finite ambient row type. Sound observable alarms attain exactly the mass outside admitted observations. Sequential rationality specializes the actual continuation context with only finite movers. | Component and pooled-agent completion next. |
-| 6 | Component and pooled-agent completion | Planned: generalize prescribed/free agent completion. | Component-mixture optimality, pooled-member conditions and sequential consumers. |
+| 6 | Component and pooled-agent completion | Static and passage slice supported: canonical stochastic strategy substitution, finite component-menu and pooled best-response existence for arbitrary underlying strategies/outcomes with integrable component plays, weighted approximate member bounds with arbitrary action carriers, and actual-passage Bayes conditioning with only finite movers. | Consistent pooled/component completion and copied-site sequential-limit consumers. |
 
 Validation for the first slice:
 
@@ -206,3 +206,46 @@ bridge, observable deterrence, the sequential adapter and the mixed controls
 use only standard Lean axioms. Hostile consumers verify partial randomized
 detection, inevitable-charge cancellation, full-admission obstruction and
 mixtures over infinite index carriers.
+
+The component checkpoint defines stochastic strategy substitution once in
+`Core.StrategySubstitution`, as a transparent specialization of canonical game
+forms. Its mixed play flattens independent component draws and commutes with
+canonical profile updates. `Analysis.ComponentCompletion` uses finite Nash for
+individual component mixtures and the existing local-choice fixed point for
+shared pool weights. Finite underlying strategies or outcomes are unnecessary:
+only utilities under each component profile's actual play law must be integrable.
+Continuous importance weights are evaluated at the incumbent profile; pool
+comparisons sum unilateral member gains, not a simultaneous joint deviation.
+
+The source's dependent casts disappear by updating the pool profile before
+selecting a member's coordinate. Independent-component existence specializes
+finite Nash directly instead of going through pooled existence.
+`Math.Probability.PooledOptimality` only needs the aggregate comparison at the
+common near-best action, permits an aggregate tolerance and nonnegative member
+weights, and removes finite-action assumptions in favor of integrability of the
+compared means. Unit weights recover the cardinality-times-error bound.
+Zero weights do not certify individual rationality. A conflicting-preference
+control proves that pooled optimality alone leaves a profitable member deviation;
+the positive consumer uses infinite actions. The game consumers use infinite
+natural-number strategies and profile outcomes with globally unbounded utility.
+
+`Analysis.Protocol.PassageBayes` conditions the actual encountered-ancestor law
+and stochastic readouts on passage, with only finite movers. The antichain
+certificate ensures unique encountered information history. The unequal-depth
+consumer simultaneously refutes a common depth and proves the conditioning law.
+
+Validation:
+
+```text
+lake build GameTheory.Analysis.ComponentCompletion GameTheory.Math.Probability.PooledOptimalityTest
+lake build GameTheory.Analysis.ComponentCompletionTest GameTheory.Analysis.Protocol.PassageBayes
+lake build GameTheory GameTheory.LintAll
+lake lint
+pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected
+```
+
+The integration build completed 4,583 jobs and the architecture audit reported
+`VERIFIED=1`, with no new equality transports or unowned mass arithmetic.
+Substitution, individual and pooled mixture existence, weighted member bounds,
+conflicting-preference and infinite-carrier controls, and unequal-depth passage
+use only the standard Lean axioms.

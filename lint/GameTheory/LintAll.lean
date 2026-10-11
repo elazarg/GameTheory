@@ -530,3 +530,7 @@ import GameTheory.Math.Probability.SoundDetection
 import GameTheory.Analysis.Protocol.Sanctions
 import GameTheory.Math.Probability.MonitoredPenalty
 import GameTheory.Analysis.ObservableEnforcement
+import GameTheory.Math.Probability.PooledOptimality
+import GameTheory.Core.StrategySubstitution
+import GameTheory.Analysis.ComponentCompletion
+import GameTheory.Analysis.Protocol.PassageBayes
