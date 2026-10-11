@@ -11,7 +11,7 @@ an existing semantic concept. Preserve upstream attribution in `NOTICE`.
 | 2 | Depth-free action restrictions | Supported: canonical restriction-belief, completion and extension APIs use terminal passage, with depth parameters removed and only `Finite` target histories. The asynchronous hidden-decision consumer refutes common depth and preserves terminal play under extension. Structural ancestor existence moves to `Protocol.History`; restriction passage lemmas live in `Protocol.RestrictionExecution`. Event-level conditional domination reuses the existing scalar ratio bound. Full build, lint and architecture audit pass. | Statistical-distance calculus and approximate transport. |
 | 3 | Total variation and approximate transport | Supported mathematical slice: the existing half-L1 `statisticalDistance` moves to a dedicated PMF module and equals the uniform event-gap bound. Arbitrary-carrier observation contraction, expected kernel error, support-local payoff-range bounds, domination and discrete convergence are proved. Canonical incentive and continuation contexts bound deviation gain without a new equilibrium predicate. Sample tests and concrete pseudo-Nash transfer improve their constants by two. Full build, lint and architecture audit pass. | Information abstraction next. Copied-site sequential-limit consumers accompany component completion. |
 | 4 | Information-abstraction criteria | Protected-law and fixed-payoff slices supported: supported fact recovery transparently specializes Mathlib `Function.FactorsThrough`; conditional averaging preserves arbitrary response laws. Perfect reporting and preservation of all informed reporting laws are equivalent to fact recovery. Guarded terminal-decision optimality specializes canonical contexts, and optimal retained-law sets coincide without finite carriers, finite-support priors or bounded utilities. Consumers cover an erased supported bit, an unreachable merge and infinite carriers. `Analysis.DecisionPayoff` characterizes fixed-payoff preservation by common maximizing actions on supported fibers; a support-local utility bound replaces finite prior support. Only optimum existence and fixed-payoff necessity need finite actions. Universal reporting-utility preservation is equivalent to supported fact recovery for finite facts. | Sequential decision consumers accompany component completion. |
-| 5 | Sanction feasibility and synthesis | Planned: incremental collection comparisons and rational least-deposit checker. | Separate executable finite checking from real correctness; signed coefficients where useful. |
+| 5 | Sanction feasibility and synthesis | Supported: independent rational signed-slope inference is sound, complete and minimal against all nonnegative real solutions. Canonical comparison bridges use additional collection risk. Explicit finite tables characterize eventual deterrence, without a finite ambient row type. Sound observable alarms attain exactly the mass outside admitted observations. Sequential rationality specializes the actual continuation context with only finite movers. | Component and pooled-agent completion next. |
 | 6 | Component and pooled-agent completion | Planned: generalize prescribed/free agent completion. | Component-mixture optimality, pooled-member conditions and sequential consumers. |
 
 Validation for the first slice:
@@ -155,3 +155,54 @@ with the mass-ownership audit; the analytic decision module contains none.
 Commutation, full-information/support optimality, finite-menu existence,
 fixed-payoff classification, universal-utility necessity and both hostile
 controls depend only on the standard Lean axioms.
+
+The sanction checkpoint separates the executable finite rational table from
+real correctness. `Math.ScalarInequalities.candidate` is the maximum of zero
+and the required ratios from positive slopes; `infer` checks it against every
+row. Any nonnegative real solution bounds that candidate below, and reducing
+to it preserves all negative-slope upper bounds. Rejection therefore means
+no nonnegative real solution exists for this fixed table. Returned values are
+least even among real solutions. The checker uses explicit `Finset` rows and
+no classical choice or finite-carrier conversion. Its tests cover empty rows,
+fractional lower and upper bounds, conflicting signed rows, zero-slope profit,
+and negative-only rows; runtime evaluation also returns the fractional result.
+
+Generic real tables characterize eventual feasibility without requiring the
+ambient index carrier to be finite. `Analysis.Enforcement` specializes the
+result to additional collection probabilities. `Math.Probability.EventPenalty`,
+`SoundDetection` and `MonitoredPenalty` own the independent probability and
+expected-charge mathematics; canonical comparison bridges remain in Analysis.
+The original Boolean payoff calculation via a finite sum simplifies to the
+generic event-penalty theorem. Sound alarms are constrained on the full admitted
+observation set, which may include the supports of every permitted strategy.
+The exact observable criterion assumes automatic collection on an alarm.
+
+`Analysis.Protocol.Sanctions` establishes local sequential rationality from
+whole-deviation bounds at the actual assessment continuation laws. It needs
+only finite movers, includes collection under the prescribed plan, and does
+not construct a monitor or consistent beliefs. Shared mixture preservation
+moves to the canonical incentive-comparison owner and replaces finite mixture
+support with integrability of the two mixed laws.
+
+Validation:
+
+```text
+lake build GameTheory.Math.ScalarInequalitiesCorrectness GameTheory.Math.ScalarInequalitiesTest
+lake build GameTheory.Math.Probability.EventPenalty GameTheory.Math.Probability.SoundDetection GameTheory.Math.Probability.MonitoredPenalty
+lake build GameTheory.Analysis.EnforcementSynthesis GameTheory.Analysis.ObservableEnforcement GameTheory.Analysis.Protocol.Sanctions
+lake build GameTheory.Analysis.EnforcementTest
+lake build GameTheory GameTheory.LintAll
+lake build GameTheory.Analysis.EnforcementTest GameTheory.LintAll
+lake lint
+pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected
+```
+
+All 4,576 integration jobs completed. Lint caught one missing alarm-definition
+docstring; after adding it, the final 4,215-job consumer/lint-scope build passed
+and lint passed. The architecture audit reported `VERIFIED=1`, with PMF mass
+arithmetic explicitly owned by its probability and analytic bridge modules.
+Soundness, exact rejection, real minimality, eventual feasibility, the incentive
+bridge, observable deterrence, the sequential adapter and the mixed controls
+use only standard Lean axioms. Hostile consumers verify partial randomized
+detection, inevitable-charge cancellation, full-admission obstruction and
+mixtures over infinite index carriers.
