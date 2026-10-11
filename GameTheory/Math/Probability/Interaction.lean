@@ -1,4 +1,4 @@
-import GameTheory.Math.Probability.ExpectationComposition
+import GameTheory.Math.Probability.ExpectationCommutation
 import GameTheory.Math.Probability.ExpectationMixture
 
 /-! # The payoff component affected by correlation
@@ -89,20 +89,8 @@ theorem expect_columnMean (left : PMF First) (right : PMF Second)
     (hbound : ∀ outcome, |payoff outcome| ≤ C) :
     expect right (columnMean payoff left) =
       grandMean payoff left right := by
-  have hjoint := payoffIntegrable_of_bounded (bindPairLaw left fun _ => right) payoff hbound
-  have hswapped := payoffIntegrable_of_bounded (bindPairLaw right fun _ => left)
-    (payoff ∘ Prod.swap) (fun outcome => hbound outcome.swap)
-  have hforward := expect_bindPairLaw_tower left right payoff hjoint
-  have hbackward := expect_bindPairLaw_tower right left (payoff ∘ Prod.swap) hswapped
-  have hswap := expect_map Prod.swap (bindPairLaw left fun _ => right) (payoff ∘ Prod.swap)
-  simp only [Function.comp_def, Prod.swap_swap] at hswap
-  calc
-    _ = expect (bindPairLaw right fun _ => left) (payoff ∘ Prod.swap) :=
-      hbackward.symm
-    _ = expect ((bindPairLaw left fun _ => right).map Prod.swap) (payoff ∘ Prod.swap)
-           := expect_congr_law (bindPairLaw_const_map_swap left right).symm _
-    _ = expect (bindPairLaw left fun _ => right) payoff := hswap
-    _ = grandMean payoff left right := hforward
+  exact (expect_comm left right (fun first second => payoff (first, second))
+    (payoffIntegrable_of_bounded _ _ hbound)).symm
 
 /-- The part of a two-coordinate payoff not explained by its two one-coordinate
 effects, centered at independent reference laws for the coordinates. -/

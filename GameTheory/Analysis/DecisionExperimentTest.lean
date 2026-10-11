@@ -6,7 +6,7 @@ unreachable state is harmless. Infinite hidden-state and action carriers use
 the same guarded optimal-law correspondence.
 -/
 
-import GameTheory.Analysis.DecisionExperiment
+import GameTheory.Analysis.DecisionPayoff
 import GameTheory.Math.Probability.Mixture
 noncomputable section
 namespace GameTheory.Tests.DecisionExperiment
@@ -53,5 +53,63 @@ theorem infinite_carrier_optimal_laws (prior : PMF (Bool × ℕ)) (utility : Boo
     (∃ policy : (Bool × ℕ) → PMF ℕ, IsOptimal prior id Prod.fst utility policy ∧
       responseLaw prior id Prod.fst policy = law) :=
   optimal_response_law_iff prior Prod.fst Prod.fst (fun _ _ same => same) utility law
+
+private def varyingReward (state action : Bool) : ℝ :=
+  if action then (if state then 2 else 1) else 0
+
+private theorem varyingReward_bounded :
+    ∀ state ∈ fair.support, ∀ action, |varyingReward state action| ≤ 2 := by
+  intro state _ action
+  cases state <;> cases action <;> norm_num [varyingReward]
+
+/-- Payoff-relevant state differences need not force different optimal decisions. -/
+theorem common_action_without_fact_recovery :
+    HasCommonMaximizer fair (fun _ => ()) varyingReward ∧
+      ¬ Determines fair (fun _ => ()) id := by
+  refine ⟨?_, erased_fact_not_determined⟩
+  intro signal _
+  refine ⟨true, ?_⟩
+  intro state _ _ alternative
+  cases state <;> cases alternative <;> norm_num [varyingReward]
+
+/-- This fixed payoff's coarse optima survive full observation despite the erased bit. -/
+theorem varying_reward_preserves_optima :
+    ∀ source : Unit → PMF Bool, IsOptimal fair (fun _ => ()) id varyingReward source →
+      ∃ target : Bool → PMF Bool, IsOptimal fair id id varyingReward target ∧
+        responseLaw fair id id target = responseLaw fair (fun _ => ()) id source :=
+  (preserves_fixed_payoff_iff_commonMaximizer fair (fun _ => ()) id varyingReward
+    varyingReward_bounded).mpr common_action_without_fact_recovery.1
+
+/-- Constant-payoff preservation does not imply equality of all optimal retained laws:
+truthful informed reporting is optimal but no erased-observation policy matches it. -/
+theorem constant_payoff_has_extra_informed_law :
+    IsOptimal fair id id (fun _ _ : Bool => (0 : ℝ)) (fun state => PMF.pure state) ∧
+      ¬ ∃ source : Unit → PMF Bool,
+        responseLaw fair (fun _ => ()) id source =
+          responseLaw fair id id (fun state => PMF.pure state) := by
+  constructor
+  · apply (fullInformation_optimal_iff fair id (fun _ _ : Bool => (0 : ℝ))
+      (C := 0) (fun _ _ _ => by norm_num) _).mpr
+    intro state _ action
+    simp only [expect_zero, le_refl]
+  · rintro ⟨source, same⟩
+    exact erased_bit_has_no_report_law ⟨source, same.trans (responseLaw_report_eq_map fair id)⟩
+
+/-- A supported collision rules out preservation across all reporting utilities. -/
+theorem erased_bit_fails_universal_optimality :
+    ¬ (∀ utility : Bool → Bool → ℝ, ∀ source : Unit → PMF Bool,
+      IsOptimal fair (fun _ => ()) id utility source →
+        ∃ target : Bool → PMF Bool, IsOptimal fair id id utility target ∧
+          responseLaw fair id id target = responseLaw fair (fun _ => ()) id source) := by
+  intro preserves
+  exact erased_fact_not_determined
+    ((all_utilities_optimal_laws_iff_determines fair (fun _ => ()) id).mp preserves)
+
+/-- Finite decisions admit an optimum even with an unrestricted prior on infinite states. -/
+theorem infinite_prior_finite_menu (prior : PMF ℕ) (observe : ℕ → ℕ)
+    (utility : ℕ → Bool → ℝ) {C : ℝ}
+    (bounded : ∀ state ∈ prior.support, ∀ action, |utility state action| ≤ C) :
+    ∃ policy : ℕ → PMF Bool, IsOptimal prior observe id utility policy :=
+  exists_optimal prior observe id utility bounded
 
 end GameTheory.Tests.DecisionExperiment

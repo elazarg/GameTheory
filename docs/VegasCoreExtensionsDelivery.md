@@ -10,7 +10,7 @@ an existing semantic concept. Preserve upstream attribution in `NOTICE`.
 | 1 | Proportional Bayes transport | Supported: `Analysis.Protocol.BeliefTransport` scales site mass, cancels the multiplier in Bayes beliefs, and derives raw positive mass. Exact transport specializes the proportional theorem. Only finite movers are assumed; history carriers are arbitrary. The tremble reach-ratio consumer and existing restriction-extension consumer compile warning-free. | Terminal passage transport. |
 | 2 | Depth-free action restrictions | Supported: canonical restriction-belief, completion and extension APIs use terminal passage, with depth parameters removed and only `Finite` target histories. The asynchronous hidden-decision consumer refutes common depth and preserves terminal play under extension. Structural ancestor existence moves to `Protocol.History`; restriction passage lemmas live in `Protocol.RestrictionExecution`. Event-level conditional domination reuses the existing scalar ratio bound. Full build, lint and architecture audit pass. | Statistical-distance calculus and approximate transport. |
 | 3 | Total variation and approximate transport | Supported mathematical slice: the existing half-L1 `statisticalDistance` moves to a dedicated PMF module and equals the uniform event-gap bound. Arbitrary-carrier observation contraction, expected kernel error, support-local payoff-range bounds, domination and discrete convergence are proved. Canonical incentive and continuation contexts bound deviation gain without a new equilibrium predicate. Sample tests and concrete pseudo-Nash transfer improve their constants by two. Full build, lint and architecture audit pass. | Information abstraction next. Copied-site sequential-limit consumers accompany component completion. |
-| 4 | Information-abstraction criteria | Protected-law slice supported: supported fact recovery transparently specializes Mathlib `Function.FactorsThrough`; conditional averaging preserves arbitrary response laws. Perfect reporting and preservation of all informed reporting laws are equivalent to fact recovery. Guarded terminal-decision optimality specializes canonical contexts, and optimal retained-law sets coincide without finite carriers, finite-support priors or bounded utilities. Consumers cover an erased supported bit, an unreachable merge and infinite carriers. | Fixed-payoff common maximizers, all-utility optimality necessity and sequential decision consumers. |
+| 4 | Information-abstraction criteria | Protected-law and fixed-payoff slices supported: supported fact recovery transparently specializes Mathlib `Function.FactorsThrough`; conditional averaging preserves arbitrary response laws. Perfect reporting and preservation of all informed reporting laws are equivalent to fact recovery. Guarded terminal-decision optimality specializes canonical contexts, and optimal retained-law sets coincide without finite carriers, finite-support priors or bounded utilities. Consumers cover an erased supported bit, an unreachable merge and infinite carriers. `Analysis.DecisionPayoff` characterizes fixed-payoff preservation by common maximizing actions on supported fibers; a support-local utility bound replaces finite prior support. Only optimum existence and fixed-payoff necessity need finite actions. Universal reporting-utility preservation is equivalent to supported fact recovery for finite facts. | Sequential decision consumers accompany component completion. |
 | 5 | Sanction feasibility and synthesis | Planned: incremental collection comparisons and rational least-deposit checker. | Separate executable finite checking from real correctness; signed coefficients where useful. |
 | 6 | Component and pooled-agent completion | Planned: generalize prescribed/free agent completion. | Component-mixture optimality, pooled-member conditions and sequential consumers. |
 
@@ -117,3 +117,41 @@ The protected-law checkpoint completed all 4,562 integration jobs, lint passed
 and the architecture audit reported `VERIFIED=1`. Reporting-law necessity,
 universal reporting-law preservation, guarded context coverage, optimal-law
 correspondence and the hostile consumers use only standard Lean axioms.
+
+The fixed-payoff checkpoint uses whole-policy guarded context optimality throughout.
+`fullInformation_optimal_iff` and its support characterization permit infinite
+actions and priors. A policy differing at one supported state proves necessity
+by strict expectation improvement, without finite sums or atom arithmetic.
+`exists_optimal` only needs a finite nonempty action menu and a utility bound on
+prior-supported states. It maximizes each observation fiber's pure-action score;
+`Math.Probability.ExpectationCommutation` supplies integrable Fubini on arbitrary
+carriers. The existing correlation-interaction consumer now specializes that
+lemma rather than repeating the swap-and-tower argument.
+
+`preserves_fixed_payoff_iff_commonMaximizer` is one-way law preservation:
+every coarse optimum has an informed match. It does not equate the complete
+optimal-law sets. The differing-reward control erases a payoff-relevant bit
+while both states prefer the same action; the constant-payoff control exhibits
+an informed optimal reporting law that no coarse policy matches. The universal
+optimality criterion uses finite reporting actions to prove necessity, with no
+finite-state or finite-prior assumption. Atomic reporting values and finite
+support expectation sums are independent probability lemmas.
+
+Fixed-payoff validation:
+
+```text
+lake build GameTheory.Math.Probability.ExpectationAtoms GameTheory.Math.Probability.ExpectationCommutation GameTheory.Math.Probability.Interaction
+lake build GameTheory.Analysis.DecisionExperimentTest
+lake build GameTheory GameTheory.LintAll
+lake build GameTheory.Analysis.DecisionExperimentTest GameTheory.LintAll
+lake lint
+pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected
+```
+
+The integration build completed 4,565 jobs. The final consumer and lint-scope
+build completed 4,206 jobs; lint passed and the audit reported `VERIFIED=1`.
+Reporting atom arithmetic lives in its probability owner, explicitly registered
+with the mass-ownership audit; the analytic decision module contains none.
+Commutation, full-information/support optimality, finite-menu existence,
+fixed-payoff classification, universal-utility necessity and both hostile
+controls depend only on the standard Lean axioms.

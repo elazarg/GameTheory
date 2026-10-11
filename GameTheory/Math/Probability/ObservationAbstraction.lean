@@ -14,6 +14,7 @@ fully informed reporting law hold exactly when the summary determines the fact.
 -/
 
 import GameTheory.Math.Probability.ConditionalObservation
+import GameTheory.Math.Probability.ExpectationAtoms
 
 noncomputable section
 
@@ -147,5 +148,41 @@ theorem all_response_laws_iff_determines (prior : PMF State) (observe : State �
   · intro determines informed
     exact ⟨averagePolicy prior observe informed,
       averagePolicy_response_law prior observe fact determines informed⟩
+
+/-- Draw the observation first, then its posterior state and the response. -/
+theorem responseLaw_eq_observation_bind (prior : PMF State) (observe : State → Signal)
+    (fact : State → Fact) (policy : Signal → PMF Action) :
+    responseLaw prior observe fact policy = (prior.map observe).bind fun signal =>
+      (fiberPosterior prior observe signal).bind fun state =>
+        (policy signal).map fun action => (fact state, action) := by
+  rw [responseLaw_eq_bind]
+  conv_lhs => rw [← fiberPosterior_reconstruct prior observe]
+  rw [PMF.bind_bind]
+  apply bind_congr_on_support
+  intro signal used
+  apply bind_congr_on_support
+  intro state selected
+  rw [(mem_support_fiberPosterior used selected).1]
+
+open Classical in
+/-- Expected reporting accuracy is the prior mean of correct-report probabilities. -/
+theorem expect_responseLaw_report_eq (prior : PMF State) (observe : State → Signal)
+    (fact : State → Fact) (policy : Signal → PMF Fact) :
+    expect (responseLaw prior observe fact policy)
+      (fun pair => if pair.1 = pair.2 then 1 else 0) =
+        expect prior (fun state => (policy (observe state) (fact state)).toReal) := by
+  classical
+  have integrable : PayoffIntegrable (responseLaw prior observe fact policy)
+      (fun pair => if pair.1 = pair.2 then (1 : ℝ) else 0) := by
+    apply payoffIntegrable_of_bounded (C := 1)
+    intro pair
+    split <;> norm_num
+  rw [responseLaw_eq_bind] at integrable ⊢
+  rw [expect_bind_tower _ _ _ integrable]
+  apply expect_congr_on_support
+  intro state _
+  rw [expect_map]
+  change expect (policy (observe state)) (fun report => if fact state = report then 1 else 0) = _
+  rw [expect_ite_eq, mul_one]
 
 end GameTheory.Math.Probability.ObservationAbstraction

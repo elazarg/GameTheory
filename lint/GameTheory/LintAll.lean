@@ -517,3 +517,7 @@ import GameTheory.Math.GridBrouwerColorSample
 import GameTheory.Math.BinaryGridClearance
 import GameTheory.Finite.BimatrixColorMeanGate
 import GameTheory.Math.GridBrouwerErrorBudget
+
+import GameTheory.Math.Probability.ExpectationAtoms
+import GameTheory.Math.Probability.ExpectationCommutation
+import GameTheory.Analysis.DecisionPayoff

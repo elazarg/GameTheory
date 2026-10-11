@@ -232,6 +232,8 @@ $RepresentationModules = @(
   # Statistical-distance calculus owns native atom and event mass arithmetic.
   'GameTheory/Math/Probability/StatisticalDistance.lean',
   'GameTheory/Math/Probability/StatisticalDistanceStability.lean',
+  'GameTheory/Math/Probability/ExpectationAtoms.lean',
+  'GameTheory/Math/Probability/ObservationAbstraction.lean',
   'GameTheory/Math/Probability/MeanComparison.lean',
   'GameTheory/Math/Probability/SampleSum.lean',
   'GameTheory/Math/Probability/RademacherWalk.lean',
