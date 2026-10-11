@@ -12,7 +12,7 @@ an existing semantic concept. Preserve upstream attribution in `NOTICE`.
 | 3 | Total variation and approximate transport | Supported mathematical slice: the existing half-L1 `statisticalDistance` moves to a dedicated PMF module and equals the uniform event-gap bound. Arbitrary-carrier observation contraction, expected kernel error, support-local payoff-range bounds, domination and discrete convergence are proved. Canonical incentive and continuation contexts bound deviation gain without a new equilibrium predicate. Sample tests and concrete pseudo-Nash transfer improve their constants by two. Full build, lint and architecture audit pass. | Information abstraction next. Copied-site sequential-limit consumers accompany component completion. |
 | 4 | Information-abstraction criteria | Protected-law and fixed-payoff slices supported: supported fact recovery transparently specializes Mathlib `Function.FactorsThrough`; conditional averaging preserves arbitrary response laws. Perfect reporting and preservation of all informed reporting laws are equivalent to fact recovery. Guarded terminal-decision optimality specializes canonical contexts, and optimal retained-law sets coincide without finite carriers, finite-support priors or bounded utilities. Consumers cover an erased supported bit, an unreachable merge and infinite carriers. `Analysis.DecisionPayoff` characterizes fixed-payoff preservation by common maximizing actions on supported fibers; a support-local utility bound replaces finite prior support. Only optimum existence and fixed-payoff necessity need finite actions. Universal reporting-utility preservation is equivalent to supported fact recovery for finite facts. | Sequential decision consumers accompany component completion. |
 | 5 | Sanction feasibility and synthesis | Supported: independent rational signed-slope inference is sound, complete and minimal against all nonnegative real solutions. Canonical comparison bridges use additional collection risk. Explicit finite tables characterize eventual deterrence, without a finite ambient row type. Sound observable alarms attain exactly the mass outside admitted observations. Sequential rationality specializes the actual continuation context with only finite movers. | Component and pooled-agent completion next. |
-| 6 | Component and pooled-agent completion | Static, passage and consistent-completion slices supported: canonical stochastic strategy substitution, finite component-menu and pooled best-response existence for arbitrary underlying strategies/outcomes with integrable component plays, weighted approximate member bounds with arbitrary action carriers, and actual-passage Bayes conditioning with only finite movers, consistent pooled/component completion, and an unequal-depth full-menu sequential-equilibrium consumer. Free-agent completion now specializes the component theorem. | Copied-site sequential-limit and sequential decision consumers. |
+| 6 | Component and pooled-agent completion | Static, passage and consistent-completion slices supported: canonical stochastic strategy substitution, finite component-menu and pooled best-response existence for arbitrary underlying strategies/outcomes with integrable component plays, weighted approximate member bounds with arbitrary action carriers, and actual-passage Bayes conditioning with only finite movers, consistent pooled/component completion, and an unequal-depth full-menu sequential-equilibrium consumer. Free-agent completion now specializes the component theorem. Uniform whole-policy gain bounds remove finite histories and a uniform horizon; the unbounded countdown consumer compiles. | Copied-site sequential-limit and sequential decision consumers. |
 
 Validation for the first slice:
 
@@ -285,3 +285,35 @@ extension consumers. Lint passed, the architecture audit reported `VERIFIED=1`,
 and pooled, independent and free-agent completion plus the unequal-depth
 consumer use only the standard Lean axioms. Copied-site approximate simulation
 and sequential decision consumers remain the next obligations.
+
+The uniform-policy prerequisite generalizes
+`GameTheoryExtensions.Analysis.Protocol.UniformPolicyLimit` to actual terminal
+continuations. A fixed site's whole-policy gains have one nonnegative bound
+that vanishes along any assessment sequence converging to a rational limit.
+Only the deviating player needs countably many actual sites and finite menus.
+Finitely many of its sites yield one common bound across those sites. Histories,
+the player carrier, other action carriers and unused information values may be
+infinite. Terminal-only utility bounds replace finite-history bounds, and the
+proof uses well-founded termination rather than a uniform fuel or clock.
+Neither recall nor Bayes consistency is required.
+
+The unbounded random-countdown consumer has real-valued raw information states,
+no uniform horizon and a nonconstant terminal reward. Every sequence converging
+to one of its rational assessments has the asserted uniform regret control;
+the sequence need not itself be optimal, fully mixed or Bayesian.
+
+Validation:
+
+```text
+lake build GameTheory.Analysis.Protocol.UniformPolicyLimit
+lake build GameTheory.Analysis.Protocol.UniformPolicyLimitTest
+lake build GameTheory GameTheory.LintAll
+lake lint
+pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected
+lake env lean .codex/scratch/UniformPolicyLimitAxioms.lean
+```
+
+All 4,587 integration jobs passed, lint passed and the architecture audit
+reported `VERIFIED=1`. Both uniform bounds and the infinite-history consumer
+use only standard Lean axioms. Copied-site transfer remains separate: uniform
+source regret does not alone establish target consistency or local comparisons.
