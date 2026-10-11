@@ -46,6 +46,30 @@ theorem pmfConvergesPointwise_iff_statisticalDistance_tendsto {α : Type*}
       have bound := (abs_le.mp (abs_mass_sub_le_statisticalDistance (sequence n) target a)).2
       linarith
 
+/-- Converging sequences whose statistical distance tends to zero have the
+same limit, without a finite or countable outcome carrier. -/
+theorem PMFConvergesPointwise.eq_of_statisticalDistance_le {α : Type*}
+    {firstSequence secondSequence : ℕ → PMF α} {first second : PMF α}
+    (firstLimit : PMFConvergesPointwise firstSequence first)
+    (secondLimit : PMFConvergesPointwise secondSequence second)
+    (error : ℕ → ℝ) (vanishes : Tendsto error atTop (nhds 0))
+    (close : ∀ n, statisticalDistance (firstSequence n) (secondSequence n) ≤ error n) :
+    first = second := by
+  have bound (n : ℕ) : statisticalDistance first second ≤
+      statisticalDistance (firstSequence n) first + error n +
+        statisticalDistance (secondSequence n) second := by
+    have outer := statisticalDistance_triangle first (firstSequence n) second
+    have inner := statisticalDistance_triangle (firstSequence n) (secondSequence n) second
+    rw [statisticalDistance_comm first (firstSequence n)] at outer
+    linarith [close n]
+  have limit := (firstLimit.statisticalDistance_tendsto.add vanishes).add
+    secondLimit.statisticalDistance_tendsto
+  have nonpositive : statisticalDistance first second ≤ 0 :=
+    le_of_tendsto_of_tendsto tendsto_const_nhds (by simpa using limit)
+      (Eventually.of_forall bound)
+  exact (statisticalDistance_eq_zero_iff first second).mp
+    (le_antisymm nonpositive (statisticalDistance_nonneg first second))
+
 /-- Keeping a fraction of another law loses at most its missing normalization mass. -/
 theorem statisticalDistance_le_of_domination {α : Type*} (source target : PMF α)
     (factor : ℝ) (small : factor ≤ 1)

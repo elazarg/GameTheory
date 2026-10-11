@@ -536,3 +536,4 @@ import GameTheory.Analysis.ComponentCompletion
 import GameTheory.Analysis.Protocol.PassageBayes
 import GameTheory.Analysis.Protocol.ComponentCompletion
 import GameTheory.Analysis.Protocol.UniformPolicyLimit
+import GameTheory.Analysis.Protocol.LocalSimulationLimit

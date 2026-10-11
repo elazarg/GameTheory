@@ -73,12 +73,7 @@ theorem BehavioralAssessmentConvergesPointwise.exists_uniform_terminal_policy_ga
         (supported : final ∈ ((current.continuationContext certificate site payoff).outcome alternative).support) :
         |payoff final| ≤ C := payoffBound final
       (current.continuationContext_support_terminal certificate site payoff alternative final supported)
-    constructor
-    · rw [← expect_constant ((current.continuationContext certificate site payoff).outcome alternative) (-C)]
-      exact expect_mono (fun final supported => (abs_le.mp (onSupport final supported)).1)
-        (payoffIntegrable_constant _ _) (integrable current alternative)
-    · exact expect_le_const _ _ (integrable current alternative) C
-        fun final supported => (abs_le.mp (onSupport final supported)).2
+    exact abs_le.mp (expect_abs_le_of_bounded_on_support onSupport)
   have bounded (n : ℕ) : BddAbove (Set.range (gain n)) := by
     refine ⟨2 * C, ?_⟩
     rintro value ⟨alternative, rfl⟩

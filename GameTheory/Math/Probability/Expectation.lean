@@ -261,4 +261,18 @@ theorem expect_le_const {α : Type*} (μ : PMF α)
     hfc hf (payoffIntegrable_constant μ c)
   simpa [expect_constant μ c] using h
 
+/-- A support-local absolute payoff bound also bounds its expectation.
+No values outside the law's support, or separate nonnegativity proof, are needed. -/
+theorem expect_abs_le_of_bounded_on_support {α : Type*} {μ : PMF α}
+    {f : α → ℝ} {C : ℝ} (hbound : ∀ a ∈ μ.support, |f a| ≤ C) :
+    |expect μ f| ≤ C := by
+  have integrable := payoffIntegrable_of_bounded_on_support μ f hbound
+  apply abs_le.mpr
+  constructor
+  · rw [← expect_constant μ (-C)]
+    exact expect_mono (fun a supported => (abs_le.mp (hbound a supported)).1)
+      (payoffIntegrable_constant μ _) integrable
+  · exact expect_le_const μ f integrable C
+      fun a supported => (abs_le.mp (hbound a supported)).2
+
 end GameTheory.Math.Probability
