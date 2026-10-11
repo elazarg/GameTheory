@@ -12,7 +12,7 @@ an existing semantic concept. Preserve upstream attribution in `NOTICE`.
 | 3 | Total variation and approximate transport | Supported mathematical slice: the existing half-L1 `statisticalDistance` moves to a dedicated PMF module and equals the uniform event-gap bound. Arbitrary-carrier observation contraction, expected kernel error, support-local payoff-range bounds, domination and discrete convergence are proved. Canonical incentive and continuation contexts bound deviation gain without a new equilibrium predicate. Sample tests and concrete pseudo-Nash transfer improve their constants by two. Full build, lint and architecture audit pass. | Copied-site sequential-limit primitives and the unbounded-source/unequal-depth target consumer are supported; weighted component/copy integration remains below. |
 | 4 | Information-abstraction criteria | Protected-law and fixed-payoff slices supported: supported fact recovery transparently specializes Mathlib `Function.FactorsThrough`; conditional averaging preserves arbitrary response laws. Perfect reporting and preservation of all informed reporting laws are equivalent to fact recovery. Guarded terminal-decision optimality specializes canonical contexts, and optimal retained-law sets coincide without finite carriers, finite-support priors or bounded utilities. Consumers cover an erased supported bit, an unreachable merge and infinite carriers. `Analysis.DecisionPayoff` characterizes fixed-payoff preservation by common maximizing actions on supported fibers; a support-local utility bound replaces finite prior support. Only optimum existence and fixed-payoff necessity need finite actions. Universal reporting-utility preservation is equivalent to supported fact recovery for finite facts. | Sequential decision consumers accompany component completion. |
 | 5 | Sanction feasibility and synthesis | Supported: independent rational signed-slope inference is sound, complete and minimal against all nonnegative real solutions. Canonical comparison bridges use additional collection risk. Explicit finite tables characterize eventual deterrence, without a finite ambient row type. Sound observable alarms attain exactly the mass outside admitted observations. Sequential rationality specializes the actual continuation context with only finite movers. | Executable monitor construction remains consumer-gated; component integration is covered below. |
-| 6 | Component and pooled-agent completion | Static, passage and consistent-completion slices supported: canonical stochastic strategy substitution, finite component-menu and pooled best-response existence for arbitrary underlying strategies/outcomes with integrable component plays, weighted approximate member bounds with arbitrary action carriers, and actual-passage Bayes conditioning with only finite movers, consistent pooled/component completion, and an unequal-depth full-menu sequential-equilibrium consumer. Free-agent completion now specializes the component theorem. Uniform whole-policy gain bounds remove finite histories and a uniform horizon; the unbounded countdown consumer compiles. Local copied-site transfer and common subsequence extraction use terminal continuations; source gain mixtures permit infinite source histories. Observed-law matching uses independent distance stability. | Weighted-component/copy integration and sequential decision consumers. |
+| 6 | Component and pooled-agent completion | Static, passage and consistent-completion slices supported: canonical stochastic strategy substitution, finite component-menu and pooled best-response existence for arbitrary underlying strategies/outcomes with integrable component plays, weighted approximate member bounds with arbitrary action carriers, and actual-passage Bayes conditioning with only finite movers, consistent pooled/component completion, and an unequal-depth full-menu sequential-equilibrium consumer. Free-agent completion now specializes the component theorem. Uniform whole-policy gain bounds remove finite histories and a uniform horizon; the unbounded countdown consumer compiles. Local copied-site transfer and common subsequence extraction use terminal continuations; source gain mixtures permit infinite source histories. Observed-law matching uses independent distance stability. | Shared-pool copied-site completion is supported with explicit local certificates. Nonconstant shared-pool comparison construction and sequential decision consumers remain. |
 
 Validation for the first slice:
 
@@ -371,3 +371,35 @@ limit, source-mixture transfer, local-bound existence, terminal-law matching and
 all three controls use only standard Lean axioms. The new module is included in
 the explicit lint driver; no probability representation-ownership expansion is
 needed because its implementation uses the existing canonical probability APIs.
+
+Shared-pool copied-site completion now composes canonical pooled completion
+and local gain limits in `Analysis.Protocol.CopiedSiteCompletion`.
+Its certificate producer receives the assembled strategy laws, full mixing,
+Bayes consistency and aggregate pool optimality. It must supply vanishing
+copied-site gains and individual free-member component gains. Converging free
+menus must span every local lottery. The conclusion retains assembled pool
+weights, the common assessment subsequence, sequential equilibrium and free-site
+mixture representations. Shared weights alone assert no observed-law equality.
+
+The unequal-depth consumer puts all played agents in one pool of full profiles.
+Projected trembling profile components converge to pure projections, and lifting
+a local lottery through canonical profile replacement proves menu spanning.
+An arbitrary free/copied classification exercises both proof branches with
+constant terminal utility. This checks composition and menu coverage; it does
+not construct a nonconstant-payoff simulation certificate.
+Validation:
+
+```text
+lake build GameTheory.Analysis.Protocol.CopiedSiteCompletion
+lake env lean GameTheory/Analysis/Protocol/CopiedSiteCompletionTest.lean
+lake build GameTheory GameTheory.LintAll
+lake lint
+pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected
+lake env lean .codex/scratch/CopiedSiteCompletionAxioms.lean
+```
+
+The full integration build passed all 4,591 jobs, lint passed and the
+architecture audit reported `VERIFIED=1`. Both the completion theorem and
+shared-pool control use only standard Lean axioms. The new public module is
+included in the explicit lint driver. No new probability representation owner
+or transparency option is required.
