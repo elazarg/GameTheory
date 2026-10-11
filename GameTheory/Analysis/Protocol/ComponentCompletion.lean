@@ -8,15 +8,15 @@ import GameTheory.Math.Probability.Bounds
 /-! # Consistent assessments from component mixtures
 
 Each played agent chooses a mixture of finitely many fully supported component
-laws, possibly sharing its weights with other agents. Finite pooled completion
-chooses every pool's weights together. Inverse site-reach importance turns the
+laws, possibly sharing its weights with other agents. Completion chooses the
+shared mixture weights of every group together. Inverse site-reach importance turns the
 aggregate unilateral gains into sums of Bayes continuation gains.
 
 One common subsequence converges to a sequentially consistent assessment.
 At sites with converging components, the limiting strategy is a mixture of the
 limiting laws; vanishing component-deviation errors imply limiting optimality.
-With one agent per pool the errors are zero. No common information-history
-depth is required, and pooled optimality does not imply every member's optimality.
+With one agent per group the errors are zero. No common information-history
+depth is required, and aggregate optimality does not imply every member's optimality.
 -/
 
 noncomputable section
@@ -81,30 +81,30 @@ private theorem expect_passage {i : ι} (site : M.InformationSite i)
 
 set_option backward.isDefEq.respectTransparency false in
 open Classical in
-/-- **Consistent pooled completion.** Every agent plays a mixture of its fully
-supported components with the weights of its pool; the weights of all pools are
-chosen together by `exists_pooled_bestResponses`, with each member weighed by
+/-- **Consistent completion with shared mixture weights.** Every agent plays a mixture of its fully
+supported components with the weights of its group; the weights of all groups are
+chosen together by `exists_bestResponses_with_shared_mixture_weights`, with each member weighed by
 the inverse of its site's probability. The assembled assessments are fully
-mixed and Bayes consistent; at every index no common replacement of a pool's
+mixed and Bayes consistent; at every index no common replacement of a group's
 weights raises the sum of its members' gains in Bayes continuation value. One
 common subsequence converges to a consistent assessment. Wherever the
 components of a site converge, the limit law is a mixture of the limit
 components, and it is optimal among such mixtures as soon as the site's
 component-mixture gains are bounded along the sequence by errors that vanish. -/
-theorem exists_consistent_pooled_completion (hrecall : M.DecisionRecall)
+theorem exists_consistent_completion_with_shared_mixture_weights (hrecall : M.DecisionRecall)
     (fallback : (i : ι) → M.Policy i) (certificate : E.WellFoundedHistories)
     (payoff : ι → E.History → ℝ)
-    {Pool : Type*} [Finite Pool] [DecidableEq Pool]
-    (pool : M.InformationAgent M.playedInformation → Pool)
-    {Part : Pool → Type*} [∀ p, Finite (Part p)] [∀ p, Nonempty (Part p)]
-    (component : ℕ → ∀ agent, Part (pool agent) →
+    {WeightGroup : Type*} [Finite WeightGroup] [DecidableEq WeightGroup]
+    (groupOf : M.InformationAgent M.playedInformation → WeightGroup)
+    {Part : WeightGroup → Type*} [∀ p, Finite (Part p)] [∀ p, Nonempty (Part p)]
+    (component : ℕ → ∀ agent, Part (groupOf agent) →
       PMF ((M.agentForm fallback certificate).sig.Strategy agent))
     (componentFull : ∀ n agent part, FullSupport (component n agent part)) :
     ∃ (weights : ℕ → ∀ p, PMF (Part p))
       (sequence : ℕ → M.BehavioralAssessment) (limit : M.BehavioralAssessment)
       (index : ℕ → ℕ),
       (∀ n, (sequence n).strategy = M.agentBehavior M.playedInformation fallback
-        fun agent => (weights n (pool agent)).bind (component n agent)) ∧
+        fun agent => (weights n (groupOf agent)).bind (component n agent)) ∧
       (∀ n, (sequence n).IsFullyMixed) ∧
       (∀ n, BehavioralAssessment.IsBayesConsistent M (sequence n)
         hrecall.decisionInformationAntichain) ∧
@@ -112,29 +112,29 @@ theorem exists_consistent_pooled_completion (hrecall : M.DecisionRecall)
       BehavioralAssessmentConvergesPointwise (fun n => sequence (index n)) limit ∧
       limit.IsSequentiallyConsistent hrecall.decisionInformationAntichain ∧
       (∀ n (alternative : ∀ p, PMF (Part p)) p,
-        ∑ agent ∈ Finset.univ.filter (fun agent => pool agent = p),
+        ∑ agent ∈ Finset.univ.filter (fun agent => groupOf agent = p),
           (if decision : M.IsDecisionInfo agent.1 agent.2.1 then
             ((sequence n).continuationContext certificate ⟨agent.2.1, decision⟩
                 (payoff agent.1)).value
                 (((sequence n).strategy agent.1).withLaw agent.2.1
-                  ((alternative (pool agent)).bind (component n agent))) -
+                  ((alternative (groupOf agent)).bind (component n agent))) -
               ((sequence n).continuationContext certificate ⟨agent.2.1, decision⟩
                 (payoff agent.1)).value ((sequence n).strategy agent.1)
           else 0) ≤ 0) ∧
       ∀ i (site : M.InformationSite i)
-        (limitComponent : Part (pool (M.agentAt site)) → PMF (M.Choice i site.1)),
+        (limitComponent : Part (groupOf (M.agentAt site)) → PMF (M.Choice i site.1)),
         (∀ part, PMFConvergesPointwise (fun n => component n (M.agentAt site) part)
           (limitComponent part)) →
-        (∃ limitWeights : PMF (Part (pool (M.agentAt site))),
+        (∃ limitWeights : PMF (Part (groupOf (M.agentAt site))),
           limit.strategy i site.1 = limitWeights.bind limitComponent) ∧
         ∀ (error : ℕ → ℝ), Filter.Tendsto error Filter.atTop (nhds 0) →
-          (∀ n (alternative : PMF (Part (pool (M.agentAt site)))),
+          (∀ n (alternative : PMF (Part (groupOf (M.agentAt site)))),
             ((sequence n).continuationContext certificate site (payoff i)).value
                 (((sequence n).strategy i).withLaw site.1
                   (alternative.bind (component n (M.agentAt site)))) ≤
               ((sequence n).continuationContext certificate site (payoff i)).value
                 ((sequence n).strategy i) + error n) →
-          ∀ alternative : PMF (Part (pool (M.agentAt site))),
+          ∀ alternative : PMF (Part (groupOf (M.agentAt site))),
             (limit.continuationContext certificate site (payoff i)).value
                 ((limit.strategy i).withLaw site.1 (alternative.bind limitComponent)) ≤
               (limit.continuationContext certificate site (payoff i)).value
@@ -142,7 +142,7 @@ theorem exists_consistent_pooled_completion (hrecall : M.DecisionRecall)
   classical
   let F := M.agentForm fallback certificate
   have : Finite F.sig.Outcome := inferInstanceAs (Finite E.History)
-  let _ (p : Pool) : Fintype (Part p) := Fintype.ofFinite _
+  let _ (p : WeightGroup) : Fintype (Part p) := Fintype.ofFinite _
   let antichain := hrecall.decisionInformationAntichain
   obtain ⟨horizon, -, bounded⟩ := E.exists_pos_boundedHorizon
   have realize (profile : Profile F.sig.mixed) : F.mixed.play profile =
@@ -158,17 +158,17 @@ theorem exists_consistent_pooled_completion (hrecall : M.DecisionRecall)
       else 0
     else 0
   -- the reach of an agent as a polynomial in the part weights
-  let reach (n : ℕ) (weights : ∀ agent, Part (pool agent) → ℝ)
+  let reach (n : ℕ) (weights : ∀ agent, Part (groupOf agent) → ℝ)
       (agent : M.InformationAgent M.playedInformation) : ℝ :=
     GameTheory.payoff
       (F.substituteStrategies (component n))
       passage agent weights
-  let mixtureOf (weights : ∀ agent, Part (pool agent) → ℝ)
-      (inside : ∀ agent, weights agent ∈ simplexWeights (Part (pool agent)))
-      (agent : M.InformationAgent M.playedInformation) : PMF (Part (pool agent)) :=
+  let mixtureOf (weights : ∀ agent, Part (groupOf agent) → ℝ)
+      (inside : ∀ agent, weights agent ∈ simplexWeights (Part (groupOf agent)))
+      (agent : M.InformationAgent M.playedInformation) : PMF (Part (groupOf agent)) :=
     PMF.ofSimplex (inside agent)
-  have reachMass (n : ℕ) (weights : ∀ agent, Part (pool agent) → ℝ)
-      (inside : ∀ agent, weights agent ∈ simplexWeights (Part (pool agent)))
+  have reachMass (n : ℕ) (weights : ∀ agent, Part (groupOf agent) → ℝ)
+      (inside : ∀ agent, weights agent ∈ simplexWeights (Part (groupOf agent)))
       {i : ι} (site : M.InformationSite i) :
       reach n weights (M.agentAt site) =
         (M.informationMass (M.agentBehavior M.playedInformation fallback
@@ -176,7 +176,7 @@ theorem exists_consistent_pooled_completion (hrecall : M.DecisionRecall)
             site).toReal := by
     let G := F.substituteStrategies (component n)
     let _ (agent : M.InformationAgent M.playedInformation) : Fintype (G.sig.Strategy agent) :=
-      Fintype.ofFinite (Part (pool agent))
+      Fintype.ofFinite (Part (groupOf agent))
     have : Finite G.sig.Outcome := inferInstanceAs (Finite E.History)
     have probsEq : probs G.sig (mixtureOf weights inside) = weights := by
       funext agent
@@ -190,7 +190,7 @@ theorem exists_consistent_pooled_completion (hrecall : M.DecisionRecall)
     have decision : M.IsDecisionInfo i site.1 := site.2
     simp only [passage, decision, ↓reduceDIte]
     exact expect_passage M site (antichain i site) certificate _
-  have mixtureFull (n : ℕ) (laws : ∀ agent, PMF (Part (pool agent))) :
+  have mixtureFull (n : ℕ) (laws : ∀ agent, PMF (Part (groupOf agent))) :
       ∀ i (site : M.InformationSite i) (choice : M.Choice i site.1),
         choice ∈ (M.agentBehavior M.playedInformation fallback
           (fun agent => (laws agent).bind (component n agent)) i site.1).support := by
@@ -198,15 +198,15 @@ theorem exists_consistent_pooled_completion (hrecall : M.DecisionRecall)
     rw [M.agentBehavior_at M.playedInformation fallback _ (M.agentAt site)]
     obtain ⟨part, member⟩ := (laws (M.agentAt site)).support_nonempty
     exact (PMF.mem_support_bind_iff _ _ _).mpr ⟨part, member, componentFull n _ part choice⟩
-  let importance (n : ℕ) (weights : ∀ agent, Part (pool agent) → ℝ)
+  let importance (n : ℕ) (weights : ∀ agent, Part (groupOf agent) → ℝ)
       (agent : M.InformationAgent M.playedInformation) : ℝ :=
     if M.IsDecisionInfo agent.1 agent.2.1 then (reach n weights agent)⁻¹ else 0
   have importanceContinuous (n : ℕ) (agent : M.InformationAgent M.playedInformation) :
       ContinuousOn (fun weights => importance n weights agent)
-        {weights | ∀ player, weights player ∈ simplexWeights (Part (pool player))} := by
+        {weights | ∀ player, weights player ∈ simplexWeights (Part (groupOf player))} := by
     let G := F.substituteStrategies (component n)
     let _ (agent : M.InformationAgent M.playedInformation) : Fintype (G.sig.Strategy agent) :=
-      Fintype.ofFinite (Part (pool agent))
+      Fintype.ofFinite (Part (groupOf agent))
     by_cases decision : M.IsDecisionInfo agent.1 agent.2.1
     · simp only [importance, decision, ↓reduceIte]
       refine ContinuousOn.inv₀ (f := fun weights => reach n weights agent)
@@ -223,14 +223,14 @@ theorem exists_consistent_pooled_completion (hrecall : M.DecisionRecall)
     · simp only [importance, decision, ↓reduceIte]
       exact continuousOn_const
   choose weights optimal using fun n =>
-    exists_pooled_bestResponses (F := F) pool (M.agentUtility payoff) (component n)
+    exists_bestResponses_with_shared_mixture_weights (F := F) groupOf (M.agentUtility payoff) (component n)
       (fun _ _ => payoffIntegrable_of_finite _ _) (importance n) (importanceContinuous n)
   let played (n : ℕ) : Profile F.sig.mixed := fun agent =>
-    (weights n (pool agent)).bind (component n agent)
+    (weights n (groupOf agent)).bind (component n agent)
   let behavior (n : ℕ) := M.agentBehavior M.playedInformation fallback (played n)
   have full (n : ℕ) : ∀ i (site : M.InformationSite i) (choice : M.Choice i site.1),
       choice ∈ (behavior n i site.1).support :=
-    mixtureFull n fun agent => weights n (pool agent)
+    mixtureFull n fun agent => weights n (groupOf agent)
   let sequence (n : ℕ) : M.BehavioralAssessment := M.bayesAssessment (behavior n) (full n) antichain
   have sequenceStrategy (n : ℕ) : (sequence n).strategy = behavior n :=
     M.bayesAssessment_strategy _ _ _
@@ -245,25 +245,25 @@ theorem exists_consistent_pooled_completion (hrecall : M.DecisionRecall)
       (fun _ _ => uniformlyTight_of_finite _) (fun _ _ => uniformlyTight_of_finite _)
   have term (n : ℕ) (alternative : ∀ p, PMF (Part p))
       (agent : M.InformationAgent M.playedInformation) :
-      importance n (fun player part => (weights n (pool player) part).toReal) agent *
+      importance n (fun player part => (weights n (groupOf player) part).toReal) agent *
         (expectedUtility (M.agentUtility payoff) agent
             (F.mixed.play (Profile.update (sig := F.sig.mixed) (played n) agent
-              ((alternative (pool agent)).bind (component n agent)))) -
+              ((alternative (groupOf agent)).bind (component n agent)))) -
           expectedUtility (M.agentUtility payoff) agent (F.mixed.play (played n))) =
       if decision : M.IsDecisionInfo agent.1 agent.2.1 then
         ((sequence n).continuationContext certificate ⟨agent.2.1, decision⟩
             (payoff agent.1)).value
             (((sequence n).strategy agent.1).withLaw agent.2.1
-              ((alternative (pool agent)).bind (component n agent))) -
+              ((alternative (groupOf agent)).bind (component n agent))) -
           ((sequence n).continuationContext certificate ⟨agent.2.1, decision⟩
             (payoff agent.1)).value ((sequence n).strategy agent.1)
       else 0 := by
     by_cases decision : M.IsDecisionInfo agent.1 agent.2.1
     · let site : M.InformationSite agent.1 := ⟨agent.2.1, decision⟩
-      have mass := reachMass n (fun player part => (weights n (pool player) part).toReal)
+      have mass := reachMass n (fun player part => (weights n (groupOf player) part).toReal)
         (fun player => PMF.toReal_mem_simplexWeights _) site
       have lawsEq : (fun player => (mixtureOf (fun player part =>
-            (weights n (pool player) part).toReal)
+            (weights n (groupOf player) part).toReal)
           (fun player => PMF.toReal_mem_simplexWeights _) player).bind (component n player)) =
           played n := by
         funext player
@@ -273,7 +273,7 @@ theorem exists_consistent_pooled_completion (hrecall : M.DecisionRecall)
           (M.informationMass (M.agentBehavior M.playedInformation fallback laws) agent.1 site).toReal)
         lawsEq)
       have gain := M.agentGain_eq_mass_mul hrecall fallback certificate payoff (played n)
-        (full n) site ((alternative (pool agent)).bind (component n agent))
+        (full n) site ((alternative (groupOf agent)).bind (component n agent))
       have positive : 0 < (M.informationMass (behavior n) agent.1 site).toReal := by
         refine ENNReal.toReal_pos ?_ ?_
         · exact (M.informationMass_pos_of_fullSupport _ (full n) agent.1 site).ne'
@@ -296,19 +296,19 @@ theorem exists_consistent_pooled_completion (hrecall : M.DecisionRecall)
     exact optimal n alternative p
   intro i site limitComponent componentConverges
   have strategyAt (n : ℕ) : (sequence n).strategy i site.1 =
-      (weights n (pool (M.agentAt site))).bind (component n (M.agentAt site)) := by
+      (weights n (groupOf (M.agentAt site))).bind (component n (M.agentAt site)) := by
     rw [sequenceStrategy]
     exact M.agentBehavior_at M.playedInformation fallback _ (M.agentAt site)
   constructor
   · obtain ⟨limitWeights, inner, innerIncreasing, weightsConverge⟩ :=
       exists_subseq_pmfConvergesPointwise
-        (fun n => weights (index n) (pool (M.agentAt site)))
+        (fun n => weights (index n) (groupOf (M.agentAt site)))
     refine ⟨limitWeights, ((converges.strategy i site).subseq innerIncreasing).unique ?_⟩
     have mixture := weightsConverge.bind
       (kernel := fun n => component (index (inner n)) (M.agentAt site))
       (fun part => (componentConverges part).subseq (increasing.comp innerIncreasing))
     have same : (fun n => (sequence (index (inner n))).strategy i site.1) =
-        (fun n => (weights (index (inner n)) (pool (M.agentAt site))).bind
+        (fun n => (weights (index (inner n)) (groupOf (M.agentAt site))).bind
           (component (index (inner n)) (M.agentAt site))) :=
       funext fun n => strategyAt (index (inner n))
     rw [same]
@@ -354,8 +354,8 @@ and Bayes consistent, and at every index each agent's weights are optimal among
 its own component mixtures for the Bayes continuation value. One common
 subsequence converges to a consistent assessment. At every decision site whose
 components converge, the limit law is a mixture of the limit components and is
-optimal among such mixtures. This is the pooled completion with one agent per
-pool. -/
+optimal among such mixtures. This specializes completion with shared mixture
+weights to one agent per group. -/
 theorem exists_consistent_component_completion (hrecall : M.DecisionRecall)
     (fallback : (i : ι) → M.Policy i) (certificate : E.WellFoundedHistories)
     (payoff : ι → E.History → ℝ)
@@ -394,8 +394,8 @@ theorem exists_consistent_component_completion (hrecall : M.DecisionRecall)
               (limit.strategy i) := by
   classical
   obtain ⟨weights, sequence, limit, index, played, mixed, bayes, increasing, converges,
-      consistent, pooled, limitFacts⟩ :=
-    M.exists_consistent_pooled_completion hrecall fallback certificate payoff (Part := Component)
+      consistent, aggregateOptimal, limitFacts⟩ :=
+    M.exists_consistent_completion_with_shared_mixture_weights hrecall fallback certificate payoff (Part := Component)
       id component componentFull
   have stepOptimal (n : ℕ) (i : ι) (site : M.InformationSite i)
       (alternative : PMF (Component (M.agentAt site))) :
@@ -406,7 +406,7 @@ theorem exists_consistent_component_completion (hrecall : M.DecisionRecall)
           ((sequence n).strategy i) := by
     let componentSig : GameSignature (M.InformationAgent M.playedInformation) :=
       { Strategy := Component, Outcome := Unit }
-    have single := pooled n (Profile.update (sig := componentSig.mixed) (weights n) (M.agentAt site) alternative)
+    have single := aggregateOptimal n (Profile.update (sig := componentSig.mixed) (weights n) (M.agentAt site) alternative)
       (M.agentAt site)
     rw [show Finset.univ.filter (fun agent => id agent = M.agentAt site) = {M.agentAt site} by
       ext agent; simp, Finset.sum_singleton,

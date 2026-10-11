@@ -9,10 +9,10 @@ open GameTheory GameTheory.Protocol GameTheory.Protocol.InformationModel
 open GameTheory.Math.Probability Filter
 open GameTheory.Tests.SequentialExistence
 
-/-- All agents share one pool of full profiles. Its projected component menus
+/-- All agents share one group of full profiles. Its projected component menus
 span every site's lotteries. This consumer checks both free and copied-site
 branches on actual unequal-depth histories, for a constant terminal payoff. -/
-theorem shared_pool_unequal_depth (copied : ∀ who, information.InformationSite who → Prop) :
+theorem shared_weights_unequal_depth (copied : ∀ who, information.InformationSite who → Prop) :
     (¬ ∃ depth, InformationSite.CommonDepth information actingSite depth) ∧
       ∃ limit : information.BehavioralAssessment,
         limit.IsSequentialEquilibrium antichain game.wellFoundedHistories
@@ -27,7 +27,7 @@ theorem shared_pool_unequal_depth (copied : ∀ who, information.InformationSite
       Nonempty (F.sig.Strategy agent) :=
     information.nonempty_choice_of_played agent.2.2
   let Part := Profile F.sig
-  let pool (_ : information.InformationAgent information.playedInformation) : Unit := ()
+  let groupOf (_ : information.InformationAgent information.playedInformation) : Unit := ()
   let weight (n : ℕ) : ℝ := 1 / ((n : ℝ) + 2)
   have positive (n : ℕ) : 0 < weight n := by dsimp [weight]; positivity
   have small (n : ℕ) : weight n ≤ 1 := by
@@ -71,8 +71,8 @@ theorem shared_pool_unequal_depth (copied : ∀ who, information.InformationSite
   let decisionRecall := information.decisionRecall_of_perfectRecall perfectRecall
   obtain ⟨weights, sequence, limit, index, played, mixed, bayes, increasing,
       converges, equilibrium, representation⟩ :=
-    information.exists_sequentialEquilibrium_of_pooled_local_certificates
-      decisionRecall fallback game.wellFoundedHistories (fun _ _ => 0) pool
+    information.exists_sequentialEquilibrium_of_shared_mixture_weight_certificates
+      decisionRecall fallback game.wellFoundedHistories (fun _ _ => 0) groupOf
       (Part := fun _ => Part) component full copied menu
       (fun who site _ => menuConverges who site)
       (fun who site _ => spans who site) (fun _ sequence _ _ _ _ => by

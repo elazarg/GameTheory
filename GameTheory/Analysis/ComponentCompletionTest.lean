@@ -28,16 +28,16 @@ theorem best_component_mixtures :
         expectedUtility utility who (form.mixed.play fun player => (weights player).bind (component player)) :=
   exists_component_bestResponses (F := form) utility component component_integrable
 
-/-- Distinct agents can share one mixing pool without narrowing the underlying game carriers. -/
-theorem shared_pool_mixtures :
-    ∃ weights : Unit → PMF Bool, ∀ (alternative : Unit → PMF Bool) (pool : Unit),
-      ∑ who ∈ Finset.univ.filter (fun _ : Bool => () = pool),
+/-- Distinct agents can share mixture weights without narrowing the underlying game carriers. -/
+theorem shared_weight_mixtures :
+    ∃ weights : Unit → PMF Bool, ∀ (alternative : Unit → PMF Bool) (groupIndex : Unit),
+      ∑ who ∈ Finset.univ.filter (fun _ : Bool => () = groupIndex),
         (expectedUtility utility who (form.mixed.play
             (Profile.update (sig := form.sig.mixed)
               (fun player => (weights ()).bind (component player))
               who ((alternative ()).bind (component who)))) -
           expectedUtility utility who (form.mixed.play fun player => (weights ()).bind (component player))) ≤ 0 := by
-  have witness :=  exists_pooled_bestResponses (F := form) (Part := fun _ : Unit => Bool)
+  have witness :=  exists_bestResponses_with_shared_mixture_weights (F := form) (Part := fun _ : Unit => Bool)
     (fun _ => ()) utility component component_integrable (fun _ _ => 1) (fun _ => continuousOn_const)
   simpa only [one_mul] using witness
 

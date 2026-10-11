@@ -3,18 +3,22 @@
 import GameTheory.Core.StrategySubstitution
 import GameTheory.Analysis.Nash
 import GameTheory.Analysis.LocalChoiceFixedPoint
-import GameTheory.Math.Probability.PooledOptimality
+import GameTheory.Math.Probability.AggregateComparison
 
-/-! # Optimal component mixtures and shared pool weights
+/-! # Optimal component mixtures with shared mixture weights
 
 Finite menus of stochastic strategy components admit simultaneous best-response
-mixtures. Pool members may share a weight vector, and a fixed point makes each
-pool maximize the continuously weighted sum of its members' unilateral gains.
+mixtures. Group members may share a weight vector, and a fixed point makes each
+group maximize the continuously weighted sum of its members' unilateral gains.
 Underlying strategies and outcomes may be infinite; only component plays need
 integrable utilities. The stochastic substitution and update laws come from
 the utility-free core, with no extra strategic semantics or dependent casts.
 
-Pooled optimality does not imply every member's optimality. The independent
+Sharing weights is a constraint on policy parameters. Components remain
+agent-specific and their random draws are independent; equal weights imply
+neither identical action laws nor protection of hidden information.
+
+Aggregate optimality does not imply every member's optimality. The independent
 probability bound for a common near-maximizing action controls individual regret,
 including weighted and approximate aggregate comparisons.
 -/
@@ -42,61 +46,61 @@ private theorem expect_payoff_point [∀ who, Fintype (F.sig.Strategy who)] [Dec
   simp only [apply_ite ENNReal.toReal, ENNReal.toReal_one, ENNReal.toReal_zero, mul_ite, mul_one,
     mul_zero, Finset.sum_ite_eq, Finset.mem_univ, ↓reduceIte]
 
-/-- **Pooled best component mixtures.** Players are grouped into pools, and all
-members of a pool mix their own components with one common weight vector over
-the pool's parts. A fixed point chooses the weights of all pools together so
-that no common replacement of a pool's weights raises the sum, over its
+/-- **Best component mixtures with shared weights.** Players are partitioned into groups, and all
+members of a group mix their own components with one common weight vector over
+the group's parts. A fixed point chooses the weights of all groups together so
+that no common replacement of a group's weights raises the sum, over its
 members, of each member's own expected utility gain weighted by its
 `importance`, each member deviating alone against the same play of everybody
 else. The importance of a member may depend continuously on the weights of all
 players, for instance as the inverse of the probability of reaching it, which
-turns the sum into a sum of conditional gains. With one player per pool and
+turns the sum into a sum of conditional gains. With one player per group and
 unit importance this is Nash existence among component mixtures. -/
-theorem exists_pooled_bestResponses
-    {Pool : Type*} [Finite Pool] [DecidableEq Pool] (pool : ι → Pool)
-    {Part : Pool → Type*} [∀ p, Finite (Part p)] [∀ p, Nonempty (Part p)]
+theorem exists_bestResponses_with_shared_mixture_weights
+    {WeightGroup : Type*} [Finite WeightGroup] [DecidableEq WeightGroup] (groupOf : ι → WeightGroup)
+    {Part : WeightGroup → Type*} [∀ p, Finite (Part p)] [∀ p, Nonempty (Part p)]
     (utility : F.sig.Outcome → ι → ℝ)
-    (component : ∀ who, Part (pool who) → PMF (F.sig.Strategy who))
-    (componentIntegrable : ∀ choice : (∀ who, Part (pool who)), ∀ who,
+    (component : ∀ who, Part (groupOf who) → PMF (F.sig.Strategy who))
+    (componentIntegrable : ∀ choice : (∀ who, Part (groupOf who)), ∀ who,
       PayoffIntegrable (F.mixed.play fun player => component player (choice player))
         (fun outcome => utility outcome who))
-    (importance : (∀ who, Part (pool who) → ℝ) → ι → ℝ)
+    (importance : (∀ who, Part (groupOf who) → ℝ) → ι → ℝ)
     (importanceContinuous : ∀ who, ContinuousOn (fun weights => importance weights who)
-      {weights | ∀ player, weights player ∈ simplexWeights (Part (pool player))}) :
-    ∃ weights : ∀ p, PMF (Part p), ∀ (alternative : ∀ p, PMF (Part p)) (p : Pool),
-      ∑ who ∈ Finset.univ.filter (fun who => pool who = p),
-        importance (fun player part => (weights (pool player) part).toReal) who *
+      {weights | ∀ player, weights player ∈ simplexWeights (Part (groupOf player))}) :
+    ∃ weights : ∀ p, PMF (Part p), ∀ (alternative : ∀ p, PMF (Part p)) (p : WeightGroup),
+      ∑ who ∈ Finset.univ.filter (fun who => groupOf who = p),
+        importance (fun player part => (weights (groupOf player) part).toReal) who *
         (expectedUtility utility who (F.mixed.play
             (Profile.update (sig := F.sig.mixed)
-              (fun player => (weights (pool player)).bind (component player))
-              who ((alternative (pool who)).bind (component who)))) -
+              (fun player => (weights (groupOf player)).bind (component player))
+              who ((alternative (groupOf who)).bind (component who)))) -
           expectedUtility utility who
-            (F.mixed.play fun player => (weights (pool player)).bind (component player))) ≤
+            (F.mixed.play fun player => (weights (groupOf player)).bind (component player))) ≤
         0 := by
   classical
-  let _ : Fintype Pool := Fintype.ofFinite Pool
+  let _ : Fintype WeightGroup := Fintype.ofFinite WeightGroup
   let G := F.substituteStrategies component
-  let _ (p : Pool) : Fintype (Part p) := Fintype.ofFinite _
-  let _ (who : ι) : Fintype (G.sig.Strategy who) := Fintype.ofFinite (Part (pool who))
+  let _ (p : WeightGroup) : Fintype (Part p) := Fintype.ofFinite _
+  let _ (who : ι) : Fintype (G.sig.Strategy who) := Fintype.ofFinite (Part (groupOf who))
   have integrable : G.HasIntegrableUtility utility :=
     fun who choice => componentIntegrable choice who
-  let spread (x : ∀ p, Part p → ℝ) : Profile G.sig.weights := fun who => x (pool who)
+  let spread (x : ∀ p, Part p → ℝ) : Profile G.sig.weights := fun who => x (groupOf who)
   have spreadContinuous : Continuous spread :=
-    continuous_pi fun who => continuous_apply (pool who)
+    continuous_pi fun who => continuous_apply (groupOf who)
   have spreadInside (x : Set.pi Set.univ fun p => simplexWeights (Part p)) :
-      spread x.1 ∈ {weights : ∀ who, Part (pool who) → ℝ |
-        ∀ player, weights player ∈ simplexWeights (Part (pool player))} :=
-    fun player => x.2 (pool player) (Set.mem_univ _)
-  let poolSig : GameSignature Pool := { Strategy := Part, Outcome := Unit }
-  let point (p : Pool) (choice : Part p) : Part p → ℝ :=
+      spread x.1 ∈ {weights : ∀ who, Part (groupOf who) → ℝ |
+        ∀ player, weights player ∈ simplexWeights (Part (groupOf player))} :=
+    fun player => x.2 (groupOf player) (Set.mem_univ _)
+  let groupSig : GameSignature WeightGroup := { Strategy := Part, Outcome := Unit }
+  let point (p : WeightGroup) (choice : Part p) : Part p → ℝ :=
     fun other => ((PMF.pure choice) other).toReal
-  let score (x : Set.pi Set.univ fun p => simplexWeights (Part p)) (p : Pool) (choice : Part p) :
+  let score (x : Set.pi Set.univ fun p => simplexWeights (Part p)) (p : WeightGroup) (choice : Part p) :
       ℝ :=
-    ∑ who, if pool who = p then
+    ∑ who, if groupOf who = p then
       importance (spread x.1) who * payoff G utility who (Profile.update (spread x.1) who
-        ((Profile.update (sig := poolSig.weights) x.1 p (point p choice)) (pool who)))
+        ((Profile.update (sig := groupSig.weights) x.1 p (point p choice)) (groupOf who)))
     else 0
-  have scoreContinuous (p : Pool) (choice : Part p) :
+  have scoreContinuous (p : WeightGroup) (choice : Part p) :
       Continuous fun x => score x p choice := by
     refine continuous_finsetSum _ fun who _ => ?_
     split
@@ -109,38 +113,38 @@ theorem exists_pooled_bestResponses
           (spreadContinuous.comp continuous_subtype_val))
     · exact continuous_const
   obtain ⟨x, optimal⟩ := exists_localChoice_fixedPoint score scoreContinuous
-  let weights (p : Pool) : PMF (Part p) := PMF.ofSimplex (x.property p (Set.mem_univ p))
-  let laws : Profile G.sig.mixed := fun who => weights (pool who)
+  let weights (p : WeightGroup) : PMF (Part p) := PMF.ofSimplex (x.property p (Set.mem_univ p))
+  let laws : Profile G.sig.mixed := fun who => weights (groupOf who)
   have spreadLaws : spread x.1 = probs G.sig laws := by
     funext who
-    exact (PMF.ofSimplex_toReal (x.property (pool who) (Set.mem_univ _))).symm
-  have spreadWeights : spread x.1 = fun player part => (weights (pool player) part).toReal :=
+    exact (PMF.ofSimplex_toReal (x.property (groupOf who) (Set.mem_univ _))).symm
+  have spreadWeights : spread x.1 = fun player part => (weights (groupOf player) part).toReal :=
     spreadLaws
-  have member (who : ι) (p : Pool) (h : pool who = p) (alternative : ∀ p, PMF (Part p)) :
+  have member (who : ι) (p : WeightGroup) (h : groupOf who = p) (alternative : ∀ p, PMF (Part p)) :
       expect (alternative p) (fun choice => importance (spread x.1) who *
           payoff G utility who
-          (Profile.update (spread x.1) who ((Profile.update (sig := poolSig.weights) x.1 p (point p choice)) (pool who)))) =
+          (Profile.update (spread x.1) who ((Profile.update (sig := groupSig.weights) x.1 p (point p choice)) (groupOf who)))) =
         importance (spread x.1) who * expectedUtility utility who (F.mixed.play
           (Profile.update (sig := F.sig.mixed)
-            (fun player => (weights (pool player)).bind (component player))
-            who ((alternative (pool who)).bind (component who)))) := by
+            (fun player => (weights (groupOf player)).bind (component player))
+            who ((alternative (groupOf who)).bind (component who)))) := by
     subst h
     simp only [Profile.update_same]
     rw [expect_const_mul, expect_payoff_point (F := G) utility (spread x.1) who
-      (alternative (pool who)), spreadLaws, ← probs_update, payoff_probs integrable,
+      (alternative (groupOf who)), spreadLaws, ← probs_update, payoff_probs integrable,
       GameForm.substituteStrategies_mixed_play, GameForm.substituteStrategies_update]
-  have total (alternative : ∀ p, PMF (Part p)) (p : Pool) :
+  have total (alternative : ∀ p, PMF (Part p)) (p : WeightGroup) :
       expect (alternative p) (score x p) =
-        ∑ who ∈ Finset.univ.filter (fun who => pool who = p),
+        ∑ who ∈ Finset.univ.filter (fun who => groupOf who = p),
           importance (spread x.1) who * expectedUtility utility who (F.mixed.play
             (Profile.update (sig := F.sig.mixed)
-              (fun player => (weights (pool player)).bind (component player))
-              who ((alternative (pool who)).bind (component who)))) := by
+              (fun player => (weights (groupOf player)).bind (component player))
+              who ((alternative (groupOf who)).bind (component who)))) := by
     rw [Finset.sum_filter, expect_eq_sum]
     simp only [score, Finset.mul_sum]
     rw [Finset.sum_comm]
     refine Finset.sum_congr rfl fun who _ => ?_
-    by_cases h : pool who = p
+    by_cases h : groupOf who = p
     · rw [← member who p h alternative, expect_eq_sum]
       simp only [h, ite_true]
     · simp [h]
@@ -150,9 +154,9 @@ theorem exists_pooled_bestResponses
     total weights p] at compared
   have same (who : ι) :
       Profile.update (sig := F.sig.mixed)
-          (fun player => (weights (pool player)).bind (component player))
-          who ((weights (pool who)).bind (component who)) =
-        fun player => (weights (pool player)).bind (component player) := by
+          (fun player => (weights (groupOf player)).bind (component player))
+          who ((weights (groupOf who)).bind (component who)) =
+        fun player => (weights (groupOf player)).bind (component player) := by
     funext player
     by_cases equal : player = who
     · subst player

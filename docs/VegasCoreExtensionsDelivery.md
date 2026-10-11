@@ -12,7 +12,7 @@ an existing semantic concept. Preserve upstream attribution in `NOTICE`.
 | 3 | Total variation and approximate transport | Supported mathematical slice: the existing half-L1 `statisticalDistance` moves to a dedicated PMF module and equals the uniform event-gap bound. Arbitrary-carrier observation contraction, expected kernel error, support-local payoff-range bounds, domination and discrete convergence are proved. Canonical incentive and continuation contexts bound deviation gain without a new equilibrium predicate. Sample tests and concrete pseudo-Nash transfer improve their constants by two. Full build, lint and architecture audit pass. | Copied-site sequential-limit primitives and the unbounded-source/unequal-depth target consumer are supported; weighted component/copy integration remains below. |
 | 4 | Information-abstraction criteria | Protected-law and fixed-payoff slices supported: supported fact recovery transparently specializes Mathlib `Function.FactorsThrough`; conditional averaging preserves arbitrary response laws. Perfect reporting and preservation of all informed reporting laws are equivalent to fact recovery. Guarded terminal-decision optimality specializes canonical contexts, and optimal retained-law sets coincide without finite carriers, finite-support priors or bounded utilities. Consumers cover an erased supported bit, an unreachable merge and infinite carriers. `Analysis.DecisionPayoff` characterizes fixed-payoff preservation by common maximizing actions on supported fibers; a support-local utility bound replaces finite prior support. Only optimum existence and fixed-payoff necessity need finite actions. Universal reporting-utility preservation is equivalent to supported fact recovery for finite facts. | Sequential decision consumers accompany component completion. |
 | 5 | Sanction feasibility and synthesis | Supported: independent rational signed-slope inference is sound, complete and minimal against all nonnegative real solutions. Canonical comparison bridges use additional collection risk. Explicit finite tables characterize eventual deterrence, without a finite ambient row type. Sound observable alarms attain exactly the mass outside admitted observations. Sequential rationality specializes the actual continuation context with only finite movers. | Executable monitor construction remains consumer-gated; component integration is covered below. |
-| 6 | Component and pooled-agent completion | Static, passage and consistent-completion slices supported: canonical stochastic strategy substitution, finite component-menu and pooled best-response existence for arbitrary underlying strategies/outcomes with integrable component plays, weighted approximate member bounds with arbitrary action carriers, and actual-passage Bayes conditioning with only finite movers, consistent pooled/component completion, and an unequal-depth full-menu sequential-equilibrium consumer. Free-agent completion now specializes the component theorem. Uniform whole-policy gain bounds remove finite histories and a uniform horizon; the unbounded countdown consumer compiles. Local copied-site transfer and common subsequence extraction use terminal continuations; source gain mixtures permit infinite source histories. Observed-law matching uses independent distance stability. | Shared-pool copied-site completion is supported with explicit local certificates. Nonconstant shared-pool comparison construction and sequential decision consumers remain. |
+| 6 | Component completion with independent or shared mixture weights | Static, passage and consistent-completion slices supported: canonical stochastic strategy substitution, existence of component mixtures with independent or shared weights for arbitrary underlying strategies/outcomes with integrable component plays, weighted approximate member bounds with arbitrary action carriers, and actual-passage Bayes conditioning with only finite movers, consistent assessment completion with independent or shared weights, and an unequal-depth full-menu sequential-equilibrium consumer. Free-agent completion now specializes the component theorem. Uniform whole-policy gain bounds remove finite histories and a uniform horizon; the unbounded countdown consumer compiles. Local copied-site transfer and common subsequence extraction use terminal continuations; source gain mixtures permit infinite source histories. Observed-law matching uses independent distance stability. | Copied-site completion with shared mixture weights is supported with explicit local certificates. Nonconstant comparison certificates for shared mixture weights and sequential decision consumers remain. |
 
 Validation for the first slice:
 
@@ -212,20 +212,20 @@ The component checkpoint defines stochastic strategy substitution once in
 forms. Its mixed play flattens independent component draws and commutes with
 canonical profile updates. `Analysis.ComponentCompletion` uses finite Nash for
 individual component mixtures and the existing local-choice fixed point for
-shared pool weights. Finite underlying strategies or outcomes are unnecessary:
+shared mixture weights. Finite underlying strategies or outcomes are unnecessary:
 only utilities under each component profile's actual play law must be integrable.
-Continuous importance weights are evaluated at the incumbent profile; pool
+Continuous importance weights are evaluated at the incumbent profile; group
 comparisons sum unilateral member gains, not a simultaneous joint deviation.
 
-The source's dependent casts disappear by updating the pool profile before
+The source's dependent casts disappear by updating the group profile before
 selecting a member's coordinate. Independent-component existence specializes
-finite Nash directly instead of going through pooled existence.
-`Math.Probability.PooledOptimality` only needs the aggregate comparison at the
+finite Nash directly instead of going through existence with shared mixture weights.
+`Math.Probability.AggregateComparison` only needs the aggregate comparison at the
 common near-best action, permits an aggregate tolerance and nonnegative member
 weights, and removes finite-action assumptions in favor of integrability of the
 compared means. Unit weights recover the cardinality-times-error bound.
 Zero weights do not certify individual rationality. A conflicting-preference
-control proves that pooled optimality alone leaves a profitable member deviation;
+control proves that aggregate optimality alone leaves a profitable member deviation;
 the positive consumer uses infinite actions. The game consumers use infinite
 natural-number strategies and profile outcomes with globally unbounded utility.
 
@@ -237,7 +237,7 @@ consumer simultaneously refutes a common depth and proves the conditioning law.
 Validation:
 
 ```text
-lake build GameTheory.Analysis.ComponentCompletion GameTheory.Math.Probability.PooledOptimalityTest
+lake build GameTheory.Analysis.ComponentCompletion GameTheory.Math.Probability.AggregateComparisonTest
 lake build GameTheory.Analysis.ComponentCompletionTest GameTheory.Analysis.Protocol.PassageBayes
 lake build GameTheory GameTheory.LintAll
 lake lint
@@ -246,17 +246,17 @@ pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected
 
 The integration build completed 4,583 jobs and the architecture audit reported
 `VERIFIED=1`, with no new equality transports or unowned mass arithmetic.
-Substitution, individual and pooled mixture existence, weighted member bounds,
+Substitution, mixture existence with independent or shared weights, weighted member bounds,
 conflicting-preference and infinite-carrier controls, and unequal-depth passage
 use only the standard Lean axioms.
 
 The consistent-completion checkpoint adds
 `Analysis.Protocol.ComponentCompletion`. Fully supported time-varying components
-admit simultaneous pool weights and a common subsequence of fully mixed Bayes
+admit simultaneous shared mixture weights and a common subsequence of fully mixed Bayes
 assessments. The limit is sequentially consistent; each convergent component
 menu retains its mixture representation. A vanishing member-gain error gives
 optimality among that menu's mixtures. Independent agents have exact zero error;
-shared-pool aggregate optimality alone does not establish member rationality.
+shared mixture weight aggregate optimality alone does not establish member rationality.
 
 The existing free-agent completion theorem now specializes this construction,
 removing its separate fixed-point, assessment extraction and gain-limit proof.
@@ -266,7 +266,7 @@ site. Finite histories remain required by the canonical played-agent enumeration
 the passage-law owner itself still needs only finite movers.
 
 One scoped transparency option addresses Lean's stricter implicit-transparency
-check in the pooled gain rewrite. Ordinary matching failures use explicit law
+check in the aggregate gain rewrite. Ordinary matching failures use explicit law
 and value equalities instead. No dependent casts, alternate equilibrium
 predicate or new trust assumption is introduced.
 
@@ -282,7 +282,7 @@ lake env lean .codex/scratch/ComponentCompletionAxioms.lean
 
 All 4,585 integration jobs passed, including restriction completion and
 extension consumers. Lint passed, the architecture audit reported `VERIFIED=1`,
-and pooled, independent and free-agent completion plus the unequal-depth
+and completion with shared weights, independent completion and free-agent completion plus the unequal-depth
 consumer use only the standard Lean axioms. Copied-site approximate simulation
 and sequential decision consumers remain the next obligations.
 
@@ -372,16 +372,16 @@ all three controls use only standard Lean axioms. The new module is included in
 the explicit lint driver; no probability representation-ownership expansion is
 needed because its implementation uses the existing canonical probability APIs.
 
-Shared-pool copied-site completion now composes canonical pooled completion
+Copied-site completion with shared mixture weights now composes canonical completion with shared mixture weights
 and local gain limits in `Analysis.Protocol.CopiedSiteCompletion`.
 Its certificate producer receives the assembled strategy laws, full mixing,
-Bayes consistency and aggregate pool optimality. It must supply vanishing
+Bayes consistency and aggregate optimality. It must supply vanishing
 copied-site gains and individual free-member component gains. Converging free
-menus must span every local lottery. The conclusion retains assembled pool
+menus must span every local lottery. The conclusion retains assembled shared mixture
 weights, the common assessment subsequence, sequential equilibrium and free-site
-mixture representations. Shared weights alone assert no observed-law equality.
+mixture representations. Shared mixture weights alone assert no observed-law equality.
 
-The unequal-depth consumer puts all played agents in one pool of full profiles.
+The unequal-depth consumer puts all played agents in one weight-sharing group of full profiles.
 Projected trembling profile components converge to pure projections, and lifting
 a local lottery through canonical profile replacement proves menu spanning.
 An arbitrary free/copied classification exercises both proof branches with
@@ -400,7 +400,7 @@ lake env lean .codex/scratch/CopiedSiteCompletionAxioms.lean
 
 The full integration build passed all 4,591 jobs, lint passed and the
 architecture audit reported `VERIFIED=1`. Both the completion theorem and
-shared-pool control use only standard Lean axioms. The new public module is
+shared mixture weight control use only standard Lean axioms. The new public module is
 included in the explicit lint driver. No new probability representation owner
 or transparency option is required.
 `Analysis.Protocol.LocalDeviationBounds` recovers the local comparisons needed
@@ -418,7 +418,7 @@ vanishing copied-site gains, rather than menu optimality at the limit. It
 accepts arbitrary terminal utilities in `[0,1]`. Concrete specializations retain
 the hidden-bit payoff and strictly reward action `true`: actual legal terminal
 histories certify rewards one and zero. Independent member completion supplies
-the zero member error. Construction of nonconstant shared-pool member bounds,
+the zero member error. Construction of nonconstant shared mixture weight member bounds,
 source simulation comparisons and sequential decision consumers remains pending.
 Validation:
 
@@ -436,3 +436,28 @@ reported `VERIFIED=1`. The three local-bound theorems and all three component
 consumer theorems use only standard Lean axioms. The public module is imported
 by the explicit lint driver; no new representation owner or transparency option
 is needed.
+The general API now names shared mixture weights explicitly. Groups tie policy
+parameters across decision agents; they do not impose common component laws,
+correlated random draws, blockchain structure or information protection.
+Aggregate optimality still compares sums of unilateral gains, with separate
+member certificates required for sequential rationality. Static completion,
+consistent assessment completion and copied-site completion use the same
+terminology. The independent probability owner is `Math.Probability.AggregateComparison`.
+Old theorem names and the former module path have been removed without aliases;
+all in-repository consumers and the lint driver use the current API.
+Validation:
+
+```text
+lake build GameTheory.Analysis.ComponentCompletion GameTheory.Math.Probability.AggregateComparisonTest
+lake build GameTheory GameTheory.LintAll
+lake lint
+pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected
+lake env lean .codex/scratch/SharedMixtureWeightsAxioms.lean
+```
+
+The full integration build passed all 4,592 jobs, lint passed and the
+architecture audit reported `VERIFIED=1`. Renamed static completion,
+consistent assessment completion, copied-site completion, the concrete shared
+weight consumer and the weighted aggregate bound use only standard Lean axioms.
+The renamed probability module is included in the lint driver; generated
+artifacts of the deleted module and its fixture have been removed.

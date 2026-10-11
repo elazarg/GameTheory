@@ -1,12 +1,12 @@
-import GameTheory.Math.Probability.PooledOptimality
+import GameTheory.Math.Probability.AggregateComparison
 noncomputable section
-namespace GameTheory.Tests.PooledOptimality
+namespace GameTheory.Tests.AggregateComparison
 open GameTheory.Math.Probability
 
 private def conflictingValue (member action : Bool) : ℝ :=
   if member then (if action then 1 else 0) else (if action then 0 else 1)
 
-/-- A pooled optimum can leave a member with a profitable deviation when their best actions conflict. -/
+/-- An aggregate optimum can leave a member with a profitable deviation when their best actions conflict. -/
 theorem conflicting_members :
     (∀ alternative : PMF Bool, ∑ member ∈ ({false, true} : Finset Bool),
       (expect alternative (conflictingValue member) -
@@ -48,4 +48,4 @@ theorem infinite_action_bound (current alternative : PMF ℕ) (value : Bool → 
     alternative alternativeIntegrable
   simpa using bound
 
-end GameTheory.Tests.PooledOptimality
+end GameTheory.Tests.AggregateComparison
