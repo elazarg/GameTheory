@@ -185,13 +185,19 @@ rejects every info/warning in extension build logs, including cached diagnostics
 Third-party imports must compile, but their warnings and proof suggestions are
 allowed. The axiom audit checks their transitive use by authored declarations.
 
-Before tagging a release, set the package `version` in `lakefile.lean` to the
-tag's version number (without the `v` prefix). The audit verifies package,
+Before tagging a release, set the package `version` in `lakefile.lean` and
+`CITATION.cff` to the tag's version number (without the `v` prefix). The audit verifies package,
 toolchain, and Mathlib version agreement; CI also checks the release tag.
 
 Architecture and contribution rules live in
 [`docs/GameTheory2Design.md`](docs/GameTheory2Design.md) and
 [`AGENTS.md`](AGENTS.md). The predecessor library is at tag `v1-final`, with its
 workflows mapped in the [v1 capability map](docs/V1CapabilityMap.md).
+
+## Citation
+
+If you use this library in your work, please cite it using
+[`CITATION.cff`](CITATION.cff). Include the tag or commit you used when citing a
+particular revision.
 
 Licensed under the [Apache License 2.0](LICENSE).

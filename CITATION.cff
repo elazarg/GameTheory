@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use this library in your work, please cite it using this metadata."
+type: software
+title: "GameTheory: formalized game theory in Lean 4"
+authors:
+  - family-names: Gershuni
+    given-names: Elazar
+version: "4.35.0"
+repository-code: "https://github.com/elazarg/GameTheory"
+url: "https://github.com/elazarg/GameTheory"
+license: Apache-2.0
+keywords:
+  - Lean 4
+  - formal verification
+  - game theory
