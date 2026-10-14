@@ -186,8 +186,9 @@ Third-party imports must compile, but their warnings and proof suggestions are
 allowed. The axiom audit checks their transitive use by authored declarations.
 
 Before tagging a release, set the package `version` in `lakefile.lean` and
-`CITATION.cff` to the tag's version number (without the `v` prefix). The audit verifies package,
-toolchain, and Mathlib version agreement; CI also checks the release tag.
+`CITATION.cff` to the tag's version number (without the `v` prefix). The audit
+verifies package, toolchain, and Mathlib version agreement; CI also checks the
+release tag.
 
 Architecture and contribution rules live in
 [`docs/GameTheory2Design.md`](docs/GameTheory2Design.md) and

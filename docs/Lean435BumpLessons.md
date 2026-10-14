@@ -87,3 +87,12 @@ against the local base checkout passed all 4,458 jobs, lint, diagnostic traces,
 and transitive axiom checks using unchanged upstream Complexitylib sources.
 All 41 tooling regression tests passed, including rejection of authored warnings
 while permitting third-party warnings. Raw build logs and probes remain local.
+
+The extension's default base Git pin is
+`b0a92aefcdca842e8a14e64829bbc54c0040d0d2`, containing the migration and citation
+metadata. The optional audit also passed all 4,458 jobs, lint, diagnostic traces,
+and axiom checks against that Git checkout without a local-path override.
+The separate `lake --iofail build GameTheory.Tests.BimatrixComputedPivot` consumer
+check passed 3,125 jobs. This used a temporary local Git transport for the committed
+base revision before publishing GameTheory; dependency pins resolve publicly.
+The development manifest was restored to the local checkout afterward.
