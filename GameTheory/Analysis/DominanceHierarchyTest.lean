@@ -11,7 +11,9 @@ lying, but not in the target: against the new action, lying pays.
 -/
 
 import GameTheory.Analysis.DominanceHierarchy
-import Mathlib.Probability.Distributions.Uniform
+import GameTheory.Math.Probability.FiniteUniform
+
+open GameTheory.Math.Probability
 
 noncomputable section
 
@@ -109,7 +111,7 @@ theorem target_nash_not_implies_dominance :
   fun himplies => target_not_dominant (himplies utility target_nash false _)
 
 /-- A uniform selection of the player and the revealed profile. -/
-def selector : PMF (Bool × Profile target.sig) := PMF.uniformOfFintype _
+def selector : PMF (Bool × Profile target.sig) := uniformLaw _
 
 theorem selector_full (selected : Bool × Profile target.sig) : selector selected ≠ 0 := by
   simp [selector]

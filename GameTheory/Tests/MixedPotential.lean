@@ -7,7 +7,7 @@ randomized expected-utility/potential identity.
 -/
 
 import GameTheory.Core.MixedPotential
-import Mathlib.Probability.Distributions.Uniform
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -37,7 +37,7 @@ def potential (profile : Profile signature) : ℝ :=
 
 def allFalse : Profile signature := fun _ => false
 
-def fairCoin : PMF Bool := PMF.uniformOfFintype Bool
+def fairCoin : PMF Bool := uniformLaw Bool
 
 def halfMixed : Profile signature.mixed :=
   Profile.update (game.form.purify allFalse) 0 fairCoin
@@ -97,7 +97,7 @@ theorem mixedPotential_half :
       expect_congr_on_support (fun action _ => hpoint action)
     _ = 1 / 2 := by
       rw [expect_eq_sum]
-      norm_num [Fintype.sum_bool, fairCoin, PMF.uniformOfFintype_apply,
+      norm_num [Fintype.sum_bool, fairCoin, uniformLaw_apply,
         potential, common, allFalse, Profile.update_same,
         Profile.update_of_ne]
 

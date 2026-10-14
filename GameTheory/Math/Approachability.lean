@@ -136,7 +136,7 @@ theorem avgVec_norm_le (payoff : P → Q → E) (br : E → P) (qseq : ℕ → Q
       rw [avgVec]
       refine le_trans hb ?_
       gcongr
-      all_goals first | exact ih | exact hM _ _
+      exact hM _ _
     nlinarith [key, hsum, hM0]
 
 /-! ## Blackwell responses -/

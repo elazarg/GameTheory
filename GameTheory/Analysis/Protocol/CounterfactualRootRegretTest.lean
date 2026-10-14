@@ -384,9 +384,9 @@ theorem terminalPayoff_mem_Icc (history : twoStage.History) :
   rcases history with ⟨state, trace⟩
   cases state with
   | root => simp [terminalPayoff, utility]
-  | first hidden => simp [terminalPayoff, utility]
-  | second hidden firstAction => simp [terminalPayoff, utility]
-  | done hidden firstAction secondAction =>
+  | first latent => simp [terminalPayoff, utility]
+  | second latent firstAction => simp [terminalPayoff, utility]
+  | done latent firstAction secondAction =>
       cases firstAction <;> cases secondAction <;>
         simp [terminalPayoff, utility]
 
@@ -414,31 +414,31 @@ theorem behavioralContinuationValue_mem_Icc
 
 theorem counterfactualReach_first_any
     (strategy : (player : Unit) → information.BehavioralPolicy player)
-    (hidden : Bool) :
+    (latent : Bool) :
     information.counterfactualReachProbability strategy ()
-        (firstHistory hidden).trace = 1 / 2 := by
+        (firstHistory latent).trace = 1 / 2 := by
   calc
     information.counterfactualReachProbability strategy ()
-        (firstHistory hidden).trace =
+        (firstHistory latent).trace =
       information.counterfactualReachProbability incumbentBehavioralStrategy ()
-        (firstHistory hidden).trace :=
+        (firstHistory latent).trace :=
           information.counterfactualReachProbability_eq_of_eq_off
             (fun other hne => False.elim (hne (Subsingleton.elim other ()))) _
-    _ = 1 / 2 := counterfactualReach_first hidden
+    _ = 1 / 2 := counterfactualReach_first latent
 
 theorem counterfactualReach_secondTrue_any
     (strategy : (player : Unit) → information.BehavioralPolicy player)
-    (hidden : Bool) :
+    (latent : Bool) :
     information.counterfactualReachProbability strategy ()
-        (secondHistory hidden true).trace = 1 / 2 := by
+        (secondHistory latent true).trace = 1 / 2 := by
   calc
     information.counterfactualReachProbability strategy ()
-        (secondHistory hidden true).trace =
+        (secondHistory latent true).trace =
       information.counterfactualReachProbability incumbentBehavioralStrategy ()
-        (secondHistory hidden true).trace :=
+        (secondHistory latent true).trace :=
           information.counterfactualReachProbability_eq_of_eq_off
             (fun other hne => False.elim (hne (Subsingleton.elim other ()))) _
-    _ = 1 / 2 := counterfactualReach_second hidden true
+    _ = 1 / 2 := counterfactualReach_second latent true
 
 theorem counterfactualReachMass_first
     (strategy : (player : Unit) → information.BehavioralPolicy player) :
@@ -447,14 +447,14 @@ theorem counterfactualReachMass_first
   calc
     (∑ history : information.InformationHistory () firstSite.1,
       information.counterfactualReachProbability strategy () history.1.trace) =
-        ∑ hidden : Bool,
+        ∑ latent : Bool,
           information.counterfactualReachProbability strategy ()
-            (firstHistory hidden).trace := by
+            (firstHistory latent).trace := by
               exact Fintype.sum_equiv firstHistoryEquivBool
                 (fun history => information.counterfactualReachProbability
                   strategy () history.1.trace)
-                (fun hidden => information.counterfactualReachProbability
-                  strategy () (firstHistory hidden).trace)
+                (fun latent => information.counterfactualReachProbability
+                  strategy () (firstHistory latent).trace)
                 (fun history => by
                   have hinverse := firstHistoryEquivBool.symm_apply_apply history
                   exact congrArg
@@ -474,14 +474,14 @@ theorem counterfactualReachMass_secondTrue
   calc
     (∑ history : information.InformationHistory () (secondSite true).1,
       information.counterfactualReachProbability strategy () history.1.trace) =
-        ∑ hidden : Bool,
+        ∑ latent : Bool,
           information.counterfactualReachProbability strategy ()
-            (secondHistory hidden true).trace := by
+            (secondHistory latent true).trace := by
               exact Fintype.sum_equiv (secondHistoryEquivBool true)
                 (fun history => information.counterfactualReachProbability
                   strategy () history.1.trace)
-                (fun hidden => information.counterfactualReachProbability
-                  strategy () (secondHistory hidden true).trace)
+                (fun latent => information.counterfactualReachProbability
+                  strategy () (secondHistory latent true).trace)
                 (fun history => by
                   have hinverse :=
                     (secondHistoryEquivBool true).symm_apply_apply history
@@ -684,10 +684,10 @@ theorem planReach_mem_Icc (plan : PayoffPlan) (key : Bool) :
   cases key <;> cases first <;> simp [planReach]
 
 theorem ownReach_secondTrue_after_planFirstCommit
-    (state : TwoSiteCFRState) (plan : PayoffPlan) (hidden : Bool) :
+    (state : TwoSiteCFRState) (plan : PayoffPlan) (latent : Bool) :
     information.playerReachProbability
         (planFirstCommittedStrategyOfState state plan) ()
-        (secondHistory hidden true).trace =
+        (secondHistory latent true).trace =
       if plan.1 then 1 else 0 := by
   rw [InformationModel.playerReachProbability_eq_ownPlayReachProbability,
     ← decodeRecord_infoOf_eq_ownPlay, infoOf_secondHistory]
@@ -717,9 +717,9 @@ theorem commonOwnReach_secondTrue_after_planFirstCommit
 
 theorem ownReach_first_of_strategy
     (strategy : (player : Unit) → information.BehavioralPolicy player)
-    (hidden : Bool) :
+    (latent : Bool) :
     information.playerReachProbability strategy ()
-      (firstHistory hidden).trace = 1 := by
+      (firstHistory latent).trace = 1 := by
   rw [InformationModel.playerReachProbability_eq_ownPlayReachProbability,
     ← decodeRecord_infoOf_eq_ownPlay, infoOf_firstHistory]
   rfl
@@ -733,9 +733,9 @@ theorem commonOwnReach_first_of_strategy
 
 theorem ownReach_secondTrue_after_firstCommit
     (state : TwoSiteCFRState)
-    (hidden : Bool) :
+    (latent : Bool) :
     information.playerReachProbability (firstCommittedStrategyOfState state) ()
-      (secondHistory hidden true).trace = 1 := by
+      (secondHistory latent true).trace = 1 := by
   rw [InformationModel.playerReachProbability_eq_ownPlayReachProbability,
     ← decodeRecord_infoOf_eq_ownPlay, infoOf_secondHistory]
   rw [show decodeRecord [(Stage.first, true)] =

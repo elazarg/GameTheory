@@ -11,6 +11,7 @@ finite prefix, unilateral measure replacement, and discounted payoff.
 -/
 
 import GameTheory.Experimental.PostArchitecture.StochasticInfiniteKuhn
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -72,7 +73,7 @@ def laterInfo : offPathGame.PublicHistory :=
 of the hostile correlated pushforward. -/
 def fairProtocolBehavioral :
     (offPathGame.perfectMonitoring false).BehavioralPolicy () :=
-  fun _ => PMF.uniformOfFintype _
+  fun _ => uniformLaw _
 
 /-- Force the choice at `laterInfo` to equal the initial choice while leaving
 all other infinitely many policy coordinates intact. -/

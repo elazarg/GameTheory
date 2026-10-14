@@ -10,7 +10,7 @@ import GameTheory.Experimental.PostArchitecture.MAIDReplacementInvariantUtility
 import GameTheory.Experimental.PostArchitecture.MAIDSitePolicySurgery
 import GameTheory.Experimental.PostArchitecture.MAIDSiteLocalReduction
 import GameTheory.Experimental.PostArchitecture.MAIDSiteOptimality
-import Mathlib.Probability.Distributions.Uniform
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -197,11 +197,11 @@ theorem later_not_oriented_source
 
 /-- Uniform law on an arbitrary nonempty finite carrier. -/
 noncomputable def uniformFinite [Fintype α] [Nonempty α] : PMF α :=
-  PMF.uniformOfFintype α
+  uniformLaw α
 
 theorem uniformFinite_mem_support [Fintype α] [Nonempty α] (action : α) :
     action ∈ (uniformFinite : PMF α).support := by
-  exact PMF.mem_support_uniformOfFintype action
+  exact mem_support_uniformLaw action
 
 /-- Uniformly randomize every site in a reduced owner policy. -/
 noncomputable def uniformReducedOwnerPolicy (pruning : Pruning diagram)

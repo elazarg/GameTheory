@@ -27,9 +27,9 @@ inductive Stage
 
 inductive State
   | root
-  | first (hidden : Bool)
-  | second (hidden firstAction : Bool)
-  | done (hidden firstAction secondAction : Bool)
+  | first (latent : Bool)
+  | second (latent firstAction : Bool)
+  | done (latent firstAction secondAction : Bool)
   deriving DecidableEq
 
 def State.stage : State → Stage
@@ -50,9 +50,9 @@ def natureLaw : PMF Bool :=
   mix (1 / 2) (by norm_num) (by norm_num)
     (PMF.pure false) (PMF.pure true)
 
-theorem mem_support_natureLaw (hidden : Bool) :
-    hidden ∈ natureLaw.support := by
-  cases hidden
+theorem mem_support_natureLaw (latent : Bool) :
+    latent ∈ natureLaw.support := by
+  cases latent
   · exact mem_support_mix_left (1 / 2) (by norm_num) (by norm_num)
       (by norm_num) ((PMF.mem_support_pure_iff _ _).mpr rfl)
   · exact mem_support_mix_right (1 / 2) (by norm_num) (by norm_num)
@@ -72,12 +72,12 @@ def twoStage : ExecutionProtocol Unit where
   step state joint :=
     match state with
     | .root => PMF.map State.first natureLaw
-    | .first hidden =>
-        PMF.pure (.second hidden (chosenAction joint.1))
-    | .second hidden firstAction =>
-        PMF.pure (.done hidden firstAction (chosenAction joint.1))
-    | .done hidden firstAction secondAction =>
-        PMF.pure (.done hidden firstAction secondAction)
+    | .first latent =>
+        PMF.pure (.second latent (chosenAction joint.1))
+    | .second latent firstAction =>
+        PMF.pure (.done latent firstAction (chosenAction joint.1))
+    | .done latent firstAction secondAction =>
+        PMF.pure (.done latent firstAction secondAction)
   progress := by
     intro state hterm
     cases state with
@@ -86,17 +86,17 @@ def twoStage : ExecutionProtocol Unit where
           intro who
           cases who
           simp [State.isDecision]⟩
-    | first hidden =>
+    | first latent =>
         exact ⟨fun _ => some false, by
           intro who
           cases who
           simp [State.isDecision]⟩
-    | second hidden firstAction =>
+    | second latent firstAction =>
         exact ⟨fun _ => some false, by
           intro who
           cases who
           simp [State.isDecision]⟩
-    | done hidden firstAction secondAction =>
+    | done latent firstAction secondAction =>
         exact False.elim (hterm trivial)
 
 def moveJoint (action : Bool) : Unit → Option Bool :=
@@ -110,61 +110,61 @@ theorem root_inactive (who : Unit) : ¬ twoStage.active .root who := by
 theorem root_noop_legal : twoStage.Legal .root twoStage.noop :=
   twoStage.noop_isLegal root_not_terminal root_inactive
 
-theorem first_mem_support (hidden : Bool) :
-    State.first hidden ∈
+theorem first_mem_support (latent : Bool) :
+    State.first latent ∈
       (twoStage.step .root ⟨twoStage.noop, root_noop_legal⟩).support := by
   rw [PMF.support_map]
-  exact ⟨hidden, mem_support_natureLaw hidden, rfl⟩
+  exact ⟨latent, mem_support_natureLaw latent, rfl⟩
 
 @[reducible]
-def firstHistory (hidden : Bool) : twoStage.History :=
-  ⟨.first hidden,
+def firstHistory (latent : Bool) : twoStage.History :=
+  ⟨.first latent,
     .extend .start twoStage.noop root_noop_legal
-      (first_mem_support hidden)⟩
+      (first_mem_support latent)⟩
 
-theorem first_not_terminal (hidden : Bool) :
-    ¬ twoStage.terminal (.first hidden) := by simp [State.isTerminal]
+theorem first_not_terminal (latent : Bool) :
+    ¬ twoStage.terminal (.first latent) := by simp [State.isTerminal]
 
-theorem second_not_terminal (hidden firstAction : Bool) :
-    ¬ twoStage.terminal (.second hidden firstAction) := by
+theorem second_not_terminal (latent firstAction : Bool) :
+    ¬ twoStage.terminal (.second latent firstAction) := by
   simp [State.isTerminal]
 
-theorem first_active (hidden : Bool) :
-    twoStage.active (firstHistory hidden).state () := by
+theorem first_active (latent : Bool) :
+    twoStage.active (firstHistory latent).state () := by
   exact trivial
 
-theorem moveJoint_legal_first (hidden action : Bool) :
-    twoStage.Legal (.first hidden) (moveJoint action) := by
-  refine twoStage.legal_of_legalOption (first_not_terminal hidden) ?_
+theorem moveJoint_legal_first (latent action : Bool) :
+    twoStage.Legal (.first latent) (moveJoint action) := by
+  refine twoStage.legal_of_legalOption (first_not_terminal latent) ?_
   intro who
   cases who
   exact ⟨trivial, Set.mem_univ _⟩
 
-theorem moveJoint_legal_second (hidden firstAction action : Bool) :
-    twoStage.Legal (.second hidden firstAction) (moveJoint action) := by
+theorem moveJoint_legal_second (latent firstAction action : Bool) :
+    twoStage.Legal (.second latent firstAction) (moveJoint action) := by
   refine twoStage.legal_of_legalOption
-    (second_not_terminal hidden firstAction) ?_
+    (second_not_terminal latent firstAction) ?_
   intro who
   cases who
   exact ⟨trivial, Set.mem_univ _⟩
 
 @[reducible]
-def secondHistory (hidden firstAction : Bool) : twoStage.History :=
-  let isLegal := moveJoint_legal_first hidden firstAction
-  ⟨.second hidden firstAction,
-    (firstHistory hidden).trace.extend (moveJoint firstAction) isLegal
+def secondHistory (latent firstAction : Bool) : twoStage.History :=
+  let isLegal := moveJoint_legal_first latent firstAction
+  ⟨.second latent firstAction,
+    (firstHistory latent).trace.extend (moveJoint firstAction) isLegal
       ((PMF.mem_support_pure_iff _ _).mpr rfl)⟩
 
-theorem second_active (hidden firstAction : Bool) :
-    twoStage.active (secondHistory hidden firstAction).state () := by
+theorem second_active (latent firstAction : Bool) :
+    twoStage.active (secondHistory latent firstAction).state () := by
   exact trivial
 
 @[reducible]
-def terminalHistory (hidden firstAction secondAction : Bool) :
+def terminalHistory (latent firstAction secondAction : Bool) :
     twoStage.History :=
-  let isLegal := moveJoint_legal_second hidden firstAction secondAction
-  ⟨.done hidden firstAction secondAction,
-    (secondHistory hidden firstAction).trace.extend
+  let isLegal := moveJoint_legal_second latent firstAction secondAction
+  ⟨.done latent firstAction secondAction,
+    (secondHistory latent firstAction).trace.extend
       (moveJoint secondAction) isLegal
       ((PMF.mem_support_pure_iff _ _).mpr rfl)⟩
 
@@ -282,15 +282,15 @@ theorem root_not_mem_step (source : State) (joint : Unit → Option Bool)
   cases source with
   | root =>
       rw [PMF.support_map]
-      rintro ⟨hidden, _, hroot⟩
+      rintro ⟨latent, _, hroot⟩
       cases hroot
-  | first hidden =>
+  | first latent =>
       rw [PMF.mem_support_pure_iff]
       simp
-  | second hidden firstAction =>
+  | second latent firstAction =>
       rw [PMF.mem_support_pure_iff]
       simp
-  | done hidden firstAction secondAction =>
+  | done latent firstAction secondAction =>
       exact False.elim (isLegal.1 trivial)
 
 theorem step_predecessor_unique
@@ -310,7 +310,7 @@ theorem step_predecessor_unique
       have hfirstJoint := legal_joint_eq_noop firstLegal
       subst firstJoint
       rw [PMF.support_map] at firstRealized
-      obtain ⟨hidden, _, rfl⟩ := firstRealized
+      obtain ⟨latent, _, rfl⟩ := firstRealized
       cases secondSource with
       | root =>
           have hsecondJoint := legal_joint_eq_noop secondLegal
@@ -324,9 +324,9 @@ theorem step_predecessor_unique
           cases secondRealized
       | done secondHidden secondFirst secondSecond =>
           exact False.elim (secondLegal.1 trivial)
-  | first hidden =>
+  | first latent =>
       obtain ⟨firstAction, hfirstJoint⟩ :=
-        exists_action_joint_eq (state := .first hidden) trivial firstLegal
+        exists_action_joint_eq (state := .first latent) trivial firstLegal
       subst firstJoint
       rw [PMF.mem_support_pure_iff] at firstRealized
       subst target
@@ -348,9 +348,9 @@ theorem step_predecessor_unique
           cases secondRealized
       | done secondHidden secondFirst secondSecond =>
           exact False.elim (secondLegal.1 trivial)
-  | second hidden firstAction =>
+  | second latent firstAction =>
       obtain ⟨chosen, hfirstJoint⟩ :=
-        exists_action_joint_eq (state := .second hidden firstAction)
+        exists_action_joint_eq (state := .second latent firstAction)
           trivial firstLegal
       subst firstJoint
       rw [PMF.mem_support_pure_iff] at firstRealized
@@ -375,7 +375,7 @@ theorem step_predecessor_unique
           exact ⟨rfl, rfl⟩
       | done secondHidden secondFirst secondSecond =>
           exact False.elim (secondLegal.1 trivial)
-  | done hidden firstAction secondAction =>
+  | done latent firstAction secondAction =>
       exact False.elim (firstLegal.1 trivial)
 
 theorem treeShaped : twoStage.IsTreeShaped :=
@@ -406,17 +406,17 @@ theorem rank_decreases (source target : State)
   cases source with
   | root =>
       rw [PMF.support_map] at realized
-      obtain ⟨hidden, _, rfl⟩ := realized
+      obtain ⟨latent, _, rfl⟩ := realized
       norm_num [rank]
-  | first hidden =>
+  | first latent =>
       rw [PMF.mem_support_pure_iff] at realized
       subst target
       norm_num [rank]
-  | second hidden firstAction =>
+  | second latent firstAction =>
       rw [PMF.mem_support_pure_iff] at realized
       subst target
       norm_num [rank]
-  | done hidden firstAction secondAction =>
+  | done latent firstAction secondAction =>
       exact False.elim (isLegal.1 trivial)
 
 theorem wellFoundedHistories : twoStage.WellFoundedHistories :=
@@ -460,8 +460,8 @@ theorem utility_integrable (law : PMF twoStage.History) :
     PayoffIntegrable law (fun outcome => utility outcome ()) :=
   payoffIntegrable_of_bounded law _ utility_bound
 
-theorem done_utility_match (hidden firstAction secondAction : Bool) :
-    (match State.done hidden firstAction secondAction with
+theorem done_utility_match (latent firstAction secondAction : Bool) :
+    (match State.done latent firstAction secondAction with
       | .done _ true true => (1 : ℝ)
       | _ => 0) =
       if firstAction && secondAction then 1 else 0 := by
@@ -500,32 +500,32 @@ private theorem continuationValue_of_step_constant
 
 private theorem continuationValue_terminal
     (profile : Profile information.strategicSignature)
-    (hidden firstAction secondAction : Bool) :
+    (latent firstAction secondAction : Bool) :
     continuationValue profile
-        (terminalHistory hidden firstAction secondAction) =
+        (terminalHistory latent firstAction secondAction) =
       if firstAction && secondAction then 1 else 0 := by
   rw [continuationValue,
     twoStage.historyBackwardValue_of_terminal
       (by simp [State.isTerminal])]
-  exact done_utility_match hidden firstAction secondAction
+  exact done_utility_match latent firstAction secondAction
 
-theorem infoOf_firstHistory (hidden : Bool) :
-    signals.infoOf () (firstHistory hidden).trace = (.first, []) := by
+theorem infoOf_firstHistory (latent : Bool) :
+    signals.infoOf () (firstHistory latent).trace = (.first, []) := by
   rw [firstHistory, InfoSignals.infoOf_extend, InfoSignals.infoOf_start]
   rfl
 
-theorem infoOf_secondHistory (hidden firstAction : Bool) :
-    signals.infoOf () (secondHistory hidden firstAction).trace =
+theorem infoOf_secondHistory (latent firstAction : Bool) :
+    signals.infoOf () (secondHistory latent firstAction).trace =
       (.second, [(.first, firstAction)]) := by
   rw [secondHistory, InfoSignals.infoOf_extend, infoOf_firstHistory]
   rfl
 
-theorem historyChooser_prescribed_first (hidden firstAction secondAction : Bool) :
+theorem historyChooser_prescribed_first (latent firstAction secondAction : Bool) :
     information.historyChooser
         (profileOf (prescribedPolicy firstAction secondAction))
-        (firstHistory hidden) (first_not_terminal hidden) =
+        (firstHistory latent) (first_not_terminal latent) =
       ⟨moveJoint firstAction,
-        moveJoint_legal_first hidden firstAction⟩ := by
+        moveJoint_legal_first latent firstAction⟩ := by
   apply Subtype.ext
   funext who
   cases who
@@ -535,13 +535,13 @@ theorem historyChooser_prescribed_first (hidden firstAction secondAction : Bool)
   rfl
 
 theorem historyChooser_prescribed_second
-    (hidden firstAction prescribedFirst prescribedSecond : Bool) :
+    (latent firstAction prescribedFirst prescribedSecond : Bool) :
     information.historyChooser
         (profileOf (prescribedPolicy prescribedFirst prescribedSecond))
-        (secondHistory hidden firstAction)
-        (second_not_terminal hidden firstAction) =
+        (secondHistory latent firstAction)
+        (second_not_terminal latent firstAction) =
       ⟨moveJoint prescribedSecond,
-        moveJoint_legal_second hidden firstAction prescribedSecond⟩ := by
+        moveJoint_legal_second latent firstAction prescribedSecond⟩ := by
   apply Subtype.ext
   funext who
   cases who
@@ -551,54 +551,54 @@ theorem historyChooser_prescribed_second
   rfl
 
 theorem continuationValue_prescribed_second
-    (hidden firstAction prescribedFirst prescribedSecond : Bool) :
+    (latent firstAction prescribedFirst prescribedSecond : Bool) :
     continuationValue
         (profileOf (prescribedPolicy prescribedFirst prescribedSecond))
-        (secondHistory hidden firstAction) =
+        (secondHistory latent firstAction) =
       if firstAction && prescribedSecond then 1 else 0 := by
   apply continuationValue_of_step_constant _ _
-    (second_not_terminal hidden firstAction) _
+    (second_not_terminal latent firstAction) _
   intro target realized
   have hpure : target ∈
-      (PMF.pure (.done hidden firstAction prescribedSecond)).support := by
+      (PMF.pure (.done latent firstAction prescribedSecond)).support := by
     simpa [historyChooser_prescribed_second, chosenAction, moveJoint]
       using realized
   have htarget := (PMF.mem_support_pure_iff _ _).mp hpure
   subst target
   have hhistory :
-      (secondHistory hidden firstAction).extend
+      (secondHistory latent firstAction).extend
           (information.historyChooser
             (profileOf (prescribedPolicy prescribedFirst prescribedSecond))
-            (secondHistory hidden firstAction)
-            (second_not_terminal hidden firstAction)).2 realized =
-        terminalHistory hidden firstAction prescribedSecond :=
+            (secondHistory latent firstAction)
+            (second_not_terminal latent firstAction)).2 realized =
+        terminalHistory latent firstAction prescribedSecond :=
     history_eq_of_state_eq rfl
   rw [hhistory]
-  exact continuationValue_terminal _ hidden firstAction prescribedSecond
+  exact continuationValue_terminal _ latent firstAction prescribedSecond
 
 theorem continuationValue_prescribed_first
-    (hidden prescribedFirst prescribedSecond : Bool) :
+    (latent prescribedFirst prescribedSecond : Bool) :
     continuationValue
         (profileOf (prescribedPolicy prescribedFirst prescribedSecond))
-        (firstHistory hidden) =
+        (firstHistory latent) =
       if prescribedFirst && prescribedSecond then 1 else 0 := by
-  apply continuationValue_of_step_constant _ _ (first_not_terminal hidden) _
+  apply continuationValue_of_step_constant _ _ (first_not_terminal latent) _
   intro target realized
   have hpure : target ∈
-      (PMF.pure (.second hidden prescribedFirst)).support := by
+      (PMF.pure (.second latent prescribedFirst)).support := by
     simpa [historyChooser_prescribed_first, chosenAction, moveJoint]
       using realized
   have htarget := (PMF.mem_support_pure_iff _ _).mp hpure
   subst target
   have hhistory :
-      (firstHistory hidden).extend
+      (firstHistory latent).extend
           (information.historyChooser
             (profileOf (prescribedPolicy prescribedFirst prescribedSecond))
-            (firstHistory hidden) (first_not_terminal hidden)).2 realized =
-        secondHistory hidden prescribedFirst :=
+            (firstHistory latent) (first_not_terminal latent)).2 realized =
+        secondHistory latent prescribedFirst :=
     history_eq_of_state_eq rfl
   rw [hhistory]
-  exact continuationValue_prescribed_second hidden prescribedFirst
+  exact continuationValue_prescribed_second latent prescribedFirst
     prescribedFirst prescribedSecond
 
 theorem historyChooser_prescribed_root (firstAction secondAction : Bool) :
@@ -622,17 +622,17 @@ theorem continuationValue_prescribed_root
   have hmap : target ∈ (PMF.map State.first natureLaw).support := by
     simpa [historyChooser_prescribed_root] using realized
   rw [PMF.support_map] at hmap
-  obtain ⟨hidden, _, htarget⟩ := hmap
+  obtain ⟨latent, _, htarget⟩ := hmap
   subst target
   have hhistory :
       twoStage.initHistory.extend
           (information.historyChooser
             (profileOf (prescribedPolicy firstAction secondAction))
             twoStage.initHistory root_not_terminal).2 realized =
-        firstHistory hidden :=
+        firstHistory latent :=
     history_eq_of_state_eq rfl
   rw [hhistory]
-  exact continuationValue_prescribed_first hidden firstAction secondAction
+  exact continuationValue_prescribed_first latent firstAction secondAction
 
 def firstKnowledge : Knowledge := (.first, [])
 
@@ -657,11 +657,11 @@ theorem policy_choice_second_eq_some (policy : information.Policy ())
   simp [policyAction, haction]
 
 theorem historyChooser_policy_first (policy : information.Policy ())
-    (hidden : Bool) :
+    (latent : Bool) :
     information.historyChooser (profileOf policy)
-        (firstHistory hidden) (first_not_terminal hidden) =
+        (firstHistory latent) (first_not_terminal latent) =
       ⟨moveJoint (policyAction policy firstKnowledge),
-        moveJoint_legal_first hidden
+        moveJoint_legal_first latent
           (policyAction policy firstKnowledge)⟩ := by
   apply Subtype.ext
   funext who
@@ -672,12 +672,12 @@ theorem historyChooser_policy_first (policy : information.Policy ())
   exact policy_choice_first_eq_some policy
 
 theorem historyChooser_policy_second (policy : information.Policy ())
-    (hidden firstAction : Bool) :
+    (latent firstAction : Bool) :
     information.historyChooser (profileOf policy)
-        (secondHistory hidden firstAction)
-        (second_not_terminal hidden firstAction) =
+        (secondHistory latent firstAction)
+        (second_not_terminal latent firstAction) =
       ⟨moveJoint (policyAction policy (secondKnowledge firstAction)),
-        moveJoint_legal_second hidden firstAction
+        moveJoint_legal_second latent firstAction
           (policyAction policy (secondKnowledge firstAction))⟩ := by
   apply Subtype.ext
   funext who
@@ -688,53 +688,53 @@ theorem historyChooser_policy_second (policy : information.Policy ())
   exact policy_choice_second_eq_some policy firstAction
 
 theorem continuationValue_policy_second (policy : information.Policy ())
-    (hidden firstAction : Bool) :
+    (latent firstAction : Bool) :
     continuationValue (profileOf policy)
-        (secondHistory hidden firstAction) =
+        (secondHistory latent firstAction) =
       if firstAction && policyAction policy (secondKnowledge firstAction)
         then 1 else 0 := by
   apply continuationValue_of_step_constant _ _
-    (second_not_terminal hidden firstAction) _
+    (second_not_terminal latent firstAction) _
   intro target realized
   let secondAction := policyAction policy (secondKnowledge firstAction)
   have hpure : target ∈
-      (PMF.pure (.done hidden firstAction secondAction)).support := by
+      (PMF.pure (.done latent firstAction secondAction)).support := by
     simpa [historyChooser_policy_second, secondAction, chosenAction,
       moveJoint] using realized
   have htarget := (PMF.mem_support_pure_iff _ _).mp hpure
   subst target
   have hhistory :
-      (secondHistory hidden firstAction).extend
+      (secondHistory latent firstAction).extend
           (information.historyChooser (profileOf policy)
-            (secondHistory hidden firstAction)
-            (second_not_terminal hidden firstAction)).2 realized =
-        terminalHistory hidden firstAction secondAction :=
+            (secondHistory latent firstAction)
+            (second_not_terminal latent firstAction)).2 realized =
+        terminalHistory latent firstAction secondAction :=
     history_eq_of_state_eq rfl
   rw [hhistory]
-  exact continuationValue_terminal _ hidden firstAction secondAction
+  exact continuationValue_terminal _ latent firstAction secondAction
 
 theorem continuationValue_policy_first (policy : information.Policy ())
-    (hidden : Bool) :
-    continuationValue (profileOf policy) (firstHistory hidden) =
+    (latent : Bool) :
+    continuationValue (profileOf policy) (firstHistory latent) =
       let firstAction := policyAction policy firstKnowledge
       if firstAction && policyAction policy (secondKnowledge firstAction)
         then 1 else 0 := by
-  apply continuationValue_of_step_constant _ _ (first_not_terminal hidden) _
+  apply continuationValue_of_step_constant _ _ (first_not_terminal latent) _
   intro target realized
   let firstAction := policyAction policy firstKnowledge
-  have hpure : target ∈ (PMF.pure (.second hidden firstAction)).support := by
+  have hpure : target ∈ (PMF.pure (.second latent firstAction)).support := by
     simpa [historyChooser_policy_first, firstAction, chosenAction,
       moveJoint] using realized
   have htarget := (PMF.mem_support_pure_iff _ _).mp hpure
   subst target
   have hhistory :
-      (firstHistory hidden).extend
+      (firstHistory latent).extend
           (information.historyChooser (profileOf policy)
-            (firstHistory hidden) (first_not_terminal hidden)).2 realized =
-        secondHistory hidden firstAction :=
+            (firstHistory latent) (first_not_terminal latent)).2 realized =
+        secondHistory latent firstAction :=
     history_eq_of_state_eq rfl
   rw [hhistory]
-  exact continuationValue_policy_second policy hidden firstAction
+  exact continuationValue_policy_second policy latent firstAction
 
 theorem historyChooser_policy_root (policy : information.Policy ()) :
     information.historyChooser (profileOf policy)
@@ -758,16 +758,16 @@ theorem continuationValue_policy_root (policy : information.Policy ()) :
   have hmap : target ∈ (PMF.map State.first natureLaw).support := by
     simpa [historyChooser_policy_root] using realized
   rw [PMF.support_map] at hmap
-  obtain ⟨hidden, _, htarget⟩ := hmap
+  obtain ⟨latent, _, htarget⟩ := hmap
   subst target
   have hhistory :
       twoStage.initHistory.extend
           (information.historyChooser (profileOf policy)
             twoStage.initHistory root_not_terminal).2 realized =
-        firstHistory hidden :=
+        firstHistory latent :=
     history_eq_of_state_eq rfl
   rw [hhistory]
-  exact continuationValue_policy_first policy hidden
+  exact continuationValue_policy_first policy latent
 
 theorem update_unit_eq_profileOf
     (profile : Profile information.strategicSignature)
@@ -894,41 +894,41 @@ theorem nonterminal_subgameRoot_eq_init (root : twoStage.History)
   cases state with
   | root =>
       exact history_eq_of_state_eq rfl
-  | first hidden =>
+  | first latent =>
       have hhere :
-          ({state := .first hidden, trace := trace} : twoStage.History) =
-            firstHistory hidden :=
+          ({state := .first latent, trace := trace} : twoStage.History) =
+            firstHistory latent :=
         history_eq_of_state_eq rfl
       rw [hhere] at hroot
-      have hcross := hroot () (firstHistory hidden) (firstHistory (!hidden))
-        (HistoryReaches.refl twoStage (firstHistory hidden))
-        (first_not_terminal hidden) (first_active hidden)
-        (first_not_terminal (!hidden)) (first_active (!hidden))
+      have hcross := hroot () (firstHistory latent) (firstHistory (!latent))
+        (HistoryReaches.refl twoStage (firstHistory latent))
+        (first_not_terminal latent) (first_active latent)
+        (first_not_terminal (!latent)) (first_active (!latent))
         (by rw [infoOf_firstHistory, infoOf_firstHistory])
       rcases hcross with ⟨fuel, hreach⟩
       have hequal := ReachesWithin.eq_of_trace_length_eq hreach (by rfl)
       have hstate := congrArg (fun history : twoStage.History => history.state) hequal
       simp at hstate
-  | second hidden firstAction =>
+  | second latent firstAction =>
       have hhere :
-          ({state := .second hidden firstAction, trace := trace} :
-            twoStage.History) = secondHistory hidden firstAction :=
+          ({state := .second latent firstAction, trace := trace} :
+            twoStage.History) = secondHistory latent firstAction :=
         history_eq_of_state_eq rfl
       rw [hhere] at hroot
       have hcross := hroot ()
-        (secondHistory hidden firstAction)
-        (secondHistory (!hidden) firstAction)
-        (HistoryReaches.refl twoStage (secondHistory hidden firstAction))
-        (second_not_terminal hidden firstAction)
-        (second_active hidden firstAction)
-        (second_not_terminal (!hidden) firstAction)
-        (second_active (!hidden) firstAction)
+        (secondHistory latent firstAction)
+        (secondHistory (!latent) firstAction)
+        (HistoryReaches.refl twoStage (secondHistory latent firstAction))
+        (second_not_terminal latent firstAction)
+        (second_active latent firstAction)
+        (second_not_terminal (!latent) firstAction)
+        (second_active (!latent) firstAction)
         (by rw [infoOf_secondHistory, infoOf_secondHistory])
       rcases hcross with ⟨fuel, hreach⟩
       have hequal := ReachesWithin.eq_of_trace_length_eq hreach (by rfl)
       have hstate := congrArg (fun history : twoStage.History => history.state) hequal
       simp at hstate
-  | done hidden firstAction secondAction =>
+  | done latent firstAction secondAction =>
       exact False.elim (hterm trivial)
 
 /-- Every single-information-set deviation is harmless for the incumbent.
@@ -944,32 +944,32 @@ theorem incumbent_hasNoProfitableSingleInformationDeviationInSubgames :
   cases state with
   | root =>
       exact False.elim (by simp [State.isDecision] at hactive)
-  | first hidden =>
+  | first latent =>
       have hhere :
-          ({state := .first hidden, trace := trace} : twoStage.History) =
-            firstHistory hidden :=
+          ({state := .first latent, trace := trace} : twoStage.History) =
+            firstHistory latent :=
         history_eq_of_state_eq rfl
       have hinfo :
           information.infoOf ()
-              ({state := .first hidden, trace := trace} :
+              ({state := .first latent, trace := trace} :
                 twoStage.History).trace = firstKnowledge := by
         rw [hhere]
-        exact infoOf_firstHistory hidden
+        exact infoOf_firstHistory latent
       obtain ⟨firstChoice, hreplace⟩ :=
         exists_replaceAt_eq_of_info_eq (incumbent ()) hinfo choice
       rw [hreplace, update_unit_eq_profileOf,
         replace_first_value, incumbent_value]
-  | second hidden firstAction =>
+  | second latent firstAction =>
       have hhere :
-          ({state := .second hidden firstAction, trace := trace} :
-            twoStage.History) = secondHistory hidden firstAction :=
+          ({state := .second latent firstAction, trace := trace} :
+            twoStage.History) = secondHistory latent firstAction :=
         history_eq_of_state_eq rfl
       have hinfo :
           information.infoOf ()
-              ({state := .second hidden firstAction, trace := trace} :
+              ({state := .second latent firstAction, trace := trace} :
                 twoStage.History).trace = secondKnowledge firstAction := by
         rw [hhere]
-        exact infoOf_secondHistory hidden firstAction
+        exact infoOf_secondHistory latent firstAction
       obtain ⟨secondChoice, hreplace⟩ :=
         exists_replaceAt_eq_of_info_eq (incumbent ()) hinfo choice
       rw [hreplace]
@@ -980,7 +980,7 @@ theorem incumbent_hasNoProfitableSingleInformationDeviationInSubgames :
       | true =>
           rw [update_unit_eq_profileOf,
             replace_second_true_value, incumbent_value]
-  | done hidden firstAction secondAction =>
+  | done latent firstAction secondAction =>
       exact False.elim (hdecision trivial)
 
 /-- The proposed general imperfect-information one-shot characterization is

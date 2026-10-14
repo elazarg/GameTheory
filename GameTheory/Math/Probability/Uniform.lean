@@ -1,6 +1,6 @@
 import GameTheory.Math.Probability.ExpectationAlgebra
 import GameTheory.Math.Probability.Mixture
-import Mathlib.Probability.Distributions.Uniform
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -11,17 +11,17 @@ namespace GameTheory.Math.Probability
 /-- Expected value under a finite uniform law is the arithmetic mean. -/
 theorem expect_uniformOfFintype {α : Type*} [Fintype α] [Nonempty α]
     (f : α → ℝ) :
-    expect (PMF.uniformOfFintype α) f =
+    expect (uniformLaw α) f =
       (∑ a, f a) / Fintype.card α := by
   rw [expect_eq_sum]
-  simp only [PMF.uniformOfFintype_apply, ENNReal.toReal_inv,
+  simp only [uniformLaw_apply, ENNReal.toReal_inv,
     ENNReal.toReal_natCast]
   rw [← Finset.mul_sum, div_eq_mul_inv]
   ring
 
 /-- The uniform expectation formula specialized to `Fin T`. -/
 theorem expect_uniformFin {T : ℕ} [NeZero T] (f : Fin T → ℝ) :
-    expect (PMF.uniformOfFintype (Fin T)) f
+    expect (uniformLaw (Fin T)) f
          = (∑ t, f t) / T := by
   simpa only [Fintype.card_fin] using expect_uniformOfFintype f
 
@@ -29,26 +29,27 @@ theorem expect_uniformFin {T : ℕ} [NeZero T] (f : Fin T → ℝ) :
 cardinality divided by the size of the source carrier. -/
 theorem uniformOfFintype_map_apply {α β : Type*} [Fintype α] [Nonempty α]
     [DecidableEq β] (f : α → β) (b : β) :
-    (PMF.uniformOfFintype α).map f b =
+    (uniformLaw α).map f b =
       ((Finset.univ.filter fun a => f a = b).card : ENNReal) /
         (Fintype.card α : ENNReal) := by
   classical
   rw [PMF.map_apply, tsum_fintype]
-  simp only [PMF.uniformOfFintype_apply]
-  rw [← Finset.sum_filter]
-  simp only [Finset.sum_const, nsmul_eq_mul]
-  simp [eq_comm, div_eq_mul_inv]
+  let : DecidablePred (fun a : α => b = f a) := fun _ => Classical.propDecidable _
+  simpa only [uniformLaw_apply, Finset.sum_const, nsmul_eq_mul, div_eq_mul_inv,
+    eq_comm] using
+    (Finset.sum_filter (s := Finset.univ) (fun a => b = f a)
+      (fun _ => (Fintype.card α : ENNReal)⁻¹)).symm
 
 /-- Splitting the final point from a finite uniform sample gives the uniform
 law on the initial segment mixed with the final atom. -/
 theorem uniformOfFintype_map_fin_succ {β : Type*} (n : ℕ) [NeZero n]
     (f : Fin (n + 1) → β) :
-    (PMF.uniformOfFintype (Fin (n + 1))).map f =
+    (uniformLaw (Fin (n + 1))).map f =
       mix ((n : ℝ) / (n + 1)) (by positivity) (by
         have hn : (0 : ℝ) < n + 1 := by positivity
         rw [div_le_iff₀ hn]
         norm_num)
-        ((PMF.uniformOfFintype (Fin n)).map fun i => f i.castSucc)
+        ((uniformLaw (Fin n)).map fun i => f i.castSucc)
         (PMF.pure (f (Fin.last n))) := by
   classical
   ext b
@@ -64,13 +65,13 @@ theorem uniformOfFintype_map_fin_succ {β : Type*} (n : ℕ) [NeZero n]
     field_simp
     ring
   have hleft := PMF.apply_ne_top
-    ((PMF.uniformOfFintype (Fin (n + 1))).map f) b
+    ((uniformLaw (Fin (n + 1))).map f) b
   have hright := PMF.apply_ne_top
     (mix ((n : ℝ) / (n + 1)) (by positivity) (by
       have hn : (0 : ℝ) < n + 1 := by positivity
       rw [div_le_iff₀ hn]
       norm_num)
-      ((PMF.uniformOfFintype (Fin n)).map fun i => f i.castSucc)
+      ((uniformLaw (Fin n)).map fun i => f i.castSucc)
       (PMF.pure (f (Fin.last n)))) b
   apply (ENNReal.toReal_eq_toReal_iff' hleft hright).1
   rw [uniformOfFintype_map_apply, mix_apply,

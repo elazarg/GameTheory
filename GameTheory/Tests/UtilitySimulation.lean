@@ -2,6 +2,7 @@
 
 import GameTheory.Core.MixtureUtilitySimulation
 import GameTheory.Tests.MixtureSimulation
+import GameTheory.Math.Probability.FiniteUniform
 
 /-! # Utility-simulation regressions for a genuine mixed deviation -/
 
@@ -61,7 +62,7 @@ private theorem source_value (profile : Profile source.sig) (replacement : Bool)
 private theorem coin_value :
     expect coin (fun bit => booleanUtility bit ()) = 1 := by
   rw [expect_eq_sum]
-  simp [coin, PMF.uniformOfFintype_apply, booleanUtility]
+  simp [coin, uniformLaw_apply, booleanUtility]
 
 private theorem target_value (profile : Profile target.sig) (replacement : Fin 3) :
     expectedUtility (fun outcome player => booleanUtility (targetObserve outcome) player) ()

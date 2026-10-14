@@ -7,6 +7,7 @@ potential step is genuinely nonzero rather than a constant-path tautology.
 -/
 
 import GameTheory.Core.FictitiousPlayPotential
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -53,7 +54,7 @@ theorem exactPotential :
 theorem firstBelief :
     game.form.empiricalBelief history 1 = game.form.purify allFalse := by
   funext who
-  show (PMF.uniformOfFintype (Fin 1)).map
+  show (uniformLaw (Fin 1)).map
       (fun round : Fin 1 => history round.val who) = PMF.pure false
   have hconstant : (fun round : Fin 1 => history round.val who) =
       fun _ => false := by

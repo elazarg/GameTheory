@@ -1,5 +1,5 @@
 import Mathlib.Data.Finset.Sort
-import Mathlib.Data.Prod.Lex
+import Mathlib.Order.Prod.Lex.Basic
 import Mathlib.Algebra.Ring.Basic
 
 /-! Canonical ordering and parity of complementary ports.

@@ -6,6 +6,8 @@ package GameTheoryComplexity where
   version := v!"0.1.0"
   description := "Opt-in computational complexity certificates for GameTheory"
   fixedToolchain := true
+  -- This library retains legacy module visibility when importing Mathlib modules.
+  allowNonModules := true
   license := "Apache-2.0"
   lintDriver := "batteries/runLinter"
   lintDriverArgs := #["GameTheoryComplexity.LintAll"]
@@ -23,15 +25,15 @@ checkout with `-KgameTheoryPath=../..`. The base package never requires this one
         (some "9e16c2a5b29ff3fe4c545c31a91602b56d25e349") none
 }
 
-require complexitylib from git "https://github.com/elazarg/complexitylib"
-  @ "c5f2acf1a35d5b00db04cd1bd337a8ce57d66a40"
+require complexitylib from git "https://github.com/SamuelSchlesinger/complexitylib"
+  @ "257ad90ec5f547894cc20f27bd828839b1bf7bbf"
 
 require cslib from git "https://github.com/leanprover/cslib.git"
   @ "94ea80f41a5678fce997a004f0d8d12dbe47cc4b"
 
 -- Explicitly select the same Mathlib version as the base package, overriding
 -- the older inherited snapshot in ComplexityLib.
-require "leanprover-community" / "mathlib" @ git "v4.34.1"
+require "leanprover-community" / "mathlib" @ git "v4.35.0"
 
 @[default_target]
 lean_lib GameTheoryComplexity where

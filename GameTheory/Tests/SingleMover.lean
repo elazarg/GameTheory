@@ -7,6 +7,9 @@ inactive. The following chance step flips a second coin through `step`.
 
 import GameTheory.Protocol.SingleMover
 import GameTheory.Math.Probability.Uniform
+import GameTheory.Math.Probability.FiniteUniform
+
+open GameTheory.Math.Probability
 
 noncomputable section
 
@@ -19,7 +22,7 @@ inductive Stage | decision | chance (choice : Bool) | done (choice toss : Bool)
   deriving DecidableEq
 
 def coin : PMF Bool :=
-  PMF.uniformOfFintype Bool
+  uniformLaw Bool
 
 @[reducible] def protocol : ExecutionProtocol ℕ where
   State := Stage

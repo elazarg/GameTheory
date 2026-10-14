@@ -25,6 +25,9 @@ import GameTheory.Math.Probability.MeanComparisonExpectation
 import GameTheory.Math.Probability.SampleSumEvents
 import GameTheory.Math.Probability.Uniform
 import Mathlib.Analysis.SpecificLimits.Normed
+import GameTheory.Math.Probability.FiniteUniform
+
+open GameTheory.Math.Probability
 
 noncomputable section
 
@@ -129,11 +132,11 @@ end Ahead
 
 /-- Pays `0` or `2` with equal probability. -/
 def coinPayoff : PMF ℝ :=
-  (PMF.uniformOfFintype Bool).map fun b => if b then 2 else 0
+  (uniformLaw Bool).map fun b => if b then 2 else 0
 
 /-- Pays `4 ^ κ` with probability `2 ^ (-κ)`, and `0` otherwise. -/
 def jackpot (κ : ℕ) : PMF ℝ :=
-  (PMF.uniformOfFintype (Fin (2 ^ κ))).map fun i => if i = 0 then 4 ^ κ else 0
+  (uniformLaw (Fin (2 ^ κ))).map fun i => if i = 0 then 4 ^ κ else 0
 
 theorem lawMean_coinPayoff : lawMean coinPayoff = 1 := by
   rw [lawMean, coinPayoff, expect_map, expect_uniformOfFintype]
@@ -320,13 +323,13 @@ def guessingGame : ParameterizedGame GuessRole where
 
 /-- Both roles pick uniformly at every size. -/
 def uniformGuess : Profile guessingGame.sig :=
-  fun _ κ => PMF.uniformOfFintype (Fin κ → Bool)
+  fun _ κ => uniformLaw (Fin κ → Bool)
 
 /-- The number of agreements with a uniform string does not depend on the other
 string. -/
 private theorem uniform_map_agreements {κ : ℕ} (y : Fin κ → Bool) :
-    (PMF.uniformOfFintype (Fin κ → Bool)).map (fun x => agreements x y) =
-      (PMF.uniformOfFintype (Fin κ → Bool)).map (fun x => agreements x fun _ => true) := by
+    (uniformLaw (Fin κ → Bool)).map (fun x => agreements x y) =
+      (uniformLaw (Fin κ → Bool)).map (fun x => agreements x fun _ => true) := by
   let flip : Equiv.Perm (Fin κ → Bool) :=
     Function.Involutive.toPerm (fun x i => x i == y i) fun x => by
       funext i
@@ -337,11 +340,11 @@ private theorem uniform_map_agreements {κ : ℕ} (y : Fin κ → Bool) :
     change (Finset.univ.filter fun i => x i = y i).card =
       (Finset.univ.filter fun i => (x i == y i) = true).card
     simp only [beq_iff_eq]
-  have hflip : (PMF.uniformOfFintype (Fin κ → Bool)).map flip =
-      PMF.uniformOfFintype (Fin κ → Bool) := by
+  have hflip : (uniformLaw (Fin κ → Bool)).map flip =
+      uniformLaw (Fin κ → Bool) := by
     ext z
     classical
-    rw [uniformOfFintype_map_apply, PMF.uniformOfFintype_apply]
+    rw [uniformOfFintype_map_apply, uniformLaw_apply]
     have hfiber : (Finset.univ.filter fun x => flip x = z) = {flip.symm z} := by
       ext x
       simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_singleton]
@@ -355,12 +358,12 @@ private theorem uniform_map_agreements {κ : ℕ} (y : Fin κ → Bool) :
 
 /-- The law of agreements with an independent uniform string. -/
 private abbrev agreementLaw (κ : ℕ) : PMF ℕ :=
-  (PMF.uniformOfFintype (Fin κ → Bool)).map fun x => agreements x fun _ => true
+  (uniformLaw (Fin κ → Bool)).map fun x => agreements x fun _ => true
 
 private theorem bind_uniform_right {κ : ℕ} (law : PMF (Fin κ → Bool)) :
-    agreementPlay law (PMF.uniformOfFintype (Fin κ → Bool)) = agreementLaw κ := by
+    agreementPlay law (uniformLaw (Fin κ → Bool)) = agreementLaw κ := by
   have hpoint : ∀ x : Fin κ → Bool,
-      (PMF.uniformOfFintype (Fin κ → Bool)).map (fun y => agreements x y) = agreementLaw κ := by
+      (uniformLaw (Fin κ → Bool)).map (fun y => agreements x y) = agreementLaw κ := by
     intro x
     simp_rw [agreements_comm x]
     exact uniform_map_agreements x
@@ -368,10 +371,10 @@ private theorem bind_uniform_right {κ : ℕ} (law : PMF (Fin κ → Bool)) :
   exact PMF.bind_const _ _
 
 private theorem bind_uniform_left {κ : ℕ} (law : PMF (Fin κ → Bool)) :
-    agreementPlay (PMF.uniformOfFintype (Fin κ → Bool)) law = agreementLaw κ := by
-  have hswap : ((PMF.uniformOfFintype (Fin κ → Bool)).bind fun x =>
+    agreementPlay (uniformLaw (Fin κ → Bool)) law = agreementLaw κ := by
+  have hswap : ((uniformLaw (Fin κ → Bool)).bind fun x =>
       law.map fun y => agreements x y) =
-        law.bind fun y => (PMF.uniformOfFintype (Fin κ → Bool)).map fun x => agreements x y := by
+        law.bind fun y => (uniformLaw (Fin κ → Bool)).map fun x => agreements x y := by
     simp only [PMF.map, Function.comp_def]
     exact PMF.bind_comm _ _ _
   rw [agreementPlay, hswap]

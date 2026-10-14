@@ -71,19 +71,20 @@ example :
     wordRoutingPointer 3 fixtureP fixtureS false (encodeRoutingPoint 3 (12, 5)) =
       encodeRoutingPoint 3 (13, 5) ∧
     wordRoutingPointer 3 fixtureP fixtureS false (encodeRoutingPoint 3 (13, 5)) =
-      encodeRoutingPoint 3 (13, 6) := by decide
+      encodeRoutingPoint 3 (13, 6) := by decide +kernel
 
 example : wordRoutingPointer 3 fixtureP fixtureS true (encodeRoutingPoint 3 (12, 5)) =
       encodeRoutingPoint 3 (12, 4) ∧
     wordRoutingPointer 3 fixtureP fixtureS true (encodeRoutingPoint 3 (12, 4)) =
-      encodeRoutingPoint 3 (13, 4) := by decide
+      encodeRoutingPoint 3 (13, 4) := by decide +kernel
 
 example : wordRoutingPointer 3 fixtureP fixtureS true (encodeRoutingPoint 3 (12, 3)) =
       encodeRoutingPoint 3 (12, 3) ∧
     wordRoutingPointer 3 fixtureP fixtureS false (encodeRoutingPoint 3 (12, 3)) =
       encodeRoutingPoint 3 (12, 3) ∧
     ¬IsEndpoint (wordRoutingPointer 3 fixtureP fixtureS true)
-      (wordRoutingPointer 3 fixtureP fixtureS false) (encodeRoutingPoint 3 (12, 3)) := by decide
+      (wordRoutingPointer 3 fixtureP fixtureS false) (encodeRoutingPoint 3 (12, 3)) := by
+  decide +kernel
 
 example : wordRoutingPointer 3 fixtureP fixtureS true [] = [] ∧
     wordRoutingPointer 3 fixtureP fixtureS false [true] = [true] ∧

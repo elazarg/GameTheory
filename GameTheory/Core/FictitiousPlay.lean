@@ -14,6 +14,7 @@ and Allocation*, Cowles Commission Monograph 13 (1951), 374--376.
 import GameTheory.Core.MixedImprovement
 import GameTheory.Core.Response
 import GameTheory.Math.Probability.Uniform
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -31,7 +32,7 @@ variable (G : GameForm.{uι, us, uo} ι)
 /-- The empirical law of one player's actions during the first `T` rounds. -/
 def empiricalMarginal (history : ℕ → Profile G.sig) (who : ι)
     (T : ℕ) [NeZero T] : PMF (G.sig.Strategy who) :=
-  (PMF.uniformOfFintype (Fin T)).map
+  (uniformLaw (Fin T)).map
     fun round : Fin T => history round.val who
 
 theorem empiricalMarginal_integrable (history : ℕ → Profile G.sig)
@@ -39,7 +40,7 @@ theorem empiricalMarginal_integrable (history : ℕ → Profile G.sig)
     (observable : G.sig.Strategy who → ℝ) :
     PayoffIntegrable (G.empiricalMarginal history who T) observable := by
   have hmap : PayoffIntegrable
-      ((PMF.uniformOfFintype (Fin T)).map
+      ((uniformLaw (Fin T)).map
         fun round : Fin T => history round.val who) observable :=
     (payoffIntegrable_map_iff _ _ _).2 (payoffIntegrable_of_finite _ _)
   simpa only [empiricalMarginal] using hmap
@@ -63,7 +64,7 @@ theorem empiricalMarginal_expect (history : ℕ → Profile G.sig) (who : ι)
       (∑ round : Fin T, observable (history round who)) / T := by
   have hmap := expect_map
     (fun round : Fin T => history round.val who)
-    (PMF.uniformOfFintype (Fin T)) observable
+    (uniformLaw (Fin T)) observable
   simpa only [empiricalMarginal, expect_uniformFin, Function.comp_apply] using hmap
 
 /-- Adding one observation is a mixture of the previous empirical law and the
@@ -151,7 +152,7 @@ theorem empiricalBelief_integrable [Fintype ι]
     PayoffIntegrable
       (independentProduct (G.empiricalBelief history T)) observable := by
   let rounds : ∀ _ : ι, PMF (Fin T) := fun _ =>
-    PMF.uniformOfFintype (Fin T)
+    uniformLaw (Fin T)
   let sampleToProfile : (∀ _ : ι, Fin T) → Profile G.sig := fun sample who =>
     history (sample who).val who
   have hlaw :
@@ -182,7 +183,7 @@ theorem empiricalBelief_update_integrable [Fintype ι] [DecidableEq ι]
         (Profile.update (G.empiricalBelief history T) who (PMF.pure action)))
       observable := by
   let rounds : ∀ _ : ι, PMF (Fin T) := fun _ =>
-    PMF.uniformOfFintype (Fin T)
+    uniformLaw (Fin T)
   let sampleToProfile : (∀ _ : ι, Fin T) → Profile G.sig := fun sample =>
     Profile.update (fun player => history (sample player).val player) who
       action

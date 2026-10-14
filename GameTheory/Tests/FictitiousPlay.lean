@@ -7,6 +7,7 @@ canonical pure-to-mixed Nash bridge.
 -/
 
 import GameTheory.Core.FictitiousPlay
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -122,13 +123,13 @@ theorem alternating_not_isFictitiousPlay :
         game.form.purify coordinated := by
     funext who
     show PMF.map (fun round : Fin 1 => alternatingHistory round who)
-        (PMF.uniformOfFintype (Fin 1)) = PMF.pure false
+        (uniformLaw (Fin 1)) = PMF.pure false
     rw [show (fun round : Fin 1 => alternatingHistory round who) = fun _ => false by
       funext round
       have hround : round = 0 := Subsingleton.elim _ _
       subst round
       rfl]
-    exact (PMF.uniformOfFintype (Fin 1)).map_const false
+    exact (uniformLaw (Fin 1)).map_const false
   have hbest := hplay 0 0 (PMF.pure false)
   have hplayed : alternatingHistory 1 0 = true := by
     norm_num [alternatingHistory]

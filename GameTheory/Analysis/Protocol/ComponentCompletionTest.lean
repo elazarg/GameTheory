@@ -2,6 +2,7 @@ import GameTheory.Analysis.Protocol.ComponentCompletion
 import GameTheory.Analysis.Protocol.LocalDeviationBounds
 import GameTheory.Analysis.Protocol.LocalSimulationLimit
 import GameTheory.Analysis.Protocol.SequentialExistenceTest
+import GameTheory.Math.Probability.FiniteUniform
 noncomputable section
 namespace GameTheory.Tests.ProtocolComponentCompletion
 open GameTheory GameTheory.Protocol GameTheory.Protocol.InformationModel
@@ -42,14 +43,14 @@ theorem unequal_depth_equilibrium_from_components_of_terminal_range
     ring
   let reference (agent : information.InformationAgent information.playedInformation) : PMF
     (F.sig.Strategy agent) :=
-    PMF.uniformOfFintype _
+    uniformLaw _
   let component (n : ℕ) (agent : information.InformationAgent information.playedInformation)
       (part : F.sig.Strategy agent) := mix (weight n) (positive n).le (small n) (reference agent)
         (PMF.pure part)
   have full : ∀ n agent part, FullSupport (component n agent part) := by
     intro n agent part choice
     exact mem_support_mix_left _ _ _ (positive n)
-      (PMF.mem_support_uniformOfFintype choice)
+      (mem_support_uniformLaw choice)
   let decisionRecallCertificate := information.decisionRecall_of_perfectRecall perfectRecall
   obtain ⟨weights, sequence, limit, index, played, mixed, bayes, increasing, converges,
       consistent, stepOptimal, limitFacts⟩ :=

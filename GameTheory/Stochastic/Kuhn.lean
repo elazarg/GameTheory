@@ -10,7 +10,7 @@ policy-measure realization handles arbitrary bounded branching.
 import GameTheory.Stochastic.History
 import GameTheory.Core.Transform
 import GameTheory.Protocol.PolicyMeasure
-import Mathlib.Probability.Distributions.Uniform
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -140,7 +140,7 @@ variable [∀ i, Fintype (G.Action i)] [∀ i, Nonempty (G.Action i)]
 /-- A proof-free behavioral profile assigning positive mass to every action at
 every public history. -/
 def fullyMixedPublicProfile (initial : G.State) : G.PublicProfile initial :=
-  fun i _ => PMF.uniformOfFintype (G.Action i)
+  fun i _ => uniformLaw (G.Action i)
 
 /-- The canonical Protocol presentation of the fully supported public profile. -/
 def fullyMixedBehaviorProfile (initial : G.State) : G.BehaviorProfile initial :=
@@ -156,7 +156,7 @@ theorem fullyMixedBehaviorProfile_mem_support (initial : G.State)
     fullyMixedPublicProfile
   rw [PMF.support_map]
   refine ⟨(G.actionChoiceEquiv initial i info).symm choice,
-    PMF.mem_support_uniformOfFintype _, ?_⟩
+    mem_support_uniformLaw _, ?_⟩
   exact (G.actionChoiceEquiv initial i info).apply_symm_apply choice
 
 /-- Information sites visited by the fully supported canonical run at some

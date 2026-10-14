@@ -15,6 +15,7 @@ import GameTheory.Math.Probability.ProductConditioning
 import GameTheory.Math.Probability.UniformTremble
 import GameTheory.Protocol.DecisionPlan
 import GameTheory.Protocol.PolicyRandomization
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -54,7 +55,7 @@ theorem exists_informationSite_of_mem_ownPlay {state : E.State} (trace : E.Trace
       · exact induction member
 
 /-- Under decision recall, a decision site does not occur in its own record. -/
-theorem InformationSite.not_mem_recordAt (recall : M.DecisionRecall)
+theorem InformationSite.not_mem_recordAt (hrecall : M.DecisionRecall)
     (site : M.InformationSite who) (action : E.Action who) :
     (site.1, action) ∉ M.recordAt who site.1 := by
   obtain ⟨history, nonterminal, _witness, _permitted⟩ := site.2
@@ -63,9 +64,9 @@ theorem InformationSite.not_mem_recordAt (recall : M.DecisionRecall)
     (joint who) (InformationSite.active M site history)
   obtain ⟨next, realized⟩ := (E.step history.1.state ⟨joint, legal⟩).support_nonempty
   let extended : E.Trace next := .extend history.1.trace joint legal realized
-  have noRepeat := recall.actsOnceAtEachInfoState who extended
+  have noRepeat := hrecall.actsOnceAtEachInfoState who extended
   simp only [extended, InfoSignals.actedAt, acted, List.nodup_cons] at noRepeat
-  rw [recall.recordAt_eq_ownPlay who site history]
+  rw [hrecall.recordAt_eq_ownPlay who site history]
   intro member
   exact noRepeat.1 (by
     rw [history.2, M.actedAt_eq_map_ownPlay]
@@ -79,25 +80,25 @@ def InformationSite.recordChoices (current site : M.InformationSite who) :
     recorded.1 = site.1 → choice.1 = some recorded.2}
 
 /-- The player's record on reaching a site does not restrict that site. -/
-theorem InformationSite.recordChoices_self (recall : M.DecisionRecall)
+theorem InformationSite.recordChoices_self (hrecall : M.DecisionRecall)
     (current : M.InformationSite who) : current.recordChoices current = Set.univ := by
   ext choice
   simp only [InformationSite.recordChoices, Set.mem_ofPred_eq, Set.mem_univ, iff_true]
   intro recorded member same
-  apply (current.not_mem_recordAt recall recorded.2).elim
+  apply (current.not_mem_recordAt hrecall recorded.2).elim
   change (recorded.1, recorded.2) ∈ M.recordAt who current.1 at member
   simpa only [same] using member
 
 /-- Decision recall makes the record's restrictions jointly satisfiable: no
 coordinate is required to record two different own actions. -/
-theorem InformationSite.recordChoices_nonempty (recall : M.DecisionRecall)
+theorem InformationSite.recordChoices_nonempty (hrecall : M.DecisionRecall)
     (current site : M.InformationSite who) : (current.recordChoices site).Nonempty := by
   classical
   obtain ⟨history, _nonterminal, _action, _permitted⟩ := current.2
-  have record := recall.recordAt_eq_ownPlay who current history
+  have record := hrecall.recordAt_eq_ownPlay who current history
   have noRepeat : ((M.recordAt who current.1).map Prod.fst).Nodup := by
     rw [record, ← M.actedAt_eq_map_ownPlay]
-    exact recall.actsOnceAtEachInfoState who _
+    exact hrecall.actsOnceAtEachInfoState who _
   by_cases visited : ∃ recorded ∈ M.recordAt who current.1, recorded.1 = site.1
   · obtain ⟨recorded, member, same⟩ := visited
     have past : recorded ∈ M.ownPlay who history.1.trace := by
@@ -117,7 +118,7 @@ theorem InformationSite.recordChoices_nonempty (recall : M.DecisionRecall)
 
 /-- An extended decision table could have brought play to a decision site
 exactly when every coordinate is compatible with the record there. -/
-theorem DecisionPlan.consistentAt_extend_iff (recall : M.DecisionRecall)
+theorem DecisionPlan.consistentAt_extend_iff (hrecall : M.DecisionRecall)
     (plan : M.DecisionPlan who) (fallback : M.Policy who)
     (current : M.InformationSite who) :
     plan.extend fallback ∈ M.ConsistentAt who current.1 ↔
@@ -130,7 +131,7 @@ theorem DecisionPlan.consistentAt_extend_iff (recall : M.DecisionRecall)
   · intro compatible recorded member
     obtain ⟨history, _nonterminal, _action, _permitted⟩ := current.2
     have past : recorded ∈ M.ownPlay who history.1.trace := by
-      simpa only [recall.recordAt_eq_ownPlay who current history] using member
+      simpa only [hrecall.recordAt_eq_ownPlay who current history] using member
     obtain ⟨site, same, _permitted⟩ :=
       M.exists_informationSite_of_mem_ownPlay history.1.trace past
     rw [← same, DecisionPlan.extend_site]
@@ -146,7 +147,7 @@ def DecisionPlan.tremble (plan : M.DecisionPlan who) (mass : M.InformationSite w
     (nonnegative : ∀ site, 0 ≤ mass site) (atMostOne : ∀ site, mass site ≤ 1) :
     PMF (M.DecisionPlan who) :=
   independentProduct fun site =>
-    mix (mass site) (nonnegative site) (atMostOne site) (PMF.uniformOfFintype _)
+    mix (mass site) (nonnegative site) (atMostOne site) (uniformLaw _)
       (PMF.pure (plan site))
 
 /-- Before any conditioning, each coordinate of a trembled plan is its own
@@ -155,7 +156,7 @@ theorem DecisionPlan.tremble_marginal (plan : M.DecisionPlan who)
     (mass : M.InformationSite who → ℝ) (nonnegative : ∀ site, 0 ≤ mass site)
     (atMostOne : ∀ site, mass site ≤ 1) (site : M.InformationSite who) :
     (plan.tremble mass nonnegative atMostOne).map (fun realized => realized site) =
-      mix (mass site) (nonnegative site) (atMostOne site) (PMF.uniformOfFintype _)
+      mix (mass site) (nonnegative site) (atMostOne site) (uniformLaw _)
         (PMF.pure (plan site)) := by
   classical
   exact independentProduct_map_eval _ site
@@ -178,7 +179,7 @@ def trembledMixedPolicy (plans : PMF (M.DecisionPlan who))
 
 /-- Under positive trembles every decision site is compatible with some
 supported policy, whatever correlation the prescribed plans carry. -/
-theorem trembledMixedPolicy_consistent (recall : M.DecisionRecall)
+theorem trembledMixedPolicy_consistent (hrecall : M.DecisionRecall)
     (plans : PMF (M.DecisionPlan who)) (mass : M.InformationSite who → ℝ)
     (positive : ∀ site, 0 < mass site) (atMostOne : ∀ site, mass site ≤ 1)
     (fallback : M.Policy who) (current : M.InformationSite who) :
@@ -187,12 +188,12 @@ theorem trembledMixedPolicy_consistent (recall : M.DecisionRecall)
         fallback).support := by
   classical
   let realized : M.DecisionPlan who := fun site =>
-    (current.recordChoices_nonempty recall site).choose
+    (current.recordChoices_nonempty hrecall site).choose
   have compatible : ∀ site, realized site ∈ current.recordChoices site :=
-    fun site => (current.recordChoices_nonempty recall site).choose_spec
+    fun site => (current.recordChoices_nonempty hrecall site).choose_spec
   obtain ⟨prescribed, supported⟩ := plans.support_nonempty
   refine ⟨realized.extend fallback,
-    (realized.consistentAt_extend_iff recall fallback current).mpr compatible, ?_⟩
+    (realized.consistentAt_extend_iff hrecall fallback current).mpr compatible, ?_⟩
   rw [trembledMixedPolicy, PMF.support_map]
   refine ⟨realized, ?_, rfl⟩
   rw [PMF.support_bind]
@@ -202,7 +203,7 @@ theorem trembledMixedPolicy_consistent (recall : M.DecisionRecall)
 /-- **Trembled plans keep their floor.** The behavioral reading of a trembled
 mixed policy gives every choice at a decision site at least that site's share
 of its tremble mass. -/
-theorem div_card_le_trembledMixedPolicy_toBehavioralWith (recall : M.DecisionRecall)
+theorem div_card_le_trembledMixedPolicy_toBehavioralWith (hrecall : M.DecisionRecall)
     (plans : PMF (M.DecisionPlan who)) (mass : M.InformationSite who → ℝ)
     (positive : ∀ site, 0 < mass site) (atMostOne : ∀ site, mass site ≤ 1)
     (fallback : M.Policy who) (current : M.InformationSite who)
@@ -217,22 +218,22 @@ theorem div_card_le_trembledMixedPolicy_toBehavioralWith (recall : M.DecisionRec
     {plan | ∀ site, plan site ∈ current.recordChoices site}
   have event_eq : extend ⁻¹' M.ConsistentAt who current.1 = event := by
     ext plan
-    exact plan.consistentAt_extend_iff recall fallback current
+    exact plan.consistentAt_extend_iff hrecall fallback current
   have answer_eq : extend ⁻¹' (fun policy : M.Policy who => policy current.1) ⁻¹' {action} =
       (fun plan : M.DecisionPlan who => plan current) ⁻¹' {action} := by
     ext plan
     simp [extend]
-  have supported := trembledMixedPolicy_consistent recall plans mass positive atMostOne
+  have supported := trembledMixedPolicy_consistent hrecall plans mass positive atMostOne
     fallback current
   have table_positive : ∃ plan ∈ event, plan ∈ law.support := by
     obtain ⟨policy, compatible, present⟩ := supported
     rw [trembledMixedPolicy, PMF.support_map] at present
     obtain ⟨plan, present, rfl⟩ := present
-    exact ⟨plan, (plan.consistentAt_extend_iff recall fallback current).mp compatible, present⟩
+    exact ⟨plan, (plan.consistentAt_extend_iff hrecall fallback current).mp compatible, present⟩
   have lower := le_prob_filter_mixture_independentProduct plans
     (fun plan site => mix (mass site) (positive site).le (atMostOne site)
-      (PMF.uniformOfFintype _) (PMF.pure (plan site)))
-    current.recordChoices current (current.recordChoices_self recall) action _
+      (uniformLaw _) (PMF.pure (plan site)))
+    current.recordChoices current (current.recordChoices_self hrecall) action _
     (fun plan _ => div_card_le_mix_uniform_apply _ (positive current).le (atMostOne current)
       _ action)
     table_positive
@@ -271,7 +272,7 @@ theorem BehavioralDecisionPlan.residualPlans_tremble (policy : M.BehavioralDecis
         (fun plan => plan.tremble mass nonnegative fun site => (belowOne site).le) =
       independentProduct policy := by
   refine (independentProduct_bind _ fun site (choice : M.Choice who site.1) =>
-    mix (mass site) (nonnegative site) (belowOne site).le (PMF.uniformOfFintype _)
+    mix (mass site) (nonnegative site) (belowOne site).le (uniformLaw _)
       (PMF.pure choice)).trans (congrArg independentProduct (funext fun site => ?_))
   rw [bind_mix_pure]
   exact (exists_mix_uniform_eq_of_floor (policy site) (mass site) (nonnegative site)

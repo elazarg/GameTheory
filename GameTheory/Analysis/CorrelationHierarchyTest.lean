@@ -13,7 +13,9 @@ coarse correlated equilibrium, and the commitment form the reverse.
 -/
 
 import GameTheory.Analysis.CorrelationHierarchy
-import Mathlib.Probability.Distributions.Uniform
+import GameTheory.Math.Probability.FiniteUniform
+
+open GameTheory.Math.Probability
 
 noncomputable section
 
@@ -29,7 +31,7 @@ def form : GameForm Bool where
 
 /-- The same uniform recommendation to both players. -/
 def device : PMF (Profile form.sig) :=
-  (PMF.uniformOfFintype (Fin 3)).map fun recommended _ => recommended
+  (uniformLaw (Fin 3)).map fun recommended _ => recommended
 
 /-- The first player likes the matched outcomes `0` and `2` and the
 mismatch `(0, 1)`; the second player is indifferent. -/
@@ -40,16 +42,16 @@ def utility : Fin 3 × Fin 3 → Bool → ℝ
   | _, _ => 0
 
 theorem outcomeLaw_map (g : Fin 3 → Profile form.sig) :
-    form.outcomeLaw ((PMF.uniformOfFintype (Fin 3)).map g) =
-      (PMF.uniformOfFintype (Fin 3)).map fun recommended =>
+    form.outcomeLaw ((uniformLaw (Fin 3)).map g) =
+      (uniformLaw (Fin 3)).map fun recommended =>
         (g recommended false, g recommended true) := by
   simp only [GameForm.outcomeLaw, PMF.bind_map, Function.comp_def]
   exact PMF.bind_pure_comp _ _
 
 theorem expect_uniform_map (g : Fin 3 → Fin 3 × Fin 3) (u : Fin 3 × Fin 3 → ℝ) :
-    expect ((PMF.uniformOfFintype (Fin 3)).map g) u = (u (g 0) + u (g 1) + u (g 2)) / 3 := by
+    expect ((uniformLaw (Fin 3)).map g) u = (u (g 0) + u (g 1) + u (g 2)) / 3 := by
   rw [expect_map, expect_eq_sum]
-  simp only [PMF.uniformOfFintype_apply, Fintype.card_fin, Fin.sum_univ_three,
+  simp only [uniformLaw_apply, Fintype.card_fin, Fin.sum_univ_three,
     Function.comp_apply]
   norm_num
   ring

@@ -59,13 +59,13 @@ theorem preferFalse_integrable (law : PMF game.History) :
   payoffIntegrable_of_finite _ _
 
 @[simp]
-theorem historyChooser_decision_fixed (action hidden : Bool) :
+theorem historyChooser_decision_fixed (action latent : Bool) :
     (information.historyChooser (fixedProfile action)
-      (decisionHistory hidden) (decision_not_terminal hidden)).1 .player =
+      (decisionHistory latent) (decision_not_terminal latent)).1 .player =
         some action := by
   show
     (fixedPolicy action).act
-        (information.infoOf .player (decisionHistory hidden).trace) =
+        (information.infoOf .player (decisionHistory latent).trace) =
       some action
   rw [infoOf_decisionHistory]
   rfl
@@ -75,7 +75,7 @@ theorem step_historyChooser_initial (action : Bool) :
         (information.historyChooser (fixedProfile action)
           execution.initHistory initial_not_terminal) =
       PMF.map
-        (fun hidden => State.decision hidden execution.noop) fairCoin :=
+        (fun latent => State.decision latent execution.noop) fairCoin :=
   by
     have hjoint :=
       initial_legal_joint_eq_noop
@@ -83,25 +83,25 @@ theorem step_historyChooser_initial (action : Bool) :
           execution.initHistory initial_not_terminal)
     show
       PMF.map
-          (fun hidden =>
-            State.decision hidden
+          (fun latent =>
+            State.decision latent
               (information.historyChooser (fixedProfile action)
                 execution.initHistory initial_not_terminal).1) fairCoin =
         PMF.map
-          (fun hidden => State.decision hidden execution.noop) fairCoin
+          (fun latent => State.decision latent execution.noop) fairCoin
     simpa only using congrArg
       (fun joint =>
-        PMF.map (fun hidden => State.decision hidden joint) fairCoin)
+        PMF.map (fun latent => State.decision latent joint) fairCoin)
       hjoint
 
-theorem runHistoryFor_one_decision_fixed (action hidden : Bool) :
+theorem runHistoryFor_one_decision_fixed (action latent : Bool) :
     expect (execution.runHistoryFor
       (information.historyChooser (fixedProfile action)) 1
-      (decisionHistory hidden))
+      (decisionHistory latent))
         (fun history => preferFalse history .player) =
       (if action = false then 1 else 0) := by
   rw [ExecutionProtocol.runHistoryFor_succ_of_not_terminal
-    _ 0 (decision_not_terminal hidden)]
+    _ 0 (decision_not_terminal latent)]
   simp [execution, decisionHistory, preferFalse, expect_pure]
 
 theorem fixed_value (action : Bool) :
@@ -125,18 +125,18 @@ theorem fixed_value (action : Bool) :
   have hbranch (state : State) (hstate : state ∈ stepLaw.support) :
       expect (continuation state hstate) payoff = value := by
     have hmapped : state ∈
-        (PMF.map (fun hidden => State.decision hidden execution.noop)
+        (PMF.map (fun latent => State.decision latent execution.noop)
           fairCoin).support := by
       rw [← step_historyChooser_initial action]
       exact hstate
     rw [PMF.support_map] at hmapped
-    rcases hmapped with ⟨hidden, _hhidden, hstateEq⟩
+    rcases hmapped with ⟨latent, _hhidden, hstateEq⟩
     subst state
     have hhistory :
         execution.initHistory.extend joint.2 hstate =
-          decisionHistory hidden := by
+          decisionHistory latent := by
       congr 1
-    have hvalue := runHistoryFor_one_decision_fixed action hidden
+    have hvalue := runHistoryFor_one_decision_fixed action latent
     simpa only [continuation, payoff, value, hhistory] using hvalue
   calc
     expectedUtility preferFalse .player

@@ -3,6 +3,7 @@
 import GameTheory.Core.MixtureSimulationComposition
 import GameTheory.Core.MixedSimulation
 import GameTheory.Math.Probability.Uniform
+import GameTheory.Math.Probability.FiniteUniform
 
 /-! # Regression tests for mixture simulation and composition -/
 
@@ -12,7 +13,7 @@ namespace GameTheory.GameForm.MixtureSimulationOn.Tests
 
 open GameTheory.Math.Probability
 
-def coin : PMF Bool := PMF.uniformOfFintype Bool
+def coin : PMF Bool := uniformLaw Bool
 
 inductive SourceOutcome where | observed (value : Bool)
 inductive MiddleOutcome where | visible (value : Bool)
@@ -137,11 +138,11 @@ theorem mixed_target_not_single_source :
   · rw [htarget] at h
     simp only [PMF.pure_map, sourceObserve] at h
     have := congrArg (fun law : PMF Bool => law true) h
-    norm_num [coin, PMF.uniformOfFintype_apply] at this
+    norm_num [coin, uniformLaw_apply] at this
   · rw [htarget] at h
     simp only [PMF.pure_map, sourceObserve] at h
     have := congrArg (fun law : PMF Bool => law false) h
-    norm_num [coin, PMF.uniformOfFintype_apply] at this
+    norm_num [coin, uniformLaw_apply] at this
 
 /-- Composition expands the third game's mixed deviation into the source
 mixture rather than strengthening it to one source strategy. -/

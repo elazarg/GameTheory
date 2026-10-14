@@ -84,7 +84,7 @@ theorem wire_predecessor_consistent {n i j : ℕ} (hi : i < n)
   all_goals rcases p with ⟨x, y⟩
   all_goals dsimp only [wirePredecessor] at hp ⊢
   all_goals split_ifs at hp ⊢ <;> simp_all only [wireSuccessor]
-  all_goals split_ifs <;> first | omega | (simp_all [Prod.mk.injEq] <;> omega)
+  all_goals split_ifs <;> first | omega | (simp_all [Prod.mk.injEq]; all_goals omega)
 
 /-- Every point outside the four route segments is a successor self-loop. -/
 theorem wireSuccessor_off_wire (n i j : ℕ) (p : ℕ × ℕ) (h : ¬onWire n i j p) :

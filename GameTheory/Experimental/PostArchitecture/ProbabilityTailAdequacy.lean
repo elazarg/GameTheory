@@ -11,6 +11,7 @@ import GameTheory.Core.MixedImprovement
 import GameTheory.Mechanism.FeasiblePosteriors
 import GameTheory.Math.Probability.Bounds
 import GameTheory.Math.Probability.Uniform
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -178,7 +179,7 @@ theorem exploitableMixed_not_isOneNash :
 /-- The sampling procedure emits an exploitable mixed profile one quarter of
 the time and the exact equilibrium otherwise. -/
 def sampledMixedProfile : PMF (Profile choiceGame.form.sig.mixed) :=
-  (PMF.uniformOfFintype (Fin 4)).map fun index =>
+  (uniformLaw (Fin 4)).map fun index =>
     if index = 0 then exploitableMixed else optimalMixed
 
 /-- The finite sampled-profile law integrates its improvement score. -/
@@ -193,9 +194,9 @@ theorem sampled_expected_improvement :
     if index = 0 then exploitableMixed else optimalMixed
   calc
     expect sampledMixedProfile choiceScore =
-        expect (PMF.uniformOfFintype (Fin 4))
+        expect (uniformLaw (Fin 4))
           (choiceScore ∘ relabel) := by
-      exact expect_map relabel (PMF.uniformOfFintype (Fin 4))
+      exact expect_map relabel (uniformLaw (Fin 4))
         choiceScore
     _ = 1 / 2 := by
       rw [expect_uniformFin]
@@ -273,7 +274,7 @@ theorem posterior_state_tail_le {State : Type*} (prior : PMF State)
         (fun belief _ => ENNReal.toReal_nonneg)
     _ = (prior state).toReal / threshold := by rw [hmean]
 
-def fairPrior : PMF Bool := PMF.uniformOfFintype Bool
+def fairPrior : PMF Bool := uniformLaw Bool
 
 def revealingPosteriorLaw : PosteriorLaw Bool :=
   PosteriorLaw.fullRevelation fairPrior
@@ -286,7 +287,7 @@ theorem revealing_true_tail_le_two_thirds :
   have h := posterior_state_tail_le fairPrior revealingPosteriorLaw
     (PosteriorLaw.isBayesPlausible_fullRevelation fairPrior) true
     (threshold := 3 / 4) (by norm_num)
-  norm_num [fairPrior, PMF.uniformOfFintype_apply] at h
+  norm_num [fairPrior, uniformLaw_apply] at h
   exact h
 
 end GameTheory.Experimental.PostArchitecture.ProbabilityTailAdequacy

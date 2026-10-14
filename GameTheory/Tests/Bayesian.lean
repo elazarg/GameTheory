@@ -6,7 +6,9 @@ exercises both source-player deviation coordinates of the protocol transfer.
 -/
 
 import GameTheory.Languages.Bayesian.Strategic
-import Mathlib.Probability.Distributions.Uniform
+import GameTheory.Math.Probability.FiniteUniform
+
+open GameTheory.Math.Probability
 
 noncomputable section
 
@@ -15,7 +17,7 @@ namespace GameTheory.Tests.Bayesian
 open GameTheory GameTheory.Math.Probability
 open GameTheory.Languages.Bayesian
 
-def fairBit : PMF Bool := PMF.uniformOfFintype Bool
+def fairBit : PMF Bool := uniformLaw Bool
 
 def bitPrior : PMF (∀ _ : Unit, Bool) :=
   fairBit.map fun bit _ => bit

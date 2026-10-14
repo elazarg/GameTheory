@@ -8,7 +8,7 @@ realized play is finite, but the possible countdown lengths are unbounded.
 import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
 import GameTheory.Protocol.BehavioralAssessment
 import GameTheory.Protocol.Backward
-import Mathlib.Data.Prod.Lex
+import Mathlib.Order.Prod.Lex.Basic
 
 noncomputable section
 

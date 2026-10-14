@@ -44,34 +44,34 @@ private theorem expect_mix_of_finite {α : Type*} [Fintype α]
 one.  The asymmetry makes the two pure policies discriminating controls. -/
 def weightedMatchingPayoff (history : execution.History) : ℝ :=
   match history.state with
-  | .terminal hidden _ action =>
-      if action .player = some hidden then if hidden then 2 else 1 else 0
+  | .terminal latent _ action =>
+      if action .player = some latent then if latent then 2 else 1 else 0
   | _ => 0
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The canonical continuation runner reduces the weighted terminal payoff to
 the alternative policy's action law at the shared information state. -/
 theorem runBehavioralFrom_decision_weightedMatchingPayoff
-    (hidden : Bool)
+    (latent : Bool)
     (alternative : information.BehavioralPolicy Player.player) :
     expect (information.runBehavioralFrom
       (Profile.update (sig := information.behavioralSignature)
         fullyMixedBehavioralProfile Player.player alternative) 2
-      (decisionHistory hidden)) weightedMatchingPayoff =
+      (decisionHistory latent)) weightedMatchingPayoff =
     expect (alternative .acting) (fun choice =>
-          if choice.1 = some hidden then if hidden then 2 else 1 else 0) := by
+          if choice.1 = some latent then if latent then 2 else 1 else 0) := by
   classical
   let drawLaw :
       PMF ((i : Player) →
         information.Choice i
-          (information.infoOf i (decisionHistory hidden).trace)) :=
+          (information.infoOf i (decisionHistory latent).trace)) :=
     independentProduct fun i =>
       Profile.update (sig := information.behavioralSignature)
         fullyMixedBehavioralProfile Player.player alternative i
-        (information.infoOf i (decisionHistory hidden).trace)
+        (information.infoOf i (decisionHistory latent).trace)
   rw [InformationModel.runBehavioralFrom,
     ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ 1
-      (decision_not_terminal hidden),
+      (decision_not_terminal latent),
     expect_bind_of_finite, InformationModel.randomizedChooser,
     InformationModel.behavioralJoint_eq_independentProduct, expect_map]
   have hmarginal :
@@ -81,7 +81,7 @@ theorem runBehavioralFrom_decision_weightedMatchingPayoff
         PMF.map (fun draws => draws Player.player) drawLaw =
           alternative
             (information.infoOf Player.player
-              (decisionHistory hidden).trace) := by
+              (decisionHistory latent).trace) := by
       unfold drawLaw
       rw [independentProduct_map_eval, Profile.update_same]
     have hprojected :
@@ -89,20 +89,20 @@ theorem runBehavioralFrom_decision_weightedMatchingPayoff
           PMF.map (fun choice => choice.1)
             (alternative
               (information.infoOf Player.player
-                (decisionHistory hidden).trace)) := by
+                (decisionHistory latent).trace)) := by
       have hcongr := congrArg
         (fun law : PMF
             (information.Choice Player.player
               (information.infoOf Player.player
-                (decisionHistory hidden).trace)) =>
+                (decisionHistory latent).trace)) =>
           PMF.map (fun choice => choice.1) law)
         hchoice
       simpa only [PMF.map_comp, Function.comp_def] using hcongr
     exact hprojected.trans (by rw [infoOf_decisionHistory])
   calc
     _ = expect drawLaw (fun draws =>
-        if (draws Player.player).1 = some hidden then
-          if hidden then 2 else 1 else 0) := by
+        if (draws Player.player).1 = some latent then
+          if latent then 2 else 1 else 0) := by
       apply expect_congr_on_support
       intro draws _hdraws
       have hlegal := (draws Player.player).2
@@ -110,7 +110,7 @@ theorem runBehavioralFrom_decision_weightedMatchingPayoff
       | none =>
           simp [information, signals_infoOf, viewOfState, hdraw] at hlegal
       | some action =>
-          cases action <;> cases hidden <;>
+          cases action <;> cases latent <;>
             simp [InformationModel.legalJointOfChoices, hdraw, expect_pure, execution,
               decisionHistory,
               weightedMatchingPayoff, PMF.pure_bindOnSupport,
@@ -119,28 +119,28 @@ theorem runBehavioralFrom_decision_weightedMatchingPayoff
     _ = expect
           (PMF.map (fun draws => (draws Player.player).1) drawLaw)
           (fun choice : Option Bool =>
-            if choice = some hidden then if hidden then 2 else 1 else 0) := by
+            if choice = some latent then if latent then 2 else 1 else 0) := by
       simpa only [Function.comp_def] using
         (expect_map (fun draws => (draws Player.player).1) drawLaw
           (fun choice : Option Bool =>
-            if choice = some hidden then if hidden then 2 else 1 else 0)).symm
+            if choice = some latent then if latent then 2 else 1 else 0)).symm
     _ = expect
           (PMF.map (fun choice => choice.1) (alternative .acting))
           (fun choice : Option Bool =>
-            if choice = some hidden then if hidden then 2 else 1 else 0) := by
+            if choice = some latent then if latent then 2 else 1 else 0) := by
       rw [hmarginal]
     _ = expect (alternative .acting) (fun choice =>
-          if choice.1 = some hidden then if hidden then 2 else 1 else 0) := by
+          if choice.1 = some latent then if latent then 2 else 1 else 0) := by
       simpa only [Function.comp_def] using
         expect_map (fun choice => choice.1) (alternative .acting)
           (fun action : Option Bool =>
-            if action = some hidden then if hidden then 2 else 1 else 0)
+            if action = some latent then if latent then 2 else 1 else 0)
 
 /-- Before the information site the focal player has only supplied the forced
 inactive choice, so its own reach is one on both hidden histories. -/
-theorem playerReachProbability_decision (hidden : Bool) :
+theorem playerReachProbability_decision (latent : Bool) :
     information.playerReachProbability fullyMixedBehavioralProfile .player
-      (decisionHistory hidden).trace = 1 := by
+      (decisionHistory latent).trace = 1 := by
   classical
   simp only [decisionHistory, decisionTrace,
     InformationModel.playerReachProbability]
@@ -172,12 +172,12 @@ theorem commonPlayerReach_acting
     (history : information.InformationHistory .player actingSite.1) :
     information.playerReachProbability fullyMixedBehavioralProfile .player
       history.1.trace = 1 := by
-  obtain ⟨hidden, hhistory⟩ :=
+  obtain ⟨latent, hhistory⟩ :=
     history_eq_decisionHistory_of_info_acting history.1 history.2
-  have hsubtype : history = decisionInformationHistory hidden :=
+  have hsubtype : history = decisionInformationHistory latent :=
     Subtype.ext hhistory
   subst history
-  exact playerReachProbability_decision hidden
+  exact playerReachProbability_decision latent
 
 /-- Pure commitments used by the action-local regret controls. -/
 def trueChoice : information.Choice .player actingSite.1 :=

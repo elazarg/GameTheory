@@ -30,15 +30,15 @@ def firstSite : information.InformationSite () :=
         simp [GameTheory.Tests.SubgameOneShot.menu,
           GameTheory.Tests.SubgameOneShot.stageMenu, firstKnowledge]⟩⟩
 
-def firstInformationHistory (hidden : Bool) :
+def firstInformationHistory (latent : Bool) :
     information.InformationHistory () firstSite.1 :=
-  ⟨firstHistory hidden, infoOf_firstHistory hidden⟩
+  ⟨firstHistory latent, infoOf_firstHistory latent⟩
 
 def firstHistoryEquivBool :
     information.InformationHistory () firstSite.1 ≃ Bool where
   toFun history :=
     match history.1.state with
-    | .first hidden => hidden
+    | .first latent => latent
     | _ => false
   invFun := firstInformationHistory
   left_inv history := by
@@ -48,14 +48,14 @@ def firstHistoryEquivBool :
     rw [hinfo] at hstage
     cases state with
     | root => simp [firstKnowledge, State.stage] at hstage
-    | first hidden =>
+    | first latent =>
         apply Subtype.ext
         exact history_eq_of_state_eq rfl
-    | second hidden firstAction =>
+    | second latent firstAction =>
         simp [firstKnowledge, State.stage] at hstage
-    | done hidden firstAction secondAction =>
+    | done latent firstAction secondAction =>
         simp [firstKnowledge, State.stage] at hstage
-  right_inv hidden := by
+  right_inv latent := by
     simp [firstInformationHistory, firstHistory]
 
 local instance : Fintype
@@ -130,22 +130,22 @@ theorem downstreamContinuation_nonconstant :
 /-- Two-step runner affinity on the hostile fixture.  One step would stop at
 the second decision; fuel two genuinely retains the downstream policy. -/
 theorem twoStage_runBehavioralFrom_affine
-    (law : PMF FirstAction) (hidden : Bool) :
+    (law : PMF FirstAction) (latent : Bool) :
     information.runBehavioralFrom
         (Profile.update (sig := information.behavioralSignature)
           baselineStrategy ()
             (baselinePolicy.withLaw firstSite.1 law))
-        2 (firstHistory hidden) =
+        2 (firstHistory latent) =
       law.bind fun choice =>
         information.runBehavioralFrom
           (Profile.update (sig := information.behavioralSignature)
             baselineStrategy ()
               (baselinePolicy.commit firstSite.1 choice))
-          2 (firstHistory hidden) := by
+          2 (firstHistory latent) := by
   exact information.runBehavioralFrom_update_withLaw_eq_bind
     information_actsOnce baselineStrategy () baselinePolicy firstSite.1 law
-      (firstHistory hidden) (infoOf_firstHistory hidden)
-      (first_not_terminal hidden) (first_active hidden) 1
+      (firstHistory latent) (infoOf_firstHistory latent)
+      (first_not_terminal latent) (first_active latent) 1
 
 /-- The generic local-law realization theorem discharges the pointwise
 realization equation of regret matching for every current law on this

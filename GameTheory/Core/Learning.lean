@@ -19,6 +19,7 @@ Generalization of On-Line Learning,” EuroCOLT 1995; S. Hart and A. Mas-Colell,
 import GameTheory.Core.Utility
 import GameTheory.Core.Mixed
 import GameTheory.Math.Probability.Uniform
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -119,7 +120,7 @@ namespace GameForm
 def timeAverage (F : GameForm.{uι, us, uo} ι) {T : ℕ} [NeZero T]
     (roundLaw : Fin T → PMF (Profile F.sig)) :
     PMF (Profile F.sig) :=
-  (PMF.uniformOfFintype (Fin T)).bind roundLaw
+  (uniformLaw (Fin T)).bind roundLaw
 
 end GameForm
 
@@ -139,7 +140,7 @@ theorem timeAverage_base_integrable
   simpa only [GameForm.timeAverage, GameForm.outcomeLaw_bind,
     UtilityIntegrable] using
     (payoffIntegrable_bind_of_finite
-      (PMF.uniformOfFintype (Fin T))
+      (uniformLaw (Fin T))
       (fun t => G.form.outcomeLaw (roundLaw t))
       (fun outcome => G.utility outcome who) hbase)
 
@@ -155,7 +156,7 @@ theorem timeAverage_deviation_integrable
       ((G.form.timeAverage roundLaw).bind fun profile =>
         G.form.play (Profile.update profile who replacement)) := by
   have h := payoffIntegrable_bind_of_finite
-    (PMF.uniformOfFintype (Fin T))
+    (uniformLaw (Fin T))
     (fun t => (roundLaw t).bind fun profile =>
       G.form.play (Profile.update profile who replacement))
     (fun outcome => G.utility outcome who) hdev
@@ -173,7 +174,7 @@ theorem externalRegret_timeAverage (G : UtilityGame.{uι, us, uo} ι)
         G.form.play (Profile.update profile who replacement))) :
     G.externalRegret (G.form.timeAverage roundLaw) who replacement =
       (∑ t, G.externalRegret (roundLaw t) who replacement) / T := by
-  let times := PMF.uniformOfFintype (Fin T)
+  let times := uniformLaw (Fin T)
   let devKernel := fun profile =>
     G.form.play (Profile.update profile who replacement)
   let devValue := fun t =>

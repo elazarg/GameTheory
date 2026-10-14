@@ -111,7 +111,9 @@ private theorem imageAxisBits_value (ruler : List Bool) (P S : List Bool → Lis
         horizontalBend, verticalBend, crossingCoordinate]
     all_goals by_cases hright : Nat.fromBitsLE y = 6 * i
     all_goals by_cases hup : 6 * k < 6 * routingOriginalPointer ruler S k + 3
-    all_goals simp_all <;> split_ifs <;> simp_all <;> omega
+    all_goals simp_all
+    all_goals split_ifs <;> simp_all
+    all_goals omega
 
 /-- The horizontal image field agrees with the natural geometric realization. -/
 theorem routingImageXBits_value (ruler : List Bool) (P S : List Bool → List Bool)

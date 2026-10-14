@@ -317,13 +317,14 @@ def main():
             if any(p["name"] == "GameTheory" and p["type"] == "path"
                    for p in manifest["packages"]):
                 config = ["-KgameTheoryPath=../.."]
-        # The upstream complexity package emits proof suggestions. Its warnings
-        # still fail; all first-party diagnostics are checked from Lake's logs.
-        strict = "--wfail" if args.complexity else "--iofail"
+        # Third-party imports need to compile, but their diagnostics are outside
+        # our conventions. First-party warnings fail through library options;
+        # check_diagnostics also rejects info and cached first-party diagnostics.
+        strict = [] if args.complexity else ["--iofail"]
         for arguments in [
             ["build"], ["build", f"{namespace}.LintAll", f"{namespace}.AxiomAudit"], ["lint"],
         ]:
-            command = ["lake", strict, *config, *arguments]
+            command = ["lake", *strict, *config, *arguments]
             print("+ " + " ".join(command), flush=True)
             subprocess.run(command, cwd=root, check=True)
         errors = check_diagnostics(root, namespace)

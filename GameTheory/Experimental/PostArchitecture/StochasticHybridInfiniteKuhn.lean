@@ -10,6 +10,7 @@ both heterogeneous unilateral quantifiers.
 
 import GameTheory.Stochastic.Kuhn
 import GameTheory.Protocol.Predraw
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -74,7 +75,7 @@ def laterInfo : hybridGame.PublicHistory :=
 /-- Independent fair choices at every information state. -/
 def fairProtocolBehavioral (i : Bool) :
     (hybridGame.perfectMonitoring false).BehavioralPolicy i :=
-  fun info => PMF.uniformOfFintype
+  fun info => uniformLaw
     ((hybridGame.perfectMonitoring false).Choice i info)
 
 /-- Force one player's choices at the initial and `laterInfo` coordinates to

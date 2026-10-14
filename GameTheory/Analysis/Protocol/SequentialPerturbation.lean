@@ -23,6 +23,7 @@ import GameTheory.Protocol.FiniteInformation
 import GameTheory.Math.Probability.ExpectationMixture
 import GameTheory.Math.Probability.Uniform
 import GameTheory.Math.Probability.UniformTremble
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -42,7 +43,7 @@ def uniformTrembleLaws (ε : ℝ) (h0 : 0 ≤ ε) (h1 : ε ≤ 1)
     [Finite (M.Choice i info)] [Nonempty (M.Choice i info)] :
     Set (PMF (M.Choice i info)) :=
   {law | ∃ residual, law = mix ε h0 h1
-    (@PMF.uniformOfFintype _ (Fintype.ofFinite _) _) residual}
+    (@uniformLaw _ (Fintype.ofFinite _) _) residual}
 
 /-- Below full mass, the uniform-tremble laws are exactly the laws giving every
 choice at least its share of the tremble. -/
@@ -93,7 +94,7 @@ private theorem exists_uniformTremble_locallyOptimal_bayesAssessment_truncated
     fun _ _ => Fintype.ofFinite _
   let _ : ∀ c : Coordinate, Fintype (Action c) := fun c => Fintype.ofFinite (M.Choice c.1 c.2.1)
   let uniform (i : ι) (site : M.InformationSite i) : PMF (M.Choice i site.1) :=
-    @PMF.uniformOfFintype _ (Fintype.ofFinite _) _
+    @uniformLaw _ (Fintype.ofFinite _) _
   let Domain := Set.pi Set.univ fun c : Coordinate => simplexWeights (Action c)
   let residual (x : Domain) (i : ι) (site : M.InformationSite i) : PMF (M.Choice i site.1) :=
     PMF.ofSimplex (x.property ⟨i, site⟩ (Set.mem_univ _))
@@ -109,7 +110,7 @@ private theorem exists_uniformTremble_locallyOptimal_bayesAssessment_truncated
     intro choice
     rw [hprofile_site]
     exact mem_support_mix_left ε hε.le h1 hε
-      (@PMF.mem_support_uniformOfFintype _ (Fintype.ofFinite _) _ choice)
+      (@mem_support_uniformLaw _ (Fintype.ofFinite _) _ choice)
   let assessment (x : Domain) := M.bayesAssessment (profile x) (hprofile_full x) hantichain
   have hprofile (i : ι) (info : M.InfoState i) (choice : M.Choice i info) :
       Continuous fun x : Domain => ((profile x i info choice).toReal) := by

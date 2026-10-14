@@ -181,8 +181,9 @@ lake --iofail build <module>            # focused build; warnings and info fail
 ```
 
 The optional audit follows its resolved local or released base dependency. It
-rejects every info/warning in extension build logs, including cached diagnostics;
-upstream proof suggestions are allowed, while dependency warnings still fail.
+rejects every info/warning in extension build logs, including cached diagnostics.
+Third-party imports must compile, but their warnings and proof suggestions are
+allowed. The axiom audit checks their transitive use by authored declarations.
 
 Before tagging a release, set the package `version` in `lakefile.lean` to the
 tag's version number (without the `v` prefix). The audit verifies package,

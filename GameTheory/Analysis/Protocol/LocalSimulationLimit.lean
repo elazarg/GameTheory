@@ -32,10 +32,10 @@ theorem BehavioralAssessmentConvergesPointwise.sequentialEquilibrium_of_copied_g
     [Finite T.History] [∀ who, DecidableEq (N.InfoState who)]
     {sequence : ℕ → N.BehavioralAssessment} {target : N.BehavioralAssessment}
     (converges : BehavioralAssessmentConvergesPointwise sequence target)
-    (recall : N.DecisionRecall) (certificate : T.WellFoundedHistories)
+    (hrecall : N.DecisionRecall) (certificate : T.WellFoundedHistories)
     (payoff : Player → T.History → ℝ)
     (copied : ∀ who, N.InformationSite who → Prop)
-    (consistent : target.IsSequentiallyConsistent recall.decisionInformationAntichain)
+    (consistent : target.IsSequentiallyConsistent hrecall.decisionInformationAntichain)
     (error : ℕ → ∀ who (site : N.InformationSite who), PMF (N.Choice who site.1) → ℝ)
     (vanishes : ∀ who (site : N.InformationSite who), copied who site →
       ∀ law, Tendsto (fun n => error n who site law) atTop (nhds 0))
@@ -49,10 +49,10 @@ theorem BehavioralAssessmentConvergesPointwise.sequentialEquilibrium_of_copied_g
           ((target.strategy who).withLaw site.1 law) ≤
         (target.continuationContext certificate site (payoff who)).value
           (target.strategy who)) :
-    target.IsSequentialEquilibrium recall.decisionInformationAntichain certificate payoff := by
+    target.IsSequentialEquilibrium hrecall.decisionInformationAntichain certificate payoff := by
   classical
   let _ := Fintype.ofFinite T.History
-  apply (target.isSequentialEquilibrium_iff_locallyOptimal N recall certificate payoff).mpr
+  apply (target.isSequentialEquilibrium_iff_locallyOptimal N hrecall certificate payoff).mpr
   refine ⟨consistent, ?_⟩
   intro who site law
   by_cases kept : copied who site
@@ -92,7 +92,7 @@ theorem sequentialEquilibrium_of_copied_comparisons_limit
     [∀ who, Finite (M.InformationSite who)]
     [∀ who (site : M.InformationSite who), Finite (M.Choice who site.1)]
     (sourceCertificate : E.WellFoundedHistories) (targetCertificate : T.WellFoundedHistories)
-    (recall : N.DecisionRecall)
+    (hrecall : N.DecisionRecall)
     (sourcePayoff : Player → E.History → ℝ) (targetPayoff : Player → T.History → ℝ)
     (bound : Player → ℝ) (nonnegative : ∀ who, 0 ≤ bound who)
     (payoffBound : ∀ who final, E.terminal final.state → |sourcePayoff who final| ≤ bound who)
@@ -102,7 +102,7 @@ theorem sequentialEquilibrium_of_copied_comparisons_limit
     {targetSequence : ℕ → N.BehavioralAssessment} {target : N.BehavioralAssessment}
     (targetConverges : BehavioralAssessmentConvergesPointwise targetSequence target)
     (copied : ∀ who, N.InformationSite who → Prop)
-    (consistent : target.IsSequentiallyConsistent recall.decisionInformationAntichain)
+    (consistent : target.IsSequentiallyConsistent hrecall.decisionInformationAntichain)
     (comparisonError : ℕ → ∀ who, N.InformationSite who → ℝ)
     (errorVanishes : ∀ who site, copied who site →
       Tendsto (fun n => comparisonError n who site) atTop (nhds 0))
@@ -126,13 +126,13 @@ theorem sequentialEquilibrium_of_copied_comparisons_limit
           ((target.strategy who).withLaw site.1 law) ≤
         (target.continuationContext targetCertificate site (targetPayoff who)).value
           (target.strategy who)) :
-    target.IsSequentialEquilibrium recall.decisionInformationAntichain targetCertificate
+    target.IsSequentialEquilibrium hrecall.decisionInformationAntichain targetCertificate
       targetPayoff := by
   classical
   choose error errorNonnegative vanishes sourceBound using fun who =>
     sourceConverges.exists_uniform_terminal_policy_gain_bound who sourceCertificate
       (sourcePayoff who) (bound who) (nonnegative who) (payoffBound who) (sourceRational who)
-  apply targetConverges.sequentialEquilibrium_of_copied_gain_bounds recall targetCertificate
+  apply targetConverges.sequentialEquilibrium_of_copied_gain_bounds hrecall targetCertificate
     targetPayoff copied consistent (fun n who site _ => error who n + comparisonError n who site)
     (fun who site kept _ => by simpa using (vanishes who).add (errorVanishes who site kept))
     (fun n who site kept law => ?_) freeOptimal
@@ -166,11 +166,11 @@ whole-policy approximate-optimality premise, only single-site deviations need
 to be controlled. Errors may depend on the local law. -/
 theorem exists_sequentialEquilibrium_limit_of_local_gain_bounds
     [Countable Player] [Finite T.History] [∀ who, DecidableEq (N.InfoState who)]
-    (recall : N.DecisionRecall) (certificate : T.WellFoundedHistories)
+    (hrecall : N.DecisionRecall) (certificate : T.WellFoundedHistories)
     (payoff : Player → T.History → ℝ) (sequence : ℕ → N.BehavioralAssessment)
     (fullyMixed : ∀ n, (sequence n).IsFullyMixed)
     (bayes : ∀ n, BehavioralAssessment.IsBayesConsistent N (sequence n)
-      recall.decisionInformationAntichain)
+      hrecall.decisionInformationAntichain)
     (error : ℕ → ∀ who (site : N.InformationSite who), PMF (N.Choice who site.1) → ℝ)
     (vanishes : ∀ who site law, Tendsto (fun n => error n who site law) atTop (nhds 0))
     (gainBound : ∀ n who (site : N.InformationSite who) law,
@@ -180,14 +180,14 @@ theorem exists_sequentialEquilibrium_limit_of_local_gain_bounds
           ((sequence n).strategy who) ≤ error n who site law) :
     ∃ (target : N.BehavioralAssessment) (index : ℕ → ℕ), StrictMono index ∧
       BehavioralAssessmentConvergesPointwise (fun n => sequence (index n)) target ∧
-      target.IsSequentialEquilibrium recall.decisionInformationAntichain certificate payoff := by
+      target.IsSequentialEquilibrium hrecall.decisionInformationAntichain certificate payoff := by
   obtain ⟨target, index, increasing, converges⟩ :=
     N.exists_subseq_behavioralAssessmentConvergesPointwise_atSites_of_uniformlyTight sequence
       (fun _ _ => uniformlyTight_of_finite _) (fun _ _ => uniformlyTight_of_finite _)
   refine ⟨target, index, increasing, converges, ?_⟩
-  exact converges.sequentialEquilibrium_of_copied_gain_bounds recall certificate payoff
+  exact converges.sequentialEquilibrium_of_copied_gain_bounds hrecall certificate payoff
     (fun _ _ => True)
-    (converges.isSequentiallyConsistent recall.decisionInformationAntichain
+    (converges.isSequentiallyConsistent hrecall.decisionInformationAntichain
       (fun n => fullyMixed (index n)) (fun n => bayes (index n)))
     (fun n who site law => error (index n) who site law)
     (fun who site _ law => (vanishes who site law).comp increasing.tendsto_atTop)

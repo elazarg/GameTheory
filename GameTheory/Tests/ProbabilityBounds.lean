@@ -7,6 +7,7 @@ that event and zero elsewhere. Markov's inequality is exact.
 
 import GameTheory.Math.Probability.Bounds
 import GameTheory.Math.Probability.Uniform
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -15,7 +16,7 @@ namespace GameTheory.Tests.ProbabilityBounds
 open GameTheory.Math.Probability
 
 def witnessLaw : PMF Bool :=
-  (PMF.uniformOfFintype (Fin 4)).map (fun value => decide (value = 0))
+  (uniformLaw (Fin 4)).map (fun value => decide (value = 0))
 
 def witnessEvent : Set Bool := {true}
 
@@ -31,13 +32,13 @@ theorem witness_event_probability :
   classical
   rw [PMF.toOuterMeasure_apply, tsum_fintype]
   norm_num [witnessLaw, witnessEvent, Fintype.sum_bool, Set.indicator,
-    PMF.map_apply, PMF.uniformOfFintype_apply, tsum_fintype, Fin.sum_univ_succ]
+    PMF.map_apply, uniformLaw_apply, tsum_fintype, Fin.sum_univ_succ]
 
 theorem witness_expectation :
     expect witnessLaw witnessObservable = 1 := by
   rw [expect_eq_sum]
   norm_num [witnessLaw, witnessObservable, Fintype.sum_bool,
-    PMF.map_apply, PMF.uniformOfFintype_apply, tsum_fintype, Fin.sum_univ_succ]
+    PMF.map_apply, uniformLaw_apply, tsum_fintype, Fin.sum_univ_succ]
 
 theorem witness_markov_bound :
     (witnessLaw.toOuterMeasure witnessEvent).toReal ≤

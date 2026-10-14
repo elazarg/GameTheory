@@ -8,6 +8,7 @@ one successor site while retaining independent fair choices elsewhere.
 import GameTheory.Stochastic.Kuhn
 import GameTheory.Math.Probability.InfiniteProductBoundary
 import GameTheory.Experimental.PostArchitecture.PMFStaticGate
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -146,7 +147,7 @@ private theorem tprod_const_zero_of_lt_one {α : Type*} [Infinite α]
   exact le_antisymm hz bot_le
 
 def fairPolicy : (chanceGame.perfectMonitoring 0).BehavioralPolicy () :=
-  fun _ => PMF.uniformOfFintype _
+  fun _ => uniformLaw _
 
 def fairMeasure : Measure ((chanceGame.perfectMonitoring 0).Policy ()) :=
   InformationModel.BehavioralPolicy.toPureMeasure
@@ -169,7 +170,7 @@ theorem fairPolicy_singleton_zero
         _ = Fintype.card Bool :=
           Fintype.card_congr (chanceGame.actionChoiceEquiv 0 () info).symm
         _ = 2 := by decide
-    simp [fairPolicy, PMF.uniformOfFintype_apply, hcard]
+    simp [fairPolicy, uniformLaw_apply, hcard]
   rw [fairMeasure, InformationModel.BehavioralPolicy.toPureMeasure,
     Measure.infinitePi_singleton]
   simp only [hcoord]
@@ -350,7 +351,7 @@ theorem correlated_root_choice_mass (answer : Bool) :
       _ = Fintype.card Bool :=
         Fintype.card_congr (chanceGame.actionChoiceEquiv 0 () []).symm
       _ = 2 := by decide
-  norm_num [fairPolicy, PMF.uniformOfFintype_apply, hcard]
+  norm_num [fairPolicy, uniformLaw_apply, hcard]
 
 def laws : chanceGame.ProtocolPolicyMeasureProfile 0 :=
   fun _ => correlatedMeasure

@@ -65,7 +65,7 @@ example : decodeGeneralCertificate 1 2 4
       if index = 2 then 1 else if index = 3 then 4 else generalCertificateField certificate index)) =
     certificate := by
   unfold decodeGeneralCertificate certificate
-  congr 1 <;> try rfl
+  congr 1
   · funext i; fin_cases i; rfl
   · funext j; fin_cases j <;> rfl
 

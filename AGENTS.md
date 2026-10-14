@@ -178,6 +178,11 @@ public linters, and checks transitive axioms in every authored module. See
 for the recorded limits they do not, and `docs/Phase4StaticHarvest.md` for the
 theorem families recovered on the settled API.
 
+Third-party libraries need to compile through the selected imports; do not
+enforce GameTheory conventions on their sources. The axiom audit follows their
+transitive use by authored declarations, rather than auditing unused dependency
+declarations.
+
 ## Architectural reminders
 
 - `GameTheory` is the public namespace; `GameTheory2` is only the repository and
@@ -242,10 +247,12 @@ decision or vertical slice, and report the exact validation performed.
 
 ## Current toolchain-bump reference
 
-The completed Lean 4.34 / Mathlib v4.34.0 bump and its client migration lessons
-are in [docs/Lean434BumpLessons.md](docs/Lean434BumpLessons.md): published pins,
-mechanical renames, simplex and measure API changes, tooling limits, and final
-validation. Keep bump plans and raw diagnostics local.
+The completed Lean 4.35 / Mathlib v4.35.0 bump and its client migration lessons
+are in [docs/Lean435BumpLessons.md](docs/Lean435BumpLessons.md): dependency pins,
+finite uniform PMF construction, parser and tactic changes, and final validation.
+The preceding bump remains recorded in
+[docs/Lean434BumpLessons.md](docs/Lean434BumpLessons.md).
+Keep bump plans and raw diagnostics local.
 
 ## Toolchain-bump lessons (Lean 4.33 / mathlib v4.33.1)
 

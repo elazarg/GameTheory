@@ -2,6 +2,7 @@
 
 import GameTheory.Math.Probability.SelectiveStopping
 import GameTheory.Math.Probability.Uniform
+import GameTheory.Math.Probability.FiniteUniform
 
 /-! # Finite regressions for information-fiber stopping bounds -/
 
@@ -11,7 +12,7 @@ namespace GameTheory.Tests.SelectiveStopping
 
 open GameTheory.Math.Probability
 
-def law : PMF (Fin 3) := PMF.uniformOfFintype (Fin 3)
+def law : PMF (Fin 3) := uniformLaw (Fin 3)
 
 def stopped (state : Fin 3) : Bool := decide (state = 0 ∨ state = 1)
 
@@ -115,16 +116,16 @@ private def gapTarget (state : Fin 2) : ℝ := if state = 0 then 0 else 3
 
 /-- A unit event discrepancy is attained on a half-mass event. -/
 theorem event_gap_sharp :
-    let pair := PMF.uniformOfFintype (Fin 2)
+    let pair := uniformLaw (Fin 2)
     ((pair.map gapEvent).toOuterMeasure {true}).toReal = 1 / 2 ∧
       expect pair gapSource = 1 ∧ expect pair gapTarget = 3 / 2 ∧
       expect pair gapTarget ≤
         expect pair gapSource +
           ((pair.map gapEvent).toOuterMeasure {true}).toReal := by
   dsimp only
-  have hmass : ((PMF.uniformOfFintype (Fin 2)).map gapEvent
+  have hmass : ((uniformLaw (Fin 2)).map gapEvent
       |>.toOuterMeasure {true}).toReal = 1 / 2 := by
-    rw [← expect_stopIndicator (PMF.uniformOfFintype (Fin 2)) gapEvent,
+    rw [← expect_stopIndicator (uniformLaw (Fin 2)) gapEvent,
       expect_uniformFin]
     norm_num [Fin.sum_univ_succ, gapEvent, stopIndicator]
   refine ⟨hmass, ?_, ?_, ?_⟩
@@ -135,7 +136,7 @@ theorem event_gap_sharp :
   · rw [expect_uniformFin, expect_uniformFin, hmass]
     norm_num [Fin.sum_univ_succ, gapSource, gapTarget]
 
-private def states2 : PMF (Fin 2) := PMF.uniformOfFintype (Fin 2)
+private def states2 : PMF (Fin 2) := uniformLaw (Fin 2)
 
 private def quit2 (state : Fin 2) : PMF ℝ :=
   PMF.pure (if state = 0 then 2 else 0)
@@ -188,7 +189,7 @@ theorem unconditional_comparison_insufficient :
 
 /-- A negative event gap is retained exactly. -/
 theorem negative_event_gap :
-    let states := PMF.uniformOfFintype (Fin 2)
+    let states := uniformLaw (Fin 2)
     let event : Set (Fin 2) := {0}
     let target := fun state : Fin 2 => if state = 0 then (-2 : ℝ) else 0
     expect states target = -1 ∧

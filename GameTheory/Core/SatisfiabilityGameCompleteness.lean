@@ -1,4 +1,5 @@
 import GameTheory.Core.SatisfiabilityGame
+import GameTheory.Math.Probability.FiniteUniform
 
 /-! A satisfying assignment yields a mixed equilibrium of the literal/clause
 game by drawing its selected literals uniformly over the variables. -/
@@ -12,7 +13,7 @@ open scoped BigOperators
 
 /-- The assignment-selected literal of a uniformly chosen variable. -/
 def assignmentLaw {n m : ℕ} [NeZero n] (τ : Fin n → Bool) : PMF (Action n m) :=
-  (PMF.uniformOfFintype (Fin n)).map (fun v => literal v (τ v))
+  (uniformLaw (Fin n)).map (fun v => literal v (τ v))
 
 theorem payoff_assignment_literals {n m : ℕ} (C : Clauses n m) (τ : Fin n → Bool)
     (v w : Fin n) : payoff C (literal v (τ v)) (literal w (τ w)) = 1 := by
@@ -44,8 +45,8 @@ theorem value_assignment {n m : ℕ} [NeZero n] (C : Clauses n m) (τ : Fin n �
       expect (assignmentLaw (m := m) τ) (payoff C (literal v (τ v))) = 1 := by
     rw [assignmentLaw, expect_map]
     simpa only [Function.comp_def, payoff_assignment_literals] using
-      expect_constant (PMF.uniformOfFintype (Fin n)) 1
-  change expect (PMF.uniformOfFintype (Fin n)) (fun v =>
+      expect_constant (uniformLaw (Fin n)) 1
+  change expect (uniformLaw (Fin n)) (fun v =>
     expect (assignmentLaw τ) (payoff C (literal v (τ v)))) = 1
   simp only [hinner, expect_constant]
 
@@ -73,7 +74,7 @@ theorem deviation_le_one {n m : ℕ} [NeZero n] (C : Clauses n m) (τ : Fin n �
   · rw [assignmentLaw, expect_map]
     have h : ∀ w : Fin n, payoff C (.inr (.inr (.inr u))) (literal w (τ w)) = 1 := by
       intro w; simp [payoff, payoffInt, literal]
-    simpa only [Function.comp_def, h] using (expect_constant (PMF.uniformOfFintype (Fin n)) 1).le
+    simpa only [Function.comp_def, h] using (expect_constant (uniformLaw (Fin n)) 1).le
 
 /-- A satisfying assignment provides an ordinary mixed Nash equilibrium with
 both payoffs equal to one. -/

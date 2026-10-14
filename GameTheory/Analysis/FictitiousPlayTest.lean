@@ -10,6 +10,7 @@ limit-to-Nash theorem.
 import GameTheory.Analysis.Learning
 import GameTheory.Tests.FictitiousPlay
 import Mathlib.Data.Int.CardIntervalMod
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -150,7 +151,7 @@ theorem cycling_isFictitiousPlay :
 
 /-- The long-run empirical target of the alternating path. -/
 def cyclingTarget : Profile cyclingSignature.mixed :=
-  fun _ => PMF.uniformOfFintype (Fin 2)
+  fun _ => uniformLaw (Fin 2)
 
 private theorem cycling_filter_card_eq_count (T : ℕ) (who action : Fin 2) :
     ((Finset.univ.filter fun round : Fin T =>
@@ -219,7 +220,7 @@ theorem cycling_empiricalBelief_converges (who : Fin 2) :
   apply pmfConvergesPointwise_iff_toReal.mpr
   intro action
   rw [show ((cyclingTarget who) action).toReal = 1 / 2 by
-    simp [cyclingTarget, PMF.uniformOfFintype_apply]]
+    simp [cyclingTarget, uniformLaw_apply]]
   rw [tendsto_iff_dist_tendsto_zero]
   refine squeeze_zero (g := fun t : ℕ => 1 / ((t + 1 : ℕ) : ℝ))
     (fun _ => dist_nonneg) (fun t => ?_) ?_

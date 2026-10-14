@@ -43,6 +43,6 @@ theorem payoffInt_actionAt {n m : ℕ} (C : Clauses n m) (i j : ℕ)
     try simp only [Fin.ext_iff]
     try split_ifs
     all_goals try omega
-  all_goals simp_all [clauseAt] <;> omega
+  all_goals simp_all [clauseAt]; all_goals omega
 
 end GameTheory.SatisfiabilityGame

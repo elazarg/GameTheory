@@ -11,6 +11,9 @@ current coordinate. The floor is strictly positive.
 
 import GameTheory.Analysis.Protocol.SequentialOneShotTest
 import GameTheory.Protocol.TremblingPlans
+import GameTheory.Math.Probability.FiniteUniform
+
+open GameTheory.Math.Probability
 
 noncomputable section
 
@@ -28,7 +31,7 @@ local instance (site : model.InformationSite ()) : Fintype (model.Choice () site
 
 /-- A fair coin between the incumbent's two whole plans. -/
 def correlatedPlans : PMF (model.DecisionPlan ()) :=
-  (PMF.uniformOfFintype Bool).map fun heads =>
+  (uniformLaw Bool).map fun heads =>
     if heads then rewardingPolicy.restrictToDecisions
     else (incumbentProfile ()).restrictToDecisions
 

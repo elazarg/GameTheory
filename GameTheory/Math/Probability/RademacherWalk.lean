@@ -14,6 +14,7 @@ summands is not concentrated near zero.
 import GameTheory.Math.Probability.SampleSum
 import GameTheory.Math.Probability.Uniform
 import Mathlib.Data.Nat.Choose.Central
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -25,7 +26,7 @@ open scoped ENNReal
 
 /-- The law taking the values `σ` and `-σ` with probability one half each. -/
 def signLaw (σ : ℝ) : PMF ℝ :=
-  (PMF.uniformOfFintype Bool).map fun b => if b then σ else -σ
+  (uniformLaw Bool).map fun b => if b then σ else -σ
 
 theorem expect_signLaw (σ : ℝ) (f : ℝ → ℝ) :
     expect (signLaw σ) f = (f σ + f (-σ)) / 2 := by
@@ -40,7 +41,7 @@ theorem abs_le_of_mem_support_signLaw (σ : ℝ) :
   cases b <;> simp
 
 private theorem uniform_bool_map_not :
-    (PMF.uniformOfFintype Bool).map (fun b => !b) = PMF.uniformOfFintype Bool := by
+    (uniformLaw Bool).map (fun b => !b) = uniformLaw Bool := by
   ext b
   cases b <;> simp [PMF.map_apply, tsum_fintype]
 
@@ -64,10 +65,10 @@ theorem signLaw_eq_map_mul (σ : ℝ) : signLaw σ = (signLaw 1).map (σ * ·) :
 def headCount : ℕ → PMF ℕ
   | 0 => PMF.pure 0
   | m + 1 => (headCount m).bind fun k =>
-      (PMF.uniformOfFintype Bool).map fun b => if b then k + 1 else k
+      (uniformLaw Bool).map fun b => if b then k + 1 else k
 
 private theorem coinStep_apply (j k : ℕ) :
-    (PMF.uniformOfFintype Bool).map (fun b => if b then j + 1 else j) k =
+    (uniformLaw Bool).map (fun b => if b then j + 1 else j) k =
       (if k = j + 1 then 2⁻¹ else 0) + (if k = j then 2⁻¹ else 0) := by
   simp [PMF.map_apply, tsum_fintype]
 

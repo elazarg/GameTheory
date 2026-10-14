@@ -12,6 +12,7 @@ import GameTheory.Core.Approximate
 import GameTheory.Repeated.Basic
 import GameTheory.Math.Eventually
 import GameTheory.Math.Probability.Uniform
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -38,7 +39,7 @@ def finiteAverageForm (G : UtilityGame ι) (horizon : ℕ) : GameForm ι where
     if hzero : horizon = 0 then PMF.pure none
     else
       letI : NeZero horizon := ⟨hzero⟩
-      (PMF.uniformOfFintype (Fin horizon)).bind fun t =>
+      (uniformLaw (Fin horizon)).bind fun t =>
         (G.form.play (G.repeatedPlay profile t)).map some
 
 /-- Payoff of a sampled stage outcome; the empty horizon pays zero. -/
@@ -58,7 +59,7 @@ theorem finiteAverageForm_play_pos (G : UtilityGame ι)
     {horizon : ℕ} [NeZero horizon]
     (profile : G.RepeatedProfile) :
     (G.finiteAverageForm horizon).play profile =
-      (PMF.uniformOfFintype (Fin horizon)).bind (fun t =>
+      (uniformLaw (Fin horizon)).bind (fun t =>
         (G.form.play (G.repeatedPlay profile t)).map some) := by
   simp [finiteAverageForm, NeZero.ne horizon]
 
@@ -84,10 +85,10 @@ theorem finiteAverageForm_integrable_iff (G : UtilityGame ι)
     constructor
     · intro h t
       have hrow := payoffIntegrable_bind_conditional_on_support
-        (PMF.uniformOfFintype (Fin horizon))
+        (uniformLaw (Fin horizon))
         (fun s => (G.form.play (G.repeatedPlay profile s)).map some)
         (fun outcome => G.finiteAverageOutcomeUtility outcome who)
-        h t (PMF.mem_support_uniformOfFintype t)
+        h t (mem_support_uniformLaw t)
       exact (payoffIntegrable_map_iff some
         (G.form.play (G.repeatedPlay profile t))
         (fun outcome => G.finiteAverageOutcomeUtility outcome who)).mp hrow
@@ -120,7 +121,7 @@ theorem finiteAverageForm_expectedUtility_eq (G : UtilityGame ι)
       _ = G.finiteAveragePayoff 0 profile who := by
         simp [finiteAveragePayoff, finiteAverageOutcomeUtility]
   · let : NeZero horizon := ⟨hzero⟩
-    let p : PMF (Fin horizon) := PMF.uniformOfFintype (Fin horizon)
+    let p : PMF (Fin horizon) := uniformLaw (Fin horizon)
     let q : Fin horizon → PMF (Option G.form.sig.Outcome) :=
       fun t => (G.form.play (G.repeatedPlay profile t)).map some
     let u : Option G.form.sig.Outcome → ℝ :=

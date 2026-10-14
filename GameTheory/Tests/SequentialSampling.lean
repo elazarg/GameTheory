@@ -1,5 +1,6 @@
 import GameTheory.Math.Probability.SequentialSampling
 import GameTheory.Math.Probability.Uniform
+import GameTheory.Math.Probability.FiniteUniform
 
 /-! # Correlated reconstruction and no-incoming-information controls -/
 
@@ -10,10 +11,10 @@ namespace GameTheory.Tests.SequentialSampling
 open GameTheory.Math.Probability
 open GameTheory.Math.Probability.SequentialSampling
 
-private def coin : PMF Bool := PMF.uniformOfFintype Bool
+private def coin : PMF Bool := uniformLaw Bool
 
 private theorem coin_support (value : Bool) : value ∈ coin.support :=
-  PMF.mem_support_uniformOfFintype value
+  mem_support_uniformLaw value
 
 private def correlated : PMF (List Bool) := coin.map fun value => [value, value]
 

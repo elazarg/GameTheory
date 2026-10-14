@@ -6,7 +6,9 @@ recommending its opposite remains plausible but fails obedience.
 -/
 
 import GameTheory.Core.BayesCorrelated
-import Mathlib.Probability.Distributions.Uniform
+import GameTheory.Math.Probability.FiniteUniform
+
+open GameTheory.Math.Probability
 
 noncomputable section
 
@@ -21,7 +23,7 @@ def falseTypes : Player → Bool := fun _ => false
 def trueTypes : Player → Bool := fun _ => true
 
 def prior : PMF (Player → Bool) :=
-  (PMF.uniformOfFintype Bool).map fun bit _ => bit
+  (uniformLaw Bool).map fun bit _ => bit
 
 @[reducible]
 def game : BayesianGame Player where
@@ -37,7 +39,7 @@ theorem prior_prob_false : prior falseTypes = 1 / 2 := by
     intro h
     have hzero := congrFun h 0
     cases hzero
-  simp [prior, PMF.map_apply, PMF.uniformOfFintype_apply]
+  simp [prior, PMF.map_apply, uniformLaw_apply]
   unfold falseTypes
   simp [hne]
 
@@ -47,7 +49,7 @@ theorem prior_prob_true : prior trueTypes = 1 / 2 := by
     intro h
     have hzero := congrFun h 0
     cases hzero
-  simp [prior, PMF.map_apply, PMF.uniformOfFintype_apply]
+  simp [prior, PMF.map_apply, uniformLaw_apply]
   unfold trueTypes
   simp [hne]
 

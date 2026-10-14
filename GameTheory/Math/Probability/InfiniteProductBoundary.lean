@@ -9,7 +9,7 @@ sampled independently.
 import GameTheory.Math.Probability.Product
 import GameTheory.Math.Probability.FiniteSampling
 import Mathlib.Analysis.SpecificLimits.Basic
-import Mathlib.Probability.Distributions.Uniform
+import GameTheory.Math.Probability.FiniteUniform
 import Mathlib.Probability.Distributions.Geometric
 import Mathlib.Probability.ProductMeasure
 
@@ -57,10 +57,10 @@ theorem finite_uniform_finSucc_marginals (sites : Finset ℕ) :
     ∃ μ : PMF ((n : ℕ) → Fin (n + 1)),
       ∀ n ∈ sites,
         μ.map (fun policy => policy n) =
-          PMF.uniformOfFintype (Fin (n + 1)) := by
+          uniformLaw (Fin (n + 1)) := by
   classical
   let laws : (n : ℕ) → PMF (Fin (n + 1)) :=
-    fun n => PMF.uniformOfFintype (Fin (n + 1))
+    fun n => uniformLaw (Fin (n + 1))
   let fallback : (n : ℕ) → Fin (n + 1) := fun _ => 0
   refine ⟨FiniteAssignment.sampleOn laws sites fallback, ?_⟩
   intro n hn
@@ -70,12 +70,12 @@ theorem finite_uniform_finSucc_marginals (sites : Finset ℕ) :
 marginals that no PMF over total tables can realize. -/
 def uniformFinSuccTableMeasure : Measure ((n : ℕ) → Fin (n + 1)) :=
   Measure.infinitePi fun n =>
-    (PMF.uniformOfFintype (Fin (n + 1))).toMeasure
+    (uniformLaw (Fin (n + 1))).toMeasure
 
 theorem uniformFinSuccTableMeasure_map_eval (n : ℕ) :
     uniformFinSuccTableMeasure.map
         (fun table : (k : ℕ) → Fin (k + 1) => table n) =
-      (PMF.uniformOfFintype (Fin (n + 1))).toMeasure := by
+      (uniformLaw (Fin (n + 1))).toMeasure := by
   exact Measure.infinitePi_map_eval _ n
 
 private def halfChance : unitInterval := ⟨1 / 2, by norm_num⟩
@@ -111,7 +111,7 @@ after chance chooses `n`, the action is uniform on `Fin (n + 1)`. -/
 theorem countableChanceTableOutcome_eq_sequential :
     countableChanceTableOutcome =
       (geometricMeasure (⟨1 / 2, by norm_num⟩ : unitInterval)).bind fun n =>
-        ((PMF.uniformOfFintype (Fin (n + 1))).toMeasure).map
+        ((uniformLaw (Fin (n + 1))).toMeasure).map
           (fun a => (⟨n, a⟩ : Σ k : ℕ, Fin (k + 1))) := by
   unfold countableChanceTableOutcome
   apply Measure.bind_congr_right (Filter.Eventually.of_forall ?_)
@@ -194,7 +194,7 @@ theorem countableChancePredrawnOutcome_eq_sequential :
         (geometricMeasure (⟨1 / 2, by norm_num⟩ : unitInterval)).map (fun n =>
           (⟨n, table n⟩ : Σ k : ℕ, Fin (k + 1)))) =
       (geometricMeasure (⟨1 / 2, by norm_num⟩ : unitInterval)).bind (fun n =>
-        ((PMF.uniformOfFintype (Fin (n + 1))).toMeasure).map
+        ((uniformLaw (Fin (n + 1))).toMeasure).map
           (fun a => (⟨n, a⟩ : Σ k : ℕ, Fin (k + 1)))) := by
   exact (uniformFinSuccTableMeasure_bind_eval_comm
     (geometricMeasure halfChance)).trans countableChanceTableOutcome_eq_sequential

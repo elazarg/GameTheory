@@ -239,6 +239,7 @@ import GameTheory.Math.Probability.ExpectationMixture
 import GameTheory.Math.Probability.ExpectationSeries
 import GameTheory.Math.Probability.ExtendedExpectation
 import GameTheory.Math.Probability.FiniteSampling
+import GameTheory.Math.Probability.FiniteUniform
 import GameTheory.Math.Probability.Indistinguishability
 import GameTheory.Math.Probability.HybridIndistinguishability
 import GameTheory.Math.Probability.InfiniteProductBoundary

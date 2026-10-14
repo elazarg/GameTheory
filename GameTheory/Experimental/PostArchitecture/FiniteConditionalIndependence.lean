@@ -13,7 +13,7 @@ positivity convention.
 
 import GameTheory.Math.Probability.Support
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
-import Mathlib.Probability.Distributions.Uniform
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -163,7 +163,7 @@ theorem impossibleEvidence_true_cross_product (firstValue secondValue : Bool) :
         (pairAtom impossibleSecond impossibleEvidence secondValue true)).toReal :=
   cross_product_at_zero_evidence _ _ _ _ _ _ _ impossibleEvidence_true_mass
 
-def diagonalLaw : PMF (Fin 2) := PMF.uniformOfFintype (Fin 2)
+def diagonalLaw : PMF (Fin 2) := uniformLaw (Fin 2)
 
 def diagonalFirst (value : Fin 2) : Fin 2 := value
 

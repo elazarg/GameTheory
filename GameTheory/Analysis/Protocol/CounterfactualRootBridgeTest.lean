@@ -37,9 +37,9 @@ def guardedActionRegret
   information.counterfactualActionRegret strategy () site terminalPayoff
     (information.truncatedRunner fuel) choice
 
-theorem incumbentOwnReach_first (hidden : Bool) :
+theorem incumbentOwnReach_first (latent : Bool) :
     information.playerReachProbability incumbentBehavioralStrategy ()
-      (firstHistory hidden).trace = 1 := by
+      (firstHistory latent).trace = 1 := by
   rw [InformationModel.playerReachProbability_eq_ownPlayReachProbability,
     ← decodeRecord_infoOf_eq_ownPlay, infoOf_firstHistory]
   rfl
@@ -89,9 +89,9 @@ theorem firstCommit_rootGain_eq_zero :
   simp only [guardedActionRegret]
   rw [first_counterfactualActionRegret, mul_zero]
 
-theorem firstCommittedOwnReach_secondTrue (hidden : Bool) :
+theorem firstCommittedOwnReach_secondTrue (latent : Bool) :
     information.playerReachProbability firstCommittedStrategy ()
-      (secondHistory hidden true).trace = 1 := by
+      (secondHistory latent true).trace = 1 := by
   rw [InformationModel.playerReachProbability_eq_ownPlayReachProbability,
     ← decodeRecord_infoOf_eq_ownPlay, infoOf_secondHistory]
   rw [show decodeRecord [(Stage.first, true)] =

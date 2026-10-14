@@ -9,7 +9,9 @@ realized behavioral policy reproduces the joint law anyway.
 -/
 
 import GameTheory.Protocol.PrivateStrategy
-import Mathlib.Probability.Distributions.Uniform
+import GameTheory.Math.Probability.FiniteUniform
+
+open GameTheory.Math.Probability
 
 noncomputable section
 
@@ -19,7 +21,7 @@ open GameTheory.Protocol.PrivateStrategy GameTheory.Math.Probability
 
 /-- Draw a private bit once and answer every input with its xor. -/
 def strategy : Strategy Bool Bool Bool where
-  initial := PMF.uniformOfFintype _
+  initial := uniformLaw _
   respond memory input := PMF.pure (xor memory input, memory)
 
 /-- The environment shows the most recent output. -/
@@ -34,10 +36,10 @@ theorem private_two (memory : Bool) : runPrivate strategy observe advance 2 [] [
   cases memory <;> simp [runPrivate, strategy, observe, advance]
 
 theorem behavioral_two : runBehavioral (behavioral strategy) observe advance 2 [] [] =
-    (PMF.uniformOfFintype Bool).map fun bit =>
+    (uniformLaw Bool).map fun bit =>
       ([false, bit], [(bit, false), (false, bit)]) := by
   rw [← realize strategy observe advance 2 [] []]
-  change (PMF.uniformOfFintype Bool).bind _ = _
+  change (uniformLaw Bool).bind _ = _
   rw [← PMF.bind_pure_comp, Function.comp_def]
   apply bind_congr_on_support _
   intro memory _

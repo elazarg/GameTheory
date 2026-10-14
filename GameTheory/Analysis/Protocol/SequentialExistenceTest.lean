@@ -21,8 +21,8 @@ set_option backward.isDefEq.respectTransparency false in
 inductive State
   | root
   | waiting
-  | decision (hidden : Bool)
-  | terminal (hidden action : Bool)
+  | decision (latent : Bool)
+  | terminal (latent action : Bool)
   deriving DecidableEq, Fintype
 
 def State.active : State → Prop
@@ -53,15 +53,15 @@ def rootLaw : PMF State :=
     match state with
     | .root => rootLaw
     | .waiting => PMF.pure (.decision true)
-    | .decision hidden => PMF.pure (.terminal hidden ((joint.1 ()).getD false))
-    | .terminal hidden action => PMF.pure (.terminal hidden action)
+    | .decision latent => PMF.pure (.terminal latent ((joint.1 ()).getD false))
+    | .terminal latent action => PMF.pure (.terminal latent action)
   progress := by
     intro state running
     cases state with
     | root => exact ⟨fun _ => none, fun _ => by simp [State.active]⟩
     | waiting => exact ⟨fun _ => none, fun _ => by simp [State.active]⟩
-    | decision hidden => exact ⟨fun _ => some false, fun _ => ⟨trivial, Set.mem_univ _⟩⟩
-    | terminal hidden action => exact False.elim (running trivial)
+    | decision latent => exact ⟨fun _ => some false, fun _ => ⟨trivial, Set.mem_univ _⟩⟩
+    | terminal latent action => exact False.elim (running trivial)
 
 def jointAt : State → Bool → Unit → Option Bool
   | .decision _, action => fun _ => some action
@@ -74,15 +74,15 @@ theorem legal_joint {state : State} {joint : Unit → Option Bool}
       exact ⟨false, execution.eq_noop_of_legal_of_inactive legal (fun _ => by simp [State.active])⟩
   | waiting =>
       exact ⟨false, execution.eq_noop_of_legal_of_inactive legal (fun _ => by simp [State.active])⟩
-  | decision hidden =>
-      have active : execution.active (.decision hidden) () := trivial
+  | decision latent =>
+      have active : execution.active (.decision latent) () := trivial
       obtain ⟨action, haction⟩ := LegalOption.exists_eq_some_of_active
         (joint ()) (execution.legalOption_of_legal legal ()) active
       refine ⟨action, ?_⟩
       funext who
       cases who
       exact haction
-  | terminal hidden action => exact False.elim (legal.1 trivial)
+  | terminal latent action => exact False.elim (legal.1 trivial)
 
 theorem no_return (source : State) (joint : Unit → Option Bool)
     (legal : execution.Legal source joint) :
@@ -94,8 +94,8 @@ theorem no_return (source : State) (joint : Unit → Option Bool)
         simp
       simpa only [execution] using hnot
   | waiting => simp [execution]
-  | decision hidden => simp [execution]
-  | terminal hidden action => simp [execution]
+  | decision latent => simp [execution]
+  | terminal latent action => simp [execution]
 
 theorem predecessor_unique {target first second : State}
     {firstJoint secondJoint : Unit → Option Bool}
@@ -174,14 +174,14 @@ theorem ownPlay : ∀ {state : State} (trace : execution.Trace state),
             simpa [PMF.pure_apply] using realized
           subst target
           simp [jointAt, ih]
-      | decision hidden =>
-          have realized : target ∈ (PMF.pure (.terminal hidden action)).support := realized
+      | decision latent =>
+          have realized : target ∈ (PMF.pure (.terminal latent action)).support := realized
           rw [PMF.mem_support_iff] at realized
-          have htarget : target = .terminal hidden action := by
+          have htarget : target = .terminal latent action := by
             simpa [PMF.pure_apply] using realized
           subst target
           simp [jointAt, ih, viewOf]
-      | terminal hidden action => exact False.elim (running trivial)
+      | terminal latent action => exact False.elim (running trivial)
 termination_by _ trace => trace.length
 decreasing_by simp [Trace.length]
 
@@ -290,14 +290,14 @@ theorem trace_length : ∀ {state : State} (trace : execution.Trace state),
             simpa [PMF.pure_apply] using realized
           subst target
           simp [Trace.length, ih, stage]
-      | decision hidden =>
-          have realized : target ∈ (PMF.pure (.terminal hidden action)).support := realized
+      | decision latent =>
+          have realized : target ∈ (PMF.pure (.terminal latent action)).support := realized
           rw [PMF.mem_support_iff] at realized
-          have htarget : target = .terminal hidden action := by
+          have htarget : target = .terminal latent action := by
             simpa [PMF.pure_apply] using realized
           subst target
-          cases hidden <;> simp [Trace.length, ih, stage]
-      | terminal hidden action => exact False.elim (running trivial)
+          cases latent <;> simp [Trace.length, ih, stage]
+      | terminal latent action => exact False.elim (running trivial)
 termination_by _ trace => trace.length
 decreasing_by simp [Trace.length]
 
@@ -307,13 +307,13 @@ theorem bounded_three : execution.BoundedHorizon 3 := by
   cases state with
   | root => simp [stage] at lengthBound
   | waiting => simp [stage] at lengthBound
-  | decision hidden => cases hidden <;> simp [stage] at lengthBound
-  | terminal hidden action => trivial
+  | decision latent => cases latent <;> simp [stage] at lengthBound
+  | terminal latent action => trivial
 
 /-- Terminal payoffs depend on the chosen action and nature's hidden bit. -/
 def payoff (_ : Unit) (history : execution.History) : ℝ :=
   match history.state with
-  | .terminal hidden action => if action = hidden then 1 else 0
+  | .terminal latent action => if action = latent then 1 else 0
   | _ => 0
 
 /-- General finite perfect-recall existence applies despite unequal decision

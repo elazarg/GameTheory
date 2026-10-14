@@ -1,4 +1,7 @@
 import GameTheory.Math.Probability.Uniform
+import GameTheory.Math.Probability.FiniteUniform
+
+open GameTheory.Math.Probability
 
 /-! Uniform bounded random tapes connect fair-coin execution to probability laws.
 Every verdict has a dyadic probability, with denominator bounded by the tape length.
@@ -10,7 +13,7 @@ namespace GameTheory.Complexity
 
 /-- The law of the verdict obtained from a fixed number of independent fair bits. -/
 def randomTapeLaw (steps : ℕ) (verdict : (Fin steps → Bool) → Bool) : PMF Bool :=
-  (PMF.uniformOfFintype (Fin steps → Bool)).map verdict
+  (uniformLaw (Fin steps → Bool)).map verdict
 
 /-- Acceptance is the fraction of random tapes giving a positive verdict. -/
 theorem randomTapeLaw_true (steps : ℕ) (verdict : (Fin steps → Bool) → Bool) :

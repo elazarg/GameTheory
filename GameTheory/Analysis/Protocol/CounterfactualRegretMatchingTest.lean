@@ -35,25 +35,25 @@ def localSite : information.InformationSite .player :=
   ⟨View.acting, ⟨⟨decisionHistory false, infoOf_decisionHistory false⟩,
     decision_not_terminal false, false, acting_menu_contains_false⟩⟩
 
-def localDecisionInformationHistory (hidden : Bool) :
+def localDecisionInformationHistory (latent : Bool) :
     information.InformationHistory .player localSite.1 :=
-  ⟨decisionHistory hidden, infoOf_decisionHistory hidden⟩
+  ⟨decisionHistory latent, infoOf_decisionHistory latent⟩
 
 def localHistoryEquivBool :
     information.InformationHistory .player localSite.1 ≃ Bool where
   toFun history :=
     match history.1.state with
-    | .decision hidden _ => hidden
+    | .decision latent _ => latent
     | _ => false
   invFun := localDecisionInformationHistory
   left_inv history := by
     rcases history with ⟨history, hinfo⟩
-    obtain ⟨hidden, hhistory⟩ :=
+    obtain ⟨latent, hhistory⟩ :=
       history_eq_decisionHistory_of_info_acting history hinfo
     subst history
     apply Subtype.ext
     rfl
-  right_inv hidden := by simp [localDecisionInformationHistory, decisionHistory]
+  right_inv latent := by simp [localDecisionInformationHistory, decisionHistory]
 
 abbrev LocalAction := information.Choice .player localSite.1
 
@@ -107,30 +107,30 @@ def localUtility (choice : LocalAction) (_environment : Unit) : ℝ :=
 /-- Counterfactual reach of either hidden history is the fair chance mass,
 independently of the current focal action law. -/
 theorem counterfactualReachProbability_decision_policyOfLaw
-    (law : PMF LocalAction) (hidden : Bool) :
+    (law : PMF LocalAction) (latent : Bool) :
     information.counterfactualReachProbability (profileOfLaw law) .player
-      (decisionHistory hidden).trace = 1 / 2 := by
+      (decisionHistory latent).trace = 1 / 2 := by
   have hinvariant :=
     information.counterfactualReachProbability_eq_of_eq_off
       (first := profileOfLaw law) (second := fullyMixedBehavioralProfile)
       (who := Player.player) (fun other hne => by
         cases other
         exact False.elim (hne rfl))
-      (decisionHistory hidden).trace
+      (decisionHistory latent).trace
   have hfactor :=
     information.historyReachProbability_eq_player_mul_counterfactual
-      fullyMixedBehavioralProfile .player (decisionHistory hidden).trace
+      fullyMixedBehavioralProfile .player (decisionHistory latent).trace
   rw [historyReachProbability_decision,
     playerReachProbability_decision, one_mul] at hfactor
   simpa using hinvariant.trans hfactor.symm
 
 theorem behavioralContinuationValue_policyOfLaw
     (law : PMF LocalAction)
-    (alternative : information.BehavioralPolicy .player) (hidden : Bool) :
+    (alternative : information.BehavioralPolicy .player) (latent : Bool) :
     information.behavioralContinuationValue (profileOfLaw law) .player
-      alternative weightedMatchingPayoff (information.truncatedRunner 2) (decisionHistory hidden) =
+      alternative weightedMatchingPayoff (information.truncatedRunner 2) (decisionHistory latent) =
         expect (alternative localSite.1) (fun choice =>
-          if choice.1 = some hidden then if hidden then 2 else 1 else 0) := by
+          if choice.1 = some latent then if latent then 2 else 1 else 0) := by
   unfold InformationModel.behavioralContinuationValue
   have hupdate :
       Profile.update (sig := information.behavioralSignature)
@@ -141,7 +141,7 @@ theorem behavioralContinuationValue_policyOfLaw
     cases who
     rw [Profile.update_same, Profile.update_same]
   rw [hupdate]
-  exact runBehavioralFrom_decision_weightedMatchingPayoff hidden alternative
+  exact runBehavioralFrom_decision_weightedMatchingPayoff latent alternative
 
 /-- Closed form for the counterfactual continuation value under any current
 law and any whole-policy replacement. -/
@@ -162,12 +162,12 @@ theorem counterfactualContinuationValue_policyOfLaw
             history.1.trace *
           information.behavioralContinuationValue (profileOfLaw law) .player
             alternative weightedMatchingPayoff (information.truncatedRunner 2) history.1) =
-      ∑ hidden : Bool,
+      ∑ latent : Bool,
         information.counterfactualReachProbability (profileOfLaw law) .player
-            (decisionHistory hidden).trace *
+            (decisionHistory latent).trace *
           information.behavioralContinuationValue (profileOfLaw law) .player
             alternative weightedMatchingPayoff (information.truncatedRunner 2) (decisionHistory
-                hidden) := by
+                latent) := by
       exact Fintype.sum_equiv localHistoryEquivBool _ _ (fun history => by
         have hinverse := localHistoryEquivBool.symm_apply_apply history
         exact congrArg
@@ -178,11 +178,11 @@ theorem counterfactualContinuationValue_policyOfLaw
                 (profileOfLaw law) .player alternative
                   weightedMatchingPayoff (information.truncatedRunner 2) current.1)
           hinverse.symm)
-    _ = ∑ hidden : Bool, (1 / 2 : ℝ) *
+    _ = ∑ latent : Bool, (1 / 2 : ℝ) *
           expect (alternative localSite.1) (fun choice =>
-            if choice.1 = some hidden then if hidden then 2 else 1 else 0) := by
+            if choice.1 = some latent then if latent then 2 else 1 else 0) := by
       apply Finset.sum_congr rfl
-      intro hidden _
+      intro latent _
       rw [counterfactualReachProbability_decision_policyOfLaw,
         behavioralContinuationValue_policyOfLaw]
     _ = _ := by

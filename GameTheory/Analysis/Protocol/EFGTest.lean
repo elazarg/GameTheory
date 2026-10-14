@@ -33,8 +33,8 @@ inductive Player
 histories never merge as execution states. -/
 inductive State
   | initial
-  | decision (hidden : Bool) (arrival : Player → Option Bool)
-  | terminal (hidden : Bool) (arrival action : Player → Option Bool)
+  | decision (latent : Bool) (arrival : Player → Option Bool)
+  | terminal (latent : Bool) (arrival action : Player → Option Bool)
   deriving DecidableEq, Fintype
 
 /-- The nondegenerate chance law. -/
@@ -70,19 +70,19 @@ def execution : ExecutionProtocol Player where
   step state joint :=
     match state with
     | .initial =>
-        PMF.map (fun hidden => State.decision hidden joint.1) fairCoin
-    | .decision hidden arrival =>
-        PMF.pure (.terminal hidden arrival joint.1)
-    | .terminal hidden arrival action =>
-        PMF.pure (.terminal hidden arrival action)
+        PMF.map (fun latent => State.decision latent joint.1) fairCoin
+    | .decision latent arrival =>
+        PMF.pure (.terminal latent arrival joint.1)
+    | .terminal latent arrival action =>
+        PMF.pure (.terminal latent arrival action)
   progress := by
     intro state hterm
     cases state with
     | initial =>
         exact ⟨fun _ => none, fun _ => by simp⟩
-    | decision hidden arrival =>
+    | decision latent arrival =>
         exact ⟨fun _ => some false, fun _ => ⟨trivial, Set.mem_univ _⟩⟩
-    | terminal hidden arrival action =>
+    | terminal latent arrival action =>
         exact False.elim (hterm trivial)
 
 theorem initial_not_mem_step (source : State)
@@ -93,9 +93,9 @@ theorem initial_not_mem_step (source : State)
       rw [PMF.support_map]
       rintro ⟨side, _hside, hstate⟩
       cases hstate
-  | decision hidden arrival =>
+  | decision latent arrival =>
       simp [execution]
-  | terminal hidden arrival action =>
+  | terminal latent arrival action =>
       exact False.elim (hlegal.1 trivial)
 
 theorem step_predecessor_unique
@@ -119,10 +119,10 @@ theorem step_predecessor_unique
           injection hequal with _ hjoint
           have hjoint' : secondJoint = firstJoint := hjoint
           exact ⟨rfl, hjoint'.symm⟩
-      | decision hidden arrival =>
+      | decision latent arrival =>
           rw [PMF.mem_support_pure_iff] at secondRealized
           cases secondRealized
-      | terminal hidden arrival action =>
+      | terminal latent arrival action =>
           exact False.elim (secondLegal.1 trivial)
   | decision firstHidden firstArrival =>
       rw [PMF.mem_support_pure_iff] at firstRealized
@@ -139,9 +139,9 @@ theorem step_predecessor_unique
           subst secondHidden
           subst secondArrival
           exact ⟨rfl, hjoint'⟩
-      | terminal hidden arrival action =>
+      | terminal latent arrival action =>
           exact False.elim (secondLegal.1 trivial)
-  | terminal hidden arrival action =>
+  | terminal latent arrival action =>
       exact False.elim (firstLegal.1 trivial)
 
 theorem trace_unique :
@@ -181,12 +181,12 @@ theorem trace_length : ∀ {state : State} (trace : execution.Trace state),
           rw [PMF.support_map] at realized
           obtain ⟨side, _, rfl⟩ := realized
           simp [ExecutionProtocol.Trace.length, ih, stage]
-      | decision hidden arrival =>
-          have htarget : target = .terminal hidden arrival joint := by
+      | decision latent arrival =>
+          have htarget : target = .terminal latent arrival joint := by
             simpa [execution] using realized
           subst target
           simp [ExecutionProtocol.Trace.length, ih, stage]
-      | terminal hidden arrival action => exact False.elim (legal.1 trivial)
+      | terminal latent arrival action => exact False.elim (legal.1 trivial)
 
 /-- Every play stops after chance and one decision. -/
 theorem bounded_two : execution.BoundedHorizon 2 := by
@@ -194,8 +194,8 @@ theorem bounded_two : execution.BoundedHorizon 2 := by
   rw [trace_length trace] at hlength
   cases state with
   | initial => simp [stage] at hlength
-  | decision hidden arrival => simp [stage] at hlength
-  | terminal hidden arrival action => trivial
+  | decision latent arrival => simp [stage] at hlength
+  | terminal latent arrival action => trivial
 
 theorem wellFoundedHistories : execution.WellFoundedHistories :=
   bounded_two.wellFoundedHistories
@@ -307,30 +307,30 @@ theorem initial_legal_joint_eq_noop
       rw [hchoice] at hlegal
       exact False.elim (initial_inactive .player hlegal.1)
 
-theorem decision_mem_support (hidden : Bool) :
-    State.decision hidden execution.noop ∈
+theorem decision_mem_support (latent : Bool) :
+    State.decision latent execution.noop ∈
       (execution.step .initial ⟨execution.noop, initialLegal⟩).support := by
   rw [PMF.support_map]
-  exact ⟨hidden, mem_support_fairCoin hidden, rfl⟩
+  exact ⟨latent, mem_support_fairCoin latent, rfl⟩
 
-def decisionTrace (hidden : Bool) :
-    execution.Trace (State.decision hidden execution.noop) :=
-  .extend .start execution.noop initialLegal (decision_mem_support hidden)
+def decisionTrace (latent : Bool) :
+    execution.Trace (State.decision latent execution.noop) :=
+  .extend .start execution.noop initialLegal (decision_mem_support latent)
 
 @[reducible]
-def decisionHistory (hidden : Bool) : execution.History :=
-  ⟨.decision hidden execution.noop, decisionTrace hidden⟩
+def decisionHistory (latent : Bool) : execution.History :=
+  ⟨.decision latent execution.noop, decisionTrace latent⟩
 
-theorem infoOf_decisionHistory (hidden : Bool) :
-    information.infoOf .player (decisionHistory hidden).trace = .acting :=
-  signals_infoOf .player (decisionTrace hidden)
+theorem infoOf_decisionHistory (latent : Bool) :
+    information.infoOf .player (decisionHistory latent).trace = .acting :=
+  signals_infoOf .player (decisionTrace latent)
 
 theorem acting_menu_contains_false :
     some false ∈ information.menu .player View.acting := by
   simp
 
-theorem decision_not_terminal (hidden : Bool) :
-    ¬ execution.terminal (decisionHistory hidden).state := by
+theorem decision_not_terminal (latent : Bool) :
+    ¬ execution.terminal (decisionHistory latent).state := by
   simp
 
 @[reducible]
@@ -345,10 +345,10 @@ theorem actingSite_info : actingSite.1 = View.acting := by
   rfl
 
 @[reducible]
-def decisionInformationHistory (hidden : Bool) :
+def decisionInformationHistory (latent : Bool) :
     information.InformationHistory .player actingSite.1 :=
-  ⟨decisionHistory hidden, by
-    simpa using infoOf_decisionHistory hidden⟩
+  ⟨decisionHistory latent, by
+    simpa using infoOf_decisionHistory latent⟩
 
 /-- The belief carrier distinguishes nature's two histories even though the
 player receives the same information state at both. -/
@@ -366,11 +366,11 @@ decision histories. The proof uses reachability carried by the history rather
 than enumerating proof terms in the history subtype. -/
 theorem decision_trace_arrival_eq_noop
     : ∀ {state : State} (_trace : execution.Trace state)
-        (hidden : Bool) (arrival : Player → Option Bool),
-        state = .decision hidden arrival → arrival = execution.noop
-  | _, .start, hidden, arrival, hstate => by cases hstate
+        (latent : Bool) (arrival : Player → Option Bool),
+        state = .decision latent arrival → arrival = execution.noop
+  | _, .start, latent, arrival, hstate => by cases hstate
   | _, .extend (source := source) prior joint isLegal realized,
-      hidden, arrival, hstate => by
+      latent, arrival, hstate => by
       cases hstate
       cases source with
       | initial =>
@@ -387,21 +387,21 @@ theorem decision_trace_arrival_eq_noop
 theorem history_eq_decisionHistory_of_info_acting
     (history : execution.History)
     (hinfo : information.infoOf .player history.trace = .acting) :
-    ∃ hidden, history = decisionHistory hidden := by
+    ∃ latent, history = decisionHistory latent := by
   rcases history with ⟨state, trace⟩
   have hview : viewOfState state = .acting := by
     rw [← signals_infoOf .player trace]
     exact hinfo
   cases state with
   | initial => simp [viewOfState] at hview
-  | terminal hidden arrival action => simp [viewOfState] at hview
-  | decision hidden arrival =>
+  | terminal latent arrival action => simp [viewOfState] at hview
+  | decision latent arrival =>
       have harrival :=
-        decision_trace_arrival_eq_noop trace hidden arrival rfl
+        decision_trace_arrival_eq_noop trace latent arrival rfl
       subst arrival
-      refine ⟨hidden, ?_⟩
+      refine ⟨latent, ?_⟩
       congr 1
-      exact trace_unique trace (decisionTrace hidden)
+      exact trace_unique trace (decisionTrace latent)
 
 /-- The acting information fiber is exactly the hidden Boolean chosen by
 nature. -/
@@ -409,17 +409,17 @@ def actingHistoryEquivBool :
     information.InformationHistory .player actingSite.1 ≃ Bool where
   toFun history :=
     match history.1.state with
-    | .decision hidden _ => hidden
+    | .decision latent _ => latent
     | _ => false
   invFun := decisionInformationHistory
   left_inv history := by
     rcases history with ⟨history, hinfo⟩
-    obtain ⟨hidden, hhistory⟩ :=
+    obtain ⟨latent, hhistory⟩ :=
       history_eq_decisionHistory_of_info_acting history hinfo
     subst history
     apply Subtype.ext
     rfl
-  right_inv hidden := by
+  right_inv latent := by
     simp
 
 /-- The nondegenerate belief supported on the two hidden decision histories. -/
@@ -429,9 +429,9 @@ def decisionBelief :
     (PMF.pure (decisionInformationHistory true))
     (PMF.pure (decisionInformationHistory false))
 
-theorem decisionInformationHistory_mem_belief (hidden : Bool) :
-    decisionInformationHistory hidden ∈ decisionBelief.support := by
-  cases hidden
+theorem decisionInformationHistory_mem_belief (latent : Bool) :
+    decisionInformationHistory latent ∈ decisionBelief.support := by
+  cases latent
   · exact mem_support_mix_right (1 / 2) (by norm_num) (by norm_num)
       (by norm_num) (by simp)
   · exact mem_support_mix_left (1 / 2) (by norm_num) (by norm_num)
@@ -510,7 +510,7 @@ theorem randomizedChooser_initial :
   exact eq_pure_of_subsingleton _ _
 
 def oneStepHistory : State → execution.History
-  | .decision hidden _ => decisionHistory hidden
+  | .decision latent _ => decisionHistory latent
   | _ => decisionHistory false
 
 theorem decisionHistory_injective : Function.Injective decisionHistory := by
@@ -518,13 +518,13 @@ theorem decisionHistory_injective : Function.Injective decisionHistory := by
   have hstate := congrArg (fun history : execution.History => history.state) hequal
   simpa [decisionHistory] using hstate
 
-theorem historyReachProbability_decision (hidden : Bool) :
+theorem historyReachProbability_decision (latent : Bool) :
     information.historyReachWeight fullyMixedBehavioralProfile
-      (decisionInformationHistory hidden).1 =
+      (decisionInformationHistory latent).1 =
         ENNReal.ofReal (1 / 2 : ℝ) := by
   classical
   unfold InformationModel.historyReachWeight
-  rw [show (decisionInformationHistory hidden).1.trace.length = 1 by rfl,
+  rw [show (decisionInformationHistory latent).1.trace.length = 1 by rfl,
     InformationModel.runBehavioral, InformationModel.runBehavioralFrom,
     ExecutionProtocol.runRandomizedFor_succ_of_not_terminal
       _ 0 initial_not_terminal,
@@ -535,7 +535,7 @@ theorem historyReachProbability_decision (hidden : Bool) :
           (information.randomizedChooser fullyMixedBehavioralProfile) 0
           (execution.initHistory.extend (joint := execution.noop)
             initialLegal_at_initHistory realized))
-      (decisionHistory hidden) = ENNReal.ofReal (1 / 2 : ℝ)
+      (decisionHistory latent) = ENNReal.ofReal (1 / 2 : ℝ)
   have hkernel : ∀ state
       (hstate : state ∈ (execution.step execution.initHistory.state
         initialDraw).support),
@@ -579,14 +579,14 @@ theorem historyReachProbability_decision (hidden : Bool) :
         PMF.map (fun side => State.decision side execution.noop) fairCoin by
           rfl,
     PMF.map_comp]
-  rw [PMF.map_apply, tsum_eq_single hidden]
-  · cases hidden <;>
+  rw [PMF.map_apply, tsum_eq_single latent]
+  · cases latent <;>
       norm_num [fairCoin, mix_apply, PMF.pure_apply, oneStepHistory]
   · intro side hside
     by_cases hequal :
-        decisionHistory hidden =
+        decisionHistory latent =
           oneStepHistory (State.decision side execution.noop)
-    · have hhidden : hidden = side :=
+    · have hhidden : latent = side :=
         decisionHistory_injective (by simpa [oneStepHistory] using hequal)
       exact False.elim (hside hhidden.symm)
     · simp [hequal]
@@ -601,17 +601,17 @@ theorem informationMass_fullyMixed_acting :
         information.InformationHistory .player actingSite.1,
         information.historyReachWeight
           fullyMixedBehavioralProfile history.1) =
-      ∑ hidden : Bool,
+      ∑ latent : Bool,
         information.historyReachWeight fullyMixedBehavioralProfile
-          (decisionInformationHistory hidden).1 := by
+          (decisionInformationHistory latent).1 := by
             exact Fintype.sum_equiv actingHistoryEquivBool
               (fun history =>
                 information.historyReachWeight
                   fullyMixedBehavioralProfile history.1)
-              (fun hidden =>
+              (fun latent =>
                 information.historyReachWeight
                   fullyMixedBehavioralProfile
-                    (decisionInformationHistory hidden).1)
+                    (decisionInformationHistory latent).1)
               (fun history => by
                 have hinverse :=
                   actingHistoryEquivBool.symm_apply_apply history
@@ -624,8 +624,8 @@ theorem informationMass_fullyMixed_acting :
                   hinverse.symm)
     _ = ∑ _hidden : Bool, ENNReal.ofReal (1 / 2 : ℝ) := by
           apply Finset.sum_congr rfl
-          intro hidden _hhidden
-          exact historyReachProbability_decision hidden
+          intro latent _hhidden
+          exact historyReachProbability_decision latent
     _ = 1 := by
           have hhalf : ENNReal.ofReal (1 / 2 : ℝ) = (1 : ENNReal) / 2 := by
             rw [ENNReal.ofReal_div_of_pos (by norm_num)]
@@ -728,32 +728,32 @@ hidden bit. This payoff is nonconstant, but the fair hidden bit and the single
 information set make both actions worth `1 / 2`. -/
 def matchingPayoff (_ : Player) (history : execution.History) : ℝ :=
   match history.state with
-  | .terminal hidden _ action =>
-      if action .player = some hidden then 1 else 0
+  | .terminal latent _ action =>
+      if action .player = some latent then 1 else 0
   | _ => 0
 
 set_option backward.isDefEq.respectTransparency false in
 theorem runBehavioralFrom_decision_matchingPayoff
-    (hidden : Bool)
+    (latent : Bool)
     (alternative : information.BehavioralPolicy Player.player) :
     expect (information.runBehavioralFrom
       (Profile.update (sig := information.behavioralSignature)
         fullyMixedBehavioralProfile Player.player alternative) 2
-      (decisionHistory hidden)) (matchingPayoff .player) =
+      (decisionHistory latent)) (matchingPayoff .player) =
         expect (alternative .acting) fun choice =>
-          if choice.1 = some hidden then 1 else 0 := by
+          if choice.1 = some latent then 1 else 0 := by
   classical
   let drawLaw :
       PMF ((i : Player) →
         information.Choice i
-          (information.infoOf i (decisionHistory hidden).trace)) :=
+          (information.infoOf i (decisionHistory latent).trace)) :=
       independentProduct fun i =>
       Profile.update (sig := information.behavioralSignature)
         fullyMixedBehavioralProfile Player.player alternative i
-        (information.infoOf i (decisionHistory hidden).trace)
+        (information.infoOf i (decisionHistory latent).trace)
   rw [InformationModel.runBehavioralFrom,
     ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ 1
-      (decision_not_terminal hidden),
+      (decision_not_terminal latent),
     expect_bind_of_finite, InformationModel.randomizedChooser,
     InformationModel.behavioralJoint_eq_independentProduct, expect_map]
   have hmarginal :
@@ -763,7 +763,7 @@ theorem runBehavioralFrom_decision_matchingPayoff
         PMF.map (fun draws => draws Player.player) drawLaw =
           alternative
             (information.infoOf Player.player
-              (decisionHistory hidden).trace) := by
+              (decisionHistory latent).trace) := by
       unfold drawLaw
       rw [independentProduct_map_eval, Profile.update_same]
     have hprojected :
@@ -771,12 +771,12 @@ theorem runBehavioralFrom_decision_matchingPayoff
           PMF.map (fun choice => choice.1)
             (alternative
               (information.infoOf Player.player
-                (decisionHistory hidden).trace)) := by
+                (decisionHistory latent).trace)) := by
       have hcongr := congrArg
         (fun law : PMF
             (information.Choice Player.player
               (information.infoOf Player.player
-                (decisionHistory hidden).trace)) =>
+                (decisionHistory latent).trace)) =>
           PMF.map (fun choice => choice.1) law)
         hchoice
       simpa only [PMF.map_comp, Function.comp_def] using hcongr
@@ -785,7 +785,7 @@ theorem runBehavioralFrom_decision_matchingPayoff
   calc
     _ =
       expect drawLaw (fun draws =>
-        if (draws Player.player).1 = some hidden then 1 else 0) := by
+        if (draws Player.player).1 = some latent then 1 else 0) := by
           apply expect_congr_on_support
           · intro draws _hdraws
             have hlegal := (draws Player.player).2
@@ -793,7 +793,7 @@ theorem runBehavioralFrom_decision_matchingPayoff
             | none =>
                 simp [information, signals_infoOf, viewOfState, hdraw] at hlegal
             | some action =>
-                cases action <;> cases hidden <;>
+                cases action <;> cases latent <;>
                   simp [InformationModel.legalJointOfChoices, hdraw, expect_pure, execution,
                     decisionHistory, matchingPayoff,
                     PMF.pure_bindOnSupport,
@@ -802,22 +802,22 @@ theorem runBehavioralFrom_decision_matchingPayoff
     _ = expect
           (PMF.map (fun draws => (draws Player.player).1) drawLaw)
           (fun choice : Option Bool =>
-            if choice = some hidden then 1 else 0) := by
+            if choice = some latent then 1 else 0) := by
           simpa only [Function.comp_def] using
             (expect_map (fun draws => (draws Player.player).1)
               drawLaw (fun choice : Option Bool =>
-                if choice = some hidden then 1 else 0)).symm
+                if choice = some latent then 1 else 0)).symm
     _ = expect
           (PMF.map (fun choice => choice.1) (alternative .acting))
           (fun choice : Option Bool =>
-            if choice = some hidden then 1 else 0) := by
+            if choice = some latent then 1 else 0) := by
           rw [hmarginal]
     _ = expect (alternative .acting) fun choice =>
-          if choice.1 = some hidden then 1 else 0 := by
+          if choice.1 = some latent then 1 else 0 := by
           simpa only [Function.comp_def] using
             expect_map (fun choice => choice.1) (alternative .acting)
               (fun action : Option Bool =>
-                if action = some hidden then 1 else 0)
+                if action = some latent then 1 else 0)
 
 /-- The Bayes assessment used by the concrete equilibrium theorem. Unlike the
 presentation-only assessment above, its decision law has full support and its
@@ -855,9 +855,9 @@ theorem fullyMixedAssessment_belief_acting :
   classical
   apply PMF.ext
   intro history
-  obtain ⟨hidden, hcarrier⟩ :=
+  obtain ⟨latent, hcarrier⟩ :=
     history_eq_decisionHistory_of_info_acting history.1 history.2
-  have hhistory : history = decisionInformationHistory hidden :=
+  have hhistory : history = decisionInformationHistory latent :=
     Subtype.ext hcarrier
   subst history
   rw [fullyMixedAssessment, InformationModel.bayesBelief_apply,
@@ -866,7 +866,7 @@ theorem fullyMixedAssessment_belief_acting :
   have hstate :
       State.decision false execution.noop ≠
         State.decision true execution.noop := by simp
-  cases hidden <;>
+  cases latent <;>
     norm_num [decisionBelief, decisionInformationHistory_ne,
       PMF.pure_apply, ENNReal.ofReal, hstate, hstate.symm]
 
@@ -895,38 +895,38 @@ theorem truncatedContinuationContext_matchingPayoff_value
     exact hvalue
   let branchValue := fun history =>
     expect (kernel history) (matchingPayoff .player)
-  have hbranch (hidden : Bool) :
-      branchValue (decisionInformationHistory hidden) =
+  have hbranch (latent : Bool) :
+      branchValue (decisionInformationHistory latent) =
         expect (alternative .acting) (fun choice =>
-          if choice.1 = some hidden then 1 else 0) := by
+          if choice.1 = some latent then 1 else 0) := by
     unfold branchValue kernel
     have hlaw :
         information.runBehavioralFrom
             (Profile.update (sig := information.behavioralSignature)
               fullyMixedAssessment.strategy Player.player alternative)
-            2 (decisionHistory hidden) =
+            2 (decisionHistory latent) =
           information.runBehavioralFrom
             (Profile.update (sig := information.behavioralSignature)
               fullyMixedBehavioralProfile Player.player alternative)
-            2 (decisionHistory hidden) := by
+            2 (decisionHistory latent) := by
       simp only [fullyMixedAssessment]
-    have hvalue' := runBehavioralFrom_decision_matchingPayoff hidden alternative
+    have hvalue' := runBehavioralFrom_decision_matchingPayoff latent alternative
     calc
       expect
           (information.runBehavioralFrom
             (Profile.update (sig := information.behavioralSignature)
               fullyMixedAssessment.strategy Player.player alternative)
-            2 (decisionHistory hidden))
+            2 (decisionHistory latent))
           (matchingPayoff .player) =
         expect
           (information.runBehavioralFrom
             (Profile.update (sig := information.behavioralSignature)
               fullyMixedBehavioralProfile Player.player alternative)
-            2 (decisionHistory hidden))
+            2 (decisionHistory latent))
           (matchingPayoff .player) :=
             expect_congr_law hlaw _
       _ = expect (alternative .acting) (fun choice =>
-          if choice.1 = some hidden then 1 else 0) := hvalue'
+          if choice.1 = some latent then 1 else 0) := hvalue'
   have htrue : PayoffIntegrable
       (PMF.pure (decisionInformationHistory true)) branchValue :=
     payoffIntegrable_of_finite _ _

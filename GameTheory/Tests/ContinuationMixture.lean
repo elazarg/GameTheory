@@ -4,6 +4,9 @@ import GameTheory.Protocol.Continuation
 import GameTheory.Protocol.Zermelo
 import GameTheory.Protocol.ContinuationLaw
 import GameTheory.Math.Probability.Uniform
+import GameTheory.Math.Probability.FiniteUniform
+
+open GameTheory.Math.Probability
 
 /-! # A lottery deviation at an off-path proper subgame
 
@@ -24,7 +27,7 @@ inductive State where
   deriving DecidableEq
 
 def coin : PMF Bool :=
-  PMF.uniformOfFintype Bool
+  uniformLaw Bool
 
 def choiceLaw (action : Fin 3) : PMF Bool :=
   if action = 0 then PMF.pure false
@@ -339,7 +342,7 @@ theorem lottery_not_pure (bit : Bool) : coin.map some ≠ PMF.pure (some bit) :=
   intro heq
   have hsupport : some (!bit) ∈ (coin.map some).support := by
     rw [PMF.mem_support_map_iff]
-    exact ⟨!bit, PMF.mem_support_uniformOfFintype _, rfl⟩
+    exact ⟨!bit, mem_support_uniformLaw _, rfl⟩
   rw [heq, PMF.mem_support_pure_iff] at hsupport
   cases bit <;> cases hsupport
 

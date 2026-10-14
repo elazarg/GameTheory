@@ -356,17 +356,11 @@ theorem encode_of_decode_eq_some {d : Fin (m + n)} {word : List Bool}
   unfold decode at h
   try dsimp only at h
   split at h <;> try contradiction
-  try dsimp only at h
   split at h <;> try contradiction
-  try dsimp only at h
   split at h <;> try contradiction
-  try dsimp only at h
   split at h <;> try contradiction
-  try dsimp only at h
   split at h <;> try contradiction
-  try dsimp only at h
   split at h <;> try contradiction
-  try dsimp only at h
   split at h <;> try contradiction
   rename_i hround
   cases h

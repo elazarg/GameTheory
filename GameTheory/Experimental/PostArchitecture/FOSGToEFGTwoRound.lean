@@ -252,12 +252,12 @@ def privateOfTransition (player : Bool) (joint : Bool → Option Bool)
 def pushView (prior : View) (ownAction : Option Bool)
     (privateSignal : PrivateSignal) (publicSignal : PublicSignal) : View :=
   match prior, ownAction, privateSignal, publicSignal with
-  | .round1, some own, .firstResolved opponent hidden,
+  | .round1, some own, .firstResolved opponent latent,
       .firstResolved publicBit =>
-      .round2 publicBit opponent hidden own
-  | .round2 publicBit opponent hidden ownFirst, ownSecond,
+      .round2 publicBit opponent latent own
+  | .round2 publicBit opponent latent ownFirst, ownSecond,
       .secondResolved opponentSecond, .secondResolved secondCoin =>
-      .done publicBit opponent hidden ownFirst secondCoin opponentSecond ownSecond
+      .done publicBit opponent latent ownFirst secondCoin opponentSecond ownSecond
   | view, _, _, _ => view
 
 @[reducible]

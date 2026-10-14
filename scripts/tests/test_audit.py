@@ -283,6 +283,29 @@ def text := "admit native_decide import GameTheory.Frontier.Control"
 
 @unittest.skipUnless(shutil.which("lake"), "Lake is required for diagnostic regression checks")
 class DiagnosticAuditTests(unittest.TestCase):
+    def test_dependency_warning_is_allowed_but_authored_warning_fails(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "lean-toolchain").write_text((ROOT / "lean-toolchain").read_text())
+            (root / "lakefile.lean").write_text(
+                "import Lake\nopen Lake DSL\npackage Probe\nlean_lib External\n"
+                "@[default_target] lean_lib Probe where\n"
+                "  leanOptions := #[⟨`warningAsError, true⟩]\n", encoding="utf-8")
+            (root / "External.lean").write_text(
+                'import Lean\nrun_cmd Lean.logWarning "dependency warning"\n')
+            (root / "Probe.lean").write_text("import External\nexample : True := True.intro\n")
+            result = subprocess.run(["lake", "build"], cwd=root, capture_output=True,
+                                    text=True, encoding="utf-8")
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("dependency warning", result.stdout + result.stderr)
+            self.assertEqual(audit.check_diagnostics(root, "Probe"), [])
+            (root / "Probe.lean").write_text(
+                'import External\nrun_cmd Lean.logWarning "authored warning"\n')
+            result = subprocess.run(["lake", "build"], cwd=root, capture_output=True,
+                                    text=True, encoding="utf-8")
+            self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("authored warning", result.stdout + result.stderr)
+
     def test_transitive_axiom_check_rejects_a_private_dependency(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

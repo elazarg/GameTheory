@@ -13,6 +13,7 @@ import GameTheory.Experimental.PostArchitecture.FiniteConditionalContinuation
 import GameTheory.Experimental.PostArchitecture.MAIDMechanismSelectorFactorization
 import GameTheory.Experimental.PostArchitecture.MAIDUtilityContinuationFromCI
 import GameTheory.Math.Probability.Joint
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -410,7 +411,7 @@ theorem mechanismSelectorLaw_map_selector
         (fun assignment =>
           ((assignment .mechanism).down,
             observable (projectObjects view assignment))) =
-      (PMF.uniformOfFintype (Fin 2)).bind fun selector =>
+      (uniformLaw (Fin 2)).bind fun selector =>
         (componentAugmentedLaw view owner base replacement source sourceRule
           selector).map fun assignment => (selector, observable assignment) := by
   unfold mechanismSelectorLaw componentAugmentedLaw
@@ -445,7 +446,7 @@ theorem mechanismSelectorLaw_map_selector_prob
         ((assignment .mechanism).down,
           observable (projectObjects view assignment))))
         (selector, result) =
-      (PMF.uniformOfFintype (Fin 2)) selector *
+      (uniformLaw (Fin 2)) selector *
         ((componentAugmentedLaw view owner base replacement source sourceRule
           selector).map observable) result := by
   rw [mechanismSelectorLaw_map_selector]
@@ -458,7 +459,7 @@ theorem mechanismSelectorLaw_map_selector_prob
     funext selected
     rw [PMF.map_comp]
     rfl]
-  exact bind_tagged_prob (PMF.uniformOfFintype (Fin 2))
+  exact bind_tagged_prob (uniformLaw (Fin 2))
     (fun selected =>
       (componentAugmentedLaw view owner base replacement source sourceRule
         selected).map observable) selector result
@@ -475,7 +476,7 @@ theorem mechanismSelectorLaw_map_objects
     {Result : Type*} (observable : AugmentedAssignment view owner → Result) :
     (mechanismSelectorLaw view owner base replacement source sourceRule).map
         (fun assignment => observable (projectObjects view assignment)) =
-      (PMF.uniformOfFintype (Fin 2)).bind fun selector =>
+      (uniformLaw (Fin 2)).bind fun selector =>
         (componentAugmentedLaw view owner base replacement source sourceRule
           selector).map observable := by
   unfold mechanismSelectorLaw componentAugmentedLaw
@@ -499,10 +500,10 @@ theorem mechanismSelectorLaw_map_objects_prob
     ((mechanismSelectorLaw view owner base replacement source sourceRule).map
       (fun assignment => observable (projectObjects view assignment)))
         result =
-      (PMF.uniformOfFintype (Fin 2)) 0 *
+      (uniformLaw (Fin 2)) 0 *
           ((componentAugmentedLaw view owner base replacement source sourceRule
             0).map observable) result +
-        (PMF.uniformOfFintype (Fin 2)) 1 *
+        (uniformLaw (Fin 2)) 1 *
           ((componentAugmentedLaw view owner base replacement source sourceRule
             1).map observable) result := by
   rw [mechanismSelectorLaw_map_objects, PMF.bind_apply, tsum_fintype]
@@ -598,7 +599,7 @@ theorem componentTerm_cross_product
         (fullAction view target assignment, termConfig view term assignment))
       (fullValue, termValue)] at hcross
   rw [ENNReal.toReal_add, ENNReal.toReal_add] at hcross
-  simp only [ENNReal.toReal_mul, PMF.uniformOfFintype_apply,
+  simp only [ENNReal.toReal_mul, uniformLaw_apply,
     Fintype.card_fin, ENNReal.toReal_inv, ENNReal.toReal_natCast] at hcross
   norm_num only at hcross
   apply (ENNReal.toReal_eq_toReal_iff'

@@ -55,7 +55,7 @@ theorem pairHalf_total :
       {∅, {0}, {1}, {2}, {0, 1}, {0, 2}, {1, 2}, Finset.univ} by decide]
   rw [Finset.sum_insert, Finset.sum_insert, Finset.sum_insert, Finset.sum_insert,
     Finset.sum_insert, Finset.sum_insert, Finset.sum_insert, Finset.sum_singleton]
-  all_goals simp [pairHalf, Finset.card_univ, three_halves] <;> try decide
+  all_goals simp [pairHalf, Finset.card_univ, three_halves] ; all_goals try decide
 
 theorem pairHalf_isBalancedCollection :
     CoalitionalGame.IsBalancedCollection pairHalf := by
@@ -72,7 +72,7 @@ theorem pairHalf_isBalancedCollection :
         (Finset.univ : Finset (Finset (Fin 3))).filter (fun coalition => 0 ∈ coalition) =
           {{0}, {0, 1}, {0, 2}, Finset.univ} by decide]
       rw [Finset.sum_insert, Finset.sum_insert, Finset.sum_insert, Finset.sum_singleton]
-      all_goals simp [pairHalf, Finset.card_univ, half_add_half] <;> try decide
+      all_goals simp [pairHalf, Finset.card_univ, half_add_half] ; all_goals try decide
     · show ∑ coalition ∈
         (Finset.univ : Finset (Finset (Fin 3))).filter (fun coalition => 1 ∈ coalition),
           pairHalf coalition = 1
@@ -80,7 +80,7 @@ theorem pairHalf_isBalancedCollection :
         (Finset.univ : Finset (Finset (Fin 3))).filter (fun coalition => 1 ∈ coalition) =
           {{1}, {0, 1}, {1, 2}, Finset.univ} by decide]
       rw [Finset.sum_insert, Finset.sum_insert, Finset.sum_insert, Finset.sum_singleton]
-      all_goals simp [pairHalf, Finset.card_univ, half_add_half] <;> try decide
+      all_goals simp [pairHalf, Finset.card_univ, half_add_half] ; all_goals try decide
     · show ∑ coalition ∈
         (Finset.univ : Finset (Finset (Fin 3))).filter (fun coalition => 2 ∈ coalition),
           pairHalf coalition = 1
@@ -88,7 +88,7 @@ theorem pairHalf_isBalancedCollection :
         (Finset.univ : Finset (Finset (Fin 3))).filter (fun coalition => 2 ∈ coalition) =
           {{2}, {0, 2}, {1, 2}, Finset.univ} by decide]
       rw [Finset.sum_insert, Finset.sum_insert, Finset.sum_insert, Finset.sum_singleton]
-      all_goals simp [pairHalf, Finset.card_univ, half_add_half] <;> try decide
+      all_goals simp [pairHalf, Finset.card_univ, half_add_half] ; all_goals try decide
 
 theorem pairHalf_weighted_majorityGame :
     ∑ coalition, pairHalf coalition * majorityGame.value coalition = 3 / 2 := by
@@ -96,7 +96,7 @@ theorem pairHalf_weighted_majorityGame :
       {∅, {0}, {1}, {2}, {0, 1}, {0, 2}, {1, 2}, Finset.univ} by decide]
   rw [Finset.sum_insert, Finset.sum_insert, Finset.sum_insert, Finset.sum_insert,
     Finset.sum_insert, Finset.sum_insert, Finset.sum_insert, Finset.sum_singleton]
-  all_goals simp [pairHalf, majorityGame, Finset.card_univ, three_halves] <;> try decide
+  all_goals simp [pairHalf, majorityGame, Finset.card_univ, three_halves] ; all_goals try decide
 
 theorem majorityGame_not_isBalanced : ¬ majorityGame.IsBalanced := by
   intro hbalanced

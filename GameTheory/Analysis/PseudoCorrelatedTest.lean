@@ -19,6 +19,9 @@ pseudo-correlated equilibrium of the fixed game.
 -/
 import GameTheory.Analysis.PseudoCorrelated
 import GameTheory.Math.Probability.Uniform
+import GameTheory.Math.Probability.FiniteUniform
+
+open GameTheory.Math.Probability
 
 noncomputable section
 
@@ -54,7 +57,7 @@ def swappedDraw (i : Fin 3) : Profile twoSizes.sig :=
   fun who => if who = 0 then ((draws i).1, (draws i).2) else ((draws i).2, (draws i).1)
 
 /-- The uniform draw. -/
-abbrev device : PMF (Fin 3) := PMF.uniformOfFintype (Fin 3)
+abbrev device : PMF (Fin 3) := uniformLaw (Fin 3)
 
 /-- At each size, both couplings recommend the same joint action. -/
 theorem sameDraw_swappedDraw_marginals (i : Fin 3) :

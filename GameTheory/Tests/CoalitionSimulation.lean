@@ -2,6 +2,7 @@
 
 import GameTheory.Core.UtilitySimulation
 import GameTheory.Math.Probability.Uniform
+import GameTheory.Math.Probability.FiniteUniform
 
 /-! # A channel that only a coalition can use
 
@@ -17,7 +18,7 @@ namespace GameTheory.GameForm.CoalitionWitness
 
 open GameTheory.Math.Probability
 
-def fairCoin : PMF Bool := PMF.uniformOfFintype Bool
+def fairCoin : PMF Bool := uniformLaw Bool
 
 abbrev baseGame : GameForm (Fin 2) where
   sig := { Strategy := fun _ => Bool, Outcome := Bool × Bool }

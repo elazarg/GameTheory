@@ -1,5 +1,6 @@
 import GameTheory.Analysis.Protocol.CopiedSiteCompletion
 import GameTheory.Analysis.Protocol.SequentialExistenceTest
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -44,11 +45,11 @@ theorem shared_weights_unequal_depth (copied : ∀ who, information.InformationS
     ring
   let component (n : ℕ) (agent : information.InformationAgent information.playedInformation)
       (part : Part) := mix (weight n) (positive n).le (small n)
-        (PMF.uniformOfFintype (F.sig.Strategy agent)) (PMF.pure (part agent))
+        (uniformLaw (F.sig.Strategy agent)) (PMF.pure (part agent))
   have full : ∀ n agent part, FullSupport (component n agent part) := by
     intro n agent part choice
     exact mem_support_mix_left _ _ _ (positive n)
-      (PMF.mem_support_uniformOfFintype choice)
+      (mem_support_uniformLaw choice)
   let menu (who : Unit) (site : information.InformationSite who) (part : Part) :=
     PMF.pure (part (information.agentAt site))
   have menuConverges who (site : information.InformationSite who) (part : Part) :

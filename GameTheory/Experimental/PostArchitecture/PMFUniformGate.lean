@@ -11,6 +11,9 @@ its value is undefined.
 
 import GameTheory.Repeated.Uniform
 import GameTheory.Experimental.PostArchitecture.PMFStaticGate
+import GameTheory.Math.Probability.FiniteUniform
+
+open GameTheory.Math.Probability
 
 noncomputable section
 
@@ -112,7 +115,7 @@ theorem falseTrue_not_approximate (horizon : ℕ) (hpositive : 0 < horizon)
         geometric.map some := by
     rw [UtilityGame.finiteAverageForm_play_pos]
     calc
-      _ = (PMF.uniformOfFintype (Fin horizon)).bind fun _ => geometric.map some := by
+      _ = (uniformLaw (Fin horizon)).bind fun _ => geometric.map some := by
         congr 1
         funext t
         exact congrArg (PMF.map some) (hdevStage t)
@@ -121,7 +124,7 @@ theorem falseTrue_not_approximate (horizon : ℕ) (hpositive : 0 < horizon)
       (game.stationaryRepeatedProfile falseTrue) = PMF.pure (some 0) := by
     rw [UtilityGame.finiteAverageForm_play_pos]
     calc
-      _ = (PMF.uniformOfFintype (Fin horizon)).bind fun _ => PMF.pure (some 0) := by
+      _ = (uniformLaw (Fin horizon)).bind fun _ => PMF.pure (some 0) := by
         congr 1
         funext t
         exact (congrArg (PMF.map some) (hbaseStage t)).trans (PMF.pure_map _ _)

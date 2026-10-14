@@ -10,6 +10,7 @@ renaming deterministic states.
 
 import GameTheory.Mechanism.InformationDesign
 import GameTheory.Math.Probability.Uniform
+import GameTheory.Math.Probability.FiniteUniform
 
 noncomputable section
 
@@ -17,7 +18,7 @@ namespace GameTheory.Tests.InformationDesign
 
 open GameTheory.Math.Probability
 
-def fairBool : PMF Bool := PMF.uniformOfFintype Bool
+def fairBool : PMF Bool := uniformLaw Bool
 
 def partialSignal : SignalStructure Bool Bool where
   kernel state := if state then PMF.pure true else fairBool
@@ -52,7 +53,7 @@ theorem senderGuard (P : PersuasionProblem Bool Bool Bool)
 theorem partialSignal_is_stochastic :
     (partialSignal.kernel false) false = 1 / 2 ∧
       (partialSignal.kernel false) true = 1 / 2 := by
-  norm_num [partialSignal, fairBool, PMF.uniformOfFintype_apply]
+  norm_num [partialSignal, fairBool, uniformLaw_apply]
 
 theorem partialJoint_has_prior_marginal :
     (partialSignal.joint fairBool).map Prod.fst = fairBool :=
@@ -63,7 +64,7 @@ theorem partialJoint_false_messages_are_nontrivial :
       (partialSignal.joint fairBool) (false, true) = 1 / 4 := by
   constructor <;>
     rw [SignalStructure.joint_apply] <;>
-    norm_num [partialSignal, fairBool, PMF.uniformOfFintype_apply,
+    norm_num [partialSignal, fairBool, uniformLaw_apply,
       ENNReal.ofReal_div_of_pos (show (0 : ℝ) < 2 by norm_num)] <;>
     rw [← ENNReal.mul_inv (a := 2) (b := 2)
       (Or.inl (by norm_num)) (Or.inl (by norm_num))] <;> norm_num
@@ -75,7 +76,7 @@ theorem receiver_scores_are_strict :
       partialProblem.receiverScore true true = 1 / 2 := by
   norm_num [PersuasionProblem.receiverScore, expect_eq_sum,
     PersuasionProblem.receiverWeighted, partialProblem, partialSignal,
-    fairBool, Fintype.sum_bool, PMF.uniformOfFintype_apply,
+    fairBool, Fintype.sum_bool, uniformLaw_apply,
     PMF.pure_apply]
 
 theorem followMessage_isPersuasive :
@@ -92,13 +93,13 @@ theorem partial_senderEU :
        = 3 / 4 := by
   rw [PersuasionProblem.senderEU_eq_sum]
   norm_num [followMessage, partialProblem, partialSignal, fairBool,
-    Fintype.sum_bool, PMF.uniformOfFintype_apply, PMF.pure_apply]
+    Fintype.sum_bool, uniformLaw_apply, PMF.pure_apply]
 
 theorem fullInformation_senderEU :
     fullProblem.senderEU id = 1 / 2 := by
   rw [PersuasionProblem.senderEU_eq_sum]
   norm_num [fullProblem, fairBool, Fintype.sum_bool,
-    PMF.uniformOfFintype_apply, PMF.pure_apply]
+    uniformLaw_apply, PMF.pure_apply]
 
 theorem partial_revelation_strictly_improves_sender_value :
     fullProblem.senderEU id <

@@ -12,6 +12,9 @@ import GameTheory.Analysis.Protocol.AssessmentCompactness
 import GameTheory.Analysis.Protocol.SequentialPerturbation
 import GameTheory.Analysis.Protocol.SequentialOneShot
 import GameTheory.Analysis.Protocol.SequentialLimits
+import GameTheory.Math.Probability.FiniteUniform
+
+open GameTheory.Math.Probability
 
 noncomputable section
 
@@ -65,7 +68,7 @@ theorem exists_sequentialEquilibrium [Finite E.History]
   let tremble (n : ℕ) {i : ι} (site : M.InformationSite i) (law : PMF (M.Choice i site.1)) :
       PMF (M.Choice i site.1) :=
     mix (weight (subseq n)) (hpositive (subseq n)).le (hone (subseq n))
-      (@PMF.uniformOfFintype _ (Fintype.ofFinite _) _) law
+      (@uniformLaw _ (Fintype.ofFinite _) _) law
   let repair (n : ℕ) (i : ι) (alternative : M.BehavioralPolicy i) :
       M.BehavioralPolicy i := fun info =>
     if hsite : M.IsDecisionInfo i info then tremble n ⟨info, hsite⟩ (alternative info)

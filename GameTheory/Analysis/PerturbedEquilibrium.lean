@@ -17,7 +17,9 @@ Selten's theorem: every finite game has a trembling-hand perfect equilibrium.
 import GameTheory.Analysis.Nash
 import GameTheory.Analysis.TremblingHand
 import GameTheory.Math.Probability.Compactness
-import Mathlib.Probability.Distributions.Uniform
+import GameTheory.Math.Probability.FiniteUniform
+
+open GameTheory.Math.Probability
 
 noncomputable section
 
@@ -268,7 +270,7 @@ theorem exists_isTremblingHandPerfect [∀ who, Finite (F.sig.Strategy who)]
     funext n
     simp only [weight, Function.comp_apply, Nat.cast_add, Nat.cast_one]
     ring
-  let reference : Profile F.sig.mixed := fun _ => PMF.uniformOfFintype _
+  let reference : Profile F.sig.mixed := fun _ => uniformLaw _
   choose approximating equilibrium using fun n => exists_isPerturbedEq utility integrable
     reference (weight n) (positive n).le (small n)
   obtain ⟨limit, subseq, increasing, converges⟩ :=

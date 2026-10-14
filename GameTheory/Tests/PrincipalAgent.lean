@@ -8,6 +8,9 @@ participation uses nonzero outside options.
 
 import GameTheory.Mechanism.PrincipalAgent
 import GameTheory.Math.Probability.Uniform
+import GameTheory.Math.Probability.FiniteUniform
+
+open GameTheory.Math.Probability
 
 noncomputable section
 
@@ -15,7 +18,7 @@ namespace GameTheory.Tests.PrincipalAgent
 
 open GameTheory GameTheory.Mechanism GameTheory.Math.Probability
 
-def fairCoin : PMF Bool := PMF.uniformOfFintype Bool
+def fairCoin : PMF Bool := uniformLaw Bool
 
 /-- `false` is safe and costless; `true` is productive, costly, and noisy. -/
 @[reducible]
@@ -59,7 +62,7 @@ theorem netGuard (payment : Bool → ℝ) (action : Bool) :
 @[simp] theorem expectedReward_productive :
     fixture.expectedReward true = 1 := by
   norm_num [Mechanism.PrincipalAgent.expectedReward, expect_eq_sum,
-    Fintype.sum_bool, fairCoin, PMF.uniformOfFintype_apply, fixture]
+    Fintype.sum_bool, fairCoin, uniformLaw_apply, fixture]
 
 @[simp] theorem zeroPayment_safe :
     fixture.agentUtility zeroPayment false = 0 := by
@@ -72,7 +75,7 @@ theorem netGuard (payment : Bool → ℝ) (action : Bool) :
       -(1 / 4 : ℝ) := by
   norm_num [Mechanism.PrincipalAgent.agentUtility,
     Mechanism.PrincipalAgent.expectedPayment, expect_eq_sum,
-    Fintype.sum_bool, PMF.uniformOfFintype_apply, fairCoin,
+    Fintype.sum_bool, uniformLaw_apply, fairCoin,
     zeroPayment, fixture]
 
 @[simp] theorem successBonus_safe :
@@ -87,7 +90,7 @@ theorem netGuard (payment : Bool → ℝ) (action : Bool) :
        = 1 / 4 := by
   norm_num [Mechanism.PrincipalAgent.agentUtility,
     Mechanism.PrincipalAgent.expectedPayment, expect_eq_sum,
-    Fintype.sum_bool, PMF.uniformOfFintype_apply, fairCoin,
+    Fintype.sum_bool, uniformLaw_apply, fairCoin,
     successBonus, fixture]
 
 theorem zeroPayment_prefers_safe :

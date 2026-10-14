@@ -29,6 +29,9 @@ game is a one-player choice between two payoff ensembles.
 -/
 import GameTheory.Analysis.PseudoNash
 import GameTheory.Examples.PseudoEquilibria
+import GameTheory.Math.Probability.FiniteUniform
+
+open GameTheory.Math.Probability
 
 noncomputable section
 
@@ -167,7 +170,7 @@ theorem binaryChoice_isNash_iff (A B : ℕ → PMF ℝ) (κ : ℕ) {R : ℝ}
 
 /-- Pays `v` with probability `1 / n`, and `0` otherwise. -/
 def spike (n : ℕ) [NeZero n] (v : ℝ) : PMF ℝ :=
-  (PMF.uniformOfFintype (Fin n)).map fun i => if i = 0 then v else 0
+  (uniformLaw (Fin n)).map fun i => if i = 0 then v else 0
 
 theorem lawMean_spike (n : ℕ) [NeZero n] (v : ℝ) : lawMean (spike n v) = v / n := by
   rw [lawMean, spike, expect_map, expect_uniformOfFintype]

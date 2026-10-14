@@ -73,9 +73,5 @@ theorem binaryDictionaryPositive_value (v : Fin 4 → List Bool) :
     (fun _ : Fin (v 1).length => 0)
     (fun j => binarySignedMatrixValue (v 1) (v 2) (v 3) r.length j.val)] = _
   congr 1
-  generalize GameTheory.Math.FiniteLexicographicCompare.lexLT
-    (fun _ : Fin (v 1).length => (0 : ℤ))
-    (fun j => binarySignedMatrixValue (v 1) (v 2) (v 3) r.length j.val) = b
-  cases b <;> rfl
 
 end GameTheory.Complexity.Backend
