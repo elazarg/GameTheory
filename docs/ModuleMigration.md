@@ -47,3 +47,11 @@ declaration and proof body; compatibility wrappers are scoped to nine declaratio
 The optional audit against the local base passed all 4,458 jobs, lint, diagnostic
 trace checks, and transitive axiom checks. Across both packages, 41 explicit import
 edges were added to preserve the existing proofs and executable checks.
+
+The optional package's default base pin is
+`c7cd6bed7498b9a16edb22262e9522ceff90648c`. Its full audit also passed all
+4,458 jobs, lint, diagnostic traces, and axiom checks in default Git mode.
+The separate `lake --dir extensions/complexity --iofail build
+GameTheory.Tests.BimatrixComputedPivot` consumer passed all 3,125 jobs. A temporary
+local Git transport supplied the committed base before publication; the ordinary
+local-path development manifest was restored afterward.

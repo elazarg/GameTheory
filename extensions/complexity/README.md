@@ -117,7 +117,7 @@ import GameTheoryComplexity.Backend.NashNPComplete
 ```
 
 The default dependency configuration fetches the base GameTheory commit
-`b0a92aefcdca842e8a14e64829bbc54c0040d0d2`; it does not assume a sibling checkout.
+`c7cd6bed7498b9a16edb22262e9522ceff90648c`; it does not assume a sibling checkout.
 The resolved packages share Lean/Mathlib 4.35.0. ComplexityLib is pinned directly
 to upstream `SamuelSchlesinger/complexitylib@257ad90ec5f547894cc20f27bd828839b1bf7bbf`,
 and CSLib to `94ea80f41a5678fce997a004f0d8d12dbe47cc4b`. Their declared upstream
