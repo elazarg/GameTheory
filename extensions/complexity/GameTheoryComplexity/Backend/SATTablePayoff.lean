@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.SATTableMachine
-import GameTheoryComplexity.Backend.SATTableEmission
-import GameTheoryComplexity.Backend.SATSyntaxMachine
+module
+
+public import GameTheoryComplexity.Backend.SATTableMachine
+public import GameTheoryComplexity.Backend.SATTableEmission
+public import GameTheoryComplexity.Backend.SATSyntaxMachine
+
+@[expose] public section
 
 /-! Polynomial-time explicit payoff-table generation. Scalar payoffs use fixed-width
 positive and negative tally blocks. The second player's payoff is the transpose.

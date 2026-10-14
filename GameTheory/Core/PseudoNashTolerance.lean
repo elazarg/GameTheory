@@ -1,3 +1,5 @@
+module
+
 /-
 # Tolerances for pseudo-Nash equilibria
 
@@ -20,7 +22,9 @@ but compares utilities exactly. Two further tolerances are useful.
   statistical distance. This is the concrete-security form of the ideal-to-real
   theorem.
 -/
-import GameTheory.Core.PseudoNash
+public import GameTheory.Core.PseudoNash
+
+@[expose] public section
 
 noncomputable section
 

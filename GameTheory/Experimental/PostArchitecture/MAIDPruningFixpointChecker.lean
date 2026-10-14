@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-109: executable MAID edge-addition fixpoint checker
 
@@ -6,8 +8,10 @@ checker uses that list for every directed and ancestral-moral reachability
 query; no finite carrier is stored in the MAID data.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteDirectedReachability
-import GameTheory.Experimental.PostArchitecture.MAIDGraphDeciders
+public import GameTheory.Experimental.PostArchitecture.FiniteDirectedReachability
+public import GameTheory.Experimental.PostArchitecture.MAIDGraphDeciders
+
+@[expose] public section
 
 namespace GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-120: direct hypotheses versus a narrow mixture record
 
@@ -6,8 +8,10 @@ same coordinatewise pure embedding, and prove the same epsilon-Nash theorem.
 The separate namespaces permit identical-import elaboration measurements.
 -/
 
-import GameTheory.Core.Mixed
-import GameTheory.Core.MixtureSimulation
+public import GameTheory.Core.Mixed
+public import GameTheory.Core.MixtureSimulation
+
+@[expose] public section
 
 noncomputable section
 

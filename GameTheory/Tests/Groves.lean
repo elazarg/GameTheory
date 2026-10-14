@@ -1,3 +1,5 @@
+module
+
 /-
 # Groves mechanisms beyond auctions
 
@@ -7,7 +9,9 @@ both directly and through the canonical DSIC bridge, and rejects a reversed
 allocation rule that is not efficient.
 -/
 
-import GameTheory.Mechanism.Groves
+public import GameTheory.Mechanism.Groves
+
+@[expose] public section
 
 noncomputable section
 

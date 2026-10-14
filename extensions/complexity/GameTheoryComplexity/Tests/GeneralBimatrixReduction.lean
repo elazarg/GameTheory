@@ -1,4 +1,8 @@
-import GameTheoryComplexity.BimatrixNash
+module
+
+public import GameTheoryComplexity.BimatrixNash
+
+@[expose] public section
 
 /-! Every-answer soundness and endpoint-preserving controls for signed rectangular Nash search. -/
 namespace GameTheory.Complexity.Tests.GeneralBimatrixReduction

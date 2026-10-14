@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-040 hostile typed-MAID fixtures
 
@@ -6,8 +8,10 @@ EXP-038's one-player, two-decision antichain: each decision observes only its
 own chance parent, while both sites resolve in the same native frontier.
 -/
 
-import GameTheory.Languages.MAID.Basic
-import Mathlib.Data.Fintype.OfMap
+public import GameTheory.Languages.MAID.Basic
+public import Mathlib.Data.Fintype.OfMap
+
+@[expose] public section
 
 noncomputable section
 

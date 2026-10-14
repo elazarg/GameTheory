@@ -1,9 +1,13 @@
-import GameTheoryComplexity.Backend.SATTableScanner
-import Complexitylib.Classes.P.Cobham
-import Complexitylib.Classes.P.Cobham.Internal.StringOps
-import Complexitylib.Classes.P.Pairing
-import Mathlib.Tactic.SplitIfs
-import Mathlib.Data.List.Fold
+module
+
+public import GameTheoryComplexity.Backend.SATTableScanner
+public import Complexitylib.Classes.P.Cobham
+public import Complexitylib.Classes.P.Cobham.Internal.StringOps
+public import Complexitylib.Classes.P.Pairing
+public import Mathlib.Tactic.SplitIfs
+public import Mathlib.Data.List.Fold
+
+@[expose] public section
 
 /-! String registers for the clause-incidence scanner. Fixed-arity tuple packing
 retains unary counters exactly, avoiding truncation when the source is scanned. -/

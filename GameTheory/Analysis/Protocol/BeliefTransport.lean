@@ -1,3 +1,5 @@
+module
+
 /-
 # Transporting Bayes beliefs
 
@@ -18,10 +20,12 @@ weights alone and a form at decision depths, which may differ between the two
 protocols.
 -/
 
-import GameTheory.Analysis.Protocol.BehavioralBayes
-import GameTheory.Analysis.Protocol.CounterfactualRegret
-import GameTheory.Analysis.Protocol.InformationLocalization
-import GameTheory.Analysis.Protocol.Sequential
+public import GameTheory.Analysis.Protocol.BehavioralBayes
+public import GameTheory.Analysis.Protocol.CounterfactualRegret
+public import GameTheory.Analysis.Protocol.InformationLocalization
+public import GameTheory.Analysis.Protocol.Sequential
+
+@[expose] public section
 
 noncomputable section
 

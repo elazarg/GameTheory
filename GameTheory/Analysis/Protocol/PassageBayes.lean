@@ -1,7 +1,11 @@
+module
+
 /- Copyright (c) 2026 VegasCore contributors. All rights reserved. -/
 
-import GameTheory.Analysis.Protocol.BeliefTransport
-import GameTheory.Math.Probability.ConditionalObservation
+public import GameTheory.Analysis.Protocol.BeliefTransport
+public import GameTheory.Math.Probability.ConditionalObservation
+
+@[expose] public section
 
 /-! # Bayes beliefs from actual passage through an information site
 

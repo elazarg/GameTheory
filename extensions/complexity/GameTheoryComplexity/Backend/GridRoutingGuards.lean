@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.GridRoutingArithmetic
-import GameTheoryComplexity.Backend.GridRoutingBitFields
-import GameTheory.Math.GridWireBounds
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingArithmetic
+public import GameTheoryComplexity.Backend.GridRoutingBitFields
+public import GameTheory.Math.GridWireBounds
+
+@[expose] public section
 
 /-! Binary rectangle guards reject points outside the live routing image before
 local owner queries. Their bounds use shifts of the vertex-width ruler. -/

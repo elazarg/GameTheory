@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-003 candidate B: normalized finitely-supported weights
 
@@ -5,8 +7,10 @@ This file intentionally develops the candidate as a concrete `Finsupp` type.
 The conversion to `PMF` is an interoperability boundary, not its definition.
 -/
 
-import Mathlib.Analysis.Convex.StdSimplex
-import Mathlib.Probability.ProbabilityMassFunction.Constructions
+public import Mathlib.Analysis.Convex.StdSimplex
+public import Mathlib.Probability.ProbabilityMassFunction.Constructions
+
+@[expose] public section
 
 noncomputable section
 

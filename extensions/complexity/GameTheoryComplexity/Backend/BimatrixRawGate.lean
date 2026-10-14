@@ -1,5 +1,9 @@
-import Complexitylib.Circuits.Encoding.Defs
-import GameTheory.Finite.BimatrixBooleanGate
+module
+
+public import Complexitylib.Circuits.Encoding.Defs
+public import GameTheory.Finite.BimatrixBooleanGate
+
+@[expose] public section
 
 /-! Raw circuit gates translate to comparator blocks with inline input negation.
 Input references remain absolute, and aliased references retain both coefficient

@@ -1,3 +1,5 @@
+module
+
 /-
 # Opt-in cooperative and market-design theories
 
@@ -6,12 +8,14 @@ larger parallel theories whose native objects are not artificial strategic
 forms.  It is intentionally absent from the lightweight `GameTheory` umbrella.
 -/
 
-import GameTheory.Core.Coalitional
-import GameTheory.Cooperative.Balancedness
-import GameTheory.Cooperative.Banzhaf
-import GameTheory.Cooperative.Bargaining
-import GameTheory.Cooperative.GaleShapley.Perfect
-import GameTheory.Cooperative.ShapleyShubik
+public import GameTheory.Core.Coalitional
+public import GameTheory.Cooperative.Balancedness
+public import GameTheory.Cooperative.Banzhaf
+public import GameTheory.Cooperative.Bargaining
+public import GameTheory.Cooperative.GaleShapley.Perfect
+public import GameTheory.Cooperative.ShapleyShubik
+
+@[expose] public section
 
 namespace GameTheory
 

@@ -1,8 +1,12 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
-import GameTheory.Core.MixtureUtilitySimulation
-import GameTheory.Tests.MixtureSimulation
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Core.MixtureUtilitySimulation
+public import GameTheory.Tests.MixtureSimulation
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 /-! # Utility-simulation regressions for a genuine mixed deviation -/
 

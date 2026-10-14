@@ -1,3 +1,5 @@
+module
+
 /-
 # Experimental graphical requisite-observation criterion for MAIDs
 
@@ -21,7 +23,9 @@ later semantic theorem must construct an equally good factoring policy or
 take factorization as a hypothesis.
 -/
 
-import GameTheory.Languages.MAID.Basic
+public import GameTheory.Languages.MAID.Basic
+
+@[expose] public section
 
 noncomputable section
 

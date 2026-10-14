@@ -1,3 +1,5 @@
+module
+
 /-
 Hostile joint-posterior regression.
 
@@ -6,8 +8,10 @@ supports two distinct belief profiles, is feasible through the common-state
 coupling, and therefore has Bayes-plausible marginals for both players.
 -/
 
-import GameTheory.Mechanism.JointFeasiblePosteriors
-import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Mechanism.JointFeasiblePosteriors
+public import GameTheory.Math.Probability.ExpectationMixture
+
+@[expose] public section
 
 noncomputable section
 

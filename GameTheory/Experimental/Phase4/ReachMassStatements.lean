@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-019: can the reach-mass conditions be stated without transport?
 
@@ -32,7 +34,9 @@ quantifying over the information state before the objects indexed by it removes
 the need — both sides land in one type by construction.
 -/
 
-import GameTheory.Protocol.PolicyRandomization
+public import GameTheory.Protocol.PolicyRandomization
+
+@[expose] public section
 
 noncomputable section
 

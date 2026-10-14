@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite-horizon stochastic-game evaluation
 
@@ -5,8 +7,10 @@ Every finite truncation is the canonical behavioral Protocol form with an
 external average stage utility. No second history runner or evaluator appears.
 -/
 
-import GameTheory.Stochastic.PerfectMonitoring
-import GameTheory.Core.Utility
+public import GameTheory.Stochastic.PerfectMonitoring
+public import GameTheory.Core.Utility
+
+@[expose] public section
 
 noncomputable section
 

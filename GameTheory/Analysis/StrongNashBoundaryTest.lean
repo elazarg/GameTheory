@@ -1,3 +1,5 @@
+module
+
 /-
 # Strong Nash is not a comparison family
 
@@ -9,7 +11,9 @@ of incentive comparisons has strong Nash as its concept, and its preservation is
 not decided by a cone criterion.
 -/
 
-import GameTheory.Analysis.IncentiveHierarchy
+public import GameTheory.Analysis.IncentiveHierarchy
+
+@[expose] public section
 
 noncomputable section
 

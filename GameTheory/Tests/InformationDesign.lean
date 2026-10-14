@@ -1,3 +1,5 @@
+module
+
 /-
 Hostile finite-persuasion regression.
 
@@ -8,9 +10,11 @@ information.  The witness exercises a non-point-mass kernel rather than merely
 renaming deterministic states.
 -/
 
-import GameTheory.Mechanism.InformationDesign
-import GameTheory.Math.Probability.Uniform
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Mechanism.InformationDesign
+public import GameTheory.Math.Probability.Uniform
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

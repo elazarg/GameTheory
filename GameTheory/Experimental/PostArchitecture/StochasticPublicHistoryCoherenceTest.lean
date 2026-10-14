@@ -1,3 +1,5 @@
+module
+
 /-
 # Experiment 111 test: a realizable live-policy deviation
 
@@ -5,7 +7,9 @@ The empty public history is in the canonical image, so changing a policy
 there changes both the canonical public-history law and the payoff.
 -/
 
-import GameTheory.Experimental.PostArchitecture.StochasticPublicHistoryCoherence
+public import GameTheory.Experimental.PostArchitecture.StochasticPublicHistoryCoherence
+
+@[expose] public section
 
 noncomputable section
 

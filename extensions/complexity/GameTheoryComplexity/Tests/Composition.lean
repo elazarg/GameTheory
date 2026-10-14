@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.CompiledSampleTest
-import GameTheoryComplexity.Tests.RandomTape
+module
+
+public import GameTheoryComplexity.Backend.CompiledSampleTest
+public import GameTheoryComplexity.Tests.RandomTape
+
+@[expose] public section
 
 /-! End-to-end fair-coin consumers cover nonmonotone clocks and immediate rejection. -/
 

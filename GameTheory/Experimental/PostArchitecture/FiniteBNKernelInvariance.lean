@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-105: parent-closed kernel invariance
 
@@ -6,8 +8,10 @@ set cannot change the law of the retained coordinates.  It compares two
 already-factorizing finite laws and does not construct another evaluator.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNRetainedSum
-import GameTheory.Languages.MAID.Basic
+public import GameTheory.Experimental.PostArchitecture.FiniteBNRetainedSum
+public import GameTheory.Languages.MAID.Basic
+
+@[expose] public section
 
 noncomputable section
 

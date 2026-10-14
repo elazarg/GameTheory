@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: dependent latent-coordinate sums
 
@@ -10,7 +12,9 @@ matches the cylinder decomposition directly and avoids transporting factors,
 scores, and configurations through an ancestral-node subtype.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
+public import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
+
+@[expose] public section
 
 noncomputable section
 

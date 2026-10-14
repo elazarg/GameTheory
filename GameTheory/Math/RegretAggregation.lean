@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite aggregation of local regret bounds
 
@@ -5,7 +7,9 @@ Pass from finitely many local regret-vector averages to uniform bounds on
 scalar gains that decompose through their coordinates.
 -/
 
-import GameTheory.Math.OrthantProjection
+public import GameTheory.Math.OrthantProjection
+
+@[expose] public section
 
 noncomputable section
 

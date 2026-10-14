@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinaryBirdDeterminantCorrectness
+module
+
+public import GameTheoryComplexity.Backend.BinaryBirdDeterminantCorrectness
+
+@[expose] public section
 
 /-! Kernel controls applying the determinant theorem with its polynomial work width. -/
 namespace GameTheory.Complexity.Tests.BinaryBirdDeterminantCorrectness

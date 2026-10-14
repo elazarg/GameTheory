@@ -1,3 +1,5 @@
+module
+
 /-
 # Localizing subgame comparisons at the root
 
@@ -15,9 +17,11 @@ comparisons at unreached proper subgames. Both facts are stated here as mass
 identities, without subtraction, over the well-founded terminal-history law.
 -/
 
-import GameTheory.Analysis.IncentiveHierarchy
-import GameTheory.Analysis.Protocol.Incentives
-import GameTheory.Protocol.SubgamePerfect
+public import GameTheory.Analysis.IncentiveHierarchy
+public import GameTheory.Analysis.Protocol.Incentives
+public import GameTheory.Protocol.SubgamePerfect
+
+@[expose] public section
 
 noncomputable section
 

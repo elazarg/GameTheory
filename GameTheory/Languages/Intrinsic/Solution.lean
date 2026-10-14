@@ -1,3 +1,5 @@
+module
+
 /-
 # Selected intrinsic closed-loop solutions
 
@@ -5,7 +7,9 @@ This opt-in theorem leaf obtains a selected decision profile solely from the
 existing unique-solvability certificate.
 -/
 
-import GameTheory.Languages.Intrinsic
+public import GameTheory.Languages.Intrinsic
+
+@[expose] public section
 
 namespace GameTheory.Languages.Intrinsic.Model
 

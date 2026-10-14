@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-113: countability of finite protocol histories
 
@@ -8,7 +10,9 @@ state.  The endpoint is included so that the indexed trace can be compared
 without introducing transports between state indices.
 -/
 
-import GameTheory.Protocol.History
+public import GameTheory.Protocol.History
+
+@[expose] public section
 
 noncomputable section
 

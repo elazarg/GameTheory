@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: finite Bayesian-network factor scopes
 
@@ -8,7 +10,9 @@ coordinate set.  Coordinate sets may overlap, as they do on conditioning
 variables; only the factor-index partition is required to be disjoint.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
+public import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,9 +1,13 @@
+module
+
 /-
   EXP-110: a direct Mathlib PMF stopping law with infinite support.
 -/
 
-import Mathlib.Analysis.SpecificLimits.Basic
-import Mathlib.Probability.ProbabilityMassFunction.Constructions
+public import Mathlib.Analysis.SpecificLimits.Basic
+public import Mathlib.Probability.ProbabilityMassFunction.Constructions
+
+@[expose] public section
 
 noncomputable section
 

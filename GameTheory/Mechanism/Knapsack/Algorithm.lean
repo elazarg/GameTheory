@@ -1,9 +1,13 @@
+module
+
 /-
 Executable 0/1 knapsack primitives. `solveList` is exact skip/take recursion
 over the supplied list. It makes no memoization or asymptotic-complexity claim.
 -/
 
-import GameTheory.Mechanism.Knapsack.Aggregate
+public import GameTheory.Mechanism.Knapsack.Aggregate
+
+@[expose] public section
 
 namespace GameTheory.Mechanism.Knapsack
 

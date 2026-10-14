@@ -1,4 +1,8 @@
-import GameTheory.Core.Transform
+module
+
+public import GameTheory.Core.Transform
+
+@[expose] public section
 
 noncomputable section
 

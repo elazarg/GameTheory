@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.EndOfLineMachineOps
-import Complexitylib.Classes.Containments.Internal.FPBridge
-import Complexitylib.Classes.P.NormalForm
+module
+
+public import GameTheoryComplexity.Backend.EndOfLineMachineOps
+public import Complexitylib.Classes.Containments.Internal.FPBridge
+public import Complexitylib.Classes.P.NormalForm
+
+@[expose] public section
 
 /-! A polynomial-time verifier for succinct End-of-Line. It evaluates only the
 source and the candidate's immediate neighbors, checks the exact witness width,

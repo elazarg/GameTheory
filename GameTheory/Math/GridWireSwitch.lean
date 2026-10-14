@@ -1,5 +1,9 @@
-import GameTheory.Math.GridWireRealization
-import GameTheory.Math.EndOfLineTailSwitch
+module
+
+public import GameTheory.Math.GridWireRealization
+public import GameTheory.Math.EndOfLineTailSwitch
+
+@[expose] public section
 
 /-! Crossing switches exchange the two source-indexed wire occurrences at a
 crossing center. Their outgoing continuations change; original vertices and

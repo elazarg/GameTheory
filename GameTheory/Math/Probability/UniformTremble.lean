@@ -1,3 +1,5 @@
+module
+
 /-
 # Uniform trembles
 
@@ -7,8 +9,10 @@ for every point: a tremble of total mass `t` gives each of `n` points at least
 residual law, so trembles are exactly the laws with a uniform floor.
 -/
 
-import GameTheory.Math.Probability.Mixture
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Math.Probability.Mixture
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

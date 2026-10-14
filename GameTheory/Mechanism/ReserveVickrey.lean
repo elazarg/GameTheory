@@ -1,3 +1,5 @@
+module
+
 /-
 # Reserve-price Vickrey auction
 
@@ -6,7 +8,9 @@ top bid does not allocate.  It is built entirely from the generic deterministic
 auction constructor and the canonical response predicates.
 -/
 
-import GameTheory.Mechanism.Auction
+public import GameTheory.Mechanism.Auction
+
+@[expose] public section
 
 noncomputable section
 

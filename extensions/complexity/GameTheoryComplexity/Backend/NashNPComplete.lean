@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.NashNP
-import GameTheoryComplexity.Backend.SATReduction
+module
+
+public import GameTheoryComplexity.Backend.NashNP
+public import GameTheoryComplexity.Backend.SATReduction
+
+@[expose] public section
 
 /-! NP-completeness of canonical payoff-constrained mixed Nash existence for
 explicit symmetric integer payoff tables. Membership uses bounded rational

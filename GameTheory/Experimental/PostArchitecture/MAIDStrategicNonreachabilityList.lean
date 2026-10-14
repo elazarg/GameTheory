@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-107: finite same-owner source-rule transport
 
@@ -7,7 +9,9 @@ fixed target: no acyclicity, coverage, or equilibrium statement is introduced
 here.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDStrategicNonreachability
+public import GameTheory.Experimental.PostArchitecture.MAIDStrategicNonreachability
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Execution laws derived from an action restriction
 
@@ -8,9 +10,11 @@ property are irrelevant. A horizon bounding the larger protocol bounds the
 smaller one, so terminal play corresponds as well.
 -/
 
-import GameTheory.Protocol.ActionRestriction
-import GameTheory.Protocol.BehavioralTerminal
-import GameTheory.Protocol.FiniteHorizon
+public import GameTheory.Protocol.ActionRestriction
+public import GameTheory.Protocol.BehavioralTerminal
+public import GameTheory.Protocol.FiniteHorizon
+
+@[expose] public section
 
 noncomputable section
 

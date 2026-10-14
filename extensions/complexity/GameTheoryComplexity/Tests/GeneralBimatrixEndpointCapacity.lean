@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixEndpointCapacity
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixEndpointCapacity
+
+@[expose] public section
 
 /-! Signed rectangular controller emission requires no client arithmetic bounds. -/
 namespace GameTheory.Complexity.Tests.GeneralBimatrixEndpointCapacity

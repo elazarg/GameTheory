@@ -1,6 +1,10 @@
-import GameTheory.Finite.BimatrixCertificate
-import GameTheory.Core.BimatrixGame
-import GameTheory.Math.Probability.Numerator
+module
+
+public import GameTheory.Finite.BimatrixCertificate
+public import GameTheory.Core.BimatrixGame
+public import GameTheory.Math.Probability.Numerator
+
+@[expose] public section
 
 /-! Accepted rectangular integer certificates produce mixed Nash equilibria
 for the canonical bimatrix game. Real-valued probability semantics are confined

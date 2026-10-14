@@ -1,3 +1,5 @@
+module
+
 /-
 # Execution retains almost all mass of the smaller protocol under rare trembles
 
@@ -7,9 +9,11 @@ choice. The one-step square and kernel iteration carry this bound to behavioral
 play of any length. Play after a new action is unrestricted.
 -/
 
-import GameTheory.Math.Probability.Domination
-import GameTheory.Protocol.RestrictionExecution
-import GameTheory.Protocol.RestrictionProfile
+public import GameTheory.Math.Probability.Domination
+public import GameTheory.Protocol.RestrictionExecution
+public import GameTheory.Protocol.RestrictionProfile
+
+@[expose] public section
 
 noncomputable section
 

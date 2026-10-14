@@ -1,3 +1,5 @@
+module
+
 /-
 # GameTheory
 
@@ -19,12 +21,14 @@ covers its source formalism in full. `GameTheory.Experimental` contains
 recorded architecture evidence, not public library surface.
 -/
 
-import GameTheory.Core
-import GameTheory.Protocol
-import GameTheory.Epistemic
-import GameTheory.Evolutionary
-import GameTheory.Finite.Algorithm
-import GameTheory.Finite.Correctness
+public import GameTheory.Core
+public import GameTheory.Protocol
+public import GameTheory.Epistemic
+public import GameTheory.Evolutionary
+public import GameTheory.Finite.Algorithm
+public import GameTheory.Finite.Correctness
+
+@[expose] public section
 
 namespace GameTheory
 

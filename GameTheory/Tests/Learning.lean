@@ -1,3 +1,5 @@
+module
+
 /-
 Discriminating finite trace for no-regret learning.
 
@@ -7,7 +9,9 @@ has strictly positive regret in the second round, so the resulting approximate
 CCE theorem is not a zero-payoff or already-equilibrium tautology.
 -/
 
-import GameTheory.Core.Learning
+public import GameTheory.Core.Learning
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,5 +1,9 @@
-import GameTheory.Finite.BimatrixPivotSource
-import Mathlib.Data.Fin.VecNotation
+module
+
+public import GameTheory.Finite.BimatrixPivotSource
+public import Mathlib.Data.Fin.VecNotation
+
+@[expose] public section
 
 /-! A fully degenerate rectangular game tests symbolic tie breaking and a
 strictly feasible successor row with a zero constant coefficient. -/

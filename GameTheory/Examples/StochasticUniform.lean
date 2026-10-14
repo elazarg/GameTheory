@@ -1,3 +1,5 @@
+module
+
 /-
 # A nondegenerate stochastic-game bridge witness
 
@@ -6,9 +8,11 @@ genuinely stochastic successor and the horizon equilibrium surface is exactly
 canonical approximate Nash.
 -/
 
-import GameTheory.Stochastic.Uniform
-import GameTheory.Math.Probability.Mixture
-import Mathlib.Tactic.NormNum
+public import GameTheory.Stochastic.Uniform
+public import GameTheory.Math.Probability.Mixture
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 noncomputable section
 

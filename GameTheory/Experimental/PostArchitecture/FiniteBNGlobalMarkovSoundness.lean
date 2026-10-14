@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: finite global-Markov soundness
 
@@ -8,10 +10,12 @@ independence for arbitrary typed query configurations, including impossible
 evidence values.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNMoralScoreBridge
-import GameTheory.Experimental.PostArchitecture.FiniteBNQueryCylinderFubini
-import GameTheory.Experimental.PostArchitecture.FiniteBNScoreCylinderBridge
-import GameTheory.Experimental.PostArchitecture.MAIDCylinderBridge
+public import GameTheory.Experimental.PostArchitecture.FiniteBNMoralScoreBridge
+public import GameTheory.Experimental.PostArchitecture.FiniteBNQueryCylinderFubini
+public import GameTheory.Experimental.PostArchitecture.FiniteBNScoreCylinderBridge
+public import GameTheory.Experimental.PostArchitecture.MAIDCylinderBridge
+
+@[expose] public section
 
 noncomputable section
 

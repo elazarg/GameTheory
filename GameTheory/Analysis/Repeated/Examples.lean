@@ -1,3 +1,5 @@
+module
+
 /-
 # A nonvacuous folk-theorem witness
 
@@ -7,8 +9,10 @@ repeated-game theorem therefore supplies patient mixed-action equilibria whose
 discounted payoff approaches cooperation.
 -/
 
-import GameTheory.Analysis.Repeated.Folk
-import GameTheory.Examples.Classic
+public import GameTheory.Analysis.Repeated.Folk
+public import GameTheory.Examples.Classic
+
+@[expose] public section
 
 noncomputable section
 

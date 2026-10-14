@@ -1,3 +1,5 @@
+module
+
 /-
 # What statistical closeness preserves
 
@@ -15,9 +17,11 @@ Statistical distance bounds every comparison made from polynomially many draws.
   probability `2 ^ (-κ)` is `2 ^ (-κ)` from nothing.
 * Changing a law only on a branch of probability `p` moves it by at most `p`.
 -/
-import GameTheory.Math.Probability.Indistinguishability
-import GameTheory.Math.Probability.Mixture
-import GameTheory.Math.Probability.StatisticalDistanceStability
+public import GameTheory.Math.Probability.Indistinguishability
+public import GameTheory.Math.Probability.Mixture
+public import GameTheory.Math.Probability.StatisticalDistanceStability
+
+@[expose] public section
 
 noncomputable section
 

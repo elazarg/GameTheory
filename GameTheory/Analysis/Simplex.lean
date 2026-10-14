@@ -1,3 +1,5 @@
+module
+
 /-
 # Mixed profiles as a product of standard simplices
 
@@ -6,9 +8,11 @@ Finite-carrier PMF/simplex correspondence is provided by
 product of simplices over a game signature.
 -/
 
-import GameTheory.Core.Form
-import GameTheory.Math.Probability.Simplex
-import Mathlib.Analysis.Normed.Module.FiniteDimension
+public import GameTheory.Core.Form
+public import GameTheory.Math.Probability.Simplex
+public import Mathlib.Analysis.Normed.Module.FiniteDimension
+
+@[expose] public section
 
 noncomputable section
 

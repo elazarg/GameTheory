@@ -1,3 +1,5 @@
+module
+
 /-
 # Observable one-stage cheap talk
 
@@ -10,7 +12,9 @@ there is no private type or distinguished sender and receiver, and this file
 makes no partition-equilibrium claim.
 -/
 
-import GameTheory.Core.Equilibrium
+public import GameTheory.Core.Equilibrium
+
+@[expose] public section
 
 noncomputable section
 

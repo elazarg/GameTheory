@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BimatrixNodeWord
+module
+
+public import GameTheoryComplexity.Backend.BimatrixNodeWord
+
+@[expose] public section
 
 namespace GameTheory.Complexity.Tests.BimatrixNodeWord
 open GameTheory.Complexity.Backend

@@ -1,7 +1,11 @@
-import GameTheoryComplexity.Backend.GridRoutingArithmetic
-import GameTheoryComplexity.Backend.SpernerCornerMachine
-import GameTheory.Math.GridWireColoringTile
-import GameTheory.Math.SourceColoringTiles
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingArithmetic
+public import GameTheoryComplexity.Backend.SpernerCornerMachine
+public import GameTheory.Math.GridWireColoringTile
+public import GameTheory.Math.SourceColoringTiles
+
+@[expose] public section
 
 /-! Constant-size tile lookup uses binary comparisons and finite selectors.
 Runtime coordinates remain binary; lookup never recurses on their numeric value. -/

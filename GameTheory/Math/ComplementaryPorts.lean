@@ -1,4 +1,8 @@
-import GameTheory.Math.ComplementaryLabels
+module
+
+public import GameTheory.Math.ComplementaryLabels
+
+@[expose] public section
 
 /-! Ports of complementary and almost complementary finite label sets.
 

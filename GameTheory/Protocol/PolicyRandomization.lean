@@ -1,3 +1,5 @@
+module
+
 /-
 # Randomization of information-local policies
 
@@ -5,10 +7,12 @@ This leaf module develops mixed-to-behavioral reading, finite-site predrawing,
 and the realization theorems over the canonical information model.
 -/
 
-import GameTheory.Protocol.Information
-import GameTheory.Protocol.HistoryPathMass
-import GameTheory.Math.Probability.FiniteSampling
-import GameTheory.Math.Probability.Conditioning
+public import GameTheory.Protocol.Information
+public import GameTheory.Protocol.HistoryPathMass
+public import GameTheory.Math.Probability.FiniteSampling
+public import GameTheory.Math.Probability.Conditioning
+
+@[expose] public section
 
 noncomputable section
 

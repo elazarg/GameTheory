@@ -1,4 +1,8 @@
-import GameTheory.Math.GridCrossingAttachment
+module
+
+public import GameTheory.Math.GridCrossingAttachment
+
+@[expose] public section
 
 /-! Closing the original strands yields two cycles; switching their continuations
 joins them into one cycle while preserving all endpoints. Arbitrary broken exterior

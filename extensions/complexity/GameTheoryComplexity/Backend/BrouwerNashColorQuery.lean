@@ -1,11 +1,15 @@
-import GameTheoryComplexity.Backend.BrouwerNashHeaders
-import GameTheoryComplexity.Backend.BrouwerNashProgram
-import GameTheoryComplexity.Backend.BrouwerNashCoefficientQuery
-import GameTheoryComplexity.Backend.BinarySignedIndicator
-import GameTheoryComplexity.Backend.BinaryUnaryEncoding
-import GameTheoryComplexity.Backend.BinaryIndexedLookup
-import GameTheoryComplexity.Backend.BinarySignedFiniteSum
-import GameTheoryComplexity.Backend.BimatrixRawGateMachine
+module
+
+public import GameTheoryComplexity.Backend.BrouwerNashHeaders
+public import GameTheoryComplexity.Backend.BrouwerNashProgram
+public import GameTheoryComplexity.Backend.BrouwerNashCoefficientQuery
+public import GameTheoryComplexity.Backend.BinarySignedIndicator
+public import GameTheoryComplexity.Backend.BinaryUnaryEncoding
+public import GameTheoryComplexity.Backend.BinaryIndexedLookup
+public import GameTheoryComplexity.Backend.BinarySignedFiniteSum
+public import GameTheoryComplexity.Backend.BimatrixRawGateMachine
+
+@[expose] public section
 /-!
 # Executable coefficient and kind queries for corner color circuits
 

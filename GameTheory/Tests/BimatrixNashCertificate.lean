@@ -1,4 +1,8 @@
-import GameTheory.Finite.BimatrixNashCertificateCorrectness
+module
+
+public import GameTheory.Finite.BimatrixNashCertificateCorrectness
+
+@[expose] public section
 
 /-! Exact certificate controls with unequal denominators, failed best responses,
 negative payoffs, and an empty action carrier. -/

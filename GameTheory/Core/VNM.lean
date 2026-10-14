@@ -1,3 +1,5 @@
+module
+
 /-
 # von Neumann--Morgenstern representation
 
@@ -9,9 +11,11 @@ Primary reference: J. von Neumann and O. Morgenstern, *Theory of Games and
 Economic Behavior*, Princeton University Press, 1944.
 -/
 
-import GameTheory.Core.ExpectedUtility
-import GameTheory.Math.Probability.Conditioning
-import Mathlib.Tactic
+public import GameTheory.Core.ExpectedUtility
+public import GameTheory.Math.Probability.Conditioning
+public import Mathlib.Tactic
+
+@[expose] public section
 
 namespace GameTheory
 

@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.SpernerGridCodec
-import GameTheoryComplexity.Backend.EndOfLineMachineOps
-import Complexitylib.Classes.P.Cobham.Internal.Extract
+module
+
+public import GameTheoryComplexity.Backend.SpernerGridCodec
+public import GameTheoryComplexity.Backend.EndOfLineMachineOps
+public import Complexitylib.Classes.P.Cobham.Internal.Extract
+
+@[expose] public section
 
 /-! Polynomial-time word operations for grid node codecs. Widths are supplied
 by word rulers; fields are extracted from existing bits, and a one-bit control

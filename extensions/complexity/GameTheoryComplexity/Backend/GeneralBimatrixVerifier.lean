@@ -1,7 +1,11 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixCertificateCodec
-import GameTheoryComplexity.Backend.GeneralBimatrixCodecMachine
-import GameTheoryComplexity.Backend.BinaryWordMultiplication
-import GameTheoryComplexity.Backend.BimatrixCertificateVerifier
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixCertificateCodec
+public import GameTheoryComplexity.Backend.GeneralBimatrixCodecMachine
+public import GameTheoryComplexity.Backend.BinaryWordMultiplication
+public import GameTheoryComplexity.Backend.BimatrixCertificateVerifier
+
+@[expose] public section
 
 /-! Binary verification of rectangular, independently signed bimatrix payoffs.
 All scan clocks count explicitly represented actions or binary bit positions. -/

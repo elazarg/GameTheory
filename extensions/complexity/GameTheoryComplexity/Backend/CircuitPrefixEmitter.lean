@@ -1,9 +1,13 @@
-import Complexitylib.Circuits.Encoding.Fragment
-import Complexitylib.Classes.P.Cobham
-import Complexitylib.Classes.P.Pairing
-import Complexitylib.Classes.P.Cobham.Internal.Algebra
-import Complexitylib.Classes.P.Cobham.Internal.PolyLen
-import Complexitylib.Classes.P.Composition
+module
+
+public import Complexitylib.Circuits.Encoding.Fragment
+public import Complexitylib.Classes.P.Cobham
+public import Complexitylib.Classes.P.Pairing
+public import Complexitylib.Classes.P.Cobham.Internal.Algebra
+public import Complexitylib.Classes.P.Cobham.Internal.PolyLen
+public import Complexitylib.Classes.P.Composition
+
+@[expose] public section
 
 /-! Polynomial-time serialization of constant and live-input circuit prefixes. -/
 

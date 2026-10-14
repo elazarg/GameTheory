@@ -1,6 +1,10 @@
-import GameTheory.Finite.BimatrixArithmeticGate
-import GameTheory.Finite.BimatrixGateProgramBounds
-import GameTheory.Math.ClippedFeedbackComposition
+module
+
+public import GameTheory.Finite.BimatrixArithmeticGate
+public import GameTheory.Finite.BimatrixGateProgramBounds
+public import GameTheory.Math.ClippedFeedbackComposition
+
+@[expose] public section
 
 /-!
 # Projected signed feedback in a cyclic affine game program

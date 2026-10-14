@@ -1,3 +1,5 @@
+module
+
 /-
 # `GameTheory.Repeated`
 
@@ -17,20 +19,22 @@ is the Protocol-backed constructor when an execution/information model is
 needed. Stochastic laws over entire infinite paths are deliberately absent.
 -/
 
-import GameTheory.Repeated.Basic
-import GameTheory.Repeated.Monitoring
-import GameTheory.Repeated.MonitoringContinuation
-import GameTheory.Repeated.MonitoringRank
-import GameTheory.Repeated.MonitoringPayoff
-import GameTheory.Repeated.MonitoringDiscounted
-import GameTheory.Repeated.MonitoringOneShot
-import GameTheory.Repeated.MonitoringDecomposition
-import GameTheory.Repeated.MonitoringSelfGeneration
-import GameTheory.Repeated.Discounted
-import GameTheory.Repeated.Uniform
-import GameTheory.Repeated.Periodic
-import GameTheory.Repeated.Trigger
-import GameTheory.Repeated.Protocol
+public import GameTheory.Repeated.Basic
+public import GameTheory.Repeated.Monitoring
+public import GameTheory.Repeated.MonitoringContinuation
+public import GameTheory.Repeated.MonitoringRank
+public import GameTheory.Repeated.MonitoringPayoff
+public import GameTheory.Repeated.MonitoringDiscounted
+public import GameTheory.Repeated.MonitoringOneShot
+public import GameTheory.Repeated.MonitoringDecomposition
+public import GameTheory.Repeated.MonitoringSelfGeneration
+public import GameTheory.Repeated.Discounted
+public import GameTheory.Repeated.Uniform
+public import GameTheory.Repeated.Periodic
+public import GameTheory.Repeated.Trigger
+public import GameTheory.Repeated.Protocol
+
+@[expose] public section
 
 namespace GameTheory.Repeated
 

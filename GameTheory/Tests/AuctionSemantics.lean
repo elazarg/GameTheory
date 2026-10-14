@@ -1,3 +1,5 @@
+module
+
 /-
 # Quasilinear auction certificates
 
@@ -6,8 +8,10 @@ transfers.  This exercises the quasilinear IR, transfer, and balance predicates
 on a nonconstant rule rather than merely checking that their names elaborate.
 -/
 
-import GameTheory.Mechanism.Auction
-import Mathlib.Tactic.FinCases
+public import GameTheory.Mechanism.Auction
+public import Mathlib.Tactic.FinCases
+
+@[expose] public section
 
 noncomputable section
 

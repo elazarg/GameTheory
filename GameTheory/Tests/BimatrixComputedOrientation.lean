@@ -1,4 +1,8 @@
-import GameTheory.Finite.BimatrixComputedOrientation
+module
+
+public import GameTheory.Finite.BimatrixComputedOrientation
+
+@[expose] public section
 
 /-! Integer color agreement at the source and across both port operations. -/
 namespace GameTheory.Tests.BimatrixComputedOrientation

@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-095: history-dependent sequential client adequacy
 
@@ -7,7 +9,9 @@ first vote on the second move.  It tests whether canonical history values and
 the historywise/SPE surface suffice without a second evaluator.
 -/
 
-import GameTheory.Tests.EFGSubgamePerfect
+public import GameTheory.Tests.EFGSubgamePerfect
+
+@[expose] public section
 
 noncomputable section
 

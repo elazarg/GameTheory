@@ -1,3 +1,5 @@
+module
+
 /-
 # Uniform hybrid arguments
 
@@ -7,7 +9,9 @@ may depend on the test, but its eventual threshold cannot depend on the hybrid
 index. Merely requiring negligible advantage for each fixed index would miss
 a distinguishing jump whose location moves with the size parameter.
 -/
-import GameTheory.Math.Probability.Indistinguishability
+public import GameTheory.Math.Probability.Indistinguishability
+
+@[expose] public section
 
 noncomputable section
 

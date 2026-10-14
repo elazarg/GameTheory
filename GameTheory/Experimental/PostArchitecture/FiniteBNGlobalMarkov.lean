@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite Bayesian-network factor partitions
 
@@ -13,7 +15,9 @@ assignment law has the factor product below as its point mass before graphical
 separation can imply a probabilistic statement.
 -/
 
-import Mathlib.Probability.ProbabilityMassFunction.Monad
+public import Mathlib.Probability.ProbabilityMassFunction.Monad
+
+@[expose] public section
 
 noncomputable section
 

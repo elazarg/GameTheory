@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.GridRoutingCrossingMachine
-import GameTheoryComplexity.Backend.GridRoutingWireMachine
-import GameTheory.Math.GridWireSwitch
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingCrossingMachine
+public import GameTheoryComplexity.Backend.GridRoutingWireMachine
+public import GameTheory.Math.GridWireSwitch
+
+@[expose] public section
 
 /-! Crossing image coordinates and owner switches are computed by local binary
 queries and exact arithmetic. Fields retain their full values until a caller

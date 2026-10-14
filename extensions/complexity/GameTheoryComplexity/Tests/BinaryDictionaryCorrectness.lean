@@ -1,4 +1,10 @@
-import GameTheoryComplexity.Backend.BinaryDictionaryCorrectness
+module
+
+public import GameTheoryComplexity.Backend.BinaryDictionaryCorrectness
+
+import all Mathlib.LinearAlgebra.Matrix.Determinant.Bird.Defs
+
+@[expose] public section
 
 /-! Controls for symbolic column ordering and signed entering directions. -/
 namespace GameTheory.Complexity.Tests.BinaryDictionaryCorrectness

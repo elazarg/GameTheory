@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.SpernerCoordinateColor
-import GameTheoryComplexity.Backend.BimatrixRawCircuit
+module
+
+public import GameTheoryComplexity.Backend.SpernerCoordinateColor
+public import GameTheoryComplexity.Backend.BimatrixRawCircuit
+
+@[expose] public section
 
 /-! Canonically compiled coordinate-color circuits are represented by paired game outputs.
 Explicit relocated wire placements and input-error bounds connect raw circuit evaluation to

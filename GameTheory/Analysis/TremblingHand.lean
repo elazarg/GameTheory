@@ -1,3 +1,5 @@
+module
+
 /-
 # Trembling-hand perfection
 
@@ -10,8 +12,10 @@ Equilibrium Points in Extensive Games,” *International Journal of Game
 Theory* 4 (1975).
 -/
 
-import GameTheory.Analysis.ExpectedUtility
-import GameTheory.Core.TremblingHand
+public import GameTheory.Analysis.ExpectedUtility
+public import GameTheory.Core.TremblingHand
+
+@[expose] public section
 
 noncomputable section
 

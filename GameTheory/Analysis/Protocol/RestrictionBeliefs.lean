@@ -1,3 +1,5 @@
+module
+
 /-
 # Beliefs and laws at retained sites
 
@@ -9,8 +11,10 @@ converge to the prescribed belief, even when the site is unreached in the limit.
 Terminal passage through the site supplies conditioning without a common decision depth.
 -/
 
-import GameTheory.Analysis.Protocol.BeliefTransport
-import GameTheory.Analysis.Protocol.RestrictionDomination
+public import GameTheory.Analysis.Protocol.BeliefTransport
+public import GameTheory.Analysis.Protocol.RestrictionDomination
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Feasible joint posterior laws
 
@@ -7,7 +9,9 @@ and whose projection to each player is that player's canonical posterior
 coupling.  Marginal Bayes plausibility is necessary, not asserted sufficient.
 -/
 
-import GameTheory.Mechanism.FeasiblePosteriors
+public import GameTheory.Mechanism.FeasiblePosteriors
+
+@[expose] public section
 
 noncomputable section
 

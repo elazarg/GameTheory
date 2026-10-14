@@ -1,3 +1,5 @@
+module
+
 /-
 # Extensive-form trembling-hand perfection
 
@@ -19,10 +21,12 @@ Theory* 4 (1975); D. M. Kreps and R. Wilson, “Sequential Equilibria,”
 *Econometrica* 50 (1982).
 -/
 
-import GameTheory.Analysis.PerturbedEquilibrium
-import GameTheory.Analysis.Protocol.AgentForm
-import GameTheory.Analysis.Protocol.AssessmentCompactness
-import GameTheory.Analysis.Protocol.SequentialOneShot
+public import GameTheory.Analysis.PerturbedEquilibrium
+public import GameTheory.Analysis.Protocol.AgentForm
+public import GameTheory.Analysis.Protocol.AssessmentCompactness
+public import GameTheory.Analysis.Protocol.SequentialOneShot
+
+@[expose] public section
 
 noncomputable section
 

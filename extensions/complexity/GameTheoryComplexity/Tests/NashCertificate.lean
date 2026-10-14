@@ -1,9 +1,13 @@
-import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
-import GameTheoryComplexity.Backend.BimatrixCertificateVerifier
-import GameTheoryComplexity.Backend.BimatrixCertificateVerifierCorrectness
-import GameTheoryComplexity.Backend.NashCertificateEncoding
-import GameTheoryComplexity.Backend.NashNP
-import GameTheory.Finite.BimatrixNashCertificateCorrectness
+module
+
+public import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
+public import GameTheoryComplexity.Backend.BimatrixCertificateVerifier
+public import GameTheoryComplexity.Backend.BimatrixCertificateVerifierCorrectness
+public import GameTheoryComplexity.Backend.NashCertificateEncoding
+public import GameTheoryComplexity.Backend.NashNP
+public import GameTheory.Finite.BimatrixNashCertificateCorrectness
+
+@[expose] public section
 
 /-! Binary carry, padded codecs, actual table parsing, and malformed numerator
 controls for the payoff-constrained mixed-equilibrium certificate. -/

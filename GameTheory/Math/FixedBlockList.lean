@@ -1,4 +1,8 @@
-import Mathlib.Data.List.Basic
+module
+
+public import Mathlib.Data.List.Basic
+
+@[expose] public section
 
 /-! Length and indexed extraction of equal-width blocks concatenated from a list. -/
 namespace GameTheory.Math.FixedBlockList

@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinaryDictionaryMachine
+module
+
+public import GameTheoryComplexity.Backend.BinaryDictionaryMachine
+
+@[expose] public section
 
 namespace GameTheory.Complexity.Tests.BinaryDictionaryMachine
 open GameTheory.Complexity.Backend

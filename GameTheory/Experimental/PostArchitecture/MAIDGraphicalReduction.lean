@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-105: graphical discharge of one-site MAID reduction
 
@@ -7,8 +9,10 @@ certificates.  It adds no evaluator, probability notion, or certificate
 layer.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDNonrelevantUtilityInvariance
-import GameTheory.Experimental.PostArchitecture.MAIDRelevantUtilityContinuation
+public import GameTheory.Experimental.PostArchitecture.MAIDNonrelevantUtilityInvariance
+public import GameTheory.Experimental.PostArchitecture.MAIDRelevantUtilityContinuation
+
+@[expose] public section
 
 noncomputable section
 

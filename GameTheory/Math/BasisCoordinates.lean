@@ -1,5 +1,9 @@
-import GameTheory.Math.CanonicalDictionary
-import GameTheory.Math.FiniteLexicographic
+module
+
+public import GameTheory.Math.CanonicalDictionary
+public import GameTheory.Math.FiniteLexicographic
+
+@[expose] public section
 
 /-! Coordinates on a basis lifted to the full variable universe.
 

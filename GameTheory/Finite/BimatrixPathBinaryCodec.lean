@@ -1,10 +1,14 @@
-import GameTheory.Finite.BimatrixComputedPivot
-import GameTheory.Finite.BimatrixPathEndOfLine
-import GameTheory.Math.EndOfLineNormalization
-import GameTheory.Math.FiniteSetRank
-import GameTheory.Math.IntegerDictionaryFeasibility
-import Mathlib.Data.List.OfFn
-import Mathlib.Data.Finset.Range
+module
+
+public import GameTheory.Finite.BimatrixComputedPivot
+public import GameTheory.Finite.BimatrixPathEndOfLine
+public import GameTheory.Math.EndOfLineNormalization
+public import GameTheory.Math.FiniteSetRank
+public import GameTheory.Math.IntegerDictionaryFeasibility
+public import Mathlib.Data.List.OfFn
+public import Mathlib.Data.Finset.Range
+
+@[expose] public section
 
 /-! Canonical binary encodings of complementary path ports. Basis membership
 and a one-hot entering variable determine the node without auxiliary witnesses.

@@ -1,7 +1,11 @@
-import GameTheory.Math.FiniteLexicographic
-import GameTheory.Math.PerturbedDictionary
-import GameTheory.Math.DictionaryPivot
-import Mathlib.Data.Finset.Max
+module
+
+public import GameTheory.Math.FiniteLexicographic
+public import GameTheory.Math.PerturbedDictionary
+public import GameTheory.Math.DictionaryPivot
+public import Mathlib.Data.Finset.Max
+
+@[expose] public section
 
 /-! Exact symbolic ratio tests for feasible linear dictionaries.
 Independent perturbation coefficients break ordinary ratio ties. The selected

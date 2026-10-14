@@ -1,3 +1,5 @@
+module
+
 /-
 # Gale--Shapley deferred acceptance
 
@@ -13,11 +15,13 @@ Proposer optimality, lattice structure, rural-hospitals results, and
 strategyproofness remain separate theorem packages.
 -/
 
-import GameTheory.Cooperative.Matching
-import Mathlib.Data.Fintype.Card
-import Mathlib.Data.Fintype.BigOperators
-import Mathlib.Logic.Equiv.Fintype
-import Mathlib.Algebra.Order.BigOperators.Group.Finset
+public import GameTheory.Cooperative.Matching
+public import Mathlib.Data.Fintype.Card
+public import Mathlib.Data.Fintype.BigOperators
+public import Mathlib.Logic.Equiv.Fintype
+public import Mathlib.Algebra.Order.BigOperators.Group.Finset
+
+@[expose] public section
 
 namespace GameTheory
 

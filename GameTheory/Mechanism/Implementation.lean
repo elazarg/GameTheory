@@ -1,3 +1,5 @@
+module
+
 /-
 # Implementation by profile-observed transfers
 
@@ -11,7 +13,9 @@ mixed, correlated, and informational implementation require their own
 consumer-backed theorem layers rather than an arbitrary solution-set wrapper.
 -/
 
-import GameTheory.Core.Response
+public import GameTheory.Core.Response
+
+@[expose] public section
 
 noncomputable section
 

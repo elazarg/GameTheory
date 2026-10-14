@@ -1,7 +1,11 @@
-import Complexitylib.Classes.P.Cobham
-import Complexitylib.Classes.P.Cobham.Internal.Algebra
-import Mathlib.Tactic.FinCases
-import Mathlib.Tactic.Linarith
+module
+
+public import Complexitylib.Classes.P.Cobham
+public import Complexitylib.Classes.P.Cobham.Internal.Algebra
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Tactic.Linarith
+
+@[expose] public section
 
 /-! Explicit row-major emission of bounded integer-payoff encodings.
 A polynomial-time certificate for each cell is lifted to the entire table by

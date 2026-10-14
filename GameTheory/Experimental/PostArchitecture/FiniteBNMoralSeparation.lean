@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: ancestral-moral separation for finite Bayesian-network queries
 
@@ -10,7 +12,9 @@ validate the graph-side relation and its factor-scope clique property before a
 factorization proof connects it to finite conditional independence.
 -/
 
-import GameTheory.Math.DAG
+public import GameTheory.Math.DAG
+
+@[expose] public section
 
 noncomputable section
 

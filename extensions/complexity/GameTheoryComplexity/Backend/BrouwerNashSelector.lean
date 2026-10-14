@@ -1,10 +1,14 @@
-import GameTheoryComplexity.Backend.BrouwerNashGlobalCorrectness
-import GameTheoryComplexity.Backend.BrouwerNashJitterQuery
-import GameTheoryComplexity.Backend.BrouwerNashExtractionQuery
-import GameTheoryComplexity.Backend.BrouwerNashIncrementQuery
-import GameTheoryComplexity.Backend.BrouwerNashInterpolationQuery
-import GameTheoryComplexity.Backend.BrouwerNashColorQuery
-import GameTheoryComplexity.Backend.BrouwerNashSelectorKind
+module
+
+public import GameTheoryComplexity.Backend.BrouwerNashGlobalCorrectness
+public import GameTheoryComplexity.Backend.BrouwerNashJitterQuery
+public import GameTheoryComplexity.Backend.BrouwerNashExtractionQuery
+public import GameTheoryComplexity.Backend.BrouwerNashIncrementQuery
+public import GameTheoryComplexity.Backend.BrouwerNashInterpolationQuery
+public import GameTheoryComplexity.Backend.BrouwerNashColorQuery
+public import GameTheoryComplexity.Backend.BrouwerNashSelectorKind
+
+@[expose] public section
 
 /-! Polynomial composition of the disjoint coefficient-query regions of the Brouwer Nash program. -/
 namespace GameTheory.Complexity.Backend.BrouwerNashSelector

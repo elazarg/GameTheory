@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
+module
+
+public import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
+
+@[expose] public section
 
 /-! Unsigned saturating subtraction scans little-endian bit positions with one
 borrow bit. Its loop and output bounds depend on operand lengths, including

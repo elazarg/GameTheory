@@ -1,4 +1,8 @@
-import GameTheory.Finite.BimatrixPivot
+module
+
+public import GameTheory.Finite.BimatrixPivot
+
+@[expose] public section
 
 /-! Exact deterministic pivot and reverse-port controls in a positive 1×1 game. -/
 namespace GameTheory.Tests.BimatrixPivot

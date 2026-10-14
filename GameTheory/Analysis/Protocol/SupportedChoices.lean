@@ -1,3 +1,5 @@
+module
+
 /-
 # Supported choices under sequential rationality
 
@@ -11,7 +13,9 @@ histories of the site, including those the belief ignores, so no positive
 belief on each history is needed.
 -/
 
-import GameTheory.Analysis.Protocol.CounterfactualRegret
+public import GameTheory.Analysis.Protocol.CounterfactualRegret
+
+@[expose] public section
 
 noncomputable section
 

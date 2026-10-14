@@ -1,8 +1,12 @@
-import GameTheory.Math.SourceColoringTiles
-import GameTheory.Math.GridRoutedColoring
-import GameTheory.Math.GridRoutedSourceStep
-import GameTheory.Math.GridWireBounds
-import GameTheory.Math.GridSperner
+module
+
+public import GameTheory.Math.SourceColoringTiles
+public import GameTheory.Math.GridRoutedColoring
+public import GameTheory.Math.GridRoutedSourceStep
+public import GameTheory.Math.GridWireBounds
+public import GameTheory.Math.GridSperner
+
+@[expose] public section
 
 /-! A boundary entrance replaces the known routed source's endpoint tile.
 The remaining routed graph is shifted into the interior; padding keeps canonical

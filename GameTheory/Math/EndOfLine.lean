@@ -1,4 +1,8 @@
-import Mathlib.Data.Fintype.Card
+module
+
+public import Mathlib.Data.Fintype.Card
+
+@[expose] public section
 
 /-! Endpoints of finite successor/predecessor graphs. Only mutually consistent,
 nontrivial pointers are edges; malformed pointers and unrelated cycles are allowed. -/

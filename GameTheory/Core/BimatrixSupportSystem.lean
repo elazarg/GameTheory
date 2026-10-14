@@ -1,11 +1,15 @@
-import Mathlib.Algebra.Order.BigOperators.Ring.Finset
-import Mathlib.Data.Int.NatAbs
-import Mathlib.Basic.Real.Basic
-import Mathlib.Data.Fintype.BigOperators
-import Mathlib.Tactic.NormNum
-import Mathlib.Tactic.Ring
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.SplitIfs
+module
+
+public import Mathlib.Algebra.Order.BigOperators.Ring.Finset
+public import Mathlib.Data.Int.NatAbs
+public import Mathlib.Basic.Real.Basic
+public import Mathlib.Data.Fintype.BigOperators
+public import Mathlib.Tactic.NormNum
+public import Mathlib.Tactic.Ring
+public import Mathlib.Tactic.Linarith
+public import Mathlib.Tactic.SplitIfs
+
+@[expose] public section
 
 /-! Fixed-support best-response constraints for a rectangular signed payoff
 table. Splitting the utility into its positive and negative parts expresses

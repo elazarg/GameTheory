@@ -1,5 +1,9 @@
-import Complexitylib.SAT.Verifier
-import GameTheory.Core.SatisfiabilityGame
+module
+
+public import Complexitylib.SAT.Verifier
+public import GameTheory.Core.SatisfiabilityGame
+
+@[expose] public section
 
 /-! Semantic interpretation of encoded SAT inputs as finite literal/clause games.
 Variables and clauses are padded to the bit length plus one. Clause indices run

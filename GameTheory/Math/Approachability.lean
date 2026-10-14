@@ -1,3 +1,5 @@
+module
+
 /-
 # Blackwell approachability
 
@@ -8,9 +10,11 @@ Primary reference: D. Blackwell, “An Analog of the Minimax Theorem for Vector
 Payoffs,” *Pacific Journal of Mathematics* 6 (1956).
 -/
 
-import Mathlib.Analysis.InnerProductSpace.Basic
-import Mathlib.Analysis.InnerProductSpace.Projection.Minimal
-import Mathlib.Topology.MetricSpace.HausdorffDistance
+public import Mathlib.Analysis.InnerProductSpace.Basic
+public import Mathlib.Analysis.InnerProductSpace.Projection.Minimal
+public import Mathlib.Topology.MetricSpace.HausdorffDistance
+
+@[expose] public section
 
 namespace GameTheory.Math.Approachability
 

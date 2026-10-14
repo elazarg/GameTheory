@@ -1,3 +1,5 @@
+module
+
 /-
 # Nondegenerate trembling-hand fixture
 
@@ -6,12 +8,14 @@ no pure Nash equilibrium.  It therefore exercises genuine mixed refinement,
 not a point-mass or singleton shortcut.
 -/
 
-import GameTheory.Analysis.TremblingHand
-import GameTheory.Examples.Classic
-import Mathlib.Tactic.FinCases
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.NormNum
-import Mathlib.Tactic.Ring
+public import GameTheory.Analysis.TremblingHand
+public import GameTheory.Examples.Classic
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Tactic.Linarith
+public import Mathlib.Tactic.NormNum
+public import Mathlib.Tactic.Ring
+
+@[expose] public section
 
 noncomputable section
 

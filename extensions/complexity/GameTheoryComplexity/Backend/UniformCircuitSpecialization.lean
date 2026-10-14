@@ -1,6 +1,12 @@
-import GameTheoryComplexity.Backend.CircuitPrefixCompiler
-import Complexitylib.Classes.P.DecisionFn
-import Complexitylib.Classes.PPoly.Uniform.Unrolling.Containment
+module
+
+public import GameTheoryComplexity.Backend.CircuitPrefixCompiler
+public import Complexitylib.Classes.P.DecisionFn
+public import Complexitylib.Classes.PPoly.Uniform.Unrolling.Containment
+
+import Complexitylib.Classes.P.Cobham.Internal
+
+@[expose] public section
 
 /-! Polynomial-time Boolean computations admit uniformly generated serialized
 circuits with a fixed word prefix hardwired. The generator retains the family

@@ -1,7 +1,11 @@
-import GameTheory.Analysis.EnforcementSynthesis
-import GameTheory.Math.Probability.ExpectationMixture
-import GameTheory.Analysis.ObservableEnforcement
-import GameTheory.Analysis.IncentiveSimulation
+module
+
+public import GameTheory.Analysis.EnforcementSynthesis
+public import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Analysis.ObservableEnforcement
+public import GameTheory.Analysis.IncentiveSimulation
+
+@[expose] public section
 noncomputable section
 namespace GameTheory.Tests.Enforcement
 open GameTheory GameTheory.Enforcement GameTheory.Math.Probability

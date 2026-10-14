@@ -1,7 +1,11 @@
-import GameTheory.Finite.BimatrixPath
-import GameTheory.Math.FacetOrientation
-import GameTheory.Math.ComplementaryPortOrder
-import GameTheory.Math.OrientedInvolutionPath
+module
+
+public import GameTheory.Finite.BimatrixPath
+public import GameTheory.Math.FacetOrientation
+public import GameTheory.Math.ComplementaryPortOrder
+public import GameTheory.Math.OrientedInvolutionPath
+
+@[expose] public section
 
 /-! Determinant orientation of almost complementary bimatrix path ports.
 Signed canonical facet minors reverse across a positive pivot. Counting payoff

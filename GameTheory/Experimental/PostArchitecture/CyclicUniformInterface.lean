@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-114: an all-phase uniform interface for cyclic stochastic games
 
@@ -8,7 +10,9 @@ than introducing another runner or identifying uniformity with terminal
 subgame perfection.
 -/
 
-import GameTheory.Stochastic.History
+public import GameTheory.Stochastic.History
+
+@[expose] public section
 
 noncomputable section
 

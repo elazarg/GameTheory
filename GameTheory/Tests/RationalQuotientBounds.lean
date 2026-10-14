@@ -1,4 +1,8 @@
-import GameTheory.Math.RationalQuotientBounds
+module
+
+public import GameTheory.Math.RationalQuotientBounds
+
+@[expose] public section
 
 /-! Quotient bounds permit zero numerators and negative denominators. -/
 

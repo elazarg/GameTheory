@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.Serializer
+module
+
+public import GameTheoryComplexity.Backend.Serializer
+
+@[expose] public section
 
 /-! Concrete controls for normalization, delimiter placement and zero parameter. -/
 

@@ -1,4 +1,9 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixNodeOperations
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixNodeOperations
+public meta import GameTheoryComplexity.Backend.GeneralBimatrixNodeOperations
+
+@[expose] public section
 
 namespace GameTheory.Complexity.Tests.GeneralBimatrixNodeOperations
 open Backend GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec

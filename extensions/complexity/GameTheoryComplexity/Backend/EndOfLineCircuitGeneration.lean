@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.PointerCircuitGeneration
-import GameTheoryComplexity.Backend.EndOfLineVerifier
+module
+
+public import GameTheoryComplexity.Backend.PointerCircuitGeneration
+public import GameTheoryComplexity.Backend.EndOfLineVerifier
+
+@[expose] public section
 
 /-! Uniform circuit generation serializes consistent-edge normalization of
 End-of-Line pointers. A shared polynomial-time compiler specializes their scalar

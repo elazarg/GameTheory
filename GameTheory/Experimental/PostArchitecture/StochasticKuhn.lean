@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-116: bounded stochastic Kuhn on an infinite history carrier
 
@@ -8,8 +10,10 @@ and Nash-transfer theorems then apply without a `Fintype PublicHistory`
 instance.
 -/
 
-import GameTheory.Stochastic.Kuhn
-import GameTheory.Protocol.Predraw
+public import GameTheory.Stochastic.Kuhn
+public import GameTheory.Protocol.Predraw
+
+@[expose] public section
 
 noncomputable section
 

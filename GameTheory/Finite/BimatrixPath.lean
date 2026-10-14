@@ -1,7 +1,11 @@
-import GameTheory.Finite.BimatrixPivot
-import GameTheory.Finite.BimatrixBasisSolution
-import GameTheory.Math.ComplementaryPorts
-import Mathlib.Data.Fintype.Powerset
+module
+
+public import GameTheory.Finite.BimatrixPivot
+public import GameTheory.Finite.BimatrixBasisSolution
+public import GameTheory.Math.ComplementaryPorts
+public import Mathlib.Data.Fintype.Powerset
+
+@[expose] public section
 
 /-! Ports of almost complementary bimatrix paths.
 A complementary node has one port at the dropped label. An internal node has

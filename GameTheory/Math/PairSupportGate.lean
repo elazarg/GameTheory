@@ -1,5 +1,9 @@
-import Mathlib.Algebra.Order.Field.Basic
-import Mathlib.Tactic.Linarith
+module
+
+public import Mathlib.Algebra.Order.Field.Basic
+public import Mathlib.Tactic.Linarith
+
+@[expose] public section
 
 /-! Scalar support inequalities implement exact saturated affine and comparison gates.
 The two gate types use distinct auxiliary support conditions. -/

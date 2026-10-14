@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-042 hostile one-shot witness
 
@@ -6,7 +8,9 @@ changes the terminal outcome but cannot change the row player's initial policy
 input or action.
 -/
 
-import GameTheory.Languages.Bridges.NFGFOSG
+public import GameTheory.Languages.Bridges.NFGFOSG
+
+@[expose] public section
 
 noncomputable section
 

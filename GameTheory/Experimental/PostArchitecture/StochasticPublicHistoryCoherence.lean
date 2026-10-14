@@ -1,3 +1,5 @@
+module
+
 /-
 # Experiment 111: realizable stochastic public histories
 
@@ -6,8 +8,10 @@ play by the image of the canonical Protocol history projection; no second
 history carrier or runner is introduced.
 -/
 
-import GameTheory.Tests.StochasticContinuation
-import Mathlib.Tactic.NormNum
+public import GameTheory.Tests.StochasticContinuation
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 noncomputable section
 

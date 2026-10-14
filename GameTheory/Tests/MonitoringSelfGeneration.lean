@@ -1,3 +1,5 @@
+module
+
 /-
 # APS self-generation witness
 
@@ -9,7 +11,9 @@ continuation.  The generic construction therefore yields a perfect public
 equilibrium delivering the cooperative payoff.
 -/
 
-import GameTheory.Repeated.MonitoringSelfGeneration
+public import GameTheory.Repeated.MonitoringSelfGeneration
+
+@[expose] public section
 
 noncomputable section
 

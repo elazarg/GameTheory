@@ -1,3 +1,5 @@
+module
+
 /-
 # Surplus-maximizing combinatorial allocations
 
@@ -5,7 +7,9 @@ Finite optimization and frugal tie-breaking over the basic combinatorial
 auction primitives.
 -/
 
-import GameTheory.Mechanism.Combinatorial.Basic
+public import GameTheory.Mechanism.Combinatorial.Basic
+
+@[expose] public section
 
 namespace GameTheory.Mechanism.Combinatorial
 

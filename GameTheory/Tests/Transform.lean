@@ -1,3 +1,5 @@
+module
+
 /-
 # Concrete transformation regression tests
 
@@ -6,7 +8,9 @@ unequal strategy carriers; the strategy flip exercises recommendation-dependent
 correlated deviations.
 -/
 
-import GameTheory.Core.Transform
+public import GameTheory.Core.Transform
+
+@[expose] public section
 
 noncomputable section
 

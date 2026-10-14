@@ -1,3 +1,5 @@
+module
+
 /-
 # Zermelo decision-menu boundary
 
@@ -7,7 +9,9 @@ backward induction needs finiteness only where a decision can actually occur;
 the unavoidable total contingent plan is supplied explicitly as a fallback.
 -/
 
-import GameTheory.Protocol.Zermelo
+public import GameTheory.Protocol.Zermelo
+
+@[expose] public section
 
 noncomputable section
 

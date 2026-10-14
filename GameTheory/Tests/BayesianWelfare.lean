@@ -1,3 +1,5 @@
+module
+
 /-
 Hostile truthful-welfare and participation regression.
 
@@ -6,7 +8,9 @@ unequal truthful utilities, so the aggregate and a nonzero outside-option
 profile are observable.  Raising one outside option refutes participation.
 -/
 
-import GameTheory.Mechanism.BayesianWelfare
+public import GameTheory.Mechanism.BayesianWelfare
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-114: hostile cyclic uniformity slice
 
@@ -7,7 +9,9 @@ switch; the constant-false profile is therefore initially safe but fails after
 the reachable one-step phase.
 -/
 
-import GameTheory.Experimental.PostArchitecture.CyclicUniformInterface
+public import GameTheory.Experimental.PostArchitecture.CyclicUniformInterface
+
+@[expose] public section
 
 noncomputable section
 

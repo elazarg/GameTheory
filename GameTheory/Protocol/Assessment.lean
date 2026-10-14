@@ -1,3 +1,5 @@
+module
+
 /-
 # Assessments, contexts, and one-shot deviations
 
@@ -22,9 +24,11 @@ one information state and leaves everything else alone; `Context` is precisely
 the data that change is evaluated against.
 -/
 
-import GameTheory.Protocol.Information
-import GameTheory.Protocol.Context
-import GameTheory.Math.Probability.ExpectationBind
+public import GameTheory.Protocol.Information
+public import GameTheory.Protocol.Context
+public import GameTheory.Math.Probability.ExpectationBind
+
+@[expose] public section
 
 noncomputable section
 

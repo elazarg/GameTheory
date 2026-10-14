@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.BrouwerNashLayout
-import GameTheoryComplexity.Backend.BrouwerNashRewardMachine
-import GameTheoryComplexity.Backend.CircuitCodeShift
+module
+
+public import GameTheoryComplexity.Backend.BrouwerNashLayout
+public import GameTheoryComplexity.Backend.BrouwerNashRewardMachine
+public import GameTheoryComplexity.Backend.CircuitCodeShift
+
+@[expose] public section
 
 /-! Polynomial header producers for a source and its two compiled coordinate-color circuits.
 Only encoded circuit header lengths determine the gate layout. -/

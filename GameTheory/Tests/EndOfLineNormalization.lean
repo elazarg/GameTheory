@@ -1,4 +1,8 @@
-import GameTheory.Math.EndOfLineNormalization
+module
+
+public import GameTheory.Math.EndOfLineNormalization
+
+@[expose] public section
 
 /-! Pointer normalization preserves genuine endpoints while rejecting isolated
 inconsistencies. Raw witnesses still include a broken outgoing link at the origin. -/

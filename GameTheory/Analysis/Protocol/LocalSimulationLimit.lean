@@ -1,8 +1,12 @@
+module
+
 /- Copyright (c) 2026 VegasCore contributors. Released under MIT; see NOTICE. -/
 
-import GameTheory.Analysis.Protocol.UniformPolicyLimit
-import GameTheory.Analysis.Protocol.SequentialOneShot
-import GameTheory.Math.Probability.StatisticalDistanceStability
+public import GameTheory.Analysis.Protocol.UniformPolicyLimit
+public import GameTheory.Analysis.Protocol.SequentialOneShot
+public import GameTheory.Math.Probability.StatisticalDistanceStability
+
+@[expose] public section
 
 /-! # Sequential equilibrium from approximate local comparisons
 

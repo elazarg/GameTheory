@@ -1,3 +1,5 @@
+module
+
 /-
 # Trembles negligible relative to varying reach
 
@@ -7,7 +9,9 @@ bound on their reach, without that bound converging, and a fixed number of
 trembled decisions then loses negligible mass relative to it.
 -/
 
-import Mathlib.Analysis.SpecificLimits.Basic
+public import Mathlib.Analysis.SpecificLimits.Basic
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Bayesian consistency at information sites
 
@@ -5,7 +7,9 @@ This leaf derives event mass and normalized beliefs from the canonical
 behavioral assessment and history runner.
 -/
 
-import GameTheory.Protocol.HistoryEvents
+public import GameTheory.Protocol.HistoryEvents
+
+@[expose] public section
 
 noncomputable section
 

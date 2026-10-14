@@ -1,3 +1,5 @@
+module
+
 /-
 # Gibbard--Satterthwaite
 
@@ -12,7 +14,9 @@ Primary references: A. Gibbard, “Manipulation of Voting Schemes,”
 Arrow's Conditions,” *Journal of Economic Theory* 10 (1975).
 -/
 
-import GameTheory.Core.Arrow
+public import GameTheory.Core.Arrow
+
+@[expose] public section
 
 namespace GameTheory
 

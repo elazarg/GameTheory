@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-113: finite-average bridge for canonical stochastic paths
 
@@ -5,8 +7,10 @@ This file only transports a fixed finite marginal through the canonical
 infinite-play measure.  It introduces no path-coherence or limit assertion.
 -/
 
-import GameTheory.Experimental.PostArchitecture.StochasticAsymptoticPayoffs
-import GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayCoherence
+public import GameTheory.Experimental.PostArchitecture.StochasticAsymptoticPayoffs
+public import GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayCoherence
+
+@[expose] public section
 
 noncomputable section
 

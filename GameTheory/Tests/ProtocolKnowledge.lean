@@ -1,3 +1,5 @@
+module
+
 /-
 # Knowing one's own play
 
@@ -7,9 +9,11 @@ set may be certain of the opposite. Refined by own-play recall, the same player
 knows its own play everywhere.
 -/
 
-import GameTheory.Protocol.Knowledge
-import GameTheory.Protocol.OwnPlayRecall
-import GameTheory.Tests.Randomized
+public import GameTheory.Protocol.Knowledge
+public import GameTheory.Protocol.OwnPlayRecall
+public import GameTheory.Tests.Randomized
+
+@[expose] public section
 
 noncomputable section
 

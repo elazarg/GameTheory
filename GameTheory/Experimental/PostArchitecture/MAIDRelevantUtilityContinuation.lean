@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-105: replacement-uniform relevant utility continuation
 
@@ -6,8 +8,10 @@ graphical conditional-independence result.  The continuation is chosen from a
 constant-action replacement and is then reused for every owner replacement.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDTargetSurgery
-import GameTheory.Experimental.PostArchitecture.MAIDUtilityContinuationFromCI
+public import GameTheory.Experimental.PostArchitecture.MAIDTargetSurgery
+public import GameTheory.Experimental.PostArchitecture.MAIDUtilityContinuationFromCI
+
+@[expose] public section
 
 noncomputable section
 

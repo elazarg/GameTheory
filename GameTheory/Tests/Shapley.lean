@@ -1,3 +1,5 @@
+module
+
 /-
 # Public-surface tests for the Shapley value
 
@@ -7,7 +9,9 @@ third. The second theorem exercises the four named axioms as a public
 characterization rather than unfolding the weighted marginal formula.
 -/
 
-import GameTheory.Core.Shapley
+public import GameTheory.Core.Shapley
+
+@[expose] public section
 
 namespace GameTheory.Tests.Shapley
 

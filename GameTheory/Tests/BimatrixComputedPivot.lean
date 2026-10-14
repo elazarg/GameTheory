@@ -1,4 +1,9 @@
-import GameTheory.Finite.BimatrixComputedPivot
+module
+
+public import GameTheory.Finite.BimatrixComputedPivot
+import all Mathlib.LinearAlgebra.Matrix.Determinant.Bird.Defs
+
+@[expose] public section
 
 /-! A rectangular degenerate source and its computed reverse exchange. -/
 

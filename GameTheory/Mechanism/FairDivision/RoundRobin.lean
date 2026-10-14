@@ -1,12 +1,16 @@
+module
+
 /-
 Copyright (c) 2026 GameTheory contributors. All rights reserved.
 Released under the Apache 2.0 license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Mechanism.FairDivision.Basic
-import Mathlib.Data.Finset.Max
-import Mathlib.Algebra.Order.BigOperators.Group.Finset
+public import GameTheory.Mechanism.FairDivision.Basic
+public import Mathlib.Data.Finset.Max
+public import Mathlib.Algebra.Order.BigOperators.Group.Finset
+
+@[expose] public section
 
 /-!
 # Indivisible Fair Division: Round-Robin

@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-092 hostile stochastic consumer
 
@@ -7,9 +9,11 @@ player's whole two-stage payoff over a constant policy.  The final comparison
 uses the canonical Protocol runner and canonical approximate-Nash predicate.
 -/
 
-import GameTheory.Stochastic.History
-import GameTheory.Math.Probability.Mixture
-import Mathlib.Tactic.NormNum
+public import GameTheory.Stochastic.History
+public import GameTheory.Math.Probability.Mixture
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 noncomputable section
 

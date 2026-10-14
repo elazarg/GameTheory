@@ -1,3 +1,5 @@
+module
+
 /-
 EXP-131: PMF-mixture transfer and the integration boundary.
 
@@ -7,8 +9,10 @@ improves on the incumbent, and the source equilibrium transfers. Under the
 integrability-guarded preference the same action blocked the transfer.
 -/
 
-import GameTheory.Core.MixtureSimulation
-import GameTheory.Experimental.PostArchitecture.PMFStaticGate
+public import GameTheory.Core.MixtureSimulation
+public import GameTheory.Experimental.PostArchitecture.PMFStaticGate
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Ex-ante and interim equilibrium as comparison families
 
@@ -13,10 +15,12 @@ only come from interim constraints at types of probability zero, where no
 posterior exists.
 -/
 
-import GameTheory.Analysis.IncentiveHierarchy
-import GameTheory.Core.BayesianEquilibrium
-import GameTheory.Math.Probability.Conditioning
-import GameTheory.Math.Probability.Support
+public import GameTheory.Analysis.IncentiveHierarchy
+public import GameTheory.Core.BayesianEquilibrium
+public import GameTheory.Math.Probability.Conditioning
+public import GameTheory.Math.Probability.Support
+
+@[expose] public section
 
 noncomputable section
 

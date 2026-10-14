@@ -1,3 +1,5 @@
+module
+
 /-
 # Probability bounds for ordinary PMFs
 
@@ -6,7 +8,9 @@ Event mass is the canonical PMF outer-measure value, converted to a real only
 when compared with an expected payoff.
 -/
 
-import GameTheory.Math.Probability.ExpectationAlgebra
+public import GameTheory.Math.Probability.ExpectationAlgebra
+
+@[expose] public section
 
 noncomputable section
 

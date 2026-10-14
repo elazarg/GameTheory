@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite Nash bargaining
 
@@ -11,12 +13,14 @@ Primary reference: J. F. Nash Jr., “The Bargaining Problem,” *Econometrica*
 18 (1950).
 -/
 
-import Mathlib.Algebra.Order.BigOperators.GroupWithZero.Finset
-import Mathlib.Algebra.BigOperators.GroupWithZero.Finset
-import Mathlib.Data.Fintype.BigOperators
-import Mathlib.Basic.Real.Basic
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.Ring
+public import Mathlib.Algebra.Order.BigOperators.GroupWithZero.Finset
+public import Mathlib.Algebra.BigOperators.GroupWithZero.Finset
+public import Mathlib.Data.Fintype.BigOperators
+public import Mathlib.Basic.Real.Basic
+public import Mathlib.Tactic.Linarith
+public import Mathlib.Tactic.Ring
+
+@[expose] public section
 
 namespace GameTheory
 

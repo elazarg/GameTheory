@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile local-CFR witness
 
@@ -7,8 +9,10 @@ vector for every law, so the cumulative regret matcher receives a genuine
 Protocol consumer rather than one named distribution.
 -/
 
-import GameTheory.Analysis.Protocol.CounterfactualRegretMatching
-import GameTheory.Analysis.Protocol.CounterfactualRegretTest
+public import GameTheory.Analysis.Protocol.CounterfactualRegretMatching
+public import GameTheory.Analysis.Protocol.CounterfactualRegretTest
+
+@[expose] public section
 
 noncomputable section
 

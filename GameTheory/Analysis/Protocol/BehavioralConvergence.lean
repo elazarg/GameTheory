@@ -1,3 +1,5 @@
+module
+
 /-
 # Limits of behavioral continuation values
 
@@ -6,9 +8,11 @@ bounded runner. Joint convergence of beliefs then passes through assessment
 continuation values, including varying whole-policy deviations.
 -/
 
-import GameTheory.Math.Probability.Convergence
-import GameTheory.Math.Probability.Support
-import GameTheory.Analysis.Protocol.BehavioralBayes
+public import GameTheory.Math.Probability.Convergence
+public import GameTheory.Math.Probability.Support
+public import GameTheory.Analysis.Protocol.BehavioralBayes
+
+@[expose] public section
 
 noncomputable section
 

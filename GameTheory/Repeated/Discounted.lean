@@ -1,3 +1,5 @@
+module
+
 /-
 # Discounted repeated games
 
@@ -7,11 +9,13 @@ PMF over infinite histories. The induced strategic form is
 `UtilityGame.repeatedForm`, so discounted equilibrium is ordinary `IsNash`.
 -/
 
-import Mathlib.Analysis.Normed.Group.InfiniteSum
-import Mathlib.Analysis.SpecificLimits.Basic
-import Mathlib.Topology.Algebra.InfiniteSum.Module
-import GameTheory.Math.Discounted
-import GameTheory.Repeated.Basic
+public import Mathlib.Analysis.Normed.Group.InfiniteSum
+public import Mathlib.Analysis.SpecificLimits.Basic
+public import Mathlib.Topology.Algebra.InfiniteSum.Module
+public import GameTheory.Math.Discounted
+public import GameTheory.Repeated.Basic
+
+@[expose] public section
 
 noncomputable section
 

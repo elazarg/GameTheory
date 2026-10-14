@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-139: ordinary-PMF mechanism guard gate
 
@@ -12,10 +14,12 @@ failing a finiteness guard. The added control shows the changed case: an
 alternative whose expected payment is `−∞` no longer refutes incentives.
 -/
 
-import GameTheory.Mechanism.PosteriorSignals
-import GameTheory.Mechanism.PrincipalAgent
-import GameTheory.Mechanism.InformationDesign
-import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
+public import GameTheory.Mechanism.PosteriorSignals
+public import GameTheory.Mechanism.PrincipalAgent
+public import GameTheory.Mechanism.InformationDesign
+public import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
+
+@[expose] public section
 
 noncomputable section
 

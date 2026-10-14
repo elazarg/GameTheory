@@ -1,3 +1,5 @@
+module
+
 /-
 # Sequential equilibrium without perfect recall
 
@@ -7,9 +9,11 @@ wherever it can act, because it acts only before voting. Finite existence
 therefore still supplies a consistent, sequentially rational assessment.
 -/
 
-import GameTheory.Analysis.Protocol.SequentialExistence
-import GameTheory.Protocol.FiniteHorizon
-import GameTheory.Tests.Randomized
+public import GameTheory.Analysis.Protocol.SequentialExistence
+public import GameTheory.Protocol.FiniteHorizon
+public import GameTheory.Tests.Randomized
+
+@[expose] public section
 
 noncomputable section
 

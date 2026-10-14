@@ -1,5 +1,9 @@
-import GameTheory.Finite.BimatrixGateProgram
-import GameTheory.Math.ClippedArithmetic
+module
+
+public import GameTheory.Finite.BimatrixGateProgram
+public import GameTheory.Math.ClippedArithmetic
+
+@[expose] public section
 
 /-! One accepted game exercises affine and comparator outputs simultaneously,
 with nonuniform block masses and zero weights on individual actions. -/

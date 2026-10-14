@@ -1,5 +1,9 @@
-import GameTheory.Math.PerturbedDictionary
-import Mathlib.Data.Fin.VecNotation
+module
+
+public import GameTheory.Math.PerturbedDictionary
+public import Mathlib.Data.Fin.VecNotation
+
+@[expose] public section
 
 /-! Symbolic perturbations separate constant-term ratio ties, including after
 solving a nontrivial triangular basis system. -/

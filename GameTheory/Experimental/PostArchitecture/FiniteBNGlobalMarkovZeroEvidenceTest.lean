@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: global Markov with impossible evidence
 
@@ -8,8 +10,10 @@ The result uses the division-free cylinder cross-product directly and requires
 neither evidence positivity nor a conditional-law convention at zero mass.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovSoundness
-import GameTheory.Math.Probability.Product
+public import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovSoundness
+public import GameTheory.Math.Probability.Product
+
+@[expose] public section
 
 noncomputable section
 

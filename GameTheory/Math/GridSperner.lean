@@ -1,5 +1,9 @@
-import GameTheory.Math.SpernerTriangle
-import GameTheory.Math.GridFlux
+module
+
+public import GameTheory.Math.SpernerTriangle
+public import GameTheory.Math.GridFlux
+
+@[expose] public section
 
 /-! Sperner colorings of a square grid with each square split along its rising
 diagonal. Oriented edge counts cancel inside the grid; the boundary has net

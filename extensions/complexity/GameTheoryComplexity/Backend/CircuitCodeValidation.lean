@@ -1,4 +1,10 @@
-import GameTheoryComplexity.Backend.CircuitCodeShift
+module
+
+public import GameTheoryComplexity.Backend.CircuitCodeShift
+
+import Complexitylib.Classes.P.Cobham.Internal
+
+@[expose] public section
 
 /-! Polynomial-time exact syntax validation for serialized raw circuits. -/
 

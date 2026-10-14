@@ -1,5 +1,9 @@
-import Mathlib.Algebra.BigOperators.Field
-import Mathlib.Data.Matrix.Basic
+module
+
+public import Mathlib.Algebra.BigOperators.Field
+public import Mathlib.Data.Matrix.Basic
+
+@[expose] public section
 
 /-! Finite linear complementarity over an ordered field.
 

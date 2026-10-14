@@ -1,3 +1,5 @@
+module
+
 /-
 # The standard equilibrium concepts
 
@@ -17,7 +19,9 @@ argument.
 Mixed Nash is `IsNash F.mixed`, not a separate predicate.
 -/
 
-import GameTheory.Core.Deviation
+public import GameTheory.Core.Deviation
+
+@[expose] public section
 
 noncomputable section
 

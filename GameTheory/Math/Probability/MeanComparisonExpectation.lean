@@ -1,3 +1,5 @@
+module
+
 /-
 # Mean dominance of fixed laws is comparison of expectations
 
@@ -11,8 +13,10 @@ computational mean dominance is exactly the order of expectations.
 * If `E X < E Y`, the sample mean of `X - Y` is eventually negative with
   probability near one, so the gap tends to one and dominance fails.
 -/
-import GameTheory.Math.Probability.MeanComparison
-import GameTheory.Math.Probability.SignBalance
+public import GameTheory.Math.Probability.MeanComparison
+public import GameTheory.Math.Probability.SignBalance
+
+@[expose] public section
 
 noncomputable section
 

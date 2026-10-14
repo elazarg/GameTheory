@@ -1,3 +1,5 @@
+module
+
 /-
 # `GameTheory.Stochastic`
 
@@ -10,12 +12,14 @@ restart/continuation calculus, average payoff, and uniform solution concepts.
 The root carries no infinite-path outcome law or general existence claim.
 -/
 
-import GameTheory.Stochastic.Basic
-import GameTheory.Stochastic.OneStep
-import GameTheory.Stochastic.ZeroSum
-import GameTheory.Stochastic.PerfectMonitoring
-import GameTheory.Stochastic.FiniteHorizon
-import GameTheory.Stochastic.PublicPolicy
-import GameTheory.Stochastic.Uniform
-import GameTheory.Stochastic.History
-import GameTheory.Stochastic.Kuhn
+public import GameTheory.Stochastic.Basic
+public import GameTheory.Stochastic.OneStep
+public import GameTheory.Stochastic.ZeroSum
+public import GameTheory.Stochastic.PerfectMonitoring
+public import GameTheory.Stochastic.FiniteHorizon
+public import GameTheory.Stochastic.PublicPolicy
+public import GameTheory.Stochastic.Uniform
+public import GameTheory.Stochastic.History
+public import GameTheory.Stochastic.Kuhn
+
+@[expose] public section

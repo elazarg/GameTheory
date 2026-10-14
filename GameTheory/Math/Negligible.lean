@@ -1,3 +1,5 @@
+module
+
 /-
 # Negligible functions
 
@@ -9,9 +11,11 @@ security parameter and the function is a distinguishing advantage.
 The decay is two-sided: a negligible function is small in absolute value, so
 negligibility of a difference of advantages bounds it in both directions.
 -/
-import Mathlib.Analysis.Asymptotics.SuperpolynomialDecay
-import Mathlib.Analysis.SpecificLimits.Basic
-import Mathlib.Analysis.SpecificLimits.Normed
+public import Mathlib.Analysis.Asymptotics.SuperpolynomialDecay
+public import Mathlib.Analysis.SpecificLimits.Basic
+public import Mathlib.Analysis.SpecificLimits.Normed
+
+@[expose] public section
 
 namespace GameTheory.Math
 

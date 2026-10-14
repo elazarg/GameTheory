@@ -1,3 +1,5 @@
+module
+
 /-
 # Existence of a mixed equilibrium
 
@@ -18,9 +20,11 @@ The fixed-point dependency stays in Analysis. Finite sequential-equilibrium
 existence also uses it through `Analysis.LocalChoiceFixedPoint`.
 -/
 
-import GameTheory.Analysis.Payoff
-import GameTheory.Core.Response
-import FixedPointTheorems.kakutani
+public import GameTheory.Analysis.Payoff
+public import GameTheory.Core.Response
+public import FixedPointTheorems.kakutani
+
+@[expose] public section
 
 noncomputable section
 

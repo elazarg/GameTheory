@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-107: global deviation coverage from sufficient recall
 
@@ -9,9 +11,11 @@ unprocessed suffix; it does not infer whole-owner optimality from unrelated
 sitewise inequalities.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDPruningRecallOrder
-import GameTheory.Experimental.PostArchitecture.MAIDPruningSiteReduction
-import GameTheory.Experimental.PostArchitecture.MAIDStrategicNonreachabilityList
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningRecallOrder
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningSiteReduction
+public import GameTheory.Experimental.PostArchitecture.MAIDStrategicNonreachabilityList
+
+@[expose] public section
 
 noncomputable section
 

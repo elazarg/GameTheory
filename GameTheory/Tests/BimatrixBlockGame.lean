@@ -1,6 +1,10 @@
-import GameTheory.Finite.BimatrixBlockGame
-import Mathlib.Algebra.BigOperators.Fin
-import Mathlib.Tactic.FinCases
+module
+
+public import GameTheory.Finite.BimatrixBlockGame
+public import Mathlib.Algebra.BigOperators.Fin
+public import Mathlib.Tactic.FinCases
+
+@[expose] public section
 
 /-! Matching-block equilibrium controls include nonuniform block masses and
 unsupported individual actions, despite full block support. -/

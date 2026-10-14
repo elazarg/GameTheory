@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: query-cylinder finite Fubini identities
 
@@ -7,8 +9,10 @@ proof is probability-only: it reuses retained-cylinder decomposition and a
 transport-free equivalence between a newly retained block and `retained \ fixed`.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNRetainedSum
-import GameTheory.Experimental.PostArchitecture.FiniteBNScoreAssembly
+public import GameTheory.Experimental.PostArchitecture.FiniteBNRetainedSum
+public import GameTheory.Experimental.PostArchitecture.FiniteBNScoreAssembly
+
+@[expose] public section
 
 noncomputable section
 

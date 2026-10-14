@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-074: finite-support compound-indifference boundary
 
@@ -7,7 +9,9 @@ carrier and arbitrary PMF branches. No second preference axiom or lottery
 carrier is defined here.
 -/
 
-import GameTheory.Core.VNM
+public import GameTheory.Core.VNM
+
+@[expose] public section
 
 namespace GameTheory.Experimental.PostArchitecture.VNMFiniteSupport
 

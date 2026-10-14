@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BinarySignedIndicator
-import GameTheoryComplexity.Backend.BrouwerNashProgram
+module
+
+public import GameTheoryComplexity.Backend.BinarySignedIndicator
+public import GameTheoryComplexity.Backend.BrouwerNashProgram
+
+@[expose] public section
 
 /-! Coefficient equations connecting unary scalar queries with the canonical gate factories. -/
 namespace GameTheory.Complexity.Backend.BrouwerNashCoefficientQuery

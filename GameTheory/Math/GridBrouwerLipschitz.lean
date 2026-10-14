@@ -1,6 +1,10 @@
-import GameTheory.Math.GridBrouwerContinuous
-import Mathlib.Analysis.Normed.Group.Uniform
-import Mathlib.Analysis.Normed.Field.Basic
+module
+
+public import GameTheory.Math.GridBrouwerContinuous
+public import Mathlib.Analysis.Normed.Group.Uniform
+public import Mathlib.Analysis.Normed.Field.Basic
+
+@[expose] public section
 
 /-!
 # Lipschitz bounds for triangular grid displacement

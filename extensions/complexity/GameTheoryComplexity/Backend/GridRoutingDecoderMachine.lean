@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.GridRoutingCandidateMachine
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingCandidateMachine
+
+@[expose] public section
 
 /-! Six fixed local candidates suffice to invert the routed grid image.
 Two virtual-center candidates are validated even when no crossing is present;

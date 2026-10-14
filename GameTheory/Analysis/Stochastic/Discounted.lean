@@ -1,3 +1,5 @@
+module
+
 /-
 # Discounted values of zero-sum stochastic games
 
@@ -18,11 +20,13 @@ does not introduce an infinite path law or claim optimality against arbitrary
 infinite-history strategies.
 -/
 
-import GameTheory.Analysis.MatrixValue
-import GameTheory.Stochastic.ZeroSum
-import GameTheory.Stochastic.OneStep
-import Mathlib.Topology.MetricSpace.Contracting
-import Mathlib.Analysis.Normed.Lp.lpSpace
+public import GameTheory.Analysis.MatrixValue
+public import GameTheory.Stochastic.ZeroSum
+public import GameTheory.Stochastic.OneStep
+public import Mathlib.Topology.MetricSpace.Contracting
+public import Mathlib.Analysis.Normed.Lp.lpSpace
+
+@[expose] public section
 
 noncomputable section
 

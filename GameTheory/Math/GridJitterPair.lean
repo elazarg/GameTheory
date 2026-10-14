@@ -1,7 +1,11 @@
-import Mathlib.Algebra.Order.Field.Power
-import GameTheory.Math.GridJitter
-import GameTheory.Math.ClippedArithmetic
-import Mathlib.Data.Fintype.Fin
+module
+
+public import Mathlib.Algebra.Order.Field.Power
+public import GameTheory.Math.GridJitter
+public import GameTheory.Math.ClippedArithmetic
+public import Mathlib.Data.Fintype.Fin
+
+@[expose] public section
 
 /-! Two-coordinate jitter avoids interior grid boundaries at all but two sample indices.
 The clipped forty-one-sample progression also stays within twenty spacings of its center. -/

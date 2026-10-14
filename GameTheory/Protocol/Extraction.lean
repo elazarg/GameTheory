@@ -1,3 +1,5 @@
+module
+
 /-
 # Reachable decision sites and strategy extraction
 
@@ -17,7 +19,9 @@ under proof irrelevance. Here we only ask whether a history *exists*, which is
 honestly a `Prop`.
 -/
 
-import GameTheory.Protocol.Execution
+public import GameTheory.Protocol.Execution
+
+@[expose] public section
 
 noncomputable section
 

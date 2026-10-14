@@ -1,3 +1,5 @@
+module
+
 /-
 # Optimality under outcome-law coverage
 
@@ -7,7 +9,9 @@ Existence of all compared expectations is transported with the inequality;
 no assumption of finite values is needed.
 -/
 
-import GameTheory.Protocol.Context
+public import GameTheory.Protocol.Context
+
+@[expose] public section
 
 noncomputable section
 

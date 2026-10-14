@@ -1,5 +1,9 @@
-import GameTheory.Core.ConstrainedNash
-import GameTheory.Finite.BimatrixTableCorrectness
+module
+
+public import GameTheory.Core.ConstrainedNash
+public import GameTheory.Finite.BimatrixTableCorrectness
+
+@[expose] public section
 
 /-! The decision language for payoff-constrained equilibria of explicit symmetric
 integer payoff tables. Its game semantics and decoding use no machine library. -/

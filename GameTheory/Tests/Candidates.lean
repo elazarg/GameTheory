@@ -1,3 +1,5 @@
+module
+
 /-
 # The two execution presentations on one game
 
@@ -17,8 +19,10 @@ Three probes, all built in up front:
   total evaluator. The certificate is exhibited.
 -/
 
-import GameTheory.Protocol.Tree
-import GameTheory.Tests.Execution
+public import GameTheory.Protocol.Tree
+public import GameTheory.Tests.Execution
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,6 +1,12 @@
-import Complexitylib.Mathlib.NatBits
-import Complexitylib.Classes.P.Cobham
-import Mathlib.Tactic.FinCases
+module
+
+public import Complexitylib.Mathlib.NatBits
+public import Complexitylib.Classes.P.Cobham
+public import Mathlib.Tactic.FinCases
+
+import Complexitylib.Classes.P.Cobham.Internal.Algebra
+
+@[expose] public section
 
 /-! Division by three scans binary digits from high to low. A two-bit remainder
 header and a growing little-endian quotient form its linearly bounded word state. -/

@@ -1,3 +1,5 @@
+module
+
 /-
 # Power-index fixture
 
@@ -6,7 +8,9 @@ raw probabilistic Banzhaf value one half, while every agent has normalized
 Shapley--Shubik power one third, so the fixture distinguishes the two indices.
 -/
 
-import GameTheory.Cooperative.ShapleyShubik
+public import GameTheory.Cooperative.ShapleyShubik
+
+@[expose] public section
 
 namespace GameTheory.Tests.Banzhaf
 

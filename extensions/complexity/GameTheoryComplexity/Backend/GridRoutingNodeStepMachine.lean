@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.GridRoutingNodeMachine
-import GameTheoryComplexity.Backend.GridRoutingWireMachine
-import GameTheoryComplexity.Backend.GridRoutingWords
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingNodeMachine
+public import GameTheoryComplexity.Backend.GridRoutingWireMachine
+public import GameTheoryComplexity.Backend.GridRoutingWords
+
+@[expose] public section
 
 /-! Guarded internal node steps follow active source-indexed wires and rejoin
 their original vertices. Idle labels retain their complete raw word. -/

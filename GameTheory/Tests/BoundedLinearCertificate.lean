@@ -1,4 +1,8 @@
-import GameTheory.Math.BoundedLinearCertificate
+module
+
+public import GameTheory.Math.BoundedLinearCertificate
+
+@[expose] public section
 
 /-! Negative coefficients and empty systems exercise generic bounded witnesses
 independently of game semantics. -/

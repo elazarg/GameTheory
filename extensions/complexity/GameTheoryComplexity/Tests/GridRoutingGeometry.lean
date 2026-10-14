@@ -1,10 +1,14 @@
-import GameTheoryComplexity.Backend.GridRoutingArithmetic
-import GameTheoryComplexity.Backend.GridRoutingBitFields
-import GameTheoryComplexity.Backend.GridRoutingGeometryMachine
-import GameTheoryComplexity.Backend.GridRoutingGuards
-import GameTheoryComplexity.Backend.GridRoutingQueries
-import GameTheoryComplexity.Backend.GridRoutingCrossingMachine
-import GameTheoryComplexity.Backend.GridRoutingWireMachine
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingArithmetic
+public import GameTheoryComplexity.Backend.GridRoutingBitFields
+public import GameTheoryComplexity.Backend.GridRoutingGeometryMachine
+public import GameTheoryComplexity.Backend.GridRoutingGuards
+public import GameTheoryComplexity.Backend.GridRoutingQueries
+public import GameTheoryComplexity.Backend.GridRoutingCrossingMachine
+public import GameTheoryComplexity.Backend.GridRoutingWireMachine
+
+@[expose] public section
 
 /-! Routing arithmetic controls distinguish numeric equality from word equality,
 exercise retained carries and truncation, and test exact lane membership. -/

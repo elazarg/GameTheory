@@ -1,3 +1,5 @@
+module
+
 /-
 # Correlation and strict dominance
 
@@ -14,8 +16,10 @@ Primary reference: R. J. Aumann, “Subjectivity and Correlation in Randomized
 Strategies,” *Journal of Mathematical Economics* 1 (1974).
 -/
 
-import GameTheory.Core.Response
-import GameTheory.Math.Probability.ExpectationConditioning
+public import GameTheory.Core.Response
+public import GameTheory.Math.Probability.ExpectationConditioning
+
+@[expose] public section
 
 noncomputable section
 

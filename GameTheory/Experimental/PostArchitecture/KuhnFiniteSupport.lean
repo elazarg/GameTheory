@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-115: horizon-relative Kuhn realization
 
@@ -7,9 +9,11 @@ distinct decision information states.  The stable bounded realization theorem
 constructs a finite-support mixed witness without `Fintype InfoState`.
 -/
 
-import GameTheory.Protocol.Information
-import GameTheory.Protocol.PolicyRandomization
-import GameTheory.Math.Probability.Mixture
+public import GameTheory.Protocol.Information
+public import GameTheory.Protocol.PolicyRandomization
+public import GameTheory.Math.Probability.Mixture
+
+@[expose] public section
 
 noncomputable section
 

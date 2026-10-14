@@ -1,11 +1,15 @@
-import GameTheoryComplexity.Backend.BrouwerNashLayout
-import GameTheoryComplexity.Backend.BimatrixRawGate
-import Complexitylib.Circuits.Encoding.Shift
-import GameTheory.Finite.BimatrixBinaryExtraction
-import GameTheory.Finite.BimatrixDyadicGate
-import GameTheory.Finite.BimatrixFeedbackGate
-import GameTheory.Finite.BimatrixInterpolationGate
-import GameTheory.Finite.BimatrixColorMeanGate
+module
+
+public import GameTheoryComplexity.Backend.BrouwerNashLayout
+public import GameTheoryComplexity.Backend.BimatrixRawGate
+public import Complexitylib.Circuits.Encoding.Shift
+public import GameTheory.Finite.BimatrixBinaryExtraction
+public import GameTheory.Finite.BimatrixDyadicGate
+public import GameTheory.Finite.BimatrixFeedbackGate
+public import GameTheory.Finite.BimatrixInterpolationGate
+public import GameTheory.Finite.BimatrixColorMeanGate
+
+@[expose] public section
 
 /-! A canonical paired-action program for jittered two-coordinate color feedback.
 The numeric allocation is shared with the executable coefficient writer. Every block specializes

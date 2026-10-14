@@ -1,6 +1,10 @@
-import GameTheory.Math.IntegerCramerComputation
-import GameTheory.Math.PerturbedDictionary
-import GameTheory.Math.IntegerRatioSelection
+module
+
+public import GameTheory.Math.IntegerCramerComputation
+public import GameTheory.Math.PerturbedDictionary
+public import GameTheory.Math.IntegerRatioSelection
+
+@[expose] public section
 
 /-! # Materialized integer symbolic dictionaries
 

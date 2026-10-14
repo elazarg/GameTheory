@@ -1,4 +1,8 @@
-import GameTheory.Math.SpernerGridGraph
+module
+
+public import GameTheory.Math.SpernerGridGraph
+
+@[expose] public section
 
 /-! Local graph controls cover short paths, a disconnected six-triangle cycle,
 the smallest grid, and isolation of unused coordinate encodings. -/

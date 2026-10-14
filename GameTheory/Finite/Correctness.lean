@@ -1,3 +1,5 @@
+module
+
 /-
 # Correctness of the executable frontend
 
@@ -10,8 +12,10 @@ This module may import Core and real-valued semantics; the algorithm module may
 not.
 -/
 
-import GameTheory.Core.Response
-import GameTheory.Finite.Algorithm
+public import GameTheory.Core.Response
+public import GameTheory.Finite.Algorithm
+
+@[expose] public section
 
 noncomputable section
 

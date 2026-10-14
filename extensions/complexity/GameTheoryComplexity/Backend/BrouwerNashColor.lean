@@ -1,11 +1,15 @@
-import GameTheoryComplexity.Backend.BrouwerNashProgram
-import GameTheoryComplexity.Backend.BimatrixCoordinateColor
-import GameTheoryComplexity.Backend.BimatrixRawCircuit
-import Complexitylib.Mathlib.NatBits
-import GameTheory.Math.BinaryExtraction
-import GameTheoryComplexity.Backend.BimatrixRawGate
-import GameTheory.Math.ClippedArithmetic
-import GameTheory.Finite.BimatrixArithmeticGate
+module
+
+public import GameTheoryComplexity.Backend.BrouwerNashProgram
+public import GameTheoryComplexity.Backend.BimatrixCoordinateColor
+public import GameTheoryComplexity.Backend.BimatrixRawCircuit
+public import Complexitylib.Mathlib.NatBits
+public import GameTheory.Math.BinaryExtraction
+public import GameTheoryComplexity.Backend.BimatrixRawGate
+public import GameTheory.Math.ClippedArithmetic
+public import GameTheory.Finite.BimatrixArithmeticGate
+
+@[expose] public section
 /-! Exact prefix digits drive Boolean ripple increments and all four extended corner inputs.
 The canonical program copies those bits into its relocated raw color circuits; every valid
 certificate then approximates each evaluated color flag without accumulating circuit depth. -/

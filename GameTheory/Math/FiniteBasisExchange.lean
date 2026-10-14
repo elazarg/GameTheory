@@ -1,6 +1,10 @@
-import Mathlib.Data.Finset.Sort
-import Mathlib.Data.Fintype.Card
-import Mathlib.Data.Finset.BooleanAlgebra
+module
+
+public import Mathlib.Data.Finset.Sort
+public import Mathlib.Data.Fintype.Card
+public import Mathlib.Data.Finset.BooleanAlgebra
+
+@[expose] public section
 
 /-! Exchange of finite basis labels with canonical sorted enumeration.
 

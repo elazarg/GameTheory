@@ -1,3 +1,5 @@
+module
+
 /-
 # The finite Electronic Mail example
 
@@ -7,12 +9,14 @@ belief, and the tempting attack-on-message plan fails ordinary Nash equilibrium
 of the direct Bayesian form.
 -/
 
-import GameTheory.Core.BayesianEquilibrium
-import GameTheory.Epistemic.Approximate
-import GameTheory.Math.Probability.Uniform
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.NormNum
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Core.BayesianEquilibrium
+public import GameTheory.Epistemic.Approximate
+public import GameTheory.Math.Probability.Uniform
+public import Mathlib.Tactic.Linarith
+public import Mathlib.Tactic.NormNum
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

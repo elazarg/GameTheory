@@ -1,3 +1,5 @@
+module
+
 /-
 # Consistent completion beyond an action restriction
 
@@ -11,9 +13,11 @@ carries the prescribed beliefs across. Incentives at retained sites are a
 separate obligation, not assumed here.
 -/
 
-import GameTheory.Analysis.Protocol.AgentCompletion
-import GameTheory.Analysis.Protocol.RestrictionBeliefs
-import GameTheory.Math.Probability.RelativeTremble
+public import GameTheory.Analysis.Protocol.AgentCompletion
+public import GameTheory.Analysis.Protocol.RestrictionBeliefs
+public import GameTheory.Math.Probability.RelativeTremble
+
+@[expose] public section
 
 noncomputable section
 

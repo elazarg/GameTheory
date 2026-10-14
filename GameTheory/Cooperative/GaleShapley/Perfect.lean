@@ -1,3 +1,5 @@
+module
+
 /-
 # Perfect stable matchings
 
@@ -5,7 +7,9 @@ In a balanced finite market where every possible partner is strictly better
 than the outside option, stability forces every agent to be matched.
 -/
 
-import GameTheory.Cooperative.GaleShapley
+public import GameTheory.Cooperative.GaleShapley
+
+@[expose] public section
 
 namespace GameTheory
 

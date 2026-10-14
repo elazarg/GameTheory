@@ -1,3 +1,5 @@
+module
+
 /-
 # `GameTheory.Analysis.Protocol`
 
@@ -6,16 +8,18 @@ sequential rationality flow upward; pointwise limit consistency never flows
 back into Protocol.
 -/
 
-import GameTheory.Analysis.Protocol.Sequential
-import GameTheory.Analysis.Protocol.Incentives
-import GameTheory.Analysis.Protocol.InformationLocalization
-import GameTheory.Analysis.Protocol.SubgameLocalization
-import GameTheory.Analysis.Protocol.EFG
-import GameTheory.Analysis.Protocol.CounterfactualReach
-import GameTheory.Analysis.Protocol.CounterfactualRegret
-import GameTheory.Analysis.Protocol.CounterfactualDecomposition
-import GameTheory.Analysis.Protocol.CounterfactualRegretMatching
-import GameTheory.Analysis.Protocol.CounterfactualRootRegret
+public import GameTheory.Analysis.Protocol.Sequential
+public import GameTheory.Analysis.Protocol.Incentives
+public import GameTheory.Analysis.Protocol.InformationLocalization
+public import GameTheory.Analysis.Protocol.SubgameLocalization
+public import GameTheory.Analysis.Protocol.EFG
+public import GameTheory.Analysis.Protocol.CounterfactualReach
+public import GameTheory.Analysis.Protocol.CounterfactualRegret
+public import GameTheory.Analysis.Protocol.CounterfactualDecomposition
+public import GameTheory.Analysis.Protocol.CounterfactualRegretMatching
+public import GameTheory.Analysis.Protocol.CounterfactualRootRegret
+
+@[expose] public section
 
 namespace GameTheory.Analysis.Protocol
 

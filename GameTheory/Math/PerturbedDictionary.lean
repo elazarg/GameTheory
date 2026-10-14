@@ -1,4 +1,8 @@
-import Mathlib.LinearAlgebra.Matrix.NonsingularInverse
+module
+
+public import Mathlib.LinearAlgebra.Matrix.NonsingularInverse
+
+@[expose] public section
 
 /-! Coefficient vectors for a linear system with symbolic right-hand-side perturbations.
 

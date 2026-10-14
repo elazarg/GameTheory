@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinaryWordMultiplication
+module
+
+public import GameTheoryComplexity.Backend.BinaryWordMultiplication
+
+@[expose] public section
 
 /-! Signed binary multiplication and comparison with explicit sign headers.
 

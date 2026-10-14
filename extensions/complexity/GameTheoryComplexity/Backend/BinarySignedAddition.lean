@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BinarySignedArithmetic
-import GameTheoryComplexity.Backend.BinaryWordSubtraction
+module
+
+public import GameTheoryComplexity.Backend.BinarySignedArithmetic
+public import GameTheoryComplexity.Backend.BinaryWordSubtraction
+
+@[expose] public section
 
 /-! Exact signed addition using bit-length-bounded magnitude arithmetic.
 Opposite signs subtract the smaller magnitude from the larger; equal signs

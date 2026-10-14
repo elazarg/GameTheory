@@ -1,5 +1,10 @@
-import GameTheory.Math.IntegerDictionaryComputation
-import Mathlib.LinearAlgebra.Matrix.Notation
+module
+
+public import GameTheory.Math.IntegerDictionaryComputation
+public import Mathlib.LinearAlgebra.Matrix.Notation
+import all Mathlib.LinearAlgebra.Matrix.Determinant.Bird.Defs
+
+@[expose] public section
 
 /-! Controls for executable symbolic ratio scans and signed common-scale dictionaries. -/
 

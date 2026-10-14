@@ -1,3 +1,5 @@
+module
+
 /-
 # Coarse correlated equilibrium without correlated equilibrium, at full support
 
@@ -12,8 +14,10 @@ The mediated extension therefore preserves correlated equilibrium but not
 coarse correlated equilibrium, and the commitment form the reverse.
 -/
 
-import GameTheory.Analysis.CorrelationHierarchy
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Analysis.CorrelationHierarchy
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 open GameTheory.Math.Probability
 

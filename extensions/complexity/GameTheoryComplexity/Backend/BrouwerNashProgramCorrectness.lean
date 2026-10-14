@@ -1,12 +1,16 @@
-import GameTheoryComplexity.Backend.BrouwerNashProgram
-import GameTheoryComplexity.Backend.BrouwerNashColor
-import GameTheoryComplexity.Backend.BrouwerNashRewardMachine
-import GameTheoryComplexity.Backend.SpernerProblem
-import GameTheory.Finite.BimatrixBrouwerGateBounds
-import GameTheory.Math.GridBrouwerErrorBudget
-import GameTheory.Math.GridBrouwerColorSample
-import GameTheory.Math.GridBrouwerJitter
-import Mathlib.Data.Rat.BigOperators
+module
+
+public import GameTheoryComplexity.Backend.BrouwerNashProgram
+public import GameTheoryComplexity.Backend.BrouwerNashColor
+public import GameTheoryComplexity.Backend.BrouwerNashRewardMachine
+public import GameTheoryComplexity.Backend.SpernerProblem
+public import GameTheory.Finite.BimatrixBrouwerGateBounds
+public import GameTheory.Math.GridBrouwerErrorBudget
+public import GameTheory.Math.GridBrouwerColorSample
+public import GameTheory.Math.GridBrouwerJitter
+public import Mathlib.Data.Rat.BigOperators
+
+@[expose] public section
 
 /-! Every accepted certificate for the concrete sampled Brouwer program yields a small
 canonical source-map residual. The proof connects the allocated extraction, color, interpolation,

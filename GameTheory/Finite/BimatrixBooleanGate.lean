@@ -1,5 +1,9 @@
-import GameTheory.Finite.BimatrixGateProgram
-import GameTheory.Math.BooleanThreshold
+module
+
+public import GameTheory.Finite.BimatrixGateProgram
+public import GameTheory.Math.BooleanThreshold
+
+@[expose] public section
 
 /-! Boolean gates specialize the common paired-action comparator program.
 Aggregated integer coefficients support aliased inputs, and normalized signals have

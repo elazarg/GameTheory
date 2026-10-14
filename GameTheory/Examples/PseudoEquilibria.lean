@@ -1,3 +1,5 @@
+module
+
 /-
 # Pseudo-equilibrium examples
 
@@ -19,13 +21,15 @@ Primary reference: A. Psomas, A. Terzoglou, Y. Wei, and V. Zikas,
 “Pseudo-Equilibria, or: How to Stop Worrying About Crypto and Just Analyze the
 Game,” arXiv:2506.22089 (2025).
 -/
-import GameTheory.Core.ExpectedUtility
-import GameTheory.Core.PseudoNash
-import GameTheory.Math.Probability.MeanComparisonExpectation
-import GameTheory.Math.Probability.SampleSumEvents
-import GameTheory.Math.Probability.Uniform
-import Mathlib.Analysis.SpecificLimits.Normed
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Core.ExpectedUtility
+public import GameTheory.Core.PseudoNash
+public import GameTheory.Math.Probability.MeanComparisonExpectation
+public import GameTheory.Math.Probability.SampleSumEvents
+public import GameTheory.Math.Probability.Uniform
+public import Mathlib.Analysis.SpecificLimits.Normed
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 open GameTheory.Math.Probability
 

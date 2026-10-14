@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.GridRoutingQueries
-import GameTheoryComplexity.Backend.EndOfLinePointerNormalization
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingQueries
+public import GameTheoryComplexity.Backend.EndOfLinePointerNormalization
+
+@[expose] public section
 
 /-! Fixed-width binary pointers and their bounded natural extensions represent
 the same incident edges. Normalized circuit queries supply natural source and

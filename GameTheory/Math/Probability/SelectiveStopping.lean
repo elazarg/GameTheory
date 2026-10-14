@@ -1,7 +1,11 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
-import GameTheory.Math.Probability.Bounds
-import GameTheory.Math.Probability.ExpectationBind
+public import GameTheory.Math.Probability.Bounds
+public import GameTheory.Math.Probability.ExpectationBind
+
+@[expose] public section
 
 /-! # Choosing whether to stop after observing a state
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-037: incomparable MAID decisions
 
@@ -12,8 +14,10 @@ evaluates utility. The main theorem proves that the canonical Protocol runner
 has exactly that terminal state law.
 -/
 
-import GameTheory.Protocol.Information
-import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Protocol.Information
+public import GameTheory.Math.Probability.ExpectationMixture
+
+@[expose] public section
 
 noncomputable section
 

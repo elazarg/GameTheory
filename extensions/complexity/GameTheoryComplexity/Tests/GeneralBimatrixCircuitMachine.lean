@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixCircuitMachine
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixCircuitMachine
+
+@[expose] public section
 
 /-! Circuit emission preserves all vertices at the serialized node width. -/
 namespace GameTheory.Complexity.Tests.GeneralBimatrixCircuitMachine

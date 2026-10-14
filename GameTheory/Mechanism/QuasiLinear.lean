@@ -1,3 +1,5 @@
+module
+
 /-
 # Quasilinear direct mechanisms
 
@@ -8,7 +10,9 @@ the library's ordinary dominant-strategy predicate rather than a parallel
 solution concept.
 -/
 
-import GameTheory.Mechanism.BayesianIncentives
+public import GameTheory.Mechanism.BayesianIncentives
+
+@[expose] public section
 
 noncomputable section
 

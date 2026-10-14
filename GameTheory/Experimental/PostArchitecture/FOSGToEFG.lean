@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-059: hostile simultaneous stochastic serialization
 
@@ -8,11 +10,13 @@ full decision prefix so tree shape is real; its information model hides that
 prefix until the source transition resolves.
 -/
 
-import GameTheory.Languages.EFG
-import GameTheory.Languages.FOSG
-import GameTheory.Math.Probability.Joint
-import GameTheory.Math.Probability.Mixture
-import GameTheory.Math.Probability.Product
+public import GameTheory.Languages.EFG
+public import GameTheory.Languages.FOSG
+public import GameTheory.Math.Probability.Joint
+public import GameTheory.Math.Probability.Mixture
+public import GameTheory.Math.Probability.Product
+
+@[expose] public section
 
 noncomputable section
 

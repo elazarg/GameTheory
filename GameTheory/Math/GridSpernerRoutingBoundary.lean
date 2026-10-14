@@ -1,4 +1,8 @@
-import GameTheory.Math.GridSpernerRouting
+module
+
+public import GameTheory.Math.GridSpernerRouting
+
+@[expose] public section
 
 /-! Inactive padding separates the routing tiles from the outer Sperner boundary.
 Boundary clipping uses only two colors in each collar, so it creates no new

@@ -1,10 +1,14 @@
+module
+
 /-
 Finite strategic choices, an infinite outcome law, and an
 unbounded but integrable utility are fed directly to mixed Nash existence.
 -/
 
-import GameTheory.Analysis.Nash
-import GameTheory.Experimental.PostArchitecture.PMFStaticGate
+public import GameTheory.Analysis.Nash
+public import GameTheory.Experimental.PostArchitecture.PMFStaticGate
+
+@[expose] public section
 
 noncomputable section
 

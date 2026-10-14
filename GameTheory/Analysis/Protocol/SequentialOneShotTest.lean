@@ -1,3 +1,5 @@
+module
+
 /-
 # One-shot optimality at an unreached decision
 
@@ -8,8 +10,10 @@ against every single-site law change, and the one-shot deviation principle for
 consistent assessments makes it a sequential equilibrium.
 -/
 
-import GameTheory.Analysis.Protocol.InformationLocalizationTest
-import GameTheory.Analysis.Protocol.SequentialOneShot
+public import GameTheory.Analysis.Protocol.InformationLocalizationTest
+public import GameTheory.Analysis.Protocol.SequentialOneShot
+
+@[expose] public section
 
 noncomputable section
 

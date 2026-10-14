@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite-law probability-bound regression
 
@@ -5,9 +7,11 @@ A proper event has mass one quarter, while a nonconstant observable is four on
 that event and zero elsewhere. Markov's inequality is exact.
 -/
 
-import GameTheory.Math.Probability.Bounds
-import GameTheory.Math.Probability.Uniform
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Math.Probability.Bounds
+public import GameTheory.Math.Probability.Uniform
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

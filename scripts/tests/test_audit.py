@@ -84,6 +84,16 @@ def raw := r#"sorry \" import Cslib.Models"#
                 self.write("GameTheory/Core/Fixture.lean", source + "\n")
                 self.assert_rejects("base module imports optional complexity surface")
 
+    def test_wrapped_public_imports_keep_boundaries_and_coverage(self):
+        self.write("GameTheory.lean", "module\npublic import\nGameTheory.Core.Fixture\n")
+        self.write("lint/GameTheory/LintAll.lean",
+                   "module\npublic\nimport GameTheory\npublic import\nGameTheory.Core.Fixture\n")
+        self.assertEqual(audit.check_sources(self.root), [])
+        source = "module\npublic\nimport\n«GameTheory».Analysis.Nash\n"
+        self.assertEqual(list(audit.imports(source)), [("GameTheory", "Analysis", "Nash")])
+        self.write("GameTheory/Core/Fixture.lean", source)
+        self.assert_rejects("Analysis/fixed-point dependency outside Analysis")
+
     def test_literal_dot_and_comment_markers_in_quoted_identifier(self):
         self.write("GameTheory/Core/Fixture.lean", '''import «GameTheoryComplexity.SampleTest»
 import «GameTheoryComplexity/-literal-/name»
@@ -323,6 +333,36 @@ class DiagnosticAuditTests(unittest.TestCase):
                                     capture_output=True, text=True, encoding="utf-8")
             self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn("depends on forbidden axiom", result.stdout + result.stderr)
+
+    def test_import_all_audits_unused_private_modern_module_declarations(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "lean-toolchain").write_text((ROOT / "lean-toolchain").read_text())
+            (root / "lakefile.lean").write_text(
+                "import Lake\nopen Lake DSL\npackage Probe\n"
+                "lean_lib External\nlean_lib GameTheory\nlean_lib Audit\n")
+            (root / "External.lean").write_text(
+                "module\nnamespace External\npublic axiom untrusted : False\nend External\n")
+            (root / "GameTheory.lean").write_text(
+                "module\nimport External\npublic theorem clean : True := True.intro\n"
+                "private theorem hiddenBad : False := External.untrusted\n")
+            implementation = (ROOT / "lint/GameTheory/AxiomAudit.lean").read_text(encoding="utf-8")
+            body = implementation[implementation.index("open Lean in"):]
+            helpers = "meta import Lean.Util.CollectAxioms\nmeta import Lean.Elab.Command\n"
+            # The public theorem keeps the ordinary-import control nonempty.
+            (root / "Audit.lean").write_text(
+                "module\nimport GameTheory\n" + helpers + body, encoding="utf-8")
+            ordinary = subprocess.run(["lake", "--iofail", "build", "Audit"], cwd=root,
+                                      capture_output=True, text=True, encoding="utf-8")
+            self.assertEqual(ordinary.returncode, 0, ordinary.stdout + ordinary.stderr)
+            (root / "Audit.lean").write_text(
+                "module\nimport all GameTheory\n" + helpers + body, encoding="utf-8")
+            complete = subprocess.run(["lake", "--iofail", "build", "Audit"], cwd=root,
+                                      capture_output=True, text=True, encoding="utf-8")
+            output = complete.stdout + complete.stderr
+            self.assertNotEqual(complete.returncode, 0, output)
+            self.assertIn("hiddenBad", output)
+            self.assertIn("depends on forbidden axiom External.untrusted", output)
 
     def test_cached_info_message_still_fails_strict_build(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -1,3 +1,5 @@
+module
+
 /-
 # General-sum discounted stationary Bellman equilibria
 
@@ -9,11 +11,13 @@ Primary reference: A. M. Fink, “Equilibrium in a Stochastic n-Person Game,”
 *Journal of Science of the Hiroshima University, Series A-I* 28 (1964).
 -/
 
-import GameTheory.Analysis.Nash
-import GameTheory.Core.MixedImprovement
-import GameTheory.Stochastic.Basic
-import GameTheory.Stochastic.OneStep
-import GameTheory.Math.PositivePartFixedPoint
+public import GameTheory.Analysis.Nash
+public import GameTheory.Core.MixedImprovement
+public import GameTheory.Stochastic.Basic
+public import GameTheory.Stochastic.OneStep
+public import GameTheory.Math.PositivePartFixedPoint
+
+@[expose] public section
 
 noncomputable section
 

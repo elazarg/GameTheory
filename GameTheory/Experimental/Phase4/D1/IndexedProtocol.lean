@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-020: indexing the carriers instead of storing them
 
@@ -16,7 +18,9 @@ histories.
 It is recorded evidence, not API. Nothing imports it.
 -/
 
-import GameTheory.Protocol.Execution
+public import GameTheory.Protocol.Execution
+
+@[expose] public section
 
 noncomputable section
 

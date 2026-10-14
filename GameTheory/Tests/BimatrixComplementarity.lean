@@ -1,6 +1,10 @@
-import GameTheory.Finite.BimatrixComplementarityCorrectness
-import Mathlib.Data.Fin.VecNotation
-import Mathlib.Tactic.FinCases
+module
+
+public import GameTheory.Finite.BimatrixComplementarityCorrectness
+public import Mathlib.Data.Fin.VecNotation
+public import Mathlib.Tactic.FinCases
+
+@[expose] public section
 
 /-! The complementary decoding accepts tied equilibria, excludes the artificial
 zero source, and recovers signed games after a positive payoff shift. -/

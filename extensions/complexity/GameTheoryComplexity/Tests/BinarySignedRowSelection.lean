@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinarySignedRowSelection
+module
+
+public import GameTheoryComplexity.Backend.BinarySignedRowSelection
+
+@[expose] public section
 
 namespace GameTheory.Complexity.Tests.BinarySignedRowSelection
 open GameTheory.Complexity.Backend

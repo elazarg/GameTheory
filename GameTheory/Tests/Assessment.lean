@@ -1,3 +1,5 @@
+module
+
 /-
 # Probes for the one-shot-deviation interface
 
@@ -12,9 +14,11 @@ would hold just as well if `value` were constant. So each probe below fixes one
 field and varies the other.
 -/
 
-import GameTheory.Protocol.Assessment
-import GameTheory.Tests.EFGZermelo
-import GameTheory.Tests.Randomized
+public import GameTheory.Protocol.Assessment
+public import GameTheory.Tests.EFGZermelo
+public import GameTheory.Tests.Randomized
+
+@[expose] public section
 
 noncomputable section
 

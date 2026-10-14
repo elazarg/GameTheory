@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BrouwerReduction
-import GameTheoryComplexity.Backend.BrouwerVerifier
+module
+
+public import GameTheoryComplexity.Backend.BrouwerReduction
+public import GameTheoryComplexity.Backend.BrouwerVerifier
+
+@[expose] public section
 
 /-! PPAD-completeness of approximate fixed-point search for succinct continuous
 triangular maps of the unit square. Answers encode arbitrary rational output

@@ -1,3 +1,5 @@
+module
+
 /-
 # Conditioning through observation channels
 
@@ -14,7 +16,9 @@ Every posterior here is the total `fiberPosterior`; hypotheses of positive
 mass appear only where a fiber must actually be met.
 -/
 
-import GameTheory.Math.Probability.Conditioning
+public import GameTheory.Math.Probability.Conditioning
+
+@[expose] public section
 
 noncomputable section
 

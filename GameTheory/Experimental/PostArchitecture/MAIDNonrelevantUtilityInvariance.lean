@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-105: nonrelevant utility-term invariance
 
@@ -7,9 +9,11 @@ the two mapped canonical augmented laws through parent-closed kernel
 invariance; it does not define another evaluator.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNKernelInvariance
-import GameTheory.Experimental.PostArchitecture.MAIDReplacementInvariantUtility
-import GameTheory.Experimental.PostArchitecture.MAIDUtilityConditionalIndependence
+public import GameTheory.Experimental.PostArchitecture.FiniteBNKernelInvariance
+public import GameTheory.Experimental.PostArchitecture.MAIDReplacementInvariantUtility
+public import GameTheory.Experimental.PostArchitecture.MAIDUtilityConditionalIndependence
+
+@[expose] public section
 
 noncomputable section
 

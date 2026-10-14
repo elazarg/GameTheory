@@ -1,3 +1,5 @@
+module
+
 /-
 # Profile-transfer implementation witnesses
 
@@ -7,7 +9,9 @@ singleton target and a larger cylinder target. Zero transfer leaves the
 all-false profile undominated and therefore fails both targets.
 -/
 
-import GameTheory.Mechanism.Implementation
+public import GameTheory.Mechanism.Implementation
+
+@[expose] public section
 
 noncomputable section
 

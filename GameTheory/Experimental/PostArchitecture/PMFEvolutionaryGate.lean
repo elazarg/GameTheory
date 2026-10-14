@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-137: positive-invasion integrability in mixed evolutionary stability
 
@@ -13,8 +15,10 @@ small-invasion rejection is therefore proved directly from that infinite
 fitness instead of through the integrable all-pair characterization.
 -/
 
-import GameTheory.Evolutionary
-import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
+public import GameTheory.Evolutionary
+public import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
+
+@[expose] public section
 
 noncomputable section
 

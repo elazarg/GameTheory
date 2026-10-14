@@ -1,3 +1,5 @@
+module
+
 /-
 # GameTheory.Epistemic
 
@@ -7,10 +9,12 @@ history-local Protocol information; it introduces no separate common-prior
 data structure.
 -/
 
-import GameTheory.Epistemic.Agreement
-import GameTheory.Epistemic.Approximate
-import GameTheory.Epistemic.ApproximateAgreement
-import GameTheory.Epistemic.Knowledge
+public import GameTheory.Epistemic.Agreement
+public import GameTheory.Epistemic.Approximate
+public import GameTheory.Epistemic.ApproximateAgreement
+public import GameTheory.Epistemic.Knowledge
+
+@[expose] public section
 
 namespace GameTheory.Epistemic
 

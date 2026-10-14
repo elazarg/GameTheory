@@ -1,3 +1,5 @@
+module
+
 /-
 # Best response, dominance, and pure rationalizability
 
@@ -16,7 +18,9 @@ rationality compares those same canonical expected utilities with an explicit
 reservation vector.
 -/
 
-import GameTheory.Core.Utility
+public import GameTheory.Core.Utility
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: hostile collider consumer for finite global-Markov soundness
 
@@ -10,8 +12,10 @@ The finite law is written explicitly and accompanied by a proved local-factor
 certificate.  This is a test fixture, not another Bayesian-network evaluator.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovSoundness
-import GameTheory.Math.Probability.Mixture
+public import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovSoundness
+public import GameTheory.Math.Probability.Mixture
+
+@[expose] public section
 
 noncomputable section
 

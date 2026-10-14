@@ -1,3 +1,5 @@
+module
+
 /-
 # Mixed cheap talk as public randomization
 
@@ -7,7 +9,9 @@ deviations turns mixed Nash of the extension into correlated equilibrium of the
 base form without introducing a communication-specific solution concept.
 -/
 
-import GameTheory.Core.CheapTalk
+public import GameTheory.Core.CheapTalk
+
+@[expose] public section
 
 noncomputable section
 

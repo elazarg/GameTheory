@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinarySignedMatrixMachine
+module
+
+public import GameTheoryComplexity.Backend.BinarySignedMatrixMachine
+
+@[expose] public section
 
 /-! Kernel controls for fixed-width arithmetic and stored dot-product accumulators. -/
 namespace GameTheory.Complexity.Tests.BinarySignedMatrixMachine

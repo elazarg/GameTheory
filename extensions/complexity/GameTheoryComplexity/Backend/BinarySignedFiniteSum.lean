@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BinarySignedAddition
-import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+module
+
+public import GameTheoryComplexity.Backend.BinarySignedAddition
+public import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+
+@[expose] public section
 
 /-! Signed summation over a fixed, compile-time number of indexed queries. -/
 namespace GameTheory.Complexity.Backend

@@ -1,6 +1,10 @@
-import GameTheory.Finite.BimatrixPivot
-import GameTheory.Finite.BimatrixBasisBounds
-import GameTheory.Math.IntegerDictionaryComputation
+module
+
+public import GameTheory.Finite.BimatrixPivot
+public import GameTheory.Finite.BimatrixBasisBounds
+public import GameTheory.Math.IntegerDictionaryComputation
+
+@[expose] public section
 
 /-! # Executable symbolic bimatrix pivots
 

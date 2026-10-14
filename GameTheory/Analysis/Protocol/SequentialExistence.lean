@@ -1,3 +1,5 @@
+module
+
 /-
 # Existence of sequential equilibria
 
@@ -8,11 +10,13 @@ forget its own play. Compactness supplies one joint strategy/belief limit, and
 vanishingly perturbed deviations recover unrestricted sequential rationality.
 -/
 
-import GameTheory.Analysis.Protocol.AssessmentCompactness
-import GameTheory.Analysis.Protocol.SequentialPerturbation
-import GameTheory.Analysis.Protocol.SequentialOneShot
-import GameTheory.Analysis.Protocol.SequentialLimits
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Analysis.Protocol.AssessmentCompactness
+public import GameTheory.Analysis.Protocol.SequentialPerturbation
+public import GameTheory.Analysis.Protocol.SequentialOneShot
+public import GameTheory.Analysis.Protocol.SequentialLimits
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 open GameTheory.Math.Probability
 

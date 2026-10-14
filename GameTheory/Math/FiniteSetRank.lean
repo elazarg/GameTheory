@@ -1,5 +1,9 @@
-import Mathlib.Data.Finset.Sort
-import Mathlib.Order.Interval.Finset.Fin
+module
+
+public import Mathlib.Data.Finset.Sort
+public import Mathlib.Order.Interval.Finset.Fin
+
+@[expose] public section
 
 /-! Ranks in canonically sorted finite sets. Counting elements strictly below a
 member recovers its ordinal, independently of the finite set's representation. -/

@@ -1,6 +1,10 @@
-import GameTheory.Finite.BimatrixBasisSolution
-import GameTheory.Math.IntegerBasisBounds
-import GameTheory.Finite.BimatrixEndpointBounds
+module
+
+public import GameTheory.Finite.BimatrixBasisSolution
+public import GameTheory.Math.IntegerBasisBounds
+public import GameTheory.Finite.BimatrixEndpointBounds
+
+@[expose] public section
 
 /-! Polynomial binary bounds on every certified bimatrix basis.
 Integer column encodings coincide with the canonical rational columns. Cramer

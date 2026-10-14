@@ -1,6 +1,10 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
-import GameTheory.Math.Probability.Conditioning
+public import GameTheory.Math.Probability.Conditioning
+
+@[expose] public section
 
 /-! # Sequential sampling of finite transcripts
 

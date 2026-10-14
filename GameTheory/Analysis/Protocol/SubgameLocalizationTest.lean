@@ -1,3 +1,5 @@
+module
+
 /-
 # Nash and subgame perfection separate at an unreached subgame
 
@@ -10,8 +12,10 @@ Nash, and a strategic form whose compilation into the sequential game
 preserves Nash but not subgame perfection.
 -/
 
-import GameTheory.Analysis.Protocol.SubgameLocalization
-import GameTheory.Tests.SubgamePerfect
+public import GameTheory.Analysis.Protocol.SubgameLocalization
+public import GameTheory.Tests.SubgamePerfect
+
+@[expose] public section
 
 noncomputable section
 

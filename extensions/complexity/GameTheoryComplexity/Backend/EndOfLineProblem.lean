@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.CircuitVectorMachine
-import GameTheoryComplexity.Backend.EndOfLineTotality
-import Complexitylib.Classes.FNP.Defs
+module
+
+public import GameTheoryComplexity.Backend.CircuitVectorMachine
+public import GameTheoryComplexity.Backend.EndOfLineTotality
+public import Complexitylib.Classes.FNP.Defs
+
+@[expose] public section
 
 /-! Succinct End-of-Line instances use a width ruler and two serialized circuit
 vectors. Every word denotes an instance: malformed scalar circuits give zero bits,

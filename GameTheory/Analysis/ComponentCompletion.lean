@@ -1,9 +1,13 @@
+module
+
 /- Copyright (c) 2026 VegasCore contributors. Released under MIT; see NOTICE. -/
 
-import GameTheory.Core.StrategySubstitution
-import GameTheory.Analysis.Nash
-import GameTheory.Analysis.LocalChoiceFixedPoint
-import GameTheory.Math.Probability.AggregateComparison
+public import GameTheory.Core.StrategySubstitution
+public import GameTheory.Analysis.Nash
+public import GameTheory.Analysis.LocalChoiceFixedPoint
+public import GameTheory.Math.Probability.AggregateComparison
+
+@[expose] public section
 
 /-! # Optimal component mixtures with shared mixture weights
 

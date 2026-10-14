@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile counterfactual-regret witness
 
@@ -7,8 +9,10 @@ pure-`true` replacement is profitable and a pure-`false` replacement is
 strictly harmful relative to the fully mixed policy.
 -/
 
-import GameTheory.Analysis.Protocol.CounterfactualRegret
-import GameTheory.Analysis.Protocol.EFGTest
+public import GameTheory.Analysis.Protocol.CounterfactualRegret
+public import GameTheory.Analysis.Protocol.EFGTest
+
+@[expose] public section
 
 noncomputable section
 

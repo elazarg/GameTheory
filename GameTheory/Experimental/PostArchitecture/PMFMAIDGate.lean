@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-140: ordinary-PMF typed MAID gate
 
@@ -10,8 +12,10 @@ defined value `⊤`, so Nash fails because that deviation is infinitely
 profitable rather than because it is incomparable.
 -/
 
-import GameTheory.Languages.MAID.Strategic
-import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
+public import GameTheory.Languages.MAID.Strategic
+public import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,5 +1,9 @@
-import GameTheory.Math.OrientedInvolutionPath
-import GameTheory.Math.EndOfLineNormalization
+module
+
+public import GameTheory.Math.OrientedInvolutionPath
+public import GameTheory.Math.EndOfLineNormalization
+
+@[expose] public section
 
 /-! Raw End-of-Line witnesses on alternating involution paths.
 Source pointer consistency rules out an outgoing inconsistency at the origin;

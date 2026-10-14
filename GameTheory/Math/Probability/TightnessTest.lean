@@ -1,3 +1,5 @@
+module
+
 /-
 # Tightness boundary controls for PMFs
 
@@ -5,9 +7,11 @@ The Dirac sequence on `Nat` loses all pointwise mass at each fixed atom. Its
 mass therefore cannot converge pointwise along any subsequence to a PMF.
 -/
 
-import GameTheory.Math.Probability.Convergence
-import GameTheory.Math.Probability.Compactness
-import Mathlib.Probability.Distributions.Geometric
+public import GameTheory.Math.Probability.Convergence
+public import GameTheory.Math.Probability.Compactness
+public import Mathlib.Probability.Distributions.Geometric
+
+@[expose] public section
 
 noncomputable section
 

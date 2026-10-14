@@ -1,3 +1,5 @@
+module
+
 /-
 # The revelation principle
 
@@ -6,7 +8,9 @@ mechanism in which truthful reporting is Bayes-Nash, using the ordinary
 Bayesian game and equilibrium predicates.
 -/
 
-import GameTheory.Mechanism.BayesianIncentives
+public import GameTheory.Mechanism.BayesianIncentives
+
+@[expose] public section
 
 noncomputable section
 

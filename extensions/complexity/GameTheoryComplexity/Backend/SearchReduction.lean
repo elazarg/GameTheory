@@ -1,5 +1,11 @@
-import Complexitylib.Classes.FNP.Defs
-import Complexitylib.Classes.P
+module
+
+public import Complexitylib.Classes.FNP.Defs
+public import Complexitylib.Classes.P
+
+import Complexitylib.Classes.P.Cobham.Internal.Algebra
+
+@[expose] public section
 
 /-! Polynomial search reductions preserve every target solution and retain the
 original instance when decoding. Search totality and efficient verification are

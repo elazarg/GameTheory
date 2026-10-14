@@ -1,3 +1,5 @@
+module
+
 /-
 # `GameTheory.Protocol`
 
@@ -54,28 +56,30 @@ two players move at once, so it is a convenience for single-mover games rather
 than an alternative semantics.
 -/
 
-import GameTheory.Protocol.Execution
-import GameTheory.Protocol.Tree
-import GameTheory.Protocol.Extraction
-import GameTheory.Protocol.History
-import GameTheory.Protocol.Randomized
-import GameTheory.Protocol.StateKernel
-import GameTheory.Protocol.ContinuationLaw
-import GameTheory.Protocol.Backward
-import GameTheory.Protocol.RandomizedBackward
-import GameTheory.Protocol.HistoryBackward
-import GameTheory.Protocol.Information
-import GameTheory.Protocol.OwnPlayRecall
-import GameTheory.Protocol.SingleMover
-import GameTheory.Protocol.Predraw
-import GameTheory.Protocol.Assessment
-import GameTheory.Protocol.SubgamePerfect
-import GameTheory.Protocol.Zermelo
-import GameTheory.Protocol.Strategic
-import GameTheory.Protocol.Continuation
-import GameTheory.Protocol.BehavioralContinuation
-import GameTheory.Protocol.PolicyMeasure
-import GameTheory.Protocol.BehavioralAssessment
-import GameTheory.Protocol.DecisionRecall
-import GameTheory.Protocol.BehavioralTerminal
-import GameTheory.Protocol.BehavioralMixture
+public import GameTheory.Protocol.Execution
+public import GameTheory.Protocol.Tree
+public import GameTheory.Protocol.Extraction
+public import GameTheory.Protocol.History
+public import GameTheory.Protocol.Randomized
+public import GameTheory.Protocol.StateKernel
+public import GameTheory.Protocol.ContinuationLaw
+public import GameTheory.Protocol.Backward
+public import GameTheory.Protocol.RandomizedBackward
+public import GameTheory.Protocol.HistoryBackward
+public import GameTheory.Protocol.Information
+public import GameTheory.Protocol.OwnPlayRecall
+public import GameTheory.Protocol.SingleMover
+public import GameTheory.Protocol.Predraw
+public import GameTheory.Protocol.Assessment
+public import GameTheory.Protocol.SubgamePerfect
+public import GameTheory.Protocol.Zermelo
+public import GameTheory.Protocol.Strategic
+public import GameTheory.Protocol.Continuation
+public import GameTheory.Protocol.BehavioralContinuation
+public import GameTheory.Protocol.PolicyMeasure
+public import GameTheory.Protocol.BehavioralAssessment
+public import GameTheory.Protocol.DecisionRecall
+public import GameTheory.Protocol.BehavioralTerminal
+public import GameTheory.Protocol.BehavioralMixture
+
+@[expose] public section

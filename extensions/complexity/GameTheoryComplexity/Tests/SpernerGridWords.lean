@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.SpernerGridWords
-import GameTheoryComplexity.Backend.SpernerGridCodecMachine
-import GameTheoryComplexity.Backend.SpernerBinarySteps
+module
+
+public import GameTheoryComplexity.Backend.SpernerGridWords
+public import GameTheoryComplexity.Backend.SpernerGridCodecMachine
+public import GameTheoryComplexity.Backend.SpernerBinarySteps
+
+@[expose] public section
 
 /-! Binary grid controls cover the smallest width, canonical source rejection,
 coordinate order, arithmetic carries, a source path, and a disconnected cycle. -/

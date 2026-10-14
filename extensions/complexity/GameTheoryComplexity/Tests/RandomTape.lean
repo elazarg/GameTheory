@@ -1,5 +1,9 @@
-import GameTheoryComplexity.SampleTest
-import GameTheoryComplexity.Backend.Complexitylib
+module
+
+public import GameTheoryComplexity.SampleTest
+public import GameTheoryComplexity.Backend.Complexitylib
+
+@[expose] public section
 
 /-! A two-step fair-coin machine exercises the probability bridge and its sampling limits. -/
 

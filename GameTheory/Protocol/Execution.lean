@@ -1,3 +1,5 @@
+module
+
 /-
 # Execution protocols
 
@@ -22,7 +24,9 @@ A protocol therefore cannot declare a legality relation inconsistent with its ow
 `active` and `available`.
 -/
 
-import GameTheory.Math.Probability.Support
+public import GameTheory.Math.Probability.Support
+
+@[expose] public section
 
 noncomputable section
 

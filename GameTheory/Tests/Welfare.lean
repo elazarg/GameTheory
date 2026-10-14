@@ -1,3 +1,5 @@
+module
+
 /-
 # Expected-utility welfare fixture
 
@@ -5,7 +7,9 @@ This binary example retains a genuinely stochastic profile outcome and tests
 individual rationality and Pareto transfer with explicit PMF expectations.
 -/
 
-import GameTheory.Core.Welfare
+public import GameTheory.Core.Welfare
+
+@[expose] public section
 
 noncomputable section
 

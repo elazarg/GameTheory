@@ -1,9 +1,13 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixTotality
-import GameTheoryComplexity.Backend.GeneralBimatrixEndpoint
-import GameTheoryComplexity.Backend.GeneralBimatrixReduction
-import GameTheoryComplexity.PPAD
-import GameTheoryComplexity.Brouwer
-import GameTheoryComplexity.Backend.BrouwerNashHardness
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixTotality
+public import GameTheoryComplexity.Backend.GeneralBimatrixEndpoint
+public import GameTheoryComplexity.Backend.GeneralBimatrixReduction
+public import GameTheoryComplexity.PPAD
+public import GameTheoryComplexity.Brouwer
+public import GameTheoryComplexity.Backend.BrouwerNashHardness
+
+@[expose] public section
 
 /-! Optional machine certificates for exact mixed Nash search in signed
 rectangular bimatrix games. Binary answers represent ordinary mixed equilibria;

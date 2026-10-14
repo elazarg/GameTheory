@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite decision information
 
@@ -7,7 +9,9 @@ reachable history. The ambient information-state carrier may be infinite:
 information values that no history reaches never matter.
 -/
 
-import GameTheory.Protocol.DecisionRecall
+public import GameTheory.Protocol.DecisionRecall
+
+@[expose] public section
 
 noncomputable section
 

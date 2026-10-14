@@ -1,3 +1,5 @@
+module
+
 /-
 # The Shapley value
 
@@ -9,12 +11,14 @@ Primary reference: L. S. Shapley, “A Value for n-Person Games,” in
 *Contributions to the Theory of Games II*, Princeton University Press, 1953.
 -/
 
-import GameTheory.Core.Coalitional
-import Mathlib.Algebra.BigOperators.Ring.Finset
-import Mathlib.Data.Fintype.Powerset
-import Mathlib.Data.Nat.Choose.Sum
-import Mathlib.Tactic.FieldSimp
-import Mathlib.Tactic.Ring
+public import GameTheory.Core.Coalitional
+public import Mathlib.Algebra.BigOperators.Ring.Finset
+public import Mathlib.Data.Fintype.Powerset
+public import Mathlib.Data.Nat.Choose.Sum
+public import Mathlib.Tactic.FieldSimp
+public import Mathlib.Tactic.Ring
+
+@[expose] public section
 
 namespace GameTheory
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Mixed extensions of exact potential games
 
@@ -7,8 +9,10 @@ differences survive pure and randomized unilateral changes when the compared
 outcome laws are integrable.
 -/
 
-import GameTheory.Core.Mixed
-import GameTheory.Core.Potential
+public import GameTheory.Core.Mixed
+public import GameTheory.Core.Potential
+
+@[expose] public section
 
 noncomputable section
 

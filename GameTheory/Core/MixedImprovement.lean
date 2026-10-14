@@ -1,3 +1,5 @@
+module
+
 /-
 # Mixed deviation gains
 
@@ -6,8 +8,10 @@ the compared laws to be integrable. Finite-action aggregates derive
 randomized-deviation integrability by finite bind closure.
 -/
 
-import GameTheory.Core.Approximate
-import GameTheory.Core.Mixed
+public import GameTheory.Core.Approximate
+public import GameTheory.Core.Mixed
+
+@[expose] public section
 
 noncomputable section
 

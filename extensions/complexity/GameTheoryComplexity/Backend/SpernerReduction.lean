@@ -1,7 +1,11 @@
-import GameTheoryComplexity.Backend.PointerCircuitGeneration
-import GameTheoryComplexity.Backend.SpernerProblem
-import GameTheoryComplexity.Backend.SpernerPointerMachine
-import GameTheoryComplexity.Backend.SearchReduction
+module
+
+public import GameTheoryComplexity.Backend.PointerCircuitGeneration
+public import GameTheoryComplexity.Backend.SpernerProblem
+public import GameTheoryComplexity.Backend.SpernerPointerMachine
+public import GameTheoryComplexity.Backend.SearchReduction
+
+@[expose] public section
 
 /-! Uniform circuit emission turns the local Sperner machine into an End-of-Line
 instance. Every target endpoint remains the same encoded triangular cell; the

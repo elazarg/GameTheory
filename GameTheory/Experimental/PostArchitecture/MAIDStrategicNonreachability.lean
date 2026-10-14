@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-107: one-source strategic nonreachability
 
@@ -8,10 +10,12 @@ surgery.  All score comparisons are division-free, including at zero-mass
 target contexts and actions.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDMechanismSelectorScores
-import GameTheory.Experimental.PostArchitecture.MAIDPruningNonrelevantInvariance
-import GameTheory.Experimental.PostArchitecture.MAIDPruningRelevantContinuation
-import GameTheory.Experimental.PostArchitecture.MAIDSiteOptimalityScores
+public import GameTheory.Experimental.PostArchitecture.MAIDMechanismSelectorScores
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningNonrelevantInvariance
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningRelevantContinuation
+public import GameTheory.Experimental.PostArchitecture.MAIDSiteOptimalityScores
+
+@[expose] public section
 
 noncomputable section
 

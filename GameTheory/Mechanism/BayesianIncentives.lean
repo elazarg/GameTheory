@@ -1,3 +1,5 @@
+module
+
 /-
 # Incentives for Bayesian direct mechanisms
 
@@ -6,8 +8,10 @@ pointwise incentive predicate and proves that it yields ordinary Nash of the
 canonical Bayesian contingent-plan form.
 -/
 
-import GameTheory.Languages.BayesianMechanism
-import GameTheory.Core.BayesianEquilibrium
+public import GameTheory.Languages.BayesianMechanism
+public import GameTheory.Core.BayesianEquilibrium
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixCodec
-import GameTheoryComplexity.Backend.BinarySignedFixedWidth
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixCodec
+public import GameTheoryComplexity.Backend.BinarySignedFixedWidth
+
+@[expose] public section
 
 /-! Polynomial emission of the unsigned positive and negative payoff fields used by
 rectangular game inputs. Arithmetic sign-header words remain internal to the writer. -/

@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-108: distinct stochastic asymptotic payoff aggregations
 
@@ -8,9 +10,11 @@ the hypotheses of the theorems that use them; they are not stored in these
 definitions.
 -/
 
-import GameTheory.Experimental.PostArchitecture.AsymptoticOscillatingSequence
-import GameTheory.Math.Probability.ExpectationMixture
-import GameTheory.Math.Probability.Measure
+public import GameTheory.Experimental.PostArchitecture.AsymptoticOscillatingSequence
+public import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Math.Probability.Measure
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-107: mechanism-selector independence
 
@@ -8,12 +10,14 @@ remains the canonical two-component mixture constructed by the factorization
 slice.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovSoundness
-import GameTheory.Experimental.PostArchitecture.FiniteConditionalContinuation
-import GameTheory.Experimental.PostArchitecture.MAIDMechanismSelectorFactorization
-import GameTheory.Experimental.PostArchitecture.MAIDUtilityContinuationFromCI
-import GameTheory.Math.Probability.Joint
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovSoundness
+public import GameTheory.Experimental.PostArchitecture.FiniteConditionalContinuation
+public import GameTheory.Experimental.PostArchitecture.MAIDMechanismSelectorFactorization
+public import GameTheory.Experimental.PostArchitecture.MAIDUtilityContinuationFromCI
+public import GameTheory.Math.Probability.Joint
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

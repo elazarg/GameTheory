@@ -1,3 +1,5 @@
+module
+
 /-
 # Intrinsic-form examples
 
@@ -6,8 +8,10 @@ causality. Evaluation, probability, temporal execution, and randomization are
 separate consumers.
 -/
 
-import GameTheory.Languages.Intrinsic
-import Mathlib.Logic.Equiv.Bool
+public import GameTheory.Languages.Intrinsic
+public import Mathlib.Logic.Equiv.Bool
+
+@[expose] public section
 
 namespace GameTheory.Examples.Intrinsic
 

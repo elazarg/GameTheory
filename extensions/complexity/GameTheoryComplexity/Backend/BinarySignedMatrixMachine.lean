@@ -1,6 +1,10 @@
-import GameTheory.Math.FixedBlockList
-import GameTheoryComplexity.Backend.BinarySignedFixedWidth
-import GameTheoryComplexity.Backend.BinarySignedRowComparison
+module
+
+public import GameTheory.Math.FixedBlockList
+public import GameTheoryComplexity.Backend.BinarySignedFixedWidth
+public import GameTheoryComplexity.Backend.BinarySignedRowComparison
+
+@[expose] public section
 
 /-! Fixed-width accumulation and packed-row dot products.
 

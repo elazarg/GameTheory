@@ -1,3 +1,5 @@
+module
+
 /-
 # Incentives at retained sites
 
@@ -10,9 +12,11 @@ comparisons of single choices cover every local lottery. Play is terminal and
 histories are finitely many.
 -/
 
-import GameTheory.Protocol.BehavioralMixture
-import GameTheory.Protocol.FiniteInformation
-import GameTheory.Protocol.RestrictionExecution
+public import GameTheory.Protocol.BehavioralMixture
+public import GameTheory.Protocol.FiniteInformation
+public import GameTheory.Protocol.RestrictionExecution
+
+@[expose] public section
 
 noncomputable section
 

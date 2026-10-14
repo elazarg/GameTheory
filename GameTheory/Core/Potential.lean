@@ -1,3 +1,5 @@
+module
+
 /-
 # Potential games
 
@@ -16,7 +18,9 @@ Primary reference: D. Monderer and L. S. Shapley, “Potential Games,” *Games
 and Economic Behavior* 14 (1996).
 -/
 
-import GameTheory.Core.Response
+public import GameTheory.Core.Response
+
+@[expose] public section
 
 noncomputable section
 

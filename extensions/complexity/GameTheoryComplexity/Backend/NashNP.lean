@@ -1,12 +1,18 @@
-import GameTheoryComplexity.Backend.PairedVerifier
-import GameTheoryComplexity.Backend.BinaryCertificateFold
-import GameTheoryComplexity.Backend.NashCertificateEncoding
-import GameTheoryComplexity.Backend.NashWitnessCompleteness
-import GameTheoryComplexity.Backend.BimatrixCertificateVerifier
-import GameTheoryComplexity.Backend.BimatrixCertificateVerifierCorrectness
-import Complexitylib.Classes.Containments.Internal.FPBridge
-import Complexitylib.Classes.NP.WitnessConstruction
-import Complexitylib.Classes.P.NormalForm
+module
+
+public import GameTheoryComplexity.Backend.PairedVerifier
+public import GameTheoryComplexity.Backend.BinaryCertificateFold
+public import GameTheoryComplexity.Backend.NashCertificateEncoding
+public import GameTheoryComplexity.Backend.NashWitnessCompleteness
+public import GameTheoryComplexity.Backend.BimatrixCertificateVerifier
+public import GameTheoryComplexity.Backend.BimatrixCertificateVerifierCorrectness
+public import Complexitylib.Classes.Containments.Internal.FPBridge
+public import Complexitylib.Classes.NP.WitnessConstruction
+public import Complexitylib.Classes.P.NormalForm
+
+import Complexitylib.Classes.P.DecisionFn
+
+@[expose] public section
 
 /-! Canonical paired inputs for the polynomial-time equilibrium certificate
 verifier. Re-encoding rejects malformed pairs before consulting the verifier. -/

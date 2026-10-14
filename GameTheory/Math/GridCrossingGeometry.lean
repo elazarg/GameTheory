@@ -1,4 +1,8 @@
-import GameTheory.Math.GridCrossing
+module
+
+public import GameTheory.Math.GridCrossing
+
+@[expose] public section
 
 /-! The directed uncrossing gadget fits in a three-by-three grid. Port-to-bend
 steps occupy the square's perimeter, and the unused center remains isolated. -/

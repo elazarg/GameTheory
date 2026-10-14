@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite multi-round games
 
@@ -6,7 +8,9 @@ directly to Protocol/FOSG and introduces no parallel runner, history, policy,
 probability, or equilibrium concept.
 -/
 
-import GameTheory.Languages.MultiRound.Monitoring
+public import GameTheory.Languages.MultiRound.Monitoring
+
+@[expose] public section
 
 namespace GameTheory.Languages.MultiRound
 

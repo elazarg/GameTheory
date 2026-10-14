@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-054: explicit-list executable knapsack boundary
 
@@ -8,8 +10,10 @@ real arithmetic, or coordinate update.  Its proof semantics quantify over any
 finite allocation supported by the supplied list.
 -/
 
-import Mathlib.Data.Finset.Basic
-import Mathlib.Algebra.BigOperators.Ring.Finset
+public import Mathlib.Data.Finset.Basic
+public import Mathlib.Algebra.BigOperators.Ring.Finset
+
+@[expose] public section
 
 namespace GameTheory.Experimental.KnapsackBoundary
 

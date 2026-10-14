@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-056 witness: repaired executable knapsack approximation
 
@@ -10,7 +12,9 @@ operational boundary without asking the kernel to normalize a sorted
 finite-set value.
 -/
 
-import GameTheory.Mechanism.Knapsack
+public import GameTheory.Mechanism.Knapsack
+
+@[expose] public section
 
 namespace GameTheory.Experimental.KnapsackApproximation
 

@@ -1,8 +1,12 @@
+module
+
 /-
 Correctness guarantees for the explicit-list knapsack solver.
 -/
 
-import GameTheory.Mechanism.Knapsack.Algorithm
+public import GameTheory.Mechanism.Knapsack.Algorithm
+
+@[expose] public section
 
 namespace GameTheory.Mechanism.Knapsack
 

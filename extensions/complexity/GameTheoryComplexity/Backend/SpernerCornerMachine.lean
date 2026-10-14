@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.SpernerGridCodecMachine
-import GameTheoryComplexity.Backend.SpernerBinarySteps
-import GameTheory.Math.GridSperner
+module
+
+public import GameTheoryComplexity.Backend.SpernerGridCodecMachine
+public import GameTheoryComplexity.Backend.SpernerBinarySteps
+public import GameTheory.Math.GridSperner
+
+@[expose] public section
 
 /-! Corner colors are computed on binary coordinate words. One extra coordinate
 bit retains boundary increments, and local equality controls enforce the fixed

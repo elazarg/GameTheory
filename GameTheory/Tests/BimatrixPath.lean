@@ -1,5 +1,9 @@
-import GameTheory.Finite.BimatrixPath
-import Mathlib.Data.Fin.VecNotation
+module
+
+public import GameTheory.Finite.BimatrixPath
+public import Mathlib.Data.Fin.VecNotation
+
+@[expose] public section
 
 /-! Source uniqueness, paired pivot operations and terminal extraction controls. -/
 namespace GameTheory.Tests.BimatrixPath

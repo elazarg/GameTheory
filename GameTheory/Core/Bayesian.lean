@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite Bayesian game forms
 
@@ -11,7 +13,9 @@ unnormalized event-restricted laws, so zero-mass type cells contribute zero;
 posterior conditioning is provided by the shared probability layer.
 -/
 
-import GameTheory.Core.Form
+public import GameTheory.Core.Form
+
+@[expose] public section
 
 noncomputable section
 

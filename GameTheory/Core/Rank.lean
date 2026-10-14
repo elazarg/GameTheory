@@ -1,3 +1,5 @@
+module
+
 /-
 # Rankings and relation laws
 
@@ -11,7 +13,9 @@ direction keeps social choice independent of probability as well as
 mathematically unrelated to it.
 -/
 
-import Mathlib.Data.Finset.Basic
+public import Mathlib.Data.Finset.Basic
+
+@[expose] public section
 
 namespace GameTheory
 

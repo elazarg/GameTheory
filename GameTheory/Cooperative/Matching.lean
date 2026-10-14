@@ -1,3 +1,5 @@
+module
+
 /-
 # Ordinal two-sided matching
 
@@ -13,7 +15,9 @@ The orientation
 means that the agent weakly prefers `preferred` to `alternative`.
 -/
 
-import GameTheory.Core.Rank
+public import GameTheory.Core.Rank
+
+@[expose] public section
 
 namespace GameTheory
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Passing sequential rationality to assessment limits
 
@@ -13,8 +15,10 @@ vanishing optimality errors has a sequential-equilibrium limit. This needs
 compactness but no fixed point.
 -/
 
-import GameTheory.Analysis.Protocol.AssessmentCompactness
-import GameTheory.Analysis.Protocol.BehavioralTerminalConvergence
+public import GameTheory.Analysis.Protocol.AssessmentCompactness
+public import GameTheory.Analysis.Protocol.BehavioralTerminalConvergence
+
+@[expose] public section
 
 noncomputable section
 

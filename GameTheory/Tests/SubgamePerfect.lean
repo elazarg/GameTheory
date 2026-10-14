@@ -1,3 +1,5 @@
+module
+
 /-
 # Historywise continuation optimality, including an off-path history
 
@@ -7,7 +9,9 @@ Rewarding is strictly better than punishing there, so initial optimality does
 not imply optimality after every complete history.
 -/
 
-import GameTheory.Protocol.SubgamePerfect
+public import GameTheory.Protocol.SubgamePerfect
+
+@[expose] public section
 
 noncomputable section
 

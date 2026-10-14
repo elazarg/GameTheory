@@ -1,3 +1,5 @@
+module
+
 /-
 # Own-play recall
 
@@ -14,7 +16,9 @@ and every refinement with perfect recall must separate at least those
 histories.
 -/
 
-import GameTheory.Protocol.Information
+public import GameTheory.Protocol.Information
+
+@[expose] public section
 
 namespace GameTheory.Protocol
 

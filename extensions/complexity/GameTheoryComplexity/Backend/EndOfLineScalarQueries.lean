@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.EndOfLinePointerNormalization
-import Complexitylib.Classes.P.Cobham.Internal.Extract
+module
+
+public import GameTheoryComplexity.Backend.EndOfLinePointerNormalization
+public import Complexitylib.Classes.P.Cobham.Internal.Extract
+
+@[expose] public section
 
 /-! Scalar queries for normalized End-of-Line pointers. The instance and unary
 output index occupy the fixed prefix; the vertex remains the circuit input. -/

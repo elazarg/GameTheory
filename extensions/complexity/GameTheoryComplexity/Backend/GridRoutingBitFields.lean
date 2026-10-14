@@ -1,7 +1,11 @@
-import GameTheoryComplexity.Backend.EndOfLineMachineOps
-import Complexitylib.Mathlib.NatBits
-import Complexitylib.Classes.P.Cobham.Internal.Extract
-import Mathlib.Tactic.Ring
+module
+
+public import GameTheoryComplexity.Backend.EndOfLineMachineOps
+public import Complexitylib.Mathlib.NatBits
+public import Complexitylib.Classes.P.Cobham.Internal.Extract
+public import Mathlib.Tactic.Ring
+
+@[expose] public section
 
 /-! Fixed-width routing fields are assembled with binary concatenation, padding,
 and shifts. Their arithmetic meaning follows the little-endian bit convention. -/

@@ -1,3 +1,5 @@
+module
+
 /-
 # A uniformly worse choice is never played
 
@@ -7,8 +9,10 @@ assessment on terminal play therefore gives `0` probability zero, with no
 assumption on its beliefs.
 -/
 
-import GameTheory.Analysis.Protocol.SupportedChoices
-import GameTheory.Analysis.Protocol.InfiniteCarrierExistenceTest
+public import GameTheory.Analysis.Protocol.SupportedChoices
+public import GameTheory.Analysis.Protocol.InfiniteCarrierExistenceTest
+
+@[expose] public section
 
 noncomputable section
 

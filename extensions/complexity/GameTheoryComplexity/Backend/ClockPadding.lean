@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.Complexitylib
-import GameTheoryComplexity.RandomTapeComposition
+module
+
+public import GameTheoryComplexity.Backend.Complexitylib
+public import GameTheoryComplexity.RandomTapeComposition
+
+@[expose] public section
 
 /-! Extra independent random bits do not change the law after every path has halted. -/
 

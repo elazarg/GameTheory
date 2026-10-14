@@ -1,7 +1,11 @@
-import Mathlib.Algebra.BigOperators.Group.Finset.Basic
-import Mathlib.Algebra.BigOperators.Group.Finset.Sigma
-import Mathlib.Data.Int.Basic
-import Mathlib.Tactic.Ring
+module
+
+public import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+public import Mathlib.Algebra.BigOperators.Group.Finset.Sigma
+public import Mathlib.Data.Int.Basic
+public import Mathlib.Tactic.Ring
+
+@[expose] public section
 
 /-! Signed flux on a square grid cancels along shared interior edges. Summing
 cell boundaries therefore leaves only the oriented outer boundary. -/

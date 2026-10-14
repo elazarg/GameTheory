@@ -1,3 +1,5 @@
+module
+
 /-
 EFG-facing Kuhn integration test.
 
@@ -7,8 +9,10 @@ the action already chosen. Thus local and ex-ante randomization agree for a
 substantive reason, not because play has only one decision.
 -/
 
-import GameTheory.Languages.EFG.Kuhn
-import GameTheory.Tests.Randomized
+public import GameTheory.Languages.EFG.Kuhn
+public import GameTheory.Tests.Randomized
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,5 +1,9 @@
-import GameTheory.Math.SpernerGridDoors
-import GameTheory.Math.EndOfLine
+module
+
+public import GameTheory.Math.SpernerGridDoors
+public import GameTheory.Math.EndOfLine
+
+@[expose] public section
 
 /-! Local directed pointers for the square-grid Sperner graph. A single extra
 node supplies the known boundary source. Invalid triangle coordinates are

@@ -1,13 +1,17 @@
-import GameTheory.Protocol.Strategic
-import GameTheory.Protocol.StrategicRealization
-import GameTheory.Protocol.PolicyRandomization
-import GameTheory.Protocol.HistoryPathMass
-import GameTheory.Math.Discounted
-import GameTheory.Math.Probability.Measure
-import GameTheory.Math.Probability.FiniteSampling
-import Mathlib.Data.Fintype.Pi
-import Mathlib.MeasureTheory.Measure.RegularityCompacts
-import Mathlib.Probability.ConditionalProbability
+module
+
+public import GameTheory.Protocol.Strategic
+public import GameTheory.Protocol.StrategicRealization
+public import GameTheory.Protocol.PolicyRandomization
+public import GameTheory.Protocol.HistoryPathMass
+public import GameTheory.Math.Discounted
+public import GameTheory.Math.Probability.Measure
+public import GameTheory.Math.Probability.FiniteSampling
+public import Mathlib.Data.Fintype.Pi
+public import Mathlib.MeasureTheory.Measure.RegularityCompacts
+public import Mathlib.Probability.ConditionalProbability
+
+@[expose] public section
 
 /-!
 # Policy-measure realization

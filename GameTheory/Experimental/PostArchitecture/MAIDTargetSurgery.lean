@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-105: canonical target-node surgery
 
@@ -6,7 +8,9 @@ execution.  The resulting point-mass identity uses neither conditioning nor
 division, so it applies unchanged at unsupported contexts.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDReplacementContext
+public import GameTheory.Experimental.PostArchitecture.MAIDReplacementContext
+
+@[expose] public section
 
 noncomputable section
 

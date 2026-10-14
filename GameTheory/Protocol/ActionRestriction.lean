@@ -1,3 +1,5 @@
+module
+
 /-
 # Structural action restrictions between execution protocols
 
@@ -9,9 +11,11 @@ protocol may contain new histories, and nothing about beliefs or equilibria is
 assumed.
 -/
 
-import GameTheory.Protocol.BehavioralAssessment
-import GameTheory.Protocol.DecisionRecall
-import GameTheory.Protocol.PolicyRandomization
+public import GameTheory.Protocol.BehavioralAssessment
+public import GameTheory.Protocol.DecisionRecall
+public import GameTheory.Protocol.PolicyRandomization
+
+@[expose] public section
 
 noncomputable section
 

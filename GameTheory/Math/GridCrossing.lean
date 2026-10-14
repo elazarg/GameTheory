@@ -1,6 +1,10 @@
-import GameTheory.Math.EndOfLine
-import Mathlib.Data.Fintype.Fin
-import Mathlib.Tactic.FinCases
+module
+
+public import GameTheory.Math.EndOfLine
+public import Mathlib.Data.Fintype.Fin
+public import Mathlib.Tactic.FinCases
+
+@[expose] public section
 
 /-! A directed grid crossing can be replaced locally by two disjoint bent paths.
 The replacement connects each incoming port to the other strand's outgoing port,

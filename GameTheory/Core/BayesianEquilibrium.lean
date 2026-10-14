@@ -1,3 +1,5 @@
+module
+
 /-
 # Interim optimality in Bayesian games
 
@@ -13,10 +15,12 @@ Primary reference: J. C. Harsanyi, “Games with Incomplete Information Played
 by Bayesian Players,” *Management Science* 14 (1967–1968).
 -/
 
-import GameTheory.Core.Bayesian
-import GameTheory.Core.Utility
-import GameTheory.Math.Probability.ExpectationConditioning
-import GameTheory.Math.Probability.ExpectationMap
+public import GameTheory.Core.Bayesian
+public import GameTheory.Core.Utility
+public import GameTheory.Math.Probability.ExpectationConditioning
+public import GameTheory.Math.Probability.ExpectationMap
+
+@[expose] public section
 
 noncomputable section
 

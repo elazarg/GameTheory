@@ -1,3 +1,5 @@
+module
+
 /-
 Hostile Gibbard--Satterthwaite fixture.
 
@@ -8,8 +10,10 @@ the truthful top alternative.  Thus neither strategyproofness nor dictatorship
 is being smuggled into the finite one-voter instance.
 -/
 
-import GameTheory.Core.GibbardSatterthwaite
-import Mathlib.Tactic
+public import GameTheory.Core.GibbardSatterthwaite
+public import Mathlib.Tactic
+
+@[expose] public section
 
 namespace GameTheory.Tests.GibbardSatterthwaite
 

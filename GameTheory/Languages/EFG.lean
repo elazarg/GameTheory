@@ -1,3 +1,5 @@
+module
+
 /-
 # Extensive forms as a transparent Protocol specialization
 
@@ -15,7 +17,9 @@ This syntax module imports no utility, preference, solution concept, or
 Analysis module.
 -/
 
-import GameTheory.Languages.FOSG
+public import GameTheory.Languages.FOSG
+
+@[expose] public section
 
 noncomputable section
 

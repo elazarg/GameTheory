@@ -1,7 +1,11 @@
+module
+
 /- Copyright (c) 2026 VegasCore contributors. Released under MIT; see NOTICE. -/
 
-import GameTheory.Math.Probability.Bounds
-import GameTheory.Math.Probability.ExpectationAlgebra
+public import GameTheory.Math.Probability.Bounds
+public import GameTheory.Math.Probability.ExpectationAlgebra
+
+@[expose] public section
 
 /-! # Sound randomized detection
 

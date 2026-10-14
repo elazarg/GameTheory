@@ -1,3 +1,5 @@
+module
+
 /-
 # Proof-facing public stochastic policies
 
@@ -6,7 +8,9 @@ the perfect-monitoring Protocol model remains the sole execution semantics.
 The translation is lossless and respects unilateral profile replacement.
 -/
 
-import GameTheory.Stochastic.FiniteHorizon
+public import GameTheory.Stochastic.FiniteHorizon
+
+@[expose] public section
 
 noncomputable section
 

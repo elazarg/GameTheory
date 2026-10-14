@@ -1,7 +1,11 @@
-import GameTheory.Math.LexicographicPivot
-import Mathlib.Data.Fin.VecNotation
-import Mathlib.Tactic.FinCases
-import Mathlib.Tactic.NormNum
+module
+
+public import GameTheory.Math.LexicographicPivot
+public import Mathlib.Data.Fin.VecNotation
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 /-! Controls for tied symbolic ratios and competing reverse pivots. -/
 namespace GameTheory.Tests.LexicographicPivot

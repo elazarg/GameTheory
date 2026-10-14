@@ -1,3 +1,5 @@
+module
+
 /-
 # Local, law-linear deviations and the single equilibrium predicate
 
@@ -17,9 +19,11 @@ opponent profiles instead and live in `GameTheory.Core.Response`; they are
 deliberately *not* instances of this predicate.
 -/
 
-import GameTheory.Core.Form
-import GameTheory.Core.Preference
-import GameTheory.Math.Probability.Support
+public import GameTheory.Core.Form
+public import GameTheory.Core.Preference
+public import GameTheory.Math.Probability.Support
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,12 +1,16 @@
-import GameTheory.Finite.BimatrixCertificate
-import GameTheory.Math.MatchingMass
-import Mathlib.Logic.Equiv.Fin.Basic
-import Mathlib.Algebra.BigOperators.Field
-import Mathlib.Data.Fintype.BigOperators
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.Push
-import Mathlib.Tactic.Ring
-import Mathlib.Tactic.NormNum
+module
+
+public import GameTheory.Finite.BimatrixCertificate
+public import GameTheory.Math.MatchingMass
+public import Mathlib.Logic.Equiv.Fin.Basic
+public import Mathlib.Algebra.BigOperators.Field
+public import Mathlib.Data.Fintype.BigOperators
+public import Mathlib.Tactic.Linarith
+public import Mathlib.Tactic.Push
+public import Mathlib.Tactic.Ring
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 /-! Paired-action matching games with bounded integer payoff perturbations.
 Dominant matching payoffs force positive, nearly uniform block masses in every
 valid exact Nash certificate, while allowing either action within a block to have zero weight. -/

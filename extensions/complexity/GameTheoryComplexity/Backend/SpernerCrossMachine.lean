@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.SpernerGridCodecMachine
-import GameTheoryComplexity.Backend.SpernerBinarySteps
+module
+
+public import GameTheoryComplexity.Backend.SpernerGridCodecMachine
+public import GameTheoryComplexity.Backend.SpernerBinarySteps
+
+@[expose] public section
 
 /-! Polynomial-time crossing of a selected grid edge on binary node words.
 Coordinate tests distinguish exterior edges before ripple arithmetic is used.

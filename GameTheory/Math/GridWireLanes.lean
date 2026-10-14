@@ -1,4 +1,8 @@
-import GameTheory.Math.GridWire
+module
+
+public import GameTheory.Math.GridWire
+
+@[expose] public section
 
 /-! Private wire columns and separated horizontal lanes keep routed edges away
 from unrelated graph vertices. Incoming hooks meet only their designated target. -/

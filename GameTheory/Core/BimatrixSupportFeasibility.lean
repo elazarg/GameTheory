@@ -1,6 +1,10 @@
-import GameTheory.Core.BimatrixSupport
-import GameTheory.Core.BimatrixSupportSystem
-import GameTheory.Math.Probability.Support
+module
+
+public import GameTheory.Core.BimatrixSupport
+public import GameTheory.Core.BimatrixSupportSystem
+public import GameTheory.Math.Probability.Support
+
+@[expose] public section
 
 /-! A bimatrix Nash equilibrium supplies feasible fixed-support linear systems
 for the two independent payoff tables. The support masks are supplied by the

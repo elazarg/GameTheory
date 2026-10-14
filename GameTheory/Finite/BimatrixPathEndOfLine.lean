@@ -1,4 +1,8 @@
-import GameTheory.Finite.BimatrixPathOrientation
+module
+
+public import GameTheory.Finite.BimatrixPathOrientation
+
+@[expose] public section
 
 /-! Directed End-of-Line paths on canonical bimatrix ports.
 The determinant orientation supplies actual predecessor and successor pointers.

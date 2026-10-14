@@ -1,9 +1,15 @@
-import Complexitylib.Circuits.Encoding.Shift
-import Complexitylib.Circuits.Encoding
-import Complexitylib.Classes.P.Cobham
-import Complexitylib.Classes.P.Pairing
-import Complexitylib.Classes.P.Composition
-import Complexitylib.Classes.P.Cobham.Internal.PolyLen
+module
+
+public import Complexitylib.Circuits.Encoding.Shift
+public import Complexitylib.Circuits.Encoding
+public import Complexitylib.Classes.P.Cobham
+public import Complexitylib.Classes.P.Pairing
+public import Complexitylib.Classes.P.Composition
+public import Complexitylib.Classes.P.Cobham.Internal.PolyLen
+
+import Complexitylib.Classes.P.Cobham.Internal
+
+@[expose] public section
 
 /-! Serialized raw circuit relocation. Unary references are shifted by inserting
 one ruler before each reference; the scanner processes only the declared gate

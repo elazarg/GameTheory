@@ -1,5 +1,9 @@
-import GameTheory.Math.LinearComplementarity
-import Mathlib.Tactic.NormNum
+module
+
+public import GameTheory.Math.LinearComplementarity
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 /-! Signed coefficients, degeneracy, empty carriers and infeasible slack exercise
 linear complementarity without game-specific assumptions. -/

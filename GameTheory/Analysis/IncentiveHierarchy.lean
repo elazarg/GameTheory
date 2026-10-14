@@ -1,3 +1,5 @@
+module
+
 /-
 # Implications between preservation properties
 
@@ -24,7 +26,9 @@ carries no such implication: the weight is the probability with which the
 coarse deviation reaches the fine comparison's point.
 -/
 
-import GameTheory.Analysis.IncentiveCone
+public import GameTheory.Analysis.IncentiveCone
+
+@[expose] public section
 
 noncomputable section
 

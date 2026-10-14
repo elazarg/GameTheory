@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.GridRoutingCodec
-import GameTheoryComplexity.Backend.GridRoutingEndpointMachine
-import GameTheory.Math.GridWireBounds
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingCodec
+public import GameTheoryComplexity.Backend.GridRoutingEndpointMachine
+public import GameTheory.Math.GridWireBounds
+
+@[expose] public section
 
 /-! Two fixed-width coordinate fields transport the globally switched grid
 graph to words. Accepted words cover the entire coordinate capacity; malformed

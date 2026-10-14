@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
-import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+module
+
+public import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
+public import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+
+@[expose] public section
 
 /-! Bounded sums of binary fields scan polynomial-length clocks and tally blocks. -/
 namespace GameTheory.Complexity.Backend

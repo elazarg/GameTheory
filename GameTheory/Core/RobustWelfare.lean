@@ -1,3 +1,5 @@
+module
+
 /-
 # Robust welfare bounds for coarse correlated equilibrium
 
@@ -8,8 +10,10 @@ Primary reference: T. Roughgarden, “Intrinsic Robustness of the Price of
 Anarchy,” STOC 2009.
 -/
 
-import GameTheory.Core.Learning
-import GameTheory.Core.Welfare
+public import GameTheory.Core.Learning
+public import GameTheory.Core.Welfare
+
+@[expose] public section
 
 noncomputable section
 

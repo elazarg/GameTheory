@@ -1,3 +1,5 @@
+module
+
 /-
 # Trembling perfectly correlated plans
 
@@ -9,9 +11,11 @@ because decision recall keeps the player's own record from restricting the
 current coordinate. The floor is strictly positive.
 -/
 
-import GameTheory.Analysis.Protocol.SequentialOneShotTest
-import GameTheory.Protocol.TremblingPlans
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Analysis.Protocol.SequentialOneShotTest
+public import GameTheory.Protocol.TremblingPlans
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 open GameTheory.Math.Probability
 

@@ -1,8 +1,13 @@
-import GameTheory.Math.IntegerSumBounds
-import Mathlib.LinearAlgebra.Matrix.Determinant.Bird.Correctness
-import Mathlib.Data.Int.NatAbs
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.Ring
+module
+
+public import GameTheory.Math.IntegerSumBounds
+public import Mathlib.LinearAlgebra.Matrix.Determinant.Bird.Correctness
+import all Mathlib.LinearAlgebra.Matrix.Determinant.Bird.Defs
+public import Mathlib.Data.Int.NatAbs
+public import Mathlib.Tactic.Linarith
+public import Mathlib.Tactic.Ring
+
+@[expose] public section
 
 /-! Integer magnitude bounds for Bird's division-free determinant recurrence.
 

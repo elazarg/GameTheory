@@ -1,3 +1,5 @@
+module
+
 /-
 Hostile finite consumer for the fictitious-play trajectory interface.
 
@@ -6,8 +8,10 @@ constant coordination history proves the best-response recurrence through the
 canonical pure-to-mixed Nash bridge.
 -/
 
-import GameTheory.Core.FictitiousPlay
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Core.FictitiousPlay
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

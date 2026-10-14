@@ -1,3 +1,5 @@
+module
+
 /-
 # Rotations of finite indices
 
@@ -5,7 +7,9 @@ Equivalences between residues and finite indices, and invariance of finite sums
 under cyclic rotation.
 -/
 
-import Mathlib.Analysis.SumOverResidueClass
+public import Mathlib.Analysis.SumOverResidueClass
+
+@[expose] public section
 
 noncomputable section
 

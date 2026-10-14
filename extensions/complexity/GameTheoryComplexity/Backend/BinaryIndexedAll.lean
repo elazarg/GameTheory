@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinaryIndexedLexicographic
+module
+
+public import GameTheoryComplexity.Backend.BinaryIndexedLexicographic
+
+@[expose] public section
 
 /-! A certified universal scan of indexed Boolean predicates. -/
 

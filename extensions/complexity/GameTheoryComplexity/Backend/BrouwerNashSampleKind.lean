@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BrouwerNashHeaders
-import GameTheoryComplexity.Backend.BinaryUnaryArithmetic
+module
+
+public import GameTheoryComplexity.Backend.BrouwerNashHeaders
+public import GameTheoryComplexity.Backend.BinaryUnaryArithmetic
+
+@[expose] public section
 
 /-! Comparator-kind flags for digit extraction and ripple increments in each jitter sample. -/
 namespace GameTheory.Complexity.Backend.BrouwerNashSampleKind

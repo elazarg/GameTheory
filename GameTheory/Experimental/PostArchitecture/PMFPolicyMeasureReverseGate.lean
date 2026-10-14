@@ -1,3 +1,5 @@
+module
+
 /-
 EXP-136: cover-free reverse policy-measure realization under infinite chance.
 At horizon two, geometric chance reaches infinitely many public information
@@ -5,10 +7,12 @@ sites. One nonatomic policy measure correlates a root choice with the choice at
 one successor site while retaining independent fair choices elsewhere.
 -/
 
-import GameTheory.Stochastic.Kuhn
-import GameTheory.Math.Probability.InfiniteProductBoundary
-import GameTheory.Experimental.PostArchitecture.PMFStaticGate
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Stochastic.Kuhn
+public import GameTheory.Math.Probability.InfiniteProductBoundary
+public import GameTheory.Experimental.PostArchitecture.PMFStaticGate
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

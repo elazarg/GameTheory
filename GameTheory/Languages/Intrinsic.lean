@@ -1,3 +1,5 @@
+module
+
 /-
 # Intrinsic-form game syntax
 
@@ -10,7 +12,9 @@ causality are expressed without storing enumeration or execution capabilities
 in the model.
 -/
 
-import Mathlib.Logic.Equiv.Defs
+public import Mathlib.Logic.Equiv.Defs
+
+@[expose] public section
 
 namespace GameTheory.Languages.Intrinsic
 

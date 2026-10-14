@@ -1,4 +1,8 @@
-import GameTheory.Math.GridWireCrossings
+module
+
+public import GameTheory.Math.GridWireCrossings
+
+@[expose] public section
 
 /-! Routing controls exercise ascending and descending columns, corner turns,
 proper crossings in both directions, and directly adjacent switch ports. -/

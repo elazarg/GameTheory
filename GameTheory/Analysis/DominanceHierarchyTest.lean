@@ -1,3 +1,5 @@
+module
+
 /-
 # An added counter-action preserves Nash but not truthfulness
 
@@ -10,8 +12,10 @@ is dominant in the source for a utility ranking side deal above honesty above
 lying, but not in the target: against the new action, lying pays.
 -/
 
-import GameTheory.Analysis.DominanceHierarchy
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Analysis.DominanceHierarchy
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 open GameTheory.Math.Probability
 

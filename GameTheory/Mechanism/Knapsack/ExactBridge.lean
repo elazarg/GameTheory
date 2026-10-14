@@ -1,3 +1,5 @@
+module
+
 /-
 # Exact knapsack execution/semantics bridge
 
@@ -6,8 +8,10 @@ may choose different maximizers when there are ties.  Their achieved welfare
 is nevertheless identical after the canonical natural-to-real embedding.
 -/
 
-import GameTheory.Mechanism.Knapsack.Basic
-import GameTheory.Mechanism.Knapsack.Correctness
+public import GameTheory.Mechanism.Knapsack.Basic
+public import GameTheory.Mechanism.Knapsack.Correctness
+
+@[expose] public section
 
 noncomputable section
 

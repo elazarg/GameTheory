@@ -1,3 +1,5 @@
+module
+
 /-
 # Where a player puts its randomness
 
@@ -17,10 +19,12 @@ protocol here is the smallest thing that violates that assumption, so it records
 what such a hypothesis is buying.
 -/
 
-import GameTheory.Protocol.Information
-import GameTheory.Protocol.PolicyRandomization
-import GameTheory.Math.Probability.Mixture
-import GameTheory.Math.Probability.Support
+public import GameTheory.Protocol.Information
+public import GameTheory.Protocol.PolicyRandomization
+public import GameTheory.Math.Probability.Mixture
+public import GameTheory.Math.Probability.Support
+
+@[expose] public section
 
 noncomputable section
 

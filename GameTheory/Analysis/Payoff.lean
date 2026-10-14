@@ -1,3 +1,5 @@
+module
+
 /-
 # The mixed payoff as a polynomial in the weights
 
@@ -14,8 +16,10 @@ best responses are the hypothesis a set-valued fixed-point theorem cannot do
 without.
 -/
 
-import GameTheory.Analysis.Simplex
-import GameTheory.Core.Utility
+public import GameTheory.Analysis.Simplex
+public import GameTheory.Core.Utility
+
+@[expose] public section
 
 noncomputable section
 

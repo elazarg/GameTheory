@@ -1,7 +1,11 @@
-import GameTheory.Math.GridBrouwerContinuous
-import Mathlib.Tactic.FinCases
-import Mathlib.Algebra.BigOperators.Fin
-import Mathlib.Algebra.Order.Group.MinMax
+module
+
+public import GameTheory.Math.GridBrouwerContinuous
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Algebra.BigOperators.Fin
+public import Mathlib.Algebra.Order.Group.MinMax
+
+@[expose] public section
 
 /-! Four-corner weights for the canonical rising-diagonal grid interpolation.
 The same formula applies on both triangles, their diagonal and cell edges. -/

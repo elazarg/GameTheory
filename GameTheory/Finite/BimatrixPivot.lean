@@ -1,4 +1,8 @@
-import GameTheory.Finite.BimatrixBasisExit
+module
+
+public import GameTheory.Finite.BimatrixBasisExit
+
+@[expose] public section
 
 /-! Reversible pivots between canonical bimatrix bases.
 A port records a nonbasic entering variable. Nonempty positive-payoff games have a

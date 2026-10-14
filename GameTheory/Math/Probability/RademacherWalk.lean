@@ -1,3 +1,5 @@
+module
+
 /-
 # The fair `±σ` walk
 
@@ -11,10 +13,12 @@ mass is at most `1 / m`. Hence the walk lands in any window of `H + 1`
 consecutive values with probability at most `(H + 1) / √m`: a sum of symmetric
 summands is not concentrated near zero.
 -/
-import GameTheory.Math.Probability.SampleSum
-import GameTheory.Math.Probability.Uniform
-import Mathlib.Data.Nat.Choose.Central
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Math.Probability.SampleSum
+public import GameTheory.Math.Probability.Uniform
+public import Mathlib.Data.Nat.Choose.Central
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

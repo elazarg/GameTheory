@@ -1,3 +1,5 @@
+module
+
 /-
 Truncating continuations below the horizon changes the game. One player first
 takes a forced step, then chooses a short payoff of one or a long payoff of
@@ -6,7 +8,9 @@ two decision sites, so no assessment is rational against it, and the
 truncated game has no sequential equilibrium.
 -/
 
-import GameTheory.Analysis.Protocol.EFG
+public import GameTheory.Analysis.Protocol.EFG
+
+@[expose] public section
 
 noncomputable section
 

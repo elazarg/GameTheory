@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BimatrixNodeColor
+module
+
+public import GameTheoryComplexity.Backend.BimatrixNodeColor
+
+@[expose] public section
 
 namespace GameTheory.Complexity.Backend.Tests.BimatrixNodeColor
 open GameTheory.Complexity.Backend

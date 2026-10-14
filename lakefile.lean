@@ -6,6 +6,9 @@ abbrev gameTheoryLeanOptions : Array LeanOption := #[
   ⟨`pp.unicode.fun, true⟩,
   ⟨`warningAsError, true⟩,
   ⟨`relaxedAutoImplicit, false⟩,
+  -- Preserve legacy private references during the mechanical module conversion.
+  ⟨`backward.privateInPublic, true⟩,
+  ⟨`backward.privateInPublic.warn, false⟩,
   /- `checkUnivs` cannot express declaration-local exceptions. GameTheory keeps
   several semantic carriers in independent universes, and each affected
   declaration documents that choice locally, so configure the exception once
@@ -24,8 +27,7 @@ package GameTheory where
   license := "Apache-2.0"
   licenseFiles := #["LICENSE", "NOTICE"]
   fixedToolchain := true
-  -- This library retains legacy module visibility when importing Mathlib modules.
-  allowNonModules := true
+  requiresModuleSystem := true
   lintDriver := "batteries/runLinter"
   lintDriverArgs := #["GameTheory.LintAll"]
 

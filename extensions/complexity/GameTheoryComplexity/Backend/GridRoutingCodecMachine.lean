@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.GridRoutingCodec
-import GameTheoryComplexity.Backend.EndOfLineMachineOps
-import Complexitylib.Classes.P.Cobham.Internal.Extract
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingCodec
+public import GameTheoryComplexity.Backend.EndOfLineMachineOps
+public import Complexitylib.Classes.P.Cobham.Internal.Extract
+
+@[expose] public section
 
 /-! Polynomial-time routing codec operations use word rulers for both coordinate
 blocks. Extraction preserves the existing bits; acceptance checks only the exact

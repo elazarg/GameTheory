@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.PointerCircuitGeneration
-import GameTheoryComplexity.Backend.SpernerProblem
-import Complexitylib.Classes.P.Cobham.Internal.Extract
+module
+
+public import GameTheoryComplexity.Backend.PointerCircuitGeneration
+public import GameTheoryComplexity.Backend.SpernerProblem
+public import Complexitylib.Classes.P.Cobham.Internal.Extract
+
+@[expose] public section
 
 /-! Two-bit color computations are compiled by the common uniform pointer
 compiler. Extra output coordinates are padding; the color decoder reads only

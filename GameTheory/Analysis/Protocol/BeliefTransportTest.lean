@@ -1,3 +1,5 @@
+module
+
 /-
 # Beliefs at an unreached decision
 
@@ -8,8 +10,10 @@ tremble level gives the same belief there, although the decision's mass
 changes with the level.
 -/
 
-import GameTheory.Analysis.Protocol.BeliefTransport
-import GameTheory.Analysis.Protocol.SequentialOneShotTest
+public import GameTheory.Analysis.Protocol.BeliefTransport
+public import GameTheory.Analysis.Protocol.SequentialOneShotTest
+
+@[expose] public section
 
 noncomputable section
 

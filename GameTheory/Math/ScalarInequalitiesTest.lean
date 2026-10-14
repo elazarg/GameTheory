@@ -1,4 +1,8 @@
-import GameTheory.Math.ScalarInequalitiesCorrectness
+module
+
+public import GameTheory.Math.ScalarInequalitiesCorrectness
+
+@[expose] public section
 namespace GameTheory.Tests.ScalarInequalities
 open GameTheory.Math.ScalarInequalities
 

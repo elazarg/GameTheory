@@ -1,7 +1,11 @@
+module
+
 /- Copyright (c) 2026 VegasCore contributors. Released under MIT; see NOTICE. -/
 
-import GameTheory.Math.Probability.EventPenalty
-import GameTheory.Math.Probability.SoundDetection
+public import GameTheory.Math.Probability.EventPenalty
+public import GameTheory.Math.Probability.SoundDetection
+
+@[expose] public section
 
 /-! # Expected penalties from randomized observations
 

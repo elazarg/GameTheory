@@ -1,7 +1,11 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixCircuitMachine
-import GameTheoryComplexity.Backend.GeneralBimatrixPathEndpoint
-import GameTheoryComplexity.Backend.RawEndOfLine
-import GameTheoryComplexity.Backend.SearchReduction
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixCircuitMachine
+public import GameTheoryComplexity.Backend.GeneralBimatrixPathEndpoint
+public import GameTheoryComplexity.Backend.RawEndOfLine
+public import GameTheoryComplexity.Backend.SearchReduction
+
+@[expose] public section
 
 /-! Polynomial reduction of exact signed rectangular Nash search to End-of-Line.
 The answer machine reconstructs the dictionary of the supplied endpoint and

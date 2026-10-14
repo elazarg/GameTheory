@@ -1,3 +1,5 @@
+module
+
 /-
 # Existence of correlated equilibria
 
@@ -10,8 +12,10 @@ This module deliberately lives in `Analysis` because it consumes mixed-Nash
 existence.  The bridges themselves remain in the topology-free core.
 -/
 
-import GameTheory.Analysis.Nash
-import GameTheory.Core.Mixed
+public import GameTheory.Analysis.Nash
+public import GameTheory.Core.Mixed
+
+@[expose] public section
 
 noncomputable section
 

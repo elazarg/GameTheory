@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.SpernerProblem
-import Complexitylib.Classes.P.NormalForm
+module
+
+public import GameTheoryComplexity.Backend.SpernerProblem
+public import Complexitylib.Classes.P.NormalForm
+
+@[expose] public section
 
 /-! A polynomial-time Sperner verifier checks one triangle code and its three
 corner colors. The canonical paired verifier rejects malformed outer encodings;

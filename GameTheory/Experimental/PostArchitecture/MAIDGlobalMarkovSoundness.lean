@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: canonical MAID global-Markov corollary
 
@@ -7,8 +9,10 @@ factorization, and the causal topological order with decision-only edges
 removed.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovSoundness
-import GameTheory.Experimental.PostArchitecture.MAIDFiniteBNBridge
+public import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovSoundness
+public import GameTheory.Experimental.PostArchitecture.MAIDFiniteBNBridge
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,6 +1,10 @@
-import GameTheory.Math.Probability.ExpectationAlgebra
-import GameTheory.Math.Probability.Mixture
-import GameTheory.Math.Probability.FiniteUniform
+module
+
+public import GameTheory.Math.Probability.ExpectationAlgebra
+public import GameTheory.Math.Probability.Mixture
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

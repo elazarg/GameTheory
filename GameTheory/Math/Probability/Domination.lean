@@ -1,3 +1,5 @@
+module
+
 /-
 # Probability domination and the stability of conditional laws
 
@@ -13,9 +15,11 @@ Enlarging an event moves its conditional law by at most the ratio of the added
 mass to the retained mass. No carrier is assumed finite.
 -/
 
-import GameTheory.Math.Probability.Bounds
-import GameTheory.Math.Probability.Conditioning
-import GameTheory.Math.Probability.Convergence
+public import GameTheory.Math.Probability.Bounds
+public import GameTheory.Math.Probability.Conditioning
+public import GameTheory.Math.Probability.Convergence
+
+@[expose] public section
 
 noncomputable section
 

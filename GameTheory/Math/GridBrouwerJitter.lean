@@ -1,6 +1,10 @@
-import GameTheory.Math.GridJitterPair
-import GameTheory.Math.GridBrouwerLipschitz
-import GameTheory.Math.RobustFeedback
+module
+
+public import GameTheory.Math.GridJitterPair
+public import GameTheory.Math.GridBrouwerLipschitz
+public import GameTheory.Math.RobustFeedback
+
+@[expose] public section
 
 /-! Centered clipped samples perturb each coordinate of the grid displacement by a
 quantified amount, independent of the vertex coloring. -/

@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-113: a nonconstant stochastic game-path payoff consumer
 
@@ -6,10 +8,12 @@ The path payoff is therefore genuinely nonconstant, while the path itself is
 still generated solely by the canonical stochastic Protocol runner.
 -/
 
-import GameTheory.Experimental.PostArchitecture.ProtocolHistoryCountable
-import GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayPayoffConsistency
-import GameTheory.Math.Probability.Mixture
-import Mathlib.Tactic.NormNum
+public import GameTheory.Experimental.PostArchitecture.ProtocolHistoryCountable
+public import GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayPayoffConsistency
+public import GameTheory.Math.Probability.Mixture
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 noncomputable section
 

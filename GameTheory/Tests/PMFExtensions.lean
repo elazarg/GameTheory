@@ -1,8 +1,12 @@
-import GameTheory.Math.Probability.ExpectationAlgebra
-import GameTheory.Math.Probability.Bounds
-import GameTheory.Math.Probability.Conditioning
-import GameTheory.Math.Probability.Support
-import GameTheory.Math.Probability.Mixture
+module
+
+public import GameTheory.Math.Probability.ExpectationAlgebra
+public import GameTheory.Math.Probability.Bounds
+public import GameTheory.Math.Probability.Conditioning
+public import GameTheory.Math.Probability.Support
+public import GameTheory.Math.Probability.Mixture
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Incentive implication without law matching, and through coupled utilities
 
@@ -12,8 +14,10 @@ become equal only after projection onto the zero-sum class. Without that
 restriction the implication fails, and a separating utility exhibits it.
 -/
 
-import GameTheory.Analysis.IncentiveCone
-import GameTheory.Math.Probability.Mixture
+public import GameTheory.Analysis.IncentiveCone
+public import GameTheory.Math.Probability.Mixture
+
+@[expose] public section
 
 noncomputable section
 

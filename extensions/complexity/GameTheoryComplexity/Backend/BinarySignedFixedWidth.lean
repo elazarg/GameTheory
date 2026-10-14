@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinarySignedAddition
+module
+
+public import GameTheoryComplexity.Backend.BinarySignedAddition
+
+@[expose] public section
 
 /-! Fixed-width signed arithmetic with a length ruler.
 

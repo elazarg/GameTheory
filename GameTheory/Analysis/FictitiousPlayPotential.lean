@@ -1,3 +1,5 @@
+module
+
 /-
 # Fictitious-play convergence in finite exact-potential games
 
@@ -7,8 +9,10 @@ forces aggregate played gain to vanish; the canonical mixed-improvement
 certificate then yields eventual approximate Nash equilibrium.
 -/
 
-import GameTheory.Core.FictitiousPlayPotential
-import GameTheory.Math.HarmonicSequence
+public import GameTheory.Core.FictitiousPlayPotential
+public import GameTheory.Math.HarmonicSequence
+
+@[expose] public section
 
 noncomputable section
 

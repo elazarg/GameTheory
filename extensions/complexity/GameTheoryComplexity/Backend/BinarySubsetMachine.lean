@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
-import GameTheory.Math.FiniteMinimumScan
+module
+
+public import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
+public import GameTheory.Math.FiniteMinimumScan
+
+@[expose] public section
 
 /-! Polynomial-time ordinal lookup in explicit Boolean membership words.
 Every scan uses word lengths; no decoded numeric value controls recursion.

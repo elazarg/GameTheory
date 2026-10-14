@@ -1,4 +1,8 @@
-import GameTheory.Finite.BimatrixPathCertificate
+module
+
+public import GameTheory.Finite.BimatrixPathCertificate
+
+@[expose] public section
 
 /-! Endpoint decoding preserves a degenerate equilibrium and restores signed payoffs. -/
 namespace GameTheory.Tests.BimatrixPathCertificate

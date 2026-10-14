@@ -1,372 +1,376 @@
-import GameTheory.LintAll
-import GameTheory.Analysis.ApproachabilityTest
-import GameTheory.Analysis.ComponentCompletionTest
-import GameTheory.Analysis.CorrelationHierarchyTest
-import GameTheory.Protocol.DecisionExperimentTest
-import GameTheory.Analysis.DominanceHierarchyTest
-import GameTheory.Analysis.EnforcementTest
-import GameTheory.Analysis.FictitiousPlayPotentialTest
-import GameTheory.Analysis.FictitiousPlayTest
-import GameTheory.Analysis.IncentiveConeTest
-import GameTheory.Analysis.LearningTest
-import GameTheory.Analysis.PMFExistenceTest
-import GameTheory.Analysis.Protocol.BayesianZeroSumLearningTest
-import GameTheory.Analysis.Protocol.BeliefTransportTest
-import GameTheory.Analysis.Protocol.ComponentCompletionTest
-import GameTheory.Analysis.Protocol.CopiedSiteCompletionTest
-import GameTheory.Analysis.Protocol.CounterfactualDecompositionTest
-import GameTheory.Analysis.Protocol.CounterfactualReachTest
-import GameTheory.Analysis.Protocol.CounterfactualRegretLinearityTest
-import GameTheory.Analysis.Protocol.CounterfactualRegretMatchingTest
-import GameTheory.Analysis.Protocol.CounterfactualRegretTest
-import GameTheory.Analysis.Protocol.CounterfactualRootBridgeTest
-import GameTheory.Analysis.Protocol.CounterfactualRootRegretTest
-import GameTheory.Analysis.Protocol.CounterfactualTerminalTest
-import GameTheory.Analysis.Protocol.CounterfactualZeroSumLearningTest
-import GameTheory.Analysis.Protocol.DecisionRecallExistenceTest
-import GameTheory.Analysis.Protocol.EFGStrategicTest
-import GameTheory.Analysis.Protocol.EFGTest
-import GameTheory.Analysis.Protocol.ExtensiveFormPerfectionTest
-import GameTheory.Analysis.Protocol.InfiniteCarrierExistenceTest
-import GameTheory.Analysis.Protocol.InformationLocalizationTest
-import GameTheory.Analysis.Protocol.LocalSimulationLimitTest
-import GameTheory.Analysis.Protocol.PassageBayesTest
-import GameTheory.Analysis.Protocol.PMFSequentialTest
-import GameTheory.Analysis.Protocol.RestrictionExtensionTest
-import GameTheory.Analysis.Protocol.SequentialExistenceBoundaryTest
-import GameTheory.Analysis.Protocol.SequentialExistenceTest
-import GameTheory.Analysis.Protocol.SequentialOneShotTest
-import GameTheory.Analysis.Protocol.SubgameLocalizationTest
-import GameTheory.Analysis.Protocol.SupportedChoicesTest
-import GameTheory.Analysis.Protocol.TremblingPlansTest
-import GameTheory.Analysis.Protocol.UniformPolicyLimitTest
-import GameTheory.Analysis.Protocol.WellFoundedTerminalAssessmentTest
-import GameTheory.Analysis.Protocol.WellFoundedTerminalEquilibriumTest
-import GameTheory.Analysis.PseudoCorrelatedTest
-import GameTheory.Analysis.PseudoNashCoalitionTest
-import GameTheory.Analysis.PseudoNashExistenceTest
-import GameTheory.Analysis.PseudoNashTest
-import GameTheory.Analysis.StrongNashBoundaryTest
-import GameTheory.Analysis.TremblingHandBoundaryTest
-import GameTheory.Analysis.TremblingHandTest
-import GameTheory.Analysis.ZeroSumLearningTest
-import GameTheory.Experimental.Phase1.D1.Bundled
-import GameTheory.Experimental.Phase1.D1.Indexed
-import GameTheory.Experimental.Phase1.D1.Stress
-import GameTheory.Experimental.Phase1.D2.FiniteSupportPMF
-import GameTheory.Experimental.Phase1.D2.Interop
-import GameTheory.Experimental.Phase1.D2.NormalizedFinsupp
-import GameTheory.Experimental.Phase2.BayesianProbe
-import GameTheory.Experimental.Phase4.D1.IndexedForm
-import GameTheory.Experimental.Phase4.D1.IndexedProtocol
-import GameTheory.Experimental.Phase4.D1.Recheck
-import GameTheory.Experimental.Phase4.ReachMassStatements
-import GameTheory.Experimental.PostArchitecture.AsymptoticOscillatingSequence
-import GameTheory.Experimental.PostArchitecture.AsymptoticPayoffSeparation
-import GameTheory.Experimental.PostArchitecture.CheapTalk
-import GameTheory.Experimental.PostArchitecture.CheapTalkPublicRandomness
-import GameTheory.Experimental.PostArchitecture.ContractOwnership
-import GameTheory.Experimental.PostArchitecture.CountableDiscreteStopping
-import GameTheory.Experimental.PostArchitecture.CountablePMFExpectation
-import GameTheory.Experimental.PostArchitecture.CyclicUniformHostile
-import GameTheory.Experimental.PostArchitecture.CyclicUniformInterface
-import GameTheory.Experimental.PostArchitecture.D8Transformations
-import GameTheory.Experimental.PostArchitecture.DAGDiamond
-import GameTheory.Experimental.PostArchitecture.DependentAssignmentEnumeration
-import GameTheory.Experimental.PostArchitecture.ElectronicMail
-import GameTheory.Experimental.PostArchitecture.EvolutionaryOwnership
-import GameTheory.Experimental.PostArchitecture.FiniteBNCoordinateIndependence
-import GameTheory.Experimental.PostArchitecture.FiniteBNFactorScopes
-import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
-import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovChainTest
-import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovColliderTest
-import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovSoundness
-import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovZeroEvidenceTest
-import GameTheory.Experimental.PostArchitecture.FiniteBNKernelInvariance
-import GameTheory.Experimental.PostArchitecture.FiniteBNLatentSum
-import GameTheory.Experimental.PostArchitecture.FiniteBNMarginalization
-import GameTheory.Experimental.PostArchitecture.FiniteBNMoralComponents
-import GameTheory.Experimental.PostArchitecture.FiniteBNMoralScoreBridge
-import GameTheory.Experimental.PostArchitecture.FiniteBNMoralSeparation
-import GameTheory.Experimental.PostArchitecture.FiniteBNQueryCylinderFubini
-import GameTheory.Experimental.PostArchitecture.FiniteBNRankOne
-import GameTheory.Experimental.PostArchitecture.FiniteBNRetainedSum
-import GameTheory.Experimental.PostArchitecture.FiniteBNScoreAssembly
-import GameTheory.Experimental.PostArchitecture.FiniteBNScoreCylinderBridge
-import GameTheory.Experimental.PostArchitecture.FiniteConditionalContinuation
-import GameTheory.Experimental.PostArchitecture.FiniteConditionalIndependence
-import GameTheory.Experimental.PostArchitecture.FiniteDirectedReachability
-import GameTheory.Experimental.PostArchitecture.FOSGKuhn
-import GameTheory.Experimental.PostArchitecture.FOSGObservationFacts
-import GameTheory.Experimental.PostArchitecture.FOSGToEFG
-import GameTheory.Experimental.PostArchitecture.FOSGToEFGGenericWitnesses
-import GameTheory.Experimental.PostArchitecture.FOSGToEFGTwoRound
-import GameTheory.Experimental.PostArchitecture.FOSGToEFGTwoRoundWitnesses
-import GameTheory.Experimental.PostArchitecture.IntrinsicOwnership
-import GameTheory.Experimental.PostArchitecture.IntrinsicStrategic
-import GameTheory.Experimental.PostArchitecture.KnapsackApproximation
-import GameTheory.Experimental.PostArchitecture.KnapsackBoundary
-import GameTheory.Experimental.PostArchitecture.KnapsackVCG
-import GameTheory.Experimental.PostArchitecture.KnowledgeOwnership
-import GameTheory.Experimental.PostArchitecture.KuhnFiniteSupport
-import GameTheory.Experimental.PostArchitecture.MAIDCylinderBridge
-import GameTheory.Experimental.PostArchitecture.MAIDFactorization
-import GameTheory.Experimental.PostArchitecture.MAIDFiniteBNBridge
-import GameTheory.Experimental.PostArchitecture.MAIDForgetfulMovieStarAudit
-import GameTheory.Experimental.PostArchitecture.MAIDGlobalMarkovSoundness
-import GameTheory.Experimental.PostArchitecture.MAIDGraphDeciders
-import GameTheory.Experimental.PostArchitecture.MAIDGraphicalReduction
-import GameTheory.Experimental.PostArchitecture.MAIDGraphicalReductionTest
-import GameTheory.Experimental.PostArchitecture.MAIDIncomparable
-import GameTheory.Experimental.PostArchitecture.MAIDKernelMarginalization
-import GameTheory.Experimental.PostArchitecture.MAIDLocalReduction
-import GameTheory.Experimental.PostArchitecture.MAIDMechanismSelectorFactorization
-import GameTheory.Experimental.PostArchitecture.MAIDMechanismSelectorIndependence
-import GameTheory.Experimental.PostArchitecture.MAIDMechanismSelectorScores
-import GameTheory.Experimental.PostArchitecture.MAIDNonrelevantUtilityInvariance
-import GameTheory.Experimental.PostArchitecture.MAIDPruningConditionalIndependence
-import GameTheory.Experimental.PostArchitecture.MAIDPruningFactorizationBridge
-import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointChecker
-import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointCheckerTest
-import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
-import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointPositiveTest
-import GameTheory.Experimental.PostArchitecture.MAIDPruningGlobalReduction
-import GameTheory.Experimental.PostArchitecture.MAIDPruningHybridFactorization
-import GameTheory.Experimental.PostArchitecture.MAIDPruningNonrelevantInvariance
-import GameTheory.Experimental.PostArchitecture.MAIDPruningRecallOrder
-import GameTheory.Experimental.PostArchitecture.MAIDPruningRelevantContinuation
-import GameTheory.Experimental.PostArchitecture.MAIDPruningSiteReduction
-import GameTheory.Experimental.PostArchitecture.MAIDRelevantUtilityContinuation
-import GameTheory.Experimental.PostArchitecture.MAIDReplacementContext
-import GameTheory.Experimental.PostArchitecture.MAIDReplacementInvariantUtility
-import GameTheory.Experimental.PostArchitecture.MAIDRequisiteObservation
-import GameTheory.Experimental.PostArchitecture.MAIDSameOwner
-import GameTheory.Experimental.PostArchitecture.MAIDSiteLocalReduction
-import GameTheory.Experimental.PostArchitecture.MAIDSiteOptimality
-import GameTheory.Experimental.PostArchitecture.MAIDSiteOptimalityScores
-import GameTheory.Experimental.PostArchitecture.MAIDSitePolicySurgery
-import GameTheory.Experimental.PostArchitecture.MAIDSiteReplacementContext
-import GameTheory.Experimental.PostArchitecture.MAIDStrategicNonreachability
-import GameTheory.Experimental.PostArchitecture.MAIDStrategicNonreachabilityList
-import GameTheory.Experimental.PostArchitecture.MAIDTargetSurgery
-import GameTheory.Experimental.PostArchitecture.MAIDThreeNodeWitness
-import GameTheory.Experimental.PostArchitecture.MAIDUtilityAugmentation
-import GameTheory.Experimental.PostArchitecture.MAIDUtilityConditionalIndependence
-import GameTheory.Experimental.PostArchitecture.MAIDUtilityContinuationFromCI
-import GameTheory.Experimental.PostArchitecture.MAIDUtilityFactorization
-import GameTheory.Experimental.PostArchitecture.MAIDUtilityGraphFinite
-import GameTheory.Experimental.PostArchitecture.MAIDUtilitySeparationBridge
-import GameTheory.Experimental.PostArchitecture.MixtureSimulationComparison
-import GameTheory.Experimental.PostArchitecture.NFGFOSGTest
-import GameTheory.Experimental.PostArchitecture.PMFBackwardGate
-import GameTheory.Experimental.PostArchitecture.PMFBayesianGate
-import GameTheory.Experimental.PostArchitecture.PMFEpistemicGate
-import GameTheory.Experimental.PostArchitecture.PMFEvolutionaryGate
-import GameTheory.Experimental.PostArchitecture.PMFInfinitePlayGate
-import GameTheory.Experimental.PostArchitecture.PMFMAIDGate
-import GameTheory.Experimental.PostArchitecture.PMFMechanismGate
-import GameTheory.Experimental.PostArchitecture.PMFMonitoringGate
-import GameTheory.Experimental.PostArchitecture.PMFPolicyMeasureReverseGate
-import GameTheory.Experimental.PostArchitecture.PMFProductGate
-import GameTheory.Experimental.PostArchitecture.PMFRationalizabilityGate
-import GameTheory.Experimental.PostArchitecture.PMFRepeatedGate
-import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
-import GameTheory.Experimental.PostArchitecture.PMFSequentialGate
-import GameTheory.Experimental.PostArchitecture.PMFStaticGate
-import GameTheory.Experimental.PostArchitecture.PMFStochasticBellmanGate
-import GameTheory.Experimental.PostArchitecture.PMFTransferGate
-import GameTheory.Experimental.PostArchitecture.PMFUniformGate
-import GameTheory.Experimental.PostArchitecture.ProbabilityTailAdequacy
-import GameTheory.Experimental.PostArchitecture.ProtocolHistoryCountable
-import GameTheory.Experimental.PostArchitecture.ProtocolKnowledgeBridge
-import GameTheory.Experimental.PostArchitecture.QuasiLinearMechanismOwnership
-import GameTheory.Experimental.PostArchitecture.RoundsWitness
-import GameTheory.Experimental.PostArchitecture.RuntimeTransformAdequacy
-import GameTheory.Experimental.PostArchitecture.SequentialClientAdequacy
-import GameTheory.Experimental.PostArchitecture.StochasticAsymptoticPayoffs
-import GameTheory.Experimental.PostArchitecture.StochasticGamePathPayoff
-import GameTheory.Experimental.PostArchitecture.StochasticHybridInfiniteKuhn
-import GameTheory.Experimental.PostArchitecture.StochasticInfiniteKuhn
-import GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayCoherence
-import GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayMeasure
-import GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayPayoffBridge
-import GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayPayoffConsistency
-import GameTheory.Experimental.PostArchitecture.StochasticKuhn
-import GameTheory.Experimental.PostArchitecture.StochasticProofViewTest
-import GameTheory.Experimental.PostArchitecture.StochasticPublicHistoryCoherence
-import GameTheory.Experimental.PostArchitecture.StochasticPublicHistoryCoherenceTest
-import GameTheory.Experimental.PostArchitecture.StochasticReverseInfiniteKuhn
-import GameTheory.Experimental.PostArchitecture.TypedMAIDTest
-import GameTheory.Experimental.PostArchitecture.TypedMAIDToEFGTest
-import GameTheory.Experimental.PostArchitecture.VNMFiniteSupport
-import GameTheory.Experimental.PostArchitecture.WellFoundedTerminalGate
-import GameTheory.Math.Probability.AggregateComparisonTest
-import GameTheory.Math.Probability.HybridIndistinguishabilityTest
-import GameTheory.Math.Probability.InteractionTest
-import GameTheory.Math.Probability.TightnessTest
-import GameTheory.Math.ScalarInequalitiesTest
-import GameTheory.Tests.AffineMaximizer
-import GameTheory.Tests.Agreement
-import GameTheory.Tests.Approachability
-import GameTheory.Tests.ApproximateEquilibriumTransport
-import GameTheory.Tests.Arena
-import GameTheory.Tests.Arrow
-import GameTheory.Tests.Assessment
-import GameTheory.Tests.AuctionSemantics
-import GameTheory.Tests.Backward
-import GameTheory.Tests.Balancedness
-import GameTheory.Tests.Banzhaf
-import GameTheory.Tests.Bargaining
-import GameTheory.Tests.BasisCoordinates
-import GameTheory.Tests.BayesCorrelated
-import GameTheory.Tests.Bayesian
-import GameTheory.Tests.BayesianMechanism
-import GameTheory.Tests.BayesianWelfare
-import GameTheory.Tests.BehavioralContinuation
-import GameTheory.Tests.BimatrixAffineGate
-import GameTheory.Tests.BimatrixBasis
-import GameTheory.Tests.BimatrixBasisBounds
-import GameTheory.Tests.BimatrixBasisExit
-import GameTheory.Tests.BimatrixBasisSolution
-import GameTheory.Tests.BimatrixBlockGame
-import GameTheory.Tests.BimatrixBooleanGate
-import GameTheory.Tests.BimatrixCertificate
-import GameTheory.Tests.BimatrixCertificateShift
-import GameTheory.Tests.BimatrixComplementarity
-import GameTheory.Tests.BimatrixComplementaryCertificateBounds
-import GameTheory.Tests.BimatrixComputedOrientation
-import GameTheory.Tests.BimatrixComputedPivot
-import GameTheory.Tests.BimatrixCramerCertificate
-import GameTheory.Tests.BimatrixEndpointBounds
-import GameTheory.Tests.BimatrixGateProgram
-import GameTheory.Tests.BimatrixNashCertificate
-import GameTheory.Tests.BimatrixPath
-import GameTheory.Tests.BimatrixPathBinaryCodec
-import GameTheory.Tests.BimatrixPathCertificate
-import GameTheory.Tests.BimatrixPathEndOfLine
-import GameTheory.Tests.BimatrixPathOrientation
-import GameTheory.Tests.BimatrixPivot
-import GameTheory.Tests.BimatrixPivotSource
-import GameTheory.Tests.BoundedLinearCertificate
-import GameTheory.Tests.Candidates
-import GameTheory.Tests.CanonicalDictionary
-import GameTheory.Tests.CoalitionSimulation
-import GameTheory.Tests.ComplementaryLabels
-import GameTheory.Tests.ComplementaryPortOrder
-import GameTheory.Tests.ComplementaryPorts
-import GameTheory.Tests.Congestion
-import GameTheory.Tests.ContinuationMenus
-import GameTheory.Tests.ContinuationMixture
-import GameTheory.Tests.ContinuationTransfer
-import GameTheory.Tests.CorrelatedDominance
-import GameTheory.Tests.DictionaryPivot
-import GameTheory.Tests.DictionaryReindex
-import GameTheory.Tests.EFGKuhn
-import GameTheory.Tests.EFGKuhnNash
-import GameTheory.Tests.EFGSubgamePerfect
-import GameTheory.Tests.EFGZermelo
-import GameTheory.Tests.EndOfLine
-import GameTheory.Tests.EndOfLineNormalization
-import GameTheory.Tests.Evolutionary
-import GameTheory.Tests.Execution
-import GameTheory.Tests.ExecutionLaws
-import GameTheory.Tests.Extraction
-import GameTheory.Tests.FacetOrientation
-import GameTheory.Tests.FairDivision
-import GameTheory.Tests.FeasiblePosteriors
-import GameTheory.Tests.FictitiousPlay
-import GameTheory.Tests.FictitiousPlayPotential
-import GameTheory.Tests.FiniteBasisExchange
-import GameTheory.Tests.FiniteLexicographic
-import GameTheory.Tests.FiniteRationalEncoding
-import GameTheory.Tests.FiniteSetRank
-import GameTheory.Tests.FOSGStrategic
-import GameTheory.Tests.GibbardSatterthwaite
-import GameTheory.Tests.GridBrouwer
-import GameTheory.Tests.GridCrossing
-import GameTheory.Tests.GridCrossingAttachment
-import GameTheory.Tests.GridRoutedGraph
-import GameTheory.Tests.GridSperner
-import GameTheory.Tests.GridSpernerRouting
-import GameTheory.Tests.GridWire
-import GameTheory.Tests.Groves
-import GameTheory.Tests.History
-import GameTheory.Tests.Implementation
-import GameTheory.Tests.InfiniteExpectation
-import GameTheory.Tests.InfiniteMovers
-import GameTheory.Tests.Information
-import GameTheory.Tests.InformationDesign
-import GameTheory.Tests.IntegerBasisBounds
-import GameTheory.Tests.IntegerCramerComputation
-import GameTheory.Tests.IntegerCramerEncoding
-import GameTheory.Tests.IntegerRatioSelection
-import GameTheory.Tests.InterleavedMenus
-import GameTheory.Tests.IntrinsicSolution
-import GameTheory.Tests.IntrinsicStrategic
-import GameTheory.Tests.IrreversibleFailure
-import GameTheory.Tests.JointFeasiblePosteriors
-import GameTheory.Tests.Learning
-import GameTheory.Tests.LexicographicPivot
-import GameTheory.Tests.LinearComplementarity
-import GameTheory.Tests.Locality
-import GameTheory.Tests.MAID
-import GameTheory.Tests.MAIDObservationPruning
-import GameTheory.Tests.MAIDPruningComposition
-import GameTheory.Tests.MAIDSafeReduction
-import GameTheory.Tests.Matching
-import GameTheory.Tests.May
-import GameTheory.Tests.MixedPotential
-import GameTheory.Tests.MixtureSimulation
-import GameTheory.Tests.Monitoring
-import GameTheory.Tests.MonitoringEquilibrium
-import GameTheory.Tests.MonitoringRank
-import GameTheory.Tests.MonitoringSelfGeneration
-import GameTheory.Tests.MultiRoundMonitoring
-import GameTheory.Tests.NonnegativeDictionary
-import GameTheory.Tests.OneShot
-import GameTheory.Tests.OrientedInvolutionPath
-import GameTheory.Tests.OrientedInvolutionPathWitness
-import GameTheory.Tests.OwnPlayRecall
-import GameTheory.Tests.PerturbedDictionary
-import GameTheory.Tests.PMFExtensions
-import GameTheory.Tests.PMFProbabilityLemmas
-import GameTheory.Tests.PMFProductAlgebra
-import GameTheory.Tests.Potential
-import GameTheory.Tests.Predraw
-import GameTheory.Tests.PrincipalAgent
-import GameTheory.Tests.PrivateStrategy
-import GameTheory.Tests.ProbabilityBounds
-import GameTheory.Tests.ProtocolKnowledge
-import GameTheory.Tests.QuasiLinearMechanism
-import GameTheory.Tests.Randomized
-import GameTheory.Tests.Rationalizability
-import GameTheory.Tests.RationalQuotientBounds
-import GameTheory.Tests.Repeated
-import GameTheory.Tests.RepeatedUniform
-import GameTheory.Tests.Revelation
-import GameTheory.Tests.SatisfiabilityGame
-import GameTheory.Tests.SelectiveStopping
-import GameTheory.Tests.SequentialSampling
-import GameTheory.Tests.Shapley
-import GameTheory.Tests.Simultaneous
-import GameTheory.Tests.SingleMover
-import GameTheory.Tests.SingleParameter
-import GameTheory.Tests.SpernerGridGraph
-import GameTheory.Tests.StochasticContinuation
-import GameTheory.Tests.Strategic
-import GameTheory.Tests.SubgameOneShot
-import GameTheory.Tests.SubgamePerfect
-import GameTheory.Tests.SubgameRoots
-import GameTheory.Tests.Transform
-import GameTheory.Tests.UtilityInvariance
-import GameTheory.Tests.UtilitySimulation
-import GameTheory.Tests.UtilityTransferBoundary
-import GameTheory.Tests.UtilityTransferComparison
-import GameTheory.Tests.VNM
-import GameTheory.Tests.Welfare
-import GameTheory.Tests.ZermeloMenus
-import Lean.Util.CollectAxioms
-import Lean.Elab.Command
+module
+
+import all GameTheory.LintAll
+import all GameTheory.Analysis.ApproachabilityTest
+import all GameTheory.Analysis.ComponentCompletionTest
+import all GameTheory.Analysis.CorrelationHierarchyTest
+import all GameTheory.Protocol.DecisionExperimentTest
+import all GameTheory.Analysis.DominanceHierarchyTest
+import all GameTheory.Analysis.EnforcementTest
+import all GameTheory.Analysis.FictitiousPlayPotentialTest
+import all GameTheory.Analysis.FictitiousPlayTest
+import all GameTheory.Analysis.IncentiveConeTest
+import all GameTheory.Analysis.LearningTest
+import all GameTheory.Analysis.PMFExistenceTest
+import all GameTheory.Analysis.Protocol.BayesianZeroSumLearningTest
+import all GameTheory.Analysis.Protocol.BeliefTransportTest
+import all GameTheory.Analysis.Protocol.ComponentCompletionTest
+import all GameTheory.Analysis.Protocol.CopiedSiteCompletionTest
+import all GameTheory.Analysis.Protocol.CounterfactualDecompositionTest
+import all GameTheory.Analysis.Protocol.CounterfactualReachTest
+import all GameTheory.Analysis.Protocol.CounterfactualRegretLinearityTest
+import all GameTheory.Analysis.Protocol.CounterfactualRegretMatchingTest
+import all GameTheory.Analysis.Protocol.CounterfactualRegretTest
+import all GameTheory.Analysis.Protocol.CounterfactualRootBridgeTest
+import all GameTheory.Analysis.Protocol.CounterfactualRootRegretTest
+import all GameTheory.Analysis.Protocol.CounterfactualTerminalTest
+import all GameTheory.Analysis.Protocol.CounterfactualZeroSumLearningTest
+import all GameTheory.Analysis.Protocol.DecisionRecallExistenceTest
+import all GameTheory.Analysis.Protocol.EFGStrategicTest
+import all GameTheory.Analysis.Protocol.EFGTest
+import all GameTheory.Analysis.Protocol.ExtensiveFormPerfectionTest
+import all GameTheory.Analysis.Protocol.InfiniteCarrierExistenceTest
+import all GameTheory.Analysis.Protocol.InformationLocalizationTest
+import all GameTheory.Analysis.Protocol.LocalSimulationLimitTest
+import all GameTheory.Analysis.Protocol.PassageBayesTest
+import all GameTheory.Analysis.Protocol.PMFSequentialTest
+import all GameTheory.Analysis.Protocol.RestrictionExtensionTest
+import all GameTheory.Analysis.Protocol.SequentialExistenceBoundaryTest
+import all GameTheory.Analysis.Protocol.SequentialExistenceTest
+import all GameTheory.Analysis.Protocol.SequentialOneShotTest
+import all GameTheory.Analysis.Protocol.SubgameLocalizationTest
+import all GameTheory.Analysis.Protocol.SupportedChoicesTest
+import all GameTheory.Analysis.Protocol.TremblingPlansTest
+import all GameTheory.Analysis.Protocol.UniformPolicyLimitTest
+import all GameTheory.Analysis.Protocol.WellFoundedTerminalAssessmentTest
+import all GameTheory.Analysis.Protocol.WellFoundedTerminalEquilibriumTest
+import all GameTheory.Analysis.PseudoCorrelatedTest
+import all GameTheory.Analysis.PseudoNashCoalitionTest
+import all GameTheory.Analysis.PseudoNashExistenceTest
+import all GameTheory.Analysis.PseudoNashTest
+import all GameTheory.Analysis.StrongNashBoundaryTest
+import all GameTheory.Analysis.TremblingHandBoundaryTest
+import all GameTheory.Analysis.TremblingHandTest
+import all GameTheory.Analysis.ZeroSumLearningTest
+import all GameTheory.Experimental.Phase1.D1.Bundled
+import all GameTheory.Experimental.Phase1.D1.Indexed
+import all GameTheory.Experimental.Phase1.D1.Stress
+import all GameTheory.Experimental.Phase1.D2.FiniteSupportPMF
+import all GameTheory.Experimental.Phase1.D2.Interop
+import all GameTheory.Experimental.Phase1.D2.NormalizedFinsupp
+import all GameTheory.Experimental.Phase2.BayesianProbe
+import all GameTheory.Experimental.Phase4.D1.IndexedForm
+import all GameTheory.Experimental.Phase4.D1.IndexedProtocol
+import all GameTheory.Experimental.Phase4.D1.Recheck
+import all GameTheory.Experimental.Phase4.ReachMassStatements
+import all GameTheory.Experimental.PostArchitecture.AsymptoticOscillatingSequence
+import all GameTheory.Experimental.PostArchitecture.AsymptoticPayoffSeparation
+import all GameTheory.Experimental.PostArchitecture.CheapTalk
+import all GameTheory.Experimental.PostArchitecture.CheapTalkPublicRandomness
+import all GameTheory.Experimental.PostArchitecture.ContractOwnership
+import all GameTheory.Experimental.PostArchitecture.CountableDiscreteStopping
+import all GameTheory.Experimental.PostArchitecture.CountablePMFExpectation
+import all GameTheory.Experimental.PostArchitecture.CyclicUniformHostile
+import all GameTheory.Experimental.PostArchitecture.CyclicUniformInterface
+import all GameTheory.Experimental.PostArchitecture.D8Transformations
+import all GameTheory.Experimental.PostArchitecture.DAGDiamond
+import all GameTheory.Experimental.PostArchitecture.DependentAssignmentEnumeration
+import all GameTheory.Experimental.PostArchitecture.ElectronicMail
+import all GameTheory.Experimental.PostArchitecture.EvolutionaryOwnership
+import all GameTheory.Experimental.PostArchitecture.FiniteBNCoordinateIndependence
+import all GameTheory.Experimental.PostArchitecture.FiniteBNFactorScopes
+import all GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
+import all GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovChainTest
+import all GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovColliderTest
+import all GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovSoundness
+import all GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovZeroEvidenceTest
+import all GameTheory.Experimental.PostArchitecture.FiniteBNKernelInvariance
+import all GameTheory.Experimental.PostArchitecture.FiniteBNLatentSum
+import all GameTheory.Experimental.PostArchitecture.FiniteBNMarginalization
+import all GameTheory.Experimental.PostArchitecture.FiniteBNMoralComponents
+import all GameTheory.Experimental.PostArchitecture.FiniteBNMoralScoreBridge
+import all GameTheory.Experimental.PostArchitecture.FiniteBNMoralSeparation
+import all GameTheory.Experimental.PostArchitecture.FiniteBNQueryCylinderFubini
+import all GameTheory.Experimental.PostArchitecture.FiniteBNRankOne
+import all GameTheory.Experimental.PostArchitecture.FiniteBNRetainedSum
+import all GameTheory.Experimental.PostArchitecture.FiniteBNScoreAssembly
+import all GameTheory.Experimental.PostArchitecture.FiniteBNScoreCylinderBridge
+import all GameTheory.Experimental.PostArchitecture.FiniteConditionalContinuation
+import all GameTheory.Experimental.PostArchitecture.FiniteConditionalIndependence
+import all GameTheory.Experimental.PostArchitecture.FiniteDirectedReachability
+import all GameTheory.Experimental.PostArchitecture.FOSGKuhn
+import all GameTheory.Experimental.PostArchitecture.FOSGObservationFacts
+import all GameTheory.Experimental.PostArchitecture.FOSGToEFG
+import all GameTheory.Experimental.PostArchitecture.FOSGToEFGGenericWitnesses
+import all GameTheory.Experimental.PostArchitecture.FOSGToEFGTwoRound
+import all GameTheory.Experimental.PostArchitecture.FOSGToEFGTwoRoundWitnesses
+import all GameTheory.Experimental.PostArchitecture.IntrinsicOwnership
+import all GameTheory.Experimental.PostArchitecture.IntrinsicStrategic
+import all GameTheory.Experimental.PostArchitecture.KnapsackApproximation
+import all GameTheory.Experimental.PostArchitecture.KnapsackBoundary
+import all GameTheory.Experimental.PostArchitecture.KnapsackVCG
+import all GameTheory.Experimental.PostArchitecture.KnowledgeOwnership
+import all GameTheory.Experimental.PostArchitecture.KuhnFiniteSupport
+import all GameTheory.Experimental.PostArchitecture.MAIDCylinderBridge
+import all GameTheory.Experimental.PostArchitecture.MAIDFactorization
+import all GameTheory.Experimental.PostArchitecture.MAIDFiniteBNBridge
+import all GameTheory.Experimental.PostArchitecture.MAIDForgetfulMovieStarAudit
+import all GameTheory.Experimental.PostArchitecture.MAIDGlobalMarkovSoundness
+import all GameTheory.Experimental.PostArchitecture.MAIDGraphDeciders
+import all GameTheory.Experimental.PostArchitecture.MAIDGraphicalReduction
+import all GameTheory.Experimental.PostArchitecture.MAIDGraphicalReductionTest
+import all GameTheory.Experimental.PostArchitecture.MAIDIncomparable
+import all GameTheory.Experimental.PostArchitecture.MAIDKernelMarginalization
+import all GameTheory.Experimental.PostArchitecture.MAIDLocalReduction
+import all GameTheory.Experimental.PostArchitecture.MAIDMechanismSelectorFactorization
+import all GameTheory.Experimental.PostArchitecture.MAIDMechanismSelectorIndependence
+import all GameTheory.Experimental.PostArchitecture.MAIDMechanismSelectorScores
+import all GameTheory.Experimental.PostArchitecture.MAIDNonrelevantUtilityInvariance
+import all GameTheory.Experimental.PostArchitecture.MAIDPruningConditionalIndependence
+import all GameTheory.Experimental.PostArchitecture.MAIDPruningFactorizationBridge
+import all GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointChecker
+import all GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointCheckerTest
+import all GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
+import all GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointPositiveTest
+import all GameTheory.Experimental.PostArchitecture.MAIDPruningGlobalReduction
+import all GameTheory.Experimental.PostArchitecture.MAIDPruningHybridFactorization
+import all GameTheory.Experimental.PostArchitecture.MAIDPruningNonrelevantInvariance
+import all GameTheory.Experimental.PostArchitecture.MAIDPruningRecallOrder
+import all GameTheory.Experimental.PostArchitecture.MAIDPruningRelevantContinuation
+import all GameTheory.Experimental.PostArchitecture.MAIDPruningSiteReduction
+import all GameTheory.Experimental.PostArchitecture.MAIDRelevantUtilityContinuation
+import all GameTheory.Experimental.PostArchitecture.MAIDReplacementContext
+import all GameTheory.Experimental.PostArchitecture.MAIDReplacementInvariantUtility
+import all GameTheory.Experimental.PostArchitecture.MAIDRequisiteObservation
+import all GameTheory.Experimental.PostArchitecture.MAIDSameOwner
+import all GameTheory.Experimental.PostArchitecture.MAIDSiteLocalReduction
+import all GameTheory.Experimental.PostArchitecture.MAIDSiteOptimality
+import all GameTheory.Experimental.PostArchitecture.MAIDSiteOptimalityScores
+import all GameTheory.Experimental.PostArchitecture.MAIDSitePolicySurgery
+import all GameTheory.Experimental.PostArchitecture.MAIDSiteReplacementContext
+import all GameTheory.Experimental.PostArchitecture.MAIDStrategicNonreachability
+import all GameTheory.Experimental.PostArchitecture.MAIDStrategicNonreachabilityList
+import all GameTheory.Experimental.PostArchitecture.MAIDTargetSurgery
+import all GameTheory.Experimental.PostArchitecture.MAIDThreeNodeWitness
+import all GameTheory.Experimental.PostArchitecture.MAIDUtilityAugmentation
+import all GameTheory.Experimental.PostArchitecture.MAIDUtilityConditionalIndependence
+import all GameTheory.Experimental.PostArchitecture.MAIDUtilityContinuationFromCI
+import all GameTheory.Experimental.PostArchitecture.MAIDUtilityFactorization
+import all GameTheory.Experimental.PostArchitecture.MAIDUtilityGraphFinite
+import all GameTheory.Experimental.PostArchitecture.MAIDUtilitySeparationBridge
+import all GameTheory.Experimental.PostArchitecture.MixtureSimulationComparison
+import all GameTheory.Experimental.PostArchitecture.NFGFOSGTest
+import all GameTheory.Experimental.PostArchitecture.PMFBackwardGate
+import all GameTheory.Experimental.PostArchitecture.PMFBayesianGate
+import all GameTheory.Experimental.PostArchitecture.PMFEpistemicGate
+import all GameTheory.Experimental.PostArchitecture.PMFEvolutionaryGate
+import all GameTheory.Experimental.PostArchitecture.PMFInfinitePlayGate
+import all GameTheory.Experimental.PostArchitecture.PMFMAIDGate
+import all GameTheory.Experimental.PostArchitecture.PMFMechanismGate
+import all GameTheory.Experimental.PostArchitecture.PMFMonitoringGate
+import all GameTheory.Experimental.PostArchitecture.PMFPolicyMeasureReverseGate
+import all GameTheory.Experimental.PostArchitecture.PMFProductGate
+import all GameTheory.Experimental.PostArchitecture.PMFRationalizabilityGate
+import all GameTheory.Experimental.PostArchitecture.PMFRepeatedGate
+import all GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
+import all GameTheory.Experimental.PostArchitecture.PMFSequentialGate
+import all GameTheory.Experimental.PostArchitecture.PMFStaticGate
+import all GameTheory.Experimental.PostArchitecture.PMFStochasticBellmanGate
+import all GameTheory.Experimental.PostArchitecture.PMFTransferGate
+import all GameTheory.Experimental.PostArchitecture.PMFUniformGate
+import all GameTheory.Experimental.PostArchitecture.ProbabilityTailAdequacy
+import all GameTheory.Experimental.PostArchitecture.ProtocolHistoryCountable
+import all GameTheory.Experimental.PostArchitecture.ProtocolKnowledgeBridge
+import all GameTheory.Experimental.PostArchitecture.QuasiLinearMechanismOwnership
+import all GameTheory.Experimental.PostArchitecture.RoundsWitness
+import all GameTheory.Experimental.PostArchitecture.RuntimeTransformAdequacy
+import all GameTheory.Experimental.PostArchitecture.SequentialClientAdequacy
+import all GameTheory.Experimental.PostArchitecture.StochasticAsymptoticPayoffs
+import all GameTheory.Experimental.PostArchitecture.StochasticGamePathPayoff
+import all GameTheory.Experimental.PostArchitecture.StochasticHybridInfiniteKuhn
+import all GameTheory.Experimental.PostArchitecture.StochasticInfiniteKuhn
+import all GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayCoherence
+import all GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayMeasure
+import all GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayPayoffBridge
+import all GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayPayoffConsistency
+import all GameTheory.Experimental.PostArchitecture.StochasticKuhn
+import all GameTheory.Experimental.PostArchitecture.StochasticProofViewTest
+import all GameTheory.Experimental.PostArchitecture.StochasticPublicHistoryCoherence
+import all GameTheory.Experimental.PostArchitecture.StochasticPublicHistoryCoherenceTest
+import all GameTheory.Experimental.PostArchitecture.StochasticReverseInfiniteKuhn
+import all GameTheory.Experimental.PostArchitecture.TypedMAIDTest
+import all GameTheory.Experimental.PostArchitecture.TypedMAIDToEFGTest
+import all GameTheory.Experimental.PostArchitecture.VNMFiniteSupport
+import all GameTheory.Experimental.PostArchitecture.WellFoundedTerminalGate
+import all GameTheory.Math.Probability.AggregateComparisonTest
+import all GameTheory.Math.Probability.HybridIndistinguishabilityTest
+import all GameTheory.Math.Probability.InteractionTest
+import all GameTheory.Math.Probability.TightnessTest
+import all GameTheory.Math.ScalarInequalitiesTest
+import all GameTheory.Tests.AffineMaximizer
+import all GameTheory.Tests.Agreement
+import all GameTheory.Tests.Approachability
+import all GameTheory.Tests.ApproximateEquilibriumTransport
+import all GameTheory.Tests.Arena
+import all GameTheory.Tests.Arrow
+import all GameTheory.Tests.Assessment
+import all GameTheory.Tests.AuctionSemantics
+import all GameTheory.Tests.Backward
+import all GameTheory.Tests.Balancedness
+import all GameTheory.Tests.Banzhaf
+import all GameTheory.Tests.Bargaining
+import all GameTheory.Tests.BasisCoordinates
+import all GameTheory.Tests.BayesCorrelated
+import all GameTheory.Tests.Bayesian
+import all GameTheory.Tests.BayesianMechanism
+import all GameTheory.Tests.BayesianWelfare
+import all GameTheory.Tests.BehavioralContinuation
+import all GameTheory.Tests.BimatrixAffineGate
+import all GameTheory.Tests.BimatrixBasis
+import all GameTheory.Tests.BimatrixBasisBounds
+import all GameTheory.Tests.BimatrixBasisExit
+import all GameTheory.Tests.BimatrixBasisSolution
+import all GameTheory.Tests.BimatrixBlockGame
+import all GameTheory.Tests.BimatrixBooleanGate
+import all GameTheory.Tests.BimatrixCertificate
+import all GameTheory.Tests.BimatrixCertificateShift
+import all GameTheory.Tests.BimatrixComplementarity
+import all GameTheory.Tests.BimatrixComplementaryCertificateBounds
+import all GameTheory.Tests.BimatrixComputedOrientation
+import all GameTheory.Tests.BimatrixComputedPivot
+import all GameTheory.Tests.BimatrixCramerCertificate
+import all GameTheory.Tests.BimatrixEndpointBounds
+import all GameTheory.Tests.BimatrixGateProgram
+import all GameTheory.Tests.BimatrixNashCertificate
+import all GameTheory.Tests.BimatrixPath
+import all GameTheory.Tests.BimatrixPathBinaryCodec
+import all GameTheory.Tests.BimatrixPathCertificate
+import all GameTheory.Tests.BimatrixPathEndOfLine
+import all GameTheory.Tests.BimatrixPathOrientation
+import all GameTheory.Tests.BimatrixPivot
+import all GameTheory.Tests.BimatrixPivotSource
+import all GameTheory.Tests.BoundedLinearCertificate
+import all GameTheory.Tests.Candidates
+import all GameTheory.Tests.CanonicalDictionary
+import all GameTheory.Tests.CoalitionSimulation
+import all GameTheory.Tests.ComplementaryLabels
+import all GameTheory.Tests.ComplementaryPortOrder
+import all GameTheory.Tests.ComplementaryPorts
+import all GameTheory.Tests.Congestion
+import all GameTheory.Tests.ContinuationMenus
+import all GameTheory.Tests.ContinuationMixture
+import all GameTheory.Tests.ContinuationTransfer
+import all GameTheory.Tests.CorrelatedDominance
+import all GameTheory.Tests.DictionaryPivot
+import all GameTheory.Tests.DictionaryReindex
+import all GameTheory.Tests.EFGKuhn
+import all GameTheory.Tests.EFGKuhnNash
+import all GameTheory.Tests.EFGSubgamePerfect
+import all GameTheory.Tests.EFGZermelo
+import all GameTheory.Tests.EndOfLine
+import all GameTheory.Tests.EndOfLineNormalization
+import all GameTheory.Tests.Evolutionary
+import all GameTheory.Tests.Execution
+import all GameTheory.Tests.ExecutionLaws
+import all GameTheory.Tests.Extraction
+import all GameTheory.Tests.FacetOrientation
+import all GameTheory.Tests.FairDivision
+import all GameTheory.Tests.FeasiblePosteriors
+import all GameTheory.Tests.FictitiousPlay
+import all GameTheory.Tests.FictitiousPlayPotential
+import all GameTheory.Tests.FiniteBasisExchange
+import all GameTheory.Tests.FiniteLexicographic
+import all GameTheory.Tests.FiniteRationalEncoding
+import all GameTheory.Tests.FiniteSetRank
+import all GameTheory.Tests.FOSGStrategic
+import all GameTheory.Tests.GibbardSatterthwaite
+import all GameTheory.Tests.GridBrouwer
+import all GameTheory.Tests.GridCrossing
+import all GameTheory.Tests.GridCrossingAttachment
+import all GameTheory.Tests.GridRoutedGraph
+import all GameTheory.Tests.GridSperner
+import all GameTheory.Tests.GridSpernerRouting
+import all GameTheory.Tests.GridWire
+import all GameTheory.Tests.Groves
+import all GameTheory.Tests.History
+import all GameTheory.Tests.Implementation
+import all GameTheory.Tests.InfiniteExpectation
+import all GameTheory.Tests.InfiniteMovers
+import all GameTheory.Tests.Information
+import all GameTheory.Tests.InformationDesign
+import all GameTheory.Tests.IntegerBasisBounds
+import all GameTheory.Tests.IntegerCramerComputation
+import all GameTheory.Tests.IntegerCramerEncoding
+import all GameTheory.Tests.IntegerRatioSelection
+import all GameTheory.Tests.InterleavedMenus
+import all GameTheory.Tests.IntrinsicSolution
+import all GameTheory.Tests.IntrinsicStrategic
+import all GameTheory.Tests.IrreversibleFailure
+import all GameTheory.Tests.JointFeasiblePosteriors
+import all GameTheory.Tests.Learning
+import all GameTheory.Tests.LexicographicPivot
+import all GameTheory.Tests.LinearComplementarity
+import all GameTheory.Tests.Locality
+import all GameTheory.Tests.MAID
+import all GameTheory.Tests.MAIDObservationPruning
+import all GameTheory.Tests.MAIDPruningComposition
+import all GameTheory.Tests.MAIDSafeReduction
+import all GameTheory.Tests.Matching
+import all GameTheory.Tests.May
+import all GameTheory.Tests.MixedPotential
+import all GameTheory.Tests.MixtureSimulation
+import all GameTheory.Tests.Monitoring
+import all GameTheory.Tests.MonitoringEquilibrium
+import all GameTheory.Tests.MonitoringRank
+import all GameTheory.Tests.MonitoringSelfGeneration
+import all GameTheory.Tests.MultiRoundMonitoring
+import all GameTheory.Tests.NonnegativeDictionary
+import all GameTheory.Tests.OneShot
+import all GameTheory.Tests.OrientedInvolutionPath
+import all GameTheory.Tests.OrientedInvolutionPathWitness
+import all GameTheory.Tests.OwnPlayRecall
+import all GameTheory.Tests.PerturbedDictionary
+import all GameTheory.Tests.PMFExtensions
+import all GameTheory.Tests.PMFProbabilityLemmas
+import all GameTheory.Tests.PMFProductAlgebra
+import all GameTheory.Tests.Potential
+import all GameTheory.Tests.Predraw
+import all GameTheory.Tests.PrincipalAgent
+import all GameTheory.Tests.PrivateStrategy
+import all GameTheory.Tests.ProbabilityBounds
+import all GameTheory.Tests.ProtocolKnowledge
+import all GameTheory.Tests.QuasiLinearMechanism
+import all GameTheory.Tests.Randomized
+import all GameTheory.Tests.Rationalizability
+import all GameTheory.Tests.RationalQuotientBounds
+import all GameTheory.Tests.Repeated
+import all GameTheory.Tests.RepeatedUniform
+import all GameTheory.Tests.Revelation
+import all GameTheory.Tests.SatisfiabilityGame
+import all GameTheory.Tests.SelectiveStopping
+import all GameTheory.Tests.SequentialSampling
+import all GameTheory.Tests.Shapley
+import all GameTheory.Tests.Simultaneous
+import all GameTheory.Tests.SingleMover
+import all GameTheory.Tests.SingleParameter
+import all GameTheory.Tests.SpernerGridGraph
+import all GameTheory.Tests.StochasticContinuation
+import all GameTheory.Tests.Strategic
+import all GameTheory.Tests.SubgameOneShot
+import all GameTheory.Tests.SubgamePerfect
+import all GameTheory.Tests.SubgameRoots
+import all GameTheory.Tests.Transform
+import all GameTheory.Tests.UtilityInvariance
+import all GameTheory.Tests.UtilitySimulation
+import all GameTheory.Tests.UtilityTransferBoundary
+import all GameTheory.Tests.UtilityTransferComparison
+import all GameTheory.Tests.VNM
+import all GameTheory.Tests.Welfare
+import all GameTheory.Tests.ZermeloMenus
+meta import Lean.Util.CollectAxioms
+meta import Lean.Elab.Command
+
+@[expose] public section
 
 /-! Check all authored declarations, including private definitions and dependencies. -/
 

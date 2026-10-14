@@ -1,4 +1,8 @@
-import GameTheory.Core.SatisfiabilityGameEncoding
+module
+
+public import GameTheory.Core.SatisfiabilityGameEncoding
+
+@[expose] public section
 
 /-! Natural indices compute the literal/clause payoff by numeric case analysis.
 The numeric evaluator agrees with the canonical payoff after action lookup. -/

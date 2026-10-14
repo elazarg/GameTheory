@@ -1,4 +1,8 @@
-import GameTheory.Finite.BimatrixPathOrientation
+module
+
+public import GameTheory.Finite.BimatrixPathOrientation
+
+@[expose] public section
 
 /-! The color reversal law excludes fixed switching ports. -/
 namespace GameTheory.Tests.BimatrixPathOrientation

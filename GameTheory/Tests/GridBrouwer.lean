@@ -1,4 +1,8 @@
-import GameTheory.Math.GridBrouwerSixthContinuous
+module
+
+public import GameTheory.Math.GridBrouwerSixthContinuous
+
+@[expose] public section
 
 /-! Controls for the displacement gap and the smallest affine self-map. -/
 

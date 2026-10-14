@@ -1,3 +1,5 @@
+module
+
 /-
 # Bayesian compiler stress test
 
@@ -5,8 +7,10 @@ A private fair bit is reported truthfully. A two-player common-bit game
 exercises both source-player deviation coordinates of the protocol transfer.
 -/
 
-import GameTheory.Languages.Bayesian.Strategic
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Languages.Bayesian.Strategic
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 open GameTheory.Math.Probability
 

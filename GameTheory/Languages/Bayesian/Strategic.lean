@@ -1,3 +1,5 @@
+module
+
 /-
 # Bayesian strategic-form transfer
 
@@ -5,8 +7,10 @@ The solution-concept-free compiler identifies local policies with contingent
 plans. This leaf transports expected utility and Nash equilibrium.
 -/
 
-import GameTheory.Languages.Bayesian
-import GameTheory.Core.BayesianEquilibrium
+public import GameTheory.Languages.Bayesian
+public import GameTheory.Core.BayesianEquilibrium
+
+@[expose] public section
 
 noncomputable section
 

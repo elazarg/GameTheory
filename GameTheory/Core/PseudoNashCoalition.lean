@@ -1,3 +1,5 @@
+module
+
 /-
 # Coalitions and strong pseudo-Nash
 
@@ -13,7 +15,9 @@ The converse fails: security against single parties, even perfect, does not
 carry strong pseudo-Nash, since a channel that only a coalition can exploit
 changes no unilateral utility law.
 -/
-import GameTheory.Core.PseudoNash
+public import GameTheory.Core.PseudoNash
+
+@[expose] public section
 
 noncomputable section
 

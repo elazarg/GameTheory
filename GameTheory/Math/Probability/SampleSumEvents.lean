@@ -1,3 +1,5 @@
+module
+
 /-
 # Events of sums of draws
 
@@ -10,7 +12,9 @@ with a sure total:
 * the sum exceeds `m t` only if some draw exceeds `t`, and it reaches `m t`
   only if some draw exceeds `t` or every draw equals `t`.
 -/
-import GameTheory.Math.Probability.SampleSum
+public import GameTheory.Math.Probability.SampleSum
+
+@[expose] public section
 
 noncomputable section
 

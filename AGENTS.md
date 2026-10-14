@@ -204,6 +204,12 @@ Use `rg`/`rg --files` for local search. Prefer Lean language-server diagnostics
 for iteration when available, then run the narrowest relevant Lake target. Run
 a full build only at a phase gate or when imports/package configuration change.
 
+Authored Lean files use `module`, `public import`, and `@[expose] public section`.
+Preserve this mechanical visibility policy until a separate visibility change is
+requested. Internal lint and axiom drivers use `import all` for authored modules
+to retain private-declaration coverage. See [docs/ModuleMigration.md](docs/ModuleMigration.md)
+for the scoped compatibility options and import repairs.
+
 Toolchain checks after dependency or environment changes:
 
 ```text

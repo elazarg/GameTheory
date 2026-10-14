@@ -1,3 +1,5 @@
+module
+
 /-
 # Classic examples
 
@@ -10,13 +12,17 @@ Every `#guard` is a regression test that fails the build if the algorithm and
 the semantics drift apart.
 -/
 
-import GameTheory.Finite.Correctness
-import GameTheory.Core.BinaryMixed
-import GameTheory.Core.BinaryCorrelated
-import GameTheory.Core.CorrelatedDominance
-import GameTheory.Core.Rationalizability
-import Mathlib.Tactic.DeriveFintype
-import Mathlib.Tactic.Ring
+public import GameTheory.Finite.Correctness
+public import GameTheory.Core.BinaryMixed
+public import GameTheory.Core.BinaryCorrelated
+public import GameTheory.Core.CorrelatedDominance
+public import GameTheory.Core.Rationalizability
+public import Mathlib.Tactic.DeriveFintype
+public import Mathlib.Tactic.Ring
+public meta import Mathlib.Data.Fintype.Basic
+public meta import GameTheory.Finite.Algorithm
+
+@[expose] public section
 
 namespace GameTheory.Examples
 

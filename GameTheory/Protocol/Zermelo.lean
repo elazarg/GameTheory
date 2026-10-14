@@ -1,3 +1,5 @@
+module
+
 /-
 # Constructive backward induction for perfect information
 
@@ -18,7 +20,9 @@ The `Zermelo` module name follows the backward-induction tradition; no
 two-player win/lose determinacy theorem is claimed by this file.
 -/
 
-import GameTheory.Protocol.HistoryChooserComposition
+public import GameTheory.Protocol.HistoryChooserComposition
+
+@[expose] public section
 
 noncomputable section
 

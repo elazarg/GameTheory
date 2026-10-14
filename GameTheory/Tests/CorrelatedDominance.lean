@@ -1,3 +1,5 @@
+module
+
 /-
 Hostile correlated-dominance fixture.
 
@@ -8,7 +10,9 @@ Nash/CE law at `(true, false)` therefore exercises support-aware dominance
 without accidentally proving global strict dominance.
 -/
 
-import GameTheory.Core.CorrelatedDominance
+public import GameTheory.Core.CorrelatedDominance
+
+@[expose] public section
 
 noncomputable section
 

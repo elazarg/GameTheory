@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixVerifier
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixVerifier
+
+@[expose] public section
 
 /-! Polynomial-time machine certificates for the complete binary rectangular-game
 verifier. Explicit action counts and binary field widths bound every loop. -/

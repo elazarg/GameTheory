@@ -1,3 +1,5 @@
+module
+
 /-
 # Pointwise convergence of discrete probability laws
 
@@ -5,12 +7,14 @@ Pointwise convergence is stated on the canonical PMF weights. Normalization
 controls escaping tails, so bounded expectations converge on arbitrary carriers.
 -/
 
-import GameTheory.Math.Probability.ExpectationAlgebra
-import GameTheory.Math.Probability.ExpectationBind
-import GameTheory.Math.Probability.FinitaryProduct
-import GameTheory.Math.Probability.Mixture
-import Mathlib.Analysis.Normed.Group.Tannery
-import Mathlib.Topology.Instances.Real.Lemmas
+public import GameTheory.Math.Probability.ExpectationAlgebra
+public import GameTheory.Math.Probability.ExpectationBind
+public import GameTheory.Math.Probability.FinitaryProduct
+public import GameTheory.Math.Probability.Mixture
+public import Mathlib.Analysis.Normed.Group.Tannery
+public import Mathlib.Topology.Instances.Real.Lemmas
+
+@[expose] public section
 
 noncomputable section
 

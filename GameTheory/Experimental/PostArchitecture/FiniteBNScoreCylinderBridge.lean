@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: retained factor scores as cylinder masses
 
@@ -7,7 +9,9 @@ marginalization has already removed every nonretained factor, so the table sums
 only the two genuine latent coordinate blocks.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNScoreAssembly
+public import GameTheory.Experimental.PostArchitecture.FiniteBNScoreAssembly
+
+@[expose] public section
 
 noncomputable section
 

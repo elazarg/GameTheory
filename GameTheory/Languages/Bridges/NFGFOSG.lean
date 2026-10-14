@@ -1,3 +1,5 @@
+module
+
 /-
 # One-shot NFG through FOSG
 
@@ -9,8 +11,10 @@ FOSG fragment; it is not a characterization or inverse compiler for arbitrary
 FOSGs.
 -/
 
-import GameTheory.Languages.NFG
-import GameTheory.Languages.FOSG
+public import GameTheory.Languages.NFG
+public import GameTheory.Languages.FOSG
+
+@[expose] public section
 
 noncomputable section
 

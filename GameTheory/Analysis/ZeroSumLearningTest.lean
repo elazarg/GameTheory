@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile checks for zero-sum no-regret learning
 
@@ -7,7 +9,9 @@ the product of its marginals, and the players' signed regrets cancel to yield
 an exact Nash equilibrium of those marginals.
 -/
 
-import GameTheory.Analysis.ZeroSumLearning
+public import GameTheory.Analysis.ZeroSumLearning
+
+@[expose] public section
 
 noncomputable section
 

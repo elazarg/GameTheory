@@ -1,7 +1,11 @@
-import GameTheory.Math.Probability.Expectation
-import GameTheory.Math.Probability.ExpectationMap
-import GameTheory.Math.Probability.Joint
-import GameTheory.Math.Probability.Support
+module
+
+public import GameTheory.Math.Probability.Expectation
+public import GameTheory.Math.Probability.ExpectationMap
+public import GameTheory.Math.Probability.Joint
+public import GameTheory.Math.Probability.Support
+
+@[expose] public section
 
 noncomputable section
 

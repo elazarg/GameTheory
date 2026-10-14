@@ -1,8 +1,12 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
-import GameTheory.Math.Probability.SelectiveStopping
-import GameTheory.Math.Probability.Uniform
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Math.Probability.SelectiveStopping
+public import GameTheory.Math.Probability.Uniform
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 /-! # Finite regressions for information-fiber stopping bounds -/
 

@@ -1,7 +1,11 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixMatrixWord
-import GameTheoryComplexity.Backend.BinaryBirdWidth
-import GameTheoryComplexity.Backend.BinaryDictionaryCorrectness
-import GameTheoryComplexity.Backend.BinarySignedRowSelection
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixMatrixWord
+public import GameTheoryComplexity.Backend.BinaryBirdWidth
+public import GameTheoryComplexity.Backend.BinaryDictionaryCorrectness
+public import GameTheoryComplexity.Backend.BinarySignedRowSelection
+
+@[expose] public section
 
 /-! Certified dictionary computations on serialized rectangular bimatrix instances.
 Inputs are the instance, raw basis membership, and entering-variable position ruler.

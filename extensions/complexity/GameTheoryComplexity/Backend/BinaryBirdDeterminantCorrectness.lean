@@ -1,7 +1,13 @@
-import GameTheory.Math.IntegerSumBounds
-import GameTheoryComplexity.Backend.BinaryBirdDeterminantMachine
-import GameTheory.Math.BirdIterationBounds
-import GameTheory.Math.TabulatedBirdDeterminant
+module
+
+public import GameTheory.Math.IntegerSumBounds
+public import GameTheoryComplexity.Backend.BinaryBirdDeterminantMachine
+public import GameTheory.Math.BirdIterationBounds
+public import GameTheory.Math.TabulatedBirdDeterminant
+
+import all Mathlib.LinearAlgebra.Matrix.Determinant.Bird.Defs
+
+@[expose] public section
 
 /-! Correctness of the fixed-width Bird machine under explicit storage and magnitude bounds. -/
 

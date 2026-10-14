@@ -1,6 +1,10 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
-import GameTheory.Core.CoalitionEquilibrium
+public import GameTheory.Core.CoalitionEquilibrium
+
+@[expose] public section
 
 /-! # Strategic transfer from profile-local utility bounds
 

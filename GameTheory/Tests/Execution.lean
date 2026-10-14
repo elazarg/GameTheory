@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile execution tests
 
@@ -18,8 +20,10 @@ instance one that picked a legal action itself with `Classical.choice` on
 two policies produce two *different* two-step laws.
 -/
 
-import GameTheory.Protocol.Execution
-import GameTheory.Math.Probability.Mixture
+public import GameTheory.Protocol.Execution
+public import GameTheory.Math.Probability.Mixture
+
+@[expose] public section
 
 noncomputable section
 

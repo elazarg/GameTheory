@@ -1,4 +1,8 @@
-import GameTheory.Math.GridWireLanes
+module
+
+public import GameTheory.Math.GridWireLanes
+
+@[expose] public section
 
 /-! Distinct directed edges with distinct sources and targets can share an
 interior grid point only at a strict horizontal/vertical crossing. The private

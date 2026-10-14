@@ -1,3 +1,5 @@
+module
+
 /-
 # Self-generating payoff sets under public monitoring
 
@@ -9,8 +11,10 @@ canonical one-shot-deviation principle to obtain perfect public equilibrium.
 It does not formalize the paper's constrained-efficiency or bang-bang results.
 -/
 
-import GameTheory.Repeated.MonitoringDecomposition
-import GameTheory.Repeated.MonitoringOneShot
+public import GameTheory.Repeated.MonitoringDecomposition
+public import GameTheory.Repeated.MonitoringOneShot
+
+@[expose] public section
 
 noncomputable section
 

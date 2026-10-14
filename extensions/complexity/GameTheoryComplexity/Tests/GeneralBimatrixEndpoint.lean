@@ -1,4 +1,8 @@
-import GameTheoryComplexity.BimatrixNash
+module
+
+public import GameTheoryComplexity.BimatrixNash
+
+@[expose] public section
 
 /-! Endpoint serialization controls for signed rectangular inputs and the
 malformed-input boundary of the emission theorem. -/

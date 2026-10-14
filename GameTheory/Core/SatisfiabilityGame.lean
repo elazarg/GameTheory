@@ -1,5 +1,9 @@
-import GameTheory.Core.BimatrixGame
-import GameTheory.Math.Probability.Uniform
+module
+
+public import GameTheory.Core.BimatrixGame
+public import GameTheory.Math.Probability.Uniform
+
+@[expose] public section
 
 /-! A finite literal/clause game turns satisfiability into existence of a mixed
 Nash equilibrium giving both players payoff at least one. This is the

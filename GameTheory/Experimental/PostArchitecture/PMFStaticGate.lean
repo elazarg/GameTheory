@@ -1,3 +1,5 @@
+module
+
 /-
 EXP-122 consumer: an infinite correlated law is tested against the canonical
 static game, preference, and equilibrium definitions.
@@ -8,11 +10,13 @@ one-strategy profile is Nash, and the infinite law strictly beats every finite
 one. Under the integrability-guarded preference both were rejected.
 -/
 
-import GameTheory.Core.Utility
-import GameTheory.Core.CorrelatedDominance
-import GameTheory.Languages.NFG
-import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
-import Mathlib.Analysis.SpecificLimits.Normed
+public import GameTheory.Core.Utility
+public import GameTheory.Core.CorrelatedDominance
+public import GameTheory.Languages.NFG
+public import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
+public import Mathlib.Analysis.SpecificLimits.Normed
+
+@[expose] public section
 
 noncomputable section
 

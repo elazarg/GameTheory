@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixMatrixWord
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixMatrixWord
+
+@[expose] public section
 
 /-! Packed canonical basis matrices use exact shifted entries and total lookups. -/
 namespace GameTheory.Complexity.Tests.GeneralBimatrixMatrixWord

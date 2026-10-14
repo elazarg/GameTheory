@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite continuation gains
 
@@ -10,10 +12,12 @@ fiber; Bayes beliefs turn the spliced root gain into the site's mass times its
 continuation gain.
 -/
 
-import GameTheory.Analysis.Protocol.CounterfactualRegret
-import GameTheory.Analysis.Protocol.BehavioralBayes
-import GameTheory.Protocol.BehavioralTerminal
-import GameTheory.Protocol.FiniteHorizon
+public import GameTheory.Analysis.Protocol.CounterfactualRegret
+public import GameTheory.Analysis.Protocol.BehavioralBayes
+public import GameTheory.Protocol.BehavioralTerminal
+public import GameTheory.Protocol.FiniteHorizon
+
+@[expose] public section
 
 noncomputable section
 

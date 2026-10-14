@@ -1,5 +1,11 @@
-import Complexitylib.Mathlib.NatBits
-import Complexitylib.Classes.P.Cobham
+module
+
+public import Complexitylib.Mathlib.NatBits
+public import Complexitylib.Classes.P.Cobham
+
+import Complexitylib.Classes.P.Cobham.Internal.Algebra
+
+@[expose] public section
 
 /-! Fixed-width little-endian grid steps ripple through the input bits.
 Increment and decrement preserve the word width, with arithmetic wraparound at

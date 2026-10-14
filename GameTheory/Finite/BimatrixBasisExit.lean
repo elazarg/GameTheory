@@ -1,5 +1,9 @@
-import GameTheory.Finite.BimatrixBasis
-import GameTheory.Math.NonnegativeDictionary
+module
+
+public import GameTheory.Finite.BimatrixBasis
+public import GameTheory.Math.NonnegativeDictionary
+
+@[expose] public section
 
 /-! # Every positive-payoff basis has an exit
 

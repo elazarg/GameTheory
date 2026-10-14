@@ -1,3 +1,5 @@
+module
+
 /-
 # Countably branching backward-law gate
 
@@ -6,10 +8,12 @@ well-founded law agrees with the forward runner; a divergent payoff leaves the
 law intact but cannot be read as a finite real backward value.
 -/
 
-import GameTheory.Protocol.Backward
-import GameTheory.Protocol.Zermelo
-import GameTheory.Math.Probability.ExpectationMap
-import GameTheory.Experimental.PostArchitecture.PMFSequentialGate
+public import GameTheory.Protocol.Backward
+public import GameTheory.Protocol.Zermelo
+public import GameTheory.Math.Probability.ExpectationMap
+public import GameTheory.Experimental.PostArchitecture.PMFSequentialGate
+
+@[expose] public section
 
 noncomputable section
 

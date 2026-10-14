@@ -1,7 +1,11 @@
-import GameTheory.Math.DictionaryReindex
-import Mathlib.Data.Fin.VecNotation
-import Mathlib.Tactic.FinCases
-import Mathlib.Tactic.NormNum
+module
+
+public import GameTheory.Math.DictionaryReindex
+public import Mathlib.Data.Fin.VecNotation
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 /-! A noninvolutive permutation detects inverse-orientation mistakes in basis sorting. -/
 

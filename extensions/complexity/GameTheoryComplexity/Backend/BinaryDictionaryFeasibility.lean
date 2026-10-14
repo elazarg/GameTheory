@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BinarySignedRowSelection
-import GameTheoryComplexity.Backend.BinaryIndexedAll
+module
+
+public import GameTheoryComplexity.Backend.BinarySignedRowSelection
+public import GameTheoryComplexity.Backend.BinaryIndexedAll
+
+@[expose] public section
 
 /-! Exact strict lexicographic positivity checks for packed symbolic rows. -/
 

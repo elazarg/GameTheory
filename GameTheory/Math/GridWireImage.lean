@@ -1,4 +1,8 @@
-import GameTheory.Math.GridCrossingLocator
+module
+
+public import GameTheory.Math.GridCrossingLocator
+
+@[expose] public section
 
 /-! A wire occurrence at a crossing center moves to its assigned gadget bend.
 All other points keep their coordinates. This separates the two wire copies

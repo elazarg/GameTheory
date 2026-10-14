@@ -1,5 +1,9 @@
-import GameTheory.Finite.BimatrixCertificateShift
-import Mathlib.Data.Fin.VecNotation
+module
+
+public import GameTheory.Finite.BimatrixCertificateShift
+public import Mathlib.Data.Fin.VecNotation
+
+@[expose] public section
 
 /-! Exact payoff-shift controls include negative rectangular payoffs and a
 fully degenerate game with a genuinely mixed certificate. -/

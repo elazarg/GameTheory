@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-107: conditional independence under explicit pruning parent maps
 
@@ -10,9 +12,11 @@ No comparison between target mechanisms, observation-reduction theorem, or
 equilibrium claim is made here.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovSoundness
-import GameTheory.Experimental.PostArchitecture.MAIDPruningHybridFactorization
-import GameTheory.Experimental.PostArchitecture.MAIDUtilitySeparationBridge
+public import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovSoundness
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningHybridFactorization
+public import GameTheory.Experimental.PostArchitecture.MAIDUtilitySeparationBridge
+
+@[expose] public section
 
 noncomputable section
 

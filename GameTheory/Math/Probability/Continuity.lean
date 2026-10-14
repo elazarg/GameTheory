@@ -1,3 +1,5 @@
+module
+
 /-
 # Coordinate continuity of finite-carrier PMF operations
 
@@ -5,7 +7,9 @@ These statements use real coordinates in the finite-dimensional cases that
 need them, without placing a topology on the semantic PMF carrier.
 -/
 
-import GameTheory.Math.Probability.Convergence
+public import GameTheory.Math.Probability.Convergence
+
+@[expose] public section
 
 noncomputable section
 

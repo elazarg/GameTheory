@@ -1,5 +1,9 @@
-import GameTheory.Math.GridRoutedGraph
-import Mathlib.Tactic.IntervalCases
+module
+
+public import GameTheory.Math.GridRoutedGraph
+public import Mathlib.Tactic.IntervalCases
+
+@[expose] public section
 
 /-! Actual grid-pointer controls exercise adjacent switch boxes, displaced
 centers, background isolation, known sources and disconnected cycle components. -/

@@ -1,9 +1,13 @@
-import GameTheoryComplexity.Backend.BrouwerNashQueryRegions
-import GameTheoryComplexity.Backend.BrouwerNashCoefficientQuery
-import GameTheoryComplexity.Backend.BrouwerNashHeaders
-import GameTheoryComplexity.Backend.BimatrixRawGateMachine
-import GameTheoryComplexity.Backend.BinaryIndexedLookup
-import GameTheoryComplexity.Backend.BinarySignedFiniteSum
+module
+
+public import GameTheoryComplexity.Backend.BrouwerNashQueryRegions
+public import GameTheoryComplexity.Backend.BrouwerNashCoefficientQuery
+public import GameTheoryComplexity.Backend.BrouwerNashHeaders
+public import GameTheoryComplexity.Backend.BimatrixRawGateMachine
+public import GameTheoryComplexity.Backend.BinaryIndexedLookup
+public import GameTheoryComplexity.Backend.BinarySignedFiniteSum
+
+@[expose] public section
 
 /-! Polynomial coefficient queries for the canonical ripple-increment stages. Each source-bit
 ordinal is scanned at its numeric placement, and literal raw-gate serialization preserves

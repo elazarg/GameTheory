@@ -1,5 +1,9 @@
-import Mathlib.Algebra.Order.Field.Basic
-import Mathlib.Tactic.Linarith
+module
+
+public import Mathlib.Algebra.Order.Field.Basic
+public import Mathlib.Tactic.Linarith
+
+@[expose] public section
 
 /-! Approximate clamped feedback controls an inward-pointing scalar residual.
 Boundary estimates account for clipping separately from interior updates. -/

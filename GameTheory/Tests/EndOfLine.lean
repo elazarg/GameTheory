@@ -1,4 +1,8 @@
-import GameTheory.Math.EndOfLine
+module
+
+public import GameTheory.Math.EndOfLine
+
+@[expose] public section
 
 /-! Finite End-of-Line fixtures allow unrelated cycles, self-loops and
 inconsistent pointers. The inverse-link hypothesis at the source is essential. -/

@@ -1,3 +1,5 @@
+module
+
 /-
 # Incentive comparisons in sequential games
 
@@ -15,10 +17,12 @@ sequential equilibrium from a consistent source is exactly target consistency
 together with the incentive criterion.
 -/
 
-import GameTheory.Analysis.IncentiveCone
-import GameTheory.Analysis.IncentiveSimulation
-import GameTheory.Analysis.Protocol.Sequential
-import GameTheory.Protocol.Continuation
+public import GameTheory.Analysis.IncentiveCone
+public import GameTheory.Analysis.IncentiveSimulation
+public import GameTheory.Analysis.Protocol.Sequential
+public import GameTheory.Protocol.Continuation
+
+@[expose] public section
 
 noncomputable section
 

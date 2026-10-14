@@ -1,3 +1,5 @@
+module
+
 /-
 # Chronological stochastic histories and restart calculus
 
@@ -6,8 +8,10 @@ Protocol runner.  It does not define a stochastic runner: every law below is a
 map or support-dependent map of `runBehavioral`.
 -/
 
-import GameTheory.Stochastic.PublicPolicy
-import GameTheory.Stochastic.Uniform
+public import GameTheory.Stochastic.PublicPolicy
+public import GameTheory.Stochastic.Uniform
+
+@[expose] public section
 
 noncomputable section
 

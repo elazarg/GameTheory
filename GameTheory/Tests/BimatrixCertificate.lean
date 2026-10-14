@@ -1,5 +1,9 @@
-import GameTheory.Finite.BimatrixCertificateCompleteness
-import Mathlib.Data.Fin.VecNotation
+module
+
+public import GameTheory.Finite.BimatrixCertificateCompleteness
+public import Mathlib.Data.Fin.VecNotation
+
+@[expose] public section
 
 /-! Rectangular, signed-payoff controls and a genuinely mixed equilibrium test
 exercise the exact certificate verifier and its canonical correctness theorem. -/

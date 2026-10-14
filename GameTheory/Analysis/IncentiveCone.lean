@@ -1,3 +1,5 @@
+module
+
 /-
 # Exact implication between incentive constraints
 
@@ -24,10 +26,12 @@ units' payoffs, such as zero-sum restrictions, are handled in the joint space
 of unit-tagged outcomes; projecting each unit separately would lose them.
 -/
 
-import GameTheory.Core.Equilibrium
-import GameTheory.Core.ExpectedUtility
-import Mathlib.Analysis.Convex.Cone.InnerDual
-import Mathlib.Analysis.InnerProductSpace.PiL2
+public import GameTheory.Core.Equilibrium
+public import GameTheory.Core.ExpectedUtility
+public import Mathlib.Analysis.Convex.Cone.InnerDual
+public import Mathlib.Analysis.InnerProductSpace.PiL2
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,6 +1,13 @@
-import GameTheoryComplexity.Backend.CircuitCodeShiftCorrectness
-import GameTheoryComplexity.Backend.CircuitPrefixEmitter
-import GameTheoryComplexity.Backend.CircuitPrefixRestriction
+module
+
+public import GameTheoryComplexity.Backend.CircuitCodeShiftCorrectness
+public import GameTheoryComplexity.Backend.CircuitPrefixEmitter
+public import GameTheoryComplexity.Backend.CircuitPrefixRestriction
+
+import Complexitylib.Classes.P.Cobham.Internal
+import Complexitylib.Classes.P.UnaryLength
+
+@[expose] public section
 
 /-! Circuit prefix compilation on serialized raw circuits. The emitter agrees
 exactly with the raw hardwiring construction on canonical source codes. -/

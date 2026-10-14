@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-066: quasilinear direct-mechanism ownership
 
@@ -6,8 +8,10 @@ The hostile slice also checks transparent specialization from `GrovesSetup` and
 compilation to the accepted Bayesian direct-mechanism language.
 -/
 
-import GameTheory.Mechanism.BayesianIncentives
-import GameTheory.Mechanism.Groves
+public import GameTheory.Mechanism.BayesianIncentives
+public import GameTheory.Mechanism.Groves
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,8 +1,12 @@
-import GameTheoryComplexity.Backend.BinarySignedMatrixMachine
-import GameTheoryComplexity.Backend.BinaryUnaryArithmetic
-import GameTheoryComplexity.Backend.BinarySubsetMachine
-import GameTheoryComplexity.Backend.BinaryIndexedAll
-import GameTheory.Finite.BimatrixPathBinaryCodec
+module
+
+public import GameTheoryComplexity.Backend.BinarySignedMatrixMachine
+public import GameTheoryComplexity.Backend.BinaryUnaryArithmetic
+public import GameTheoryComplexity.Backend.BinarySubsetMachine
+public import GameTheoryComplexity.Backend.BinaryIndexedAll
+public import GameTheory.Finite.BimatrixPathBinaryCodec
+
+@[expose] public section
 
 /-! Certified unmasking and combinatorial validation of complementary path words.
 The dimension is an explicit length ruler and the dropped label is zero.

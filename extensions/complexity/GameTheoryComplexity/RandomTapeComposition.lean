@@ -1,6 +1,10 @@
-import GameTheoryComplexity.RandomTape
-import GameTheory.Math.Probability.UniformProjection
-import GameTheory.Math.Probability.FiniteUniform
+module
+
+public import GameTheoryComplexity.RandomTape
+public import GameTheory.Math.Probability.UniformProjection
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 /-! Ignoring unused fair random bits preserves the full verdict law. -/
 

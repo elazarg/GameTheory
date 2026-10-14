@@ -1,6 +1,10 @@
+module
+
 /- Copyright (c) 2026 VegasCore contributors. Released under MIT; see NOTICE. -/
 
-import GameTheory.Analysis.Protocol.SequentialLimits
+public import GameTheory.Analysis.Protocol.SequentialLimits
+
+@[expose] public section
 
 /-! # Uniform whole-policy regret at assessment limits
 

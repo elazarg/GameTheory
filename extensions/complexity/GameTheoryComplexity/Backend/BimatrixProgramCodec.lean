@@ -1,6 +1,10 @@
-import Complexitylib.Classes.P.Pairing
-import GameTheoryComplexity.Backend.BinarySignedMatrixMachine
-import GameTheory.Finite.BimatrixGateProgram
+module
+
+public import Complexitylib.Classes.P.Pairing
+public import GameTheoryComplexity.Backend.BinarySignedMatrixMachine
+public import GameTheory.Finite.BimatrixGateProgram
+
+@[expose] public section
 
 /-! A total tape decoder for the canonical mixed gate program.
 Unary header lengths give the output count and signed coefficient width.

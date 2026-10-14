@@ -1,3 +1,5 @@
+module
+
 /-
 # Behavioral mixture laws
 
@@ -6,8 +8,10 @@ choice and continuing under its pure commitment. No-revisit makes this
 factorization valid throughout a finite-horizon run.
 -/
 
-import GameTheory.Protocol.PolicyRandomization
-import GameTheory.Protocol.BehavioralAssessment
+public import GameTheory.Protocol.PolicyRandomization
+public import GameTheory.Protocol.BehavioralAssessment
+
+@[expose] public section
 
 noncomputable section
 

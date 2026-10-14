@@ -1,6 +1,10 @@
-import GameTheory.Finite.BimatrixNashCertificate
-import GameTheory.Finite.BimatrixTableProblem
-import GameTheory.Math.Probability.Numerator
+module
+
+public import GameTheory.Finite.BimatrixNashCertificate
+public import GameTheory.Finite.BimatrixTableProblem
+public import GameTheory.Math.Probability.Numerator
+
+@[expose] public section
 
 /-! Verified integer numerator certificates yield ordinary PMF mixed strategies
 and the canonical payoff-constrained Nash predicate. -/

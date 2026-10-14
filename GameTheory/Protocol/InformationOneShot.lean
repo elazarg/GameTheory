@@ -1,3 +1,5 @@
+module
+
 /-
 # Information-local one-shot deviations
 
@@ -5,9 +7,11 @@ The finite-horizon history context and its comparison with whole
 policy changes. This leaf consumes the generic assessment interface.
 -/
 
-import GameTheory.Protocol.Assessment
-import GameTheory.Protocol.Strategic
-import GameTheory.Core.Utility
+public import GameTheory.Protocol.Assessment
+public import GameTheory.Protocol.Strategic
+public import GameTheory.Core.Utility
+
+@[expose] public section
 
 noncomputable section
 

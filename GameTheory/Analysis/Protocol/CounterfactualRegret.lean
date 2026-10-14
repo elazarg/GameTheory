@@ -1,3 +1,5 @@
+module
+
 /-
 # Counterfactual regret and Bayes continuation gain
 
@@ -10,11 +12,13 @@ that uses the runner's structure, through `RunnerFactorsAt`. Common own reach
 is a named weaker certificate; perfect recall discharges it.
 -/
 
-import GameTheory.Analysis.Protocol.CounterfactualReach
-import GameTheory.Analysis.Protocol.BehavioralBayes
-import GameTheory.Protocol.PolicyRandomization
-import GameTheory.Protocol.BehavioralMixture
-import GameTheory.Protocol.BehavioralTerminal
+public import GameTheory.Analysis.Protocol.CounterfactualReach
+public import GameTheory.Analysis.Protocol.BehavioralBayes
+public import GameTheory.Protocol.PolicyRandomization
+public import GameTheory.Protocol.BehavioralMixture
+public import GameTheory.Protocol.BehavioralTerminal
+
+@[expose] public section
 
 noncomputable section
 

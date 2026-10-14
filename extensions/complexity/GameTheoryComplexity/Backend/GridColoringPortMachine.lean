@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.GridColoringTileMachine
-import GameTheoryComplexity.Backend.GridRoutingPointerMachine
-import GameTheory.Math.GridWireColoringPorts
+module
+
+public import GameTheoryComplexity.Backend.GridColoringTileMachine
+public import GameTheoryComplexity.Backend.GridRoutingPointerMachine
+public import GameTheory.Math.GridWireColoringPorts
+
+@[expose] public section
 
 /-! Binary unit-step directions supply finite tile ports. Numeric comparisons
 allow arbitrary padding, and the routing rectangle guard prevents truncation. -/

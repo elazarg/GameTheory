@@ -1,3 +1,5 @@
+module
+
 /-
 # Deterministic normal-form syntax
 
@@ -10,7 +12,9 @@ This syntax module imports no Protocol, utility, preference, equilibrium,
 finite algorithm, or Analysis module.
 -/
 
-import GameTheory.Core.Form
+public import GameTheory.Core.Form
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,4 +1,8 @@
-import GameTheory.Math.LexicographicPivot
+module
+
+public import GameTheory.Math.LexicographicPivot
+
+@[expose] public section
 
 /-! # Permuting dictionary basis columns
 

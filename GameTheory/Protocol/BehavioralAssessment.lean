@@ -1,3 +1,5 @@
+module
+
 /-
 # Behavioral assessments
 
@@ -11,10 +13,12 @@ interfaces. Pointwise convergence and Kreps-Wilson consistency live in the
 one-way analytic bridge `GameTheory.Analysis.Protocol.Sequential`.
 -/
 
-import GameTheory.Protocol.Context
-import GameTheory.Protocol.Information
-import GameTheory.Math.Probability.ExpectationAlgebra
-import GameTheory.Math.Probability.ExpectationBind
+public import GameTheory.Protocol.Context
+public import GameTheory.Protocol.Information
+public import GameTheory.Math.Probability.ExpectationAlgebra
+public import GameTheory.Math.Probability.ExpectationBind
+
+@[expose] public section
 
 noncomputable section
 

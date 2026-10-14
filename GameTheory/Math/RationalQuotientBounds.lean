@@ -1,5 +1,9 @@
-import Mathlib.Data.Rat.Lemmas
-import Mathlib.Data.Int.NatAbs
+module
+
+public import Mathlib.Data.Rat.Lemmas
+public import Mathlib.Data.Int.NatAbs
+
+@[expose] public section
 
 /-! Reducing an integer quotient cannot increase its numerator or denominator.
 

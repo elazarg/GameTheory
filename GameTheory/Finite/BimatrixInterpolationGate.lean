@@ -1,5 +1,9 @@
-import GameTheory.Finite.BimatrixMinGate
-import GameTheory.Math.GridBrouwerFourCorners
+module
+
+public import GameTheory.Finite.BimatrixMinGate
+public import GameTheory.Math.GridBrouwerFourCorners
+
+@[expose] public section
 
 /-!
 # Canonical four-corner interpolation weights from affine game gates

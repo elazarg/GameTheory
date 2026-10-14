@@ -1,9 +1,13 @@
-import GameTheory.Finite.BimatrixBlockGame
-import GameTheory.Math.PairSupportGate
-import Mathlib.Tactic.Linarith
-import Mathlib.Algebra.BigOperators.Fin
-import Mathlib.Algebra.Order.Group.MinMax
-import Mathlib.Tactic.FieldSimp
+module
+
+public import GameTheory.Finite.BimatrixBlockGame
+public import GameTheory.Math.PairSupportGate
+public import Mathlib.Tactic.Linarith
+public import Mathlib.Algebra.BigOperators.Fin
+public import Mathlib.Algebra.Order.Group.MinMax
+public import Mathlib.Tactic.FieldSimp
+
+@[expose] public section
 
 /-! Integer paired-action games implement saturated affine equations.
 Each row pair responds to its own auxiliary column pair. The column payoff

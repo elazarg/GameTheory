@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: retained-cylinder decomposition
 
@@ -8,8 +10,10 @@ marginalization and latent component sums.  No graph, factorization,
 normalization, or positivity premise is used.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNLatentSum
-import GameTheory.Experimental.PostArchitecture.FiniteBNMarginalization
+public import GameTheory.Experimental.PostArchitecture.FiniteBNLatentSum
+public import GameTheory.Experimental.PostArchitecture.FiniteBNMarginalization
+
+@[expose] public section
 
 noncomputable section
 

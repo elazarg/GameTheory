@@ -1,6 +1,10 @@
-import GameTheory.Analysis.Protocol.CopiedSiteCompletion
-import GameTheory.Analysis.Protocol.SequentialExistenceTest
-import GameTheory.Math.Probability.FiniteUniform
+module
+
+public import GameTheory.Analysis.Protocol.CopiedSiteCompletion
+public import GameTheory.Analysis.Protocol.SequentialExistenceTest
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

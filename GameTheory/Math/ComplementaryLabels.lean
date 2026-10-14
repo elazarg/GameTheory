@@ -1,8 +1,12 @@
-import Mathlib.Data.Finset.Prod
-import Mathlib.Data.Finset.Card
-import Mathlib.Data.Fintype.Card
-import Mathlib.Tactic.Tauto
-import GameTheory.Math.FiniteBasisExchange
+module
+
+public import Mathlib.Data.Finset.Prod
+public import Mathlib.Data.Finset.Card
+public import Mathlib.Data.Fintype.Card
+public import Mathlib.Tactic.Tauto
+public import GameTheory.Math.FiniteBasisExchange
+
+@[expose] public section
 
 /-! Cardinality invariants for finite sets of paired labels.
 A set with one variable per label on average either covers every label exactly

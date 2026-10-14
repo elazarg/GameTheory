@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.Composition
-import GameTheoryComplexity.Backend.Serializer
+module
+
+public import GameTheoryComplexity.Backend.Composition
+public import GameTheoryComplexity.Backend.Serializer
+
+@[expose] public section
 
 /-! A single probabilistic machine implements canonical Boolean serialization and testing.
 The implementation is fixed across security parameters and sample tuples; its

@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-108: an infinite law above the canonical stochastic runner
 
@@ -8,10 +10,12 @@ infinite law, and the main theorem identifies every chronological projection
 with the existing fixed-horizon law.
 -/
 
-import GameTheory.Stochastic.History
-import GameTheory.Math.Probability.Measure
-import Mathlib.Probability.Kernel.IonescuTulcea.Traj
-import Mathlib.Probability.ProbabilityMassFunction.Integrals
+public import GameTheory.Stochastic.History
+public import GameTheory.Math.Probability.Measure
+public import Mathlib.Probability.Kernel.IonescuTulcea.Traj
+public import Mathlib.Probability.ProbabilityMassFunction.Integrals
+
+@[expose] public section
 
 noncomputable section
 

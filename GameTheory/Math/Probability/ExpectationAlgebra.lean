@@ -1,4 +1,8 @@
-import GameTheory.Math.Probability.ExpectationComposition
+module
+
+public import GameTheory.Math.Probability.ExpectationComposition
+
+@[expose] public section
 
 noncomputable section
 

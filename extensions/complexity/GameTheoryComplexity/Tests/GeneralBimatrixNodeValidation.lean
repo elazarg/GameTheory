@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixNodeValidation
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixNodeValidation
+
+@[expose] public section
 namespace GameTheory.Complexity.Tests.GeneralBimatrixNodeValidation
 open Backend GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
 open _root_.Complexity _root_.Complexity.Cobham

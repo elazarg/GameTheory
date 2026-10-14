@@ -1,3 +1,5 @@
+module
+
 /-
 # Factored-observation stochastic-game example
 
@@ -7,9 +9,11 @@ It installs neither a finite-history enumeration nor a bounded evaluator. Its
 regression is the exact canonical history law of the FOSG-to-EFG serializer.
 -/
 
-import GameTheory.Languages.Bridges.FOSGToEFG
-import GameTheory.Languages.Bridges.NFGFOSG
-import Mathlib.Logic.Equiv.Bool
+public import GameTheory.Languages.Bridges.FOSGToEFG
+public import GameTheory.Languages.Bridges.NFGFOSG
+public import Mathlib.Logic.Equiv.Bool
+
+@[expose] public section
 
 noncomputable section
 

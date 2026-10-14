@@ -1,3 +1,5 @@
+module
+
 /-
 # Sequential consistency on an infinite action carrier
 
@@ -8,11 +10,13 @@ the countable action menu; bounded continuation values converge while holding
 the infinite-support belief fixed.
 -/
 
-import GameTheory.Analysis.Protocol.Sequential
-import GameTheory.Analysis.Protocol.BehavioralBayes
-import GameTheory.Analysis.Protocol.BehavioralConvergence
-import GameTheory.Experimental.PostArchitecture.PMFSequentialGate
-import Mathlib.Analysis.SpecificLimits.Basic
+public import GameTheory.Analysis.Protocol.Sequential
+public import GameTheory.Analysis.Protocol.BehavioralBayes
+public import GameTheory.Analysis.Protocol.BehavioralConvergence
+public import GameTheory.Experimental.PostArchitecture.PMFSequentialGate
+public import Mathlib.Analysis.SpecificLimits.Basic
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Discounted stochastic-value witness
 
@@ -9,9 +11,11 @@ same value on infinitely many states and exhibits an unbounded solution of its
 Bellman equation.
 -/
 
-import GameTheory.Analysis.Stochastic.Discounted
-import GameTheory.Analysis.Stochastic.Fink
-import GameTheory.Math.Probability.Mixture
+public import GameTheory.Analysis.Stochastic.Discounted
+public import GameTheory.Analysis.Stochastic.Fink
+public import GameTheory.Math.Probability.Mixture
+
+@[expose] public section
 
 noncomputable section
 

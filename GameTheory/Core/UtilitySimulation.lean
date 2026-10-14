@@ -1,6 +1,10 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
-import GameTheory.Core.UtilityTransfer
+public import GameTheory.Core.UtilityTransfer
+
+@[expose] public section
 
 /-! # Strategic transfer by utility bounds
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Tight behavioral-assessment subsequences
 
@@ -8,8 +10,10 @@ leaves other raw strategy values at the first assessment. Finite carriers
 imply tightness automatically.
 -/
 
-import GameTheory.Analysis.Protocol.Sequential
-import GameTheory.Math.Probability.Compactness
+public import GameTheory.Analysis.Protocol.Sequential
+public import GameTheory.Math.Probability.Compactness
+
+@[expose] public section
 
 noncomputable section
 

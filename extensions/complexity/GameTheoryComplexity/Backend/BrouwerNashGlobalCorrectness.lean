@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BrouwerNashGlobalQuery
-import GameTheoryComplexity.Backend.BrouwerNashCoefficientQuery
+module
+
+public import GameTheoryComplexity.Backend.BrouwerNashGlobalQuery
+public import GameTheoryComplexity.Backend.BrouwerNashCoefficientQuery
+
+@[expose] public section
 
 
 

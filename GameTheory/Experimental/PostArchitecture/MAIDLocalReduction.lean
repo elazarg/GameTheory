@@ -1,3 +1,5 @@
+module
+
 /-
 # Local semantic discharge for one-site MAID observation reduction
 
@@ -19,8 +21,10 @@ same kept-context/action law.  The result discharges the existing
 soundness claim is made here.
 -/
 
-import GameTheory.Languages.MAID.ObservationPruning
-import GameTheory.Experimental.PostArchitecture.MAIDKernelMarginalization
+public import GameTheory.Languages.MAID.ObservationPruning
+public import GameTheory.Experimental.PostArchitecture.MAIDKernelMarginalization
+
+@[expose] public section
 
 noncomputable section
 

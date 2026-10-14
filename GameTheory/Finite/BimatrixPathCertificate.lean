@@ -1,7 +1,11 @@
-import GameTheory.Finite.BimatrixPathEndOfLine
-import GameTheory.Finite.BimatrixComplementarityCorrectness
-import GameTheory.Finite.BimatrixCertificateCompleteness
-import GameTheory.Math.FiniteRationalEncoding
+module
+
+public import GameTheory.Finite.BimatrixPathEndOfLine
+public import GameTheory.Finite.BimatrixComplementarityCorrectness
+public import GameTheory.Finite.BimatrixCertificateCompleteness
+public import GameTheory.Math.FiniteRationalEncoding
+
+@[expose] public section
 
 /-! Rational complementary endpoints give exact Nash certificates.
 Clearing denominators preserves every coordinate of the supplied endpoint.

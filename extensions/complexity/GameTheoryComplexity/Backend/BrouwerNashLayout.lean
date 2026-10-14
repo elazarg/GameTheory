@@ -1,6 +1,10 @@
-import Mathlib.Data.Fintype.Fin
-import Mathlib.Data.Fin.VecNotation
-import Mathlib.Tactic.NormNum
+module
+
+public import Mathlib.Data.Fintype.Fin
+public import Mathlib.Data.Fin.VecNotation
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 /-! Shared wire allocation for jittered two-coordinate color evaluation and cyclic feedback.
 Every sample owns extraction, corner increments, interpolation, color circuits and weighted

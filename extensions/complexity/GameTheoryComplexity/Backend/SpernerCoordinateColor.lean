@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.SpernerProblem
-import GameTheoryComplexity.Backend.UniformCircuitSpecialization
+module
+
+public import GameTheoryComplexity.Backend.SpernerProblem
+public import GameTheoryComplexity.Backend.UniformCircuitSpecialization
+
+@[expose] public section
 
 /-! Direct coordinate queries reuse the canonical boundary-corrected coloring.
 Coordinates occupy two extended little-endian fields, without triangle tags. Each color flag

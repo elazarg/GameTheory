@@ -1,9 +1,13 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
-import GameTheory.Core.MixtureSimulationComposition
-import GameTheory.Core.MixedSimulation
-import GameTheory.Math.Probability.Uniform
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Core.MixtureSimulationComposition
+public import GameTheory.Core.MixedSimulation
+public import GameTheory.Math.Probability.Uniform
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 /-! # Regression tests for mixture simulation and composition -/
 

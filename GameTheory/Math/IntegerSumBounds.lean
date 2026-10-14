@@ -1,5 +1,9 @@
-import Mathlib.Algebra.Order.BigOperators.Group.Finset
-import Mathlib.Data.Fintype.Card
+module
+
+public import Mathlib.Algebra.Order.BigOperators.Group.Finset
+public import Mathlib.Data.Fintype.Card
+
+@[expose] public section
 
 /-! Uniform integer magnitude bounds for finite sums before cancellation. -/
 namespace GameTheory.Math.IntegerSumBounds

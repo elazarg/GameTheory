@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Brouwer
+module
+
+public import GameTheoryComplexity.Brouwer
+
+@[expose] public section
 
 /-! Rational-point controls include nonzero accepted residuals, malformed
 lengths, out-of-square coordinates, diagonal choices, and the closed far edge. -/

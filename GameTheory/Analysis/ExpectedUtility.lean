@@ -1,3 +1,5 @@
+module
+
 /-
 # Continuity of finite mixed expected utility
 
@@ -6,8 +8,10 @@ expected utility.  The finite action carriers make the profile observable a
 finite sum, while actual pure-play integration supports arbitrary outcomes.
 -/
 
-import GameTheory.Math.Probability.Convergence
-import GameTheory.Core.Mixed
+public import GameTheory.Math.Probability.Convergence
+public import GameTheory.Core.Mixed
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Periodic repeated paths
 
@@ -6,8 +8,10 @@ convergence to cycle averages as the discount factor tends to one, using
 explicit payoff bounds and canonical list-history paths.
 -/
 
-import GameTheory.Math.FinRotation
-import GameTheory.Repeated.Discounted
+public import GameTheory.Math.FinRotation
+public import GameTheory.Repeated.Discounted
+
+@[expose] public section
 
 noncomputable section
 

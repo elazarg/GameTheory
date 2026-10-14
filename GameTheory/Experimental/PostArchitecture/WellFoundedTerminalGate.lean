@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-142: a well-founded protocol with no uniform horizon
 
@@ -5,10 +7,12 @@ A Boolean decision at the initial history selects a geometric countdown. Every
 realized play is finite, but the possible countdown lengths are unbounded.
 -/
 
-import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
-import GameTheory.Protocol.BehavioralAssessment
-import GameTheory.Protocol.Backward
-import Mathlib.Order.Prod.Lex.Basic
+public import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
+public import GameTheory.Protocol.BehavioralAssessment
+public import GameTheory.Protocol.Backward
+public import Mathlib.Order.Prod.Lex.Basic
+
+@[expose] public section
 
 noncomputable section
 

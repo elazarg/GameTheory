@@ -1,3 +1,5 @@
+module
+
 /-
 # Comparing conditional probabilities by injections and symmetries
 
@@ -11,9 +13,11 @@ Comparisons along a pointwise convergent sequence pass to its limit on any
 carrier.
 -/
 
-import GameTheory.Math.Probability.Bounds
-import GameTheory.Math.Probability.Conditioning
-import GameTheory.Math.Probability.Convergence
+public import GameTheory.Math.Probability.Bounds
+public import GameTheory.Math.Probability.Conditioning
+public import GameTheory.Math.Probability.Convergence
+
+@[expose] public section
 
 noncomputable section
 

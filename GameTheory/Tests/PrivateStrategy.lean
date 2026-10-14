@@ -1,3 +1,5 @@
+module
+
 /-
 # Correlated private randomness survives behavioral realization
 
@@ -8,8 +10,10 @@ outputs are correlated through memory the transcript never records; the
 realized behavioral policy reproduces the joint law anyway.
 -/
 
-import GameTheory.Protocol.PrivateStrategy
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Protocol.PrivateStrategy
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 open GameTheory.Math.Probability
 

@@ -1,8 +1,12 @@
-import GameTheory.Analysis.Protocol.ComponentCompletion
-import GameTheory.Analysis.Protocol.LocalDeviationBounds
-import GameTheory.Analysis.Protocol.LocalSimulationLimit
-import GameTheory.Analysis.Protocol.SequentialExistenceTest
-import GameTheory.Math.Probability.FiniteUniform
+module
+
+public import GameTheory.Analysis.Protocol.ComponentCompletion
+public import GameTheory.Analysis.Protocol.LocalDeviationBounds
+public import GameTheory.Analysis.Protocol.LocalSimulationLimit
+public import GameTheory.Analysis.Protocol.SequentialExistenceTest
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 noncomputable section
 namespace GameTheory.Tests.ProtocolComponentCompletion
 open GameTheory GameTheory.Protocol GameTheory.Protocol.InformationModel

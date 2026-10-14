@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.EndOfLineProblem
-import Complexitylib.Classes.Containments.Internal.FPBridge
+module
+
+public import GameTheoryComplexity.Backend.EndOfLineProblem
+public import Complexitylib.Classes.Containments.Internal.FPBridge
+
+@[expose] public section
 
 /-! Polynomial-time pointer composition and one-bit controls shared by the
 End-of-Line verifiers. -/

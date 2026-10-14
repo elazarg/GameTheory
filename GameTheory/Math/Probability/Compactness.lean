@@ -1,3 +1,5 @@
+module
+
 /-
 # Tight discrete PMF families and countable-coordinate compactness
 
@@ -7,9 +9,11 @@ supports lets Mathlib's compact-product theorem extract one subsequence.
 No topology is imposed on the semantic PMF type.
 -/
 
-import GameTheory.Math.Probability.Convergence
-import GameTheory.Math.Probability.Tightness
-import Mathlib.Topology.Sequences
+public import GameTheory.Math.Probability.Convergence
+public import GameTheory.Math.Probability.Tightness
+public import Mathlib.Topology.Sequences
+
+@[expose] public section
 
 noncomputable section
 

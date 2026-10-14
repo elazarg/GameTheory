@@ -1,3 +1,5 @@
+module
+
 /-
 Hostile public-monitoring regression fixture.
 
@@ -6,7 +8,9 @@ current loss from deviating, and includes an off-support continuation.  The
 discounted layer turns these local facts into PPE below.
 -/
 
-import GameTheory.Repeated.MonitoringOneShot
+public import GameTheory.Repeated.MonitoringOneShot
+
+@[expose] public section
 
 noncomputable section
 

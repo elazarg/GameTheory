@@ -1,3 +1,5 @@
+module
+
 /-
 # Why sequential consistency is a limit notion
 
@@ -6,8 +8,10 @@ law. This is the smallest witness that the topology in sequential consistency
 does real work: fully mixed approximants need not have a fully mixed limit.
 -/
 
-import Mathlib.Analysis.SpecificLimits.Basic
-import GameTheory.Analysis.Protocol.Sequential
+public import Mathlib.Analysis.SpecificLimits.Basic
+public import GameTheory.Analysis.Protocol.Sequential
+
+@[expose] public section
 
 noncomputable section
 

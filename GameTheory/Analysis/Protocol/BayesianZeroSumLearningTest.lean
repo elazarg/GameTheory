@@ -1,3 +1,5 @@
+module
+
 /-
 # Multi-site Bayesian Protocol regret learning
 
@@ -7,10 +9,12 @@ over complete contingent policies, and their shared trace is intended to feed
 the static zero-sum regret-to-Nash theorem.
 -/
 
-import GameTheory.Analysis.Protocol.CounterfactualRootRegret
-import GameTheory.Analysis.ZeroSumLearning
-import GameTheory.Languages.Bayesian.Strategic
-import Mathlib.Tactic.FinCases
+public import GameTheory.Analysis.Protocol.CounterfactualRootRegret
+public import GameTheory.Analysis.ZeroSumLearning
+public import GameTheory.Languages.Bayesian.Strategic
+public import Mathlib.Tactic.FinCases
+
+@[expose] public section
 
 noncomputable section
 

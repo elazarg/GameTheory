@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BinarySignedMatrixMachine
-import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+module
+
+public import GameTheoryComplexity.Backend.BinarySignedMatrixMachine
+public import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+
+@[expose] public section
 
 /-! Indexed guarded lookup with fixed-width signed storage. -/
 namespace GameTheory.Complexity.Backend

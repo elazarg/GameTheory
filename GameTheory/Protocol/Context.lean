@@ -1,3 +1,5 @@
+module
+
 /-
 # Continuation contexts
 
@@ -9,7 +11,9 @@ payoff also has a real value, and between such choices the comparison is the
 real one.
 -/
 
-import GameTheory.Math.Probability.ExtendedExpectation
+public import GameTheory.Math.Probability.ExtendedExpectation
+
+@[expose] public section
 
 noncomputable section
 

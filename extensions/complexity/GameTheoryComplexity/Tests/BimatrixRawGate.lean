@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BimatrixRawCircuit
-import Mathlib.Tactic.FinCases
+module
+
+public import GameTheoryComplexity.Backend.BimatrixRawCircuit
+public import Mathlib.Tactic.FinCases
+
+@[expose] public section
 
 /-! An aliased OR gate with opposite inline negation flags is a tautology.
 A nonuniform accepted certificate realizes it beside an affine false-input block. -/

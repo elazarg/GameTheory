@@ -1,6 +1,10 @@
-import GameTheory.Math.SpernerDoors
-import GameTheory.Math.SpernerGridGeometry
-import GameTheory.Math.GridSperner
+module
+
+public import GameTheory.Math.SpernerDoors
+public import GameTheory.Math.SpernerGridGeometry
+public import GameTheory.Math.GridSperner
+
+@[expose] public section
 
 /-! Oriented doors in square-grid triangles. Canonical boundary enforcement
 leaves one exterior door, on the first bottom edge of the lower origin triangle. -/

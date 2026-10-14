@@ -1,3 +1,5 @@
+module
+
 /-
 # Public-surface test for Arrow's theorem
 
@@ -6,7 +8,9 @@ entirely on the weak `Ranking` surface and checks both a concrete admissible
 aggregator and the finite-cardinality theorem.
 -/
 
-import GameTheory.Core.Arrow
+public import GameTheory.Core.Arrow
+
+@[expose] public section
 
 namespace GameTheory.Tests.Arrow
 

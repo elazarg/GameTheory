@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-108: separation of asymptotic payoff aggregations
 
@@ -14,9 +16,11 @@ endpoints are `B 0 = 2`, `B (k + 1) = B k ^ 2`, with alternating values on
 the uncompiled part of this experiment; no existence claim is hidden here.
 -/
 
-import GameTheory.Math.Probability.ExpectationMixture
-import GameTheory.Math.Probability.Mixture
-import Mathlib.Topology.Order.LiminfLimsup
+public import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Math.Probability.Mixture
+public import Mathlib.Topology.Order.LiminfLimsup
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Typed MAID order algebra
 
@@ -6,7 +8,9 @@ Node kernels act on the typed total assignment, and independent kernels commute
 without exposing a swap certificate or an implementation-specific state type.
 -/
 
-import GameTheory.Languages.MAID.ToEFG
+public import GameTheory.Languages.MAID.ToEFG
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,64 +1,68 @@
-import GameTheoryComplexity.SampleTest
-import GameTheoryComplexity.Backend.CompiledSampleTest
-import GameTheoryComplexity.Tests.BinaryRatioExtraction
-import GameTheoryComplexity.Tests.BimatrixProgramEmission
-import GameTheoryComplexity.Tests.BimatrixRawGateMachine
-import GameTheoryComplexity.Tests.SpernerCoordinateColor
-import GameTheoryComplexity.Tests.BimatrixProgramPayoffs
-import GameTheoryComplexity.Tests.GeneralBimatrixPayoffEmission
-import GameTheoryComplexity.Tests.BimatrixRawGate
-import GameTheoryComplexity
-import GameTheoryComplexity.LintAll
-import GameTheoryComplexity.Backend.Negligible
-import GameTheoryComplexity.Tests.RandomTape
-import GameTheoryComplexity.Tests.Facade
-import GameTheoryComplexity.Tests.Serializer
-import GameTheoryComplexity.Tests.Composition
-import GameTheoryComplexity.Tests.SATReduction
-import GameTheoryComplexity.Tests.NashCertificate
-import GameTheoryComplexity.Tests.SearchReduction
-import GameTheoryComplexity.Tests.EndOfLine
-import GameTheoryComplexity.Tests.RawEndOfLine
-import GameTheoryComplexity.Tests.PPAD
-import GameTheoryComplexity.Tests.CircuitPrefixCompiler
-import GameTheoryComplexity.Tests.NormalizedEndOfLine
-import GameTheoryComplexity.Tests.SpernerGridWords
-import GameTheoryComplexity.Tests.SpernerPointerMachine
-import GameTheoryComplexity.Tests.Sperner
-import GameTheoryComplexity.Tests.GridRouting
-import GameTheoryComplexity.Tests.GridRoutingGeometry
-import GameTheoryComplexity.Tests.GridRoutingNodes
-import GameTheoryComplexity.Tests.SpernerHardness
-import GameTheoryComplexity.Tests.Brouwer
-import GameTheoryComplexity.Tests.GeneralBimatrix
-import GameTheoryComplexity.Tests.GeneralBimatrixCodec
-import GameTheoryComplexity.Tests.GeneralBimatrixTotality
-import GameTheoryComplexity.Tests.GeneralBimatrixEndpoint
-import GameTheoryComplexity.Tests.BinarySignedArithmetic
-import GameTheoryComplexity.Tests.BinarySignedRowComparison
-import GameTheoryComplexity.Tests.BinarySignedMatrixMachine
-import GameTheoryComplexity.Tests.BinarySignedRowSelection
-import GameTheoryComplexity.Tests.BinarySubsetMachine
-import GameTheoryComplexity.Tests.BinaryUnaryArithmetic
-import GameTheoryComplexity.Tests.BinaryBirdDeterminantMachine
-import GameTheoryComplexity.Tests.BinaryCramerMachine
-import GameTheoryComplexity.Tests.BinaryDictionaryMachine
-import GameTheoryComplexity.Tests.BinaryBirdDeterminantCorrectness
-import GameTheoryComplexity.Tests.BimatrixNodeWord
-import GameTheoryComplexity.Tests.GeneralBimatrixMatrixWord
-import GameTheoryComplexity.Tests.BinaryDictionaryCorrectness
-import GameTheoryComplexity.Tests.BinaryDictionaryFeasibility
-import GameTheoryComplexity.Tests.GeneralBimatrixEndpointMachine
-import GameTheoryComplexity.Tests.BimatrixNodeOperations
-import GameTheoryComplexity.Tests.BimatrixNodeColor
-import GameTheoryComplexity.Tests.GeneralBimatrixNodeOperations
-import GameTheoryComplexity.Tests.GeneralBimatrixCircuitMachine
-import GameTheoryComplexity.Tests.GeneralBimatrixReduction
-import GameTheoryComplexity.Tests.GeneralBimatrixDictionary
-import GameTheoryComplexity.Tests.GeneralBimatrixNodeValidation
-import GameTheoryComplexity.Tests.GeneralBimatrixEndpointCapacity
-import GameTheoryComplexity.Tests.GeneralBimatrixPathEndpoint
-import Lean.Util.CollectAxioms
+module
+
+import all GameTheoryComplexity.SampleTest
+import all GameTheoryComplexity.Backend.CompiledSampleTest
+import all GameTheoryComplexity.Tests.BinaryRatioExtraction
+import all GameTheoryComplexity.Tests.BimatrixProgramEmission
+import all GameTheoryComplexity.Tests.BimatrixRawGateMachine
+import all GameTheoryComplexity.Tests.SpernerCoordinateColor
+import all GameTheoryComplexity.Tests.BimatrixProgramPayoffs
+import all GameTheoryComplexity.Tests.GeneralBimatrixPayoffEmission
+import all GameTheoryComplexity.Tests.BimatrixRawGate
+import all GameTheoryComplexity
+import all GameTheoryComplexity.LintAll
+import all GameTheoryComplexity.Backend.Negligible
+import all GameTheoryComplexity.Tests.RandomTape
+import all GameTheoryComplexity.Tests.Facade
+import all GameTheoryComplexity.Tests.Serializer
+import all GameTheoryComplexity.Tests.Composition
+import all GameTheoryComplexity.Tests.SATReduction
+import all GameTheoryComplexity.Tests.NashCertificate
+import all GameTheoryComplexity.Tests.SearchReduction
+import all GameTheoryComplexity.Tests.EndOfLine
+import all GameTheoryComplexity.Tests.RawEndOfLine
+import all GameTheoryComplexity.Tests.PPAD
+import all GameTheoryComplexity.Tests.CircuitPrefixCompiler
+import all GameTheoryComplexity.Tests.NormalizedEndOfLine
+import all GameTheoryComplexity.Tests.SpernerGridWords
+import all GameTheoryComplexity.Tests.SpernerPointerMachine
+import all GameTheoryComplexity.Tests.Sperner
+import all GameTheoryComplexity.Tests.GridRouting
+import all GameTheoryComplexity.Tests.GridRoutingGeometry
+import all GameTheoryComplexity.Tests.GridRoutingNodes
+import all GameTheoryComplexity.Tests.SpernerHardness
+import all GameTheoryComplexity.Tests.Brouwer
+import all GameTheoryComplexity.Tests.GeneralBimatrix
+import all GameTheoryComplexity.Tests.GeneralBimatrixCodec
+import all GameTheoryComplexity.Tests.GeneralBimatrixTotality
+import all GameTheoryComplexity.Tests.GeneralBimatrixEndpoint
+import all GameTheoryComplexity.Tests.BinarySignedArithmetic
+import all GameTheoryComplexity.Tests.BinarySignedRowComparison
+import all GameTheoryComplexity.Tests.BinarySignedMatrixMachine
+import all GameTheoryComplexity.Tests.BinarySignedRowSelection
+import all GameTheoryComplexity.Tests.BinarySubsetMachine
+import all GameTheoryComplexity.Tests.BinaryUnaryArithmetic
+import all GameTheoryComplexity.Tests.BinaryBirdDeterminantMachine
+import all GameTheoryComplexity.Tests.BinaryCramerMachine
+import all GameTheoryComplexity.Tests.BinaryDictionaryMachine
+import all GameTheoryComplexity.Tests.BinaryBirdDeterminantCorrectness
+import all GameTheoryComplexity.Tests.BimatrixNodeWord
+import all GameTheoryComplexity.Tests.GeneralBimatrixMatrixWord
+import all GameTheoryComplexity.Tests.BinaryDictionaryCorrectness
+import all GameTheoryComplexity.Tests.BinaryDictionaryFeasibility
+import all GameTheoryComplexity.Tests.GeneralBimatrixEndpointMachine
+import all GameTheoryComplexity.Tests.BimatrixNodeOperations
+import all GameTheoryComplexity.Tests.BimatrixNodeColor
+import all GameTheoryComplexity.Tests.GeneralBimatrixNodeOperations
+import all GameTheoryComplexity.Tests.GeneralBimatrixCircuitMachine
+import all GameTheoryComplexity.Tests.GeneralBimatrixReduction
+import all GameTheoryComplexity.Tests.GeneralBimatrixDictionary
+import all GameTheoryComplexity.Tests.GeneralBimatrixNodeValidation
+import all GameTheoryComplexity.Tests.GeneralBimatrixEndpointCapacity
+import all GameTheoryComplexity.Tests.GeneralBimatrixPathEndpoint
+meta import Lean.Util.CollectAxioms
+
+@[expose] public section
 
 /-! Reject placeholders and nonstandard axioms in every public extension
 declaration, including axioms reached through upstream dependencies. -/

@@ -1,4 +1,8 @@
-import GameTheory.Math.GridWireBounds
+module
+
+public import GameTheory.Math.GridWireBounds
+
+@[expose] public section
 
 /-! A linear coordinate width leaves an inactive collar around the shifted,
 size-six routed coloring. The collar separates its paths from the canonical

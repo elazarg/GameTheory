@@ -1,10 +1,14 @@
-import GameTheoryComplexity.Backend.SpernerCircuitGeneration
-import GameTheoryComplexity.Backend.SpernerRoutingDecoderMachine
-import GameTheoryComplexity.Backend.GridRoutingOriginalGraph
-import GameTheoryComplexity.Backend.SearchReduction
-import GameTheoryComplexity.Backend.GridSpernerColorMachine
-import GameTheory.Math.GridSpernerRoutingBoundary
-import GameTheory.Math.GridSpernerRoutingBounds
+module
+
+public import GameTheoryComplexity.Backend.SpernerCircuitGeneration
+public import GameTheoryComplexity.Backend.SpernerRoutingDecoderMachine
+public import GameTheoryComplexity.Backend.GridRoutingOriginalGraph
+public import GameTheoryComplexity.Backend.SearchReduction
+public import GameTheoryComplexity.Backend.GridSpernerColorMachine
+public import GameTheory.Math.GridSpernerRoutingBoundary
+public import GameTheory.Math.GridSpernerRoutingBounds
+
+@[expose] public section
 
 /-! Local routed color circuits and binary endpoint decoding implement the
 reverse Sperner reduction. Answer decoding preserves endpoints from every

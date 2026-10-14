@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixVerifier
-import GameTheoryComplexity.Backend.BinarySignedAddition
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixVerifier
+public import GameTheoryComplexity.Backend.BinarySignedAddition
+
+@[expose] public section
 
 /-! Certified signed words for the decoded rectangular game and its positive shift.
 The input codec remains a pair of unsigned magnitude fields; only internal

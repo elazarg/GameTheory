@@ -1,5 +1,9 @@
-import GameTheory.Protocol.Backward
-import GameTheory.Math.Probability.ExpectationMixture
+module
+
+public import GameTheory.Protocol.Backward
+public import GameTheory.Math.Probability.ExpectationMixture
+
+@[expose] public section
 
 noncomputable section
 

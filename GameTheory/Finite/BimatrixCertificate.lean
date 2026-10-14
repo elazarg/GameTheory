@@ -1,4 +1,8 @@
-import Mathlib.Algebra.Order.BigOperators.Ring.Finset
+module
+
+public import Mathlib.Algebra.Order.BigOperators.Ring.Finset
+
+@[expose] public section
 
 /-! Exact integer certificates for rectangular bimatrix Nash equilibria.
 Natural probability numerators have independent positive denominators, while

@@ -1,3 +1,5 @@
+module
+
 /-
 # Pseudo-correlated equilibrium
 
@@ -20,8 +22,10 @@ implementation of the mediated family, replacing the mediator by a protocol,
 turns a pseudo-correlated equilibrium into a pseudo-Nash equilibrium of the
 protocol game.
 -/
-import GameTheory.Analysis.CorrelationHierarchy
-import GameTheory.Analysis.PseudoNash
+public import GameTheory.Analysis.CorrelationHierarchy
+public import GameTheory.Analysis.PseudoNash
+
+@[expose] public section
 
 noncomputable section
 

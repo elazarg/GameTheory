@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-105: utility-augmented MAID factorization
 
@@ -7,8 +9,10 @@ utility factor has mass one.  An assignment outside that image disagrees at a
 utility leaf, whose deterministic kernel gives both sides point mass zero.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDUtilityGraphFinite
-import GameTheory.Math.Probability.Support
+public import GameTheory.Experimental.PostArchitecture.MAIDUtilityGraphFinite
+public import GameTheory.Math.Probability.Support
+
+@[expose] public section
 
 noncomputable section
 

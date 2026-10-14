@@ -1,9 +1,13 @@
-import GameTheoryComplexity.Backend.BimatrixRawGate
-import Complexitylib.Circuits.Encoding.Shift.Defs
-import GameTheoryComplexity.Backend.CircuitGateLookup
-import GameTheoryComplexity.Backend.BinaryUnaryEncoding
-import GameTheoryComplexity.Backend.BinaryUnaryArithmetic
-import GameTheoryComplexity.Backend.BinarySignedAddition
+module
+
+public import GameTheoryComplexity.Backend.BimatrixRawGate
+public import Complexitylib.Circuits.Encoding.Shift.Defs
+public import GameTheoryComplexity.Backend.CircuitGateLookup
+public import GameTheoryComplexity.Backend.BinaryUnaryEncoding
+public import GameTheoryComplexity.Backend.BinaryUnaryArithmetic
+public import GameTheoryComplexity.Backend.BinarySignedAddition
+
+@[expose] public section
 
 /-! Certified signed-coefficient queries for serialized raw gates.
 Input negations are inline and both reference contributions are retained when they alias.

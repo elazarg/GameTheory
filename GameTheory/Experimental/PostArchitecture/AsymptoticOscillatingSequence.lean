@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-108: a concrete alternating-block sequence
 
@@ -8,7 +10,9 @@ index is deliberately exposed: its interval characterization is the finite
 arithmetic checkpoint needed before the liminf/limsup filter argument.
 -/
 
-import GameTheory.Experimental.PostArchitecture.AsymptoticPayoffSeparation
+public import GameTheory.Experimental.PostArchitecture.AsymptoticPayoffSeparation
+
+@[expose] public section
 
 noncomputable section
 

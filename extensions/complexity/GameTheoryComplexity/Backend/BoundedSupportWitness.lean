@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.NashSupportSystem
-import GameTheory.Math.SmallRationalWitness
-import GameTheory.Math.FiniteLinearBitBound
+module
+
+public import GameTheoryComplexity.Backend.NashSupportSystem
+public import GameTheory.Math.SmallRationalWitness
+public import GameTheory.Math.FiniteLinearBitBound
+
+@[expose] public section
 
 /-! Fixed-support best-response feasibility has integer numerator solutions
 whose common denominator and every coordinate have polynomial binary width. -/

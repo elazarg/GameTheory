@@ -1,3 +1,5 @@
+module
+
 /-
 # EFG strategic-form transfer
 
@@ -11,9 +13,11 @@ native `run` and `runMixed` vocabulary. They define no language-specific
 equilibrium predicate.
 -/
 
-import GameTheory.Languages.EFG
-import GameTheory.Protocol.Strategic
-import GameTheory.Core.Utility
+public import GameTheory.Languages.EFG
+public import GameTheory.Protocol.Strategic
+public import GameTheory.Core.Utility
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Serialized/native typed MAID equivalence
 
@@ -6,7 +8,9 @@ frontier with sequential draws of the same node laws. This file keeps that
 probability algebra separate from both evaluators.
 -/
 
-import GameTheory.Languages.MAID.Order
+public import GameTheory.Languages.MAID.Order
+
+@[expose] public section
 
 noncomputable section
 

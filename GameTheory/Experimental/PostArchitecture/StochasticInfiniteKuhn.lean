@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-117: one regular pure-policy law for infinite-horizon Kuhn
 
@@ -8,7 +10,9 @@ off-baseline behavioral deviation, and gives the same bounded discounted
 payoff series as behavioral play.
 -/
 
-import GameTheory.Experimental.PostArchitecture.StochasticKuhn
+public import GameTheory.Experimental.PostArchitecture.StochasticKuhn
+
+@[expose] public section
 
 noncomputable section
 

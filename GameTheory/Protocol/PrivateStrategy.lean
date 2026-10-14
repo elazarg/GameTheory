@@ -1,3 +1,5 @@
+module
+
 /-
 # Realizing private strategy memory by behavioral policies
 
@@ -13,7 +15,9 @@ of private memory given that output, and inputs are observations of the
 environment state.
 -/
 
-import GameTheory.Math.Probability.Conditioning
+public import GameTheory.Math.Probability.Conditioning
+
+@[expose] public section
 
 noncomputable section
 

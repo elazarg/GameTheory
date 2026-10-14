@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinaryUnaryArithmetic
+module
+
+public import GameTheoryComplexity.Backend.BinaryUnaryArithmetic
+
+@[expose] public section
 
 namespace GameTheory.Complexity.Tests.BinaryUnaryArithmetic
 open GameTheory.Complexity.Backend

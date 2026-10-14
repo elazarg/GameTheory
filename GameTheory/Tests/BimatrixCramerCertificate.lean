@@ -1,5 +1,9 @@
-import GameTheory.Finite.BimatrixCramerCertificate
-import Mathlib.Data.Fin.VecNotation
+module
+
+public import GameTheory.Finite.BimatrixCramerCertificate
+public import Mathlib.Data.Fin.VecNotation
+
+@[expose] public section
 
 /-! A negative-determinant terminal preserves its endpoint through payoff unshifting. -/
 

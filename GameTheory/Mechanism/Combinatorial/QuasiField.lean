@@ -1,3 +1,5 @@
+module
+
 /-
 # Quasi-fields of bundles
 
@@ -5,7 +7,9 @@ Closure lemmas for the finite bundle families used by coordinated
 combinatorial mechanisms.
 -/
 
-import GameTheory.Mechanism.Combinatorial.Basic
+public import GameTheory.Mechanism.Combinatorial.Basic
+
+@[expose] public section
 
 namespace GameTheory.Mechanism.Combinatorial
 

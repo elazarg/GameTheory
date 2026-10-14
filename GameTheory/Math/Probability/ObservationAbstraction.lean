@@ -1,3 +1,5 @@
+module
+
 /-
 # Observation abstraction for response laws
 
@@ -13,8 +15,10 @@ irrelevant to the initialized law. Perfect reporting and preservation of every
 fully informed reporting law hold exactly when the summary determines the fact.
 -/
 
-import GameTheory.Math.Probability.ConditionalObservation
-import GameTheory.Math.Probability.ExpectationAtoms
+public import GameTheory.Math.Probability.ConditionalObservation
+public import GameTheory.Math.Probability.ExpectationAtoms
+
+@[expose] public section
 
 noncomputable section
 

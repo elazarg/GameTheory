@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinaryCramerMachine
+module
+
+public import GameTheoryComplexity.Backend.BinaryCramerMachine
+
+@[expose] public section
 
 /-! Packed symbolic dictionaries over a common positive determinant scale.
 The constant column uses the all-ones right-hand side; later columns use unit

@@ -1,5 +1,9 @@
-import GameTheory.Math.ClippedArithmetic
-import Mathlib.Algebra.Order.Field.Basic
+module
+
+public import GameTheory.Math.ClippedArithmetic
+public import Mathlib.Algebra.Order.Field.Basic
+
+@[expose] public section
 
 /-!
 # Clipped affine feedback without premature saturation

@@ -1,3 +1,5 @@
+module
+
 /-
 # Explicit-order FOSG serialization
 
@@ -14,9 +16,11 @@ the exact law and terminal-support results also hold for continuations from
 any supplied reached boundary.
 -/
 
-import GameTheory.Languages.EFG
-import GameTheory.Languages.FOSG
-import GameTheory.Math.Probability.FiniteSampling
+public import GameTheory.Languages.EFG
+public import GameTheory.Languages.FOSG
+public import GameTheory.Math.Probability.FiniteSampling
+
+@[expose] public section
 
 noncomputable section
 

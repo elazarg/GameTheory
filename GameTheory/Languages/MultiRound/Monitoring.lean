@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite multi-round games with imperfect monitoring
 
@@ -17,7 +19,9 @@ signals.  Thus previous-action recall and imperfect monitoring are enforced by
 the target types rather than asserted as a locality condition on policies.
 -/
 
-import GameTheory.Languages.FOSG
+public import GameTheory.Languages.FOSG
+
+@[expose] public section
 
 noncomputable section
 

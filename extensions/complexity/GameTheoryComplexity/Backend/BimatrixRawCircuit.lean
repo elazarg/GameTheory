@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BimatrixRawGate
-import Complexitylib.Circuits.Encoding.Shift
+module
+
+public import GameTheoryComplexity.Backend.BimatrixRawGate
+public import Complexitylib.Circuits.Encoding.Shift
+
+@[expose] public section
 /-! A single paired-action game evaluates a topologically ordered raw circuit.
 The invariant follows the canonical memo-array evaluator: primary input errors
 are bounded initially, and each comparator output resets its error to the common

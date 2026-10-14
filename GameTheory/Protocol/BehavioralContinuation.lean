@@ -1,3 +1,5 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
 /-
@@ -9,8 +11,10 @@ histories. A certified bound supplies evaluation fuel, and larger certified
 bounds give the same laws. Transfer is inherited from `IsContinuationNash`.
 -/
 
-import GameTheory.Protocol.SingleMover
-import GameTheory.Protocol.Continuation
+public import GameTheory.Protocol.SingleMover
+public import GameTheory.Protocol.Continuation
+
+@[expose] public section
 
 noncomputable section
 

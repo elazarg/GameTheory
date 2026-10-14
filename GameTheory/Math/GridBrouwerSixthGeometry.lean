@@ -1,4 +1,8 @@
-import GameTheory.Math.GridBrouwerSixthPoints
+module
+
+public import GameTheory.Math.GridBrouwerSixthPoints
+
+@[expose] public section
 
 /-! The sixth-grid locator reconstructs the input point by affine weights.
 Triangle barycenters have canonical integer numerators in this representation. -/

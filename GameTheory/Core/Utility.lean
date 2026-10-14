@@ -1,3 +1,5 @@
+module
+
 /-
 # Utility evaluation and expected-utility preference
 
@@ -11,8 +13,10 @@ rational payoffs and connects to this layer by a proved compilation, not by a
 scalar parameter threaded through the core.
 -/
 
-import GameTheory.Core.Equilibrium
-import GameTheory.Core.ExpectedUtility
+public import GameTheory.Core.Equilibrium
+public import GameTheory.Core.ExpectedUtility
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,6 +1,10 @@
-import GameTheory.Math.EndOfLineNormalization
-import GameTheoryComplexity.Backend.EndOfLineMachineOps
-import Complexitylib.Classes.P.NormalForm
+module
+
+public import GameTheory.Math.EndOfLineNormalization
+public import GameTheoryComplexity.Backend.EndOfLineMachineOps
+public import Complexitylib.Classes.P.NormalForm
+
+@[expose] public section
 
 /-! The usual asymmetric End-of-Line search condition on the shared succinct
 pointer encoding. The origin may answer a broken initial link. Weak source

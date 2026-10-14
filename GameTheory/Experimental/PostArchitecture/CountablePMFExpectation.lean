@@ -1,3 +1,5 @@
+module
+
 /-
   EXP-112: exact guarded PMF expectation and its canonical measure bridge.
 
@@ -6,10 +8,12 @@
   bridge rather than defining a second expectation API.
 -/
 
-import Mathlib.Probability.ProbabilityMassFunction.Integrals
-import Mathlib.Analysis.SpecificLimits.Basic
-import GameTheory.Experimental.PostArchitecture.CountableDiscreteStopping
-import GameTheory.Math.Probability.Measure
+public import Mathlib.Probability.ProbabilityMassFunction.Integrals
+public import Mathlib.Analysis.SpecificLimits.Basic
+public import GameTheory.Experimental.PostArchitecture.CountableDiscreteStopping
+public import GameTheory.Math.Probability.Measure
+
+@[expose] public section
 
 noncomputable section
 

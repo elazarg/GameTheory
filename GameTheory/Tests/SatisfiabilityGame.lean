@@ -1,4 +1,8 @@
-import GameTheory.Core.SatisfiabilityGameReduction
+module
+
+public import GameTheory.Core.SatisfiabilityGameReduction
+
+@[expose] public section
 
 /-! Payoff-threshold controls use a nonconstant satisfying assignment and an
 inconsistent pair of clauses. Mixed strategies cannot evade the latter. -/

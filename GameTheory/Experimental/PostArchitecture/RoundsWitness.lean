@@ -1,3 +1,5 @@
+module
+
 /-
 # Historical two-round simultaneity architecture witness
 
@@ -17,7 +19,9 @@ round is not vestigial, and the state reached after round one genuinely records
 which outcome occurred.
 -/
 
-import GameTheory.Protocol.Execution
+public import GameTheory.Protocol.Execution
+
+@[expose] public section
 
 noncomputable section
 

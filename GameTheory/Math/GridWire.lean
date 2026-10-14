@@ -1,4 +1,8 @@
-import GameTheory.Math.GridCrossingGeometry
+module
+
+public import GameTheory.Math.GridCrossingGeometry
+
+@[expose] public section
 
 /-! A routed edge uses a private vertical column, two horizontal segments, and
 a short downward hook into its target vertex. Successor and predecessor inspect

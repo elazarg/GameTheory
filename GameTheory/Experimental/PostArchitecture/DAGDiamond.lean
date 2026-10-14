@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-039: arbitrary-carrier finite DAG
 
@@ -6,8 +8,10 @@ substrate derives an order without storing one and proves both direct and
 transitive predecessors occur earlier.
 -/
 
-import GameTheory.Math.DAG
-import Mathlib.Data.Fintype.OfMap
+public import GameTheory.Math.DAG
+public import Mathlib.Data.Fintype.OfMap
+
+@[expose] public section
 
 namespace GameTheory.Experimental.DAGDiamond
 

@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
+module
+
+public import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
+
+@[expose] public section
 
 /-! Exact unsigned multiplication by recursion on little-endian bit positions.
 The output bound and polynomial-time certificate depend on word lengths, including

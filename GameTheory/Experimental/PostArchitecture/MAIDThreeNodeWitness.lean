@@ -1,3 +1,5 @@
+module
+
 /-
 # A three-node MAID on the shared execution base
 
@@ -39,8 +41,10 @@ Four results decide the experiment.
 Read that section before concluding anything from the theorems.
 -/
 
-import GameTheory.Protocol.Information
-import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Protocol.Information
+public import GameTheory.Math.Probability.ExpectationMixture
+
+@[expose] public section
 
 noncomputable section
 

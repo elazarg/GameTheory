@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-060: two-round hidden-phase FOSG serialization
 
@@ -9,11 +11,13 @@ source history; reconstructing one from an outcome or source state is not
 sound for this fixture.
 -/
 
-import GameTheory.Languages.EFG
-import GameTheory.Languages.FOSG
-import GameTheory.Math.Probability.Joint
-import GameTheory.Math.Probability.Mixture
-import GameTheory.Math.Probability.Product
+public import GameTheory.Languages.EFG
+public import GameTheory.Languages.FOSG
+public import GameTheory.Math.Probability.Joint
+public import GameTheory.Math.Probability.Mixture
+public import GameTheory.Math.Probability.Product
+
+@[expose] public section
 
 noncomputable section
 

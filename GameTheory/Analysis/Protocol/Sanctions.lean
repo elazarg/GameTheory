@@ -1,7 +1,11 @@
+module
+
 /- Copyright (c) 2026 VegasCore contributors. Released under MIT; see NOTICE. -/
 
-import GameTheory.Analysis.Enforcement
-import GameTheory.Protocol.BehavioralAssessment
+public import GameTheory.Analysis.Enforcement
+public import GameTheory.Protocol.BehavioralAssessment
+
+@[expose] public section
 
 /-! # Sequential incentives from incremental penalties
 

@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixPayoffEmission
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixPayoffEmission
+
+@[expose] public section
 
 /-! Magnitude emission controls cover positive, negative, padded zero and truncation. -/
 namespace GameTheory.Complexity.Tests.GeneralBimatrixPayoffEmission

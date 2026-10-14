@@ -1,3 +1,5 @@
+module
+
 /-
 # Realization of randomized information-local policies
 
@@ -6,8 +8,10 @@ and bounded counterfactual realizations. This is a one-way consumer of the
 strategic compiler and the focused policy-randomization mathematics.
 -/
 
-import GameTheory.Protocol.Strategic
-import GameTheory.Protocol.PolicyRandomization
+public import GameTheory.Protocol.Strategic
+public import GameTheory.Protocol.PolicyRandomization
+
+@[expose] public section
 
 noncomputable section
 

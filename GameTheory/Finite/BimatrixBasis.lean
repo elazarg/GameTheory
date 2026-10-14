@@ -1,7 +1,11 @@
-import GameTheory.Finite.BimatrixPivotSource
-import GameTheory.Math.CanonicalDictionary
-import GameTheory.Math.ComplementaryLabels
-import Mathlib.Order.Prod.Lex.Basic
+module
+
+public import GameTheory.Finite.BimatrixPivotSource
+public import GameTheory.Math.CanonicalDictionary
+public import GameTheory.Math.ComplementaryLabels
+public import Mathlib.Order.Prod.Lex.Basic
+
+@[expose] public section
 
 /-! Canonical feasible bases of the bimatrix complementarity system.
 Basis variables form a finite set, so column permutations do not create new

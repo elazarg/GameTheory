@@ -1,7 +1,13 @@
-import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
-import Complexitylib.Classes.Containments.Internal.FPBridge
-import Complexitylib.Classes.P.NormalForm
-import Complexitylib.Classes.NP.WitnessConstruction
+module
+
+public import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
+public import Complexitylib.Classes.Containments.Internal.FPBridge
+public import Complexitylib.Classes.P.NormalForm
+public import Complexitylib.Classes.NP.WitnessConstruction
+
+import Complexitylib.Classes.P
+
+@[expose] public section
 
 /-! Canonical binary pairing lifts a multi-input verifier to a word machine.
 Re-encoding checks the serialization before the component verifier is consulted. -/

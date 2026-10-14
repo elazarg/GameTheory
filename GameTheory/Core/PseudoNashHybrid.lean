@@ -1,3 +1,5 @@
+module
+
 /-
 # Secure implementations proved by uniform hybrids
 
@@ -6,8 +8,10 @@ negligible bound controls every adjacent replacement. The bound is uniform in
 the replacement index; separate negligible bounds for each fixed index do not
 suffice when the number of replacements grows with the security parameter.
 -/
-import GameTheory.Core.PseudoNash
-import GameTheory.Math.Probability.HybridIndistinguishability
+public import GameTheory.Core.PseudoNash
+public import GameTheory.Math.Probability.HybridIndistinguishability
+
+@[expose] public section
 
 noncomputable section
 

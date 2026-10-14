@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinarySignedRowComparison
+module
+
+public import GameTheoryComplexity.Backend.BinarySignedRowComparison
+
+@[expose] public section
 
 /-! Kernel controls for packed symbolic ratio rows and length-based scan clocks. -/
 namespace GameTheory.Complexity.Tests.BinarySignedRowComparison

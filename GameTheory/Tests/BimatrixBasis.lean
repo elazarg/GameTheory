@@ -1,4 +1,8 @@
-import GameTheory.Finite.BimatrixBasis
+module
+
+public import GameTheory.Finite.BimatrixBasis
+
+@[expose] public section
 
 /-! Canonical source identity and a certified pivot in a degenerate rectangular game. -/
 namespace GameTheory.Tests.BimatrixBasis

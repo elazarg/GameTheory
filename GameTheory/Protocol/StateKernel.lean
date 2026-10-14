@@ -1,6 +1,10 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
-import GameTheory.Protocol.Randomized
+public import GameTheory.Protocol.Randomized
+
+@[expose] public section
 
 /-! # State kernels of history-based randomized play
 

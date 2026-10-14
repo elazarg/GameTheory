@@ -1,3 +1,5 @@
+module
+
 /-
 # Multiplicative-weights self-play test
 
@@ -6,8 +8,10 @@ game.  This Analysis-owned test is the only place where that fixture reaches
 the opt-in exponential-weights bridge.
 -/
 
-import GameTheory.Analysis.Learning
-import GameTheory.Tests.Learning
+public import GameTheory.Analysis.Learning
+public import GameTheory.Tests.Learning
+
+@[expose] public section
 
 noncomputable section
 

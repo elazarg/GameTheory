@@ -1,5 +1,9 @@
-import GameTheory.Analysis.Nash
-import GameTheory.Finite.BimatrixCertificateCompleteness
+module
+
+public import GameTheory.Analysis.Nash
+public import GameTheory.Finite.BimatrixCertificateCompleteness
+
+@[expose] public section
 
 /-! Every nonempty finite integer bimatrix game has an exact rational Nash
 certificate of polynomial binary width. Analytic Nash existence supplies a

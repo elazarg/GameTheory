@@ -1,3 +1,5 @@
+module
+
 /-
 # Approximate common knowledge
 
@@ -8,7 +10,9 @@ Primary reference: D. Monderer and M. Samet, “Approximating Common Knowledge
 with Common Beliefs,” *Games and Economic Behavior* 1 (1989).
 -/
 
-import GameTheory.Epistemic.Basic
+public import GameTheory.Epistemic.Basic
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BinarySignedArithmetic
-import Mathlib.Data.Rat.Cast.Order
+module
+
+public import GameTheoryComplexity.Backend.BinarySignedArithmetic
+public import Mathlib.Data.Rat.Cast.Order
+
+@[expose] public section
 
 /-! Polynomial-time signed cross-product comparisons for exact ratio scans.
 All four operands are binary signed words, with no canonical-padding premise.

@@ -1,9 +1,13 @@
-import GameTheoryComplexity.Backend.BrouwerPointCodec
-import GameTheory.Math.GridBrouwerSixthGeometry
-import GameTheoryComplexity.Backend.SpernerGridCodecMachine
-import GameTheoryComplexity.Backend.GridRoutingBitFields
-import GameTheoryComplexity.Backend.GridRoutingDivision
-import GameTheoryComplexity.Backend.GridRoutingArithmetic
+module
+
+public import GameTheoryComplexity.Backend.BrouwerPointCodec
+public import GameTheory.Math.GridBrouwerSixthGeometry
+public import GameTheoryComplexity.Backend.SpernerGridCodecMachine
+public import GameTheoryComplexity.Backend.GridRoutingBitFields
+public import GameTheoryComplexity.Backend.GridRoutingDivision
+public import GameTheoryComplexity.Backend.GridRoutingArithmetic
+
+@[expose] public section
 
 /-! Point location uses binary division by six and a constant remainder table.
 Boundary coordinates are clamped to the final grid cell. The reverse decoder

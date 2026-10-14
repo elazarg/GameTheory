@@ -36,6 +36,10 @@ umbrellas. Other modules build when explicitly imported or named as a Lake
 target. For complete source-boundary, build, lint, and transitive-axiom checks,
 including tests and experimental evidence, run `python scripts/audit.py`.
 
+Authored files use Lean's module system with public imports and exposed public
+declarations. The [mechanical migration notes](docs/ModuleMigration.md) document
+the preserved visibility policy and compatibility options.
+
 Lake also fetches the other dependencies, including the fixed-point theorem
 library used by `GameTheory.Analysis`.
 

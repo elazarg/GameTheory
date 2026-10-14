@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite-bidder sealed-bid auctions
 
@@ -12,7 +14,9 @@ Primary reference: W. Vickrey, “Counterspeculation, Auctions, and Competitive
 Sealed Tenders,” *Journal of Finance* 16 (1961).
 -/
 
-import GameTheory.Core.Response
+public import GameTheory.Core.Response
+
+@[expose] public section
 
 noncomputable section
 

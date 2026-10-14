@@ -1,7 +1,11 @@
-import GameTheory.Math.FacetOrientation
-import Mathlib.Data.Fin.VecNotation
-import Mathlib.Tactic.FinCases
-import Mathlib.Tactic.NormNum
+module
+
+public import GameTheory.Math.FacetOrientation
+public import Mathlib.Data.Fin.VecNotation
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 /-! Signed cofactors track the sign change caused by canonical sorting of a pivot. -/
 

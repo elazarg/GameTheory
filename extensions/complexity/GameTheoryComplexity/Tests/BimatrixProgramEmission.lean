@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BimatrixProgramEmission
+module
+
+public import GameTheoryComplexity.Backend.BimatrixProgramEmission
+
+@[expose] public section
 
 /-! Packed signed fields preserve aliases, signs and empty dimensions. -/
 namespace GameTheory.Complexity.Tests.BimatrixProgramEmission

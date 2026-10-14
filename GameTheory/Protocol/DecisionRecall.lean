@@ -1,3 +1,5 @@
+module
+
 /-
 # Recall at genuine decision information sets
 
@@ -14,8 +16,10 @@ information states, and the record read off a decision information state is
 the actual own play along every history producing it.
 -/
 
-import GameTheory.Protocol.BehavioralAssessment
-import GameTheory.Protocol.PolicyRandomization
+public import GameTheory.Protocol.BehavioralAssessment
+public import GameTheory.Protocol.PolicyRandomization
+
+@[expose] public section
 
 namespace GameTheory.Protocol.InformationModel
 

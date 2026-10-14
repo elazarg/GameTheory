@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite economic games
 
@@ -9,11 +11,15 @@ The discrete Cournot and Traveler tables deliberately expose all of their pure
 equilibria, as verified by exhaustive enumeration.
 -/
 
-import GameTheory.Finite.Correctness
-import Mathlib.Tactic.DeriveFintype
-import Mathlib.Tactic.FinCases
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.Ring
+public import GameTheory.Finite.Correctness
+public import Mathlib.Tactic.DeriveFintype
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Tactic.Linarith
+public import Mathlib.Tactic.Ring
+public meta import Mathlib.Data.Fintype.Basic
+public meta import GameTheory.Finite.Algorithm
+
+@[expose] public section
 
 namespace GameTheory.Examples.Economic
 

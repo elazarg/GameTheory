@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile locality and law-linearity tests
 
@@ -7,7 +9,9 @@ locality by construction. These are the tests that would catch it failing to.
 Nothing here is a new definition; every statement exercises the public Core API.
 -/
 
-import GameTheory.Core
+public import GameTheory.Core
+
+@[expose] public section
 
 noncomputable section
 

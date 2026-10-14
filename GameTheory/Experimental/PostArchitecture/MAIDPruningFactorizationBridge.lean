@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-107: pruning-parent factorization bridge
 
@@ -7,8 +9,10 @@ effective base graphs and, after appending the exact utility leaves, for their
 augmented graphs.  This file contains no optimality or coverage claim.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
-import GameTheory.Experimental.PostArchitecture.MAIDUtilityFactorization
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
+public import GameTheory.Experimental.PostArchitecture.MAIDUtilityFactorization
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,6 +1,10 @@
-import GameTheory.Math.IntegerSumBounds
-import GameTheoryComplexity.Backend.GeneralBimatrixEndpointMachine
-import GameTheoryComplexity.Backend.GeneralBimatrixDictionary
+module
+
+public import GameTheory.Math.IntegerSumBounds
+public import GameTheoryComplexity.Backend.GeneralBimatrixEndpointMachine
+public import GameTheoryComplexity.Backend.GeneralBimatrixDictionary
+
+@[expose] public section
 
 /-! Automatic storage bounds for emission from a computed complementary dictionary.
 The controller's working width covers all Cramer weights, probability masses and

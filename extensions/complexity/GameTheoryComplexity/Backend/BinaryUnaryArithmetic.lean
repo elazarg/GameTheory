@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
+module
+
+public import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
+
+@[expose] public section
 
 /-! Certified length arithmetic on explicit rulers.
 The machine stores a parity header and a unary half-length tail.

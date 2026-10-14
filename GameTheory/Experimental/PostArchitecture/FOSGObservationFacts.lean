@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-058 witness: reachable-observation proof-machine retirement
 
@@ -12,8 +14,10 @@ claims cannot be promoted as general FOSG facts.  Their useful replacements
 are already the operation-local Protocol theorems.
 -/
 
-import GameTheory.Languages.FOSG.Kuhn
-import GameTheory.Tests.Randomized
+public import GameTheory.Languages.FOSG.Kuhn
+public import GameTheory.Tests.Randomized
+
+@[expose] public section
 
 noncomputable section
 

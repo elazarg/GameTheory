@@ -1,4 +1,10 @@
-import GameTheoryComplexity.Backend.BimatrixProgramCodec
+module
+
+public import GameTheoryComplexity.Backend.BimatrixProgramCodec
+
+import Complexitylib.Classes.P.Cobham.Internal
+
+@[expose] public section
 
 /-! A polynomial-time coefficient-table emitter for the canonical mixed-gate program codec.
 Fixed-width normalization preserves each coefficient and the bytes of every packed row;

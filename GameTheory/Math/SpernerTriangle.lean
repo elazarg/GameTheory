@@ -1,6 +1,10 @@
-import Mathlib.Data.Int.Basic
-import Mathlib.Data.Fintype.Fin
-import Mathlib.Tactic.FinCases
+module
+
+public import Mathlib.Data.Int.Basic
+public import Mathlib.Data.Fintype.Fin
+public import Mathlib.Tactic.FinCases
+
+@[expose] public section
 
 /-! Oriented edge and triangle flux for three-color Sperner labelings.
 Only transitions between colors zero and one contribute to the flux. The

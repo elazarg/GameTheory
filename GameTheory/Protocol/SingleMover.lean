@@ -1,7 +1,11 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
-import GameTheory.Protocol.Information
-import GameTheory.Math.Probability.Support
+public import GameTheory.Protocol.Information
+public import GameTheory.Math.Probability.Support
+
+@[expose] public section
 
 /-! # Behavioral play with at most one active player
 

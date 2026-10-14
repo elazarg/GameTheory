@@ -1,3 +1,5 @@
+module
+
 /-
 # Canonical principal-agent ownership regression
 
@@ -5,9 +7,11 @@ The stochastic fixture exercises the shared principal-agent model and its
 operation-local payoff guards.
 -/
 
-import GameTheory.Mechanism.PrincipalAgent
-import GameTheory.Math.Probability.Expectation
-import GameTheory.Math.Probability.Mixture
+public import GameTheory.Mechanism.PrincipalAgent
+public import GameTheory.Math.Probability.Expectation
+public import GameTheory.Math.Probability.Mixture
+
+@[expose] public section
 
 noncomputable section
 

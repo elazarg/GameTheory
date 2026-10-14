@@ -1,3 +1,5 @@
+module
+
 /-
 # Coalitional games and the core
 
@@ -17,12 +19,14 @@ assumed; and the three-player majority game has no core allocation at all,
 which is why cooperative solution concepts other than the core exist.
 -/
 
-import Mathlib.Algebra.BigOperators.Fin
-import Mathlib.Algebra.Order.BigOperators.Group.Finset
-import Mathlib.Data.Fintype.BigOperators
-import Mathlib.Basic.Real.Basic
-import Mathlib.Tactic.FinCases
-import Mathlib.Tactic.Linarith
+public import Mathlib.Algebra.BigOperators.Fin
+public import Mathlib.Algebra.Order.BigOperators.Group.Finset
+public import Mathlib.Data.Fintype.BigOperators
+public import Mathlib.Basic.Real.Basic
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Tactic.Linarith
+
+@[expose] public section
 
 namespace GameTheory
 

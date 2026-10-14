@@ -1,4 +1,8 @@
-import GameTheory.Math.FiniteSetRank
+module
+
+public import GameTheory.Math.FiniteSetRank
+
+@[expose] public section
 
 /-! Canonical finite-set ranks identify selected elements. -/
 namespace GameTheory.Tests.FiniteSetRank

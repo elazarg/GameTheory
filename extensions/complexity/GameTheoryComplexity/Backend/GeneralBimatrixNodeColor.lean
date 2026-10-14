@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixNodeValidation
-import GameTheoryComplexity.Backend.GeneralBimatrixVerifierCorrectness
-import GameTheoryComplexity.Backend.BimatrixNodeColor
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixNodeValidation
+public import GameTheoryComplexity.Backend.GeneralBimatrixVerifierCorrectness
+public import GameTheoryComplexity.Backend.BimatrixNodeColor
+
+@[expose] public section
 
 /-! Integer orientation and source calibration for serialized bimatrix games.
 The calibration uses the same dictionary computation as every other vertex. -/

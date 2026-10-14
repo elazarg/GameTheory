@@ -1,4 +1,8 @@
-import GameTheory.Math.GridRoutedGraph
+module
+
+public import GameTheory.Math.GridRoutedGraph
+
+@[expose] public section
 
 /-! Every live routed point fits inside a quadratic-width, linear-height grid.
 Crossing bends retain a one-step margin within this rectangle. Global pointers

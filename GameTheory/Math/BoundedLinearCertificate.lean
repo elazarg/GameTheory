@@ -1,6 +1,10 @@
-import GameTheory.Math.FiniteLinearBinaryBound
-import GameTheory.Math.SmallRationalWitness
-import Mathlib.Algebra.BigOperators.Field
+module
+
+public import GameTheory.Math.FiniteLinearBinaryBound
+public import GameTheory.Math.SmallRationalWitness
+public import Mathlib.Algebra.BigOperators.Field
+
+@[expose] public section
 
 /-! Integer certificates for nonnegative feasibility of finite linear systems.
 

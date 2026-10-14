@@ -1,3 +1,5 @@
+module
+
 /-
 # Multiplicative-weights self-play
 
@@ -10,13 +12,15 @@ predicate is introduced here. The module also supplies the finite-law limit
 theorem taking convergent fictitious-play empirical beliefs to mixed Nash.
 -/
 
-import GameTheory.Core.Learning
-import GameTheory.Core.FictitiousPlay
-import GameTheory.Analysis.FictitiousPlayPotential
-import GameTheory.Math.Probability.Convergence
-import GameTheory.Analysis.ExpectedUtility
-import GameTheory.Math.Probability.OnlineLearning
-import GameTheory.Math.OnlineLearning
+public import GameTheory.Core.Learning
+public import GameTheory.Core.FictitiousPlay
+public import GameTheory.Analysis.FictitiousPlayPotential
+public import GameTheory.Math.Probability.Convergence
+public import GameTheory.Analysis.ExpectedUtility
+public import GameTheory.Math.Probability.OnlineLearning
+public import GameTheory.Math.OnlineLearning
+
+@[expose] public section
 
 noncomputable section
 

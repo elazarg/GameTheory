@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixCertificateCodec
-import GameTheory.Finite.BimatrixCertificateCompleteness
-import Complexitylib.Classes.NP.Witness
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixCertificateCodec
+public import GameTheory.Finite.BimatrixCertificateCompleteness
+public import Complexitylib.Classes.NP.Witness
+
+@[expose] public section
 
 /-! Binary Nash search for independent signed rectangular payoff matrices.
 Malformed instances have exactly the empty answer. Honest answers decode to

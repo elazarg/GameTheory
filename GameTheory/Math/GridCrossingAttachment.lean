@@ -1,4 +1,8 @@
-import GameTheory.Math.GridCrossing
+module
+
+public import GameTheory.Math.GridCrossing
+
+@[expose] public section
 
 /-! Crossing switches preserve endpoints even when their ports are attached to
 an arbitrary exterior graph. Strand continuations may change; incident edge

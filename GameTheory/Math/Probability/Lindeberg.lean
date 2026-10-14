@@ -1,3 +1,5 @@
+module
+
 /-
 # Lindeberg replacement
 
@@ -12,8 +14,12 @@ Taylor remainder contributes.
 of `f` with the third bounded by `M`; it is stable under affine changes of
 argument and value, which is how test functions are rescaled.
 -/
-import GameTheory.Math.Probability.SampleSum
-import Mathlib.Analysis.Calculus.MeanValue
+public import GameTheory.Math.Probability.SampleSum
+public import Mathlib.Analysis.Calculus.MeanValue
+public import Mathlib.Analysis.Calculus.Deriv.Comp
+public import Mathlib.Analysis.Calculus.Deriv.Pow
+
+@[expose] public section
 
 noncomputable section
 

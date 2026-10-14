@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinarySubsetMachine
+module
+
+public import GameTheoryComplexity.Backend.BinarySubsetMachine
+
+@[expose] public section
 
 namespace GameTheory.Complexity.Tests.BinarySubsetMachine
 open GameTheory.Complexity.Backend

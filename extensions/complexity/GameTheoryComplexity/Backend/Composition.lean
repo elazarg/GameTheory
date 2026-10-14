@@ -1,8 +1,12 @@
-import GameTheoryComplexity.Backend.Complexitylib
-import GameTheoryComplexity.Backend.ClockPadding
-import GameTheoryComplexity.RandomTapeComposition
-import Complexitylib.Models.TuringMachine.Composition.Nondeterministic.Trace
-import Complexitylib.Classes.P.Defs
+module
+
+public import GameTheoryComplexity.Backend.Complexitylib
+public import GameTheoryComplexity.Backend.ClockPadding
+public import GameTheoryComplexity.RandomTapeComposition
+public import Complexitylib.Models.TuringMachine.Composition.Nondeterministic.Trace
+public import Complexitylib.Classes.P.Defs
+
+@[expose] public section
 
 /-! Deterministic serialization and randomized testing form one uniform machine.
 The deterministic prefix consumes unused fair bits; dropping those bits and padding

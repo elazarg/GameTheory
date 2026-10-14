@@ -1,8 +1,12 @@
-import GameTheory.Math.Probability.Uniform
-import GameTheory.Math.Probability.Support
-import GameTheory.Math.Probability.Joint
-import Mathlib.Logic.Equiv.Fin.Basic
-import GameTheory.Math.Probability.FiniteUniform
+module
+
+public import GameTheory.Math.Probability.Uniform
+public import GameTheory.Math.Probability.Support
+public import GameTheory.Math.Probability.Joint
+public import Mathlib.Logic.Equiv.Fin.Basic
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 /-! Uniform laws survive bijections and forgetting independent coordinates.
 Finite tuple projections apply to every finite alphabet, including empty tuples.

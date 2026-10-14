@@ -1,3 +1,5 @@
+module
+
 /-
 # Pigou and Braess congestion examples
 
@@ -7,9 +9,11 @@ library-wide `IsNash` predicate and `Profile.update`, rather than a separate
 routing-game semantics.
 -/
 
-import GameTheory.Congestion.AffinePoA
-import Mathlib.Algebra.BigOperators.Fin
-import Mathlib.Data.Fin.VecNotation
+public import GameTheory.Congestion.AffinePoA
+public import Mathlib.Algebra.BigOperators.Fin
+public import Mathlib.Data.Fin.VecNotation
+
+@[expose] public section
 
 noncomputable section
 

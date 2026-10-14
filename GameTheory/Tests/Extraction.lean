@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile extraction tests
 
@@ -11,7 +13,9 @@ reachable, and that two choosers differing only there induce the same run.
 Without the first test the second would be vacuous.
 -/
 
-import GameTheory.Protocol.Extraction
+public import GameTheory.Protocol.Extraction
+
+@[expose] public section
 
 noncomputable section
 

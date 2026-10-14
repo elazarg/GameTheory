@@ -1,11 +1,15 @@
+module
+
 /-
 EXP-133 follow-up: infinite public signals and unbounded integrable outcomes.
 The first signal selects a permanent Boolean action, so continuation values
 are not constant. The monitored Bellman theorem uses its general PMF guards.
 -/
 
-import GameTheory.Repeated.MonitoringDiscounted
-import GameTheory.Experimental.PostArchitecture.PMFRepeatedGate
+public import GameTheory.Repeated.MonitoringDiscounted
+public import GameTheory.Experimental.PostArchitecture.PMFRepeatedGate
+
+@[expose] public section
 
 noncomputable section
 

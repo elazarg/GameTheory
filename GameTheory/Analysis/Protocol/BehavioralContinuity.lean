@@ -1,3 +1,5 @@
+module
+
 /-
 # Continuity of canonical behavioral play
 
@@ -8,10 +10,12 @@ be infinite. All evaluations below use the existing Protocol runner, including
 its absorbing terminal histories.
 -/
 
-import GameTheory.Analysis.Protocol.CounterfactualReach
-import GameTheory.Protocol.FiniteInformation
-import GameTheory.Analysis.Protocol.BehavioralBayes
-import GameTheory.Math.Probability.Continuity
+public import GameTheory.Analysis.Protocol.CounterfactualReach
+public import GameTheory.Protocol.FiniteInformation
+public import GameTheory.Analysis.Protocol.BehavioralBayes
+public import GameTheory.Math.Probability.Continuity
+
+@[expose] public section
 
 noncomputable section
 

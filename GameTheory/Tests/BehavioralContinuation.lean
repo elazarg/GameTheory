@@ -1,7 +1,13 @@
-import GameTheory.Protocol.BehavioralContinuation
-import GameTheory.Tests.FOSGStrategic
-import GameTheory.Tests.SingleMover
-import GameTheory.Tests.SubgameRoots
+module
+
+public import GameTheory.Protocol.BehavioralContinuation
+public import GameTheory.Tests.FOSGStrategic
+public import GameTheory.Tests.SingleMover
+public import GameTheory.Tests.SubgameRoots
+
+import all GameTheory.Examples.FOSG
+
+@[expose] public section
 
 /-! # Behavioral continuation admission controls
 

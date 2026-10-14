@@ -1,9 +1,13 @@
+module
+
 /- Copyright (c) 2026 VegasCore contributors. Released under MIT; see NOTICE. -/
 
-import GameTheory.Analysis.ComponentCompletion
-import GameTheory.Analysis.Protocol.ExtensiveFormPerfection
-import GameTheory.Analysis.Protocol.PassageBayes
-import GameTheory.Math.Probability.Bounds
+public import GameTheory.Analysis.ComponentCompletion
+public import GameTheory.Analysis.Protocol.ExtensiveFormPerfection
+public import GameTheory.Analysis.Protocol.PassageBayes
+public import GameTheory.Math.Probability.Bounds
+
+@[expose] public section
 
 /-! # Consistent assessments from component mixtures
 

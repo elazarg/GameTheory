@@ -1,3 +1,5 @@
+module
+
 /-
 # Counterfactual regret on terminal play without a horizon
 
@@ -12,8 +14,10 @@ play chosen `true` is still counting down and has earned nothing, so every
 truncated counterfactual regret falls strictly short of the terminal one.
 -/
 
-import GameTheory.Analysis.Protocol.CounterfactualDecomposition
-import GameTheory.Analysis.Protocol.WellFoundedTerminalEquilibriumTest
+public import GameTheory.Analysis.Protocol.CounterfactualDecomposition
+public import GameTheory.Analysis.Protocol.WellFoundedTerminalEquilibriumTest
+
+@[expose] public section
 
 noncomputable section
 

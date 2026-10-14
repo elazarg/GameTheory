@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BimatrixProgramMachine
-import GameTheoryComplexity.Backend.GeneralBimatrixProblem
+module
+
+public import GameTheoryComplexity.Backend.BimatrixProgramMachine
+public import GameTheoryComplexity.Backend.GeneralBimatrixProblem
+
+@[expose] public section
 
 /-! Every accepted answer to the written integer game is a canonical certificate
 for the decoded mixed-gate program, independently of how the answer was obtained. -/

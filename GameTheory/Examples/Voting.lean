@@ -1,3 +1,5 @@
+module
+
 /-
 # The Condorcet paradox
 
@@ -12,7 +14,9 @@ no probability in either: the same `Total` and `Transitive` that a game's
 preference satisfies are what the voters satisfy and what society fails.
 -/
 
-import GameTheory.Core.SocialChoice
+public import GameTheory.Core.SocialChoice
+
+@[expose] public section
 
 namespace GameTheory.Examples
 

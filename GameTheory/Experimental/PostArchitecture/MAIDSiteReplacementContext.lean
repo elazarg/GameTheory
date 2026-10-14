@@ -1,3 +1,5 @@
+module
+
 /-
 # Shared target context under site-local MAID replacement
 
@@ -6,8 +8,10 @@ rule leaves the pre-target context law unchanged, even when the owner controls
 other typed decision sites.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDSitePolicySurgery
-import GameTheory.Experimental.PostArchitecture.MAIDReplacementContext
+public import GameTheory.Experimental.PostArchitecture.MAIDSitePolicySurgery
+public import GameTheory.Experimental.PostArchitecture.MAIDReplacementContext
+
+@[expose] public section
 
 noncomputable section
 

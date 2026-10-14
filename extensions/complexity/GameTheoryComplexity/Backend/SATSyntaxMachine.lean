@@ -1,7 +1,11 @@
-import Complexitylib.SAT.Tseitin.Machine.Internal.Validation
-import Complexitylib.SAT.Tseitin.Machine.Internal.ValidationFramed
-import Complexitylib.Classes.P.Cobham
-import Complexitylib.Asymptotics.PolyBound
+module
+
+public import Complexitylib.SAT.Tseitin.Machine.Internal.Validation
+public import Complexitylib.SAT.Tseitin.Machine.Internal.ValidationFramed
+public import Complexitylib.Classes.P.Cobham
+public import Complexitylib.Asymptotics.PolyBound
+
+@[expose] public section
 
 /-! Polynomial-time syntax validation for the concrete SAT bit encoding.
 The existing finite-state validator writes one Boolean output bit and halts in

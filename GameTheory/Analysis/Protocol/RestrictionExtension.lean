@@ -1,3 +1,5 @@
+module
+
 /-
 # Sequential equilibria extend across an action restriction
 
@@ -14,9 +16,11 @@ holds automatically for players who either keep all their choices or are
 indifferent over all outcomes.
 -/
 
-import GameTheory.Analysis.Protocol.RestrictionCompletion
-import GameTheory.Analysis.Protocol.RestrictionIncentives
-import GameTheory.Analysis.Protocol.SequentialOneShot
+public import GameTheory.Analysis.Protocol.RestrictionCompletion
+public import GameTheory.Analysis.Protocol.RestrictionIncentives
+public import GameTheory.Analysis.Protocol.SequentialOneShot
+
+@[expose] public section
 
 noncomputable section
 

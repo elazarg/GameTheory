@@ -1,3 +1,5 @@
+module
+
 /-
 # S5 knowledge and common knowledge
 
@@ -5,8 +7,10 @@ Knowledge is set-valued and does not enumerate the state space. Probability
 enters only in posterior and agreement operations.
 -/
 
-import Mathlib.Data.Set.Basic
-import Mathlib.Data.Set.Disjoint
+public import Mathlib.Data.Set.Basic
+public import Mathlib.Data.Set.Disjoint
+
+@[expose] public section
 
 noncomputable section
 

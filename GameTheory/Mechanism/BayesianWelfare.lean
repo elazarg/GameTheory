@@ -1,3 +1,5 @@
+module
+
 /-
 # Truthful welfare and participation for Bayesian mechanisms
 
@@ -6,7 +8,9 @@ mechanism.  They do not introduce a second mechanism, equilibrium predicate,
 or utility semantics.
 -/
 
-import GameTheory.Languages.BayesianMechanism
+public import GameTheory.Languages.BayesianMechanism
+
+@[expose] public section
 
 noncomputable section
 

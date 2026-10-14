@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.BinarySignedCrossComparison
-import GameTheoryComplexity.Backend.BinaryIndexedLexicographic
-import GameTheory.Math.IntegerRatioSelection
+module
+
+public import GameTheoryComplexity.Backend.BinarySignedCrossComparison
+public import GameTheoryComplexity.Backend.BinaryIndexedLexicographic
+public import GameTheory.Math.IntegerRatioSelection
+
+@[expose] public section
 
 /-! Exact lexicographic comparison of packed signed binary rows.
 Field widths and coefficient counts are supplied as length rulers. Truncated fields,

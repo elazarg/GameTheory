@@ -1,8 +1,12 @@
+module
+
 /- Copyright (c) 2026 VegasCore contributors. Released under MIT; see NOTICE. -/
 
-import GameTheory.Analysis.IncentiveCone
-import GameTheory.Math.Probability.EventPenalty
-import GameTheory.Math.ScalarInequalitiesCorrectness
+public import GameTheory.Analysis.IncentiveCone
+public import GameTheory.Math.Probability.EventPenalty
+public import GameTheory.Math.ScalarInequalitiesCorrectness
+
+@[expose] public section
 
 /-! # Incentives under event penalties
 

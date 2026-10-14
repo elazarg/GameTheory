@@ -1,3 +1,5 @@
+module
+
 /-
 # Expectations of dominated real series under a PMF
 
@@ -5,8 +7,10 @@ A summable numerical majorant on the support controls both the pointwise
 series and its expected value. The carrier need not be finite or countable.
 -/
 
-import GameTheory.Math.Probability.Expectation
-import Mathlib.Topology.Algebra.InfiniteSum.Real
+public import GameTheory.Math.Probability.Expectation
+public import Mathlib.Topology.Algebra.InfiniteSum.Real
+
+@[expose] public section
 
 noncomputable section
 

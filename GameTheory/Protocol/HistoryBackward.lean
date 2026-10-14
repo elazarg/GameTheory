@@ -1,3 +1,5 @@
+module
+
 /-
 # Deterministic terminal histories
 
@@ -5,8 +7,10 @@ The historywise terminal law is the point-mass specialization of the general
 well-founded randomized law. Its values and one-shot properties use that law.
 -/
 
-import GameTheory.Protocol.RandomizedBackward
-import GameTheory.Math.Probability.ExtendedExpectation
+public import GameTheory.Protocol.RandomizedBackward
+public import GameTheory.Math.Probability.ExtendedExpectation
+
+@[expose] public section
 
 noncomputable section
 

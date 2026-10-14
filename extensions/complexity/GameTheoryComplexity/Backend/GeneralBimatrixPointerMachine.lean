@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixNodeColor
-import GameTheoryComplexity.Backend.GeneralBimatrixNodeOperations
-import GameTheory.Finite.BimatrixPathEndOfLine
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixNodeColor
+public import GameTheoryComplexity.Backend.GeneralBimatrixNodeOperations
+public import GameTheory.Finite.BimatrixPathEndOfLine
+
+@[expose] public section
 
 /-! Polynomial predecessor and successor machines for complementary paths.
 Invalid vertex words are isolated by identity pointers. Valid words alternate

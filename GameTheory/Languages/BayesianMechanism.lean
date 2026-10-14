@@ -1,3 +1,5 @@
+module
+
 /-
 # Bayesian direct-mechanism syntax and compilation
 
@@ -10,7 +12,9 @@ module contains data and compilation only; incentive predicates and equilibrium
 theorems live under `GameTheory.Mechanism`.
 -/
 
-import GameTheory.Core.Bayesian
+public import GameTheory.Core.Bayesian
+
+@[expose] public section
 
 noncomputable section
 

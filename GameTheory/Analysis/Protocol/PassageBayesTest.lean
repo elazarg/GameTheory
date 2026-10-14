@@ -1,5 +1,9 @@
-import GameTheory.Analysis.Protocol.PassageBayes
-import GameTheory.Analysis.Protocol.SequentialExistenceTest
+module
+
+public import GameTheory.Analysis.Protocol.PassageBayes
+public import GameTheory.Analysis.Protocol.SequentialExistenceTest
+
+@[expose] public section
 noncomputable section
 namespace GameTheory.Tests.PassageBayes
 open GameTheory.Protocol GameTheory.Protocol.InformationModel

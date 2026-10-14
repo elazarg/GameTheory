@@ -1,10 +1,14 @@
-import Mathlib.Algebra.Order.Field.Basic
-import Mathlib.Algebra.Order.Ring.Abs
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.Positivity
-import Mathlib.Tactic.Ring
-import Mathlib.Tactic.FieldSimp
-import Mathlib.Tactic.NormNum
+module
+
+public import Mathlib.Algebra.Order.Field.Basic
+public import Mathlib.Algebra.Order.Ring.Abs
+public import Mathlib.Tactic.Linarith
+public import Mathlib.Tactic.Positivity
+public import Mathlib.Tactic.Ring
+public import Mathlib.Tactic.FieldSimp
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 /-!
 # Dyadic error budgets for grid computations

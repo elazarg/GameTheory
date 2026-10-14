@@ -1,3 +1,5 @@
+module
+
 /-
 # The executable rational finite-table frontend
 
@@ -11,10 +13,12 @@ Correctness against the semantic predicates lives in
 `GameTheory.Finite.Correctness`, which may import Core.
 -/
 
-import GameTheory.Core.Signature
-import Mathlib.Algebra.Order.BigOperators.Ring.Finset
-import Mathlib.Data.Fintype.Pi
-import Mathlib.Data.Rat.Lemmas
+public import GameTheory.Core.Signature
+public import Mathlib.Algebra.Order.BigOperators.Ring.Finset
+public import Mathlib.Data.Fintype.Pi
+public import Mathlib.Data.Rat.Lemmas
+
+@[expose] public section
 
 namespace GameTheory.Finite
 

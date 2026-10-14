@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinaryRatioExtraction
+module
+
+public import GameTheoryComplexity.Backend.BinaryRatioExtraction
+
+@[expose] public section
 
 /-! Binary extraction controls cover interior ratios, dyadic ties, endpoints and clipping. -/
 namespace GameTheory.Complexity.Tests.BinaryRatioExtraction

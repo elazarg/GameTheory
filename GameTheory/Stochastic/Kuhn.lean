@@ -1,3 +1,5 @@
+module
+
 /-
 # Kuhn correspondence for perfect-monitoring stochastic games
 
@@ -7,10 +9,12 @@ predrawing therefore takes an explicit finite-site certificate. The separate
 policy-measure realization handles arbitrary bounded branching.
 -/
 
-import GameTheory.Stochastic.History
-import GameTheory.Core.Transform
-import GameTheory.Protocol.PolicyMeasure
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Stochastic.History
+public import GameTheory.Core.Transform
+public import GameTheory.Protocol.PolicyMeasure
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

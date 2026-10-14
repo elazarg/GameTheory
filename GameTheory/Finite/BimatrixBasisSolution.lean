@@ -1,6 +1,10 @@
-import GameTheory.Finite.BimatrixBasis
-import GameTheory.Math.BasisCoordinates
-import Mathlib.Tactic.Linarith
+module
+
+public import GameTheory.Finite.BimatrixBasis
+public import GameTheory.Math.BasisCoordinates
+public import Mathlib.Tactic.Linarith
+
+@[expose] public section
 
 /-! Rational complementary solutions decoded from feasible bimatrix bases.
 Nonbasic variables are zero, while symbolic feasibility ensures nonnegative

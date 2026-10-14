@@ -1,3 +1,5 @@
+module
+
 /-
 # Pointwise consistency and sequential equilibrium
 
@@ -8,9 +10,11 @@ remain in stable Protocol; only convergence and the resulting specialization
 live behind this one-way bridge.
 -/
 
-import GameTheory.Math.Probability.Convergence
-import GameTheory.Protocol.BehavioralBayes
-import GameTheory.Protocol.BehavioralTerminal
+public import GameTheory.Math.Probability.Convergence
+public import GameTheory.Protocol.BehavioralBayes
+public import GameTheory.Protocol.BehavioralTerminal
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # The state forgets what the history remembers
 
@@ -17,8 +19,10 @@ the state loses is not secrecy but *order* — which of two equally visible past
 actually happened.
 -/
 
-import GameTheory.Protocol.Information
-import GameTheory.Math.Probability.Mixture
+public import GameTheory.Protocol.Information
+public import GameTheory.Math.Probability.Mixture
+
+@[expose] public section
 
 noncomputable section
 

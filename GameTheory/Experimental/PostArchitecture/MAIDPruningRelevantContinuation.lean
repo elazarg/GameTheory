@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-107: relevant utility continuation under restore-at-target pruning
 
@@ -13,12 +15,14 @@ actions.  It makes no claim about nonrelevant terms, total utility, reduction,
 coverage, or equilibrium.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteConditionalContinuation
-import GameTheory.Math.Probability.Joint
-import GameTheory.Experimental.PostArchitecture.MAIDPruningConditionalIndependence
-import GameTheory.Experimental.PostArchitecture.MAIDSiteReplacementContext
-import GameTheory.Experimental.PostArchitecture.MAIDTargetSurgery
-import GameTheory.Experimental.PostArchitecture.MAIDUtilityContinuationFromCI
+public import GameTheory.Experimental.PostArchitecture.FiniteConditionalContinuation
+public import GameTheory.Math.Probability.Joint
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningConditionalIndependence
+public import GameTheory.Experimental.PostArchitecture.MAIDSiteReplacementContext
+public import GameTheory.Experimental.PostArchitecture.MAIDTargetSurgery
+public import GameTheory.Experimental.PostArchitecture.MAIDUtilityContinuationFromCI
+
+@[expose] public section
 
 noncomputable section
 

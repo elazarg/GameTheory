@@ -1,3 +1,5 @@
+module
+
 /-
 # Single-parameter mechanisms: topology-free algebra
 
@@ -10,7 +12,9 @@ Primary reference: R. B. Myerson, “Optimal Auction Design,” *Mathematics of
 Operations Research* 6 (1981).
 -/
 
-import GameTheory.Mechanism.QuasiLinear
+public import GameTheory.Mechanism.QuasiLinear
+
+@[expose] public section
 
 noncomputable section
 

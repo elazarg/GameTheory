@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.GridRoutingGuards
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingGuards
+
+@[expose] public section
 
 /-! Original binary pointer queries are normalized only on bounded vertex labels.
 Outside labels retain their full value and word; local edge guards use the canonical

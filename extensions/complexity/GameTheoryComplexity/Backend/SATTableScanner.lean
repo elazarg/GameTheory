@@ -1,4 +1,8 @@
-import Complexitylib.SAT.Encoding
+module
+
+public import Complexitylib.SAT.Encoding
+
+@[expose] public section
 
 /-! A right-to-left scanner for clause incidence in the concrete unary SAT format.
 Its counters enumerate clauses from the final encoded clause toward the first.

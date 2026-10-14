@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-107: positive edge-addition-fixpoint consumer
 
@@ -9,9 +11,11 @@ maximum utility, so the semantic coverage certificate is proved directly from
 canonical play rather than assumed from a future graphical theorem.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
-import GameTheory.Experimental.PostArchitecture.MAIDPruningGlobalReduction
-import GameTheory.Languages.MAID.ObservationPruning
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningGlobalReduction
+public import GameTheory.Languages.MAID.ObservationPruning
+
+@[expose] public section
 
 noncomputable section
 

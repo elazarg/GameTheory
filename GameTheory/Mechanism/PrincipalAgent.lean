@@ -1,3 +1,5 @@
+module
+
 /-
 # Principal-agent contracts
 
@@ -9,7 +11,9 @@ action whose expected payment is infinite is still ranked; only an action whose
 expected payment is undefined is left incomparable.
 -/
 
-import GameTheory.Math.Probability.ExtendedExpectation
+public import GameTheory.Math.Probability.ExtendedExpectation
+
+@[expose] public section
 
 noncomputable section
 

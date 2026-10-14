@@ -1,9 +1,13 @@
-import GameTheoryComplexity.Backend.BimatrixProgramCorrectness
-import GameTheoryComplexity.Backend.GeneralBimatrixVerifierCorrectness
-import GameTheoryComplexity.Backend.BinaryRatioExtraction
-import GameTheoryComplexity.Backend.BrouwerReduction
-import GameTheory.Math.GridBrouwerBinaryCell
-import GameTheory.Math.ClippedArithmetic
+module
+
+public import GameTheoryComplexity.Backend.BimatrixProgramCorrectness
+public import GameTheoryComplexity.Backend.GeneralBimatrixVerifierCorrectness
+public import GameTheoryComplexity.Backend.BinaryRatioExtraction
+public import GameTheoryComplexity.Backend.BrouwerReduction
+public import GameTheory.Math.GridBrouwerBinaryCell
+public import GameTheory.Math.ClippedArithmetic
+
+@[expose] public section
 
 /-! Bounded word extraction converts normalized Nash coordinate weights into
 an exact dyadic triangle and emits its canonical rational barycenter. -/

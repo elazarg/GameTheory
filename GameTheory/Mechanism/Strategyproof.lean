@@ -1,3 +1,5 @@
+module
+
 /-
 # Strategyproof direct mechanisms
 
@@ -6,9 +8,11 @@ canonical response API.  The syntax module remains capability-light and does
 not import this file.
 -/
 
-import GameTheory.Languages.Mechanism
-import GameTheory.Core.Response
-import GameTheory.Core.Utility
+public import GameTheory.Languages.Mechanism
+public import GameTheory.Core.Response
+public import GameTheory.Core.Utility
+
+@[expose] public section
 
 noncomputable section
 

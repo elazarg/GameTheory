@@ -1,3 +1,5 @@
+module
+
 /-
 # Stability of discrete laws in statistical distance
 
@@ -6,8 +8,10 @@ statistical distance, without finiteness or countability of the carrier.
 Pointwise domination gives the distance bound from missing normalization mass.
 -/
 
-import GameTheory.Math.Probability.StatisticalDistance
-import GameTheory.Math.Probability.Domination
+public import GameTheory.Math.Probability.StatisticalDistance
+public import GameTheory.Math.Probability.Domination
+
+@[expose] public section
 
 noncomputable section
 

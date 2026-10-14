@@ -1,7 +1,11 @@
-import GameTheory.Math.GridBrouwerFourCorners
-import GameTheory.Math.BooleanThreshold
-import Mathlib.Algebra.Order.Ring.Abs
-import Mathlib.Tactic.Ring
+module
+
+public import GameTheory.Math.GridBrouwerFourCorners
+public import GameTheory.Math.BooleanThreshold
+public import Mathlib.Algebra.Order.Ring.Abs
+public import Mathlib.Tactic.Ring
+
+@[expose] public section
 
 /-!
 # Approximate color signals for four-corner interpolation

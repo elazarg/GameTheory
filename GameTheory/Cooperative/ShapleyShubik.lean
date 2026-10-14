@@ -1,3 +1,5 @@
+module
+
 /-
 # The Shapley--Shubik power index
 
@@ -6,8 +8,10 @@ The standalone Banzhaf construction therefore does not inherit the full
 Shapley characterization dependency.
 -/
 
-import GameTheory.Cooperative.Banzhaf
-import GameTheory.Core.Shapley
+public import GameTheory.Cooperative.Banzhaf
+public import GameTheory.Core.Shapley
+
+@[expose] public section
 
 namespace GameTheory.CoalitionalGame
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Aggregating rankings
 
@@ -13,8 +15,10 @@ a reader-facing consumer in `GameTheory.Examples.Voting`; this foundational
 module supplies only the reusable aggregation definitions and laws.
 -/
 
-import GameTheory.Core.Rank
-import Mathlib.Data.Fintype.Card
+public import GameTheory.Core.Rank
+public import Mathlib.Data.Fintype.Card
+
+@[expose] public section
 
 namespace GameTheory
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Safe and unsafe MAID observation reduction
 
@@ -9,12 +11,14 @@ valuable.  Every signal-blind reduced policy earns one half, while the full
 copying policy earns one.
 -/
 
-import GameTheory.Languages.MAID.ObservationPruning
-import GameTheory.Math.Probability.Mixture
-import GameTheory.Math.Probability.ExpectationBind
-import GameTheory.Math.Probability.ExpectationAlgebra
-import GameTheory.Math.Probability.ExpectationMap
-import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Languages.MAID.ObservationPruning
+public import GameTheory.Math.Probability.Mixture
+public import GameTheory.Math.Probability.ExpectationBind
+public import GameTheory.Math.Probability.ExpectationAlgebra
+public import GameTheory.Math.Probability.ExpectationMap
+public import GameTheory.Math.Probability.ExpectationMixture
+
+@[expose] public section
 
 noncomputable section
 

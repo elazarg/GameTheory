@@ -1,8 +1,12 @@
-import GameTheory.Math.FiniteLexicographic
-import Mathlib.Data.Fin.VecNotation
-import Mathlib.Tactic.NormNum
-import Mathlib.Tactic.FinCases
-import Mathlib.Data.Fintype.Fin
+module
+
+public import GameTheory.Math.FiniteLexicographic
+public import Mathlib.Data.Fin.VecNotation
+public import Mathlib.Tactic.NormNum
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Data.Fintype.Fin
+
+@[expose] public section
 
 /-! Controls for lexicographic perturbation coefficients. -/
 

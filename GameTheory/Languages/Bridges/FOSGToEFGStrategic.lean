@@ -1,3 +1,5 @@
+module
+
 /-
 # Strategic transfer for explicit-order FOSG serialization
 
@@ -11,9 +13,11 @@ The serialization order remains explicit.  No utility or solution concept is
 stored in FOSG syntax, and no bridge-specific equilibrium predicate is added.
 -/
 
-import GameTheory.Languages.Bridges.FOSGToEFG
-import GameTheory.Core.Approximate
-import GameTheory.Core.Utility
+public import GameTheory.Languages.Bridges.FOSGToEFG
+public import GameTheory.Core.Approximate
+public import GameTheory.Core.Utility
+
+@[expose] public section
 
 noncomputable section
 

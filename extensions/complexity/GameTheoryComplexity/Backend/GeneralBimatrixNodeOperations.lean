@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixNodeValidation
-import GameTheoryComplexity.Backend.BimatrixNodeOperations
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixNodeValidation
+public import GameTheoryComplexity.Backend.BimatrixNodeOperations
+
+@[expose] public section
 
 /-! Certified port operations driven by the serialized integer dictionary.
 The selected row ordinal is converted to its canonical variable position by

@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-141: infinite canonical play without countable histories
 
@@ -6,7 +8,10 @@ chronological marginal use the canonical PMF runner without a countability
 assumption on the full history carrier.
 -/
 
-import GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayMeasure
+public import GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayMeasure
+import Mathlib.Analysis.Real.Cardinality
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.RawEndOfLine
-import GameTheoryComplexity.Backend.EndOfLineVerifier
-import GameTheoryComplexity.Backend.SearchReduction
+module
+
+public import GameTheoryComplexity.Backend.RawEndOfLine
+public import GameTheoryComplexity.Backend.EndOfLineVerifier
+public import GameTheoryComplexity.Backend.SearchReduction
+
+@[expose] public section
 
 /-! Standard raw witnesses reduce to consistent-edge endpoint search. A failed
 first inverse link is recovered from the endpoint relation's empty fallback by

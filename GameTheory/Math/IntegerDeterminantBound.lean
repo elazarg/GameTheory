@@ -1,7 +1,11 @@
-import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
-import Mathlib.Data.Nat.Factorial.Basic
-import Mathlib.Data.Int.NatAbs
-import Mathlib.Algebra.Order.BigOperators.Group.Finset
+module
+
+public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
+public import Mathlib.Data.Nat.Factorial.Basic
+public import Mathlib.Data.Int.NatAbs
+public import Mathlib.Algebra.Order.BigOperators.Group.Finset
+
+@[expose] public section
 
 /-! Determinant magnitude bounds for finite integer matrices.
 The permutation expansion bounds a determinant by the number of terms times

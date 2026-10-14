@@ -1,3 +1,5 @@
+module
+
 /-
 # Arrow's impossibility theorem
 
@@ -14,11 +16,13 @@ Primary reference: K. J. Arrow, *Social Choice and Individual Values*, 2nd
 edition, Yale University Press, 1963.
 -/
 
-import GameTheory.Core.SocialChoice
-import Mathlib.Data.Finset.Max
-import Mathlib.Data.Fintype.EquivFin
-import Mathlib.Data.Fintype.Powerset
-import Mathlib.SetTheory.Cardinal.Order
+public import GameTheory.Core.SocialChoice
+public import Mathlib.Data.Finset.Max
+public import Mathlib.Data.Fintype.EquivFin
+public import Mathlib.Data.Fintype.Powerset
+public import Mathlib.SetTheory.Cardinal.Order
+
+@[expose] public section
 
 namespace GameTheory
 

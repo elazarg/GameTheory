@@ -1,3 +1,5 @@
+module
+
 /-
 # Recursive payoff decomposition under public monitoring
 
@@ -15,7 +17,9 @@ a deviation whose payoff is genuinely undefined is left incomparable. No bound
 or finite signal carrier is stored in the model.
 -/
 
-import GameTheory.Repeated.MonitoringDiscounted
+public import GameTheory.Repeated.MonitoringDiscounted
+
+@[expose] public section
 
 noncomputable section
 

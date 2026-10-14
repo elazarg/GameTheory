@@ -1,3 +1,5 @@
+module
+
 /-
 Hostile finite principal-agent regression fixture.
 
@@ -6,9 +8,11 @@ bonus, unlike zero payment, strictly changes the agent's preferred action;
 participation uses nonzero outside options.
 -/
 
-import GameTheory.Mechanism.PrincipalAgent
-import GameTheory.Math.Probability.Uniform
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Mechanism.PrincipalAgent
+public import GameTheory.Math.Probability.Uniform
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 open GameTheory.Math.Probability
 

@@ -1,4 +1,8 @@
-import GameTheory.Math.GridWireLanes
+module
+
+public import GameTheory.Math.GridWireLanes
+
+@[expose] public section
 
 /-! A whole bounded pointer graph is routed through source-indexed grid wires.
 Interiors retain their source labels, so crossings have separate occurrences.

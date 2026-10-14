@@ -1,4 +1,9 @@
-import GameTheory.Finite.BimatrixPathBinaryCodec
+module
+
+public import GameTheory.Finite.BimatrixPathBinaryCodec
+import all Mathlib.LinearAlgebra.Matrix.Determinant.Bird.Defs
+
+@[expose] public section
 
 /-! Canonical source encoding, strict feasibility and malformed node controls. -/
 namespace GameTheory.Tests.BimatrixPathBinaryCodec

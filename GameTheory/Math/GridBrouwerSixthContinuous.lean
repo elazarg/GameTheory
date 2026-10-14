@@ -1,5 +1,9 @@
-import GameTheory.Math.GridBrouwerContinuous
-import GameTheory.Math.GridBrouwerSixthGeometry
+module
+
+public import GameTheory.Math.GridBrouwerContinuous
+public import GameTheory.Math.GridBrouwerSixthGeometry
+
+@[expose] public section
 
 /-! The finite sixth-grid representation evaluates the globally continuous
 normalized grid map exactly. Its rational local residual test is equivalent

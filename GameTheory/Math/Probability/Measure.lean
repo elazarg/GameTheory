@@ -1,3 +1,5 @@
+module
+
 /-
 # PMFs and probability measures
 
@@ -6,11 +8,13 @@ measurable carriers. This file relates real expectations and PMF
 composition to those canonical measure constructions.
 -/
 
-import GameTheory.Math.Probability.Expectation
-import GameTheory.Math.Probability.Product
-import Mathlib.Probability.ConditionalProbability
-import Mathlib.Probability.ProbabilityMassFunction.Integrals
-import Mathlib.Probability.ProductMeasure
+public import GameTheory.Math.Probability.Expectation
+public import GameTheory.Math.Probability.Product
+public import Mathlib.Probability.ConditionalProbability
+public import Mathlib.Probability.ProbabilityMassFunction.Integrals
+public import Mathlib.Probability.ProductMeasure
+
+@[expose] public section
 
 noncomputable section
 

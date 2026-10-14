@@ -1,6 +1,10 @@
-import Complexitylib.Mathlib.NatBits
-import GameTheory.Finite.BimatrixCertificate
-import Mathlib.Tactic.Linarith
+module
+
+public import Complexitylib.Mathlib.NatBits
+public import GameTheory.Finite.BimatrixCertificate
+public import Mathlib.Tactic.Linarith
+
+@[expose] public section
 
 /-! Fixed-width fields and unary dimensions for signed rectangular bimatrix inputs. -/
 namespace GameTheory.Complexity.Backend

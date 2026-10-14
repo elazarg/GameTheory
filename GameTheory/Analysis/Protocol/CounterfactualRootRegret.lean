@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite local CFR bounds control root deviations
 
@@ -8,9 +10,11 @@ deviations; bounded common-depth topological chains supply that premise. No
 second runner or regret semantics is introduced here.
 -/
 
-import GameTheory.Analysis.Protocol.CounterfactualDecomposition
-import GameTheory.Analysis.Protocol.CounterfactualRegretMatching
-import GameTheory.Math.RegretAggregation
+public import GameTheory.Analysis.Protocol.CounterfactualDecomposition
+public import GameTheory.Analysis.Protocol.CounterfactualRegretMatching
+public import GameTheory.Math.RegretAggregation
+
+@[expose] public section
 
 noncomputable section
 

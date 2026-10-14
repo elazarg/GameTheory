@@ -1,3 +1,5 @@
+module
+
 /-
 # Factored-observation stochastic games
 
@@ -10,7 +12,9 @@ There is deliberately no FOSG-specific runner, history, strategy, utility, or
 solution predicate. Compilation delegates to `InformationModel.toGameForm`.
 -/
 
-import GameTheory.Protocol.Strategic
+public import GameTheory.Protocol.Strategic
+
+@[expose] public section
 
 noncomputable section
 

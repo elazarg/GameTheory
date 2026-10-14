@@ -1,5 +1,9 @@
-import GameTheoryComplexity.PPAD
-import GameTheoryComplexity.Tests.RawEndOfLine
+module
+
+public import GameTheoryComplexity.PPAD
+public import GameTheoryComplexity.Tests.RawEndOfLine
+
+@[expose] public section
 
 /-! Controls for coordinate order, scalar queries, normalized isolated vertices,
 and the certified reduction's public classification. -/

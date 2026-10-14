@@ -1,6 +1,10 @@
-import GameTheory.Finite.BimatrixComputedPivot
-import GameTheory.Finite.BimatrixPathOrientation
-import GameTheory.Math.FiniteSetRank
+module
+
+public import GameTheory.Finite.BimatrixComputedPivot
+public import GameTheory.Finite.BimatrixPathOrientation
+public import GameTheory.Math.FiniteSetRank
+
+@[expose] public section
 
 /-! Integer computation of determinant-oriented complementary path colors.
 Counting preceding columns and payoff kinds replaces augmented rational minors;

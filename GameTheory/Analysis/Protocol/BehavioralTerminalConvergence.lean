@@ -1,3 +1,5 @@
+module
+
 /-
 # Convergence of well-founded behavioral terminal laws
 
@@ -5,8 +7,10 @@ Convergence passes through the randomized terminal recursion one realized
 successor at a time. A global fuel or uniform termination tail is unnecessary.
 -/
 
-import GameTheory.Protocol.BehavioralTerminal
-import GameTheory.Math.Probability.Convergence
+public import GameTheory.Protocol.BehavioralTerminal
+public import GameTheory.Math.Probability.Convergence
+
+@[expose] public section
 
 noncomputable section
 

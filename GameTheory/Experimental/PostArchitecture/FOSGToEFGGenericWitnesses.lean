@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-061: generic FOSG serialization witnesses
 
@@ -7,9 +9,11 @@ known inactive second-round slot.  Both exhaustive player orders must preserve
 the exact two-round history law.
 -/
 
-import GameTheory.Languages.Bridges.FOSGToEFG
-import GameTheory.Experimental.PostArchitecture.FOSGToEFGTwoRoundWitnesses
-import Mathlib.Logic.Equiv.Bool
+public import GameTheory.Languages.Bridges.FOSGToEFG
+public import GameTheory.Experimental.PostArchitecture.FOSGToEFGTwoRoundWitnesses
+public import Mathlib.Logic.Equiv.Bool
+
+@[expose] public section
 
 noncomputable section
 

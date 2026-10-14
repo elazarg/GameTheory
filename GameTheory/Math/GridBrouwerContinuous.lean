@@ -1,6 +1,10 @@
-import GameTheory.Math.GridBrouwerMap
-import Mathlib.Topology.Instances.Real.Lemmas
-import Mathlib.Algebra.Order.Floor.Semiring
+module
+
+public import GameTheory.Math.GridBrouwerMap
+public import Mathlib.Topology.Instances.Real.Lemmas
+public import Mathlib.Algebra.Order.Floor.Semiring
+
+@[expose] public section
 
 /-! Continuous piecewise affine interpolation of the canonical grid displacement.
 The compactly supported vertex hats agree with barycentric coordinates on the

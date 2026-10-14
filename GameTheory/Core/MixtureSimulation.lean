@@ -1,6 +1,10 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
-import GameTheory.Core.Approximate
+public import GameTheory.Core.Approximate
+
+@[expose] public section
 
 /-! # Game-form simulation by PMF mixtures of unilateral deviations -/
 

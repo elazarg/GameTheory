@@ -1,3 +1,5 @@
+module
+
 /-
 # What the fixed-point argument buys
 
@@ -13,10 +15,13 @@ fixed point, which is why the dependency that proves fixed points exist is worth
 its cost.
 -/
 
-import GameTheory.Analysis.Minimax
-import GameTheory.Analysis.MatrixValue
-import GameTheory.Analysis.Correlated
-import GameTheory.Examples.Classic
+public import GameTheory.Analysis.Minimax
+public import GameTheory.Analysis.MatrixValue
+import all GameTheory.Analysis.MatrixValue
+public import GameTheory.Analysis.Correlated
+public import GameTheory.Examples.Classic
+
+@[expose] public section
 
 namespace GameTheory.Examples
 

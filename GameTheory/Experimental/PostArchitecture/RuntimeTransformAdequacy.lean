@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-093: executable client transformation adequacy
 
@@ -8,8 +10,10 @@ outcomes have all changed.  The sole strategic meaning remains canonical
 transformation theorems compose cleanly enough for an unrelated client.
 -/
 
-import GameTheory.Core.Transform
-import GameTheory.Finite.Correctness
+public import GameTheory.Core.Transform
+public import GameTheory.Finite.Correctness
+
+@[expose] public section
 
 noncomputable section
 

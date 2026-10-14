@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixPathEndpoint
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixPathEndpoint
+
+@[expose] public section
 
 /-! Raw path witnesses produce accepted answers for signed rectangular games. -/
 namespace GameTheory.Complexity.Tests.GeneralBimatrixPathEndpoint

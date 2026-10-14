@@ -1,3 +1,5 @@
+module
+
 /-
 # Kuhn correspondence for factored-observation stochastic games
 
@@ -12,8 +14,10 @@ profiles. It does not yet provide the per-player realization theorem needed to
 transfer Nash equilibria between behavioral and mixed strategy spaces.
 -/
 
-import GameTheory.Languages.FOSG
-import GameTheory.Protocol.PolicyRandomization
+public import GameTheory.Languages.FOSG
+public import GameTheory.Protocol.PolicyRandomization
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Terminal decision experiments with retained outcomes
 
@@ -14,8 +16,10 @@ decisions; it does not assert sequential-equilibrium abstraction for arbitrary
 multiplayer protocols.
 -/
 
-import GameTheory.Math.Probability.ObservationAbstraction
-import GameTheory.Protocol.ContextTransport
+public import GameTheory.Math.Probability.ObservationAbstraction
+public import GameTheory.Protocol.ContextTransport
+
+@[expose] public section
 
 noncomputable section
 

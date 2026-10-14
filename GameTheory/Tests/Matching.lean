@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile stable-matching fixture
 
@@ -7,9 +9,11 @@ one-to-one validity and perfectness from stability in an unbalanced or
 unacceptable market.
 -/
 
-import GameTheory.Cooperative.GaleShapley.Perfect
-import Mathlib.Tactic.FinCases
-import Mathlib.Tactic.NormNum
+public import GameTheory.Cooperative.GaleShapley.Perfect
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 namespace GameTheory.Tests.Matching
 

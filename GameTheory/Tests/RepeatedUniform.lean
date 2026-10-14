@@ -1,3 +1,5 @@
+module
+
 /-
 # Uniform-equilibrium fixture
 
@@ -6,8 +8,10 @@ contrast, stationary cooperation already fails one-stage approximate Nash at
 slack one, where a permanent defection gains two.
 -/
 
-import GameTheory.Examples.Classic
-import GameTheory.Repeated.Uniform
+public import GameTheory.Examples.Classic
+public import GameTheory.Repeated.Uniform
+
+@[expose] public section
 
 namespace GameTheory.Tests.RepeatedUniform
 

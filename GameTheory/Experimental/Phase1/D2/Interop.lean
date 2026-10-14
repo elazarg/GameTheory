@@ -1,7 +1,11 @@
+module
+
 /- # EXP-003 interoperability, dependent-product, and concrete stress. -/
 
-import GameTheory.Experimental.Phase1.D2.FiniteSupportPMF
-import GameTheory.Experimental.Phase1.D2.NormalizedFinsupp
+public import GameTheory.Experimental.Phase1.D2.FiniteSupportPMF
+public import GameTheory.Experimental.Phase1.D2.NormalizedFinsupp
+
+@[expose] public section
 
 noncomputable section
 

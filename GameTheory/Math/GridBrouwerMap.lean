@@ -1,5 +1,9 @@
-import GameTheory.Math.GridBrouwer
-import Mathlib.Tactic.Linarith
+module
+
+public import GameTheory.Math.GridBrouwer
+public import Mathlib.Tactic.Linarith
+
+@[expose] public section
 
 /-! Affine maps on the triangles of a colored square grid. Boundary exclusions
 keep the displaced vertices in the square; convex interpolation therefore

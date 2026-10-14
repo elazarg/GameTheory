@@ -1,5 +1,9 @@
-import GameTheory.Finite.BimatrixBasisBounds
-import GameTheory.Finite.BimatrixPivot
+module
+
+public import GameTheory.Finite.BimatrixBasisBounds
+public import GameTheory.Finite.BimatrixPivot
+
+@[expose] public section
 
 /-! Binary bounds hold for signed source columns and a degenerate rectangular pivot. -/
 namespace GameTheory.Tests.BimatrixBasisBounds

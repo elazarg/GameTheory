@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.CircuitCodeShiftCorrectness
+module
+
+public import GameTheoryComplexity.Backend.CircuitCodeShiftCorrectness
+
+@[expose] public section
 
 /-! Bounded lookup of serialized raw gates. The scanner returns the suffix beginning
 at the requested gate, strips the count header, and remains total on malformed words. -/

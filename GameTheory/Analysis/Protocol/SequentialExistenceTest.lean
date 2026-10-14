@@ -1,3 +1,5 @@
+module
+
 /-
 # Sequential existence with asynchronous imperfect information
 
@@ -7,8 +9,10 @@ their lengths differ. Terminal observations retain the player's own action,
 so perfect recall holds on every legal history.
 -/
 
-import GameTheory.Analysis.Protocol.EFGExistence
-import GameTheory.Analysis.Protocol.SequentialExistenceBoundaryTest
+public import GameTheory.Analysis.Protocol.EFGExistence
+public import GameTheory.Analysis.Protocol.SequentialExistenceBoundaryTest
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # External cumulative values for factored-observation stochastic games
 
@@ -6,7 +8,9 @@ distinguished reward field.  Consumers supply the value of each realized
 transition; the accumulation itself is the canonical Protocol trace fold.
 -/
 
-import GameTheory.Languages.FOSG
+public import GameTheory.Languages.FOSG
+
+@[expose] public section
 
 namespace GameTheory.Languages.FOSG
 

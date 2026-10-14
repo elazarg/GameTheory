@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-060 signal-timing witnesses
 
@@ -5,7 +7,9 @@ Concrete checks over the two-round source/serialization slice. This file
 contains no profile translation or runner comparison.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FOSGToEFGTwoRound
+public import GameTheory.Experimental.PostArchitecture.FOSGToEFGTwoRound
+
+@[expose] public section
 
 noncomputable section
 

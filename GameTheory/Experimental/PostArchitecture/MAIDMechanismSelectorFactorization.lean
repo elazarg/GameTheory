@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-107: mechanism-selector factorization
 
@@ -10,11 +12,13 @@ This file constructs no alternate evaluator and states no conditional
 independence, optimality, coverage, or equilibrium theorem.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
-import GameTheory.Experimental.PostArchitecture.MAIDSitePolicySurgery
-import GameTheory.Experimental.PostArchitecture.MAIDUtilityFactorization
-import GameTheory.Math.Probability.Support
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
+public import GameTheory.Experimental.PostArchitecture.MAIDSitePolicySurgery
+public import GameTheory.Experimental.PostArchitecture.MAIDUtilityFactorization
+public import GameTheory.Math.Probability.Support
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

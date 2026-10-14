@@ -1,3 +1,5 @@
+module
+
 /-
 # Strategic form of a selected intrinsic closed-loop solution
 
@@ -11,8 +13,10 @@ No temporal execution, nature lottery, mixed strategy, or intrinsic-specific
 solution predicate is introduced here.
 -/
 
-import GameTheory.Languages.Intrinsic.Solution
-import GameTheory.Core.Utility
+public import GameTheory.Languages.Intrinsic.Solution
+public import GameTheory.Core.Utility
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 Nonconstant-payoff strategic-transfer probe.
 
@@ -8,9 +10,11 @@ while a genuinely mixed profile that sometimes chooses `true` is not. Both
 claims pass through the EFG-facing pure/mixed iff theorems.
 -/
 
-import GameTheory.Languages.EFG.Strategic
-import GameTheory.Analysis.Protocol.EFGTest
-import GameTheory.Core.Mixed
+public import GameTheory.Languages.EFG.Strategic
+public import GameTheory.Analysis.Protocol.EFGTest
+public import GameTheory.Core.Mixed
+
+@[expose] public section
 
 noncomputable section
 

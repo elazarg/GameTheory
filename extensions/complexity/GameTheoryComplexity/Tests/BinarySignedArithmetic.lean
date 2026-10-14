@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BinarySignedAddition
-import GameTheoryComplexity.Backend.BinarySignedCrossComparison
+module
+
+public import GameTheoryComplexity.Backend.BinarySignedAddition
+public import GameTheoryComplexity.Backend.BinarySignedCrossComparison
+
+@[expose] public section
 
 /-! Kernel-checked controls for signed binary arithmetic and ratio comparison. -/
 namespace GameTheory.Complexity.Tests.BinarySignedArithmetic

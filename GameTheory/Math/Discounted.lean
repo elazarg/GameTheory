@@ -1,11 +1,15 @@
+module
+
 /-
 # Normalized discounted real series
 
 Algebra for normalized geometric sums and discounted real series.
 -/
 
-import Mathlib.Analysis.Normed.Group.InfiniteSum
-import Mathlib.Analysis.SpecificLimits.Basic
+public import Mathlib.Analysis.Normed.Group.InfiniteSum
+public import Mathlib.Analysis.SpecificLimits.Basic
+
+@[expose] public section
 
 noncomputable section
 

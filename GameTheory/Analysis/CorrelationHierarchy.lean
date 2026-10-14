@@ -1,3 +1,5 @@
+module
+
 /-
 # Correlated and coarse correlated equilibrium as preservation targets
 
@@ -21,7 +23,9 @@ preserves coarse correlated equilibrium but preserves correlated equilibrium
 only when the two already coincide.
 -/
 
-import GameTheory.Analysis.IncentiveHierarchy
+public import GameTheory.Analysis.IncentiveHierarchy
+
+@[expose] public section
 
 noncomputable section
 

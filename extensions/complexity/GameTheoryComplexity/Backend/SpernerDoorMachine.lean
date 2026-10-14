@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.EndOfLineMachineOps
-import GameTheory.Math.SpernerDoors
+module
+
+public import GameTheoryComplexity.Backend.EndOfLineMachineOps
+public import GameTheory.Math.SpernerDoors
+
+@[expose] public section
 
 /-! Constant-size word controls select oriented zero/one doors. The selection
 order agrees with the mathematical door function; no triangle enumeration is needed. -/

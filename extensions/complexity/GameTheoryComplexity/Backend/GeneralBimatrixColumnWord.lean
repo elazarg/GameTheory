@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixSignedInput
-import GameTheory.Finite.BimatrixBasisBounds
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixSignedInput
+public import GameTheory.Finite.BimatrixBasisBounds
+
+@[expose] public section
 
 /-! Certified ambient system columns for the positively shifted bimatrix game.
 Row and label indices are length rulers. Payoff columns use the two off-diagonal

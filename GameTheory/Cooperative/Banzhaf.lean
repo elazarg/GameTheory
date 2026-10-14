@@ -1,3 +1,5 @@
+module
+
 /-
 # The probabilistic Banzhaf power index
 
@@ -9,9 +11,11 @@ Primary reference: J. F. Banzhaf III, “Weighted Voting Doesn't Work: A
 Mathematical Analysis,” *Rutgers Law Review* 19 (1965).
 -/
 
-import GameTheory.Core.Coalitional
-import Mathlib.Algebra.BigOperators.Ring.Finset
-import Mathlib.Tactic.Ring
+public import GameTheory.Core.Coalitional
+public import Mathlib.Algebra.BigOperators.Ring.Finset
+public import Mathlib.Tactic.Ring
+
+@[expose] public section
 
 namespace GameTheory.CoalitionalGame
 

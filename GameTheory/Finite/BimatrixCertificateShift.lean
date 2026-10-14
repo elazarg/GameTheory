@@ -1,6 +1,10 @@
-import GameTheory.Finite.BimatrixCertificate
-import Mathlib.Tactic.NormNum
-import Mathlib.Tactic.Positivity
+module
+
+public import GameTheory.Finite.BimatrixCertificate
+public import Mathlib.Tactic.NormNum
+public import Mathlib.Tactic.Positivity
+
+@[expose] public section
 
 /-! Adding constants to either player's payoff table preserves exact Nash
 certificates. Positive payoff tables have positive certified utilities, including

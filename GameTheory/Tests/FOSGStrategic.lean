@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile FOSG strategic-serialization witness
 
@@ -9,8 +11,11 @@ a profitable-deviation control are checked in the source game and across both
 serialization orders.
 -/
 
-import GameTheory.Examples.FOSG
-import GameTheory.Languages.Bridges.FOSGToEFGStrategic
+public import GameTheory.Examples.FOSG
+import all GameTheory.Examples.FOSG
+public import GameTheory.Languages.Bridges.FOSGToEFGStrategic
+
+@[expose] public section
 
 noncomputable section
 

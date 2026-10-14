@@ -1,3 +1,5 @@
+module
+
 /-
 # Preferences over outcome laws
 
@@ -14,8 +16,10 @@ orientation
 means that `agent` weakly prefers `preferred` to `alternative`.
 -/
 
-import GameTheory.Core.Rank
-import GameTheory.Math.Probability.Mixture
+public import GameTheory.Core.Rank
+public import GameTheory.Math.Probability.Mixture
+
+@[expose] public section
 
 namespace GameTheory
 

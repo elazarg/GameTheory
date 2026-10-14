@@ -1,3 +1,5 @@
+module
+
 /-
 Hostile finite-law VNM fixture.
 
@@ -9,8 +11,10 @@ expected-utility preference over the natural numbers exercises the
 representation of finitely supported lotteries on an infinite outcome type.
 -/
 
-import GameTheory.Core.VNM
-import Mathlib.Tactic
+public import GameTheory.Core.VNM
+public import Mathlib.Tactic
+
+@[expose] public section
 
 noncomputable section
 

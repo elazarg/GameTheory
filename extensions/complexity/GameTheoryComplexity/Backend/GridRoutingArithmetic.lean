@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
+module
+
+public import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
+
+@[expose] public section
 
 /-! Binary routing arithmetic reuses the exact adder and unsigned comparator.
 The constant factors three and six use shifts and addition, with no numeric loops. -/

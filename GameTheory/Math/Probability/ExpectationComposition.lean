@@ -1,5 +1,9 @@
-import GameTheory.Math.Probability.ExpectationBind
-import GameTheory.Math.Probability.Joint
+module
+
+public import GameTheory.Math.Probability.ExpectationBind
+public import GameTheory.Math.Probability.Joint
+
+@[expose] public section
 
 noncomputable section
 

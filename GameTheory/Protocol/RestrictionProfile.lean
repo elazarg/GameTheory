@@ -1,3 +1,5 @@
+module
+
 /-
 # Retained decision laws and their perturbations
 
@@ -7,8 +9,10 @@ profile of the smaller protocol; values created by new actions stay free.
 Perturbations mix the pinned laws with a reference law of the larger protocol.
 -/
 
-import GameTheory.Math.Probability.Mixture
-import GameTheory.Protocol.ActionRestriction
+public import GameTheory.Math.Probability.Mixture
+public import GameTheory.Protocol.ActionRestriction
+
+@[expose] public section
 
 noncomputable section
 

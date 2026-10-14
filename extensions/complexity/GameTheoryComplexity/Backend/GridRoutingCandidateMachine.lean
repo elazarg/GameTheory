@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.GridRoutingNodeMachine
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingNodeMachine
+
+@[expose] public section
 
 /-! A candidate is accepted exactly when it is live and realizes the requested
 point. Selection carries an explicit found flag; an empty internal node word

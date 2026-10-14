@@ -1,10 +1,14 @@
-import Mathlib.Data.Rat.Defs
-import Mathlib.Algebra.Order.Field.Basic
-import Mathlib.Algebra.Order.Ring.Abs
-import Mathlib.Data.Finset.Card
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.NormNum
-import Mathlib.Tactic.Ring
+module
+
+public import Mathlib.Data.Rat.Defs
+public import Mathlib.Algebra.Order.Field.Basic
+public import Mathlib.Algebra.Order.Ring.Abs
+public import Mathlib.Data.Finset.Card
+public import Mathlib.Tactic.Linarith
+public import Mathlib.Tactic.NormNum
+public import Mathlib.Tactic.Ring
+
+@[expose] public section
 
 /-!
 # Separated jitter samples near interior grid boundaries

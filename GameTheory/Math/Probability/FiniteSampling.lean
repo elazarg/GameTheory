@@ -1,3 +1,5 @@
+module
+
 /-
 # Sampling finitely many coordinates of a dependent assignment
 
@@ -5,8 +7,10 @@ The selected coordinates have independent PMF laws. A total assignment
 supplies deterministic values elsewhere; coordinate carriers may be infinite.
 -/
 
-import GameTheory.Math.Probability.Product
-import GameTheory.Math.Probability.Support
+public import GameTheory.Math.Probability.Product
+public import GameTheory.Math.Probability.Support
+
+@[expose] public section
 
 noncomputable section
 

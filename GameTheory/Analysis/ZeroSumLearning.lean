@@ -1,3 +1,5 @@
+module
+
 /-
 # Zero-sum external regret and empirical saddle gaps
 
@@ -8,9 +10,11 @@ marginals. This module derives that identity from the canonical Core regret,
 mixed extension, and approximate-Nash predicate.
 -/
 
-import GameTheory.Core.Approximate
-import GameTheory.Core.Learning
-import GameTheory.Core.MatrixGame
+public import GameTheory.Core.Approximate
+public import GameTheory.Core.Learning
+public import GameTheory.Core.MatrixGame
+
+@[expose] public section
 
 noncomputable section
 

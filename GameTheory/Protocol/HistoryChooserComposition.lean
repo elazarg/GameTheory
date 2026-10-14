@@ -1,3 +1,5 @@
+module
+
 /-
 # Composing history choosers on child cones
 
@@ -6,7 +8,9 @@ This permits a current joint action to be combined with independently chosen
 continuation choosers, without imposing a common finite history carrier.
 -/
 
-import GameTheory.Protocol.SubgamePerfect
+public import GameTheory.Protocol.SubgamePerfect
+
+@[expose] public section
 
 noncomputable section
 

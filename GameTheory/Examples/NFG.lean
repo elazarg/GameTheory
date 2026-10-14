@@ -1,3 +1,5 @@
+module
+
 /-
 # Normal-form examples with non-finite action spaces
 
@@ -6,10 +8,12 @@ canonical semantic solution concepts remain independent of executable finite
 enumeration.
 -/
 
-import GameTheory.Core.Response
-import GameTheory.Core.Utility
-import GameTheory.Languages.NFG
-import Mathlib.Tactic.FinCases
+public import GameTheory.Core.Response
+public import GameTheory.Core.Utility
+public import GameTheory.Languages.NFG
+public import Mathlib.Tactic.FinCases
+
+@[expose] public section
 
 noncomputable section
 

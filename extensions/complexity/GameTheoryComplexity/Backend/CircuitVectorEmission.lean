@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.CircuitVectorMachine
-import Complexitylib.Classes.P.Cobham.Internal.Algebra
-import Complexitylib.Classes.P.Cobham.Internal.PolyLen
+module
+
+public import GameTheoryComplexity.Backend.CircuitVectorMachine
+public import Complexitylib.Classes.P.Cobham.Internal.Algebra
+public import Complexitylib.Classes.P.Cobham.Internal.PolyLen
+
+@[expose] public section
 
 /-! Polynomial-time emission of serialized circuit vectors from scalar code producers.
 The output coordinates appear in ascending order and retain the producer's exact codes. -/

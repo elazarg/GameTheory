@@ -1,3 +1,5 @@
+module
+
 /-
 # Sequential-equilibrium existence for finite extensive games
 
@@ -7,9 +9,11 @@ decision recall (implied by perfect recall) and inhabited total policies supply
 the strategic hypotheses.
 -/
 
-import GameTheory.Analysis.Protocol.EFG
-import GameTheory.Analysis.Protocol.SequentialExistence
-import GameTheory.Protocol.FiniteHorizon
+public import GameTheory.Analysis.Protocol.EFG
+public import GameTheory.Analysis.Protocol.SequentialExistence
+public import GameTheory.Protocol.FiniteHorizon
+
+@[expose] public section
 
 noncomputable section
 

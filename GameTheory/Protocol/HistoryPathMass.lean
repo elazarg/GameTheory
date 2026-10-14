@@ -1,3 +1,5 @@
+module
+
 /-
 # Local point masses of the canonical history runner
 
@@ -5,7 +7,9 @@ An exact history carries its own predecessor. At its trace depth, only that
 predecessor can contribute to its terminal point mass in one more runner step.
 -/
 
-import GameTheory.Protocol.HistoryEvents
+public import GameTheory.Protocol.HistoryEvents
+
+@[expose] public section
 
 noncomputable section
 

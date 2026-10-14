@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-105: canonical replacement-context law
 
@@ -6,8 +8,10 @@ canonical serialized MAID evaluator.  The argument uses no conditional law,
 positivity assumption, or finite enumeration of node-value fibres.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDFactorization
-import GameTheory.Experimental.PostArchitecture.MAIDReplacementInvariantUtility
+public import GameTheory.Experimental.PostArchitecture.MAIDFactorization
+public import GameTheory.Experimental.PostArchitecture.MAIDReplacementInvariantUtility
+
+@[expose] public section
 
 noncomputable section
 

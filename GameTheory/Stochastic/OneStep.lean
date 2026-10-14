@@ -1,3 +1,5 @@
+module
+
 /-
 # One-step stochastic utility
 
@@ -6,8 +8,10 @@ operation has no finite-state or bounded-value premise; results about it state
 the integrability they need at the selected state and joint action.
 -/
 
-import GameTheory.Stochastic.Basic
-import GameTheory.Core.Utility
+public import GameTheory.Stochastic.Basic
+public import GameTheory.Core.Utility
+
+@[expose] public section
 
 noncomputable section
 

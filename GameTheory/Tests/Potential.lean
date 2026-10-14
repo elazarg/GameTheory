@@ -1,3 +1,5 @@
+module
+
 /-
 # Exact and ordinal potentials are genuinely different
 
@@ -8,7 +10,9 @@ one-player game chooses among the natural numbers; its two-valued payoff gives
 a potential with finitely many values on infinitely many profiles.
 -/
 
-import GameTheory.Core.Potential
+public import GameTheory.Core.Potential
+
+@[expose] public section
 
 noncomputable section
 

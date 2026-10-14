@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: MAID cylinder bridge
 
@@ -11,8 +13,10 @@ to agreement of its typed restrictions, without disjointness assumptions or
 equality transport in the API.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNMarginalization
-import GameTheory.Experimental.PostArchitecture.FiniteBNCoordinateIndependence
+public import GameTheory.Experimental.PostArchitecture.FiniteBNMarginalization
+public import GameTheory.Experimental.PostArchitecture.FiniteBNCoordinateIndependence
+
+@[expose] public section
 
 noncomputable section
 

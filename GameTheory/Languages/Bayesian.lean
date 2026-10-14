@@ -1,3 +1,5 @@
+module
+
 /-
 # Bayesian games through execution and information
 
@@ -10,8 +12,10 @@ It establishes syntax, information locality, and induced outcome laws; ordinary
 static solution concepts apply above this compiler.
 -/
 
-import GameTheory.Core.Bayesian
-import GameTheory.Protocol.Strategic
+public import GameTheory.Core.Bayesian
+public import GameTheory.Protocol.Strategic
+
+@[expose] public section
 
 noncomputable section
 

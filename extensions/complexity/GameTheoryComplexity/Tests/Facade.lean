@@ -1,4 +1,8 @@
-import GameTheoryComplexity.SampleTest
+module
+
+public import GameTheoryComplexity.SampleTest
+
+@[expose] public section
 
 /-! Client proofs consume the sample-test facade without naming a machine backend. -/
 

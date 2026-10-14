@@ -1,3 +1,5 @@
+module
+
 /-
 # Feasible posterior laws
 
@@ -6,7 +8,9 @@ prior. Both levels are ordinary PMFs, so infinite-support splittings are
 included without a separate finite probability type.
 -/
 
-import GameTheory.Math.Probability.Joint
+public import GameTheory.Math.Probability.Joint
+
+@[expose] public section
 
 noncomputable section
 

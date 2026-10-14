@@ -1,3 +1,5 @@
+module
+
 /-
 # Topology-free mixed perturbations
 
@@ -7,7 +9,9 @@ reuse the sole `IsEquilibrium` predicate through a constrained deviation
 scheme.  Only limits of perturbations belong in Analysis.
 -/
 
-import GameTheory.Core.Mixed
+public import GameTheory.Core.Mixed
+
+@[expose] public section
 
 noncomputable section
 

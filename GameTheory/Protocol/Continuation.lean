@@ -1,3 +1,5 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
 /-
@@ -13,9 +15,11 @@ proper source root before a deviation is selected. Initial outcome laws alone
 do not supply that coverage. No new equilibrium predicate or evaluator is used.
 -/
 
-import GameTheory.Protocol.Strategic
-import GameTheory.Protocol.SubgamePerfect
-import GameTheory.Core.MixtureSimulation
+public import GameTheory.Protocol.Strategic
+public import GameTheory.Protocol.SubgamePerfect
+public import GameTheory.Core.MixtureSimulation
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Correctness of the executable knapsack approximation frontend
 
@@ -6,7 +8,9 @@ attainment properties of `ApproximationAlgorithm`.  The approximation-ratio
 proof is built on this structural boundary.
 -/
 
-import GameTheory.Mechanism.Knapsack.ApproximationAlgorithm
+public import GameTheory.Mechanism.Knapsack.ApproximationAlgorithm
+
+@[expose] public section
 
 namespace GameTheory.Mechanism.Knapsack
 

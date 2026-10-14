@@ -1,5 +1,9 @@
-import GameTheory.Finite.BimatrixAffineGate
-import Mathlib.Algebra.BigOperators.Fin
+module
+
+public import GameTheory.Finite.BimatrixAffineGate
+public import Mathlib.Algebra.BigOperators.Fin
+
+@[expose] public section
 
 /-! Paired-action comparison games select the lower or upper output endpoint
 according to the sign of a weighted integer signal. Zero signals leave the pair unconstrained. -/

@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.SpernerCoordinateColor
+module
+
+public import GameTheoryComplexity.Backend.SpernerCoordinateColor
+
+@[expose] public section
 
 /-! Coordinate queries retain the high boundary bit and the canonical edge priority. -/
 namespace GameTheory.Complexity.Tests.SpernerCoordinateColor

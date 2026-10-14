@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.GridSpernerColorMachine
-import GameTheoryComplexity.Backend.GridRoutingOriginalGraph
-import GameTheoryComplexity.Backend.SpernerRoutingDecoderMachine
+module
+
+public import GameTheoryComplexity.Backend.GridSpernerColorMachine
+public import GameTheoryComplexity.Backend.GridRoutingOriginalGraph
+public import GameTheoryComplexity.Backend.SpernerRoutingDecoderMachine
+
+@[expose] public section
 
 /-! Routed color-query controls exercise extended coordinate fields, the source
 entrance, disconnected endpoint components, and unconditional decoder fallback. -/

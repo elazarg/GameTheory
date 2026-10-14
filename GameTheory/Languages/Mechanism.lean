@@ -1,3 +1,5 @@
+module
+
 /-
 # Direct-revelation mechanism syntax
 
@@ -7,7 +9,9 @@ preference, or solution concept.  The deterministic compiler is structural;
 strategyproofness and auction theorems live in `GameTheory.Mechanism`.
 -/
 
-import GameTheory.Core.Form
+public import GameTheory.Core.Form
+
+@[expose] public section
 
 noncomputable section
 

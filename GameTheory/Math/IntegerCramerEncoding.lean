@@ -1,5 +1,9 @@
-import GameTheory.Math.IntegerBasisBounds
-import Mathlib.Tactic.Ring
+module
+
+public import GameTheory.Math.IntegerBasisBounds
+public import Mathlib.Tactic.Ring
+
+@[expose] public section
 
 /-! # Common-denominator encoding of nonnegative integer-system solutions
 

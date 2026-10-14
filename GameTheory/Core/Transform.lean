@@ -1,3 +1,5 @@
+module
+
 /-
 # Concrete game-form transformations
 
@@ -9,7 +11,9 @@ commutes with both profile transformations at the actual play law.
 No generic morphism or certificate hierarchy is introduced.
 -/
 
-import GameTheory.Core.Mixed
+public import GameTheory.Core.Mixed
+
+@[expose] public section
 
 noncomputable section
 

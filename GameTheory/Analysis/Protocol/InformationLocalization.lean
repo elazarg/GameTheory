@@ -1,3 +1,5 @@
+module
+
 /-
 # Localizing sequential rationality at the root
 
@@ -18,12 +20,14 @@ The mass identity is proved over the well-founded terminal-history law of an
 arbitrary randomized chooser and an arbitrary antichain of roots.
 -/
 
-import GameTheory.Analysis.IncentiveHierarchy
-import GameTheory.Analysis.Protocol.Incentives
-import GameTheory.Analysis.Protocol.SubgameLocalization
-import GameTheory.Protocol.BehavioralBayes
-import GameTheory.Protocol.BehavioralTerminal
-import GameTheory.Protocol.DecisionRecall
+public import GameTheory.Analysis.IncentiveHierarchy
+public import GameTheory.Analysis.Protocol.Incentives
+public import GameTheory.Analysis.Protocol.SubgameLocalization
+public import GameTheory.Protocol.BehavioralBayes
+public import GameTheory.Protocol.BehavioralTerminal
+public import GameTheory.Protocol.DecisionRecall
+
+@[expose] public section
 
 noncomputable section
 

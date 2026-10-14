@@ -1,13 +1,17 @@
-import GameTheoryComplexity.Backend.Complexitylib
-import Complexitylib.Classes.P.Cobham.Vec
-import Complexitylib.Classes.P.Cobham.Internal.FstBlock
-import Complexitylib.Classes.P.Cobham.Internal.SndBlock
-import Complexitylib.Classes.P.Cobham.Internal.Reorder
-import Complexitylib.Classes.P.Cobham.Internal.Cat
-import Complexitylib.Classes.P.Cobham.Internal.ConsBit
-import Complexitylib.Classes.P.Composition
-import Complexitylib.Classes.P.PairWithInput
-import Complexitylib.Classes.P.UnaryLength
+module
+
+public import GameTheoryComplexity.Backend.Complexitylib
+public import Complexitylib.Classes.P.Cobham.Vec
+public import Complexitylib.Classes.P.Cobham.Internal.FstBlock
+public import Complexitylib.Classes.P.Cobham.Internal.SndBlock
+public import Complexitylib.Classes.P.Cobham.Internal.Reorder
+public import Complexitylib.Classes.P.Cobham.Internal.Cat
+public import Complexitylib.Classes.P.Cobham.Internal.ConsBit
+public import Complexitylib.Classes.P.Composition
+public import Complexitylib.Classes.P.PairWithInput
+public import Complexitylib.Classes.P.UnaryLength
+
+@[expose] public section
 
 /-! Polynomial-time serialization of a unary security parameter and Boolean samples.
 The certificate witnesses an actual deterministic machine on encoded two-component

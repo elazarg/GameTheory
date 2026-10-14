@@ -1,6 +1,10 @@
-import GameTheory.Math.BinaryExtraction
-import GameTheory.Math.GridBrouwerContinuous
-import Mathlib.Data.Rat.Cast.Order
+module
+
+public import GameTheory.Math.BinaryExtraction
+public import GameTheory.Math.GridBrouwerContinuous
+public import Mathlib.Data.Rat.Cast.Order
+
+@[expose] public section
 
 /-! Exact binary cell extraction turns a small interpolated residual into a
 trichromatic triangle, including unit-square edges and the rising diagonal. -/

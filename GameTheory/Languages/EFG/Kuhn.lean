@@ -1,3 +1,5 @@
+module
+
 /-
 # Kuhn correspondence for extensive-form games
 
@@ -13,9 +15,11 @@ holding every opponent coordinate fixed; this EFG surface uses those laws to
 transfer Nash equilibria in both directions.
 -/
 
-import GameTheory.Languages.EFG.Strategic
-import GameTheory.Protocol.StrategicRealization
-import GameTheory.Core.Utility
+public import GameTheory.Languages.EFG.Strategic
+public import GameTheory.Protocol.StrategicRealization
+public import GameTheory.Core.Utility
+
+@[expose] public section
 
 noncomputable section
 

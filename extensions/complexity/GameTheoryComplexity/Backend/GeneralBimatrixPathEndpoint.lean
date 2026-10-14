@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixEndpointCapacity
-import GameTheory.Finite.BimatrixPathWitness
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixEndpointCapacity
+public import GameTheory.Finite.BimatrixPathWitness
+
+@[expose] public section
 
 /-! Accepted certificate emission from canonical bimatrix path witnesses.
 Raw pointer inconsistency identifies a complementary non-source basis; its

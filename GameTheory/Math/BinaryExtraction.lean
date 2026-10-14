@@ -1,10 +1,14 @@
-import Mathlib.Data.Rat.Defs
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.NormNum
-import Mathlib.Tactic.SplitIfs
-import Mathlib.Tactic.Ring
-import Mathlib.Algebra.Order.Ring.Abs
-import Mathlib.Algebra.Order.Group.MinMax
+module
+
+public import Mathlib.Data.Rat.Defs
+public import Mathlib.Tactic.Linarith
+public import Mathlib.Tactic.NormNum
+public import Mathlib.Tactic.SplitIfs
+public import Mathlib.Tactic.Ring
+public import Mathlib.Algebra.Order.Ring.Abs
+public import Mathlib.Algebra.Order.Group.MinMax
+
+@[expose] public section
 
 /-!
 # Binary threshold extraction on the closed unit interval

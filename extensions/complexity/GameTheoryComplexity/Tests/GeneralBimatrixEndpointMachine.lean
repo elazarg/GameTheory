@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixEndpointMachine
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixEndpointMachine
+
+@[expose] public section
 
 namespace GameTheory.Complexity.Tests.GeneralBimatrixEndpointMachine
 open Backend _root_.Complexity _root_.Complexity.Cobham

@@ -6,8 +6,7 @@ package GameTheoryComplexity where
   version := v!"0.1.0"
   description := "Opt-in computational complexity certificates for GameTheory"
   fixedToolchain := true
-  -- This library retains legacy module visibility when importing Mathlib modules.
-  allowNonModules := true
+  requiresModuleSystem := true
   license := "Apache-2.0"
   lintDriver := "batteries/runLinter"
   lintDriverArgs := #["GameTheoryComplexity.LintAll"]
@@ -39,11 +38,13 @@ require "leanprover-community" / "mathlib" @ git "v4.35.0"
 lean_lib GameTheoryComplexity where
   globs := #[.andSubmodules `GameTheoryComplexity]
   leanOptions := #[⟨`warningAsError, true⟩, ⟨`relaxedAutoImplicit, false⟩,
+    ⟨`backward.privateInPublic, true⟩, ⟨`backward.privateInPublic.warn, false⟩,
     ⟨`linter.checkUnivs, false⟩]
 
 lean_lib GameTheoryComplexity.LintAll where
   srcDir := "lint"
   leanOptions := #[⟨`warningAsError, true⟩, ⟨`relaxedAutoImplicit, false⟩,
+    ⟨`backward.privateInPublic, true⟩, ⟨`backward.privateInPublic.warn, false⟩,
     ⟨`linter.checkUnivs, false⟩]
 
 lean_lib GameTheoryComplexity.AxiomAudit where

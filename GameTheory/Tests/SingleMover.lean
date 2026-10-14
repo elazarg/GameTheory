@@ -1,3 +1,5 @@
+module
+
 /-
 # A random mover among infinitely many players
 
@@ -5,9 +7,11 @@ Player zero flips a behavioral coin; every other natural-number player is
 inactive. The following chance step flips a second coin through `step`.
 -/
 
-import GameTheory.Protocol.SingleMover
-import GameTheory.Math.Probability.Uniform
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Protocol.SingleMover
+public import GameTheory.Math.Probability.Uniform
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 open GameTheory.Math.Probability
 

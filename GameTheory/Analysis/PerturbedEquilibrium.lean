@@ -1,3 +1,5 @@
+module
+
 /-
 # Perturbed equilibria and the existence of trembling-hand perfection
 
@@ -14,10 +16,12 @@ Letting the weight vanish and extracting a convergent subsequence gives
 Selten's theorem: every finite game has a trembling-hand perfect equilibrium.
 -/
 
-import GameTheory.Analysis.Nash
-import GameTheory.Analysis.TremblingHand
-import GameTheory.Math.Probability.Compactness
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Analysis.Nash
+public import GameTheory.Analysis.TremblingHand
+public import GameTheory.Math.Probability.Compactness
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 open GameTheory.Math.Probability
 

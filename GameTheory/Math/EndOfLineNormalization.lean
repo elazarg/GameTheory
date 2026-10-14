@@ -1,4 +1,8 @@
-import GameTheory.Math.EndOfLine
+module
+
+public import GameTheory.Math.EndOfLine
+
+@[expose] public section
 
 /-! Removing inconsistent pointers preserves the graph's incident edges and
 connects its endpoints to the usual asymmetric End-of-Line witness condition. -/

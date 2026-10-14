@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile MAID observation-pruning witness
 
@@ -7,7 +9,9 @@ smaller domain and keep their native/compiled assignment law; a signal-reading
 full policy is proved outside the image of every reduced policy.
 -/
 
-import GameTheory.Languages.MAID.ObservationPruning
+public import GameTheory.Languages.MAID.ObservationPruning
+
+@[expose] public section
 
 noncomputable section
 

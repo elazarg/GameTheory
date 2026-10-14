@@ -1,3 +1,5 @@
+module
+
 /-
 # Equilibrium against selected coalitions
 
@@ -6,7 +8,9 @@ Empty coalitions are ignored, just as in strong Nash. Approximation changes only
 the expected-utility preference, not the equilibrium predicate.
 -/
 
-import GameTheory.Core.Approximate
+public import GameTheory.Core.Approximate
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Observation pruning for typed MAIDs
 
@@ -13,8 +15,10 @@ by a reduced deviation.  Both directions are proved against the canonical
 native and compiled forms.
 -/
 
-import GameTheory.Languages.MAID.Strategic
-import GameTheory.Core.UtilityTransfer
+public import GameTheory.Languages.MAID.Strategic
+public import GameTheory.Core.UtilityTransfer
+
+@[expose] public section
 
 noncomputable section
 

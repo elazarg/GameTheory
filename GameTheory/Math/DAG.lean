@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite directed acyclic graphs
 
@@ -5,9 +7,11 @@ Relation and topological-order facts over arbitrary vertex types. Finiteness
 and decidable equality are required only by order construction.
 -/
 
-import Mathlib.Data.Fintype.Card
-import Mathlib.Data.List.Nodup
-import Mathlib.Order.WellFoundedSet
+public import Mathlib.Data.Fintype.Card
+public import Mathlib.Data.List.Nodup
+public import Mathlib.Order.WellFoundedSet
+
+@[expose] public section
 
 namespace GameTheory.Math.DAG
 

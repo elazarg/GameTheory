@@ -1,7 +1,11 @@
+module
+
 /- Copyright (c) 2026 VegasCore contributors. Released under MIT; see NOTICE. -/
 
-import GameTheory.Analysis.Protocol.ComponentCompletion
-import GameTheory.Analysis.Protocol.LocalSimulationLimit
+public import GameTheory.Analysis.Protocol.ComponentCompletion
+public import GameTheory.Analysis.Protocol.LocalSimulationLimit
+
+@[expose] public section
 
 /-! # Shared component completion with copied sites
 

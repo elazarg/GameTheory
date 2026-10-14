@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite fair division
 
@@ -6,9 +8,11 @@ round-robin, and two-agent EFX existence.  Measurable cake-cutting theory is
 intentionally absent.
 -/
 
-import GameTheory.Mechanism.FairDivision.Basic
-import GameTheory.Mechanism.FairDivision.RoundRobin
-import GameTheory.Mechanism.FairDivision.TwoAgentEFX
+public import GameTheory.Mechanism.FairDivision.Basic
+public import GameTheory.Mechanism.FairDivision.RoundRobin
+public import GameTheory.Mechanism.FairDivision.TwoAgentEFX
+
+@[expose] public section
 
 namespace GameTheory.Mechanism.FairDivision
 

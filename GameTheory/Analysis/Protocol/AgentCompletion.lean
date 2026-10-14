@@ -1,3 +1,5 @@
+module
+
 /-
 # Simultaneous completion of free agents
 
@@ -11,7 +13,9 @@ decision site is optimal against single-site law changes. The prescribed laws
 need not converge, and nothing is claimed about the prescribed sites.
 -/
 
-import GameTheory.Analysis.Protocol.ComponentCompletion
+public import GameTheory.Analysis.Protocol.ComponentCompletion
+
+@[expose] public section
 
 noncomputable section
 

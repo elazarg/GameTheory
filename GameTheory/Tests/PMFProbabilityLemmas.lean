@@ -1,3 +1,5 @@
+module
+
 /-
 # Ordinary PMF probability identities
 
@@ -5,10 +7,12 @@ The fixtures deliberately use Nat carriers: PMFs remain meaningful when the
 carrier is infinite, and the independent product controls use arbitrary laws.
 -/
 
-import GameTheory.Math.Probability.Mixture
-import GameTheory.Math.Probability.Product
-import GameTheory.Math.Probability.ExpectationComposition
-import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Math.Probability.Mixture
+public import GameTheory.Math.Probability.Product
+public import GameTheory.Math.Probability.ExpectationComposition
+public import GameTheory.Math.Probability.ExpectationMixture
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # All-pay auction arithmetic
 
@@ -6,8 +8,10 @@ real-arithmetic facts used by an eventual allocation model; they make no
 dominance or equilibrium claim by themselves.
 -/
 
-import Mathlib.Basic.Real.Basic
-import Mathlib.Tactic.Linarith
+public import Mathlib.Basic.Real.Basic
+public import Mathlib.Tactic.Linarith
+
+@[expose] public section
 
 namespace GameTheory.Mechanism.Auction
 

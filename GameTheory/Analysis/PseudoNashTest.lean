@@ -1,3 +1,5 @@
+module
+
 /-
 # Boundaries of pseudo-Nash
 
@@ -27,9 +29,11 @@ game is a one-player choice between two payoff ensembles.
   `1` is Nash at every size of the source and pseudo-Nash in the target, where
   it is Nash at no positive size and not Nash up to negligible slack.
 -/
-import GameTheory.Analysis.PseudoNash
-import GameTheory.Examples.PseudoEquilibria
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Analysis.PseudoNash
+public import GameTheory.Examples.PseudoEquilibria
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 open GameTheory.Math.Probability
 

@@ -1,5 +1,9 @@
-import GameTheory.Math.ComplementaryPortOrder
-import Mathlib.Algebra.Order.Ring.Int
+module
+
+public import GameTheory.Math.ComplementaryPortOrder
+public import Mathlib.Algebra.Order.Ring.Int
+
+@[expose] public section
 
 /-! Twin ports have the same sorted coordinate and opposite payoff parity,
 including ports inserted between existing labels and at either boundary.

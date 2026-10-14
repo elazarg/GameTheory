@@ -1,3 +1,5 @@
+module
+
 /-
 # Evolutionary stability against mixed mutants
 
@@ -13,10 +15,12 @@ self encounter wins every positive invasion even when the static first-order
 test favours the resident. Under integrability they coincide.
 -/
 
-import GameTheory.Evolutionary.Basic
-import GameTheory.Math.Probability.ExpectationBind
-import GameTheory.Math.Probability.ExpectationMixture
-import GameTheory.Math.Probability.ExtendedExpectation
+public import GameTheory.Evolutionary.Basic
+public import GameTheory.Math.Probability.ExpectationBind
+public import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Math.Probability.ExtendedExpectation
+
+@[expose] public section
 
 noncomputable section
 

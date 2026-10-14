@@ -1,3 +1,5 @@
+module
+
 /-
 # Extended-real expectation
 
@@ -10,9 +12,11 @@ defines the expectation in `EReal` as their difference. The expectation exists
 unless both parts are infinite; only then is the value genuinely undefined.
 -/
 
-import GameTheory.Math.Probability.ExpectationAlgebra
-import GameTheory.Math.Probability.ExpectationMap
-import Mathlib.Data.EReal.Operations
+public import GameTheory.Math.Probability.ExpectationAlgebra
+public import GameTheory.Math.Probability.ExpectationMap
+public import Mathlib.Data.EReal.Operations
+
+@[expose] public section
 
 noncomputable section
 

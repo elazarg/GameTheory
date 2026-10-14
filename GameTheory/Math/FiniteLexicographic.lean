@@ -1,6 +1,10 @@
-import Mathlib.Algebra.Order.Group.PiLex
-import Mathlib.Algebra.Order.Field.Basic
-import Mathlib.Order.Fin.Basic
+module
+
+public import Mathlib.Algebra.Order.Group.PiLex
+public import Mathlib.Algebra.Order.Field.Basic
+public import Mathlib.Order.Fin.Basic
+
+@[expose] public section
 
 /-! Finite coefficient vectors with Mathlib's lexicographic order.
 

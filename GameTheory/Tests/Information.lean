@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile information tests
 
@@ -40,8 +42,10 @@ Four things make it hostile rather than decorative.
 a `rfl`-checked type equation in which `hiddenCard.State` does not appear.
 -/
 
-import GameTheory.Protocol.Information
-import GameTheory.Math.Probability.Mixture
+public import GameTheory.Protocol.Information
+public import GameTheory.Math.Probability.Mixture
+
+@[expose] public section
 
 noncomputable section
 

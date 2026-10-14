@@ -1,3 +1,5 @@
+module
+
 /-
 # Stochastic games
 
@@ -6,7 +8,9 @@ transition law, and stage utility. Initial states, discount factors,
 finiteness, and nonemptiness belong to the consumers that need them.
 -/
 
-import Mathlib.Probability.ProbabilityMassFunction.Constructions
+public import Mathlib.Probability.ProbabilityMassFunction.Constructions
+
+@[expose] public section
 
 namespace GameTheory.Stochastic
 

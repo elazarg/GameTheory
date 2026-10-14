@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.GridRoutingNodeCodec
-import GameTheoryComplexity.Backend.GridRoutingLiveMachine
-import GameTheoryComplexity.Backend.GridRoutingImageMachine
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingNodeCodec
+public import GameTheoryComplexity.Backend.GridRoutingLiveMachine
+public import GameTheoryComplexity.Backend.GridRoutingImageMachine
+
+@[expose] public section
 
 /-! Internal node operations dispatch on the vertex/interior tag while retaining
 raw framed fields. Their semantics agree with the total natural routing nodes. -/

@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.GridRoutingDecoderMachine
-import GameTheoryComplexity.Backend.GridRoutingNodeStepMachine
-import GameTheoryComplexity.Backend.GridRoutingWords
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingDecoderMachine
+public import GameTheoryComplexity.Backend.GridRoutingNodeStepMachine
+public import GameTheoryComplexity.Backend.GridRoutingWords
+
+@[expose] public section
 
 /-! One composed routing pointer decodes a live internal node, follows the
 crossing-switched step, and serializes its exact image. Malformed external

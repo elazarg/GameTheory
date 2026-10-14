@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BimatrixNodeWord
+module
+
+public import GameTheoryComplexity.Backend.BimatrixNodeWord
+
+@[expose] public section
 
 /-! Certified binary operations on complementary-path node fields.
 

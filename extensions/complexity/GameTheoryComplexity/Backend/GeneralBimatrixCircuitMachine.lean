@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.PointerCircuitGeneration
-import GameTheoryComplexity.Backend.GeneralBimatrixPointerMachine
+module
+
+public import GameTheoryComplexity.Backend.PointerCircuitGeneration
+public import GameTheoryComplexity.Backend.GeneralBimatrixPointerMachine
+
+@[expose] public section
 
 /-! Uniform circuit emission for serialized bimatrix path pointers.
 The actual polynomial-time pointer machines are specialized to each instance

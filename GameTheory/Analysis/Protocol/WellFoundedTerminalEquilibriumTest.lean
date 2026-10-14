@@ -1,3 +1,5 @@
+module
+
 /-
 # Sequential equilibrium without a uniform horizon
 
@@ -7,9 +9,11 @@ false-action tremble has approximately optimal whole-policy continuations at
 the sole decision site.
 -/
 
-import GameTheory.Analysis.Protocol.WellFoundedTerminalAssessmentTest
-import GameTheory.Analysis.Protocol.SequentialLimits
-import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Analysis.Protocol.WellFoundedTerminalAssessmentTest
+public import GameTheory.Analysis.Protocol.SequentialLimits
+public import GameTheory.Math.Probability.ExpectationMixture
+
+@[expose] public section
 
 noncomputable section
 

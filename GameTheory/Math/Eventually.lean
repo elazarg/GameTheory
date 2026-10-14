@@ -1,3 +1,5 @@
+module
+
 /-
 # Discrete eventual properties
 
@@ -6,7 +8,9 @@ notions. It keeps the public statement in explicit threshold form and avoids
 making these definitions depend on the topology-facing filter API.
 -/
 
-import Mathlib.Data.Nat.Basic
+public import Mathlib.Data.Nat.Basic
+
+@[expose] public section
 
 namespace GameTheory.Math
 

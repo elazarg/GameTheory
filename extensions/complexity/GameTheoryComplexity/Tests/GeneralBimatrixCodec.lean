@@ -1,7 +1,11 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixCertificateCodec
-import GameTheoryComplexity.Backend.GeneralBimatrixVerifierCorrectness
-import Mathlib.Tactic.NormNum
-import Mathlib.Tactic.FinCases
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixCertificateCodec
+public import GameTheoryComplexity.Backend.GeneralBimatrixVerifierCorrectness
+public import Mathlib.Tactic.NormNum
+public import Mathlib.Tactic.FinCases
+
+@[expose] public section
 
 /-! Signed rectangular encodings retain independent payoffs and reject false Nash certificates. -/
 namespace GameTheory.Complexity.Backend.Tests

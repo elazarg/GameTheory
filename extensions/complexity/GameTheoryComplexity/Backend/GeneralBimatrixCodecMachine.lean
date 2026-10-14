@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixCodec
-import GameTheoryComplexity.Backend.BimatrixCertificateVerifier
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixCodec
+public import GameTheoryComplexity.Backend.BimatrixCertificateVerifier
+
+@[expose] public section
 
 /-! Polynomial-time parsers for the three unary headers of a rectangular binary game. -/
 namespace GameTheory.Complexity.Backend

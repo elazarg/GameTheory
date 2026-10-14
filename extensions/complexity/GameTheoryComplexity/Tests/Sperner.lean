@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Sperner
+module
+
+public import GameTheoryComplexity.Sperner
+
+@[expose] public section
 
 /-! Succinct Sperner controls cover zero coordinate width, malformed color
 circuits, canonical source exclusion, binary coordinates, and paired verification. -/

@@ -1,3 +1,5 @@
+module
+
 /-
 # `GameTheory.Core`
 
@@ -19,49 +21,51 @@ opt-in leaves: `Core.UtilitySimulation` and `Core.MixtureUtilitySimulation`.
 The direct profile-local transfer theorems are included here.
 -/
 
-import GameTheory.Core.PseudoNashCoalition
-import GameTheory.Core.PseudoNashTolerance
-import GameTheory.Core.Signature
-import GameTheory.Core.Form
-import GameTheory.Core.Bayesian
-import GameTheory.Core.BayesianEquilibrium
-import GameTheory.Core.BayesCorrelated
-import GameTheory.Core.Rank
-import GameTheory.Core.Preference
-import GameTheory.Core.VNM
-import GameTheory.Core.Deviation
-import GameTheory.Core.Equilibrium
-import GameTheory.Core.CheapTalk
-import GameTheory.Core.CheapTalkRandomization
-import GameTheory.Core.Utility
-import GameTheory.Core.Welfare
-import GameTheory.Core.Learning
-import GameTheory.Core.FictitiousPlay
-import GameTheory.Core.RobustWelfare
-import GameTheory.Core.Response
-import GameTheory.Core.CorrelatedDominance
-import GameTheory.Core.Rationalizability
-import GameTheory.Core.UtilityInvariance
-import GameTheory.Core.Approximate
-import GameTheory.Core.CoalitionEquilibrium
-import GameTheory.Core.UtilityTransfer
-import GameTheory.Core.MixtureSimulationComposition
-import GameTheory.Core.Potential
-import GameTheory.Core.Mixed
-import GameTheory.Core.MixedSimulation
-import GameTheory.Core.TremblingHand
-import GameTheory.Core.MixedImprovement
-import GameTheory.Core.MixedPotential
-import GameTheory.Core.FictitiousPlayPotential
-import GameTheory.Core.BinaryMixed
-import GameTheory.Core.BinaryCorrelated
-import GameTheory.Core.Transform
-import GameTheory.Core.ZeroSum
-import GameTheory.Core.MatrixGame
-import GameTheory.Core.SocialChoice
-import GameTheory.Core.May
-import GameTheory.Core.Arrow
-import GameTheory.Core.GibbardSatterthwaite
-import GameTheory.Core.Coalitional
-import GameTheory.Core.Shapley
-import GameTheory.Core.PseudoNash
+public import GameTheory.Core.PseudoNashCoalition
+public import GameTheory.Core.PseudoNashTolerance
+public import GameTheory.Core.Signature
+public import GameTheory.Core.Form
+public import GameTheory.Core.Bayesian
+public import GameTheory.Core.BayesianEquilibrium
+public import GameTheory.Core.BayesCorrelated
+public import GameTheory.Core.Rank
+public import GameTheory.Core.Preference
+public import GameTheory.Core.VNM
+public import GameTheory.Core.Deviation
+public import GameTheory.Core.Equilibrium
+public import GameTheory.Core.CheapTalk
+public import GameTheory.Core.CheapTalkRandomization
+public import GameTheory.Core.Utility
+public import GameTheory.Core.Welfare
+public import GameTheory.Core.Learning
+public import GameTheory.Core.FictitiousPlay
+public import GameTheory.Core.RobustWelfare
+public import GameTheory.Core.Response
+public import GameTheory.Core.CorrelatedDominance
+public import GameTheory.Core.Rationalizability
+public import GameTheory.Core.UtilityInvariance
+public import GameTheory.Core.Approximate
+public import GameTheory.Core.CoalitionEquilibrium
+public import GameTheory.Core.UtilityTransfer
+public import GameTheory.Core.MixtureSimulationComposition
+public import GameTheory.Core.Potential
+public import GameTheory.Core.Mixed
+public import GameTheory.Core.MixedSimulation
+public import GameTheory.Core.TremblingHand
+public import GameTheory.Core.MixedImprovement
+public import GameTheory.Core.MixedPotential
+public import GameTheory.Core.FictitiousPlayPotential
+public import GameTheory.Core.BinaryMixed
+public import GameTheory.Core.BinaryCorrelated
+public import GameTheory.Core.Transform
+public import GameTheory.Core.ZeroSum
+public import GameTheory.Core.MatrixGame
+public import GameTheory.Core.SocialChoice
+public import GameTheory.Core.May
+public import GameTheory.Core.Arrow
+public import GameTheory.Core.GibbardSatterthwaite
+public import GameTheory.Core.Coalitional
+public import GameTheory.Core.Shapley
+public import GameTheory.Core.PseudoNash
+
+@[expose] public section

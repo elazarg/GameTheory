@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-118: arbitrary pure-policy measures read behaviorally
 
@@ -10,8 +12,10 @@ layer nevertheless supplies one conditional behavioral profile for every
 finite prefix, unilateral measure replacement, and discounted payoff.
 -/
 
-import GameTheory.Experimental.PostArchitecture.StochasticInfiniteKuhn
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Experimental.PostArchitecture.StochasticInfiniteKuhn
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

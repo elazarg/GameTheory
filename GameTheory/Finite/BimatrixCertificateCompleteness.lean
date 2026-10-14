@@ -1,7 +1,11 @@
-import GameTheory.Core.BimatrixSupportFeasibility
-import GameTheory.Finite.BimatrixCertificateCorrectness
-import GameTheory.Math.BoundedLinearCertificate
-import Mathlib.Data.Int.NatAbs
+module
+
+public import GameTheory.Core.BimatrixSupportFeasibility
+public import GameTheory.Finite.BimatrixCertificateCorrectness
+public import GameTheory.Math.BoundedLinearCertificate
+public import Mathlib.Data.Int.NatAbs
+
+@[expose] public section
 
 /-! Every real Nash equilibrium of a finite integer bimatrix game admits an
 exact rational certificate with polynomial binary width. The support systems

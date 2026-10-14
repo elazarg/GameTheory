@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-107: restore-at-site canonical factorization
 
@@ -9,8 +11,10 @@ laws then factorize over that hybrid graph.  No alternate evaluator, optimality,
 conditional-independence, or coverage claim is introduced.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDPruningFactorizationBridge
-import GameTheory.Experimental.PostArchitecture.MAIDSitePolicySurgery
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningFactorizationBridge
+public import GameTheory.Experimental.PostArchitecture.MAIDSitePolicySurgery
+
+@[expose] public section
 
 noncomputable section
 

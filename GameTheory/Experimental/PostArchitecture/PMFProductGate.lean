@@ -1,9 +1,13 @@
+module
+
 /-
 Copyright (c) 2026 GameTheory contributors. All rights reserved.
 Released under the Apache 2.0 license as described in the file LICENSE.
 -/
-import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
-import GameTheory.Math.Probability.Product
+public import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
+public import GameTheory.Math.Probability.Product
+
+@[expose] public section
 
 open scoped BigOperators
 

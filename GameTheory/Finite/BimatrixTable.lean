@@ -1,6 +1,10 @@
-import Mathlib.Data.List.Basic
-import Mathlib.Data.List.Range
-import Mathlib.Data.Int.Basic
+module
+
+public import Mathlib.Data.List.Basic
+public import Mathlib.Data.List.Range
+public import Mathlib.Data.Int.Basic
+
+@[expose] public section
 
 /-! Executable binary serialization of a symmetric integer-payoff table.
 The unary dimension header is followed by positive and negative tallies in

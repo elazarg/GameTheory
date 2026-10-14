@@ -1,6 +1,10 @@
-import GameTheory.Finite.BimatrixComplementarity
-import GameTheory.Finite.BimatrixCertificateShift
-import GameTheory.Finite.BimatrixCertificateCorrectness
+module
+
+public import GameTheory.Finite.BimatrixComplementarity
+public import GameTheory.Finite.BimatrixCertificateShift
+public import GameTheory.Finite.BimatrixCertificateCorrectness
+
+@[expose] public section
 
 /-! Nonzero complementary points decode to the canonical mixed Nash semantics.
 Payoff shifts support signed games; positivity is used only to scale Nash

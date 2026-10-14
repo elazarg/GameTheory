@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-107: graphical data for a MAID pruning fixpoint
 
@@ -15,9 +17,11 @@ means that the target decision can strategically rely on the source.  No
 semantic coverage or equilibrium theorem is claimed here.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNMoralSeparation
-import GameTheory.Experimental.PostArchitecture.MAIDRequisiteObservation
-import GameTheory.Languages.MAID.ObservationPruning
+public import GameTheory.Experimental.PostArchitecture.FiniteBNMoralSeparation
+public import GameTheory.Experimental.PostArchitecture.MAIDRequisiteObservation
+public import GameTheory.Languages.MAID.ObservationPruning
+
+@[expose] public section
 
 noncomputable section
 

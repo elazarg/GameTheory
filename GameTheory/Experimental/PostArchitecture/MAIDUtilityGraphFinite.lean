@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-105: finite utility-augmented MAID graphs
 
@@ -6,10 +8,12 @@ proof-side utility augmentation.  It adds deterministic utility sinks without
 defining another evaluator or joint law.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDFiniteBNBridge
-import GameTheory.Experimental.PostArchitecture.MAIDUtilityAugmentation
-import Mathlib.Data.Fintype.Pi
-import Mathlib.Data.Fintype.Sets
+public import GameTheory.Experimental.PostArchitecture.MAIDFiniteBNBridge
+public import GameTheory.Experimental.PostArchitecture.MAIDUtilityAugmentation
+public import Mathlib.Data.Fintype.Pi
+public import Mathlib.Data.Fintype.Sets
+
+@[expose] public section
 
 noncomputable section
 

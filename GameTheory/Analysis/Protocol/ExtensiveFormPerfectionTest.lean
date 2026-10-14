@@ -1,3 +1,5 @@
+module
+
 /-
 # Perfection in the entry-deterrence arena
 
@@ -5,8 +7,10 @@ The entry-deterrence arena has an extensive-form trembling-hand perfect
 profile, and every such profile is the strategy of a sequential equilibrium.
 -/
 
-import GameTheory.Analysis.Protocol.ExtensiveFormPerfection
-import GameTheory.Analysis.Protocol.SequentialOneShotTest
+public import GameTheory.Analysis.Protocol.ExtensiveFormPerfection
+public import GameTheory.Analysis.Protocol.SequentialOneShotTest
+
+@[expose] public section
 
 noncomputable section
 

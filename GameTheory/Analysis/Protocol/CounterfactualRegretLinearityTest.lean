@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile generic local-CFR realization witness
 
@@ -8,8 +10,10 @@ terminal payoff.  The same fixture already separates harmless one-site
 deviations from a profitable two-site policy change.
 -/
 
-import GameTheory.Analysis.Protocol.CounterfactualRegretMatching
-import GameTheory.Tests.SubgameOneShot
+public import GameTheory.Analysis.Protocol.CounterfactualRegretMatching
+public import GameTheory.Tests.SubgameOneShot
+
+@[expose] public section
 
 noncomputable section
 

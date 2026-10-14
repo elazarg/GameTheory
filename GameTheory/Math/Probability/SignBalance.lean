@@ -1,3 +1,5 @@
+module
+
 /-
 # Sign balance of centred sums
 
@@ -16,10 +18,12 @@ symmetric walk rarely visits. With `n` the integer eighth root of `m` and
 `h = σ n ^ 3`, both errors are of order `1 / n`; the reflected law bounds the
 sign from below.
 -/
-import GameTheory.Math.Probability.Lindeberg
-import GameTheory.Math.Probability.RademacherWalk
-import Mathlib.Analysis.SpecialFunctions.SmoothTransition
-import Mathlib.Basic.Real.Sign
+public import GameTheory.Math.Probability.Lindeberg
+public import GameTheory.Math.Probability.RademacherWalk
+public import Mathlib.Analysis.SpecialFunctions.SmoothTransition
+public import Mathlib.Basic.Real.Sign
+
+@[expose] public section
 
 noncomputable section
 

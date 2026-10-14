@@ -1,3 +1,5 @@
+module
+
 /-
 # One-participant predrawing with a forgetful randomized opponent
 
@@ -6,7 +8,9 @@ opponent has the same `Unit` information state at both moves and randomizes
 afresh. Equalities below retain the full history, including both joint actions.
 -/
 
-import GameTheory.Protocol.Predraw
+public import GameTheory.Protocol.Predraw
+
+@[expose] public section
 
 noncomputable section
 

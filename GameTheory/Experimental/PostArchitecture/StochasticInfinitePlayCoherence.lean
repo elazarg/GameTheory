@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-113: coherence of the canonical infinite stochastic path
 
@@ -6,7 +8,9 @@ file records the resulting pathwise coherence seam without introducing a
 second runner.
 -/
 
-import GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayMeasure
+public import GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayMeasure
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile across-information-set decomposition probe
 
@@ -7,8 +9,10 @@ policy gains one.  A correct counterfactual decomposition must recover that
 gain at the off-path second-after-true information site.
 -/
 
-import GameTheory.Analysis.Protocol.CounterfactualDecomposition
-import GameTheory.Analysis.Protocol.CounterfactualRegretLinearityTest
+public import GameTheory.Analysis.Protocol.CounterfactualDecomposition
+public import GameTheory.Analysis.Protocol.CounterfactualRegretLinearityTest
+
+@[expose] public section
 
 noncomputable section
 

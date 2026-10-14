@@ -1,5 +1,9 @@
-import GameTheory.Math.GridSpernerRoutingBoundary
-import Mathlib.Tactic.IntervalCases
+module
+
+public import GameTheory.Math.GridSpernerRoutingBoundary
+public import Mathlib.Tactic.IntervalCases
+
+@[expose] public section
 
 /-! Boundary entrance controls preserve disconnected endpoints while removing
 only the known source witness. A power-of-two outer square cuts partial tiles. -/

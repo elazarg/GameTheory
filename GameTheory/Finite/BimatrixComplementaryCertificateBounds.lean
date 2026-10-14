@@ -1,5 +1,9 @@
-import GameTheory.Finite.BimatrixComplementarity
-import GameTheory.Finite.BimatrixCertificateShift
+module
+
+public import GameTheory.Finite.BimatrixComplementarity
+public import GameTheory.Finite.BimatrixCertificateShift
+
+@[expose] public section
 
 /-! Binary width bounds for normalized complementary coordinates and shifted
 utilities. The estimates apply to every supplied integer representation. -/

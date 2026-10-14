@@ -1,7 +1,11 @@
-import GameTheory.Math.FiniteLexicographicCompare
-import GameTheory.Math.FiniteMinimumScan
-import GameTheory.Math.LexicographicPivot
-import Mathlib.Data.List.FinRange
+module
+
+public import GameTheory.Math.FiniteLexicographicCompare
+public import GameTheory.Math.FiniteMinimumScan
+public import GameTheory.Math.LexicographicPivot
+public import Mathlib.Data.List.FinRange
+
+@[expose] public section
 
 /-! Executable symbolic ratio selection using integer cross-products.
 

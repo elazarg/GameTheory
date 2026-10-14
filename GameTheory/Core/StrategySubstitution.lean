@@ -1,6 +1,10 @@
+module
+
 /- Copyright (c) 2026 VegasCore contributors. Released under MIT; see NOTICE. -/
 
-import GameTheory.Core.Form
+public import GameTheory.Core.Form
+
+@[expose] public section
 
 /-! # Independent stochastic strategy substitution
 

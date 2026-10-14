@@ -1,4 +1,8 @@
-import GameTheory.Math.Probability.AggregateComparison
+module
+
+public import GameTheory.Math.Probability.AggregateComparison
+
+@[expose] public section
 noncomputable section
 namespace GameTheory.Tests.AggregateComparison
 open GameTheory.Math.Probability

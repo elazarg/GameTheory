@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.SpernerPointerMachine
-import GameTheoryComplexity.Backend.CircuitVectorMachine
+module
+
+public import GameTheoryComplexity.Backend.SpernerPointerMachine
+public import GameTheoryComplexity.Backend.CircuitVectorMachine
+
+@[expose] public section
 
 /-! Machine-level controls exercise source paths, boundary carries, rejected
 encodings and a disconnected cycle. The uniform certificate permits both the

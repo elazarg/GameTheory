@@ -1,3 +1,5 @@
+module
+
 /-
 Analytic consumer for finite exact-potential fictitious-play convergence.
 
@@ -6,8 +8,10 @@ first potential increment, so these asymptotic conclusions are not witnessed
 only by a stationary equilibrium path.
 -/
 
-import GameTheory.Analysis.FictitiousPlayPotential
-import GameTheory.Tests.FictitiousPlayPotential
+public import GameTheory.Analysis.FictitiousPlayPotential
+public import GameTheory.Tests.FictitiousPlayPotential
+
+@[expose] public section
 
 noncomputable section
 

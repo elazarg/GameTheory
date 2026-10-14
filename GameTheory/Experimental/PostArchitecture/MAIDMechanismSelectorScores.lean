@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-107: mechanism-selector scores and support transport
 
@@ -8,8 +10,10 @@ fully mixed baseline source rule.  No positivity assumption is made on the
 changed rule or on chance nodes.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDMechanismSelectorIndependence
-import GameTheory.Experimental.PostArchitecture.MAIDSiteOptimality
+public import GameTheory.Experimental.PostArchitecture.MAIDMechanismSelectorIndependence
+public import GameTheory.Experimental.PostArchitecture.MAIDSiteOptimality
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.EndOfLineVerifier
+module
+
+public import GameTheoryComplexity.Backend.EndOfLineVerifier
+
+@[expose] public section
 
 /-! Encoded End-of-Line controls use actual constant circuits. Endpoints have
 exactly one mutually consistent nontrivial edge; isolated vertices with two

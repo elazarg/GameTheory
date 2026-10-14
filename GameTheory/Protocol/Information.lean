@@ -1,3 +1,5 @@
+module
+
 /-
 # Information models
 
@@ -57,9 +59,11 @@ fields. `InformationModel extends InfoSignals` keeps that a private detail:
 `M.InfoState`, `M.pushInfo`, and `M.infoOf` all resolve through the parent.
 -/
 
-import GameTheory.Protocol.Randomized
-import GameTheory.Core.Signature
-import GameTheory.Math.Probability.FinitaryProduct
+public import GameTheory.Protocol.Randomized
+public import GameTheory.Core.Signature
+public import GameTheory.Math.Probability.FinitaryProduct
+
+@[expose] public section
 
 noncomputable section
 

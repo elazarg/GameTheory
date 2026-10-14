@@ -1,4 +1,8 @@
-import GameTheory.Math.GridWireColoringTile
+module
+
+public import GameTheory.Math.GridWireColoringTile
+
+@[expose] public section
 
 /-! Compatible finite color tiles glue to a coloring of the natural square grid.
 Tile boundaries agree across seams, including corners, so every triangle is

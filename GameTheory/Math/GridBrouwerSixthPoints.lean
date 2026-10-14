@@ -1,5 +1,9 @@
-import GameTheory.Math.GridBrouwerMap
-import Mathlib.Data.Fin.VecNotation
+module
+
+public import GameTheory.Math.GridBrouwerMap
+public import Mathlib.Data.Fin.VecNotation
+
+@[expose] public section
 
 /-! Rational grid points at sixth-cell resolution. The last vertex of the
 square belongs to its last cell, with local coordinate one. This convention

@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.BinaryUnaryEncoding
-import GameTheoryComplexity.Backend.BinarySignedArithmetic
-import GameTheory.Math.GridBrouwerErrorBudget
+module
+
+public import GameTheoryComplexity.Backend.BinaryUnaryEncoding
+public import GameTheoryComplexity.Backend.BinarySignedArithmetic
+public import GameTheory.Math.GridBrouwerErrorBudget
+
+@[expose] public section
 
 /-! Integer reward words with polynomial bit length for robust grid gate computations.
 The precision clock controls padding; multiplication operates on binary words. -/

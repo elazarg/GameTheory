@@ -1,7 +1,11 @@
-import Mathlib.Data.Fin.Basic
-import Mathlib.Data.Fintype.Basic
-import Mathlib.Tactic.FinCases
-import Lean.Elab.Tactic.Omega
+module
+
+public import Mathlib.Data.Fin.Basic
+public import Mathlib.Data.Fintype.Basic
+public import Mathlib.Tactic.FinCases
+public import Lean.Elab.Tactic.Omega
+
+@[expose] public section
 
 /-! Each square is split along its southwest-to-northeast diagonal into two
 counterclockwise triangles. Adjacent triangles traverse their shared edge in

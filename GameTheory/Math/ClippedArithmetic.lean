@@ -1,7 +1,11 @@
-import Mathlib.Algebra.Order.Group.MinMax
-import Mathlib.Algebra.Order.Ring.Abs
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.Ring
+module
+
+public import Mathlib.Algebra.Order.Group.MinMax
+public import Mathlib.Algebra.Order.Ring.Abs
+public import Mathlib.Tactic.Linarith
+public import Mathlib.Tactic.Ring
+
+@[expose] public section
 
 /-!
 # Clipped subtraction implements a minimum

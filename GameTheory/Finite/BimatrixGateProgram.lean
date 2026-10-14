@@ -1,5 +1,9 @@
-import GameTheory.Finite.BimatrixAffineGate
-import Mathlib.Algebra.Order.Group.MinMax
+module
+
+public import GameTheory.Finite.BimatrixAffineGate
+public import Mathlib.Algebra.Order.Group.MinMax
+
+@[expose] public section
 
 /-! A single paired-action game implements both affine and comparator gates.
 Each output occupies its own row block. Signed coefficients are split into

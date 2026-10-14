@@ -1,9 +1,13 @@
-import GameTheoryComplexity.Backend.BrouwerNashAverageQuery
-import GameTheoryComplexity.Backend.BrouwerNashCoefficientQuery
-import GameTheoryComplexity.Backend.BrouwerNashHeaders
-import GameTheoryComplexity.Backend.BinaryIndexedLookup
-import GameTheoryComplexity.Backend.BinarySignedIndicator
-import GameTheoryComplexity.Backend.BinaryUnaryEncoding
+module
+
+public import GameTheoryComplexity.Backend.BrouwerNashAverageQuery
+public import GameTheoryComplexity.Backend.BrouwerNashCoefficientQuery
+public import GameTheoryComplexity.Backend.BrouwerNashHeaders
+public import GameTheoryComplexity.Backend.BinaryIndexedLookup
+public import GameTheoryComplexity.Backend.BinarySignedIndicator
+public import GameTheoryComplexity.Backend.BinaryUnaryEncoding
+
+@[expose] public section
 
 /-! Polynomial-time coefficient queries for the shared affine feedback and scaling blocks.
 Unary output scans use the source precision as their bounded clock. Signed addition retains

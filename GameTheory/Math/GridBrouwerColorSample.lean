@@ -1,5 +1,9 @@
-import GameTheory.Math.GridBrouwerColorSignal
-import GameTheory.Math.BinaryExtraction
+module
+
+public import GameTheory.Math.GridBrouwerColorSignal
+public import GameTheory.Math.BinaryExtraction
+
+@[expose] public section
 
 /-!
 # Canonical displacement bounds for binary-selected color samples

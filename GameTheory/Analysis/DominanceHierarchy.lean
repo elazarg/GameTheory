@@ -1,3 +1,5 @@
+module
+
 /-
 # Dominance and Nash as preservation targets
 
@@ -9,8 +11,10 @@ reaches another opponent profile, so no localization links the two families
 and preserving Nash says nothing about dominance at other opponent profiles.
 -/
 
-import GameTheory.Analysis.IncentiveHierarchy
-import GameTheory.Core.Response
+public import GameTheory.Analysis.IncentiveHierarchy
+public import GameTheory.Core.Response
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 Hostile feasible-posterior regression.
 
@@ -6,8 +8,10 @@ beliefs.  The canonical coupling puts probability `1/2` on each matching
 state/point-mass-belief pair and has the required state and belief marginals.
 -/
 
-import GameTheory.Mechanism.PosteriorSignals
-import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Mechanism.PosteriorSignals
+public import GameTheory.Math.Probability.ExpectationMixture
+
+@[expose] public section
 
 noncomputable section
 

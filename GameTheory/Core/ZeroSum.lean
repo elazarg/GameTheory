@@ -1,3 +1,5 @@
+module
+
 /-
 # Zero-sum games and saddle points
 
@@ -18,7 +20,9 @@ name a player who moves up and a player who moves down, and with three players
 there is no such pair.
 -/
 
-import GameTheory.Core.Utility
+public import GameTheory.Core.Utility
+
+@[expose] public section
 
 noncomputable section
 

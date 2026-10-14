@@ -1,3 +1,5 @@
+module
+
 /-
 # Utility-invariance hostile fixture
 
@@ -5,7 +7,9 @@ A one-player binary choice separates the positivity theorem from the false
 claim that arbitrary affine rescaling preserves incentives.
 -/
 
-import GameTheory.Core.UtilityInvariance
+public import GameTheory.Core.UtilityInvariance
+
+@[expose] public section
 
 noncomputable section
 

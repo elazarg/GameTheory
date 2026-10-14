@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite combinatorial-auction primitives
 
@@ -5,10 +7,12 @@ This opt-in mechanism layer defines normalized monotone valuations and feasible
 allocations.  It does not commit the core to an auction-specific outcome type.
 -/
 
-import Mathlib.Algebra.BigOperators.Ring.Finset
-import Mathlib.Data.Finset.Lattice.Fold
-import Mathlib.Data.Finset.Powerset
-import Mathlib.Basic.Real.Basic
+public import Mathlib.Algebra.BigOperators.Ring.Finset
+public import Mathlib.Data.Finset.Lattice.Fold
+public import Mathlib.Data.Finset.Powerset
+public import Mathlib.Basic.Real.Basic
+
+@[expose] public section
 
 namespace GameTheory.Mechanism.Combinatorial
 

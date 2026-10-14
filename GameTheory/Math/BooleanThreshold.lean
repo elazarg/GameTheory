@@ -1,6 +1,10 @@
-import Mathlib.Algebra.Order.Field.Basic
-import Mathlib.Algebra.Order.Group.MinMax
-import Mathlib.Tactic.Linarith
+module
+
+public import Mathlib.Algebra.Order.Field.Basic
+public import Mathlib.Algebra.Order.Group.MinMax
+public import Mathlib.Tactic.Linarith
+
+@[expose] public section
 
 /-! Strict Boolean threshold signals tolerate small scalar representation errors.
 Clamping a Boolean scalar to a nonnegative weight preserves its error bound. -/

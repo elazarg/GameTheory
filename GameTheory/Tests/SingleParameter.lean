@@ -1,3 +1,5 @@
+module
+
 /-
 Hostile topology-free single-parameter mechanism fixture.
 
@@ -7,7 +9,9 @@ deviation, preventing the DSIC and monotonicity results from passing through a
 constant allocation or payment rule.
 -/
 
-import GameTheory.Mechanism.SingleParameter
+public import GameTheory.Mechanism.SingleParameter
+
+@[expose] public section
 
 noncomputable section
 

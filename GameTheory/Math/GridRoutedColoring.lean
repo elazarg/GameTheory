@@ -1,6 +1,10 @@
-import GameTheory.Math.GridWireColoring
-import GameTheory.Math.GridWireColoringPorts
-import GameTheory.Math.GridRoutedGraph
+module
+
+public import GameTheory.Math.GridWireColoring
+public import GameTheory.Math.GridWireColoringPorts
+public import GameTheory.Math.GridRoutedGraph
+
+@[expose] public section
 
 /-! The endpoint-preserving routed graph admits a local three-color thickening.
 Every trichromatic triangle identifies an original endpoint by two row divisions.

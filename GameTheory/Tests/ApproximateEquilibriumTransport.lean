@@ -1,3 +1,5 @@
+module
+
 /-
 # Approximate-equilibrium transport control
 
@@ -7,7 +9,9 @@ unilateral deviations, and consequently does not preserve even zero-slack
 approximate Nash equilibrium.
 -/
 
-import GameTheory.Core.Approximate
+public import GameTheory.Core.Approximate
+
+@[expose] public section
 
 noncomputable section
 

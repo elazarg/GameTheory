@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-113: pathwise finite-average consistency
 
@@ -6,7 +8,9 @@ stage records.  This is a finite, pathwise bridge; it makes no limiting or
 expectation-limit bridge claim.
 -/
 
-import GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayPayoffBridge
+public import GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayPayoffBridge
+
+@[expose] public section
 
 noncomputable section
 

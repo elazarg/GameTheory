@@ -1,6 +1,10 @@
-import GameTheory.Math.GridWireColoringTile
-import GameTheory.Math.GridCrossingGeometry
-import GameTheory.Math.EndOfLineTwoCycle
+module
+
+public import GameTheory.Math.GridWireColoringTile
+public import GameTheory.Math.GridCrossingGeometry
+public import GameTheory.Math.EndOfLineTwoCycle
+
+@[expose] public section
 
 /-! Reciprocal unit grid pointers determine compatible tile ports. Isolated
 two-cycles are erased so an incoming and outgoing port never coincide. -/

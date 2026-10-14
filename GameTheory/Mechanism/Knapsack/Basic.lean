@@ -1,3 +1,5 @@
+module
+
 /-
 # Real finite-set knapsack semantics
 
@@ -5,10 +7,12 @@ Allocations are finite sets; the finite universe remains explicit until a
 mechanism needs the full player universe.
 -/
 
-import GameTheory.Mechanism.Knapsack.Aggregate
-import Mathlib.Data.Finset.Max
-import Mathlib.Data.Finset.Powerset
-import Mathlib.Basic.Real.Basic
+public import GameTheory.Mechanism.Knapsack.Aggregate
+public import Mathlib.Data.Finset.Max
+public import Mathlib.Data.Finset.Powerset
+public import Mathlib.Basic.Real.Basic
+
+@[expose] public section
 
 noncomputable section
 

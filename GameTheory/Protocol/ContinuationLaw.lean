@@ -1,7 +1,11 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
-import GameTheory.Protocol.Randomized
-import GameTheory.Math.Probability.Support
+public import GameTheory.Protocol.Randomized
+public import GameTheory.Math.Probability.Support
+
+@[expose] public section
 
 /-! # Reading a continuation law from randomized histories
 

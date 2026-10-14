@@ -1,3 +1,5 @@
+module
+
 /-
 # Uniform equilibrium
 
@@ -8,11 +10,13 @@ has zero utility. This makes finite-horizon approximate Nash exactly the
 canonical `IsεNash`, with integration required only on compared laws.
 -/
 
-import GameTheory.Core.Approximate
-import GameTheory.Repeated.Basic
-import GameTheory.Math.Eventually
-import GameTheory.Math.Probability.Uniform
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Core.Approximate
+public import GameTheory.Repeated.Basic
+public import GameTheory.Math.Eventually
+public import GameTheory.Math.Probability.Uniform
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

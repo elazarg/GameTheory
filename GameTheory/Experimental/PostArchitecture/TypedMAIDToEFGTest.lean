@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-041 hostile probe
 
@@ -6,8 +8,10 @@ parents. Both serializations are real EFGs. Changing the earlier incomparable
 decision must leave the later site's information state unchanged.
 -/
 
-import GameTheory.Experimental.PostArchitecture.TypedMAIDTest
-import GameTheory.Languages.MAID.Order
+public import GameTheory.Experimental.PostArchitecture.TypedMAIDTest
+public import GameTheory.Languages.MAID.Order
+
+@[expose] public section
 
 noncomputable section
 

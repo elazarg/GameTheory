@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BrouwerNashSelector
-import GameTheoryComplexity.Backend.BrouwerNashQueryRegions
+module
+
+public import GameTheoryComplexity.Backend.BrouwerNashSelector
+public import GameTheoryComplexity.Backend.BrouwerNashQueryRegions
+
+@[expose] public section
 
 /-! Exact scalar correctness of the polynomial Brouwer Nash coefficient selector. Disjoint
 numeric regions select the canonical gate factories; every other family contributes zero.

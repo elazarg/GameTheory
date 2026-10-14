@@ -1,4 +1,8 @@
-import GameTheory.Math.GridCrossingGeometry
+module
+
+public import GameTheory.Math.GridCrossingGeometry
+
+@[expose] public section
 
 /-! Uncrossing controls cover all directed orientations, switched outgoing
 pairings, occupied and unused bends, endpoint preservation, and grid embedding. -/

@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BrouwerNashProgram
+module
+
+public import GameTheoryComplexity.Backend.BrouwerNashProgram
+
+@[expose] public section
 
 /-! Exact decompositions of the contiguous regions in the canonical gate allocation. -/
 namespace GameTheory.Complexity.Backend.BrouwerNashQueryRegions

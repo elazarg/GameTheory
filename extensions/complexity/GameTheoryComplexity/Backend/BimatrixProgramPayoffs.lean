@@ -1,7 +1,11 @@
-import GameTheoryComplexity.Backend.BimatrixProgramCodec
-import GameTheoryComplexity.Backend.BinaryUnaryArithmetic
-import GameTheoryComplexity.Backend.BinarySignedAddition
-import GameTheoryComplexity.Backend.BinaryUnaryEncoding
+module
+
+public import GameTheoryComplexity.Backend.BimatrixProgramCodec
+public import GameTheoryComplexity.Backend.BinaryUnaryArithmetic
+public import GameTheoryComplexity.Backend.BinarySignedAddition
+public import GameTheoryComplexity.Backend.BinaryUnaryEncoding
+
+@[expose] public section
 
 /-! Certified entry queries for the canonical mixed-gate game's integer payoffs.
 All loops are controlled by word lengths, and signed padding is interpreted exactly. -/

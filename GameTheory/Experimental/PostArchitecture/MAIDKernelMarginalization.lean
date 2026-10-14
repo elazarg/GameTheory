@@ -1,3 +1,5 @@
+module
+
 /-
 # Experimental kernel marginalization for MAID information removal
 
@@ -12,9 +14,11 @@ the owner's continuation utility depends on the full context only through the
 kept observation and chosen action.
 -/
 
-import GameTheory.Math.Probability.Conditioning
-import GameTheory.Math.Probability.ExpectationBind
-import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Math.Probability.Conditioning
+public import GameTheory.Math.Probability.ExpectationBind
+public import GameTheory.Math.Probability.ExpectationMixture
+
+@[expose] public section
 
 noncomputable section
 

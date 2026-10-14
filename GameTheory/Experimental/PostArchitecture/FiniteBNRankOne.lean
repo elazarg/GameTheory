@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: rank-one finite-table algebra
 
@@ -12,9 +14,11 @@ No probability normalization, positivity, nonemptiness, graph structure, or
 conditional-law construction is used below.
 -/
 
-import Mathlib.Algebra.BigOperators.Ring.Finset
-import Mathlib.Tactic.FinCases
-import Mathlib.Tactic.NormNum
+public import Mathlib.Algebra.BigOperators.Ring.Finset
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 open scoped BigOperators
 

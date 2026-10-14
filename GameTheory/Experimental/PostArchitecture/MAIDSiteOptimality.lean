@@ -1,3 +1,5 @@
+module
+
 /-
 # Site-local optimality for typed MAIDs
 
@@ -6,8 +8,10 @@ rule in the owner's replacement.  Expected utility is always computed by the
 canonical native MAID form.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDSiteReplacementContext
-import GameTheory.Math.Probability.Product
+public import GameTheory.Experimental.PostArchitecture.MAIDSiteReplacementContext
+public import GameTheory.Math.Probability.Product
+
+@[expose] public section
 
 noncomputable section
 

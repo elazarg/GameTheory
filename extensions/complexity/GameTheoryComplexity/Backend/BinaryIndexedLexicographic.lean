@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
+module
+
+public import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
+
+@[expose] public section
 
 /-! Polynomial-time lexicographic scans of indexed Boolean comparisons.
 

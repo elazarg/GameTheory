@@ -1,8 +1,12 @@
-import GameTheory.Math.Probability.Support
-import GameTheory.Math.Probability.Measure
-import GameTheory.Math.Probability.Mixture
-import GameTheory.Math.Probability.Joint
-import Mathlib.Probability.ProbabilityMassFunction.Constructions
+module
+
+public import GameTheory.Math.Probability.Support
+public import GameTheory.Math.Probability.Measure
+public import GameTheory.Math.Probability.Mixture
+public import GameTheory.Math.Probability.Joint
+public import Mathlib.Probability.ProbabilityMassFunction.Constructions
+
+@[expose] public section
 
 noncomputable section
 

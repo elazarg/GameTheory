@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BimatrixProgramPayoffs
-import GameTheoryComplexity.Backend.GeneralBimatrixPayoffEmission
+module
+
+public import GameTheoryComplexity.Backend.BimatrixProgramPayoffs
+public import GameTheoryComplexity.Backend.GeneralBimatrixPayoffEmission
+
+@[expose] public section
 
 /-! A polynomial-time writer of the integer game for a packed mixed-gate program.
 The emitted rectangular codec uses exact fixed-width positive and negative magnitudes. -/

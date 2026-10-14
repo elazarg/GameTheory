@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.BrouwerProblem
-import GameTheoryComplexity.Backend.BrouwerPointMachine
-import GameTheoryComplexity.Sperner
+module
+
+public import GameTheoryComplexity.Backend.BrouwerProblem
+public import GameTheoryComplexity.Backend.BrouwerPointMachine
+public import GameTheoryComplexity.Sperner
+
+@[expose] public section
 
 /-! Point answers are located in their containing triangle before decoding.
 Conversely, a trichromatic triangle supplies its rational fixed barycenter.

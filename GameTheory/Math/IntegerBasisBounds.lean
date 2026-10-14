@@ -1,8 +1,12 @@
-import GameTheory.Math.IntegerDeterminantBound
-import GameTheory.Math.RationalQuotientBounds
-import Mathlib.LinearAlgebra.Matrix.NonsingularInverse
-import Mathlib.Data.Nat.Factorial.Basic
-import Mathlib.Tactic.Ring
+module
+
+public import GameTheory.Math.IntegerDeterminantBound
+public import GameTheory.Math.RationalQuotientBounds
+public import Mathlib.LinearAlgebra.Matrix.NonsingularInverse
+public import Mathlib.Data.Nat.Factorial.Basic
+public import Mathlib.Tactic.Ring
+
+@[expose] public section
 
 /-! # Binary bounds for inverse integer bases
 

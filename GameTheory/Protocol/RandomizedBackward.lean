@@ -1,3 +1,5 @@
+module
+
 /-
 # Well-founded randomized terminal histories
 
@@ -5,8 +7,10 @@ The canonical randomized chooser draws a legal joint action at each history.
 Well-founded recursion follows its realized transitions to a terminal history.
 -/
 
-import GameTheory.Protocol.Backward
-import GameTheory.Protocol.Randomized
+public import GameTheory.Protocol.Backward
+public import GameTheory.Protocol.Randomized
+
+@[expose] public section
 
 noncomputable section
 

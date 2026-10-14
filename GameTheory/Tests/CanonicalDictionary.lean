@@ -1,7 +1,11 @@
-import GameTheory.Math.CanonicalDictionary
-import Mathlib.Data.Fin.VecNotation
-import Mathlib.Tactic.FinCases
-import Mathlib.Tactic.NormNum
+module
+
+public import GameTheory.Math.CanonicalDictionary
+public import Mathlib.Data.Fin.VecNotation
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 /-! Sorting after an actual feasible pivot changes the leaving-column slot. -/
 

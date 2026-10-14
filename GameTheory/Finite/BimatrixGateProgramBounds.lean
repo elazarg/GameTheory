@@ -1,5 +1,9 @@
-import GameTheory.Finite.BimatrixGateProgram
-import GameTheory.Math.ClippedArithmetic
+module
+
+public import GameTheory.Finite.BimatrixGateProgram
+public import GameTheory.Math.ClippedArithmetic
+
+@[expose] public section
 
 /-!
 # Uniform mass and wire bounds for canonical game programs

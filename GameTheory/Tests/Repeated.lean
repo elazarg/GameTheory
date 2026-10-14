@@ -1,3 +1,5 @@
+module
+
 /-
 # Repeated-play boundary stress test
 
@@ -8,9 +10,11 @@ execution is exactly the native public prefix. Separately, stationary repetition
 of a stage Nash equilibrium is Nash for normalized discounted utility.
 -/
 
-import GameTheory.Repeated.Basic
-import GameTheory.Repeated.Discounted
-import GameTheory.Repeated.Protocol
+public import GameTheory.Repeated.Basic
+public import GameTheory.Repeated.Discounted
+public import GameTheory.Repeated.Protocol
+
+@[expose] public section
 
 noncomputable section
 

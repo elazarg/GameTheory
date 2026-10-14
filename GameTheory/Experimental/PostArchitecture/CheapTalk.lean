@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-046: observable cheap talk as a static strategy enrichment
 
@@ -7,7 +9,9 @@ objects at once. The experiment asks whether the ordinary static `GameForm`
 and `IsNash` APIs can still prove the babbling theorem without Protocol timing.
 -/
 
-import GameTheory.Examples.Classic
+public import GameTheory.Examples.Classic
+
+@[expose] public section
 
 noncomputable section
 

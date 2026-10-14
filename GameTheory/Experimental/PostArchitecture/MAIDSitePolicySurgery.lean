@@ -1,3 +1,5 @@
+module
+
 /-
 # Site-local policy surgery for typed MAIDs
 
@@ -6,7 +8,9 @@ every other site rule fixed.  The canonical MAID node law and serialized runner
 remain the only execution semantics.
 -/
 
-import GameTheory.Languages.MAID.Strategic
+public import GameTheory.Languages.MAID.Strategic
+
+@[expose] public section
 
 noncomputable section
 

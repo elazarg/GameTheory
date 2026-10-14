@@ -1,3 +1,5 @@
+module
+
 /-
 # Affine congestion games and the 5/2 price-of-anarchy bound
 
@@ -10,8 +12,10 @@ Primary reference: G. Christodoulou and E. Koutsoupias, “The Price of Anarchy
 of Finite Congestion Games,” STOC 2005.
 -/
 
-import GameTheory.Congestion.Basic
-import GameTheory.Core.RobustWelfare
+public import GameTheory.Congestion.Basic
+public import GameTheory.Core.RobustWelfare
+
+@[expose] public section
 
 noncomputable section
 

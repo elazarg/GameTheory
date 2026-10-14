@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.BinaryCramerCorrectness
-import GameTheoryComplexity.Backend.BinaryDictionaryMachine
-import GameTheory.Math.IntegerDictionaryComputation
+module
+
+public import GameTheoryComplexity.Backend.BinaryCramerCorrectness
+public import GameTheoryComplexity.Backend.BinaryDictionaryMachine
+public import GameTheory.Math.IntegerDictionaryComputation
+
+@[expose] public section
 
 /-! Signed packed dictionary fields agree with the canonical integer Cramer dictionary. -/
 

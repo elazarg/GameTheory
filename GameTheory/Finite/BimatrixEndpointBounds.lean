@@ -1,6 +1,10 @@
-import GameTheory.Finite.BimatrixPathCertificate
-import GameTheory.Math.FiniteRationalEncoding
-import GameTheory.Finite.BimatrixComplementaryCertificateBounds
+module
+
+public import GameTheory.Finite.BimatrixPathCertificate
+public import GameTheory.Math.FiniteRationalEncoding
+public import GameTheory.Finite.BimatrixComplementaryCertificateBounds
+
+@[expose] public section
 
 /-! Binary width bounds for the certificate decoded from a supplied rational
 endpoint. Bounds cover the same endpoint, including the effect of payoff shifts. -/

@@ -1,4 +1,8 @@
-import GameTheory.Math.Probability.Joint
+module
+
+public import GameTheory.Math.Probability.Joint
+
+@[expose] public section
 
 /-! Coordinatewise maps preserve the independent joint construction. -/
 

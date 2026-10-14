@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite histories supply a certified horizon
 
@@ -7,7 +9,9 @@ data. Finiteness here concerns histories, so finite-state protocols with cycles
 do not satisfy the premise merely because their state carrier is finite.
 -/
 
-import GameTheory.Protocol.RandomizedBackward
+public import GameTheory.Protocol.RandomizedBackward
+
+@[expose] public section
 
 namespace GameTheory.Protocol.ExecutionProtocol
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Affine maximizers
 
@@ -8,7 +10,9 @@ mechanism, whose DSIC predicate uses the library's ordinary dominant-strategy
 surface.
 -/
 
-import GameTheory.Mechanism.QuasiLinear
+public import GameTheory.Mechanism.QuasiLinear
+
+@[expose] public section
 
 noncomputable section
 

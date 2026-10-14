@@ -1,3 +1,5 @@
+module
+
 /-
 # Independent local trembles on decision plans
 
@@ -11,11 +13,13 @@ behavioral table with that floor at every site is the tremble of independent
 residual plans.
 -/
 
-import GameTheory.Math.Probability.ProductConditioning
-import GameTheory.Math.Probability.UniformTremble
-import GameTheory.Protocol.DecisionPlan
-import GameTheory.Protocol.PolicyRandomization
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Math.Probability.ProductConditioning
+public import GameTheory.Math.Probability.UniformTremble
+public import GameTheory.Protocol.DecisionPlan
+public import GameTheory.Protocol.PolicyRandomization
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

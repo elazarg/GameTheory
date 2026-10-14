@@ -1,5 +1,9 @@
-import GameTheory.Finite.BimatrixArithmeticGate
-import GameTheory.Math.ClippedArithmetic
+module
+
+public import GameTheory.Finite.BimatrixArithmeticGate
+public import GameTheory.Math.ClippedArithmetic
+
+@[expose] public section
 
 /-!
 # Dyadic scaling in canonical affine game programs

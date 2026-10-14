@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BimatrixRawGateMachine
+module
+
+public import GameTheoryComplexity.Backend.BimatrixRawGateMachine
+
+@[expose] public section
 
 /-! Executable coefficient controls retain repeated references and inline negations. -/
 namespace GameTheory.Complexity.Tests.BimatrixRawGateMachine

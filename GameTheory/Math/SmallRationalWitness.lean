@@ -1,9 +1,13 @@
-import GameTheory.Math.IntegerDeterminantBound
-import Mathlib.LinearAlgebra.Matrix.Nonsingular
-import Mathlib.LinearAlgebra.Matrix.Rank
-import Mathlib.Data.Nat.Factorial.Basic
-import Mathlib.Basic.Real.Basic
-import Mathlib.Data.Int.NatAbs
+module
+
+public import GameTheory.Math.IntegerDeterminantBound
+public import Mathlib.LinearAlgebra.Matrix.Nonsingular
+public import Mathlib.LinearAlgebra.Matrix.Rank
+public import Mathlib.Data.Nat.Factorial.Basic
+public import Mathlib.Basic.Real.Basic
+public import Mathlib.Data.Int.NatAbs
+
+@[expose] public section
 
 /-! Nonnegative solutions of integer linear systems have bounded rational witnesses.
 

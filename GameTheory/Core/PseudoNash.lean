@@ -1,3 +1,5 @@
+module
+
 /-
 # Pseudo-Nash equilibrium
 
@@ -41,9 +43,11 @@ Primary reference: A. Psomas, A. Terzoglou, Y. Wei, and V. Zikas,
 “Pseudo-Equilibria, or: How to Stop Worrying About Crypto and Just Analyze the
 Game,” arXiv:2506.22089 (2025).
 -/
-import GameTheory.Core.Equilibrium
-import GameTheory.Math.Probability.MeanComparisonAffine
-import GameTheory.Math.Probability.StatisticalCloseness
+public import GameTheory.Core.Equilibrium
+public import GameTheory.Math.Probability.MeanComparisonAffine
+public import GameTheory.Math.Probability.StatisticalCloseness
+
+@[expose] public section
 
 noncomputable section
 

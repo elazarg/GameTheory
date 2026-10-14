@@ -1,6 +1,10 @@
-import GameTheory.Math.GridWireDecoder
-import GameTheory.Math.GridWireSwitch
-import GameTheory.Math.GridWireImageSteps
+module
+
+public import GameTheory.Math.GridWireDecoder
+public import GameTheory.Math.GridWireSwitch
+public import GameTheory.Math.GridWireImageSteps
+
+@[expose] public section
 
 /-! Global grid pointers decode a live routed label, exchange crossing tails,
 then return its geometric image. Background points are self-loops. Every grid

@@ -1,3 +1,5 @@
+module
+
 /-
 # Feasible and opponent-rational payoff vectors
 
@@ -8,9 +10,11 @@ from `GameTheory.Math`. The construction needs neither ambient/interior geometry
 nor a separate general security hierarchy.
 -/
 
-import Mathlib.Analysis.Convex.Combination
-import GameTheory.Repeated.Periodic
-import GameTheory.Math.SimplexApproximation
+public import Mathlib.Analysis.Convex.Combination
+public import GameTheory.Repeated.Periodic
+public import GameTheory.Math.SimplexApproximation
+
+@[expose] public section
 
 noncomputable section
 

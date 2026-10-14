@@ -1,4 +1,8 @@
-import GameTheory.Math.ComplementaryPorts
+module
+
+public import GameTheory.Math.ComplementaryPorts
+
+@[expose] public section
 
 /-! Endpoint and internal port controls for a dropped label. -/
 

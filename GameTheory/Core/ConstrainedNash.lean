@@ -1,4 +1,8 @@
-import GameTheory.Core.BimatrixGame
+module
+
+public import GameTheory.Core.BimatrixGame
+
+@[expose] public section
 
 /-! Payoff-constrained equilibrium existence uses the canonical mixed Nash
 predicate together with explicit expected-payoff thresholds. Integrability is

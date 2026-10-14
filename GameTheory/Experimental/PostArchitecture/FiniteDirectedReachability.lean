@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-109: executable finite directed reachability
 
@@ -6,8 +8,10 @@ reachability.  The node carrier remains arbitrary: callers provide a complete,
 duplicate-free enumeration only when they want to run the checker.
 -/
 
-import Mathlib.Data.List.Nodup
-import Mathlib.Logic.Relation
+public import Mathlib.Data.List.Nodup
+public import Mathlib.Logic.Relation
+
+@[expose] public section
 
 namespace GameTheory.Experimental.PostArchitecture.FiniteDirectedReachability
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Predrawing one participant
 
@@ -11,9 +13,11 @@ the supplied profile, starting history, and horizon. Its policy law may have
 infinite support, and its witness is not uniform across opponent profiles.
 -/
 
-import GameTheory.Protocol.Information
-import GameTheory.Protocol.PolicyRandomization
-import GameTheory.Math.Probability.FiniteSampling
+public import GameTheory.Protocol.Information
+public import GameTheory.Protocol.PolicyRandomization
+public import GameTheory.Math.Probability.FiniteSampling
+
+@[expose] public section
 
 noncomputable section
 

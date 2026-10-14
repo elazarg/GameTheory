@@ -1,3 +1,5 @@
+module
+
 /-
 # Action-dependent stochastic restart fixture
 
@@ -6,8 +8,10 @@ observed first-stage record.  The test consumes the public-policy compiler and
 the generic restart identity; it defines no runner or local payoff semantics.
 -/
 
-import GameTheory.Stochastic.History
-import Mathlib.Tactic.NormNum
+public import GameTheory.Stochastic.History
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-020: the same question at the layer where it was decided
 
@@ -16,8 +18,10 @@ This file carries both sides far enough to see the difference. Recorded
 evidence, not API.
 -/
 
-import GameTheory.Core.Form
-import GameTheory.Math.Probability.Product
+public import GameTheory.Core.Form
+public import GameTheory.Math.Probability.Product
+
+@[expose] public section
 
 noncomputable section
 

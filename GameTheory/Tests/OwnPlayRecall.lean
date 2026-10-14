@@ -1,3 +1,5 @@
+module
+
 /-
 # Own-play recall on forgetful and delayed protocols
 
@@ -11,8 +13,10 @@ observes nothing. Both histories reach the decision with the same refined
 information: recall of one's own moves reveals no timing.
 -/
 
-import GameTheory.Protocol.OwnPlayRecall
-import GameTheory.Tests.Randomized
+public import GameTheory.Protocol.OwnPlayRecall
+public import GameTheory.Tests.Randomized
+
+@[expose] public section
 
 noncomputable section
 

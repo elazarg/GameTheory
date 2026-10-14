@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixFNP
-import GameTheory.Finite.BimatrixPathCertificate
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixFNP
+public import GameTheory.Finite.BimatrixPathCertificate
+
+@[expose] public section
 
 /-! Total serialized bimatrix Nash search. A finite complementary path supplies
 bounded certificates on valid inputs; malformed words retain the empty answer. -/

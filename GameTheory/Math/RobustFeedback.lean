@@ -1,7 +1,11 @@
-import GameTheory.Math.RobustAverage
-import GameTheory.Math.ClampedFeedback
-import Mathlib.Algebra.BigOperators.Fin
-import Mathlib.Tactic.NormNum
+module
+
+public import GameTheory.Math.RobustAverage
+public import GameTheory.Math.ClampedFeedback
+public import Mathlib.Algebra.BigOperators.Fin
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 /-! Robust finite averaging and approximate projected feedback bound the underlying signal.
 Exceptional samples contribute a count-dependent error; clipping is controlled by the

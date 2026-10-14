@@ -1,9 +1,13 @@
-import GameTheoryComplexity.Backend.SATTablePayoff
-import GameTheoryComplexity.Backend.SATTableScannerCorrectness
-import GameTheory.Core.SatisfiabilityGameEncoding
-import GameTheory.Core.SatisfiabilityGamePayoff
-import GameTheory.Finite.BimatrixTable
-import GameTheoryComplexity.Backend.SATReductionSemantic
+module
+
+public import GameTheoryComplexity.Backend.SATTablePayoff
+public import GameTheoryComplexity.Backend.SATTableScannerCorrectness
+public import GameTheory.Core.SatisfiabilityGameEncoding
+public import GameTheory.Core.SatisfiabilityGamePayoff
+public import GameTheory.Finite.BimatrixTable
+public import GameTheoryComplexity.Backend.SATReductionSemantic
+
+@[expose] public section
 
 /-! Exact agreement between the polynomial-time payoff emitter and the canonical
 literal/clause game. The result identifies every serialized integer table entry.

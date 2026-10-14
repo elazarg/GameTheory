@@ -1,4 +1,8 @@
-import GameTheory.Math.EndOfLine
+module
+
+public import GameTheory.Math.EndOfLine
+
+@[expose] public section
 
 /-! Reciprocal pointers whose predecessor and successor coincide off the diagonal
 form isolated two-cycles. Removing these components preserves every endpoint

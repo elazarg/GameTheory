@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-135: arbitrary epistemic events with PMF beliefs
 
@@ -7,9 +9,11 @@ partitions and reports. It also tests exact agreement at a nonempty null
 public event and separates knowledge from positive scalar belief at a null cell.
 -/
 
-import GameTheory.Epistemic.ApproximateAgreement
-import GameTheory.Epistemic.Agreement
-import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
+public import GameTheory.Epistemic.ApproximateAgreement
+public import GameTheory.Epistemic.Agreement
+public import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
+
+@[expose] public section
 
 noncomputable section
 

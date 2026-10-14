@@ -1,3 +1,5 @@
+module
+
 /-
 # Fully mixed assessments on the unbounded countdown
 
@@ -6,9 +8,11 @@ are built from the actual fully supported behavioral profiles. The repair
 mixes every whole-policy alternative with that same positive tremble.
 -/
 
-import GameTheory.Experimental.PostArchitecture.WellFoundedTerminalGate
-import GameTheory.Analysis.Protocol.SequentialLimits
-import GameTheory.Analysis.Protocol.BehavioralBayes
+public import GameTheory.Experimental.PostArchitecture.WellFoundedTerminalGate
+public import GameTheory.Analysis.Protocol.SequentialLimits
+public import GameTheory.Analysis.Protocol.BehavioralBayes
+
+@[expose] public section
 
 noncomputable section
 

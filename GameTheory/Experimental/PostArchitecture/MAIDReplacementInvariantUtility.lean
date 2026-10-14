@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-105: replacement-invariant utility laws
 
@@ -7,8 +9,10 @@ to canonical native play under a full owner-policy replacement.  They contain
 no reduced replacement witness, preference comparison, or coverage claim.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDLocalReduction
-import GameTheory.Experimental.PostArchitecture.MAIDUtilityAugmentation
+public import GameTheory.Experimental.PostArchitecture.MAIDLocalReduction
+public import GameTheory.Experimental.PostArchitecture.MAIDUtilityAugmentation
+
+@[expose] public section
 
 noncomputable section
 

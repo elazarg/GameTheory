@@ -1,3 +1,5 @@
+module
+
 /-
 # General typed, site-local MAID frontier semantics
 
@@ -8,8 +10,10 @@ frontier by one dependent finite product. The public laws validate this
 representation and its exact compiled-EFG semantics.
 -/
 
-import GameTheory.Math.Probability.Product
-import GameTheory.Math.DAG
+public import GameTheory.Math.Probability.Product
+public import GameTheory.Math.DAG
+
+@[expose] public section
 
 noncomputable section
 

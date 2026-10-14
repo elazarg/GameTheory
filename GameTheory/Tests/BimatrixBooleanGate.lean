@@ -1,4 +1,8 @@
-import GameTheory.Finite.BimatrixBooleanGate
+module
+
+public import GameTheory.Finite.BimatrixBooleanGate
+
+@[expose] public section
 
 /-! Both Boolean outputs occur in accepted certificates for a conjunction that
 reads the same input twice. The gate theorem applies without distinct-input assumptions. -/

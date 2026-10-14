@@ -1,3 +1,5 @@
+module
+
 /-
 # Strategic-form compilation
 
@@ -25,9 +27,11 @@ knows about strategies and induced laws; it introduces no protocol-specific
 equilibrium predicate.
 -/
 
-import GameTheory.Protocol.Extraction
-import GameTheory.Protocol.Information
-import GameTheory.Core.Form
+public import GameTheory.Protocol.Extraction
+public import GameTheory.Protocol.Information
+public import GameTheory.Core.Form
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: division-free conditional independence
 
@@ -11,9 +13,11 @@ unrestricted. It introduces neither a Bayesian-network evaluator nor a
 positivity convention.
 -/
 
-import GameTheory.Math.Probability.Support
-import Mathlib.Probability.ProbabilityMassFunction.Constructions
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Math.Probability.Support
+public import Mathlib.Probability.ProbabilityMassFunction.Constructions
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

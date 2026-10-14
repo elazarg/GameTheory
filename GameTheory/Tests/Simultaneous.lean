@@ -1,3 +1,5 @@
+module
+
 /-
 # The simultaneous-action slice
 
@@ -16,8 +18,10 @@ That is the classical reason a game tree needs information sets before it can
 represent a simultaneous move. Here it is a theorem about strategy counts.
 -/
 
-import GameTheory.Protocol.Tree
-import GameTheory.Protocol.Execution
+public import GameTheory.Protocol.Tree
+public import GameTheory.Protocol.Execution
+
+@[expose] public section
 
 noncomputable section
 

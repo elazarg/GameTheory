@@ -1,3 +1,5 @@
+module
+
 /-
 # General-PMF sequential gate
 
@@ -9,10 +11,12 @@ Under EXP-147's extended expectation the divergent incumbent is worth `⊤`, a
 defined value, so with no alternatives it is locally optimal.
 -/
 
-import GameTheory.Protocol.Information
-import GameTheory.Protocol.Context
-import GameTheory.Protocol.BehavioralBayes
-import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
+public import GameTheory.Protocol.Information
+public import GameTheory.Protocol.Context
+public import GameTheory.Protocol.BehavioralBayes
+public import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
+
+@[expose] public section
 
 noncomputable section
 
@@ -114,6 +118,7 @@ theorem rootLaw :
 
 abbrev rootHistory : canonicalDecision.History := ⟨.root, .start⟩
 
+set_option backward.proofsInPublic true in
 abbrev earlyHistory (n : ℕ) (hn0 : n ≠ 0) (hn : Even n) :
     canonicalDecision.History :=
   rootHistory.extend rootLegal (by
@@ -122,6 +127,7 @@ abbrev earlyHistory (n : ℕ) (hn0 : n ≠ 0) (hn : Even n) :
     rw [rootLaw, PMF.mem_support_map_iff]
     exact ⟨n, (geometric_positive n).ne', by simp [hn0, hn]⟩)
 
+set_option backward.proofsInPublic true in
 abbrev chanceHistory (n : ℕ) (hn : ¬ Even n) :
     canonicalDecision.History :=
   rootHistory.extend rootLegal (by
@@ -134,6 +140,7 @@ abbrev chanceHistory (n : ℕ) (hn : ¬ Even n) :
       exact hn (by decide)
     exact ⟨n, (geometric_positive n).ne', by simp [hn0, hn]⟩)
 
+set_option backward.proofsInPublic true in
 abbrev lateHistory (n m : ℕ) (hn : ¬ Even n) :
     canonicalDecision.History :=
   (chanceHistory n hn).extend (chanceLegal n) (by
@@ -373,6 +380,7 @@ theorem lateHistory_reached (law : PMF ℕ) (n m : ℕ)
     ⟨chanceHistory n hn, chanceHistory_reached law n hn,
       lateHistory_reached_from_chance law n m hn⟩
 
+set_option backward.proofsInPublic true in
 abbrev rootExitHistory : canonicalDecision.History :=
   rootHistory.extend rootLegal (by
     show DecisionScene.done 0 0 0 ∈
@@ -857,6 +865,7 @@ theorem rootGoLegal : execution.Legal .root (fun _ => some true) := by
     cases i
     simp [IsLegalJoint, execution, info]
 
+set_option backward.proofsInPublic true in
 abbrev secondHistory : execution.History :=
   execution.initHistory.extend rootGoLegal (by
     show Scene.second ∈

@@ -1,5 +1,9 @@
-import Complexitylib.Circuits.Encoding.Shift
-import Complexitylib.Circuits.Encoding.Fragment
+module
+
+public import Complexitylib.Circuits.Encoding.Shift
+public import Complexitylib.Circuits.Encoding.Fragment
+
+@[expose] public section
 
 /-! Raw prefix restriction uses constant gates and copies of the live inputs to
 recreate the original input order. Wire relocation preserves malformed-reference

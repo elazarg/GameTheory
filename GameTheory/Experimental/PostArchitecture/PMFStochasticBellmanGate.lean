@@ -1,3 +1,5 @@
+module
+
 /-
 EXP-138: the stationary Bellman predicate uses actual one-step laws on
 infinite states. An unrelated pure joint action has divergent continuation
@@ -9,8 +11,10 @@ so a unilateral deviation into it defeats the Bellman predicate because it is
 infinitely profitable rather than because its value is undefined.
 -/
 
-import GameTheory.Stochastic.OneStep
-import GameTheory.Experimental.PostArchitecture.PMFStaticGate
+public import GameTheory.Stochastic.OneStep
+public import GameTheory.Experimental.PostArchitecture.PMFStaticGate
+
+@[expose] public section
 
 noncomputable section
 

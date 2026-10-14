@@ -1,8 +1,12 @@
-import Complexitylib.Circuits.Encoding.Machine.Core
-import Complexitylib.Classes.PCP.Internal.BitwiseFP
-import Complexitylib.Classes.P.Preimage
-import Complexitylib.Classes.P.Pairing
-import Mathlib.Data.List.OfFn
+module
+
+public import Complexitylib.Circuits.Encoding.Machine.Core
+public import Complexitylib.Classes.PCP.Internal.BitwiseFP
+public import Complexitylib.Classes.P.Preimage
+public import Complexitylib.Classes.P.Pairing
+public import Mathlib.Data.List.OfFn
+
+@[expose] public section
 
 /-! Serialized vectors of Boolean circuits are evaluated one output bit at a time.
 Every scalar code uses the ordinary tagged circuit codec. Malformed scalar codes

@@ -1,4 +1,10 @@
-import Mathlib.LinearAlgebra.Matrix.Determinant.Bird.Correctness
+module
+
+public import Mathlib.LinearAlgebra.Matrix.Determinant.Bird.Correctness
+import all Mathlib.LinearAlgebra.Matrix.Determinant.Bird.Defs
+public import Mathlib.Algebra.Order.BigOperators.Group.LocallyFinite
+
+@[expose] public section
 
 /-! # Bird determinants with materialized recurrence stages
 

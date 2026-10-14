@@ -1,3 +1,5 @@
+module
+
 /-
 # Uniform tightness of discrete probability-law families
 
@@ -5,7 +7,9 @@ Finite sets capture nearly all mass uniformly across a sequence of ordinary
 PMFs. The family index and ambient outcome type need not be countable.
 -/
 
-import GameTheory.Math.Probability.Expectation
+public import GameTheory.Math.Probability.Expectation
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Pseudo-Nash against expected-utility concepts
 
@@ -22,11 +24,13 @@ Primary reference: A. Psomas, A. Terzoglou, Y. Wei, and V. Zikas,
 “Pseudo-Equilibria, or: How to Stop Worrying About Crypto and Just Analyze the
 Game,” arXiv:2506.22089 (2025).
 -/
-import GameTheory.Core.Approximate
-import GameTheory.Core.ExpectedUtility
-import GameTheory.Core.PseudoNashCoalition
-import GameTheory.Core.PseudoNashTolerance
-import GameTheory.Math.Probability.MeanComparisonExpectation
+public import GameTheory.Core.Approximate
+public import GameTheory.Core.ExpectedUtility
+public import GameTheory.Core.PseudoNashCoalition
+public import GameTheory.Core.PseudoNashTolerance
+public import GameTheory.Math.Probability.MeanComparisonExpectation
+
+@[expose] public section
 
 noncomputable section
 

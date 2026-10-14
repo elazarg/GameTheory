@@ -1,3 +1,5 @@
+module
+
 /-
 # Optimal decisions under a fixed payoff
 
@@ -14,9 +16,11 @@ the optimal-witness transport. Reporting utilities characterize universal
 preservation when the retained fact has a finite reporting menu.
 -/
 
-import GameTheory.Protocol.DecisionExperiment
-import GameTheory.Math.Probability.ExpectationCommutation
-import GameTheory.Math.Probability.Bounds
+public import GameTheory.Protocol.DecisionExperiment
+public import GameTheory.Math.Probability.ExpectationCommutation
+public import GameTheory.Math.Probability.Bounds
+
+@[expose] public section
 
 noncomputable section
 namespace GameTheory.DecisionExperiment

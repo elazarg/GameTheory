@@ -1,3 +1,5 @@
+module
+
 /-
 # The pure embedding as a PMF-mixture simulation
 
@@ -5,8 +7,10 @@ Every mixed deviation is already a PMF over pure deviations. Integration of
 each actual randomized deviation remains the separate numerical condition.
 -/
 
-import GameTheory.Core.Mixed
-import GameTheory.Core.MixtureSimulation
+public import GameTheory.Core.Mixed
+public import GameTheory.Core.MixtureSimulation
+
+@[expose] public section
 
 noncomputable section
 

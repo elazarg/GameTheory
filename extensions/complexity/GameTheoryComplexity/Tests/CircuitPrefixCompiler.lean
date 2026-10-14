@@ -1,4 +1,10 @@
-import GameTheoryComplexity.Backend.CircuitPrefixCompiler
+module
+
+public import GameTheoryComplexity.Backend.CircuitPrefixCompiler
+
+import Complexitylib.Classes.P.Cobham.Internal.StringOps
+
+@[expose] public section
 
 /-! Shared-gate and malformed-input controls for serialized prefix compilation. -/
 

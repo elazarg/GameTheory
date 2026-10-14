@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.CircuitCodeRestriction
-import GameTheoryComplexity.Backend.CircuitCodeValidation
+module
+
+public import GameTheoryComplexity.Backend.CircuitCodeRestriction
+public import GameTheoryComplexity.Backend.CircuitCodeValidation
+
+@[expose] public section
 
 /-! Polynomial-time hardwiring of serialized raw circuits. Exact syntax validation
 rejects malformed inputs, and explicit guards prevent empty circuits or zero live

@@ -1,5 +1,9 @@
-import GameTheory.Math.CanonicalDictionary
-import Mathlib.Tactic.LinearCombination
+module
+
+public import GameTheory.Math.CanonicalDictionary
+public import Mathlib.Tactic.LinearCombination
+
+@[expose] public section
 
 /-! # Orientations of adjacent basis facets
 

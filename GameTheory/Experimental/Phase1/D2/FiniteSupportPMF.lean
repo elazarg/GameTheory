@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-003 candidate A: a PMF carrying finite support
 
@@ -5,8 +7,10 @@ This candidate tests a PMF subtype carrying explicit finite support together
 with the operations and expectation laws needed by the core.
 -/
 
-import Mathlib.Analysis.Convex.StdSimplex
-import Mathlib.Probability.ProbabilityMassFunction.Integrals
+public import Mathlib.Analysis.Convex.StdSimplex
+public import Mathlib.Probability.ProbabilityMassFunction.Integrals
+
+@[expose] public section
 
 noncomputable section
 

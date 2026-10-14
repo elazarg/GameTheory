@@ -1,3 +1,5 @@
+module
+
 /-
 # `GameTheory.Analysis.Repeated`
 
@@ -7,8 +9,10 @@ discounted folk theorem. Neither `GameTheory.Repeated` nor Protocol imports
 this root.
 -/
 
-import GameTheory.Analysis.Repeated.Feasible
-import GameTheory.Analysis.Repeated.Folk
+public import GameTheory.Analysis.Repeated.Feasible
+public import GameTheory.Analysis.Repeated.Folk
+
+@[expose] public section
 
 namespace GameTheory.Analysis.Repeated
 

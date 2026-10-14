@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.BinaryWordSubtraction
-import Complexitylib.Classes.P.Pairing
-import GameTheory.Math.BinaryExtraction
+module
+
+public import GameTheoryComplexity.Backend.BinaryWordSubtraction
+public import Complexitylib.Classes.P.Pairing
+public import GameTheory.Math.BinaryExtraction
+
+@[expose] public section
 
 /-! Exact binary ratio extraction by bounded word arithmetic.
 The precision ruler controls every iteration. A numerator exceeding its denominator

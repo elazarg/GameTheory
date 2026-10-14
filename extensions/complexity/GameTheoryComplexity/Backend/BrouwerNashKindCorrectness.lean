@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BrouwerNashSampleKind
-import GameTheoryComplexity.Backend.BrouwerNashProgram
+module
+
+public import GameTheoryComplexity.Backend.BrouwerNashSampleKind
+public import GameTheoryComplexity.Backend.BrouwerNashProgram
+
+@[expose] public section
 
 /-! Exact comparator flags for the non-color regions of the canonical Brouwer feedback program. -/
 namespace GameTheory.Complexity.Backend.BrouwerNashKindCorrectness

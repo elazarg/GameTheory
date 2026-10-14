@@ -1,6 +1,10 @@
-import GameTheory.Core.SatisfiabilityGame
-import Mathlib.Logic.Equiv.Fin.Basic
-import Mathlib.Logic.Equiv.Prod
+module
+
+public import GameTheory.Core.SatisfiabilityGame
+public import Mathlib.Logic.Equiv.Fin.Basic
+public import Mathlib.Logic.Equiv.Prod
+
+@[expose] public section
 
 /-! Explicit row indices for the literal/clause game: positive literals,
 negative literals, variables, clauses, and the fallback action. -/

@@ -1,5 +1,9 @@
-import GameTheory.Math.IntegerDictionaryComputation
-import GameTheory.Math.FiniteLexicographicCompare
+module
+
+public import GameTheory.Math.IntegerDictionaryComputation
+public import GameTheory.Math.FiniteLexicographicCompare
+
+@[expose] public section
 
 /-! Executable integer Cramer checks characterize strict lexicographic
 feasibility of the rational symbolic dictionary with unit right-hand side.

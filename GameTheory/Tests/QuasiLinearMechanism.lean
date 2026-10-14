@@ -1,3 +1,5 @@
+module
+
 /-
 Hostile quasilinear direct-mechanism fixture.
 
@@ -7,7 +9,9 @@ allocation rule creates a profitable deviation.  This prevents the ownership
 gate from passing through constant allocations, transfers, or utilities.
 -/
 
-import GameTheory.Mechanism.QuasiLinear
+public import GameTheory.Mechanism.QuasiLinear
+
+@[expose] public section
 
 noncomputable section
 

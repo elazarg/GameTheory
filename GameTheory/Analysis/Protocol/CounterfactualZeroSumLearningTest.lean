@@ -1,3 +1,5 @@
+module
+
 /-
 # Same-trace two-player Protocol regret learning
 
@@ -8,9 +10,12 @@ not constant: both players have a strict improving action, both initial regret
 contributions are positive, and both learned laws move.
 -/
 
-import GameTheory.Analysis.Protocol.CounterfactualRootRegret
-import GameTheory.Analysis.ZeroSumLearning
-import GameTheory.Examples.FOSG
+public import GameTheory.Analysis.Protocol.CounterfactualRootRegret
+public import GameTheory.Analysis.ZeroSumLearning
+public import GameTheory.Examples.FOSG
+import all GameTheory.Examples.FOSG
+
+@[expose] public section
 
 noncomputable section
 

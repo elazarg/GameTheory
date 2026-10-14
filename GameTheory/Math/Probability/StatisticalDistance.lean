@@ -1,3 +1,5 @@
+module
+
 /-
 # Statistical distance of discrete probability laws
 
@@ -8,8 +10,10 @@ payoffs change by at most the distance times their range, and only the values
 on the two laws' supports need bounds. No carrier is assumed finite.
 -/
 
-import GameTheory.Math.Probability.Bounds
-import GameTheory.Math.Probability.Support
+public import GameTheory.Math.Probability.Bounds
+public import GameTheory.Math.Probability.Support
+
+@[expose] public section
 
 noncomputable section
 

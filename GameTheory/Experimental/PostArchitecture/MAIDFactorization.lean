@@ -1,3 +1,5 @@
+module
+
 /-
 # Canonical MAID finite-BN factorization
 
@@ -6,9 +8,11 @@ algebra in `FiniteBNGlobalMarkov`.  It reuses `assignmentRun` and its exact
 native-execution equivalence; no second evaluator is introduced.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
-import GameTheory.Experimental.PostArchitecture.MAIDRequisiteObservation
-import GameTheory.Languages.MAID.Strategic
+public import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
+public import GameTheory.Experimental.PostArchitecture.MAIDRequisiteObservation
+public import GameTheory.Languages.MAID.Strategic
+
+@[expose] public section
 
 noncomputable section
 

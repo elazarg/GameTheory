@@ -1,5 +1,9 @@
-import GameTheoryComplexity.PPAD
-import GameTheoryComplexity.Tests.RawEndOfLine
+module
+
+public import GameTheoryComplexity.PPAD
+public import GameTheoryComplexity.Tests.RawEndOfLine
+
+@[expose] public section
 
 /-! Source-aware decoding recovers a raw answer when endpoint search returns an
 empty invalid-promise witness, and retains ordinary endpoint solutions. -/

@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-107: graph-free target-site observation reduction
 
@@ -11,8 +13,10 @@ at an arbitrary reduced owner policy.
 No graph criterion, deviation coverage, or equilibrium claim is made here.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDKernelMarginalization
-import GameTheory.Experimental.PostArchitecture.MAIDSiteOptimality
+public import GameTheory.Experimental.PostArchitecture.MAIDKernelMarginalization
+public import GameTheory.Experimental.PostArchitecture.MAIDSiteOptimality
+
+@[expose] public section
 
 noncomputable section
 

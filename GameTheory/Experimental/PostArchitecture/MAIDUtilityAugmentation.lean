@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-105: proof-side MAID utility augmentation
 
@@ -11,7 +13,9 @@ Supporting a lower value universe would require lifting base fibers and is
 outside this transport-free slice.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDRequisiteObservation
+public import GameTheory.Experimental.PostArchitecture.MAIDRequisiteObservation
+
+@[expose] public section
 
 noncomputable section
 

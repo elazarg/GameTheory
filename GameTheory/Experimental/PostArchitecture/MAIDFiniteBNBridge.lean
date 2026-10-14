@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: canonical MAID finite-BN bridge
 
@@ -6,8 +8,10 @@ consumed by finite-BN marginalization.  Effective decision parents only remove
 causal edges, so an existing causal topological order remains valid verbatim.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNMarginalization
-import GameTheory.Experimental.PostArchitecture.MAIDFactorization
+public import GameTheory.Experimental.PostArchitecture.FiniteBNMarginalization
+public import GameTheory.Experimental.PostArchitecture.MAIDFactorization
+
+@[expose] public section
 
 noncomputable section
 

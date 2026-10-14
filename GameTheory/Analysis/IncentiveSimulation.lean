@@ -1,3 +1,5 @@
+module
+
 /-
 # Mixture certificates for incentive preservation
 
@@ -24,9 +26,11 @@ statistical distances times the utility range. Bounded utilities make the
 comparison integrable on arbitrary outcome carriers.
 -/
 
-import GameTheory.Analysis.IncentiveHierarchy
-import GameTheory.Math.Probability.ExpectationMixture
-import GameTheory.Math.Probability.StatisticalDistance
+public import GameTheory.Analysis.IncentiveHierarchy
+public import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Math.Probability.StatisticalDistance
+
+@[expose] public section
 
 noncomputable section
 

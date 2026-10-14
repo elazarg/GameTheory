@@ -1,5 +1,9 @@
-import Mathlib.Data.Nat.Factorial.Basic
-import Mathlib.Tactic.Ring
+module
+
+public import Mathlib.Data.Nat.Factorial.Basic
+public import Mathlib.Tactic.Ring
+
+@[expose] public section
 
 /-! Polynomial binary widths for factorial coefficient bounds arising from
 finite integer linear systems. -/

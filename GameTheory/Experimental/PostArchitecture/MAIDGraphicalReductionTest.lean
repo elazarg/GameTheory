@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-105: hostile consumer for graphical MAID reduction
 
@@ -8,8 +10,10 @@ rival relays the signal, the open route through the rival makes the same
 observation requisite and enables a profitable full deviation.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDGraphicalReduction
-import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Experimental.PostArchitecture.MAIDGraphicalReduction
+public import GameTheory.Math.Probability.ExpectationMixture
+
+@[expose] public section
 
 noncomputable section
 

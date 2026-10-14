@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-055 witness: real knapsack VCG
 
@@ -6,7 +8,9 @@ The stable definitions live in `GameTheory.Mechanism.Knapsack.Basic` and
 capacity-constrained instance used to validate pivot normalization.
 -/
 
-import GameTheory.Mechanism.Knapsack.Mechanism
+public import GameTheory.Mechanism.Knapsack.Mechanism
+
+@[expose] public section
 
 namespace GameTheory.Experimental.KnapsackVCG
 

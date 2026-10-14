@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-047: mixed cheap talk as public randomization
 
@@ -5,7 +7,9 @@ This experiment is a consumer of the canonical recommendation-law and
 cheap-talk randomization results.
 -/
 
-import GameTheory.Core.CheapTalkRandomization
+public import GameTheory.Core.CheapTalkRandomization
+
+@[expose] public section
 
 noncomputable section
 

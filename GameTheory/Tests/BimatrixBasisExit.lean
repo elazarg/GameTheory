@@ -1,6 +1,10 @@
-import GameTheory.Finite.BimatrixBasisExit
-import Mathlib.Data.Fin.VecNotation
-import Mathlib.Tactic.NormNum
+module
+
+public import GameTheory.Finite.BimatrixBasisExit
+public import Mathlib.Data.Fin.VecNotation
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 /-! Fully tied positive games admit exits for both slack and payoff variables. -/
 

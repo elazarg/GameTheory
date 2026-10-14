@@ -1,6 +1,10 @@
-import GameTheory.Math.OrientedInvolutionPath
-import Mathlib.Data.Fin.VecNotation
-import Mathlib.Tactic.FinCases
+module
+
+public import GameTheory.Math.OrientedInvolutionPath
+public import Mathlib.Data.Fin.VecNotation
+public import Mathlib.Tactic.FinCases
+
+@[expose] public section
 
 /-! An oriented three-edge path alongside an unrelated alternating cycle.
 Only the path's two endpoints fix the incident-edge involution.

@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile finite EFG assessment and equilibrium test
 
@@ -9,12 +11,14 @@ presentation together. A fully mixed Bayes assessment later proves that the
 presentation carries an actual sequential-equilibrium witness.
 -/
 
-import GameTheory.Analysis.Protocol.EFG
-import GameTheory.Math.Probability.Mixture
-import GameTheory.Math.Probability.Product
-import GameTheory.Math.Probability.Support
-import GameTheory.Math.Probability.ExpectationBind
-import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Analysis.Protocol.EFG
+public import GameTheory.Math.Probability.Mixture
+public import GameTheory.Math.Probability.Product
+public import GameTheory.Math.Probability.Support
+public import GameTheory.Math.Probability.ExpectationBind
+public import GameTheory.Math.Probability.ExpectationMixture
+
+@[expose] public section
 
 noncomputable section
 

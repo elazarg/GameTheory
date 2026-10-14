@@ -1,5 +1,9 @@
-import GameTheory.Math.Probability.ExpectationCommutation
-import GameTheory.Math.Probability.ExpectationMixture
+module
+
+public import GameTheory.Math.Probability.ExpectationCommutation
+public import GameTheory.Math.Probability.ExpectationMixture
+
+@[expose] public section
 
 /-! # The payoff component affected by correlation
 

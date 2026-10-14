@@ -1,4 +1,8 @@
-import GameTheory.Math.EndOfLine
+module
+
+public import GameTheory.Math.EndOfLine
+
+@[expose] public section
 
 /-! End-of-Line pointers obtained from two alternating involutions.
 One involution exchanges the two sides of an edge and never fixes a point.

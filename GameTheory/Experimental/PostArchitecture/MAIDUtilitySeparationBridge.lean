@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-105: MAID utility-separation graph bridge
 
@@ -7,8 +9,10 @@ query presentations and supplies only the disjointness facts needed by a later
 global-Markov application.  It makes no semantic or reduction claim.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNMoralSeparation
-import GameTheory.Experimental.PostArchitecture.MAIDRequisiteObservation
+public import GameTheory.Experimental.PostArchitecture.FiniteBNMoralSeparation
+public import GameTheory.Experimental.PostArchitecture.MAIDRequisiteObservation
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Intrinsic selected-solution fixture
 
@@ -6,8 +8,10 @@ The selected fixed point is nonconstant across agents, so the selector cannot
 pass by returning an arbitrary constant profile.
 -/
 
-import GameTheory.Examples.Intrinsic
-import GameTheory.Languages.Intrinsic.Solution
+public import GameTheory.Examples.Intrinsic
+public import GameTheory.Languages.Intrinsic.Solution
+
+@[expose] public section
 
 namespace GameTheory.Tests.IntrinsicSolution
 

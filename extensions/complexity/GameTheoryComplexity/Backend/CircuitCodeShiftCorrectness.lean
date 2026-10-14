@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.CircuitCodeShift
+module
+
+public import GameTheoryComplexity.Backend.CircuitCodeShift
+
+@[expose] public section
 
 /-! Canonical serialized relocation agrees exactly with relocation of raw gates. -/
 

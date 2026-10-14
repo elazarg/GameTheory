@@ -1,4 +1,8 @@
-import GameTheoryComplexity.BimatrixNash
+module
+
+public import GameTheoryComplexity.BimatrixNash
+
+@[expose] public section
 
 /-! Total search controls for honest signed games and malformed encodings. -/
 namespace GameTheory.Complexity.Tests.GeneralBimatrixTotality

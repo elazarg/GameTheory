@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.SpernerCornerMachine
-import GameTheoryComplexity.Backend.CircuitVectorMachine
+module
+
+public import GameTheoryComplexity.Backend.SpernerCornerMachine
+public import GameTheoryComplexity.Backend.CircuitVectorMachine
+
+@[expose] public section
 
 /-! Succinct square-grid Sperner instances consist of a coordinate-width ruler
 and serialized color circuits. Boundary colors are enforced locally. Witnesses

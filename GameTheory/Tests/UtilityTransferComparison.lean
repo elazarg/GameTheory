@@ -1,4 +1,8 @@
-import GameTheory.Tests.UtilitySimulation
+module
+
+public import GameTheory.Tests.UtilitySimulation
+
+@[expose] public section
 
 /-! # Direct and bundled utility-bound composition -/
 

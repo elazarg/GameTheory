@@ -1,6 +1,10 @@
-import GameTheory.Finite.BimatrixBasisBounds
-import GameTheory.Finite.BimatrixComplementaryCertificateBounds
-import GameTheory.Math.IntegerCramerComputation
+module
+
+public import GameTheory.Finite.BimatrixBasisBounds
+public import GameTheory.Finite.BimatrixComplementaryCertificateBounds
+public import GameTheory.Math.IntegerCramerComputation
+
+@[expose] public section
 
 /-! Compact certificates for the equilibrium at a complementary basis.
 One absolute basis determinant clears all coordinates, avoiding a product of

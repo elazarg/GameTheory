@@ -1,3 +1,5 @@
+module
+
 /-
 # Harmonic-energy sequence estimates
 
@@ -7,7 +9,9 @@ arbitrarily small late values, and an `O(1/n)` adjacent-variation bound upgrades
 that recurrence to convergence to zero.
 -/
 
-import Mathlib.Analysis.PSeries
+public import Mathlib.Analysis.PSeries
+
+@[expose] public section
 
 namespace GameTheory.Math
 

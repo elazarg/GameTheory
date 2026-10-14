@@ -1,4 +1,8 @@
-import GameTheory.Core.SatisfiabilityGame
+module
+
+public import GameTheory.Core.SatisfiabilityGame
+
+@[expose] public section
 
 /-! A high-payoff mixed equilibrium of the literal/clause game determines a
 satisfying assignment. Welfare saturation restricts the independent supports to

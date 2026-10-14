@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-107: Forgetful Movie Star source audit
 
@@ -13,8 +15,10 @@ does not dispute the graph theorem or claim that every imperfect-recall
 fixpoint is safe.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
-import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
+public import GameTheory.Math.Probability.ExpectationMixture
+
+@[expose] public section
 
 noncomputable section
 

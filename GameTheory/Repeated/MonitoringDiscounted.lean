@@ -1,3 +1,5 @@
+module
+
 /-
 # Discounted public monitoring
 
@@ -7,13 +9,15 @@ private-action or private-randomization histories are outside this model. The
 one-shot-deviation sufficiency argument lives separately.
 -/
 
-import GameTheory.Repeated.MonitoringPayoff
-import GameTheory.Math.Probability.ExpectationSeries
-import GameTheory.Core.Approximate
-import GameTheory.Math.Discounted
-import Mathlib.Analysis.Normed.Group.InfiniteSum
-import Mathlib.Analysis.SpecificLimits.Basic
-import Mathlib.Topology.Algebra.InfiniteSum.Module
+public import GameTheory.Repeated.MonitoringPayoff
+public import GameTheory.Math.Probability.ExpectationSeries
+public import GameTheory.Core.Approximate
+public import GameTheory.Math.Discounted
+public import Mathlib.Analysis.Normed.Group.InfiniteSum
+public import Mathlib.Analysis.SpecificLimits.Basic
+public import Mathlib.Topology.Algebra.InfiniteSum.Module
+
+@[expose] public section
 
 noncomputable section
 

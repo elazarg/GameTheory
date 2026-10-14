@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-079: intrinsic selected-solution strategic form
 
@@ -6,8 +8,10 @@ static game form and Nash predicate without choosing a temporal execution.
 The hostile sender deviation must re-solve the receiver's downstream action.
 -/
 
-import GameTheory.Examples.Intrinsic
-import GameTheory.Languages.Intrinsic.Strategic
+public import GameTheory.Examples.Intrinsic
+public import GameTheory.Languages.Intrinsic.Strategic
+
+@[expose] public section
 
 noncomputable section
 

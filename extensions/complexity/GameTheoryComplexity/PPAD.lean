@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.RawEndOfLineReduction
-import GameTheoryComplexity.Backend.NormalizedEndOfLineReduction
-import GameTheoryComplexity.Backend.EndOfLineCircuitGeneration
+module
+
+public import GameTheoryComplexity.Backend.RawEndOfLineReduction
+public import GameTheoryComplexity.Backend.NormalizedEndOfLineReduction
+public import GameTheoryComplexity.Backend.EndOfLineCircuitGeneration
+
+@[expose] public section
 
 /-! Polynomial search classification through the standard asymmetric End-of-Line
 relation. Verifiability and balance are independent of solution-preserving

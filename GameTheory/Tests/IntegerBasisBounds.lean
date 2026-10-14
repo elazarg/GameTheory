@@ -1,7 +1,11 @@
-import GameTheory.Math.IntegerBasisBounds
-import Mathlib.Data.Fin.VecNotation
-import Mathlib.Tactic.FinCases
-import Mathlib.Tactic.NormNum
+module
+
+public import GameTheory.Math.IntegerBasisBounds
+public import Mathlib.Data.Fin.VecNotation
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 /-! Signed determinants and reduced rational solutions satisfy the advertised binary width. -/
 

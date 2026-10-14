@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.NashRealSupport
-import GameTheoryComplexity.Backend.BoundedSupportWitness
-import GameTheory.Finite.BimatrixNashCertificateCorrectness
+module
+
+public import GameTheoryComplexity.Backend.NashRealSupport
+public import GameTheoryComplexity.Backend.BoundedSupportWitness
+public import GameTheory.Finite.BimatrixNashCertificateCorrectness
+
+@[expose] public section
 
 /-! Payoff-constrained mixed Nash equilibria admit exact integer numerator
 certificates with a polynomial number of bits per field. -/

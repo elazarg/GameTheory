@@ -1,6 +1,10 @@
-import GameTheory.Math.FiniteBasisExchange
-import Mathlib.Data.Fin.VecNotation
-import Mathlib.Tactic.NormNum
+module
+
+public import GameTheory.Math.FiniteBasisExchange
+public import Mathlib.Data.Fin.VecNotation
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 /-! Canonical basis labels survive exchanges that reorder the columns. -/
 

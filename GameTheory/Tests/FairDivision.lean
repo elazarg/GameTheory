@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile finite fair-division fixture
 
@@ -8,8 +10,10 @@ also specialize the general canonical round-robin completeness and EF1
 theorems.
 -/
 
-import GameTheory.Mechanism.FairDivision
-import Mathlib.Tactic.Linarith
+public import GameTheory.Mechanism.FairDivision
+public import Mathlib.Tactic.Linarith
+
+@[expose] public section
 
 noncomputable section
 

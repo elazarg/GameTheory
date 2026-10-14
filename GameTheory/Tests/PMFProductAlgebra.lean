@@ -1,5 +1,9 @@
-import GameTheory.Math.Probability.Joint
-import GameTheory.Math.Probability.Product
+module
+
+public import GameTheory.Math.Probability.Joint
+public import GameTheory.Math.Probability.Product
+
+@[expose] public section
 
 noncomputable section
 

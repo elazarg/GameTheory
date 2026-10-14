@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinaryBirdDeterminantMachine
+module
+
+public import GameTheoryComplexity.Backend.BinaryBirdDeterminantMachine
+
+@[expose] public section
 
 /-! Kernel controls for fixed-width, materialized determinant stages. -/
 namespace GameTheory.Complexity.Tests.BinaryBirdDeterminantMachine

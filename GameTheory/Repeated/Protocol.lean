@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite repeated play through Protocol
 
@@ -7,8 +9,10 @@ history runner. The protocol state is exactly the publicly observed prefix, so
 its information model hides nothing and adds no second transition semantics.
 -/
 
-import GameTheory.Repeated.Basic
-import GameTheory.Protocol.Strategic
+public import GameTheory.Repeated.Basic
+public import GameTheory.Protocol.Strategic
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Local counterfactual regret matching
 
@@ -7,8 +9,10 @@ squared-distance estimate and asymptotic approach to the nonpositive orthant.
 It is local learning at one information site, not global CFR exploitability.
 -/
 
-import GameTheory.Analysis.Approachability
-import GameTheory.Analysis.Protocol.CounterfactualRegret
+public import GameTheory.Analysis.Approachability
+public import GameTheory.Analysis.Protocol.CounterfactualRegret
+
+@[expose] public section
 
 noncomputable section
 

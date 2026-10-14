@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixProblem
-import GameTheory.Finite.BimatrixCramerCertificate
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixProblem
+public import GameTheory.Finite.BimatrixCramerCertificate
+
+@[expose] public section
 
 /-! Serialize the equilibrium at a supplied complementary endpoint.
 The binary word uses the existing relation and preserves the endpoint through

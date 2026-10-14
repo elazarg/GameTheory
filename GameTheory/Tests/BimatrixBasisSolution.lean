@@ -1,5 +1,9 @@
-import GameTheory.Finite.BimatrixBasisSolution
-import Mathlib.Data.Fin.VecNotation
+module
+
+public import GameTheory.Finite.BimatrixBasisSolution
+public import Mathlib.Data.Fin.VecNotation
+
+@[expose] public section
 
 /-! The zero source and a positive complementary terminal basis.
 The terminal chooses both payoff columns of the one-action game; its ambient

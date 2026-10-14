@@ -1,10 +1,14 @@
-import GameTheory.Math.LinearComplementarity
-import GameTheory.Finite.BimatrixCertificate
-import Mathlib.Algebra.BigOperators.Group.Finset.Pi
-import Mathlib.Algebra.Order.Field.Basic
-import Mathlib.Data.Rat.Cast.Order
-import Mathlib.Tactic.NormNum
-import Mathlib.Tactic.Ring
+module
+
+public import GameTheory.Math.LinearComplementarity
+public import GameTheory.Finite.BimatrixCertificate
+public import Mathlib.Algebra.BigOperators.Group.Finset.Pi
+public import Mathlib.Algebra.Order.Field.Basic
+public import Mathlib.Data.Rat.Cast.Order
+public import Mathlib.Tactic.NormNum
+public import Mathlib.Tactic.Ring
+
+@[expose] public section
 
 /-! Exact rational complementary points for independent rectangular payoff matrices.
 The zero point is the artificial source. Every other complementary point encoded

@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.SpernerGridCodec
-import GameTheory.Math.GridBrouwerSixthPoints
+module
+
+public import GameTheoryComplexity.Backend.SpernerGridCodec
+public import GameTheory.Math.GridBrouwerSixthPoints
+
+@[expose] public section
 
 /-! Rational square points are encoded by two fixed-width integer numerators.
 The common denominator is six times the grid size. Boundary points are assigned

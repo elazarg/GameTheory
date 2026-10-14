@@ -1,3 +1,5 @@
+module
+
 /-
 # Expected utility and preference
 
@@ -9,12 +11,14 @@ and losses both have infinite expectation has no expected utility and is never
 ranked.
 -/
 
-import GameTheory.Core.Preference
-import GameTheory.Math.Probability.ExpectationBind
-import GameTheory.Math.Probability.ExpectationAlgebra
-import GameTheory.Math.Probability.ExpectationMap
-import GameTheory.Math.Probability.ExpectationMixture
-import GameTheory.Math.Probability.ExtendedExpectation
+public import GameTheory.Core.Preference
+public import GameTheory.Math.Probability.ExpectationBind
+public import GameTheory.Math.Probability.ExpectationAlgebra
+public import GameTheory.Math.Probability.ExpectationMap
+public import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Math.Probability.ExtendedExpectation
+
+@[expose] public section
 
 noncomputable section
 

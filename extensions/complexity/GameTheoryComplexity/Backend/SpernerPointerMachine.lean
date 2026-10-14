@@ -1,7 +1,11 @@
-import GameTheoryComplexity.Backend.SpernerCornerMachine
-import GameTheoryComplexity.Backend.SpernerCrossMachine
-import GameTheoryComplexity.Backend.SpernerDoorMachine
-import GameTheoryComplexity.Backend.SpernerGridWords
+module
+
+public import GameTheoryComplexity.Backend.SpernerCornerMachine
+public import GameTheoryComplexity.Backend.SpernerCrossMachine
+public import GameTheoryComplexity.Backend.SpernerDoorMachine
+public import GameTheoryComplexity.Backend.SpernerGridWords
+
+@[expose] public section
 
 /-! A composed polynomial-time Sperner pointer reads three corner colors and
 crosses their selected door. Boundary coordinates retain an extra bit; rejected

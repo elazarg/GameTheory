@@ -1,6 +1,10 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
-import GameTheory.Protocol.Zermelo
+public import GameTheory.Protocol.Zermelo
+
+@[expose] public section
 
 /-! # Irreversible failure before a later decision
 

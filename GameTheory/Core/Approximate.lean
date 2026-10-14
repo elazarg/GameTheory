@@ -1,3 +1,5 @@
+module
+
 /-
 # Approximate expected-utility equilibrium
 
@@ -6,7 +8,9 @@ the expected-utility preference relaxed by an additive slack.  Keeping that
 relationship transparent lets every generic Nash theorem continue to apply.
 -/
 
-import GameTheory.Core.Response
+public import GameTheory.Core.Response
+
+@[expose] public section
 
 noncomputable section
 

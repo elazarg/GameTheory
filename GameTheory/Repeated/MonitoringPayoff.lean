@@ -1,3 +1,5 @@
+module
+
 /-
 # Expected payoffs under public monitoring
 
@@ -8,7 +10,9 @@ conditional integration alone does not imply integration of a joint outcome
 law. No law on infinite paths is constructed.
 -/
 
-import GameTheory.Repeated.MonitoringContinuation
+public import GameTheory.Repeated.MonitoringContinuation
+
+@[expose] public section
 
 noncomputable section
 

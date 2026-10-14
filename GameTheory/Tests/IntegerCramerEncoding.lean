@@ -1,7 +1,11 @@
-import GameTheory.Math.IntegerCramerEncoding
-import Mathlib.Data.Fin.VecNotation
-import Mathlib.Tactic.FinCases
-import Mathlib.Tactic.NormNum
+module
+
+public import GameTheory.Math.IntegerCramerEncoding
+public import Mathlib.Data.Fin.VecNotation
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 /-! One determinant denominator avoids multiplying separately reduced denominators. -/
 

@@ -1,3 +1,5 @@
+module
+
 /-
 Hostile affine-maximizer fixture.
 
@@ -7,7 +9,9 @@ strictly better for both types of the active player, so DSIC cannot pass through
 a constant objective, choice, transfer, or utility.
 -/
 
-import GameTheory.Mechanism.AffineMaximizer
+public import GameTheory.Mechanism.AffineMaximizer
+
+@[expose] public section
 
 noncomputable section
 

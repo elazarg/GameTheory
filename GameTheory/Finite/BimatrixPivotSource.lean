@@ -1,6 +1,10 @@
-import GameTheory.Finite.BimatrixComplementarity
-import GameTheory.Math.LexicographicPivot
-import Mathlib.Logic.Equiv.Fin.Basic
+module
+
+public import GameTheory.Finite.BimatrixComplementarity
+public import GameTheory.Math.LexicographicPivot
+public import Mathlib.Logic.Equiv.Fin.Basic
+
+@[expose] public section
 
 /-! The first symbolic pivot of the bimatrix complementarity system.
 

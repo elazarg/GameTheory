@@ -1,3 +1,5 @@
+module
+
 /-
 # Empirical potential recurrences
 
@@ -7,8 +9,10 @@ game, its first-order increment is precisely the step size times the action's
 current deviation gain. Asymptotic estimates live in `Analysis`.
 -/
 
-import GameTheory.Core.FictitiousPlay
-import GameTheory.Core.MixedPotential
+public import GameTheory.Core.FictitiousPlay
+public import GameTheory.Core.MixedPotential
+
+@[expose] public section
 
 noncomputable section
 

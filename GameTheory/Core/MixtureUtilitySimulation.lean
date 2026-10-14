@@ -1,7 +1,11 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
-import GameTheory.Core.MixtureSimulation
-import GameTheory.Core.UtilitySimulation
+public import GameTheory.Core.MixtureSimulation
+public import GameTheory.Core.UtilitySimulation
+
+@[expose] public section
 
 /-! # From PMF-mixture laws to unilateral utility coverage -/
 

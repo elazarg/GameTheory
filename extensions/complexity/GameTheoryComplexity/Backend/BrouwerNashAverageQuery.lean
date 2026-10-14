@@ -1,9 +1,13 @@
-import GameTheoryComplexity.Backend.BrouwerNashCoefficientQuery
-import GameTheoryComplexity.Backend.BrouwerNashProgram
-import GameTheoryComplexity.Backend.BrouwerNashHeaders
-import GameTheoryComplexity.Backend.BinarySignedIndicator
-import GameTheoryComplexity.Backend.BinaryUnaryEncoding
-import GameTheoryComplexity.Backend.BinarySignedFiniteSum
+module
+
+public import GameTheoryComplexity.Backend.BrouwerNashCoefficientQuery
+public import GameTheoryComplexity.Backend.BrouwerNashProgram
+public import GameTheoryComplexity.Backend.BrouwerNashHeaders
+public import GameTheoryComplexity.Backend.BinarySignedIndicator
+public import GameTheoryComplexity.Backend.BinaryUnaryEncoding
+public import GameTheoryComplexity.Backend.BinarySignedFiniteSum
+
+@[expose] public section
 
 namespace GameTheory.Complexity.Backend.BrouwerNashAverageQuery
 open _root_.Complexity _root_.Complexity.Cobham

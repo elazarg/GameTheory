@@ -1,3 +1,5 @@
+module
+
 /-
 # Multi-agent influence diagrams
 
@@ -7,4 +9,6 @@ The concrete three-node validation fixture lives explicitly under
 `GameTheory.Experimental.PostArchitecture.MAIDThreeNodeWitness`.
 -/
 
-import GameTheory.Languages.MAID.General
+public import GameTheory.Languages.MAID.General
+
+@[expose] public section

@@ -1,3 +1,5 @@
+module
+
 /-
 # Welfare-maximizing knapsack mechanism
 
@@ -5,8 +7,10 @@ Mechanism and equilibrium semantics reuse the canonical auction report,
 profile update, VCG, and Nash surfaces.
 -/
 
-import GameTheory.Mechanism.Knapsack.Basic
-import GameTheory.Mechanism.Groves
+public import GameTheory.Mechanism.Knapsack.Basic
+public import GameTheory.Mechanism.Groves
+
+@[expose] public section
 
 noncomputable section
 

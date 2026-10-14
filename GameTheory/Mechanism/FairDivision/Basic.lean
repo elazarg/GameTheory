@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite indivisible fair division
 
@@ -7,10 +9,12 @@ certificate; neither carrier finiteness nor decidable equality is stored in
 the allocation itself.
 -/
 
-import GameTheory.Mechanism.Combinatorial.Basic
-import Mathlib.Algebra.Order.BigOperators.Group.Finset
-import Mathlib.Data.Fintype.Pi
-import Mathlib.Tactic.FinCases
+public import GameTheory.Mechanism.Combinatorial.Basic
+public import Mathlib.Algebra.Order.BigOperators.Group.Finset
+public import Mathlib.Data.Fintype.Pi
+public import Mathlib.Tactic.FinCases
+
+@[expose] public section
 
 namespace GameTheory.Mechanism.FairDivision
 

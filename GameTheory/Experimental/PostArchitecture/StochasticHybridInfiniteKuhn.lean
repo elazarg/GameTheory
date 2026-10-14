@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-119: hybrid unilateral infinite-policy Kuhn
 
@@ -8,9 +10,11 @@ deviation. The two consumers keep the opponents genuinely present and exercise
 both heterogeneous unilateral quantifiers.
 -/
 
-import GameTheory.Stochastic.Kuhn
-import GameTheory.Protocol.Predraw
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Stochastic.Kuhn
+public import GameTheory.Protocol.Predraw
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

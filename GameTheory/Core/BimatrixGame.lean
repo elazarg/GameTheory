@@ -1,7 +1,11 @@
-import GameTheory.Core.MatrixGame
-import GameTheory.Core.Mixed
-import GameTheory.Math.Probability.ExpectationComposition
-import GameTheory.Math.Probability.JointMap
+module
+
+public import GameTheory.Core.MatrixGame
+public import GameTheory.Core.Mixed
+public import GameTheory.Math.Probability.ExpectationComposition
+public import GameTheory.Math.Probability.JointMap
+
+@[expose] public section
 
 /-! Two payoff matrices share the canonical row/column game form. Independent
 mixed play and its pure-deviation tests are expressed using ordinary PMFs. -/

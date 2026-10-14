@@ -1,3 +1,5 @@
+module
+
 /-
 # Probes for the strategic-form compilation
 
@@ -10,12 +12,14 @@ check that static mixing agrees with behavioral play exactly where the
 compiler's hypotheses say it does.
 -/
 
-import GameTheory.Protocol.Strategic
-import GameTheory.Protocol.StrategicRealization
-import GameTheory.Core.Utility
-import GameTheory.Tests.Execution
-import GameTheory.Tests.Information
-import GameTheory.Tests.Randomized
+public import GameTheory.Protocol.Strategic
+public import GameTheory.Protocol.StrategicRealization
+public import GameTheory.Core.Utility
+public import GameTheory.Tests.Execution
+public import GameTheory.Tests.Information
+public import GameTheory.Tests.Randomized
+
+@[expose] public section
 
 noncomputable section
 

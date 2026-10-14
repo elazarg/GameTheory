@@ -1,4 +1,8 @@
-import GameTheory.Math.GridWireCrossings
+module
+
+public import GameTheory.Math.GridWireCrossings
+
+@[expose] public section
 
 /-! Translation places a crossing switch in its existing grid neighborhood.
 The coordinate decoder identifies exactly the nine nodes of the switch. -/

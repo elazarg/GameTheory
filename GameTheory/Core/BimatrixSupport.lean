@@ -1,4 +1,8 @@
-import GameTheory.Core.BimatrixGame
+module
+
+public import GameTheory.Core.BimatrixGame
+
+@[expose] public section
 
 /-! Pure actions in the support of a bimatrix Nash equilibrium attain the
 incumbent expected payoff. These equalities give linear constraints once the

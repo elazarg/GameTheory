@@ -1,3 +1,5 @@
+module
+
 /-
 # General MAID bridge fixture
 
@@ -7,7 +9,9 @@ pure policies induce different assignment laws, so the bridge cannot pass by
 ignoring the decision node.
 -/
 
-import GameTheory.Languages.MAID.Strategic
+public import GameTheory.Languages.MAID.Strategic
+
+@[expose] public section
 
 noncomputable section
 

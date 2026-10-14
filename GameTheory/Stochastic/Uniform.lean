@@ -1,3 +1,5 @@
+module
+
 /-
 # Uniform equilibrium in stochastic games
 
@@ -8,9 +10,11 @@ The payoff-level property may choose a new profile for each accuracy, unlike
 profile. No general existence theorem is claimed here.
 -/
 
-import GameTheory.Stochastic.FiniteHorizon
-import GameTheory.Core.Approximate
-import GameTheory.Math.Eventually
+public import GameTheory.Stochastic.FiniteHorizon
+public import GameTheory.Core.Approximate
+public import GameTheory.Math.Eventually
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,4 +1,8 @@
-import GameTheory.Finite.BimatrixComplementaryCertificateBounds
+module
+
+public import GameTheory.Finite.BimatrixComplementaryCertificateBounds
+
+@[expose] public section
 
 /-! Binary width controls for normalized complementary certificates. -/
 namespace GameTheory.Tests.BimatrixComplementaryCertificateBounds

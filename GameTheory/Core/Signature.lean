@@ -1,3 +1,5 @@
+module
+
 /-
 # Game signatures and profile operations
 
@@ -16,8 +18,10 @@ the lowest sufficient semantic layer, so the executable rational frontend can
 share these operations without pulling real-valued semantics in.
 -/
 
-import Mathlib.Data.Finset.Basic
-import Mathlib.Logic.Function.Basic
+public import Mathlib.Data.Finset.Basic
+public import Mathlib.Logic.Function.Basic
+
+@[expose] public section
 
 namespace GameTheory
 

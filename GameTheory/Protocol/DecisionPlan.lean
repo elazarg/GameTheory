@@ -1,3 +1,5 @@
+module
+
 /-
 # Decision plans
 
@@ -9,7 +11,9 @@ the policy from every history. With finitely many histories the tables are
 finite even when the information carrier is not.
 -/
 
-import GameTheory.Protocol.FiniteInformation
+public import GameTheory.Protocol.FiniteInformation
+
+@[expose] public section
 
 noncomputable section
 

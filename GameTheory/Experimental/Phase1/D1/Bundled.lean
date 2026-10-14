@@ -1,6 +1,10 @@
+module
+
 /- # EXP-002 bundled-signature candidate. -/
 
-import GameTheory.Experimental.Phase1.D1.Indexed
+public import GameTheory.Experimental.Phase1.D1.Indexed
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Mean comparisons under affine maps of payoffs
 
@@ -8,7 +10,9 @@ under per-size positive affine rescaling. Shifting one side only is shifting the
 other side the opposite way, which is how payoff tolerances enter mean tests.
 Point masses compare deterministically.
 -/
-import GameTheory.Math.Probability.Indistinguishability
+public import GameTheory.Math.Probability.Indistinguishability
+
+@[expose] public section
 
 noncomputable section
 

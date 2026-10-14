@@ -1,8 +1,12 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixDictionary
-import GameTheoryComplexity.Backend.BinaryDictionaryFeasibility
-import GameTheoryComplexity.Backend.BimatrixNodeWord
-import GameTheoryComplexity.Backend.GeneralBimatrixVerifierMachine
-import GameTheoryComplexity.Backend.GeneralBimatrixVerifierCorrectness
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixDictionary
+public import GameTheoryComplexity.Backend.BinaryDictionaryFeasibility
+public import GameTheoryComplexity.Backend.BimatrixNodeWord
+public import GameTheoryComplexity.Backend.GeneralBimatrixVerifierMachine
+public import GameTheoryComplexity.Backend.GeneralBimatrixVerifierCorrectness
+
+@[expose] public section
 
 /-! Arithmetic and syntactic validation of complementary path words.
 The same reconstructed integer dictionary drives feasibility and later pivots. -/

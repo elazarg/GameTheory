@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.BinaryBirdDeterminantCorrectness
-import GameTheoryComplexity.Backend.BinaryCramerMachine
-import GameTheory.Math.IntegerCramerComputation
+module
+
+public import GameTheoryComplexity.Backend.BinaryBirdDeterminantCorrectness
+public import GameTheoryComplexity.Backend.BinaryCramerMachine
+public import GameTheory.Math.IntegerCramerComputation
+
+@[expose] public section
 
 /-! Packed Cramer computation agrees with integer column replacement and signed Cramer fields. -/
 

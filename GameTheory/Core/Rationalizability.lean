@@ -1,3 +1,5 @@
+module
+
 /-
 # Correlated and independent rationalizability
 
@@ -17,8 +19,10 @@ Reference: A. Brandenburger and E. Dekel, “Rationalizability and Correlated
 Equilibria,” *Econometrica* 55 (1987), 1391–1402, DOI: 10.2307/1913562.
 -/
 
-import GameTheory.Core.Mixed
-import GameTheory.Core.Response
+public import GameTheory.Core.Mixed
+public import GameTheory.Core.Response
+
+@[expose] public section
 
 noncomputable section
 

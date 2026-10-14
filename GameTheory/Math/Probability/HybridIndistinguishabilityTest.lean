@@ -1,10 +1,14 @@
+module
+
 /-
 # Consumers and limits of uniform hybrid bounds
 
 Exponential adjacent bounds tolerate polynomially many steps. A moving jump
 shows why negligible differences for each fixed hybrid index are insufficient.
 -/
-import GameTheory.Math.Probability.HybridIndistinguishability
+public import GameTheory.Math.Probability.HybridIndistinguishability
+
+@[expose] public section
 
 noncomputable section
 

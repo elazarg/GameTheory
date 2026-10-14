@@ -1,3 +1,5 @@
+module
+
 /-
 # General MAID strategic and equilibrium transfer
 
@@ -7,10 +9,12 @@ players. The native frontier evaluator and the compiled EFG are presented as
 ordinary `GameForm`s over those source-player coordinates.
 -/
 
-import GameTheory.Languages.MAID.FrontierEquivalence
-import GameTheory.Protocol.Strategic
-import GameTheory.Core.Approximate
-import GameTheory.Core.Utility
+public import GameTheory.Languages.MAID.FrontierEquivalence
+public import GameTheory.Protocol.Strategic
+public import GameTheory.Core.Approximate
+public import GameTheory.Core.Utility
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: hostile heterogeneous chain consumer
 
@@ -7,7 +9,9 @@ separates the endpoints; removing that evidence exposes both the graph path
 and the induced endpoint dependence.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDGlobalMarkovSoundness
+public import GameTheory.Experimental.PostArchitecture.MAIDGlobalMarkovSoundness
+
+@[expose] public section
 
 noncomputable section
 

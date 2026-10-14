@@ -1,3 +1,5 @@
+module
+
 /-
 # Single-party security does not carry strong pseudo-Nash
 
@@ -9,8 +11,10 @@ equilibrium of the compiled game. Hence no class of tests comparing empirical
 means admits a `CoalitionSecureImplementation` of the base game by the channel
 game, whatever the compilation.
 -/
-import GameTheory.Analysis.PseudoNash
-import GameTheory.Tests.CoalitionSimulation
+public import GameTheory.Analysis.PseudoNash
+public import GameTheory.Tests.CoalitionSimulation
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Evolutionary stability and canonical Nash equilibrium
 
@@ -5,9 +7,11 @@ This module is the one-way bridge from the static evolutionary payoff kernel
 to the shared utility-free form and equilibrium predicate.
 -/
 
-import GameTheory.Core.Utility
-import GameTheory.Evolutionary.Basic
-import GameTheory.Evolutionary.Mixed
+public import GameTheory.Core.Utility
+public import GameTheory.Evolutionary.Basic
+public import GameTheory.Evolutionary.Mixed
+
+@[expose] public section
 
 noncomputable section
 

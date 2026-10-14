@@ -1,5 +1,11 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixMatrixWord
-import GameTheoryComplexity.Backend.GeneralBimatrixVerifier
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixMatrixWord
+public import GameTheoryComplexity.Backend.GeneralBimatrixVerifier
+
+import Complexitylib.Classes.P.Cobham.Internal.Extract
+
+@[expose] public section
 
 /-! Binary emission of the certificate at a supplied complementary basis.
 The input contains the already computed determinant and packed dictionary.

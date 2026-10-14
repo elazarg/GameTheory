@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite no-regret learning
 
@@ -16,10 +18,12 @@ Generalization of On-Line Learning,” EuroCOLT 1995; S. Hart and A. Mas-Colell,
 *Econometrica* 68 (2000).
 -/
 
-import GameTheory.Core.Utility
-import GameTheory.Core.Mixed
-import GameTheory.Math.Probability.Uniform
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Core.Utility
+public import GameTheory.Core.Mixed
+public import GameTheory.Math.Probability.Uniform
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

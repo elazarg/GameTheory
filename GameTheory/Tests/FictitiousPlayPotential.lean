@@ -1,3 +1,5 @@
+module
+
 /-
 Hostile finite consumer for empirical potential recurrences.
 
@@ -6,8 +8,10 @@ best action forever.  Its first played gain is one, so the first empirical
 potential step is genuinely nonzero rather than a constant-path tautology.
 -/
 
-import GameTheory.Core.FictitiousPlayPotential
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Core.FictitiousPlayPotential
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

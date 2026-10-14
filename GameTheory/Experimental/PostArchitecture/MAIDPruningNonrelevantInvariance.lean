@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-107: nonrelevant utility invariance under restore-at-target pruning
 
@@ -12,10 +14,12 @@ conditional-independence, utility-factorization, coverage, or equilibrium
 claim.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNKernelInvariance
-import GameTheory.Experimental.PostArchitecture.MAIDPruningConditionalIndependence
-import GameTheory.Experimental.PostArchitecture.MAIDReplacementInvariantUtility
-import GameTheory.Experimental.PostArchitecture.MAIDSiteReplacementContext
+public import GameTheory.Experimental.PostArchitecture.FiniteBNKernelInvariance
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningConditionalIndependence
+public import GameTheory.Experimental.PostArchitecture.MAIDReplacementInvariantUtility
+public import GameTheory.Experimental.PostArchitecture.MAIDSiteReplacementContext
+
+@[expose] public section
 
 noncomputable section
 

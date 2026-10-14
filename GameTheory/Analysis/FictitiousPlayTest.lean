@@ -1,3 +1,5 @@
+module
+
 /-
 Analytic consumer of the finite fictitious-play fixture.
 
@@ -7,10 +9,12 @@ through the shared finite-law convergence interface and the public
 limit-to-Nash theorem.
 -/
 
-import GameTheory.Analysis.Learning
-import GameTheory.Tests.FictitiousPlay
-import Mathlib.Data.Int.CardIntervalMod
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Analysis.Learning
+public import GameTheory.Tests.FictitiousPlay
+public import Mathlib.Data.Int.CardIntervalMod
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

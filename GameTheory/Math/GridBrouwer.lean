@@ -1,8 +1,12 @@
-import GameTheory.Math.GridSperner
-import GameTheory.Math.SpernerGridGeometry
-import Mathlib.Data.Rat.Lemmas
-import Mathlib.Tactic.NormNum
-import Mathlib.Tactic.Linarith
+module
+
+public import GameTheory.Math.GridSperner
+public import GameTheory.Math.SpernerGridGeometry
+public import Mathlib.Data.Rat.Lemmas
+public import Mathlib.Tactic.NormNum
+public import Mathlib.Tactic.Linarith
+
+@[expose] public section
 
 /-! Rational displacement vectors for three-color square-grid labelings.
 At triangle barycenters, zero displacement and sufficiently small residuals

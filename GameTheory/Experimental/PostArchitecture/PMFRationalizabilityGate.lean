@@ -1,3 +1,5 @@
+module
+
 /-
 EXP-132: the product-belief/mixed-dominator integration boundary.
 
@@ -7,8 +9,10 @@ infinite-support belief, while a PMF mixture strictly dominates it at every
 pure opponent action.
 -/
 
-import GameTheory.Core.Rationalizability
-import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
+public import GameTheory.Core.Rationalizability
+public import GameTheory.Experimental.PostArchitecture.PMFRestorationProbe
+
+@[expose] public section
 
 noncomputable section
 

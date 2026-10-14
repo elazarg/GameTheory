@@ -1,7 +1,13 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixProblem
-import GameTheoryComplexity.Backend.GeneralBimatrixVerifierMachine
-import GameTheoryComplexity.Backend.GeneralBimatrixVerifierCorrectness
-import GameTheoryComplexity.Backend.PairedVerifier
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixProblem
+public import GameTheoryComplexity.Backend.GeneralBimatrixVerifierMachine
+public import GameTheoryComplexity.Backend.GeneralBimatrixVerifierCorrectness
+public import GameTheoryComplexity.Backend.PairedVerifier
+
+import Complexitylib.Classes.P.DecisionFn
+
+@[expose] public section
 
 /-! An actual polynomial-time paired-input decider for exact bimatrix certificates. -/
 namespace GameTheory.Complexity.Backend

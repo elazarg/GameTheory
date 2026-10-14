@@ -1,3 +1,5 @@
+module
+
 /-
 # Combinatorial allocation and bundle valuations
 
@@ -6,9 +8,11 @@ surplus-maximizing and frugal selection, and quasi-fields of bundles.  Auction
 bids, payments, and incentive theorems are not claimed by this root.
 -/
 
-import GameTheory.Mechanism.Combinatorial.Basic
-import GameTheory.Mechanism.Combinatorial.Surplus
-import GameTheory.Mechanism.Combinatorial.QuasiField
+public import GameTheory.Mechanism.Combinatorial.Basic
+public import GameTheory.Mechanism.Combinatorial.Surplus
+public import GameTheory.Mechanism.Combinatorial.QuasiField
+
+@[expose] public section
 
 namespace GameTheory.Mechanism.Combinatorial
 

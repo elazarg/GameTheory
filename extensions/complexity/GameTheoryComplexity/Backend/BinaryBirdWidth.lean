@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BinarySignedFixedWidth
-import GameTheory.Math.BirdIterationBounds
+module
+
+public import GameTheoryComplexity.Backend.BinarySignedFixedWidth
+public import GameTheory.Math.BirdIterationBounds
+
+@[expose] public section
 
 /-! Polynomial length rulers for exact division-free matrix arithmetic. -/
 

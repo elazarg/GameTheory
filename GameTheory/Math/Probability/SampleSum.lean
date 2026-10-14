@@ -1,3 +1,5 @@
+module
+
 /-
 # Sums of independent draws
 
@@ -10,8 +12,10 @@ Beyond the convolution algebra, the file bounds the support of a sum and
 computes its second central moment, which yields Chebyshev's inequality for
 the sum of draws from a law of bounded support.
 -/
-import GameTheory.Math.Probability.Bounds
-import GameTheory.Math.Probability.ExpectationBind
+public import GameTheory.Math.Probability.Bounds
+public import GameTheory.Math.Probability.ExpectationBind
+
+@[expose] public section
 
 noncomputable section
 

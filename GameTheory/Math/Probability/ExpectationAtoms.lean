@@ -1,4 +1,8 @@
-import GameTheory.Math.Probability.Bounds
+module
+
+public import GameTheory.Math.Probability.Bounds
+
+@[expose] public section
 
 /-! # Atomic and finite-support expectations -/
 noncomputable section

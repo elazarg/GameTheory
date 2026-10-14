@@ -1,5 +1,9 @@
-import Mathlib.LinearAlgebra.Matrix.NonsingularInverse
-import Mathlib.Algebra.Order.BigOperators.Group.Finset
+module
+
+public import Mathlib.LinearAlgebra.Matrix.NonsingularInverse
+public import Mathlib.Algebra.Order.BigOperators.Group.Finset
+
+@[expose] public section
 
 /-! # Exit directions in nonnegative dictionaries
 

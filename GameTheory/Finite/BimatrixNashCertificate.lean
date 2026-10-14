@@ -1,4 +1,8 @@
-import Mathlib.Algebra.Order.BigOperators.Ring.Finset
+module
+
+public import Mathlib.Algebra.Order.BigOperators.Ring.Finset
+
+@[expose] public section
 
 /-! Integer numerator certificates for payoff-constrained symmetric bimatrix
 equilibria. The verifier uses finite sums and exact integer comparisons. -/

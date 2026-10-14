@@ -1,11 +1,15 @@
-import Mathlib.Data.Rat.Cast.CharZero
-import Mathlib.Data.Int.NatAbs
-import Mathlib.Data.Nat.Cast.Field
-import Mathlib.Algebra.Order.BigOperators.Ring.Finset
-import Mathlib.Algebra.Order.BigOperators.GroupWithZero.Finset
-import Mathlib.Algebra.Order.BigOperators.Group.Finset
-import Mathlib.Algebra.BigOperators.Group.Finset.Piecewise
-import Mathlib.Tactic.FieldSimp
+module
+
+public import Mathlib.Data.Rat.Cast.CharZero
+public import Mathlib.Data.Int.NatAbs
+public import Mathlib.Data.Nat.Cast.Field
+public import Mathlib.Algebra.Order.BigOperators.Ring.Finset
+public import Mathlib.Algebra.Order.BigOperators.GroupWithZero.Finset
+public import Mathlib.Algebra.Order.BigOperators.Group.Finset
+public import Mathlib.Algebra.BigOperators.Group.Finset.Piecewise
+public import Mathlib.Tactic.FieldSimp
+
+@[expose] public section
 
 /-! Natural common-denominator encodings of finite nonnegative rational vectors.
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # The one-shot-deviation principle for public monitoring
 
@@ -9,8 +11,10 @@ the ordinary real payoff series.  No probability law on infinite histories is
 constructed.
 -/
 
-import GameTheory.Repeated.MonitoringDiscounted
-import Mathlib.Analysis.Normed.Group.Tannery
+public import GameTheory.Repeated.MonitoringDiscounted
+public import Mathlib.Analysis.Normed.Group.Tannery
+
+@[expose] public section
 
 noncomputable section
 

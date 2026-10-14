@@ -1,10 +1,14 @@
+module
+
 /-
 Copyright (c) 2026 GameTheory contributors. All rights reserved.
 Released under the Apache 2.0 license as described in the file LICENSE.
 -/
-import Mathlib.Data.Fintype.Basic
-import Mathlib.Topology.Instances.ENNReal.Lemmas
-import Mathlib.Probability.ProbabilityMassFunction.Constructions
+public import Mathlib.Data.Fintype.Basic
+public import Mathlib.Topology.Instances.ENNReal.Lemmas
+public import Mathlib.Probability.ProbabilityMassFunction.Constructions
+
+@[expose] public section
 
 open scoped BigOperators
 

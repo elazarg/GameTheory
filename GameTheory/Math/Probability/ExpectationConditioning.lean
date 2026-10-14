@@ -1,6 +1,10 @@
-import GameTheory.Math.Probability.Conditioning
-import GameTheory.Math.Probability.ExpectationBind
-import GameTheory.Math.Probability.ExpectationAlgebra
+module
+
+public import GameTheory.Math.Probability.Conditioning
+public import GameTheory.Math.Probability.ExpectationBind
+public import GameTheory.Math.Probability.ExpectationAlgebra
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 Bondareva--Shapley hostile fixture.
 
@@ -6,8 +8,10 @@ Every player is therefore covered twice by half, while the weighted coalition
 worth is three halves although the grand coalition is worth only one.
 -/
 
-import GameTheory.Cooperative.Balancedness
-import Mathlib.Tactic
+public import GameTheory.Cooperative.Balancedness
+public import Mathlib.Tactic
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,4 +1,8 @@
-import GameTheory.Analysis.ComponentCompletion
+module
+
+public import GameTheory.Analysis.ComponentCompletion
+
+@[expose] public section
 noncomputable section
 namespace GameTheory.Tests.ComponentCompletion
 open GameTheory GameTheory.Math.Probability

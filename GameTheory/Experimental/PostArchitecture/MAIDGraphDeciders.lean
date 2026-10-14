@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-109: bounded graph-node enumeration and one-step deciders
 
@@ -9,7 +11,9 @@ parameter: a later module can provide its bounded path decider without
 changing these one-step definitions.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
+
+@[expose] public section
 
 noncomputable section
 

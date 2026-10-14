@@ -1,3 +1,5 @@
+module
+
 /-
 # Static evolutionary stability
 
@@ -11,9 +13,11 @@ Primary reference: J. Maynard Smith and G. R. Price, “The Logic of Animal
 Conflict,” *Nature* 246 (1973).
 -/
 
-import Mathlib.Basic.Real.Basic
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.NormNum
+public import Mathlib.Basic.Real.Basic
+public import Mathlib.Tactic.Linarith
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 namespace GameTheory.Evolutionary
 

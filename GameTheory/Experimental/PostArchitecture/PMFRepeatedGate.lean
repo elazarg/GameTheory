@@ -1,3 +1,5 @@
+module
+
 /-
 EXP-133: stage integration and discounted time-series summability are distinct.
 The infinite geometric stage noise has an integrable unbounded payoff at every
@@ -5,9 +7,11 @@ pure action. An exponentially growing repeated action path defeats half-discount
 summability even though all of its individual stages remain integrable.
 -/
 
-import GameTheory.Repeated.Discounted
-import GameTheory.Experimental.PostArchitecture.PMFStaticGate
-import Mathlib.Analysis.SpecificLimits.Normed
+public import GameTheory.Repeated.Discounted
+public import GameTheory.Experimental.PostArchitecture.PMFStaticGate
+public import Mathlib.Analysis.SpecificLimits.Normed
+
+@[expose] public section
 
 noncomputable section
 

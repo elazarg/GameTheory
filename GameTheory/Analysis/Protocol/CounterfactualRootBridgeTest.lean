@@ -1,3 +1,5 @@
+module
+
 /-
 # Root consumers for bounded counterfactual decomposition
 
@@ -5,7 +7,9 @@ This small leaf keeps the composed generic theorem responsive without making
 the larger hostile fixture re-elaborate on every root-bridge change.
 -/
 
-import GameTheory.Analysis.Protocol.CounterfactualDecompositionTest
+public import GameTheory.Analysis.Protocol.CounterfactualDecompositionTest
+
+@[expose] public section
 
 noncomputable section
 

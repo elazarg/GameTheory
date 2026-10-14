@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite multiplicative weights
 
@@ -6,9 +8,11 @@ are coordinates summing to one; `GameTheory.Math.Probability.OnlineLearning`
 packages those coordinates as canonical finite-support PMFs.
 -/
 
-import Mathlib.Analysis.Convex.SpecificFunctions.Basic
-import Mathlib.Analysis.Real.Sqrt
-import Mathlib.Analysis.SpecialFunctions.Log.Basic
+public import Mathlib.Analysis.Convex.SpecificFunctions.Basic
+public import Mathlib.Analysis.Real.Sqrt
+public import Mathlib.Analysis.SpecialFunctions.Log.Basic
+
+@[expose] public section
 
 noncomputable section
 

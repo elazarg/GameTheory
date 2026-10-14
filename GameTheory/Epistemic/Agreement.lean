@@ -1,3 +1,5 @@
+module
+
 /-
 # Agreement over epistemic setoids
 
@@ -9,7 +11,9 @@ Primary reference: R. J. Aumann, “Agreeing to Disagree,” *Annals of
 Statistics* 4 (1976).
 -/
 
-import GameTheory.Epistemic.Basic
+public import GameTheory.Epistemic.Basic
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite online-learning laws
 
@@ -6,8 +8,10 @@ The reusable theorem speaks about a normalized real vector; this module alone
 packages that vector as an ordinary probability mass function.
 -/
 
-import GameTheory.Math.Probability.ExpectationAlgebra
-import GameTheory.Math.OnlineLearning
+public import GameTheory.Math.Probability.ExpectationAlgebra
+public import GameTheory.Math.OnlineLearning
+
+@[expose] public section
 
 noncomputable section
 

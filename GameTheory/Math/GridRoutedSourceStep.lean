@@ -1,4 +1,8 @@
-import GameTheory.Math.GridRoutedGraph
+module
+
+public import GameTheory.Math.GridRoutedGraph
+
+@[expose] public section
 
 /-! The routed zero source starts with one eastward grid step. This exact
 orientation supports attaching a boundary entrance to the interior grid path. -/

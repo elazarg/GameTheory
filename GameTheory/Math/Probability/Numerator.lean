@@ -1,4 +1,8 @@
-import GameTheory.Math.Probability.Expectation
+module
+
+public import GameTheory.Math.Probability.Expectation
+
+@[expose] public section
 
 /-! Common-denominator natural weights define probability mass functions, with
 exact finite weighted-sum expectations. -/

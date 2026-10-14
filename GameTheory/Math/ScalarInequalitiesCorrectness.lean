@@ -1,11 +1,15 @@
+module
+
 /- Copyright (c) 2026 VegasCore contributors. Released under MIT; see NOTICE. -/
 
-import GameTheory.Math.ScalarInequalities
-import Mathlib.Basic.Real.Basic
-import Mathlib.Tactic.NormNum
-import Mathlib.Algebra.Order.BigOperators.Group.Finset
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.FieldSimp
+public import GameTheory.Math.ScalarInequalities
+public import Mathlib.Basic.Real.Basic
+public import Mathlib.Tactic.NormNum
+public import Mathlib.Algebra.Order.BigOperators.Group.Finset
+public import Mathlib.Tactic.Linarith
+public import Mathlib.Tactic.FieldSimp
+
+@[expose] public section
 
 /-! # Real correctness of rational scalar inference
 

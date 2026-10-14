@@ -1,3 +1,5 @@
+module
+
 /-
 # Bayes-correlated equilibrium
 
@@ -6,7 +8,9 @@ plausibility fixes its type marginal; obedience compares the actual law with
 every law obtained by a player's type-and-recommendation dependent deviation.
 -/
 
-import GameTheory.Core.BayesianEquilibrium
+public import GameTheory.Core.BayesianEquilibrium
+
+@[expose] public section
 
 noncomputable section
 

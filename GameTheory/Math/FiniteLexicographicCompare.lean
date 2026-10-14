@@ -1,5 +1,9 @@
-import Mathlib.Order.PiLex
-import Mathlib.Order.Fin.Basic
+module
+
+public import Mathlib.Order.PiLex
+public import Mathlib.Order.Fin.Basic
+
+@[expose] public section
 
 /-! # Executable finite lexicographic comparison
 

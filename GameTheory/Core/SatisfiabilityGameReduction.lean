@@ -1,6 +1,10 @@
-import GameTheory.Core.SatisfiabilityGameCompleteness
-import GameTheory.Core.SatisfiabilityGameSoundness
-import GameTheory.Core.ConstrainedNash
+module
+
+public import GameTheory.Core.SatisfiabilityGameCompleteness
+public import GameTheory.Core.SatisfiabilityGameSoundness
+public import GameTheory.Core.ConstrainedNash
+
+@[expose] public section
 
 /-! Satisfiability is equivalent to existence of a high-payoff equilibrium in
 the explicitly constructed two-player game. This semantic reduction asserts no

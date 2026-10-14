@@ -1,7 +1,11 @@
-import GameTheory.Math.NonnegativeDictionary
-import Mathlib.Data.Fin.VecNotation
-import Mathlib.Tactic.FinCases
-import Mathlib.Tactic.NormNum
+module
+
+public import GameTheory.Math.NonnegativeDictionary
+public import Mathlib.Data.Fin.VecNotation
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 /-! Exit existence needs a positive coordinate, not a nonnegative entering vector. -/
 

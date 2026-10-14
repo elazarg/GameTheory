@@ -1,7 +1,11 @@
-import GameTheoryComplexity.Backend.GridRoutingCodecMachine
-import GameTheoryComplexity.Backend.GridRoutingBitFields
-import GameTheoryComplexity.Backend.GridRoutingDivision
-import GameTheory.Math.GridWire
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingCodecMachine
+public import GameTheoryComplexity.Backend.GridRoutingBitFields
+public import GameTheoryComplexity.Backend.GridRoutingDivision
+public import GameTheory.Math.GridWire
+
+@[expose] public section
 
 /-! An original routed vertex has vertical coordinate six times its label.
 Binary division followed by a fixed-width low-bit extraction recovers that label

@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite matrix-game values
 
@@ -7,8 +9,10 @@ to select its value and prove that the value is nonexpansive in the entries;
 there is no parallel simplex or equilibrium API.
 -/
 
-import GameTheory.Analysis.Minimax
-import GameTheory.Core.MatrixGame
+public import GameTheory.Analysis.Minimax
+public import GameTheory.Core.MatrixGame
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # The one-shot deviation principle for consistent assessments
 
@@ -17,10 +19,12 @@ one-shot optimality. Local laws may be restricted to allowed sets; only the
 alternative's own laws need be allowed, not the assessment's.
 -/
 
-import GameTheory.Analysis.Protocol.InformationLocalization
-import GameTheory.Analysis.Protocol.SequentialLimits
-import GameTheory.Analysis.Protocol.SequentialRationality
-import GameTheory.Protocol.FiniteInformation
+public import GameTheory.Analysis.Protocol.InformationLocalization
+public import GameTheory.Analysis.Protocol.SequentialLimits
+public import GameTheory.Analysis.Protocol.SequentialRationality
+public import GameTheory.Protocol.FiniteInformation
+
+@[expose] public section
 
 noncomputable section
 

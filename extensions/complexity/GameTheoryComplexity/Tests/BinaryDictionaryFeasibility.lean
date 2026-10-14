@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BinaryDictionaryFeasibility
-import GameTheoryComplexity.Backend.BinarySignedFixedWidth
+module
+
+public import GameTheoryComplexity.Backend.BinaryDictionaryFeasibility
+public import GameTheoryComplexity.Backend.BinarySignedFixedWidth
+
+@[expose] public section
 
 namespace GameTheory.Complexity.Tests.BinaryDictionaryFeasibility
 open GameTheory.Complexity.Backend

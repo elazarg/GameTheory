@@ -1,3 +1,5 @@
+module
+
 /-
 # Executable knapsack approximation frontend
 
@@ -7,8 +9,11 @@ finite-set allocation chosen between the greedy prefix and a feasible
 singleton. Correctness and the approximation ratio live in a separate leaf.
 -/
 
-import GameTheory.Mechanism.Knapsack.Aggregate
-import Mathlib.Data.List.Sort
+public import GameTheory.Mechanism.Knapsack.Aggregate
+public meta import GameTheory.Mechanism.Knapsack.Aggregate
+public import Mathlib.Data.List.Sort
+
+@[expose] public section
 
 namespace GameTheory.Mechanism.Knapsack
 

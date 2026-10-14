@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile multi-round imperfect-monitoring fixture
 
@@ -7,10 +9,12 @@ zero.  The information state nevertheless remembers player zero's own choice,
 and a second-round policy branches on it.
 -/
 
-import GameTheory.Languages.MultiRound
-import GameTheory.Languages.FOSG.Values
-import Mathlib.Tactic.FinCases
-import Mathlib.Tactic.NormNum
+public import GameTheory.Languages.MultiRound
+public import GameTheory.Languages.FOSG.Values
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 noncomputable section
 
@@ -172,6 +176,7 @@ theorem initial_step01 :
       PMF.pure (oneRound 0 1) := by
   simpa using step_unequal (first := 0) (second := 1) (by decide)
 
+set_option backward.proofsInPublic true in
 def history01 : fixture.execution.History :=
   fixture.execution.initHistory.extend initialLegal01 (by
     rw [initial_step01]

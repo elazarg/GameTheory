@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.SATReduction
+module
+
+public import GameTheoryComplexity.Backend.SATReduction
+
+@[expose] public section
 
 /-! Satisfiable, contradictory, empty-formula and malformed-source controls for
 the explicit payoff-table reduction. -/

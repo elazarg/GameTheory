@@ -1,3 +1,5 @@
+module
+
 /-
 # Behavioral terminal continuations
 
@@ -7,9 +9,11 @@ their terminal outcomes; sequential rationality is optimality in these
 contexts.
 -/
 
-import GameTheory.Protocol.BehavioralAssessment
-import GameTheory.Protocol.BehavioralMixture
-import GameTheory.Protocol.HistoryBackward
+public import GameTheory.Protocol.BehavioralAssessment
+public import GameTheory.Protocol.BehavioralMixture
+public import GameTheory.Protocol.HistoryBackward
+
+@[expose] public section
 
 noncomputable section
 

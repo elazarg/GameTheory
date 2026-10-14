@@ -1,6 +1,10 @@
-import GameTheory.Analysis.Protocol.LocalSimulationLimit
-import GameTheory.Analysis.Protocol.SequentialExistenceTest
-import GameTheory.Analysis.Protocol.WellFoundedTerminalEquilibriumTest
+module
+
+public import GameTheory.Analysis.Protocol.LocalSimulationLimit
+public import GameTheory.Analysis.Protocol.SequentialExistenceTest
+public import GameTheory.Analysis.Protocol.WellFoundedTerminalEquilibriumTest
+
+@[expose] public section
 
 noncomputable section
 

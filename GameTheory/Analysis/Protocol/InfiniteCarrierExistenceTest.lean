@@ -1,3 +1,5 @@
+module
+
 /-
 # Sequential equilibrium over infinite carriers
 
@@ -7,8 +9,10 @@ these carriers is finite. Only three legal histories exist, and that alone
 supplies a consistent, sequentially rational assessment.
 -/
 
-import GameTheory.Analysis.Protocol.SequentialExistence
-import GameTheory.Protocol.FiniteHorizon
+public import GameTheory.Analysis.Protocol.SequentialExistence
+public import GameTheory.Protocol.FiniteHorizon
+
+@[expose] public section
 
 noncomputable section
 

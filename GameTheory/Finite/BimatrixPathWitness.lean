@@ -1,5 +1,9 @@
-import GameTheory.Finite.BimatrixPathEndOfLine
-import GameTheory.Math.OrientedInvolutionPathWitness
+module
+
+public import GameTheory.Finite.BimatrixPathEndOfLine
+public import GameTheory.Math.OrientedInvolutionPathWitness
+
+@[expose] public section
 
 /-! Soundness of raw witnesses on the canonical complementary path.
 An inconsistent pointer identifies a complementary non-source basis, including

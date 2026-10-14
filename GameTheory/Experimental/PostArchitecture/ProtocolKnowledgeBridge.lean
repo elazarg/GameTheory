@@ -1,3 +1,5 @@
+module
+
 /-
 # Protocol knowledge on merging histories
 
@@ -8,9 +10,11 @@ with the same execution state: no event about execution states is this
 knowledge. The forgetful negative control is `GameTheory.Tests.ProtocolKnowledge`.
 -/
 
-import GameTheory.Protocol.Knowledge
-import GameTheory.Protocol.OwnPlayRecall
-import GameTheory.Experimental.PostArchitecture.KnowledgeOwnership
+public import GameTheory.Protocol.Knowledge
+public import GameTheory.Protocol.OwnPlayRecall
+public import GameTheory.Experimental.PostArchitecture.KnowledgeOwnership
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.GridRoutingWords
-import GameTheoryComplexity.Backend.GridRoutingEndpointMachine
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingWords
+public import GameTheoryComplexity.Backend.GridRoutingEndpointMachine
+
+@[expose] public section
 
 /-! Binary routing controls exercise full-capacity point words, malformed lengths,
 padded arithmetic, endpoint label extraction, and actual switched wire execution. -/

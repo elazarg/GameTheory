@@ -1,6 +1,10 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
-import GameTheory.Core.MixtureSimulation
+public import GameTheory.Core.MixtureSimulation
+
+@[expose] public section
 
 /-! # Composition of PMF-mixture game-form simulations -/
 

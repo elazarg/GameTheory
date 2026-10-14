@@ -1,3 +1,5 @@
+module
+
 /-
 # Projection onto the nonpositive orthant
 
@@ -5,8 +7,10 @@ Euclidean geometry connecting distance from the nonpositive orthant with
 coordinatewise positive parts.
 -/
 
-import GameTheory.Math.Approachability
-import Mathlib.Analysis.InnerProductSpace.PiL2
+public import GameTheory.Math.Approachability
+public import Mathlib.Analysis.InnerProductSpace.PiL2
+
+@[expose] public section
 
 namespace GameTheory.Math.OrthantProjection
 

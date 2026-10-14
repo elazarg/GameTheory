@@ -1,3 +1,5 @@
+module
+
 /-
 # Dependent assignment enumeration
 
@@ -7,8 +9,10 @@ coordinates.  Construction branches on membership and never exposes equality
 transport or a non-dependent update operation.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
-import GameTheory.Math.Probability.FiniteSampling
+public import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
+public import GameTheory.Math.Probability.FiniteSampling
+
+@[expose] public section
 
 noncomputable section
 

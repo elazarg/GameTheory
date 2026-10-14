@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.GridRoutingGeometryMachine
-import GameTheoryComplexity.Backend.GridRoutingCodecMachine
-import GameTheoryComplexity.Backend.SpernerBinarySteps
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingGeometryMachine
+public import GameTheoryComplexity.Backend.GridRoutingCodecMachine
+public import GameTheoryComplexity.Backend.SpernerBinarySteps
+
+@[expose] public section
 
 /-! A binary machine follows either direction of a single routed wire.
 Comparisons use exact unsigned values; output coordinate fields are canonical

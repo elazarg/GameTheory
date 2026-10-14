@@ -1,8 +1,12 @@
-import GameTheoryComplexity.Backend.BrouwerNashCoefficientQuery
-import GameTheoryComplexity.Backend.BrouwerNashHeaders
-import GameTheoryComplexity.Backend.BinarySignedFiniteSum
-import GameTheoryComplexity.Backend.BinaryUnaryEncoding
-import GameTheoryComplexity.Backend.BrouwerNashQueryRegions
+module
+
+public import GameTheoryComplexity.Backend.BrouwerNashCoefficientQuery
+public import GameTheoryComplexity.Backend.BrouwerNashHeaders
+public import GameTheoryComplexity.Backend.BinarySignedFiniteSum
+public import GameTheoryComplexity.Backend.BinaryUnaryEncoding
+public import GameTheoryComplexity.Backend.BrouwerNashQueryRegions
+
+@[expose] public section
 
 /-! Fixed interpolation and weighted-minimum families query the actual paired-action
 coefficients using unary references and signed indicator addition. Forty-one-sample scans

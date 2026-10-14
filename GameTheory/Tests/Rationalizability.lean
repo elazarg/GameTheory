@@ -1,3 +1,5 @@
+module
+
 /-
 # Mixed versus pure rationalizability hostile fixture
 
@@ -8,8 +10,10 @@ the first pure round. No all-round inclusion between the survivor iterations
 is assumed.
 -/
 
-import GameTheory.Finite.Correctness
-import GameTheory.Core.Rationalizability
+public import GameTheory.Finite.Correctness
+public import GameTheory.Core.Rationalizability
+
+@[expose] public section
 
 noncomputable section
 

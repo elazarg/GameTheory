@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.Complexitylib
+module
+
+public import GameTheoryComplexity.Backend.Complexitylib
+
+@[expose] public section
 
 /-! A small sample-test facade for the selected computational backend.
 Client statements use the library's existing tests and indistinguishability relation;

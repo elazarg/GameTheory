@@ -1,7 +1,11 @@
-import GameTheoryComplexity.Backend.SpernerReduction
-import GameTheoryComplexity.Backend.SpernerVerifier
-import GameTheoryComplexity.Backend.EndOfLineSpernerReduction
-import GameTheoryComplexity.PPAD
+module
+
+public import GameTheoryComplexity.Backend.SpernerReduction
+public import GameTheoryComplexity.Backend.SpernerVerifier
+public import GameTheoryComplexity.Backend.EndOfLineSpernerReduction
+public import GameTheoryComplexity.PPAD
+
+@[expose] public section
 
 /-! Succinct square-grid Sperner search is PPAD-complete. Canonical boundary
 colors enforce totality for arbitrary serialized inputs. Uniformly compiled

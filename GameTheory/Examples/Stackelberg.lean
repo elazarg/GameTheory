@@ -1,3 +1,5 @@
+module
+
 /-
 # Stackelberg commitment through the sequential layer
 
@@ -8,9 +10,13 @@ commitment. The underlying simultaneous game is independently presented as a
 predicate.
 -/
 
-import GameTheory.Finite.Correctness
-import GameTheory.Protocol.Tree
-import Mathlib.Tactic.DeriveFintype
+public import GameTheory.Finite.Correctness
+public import GameTheory.Protocol.Tree
+public import Mathlib.Tactic.DeriveFintype
+public meta import Mathlib.Data.Finset.Card
+public meta import GameTheory.Finite.Algorithm
+
+@[expose] public section
 
 namespace GameTheory.Examples.Stackelberg
 

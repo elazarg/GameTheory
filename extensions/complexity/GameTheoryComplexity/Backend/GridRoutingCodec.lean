@@ -1,5 +1,9 @@
-import Complexitylib.Mathlib.NatBits
-import Mathlib.Data.List.Basic
+module
+
+public import Complexitylib.Mathlib.NatBits
+public import Mathlib.Data.List.Basic
+
+@[expose] public section
 
 /-! Routed grid points use two fixed-width little-endian coordinate blocks.
 Every word of the advertised length denotes a bounded point in the square;

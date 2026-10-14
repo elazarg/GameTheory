@@ -1,3 +1,5 @@
+module
+
 /-
 # `GameTheory.Analysis.Stochastic`
 
@@ -7,8 +9,10 @@ stationary Bellman equilibria live here; the stable `GameTheory.Stochastic`
 root imports neither topology nor fixed points.
 -/
 
-import GameTheory.Analysis.Stochastic.Discounted
-import GameTheory.Analysis.Stochastic.Fink
+public import GameTheory.Analysis.Stochastic.Discounted
+public import GameTheory.Analysis.Stochastic.Fink
+
+@[expose] public section
 
 namespace GameTheory.Analysis.Stochastic
 

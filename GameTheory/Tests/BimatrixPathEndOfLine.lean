@@ -1,4 +1,8 @@
-import GameTheory.Finite.BimatrixPathEndOfLine
+module
+
+public import GameTheory.Finite.BimatrixPathEndOfLine
+
+@[expose] public section
 
 /-! End-of-Line source boundary and rational solution existence in a fully tied game. -/
 namespace GameTheory.Tests.BimatrixPathEndOfLine

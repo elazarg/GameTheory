@@ -1,3 +1,5 @@
+module
+
 /-
 # Sequential play with infinitely many players
 
@@ -12,8 +14,10 @@ set `ℕ`: both first votes are drawable at the start, and behavioral play of a
 deterministic profile is its deterministic play.
 -/
 
-import GameTheory.Protocol.Information
-import GameTheory.Math.Probability.Mixture
+public import GameTheory.Protocol.Information
+public import GameTheory.Math.Probability.Mixture
+
+@[expose] public section
 
 noncomputable section
 

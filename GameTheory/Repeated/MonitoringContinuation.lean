@@ -1,3 +1,5 @@
+module
+
 /-
 # Continuations and finite deviations for public monitoring
 
@@ -6,7 +8,9 @@ public-monitoring arguments.  It deliberately stops before defining payoffs or
 equilibrium predicates.
 -/
 
-import GameTheory.Repeated.Monitoring
+public import GameTheory.Repeated.Monitoring
+
+@[expose] public section
 
 noncomputable section
 

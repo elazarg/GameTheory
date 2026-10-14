@@ -1,3 +1,5 @@
+module
+
 /-
 # The minimax theorem
 
@@ -12,8 +14,10 @@ fact that all saddle points are worth the same. Only the assertion that one
 exists needs a fixed point, and that is the single line this module contributes.
 -/
 
-import GameTheory.Analysis.Nash
-import GameTheory.Core.ZeroSum
+public import GameTheory.Analysis.Nash
+public import GameTheory.Core.ZeroSum
+
+@[expose] public section
 
 noncomputable section
 

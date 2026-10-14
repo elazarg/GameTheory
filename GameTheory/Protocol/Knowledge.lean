@@ -1,3 +1,5 @@
+module
+
 /-
 # Protocol information as knowledge of histories
 
@@ -17,8 +19,10 @@ This leaf is not re-exported by the Protocol root, whose dependency closure
 stays independent of the epistemic layer.
 -/
 
-import GameTheory.Protocol.BehavioralAssessment
-import GameTheory.Epistemic.Knowledge
+public import GameTheory.Protocol.BehavioralAssessment
+public import GameTheory.Epistemic.Knowledge
+
+@[expose] public section
 
 namespace GameTheory.Protocol
 

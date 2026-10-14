@@ -1,3 +1,5 @@
+module
+
 /-
 # Trembling-hand perfection is not a comparison family
 
@@ -13,8 +15,10 @@ so trembling-hand perfection is the concept of no comparison family and its
 preservation is not decided by a cone criterion.
 -/
 
-import GameTheory.Analysis.IncentiveHierarchy
-import GameTheory.Analysis.TremblingHand
+public import GameTheory.Analysis.IncentiveHierarchy
+public import GameTheory.Analysis.TremblingHand
+
+@[expose] public section
 
 noncomputable section
 

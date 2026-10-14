@@ -1,5 +1,9 @@
-import GameTheory.Math.Probability.ExpectationAlgebra
-import GameTheory.Math.Probability.Mixture
+module
+
+public import GameTheory.Math.Probability.ExpectationAlgebra
+public import GameTheory.Math.Probability.Mixture
+
+@[expose] public section
 
 noncomputable section
 

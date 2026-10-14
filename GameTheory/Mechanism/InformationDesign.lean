@@ -1,3 +1,5 @@
+module
+
 /-
 # Information design over ordinary PMFs
 
@@ -8,9 +10,11 @@ sender optimality compare extended-real values, so an infinite value is still
 ranked; only an alternative whose value is undefined is left incomparable.
 -/
 
-import GameTheory.Math.Probability.ExpectationBind
-import GameTheory.Math.Probability.ExtendedExpectation
-import GameTheory.Math.Probability.Joint
+public import GameTheory.Math.Probability.ExpectationBind
+public import GameTheory.Math.Probability.ExtendedExpectation
+public import GameTheory.Math.Probability.Joint
+
+@[expose] public section
 
 noncomputable section
 

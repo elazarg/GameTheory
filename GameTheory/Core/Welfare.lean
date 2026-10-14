@@ -1,3 +1,5 @@
+module
+
 /-
 # Social welfare and smooth games
 
@@ -6,7 +8,9 @@ Smoothness states the integrability of exactly the pure-profile utilities its
 comparison uses.
 -/
 
-import GameTheory.Core.Response
+public import GameTheory.Core.Response
+
+@[expose] public section
 
 noncomputable section
 

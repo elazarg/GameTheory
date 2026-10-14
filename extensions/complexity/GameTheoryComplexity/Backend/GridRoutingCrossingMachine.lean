@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.GridRoutingGeometryMachine
-import GameTheoryComplexity.Backend.GridRoutingQueries
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingGeometryMachine
+public import GameTheoryComplexity.Backend.GridRoutingQueries
+
+@[expose] public section
 
 /-! Crossing validation identifies two local owners and checks their consistent
 edges and strict interiors. Guarded original queries retain out-of-range labels

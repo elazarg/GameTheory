@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile finite bargaining fixture
 
@@ -7,10 +9,12 @@ allocations in Nash product, while unequal positive scales and nonzero shifts
 exercise genuine componentwise affine invariance.
 -/
 
-import GameTheory.Cooperative.Bargaining
-import Mathlib.Algebra.BigOperators.Fin
-import Mathlib.Tactic.FinCases
-import Mathlib.Tactic.NormNum
+public import GameTheory.Cooperative.Bargaining
+public import Mathlib.Algebra.BigOperators.Fin
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 namespace GameTheory.Tests.Bargaining
 

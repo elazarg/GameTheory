@@ -1,3 +1,5 @@
+module
+
 /-
 # State sufficiency and completed readout controls
 
@@ -6,10 +8,12 @@ the branch-merging fixture rejects the claim when history changes that law.
 A separate stochastic countdown checks completed readout from a retained prefix.
 -/
 
-import GameTheory.Protocol.StateKernel
-import GameTheory.Protocol.ContinuationLaw
-import GameTheory.Tests.History
-import GameTheory.Tests.Randomized
+public import GameTheory.Protocol.StateKernel
+public import GameTheory.Protocol.ContinuationLaw
+public import GameTheory.Tests.History
+public import GameTheory.Tests.Randomized
+
+@[expose] public section
 
 noncomputable section
 

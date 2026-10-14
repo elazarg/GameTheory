@@ -39,9 +39,10 @@ lake env lean --version
 lake exe cache get
 ```
 
-The package option `allowNonModules := true` preserves the existing legacy
-module visibility while importing Mathlib modules. This bump does not convert
-GameTheory's source tree to Lean's module system.
+The initial bump used `allowNonModules := true` to preserve legacy visibility
+while importing Mathlib modules. The subsequent
+[mechanical module migration](ModuleMigration.md) converted the authored tree
+and replaced this option with `requiresModuleSystem := true`.
 
 ## Finite uniform probability
 
@@ -88,7 +89,7 @@ and transitive axiom checks using unchanged upstream Complexitylib sources.
 All 41 tooling regression tests passed, including rejection of authored warnings
 while permitting third-party warnings. Raw build logs and probes remain local.
 
-The extension's default base Git pin is
+The bump selected the extension's default base Git pin
 `b0a92aefcdca842e8a14e64829bbc54c0040d0d2`, containing the migration and citation
 metadata. The optional audit also passed all 4,458 jobs, lint, diagnostic traces,
 and axiom checks against that Git checkout without a local-path override.

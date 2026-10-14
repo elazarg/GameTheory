@@ -1,7 +1,11 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
-import GameTheory.Protocol.Continuation
-import GameTheory.Tests.IrreversibleFailure
+public import GameTheory.Protocol.Continuation
+public import GameTheory.Tests.IrreversibleFailure
+
+@[expose] public section
 
 /-! # Continuation transfer: identity and the irreversible-failure boundary
 

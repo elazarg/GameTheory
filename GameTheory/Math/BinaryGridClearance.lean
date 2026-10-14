@@ -1,5 +1,9 @@
-import GameTheory.Math.BinaryExtraction
-import Mathlib.Tactic.FieldSimp
+module
+
+public import GameTheory.Math.BinaryExtraction
+public import Mathlib.Tactic.FieldSimp
+
+@[expose] public section
 
 /-! Clearance from interior dyadic grid lines bounds every binary threshold margin.
 The exact threshold-grid identity transfers geometric extraction error bounds to stable digits,

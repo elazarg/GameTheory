@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: finite ancestral-moral component partitions
 
@@ -8,8 +10,10 @@ region.  The result is purely graph-theoretic; no probabilistic independence
 claim is made here.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNFactorScopes
-import GameTheory.Experimental.PostArchitecture.FiniteBNMoralSeparation
+public import GameTheory.Experimental.PostArchitecture.FiniteBNFactorScopes
+public import GameTheory.Experimental.PostArchitecture.FiniteBNMoralSeparation
+
+@[expose] public section
 
 noncomputable section
 

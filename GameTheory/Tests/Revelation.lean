@@ -1,3 +1,5 @@
+module
+
 /-
 Hostile revelation-principle regression.
 
@@ -7,8 +9,10 @@ the report: truth is optimal there, while the false type's opposite report
 strictly lowers payoff.
 -/
 
-import GameTheory.Mechanism.Revelation
-import GameTheory.Core.BayesCorrelated
+public import GameTheory.Mechanism.Revelation
+public import GameTheory.Core.BayesCorrelated
+
+@[expose] public section
 
 noncomputable section
 

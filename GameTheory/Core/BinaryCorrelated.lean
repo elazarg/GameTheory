@@ -1,3 +1,5 @@
+module
+
 /-
 # Binary correlated games
 
@@ -6,8 +8,10 @@ recommendation-dependent deviations force a cycle of inequalities among the
 four pure-profile masses; normalization then makes every mass one quarter.
 -/
 
-import GameTheory.Core.BinaryMixed
-import Mathlib.Tactic.FinCases
+public import GameTheory.Core.BinaryMixed
+public import Mathlib.Tactic.FinCases
+
+@[expose] public section
 
 noncomputable section
 

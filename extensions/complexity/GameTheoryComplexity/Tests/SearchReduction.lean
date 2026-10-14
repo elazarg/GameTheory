@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.SearchReduction
-import Complexitylib.Classes.Containments.Internal.FPBridge
-import Complexitylib.Classes.P.DecisionFn
+module
+
+public import GameTheoryComplexity.Backend.SearchReduction
+public import Complexitylib.Classes.Containments.Internal.FPBridge
+public import Complexitylib.Classes.P.DecisionFn
+
+@[expose] public section
 
 /-! Controls distinguishing search reductions from decision reductions, totality
 from efficient verification, and correctly wired solution composition. -/

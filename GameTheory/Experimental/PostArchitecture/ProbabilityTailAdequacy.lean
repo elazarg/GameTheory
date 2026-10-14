@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-094: high-probability equilibrium certification
 
@@ -7,11 +9,13 @@ approximate Nash.  It must not inspect the underlying PMF representation or
 introduce another probability, regret, or equilibrium definition.
 -/
 
-import GameTheory.Core.MixedImprovement
-import GameTheory.Mechanism.FeasiblePosteriors
-import GameTheory.Math.Probability.Bounds
-import GameTheory.Math.Probability.Uniform
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Core.MixedImprovement
+public import GameTheory.Mechanism.FeasiblePosteriors
+public import GameTheory.Math.Probability.Bounds
+public import GameTheory.Math.Probability.Uniform
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-008: canonical Bayesian interim-deviation probe
 
@@ -5,7 +7,9 @@ The finite fixture consumes the canonical Bayesian game and its guarded
 ex-ante/interim characterization. It introduces no parallel game record.
 -/
 
-import GameTheory.Core.BayesianEquilibrium
+public import GameTheory.Core.BayesianEquilibrium
+
+@[expose] public section
 
 noncomputable section
 

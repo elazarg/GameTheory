@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-105: fixed-policy utility continuation from graphical CI
 
@@ -8,9 +10,11 @@ result remains about one fixed policy law and makes no replacement-uniformity
 claim.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteConditionalContinuation
-import GameTheory.Experimental.PostArchitecture.MAIDUtilityConditionalIndependence
-import GameTheory.Languages.MAID.ObservationPruning
+public import GameTheory.Experimental.PostArchitecture.FiniteConditionalContinuation
+public import GameTheory.Experimental.PostArchitecture.MAIDUtilityConditionalIndependence
+public import GameTheory.Languages.MAID.ObservationPruning
+
+@[expose] public section
 
 noncomputable section
 

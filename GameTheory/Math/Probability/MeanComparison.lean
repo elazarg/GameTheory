@@ -1,3 +1,5 @@
+module
+
 /-
 # Comparing empirical means
 
@@ -24,9 +26,11 @@ Primary reference: A. Psomas, A. Terzoglou, Y. Wei, and V. Zikas,
 “Pseudo-Equilibria, or: How to Stop Worrying About Crypto and Just Analyze the
 Game,” arXiv:2506.22089 (2025).
 -/
-import GameTheory.Math.Probability.SampleSumEvents
-import GameTheory.Math.Negligible
-import Mathlib.Basic.Real.Sign
+public import GameTheory.Math.Probability.SampleSumEvents
+public import GameTheory.Math.Negligible
+public import Mathlib.Basic.Real.Sign
+
+@[expose] public section
 
 noncomputable section
 

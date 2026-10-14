@@ -1,3 +1,5 @@
+module
+
 /-
 # Backward induction over a general-state protocol
 
@@ -36,9 +38,11 @@ The discriminating fixture lives in `GameTheory.Tests.Backward`, so stable
 importers compile only the semantic definitions and proofs in this module.
 -/
 
-import GameTheory.Protocol.Execution
-import GameTheory.Protocol.Context
-import GameTheory.Math.Probability.ExpectationBind
+public import GameTheory.Protocol.Execution
+public import GameTheory.Protocol.Context
+public import GameTheory.Math.Probability.ExpectationBind
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Matrix-game semantics
 
@@ -6,7 +8,9 @@ Mixed row/column profiles, their expected payoff, and security predicates are
 static and topology-free; existence and selected values remain in Analysis.
 -/
 
-import GameTheory.Core.ZeroSum
+public import GameTheory.Core.ZeroSum
+
+@[expose] public section
 
 noncomputable section
 

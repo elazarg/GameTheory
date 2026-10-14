@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.NashCertificateFormat
+module
+
+public import GameTheoryComplexity.Backend.NashCertificateFormat
+
+@[expose] public section
 
 /-! Encoding bounded numerator certificates as fixed-width little-endian fields,
 with an exact length and a round trip through the verifier's shared parser. -/

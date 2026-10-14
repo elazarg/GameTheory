@@ -1,3 +1,5 @@
+module
+
 /-
 # Binary mixed games
 
@@ -6,10 +8,12 @@ stochastic and the action carriers may have descriptive names; an equivalence
 with `Bool` supplies only the two labels needed by the theorem.
 -/
 
-import GameTheory.Core.Mixed
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.NormNum
-import Mathlib.Tactic.Ring
+public import GameTheory.Core.Mixed
+public import Mathlib.Tactic.Linarith
+public import Mathlib.Tactic.NormNum
+public import Mathlib.Tactic.Ring
+
+@[expose] public section
 
 noncomputable section
 

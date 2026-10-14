@@ -1,3 +1,5 @@
+module
+
 /-
 # Observable cheap-talk examples
 
@@ -5,8 +7,10 @@ Both pure equilibria of Battle of the Sexes survive the observable one-stage
 cheap-talk extension as ordinary Nash equilibria.
 -/
 
-import GameTheory.Core.CheapTalk
-import GameTheory.Examples.Classic
+public import GameTheory.Core.CheapTalk
+public import GameTheory.Examples.Classic
+
+@[expose] public section
 
 namespace GameTheory.Examples.CheapTalk
 

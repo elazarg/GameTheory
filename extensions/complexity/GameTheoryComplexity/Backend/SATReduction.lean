@@ -1,7 +1,11 @@
-import GameTheoryComplexity.Backend.SATReductionSemantic
-import GameTheoryComplexity.Backend.SATTablePayoffCorrectness
-import Complexitylib.SAT.CookLevin.Assembly
-import Complexitylib.Classes.P.NormalForm
+module
+
+public import GameTheoryComplexity.Backend.SATReductionSemantic
+public import GameTheoryComplexity.Backend.SATTablePayoffCorrectness
+public import Complexitylib.SAT.CookLevin.Assembly
+public import Complexitylib.Classes.P.NormalForm
+
+@[expose] public section
 
 /-! NP-hardness of payoff-constrained mixed Nash equilibrium existence for
 explicit symmetric integer payoff tables. The SAT reduction has a fixed

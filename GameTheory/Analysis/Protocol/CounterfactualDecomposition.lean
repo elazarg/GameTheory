@@ -1,3 +1,5 @@
+module
+
 /-
 # Counterfactual decomposition
 
@@ -13,7 +15,9 @@ need no horizon. Play cut off at a fixed step count splits with a rolling
 deadline: the root is cut at the site depth plus the continuation's steps.
 -/
 
-import GameTheory.Analysis.Protocol.CounterfactualRegret
+public import GameTheory.Analysis.Protocol.CounterfactualRegret
+
+@[expose] public section
 
 noncomputable section
 

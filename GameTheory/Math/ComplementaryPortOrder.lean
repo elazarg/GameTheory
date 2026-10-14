@@ -1,6 +1,10 @@
-import Mathlib.Data.Finset.Sort
-import Mathlib.Order.Prod.Lex.Basic
-import Mathlib.Algebra.Ring.Basic
+module
+
+public import Mathlib.Data.Finset.Sort
+public import Mathlib.Order.Prod.Lex.Basic
+public import Mathlib.Algebra.Ring.Basic
+
+@[expose] public section
 
 /-! Canonical ordering and parity of complementary ports.
 If a variable set contains neither variable of a label, inserting either one

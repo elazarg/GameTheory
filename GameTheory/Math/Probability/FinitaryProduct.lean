@@ -1,9 +1,13 @@
+module
+
 /-
 Copyright (c) 2026 GameTheory contributors. All rights reserved.
 Released under the Apache 2.0 license as described in the file LICENSE.
 -/
-import GameTheory.Math.Probability.Product
-import GameTheory.Math.Probability.Support
+public import GameTheory.Math.Probability.Product
+public import GameTheory.Math.Probability.Support
+
+@[expose] public section
 
 /-!
 # Independent products with finitely many random coordinates

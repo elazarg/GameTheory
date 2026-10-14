@@ -1,3 +1,5 @@
+module
+
 /-
 # Well-founded continuation optimality and subgame perfection
 
@@ -19,8 +21,10 @@ root, complementary changes at several information states can be profitable
 even though no single-information-state replacement is.
 -/
 
-import GameTheory.Protocol.HistoryBackward
-import GameTheory.Protocol.InformationOneShot
+public import GameTheory.Protocol.HistoryBackward
+public import GameTheory.Protocol.InformationOneShot
+
+@[expose] public section
 
 noncomputable section
 

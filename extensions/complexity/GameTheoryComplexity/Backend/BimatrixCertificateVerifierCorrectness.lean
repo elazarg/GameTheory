@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BimatrixCertificateVerifier
-import GameTheoryComplexity.Backend.NashCertificateFormat
+module
+
+public import GameTheoryComplexity.Backend.BimatrixCertificateVerifier
+public import GameTheoryComplexity.Backend.NashCertificateFormat
+
+@[expose] public section
 
 /-! The binary verifier checks exactly the integer numerator certificate constraints.
 Signed payoffs are evaluated as separate positive and negative binary sums.

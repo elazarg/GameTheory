@@ -1,3 +1,5 @@
+module
+
 /-
 # Conditioning independent choices on coordinate restrictions
 
@@ -7,10 +9,12 @@ themselves drawn from a latent law, and so correlated, a floor that every
 latent value gives one unrestricted coordinate survives the conditioning.
 -/
 
-import GameTheory.Math.Probability.Conditioning
-import GameTheory.Math.Probability.ExpectationAlgebra
-import GameTheory.Math.Probability.ExpectationBind
-import GameTheory.Math.Probability.Product
+public import GameTheory.Math.Probability.Conditioning
+public import GameTheory.Math.Probability.ExpectationAlgebra
+public import GameTheory.Math.Probability.ExpectationBind
+public import GameTheory.Math.Probability.Product
+
+@[expose] public section
 
 noncomputable section
 

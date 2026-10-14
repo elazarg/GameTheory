@@ -1,6 +1,10 @@
-import GameTheoryComplexity.RandomTape
-import GameTheory.Math.Probability.Indistinguishability
-import Complexitylib.Classes.Randomized
+module
+
+public import GameTheoryComplexity.RandomTape
+public import GameTheory.Math.Probability.Indistinguishability
+public import Complexitylib.Classes.Randomized
+
+@[expose] public section
 
 /-! Clocked machine execution supplies acceptance laws for sample tests.
 The canonical Boolean input serialization has a polynomial length bound.

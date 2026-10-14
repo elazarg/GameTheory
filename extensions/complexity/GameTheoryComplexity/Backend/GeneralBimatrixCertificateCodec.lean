@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixCodec
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixCodec
+
+@[expose] public section
 
 /-! Binary mixed-strategy certificates with unsigned probabilities and signed utilities. -/
 namespace GameTheory.Complexity.Backend

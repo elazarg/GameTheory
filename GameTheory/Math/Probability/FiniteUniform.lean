@@ -1,3 +1,5 @@
+module
+
 /-
 # Uniform probability mass on a finite carrier
 
@@ -6,7 +8,9 @@ mass equal to the inverse cardinality, and every point belongs to its support.
 No measurable structure is needed to construct or use the law.
 -/
 
-import Mathlib.Probability.ProbabilityMassFunction.Constructions
+public import Mathlib.Probability.ProbabilityMassFunction.Constructions
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Monitoring-rank witnesses
 
@@ -8,7 +10,9 @@ positive fixture also consumes the bridge from a rank row to the generated
 one-signal prefix law.
 -/
 
-import GameTheory.Repeated.MonitoringRank
+public import GameTheory.Repeated.MonitoringRank
+
+@[expose] public section
 
 noncomputable section
 

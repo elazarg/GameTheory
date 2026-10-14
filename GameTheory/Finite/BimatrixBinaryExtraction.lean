@@ -1,7 +1,11 @@
-import GameTheory.Finite.BimatrixArithmeticGate
-import GameTheory.Finite.BimatrixBooleanGate
-import GameTheory.Math.BinaryGridClearance
-import GameTheory.Math.ClippedArithmetic
+module
+
+public import GameTheory.Finite.BimatrixArithmeticGate
+public import GameTheory.Finite.BimatrixBooleanGate
+public import GameTheory.Math.BinaryGridClearance
+public import GameTheory.Math.ClippedArithmetic
+
+@[expose] public section
 
 /-!
 # Binary extraction by canonical comparator and affine game gates

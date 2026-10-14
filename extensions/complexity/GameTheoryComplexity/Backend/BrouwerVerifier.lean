@@ -1,7 +1,11 @@
-import GameTheoryComplexity.Backend.BrouwerProblem
-import GameTheoryComplexity.Backend.BrouwerPointMachine
-import GameTheoryComplexity.Backend.BrouwerResidualMachine
-import Complexitylib.Classes.P.NormalForm
+module
+
+public import GameTheoryComplexity.Backend.BrouwerProblem
+public import GameTheoryComplexity.Backend.BrouwerPointMachine
+public import GameTheoryComplexity.Backend.BrouwerResidualMachine
+public import Complexitylib.Classes.P.NormalForm
+
+@[expose] public section
 
 /-! A polynomial-time verifier locates a rational point, queries the three
 corner colors, and checks its exact affine residual. It validates both the

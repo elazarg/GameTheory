@@ -1,3 +1,5 @@
+module
+
 /-
 Noisy finite public-monitoring probe.
 
@@ -8,7 +10,9 @@ bind-first theorem from perfect public observation and from an independent
 fixed signal process.
 -/
 
-import GameTheory.Repeated.Monitoring
+public import GameTheory.Repeated.Monitoring
+
+@[expose] public section
 
 noncomputable section
 

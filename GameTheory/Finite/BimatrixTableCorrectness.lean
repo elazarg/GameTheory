@@ -1,7 +1,11 @@
-import GameTheory.Math.FixedBlockList
-import GameTheory.Finite.BimatrixTable
-import GameTheory.Core.BimatrixGame
-import Mathlib.Tactic.Linarith
+module
+
+public import GameTheory.Math.FixedBlockList
+public import GameTheory.Finite.BimatrixTable
+public import GameTheory.Core.BimatrixGame
+public import Mathlib.Tactic.Linarith
+
+@[expose] public section
 
 /-! The executable tally decoder recovers every bounded payoff cell of an
 encoded table. Decoded tables compile to the canonical symmetric bimatrix game. -/

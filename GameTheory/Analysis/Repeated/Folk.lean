@@ -1,3 +1,5 @@
+module
+
 /-
 # The discounted folk theorem
 
@@ -13,9 +15,11 @@ Games with Discounting or with Incomplete Information,” *Econometrica* 54
 (1986), 533--554.
 -/
 
-import GameTheory.Analysis.Repeated.Feasible
-import GameTheory.Core.Mixed
-import GameTheory.Repeated.Trigger
+public import GameTheory.Analysis.Repeated.Feasible
+public import GameTheory.Core.Mixed
+public import GameTheory.Repeated.Trigger
+
+@[expose] public section
 
 noncomputable section
 

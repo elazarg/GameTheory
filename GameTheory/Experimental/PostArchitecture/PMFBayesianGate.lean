@@ -1,3 +1,5 @@
+module
+
 /-
 EXP-130: an infinite-prior Bayesian equilibrium consumer.
 
@@ -6,8 +8,10 @@ has an integrable whole outcome law, while constant accepting play earns the
 maximal bounded action bonus at each type.
 -/
 
-import GameTheory.Core.BayesianEquilibrium
-import GameTheory.Experimental.PostArchitecture.PMFStaticGate
+public import GameTheory.Core.BayesianEquilibrium
+public import GameTheory.Experimental.PostArchitecture.PMFStaticGate
+
+@[expose] public section
 
 noncomputable section
 

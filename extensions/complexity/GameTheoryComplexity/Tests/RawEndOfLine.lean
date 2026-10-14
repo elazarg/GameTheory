@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.RawEndOfLine
-import GameTheoryComplexity.Tests.EndOfLine
+module
+
+public import GameTheoryComplexity.Backend.RawEndOfLine
+public import GameTheoryComplexity.Tests.EndOfLine
+
+@[expose] public section
 
 /-! Controls distinguish the asymmetric pointer witness relation from filtered
 graph endpoints, including the broken initial edge answered by the origin. -/

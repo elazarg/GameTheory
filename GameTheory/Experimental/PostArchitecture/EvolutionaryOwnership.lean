@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-044: evolutionary static/dynamic ownership
 
@@ -5,7 +7,9 @@ This witness exercises the canonical static ESS kernel and its one-way Nash
 bridge. The generic definitions live only in `GameTheory.Evolutionary`.
 -/
 
-import GameTheory.Evolutionary
+public import GameTheory.Evolutionary
+
+@[expose] public section
 
 noncomputable section
 

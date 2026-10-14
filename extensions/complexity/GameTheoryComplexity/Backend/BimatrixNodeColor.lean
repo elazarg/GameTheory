@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.BimatrixNodeWord
-import GameTheoryComplexity.Backend.BinaryBirdDeterminantMachine
-import GameTheory.Finite.BimatrixComputedOrientation
+module
+
+public import GameTheoryComplexity.Backend.BimatrixNodeWord
+public import GameTheoryComplexity.Backend.BinaryBirdDeterminantMachine
+public import GameTheory.Finite.BimatrixComputedOrientation
+
+@[expose] public section
 
 /-! Polynomial-time integer orientation words for canonical complementary ports.
 Insertion rank and payoff-kind parity are scanned from explicit membership bits.

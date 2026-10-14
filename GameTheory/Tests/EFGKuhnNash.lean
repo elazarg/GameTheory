@@ -1,3 +1,5 @@
+module
+
 /-
 # Unilateral Kuhn and Nash-transfer witness
 
@@ -7,7 +9,9 @@ genuine nondeviator in the law when the other player's strategy is converted,
 then attaches coordination utility for the Nash-transfer consumer.
 -/
 
-import GameTheory.Languages.EFG.Kuhn
+public import GameTheory.Languages.EFG.Kuhn
+
+@[expose] public section
 
 noncomputable section
 
@@ -259,6 +263,7 @@ def behavioralProfile (firstAction secondAction : Bool) :
     Profile game.behavioralSignature :=
   fun who => (actionProfile firstAction secondAction who).toBehavioral
 
+set_option backward.proofsInPublic true in
 @[reducible]
 def secondHistory (firstAction : Bool) : execution.History :=
   let isLegal := jointAt_legal_first firstAction
@@ -273,6 +278,7 @@ theorem secondHistory_state (firstAction : Bool) :
   unfold secondHistory ExecutionProtocol.History.extend
   rfl
 
+set_option backward.proofsInPublic true in
 @[reducible]
 def terminalHistory (firstAction secondAction : Bool) : execution.History :=
   let isLegal := jointAt_legal_second firstAction secondAction

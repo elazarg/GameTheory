@@ -1,3 +1,5 @@
+module
+
 /-
 # Sequential equilibrium for EFG presentations
 
@@ -6,8 +8,10 @@ adapter transparently specializes Protocol predicates to EFG continuations,
 without finiteness assumptions on states, information states, or history fibers.
 -/
 
-import GameTheory.Analysis.Protocol.Sequential
-import GameTheory.Languages.EFG
+public import GameTheory.Analysis.Protocol.Sequential
+public import GameTheory.Languages.EFG
+
+@[expose] public section
 
 noncomputable section
 

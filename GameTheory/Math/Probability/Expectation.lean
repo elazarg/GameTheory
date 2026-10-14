@@ -1,4 +1,8 @@
-import Mathlib.Probability.ProbabilityMassFunction.Constructions
+module
+
+public import Mathlib.Probability.ProbabilityMassFunction.Constructions
+
+@[expose] public section
 
 noncomputable section
 

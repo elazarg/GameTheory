@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.GridRoutingQueries
-import GameTheoryComplexity.Backend.GridRoutingGeometryMachine
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingQueries
+public import GameTheoryComplexity.Backend.GridRoutingGeometryMachine
+
+@[expose] public section
 
 /-! Internal routing nodes carry a vertex/interior tag and framed binary fields.
 Owners and coordinates retain their complete words until a liveness check;

@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-105: fixed-policy utility conditional independence
 
@@ -7,9 +9,11 @@ does not identify continuation laws across replacements or claim observation
 reduction.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovSoundness
-import GameTheory.Experimental.PostArchitecture.MAIDUtilityFactorization
-import GameTheory.Experimental.PostArchitecture.MAIDUtilitySeparationBridge
+public import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkovSoundness
+public import GameTheory.Experimental.PostArchitecture.MAIDUtilityFactorization
+public import GameTheory.Experimental.PostArchitecture.MAIDUtilitySeparationBridge
+
+@[expose] public section
 
 noncomputable section
 

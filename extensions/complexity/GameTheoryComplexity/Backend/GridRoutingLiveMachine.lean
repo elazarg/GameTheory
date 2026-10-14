@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.GridRoutingGeometryMachine
-import GameTheoryComplexity.Backend.GridRoutingQueries
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingGeometryMachine
+public import GameTheoryComplexity.Backend.GridRoutingQueries
+
+@[expose] public section
 
 /-! Binary live-label tests validate bounded original vertices and active wire
 interiors. Coordinates and owner fields retain their full raw numeric values. -/

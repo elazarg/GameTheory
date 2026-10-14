@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.BrouwerPointCodec
-import GameTheoryComplexity.Backend.SpernerProblem
-import GameTheory.Math.GridBrouwerSixthContinuous
+module
+
+public import GameTheoryComplexity.Backend.BrouwerPointCodec
+public import GameTheoryComplexity.Backend.SpernerProblem
+public import GameTheory.Math.GridBrouwerSixthContinuous
+
+@[expose] public section
 
 /-! Approximate fixed-point search for succinct continuous unit-square maps.
 Color circuits specify the vertex displacements of a globally continuous

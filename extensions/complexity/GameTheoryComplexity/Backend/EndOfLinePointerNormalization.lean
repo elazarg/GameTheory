@@ -1,5 +1,9 @@
-import GameTheory.Math.EndOfLineNormalization
-import GameTheoryComplexity.Backend.EndOfLineMachineOps
+module
+
+public import GameTheory.Math.EndOfLineNormalization
+public import GameTheoryComplexity.Backend.EndOfLineMachineOps
+
+@[expose] public section
 
 /-! Polynomial-time evaluation of consistent End-of-Line pointers. Each evaluator
 checks the original pointer and its reverse link, retaining the pointer only when

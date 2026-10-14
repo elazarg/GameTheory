@@ -1,3 +1,5 @@
+module
+
 /-
 EFG-facing one-shot deviation integration test.
 
@@ -6,8 +8,10 @@ discharges the EFG wrapper's structural hypotheses on an actual multi-step
 game; the Protocol test separately retains the profitable off-path deviation.
 -/
 
-import GameTheory.Languages.EFG.SubgamePerfect
-import GameTheory.Tests.EFGKuhn
+public import GameTheory.Languages.EFG.SubgamePerfect
+public import GameTheory.Tests.EFGKuhn
+
+@[expose] public section
 
 noncomputable section
 

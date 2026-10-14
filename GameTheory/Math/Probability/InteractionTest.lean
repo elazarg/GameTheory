@@ -1,4 +1,8 @@
-import GameTheory.Math.Probability.Interaction
+module
+
+public import GameTheory.Math.Probability.Interaction
+
+@[expose] public section
 
 /-! # Correlation-sensitive and additive payoffs
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: dependent score assembly and rank-one marginalization
 
@@ -11,10 +13,12 @@ ancestral set inside the original node type, so nonretained coordinates are
 left at the supplied default and are never included in a latent sum.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNFactorScopes
-import GameTheory.Experimental.PostArchitecture.FiniteBNLatentSum
-import GameTheory.Experimental.PostArchitecture.FiniteBNRankOne
-import GameTheory.Experimental.PostArchitecture.FiniteBNRetainedSum
+public import GameTheory.Experimental.PostArchitecture.FiniteBNFactorScopes
+public import GameTheory.Experimental.PostArchitecture.FiniteBNLatentSum
+public import GameTheory.Experimental.PostArchitecture.FiniteBNRankOne
+public import GameTheory.Experimental.PostArchitecture.FiniteBNRetainedSum
+
+@[expose] public section
 
 noncomputable section
 

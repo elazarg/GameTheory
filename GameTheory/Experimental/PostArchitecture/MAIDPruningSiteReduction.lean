@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-107: graphical target-site observation reduction
 
@@ -10,11 +12,13 @@ The result fixes every other site of a possibly multi-site owner.  It makes no
 coverage, equilibrium, recall, or global pruning claim.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDPruningNonrelevantInvariance
-import GameTheory.Experimental.PostArchitecture.MAIDPruningRelevantContinuation
-import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
-import GameTheory.Experimental.PostArchitecture.MAIDReplacementInvariantUtility
-import GameTheory.Experimental.PostArchitecture.MAIDSiteLocalReduction
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningNonrelevantInvariance
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningRelevantContinuation
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
+public import GameTheory.Experimental.PostArchitecture.MAIDReplacementInvariantUtility
+public import GameTheory.Experimental.PostArchitecture.MAIDSiteLocalReduction
+
+@[expose] public section
 
 noncomputable section
 

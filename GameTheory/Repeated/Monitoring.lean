@@ -1,3 +1,5 @@
+module
+
 /-
 # Public monitoring
 
@@ -17,7 +19,9 @@ that need a finite execution/information compiler use
 own earlier actions and therefore have a deliberately richer information type.
 -/
 
-import GameTheory.Repeated.Basic
+public import GameTheory.Repeated.Basic
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,5 +1,9 @@
-import GameTheory.Math.GridWireGraph
-import GameTheory.Math.GridWireImage
+module
+
+public import GameTheory.Math.GridWireGraph
+public import GameTheory.Math.GridWireImage
+
+@[expose] public section
 
 /-! Coordinates realize the source-indexed routed graph. Its two crossing
 occurrences use different switch bends, and no live interior occupies an

@@ -1,4 +1,8 @@
-import GameTheory.Math.GridCrossingPlacement
+module
+
+public import GameTheory.Math.GridCrossingPlacement
+
+@[expose] public section
 
 /-! A grid point determines its unique spacing-three switch box. Its row and
 column then identify the two possible wire owners using arithmetic and a

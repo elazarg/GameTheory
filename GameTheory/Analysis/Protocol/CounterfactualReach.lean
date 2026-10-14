@@ -1,3 +1,5 @@
+module
+
 /-
 # Counterfactual reach on canonical protocol histories
 
@@ -11,10 +13,12 @@ There is no alternate history carrier, runner, or probability abstraction in
 this module.
 -/
 
-import GameTheory.Protocol.BehavioralAssessment
-import GameTheory.Protocol.DecisionRecall
-import GameTheory.Protocol.HistoryPathMass
-import GameTheory.Math.Probability.Support
+public import GameTheory.Protocol.BehavioralAssessment
+public import GameTheory.Protocol.DecisionRecall
+public import GameTheory.Protocol.HistoryPathMass
+public import GameTheory.Math.Probability.Support
+
+@[expose] public section
 
 noncomputable section
 

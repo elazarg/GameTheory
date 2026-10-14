@@ -1,3 +1,5 @@
+module
+
 /-
 # Trigger strategies for public repeated play
 
@@ -9,7 +11,9 @@ one-period-gain versus discounted-tail calculation as ordinary `IsNash`. List
 histories avoid dependent-history transport and direct `Function.update` use.
 -/
 
-import GameTheory.Repeated.Periodic
+public import GameTheory.Repeated.Periodic
+
+@[expose] public section
 
 noncomputable section
 
@@ -23,6 +27,7 @@ variable {ι : Type uι}
 
 namespace UtilityGame
 
+set_option backward.proofsInPublic true in
 /-- Select one coordinate at which two profiles differ. -/
 noncomputable def profileMismatchPlayer (G : UtilityGame ι)
     {expected actual : Profile G.form.sig} (hne : actual ≠ expected) : ι :=

@@ -1,4 +1,10 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixDictionary
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixDictionary
+
+import all Mathlib.LinearAlgebra.Matrix.Determinant.Bird.Defs
+
+@[expose] public section
 
 /-! Serialized dictionary controls with signed input and unchecked candidate bases. -/
 namespace GameTheory.Complexity.Tests.GeneralBimatrixDictionary

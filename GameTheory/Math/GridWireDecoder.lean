@@ -1,4 +1,8 @@
-import GameTheory.Math.GridWireRealization
+module
+
+public import GameTheory.Math.GridWireRealization
+
+@[expose] public section
 
 /-! The inverse grid map validates at most six locally computed labels. It
 recovers ordinary wire points and displaced crossing centers without scanning

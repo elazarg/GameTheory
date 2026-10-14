@@ -1,3 +1,5 @@
+module
+
 /-
 # Simultaneous optimal local lotteries
 
@@ -11,9 +13,11 @@ expectation is linear in the alternative lottery, so every argmax set is
 nonempty and convex, and continuity of the scores gives a closed graph.
 -/
 
-import GameTheory.Math.Probability.Simplex
-import Mathlib.Analysis.Normed.Module.FiniteDimension
-import FixedPointTheorems.kakutani
+public import GameTheory.Math.Probability.Simplex
+public import Mathlib.Analysis.Normed.Module.FiniteDimension
+public import FixedPointTheorems.kakutani
+
+@[expose] public section
 
 noncomputable section
 

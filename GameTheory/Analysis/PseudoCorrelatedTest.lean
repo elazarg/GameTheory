@@ -1,3 +1,5 @@
+module
+
 /-
 # Correlated pseudo-equilibria and the coupling of sizes
 
@@ -17,9 +19,11 @@ swerver becomes profitable.
 size's recommendation inside play at that size; the chicken device is a
 pseudo-correlated equilibrium of the fixed game.
 -/
-import GameTheory.Analysis.PseudoCorrelated
-import GameTheory.Math.Probability.Uniform
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Analysis.PseudoCorrelated
+public import GameTheory.Math.Probability.Uniform
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 open GameTheory.Math.Probability
 

@@ -1,7 +1,11 @@
-import GameTheoryComplexity.Backend.SpernerGridCodecMachine
-import GameTheoryComplexity.Backend.GridRoutingBitFields
-import GameTheoryComplexity.Backend.GridRoutingDivision
-import GameTheoryComplexity.Backend.EndOfLineVerifier
+module
+
+public import GameTheoryComplexity.Backend.SpernerGridCodecMachine
+public import GameTheoryComplexity.Backend.GridRoutingBitFields
+public import GameTheoryComplexity.Backend.GridRoutingDivision
+public import GameTheoryComplexity.Backend.EndOfLineVerifier
+
+@[expose] public section
 
 /-! Routed endpoint triangles have vertical coordinate thirty-six times the
 original label plus eight. Two binary divisions by six recover the label without

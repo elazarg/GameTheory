@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.BimatrixCoordinateColor
-import GameTheoryComplexity.Backend.BrouwerNashReduction
-import GameTheoryComplexity.Backend.BrouwerNashSelectorCorrectness
+module
+
+public import GameTheoryComplexity.Backend.BimatrixCoordinateColor
+public import GameTheoryComplexity.Backend.BrouwerNashReduction
+public import GameTheoryComplexity.Backend.BrouwerNashSelectorCorrectness
+
+@[expose] public section
 
 /-! An actual polynomial-time reduction from canonical Brouwer search to rectangular Nash search. -/
 namespace GameTheory.Complexity.Backend.BrouwerNashHardness

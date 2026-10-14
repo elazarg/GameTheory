@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: finite Bayesian-network cylinder masses
 
@@ -12,13 +14,15 @@ kernels before graphical separation can be connected to conditional
 independence.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
-import GameTheory.Experimental.PostArchitecture.FiniteConditionalIndependence
-import GameTheory.Experimental.PostArchitecture.DependentAssignmentEnumeration
-import GameTheory.Math.Probability.FiniteSampling
-import GameTheory.Math.Probability.Product
-import GameTheory.Math.Probability.Expectation
-import GameTheory.Math.DAG
+public import GameTheory.Experimental.PostArchitecture.FiniteBNGlobalMarkov
+public import GameTheory.Experimental.PostArchitecture.FiniteConditionalIndependence
+public import GameTheory.Experimental.PostArchitecture.DependentAssignmentEnumeration
+public import GameTheory.Math.Probability.FiniteSampling
+public import GameTheory.Math.Probability.Product
+public import GameTheory.Math.Probability.Expectation
+public import GameTheory.Math.DAG
+
+@[expose] public section
 
 noncomputable section
 

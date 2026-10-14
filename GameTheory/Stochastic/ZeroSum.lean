@@ -1,3 +1,5 @@
+module
+
 /-
 # Two-player zero-sum stochastic games
 
@@ -6,8 +8,10 @@ proof-free row/column presentation of dependent joint actions.  Discounted
 values and fixed points remain in the one-way Analysis bridge.
 -/
 
-import GameTheory.Core.ZeroSum
-import GameTheory.Stochastic.Basic
+public import GameTheory.Core.ZeroSum
+public import GameTheory.Stochastic.Basic
+
+@[expose] public section
 
 namespace GameTheory.Stochastic.Game
 

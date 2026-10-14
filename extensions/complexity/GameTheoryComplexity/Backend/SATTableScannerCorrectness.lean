@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.SATTableScanner
-import GameTheoryComplexity.Backend.SATGame
+module
+
+public import GameTheoryComplexity.Backend.SATTableScanner
+public import GameTheoryComplexity.Backend.SATGame
+
+@[expose] public section
 
 /-! Correctness of the reverse incidence scanner on the concrete SAT encoding. -/
 

@@ -1,4 +1,8 @@
-import GameTheory.Core
+module
+
+public import GameTheory.Core
+
+@[expose] public section
 
 /-! The default Core surface carries direct utility transfer. Uniform utility
 certificates and their mixture bridge require an explicit additional import. -/

@@ -1,4 +1,8 @@
-import GameTheory.Finite.BimatrixEndpointBounds
+module
+
+public import GameTheory.Finite.BimatrixEndpointBounds
+
+@[expose] public section
 
 /-! Direct endpoint bounds cover tied signed games, zero coordinates and
 truncated negative coordinates, without confusing width with validity. -/

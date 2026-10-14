@@ -1,6 +1,10 @@
-import GameTheory.Math.Probability.SequentialSampling
-import GameTheory.Math.Probability.Uniform
-import GameTheory.Math.Probability.FiniteUniform
+module
+
+public import GameTheory.Math.Probability.SequentialSampling
+public import GameTheory.Math.Probability.Uniform
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 /-! # Correlated reconstruction and no-incoming-information controls -/
 

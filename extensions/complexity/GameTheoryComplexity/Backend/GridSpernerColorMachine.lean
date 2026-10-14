@@ -1,6 +1,10 @@
-import GameTheoryComplexity.Backend.GridColoringPortMachine
-import GameTheoryComplexity.Backend.SpernerRoutingDecoderMachine
-import GameTheory.Math.GridSpernerRouting
+module
+
+public import GameTheoryComplexity.Backend.GridColoringPortMachine
+public import GameTheoryComplexity.Backend.SpernerRoutingDecoderMachine
+public import GameTheory.Math.GridSpernerRouting
+
+@[expose] public section
 
 /-! Binary coordinate queries select a local color tile after division by six.
 Source collars replace the known endpoint, while seeded pointer queries compute

@@ -1,4 +1,8 @@
-import GameTheory.Math.ComplementaryLabels
+module
+
+public import GameTheory.Math.ComplementaryLabels
+
+@[expose] public section
 
 /-! Finite paired-label controls exercise the complementary boundary, a missing
 label with a distinct unique duplicate, and failure of the size/coverage guards. -/

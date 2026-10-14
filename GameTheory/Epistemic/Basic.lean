@@ -1,3 +1,5 @@
+module
+
 /-
 # Setoid epistemic partitions
 
@@ -6,10 +8,12 @@ reports use an ordinary PMF and arbitrary set events; no finiteness capability
 is stored in the epistemic data.
 -/
 
-import GameTheory.Epistemic.Knowledge
-import GameTheory.Math.Probability.Bounds
-import GameTheory.Math.Probability.ExpectationConditioning
-import GameTheory.Math.Probability.Support
+public import GameTheory.Epistemic.Knowledge
+public import GameTheory.Math.Probability.Bounds
+public import GameTheory.Math.Probability.ExpectationConditioning
+public import GameTheory.Math.Probability.Support
+
+@[expose] public section
 
 noncomputable section
 

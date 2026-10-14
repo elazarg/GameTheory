@@ -1,3 +1,5 @@
+module
+
 /-
 # Rosenthal-potential fixture
 
@@ -6,7 +8,9 @@ across resources raises both the deviator's utility and Rosenthal's potential
 by one. A constant candidate therefore fails the exact-potential identity.
 -/
 
-import GameTheory.Congestion
+public import GameTheory.Congestion
+
+@[expose] public section
 
 noncomputable section
 

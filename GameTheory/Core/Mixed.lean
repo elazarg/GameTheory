@@ -1,3 +1,5 @@
+module
+
 /-
 # The mixed extension and its equilibria
 
@@ -17,7 +19,9 @@ reason to survive the embedding, and nothing in a `WeakPreference` makes it do
 so.
 -/
 
-import GameTheory.Core.Utility
+public import GameTheory.Core.Utility
+
+@[expose] public section
 
 noncomputable section
 

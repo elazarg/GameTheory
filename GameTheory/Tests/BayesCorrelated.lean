@@ -1,3 +1,5 @@
+module
+
 /-
 # Bayes-Nash and Bayes-correlated equilibrium probe
 
@@ -5,8 +7,10 @@ A fair true type is duplicated as a private signal. Matching it earns one;
 recommending its opposite remains plausible but fails obedience.
 -/
 
-import GameTheory.Core.BayesCorrelated
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Core.BayesCorrelated
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 open GameTheory.Math.Probability
 

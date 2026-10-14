@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: dependent coordinate cylinders
 
@@ -11,8 +13,10 @@ graph theorem can impose pairwise-disjoint coordinate sets at its own boundary;
 the probability identity itself does not need that assumption.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteConditionalIndependence
-import GameTheory.Languages.MAID.Basic
+public import GameTheory.Experimental.PostArchitecture.FiniteConditionalIndependence
+public import GameTheory.Languages.MAID.Basic
+
+@[expose] public section
 
 noncomputable section
 

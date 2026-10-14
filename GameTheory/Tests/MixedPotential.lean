@@ -1,3 +1,5 @@
+module
+
 /-
 Hostile finite consumer for the mixed extension of an exact potential.
 
@@ -6,8 +8,10 @@ to one half.  The same nonzero change is then checked through the generic
 randomized expected-utility/potential identity.
 -/
 
-import GameTheory.Core.MixedPotential
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Core.MixedPotential
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

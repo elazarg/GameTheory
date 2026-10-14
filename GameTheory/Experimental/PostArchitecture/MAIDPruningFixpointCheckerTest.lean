@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-109: executable checker consumers
 
@@ -5,9 +7,11 @@ The executable edge-addition checker accepts the two existing semantic
 fixpoint certificates with explicit complete player enumerations.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointChecker
-import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointPositiveTest
-import GameTheory.Experimental.PostArchitecture.MAIDForgetfulMovieStarAudit
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointChecker
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointPositiveTest
+public import GameTheory.Experimental.PostArchitecture.MAIDForgetfulMovieStarAudit
+
+@[expose] public section
 
 namespace GameTheory.Experimental.PostArchitecture
 

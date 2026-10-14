@@ -1,3 +1,5 @@
+module
+
 /-
 # Utility-scale invariance
 
@@ -7,7 +9,9 @@ dominance consequences for arbitrary stochastic game forms at the canonical
 `GameForm` layer.
 -/
 
-import GameTheory.Core.Response
+public import GameTheory.Core.Response
+
+@[expose] public section
 
 noncomputable section
 

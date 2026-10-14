@@ -1,5 +1,9 @@
-import GameTheory.Math.Probability.ExpectationAlgebra
-import Mathlib.Tactic.Linarith
+module
+
+public import GameTheory.Math.Probability.ExpectationAlgebra
+public import Mathlib.Tactic.Linarith
+
+@[expose] public section
 /-! # Individual bounds from aggregate comparisons
 
 When members share a near-maximizing action, an aggregate payoff comparison

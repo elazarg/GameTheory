@@ -1,3 +1,5 @@
+module
+
 /-
 # Information-set deviations do not characterize general SPE
 
@@ -8,8 +10,10 @@ set.  Payoff complementarity makes changing both decisions profitable even
 though changing either information-state action alone is not.
 -/
 
-import GameTheory.Protocol.SubgamePerfect
-import GameTheory.Math.Probability.Mixture
+public import GameTheory.Protocol.SubgamePerfect
+public import GameTheory.Math.Probability.Mixture
+
+@[expose] public section
 
 noncomputable section
 

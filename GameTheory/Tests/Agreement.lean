@@ -1,3 +1,5 @@
+module
+
 /-
 # Common-knowledge agreement regression
 
@@ -6,8 +8,10 @@ other. The full event gives a positive common-knowledge agreement witness;
 the true singleton has different posteriors and cannot be common knowledge.
 -/
 
-import GameTheory.Epistemic.Agreement
-import GameTheory.Epistemic.ApproximateAgreement
+public import GameTheory.Epistemic.Agreement
+public import GameTheory.Epistemic.ApproximateAgreement
+
+@[expose] public section
 
 noncomputable section
 

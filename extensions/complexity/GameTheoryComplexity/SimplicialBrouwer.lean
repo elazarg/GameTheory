@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.SimplicialBrouwer
+module
+
+public import GameTheoryComplexity.Backend.SimplicialBrouwer
+
+@[expose] public section
 
 /-! PPAD-completeness for circuit-coded simplicial Brouwer search with rational
 barycenter residuals. This is a discrete displacement problem; unrestricted

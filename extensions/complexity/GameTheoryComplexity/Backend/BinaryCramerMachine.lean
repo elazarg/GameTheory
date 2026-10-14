@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinaryBirdDeterminantMachine
+module
+
+public import GameTheoryComplexity.Backend.BinaryBirdDeterminantMachine
+
+@[expose] public section
 
 /-! Packed column replacement and signed Cramer numerator machines.
 All scalar and matrix buffers retain their supplied field width. -/

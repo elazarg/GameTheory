@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-057 witness: FOSG observation ownership and Kuhn laws
 
@@ -8,8 +10,10 @@ named FOSG theorems then preserve the canonical complete-history law and every
 outcome projection without constructing a native FOSG runner.
 -/
 
-import GameTheory.Languages.FOSG.Kuhn
-import GameTheory.Tests.Randomized
+public import GameTheory.Languages.FOSG.Kuhn
+public import GameTheory.Tests.Randomized
+
+@[expose] public section
 
 noncomputable section
 

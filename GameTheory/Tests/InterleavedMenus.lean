@@ -1,7 +1,11 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
-import GameTheory.Math.Probability.ExpectationAlgebra
-import GameTheory.Math.Probability.Bounds
+public import GameTheory.Math.Probability.ExpectationAlgebra
+public import GameTheory.Math.Probability.Bounds
+
+@[expose] public section
 
 /-! # An interleaved restricted menu
 

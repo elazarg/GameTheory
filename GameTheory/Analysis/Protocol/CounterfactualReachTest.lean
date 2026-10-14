@@ -1,3 +1,5 @@
+module
+
 /-
 # Counterfactual-reach consumers
 
@@ -6,9 +8,11 @@ The two-step fixture checks that recursive reach multiplies across an actual
 canonical trace rather than passing only at the final step.
 -/
 
-import GameTheory.Analysis.Protocol.CounterfactualReach
-import GameTheory.Languages.FOSG
-import GameTheory.Tests.Randomized
+public import GameTheory.Analysis.Protocol.CounterfactualReach
+public import GameTheory.Languages.FOSG
+public import GameTheory.Tests.Randomized
+
+@[expose] public section
 
 noncomputable section
 

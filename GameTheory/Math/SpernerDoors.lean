@@ -1,4 +1,8 @@
-import GameTheory.Math.SpernerTriangle
+module
+
+public import GameTheory.Math.SpernerTriangle
+
+@[expose] public section
 
 /-! Executable selection of oriented doors in a three-color triangle.
 Each sign occurs on at most one edge. A triangle has exactly one unmatched

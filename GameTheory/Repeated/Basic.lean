@@ -1,3 +1,5 @@
+module
+
 /-
 # Public-action repeated play
 
@@ -12,8 +14,10 @@ No probability law over an infinite path is introduced. Infinite-horizon
 payoff aggregations build on the generated `ℕ`-indexed path in `Discounted`.
 -/
 
-import GameTheory.Core.Utility
-import Mathlib.Topology.Instances.Nat
+public import GameTheory.Core.Utility
+public import Mathlib.Topology.Instances.Nat
+
+@[expose] public section
 
 noncomputable section
 

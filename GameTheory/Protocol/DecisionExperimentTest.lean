@@ -1,3 +1,5 @@
+module
+
 /-
 # Controls for observation abstraction
 
@@ -6,8 +8,10 @@ unreachable state is harmless. Infinite hidden-state and action carriers use
 the same guarded optimal-law correspondence.
 -/
 
-import GameTheory.Protocol.DecisionPayoff
-import GameTheory.Math.Probability.Mixture
+public import GameTheory.Protocol.DecisionPayoff
+public import GameTheory.Math.Probability.Mixture
+
+@[expose] public section
 noncomputable section
 namespace GameTheory.Tests.DecisionExperiment
 open GameTheory.Math.Probability GameTheory.Math.Probability.ObservationAbstraction

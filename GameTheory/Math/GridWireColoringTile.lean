@@ -1,6 +1,10 @@
-import GameTheory.Math.SpernerGridGeometry
-import GameTheory.Math.SpernerTriangle
-import Mathlib.Data.Fintype.Option
+module
+
+public import GameTheory.Math.SpernerGridGeometry
+public import GameTheory.Math.SpernerTriangle
+public import Mathlib.Data.Fintype.Option
+
+@[expose] public section
 
 /-! Constant-size color tiles thicken directed grid paths. Incoming and outgoing
 ports carry opposite zero/one transitions; all other boundary points have color

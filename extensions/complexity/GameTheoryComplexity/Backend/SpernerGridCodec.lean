@@ -1,5 +1,9 @@
-import Complexitylib.Mathlib.NatBits
-import GameTheory.Math.SpernerGridGeometry
+module
+
+public import Complexitylib.Mathlib.NatBits
+public import GameTheory.Math.SpernerGridGeometry
+
+@[expose] public section
 
 /-! Fixed-width little-endian grid nodes reserve the all-zero word for the
 boundary source. Triangle words carry a tag, an orientation bit, and two

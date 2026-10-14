@@ -1,3 +1,5 @@
+module
+
 /-
 # PMF fictitious-play trajectories
 
@@ -11,10 +13,12 @@ by Fictitious Play,” in T. C. Koopmans (ed.), *Activity Analysis of Production
 and Allocation*, Cowles Commission Monograph 13 (1951), 374--376.
 -/
 
-import GameTheory.Core.MixedImprovement
-import GameTheory.Core.Response
-import GameTheory.Math.Probability.Uniform
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Core.MixedImprovement
+public import GameTheory.Core.Response
+public import GameTheory.Math.Probability.Uniform
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

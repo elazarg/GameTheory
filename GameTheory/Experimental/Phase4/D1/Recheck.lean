@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-020: the transformation recheck the decision named
 
@@ -17,7 +19,9 @@ The unit of comparison is what each candidate has to put in a *statement*, since
 that is the axis in question. Recorded evidence, not API.
 -/
 
-import GameTheory.Experimental.Phase1.D1.Stress
+public import GameTheory.Experimental.Phase1.D1.Stress
+
+@[expose] public section
 
 noncomputable section
 

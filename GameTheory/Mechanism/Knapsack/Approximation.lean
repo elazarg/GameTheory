@@ -1,3 +1,5 @@
+module
+
 /-
 # Executable knapsack half approximation
 
@@ -9,9 +11,11 @@ A. Mu'alem and N. Nisan, “Truthful Approximation Mechanisms for Restricted
 Combinatorial Auctions,” *Games and Economic Behavior* 64 (2008).
 -/
 
-import GameTheory.Mechanism.Knapsack.ApproximationCorrectness
-import GameTheory.Mechanism.Knapsack.Correctness
-import Mathlib.Algebra.Order.BigOperators.Group.Finset
+public import GameTheory.Mechanism.Knapsack.ApproximationCorrectness
+public import GameTheory.Mechanism.Knapsack.Correctness
+public import Mathlib.Algebra.Order.BigOperators.Group.Finset
+
+@[expose] public section
 
 namespace GameTheory.Mechanism.Knapsack
 

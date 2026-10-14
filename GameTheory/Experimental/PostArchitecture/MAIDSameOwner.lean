@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-038: same-owner incomparable MAID decisions
 
@@ -11,7 +13,9 @@ The cross-reading compiled policy below is legal for that interface but cannot
 come from any native policy.
 -/
 
-import Mathlib.Data.Bool.Basic
+public import Mathlib.Data.Bool.Basic
+
+@[expose] public section
 
 namespace GameTheory.Experimental.MAIDSameOwner
 

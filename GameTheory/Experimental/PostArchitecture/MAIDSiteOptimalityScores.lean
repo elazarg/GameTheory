@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-107: site-local optimality score bridges
 
@@ -6,8 +8,10 @@ replacement.  It does not assert optimality transport or deviation coverage:
 those statements still require the graphical nonreachability argument.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDSiteOptimality
-import GameTheory.Experimental.PostArchitecture.MAIDReplacementInvariantUtility
+public import GameTheory.Experimental.PostArchitecture.MAIDSiteOptimality
+public import GameTheory.Experimental.PostArchitecture.MAIDReplacementInvariantUtility
+
+@[expose] public section
 
 noncomputable section
 

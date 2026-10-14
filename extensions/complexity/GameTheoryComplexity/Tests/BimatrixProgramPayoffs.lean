@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BimatrixProgramMachine
+module
+
+public import GameTheoryComplexity.Backend.BimatrixProgramMachine
+
+@[expose] public section
 
 /-! Entry controls distinguish affine and comparator feedback, including signed zero. -/
 namespace GameTheory.Complexity.Tests.BimatrixProgramPayoffs

@@ -1,3 +1,5 @@
+module
+
 /-
 # Chance-rooted Zermelo integration witness
 
@@ -9,7 +11,9 @@ consequential off-path decision. The test exercises chance, global contingent
 plans, perfect-information separation, and the public EFG existence theorem.
 -/
 
-import GameTheory.Languages.EFG.Zermelo
+public import GameTheory.Languages.EFG.Zermelo
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Perfect public monitoring for stochastic games
 
@@ -6,8 +8,10 @@ observe proof-free stochastic stage records; Protocol retains legality and
 positive-support evidence internally.
 -/
 
-import GameTheory.Stochastic.Basic
-import GameTheory.Protocol.Strategic
+public import GameTheory.Stochastic.Basic
+public import GameTheory.Protocol.Strategic
+
+@[expose] public section
 
 noncomputable section
 

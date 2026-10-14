@@ -1,3 +1,5 @@
+module
+
 /-
 # May's theorem
 
@@ -10,10 +12,12 @@ Primary reference: K. O. May, “A Set of Independent Necessary and Sufficient
 Conditions for Simple Majority Decision,” *Econometrica* 20 (1952).
 -/
 
-import GameTheory.Core.Rank
-import Mathlib.Algebra.BigOperators.Ring.Finset
-import Mathlib.Basic.Sign.Basic
-import Mathlib.Tactic.Order
+public import GameTheory.Core.Rank
+public import Mathlib.Algebra.BigOperators.Ring.Finset
+public import Mathlib.Basic.Sign.Basic
+public import Mathlib.Tactic.Order
+
+@[expose] public section
 
 namespace GameTheory.May
 

@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.SpernerGridCodec
-import GameTheory.Math.SpernerGridGraph
+module
+
+public import GameTheoryComplexity.Backend.SpernerGridCodec
+public import GameTheory.Math.SpernerGridGraph
+
+@[expose] public section
 
 /-! Binary word semantics for the local Sperner graph. The source has the zero
 word, triangles use fixed coordinate blocks, and every rejected word is isolated.

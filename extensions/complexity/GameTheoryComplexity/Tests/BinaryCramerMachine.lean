@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BinaryCramerMachine
-import GameTheoryComplexity.Backend.BinaryBirdWidth
+module
+
+public import GameTheoryComplexity.Backend.BinaryCramerMachine
+public import GameTheoryComplexity.Backend.BinaryBirdWidth
+
+@[expose] public section
 
 namespace GameTheory.Complexity.Tests.BinaryCramerMachine
 open GameTheory.Complexity.Backend

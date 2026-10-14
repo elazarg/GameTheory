@@ -1,5 +1,9 @@
-import Complexitylib.Mathlib.NatBits
-import GameTheory.Finite.BimatrixNashCertificate
+module
+
+public import Complexitylib.Mathlib.NatBits
+public import GameTheory.Finite.BimatrixNashCertificate
+
+@[expose] public section
 
 /-! Fixed-width little-endian fields for the ordinary integer numerator
 certificate. The machine verifier and encoding proofs share this total parser. -/

@@ -1,5 +1,9 @@
-import GameTheory.Core.SatisfiabilityGame
-import GameTheory.Math.Probability.FiniteUniform
+module
+
+public import GameTheory.Core.SatisfiabilityGame
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 /-! A satisfying assignment yields a mixed equilibrium of the literal/clause
 game by drawing its selected literals uniformly over the variables. -/

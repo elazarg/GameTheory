@@ -1,3 +1,5 @@
+module
+
 /-
 # Epistemic ownership boundary
 
@@ -6,8 +8,10 @@ experiment retains the Protocol counterexample: a merged execution state may
 carry distinct history-local information states.
 -/
 
-import GameTheory.Protocol.Information
-import GameTheory.Epistemic.Agreement
+public import GameTheory.Protocol.Information
+public import GameTheory.Epistemic.Agreement
+
+@[expose] public section
 
 noncomputable section
 

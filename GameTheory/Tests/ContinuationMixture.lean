@@ -1,10 +1,14 @@
+module
+
 /- Copyright (c) 2026 GameTheory contributors. All rights reserved. -/
 
-import GameTheory.Protocol.Continuation
-import GameTheory.Protocol.Zermelo
-import GameTheory.Protocol.ContinuationLaw
-import GameTheory.Math.Probability.Uniform
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Protocol.Continuation
+public import GameTheory.Protocol.Zermelo
+public import GameTheory.Protocol.ContinuationLaw
+public import GameTheory.Math.Probability.Uniform
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 open GameTheory.Math.Probability
 

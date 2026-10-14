@@ -1,3 +1,5 @@
+module
+
 /-
 # Fully mixed assessments with optimal perturbed local choices
 
@@ -13,17 +15,19 @@ This is a local-deviation theorem. Whole continuation-policy optimality requires
 a separate perfect-recall argument.
 -/
 
-import GameTheory.Analysis.LocalChoiceFixedPoint
-import GameTheory.Analysis.Protocol.BehavioralBayes
-import GameTheory.Analysis.Protocol.BehavioralContinuity
-import GameTheory.Protocol.BehavioralMixture
-import GameTheory.Protocol.BehavioralTerminal
-import GameTheory.Protocol.FiniteHorizon
-import GameTheory.Protocol.FiniteInformation
-import GameTheory.Math.Probability.ExpectationMixture
-import GameTheory.Math.Probability.Uniform
-import GameTheory.Math.Probability.UniformTremble
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Analysis.LocalChoiceFixedPoint
+public import GameTheory.Analysis.Protocol.BehavioralBayes
+public import GameTheory.Analysis.Protocol.BehavioralContinuity
+public import GameTheory.Protocol.BehavioralMixture
+public import GameTheory.Protocol.BehavioralTerminal
+public import GameTheory.Protocol.FiniteHorizon
+public import GameTheory.Protocol.FiniteInformation
+public import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Math.Probability.Uniform
+public import GameTheory.Math.Probability.UniformTremble
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

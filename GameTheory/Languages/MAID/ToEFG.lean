@@ -1,3 +1,5 @@
+module
+
 /-
 # Explicit-order typed MAID serialization
 
@@ -9,9 +11,11 @@ equivalence intentionally compares their image after forgetting history down
 to the typed assignment.
 -/
 
-import GameTheory.Languages.MAID.Basic
-import GameTheory.Languages.EFG
-import GameTheory.Math.Probability.Support
+public import GameTheory.Languages.MAID.Basic
+public import GameTheory.Languages.EFG
+public import GameTheory.Math.Probability.Support
+
+@[expose] public section
 
 noncomputable section
 

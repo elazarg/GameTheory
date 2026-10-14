@@ -1,3 +1,5 @@
+module
+
 /-
 # Quantitative approximate agreement
 
@@ -6,8 +8,10 @@ each information fiber and aggregating with the PMF fiberwise expectation law.
 The state space, event cells, and probability support may be infinite.
 -/
 
-import GameTheory.Epistemic.Approximate
-import GameTheory.Math.Probability.ExpectationConditioning
+public import GameTheory.Epistemic.Approximate
+public import GameTheory.Math.Probability.ExpectationConditioning
+
+@[expose] public section
 
 noncomputable section
 

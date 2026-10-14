@@ -1,6 +1,10 @@
-import GameTheory.Finite.BimatrixAffineGate
-import GameTheory.Finite.BimatrixComparatorGate
-import Mathlib.Algebra.BigOperators.Fin
+module
+
+public import GameTheory.Finite.BimatrixAffineGate
+public import GameTheory.Finite.BimatrixComparatorGate
+public import Mathlib.Algebra.BigOperators.Fin
+
+@[expose] public section
 
 /-! Accepted concrete equilibria exercise affine clipping and strict comparison
 on both sides of the output range, including an interior fractional output. -/

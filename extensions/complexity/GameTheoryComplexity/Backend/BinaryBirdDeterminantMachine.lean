@@ -1,4 +1,8 @@
-import GameTheoryComplexity.Backend.BinarySignedMatrixMachine
+module
+
+public import GameTheoryComplexity.Backend.BinarySignedMatrixMachine
+
+@[expose] public section
 
 /-! Fixed-width, materialized Bird determinant machines.
 

@@ -1,5 +1,9 @@
-import GameTheory.Math.EndOfLine
-import Mathlib.Data.Fintype.Vector
+module
+
+public import GameTheory.Math.EndOfLine
+public import Mathlib.Data.Fintype.Vector
+
+@[expose] public section
 
 /-! Finite End-of-Line totality for fixed-width binary words. -/
 

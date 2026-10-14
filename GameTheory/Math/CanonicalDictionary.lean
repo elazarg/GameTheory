@@ -1,5 +1,9 @@
-import GameTheory.Math.FiniteBasisExchange
-import GameTheory.Math.DictionaryReindex
+module
+
+public import GameTheory.Math.FiniteBasisExchange
+public import GameTheory.Math.DictionaryReindex
+
+@[expose] public section
 
 /-! Sorted finite sets give one dictionary for each basis. Sorting a column
 replacement permutes the basis coordinates and preserves symbolic feasibility.

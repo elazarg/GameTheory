@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.SpernerCornerMachine
-import GameTheory.Math.GridBrouwer
+module
+
+public import GameTheoryComplexity.Backend.SpernerCornerMachine
+public import GameTheory.Math.GridBrouwer
+
+@[expose] public section
 
 /-! Exact fixed-size residual lookup for sixth-grid points in an affine triangle.
 Each input field is checked against its canonical encoding before a table entry

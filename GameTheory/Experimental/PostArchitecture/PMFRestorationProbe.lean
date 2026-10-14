@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-122: general-PMF restoration feasibility
 
@@ -7,10 +9,12 @@ infinite support, countable conditioning, and the danger of interpreting a
 totalized real sum as an expected payoff. It introduces no game interface.
 -/
 
-import GameTheory.Math.Probability.Expectation
-import GameTheory.Math.Probability.ExtendedExpectation
-import Mathlib.Probability.ProbabilityMassFunction.Constructions
-import Mathlib.Analysis.SpecificLimits.Basic
+public import GameTheory.Math.Probability.Expectation
+public import GameTheory.Math.Probability.ExtendedExpectation
+public import Mathlib.Probability.ProbabilityMassFunction.Constructions
+public import Mathlib.Analysis.SpecificLimits.Basic
+
+@[expose] public section
 
 noncomputable section
 

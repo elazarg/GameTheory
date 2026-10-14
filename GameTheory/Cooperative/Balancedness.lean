@@ -1,3 +1,5 @@
+module
+
 /-
 # Balanced coalitional games
 
@@ -12,7 +14,9 @@ Methods to the Theory of Cooperative Games,” 1963; L. S. Shapley, “On
 Balanced Sets and Cores,” *Naval Research Logistics Quarterly* 14 (1967).
 -/
 
-import GameTheory.Core.Coalitional
+public import GameTheory.Core.Coalitional
+
+@[expose] public section
 
 namespace GameTheory
 

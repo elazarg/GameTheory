@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixVerifier
-import GameTheoryComplexity.Backend.BimatrixCertificateVerifierCorrectness
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixVerifier
+public import GameTheoryComplexity.Backend.BimatrixCertificateVerifierCorrectness
+
+@[expose] public section
 
 /-! The binary rectangular-game verifier agrees with the canonical signed
 integer certificate predicates, including support-sensitive best responses. -/

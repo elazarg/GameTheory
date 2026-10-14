@@ -1,5 +1,9 @@
-import Mathlib.Data.Nat.Basic
-import Mathlib.Order.Basic
+module
+
+public import Mathlib.Data.Nat.Basic
+public import Mathlib.Order.Basic
+
+@[expose] public section
 
 /-! Stable finite minimum scans with explicit eligibility and comparison flags.
 The executable recurrence visits indices in increasing order and retains the

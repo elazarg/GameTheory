@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite-player congestion games
 
@@ -12,7 +14,9 @@ The static presentation below deliberately reuses `GameForm`, `UtilityGame`,
 equilibrium predicate.
 -/
 
-import GameTheory.Core.Utility
+public import GameTheory.Core.Utility
+
+@[expose] public section
 
 noncomputable section
 

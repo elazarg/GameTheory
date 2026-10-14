@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite game trees
 
@@ -18,7 +20,9 @@ normalized by construction and no proof obligation is stored in the
 constructor.
 -/
 
-import GameTheory.Math.Probability.Product
+public import GameTheory.Math.Probability.Product
+
+@[expose] public section
 
 noncomputable section
 

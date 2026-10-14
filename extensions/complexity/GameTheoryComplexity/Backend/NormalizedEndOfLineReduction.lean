@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.RawEndOfLineReduction
-import GameTheoryComplexity.Backend.EndOfLinePointerNormalization
+module
+
+public import GameTheoryComplexity.Backend.RawEndOfLineReduction
+public import GameTheoryComplexity.Backend.EndOfLinePointerNormalization
+
+@[expose] public section
 
 /-! A polynomial-time instance normalizer yields a search reduction when its
 serialized pointers agree with consistent-edge normalization on every vertex.

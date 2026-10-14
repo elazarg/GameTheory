@@ -1,6 +1,10 @@
+module
+
 /- # EXP-002 downstream signature and composition stress. -/
 
-import GameTheory.Experimental.Phase1.D1.Bundled
+public import GameTheory.Experimental.Phase1.D1.Bundled
+
+@[expose] public section
 
 noncomputable section
 

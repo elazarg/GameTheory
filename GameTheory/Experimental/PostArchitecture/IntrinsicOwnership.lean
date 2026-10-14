@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-062: intrinsic-game ownership
 
@@ -6,7 +8,9 @@ deliberately omitting probability, utility, compiler, mixed/behavioral, and
 Kuhn layers.
 -/
 
-import Mathlib.Logic.Equiv.Bool
+public import Mathlib.Logic.Equiv.Bool
+
+@[expose] public section
 
 namespace GameTheory.Experimental.IntrinsicOwnership
 

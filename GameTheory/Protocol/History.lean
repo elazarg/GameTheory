@@ -1,3 +1,5 @@
+module
+
 /-
 # Running a game along its history
 
@@ -19,8 +21,10 @@ why the recursion composes laws with a support-dependent bind: the continuation
 reads the proof that its input occurs.
 -/
 
-import GameTheory.Protocol.Extraction
-import Mathlib.Probability.ProbabilityMassFunction.Constructions
+public import GameTheory.Protocol.Extraction
+public import Mathlib.Probability.ProbabilityMassFunction.Constructions
+
+@[expose] public section
 
 noncomputable section
 

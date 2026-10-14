@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-104: ancestral-moral score certificates
 
@@ -6,8 +8,10 @@ score interface used by latent finite summation.  It makes no probability or
 conditional-independence claim.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteBNMoralComponents
-import GameTheory.Experimental.PostArchitecture.FiniteBNScoreAssembly
+public import GameTheory.Experimental.PostArchitecture.FiniteBNMoralComponents
+public import GameTheory.Experimental.PostArchitecture.FiniteBNScoreAssembly
+
+@[expose] public section
 
 noncomputable section
 

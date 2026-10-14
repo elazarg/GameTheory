@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-048: finite Electronic Mail as a static Bayesian/Epistemic bridge
 
@@ -6,7 +8,9 @@ setoid posterior model. This gate consumes its mutual-belief threshold and
 Bayes-Nash deviation controls.
 -/
 
-import GameTheory.Examples.ElectronicMail
+public import GameTheory.Examples.ElectronicMail
+
+@[expose] public section
 
 namespace GameTheory.Experimental.PostArchitecture.ElectronicMail
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Nested MAID observation-pruning composition
 
@@ -8,12 +10,14 @@ nearby signal-matching payoff makes the first pruning step unsafe while the
 coarse-to-full step remains safe.  No graphical or recall claim is made.
 -/
 
-import GameTheory.Languages.MAID.ObservationPruning
-import GameTheory.Math.Probability.Mixture
-import GameTheory.Math.Probability.ExpectationBind
-import GameTheory.Math.Probability.ExpectationAlgebra
-import GameTheory.Math.Probability.ExpectationMap
-import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Languages.MAID.ObservationPruning
+public import GameTheory.Math.Probability.Mixture
+public import GameTheory.Math.Probability.ExpectationBind
+public import GameTheory.Math.Probability.ExpectationAlgebra
+public import GameTheory.Math.Probability.ExpectationMap
+public import GameTheory.Math.Probability.ExpectationMixture
+
+@[expose] public section
 
 noncomputable section
 

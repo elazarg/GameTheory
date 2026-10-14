@@ -1,3 +1,5 @@
+module
+
 /-
 # Subgame perfection for extensive-form games
 
@@ -7,8 +9,10 @@ named equivalence; it adds no subtree evaluator or language-specific strategic
 semantics.
 -/
 
-import GameTheory.Languages.EFG.Strategic
-import GameTheory.Protocol.SubgamePerfect
+public import GameTheory.Languages.EFG.Strategic
+public import GameTheory.Protocol.SubgamePerfect
+
+@[expose] public section
 
 noncomputable section
 

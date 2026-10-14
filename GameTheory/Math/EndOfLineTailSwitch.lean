@@ -1,4 +1,8 @@
-import GameTheory.Math.EndOfLine
+module
+
+public import GameTheory.Math.EndOfLine
+
+@[expose] public section
 
 /-! An involution can exchange the continuations at internal vertices while preserving
 every endpoint. The cut condition prevents a exchanged edge from becoming a self-loop. -/

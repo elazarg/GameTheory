@@ -1,3 +1,5 @@
+module
+
 /-
 EXP-134: finite-average play samples one stage and its actual outcome. An
 unrelated profile may have a nonintegrable geometric payoff while stationary
@@ -9,9 +11,11 @@ deviation is rejected because it is infinitely profitable rather than because
 its value is undefined.
 -/
 
-import GameTheory.Repeated.Uniform
-import GameTheory.Experimental.PostArchitecture.PMFStaticGate
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Repeated.Uniform
+public import GameTheory.Experimental.PostArchitecture.PMFStaticGate
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 open GameTheory.Math.Probability
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile regret-matching fixture
 
@@ -6,7 +8,9 @@ genuinely nonuniform law, and the two environment states induce different
 regret vectors before the general approachability theorem is specialized.
 -/
 
-import GameTheory.Analysis.Approachability
+public import GameTheory.Analysis.Approachability
+
+@[expose] public section
 
 noncomputable section
 

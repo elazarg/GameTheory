@@ -1,4 +1,8 @@
-import GameTheoryComplexity.BimatrixNash
+module
+
+public import GameTheoryComplexity.BimatrixNash
+
+@[expose] public section
 
 /-! Kernel-checked arithmetic, malformed-input and canonical-pair controls. -/
 namespace GameTheory.Complexity.Tests.GeneralBimatrix

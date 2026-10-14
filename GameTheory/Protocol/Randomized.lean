@@ -1,3 +1,5 @@
+module
+
 /-
 # Randomizing along the history
 
@@ -14,7 +16,9 @@ theorem here rather than a convention — so this is not a third notion of play
 sitting beside the other two.
 -/
 
-import GameTheory.Protocol.History
+public import GameTheory.Protocol.History
+
+@[expose] public section
 
 noncomputable section
 

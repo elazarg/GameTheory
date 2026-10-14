@@ -1,10 +1,14 @@
-import GameTheoryComplexity.Backend.GridRoutingNodeCodec
-import GameTheoryComplexity.Backend.GridRoutingLiveMachine
-import GameTheoryComplexity.Backend.GridRoutingImageMachine
-import GameTheoryComplexity.Backend.GridRoutingNodeMachine
-import GameTheoryComplexity.Backend.GridRoutingDecoderMachine
-import GameTheoryComplexity.Backend.GridRoutingNodeStepMachine
-import GameTheoryComplexity.Backend.GridRoutingPointerMachine
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingNodeCodec
+public import GameTheoryComplexity.Backend.GridRoutingLiveMachine
+public import GameTheoryComplexity.Backend.GridRoutingImageMachine
+public import GameTheoryComplexity.Backend.GridRoutingNodeMachine
+public import GameTheoryComplexity.Backend.GridRoutingDecoderMachine
+public import GameTheoryComplexity.Backend.GridRoutingNodeStepMachine
+public import GameTheoryComplexity.Backend.GridRoutingPointerMachine
+
+@[expose] public section
 
 /-! Internal routing controls retain arbitrary raw fields, distinguish total
 interpretation from liveness, and exercise displaced crossing occurrences. -/

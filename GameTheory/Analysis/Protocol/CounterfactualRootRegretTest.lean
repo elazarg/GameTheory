@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile finite root-regret consumer
 
@@ -7,10 +9,12 @@ from the zero first-site vector and the unit off-path second-site vector.  This
 is also the failed-learner control for the eventual convergence consumer.
 -/
 
-import GameTheory.Analysis.Protocol.CounterfactualRootBridgeTest
-import GameTheory.Analysis.Protocol.CounterfactualRootRegret
-import GameTheory.Core.Learning
-import GameTheory.Protocol.Strategic
+public import GameTheory.Analysis.Protocol.CounterfactualRootBridgeTest
+public import GameTheory.Analysis.Protocol.CounterfactualRootRegret
+public import GameTheory.Core.Learning
+public import GameTheory.Protocol.Strategic
+
+@[expose] public section
 
 noncomputable section
 

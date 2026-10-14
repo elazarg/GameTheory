@@ -1,5 +1,9 @@
-import GameTheory.Math.GridSperner
-import Mathlib.Tactic.IntervalCases
+module
+
+public import GameTheory.Math.GridSperner
+public import Mathlib.Tactic.IntervalCases
+
+@[expose] public section
 
 /-! Concrete grid controls cover both triangle orientations, arbitrary interior
 colors, multiple boundary transitions, and failure without the boundary rules. -/

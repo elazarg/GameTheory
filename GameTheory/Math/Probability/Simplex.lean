@@ -1,3 +1,5 @@
+module
+
 /-
 # Finite-carrier PMFs as points of the standard simplex
 
@@ -6,9 +8,11 @@ carrier. The ambient function space is the coordinate image of Mathlib's
 canonical finitely supported simplex.
 -/
 
-import GameTheory.Math.Probability.Expectation
-import Mathlib.Analysis.Convex.Basic
-import Mathlib.Geometry.Convex.ConvexSpace.CompactSpaceStdSimplex
+public import GameTheory.Math.Probability.Expectation
+public import Mathlib.Analysis.Convex.Basic
+public import Mathlib.Geometry.Convex.ConvexSpace.CompactSpaceStdSimplex
+
+@[expose] public section
 
 noncomputable section
 

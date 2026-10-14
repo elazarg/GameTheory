@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-107: recall-order data for a pruned MAID
 
@@ -5,12 +7,14 @@ This experiment supplies the local dependent-policy and owner-ordering data
 needed by a later recall argument.  It makes no semantic coverage claim.
 -/
 
-import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
-import GameTheory.Experimental.PostArchitecture.MAIDReplacementInvariantUtility
-import GameTheory.Experimental.PostArchitecture.MAIDSitePolicySurgery
-import GameTheory.Experimental.PostArchitecture.MAIDSiteLocalReduction
-import GameTheory.Experimental.PostArchitecture.MAIDSiteOptimality
-import GameTheory.Math.Probability.FiniteUniform
+public import GameTheory.Experimental.PostArchitecture.MAIDPruningFixpointGraph
+public import GameTheory.Experimental.PostArchitecture.MAIDReplacementInvariantUtility
+public import GameTheory.Experimental.PostArchitecture.MAIDSitePolicySurgery
+public import GameTheory.Experimental.PostArchitecture.MAIDSiteLocalReduction
+public import GameTheory.Experimental.PostArchitecture.MAIDSiteOptimality
+public import GameTheory.Math.Probability.FiniteUniform
+
+@[expose] public section
 
 noncomputable section
 

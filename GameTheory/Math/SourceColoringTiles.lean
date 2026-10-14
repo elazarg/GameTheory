@@ -1,4 +1,8 @@
-import GameTheory.Math.GridWireColoringTile
+module
+
+public import GameTheory.Math.GridWireColoringTile
+
+@[expose] public section
 
 /-! Four finite color tiles carry the standard boundary entrance into a shifted
 routed graph. Their specified collars match the ordinary path tiles, and none

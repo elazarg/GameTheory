@@ -1,6 +1,10 @@
+module
+
 /- # EXP-002 indexed-signature candidate. -/
 
-import GameTheory.Experimental.Phase1.D2.FiniteSupportPMF
+public import GameTheory.Experimental.Phase1.D2.FiniteSupportPMF
+
+@[expose] public section
 
 noncomputable section
 

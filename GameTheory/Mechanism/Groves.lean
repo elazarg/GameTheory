@@ -1,3 +1,5 @@
+module
+
 /-
 # Groves mechanisms
 
@@ -11,8 +13,10 @@ Primary references: E. H. Clarke, “Multipart Pricing of Public Goods,”
 (1973).
 -/
 
-import GameTheory.Mechanism.Auction
-import GameTheory.Mechanism.QuasiLinear
+public import GameTheory.Mechanism.Auction
+public import GameTheory.Mechanism.QuasiLinear
+
+@[expose] public section
 
 noncomputable section
 

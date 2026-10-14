@@ -1,7 +1,11 @@
-import GameTheoryComplexity.Backend.UniformCircuitSpecialization
-import GameTheoryComplexity.Backend.EndOfLineScalarQueries
-import GameTheoryComplexity.Backend.CircuitVectorEmission
-import GameTheoryComplexity.Backend.EndOfLineProblem
+module
+
+public import GameTheoryComplexity.Backend.UniformCircuitSpecialization
+public import GameTheoryComplexity.Backend.EndOfLineScalarQueries
+public import GameTheoryComplexity.Backend.CircuitVectorEmission
+public import GameTheoryComplexity.Backend.EndOfLineProblem
+
+@[expose] public section
 
 /-! Uniform circuit generation serializes polynomial-time word pointers.
 A polynomial-time width ruler supplies the vertex length. Scalar bit computations

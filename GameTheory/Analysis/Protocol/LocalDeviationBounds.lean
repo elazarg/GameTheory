@@ -1,7 +1,11 @@
+module
+
 /- Copyright (c) 2026 VegasCore contributors. Released under MIT; see NOTICE. -/
 
-import GameTheory.Analysis.Protocol.RestrictionIncentives
-import GameTheory.Math.Probability.ExpectationMixture
+public import GameTheory.Analysis.Protocol.RestrictionIncentives
+public import GameTheory.Math.Probability.ExpectationMixture
+
+@[expose] public section
 
 /-! # Bounds for local continuation deviations
 

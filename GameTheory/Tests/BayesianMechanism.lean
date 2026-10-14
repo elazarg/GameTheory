@@ -1,3 +1,5 @@
+module
+
 /-
 Hostile Bayesian-mechanism integration probe.
 
@@ -8,8 +10,10 @@ Bayes-correlated. The explicit false-type lie prevents the result from passing
 only because payoffs or the prior are degenerate.
 -/
 
-import GameTheory.Core.BayesCorrelated
-import GameTheory.Mechanism.BayesianIncentives
+public import GameTheory.Core.BayesCorrelated
+public import GameTheory.Mechanism.BayesianIncentives
+
+@[expose] public section
 
 noncomputable section
 

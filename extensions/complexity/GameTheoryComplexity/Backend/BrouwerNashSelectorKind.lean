@@ -1,7 +1,11 @@
-import GameTheoryComplexity.Backend.BrouwerNashKindCorrectness
-import GameTheoryComplexity.Backend.BrouwerNashGlobalCorrectness
-import GameTheoryComplexity.Backend.BrouwerNashColorQuery
-import GameTheoryComplexity.Backend.BrouwerNashQueryRegions
+module
+
+public import GameTheoryComplexity.Backend.BrouwerNashKindCorrectness
+public import GameTheoryComplexity.Backend.BrouwerNashGlobalCorrectness
+public import GameTheoryComplexity.Backend.BrouwerNashColorQuery
+public import GameTheoryComplexity.Backend.BrouwerNashQueryRegions
+
+@[expose] public section
 
 /-! The canonical combined comparator flag for the allocated Brouwer feedback program. -/
 namespace GameTheory.Complexity.Backend.BrouwerNashSelectorKind

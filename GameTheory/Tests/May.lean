@@ -1,3 +1,5 @@
+module
+
 /-
 # May theorem fixture
 
@@ -5,7 +7,9 @@ A three-voter strict majority exercises the characterization away from ties
 and empty electorates.
 -/
 
-import GameTheory.Core.May
+public import GameTheory.Core.May
+
+@[expose] public section
 
 namespace GameTheory.Tests.May
 

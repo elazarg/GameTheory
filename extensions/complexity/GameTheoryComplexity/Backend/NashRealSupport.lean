@@ -1,7 +1,11 @@
-import GameTheory.Core.BimatrixSupport
-import GameTheory.Core.ConstrainedNash
-import GameTheory.Math.Probability.Support
-import GameTheoryComplexity.Backend.NashSupportSystem
+module
+
+public import GameTheory.Core.BimatrixSupport
+public import GameTheory.Core.ConstrainedNash
+public import GameTheory.Math.Probability.Support
+public import GameTheoryComplexity.Backend.NashSupportSystem
+
+@[expose] public section
 
 /-! A canonical mixed Nash equilibrium supplies the two feasible fixed-support
 linear systems used to obtain bounded rational witnesses. -/

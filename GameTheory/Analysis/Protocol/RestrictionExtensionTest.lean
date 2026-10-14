@@ -1,3 +1,5 @@
+module
+
 /-
 # Extending a sequential equilibrium through the identity restriction
 
@@ -6,9 +8,11 @@ exiting and rewarding off path extends to a sequential equilibrium with the
 same terminal play, beliefs and behavior at every decision.
 -/
 
-import GameTheory.Analysis.Protocol.RestrictionExtension
-import GameTheory.Analysis.Protocol.SequentialOneShotTest
-import GameTheory.Analysis.Protocol.SequentialExistenceTest
+public import GameTheory.Analysis.Protocol.RestrictionExtension
+public import GameTheory.Analysis.Protocol.SequentialOneShotTest
+public import GameTheory.Analysis.Protocol.SequentialExistenceTest
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,8 +1,14 @@
-import Complexitylib.Classes.P.Cobham
-import Complexitylib.Classes.P.Cobham.Internal.StringOps
-import Complexitylib.Mathlib.NatBits
-import Mathlib.Tactic.FinCases
-import Mathlib.Tactic.Ring
+module
+
+public import Complexitylib.Classes.P.Cobham
+public import Complexitylib.Classes.P.Cobham.Internal.StringOps
+public import Complexitylib.Mathlib.NatBits
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Tactic.Ring
+
+import Complexitylib.Classes.P.Cobham.Internal.Extract
+
+@[expose] public section
 
 /-! Binary certificate arithmetic uses bit positions and bounded word recursion.
 The fields may represent exponentially large naturals; no loop counts their values. -/

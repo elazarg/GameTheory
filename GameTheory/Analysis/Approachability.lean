@@ -1,3 +1,5 @@
+module
+
 /-
 # External-regret matching through Blackwell approachability
 
@@ -13,8 +15,10 @@ Primary reference: S. Hart and A. Mas-Colell, “A General Class of Adaptive
 Strategies,” *Journal of Economic Theory* 98 (2001), 26--54.
 -/
 
-import GameTheory.Math.Probability.ExpectationAlgebra
-import GameTheory.Math.OrthantProjection
+public import GameTheory.Math.Probability.ExpectationAlgebra
+public import GameTheory.Math.OrthantProjection
+
+@[expose] public section
 
 noncomputable section
 

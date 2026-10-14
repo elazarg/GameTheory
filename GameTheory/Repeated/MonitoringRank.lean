@@ -1,3 +1,5 @@
+module
+
 /-
 # Rank conditions for finite public monitoring
 
@@ -12,8 +14,10 @@ each row with the change in the generated one-signal prefix law caused by the
 canonical monitored one-shot deviation.  No infinite signal-path law is used.
 -/
 
-import GameTheory.Repeated.MonitoringContinuation
-import Mathlib.LinearAlgebra.Matrix.Rank
+public import GameTheory.Repeated.MonitoringContinuation
+public import Mathlib.LinearAlgebra.Matrix.Rank
+
+@[expose] public section
 
 noncomputable section
 

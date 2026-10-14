@@ -1,3 +1,5 @@
+module
+
 /-
 # Rosenthal potential for congestion games
 
@@ -11,8 +13,10 @@ Primary reference: R. W. Rosenthal, “A Class of Games Possessing Pure-Strategy
 Nash Equilibria,” *International Journal of Game Theory* 2 (1973).
 -/
 
-import GameTheory.Congestion.Basic
-import GameTheory.Core.Potential
+public import GameTheory.Congestion.Basic
+public import GameTheory.Core.Potential
+
+@[expose] public section
 
 noncomputable section
 

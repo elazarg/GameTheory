@@ -1,10 +1,14 @@
+module
+
 /-
 # Reach events of complete histories
 
 Finite-depth cylinder facts for the canonical PMF history runner.
 -/
 
-import GameTheory.Protocol.BehavioralAssessment
+public import GameTheory.Protocol.BehavioralAssessment
+
+@[expose] public section
 
 noncomputable section
 

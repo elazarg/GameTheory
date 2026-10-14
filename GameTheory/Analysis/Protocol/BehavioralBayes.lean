@@ -1,3 +1,5 @@
+module
+
 /-
 # Bayes assessments for fully supported behavioral play
 
@@ -6,7 +8,9 @@ positive probability. Thus Bayes beliefs exist simultaneously at every site,
 including sites that can have zero mass in a later limit.
 -/
 
-import GameTheory.Analysis.Protocol.Sequential
+public import GameTheory.Analysis.Protocol.Sequential
+
+@[expose] public section
 
 noncomputable section
 

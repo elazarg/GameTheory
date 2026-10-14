@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BinaryUnaryArithmetic
-import GameTheoryComplexity.Backend.BinarySignedAddition
+module
+
+public import GameTheoryComplexity.Backend.BinaryUnaryArithmetic
+public import GameTheoryComplexity.Backend.BinarySignedAddition
+
+@[expose] public section
 
 /-! Signed scalar coefficients selected by a unary paired-action index. -/
 namespace GameTheory.Complexity.Backend

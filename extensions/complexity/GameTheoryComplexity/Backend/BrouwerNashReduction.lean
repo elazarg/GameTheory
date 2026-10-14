@@ -1,7 +1,11 @@
-import GameTheoryComplexity.Backend.BrouwerNashProgramCorrectness
-import GameTheoryComplexity.Backend.BrouwerNashAnswerMachine
-import GameTheoryComplexity.Backend.BrouwerNashHeaders
-import GameTheoryComplexity.Backend.BimatrixProgramEmission
+module
+
+public import GameTheoryComplexity.Backend.BrouwerNashProgramCorrectness
+public import GameTheoryComplexity.Backend.BrouwerNashAnswerMachine
+public import GameTheoryComplexity.Backend.BrouwerNashHeaders
+public import GameTheoryComplexity.Backend.BimatrixProgramEmission
+
+@[expose] public section
 
 /-! Scalar coefficient and singleton-kind selectors compose with certified table writers
 to reduce continuous Brouwer search to the canonical rectangular Nash relation. Every accepted

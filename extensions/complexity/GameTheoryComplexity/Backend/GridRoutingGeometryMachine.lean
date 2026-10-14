@@ -1,8 +1,12 @@
-import GameTheoryComplexity.Backend.GridRoutingArithmetic
-import GameTheoryComplexity.Backend.GridRoutingBitFields
-import GameTheoryComplexity.Backend.GridRoutingDivision
-import GameTheory.Math.GridWire
-import GameTheory.Math.GridCrossingLocator
+module
+
+public import GameTheoryComplexity.Backend.GridRoutingArithmetic
+public import GameTheoryComplexity.Backend.GridRoutingBitFields
+public import GameTheoryComplexity.Backend.GridRoutingDivision
+public import GameTheory.Math.GridWire
+public import GameTheory.Math.GridCrossingLocator
+
+@[expose] public section
 
 /-! Binary route geometry uses exact arithmetic with retained carries.
 Comparisons inspect numeric values, so unequal widths and high zero padding

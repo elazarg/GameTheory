@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile arena tests
 
@@ -11,7 +13,9 @@ it cannot distinguish a tree from a merging arena at all. Here `Trace` is data,
 so `IsTreeShaped` is refutable, and this file refutes it.
 -/
 
-import GameTheory.Protocol.Execution
+public import GameTheory.Protocol.Execution
+
+@[expose] public section
 
 noncomputable section
 

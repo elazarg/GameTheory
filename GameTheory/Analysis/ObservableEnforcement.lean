@@ -1,7 +1,11 @@
+module
+
 /- Copyright (c) 2026 VegasCore contributors. Released under MIT; see NOTICE. -/
 
-import GameTheory.Analysis.Enforcement
-import GameTheory.Math.Probability.MonitoredPenalty
+public import GameTheory.Analysis.Enforcement
+public import GameTheory.Math.Probability.MonitoredPenalty
+
+@[expose] public section
 
 /-! # Sound observable deterrence
 

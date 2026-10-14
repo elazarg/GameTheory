@@ -1,9 +1,13 @@
-import GameTheoryComplexity.Backend.GeneralBimatrixColumnWord
-import GameTheoryComplexity.Backend.BinarySubsetMachine
-import GameTheoryComplexity.Backend.BinaryUnaryArithmetic
-import GameTheoryComplexity.Backend.BinarySignedMatrixMachine
-import GameTheoryComplexity.Backend.GeneralBimatrixEndpoint
-import GameTheory.Finite.BimatrixPathBinaryCodec
+module
+
+public import GameTheoryComplexity.Backend.GeneralBimatrixColumnWord
+public import GameTheoryComplexity.Backend.BinarySubsetMachine
+public import GameTheoryComplexity.Backend.BinaryUnaryArithmetic
+public import GameTheoryComplexity.Backend.BinarySignedMatrixMachine
+public import GameTheoryComplexity.Backend.GeneralBimatrixEndpoint
+public import GameTheory.Finite.BimatrixPathBinaryCodec
+
+@[expose] public section
 
 /-! Packed canonical basis matrices for shifted rectangular bimatrix games.
 Selected columns are located by their Boolean membership ordinal. Both matrix

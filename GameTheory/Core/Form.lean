@@ -1,3 +1,5 @@
+module
+
 /-
 # Game forms
 
@@ -9,10 +11,12 @@ Preferences, utilities, deviations, and every solution concept are defined
 elsewhere against this one object.
 -/
 
-import GameTheory.Core.Signature
-import GameTheory.Math.Probability.Product
-import GameTheory.Math.Probability.Mixture
-import GameTheory.Math.Probability.Support
+public import GameTheory.Core.Signature
+public import GameTheory.Math.Probability.Product
+public import GameTheory.Math.Probability.Mixture
+public import GameTheory.Math.Probability.Support
+
+@[expose] public section
 
 noncomputable section
 

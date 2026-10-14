@@ -1,5 +1,9 @@
-import GameTheory.Math.GridBrouwer
-import GameTheoryComplexity.Sperner
+module
+
+public import GameTheory.Math.GridBrouwer
+public import GameTheoryComplexity.Sperner
+
+@[expose] public section
 
 /-! Succinct simplicial Brouwer search uses the existing circuit-coded grid
 but specifies answers by a rational displacement residual. Outputs select a

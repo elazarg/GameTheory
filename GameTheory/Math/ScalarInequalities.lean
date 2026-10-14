@@ -1,5 +1,9 @@
-import Mathlib.Data.Finset.Max
-import Mathlib.Algebra.Order.Field.Rat
+module
+
+public import Mathlib.Data.Finset.Max
+public import Mathlib.Algebra.Order.Field.Rat
+
+@[expose] public section
 
 /-! # Executable scalar feasibility with signed slopes
 

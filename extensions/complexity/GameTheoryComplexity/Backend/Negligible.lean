@@ -1,3 +1,5 @@
+module
+
 /-
 # Agreement of negligible-advantage predicates
 
@@ -5,8 +7,11 @@ The machine library's explicit inverse-power bounds and GameTheory's canonical
 superpolynomial decay predicate describe the same real-valued advantages.
 This bridge keeps probability and security statements on the canonical predicate.
 -/
-import GameTheory.Math.Negligible
-import Complexitylib.Classes.Negligible
+public import GameTheory.Math.Negligible
+public import Complexitylib.Classes.Negligible
+import all Complexitylib.Classes.Negligible
+
+@[expose] public section
 
 namespace GameTheory.Complexity.Backend
 

@@ -1,6 +1,10 @@
-import GameTheory.Math.TabulatedBirdDeterminant
-import GameTheory.Math.IntegerCramerEncoding
-import GameTheory.Math.BirdIterationBounds
+module
+
+public import GameTheory.Math.TabulatedBirdDeterminant
+public import GameTheory.Math.IntegerCramerEncoding
+public import GameTheory.Math.BirdIterationBounds
+
+@[expose] public section
 
 /-! # Division-free computation of common-denominator Cramer fields
 

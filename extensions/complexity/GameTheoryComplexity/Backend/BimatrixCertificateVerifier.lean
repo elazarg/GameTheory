@@ -1,7 +1,11 @@
-import GameTheory.Math.FiniteLinearBitBound
-import GameTheoryComplexity.Backend.BinaryCertificateFold
-import GameTheory.Finite.BimatrixNashCertificate
-import GameTheory.Finite.BimatrixTable
+module
+
+public import GameTheory.Math.FiniteLinearBitBound
+public import GameTheoryComplexity.Backend.BinaryCertificateFold
+public import GameTheory.Finite.BimatrixNashCertificate
+public import GameTheory.Finite.BimatrixTable
+
+@[expose] public section
 
 /-! A binary certificate verifier for the total signed-tally table decoder.
 All iteration clocks are word lengths, dimensions, or tally lengths. -/

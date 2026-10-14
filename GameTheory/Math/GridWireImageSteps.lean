@@ -1,5 +1,9 @@
-import GameTheory.Math.GridWireImage
-import GameTheory.Math.GridWireSwitch
+module
+
+public import GameTheory.Math.GridWireImage
+public import GameTheory.Math.GridWireSwitch
+
+@[expose] public section
 
 /-! The switch ports coincide with the adjacent points of the original strands.
 These coordinate agreements connect routed wire execution to placed switch edges. -/

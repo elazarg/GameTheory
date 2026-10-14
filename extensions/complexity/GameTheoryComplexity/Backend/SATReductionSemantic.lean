@@ -1,7 +1,11 @@
-import GameTheory.Core.SatisfiabilityGameReduction
-import GameTheory.Core.SatisfiabilityGameEncoding
-import GameTheory.Finite.BimatrixTableProblem
-import GameTheoryComplexity.Backend.SATGame
+module
+
+public import GameTheory.Core.SatisfiabilityGameReduction
+public import GameTheory.Core.SatisfiabilityGameEncoding
+public import GameTheory.Finite.BimatrixTableProblem
+public import GameTheoryComplexity.Backend.SATGame
+
+@[expose] public section
 
 /-! The SAT reduction emits an explicit symmetric integer payoff table. Its
 membership equivalence uses canonical mixed Nash and actual table decoding;

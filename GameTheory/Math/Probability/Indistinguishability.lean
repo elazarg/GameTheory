@@ -1,3 +1,5 @@
+module
+
 /-
 # Indistinguishability by sample tests
 
@@ -27,10 +29,12 @@ such precomposition therefore transfers indistinguishability to the images. In
 a game, indistinguishable views transfer to indistinguishable utilities when
 utility is computed from the view.
 -/
-import GameTheory.Math.Probability.MeanComparison
-import GameTheory.Math.Probability.Product
-import GameTheory.Math.Probability.Support
-import GameTheory.Math.Probability.StatisticalDistance
+public import GameTheory.Math.Probability.MeanComparison
+public import GameTheory.Math.Probability.Product
+public import GameTheory.Math.Probability.Support
+public import GameTheory.Math.Probability.StatisticalDistance
+
+@[expose] public section
 
 noncomputable section
 

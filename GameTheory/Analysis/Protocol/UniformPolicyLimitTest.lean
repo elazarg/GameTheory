@@ -1,5 +1,9 @@
-import GameTheory.Analysis.Protocol.UniformPolicyLimit
-import GameTheory.Analysis.Protocol.WellFoundedTerminalEquilibriumTest
+module
+
+public import GameTheory.Analysis.Protocol.UniformPolicyLimit
+public import GameTheory.Analysis.Protocol.WellFoundedTerminalEquilibriumTest
+
+@[expose] public section
 
 noncomputable section
 

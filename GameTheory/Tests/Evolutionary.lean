@@ -1,3 +1,5 @@
+module
+
 /-
 # Evolutionary stability with mixed mutants
 
@@ -5,10 +7,12 @@ A Boolean resident faces every finite-law mutant, not only the other pure
 action. The fair mutant is an explicit non-point-mass negative control.
 -/
 
-import GameTheory.Evolutionary
-import Mathlib.Tactic.FinCases
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.NormNum
+public import GameTheory.Evolutionary
+public import Mathlib.Tactic.FinCases
+public import Mathlib.Tactic.Linarith
+public import Mathlib.Tactic.NormNum
+
+@[expose] public section
 
 noncomputable section
 

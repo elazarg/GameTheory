@@ -1,3 +1,5 @@
+module
+
 /-
 # Pseudo-Nash equilibria need not exist
 
@@ -27,7 +29,9 @@ from a per-size fixed-point theorem. Magnitudes play no role:
 `ParameterizedGame.isPseudoNash_rescale_iff` makes existence invariant under
 per-size rescaling.
 -/
-import GameTheory.Analysis.PseudoNashTest
+public import GameTheory.Analysis.PseudoNashTest
+
+@[expose] public section
 
 noncomputable section
 

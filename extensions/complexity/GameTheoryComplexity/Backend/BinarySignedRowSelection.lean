@@ -1,5 +1,9 @@
-import GameTheoryComplexity.Backend.BinarySignedRowComparison
-import GameTheory.Math.FiniteMinimumScan
+module
+
+public import GameTheoryComplexity.Backend.BinarySignedRowComparison
+public import GameTheory.Math.FiniteMinimumScan
+
+@[expose] public section
 
 /-! Bounded scans selecting the earliest eligible minimum of packed signed rows. -/
 

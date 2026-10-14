@@ -1,3 +1,5 @@
+module
+
 /-
 # Sequential rationality and Nash separate at a site of mass zero
 
@@ -9,8 +11,10 @@ sequentially rational, and that site has mass zero. So the zero-mass term of
 the gap between sequential rationality and Nash is not vacuous.
 -/
 
-import GameTheory.Analysis.Protocol.InformationLocalization
-import GameTheory.Analysis.Protocol.SubgameLocalizationTest
+public import GameTheory.Analysis.Protocol.InformationLocalization
+public import GameTheory.Analysis.Protocol.SubgameLocalizationTest
+
+@[expose] public section
 
 noncomputable section
 

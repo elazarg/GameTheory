@@ -1,3 +1,5 @@
+module
+
 /-
 # EXP-105: conditional continuation from an ordinary PMF
 
@@ -8,9 +10,11 @@ the canonical fiber posterior on supported kept values and a total fallback
 law elsewhere.
 -/
 
-import GameTheory.Experimental.PostArchitecture.FiniteConditionalIndependence
-import GameTheory.Math.Probability.Conditioning
-import GameTheory.Math.Probability.Joint
+public import GameTheory.Experimental.PostArchitecture.FiniteConditionalIndependence
+public import GameTheory.Math.Probability.Conditioning
+public import GameTheory.Math.Probability.Joint
+
+@[expose] public section
 
 noncomputable section
 

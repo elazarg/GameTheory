@@ -1,3 +1,5 @@
+module
+
 /-
 # `GameTheory.Congestion`
 
@@ -7,9 +9,11 @@ re-exported from `GameTheory`: congestion theory is a domain package built on
 the stable static core.
 -/
 
-import GameTheory.Congestion.Rosenthal
-import GameTheory.Congestion.AffinePoA
-import GameTheory.Congestion.Examples
+public import GameTheory.Congestion.Rosenthal
+public import GameTheory.Congestion.AffinePoA
+public import GameTheory.Congestion.Examples
+
+@[expose] public section
 
 namespace GameTheory
 

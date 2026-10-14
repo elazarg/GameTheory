@@ -1,4 +1,8 @@
-import GameTheory.Math.OrientedInvolutionPathWitness
+module
+
+public import GameTheory.Math.OrientedInvolutionPathWitness
+
+@[expose] public section
 
 /-! Raw witnesses exclude the calibrated source and recover alternating terminals. -/
 namespace GameTheory.Tests.OrientedInvolutionPathWitness

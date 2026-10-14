@@ -1,4 +1,8 @@
-import GameTheory.Math.Probability.ExpectationAlgebra
+module
+
+public import GameTheory.Math.Probability.ExpectationAlgebra
+
+@[expose] public section
 
 /-! # Commuting independent expectations -/
 noncomputable section

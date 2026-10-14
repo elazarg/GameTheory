@@ -1,3 +1,5 @@
+module
+
 /-
 # Imperfect-information subgame roots
 
@@ -7,8 +9,10 @@ information set, so it is not a proper subgame.  The initial history remains a
 subgame root, as it must in every protocol.
 -/
 
-import GameTheory.Protocol.SubgamePerfect
-import GameTheory.Tests.Information
+public import GameTheory.Protocol.SubgamePerfect
+public import GameTheory.Tests.Information
+
+@[expose] public section
 
 noncomputable section
 

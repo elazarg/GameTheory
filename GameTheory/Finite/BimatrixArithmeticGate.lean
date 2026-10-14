@@ -1,4 +1,8 @@
-import GameTheory.Finite.BimatrixGateProgram
+module
+
+public import GameTheory.Finite.BimatrixGateProgram
+
+@[expose] public section
 
 /-! Affine comparator-program blocks evaluate integer linear combinations of paired inputs.
 The normalized outputs approximate unit-clipped arithmetic expressions, with error controlled

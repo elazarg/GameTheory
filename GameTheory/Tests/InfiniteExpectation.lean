@@ -1,3 +1,5 @@
+module
+
 /-
 # Infinite expected loss is a defined value
 
@@ -8,9 +10,11 @@ defined value `⊥`, so staying home is a Nash equilibrium. A preference that
 compares only integrable payoffs rejects that equilibrium.
 -/
 
-import GameTheory.Core.Equilibrium
-import GameTheory.Core.ExpectedUtility
-import Mathlib.Analysis.SpecificLimits.Basic
+public import GameTheory.Core.Equilibrium
+public import GameTheory.Core.ExpectedUtility
+public import Mathlib.Analysis.SpecificLimits.Basic
+
+@[expose] public section
 
 noncomputable section
 

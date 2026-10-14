@@ -1,3 +1,5 @@
+module
+
 /-
 # Zermelo backward induction for EFG presentations
 
@@ -7,8 +9,10 @@ transparent EFG presentation; it introduces neither a tree evaluator nor a
 language-specific subgame-perfect predicate.
 -/
 
-import GameTheory.Languages.EFG.SubgamePerfect
-import GameTheory.Protocol.Zermelo
+public import GameTheory.Languages.EFG.SubgamePerfect
+public import GameTheory.Protocol.Zermelo
+
+@[expose] public section
 
 noncomputable section
 

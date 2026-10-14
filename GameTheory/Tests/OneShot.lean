@@ -1,3 +1,5 @@
+module
+
 /-
 # The one-shot deviation principle, exercised
 
@@ -15,7 +17,9 @@ exercised in both directions too: the one-step condition gives global
 optimality, and global optimality gives it back.
 -/
 
-import GameTheory.Tests.Backward
+public import GameTheory.Tests.Backward
+
+@[expose] public section
 
 noncomputable section
 

@@ -1,3 +1,5 @@
+module
+
 /-
 # Hostile intrinsic strategic-form witness
 
@@ -7,8 +9,10 @@ truthful Nash equilibrium and rejects a constant-false control through that
 nonlocal outcome effect.
 -/
 
-import GameTheory.Examples.Intrinsic
-import GameTheory.Languages.Intrinsic.Strategic
+public import GameTheory.Examples.Intrinsic
+public import GameTheory.Languages.Intrinsic.Strategic
+
+@[expose] public section
 
 noncomputable section
 

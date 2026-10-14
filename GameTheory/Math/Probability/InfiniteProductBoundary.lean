@@ -1,3 +1,5 @@
+module
+
 /-
 # Atomic boundary for infinite-coordinate PMF laws
 
@@ -6,12 +8,14 @@ cannot be marginals of one such PMF, even though each finite prefix can be
 sampled independently.
 -/
 
-import GameTheory.Math.Probability.Product
-import GameTheory.Math.Probability.FiniteSampling
-import Mathlib.Analysis.SpecificLimits.Basic
-import GameTheory.Math.Probability.FiniteUniform
-import Mathlib.Probability.Distributions.Geometric
-import Mathlib.Probability.ProductMeasure
+public import GameTheory.Math.Probability.Product
+public import GameTheory.Math.Probability.FiniteSampling
+public import Mathlib.Analysis.SpecificLimits.Basic
+public import GameTheory.Math.Probability.FiniteUniform
+public import Mathlib.Probability.Distributions.Geometric
+public import Mathlib.Probability.ProductMeasure
+
+@[expose] public section
 
 namespace GameTheory.Math.Probability
 

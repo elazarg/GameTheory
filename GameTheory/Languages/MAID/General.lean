@@ -1,3 +1,5 @@
+module
+
 /-
 # General typed MAIDs
 
@@ -18,7 +20,9 @@ The concrete three-node architecture witness remains available explicitly at
 is the validated general surface.
 -/
 
-import GameTheory.Languages.MAID.ObservationPruning
+public import GameTheory.Languages.MAID.ObservationPruning
+
+@[expose] public section
 
 namespace GameTheory.Languages.MAID
 

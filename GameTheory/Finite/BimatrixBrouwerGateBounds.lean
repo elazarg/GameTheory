@@ -1,10 +1,14 @@
-import GameTheory.Finite.BimatrixDyadicGate
-import GameTheory.Finite.BimatrixFeedbackGate
-import GameTheory.Finite.BimatrixColorMeanGate
-import GameTheory.Finite.BimatrixBinaryExtraction
-import GameTheory.Finite.BimatrixInterpolationGate
-import GameTheory.Finite.BimatrixGateProgramBounds
-import GameTheory.Math.GridJitter
+module
+
+public import GameTheory.Finite.BimatrixDyadicGate
+public import GameTheory.Finite.BimatrixFeedbackGate
+public import GameTheory.Finite.BimatrixColorMeanGate
+public import GameTheory.Finite.BimatrixBinaryExtraction
+public import GameTheory.Finite.BimatrixInterpolationGate
+public import GameTheory.Finite.BimatrixGateProgramBounds
+public import GameTheory.Math.GridJitter
+
+@[expose] public section
 
 /-!
 # Error propagation through jittered grid-evaluation gates

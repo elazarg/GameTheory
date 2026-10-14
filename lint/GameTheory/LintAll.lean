@@ -1,16 +1,18 @@
-import GameTheory
-import GameTheory.Finite.BimatrixFeedbackGate
-import GameTheory.Finite.BimatrixGateProgramBounds
-import GameTheory.Finite.BimatrixInterpolationGate
-import GameTheory.Finite.BimatrixDyadicGate
-import GameTheory.Finite.BimatrixBinaryExtraction
-import GameTheory.Finite.BimatrixBrouwerGateBounds
-import GameTheory.Math.GridBrouwerBinaryCell
-import GameTheory.Math.GridBrouwerJitter
-import GameTheory.Math.ClippedFeedbackComposition
-import GameTheory.Finite.BimatrixMinGate
-import GameTheory.Math.GridJitterPair
-import GameTheory.Math.ClippedArithmetic
+module
+
+import all GameTheory
+import all GameTheory.Finite.BimatrixFeedbackGate
+import all GameTheory.Finite.BimatrixGateProgramBounds
+import all GameTheory.Finite.BimatrixInterpolationGate
+import all GameTheory.Finite.BimatrixDyadicGate
+import all GameTheory.Finite.BimatrixBinaryExtraction
+import all GameTheory.Finite.BimatrixBrouwerGateBounds
+import all GameTheory.Math.GridBrouwerBinaryCell
+import all GameTheory.Math.GridBrouwerJitter
+import all GameTheory.Math.ClippedFeedbackComposition
+import all GameTheory.Finite.BimatrixMinGate
+import all GameTheory.Math.GridJitterPair
+import all GameTheory.Math.ClippedArithmetic
 /-
 Lint scope for the public library.
 
@@ -26,518 +28,520 @@ enforce over `GameTheory/`.
 
 New library modules must be added here, or the linters will not see them.
 -/
-import GameTheory.Analysis
-import GameTheory.Analysis.Approachability
-import GameTheory.Analysis.BayesianHierarchy
-import GameTheory.Analysis.Correlated
-import GameTheory.Analysis.CorrelationHierarchy
-import GameTheory.Analysis.DominanceHierarchy
-import GameTheory.Analysis.Examples
-import GameTheory.Analysis.ExpectedUtility
-import GameTheory.Analysis.FictitiousPlayPotential
-import GameTheory.Analysis.IncentiveCone
-import GameTheory.Protocol.DecisionExperiment
-import GameTheory.Analysis.IncentiveHierarchy
-import GameTheory.Analysis.IncentiveSimulation
-import GameTheory.Analysis.Learning
-import GameTheory.Analysis.LocalChoiceFixedPoint
-import GameTheory.Analysis.MatrixValue
-import GameTheory.Analysis.Minimax
-import GameTheory.Analysis.Nash
-import GameTheory.Analysis.Payoff
-import GameTheory.Analysis.PerturbedEquilibrium
-import GameTheory.Analysis.Protocol
-import GameTheory.Analysis.Protocol.AgentCompletion
-import GameTheory.Analysis.Protocol.AgentForm
-import GameTheory.Analysis.Protocol.AssessmentCompactness
-import GameTheory.Analysis.Protocol.BehavioralBayes
-import GameTheory.Analysis.Protocol.BehavioralContinuity
-import GameTheory.Analysis.Protocol.BehavioralConvergence
-import GameTheory.Analysis.Protocol.BehavioralTerminalConvergence
-import GameTheory.Analysis.Protocol.BeliefTransport
-import GameTheory.Analysis.Protocol.CounterfactualDecomposition
-import GameTheory.Analysis.Protocol.CounterfactualReach
-import GameTheory.Analysis.Protocol.CounterfactualRegret
-import GameTheory.Analysis.Protocol.CounterfactualRegretMatching
-import GameTheory.Analysis.Protocol.CounterfactualRootRegret
-import GameTheory.Analysis.Protocol.EFG
-import GameTheory.Analysis.Protocol.EFGExistence
-import GameTheory.Analysis.Protocol.Examples
-import GameTheory.Analysis.Protocol.ExtensiveFormPerfection
-import GameTheory.Analysis.Protocol.Incentives
-import GameTheory.Analysis.Protocol.InformationLocalization
-import GameTheory.Analysis.Protocol.RestrictionBeliefs
-import GameTheory.Analysis.Protocol.RestrictionCompletion
-import GameTheory.Analysis.Protocol.RestrictionDomination
-import GameTheory.Analysis.Protocol.RestrictionExtension
-import GameTheory.Analysis.Protocol.RestrictionIncentives
-import GameTheory.Analysis.Protocol.Sequential
-import GameTheory.Analysis.Protocol.SequentialExistence
-import GameTheory.Analysis.Protocol.SequentialLimits
-import GameTheory.Analysis.Protocol.SequentialOneShot
-import GameTheory.Analysis.Protocol.SequentialPerturbation
-import GameTheory.Analysis.Protocol.SequentialRationality
-import GameTheory.Analysis.Protocol.SubgameLocalization
-import GameTheory.Analysis.Protocol.SupportedChoices
-import GameTheory.Analysis.PseudoCorrelated
-import GameTheory.Analysis.PseudoNash
-import GameTheory.Analysis.Repeated
-import GameTheory.Analysis.Repeated.Examples
-import GameTheory.Analysis.Repeated.Feasible
-import GameTheory.Analysis.Repeated.Folk
-import GameTheory.Analysis.Simplex
-import GameTheory.Analysis.Stochastic
-import GameTheory.Analysis.Stochastic.Discounted
-import GameTheory.Analysis.Stochastic.Examples
-import GameTheory.Analysis.Stochastic.Fink
-import GameTheory.Analysis.TremblingHand
-import GameTheory.Analysis.ZeroSumLearning
-import GameTheory.Congestion
-import GameTheory.Congestion.AffinePoA
-import GameTheory.Congestion.Basic
-import GameTheory.Congestion.Examples
-import GameTheory.Congestion.Rosenthal
-import GameTheory.Cooperative
-import GameTheory.Cooperative.Balancedness
-import GameTheory.Cooperative.Banzhaf
-import GameTheory.Cooperative.Bargaining
-import GameTheory.Cooperative.GaleShapley
-import GameTheory.Cooperative.GaleShapley.Perfect
-import GameTheory.Cooperative.Matching
-import GameTheory.Cooperative.ShapleyShubik
-import GameTheory.Core
-import GameTheory.Core.Approximate
-import GameTheory.Core.Arrow
-import GameTheory.Core.BayesCorrelated
-import GameTheory.Core.Bayesian
-import GameTheory.Core.BayesianEquilibrium
-import GameTheory.Core.BinaryCorrelated
-import GameTheory.Core.BinaryMixed
-import GameTheory.Core.CheapTalk
-import GameTheory.Core.CheapTalkRandomization
-import GameTheory.Core.CoalitionEquilibrium
-import GameTheory.Core.Coalitional
-import GameTheory.Core.CorrelatedDominance
-import GameTheory.Core.Deviation
-import GameTheory.Core.Equilibrium
-import GameTheory.Core.ExpectedUtility
-import GameTheory.Core.FictitiousPlay
-import GameTheory.Core.FictitiousPlayPotential
-import GameTheory.Core.Form
-import GameTheory.Core.GibbardSatterthwaite
-import GameTheory.Core.Learning
-import GameTheory.Core.MatrixGame
-import GameTheory.Core.May
-import GameTheory.Core.Mixed
-import GameTheory.Core.MixedImprovement
-import GameTheory.Core.MixedPotential
-import GameTheory.Core.MixedSimulation
-import GameTheory.Core.MixtureSimulation
-import GameTheory.Core.MixtureSimulationComposition
-import GameTheory.Core.MixtureUtilitySimulation
-import GameTheory.Core.Potential
-import GameTheory.Core.Preference
-import GameTheory.Core.PseudoNash
-import GameTheory.Core.PseudoNashHybrid
-import GameTheory.Core.PseudoNashCoalition
-import GameTheory.Core.PseudoNashTolerance
-import GameTheory.Core.Rank
-import GameTheory.Core.Rationalizability
-import GameTheory.Core.Response
-import GameTheory.Core.RobustWelfare
-import GameTheory.Core.Shapley
-import GameTheory.Core.Signature
-import GameTheory.Core.SocialChoice
-import GameTheory.Core.Transform
-import GameTheory.Core.TremblingHand
-import GameTheory.Core.Utility
-import GameTheory.Core.UtilityInvariance
-import GameTheory.Core.UtilitySimulation
-import GameTheory.Core.UtilityTransfer
-import GameTheory.Core.VNM
-import GameTheory.Core.Welfare
-import GameTheory.Core.ZeroSum
-import GameTheory.Epistemic
-import GameTheory.Epistemic.Agreement
-import GameTheory.Epistemic.Approximate
-import GameTheory.Epistemic.ApproximateAgreement
-import GameTheory.Epistemic.Basic
-import GameTheory.Epistemic.Knowledge
-import GameTheory.Evolutionary
-import GameTheory.Evolutionary.Basic
-import GameTheory.Evolutionary.Mixed
-import GameTheory.Evolutionary.Nash
-import GameTheory.Examples.CheapTalk
-import GameTheory.Examples.Classic
-import GameTheory.Examples.Economic
-import GameTheory.Examples.ElectronicMail
-import GameTheory.Examples.FOSG
-import GameTheory.Examples.Intrinsic
-import GameTheory.Examples.NFG
-import GameTheory.Examples.PseudoEquilibria
-import GameTheory.Examples.Stackelberg
-import GameTheory.Examples.StochasticUniform
-import GameTheory.Examples.Voting
-import GameTheory.Finite.Algorithm
-import GameTheory.Finite.Correctness
-import GameTheory.Languages.Bayesian
-import GameTheory.Languages.Bayesian.Strategic
-import GameTheory.Languages.BayesianMechanism
-import GameTheory.Languages.Bridges.FOSGToEFG
-import GameTheory.Languages.Bridges.FOSGToEFGStrategic
-import GameTheory.Languages.Bridges.NFGFOSG
-import GameTheory.Languages.EFG
-import GameTheory.Languages.EFG.Kuhn
-import GameTheory.Languages.EFG.Strategic
-import GameTheory.Languages.EFG.SubgamePerfect
-import GameTheory.Languages.EFG.Zermelo
-import GameTheory.Languages.FOSG
-import GameTheory.Languages.FOSG.Kuhn
-import GameTheory.Languages.FOSG.Values
-import GameTheory.Languages.Intrinsic
-import GameTheory.Languages.Intrinsic.Solution
-import GameTheory.Languages.Intrinsic.Strategic
-import GameTheory.Languages.MAID
-import GameTheory.Languages.MAID.Basic
-import GameTheory.Languages.MAID.FrontierEquivalence
-import GameTheory.Languages.MAID.General
-import GameTheory.Languages.MAID.ObservationPruning
-import GameTheory.Languages.MAID.Order
-import GameTheory.Languages.MAID.Strategic
-import GameTheory.Languages.MAID.ToEFG
-import GameTheory.Languages.Mechanism
-import GameTheory.Languages.MultiRound
-import GameTheory.Languages.MultiRound.Monitoring
-import GameTheory.Languages.NFG
-import GameTheory.Math
-import GameTheory.Math.Approachability
-import GameTheory.Math.DAG
-import GameTheory.Math.Discounted
-import GameTheory.Math.Eventually
-import GameTheory.Math.FinRotation
-import GameTheory.Math.HarmonicSequence
-import GameTheory.Math.Negligible
-import GameTheory.Math.OnlineLearning
-import GameTheory.Math.OrthantProjection
-import GameTheory.Math.PositivePartFixedPoint
-import GameTheory.Math.Probability.Bounds
-import GameTheory.Math.Probability.Compactness
-import GameTheory.Math.Probability.ConditionalComparison
-import GameTheory.Math.Probability.ConditionalObservation
-import GameTheory.Math.Probability.ObservationAbstraction
-import GameTheory.Math.Probability.Conditioning
-import GameTheory.Math.Probability.Continuity
-import GameTheory.Math.Probability.Convergence
-import GameTheory.Math.Probability.Domination
-import GameTheory.Math.Probability.Expectation
-import GameTheory.Math.Probability.ExpectationAlgebra
-import GameTheory.Math.Probability.ExpectationBind
-import GameTheory.Math.Probability.ExpectationComposition
-import GameTheory.Math.Probability.ExpectationConditioning
-import GameTheory.Math.Probability.ExpectationMap
-import GameTheory.Math.Probability.ExpectationMixture
-import GameTheory.Math.Probability.ExpectationSeries
-import GameTheory.Math.Probability.ExtendedExpectation
-import GameTheory.Math.Probability.FiniteSampling
-import GameTheory.Math.Probability.FiniteUniform
-import GameTheory.Math.Probability.Indistinguishability
-import GameTheory.Math.Probability.HybridIndistinguishability
-import GameTheory.Math.Probability.InfiniteProductBoundary
-import GameTheory.Math.Probability.Interaction
-import GameTheory.Math.Probability.Joint
-import GameTheory.Math.Probability.Lindeberg
-import GameTheory.Math.Probability.MeanComparison
-import GameTheory.Math.Probability.MeanComparisonAffine
-import GameTheory.Math.Probability.MeanComparisonExpectation
-import GameTheory.Math.Probability.Measure
-import GameTheory.Math.Probability.Mixture
-import GameTheory.Math.Probability.OnlineLearning
-import GameTheory.Math.Probability.FinitaryProduct
-import GameTheory.Math.Probability.Product
-import GameTheory.Math.Probability.ProductConditioning
-import GameTheory.Math.Probability.RademacherWalk
-import GameTheory.Math.Probability.RelativeTremble
-import GameTheory.Math.Probability.SampleSum
-import GameTheory.Math.Probability.SampleSumEvents
-import GameTheory.Math.Probability.SelectiveStopping
-import GameTheory.Math.Probability.SequentialSampling
-import GameTheory.Math.Probability.SignBalance
-import GameTheory.Math.Probability.Simplex
-import GameTheory.Math.Probability.StatisticalCloseness
-import GameTheory.Math.Probability.StatisticalDistance
-import GameTheory.Math.Probability.StatisticalDistanceStability
-import GameTheory.Math.Probability.Support
-import GameTheory.Math.Probability.Tightness
-import GameTheory.Math.Probability.Uniform
-import GameTheory.Math.Probability.UniformProjection
-import GameTheory.Math.Probability.UniformTremble
-import GameTheory.Math.RegretAggregation
-import GameTheory.Math.SimplexApproximation
-import GameTheory.Mechanism
-import GameTheory.Mechanism.AffineMaximizer
-import GameTheory.Mechanism.AllPay
-import GameTheory.Mechanism.Auction
-import GameTheory.Mechanism.BayesianIncentives
-import GameTheory.Mechanism.BayesianWelfare
-import GameTheory.Mechanism.Combinatorial
-import GameTheory.Mechanism.Combinatorial.Basic
-import GameTheory.Mechanism.Combinatorial.QuasiField
-import GameTheory.Mechanism.Combinatorial.Surplus
-import GameTheory.Mechanism.FairDivision
-import GameTheory.Mechanism.FairDivision.Basic
-import GameTheory.Mechanism.FairDivision.RoundRobin
-import GameTheory.Mechanism.FairDivision.TwoAgentEFX
-import GameTheory.Mechanism.FeasiblePosteriors
-import GameTheory.Mechanism.Groves
-import GameTheory.Mechanism.Implementation
-import GameTheory.Mechanism.InformationDesign
-import GameTheory.Mechanism.JointFeasiblePosteriors
-import GameTheory.Mechanism.Knapsack
-import GameTheory.Mechanism.Knapsack.Aggregate
-import GameTheory.Mechanism.Knapsack.Algorithm
-import GameTheory.Mechanism.Knapsack.Approximation
-import GameTheory.Mechanism.Knapsack.ApproximationAlgorithm
-import GameTheory.Mechanism.Knapsack.ApproximationCorrectness
-import GameTheory.Mechanism.Knapsack.Basic
-import GameTheory.Mechanism.Knapsack.Correctness
-import GameTheory.Mechanism.Knapsack.ExactBridge
-import GameTheory.Mechanism.Knapsack.Mechanism
-import GameTheory.Mechanism.PosteriorSignals
-import GameTheory.Mechanism.PrincipalAgent
-import GameTheory.Mechanism.QuasiLinear
-import GameTheory.Mechanism.ReserveVickrey
-import GameTheory.Mechanism.Revelation
-import GameTheory.Mechanism.SingleParameter
-import GameTheory.Mechanism.Strategyproof
-import GameTheory.Protocol
-import GameTheory.Protocol.ActionRestriction
-import GameTheory.Protocol.Assessment
-import GameTheory.Protocol.Backward
-import GameTheory.Protocol.BehavioralAssessment
-import GameTheory.Protocol.BehavioralBayes
-import GameTheory.Protocol.BehavioralContinuation
-import GameTheory.Protocol.BehavioralMixture
-import GameTheory.Protocol.BehavioralTerminal
-import GameTheory.Protocol.Context
-import GameTheory.Protocol.ContextTransport
-import GameTheory.Protocol.Continuation
-import GameTheory.Protocol.ContinuationLaw
-import GameTheory.Protocol.DecisionPlan
-import GameTheory.Protocol.DecisionRecall
-import GameTheory.Protocol.Execution
-import GameTheory.Protocol.Extraction
-import GameTheory.Protocol.FiniteHorizon
-import GameTheory.Protocol.FiniteInformation
-import GameTheory.Protocol.History
-import GameTheory.Protocol.HistoryBackward
-import GameTheory.Protocol.HistoryChooserComposition
-import GameTheory.Protocol.HistoryEvents
-import GameTheory.Protocol.HistoryPathMass
-import GameTheory.Protocol.Information
-import GameTheory.Protocol.InformationOneShot
-import GameTheory.Protocol.Knowledge
-import GameTheory.Protocol.OwnPlayRecall
-import GameTheory.Protocol.PolicyMeasure
-import GameTheory.Protocol.PolicyRandomization
-import GameTheory.Protocol.Predraw
-import GameTheory.Protocol.PrivateStrategy
-import GameTheory.Protocol.Randomized
-import GameTheory.Protocol.RandomizedBackward
-import GameTheory.Protocol.RestrictionExecution
-import GameTheory.Protocol.RestrictionProfile
-import GameTheory.Protocol.SingleMover
-import GameTheory.Protocol.StateKernel
-import GameTheory.Protocol.Strategic
-import GameTheory.Protocol.StrategicRealization
-import GameTheory.Protocol.SubgamePerfect
-import GameTheory.Protocol.Tree
-import GameTheory.Protocol.TremblingPlans
-import GameTheory.Protocol.Zermelo
-import GameTheory.Repeated
-import GameTheory.Repeated.Basic
-import GameTheory.Repeated.Discounted
-import GameTheory.Repeated.Monitoring
-import GameTheory.Repeated.MonitoringContinuation
-import GameTheory.Repeated.MonitoringDecomposition
-import GameTheory.Repeated.MonitoringDiscounted
-import GameTheory.Repeated.MonitoringOneShot
-import GameTheory.Repeated.MonitoringPayoff
-import GameTheory.Repeated.MonitoringRank
-import GameTheory.Repeated.MonitoringSelfGeneration
-import GameTheory.Repeated.Periodic
-import GameTheory.Repeated.Protocol
-import GameTheory.Repeated.Trigger
-import GameTheory.Repeated.Uniform
-import GameTheory.Stochastic
-import GameTheory.Stochastic.Basic
-import GameTheory.Stochastic.FiniteHorizon
-import GameTheory.Stochastic.History
-import GameTheory.Stochastic.Kuhn
-import GameTheory.Stochastic.OneStep
-import GameTheory.Stochastic.PerfectMonitoring
-import GameTheory.Stochastic.PublicPolicy
-import GameTheory.Stochastic.Uniform
-import GameTheory.Stochastic.ZeroSum
-import GameTheory.Math.Probability.JointMap
-import GameTheory.Core.BimatrixGame
-import GameTheory.Core.ConstrainedNash
-import GameTheory.Core.SatisfiabilityGame
-import GameTheory.Core.SatisfiabilityGameCompleteness
-import GameTheory.Core.SatisfiabilityGameSoundness
-import GameTheory.Core.SatisfiabilityGameReduction
-import GameTheory.Core.SatisfiabilityGameEncoding
-import GameTheory.Core.SatisfiabilityGamePayoff
-import GameTheory.Finite.BimatrixTable
-import GameTheory.Finite.BimatrixTableCorrectness
-import GameTheory.Finite.BimatrixTableProblem
-import GameTheory.Finite.BimatrixNashCertificate
-import GameTheory.Finite.BimatrixNashCertificateCorrectness
-import GameTheory.Core.BimatrixSupport
-import GameTheory.Core.BimatrixSupportSystem
-import GameTheory.Core.BimatrixSupportFeasibility
-import GameTheory.Finite.BimatrixCertificate
-import GameTheory.Finite.BimatrixCertificateCorrectness
-import GameTheory.Finite.BimatrixCertificateCompleteness
-import GameTheory.Analysis.BimatrixCertificateExistence
-import GameTheory.Math.FiniteLinearBinaryBound
-import GameTheory.Math.BoundedLinearCertificate
-import GameTheory.Math.FiniteLinearBitBound
-import GameTheory.Math.SmallRationalWitness
-import GameTheory.Math.Probability.Numerator
-import GameTheory.Math.EndOfLine
-import GameTheory.Math.EndOfLineNormalization
-import GameTheory.Math.SpernerTriangle
-import GameTheory.Math.GridFlux
-import GameTheory.Math.GridSperner
-import GameTheory.Math.SpernerDoors
-import GameTheory.Math.SpernerGridGeometry
-import GameTheory.Math.SpernerGridDoors
-import GameTheory.Math.SpernerGridGraph
-import GameTheory.Math.GridCrossing
-import GameTheory.Math.GridCrossingGeometry
-import GameTheory.Math.GridCrossingAttachment
-import GameTheory.Math.GridWire
-import GameTheory.Math.GridWireLanes
-import GameTheory.Math.GridWireCrossings
-import GameTheory.Math.GridCrossingPlacement
-import GameTheory.Math.GridCrossingLocator
-import GameTheory.Math.EndOfLineTailSwitch
-import GameTheory.Math.GridWireGraph
-import GameTheory.Math.GridWireImage
-import GameTheory.Math.GridWireRealization
-import GameTheory.Math.GridWireDecoder
-import GameTheory.Math.GridWireSwitch
-import GameTheory.Math.GridWireImageSteps
-import GameTheory.Math.GridRoutedGraph
-import GameTheory.Math.GridWireBounds
-import GameTheory.Math.EndOfLineTwoCycle
-import GameTheory.Math.GridWireColoringTile
-import GameTheory.Math.GridWireColoring
-import GameTheory.Math.GridWireColoringPorts
-import GameTheory.Math.GridRoutedColoring
-import GameTheory.Math.GridRoutedSourceStep
-import GameTheory.Math.SourceColoringTiles
-import GameTheory.Math.GridSpernerRouting
-import GameTheory.Math.GridSpernerRoutingBoundary
-import GameTheory.Math.GridSpernerRoutingBounds
-import GameTheory.Math.GridBrouwer
-import GameTheory.Math.GridBrouwerMap
-import GameTheory.Math.GridBrouwerContinuous
-import GameTheory.Math.GridBrouwerSixthPoints
-import GameTheory.Math.GridBrouwerSixthGeometry
-import GameTheory.Math.GridBrouwerSixthContinuous
-import GameTheory.Math.LinearComplementarity
-import GameTheory.Finite.BimatrixCertificateShift
-import GameTheory.Finite.BimatrixComplementarity
-import GameTheory.Finite.BimatrixComplementarityCorrectness
-import GameTheory.Math.FiniteLexicographic
-import GameTheory.Math.PerturbedDictionary
-import GameTheory.Math.DictionaryPivot
-import GameTheory.Math.LexicographicPivot
-import GameTheory.Finite.BimatrixPivotSource
-import GameTheory.Math.FiniteBasisExchange
-import GameTheory.Math.DictionaryReindex
-import GameTheory.Math.ComplementaryLabels
-import GameTheory.Math.CanonicalDictionary
-import GameTheory.Finite.BimatrixBasis
-import GameTheory.Math.NonnegativeDictionary
-import GameTheory.Math.BasisCoordinates
-import GameTheory.Finite.BimatrixBasisExit
-import GameTheory.Finite.BimatrixBasisSolution
-import GameTheory.Finite.BimatrixPivot
-import GameTheory.Math.ComplementaryPorts
-import GameTheory.Math.FacetOrientation
-import GameTheory.Math.ComplementaryPortOrder
-import GameTheory.Math.OrientedInvolutionPath
-import GameTheory.Finite.BimatrixPath
-import GameTheory.Finite.BimatrixPathOrientation
-import GameTheory.Finite.BimatrixPathEndOfLine
-import GameTheory.Math.FiniteRationalEncoding
-import GameTheory.Finite.BimatrixPathCertificate
-import GameTheory.Math.IntegerDeterminantBound
-import GameTheory.Math.RationalQuotientBounds
-import GameTheory.Math.IntegerBasisBounds
-import GameTheory.Finite.BimatrixEndpointBounds
-import GameTheory.Finite.BimatrixBasisBounds
-import GameTheory.Math.IntegerCramerEncoding
-import GameTheory.Finite.BimatrixComplementaryCertificateBounds
-import GameTheory.Finite.BimatrixCramerCertificate
-import GameTheory.Math.TabulatedBirdDeterminant
-import GameTheory.Math.BirdIterationBounds
-import GameTheory.Math.IntegerCramerComputation
-import GameTheory.Math.FiniteLexicographicCompare
-import GameTheory.Math.IntegerRatioSelection
-import GameTheory.Math.FiniteMinimumScan
-import GameTheory.Math.IntegerDictionaryComputation
-import GameTheory.Math.IntegerDictionaryFeasibility
-import GameTheory.Math.IntegerSumBounds
-import GameTheory.Math.FixedBlockList
-import GameTheory.Finite.BimatrixComputedPivot
-import GameTheory.Math.FiniteSetRank
-import GameTheory.Finite.BimatrixPathBinaryCodec
-import GameTheory.Finite.BimatrixComputedOrientation
-import GameTheory.Math.OrientedInvolutionPathWitness
-import GameTheory.Finite.BimatrixPathWitness
-import GameTheory.Math.MatchingMass
-import GameTheory.Math.PairSupportGate
-import GameTheory.Math.ClampedFeedback
-import GameTheory.Math.GridBrouwerLipschitz
-import GameTheory.Math.GridBrouwerFourCorners
-import GameTheory.Math.BinaryExtraction
-import GameTheory.Finite.BimatrixBlockGame
-import GameTheory.Finite.BimatrixAffineGate
-import GameTheory.Finite.BimatrixComparatorGate
-import GameTheory.Math.RobustAverage
-import GameTheory.Math.BooleanThreshold
-import GameTheory.Math.GridJitter
-import GameTheory.Finite.BimatrixGateProgram
-import GameTheory.Math.RobustFeedback
-import GameTheory.Finite.BimatrixBooleanGate
-import GameTheory.Finite.BimatrixArithmeticGate
-import GameTheory.Math.GridBrouwerColorSignal
-import GameTheory.Math.GridBrouwerColorSample
-import GameTheory.Math.BinaryGridClearance
-import GameTheory.Finite.BimatrixColorMeanGate
-import GameTheory.Math.GridBrouwerErrorBudget
+import all GameTheory.Analysis
+import all GameTheory.Analysis.Approachability
+import all GameTheory.Analysis.BayesianHierarchy
+import all GameTheory.Analysis.Correlated
+import all GameTheory.Analysis.CorrelationHierarchy
+import all GameTheory.Analysis.DominanceHierarchy
+import all GameTheory.Analysis.Examples
+import all GameTheory.Analysis.ExpectedUtility
+import all GameTheory.Analysis.FictitiousPlayPotential
+import all GameTheory.Analysis.IncentiveCone
+import all GameTheory.Protocol.DecisionExperiment
+import all GameTheory.Analysis.IncentiveHierarchy
+import all GameTheory.Analysis.IncentiveSimulation
+import all GameTheory.Analysis.Learning
+import all GameTheory.Analysis.LocalChoiceFixedPoint
+import all GameTheory.Analysis.MatrixValue
+import all GameTheory.Analysis.Minimax
+import all GameTheory.Analysis.Nash
+import all GameTheory.Analysis.Payoff
+import all GameTheory.Analysis.PerturbedEquilibrium
+import all GameTheory.Analysis.Protocol
+import all GameTheory.Analysis.Protocol.AgentCompletion
+import all GameTheory.Analysis.Protocol.AgentForm
+import all GameTheory.Analysis.Protocol.AssessmentCompactness
+import all GameTheory.Analysis.Protocol.BehavioralBayes
+import all GameTheory.Analysis.Protocol.BehavioralContinuity
+import all GameTheory.Analysis.Protocol.BehavioralConvergence
+import all GameTheory.Analysis.Protocol.BehavioralTerminalConvergence
+import all GameTheory.Analysis.Protocol.BeliefTransport
+import all GameTheory.Analysis.Protocol.CounterfactualDecomposition
+import all GameTheory.Analysis.Protocol.CounterfactualReach
+import all GameTheory.Analysis.Protocol.CounterfactualRegret
+import all GameTheory.Analysis.Protocol.CounterfactualRegretMatching
+import all GameTheory.Analysis.Protocol.CounterfactualRootRegret
+import all GameTheory.Analysis.Protocol.EFG
+import all GameTheory.Analysis.Protocol.EFGExistence
+import all GameTheory.Analysis.Protocol.Examples
+import all GameTheory.Analysis.Protocol.ExtensiveFormPerfection
+import all GameTheory.Analysis.Protocol.Incentives
+import all GameTheory.Analysis.Protocol.InformationLocalization
+import all GameTheory.Analysis.Protocol.RestrictionBeliefs
+import all GameTheory.Analysis.Protocol.RestrictionCompletion
+import all GameTheory.Analysis.Protocol.RestrictionDomination
+import all GameTheory.Analysis.Protocol.RestrictionExtension
+import all GameTheory.Analysis.Protocol.RestrictionIncentives
+import all GameTheory.Analysis.Protocol.Sequential
+import all GameTheory.Analysis.Protocol.SequentialExistence
+import all GameTheory.Analysis.Protocol.SequentialLimits
+import all GameTheory.Analysis.Protocol.SequentialOneShot
+import all GameTheory.Analysis.Protocol.SequentialPerturbation
+import all GameTheory.Analysis.Protocol.SequentialRationality
+import all GameTheory.Analysis.Protocol.SubgameLocalization
+import all GameTheory.Analysis.Protocol.SupportedChoices
+import all GameTheory.Analysis.PseudoCorrelated
+import all GameTheory.Analysis.PseudoNash
+import all GameTheory.Analysis.Repeated
+import all GameTheory.Analysis.Repeated.Examples
+import all GameTheory.Analysis.Repeated.Feasible
+import all GameTheory.Analysis.Repeated.Folk
+import all GameTheory.Analysis.Simplex
+import all GameTheory.Analysis.Stochastic
+import all GameTheory.Analysis.Stochastic.Discounted
+import all GameTheory.Analysis.Stochastic.Examples
+import all GameTheory.Analysis.Stochastic.Fink
+import all GameTheory.Analysis.TremblingHand
+import all GameTheory.Analysis.ZeroSumLearning
+import all GameTheory.Congestion
+import all GameTheory.Congestion.AffinePoA
+import all GameTheory.Congestion.Basic
+import all GameTheory.Congestion.Examples
+import all GameTheory.Congestion.Rosenthal
+import all GameTheory.Cooperative
+import all GameTheory.Cooperative.Balancedness
+import all GameTheory.Cooperative.Banzhaf
+import all GameTheory.Cooperative.Bargaining
+import all GameTheory.Cooperative.GaleShapley
+import all GameTheory.Cooperative.GaleShapley.Perfect
+import all GameTheory.Cooperative.Matching
+import all GameTheory.Cooperative.ShapleyShubik
+import all GameTheory.Core
+import all GameTheory.Core.Approximate
+import all GameTheory.Core.Arrow
+import all GameTheory.Core.BayesCorrelated
+import all GameTheory.Core.Bayesian
+import all GameTheory.Core.BayesianEquilibrium
+import all GameTheory.Core.BinaryCorrelated
+import all GameTheory.Core.BinaryMixed
+import all GameTheory.Core.CheapTalk
+import all GameTheory.Core.CheapTalkRandomization
+import all GameTheory.Core.CoalitionEquilibrium
+import all GameTheory.Core.Coalitional
+import all GameTheory.Core.CorrelatedDominance
+import all GameTheory.Core.Deviation
+import all GameTheory.Core.Equilibrium
+import all GameTheory.Core.ExpectedUtility
+import all GameTheory.Core.FictitiousPlay
+import all GameTheory.Core.FictitiousPlayPotential
+import all GameTheory.Core.Form
+import all GameTheory.Core.GibbardSatterthwaite
+import all GameTheory.Core.Learning
+import all GameTheory.Core.MatrixGame
+import all GameTheory.Core.May
+import all GameTheory.Core.Mixed
+import all GameTheory.Core.MixedImprovement
+import all GameTheory.Core.MixedPotential
+import all GameTheory.Core.MixedSimulation
+import all GameTheory.Core.MixtureSimulation
+import all GameTheory.Core.MixtureSimulationComposition
+import all GameTheory.Core.MixtureUtilitySimulation
+import all GameTheory.Core.Potential
+import all GameTheory.Core.Preference
+import all GameTheory.Core.PseudoNash
+import all GameTheory.Core.PseudoNashHybrid
+import all GameTheory.Core.PseudoNashCoalition
+import all GameTheory.Core.PseudoNashTolerance
+import all GameTheory.Core.Rank
+import all GameTheory.Core.Rationalizability
+import all GameTheory.Core.Response
+import all GameTheory.Core.RobustWelfare
+import all GameTheory.Core.Shapley
+import all GameTheory.Core.Signature
+import all GameTheory.Core.SocialChoice
+import all GameTheory.Core.Transform
+import all GameTheory.Core.TremblingHand
+import all GameTheory.Core.Utility
+import all GameTheory.Core.UtilityInvariance
+import all GameTheory.Core.UtilitySimulation
+import all GameTheory.Core.UtilityTransfer
+import all GameTheory.Core.VNM
+import all GameTheory.Core.Welfare
+import all GameTheory.Core.ZeroSum
+import all GameTheory.Epistemic
+import all GameTheory.Epistemic.Agreement
+import all GameTheory.Epistemic.Approximate
+import all GameTheory.Epistemic.ApproximateAgreement
+import all GameTheory.Epistemic.Basic
+import all GameTheory.Epistemic.Knowledge
+import all GameTheory.Evolutionary
+import all GameTheory.Evolutionary.Basic
+import all GameTheory.Evolutionary.Mixed
+import all GameTheory.Evolutionary.Nash
+import all GameTheory.Examples.CheapTalk
+import all GameTheory.Examples.Classic
+import all GameTheory.Examples.Economic
+import all GameTheory.Examples.ElectronicMail
+import all GameTheory.Examples.FOSG
+import all GameTheory.Examples.Intrinsic
+import all GameTheory.Examples.NFG
+import all GameTheory.Examples.PseudoEquilibria
+import all GameTheory.Examples.Stackelberg
+import all GameTheory.Examples.StochasticUniform
+import all GameTheory.Examples.Voting
+import all GameTheory.Finite.Algorithm
+import all GameTheory.Finite.Correctness
+import all GameTheory.Languages.Bayesian
+import all GameTheory.Languages.Bayesian.Strategic
+import all GameTheory.Languages.BayesianMechanism
+import all GameTheory.Languages.Bridges.FOSGToEFG
+import all GameTheory.Languages.Bridges.FOSGToEFGStrategic
+import all GameTheory.Languages.Bridges.NFGFOSG
+import all GameTheory.Languages.EFG
+import all GameTheory.Languages.EFG.Kuhn
+import all GameTheory.Languages.EFG.Strategic
+import all GameTheory.Languages.EFG.SubgamePerfect
+import all GameTheory.Languages.EFG.Zermelo
+import all GameTheory.Languages.FOSG
+import all GameTheory.Languages.FOSG.Kuhn
+import all GameTheory.Languages.FOSG.Values
+import all GameTheory.Languages.Intrinsic
+import all GameTheory.Languages.Intrinsic.Solution
+import all GameTheory.Languages.Intrinsic.Strategic
+import all GameTheory.Languages.MAID
+import all GameTheory.Languages.MAID.Basic
+import all GameTheory.Languages.MAID.FrontierEquivalence
+import all GameTheory.Languages.MAID.General
+import all GameTheory.Languages.MAID.ObservationPruning
+import all GameTheory.Languages.MAID.Order
+import all GameTheory.Languages.MAID.Strategic
+import all GameTheory.Languages.MAID.ToEFG
+import all GameTheory.Languages.Mechanism
+import all GameTheory.Languages.MultiRound
+import all GameTheory.Languages.MultiRound.Monitoring
+import all GameTheory.Languages.NFG
+import all GameTheory.Math
+import all GameTheory.Math.Approachability
+import all GameTheory.Math.DAG
+import all GameTheory.Math.Discounted
+import all GameTheory.Math.Eventually
+import all GameTheory.Math.FinRotation
+import all GameTheory.Math.HarmonicSequence
+import all GameTheory.Math.Negligible
+import all GameTheory.Math.OnlineLearning
+import all GameTheory.Math.OrthantProjection
+import all GameTheory.Math.PositivePartFixedPoint
+import all GameTheory.Math.Probability.Bounds
+import all GameTheory.Math.Probability.Compactness
+import all GameTheory.Math.Probability.ConditionalComparison
+import all GameTheory.Math.Probability.ConditionalObservation
+import all GameTheory.Math.Probability.ObservationAbstraction
+import all GameTheory.Math.Probability.Conditioning
+import all GameTheory.Math.Probability.Continuity
+import all GameTheory.Math.Probability.Convergence
+import all GameTheory.Math.Probability.Domination
+import all GameTheory.Math.Probability.Expectation
+import all GameTheory.Math.Probability.ExpectationAlgebra
+import all GameTheory.Math.Probability.ExpectationBind
+import all GameTheory.Math.Probability.ExpectationComposition
+import all GameTheory.Math.Probability.ExpectationConditioning
+import all GameTheory.Math.Probability.ExpectationMap
+import all GameTheory.Math.Probability.ExpectationMixture
+import all GameTheory.Math.Probability.ExpectationSeries
+import all GameTheory.Math.Probability.ExtendedExpectation
+import all GameTheory.Math.Probability.FiniteSampling
+import all GameTheory.Math.Probability.FiniteUniform
+import all GameTheory.Math.Probability.Indistinguishability
+import all GameTheory.Math.Probability.HybridIndistinguishability
+import all GameTheory.Math.Probability.InfiniteProductBoundary
+import all GameTheory.Math.Probability.Interaction
+import all GameTheory.Math.Probability.Joint
+import all GameTheory.Math.Probability.Lindeberg
+import all GameTheory.Math.Probability.MeanComparison
+import all GameTheory.Math.Probability.MeanComparisonAffine
+import all GameTheory.Math.Probability.MeanComparisonExpectation
+import all GameTheory.Math.Probability.Measure
+import all GameTheory.Math.Probability.Mixture
+import all GameTheory.Math.Probability.OnlineLearning
+import all GameTheory.Math.Probability.FinitaryProduct
+import all GameTheory.Math.Probability.Product
+import all GameTheory.Math.Probability.ProductConditioning
+import all GameTheory.Math.Probability.RademacherWalk
+import all GameTheory.Math.Probability.RelativeTremble
+import all GameTheory.Math.Probability.SampleSum
+import all GameTheory.Math.Probability.SampleSumEvents
+import all GameTheory.Math.Probability.SelectiveStopping
+import all GameTheory.Math.Probability.SequentialSampling
+import all GameTheory.Math.Probability.SignBalance
+import all GameTheory.Math.Probability.Simplex
+import all GameTheory.Math.Probability.StatisticalCloseness
+import all GameTheory.Math.Probability.StatisticalDistance
+import all GameTheory.Math.Probability.StatisticalDistanceStability
+import all GameTheory.Math.Probability.Support
+import all GameTheory.Math.Probability.Tightness
+import all GameTheory.Math.Probability.Uniform
+import all GameTheory.Math.Probability.UniformProjection
+import all GameTheory.Math.Probability.UniformTremble
+import all GameTheory.Math.RegretAggregation
+import all GameTheory.Math.SimplexApproximation
+import all GameTheory.Mechanism
+import all GameTheory.Mechanism.AffineMaximizer
+import all GameTheory.Mechanism.AllPay
+import all GameTheory.Mechanism.Auction
+import all GameTheory.Mechanism.BayesianIncentives
+import all GameTheory.Mechanism.BayesianWelfare
+import all GameTheory.Mechanism.Combinatorial
+import all GameTheory.Mechanism.Combinatorial.Basic
+import all GameTheory.Mechanism.Combinatorial.QuasiField
+import all GameTheory.Mechanism.Combinatorial.Surplus
+import all GameTheory.Mechanism.FairDivision
+import all GameTheory.Mechanism.FairDivision.Basic
+import all GameTheory.Mechanism.FairDivision.RoundRobin
+import all GameTheory.Mechanism.FairDivision.TwoAgentEFX
+import all GameTheory.Mechanism.FeasiblePosteriors
+import all GameTheory.Mechanism.Groves
+import all GameTheory.Mechanism.Implementation
+import all GameTheory.Mechanism.InformationDesign
+import all GameTheory.Mechanism.JointFeasiblePosteriors
+import all GameTheory.Mechanism.Knapsack
+import all GameTheory.Mechanism.Knapsack.Aggregate
+import all GameTheory.Mechanism.Knapsack.Algorithm
+import all GameTheory.Mechanism.Knapsack.Approximation
+import all GameTheory.Mechanism.Knapsack.ApproximationAlgorithm
+import all GameTheory.Mechanism.Knapsack.ApproximationCorrectness
+import all GameTheory.Mechanism.Knapsack.Basic
+import all GameTheory.Mechanism.Knapsack.Correctness
+import all GameTheory.Mechanism.Knapsack.ExactBridge
+import all GameTheory.Mechanism.Knapsack.Mechanism
+import all GameTheory.Mechanism.PosteriorSignals
+import all GameTheory.Mechanism.PrincipalAgent
+import all GameTheory.Mechanism.QuasiLinear
+import all GameTheory.Mechanism.ReserveVickrey
+import all GameTheory.Mechanism.Revelation
+import all GameTheory.Mechanism.SingleParameter
+import all GameTheory.Mechanism.Strategyproof
+import all GameTheory.Protocol
+import all GameTheory.Protocol.ActionRestriction
+import all GameTheory.Protocol.Assessment
+import all GameTheory.Protocol.Backward
+import all GameTheory.Protocol.BehavioralAssessment
+import all GameTheory.Protocol.BehavioralBayes
+import all GameTheory.Protocol.BehavioralContinuation
+import all GameTheory.Protocol.BehavioralMixture
+import all GameTheory.Protocol.BehavioralTerminal
+import all GameTheory.Protocol.Context
+import all GameTheory.Protocol.ContextTransport
+import all GameTheory.Protocol.Continuation
+import all GameTheory.Protocol.ContinuationLaw
+import all GameTheory.Protocol.DecisionPlan
+import all GameTheory.Protocol.DecisionRecall
+import all GameTheory.Protocol.Execution
+import all GameTheory.Protocol.Extraction
+import all GameTheory.Protocol.FiniteHorizon
+import all GameTheory.Protocol.FiniteInformation
+import all GameTheory.Protocol.History
+import all GameTheory.Protocol.HistoryBackward
+import all GameTheory.Protocol.HistoryChooserComposition
+import all GameTheory.Protocol.HistoryEvents
+import all GameTheory.Protocol.HistoryPathMass
+import all GameTheory.Protocol.Information
+import all GameTheory.Protocol.InformationOneShot
+import all GameTheory.Protocol.Knowledge
+import all GameTheory.Protocol.OwnPlayRecall
+import all GameTheory.Protocol.PolicyMeasure
+import all GameTheory.Protocol.PolicyRandomization
+import all GameTheory.Protocol.Predraw
+import all GameTheory.Protocol.PrivateStrategy
+import all GameTheory.Protocol.Randomized
+import all GameTheory.Protocol.RandomizedBackward
+import all GameTheory.Protocol.RestrictionExecution
+import all GameTheory.Protocol.RestrictionProfile
+import all GameTheory.Protocol.SingleMover
+import all GameTheory.Protocol.StateKernel
+import all GameTheory.Protocol.Strategic
+import all GameTheory.Protocol.StrategicRealization
+import all GameTheory.Protocol.SubgamePerfect
+import all GameTheory.Protocol.Tree
+import all GameTheory.Protocol.TremblingPlans
+import all GameTheory.Protocol.Zermelo
+import all GameTheory.Repeated
+import all GameTheory.Repeated.Basic
+import all GameTheory.Repeated.Discounted
+import all GameTheory.Repeated.Monitoring
+import all GameTheory.Repeated.MonitoringContinuation
+import all GameTheory.Repeated.MonitoringDecomposition
+import all GameTheory.Repeated.MonitoringDiscounted
+import all GameTheory.Repeated.MonitoringOneShot
+import all GameTheory.Repeated.MonitoringPayoff
+import all GameTheory.Repeated.MonitoringRank
+import all GameTheory.Repeated.MonitoringSelfGeneration
+import all GameTheory.Repeated.Periodic
+import all GameTheory.Repeated.Protocol
+import all GameTheory.Repeated.Trigger
+import all GameTheory.Repeated.Uniform
+import all GameTheory.Stochastic
+import all GameTheory.Stochastic.Basic
+import all GameTheory.Stochastic.FiniteHorizon
+import all GameTheory.Stochastic.History
+import all GameTheory.Stochastic.Kuhn
+import all GameTheory.Stochastic.OneStep
+import all GameTheory.Stochastic.PerfectMonitoring
+import all GameTheory.Stochastic.PublicPolicy
+import all GameTheory.Stochastic.Uniform
+import all GameTheory.Stochastic.ZeroSum
+import all GameTheory.Math.Probability.JointMap
+import all GameTheory.Core.BimatrixGame
+import all GameTheory.Core.ConstrainedNash
+import all GameTheory.Core.SatisfiabilityGame
+import all GameTheory.Core.SatisfiabilityGameCompleteness
+import all GameTheory.Core.SatisfiabilityGameSoundness
+import all GameTheory.Core.SatisfiabilityGameReduction
+import all GameTheory.Core.SatisfiabilityGameEncoding
+import all GameTheory.Core.SatisfiabilityGamePayoff
+import all GameTheory.Finite.BimatrixTable
+import all GameTheory.Finite.BimatrixTableCorrectness
+import all GameTheory.Finite.BimatrixTableProblem
+import all GameTheory.Finite.BimatrixNashCertificate
+import all GameTheory.Finite.BimatrixNashCertificateCorrectness
+import all GameTheory.Core.BimatrixSupport
+import all GameTheory.Core.BimatrixSupportSystem
+import all GameTheory.Core.BimatrixSupportFeasibility
+import all GameTheory.Finite.BimatrixCertificate
+import all GameTheory.Finite.BimatrixCertificateCorrectness
+import all GameTheory.Finite.BimatrixCertificateCompleteness
+import all GameTheory.Analysis.BimatrixCertificateExistence
+import all GameTheory.Math.FiniteLinearBinaryBound
+import all GameTheory.Math.BoundedLinearCertificate
+import all GameTheory.Math.FiniteLinearBitBound
+import all GameTheory.Math.SmallRationalWitness
+import all GameTheory.Math.Probability.Numerator
+import all GameTheory.Math.EndOfLine
+import all GameTheory.Math.EndOfLineNormalization
+import all GameTheory.Math.SpernerTriangle
+import all GameTheory.Math.GridFlux
+import all GameTheory.Math.GridSperner
+import all GameTheory.Math.SpernerDoors
+import all GameTheory.Math.SpernerGridGeometry
+import all GameTheory.Math.SpernerGridDoors
+import all GameTheory.Math.SpernerGridGraph
+import all GameTheory.Math.GridCrossing
+import all GameTheory.Math.GridCrossingGeometry
+import all GameTheory.Math.GridCrossingAttachment
+import all GameTheory.Math.GridWire
+import all GameTheory.Math.GridWireLanes
+import all GameTheory.Math.GridWireCrossings
+import all GameTheory.Math.GridCrossingPlacement
+import all GameTheory.Math.GridCrossingLocator
+import all GameTheory.Math.EndOfLineTailSwitch
+import all GameTheory.Math.GridWireGraph
+import all GameTheory.Math.GridWireImage
+import all GameTheory.Math.GridWireRealization
+import all GameTheory.Math.GridWireDecoder
+import all GameTheory.Math.GridWireSwitch
+import all GameTheory.Math.GridWireImageSteps
+import all GameTheory.Math.GridRoutedGraph
+import all GameTheory.Math.GridWireBounds
+import all GameTheory.Math.EndOfLineTwoCycle
+import all GameTheory.Math.GridWireColoringTile
+import all GameTheory.Math.GridWireColoring
+import all GameTheory.Math.GridWireColoringPorts
+import all GameTheory.Math.GridRoutedColoring
+import all GameTheory.Math.GridRoutedSourceStep
+import all GameTheory.Math.SourceColoringTiles
+import all GameTheory.Math.GridSpernerRouting
+import all GameTheory.Math.GridSpernerRoutingBoundary
+import all GameTheory.Math.GridSpernerRoutingBounds
+import all GameTheory.Math.GridBrouwer
+import all GameTheory.Math.GridBrouwerMap
+import all GameTheory.Math.GridBrouwerContinuous
+import all GameTheory.Math.GridBrouwerSixthPoints
+import all GameTheory.Math.GridBrouwerSixthGeometry
+import all GameTheory.Math.GridBrouwerSixthContinuous
+import all GameTheory.Math.LinearComplementarity
+import all GameTheory.Finite.BimatrixCertificateShift
+import all GameTheory.Finite.BimatrixComplementarity
+import all GameTheory.Finite.BimatrixComplementarityCorrectness
+import all GameTheory.Math.FiniteLexicographic
+import all GameTheory.Math.PerturbedDictionary
+import all GameTheory.Math.DictionaryPivot
+import all GameTheory.Math.LexicographicPivot
+import all GameTheory.Finite.BimatrixPivotSource
+import all GameTheory.Math.FiniteBasisExchange
+import all GameTheory.Math.DictionaryReindex
+import all GameTheory.Math.ComplementaryLabels
+import all GameTheory.Math.CanonicalDictionary
+import all GameTheory.Finite.BimatrixBasis
+import all GameTheory.Math.NonnegativeDictionary
+import all GameTheory.Math.BasisCoordinates
+import all GameTheory.Finite.BimatrixBasisExit
+import all GameTheory.Finite.BimatrixBasisSolution
+import all GameTheory.Finite.BimatrixPivot
+import all GameTheory.Math.ComplementaryPorts
+import all GameTheory.Math.FacetOrientation
+import all GameTheory.Math.ComplementaryPortOrder
+import all GameTheory.Math.OrientedInvolutionPath
+import all GameTheory.Finite.BimatrixPath
+import all GameTheory.Finite.BimatrixPathOrientation
+import all GameTheory.Finite.BimatrixPathEndOfLine
+import all GameTheory.Math.FiniteRationalEncoding
+import all GameTheory.Finite.BimatrixPathCertificate
+import all GameTheory.Math.IntegerDeterminantBound
+import all GameTheory.Math.RationalQuotientBounds
+import all GameTheory.Math.IntegerBasisBounds
+import all GameTheory.Finite.BimatrixEndpointBounds
+import all GameTheory.Finite.BimatrixBasisBounds
+import all GameTheory.Math.IntegerCramerEncoding
+import all GameTheory.Finite.BimatrixComplementaryCertificateBounds
+import all GameTheory.Finite.BimatrixCramerCertificate
+import all GameTheory.Math.TabulatedBirdDeterminant
+import all GameTheory.Math.BirdIterationBounds
+import all GameTheory.Math.IntegerCramerComputation
+import all GameTheory.Math.FiniteLexicographicCompare
+import all GameTheory.Math.IntegerRatioSelection
+import all GameTheory.Math.FiniteMinimumScan
+import all GameTheory.Math.IntegerDictionaryComputation
+import all GameTheory.Math.IntegerDictionaryFeasibility
+import all GameTheory.Math.IntegerSumBounds
+import all GameTheory.Math.FixedBlockList
+import all GameTheory.Finite.BimatrixComputedPivot
+import all GameTheory.Math.FiniteSetRank
+import all GameTheory.Finite.BimatrixPathBinaryCodec
+import all GameTheory.Finite.BimatrixComputedOrientation
+import all GameTheory.Math.OrientedInvolutionPathWitness
+import all GameTheory.Finite.BimatrixPathWitness
+import all GameTheory.Math.MatchingMass
+import all GameTheory.Math.PairSupportGate
+import all GameTheory.Math.ClampedFeedback
+import all GameTheory.Math.GridBrouwerLipschitz
+import all GameTheory.Math.GridBrouwerFourCorners
+import all GameTheory.Math.BinaryExtraction
+import all GameTheory.Finite.BimatrixBlockGame
+import all GameTheory.Finite.BimatrixAffineGate
+import all GameTheory.Finite.BimatrixComparatorGate
+import all GameTheory.Math.RobustAverage
+import all GameTheory.Math.BooleanThreshold
+import all GameTheory.Math.GridJitter
+import all GameTheory.Finite.BimatrixGateProgram
+import all GameTheory.Math.RobustFeedback
+import all GameTheory.Finite.BimatrixBooleanGate
+import all GameTheory.Finite.BimatrixArithmeticGate
+import all GameTheory.Math.GridBrouwerColorSignal
+import all GameTheory.Math.GridBrouwerColorSample
+import all GameTheory.Math.BinaryGridClearance
+import all GameTheory.Finite.BimatrixColorMeanGate
+import all GameTheory.Math.GridBrouwerErrorBudget
 
-import GameTheory.Math.Probability.ExpectationAtoms
-import GameTheory.Math.Probability.ExpectationCommutation
-import GameTheory.Protocol.DecisionPayoff
-import GameTheory.Math.ScalarInequalities
-import GameTheory.Math.ScalarInequalitiesCorrectness
-import GameTheory.Math.Probability.EventPenalty
-import GameTheory.Analysis.Enforcement
-import GameTheory.Analysis.EnforcementSynthesis
-import GameTheory.Math.Probability.SoundDetection
-import GameTheory.Analysis.Protocol.Sanctions
-import GameTheory.Math.Probability.MonitoredPenalty
-import GameTheory.Analysis.ObservableEnforcement
-import GameTheory.Math.Probability.AggregateComparison
-import GameTheory.Core.StrategySubstitution
-import GameTheory.Analysis.ComponentCompletion
-import GameTheory.Analysis.Protocol.PassageBayes
-import GameTheory.Analysis.Protocol.ComponentCompletion
-import GameTheory.Analysis.Protocol.UniformPolicyLimit
-import GameTheory.Analysis.Protocol.LocalSimulationLimit
-import GameTheory.Analysis.Protocol.CopiedSiteCompletion
-import GameTheory.Analysis.Protocol.LocalDeviationBounds
+import all GameTheory.Math.Probability.ExpectationAtoms
+import all GameTheory.Math.Probability.ExpectationCommutation
+import all GameTheory.Protocol.DecisionPayoff
+import all GameTheory.Math.ScalarInequalities
+import all GameTheory.Math.ScalarInequalitiesCorrectness
+import all GameTheory.Math.Probability.EventPenalty
+import all GameTheory.Analysis.Enforcement
+import all GameTheory.Analysis.EnforcementSynthesis
+import all GameTheory.Math.Probability.SoundDetection
+import all GameTheory.Analysis.Protocol.Sanctions
+import all GameTheory.Math.Probability.MonitoredPenalty
+import all GameTheory.Analysis.ObservableEnforcement
+import all GameTheory.Math.Probability.AggregateComparison
+import all GameTheory.Core.StrategySubstitution
+import all GameTheory.Analysis.ComponentCompletion
+import all GameTheory.Analysis.Protocol.PassageBayes
+import all GameTheory.Analysis.Protocol.ComponentCompletion
+import all GameTheory.Analysis.Protocol.UniformPolicyLimit
+import all GameTheory.Analysis.Protocol.LocalSimulationLimit
+import all GameTheory.Analysis.Protocol.CopiedSiteCompletion
+import all GameTheory.Analysis.Protocol.LocalDeviationBounds
+
+@[expose] public section

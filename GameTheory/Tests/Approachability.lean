@@ -1,3 +1,5 @@
+module
+
 /-
 # Nondegenerate Blackwell approachability fixture
 
@@ -6,7 +8,9 @@ nonpositive orthant.  This discharges the public B-set hypothesis and consumes
 the response, finite-time, and convergence entry points directly.
 -/
 
-import GameTheory.Math.Approachability
+public import GameTheory.Math.Approachability
+
+@[expose] public section
 
 noncomputable section
 

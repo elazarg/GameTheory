@@ -1,3 +1,5 @@
+module
+
 /-
 Scalar-generic finite-set aggregation for knapsack allocations.
 
@@ -5,8 +7,10 @@ This leaf is shared by the executable natural-number solver and the
 real-valued mechanism semantics.
 -/
 
-import Mathlib.Algebra.BigOperators.Ring.Finset
-import Mathlib.Data.Finset.Basic
+public import Mathlib.Algebra.BigOperators.Ring.Finset
+public import Mathlib.Data.Finset.Basic
+
+@[expose] public section
 
 namespace GameTheory.Mechanism.Knapsack
 

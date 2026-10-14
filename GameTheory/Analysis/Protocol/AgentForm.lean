@@ -1,3 +1,5 @@
+module
+
 /-
 # The agent normal form of a protocol
 
@@ -13,10 +15,12 @@ Equilibrium Points in Extensive Games,” *International Journal of Game
 Theory* 4 (1975).
 -/
 
-import GameTheory.Core.Form
-import GameTheory.Protocol.BehavioralTerminal
-import GameTheory.Protocol.PolicyRandomization
-import GameTheory.Protocol.Strategic
+public import GameTheory.Core.Form
+public import GameTheory.Protocol.BehavioralTerminal
+public import GameTheory.Protocol.PolicyRandomization
+public import GameTheory.Protocol.Strategic
+
+@[expose] public section
 
 noncomputable section
 

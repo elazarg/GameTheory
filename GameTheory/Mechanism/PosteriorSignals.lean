@@ -1,3 +1,5 @@
+module
+
 /-
 # Signals and posterior laws
 
@@ -6,9 +8,11 @@ belief law is Bayes plausible, and every Bayes-plausible posterior law can be
 implemented by a signal built from conditional PMFs on positive state fibers.
 -/
 
-import GameTheory.Mechanism.FeasiblePosteriors
-import GameTheory.Mechanism.InformationDesign
-import GameTheory.Math.Probability.Conditioning
+public import GameTheory.Mechanism.FeasiblePosteriors
+public import GameTheory.Mechanism.InformationDesign
+public import GameTheory.Math.Probability.Conditioning
+
+@[expose] public section
 
 noncomputable section
 
