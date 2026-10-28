@@ -110,6 +110,7 @@ import all GameTheory.Cooperative
 import all GameTheory.Cooperative.Balancedness
 import all GameTheory.Cooperative.Banzhaf
 import all GameTheory.Cooperative.Bargaining
+import all GameTheory.Cooperative.Convex
 import all GameTheory.Cooperative.GaleShapley
 import all GameTheory.Cooperative.GaleShapley.Perfect
 import all GameTheory.Cooperative.GaleShapley.Optimality

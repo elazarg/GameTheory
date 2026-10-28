@@ -387,6 +387,15 @@ from every stable matching; no equality of market sizes or complete
 acceptability is needed. The two-stable-endpoint, actual rejection, and
 unbalanced unacceptable-partner controls are in `Tests.MatchingOptimality`.
 
+Convex-game core nonemptiness is delivered in `Cooperative.Convex`.
+Supermodular worth gives increasing marginal contributions; for any linear
+ordering, successive marginal payments telescope and dominate each coalition's
+own worth. The explicit marginal allocation is in the existing core, including
+negative singleton worth and empty player types. `Tests.ConvexCore` separates
+two different order-dependent core allocations and refutes convexity of the
+majority game. Shapley-in-core remains separate: the coalition-weighted
+Shapley definition still needs its averaging-over-orders bridge.
+
 Full finite Bondareva--Shapley is delivered in `Cooperative.Balancedness`.
 The converse uses an exact finite inequality alternative adapted from the
 algebraic Fourier--Motzkin proof in multitubes, kept independently reusable

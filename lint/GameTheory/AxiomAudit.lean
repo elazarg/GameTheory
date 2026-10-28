@@ -222,6 +222,7 @@ import all GameTheory.Tests.AuctionSemantics
 import all GameTheory.Tests.Backward
 import all GameTheory.Tests.Balancedness
 import all GameTheory.Tests.BondarevaShapley
+import all GameTheory.Tests.ConvexCore
 import all GameTheory.Math.LinearInequalityTest
 import all GameTheory.Tests.Banzhaf
 import all GameTheory.Tests.Bargaining
