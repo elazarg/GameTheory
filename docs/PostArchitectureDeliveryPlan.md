@@ -397,6 +397,15 @@ unacceptable extra agent, then transposes the market to test receivers.
 This is the one-to-one invariant; capacitated rural hospitals remains a
 separate design and theorem package.
 
+The capacitated design is now separately measured in EXP-168 and
+[D74](decisions/D74-capacitated-rural-hospitals.md), with experimental native
+quota semantics, unit-capacity adequacy, nonempty-underfill controls and a
+forward slot reduction through existing DA. An arbitrary reverse slot lift is
+refuted; sorted stable lifting is the next gate. The outside-option guard
+comparison preserves the raw-ranking unit-capacity semantics before any
+promotion. No stable capacitated API or full rural hospitals theorem is
+claimed by this design work.
+
 `GaleShapley.Strategyproof` proves that truthful deferred acceptance weakly
 beats every stable outcome under a unilateral proposer report, with every
 other report fixed. Its deferred-acceptance corollary permits all strict

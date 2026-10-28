@@ -10474,3 +10474,62 @@ memory.
   CPPBE-to-SPE theorem and a CPPBE-but-not-SE control remain theorem delivery;
   infinite-history existence and native embedded-chance lowering are not
   admitted by this slice.
+
+## EXP-168: capacitated matching representation for rural hospitals
+
+- **Question:** Can hospital capacities extend the native ordinal matching
+  model without duplicating preferences or storing finite carriers, and can
+  its stability be connected to the validated one-to-one layer?
+- **Competing designs:** direct doctor-to-optional-hospital assignments with
+  capacity feasibility and responsive blocking; ordered hospital-slot cloning
+  into the existing one-to-one market; or a general hospital-choice model
+  guarded by substitutability and aggregate demand certificates.
+- **Representative slice:** a nonempty undersubscribed hospital alongside
+  two distinct stable assignments, an unmatched doctor and unacceptable pairs;
+  capacity-zero and capacity-one boundaries; finite-fiber enforcement on an
+  infinite doctor carrier; and a measured comparison with hospital slots.
+- **Kill conditions:** infinite fibers passing a finite quota through a
+  default-zero cardinality operation; arbitrary cohort preferences admitted
+  as responsive; hidden tie-breaking in the semantic market; stored finite
+  instances; a second one-to-one matching semantics; or claiming full rural
+  hospitals from equal headcounts without preserving an undersubscribed
+  hospital's entire doctor set.
+- **Artifacts and commands:** the four probes under
+  `GameTheory/Experimental/Exp168/` compare capacity semantics, guard placement,
+  finite hospital controls and the slot reduction. The native checkpoint
+  `lake --iofail build GameTheory.Experimental.Exp168.Capacitated` passes 987
+  jobs. `python scripts/audit.py` passes public build (3,872 jobs), complete
+  validation (4,685 jobs), public lint, source boundaries and transitive
+  standard-axiom checks. The silent declaration probe
+  `lake env lean .codex/scratch/exp168-boundary.lean` reaches the new stable
+  existence consumer and rejects Nash, Protocol, project expectation and
+  PMF dependencies from the slot leaf. Independent semantic reviews found no
+  remaining issue in the measured statements. No capacitated API is exported.
+- **Observations:** finite-quota `encard` bounds force finite fibers on
+  arbitrary doctor carriers. The same infinite constant fiber passes the
+  competing `ncard ≤ 1` bound and fails extended-cardinality feasibility;
+  default-zero cardinality is therefore refuted as a semantic quota check.
+  Unit quotas recover existing one-to-one matching. A universal
+  outside-option guard needs transitivity for that reduction; a cyclic raw
+  ranking refutes assumption-free equivalence. Requiring acceptability on the
+  vacancy branch and using the incumbent comparison on the replacement branch
+  preserves the existing unit-capacity semantics without extra laws. Both
+  placements agree under individual rationality and hospital transitivity.
+- **Further observations:** ordered slots preserve linearity and project
+  stable assignments to native stability, with exact cohort/occupied-slot
+  cardinality and no finite-doctor premise. Existing one-to-one DA gives
+  finite native stable existence, including zero quotas. But arbitrary reverse
+  lifting is refuted: placing one doctor in the later of two otherwise
+  identical hospital slots creates an earlier-slot blocking pair, while both
+  lifts collapse to the same stable hospital assignment. A nonempty
+  undersubscribed hospital retains its exact singleton cohort across two
+  distinct stable controls; equal headcounts alone also have a proved
+  different-cohort, nonstable control.
+- **Outcome:** supporting and narrowing evidence for native quota semantics
+  with a derived slot backend. [D74](decisions/D74-capacitated-rural-hospitals.md)
+  remains provisional. Prefer the vacancy-or-replacement guard for the shared
+  semantic primitive; refactor the unit-capacity API rather than retaining
+  parallel definitions. A sorted reverse stable-lift theorem is the next
+  adequacy gate before the general rural hospitals theorem or stable API
+  promotion. General hospital choice functions were scoped out, not tested or
+  disproved. Preserve both refuted candidates above as experiment evidence.
