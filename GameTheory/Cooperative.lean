@@ -17,6 +17,7 @@ public import GameTheory.Cooperative.GaleShapley.Perfect
 public import GameTheory.Cooperative.GaleShapley.Optimality
 public import GameTheory.Cooperative.GaleShapley.Unmatched
 public import GameTheory.Cooperative.GaleShapley.Strategyproof
+public import GameTheory.Cooperative.Matching.RuralHospitals
 public import GameTheory.Cooperative.ShapleyShubik
 
 @[expose] public section

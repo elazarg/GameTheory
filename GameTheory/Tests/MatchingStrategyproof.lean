@@ -98,6 +98,7 @@ theorem outsideReport_linear : outsideReport.HasLinearPreferences :=
     (Rank.onlyAccept_linear (MatchingOptimality.unbalanced_linear.left ()) true)
 
 private theorem outsideReport_partner_stable : outsideReport.IsStable (fun _ => some true) := by
+  apply (outsideReport.isStable_iff _).mpr
   refine ⟨fun _ _ _ _ _ => Subsingleton.elim _ _, ?_, ?_⟩
   · intro left right paired
     cases left

@@ -97,8 +97,9 @@ theorem not_unmatched_acceptable_pair_of_stable
     (leftAccepts : Preference.strict market.prefersLeft left (some right) none)
     (rightAccepts : Preference.strict market.prefersRight right (some left) none) :
     False := by
-  apply stable.2.2
-  refine ⟨left, right, ?_, ?_, ?_⟩
+  apply stable.not_isBlockingPair left right
+  apply (market.isBlockingPair_iff_pairwise stable.isMatching left right).mpr
+  refine ⟨?_, ?_, ?_⟩
   · simpa [leftUnmatched] using leftAccepts
   · intro left' hmatch
     exact False.elim (rightUnmatched left' hmatch)
@@ -127,7 +128,7 @@ theorem stable_matching_perfect
     by_contra hunmatched
     push Not at hunmatched
     obtain ⟨left, hleft⟩ := exists_unmatched_left_of_unmatched_right
-      stable.1 hcard hunmatched
+      stable.isMatching hcard hunmatched
     exact market.not_unmatched_acceptable_pair_of_stable stable hleft hunmatched
       (acceptable.1 left right) (acceptable.2 right left)
 

@@ -73,3 +73,17 @@ acceptance, and perfectness are native market-design concepts.  Proposer
 optimality, receiver pessimality, matching symmetry, rural hospitals, and
 strategyproofness are subsequent P-MATCH breadth gates; none may introduce a
 parallel preference or matching representation.
+
+## Capacitated extension
+
+EXP-168/[D74](D74-capacitated-rural-hospitals.md) completes the responsive
+capacitated gate. `Matching.Basic` retains the preference and assignment data;
+`Matching.Capacitated` owns quota feasibility and responsive stability.
+One-to-one stability is its transparent unit-quota specialization. The
+pairwise blocking characterization preserves the former raw-ranking behavior
+on valid assignments; stability preservation needs no extra ranking laws.
+The sorted slot reduction reuses the existing one-to-one algorithm without
+turning native matching into a strategic form. Full rural hospitals is proved
+and exported by the opt-in Cooperative root. Finite and strict-ranking
+certificates remain local to operations and theorems; the native leaf still
+excludes Nash, probability, Protocol and Analysis.

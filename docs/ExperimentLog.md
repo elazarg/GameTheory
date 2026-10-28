@@ -10533,3 +10533,37 @@ memory.
   adequacy gate before the general rural hospitals theorem or stable API
   promotion. General hospital choice functions were scoped out, not tested or
   disproved. Preserve both refuted candidates above as experiment evidence.
+- **Continuation:** complete the sorted reverse stable lift and all three
+  rural-hospitals conclusions, then promote a single vacancy-or-replacement
+  semantic owner with unit-capacity specializations. The earlier partial
+  outcome and counterexamples remain evidence; promotion is pending the
+  general theorem, downstream migration and full review/audit.
+- **Continuation result:** Mathlib sorting and list indices give an actual
+  sorted reverse stable lift, with injectivity, exact collapse and initial
+  occupied segments. It requires finite doctors only. Native doctor-optimal
+  DA and all three rural-hospitals conclusions now follow from the existing
+  one-to-one algorithm and unmatched-agent invariance. The exact-cohort proof
+  uses optimal-cohort inclusion at a vacancy and equal finite headcounts,
+  rather than claiming that equal headcounts alone determine a cohort.
+- **Promotion evidence:** `Matching.Basic` owns the existing individual data
+  and assignments; `Matching.Capacitated` owns responsive stability once.
+  Ordinary matching is its transparent unit-quota specialization. Pairwise
+  blocking behavior is preserved on valid assignments without ranking laws;
+  stability preservation needs no separate validity premise. All earlier
+  one-to-one consumers and experimental counterexamples retain their stated
+  scope. Stable modules import no experiment. The public rural-hospitals
+  consumer tests nonempty underfill, changing full-hospital cohorts, zero
+  quotas with an empty slot carrier, and infinite-fiber rejection.
+- **Final commands and measurements:** the focused complete theorem,
+  controls, migrated matching fixtures and experimental evidence build passes
+  1,079 jobs. `python scripts/audit.py` passes the public build (3,872 jobs),
+  complete validation (4,691 jobs), public lint, source boundaries and
+  transitive standard-axiom checks. Independent semantic reviews accept the
+  shared owner, sorted lift and exact-cohort argument. The silent command
+  `lake env lean .codex/scratch/rural-hospitals-boundary.lean` reaches both
+  the full theorem and proved reverse lift while rejecting Nash, Protocol,
+  project expectation and PMF declarations from the native theorem leaf.
+- **Final outcome:** adopted and promoted by
+  [D74](decisions/D74-capacitated-rural-hospitals.md). The sorted-lift and full
+  finite responsive rural-hospitals gates pass. General hospital choice,
+  ties, couples and many-to-many matching remain outside the delivered scope.

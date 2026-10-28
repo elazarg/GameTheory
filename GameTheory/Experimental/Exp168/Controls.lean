@@ -19,7 +19,8 @@ public import Mathlib.Tactic.NormNum
 
 namespace GameTheory.Experimental.Exp168.Controls
 
-open GameTheory.MatchingMarket Capacitated Capacitated.Market
+open GameTheory.MatchingMarket (Matching)
+open Capacitated Capacitated.Market
 
 abbrev Doctor := Fin 4
 abbrev Hospital := Fin 3

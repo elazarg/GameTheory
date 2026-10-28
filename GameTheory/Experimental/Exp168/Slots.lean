@@ -236,8 +236,9 @@ theorem blocking_pair_lifts (market : Capacitated.Market Doctor Hospital)
     ∃ slot : Slot market, (cloneMarket market).IsBlockingPair assignment doctor slot := by
   rcases blocks with ⟨doctorPreferred, hospitalAccepts, vacancy | replacement⟩
   · obtain ⟨index, empty⟩ := exists_empty_slot_of_vacancy market valid hospital vacancy
-    refine ⟨⟨hospital, index⟩,
-      doctor_strict_at_slot market assignment doctor hospital index doctorPreferred, ?_, ?_⟩
+    refine ⟨⟨hospital, index⟩, ?_⟩
+    apply ((cloneMarket market).isBlockingPair_iff_pairwise valid doctor ⟨hospital, index⟩).mpr
+    refine ⟨doctor_strict_at_slot market assignment doctor hospital index doctorPreferred, ?_, ?_⟩
     · intro incumbent paired
       exact False.elim (empty incumbent paired)
     · intro _
@@ -245,8 +246,9 @@ theorem blocking_pair_lifts (market : Capacitated.Market Doctor Hospital)
   · obtain ⟨incumbent, member, hospitalPreferred⟩ := replacement
     obtain ⟨index, incumbentPaired⟩ :=
       (mem_cohort_collapse_iff market assignment incumbent hospital).mp member
-    refine ⟨⟨hospital, index⟩,
-      doctor_strict_at_slot market assignment doctor hospital index doctorPreferred, ?_, ?_⟩
+    refine ⟨⟨hospital, index⟩, ?_⟩
+    apply ((cloneMarket market).isBlockingPair_iff_pairwise valid doctor ⟨hospital, index⟩).mpr
+    refine ⟨doctor_strict_at_slot market assignment doctor hospital index doctorPreferred, ?_, ?_⟩
     · intro other paired
       have same := valid other incumbent ⟨hospital, index⟩ paired incumbentPaired
       subst other
@@ -314,17 +316,19 @@ def earlyAssignment : Matching Unit (Slot twoSlots) := fun _ => some firstSlot
 def lateAssignment : Matching Unit (Slot twoSlots) := fun _ => some secondSlot
 
 theorem earlyAssignment_stable : (cloneMarket twoSlots).IsStable earlyAssignment := by
+  apply ((cloneMarket twoSlots).isStable_iff _).mpr
   refine ⟨fun _ _ _ _ _ => Subsingleton.elim _ _, ?_, ?_⟩
   · intro doctor slot paired
     have same : slot = firstSlot := (Option.some.inj paired).symm
     subst slot
     norm_num [cloneMarket, twoSlots, optionScore, hospitalOf, slotIndex, firstSlot]
   · rintro ⟨doctor, ⟨hospital, index⟩, blocks⟩
+    have strict := blocks.1
     cases hospital
     fin_cases index <;>
-      norm_num [MatchingMarket.IsBlockingPair, Preference.strict, Rank.strict,
+      norm_num [Preference.strict, Rank.strict, MatchingMarket.withCapacities,
         cloneMarket, twoSlots, optionScore,
-        hospitalOf, slotIndex, firstSlot, earlyAssignment] at blocks
+        hospitalOf, slotIndex, firstSlot, earlyAssignment] at strict
 
 /-- The positive consumer projects actual one-to-one slot stability. -/
 theorem early_collapse_stable : twoSlots.IsStable (collapse twoSlots earlyAssignment) :=
@@ -334,6 +338,8 @@ theorem early_collapse_stable : twoSlots.IsStable (collapse twoSlots earlyAssign
 copies of the very same hospital. -/
 theorem lateAssignment_blocks_at_first :
     (cloneMarket twoSlots).IsBlockingPair lateAssignment () firstSlot := by
+  apply ((cloneMarket twoSlots).isBlockingPair_iff_pairwise
+    (fun _ _ _ _ _ => Subsingleton.elim _ _) () firstSlot).mpr
   refine ⟨?_, ?_, ?_⟩
   · norm_num [Preference.strict, Rank.strict, cloneMarket, twoSlots, optionScore,
       hospitalOf, slotIndex, firstSlot, secondSlot, lateAssignment]

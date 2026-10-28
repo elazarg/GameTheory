@@ -54,6 +54,7 @@ def diagonal : Matching Bool Bool := some
 def crossed : Matching Bool Bool := fun left => some (!left)
 
 theorem diagonal_stable : market.IsStable diagonal := by
+  apply (market.isStable_iff _).mpr
   refine ⟨?_, ?_, ?_⟩
   · intro first second right firstMatch secondMatch
     exact Option.some.inj (firstMatch.trans secondMatch.symm)
@@ -62,18 +63,22 @@ theorem diagonal_stable : market.IsStable diagonal := by
     exact ⟨Nat.zero_le _, Nat.zero_le _⟩
   · rintro ⟨left, right, blocking⟩
     have improves := blocking.1.2
+    change ¬ market.prefersLeft left (diagonal left) (some right) at improves
     cases left <;> cases right <;>
       norm_num [market, leftScore, diagonal] at improves
 
 theorem crossed_stable : market.IsStable crossed := by
-  refine ⟨?_, ?_, ?_⟩
-  · intro first second right firstMatch secondMatch
+  have valid : IsMatching crossed := by
+    intro first second right firstMatch secondMatch
     have same := Option.some.inj (firstMatch.trans secondMatch.symm)
     cases first <;> cases second <;> simp_all [crossed]
+  apply (market.isStable_iff _).mpr
+  refine ⟨valid, ?_, ?_⟩
   · intro left right _
     change 0 ≤ leftScore left (some right) ∧ 0 ≤ rightScore right (some left)
     exact ⟨Nat.zero_le _, Nat.zero_le _⟩
   · rintro ⟨left, right, blocking⟩
+    have blocking := (market.isBlockingPair_iff_pairwise valid left right).mp blocking
     have improves := (blocking.2.1 (!right) (by simp [crossed])).2
     cases left <;> cases right <;>
       norm_num [market, rightScore] at improves

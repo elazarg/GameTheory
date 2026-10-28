@@ -109,6 +109,7 @@ theorem isBlockingPair_iff_partners (market : MatchingMarket Left Right)
       Preference.strict market.prefersLeft left (some right) (matching left) ∧
         Preference.strict market.prefersRight right
           (some left) (transposeMatching matching right) := by
+  rw [market.isBlockingPair_iff_pairwise valid left right]
   constructor
   · intro blocks
     refine ⟨blocks.1, ?_⟩
@@ -136,6 +137,7 @@ both viewed from the other side. -/
 theorem IsStable.transpose {market : MatchingMarket Left Right}
     {matching : Matching Left Right} (stable : market.IsStable matching) :
     market.transpose.IsStable (transposeMatching matching) := by
+  apply (market.transpose.isStable_iff _).mpr
   refine ⟨isMatching_transposeMatching matching, ?_, ?_⟩
   · intro right left paired
     have pair := (transposeMatching_apply_some_iff matching stable.isMatching).mp paired

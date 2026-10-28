@@ -119,6 +119,16 @@ The foundational characteristic-function game and its core live in
 merely to fit this diagram. Larger cooperative developments may still warrant
 their own dependency root.
 
+EXP-168/[D74](decisions/D74-capacitated-rural-hospitals.md) validates one native
+responsive matching owner under `GameTheory.Cooperative.Matching`.
+`CapacitatedMarket` adds only right-side quotas to the existing individual
+rankings, and extended-cardinality fiber bounds enforce those quotas.
+One-to-one stability is the unit-quota specialization of the same semantics.
+A sorted hospital-slot reduction reuses the original deferred-acceptance and
+unmatched-agent proofs to establish the full finite rural hospitals theorem,
+including exact cohorts at undersubscribed hospitals. Neither stored finite
+instances nor probability, strategic forms or Protocol are introduced.
+
 Hidden-action contracts are likewise native to the opt-in mechanism branch.
 D32/D62 represent each action by its own PMF outcome law and state agent
 optimality and explicit participation directly. Real comparisons require

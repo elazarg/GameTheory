@@ -232,15 +232,19 @@ def finalMatching : Matching Left Right
   | _ => some 2
 
 theorem finalMatching_isStable : fixture.IsStable finalMatching := by
-  refine ⟨?_, ?_, ?_⟩
-  · intro left₁ left₂ right h₁ h₂
+  have valid : IsMatching finalMatching := by
+    intro left₁ left₂ right h₁ h₂
     fin_cases left₁ <;> fin_cases left₂ <;> fin_cases right <;>
       simp [finalMatching] at h₁ h₂ ⊢
+  apply (fixture.isStable_iff _).mpr
+  refine ⟨valid, ?_, ?_⟩
   · intro left right hmatch
     fin_cases left <;> fin_cases right <;>
       simp [finalMatching] at hmatch
     all_goals norm_num [fixture, leftScore, rightScore]
-  · rintro ⟨left, right, _, rightMatched, _⟩
+  · rintro ⟨left, right, blocks⟩
+    obtain ⟨_, rightMatched, _⟩ :=
+      (fixture.isBlockingPair_iff_pairwise valid left right).mp blocks
     have hcurrent : ∃ current,
         finalMatching current = some right ∧
           fixture.prefersRight right (some current) (some left) := by
@@ -275,6 +279,11 @@ def unstableMatching : Matching Left Right
 /-- Left one and right zero are a concrete blocking pair. -/
 theorem unstable_has_blocking_pair :
     fixture.IsBlockingPair unstableMatching 1 0 := by
+  have valid : IsMatching unstableMatching := by
+    intro first second right firstAssigned secondAssigned
+    fin_cases first <;> fin_cases second <;> fin_cases right <;>
+      simp [unstableMatching] at firstAssigned secondAssigned ⊢
+  apply (fixture.isBlockingPair_iff_pairwise valid 1 0).mpr
   refine ⟨?_, ?_, ?_⟩
   · norm_num [unstableMatching, fixture, Preference.strict, Rank.strict,
       leftScore]

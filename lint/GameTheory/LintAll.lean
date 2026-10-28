@@ -117,6 +117,11 @@ import all GameTheory.Cooperative.GaleShapley.Optimality
 import all GameTheory.Cooperative.GaleShapley.Unmatched
 import all GameTheory.Cooperative.GaleShapley.Strategyproof
 import all GameTheory.Cooperative.Matching
+import all GameTheory.Cooperative.Matching.Basic
+import all GameTheory.Cooperative.Matching.Capacitated
+import all GameTheory.Cooperative.Matching.Slots
+import all GameTheory.Cooperative.Matching.SortedLift
+import all GameTheory.Cooperative.Matching.RuralHospitals
 import all GameTheory.Cooperative.Matching.Transpose
 import all GameTheory.Cooperative.ShapleyShubik
 import all GameTheory.Core

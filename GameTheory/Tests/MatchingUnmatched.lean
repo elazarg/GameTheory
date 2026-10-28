@@ -61,12 +61,18 @@ def crossed : Matching (Option Bool) Bool
   | some left => some (!left)
 
 theorem diagonal_stable : market.IsStable diagonal := by
-  unfold IsStable IsMatching IsIndividuallyRational IsBlockingPair
+  have valid : IsMatching diagonal := by unfold IsMatching diagonal; decide
+  rw [market.isStable_iff]
+  simp_rw [market.isBlockingPair_iff_pairwise valid]
+  unfold IsMatching IsIndividuallyRational
     Preference.strict Rank.strict market
   decide
 
 theorem crossed_stable : market.IsStable crossed := by
-  unfold IsStable IsMatching IsIndividuallyRational IsBlockingPair
+  have valid : IsMatching crossed := by unfold IsMatching crossed; decide
+  rw [market.isStable_iff]
+  simp_rw [market.isBlockingPair_iff_pairwise valid]
+  unfold IsMatching IsIndividuallyRational
     Preference.strict Rank.strict market
   decide
 

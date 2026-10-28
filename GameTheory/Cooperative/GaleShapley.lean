@@ -14,7 +14,8 @@ This module proves stable matching existence; `GaleShapley.Perfect` adds
 balanced perfectness, `GaleShapley.Optimality` adds proposer optimality, and
 `GaleShapley.Unmatched` adds receiver pessimism and invariance of unmatched
 agents. `GaleShapley.Strategyproof` proves truthful proposer report incentives.
-Lattice structure and capacitated rural hospitals remain separate theorem packages.
+`Matching.RuralHospitals` reuses this algorithm through sorted hospital slots.
+Lattice structure remains a separate theorem package.
 -/
 
 public import GameTheory.Cooperative.Matching
@@ -495,7 +496,9 @@ theorem no_blocking_at_fixedPoint
       market.IsBlockingPair
         (fun agent => market.topChoice linear rejected agent) left right := by
   classical
-  rintro ⟨left, right, hleft, hrightMatched, hrightNone⟩
+  rintro ⟨left, right, blocks⟩
+  rcases (market.isBlockingPair_iff_pairwise (market.fixedPoint_isMatching linear hfixed)
+    left right).mp blocks with ⟨hleft, hrightMatched, hrightNone⟩
   have hacceptableLeft : market.AcceptableToLeft left right := by
     cases hchoice : market.topChoice linear rejected left with
     | none =>
@@ -558,6 +561,7 @@ noncomputable def deferredAcceptance
 theorem deferredAcceptance_isStable
     (linear : market.HasLinearPreferences) :
     market.IsStable (market.deferredAcceptance linear) := by
+  apply (market.isStable_iff _).mpr
   refine ⟨market.fixedPoint_isMatching linear
       (market.daStep_daFixedPoint linear),
     market.fixedPoint_individuallyRational linear

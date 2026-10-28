@@ -64,6 +64,7 @@ private theorem stable_transfer {source target : MatchingMarket Left Right}
     (strict : ∀ right, Preference.strict target.prefersLeft who (some right) (matching who) →
       Preference.strict source.prefersLeft who (some right) (matching who)) :
     target.IsStable matching := by
+  apply (target.isStable_iff _).mpr
   refine ⟨stable.isMatching, ?_, ?_⟩
   · intro left right paired
     have original := stable.isIndividuallyRational left right paired
@@ -74,7 +75,9 @@ private theorem stable_transfer {source target : MatchingMarket Left Right}
       · simpa only [← sameOther left same] using original.1
     · simpa only [sameRight] using original.2
   · rintro ⟨left, right, blocks⟩
+    have blocks := (target.isBlockingPair_iff_pairwise stable.isMatching left right).mp blocks
     apply stable.not_isBlockingPair left right
+    apply (source.isBlockingPair_iff_pairwise stable.isMatching left right).mpr
     refine ⟨?_, ?_, ?_⟩
     · by_cases same : left = who
       · subst left

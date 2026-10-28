@@ -374,7 +374,7 @@ fixed:
 - general security and constant-sum correlation;
 - Sen and median-voter social choice;
 - convex-game Shapley-in-core;
-- capacitated rural-hospitals extensions; and
+- matching lattice structure and group incentives; and
 - egalitarian and Kalai–Smorodinsky bargaining.
 
 Each package needs its own theorem-level consumer. Shared general mathematics
@@ -394,17 +394,21 @@ all stable matchings. Finite matched-set cardinality upgrades the opposing
 inclusions to equalities; unequal sizes and incomplete acceptability remain
 allowed. The hostile consumer has two distinct stable assignments and an
 unacceptable extra agent, then transposes the market to test receivers.
-This is the one-to-one invariant; capacitated rural hospitals remains a
-separate design and theorem package.
-
-The capacitated design is now separately measured in EXP-168 and
-[D74](decisions/D74-capacitated-rural-hospitals.md), with experimental native
-quota semantics, unit-capacity adequacy, nonempty-underfill controls and a
-forward slot reduction through existing DA. An arbitrary reverse slot lift is
-refuted; sorted stable lifting is the next gate. The outside-option guard
-comparison preserves the raw-ranking unit-capacity semantics before any
-promotion. No stable capacitated API or full rural hospitals theorem is
-claimed by this design work.
+The full capacitated rural hospitals theorem is delivered by
+`Matching.RuralHospitals`, validated in EXP-168 and
+[D74](decisions/D74-capacitated-rural-hospitals.md). `CapacitatedMarket` adds
+only quotas to existing individual rankings. Extended cardinality enforces
+finite cohorts; vacancy-or-replacement blocking is the single semantic owner,
+with ordinary one-to-one stability as its unit-quota specialization.
+`Matching.SortedLift` proves the reverse stable slot lift by sorting each
+hospital's cohort into an initial occupied segment. Existing one-to-one DA
+and unmatched-agent invariance give native doctor optimality, unmatched-doctor
+and headcount invariance, and exact cohort invariance at undersubscribed
+hospitals. `Tests.RuralHospitals` consumes the full theorem on two distinct
+stable outcomes with a nonempty underfilled hospital, and covers changing
+full-hospital cohorts, zero quotas with an empty slot carrier, and rejected
+infinite fibers. General hospital choice, ties, couples and group incentives
+remain separate scope.
 
 `GaleShapley.Strategyproof` proves that truthful deferred acceptance weakly
 beats every stable outcome under a unilateral proposer report, with every

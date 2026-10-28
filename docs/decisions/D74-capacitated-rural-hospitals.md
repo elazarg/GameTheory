@@ -1,160 +1,146 @@
-# D74: native capacitated matching with a separate slot reduction
+# D74: one responsive capacity semantics with a sorted slot reduction
 
-- **Status:** provisional; no stable capacitated API is frozen
+- **Status:** adopted and promoted
 - **Date:** 2026-10-28
 - **Experiment ID:** [EXP-168](../ExperimentLog.md)
 
-## Target and scope
+## Target and delivered scope
 
-The target is the full finite rural hospitals theorem under strict individual
-rankings and responsive hospital behavior. For two stable assignments of the
-same market, prove separately that:
+`CapacitatedMarket.ruralHospitals` proves the full finite rural hospitals
+result under strict individual rankings and responsive acceptance. For two
+stable assignments of the same market it proves separately:
 
 1. exactly the same doctors are unmatched;
-2. each hospital employs the same number of doctors; and
+2. every hospital employs the same number of doctors; and
 3. a hospital below quota has exactly the same doctor cohort in both assignments.
 
-The third statement is equality of sets, not just their cardinalities. This
+The third conclusion is equality of sets, not just their cardinalities. This
 is the distinction established by Roth's
 [*On the Allocation of Residents to Rural Hospitals* (1986)](
 https://stanford.edu/~alroth/papers/1986_E_On_the_Allocation.pdf).
 
-The first slice excludes ties, couples, contracts, distributional constraints,
-endogenous capacities and arbitrary preferences over teams. Zero quotas,
-unacceptable partners, unmatched doctors, unequal market sizes and nonempty
-undersubscribed hospitals are included. Finite-carrier and ranking-law
-assumptions belong on operations and theorems, not market data.
+Zero quotas, unacceptable partners, unmatched doctors, unequal market sizes
+and nonempty undersubscribed hospitals are included. Neither positive quotas
+nor complete acceptability is assumed. Finite-carrier and ranking-law
+assumptions are parameters of the operations and theorems, not market data or
+additional conjuncts of stability. Ties, couples, contracts, distributional
+constraints, endogenous quotas and arbitrary team preferences are outside
+this package.
 
-## Candidate semantic owner
+## Shared semantic owner
 
-The experimental direct model stores the existing two individual preference
-families as a `MatchingMarket Doctor Hospital` and adds only the quota function
-`Hospital → ℕ`. An assignment remains the existing doctor-to-optional-hospital
-function. Each hospital's cohort is its fiber; no second hospital assignment
-map is stored or maintained.
+`Matching.Basic` owns individual `MatchingMarket` rankings, optional
+assignments, cohort fibers, injectivity and individual rationality.
+`Matching.Capacitated` owns `CapacitatedMarket`: the existing rankings plus
+one intrinsic quota function `Hospital → ℕ`. No finite instances, ordering
+certificates, utility representation or second assignment map are stored.
 
-Capacity feasibility compares a fiber's `Set.encard` with the finite quota.
-This both bounds its size and certifies finiteness. An unconstrained `ncard`
-bound is rejected: infinite sets default to cardinality zero there and could
-silently pass every quota. Explicit finite enumeration may enter later at the
-execution or finite-proof layer.
+Every cohort is the actual fiber of the doctor-to-optional-hospital
+assignment. Feasibility bounds its `Set.encard` by the finite quota. This
+simultaneously bounds its size and certifies finiteness, even for infinite
+doctor carriers. An unguarded `ncard` check is rejected by a proved infinite
+constant-fiber counterexample: natural cardinality passes the quota-one
+bound while extended cardinality rejects it.
 
-Responsive willingness is determined by the individual ranking and quota.
-The proposed shared rule says a pair blocks when the doctor strictly prefers
-the hospital and either the hospital has a vacancy and finds the doctor
-acceptable, or it prefers that doctor to an incumbent. Stability combines
-assignment feasibility, the existing individual rationality predicate, and
-absence of such pairs. All three are conditions on the assignment. Linearity
-is a separate theorem hypothesis.
+The single responsive blocking rule says that the doctor strictly prefers
+the hospital and either the hospital has a vacancy and finds that doctor
+acceptable, or it prefers the doctor to an incumbent. Stability combines
+feasibility, existing individual rationality and absence of such pairs.
+Responsiveness is encoded by these local acceptance operations. There is no
+free ranking over teams with an unenforced responsiveness annotation.
 
-The first direct prototype instead required acceptability in both branches.
-`BlockingComparison` proves the two rules equivalent under individual
-rationality and hospital transitivity, at every quota. It also proves a genuine
-difference on raw cyclic rankings. The vacancy-or-replacement rule recovers
-existing one-to-one blocking and stability at unit quotas without extra
-preference laws; the original placement needs hospital transitivity. Prefer
-the vacancy-or-replacement rule when promoting the shared semantic primitive.
-This preserves the existing raw-ranking API instead of quietly narrowing it.
-The experimental files retain both candidates as evidence, not as permanent
-parallel public definitions.
+Ordinary `MatchingMarket.IsStable` and `IsBlockingPair` are transparent
+unit-quota specializations of this owner. Injectivity is recovered by the
+unit-capacity feasibility theorem. The pairwise characterization agrees with
+the former blocking formula on valid one-to-one assignments without extra
+ranking laws; stability preservation needs no separate validity premise,
+because feasibility supplies it. Existing algorithms and fixtures consume
+these mathematical characterizations rather than compatibility aliases or a
+parallel stability definition.
 
-This models responsive acceptance by construction. It does not store a free
-ranking over cohorts and assert that it is responsive in prose. If a later
-consumer needs arbitrary hospital choice functions, that extension must
-specify and validate its own substitutability, consistency and size laws.
+## Competing designs and measured corrections
 
-## Competing designs and roles
+The experiment compared native quota assignments, ordered hospital-slot
+cloning and a broader hospital-choice framework. Native assignments are the
+semantic owner; slots are a proved backend. General choice functions were
+scoped out, not disproved. A later extension must specify and validate its
+own substitutability, consistency and size laws.
 
-| Design | Role under consideration | Risk to test |
-|---|---|---|
-| Native optional-hospital assignment with quotas | Canonical semantics | Wrong vacancy or cardinality semantics; duplication of the unit-capacity case |
-| Ordered copies of hospital positions | Derived theorem backend using existing one-to-one matching | Artificial slot priorities; invalid reverse lifting; equality of totals mistaken for equality of cohorts |
-| General hospital choice functions | Possible later generalization | Stronger semantic machinery than the classical theorem needs; missing certificate laws |
+The initial native prototype required outside-option acceptability for both
+vacancy and replacement. Both guard placements agree under individual
+rationality and hospital transitivity, at every quota. But a raw cyclic-ranking
+counterexample refutes assumption-free equivalence. Requiring acceptability
+only for vacancy preserves the existing raw-ranking unit-capacity behavior,
+so that is the promoted shared rule. EXP-168 retains both prototypes and the
+counterexample instead of rewriting away the unsuccessful stronger claim.
 
-Native assignments and slots need not be competing public representations.
-The preferred direction is native semantics with a proved slot reduction as
-an implementation detail of the proof. Slot indices must not become semantic
-preferences over physical hospital places.
+An arbitrary reverse slot lift is also refuted. Assigning one doctor to the
+later of two copies of the same hospital creates an earlier-slot blocking
+pair, although both lifts collapse to the identical stable native assignment.
+The reverse reduction therefore sorts each hospital's doctors into an initial
+segment. This sorting requirement is enforced by the construction and proved
+occupancy properties, not by a comment or an assumed lifting witness.
 
-## Measured slice
+## Established proof dependency path
 
-Artifacts live only in `GameTheory/Experimental/Exp168/` and are not exported.
-The direct-model checkpoint passes 987 jobs. It proves that feasible fibers
-are finite, zero quotas exclude every doctor, unit quotas recover the existing
-`IsMatching`, and unit-quota stability is equivalent to canonical one-to-one
-stability. The last equivalence needs only transitivity of hospital rankings.
-An infinite constant assignment to one quota-one hospital is refuted; the same
-fiber provably passes the competing natural-cardinality bound.
+`Matching.Slots` derives the hospital-slot market from the existing rankings.
+Different hospitals retain their native order; lower indices refine positions
+of the same hospital. Every slot inherits the hospital's ranking of doctors.
+The slot refinement preserves strict linearity. A valid slot assignment has
+an exact bijection between each collapsed cohort and its occupied slots.
+Stable slot assignments collapse to native stability, without requiring
+finite doctor or hospital carriers.
 
-The required finite control has two distinct stable outcomes on four doctors
-and three hospitals, with quotas `1, 1, 2`. The first two hospitals exchange
-their doctors; the third has a nonempty singleton cohort below quota in both
-outcomes. An additional doctor is unmatched and unacceptable. A nonstable
-assignment with the same headcounts but a different cohort guards the stronger
-third conclusion.
+`Matching.SortedLift` uses Mathlib finite sorting and list indices to place
+each hospital's doctors best first into its initial occupied segment. It
+proves injectivity, exact collapse and reverse stability. Earlier occupied
+slots exclude artificial within-hospital blockers; genuine hospital moves
+would block the native assignment. The reverse lift requires finite doctors
+only, with no finite-hospital premise. The final theorem uses this actual
+construction, never an assumed stable lift.
 
-The slot prototype proves strict-linearity preservation, exact equality of a
-hospital's cohort cardinality with its occupied-slot cardinality, and
-clone-stable-to-native-stable projection. These projection results need no
-finite doctor or hospital carrier. With finite carriers, it constructs a
-native stable assignment through the existing one-to-one DA theorem. Zero
-quotas work even when the entire slot type is empty.
+`Matching.RuralHospitals` then:
 
-A one-doctor/two-slot control refutes stability of an arbitrary reverse lift:
-assigning the doctor to the later slot leaves an earlier slot as a blocking
-partner, although collapse yields the same stable native assignment as the
-early-slot lift. Thus the reverse bridge must choose an ordering; collapse
-alone is not a stability equivalence.
+1. applies the existing one-to-one unmatched-agent theorem to the stable lifts;
+2. transfers unmatched doctors and pointwise occupied-slot equality, obtaining
+   equal headcounts at every hospital;
+3. projects existing one-to-one DA and proposer optimality to a stable,
+   doctor-optimal native assignment; and
+4. compares any undersubscribed hospital with that optimal assignment. A
+   doctor in the optimal cohort but absent from the other cohort would prefer
+   that hospital and block its vacancy. Cohort inclusion and equal finite
+   headcounts give set equality. Comparing both stable assignments to the
+   same optimal assignment proves the exact-cohort conclusion.
 
-The integrated `python scripts/audit.py` run passes the public build (3,872
-jobs), complete validation (4,685 jobs), public lint, source boundaries and
-transitive standard-axiom checks. The slot-leaf declaration probe reaches
-`exists_stable_via_slots` while rejecting Nash, Protocol, project expectation
-and PMF declarations. The experimental sources contain no visible equality
-transport plumbing. Independent cross-reviews accept the measured semantic
-and proof statements. They do not certify the still-unproved reverse bridge.
+There is one DA algorithm and one responsive stability semantics. Slot
+priorities are auxiliary to the reduction; the public native preference
+comparisons concern physical hospitals and the outside option.
 
-## Proposed proof dependency path
+## Validation and admission
 
-1. Prove that a stable slot assignment collapses to native stability, with
-   exact correspondence between a hospital cohort and its occupied slots.
-2. Prove that every native stable assignment has a stable slot lift. An
-   arbitrary lift is insufficient: within each hospital, doctors must be
-   sorted by its ranking into the ordered positions. Vacant positions follow
-   occupied ones. This is the next required adequacy gate.
-3. Apply the existing unmatched-agent theorem to stable lifts. Doctor
-   unmatchedness is preserved by collapse; equality of occupied status for
-   every slot gives each hospital's headcount invariant.
-4. Project slot deferred acceptance and use the lift theorem plus proposer
-   optimality to obtain a doctor-optimal native stable assignment.
-5. Compare that assignment with any stable assignment at an undersubscribed
-   hospital. A doctor in the optimal cohort but absent from the other cohort
-   would prefer that hospital and block its vacancy. Cohort inclusion plus
-   equal finite headcounts gives set equality. Compare both assignments with
-   the same doctor-optimal allocation to finish the full theorem.
+The initial prototypes and refutations remain under
+`GameTheory/Experimental/Exp168/`. Stable modules import none of them.
+`Tests.RuralHospitals` independently constructs a four-doctor, three-hospital
+market with quotas `1,1,2`, two distinct stable outcomes, an unmatched doctor,
+unacceptable pairs and a nonempty underfilled hospital. Its public consumer
+uses all three general conclusions. Further controls prove that full hospitals
+can change their cohorts, that equal headcounts alone need not mean equal
+cohorts, that zero quotas work with an empty slot carrier, and that infinite
+fibers fail finite quotas.
 
-This path reuses one-to-one deferred acceptance and its proved invariants.
-It introduces neither a second rejection process nor a separate equilibrium
-predicate. The sorted reverse lift must compile before this path is treated
-as established rather than a proof plan.
+The focused strict build of the complete new theorem, native controls, all
+migrated one-to-one fixtures and experimental evidence passes 1,079 jobs.
+Independent semantic reviews accept the sorted lift, shared semantic owner,
+unit-capacity preservation and exact-cohort argument. The full
+`python scripts/audit.py` run passes the public build (3,872 jobs), complete
+validation (4,691 jobs), public lint, source boundaries and transitive
+standard-axiom checks, with no authored warnings or info diagnostics. The
+native theorem-leaf declaration probe reaches the full theorem and sorted
+reverse lift while rejecting Nash, Protocol, project expectation and PMF.
+EXP-168 records the commands and preserves the earlier failed candidates.
 
-## Admission conditions and remaining work
-
-Reject an implementation that lets infinite cohorts pass finite quotas,
-requires stored finite instances, permits arbitrary team preferences without
-laws, treats arbitrary slot lifts as stable, or proves only occupancy counts
-while advertising the full theorem. Preserve any counterexample in EXP-168.
-
-Before promotion, extract the shared vacancy-or-replacement primitive and
-refactor the existing one-to-one definitions as unit-capacity specializations,
-preserving their raw-ranking behavior. Do not retain a second one-to-one
-definition behind an equivalence or compatibility adapter. Measure the
-dependency cost of the shared owner; finite quotas and extended cardinality
-must not introduce probability, Protocol or Analysis into native matching.
-
-Promote a stable native API only after the slot correspondence (or a competing
-direct proof) reaches the general theorem and the nonempty-underfill control.
-The present branch records measured representation evidence and a precise
-dependency path, not a completed rural hospitals theorem. General choice,
-many-to-many matching and strategyproofness with hospital reports remain
-separate work.
+The rejected conditions remain: default-zero counts admitting infinite
+cohorts, stored finite capabilities, arbitrary team preferences without laws,
+arbitrary reverse slot lifts, duplicate one-to-one semantics, or advertising
+headcount equality as the full theorem. All passed admission conditions are
+backed by the artifacts and commands recorded in EXP-168.

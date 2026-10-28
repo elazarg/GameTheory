@@ -105,6 +105,7 @@ theorem isBlockingPair_iff_of_unitCapacity (market : Market Doctor Hospital)
     (doctor : Doctor) (hospital : Hospital) :
     market.IsBlockingPair assignment doctor hospital ↔
       market.rankings.IsBlockingPair assignment doctor hospital := by
+  rw [market.rankings.isBlockingPair_iff_pairwise matching doctor hospital]
   have vacant : (cohort assignment hospital).encard < (market.capacity hospital : ℕ∞) ↔
       ∀ incumbent, assignment incumbent ≠ some hospital := by
     simp only [unitCapacity, Nat.cast_one, Set.encard_lt_one,
@@ -140,12 +141,14 @@ theorem isStable_iff_of_unitCapacity (market : Market Doctor Hospital)
   · rintro ⟨feasible, rational, unblocked⟩
     have matching :=
       (market.isFeasible_iff_isMatching_of_unitCapacity unitCapacity assignment).mp feasible
+    apply (market.rankings.isStable_iff _).mpr
     refine ⟨matching, rational, ?_⟩
     rintro ⟨doctor, hospital, blocks⟩
     exact unblocked ⟨doctor, hospital,
       (market.isBlockingPair_iff_of_unitCapacity unitCapacity hospitalTransitive matching
         rational doctor hospital).mpr blocks⟩
-  · rintro ⟨matching, rational, unblocked⟩
+  · intro stable
+    obtain ⟨matching, rational, unblocked⟩ := (market.rankings.isStable_iff _).mp stable
     refine ⟨(market.isFeasible_iff_isMatching_of_unitCapacity unitCapacity assignment).mpr matching,
       rational, ?_⟩
     rintro ⟨doctor, hospital, blocks⟩

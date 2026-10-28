@@ -91,6 +91,7 @@ theorem stable_partner_not_rejected_iterate (linear : market.HasLinearPreference
             intro equal
             exact heldDifferent (stable.isMatching held left right equal.symm paired))
         apply stable.not_isBlockingPair held right
+        apply (market.isBlockingPair_iff_pairwise stable.isMatching held right).mpr
         refine ⟨proposerStrict, ?_, ?_⟩
         · intro other otherPaired
           have equal := stable.isMatching other left right otherPaired paired
