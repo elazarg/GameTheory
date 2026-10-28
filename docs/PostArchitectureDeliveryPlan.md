@@ -77,8 +77,16 @@ of positive root mass. Sequential equilibrium refines it with the existing
 finite-fiber premise; finite-history decision-recall existence and root
 incentives for finite observed utilities reuse established theorems. A proved
 weak assessment fails proper-subgame perfection for its same prescribed
-strategy, so weak PBE is not an intermediate step from SE to SPE. Stronger PBE
-variants remain separately specified, consumer-gated work.
+strategy, so weak PBE is not an intermediate step from SE to SPE.
+Conditional-probability PBE is separately specified by
+[D73](decisions/D73-conditional-probability-pbe.md)/EXP-167: one terminal-history
+conditional system represents every information-set belief and respects
+behavioral continuations at positive-belief nodes and Nature's continuations
+even off path. Finite-history sequential equilibrium supplies the common
+system by compactness, giving finite decision-recall existence with explicit
+chance; the chain rule derives ordinary on-path Bayes consistency. The weak-PBE separation is rejected
+by its incorrect off-path chance belief. A general CPPBE-to-subgame-perfection
+bridge and a CPPBE-but-not-SE example remain separate theorem delivery.
 
 Fuel-free well-founded continuation (EXP-142) and uniform-tightness extraction
 of countably many actual assessment sites (EXP-143) are delivered by D63.

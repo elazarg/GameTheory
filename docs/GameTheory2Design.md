@@ -1516,7 +1516,18 @@ same strategy fails proper-subgame perfection, so this is not a weakening of
 the sequential-equilibrium definition or a replacement for SPE. The analytic
 SE-to-weak bridge retains finite information-history fibers, and finite
 existence and root incentives reuse the established decision-recall results.
-No unqualified stronger PBE definition is adopted.
+EXP-167/[D73](decisions/D73-conditional-probability-pbe.md) separately specifies
+conditional-probability PBE. A common PMF conditional system on terminal
+histories represents information-set beliefs, with behavioral continuation
+compatibility guarded by positive assessment belief and Nature constrained
+even off path. `HasExplicitChance` enforces that random draws are exposed as
+Nature nodes; player transitions are deterministic on each legal action.
+The conditional-system data and equilibrium predicate are
+stable; simultaneous subsequence compactness and the finite-history
+SE-to-CPPBE construction stay in their mathematical and analytic leaves.
+The canonical terminal runner is reused, including its terminal-history
+subtype, rather than introducing another evaluator. No unqualified stronger
+PBE name or Fudenberg--Tirole multistage specialization is adopted.
 
 EXP-049/D21 applies the same enforced split to finite online learning. Core
 owns only product-law, normalization, and finite regret-to-CCE identities.

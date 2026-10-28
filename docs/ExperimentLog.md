@@ -10397,3 +10397,80 @@ memory.
   separate. The SE bridge retains finite information-history fibers; the root
   incentive bridge retains decision recall and finite observed utilities.
   Stronger PBE variants remain separately specified, consumer-gated work.
+
+## EXP-166: observed-action multistage Bayesian beliefs
+
+- **Question:** Can a native multistage game with private initial types and
+  publicly observed joint actions express the Fudenberg--Tirole belief
+  restrictions through the canonical Protocol assessment, without adding an
+  evaluator or widening what a player's policy observes?
+- **Competing designs:** extend the one-move Bayesian compiler with public
+  action histories; store a duplicate strategic-form evaluator; or use a
+  general conditional-probability PBE notion with different off-path semantics.
+  The latter is a distinct solution concept, not a spelling of the first.
+- **Representative slice:** two finite stages, independent private bits, and
+  a zero-probability observed action. Beliefs about a nondeviating player's
+  type must still update from that player's own action and cannot signal
+  information from the other player's unexpected action.
+- **Kill conditions:** fresh history/play semantics; hidden dependence on
+  opponents' private types in a policy; assumed updating in place of an actual
+  canonical consumer; or conflating the restricted notion with general EFG PBE.
+- **Artifacts and commands:** partial native compiler and belief-restriction
+  prototypes are retained locally in `.codex/scratch/exp166-ftpbe/`. No public
+  API was frozen and no positive/off-path consumer was completed.
+- **Outcome:** inconclusive for the proposed restricted design. The user
+  selected general conditional-probability PBE before this slice completed.
+  The type-specific prototype is outside that scope and is not admitted.
+  Continue with EXP-167; this is a change of mathematical target, not evidence
+  that the original compiler design failed a kill condition.
+
+## EXP-167: common conditional probabilities for finite extensive games
+
+- **Question:** Can the existing history-supported assessment be connected to
+  one common conditional probability system on terminal histories, imposing
+  off-path coherence without requiring independent trembles?
+- **Competing designs:** finite PMF conditional systems with a chain rule;
+  their full-support-law limit characterization; or reuse sequential
+  equilibrium, which additionally restricts the approximating behavior laws.
+- **Representative slice:** existing finite hidden-information assessments,
+  the weak-PBE-but-not-SPE control with an unreached chance continuation, and
+  the existing sequential-equilibrium existence consumer.
+- **Kill conditions:** a parallel play evaluator; changing weak PBE or SE;
+  assuming coherence instead of constructing an actual positive consumer;
+  dropping the source definition's positive-belief guard; or treating Nature's
+  fixed conditional law as unconstrained off path.
+- **Artifacts and commands:** `Math.Probability.ConditionalSystem` and its
+  compactness leaf, `Analysis.Protocol.ConditionalPBE`, the concrete positive
+  consumer in `ConditionalPBETest`, and the hostile
+  `Tests.ConditionalPBESeparation` / `Tests.ExplicitChance` controls.
+  The focused strict build of the bridge, existence, EFG specialization and
+  controls passes 3,807 jobs. `python scripts/audit.py --source-only` passes;
+  `python scripts/audit.py` passes the public build (3,872 jobs), complete
+  authored-module validation (4,673 jobs), public lint and transitive
+  standard-axiom checks, with no first-party warnings or info diagnostics.
+- **Observation requiring a narrower admission boundary:** the initial
+  unrestricted-protocol reading constrained only no-active-player chance
+  states. A stochastic transition hidden inside an active player's
+  zero-probability action would leave Nature's conditional law unconstrained.
+  This refutes admission on arbitrary native stochastic player transitions.
+  The source exposes Nature as separate singleton nodes; `HasExplicitChance`
+  now enforces that presentation in the PBE predicate. The common-system
+  consistency construction itself remains available on general Protocol
+  assessments. Embedded stochastic player transitions require separate
+  lowering or a separately validated definition; no strengthening by
+  inserting artificial deterministic Nature nodes is silently assumed.
+- **Additional observations:** one common subsequence of finite terminal-law
+  conditionals preserves the complete chain rule and represents limiting
+  assessment beliefs, including zero-reach sites. The common system's
+  unconditional law is actual terminal play; its chain rule derives on-path
+  Bayes consistency without assuming weak PBE. The off-path chance control
+  forces the same conditional event to have probability both one and one-half
+  and is rejected. Separate and embedded fair draws are distinguished by the
+  explicit-chance certificate.
+- **Outcome:** supported within the narrowed boundary.
+  [D73](decisions/D73-conditional-probability-pbe.md) adopts Merotto--Wolitzky
+  (2026), *Conditional Probability Perfect Bayesian Equilibrium*, Definitions
+  1--2, with finite-history, single-mover and explicit-chance scope. A general
+  CPPBE-to-SPE theorem and a CPPBE-but-not-SE control remain theorem delivery;
+  infinite-history existence and native embedded-chance lowering are not
+  admitted by this slice.

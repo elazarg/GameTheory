@@ -77,27 +77,6 @@ theorem historyReaches_comparable {first second final : E.History}
       (hancestor.trans hfirstReach) hlength.symm
     exact Or.inr ⟨fuel, by simpa only [← hsame] using hancestor⟩
 
-/-- Every terminal history in the support of a randomized law from a history is
-reached from it. -/
-theorem randomizedBackwardLaw_support_reaches {certificate : E.WellFoundedHistories}
-    {chooser : E.RandomizedChooser} (start : E.History) :
-    ∀ final ∈ (E.randomizedBackwardLaw certificate chooser start).support,
-      E.HistoryReaches start final := by
-  induction start using certificate.induction with
-  | _ current ih =>
-      intro final hfinal
-      by_cases hterm : E.terminal current.state
-      · rw [E.randomizedBackwardLaw_of_terminal hterm, PMF.support_pure,
-          Set.mem_singleton_iff] at hfinal
-        subst hfinal
-        exact HistoryReaches.refl E _
-      · rw [E.randomizedBackwardLaw_of_not_terminal hterm, PMF.mem_support_bind_iff] at hfinal
-        obtain ⟨drawn, -, hdrawn⟩ := hfinal
-        rw [PMF.mem_support_bindOnSupport_iff] at hdrawn
-        obtain ⟨reached, realized, hmem⟩ := hdrawn
-        exact HistoryReaches.step E drawn.2 realized
-          (ih (current.extend drawn.2 realized) ⟨drawn.1, drawn.2, realized⟩ final hmem)
-
 variable (E)
 
 /-- The probability that play from `start` passes through `root`. -/

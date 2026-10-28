@@ -298,6 +298,52 @@ theorem HistoryReaches.step {start target : E.History}
   rcases rest with ⟨fuel, hrest⟩
   exact ⟨fuel + 1, .step joint isLegal realized hrest⟩
 
+/-- Terminal histories retain both the realized trace and its terminality. -/
+abbrev TerminalHistory (E : ExecutionProtocol ι) :=
+  {history : E.History // E.terminal history.state}
+
+/-- Terminal descendants of a history. -/
+def terminalCone (E : ExecutionProtocol ι) (history : E.History) :
+    Set E.TerminalHistory :=
+  {final | E.HistoryReaches history final.1}
+
+@[simp]
+theorem terminalCone_init : E.terminalCone E.initHistory = Set.univ := by
+  ext final
+  exact iff_true_intro ⟨_, E.reachesWithin_from_init final.1⟩
+
+@[simp]
+theorem terminalCone_terminal (final : E.TerminalHistory) :
+    E.terminalCone final.1 = {final} := by
+  ext other
+  constructor
+  · rintro ⟨fuel, reaches⟩
+    exact Subtype.ext (reaches.eq_of_terminal final.2)
+  · intro equal
+    have same : other = final := equal
+    subst other
+    exact HistoryReaches.refl E final.1
+
+/-- A terminal outcome of the randomized continuation extends its starting history. -/
+theorem randomizedBackwardLaw_support_reaches
+    {certificate : E.WellFoundedHistories} {chooser : E.RandomizedChooser}
+    (history : E.History) :
+    ∀ final ∈ (E.randomizedBackwardLaw certificate chooser history).support,
+      E.HistoryReaches history final := by
+  induction history using certificate.induction with
+  | _ current ih =>
+      intro final hfinal
+      by_cases hterm : E.terminal current.state
+      · rw [E.randomizedBackwardLaw_of_terminal hterm, PMF.mem_support_pure_iff] at hfinal
+        subst final
+        exact HistoryReaches.refl E current
+      · rw [E.randomizedBackwardLaw_of_not_terminal hterm, PMF.support_bind] at hfinal
+        obtain ⟨drawn, _, hcontinue⟩ := Set.mem_iUnion₂.mp hfinal
+        rw [PMF.mem_support_bindOnSupport_iff] at hcontinue
+        obtain ⟨target, realized, hchild⟩ := hcontinue
+        exact HistoryReaches.step E drawn.2 realized
+          (ih (current.extend drawn.2 realized) ⟨drawn.1, drawn.2, realized⟩ final hchild)
+
 /-- Choosers agreeing on the reachable history cone have the same terminal law. -/
 theorem historyBackwardLaw_congr_of_reaches
     {certificate : E.WellFoundedHistories}

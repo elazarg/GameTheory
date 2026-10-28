@@ -9,6 +9,9 @@ back into Protocol.
 -/
 
 public import GameTheory.Analysis.Protocol.Sequential
+public import GameTheory.Analysis.Protocol.ConditionalPBE
+public import GameTheory.Analysis.Protocol.ConditionalPBEWeak
+public import GameTheory.Analysis.Protocol.ConditionalPBEExistence
 public import GameTheory.Analysis.Protocol.Incentives
 public import GameTheory.Analysis.Protocol.InformationLocalization
 public import GameTheory.Analysis.Protocol.SubgameLocalization

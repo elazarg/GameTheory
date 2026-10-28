@@ -60,6 +60,9 @@ import all GameTheory.Analysis.Protocol.BehavioralConvergence
 import all GameTheory.Analysis.Protocol.BehavioralTerminalConvergence
 import all GameTheory.Analysis.Protocol.BeliefTransport
 import all GameTheory.Analysis.Protocol.CounterfactualDecomposition
+import all GameTheory.Analysis.Protocol.ConditionalPBE
+import all GameTheory.Analysis.Protocol.ConditionalPBEWeak
+import all GameTheory.Analysis.Protocol.ConditionalPBEExistence
 import all GameTheory.Analysis.Protocol.CounterfactualReach
 import all GameTheory.Analysis.Protocol.CounterfactualRegret
 import all GameTheory.Analysis.Protocol.CounterfactualRegretMatching
@@ -199,6 +202,7 @@ import all GameTheory.Languages.EFG.Kuhn
 import all GameTheory.Languages.EFG.Strategic
 import all GameTheory.Languages.EFG.SubgamePerfect
 import all GameTheory.Languages.EFG.WeakPBE
+import all GameTheory.Languages.EFG.ConditionalPBE
 import all GameTheory.Languages.EFG.Zermelo
 import all GameTheory.Languages.FOSG
 import all GameTheory.Languages.FOSG.Kuhn
@@ -233,6 +237,8 @@ import all GameTheory.Math.Probability.Bounds
 import all GameTheory.Math.Probability.Compactness
 import all GameTheory.Math.Probability.ConditionalComparison
 import all GameTheory.Math.Probability.ConditionalObservation
+import all GameTheory.Math.Probability.ConditionalSystem
+import all GameTheory.Math.Probability.ConditionalSystemCompactness
 import all GameTheory.Math.Probability.ObservationAbstraction
 import all GameTheory.Math.Probability.Conditioning
 import all GameTheory.Math.Probability.Continuity
@@ -330,6 +336,8 @@ import all GameTheory.Protocol.BehavioralContinuation
 import all GameTheory.Protocol.BehavioralMixture
 import all GameTheory.Protocol.BehavioralTerminal
 import all GameTheory.Protocol.WeakPBE
+import all GameTheory.Protocol.ConditionalPBE
+import all GameTheory.Protocol.ExplicitChance
 import all GameTheory.Protocol.Context
 import all GameTheory.Protocol.ContextTransport
 import all GameTheory.Protocol.Continuation

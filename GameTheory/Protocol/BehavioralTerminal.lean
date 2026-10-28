@@ -65,6 +65,44 @@ theorem runBehavioralTerminalFrom_support_terminal
       E.terminal final.state :=
   E.randomizedBackwardLaw_support_terminal history
 
+/-- The canonical terminal runner, with its support invariant in the carrier. -/
+def terminalLaw (certificate : E.WellFoundedHistories)
+    (strategy : (i : ι) → M.BehavioralPolicy i) (start : E.History) :
+    PMF E.TerminalHistory :=
+  (M.runBehavioralTerminalFrom certificate strategy start).bindOnSupport fun final supported =>
+    PMF.pure ⟨final, M.runBehavioralTerminalFrom_support_terminal certificate strategy
+      start final supported⟩
+
+@[simp]
+theorem terminalLaw_map_val (certificate : E.WellFoundedHistories)
+    (strategy : (i : ι) → M.BehavioralPolicy i) (start : E.History) :
+    (M.terminalLaw certificate strategy start).map Subtype.val =
+      M.runBehavioralTerminalFrom certificate strategy start := by
+  simp only [terminalLaw, map_bindOnSupport, PMF.pure_map, PMF.bindOnSupport_pure]
+
+theorem terminalLaw_apply (certificate : E.WellFoundedHistories)
+    (strategy : (i : ι) → M.BehavioralPolicy i) (start : E.History)
+    (final : E.TerminalHistory) :
+    M.terminalLaw certificate strategy start final =
+      M.runBehavioralTerminalFrom certificate strategy start final.1 := by
+  classical
+  have mapped := congrArg (fun law : PMF E.History => law final.1)
+    (M.terminalLaw_map_val certificate strategy start)
+  rw [PMF.map_apply, tsum_eq_single final] at mapped
+  · simpa using mapped
+  · intro other different
+    have : final.1 ≠ other.1 := fun same => different (Subtype.ext same).symm
+    simp [this]
+
+/-- Every history has a terminal descendant under a well-founded continuation. -/
+theorem terminalCone_nonempty (certificate : E.WellFoundedHistories)
+    (strategy : (i : ι) → M.BehavioralPolicy i) (start : E.History) :
+    (E.terminalCone start).Nonempty := by
+  obtain ⟨final, supported⟩ :=
+    (M.runBehavioralTerminalFrom certificate strategy start).support_nonempty
+  exact ⟨⟨final, M.runBehavioralTerminalFrom_support_terminal certificate strategy
+    start final supported⟩, E.randomizedBackwardLaw_support_reaches start final supported⟩
+
 /-- One step of terminal behavioral play: draw the joint action, step, and
 continue from the extended history. -/
 theorem runBehavioralTerminalFrom_of_not_terminal (M : InformationModel E)
