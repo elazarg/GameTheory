@@ -25,7 +25,7 @@ nor complete acceptability is assumed. Finite-carrier and ranking-law
 assumptions are parameters of the operations and theorems, not market data or
 additional conjuncts of stability. Ties, couples, contracts, distributional
 constraints, endogenous quotas and arbitrary team preferences are outside
-this package.
+the positive theorem.
 
 ## Shared semantic owner
 
@@ -57,6 +57,11 @@ ranking laws; stability preservation needs no separate validity premise,
 because feasibility supplies it. Existing algorithms and fixtures consume
 these mathematical characterizations rather than compatibility aliases or a
 parallel stability definition.
+
+`deferredAcceptance_eq_oneToOne` also identifies the actual assignment maps
+when every quota is one. Both constructions are stable and proposer-optimal;
+antisymmetry gives pointwise equality. The public statement needs no slot
+relabeling, and there is still one deferred-acceptance algorithm.
 
 ## Competing designs and measured corrections
 
@@ -128,12 +133,27 @@ can change their cohorts, that equal headcounts alone need not mean equal
 cohorts, that zero quotas work with an empty slot carrier, and that infinite
 fibers fail finite quotas.
 
+`Tests.RuralHospitalsBlocking` strengthens the equal-headcount negative
+control: both assignments are feasible and individually rational under strict
+rankings, and both give a nonempty cohort to the undersubscribed hospital.
+Their cohorts differ, and an explicit acceptable vacancy blocking pair refutes
+the wrong assignment's stability. Thus this control tests blocking separately
+from individual rationality.
+
+`Tests.RuralHospitalsTies` isolates the strictness boundary. One doctor is
+indifferent between two acceptable hospitals; all other rankings are strict,
+and there are no ties with the outside option. Two assignments satisfy the
+canonical no-both-strictly-improving-pair stability predicate, yet have
+different unmatched doctors, hospital headcounts and undersubscribed cohorts.
+This refutes the three conclusions for weak stability with ties. No claim
+about strong or super stability is made.
+
 The focused strict build of the complete new theorem, native controls, all
 migrated one-to-one fixtures and experimental evidence passes 1,079 jobs.
 Independent semantic reviews accept the sorted lift, shared semantic owner,
 unit-capacity preservation and exact-cohort argument. The full
 `python scripts/audit.py` run passes the public build (3,872 jobs), complete
-validation (4,691 jobs), public lint, source boundaries and transitive
+validation (4,693 jobs), public lint, source boundaries and transitive
 standard-axiom checks, with no authored warnings or info diagnostics. The
 native theorem-leaf declaration probe reaches the full theorem and sorted
 reverse lift while rejecting Nash, Protocol, project expectation and PMF.

@@ -141,4 +141,21 @@ theorem ruralHospitals (linear : market.rankings.HasLinearPreferences)
     market.stable_cohort_encard_eq linear stableFirst stableSecond,
     market.stable_underfilled_cohort_eq linear stableFirst stableSecond⟩
 
+/-- Unit quotas make projected hospital-slot DA equal ordinary one-to-one DA.
+Both assignments are stable and doctor-optimal, so antisymmetry fixes every
+doctor's optional partner without any slot relabeling in the statement. -/
+theorem deferredAcceptance_eq_oneToOne (linear : market.rankings.HasLinearPreferences)
+    (unitCapacity : ∀ hospital, market.capacity hospital = 1) :
+    market.deferredAcceptance linear = market.rankings.deferredAcceptance linear := by
+  cases market with
+  | mk rankings capacity =>
+      have same : capacity = fun _ => 1 := funext unitCapacity
+      subst capacity
+      funext doctor
+      exact (linear.left doctor).2.2.2 _ _
+        ((rankings.withCapacities (fun _ => 1)).deferredAcceptance_doctorOptimal linear
+          (rankings.deferredAcceptance_isStable linear) doctor)
+        (rankings.deferredAcceptance_proposerOptimal linear
+          ((rankings.withCapacities (fun _ => 1)).deferredAcceptance_isStable linear) doctor)
+
 end GameTheory.CapacitatedMarket
