@@ -114,7 +114,9 @@ import all GameTheory.Cooperative.Convex
 import all GameTheory.Cooperative.GaleShapley
 import all GameTheory.Cooperative.GaleShapley.Perfect
 import all GameTheory.Cooperative.GaleShapley.Optimality
+import all GameTheory.Cooperative.GaleShapley.Unmatched
 import all GameTheory.Cooperative.Matching
+import all GameTheory.Cooperative.Matching.Transpose
 import all GameTheory.Cooperative.ShapleyShubik
 import all GameTheory.Core
 import all GameTheory.Core.Approximate

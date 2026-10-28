@@ -11,9 +11,10 @@ Primary reference: D. Gale and L. S. Shapley, “College Admissions and the
 Stability of Marriage,” *American Mathematical Monthly* 69 (1962).
 
 This module proves stable matching existence; `GaleShapley.Perfect` adds
-balanced perfectness and `GaleShapley.Optimality` adds proposer optimality.
-Lattice structure, rural-hospitals results, and strategyproofness remain
-separate theorem packages.
+balanced perfectness, `GaleShapley.Optimality` adds proposer optimality, and
+`GaleShapley.Unmatched` adds receiver pessimism and invariance of unmatched
+agents. Lattice structure, capacitated rural hospitals and strategyproofness
+remain separate theorem packages.
 -/
 
 public import GameTheory.Cooperative.Matching

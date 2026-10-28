@@ -387,6 +387,16 @@ from every stable matching; no equality of market sizes or complete
 acceptability is needed. The two-stable-endpoint, actual rejection, and
 unbalanced unacceptable-partner controls are in `Tests.MatchingOptimality`.
 
+`Cooperative.Matching.Transpose` supplies partial reciprocal maps without
+perfectness. `GaleShapley.Unmatched` derives receiver pessimism from proposer
+optimality and proves identical unmatched-agent sets on both sides across
+all stable matchings. Finite matched-set cardinality upgrades the opposing
+inclusions to equalities; unequal sizes and incomplete acceptability remain
+allowed. The hostile consumer has two distinct stable assignments and an
+unacceptable extra agent, then transposes the market to test receivers.
+This is the one-to-one invariant; capacitated rural hospitals remains a
+separate design and theorem package.
+
 Convex-game core nonemptiness is delivered in `Cooperative.Convex`.
 Supermodular worth gives increasing marginal contributions; for any linear
 ordering, successive marginal payments telescope and dominate each coalition's
