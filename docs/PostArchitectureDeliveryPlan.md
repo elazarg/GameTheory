@@ -355,12 +355,18 @@ fixed:
 - general security and constant-sum correlation;
 - Sen and median-voter social choice;
 - convex-game Shapley-in-core and the balancedness converse;
-- matching optimality/strategyproofness; and
+- matching strategyproofness and rural-hospitals extensions; and
 - egalitarian and Kalai–Smorodinsky bargaining.
 
 Each package needs its own theorem-level consumer. Shared general mathematics
 belongs in Mathlib when available, otherwise in `GameTheory.Math` only after a
 live game-theoretic consumer exists.
+
+Proposer optimality is delivered in `Cooperative.GaleShapley.Optimality` using
+the existing simultaneous rejection process. Every rejected pair is excluded
+from every stable matching; no equality of market sizes or complete
+acceptability is needed. The two-stable-endpoint, actual rejection, and
+unbalanced unacceptable-partner controls are in `Tests.MatchingOptimality`.
 
 Independent rationalizability is complete through the existing mixed-product
 law: iterated product-belief best response has a Nash-survival theorem and a

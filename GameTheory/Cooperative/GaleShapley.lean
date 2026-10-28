@@ -10,9 +10,10 @@ and uses relation-valued rankings directly.
 Primary reference: D. Gale and L. S. Shapley, “College Admissions and the
 Stability of Marriage,” *American Mathematical Monthly* 69 (1962).
 
-This module proves stable matching existence and balanced perfectness.
-Proposer optimality, lattice structure, rural-hospitals results, and
-strategyproofness remain separate theorem packages.
+This module proves stable matching existence; `GaleShapley.Perfect` adds
+balanced perfectness and `GaleShapley.Optimality` adds proposer optimality.
+Lattice structure, rural-hospitals results, and strategyproofness remain
+separate theorem packages.
 -/
 
 public import GameTheory.Cooperative.Matching

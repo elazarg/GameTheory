@@ -13,6 +13,7 @@ public import GameTheory.Cooperative.Balancedness
 public import GameTheory.Cooperative.Banzhaf
 public import GameTheory.Cooperative.Bargaining
 public import GameTheory.Cooperative.GaleShapley.Perfect
+public import GameTheory.Cooperative.GaleShapley.Optimality
 public import GameTheory.Cooperative.ShapleyShubik
 
 @[expose] public section

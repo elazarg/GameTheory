@@ -107,6 +107,7 @@ import all GameTheory.Cooperative.Banzhaf
 import all GameTheory.Cooperative.Bargaining
 import all GameTheory.Cooperative.GaleShapley
 import all GameTheory.Cooperative.GaleShapley.Perfect
+import all GameTheory.Cooperative.GaleShapley.Optimality
 import all GameTheory.Cooperative.Matching
 import all GameTheory.Cooperative.ShapleyShubik
 import all GameTheory.Core
