@@ -125,46 +125,6 @@ theorem groves_truthful [Fintype ι] [DecidableEq ι]
   rw [hsplit, hsplit] at hefficient
   linarith
 
-/-- The deterministic utility game at a fixed profile of true types. Reports
-are strategies and realized outcomes retain the report profile. -/
-@[reducible]
-def toUtilityGame [Fintype ι] [DecidableEq ι] (trueTypes : V.ReportProfile) : UtilityGame ι :=
-  Auction.auctionGame V.alloc V.grovesPayment
-    (fun i outcome => V.val i (trueTypes i) outcome)
-
-/-- Truthful reporting as a type-contingent dependent strategy. -/
-def truthfulStrategy : ∀ i, V.Θ i → V.Θ i := fun _ type => type
-
-/-- At a true-type profile, the truthful direct report is that same profile. -/
-@[simp]
-theorem toUtilityGame_play_truthful [Fintype ι] [DecidableEq ι]
-    (trueTypes : V.ReportProfile) :
-    (V.toUtilityGame trueTypes).form.play
-        (fun i => V.truthfulStrategy i (trueTypes i)) =
-      PMF.pure trueTypes := by
-  rfl
-
-/-- Truthful reporting is an ex-post equilibrium: for every true-type profile,
-the truthful report profile is ordinary expected-utility Nash. -/
-theorem truthfulStrategy_isExPostNash [Fintype ι] [DecidableEq ι]
-    (alloc_efficient : V.IsEfficient)
-    (h_independent : ∀ (who : ι) (report : V.ReportProfile) (replacement : V.Θ who),
-      V.h who (Profile.update report who replacement) = V.h who report) :
-    ∀ trueTypes : V.ReportProfile,
-      IsNash (V.toUtilityGame trueTypes).form
-        (euPreference (V.toUtilityGame trueTypes).utility) trueTypes := by
-  intro trueTypes
-  rw [isNash_iff]
-  intro who alternative
-  rw [euPreference_apply]
-  refine (euPreference_iff _ _ _ _ (payoffIntegrable_pure _ _) (payoffIntegrable_pure _ _)).2 ?_
-  simp only [toUtilityGame, expectedUtility_pure]
-  have htruth := V.groves_truthful alloc_efficient h_independent trueTypes who
-    (trueTypes who) alternative
-  rw [Profile.update_eq_self] at htruth
-  unfold trueUtility at htruth
-  exact htruth
-
 /-- Forget the Groves-specific offset presentation and expose the shared
 quasilinear direct-mechanism data. -/
 def toQuasiLinearMechanism [Fintype ι] [DecidableEq ι] :
@@ -173,6 +133,33 @@ def toQuasiLinearMechanism [Fintype ι] [DecidableEq ι] :
   value := V.val
   choose := V.alloc
   payment := V.grovesPayment
+
+/-- The canonical common-prior Bayesian game of Groves reports. The prior
+belongs only to ex-ante comparisons; ex-post truthfulness holds for any prior. -/
+@[reducible]
+def toBayesianGame [Fintype ι] [DecidableEq ι]
+    (prior : PMF (∀ i, V.Θ i)) : BayesianGame ι :=
+  V.toQuasiLinearMechanism.toBayesianMechanism.toBayesianGame prior
+
+/-- Truthful reporting as a type-contingent dependent strategy. -/
+def truthfulStrategy : ∀ i, V.Θ i → V.Θ i := fun _ type => type
+
+/-- Efficient Groves truthfulness consumes the general ex-post equilibrium
+predicate, independently of the Bayesian game's chosen prior. -/
+theorem truthfulStrategy_isExPostNash [Fintype ι] [DecidableEq ι]
+    (prior : PMF (∀ i, V.Θ i))
+    (alloc_efficient : V.IsEfficient)
+    (h_independent : ∀ (who : ι) (report : V.ReportProfile) (replacement : V.Θ who),
+      V.h who (Profile.update report who replacement) = V.h who report) :
+    (V.toBayesianGame prior).IsExPostNash V.truthfulStrategy := by
+  apply (BayesianGame.isExPostNash_iff (V.toBayesianGame prior) V.truthfulStrategy).2
+  intro types who alternative
+  change V.trueUtility who (types who) (Profile.update types who alternative) ≤
+    V.trueUtility who (types who) types
+  have htruth := V.groves_truthful alloc_efficient h_independent types who
+    (types who) alternative
+  exact htruth.trans_eq (congrArg (V.trueUtility who (types who))
+    (Profile.update_eq_self (sig := V.reportSignature) types who))
 
 @[simp]
 theorem toQuasiLinearMechanism_trueUtility [Fintype ι] [DecidableEq ι]

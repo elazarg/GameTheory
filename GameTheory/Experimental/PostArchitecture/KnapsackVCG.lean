@@ -101,14 +101,11 @@ example (reports : GameTheory.Mechanism.Auction.BidProfile (Fin 2)) :
       (Profile.update reports 0 0) 0 = 0 :=
   vcgPayment_update_zero unitCapacityData unitCapacity_nonnegative reports 0
 
-example :
-    ∀ trueTypes : (vcgSetup unitCapacityData unitCapacity_nonnegative).ReportProfile,
-      IsNash
-        ((vcgSetup unitCapacityData unitCapacity_nonnegative).toUtilityGame trueTypes).form
-        (euPreference
-          ((vcgSetup unitCapacityData unitCapacity_nonnegative).toUtilityGame trueTypes).utility)
-        trueTypes :=
-  vcgSetup_truthful_isExPostNash unitCapacityData unitCapacity_nonnegative
+example (prior : PMF (Fin 2 → ℝ)) :
+    ((vcgSetup unitCapacityData unitCapacity_nonnegative).toBayesianGame prior).IsExPostNash
+      (vcgSetup unitCapacityData unitCapacity_nonnegative).truthfulStrategy :=
+  vcgSetup_truthful_isExPostNash unitCapacityData unitCapacity_nonnegative prior
+
 
 
 end GameTheory.Experimental.KnapsackVCG

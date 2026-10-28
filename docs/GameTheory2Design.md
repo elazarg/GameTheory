@@ -1508,6 +1508,16 @@ through its probability infrastructure, so project-declaration probes enforce
 this boundary. Strong sequential consistency retains its joint perturbation
 limit; the PMF restoration does not weaken it to on-path Bayes consistency.
 
+EXP-165/[D72](decisions/D72-weak-perfect-bayesian-equilibrium.md) names the
+distinct weak-PBE composition in stable Protocol: terminal whole-policy
+rationality plus the existing positive-mass Bayes predicate. It adds no
+evaluator, belief carrier or analytic dependency. A proved weak assessment's
+same strategy fails proper-subgame perfection, so this is not a weakening of
+the sequential-equilibrium definition or a replacement for SPE. The analytic
+SE-to-weak bridge retains finite information-history fibers, and finite
+existence and root incentives reuse the established decision-recall results.
+No unqualified stronger PBE definition is adopted.
+
 EXP-049/D21 applies the same enforced split to finite online learning. Core
 owns only product-law, normalization, and finite regret-to-CCE identities.
 `GameTheory.Math.OnlineLearning` proves multiplicative-weights regret over a

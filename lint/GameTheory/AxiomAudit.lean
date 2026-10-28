@@ -28,6 +28,7 @@ import all GameTheory.Analysis.Protocol.CounterfactualZeroSumLearningTest
 import all GameTheory.Analysis.Protocol.DecisionRecallExistenceTest
 import all GameTheory.Analysis.Protocol.EFGStrategicTest
 import all GameTheory.Analysis.Protocol.EFGTest
+import all GameTheory.Analysis.Protocol.WeakPBETest
 import all GameTheory.Analysis.Protocol.ExtensiveFormPerfectionTest
 import all GameTheory.Analysis.Protocol.InfiniteCarrierExistenceTest
 import all GameTheory.Analysis.Protocol.InformationLocalizationTest
@@ -222,6 +223,7 @@ import all GameTheory.Tests.Bargaining
 import all GameTheory.Tests.BasisCoordinates
 import all GameTheory.Tests.BayesCorrelated
 import all GameTheory.Tests.Bayesian
+import all GameTheory.Tests.BayesianExPost
 import all GameTheory.Tests.BayesianMechanism
 import all GameTheory.Tests.BayesianWelfare
 import all GameTheory.Tests.BehavioralContinuation
@@ -292,6 +294,7 @@ import all GameTheory.Tests.GridSperner
 import all GameTheory.Tests.GridSpernerRouting
 import all GameTheory.Tests.GridWire
 import all GameTheory.Tests.Groves
+import all GameTheory.Tests.WeakPBESeparation
 import all GameTheory.Tests.History
 import all GameTheory.Tests.Implementation
 import all GameTheory.Tests.InfiniteExpectation

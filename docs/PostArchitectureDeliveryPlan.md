@@ -70,6 +70,16 @@ not reopen a universal adequacy hierarchy or imply CE/CCE transfer.
 
 ### A. Sequential refinements — finite existence and proper-subgame boundary resolved
 
+Weak perfect Bayesian equilibrium is separately delivered by
+[D72](decisions/D72-weak-perfect-bayesian-equilibrium.md)/EXP-165. It composes
+stable terminal whole-policy rationality and Bayes consistency only at sites
+of positive root mass. Sequential equilibrium refines it with the existing
+finite-fiber premise; finite-history decision-recall existence and root
+incentives for finite observed utilities reuse established theorems. A proved
+weak assessment fails proper-subgame perfection for its same prescribed
+strategy, so weak PBE is not an intermediate step from SE to SPE. Stronger PBE
+variants remain separately specified, consumer-gated work.
+
 Fuel-free well-founded continuation (EXP-142) and uniform-tightness extraction
 of countably many actual assessment sites (EXP-143) are delivered by D63.
 Their composition retains all whole-policy deviations and fully mixed Bayes

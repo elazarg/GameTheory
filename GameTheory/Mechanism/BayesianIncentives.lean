@@ -6,6 +6,14 @@ module
 The direct-mechanism language is compiled first.  This solution leaf adds the
 pointwise incentive predicate and proves that it yields ordinary Nash of the
 canonical Bayesian contingent-plan form.
+
+Bayesian incentive compatibility (BIC) means that the truthful contingent plan
+is a Bayesian Nash equilibrium (BNE):
+`IsNash (M.toBayesianGame prior).toForm
+  (euPreference (M.toBayesianGame prior).utility) (M.truthfulPlan prior)`.
+This uses the canonical equilibrium predicate. `IsIncentiveCompatible` below
+is the stronger dominant-strategy condition (DSIC), which compares reports
+pointwise against arbitrary opponents' reports, independently of the prior.
 -/
 
 public import GameTheory.Languages.BayesianMechanism

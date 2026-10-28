@@ -81,6 +81,8 @@ import all GameTheory.Analysis.Protocol.SequentialPerturbation
 import all GameTheory.Analysis.Protocol.SequentialRationality
 import all GameTheory.Analysis.Protocol.SubgameLocalization
 import all GameTheory.Analysis.Protocol.SupportedChoices
+import all GameTheory.Analysis.Protocol.WeakPBE
+import all GameTheory.Analysis.Protocol.WeakPBEExistence
 import all GameTheory.Analysis.PseudoCorrelated
 import all GameTheory.Analysis.PseudoNash
 import all GameTheory.Analysis.Repeated
@@ -192,6 +194,7 @@ import all GameTheory.Languages.EFG
 import all GameTheory.Languages.EFG.Kuhn
 import all GameTheory.Languages.EFG.Strategic
 import all GameTheory.Languages.EFG.SubgamePerfect
+import all GameTheory.Languages.EFG.WeakPBE
 import all GameTheory.Languages.EFG.Zermelo
 import all GameTheory.Languages.FOSG
 import all GameTheory.Languages.FOSG.Kuhn
@@ -320,6 +323,7 @@ import all GameTheory.Protocol.BehavioralBayes
 import all GameTheory.Protocol.BehavioralContinuation
 import all GameTheory.Protocol.BehavioralMixture
 import all GameTheory.Protocol.BehavioralTerminal
+import all GameTheory.Protocol.WeakPBE
 import all GameTheory.Protocol.Context
 import all GameTheory.Protocol.ContextTransport
 import all GameTheory.Protocol.Continuation

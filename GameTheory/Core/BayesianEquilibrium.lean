@@ -1,11 +1,15 @@
 module
 
 /-
-# Interim optimality in Bayesian games
+# Bayesian Nash equilibrium (BNE), interim optimality, and ex-post equilibrium
 
 Bayes-Nash is not a second equilibrium predicate: it is ordinary `IsNash` of
 the direct type-contingent game form under expected utility. The theorem below
-identifies it with prior-weighted interim optimality at every own type.
+identifies it with prior-weighted interim optimality at every own type. Here
+plans are pure functions from one's own type to actions. For finitely many
+players, mixed contingent-plan equilibrium uses the canonical mixed extension
+`B.toForm.mixed`; equivalence with type-indexed behavioral lotteries requires
+a realization theorem.
 
 The interim value is intentionally unnormalised, so zero-probability types
 contribute zero. Normalized conditioning and posterior comparison use shared
@@ -37,6 +41,33 @@ namespace BayesianGame
 /-- The induced real utility on realized type/action outcomes. -/
 def utility (B : BayesianGame ι) : Utility B.signature :=
   fun outcome who => B.payoff outcome.1 outcome.2 who
+
+/-- The complete-information game at a realized type profile. Strategies are
+actions and the outcome retains their complete profile. The prior is unused. -/
+@[reducible]
+def realizedGame (B : BayesianGame ι) (types : ∀ i, B.Ty i) : UtilityGame ι where
+  form := GameForm.deterministic
+    { Strategy := B.Act, Outcome := ∀ i, B.Act i } id
+  utility actions who := B.payoff types actions who
+
+/-- Ex-post equilibrium: the contingent plan prescribes Nash play at every
+realized type profile, including those outside the prior's support. -/
+def IsExPostNash (B : BayesianGame ι) [DecidableEq ι]
+    (plan : Profile B.signature) : Prop :=
+  ∀ types, IsNash (B.realizedGame types).form
+    (euPreference (B.realizedGame types).utility) (B.actionsOf plan types)
+
+/-- Ex-post Nash is pointwise optimality against each unilateral action
+replacement, with the complete realized type profile held fixed. -/
+theorem isExPostNash_iff (B : BayesianGame ι) [DecidableEq ι]
+    (plan : Profile B.signature) :
+    B.IsExPostNash plan ↔
+      ∀ (types : ∀ i, B.Ty i) (who : ι) (alternative : B.Act who),
+        B.payoff types (Profile.update (B.actionsOf plan types) who alternative) who ≤
+          B.payoff types (B.actionsOf plan types) who := by
+  unfold IsExPostNash
+  simp only [isNash_iff, realizedGame, euPreference_pure_iff, id_eq]
+  rfl
 
 /-- The contingent deviation that changes the response only at one own type. -/
 def singleTypeDeviation (B : BayesianGame ι)
@@ -397,6 +428,27 @@ theorem isNash_iff_interim (B : BayesianGame ι)
   constructor
   · exact B.isNash_implies_interim plan hdeviation
   · exact B.interim_implies_isNash plan hdeviation
+
+/-- Ex-post optimality implies Bayes-Nash for the game's arbitrary prior.
+Only the actual whole-plan comparison laws need integrable utility. -/
+theorem IsExPostNash.isNash (B : BayesianGame ι) [DecidableEq ι]
+    (plan : Profile B.signature) (hexpost : B.IsExPostNash plan)
+    (hdeviation : ∀ who (deviation : B.Ty who → B.Act who),
+      UtilityIntegrable B.utility who
+        (B.toForm.play (Profile.update plan who deviation))) :
+    IsNash B.toForm (euPreference B.utility) plan := by
+  rw [isNash_iff]
+  intro who deviation
+  have hbase : UtilityIntegrable B.utility who (B.toForm.play plan) := by
+    simpa only [Profile.update_eq_self] using hdeviation who (plan who)
+  refine (euPreference_iff B.utility who _ _ hbase (hdeviation who deviation)).2 ?_
+  rw [B.expectedUtility_eq_prior who _, B.expectedUtility_eq_prior who _]
+  refine expect_mono ?_
+    (B.planPayoff_integrable who _ (hdeviation who deviation))
+    (B.planPayoff_integrable who _ hbase)
+  intro types _
+  simpa only [planPayoff, B.actionsOf_update] using
+    (B.isExPostNash_iff plan).mp hexpost types who (deviation (types who))
 
 end BayesianGame
 

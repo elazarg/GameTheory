@@ -10354,3 +10354,46 @@ memory.
   root-only scheduling with complete verification through the existing
   drivers. No new semantic owner or library target is introduced. Keep the
   coverage checks and explicit CI validation targets when adding modules.
+
+## EXP-165: weak PBE and the proper-subgame boundary
+
+- **Question:** Does terminal whole-policy sequential rationality together with
+  positive-mass Bayes consistency express weak perfect Bayesian equilibrium
+  without imposing sequential consistency or proper-subgame perfection?
+- **Competing designs:** compose the existing stable rationality and Bayes
+  predicates; reuse analytic sequential equilibrium; or require Bayes' rule
+  separately in every proper subgame. The last two impose stronger off-path
+  constraints and must not receive the weak-PBE name.
+- **Representative slice:** a player exits for payoff three, or enters a
+  hidden-bit continuation. A supported off-path belief makes its prescribed
+  guess optimal, although the continuation's actual chance law favors another
+  guess. The chance-root continuation is a proper subgame.
+- **Kill conditions:** a second evaluator or belief carrier is needed; analytic
+  imports leak into stable Protocol; the weak assessment is not rational
+  against whole policies; or its strategy cannot be proved to fail the existing
+  proper-subgame predicate.
+- **Artifacts and commands:** `Protocol.WeakPBE`,
+  `Languages.EFG.WeakPBE`, `Analysis.Protocol.WeakPBE`,
+  `Analysis.Protocol.WeakPBEExistence`, `Analysis.Protocol.WeakPBETest`, and
+  `Tests.WeakPBESeparation`. `lake --iofail build GameTheory.Analysis.Protocol.WeakPBETest`
+  passes 3,799 jobs; `lake --iofail build GameTheory.Tests.WeakPBESeparation`
+  passes 3,166 jobs. `python scripts/audit.py --source-only` passes.
+  Final `python scripts/audit.py` passes the public build (3,868 jobs), complete
+  validation build (4,650 jobs), public lint, and transitive standard-axiom
+  checks, with no authored warnings or info diagnostics.
+- **Observations:** the implemented control uses exit payoff zero and bounded
+  nonpositive payoffs, so root rationality holds against arbitrary behavioral
+  whole-policy replacements. Its reached root has mass one; the guessing site
+  has mass zero. A dogmatic off-path belief justifies the prescribed guess,
+  while actual proper-subgame values `-1` and `-1/2` prove failure of canonical
+  subgame perfection for that same strategy. A reached-site wrong-belief
+  control is rational for zero utility but fails Bayes consistency, separating
+  the two conjuncts. The nonconstant mixed hidden-bit equilibrium passes the
+  SE refinement bridge. Finite existence works under decision recall without
+  perfect recall. Existing continuation laws, belief fibers, Bayes predicates
+  and root decomposition suffice; no evaluator or probability carrier is added.
+- **Outcome:** supported. [D72](decisions/D72-weak-perfect-bayesian-equilibrium.md)
+  adopts the explicit weak-PBE name and keeps stronger off-path consistency
+  separate. The SE bridge retains finite information-history fibers; the root
+  incentive bridge retains decision recall and finite observed utilities.
+  Stronger PBE variants remain separately specified, consumer-gated work.

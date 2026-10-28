@@ -80,6 +80,7 @@ public import GameTheory.Protocol.PolicyMeasure
 public import GameTheory.Protocol.BehavioralAssessment
 public import GameTheory.Protocol.DecisionRecall
 public import GameTheory.Protocol.BehavioralTerminal
+public import GameTheory.Protocol.WeakPBE
 public import GameTheory.Protocol.BehavioralMixture
 
 @[expose] public section

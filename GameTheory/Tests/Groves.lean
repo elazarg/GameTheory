@@ -57,11 +57,9 @@ theorem publicChoice_offset_independent :
   cases who <;> simp [publicChoice, Profile.update_of_ne]
 
 /-- The general theorem yields ex-post Nash truthfulness without auction data. -/
-theorem publicChoice_truthful_isExPostNash :
-    ∀ trueTypes : publicChoice.ReportProfile,
-      IsNash (publicChoice.toUtilityGame trueTypes).form
-        (euPreference (publicChoice.toUtilityGame trueTypes).utility) trueTypes :=
-  publicChoice.truthfulStrategy_isExPostNash publicChoice_isEfficient
+theorem publicChoice_truthful_isExPostNash (prior : PMF (Bool → Bool)) :
+    (publicChoice.toBayesianGame prior).IsExPostNash publicChoice.truthfulStrategy :=
+  publicChoice.truthfulStrategy_isExPostNash prior publicChoice_isEfficient
     publicChoice_offset_independent
 
 /-- The same public-choice mechanism consumes the canonical DSIC interface. -/

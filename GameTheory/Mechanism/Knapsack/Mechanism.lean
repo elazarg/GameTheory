@@ -196,12 +196,10 @@ theorem vcgPayment_update_zero (A : Data Agent) (hcap : 0 ≤ A.capacity)
 
 /-- Canonical VCG truthfulness gives ex-post Nash for the knapsack setup. -/
 theorem vcgSetup_truthful_isExPostNash (A : Data Agent)
-    (hcap : 0 ≤ A.capacity) :
-    ∀ trueTypes : (vcgSetup A hcap).ReportProfile,
-      IsNash ((vcgSetup A hcap).toUtilityGame trueTypes).form
-        (euPreference ((vcgSetup A hcap).toUtilityGame trueTypes).utility)
-        trueTypes :=
-  (vcgSetup A hcap).truthfulStrategy_isExPostNash
+    (hcap : 0 ≤ A.capacity) (prior : PMF (Agent → ℝ)) :
+    ((vcgSetup A hcap).toBayesianGame prior).IsExPostNash
+      (vcgSetup A hcap).truthfulStrategy :=
+  (vcgSetup A hcap).truthfulStrategy_isExPostNash prior
     (vcgSetup_efficient A hcap) (vcgSetup_offset_independent A hcap)
 
 /-- The welfare-maximizing pivot mechanism is DSIC through the canonical
