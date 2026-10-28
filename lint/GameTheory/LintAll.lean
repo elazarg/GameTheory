@@ -495,6 +495,7 @@ import all GameTheory.Math.IntegerCramerComputation
 import all GameTheory.Math.FiniteLexicographicCompare
 import all GameTheory.Math.IntegerRatioSelection
 import all GameTheory.Math.FiniteMinimumScan
+import all GameTheory.Math.LinearInequality
 import all GameTheory.Math.IntegerDictionaryComputation
 import all GameTheory.Math.IntegerDictionaryFeasibility
 import all GameTheory.Math.IntegerSumBounds

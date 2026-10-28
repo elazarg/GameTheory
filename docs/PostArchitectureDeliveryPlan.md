@@ -354,7 +354,7 @@ fixed:
 - weighted-potential theory;
 - general security and constant-sum correlation;
 - Sen and median-voter social choice;
-- convex-game Shapley-in-core and the balancedness converse;
+- convex-game Shapley-in-core;
 - matching strategyproofness and rural-hospitals extensions; and
 - egalitarian and Kalai–Smorodinsky bargaining.
 
@@ -367,6 +367,14 @@ the existing simultaneous rejection process. Every rejected pair is excluded
 from every stable matching; no equality of market sizes or complete
 acceptability is needed. The two-stable-endpoint, actual rejection, and
 unbalanced unacceptable-partner controls are in `Tests.MatchingOptimality`.
+
+Full finite Bondareva--Shapley is delivered in `Cooperative.Balancedness`.
+The converse uses an exact finite inequality alternative adapted from the
+algebraic Fourier--Motzkin proof in multitubes, kept independently reusable
+in `Math.LinearInequality`. No new dependency, topological closure argument,
+or general linear-programming framework is needed. Negative coalition values
+and empty player types are covered by `Tests.BondarevaShapley`; empty-row and
+empty-column rational controls cover the mathematical boundary.
 
 Independent rationalizability is complete through the existing mixed-product
 law: iterated product-belief best response has a Nash-survival theorem and a
@@ -645,7 +653,7 @@ Recovery proceeds in three dependency-gated waves:
 
 1. **Established-owner recovery:** secure equilibrium and constant-sum
    correlation; Sen and median voter; convex-game core and cost of stability;
-   matching optimality, rural hospitals, lattice, and strategyproofness;
+   matching rural hospitals, lattice, and strategyproofness;
    alternative bargaining solutions; envy-cycle EF1 and maximin share.
 2. **Bounded analytic/domain experiments:** Myerson envelope identities;
    divisible cake cutting; monitored public randomization; absent-minded

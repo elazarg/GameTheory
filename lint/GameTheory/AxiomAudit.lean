@@ -218,6 +218,8 @@ import all GameTheory.Tests.Assessment
 import all GameTheory.Tests.AuctionSemantics
 import all GameTheory.Tests.Backward
 import all GameTheory.Tests.Balancedness
+import all GameTheory.Tests.BondarevaShapley
+import all GameTheory.Math.LinearInequalityTest
 import all GameTheory.Tests.Banzhaf
 import all GameTheory.Tests.Bargaining
 import all GameTheory.Tests.BasisCoordinates
