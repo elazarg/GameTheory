@@ -347,6 +347,17 @@ path measure still needs its own construction and measurable interface.
 
 ### G. Static mature-family rotation
 
+Myerson proper equilibrium is delivered by `Core.Proper`, `Analysis.Proper`
+and `Analysis.ProperExistence`: actual integrable pure-action comparisons,
+relative error rates, proper-to-perfect-to-Nash, full-support Nash properness,
+and finite epsilon-proper/proper existence. The fixed-point correspondence
+uses geometric score-rank lotteries with a common positive floor; finite
+compactness supplies a limit. The canonical mixed play law is unchanged.
+`Analysis.ProperTest` preserves genuine mixing, infinite-support stochastic
+outcomes and unbounded integrable utility, while rejecting nonintegrable
+real-score comparisons. `ProperSeparationTest` separates perfection from
+properness. Extensive-form properness remains a separate theorem package.
+
 These packages may proceed independently once their owner imports remain
 fixed:
 

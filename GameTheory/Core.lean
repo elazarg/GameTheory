@@ -27,6 +27,7 @@ public import GameTheory.Core.Signature
 public import GameTheory.Core.Form
 public import GameTheory.Core.Bayesian
 public import GameTheory.Core.BayesianEquilibrium
+public import GameTheory.Core.Proper
 public import GameTheory.Core.BayesCorrelated
 public import GameTheory.Core.Rank
 public import GameTheory.Core.Preference

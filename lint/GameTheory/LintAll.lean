@@ -48,6 +48,8 @@ import all GameTheory.Analysis.Minimax
 import all GameTheory.Analysis.Nash
 import all GameTheory.Analysis.Payoff
 import all GameTheory.Analysis.PerturbedEquilibrium
+import all GameTheory.Analysis.Proper
+import all GameTheory.Analysis.ProperExistence
 import all GameTheory.Analysis.Protocol
 import all GameTheory.Analysis.Protocol.AgentCompletion
 import all GameTheory.Analysis.Protocol.AgentForm
@@ -116,6 +118,7 @@ import all GameTheory.Core.Arrow
 import all GameTheory.Core.BayesCorrelated
 import all GameTheory.Core.Bayesian
 import all GameTheory.Core.BayesianEquilibrium
+import all GameTheory.Core.Proper
 import all GameTheory.Core.BinaryCorrelated
 import all GameTheory.Core.BinaryMixed
 import all GameTheory.Core.CheapTalk
@@ -246,6 +249,8 @@ import all GameTheory.Math.Probability.ExpectationSeries
 import all GameTheory.Math.Probability.ExtendedExpectation
 import all GameTheory.Math.Probability.FiniteSampling
 import all GameTheory.Math.Probability.FiniteUniform
+import all GameTheory.Math.Probability.GeometricRanking
+import all GameTheory.Math.Probability.FiniteOptimality
 import all GameTheory.Math.Probability.Indistinguishability
 import all GameTheory.Math.Probability.HybridIndistinguishability
 import all GameTheory.Math.Probability.InfiniteProductBoundary

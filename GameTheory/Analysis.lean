@@ -11,6 +11,8 @@ lightweight `GameTheory` umbrella.
 
 public import GameTheory.Analysis.Approachability
 public import GameTheory.Analysis.BayesianHierarchy
+public import GameTheory.Analysis.Proper
+public import GameTheory.Analysis.ProperExistence
 public import GameTheory.Analysis.BimatrixCertificateExistence
 public import GameTheory.Analysis.Correlated
 public import GameTheory.Analysis.CorrelationHierarchy

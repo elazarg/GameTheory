@@ -12,6 +12,8 @@ import all GameTheory.Analysis.FictitiousPlayTest
 import all GameTheory.Analysis.IncentiveConeTest
 import all GameTheory.Analysis.LearningTest
 import all GameTheory.Analysis.PMFExistenceTest
+import all GameTheory.Analysis.ProperTest
+import all GameTheory.Analysis.ProperSeparationTest
 import all GameTheory.Analysis.Protocol.BayesianZeroSumLearningTest
 import all GameTheory.Analysis.Protocol.BeliefTransportTest
 import all GameTheory.Analysis.Protocol.ComponentCompletionTest
