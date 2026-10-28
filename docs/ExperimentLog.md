@@ -10567,3 +10567,70 @@ memory.
   [D74](decisions/D74-capacitated-rural-hospitals.md). The sorted-lift and full
   finite responsive rural-hospitals gates pass. General hospital choice,
   ties, couples and many-to-many matching remain outside the delivered scope.
+
+## EXP-169: analytic single-parameter theory on the canonical mechanism
+
+- **Question:** Can envelope and expected-payment identities extend the existing
+  mechanism owner without a second incentive predicate or bundled scalar-choice
+  model? Compare direct own-report slices and reusable scalar integration lemmas
+  with adopting MathEconLib's bundled problem representation.
+- **Slice:** signed, unbounded identity allocation with quadratic payments;
+  discontinuous monotone allocation; nonzero normalization and opponents' report
+  dependence; a bounded type law with atoms and a rejected wrong payment rule.
+- **Kill conditions:** stored probability or analytic capabilities, allocation
+  probabilities forced into `[0,1]`, a duplicate DSIC definition, or a continuous
+  game core needed merely to integrate scalar payments.
+- **Observations:** direct slices add no semantic definitions or stored
+  capabilities. Mathlib convex continuity and calculus handle arbitrary signed,
+  globally unbounded monotone quantities, including jumps. Signed Fubini needs
+  neither a density nor global measurability of the interval integrand. Atomic
+  and diffuse consumers produce nonzero tail integrals; bounded mapped
+  natural-number laws require no finite support. No kill condition fired.
+- **Validation:** `lake --iofail build GameTheory.Analysis.SingleParameterTest`
+  passes 3,234 jobs. `python scripts/audit.py` passes the public build (3,872
+  jobs), complete lint/axiom build (4,754 jobs), public lint and source checks.
+  The unchanged default job count is an incremental-build observation, not a
+  cold-build benchmark. The local transcript is
+  `.codex/scratch/single-parameter-audit.log`.
+- **Outcome:** adopt direct canonical slices in
+  [D75](decisions/D75-single-parameter-envelope.md). The permanent evidence is
+  [SingleParameterTest](../GameTheory/Analysis/SingleParameterTest.lean).
+  Scalar DSIC envelopes, baseline payment uniqueness, monotone-allocation
+  implementability and bounded-support expected payment are supported.
+  Interim/BIC envelopes and auction revenue equivalence remain separate.
+
+## EXP-170: interval-wide interim incentives and realized revenue
+
+- **Question:** Can fixed-law opponent averaging reuse the existing mechanism
+  and canonical BNE while interval envelopes distinguish null types correctly?
+  Compare an averaging operation plus ordinary `IsMaxOn` constraints with a
+  new interim-game structure or a pointwise predicate called BIC.
+- **Slice:** two-player independent types with nonconstant transfers, equal
+  interim allocations but different realized payments, a null-type separation,
+  and a correlated-belief control rejecting the fixed-law envelope argument.
+- **Kill conditions:** deducing interval-wide optimality from supported-type
+  BNE; silently changing beliefs with a report; totalized divergent payments
+  certifying receipts; or adding a duplicate game/incentive semantics.
+- **Observations:** one averaging operation returns the existing mechanism;
+  no new game or equilibrium predicate is needed. Interval supporting slopes
+  derive their own monotonicity and specialize to the prior global theorem.
+  Independent actual-payoff towers connect interim payments to realized
+  receipts. The positive mechanisms have expected receipts 2 each but receipts
+  4 versus 12 at one realized profile; the scaled mechanism is BNE and not DSIC.
+  The null-type control is canonical BNE yet fails interval payment recovery.
+  The correlated control identifies actual posteriors at both supported types
+  and has changing conditional utility with zero allocated quantity.
+- **Artifacts:** [positive consumer](../GameTheory/Analysis/RevenueEquivalenceTest.lean),
+  [boundary controls](../GameTheory/Analysis/RevenueBoundaryTest.lean), and
+  [theorem owner](../GameTheory/Analysis/RevenueEquivalence.lean).
+- **Validation:** `lake --iofail build GameTheory.Analysis.RevenueEquivalenceTest
+  GameTheory.Analysis.RevenueBoundaryTest` passes 3,173 jobs, warning-free.
+  `python scripts/audit.py` passes the default build (3,872 jobs), complete
+  validation (4,761 jobs), public lint, source boundaries and transitive
+  standard-axiom checks. The local transcript is
+  `.codex/scratch/interim-revenue-audit.log`. Documentation links and
+  `git diff --check` also pass.
+- **Outcome:** adopt the averaging operation and distinct supported-type and
+  interval-wide contracts in [D76](decisions/D76-interim-envelope-revenue.md).
+  No kill condition fired. Correlated-belief envelopes, continuous-type BNE,
+  and optimal-auction or single-good feasibility claims remain separate.

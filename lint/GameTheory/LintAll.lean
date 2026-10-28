@@ -96,6 +96,8 @@ import all GameTheory.Analysis.Repeated.Feasible
 import all GameTheory.Analysis.Repeated.Folk
 import all GameTheory.Analysis.Simplex
 import all GameTheory.Analysis.Stochastic
+import all GameTheory.Analysis.SingleParameter
+import all GameTheory.Analysis.RevenueEquivalence
 import all GameTheory.Analysis.Stochastic.Discounted
 import all GameTheory.Analysis.Stochastic.Examples
 import all GameTheory.Analysis.Stochastic.Fink
@@ -237,6 +239,7 @@ import all GameTheory.Math.Approachability
 import all GameTheory.Math.DAG
 import all GameTheory.Math.Discounted
 import all GameTheory.Math.Eventually
+import all GameTheory.Math.Envelope
 import all GameTheory.Math.FinRotation
 import all GameTheory.Math.HarmonicSequence
 import all GameTheory.Math.Negligible
@@ -277,6 +280,8 @@ import all GameTheory.Math.Probability.MeanComparison
 import all GameTheory.Math.Probability.MeanComparisonAffine
 import all GameTheory.Math.Probability.MeanComparisonExpectation
 import all GameTheory.Math.Probability.Measure
+import all GameTheory.Math.Probability.TailIntegral
+import all GameTheory.Math.Probability.ProductResampling
 import all GameTheory.Math.Probability.Mixture
 import all GameTheory.Math.Probability.OnlineLearning
 import all GameTheory.Math.Probability.FinitaryProduct
@@ -335,6 +340,9 @@ import all GameTheory.Mechanism.QuasiLinear
 import all GameTheory.Mechanism.ReserveVickrey
 import all GameTheory.Mechanism.Revelation
 import all GameTheory.Mechanism.SingleParameter
+import all GameTheory.Mechanism.SingleParameter.Interim
+import all GameTheory.Mechanism.SingleParameter.Independent
+import all GameTheory.Mechanism.SingleParameter.Bayesian
 import all GameTheory.Mechanism.Strategyproof
 import all GameTheory.Protocol
 import all GameTheory.Protocol.ActionRestriction

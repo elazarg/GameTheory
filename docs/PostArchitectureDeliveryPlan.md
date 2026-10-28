@@ -444,9 +444,26 @@ strict three-player separation from correlated rationalizability.
 
 ### H. Mechanism and algorithm extensions
 
+EXP-169/[D75](decisions/D75-single-parameter-envelope.md) delivers the scalar
+DSIC envelope and expected-payment chain on the existing single-parameter
+mechanism. Signed quantities and discontinuous allocations need no new model;
+Mathlib supplies convex continuity and calculus, and generic signed Fubini
+handles finite measures with atoms. The expected-payment consumer holds
+opponents fixed and permits bounded infinite-support PMFs and diffuse scalar
+laws. It does not introduce measurable Bayesian-game semantics.
+
+EXP-170/[D76](decisions/D76-interim-envelope-revenue.md) extends this chain
+through fixed-law opponent averaging and independent discrete priors. The
+canonical BNE bridge needs only supported-type optimality against all reports;
+interval payment identities and revenue equivalence separately require interim
+optimality throughout the declared interval, including null types. Matching
+interim allocation and lowest-type utility then determine payments, and actual
+joint payment integrability connects them to expected realized total receipts.
+The scalar mathematics is shared with the existing DSIC envelope.
+
 Independent packages:
 
-- analytic envelope identities above the stable single-parameter algebra;
+- correlated-belief envelope identities and general measurable-type Bayesian games;
 - monotonicity and critical payments for any truthful knapsack approximation;
 - mixed, correlated, informational, VCG, price, and attainment extensions of
   the stable weak-undominance implementation surface;
@@ -717,7 +734,7 @@ Recovery proceeds in three dependency-gated waves:
    correlation; Sen and median voter; convex-game core and cost of stability;
    matching rural hospitals, lattice, and strategyproofness;
    alternative bargaining solutions; envy-cycle EF1 and maximin share.
-2. **Bounded analytic/domain experiments:** Myerson envelope identities;
+2. **Bounded analytic/domain experiments:** correlated-belief envelope identities;
    divisible cake cutting; monitored public randomization; absent-minded
    values; delegation/liquid democracy; and finite-game flow decomposition.
 3. **Research frontier:** OpenGame admission only after a representative

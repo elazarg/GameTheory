@@ -144,6 +144,18 @@ predicate, and derives weak monotonicity by cancelling payments.  Groves/VCG,
 affine-maximizer, and Myerson structures are consumers of this owner rather
 than fields forced into its foundation.
 
+EXP-169/[D75](decisions/D75-single-parameter-envelope.md) extends that owner
+with scalar DSIC envelope and expected-payment identities through direct
+own-report slices. Independent signed integration lemmas live under Math,
+and the economic consumer stays under Analysis. Scalar probability measures
+do not add measurable parameters or a second incentive predicate to the
+mechanism. EXP-170/[D76](decisions/D76-interim-envelope-revenue.md) adds fixed-law
+opponent averaging as an operation on the same owner. Supported-type interim
+optimality gives canonical BNE for independent PMF priors. Interval-wide
+incentives, which additionally constrain null types, determine interim payments
+and yield realized-revenue equivalence with actual joint integrability.
+Correlated-belief envelopes and measurable-game semantics remain separate.
+
 ## 4. Decision summary
 
 | ID | Current/default decision | Status | Fastest serious test |

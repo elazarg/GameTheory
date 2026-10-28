@@ -27,6 +27,7 @@ public import GameTheory.Mechanism.QuasiLinear
 public import GameTheory.Mechanism.Revelation
 public import GameTheory.Mechanism.ReserveVickrey
 public import GameTheory.Mechanism.SingleParameter
+public import GameTheory.Mechanism.SingleParameter.Bayesian
 
 @[expose] public section
 

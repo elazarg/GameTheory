@@ -26,6 +26,8 @@ public import GameTheory.Analysis.Protocol
 public import GameTheory.Analysis.PseudoCorrelated
 public import GameTheory.Analysis.PseudoNash
 public import GameTheory.Analysis.Repeated
+public import GameTheory.Analysis.RevenueEquivalence
+public import GameTheory.Analysis.SingleParameter
 public import GameTheory.Analysis.Stochastic
 public import GameTheory.Analysis.TremblingHand
 public import GameTheory.Analysis.ZeroSumLearning

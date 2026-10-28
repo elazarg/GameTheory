@@ -3,6 +3,11 @@ Copyright (c) 2025-2026 Elazar Gershuni
 
 This product includes software developed as part of the GameTheory library.
 
+The supporting-slope differentiation proof in GameTheory/Math/Envelope.lean
+adapts MathEconLib's SingleParameter/EnvelopeIC.lean.
+Copyright (c) 2026 Bo Cowgill. Released under Apache License 2.0.
+Source revision: 58f602847d7f131994d32ca7a8cc1af35b7e2dbe.
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at

@@ -53,6 +53,7 @@ family's assumptions out of the basic one:
 | Protocol execution, histories, information, assessment, SPE, backward induction | `GameTheory.Protocol` |
 | Finite pure-Nash enumeration and checked rational algorithms | `GameTheory.Finite.Algorithm`, `GameTheory.Finite.Correctness` |
 | Mixed-Nash existence, minimax, refinements, approachability, convergence | `GameTheory.Analysis` |
+| Single-parameter envelopes, interim payments, and independent-type revenue equivalence | `GameTheory.Analysis.RevenueEquivalence` |
 | Discrete probability, DAGs, online learning, discounted sums, reusable geometry | `GameTheory.Math` |
 | Repeated games, public monitoring, PPE, self-generation, uniform equilibrium | `GameTheory.Repeated` |
 | Stochastic games, public policies, restart calculus, uniform payoffs | `GameTheory.Stochastic` |
@@ -174,6 +175,9 @@ focused experiments with infinite-play laws live under
 
 The [delivery ledger](docs/DeliveryLedger.md) lists theorem families that are
 partial or planned.
+
+The [MathEconLib comparison](docs/MathEconLibComparison.md) records differences
+in coverage and semantics, with recommendations for both libraries.
 
 ## Development
 

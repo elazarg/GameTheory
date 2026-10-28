@@ -207,6 +207,16 @@ abbrev OwnAllocation [DecidableEq Player]
     (replacement : ℝ) : ℝ :=
   allocation (Profile.update reports who replacement) who
 
+/-- A monotone allocation has a monotone slice at every fixed profile of
+opponents' reports. -/
+theorem ownAllocation_monotone [DecidableEq Player] (hmono : M.IsMonotone)
+    (who : Player) (reports : SingleParameterReportProfile Player) :
+    Monotone (OwnAllocation M.allocation who reports) := by
+  intro a b hab
+  have h := hmono who (Profile.update reports who a) b
+    (by simpa only [Profile.update_same] using hab)
+  simpa only [OwnAllocation, Profile.update_idem] using h
+
 /-- Payment normalization at a zero own report. -/
 def ZeroNormalized [DecidableEq Player] : Prop :=
   ∀ who reports, M.payment (Profile.update reports who 0) who = 0
