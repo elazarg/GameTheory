@@ -115,6 +115,7 @@ import all GameTheory.Cooperative.GaleShapley
 import all GameTheory.Cooperative.GaleShapley.Perfect
 import all GameTheory.Cooperative.GaleShapley.Optimality
 import all GameTheory.Cooperative.GaleShapley.Unmatched
+import all GameTheory.Cooperative.GaleShapley.Strategyproof
 import all GameTheory.Cooperative.Matching
 import all GameTheory.Cooperative.Matching.Transpose
 import all GameTheory.Cooperative.ShapleyShubik
@@ -156,6 +157,7 @@ import all GameTheory.Core.PseudoNashHybrid
 import all GameTheory.Core.PseudoNashCoalition
 import all GameTheory.Core.PseudoNashTolerance
 import all GameTheory.Core.Rank
+import all GameTheory.Core.Rank.Truncation
 import all GameTheory.Core.Rationalizability
 import all GameTheory.Core.Response
 import all GameTheory.Core.RobustWelfare

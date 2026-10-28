@@ -13,8 +13,8 @@ Stability of Marriage,” *American Mathematical Monthly* 69 (1962).
 This module proves stable matching existence; `GaleShapley.Perfect` adds
 balanced perfectness, `GaleShapley.Optimality` adds proposer optimality, and
 `GaleShapley.Unmatched` adds receiver pessimism and invariance of unmatched
-agents. Lattice structure, capacitated rural hospitals and strategyproofness
-remain separate theorem packages.
+agents. `GaleShapley.Strategyproof` proves truthful proposer report incentives.
+Lattice structure and capacitated rural hospitals remain separate theorem packages.
 -/
 
 public import GameTheory.Cooperative.Matching

@@ -329,6 +329,7 @@ import all GameTheory.Tests.MAIDSafeReduction
 import all GameTheory.Tests.Matching
 import all GameTheory.Tests.MatchingOptimality
 import all GameTheory.Tests.MatchingUnmatched
+import all GameTheory.Tests.MatchingStrategyproof
 import all GameTheory.Tests.May
 import all GameTheory.Tests.MixedPotential
 import all GameTheory.Tests.MixtureSimulation

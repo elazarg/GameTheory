@@ -374,7 +374,7 @@ fixed:
 - general security and constant-sum correlation;
 - Sen and median-voter social choice;
 - convex-game Shapley-in-core;
-- matching strategyproofness and rural-hospitals extensions; and
+- capacitated rural-hospitals extensions; and
 - egalitarian and Kalai–Smorodinsky bargaining.
 
 Each package needs its own theorem-level consumer. Shared general mathematics
@@ -396,6 +396,17 @@ allowed. The hostile consumer has two distinct stable assignments and an
 unacceptable extra agent, then transposes the market to test receivers.
 This is the one-to-one invariant; capacitated rural hospitals remains a
 separate design and theorem package.
+
+`GaleShapley.Strategyproof` proves that truthful deferred acceptance weakly
+beats every stable outcome under a unilateral proposer report, with every
+other report fixed. Its deferred-acceptance corollary permits all strict
+reports, including arbitrary changes to acceptability. Ordinal truncation
+and singleton reports preserve linearity at `Core.Rank.Truncation`; unmatched
+invariance rules out a profitable report. No duplicate matching process,
+cardinal utility encoding or artificial strategic form is introduced.
+Controls exhibit harmful truncation and harmful outside-option changes in
+contested and incomplete markets. Receiver truthfulness and group incentives
+are not claimed.
 
 Convex-game core nonemptiness is delivered in `Cooperative.Convex`.
 Supermodular worth gives increasing marginal contributions; for any linear
