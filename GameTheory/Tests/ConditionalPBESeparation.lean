@@ -23,6 +23,17 @@ open GameTheory.Math.Probability
 open GameTheory.Tests.WeakPBESeparation
 open scoped ENNReal
 
+/-- The rejected assessment belongs to the predicate's explicit-chance domain. -/
+theorem arena_hasExplicitChance : arena.HasExplicitChance := by
+  intro history active joint
+  rcases history with ⟨state, _trace⟩
+  cases state with
+  | root => exact ⟨_, rfl⟩
+  | chance => obtain ⟨_, active⟩ := active; exact False.elim active
+  | guess latent => exact ⟨_, rfl⟩
+  | exited => exact ⟨_, rfl⟩
+  | done latent chosen => exact ⟨_, rfl⟩
+
 def guessingSite : model.InformationSite () :=
   ⟨.guess, ⟨⟨guessHistory false, rfl⟩, by simp [State.terminal],
     false, by simp [menu]⟩⟩
@@ -189,13 +200,13 @@ theorem assessment_not_conditionalProbabilityConsistent :
   norm_num at real
 
 theorem assessment_not_conditionalPBE :
-    ¬ assessment.IsConditionalPBE model wellFoundedHistories payoff :=
-  fun equilibrium => assessment_not_conditionalProbabilityConsistent equilibrium.2.1
+    ¬ assessment.IsConditionalPBE model arena_hasExplicitChance wellFoundedHistories payoff :=
+  fun equilibrium => assessment_not_conditionalProbabilityConsistent equilibrium.2
 
 /-- The explicit weak PBE is rejected by conditional-probability PBE. -/
 theorem weakPBE_not_conditionalPBE :
     assessment.IsWeakPBE information_antichain wellFoundedHistories payoff ∧
-      ¬ assessment.IsConditionalPBE model wellFoundedHistories payoff :=
+      ¬ assessment.IsConditionalPBE model arena_hasExplicitChance wellFoundedHistories payoff :=
   ⟨assessment_isWeakPBE, assessment_not_conditionalPBE⟩
 
 end GameTheory.Tests.ConditionalPBESeparation

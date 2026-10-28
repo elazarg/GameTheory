@@ -272,8 +272,8 @@ theorem BehavioralAssessment.IsSequentialEquilibrium.isConditionalPBE
     (explicitChance : E.HasExplicitChance)
     (payoff : ι → E.History → ℝ)
     (equilibrium : A.IsSequentialEquilibrium antichain certificate payoff) :
-    A.IsConditionalPBE M certificate payoff :=
+    A.IsConditionalPBE M explicitChance certificate payoff :=
   ⟨equilibrium.1,
-    equilibrium.2.isConditionalProbabilityConsistent M antichain certificate, explicitChance⟩
+    equilibrium.2.isConditionalProbabilityConsistent M antichain certificate⟩
 
 end GameTheory.Protocol.InformationModel

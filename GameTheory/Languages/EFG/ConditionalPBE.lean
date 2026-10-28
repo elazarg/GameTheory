@@ -21,11 +21,12 @@ universe uι us ua up uq uk
 variable {ι : Type uι} (G : Game.{uι, us, ua, up, uq, uk} ι)
 
 /-- The EFG specialization retains the common off-path conditional beliefs
-and the certificate that Nature is explicitly represented. -/
+and requires a certificate that Nature is explicitly represented. -/
 abbrev IsConditionalPBE [DecidableEq ι]
     (assessment : G.information.BehavioralAssessment)
+    (explicitChance : G.execution.HasExplicitChance)
     (certificate : G.execution.WellFoundedHistories)
     (payoff : ι → G.History → ℝ) : Prop :=
-  assessment.IsConditionalPBE G.information certificate payoff
+  assessment.IsConditionalPBE G.information explicitChance certificate payoff
 
 end GameTheory.Languages.EFG.Game

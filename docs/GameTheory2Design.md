@@ -1520,8 +1520,10 @@ EXP-167/[D73](decisions/D73-conditional-probability-pbe.md) separately specifies
 conditional-probability PBE. A common PMF conditional system on terminal
 histories represents information-set beliefs, with behavioral continuation
 compatibility guarded by positive assessment belief and Nature constrained
-even off path. `HasExplicitChance` enforces that random draws are exposed as
-Nature nodes; player transitions are deterministic on each legal action.
+even off path. A required `HasExplicitChance` parameter restricts the predicate
+to presentations with explicit Nature nodes and deterministic player
+transitions on each legal action. This applicability certificate is separate
+from the predicate's rationality and common-system consistency conditions.
 The conditional-system data and equilibrium predicate are
 stable; simultaneous subsequence compactness and the finite-history
 SE-to-CPPBE construction stay in their mathematical and analytic leaves.

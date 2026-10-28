@@ -31,11 +31,11 @@ theorem exists_conditionalPBE [Finite E.History]
     (payoff : ι → E.History → ℝ) (certificate : E.WellFoundedHistories)
     (explicitChance : E.HasExplicitChance) :
     ∃ assessment : M.BehavioralAssessment,
-      assessment.IsConditionalPBE M certificate payoff := by
+      assessment.IsConditionalPBE M explicitChance certificate payoff := by
   obtain ⟨assessment, rational, consistent⟩ :=
     M.exists_sequentialEquilibrium hrecall fallback payoff certificate
   exact ⟨assessment, rational,
     consistent.isConditionalProbabilityConsistent M hrecall.decisionInformationAntichain
-      certificate, explicitChance⟩
+      certificate⟩
 
 end GameTheory.Protocol.InformationModel

@@ -39,11 +39,19 @@ belongs in `ConditionalSystemCompactness`, outside the stable data leaf.
 cone probabilities. Its continuation field retains the positive-belief guard;
 its Nature field imposes continuation compatibility at every nonterminal
 history with no active player. These are named certificate fields, not prose
-assumptions. `IsConditionalPBE` composes this consistency condition with the
-canonical whole-policy rationality predicate and `HasExplicitChance`: every
-legal action at a reachable player node has a deterministic successor. The
-EFG solution leaf is a transparent specialization; language syntax imports
-no solution concept.
+assumptions. `IsConditionalPBE` requires a `HasExplicitChance` parameter:
+every legal action at a reachable player node has a deterministic successor.
+Its body composes only this consistency condition and the canonical
+whole-policy rationality predicate. The EFG solution leaf is a transparent
+specialization; language syntax imports no solution concept.
+
+The original API conjoined `HasExplicitChance` with the assessment conditions.
+That made nonexistence automatic on unsupported game representations. Requiring
+the certificate when forming the predicate preserves the applicability
+boundary without mixing a property of the game into equilibrium. The SE bridge
+and existence theorem take the certificate explicitly; common-system
+consistency remains independent of it. The off-path rejection consumer supplies
+its game's certificate, so its nonexistence proof still refutes the beliefs.
 
 The explicit-chance certificate is material. General stochastic protocols
 can hide a random draw inside an active player's transition. If the action
@@ -93,6 +101,11 @@ validation build (4,673 jobs), public lint and transitive standard-axiom
 checks. Source boundaries and driver coverage also pass. The common system is
 constructed from SE approximations, and the weak-PBE control is rejected by
 the required one-versus-one-half conditional mass contradiction.
+
+The certificate-parameter API and its positive and rejection consumers pass
+the complete strict validation target (4,673 jobs), including the lint and
+axiom drivers, followed by `lake --iofail lint` and
+`python scripts/audit.py --source-only`.
 
 ## Deliberate limits
 

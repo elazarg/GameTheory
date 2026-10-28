@@ -124,12 +124,13 @@ theorem BehavioralAssessment.IsConditionalProbabilityConsistent.isBayesConsisten
 Bayesian equilibrium; its on-path Bayes property is derived from the common
 conditional system. -/
 theorem BehavioralAssessment.IsConditionalPBE.isWeakPBE [DecidableEq ι]
-    {A : M.BehavioralAssessment} {certificate : E.WellFoundedHistories}
+    {A : M.BehavioralAssessment} {explicitChance : E.HasExplicitChance}
+    {certificate : E.WellFoundedHistories}
     {payoff : ι → E.History → ℝ}
-    (equilibrium : A.IsConditionalPBE M certificate payoff)
+    (equilibrium : A.IsConditionalPBE M explicitChance certificate payoff)
     (antichain : M.DecisionInformationAntichain) :
     A.IsWeakPBE antichain certificate payoff :=
-  ⟨equilibrium.1, equilibrium.2.1.isBayesConsistent M antichain⟩
+  ⟨equilibrium.1, equilibrium.2.isBayesConsistent M antichain⟩
 
 end InformationModel
 end GameTheory.Protocol

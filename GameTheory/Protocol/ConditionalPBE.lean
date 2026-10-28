@@ -73,13 +73,15 @@ def BehavioralAssessment.IsConditionalProbabilityConsistent
   ∃ C : ConditionalProbabilitySystem E.TerminalHistory,
     A.ConditionalProbabilityCompatible M certificate C
 
-/-- Conditional-probability perfect Bayesian equilibrium with explicitly represented
-chance, whole-policy rationality and a common conditional system respecting play. -/
+/-- Conditional-probability perfect Bayesian equilibrium: whole-policy rationality
+and a common conditional system respecting play. The explicit-chance certificate
+is a prerequisite for applying the predicate, independent of the assessment. -/
 def BehavioralAssessment.IsConditionalPBE
-    [DecidableEq ι] (A : M.BehavioralAssessment) (certificate : E.WellFoundedHistories)
+    [DecidableEq ι] (A : M.BehavioralAssessment) (_explicitChance : E.HasExplicitChance)
+    (certificate : E.WellFoundedHistories)
     (payoff : ι → E.History → ℝ) : Prop :=
   A.IsSequentiallyRational certificate payoff ∧
-    A.IsConditionalProbabilityConsistent M certificate ∧ E.HasExplicitChance
+    A.IsConditionalProbabilityConsistent M certificate
 
 end InformationModel
 end GameTheory.Protocol

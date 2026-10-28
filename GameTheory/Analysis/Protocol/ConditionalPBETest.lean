@@ -35,7 +35,8 @@ theorem hiddenBit_hasExplicitChance : execution.HasExplicitChance := by
 
 /-- A genuinely Bayesian assessment with nonconstant utility satisfies CPPBE. -/
 theorem matching_isConditionalPBE :
-    fullyMixedAssessment.IsConditionalPBE information wellFoundedHistories matchingPayoff := by
+    fullyMixedAssessment.IsConditionalPBE information hiddenBit_hasExplicitChance
+      wellFoundedHistories matchingPayoff := by
   apply InformationModel.BehavioralAssessment.IsSequentialEquilibrium.isConditionalPBE
     information information_decisionInformationAntichain wellFoundedHistories
       hiddenBit_hasExplicitChance matchingPayoff
@@ -45,7 +46,8 @@ theorem matching_isConditionalPBE :
 
 /-- The same continuation evaluator rejects an assessment that chooses the worse action. -/
 theorem irrational_not_isConditionalPBE :
-    ¬ wrongAssessment.IsConditionalPBE information wellFoundedHistories matchingPayoff :=
+    ¬ wrongAssessment.IsConditionalPBE information hiddenBit_hasExplicitChance
+      wellFoundedHistories matchingPayoff :=
   fun equilibrium => wrongAssessment_not_isSequentiallyRational_matchingPayoff equilibrium.1
 
 end GameTheory.Tests.ConditionalPBE
@@ -65,7 +67,8 @@ theorem vote_hasExplicitChance : once.HasExplicitChance := by
 forgets the player's vote. -/
 theorem exists_conditionalPBE :
     ∃ assessment : singleModel.BehavioralAssessment,
-      assessment.IsConditionalPBE singleModel once.wellFoundedHistories_of_fintype payoff :=
+      assessment.IsConditionalPBE singleModel vote_hasExplicitChance
+        once.wellFoundedHistories_of_fintype payoff :=
   singleModel.exists_conditionalPBE single_decisionRecall fallback payoff _
     vote_hasExplicitChance
 
