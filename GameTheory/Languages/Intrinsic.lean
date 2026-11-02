@@ -122,13 +122,14 @@ def AgreeBefore {M : Model.{uAgent, uNature, uDecision}} {slots : Nat}
       left.decision (schedule.orderAt left earlier) =
         right.decision (schedule.orderAt left earlier)
 
-/-- At the current slot, information may depend on nature and predecessor
-decisions, but not on a decision scheduled later. -/
+/-- Nature and predecessor decisions determine both the schedule through the
+current slot and the current agent's information. In particular, the schedule
+cannot reveal a current or future decision by choosing who moves next. -/
 def IsCausalWith {M : Model.{uAgent, uNature, uDecision}} {slots : Nat}
     (schedule : M.Schedule slots) : Prop :=
   ∀ (left right : M.Configuration) (slot : Fin slots),
-    SamePrefixThrough schedule slot left right →
     AgreeBefore schedule slot left right →
+    SamePrefixThrough schedule slot left right ∧
     (M.info (schedule.orderAt left slot)).r left right
 
 end Model

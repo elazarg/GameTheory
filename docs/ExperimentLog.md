@@ -75,7 +75,7 @@ entries below, following the initial feasibility survey.
 | EXP-059 | 2026-08-02 | D6/D8/D14/D15/D28 / FOSG-to-EFG serialization | Can a simultaneous stochastic FOSG be serialized as a single-mover EFG while hiding within-round choices and preserving its mapped history law? | Supports explicit hidden-phase serialization; decides D30 | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Experimental/PostArchitecture/FOSGToEFG.lean` |
 | EXP-060 | 2026-08-02 | D6/D8/D14/D15/D30 / two-round FOSG-to-EFG signal replay | Can the hidden-phase serializer replay nontrivial source public/private signals over two stochastic rounds, including own-action memory and inactive slots, while preserving the scaled canonical-history law? | Supports two-round signal replay; generic explicit-order implementation unblocked; extends D30 | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Experimental/PostArchitecture/FOSGToEFGTwoRound{,Witnesses}.lean` |
 | EXP-061 | 2026-08-02 | D6/D8/D14/D15/D30 / generic explicit-order FOSG-to-EFG bridge | Can D30's validated hidden-phase construction be expressed once over the canonical FOSG/EFG APIs, with explicit finite player order and the same exact history, signal, policy, inactivity, and order laws? | Supports; promotes the stable generic bridge and completes D30's API gate | [`decisions/D30-fosg-efg-serialization.md`](decisions/D30-fosg-efg-serialization.md); `GameTheory/Languages/Bridges/FOSGToEFG.lean`; generic hostile witnesses |
-| EXP-062 | 2026-08-03 | D4/D6/D7/D9 / intrinsic games ownership | Does configuration-dependent causality and closed-loop solvability earn a native intrinsic-game branch by proving a theorem or counterexample unavailable from bare Protocol without first choosing a temporal compiler? | Supports; native closed-loop and causality root approved, later compiler/mixed/utility/Kuhn layers remain gated | `GameTheory/Experimental/PostArchitecture/IntrinsicOwnership.lean`; D31; focused compile, hazard, axiom, and premise-independence audits |
+| EXP-062 | 2026-08-03 | D4/D6/D7/D9 / intrinsic games ownership | Does configuration-dependent causality and closed-loop solvability earn a native intrinsic-game branch by proving a theorem or counterexample unavailable from bare Protocol without first choosing a temporal compiler? | Originally supports; native ownership retained, causality justification refuted and corrected by EXP-171 | `GameTheory/Experimental/PostArchitecture/IntrinsicOwnership.lean`; D31; original compile, hazard, axiom, and premise-independence audits |
 | EXP-063 | 2026-08-03 | D12 / dependency maintenance | Do Lean and Mathlib 4.32.2 preserve the fixed-point dependency, trust profile, and enforced architecture boundaries? | Supports; toolchain-aligned maintained fork repinned without theorem-source change | `lean-toolchain`; `lakefile.lean`; `lake-manifest.json`; [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md) |
 | EXP-064 | 2026-08-03 | D5/D11 / repeated public monitoring | Can finite-prefix signal laws support canonical PPE and the bounded one-shot-deviation principle without an infinite-path law? | Supports; closes the public-monitoring equilibrium waist | `GameTheory/Repeated/Monitoring*.lean`; `GameTheory/Tests/MonitoringEquilibrium.lean`; [`SupportEvidenceMatrix.md`](SupportEvidenceMatrix.md) |
 | EXP-065 | 2026-08-03 | D0/D2/D4/D9 / finite contracts | Does hidden-action contract theory earn a native finite-support principal-agent branch, with an explicit outside option, rather than a one-player `GameForm` or an auction specialization? | Supports native ownership; decides D32 | [`decisions/D32-principal-agent-contract-ownership.md`](decisions/D32-principal-agent-contract-ownership.md); `GameTheory/Experimental/PostArchitecture/ContractOwnership.lean` |
@@ -4084,6 +4084,10 @@ memory.
   gates.
 
 ### EXP-062: intrinsic games ownership and closed-loop causality
+
+**Later correction:** EXP-171 refutes this entry's original causality
+justification while retaining native ownership. The original prediction,
+observations and outcome below are preserved as the record of that run.
 
 - **Date / revision:** 2026-08-03, reserved on `6c37ac8`
 - **Status:** complete; supports a native intrinsic root and
@@ -10634,3 +10638,35 @@ memory.
   interval-wide contracts in [D76](decisions/D76-interim-envelope-revenue.md).
   No kill condition fired. Correlated-belief envelopes, continuous-type BNE,
   and optimal-auction or single-good feasibility claims remain separate.
+
+## EXP-171: intrinsic causality determines its own schedule prefix
+
+- **Date / decision:** 2026-11-02; correction to [D31](decisions/D31-intrinsic-native-ownership.md).
+- **Question / competing designs:** Does conditioning information locality on
+  an assumed shared prefix express intrinsic causality, or must predecessor
+  agreement also determine that prefix? Preserve the native closed-loop owner
+  while comparing the two conditions.
+- **Slice / kill condition:** a future-dependent two-agent schedule with an
+  admissible rule having no fixed point, the old three-agent branching witness,
+  clapping hands, and a branch depending solely on an earlier decision. Reject
+  a causality predicate that accepts an unsolvable nonempty finite model.
+- **Observation:** the EXP-062 condition fails: it admits anticipatory schedule
+  cells and the unsolvable branching witness. Definition 6, equation (18), of
+  [the intrinsic-form paper](https://arxiv.org/pdf/2006.14838) also requires the
+  prefix cell itself to depend only on nature and predecessor decisions.
+- **Artifacts / validation:** `GameTheory/Languages/Intrinsic.lean`, its
+  `Solution.lean` leaf, `GameTheory/Tests/IntrinsicCausality.lean`, and the
+  preserved `IntrinsicOwnership` experiment. `lake --iofail build
+  GameTheory.Tests.IntrinsicCausality GameTheory.Tests.IntrinsicSolution
+  GameTheory.Tests.IntrinsicStrategic
+  GameTheory.Experimental.PostArchitecture.IntrinsicOwnership
+  GameTheory.Experimental.PostArchitecture.IntrinsicStrategic` passes 3,070
+  jobs. `python scripts/audit.py` passes the default build (3,872 jobs),
+  complete validation (4,762 jobs), public lint, source boundaries and
+  transitive standard-axiom checks. Independent proof review accepts the
+  changing-schedule induction and dependent decision carriers.
+- **Outcome / next action:** original condition refuted; adopt
+  `AgreeBefore → SamePrefixThrough ∧ info`. `isSolvable_of_isCausalWith` proves
+  unique solvability with nonempty decisions; an empty-decision counterexample
+  proves that premise necessary. Native ownership remains adopted; the
+  original independence argument remains historical evidence, not causality.

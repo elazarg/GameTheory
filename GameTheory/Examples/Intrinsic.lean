@@ -51,8 +51,8 @@ def noInformationSchedule : noInformation.Schedule 2 :=
 /-- No-information agents satisfy causality for the fixed schedule. -/
 theorem noInformation_isCausal :
     Model.IsCausalWith noInformationSchedule := by
-  intro left right slot hprefix hagree
-  trivial
+  intro left right slot _
+  exact ⟨fun _ _ => rfl, trivial⟩
 
 /-- A two-agent signaling model. `false` is the sender and observes nature;
 `true` is the receiver and observes the sender's message. -/
@@ -111,14 +111,11 @@ theorem futureLooking_not_causal :
   intro hcausal
   have hinfo := hcausal futureFalse futureTrue (0 : Fin 2)
     (by
-      intro earlier hearlier
-      rfl)
-    (by
       constructor
       · rfl
       · intro earlier hearlier
         omega)
-  have hunequal : futureFalse.decision true = futureTrue.decision true := hinfo
+  have hunequal : futureFalse.decision true = futureTrue.decision true := hinfo.2
   have hne : (false : futureLooking.Decision true) ≠ true := by decide
   exact hne hunequal
 

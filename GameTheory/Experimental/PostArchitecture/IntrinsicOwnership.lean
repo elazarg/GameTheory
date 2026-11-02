@@ -5,7 +5,9 @@ module
 
 This hostile slice tests closed-loop configuration and causality while
 deliberately omitting probability, utility, compiler, mixed/behavioral, and
-Kuhn layers.
+Kuhn layers. Its original branching witness is retained as evidence of the
+failed prefix-conditioned causality validation: the corrected condition
+rejects that witness.
 -/
 
 public import Mathlib.Logic.Equiv.Bool
@@ -100,14 +102,14 @@ def AgreeBefore {M : Model} {slots : ℕ}
       left.decision (schedule.orderAt left earlier) =
         right.decision (schedule.orderAt left earlier)
 
-/-- At the current slot, information may depend on nature and predecessor
-decisions, but not on a decision scheduled later. -/
+/-- Nature and predecessor decisions determine both the schedule prefix
+through the current slot and the current agent's information. -/
 def IsCausalWith {M : Model} {slots : ℕ}
     (schedule : M.Schedule slots) : Prop :=
   ∀ (left right : M.Configuration) (slot : Fin slots),
-    SamePrefixThrough schedule slot left right →
     AgreeBefore schedule slot left right →
-    (M.info (schedule.orderAt left slot)).r left right
+    SamePrefixThrough schedule slot left right ∧
+      (M.info (schedule.orderAt left slot)).r left right
 
 end Model
 
@@ -142,8 +144,8 @@ def trivialOrder : trivialModel.Schedule 2 :=
 
 theorem trivialModel_isCausal :
     Model.IsCausalWith trivialOrder := by
-  intro left right slot _ _
-  trivial
+  intro left right slot _
+  exact ⟨fun _ _ => rfl, trivial⟩
 
 /-- Agent `false` observes the decision of agent `true`, who is scheduled
 later; agent `true` has trivial information. -/
@@ -175,14 +177,11 @@ theorem futureLookingModel_not_causal :
   intro hcausal
   have hinfo := hcausal allFalse futureTrue (0 : Fin 2)
     (by
-      intro earlier _
-      rfl)
-    (by
       constructor
       · rfl
       · intro earlier hearlier
         omega)
-  have hinfo' : allFalse.decision true = futureTrue.decision true := hinfo
+  have hinfo' : allFalse.decision true = futureTrue.decision true := hinfo.2
   have hne : (false : futureLookingModel.Decision true) ≠ true := by
     decide
   exact hne hinfo'
@@ -307,9 +306,9 @@ theorem branchingOrder_nonconstant :
   rw [branchingOrder_one_of _ hall, branchingOrder_one_of_not _ hone]
   decide
 
-/-- The hostile configurations separate the two causality premises.  The first
-pair agrees on the predecessor but changes configuration cell; the second
-stays in one cell while changing the predecessor. -/
+/-- The historical witness separates predecessor agreement from prefix
+agreement. The first pair therefore refutes causality: a causal schedule must
+derive prefix agreement from predecessor agreement. -/
 theorem branchingPremises_independent :
     (Model.AgreeBefore branchingOrder (1 : Fin 3)
         branchingAllFalse branchingOneTrue ∧
@@ -344,11 +343,14 @@ theorem branchingPremises_independent :
       rw [branchingOrder_zero] at hzero
       simp [branchingAllFalse, branchingZeroOneTrue] at hzero
 
-/-- The nonconstant order is causal.  Predecessor agreement supplies the exact
-agent-zero decision, while configuration-prefix agreement independently
-supplies equality of the branch condition. -/
-theorem branchingModel_isCausal :
-    Model.IsCausalWith branchingOrder := by
+/-- This historical positive result assumes the schedule prefix instead of
+deriving it. It records the weaker condition originally mistaken for causality
+in EXP-062; the same witness is rejected by `IsCausalWith`. -/
+theorem branchingModel_prefixConditionedInformation :
+    ∀ (left right : branchingModel.Configuration) (slot : Fin 3),
+      Model.SamePrefixThrough branchingOrder slot left right →
+      Model.AgreeBefore branchingOrder slot left right →
+      (branchingModel.info (branchingOrder.orderAt left slot)).r left right := by
   intro left right slot hprefix hagree
   have hslot : slot = 0 ∨ slot = 1 ∨ slot = 2 := by omega
   rcases hslot with rfl | rfl | rfl
@@ -401,6 +403,13 @@ theorem branchingModel_isCausal :
       exact (branchingInfo_one left right).2 ⟨hzero, hbranch⟩
     · rw [branchingOrder_two_of_not _ hleft]
       exact (branchingInfo_two left right).2 ⟨hzero, hbranch⟩
-
+/-- The later order reads a future coordinate, so predecessor agreement does
+not determine the schedule prefix required by causality. -/
+theorem branchingModel_not_causal :
+    ¬ Model.IsCausalWith branchingOrder := by
+  intro hcausal
+  exact branchingPremises_independent.1.2
+    (hcausal branchingAllFalse branchingOneTrue 1
+      branchingPremises_independent.1.1).1
 
 end GameTheory.Experimental.IntrinsicOwnership

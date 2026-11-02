@@ -321,6 +321,7 @@ import all GameTheory.Tests.IntegerCramerComputation
 import all GameTheory.Tests.IntegerCramerEncoding
 import all GameTheory.Tests.IntegerRatioSelection
 import all GameTheory.Tests.InterleavedMenus
+import all GameTheory.Tests.IntrinsicCausality
 import all GameTheory.Tests.IntrinsicSolution
 import all GameTheory.Tests.IntrinsicStrategic
 import all GameTheory.Tests.IrreversibleFailure

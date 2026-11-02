@@ -1,9 +1,10 @@
 # D31: Keep intrinsic closed-loop semantics native before temporal compilation
 
-- **Status:** adopted; minimal native root and configuration-dependent
-  causality surface approved for promotion
+- **Status:** adopted; native ownership retained, causality condition corrected
+  after the original schedule-prefix validation was refuted
 - **Date:** 2026-08-03
-- **Experiment ID:** EXP-062
+- **Amended:** 2026-11-02
+- **Experiment IDs:** EXP-062; EXP-171 supersedes its causality justification
 
 ## Decision / question
 
@@ -25,7 +26,10 @@ future-information counterexample before an execution state, history, or
 temporal order exists.  Designs 2 and 3 cannot express both facts at the same
 semantic layer without first discarding or re-encoding the product structure.
 
-## Representative hostile slice
+## Representative hostile slice (EXP-062, historical)
+
+The account below preserves the original validation. EXP-171 refutes its
+causality conclusion; see the correction below.
 
 The positive witness has two Boolean agents with universal information.  Every
 admissible pure strategy is constant on configuration space, so every profile
@@ -44,7 +48,7 @@ predecessor agreement does not imply a shared schedule prefix, and a shared
 schedule prefix does not imply predecessor agreement.  Thus neither premise
 can be erased from the positive causality proof.
 
-## Measurements
+## Measurements (EXP-062, historical)
 
 | Measure | EXP-062 result |
 |---|---|
@@ -57,7 +61,7 @@ can be erased from the positive causality proof.
 | configuration-cell test | nonconstant three-agent schedule; `SamePrefixThrough` is equivalent to direct `PrefixCell` membership through the current slot |
 | independence test | concrete pairs refute each premise-erased causality variant |
 
-## Kill conditions and result
+## Original kill conditions and result
 
 Reject native ownership if the hostile statements reduce to existing Protocol
 theorems; require temporal execution merely to state; need stored global
@@ -67,6 +71,49 @@ or forbidden trust features; or if either causality premise is ornamental.
 Counterexamples refute both premise-erased variants. EXP-062 therefore
 supports native ownership and the configuration-dependent causality
 representation.
+
+The preceding result is the original conclusion, not the current causality
+claim. Its premise-independence argument tested a condition weaker than the
+source definition. The native-ownership evidence remains useful.
+
+## Corrected causality and replacement validation (EXP-171)
+
+Definition 6, equation (18), of
+[Kuhn's Equivalence Theorem for Games in Intrinsic Form](https://arxiv.org/pdf/2006.14838)
+requires each prefix cell intersected with an information event to be
+measurable using nature and predecessor coordinates. Taking the information
+event to be the entire configuration space already requires that the prefix
+cell itself be determined by those coordinates. The setoid formulation is
+therefore:
+
+```text
+AgreeBefore schedule slot left right →
+  SamePrefixThrough schedule slot left right ∧
+  (M.info (schedule.orderAt left slot)).r left right
+```
+
+The previous formulation assumed `SamePrefixThrough` and concluded only
+information equivalence. It could use future decisions to select a schedule
+cell and then hide that dependence inside the assumption. The two-agent
+counterexample satisfies that weaker condition but has an admissible profile
+with no fixed point. The old three-agent branching fixture has the same
+defect: its later information determines agent one's own decision. Its
+premise-independence theorem now supplies a negative causality witness, and
+its weaker information-locality proof is retained under an explicit name.
+The claim that predecessor agreement need not imply a shared prefix is
+withdrawn for causal schedules.
+
+The replacement positive witness branches only on agent zero's already-made
+decision; later agents observe that coordinate. Negative controls reject the
+anticipatory two-agent schedule and every schedule for clapping hands. The
+`isSolvable_of_isCausalWith` theorem in the `Solution` leaf derives unique
+solvability from corrected causality with decision nonemptiness supplied at
+the theorem. This adds no capabilities
+to `Model` and requires no Protocol compiler. An empty-decision control proves
+the nonemptiness premise necessary. EXP-171 validates the corrected surface:
+the focused intrinsic build passes 3,070 jobs, and the full audit passes the
+default build (3,872 jobs), complete validation (4,762 jobs), public lint,
+source boundaries and transitive standard-axiom checks.
 
 ## Consequences for the public API
 
@@ -82,6 +129,12 @@ Use independent universes in the stable root.  Store no finite or nonempty
 capabilities.  `IsSolvable` is allowed to be vacuous when no pure profile
 exists; any operation that extracts or plays a solution carries the
 nonemptiness or existence capability it needs.
+
+`IsCausalWith` concludes both prefix agreement and information equivalence
+from predecessor agreement. Its solvability theorem requests nonempty decision
+carriers: without them, the configuration space can be empty and causality
+can hold vacuously. No compatibility predicate preserves the rejected meaning
+in the stable API.
 
 Do not yet promote a temporal compiler, execution semantics, perfect recall,
 mixed or behavioral strategies, PMF outcome laws, player ownership, utility,
