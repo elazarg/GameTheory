@@ -10706,3 +10706,9 @@ observations and outcome below are preserved as the record of that run.
   imported module-name array before traversing declarations; its allowed axioms
   and private-declaration coverage are unchanged, and all four diagnostic and
   private-axiom regression controls pass.
+- **Convention result:** `Backend.NativeEndOfLineSemantics` passes its focused
+  build (1,994 jobs) without diagnostics. For arbitrary pointer functions whose
+  predecessor fixes zero, native active-edge predicates agree with the base
+  consistent-edge predicates. With a genuine source, native witnesses are
+  exactly fixed-width non-source endpoints. Connecting the serialized problems
+  and their efficient reductions remains pending.
