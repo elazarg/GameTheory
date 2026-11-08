@@ -10,7 +10,7 @@ All four operands are binary signed words, with no canonical-padding premise.
 -/
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM
 
 /-- Compare `x*dy` and `y*dx` on four arbitrary signed binary fields. -/
 def binarySignedCrossLT (v : Fin 4 → List Bool) : List Bool :=
@@ -31,13 +31,12 @@ theorem binarySignedCrossLT_value (x y dx dy : List Bool) :
   rfl
 
 /-- Signed cross-product comparison composes four actual polynomial-time word machines. -/
-theorem binarySignedCrossLT_cobham : Cobham binarySignedCrossLT :=
-  (Cobham.comp₂ binarySignedLTFlag_cobham
-    (Cobham.comp₂ binarySignedMul_cobham (.proj 0) (.proj 3))
-    (Cobham.comp₂ binarySignedMul_cobham (.proj 1) (.proj 2))).of_eq fun _ => rfl
-
-theorem binarySignedCrossLT_mem_FPn : FPn binarySignedCrossLT :=
-  cobham_iff_FPn.mp binarySignedCrossLT_cobham
+@[fun_prop] theorem binarySignedCrossLT_polyTime :
+    ComputableInPolyTime (fun v : Fin 4 → List Bool => binarySignedCrossLT v)
+      (encPi encBits) encBits :=
+  binarySignedLTFlag_polyTime
+    (binarySignedMul_polyTime (.pi_apply encBits 0) (.pi_apply encBits 3))
+    (binarySignedMul_polyTime (.pi_apply encBits 1) (.pi_apply encBits 2))
 
 theorem binarySignedCrossLT_eq_true_iff (x y dx dy : List Bool) :
     binarySignedCrossLT ![x, y, dx, dy] = [true] ↔

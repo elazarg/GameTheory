@@ -109,7 +109,8 @@ private theorem sameSignFlag_comp {Input : Type} {input : Input ↪ List Bool}
   have hboth := andFlag_polyTime.comp (hnotx.prod hnoty)
   exact orFlag_polyTime.comp (hand.prod hboth)
 
-private theorem binarySignedAdd_comp {Input : Type} {input : Input ↪ List Bool}
+/-- Signed addition composes certified word producers on their original input encoding. -/
+@[fun_prop] theorem binarySignedAdd_polyTime {Input : Type} {input : Input ↪ List Bool}
     {x y : Input → List Bool} (hx : ComputableInPolyTime x input encBits)
     (hy : ComputableInPolyTime y input encBits) :
     ComputableInPolyTime (fun a => binarySignedAdd (x a) (y a)) input encBits := by
@@ -130,11 +131,6 @@ private theorem binarySignedAdd_comp {Input : Type} {input : Input ↪ List Bool
   have hopp := select_polyTime.comp (hle.prod (hleft.prod hright))
   exact select_polyTime.comp (hflag.prod (hsame.prod hopp))
 
-@[fun_prop] theorem binarySignedAdd_polyTime :
-    ComputableInPolyTime (fun v : Fin 2 → List Bool => binarySignedAdd (v 0) (v 1))
-      (encPi encBits) encBits :=
-  binarySignedAdd_comp (.pi_apply encBits 0) (.pi_apply encBits 1)
-
 /-- Subtract signed words by composing addition and header negation. -/
 def binarySignedSub (x y : List Bool) : List Bool := binarySignedAdd x (binarySignedNeg y)
 
@@ -149,22 +145,12 @@ theorem binarySignedSub_length (x y : List Bool) :
   unfold binarySignedSub
   omega
 
-private theorem binarySignedNeg_comp {Input : Type} {input : Input ↪ List Bool}
-    {x : Input → List Bool} (hx : ComputableInPolyTime x input encBits) :
-    ComputableInPolyTime (fun a => binarySignedNeg (x a)) input encBits := by
-  have hhead := ComputableInPolyTime.bitsCons
-    ((ComputableInPolyTime.headD false).comp hx) (.const [])
-  have hnot := notFlag_polyTime.comp hhead
-  have htail := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hx
-  exact ComputableInPolyTime.bitsAppend hnot htail
-
-@[fun_prop] theorem binarySignedSub_polyTime :
-    ComputableInPolyTime (fun v : Fin 2 → List Bool => binarySignedSub (v 0) (v 1))
-      (encPi encBits) encBits := by
-  have hx : ComputableInPolyTime (fun v : Fin 2 → List Bool => v 0)
-      (encPi encBits) encBits := .pi_apply encBits 0
-  have hy : ComputableInPolyTime (fun v : Fin 2 → List Bool => v 1)
-      (encPi encBits) encBits := .pi_apply encBits 1
-  exact binarySignedAdd_comp hx (binarySignedNeg_comp hy)
+/-- Signed subtraction composes addition and negation without changing either input encoding. -/
+@[fun_prop] theorem binarySignedSub_polyTime
+    {Input : Type} {input : Input ↪ List Bool} {x y : Input → List Bool}
+    (hx : ComputableInPolyTime x input encBits)
+    (hy : ComputableInPolyTime y input encBits) :
+    ComputableInPolyTime (fun a => binarySignedSub (x a) (y a)) input encBits :=
+  binarySignedAdd_polyTime hx (binarySignedNeg_polyTime hy)
 
 end GameTheory.Complexity.Backend

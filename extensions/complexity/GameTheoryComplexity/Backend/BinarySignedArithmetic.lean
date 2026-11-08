@@ -129,69 +129,73 @@ theorem binarySignedNeg_length (x : List Bool) : (binarySignedNeg x).length ≤ 
   simp only [binarySignedNeg, List.length_append, hf, List.length_tail]
   omega
 
-@[fun_prop] theorem binarySignedMul_polyTime :
-    ComputableInPolyTime (fun v : Fin 2 → List Bool => binarySignedMul (v 0) (v 1))
-      (encPi encBits) encBits := by
-  unfold binarySignedMul
-  fun_prop (maxSteps := 32)
+/-- Signed multiplication composes uniformly with two certified word producers. -/
+@[fun_prop] theorem binarySignedMul_polyTime
+    {Input : Type} {input : Input ↪ List Bool} {x y : Input → List Bool}
+    (hx : ComputableInPolyTime x input encBits)
+    (hy : ComputableInPolyTime y input encBits) :
+    ComputableInPolyTime (fun a => binarySignedMul (x a) (y a)) input encBits := by
+  have hheadx : ComputableInPolyTime (fun a : Input => (x a).headD false) input encBool :=
+    (ComputableInPolyTime.headD false).comp hx
+  have hheady : ComputableInPolyTime (fun a : Input => (y a).headD false) input encBool :=
+    (ComputableInPolyTime.headD false).comp hy
+  have hsign := ComputableInPolyTime.bool_xor.comp (hheadx.prod hheady)
+  have hheader := ComputableInPolyTime.bitsCons hsign (ComputableInPolyTime.const [])
+  have htailx := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hx
+  have htaily := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hy
+  exact ComputableInPolyTime.bitsAppend hheader (binaryWordMul_polyTime htailx htaily)
 
-@[fun_prop] theorem binarySignedLTFlag_polyTime :
-    ComputableInPolyTime (fun v : Fin 2 → List Bool => binarySignedLTFlag (v 0) (v 1))
-      (encPi encBits) encBits := by
-  have hx : ComputableInPolyTime (fun v : Fin 2 → List Bool => v 0)
-      (encPi encBits) encBits := .pi_apply encBits 0
-  have hy : ComputableInPolyTime (fun v : Fin 2 → List Bool => v 1)
-      (encPi encBits) encBits := .pi_apply encBits 1
-  have hnegx : ComputableInPolyTime (fun v : Fin 2 → List Bool => effectiveNegative (v 0))
-      (encPi encBits) encBits := by
-    have hbits : ComputableInPolyTime (fun v : Fin 2 → List Bool =>
-        [(v 0).headD false]) (encPi encBits) encBits :=
+/-- Strict signed comparison retains the complete encoding of both word producers. -/
+@[fun_prop] theorem binarySignedLTFlag_polyTime
+    {Input : Type} {input : Input ↪ List Bool} {x y : Input → List Bool}
+    (hx : ComputableInPolyTime x input encBits)
+    (hy : ComputableInPolyTime y input encBits) :
+    ComputableInPolyTime (fun a => binarySignedLTFlag (x a) (y a)) input encBits := by
+  have hnegx : ComputableInPolyTime (fun a : Input => effectiveNegative (x a))
+      input encBits := by
+    have hbits : ComputableInPolyTime (fun a : Input => [(x a).headD false]) input encBits :=
       .bitsCons ((ComputableInPolyTime.headD false).comp hx) (.const [])
-    have htail : ComputableInPolyTime (fun v : Fin 2 → List Bool => (v 0).tail)
-        (encPi encBits) encBits :=
+    have htail : ComputableInPolyTime (fun a : Input => (x a).tail) input encBits :=
       (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hx
     have hcmp := binaryCertificateLE_comp htail (.const [])
     have hraw := notFlag_polyTime.comp hcmp
     exact andFlag_polyTime.comp (hbits.prod hraw)
-  have hnegy : ComputableInPolyTime (fun v : Fin 2 → List Bool => effectiveNegative (v 1))
-      (encPi encBits) encBits := by
-    have hbits : ComputableInPolyTime (fun v : Fin 2 → List Bool =>
-        [(v 1).headD false]) (encPi encBits) encBits :=
+  have hnegy : ComputableInPolyTime (fun a : Input => effectiveNegative (y a))
+      input encBits := by
+    have hbits : ComputableInPolyTime (fun a : Input => [(y a).headD false]) input encBits :=
       .bitsCons ((ComputableInPolyTime.headD false).comp hy) (.const [])
-    have htail : ComputableInPolyTime (fun v : Fin 2 → List Bool => (v 1).tail)
-        (encPi encBits) encBits :=
+    have htail : ComputableInPolyTime (fun a : Input => (y a).tail) input encBits :=
       (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hy
     have hcmp := binaryCertificateLE_comp htail (.const [])
     have hraw := notFlag_polyTime.comp hcmp
     exact andFlag_polyTime.comp (hbits.prod hraw)
-  have htx : ComputableInPolyTime (fun v : Fin 2 → List Bool => (v 0).tail)
-      (encPi encBits) encBits :=
+  have htx : ComputableInPolyTime (fun a : Input => (x a).tail) input encBits :=
     (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hx
-  have hty : ComputableInPolyTime (fun v : Fin 2 → List Bool => (v 1).tail)
-      (encPi encBits) encBits :=
+  have hty : ComputableInPolyTime (fun a : Input => (y a).tail) input encBits :=
     (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hy
   have hxy := binaryCertificateLE_comp htx hty
   have hyx := binaryCertificateLE_comp hty htx
   have hrawxy := notFlag_polyTime.comp hxy
   have hrawyx := notFlag_polyTime.comp hyx
-  have htrue : ComputableInPolyTime (fun _ : Fin 2 → List Bool => [true])
-      (encPi encBits) encBits := .const [true]
-  have hfalse : ComputableInPolyTime (fun _ : Fin 2 → List Bool => [false])
-      (encPi encBits) encBits := .const [false]
-  have hbranchNeg : ComputableInPolyTime (fun v : Fin 2 → List Bool =>
-      select (effectiveNegative (v 1)) (signedRawLT (v 1).tail (v 0).tail) [true])
-      (encPi encBits) encBits :=
-    select_polyTime.comp (hnegy.prod (hrawxy.prod htrue))
-  have hbranchPos : ComputableInPolyTime (fun v : Fin 2 → List Bool =>
-      select (effectiveNegative (v 1)) [false] (signedRawLT (v 0).tail (v 1).tail))
-      (encPi encBits) encBits :=
-    select_polyTime.comp (hnegy.prod (hfalse.prod hrawyx))
+  have htrue : ComputableInPolyTime (fun _ : Input => [true]) input encBits := .const [true]
+  have hfalse : ComputableInPolyTime (fun _ : Input => [false]) input encBits := .const [false]
+  have hbranchNeg : ComputableInPolyTime (fun a : Input =>
+      select (effectiveNegative (y a)) (signedRawLT (y a).tail (x a).tail) [true])
+      input encBits := select_polyTime.comp (hnegy.prod (hrawxy.prod htrue))
+  have hbranchPos : ComputableInPolyTime (fun a : Input =>
+      select (effectiveNegative (y a)) [false] (signedRawLT (x a).tail (y a).tail))
+      input encBits := select_polyTime.comp (hnegy.prod (hfalse.prod hrawyx))
   exact select_polyTime.comp (hnegx.prod (hbranchNeg.prod hbranchPos))
 
-@[fun_prop] theorem binarySignedNeg_polyTime :
-    ComputableInPolyTime (fun v : Fin 1 → List Bool => binarySignedNeg (v 0))
-      (encPi encBits) encBits := by
-  unfold binarySignedNeg
-  fun_prop (maxSteps := 32)
+/-- Header negation composes with a certified producer on any declared input encoding. -/
+@[fun_prop] theorem binarySignedNeg_polyTime
+    {Input : Type} {input : Input ↪ List Bool} {x : Input → List Bool}
+    (hx : ComputableInPolyTime x input encBits) :
+    ComputableInPolyTime (fun a => binarySignedNeg (x a)) input encBits := by
+  have hhead := ComputableInPolyTime.bitsCons
+    ((ComputableInPolyTime.headD false).comp hx) (ComputableInPolyTime.const [])
+  have hnot := notFlag_polyTime.comp hhead
+  have htail := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hx
+  exact ComputableInPolyTime.bitsAppend hnot htail
 
 end GameTheory.Complexity.Backend
