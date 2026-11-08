@@ -1,7 +1,8 @@
 # D69: standard End-of-Line and the PPAD interface
 
-Status: adopted for the standard raw target and local PPAD classification;
-serialized circuit normalization remains open.
+Status: historical backend decision. [D77](D77-native-computation-certificates.md)
+supersedes the local PPAD definitions and compilation route, retaining the
+standard raw relation and the mathematical distinction recorded here.
 
 ## Question and alternatives
 

@@ -62,26 +62,27 @@ Serialized totality, TFNP and general Nash PPAD membership are proved through
 finite complementary paths and actual polynomial-time pointer and answer
 machines. Analytic existence remains confined to the base `Analysis` root.
 
-Import `GameTheoryComplexity.Backend.EndOfLineVerifier` for a total circuit-encoded
-End-of-Line
-endpoint relation in TFNP and its actual polynomial-time verifier.
-`Backend.SearchReduction` provides certified instance maps and decoders preserving
-every target solution. The generic finite endpoint theorem lives independently in
-the base `GameTheory.Math.EndOfLine` module. This slice uses mutually consistent
-edges. Import `GameTheoryComplexity.PPAD` for the standard asymmetric raw
-End-of-Line relation, PPAD membership and closure, and a certified reduction
-showing consistent-edge endpoint search is PPAD-complete. Raw End-of-Line is complete
-by definition of the class. Uniformly generated normalized circuit instances
-give the reverse reduction with an actual FP instance map and every-answer decoder;
-Signed rectangular Nash PPAD-completeness is supplied by `GameTheoryComplexity.BimatrixNash`.
+Import `GameTheoryComplexity.Backend.EndOfLineVerifier` for the total
+circuit-encoded endpoint relation and its native Boolean verifier. The generic
+finite endpoint theorem lives in the dependency-free base mathematics.
+`Cslib.Complexity.SearchReducible` supplies efficient instance maps and decoders
+that preserve every target answer; source FNP verification remains independent.
 
-`Backend.CircuitPrefixCompiler` provides an actual polynomial-time serialized
-prefix restriction component. It preserves exact optional evaluation on all
-source codes at positive live width, rejects malformed syntax and guards empty
-outputs. `Backend.UniformCircuitSpecialization` joins this compiler to actual
-uniform generation; `Backend.CircuitVectorEmission` serializes the output coordinates
-in polynomial time. `Backend.EndOfLineCircuitGeneration` specializes normalized
-pointer computations and preserves the invalid-source fallback.
+Import `GameTheoryComplexity.PPAD` for native `PPAD encBits` membership and
+`SearchComplete @PPAD encBits` theorems for both concrete endpoint and asymmetric
+raw End-of-Line. Completeness covers arbitrary encoded instance types. Raw
+End-of-Line is proved complete for the upstream class. Broken initial links,
+source masking, disconnected inconsistent pointers and invalid-source fallbacks
+have explicit semantic proofs.
+
+`Backend.NativeCircuitFamilies` specializes native uniform circuit generation.
+`Backend.CircuitCompiler` certifies concrete scalar serialization and exact
+optional evaluation; `Backend.CircuitVectorEmission` emits uniformly efficient
+word-valued circuit vectors, including width zero. `Backend.PointerCircuitGeneration`
+realizes any efficient width-preserving pointer pair on its prescribed cube.
+`Backend.EndOfLineCircuitGeneration` realizes native active-edge filtering, and
+`Backend.NativeEndOfLineReduction` decodes every raw or endpoint answer back to
+the native family.
 
 `Backend.GridRoutingWords` encodes the endpoint-preserving planar routed graph
 using two coordinate fields, totaling `4*b+6` bits for `2^b` original vertices.

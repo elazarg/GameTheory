@@ -10721,3 +10721,38 @@ observations and outcome below are preserved as the record of that run.
   pass their focused builds (1,980 and 1,981 jobs), with no first-party
   diagnostics; all 110 owned declarations in the expanded arithmetic and
   convention slice have only standard transitive axioms.
+- **Closure limit:** the first stable-4.35 build of the probabilistic closure
+  reaches `Complexity.Probability.PMF.Bind`, whose proofs use generalized
+  infinite-sum APIs introduced after the selected stable Mathlib. The earlier
+  successful arithmetic/circuit checks therefore do not establish compatibility
+  of that larger closure. Continue validation in a separate scratch environment
+  matching the pinned upstream toolchain; keep the repository on stable releases
+  and complete the shared 4.36 bump when its final release is available. No
+  dependency source or tracked toolchain is patched to hide this observation.
+- **Native API result (2026-11-09):** the direct interface supports both
+  concrete endpoint and asymmetric raw completeness for native PPAD, across
+  arbitrary encoded instance types. Uniform circuit generation has an actual
+  polynomial-time serializer, including zero width. Origin masking requires
+  filtering inactive pointers; a source-aware decoder preserves every target
+  answer and returns the native zero witness when the source promise fails.
+  This supports replacing the local class calculus, rather than equating the
+  two pointer conventions. The focused matching-toolchain endpoint build
+  passes 4,472 jobs; all 598 owned declarations in the expanded arithmetic,
+  compiler and native classification closure have only standard transitive
+  axioms (`NativeFoundationAudit.lean`, `native-ppad-foundation-axioms.log`). The
+  4,488-job public-classification/control build also passes: broken initial
+  links, isolated inconsistent vertices, malformed circuits and width-zero
+  instances retain their prescribed answers.
+- **Probability result:** native preprocessing and intrinsic-halting compilation
+  preserve the full program PMF law, with one machine chosen before the sample
+  degree. The sample/serializer/composition/facade build passes 6,714 jobs; the
+  uniform-projection closure passes 6,112 jobs. All 58 owned declarations in
+  that closure have standard transitive axioms (`RandomizedAudit.lean`,
+  `randomized-axioms.log`). The base import/configuration/manifest source audit
+  passes. These matching-toolchain probes do not claim stable-4.35 compatibility
+  of the larger probability closure.
+- **Outcome:** support the native API choice in
+  [D77](decisions/D77-native-computation-certificates.md). The representative
+  semantic and execution gates pass; downstream migration, full package audits,
+  both consumer configurations and the shared final-release bump remain delivery
+  obligations. No RC toolchain is adopted in tracked sources.
