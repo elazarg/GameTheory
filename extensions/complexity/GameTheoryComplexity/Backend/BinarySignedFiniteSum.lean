@@ -7,7 +7,7 @@ public import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 
 /-! Signed summation over a fixed, compile-time number of indexed queries. -/
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 open scoped BigOperators
 
 /-- Sum a fixed number of signed queries; indexed rulers have canonical false contents. -/
@@ -17,22 +17,40 @@ def binarySignedFiniteSum {p : ℕ} (term : (Fin (p + 1) → List Bool) → List
   | n + 1, params => binarySignedAdd (binarySignedFiniteSum term n params)
       (term (Fin.cons (List.replicate n false) params))
 
-/-- The count is fixed in the polynomial-time certificate. -/
-theorem binarySignedFiniteSum_cobham {p : ℕ}
-    {term : (Fin (p + 1) → List Bool) → List Bool} (ht : Cobham term) (n : ℕ) :
-    Cobham (binarySignedFiniteSum term n) := by
-  induction n with
-  | zero => exact Cobham.empty
-  | succ n ih =>
-    have hg : ∀ i : Fin (p + 1), Cobham fun v : Fin p → List Bool =>
-        (Fin.cons (List.replicate n false) v : Fin (p + 1) → List Bool) i := by
-      intro i
-      exact Fin.cases (Cobham.const (List.replicate n false)) (fun a => .proj a) i
-    exact Cobham.comp₂ binarySignedAdd_cobham ih (Cobham.comp ht hg)
+private theorem binarySignedFiniteSum_step_polyTime {p : ℕ}
+    {term : (Fin (p + 1) → List Bool) → List Bool}
+    (ht : ComputableInPolyTime term (encPi encBits) encBits) (n : ℕ)
+    (hparams : ComputableInPolyTime (binarySignedFiniteSum term n)
+      (encPi encBits) encBits) :
+    ComputableInPolyTime
+      (fun v : Fin p → List Bool =>
+        binarySignedAdd (binarySignedFiniteSum term n v)
+          (term (Fin.cons (List.replicate n false) v)))
+      (encPi encBits) encBits := by
+  have hcons : ComputableInPolyTime
+      (fun v : Fin p → List Bool => Fin.cons (List.replicate n false) v)
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    refine Fin.cases ?_ (fun j => ?_) i
+    · exact .const (List.replicate n false)
+    · exact ComputableInPolyTime.pi_apply encBits j
+  exact binarySignedAdd_polyTime hparams (ht.comp hcons)
 
-theorem binarySignedFiniteSum_mem_FPn {p : ℕ}
-    {term : (Fin (p + 1) → List Bool) → List Bool} (ht : Cobham term) (n : ℕ) :
-    FPn (binarySignedFiniteSum term n) := cobham_iff_FPn.mp (binarySignedFiniteSum_cobham ht n)
+/-- The count is fixed in this polynomial-time certificate. -/
+@[fun_prop] theorem binarySignedFiniteSum_polyTime {p : ℕ}
+    {term : (Fin (p + 1) → List Bool) → List Bool}
+    (ht : ComputableInPolyTime term (encPi encBits) encBits) (n : ℕ) :
+    ComputableInPolyTime (binarySignedFiniteSum term n) (encPi encBits) encBits := by
+  induction n with
+  | zero => exact .const []
+  | succ n ih =>
+    change ComputableInPolyTime
+      (fun v : Fin p → List Bool =>
+        binarySignedAdd (binarySignedFiniteSum term n v)
+          (term (Fin.cons (List.replicate n false) v)))
+      (encPi encBits) encBits
+    exact binarySignedFiniteSum_step_polyTime ht n ih
 
 /-- Signed values add exactly, without field-width or sign assumptions. -/
 theorem binarySignedFiniteSum_value {p : ℕ}
@@ -51,21 +69,17 @@ def binarySignedQuerySum {p : ℕ}
   queries.foldr (fun query rest => binarySignedAdd (query v) rest) []
 
 /-- A fixed finite collection of polynomial-time queries has a polynomial-time signed sum. -/
-theorem binarySignedQuerySum_cobham {p : ℕ}
+@[fun_prop] theorem binarySignedQuerySum_polyTime {p : ℕ}
     (queries : List ((Fin p → List Bool) → List Bool))
-    (hq : ∀ query ∈ queries, Cobham query) : Cobham (binarySignedQuerySum queries) := by
+    (hq : ∀ query ∈ queries,
+      ComputableInPolyTime query (encPi encBits) encBits) :
+    ComputableInPolyTime (binarySignedQuerySum queries) (encPi encBits) encBits := by
   induction queries with
-  | nil => exact Cobham.empty
+  | nil => exact .const []
   | cons query queries ih =>
-    have ht : Cobham (binarySignedQuerySum queries) :=
+    have ht : ComputableInPolyTime (binarySignedQuerySum queries) (encPi encBits) encBits :=
       ih (fun q h => hq q (List.mem_cons_of_mem _ h))
-    exact (Cobham.comp₂ binarySignedAdd_cobham (hq query (List.mem_cons_self)) ht).of_eq
-      fun _ => rfl
-
-theorem binarySignedQuerySum_mem_FPn {p : ℕ}
-    (queries : List ((Fin p → List Bool) → List Bool))
-    (hq : ∀ query ∈ queries, Cobham query) : FPn (binarySignedQuerySum queries) :=
-  cobham_iff_FPn.mp (binarySignedQuerySum_cobham queries hq)
+    exact binarySignedAdd_polyTime (hq query List.mem_cons_self) ht
 
 /-- Signed values add without overflow or representation assumptions. -/
 theorem binarySignedQuerySum_value {p : ℕ}
