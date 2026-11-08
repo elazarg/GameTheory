@@ -1,6 +1,7 @@
 module
 
 public import GameTheoryComplexity.Backend.BinarySignedArithmetic
+public import GameTheoryComplexity.Backend.WordOperations
 public import GameTheoryComplexity.Backend.BinaryWordSubtraction
 
 @[expose] public section
@@ -11,28 +12,25 @@ retain the sign and add magnitudes. Padded and negative-zero inputs are accepted
 -/
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
+open GameTheory.Complexity.Backend.WordOperations
 
 private def sameSignFlag (x y : List Bool) : List Bool :=
-  orBit (andBit (bitAt [] x) (bitAt [] y))
-    (andBit (notBit (bitAt [] x)) (notBit (bitAt [] y)))
+  orFlag (andFlag [x.headD false] [y.headD false])
+    (andFlag (notFlag [x.headD false]) (notFlag [y.headD false]))
 
 /-- Add two sign-header, little-endian-magnitude words without numeric-value loops. -/
 def binarySignedAdd (x y : List Bool) : List Bool :=
-  caseBit₀ (sameSignFlag x y)
-    (bitAt [] x ++ binaryCertificateAdd ![x.tail, y.tail])
-    (caseBit₀ (binaryCertificateLE ![y.tail, x.tail])
-      (bitAt [] x ++ binaryWordSub x.tail y.tail)
-      (bitAt [] y ++ binaryWordSub y.tail x.tail))
-
-private theorem headFlag (x : List Bool) : bitAt [] x = [x.headD false] := by
-  cases x with
-  | nil => rfl
-  | cons b x => cases b <;> rfl
+  select (orFlag (andFlag [x.headD false] [y.headD false])
+      (andFlag (notFlag [x.headD false]) (notFlag [y.headD false])))
+    ([x.headD false] ++ binaryCertificateAdd ![x.tail, y.tail])
+    (select (binaryCertificateLE ![y.tail, x.tail])
+      ([x.headD false] ++ binaryWordSub x.tail y.tail)
+      ([y.headD false] ++ binaryWordSub y.tail x.tail))
 
 private theorem sameSignFlag_value (x y : List Bool) :
     sameSignFlag x y = [decide (x.headD false = y.headD false)] := by
-  rw [sameSignFlag, headFlag, headFlag]
+  rw [sameSignFlag]
   generalize x.headD false = a
   generalize y.headD false = b
   cases a <;> cases b <;> rfl
@@ -40,48 +38,102 @@ private theorem sameSignFlag_value (x y : List Bool) :
 /-- Signed addition is exact for arbitrary padding and either representation of zero. -/
 theorem binarySignedAdd_value (x y : List Bool) :
     binarySignedValue (binarySignedAdd x y) = binarySignedValue x + binarySignedValue y := by
-  rw [binarySignedAdd, sameSignFlag_value, headFlag, headFlag, binaryCertificateLE_value]
+  change binarySignedValue (select (sameSignFlag x y)
+    ([x.headD false] ++ binaryCertificateAdd ![x.tail, y.tail])
+    (select (binaryCertificateLE ![y.tail, x.tail])
+      ([x.headD false] ++ binaryWordSub x.tail y.tail)
+      ([y.headD false] ++ binaryWordSub y.tail x.tail))) = _
+  rw [sameSignFlag_value, binaryCertificateLE_value]
   unfold binarySignedValue
   generalize x.headD false = sx
   generalize y.headD false = sy
   cases sx <;> cases sy <;>
-    by_cases h : Nat.fromBitsLE y.tail ≤ Nat.fromBitsLE x.tail <;>
-    simp [caseBit₀, h, binaryCertificateAdd_value, binaryWordSub_value] <;> omega
+    by_cases h : ofBits y.tail ≤ ofBits x.tail <;>
+    simp [select, h, binaryCertificateAdd_value, binaryWordSub_value] <;> omega
 
 /-- The output length is linear in the input word lengths. -/
 theorem binarySignedAdd_length (x y : List Bool) :
     (binarySignedAdd x y).length ≤ max x.length y.length + 2 := by
-  rw [binarySignedAdd, sameSignFlag_value, headFlag, headFlag, binaryCertificateLE_value]
+  change (select (sameSignFlag x y)
+    ([x.headD false] ++ binaryCertificateAdd ![x.tail, y.tail])
+    (select (binaryCertificateLE ![y.tail, x.tail])
+      ([x.headD false] ++ binaryWordSub x.tail y.tail)
+      ([y.headD false] ++ binaryWordSub y.tail x.tail))).length ≤ _
+  rw [sameSignFlag_value, binaryCertificateLE_value]
   have hs := binaryWordSub_length x.tail y.tail
   have ht := binaryWordSub_length y.tail x.tail
   generalize x.headD false = sx
   generalize y.headD false = sy
   cases sx <;> cases sy <;>
-    by_cases h : Nat.fromBitsLE y.tail ≤ Nat.fromBitsLE x.tail <;>
-    simp [h, caseBit₀, binaryCertificateAdd_length] <;>
+    by_cases h : ofBits y.tail ≤ ofBits x.tail <;>
+    simp [h, select, binaryCertificateAdd_length] <;>
     simp only [List.length_tail] at * <;> omega
 
-/-- Signed addition has a compositional Cobham certificate. -/
-theorem binarySignedAdd_cobham : Cobham fun v : Fin 2 → List Bool =>
-    binarySignedAdd (v 0) (v 1) := by
-  have hx : Cobham fun v : Fin 2 → List Bool => bitAt [] (v 0) :=
-    Cobham.comp₂ Cobham.bitAtFn (Cobham.const []) (.proj 0)
-  have hy : Cobham fun v : Fin 2 → List Bool => bitAt [] (v 1) :=
-    Cobham.comp₂ Cobham.bitAtFn (Cobham.const []) (.proj 1)
-  have tx : Cobham fun v : Fin 2 → List Bool => (v 0).tail := Cobham.tailFn (.proj 0)
-  have ty : Cobham fun v : Fin 2 → List Bool => (v 1).tail := Cobham.tailFn (.proj 1)
-  have hs : Cobham fun v : Fin 2 → List Bool => sameSignFlag (v 0) (v 1) :=
-    Cobham.orFn (Cobham.andFn hx hy) (Cobham.andFn (Cobham.notFn hx) (Cobham.notFn hy))
-  exact (Cobham.iteFn hs
-    (Cobham.appendFn hx (Cobham.comp₂ binaryCertificateAdd_cobham tx ty))
-    (Cobham.iteFn (Cobham.comp₂ binaryCertificateLE_cobham ty tx)
-      (Cobham.appendFn hx (Cobham.comp₂ binaryWordSub_cobham tx ty))
-      (Cobham.appendFn hy (Cobham.comp₂ binaryWordSub_cobham ty tx)))).of_eq fun _ => rfl
+private theorem binaryCertificateAdd_comp {Input : Type} {input : Input ↪ List Bool}
+    {x y : Input → List Bool} (hx : ComputableInPolyTime x input encBits)
+    (hy : ComputableInPolyTime y input encBits) :
+    ComputableInPolyTime (fun a => binaryCertificateAdd ![x a, y a]) input encBits := by
+  have htable : ComputableInPolyTime (fun a : Input => ![x a, y a])
+      input (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hx
+    · exact hy
+  exact binaryCertificateAdd_polyTime.comp htable
 
-/-- Signed addition belongs to polynomial time at arity two. -/
-theorem binarySignedAdd_mem_FPn :
-    FPn (fun v : Fin 2 → List Bool => binarySignedAdd (v 0) (v 1)) :=
-  cobham_iff_FPn.mp binarySignedAdd_cobham
+private theorem binaryCertificateLE_comp {Input : Type} {input : Input ↪ List Bool}
+    {x y : Input → List Bool} (hx : ComputableInPolyTime x input encBits)
+    (hy : ComputableInPolyTime y input encBits) :
+    ComputableInPolyTime (fun a => binaryCertificateLE ![x a, y a]) input encBits := by
+  have htable : ComputableInPolyTime (fun a : Input => ![x a, y a])
+      input (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hx
+    · exact hy
+  exact binaryCertificateLE_polyTime.comp htable
+
+private theorem sameSignFlag_comp {Input : Type} {input : Input ↪ List Bool}
+    {x y : Input → List Bool} (hx : ComputableInPolyTime x input encBits)
+    (hy : ComputableInPolyTime y input encBits) :
+    ComputableInPolyTime (fun a => sameSignFlag (x a) (y a)) input encBits := by
+  have hheadx := ComputableInPolyTime.bitsCons
+    ((ComputableInPolyTime.headD false).comp hx) (.const [])
+  have hheady := ComputableInPolyTime.bitsCons
+    ((ComputableInPolyTime.headD false).comp hy) (.const [])
+  have hand := andFlag_polyTime.comp (hheadx.prod hheady)
+  have hnotx := notFlag_polyTime.comp hheadx
+  have hnoty := notFlag_polyTime.comp hheady
+  have hboth := andFlag_polyTime.comp (hnotx.prod hnoty)
+  exact orFlag_polyTime.comp (hand.prod hboth)
+
+private theorem binarySignedAdd_comp {Input : Type} {input : Input ↪ List Bool}
+    {x y : Input → List Bool} (hx : ComputableInPolyTime x input encBits)
+    (hy : ComputableInPolyTime y input encBits) :
+    ComputableInPolyTime (fun a => binarySignedAdd (x a) (y a)) input encBits := by
+  have hflag := sameSignFlag_comp hx hy
+  have hheadx := ComputableInPolyTime.bitsCons
+    ((ComputableInPolyTime.headD false).comp hx) (.const [])
+  have hheady := ComputableInPolyTime.bitsCons
+    ((ComputableInPolyTime.headD false).comp hy) (.const [])
+  have htailx := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hx
+  have htaily := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hy
+  have hadd := binaryCertificateAdd_comp htailx htaily
+  have hle := binaryCertificateLE_comp htaily htailx
+  have hsubxy := binaryWordSub_polyTime htailx htaily
+  have hsubyx := binaryWordSub_polyTime htaily htailx
+  have hsame := ComputableInPolyTime.bitsAppend hheadx hadd
+  have hleft := ComputableInPolyTime.bitsAppend hheadx hsubxy
+  have hright := ComputableInPolyTime.bitsAppend hheady hsubyx
+  have hopp := select_polyTime.comp (hle.prod (hleft.prod hright))
+  exact select_polyTime.comp (hflag.prod (hsame.prod hopp))
+
+@[fun_prop] theorem binarySignedAdd_polyTime :
+    ComputableInPolyTime (fun v : Fin 2 → List Bool => binarySignedAdd (v 0) (v 1))
+      (encPi encBits) encBits :=
+  binarySignedAdd_comp (.pi_apply encBits 0) (.pi_apply encBits 1)
 
 /-- Subtract signed words by composing addition and header negation. -/
 def binarySignedSub (x y : List Bool) : List Bool := binarySignedAdd x (binarySignedNeg y)
@@ -97,13 +149,22 @@ theorem binarySignedSub_length (x y : List Bool) :
   unfold binarySignedSub
   omega
 
-theorem binarySignedSub_cobham : Cobham fun v : Fin 2 → List Bool =>
-    binarySignedSub (v 0) (v 1) := by
-  exact (Cobham.comp₂ binarySignedAdd_cobham (.proj 0)
-    (Cobham.comp binarySignedNeg_cobham fun _ => Cobham.proj 1)).of_eq fun _ => rfl
+private theorem binarySignedNeg_comp {Input : Type} {input : Input ↪ List Bool}
+    {x : Input → List Bool} (hx : ComputableInPolyTime x input encBits) :
+    ComputableInPolyTime (fun a => binarySignedNeg (x a)) input encBits := by
+  have hhead := ComputableInPolyTime.bitsCons
+    ((ComputableInPolyTime.headD false).comp hx) (.const [])
+  have hnot := notFlag_polyTime.comp hhead
+  have htail := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hx
+  exact ComputableInPolyTime.bitsAppend hnot htail
 
-theorem binarySignedSub_mem_FPn :
-    FPn (fun v : Fin 2 → List Bool => binarySignedSub (v 0) (v 1)) :=
-  cobham_iff_FPn.mp binarySignedSub_cobham
+@[fun_prop] theorem binarySignedSub_polyTime :
+    ComputableInPolyTime (fun v : Fin 2 → List Bool => binarySignedSub (v 0) (v 1))
+      (encPi encBits) encBits := by
+  have hx : ComputableInPolyTime (fun v : Fin 2 → List Bool => v 0)
+      (encPi encBits) encBits := .pi_apply encBits 0
+  have hy : ComputableInPolyTime (fun v : Fin 2 → List Bool => v 1)
+      (encPi encBits) encBits := .pi_apply encBits 1
+  exact binarySignedAdd_comp hx (binarySignedNeg_comp hy)
 
 end GameTheory.Complexity.Backend
