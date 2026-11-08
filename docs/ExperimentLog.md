@@ -11419,3 +11419,12 @@ the measured ones by that workstream only.
   consistent-edge predicates. With a genuine source, native witnesses are
   exactly fixed-width non-source endpoints. Connecting the serialized problems
   and their efficient reductions remains pending.
+- **Representation check:** multiplication's output width follows a
+  bit-dependent recurrence; replacing it by the usual sum of operand widths
+  would change serialized outputs. The native implementation retains that
+  recurrence and proves the original byte equations. Unsigned subtraction
+  retains an empty strict-underflow result and padded non-underflow zeros.
+  Native multiplication, subtraction and signed multiplication/order/negation
+  pass their focused builds (1,980 and 1,981 jobs), with no first-party
+  diagnostics; all 110 owned declarations in the expanded arithmetic and
+  convention slice have only standard transitive axioms.
