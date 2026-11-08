@@ -6,117 +6,94 @@ public import GameTheoryComplexity.Backend.BinarySignedAddition
 
 /-! Fixed-width signed arithmetic with a length ruler.
 
-Every result is stored in exactly the ruler's width, so repeated arithmetic cannot
-accumulate representation padding. Values fitting the magnitude capacity are
-preserved; larger magnitudes are truncated explicitly.
+Every result is stored in exactly the ruler's width. Values fitting the
+magnitude capacity are preserved; larger magnitudes are truncated explicitly.
 -/
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
 
-private theorem fromBitsLE_take (w : ℕ) (x : List Bool) :
-    Nat.fromBitsLE (x.take w) = Nat.fromBitsLE x % 2 ^ w := by
-  by_cases hw : w ≤ x.length
-  · have hl : (x.take w).length = w := by simp [List.length_take, hw]
-    have hb : Nat.fromBitsLE (x.take w) < 2 ^ w := by
-      simpa only [hl] using Nat.fromBitsLE_lt_pow_length (x.take w)
-    have he : Nat.fromBitsLE x = Nat.fromBitsLE (x.take w) +
-        2 ^ w * Nat.fromBitsLE (x.drop w) := by
-      simpa only [hl, List.take_append_drop] using fromBitsLE_append (x.take w) (x.drop w)
-    rw [he]
-    simp [Nat.add_mod, Nat.mod_eq_of_lt hb]
-  · have hl : x.length ≤ w := by omega
-    have hb : Nat.fromBitsLE x < 2 ^ w :=
-      (Nat.fromBitsLE_lt_pow_length x).trans_le (Nat.pow_le_pow_right (by decide) hl)
-    simp [List.take_of_length_le hl, Nat.mod_eq_of_lt hb]
+open Cslib.BitString Turing.MultiTapeTM
 
-private theorem fromBitsLE_zero (w : ℕ) :
-    Nat.fromBitsLE (List.replicate w false) = 0 := by
-  induction w with
-  | zero => rfl
-  | succ w ih => simp [List.replicate_succ, Nat.fromBitsLE_cons, ih]
-
-theorem padTo_fromBitsLE (ruler x : List Bool) :
-    Nat.fromBitsLE (padTo ruler x) = Nat.fromBitsLE x % 2 ^ ruler.length := by
-  rw [padTo, fromBitsLE_take, fromBitsLE_append, fromBitsLE_zero]
-  simp
-
-private theorem headFlag (x : List Bool) : bitAt [] x = [x.headD false] := by
+private theorem ofBits_head_add_tail (x : List Bool) :
+    ofBits x = (x.headD false).toNat + 2 * ofBits x.tail := by
   cases x with
   | nil => rfl
-  | cons b x => cases b <;> rfl
+  | cons b t =>
+    simp only [ofBits, List.foldr_cons, Nat.bit_val, List.headD_cons, List.tail_cons]
+    omega
 
-/-- Normalize a signed word to exactly the total field width, including its header. -/
+private theorem ofBits_mod_two (x : List Bool) :
+    ofBits x % 2 = (x.headD false).toNat := by
+  rw [ofBits_head_add_tail]
+  have hb : (x.headD false).toNat ≤ 1 := by cases x.headD false <;> decide
+  omega
+
+/-- Normalize a signed word to exactly the ruler's width, truncating high bits. -/
 def binarySignedFixed (ruler x : List Bool) : List Bool :=
-  padTo ruler (bitAt [] x ++ padTo ruler.tail x.tail)
+  lowBits ruler.length (ofBits x)
 
 @[simp] theorem binarySignedFixed_length (ruler x : List Bool) :
-    (binarySignedFixed ruler x).length = ruler.length := padTo_length _ _
+    (binarySignedFixed ruler x).length = ruler.length := by
+  simp [binarySignedFixed]
 
 /-- Normalizing an already sized field preserves its bytes, including negative zero. -/
 theorem binarySignedFixed_eq_of_length (ruler x : List Bool) (hx : x.length = ruler.length) :
     binarySignedFixed ruler x = x := by
-  cases x with
-  | nil =>
-    have hr : ruler = [] := by simpa using hx.symm
-    subst ruler
-    rfl
-  | cons b x =>
-    have ht : x.length = ruler.tail.length := by simp only [List.length_tail]; simp at hx; omega
-    have hp : padTo ruler.tail x = x := by
-      rw [padTo_eq_append _ _ ht.le, ← ht, Nat.sub_self]
-      simp
-    rw [binarySignedFixed, headFlag, List.headD_cons, List.singleton_append, List.tail_cons, hp]
-    rw [padTo_eq_append _ _ hx.le, ← hx, Nat.sub_self]
-    simp
+  rw [binarySignedFixed, ← hx, ofBits, ← Cslib.BitString.lsbValue_eq_foldr_bit]
+  exact Cslib.BitString.lowBits_lsbValue x
 
 theorem binarySignedValue_natAbs (x : List Bool) :
-    (binarySignedValue x).natAbs = Nat.fromBitsLE x.tail := by
+    (binarySignedValue x).natAbs = ofBits x.tail := by
   unfold binarySignedValue
   split <;> simp
 
-/-- The stored word preserves exactly the representable magnitude, with the original sign. -/
+/-- The stored word preserves every representable signed value. -/
 theorem binarySignedFixed_value (ruler x : List Bool) (hr : 0 < ruler.length)
     (hx : (binarySignedValue x).natAbs < 2 ^ (ruler.length - 1)) :
     binarySignedValue (binarySignedFixed ruler x) = binarySignedValue x := by
-  have hlen : (bitAt [] x ++ padTo ruler.tail x.tail).length = ruler.length := by
-    rw [headFlag]
-    simp
+  have hmag : ofBits x.tail < 2 ^ (ruler.length - 1) := by
+    simpa only [binarySignedValue_natAbs] using hx
+  have hwidth : ruler.length = ruler.length - 1 + 1 := by omega
+  have hfit : ofBits x < 2 ^ ruler.length := by
+    rw [hwidth, Nat.pow_succ, ofBits_head_add_tail]
+    have hb : (x.headD false).toNat ≤ 1 := by cases x.headD false <;> decide
     omega
-  have he : padTo ruler (bitAt [] x ++ padTo ruler.tail x.tail) =
-      bitAt [] x ++ padTo ruler.tail x.tail := by
-    rw [padTo_eq_append _ _ hlen.le, hlen, Nat.sub_self]
-    simp
-  rw [binarySignedFixed, he, headFlag]
-  simp only [List.singleton_append, binarySignedValue, List.headD_cons, List.tail_cons]
-  have hmag : Nat.fromBitsLE x.tail < 2 ^ ruler.tail.length := by
-    simpa only [binarySignedValue_natAbs, List.length_tail] using hx
-  rw [padTo_fromBitsLE, Nat.mod_eq_of_lt hmag]
-  rfl
+  have hvalue : ofBits (binarySignedFixed ruler x) = ofBits x := by
+    exact Nat.foldr_bit_testBit (Nat.size_le.mpr hfit)
+  have hheadNat : ((binarySignedFixed ruler x).headD false).toNat =
+      (x.headD false).toNat := by
+    have hm := congrArg (fun n => n % 2) hvalue
+    simpa only [ofBits_mod_two] using hm
+  have hhead : (binarySignedFixed ruler x).headD false = x.headD false := by
+    cases b : (binarySignedFixed ruler x).headD false <;>
+      cases c : x.headD false <;>
+      simp only [b, c, Bool.toNat_false, Bool.toNat_true] at hheadNat ⊢ <;> omega
+  have htail : ofBits (binarySignedFixed ruler x).tail = ofBits x.tail := by
+    rw [ofBits_head_add_tail (binarySignedFixed ruler x), ofBits_head_add_tail x, hhead] at hvalue
+    omega
+  unfold binarySignedValue
+  rw [hhead, htail]
 
 /-- Fixed-width storage preserves zero, including when its ruler is empty. -/
 theorem binarySignedFixed_value_zero (ruler x : List Bool)
-    (hx : binarySignedValue x = 0) : binarySignedValue (binarySignedFixed ruler x) = 0 := by
+    (hx : binarySignedValue x = 0) :
+    binarySignedValue (binarySignedFixed ruler x) = 0 := by
   cases ruler with
   | nil => rfl
   | cons b ruler =>
-    rw [binarySignedFixed_value (b :: ruler) x (by simp) (by rw [hx]; simp), hx]
+    have hmag : (binarySignedValue x).natAbs < 2 ^ ((b :: ruler).length - 1) := by
+      rw [hx]
+      simp
+    rw [binarySignedFixed_value (b :: ruler) x (by simp) hmag, hx]
 
-theorem binarySignedFixed_cobham : Cobham fun v : Fin 2 → List Bool =>
-    binarySignedFixed (v 0) (v 1) :=
-  Cobham.padFn (.proj 0) (Cobham.appendFn
-    (Cobham.comp₂ Cobham.bitAtFn (Cobham.const []) (.proj 1))
-    (Cobham.padFn (Cobham.tailFn (.proj 0)) (Cobham.tailFn (.proj 1))))
-
-theorem binarySignedFixed_mem_FPn :
-    FPn (fun v : Fin 2 → List Bool => binarySignedFixed (v 0) (v 1)) :=
-  cobham_iff_FPn.mp binarySignedFixed_cobham
-
+/-- Every fixed-width word has a magnitude below its signed capacity. -/
 theorem binarySignedFixed_natAbs_lt (ruler x : List Bool) :
     (binarySignedValue (binarySignedFixed ruler x)).natAbs < 2 ^ (ruler.length - 1) := by
   rw [binarySignedValue_natAbs]
-  simpa only [List.length_tail, binarySignedFixed_length] using
-    Nat.fromBitsLE_lt_pow_length (binarySignedFixed ruler x).tail
+  have hlen := binarySignedFixed_length ruler x
+  have htail : (binarySignedFixed ruler x).tail.length = ruler.length - 1 := by
+    simp only [List.length_tail, hlen]
+  simpa only [ofBits, htail] using Nat.foldr_bit_lt (binarySignedFixed ruler x).tail
 
 /-- Add and normalize immediately to prevent accumulation of padding. -/
 def binarySignedFixedAdd (ruler x y : List Bool) : List Bool :=
@@ -160,31 +137,37 @@ theorem binarySignedFixedMul_value (ruler x y : List Bool) (hr : 0 < ruler.lengt
     rwa [binarySignedMul_value]
   exact (binarySignedFixed_value ruler _ hr hh).trans (binarySignedMul_value x y)
 
-theorem binarySignedFixedAdd_cobham : Cobham fun v : Fin 3 → List Bool =>
-    binarySignedFixedAdd (v 0) (v 1) (v 2) :=
-  (Cobham.comp₂ binarySignedFixed_cobham (.proj 0)
-    (Cobham.comp₂ binarySignedAdd_cobham (.proj 1) (.proj 2))).of_eq fun _ => rfl
+@[fun_prop] theorem binarySignedFixed_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {ruler x : Input → List Bool}
+    (hruler : ComputableInPolyTime ruler input encBits)
+    (hx : ComputableInPolyTime x input encBits) :
+    ComputableInPolyTime (fun a => binarySignedFixed (ruler a) (x a)) input encBits := by
+  have hwidth := ComputableInPolyTime.length_bits_comp hruler
+  have hvalue := ComputableInPolyTime.bitsToNat.comp hx
+  exact ComputableInPolyTime.bitsLow hwidth hvalue
 
-theorem binarySignedFixedSub_cobham : Cobham fun v : Fin 3 → List Bool =>
-    binarySignedFixedSub (v 0) (v 1) (v 2) :=
-  (Cobham.comp₂ binarySignedFixed_cobham (.proj 0)
-    (Cobham.comp₂ binarySignedSub_cobham (.proj 1) (.proj 2))).of_eq fun _ => rfl
+@[fun_prop] theorem binarySignedFixedAdd_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {ruler x y : Input → List Bool}
+    (hr : ComputableInPolyTime ruler input encBits)
+    (hx : ComputableInPolyTime x input encBits)
+    (hy : ComputableInPolyTime y input encBits) :
+    ComputableInPolyTime (fun a => binarySignedFixedAdd (ruler a) (x a) (y a)) input encBits :=
+  binarySignedFixed_polyTime hr (binarySignedAdd_polyTime hx hy)
 
-theorem binarySignedFixedMul_cobham : Cobham fun v : Fin 3 → List Bool =>
-    binarySignedFixedMul (v 0) (v 1) (v 2) :=
-  (Cobham.comp₂ binarySignedFixed_cobham (.proj 0)
-    (Cobham.comp₂ binarySignedMul_cobham (.proj 1) (.proj 2))).of_eq fun _ => rfl
+@[fun_prop] theorem binarySignedFixedSub_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {ruler x y : Input → List Bool}
+    (hr : ComputableInPolyTime ruler input encBits)
+    (hx : ComputableInPolyTime x input encBits)
+    (hy : ComputableInPolyTime y input encBits) :
+    ComputableInPolyTime (fun a => binarySignedFixedSub (ruler a) (x a) (y a)) input encBits :=
+  binarySignedFixed_polyTime hr (binarySignedSub_polyTime hx hy)
 
-theorem binarySignedFixedAdd_mem_FPn :
-    FPn (fun v : Fin 3 → List Bool => binarySignedFixedAdd (v 0) (v 1) (v 2)) :=
-  cobham_iff_FPn.mp binarySignedFixedAdd_cobham
-
-theorem binarySignedFixedSub_mem_FPn :
-    FPn (fun v : Fin 3 → List Bool => binarySignedFixedSub (v 0) (v 1) (v 2)) :=
-  cobham_iff_FPn.mp binarySignedFixedSub_cobham
-
-theorem binarySignedFixedMul_mem_FPn :
-    FPn (fun v : Fin 3 → List Bool => binarySignedFixedMul (v 0) (v 1) (v 2)) :=
-  cobham_iff_FPn.mp binarySignedFixedMul_cobham
+@[fun_prop] theorem binarySignedFixedMul_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {ruler x y : Input → List Bool}
+    (hr : ComputableInPolyTime ruler input encBits)
+    (hx : ComputableInPolyTime x input encBits)
+    (hy : ComputableInPolyTime y input encBits) :
+    ComputableInPolyTime (fun a => binarySignedFixedMul (ruler a) (x a) (y a)) input encBits :=
+  binarySignedFixed_polyTime hr (binarySignedMul_polyTime hx hy)
 
 end GameTheory.Complexity.Backend
