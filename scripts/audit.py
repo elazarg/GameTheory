@@ -18,7 +18,7 @@ NAME = re.compile(r"(?:«[^»\n]*»|[^\W\d][\w']*)(?:\.(?:«[^»\n]*»|[^\W\d][\
 RAW_STRING = re.compile(r'r(#+)"')
 CHARACTER = re.compile(r"'(?:\\[^\n]|[^'\\\n])'")
 IMPORT = re.compile(r"(?m)^\s*(?:public\s+)?(?:meta\s+)?import\s+(?:all\s+)?([^\r\n]+)")
-OPTIONAL = {"GameTheoryComplexity", "Complexitylib", "Cslib"}
+OPTIONAL = {"GameTheoryComplexity", "Complexitylib", "Complexity", "Cslib"}
 # Execution leaves, rather than correctness/proof modules in the same directory.
 EXECUTABLE = {
     "GameTheory.Finite.Algorithm", "GameTheory.Finite.BimatrixCertificate",
