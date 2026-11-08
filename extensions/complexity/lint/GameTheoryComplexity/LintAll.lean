@@ -13,6 +13,7 @@ import all GameTheoryComplexity.Backend.BimatrixProgramPayoffs
 import all GameTheoryComplexity
 import all GameTheoryComplexity.Backend.Negligible
 import all GameTheoryComplexity.Backend.WordOperations
+import all GameTheoryComplexity.Backend.WordFold
 import all GameTheoryComplexity.Backend.NativeEndOfLineSemantics
 import all GameTheoryComplexity.Backend.Complexitylib
 import all GameTheoryComplexity.Backend.Serializer
