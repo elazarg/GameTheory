@@ -1,26 +1,25 @@
 module
 
-public import Complexitylib.Circuits.Encoding.Machine.Core
-public import Complexitylib.Classes.PCP.Internal.BitwiseFP
-public import Complexitylib.Classes.P.Preimage
-public import Complexitylib.Classes.P.Pairing
-public import Mathlib.Data.List.OfFn
+public import GameTheoryComplexity.Backend.CircuitFormat
+public import GameTheoryComplexity.Backend.CircuitWords
+public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Iteration
 
 @[expose] public section
 
 /-! Serialized vectors of Boolean circuits are evaluated one output bit at a time.
-Every scalar code uses the ordinary tagged circuit codec. Malformed scalar codes
-denote the zero bit. The number of outputs is the length of the supplied vertex,
-so evaluation never enumerates the exponentially larger space of vertices. -/
+Each scalar code uses the tagged circuit byte format. Malformed scalar codes
+denote the zero bit. The output width is the supplied vertex's bit length, so
+evaluation never enumerates the exponentially larger space of vertices. -/
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity
+open Turing.MultiTapeTM
+open ComputableInPolyTime
 
 /-- A right-nested list of self-delimiting tagged circuit codewords. -/
 def encodeVectorCodes : List (List Bool) → List Bool
   | [] => []
-  | code :: codes => pair code (encodeVectorCodes codes)
+  | code :: codes => CircuitWords.encodePair code (encodeVectorCodes codes)
 
 /-- Serializing a circuit vector adds only linear framing overhead. -/
 theorem encodeVectorCodes_length (codes : List (List Bool)) :
@@ -28,13 +27,16 @@ theorem encodeVectorCodes_length (codes : List (List Bool)) :
       2 * codes.length := by
   induction codes with
   | nil => rfl
-  | cons code codes ih => simp [encodeVectorCodes, pair_length, ih]; omega
+  | cons code codes ih =>
+    simp only [encodeVectorCodes, CircuitWords.encodePair_length, ih, List.map_cons,
+      List.sum_cons, List.length_cons]
+    omega
 
 /-- Locate one output circuit using a unary position, defaulting a missing code to empty. -/
 def circuitVectorCodeAt (codes : List Bool) (i : ℕ) : List Bool :=
-  pairFst (pairSnd^[i] codes)
+  CircuitWords.first (CircuitWords.rest^[i] codes)
 
-private theorem pairSnd_iterate_nil (i : ℕ) : pairSnd^[i] [] = [] := by
+private theorem circuitWords_rest_iterate_nil (i : ℕ) : CircuitWords.rest^[i] [] = [] := by
   induction i with
   | zero => rfl
   | succ i ih => rw [Function.iterate_succ_apply', ih]; rfl
@@ -43,100 +45,110 @@ private theorem pairSnd_iterate_nil (i : ℕ) : pairSnd^[i] [] = [] := by
 theorem circuitVectorCodeAt_encode (codes : List (List Bool)) (i : ℕ) :
     circuitVectorCodeAt (encodeVectorCodes codes) i = (codes[i]?).getD [] := by
   induction codes generalizing i with
-  | nil => simp [circuitVectorCodeAt, encodeVectorCodes, pairSnd_iterate_nil, pairFst]
+  | nil =>
+    simp [circuitVectorCodeAt, encodeVectorCodes, circuitWords_rest_iterate_nil,
+      CircuitWords.first, CircuitWords.splitPair]
   | cons code codes ih =>
-      cases i with
-      | zero => simp [circuitVectorCodeAt, encodeVectorCodes]
-      | succ i =>
-          simpa only [circuitVectorCodeAt, encodeVectorCodes,
-            Function.iterate_succ_apply, pairSnd_pair, List.getElem?_cons_succ] using ih i
+    cases i with
+    | zero => simp [circuitVectorCodeAt, encodeVectorCodes]
+    | succ i =>
+      simpa only [circuitVectorCodeAt, encodeVectorCodes,
+        Function.iterate_succ_apply, CircuitWords.rest_encodePair,
+        List.getElem?_cons_succ] using ih i
 
 /-- Total evaluation with exactly one output per vertex bit. -/
 def evaluateCircuitVector (codes vertex : List Bool) : List Bool :=
   (List.range vertex.length).map fun i =>
-    (CircuitCode.evalFamilyCode (circuitVectorCodeAt codes i) vertex).getD false
+    (CircuitFormat.evalTagged? (circuitVectorCodeAt codes i) vertex).getD false
 
 /-- The output width depends only on the input vertex width. -/
 @[simp] theorem evaluateCircuitVector_length (codes vertex : List Bool) :
     (evaluateCircuitVector codes vertex).length = vertex.length := by
   simp [evaluateCircuitVector]
 
-/-- Each canonical codeword is evaluated by the exact scalar circuit semantics. -/
+/-- Canonical codewords are evaluated by the exact scalar byte semantics. -/
 theorem evaluateCircuitVector_encode (codes : List (List Bool)) (vertex : List Bool) :
     evaluateCircuitVector (encodeVectorCodes codes) vertex =
       (List.range vertex.length).map fun i =>
-        (CircuitCode.evalFamilyCode ((codes[i]?).getD []) vertex).getD false := by
+        (CircuitFormat.evalTagged? ((codes[i]?).getD []) vertex).getD false := by
   simp only [evaluateCircuitVector, circuitVectorCodeAt_encode]
 
-/-- A vector of typed circuits yields precisely its vector of semantic answers. -/
-theorem evaluateCircuitVector_encode_families {n : ℕ}
-    (families : Fin n → CircuitFamily Basis.andOr2) (vertex : BitString n) :
-    evaluateCircuitVector
-      (encodeVectorCodes (List.ofFn fun i => (families i).encodeAt n)) vertex.toList =
-        List.ofFn fun i => (families i).function n vertex := by
-  apply List.ext_getElem
-  · simp
-  · intro i hi hj
-    have hin : i < n := by simpa using hj
-    simp [evaluateCircuitVector, circuitVectorCodeAt_encode, hin]
-
-private theorem pairSnd_iterate_length_le (bits : List Bool) (i : ℕ) :
-    (pairSnd^[i] bits).length ≤ bits.length := by
+private theorem circuitWords_rest_iterate_length_le (bits : List Bool) (i : ℕ) :
+    (CircuitWords.rest^[i] bits).length ≤ bits.length := by
   induction i with
   | zero => rfl
   | succ i ih =>
-      rw [Function.iterate_succ_apply']
-      exact (pairSnd_length_le _).trans ih
+    rw [Function.iterate_succ_apply']
+    exact (CircuitWords.rest_length_le _).trans ih
 
-private def vectorCircuitQuery (z : List Bool) : List Bool :=
-  pair (circuitVectorCodeAt (pairFst (pairFst z)) (pairSnd z).length)
-    (pairSnd (pairFst z))
+/-- Each scalar frame can be concatenated independently. -/
+theorem encodeVectorCodes_eq_flatMap (codes : List (List Bool)) :
+    encodeVectorCodes codes = codes.flatMap (fun code => CircuitWords.encodePair code []) := by
+  induction codes with
+  | nil => rfl
+  | cons code codes ih =>
+    simp only [encodeVectorCodes, List.flatMap_cons, CircuitWords.encodePair, List.append_nil,
+      List.append_assoc, ih]
 
-private theorem vectorCircuitQuery_mem_FP : vectorCircuitQuery ∈ FP := by
-  have hcodes : (fun z => pairFst (pairFst z)) ∈ FP :=
-    mem_FP_comp pairFst_mem_FP pairFst_mem_FP
-  have htail : (fun z => pairSnd^[(pairSnd z).length] (pairFst (pairFst z))) ∈ FP :=
-    Cobham.iterate_mem_FP pairSnd_mem_FP hcodes pairSnd_mem_FP hcodes
-      (fun z i _ => pairSnd_iterate_length_le _ i)
-  exact Cobham.pairFn_mem_FP (mem_FP_comp htail pairFst_mem_FP)
-    (mem_FP_comp pairFst_mem_FP pairSnd_mem_FP)
+/-- Framing every scalar code is polynomial in the encoded list of codewords. -/
+@[fun_prop] theorem encodeVectorCodes_polyTime :
+    ComputableInPolyTime encodeVectorCodes (encList encBits) encBits := by
+  have hbody : ComputableInPolyTime
+      (fun p : List (List Bool) × List Bool => CircuitWords.encodePair p.2 [])
+      (encPair (encList encBits) encBits) encBits :=
+    CircuitWords.encodePair_polyTime.comp
+      ((snd (encList encBits) encBits).prod (const []))
+  have h := flatMapToBitsWithInput
+    (list := fun codes : List (List Bool) => codes)
+    (f := fun (_ : List (List Bool)) (code : List Bool) => CircuitWords.encodePair code [])
+    (id' (encIn := encList encBits)) hbody
+  have heq : encodeVectorCodes =
+      fun codes => codes.flatMap (fun code => CircuitWords.encodePair code []) :=
+    funext encodeVectorCodes_eq_flatMap
+  rw [heq]
+  exact h
 
-private theorem scalarCircuitEval_mem_P : CircuitCode.circuitEvalLanguage ∈ P := by
-  apply Set.mem_iUnion.mpr
-  exact ⟨2, CircuitCode.Machine.workTapeCount, CircuitCode.Machine.evalFamilyTM,
-    CircuitCode.Machine.evalFamilyTime, CircuitCode.Machine.evalFamilyTM_decidesInTime,
-    CircuitCode.Machine.evalFamilyTime_bigO_quadratic⟩
+/-- Locating a scalar code has polynomial cost in its unary index and codeword. -/
+@[fun_prop] theorem circuitVectorCodeAt_polyTime
+    {α : Type} {encIn : α ↪ List Bool} {codes : α → List Bool} {index : α → ℕ}
+    (hcodes : ComputableInPolyTime codes encIn encBits)
+    (hindex : ComputableInPolyTime index encIn encUnary) :
+    ComputableInPolyTime (fun a => circuitVectorCodeAt (codes a) (index a)) encIn encBits := by
+  have htail : ComputableInPolyTime
+      (fun a => CircuitWords.rest^[index a] (codes a)) encIn encBits :=
+    iterate hindex hcodes CircuitWords.rest_polyTime
+      (bound := fun a => (codes a).length) hcodes.polyBounded_length
+      (fun a i _ => circuitWords_rest_iterate_length_le (codes a) i)
+  exact CircuitWords.first_polyTime.comp htail
 
-/-- The vector evaluator is computed by a polynomial-time string machine.
-The machine appends one output bit per input bit, using the verified serialized
-circuit evaluator after polynomial-time indexed code selection. -/
-theorem evaluateCircuitVector_pair_mem_FP :
-    (fun z => evaluateCircuitVector (pairFst z) (pairSnd z)) ∈ FP := by
-  have hlength : (fun z => List.replicate (pairSnd z).length true) ∈ FP :=
-    mem_FP_comp pairSnd_mem_FP unaryLength_mem_FP
-  apply bitwise_mem_FP_of_mem_P hlength
-    (mem_P_preimage vectorCircuitQuery_mem_FP scalarCircuitEval_mem_P)
-  intro x i
-  change vectorCircuitQuery (pair x (List.replicate i true)) ∈
-      CircuitCode.circuitEvalLanguage ↔ _
-  simp only [vectorCircuitQuery, pairFst_pair, pairSnd_pair, List.length_replicate,
-    CircuitCode.circuitEvalLanguage, Set.mem_ofPred_eq, CircuitCode.evalFamilyPair?_pair]
-  cases CircuitCode.evalFamilyCode (circuitVectorCodeAt (pairFst x) i) (pairSnd x) with
-  | none => simp
-  | some b => cases b <;> simp
-
-/-- Circuit vector evaluation can be composed inside bounded word computations. -/
-theorem evaluateCircuitVector_cobham :
-    Cobham (fun v : Fin 2 → List Bool => evaluateCircuitVector (v 0) (v 1)) := by
-  have h := Cobham.comp (FP_subset_CobhamFP evaluateCircuitVector_pair_mem_FP)
-    (fun _ : Fin 1 => Cobham.comp₂ Cobham.pairing
-      (Cobham.proj (0 : Fin 2)) (Cobham.proj 1))
-  exact h.of_eq fun v => by simp
-
-/-- Polynomial-time evaluation of two explicit word arguments, with no conditions
-on well-formedness of their encodings. -/
-theorem evaluateCircuitVector_mem_FPn :
-    Cobham.FPn (fun v : Fin 2 → List Bool => evaluateCircuitVector (v 0) (v 1)) :=
-  Cobham.cobham_iff_FPn.mp evaluateCircuitVector_cobham
+/-- Evaluating a serialized vector charges the vertex-width map and every scalar parser. -/
+@[fun_prop] theorem evaluateCircuitVector_polyTime
+    {α : Type} {encIn : α ↪ List Bool} {codes vertex : α → List Bool}
+    (hcodes : ComputableInPolyTime codes encIn encBits)
+    (hvertex : ComputableInPolyTime vertex encIn encBits) :
+    ComputableInPolyTime (fun a => evaluateCircuitVector (codes a) (vertex a)) encIn encBits := by
+  have hrange : ComputableInPolyTime (fun a => List.range (vertex a).length)
+      encIn (encList encUnary) := range.comp (length_bits.comp hvertex)
+  have hcodes' : ComputableInPolyTime (fun p : α × ℕ => codes p.1)
+      (encPair encIn encUnary) encBits := hcodes.comp (fst encIn encUnary)
+  have hvertex' : ComputableInPolyTime (fun p : α × ℕ => vertex p.1)
+      (encPair encIn encUnary) encBits := hvertex.comp (fst encIn encUnary)
+  have hscalar : ComputableInPolyTime
+      (fun p : α × ℕ => circuitVectorCodeAt (codes p.1) p.2)
+      (encPair encIn encUnary) encBits :=
+    circuitVectorCodeAt_polyTime hcodes' (snd encIn encUnary)
+  have hvalue : ComputableInPolyTime
+      (fun p : α × ℕ => CircuitFormat.evalTagged?
+        (circuitVectorCodeAt (codes p.1) p.2) (vertex p.1))
+      (encPair encIn encUnary) (encOption encBool) :=
+    CircuitFormat.computableInPolyTime_evalTagged.comp (hscalar.prod hvertex')
+  have hbody : ComputableInPolyTime
+      (fun p : α × ℕ => (CircuitFormat.evalTagged?
+        (circuitVectorCodeAt (codes p.1) p.2) (vertex p.1)).getD false)
+      (encPair encIn encUnary) encBool := optionGetDWithInput hvalue (const false)
+  exact mapToBitsWithInput
+    (f := fun (a : α) (i : ℕ) =>
+      (CircuitFormat.evalTagged? (circuitVectorCodeAt (codes a) i) (vertex a)).getD false)
+    hrange hbody
 
 end GameTheory.Complexity.Backend
