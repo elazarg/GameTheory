@@ -2,7 +2,7 @@ module
 
 public import GameTheory.Math.EndOfLineNormalization
 public import GameTheoryComplexity.Backend.EndOfLineMachineOps
-public import Complexitylib.Classes.P.NormalForm
+public import Complexity.Computability.Complexity.Classes.TFNP
 
 @[expose] public section
 
@@ -12,7 +12,8 @@ promises are checked, and an invalid promise accepts only the empty witness. -/
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM
+open ComputableInPolyTime
 open EndOfLineMachineOps
 
 /-- The standard source promise does not require the first edge to be consistent. -/
@@ -29,7 +30,9 @@ def rawEndOfLineRelation (input witness : List Bool) : Prop :=
     (¬rawEndOfLineSourceValid input ∧ witness = [])
 
 /-- The unary ruler bounds every accepted raw witness. -/
-theorem rawEndOfLineRelation_polyBalanced : PolyBalanced rawEndOfLineRelation := by
+theorem rawEndOfLineRelation_polyBalanced :
+    ∃ p : Polynomial ℕ, ∀ input witness, rawEndOfLineRelation input witness →
+      witness.length ≤ p.eval input.length := by
   refine ⟨Polynomial.X, fun input witness h => ?_⟩
   simp only [Polynomial.eval_X]
   rcases h with ⟨_, hlen, _⟩ | ⟨_, rfl⟩
@@ -56,142 +59,86 @@ theorem rawEndOfLineRelation_total (input : List Bool) :
         Or.inl hlink⟩⟩
   · exact ⟨[], Or.inr ⟨hsource, rfl⟩⟩
 
-/-- One-bit check of the weak source promise. -/
-def rawEndOfLineSourceFlag (input : List Bool) : List Bool :=
-  andBit
-    (eqFlag (endOfLinePredecessor input (endOfLineOrigin input)) (endOfLineOrigin input))
-    (notBit (eqFlag (endOfLineSuccessor input (endOfLineOrigin input))
-      (endOfLineOrigin input)))
-
-theorem rawEndOfLineSourceFlag_flag (input : List Bool) :
-    rawEndOfLineSourceFlag input = [true] ∨ rawEndOfLineSourceFlag input = [false] :=
-  andBit_flag _ _
+/-- Check the weak source promise. -/
+def rawEndOfLineSourceFlag (input : List Bool) : Bool :=
+  decide (endOfLinePredecessor input (endOfLineOrigin input) = endOfLineOrigin input) &&
+    !decide (endOfLineSuccessor input (endOfLineOrigin input) = endOfLineOrigin input)
 
 theorem rawEndOfLineSourceFlag_accept (input : List Bool) :
-    rawEndOfLineSourceFlag input = [true] ↔ rawEndOfLineSourceValid input := by
-  rw [rawEndOfLineSourceFlag, andBit_eq_true_iff (eqFlag_flag _ _)
-    (negFlag_flag (eqFlag_flag _ _)), negFlag_accept (eqFlag_flag _ _)]
-  simp only [eqFlag_eq_true_iff, rawEndOfLineSourceValid]
+    rawEndOfLineSourceFlag input = true ↔ rawEndOfLineSourceValid input := by
+  simp [rawEndOfLineSourceFlag, rawEndOfLineSourceValid]
 
 /-- Outgoing inconsistency is accepted at any vertex; incoming inconsistency
 is accepted away from the origin. -/
-def rawEndOfLineWitnessFlag (input witness : List Bool) : List Bool :=
-  orBit
-    (notBit (eqFlag (endOfLinePredecessor input (endOfLineSuccessor input witness)) witness))
-    (andBit (notBit (eqFlag witness (endOfLineOrigin input)))
-      (notBit (eqFlag (endOfLineSuccessor input (endOfLinePredecessor input witness)) witness)))
-
-theorem rawEndOfLineWitnessFlag_flag (input witness : List Bool) :
-    rawEndOfLineWitnessFlag input witness = [true] ∨
-      rawEndOfLineWitnessFlag input witness = [false] :=
-  orBit_flag (negFlag_flag (eqFlag_flag _ _)) (andBit_flag _ _)
+def rawEndOfLineWitnessFlag (input witness : List Bool) : Bool :=
+  !decide (endOfLinePredecessor input (endOfLineSuccessor input witness) = witness) ||
+    (!decide (witness = endOfLineOrigin input) &&
+      !decide (endOfLineSuccessor input (endOfLinePredecessor input witness) = witness))
 
 theorem rawEndOfLineWitnessFlag_accept (input witness : List Bool) :
-    rawEndOfLineWitnessFlag input witness = [true] ↔
+    rawEndOfLineWitnessFlag input witness = true ↔
       GameTheory.Math.EndOfLine.RawWitness (endOfLinePredecessor input)
         (endOfLineSuccessor input) (endOfLineOrigin input) witness := by
-  rw [rawEndOfLineWitnessFlag, orBit_eq_true_iff (negFlag_flag (eqFlag_flag _ _))
-    (andBit_flag _ _), andBit_eq_true_iff (negFlag_flag (eqFlag_flag _ _))
-    (negFlag_flag (eqFlag_flag _ _)), negFlag_accept (eqFlag_flag _ _),
-    negFlag_accept (eqFlag_flag _ _), negFlag_accept (eqFlag_flag _ _)]
-  simp only [eqFlag_eq_true_iff, GameTheory.Math.EndOfLine.RawWitness]
+  simp [rawEndOfLineWitnessFlag, GameTheory.Math.EndOfLine.RawWitness]
 
-/-- Verify source, width and the asymmetric witness condition, or the fallback. -/
-def rawEndOfLineVerdict (input witness : List Bool) : List Bool :=
-  orBit
-    (andBit (rawEndOfLineSourceFlag input)
-      (andBit (eqFlag (List.replicate witness.length false) (endOfLineOrigin input))
-        (rawEndOfLineWitnessFlag input witness)))
-    (andBit (notBit (rawEndOfLineSourceFlag input)) (eqFlag witness []))
-
-theorem rawEndOfLineVerdict_flag (input witness : List Bool) :
-    rawEndOfLineVerdict input witness = [true] ∨
-      rawEndOfLineVerdict input witness = [false] :=
-  orBit_flag (andBit_flag _ _) (andBit_flag _ _)
+/-- Verify the source, width and asymmetric witness condition, or the fallback. -/
+def rawEndOfLineVerdict (input witness : List Bool) : Bool :=
+  (rawEndOfLineSourceFlag input &&
+    (decide (witness.length = endOfLineWidth input) && rawEndOfLineWitnessFlag input witness)) ||
+    (!rawEndOfLineSourceFlag input && decide (witness = []))
 
 theorem rawEndOfLineVerdict_accept (input witness : List Bool) :
-    rawEndOfLineVerdict input witness = [true] ↔ rawEndOfLineRelation input witness := by
-  rw [rawEndOfLineVerdict, orBit_eq_true_iff (andBit_flag _ _) (andBit_flag _ _),
-    andBit_eq_true_iff (rawEndOfLineSourceFlag_flag _) (andBit_flag _ _),
-    andBit_eq_true_iff (eqFlag_flag _ _) (rawEndOfLineWitnessFlag_flag _ _),
-    andBit_eq_true_iff (negFlag_flag (rawEndOfLineSourceFlag_flag _)) (eqFlag_flag _ _),
-    negFlag_accept (rawEndOfLineSourceFlag_flag _)]
-  simp only [eqFlag_eq_true_iff, rawEndOfLineSourceFlag_accept,
-    rawEndOfLineWitnessFlag_accept, endOfLineOrigin, zeroWords_eq_iff, rawEndOfLineRelation]
+    rawEndOfLineVerdict input witness = true ↔ rawEndOfLineRelation input witness := by
+  simp only [rawEndOfLineVerdict, Bool.or_eq_true, Bool.and_eq_true, Bool.not_eq_true',
+    Bool.eq_false_iff, ne_eq, decide_eq_true_eq, rawEndOfLineSourceFlag_accept,
+    rawEndOfLineWitnessFlag_accept, rawEndOfLineRelation]
 
-/-- Weak source checking composes polynomial-time pointer machines. -/
-theorem rawEndOfLineSourceFlagFn_mem_FP {input : List Bool → List Bool} (hi : input ∈ FP) :
-    (fun z => rawEndOfLineSourceFlag (input z)) ∈ FP := by
-  have ho := originFn_mem_FP hi
-  exact andBitFn_mem_FP (eqFlagFn_mem_FP (predecessorFn_mem_FP hi ho) ho)
-    (notBitFn_mem_FP (eqFlagFn_mem_FP (successorFn_mem_FP hi ho) ho))
+@[fun_prop] theorem rawEndOfLineSourceFlag_polyTime
+    {α : Type} {encIn : α ↪ List Bool} {input : α → List Bool}
+    (hi : ComputableInPolyTime input encIn encBits) :
+    ComputableInPolyTime (fun a => rawEndOfLineSourceFlag (input a)) encIn encBool := by
+  have ho := origin_polyTime hi
+  exact bool_and' (decide_eq' (predecessor_polyTime hi ho) ho)
+    (bool_not.comp (decide_eq' (successor_polyTime hi ho) ho))
 
-private theorem witnessFlagFn_mem_FP {input witness : List Bool → List Bool}
-    (hi : input ∈ FP) (hw : witness ∈ FP) :
-    (fun z => rawEndOfLineWitnessFlag (input z) (witness z)) ∈ FP := by
-  have hs := successorFn_mem_FP hi hw
-  have hp := predecessorFn_mem_FP hi hw
-  exact orBitFn_mem_FP
-    (notBitFn_mem_FP (eqFlagFn_mem_FP (predecessorFn_mem_FP hi hs) hw))
-    (andBitFn_mem_FP (notBitFn_mem_FP (eqFlagFn_mem_FP hw (originFn_mem_FP hi)))
-      (notBitFn_mem_FP (eqFlagFn_mem_FP (successorFn_mem_FP hi hp) hw)))
+@[fun_prop] theorem rawEndOfLineWitnessFlag_polyTime
+    {α : Type} {encIn : α ↪ List Bool} {input witness : α → List Bool}
+    (hi : ComputableInPolyTime input encIn encBits)
+    (hw : ComputableInPolyTime witness encIn encBits) :
+    ComputableInPolyTime (fun a => rawEndOfLineWitnessFlag (input a) (witness a))
+      encIn encBool := by
+  have hs := successor_polyTime hi hw
+  have hp := predecessor_polyTime hi hw
+  exact bool_or.comp
+    ((bool_not.comp (decide_eq' (predecessor_polyTime hi hs) hw)).prod
+      (bool_and' (bool_not.comp (decide_eq' hw (origin_polyTime hi)))
+        (bool_not.comp (decide_eq' (successor_polyTime hi hp) hw))))
 
-private theorem verdict_pair_mem_FP :
-    (fun z => rawEndOfLineVerdict (pairFst z) (pairSnd z)) ∈ FP := by
-  have hi := pairFst_mem_FP
-  have hw := pairSnd_mem_FP
-  have ho := originFn_mem_FP hi
-  have hsource := rawEndOfLineSourceFlagFn_mem_FP hi
-  have hzero : (fun z => List.replicate (pairSnd z).length false) ∈ FP := by
-    simpa only [List.length_cons, List.length_nil, Nat.zero_add, Nat.one_mul] using
-      mulLenFn_mem_FP (constFn_mem_FP [false]) hw
-  exact orBitFn_mem_FP
-    (andBitFn_mem_FP hsource
-      (andBitFn_mem_FP (eqFlagFn_mem_FP hzero ho) (witnessFlagFn_mem_FP hi hw)))
-    (andBitFn_mem_FP (notBitFn_mem_FP hsource) (eqFlagFn_mem_FP hw const_nil_mem_FP))
+@[fun_prop] theorem rawEndOfLineVerdict_polyTime
+    {α : Type} {encIn : α ↪ List Bool} {input witness : α → List Bool}
+    (hi : ComputableInPolyTime input encIn encBits)
+    (hw : ComputableInPolyTime witness encIn encBits) :
+    ComputableInPolyTime (fun a => rawEndOfLineVerdict (input a) (witness a))
+      encIn encBool := by
+  have hsource := rawEndOfLineSourceFlag_polyTime hi
+  have hwidth := decide_eq' (length_bits.comp hw) (width_polyTime hi)
+  have hwitness := rawEndOfLineWitnessFlag_polyTime hi hw
+  exact bool_or.comp
+    ((bool_and' hsource (bool_and' hwidth hwitness)).prod
+      (bool_and' (bool_not.comp hsource) (decide_eq' hw (const []))))
 
-/-- Noncanonical outer pair encodings are rejected. -/
-def rawEndOfLinePairedVerdict (z : List Bool) : List Bool :=
-  andBit (eqFlag z (pair (pairFst z) (pairSnd z)))
-    (rawEndOfLineVerdict (pairFst z) (pairSnd z))
-
-/-- The complete verifier is a polynomial-time string function. -/
-theorem rawEndOfLinePairedVerdict_mem_FP : rawEndOfLinePairedVerdict ∈ FP :=
-  andBitFn_mem_FP
-    (eqFlagFn_mem_FP id_mem_FP (pairFn_mem_FP pairFst_mem_FP pairSnd_mem_FP))
-    verdict_pair_mem_FP
-
-/-- A single deterministic machine verifies the complete serialized input in
-polynomial time, without enumerating the exponentially many vertices. -/
-theorem exists_rawEndOfLinePairedVerdict_machine :
-    ∃ (k : ℕ) (machine : TM k) (bound : Polynomial ℕ),
-      machine.ComputesInTime rawEndOfLinePairedVerdict bound.eval :=
-  mem_FP_iff_computesInTime_polynomial.mp rawEndOfLinePairedVerdict_mem_FP
-
-theorem rawEndOfLinePairedVerdict_accept (z : List Bool) :
-    rawEndOfLinePairedVerdict z = [true] ↔ z ∈ pairLang rawEndOfLineRelation := by
-  rw [rawEndOfLinePairedVerdict,
-    andBit_eq_true_iff (eqFlag_flag _ _) (rawEndOfLineVerdict_flag _ _),
-    eqFlag_eq_true_iff, rawEndOfLineVerdict_accept]
-  constructor
-  · rintro ⟨hz, h⟩
-    exact ⟨pairFst z, pairSnd z, hz, h⟩
-  · rintro ⟨input, witness, rfl, h⟩
-    simp only [pairFst_pair, pairSnd_pair]
-    exact ⟨trivial, h⟩
-
-/-- Genuine FNP membership uses the canonical paired polynomial-time verifier. -/
-theorem rawEndOfLineRelation_mem_FNP : rawEndOfLineRelation ∈ FNP := by
-  refine ⟨rawEndOfLineRelation_polyBalanced, mem_P_of_decisionFn
-    rawEndOfLinePairedVerdict_mem_FP ?_⟩
-  intro z
-  rw [← rawEndOfLinePairedVerdict_accept]
-  rcases andBit_flag (eqFlag z (pair (pairFst z) (pairSnd z)))
-    (rawEndOfLineVerdict (pairFst z) (pairSnd z)) with h | h <;>
-    simp [rawEndOfLinePairedVerdict, h]
+/-- Native FNP membership uses the exact Boolean verifier on an instance/witness pair. -/
+theorem rawEndOfLineRelation_mem_FNP :
+    rawEndOfLineRelation ∈ Cslib.Complexity.FNP encBits := by
+  refine ⟨rawEndOfLineRelation_polyBalanced, ?_⟩
+  exact ⟨(fun p : List Bool × List Bool => rawEndOfLineVerdict p.1 p.2),
+    rawEndOfLineVerdict_polyTime (fst encBits encBits) (snd encBits encBits),
+    fun input witness => (rawEndOfLineVerdict_accept input witness).symm⟩
 
 /-- Standard asymmetric succinct End-of-Line is a total FNP search relation. -/
-theorem rawEndOfLineRelation_mem_TFNP : rawEndOfLineRelation ∈ TFNP :=
+theorem rawEndOfLineRelation_mem_TFNP :
+    rawEndOfLineRelation ∈ Cslib.Complexity.TFNP encBits :=
   ⟨rawEndOfLineRelation_mem_FNP, rawEndOfLineRelation_total⟩
 
 end GameTheory.Complexity.Backend
+
