@@ -402,11 +402,12 @@ meta import Lean.Elab.Command
 open Lean in
 run_cmd do
   let env ← getEnv
+  let moduleNames := env.header.moduleNames
   let allowed := #[``propext, ``Classical.choice, ``Quot.sound]
   let mut checked : Nat := 0
   for (name, _) in env.constants.toList do
     let owned := match env.getModuleIdxFor? name with
-      | some idx => (`GameTheory).isPrefixOf env.header.moduleNames[idx.toNat]!
+      | some idx => (`GameTheory).isPrefixOf moduleNames[idx.toNat]!
       | none => false
     if owned then
       checked := checked + 1
