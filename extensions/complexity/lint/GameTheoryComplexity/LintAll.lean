@@ -20,8 +20,6 @@ import all GameTheoryComplexity.Backend.CircuitCompiler
 import all GameTheoryComplexity.Backend.CircuitFormat
 import all GameTheoryComplexity.Backend.Complexitylib
 import all GameTheoryComplexity.Backend.Serializer
-import all GameTheoryComplexity.Backend.ClockPadding
-import all GameTheoryComplexity.Backend.Composition
 import all GameTheoryComplexity.Backend.CompiledSampleTest
 import all GameTheoryComplexity.RandomTapeComposition
 import all GameTheoryComplexity.RandomTape
