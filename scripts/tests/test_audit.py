@@ -84,6 +84,18 @@ def raw := r#"sorry \" import Cslib.Models"#
                 self.write("GameTheory/Core/Fixture.lean", source + "\n")
                 self.assert_rejects("base module imports optional complexity surface")
 
+    def test_cslib_complexity_import_root_stays_optional(self):
+        for source in [
+            "import Complexity",
+            "public import Complexity.Computability.Complexity.Classes.TFNP",
+            "meta import all Complexity.Computability.Machines.Turing.MultiTape.PolyTime",
+            "public meta import all «Complexity».Computability.Complexity.Classes.P",
+            "module\npublic\nimport\n«Complexity».Crypto.Negligible",
+        ]:
+            with self.subTest(source=source):
+                self.write("GameTheory/Core/Fixture.lean", source + "\n")
+                self.assert_rejects("base module imports optional complexity surface")
+
     def test_wrapped_public_imports_keep_boundaries_and_coverage(self):
         self.write("GameTheory.lean", "module\npublic import\nGameTheory.Core.Fixture\n")
         self.write("lint/GameTheory/LintAll.lean",
@@ -239,6 +251,7 @@ private axiom bad : False
 
     def test_extension_keeps_its_backend_and_proof_dependency_budget(self):
         self.extension('''import Complexitylib.Classes.P.NormalForm
+public import Complexity.Computability.Complexity.Classes.TFNP
 import Cslib.Models
 import GameTheory.Core.Utility
 import GameTheoryComplexity.SampleTest
