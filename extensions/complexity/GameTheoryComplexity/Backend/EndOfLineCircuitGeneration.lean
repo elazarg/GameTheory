@@ -1,58 +1,56 @@
 module
 
-public import GameTheoryComplexity.Backend.PointerCircuitGeneration
-public import GameTheoryComplexity.Backend.EndOfLineVerifier
+public import GameTheoryComplexity.Backend.CircuitVectorEmission
+public import GameTheoryComplexity.Backend.EndOfLineProblem
+public import GameTheoryComplexity.Backend.NativeEndOfLineSemantics
 
 @[expose] public section
 
-/-! Uniform circuit generation serializes consistent-edge normalization of
-End-of-Line pointers. A shared polynomial-time compiler specializes their scalar
-bit queries. Invalid source promises map to the empty instance. -/
+/-! Uniform circuit instances for native active-edge pointers.
+The instance stores a true unary width ruler followed by predecessor and successor
+circuit vectors in the concrete doubled-word byte format. The construction keeps
+the prescribed width and the exact filtered pointer values on its input cube.
+-/
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity _root_.Complexity.Cobham
-open EndOfLineMachineOps
+open Turing.MultiTapeTM
 
-private theorem source_width_pos {input : List Bool} (h : endOfLineSourceValid input) :
-    0 < endOfLineWidth input := by
-  by_contra hn
-  have hz : endOfLineWidth input = 0 := by omega
-  have ho : endOfLineOrigin input = [] := by simp [endOfLineOrigin, hz]
-  have hs : endOfLineSuccessor input (endOfLineOrigin input) = [] := by
-    apply List.eq_nil_of_length_eq_zero
-    rw [endOfLineSuccessor, evaluateCircuitVector_length, ho]
-    rfl
-  exact h.2.1 (hs.trans ho.symm)
-
-/-- An actual polynomial-time mapper serializes normalized pointers at the same
-width for valid sources and returns the empty instance for invalid sources. -/
-theorem exists_normalizedEndOfLineInstance :
-    ∃ f : List Bool → List Bool, f ∈ FP ∧
-      (∀ input, endOfLineSourceValid input →
-        endOfLineWidth (f input) = endOfLineWidth input ∧
-          ∀ vertex, vertex.length = endOfLineWidth input →
-            endOfLinePredecessor (f input) vertex =
-                endOfLineNormalizedPredecessor input vertex ∧
-            endOfLineSuccessor (f input) vertex = endOfLineNormalizedSuccessor input vertex) ∧
-      (∀ input, ¬endOfLineSourceValid input → f input = []) := by
-  obtain ⟨g, hg, hgen⟩ := exists_pointerCircuitInstance pairFst
-    endOfLineNormalizedPredecessor endOfLineNormalizedSuccessor pairFst_mem_FP
-    (normalizedPredecessorFn_mem_FP pairFst_mem_FP pairSnd_mem_FP)
-    (normalizedSuccessorFn_mem_FP pairFst_mem_FP pairSnd_mem_FP)
-    endOfLineNormalizedPredecessor_length endOfLineNormalizedSuccessor_length
-  let f := fun input => caseBit₀ (endOfLineSourceFlag input) (g input) []
-  have hid : (fun z : List Bool => z) ∈ FP := CobhamFP_subset_FP (Cobham.proj 0)
-  refine ⟨f, selectFn_mem_FP (endOfLineSourceFlagFn_mem_FP hid) hg (constFn_mem_FP []),
-    ?_, ?_⟩
-  · intro input hsource
-    have hflag := (endOfLineSourceFlag_accept input).mpr hsource
-    have hf : f input = g input := by simp [f, hflag, caseBit₀]
-    rw [hf]
-    exact hgen input (source_width_pos hsource)
-  · intro input hinvalid
-    have hflag := (endOfLineSourceFlag_flag input).resolve_left
-      (fun h => hinvalid ((endOfLineSourceFlag_accept input).mp h))
-    simp [f, hflag, caseBit₀]
+/-- Construct an efficient concrete instance whose decoded pointers are the
+native active incoming and outgoing maps on the prescribed finite cube. -/
+theorem exists_activeEndOfLineInstance {α : Type} {enc : α ↪ List Bool}
+    {n : α → ℕ} {P S : α × List Bool → List Bool}
+    (hn : ComputableInPolyTime n enc encUnary)
+    (hP : ComputableInPolyTime P (encPair enc encBits) encBits)
+    (hS : ComputableInPolyTime S (encPair enc encBits) encBits)
+    (hP_length : ∀ a (u : List Bool), u.length = n a → (P (a, u)).length = n a)
+    (hS_length : ∀ a (u : List Bool), u.length = n a → (S (a, u)).length = n a) :
+    ∃ inst : α → List Bool,
+      ComputableInPolyTime inst enc encBits ∧
+      (∀ a, endOfLineWidth (inst a) = n a) ∧
+      ∀ a (u : List Bool), u.length = n a →
+        endOfLinePredecessor (inst a) u = NativeEndOfLine.activePredecessor n P S (a, u) ∧
+        endOfLineSuccessor (inst a) u = Cslib.Complexity.ppadToPppMap n P S (a, u) := by
+  obtain ⟨predecessors, hpredecessors, hpredecessor_eval⟩ :=
+    exists_circuitVector hn (NativeEndOfLine.activePredecessor_polyTime n P S hn hP hS)
+      (fun a u hu => NativeEndOfLine.activePredecessor_length n P S a (hP_length a) u hu)
+  obtain ⟨successors, hsuccessors, hsuccessor_eval⟩ :=
+    exists_circuitVector hn (NativeEndOfLine.ppadToPppMap_polyTime n P S hn hP hS)
+      (fun a u hu => Cslib.Complexity.length_ppadToPppMap (hS_length a) hu)
+  let inst (a : α) : List Bool :=
+    CircuitWords.encodePair (List.replicate (n a) true)
+      (CircuitWords.encodePair (predecessors a) (successors a))
+  refine ⟨inst, ?_, ?_, ?_⟩
+  · have hinner := CircuitWords.encodePair_polyTime.comp (hpredecessors.prod hsuccessors)
+    exact CircuitWords.encodePair_polyTime.comp
+      (((ComputableInPolyTime.bitsReplicate true).comp hn).prod hinner)
+  · intro a
+    simp only [inst, endOfLineWidth, CircuitWords.first_encodePair, List.length_replicate]
+  · intro a u hu
+    constructor
+    · simpa only [inst, endOfLinePredecessor, CircuitWords.rest_encodePair,
+        CircuitWords.first_encodePair] using hpredecessor_eval a u hu
+    · simpa only [inst, endOfLineSuccessor, CircuitWords.rest_encodePair] using
+        hsuccessor_eval a u hu
 
 end GameTheory.Complexity.Backend

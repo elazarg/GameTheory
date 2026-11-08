@@ -17,6 +17,7 @@ import all GameTheoryComplexity.Backend.WordFold
 import all GameTheoryComplexity.Backend.NativeEndOfLineSemantics
 import all GameTheoryComplexity.Backend.CircuitWords
 import all GameTheoryComplexity.Backend.CircuitCompiler
+import all GameTheoryComplexity.Backend.NativeCircuitFamilies
 import all GameTheoryComplexity.Backend.CircuitFormat
 import all GameTheoryComplexity.Backend.Complexitylib
 import all GameTheoryComplexity.Backend.Serializer
@@ -50,6 +51,7 @@ import all GameTheoryComplexity.Backend.CircuitVectorMachine
 import all GameTheoryComplexity.Backend.EndOfLineTotality
 import all GameTheoryComplexity.Backend.EndOfLineProblem
 import all GameTheoryComplexity.Backend.EndOfLineVerifier
+import all GameTheoryComplexity.Backend.EndOfLineMembership
 import all GameTheoryComplexity.Backend.SearchReduction
 import all GameTheoryComplexity.Backend.EndOfLineMachineOps
 import all GameTheoryComplexity.Backend.EndOfLinePointerNormalization

@@ -3,6 +3,7 @@ module
 public import Complexity.Computability.Complexity.Classes.TFNP.Subclasses
 public import Complexity.Computability.Complexity.Classes.TFNP.Subclasses.Principles
 public import GameTheory.Math.EndOfLine
+public import GameTheory.Math.EndOfLineNormalization
 
 @[expose] public section
 
@@ -179,5 +180,51 @@ theorem endOfLineRel_of_active_endpoint (u : List Bool) (hlen : u.length = n a)
     Cslib.Complexity.endOfLineRel n P S a u := by
   have hxor := (isEndpoint_active_iff n P S a u).mp hend
   simp [Cslib.Complexity.endOfLineRel, hlen, hne, hxor]
+
+/-- Active incoming pointers already contain no inconsistent edges. -/
+theorem normalizePredecessor_active (u : List Bool) :
+    GameTheory.Math.EndOfLine.normalizePredecessor
+      (fun v => activePredecessor n P S (a, v))
+      (fun v => Cslib.Complexity.ppadToPppMap n P S (a, v)) u =
+        activePredecessor n P S (a, u) := by
+  unfold GameTheory.Math.EndOfLine.normalizePredecessor
+  by_cases hin : Cslib.Complexity.hasIn n P S a u = true
+  · rw [ite_eq_left ((hasPredecessor_active_iff n P S a u).mpr hin)]
+  · rw [ite_eq_right (fun hp => hin ((hasPredecessor_active_iff n P S a u).mp hp))]
+    unfold activePredecessor
+    rw [ite_eq_right hin]
+
+/-- Active outgoing pointers already contain no inconsistent edges. -/
+theorem normalizeSuccessor_active (u : List Bool) :
+    GameTheory.Math.EndOfLine.normalizeSuccessor
+      (fun v => activePredecessor n P S (a, v))
+      (fun v => Cslib.Complexity.ppadToPppMap n P S (a, v)) u =
+        Cslib.Complexity.ppadToPppMap n P S (a, u) := by
+  unfold GameTheory.Math.EndOfLine.normalizeSuccessor
+  by_cases hout : Cslib.Complexity.hasOut n P S a u = true
+  · rw [ite_eq_left ((hasSuccessor_active_iff n P S a u).mpr hout)]
+  · rw [ite_eq_right (fun hs => hout ((hasSuccessor_active_iff n P S a u).mp hs))]
+    unfold Cslib.Complexity.ppadToPppMap
+    rw [ite_eq_right hout]
+
+/-- Raw witnesses of active pointers are precisely their non-source endpoints. -/
+theorem rawWitness_active_iff
+    (hout : Cslib.Complexity.hasOut n P S a (Cslib.Complexity.zeroVertex (n a)) = true)
+    (u : List Bool) :
+    GameTheory.Math.EndOfLine.RawWitness
+      (fun v => activePredecessor n P S (a, v))
+      (fun v => Cslib.Complexity.ppadToPppMap n P S (a, v))
+      (Cslib.Complexity.zeroVertex (n a)) u ↔
+        u ≠ Cslib.Complexity.zeroVertex (n a) ∧
+          GameTheory.Math.EndOfLine.IsEndpoint
+            (fun v => activePredecessor n P S (a, v))
+            (fun v => Cslib.Complexity.ppadToPppMap n P S (a, v)) u := by
+  have hsource := (active_source_iff n P S a).mpr hout
+  have hp := funext (normalizePredecessor_active n P S a)
+  have hs := funext (normalizeSuccessor_active n P S a)
+  simpa only [hp, hs] using GameTheory.Math.EndOfLine.normalized_rawWitness_iff
+    (fun v => activePredecessor n P S (a, v))
+    (fun v => Cslib.Complexity.ppadToPppMap n P S (a, v))
+    (x := u) hsource.1 hsource.2.1 hsource.2.2
 
 end GameTheory.Complexity.Backend.NativeEndOfLine
