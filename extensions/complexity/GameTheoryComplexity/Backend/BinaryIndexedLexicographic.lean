@@ -1,6 +1,8 @@
 module
 
 public import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
+public import GameTheoryComplexity.Backend.WordFold
+public import GameTheoryComplexity.Backend.WordOperations
 
 @[expose] public section
 
@@ -10,37 +12,27 @@ The two-bit state records whether the prefix is equal and whether it is less.
 The clock is a word, so scanning never iterates a binary represented value.
 -/
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
-
-private theorem and_length (x y : List Bool) : (andBit x y).length = 1 := by
-  cases x with
-  | nil => rfl
-  | cons a x =>
-    cases a with
-    | false => rfl
-    | true => cases y with
-      | nil => rfl
-      | cons b y => cases b <;> rfl
-
-private def indexedLexStep {p : ℕ}
-    (lt eq : (Fin (p + 1) → List Bool) → List Bool)
-    (v : Fin (p + 2) → List Bool) : List Bool :=
-  let args := Fin.cons (v 0) (Fin.tail (Fin.tail v))
-  andBit (bitAt [] (v 1)) (eq args) ++
-    orBit (bitAt [false] (v 1)) (andBit (bitAt [] (v 1)) (lt args))
+open Cslib.BitString Turing.MultiTapeTM
+open GameTheory.Complexity.Backend.WordOperations
 
 /-- Scan indexed comparisons, retaining the first unequal coordinate. -/
 def binaryIndexedLexState {p : ℕ}
     (lt eq : (Fin (p + 1) → List Bool) → List Bool)
     (clock : List Bool) (params : Fin p → List Bool) : List Bool :=
-  recNotation (fun _ => [true, false]) (indexedLexStep lt eq) (indexedLexStep lt eq)
-    clock params
+  WordFold.suffixFold
+    (fun params suffix state _bit =>
+      let args := Fin.cons suffix params
+      let prefixEqual := state.headD false
+      let prefixLess := state.getD 1 false
+      [prefixEqual && (eq args).headD false,
+        prefixLess || (prefixEqual && (lt args).headD false)])
+    params [true, false] clock
 
 /-- Return the strict comparison bit from the scan's two-bit state. -/
 def binaryIndexedLexLT {p : ℕ}
     (lt eq : (Fin (p + 1) → List Bool) → List Bool)
     (clock : List Bool) (params : Fin p → List Bool) : List Bool :=
-  bitAt [false] (binaryIndexedLexState lt eq clock params)
+  [(binaryIndexedLexState lt eq clock params).getD 1 false]
 
 theorem binaryIndexedLexState_length {p : ℕ}
     (lt eq : (Fin (p + 1) → List Bool) → List Bool)
@@ -49,48 +41,115 @@ theorem binaryIndexedLexState_length {p : ℕ}
   cases clock with
   | nil => rfl
   | cons b clock =>
-    simp only [binaryIndexedLexState, recNotation_cons, Bool.cond_self, indexedLexStep,
-      List.length_append, and_length, orBit_length]
+    rw [binaryIndexedLexState, WordFold.suffixFold_cons]
+    simp
 
 @[simp] theorem binaryIndexedLexLT_length {p : ℕ}
     (lt eq : (Fin (p + 1) → List Bool) → List Bool)
     (clock : List Bool) (params : Fin p → List Bool) :
-    (binaryIndexedLexLT lt eq clock params).length = 1 := bitAt_length _ _
+    (binaryIndexedLexLT lt eq clock params).length = 1 := rfl
 
-/-- A constant-size state makes any two certified indexed comparisons a certified scan. -/
-theorem binaryIndexedLexState_cobham {p : ℕ}
+private theorem indexedLexStep_polyTime {p : ℕ}
     {lt eq : (Fin (p + 1) → List Bool) → List Bool}
-    (hlt : Cobham lt) (heq : Cobham eq) :
-    Cobham fun v : Fin (p + 1) → List Bool =>
-      binaryIndexedLexState lt eq (v 0) (Fin.tail v) := by
-  have liftTerm {term : (Fin (p + 1) → List Bool) → List Bool} (ht : Cobham term) :
-      Cobham fun v : Fin (p + 2) → List Bool =>
-        term (Fin.cons (v 0) (Fin.tail (Fin.tail v))) := by
-    apply Cobham.comp ht
+    (hlt : ComputableInPolyTime lt (encPi encBits) encBits)
+    (heq : ComputableInPolyTime eq (encPi encBits) encBits) :
+    ComputableInPolyTime
+      (fun q : (Fin p → List Bool) × (List Bool × List Bool) =>
+        let args := Fin.cons q.2.1 q.1
+        let prefixEqual := q.2.2.headD false
+        let prefixLess := q.2.2.getD 1 false
+        [prefixEqual && (eq args).headD false,
+          prefixLess || (prefixEqual && (lt args).headD false)])
+      (encPair (encPi encBits) (encPair encBits encBits)) encBits := by
+  let paramsEncoding : (Fin p → List Bool) ↪ List Bool := encPi encBits
+  let contextStateEncoding : (Fin p → List Bool) × (List Bool × List Bool) ↪ List Bool :=
+    encPair paramsEncoding (encPair encBits encBits)
+  have hparams := ComputableInPolyTime.fst paramsEncoding (encPair encBits encBits)
+  have hstate := ComputableInPolyTime.snd paramsEncoding (encPair encBits encBits)
+  have hsuffix := (ComputableInPolyTime.fst encBits encBits).comp hstate
+  have hstates := (ComputableInPolyTime.snd encBits encBits).comp hstate
+  have htable : ComputableInPolyTime
+      (fun q : (Fin p → List Bool) × (List Bool × List Bool) => Fin.cons q.2.1 q.1)
+      contextStateEncoding (encPi encBits) := by
+    apply ComputableInPolyTime.pi
     intro i
-    exact Fin.cases (.proj 0) (fun j => .proj j.succ.succ) i
-  have hhead : Cobham fun v : Fin (p + 2) → List Bool => bitAt [] (v 1) :=
-    Cobham.comp₂ Cobham.bitAtFn (Cobham.const []) (.proj 1)
-  have hless : Cobham fun v : Fin (p + 2) → List Bool => bitAt [false] (v 1) :=
-    Cobham.comp₂ Cobham.bitAtFn (Cobham.const [false]) (.proj 1)
-  have hs : Cobham (indexedLexStep lt eq) :=
-    Cobham.appendFn (Cobham.andFn hhead (liftTerm heq))
-      (Cobham.orFn hless (Cobham.andFn hhead (liftTerm hlt)))
-  exact (Cobham.boundedRec (Cobham.const [true, false]) hs hs
-    (Cobham.const [false, false]) (fun r v => (binaryIndexedLexState_length lt eq r v).le)).of_eq
-      fun _ => rfl
+    refine Fin.cases ?_ (fun j => ?_) i
+    · exact hsuffix
+    · exact (ComputableInPolyTime.pi_apply encBits j).comp hparams
+  have hlt' := hlt.comp htable
+  have heq' := heq.comp htable
+  have hprefixEqual : ComputableInPolyTime
+      (fun q : (Fin p → List Bool) × (List Bool × List Bool) => q.2.2.headD false)
+      contextStateEncoding encBool :=
+    (ComputableInPolyTime.headD false).comp hstates
+  have hprefixLess : ComputableInPolyTime
+      (fun q : (Fin p → List Bool) × (List Bool × List Bool) => q.2.2.getD 1 false)
+      contextStateEncoding encBool :=
+    (ComputableInPolyTime.headD false).comp
+      (indexedFlag_polyTime.comp ((ComputableInPolyTime.const (1 : ℕ)).prod hstates))
+  have heqBit : ComputableInPolyTime
+      (fun q : (Fin p → List Bool) × (List Bool × List Bool) =>
+        (eq (Fin.cons q.2.1 q.1)).headD false) contextStateEncoding encBool :=
+    (ComputableInPolyTime.headD false).comp heq'
+  have hltBit : ComputableInPolyTime
+      (fun q : (Fin p → List Bool) × (List Bool × List Bool) =>
+        (lt (Fin.cons q.2.1 q.1)).headD false) contextStateEncoding encBool :=
+    (ComputableInPolyTime.headD false).comp hlt'
+  have hnextEqual : ComputableInPolyTime
+      (fun q : (Fin p → List Bool) × (List Bool × List Bool) =>
+        q.2.2.headD false && (eq (Fin.cons q.2.1 q.1)).headD false)
+      contextStateEncoding encBool :=
+    ComputableInPolyTime.of_tidy
+      (ComputableTidilyInPolyTime.bool_and.comp (hprefixEqual.tidy.prod heqBit.tidy))
+  have hboth : ComputableInPolyTime
+      (fun q : (Fin p → List Bool) × (List Bool × List Bool) =>
+        q.2.2.headD false && (lt (Fin.cons q.2.1 q.1)).headD false)
+      contextStateEncoding encBool :=
+    ComputableInPolyTime.of_tidy
+      (ComputableTidilyInPolyTime.bool_and.comp (hprefixEqual.tidy.prod hltBit.tidy))
+  have hnextLess : ComputableInPolyTime
+      (fun q : (Fin p → List Bool) × (List Bool × List Bool) =>
+        q.2.2.getD 1 false ||
+          (q.2.2.headD false && (lt (Fin.cons q.2.1 q.1)).headD false))
+      contextStateEncoding encBool :=
+    ComputableInPolyTime.of_tidy
+      (ComputableTidilyInPolyTime.bool_or.comp (hprefixLess.tidy.prod hboth.tidy))
+  exact ComputableInPolyTime.bitsCons hnextEqual
+    (ComputableInPolyTime.bitsCons hnextLess (.const []))
 
-theorem binaryIndexedLexLT_cobham {p : ℕ}
+/-- Certified lexicographic state scan for arbitrary encoded producers. -/
+@[fun_prop] theorem binaryIndexedLexState_polyTime {p : ℕ} {Input : Type}
+    {input : Input ↪ List Bool}
     {lt eq : (Fin (p + 1) → List Bool) → List Bool}
-    (hlt : Cobham lt) (heq : Cobham eq) :
-    Cobham fun v : Fin (p + 1) → List Bool => binaryIndexedLexLT lt eq (v 0) (Fin.tail v) :=
-  Cobham.comp₂ Cobham.bitAtFn (Cobham.const [false]) (binaryIndexedLexState_cobham hlt heq)
+    {clock : Input → List Bool} {params : Input → Fin p → List Bool}
+    (hlt : ComputableInPolyTime lt (encPi encBits) encBits)
+    (heq : ComputableInPolyTime eq (encPi encBits) encBits)
+    (hclock : ComputableInPolyTime clock input encBits)
+    (hparams : ComputableInPolyTime params input (encPi encBits)) :
+    ComputableInPolyTime
+      (fun x => binaryIndexedLexState lt eq (clock x) (params x)) input encBits := by
+  have hstep := (indexedLexStep_polyTime hlt heq).comp
+    (ComputableInPolyTime.fst
+      (encPair (encPi encBits) (encPair encBits encBits)) encBool)
+  exact WordFold.suffixFold_polyTime hparams hclock
+    (ComputableInPolyTime.const [true, false]) hstep (.const 2)
+    (fun (x : Input) (suffix : List Bool) (_hsuffix : suffix <:+ clock x) => by
+      simpa [binaryIndexedLexState] using
+        (binaryIndexedLexState_length lt eq suffix (params x)).le)
 
-theorem binaryIndexedLexLT_mem_FPn {p : ℕ}
+/-- Certified strict result bit from the lexicographic state scan. -/
+@[fun_prop] theorem binaryIndexedLexLT_polyTime {p : ℕ} {Input : Type}
+    {input : Input ↪ List Bool}
     {lt eq : (Fin (p + 1) → List Bool) → List Bool}
-    (hlt : Cobham lt) (heq : Cobham eq) :
-    FPn (fun v : Fin (p + 1) → List Bool => binaryIndexedLexLT lt eq (v 0) (Fin.tail v)) :=
-  cobham_iff_FPn.mp (binaryIndexedLexLT_cobham hlt heq)
+    {clock : Input → List Bool} {params : Input → Fin p → List Bool}
+    (hlt : ComputableInPolyTime lt (encPi encBits) encBits)
+    (heq : ComputableInPolyTime eq (encPi encBits) encBits)
+    (hclock : ComputableInPolyTime clock input encBits)
+    (hparams : ComputableInPolyTime params input (encPi encBits)) :
+    ComputableInPolyTime
+      (fun x => binaryIndexedLexLT lt eq (clock x) (params x)) input encBits := by
+  have hstate := binaryIndexedLexState_polyTime hlt heq hclock hparams
+  exact indexedFlag_polyTime.comp ((ComputableInPolyTime.const (1 : ℕ)).prod hstate)
 
 private theorem indexedPrefix_succ (E L : ℕ → Bool) (n : ℕ) :
     (∃ i < n + 1, L i = true ∧ ∀ j < i, E j = true) ↔
@@ -111,13 +170,18 @@ theorem binaryIndexedLexState_value {p : ℕ}
       [decide (∀ i < clock.length, E i = true),
        decide (∃ i < clock.length, L i = true ∧ ∀ j < i, E j = true)] := by
   induction clock with
-  | nil => simp [binaryIndexedLexState, recNotation]
+  | nil => simp [binaryIndexedLexState]
   | cons b r ih =>
-    simp only [binaryIndexedLexState, recNotation_cons, Bool.cond_self]
-    change indexedLexStep lt eq (Fin.cons r (Fin.cons (binaryIndexedLexState lt eq r params) params)) = _
+    rw [binaryIndexedLexState, WordFold.suffixFold_cons]
+    change [
+      (binaryIndexedLexState lt eq r params).headD false &&
+        (eq (Fin.cons r params)).headD false,
+      (binaryIndexedLexState lt eq r params).getD 1 false ||
+        ((binaryIndexedLexState lt eq r params).headD false &&
+          (lt (Fin.cons r params)).headD false)] = _
     rw [ih]
-    simp only [indexedLexStep, Fin.cons_zero, Fin.cons_one, Fin.tail_cons, heq r, hlt r,
-      List.length_cons]
+    simp only [heq r, hlt r, List.headD_cons, List.getD_cons_zero,
+      List.getD_cons_succ, List.length_cons]
     simp only [Nat.forall_lt_succ_right, indexedPrefix_succ, Bool.decide_and, Bool.decide_or]
     generalize decide (∀ i < r.length, E i = true) = e
     generalize decide (∃ i < r.length, L i = true ∧ ∀ j < i, E j = true) = l
