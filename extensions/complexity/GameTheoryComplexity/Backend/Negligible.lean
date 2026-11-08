@@ -1,33 +1,23 @@
 module
 
-/-
-# Agreement of negligible-advantage predicates
-
-The machine library's explicit inverse-power bounds and GameTheory's canonical
-superpolynomial decay predicate describe the same real-valued advantages.
-This bridge keeps probability and security statements on the canonical predicate.
--/
 public import GameTheory.Math.Negligible
-public import Complexitylib.Classes.Negligible
-import all Complexitylib.Classes.Negligible
+public import Complexity.Crypto.Negligible.Basic
 
 @[expose] public section
 
+/-! Native nonnegative negligible bounds agree with the canonical signed
+real-valued advantage predicate after taking the nonnegative norm.
+-/
+
 namespace GameTheory.Complexity.Backend
 
-/-- Explicit inverse-power thresholds agree with superpolynomial decay. -/
+/-- Bounding the magnitude identifies the native nonnegative predicate with
+two-sided negligible decay of a real advantage. -/
 theorem negligible_iff (f : ℕ → ℝ) :
-    _root_.Complexity.Negligible f ↔ GameTheory.Math.Negligible f := by
-  constructor
-  · intro hf
-    apply GameTheory.Math.negligible_of_eventually_abs_le
-    intro c
-    obtain ⟨N, _, hN⟩ := hf c
-    exact Filter.eventually_atTop.mpr ⟨N, fun n hn => by
-      simpa only [one_div] using (hN n hn).le⟩
-  · intro hf c
-    obtain ⟨N, hN⟩ := Filter.eventually_atTop.mp (hf.eventually_abs_lt c)
-    refine ⟨max N 1, by omega, fun n hn => ?_⟩
-    simpa only [one_div] using hN n (le_trans (le_max_left N 1) hn)
+    Cslib.Crypto.Negligible (fun κ => ‖f κ‖₊) ↔ GameTheory.Math.Negligible f := by
+  rw [Cslib.Crypto.negligible_iff_coe]
+  simpa only [coe_nnnorm, Real.norm_eq_abs, Nat.abs_cast] using
+    (Asymptotics.superpolynomialDecay_iff_superpolynomialDecay_abs
+      Filter.atTop (fun κ : ℕ => (κ : ℝ)) f).symm
 
 end GameTheory.Complexity.Backend

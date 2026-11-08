@@ -1,24 +1,41 @@
 # GameTheoryComplexity
 
-This separate Lake package connects selected ComplexityLib machine definitions
-to GameTheory probability and sample-test semantics. The base GameTheory package
-does not depend on this package, ComplexityLib, or CSLib. Clients needing only
-ordinary game theory do not resolve or download these dependencies.
+This separate Lake package connects the CSLib-based ComplexityLib's certified
+computation APIs to GameTheory probability and sample-test semantics. The base
+GameTheory package does not depend on this package, ComplexityLib, or CSLib.
+Clients needing only ordinary game theory do not resolve or download these
+dependencies.
 
-The first integration provides finite fair-coin random tapes, their exact
-counting interpretation, canonically encoded Boolean sample tests with certified
-polynomial input length and machine execution, and equivalence
-between the two libraries' negligibility predicates. It does not establish
-efficient sampling of arbitrary real-valued utilities, efficient game deviations,
-cryptographic primitives, or complexity bounds for arbitrary Lean definitions.
-The canonical serializer also has a deterministic polynomial-time machine
-certificate, with exact output correctness and tuple decoding included in the
-cost. Its encoded input length and runtime are polynomial in the unary security
-parameter. A composed probabilistic machine implements serialization plus
-testing with exactly the same verdict law, one fixed machine, and a polynomial
-clock independent of the samples. FP preprocessing is certified rather than
-inferred from output length. A user-supplied encoder is never
-classified as efficient merely because its result has polynomial length.
+The random-sample integration uses native `Cslib.Probability.IsPPTOn`
+certificates for programs `List Bool → Cslib.ProbComp Bool`. Each certificate
+identifies the full program law with one finite fair-coin machine and a strict
+polynomial clock in encoded input length. `booleanProgramTest program degree`
+runs the program on the canonical unary parameter, delimiter and Boolean
+samples. The public `booleanMachineTests` class requires the native certificate
+and retains GameTheory's existing sample-test and indistinguishability
+semantics.
+
+`exists_program_randomTapeLaw` gives one deterministic polynomial-time
+saved-coin evaluator with exactly the program's PMF law on a uniformly drawn
+finite tape. This recovers the finite counting interpretation and rules out
+exact acceptance probability `1/3` for every certified Boolean program.
+The serializer's `ComputableInPolyTime` certificate charges native framed-pair
+decoding and the complete output. A canonical pair at parameter `κ` and sample
+degree `s` has encoded length `2*κ + 1 + (κ+1)^s`, bounded by
+`4*(κ+1)^(s+1)`, including parameter zero.
+
+Native preprocessing closure composes serialization and testing. The native
+halting compiler produces one finite machine whose complete encoded verdict law
+agrees exactly with the sample test and whose parameter-polynomial clock is
+independent of the observed samples. The same machine has one raw-word polynomial
+clock and halts on every raw input, including malformed outer encodings; the
+program-law guarantee applies to encoded pairs. The negligible-advantage bridge
+applies the native nonnegative predicate to `fun κ => ‖advantage κ‖₊`, preserving the
+canonical two-sided real predicate.
+
+Arbitrary real-valued utility samplers, game deviations and cryptographic
+primitives still need their own efficient encodings and implementation
+certificates. A bound on an encoder's output length does not certify its runtime.
 
 The payoff-constrained Nash slice certifies SAT reduction to explicit symmetric
 integer payoff tables and proves NP-completeness of mixed Nash existence with both
@@ -133,14 +150,25 @@ first-party diagnostics and transitive nonstandard axioms remain audit failures.
 Import modules use the disjoint prefix `GameTheoryComplexity` because the base
 package owns every `GameTheory.*` module through its default Lake globs.
 Declarations keep the public namespace `GameTheory.Complexity`. Ordinary clients
-use the small `SampleTest` facade; machine-specific builders live under
-`GameTheoryComplexity.Backend.Complexitylib`, and the negligibility equivalence
-under `GameTheoryComplexity.Backend.Negligible`. The serializer machine
-certificate lives in `GameTheoryComplexity.Backend.Serializer`. Composition and
-its canonical sample-test specialization live in `Backend.Composition` and
-`Backend.CompiledSampleTest`, respectively. This separates backend details
-without introducing a general machine-interface framework. Swapping a backend
-still requires proofs that its implementation satisfies the facade contract.
+use the small `SampleTest` facade. Backend clients supply a native program and
+its certificate through `GameTheoryComplexity.Backend.Complexitylib`:
+
+```lean
+open Cslib Cslib.Probability Turing.MultiTapeTM
+open GameTheory.Complexity.Backend
+
+example (program : List Bool → ProbComp Bool)
+    (efficient : IsPPTOn encBits encBool program) (degree : ℕ) :
+    booleanProgramTest program degree ∈ GameTheory.Complexity.booleanMachineTests :=
+  ⟨program, efficient, degree, rfl⟩
+```
+
+The canonical framed-pair serializer and its deterministic certificate live in
+`Backend.Serializer`. `Backend.CompiledSampleTest` specializes native
+preprocessing closure and intrinsic halting to the canonical sample input.
+`Backend.Negligible` relates the native nonnegative norm bound to signed
+GameTheory advantages. These modules use the native computation APIs directly;
+they introduce no general machine-interface framework or backend registry.
 
 ## Work in this repository
 

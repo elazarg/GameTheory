@@ -8,10 +8,10 @@ public import GameTheoryComplexity.Backend.Serializer
 
 namespace GameTheory.Complexity.Backend
 
-example : serializeBoolean ![[false, false], [false, true]] =
+example : serializeBoolean ([false, false], [false, true]) =
     [true, true, false, false, true] := rfl
 
-example : serializeBoolean ![[], []] = [false] := rfl
+example : serializeBoolean ([], []) = [false] := rfl
 
 example : booleanInput 0 0 (fun _ => true) = [false, true] := by
   simp [booleanInput, List.ofFn_succ]

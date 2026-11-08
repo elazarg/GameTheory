@@ -5,150 +5,81 @@ public import GameTheoryComplexity.Tests.RandomTape
 
 @[expose] public section
 
-/-! End-to-end fair-coin consumers cover nonmonotone clocks and immediate rejection. -/
+/-! Actual compiled machines cover a fair verdict, immediate rejection and a
+payload-sensitive deterministic result after canonical serialization.
+-/
+
+noncomputable section
 
 namespace GameTheory.Complexity.Tests
 
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib Cslib.Probability Turing.MultiTapeTM
 open GameTheory.Complexity.Backend
 
-/-- A valid all-path clock may decrease as input length increases. -/
-def descendingClock : PolynomialClock coinMachine where
-  steps len := if len = 0 then 3 else 2
-  halts := NTM.AllPathsHaltIn.mono (by intro len; split_ifs <;> omega) coinMachine_halts
-  degree := 0
-  asymptotic := (BigO.of_le (g := fun _ => 3) (by intro len; split_ifs <;> omega)).trans
-    (BigO.const_le_pow 3 0)
-  constant := 3
-  bound := by intro len; simp only [pow_zero, mul_one]; split_ifs <;> omega
-
-example : ¬ Monotone descendingClock.steps := by
-  intro h
-  have hbad := h (show 0 ≤ 1 from by omega)
-  norm_num [descendingClock] at hbad
-
-/-- Serialization followed by a fair-coin test remains exactly fair, even when
-its source clock is nonmonotone. One machine and one clock work for every draw. -/
-theorem composed_coin_probability :
-    ∃ (n : ℕ) (composite : NTM n), composite.IsPPT ∧ ∃ bound : Polynomial ℕ,
+/-- The compiled serializer and fair test have exactly the uniform Boolean law. -/
+theorem composed_coin_law :
+    ∃ (tapes : ℕ) (State : Type) (_ : Finite State)
+      (machine : Turing.MultiTapePTM tapes Bool State) (bound : Polynomial ℕ),
       ∀ (κ : ℕ) (draws : Fin ((κ + 1) ^ 2) → Bool),
-        (∀ choices : Fin (bound.eval κ) → Bool,
-          composite.halted (composite.trace (bound.eval κ) choices
-            (composite.initCfg (encodeVec (booleanTuple 2 κ draws))))) ∧
-        composite.acceptProb (encodeVec (booleanTuple 2 κ draws)) (bound.eval κ) = 1 / 2 := by
-  obtain ⟨n, composite, hppt, hdegrees⟩ := exists_composed_booleanMachine coinMachine descendingClock
+        (∀ final ∈ (ProbComp.eval (machine.runClosedConfigFrom (bound.eval κ)
+          (machine.initialConfig (encPair encBits encBits (booleanTuple 2 κ draws))))).support,
+          final.tapes.state = none) ∧
+        ProbComp.eval (machine.runClosed (bound.eval κ)
+          (encPair encBits encBits (booleanTuple 2 κ draws))) =
+            (ProbComp.eval (ProbComp.uniform Bool)).map encBool := by
+  obtain ⟨tapes, State, hfinite, machine, _, _, _, _, hdegrees⟩ :=
+    exists_composed_booleanMachine coinProgram coinProgram_isPPT
   obtain ⟨bound, hcert⟩ := hdegrees 2
-  refine ⟨n, composite, hppt, bound, fun κ draws => ?_⟩
-  obtain ⟨hhalt, hlaw⟩ := hcert κ draws
-  refine ⟨hhalt, ?_⟩
-  have hcoin : machineLaw coinMachine (booleanInput 2 κ draws)
-      (descendingClock.steps (booleanInput 2 κ draws).length) =
-      machineLaw coinMachine (booleanInput 2 κ draws) 2 := by
-    apply machineLaw_of_le_of_halts
-    · change 2 ≤ if (booleanInput 2 κ draws).length = 0 then 3 else 2
-      split_ifs <;> omega
-    · exact coinMachine_halts _
-  have hprob : (composite.acceptProb (encodeVec (booleanTuple 2 κ draws))
-      (bound.eval κ) : ℝ) = 1 / 2 := by
-    rw [← machineLaw_acceptProb, hlaw]
-    change (machineLaw coinMachine (booleanInput 2 κ draws)
-      (descendingClock.steps (booleanInput 2 κ draws).length) true).toReal = 1 / 2
-    rw [hcoin]
-    exact coinMachine_probability _
-  apply Rat.cast_injective (α := ℝ)
-  simpa only [Rat.cast_div, Rat.cast_one, Rat.cast_ofNat] using hprob
+  refine ⟨tapes, State, hfinite, machine, bound, fun κ draws => ?_⟩
+  simpa only [booleanProgramTest, coinProgram] using hcert κ draws
 
-/-- This source test begins halted, so it consumes zero random bits and rejects. -/
-def stoppedMachine : NTM 0 where
-  Q := Fin 1
-  qstart := 0
-  qhalt := 0
-  δ _ _ _ _ _ := (0, fun _ => Γw.blank, Γw.blank, Dir3.right,
-    fun _ => Dir3.right, Dir3.right)
-  δ_right_of_start := by intros; exact ⟨fun _ => rfl, fun _ _ => rfl, fun _ => rfl⟩
+/-- Immediate deterministic rejection is a native PPT program. -/
+def stoppedProgram : List Bool → ProbComp Bool := fun _ => pure false
 
-def stoppedClock : PolynomialClock stoppedMachine where
-  steps _ := 0
-  halts := by intro input choices; rfl
-  degree := 0
-  asymptotic := BigO.const_le_pow 0 0
-  constant := 0
-  bound := by intro len; simp
+theorem stoppedProgram_isPPT : IsPPTOn encBits encBool stoppedProgram :=
+  (ComputableInPolyTime.const false).isPPTOn
 
-/-- The end-to-end certificate includes tests whose start state is already halted. -/
+/-- The composed realization handles a test that rejects without sampling a coin. -/
 theorem composed_immediate_rejection :
-    ∃ (n : ℕ) (composite : NTM n), composite.IsPPT ∧ ∃ bound : Polynomial ℕ,
+    ∃ (tapes : ℕ) (State : Type) (_ : Finite State)
+      (machine : Turing.MultiTapePTM tapes Bool State) (bound : Polynomial ℕ),
       ∀ (κ : ℕ) (draws : Fin ((κ + 1) ^ 0) → Bool),
-        (∀ choices : Fin (bound.eval κ) → Bool,
-          composite.halted (composite.trace (bound.eval κ) choices
-            (composite.initCfg (encodeVec (booleanTuple 0 κ draws))))) ∧
-        machineLaw composite (encodeVec (booleanTuple 0 κ draws)) (bound.eval κ) = PMF.pure false := by
-  obtain ⟨n, composite, hppt, hdegrees⟩ := exists_composed_booleanMachine stoppedMachine stoppedClock
+        (∀ final ∈ (ProbComp.eval (machine.runClosedConfigFrom (bound.eval κ)
+          (machine.initialConfig (encPair encBits encBits (booleanTuple 0 κ draws))))).support,
+          final.tapes.state = none) ∧
+        ProbComp.eval (machine.runClosed (bound.eval κ)
+          (encPair encBits encBits (booleanTuple 0 κ draws))) = PMF.pure [false] := by
+  obtain ⟨tapes, State, hfinite, machine, _, _, _, _, hdegrees⟩ :=
+    exists_composed_booleanMachine stoppedProgram stoppedProgram_isPPT
   obtain ⟨bound, hcert⟩ := hdegrees 0
-  refine ⟨n, composite, hppt, bound, fun κ draws => ?_⟩
-  obtain ⟨hhalt, hlaw⟩ := hcert κ draws
-  refine ⟨hhalt, ?_⟩
-  rw [hlaw]
-  exact machineLaw_start_halted stoppedMachine rfl _ _
+  refine ⟨tapes, State, hfinite, machine, bound, fun κ draws => ?_⟩
+  simpa only [booleanProgramTest, stoppedProgram, ProbComp.eval_pure, PMF.pure_map,
+    encBool_apply] using hcert κ draws
 
-/-- Read the third serialized bit, overwriting verdict cell one as input advances.
-At unary parameter one this is the first sample, after the parameter and delimiter. -/
-def payloadReader : NTM 0 where
-  Q := Fin 5
-  qstart := 0
-  qhalt := 4
-  δ _ state input _ output :=
-    (if state = 0 then 1 else if state = 1 then 2 else if state = 2 then 3 else 4,
-      fun _ => Γw.blank, if input = Γ.one then Γw.one else Γw.zero,
-      Dir3.right, fun _ => Dir3.right, if output = Γ.start then Dir3.right else Dir3.stay)
-  δ_right_of_start := by
-    intros
-    exact ⟨fun _ => rfl, fun _ _ => rfl, fun h => by simp [h]⟩
+/-- Read the first sample following a unary parameter of length one and its delimiter. -/
+def payloadProgram (input : List Bool) : ProbComp Bool := pure (input.getD 2 false)
 
-theorem payloadReader_halts : payloadReader.AllPathsHaltIn (fun _ => 4) := by
-  intro input choices
-  simp [NTM.trace, payloadReader]
+theorem payloadProgram_isPPT : IsPPTOn encBits encBool payloadProgram :=
+  (ComputableInPolyTime.bitsGetDWithInput ComputableInPolyTime.id'
+    (ComputableInPolyTime.const 2) false).isPPTOn
 
-def payloadClock : PolynomialClock payloadReader where
-  steps _ := 4
-  halts := payloadReader_halts
-  degree := 0
-  asymptotic := BigO.const_le_pow 4 0
-  constant := 4
-  bound := by intro len; simp
-
-theorem payloadReader_verdict (b : Bool) (choices : Fin 4 → Bool) :
-    machineVerdict payloadReader [true, false, b] 4 choices = b := by
-  cases b <;> simp [machineVerdict, NTM.trace, payloadReader, Tape.read, Tape.write, Tape.move,
-    Tape.init, Γ.ofBool]
-
-theorem payloadReader_law (b : Bool) :
-    machineLaw payloadReader [true, false, b] 4 = PMF.pure b := by
-  have hfun : machineVerdict payloadReader [true, false, b] 4 = fun _ => b := by
-    funext choices
-    exact payloadReader_verdict b choices
-  simp only [machineLaw, randomTapeLaw, hfun]
-  exact PMF.map_const _ _
-
-/-- One compiled machine distinguishes the two payloads after reading the unary
-parameter and delimiter, so serialization correctness is observable end to end. -/
+/-- Both payload values remain observable after actual serialization and native
+machine execution; a constant serializer would fail this control. -/
 theorem composed_payload_reader :
-    ∃ (n : ℕ) (composite : NTM n), composite.IsPPT ∧ ∃ bound : Polynomial ℕ,
-      ∀ b : Bool,
-        (∀ choices : Fin (bound.eval 1) → Bool,
-          composite.halted (composite.trace (bound.eval 1) choices
-            (composite.initCfg (encodeVec (booleanTuple 0 1 (fun _ => b)))))) ∧
-        machineLaw composite (encodeVec (booleanTuple 0 1 (fun _ => b))) (bound.eval 1) = PMF.pure b := by
-  obtain ⟨n, composite, hppt, hdegrees⟩ := exists_composed_booleanMachine payloadReader payloadClock
+    ∃ (tapes : ℕ) (State : Type) (_ : Finite State)
+      (machine : Turing.MultiTapePTM tapes Bool State) (bound : Polynomial ℕ),
+      ∀ bit : Bool,
+        (∀ final ∈ (ProbComp.eval (machine.runClosedConfigFrom (bound.eval 1)
+          (machine.initialConfig (encPair encBits encBits
+            (booleanTuple 0 1 (fun _ => bit)))))).support,
+          final.tapes.state = none) ∧
+        ProbComp.eval (machine.runClosed (bound.eval 1)
+          (encPair encBits encBits (booleanTuple 0 1 (fun _ => bit)))) = PMF.pure [bit] := by
+  obtain ⟨tapes, State, hfinite, machine, _, _, _, _, hdegrees⟩ :=
+    exists_composed_booleanMachine payloadProgram payloadProgram_isPPT
   obtain ⟨bound, hcert⟩ := hdegrees 0
-  refine ⟨n, composite, hppt, bound, fun b => ?_⟩
-  obtain ⟨hhalt, hlaw⟩ := hcert 1 (fun _ => b)
-  refine ⟨hhalt, ?_⟩
-  rw [hlaw]
-  change machineLaw payloadReader (booleanInput 0 1 (fun _ => b)) 4 = PMF.pure b
-  have hinput : booleanInput 0 1 (fun _ => b) = [true, false, b] := by
-    simp [booleanInput, List.ofFn_succ]
-  rw [hinput]
-  exact payloadReader_law b
+  refine ⟨tapes, State, hfinite, machine, bound, fun bit => ?_⟩
+  simpa [booleanProgramTest, payloadProgram, booleanInput, List.ofFn_succ] using
+    hcert 1 (fun _ => bit)
 
 end GameTheory.Complexity.Tests
