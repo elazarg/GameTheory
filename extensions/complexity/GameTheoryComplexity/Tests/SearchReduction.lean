@@ -1,8 +1,7 @@
 module
 
-public import GameTheoryComplexity.Backend.SearchReduction
-public import Complexitylib.Classes.Containments.Internal.FPBridge
-public import Complexitylib.Classes.P.DecisionFn
+public import Complexity.Computability.Complexity.Classes.TFNP
+public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
 
 @[expose] public section
 
@@ -11,9 +10,7 @@ from efficient verification, and correctly wired solution composition. -/
 
 namespace GameTheory.Complexity.Tests.SearchReduction
 
-open _root_.Complexity
-open _root_.Complexity.Cobham
-open GameTheory.Complexity.Backend
+open Cslib.Complexity Turing.MultiTapeTM
 
 def oneSolution (_ y : List Bool) : Prop := y = [false]
 
@@ -34,74 +31,79 @@ def unboundedSource (_ _ : List Bool) : Prop := True
 
 def emptySolution (_ y : List Bool) : Prop := y = []
 
-/-- The target really is TFNP, including rejection of malformed pair codes. -/
-theorem emptySolution_mem_TFNP : emptySolution ∈ TFNP := by
-  refine ⟨⟨⟨0, ?_⟩, ?_⟩, fun x => ⟨[], rfl⟩⟩
+/-- Native verification receives a typed instance and candidate pair. -/
+theorem emptySolution_mem_TFNP : emptySolution ∈ TFNP encBits := by
+  refine ⟨⟨⟨0, ?_⟩, (fun p : List Bool × List Bool => decide (p.2 = [])),
+    ComputableInPolyTime.decide_eq' (.snd encBits encBits) (.const []), ?_⟩,
+    fun _ => ⟨[], rfl⟩⟩
   · intro x y hy
-    simp [emptySolution] at hy
+    simp only [emptySolution] at hy
     simp [hy]
-  · apply mem_P_of_decisionFn
-      (eqFlagFn_mem_FP id_mem_FP (pairFn_mem_FP pairFst_mem_FP const_nil_mem_FP))
-    intro z
-    have heq : z ∈ pairLang emptySolution ↔ z = pair (pairFst z) [] := by
-      constructor
-      · rintro ⟨x, y, hz, hy⟩
-        subst y
-        simp [hz]
-      · intro hz
-        exact ⟨pairFst z, [], hz, rfl⟩
-    rw [heq, ← eqFlag_eq_true_iff]
-    rcases eqFlag_flag z (pair (pairFst z) []) with h | h <;> simp [h]
+  · intro x y
+    simp [emptySolution]
 
-def unboundedReduction : SearchReduction unboundedSource emptySolution where
-  instanceMap := fun _ => []
-  instanceMap_mem_FP := constFn_mem_FP []
-  decode := fun _ => []
-  decode_mem_FPn := cobham_iff_FPn.mp (Cobham.const [])
-  sound := fun _ _ _ => trivial
+/-- A valid search reduction does not bound the source's other accepted witnesses. -/
+theorem unboundedReduction : SearchReducible encBits encBits unboundedSource emptySolution :=
+  .of_isTotalSearch (fun _ => ⟨[], rfl⟩) (.const []) (.const []) (fun _ _ _ => trivial)
 
-/-- A valid search reduction does not bound all source witnesses. -/
-theorem unboundedSource_not_polyBalanced : ¬ PolyBalanced unboundedSource := by
+theorem unboundedSource_not_polyBalanced :
+    ¬ ∃ p : Polynomial ℕ, ∀ x y, unboundedSource x y → y.length ≤ p.eval x.length := by
   rintro ⟨p, hp⟩
   have h := hp [] (List.replicate (p.eval 0 + 1) false) trivial
   simp only [List.length_nil, List.length_replicate] at h
   omega
 
-theorem unboundedSource_not_TFNP : unboundedSource ∉ TFNP := by
+theorem unboundedSource_not_TFNP : unboundedSource ∉ TFNP encBits := by
   intro h
   exact unboundedSource_not_polyBalanced h.1.1
+
+/-- A decoder's vacuous implication cannot erase the source's nonempty domain. -/
+theorem no_reduction_to_empty_domain :
+    ¬ SearchReducible encBits encBits emptySolution (fun _ _ => False) := by
+  rintro ⟨f, g, hf, hg, hdomain, hsound⟩
+  obtain ⟨w, hw⟩ := hdomain [] ⟨[], rfl⟩
+  exact hw
 
 def sourceRelation (x y : List Bool) : Prop := y = x ++ (false :: x)
 
 def middleRelation (x y : List Bool) : Prop := y = x
 
-def sourceToMiddle : SearchReduction sourceRelation middleRelation where
-  instanceMap := fun x => false :: x
-  instanceMap_mem_FP := CobhamFP_subset_FP (.bit false)
-  decode := fun v => v 0 ++ v 1
-  decode_mem_FPn := cobham_iff_FPn.mp Cobham.append
-  sound := by
-    intro x y hy
+def sourceInstance (x : List Bool) : List Bool := false :: x
+
+def sourceDecoder (p : List Bool × List Bool) : List Bool := p.1 ++ p.2
+
+def middleDecoder (p : List Bool × List Bool) : List Bool := p.1
+
+theorem sourceToMiddle : SearchReducible encBits encBits sourceRelation middleRelation := by
+  have htotal : IsTotalSearch middleRelation := fun x => ⟨x, rfl⟩
+  refine SearchReducible.of_isTotalSearch htotal
+    (f := sourceInstance) (g := sourceDecoder) ?_ ?_ ?_
+  · exact .bitsCons (.const false) .id'
+  · exact .bitsAppend (.fst encBits encBits) (.snd encBits encBits)
+  · intro x y hy
     exact congrArg (fun z => x ++ z) hy
 
-def middleToEmpty : SearchReduction middleRelation emptySolution where
-  instanceMap := fun _ => []
-  instanceMap_mem_FP := constFn_mem_FP []
-  decode := fun v => v 0
-  decode_mem_FPn := cobham_iff_FPn.mp (.proj 0)
-  sound := fun _ _ _ => rfl
+theorem middleToEmpty : SearchReducible encBits encBits middleRelation emptySolution :=
+  .of_isTotalSearch (fun _ => ⟨[], rfl⟩) (.const []) (.fst encBits encBits)
+    (fun _ _ _ => rfl)
 
-/-- The inner decoder sees the mapped instance while the outer one retains the
-original source instance. -/
+/-- Composition is a native reduction; explicit maps make its wiring reviewable. -/
+theorem sourceToEmpty : SearchReducible encBits encBits sourceRelation emptySolution :=
+  sourceToMiddle.trans middleToEmpty
+
+def composedDecoder (p : List Bool × List Bool) : List Bool :=
+  sourceDecoder (p.1, middleDecoder (sourceInstance p.1, p.2))
+
+/-- The inner decoder sees the mapped instance while the outer retains the original. -/
 theorem composed_decoder_retains_both_instances (x z : List Bool) :
-    (sourceToMiddle.trans middleToEmpty).decode ![x, z] = x ++ (false :: x) := rfl
+    composedDecoder (x, z) = x ++ (false :: x) := rfl
 
 theorem wrong_outer_instance_changes_solution :
-    sourceToMiddle.decode ![false :: [true], false :: [true]] ≠
-      (sourceToMiddle.trans middleToEmpty).decode ![[true], []] := by decide
+    sourceDecoder (false :: [true], false :: [true]) ≠
+      composedDecoder ([true], []) := by decide +kernel
 
 theorem wrong_inner_instance_changes_solution :
-    sourceToMiddle.decode ![[true], middleToEmpty.decode ![[true], []]] ≠
-      (sourceToMiddle.trans middleToEmpty).decode ![[true], []] := by decide
+    sourceDecoder ([true], middleDecoder ([true], [])) ≠
+      composedDecoder ([true], []) := by decide +kernel
 
 end GameTheory.Complexity.Tests.SearchReduction
