@@ -70,6 +70,7 @@ import all GameTheoryComplexity.Backend.CircuitVectorEmission
 import all GameTheoryComplexity.Backend.EndOfLineScalarQueries
 import all GameTheoryComplexity.Backend.NormalizedEndOfLineReduction
 import all GameTheoryComplexity.Backend.EndOfLineCircuitGeneration
+import all GameTheoryComplexity.Backend.NativeEndOfLineReduction
 import all GameTheoryComplexity.Backend.SpernerBinarySteps
 import all GameTheoryComplexity.Backend.SpernerGridCodec
 import all GameTheoryComplexity.Backend.SpernerGridCodecMachine

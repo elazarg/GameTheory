@@ -54,6 +54,22 @@ The adjacent hybrid modules belong to the base library and import no machine
 dependency. The machine and predicate bridges belong exclusively to the
 companion package.
 
+## Native End-of-Line classification
+
+`GameTheoryComplexity.PPAD` proves native
+`SearchComplete @Cslib.Complexity.PPAD encBits` for both concrete endpoint search
+and the asymmetric raw pointer relation. It defines no local PPAD class or
+reduction record. Native membership includes the independent Boolean verifier
+and witness bounds; hardness covers arbitrary encoded source types.
+
+Uniform native circuit generation is connected to the concrete byte evaluator by
+an actual polynomial-time serializer. The zero-width cube and malformed circuit
+semantics are explicit. Native origin masking is realized by filtering inactive
+pointers. Every target answer decodes to a native answer; invalid source promises
+return the native zero witness. Exact word codecs stay separate from native
+framed machine arguments. EXP-172 and D77 record the design evidence; the delivery
+ledger tracks the remaining downstream migration and full consumer checks.
+
 ## Payoff-constrained Nash hardness
 
 `GameTheory.Core.ConstrainedNash` defines `HasNashWithPayoffAtLeast` as canonical

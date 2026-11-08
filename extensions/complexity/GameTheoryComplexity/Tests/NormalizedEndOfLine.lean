@@ -1,6 +1,7 @@
 module
 
 public import GameTheoryComplexity.PPAD
+public import GameTheoryComplexity.Backend.EndOfLineScalarQueries
 public import GameTheoryComplexity.Tests.RawEndOfLine
 
 @[expose] public section
@@ -10,27 +11,28 @@ and the certified reduction's public classification. -/
 
 namespace GameTheory.Complexity.Tests.NormalizedEndOfLine
 
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM
+open Cslib.Complexity
 open GameTheory.Complexity GameTheory.Complexity.Backend
 open GameTheory.Complexity.Tests.EndOfLine
 
 example : circuitVectorCodeAt
-    (emitCircuitVector pairSnd [false] 3) 0 = [] := by decide
+    (emitCircuitVector (fun _ i => List.replicate i true) [false] 3) 0 = [] := by decide
 
 example : circuitVectorCodeAt
-    (emitCircuitVector pairSnd [false] 3) 2 = [true, true] := by decide
+    (emitCircuitVector (fun _ i => List.replicate i true) [false] 3) 2 = [true, true] := by decide
 
-example : emitCircuitVector pairSnd [false] 0 = [] := rfl
+example : emitCircuitVector (fun _ i => List.replicate i true) [false] 0 = [] := rfl
 
 example : pointerBitQuery endOfLineNormalizedSuccessor
-    (pair (pair oneBitPath []) [false]) = true := by
-  change pointerBitQuery _ (pair (pair oneBitPath (List.replicate 0 true)) [false]) = true
+    (CircuitWords.encodePair (CircuitWords.encodePair oneBitPath []) [false]) = true := by
+  change pointerBitQuery _ (CircuitWords.encodePair (CircuitWords.encodePair oneBitPath (List.replicate 0 true)) [false]) = true
   rw [pointerBitQuery_pair]
   decide
 
 example : pointerBitQuery endOfLineNormalizedSuccessor
-    (pair (pair oneBitPath [true]) [false]) = false := by
-  change pointerBitQuery _ (pair (pair oneBitPath (List.replicate 1 true)) [false]) = false
+    (CircuitWords.encodePair (CircuitWords.encodePair oneBitPath [true]) [false]) = false := by
+  change pointerBitQuery _ (CircuitWords.encodePair (CircuitWords.encodePair oneBitPath (List.replicate 1 true)) [false]) = false
   rw [pointerBitQuery_pair]
   decide
 
@@ -43,13 +45,10 @@ example : ¬GameTheory.Math.EndOfLine.RawWitness
   unfold GameTheory.Math.EndOfLine.RawWitness
   decide
 
-example : PPADComplete endOfLineRelation := endOfLineRelation_PPADComplete
+example : SearchComplete @Cslib.Complexity.PPAD encBits endOfLineRelation := endOfLineRelation_PPADComplete
 
-/-- The compiled reduction preserves every raw answer, including fallback cases. -/
-example : ∃ a : SearchReduction endOfLineRelation rawEndOfLineRelation,
-    ∀ input witness, rawEndOfLineRelation (a.instanceMap input) witness →
-      endOfLineRelation input (a.decode ![input, witness]) := by
-  obtain ⟨a⟩ := endOfLineRelation_mem_PPAD.2
-  exact ⟨a, a.sound⟩
+/-- Native completeness supplies an efficient reduction preserving every raw answer. -/
+example : SearchReducible encBits encBits endOfLineRelation rawEndOfLineRelation :=
+  rawEndOfLineRelation_PPADHard encBits endOfLineRelation endOfLineRelation_mem_PPAD
 
 end GameTheory.Complexity.Tests.NormalizedEndOfLine
