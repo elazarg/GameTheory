@@ -3,6 +3,9 @@ module
 public import GameTheory.Math.FixedBlockList
 public import GameTheoryComplexity.Backend.BinarySignedFixedWidth
 public import GameTheoryComplexity.Backend.BinarySignedRowComparison
+public import GameTheoryComplexity.Backend.WordFold
+public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
+public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
 
 @[expose] public section
 
@@ -14,20 +17,23 @@ field. The machine remains total when that bound is not satisfied.
 -/
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 open scoped BigOperators
 
 private def signedSumStep {p : ℕ}
     (term : (Fin (p + 1) → List Bool) → List Bool)
-    (v : Fin (p + 3) → List Bool) : List Bool :=
-  binarySignedFixedAdd (v 2) (v 1)
-    (term (Fin.cons (v 0) (Fin.tail (Fin.tail (Fin.tail v)))))
+    (context : Fin (p + 1) → List Bool) (suffix state : List Bool) (_bit : Bool) : List Bool :=
+  binarySignedFixedAdd (context 0) state
+    (term (Fin.cons suffix (Fin.tail context)))
 
 /-- Accumulate indexed signed terms, storing exactly one fixed-width signed field. -/
 def binarySignedSum {p : ℕ} (term : (Fin (p + 1) → List Bool) → List Bool)
     (clock width : List Bool) (params : Fin p → List Bool) : List Bool :=
-  recNotation (fun v : Fin (p + 1) → List Bool => binarySignedFixed (v 0) [])
-    (signedSumStep term) (signedSumStep term) clock (Fin.cons width params)
+  WordFold.suffixFold
+    (fun (context : Fin (p + 1) → List Bool) suffix state _bit =>
+      binarySignedFixedAdd (context 0) state (term (Fin.cons suffix (Fin.tail context))))
+    (Fin.cons width params : Fin (p + 1) → List Bool)
+    (binarySignedFixed width []) clock
 
 @[simp] theorem binarySignedSum_length {p : ℕ}
     (term : (Fin (p + 1) → List Bool) → List Bool)
@@ -36,9 +42,91 @@ def binarySignedSum {p : ℕ} (term : (Fin (p + 1) → List Bool) → List Bool)
   cases clock with
   | nil => exact binarySignedFixed_length _ _
   | cons b r =>
-    simp only [binarySignedSum, recNotation_cons, Bool.cond_self, signedSumStep,
-      Fin.cons_one, Fin.cons_zero, binarySignedFixedAdd_length]
-    rfl
+    rw [binarySignedSum, WordFold.suffixFold_cons]
+    change (binarySignedFixedAdd width (binarySignedSum term r width params)
+      (term (Fin.cons r params))).length = width.length
+    exact binarySignedFixedAdd_length _ _ _
+
+private theorem signedSumStep_polyTime {p : ℕ}
+    {term : (Fin (p + 1) → List Bool) → List Bool}
+    (hterm : ComputableInPolyTime term (encPi encBits) encBits) :
+    ComputableInPolyTime
+      (fun q : ((Fin (p + 1) → List Bool) × (List Bool × List Bool)) × Bool =>
+        signedSumStep term q.1.1 q.1.2.1 q.1.2.2 q.2)
+      (encPair (encPair (encPi encBits) (encPair encBits encBits)) encBool) encBits := by
+  let encContext : (Fin (p + 1) → List Bool) ↪ List Bool := encPi encBits
+  let encMiddle : (Fin (p + 1) → List Bool) × (List Bool × List Bool) ↪ List Bool :=
+    encPair encContext (encPair encBits encBits)
+  have hmiddle : ComputableInPolyTime
+      (fun q : ((Fin (p + 1) → List Bool) × (List Bool × List Bool)) × Bool => q.1)
+      (encPair encMiddle encBool) encMiddle := ComputableInPolyTime.fst encMiddle encBool
+  have hcontext : ComputableInPolyTime
+      (fun q : ((Fin (p + 1) → List Bool) × (List Bool × List Bool)) × Bool => q.1.1)
+      (encPair encMiddle encBool) encContext :=
+    (ComputableInPolyTime.fst encContext (encPair encBits encBits)).comp hmiddle
+  have hcontext' : ComputableInPolyTime
+      (fun q : ((Fin (p + 1) → List Bool) × (List Bool × List Bool)) × Bool => q.1.1)
+      (encPair encMiddle encBool) (encPi encBits) := by
+    simpa [encContext] using hcontext
+  have htail : ComputableInPolyTime
+      (fun q : ((Fin (p + 1) → List Bool) × (List Bool × List Bool)) × Bool => q.1.2.1)
+      (encPair encMiddle encBool) encBits :=
+    (ComputableInPolyTime.fst encBits encBits).comp
+      ((ComputableInPolyTime.snd encContext (encPair encBits encBits)).comp hmiddle)
+  have hstate : ComputableInPolyTime
+      (fun q : ((Fin (p + 1) → List Bool) × (List Bool × List Bool)) × Bool => q.1.2.2)
+      (encPair encMiddle encBool) encBits :=
+    (ComputableInPolyTime.snd encBits encBits).comp
+      ((ComputableInPolyTime.snd encContext (encPair encBits encBits)).comp hmiddle)
+  have hparams : ComputableInPolyTime
+      (fun q : ((Fin (p + 1) → List Bool) × (List Bool × List Bool)) × Bool =>
+        Fin.tail q.1.1)
+      (encPair encMiddle encBool) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro j
+    exact (ComputableInPolyTime.pi_apply encBits (Fin.succ j)).comp hcontext'
+  have htable : ComputableInPolyTime
+      (fun q : ((Fin (p + 1) → List Bool) × (List Bool × List Bool)) × Bool =>
+        (Fin.cons q.1.2.1 (Fin.tail q.1.1) : Fin (p + 1) → List Bool))
+      (encPair encMiddle encBool) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    refine Fin.cases ?_ (fun j => ?_) i
+    · exact htail
+    · exact (ComputableInPolyTime.pi_apply encBits j).comp hparams
+  exact binarySignedFixedAdd_polyTime
+    ((ComputableInPolyTime.pi_apply encBits 0).comp hcontext)
+    hstate (hterm.comp htable)
+
+@[fun_prop] theorem binarySignedSum_polyTime {p : ℕ}
+    {term : (Fin (p + 1) → List Bool) → List Bool}
+    (hterm : ComputableInPolyTime term (encPi encBits) encBits) :
+    ComputableInPolyTime
+      (fun v : Fin (p + 2) → List Bool =>
+        binarySignedSum term (v 0) (v 1) (Fin.tail (Fin.tail v)))
+      (encPi encBits) encBits := by
+  have hclock : ComputableInPolyTime
+      (fun v : Fin (p + 2) → List Bool => v 0) (encPi encBits) encBits := .pi_apply encBits 0
+  have hwidth : ComputableInPolyTime
+      (fun v : Fin (p + 2) → List Bool => v 1) (encPi encBits) encBits := .pi_apply encBits 1
+  have hparams : ComputableInPolyTime
+      (fun v : Fin (p + 2) → List Bool =>
+        (Fin.cons (v 1) (Fin.tail (Fin.tail v)) : Fin (p + 1) → List Bool))
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    refine Fin.cases ?_ (fun j => ?_) i
+    · exact hwidth
+    · exact .pi_apply encBits (Fin.succ (Fin.succ j))
+  have hinitial : ComputableInPolyTime
+      (fun v : Fin (p + 2) → List Bool => binarySignedFixed (v 1) [])
+      (encPi encBits) encBits :=
+    binarySignedFixed_polyTime hwidth (.const [])
+  exact WordFold.suffixFold_polyTime hparams hclock hinitial
+    (signedSumStep_polyTime hterm) hwidth.polyBounded_length
+    (fun v suffix _ => by
+      simpa [binarySignedSum] using
+        (binarySignedSum_length term suffix (v 1) (Fin.tail (Fin.tail v))).le)
 
 theorem binarySignedSum_value {p : ℕ}
     (term : (Fin (p + 1) → List Bool) → List Bool)
@@ -51,14 +139,17 @@ theorem binarySignedSum_value {p : ℕ}
   induction clock with
   | nil =>
     change binarySignedValue (binarySignedFixed width []) = _
-    rw [binarySignedFixed_value width [] hr (by simp [binarySignedValue, Nat.fromBitsLE, Nat.fromBits])]
-    simp [binarySignedValue, Nat.fromBitsLE, Nat.fromBits]
+    have hz : (binarySignedValue ([] : List Bool)).natAbs = 0 := by
+      rw [binarySignedValue_natAbs]
+      rfl
+    rw [binarySignedFixed_value width [] hr (by rw [hz]; exact Nat.pow_pos (by decide))]
+    simp [binarySignedValue, ofBits]
   | cons b r ih =>
     have hp : ∀ t ≤ r.length, (∑ i ∈ Finset.range t, f i).natAbs < 2 ^ (width.length - 1) := by
       intro t ht
       exact hbound t (ht.trans (by simp))
     have hv := ih hp
-    simp only [binarySignedSum, recNotation_cons, Bool.cond_self]
+    simp only [binarySignedSum, WordFold.suffixFold_cons]
     change binarySignedValue (binarySignedFixedAdd width
       (binarySignedSum term r width params) (term (Fin.cons r params))) = _
     have hh : (binarySignedValue (binarySignedSum term r width params) +
@@ -68,46 +159,21 @@ theorem binarySignedSum_value {p : ℕ}
     rw [binarySignedFixedAdd_value _ _ _ hr hh, hv, hterm r]
     simp only [List.length_cons, Finset.sum_range_succ]
 
-theorem binarySignedSum_cobham {p : ℕ}
-    {term : (Fin (p + 1) → List Bool) → List Bool} (ht : Cobham term) :
-    Cobham fun v : Fin (p + 2) → List Bool =>
-      binarySignedSum term (v 0) (v 1) (Fin.tail (Fin.tail v)) := by
-  have hg : Cobham fun v : Fin (p + 1) → List Bool => binarySignedFixed (v 0) [] :=
-    (Cobham.comp₂ binarySignedFixed_cobham (.proj 0) (Cobham.const [])).of_eq fun _ => rfl
-  have hterm : Cobham fun v : Fin (p + 3) → List Bool =>
-      term (Fin.cons (v 0) (Fin.tail (Fin.tail (Fin.tail v)))) := by
-    apply Cobham.comp ht
-    intro i
-    exact Fin.cases (.proj 0) (fun j => .proj j.succ.succ.succ) i
-  have hs : Cobham (signedSumStep term) :=
-    (Cobham.comp₃ binarySignedFixedAdd_cobham (.proj 2) (.proj 1) hterm).of_eq fun _ => rfl
-  exact (Cobham.boundedRec hg hs hs (.proj 1) (fun r v => by
-    have hv : v = Fin.cons (v 0) (Fin.tail v) := by
-      ext i
-      cases i using Fin.cases <;> rfl
-    rw [hv]
-    change (binarySignedSum term r (v 0) (Fin.tail v)).length ≤ (v 0).length
-    exact (binarySignedSum_length _ _ _ _).le)).of_eq fun v => by
-      congr 1
-      ext i
-      cases i using Fin.cases <;> rfl
-
-theorem binarySignedSum_mem_FPn {p : ℕ}
-    {term : (Fin (p + 1) → List Bool) → List Bool} (ht : Cobham term) :
-    FPn (fun v : Fin (p + 2) → List Bool =>
-      binarySignedSum term (v 0) (v 1) (Fin.tail (Fin.tail v))) :=
-  cobham_iff_FPn.mp (binarySignedSum_cobham ht)
-
 private def signedDotTerm (v : Fin 4 → List Bool) : List Bool :=
   binarySignedMul (binarySignedRowField ![v 0, v 1, v 2])
     (binarySignedRowField ![v 0, v 1, v 3])
 
 /-- Dot product of two packed signed rows, with fixed-width prefix accumulators. -/
 def binarySignedDot (clock width x y : List Bool) : List Bool :=
-  binarySignedSum signedDotTerm clock width ![width, x, y]
+  let term : (Fin 4 → List Bool) → List Bool := fun (v : Fin 4 → List Bool) =>
+    binarySignedMul (binarySignedRowField ![v 0, v 1, v 2])
+      (binarySignedRowField ![v 0, v 1, v 3])
+  binarySignedSum term clock width ![width, x, y]
 
 @[simp] theorem binarySignedDot_length (clock width x y : List Bool) :
-    (binarySignedDot clock width x y).length = width.length := binarySignedSum_length _ _ _ _
+    (binarySignedDot clock width x y).length = width.length := by
+  change (binarySignedSum signedDotTerm clock width ![width, x, y]).length = width.length
+  exact binarySignedSum_length _ _ _ _
 
 theorem binarySignedDot_value (clock width x y : List Bool) (hr : 0 < width.length)
     (hbound : ∀ t ≤ clock.length,
@@ -115,41 +181,120 @@ theorem binarySignedDot_value (clock width x y : List Bool) (hr : 0 < width.leng
         2 ^ (width.length - 1)) :
     binarySignedValue (binarySignedDot clock width x y) =
       ∑ i ∈ Finset.range clock.length, binarySignedRowValue width x i * binarySignedRowValue width y i := by
+  change binarySignedValue (binarySignedSum signedDotTerm clock width ![width, x, y]) = _
   apply binarySignedSum_value _ _ _ _ _ hr _ hbound
   intro r
   exact binarySignedMul_value _ _
 
-theorem binarySignedDot_cobham : Cobham fun v : Fin 4 → List Bool =>
-    binarySignedDot (v 0) (v 1) (v 2) (v 3) := by
-  have ht : Cobham signedDotTerm :=
-    (Cobham.comp₂ binarySignedMul_cobham
-      (Cobham.comp₃ binarySignedRowField_cobham (.proj 0) (.proj 1) (.proj 2))
-      (Cobham.comp₃ binarySignedRowField_cobham (.proj 0) (.proj 1) (.proj 3))).of_eq fun _ => rfl
-  have h := Cobham.comp (binarySignedSum_cobham ht)
-    (fun i : Fin 5 => (Cobham.proj (![0, 1, 1, 2, 3] i) : Cobham fun v : Fin 4 → List Bool =>
-      v (![0, 1, 1, 2, 3] i)))
-  exact h.of_eq fun v => by
-    change binarySignedSum signedDotTerm (v 0) (v 1) _ =
-      binarySignedSum signedDotTerm (v 0) (v 1) ![v 1, v 2, v 3]
-    congr 1
-    ext i
-    fin_cases i <;> rfl
+private theorem signedDotTerm_polyTime :
+    ComputableInPolyTime signedDotTerm (encPi encBits) encBits := by
+  have hleft : ComputableInPolyTime (fun v : Fin 4 → List Bool =>
+      binarySignedRowField ![v 0, v 1, v 2]) (encPi encBits) encBits := by
+    have hargs : ComputableInPolyTime (fun v : Fin 4 → List Bool =>
+        ![v 0, v 1, v 2]) (encPi encBits) (encPi encBits) := by
+      apply ComputableInPolyTime.pi
+      intro i
+      fin_cases i
+      · exact .pi_apply encBits 0
+      · exact .pi_apply encBits 1
+      · exact .pi_apply encBits 2
+    exact binarySignedRowField_polyTime.comp hargs
+  have hright : ComputableInPolyTime (fun v : Fin 4 → List Bool =>
+      binarySignedRowField ![v 0, v 1, v 3]) (encPi encBits) encBits := by
+    have hargs : ComputableInPolyTime (fun v : Fin 4 → List Bool =>
+        ![v 0, v 1, v 3]) (encPi encBits) (encPi encBits) := by
+      apply ComputableInPolyTime.pi
+      intro i
+      fin_cases i
+      · exact .pi_apply encBits 0
+      · exact .pi_apply encBits 1
+      · exact .pi_apply encBits 3
+    exact binarySignedRowField_polyTime.comp hargs
+  exact binarySignedMul_polyTime hleft hright
 
-theorem binarySignedDot_mem_FPn :
-    FPn (fun v : Fin 4 → List Bool => binarySignedDot (v 0) (v 1) (v 2) (v 3)) :=
-  cobham_iff_FPn.mp binarySignedDot_cobham
+@[fun_prop] theorem binarySignedDot_polyTime :
+    ComputableInPolyTime (fun v : Fin 4 → List Bool =>
+      binarySignedDot (v 0) (v 1) (v 2) (v 3)) (encPi encBits) encBits := by
+  change ComputableInPolyTime
+    (fun v : Fin 4 → List Bool =>
+      binarySignedSum signedDotTerm (v 0) (v 1) ![v 1, v 2, v 3])
+    (encPi encBits) encBits
+  have hargs : ComputableInPolyTime (fun v : Fin 4 → List Bool =>
+      ![v 0, v 1, v 1, v 2, v 3]) (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 2
+    · exact .pi_apply encBits 3
+  simpa [Function.comp_def, Fin.tail] using
+    (binarySignedSum_polyTime signedDotTerm_polyTime).comp hargs
 
 private def signedTableStep {p : ℕ}
     (term : (Fin (p + 1) → List Bool) → List Bool)
-    (v : Fin (p + 3) → List Bool) : List Bool :=
-  v 1 ++ binarySignedFixed (v 2)
-    (term (Fin.cons (v 0) (Fin.tail (Fin.tail (Fin.tail v)))))
+    (context : Fin (p + 1) → List Bool) (suffix state : List Bool) (_bit : Bool) : List Bool :=
+  state ++ binarySignedFixed (context 0) (term (Fin.cons suffix (Fin.tail context)))
 
 /-- Materialize indexed entries as a packed table of fixed-width signed fields. -/
 def binarySignedTable {p : ℕ} (term : (Fin (p + 1) → List Bool) → List Bool)
     (clock width : List Bool) (params : Fin p → List Bool) : List Bool :=
-  recNotation (fun _ : Fin (p + 1) → List Bool => [])
-    (signedTableStep term) (signedTableStep term) clock (Fin.cons width params)
+  WordFold.suffixFold
+    (fun (context : Fin (p + 1) → List Bool) suffix state _bit =>
+      state ++ binarySignedFixed (context 0) (term (Fin.cons suffix (Fin.tail context))))
+    (Fin.cons width params : Fin (p + 1) → List Bool) [] clock
+
+private theorem signedTableStep_polyTime {p : ℕ}
+    {term : (Fin (p + 1) → List Bool) → List Bool}
+    (hterm : ComputableInPolyTime term (encPi encBits) encBits) :
+    ComputableInPolyTime
+      (fun q : ((Fin (p + 1) → List Bool) × (List Bool × List Bool)) × Bool =>
+        signedTableStep term q.1.1 q.1.2.1 q.1.2.2 q.2)
+      (encPair (encPair (encPi encBits) (encPair encBits encBits)) encBool) encBits := by
+  let encContext : (Fin (p + 1) → List Bool) ↪ List Bool := encPi encBits
+  let encMiddle : (Fin (p + 1) → List Bool) × (List Bool × List Bool) ↪ List Bool :=
+    encPair encContext (encPair encBits encBits)
+  have hmiddle : ComputableInPolyTime
+      (fun q : ((Fin (p + 1) → List Bool) × (List Bool × List Bool)) × Bool => q.1)
+      (encPair encMiddle encBool) encMiddle := ComputableInPolyTime.fst encMiddle encBool
+  have hcontext : ComputableInPolyTime
+      (fun q : ((Fin (p + 1) → List Bool) × (List Bool × List Bool)) × Bool => q.1.1)
+      (encPair encMiddle encBool) encContext :=
+    (ComputableInPolyTime.fst encContext (encPair encBits encBits)).comp hmiddle
+  have hcontext' : ComputableInPolyTime
+      (fun q : ((Fin (p + 1) → List Bool) × (List Bool × List Bool)) × Bool => q.1.1)
+      (encPair encMiddle encBool) (encPi encBits) := by
+    simpa [encContext] using hcontext
+  have htail : ComputableInPolyTime
+      (fun q : ((Fin (p + 1) → List Bool) × (List Bool × List Bool)) × Bool => q.1.2.1)
+      (encPair encMiddle encBool) encBits :=
+    (ComputableInPolyTime.fst encBits encBits).comp
+      ((ComputableInPolyTime.snd encContext (encPair encBits encBits)).comp hmiddle)
+  have hstate : ComputableInPolyTime
+      (fun q : ((Fin (p + 1) → List Bool) × (List Bool × List Bool)) × Bool => q.1.2.2)
+      (encPair encMiddle encBool) encBits :=
+    (ComputableInPolyTime.snd encBits encBits).comp
+      ((ComputableInPolyTime.snd encContext (encPair encBits encBits)).comp hmiddle)
+  have hparams : ComputableInPolyTime
+      (fun q : ((Fin (p + 1) → List Bool) × (List Bool × List Bool)) × Bool =>
+        Fin.tail q.1.1)
+      (encPair encMiddle encBool) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro j
+    exact (ComputableInPolyTime.pi_apply encBits (Fin.succ j)).comp hcontext'
+  have htable : ComputableInPolyTime
+      (fun q : ((Fin (p + 1) → List Bool) × (List Bool × List Bool)) × Bool =>
+        (Fin.cons q.1.2.1 (Fin.tail q.1.1) : Fin (p + 1) → List Bool))
+      (encPair encMiddle encBool) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    refine Fin.cases ?_ (fun j => ?_) i
+    · exact htail
+    · exact (ComputableInPolyTime.pi_apply encBits j).comp hparams
+  have hfield := binarySignedFixed_polyTime
+    ((ComputableInPolyTime.pi_apply encBits 0).comp hcontext) (hterm.comp htable)
+  exact ComputableInPolyTime.bitsAppend hstate hfield
 
 @[simp] theorem binarySignedTable_length {p : ℕ}
     (term : (Fin (p + 1) → List Bool) → List Bool)
@@ -158,40 +303,51 @@ def binarySignedTable {p : ℕ} (term : (Fin (p + 1) → List Bool) → List Boo
   induction clock with
   | nil => simp [binarySignedTable]
   | cons b r ih =>
-    simp only [binarySignedTable, recNotation_cons, Bool.cond_self]
+    simp only [binarySignedTable, WordFold.suffixFold_cons]
     change (binarySignedTable term r width params ++
       binarySignedFixed width (term (Fin.cons r params))).length = _
     rw [List.length_append, ih, binarySignedFixed_length, List.length_cons, Nat.succ_mul]
 
-theorem binarySignedTable_cobham {p : ℕ}
-    {term : (Fin (p + 1) → List Bool) → List Bool} (ht : Cobham term) :
-    Cobham fun v : Fin (p + 2) → List Bool =>
-      binarySignedTable term (v 0) (v 1) (Fin.tail (Fin.tail v)) := by
-  have hterm : Cobham fun v : Fin (p + 3) → List Bool =>
-      term (Fin.cons (v 0) (Fin.tail (Fin.tail (Fin.tail v)))) := by
-    apply Cobham.comp ht
+@[fun_prop] theorem binarySignedTable_polyTime {p : ℕ}
+    {term : (Fin (p + 1) → List Bool) → List Bool}
+    (hterm : ComputableInPolyTime term (encPi encBits) encBits) :
+    ComputableInPolyTime
+      (fun v : Fin (p + 2) → List Bool =>
+        binarySignedTable term (v 0) (v 1) (Fin.tail (Fin.tail v)))
+      (encPi encBits) encBits := by
+  have hclock : ComputableInPolyTime
+      (fun v : Fin (p + 2) → List Bool => v 0) (encPi encBits) encBits := .pi_apply encBits 0
+  have hwidth : ComputableInPolyTime
+      (fun v : Fin (p + 2) → List Bool => v 1) (encPi encBits) encBits := .pi_apply encBits 1
+  have hparams : ComputableInPolyTime
+      (fun v : Fin (p + 2) → List Bool =>
+        (Fin.cons (v 1) (Fin.tail (Fin.tail v)) : Fin (p + 1) → List Bool))
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
     intro i
-    exact Fin.cases (.proj 0) (fun j => .proj j.succ.succ.succ) i
-  have hs : Cobham (signedTableStep term) :=
-    Cobham.appendFn (.proj 1) (Cobham.comp₂ binarySignedFixed_cobham (.proj 2) hterm)
-  exact (Cobham.boundedRec Cobham.empty hs hs
-    (Cobham.comp₂ Cobham.smash (.proj 0) (.proj 1)) (fun r v => by
-      have hv : v = Fin.cons (v 0) (Fin.tail v) := by
-        ext i
-        cases i using Fin.cases <;> rfl
-      rw [hv]
-      change (binarySignedTable term r (v 0) (Fin.tail v)).length ≤ _
-      rw [binarySignedTable_length, smash_length]
-      exact le_rfl)).of_eq fun v => by
-        congr 1
-        ext i
-        cases i using Fin.cases <;> rfl
-
-theorem binarySignedTable_mem_FPn {p : ℕ}
-    {term : (Fin (p + 1) → List Bool) → List Bool} (ht : Cobham term) :
-    FPn (fun v : Fin (p + 2) → List Bool =>
-      binarySignedTable term (v 0) (v 1) (Fin.tail (Fin.tail v))) :=
-  cobham_iff_FPn.mp (binarySignedTable_cobham ht)
+    refine Fin.cases ?_ (fun j => ?_) i
+    · exact hwidth
+    · exact .pi_apply encBits (Fin.succ (Fin.succ j))
+  have hbound : PolyBounded (fun v : Fin (p + 2) → List Bool => (encPi encBits v).length)
+      (fun v => (v 0).length * (v 1).length) := by
+    exact (ComputableInPolyTime.unary_mul'
+      (ComputableInPolyTime.length_bits_comp hclock)
+      (ComputableInPolyTime.length_bits_comp hwidth)).polyBounded
+  exact WordFold.suffixFold_polyTime hparams hclock (.const [])
+    (signedTableStep_polyTime hterm) hbound
+    (fun v suffix hsub => by
+      have hlength :
+          (WordFold.suffixFold
+            (fun (context : Fin (p + 1) → List Bool) suffix state _bit =>
+              state ++ binarySignedFixed (context 0)
+                (term (Fin.cons suffix (Fin.tail context))))
+            (Fin.cons (v 1) (Fin.tail (Fin.tail v))) [] suffix).length =
+            suffix.length * (v 1).length := by
+        simpa [binarySignedTable] using
+          (binarySignedTable_length term suffix (v 1) (Fin.tail (Fin.tail v)))
+      have hmul := Nat.mul_le_mul_right (v 1).length hsub.length_le
+      rw [hlength]
+      exact hmul)
 
 /-- The materialized table concatenates its fixed-width fields in increasing index order. -/
 theorem binarySignedTable_eq_flatMap {p : ℕ} (term : (Fin (p + 1) → List Bool) → List Bool)
@@ -201,7 +357,7 @@ theorem binarySignedTable_eq_flatMap {p : ℕ} (term : (Fin (p + 1) → List Boo
   induction clock with
   | nil => rfl
   | cons b r ih =>
-    simp only [binarySignedTable, recNotation_cons, Bool.cond_self]
+    simp only [binarySignedTable, WordFold.suffixFold_cons]
     change binarySignedTable term r width params ++
       binarySignedFixed width (term (Fin.cons r params)) = _
     rw [ih, List.length_cons, List.range_succ, List.flatMap_append, List.flatMap_singleton]
@@ -238,7 +394,7 @@ theorem binarySignedTable_value {p : ℕ}
   induction clock generalizing i with
   | nil => simp at hi
   | cons b r ih =>
-    simp only [binarySignedTable, recNotation_cons, Bool.cond_self]
+    simp only [binarySignedTable, WordFold.suffixFold_cons]
     change binarySignedRowValue width (binarySignedTable term r width params ++
       binarySignedFixed width (term (Fin.cons r params))) i = _
     rcases Nat.lt_succ_iff_lt_or_eq.mp hi with hi | rfl
@@ -273,7 +429,7 @@ theorem binarySignedTable_flags {p : ℕ}
   induction clock with
   | nil => rfl
   | cons b r ih =>
-    simp only [binarySignedTable, recNotation_cons, Bool.cond_self]
+    simp only [binarySignedTable, WordFold.suffixFold_cons]
     change binarySignedTable term r [false] params ++
       binarySignedFixed [false] (term (Fin.cons r params)) = _
     rw [ih, ht, binarySignedFixed_eq_of_length [false] [f r.length] rfl]
