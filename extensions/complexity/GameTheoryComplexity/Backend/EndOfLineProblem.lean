@@ -2,7 +2,7 @@ module
 
 public import GameTheoryComplexity.Backend.CircuitVectorMachine
 public import GameTheoryComplexity.Backend.EndOfLineTotality
-public import Complexitylib.Classes.FNP.Defs
+public import Mathlib.Algebra.Polynomial.Eval.Defs
 
 @[expose] public section
 
@@ -12,10 +12,8 @@ and an invalid initial source has the empty word as its designated witness. -/
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity
-
 /-- The width is encoded in unary, independently of the ruler's bit values. -/
-def endOfLineWidth (input : List Bool) : ℕ := (pairFst input).length
+def endOfLineWidth (input : List Bool) : ℕ := (CircuitWords.first input).length
 
 /-- The distinguished all-zero vertex. -/
 def endOfLineOrigin (input : List Bool) : List Bool :=
@@ -23,16 +21,16 @@ def endOfLineOrigin (input : List Bool) : List Bool :=
 
 /-- The total predecessor pointer selected by the first circuit vector. -/
 def endOfLinePredecessor (input vertex : List Bool) : List Bool :=
-  evaluateCircuitVector (pairFst (pairSnd input)) vertex
+  evaluateCircuitVector (CircuitWords.first (CircuitWords.rest input)) vertex
 
 /-- The total successor pointer selected by the second circuit vector. -/
 def endOfLineSuccessor (input vertex : List Bool) : List Bool :=
-  evaluateCircuitVector (pairSnd (pairSnd input)) vertex
+  evaluateCircuitVector (CircuitWords.rest (CircuitWords.rest input)) vertex
 
 /-- Canonical serialization of an instance, with a linear-size width ruler. -/
 def encodeEndOfLine (width : ℕ) (predecessors successors : List (List Bool)) : List Bool :=
-  pair (List.replicate width true)
-    (pair (encodeVectorCodes predecessors) (encodeVectorCodes successors))
+  CircuitWords.encodePair (List.replicate width true)
+    (CircuitWords.encodePair (encodeVectorCodes predecessors) (encodeVectorCodes successors))
 
 @[simp] theorem endOfLineWidth_encode (width : ℕ)
     (predecessors successors : List (List Bool)) :
@@ -55,28 +53,15 @@ def endOfLineRelation (input witness : List Bool) : Prop :=
       (endOfLinePredecessor input) (endOfLineSuccessor input) witness) ∨
     (¬endOfLineSourceValid input ∧ witness = [])
 
-private theorem pairFst_length_le : ∀ input : List Bool,
-    (pairFst input).length ≤ input.length
-  | false :: false :: input => by
-      simp only [pairFst, List.length_cons]
-      have h := pairFst_length_le input
-      omega
-  | true :: true :: input => by
-      simp only [pairFst, List.length_cons]
-      have h := pairFst_length_le input
-      omega
-  | [] => by decide
-  | [b] => by cases b <;> decide
-  | false :: true :: input => by simp [pairFst]
-  | true :: false :: input => by simp [pairFst]
-
 /-- The unary width ruler bounds every accepted endpoint witness. -/
 theorem endOfLineWidth_le_length (input : List Bool) :
     endOfLineWidth input ≤ input.length :=
-  pairFst_length_le input
+  CircuitWords.first_length_le input
 
 /-- Every accepted endpoint witness has at most the input length. -/
-theorem endOfLineRelation_polyBalanced : PolyBalanced endOfLineRelation := by
+theorem endOfLineRelation_polyBalanced :
+    ∃ p : Polynomial ℕ, ∀ input witness, endOfLineRelation input witness →
+      witness.length ≤ p.eval input.length := by
   refine ⟨Polynomial.X, fun input witness h => ?_⟩
   simp only [Polynomial.eval_X]
   rcases h with ⟨_, hlen, _, _⟩ | ⟨_, rfl⟩
