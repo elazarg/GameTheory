@@ -3,7 +3,7 @@ import Lake
 open Lake DSL
 
 package GameTheoryComplexity where
-  version := v!"0.1.0"
+  version := v!"0.2.0"
   description := "Opt-in computational complexity certificates for GameTheory"
   fixedToolchain := true
   requiresModuleSystem := true
@@ -24,14 +24,15 @@ checkout with `-KgameTheoryPath=../..`. The base package never requires this one
         (some "c7cd6bed7498b9a16edb22262e9522ceff90648c") none
 }
 
-require complexitylib from git "https://github.com/SamuelSchlesinger/complexitylib"
-  @ "257ad90ec5f547894cc20f27bd828839b1bf7bbf"
+require complexitylib from git "https://github.com/cslib-community/complexitylib"
+  @ "054834a4a4e6ac3ec50ed770bacea7fc42eccc7d"
 
 require cslib from git "https://github.com/leanprover/cslib.git"
-  @ "94ea80f41a5678fce997a004f0d8d12dbe47cc4b"
+  @ "254e30e6d4299c51323aaeaf5f51a4763b375d4a"
 
 -- Explicitly select the same Mathlib version as the base package, overriding
--- the older inherited snapshot in ComplexityLib.
+-- the inherited snapshot in the selected backend. Only the imported closure
+-- is validated against this shared stable release.
 require "leanprover-community" / "mathlib" @ git "v4.35.0"
 
 @[default_target]

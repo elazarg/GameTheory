@@ -10670,3 +10670,39 @@ observations and outcome below are preserved as the record of that run.
   unique solvability with nonempty decisions; an empty-decision counterexample
   proves that premise necessary. Native ownership remains adopted; the
   original independence argument remains historical evidence, not causality.
+
+## EXP-172: native CSLib computation certificates and search classes
+
+- **Date / status:** 2026-11-08; in progress on `port/cslib-complexity`.
+- **Question / competing designs:** Can the optional companion use the
+  CSLib-based successor's encoded polynomial-time certificates and native
+  search classes directly, replacing its custom reduction and PPAD calculus,
+  while retaining the canonical game relations and probability laws?
+- **Representative slice:** binary certificate arithmetic, an independently
+  certified End-of-Line verifier, every-answer search reductions, and a Boolean
+  sample test with its exact verdict law. Compare the native active-edge
+  End-of-Line condition with the existing asymmetric pointer condition.
+- **Kill conditions:** a reduction preserves only some target answers; an
+  encoding change silently changes the game relation; a runtime claim follows
+  only from output length; a native witness changes the test's PMF law; or the
+  base resolves/imports the optional backend. Shared Lean release upgrades are
+  independent maintenance; this experiment does not adopt a release candidate.
+- **Artifacts / commands:** successor checkout
+  `cslib-community/complexitylib@054834a4a4e6ac3ec50ed770bacea7fc42eccc7d`;
+  local probes and transcripts under `.codex/scratch/cslib-port/`.
+- **Initial observation:** the successor's finite-tuple framing differs from
+  the historical format. Internal machine arguments can use native encodings;
+  concrete problem codecs require explicit semantic proofs. Native PPAD
+  membership can use the existing pointer family without serializing it into
+  a second circuit format. Outcome and decision remain pending validation.
+- **First measured result:** the stable-toolchain probe `lake build PortProbe`
+  passes 1,901 jobs against the selected successor and CSLib sources, using
+  the existing Mathlib 4.35.0 pin. The direct check of `Backend.WordOperations`
+  with `-DwarningAsError=true` has no diagnostics. These validate the native
+  certificate operations, not the still-pending search and game classifications.
+- **Arithmetic slice:** the word operations and exact binary addition/comparison
+  build passes 1,979 jobs with no stored first-party diagnostics. All 43 owned
+  declarations pass transitive standard-axiom checking. The audit now caches the
+  imported module-name array before traversing declarations; its allowed axioms
+  and private-declaration coverage are unchanged, and all four diagnostic and
+  private-axiom regression controls pass.
