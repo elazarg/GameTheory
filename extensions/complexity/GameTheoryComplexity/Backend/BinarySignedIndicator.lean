@@ -7,48 +7,56 @@ public import GameTheoryComplexity.Backend.BinarySignedAddition
 
 /-! Signed scalar coefficients selected by a unary paired-action index. -/
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 
 /-- Arguments are row-action ruler, positive input-block ruler and signed scalar coefficient. -/
 def binarySignedIndicator (v : Fin 3 → List Bool) : List Bool :=
-  caseBit₀ (andBit (binaryLengthParity (v 0))
-    (lenEqFlag (binaryHalfRuler (v 0)) (v 1))) (v 2) []
+  if (v 0).length / 2 = (v 1).length ∧ (v 0).length % 2 = 1 then v 2 else []
 
-theorem binarySignedIndicator_cobham : Cobham binarySignedIndicator :=
-  Cobham.iteFn
-    (Cobham.andFn
-      (Cobham.comp binaryLengthParity_cobham fun _ : Fin 1 => .proj 0)
-      (lenEqFlag_mem
-        (Cobham.comp binaryHalfRuler_cobham fun _ : Fin 1 => .proj 0) (.proj 1)))
-    (.proj 2) (Cobham.const [])
-
-theorem binarySignedIndicator_mem_FPn : FPn binarySignedIndicator :=
-  cobham_iff_FPn.mp binarySignedIndicator_cobham
+@[fun_prop] theorem binarySignedIndicator_polyTime :
+    ComputableInPolyTime binarySignedIndicator (encPi encBits) encBits := by
+  have hrow : ComputableInPolyTime (fun v : Fin 3 → List Bool => v 0)
+      (encPi encBits) encBits := .pi_apply encBits 0
+  have hinput : ComputableInPolyTime (fun v : Fin 3 → List Bool => v 1)
+      (encPi encBits) encBits := .pi_apply encBits 1
+  have hscalar : ComputableInPolyTime (fun v : Fin 3 → List Bool => v 2)
+      (encPi encBits) encBits := .pi_apply encBits 2
+  have hrowLen := ComputableInPolyTime.length_bits_comp hrow
+  have hinputLen := ComputableInPolyTime.length_bits_comp hinput
+  have hhalf := (ComputableInPolyTime.unary_div_const 2).comp hrowLen
+  have heq : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool => decide ((v 0).length / 2 = (v 1).length))
+      (encPi encBits) encBool :=
+    ComputableInPolyTime.of_tidy
+      ((ComputableTidilyInPolyTime.decide_eq encUnary).comp
+        (hhalf.tidy.prod hinputLen.tidy))
+  have hmod := ComputableInPolyTime.unary_mod.comp (hrowLen.prod (.const 2))
+  have hodd : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool => decide ((v 0).length % 2 = 1))
+      (encPi encBits) encBool :=
+    ComputableInPolyTime.of_tidy
+      ((ComputableTidilyInPolyTime.decide_eq encUnary).comp (hmod.tidy.prod (.const 1)))
+  have hconditionAnd : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool =>
+        decide ((v 0).length / 2 = (v 1).length) && decide ((v 0).length % 2 = 1))
+      (encPi encBits) encBool :=
+    ComputableInPolyTime.of_tidy
+      (ComputableTidilyInPolyTime.bool_and.comp (heq.tidy.prod hodd.tidy))
+  have hcondition : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool =>
+        decide ((v 0).length / 2 = (v 1).length ∧ (v 0).length % 2 = 1))
+      (encPi encBits) encBool :=
+    hconditionAnd.of_enc_eq (fun v => by simp)
+  exact (hcondition.ite hscalar (.const [])).of_enc_eq (fun v => by
+    simp [binarySignedIndicator, decide_eq_true_eq])
 
 /-- Arbitrary missing or padded scalar words keep their existing signed interpretation. -/
 theorem binarySignedIndicator_value (row input scalar : List Bool) :
     binarySignedValue (binarySignedIndicator ![row, input, scalar]) =
       if row.length / 2 = input.length ∧ row.length % 2 = 1
       then binarySignedValue scalar else 0 := by
-  change binarySignedValue (caseBit₀ (andBit (binaryLengthParity row)
-    (lenEqFlag (binaryHalfRuler row) input)) scalar []) = _
-  rw [binaryLengthParity_value]
-  rcases lenEqFlag_flag (binaryHalfRuler row) input with he | he
-  · have hlen := (lenEqFlag_eq_true_iff _ _).mp he
-    rw [binaryHalfRuler_length] at hlen
-    rw [he]
-    by_cases hp : row.length % 2 = 1
-    · simp [hp, hlen, andBit, caseBit₀]
-    · simp [hp, hlen, andBit, caseBit₀]
-      rfl
-  · have hlen : row.length / 2 ≠ input.length := by
-      intro h
-      have hx := (lenEqFlag_eq_true_iff (binaryHalfRuler row) input).mpr
-        (by simpa only [binaryHalfRuler_length] using h)
-      rw [he] at hx
-      contradiction
-    rw [he]
-    by_cases hp : row.length % 2 = 1 <;> simp [hp, hlen, andBit, caseBit₀] <;> rfl
+  by_cases h : row.length / 2 = input.length ∧ row.length % 2 = 1 <;>
+    simp [binarySignedIndicator, h, binarySignedValue, ofBits]
 
 /-- Canonical paired indices select the exact positive-action coefficient. -/
 theorem binarySignedIndicator_index {k : ℕ} (row input scalar : List Bool)
