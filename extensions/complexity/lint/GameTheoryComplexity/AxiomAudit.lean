@@ -19,6 +19,7 @@ import all GameTheoryComplexity.Tests.Composition
 import all GameTheoryComplexity.Tests.SATReduction
 import all GameTheoryComplexity.Tests.NashCertificate
 import all GameTheoryComplexity.Tests.SearchReduction
+import all GameTheoryComplexity.Tests.WordFold
 import all GameTheoryComplexity.Tests.EndOfLine
 import all GameTheoryComplexity.Tests.RawEndOfLine
 import all GameTheoryComplexity.Tests.PPAD
