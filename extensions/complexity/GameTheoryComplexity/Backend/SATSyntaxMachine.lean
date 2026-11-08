@@ -1,60 +1,63 @@
 module
 
-public import Complexitylib.SAT.Tseitin.Machine.Internal.Validation
-public import Complexitylib.SAT.Tseitin.Machine.Internal.ValidationFramed
-public import Complexitylib.Classes.P.Cobham
-public import Complexitylib.Asymptotics.PolyBound
+public import GameTheoryComplexity.Backend.SATWords
+public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Basic
+public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
+public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Plain
 
 @[expose] public section
 
-/-! Polynomial-time syntax validation for the concrete SAT bit encoding.
-The existing finite-state validator writes one Boolean output bit and halts in
-exactly the input length plus two machine transitions.
+/-! A finite-state machine certifies syntax validation of the public unary SAT
+byte format. Five Boolean registers suffice on every input. The proof identifies
+that actual bounded-state scan with successful canonical native CNF decoding;
+no runtime bound is inferred from the size of a decoded formula.
 -/
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity _root_.Complexity.SAT _root_.Complexity.SAT.ThreeSAT.Machine
+open Turing.MultiTapeTM
 
-/-- One-bit characteristic word for successful CNF decoding. -/
-def satSyntaxWord (input : List Bool) : List Bool := [(CNF.decode? input).isSome]
+private abbrev SyntaxState := Bool × Bool × (Bool × Bool × Bool)
+
+private abbrev syntaxEncoding : SyntaxState ↪ List Bool :=
+  encPair encBool (encPair encBool (encPair encBool (encPair encBool encBool)))
+
+private theorem finiteSyntaxFold_polyTime
+    (step : SyntaxState → Bool → SyntaxState) (initial : SyntaxState) :
+    ComputableInPolyTime (fun input : List Bool => input.foldl step initial)
+      encBits syntaxEncoding := by
+  have hstep : ComputableInPolyTime (fun pair : SyntaxState × Bool => step pair.1 pair.2)
+      (encPair syntaxEncoding encBool) syntaxEncoding := .of_finite _
+  have hfold := ComputableTidilyInPolyTime.foldl_of_bounded_growth
+    (encA := encBool) (encL := encBits)
+    (list := id) (init := fun _ : List Bool => initial) (step := step)
+    (ComputableTidilyInPolyTime.id' (encIn := encBits))
+    (ComputableTidilyInPolyTime.const initial) hstep.tidy
+    (growth := 0) (fun _ _ => by simp [syntaxEncoding])
+  simpa only [id_eq] using ComputableInPolyTime.of_tidy hfold
+
+/-- The actual finite-state scan has one native polynomial-time machine certificate. -/
+@[fun_prop] theorem satSyntaxValid_polyTime :
+    ComputableInPolyTime SATWords.syntaxValid encBits encBool := by
+  unfold SATWords.syntaxValid
+  let finish (state : SyntaxState) : Bool :=
+    !state.1 && (!state.2.2.1 && !state.2.2.2.1 && !state.2.2.2.2)
+  have hfinish : ComputableInPolyTime finish syntaxEncoding encBool := .of_finite _
+  exact hfinish.comp (finiteSyntaxFold_polyTime _ (false, false, false, false, false))
+
+/-- One-bit characteristic word for successful native CNF decoding. -/
+def satSyntaxWord (input : List Bool) : List Bool := [(SATWords.decodeFormula? input).isSome]
 
 @[simp] theorem satSyntaxWord_eq (input : List Bool) :
-    satSyntaxWord input = [(CNF.decode? input).isSome] := rfl
+    satSyntaxWord input = [(SATWords.decodeFormula? input).isSome] := rfl
 
-/-- The concrete finite-state validator computes the full one-bit syntax word. -/
-theorem satSyntaxWord_computesInTime :
-    (validationTM (n := 0)).ComputesInTime satSyntaxWord (fun n => n + 2) := by
-  intro input
-  let work₀ : Fin 0 → Tape := fun _ => ⟨1, (Tape.init []).cells⟩
-  let output₀ : Tape := ⟨1, (Tape.init []).cells⟩
-  let started : Cfg 0 (validationTM (n := 0)).Q :=
-    { state := (validationTM (n := 0)).qstart
-      input := ⟨1, (Tape.init (input.map Γ.ofBool)).cells⟩
-      work := work₀
-      output := output₀ }
-  have hstep : (validationTM (n := 0)).step ((validationTM (n := 0)).initCfg input) =
-      some started := rfl
-  obtain ⟨c, hreach, hhalt, hpost⟩ :=
-    validationTM_started_framed_reachesIn_internal input work₀ output₀
-      (fun i => Fin.elim0 i) TM.outAcc_nil_init
-  refine ⟨c, input.length + 2, le_rfl, .step hstep hreach, hhalt, ?_⟩
-  rcases hpost with ⟨_, _, _, _, _, hcell, htail⟩
-  constructor
-  · intro i hi
-    have hi0 : i = 0 := by simpa [satSyntaxWord] using hi
-    subst i
-    simpa [satSyntaxWord, validEncoding_eq_decode?_isSome_internal] using hcell
-  · exact htail 2 (by decide)
-
-/-- The syntax word has an actual polynomial-time deterministic-machine certificate. -/
-theorem satSyntaxWord_mem_FP : satSyntaxWord ∈ FP := by
-  obtain ⟨d, hd⟩ := (PolyBound.id.add (PolyBound.const 2)).bigO
-  exact ⟨d, 0, validationTM, fun n => n + 2, satSyntaxWord_computesInTime, hd⟩
-
-/-- The machine certificate can be used in Cobham constructions of payoff serializers. -/
-theorem satSyntaxWord_cobham :
-    Cobham (fun v : Fin 1 → List Bool => satSyntaxWord (v 0)) :=
-  FP_subset_CobhamFP satSyntaxWord_mem_FP
+/-- Syntax validation is certified by native finite-state execution, including
+malformed and incomplete inputs, before being used by payoff serializers. -/
+@[fun_prop] theorem satSyntaxWord_polyTime :
+    ComputableInPolyTime satSyntaxWord encBits encBits := by
+  change ComputableInPolyTime
+    (fun input : List Bool => [(SATWords.decodeFormula? input).isSome]) encBits encBits
+  simpa only [SATWords.syntaxValid_eq_decodeFormula] using
+    ComputableInPolyTime.bitsCons satSyntaxValid_polyTime (ComputableInPolyTime.const [])
 
 end GameTheory.Complexity.Backend
