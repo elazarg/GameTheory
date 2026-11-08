@@ -11,28 +11,32 @@ ComplexityLib. See the companion README for local and consumer commands.
 - `GameTheoryComplexity.RandomTape`: the PMF of a verdict on uniformly drawn
   finite fair random tapes, its counting formula, and impossibility of exact
   acceptance probability `1/3` for any fixed tape length.
-- `GameTheoryComplexity.Backend.Complexitylib`: equality of that PMF acceptance probability
-  with ComplexityLib's machine counting semantics; one fixed machine with a
-  named all-path polynomial clock; canonical Boolean sample serialization with
-  unary security parameter; polynomial encoded-input and execution bounds; and
-  specialization through the existing `SampleTest` interface.
-- `GameTheoryComplexity.Backend.Serializer`: a deterministic polynomial-time
-  machine witness for the canonical Boolean serializer, including tuple
-  decoding, exact output correctness, and a runtime bound in the unary security
-  parameter. `exists_uniform_booleanSerializer` supplies one machine for all
-  sample degrees, parameters and sample tuples; each fixed sample degree has
-  a polynomial runtime bound valid at every parameter, including zero.
-- `GameTheoryComplexity.RandomTapeComposition` and `Backend.ClockPadding`:
-  exact invariance of full verdict laws under unused fair bits and clock
-  extension after all paths halt.
-- `GameTheoryComplexity.Backend.Composition`: one probabilistic polynomial-time
-  machine for deterministic FP preprocessing followed by a clocked randomized
-  test, preserving its full acceptance law on every input.
-- `GameTheoryComplexity.Backend.CompiledSampleTest`: one fixed machine implementing
-  each canonical Boolean test, with a polynomial security clock uniform over
-  all sample tuples, exact law agreement, and immediate rejection covered.
-- `GameTheoryComplexity.Backend.Negligible`: equivalence of ComplexityLib's explicit
-  inverse-power threshold predicate with the canonical Mathlib-based predicate.
+- `GameTheoryComplexity.Backend.Complexitylib`: native
+  `Cslib.Probability.IsPPTOn encBits encBool` certificates for Boolean programs,
+  canonical unary-parameter sample serialization, and specialization through the
+  existing `SampleTest` interface. `exists_program_randomTapeLaw` gives one
+  efficient deterministic saved-coin evaluator whose uniform finite-tape law is
+  exactly the program's PMF law. Every certified Boolean program therefore
+  satisfies the same exact-third impossibility as the canonical random tapes.
+- `GameTheoryComplexity.Backend.Serializer`: the canonical Boolean serializer
+  on a native framed pair of raw words. `serializeBoolean_polyTime` supplies its
+  actual deterministic polynomial-time machine certificate, including pair
+  decoding, normalization of the first word to unary, and writing the delimiter
+  and payload. `booleanTuple_encode_length` gives
+  `2*κ + 1 + (κ+1)^sampleDegree`; its parameter-polynomial bound includes zero.
+- `GameTheoryComplexity.RandomTapeComposition`: exact invariance of full verdict
+  laws when unused independent fair bits are discarded.
+- `GameTheoryComplexity.Backend.CompiledSampleTest`: native preprocessing
+  closure and the native intrinsic-halting compiler give one fixed finite machine
+  implementing serialization and testing. Its parameter-polynomial clock is
+  uniform over all sample tuples, with exact agreement of the complete encoded
+  verdict law and halting on every supported execution. The same machine has a
+  raw-word polynomial clock that halts on every word; the program-law guarantee
+  applies to encoded pairs. Native halting-padding
+  lemmas preserve that law when the security bound enlarges the clock.
+- `GameTheoryComplexity.Backend.Negligible`: the native nonnegative predicate on
+  `fun κ => ‖advantage κ‖₊` is equivalent to GameTheory's canonical signed
+  real-valued superpolynomial-decay predicate.
 - `GameTheoryComplexity.SampleTest`: a small client facade exposing the Boolean
   test class, its polynomial sample-count property, and indistinguishability
   implications using only canonical GameTheory types in declaration signatures.
@@ -108,29 +112,44 @@ search and FIXP have different output conventions. They remain separate delivery
 seams.
 
 Normal clients import the facade and continue using canonical `SampleTest`,
-`IndistinguishableBy`, and `SecureImplementation`. Clients constructing concrete
-machines import the backend explicitly. Swapping the machine library requires
-changing backend implementations and proofs rather than these facade signatures;
-no equivalence between arbitrary machine models is assumed. This is a module
-boundary, not a universal computation interface or a backend registry.
+`IndistinguishableBy`, and `SecureImplementation`. Backend clients supply a
+program `List Bool → Cslib.ProbComp Bool` and an explicit native
+`IsPPTOn encBits encBool` certificate. The backend uses the native computation
+APIs directly; the facade's declaration signatures retain canonical GameTheory
+types. The module boundary introduces no universal computation interface or
+backend registry.
 
 ## Exact limits
 
 Machine bounds use encoded input length. The Boolean interface fixes sample
 count to a power of `κ + 1`, serializes `κ` in unary, and proves an explicit
-execution bound in `κ`. An arbitrary encoder with short outputs could hide an
-oracle; no such encoder is admitted as efficient preprocessing. The serializer
-certificate starts from a standard encoded pair containing the unary parameter
-and the sample bitstring. Its deterministic machine computes
-exactly the input consumed by `booleanMachineTest`, with polynomial cost
-including pair decoding. General efficient postprocessing and general reference
-mean tests remain separate obligations. The composition certificate now supplies
-one probabilistic polynomial-time machine for serialization and testing together.
-Its global clock is polynomial in raw input length; its clock on canonical tuples
-is polynomial in the unary security parameter and independent of the samples.
-Unused prefix bits and padding after halting preserve the full verdict law.
-The initial encoded tuple remains the explicit machine input convention; this
-certificate does not construct a sampler or encode a binary security parameter.
+parameter-polynomial length bound. An arbitrary encoder with short outputs could
+hide an oracle; it requires its own deterministic computation certificate.
+
+The serializer starts from the native encoding
+`encPair encBits encBits` of a raw-word pair. At a canonical input the first
+word is `List.replicate κ true` and the second is the sample bitstring.
+`serializeBoolean_polyTime` computes exactly the input consumed by
+`booleanProgramTest`, charging pair decoding and the complete output.
+The native pair has length `2*κ + 1 + (κ+1)^sampleDegree`, bounded by
+`4*(κ+1)^(sampleDegree+1)` for every parameter and prescribed sample tuple.
+
+Native `IsPPTOn` identifies a program law with a fixed finite machine stopped at
+a strict polynomial budget; that initial certificate alone need not assert that
+the control state has halted. `exists_composed_booleanMachine` uses native
+preprocessing closure and the intrinsic-halting compiler to supply one actual
+halting machine for serialization and testing. The same machine halts on every
+raw word within one polynomial in that word's length, including words outside
+the pair encoding's image. Its exact program-law guarantee applies to encoded
+pairs. Its security bound is polynomial in the
+unary security parameter and independent of the sample values. Enlarging the
+clock after halting preserves the complete configuration and verdict laws.
+Saved-coin replay also permits arbitrary extra independent tape padding.
+
+The explicit machine input remains the encoded pair. This certificate constructs
+neither a sampler for arbitrary input laws nor a binary security-parameter
+encoding. Reference utility mean tests and arbitrary efficient encodings require
+their own implementation certificates.
 
 Finite fair random tapes give dyadic probabilities. Arbitrary rational laws
 require approximation or another sampling model. Arbitrary real utilities need

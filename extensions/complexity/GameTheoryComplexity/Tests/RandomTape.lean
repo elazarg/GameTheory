@@ -2,64 +2,52 @@ module
 
 public import GameTheoryComplexity.SampleTest
 public import GameTheoryComplexity.Backend.Complexitylib
+public import Complexity.Computability.Probabilistic.Sampling
 
 @[expose] public section
 
-/-! A two-step fair-coin machine exercises the probability bridge and its sampling limits. -/
+/-! A native fair-coin program exercises exact laws, machine certification and the
+limitations of bounded fair randomness.
+-/
 
 noncomputable section
 
 namespace GameTheory.Complexity.Tests
 
-open _root_.Complexity
+open Cslib Cslib.Probability Turing.MultiTapeTM
 open GameTheory.Complexity.Backend
 
-/-- The first step passes the immutable marker; the second writes a fair verdict and halts. -/
-def coinMachine : NTM 0 where
-  Q := Fin 3
-  qstart := 0
-  qhalt := 2
-  δ bit state _ _ _ :=
-    (if state = 0 then 1 else 2, fun _ => Γw.blank,
-      if bit then Γw.one else Γw.zero, Dir3.right, fun _ => Dir3.right, Dir3.right)
-  δ_right_of_start := by intros; exact ⟨fun _ => rfl, fun _ _ => rfl, fun _ => rfl⟩
+/-- One sampled fair bit is the verdict, independently of the input. -/
+def coinProgram : List Bool → ProbComp Bool := fun _ => ProbComp.uniform Bool
 
-theorem coinMachine_halts : coinMachine.AllPathsHaltIn (fun _ => 2) := by
-  intro input tape
-  simp [NTM.trace, coinMachine]
+theorem coinProgram_isPPT : IsPPTOn encBits encBool coinProgram :=
+  isPPTOn_uniform_bool encBits
 
-/-- A constant-time certificate for the same fixed machine on every input. -/
-def coinClock : PolynomialClock coinMachine where
-  steps := fun _ => 2
-  halts := coinMachine_halts
-  degree := 0
-  asymptotic := BigO.const_le_pow 2 0
-  constant := 2
-  bound := by intro len; simp
+example : booleanProgramTest coinProgram 0 ∈ GameTheory.Complexity.booleanMachineTests :=
+  ⟨coinProgram, coinProgram_isPPT, 0, rfl⟩
 
-example : coinMachine.IsPPT := coinClock.isPPT
+/-- The native machine-certified consumer accepts with probability exactly one half. -/
+theorem coinProgram_probability (input : List Bool) :
+    (ProbComp.eval (coinProgram input) true).toReal = 1 / 2 := by
+  norm_num [coinProgram, ProbComp.eval_uniform]
 
-example : booleanMachineTest coinMachine coinClock 0 ∈ GameTheory.Complexity.booleanMachineTests :=
-  ⟨0, coinMachine, coinClock, 0, rfl⟩
+/-- Every certified program, including this fair coin, obeys the finite-tape restriction. -/
+example (program : List Bool → ProbComp Bool)
+    (efficient : IsPPTOn encBits encBool program) (input : List Bool) :
+    (ProbComp.eval (program input) true).toReal ≠ 1 / 3 :=
+  program_acceptProb_ne_one_third program efficient input
 
-theorem coinMachine_verdict (input : List Bool) (tape : Fin 2 → Bool) :
-    machineVerdict coinMachine input 2 tape = tape 1 := by
-  cases h : tape 1 <;>
-    simp [machineVerdict, NTM.trace, coinMachine, Tape.write, Tape.move, h]
-
-/-- An actual probabilistic machine consumer, with positive acceptance probability. -/
-theorem coinMachine_probability (input : List Bool) :
-    (machineLaw coinMachine input 2 true).toReal = 1 / 2 := by
-  rw [machineLaw, randomTapeLaw_true]
-  simp only [coinMachine_verdict]
-  have hcount : (Finset.univ.filter fun tape : Fin 2 → Bool => tape 1 = true).card = 2 := by
-    decide
-  rw [hcount]
-  norm_num
-
-/-- Neither this machine nor any other bounded fair-coin verdict realizes an exact third. -/
-example (steps : ℕ) (verdict : (Fin steps → Bool) → Bool) :
-    (randomTapeLaw steps verdict true).toReal ≠ 1 / 3 :=
-  randomTapeLaw_ne_one_third steps verdict
+/-- Saved-coin replay admits any additional independent padding, uniformly over
+the input; its complete verdict law stays unchanged. -/
+theorem coinProgram_padded_randomTapeLaw :
+    ∃ (coefficient degree : ℕ) (evaluate : List Bool → List Bool → Bool),
+      ∀ input padding, ProbComp.eval (coinProgram input) =
+        randomTapeLaw (coefficient * (input.length + 1) ^ degree + padding)
+          (fun choices => evaluate input (List.ofFn choices)) := by
+  obtain ⟨coefficient, degree, evaluate, _, _, hlaw⟩ :=
+    coinProgram_isPPT.exists_total_seeded_evaluator
+  refine ⟨coefficient, degree, evaluate, fun input padding => ?_⟩
+  exact (hlaw input _ (Nat.le_add_right _ _)).trans
+    (uniformList_map_eq_randomTapeLaw _ _)
 
 end GameTheory.Complexity.Tests
