@@ -12,45 +12,124 @@ public import GameTheory.Finite.BimatrixPathBinaryCodec
 The dimension is an explicit length ruler and the dropped label is zero.
 -/
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
+open GameTheory.Complexity.Backend.WordOperations
 
-private def basicBit (v : Fin 2 → List Bool) : List Bool :=
-  xorSuffix (bitAt (v 0) (v 1)) (notBit (binaryLengthParity (v 0)))
+/-- Unmask one basic-variable bit using the ruler's parity. -/
+def bimatrixNodeBasicBit (v : Fin 2 → List Bool) : List Bool :=
+  [Bool.xor ((v 1)[(v 0).length]?.getD false)
+    (!(decide ((v 0).length % 2 = 1)))]
 
-private def enteringBit (v : Fin 2 → List Bool) : List Bool :=
-  xorSuffix (bitAt (v 0) (v 1)) (lenEqFlag (v 0) [false])
+/-- Unmask one entering-variable bit, removing the source bit at position one. -/
+def bimatrixNodeEnteringBit (v : Fin 2 → List Bool) : List Bool :=
+  [Bool.xor ((v 1)[(v 0).length]?.getD false) (decide ((v 0).length = 1))]
 
 /-- Unmask the basis bits, indexed in canonical label/kind order. -/
 def bimatrixNodeBasicWord (v : Fin 2 → List Bool) : List Bool :=
-  binarySignedTable basicBit ((v 0) ++ (v 0)) [false] ![v 1]
+  binarySignedTable bimatrixNodeBasicBit ((v 0) ++ (v 0)) [false] ![v 1]
 
 /-- Unmask the entering bits; the source entering variable has position one. -/
 def bimatrixNodeEnteringWord (v : Fin 2 → List Bool) : List Bool :=
-  binarySignedTable enteringBit ((v 0) ++ (v 0)) [false]
+  binarySignedTable bimatrixNodeEnteringBit ((v 0) ++ (v 0)) [false]
     ![(v 1).drop (((v 0) ++ (v 0)).length)]
 
-private theorem basicBit_cobham : Cobham basicBit :=
-  xorSuffix_mem (Cobham.comp₂ Cobham.bitAtFn (.proj 0) (.proj 1))
-    (Cobham.notFn (Cobham.comp binaryLengthParity_cobham fun _ => .proj 0))
+private theorem bimatrixNodeBasicBit_polyTime :
+    ComputableInPolyTime bimatrixNodeBasicBit (encPi encBits) encBits := by
+  have hr := ComputableInPolyTime.pi_apply encBits (0 : Fin 2)
+  have hw := ComputableInPolyTime.pi_apply encBits (1 : Fin 2)
+  have hlen := ComputableInPolyTime.length_bits_comp hr
+  have hbit := indexedFlag_polyTime.comp (hlen.prod hw)
+  have hodd := binaryLengthParity_polyTime.comp hr
+  have hhead : ComputableInPolyTime (fun word : List Bool => word.headD false)
+      encBits encBool := .headD false
+  have hbitBool := hhead.comp hbit
+  have hparity := hhead.comp hodd
+  have hnot := ComputableInPolyTime.bool_not.comp hparity
+  have hxor := ComputableInPolyTime.bool_xor.comp (hbitBool.prod hnot)
+  exact ComputableInPolyTime.bitsCons hxor (.const [])
 
-private theorem enteringBit_cobham : Cobham enteringBit :=
-  xorSuffix_mem (Cobham.comp₂ Cobham.bitAtFn (.proj 0) (.proj 1))
-    (lenEqFlag_mem (.proj 0) (Cobham.const [false]))
+private theorem bimatrixNodeEnteringBit_polyTime :
+    ComputableInPolyTime bimatrixNodeEnteringBit (encPi encBits) encBits := by
+  have hr := ComputableInPolyTime.pi_apply encBits (0 : Fin 2)
+  have hw := ComputableInPolyTime.pi_apply encBits (1 : Fin 2)
+  have hlen := ComputableInPolyTime.length_bits_comp hr
+  have hbit := indexedFlag_polyTime.comp (hlen.prod hw)
+  have heq := ComputableInPolyTime.of_tidy
+    ((ComputableTidilyInPolyTime.decide_eq encUnary).comp (hlen.tidy.prod (.const 1)))
+  have hhead : ComputableInPolyTime (fun word : List Bool => word.headD false)
+      encBits encBool := .headD false
+  have hbitBool := hhead.comp hbit
+  have hxor := ComputableInPolyTime.bool_xor.comp (hbitBool.prod heq)
+  exact ComputableInPolyTime.bitsCons hxor (.const [])
 
-theorem bimatrixNodeBasicWord_cobham : Cobham bimatrixNodeBasicWord :=
-  Cobham.comp₃ (binarySignedTable_cobham basicBit_cobham)
-    (Cobham.appendFn (.proj 0) (.proj 0)) (Cobham.const [false]) (.proj 1)
+@[fun_prop] theorem bimatrixNodeBasicWord_polyTime :
+    ComputableInPolyTime bimatrixNodeBasicWord (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 2 → List Bool => ![(v 0) ++ (v 0), [false], v 1])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · change ComputableInPolyTime (fun v : Fin 2 → List Bool => (v 0) ++ (v 0))
+        (encPi encBits) encBits
+      exact ComputableInPolyTime.bitsAppend (.pi_apply encBits (0 : Fin 2))
+        (.pi_apply encBits (0 : Fin 2))
+    · change ComputableInPolyTime (fun _ : Fin 2 → List Bool => [false])
+        (encPi encBits) encBits
+      exact .const [false]
+    · change ComputableInPolyTime (fun v : Fin 2 → List Bool => v 1)
+        (encPi encBits) encBits
+      exact .pi_apply encBits (1 : Fin 2)
+  have htable : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool =>
+        binarySignedTable bimatrixNodeBasicBit (v 0) (v 1) (Fin.tail (Fin.tail v)))
+      (encPi encBits) encBits :=
+    binarySignedTable_polyTime (p := 1) bimatrixNodeBasicBit_polyTime
+  have hcert := htable.comp hargs
+  apply ComputableInPolyTime.of_tidy
+  apply hcert.tidy.of_enc_eq
+  intro v
+  rfl
 
-theorem bimatrixNodeEnteringWord_cobham : Cobham bimatrixNodeEnteringWord :=
-  Cobham.comp₃ (binarySignedTable_cobham enteringBit_cobham)
-    (Cobham.appendFn (.proj 0) (.proj 0)) (Cobham.const [false])
-    (Cobham.dropFn (Cobham.appendFn (.proj 0) (.proj 0)) (.proj 1))
-
-theorem bimatrixNodeBasicWord_mem_FPn : FPn bimatrixNodeBasicWord :=
-  cobham_iff_FPn.mp bimatrixNodeBasicWord_cobham
-
-theorem bimatrixNodeEnteringWord_mem_FPn : FPn bimatrixNodeEnteringWord :=
-  cobham_iff_FPn.mp bimatrixNodeEnteringWord_cobham
+@[fun_prop] theorem bimatrixNodeEnteringWord_polyTime :
+    ComputableInPolyTime bimatrixNodeEnteringWord (encPi encBits) encBits := by
+  have hclock : ComputableInPolyTime (fun v : Fin 2 → List Bool => v 0 ++ v 0)
+      (encPi encBits) encBits :=
+    ComputableInPolyTime.bitsAppend (.pi_apply encBits (0 : Fin 2))
+      (.pi_apply encBits (0 : Fin 2))
+  have hclockLen := ComputableInPolyTime.length_bits_comp hclock
+  have hword : ComputableInPolyTime (fun v : Fin 2 → List Bool => v 1)
+      (encPi encBits) encBits := .pi_apply encBits 1
+  have hdrop : ComputableInPolyTime
+      (fun v : Fin 2 → List Bool => (v 1).drop ((v 0 ++ v 0).length))
+      (encPi encBits) encBits := hword.bitsDropWithInput hclockLen
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 2 → List Bool =>
+        ![(v 0) ++ (v 0), [false], (v 1).drop (((v 0) ++ (v 0)).length)])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · change ComputableInPolyTime (fun v : Fin 2 → List Bool => v 0 ++ v 0)
+        (encPi encBits) encBits
+      exact hclock
+    · change ComputableInPolyTime (fun _ : Fin 2 → List Bool => [false])
+        (encPi encBits) encBits
+      exact .const [false]
+    · change ComputableInPolyTime
+        (fun v : Fin 2 → List Bool => (v 1).drop ((v 0 ++ v 0).length))
+        (encPi encBits) encBits
+      exact hdrop
+  have htable : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool =>
+        binarySignedTable bimatrixNodeEnteringBit (v 0) (v 1) (Fin.tail (Fin.tail v)))
+      (encPi encBits) encBits :=
+    binarySignedTable_polyTime (p := 1) bimatrixNodeEnteringBit_polyTime
+  have hcert := htable.comp hargs
+  apply ComputableInPolyTime.of_tidy
+  apply hcert.tidy.of_enc_eq
+  intro v
+  rfl
 
 @[simp] theorem bimatrixNodeBasicWord_length (v : Fin 2 → List Bool) :
     (bimatrixNodeBasicWord v).length = 2 * (v 0).length := by
@@ -62,41 +141,22 @@ theorem bimatrixNodeEnteringWord_mem_FPn : FPn bimatrixNodeEnteringWord :=
 
 
 
-private theorem lenEq_value (x y : List Bool) : lenEqFlag x y = [decide (x.length = y.length)] := by
-  rcases lenEqFlag_flag x y with h | h
-  · rw [h]; simp [(lenEqFlag_eq_true_iff x y).mp h]
-  · rw [h]
-    have hn : x.length ≠ y.length := by
-      intro he
-      have := (lenEqFlag_eq_true_iff x y).mpr he
-      simp [h] at this
-    simp [hn]
-
-private theorem xor_value (x y : Bool) : xorSuffix [x] [y] = [xor x y] := by
-  rw [xorSuffix_eq_zipWith_of_length [x] [y] rfl]
-  rfl
-
 private theorem xor_decide (x y : Bool) : some (xor x y) = some (decide (xor x y = true)) := by
   cases x <;> cases y <;> rfl
 
 private theorem basicBit_value (r node : List Bool) :
-    basicBit ![r, node] = [xor (node[r.length]?.getD false) (!(decide (r.length % 2 = 1)))] := by
-  change xorSuffix (bitAt r node) (notBit (binaryLengthParity r)) = _
-  rw [bitAt_getElem?, binaryLengthParity_value]
-  generalize decide (r.length % 2 = 1) = b
-  cases b <;> exact xor_value _ _
+    bimatrixNodeBasicBit ![r, node] =
+      [xor (node[r.length]?.getD false) (!(decide (r.length % 2 = 1)))] := rfl
 
 private theorem enteringBit_value (r node : List Bool) :
-    enteringBit ![r, node] = [xor (node[r.length]?.getD false) (decide (r.length = 1))] := by
-  change xorSuffix (bitAt r node) (lenEqFlag r [false]) = _
-  rw [bitAt_getElem?, lenEq_value]
-  exact xor_value _ _
+    bimatrixNodeEnteringBit ![r, node] =
+      [xor (node[r.length]?.getD false) (decide (r.length = 1))] := rfl
 
 /-- Exact unmasked basis bytes, including zero padding for truncated nodes. -/
 theorem bimatrixNodeBasicWord_value (v : Fin 2 → List Bool) :
     bimatrixNodeBasicWord v = (List.range (2 * (v 0).length)).map
       (fun i => xor ((v 1)[i]?.getD false) (!(decide (i % 2 = 1)))) := by
-  have h := binarySignedTable_flags basicBit ![v 1]
+  have h := binarySignedTable_flags bimatrixNodeBasicBit ![v 1]
     (fun i => xor ((v 1)[i]?.getD false) (!(decide (i % 2 = 1))))
     (fun r => basicBit_value r (v 1)) ((v 0) ++ (v 0))
   simpa only [bimatrixNodeBasicWord, List.length_append, ← two_mul] using h
@@ -105,109 +165,178 @@ theorem bimatrixNodeBasicWord_value (v : Fin 2 → List Bool) :
 theorem bimatrixNodeEnteringWord_value (v : Fin 2 → List Bool) :
     bimatrixNodeEnteringWord v = (List.range (2 * (v 0).length)).map
       (fun i => xor ((v 1)[2 * (v 0).length + i]?.getD false) (decide (i = 1))) := by
-  have h := binarySignedTable_flags enteringBit ![(v 1).drop (2 * (v 0).length)]
+  have h := binarySignedTable_flags bimatrixNodeEnteringBit ![(v 1).drop (2 * (v 0).length)]
     (fun i => xor (((v 1).drop (2 * (v 0).length))[i]?.getD false) (decide (i = 1)))
     (fun r => enteringBit_value r _) ((v 0) ++ (v 0))
   simpa only [bimatrixNodeEnteringWord, List.length_append, ← two_mul, List.getElem?_drop] using h
 
-private def coverageBit (v : Fin 2 → List Bool) : List Bool :=
-  orBit (lenEqFlag (v 0) []) (notBit (andBit
-    (bitAt ((v 0) ++ (v 0)) (v 1))
-    (bitAt (true :: ((v 0) ++ (v 0))) (v 1))))
+def bimatrixNodeCoverageBit (v : Fin 2 → List Bool) : List Bool :=
+  [decide ((v 0).length = 0) ||
+    (!((v 1)[2 * (v 0).length]?.getD false) ||
+      !((v 1)[2 * (v 0).length + 1]?.getD false))]
 
-private def portBit (v : Fin 3 → List Bool) : List Bool :=
-  let label := binaryHalfRuler (v 0)
-  orBit (notBit (bitAt (v 0) (v 2)))
-    (andBit (notBit (bitAt (v 0) (v 1)))
-      (orBit (lenEqFlag label []) (notBit (orBit
-        (bitAt (label ++ label) (v 1)) (bitAt (true :: (label ++ label)) (v 1))))))
+def bimatrixNodePortBit (v : Fin 3 → List Bool) : List Bool :=
+  let labelLength := (binaryHalfRuler (v 0)).length
+  let enteringBit := (v 2)[(v 0).length]?.getD false
+  let basicBit := (v 1)[(v 0).length]?.getD false
+  let basicLabelFalse := (v 1)[2 * labelLength]?.getD false
+  let basicLabelTrue := (v 1)[2 * labelLength + 1]?.getD false
+  let condition :=
+    (!enteringBit) ||
+      ((!basicBit) &&
+        ((decide (labelLength = 0)) ||
+          ((!basicLabelFalse) && (!basicLabelTrue))))
+  [condition]
 
-private theorem coverageBit_cobham : Cobham coverageBit :=
-  Cobham.orFn (lenEqFlag_mem (.proj 0) (Cobham.const []))
-    (Cobham.notFn (Cobham.andFn
-      (Cobham.comp₂ Cobham.bitAtFn (Cobham.appendFn (.proj 0) (.proj 0)) (.proj 1))
-      (Cobham.comp₂ Cobham.bitAtFn
-        (Cobham.appendFn (Cobham.const [true]) (Cobham.appendFn (.proj 0) (.proj 0))) (.proj 1))))
+private theorem bimatrixNodeCoverageBit_polyTime :
+    ComputableInPolyTime bimatrixNodeCoverageBit (encPi encBits) encBits := by
+  have hr := ComputableInPolyTime.pi_apply encBits (0 : Fin 2)
+  have hb := ComputableInPolyTime.pi_apply encBits (1 : Fin 2)
+  have hlen := ComputableInPolyTime.length_bits_comp hr
+  have hindex0 := ComputableInPolyTime.unary_mul' (.const 2) hlen
+  have hindex1 := ComputableInPolyTime.unary_add' hindex0 (.const 1)
+  have hbit0 := indexedFlag_polyTime.comp (hindex0.prod hb)
+  have hbit1 := indexedFlag_polyTime.comp (hindex1.prod hb)
+  have hhead : ComputableInPolyTime (fun word : List Bool => word.headD false)
+      encBits encBool := .headD false
+  have hnot0 := ComputableInPolyTime.bool_not.comp (hhead.comp hbit0)
+  have hnot1 := ComputableInPolyTime.bool_not.comp (hhead.comp hbit1)
+  have hzero := ComputableInPolyTime.of_tidy
+    ((ComputableTidilyInPolyTime.decide_eq encUnary).comp (hlen.tidy.prod (.const 0)))
+  have hzeroOr := ComputableInPolyTime.bool_or.comp (hzero.prod
+    (ComputableInPolyTime.bool_or.comp (hnot0.prod hnot1)))
+  have hcert := ComputableInPolyTime.bitsCons hzeroOr (.const [])
+  apply ComputableInPolyTime.of_tidy
+  apply hcert.tidy.of_enc_eq
+  intro v
+  rfl
 
-private theorem portBit_cobham : Cobham portBit := by
-  have hl : Cobham fun v : Fin 3 → List Bool => binaryHalfRuler (v 0) :=
-    Cobham.comp binaryHalfRuler_cobham fun _ => .proj 0
-  exact Cobham.orFn (Cobham.notFn (Cobham.comp₂ Cobham.bitAtFn (.proj 0) (.proj 2)))
-    (Cobham.andFn (Cobham.notFn (Cobham.comp₂ Cobham.bitAtFn (.proj 0) (.proj 1)))
-      (Cobham.orFn (lenEqFlag_mem hl (Cobham.const [])) (Cobham.notFn (Cobham.orFn
-        (Cobham.comp₂ Cobham.bitAtFn (Cobham.appendFn hl hl) (.proj 1))
-        (Cobham.comp₂ Cobham.bitAtFn
-          (Cobham.appendFn (Cobham.const [true]) (Cobham.appendFn hl hl)) (.proj 1))))))
+private theorem bimatrixNodePortBit_polyTime :
+    ComputableInPolyTime bimatrixNodePortBit (encPi encBits) encBits := by
+  have hr := ComputableInPolyTime.pi_apply encBits (0 : Fin 3)
+  have hb := ComputableInPolyTime.pi_apply encBits (1 : Fin 3)
+  have he := ComputableInPolyTime.pi_apply encBits (2 : Fin 3)
+  have hlen := ComputableInPolyTime.length_bits_comp hr
+  have hhalf := binaryHalfRuler_polyTime.comp hr
+  have hhalfLen := ComputableInPolyTime.length_bits_comp hhalf
+  have hhalfIndex0 := ComputableInPolyTime.unary_mul' (.const 2) hhalfLen
+  have hhalfIndex1 := ComputableInPolyTime.unary_add' hhalfIndex0 (.const 1)
+  have henter := indexedFlag_polyTime.comp (hlen.prod he)
+  have hbasic := indexedFlag_polyTime.comp (hlen.prod hb)
+  have hbasic0 := indexedFlag_polyTime.comp (hhalfIndex0.prod hb)
+  have hbasic1 := indexedFlag_polyTime.comp (hhalfIndex1.prod hb)
+  have hhead : ComputableInPolyTime (fun word : List Bool => word.headD false)
+      encBits encBool := .headD false
+  have hnotEnter := ComputableInPolyTime.bool_not.comp (hhead.comp henter)
+  have hnotBasic := ComputableInPolyTime.bool_not.comp (hhead.comp hbasic)
+  have hnotBasic0 := ComputableInPolyTime.bool_not.comp (hhead.comp hbasic0)
+  have hnotBasic1 := ComputableInPolyTime.bool_not.comp (hhead.comp hbasic1)
+  have hzero := ComputableInPolyTime.of_tidy
+    ((ComputableTidilyInPolyTime.decide_eq encUnary).comp (hhalfLen.tidy.prod (.const 0)))
+  have hboth := ComputableInPolyTime.bool_and.comp (hnotBasic0.prod hnotBasic1)
+  have hlabelOK := ComputableInPolyTime.bool_or.comp (hzero.prod hboth)
+  have hbody := ComputableInPolyTime.bool_and.comp (hnotBasic.prod hlabelOK)
+  have hout := ComputableInPolyTime.bool_or.comp (hnotEnter.prod hbody)
+  have hcert := ComputableInPolyTime.bitsCons hout (.const [])
+  apply ComputableInPolyTime.of_tidy
+  apply hcert.tidy.of_enc_eq
+  intro v
+  rfl
 
-private abbrev CoveredAt (basic : List Bool) (i : ℕ) : Prop :=
+abbrev CoveredAt (basic : List Bool) (i : ℕ) : Prop :=
   i = 0 ∨ basic[2 * i]?.getD false = false ∨ basic[2 * i + 1]?.getD false = false
 
-private abbrev PermittedAt (basic entering : List Bool) (i : ℕ) : Prop :=
+abbrev PermittedAt (basic entering : List Bool) (i : ℕ) : Prop :=
   entering[i]?.getD false = true → basic[i]?.getD false = false ∧
     (i / 2 = 0 ∨ (basic[2 * (i / 2)]?.getD false = false ∧
       basic[2 * (i / 2) + 1]?.getD false = false))
 
 private theorem coverageBit_value (r basic : List Bool) :
-    coverageBit ![r, basic] = [decide (CoveredAt basic r.length)] := by
-  change orBit (lenEqFlag r []) (notBit (andBit (bitAt (r ++ r) basic)
-    (bitAt (true :: (r ++ r)) basic))) = _
-  rw [lenEq_value, bitAt_getElem?, bitAt_getElem?]
-  simp only [List.length_nil, List.length_append, List.length_cons, ← two_mul]
-  unfold CoveredAt
+    bimatrixNodeCoverageBit ![r, basic] = [decide (CoveredAt basic r.length)] := by
+  change [decide (r.length = 0) ||
+      (!(basic[2 * r.length]?.getD false) ||
+        !(basic[2 * r.length + 1]?.getD false))] =
+    [decide (r.length = 0 ∨ basic[2 * r.length]?.getD false = false ∨
+      basic[2 * r.length + 1]?.getD false = false)]
   by_cases hz : r.length = 0 <;>
-    cases ha : basic[2 * r.length]?.getD false <;>
-    cases hb : basic[2 * r.length + 1]?.getD false <;>
-    simp [hz, orBit, andBit, notBit, caseBit₀]
+    by_cases hb : basic[2 * r.length]?.getD false = false <;>
+    by_cases hc : basic[2 * r.length + 1]?.getD false = false <;>
+    simp [hz, hb, hc]
 
 private theorem portBit_value (r basic entering : List Bool) :
-    portBit ![r, basic, entering] = [decide (PermittedAt basic entering r.length)] := by
-  change orBit (notBit (bitAt r entering))
-    (andBit (notBit (bitAt r basic))
-      (orBit (lenEqFlag (binaryHalfRuler r) []) (notBit (orBit
-        (bitAt (binaryHalfRuler r ++ binaryHalfRuler r) basic)
-        (bitAt (true :: (binaryHalfRuler r ++ binaryHalfRuler r)) basic))))) = _
-  rw [bitAt_getElem?, bitAt_getElem?, lenEq_value, bitAt_getElem?, bitAt_getElem?]
-  simp only [List.length_nil, List.length_append, List.length_cons,
-    binaryHalfRuler_length, ← two_mul]
-  unfold PermittedAt
-  by_cases hz : r.length / 2 = 0 <;>
-    cases he : entering[r.length]?.getD false <;>
-    cases ha : basic[r.length]?.getD false <;>
-    cases hb : basic[2 * (r.length / 2)]?.getD false <;>
-    cases hc : basic[2 * (r.length / 2) + 1]?.getD false <;>
-    simp [hz, orBit, andBit, notBit, caseBit₀]
+    bimatrixNodePortBit ![r, basic, entering] = [decide (PermittedAt basic entering r.length)] := by
+  simp [bimatrixNodePortBit, PermittedAt, binaryHalfRuler_length]
 
 /-- Combinatorial validation: exact size, basis cardinality, one entering variable,
 coverage away from label zero, and the complementary-port condition. -/
 def bimatrixNodeSyntaxFlag (v : Fin 2 → List Bool) : List Bool :=
   let basic := bimatrixNodeBasicWord v
   let entering := bimatrixNodeEnteringWord v
-  andBit (lenEqFlag (v 1) (((v 0) ++ (v 0)) ++ ((v 0) ++ (v 0))))
-    (andBit (lenEqFlag (binarySubsetTally basic) (v 0))
-      (andBit (lenEqFlag (binarySubsetTally entering) [false])
-        (andBit (binaryIndexedAll coverageBit (v 0) ![basic])
-          (binaryIndexedAll portBit ((v 0) ++ (v 0)) ![basic, entering]))))
+  andFlag [decide ((v 1).length = 4 * (v 0).length)]
+    (andFlag [decide ((binarySubsetTally basic).length = (v 0).length)]
+      (andFlag [decide ((binarySubsetTally entering).length = [false].length)]
+        (andFlag (binaryIndexedAll bimatrixNodeCoverageBit (v 0) ![basic])
+          (binaryIndexedAll bimatrixNodePortBit ((v 0) ++ (v 0)) ![basic, entering]))))
 
-theorem bimatrixNodeSyntaxFlag_cobham : Cobham bimatrixNodeSyntaxFlag := by
-  have ht {term : (Fin 2 → List Bool) → List Bool} (h : Cobham term) :
-      Cobham fun v => binarySubsetTally (term v) := Cobham.comp binarySubsetTally_cobham fun _ => h
-  exact Cobham.andFn
-    (lenEqFlag_mem (.proj 1) (Cobham.appendFn (Cobham.appendFn (.proj 0) (.proj 0))
-      (Cobham.appendFn (.proj 0) (.proj 0))))
-    (Cobham.andFn (lenEqFlag_mem (ht bimatrixNodeBasicWord_cobham) (.proj 0))
-      (Cobham.andFn (lenEqFlag_mem (ht bimatrixNodeEnteringWord_cobham) (Cobham.const [false]))
-        (Cobham.andFn (Cobham.comp₂ (binaryIndexedAll_cobham coverageBit_cobham)
-          (.proj 0) bimatrixNodeBasicWord_cobham)
-          (Cobham.comp₃ (binaryIndexedAll_cobham portBit_cobham)
-            (Cobham.appendFn (.proj 0) (.proj 0))
-            bimatrixNodeBasicWord_cobham bimatrixNodeEnteringWord_cobham))))
+@[fun_prop] theorem bimatrixNodeSyntaxFlag_polyTime :
+    ComputableInPolyTime bimatrixNodeSyntaxFlag (encPi encBits) encBits := by
+  have hbasic := bimatrixNodeBasicWord_polyTime
+  have henter := bimatrixNodeEnteringWord_polyTime
+  have hdimension := ComputableInPolyTime.pi_apply encBits (0 : Fin 2)
+  have hsource := ComputableInPolyTime.pi_apply encBits (1 : Fin 2)
+  have hdimensionLen := ComputableInPolyTime.length_bits_comp hdimension
+  have hsourceLen := ComputableInPolyTime.length_bits_comp hsource
+  have hsize := ComputableInPolyTime.of_tidy
+    ((ComputableTidilyInPolyTime.decide_eq encUnary).comp
+      (hsourceLen.tidy.prod (ComputableInPolyTime.unary_mul' (.const 4) hdimensionLen).tidy))
+  have hsizeFlag := ComputableInPolyTime.bitsCons hsize (.const [])
+  have hbasicCount := ComputableInPolyTime.length_bits_comp
+    (binarySubsetTally_polyTime hbasic)
+  have hbasicFlag := ComputableInPolyTime.bitsCons
+    (ComputableInPolyTime.of_tidy ((ComputableTidilyInPolyTime.decide_eq encUnary).comp
+      (hbasicCount.tidy.prod hdimensionLen.tidy))) (.const [])
+  have henterCount := ComputableInPolyTime.length_bits_comp
+    (binarySubsetTally_polyTime henter)
+  have honeFlag := ComputableInPolyTime.bitsCons
+    (ComputableInPolyTime.of_tidy ((ComputableTidilyInPolyTime.decide_eq encUnary).comp
+      (henterCount.tidy.prod (.const 1)))) (.const [])
+  have hcoverageArgs : ComputableInPolyTime
+      (fun v : Fin 2 → List Bool => ![v 0, bimatrixNodeBasicWord v])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 0
+    · exact hbasic
+  have hcoverage := (binaryIndexedAll_polyTime (p := 1) bimatrixNodeCoverageBit_polyTime)
+    |>.comp hcoverageArgs
+  have hclock := ComputableInPolyTime.bitsAppend hdimension hdimension
+  have hportArgs : ComputableInPolyTime
+      (fun v : Fin 2 → List Bool =>
+        ![(v 0) ++ (v 0), bimatrixNodeBasicWord v, bimatrixNodeEnteringWord v])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hclock
+    · exact hbasic
+    · exact henter
+  have hports := (binaryIndexedAll_polyTime (p := 2) bimatrixNodePortBit_polyTime)
+    |>.comp hportArgs
+  have hlast := andFlag_polyTime.comp (hcoverage.prod hports)
+  have hthird := andFlag_polyTime.comp (honeFlag.prod hlast)
+  have hsecond := andFlag_polyTime.comp (hbasicFlag.prod hthird)
+  have hfirst := andFlag_polyTime.comp (hsizeFlag.prod hsecond)
+  have hcert := hfirst
+  apply ComputableInPolyTime.of_tidy
+  apply hcert.tidy.of_enc_eq
+  intro v
+  rfl
 
-theorem bimatrixNodeSyntaxFlag_mem_FPn : FPn bimatrixNodeSyntaxFlag :=
-  cobham_iff_FPn.mp bimatrixNodeSyntaxFlag_cobham
 
 private theorem and_decide (P Q : Prop) [Decidable P] [Decidable Q] :
-    andBit [decide P] [decide Q] = [decide (P ∧ Q)] := by
-  by_cases hp : P <;> by_cases hq : Q <;> simp [hp, hq, andBit, caseBit₀]
+    andFlag [decide P] [decide Q] = [decide (P ∧ Q)] := by
+  by_cases hp : P <;> by_cases hq : Q <;> simp [hp, hq, andFlag]
 
 /-- All syntactic conditions checked by the bounded Boolean machine. -/
 theorem bimatrixNodeSyntaxFlag_value (v : Fin 2 → List Bool) :
@@ -217,12 +346,10 @@ theorem bimatrixNodeSyntaxFlag_value (v : Fin 2 → List Bool) :
       (∀ i < (v 0).length, CoveredAt (bimatrixNodeBasicWord v) i) ∧
       (∀ i < 2 * (v 0).length, PermittedAt (bimatrixNodeBasicWord v)
         (bimatrixNodeEnteringWord v) i))] := by
-  rw [bimatrixNodeSyntaxFlag, lenEq_value, lenEq_value, lenEq_value,
-    binarySubsetTally_length, binarySubsetTally_length]
-  rw [binaryIndexedAll_value coverageBit _ _ (fun r => coverageBit_value r _),
-    binaryIndexedAll_value portBit _ _ (fun r => portBit_value r _ _)]
-  simp only [List.length_append, List.length_singleton, ← two_mul,
-    show 2 * (2 * (v 0).length) = 4 * (v 0).length by omega]
+  rw [bimatrixNodeSyntaxFlag, binarySubsetTally_length, binarySubsetTally_length]
+  rw [binaryIndexedAll_value bimatrixNodeCoverageBit _ _ (fun r => coverageBit_value r _),
+    binaryIndexedAll_value bimatrixNodePortBit _ _ (fun r => portBit_value r _ _)]
+  simp only [List.length_append, List.length_singleton, ← two_mul]
   rw [and_decide, and_decide, and_decide, and_decide]
 
 /-- Unmasking recovers the base codec's canonical basis membership word. -/
