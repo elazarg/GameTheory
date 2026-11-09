@@ -10,7 +10,7 @@ interiors. Coordinates and owner fields retain their full raw numeric values. -/
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM ComputableInPolyTime Cslib.BitString WordOperations
 open GameTheory.Math.GridWire
 
 /-- A vertex label is live exactly when its raw value fits the original vertex set. -/
@@ -21,16 +21,16 @@ def routingLiveVertexFlag (ruler owner : List Bool) : List Bool :=
 def routingLiveInteriorFlag (ruler : List Bool) (P S : List Bool → List Bool)
     (owner x y : List Bool) : List Bool :=
   let next := routingQueryBits ruler S owner
-  let sourceVertex := andBit (routingEQFlag x []) (routingEQFlag y (routingSixBits owner))
-  let targetVertex := andBit (routingEQFlag x []) (routingEQFlag y (routingSixBits next))
-  andBit (routingActiveEdgeFlag ruler P S owner)
-    (andBit (routingOnWireFlag ruler owner next x y)
-      (andBit (notBit sourceVertex) (notBit targetVertex)))
+  let sourceVertex := andFlag (routingEQFlag x []) (routingEQFlag y (routingSixBits owner))
+  let targetVertex := andFlag (routingEQFlag x []) (routingEQFlag y (routingSixBits next))
+  andFlag (routingActiveEdgeFlag ruler P S owner)
+    (andFlag (routingOnWireFlag ruler owner next x y)
+      (andFlag (notFlag sourceVertex) (notFlag targetVertex)))
 
 /-- Vertex liveness agrees with the natural label predicate for arbitrary pointers. -/
 theorem routingLiveVertexFlag_value (ruler owner : List Bool) (P S : ℕ → ℕ) :
     routingLiveVertexFlag ruler owner =
-      [decide (liveWireNode (2 ^ ruler.length) P S (.inl (Nat.fromBitsLE owner)))] := by
+      [decide (liveWireNode (2 ^ ruler.length) P S (.inl (lsbValue owner)))] := by
   simp only [routingLiveVertexFlag, routingLTFlag_value, routingVertexBoundBits_value,
     liveWireNode]
   congr 2
@@ -40,32 +40,34 @@ theorem routingLiveVertexFlag_value (ruler owner : List Bool) (P S : ℕ → ℕ
     (routingLiveVertexFlag ruler owner).length = 1 :=
   routingLTFlag_length _ _
 
-/-- Vertex liveness composes arbitrary polynomial-time ruler and owner producers. -/
-theorem routingLiveVertexFlagFn_mem_FP {ruler owner : List Bool → List Bool}
-    (hr : ruler ∈ FP) (ho : owner ∈ FP) :
-    (fun z => routingLiveVertexFlag (ruler z) (owner z)) ∈ FP :=
-  routingLTFlagFn_mem_FP ho (routingVertexBoundBitsFn_mem_FP hr)
+/-- Vertex liveness charges native ruler and owner producers. -/
+@[fun_prop] theorem routingLiveVertexFlag_polyTime
+    {α : Type} {enc : α ↪ List Bool} {ruler owner : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits)
+    (ho : ComputableInPolyTime owner enc encBits) :
+    ComputableInPolyTime (fun z => routingLiveVertexFlag (ruler z) (owner z)) enc encBits :=
+  routingLTFlag_polyTime ho (routingVertexBoundBits_polyTime hr)
 
 private theorem flagAnd_decide (a b : Prop) [Decidable a] [Decidable b] :
-    andBit [decide a] [decide b] = [decide (a ∧ b)] := by
-  by_cases ha : a <;> by_cases hb : b <;> simp [ha, hb, andBit, caseBit₀]
+    andFlag [decide a] [decide b] = [decide (a ∧ b)] := by
+  by_cases ha : a <;> by_cases hb : b <;> simp [ha, hb, andFlag]
 
 private theorem flagNot_decide (a : Prop) [Decidable a] :
-    notBit [decide a] = [decide (¬a)] := by
-  by_cases h : a <;> simp [h, notBit, caseBit₀]
+    notFlag [decide a] = [decide (¬a)] := by
+  by_cases h : a <;> simp [h, notFlag]
 
 /-- Interior liveness is exactly the natural predicate, including endpoint exclusion. -/
 theorem routingLiveInteriorFlag_value (ruler : List Bool) (P S : List Bool → List Bool)
     (owner x y : List Bool) : routingLiveInteriorFlag ruler P S owner x y =
       [decide (liveWireNode (2 ^ ruler.length) (routingOriginalPointer ruler P)
         (routingOriginalPointer ruler S)
-        (.inr (Nat.fromBitsLE owner, (Nat.fromBitsLE x, Nat.fromBitsLE y))))] := by
+        (.inr (lsbValue owner, (lsbValue x, lsbValue y))))] := by
   simp only [routingLiveInteriorFlag, routingActiveEdgeFlag_value, routingOnWireFlag_value,
     routingEQFlag_value, routingSixBits_value, routingQueryBits_value,
     flagAnd_decide, flagNot_decide, liveWireNode, vertexPoint]
   congr 2
   apply propext
-  simp only [ne_eq, Prod.mk.injEq, show Nat.fromBitsLE [] = 0 from rfl]
+  simp only [ne_eq, Prod.mk.injEq, show lsbValue [] = 0 from rfl]
 
 /-- Interior liveness always emits one Boolean flag. -/
 @[simp] theorem routingLiveInteriorFlag_length (ruler : List Bool) (P S : List Bool → List Bool)
@@ -73,23 +75,30 @@ theorem routingLiveInteriorFlag_value (ruler : List Bool) (P S : List Bool → L
   rw [routingLiveInteriorFlag_value]
   rfl
 
-/-- Interior liveness is uniform in seeded pointer queries and all raw word producers. -/
-theorem routingLiveInteriorFlagUniformFn_mem_FP
+/-- Interior liveness charges both seeded native queries and every raw field producer. -/
+@[fun_prop] theorem routingLiveInteriorFlagUniform_polyTime
     (P S : List Bool → List Bool → List Bool)
-    {ruler seed owner x y : List Bool → List Bool}
-    (hr : ruler ∈ FP) (hs : seed ∈ FP) (ho : owner ∈ FP) (hx : x ∈ FP) (hy : y ∈ FP)
-    (hP : (fun z => P (pairFst z) (pairSnd z)) ∈ FP)
-    (hS : (fun z => S (pairFst z) (pairSnd z)) ∈ FP) :
-    (fun z => routingLiveInteriorFlag (ruler z) (P (seed z))
-      (S (seed z)) (owner z) (x z) (y z)) ∈ FP := by
-  have hnext := routingQueryBitsUniformFn_mem_FP S hr hs ho hS
-  have hzero := routingEQFlagFn_mem_FP hx (constFn_mem_FP [])
-  have hsource := andBitFn_mem_FP hzero
-    (routingEQFlagFn_mem_FP hy (routingSixBitsFn_mem_FP ho))
-  have htarget := andBitFn_mem_FP hzero
-    (routingEQFlagFn_mem_FP hy (routingSixBitsFn_mem_FP hnext))
-  exact andBitFn_mem_FP (routingActiveEdgeFlagUniformFn_mem_FP P S hr hs ho hP hS)
-    (andBitFn_mem_FP (routingOnWireFlagFn_mem_FP hr ho hnext hx hy)
-      (andBitFn_mem_FP (notBitFn_mem_FP hsource) (notBitFn_mem_FP htarget)))
+    {α : Type} {enc : α ↪ List Bool} {ruler seed owner x y : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits)
+    (hs : ComputableInPolyTime seed enc encBits)
+    (ho : ComputableInPolyTime owner enc encBits)
+    (hx : ComputableInPolyTime x enc encBits)
+    (hy : ComputableInPolyTime y enc encBits)
+    (hP : ComputableInPolyTime (fun p : List Bool × List Bool => P p.1 p.2)
+      (encPair encBits encBits) encBits)
+    (hS : ComputableInPolyTime (fun p : List Bool × List Bool => S p.1 p.2)
+      (encPair encBits encBits) encBits) :
+    ComputableInPolyTime (fun z => routingLiveInteriorFlag (ruler z) (P (seed z))
+      (S (seed z)) (owner z) (x z) (y z)) enc encBits := by
+  have hnext := routingQueryBitsUniform_polyTime S hr hs ho hS
+  have hzero := routingEQFlag_polyTime hx (const [])
+  have hsource := andFlag_polyTime.comp (hzero.prod
+    (routingEQFlag_polyTime hy (routingSixBits_polyTime ho)))
+  have htarget := andFlag_polyTime.comp (hzero.prod
+    (routingEQFlag_polyTime hy (routingSixBits_polyTime hnext)))
+  exact andFlag_polyTime.comp ((routingActiveEdgeFlagUniform_polyTime P S hr hs ho hP hS).prod
+    (andFlag_polyTime.comp ((routingOnWireFlag_polyTime hr ho hnext hx hy).prod
+      (andFlag_polyTime.comp ((notFlag_polyTime.comp hsource).prod
+        (notFlag_polyTime.comp htarget))))))
 
 end GameTheory.Complexity.Backend

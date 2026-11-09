@@ -10,19 +10,19 @@ mutually consistent edge predicate. -/
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM ComputableInPolyTime Cslib.BitString WordOperations
 open GameTheory.Math.GridWire GameTheory.Math.EndOfLine
 
 /-- Extend a normalized binary pointer to naturals by identity outside its vertex set. -/
 def routingOriginalPointer (ruler : List Bool) (query : List Bool → List Bool) (i : ℕ) : ℕ :=
   if i < 2 ^ ruler.length then
-    Nat.fromBitsLE (routingPadBits ruler (query (Nat.toBitsLE ruler.length i)))
+    lsbValue (routingPadBits ruler (query (lowBits ruler.length i)))
   else i
 
 /-- Query bounded labels at their canonical width, retaining every rejected raw word. -/
 def routingQueryBits (ruler : List Bool) (query : List Bool → List Bool)
     (raw : List Bool) : List Bool :=
-  caseBit₀ (routingLTFlag raw (routingVertexBoundBits ruler))
+  select (routingLTFlag raw (routingVertexBoundBits ruler))
     (routingPadBits ruler (query (routingPadBits ruler raw))) raw
 
 /-- The total natural extension preserves the bounded original vertex set. -/
@@ -39,77 +39,77 @@ theorem routingOriginalPointer_of_ge (ruler : List Bool) (query : List Bool → 
 
 /-- Accepted raw labels query the padded binary input and normalize the output width. -/
 theorem routingQueryBits_of_lt (ruler : List Bool) (query : List Bool → List Bool)
-    (raw : List Bool) (h : Nat.fromBitsLE raw < 2 ^ ruler.length) :
+    (raw : List Bool) (h : lsbValue raw < 2 ^ ruler.length) :
     routingQueryBits ruler query raw = routingPadBits ruler (query (routingPadBits ruler raw)) := by
-  simp [routingQueryBits, routingLTFlag_value, routingVertexBoundBits_value, h, caseBit₀]
+  simp [routingQueryBits, routingLTFlag_value, routingVertexBoundBits_value, h, select]
 
 /-- Rejected labels retain their complete raw word, including its padding and width. -/
 theorem routingQueryBits_of_ge (ruler : List Bool) (query : List Bool → List Bool)
-    (raw : List Bool) (h : 2 ^ ruler.length ≤ Nat.fromBitsLE raw) :
+    (raw : List Bool) (h : 2 ^ ruler.length ≤ lsbValue raw) :
     routingQueryBits ruler query raw = raw := by
   simp [routingQueryBits, routingLTFlag_value, routingVertexBoundBits_value,
-    Nat.not_lt.mpr h, caseBit₀]
+    Nat.not_lt.mpr h, select]
 
 /-- The word-level query agrees with the total natural extension on every raw input. -/
 theorem routingQueryBits_value (ruler : List Bool) (query : List Bool → List Bool)
     (raw : List Bool) :
-    Nat.fromBitsLE (routingQueryBits ruler query raw) =
-      routingOriginalPointer ruler query (Nat.fromBitsLE raw) := by
-  by_cases h : Nat.fromBitsLE raw < 2 ^ ruler.length
-  · rw [routingQueryBits_of_lt ruler query raw h, routingPadBits_eq_toBitsLE ruler raw]
+    lsbValue (routingQueryBits ruler query raw) =
+      routingOriginalPointer ruler query (lsbValue raw) := by
+  by_cases h : lsbValue raw < 2 ^ ruler.length
+  · rw [routingQueryBits_of_lt ruler query raw h, routingPadBits_eq_lowBits ruler raw]
     simp only [routingOriginalPointer, ite_eq_left h]
   · rw [routingQueryBits_of_ge ruler query raw (Nat.le_of_not_gt h),
       routingOriginalPointer_of_ge ruler query (Nat.le_of_not_gt h)]
 
 /-- Every accepted query result has exactly the original vertex width. -/
 theorem routingQueryBits_length_of_lt (ruler : List Bool) (query : List Bool → List Bool)
-    (raw : List Bool) (h : Nat.fromBitsLE raw < 2 ^ ruler.length) :
+    (raw : List Bool) (h : lsbValue raw < 2 ^ ruler.length) :
     (routingQueryBits ruler query raw).length = ruler.length := by
   rw [routingQueryBits_of_lt ruler query raw h]
   exact routingPadBits_length _ _
 
 /-- Every accepted query result is the canonical encoding of the natural pointer value. -/
 theorem routingQueryBits_eq_bits_of_lt (ruler : List Bool) (query : List Bool → List Bool)
-    (raw : List Bool) (h : Nat.fromBitsLE raw < 2 ^ ruler.length) :
+    (raw : List Bool) (h : lsbValue raw < 2 ^ ruler.length) :
     routingQueryBits ruler query raw =
-      Nat.toBitsLE ruler.length (routingOriginalPointer ruler query (Nat.fromBitsLE raw)) := by
-  have he := Nat.toBitsLE_fromBitsLE (routingQueryBits ruler query raw)
+      lowBits ruler.length (routingOriginalPointer ruler query (lsbValue raw)) := by
+  have he := lowBits_lsbValue (routingQueryBits ruler query raw)
   rw [routingQueryBits_length_of_lt ruler query raw h, routingQueryBits_value] at he
   exact he.symm
 
-private theorem seededQueryFn_mem_FP (query : List Bool → List Bool → List Bool)
-    {seed vertex : List Bool → List Bool} (hs : seed ∈ FP) (hv : vertex ∈ FP)
-    (hq : (fun z => query (pairFst z) (pairSnd z)) ∈ FP) :
-    (fun z => query (seed z) (vertex z)) ∈ FP := by
-  have h := mem_FP_comp (pairFn_mem_FP hs hv) hq
-  simpa only [Function.comp_def, pairFst_pair, pairSnd_pair] using h
+/-- Seeded queries charge native seed, ruler and raw-label producers. -/
+@[fun_prop] theorem routingQueryBitsUniform_polyTime
+    (query : List Bool → List Bool → List Bool)
+    {α : Type} {enc : α ↪ List Bool} {ruler seed raw : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits)
+    (hs : ComputableInPolyTime seed enc encBits)
+    (hw : ComputableInPolyTime raw enc encBits)
+    (hq : ComputableInPolyTime (fun p : List Bool × List Bool => query p.1 p.2)
+      (encPair encBits encBits) encBits) :
+    ComputableInPolyTime (fun z => routingQueryBits (ruler z) (query (seed z)) (raw z))
+      enc encBits := by
+  have hguard := routingLTFlag_polyTime hw (routingVertexBoundBits_polyTime hr)
+  have hin := routingPadBits_polyTime hr hw
+  have hout := routingPadBits_polyTime hr (hq.comp (hs.prod hin))
+  exact select_polyTime.comp (hguard.prod (hout.prod hw))
 
-/-- Seeded binary queries compose polynomial-time seed, ruler and raw-label producers. -/
-theorem routingQueryBitsUniformFn_mem_FP (query : List Bool → List Bool → List Bool)
-    {ruler seed raw : List Bool → List Bool}
-    (hr : ruler ∈ FP) (hs : seed ∈ FP) (hw : raw ∈ FP)
-    (hq : (fun z => query (pairFst z) (pairSnd z)) ∈ FP) :
-    (fun z => routingQueryBits (ruler z) (query (seed z)) (raw z)) ∈ FP := by
-  have hguard := routingLTFlagFn_mem_FP hw (routingVertexBoundBitsFn_mem_FP hr)
-  have hin := routingPadBitsFn_mem_FP hr hw
-  have hout := routingPadBitsFn_mem_FP hr (seededQueryFn_mem_FP query hs hin hq)
-  exact CobhamFP_subset_FP
-    (Cobham.iteFn (FP_subset_CobhamFP hguard) (FP_subset_CobhamFP hout) (FP_subset_CobhamFP hw))
-
-/-- A fixed polynomial-time query composes arbitrary ruler and raw-label producers. -/
-theorem routingQueryBitsFn_mem_FP (query : List Bool → List Bool)
-    {ruler raw : List Bool → List Bool} (hr : ruler ∈ FP) (hw : raw ∈ FP) (hq : query ∈ FP) :
-    (fun z => routingQueryBits (ruler z) query (raw z)) ∈ FP :=
-  routingQueryBitsUniformFn_mem_FP (fun _ => query) hr (constFn_mem_FP []) hw
-    (mem_FP_comp pairSnd_mem_FP hq)
+/-- Fixed native queries compose with arbitrary ruler and raw-label producers. -/
+@[fun_prop] theorem routingQueryBits_polyTime (query : List Bool → List Bool)
+    {α : Type} {enc : α ↪ List Bool} {ruler raw : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits)
+    (hw : ComputableInPolyTime raw enc encBits)
+    (hq : ComputableInPolyTime query encBits encBits) :
+    ComputableInPolyTime (fun z => routingQueryBits (ruler z) query (raw z)) enc encBits :=
+  routingQueryBitsUniform_polyTime (fun _ => query) hr (const []) hw
+    (hq.comp (snd encBits encBits))
 
 /-- Test a bounded, nontrivial outgoing edge whose predecessor query returns its source. -/
 def routingActiveEdgeFlag (ruler : List Bool) (Pquery Squery : List Bool → List Bool)
     (raw : List Bool) : List Bool :=
   let next := routingQueryBits ruler Squery raw
-  andBit (routingLTFlag raw (routingVertexBoundBits ruler))
-    (andBit (routingLTFlag next (routingVertexBoundBits ruler))
-      (andBit (notBit (routingEQFlag next raw))
+  andFlag (routingLTFlag raw (routingVertexBoundBits ruler))
+    (andFlag (routingLTFlag next (routingVertexBoundBits ruler))
+      (andFlag (notFlag (routingEQFlag next raw))
         (routingEQFlag (routingQueryBits ruler Pquery next) raw)))
 
 /-- The binary active-edge test is exactly the canonical routed edge predicate. -/
@@ -117,24 +117,24 @@ theorem routingActiveEdgeFlag_value (ruler : List Bool)
     (Pquery Squery : List Bool → List Bool) (raw : List Bool) :
     routingActiveEdgeFlag ruler Pquery Squery raw = [decide
       (activeEdge (2 ^ ruler.length) (routingOriginalPointer ruler Pquery)
-        (routingOriginalPointer ruler Squery) (Nat.fromBitsLE raw))] := by
+        (routingOriginalPointer ruler Squery) (lsbValue raw))] := by
   simp only [routingActiveEdgeFlag, routingLTFlag_value, routingVertexBoundBits_value,
     routingEQFlag_value, routingQueryBits_value, activeEdge, HasSuccessor]
-  by_cases hr : Nat.fromBitsLE raw < 2 ^ ruler.length <;>
-    by_cases hn : routingOriginalPointer ruler Squery (Nat.fromBitsLE raw) <
+  by_cases hr : lsbValue raw < 2 ^ ruler.length <;>
+    by_cases hn : routingOriginalPointer ruler Squery (lsbValue raw) <
       2 ^ ruler.length <;>
-    by_cases he : routingOriginalPointer ruler Squery (Nat.fromBitsLE raw) =
-      Nat.fromBitsLE raw <;>
+    by_cases he : routingOriginalPointer ruler Squery (lsbValue raw) =
+      lsbValue raw <;>
     by_cases hp : routingOriginalPointer ruler Pquery
-      (routingOriginalPointer ruler Squery (Nat.fromBitsLE raw)) = Nat.fromBitsLE raw <;>
-    simp [hr, hn, he, hp, andBit, notBit, caseBit₀]
+      (routingOriginalPointer ruler Squery (lsbValue raw)) = lsbValue raw <;>
+    simp [hr, hn, he, hp, andFlag, notFlag]
 
 /-- The active-edge flag accepts exactly a bounded mutually consistent original edge. -/
 theorem routingActiveEdgeFlag_accept (ruler : List Bool)
     (Pquery Squery : List Bool → List Bool) (raw : List Bool) :
     routingActiveEdgeFlag ruler Pquery Squery raw = [true] ↔
       activeEdge (2 ^ ruler.length) (routingOriginalPointer ruler Pquery)
-        (routingOriginalPointer ruler Squery) (Nat.fromBitsLE raw) := by
+        (routingOriginalPointer ruler Squery) (lsbValue raw) := by
   rw [routingActiveEdgeFlag_value]
   simp
 
@@ -145,29 +145,37 @@ theorem routingActiveEdgeFlag_accept (ruler : List Bool)
   rw [routingActiveEdgeFlag_value]
   rfl
 
-/-- Active-edge testing is uniform in the seed of both polynomial-time pointer queries. -/
-theorem routingActiveEdgeFlagUniformFn_mem_FP
+/-- Active-edge testing charges both native seeded pointer computations. -/
+@[fun_prop] theorem routingActiveEdgeFlagUniform_polyTime
     (Pquery Squery : List Bool → List Bool → List Bool)
-    {ruler seed raw : List Bool → List Bool} (hr : ruler ∈ FP) (hs : seed ∈ FP) (hw : raw ∈ FP)
-    (hP : (fun z => Pquery (pairFst z) (pairSnd z)) ∈ FP)
-    (hS : (fun z => Squery (pairFst z) (pairSnd z)) ∈ FP) :
-    (fun z => routingActiveEdgeFlag (ruler z) (Pquery (seed z))
-      (Squery (seed z)) (raw z)) ∈ FP := by
-  have hbound := routingVertexBoundBitsFn_mem_FP hr
-  have hnext := routingQueryBitsUniformFn_mem_FP Squery hr hs hw hS
-  have hprev := routingQueryBitsUniformFn_mem_FP Pquery hr hs hnext hP
-  apply CobhamFP_subset_FP
-  exact Cobham.andFn (FP_subset_CobhamFP (routingLTFlagFn_mem_FP hw hbound))
-    (Cobham.andFn (FP_subset_CobhamFP (routingLTFlagFn_mem_FP hnext hbound))
-      (Cobham.andFn (Cobham.notFn (FP_subset_CobhamFP (routingEQFlagFn_mem_FP hnext hw)))
-        (FP_subset_CobhamFP (routingEQFlagFn_mem_FP hprev hw))))
+    {α : Type} {enc : α ↪ List Bool} {ruler seed raw : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits)
+    (hs : ComputableInPolyTime seed enc encBits)
+    (hw : ComputableInPolyTime raw enc encBits)
+    (hP : ComputableInPolyTime (fun p : List Bool × List Bool => Pquery p.1 p.2)
+      (encPair encBits encBits) encBits)
+    (hS : ComputableInPolyTime (fun p : List Bool × List Bool => Squery p.1 p.2)
+      (encPair encBits encBits) encBits) :
+    ComputableInPolyTime (fun z => routingActiveEdgeFlag (ruler z) (Pquery (seed z))
+      (Squery (seed z)) (raw z)) enc encBits := by
+  have hbound := routingVertexBoundBits_polyTime hr
+  have hnext := routingQueryBitsUniform_polyTime Squery hr hs hw hS
+  have hprev := routingQueryBitsUniform_polyTime Pquery hr hs hnext hP
+  exact andFlag_polyTime.comp ((routingLTFlag_polyTime hw hbound).prod
+    (andFlag_polyTime.comp ((routingLTFlag_polyTime hnext hbound).prod
+      (andFlag_polyTime.comp ((notFlag_polyTime.comp (routingEQFlag_polyTime hnext hw)).prod
+        (routingEQFlag_polyTime hprev hw))))))
 
-/-- Fixed polynomial-time pointers support uniformly polynomial-time active-edge tests. -/
-theorem routingActiveEdgeFlagFn_mem_FP (Pquery Squery : List Bool → List Bool)
-    {ruler raw : List Bool → List Bool} (hr : ruler ∈ FP) (hw : raw ∈ FP)
-    (hP : Pquery ∈ FP) (hS : Squery ∈ FP) :
-    (fun z => routingActiveEdgeFlag (ruler z) Pquery Squery (raw z)) ∈ FP :=
-  routingActiveEdgeFlagUniformFn_mem_FP (fun _ => Pquery) (fun _ => Squery)
-    hr (constFn_mem_FP []) hw (mem_FP_comp pairSnd_mem_FP hP) (mem_FP_comp pairSnd_mem_FP hS)
+/-- Fixed native pointers support uniform active-edge testing. -/
+@[fun_prop] theorem routingActiveEdgeFlag_polyTime (Pquery Squery : List Bool → List Bool)
+    {α : Type} {enc : α ↪ List Bool} {ruler raw : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits)
+    (hw : ComputableInPolyTime raw enc encBits)
+    (hP : ComputableInPolyTime Pquery encBits encBits)
+    (hS : ComputableInPolyTime Squery encBits encBits) :
+    ComputableInPolyTime (fun z => routingActiveEdgeFlag (ruler z) Pquery Squery (raw z))
+      enc encBits :=
+  routingActiveEdgeFlagUniform_polyTime (fun _ => Pquery) (fun _ => Squery)
+    hr (const []) hw (hP.comp (snd encBits encBits)) (hS.comp (snd encBits encBits))
 
 end GameTheory.Complexity.Backend
