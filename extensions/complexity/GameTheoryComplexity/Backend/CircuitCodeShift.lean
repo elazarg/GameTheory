@@ -1,83 +1,41 @@
 module
 
-public import Complexitylib.Circuits.Encoding.Shift
-public import Complexitylib.Circuits.Encoding
-public import Complexitylib.Classes.P.Cobham
-public import Complexitylib.Classes.P.Pairing
-public import Complexitylib.Classes.P.Composition
-public import Complexitylib.Classes.P.Cobham.Internal.PolyLen
-
-import Complexitylib.Classes.P.Cobham.Internal
+public import GameTheoryComplexity.Backend.CircuitFormat
+public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Iteration
+public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
 
 @[expose] public section
 
-/-! Serialized raw circuit relocation. Unary references are shifted by inserting
-one ruler before each reference; the scanner processes only the declared gate
-count. Its execution is certified by bounded polynomial-time iteration. -/
+/-! Serialized circuit relocation preserves the concrete flags and unary fields.
+The total scanner processes only the declared gate count. Its native machine
+captures the offset ruler and bounds the accumulated output on arbitrary words.
+-/
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM
 
 /-- The leading unary field, excluding its terminator. -/
-def circuitUnaryPrefix : List Bool → List Bool
-  | true :: rest => true :: circuitUnaryPrefix rest
-  | _ => []
+def circuitUnaryPrefix (bits : List Bool) : List Bool :=
+  bits.take (bits.idxOf false)
 
 /-- A scanned unary field never exceeds its containing word. -/
 theorem circuitUnaryPrefix_length_le (bits : List Bool) :
     (circuitUnaryPrefix bits).length ≤ bits.length := by
-  induction bits with
-  | nil => rfl
-  | cons b bits ih => cases b <;> simp_all [circuitUnaryPrefix]
+  simp only [circuitUnaryPrefix, List.length_take]
+  exact Nat.min_le_right _ _
 
-private theorem circuitUnaryPrefix_rec (x : List Bool) (v : Fin 0 → List Bool) :
-    recNotation (fun _ : Fin 0 → List Bool => [])
-      (fun _ : Fin 2 → List Bool => []) (fun w : Fin 2 → List Bool => true :: w 1) x v =
-      circuitUnaryPrefix x := by
-  induction x with
-  | nil => rfl
-  | cons b x ih => cases b <;> simp [recNotation, circuitUnaryPrefix, ih]
+/-- Scan a unary prefix in polynomial time, including an unterminated field. -/
+@[fun_prop] theorem circuitUnaryPrefix_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {bits : Input → List Bool} (hbits : ComputableInPolyTime bits input encBits) :
+    ComputableInPolyTime (fun a => circuitUnaryPrefix (bits a)) input encBits :=
+  ComputableInPolyTime.bitsTakeWithInput hbits
+    (ComputableInPolyTime.idxOfWithInput
+      (ComputableInPolyTime.bitsToList.comp hbits) (ComputableInPolyTime.const false))
 
-/-- Unary field scanning has an actual polynomial-time string machine. -/
-theorem circuitUnaryPrefix_mem_FP : circuitUnaryPrefix ∈ FP := by
-  apply CobhamFP_subset_FP
-  have h := Cobham.boundedRec (n := 0) Cobham.empty Cobham.empty
-    (Cobham.comp (Cobham.bit true) fun _ : Fin 1 => Cobham.proj (1 : Fin 2))
-    (Cobham.proj (0 : Fin 1)) (fun x v => by
-      rw [circuitUnaryPrefix_rec]
-      exact circuitUnaryPrefix_length_le x)
-  exact h.of_eq fun v => circuitUnaryPrefix_rec (v 0) (Fin.tail v)
-
-/-- Skip one unary reference and its terminator. -/
+/-- Skip one unary reference and its terminator, if present. -/
 def circuitUnaryRest (bits : List Bool) : List Bool :=
   bits.drop ((circuitUnaryPrefix bits).length + 1)
-
-/-- Scanning a canonical unary field recovers its ruler. -/
-theorem circuitUnaryPrefix_encode (n : ℕ) (rest : List Bool) :
-    circuitUnaryPrefix (CircuitCode.NatCode.encode n ++ rest) = List.replicate n true := by
-  induction n with
-  | zero => rfl
-  | succ n ih => simpa [CircuitCode.NatCode.encode, List.replicate_succ,
-      circuitUnaryPrefix] using congrArg (List.cons true) ih
-
-/-- An encoded raw circuit's unary header records exactly its gate count. -/
-theorem circuitUnaryPrefix_rawEncode_length (raw : CircuitCode.RawCircuit) :
-    (circuitUnaryPrefix raw.encode).length = raw.length := by
-  rw [CircuitCode.RawCircuit.encode, circuitUnaryPrefix_encode, List.length_replicate]
-
-/-- Successful decoding identifies the scanned header with the decoded gate count. -/
-theorem circuitUnaryPrefix_length_of_decode (code : List Bool) (raw : CircuitCode.RawCircuit)
-    (hd : CircuitCode.RawCircuit.decode? code = some raw) :
-    (circuitUnaryPrefix code).length = raw.length := by
-  rw [(CircuitCode.RawCircuit.decode?_eq_some_iff code raw).mp hd]
-  exact circuitUnaryPrefix_rawEncode_length raw
-
-/-- Skipping a canonical unary field recovers its unconsumed suffix. -/
-theorem circuitUnaryRest_encode (n : ℕ) (rest : List Bool) :
-    circuitUnaryRest (CircuitCode.NatCode.encode n ++ rest) = rest := by
-  rw [circuitUnaryRest, circuitUnaryPrefix_encode]
-  simp [CircuitCode.NatCode.encode, List.drop_append]
 
 /-- The shifted serialization of the first gate in a stream. -/
 def circuitShiftGate (ruler bits : List Bool) : List Bool :=
@@ -92,88 +50,91 @@ def circuitShiftGate (ruler bits : List Bool) : List Bool :=
 def circuitGateRest (bits : List Bool) : List Bool :=
   circuitUnaryRest (circuitUnaryRest (bits.drop 3))
 
-/-- One scanner step keeps its ruler, consumes a gate and appends shifted code. -/
-def circuitShiftStep (state : List Bool) : List Bool :=
-  let ruler := pairFst state
-  let stream := pairFst (pairSnd state)
-  let output := pairSnd (pairSnd state)
-  pair ruler (pair (circuitGateRest stream) (output ++ circuitShiftGate ruler stream))
+/-- A scan step consumes one gate and appends its relocated bytes. -/
+def circuitShiftStep (ruler : List Bool) (state : List Bool × List Bool) :
+    List Bool × List Bool :=
+  (circuitGateRest state.1, state.2 ++ circuitShiftGate ruler state.1)
 
 /-- Relocate a declared serialized circuit using a unary wire-offset ruler. -/
 def shiftCircuitCode (ruler code : List Bool) : List Bool :=
   let count := circuitUnaryPrefix code
-  let stream := circuitUnaryRest code
-  count ++ [false] ++ pairSnd (pairSnd
-    (circuitShiftStep^[count.length] (pair ruler (pair stream []))))
+  count ++ [false] ++
+    ((circuitShiftStep ruler)^[count.length] (circuitUnaryRest code, [])).2
 
-private theorem unaryPrefixFn {n : ℕ} {f : (Fin n → List Bool) → List Bool}
-    (hf : Cobham f) : Cobham fun v => circuitUnaryPrefix (f v) :=
-  (Cobham.comp (FP_subset_CobhamFP circuitUnaryPrefix_mem_FP)
-    fun _ : Fin 1 => hf).of_eq fun _ => rfl
+/-- Skipping a unary field charges the complete containing word. -/
+@[fun_prop] theorem circuitUnaryRest_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {bits : Input → List Bool} (hbits : ComputableInPolyTime bits input encBits) :
+    ComputableInPolyTime (fun a => circuitUnaryRest (bits a)) input encBits :=
+  ComputableInPolyTime.bitsDropWithInput hbits
+    (ComputableInPolyTime.unary_succ.comp
+      (ComputableInPolyTime.length_bits_comp (circuitUnaryPrefix_polyTime hbits)))
 
-private theorem unaryRestFn {n : ℕ} {f : (Fin n → List Bool) → List Bool}
-    (hf : Cobham f) : Cobham fun v => circuitUnaryRest (f v) :=
-  (dropFn (appendFn (unaryPrefixFn hf) (Cobham.const [false])) hf).of_eq fun _ => by
-    simp [circuitUnaryRest]
+/-- Gate skipping is polynomial-time on arbitrary, possibly truncated fields. -/
+@[fun_prop] theorem circuitGateRest_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {bits : Input → List Bool} (hbits : ComputableInPolyTime bits input encBits) :
+    ComputableInPolyTime (fun a => circuitGateRest (bits a)) input encBits :=
+  circuitUnaryRest_polyTime (circuitUnaryRest_polyTime
+    (ComputableInPolyTime.bitsDropWithInput hbits (ComputableInPolyTime.const 3)))
 
-/-- Skipping a unary field is polynomial time, including unterminated fields. -/
-theorem circuitUnaryRest_mem_FP : circuitUnaryRest ∈ FP :=
-  CobhamFP_subset_FP (unaryRestFn (Cobham.proj (0 : Fin 1)))
+/-- Relocating a gate charges the ruler padding and both scanned reference fields. -/
+@[fun_prop] theorem circuitShiftGate_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {ruler bits : Input → List Bool}
+    (hruler : ComputableInPolyTime ruler input encBits)
+    (hbits : ComputableInPolyTime bits input encBits) :
+    ComputableInPolyTime (fun a => circuitShiftGate (ruler a) (bits a)) input encBits := by
+  have hhead := ComputableInPolyTime.bitsTakeWithInput hbits (ComputableInPolyTime.const 3)
+  have hfirst := ComputableInPolyTime.bitsDropWithInput hbits (ComputableInPolyTime.const 3)
+  have hsecond := circuitUnaryRest_polyTime hfirst
+  have hpadding := (ComputableInPolyTime.bitsReplicate true).comp
+    (ComputableInPolyTime.length_bits_comp hruler)
+  have hleft := ComputableInPolyTime.bitsTakeWithInput hfirst
+    (ComputableInPolyTime.unary_succ.comp
+      (ComputableInPolyTime.length_bits_comp (circuitUnaryPrefix_polyTime hfirst)))
+  have hright := ComputableInPolyTime.bitsTakeWithInput hsecond
+    (ComputableInPolyTime.unary_succ.comp
+      (ComputableInPolyTime.length_bits_comp (circuitUnaryPrefix_polyTime hsecond)))
+  exact ComputableInPolyTime.bitsAppend
+    (ComputableInPolyTime.bitsAppend
+      (ComputableInPolyTime.bitsAppend (ComputableInPolyTime.bitsAppend hhead hpadding) hleft)
+      hpadding) hright
 
-private theorem gateRestFn {n : ℕ} {f : (Fin n → List Bool) → List Bool}
-    (hf : Cobham f) : Cobham fun v => circuitGateRest (f v) :=
-  unaryRestFn (unaryRestFn (dropFn (Cobham.const [false, false, false]) hf))
+private theorem circuitShiftStep_polyTime :
+    ComputableInPolyTime
+      (fun p : List Bool × (List Bool × List Bool) => circuitShiftStep p.1 p.2)
+      (encPair encBits (encPair encBits encBits)) (encPair encBits encBits) := by
+  have hruler := ComputableInPolyTime.fst encBits (encPair encBits encBits)
+  have hstream := (ComputableInPolyTime.snd encBits (encPair encBits encBits)).fst'
+  have houtput := (ComputableInPolyTime.snd encBits (encPair encBits encBits)).snd'
+  exact (circuitGateRest_polyTime hstream).prod
+    (ComputableInPolyTime.bitsAppend houtput (circuitShiftGate_polyTime hruler hstream))
 
-private theorem shiftGateFn {n : ℕ} {r f : (Fin n → List Bool) → List Bool}
-    (hr : Cobham r) (hf : Cobham f) : Cobham fun v => circuitShiftGate (r v) (f v) := by
-  have hfirst := dropFn (Cobham.const [false, false, false]) hf
-  have hsecond := unaryRestFn hfirst
-  have hu : Cobham fun v => List.replicate (r v).length true :=
-    (comp₂ Cobham.smash (Cobham.const [true]) hr).of_eq fun v => by
-    simp [_root_.Complexity.smash]
-  exact (appendFn (appendFn (appendFn (appendFn
-    (takeFn (Cobham.const [false, false, false]) hf) hu)
-    (takeFn (appendFn (unaryPrefixFn hfirst) (Cobham.const [false])) hfirst)) hu)
-    (takeFn (appendFn (unaryPrefixFn hsecond) (Cobham.const [false])) hsecond)).of_eq
-      fun _ => by simp [circuitShiftGate, circuitUnaryRest]
-
-/-- Each relocation scanner step is polynomial time on arbitrary words. -/
-theorem circuitShiftStep_mem_FP : circuitShiftStep ∈ FP := by
-  apply CobhamFP_subset_FP
-  have hr := FP_subset_CobhamFP pairFst_mem_FP
-  have hs := FP_subset_CobhamFP pairSnd_mem_FP
-  have hstream := Cobham.comp hr fun _ : Fin 1 => hs
-  have hout := Cobham.comp hs fun _ : Fin 1 => hs
-  exact (comp₂ Cobham.pairing hr (comp₂ Cobham.pairing (gateRestFn hstream)
-    (appendFn hout (shiftGateFn hr hstream)))).of_eq fun _ => rfl
-
-private theorem unaryRest_length_le (bits : List Bool) :
-    (circuitUnaryRest bits).length ≤ bits.length := by
-  simp only [circuitUnaryRest, List.length_drop]
+/-- Skipping a gate only consumes input, including truncated encodings. -/
+theorem circuitGateRest_length_le (bits : List Bool) :
+    (circuitGateRest bits).length ≤ bits.length := by
+  simp only [circuitGateRest, circuitUnaryRest, List.length_drop]
   omega
 
-private theorem gateRest_length_le (bits : List Bool) :
-    (circuitGateRest bits).length ≤ bits.length :=
-  (unaryRest_length_le _).trans
-    ((unaryRest_length_le _).trans (by simp only [List.length_drop]; omega))
-
-private theorem shiftGate_length_le (ruler bits : List Bool) :
+private theorem circuitShiftGate_length_le (ruler bits : List Bool) :
     (circuitShiftGate ruler bits).length ≤ 3 + 2 * ruler.length + 2 * bits.length := by
-  have hfirst : (bits.drop 3).length ≤ bits.length := by simp only [List.length_drop]; omega
-  have hsecond := (unaryRest_length_le (bits.drop 3)).trans hfirst
-  have hhead := List.length_take_le (l := bits) (i := 3)
-  have ha : ((bits.drop 3).take ((circuitUnaryPrefix (bits.drop 3)).length + 1)).length ≤
-      (bits.drop 3).length := by simp only [List.length_take]; exact min_le_right _ _
-  have hb : ((circuitUnaryRest (bits.drop 3)).take
+  have hsecond : (circuitUnaryRest (bits.drop 3)).length ≤ bits.length := by
+    simp only [circuitUnaryRest, List.length_drop]
+    omega
+  have hhead := List.length_take_le 3 bits
+  have hleft : ((bits.drop 3).take ((circuitUnaryPrefix (bits.drop 3)).length + 1)).length ≤
+      bits.length := by
+    simp only [List.length_take, List.length_drop]
+    omega
+  have hright : ((circuitUnaryRest (bits.drop 3)).take
       ((circuitUnaryPrefix (circuitUnaryRest (bits.drop 3))).length + 1)).length ≤
-      (circuitUnaryRest (bits.drop 3)).length := by
-    simp only [List.length_take]; exact min_le_right _ _
+      bits.length := by
+    simp only [List.length_take]
+    omega
   simp only [circuitShiftGate, List.length_append, List.length_replicate]
   omega
 
 private theorem shiftStep_iterate_bound (ruler stream : List Bool) (i : ℕ) :
     ∃ rest output,
-      circuitShiftStep^[i] (pair ruler (pair stream [])) = pair ruler (pair rest output) ∧
+      (circuitShiftStep ruler)^[i] (stream, []) = (rest, output) ∧
       rest.length ≤ stream.length ∧
       output.length ≤ i * (3 + 2 * ruler.length + 2 * stream.length) := by
   induction i with
@@ -181,56 +142,127 @@ private theorem shiftStep_iterate_bound (ruler stream : List Bool) (i : ℕ) :
   | succ i ih =>
     obtain ⟨rest, output, heq, hrest, hout⟩ := ih
     refine ⟨circuitGateRest rest, output ++ circuitShiftGate ruler rest, ?_,
-      (gateRest_length_le rest).trans hrest, ?_⟩
+      (circuitGateRest_length_le rest).trans hrest, ?_⟩
     · rw [Function.iterate_succ_apply', heq]
-      simp only [circuitShiftStep, pairFst_pair, pairSnd_pair]
-    · have hg := shiftGate_length_le ruler rest
+      rfl
+    · have hg := circuitShiftGate_length_le ruler rest
       rw [List.length_append, Nat.succ_mul]
       omega
 
-private def shiftScanInit (z : List Bool) : List Bool :=
-  pair (pairFst z) (pair (circuitUnaryRest (pairSnd z)) [])
-
-private def shiftScanWidth (z : List Bool) : List Bool :=
-  let r := pairFst z
-  let c := pairSnd z
-  (r ++ r ++ c ++ c ++ [false, false, false, false]) ++
-    smash c ([false, false, false] ++ r ++ r ++ c ++ c)
-
-/-- Uniform serialized relocation is polynomial time, including arbitrary codes. -/
-theorem shiftCircuitCode_pair_mem_FP :
-    (fun z => shiftCircuitCode (pairFst z) (pairSnd z)) ∈ FP := by
-  have hr := FP_subset_CobhamFP pairFst_mem_FP
-  have hc := FP_subset_CobhamFP pairSnd_mem_FP
-  have hinit : shiftScanInit ∈ FP := CobhamFP_subset_FP
-    ((comp₂ Cobham.pairing hr (comp₂ Cobham.pairing (unaryRestFn hc) Cobham.empty)).of_eq
-      fun _ => rfl)
-  have hclock : (fun z => circuitUnaryPrefix (pairSnd z)) ∈ FP :=
-    mem_FP_comp pairSnd_mem_FP circuitUnaryPrefix_mem_FP
-  have hwidth : shiftScanWidth ∈ FP := CobhamFP_subset_FP
-    ((appendFn (appendFn (appendFn (appendFn (appendFn hr hr) hc) hc)
-      (Cobham.const [false, false, false, false]))
-      (comp₂ Cobham.smash hc (appendFn (appendFn (appendFn (appendFn
-        (Cobham.const [false, false, false]) hr) hr) hc) hc))).of_eq fun _ => rfl)
-  have hscan := iterate_mem_FP circuitShiftStep_mem_FP hinit hclock hwidth
-    (fun z i hi => by
+/-- Uniform relocation charges the captured ruler and every accumulated output byte. -/
+@[fun_prop] theorem shiftCircuitCode_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {ruler code : Input → List Bool}
+    (hruler : ComputableInPolyTime ruler input encBits)
+    (hcode : ComputableInPolyTime code input encBits) :
+    ComputableInPolyTime (fun a => shiftCircuitCode (ruler a) (code a)) input encBits := by
+  have hprefix := circuitUnaryPrefix_polyTime hcode
+  have hcount := ComputableInPolyTime.length_bits_comp hprefix
+  have hinit : ComputableInPolyTime
+      (fun a : Input => (circuitUnaryRest (code a), ([] : List Bool)))
+      input (encPair encBits encBits) :=
+    (circuitUnaryRest_polyTime hcode).prod (ComputableInPolyTime.const [])
+  have hr := hruler.polyBounded_length
+  have hc := hcode.polyBounded_length
+  have hsize : PolyBounded (fun a => (input a).length)
+      (fun a => 2 * (code a).length + 1 + (code a).length *
+        (3 + 2 * (ruler a).length + 2 * (code a).length)) :=
+    (((PolyBounded.const 2).mul hc).add (PolyBounded.const 1)).add
+      (hc.mul (((PolyBounded.const 3).add ((PolyBounded.const 2).mul hr)).add
+        ((PolyBounded.const 2).mul hc)))
+  have hloop : ComputableInPolyTime
+      (fun a => (circuitShiftStep (ruler a))^[(circuitUnaryPrefix (code a)).length]
+        (circuitUnaryRest (code a), [])) input (encPair encBits encBits) :=
+    ComputableInPolyTime.iterateWith hruler hcount hinit circuitShiftStep_polyTime hsize (by
+      intro a i hi
+      change i ≤ (circuitUnaryPrefix (code a)).length at hi
       obtain ⟨rest, output, heq, hrest, hout⟩ :=
-        shiftStep_iterate_bound (pairFst z) (circuitUnaryRest (pairSnd z)) i
-      change (circuitShiftStep^[i]
-        (pair (pairFst z) (pair (circuitUnaryRest (pairSnd z)) []))).length ≤ _
+        shiftStep_iterate_bound (ruler a) (circuitUnaryRest (code a)) i
       rw [heq]
-      have hs := unaryRest_length_le (pairSnd z)
-      have ht := circuitUnaryPrefix_length_le (pairSnd z)
-      have hm : i * (3 + 2 * (pairFst z).length +
-          2 * (circuitUnaryRest (pairSnd z)).length) ≤
-          (pairSnd z).length * (3 + 2 * (pairFst z).length + 2 * (pairSnd z).length) :=
-        Nat.mul_le_mul (hi.trans ht) (by omega)
+      have hs : (circuitUnaryRest (code a)).length ≤ (code a).length := by
+        simp only [circuitUnaryRest, List.length_drop]
+        omega
+      have hclock := circuitUnaryPrefix_length_le (code a)
+      have hm : i * (3 + 2 * (ruler a).length + 2 * (circuitUnaryRest (code a)).length) ≤
+          (code a).length * (3 + 2 * (ruler a).length + 2 * (code a).length) :=
+        Nat.mul_le_mul (hi.trans hclock) (by omega)
       have hout' := hout.trans hm
-      simp only [pair_length, List.length_nil, shiftScanWidth, List.length_append,
-        smash_length, List.length_cons]
-      ring_nf at hout' ⊢
+      simp only [length_encPair, encBits_apply]
       omega)
-  exact (appendFn_mem_FP (appendFn_mem_FP hclock (constFn_mem_FP [false]))
-    (mem_FP_comp (mem_FP_comp hscan pairSnd_mem_FP) pairSnd_mem_FP))
+  exact ComputableInPolyTime.bitsAppend
+    (ComputableInPolyTime.bitsAppend hprefix (ComputableInPolyTime.const [false])) hloop.snd'
+
+/-- Scanning a canonical unary field recovers its true ruler. -/
+theorem circuitUnaryPrefix_encode (n : ℕ) (rest : List Bool) :
+    circuitUnaryPrefix (CircuitFormat.encodeUnary n ++ rest) = List.replicate n true := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    simpa [CircuitFormat.encodeUnary, List.replicate_succ, circuitUnaryPrefix,
+      List.idxOf_cons] using congrArg (List.cons true) ih
+
+/-- Skipping a canonical unary field recovers the exact unconsumed suffix. -/
+theorem circuitUnaryRest_encode (n : ℕ) (rest : List Bool) :
+    circuitUnaryRest (CircuitFormat.encodeUnary n ++ rest) = rest := by
+  rw [circuitUnaryRest, circuitUnaryPrefix_encode]
+  simp [CircuitFormat.encodeUnary, List.drop_append]
+
+/-- A canonically encoded native gate list records exactly its gate count. -/
+theorem circuitUnaryPrefix_encode_length
+    (gates : List (CircuitFormat.signature.Op × List ℕ))
+    (harity : ∀ gate ∈ gates, gate.2.length = 2) :
+    (circuitUnaryPrefix (CircuitFormat.encode gates)).length = gates.length := by
+  have hall : gates.all (fun gate => gate.2.length == 2) = true := by
+    apply List.all_eq_true.mpr
+    intro gate hg
+    simp [harity gate hg]
+  rw [CircuitFormat.encode, ite_eq_left hall, circuitUnaryPrefix_encode, List.length_replicate]
+
+private theorem decodedGateCount {count : ℕ} {bits suffix : List Bool}
+    {gates : List (CircuitFormat.signature.Op × List ℕ)}
+    (h : CircuitFormat.decodeGates? count bits = some (gates, suffix)) :
+    gates.length = count := by
+  induction count generalizing bits gates suffix with
+  | zero =>
+    change some ([], bits) = some (gates, suffix) at h
+    cases h
+    rfl
+  | succ count ih =>
+    cases hgate : CircuitFormat.decodeGatePrefix? bits with
+    | none => simp [CircuitFormat.decodeGates?, hgate] at h
+    | some parsed =>
+      rcases parsed with ⟨gate, rest⟩
+      cases htail : CircuitFormat.decodeGates? count rest with
+      | none => simp [CircuitFormat.decodeGates?, hgate, htail] at h
+      | some parsed =>
+        rcases parsed with ⟨tail, rest'⟩
+        have heq : (gate :: tail, rest') = (gates, suffix) := by
+          simpa only [CircuitFormat.decodeGates?, hgate, bind, Option.bind_some, htail,
+            Option.pure_def, Option.some.injEq] using h
+        cases heq
+        simpa only [List.length_cons] using congrArg Nat.succ (ih htail)
+
+/-- Successful strict decoding identifies the scanned header with the gate count. -/
+theorem circuitUnaryPrefix_length_of_decode (code : List Bool)
+    (gates : List (CircuitFormat.signature.Op × List ℕ))
+    (hd : CircuitFormat.decode? code = some gates) :
+    (circuitUnaryPrefix code).length = gates.length := by
+  cases hprefix : CircuitFormat.decodeUnaryPrefix? code with
+  | none => simp [CircuitFormat.decode?, hprefix] at hd
+  | some parsed =>
+    rcases parsed with ⟨count, rest⟩
+    cases hscan : CircuitFormat.decodeGates? count rest with
+    | none => simp [CircuitFormat.decode?, hprefix, hscan] at hd
+    | some parsed =>
+      rcases parsed with ⟨decoded, suffix⟩
+      cases suffix with
+      | nil =>
+        have heq : decoded = gates := by
+          simpa only [CircuitFormat.decode?, hprefix, hscan, Option.some.injEq] using hd
+        subst decoded
+        have hlength := decodedGateCount hscan
+        have hcode := CircuitFormat.decodeUnaryPrefix?_sound hprefix
+        rw [hcode, circuitUnaryPrefix_encode, List.length_replicate]
+        exact hlength.symm
+      | cons b suffix => simp [CircuitFormat.decode?, hprefix, hscan] at hd
 
 end GameTheory.Complexity.Backend
