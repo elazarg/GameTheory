@@ -1,6 +1,8 @@
 module
 
-public import Complexitylib.Mathlib.NatBits
+public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.BitString
+public import Complexity.Foundations.Data.BitString.Binary
+public import Complexity.Foundations.Data.Nat.Bits
 public import GameTheory.Finite.BimatrixCertificate
 public import Mathlib.Tactic.Linarith
 
@@ -8,6 +10,7 @@ public import Mathlib.Tactic.Linarith
 
 /-! Fixed-width fields and unary dimensions for signed rectangular bimatrix inputs. -/
 namespace GameTheory.Complexity.Backend
+open Cslib.BitString Turing.MultiTapeTM
 
 /-- A total fixed-width field parser, also defined on malformed words. -/
 def generalBinaryField (W index : ℕ) (word : List Bool) : List Bool :=
@@ -15,12 +18,16 @@ def generalBinaryField (W index : ℕ) (word : List Bool) : List Bool :=
 
 /-- Unsigned value of a fixed-width field. -/
 def generalNatField (W index : ℕ) (word : List Bool) : ℕ :=
-  Nat.fromBitsLE (generalBinaryField W index word)
+  ofBits (generalBinaryField W index word)
 
 /-- Concatenate a specified number of equally wide binary fields. -/
 def encodeGeneralFields (W : ℕ) : ℕ → (ℕ → ℕ) → List Bool
   | 0, _ => []
-  | k + 1, f => Nat.toBitsLE W (f 0) ++ encodeGeneralFields W k (fun i => f (i + 1))
+  | k + 1, f => lowBits W (f 0) ++ encodeGeneralFields W k (fun i => f (i + 1))
+
+private theorem ofBits_lowBits {W x : ℕ} (hx : x < 2 ^ W) : ofBits (lowBits W x) = x := by
+  unfold Turing.MultiTapeTM.ofBits
+  rw [← lsbValue_eq_foldr_bit, lsbValue_lowBits hx]
 
 @[simp] theorem encodeGeneralFields_length (W k : ℕ) (f : ℕ → ℕ) :
     (encodeGeneralFields W k f).length = k * W := by
@@ -67,8 +74,8 @@ def generalPayoffField (columnPlayer positive : Bool) (input : List Bool) (i j :
 
 /-- Row-major signed integer payoff from its positive and negative magnitude blocks. -/
 def decodeGeneralPayoff (columnPlayer : Bool) (input : List Bool) (i j : ℕ) : ℤ :=
-  (Nat.fromBitsLE (generalPayoffField columnPlayer true input i j) : ℤ) -
-    (Nat.fromBitsLE (generalPayoffField columnPlayer false input i j) : ℤ)
+  (ofBits (generalPayoffField columnPlayer true input i j) : ℤ) -
+    (ofBits (generalPayoffField columnPlayer false input i j) : ℤ)
 
 @[simp] theorem generalRowRuler_length_le (input : List Bool) :
     (generalRowRuler input).length ≤ input.length := (List.takeWhile_sublist _).length_le
@@ -82,7 +89,7 @@ def decodeGeneralPayoff (columnPlayer : Bool) (input : List Bool) (i j : ℕ) : 
 /-- A field of a concatenated encoding is precisely its fixed-width block. -/
 theorem generalBinaryField_encode (W k : ℕ) (f : ℕ → ℕ) (index : ℕ)
     (hi : index < k) :
-    generalBinaryField W index (encodeGeneralFields W k f) = Nat.toBitsLE W (f index) := by
+    generalBinaryField W index (encodeGeneralFields W k f) = lowBits W (f index) := by
   induction k generalizing f index with
   | zero => omega
   | succ k ih =>
@@ -90,7 +97,7 @@ theorem generalBinaryField_encode (W k : ℕ) (f : ℕ → ℕ) (index : ℕ)
     | zero => simp [generalBinaryField, encodeGeneralFields]
     | succ index =>
       have hidx : index < k := by omega
-      have hdrop : (Nat.toBitsLE W (f 0)).drop (W + index * W) = [] :=
+      have hdrop : (lowBits W (f 0)).drop (W + index * W) = [] :=
         List.drop_eq_nil_iff.mpr (by simp)
       simpa [generalBinaryField, encodeGeneralFields, List.drop_append, Nat.succ_mul,
         hdrop, Nat.add_sub_cancel, Nat.add_comm, Nat.add_left_comm, Nat.add_assoc] using
@@ -101,14 +108,17 @@ theorem generalNatField_encode (W k : ℕ) (f : ℕ → ℕ) (index : ℕ)
     (hi : index < k) (hf : f index < 2 ^ W) :
     generalNatField W index (encodeGeneralFields W k f) = f index := by
   rw [generalNatField, generalBinaryField_encode W k f index hi,
-    Nat.fromBitsLE_toBitsLE hf]
+    ofBits_lowBits hf]
 
 /-- Every parsed field has at most the advertised bit width. -/
 theorem generalNatField_lt (W index : ℕ) (word : List Bool) :
     generalNatField W index word < 2 ^ W := by
-  have h := Nat.fromBitsLE_lt_pow_length (generalBinaryField W index word)
+  unfold generalNatField
+  have h := Nat.foldr_bit_lt (generalBinaryField W index word)
   have hl : (generalBinaryField W index word).length ≤ W := by
     simp only [generalBinaryField, List.length_take]; omega
+  change ofBits (generalBinaryField W index word) <
+    2 ^ (generalBinaryField W index word).length at h
   exact h.trans_le (Nat.pow_le_pow_right (by decide) hl)
 
 /-- Both signed magnitudes are bounded, hence so is their difference. -/

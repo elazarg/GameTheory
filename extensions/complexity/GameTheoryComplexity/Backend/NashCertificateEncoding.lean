@@ -1,6 +1,7 @@
 module
 
 public import GameTheoryComplexity.Backend.NashCertificateFormat
+public import Complexity.Foundations.Data.BitString.Binary
 
 @[expose] public section
 
@@ -10,6 +11,7 @@ with an exact length and a round trip through the verifier's shared parser. -/
 namespace GameTheory.Complexity.Backend
 
 open GameTheory.Finite
+open Cslib.BitString Turing.MultiTapeTM
 
 /-- Certificate numbers in denominator, utility, row-weight, column-weight order. -/
 def nashCertificateNumbers {q : ℕ} (c : NumeratorCertificate q) : List ℕ :=
@@ -18,7 +20,11 @@ def nashCertificateNumbers {q : ℕ} (c : NumeratorCertificate q) : List ℕ :=
 
 /-- Concatenate fixed-width little-endian certificate fields in parser order. -/
 def encodeNashCertificate {q : ℕ} (W : ℕ) (c : NumeratorCertificate q) : List Bool :=
-  (nashCertificateNumbers c).flatMap (Nat.toBitsLE W)
+  (nashCertificateNumbers c).flatMap (lowBits W)
+
+private theorem ofBits_lowBits {W x : ℕ} (hx : x < 2 ^ W) : ofBits (lowBits W x) = x := by
+  unfold Turing.MultiTapeTM.ofBits
+  rw [← lsbValue_eq_foldr_bit, lsbValue_lowBits hx]
 
 private theorem length_flatMap_fixed {α β : Type*} (xs : List α) (f : α → List β)
     (w : ℕ) (hf : ∀ a ∈ xs, (f a).length = w) :
@@ -58,14 +64,14 @@ theorem nashCertificateNumbers_length {q : ℕ} (c : NumeratorCertificate q) :
 theorem encodeNashCertificate_length {q : ℕ} (W : ℕ) (c : NumeratorCertificate q) :
     (encodeNashCertificate W c).length = (2 * q + 4) * W := by
   rw [encodeNashCertificate, length_flatMap_fixed _ _ W
-    (fun _ _ => Nat.length_toBitsLE _ _), nashCertificateNumbers_length]
+    (fun _ _ => Cslib.BitString.length_lowBits _ _), nashCertificateNumbers_length]
 
 theorem nashCertificateField_encode {q : ℕ} (W : ℕ) (c : NumeratorCertificate q)
     (k : ℕ) (hk : k < (nashCertificateNumbers c).length) :
     nashCertificateField W k (encodeNashCertificate W c) =
-      Nat.toBitsLE W (nashCertificateNumbers c)[k] := by
-  exact block_flatMap_fixed (nashCertificateNumbers c) (Nat.toBitsLE W) W
-    (fun _ _ => Nat.length_toBitsLE _ _) k hk
+      lowBits W (nashCertificateNumbers c)[k] := by
+  exact block_flatMap_fixed (nashCertificateNumbers c) (lowBits W) W
+    (fun _ _ => Cslib.BitString.length_lowBits _ _) k hk
 
 private theorem scalar_numbers {q : ℕ} (c : NumeratorCertificate q) :
     (nashCertificateNumbers c)[0]'(by rw [nashCertificateNumbers_length]; omega) =
@@ -106,20 +112,20 @@ theorem decodeNashCertificate_encode {q : ℕ} (W : ℕ) (c : NumeratorCertifica
   have hk (k : ℕ) (h : k < 2 * q + 4) : k < (nashCertificateNumbers c).length := by
     rwa [nashCertificateNumbers_length]
   have hs := scalar_numbers c
-  have hrow (i : Fin q) : Nat.fromBitsLE
+  have hrow (i : Fin q) : ofBits
       (nashCertificateField W (4 + i) (encodeNashCertificate W c)) = c.rowWeights i := by
     rw [nashCertificateField_encode W c _ (hk _ (by omega)), row_number]
-    exact Nat.fromBitsLE_toBitsLE (ha i)
-  have hcol (i : Fin q) : Nat.fromBitsLE
+    exact ofBits_lowBits (ha i)
+  have hcol (i : Fin q) : ofBits
       (nashCertificateField W (4 + q + i) (encodeNashCertificate W c)) = c.colWeights i := by
     rw [nashCertificateField_encode W c _ (hk _ (by omega)), col_number]
-    exact Nat.fromBitsLE_toBitsLE (hb i)
+    exact ofBits_lowBits (hb i)
   cases c
   simp only [decodeNashCertificate, nashCertificateField_encode W _ _ (hk 0 (by omega)),
     nashCertificateField_encode W _ _ (hk 1 (by omega)),
     nashCertificateField_encode W _ _ (hk 2 (by omega)),
     nashCertificateField_encode W _ _ (hk 3 (by omega)), hs.1, hs.2.1, hs.2.2.1, hs.2.2.2,
-    Nat.fromBitsLE_toBitsLE hdp, Nat.fromBitsLE_toBitsLE hdq,
-    Nat.fromBitsLE_toBitsLE hU, Nat.fromBitsLE_toBitsLE hV, hrow, hcol]
+    ofBits_lowBits hdp, ofBits_lowBits hdq,
+    ofBits_lowBits hU, ofBits_lowBits hV, hrow, hcol]
 
 end GameTheory.Complexity.Backend
