@@ -13,22 +13,22 @@ private def program (comparator : Bool) (q : List Bool) : List Bool :=
     [false, false, true, false, true] [comparator] ([false, false, false] ++ q)
 
 example : binarySignedValue (BimatrixProgramPayoffs.rowEntry
-    ![[], [false], program true [false, true, false]]) = 12 := by decide +kernel
+    [] [false] (program true [false, true, false])) = 12 := by decide +kernel
 
 example : binarySignedValue (BimatrixProgramPayoffs.columnEntry
-    ![[false], [], program true [false, true, false]]) = -7 := by decide +kernel
+    [false] [] (program true [false, true, false])) = -7 := by decide +kernel
 
 example : binarySignedValue (BimatrixProgramPayoffs.columnEntry
-    ![[false], [false], program true [false, true, false]]) = -8 := by decide +kernel
+    [false] [false] (program true [false, true, false])) = -8 := by decide +kernel
 
 example : binarySignedValue (BimatrixProgramPayoffs.columnEntry
-    ![[false], [], program false [false, true, false]]) = -9 := by decide +kernel
+    [false] [] (program false [false, true, false])) = -9 := by decide +kernel
 
 example : binarySignedValue (BimatrixProgramPayoffs.columnEntry
-    ![[false], [], program true [true, false, false]]) = -8 := by decide +kernel
+    [false] [] (program true [true, false, false])) = -8 := by decide +kernel
 
-example : binarySignedValue (BimatrixProgramPayoffs.rowEntry ![[], [], []]) = 0 ∧
-    binarySignedValue (BimatrixProgramPayoffs.columnEntry ![[], [], []]) = 0 := by
+example : binarySignedValue (BimatrixProgramPayoffs.rowEntry [] [] []) = 0 ∧
+    binarySignedValue (BimatrixProgramPayoffs.columnEntry [] [] []) = 0 := by
   decide +kernel
 
 example : GeneralInstanceValid

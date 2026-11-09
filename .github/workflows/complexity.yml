@@ -70,6 +70,8 @@ jobs:
           if ($base.Count -ne 1 -or $base[0].type -ne 'path') {
             throw 'Checkout verification did not resolve the local GameTheory path'
           }
+      - name: Verify checkout Lean toolchain
+        run: lake '-KgameTheoryPath=../..' env lean --version
       - name: Fetch Mathlib cache
         run: lake '-KgameTheoryPath=../..' exe cache get
       - name: Build, lint, and audit the optional package
@@ -85,6 +87,10 @@ jobs:
           if ($base.Count -ne 1 -or $base[0].type -ne 'git') {
             throw 'Released consumer smoke still resolves a local GameTheory path'
           }
+      - name: Verify released-base Lean toolchain
+        run: lake env lean --version
+      - name: Fetch released-base Mathlib cache
+        run: lake exe cache get
       - name: Audit the optional package against the released base
         run: python ../../scripts/audit.py --complexity
       - name: Verify the released base pivot client

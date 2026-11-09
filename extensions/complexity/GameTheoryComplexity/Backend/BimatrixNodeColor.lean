@@ -16,6 +16,7 @@ open Cslib.BitString Turing.MultiTapeTM
 open GameTheory.Complexity.Backend.WordOperations
 
 
+/-- Emit the orientation guard bit from the row, basic-node, and entering words. -/
 def payoffBit (v : Fin 3 → List Bool) : List Bool :=
   andFlag (binaryLengthParity (v 0))
     (andFlag [decide (3 ≤ (v 0).length)]
@@ -62,6 +63,7 @@ private theorem payoffBit_value (r basic entering : List Bool) :
   have hb : [basic[r.length]?.getD false] = [decide (basic[r.length]?.getD false = true)] := by
     cases basic[r.length]?.getD false <;> rfl
   rw [hb, ho, ha, ha]
+/-- Build the signed payoff table using the row ruler and node membership words. -/
 def payoffWord (v : Fin 3 → List Bool) : List Bool :=
   binarySignedTable payoffBit (v 0 ++ v 0) [false]
     ![bimatrixNodeBasicWord ![v 0, v 1], v 2]

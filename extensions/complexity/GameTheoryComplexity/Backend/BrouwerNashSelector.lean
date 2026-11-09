@@ -10,93 +10,107 @@ public import GameTheoryComplexity.Backend.BrouwerNashSelectorKind
 
 @[expose] public section
 
-/-! Polynomial composition of the disjoint coefficient-query regions of the Brouwer Nash program. -/
+/-! The disjoint coefficient regions compose in their canonical order. Source-dependent
+color codes are charged as actual native word producers at the selector boundary. -/
 namespace GameTheory.Complexity.Backend.BrouwerNashSelector
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM
 
-private def queries : List ((Fin 5 → List Bool) → List Bool) :=
-  [BrouwerNashGlobalQuery.coefficientWord, BrouwerNashJitterQuery.coefficientWord,
-    BrouwerNashExtractionQuery.coefficientWord, BrouwerNashIncrementQuery.allCoefficientWord,
-    BrouwerNashInterpolationQuery.coefficientWord, BrouwerNashColorQuery.coefficientWord]
+local notation "QueryContext" => ((List Bool × (List Bool × List Bool)) × (List Bool × List Bool))
+local notation "queryEncoding" => encPair (encPair encBits (encPair encBits encBits)) (encPair encBits encBits)
 
-/-- Add the six disjoint canonical coefficient regions before fixed-width serialization. -/
-def coefficientWord : (Fin 5 → List Bool) → List Bool := binarySignedQuerySum queries
+private def queries : List (QueryContext → List Bool) := [
+  (fun context => BrouwerNashGlobalQuery.coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2),
+  (fun context => BrouwerNashJitterQuery.coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2),
+  (fun context => BrouwerNashExtractionQuery.coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2),
+  (fun context => BrouwerNashIncrementQuery.allCoefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2),
+  (fun context => BrouwerNashInterpolationQuery.coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2),
+  (fun context => BrouwerNashColorQuery.coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2)]
 
-/-- The entire coefficient selector has an actual polynomial-time certificate. -/
-theorem coefficientWord_cobham : Cobham coefficientWord := by
-  apply binarySignedQuerySum_cobham
-  intro query hq
-  simp only [queries, List.mem_cons, List.not_mem_nil, or_false] at hq
-  rcases hq with hq | hq | hq | hq | hq | hq <;> subst query
-  · exact BrouwerNashGlobalQuery.coefficientWord_cobham
-  · exact BrouwerNashJitterQuery.coefficientWord_cobham
-  · exact BrouwerNashExtractionQuery.coefficientWord_cobham
-  · exact BrouwerNashIncrementQuery.allCoefficientWord_cobham
-  · exact BrouwerNashInterpolationQuery.coefficientWord_cobham
-  · exact BrouwerNashColorQuery.coefficientWord_cobham
+/-- Add the six canonical coefficient regions in their original right-fold order. -/
+def coefficientWord (source code₀ code₁ out action : List Bool) : List Bool :=
+  binarySignedQuerySum [
+    (fun context : QueryContext => BrouwerNashGlobalQuery.coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2),
+    (fun context => BrouwerNashJitterQuery.coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2),
+    (fun context => BrouwerNashExtractionQuery.coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2),
+    (fun context => BrouwerNashIncrementQuery.allCoefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2),
+    (fun context => BrouwerNashInterpolationQuery.coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2),
+    (fun context => BrouwerNashColorQuery.coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2)]
+    ((source,(code₀,code₁)),(out,action))
 
-theorem coefficientWord_mem_FPn : FPn coefficientWord := cobham_iff_FPn.mp coefficientWord_cobham
+private theorem coefficientWord_eq (context : QueryContext) :
+    coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2 =
+      binarySignedQuerySum queries context := rfl
 
-/-- All region contributions add exactly, including aliases and signed constants. -/
-theorem coefficientWord_expansion (v : Fin 5 → List Bool) :
-    binarySignedValue (coefficientWord v) =
-      binarySignedValue (BrouwerNashGlobalQuery.coefficientWord v) +
-        (binarySignedValue (BrouwerNashJitterQuery.coefficientWord v) +
-          (binarySignedValue (BrouwerNashExtractionQuery.coefficientWord v) +
-            (binarySignedValue (BrouwerNashIncrementQuery.allCoefficientWord v) +
-              (binarySignedValue (BrouwerNashInterpolationQuery.coefficientWord v) +
-                binarySignedValue (BrouwerNashColorQuery.coefficientWord v))))) := by
-  simp only [coefficientWord, binarySignedQuerySum_value, queries, List.map_cons,
+@[fun_prop] theorem coefficientWord_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {source code₀ code₁ out action : Input → List Bool}
+    (hs : ComputableInPolyTime source input encBits)
+    (h₀ : ComputableInPolyTime code₀ input encBits)
+    (h₁ : ComputableInPolyTime code₁ input encBits)
+    (ho : ComputableInPolyTime out input encBits)
+    (ha : ComputableInPolyTime action input encBits) :
+    ComputableInPolyTime (fun a => coefficientWord (source a) (code₀ a) (code₁ a) (out a) (action a))
+      input encBits := by
+  have hc : ComputableInPolyTime (fun context : QueryContext => context) queryEncoding queryEncoding := .id'
+  have hqueries : ∀ query ∈ queries, ComputableInPolyTime query queryEncoding encBits := by
+    intro query hq
+    simp only [queries, List.mem_cons, List.not_mem_nil, or_false] at hq
+    rcases hq with rfl | rfl | rfl | rfl | rfl | rfl
+    · exact BrouwerNashGlobalQuery.coefficientWord_polyTime hc.fst'.fst' hc.fst'.snd'.fst'
+        hc.fst'.snd'.snd' hc.snd'.fst' hc.snd'.snd'
+    · exact BrouwerNashJitterQuery.coefficientWord_polyTime hc.fst'.fst' hc.fst'.snd'.fst'
+        hc.fst'.snd'.snd' hc.snd'.fst' hc.snd'.snd'
+    · exact BrouwerNashExtractionQuery.coefficientWord_polyTime hc.fst'.fst' hc.fst'.snd'.fst'
+        hc.fst'.snd'.snd' hc.snd'.fst' hc.snd'.snd'
+    · exact BrouwerNashIncrementQuery.allCoefficientWord_polyTime hc.fst'.fst' hc.fst'.snd'.fst'
+        hc.fst'.snd'.snd' hc.snd'.fst' hc.snd'.snd'
+    · exact BrouwerNashInterpolationQuery.coefficientWord_polyTime hc.fst'.fst' hc.fst'.snd'.fst'
+        hc.fst'.snd'.snd' hc.snd'.fst' hc.snd'.snd'
+    · exact BrouwerNashColorQuery.coefficientWord_polyTime hc.fst'.fst' hc.fst'.snd'.fst'
+        hc.fst'.snd'.snd' hc.snd'.fst' hc.snd'.snd'
+  exact (binarySignedQuerySum_polyTime queries hqueries
+    ((hs.prod (h₀.prod h₁)).prod (ho.prod ha))).of_enc_eq (fun a =>
+      congrArg encBits (coefficientWord_eq ((source a,(code₀ a,code₁ a)),(out a,action a))))
+
+/-- All contributions add exactly, including reference aliases and signed constants. -/
+theorem coefficientWord_expansion (source code₀ code₁ out action : List Bool) :
+    binarySignedValue (coefficientWord source code₀ code₁ out action) =
+      binarySignedValue (BrouwerNashGlobalQuery.coefficientWord source code₀ code₁ out action) +
+        (binarySignedValue (BrouwerNashJitterQuery.coefficientWord source code₀ code₁ out action) +
+          (binarySignedValue (BrouwerNashExtractionQuery.coefficientWord source code₀ code₁ out action) +
+            (binarySignedValue (BrouwerNashIncrementQuery.allCoefficientWord source code₀ code₁ out action) +
+              (binarySignedValue (BrouwerNashInterpolationQuery.coefficientWord source code₀ code₁ out action) +
+                binarySignedValue (BrouwerNashColorQuery.coefficientWord source code₀ code₁ out action))))) := by
+  simp only [coefficientWord, binarySignedQuerySum_value, List.map_cons,
     List.map_nil, List.sum_cons, List.sum_nil, add_zero]
 
-/-- Specialize the uniform selector to the two source-dependent compiled color circuits. -/
+/-- Specialize both actual compiled color-code producers to the source word. -/
 def coefficientQuery (codes : Fin 2 → List Bool → List Bool)
-    (v : Fin 3 → List Bool) : List Bool :=
-  coefficientWord ![v 0, v 1, v 2, codes 0 (v 2), codes 1 (v 2)]
+    (source out action : List Bool) : List Bool :=
+  coefficientWord source (codes 0 source) (codes 1 source) out action
 
-/-- Actual FP color-code producers compose with the uniform selector. -/
-theorem coefficientQuery_cobham (codes : Fin 2 → List Bool → List Bool)
-    (hc : ∀ flag, codes flag ∈ FP) : Cobham (coefficientQuery codes) := by
-  have hcode (flag : Fin 2) : Cobham fun v : Fin 3 → List Bool => codes flag (v 2) :=
-    (Cobham.comp (FP_subset_CobhamFP (hc flag)) fun _ : Fin 1 => .proj 2).of_eq fun _ => rfl
-  have hv : ∀ i : Fin 5, Cobham fun v : Fin 3 → List Bool =>
-      (![v 0, v 1, v 2, codes 0 (v 2), codes 1 (v 2)] : Fin 5 → List Bool) i := by
-    intro i
-    fin_cases i
-    · exact .proj 0
-    · exact .proj 1
-    · exact .proj 2
-    · exact hcode 0
-    · exact hcode 1
-  exact (Cobham.comp coefficientWord_cobham hv).of_eq fun _ => rfl
+/-- The joint native query charges source, output, action and both compiled code words. -/
+@[fun_prop] theorem coefficientQuery_polyTime (codes : Fin 2 → List Bool → List Bool)
+    (hc : ∀ flag, ComputableInPolyTime (codes flag) encBits encBits) :
+    ComputableInPolyTime (fun p : List Bool × (List Bool × List Bool) =>
+      coefficientQuery codes p.1 p.2.1 p.2.2)
+      (encPair encBits (encPair encBits encBits)) encBits := by
+  have hs := ComputableInPolyTime.fst encBits (encPair encBits encBits)
+  have hr := ComputableInPolyTime.snd encBits (encPair encBits encBits)
+  have hcert := coefficientWord_polyTime hs ((hc 0).comp hs) ((hc 1).comp hs) hr.fst' hr.snd'
+  simpa only [coefficientQuery, Function.comp_def] using hcert
 
-theorem coefficientQuery_mem_FPn (codes : Fin 2 → List Bool → List Bool)
-    (hc : ∀ flag, codes flag ∈ FP) : FPn (coefficientQuery codes) :=
-  cobham_iff_FPn.mp (coefficientQuery_cobham codes hc)
+/-- Specialize the complete comparator flag to the two compiled color codes. -/
+def kindQuery (codes : Fin 2 → List Bool → List Bool) (source out : List Bool) : List Bool :=
+  BrouwerNashSelectorKind.kindWord source (codes 0 source) (codes 1 source) out
 
-/-- Specialize the complete comparator flag to compiled source-dependent color circuits. -/
-def kindQuery (codes : Fin 2 → List Bool → List Bool)
-    (v : Fin 2 → List Bool) : List Bool :=
-  BrouwerNashSelectorKind.kindWord ![v 0, [], v 1, codes 0 (v 1), codes 1 (v 1)]
-
-/-- Actual FP color-code producers compose with the complete comparator flag. -/
-theorem kindQuery_cobham (codes : Fin 2 → List Bool → List Bool)
-    (hc : ∀ flag, codes flag ∈ FP) : Cobham (kindQuery codes) := by
-  have hcode (flag : Fin 2) : Cobham fun v : Fin 2 → List Bool => codes flag (v 1) :=
-    (Cobham.comp (FP_subset_CobhamFP (hc flag)) fun _ : Fin 1 => .proj 1).of_eq fun _ => rfl
-  have hv : ∀ i : Fin 5, Cobham fun v : Fin 2 → List Bool =>
-      (![v 0, [], v 1, codes 0 (v 1), codes 1 (v 1)] : Fin 5 → List Bool) i := by
-    intro i
-    fin_cases i
-    · exact .proj 0
-    · exact .const []
-    · exact .proj 1
-    · exact hcode 0
-    · exact hcode 1
-  exact (Cobham.comp BrouwerNashSelectorKind.kindWord_cobham hv).of_eq fun _ => rfl
-
-theorem kindQuery_mem_FPn (codes : Fin 2 → List Bool → List Bool)
-    (hc : ∀ flag, codes flag ∈ FP) : FPn (kindQuery codes) :=
-  cobham_iff_FPn.mp (kindQuery_cobham codes hc)
+/-- The kind query charges the source, output ruler and both compiled code words. -/
+@[fun_prop] theorem kindQuery_polyTime (codes : Fin 2 → List Bool → List Bool)
+    (hc : ∀ flag, ComputableInPolyTime (codes flag) encBits encBits) :
+    ComputableInPolyTime (fun p : List Bool × List Bool => kindQuery codes p.1 p.2)
+      (encPair encBits encBits) encBits := by
+  have hs := ComputableInPolyTime.fst encBits encBits
+  have hcert := BrouwerNashSelectorKind.kindWord_polyTime hs ((hc 0).comp hs) ((hc 1).comp hs)
+    (ComputableInPolyTime.snd encBits encBits)
+  simpa only [kindQuery, Function.comp_def] using hcert
 
 end GameTheory.Complexity.Backend.BrouwerNashSelector
