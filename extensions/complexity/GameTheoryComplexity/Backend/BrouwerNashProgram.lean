@@ -2,7 +2,6 @@ module
 
 public import GameTheoryComplexity.Backend.BrouwerNashLayout
 public import GameTheoryComplexity.Backend.BimatrixRawGate
-public import Complexitylib.Circuits.Encoding.Shift
 public import GameTheory.Finite.BimatrixBinaryExtraction
 public import GameTheory.Finite.BimatrixDyadicGate
 public import GameTheory.Finite.BimatrixFeedbackGate
@@ -15,7 +14,7 @@ public import GameTheory.Finite.BimatrixColorMeanGate
 The numeric allocation is shared with the executable coefficient writer. Every block specializes
 an existing affine or comparator factory, and malformed raw references emit affine zero. -/
 namespace GameTheory.Complexity.Backend.BrouwerNashProgram
-open _root_.Complexity.CircuitCode
+open Cslib.Circuits
 open GameTheory.Finite GameTheory.Finite.BimatrixGateProgram
 open scoped BigOperators
 open BrouwerNashLayout
@@ -28,8 +27,8 @@ def slot (b ell₀ ell₁ i : ℕ) : Fin (dimension b ell₀ ell₁) :=
     (slot b ell₀ ell₁ i).val = i := Nat.mod_eq_of_lt hi
 
 /-- Missing or out-of-range raw gates emit the canonical affine zero gate. -/
-def guardedRaw {k : ℕ} (raw : RawGate) : Gate k :=
-  if h : raw.WellFormedAt k then BimatrixRawGate.gate raw h
+def guardedRaw {k : ℕ} (raw : CircuitFormat.signature.Op × List ℕ) : Gate k :=
+  if h : Program.IsCodeFrom CircuitFormat.signature k 0 [raw] then BimatrixRawGate.gate raw h
   else BimatrixArithmeticGate.gate (fun _ => 0) 0
 
 /-- Aggregate two affine inputs, retaining both contributions when references coincide. -/
@@ -90,11 +89,11 @@ def incrementGate (b ell₀ ell₁ : ℕ) (t : Fin 41)
   let carryInput := if j = 0 then one else
     (sampleRef b ell₀ ell₁ t (increment b axis (j - 1) 3)).val
   guardedRaw (match stage.val with
-  | 0 => ⟨.and, input, carryInput, false, true⟩
-  | 1 => ⟨.and, input, carryInput, true, false⟩
-  | 2 => ⟨.or, (sampleRef b ell₀ ell₁ t (increment b axis j 0)).val,
-      (sampleRef b ell₀ ell₁ t (increment b axis j 1)).val, false, false⟩
-  | _ => ⟨.and, input, carryInput, false, false⟩)
+  | 0 => ((true, false, true), [input, carryInput])
+  | 1 => ((true, true, false), [input, carryInput])
+  | 2 => ((false, false, false), [(sampleRef b ell₀ ell₁ t (increment b axis j 0)).val,
+      (sampleRef b ell₀ ell₁ t (increment b axis j 1)).val])
+  | _ => ((true, false, false), [input, carryInput]))
 
 /-- Coordinate-copy inputs choose the lower prefix or its ripple increment. -/
 def cornerBit (b ell₀ ell₁ : ℕ) (t : Fin 41) (corner : Fin 4)
@@ -110,7 +109,7 @@ def cornerBit (b ell₀ ell₁ : ℕ) (t : Fin 41) (corner : Fin 4)
   else sampleRef b ell₀ ell₁ t (primaryBit b axis j)
 
 /-- Copies and relocated raw color gates share the same absolute input offset. -/
-def colorRegionGate (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41)
+def colorRegionGate (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) (t : Fin 41)
     (corner : Fin 4) (offset : ℕ) : Gate (dimension b raw₀.length raw₁.length) :=
   let ell₀ := raw₀.length
   let ell₁ := raw₁.length
@@ -119,11 +118,11 @@ def colorRegionGate (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41)
   let copy (j : ℕ) := affine₂
     (cornerBit b ell₀ ell₁ t corner ⟨(j / (b + 1)) % 2, Nat.mod_lt _ (by decide)⟩
       (j % (b + 1))) (ref zero) (2 * (dimension b ell₀ ell₁ : ℤ)) 0 0
-  let query (raw : RawCircuit) (flag : Fin 2) (j : ℕ) :=
+  let query (raw : List (CircuitFormat.signature.Op × List ℕ)) (flag : Fin 2) (j : ℕ) :=
     match raw[j]? with
     | none => BimatrixArithmeticGate.gate (fun _ => 0) 0
-    | some gate => guardedRaw (gate.shift
-        (sampleBase b ell₀ ell₁ t + colorInput b ell₀ ell₁ corner flag))
+    | some gate => guardedRaw (gate.1, gate.2.map (fun ref =>
+        (sampleBase b ell₀ ell₁ t + colorInput b ell₀ ell₁ corner flag) + ref))
   if offset < n then copy offset
   else if offset < n + ell₀ then query raw₀ 0 (offset - n)
   else if offset < 2 * n + ell₀ then copy (offset - (n + ell₀))
@@ -158,7 +157,7 @@ def minimumGate (b ell₀ ell₁ : ℕ) (t : Fin 41) (corner : Fin 4) (flag : Fi
     (ref (weight b corner)) (ref (minimumTemporary b ell₀ ell₁ corner flag))
 
 /-- One sample computes jitter, digits, corners, interpolation and weighted color flags. -/
-def sampleGate (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41) (i : ℕ) :
+def sampleGate (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) (t : Fin 41) (i : ℕ) :
     Gate (dimension b raw₀.length raw₁.length) :=
   let ell₀ := raw₀.length
   let ell₁ := raw₁.length
@@ -194,7 +193,7 @@ def sampleGate (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41) (i : ℕ) :
     minimumGate b ell₀ ell₁ t corner flag (decide (offset % 2 = 0))
 
 /-- A total canonical mixed gate program on the shared numeric allocation. -/
-def program (b : ℕ) (raw₀ raw₁ : RawCircuit) :
+def program (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) :
     Fin (dimension b raw₀.length raw₁.length) → Gate (dimension b raw₀.length raw₁.length) :=
   fun i =>
     if i.val < globalCount b then globalGate b raw₀.length raw₁.length i.val
@@ -206,7 +205,7 @@ def program (b : ℕ) (raw₀ raw₁ : RawCircuit) :
       else BimatrixArithmeticGate.gate (fun _ => 0) 0
 
 /-- Shared output positions select their canonical shared gates. -/
-theorem program_global (b : ℕ) (raw₀ raw₁ : RawCircuit) (i : ℕ)
+theorem program_global (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) (i : ℕ)
     (hi : i < globalCount b) :
     program b raw₀ raw₁ (slot b raw₀.length raw₁.length i) =
       globalGate b raw₀.length raw₁.length i := by
@@ -215,7 +214,7 @@ theorem program_global (b : ℕ) (raw₀ raw₁ : RawCircuit) (i : ℕ)
   simp only [program, slot_val _ _ _ _ hb, ite_eq_left hi]
 
 /-- Every allocated local output selects the same canonical sample gate. -/
-theorem program_sample (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41) (i : ℕ)
+theorem program_sample (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) (t : Fin 41) (i : ℕ)
     (hi : i < sampleWidth b raw₀.length raw₁.length) :
     program b raw₀ raw₁ (sampleRef b raw₀.length raw₁.length t i) =
       sampleGate b raw₀ raw₁ t i := by
@@ -286,7 +285,7 @@ private theorem affine₂_bound {k : ℕ} (a z : Fin k) (ca cz constant : ℤ)
     (by split_ifs <;> simp only [le_refl, abs_zero, abs_nonneg])
     (by split_ifs <;> simp only [le_refl, abs_zero, abs_nonneg]))
 
-private theorem guardedRaw_bound {k : ℕ} (hk : 0 < k) (raw : RawGate)
+private theorem guardedRaw_bound {k : ℕ} (hk : 0 < k) (raw : CircuitFormat.signature.Op × List ℕ)
     (r : Fin (k * 2)) : |(guardedRaw raw).coefficients r| ≤ 100 * (k : ℤ) := by
   have hz : (0 : ℤ) < k := by exact_mod_cast hk
   unfold guardedRaw
@@ -382,7 +381,7 @@ private theorem copy_bound {k : ℕ} (a z : Fin k) (r : Fin (k * 2)) :
   simp only [abs_zero, add_zero, abs_of_nonneg (by positivity : (0 : ℤ) ≤ 2 * k)] at h
   omega
 
-private theorem colorRegionGate_bound (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41)
+private theorem colorRegionGate_bound (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) (t : Fin 41)
     (corner : Fin 4) (offset : ℕ) (r : Fin (dimension b raw₀.length raw₁.length * 2)) :
     |(colorRegionGate b raw₀ raw₁ t corner offset).coefficients r| ≤
       100 * (dimension b raw₀.length raw₁.length : ℤ) := by
@@ -436,7 +435,8 @@ private theorem minimumGate_bound (b ell₀ ell₁ : ℕ) (t : Fin 41)
   have hk := dimension_pos b ell₀ ell₁
   dsimp only [minimumGate]
   split_ifs <;> exact (elementary_bound hk _ _ r).2.2.2.2.2.2.2
-private theorem sampleGate_bound (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41) (i : ℕ)
+
+private theorem sampleGate_bound (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) (t : Fin 41) (i : ℕ)
     (r : Fin (dimension b raw₀.length raw₁.length * 2)) :
     |(sampleGate b raw₀ raw₁ t i).coefficients r| ≤
       100 * (dimension b raw₀.length raw₁.length : ℤ) := by
@@ -450,8 +450,9 @@ private theorem sampleGate_bound (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin
   · exact interpolationGate_bound _ _ _ t _ r
   · exact colorRegionGate_bound _ _ _ t _ _ r
   · exact minimumGate_bound _ _ _ t _ _ _ r
+
 /-- Every emitted coefficient satisfies a uniform linear cap, even for malformed circuits. -/
-theorem coefficients_bound (b : ℕ) (raw₀ raw₁ : RawCircuit)
+theorem coefficients_bound (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ))
     (i : Fin (dimension b raw₀.length raw₁.length))
     (r : Fin (dimension b raw₀.length raw₁.length * 2)) :
     |(program b raw₀ raw₁ i).coefficients r| ≤
@@ -504,7 +505,7 @@ theorem globalGate_coordinate (b ell₀ ell₁ : ℕ) (axis : Fin 2) :
   exact dite_eq_left axis.isLt
 
 /-- Local jitter gates use the shared coordinate and final alpha wire. -/
-theorem sampleGate_jitter (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41) (axis : Fin 2) :
+theorem sampleGate_jitter (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) (t : Fin 41) (axis : Fin 2) :
     sampleGate b raw₀ raw₁ t (jitter axis) =
       affine₂ (slot b raw₀.length raw₁.length (coordinate axis))
         (slot b raw₀.length raw₁.length (alpha (precision b)))
@@ -514,7 +515,7 @@ theorem sampleGate_jitter (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41) (a
   exact dite_eq_left axis.isLt
 
 /-- Interpolation slots select all eight canonical affine blocks. -/
-theorem sampleGate_interpolation (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41)
+theorem sampleGate_interpolation (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) (t : Fin 41)
     (stage : Fin 8) :
     sampleGate b raw₀ raw₁ t (weightBase b + stage.val) =
       interpolationGate b raw₀.length raw₁.length t stage.val := by
@@ -529,12 +530,12 @@ theorem sampleGate_interpolation (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin
     ite_eq_left h4, Nat.add_sub_cancel_left]
 
 /-- A well-formed guarded raw slot is exactly the existing raw-gate translation. -/
-theorem guardedRaw_eq {k : ℕ} (raw : RawGate) (h : raw.WellFormedAt k) :
+theorem guardedRaw_eq {k : ℕ} (raw : CircuitFormat.signature.Op × List ℕ) (h : Program.IsCodeFrom CircuitFormat.signature k 0 [raw]) :
     guardedRaw raw = BimatrixRawGate.gate raw h := by
   exact dite_eq_left h
 
 /-- Each allocated color region retains its local circuit and input positions. -/
-theorem sampleGate_colorRegion (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41)
+theorem sampleGate_colorRegion (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) (t : Fin 41)
     (corner : Fin 4) (offset : ℕ) (ho : offset < cornerWidth b raw₀.length raw₁.length) :
     sampleGate b raw₀ raw₁ t
       (colorBase b + corner.val * cornerWidth b raw₀.length raw₁.length + offset) =
@@ -570,7 +571,7 @@ theorem sampleGate_colorRegion (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 4
     ite_eq_right h4, ite_eq_left h5, hoff, hd, hm, Nat.mod_eq_of_lt corner.isLt]
 
 /-- Both scalar color circuits receive the same copied corner coordinate inputs. -/
-theorem colorRegionGate_copy (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41)
+theorem colorRegionGate_copy (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) (t : Fin 41)
     (corner : Fin 4) (flag : Fin 2) (j : ℕ) (hj : j < arity b) :
     colorRegionGate b raw₀ raw₁ t corner
       ((if flag.val = 0 then 0 else arity b + raw₀.length) + j) =
@@ -587,12 +588,12 @@ theorem colorRegionGate_copy (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41)
       ite_eq_right h2, ite_eq_left h3, Nat.add_sub_cancel_left]
 
 /-- Raw scalar color gates use the absolute beginning of their copied-coordinate region. -/
-theorem colorRegionGate_raw₀ (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41)
+theorem colorRegionGate_raw₀ (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) (t : Fin 41)
     (corner : Fin 4) (j : Fin raw₀.length) :
     colorRegionGate b raw₀ raw₁ t corner (arity b + j.val) =
-      guardedRaw ((raw₀.get j).shift
+      guardedRaw ((raw₀.get j).1, (raw₀.get j).2.map (fun ref =>
         (sampleBase b raw₀.length raw₁.length t +
-          colorInput b raw₀.length raw₁.length corner 0)) := by
+          colorInput b raw₀.length raw₁.length corner 0) + ref)) := by
   have h1 : ¬arity b + j.val < arity b := by omega
   have h2 : arity b + j.val < arity b + raw₀.length := by have hj := j.isLt; omega
   simp only [colorRegionGate, ite_eq_right h1, ite_eq_left h2, Nat.add_sub_cancel_left,
@@ -600,12 +601,12 @@ theorem colorRegionGate_raw₀ (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 4
   rfl
 
 /-- The second scalar circuit has its own absolute input-copy offset. -/
-theorem colorRegionGate_raw₁ (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41)
+theorem colorRegionGate_raw₁ (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) (t : Fin 41)
     (corner : Fin 4) (j : Fin raw₁.length) :
     colorRegionGate b raw₀ raw₁ t corner (2 * arity b + raw₀.length + j.val) =
-      guardedRaw ((raw₁.get j).shift
+      guardedRaw ((raw₁.get j).1, (raw₁.get j).2.map (fun ref =>
         (sampleBase b raw₀.length raw₁.length t +
-          colorInput b raw₀.length raw₁.length corner 1)) := by
+          colorInput b raw₀.length raw₁.length corner 1) + ref)) := by
   have h1 : ¬2 * arity b + raw₀.length + j.val < arity b := by omega
   have h2 : ¬2 * arity b + raw₀.length + j.val < arity b + raw₀.length := by omega
   have h3 : ¬2 * arity b + raw₀.length + j.val < 2 * arity b + raw₀.length := by omega
@@ -614,7 +615,7 @@ theorem colorRegionGate_raw₁ (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 4
   rfl
 
 /-- Every ripple-increment stage selects its canonical guarded Boolean gate. -/
-theorem sampleGate_increment (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41)
+theorem sampleGate_increment (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) (t : Fin 41)
     (axis : Fin 2) (j : ℕ) (hj : j < b) (stage : Fin 4) :
     sampleGate b raw₀ raw₁ t (increment b axis j stage) =
       incrementGate b raw₀.length raw₁.length t axis j stage := by
@@ -651,7 +652,7 @@ theorem sampleGate_increment (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41)
   exact hsmod
 
 /-- The two local subtraction stages compute every corner-weight/color-flag minimum. -/
-theorem sampleGate_minimum (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41)
+theorem sampleGate_minimum (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) (t : Fin 41)
     (corner : Fin 4) (flag : Fin 2) (temporary : Bool) :
     sampleGate b raw₀ raw₁ t (minimumTemporary b raw₀.length raw₁.length corner flag +
       if temporary then 0 else 1) =
@@ -704,7 +705,7 @@ theorem sampleGate_minimum (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41)
     ite_eq_right h4, ite_eq_right h5, hoff, hc, hf, ht]
 
 /-- Each digit/remainder pair uses the canonical extraction factories. -/
-theorem sampleGate_extraction (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41)
+theorem sampleGate_extraction (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) (t : Fin 41)
     (axis : Fin 2) (j : ℕ) (hj : j < b) (stage : Fin 2) :
     sampleGate b raw₀ raw₁ t (digit b axis j + stage.val) =
       if stage.val = 0 then BimatrixBinaryExtraction.digitGate
