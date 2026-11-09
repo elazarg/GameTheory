@@ -11,7 +11,7 @@ membership lookup before exchanging node bits. Switching and color share the
 same recovered entering position.
 -/
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
 
 /-- Convert the selected dictionary row into its canonical leaving-variable position. -/
@@ -19,29 +19,10 @@ def generalBimatrixNodeLeavingPosition (v : Fin 2 → List Bool) : List Bool :=
   (binarySubsetNth ![generalBimatrixNodeData v 1,
     (generalBimatrixDictionarySelectedRow (generalBimatrixNodeData v)).tail]).tail
 
-theorem generalBimatrixNodeLeavingPosition_cobham : Cobham generalBimatrixNodeLeavingPosition :=
-  Cobham.tailFn (Cobham.comp₂ binarySubsetNth_cobham (generalBimatrixNodeData_cobham 1)
-    (Cobham.tailFn (Cobham.comp generalBimatrixDictionarySelectedRow_cobham generalBimatrixNodeData_cobham)))
-
-theorem generalBimatrixNodeLeavingPosition_mem_FPn : FPn generalBimatrixNodeLeavingPosition :=
-  cobham_iff_FPn.mp generalBimatrixNodeLeavingPosition_cobham
-
 /-- Exchange the selected leaving variable for the entering variable of a node word. -/
 def generalBimatrixPivotWord (v : Fin 2 → List Bool) : List Bool :=
   bimatrixNodeExchangeWord ![generalBimatrixDimensionWord (v 0), v 1,
     generalBimatrixNodeLeavingPosition v, generalBimatrixNodeData v 2]
-
-theorem generalBimatrixPivotWord_cobham : Cobham generalBimatrixPivotWord := by
-  apply Cobham.comp bimatrixNodeExchangeWord_cobham
-  intro i
-  fin_cases i
-  · exact Cobham.comp generalBimatrixDimensionWord_cobham fun _ => .proj 0
-  · exact .proj 1
-  · exact generalBimatrixNodeLeavingPosition_cobham
-  · exact generalBimatrixNodeData_cobham 2
-
-theorem generalBimatrixPivotWord_mem_FPn : FPn generalBimatrixPivotWord :=
-  cobham_iff_FPn.mp generalBimatrixPivotWord_cobham
 
 theorem generalBimatrixPivotWord_length (v : Fin 2 → List Bool) :
     (generalBimatrixPivotWord v).length = (v 1).length := bimatrixNodeExchangeWord_length _
@@ -49,14 +30,6 @@ theorem generalBimatrixPivotWord_length (v : Fin 2 → List Bool) :
 /-- Switch the recovered entering variable to its internal twin, retaining endpoints. -/
 def generalBimatrixSwitchWord (v : Fin 2 → List Bool) : List Bool :=
   bimatrixNodeSwitchWord ![generalBimatrixDimensionWord (v 0), v 1, generalBimatrixNodeData v 2]
-
-theorem generalBimatrixSwitchWord_cobham : Cobham generalBimatrixSwitchWord :=
-  Cobham.comp₃ bimatrixNodeSwitchWord_cobham
-    (Cobham.comp generalBimatrixDimensionWord_cobham fun _ => .proj 0)
-    (.proj 1) (generalBimatrixNodeData_cobham 2)
-
-theorem generalBimatrixSwitchWord_mem_FPn : FPn generalBimatrixSwitchWord :=
-  cobham_iff_FPn.mp generalBimatrixSwitchWord_cobham
 
 theorem generalBimatrixSwitchWord_length (v : Fin 2 → List Bool) :
     (generalBimatrixSwitchWord v).length = (v 1).length := bimatrixNodeSwitchWord_length _
@@ -177,6 +150,7 @@ theorem generalBimatrixDictionarySelectedRow_eq_some (input : List Bool)
     have heq : l = port.leavingRow hm hn hA hB :=
       (port.basis.exists_unique_leavingRow hm hn hA hB port.entering).choose_spec.2 l hleave
     exact congrArg (fun j => some j.val) heq
+
 /-- Serialized valid games compute the canonical positive-shifted pivot without extra selection premises. -/
 theorem generalBimatrixPivotWord_encode (input : List Bool) (hi : GeneralInstanceValid input)
     {d : Fin (generalRowCount input + generalColCount input)} (hd : d.val = 0)
@@ -204,4 +178,96 @@ theorem generalBimatrixPivotWord_encode (input : List Bool) (hi : GeneralInstanc
   rw [hparams]
   exact generalBimatrixDictionarySelectedRow_eq_some input port.toPivotPort hi.1 hi.2.1 hA hB _
     (generalBimatrixNodeData_entering input (generalBimatrixDimensionWord_length input) hd port)
+
+@[fun_prop] theorem generalBimatrixNodeLeavingPosition_polyTime :
+    ComputableInPolyTime generalBimatrixNodeLeavingPosition (encPi encBits) encBits := by
+  have hmembers := (ComputableInPolyTime.pi_apply encBits (1 : Fin 3)).comp
+    generalBimatrixNodeData_polyTime
+  have hselected := generalBimatrixDictionarySelectedRow_polyTime.comp generalBimatrixNodeData_polyTime
+  have hordinal := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hselected
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 2 → List Bool => ![generalBimatrixNodeData v 1,
+        (generalBimatrixDictionarySelectedRow (generalBimatrixNodeData v)).tail])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hmembers
+    · exact hordinal
+  have hlookup := binarySubsetNth_polyTime.comp hargs
+  have h := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hlookup
+  apply ComputableInPolyTime.of_tidy
+  apply h.tidy.of_enc_eq (g := generalBimatrixNodeLeavingPosition)
+  intro v
+  rfl
+
+@[fun_prop] theorem generalBimatrixPivotWord_polyTime :
+    ComputableInPolyTime generalBimatrixPivotWord (encPi encBits) encBits := by
+  have hinput : ComputableInPolyTime (fun v : Fin 2 → List Bool => ![v 0])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    exact .pi_apply encBits (0 : Fin 2)
+  have hdim0 := generalBimatrixDimensionWord_polyTime.comp hinput
+  have hdim : ComputableInPolyTime
+      (fun v : Fin 2 → List Bool => generalBimatrixDimensionWord (v 0))
+      (encPi encBits) encBits := by
+    apply ComputableInPolyTime.of_tidy
+    apply hdim0.tidy.of_enc_eq
+    intro v
+    rfl
+  have hentering := (ComputableInPolyTime.pi_apply encBits (2 : Fin 3)).comp
+    generalBimatrixNodeData_polyTime
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 2 → List Bool => ![generalBimatrixDimensionWord (v 0), v 1,
+        generalBimatrixNodeLeavingPosition v, generalBimatrixNodeData v 2])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hdim
+    · exact .pi_apply encBits 1
+    · exact generalBimatrixNodeLeavingPosition_polyTime
+    · exact hentering
+  have h := bimatrixNodeExchangeWord_polyTime.comp hargs
+  apply ComputableInPolyTime.of_tidy
+  apply h.tidy.of_enc_eq (g := generalBimatrixPivotWord)
+  intro v
+  rfl
+
+@[fun_prop] theorem generalBimatrixSwitchWord_polyTime :
+    ComputableInPolyTime generalBimatrixSwitchWord (encPi encBits) encBits := by
+  have hinput : ComputableInPolyTime (fun v : Fin 2 → List Bool => ![v 0])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    exact .pi_apply encBits (0 : Fin 2)
+  have hdim0 := generalBimatrixDimensionWord_polyTime.comp hinput
+  have hdim : ComputableInPolyTime
+      (fun v : Fin 2 → List Bool => generalBimatrixDimensionWord (v 0))
+      (encPi encBits) encBits := by
+    apply ComputableInPolyTime.of_tidy
+    apply hdim0.tidy.of_enc_eq
+    intro v
+    rfl
+  have hentering := (ComputableInPolyTime.pi_apply encBits (2 : Fin 3)).comp
+    generalBimatrixNodeData_polyTime
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 2 → List Bool =>
+        ![generalBimatrixDimensionWord (v 0), v 1, generalBimatrixNodeData v 2])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hdim
+    · exact .pi_apply encBits 1
+    · exact hentering
+  have h := bimatrixNodeSwitchWord_polyTime.comp hargs
+  apply ComputableInPolyTime.of_tidy
+  apply h.tidy.of_enc_eq (g := generalBimatrixSwitchWord)
+  intro v
+  rfl
+
 end GameTheory.Complexity.Backend

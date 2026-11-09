@@ -245,7 +245,10 @@ The native general verifier and totality leaves are
 `Backend.GeneralBimatrixFNP` and `Backend.GeneralBimatrixTotality`. They prove
 `FNP encBits` and `TFNP encBits` for the canonical signed rectangular relation
 using the actual typed Boolean verifier and finite complementary-path existence.
-The node/pointer and full public Nash classifier port remains in progress.
+Native node validation, exchange, orientation and total pointer machines now feed
+`Backend.GeneralBimatrixCircuitMachine`, which certifies the actual uniform
+predecessor/successor circuit instance and agrees at every fixed-width vertex.
+Endpoint emission and the full public Nash classifier port remain in progress.
 
 Import `GameTheoryComplexity.BimatrixNash` for exact signed rectangular Nash
 search PPAD-completeness (`bimatrixNashRelation_PPADComplete`). The existing binary relation
