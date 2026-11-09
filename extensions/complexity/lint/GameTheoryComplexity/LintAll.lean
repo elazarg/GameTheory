@@ -28,6 +28,7 @@ import all GameTheoryComplexity.SampleTest
 import all GameTheoryComplexity.Backend.SATGame
 import all GameTheoryComplexity.Backend.SATSyntaxMachine
 import all GameTheoryComplexity.Backend.SATWords
+import all GameTheoryComplexity.Backend.SATWordsMachine
 import all GameTheoryComplexity.Backend.SATTableEmission
 import all GameTheoryComplexity.Backend.SATTableScanner
 import all GameTheoryComplexity.Backend.SATTableScannerCorrectness
