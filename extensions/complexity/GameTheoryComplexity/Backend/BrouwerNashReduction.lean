@@ -4,6 +4,7 @@ public import GameTheoryComplexity.Backend.BrouwerNashProgramCorrectness
 public import GameTheoryComplexity.Backend.BrouwerNashAnswerMachine
 public import GameTheoryComplexity.Backend.BrouwerNashHeaders
 public import GameTheoryComplexity.Backend.BimatrixProgramEmission
+public import GameTheoryComplexity.Backend.GeneralBimatrixTotality
 
 @[expose] public section
 
@@ -12,23 +13,24 @@ to reduce continuous Brouwer search to the canonical rectangular Nash relation. 
 game answer is decoded through the actual sampled program and binary-cell answer machine. -/
 
 namespace GameTheory.Complexity.Backend.BrouwerNashReduction
-open _root_.Complexity _root_.Complexity.CircuitCode _root_.Complexity.Cobham
+open Turing.MultiTapeTM Cslib.Complexity Cslib.Circuits
+open Cslib.BitString
 open GameTheory.Finite GameTheory.Finite.BimatrixGateProgram
 open BrouwerNashLayout BrouwerNashProgram
 
 section
-variable (source tape : List Bool) (raw₀ raw₁ : RawCircuit)
-local notation "b" => List.length (pairFst source)
+variable (source tape : List Bool) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ))
+local notation "b" => List.length (CircuitWords.first source)
 local notation "k" => dimension b raw₀.length raw₁.length
 local notation "g" => program b raw₀ raw₁
 
 /-- Exact written fields preserve every accepted answer through the canonical program. -/
 theorem answer_sound_of_fields
     (hsize : (BimatrixProgramCodec.dimension tape).length = k)
-    (rulers : Fin 2 → List Bool) (hdepth : (rulers 0).length = b)
-    (hruler : (rulers 1).length = k)
+    (precision size : List Bool) (hdepth : precision.length = b)
+    (hruler : size.length = k)
     (hbaseline : BimatrixProgramCodec.baseline tape =
-      binarySignedValue (BrouwerNashRewardMachine.reward rulers))
+      binarySignedValue (BrouwerNashRewardMachine.reward precision size))
     (hcoeff : ∀ i r (hi : i < k) (hr : r < k * 2),
       binarySignedRowValue (BimatrixProgramCodec.width tape)
         (BimatrixProgramCodec.coefficientTape tape) (i * (k * 2) + r) =
@@ -36,11 +38,14 @@ theorem answer_sound_of_fields
     (hkind : ∀ i (hi : i < k),
       (if (BimatrixProgramCodec.kindFlags tape)[i]?.getD false then GateKind.comparator
         else GateKind.affine) = (g ⟨i, hi⟩).kind)
-    (hraw : ∀ flag : Fin 2, (if flag.val = 0 then raw₀ else raw₁).WellFormed (arity b))
+    (hraw : ∀ flag : Fin 2, Program.IsCodeFrom CircuitFormat.signature (arity b) 0
+      (if flag.val = 0 then raw₀ else raw₁))
+    (hne : ∀ flag : Fin 2, (if flag.val = 0 then raw₀ else raw₁) ≠ [])
     (hquery : ∀ flag : Fin 2, ∀ x y : ℕ, x ≤ 2 ^ b → y ≤ 2 ^ b →
-      (if flag.val = 0 then raw₀ else raw₁).eval?
-        (Nat.toBitsLE (b + 1) x ++ Nat.toBitsLE (b + 1) y) =
-          some (bitOf (encodeGridColor (spernerColor source x y)) flag))
+      CircuitFormat.evalOutput (lowBits (b + 1) x ++ lowBits (b + 1) y)
+        (if flag.val = 0 then raw₀ else raw₁)
+        (arity b + (if flag.val = 0 then raw₀ else raw₁).length - 1) =
+          (encodeGridColor (spernerColor source x y)).getD flag.val false)
     (answer : List Bool)
     (ha : generalBimatrixRelation (BimatrixProgramMachine.instanceWord tape) answer) :
     brouwerRelation source (BrouwerNashAnswerMachine.answerWord ![source, tape, answer]) := by
@@ -51,6 +56,7 @@ theorem answer_sound_of_fields
   have hv := BimatrixProgramCorrectness.accepted_valid tape answer (by omega) ha
   unfold BimatrixProgramCodec.decode at hv
   rw [hsize, hbaseline] at hv
+  simp only [List.getD_eq_getElem?_getD] at hv
   have hg : (fun i : Fin k => ({
       coefficients := fun r => binarySignedRowValue (BimatrixProgramCodec.width tape)
         (BimatrixProgramCodec.coefficientTape tape) (i.val * (k * 2) + r.val)
@@ -68,8 +74,8 @@ theorem answer_sound_of_fields
   let c := decodeGeneralCertificate (k * 2) (k * 2)
     (generalCertificateWidth (BimatrixProgramMachine.instanceWord tape).length) answer
   have hres := BrouwerNashProgramCorrectness.reward_source_residual b raw₀ raw₁
-    source rfl rulers hdepth hruler c hv hraw hquery
-  have hd : 0 < Nat.fromBitsLE (BrouwerNashAnswerMachine.denominatorWord tape answer) := by
+    source rfl precision size hdepth hruler c hv hraw hne hquery
+  have hd : 0 < ofBits (BrouwerNashAnswerMachine.denominatorWord tape answer) := by
     rw [BrouwerNashAnswerMachine.denominatorWord_value]
     exact hv.1
   have hcoordinate (axis : Fin 2) :
@@ -90,88 +96,130 @@ theorem answer_sound_of_fields
 
 end
 
-private def kindWord (query : (Fin 2 → List Bool) → List Bool)
-    (ruler source : List Bool) : List Bool := binarySignedTable query ruler [false] ![source]
+private def kindWord (query : List Bool → List Bool → List Bool)
+    (ruler source : List Bool) : List Bool :=
+  (List.range ruler.length).flatMap fun i =>
+    binarySignedFixed [false] (query source (ruler.drop (ruler.length - i)))
 
-private theorem kindWord_mem_FP {query : (Fin 2 → List Bool) → List Bool}
-    (hq : FPn query) {ruler : List Bool → List Bool} (hr : ruler ∈ FP) :
-    (fun source => kindWord query (ruler source) source) ∈ FP := by
-  apply CobhamFP_subset_FP
-  exact (Cobham.comp₃ (binarySignedTable_cobham (cobham_iff_FPn.mpr hq))
-    (FP_subset_CobhamFP hr) (Cobham.const [false]) (.proj 0)).of_eq fun _ => rfl
+private theorem kindWord_polyTime
+    {query : List Bool → List Bool → List Bool}
+    (hq : ComputableInPolyTime (fun p : List Bool × List Bool => query p.1 p.2)
+      (encPair encBits encBits) encBits)
+    {ruler : List Bool → List Bool} (hr : ComputableInPolyTime ruler encBits encBits) :
+    ComputableInPolyTime (fun source => kindWord query (ruler source) source)
+      encBits encBits := by
+  have hi := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.range).comp
+    (ComputableInPolyTime.length_bits_comp hr)
+  change ComputableInPolyTime (fun source =>
+    (List.range (ruler source).length).flatMap fun i =>
+      binarySignedFixed [false] (query source ((ruler source).drop ((ruler source).length - i))))
+    encBits encBits
+  refine ComputableInPolyTime.flatMapToBitsWithInput
+    (f := fun (source : List Bool) (i : ℕ) =>
+      binarySignedFixed [false]
+        (query source ((ruler source).drop ((ruler source).length - i)))) hi ?_
+  have hs : ComputableInPolyTime (fun p : List Bool × ℕ => p.1)
+      (encPair encBits encUnary) encBits := .fst encBits encUnary
+  have hj : ComputableInPolyTime (fun p : List Bool × ℕ => p.2)
+      (encPair encBits encUnary) encUnary := .snd encBits encUnary
+  have hr' := hr.comp hs
+  have ho := ComputableInPolyTime.bitsDropWithInput hr'
+    (ComputableInPolyTime.unary_sub' (ComputableInPolyTime.length_bits_comp hr') hj)
+  exact binarySignedFixed_polyTime (.const [false]) (hq.comp (hs.prod ho))
 
-private theorem kindWord_at (query : (Fin 2 → List Bool) → List Bool)
+private theorem kindWord_at (query : List Bool → List Bool → List Bool)
     (ruler source : List Bool) (i : ℕ) (hi : i < ruler.length) (bit : Bool)
-    (he : query ![ruler.drop (ruler.length - i), source] = [bit]) :
+    (he : query source (ruler.drop (ruler.length - i)) = [bit]) :
     (kindWord query ruler source)[i]?.getD false = bit := by
-  have hf := binarySignedTable_field query ruler [false] ![source] i hi
-  change ((kindWord query ruler source).drop (i * 1)).take 1 =
-    binarySignedFixed [false] (query ![ruler.drop (ruler.length - i), source]) at hf
+  have hf := GameTheory.Math.FixedBlockList.block_flatMap_fixed
+    (List.range ruler.length)
+    (fun j => binarySignedFixed [false] (query source (ruler.drop (ruler.length - j))))
+    1 (fun _ _ => binarySignedFixed_length _ _) i
+    (by simpa only [List.length_range] using hi)
+  simp only [List.getElem_range, Nat.mul_one] at hf
+  change ((kindWord query ruler source).drop i).take 1 = _ at hf
   rw [he, binarySignedFixed_eq_of_length [false] [bit] rfl] at hf
   have h := congrArg (fun word : List Bool => word[0]?.getD false) hf
   simpa using h
+
 section Assembly
 variable (codes : Fin 2 → List Bool → List Bool)
-variable (query : (Fin 3 → List Bool) → List Bool)
-variable (kindQuery : (Fin 2 → List Bool) → List Bool)
+variable (query : List Bool → List Bool → List Bool → List Bool)
+variable (kindQuery : List Bool → List Bool → List Bool)
 local notation "d" => BrouwerNashHeaders.sourceFn BrouwerNashHeaders.dimensionRuler codes
 local notation "w" => BrouwerNashHeaders.sourceFn BrouwerNashHeaders.widthRuler codes
 local notation "h" => BrouwerNashHeaders.sourceFn BrouwerNashHeaders.baselineWord codes
 
 /-- Certified scalar and kind selectors supply an actual every-answer search reduction. -/
 theorem exists_reduction_of_selectors
-    (hcodes : ∀ flag, codes flag ∈ FP)
-    (hcompiled : ∀ flag source, ∃ raw : RawCircuit,
-      RawCircuit.decode? (codes flag source) = some raw ∧
-      raw.WellFormed (arity (pairFst source).length) ∧
-      ∀ x y, x ≤ 2 ^ (pairFst source).length → y ≤ 2 ^ (pairFst source).length →
-        raw.eval? (Nat.toBitsLE ((pairFst source).length + 1) x ++
-          Nat.toBitsLE ((pairFst source).length + 1) y) =
-            some (bitOf (encodeGridColor (spernerColor source x y)) flag))
-    (hq : FPn query) (hkq : FPn kindQuery)
+    (hcodes : ∀ flag, ComputableInPolyTime (codes flag) encBits encBits)
+    (hcompiled : ∀ flag source,
+      ∃ gates : List (CircuitFormat.signature.Op × List ℕ),
+        ∃ output : Fin (2 * ((CircuitWords.first source).length + 1) + gates.length),
+          CircuitFormat.decode? (codes flag source) = some gates ∧
+          Program.IsCodeFrom CircuitFormat.signature
+            (2 * ((CircuitWords.first source).length + 1)) 0 gates ∧ gates ≠ [] ∧
+          output.val = 2 * ((CircuitWords.first source).length + 1) + gates.length - 1 ∧
+          ∀ x y, x ≤ 2 ^ (CircuitWords.first source).length →
+            y ≤ 2 ^ (CircuitWords.first source).length →
+            CircuitFormat.evalOutput
+              (lowBits ((CircuitWords.first source).length + 1) x ++
+                lowBits ((CircuitWords.first source).length + 1) y) gates output.val =
+              (encodeGridColor (spernerColor source x y)).getD flag.val false)
+    (hq : ComputableInPolyTime
+      (fun p : List Bool × (List Bool × List Bool) => query p.1 p.2.1 p.2.2)
+      (encPair encBits (encPair encBits encBits)) encBits)
+    (hkq : ComputableInPolyTime (fun p : List Bool × List Bool => kindQuery p.1 p.2)
+      (encPair encBits encBits) encBits)
     (hcoeff : ∀ source raw₀ raw₁,
-      RawCircuit.decode? (codes 0 source) = some raw₀ →
-      RawCircuit.decode? (codes 1 source) = some raw₁ →
-      ∀ (i : Fin (dimension (pairFst source).length raw₀.length raw₁.length))
-        (r : Fin (dimension (pairFst source).length raw₀.length raw₁.length * 2)),
-      binarySignedValue (query ![(d source).drop ((d source).length - i.val),
-        (d source ++ d source).drop ((d source).length * 2 - r.val), source]) =
-          (program (pairFst source).length raw₀ raw₁ i).coefficients r)
+      CircuitFormat.decode? (codes 0 source) = some raw₀ →
+      CircuitFormat.decode? (codes 1 source) = some raw₁ →
+      ∀ (i : Fin (dimension (CircuitWords.first source).length raw₀.length raw₁.length))
+        (r : Fin (dimension (CircuitWords.first source).length raw₀.length raw₁.length * 2)),
+      binarySignedValue (query source ((d source).drop ((d source).length - i.val))
+        ((d source ++ d source).drop ((d source).length * 2 - r.val))) =
+          (program (CircuitWords.first source).length raw₀ raw₁ i).coefficients r)
     (hkind : ∀ source raw₀ raw₁,
-      RawCircuit.decode? (codes 0 source) = some raw₀ →
-      RawCircuit.decode? (codes 1 source) = some raw₁ →
-      ∀ i : Fin (dimension (pairFst source).length raw₀.length raw₁.length),
-        kindQuery ![(d source).drop ((d source).length - i.val), source] =
-          [decide ((program (pairFst source).length raw₀ raw₁ i).kind = .comparator)]) :
-    Nonempty (SearchReduction brouwerRelation generalBimatrixRelation) := by
+      CircuitFormat.decode? (codes 0 source) = some raw₀ →
+      CircuitFormat.decode? (codes 1 source) = some raw₁ →
+      ∀ i : Fin (dimension (CircuitWords.first source).length raw₀.length raw₁.length),
+        kindQuery source ((d source).drop ((d source).length - i.val)) =
+          [decide ((program (CircuitWords.first source).length raw₀ raw₁ i).kind = .comparator)]) :
+    SearchReducible encBits encBits brouwerRelation generalBimatrixRelation := by
   let kinds := fun source => kindWord kindQuery (d source) source
   let tape := BimatrixProgramEmission.programWord d w h kinds query
-  have hdFP := BrouwerNashHeaders.sourceFn_mem_FP
-    BrouwerNashHeaders.dimensionRuler_cobham codes hcodes
-  have hwFP := BrouwerNashHeaders.sourceFn_mem_FP
-    BrouwerNashHeaders.widthRuler_cobham codes hcodes
-  have hhFP := BrouwerNashHeaders.sourceFn_mem_FP
-    BrouwerNashHeaders.baselineWord_cobham codes hcodes
-  have htape : tape ∈ FP := BimatrixProgramEmission.programWord_mem_FP
-    hdFP hwFP hhFP (kindWord_mem_FP hkq hdFP) hq
-  let instanceMap := BimatrixProgramMachine.instanceWord ∘ tape
-  have hiFP : instanceMap ∈ FP := mem_FP_comp (f := tape)
-    (g := BimatrixProgramMachine.instanceWord) htape BimatrixProgramMachine.instanceWord_mem_FP
-  refine ⟨{
-    instanceMap := instanceMap
-    instanceMap_mem_FP := hiFP
-    decode := fun v => BrouwerNashAnswerMachine.answerWord ![v 0, tape (v 0), v 1]
-    decode_mem_FPn := ?_
-    sound := ?_ }⟩
-  · apply cobham_iff_FPn.mp
-    exact (Cobham.comp₃ BrouwerNashAnswerMachine.answerWord_cobham (.proj 0)
-      (Cobham.comp (FP_subset_CobhamFP htape) fun _ : Fin 1 =>
-        (Cobham.proj 0 : Cobham fun v : Fin 2 → List Bool => v 0)) (.proj 1)).of_eq
-      fun _ => rfl
+  have hdPT : ComputableInPolyTime d encBits encBits :=
+    BrouwerNashHeaders.dimensionRuler_polyTime (.id') (hcodes 0) (hcodes 1)
+  have hwPT : ComputableInPolyTime w encBits encBits :=
+    BrouwerNashHeaders.widthRuler_polyTime (.id') (hcodes 0) (hcodes 1)
+  have hhPT : ComputableInPolyTime h encBits encBits :=
+    BrouwerNashHeaders.baselineWord_polyTime (.id') (hcodes 0) (hcodes 1)
+  have htape : ComputableInPolyTime tape encBits encBits :=
+    BimatrixProgramEmission.programWord_polyTime hdPT hwPT hhPT
+      (kindWord_polyTime hkq hdPT) hq
+  let instanceMap := fun source => BimatrixProgramMachine.instanceWord (tape source)
+  have hiPT : ComputableInPolyTime instanceMap encBits encBits :=
+    BimatrixProgramMachine.instanceWord_polyTime htape
+  apply SearchReducible.of_isTotalSearch
+    (f := instanceMap)
+    (g := fun p : List Bool × List Bool =>
+      BrouwerNashAnswerMachine.answerWord ![p.1, tape p.1, p.2])
+    generalBimatrixRelation_total hiPT
+  · have hargs : ComputableInPolyTime
+        (fun p : List Bool × List Bool => ![p.1, tape p.1, p.2])
+        (encPair encBits encBits) (encPi encBits) := by
+      apply ComputableInPolyTime.pi
+      intro i
+      fin_cases i
+      · exact .fst encBits encBits
+      · exact htape.comp (.fst encBits encBits)
+      · exact .snd encBits encBits
+    have hcert := BrouwerNashAnswerMachine.answerWord_polyTime.comp hargs
+    exact hcert
   · intro source answer ha
-    obtain ⟨raw₀, hd₀, hw₀, he₀⟩ := hcompiled 0 source
-    obtain ⟨raw₁, hd₁, hw₁, he₁⟩ := hcompiled 1 source
-    let b := (pairFst source).length
+    obtain ⟨raw₀, output₀, hd₀, hw₀, hn₀, hl₀, he₀⟩ := hcompiled 0 source
+    obtain ⟨raw₁, output₁, hd₁, hw₁, hn₁, hl₁, he₁⟩ := hcompiled 1 source
+    let b := (CircuitWords.first source).length
     let K := dimension b raw₀.length raw₁.length
     let G := program b raw₀ raw₁
     have hd := BrouwerNashHeaders.sourceDimension_length_of_decode
@@ -182,24 +230,20 @@ theorem exists_reduction_of_selectors
     change generalBimatrixRelation (BimatrixProgramMachine.instanceWord (tape source)) answer at ha
     change brouwerRelation source
       (BrouwerNashAnswerMachine.answerWord ![source, tape source, answer])
-    let rulers : Fin 2 → List Bool := ![pairFst source, d source]
-    have hdepth : (rulers 0).length = b := rfl
-    have hruler : (rulers 1).length = K := by
-      dsimp only [rulers, Matrix.cons_val_one, Matrix.cons_val_zero]
-      exact hd
+    let precision := CircuitWords.first source
+    have hdepth : precision.length = b := rfl
+    have hruler : (d source).length = K := hd
     refine answer_sound_of_fields source (tape source) raw₀ raw₁ hsize
-      rulers hdepth hruler ?_ ?_ ?_ ?_ ?_ answer ha
+      precision (d source) hdepth hruler ?_ ?_ ?_ ?_ ?_ ?_ answer ha
     · rw [BimatrixProgramCodec.baseline, hf.2.2.1]
       rfl
     · intro i r hi hr
       rw [hf.2.1, hf.2.2.2.2]
       have hiD : i < (d source).length := by simpa only [hd] using hi
       have hrD : r < (d source).length * 2 := by simpa only [hd] using hr
-      have hp := BimatrixProgramEmission.coefficients_field query ![d source, w source, source]
-        i r (by simpa only [Matrix.cons_val_zero] using hiD)
-          (by simpa only [Matrix.cons_val_zero] using hrD)
-      simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two] at hp
-      change ((BimatrixProgramEmission.coefficients query ![d source, w source, source]).drop
+      have hp := BimatrixProgramEmission.coefficients_field query source (d source) (w source)
+        i r hiD hrD
+      change ((BimatrixProgramEmission.coefficients query source (d source) (w source)).drop
         ((i * ((d source).length * 2) + r) * (w source).length)).take (w source).length = _ at hp
       rw [hd] at hp
       unfold binarySignedRowValue
@@ -207,12 +251,11 @@ theorem exists_reduction_of_selectors
       have he := hcoeff source raw₀ raw₁ hd₀ hd₁ ⟨i, hi⟩ ⟨r, hr⟩
       rw [hd] at he
       apply (binarySignedFixed_value (w source) _ ?_ ?_).trans he
-      · change 0 < (BrouwerNashHeaders.widthRuler
-          ![source, codes 0 source, codes 1 source]).length
+      · change 0 < (BrouwerNashHeaders.widthRuler source (codes 0 source) (codes 1 source)).length
         rw [BrouwerNashHeaders.widthRuler_length]
         omega
       · rw [he]
-        apply BrouwerNashHeaders.widthRuler_fits ![source, codes 0 source, codes 1 source]
+        apply BrouwerNashHeaders.widthRuler_fits source (codes 0 source) (codes 1 source)
         change ((G ⟨i, hi⟩).coefficients ⟨r, hr⟩).natAbs ≤ 100 * (d source).length
         rw [hd]
         have hb := coefficients_bound b raw₀ raw₁ ⟨i, hi⟩ ⟨r, hr⟩
@@ -232,8 +275,12 @@ theorem exists_reduction_of_selectors
       · exact hw₁
     · intro flag
       fin_cases flag
-      · exact he₀
-      · exact he₁
+      · exact hn₀
+      · exact hn₁
+    · intro flag
+      fin_cases flag
+      · simpa only [hl₀, arity, Fin.val_zero, ite_true] using he₀
+      · simpa only [hl₁, arity, Fin.val_one, Nat.one_ne_zero, ite_false] using he₁
 
 end Assembly
 end GameTheory.Complexity.Backend.BrouwerNashReduction

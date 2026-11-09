@@ -170,11 +170,13 @@ theorem bimatrixNodeEnteringWord_value (v : Fin 2 → List Bool) :
     (fun r => enteringBit_value r _) ((v 0) ++ (v 0))
   simpa only [bimatrixNodeEnteringWord, List.length_append, ← two_mul, List.getElem?_drop] using h
 
+/-- Emit whether the row's pair of basic-label bits satisfies the coverage condition. -/
 def bimatrixNodeCoverageBit (v : Fin 2 → List Bool) : List Bool :=
   [decide ((v 0).length = 0) ||
     (!((v 1)[2 * (v 0).length]?.getD false) ||
       !((v 1)[2 * (v 0).length + 1]?.getD false))]
 
+/-- Emit whether the entering bit selects a permitted basic port with covered labels. -/
 def bimatrixNodePortBit (v : Fin 3 → List Bool) : List Bool :=
   let labelLength := (binaryHalfRuler (v 0)).length
   let enteringBit := (v 2)[(v 0).length]?.getD false
@@ -243,9 +245,11 @@ private theorem bimatrixNodePortBit_polyTime :
   intro v
   rfl
 
+/-- State that the paired basic-label bits at index `i` are covered. -/
 abbrev CoveredAt (basic : List Bool) (i : ℕ) : Prop :=
   i = 0 ∨ basic[2 * i]?.getD false = false ∨ basic[2 * i + 1]?.getD false = false
 
+/-- State that an entering bit at `i` is allowed by the basic membership and labels. -/
 abbrev PermittedAt (basic entering : List Bool) (i : ℕ) : Prop :=
   entering[i]?.getD false = true → basic[i]?.getD false = false ∧
     (i / 2 = 0 ∨ (basic[2 * (i / 2)]?.getD false = false ∧

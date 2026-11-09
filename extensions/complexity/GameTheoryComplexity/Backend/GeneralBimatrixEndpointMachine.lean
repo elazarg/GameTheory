@@ -240,6 +240,7 @@ def generalBimatrixEndpointUtilityWord (columnPlayer : Bool) (v : Fin 5 → List
       ((ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp h2)
   exact binarySignedFixedSub_polyTime h4 hraw hproduct
 
+/-- Select one of the six signed endpoint scalar words, with a false-bit fallback. -/
 def scalarWord : ℕ → (Fin 5 → List Bool) → List Bool
   | 0, v => generalBimatrixEndpointMassWord false v
   | 1, v => generalBimatrixEndpointMassWord true v
@@ -265,6 +266,7 @@ private theorem scalarWord_polyTime (n : ℕ) :
   · exact binarySignedNeg_polyTime (generalBimatrixEndpointUtilityWord_polyTime true)
   exact .const [false]
 
+/-- Select the signed endpoint field at an index, using the row ruler to locate it. -/
 def fieldSignedWord : ℕ → (Fin 6 → List Bool) → List Bool
   | 0, v => generalBimatrixEndpointWeightWord
       ![(v 0).drop 6, v 1, v 2, v 3, v 4, v 5]
@@ -303,6 +305,7 @@ private theorem fieldSignedWord_polyTime (n : ℕ) :
     exact ComputableInPolyTime.of_tidy
       (.ite_decide hcondition.tidy hscalar.tidy ih.tidy)
 
+/-- Encode the selected field's positive magnitude at the requested width. -/
 def fieldWord (v : Fin 6 → List Bool) : List Bool :=
   lowBits (generalWidthRuler (v 1)).length
     (ofBits (endpointPositiveWord (fieldSignedWord 6 v)).tail)
@@ -326,6 +329,7 @@ private def emitFieldsStep (context : Fin 5 → List Bool) (suffix state : List 
     (_bit : Bool) : List Bool :=
   state ++ fieldWord (Fin.cons suffix context)
 
+/-- Emit one width-limited scalar field for each bit of the clock word. -/
 def emitFields (clock : List Bool) (v : Fin 5 → List Bool) : List Bool :=
   WordFold.suffixFold
     (fun (context : Fin 5 → List Bool) (suffix state : List Bool) (_bit : Bool) =>
