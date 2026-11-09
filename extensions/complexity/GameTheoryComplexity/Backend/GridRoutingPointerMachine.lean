@@ -12,7 +12,7 @@ words and background points remain unchanged. -/
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity _root_.Complexity.Cobham EndOfLineMachineOps
+open Turing.MultiTapeTM ComputableInPolyTime Cslib.BitString WordOperations
 open GameTheory.Math.GridWire
 
 /-- Switch outgoing tails before a successor step and incoming tails after a predecessor. -/
@@ -33,9 +33,9 @@ def routingPointerMachine (ruler : List Bool) (P S : List Bool → List Bool)
     (incoming : Bool) (word : List Bool) : List Bool :=
   let result := routingDecoderBits ruler P S (routingPointXBits ruler word)
     (routingPointYBits ruler word)
-  let next := routingSwitchedNodeStepBits ruler P S incoming (pairSnd result)
-  caseBit₀ (routingPointAcceptFlag ruler word)
-    (caseBit₀ (pairFst result) (routingNodeOutputBits ruler P S next) word) word
+  let next := routingSwitchedNodeStepBits ruler P S incoming (CircuitWords.rest result)
+  select (routingPointAcceptFlag ruler word)
+    (select (CircuitWords.first result) (routingNodeOutputBits ruler P S next) word) word
 
 /-- Internal execution follows precisely the mathematical crossing-switched pointer. -/
 theorem routingSwitchedNodeStepBits_decode (ruler : List Bool) (P S : List Bool → List Bool)
@@ -57,7 +57,7 @@ theorem routingNodeOutputBits_eq_encode (ruler : List Bool) (P S : List Bool →
       encodeRoutingPoint ruler.length (routedCoordinate (2 ^ ruler.length)
         (routingOriginalPointer ruler P) (routingOriginalPointer ruler S)
           (routingDecodeNodeBits node)) := by
-  simp only [routingNodeOutputBits, routingPadBits_eq_toBitsLE,
+  simp only [routingNodeOutputBits, routingPadBits_eq_lowBits,
     routingCoordinateRuler_length, routingNodeImageXBits_value, routingNodeImageYBits_value,
     encodeRoutingPoint]
 
@@ -69,17 +69,17 @@ theorem routingPointerMachine_eq_words (ruler : List Bool) (P S : List Bool → 
   by_cases hw : word.length = routingPointWidth ruler.length
   · have ha := (routingPointAcceptFlag_width ruler word).mpr hw
     have hd : decodeRoutingPoint ruler.length word = some
-        (Nat.fromBitsLE (routingPointXBits ruler word),
-          Nat.fromBitsLE (routingPointYBits ruler word)) := by
+        (lsbValue (routingPointXBits ruler word),
+          lsbValue (routingPointYBits ruler word)) := by
       simp only [decodeRoutingPoint, hw, ↓reduceIte, routingPointXBits, routingPointYBits]
     rw [wordRoutingPointer_of_decode hd incoming]
     unfold routingPointerMachine
     rw [ha]
-    simp only [caseBit₀, Bool.cond_true]
+    simp only [select_cons, ↓reduceIte]
     cases hg : decodeWireNode (2 ^ ruler.length) (routingOriginalPointer ruler P)
         (routingOriginalPointer ruler S)
-        (Nat.fromBitsLE (routingPointXBits ruler word),
-          Nat.fromBitsLE (routingPointYBits ruler word)) with
+        (lsbValue (routingPointXBits ruler word),
+          lsbValue (routingPointYBits ruler word)) with
     | none =>
         have hn := (routingDecodeResultBits_eq_none_iff _).mp
           ((routingDecoderBits_decode ruler P S
@@ -87,7 +87,6 @@ theorem routingPointerMachine_eq_words (ruler : List Bool) (P S : List Bool → 
         have hf := (routingDecoderBits_found_flag ruler P S
           (routingPointXBits ruler word) (routingPointYBits ruler word)).resolve_left hn
         rw [hf]
-        simp only [Bool.cond_false]
         cases incoming <;>
           simp only [Bool.false_eq_true, ↓reduceIte, gridRoutedPredecessor,
             gridRoutedSuccessor, hg] <;>
@@ -97,7 +96,7 @@ theorem routingPointerMachine_eq_words (ruler : List Bool) (P S : List Bool → 
           ((routingDecoderBits_decode ruler P S
             (routingPointXBits ruler word) (routingPointYBits ruler word)).trans hg)
         rw [hf]
-        simp only [Bool.cond_true]
+        simp only [select_cons, ↓reduceIte]
         rw [routingNodeOutputBits_eq_encode, routingSwitchedNodeStepBits_decode, hn]
         cases incoming <;>
           simp only [Bool.false_eq_true, ↓reduceIte, gridRoutedPredecessor,
@@ -106,9 +105,9 @@ theorem routingPointerMachine_eq_words (ruler : List Bool) (P S : List Bool → 
       intro ha
       exact hw ((routingPointAcceptFlag_width ruler word).mp ha)
     have hf : routingPointAcceptFlag ruler word = [false] :=
-      (eqFlag_flag _ _).resolve_left hn
-    simp only [routingPointerMachine, hf, caseBit₀, Bool.cond_false,
-      wordRoutingPointer, decodeRoutingPoint, hw, ite_false]
+      by simp [routingPointAcceptFlag, hw]
+    simp only [routingPointerMachine, hf, select_cons, Bool.false_eq_true, ↓reduceIte,
+      wordRoutingPointer, decodeRoutingPoint, hw]
 
 /-- The composed pointer preserves external word length, including malformed inputs. -/
 @[simp] theorem routingPointerMachine_length (ruler : List Bool) (P S : List Bool → List Bool)
@@ -116,47 +115,61 @@ theorem routingPointerMachine_eq_words (ruler : List Bool) (P S : List Bool → 
     (routingPointerMachine ruler P S incoming word).length = word.length := by
   rw [routingPointerMachine_eq_words, wordRoutingPointer_length]
 
-/-- Crossing-switched internal steps compose seeded polynomial-time producers uniformly. -/
-theorem routingSwitchedNodeStepBitsUniformFn_mem_FP (incoming : Bool)
-    (P S : List Bool → List Bool → List Bool) {ruler seed node : List Bool → List Bool}
-    (hr : ruler ∈ FP) (hs : seed ∈ FP) (hn : node ∈ FP)
-    (hP : (fun z => P (pairFst z) (pairSnd z)) ∈ FP)
-    (hS : (fun z => S (pairFst z) (pairSnd z)) ∈ FP) :
-    (fun z => routingSwitchedNodeStepBits (ruler z) (P (seed z)) (S (seed z))
-      incoming (node z)) ∈ FP := by
+/-- Crossing-switched steps charge native seeded pointer and raw-node producers. -/
+@[fun_prop] theorem routingSwitchedNodeStepBitsUniform_polyTime (incoming : Bool)
+    (P S : List Bool → List Bool → List Bool)
+    {α : Type} {enc : α ↪ List Bool} {ruler seed node : α → List Bool}
+    (hruler : ComputableInPolyTime ruler enc encBits)
+    (hseed : ComputableInPolyTime seed enc encBits)
+    (hnode : ComputableInPolyTime node enc encBits)
+    (hP : ComputableInPolyTime (fun p : List Bool × List Bool => P p.1 p.2)
+      (encPair encBits encBits) encBits)
+    (hS : ComputableInPolyTime (fun p : List Bool × List Bool => S p.1 p.2)
+      (encPair encBits encBits) encBits) :
+    ComputableInPolyTime (fun z => routingSwitchedNodeStepBits (ruler z) (P (seed z)) (S (seed z)) incoming (node z)) enc encBits := by
   cases incoming
-  · exact routingNodeStepBitsUniformFn_mem_FP false P S hr hs
-      (routingNodeSwitchBitsUniformFn_mem_FP P S hr hs hn hP hS) hP hS
-  · exact routingNodeSwitchBitsUniformFn_mem_FP P S hr hs
-      (routingNodeStepBitsUniformFn_mem_FP true P S hr hs hn hP hS) hP hS
+  · exact routingNodeStepBitsUniform_polyTime false P S hruler hseed
+      (routingNodeSwitchBitsUniform_polyTime P S hruler hseed hnode hP hS) hP hS
+  · exact routingNodeSwitchBitsUniform_polyTime P S hruler hseed
+      (routingNodeStepBitsUniform_polyTime true P S hruler hseed hnode hP hS) hP hS
 
-/-- External node-image packing has an actual uniform polynomial-time certificate. -/
-theorem routingNodeOutputBitsUniformFn_mem_FP (P S : List Bool → List Bool → List Bool)
-    {ruler seed node : List Bool → List Bool} (hr : ruler ∈ FP) (hs : seed ∈ FP) (hn : node ∈ FP)
-    (hP : (fun z => P (pairFst z) (pairSnd z)) ∈ FP)
-    (hS : (fun z => S (pairFst z) (pairSnd z)) ∈ FP) :
-    (fun z => routingNodeOutputBits (ruler z) (P (seed z)) (S (seed z)) (node z)) ∈ FP :=
-  appendFn_mem_FP
-    (routingPadBitsFn_mem_FP (routingCoordinateRulerFn_mem_FP hr)
-      (routingNodeImageXBitsUniformFn_mem_FP P S hr hs hn hP hS))
-    (routingPadBitsFn_mem_FP (routingCoordinateRulerFn_mem_FP hr)
-      (routingNodeImageYBitsUniformFn_mem_FP P S hr hs hn hP hS))
+/-- External node-image packing charges both complete canonical fields. -/
+@[fun_prop] theorem routingNodeOutputBitsUniform_polyTime
+    (P S : List Bool → List Bool → List Bool)
+    {α : Type} {enc : α ↪ List Bool} {ruler seed node : α → List Bool}
+    (hruler : ComputableInPolyTime ruler enc encBits)
+    (hseed : ComputableInPolyTime seed enc encBits)
+    (hnode : ComputableInPolyTime node enc encBits)
+    (hP : ComputableInPolyTime (fun p : List Bool × List Bool => P p.1 p.2)
+      (encPair encBits encBits) encBits)
+    (hS : ComputableInPolyTime (fun p : List Bool × List Bool => S p.1 p.2)
+      (encPair encBits encBits) encBits) :
+    ComputableInPolyTime (fun z => routingNodeOutputBits (ruler z) (P (seed z)) (S (seed z)) (node z)) enc encBits := by
+  exact bitsAppend
+    (routingPadBits_polyTime (routingCoordinateRuler_polyTime hruler)
+      (routingNodeImageXBitsUniform_polyTime P S hruler hseed hnode hP hS))
+    (routingPadBits_polyTime (routingCoordinateRuler_polyTime hruler)
+      (routingNodeImageYBitsUniform_polyTime P S hruler hseed hnode hP hS))
 
-/-- The complete routing pointer has one actual uniform polynomial-time certificate. -/
-theorem routingPointerMachineUniformFn_mem_FP (incoming : Bool)
-    (P S : List Bool → List Bool → List Bool) {ruler seed word : List Bool → List Bool}
-    (hr : ruler ∈ FP) (hs : seed ∈ FP) (hw : word ∈ FP)
-    (hP : (fun z => P (pairFst z) (pairSnd z)) ∈ FP)
-    (hS : (fun z => S (pairFst z) (pairSnd z)) ∈ FP) :
-    (fun z => routingPointerMachine (ruler z) (P (seed z)) (S (seed z))
-      incoming (word z)) ∈ FP := by
-  have hd := routingDecoderBitsUniformFn_mem_FP P S hr hs
-    (routingPointXBitsFn_mem_FP hr hw) (routingPointYBitsFn_mem_FP hr hw) hP hS
-  have hn := mem_FP_comp hd pairSnd_mem_FP
-  have hf := mem_FP_comp hd pairFst_mem_FP
-  have hstep := routingSwitchedNodeStepBitsUniformFn_mem_FP incoming P S hr hs hn hP hS
-  have hout := routingNodeOutputBitsUniformFn_mem_FP P S hr hs hstep hP hS
-  exact selectFn_mem_FP (routingPointAcceptFlagFn_mem_FP hr hw)
-    (selectFn_mem_FP hf hout hw) hw
+/-- The complete routing pointer has one native uniform polynomial-time machine. -/
+@[fun_prop] theorem routingPointerMachineUniform_polyTime (incoming : Bool)
+    (P S : List Bool → List Bool → List Bool)
+    {α : Type} {enc : α ↪ List Bool} {ruler seed word : α → List Bool}
+    (hruler : ComputableInPolyTime ruler enc encBits)
+    (hseed : ComputableInPolyTime seed enc encBits)
+    (hword : ComputableInPolyTime word enc encBits)
+    (hP : ComputableInPolyTime (fun p : List Bool × List Bool => P p.1 p.2)
+      (encPair encBits encBits) encBits)
+    (hS : ComputableInPolyTime (fun p : List Bool × List Bool => S p.1 p.2)
+      (encPair encBits encBits) encBits) :
+    ComputableInPolyTime (fun z => routingPointerMachine (ruler z) (P (seed z)) (S (seed z)) incoming (word z)) enc encBits := by
+  have hd := routingDecoderBitsUniform_polyTime P S hruler hseed
+    (routingPointXBits_polyTime hruler hword) (routingPointYBits_polyTime hruler hword) hP hS
+  have hn := CircuitWords.rest_polyTime.comp hd
+  have hf := CircuitWords.first_polyTime.comp hd
+  have hstep := routingSwitchedNodeStepBitsUniform_polyTime incoming P S hruler hseed hn hP hS
+  have hout := routingNodeOutputBitsUniform_polyTime P S hruler hseed hstep hP hS
+  exact select_polyTime.comp ((routingPointAcceptFlag_polyTime hruler hword).prod
+    ((select_polyTime.comp (hf.prod (hout.prod hword))).prod hword))
 
 end GameTheory.Complexity.Backend
