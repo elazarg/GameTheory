@@ -1,6 +1,6 @@
 module
 
-public import GameTheoryComplexity.Backend.GeneralBimatrixVerifier
+public import GameTheoryComplexity.Backend.GeneralBimatrixVerifierMachine
 public import GameTheoryComplexity.Backend.BinarySignedAddition
 
 @[expose] public section
@@ -10,7 +10,7 @@ The input codec remains a pair of unsigned magnitude fields; only internal
 arithmetic uses sign-header words.
 -/
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 
 /-- Decode both magnitude fields into one exact signed arithmetic word. -/
 def generalSignedPayoffWord (columnPlayer : Bool) (v : Fin 3 → List Bool) : List Bool :=
@@ -22,7 +22,7 @@ private theorem payoffWord_field (columnPlayer positive : Bool) (v : Fin 3 → L
       generalPayoffField columnPlayer positive (v 2) (v 0).length (v 1).length := by
   cases columnPlayer <;> cases positive <;>
     simp [generalPayoffWord, generalPayoffField, generalBinaryField,
-      generalRowCount, generalColCount, generalCoefficientBits, smash_length]
+      generalRowCount, generalColCount, generalCoefficientBits]
   all_goals (congr 2; ring)
 
 theorem generalSignedPayoffWord_value (columnPlayer : Bool) (v : Fin 3 → List Bool) :
@@ -31,30 +31,18 @@ theorem generalSignedPayoffWord_value (columnPlayer : Bool) (v : Fin 3 → List 
   rw [generalSignedPayoffWord, binarySignedSub_value, payoffWord_field, payoffWord_field]
   rfl
 
-theorem generalSignedPayoffWord_cobham (columnPlayer : Bool) :
-    Cobham (generalSignedPayoffWord columnPlayer) :=
-  (Cobham.comp₂ binarySignedSub_cobham
-    (Cobham.comp (.bit false) fun _ => generalPayoffWord_cobham columnPlayer true)
-    (Cobham.comp (.bit false) fun _ => generalPayoffWord_cobham columnPlayer false)).of_eq fun _ => rfl
-
-theorem generalSignedPayoffWord_mem_FPn (columnPlayer : Bool) :
-    FPn (generalSignedPayoffWord columnPlayer) :=
-  cobham_iff_FPn.mp (generalSignedPayoffWord_cobham columnPlayer)
-
 /-- The fixed positive payoff shift, represented directly in binary. -/
 def generalPositiveShiftWord (input : List Bool) : List Bool :=
-  false :: binaryCertificateAdd ![[true], padTo (generalBitsRuler input) [] ++ [true]]
+  false :: binaryCertificateAdd ![[true], List.replicate (generalBitsRuler input).length false ++ [true]]
 
 private theorem powerWord_value (ruler : List Bool) :
-    Nat.fromBitsLE (padTo ruler [] ++ [true]) = 2 ^ ruler.length := by
-  rw [padTo_eq_append _ _ (by simp)]
-  simp only [List.length_nil, Nat.sub_zero, List.nil_append]
+    ofBits (List.replicate ruler.length false ++ [true]) = 2 ^ ruler.length := by
   induction ruler.length with
   | zero => rfl
   | succ n ih =>
-    simp only [List.replicate_succ, List.cons_append, Nat.fromBitsLE_cons, pow_succ]
-    simp only [Bool.false_eq_true, ↓reduceIte, zero_add, ih]
-    omega
+    change Nat.bit false (ofBits (List.replicate n false ++ [true])) = _
+    rw [ih, Nat.bit_val]
+    simp [pow_succ, Nat.mul_comm]
 
 theorem generalPositiveShiftWord_value (input : List Bool) :
     binarySignedValue (generalPositiveShiftWord input) =
@@ -63,13 +51,6 @@ theorem generalPositiveShiftWord_value (input : List Bool) :
     Bool.false_eq_true, ↓reduceIte, binaryCertificateAdd_value, powerWord_value]
   change ((1 + 2 ^ (generalBitsRuler input).length : ℕ) : ℤ) = _
   simp [generalCoefficientBits, Nat.cast_add, Nat.cast_pow, add_comm]
-
-theorem generalPositiveShiftWord_cobham : Cobham fun v : Fin 1 → List Bool =>
-    generalPositiveShiftWord (v 0) :=
-  (Cobham.comp (.bit false) fun _ => Cobham.comp₂ binaryCertificateAdd_cobham
-    (Cobham.const [true])
-    (Cobham.appendFn (Cobham.padFn generalBitsRuler_cobham Cobham.empty)
-      (Cobham.const [true]))).of_eq fun _ => rfl
 
 /-- Add the canonical strictly positive shift used by the complementary path. -/
 def generalShiftedPayoffWord (columnPlayer : Bool) (v : Fin 3 → List Bool) : List Bool :=
@@ -102,15 +83,43 @@ theorem generalShiftedPayoffWord_bound (columnPlayer : Bool) (v : Fin 3 → List
   have hp : 0 < 2 ^ generalCoefficientBits (v 2) := by positivity
   nlinarith
 
-theorem generalShiftedPayoffWord_cobham (columnPlayer : Bool) :
-    Cobham (generalShiftedPayoffWord columnPlayer) := by
-  have hp : Cobham fun v : Fin 3 → List Bool => generalPositiveShiftWord (v 2) :=
-    (Cobham.comp generalPositiveShiftWord_cobham fun _ => Cobham.proj 2).of_eq fun _ => rfl
-  exact (Cobham.comp₂ binarySignedAdd_cobham (generalSignedPayoffWord_cobham columnPlayer)
-    hp).of_eq fun _ => rfl
+@[fun_prop] theorem generalSignedPayoffWord_polyTime (columnPlayer : Bool) :
+    ComputableInPolyTime (generalSignedPayoffWord columnPlayer) (encPi encBits) encBits := by
+  exact binarySignedSub_polyTime
+    (.bitsCons (.const false) (generalPayoffWord_polyTime columnPlayer true))
+    (.bitsCons (.const false) (generalPayoffWord_polyTime columnPlayer false))
 
-theorem generalShiftedPayoffWord_mem_FPn (columnPlayer : Bool) :
-    FPn (generalShiftedPayoffWord columnPlayer) :=
-  cobham_iff_FPn.mp (generalShiftedPayoffWord_cobham columnPlayer)
+@[fun_prop] theorem generalPositiveShiftWord_polyTime :
+    ComputableInPolyTime (fun v : Fin 1 → List Bool => generalPositiveShiftWord (v 0))
+      (encPi encBits) encBits := by
+  have hpower := ComputableInPolyTime.bitsAppend
+    ((ComputableInPolyTime.bitsReplicate false).comp
+      (ComputableInPolyTime.length_bits_comp generalBitsRuler_polyTime))
+    (ComputableInPolyTime.const [true])
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 1 → List Bool =>
+        ![[true], List.replicate (generalBitsRuler (v 0)).length false ++ [true]])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .const [true]
+    · exact hpower
+  exact .bitsCons (.const false) (binaryCertificateAdd_polyTime.comp hargs)
+
+@[fun_prop] theorem generalShiftedPayoffWord_polyTime (columnPlayer : Bool) :
+    ComputableInPolyTime (generalShiftedPayoffWord columnPlayer) (encPi encBits) encBits := by
+  have hinput : ComputableInPolyTime (fun v : Fin 3 → List Bool => ![v 2])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    exact .pi_apply encBits (2 : Fin 3)
+  have h := binarySignedAdd_polyTime (generalSignedPayoffWord_polyTime columnPlayer)
+    (generalPositiveShiftWord_polyTime.comp hinput)
+  apply ComputableInPolyTime.of_tidy
+  apply h.tidy.of_enc_eq (g := generalShiftedPayoffWord columnPlayer)
+  intro v
+  rfl
 
 end GameTheory.Complexity.Backend

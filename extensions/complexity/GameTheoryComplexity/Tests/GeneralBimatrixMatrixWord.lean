@@ -7,7 +7,7 @@ public import GameTheoryComplexity.Backend.GeneralBimatrixMatrixWord
 /-! Packed canonical basis matrices use exact shifted entries and total lookups. -/
 namespace GameTheory.Complexity.Tests.GeneralBimatrixMatrixWord
 open Backend GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM
 
 private def input : List Bool :=
   encodeGeneralInstance 1 1 2 (fun _ _ => -1) (fun _ _ => 2)
@@ -41,7 +41,8 @@ example : generalBimatrixBasisMatrixWord ![fieldWidth, [], input] = List.replica
 example : (generalBimatrixBasisMatrixWord ![fieldWidth, payoffColumns, input]).length = 16 := by
   decide +kernel
 
-example : FPn generalBimatrixBasisMatrixWord := generalBimatrixBasisMatrixWord_mem_FPn
+example : ComputableInPolyTime generalBimatrixBasisMatrixWord (encPi encBits) encBits :=
+  generalBimatrixBasisMatrixWord_polyTime
 
 -- Every certified basis has these exact row-major fields, conditional only on
 -- supplying sufficient fixed-width magnitude capacity.

@@ -4,6 +4,7 @@ public import GameTheoryComplexity.Backend.GeneralBimatrixColumnWord
 public import GameTheoryComplexity.Backend.BinarySubsetMachine
 public import GameTheoryComplexity.Backend.BinaryUnaryArithmetic
 public import GameTheoryComplexity.Backend.BinarySignedMatrixMachine
+public import GameTheoryComplexity.Backend.WordFold
 public import GameTheoryComplexity.Backend.GeneralBimatrixEndpoint
 public import GameTheory.Finite.BimatrixPathBinaryCodec
 
@@ -14,7 +15,7 @@ Selected columns are located by their Boolean membership ordinal. Both matrix
 loops use explicit dimension rulers, and every signed entry has the supplied
 fixed field width. Malformed selections return zero entries. -/
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec GameTheory.Math.CanonicalDictionary
 
 /-- The dimension ruler of the complementary system. -/
@@ -25,35 +26,14 @@ def generalBimatrixDimensionWord (input : List Bool) : List Bool :=
     (generalBimatrixDimensionWord input).length = generalRowCount input + generalColCount input := by
   simp only [generalBimatrixDimensionWord, List.length_append, generalRowCount, generalColCount]
 
-theorem generalBimatrixDimensionWord_cobham : Cobham fun v : Fin 1 → List Bool =>
-    generalBimatrixDimensionWord (v 0) := Cobham.appendFn generalRowRuler_cobham generalColRuler_cobham
-
 /-- One selected integer entry. Arguments are row ruler, column ordinal ruler,
 raw membership bits and game instance. Failed ordinal lookup returns zero. -/
 def generalBimatrixBasisEntryWord (v : Fin 4 → List Bool) : List Bool :=
   let found := binarySubsetNth ![v 2, v 1]
-  caseBit₀ found
-    (generalBimatrixColumnWord ![v 0, binaryHalfRuler found.tail,
-      binaryLengthParity found.tail, v 3]) [false]
-
-theorem generalBimatrixBasisEntryWord_cobham : Cobham generalBimatrixBasisEntryWord := by
-  have hn : Cobham fun v : Fin 4 → List Bool => binarySubsetNth ![v 2, v 1] :=
-    Cobham.comp₂ binarySubsetNth_cobham (.proj 2) (.proj 1)
-  have hh := Cobham.comp binaryHalfRuler_cobham (fun _ => Cobham.tailFn hn)
-  have hp := Cobham.comp binaryLengthParity_cobham (fun _ => Cobham.tailFn hn)
-  have hc : Cobham fun v : Fin 4 → List Bool =>
-      generalBimatrixColumnWord ![v 0, binaryHalfRuler (binarySubsetNth ![v 2, v 1]).tail,
-        binaryLengthParity (binarySubsetNth ![v 2, v 1]).tail, v 3] :=
-    Cobham.comp generalBimatrixColumnWord_cobham (fun i => by
-      fin_cases i
-      · exact Cobham.proj 0
-      · exact hh
-      · exact hp
-      · exact Cobham.proj 3)
-  exact (Cobham.iteFn hn hc (Cobham.const [false])).of_eq fun _ => rfl
-
-theorem generalBimatrixBasisEntryWord_mem_FPn : FPn generalBimatrixBasisEntryWord :=
-  cobham_iff_FPn.mp generalBimatrixBasisEntryWord_cobham
+  if found.headD false then
+    generalBimatrixColumnWord ![v 0, binaryHalfRuler found.tail,
+      binaryLengthParity found.tail, v 3]
+  else [false]
 
 /-- Canonical candidate matrix, without feasibility or invertibility assumptions. -/
 abbrev generalBimatrixCandidateMatrix (input : List Bool)
@@ -97,14 +77,11 @@ theorem generalBimatrixCandidateEntryWord_integer_of_lengths (input : List Bool)
   have hkind : binaryLengthParity found.tail = [(ofLex v).2] := by
     rw [binaryLengthParity_value, hlen]
     cases hb : (ofLex v).2 <;> simp [index, hb, Nat.add_mod]
-  change binarySignedValue (caseBit₀ found
-    (generalBimatrixColumnWord ![row,
-      binaryHalfRuler found.tail, binaryLengthParity found.tail, input]) [false]) = _
-  have hcase {x a b : List Bool} (hx : x.headD false = true) : caseBit₀ x a b = a := by
-    cases x with
-    | nil => simp at hx
-    | cons c x => cases c <;> simp_all [caseBit₀]
-  rw [hcase hhead, hhalf, hkind]
+  change binarySignedValue (if found.headD false then
+    generalBimatrixColumnWord ![row,
+      binaryHalfRuler found.tail, binaryLengthParity found.tail, input] else [false]) = _
+  simp only [hhead, ↓reduceIte]
+  rw [hhalf, hkind]
   have hrowWord : binarySignedValue (generalBimatrixColumnWord
       ![row, List.replicate (ofLex v).1.val true, [(ofLex v).2], input]) =
       binarySignedValue (generalBimatrixColumnWord
@@ -124,51 +101,33 @@ theorem generalBimatrixCandidateEntryWord_integer (input : List Bool)
   generalBimatrixCandidateEntryWord_integer_of_lengths input s hs i j _ _
     (List.length_replicate ..) (List.length_replicate ..)
 
-private def entryTerm (v : Fin 4 → List Bool) : List Bool :=
+private abbrev entryTerm (v : Fin 4 → List Bool) : List Bool :=
   generalBimatrixBasisEntryWord ![v 1, v 0, v 2, v 3]
-
-private theorem entryTerm_cobham : Cobham entryTerm :=
-  (Cobham.comp generalBimatrixBasisEntryWord_cobham (fun i => Cobham.proj (![1, 0, 2, 3] i))).of_eq
-    fun _ => rfl
 
 /-- One packed row. Arguments are row ruler, field-width ruler, membership and input. -/
 def generalBimatrixBasisRowWord (v : Fin 4 → List Bool) : List Bool :=
-  binarySignedTable entryTerm (generalBimatrixDimensionWord (v 3)) (v 1) ![v 0, v 2, v 3]
+  binarySignedTable
+    (fun args : Fin 4 → List Bool => generalBimatrixBasisEntryWord ![args 1, args 0, args 2, args 3])
+    (generalBimatrixDimensionWord (v 3)) (v 1) ![v 0, v 2, v 3]
 
 @[simp] theorem generalBimatrixBasisRowWord_length (v : Fin 4 → List Bool) :
     (generalBimatrixBasisRowWord v).length =
       (generalRowCount (v 3) + generalColCount (v 3)) * (v 1).length := by
   rw [generalBimatrixBasisRowWord, binarySignedTable_length, generalBimatrixDimensionWord_length]
 
-theorem generalBimatrixBasisRowWord_cobham : Cobham generalBimatrixBasisRowWord := by
-  have hk : Cobham fun v : Fin 4 → List Bool => generalBimatrixDimensionWord (v 3) :=
-    (Cobham.comp generalBimatrixDimensionWord_cobham fun _ => Cobham.proj 3).of_eq fun _ => rfl
-  let g : Fin 5 → (Fin 4 → List Bool) → List Bool := fun i v =>
-    ![generalBimatrixDimensionWord (v 3), v 1, v 0, v 2, v 3] i
-  have hg : ∀ i, Cobham (g i) := fun i => by
-      fin_cases i
-      · exact hk
-      · exact Cobham.proj 1
-      · exact Cobham.proj 0
-      · exact Cobham.proj 2
-      · exact Cobham.proj 3
-  have h := Cobham.comp (gs := g) (binarySignedTable_cobham entryTerm_cobham) hg
-  exact h.of_eq fun v => by
-    congr 1
-
-private def rowStep (v : Fin 5 → List Bool) : List Bool :=
-  v 1 ++ generalBimatrixBasisRowWord ![v 0, v 2, v 3, v 4]
-
 private def rows (clock width members input : List Bool) : List Bool :=
-  recNotation (fun _ : Fin 3 → List Bool => []) rowStep rowStep clock ![width, members, input]
+  WordFold.suffixFold
+    (fun params : Fin 3 → List Bool => fun suffix state _ =>
+      state ++ generalBimatrixBasisRowWord ![suffix, params 0, params 1, params 2])
+    ![width, members, input] [] clock
 
 private theorem rows_length (clock width members input : List Bool) :
     (rows clock width members input).length = clock.length *
       (generalRowCount input + generalColCount input) * width.length := by
   induction clock with
-  | nil => simp [rows, recNotation]
+  | nil => simp [rows]
   | cons b r ih =>
-    simp only [rows, recNotation_cons, Bool.cond_self]
+    simp only [rows, WordFold.suffixFold_cons]
     change (rows r width members input ++ generalBimatrixBasisRowWord ![r, width, members, input]).length = _
     rw [List.length_append, ih, generalBimatrixBasisRowWord_length]
     change r.length * (generalRowCount input + generalColCount input) * width.length +
@@ -178,60 +137,24 @@ private theorem rows_length (clock width members input : List Bool) :
 
 /-- A row-major packed matrix. Arguments are field width, membership and input. -/
 def generalBimatrixBasisMatrixWord (v : Fin 3 → List Bool) : List Bool :=
-  rows (generalBimatrixDimensionWord (v 2)) (v 0) (v 1) (v 2)
+  WordFold.suffixFold
+    (fun params : Fin 3 → List Bool => fun suffix state _ =>
+      state ++ generalBimatrixBasisRowWord ![suffix, params 0, params 1, params 2])
+    ![v 0, v 1, v 2] [] (generalBimatrixDimensionWord (v 2))
 
 @[simp] theorem generalBimatrixBasisMatrixWord_length (v : Fin 3 → List Bool) :
     (generalBimatrixBasisMatrixWord v).length =
       (generalRowCount (v 2) + generalColCount (v 2)) ^ 2 * (v 0).length := by
-  rw [generalBimatrixBasisMatrixWord, rows_length, generalBimatrixDimensionWord_length]
+  change (rows (generalBimatrixDimensionWord (v 2)) (v 0) (v 1) (v 2)).length = _
+  rw [rows_length, generalBimatrixDimensionWord_length]
   ring
-
-theorem generalBimatrixBasisMatrixWord_cobham : Cobham generalBimatrixBasisMatrixWord := by
-  have hs : Cobham rowStep := Cobham.appendFn (.proj 1)
-    (Cobham.comp generalBimatrixBasisRowWord_cobham (fun i => by
-      fin_cases i
-      · exact Cobham.proj 0
-      · exact Cobham.proj 2
-      · exact Cobham.proj 3
-      · exact Cobham.proj 4))
-  have hbound : Cobham fun v : Fin 4 → List Bool =>
-      smash (v 0) (smash (generalBimatrixDimensionWord (v 3)) (v 1)) := by
-    have hk' : Cobham fun v : Fin 4 → List Bool => generalBimatrixDimensionWord (v 3) :=
-      (Cobham.comp generalBimatrixDimensionWord_cobham fun _ => Cobham.proj 3).of_eq fun _ => rfl
-    exact Cobham.comp₂ Cobham.smash (.proj 0) (Cobham.comp₂ Cobham.smash hk' (.proj 1))
-  have hr : Cobham fun v : Fin 4 → List Bool => rows (v 0) (v 1) (v 2) (v 3) := by
-    exact (Cobham.boundedRec Cobham.empty hs hs hbound (fun r p => by
-      have hp : p = ![p 0, p 1, p 2] := by ext i; fin_cases i <;> rfl
-      rw [hp]
-      change (rows r (p 0) (p 1) (p 2)).length ≤ _
-      rw [rows_length, smash_length, smash_length, generalBimatrixDimensionWord_length]
-      change r.length * (generalRowCount (p 2) + generalColCount (p 2)) * (p 0).length ≤
-        r.length * ((generalRowCount (p 2) + generalColCount (p 2)) * (p 0).length)
-      exact (Nat.mul_assoc _ _ _).le)).of_eq fun v => by
-        congr 1
-        ext i
-        fin_cases i <;> rfl
-  have hk' : Cobham fun v : Fin 3 → List Bool => generalBimatrixDimensionWord (v 2) :=
-    (Cobham.comp generalBimatrixDimensionWord_cobham fun _ => Cobham.proj 2).of_eq fun _ => rfl
-  let g : Fin 4 → (Fin 3 → List Bool) → List Bool := fun i v =>
-    ![generalBimatrixDimensionWord (v 2), v 0, v 1, v 2] i
-  have hg : ∀ i, Cobham (g i) := fun i => by
-    fin_cases i
-    · exact hk'
-    · exact Cobham.proj 0
-    · exact Cobham.proj 1
-    · exact Cobham.proj 2
-  exact (Cobham.comp (gs := g) hr hg).of_eq fun _ => rfl
-
-theorem generalBimatrixBasisMatrixWord_mem_FPn : FPn generalBimatrixBasisMatrixWord :=
-  cobham_iff_FPn.mp generalBimatrixBasisMatrixWord_cobham
 
 private theorem entryWord_of_none (v : Fin 4 → List Bool)
     (h : binarySubsetNthPosition ![v 2, v 1] = none) :
     generalBimatrixBasisEntryWord v = [false] := by
   let found := binarySubsetNth ![v 2, v 1]
   change (if found.headD false then some found.tail.length else none) = none at h
-  change caseBit₀ found _ [false] = [false]
+  change (if found.headD false then _ else [false]) = [false]
   cases hf : found with
   | nil => rfl
   | cons b xs =>
@@ -264,7 +187,7 @@ theorem generalBimatrixCandidateRowWord_integer (input : List Bool)
         change (membershipWord s).count true ≤ r.length
         rw [membershipWord_count, hs]
         omega
-      rw [entryWord_of_none _ hn]
+      rw [entryWord_of_none ![row, r, membershipWord s, input] hn]
       simp only [f, ht, ↓reduceDIte]
       rfl
   have hbound (t : ℕ) (ht : t < (generalBimatrixDimensionWord input).length) :
@@ -273,7 +196,7 @@ theorem generalBimatrixCandidateRowWord_integer (input : List Bool)
     dsimp only [f]
     rw [dite_eq_left ht']
     exact hb i ⟨t, ht'⟩
-  have hval := binarySignedTable_value entryTerm fieldWidth
+  have hval := binarySignedTable_value (p := 3) entryTerm fieldWidth
     ![row, membershipWord s, input] f hterm hw
     (generalBimatrixDimensionWord input) hbound j.val (by rw [generalBimatrixDimensionWord_length]; exact j.isLt)
   dsimp only [f] at hval
@@ -296,7 +219,7 @@ private theorem rows_integer (input : List Bool)
     have hr : r.length ≤ generalRowCount input + generalColCount input := by
       simp only [List.length_cons] at hc
       omega
-    simp only [rows, recNotation_cons, Bool.cond_self]
+    simp only [rows, WordFold.suffixFold_cons]
     change binarySignedRowValue fieldWidth
       (rows r fieldWidth (membershipWord s) input ++
         generalBimatrixBasisRowWord ![r, fieldWidth, membershipWord s, input])
@@ -373,5 +296,169 @@ theorem generalBimatrixBasisMatrixWord_integer (input : List Bool)
       (i.val * (generalRowCount input + generalColCount input) + j.val) = basis.integerMatrix i j :=
   generalBimatrixCandidateMatrixWord_integer input basis.basic basis.cardinality
     fieldWidth hw hb i j
+
+@[fun_prop] theorem generalBimatrixDimensionWord_polyTime :
+    ComputableInPolyTime (fun v : Fin 1 → List Bool => generalBimatrixDimensionWord (v 0))
+      (encPi encBits) encBits :=
+  .bitsAppend generalRowRuler_polyTime generalColRuler_polyTime
+
+@[fun_prop] theorem generalBimatrixBasisEntryWord_polyTime :
+    ComputableInPolyTime generalBimatrixBasisEntryWord (encPi encBits) encBits := by
+  have hnargs : ComputableInPolyTime (fun v : Fin 4 → List Bool => ![v 2, v 1])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 2
+    · exact .pi_apply encBits 1
+  have hn := binarySubsetNth_polyTime.comp hnargs
+  have htail := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hn
+  have hhalf := binaryHalfRuler_polyTime.comp htail
+  have hparity := binaryLengthParity_polyTime.comp htail
+  have hcargs : ComputableInPolyTime
+      (fun v : Fin 4 → List Bool => ![v 0, binaryHalfRuler (binarySubsetNth ![v 2, v 1]).tail,
+        binaryLengthParity (binarySubsetNth ![v 2, v 1]).tail, v 3])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 0
+    · exact hhalf
+    · exact hparity
+    · exact .pi_apply encBits 3
+  have hhead : ComputableInPolyTime
+      (fun v : Fin 4 → List Bool => (binarySubsetNth ![v 2, v 1]).headD false)
+      (encPi encBits) encBool := (ComputableInPolyTime.headD false).comp hn
+  have h := hhead.ite
+    (generalBimatrixColumnWord_polyTime.comp hcargs) (.const [false])
+  apply ComputableInPolyTime.of_tidy
+  apply h.tidy.of_enc_eq (g := generalBimatrixBasisEntryWord)
+  intro v
+  rfl
+
+private theorem entryTerm_polyTime :
+    ComputableInPolyTime entryTerm (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 4 → List Bool => ![v 1, v 0, v 2, v 3])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 2
+    · exact .pi_apply encBits 3
+  exact generalBimatrixBasisEntryWord_polyTime.comp hargs
+
+@[fun_prop] theorem generalBimatrixBasisRowWord_polyTime :
+    ComputableInPolyTime generalBimatrixBasisRowWord (encPi encBits) encBits := by
+  have hinput : ComputableInPolyTime (fun v : Fin 4 → List Bool => ![v 3])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    exact .pi_apply encBits (3 : Fin 4)
+  have hclock0 := generalBimatrixDimensionWord_polyTime.comp hinput
+  have hclock : ComputableInPolyTime
+      (fun v : Fin 4 → List Bool => generalBimatrixDimensionWord (v 3))
+      (encPi encBits) encBits := by
+    apply ComputableInPolyTime.of_tidy
+    apply hclock0.tidy.of_enc_eq
+    intro v
+    rfl
+  have htable := binarySignedTable_polyTime (p := 3) (term := entryTerm) entryTerm_polyTime
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 4 → List Bool => ![generalBimatrixDimensionWord (v 3), v 1, v 0, v 2, v 3])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hclock
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 2
+    · exact .pi_apply encBits 3
+  have htable' := htable.comp hargs
+  apply ComputableInPolyTime.of_tidy
+  apply htable'.tidy.of_enc_eq
+  intro v
+  change generalBimatrixBasisRowWord v = binarySignedTable entryTerm
+    (generalBimatrixDimensionWord (v 3)) (v 1)
+    (Fin.tail (Fin.tail (![generalBimatrixDimensionWord (v 3), v 1, v 0, v 2, v 3] : Fin 5 → List Bool)))
+  unfold generalBimatrixBasisRowWord
+  apply congrArg (binarySignedTable entryTerm (generalBimatrixDimensionWord (v 3)) (v 1))
+  funext i
+  fin_cases i <;> rfl
+
+private theorem matrixRowsStep_polyTime :
+    ComputableInPolyTime
+      (fun p : ((Fin 3 → List Bool) × (List Bool × List Bool)) × Bool =>
+        p.1.2.2 ++ generalBimatrixBasisRowWord ![p.1.2.1, p.1.1 0, p.1.1 1, p.1.1 2])
+      (encPair (encPair (encPi encBits) (encPair encBits encBits)) encBool) encBits := by
+  have hp : ComputableInPolyTime
+      (fun p : ((Fin 3 → List Bool) × (List Bool × List Bool)) × Bool => p.1)
+      (encPair (encPair (encPi encBits) (encPair encBits encBits)) encBool)
+      (encPair (encPi encBits) (encPair encBits encBits)) := .fst _ _
+  have hparams : ComputableInPolyTime
+      (fun p : ((Fin 3 → List Bool) × (List Bool × List Bool)) × Bool => p.1.1)
+      (encPair (encPair (encPi encBits) (encPair encBits encBits)) encBool)
+      (encPi encBits) := (ComputableInPolyTime.fst _ _).comp hp
+  have hparts : ComputableInPolyTime
+      (fun p : ((Fin 3 → List Bool) × (List Bool × List Bool)) × Bool => p.1.2)
+      (encPair (encPair (encPi encBits) (encPair encBits encBits)) encBool)
+      (encPair encBits encBits) := (ComputableInPolyTime.snd _ _).comp hp
+  have hsuffix := (ComputableInPolyTime.fst encBits encBits).comp hparts
+  have hstate := (ComputableInPolyTime.snd encBits encBits).comp hparts
+  have hargs : ComputableInPolyTime
+      (fun p : ((Fin 3 → List Bool) × (List Bool × List Bool)) × Bool =>
+        ![p.1.2.1, p.1.1 0, p.1.1 1, p.1.1 2])
+      (encPair (encPair (encPi encBits) (encPair encBits encBits)) encBool)
+      (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hsuffix
+    · exact (ComputableInPolyTime.pi_apply encBits (0 : Fin 3)).comp hparams
+    · exact (ComputableInPolyTime.pi_apply encBits (1 : Fin 3)).comp hparams
+    · exact (ComputableInPolyTime.pi_apply encBits (2 : Fin 3)).comp hparams
+  exact .bitsAppend hstate (generalBimatrixBasisRowWord_polyTime.comp hargs)
+
+@[fun_prop] theorem generalBimatrixBasisMatrixWord_polyTime :
+    ComputableInPolyTime generalBimatrixBasisMatrixWord (encPi encBits) encBits := by
+  have hcontext : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool => ![v 0, v 1, v 2]) (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 2
+  have hinput : ComputableInPolyTime (fun v : Fin 3 → List Bool => ![v 2])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    exact .pi_apply encBits (2 : Fin 3)
+  have hclock0 := generalBimatrixDimensionWord_polyTime.comp hinput
+  have hclock : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool => generalBimatrixDimensionWord (v 2))
+      (encPi encBits) encBits := by
+    apply ComputableInPolyTime.of_tidy
+    apply hclock0.tidy.of_enc_eq
+    intro v
+    rfl
+  have hwidth : ComputableInPolyTime (fun v : Fin 3 → List Bool => v 0)
+      (encPi encBits) encBits := .pi_apply encBits 0
+  have hbound := (hclock.polyBounded_length.mul hclock.polyBounded_length).mul
+    hwidth.polyBounded_length
+  apply WordFold.suffixFold_polyTime hcontext hclock (.const []) matrixRowsStep_polyTime hbound
+  intro v suffix hsub
+  change (rows suffix (v 0) (v 1) (v 2)).length ≤ _
+  rw [rows_length]
+  change suffix.length * (generalRowCount (v 2) + generalColCount (v 2)) * (v 0).length ≤
+    (generalBimatrixDimensionWord (v 2)).length *
+      (generalBimatrixDimensionWord (v 2)).length * (v 0).length
+  rw [generalBimatrixDimensionWord_length]
+  exact Nat.mul_le_mul_right _ (Nat.mul_le_mul_right _ (by simpa using hsub.length_le))
 
 end GameTheory.Complexity.Backend
