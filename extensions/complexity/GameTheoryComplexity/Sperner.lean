@@ -13,17 +13,17 @@ routed color circuits give the reverse reduction, preserving every answer. -/
 
 namespace GameTheory.Complexity
 
-open _root_.Complexity Backend
+open Turing.MultiTapeTM Cslib.Complexity Backend
 
 /-- Succinct Sperner search has an independent FNP verifier and a certified
 polynomial search reduction to the standard PPAD reference problem. -/
-theorem spernerRelation_mem_PPAD : spernerRelation ∈ PPAD := by
-  obtain ⟨a⟩ := exists_spernerToEndOfLineReduction
-  exact PPAD.of_reduction a spernerRelation_mem_FNP endOfLineRelation_mem_PPAD
+theorem spernerRelation_mem_PPAD : spernerRelation ∈ PPAD encBits := by
+  exact exists_spernerToEndOfLineReduction.mem_PPAD spernerRelation_mem_FNP
+    endOfLineRelation_mem_PPAD
 
 /-- Every succinct Sperner instance has a polynomially bounded, efficiently verified answer. -/
-theorem spernerRelation_mem_TFNP : spernerRelation ∈ TFNP :=
-  PPAD.mem_TFNP spernerRelation_mem_PPAD
+theorem spernerRelation_mem_TFNP : spernerRelation ∈ TFNP encBits :=
+  PPAD_subset_TFNP spernerRelation_mem_PPAD
 
 /-- Totality covers arbitrary serialized inputs, with no coloring promise to check. -/
 theorem spernerRelation_total (input : List Bool) : ∃ word, spernerRelation input word :=
@@ -31,14 +31,12 @@ theorem spernerRelation_total (input : List Bool) : ∃ word, spernerRelation in
 
 /-- Every PPAD search problem reduces to succinct square-grid Sperner through
 actual polynomial-time circuit generation and source-aware answer decoding. -/
-theorem spernerRelation_PPADHard : PPADHard spernerRelation := by
-  obtain ⟨b⟩ := exists_endOfLineToSpernerReduction
-  intro T hT
-  obtain ⟨a⟩ := endOfLineRelation_PPADHard T hT
-  exact ⟨a.trans b⟩
+theorem spernerRelation_PPADHard : SearchHard @PPAD encBits spernerRelation := by
+  intro α enc R hR
+  exact (endOfLineRelation_PPADHard enc R hR).trans exists_endOfLineToSpernerReduction
 
 /-- Succinct square-grid Sperner is complete for standard PPAD. -/
-theorem spernerRelation_PPADComplete : PPADComplete spernerRelation :=
+theorem spernerRelation_PPADComplete : SearchComplete @PPAD encBits spernerRelation :=
   ⟨spernerRelation_mem_PPAD, spernerRelation_PPADHard⟩
 
 end GameTheory.Complexity
