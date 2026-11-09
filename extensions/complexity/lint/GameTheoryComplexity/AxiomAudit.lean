@@ -23,7 +23,6 @@ import all GameTheoryComplexity.Tests.WordFold
 import all GameTheoryComplexity.Tests.EndOfLine
 import all GameTheoryComplexity.Tests.RawEndOfLine
 import all GameTheoryComplexity.Tests.PPAD
-import all GameTheoryComplexity.Tests.CircuitPrefixCompiler
 import all GameTheoryComplexity.Tests.NormalizedEndOfLine
 import all GameTheoryComplexity.Tests.SpernerGridWords
 import all GameTheoryComplexity.Tests.SpernerPointerMachine

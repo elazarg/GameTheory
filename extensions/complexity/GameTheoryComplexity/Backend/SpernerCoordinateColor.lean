@@ -1,89 +1,74 @@
 module
 
 public import GameTheoryComplexity.Backend.SpernerProblem
-public import GameTheoryComplexity.Backend.UniformCircuitSpecialization
+public import GameTheoryComplexity.Backend.NativeCircuitFamilies
 
 @[expose] public section
 
 /-! Direct coordinate queries reuse the canonical boundary-corrected coloring.
-Coordinates occupy two extended little-endian fields, without triangle tags. Each color flag
-has a polynomial-time circuit generator with the serialized source hardwired. -/
+Coordinates occupy two extended little-endian fields without triangle tags.
+Native uniform raw circuits hardwire the source and retain checked gate tuples
+with their bounded final output wires. -/
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham EndOfLineMachineOps
-open _root_.Complexity.CircuitCode
 
-/-- Query the canonical source coloring on two extended little-endian coordinate fields. -/
+open Cslib.Circuits Cslib.BitString Turing.MultiTapeTM WordOperations
+
+/-- Query the canonical source coloring on two extended coordinate fields. -/
 def gridCoordinateColor (input vertex : List Bool) : List Bool :=
-  let ruler := pairFst input
-  boundaryColorBits ruler (evaluateCircuitVector (pairSnd input))
+  let ruler := CircuitWords.first input
+  boundaryColorBits ruler (evaluateCircuitVector (CircuitWords.rest input))
     (vertex.take (ruler.length + 1)) (vertex.drop (ruler.length + 1))
 
-/-- Canonical coordinate encodings recover the source grid coloring, including boundaries. -/
+/-- Canonical coordinate words recover the source grid coloring, including boundaries. -/
 theorem gridCoordinateColor_encode (input : List Bool) (x y : ℕ)
-    (hx : x ≤ 2 ^ (pairFst input).length) (hy : y ≤ 2 ^ (pairFst input).length) :
+    (hx : x ≤ 2 ^ (CircuitWords.first input).length)
+    (hy : y ≤ 2 ^ (CircuitWords.first input).length) :
     gridCoordinateColor input
-      (Nat.toBitsLE ((pairFst input).length + 1) x ++
-        Nat.toBitsLE ((pairFst input).length + 1) y) =
+      (lowBits ((CircuitWords.first input).length + 1) x ++
+        lowBits ((CircuitWords.first input).length + 1) y) =
       encodeGridColor (spernerColor input x y) := by
-  have ht : (Nat.toBitsLE ((pairFst input).length + 1) x ++
-      Nat.toBitsLE ((pairFst input).length + 1) y).take ((pairFst input).length + 1) =
-      Nat.toBitsLE ((pairFst input).length + 1) x := by
+  have ht : (lowBits ((CircuitWords.first input).length + 1) x ++
+      lowBits ((CircuitWords.first input).length + 1) y).take
+        ((CircuitWords.first input).length + 1) =
+      lowBits ((CircuitWords.first input).length + 1) x := by
     exact List.take_left' (by simp)
-  have hd : (Nat.toBitsLE ((pairFst input).length + 1) x ++
-      Nat.toBitsLE ((pairFst input).length + 1) y).drop ((pairFst input).length + 1) =
-      Nat.toBitsLE ((pairFst input).length + 1) y := by
+  have hd : (lowBits ((CircuitWords.first input).length + 1) x ++
+      lowBits ((CircuitWords.first input).length + 1) y).drop
+        ((CircuitWords.first input).length + 1) =
+      lowBits ((CircuitWords.first input).length + 1) y := by
     exact List.drop_left' (by simp)
   dsimp only [gridCoordinateColor]
   rw [ht, hd]
   exact boundaryColorBits_encode _ _ x y hx hy
 
-/-- Direct coordinate queries compose polynomial-time source and coordinate producers. -/
-theorem gridCoordinateColorFn_mem_FP {input vertex : List Bool → List Bool}
-    (hi : input ∈ FP) (hv : vertex ∈ FP) :
-    (fun z => gridCoordinateColor (input z) (vertex z)) ∈ FP := by
-  have hr := mem_FP_comp hi pairFst_mem_FP
-  have hs := mem_FP_comp hi pairSnd_mem_FP
-  have hw := appendFn_mem_FP hr (constFn_mem_FP [false])
-  have hx : (fun z => (vertex z).take ((pairFst (input z)).length + 1)) ∈ FP := by
-    apply CobhamFP_subset_FP
-    exact (takeFn (FP_subset_CobhamFP hw) (FP_subset_CobhamFP hv)).of_eq fun z => by
-      simp
-  have hy : (fun z => (vertex z).drop ((pairFst (input z)).length + 1)) ∈ FP := by
-    apply CobhamFP_subset_FP
-    exact (dropFn (FP_subset_CobhamFP hw) (FP_subset_CobhamFP hv)).of_eq fun z => by
-      simp
-  have hq := mem_FP_comp (pairFn_mem_FP hs (appendFn_mem_FP hx hy))
-    evaluateCircuitVector_pair_mem_FP
-  apply boundaryColorBitsFn_mem_FP hr hx hy (fun z => evaluateCircuitVector (pairSnd (input z)))
-  simpa only [Function.comp_def, pairFst_pair, pairSnd_pair] using hq
-
-/-- Paired direct coordinate queries have an actual polynomial-time certificate. -/
-theorem gridCoordinateColor_pair_mem_FP :
-    (fun z => gridCoordinateColor (pairFst z) (pairSnd z)) ∈ FP :=
-  gridCoordinateColorFn_mem_FP pairFst_mem_FP pairSnd_mem_FP
-
-/-- Read one of the two canonical color flags from a paired source and coordinate word. -/
-def gridCoordinateColorBit (i : Fin 2) (z : List Bool) : Bool :=
-  bitOf (gridCoordinateColor (pairFst z) (pairSnd z)) i.val
-
-/-- Each canonical color flag has an actual polynomial-time certificate. -/
-theorem gridCoordinateColorBit_mem_FP (i : Fin 2) :
-    (fun z => [gridCoordinateColorBit i z]) ∈ FP := by
-  have h := Cobham.comp₂ Cobham.bitAtFn
-    (FP_subset_CobhamFP (constFn_mem_FP (List.replicate i.val true)))
-    (FP_subset_CobhamFP gridCoordinateColor_pair_mem_FP)
-  apply CobhamFP_subset_FP
-  exact h.of_eq fun z => by simp [bitAt_eq, gridCoordinateColorBit]
+/-- Direct coordinate queries retain the actual encoding of both word producers. -/
+@[fun_prop] theorem gridCoordinateColor_polyTime
+    {Input : Type} {inputEncoding : Input ↪ List Bool} {input vertex : Input → List Bool}
+    (hi : ComputableInPolyTime input inputEncoding encBits)
+    (hv : ComputableInPolyTime vertex inputEncoding encBits) :
+    ComputableInPolyTime (fun a => gridCoordinateColor (input a) (vertex a))
+      inputEncoding encBits := by
+  have hr := CircuitWords.first_polyTime.comp hi
+  have hc := CircuitWords.rest_polyTime.comp hi
+  have hw := ComputableInPolyTime.unary_succ.comp (ComputableInPolyTime.length_bits_comp hr)
+  have hx := ComputableInPolyTime.bitsTakeWithInput hv hw
+  have hy := ComputableInPolyTime.bitsDropWithInput hv hw
+  exact boundaryColorBits_polyTime hr hx hy
+    (fun a => evaluateCircuitVector (CircuitWords.rest (input a)))
+    (evaluateCircuitVector_polyTime hc (ComputableInPolyTime.bitsAppend hx hy))
 
 private theorem select_color (flag x y : List Bool)
     (hx : ∃ c, x = encodeGridColor c) (hy : ∃ c, y = encodeGridColor c) :
-    ∃ c, caseBit₀ flag x y = encodeGridColor c := by
+    ∃ c, select flag x y = encodeGridColor c := by
   cases flag with
   | nil => exact hy
-  | cons b flag => cases b <;> assumption
+  | cons b flag =>
+    cases b
+    · exact hy
+    · exact hx
 
-/-- Every query result is a canonical color, including malformed sources and coordinates. -/
+/-- Every query is a canonical color, including malformed sources and coordinates. -/
 theorem gridCoordinateColor_canonical (input vertex : List Bool) :
     ∃ c, gridCoordinateColor input vertex = encodeGridColor c := by
   unfold gridCoordinateColor boundaryColorBits
@@ -100,70 +85,51 @@ theorem gridCoordinateColor_length (input vertex : List Bool) :
   rw [hc]
   rfl
 
-/-- Two polynomial-time generators hardwire the source and retain extended coordinate inputs. -/
-theorem exists_gridCoordinateColorCircuitGenerators :
+/-- Two native generators hardwire the source into checked raw color circuits.
+Each output wire is bounded and is the final copied gate of its program. -/
+theorem exists_gridCoordinateColorCircuitCodes :
     ∃ codes : Fin 2 → List Bool → List Bool,
-      (∀ i, codes i ∈ FP) ∧ ∀ i input vertex,
-        vertex.length = 2 * ((pairFst input).length + 1) →
-          evalFamilyCode (codes i input) vertex =
-            some (bitOf (gridCoordinateColor input vertex) i) := by
-  classical
-  choose gen hgen heval using fun i : Fin 2 =>
-    exists_prefixCircuitGenerator (gridCoordinateColorBit i) (gridCoordinateColorBit_mem_FP i)
-  let ruler := fun input : List Bool =>
-    (pairFst input ++ [false]) ++ (pairFst input ++ [false])
-  have hr : ruler ∈ FP := appendFn_mem_FP
-    (appendFn_mem_FP pairFst_mem_FP (constFn_mem_FP [false]))
-    (appendFn_mem_FP pairFst_mem_FP (constFn_mem_FP [false]))
-  let codes := fun i input => gen i (pair (ruler input) (pair input []))
-  refine ⟨codes, fun i => ?_, ?_⟩
-  · have hid : (fun z : List Bool => z) ∈ FP := CobhamFP_subset_FP (Cobham.proj 0)
-    exact mem_FP_comp (pairFn_mem_FP hr (pairFn_mem_FP hid (constFn_mem_FP []))) (hgen i)
-  · intro i input vertex hv
-    have hlen : (ruler input).length = 2 * ((pairFst input).length + 1) := by
-      simp [ruler]
-      omega
-    have hp : 0 < (ruler input).length := by rw [hlen]; omega
-    have h := heval i (ruler input) (pair input []) vertex hp (hv.trans hlen.symm)
-    have happ : pair input [] ++ vertex = pair input vertex := by simp [pair]
-    rw [happ] at h
-    simpa only [gridCoordinateColorBit, pairFst_pair, pairSnd_pair] using h
-
-/-- Removing the family tag yields canonical raw circuits ready for paired gate programs. -/
-theorem exists_gridCoordinateColorRawCircuitGenerators :
-    ∃ codes : Fin 2 → List Bool → List Bool,
-      (∀ i, codes i ∈ FP) ∧ ∀ i input,
-        ∃ raw : RawCircuit, RawCircuit.decode? (codes i input) = some raw ∧
-          raw.WellFormed (2 * ((pairFst input).length + 1)) ∧
-          ∀ vertex, vertex.length = 2 * ((pairFst input).length + 1) →
-            raw.eval? vertex = some (bitOf (gridCoordinateColor input vertex) i) := by
-  obtain ⟨gen, hgen, heval⟩ := exists_gridCoordinateColorCircuitGenerators
-  let codes := fun i input => (gen i input).tail
-  refine ⟨codes, fun i => ?_, ?_⟩
-  · apply CobhamFP_subset_FP
-    exact Cobham.tailFn (FP_subset_CobhamFP (hgen i))
-  · intro i input
-    let n := 2 * ((pairFst input).length + 1)
-    have hn : 0 < n := by dsimp [n]; omega
-    have he := heval i input (List.replicate n false) (List.length_replicate ..)
-    have ht : List.replicate n false ≠ [] := by
-      exact List.length_pos_iff.mp (by simpa using hn)
-    have hsome : (evalFamilyCode (gen i input) (List.replicate n false)).isSome := by
-      rw [he]
-      rfl
-    obtain ⟨raw, hcode, hwell⟩ :=
-      (evalFamilyCode_isSome_iff_of_ne_nil _ _ ht).mp hsome
-    have hdecode : RawCircuit.decode? raw.encode = some raw :=
-      (RawCircuit.decode?_eq_some_iff _ _).mpr rfl
-    refine ⟨raw, ?_, ?_, ?_⟩
-    · change RawCircuit.decode? (gen i input).tail = some raw
-      rw [hcode]
-      exact hdecode
-    · simpa only [List.length_replicate] using hwell
-    · intro vertex hv
-      have hvne : vertex ≠ [] := List.length_pos_iff.mp (by rw [hv]; exact hn)
-      have hh := heval i input vertex hv
-      rw [hcode] at hh
-      simpa [evalFamilyCode, hvne, evalCode, hdecode] using hh
+      (∀ i, ComputableInPolyTime (codes i) encBits encBits) ∧
+      ∀ i input,
+        ∃ gates : List (CircuitFormat.signature.Op × List ℕ),
+          ∃ output : Fin (2 * ((CircuitWords.first input).length + 1) + gates.length),
+            CircuitFormat.decode? (codes i input) = some gates ∧
+            Program.IsCodeFrom CircuitFormat.signature
+              (2 * ((CircuitWords.first input).length + 1)) 0 gates ∧ gates ≠ [] ∧
+            output.val = 2 * ((CircuitWords.first input).length + 1) + gates.length - 1 ∧
+            ∀ vertex, vertex.length = 2 * ((CircuitWords.first input).length + 1) →
+              CircuitFormat.evalOutput vertex gates output.val =
+                (gridCoordinateColor input vertex).getD i.val false := by
+  let n := fun input : List Bool => 2 * ((CircuitWords.first input).length + 1)
+  have hn : ComputableInPolyTime n encBits encUnary :=
+    ComputableInPolyTime.unary_mul' (ComputableInPolyTime.const 2)
+      (ComputableInPolyTime.unary_succ.comp
+        (ComputableInPolyTime.length_bits_comp CircuitWords.first_polyTime))
+  have hF : ComputableInPolyTime (fun p : List Bool × List Bool =>
+      gridCoordinateColor p.1 p.2) (encPair encBits encBits) encBits :=
+    gridCoordinateColor_polyTime (ComputableInPolyTime.fst encBits encBits)
+      (ComputableInPolyTime.snd encBits encBits)
+  have hpos : ∀ input, 0 < n input := by intro input; dsimp only [n]; omega
+  obtain ⟨compiled, hcompiled, _, hraw⟩ :=
+    NativeCircuitFamilies.exists_uniformRawCircuitCodes hn (ComputableInPolyTime.const 2) hF hpos
+  let codes := fun (i : Fin 2) (input : List Bool) => (compiled input).getD i.val []
+  have hcodes : ∀ i, ComputableInPolyTime (codes i) encBits encBits := by
+    intro i
+    exact ComputableInPolyTime.listGetDWithInput hcompiled (ComputableInPolyTime.const i.val) []
+  refine ⟨codes, hcodes, ?_⟩
+  intro i input
+  obtain ⟨gates, output, hdecode, hvalid, hnonempty, hlast, heval⟩ := hraw input i
+  refine ⟨gates, output, ?_, hvalid, hnonempty, hlast, ?_⟩
+  · simpa only [codes, List.getD_eq_getElem?_getD] using hdecode
+  · intro vertex hv
+    have hview : List.ofFn
+        (fun j : Fin (n input) => vertex.getD j.val false) = vertex := by
+      apply List.ext_getElem (by simp only [List.length_ofFn, hv]; rfl)
+      intro j _ hj
+      simp only [List.getElem_ofFn]
+      exact List.getD_eq_getElem vertex false hj
+    have h := heval (fun j : Fin (n input) => vertex.getD j.val false)
+    rw [hview] at h
+    exact h
 
 end GameTheory.Complexity.Backend
