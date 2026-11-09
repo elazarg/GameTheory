@@ -638,14 +638,14 @@ crossings agree with the geometric `across` operation on every valid triangle.
 order as the mathematical door selector. Its FP certificate combines constant
 controls rather than enumerating vertices.
 
-`Backend.SpernerPointerMachine.gridPointerMachineUniformFn_mem_FP` composes
-these operations into one actual polynomial-time computation. Its certificate
-is uniform in the ruler, color-query seed and vertex. In particular,
-`spernerPointer_pair_mem_FP` accepts a serialized color circuit vector as part
-of its input; it does not assume one fixed coloring. The implementation agrees
-with `wordGridPointer` on all words, preserving lengths and rejected-word
-isolation. Source promises and every-endpoint trichromaticity therefore hold
-for the concrete serialized-circuit pointer itself.
+`Backend.SpernerPointerMachine.gridPointerMachine_polyTime` composes these
+operations into a native `ComputableInPolyTime` certificate. Its generic producer
+form charges the ruler and vertex producers together with the joint certificate
+for the captured color query. `spernerPointer_polyTime` specializes this to a
+serialized color circuit vector and charges the complete instance and vertex
+producers. The implementation agrees with `wordGridPointer` on all words,
+preserving lengths and rejected-word isolation. Source promises and every-endpoint
+trichromaticity therefore hold for the concrete serialized-circuit pointer itself.
 
 This closes the composed FP pointer obligation. Uniform generation of an
 End-of-Line circuit instance and the FPn every-answer word decoder remain
@@ -953,9 +953,10 @@ Accepted valid answers yield canonical PMF mixed Nash equilibria. A supplied
 canonical equilibrium yields an exactly serialized bounded certificate.
 `Backend.GeneralBimatrixTotality` additionally uses finite complementary-path
 existence to prove native `TFNP encBits` membership for every input, without an
-Analysis import. Native node, pointer, endpoint and every-answer PPAD reduction leaves are now
-validated against the matching toolchain. The public hardness facade and full
-release gates remain open; verification and totality do not supply a polynomial-time solver.
+Analysis import. Native node, pointer, endpoint and every-answer PPAD reductions and the public
+Nash completeness facade now pass the full matching-toolchain library, lint,
+axiom and authored-diagnostic gates. Actual stable local/published consumer
+checks remain open; verification and totality do not supply a polynomial-time solver.
 
 The matching-toolchain verifier, totality, determinant and dictionary checkpoint
 passes 6,756 jobs. Its expanded transitive audit checks 2,943 authored declarations

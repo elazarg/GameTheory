@@ -9,26 +9,33 @@ public import GameTheoryComplexity.Backend.BrouwerNashQueryRegions
 
 /-! The canonical combined comparator flag for the allocated Brouwer feedback program. -/
 namespace GameTheory.Complexity.Backend.BrouwerNashSelectorKind
-open _root_.Complexity _root_.Complexity.Cobham _root_.Complexity.CircuitCode
-open BrouwerNashLayout BrouwerNashProgram
+open Cslib.Circuits Turing.MultiTapeTM
+open BrouwerNashLayout BrouwerNashProgram WordOperations
 
 /-- Combine the disjoint non-color and color comparator flags. -/
-def kindWord (v : Fin 5 → List Bool) : List Bool :=
-  orBit (BrouwerNashSampleKind.kindWord v) (BrouwerNashColorQuery.kindWord v)
+def kindWord (source code₀ code₁ out : List Bool) : List Bool :=
+  orFlag (BrouwerNashSampleKind.kindWord source code₀ code₁ out)
+    (BrouwerNashColorQuery.kindWord source code₀ code₁ out)
 
-/-- The complete flag selector has an actual Cobham certificate. -/
-theorem kindWord_cobham : Cobham kindWord :=
-  Cobham.orFn BrouwerNashSampleKind.kindWord_cobham
-    BrouwerNashColorQuery.kindWord_cobham
+/-- Both actual kind machines compose with the four captured word producers. -/
+@[fun_prop] theorem kindWord_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {source code₀ code₁ out : Input → List Bool}
+    (hs : ComputableInPolyTime source input encBits)
+    (h₀ : ComputableInPolyTime code₀ input encBits)
+    (h₁ : ComputableInPolyTime code₁ input encBits)
+    (ho : ComputableInPolyTime out input encBits) :
+    ComputableInPolyTime (fun a => kindWord (source a) (code₀ a) (code₁ a) (out a)) input encBits := by
+  have hcert := orFlag_polyTime.comp ((BrouwerNashSampleKind.kindWord_polyTime hs h₀ h₁ ho).prod
+    (BrouwerNashColorQuery.kindWord_polyTime hs h₀ h₁ ho))
+  simpa only [kindWord, Function.comp_def] using hcert
 
-theorem kindWord_mem_FPn : FPn kindWord := cobham_iff_FPn.mp kindWord_cobham
+private theorem or_false_right (a : Bool) : orFlag [a] [false] = [a] := by cases a <;> rfl
 
-private theorem or_false_right (a : Bool) : orBit [a] [false] = [a] := by cases a <;> rfl
-private theorem or_false_left (a : Bool) : orBit [false] [a] = [a] := by cases a <;> rfl
+private theorem or_false_left (a : Bool) : orFlag [false] [a] = [a] := by cases a <;> rfl
 
 section Correctness
-variable (out action source code₀ code₁ : List Bool)
-local notation "b" => List.length (pairFst source)
+variable (out source code₀ code₁ : List Bool)
+local notation "b" => List.length (CircuitWords.first source)
 local notation "e₀" => List.length (circuitUnaryPrefix code₀)
 local notation "e₁" => List.length (circuitUnaryPrefix code₁)
 
@@ -38,8 +45,8 @@ private theorem minimumBase_le_width : minimumBase b e₀ e₁ ≤ sampleWidth b
 
 private theorem color_zero_outside_allocated
     (ho : out.length < globalCount b ∨ globalCount b + 41 * sampleWidth b e₀ e₁ ≤ out.length) :
-    BrouwerNashColorQuery.kindWord ![out, action, source, code₀, code₁] = [false] := by
-  apply BrouwerNashColorQuery.kindWord_zero_of_outside
+    BrouwerNashColorQuery.kindWord source code₀ code₁ out = [false] := by
+  apply BrouwerNashColorQuery.kindWord_zero_of_outside ((source,(code₀,code₁)),(out,[]))
   intro t
   change ¬(sampleBase b e₀ e₁ t + colorBase b ≤ out.length ∧
     out.length < sampleBase b e₀ e₁ t + minimumBase b e₀ e₁)
@@ -54,18 +61,19 @@ private theorem color_zero_outside_allocated
 private theorem color_zero_at_noncolor (t : Fin 41) (i : ℕ)
     (hi : i < sampleWidth b e₀ e₁) (ho : out.length = sampleBase b e₀ e₁ t + i)
     (hno : i < colorBase b ∨ minimumBase b e₀ e₁ ≤ i) :
-    BrouwerNashColorQuery.kindWord ![out, action, source, code₀, code₁] = [false] := by
-  apply BrouwerNashColorQuery.kindWord_zero_of_outside
+    BrouwerNashColorQuery.kindWord source code₀ code₁ out = [false] := by
+  apply BrouwerNashColorQuery.kindWord_zero_of_outside ((source,(code₀,code₁)),(out,[]))
   exact BrouwerNashQueryRegions.sampleOutput_interval_excluded b e₀ e₁ out.length i
     (colorBase b) (minimumBase b e₀ e₁) t hi ho
     (minimumBase_le_width source code₀ code₁) hno
-private theorem color_at_sample (raw₀ raw₁ : RawCircuit)
+
+private theorem color_at_sample (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ))
     (h₀ : e₀ = raw₀.length) (h₁ : e₁ = raw₁.length)
-    (hw₀ : raw₀.WellFormed (arity b)) (hw₁ : raw₁.WellFormed (arity b))
+    (hw₀ : Program.IsCodeFrom CircuitFormat.signature (arity b) 0 raw₀) (hw₁ : Program.IsCodeFrom CircuitFormat.signature (arity b) 0 raw₁)
     (t : Fin 41) (i : ℕ)
     (ho : out.length = sampleBase b raw₀.length raw₁.length t + i)
     (hlo : colorBase b ≤ i) (hhi : i < minimumBase b raw₀.length raw₁.length) :
-    BrouwerNashColorQuery.kindWord ![out, action, source, code₀, code₁] =
+    BrouwerNashColorQuery.kindWord source code₀ code₁ out =
       [decide ((sampleGate b raw₀ raw₁ t i).kind =
         GameTheory.Finite.BimatrixGateProgram.GateKind.comparator)] := by
   let w := cornerWidth b raw₀.length raw₁.length
@@ -86,24 +94,24 @@ private theorem color_at_sample (raw₀ raw₁ : RawCircuit)
     omega
   rw [he, sampleGate_colorRegion b raw₀ raw₁ t corner offset hoff]
   apply BrouwerNashColorQuery.kindWord_eq_colorRegion_of_lengths
-    ![out, action, source, code₀, code₁] raw₀ raw₁ h₀ h₁ hw₀ hw₁ t corner offset hoff
+    ((source,(code₀,code₁)),(out,[])) raw₀ raw₁ h₀ h₁ hw₀ hw₁ t corner offset hoff
   change out.length = sampleBase b raw₀.length raw₁.length t + colorBase b +
     corner.val * w + offset
   omega
 
 /-- At every program output, the combined flag equals the canonical gate's comparator kind. -/
-theorem kindWord_value (raw₀ raw₁ : RawCircuit)
+theorem kindWord_value (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ))
     (h₀ : e₀ = raw₀.length) (h₁ : e₁ = raw₁.length)
-    (hw₀ : raw₀.WellFormed (arity b)) (hw₁ : raw₁.WellFormed (arity b))
+    (hw₀ : Program.IsCodeFrom CircuitFormat.signature (arity b) 0 raw₀) (hw₁ : Program.IsCodeFrom CircuitFormat.signature (arity b) 0 raw₁)
     (i : Fin (dimension b raw₀.length raw₁.length)) (ho : out.length = i.val) :
-    kindWord ![out, action, source, code₀, code₁] =
+    kindWord source code₀ code₁ out =
       [decide ((program b raw₀ raw₁ i).kind =
         GameTheory.Finite.BimatrixGateProgram.GateKind.comparator)] := by
   by_cases hg : i.val < globalCount b
   · have houtside : out.length < globalCount b ∨
         globalCount b + 41 * sampleWidth b e₀ e₁ ≤ out.length := Or.inl (by omega)
-    rw [kindWord, BrouwerNashKindCorrectness.sampleKind_zero _ _ _ _ _ houtside,
-      color_zero_outside_allocated _ _ _ _ _ houtside]
+    rw [kindWord, BrouwerNashKindCorrectness.sampleKind_zero _ _ _ _ houtside,
+      color_zero_outside_allocated _ _ _ _ houtside]
     rw [program, ite_eq_left hg, BrouwerNashGlobalQuery.globalGate_kind]
     rfl
   let w := sampleWidth b raw₀.length raw₁.length
@@ -129,17 +137,17 @@ theorem kindWord_value (raw₀ raw₁ : RawCircuit)
     have hocode : out.length = sampleBase b e₀ e₁ t + localIndex := by
       simpa only [h₀, h₁] using hout
     by_cases hno : localIndex < colorBase b ∨ minimumBase b raw₀.length raw₁.length ≤ localIndex
-    · rw [kindWord, BrouwerNashKindCorrectness.sampleKind_at_sample _ _ _ _ _ raw₀ raw₁
+    · rw [kindWord, BrouwerNashKindCorrectness.sampleKind_at_sample _ _ _ _ raw₀ raw₁
         t localIndex h₀ h₁ hi hout hno,
-        color_zero_at_noncolor _ _ _ _ _ t localIndex hicode hocode
+        color_zero_at_noncolor _ _ _ _ t localIndex hicode hocode
           (by simpa only [h₀, h₁] using hno)]
       exact or_false_right _
     · have hlo : colorBase b ≤ localIndex := by omega
       have hhi : localIndex < minimumBase b raw₀.length raw₁.length := by omega
       have hafter : weightBase b ≤ localIndex := by dsimp only [colorBase] at hlo; omega
-      rw [kindWord, BrouwerNashKindCorrectness.sampleKind_false_of_weightBase _ _ _ _ _
+      rw [kindWord, BrouwerNashKindCorrectness.sampleKind_false_of_weightBase _ _ _ _
         t localIndex hicode hocode hafter,
-        color_at_sample _ _ _ _ _ raw₀ raw₁ h₀ h₁ hw₀ hw₁ t localIndex hout hlo hhi]
+        color_at_sample _ _ _ _ raw₀ raw₁ h₀ h₁ hw₀ hw₁ t localIndex hout hlo hhi]
       exact or_false_left _
   · have hafter : globalCount b + 41 * sampleWidth b e₀ e₁ ≤ out.length := by
       have hmul := Nat.mul_le_of_le_div w 41 offset (show 41 ≤ offset / w by omega)
@@ -148,11 +156,12 @@ theorem kindWord_value (raw₀ raw₁ : RawCircuit)
       omega
     have houtside : out.length < globalCount b ∨
         globalCount b + 41 * sampleWidth b e₀ e₁ ≤ out.length := Or.inr hafter
-    rw [kindWord, BrouwerNashKindCorrectness.sampleKind_zero _ _ _ _ _ houtside,
-      color_zero_outside_allocated _ _ _ _ _ houtside]
+    rw [kindWord, BrouwerNashKindCorrectness.sampleKind_zero _ _ _ _ houtside,
+      color_zero_outside_allocated _ _ _ _ houtside]
     unfold program
     rw [ite_eq_right hg]
     rw [dite_eq_right hs]
     rfl
 end Correctness
+
 end GameTheory.Complexity.Backend.BrouwerNashSelectorKind

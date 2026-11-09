@@ -189,10 +189,11 @@ the released base pin with a path. Run `lake -R update` after switching between
 local and released modes. Source dependencies remain explicitly pinned; never
 edit either package's manifest by hand.
 
-The audit rejects warnings and info in every extension module's stored build
-diagnostics, including cached results. Dependency warnings also fail; upstream
-proof suggestions are allowed. CI runs the same audit against both the local
-checkout and the released base pin.
+The audit rejects warnings and info in authored extension modules' stored build
+diagnostics, including cached results. Third-party diagnostics are permitted if
+the selected imports compile; every authored declaration's transitive axioms
+remain audited. CI runs the same audit against both the local checkout and the
+released base pin.
 
 The extension has its own CI workflow. Its default build targets only its own
 library and fixtures, together with their imported dependencies. It never builds
@@ -247,7 +248,7 @@ extraction, triangle selection and accepted-answer soundness. All increment, col
 coefficient families now have native certificates and preserve their original
 bytes for arbitrary query words. Their canonical scalar and color-error laws
 also pass. Combined selector correctness, sampled residual correctness and the
-aggregate every-answer reduction are being integrated.
+native every-answer reduction now pass the full matching-toolchain checks.
 
 The native general verifier and totality leaves are
 `Backend.GeneralBimatrixFNP` and `Backend.GeneralBimatrixTotality`. They prove
@@ -259,13 +260,16 @@ predecessor/successor circuit instance and agrees at every fixed-width vertex.
 `Backend.GeneralBimatrixEndpointMachine` and `Backend.GeneralBimatrixEndpointCapacity`
 now certify reconstruction of the supplied endpoint's certificate. Native
 `Backend.GeneralBimatrixReduction` preserves every raw End-of-Line answer,
-including the malformed-input fallback. The full public Nash classifier port
-remains in progress.
+including the malformed-input fallback. The public Nash classifier now has native membership, hardness and completeness
+proofs. Full matching-toolchain build/lint/axiom and authored-diagnostic checks
+pass; actual stable local/published consumer verification is the remaining gate.
 
-The public `GameTheoryComplexity.BimatrixNash` facade is being integrated with
-native hardness and completeness proofs for the same exact signed rectangular
-relation. Native verification, totality, actual endpoint instance/answer
-machines and an independent PPAD membership control already pass. The remaining
-Brouwer-to-game reduction uses the canonical sampled program's coefficient/kind
+Import `GameTheoryComplexity.BimatrixNash` for native exact signed rectangular
+Nash PPAD-completeness. Verification, totality, pointer-circuit generation and
+endpoint-preserving decoding classify the canonical binary relation. The
+Brouwer-to-game reduction uses the sampled program's exact coefficient/kind
 machines and reward bounds to decode every accepted Nash certificate to a
-Brouwer answer. Ordinary base clients require no ComplexityLib.
+Brouwer answer. All these proofs and controls pass the full upstream-matching
+toolchain checks. Tracked toolchains remain stable; local/published stable
+consumer verification is recorded separately in the delivery ledger. Ordinary
+base clients require no ComplexityLib.

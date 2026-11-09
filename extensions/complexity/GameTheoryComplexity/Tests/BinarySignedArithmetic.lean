@@ -10,10 +10,10 @@ namespace GameTheory.Complexity.Tests.BinarySignedArithmetic
 open Backend
 
 -- A borrow cascades through all intervening zero bits; underflow saturates.
-example : Nat.fromBitsLE (binaryWordSub [false, false, false, false, true] [true]) = 15 := by
+example : Turing.MultiTapeTM.ofBits (binaryWordSub [false, false, false, false, true] [true]) = 15 := by
   decide +kernel
 example : binaryWordSub [true] [false, true] = [] := by decide +kernel
-example : Nat.fromBitsLE (binaryWordSub [true, false, false] [true]) = 0 := by
+example : Turing.MultiTapeTM.ofBits (binaryWordSub [true, false, false] [true]) = 0 := by
   decide +kernel
 
 -- Opposite signs, carries, cancellation, and unequal padded magnitudes.
