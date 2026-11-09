@@ -4,118 +4,97 @@ public import GameTheoryComplexity.Backend.CircuitCodeShiftCorrectness
 
 @[expose] public section
 
-/-! Bounded lookup of serialized raw gates. The scanner returns the suffix beginning
-at the requested gate, strips the count header, and remains total on malformed words. -/
+/-! Bounded lookup of serialized gates. The scanner strips the count header and
+returns the suffix at the requested ordinal. It ignores clock-bit values and
+retains its total behavior on malformed fields and exhausted streams.
+-/
+
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham _root_.Complexity.CircuitCode
 
-/-- Skipping a serialized gate is polynomial time on arbitrary words. -/
-theorem circuitGateRest_mem_FP : circuitGateRest ∈ FP := by
-  have hu := FP_subset_CobhamFP circuitUnaryRest_mem_FP
-  have hd := dropFn (Cobham.const [false, false, false]) (Cobham.proj (0 : Fin 1))
-  exact CobhamFP_subset_FP ((Cobham.comp hu fun _ : Fin 1 =>
-    Cobham.comp hu fun _ : Fin 1 => hd).of_eq fun _ => rfl)
+open Turing.MultiTapeTM
 
-/-- Skipping a gate only consumes input, including truncated encodings. -/
-theorem circuitGateRest_length_le (bits : List Bool) :
-    (circuitGateRest bits).length ≤ bits.length := by
-  simp only [circuitGateRest, circuitUnaryRest, List.length_drop]
-  omega
-
-/-- Return the serialized suffix at an ordinal supplied by ruler length.
-The clock bits are ignored; missing fields and exhausted streams yield the empty word. -/
+/-- Return the serialized suffix at an ordinal supplied by ruler length. -/
 def circuitGateSuffix (code indexRuler : List Bool) : List Bool :=
-  recNotation (fun v : Fin 1 → List Bool => circuitUnaryRest (v 0))
-    (fun v : Fin 3 → List Bool => circuitGateRest (v 1))
-    (fun v : Fin 3 → List Bool => circuitGateRest (v 1)) indexRuler ![code]
+  circuitGateRest^[indexRuler.length] (circuitUnaryRest code)
 
-/-- The lookup performs exactly one consuming step per ruler bit. -/
-theorem circuitGateSuffix_eq_iterate (code indexRuler : List Bool) :
-    circuitGateSuffix code indexRuler =
-      circuitGateRest^[indexRuler.length] (circuitUnaryRest code) := by
-  induction indexRuler with
-  | nil => rfl
-  | cons b r ih =>
-    simp only [circuitGateSuffix, recNotation_cons, Bool.cond_self]
-    change circuitGateRest (circuitGateSuffix code r) = _
-    rw [ih, List.length_cons, Function.iterate_succ_apply']
-
-/-- The state is bounded by the original source length on all inputs. -/
-theorem circuitGateSuffix_length_le (code indexRuler : List Bool) :
-    (circuitGateSuffix code indexRuler).length ≤ code.length := by
-  induction indexRuler with
-  | nil =>
-    simp only [circuitGateSuffix, recNotation, circuitUnaryRest,
-      List.length_drop, Matrix.cons_val_zero]
-    omega
-  | cons b r ih =>
-    simp only [circuitGateSuffix, recNotation_cons, Bool.cond_self]
+private theorem gateRest_iterate_length_le (bits : List Bool) (i : ℕ) :
+    (circuitGateRest^[i] bits).length ≤ bits.length := by
+  induction i with
+  | zero => rfl
+  | succ i ih =>
+    rw [Function.iterate_succ_apply']
     exact (circuitGateRest_length_le _).trans ih
 
-/-- Uniform gate suffix lookup has an actual bounded string machine. -/
-theorem circuitGateSuffix_cobham :
-    Cobham fun v : Fin 2 → List Bool => circuitGateSuffix (v 0) (v 1) := by
-  have hu := FP_subset_CobhamFP circuitUnaryRest_mem_FP
-  have hg := FP_subset_CobhamFP circuitGateRest_mem_FP
-  have hb := Cobham.comp hu fun _ : Fin 1 => Cobham.proj (0 : Fin 1)
-  have hs := Cobham.comp hg fun _ : Fin 1 => Cobham.proj (1 : Fin 3)
-  have hr := Cobham.boundedRec hb hs hs (Cobham.proj (1 : Fin 2)) (fun r p => by
-    have hp : p = ![p 0] := by ext i; fin_cases i; rfl
-    rw [hp]
-    exact circuitGateSuffix_length_le _ _)
-  let args : Fin 2 → (Fin 2 → List Bool) → List Bool := ![fun v => v 1, fun v => v 0]
-  have ha : ∀ i, Cobham (args i) := by intro i; fin_cases i <;> exact Cobham.proj _
-  exact (Cobham.comp hr ha).of_eq fun v => by
-    have hv : Fin.tail (fun i => args i v) = ![v 0] := by
-      ext i
-      fin_cases i
-      rfl
-    rw [hv]
-    rfl
+/-- Every lookup state is bounded by the original source word. -/
+theorem circuitGateSuffix_length_le (code indexRuler : List Bool) :
+    (circuitGateSuffix code indexRuler).length ≤ code.length := by
+  have h := gateRest_iterate_length_le (circuitUnaryRest code) indexRuler.length
+  have hinit : (circuitUnaryRest code).length ≤ code.length := by
+    simp only [circuitUnaryRest, List.length_drop]
+    omega
+  exact h.trans hinit
 
-/-- Lookup with a paired source and ordinal ruler. -/
-def circuitGateLookup (z : List Bool) : List Bool :=
-  circuitGateSuffix (pairFst z) (pairSnd z)
+/-- Uniform suffix lookup charges both the source and its unary ordinal ruler. -/
+@[fun_prop] theorem circuitGateSuffix_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {code indexRuler : Input → List Bool}
+    (hcode : ComputableInPolyTime code input encBits)
+    (hindex : ComputableInPolyTime indexRuler input encBits) :
+    ComputableInPolyTime (fun a => circuitGateSuffix (code a) (indexRuler a)) input encBits := by
+  have h : ComputableInPolyTime
+      (fun a => circuitGateRest^[(indexRuler a).length] (circuitUnaryRest (code a)))
+      input encBits :=
+    ComputableInPolyTime.iterate (step := circuitGateRest)
+      (bound := fun a => (code a).length)
+      (ComputableInPolyTime.length_bits_comp hindex) (circuitUnaryRest_polyTime hcode)
+      (circuitGateRest_polyTime (ComputableInPolyTime.id' (encIn := encBits)))
+      hcode.polyBounded_length (by
+        intro a i _
+        have hinit : (circuitUnaryRest (code a)).length ≤ (code a).length := by
+          simp only [circuitUnaryRest, List.length_drop]
+          omega
+        exact (gateRest_iterate_length_le _ i).trans hinit)
+  exact h
 
-/-- Paired serialized gate lookup is polynomial time. -/
-theorem circuitGateLookup_mem_FP : circuitGateLookup ∈ FP := by
-  let args : Fin 2 → (Fin 1 → List Bool) → List Bool :=
-    ![fun v => pairFst (v 0), fun v => pairSnd (v 0)]
-  have ha : ∀ i, Cobham (args i) := by
-    intro i
-    fin_cases i
-    · exact FP_subset_CobhamFP pairFst_mem_FP
-    · exact FP_subset_CobhamFP pairSnd_mem_FP
-  exact CobhamFP_subset_FP ((Cobham.comp circuitGateSuffix_cobham ha).of_eq fun _ => rfl)
-
-private theorem gateRest_iterate_encode (n : ℕ) (raw : RawCircuit) :
-    circuitGateRest^[n] (raw.flatMap RawGate.encode) =
-      (raw.drop n).flatMap RawGate.encode := by
-  induction n generalizing raw with
+private theorem gateRest_iterate_encode (n : ℕ)
+    (gates : List (CircuitFormat.signature.Op × List ℕ)) :
+    circuitGateRest^[n]
+      (gates.flatMap fun gate => CircuitFormat.encodeGate gate.1
+        (gate.2.getD 0 0) (gate.2.getD 1 0)) =
+      (gates.drop n).flatMap fun gate => CircuitFormat.encodeGate gate.1
+        (gate.2.getD 0 0) (gate.2.getD 1 0) := by
+  induction n generalizing gates with
   | zero => rfl
   | succ n ih =>
-    cases raw with
+    cases gates with
     | nil =>
       rw [Function.iterate_succ_apply]
-      change circuitGateRest^[n] [] = []
-      simpa only [List.flatMap_nil, List.drop_nil] using ih []
-    | cons g raw =>
+      have hnil : circuitGateRest [] = [] := by simp [circuitGateRest, circuitUnaryRest]
+      simpa only [List.flatMap_nil, List.drop_nil, hnil] using ih []
+    | cons gate gates =>
       rw [Function.iterate_succ_apply]
       simp only [List.flatMap_cons, circuitGateRest_encode]
-      simpa only [List.drop_succ_cons] using ih raw
+      simpa only [List.drop_succ_cons] using ih gates
 
 /-- Canonical lookup returns the exact suffix, even beyond the declared gate count. -/
-theorem circuitGateSuffix_encode (raw : RawCircuit) (indexRuler : List Bool) :
-    circuitGateSuffix raw.encode indexRuler =
-      (raw.drop indexRuler.length).flatMap RawGate.encode := by
-  rw [circuitGateSuffix_eq_iterate]
-  simp only [RawCircuit.encode, circuitUnaryRest_encode]
+theorem circuitGateSuffix_encode (gates : List (CircuitFormat.signature.Op × List ℕ))
+    (harity : ∀ gate ∈ gates, gate.2.length = 2) (indexRuler : List Bool) :
+    circuitGateSuffix (CircuitFormat.encode gates) indexRuler =
+      (gates.drop indexRuler.length).flatMap fun gate => CircuitFormat.encodeGate gate.1
+        (gate.2.getD 0 0) (gate.2.getD 1 0) := by
+  have hall : gates.all (fun gate => gate.2.length == 2) = true := by
+    apply List.all_eq_true.mpr
+    intro gate hg
+    simp [harity gate hg]
+  simp only [circuitGateSuffix, CircuitFormat.encode, hall, ↓reduceIte, circuitUnaryRest_encode]
   exact gateRest_iterate_encode _ _
 
 /-- A canonical out-of-range lookup returns the empty stream. -/
-theorem circuitGateSuffix_encode_of_length_le (raw : RawCircuit) (ruler : List Bool)
-    (h : raw.length ≤ ruler.length) : circuitGateSuffix raw.encode ruler = [] := by
-  rw [circuitGateSuffix_encode, List.drop_eq_nil_iff.mpr h]
+theorem circuitGateSuffix_encode_of_length_le
+    (gates : List (CircuitFormat.signature.Op × List ℕ))
+    (harity : ∀ gate ∈ gates, gate.2.length = 2) (ruler : List Bool)
+    (h : gates.length ≤ ruler.length) :
+    circuitGateSuffix (CircuitFormat.encode gates) ruler = [] := by
+  rw [circuitGateSuffix_encode gates harity ruler, List.drop_eq_nil_iff.mpr h]
   rfl
 
 end GameTheory.Complexity.Backend
