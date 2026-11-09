@@ -5,7 +5,7 @@ public import GameTheoryComplexity.Backend.BinarySignedRowSelection
 @[expose] public section
 
 namespace GameTheory.Complexity.Tests.BinarySignedRowSelection
-open GameTheory.Complexity.Backend
+open GameTheory.Complexity.Backend Turing.MultiTapeTM
 
 private def width : List Bool := [false, false, false]
 private def one : List Bool := [false, true, false]
@@ -40,7 +40,7 @@ example : binarySignedRowSelectedIndex (binarySignedRowSelect
     ![[false, false], [false], width, one, one ++ one]) = some 1 := by
   decide +kernel
 
-example : _root_.Complexity.Cobham binarySignedRowSelect := binarySignedRowSelect_cobham
-example : _root_.Complexity.Cobham.FPn binarySignedRowSelect := binarySignedRowSelect_mem_FPn
+example : ComputableInPolyTime binarySignedRowSelect (encPi encBits) encBits :=
+  binarySignedRowSelect_polyTime
 
 end GameTheory.Complexity.Tests.BinarySignedRowSelection

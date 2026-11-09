@@ -5,7 +5,7 @@ public import GameTheoryComplexity.Backend.BinaryUnaryArithmetic
 @[expose] public section
 
 namespace GameTheory.Complexity.Tests.BinaryUnaryArithmetic
-open GameTheory.Complexity.Backend
+open GameTheory.Complexity.Backend Turing.MultiTapeTM
 
 example : binaryHalfRuler [] = [] := by decide +kernel
 example : binaryHalfRuler [false] = [] := by decide +kernel
@@ -20,9 +20,9 @@ example : binaryLengthParity [false, false] = [false] := by decide +kernel
 example : binaryLengthParity [false, false, false] = [true] := by decide +kernel
 example : binaryLengthParity [true, true, true, true] = [false] := by decide +kernel
 
-example : _root_.Complexity.Cobham (fun v : Fin 1 → List Bool => binaryHalfRuler (v 0)) :=
-  binaryHalfRuler_cobham
-example : _root_.Complexity.Cobham.FPn (fun v : Fin 1 → List Bool => binaryLengthParity (v 0)) :=
-  binaryLengthParity_mem_FPn
+example : ComputableInPolyTime binaryHalfRuler encBits encBits :=
+  binaryHalfRuler_polyTime
+example : ComputableInPolyTime binaryLengthParity encBits encBits :=
+  binaryLengthParity_polyTime
 
 end GameTheory.Complexity.Tests.BinaryUnaryArithmetic

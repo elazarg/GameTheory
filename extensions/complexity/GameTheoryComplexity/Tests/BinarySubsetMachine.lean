@@ -5,7 +5,7 @@ public import GameTheoryComplexity.Backend.BinarySubsetMachine
 @[expose] public section
 
 namespace GameTheory.Complexity.Tests.BinarySubsetMachine
-open GameTheory.Complexity.Backend
+open GameTheory.Complexity.Backend Turing.MultiTapeTM
 
 -- False positions do not contribute to ordinals; ordinal bits supply only a length.
 example : binarySubsetNthPosition ![[false, true, false, true, true], []] = some 1 := by
@@ -30,7 +30,7 @@ example : binarySubsetParity [] = [false] := by decide +kernel
 example : binarySubsetParity [true, false, true] = [false] := by decide +kernel
 example : binarySubsetParity [false, true, true, false, true] = [true] := by decide +kernel
 
-example : _root_.Complexity.Cobham binarySubsetNth := binarySubsetNth_cobham
-example : _root_.Complexity.Cobham.FPn binarySubsetNth := binarySubsetNth_mem_FPn
+example : ComputableInPolyTime binarySubsetNth (encPi encBits) encBits :=
+  binarySubsetNth_polyTime
 
 end GameTheory.Complexity.Tests.BinarySubsetMachine
