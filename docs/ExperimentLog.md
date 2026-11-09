@@ -10673,7 +10673,7 @@ observations and outcome below are preserved as the record of that run.
 
 ## EXP-172: native CSLib computation certificates and search classes
 
-- **Date / status:** 2026-11-08; in progress on `port/cslib-complexity`.
+- **Date / status:** 2026-11-08–2026-11-09; complete, supporting the native API choice.
 - **Question / competing designs:** Can the optional companion use the
   CSLib-based successor's encoded polynomial-time certificates and native
   search classes directly, replacing its custom reduction and PPAD calculus,
@@ -10751,8 +10751,15 @@ observations and outcome below are preserved as the record of that run.
   `randomized-axioms.log`). The base import/configuration/manifest source audit
   passes. These matching-toolchain probes do not claim stable-4.35 compatibility
   of the larger probability closure.
-- **Outcome:** support the native API choice in
-  [D77](decisions/D77-native-computation-certificates.md). The representative
-  semantic and execution gates pass; downstream migration, full package audits,
-  both consumer configurations and the shared final-release bump remain delivery
-  obligations. No RC toolchain is adopted in tracked sources.
+- **Final design check:** the full matching-toolchain library/fixture build
+  passes 7,838 jobs; final lint/axiom-driver rebuilding passes 7,840 jobs. Public
+  lint, transitive axiom checks, 251 authored cached-diagnostic checks and 44
+  regressions pass. This extends the representative evidence to the complete
+  optional closure without weakening the semantic or execution kill conditions.
+- **Outcome:** complete; supports the native API choice in
+  [D77](decisions/D77-native-computation-certificates.md). The canonical relations,
+  PMF laws and every-answer reductions survive native certificates with actual
+  computation costs. The stable-4.35 probability failure remains preserved above
+  and is confirmed by the actual local audit and published-base targeted check.
+  Final stable-release maintenance and full consumer audits are blocked delivery
+  gates, recorded in the delivery ledger. No RC toolchain is adopted in tracked sources.

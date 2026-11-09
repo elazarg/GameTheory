@@ -299,4 +299,3 @@ example : splitPair [false, false, true, false, true] = ([false], []) := rfl
 example : splitPair [false, true, true, false] = ([], [true, false]) := rfl
 
 end GameTheory.Complexity.Backend.CircuitWords
-

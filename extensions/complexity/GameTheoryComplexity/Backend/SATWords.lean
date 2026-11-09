@@ -582,4 +582,3 @@ example : decodeFormula? [true, true, false, true, true, false] = some [[(0, tru
 
 
 end GameTheory.Complexity.Backend.SATWords
-

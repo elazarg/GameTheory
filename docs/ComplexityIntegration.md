@@ -6,6 +6,37 @@ It owns `GameTheoryComplexity` import modules, declares its API under
 ComplexityLib modules. The main package has no dependency on this companion or
 ComplexityLib. See the companion README for local and consumer commands.
 
+The native source port is complete. Full upstream-matching library/fixture
+validation passes 7,838 jobs; final lint/axiom-driver rebuilding passes 7,840
+jobs. Public lint, the transitive axiom driver, all 251 authored cached-diagnostic
+checks and 44 audit regressions pass. These checks use isolated 4.36-RC source
+copies; tracked Lean/Mathlib remain stable 4.35.
+
+A separate stable 4.35 selected-closure probe passes
+`lake --iofail build GameTheoryComplexity.BimatrixNash` in 3,694 jobs
+(`stable-probe-native-nash-build.log`). This verifies the Nash facade's imported
+closure and does not validate the full stable optional package or its audit.
+
+The stable merge gate is blocked by unmodified upstream
+`Complexity.Probability.PMF.Bind`, which uses unavailable `tsum_sigma`,
+`tsum_le_tsum` and `tsum_add` APIs. Actual stable local update/version/cache
+checks pass, including 9,031 already-decompressed cache files, but the full
+local audit fails during its build; later audit stages did not complete.
+Actual published-base resolution verifies the sole GameTheory git dependency
+at `c7cd6bed7498b9a16edb22262e9522ceff90648c` and Lean 4.35.0. Its pivot client
+passes 3,125 jobs; the targeted probability check fails in a 3,049-job target
+with the same missing APIs. The full published optional audit remains unrun
+and blocked; no published cache gate is claimed. Local transcripts are under
+`.codex/scratch/cslib-port/`: `stable-local-update.log`,
+`stable-local-cache.log`, `stable-local-full-audit.log`,
+`stable-published-update.log`, `stable-published-pivot-client.log` and
+`stable-published-probability-gate.log`.
+
+Final Lean and Mathlib 4.36 release endpoints return 404 as of 2026-11-09.
+Normal final-release maintenance must precede full local-path and published-base
+audits and a fresh published pivot-client check. Neither tracked RC toolchains
+nor dependency-source patches are used to bypass this gate.
+
 ## Delivered interfaces
 
 - `GameTheoryComplexity.RandomTape`: the PMF of a verdict on uniformly drawn
@@ -68,7 +99,7 @@ semantics are explicit. Native origin masking is realized by filtering inactive
 pointers. Every target answer decodes to a native answer; invalid source promises
 return the native zero witness. Exact word codecs stay separate from native
 framed machine arguments. EXP-172 and D77 record the design evidence; the delivery
-ledger tracks the remaining downstream migration and full consumer checks.
+ledger records the completed source port and blocked final stable consumer gate.
 
 ## Payoff-constrained Nash hardness
 
@@ -127,9 +158,9 @@ native instance encoding.
 
 The matching-toolchain focused SAT hardness build passes 6,654 jobs, and its
 transitive audit accepts 887 authored declarations with standard axioms only.
-The full companion migration and stable-release consumer gates remain open;
-NP membership and later search classifications still await their native
-verifier and reduction ports.
+The complete source port includes native NP membership and later search
+classifications. Full matching-toolchain gates pass; the final stable consumer
+merge gate is blocked as recorded above.
 
 Import this backend leaf explicitly for hardness. The random-sample facade and
 umbrella keep their smaller dependency closure. Changing the machine library
@@ -334,9 +365,9 @@ The matching-toolchain NP/Cramer checkpoint passes 6,768 jobs, and its public
 Nash and program controls pass 6,802 jobs. The expanded transitive audit accepts
 2,402 authored declarations with standard axioms. Controls cover binary carry,
 padding, exact codecs, actual decoded-game acceptance, incorrect support payoffs,
-extra/missing certificate bits and empty dimensions. Shared stable-release,
-full-companion and local/published-consumer verification remain open in the
-cross-cutting delivery gate.
+extra/missing certificate bits and empty dimensions. Full matching-toolchain
+companion gates now pass; the final stable consumer merge gate is blocked as
+recorded above.
 
 ## Succinct End-of-Line and search reductions
 
@@ -403,23 +434,25 @@ valid inputs require exact-width witnesses and canonical paired verification.
 The relation has a genuine polynomial-time verifier, balance and totality,
 including the broken-initial-link case, so it belongs to TFNP.
 
-PPAD membership consists of independent source FNP evidence and a certified
-search reduction to this raw relation. This gives containment in TFNP and
-closure under reductions with source FNP supplied. Raw End-of-Line is complete
-by definition of the class; this is the reference problem, not a Nash
-completeness theorem.
+Native `Cslib.Complexity.PPAD` membership includes independent source FNP
+evidence and encoded search reductions. `endOfLineRelation_PPADComplete` and
+`rawEndOfLineRelation_PPADComplete` prove native `SearchComplete @PPAD encBits`
+for arbitrary encoded source types through actual circuit maps and every-answer
+decoders. TFNP containment and transport retain the independent FNP requirement.
 
 The certified raw-to-endpoint reduction keeps the instance and decodes every
 filtered-edge solution. With a genuine source it keeps the endpoint. When only
 the initial link is broken it maps the target fallback to the origin; invalid
-weak promises retain the empty fallback. Its instance map is FP and its
-original-instance decoder is FPn. Thus filtered-edge search is PPAD-hard.
+weak promises retain the empty fallback. Native `ComputableInPolyTime`
+certificates cover its instance map and original-instance answer decoder.
 
 Generic normalization replaces inconsistent pointers by self-loops, preserving
-edges and endpoints. Its pointer-word evaluators are FP-certified. The normalized
-circuit-instance compiler described below closes the reverse reduction and
-proves filtered endpoint PPAD membership and completeness. EXP-161 and D69
-record the original compilation obligation; EXP-163 and D71 discharge it.
+edges and endpoints. Its pointer-word evaluators have native
+`ComputableInPolyTime` certificates. `nativeEndOfLine_searchReducible` and
+`nativeEndOfLine_raw_searchReducible` supply both native circuit-family
+reductions, preserving every answer, including width zero and failed source
+promises. EXP-161/D69 and EXP-163/D71 record the earlier convention and
+normalization evidence; EXP-172/D77 records the native class decision.
 
 Validation: the base build and lint pass 4,368 jobs. The optional library,
 lint scope and transitive axiom audit pass 3,835 jobs; all 1,024 owned declarations
@@ -461,6 +494,10 @@ compiler fixture runs alongside the existing facade, composed machine, NP and
 PPAD endpoints. Local-path mode is restored after the check.
 
 ## Uniform normalized End-of-Line instances
+
+This is the historical pre-native implementation checkpoint. Its prefix
+specialization route is superseded by `Backend.NativeCircuitFamilies` and
+`EndOfLineCircuitGeneration.exists_activeEndOfLineInstance`.
 
 `Backend.UniformCircuitSpecialization.exists_prefixCircuitGenerator` starts
 with a genuine FP one-bit computation. The upstream unconditional uniform
@@ -605,12 +642,10 @@ The optional package's released base pin advances to
 `a58d028f7fe4161782169c7f8c32dd793426b29c`, which publishes the prerequisite
 Sperner mathematics. Clients of the base library still need no ComplexityLib.
 
-The semantic word pointer has no composed FP certificate yet. That next
-certificate must enforce canonical boundary colors before incrementing corner
-coordinates: a boundary corner can equal `2^b`, outside a `b`-bit field.
-Uniform circuit-instance generation and an FPn every-answer decoder then
-complete the remaining reduction obligations. This slice does not establish
-succinct Sperner PPAD membership.
+The native pointer certificates enforce canonical boundary colors before
+incrementing corner coordinates: a boundary corner can equal `2^b`, outside a
+`b`-bit field. Uniform native circuit generation and every-answer
+`SearchReducible` proofs complete the subsequent Sperner classification.
 
 
 Validation: the full companion, lint scope and axiom driver build pass 4,114
@@ -647,10 +682,8 @@ producers. The implementation agrees with `wordGridPointer` on all words,
 preserving lengths and rejected-word isolation. Source promises and every-endpoint
 trichromaticity therefore hold for the concrete serialized-circuit pointer itself.
 
-This closes the composed FP pointer obligation. Uniform generation of an
-End-of-Line circuit instance and the FPn every-answer word decoder remain
-before succinct Sperner PPAD membership. PPAD-hardness of Sperner is a further
-separate reduction obligation.
+The native pointer feeds the certified End-of-Line circuit-instance map and
+every-answer decoder used by the completed succinct Sperner classification.
 
 
 Validation: the full optional library, lint scope and axiom driver pass 4,119
@@ -690,7 +723,7 @@ this same implementation, preserving its invalid-source fallback.
 to the certified Sperner pointer. The node width is always positive, including
 zero coordinate bits, and the emitted instance has the proved source promises.
 Every target endpoint yields the same trichromatic triangle word, independently
-of its graph component. The decoder is the actual FPn second projection.
+of its graph component. The decoder is the native polynomial-time second projection.
 No path traversal, grid enumeration or selected-solution assumption is used.
 
 `GameTheoryComplexity.Sperner.spernerRelation_mem_PPAD` combines that reduction
@@ -729,7 +762,7 @@ or aliased. Used bends have two consistent edges; unused bends and the center
 remain isolated. A fixture closes the original strands into two cycles and
 shows that switching joins them into one cycle without introducing endpoints.
 
-This is a proved local routing prerequisite. Global succinct routing, original
+This was a proved local routing prerequisite at its historical checkpoint. Global succinct routing, original
 endpoint decoding, wire colors, a canonical boundary/source hook and actual
 FP/FPn reduction certificates remain before Sperner hardness. The mathematical
 modules have no ComplexityLib dependency. The source paper's triangular region,
@@ -763,7 +796,7 @@ Crossings have three-step clearance from bends, disjoint three-by-three switch
 boxes and no third active wire inside a box. Neighboring boxes may have directly
 adjacent ports; the proofs do not assume an extra empty row between them.
 
-These are the geometric prerequisites for the global route, with no
+These were the geometric prerequisites at the historical routing checkpoint, with no
 ComplexityLib dependency. The next slice must assemble globally consistent
 switched pointers, prove preservation and decoding of every original endpoint,
 and implement bounded local queries. Wire coloring, the canonical square-grid
@@ -809,7 +842,7 @@ proves an exact inverse on the live image. Removed centers and unused bends
 are rejected. `Math.GridWireImageSteps` connects this coordinate map to the
 local switch, including directly adjacent ports of neighboring boxes.
 
-The modules have no ComplexityLib dependency. The six-candidate bound proves
+At this historical checkpoint, the modules had no ComplexityLib dependency. The six-candidate bound proves
 locality; it is not an actual FP machine certificate. Coordinate word layouts,
 certified FP arithmetic and queries, routed-wire colors, canonical square-grid
 boundary/source translation and the FP/FPn hardness reduction remain open.
@@ -831,8 +864,8 @@ inputs, and exact all-point endpoint sets including a disconnected cycle.
 `GameTheoryComplexity.Sperner.spernerRelation_PPADComplete` proves completeness
 for standard PPAD of the existing canonical succinct grid relation. Membership
 uses the previously certified directed triangle graph. The reverse reduction
-now has actual uniform FP color queries and circuit-instance generation, plus
-an FPn every-answer decoder.
+has native `ComputableInPolyTime` color queries and circuit-instance generation,
+plus an every-answer `SearchReducible` proof.
 
 The dependency-free construction expands routed vertices into size-six color
 tiles. A boundary entrance replaces the known source witness; inactive two-color
@@ -923,8 +956,8 @@ The native matching-toolchain checkpoint passes 5,328 jobs, including public
 continuous and simplicial Brouwer leaves, coordinate-circuit generators and the
 rational-point controls. Its transitive audit checks 2,801 authored declarations
 using only `propext`, `Classical.choice` and `Quot.sound`. Source isolation and
-coverage pass. The tracked stable toolchain, full optional lint/axiom targets and
-local/published-base consumer checks remain open in the native migration gate.
+coverage pass. Full matching-toolchain optional build/lint/axiom gates now pass;
+the final stable consumer merge gate is blocked as recorded above.
 
 Before the native API migration, the full continuous slice passed 4,198 companion
 jobs in local and published-base-pin configurations at `b2a5e098`; that historical
@@ -955,15 +988,16 @@ canonical equilibrium yields an exactly serialized bounded certificate.
 existence to prove native `TFNP encBits` membership for every input, without an
 Analysis import. Native node, pointer, endpoint and every-answer PPAD reductions and the public
 Nash completeness facade now pass the full matching-toolchain library, lint,
-axiom and authored-diagnostic gates. Actual stable local/published consumer
-checks remain open; verification and totality do not supply a polynomial-time solver.
+axiom and authored-diagnostic gates. The final stable consumer merge gate is
+blocked as recorded above; verification and totality do not supply a polynomial-time solver.
 
 The matching-toolchain verifier, totality, determinant and dictionary checkpoint
 passes 6,756 jobs. Its expanded transitive audit checks 2,943 authored declarations
 using only `propext`, `Classical.choice` and `Quot.sound`. Signed, singular,
 zero-width, malformed-length and support controls compile. Source isolation and
-coverage pass, along with all 44 script regressions. Shared stable-toolchain,
-full optional lint/axiom and local/published-base consumer gates remain open.
+coverage pass, along with all 44 script regressions. Full matching-toolchain
+optional build/lint/axiom gates now pass; the final stable consumer merge gate
+is blocked as recorded above.
 The earlier 4,218-job full companion run at base `e4b2d039` predates the native
 API migration and does not validate the current dependency selection.
 
@@ -1107,7 +1141,7 @@ source pointer conditions. Every other endpoint decodes to a nonzero rational
 complementary solution; the finite graph theorem yields existence for nonempty
 positive-payoff integer games without importing Analysis.
 
-This closes the mathematical oriented graph and endpoint proof, including
+This closed the mathematical oriented graph and endpoint proof at its historical checkpoint, including
 degeneracy and ray exclusion. Natural numerator/common-denominator endpoint
 encoding, polynomial bit bounds and actual serialized FP/FPn maps remain.
 The pointer definitions are noncomputable; no new PPAD classification or
@@ -1187,7 +1221,7 @@ controls include a negative coordinate whose truncated encoding is bounded but
 invalid. Other controls cover negative determinants and reduced fractions,
 empty matrices, singular-premise rejection and a degenerate rectangular pivot.
 
-The direct product-denominator bound is polynomial but may exceed the existing
+At this historical checkpoint, the direct product-denominator bound was polynomial but could exceed the existing
 serialized field width. Sharing the Cramer denominator is the next compression
 step. Binary graph codecs, efficient exact linear algebra and actual FP/FPn
 pointer and every-answer maps remain before PPAD membership. No runtime bound
@@ -1215,7 +1249,7 @@ and the earlier arbitrary-rational-vector bound now reuses it.
 
 The signed one-action control has determinant `-24`, denominator `24`, payoff
 weights `6/4` and original utility numerators `-12/-30`. Source certificates are
-rejected. This closes the direct endpoint field-size gap. Efficient exact linear
+rejected. This closed the direct endpoint field-size gap at its historical checkpoint. Efficient exact linear
 algebra, binary graph encodings and actual FP/FPn maps remain before PPAD.
 
 Validation: full base/lint-scope build, 4,496 jobs; lint and architecture audit
@@ -1258,7 +1292,7 @@ the stored arrays to those bounds and proves exact agreement of the computed
 Cramer fields with the canonical encoding. The existing bimatrix endpoint
 certificate producer uses these fields without a client API change.
 
-This supplies executable determinant arithmetic and bounds its stored integer
+At this historical checkpoint, the slice supplied executable determinant arithmetic and bounded its stored integer
 entries. It does not yet supply a binary FP/FPn certificate. Machine-certified
 matrix loops, ratio selection, graph codecs and pointers remain before Nash PPAD
 membership. These generic leaves import only reusable mathematics.
@@ -1298,7 +1332,7 @@ eligible row using a perturbation coefficient; its computed forward and reverse
 exchanges restore the port data. The library contains formal controls; compiled
 evaluation lives in ignored scratch, as required by the architecture audit.
 
-These operations use integers and explicit finite scans. Rational inverses and
+At this historical checkpoint, these operations used integers and explicit finite scans. Rational inverses and
 noncomputable function orders occur only in proofs. Actual FP/FPn certificates
 for the binary matrix loops, scans, exchange and graph codecs remain before the
 Nash PPAD reduction.
@@ -1320,7 +1354,7 @@ regression fixture pass. Released-pin CI includes the new pivot consumer.
 
 The optional generic leaves `Backend.BinaryWordSubtraction`,
 `BinarySignedArithmetic`, `BinarySignedAddition` and
-`BinarySignedCrossComparison` now have actual Cobham and FPn certificates.
+`BinarySignedCrossComparison` have native `ComputableInPolyTime` certificates.
 Subtraction scans the longer operand with one borrow bit and saturates on
 underflow. Signed words use a sign header followed by an arbitrary little-endian
 magnitude. Addition compares magnitudes for opposite signs; multiplication
@@ -1340,16 +1374,15 @@ declarations. Companion lint in both configurations, architecture/isolation audi
 19 optional-boundary regressions and the architecture fixture pass. Kernel controls and independent
 review cover sign, padding, borrow, cancellation and ratio orientation.
 
-Complete lexicographic comparison is now certified as described below.
-Minimum-row selection and materialized matrix loops remain. Node codecs, basis exchange, oriented
-pointer machines and the every-answer End-of-Line reduction remain before Nash
-PPAD membership.
+Native packed-table traversal and minimum-row selection are supplied by
+`binarySignedTable_polyTime` and `binarySignedRowSelect_polyTime`. The node,
+pivot and every-answer Nash reduction clients are delivered below.
 
 ## Packed binary lexicographic ratio comparison
 
 `Backend.BinaryIndexedLexicographic` implements a uniform indexed scan with a
-two-bit state: prefix equality and strict order. Cobham composition and a
-constant recursion bound give actual polynomial-time membership. Exact
+two-bit state: prefix equality and strict order. Native composition and a
+charged finite traversal give `ComputableInPolyTime` certificates. Exact
 correctness detects a strict coordinate with every earlier coordinate equal.
 The clock uses its length, with no numeric-value loop or requirement that its
 bits are true.
@@ -1390,7 +1423,7 @@ coefficients, entering directions and the full lexicographic minimum ratio.
 The independent perturbation coefficients resolve degeneracy without changing
 the output game's equilibrium semantics. Fixed-width arithmetic is justified
 by bounds on every intermediate product and prefix sum, rather than only on
-the final determinant. All loops have actual Cobham/FPn certificates.
+the final determinant. All loops have native `ComputableInPolyTime` certificates.
 
 The node codec records a sorted basis membership mask and a one-hot entering
 variable, relative to the distinguished source. Its arithmetic and syntax
