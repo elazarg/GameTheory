@@ -7,70 +7,52 @@ public import GameTheoryComplexity.Backend.BinaryUnaryEncoding
 
 @[expose] public section
 
-/-! Certified entry queries for the canonical mixed-gate game's integer payoffs.
-All loops are controlled by word lengths, and signed padding is interpreted exactly. -/
+/-! Integer payoff queries for the canonical mixed-gate game use explicit
+action ruler lengths. Total queries retain signed padding and the codec's
+truncated-field and missing-kind behavior. -/
+
 namespace GameTheory.Complexity.Backend.BimatrixProgramPayoffs
-open _root_.Complexity _root_.Complexity.Cobham
+
+open Turing.MultiTapeTM
 open GameTheory.Finite
 
 /-- Signed twice the decoded output count. -/
 def capacityWord (tape : List Bool) : List Bool :=
   false :: false :: binaryLengthWord (BimatrixProgramCodec.dimension tape)
 
-private def sameBlock (r s : List Bool) : List Bool :=
-  lenEqFlag (binaryHalfRuler r) (binaryHalfRuler s)
-private def oppositeKind (r s : List Bool) : List Bool :=
-  orBit (andBit (binaryLengthParity r) (notBit (binaryLengthParity s)))
-    (andBit (notBit (binaryLengthParity r)) (binaryLengthParity s))
-private def ownOutput (r s : List Bool) : List Bool :=
-  andBit (sameBlock r s) (binaryLengthParity r)
-private def positivePart (q : List Bool) : List Bool := caseBit₀ (bitAt [] q) [] q
+private def positivePart (q : List Bool) : List Bool := if q.headD false then [] else q
+
 private def negativePart (q : List Bool) : List Bool :=
-  caseBit₀ (bitAt [] q) (binarySignedNeg q) []
+  if q.headD false then binarySignedNeg q else []
 
-/-- Row payoff query on row-action, column-action, and program tape. -/
-def rowEntry (v : Fin 3 → List Bool) : List Bool :=
+/-- Row payoff query on a row ruler, a column ruler, and a program tape. -/
+def rowEntry (r s tape : List Bool) : List Bool :=
   binarySignedAdd
-    (caseBit₀ (sameBlock (v 0) (v 1)) (BimatrixProgramCodec.baselineWord (v 2)) [])
-    (caseBit₀ (andBit (sameBlock (v 0) (v 1)) (oppositeKind (v 0) (v 1)))
-      (capacityWord (v 2)) [])
+    (if r.length / 2 = s.length / 2 then BimatrixProgramCodec.baselineWord tape else [])
+    (if r.length / 2 = s.length / 2 ∧ r.length % 2 ≠ s.length % 2 then capacityWord tape else [])
 
-/-- Column payoff query on row-action, column-action, and program tape. -/
-def columnEntry (v : Fin 3 → List Bool) : List Bool :=
-  let q := BimatrixProgramCodec.coefficientField ![v 2, binaryHalfRuler (v 1), v 0]
-  let feedback := caseBit₀ (ownOutput (v 0) (v 1)) (capacityWord (v 2)) []
+/-- Column payoff query on a row ruler, a column ruler, and a program tape. -/
+def columnEntry (r s tape : List Bool) : List Bool :=
+  let q := BimatrixProgramCodec.coefficientField tape (binaryHalfRuler s) r
+  let feedback :=
+    if r.length / 2 = s.length / 2 ∧ r.length % 2 = 1 then capacityWord tape else []
   binarySignedAdd
-    (caseBit₀ (sameBlock (v 0) (v 1))
-      (binarySignedNeg (BimatrixProgramCodec.baselineWord (v 2))) [])
-    (caseBit₀ (binaryLengthParity (v 1))
-      (binarySignedAdd (negativePart q) feedback)
-      (binarySignedAdd (positivePart q)
-        (caseBit₀ (BimatrixProgramCodec.kindFlag ![v 2, binaryHalfRuler (v 1)]) feedback [])))
-
-private theorem lenEq_value (a b : List Bool) :
-    lenEqFlag a b = [decide (a.length = b.length)] := by
-  rcases lenEqFlag_flag a b with h | h
-  · rw [h]
-    simp [(lenEqFlag_eq_true_iff a b).mp h]
-  · rw [h]
-    have hn : a.length ≠ b.length := by
-      intro he
-      have ht := (lenEqFlag_eq_true_iff a b).mpr he
-      rw [h] at ht
-      contradiction
-    simp [hn]
-
-private theorem select_value (P : Prop) [Decidable P] (x : List Bool) :
-    binarySignedValue (caseBit₀ [decide P] x []) = if P then binarySignedValue x else 0 := by
-  by_cases h : P <;> simp [h, caseBit₀, binarySignedValue, Nat.fromBitsLE, Nat.fromBits]
+    (if r.length / 2 = s.length / 2 then
+      binarySignedNeg (BimatrixProgramCodec.baselineWord tape) else [])
+    (if s.length % 2 = 1 then
+      binarySignedAdd (if q.headD false then binarySignedNeg q else []) feedback
+    else
+      binarySignedAdd (if q.headD false then [] else q)
+        (if BimatrixProgramCodec.kindFlag tape (binaryHalfRuler s) then feedback else []))
 
 private theorem positivePart_value (q : List Bool) :
     binarySignedValue (positivePart q) = max (binarySignedValue q) 0 := by
   cases q with
   | nil => rfl
   | cons b q =>
-    cases b <;> simp [positivePart, bitAt, caseBit₀, binarySignedValue,
-      Nat.fromBitsLE, Nat.fromBits]
+    cases b
+    · simp [positivePart, binarySignedValue]
+    · simp [positivePart, binarySignedValue, ofBits]
 
 private theorem negativePart_value (q : List Bool) :
     binarySignedValue (negativePart q) = max (-binarySignedValue q) 0 := by
@@ -78,7 +60,7 @@ private theorem negativePart_value (q : List Bool) :
   | nil => rfl
   | cons b q =>
     cases b
-    · simp [negativePart, bitAt, caseBit₀, binarySignedValue, Nat.fromBitsLE, Nat.fromBits]
+    · simp [negativePart, binarySignedValue, ofBits]
     · change binarySignedValue (binarySignedNeg (true :: q)) = _
       rw [binarySignedNeg_value]
       simp [binarySignedValue]
@@ -86,157 +68,75 @@ private theorem negativePart_value (q : List Bool) :
 /-- The response capacity is exactly twice the decoded dimension. -/
 theorem capacityWord_value (tape : List Bool) :
     binarySignedValue (capacityWord tape) = 2 * (BimatrixProgramCodec.dimension tape).length := by
-  simp only [capacityWord, binarySignedValue, List.headD_cons, Bool.false_eq_true,
-    ite_false, List.tail_cons, Nat.fromBitsLE_cons, zero_add,
-    binaryLengthWord_value, Nat.cast_mul, Nat.cast_ofNat]
+  change (ofBits (false :: binaryLengthWord (BimatrixProgramCodec.dimension tape)) : ℤ) = _
+  have h : ofBits (false :: binaryLengthWord (BimatrixProgramCodec.dimension tape)) =
+      2 * (BimatrixProgramCodec.dimension tape).length := by
+    change Nat.bit false (ofBits (binaryLengthWord (BimatrixProgramCodec.dimension tape))) = _
+    rw [binaryLengthWord_value, Nat.bit_false_apply]
+  exact_mod_cast h
 
-/-- The capacity word has length bounded by its explicit dimension ruler. -/
+/-- The capacity encoding is bounded by the explicit dimension ruler. -/
 theorem capacityWord_length (tape : List Bool) :
     (capacityWord tape).length ≤ (BimatrixProgramCodec.dimension tape).length + 3 := by
   have h := binaryLengthWord_length (BimatrixProgramCodec.dimension tape)
   simp only [capacityWord, List.length_cons]
   omega
 
-private theorem sameBlock_value (r s : List Bool) :
-    sameBlock r s = [decide (r.length / 2 = s.length / 2)] := by
-  rw [sameBlock, lenEq_value, binaryHalfRuler_length, binaryHalfRuler_length]
-
-private theorem oppositeKind_value (r s : List Bool) :
-    oppositeKind r s = [decide (r.length % 2 ≠ s.length % 2)] := by
-  have hr : r.length % 2 < 2 := Nat.mod_lt _ (by omega)
-  have hs : s.length % 2 < 2 := Nat.mod_lt _ (by omega)
-  rw [oppositeKind, binaryLengthParity_value, binaryLengthParity_value]
-  rcases Nat.mod_two_eq_zero_or_one r.length with hr | hr <;>
-    rcases Nat.mod_two_eq_zero_or_one s.length with hs | hs <;>
-      simp [hr, hs, andBit, orBit, notBit, caseBit₀]
-
-private theorem ownOutput_value (r s : List Bool) :
-    ownOutput r s = [decide (r.length / 2 = s.length / 2 ∧ r.length % 2 = 1)] := by
-  rw [ownOutput, sameBlock_value, binaryLengthParity_value]
-  by_cases he : r.length / 2 = s.length / 2 <;>
-    by_cases ho : r.length % 2 = 1 <;> simp [he, ho, andBit, caseBit₀]
-
-/-- The capacity word is computed by a polynomial-time string machine. -/
-theorem capacityWord_cobham :
-    Cobham fun v : Fin 1 → List Bool => capacityWord (v 0) :=
-  appendFn (Cobham.const [false, false])
-    (Cobham.comp binaryLengthWord_cobham fun _ : Fin 1 =>
-      BimatrixProgramCodec.dimension_cobham)
-
-private theorem sameBlock_fn {n : ℕ} {r s : (Fin n → List Bool) → List Bool}
-    (hr : Cobham r) (hs : Cobham s) : Cobham fun v => sameBlock (r v) (s v) :=
-  lenEqFlag_mem (Cobham.comp binaryHalfRuler_cobham fun _ : Fin 1 => hr)
-    (Cobham.comp binaryHalfRuler_cobham fun _ : Fin 1 => hs)
-
-private theorem parity_fn {n : ℕ} {r : (Fin n → List Bool) → List Bool}
-    (hr : Cobham r) : Cobham fun v => binaryLengthParity (r v) :=
-  Cobham.comp binaryLengthParity_cobham fun _ : Fin 1 => hr
-
-private theorem oppositeKind_fn {n : ℕ} {r s : (Fin n → List Bool) → List Bool}
-    (hr : Cobham r) (hs : Cobham s) : Cobham fun v => oppositeKind (r v) (s v) :=
-  Cobham.orFn (Cobham.andFn (parity_fn hr) (Cobham.notFn (parity_fn hs)))
-    (Cobham.andFn (Cobham.notFn (parity_fn hr)) (parity_fn hs))
-
-/-- The row payoff entry is an actual polynomial-time query. -/
-theorem rowEntry_cobham : Cobham rowEntry := by
-  have hH : Cobham fun v : Fin 3 → List Bool => BimatrixProgramCodec.baselineWord (v 2) :=
-    Cobham.comp BimatrixProgramCodec.baselineWord_cobham fun _ : Fin 1 => .proj 2
-  have hC : Cobham fun v : Fin 3 → List Bool => capacityWord (v 2) :=
-    Cobham.comp capacityWord_cobham fun _ : Fin 1 => .proj 2
-  have hsame := sameBlock_fn (Cobham.proj (0 : Fin 3)) (Cobham.proj (1 : Fin 3))
-  exact Cobham.comp₂ binarySignedAdd_cobham (Cobham.iteFn hsame hH Cobham.empty)
-    (Cobham.iteFn (Cobham.andFn hsame (oppositeKind_fn (.proj 0) (.proj 1))) hC Cobham.empty)
-
-theorem rowEntry_mem_FPn : FPn rowEntry := cobham_iff_FPn.mp rowEntry_cobham
-
-/-- The column payoff entry is an actual polynomial-time query. -/
-theorem columnEntry_cobham : Cobham columnEntry := by
-  have hhalf : Cobham fun v : Fin 3 → List Bool => binaryHalfRuler (v 1) :=
-    Cobham.comp binaryHalfRuler_cobham fun _ : Fin 1 => .proj 1
-  have hq := Cobham.comp₃ BimatrixProgramCodec.coefficientField_cobham (.proj 2) hhalf (.proj 0)
-  have hk := Cobham.comp₂ BimatrixProgramCodec.kindFlag_cobham (.proj 2) hhalf
-  have hH : Cobham fun v : Fin 3 → List Bool => BimatrixProgramCodec.baselineWord (v 2) :=
-    Cobham.comp BimatrixProgramCodec.baselineWord_cobham fun _ : Fin 1 => .proj 2
-  have hC : Cobham fun v : Fin 3 → List Bool => capacityWord (v 2) :=
-    Cobham.comp capacityWord_cobham fun _ : Fin 1 => .proj 2
-  have hsame := sameBlock_fn (Cobham.proj (0 : Fin 3)) (Cobham.proj (1 : Fin 3))
-  have hfeedback := Cobham.iteFn (Cobham.andFn hsame (parity_fn (.proj 0))) hC Cobham.empty
-  have hsign := Cobham.comp₂ Cobham.bitAtFn (Cobham.const []) hq
-  have hp := Cobham.iteFn hsign Cobham.empty hq
-  have hn := Cobham.iteFn hsign
-    (Cobham.comp binarySignedNeg_cobham fun _ : Fin 1 => hq) Cobham.empty
-  exact Cobham.comp₂ binarySignedAdd_cobham
-    (Cobham.iteFn hsame (Cobham.comp binarySignedNeg_cobham fun _ : Fin 1 => hH) Cobham.empty)
-    (Cobham.iteFn (parity_fn (.proj 1))
-      (Cobham.comp₂ binarySignedAdd_cobham hn hfeedback)
-      (Cobham.comp₂ binarySignedAdd_cobham hp (Cobham.iteFn hk hfeedback Cobham.empty)))
-
-theorem columnEntry_mem_FPn : FPn columnEntry := cobham_iff_FPn.mp columnEntry_cobham
-
-/-- Total row-entry arithmetic, also describing out-of-range query rulers. -/
+/-- Total row-entry arithmetic also covers out-of-range action rulers. -/
 theorem rowEntry_value (r s tape : List Bool) :
-    binarySignedValue (rowEntry ![r, s, tape]) =
+    binarySignedValue (rowEntry r s tape) =
       (if r.length / 2 = s.length / 2 then BimatrixProgramCodec.baseline tape else 0) +
       (if r.length / 2 = s.length / 2 ∧ r.length % 2 ≠ s.length % 2
         then 2 * (BimatrixProgramCodec.dimension tape).length else 0) := by
-  change binarySignedValue (binarySignedAdd _ _) = _
-  rw [binarySignedAdd_value, sameBlock_value, oppositeKind_value]
+  rw [rowEntry, binarySignedAdd_value]
   have hz : binarySignedValue [] = 0 := rfl
   by_cases he : r.length / 2 = s.length / 2 <;>
     by_cases ho : r.length % 2 ≠ s.length % 2 <;>
-      simp [he, ho, andBit, caseBit₀, capacityWord_value,
-        BimatrixProgramCodec.baseline, hz]
+      simp [he, ho, capacityWord_value, BimatrixProgramCodec.baseline, hz]
 
-/-- Total column-entry arithmetic with the canonical packed coefficient value. -/
+/-- Total column-entry arithmetic retains the canonical packed coefficient interpretation. -/
 theorem columnEntry_value (r s tape : List Bool) :
     let q := binarySignedRowValue (BimatrixProgramCodec.width tape)
       (BimatrixProgramCodec.coefficientTape tape)
       ((s.length / 2) * ((BimatrixProgramCodec.dimension tape).length * 2) + r.length)
     let C : ℤ := 2 * (BimatrixProgramCodec.dimension tape).length
     let feedback : ℤ := if r.length / 2 = s.length / 2 ∧ r.length % 2 = 1 then C else 0
-    binarySignedValue (columnEntry ![r, s, tape]) =
+    binarySignedValue (columnEntry r s tape) =
       (if r.length / 2 = s.length / 2 then -BimatrixProgramCodec.baseline tape else 0) +
       (if s.length % 2 = 1 then max (-q) 0 + feedback
-       else max q 0 + if (BimatrixProgramCodec.kindFlags tape)[s.length / 2]?.getD false
+       else max q 0 + if (BimatrixProgramCodec.kindFlags tape).getD (s.length / 2) false
          then feedback else 0) := by
-  have hq := BimatrixProgramCodec.coefficientField_value ![tape, binaryHalfRuler s, r]
-  change binarySignedValue (BimatrixProgramCodec.coefficientField
-    ![tape, binaryHalfRuler s, r]) = binarySignedRowValue (BimatrixProgramCodec.width tape)
-      (BimatrixProgramCodec.coefficientTape tape)
-      ((binaryHalfRuler s).length * ((BimatrixProgramCodec.dimension tape).length * 2) +
-        r.length) at hq
+  have hq := BimatrixProgramCodec.coefficientField_value tape (binaryHalfRuler s) r
   rw [binaryHalfRuler_length] at hq
-  have hk := BimatrixProgramCodec.kindFlag_value ![tape, binaryHalfRuler s]
-  change BimatrixProgramCodec.kindFlag ![tape, binaryHalfRuler s] =
-    [(BimatrixProgramCodec.kindFlags tape)[(binaryHalfRuler s).length]?.getD false] at hk
-  rw [binaryHalfRuler_length] at hk
   dsimp only
   change binarySignedValue (binarySignedAdd
-    (caseBit₀ (sameBlock r s) (binarySignedNeg (BimatrixProgramCodec.baselineWord tape)) [])
-    (caseBit₀ (binaryLengthParity s)
-      (binarySignedAdd
-        (negativePart (BimatrixProgramCodec.coefficientField ![tape, binaryHalfRuler s, r]))
-        (caseBit₀ (ownOutput r s) (capacityWord tape) []))
-      (binarySignedAdd
-        (positivePart (BimatrixProgramCodec.coefficientField ![tape, binaryHalfRuler s, r]))
-        (caseBit₀ (BimatrixProgramCodec.kindFlag ![tape, binaryHalfRuler s])
-          (caseBit₀ (ownOutput r s) (capacityWord tape) []) [])))) = _
-  rw [binarySignedAdd_value, sameBlock_value, ownOutput_value,
-    binaryLengthParity_value, hk]
+    (if r.length / 2 = s.length / 2 then
+      binarySignedNeg (BimatrixProgramCodec.baselineWord tape) else [])
+    (if s.length % 2 = 1 then
+      binarySignedAdd
+        (negativePart (BimatrixProgramCodec.coefficientField tape (binaryHalfRuler s) r))
+        (if r.length / 2 = s.length / 2 ∧ r.length % 2 = 1 then capacityWord tape else [])
+    else
+      binarySignedAdd
+        (positivePart (BimatrixProgramCodec.coefficientField tape (binaryHalfRuler s) r))
+        (if BimatrixProgramCodec.kindFlag tape (binaryHalfRuler s) then
+          (if r.length / 2 = s.length / 2 ∧ r.length % 2 = 1 then capacityWord tape else [])
+        else []))) = _
+  rw [binarySignedAdd_value]
   have hz : binarySignedValue [] = 0 := rfl
   by_cases he : r.length / 2 = s.length / 2 <;>
     by_cases hr : r.length % 2 = 1 <;>
     by_cases hs : s.length % 2 = 1 <;>
     cases hd : (BimatrixProgramCodec.kindFlags tape)[s.length / 2]?.getD false <;>
-      simp [he, hr, hs, caseBit₀, binarySignedAdd_value,
-        binarySignedNeg_value, positivePart_value, negativePart_value, hq,
-        capacityWord_value, BimatrixProgramCodec.baseline, hz]
+      simp [he, hr, hs, hd, binarySignedAdd_value, binarySignedNeg_value,
+        positivePart_value, negativePart_value, hq, capacityWord_value,
+        BimatrixProgramCodec.baseline, BimatrixProgramCodec.kindFlag, binaryHalfRuler_length, hz]
 
-/-- On bounded action indices the row query is the canonical affine row payoff. -/
+/-- Bounded action rulers recover the canonical affine row payoff. -/
 theorem rowEntry_eq_rowPayoff (tape r s : List Bool)
     (ri si : Fin ((BimatrixProgramCodec.dimension tape).length * 2))
     (hr : r.length = ri.val) (hs : s.length = si.val) :
-    binarySignedValue (rowEntry ![r, s, tape]) =
+    binarySignedValue (rowEntry r s tape) =
       BimatrixAffineGate.rowPayoff (BimatrixProgramCodec.baseline tape)
         (2 * (BimatrixProgramCodec.dimension tape).length) ri si := by
   obtain ⟨⟨i, b⟩, rfl⟩ := finProdFinEquiv.surjective ri
@@ -263,11 +163,11 @@ theorem rowEntry_eq_rowPayoff (tape r s : List Bool)
       BimatrixBlockGame.matchingBlockPayoff, BimatrixBlockGame.pairedBlock,
       finProdFinEquiv.injective.eq_iff, Fin.val_inj, hij, eq_comm]
 
-/-- On bounded action indices the column query is the canonical mixed-program payoff. -/
+/-- Bounded action rulers recover the canonical mixed-program column payoff. -/
 theorem columnEntry_eq_columnPayoff (tape r s : List Bool)
     (ri si : Fin ((BimatrixProgramCodec.dimension tape).length * 2))
     (hr : r.length = ri.val) (hs : s.length = si.val) :
-    binarySignedValue (columnEntry ![r, s, tape]) =
+    binarySignedValue (columnEntry r s tape) =
       BimatrixGateProgram.columnPayoff (BimatrixProgramCodec.baseline tape)
         (2 * (BimatrixProgramCodec.dimension tape).length) (BimatrixProgramCodec.decode tape)
         ri si := by
@@ -299,71 +199,130 @@ theorem columnEntry_eq_columnPayoff (tape r s : List Bool)
         BimatrixBlockGame.pairedBlock, BimatrixProgramCodec.decode, hk,
         finProdFinEquiv.injective.eq_iff, Fin.val_inj, hij, eq_comm]
 
-private theorem select_length (flag x y : List Bool) :
-    (caseBit₀ flag x y).length ≤ max x.length y.length := by
-  cases flag with
-  | nil => exact le_max_right _ _
-  | cons b flag => cases b <;> simp [caseBit₀]
+/-- Row query size is bounded independently of both action rulers. -/
+theorem rowEntry_length (r s tape : List Bool) :
+    (rowEntry r s tape).length ≤ (BimatrixProgramCodec.baselineWord tape).length +
+      (BimatrixProgramCodec.dimension tape).length + 5 := by
+  have hH : (if r.length / 2 = s.length / 2 then
+      BimatrixProgramCodec.baselineWord tape else []).length ≤
+      (BimatrixProgramCodec.baselineWord tape).length := by split <;> simp
+  have hC : (if r.length / 2 = s.length / 2 ∧ r.length % 2 ≠ s.length % 2 then
+      capacityWord tape else []).length ≤ (capacityWord tape).length := by split <;> simp
+  have hc := capacityWord_length tape
+  have h := binarySignedAdd_length
+    (if r.length / 2 = s.length / 2 then BimatrixProgramCodec.baselineWord tape else [])
+    (if r.length / 2 = s.length / 2 ∧ r.length % 2 ≠ s.length % 2 then capacityWord tape else [])
+  exact h.trans (by omega)
 
-/-- Every row query has a word-length bound independent of the action rulers. -/
-theorem rowEntry_length (v : Fin 3 → List Bool) :
-    (rowEntry v).length ≤ (BimatrixProgramCodec.baselineWord (v 2)).length +
-      (BimatrixProgramCodec.dimension (v 2)).length + 5 := by
-  have hH := select_length (sameBlock (v 0) (v 1))
-    (BimatrixProgramCodec.baselineWord (v 2)) []
-  have hC := select_length (andBit (sameBlock (v 0) (v 1)) (oppositeKind (v 0) (v 1)))
-    (capacityWord (v 2)) []
-  have hc := capacityWord_length (v 2)
-  have ha := binarySignedAdd_length
-    (caseBit₀ (sameBlock (v 0) (v 1)) (BimatrixProgramCodec.baselineWord (v 2)) [])
-    (caseBit₀ (andBit (sameBlock (v 0) (v 1)) (oppositeKind (v 0) (v 1)))
-      (capacityWord (v 2)) [])
-  simp only [List.length_nil, max_zero] at hH hC
-  exact ha.trans (by omega)
-
-/-- Every column query has a word-length bound independent of the action rulers. -/
-theorem columnEntry_length (v : Fin 3 → List Bool) :
-    (columnEntry v).length ≤ (BimatrixProgramCodec.baselineWord (v 2)).length +
-      (BimatrixProgramCodec.width (v 2)).length +
-      (BimatrixProgramCodec.dimension (v 2)).length + 8 := by
-  let q := BimatrixProgramCodec.coefficientField ![v 2, binaryHalfRuler (v 1), v 0]
-  let feedback := caseBit₀ (ownOutput (v 0) (v 1)) (capacityWord (v 2)) []
-  have hq : q.length ≤ (BimatrixProgramCodec.width (v 2)).length :=
-    binarySignedRowField_length _
-  have hf : feedback.length ≤ (BimatrixProgramCodec.dimension (v 2)).length + 3 := by
-    have hs := select_length (ownOutput (v 0) (v 1)) (capacityWord (v 2)) []
-    have hc := capacityWord_length (v 2)
-    simp only [List.length_nil, max_zero] at hs
-    exact hs.trans hc
+/-- Column query size depends only on the explicit program headers. -/
+theorem columnEntry_length (r s tape : List Bool) :
+    (columnEntry r s tape).length ≤ (BimatrixProgramCodec.baselineWord tape).length +
+      (BimatrixProgramCodec.width tape).length +
+      (BimatrixProgramCodec.dimension tape).length + 8 := by
+  let q := BimatrixProgramCodec.coefficientField tape (binaryHalfRuler s) r
+  let feedback : List Bool :=
+    if r.length / 2 = s.length / 2 ∧ r.length % 2 = 1 then capacityWord tape else []
+  let base : List Bool :=
+    if r.length / 2 = s.length / 2 then
+      binarySignedNeg (BimatrixProgramCodec.baselineWord tape) else []
+  let kindFeedback : List Bool :=
+    if BimatrixProgramCodec.kindFlag tape (binaryHalfRuler s) then feedback else []
+  have hq : q.length ≤ (BimatrixProgramCodec.width tape).length :=
+    BimatrixProgramCodec.coefficientField_length _ _ _
+  have hf : feedback.length ≤ (BimatrixProgramCodec.dimension tape).length + 3 := by
+    have hs : feedback.length ≤ (capacityWord tape).length := by
+      dsimp only [feedback]
+      split <;> simp
+    exact hs.trans (capacityWord_length tape)
   have hp : (positivePart q).length ≤ q.length := by
-    have hs := select_length (bitAt [] q) [] q
-    simpa only [positivePart, List.length_nil, zero_max] using hs
+    unfold positivePart
+    split <;> simp
   have hn : (negativePart q).length ≤ q.length + 1 := by
-    have hs := select_length (bitAt [] q) (binarySignedNeg q) []
-    simp only [List.length_nil, max_zero] at hs
-    exact hs.trans (binarySignedNeg_length q)
-  have hk : (caseBit₀ (BimatrixProgramCodec.kindFlag ![v 2, binaryHalfRuler (v 1)])
-      feedback []).length ≤ feedback.length := by
-    simpa only [List.length_nil, max_zero] using select_length
-      (BimatrixProgramCodec.kindFlag ![v 2, binaryHalfRuler (v 1)]) feedback []
+    unfold negativePart
+    split
+    · exact binarySignedNeg_length q
+    · simp
+  have hk : kindFeedback.length ≤ feedback.length := by
+    dsimp only [kindFeedback]
+    split <;> simp
+  have hb : base.length ≤ (BimatrixProgramCodec.baselineWord tape).length + 1 := by
+    dsimp only [base]
+    split
+    · exact binarySignedNeg_length _
+    · simp
   have hneg := binarySignedAdd_length (negativePart q) feedback
-  have hpos := binarySignedAdd_length (positivePart q)
-    (caseBit₀ (BimatrixProgramCodec.kindFlag ![v 2, binaryHalfRuler (v 1)]) feedback [])
-  have hi := select_length (binaryLengthParity (v 1))
-    (binarySignedAdd (negativePart q) feedback)
-    (binarySignedAdd (positivePart q)
-      (caseBit₀ (BimatrixProgramCodec.kindFlag ![v 2, binaryHalfRuler (v 1)]) feedback []))
-  have hbase := select_length (sameBlock (v 0) (v 1))
-    (binarySignedNeg (BimatrixProgramCodec.baselineWord (v 2))) []
-  have hH := binarySignedNeg_length (BimatrixProgramCodec.baselineWord (v 2))
-  simp only [List.length_nil, max_zero] at hbase
-  have ha := binarySignedAdd_length
-    (caseBit₀ (sameBlock (v 0) (v 1))
-      (binarySignedNeg (BimatrixProgramCodec.baselineWord (v 2))) [])
-    (caseBit₀ (binaryLengthParity (v 1))
-      (binarySignedAdd (negativePart q) feedback)
-      (binarySignedAdd (positivePart q)
-        (caseBit₀ (BimatrixProgramCodec.kindFlag ![v 2, binaryHalfRuler (v 1)]) feedback [])))
-  exact ha.trans (by omega)
+  have hpos := binarySignedAdd_length (positivePart q) kindFeedback
+  have hi : (if s.length % 2 = 1 then binarySignedAdd (negativePart q) feedback
+      else binarySignedAdd (positivePart q) kindFeedback).length ≤
+      max (binarySignedAdd (negativePart q) feedback).length
+        (binarySignedAdd (positivePart q) kindFeedback).length := by
+    split
+    · exact le_max_left _ _
+    · exact le_max_right _ _
+  have h := binarySignedAdd_length base
+    (if s.length % 2 = 1 then binarySignedAdd (negativePart q) feedback
+      else binarySignedAdd (positivePart q) kindFeedback)
+  exact h.trans (by omega)
+
+/-- Capacity words retain the actual encoding of their tape producer. -/
+@[fun_prop] theorem capacityWord_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {tape : Input → List Bool} (ht : ComputableInPolyTime tape input encBits) :
+    ComputableInPolyTime (fun a => capacityWord (tape a)) input encBits :=
+  ComputableInPolyTime.bitsCons (.const false) (ComputableInPolyTime.bitsCons (.const false)
+    (binaryLengthWord_polyTime.comp (BimatrixProgramCodec.dimension_polyTime ht)))
+
+private theorem actionGuards_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {r s : Input → List Bool}
+    (hr : ComputableInPolyTime r input encBits) (hs : ComputableInPolyTime s input encBits) :
+    ComputableInPolyTime (fun a => decide ((r a).length / 2 = (s a).length / 2)) input encBool ∧
+    ComputableInPolyTime (fun a => decide ((r a).length % 2 ≠ (s a).length % 2)) input encBool ∧
+    ComputableInPolyTime (fun a => decide ((r a).length % 2 = 1)) input encBool ∧
+    ComputableInPolyTime (fun a => decide ((s a).length % 2 = 1)) input encBool := by
+  have hrl := ComputableInPolyTime.length_bits_comp hr
+  have hsl := ComputableInPolyTime.length_bits_comp hs
+  have hrh := (ComputableInPolyTime.unary_div_const 2).comp hrl
+  have hsh := (ComputableInPolyTime.unary_div_const 2).comp hsl
+  have hrm := ComputableInPolyTime.unary_mod.comp (hrl.prod (ComputableInPolyTime.const 2))
+  have hsm := ComputableInPolyTime.unary_mod.comp (hsl.prod (ComputableInPolyTime.const 2))
+  exact ⟨ComputableInPolyTime.decide_eq' hrh hsh,
+    ComputableInPolyTime.of_tidy
+      (ComputableTidilyInPolyTime.decide_ne hrm.tidy hsm.tidy),
+    ComputableInPolyTime.decide_eq' hrm (ComputableInPolyTime.const 1),
+    ComputableInPolyTime.decide_eq' hsm (ComputableInPolyTime.const 1)⟩
+
+/-- Total row payoff queries compose with all three certified word producers. -/
+@[fun_prop] theorem rowEntry_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {r s tape : Input → List Bool}
+    (hr : ComputableInPolyTime r input encBits) (hs : ComputableInPolyTime s input encBits)
+    (ht : ComputableInPolyTime tape input encBits) :
+    ComputableInPolyTime (fun a => rowEntry (r a) (s a) (tape a)) input encBits := by
+  have hg := actionGuards_polyTime hr hs
+  exact binarySignedAdd_polyTime
+    (hg.1.ite_decide (BimatrixProgramCodec.baselineWord_polyTime ht) (.const []))
+    ((ComputableInPolyTime.decide_and hg.1 hg.2.1).ite_decide
+      (capacityWord_polyTime ht) (.const []))
+
+/-- Column payoff queries charge action guards, packed lookup, and signed arithmetic. -/
+@[fun_prop] theorem columnEntry_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {r s tape : Input → List Bool}
+    (hr : ComputableInPolyTime r input encBits) (hs : ComputableInPolyTime s input encBits)
+    (ht : ComputableInPolyTime tape input encBits) :
+    ComputableInPolyTime (fun a => columnEntry (r a) (s a) (tape a)) input encBits := by
+  have hg := actionGuards_polyTime hr hs
+  have hhalf := binaryHalfRuler_polyTime.comp hs
+  have hq := BimatrixProgramCodec.coefficientField_polyTime ht hhalf hr
+  have hk := BimatrixProgramCodec.kindFlag_polyTime ht hhalf
+  have hfeedback := (ComputableInPolyTime.decide_and hg.1 hg.2.2.1).ite_decide
+    (capacityWord_polyTime ht) (ComputableInPolyTime.const [])
+  have hsign : ComputableInPolyTime (fun a : Input =>
+      (BimatrixProgramCodec.coefficientField (tape a) (binaryHalfRuler (s a)) (r a)).headD false)
+      input encBool := (ComputableInPolyTime.headD false).comp hq
+  have hpositive := hsign.ite (ComputableInPolyTime.const []) hq
+  have hnegative := hsign.ite (binarySignedNeg_polyTime hq) (ComputableInPolyTime.const [])
+  exact binarySignedAdd_polyTime
+    (hg.1.ite_decide
+      (binarySignedNeg_polyTime (BimatrixProgramCodec.baselineWord_polyTime ht)) (.const []))
+    (hg.2.2.2.ite_decide (binarySignedAdd_polyTime hnegative hfeedback)
+      (binarySignedAdd_polyTime hpositive (hk.ite hfeedback (.const []))))
 
 end GameTheory.Complexity.Backend.BimatrixProgramPayoffs
