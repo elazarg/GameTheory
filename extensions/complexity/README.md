@@ -136,13 +136,26 @@ The default dependency configuration fetches the base GameTheory commit
 `c7cd6bed7498b9a16edb22262e9522ceff90648c`; it does not assume a sibling checkout.
 The migration selects CSLib-based Complexitylib v0.2.0 at
 `cslib-community/complexitylib@054834a4a4e6ac3ec50ed770bacea7fc42eccc7d`
-and CSLib `254e30e6d4299c51323aaeaf5f51a4763b375d4a`. Tracked toolchains stay
-on stable Lean/Mathlib 4.35 until final 4.36 is published; the larger native
-probability closure needs that shared upgrade. Matching upstream-toolchain
-snapshots validate the port meanwhile. Full companion and released-base
-consumer validation remain open. Native computation, sampling, concrete
-End-of-Line, Sperner and Brouwer classification, and payoff-language NP-completeness
-have compiled evidence; the general Nash and circuit-to-game ports remain in progress.
+and CSLib `254e30e6d4299c51323aaeaf5f51a4763b375d4a`. The native source port is
+complete. The full matching-toolchain library/fixture build passes 7,838 jobs,
+with final lint/axiom-driver rebuilding passing 7,840 jobs. Public lint, the
+transitive axiom driver, all 251 authored cached-diagnostic checks and 44 audit
+regressions pass. Matching 4.36-RC validation remains isolated in ignored scratch
+state; tracked Lean/Mathlib stay on stable 4.35.
+
+A separate stable 4.35 selected-closure probe,
+`lake --iofail build GameTheoryComplexity.BimatrixNash`, passes 3,694 jobs.
+This validates the Nash facade's imported closure, not the full optional package.
+
+The stable merge gate is blocked. Actual local update, version and cache checks
+pass, but the full local audit fails during its build in unmodified upstream
+`Complexity.Probability.PMF.Bind`: `tsum_sigma`, `tsum_le_tsum` and `tsum_add`
+are unavailable. Later audit stages did not complete. Published-base resolution
+at the exact pin above, Lean 4.35 verification and the pivot client pass; the
+targeted probability check fails identically, so the full published audit is
+blocked and unrun. Final Lean and Mathlib 4.36 release endpoints return 404 as
+of 2026-11-09. Complete normal final-release maintenance, both full consumer
+audits and a fresh published pivot-client check before merging.
 
 Validation covers the dependency closure of selected imports. Third-party
 diagnostics are allowed; first-party diagnostics and transitive nonstandard
@@ -262,7 +275,7 @@ now certify reconstruction of the supplied endpoint's certificate. Native
 `Backend.GeneralBimatrixReduction` preserves every raw End-of-Line answer,
 including the malformed-input fallback. The public Nash classifier now has native membership, hardness and completeness
 proofs. Full matching-toolchain build/lint/axiom and authored-diagnostic checks
-pass; actual stable local/published consumer verification is the remaining gate.
+pass. The final stable consumer merge gate is blocked as recorded above.
 
 Import `GameTheoryComplexity.BimatrixNash` for native exact signed rectangular
 Nash PPAD-completeness. Verification, totality, pointer-circuit generation and
@@ -270,6 +283,6 @@ endpoint-preserving decoding classify the canonical binary relation. The
 Brouwer-to-game reduction uses the sampled program's exact coefficient/kind
 machines and reward bounds to decode every accepted Nash certificate to a
 Brouwer answer. All these proofs and controls pass the full upstream-matching
-toolchain checks. Tracked toolchains remain stable; local/published stable
-consumer verification is recorded separately in the delivery ledger. Ordinary
+toolchain checks. Tracked toolchains remain stable; the blocked final stable
+consumer gate is recorded separately in the delivery ledger. Ordinary
 base clients require no ComplexityLib.

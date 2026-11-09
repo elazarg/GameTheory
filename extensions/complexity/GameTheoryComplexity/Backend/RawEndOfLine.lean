@@ -141,4 +141,3 @@ theorem rawEndOfLineRelation_mem_TFNP :
   ⟨rawEndOfLineRelation_mem_FNP, rawEndOfLineRelation_total⟩
 
 end GameTheory.Complexity.Backend
-

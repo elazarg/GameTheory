@@ -1,7 +1,7 @@
 # D77: native computation certificates and directed-parity classes
 
-Status: adopted for the successor backend API; downstream delivery and final
-stable-toolchain verification remain tracked in the delivery ledger.
+Status: adopted; EXP-172 and the native source port are complete. The final
+stable consumer merge gate is blocked and tracked in the delivery ledger.
 
 Experiment: [EXP-172](../ExperimentLog.md#exp-172-native-cslib-computation-certificates-and-search-classes).
 
@@ -46,9 +46,15 @@ relation or PMF law, inferring runtime from output size, or resolving optional
 packages from the base invalidates the design. Its measured slice supports the
 native choice. All declarations remain subject to transitive axiom auditing.
 
-The optional package boundary of D67 is unchanged. The successor's larger
-probability closure needs newer Mathlib infinite-sum APIs than stable 4.35.
-Validation in an isolated matching-toolchain source copy does not adopt an RC
-in the repository. Shared final-release upgrades follow normal maintenance;
-full downstream builds, lint, axioms and local/published consumers must pass
-before the migration is ready to merge.
+The optional package boundary of D67 is unchanged. Full matching-toolchain
+build/lint/axiom and authored-diagnostic gates pass. Actual stable 4.35 local
+setup succeeds, but its full audit fails during the build in unmodified upstream
+`Complexity.Probability.PMF.Bind`, which needs newer Mathlib infinite-sum APIs.
+The exact published-base resolver/version and pivot client pass; the targeted
+probability check fails identically, and the full published audit remains unrun.
+This blocks stable delivery rather than the completed native API decision.
+
+Validation in isolated matching-toolchain source copies does not adopt an RC in
+the repository. Final Lean and Mathlib 4.36 releases remain unavailable as of
+2026-11-09. Complete normal shared final-release maintenance, full local and
+published-base audits, and a fresh published pivot-client check before merging.
