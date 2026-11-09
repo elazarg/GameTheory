@@ -1,7 +1,6 @@
 module
 
 public import GameTheoryComplexity.Backend.SATTableScanner
-public import GameTheoryComplexity.Backend.SATGame
 
 @[expose] public section
 
@@ -9,7 +8,19 @@ public import GameTheoryComplexity.Backend.SATGame
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity.SAT
+open Cslib.Logic.PL
+
+private def doubleBits (input : List Bool) : List Bool :=
+  input.flatMap fun bit => [bit, bit]
+
+private theorem doubleBits_nil : doubleBits [] = [] := rfl
+
+private theorem doubleBits_cons (bit : Bool) (input : List Bool) :
+    doubleBits (bit :: input) = [bit, bit] ++ doubleBits input := rfl
+
+private theorem encodeLiteral_eq (literal : Literal ℕ) :
+    SATWords.encodeLiteral literal =
+      doubleBits (literal.2 :: List.replicate literal.1 true) ++ [false, true] := rfl
 
 private def runBits (varIndex : ℕ) (sign : Bool) (clause : ℕ)
     (s : IncidenceState) (input : List Bool) : IncidenceState :=
@@ -42,7 +53,7 @@ private theorem runBits_raw (v : ℕ) (b : Bool) (k : ℕ)
         seenData := true } := by
   induction literalVar generalizing s with
   | zero =>
-      simp only [List.replicate_zero, doubleBits_cons, doubleBits_nil]
+      simp only [List.replicate_zero, doubleBits_cons, doubleBits_nil, List.append_nil]
       rw [runBits_pair v b k s literalSign literalSign hw]
       cases literalSign <;> simp [IncidenceState.token]
   | succ n ih =>
@@ -59,25 +70,24 @@ private theorem runBits_raw (v : ℕ) (b : Bool) (k : ℕ)
       dsimp
       omega
 
-private def occurs (v : ℕ) (b : Bool) (c : Clause) : Bool :=
-  c.any fun lit => decide (lit.var = v) && decide (lit.sign = b)
+private def occurs (v : ℕ) (b : Bool) (c : Clause ℕ) : Bool :=
+  c.any fun lit => decide (lit.1 = v) && decide (lit.2 = b)
 
 private theorem runBits_clause (v : ℕ) (b : Bool) (k : ℕ)
-    (c : Clause) (s : IncidenceState) (hw : s.waiting = false)
+    (c : Clause ℕ) (s : IncidenceState) (hw : s.waiting = false)
     (hd : s.seenData = false) :
-    (runBits v b k s c.encode).waiting = false ∧
-    (runBits v b k s c.encode).clauseIndex = s.clauseIndex ∧
-    (runBits v b k s c.encode).seenClause = s.seenClause ∧
-    ((runBits v b k s c.encode).finish v b k).hit =
+    (runBits v b k s (SATWords.encodeClause c)).waiting = false ∧
+    (runBits v b k s (SATWords.encodeClause c)).clauseIndex = s.clauseIndex ∧
+    (runBits v b k s (SATWords.encodeClause c)).seenClause = s.seenClause ∧
+    ((runBits v b k s (SATWords.encodeClause c)).finish v b k).hit =
       (s.hit || (decide (s.clauseIndex = k) && occurs v b c)) := by
   induction c generalizing s with
-  | nil => simp [Clause.encode, runBits, IncidenceState.finish, occurs, hw, hd]
+  | nil => simp [SATWords.encodeClause, runBits, IncidenceState.finish, occurs, hw, hd]
   | cons lit tail ih =>
       have ht := ih s hw hd
-      simp only [Clause.encode_cons, runBits_append]
+      simp only [SATWords.encodeClause_cons, encodeLiteral_eq, runBits_append]
       rw [runBits_pair v b k _ false true ht.1]
-      simp only [Lit.encodeRaw, Unary.encode]
-      rw [runBits_raw v b k lit.sign lit.var _ rfl]
+      rw [runBits_raw v b k lit.2 lit.1 _ rfl]
       simp only [IncidenceState.token]
       dsimp
       simp only [ht.2.1, ht.2.2.1, Nat.zero_add,
@@ -87,16 +97,16 @@ private theorem runBits_clause (v : ℕ) (b : Bool) (k : ℕ)
       simp only [occurs, List.any_cons] at *
       grind
 
-private def hitFor (v : ℕ) (b : Bool) (k : ℕ) (φ : CNF) : Bool :=
+private def hitFor (v : ℕ) (b : Bool) (k : ℕ) (φ : CNF ℕ) : Bool :=
   match φ.reverse[k]? with
   | some c => occurs v b c
   | none => false
 
-private theorem hitFor_cons (v : ℕ) (b : Bool) (k : ℕ) (c : Clause) (tail : CNF) :
+private theorem hitFor_cons (v : ℕ) (b : Bool) (k : ℕ) (c : Clause ℕ) (tail : CNF ℕ) :
     hitFor v b k (c :: tail) =
       (hitFor v b k tail || (decide (tail.length = k) && occurs v b c)) := by
   by_cases h : k < tail.length
-  · simp [hitFor, List.reverse_cons, List.getElem?_append, h, ne_of_gt h]
+  · simp [hitFor, List.reverse_cons, List.getElem?_append, h, Nat.ne_of_gt h]
   · by_cases heq : k = tail.length
     · subst k
       simp [hitFor, List.reverse_cons]
@@ -104,15 +114,15 @@ private theorem hitFor_cons (v : ℕ) (b : Bool) (k : ℕ) (c : Clause) (tail : 
         List.getElem?_eq_none (by simp; omega)
       simp [hitFor, List.reverse_cons, List.getElem?_append, h, Ne.symm heq, hsingle]
 
-private theorem runBits_cnf (v : ℕ) (b : Bool) (k : ℕ) (φ : CNF) :
-    (runBits v b k {} φ.encode).waiting = false ∧
-    (runBits v b k {} φ.encode).clauseIndex = φ.length - 1 ∧
-    (runBits v b k {} φ.encode).seenClause = decide (φ ≠ []) ∧
-    ((runBits v b k {} φ.encode).finish v b k).hit = hitFor v b k φ := by
+private theorem runBits_cnf (v : ℕ) (b : Bool) (k : ℕ) (φ : CNF ℕ) :
+    (runBits v b k {} (SATWords.encodeFormula φ)).waiting = false ∧
+    (runBits v b k {} (SATWords.encodeFormula φ)).clauseIndex = φ.length - 1 ∧
+    (runBits v b k {} (SATWords.encodeFormula φ)).seenClause = decide (φ ≠ []) ∧
+    ((runBits v b k {} (SATWords.encodeFormula φ)).finish v b k).hit = hitFor v b k φ := by
   induction φ with
-  | nil => simp [CNF.encode, runBits, IncidenceState.finish, hitFor]
+  | nil => simp [SATWords.encodeFormula, runBits, IncidenceState.finish, hitFor]
   | cons c tail ih =>
-      let t := runBits v b k {} (CNF.encode tail)
+      let t := runBits v b k {} (SATWords.encodeFormula tail)
       have ht : t.waiting = false := ih.1
       have hx : t.clauseIndex + (if t.seenClause then 1 else 0) = tail.length := by
         rw [show t.clauseIndex = tail.length - 1 from ih.2.1,
@@ -123,12 +133,12 @@ private theorem runBits_cnf (v : ℕ) (b : Bool) (k : ℕ) (φ : CNF) :
       have hrIndex : r.clauseIndex = tail.length := hx
       have hrHit : r.hit = (t.finish v b k).hit := rfl
       have hc := runBits_clause v b k c r rfl rfl
-      simp only [CNF.encode_cons, runBits_append]
+      simp only [SATWords.encodeFormula_cons, runBits_append]
       rw [runBits_pair v b k t true false ht]
-      change (runBits v b k r c.encode).waiting = false ∧
-        (runBits v b k r c.encode).clauseIndex = (c :: tail).length - 1 ∧
-        (runBits v b k r c.encode).seenClause = decide (c :: tail ≠ []) ∧
-        ((runBits v b k r c.encode).finish v b k).hit = hitFor v b k (c :: tail)
+      change (runBits v b k r (SATWords.encodeClause c)).waiting = false ∧
+        (runBits v b k r (SATWords.encodeClause c)).clauseIndex = (c :: tail).length - 1 ∧
+        (runBits v b k r (SATWords.encodeClause c)).seenClause = decide (c :: tail ≠ []) ∧
+        ((runBits v b k r (SATWords.encodeClause c)).finish v b k).hit = hitFor v b k (c :: tail)
       refine ⟨hc.1, ?_, ?_, ?_⟩
       · simpa only [List.length_cons, Nat.add_sub_cancel] using hc.2.1.trans hrIndex
       · exact hc.2.2.1
@@ -137,15 +147,15 @@ private theorem runBits_cnf (v : ℕ) (b : Bool) (k : ℕ) (φ : CNF) :
           hitFor_cons]
 
 /-- The reverse scanner computes literal occurrence, with tautological absent clauses. -/
-theorem scanIncidence_encode (v : ℕ) (b : Bool) (k : ℕ) (φ : CNF) :
-    scanIncidence v b k φ.encode =
+theorem scanIncidence_encode (v : ℕ) (b : Bool) (k : ℕ) (φ : CNF ℕ) :
+    scanIncidence v b k (SATWords.encodeFormula φ) =
       match φ.reverse[k]? with
-      | some c => c.any fun lit => lit.var == v && lit.sign == b
+      | some c => c.any fun lit => lit.1 == v && lit.2 == b
       | none => true := by
   have h := runBits_cnf v b k φ
-  change (((runBits v b k {} φ.encode).finish v b k).hit ||
-      !(runBits v b k {} φ.encode).seenClause ||
-      decide ((runBits v b k {} φ.encode).clauseIndex < k)) = _
+  change (((runBits v b k {} (SATWords.encodeFormula φ)).finish v b k).hit ||
+      !(runBits v b k {} (SATWords.encodeFormula φ)).seenClause ||
+      decide ((runBits v b k {} (SATWords.encodeFormula φ)).clauseIndex < k)) = _
   rw [h.2.2.2, h.2.2.1, h.2.1]
   cases hg : φ.reverse[k]? with
   | none =>
@@ -171,14 +181,16 @@ theorem scanIncidence_encode (v : ℕ) (b : Bool) (k : ℕ) (φ : CNF) :
       rw [Bool.eq_iff_iff]
       simp [hnonempty, hnlt, occurs, List.any_eq_true]
 
-/-- On valid encodings the executable scanner agrees with the semantic game incidence. -/
-theorem scanIncidence_eq_satIncidence (input : List Bool) (φ : CNF)
-    (hdecode : CNF.decode? input = some φ)
-    (c v : Fin (input.length + 1)) (b : Bool) :
-    scanIncidence v.val b c.val input = satIncidence input c v b := by
-  have hinput := CNF.decode?_sound hdecode
-  simp only [satIncidence, hdecode, paddedSATIncidence]
-  exact (congrArg (scanIncidence v.val b c.val) hinput).trans
-    (scanIncidence_encode v.val b c.val φ)
+/-- On decoded inputs the scanner returns the corresponding native literal occurrence. -/
+theorem scanIncidence_decode (input : List Bool) (φ : CNF ℕ)
+    (hdecode : SATWords.decodeFormula? input = some φ)
+    (varIndex clauseIndex : ℕ) (sign : Bool) :
+    scanIncidence varIndex sign clauseIndex input =
+      match φ.reverse[clauseIndex]? with
+      | some clause => clause.any fun literal => literal.1 == varIndex && literal.2 == sign
+      | none => true := by
+  have hinput := SATWords.decodeFormula_sound hdecode
+  exact (congrArg (scanIncidence varIndex sign clauseIndex) hinput).trans
+    (scanIncidence_encode varIndex sign clauseIndex φ)
 
 end GameTheory.Complexity.Backend
