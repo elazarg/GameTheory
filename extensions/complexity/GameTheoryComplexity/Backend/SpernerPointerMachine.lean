@@ -150,7 +150,7 @@ theorem gridPointerMachine_reject (ruler : List Bool) (query : List Bool → Lis
     cases hn
   · simp [gridPointerMachine, hf]
 
-/-- The FP implementation agrees on every word with the semantic graph transport. -/
+/-- The polynomial-time implementation agrees on every word with the semantic graph transport. -/
 theorem gridPointerMachine_eq_wordGridPointer (ruler : List Bool)
     (query : List Bool → List Bool) (incoming : Bool) (word : List Bool) :
     gridPointerMachine ruler query incoming word =

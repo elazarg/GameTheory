@@ -370,19 +370,21 @@ a single deterministic polynomial-time machine. No computation enumerates the
 `2^n` vertices. Balance bounds every accepted witness by the input length;
 `endOfLineRelation_mem_TFNP` combines that bound, the verifier and finite totality.
 
-`Backend.SearchReduction` contains only an FP instance map, an FPn decoder taking
-the original instance and target solution, and preservation of **every** valid
-target solution. Identity and composition have genuine machine certificates.
-Composition gives each decoder its own instance. A reduction transports totality
-backward, but TFNP membership also requires independent FNP membership of the
-source: its other accepted witnesses need not be bounded or efficiently checked.
+The current backend uses native `Cslib.Complexity.SearchReducible` with explicit
+instance encodings, polynomial-time instance maps and original-instance answer
+decoders. It preserves **every** valid target answer and the source/target domain
+obligation. Identity and composition have native machine certificates.
+Composition gives each decoder its own instance. TFNP transport also requires
+independent source FNP membership: other accepted witnesses need not be bounded
+or efficiently checked. The earlier local `Backend.SearchReduction` record is
+retired; the native `Tests.SearchReduction` controls remain.
 
 This establishes the filtered-edge search foundation. The next section supplies
 the standard raw convention and PPAD class. Uniform normalization then connects
 the encodings. Brouwer/Sperner reductions, Nash search completeness and
 approximation conventions remain further obligations.
 
-The base build passes 4,366 jobs and the full companion build 3,827 jobs. All
+The earlier backend checkpoint passed 4,366 base jobs and 3,827 companion jobs. All
 937 owned declarations have only standard transitive axioms. Both linters,
 architecture checks and 19 optional-boundary regression cases pass. The
 released-mode consumer builds the facade, composed machine, NP-completeness and
@@ -1398,10 +1400,10 @@ certified pivot and internal switch agree with the existing mathematical
 involutions, and the uniform circuit compiler emits their predecessor and
 successor circuits in FP.
 
-`Backend.GeneralBimatrixReduction` proves an actual `SearchReduction` to raw
-End-of-Line. Every target answer, including answers on components disconnected
-from the known source, decodes to a complementary non-source basis. The FPn
-answer machine computes that basis's Cramer certificate, normalizes the two
+`Backend.GeneralBimatrixReduction` now proves native
+`SearchReducible encBits encBits` to raw End-of-Line. Every target answer, including answers on components disconnected
+from the known source, decodes to a complementary non-source basis. The native
+polynomial-time answer machine computes that basis's Cramer certificate, normalizes the two
 players' masses and undoes the positive payoff shift. It preserves the supplied
 endpoint and uses no path enumeration or reachability assumption. On malformed
 instances its explicit validity guard emits the designated empty answer.

@@ -3,7 +3,7 @@ module
 public import GameTheoryComplexity.Backend.BrouwerNashProgram
 public import GameTheoryComplexity.Backend.BimatrixCoordinateColor
 public import GameTheoryComplexity.Backend.BimatrixRawCircuit
-public import Complexitylib.Mathlib.NatBits
+public import Complexity.Foundations.Data.BitString.Binary
 public import GameTheory.Math.BinaryExtraction
 public import GameTheoryComplexity.Backend.BimatrixRawGate
 public import GameTheory.Math.ClippedArithmetic
@@ -14,6 +14,18 @@ public import GameTheory.Finite.BimatrixArithmeticGate
 The canonical program copies those bits into its relocated raw color circuits; every valid
 certificate then approximates each evaluated color flag without accumulating circuit depth. -/
 namespace GameTheory.Complexity.Backend.BrouwerNashColor
+open Cslib.BitString Turing.MultiTapeTM Cslib.Circuits
+private theorem ofBits_eq_lsbValue (bits : List Bool) : ofBits bits = Cslib.BitString.lsbValue bits := by
+  unfold ofBits
+  exact (Cslib.BitString.lsbValue_eq_foldr_bit bits).symm
+private theorem ofBits_cons (bit : Bool) (bits : List Bool) :
+    ofBits (bit :: bits) = bit.toNat + 2 * ofBits bits := by
+  simp only [ofBits, List.foldr_cons, Nat.bit_val]
+  omega
+private theorem lowBits_ofBits_self (bits : List Bool) :
+    lowBits bits.length (ofBits bits) = bits := by
+  rw [ofBits_eq_lsbValue]
+  exact Cslib.BitString.lowBits_lsbValue bits
 private def rippleBits : List Bool → Bool → List Bool
   | [], carry => [carry]
   | bit :: bits, carry => (bit.xor carry) :: rippleBits bits (bit && carry)
@@ -23,16 +35,16 @@ private theorem rippleBits_length (bits : List Bool) (carry : Bool) :
   | nil => rfl
   | cons bit bits ih => simp only [rippleBits, List.length_cons, ih]
 private theorem rippleBits_value (bits : List Bool) (carry : Bool) :
-    Nat.fromBitsLE (rippleBits bits carry) = Nat.fromBitsLE bits + if carry then 1 else 0 := by
+    ofBits (rippleBits bits carry) = ofBits bits + if carry then 1 else 0 := by
   induction bits generalizing carry with
   | nil => cases carry <;> rfl
   | cons bit bits ih =>
-    simp only [rippleBits, Nat.fromBitsLE_cons, ih]
+    simp only [rippleBits, ofBits_cons, ih]
     cases bit <;> cases carry <;> simp <;> omega
 private theorem rippleBits_eq (bits : List Bool) (carry : Bool) :
-    rippleBits bits carry = Nat.toBitsLE (bits.length + 1)
-      (Nat.fromBitsLE bits + if carry then 1 else 0) := by
-  have h := Nat.toBitsLE_fromBitsLE (rippleBits bits carry)
+    rippleBits bits carry = lowBits (bits.length + 1)
+      (ofBits bits + if carry then 1 else 0) := by
+  have h := lowBits_ofBits_self (rippleBits bits carry)
   rw [rippleBits_length, rippleBits_value] at h
   exact h.symm
 private def rippleCarry (bits : List Bool) (initial : Bool) : ℕ → Bool
@@ -71,11 +83,11 @@ private theorem prefixBits_length (q : ℚ) (b : ℕ) : (prefixBits q b).length 
   | zero => rfl
   | succ b ih => simp only [prefixBits, List.length_cons, ih]
 private theorem prefixBits_value (q : ℚ) (b : ℕ) :
-    Nat.fromBitsLE (prefixBits q b) = GameTheory.Math.binaryPrefix b q := by
+    ofBits (prefixBits q b) = GameTheory.Math.binaryPrefix b q := by
   induction b with
   | zero => rfl
   | succ b ih =>
-    simp only [prefixBits, Nat.fromBitsLE_cons, ih, GameTheory.Math.binaryPrefix]
+    simp only [prefixBits, ofBits_cons, ih, GameTheory.Math.binaryPrefix]
     split <;> simp_all [Nat.add_comm]
 private theorem prefixBits_get (q : ℚ) (b j : ℕ) (hj : j < b) :
     (prefixBits q b)[j]?.getD false =
@@ -91,18 +103,25 @@ private theorem prefixBits_get (q : ℚ) (b j : ℕ) (hj : j < b) :
       rw [ih j (by omega), show b + 1 - 1 - (j + 1) = b - 1 - j by omega]
 
 private theorem prefixBits_pad_eq (q : ℚ) (b : ℕ) :
-    prefixBits q b ++ [false] = Nat.toBitsLE (b + 1) (GameTheory.Math.binaryPrefix b q) := by
-  have h := Nat.toBitsLE_fromBitsLE (prefixBits q b ++ [false])
-  have hn : Nat.fromBitsLE (prefixBits q b ++ [false]) =
+    prefixBits q b ++ [false] = lowBits (b + 1) (GameTheory.Math.binaryPrefix b q) := by
+  have h := lowBits_ofBits_self (prefixBits q b ++ [false])
+  rw [List.length_append, List.length_singleton, prefixBits_length] at h
+  have happend : ofBits (prefixBits q b ++ [false]) = ofBits (prefixBits q b) := by
+    calc
+      ofBits (prefixBits q b ++ [false]) = Cslib.BitString.lsbValue
+          (prefixBits q b ++ [false]) := ofBits_eq_lsbValue _
+      _ = Cslib.BitString.lsbValue (prefixBits q b) := by
+        rw [Cslib.BitString.lsbValue_append]
+        simp
+      _ = ofBits (prefixBits q b) := (ofBits_eq_lsbValue _).symm
+  have hn : ofBits (prefixBits q b ++ [false]) =
       GameTheory.Math.binaryPrefix b q := by
-    simpa only [Nat.fromBitsLE, List.reverse_append, List.reverse_cons,
-      List.reverse_nil, List.nil_append, List.singleton_append, Nat.fromBits,
-      Bool.false_eq_true, ite_false, zero_mul, zero_add] using prefixBits_value q b
-  rw [List.length_append, List.length_singleton, prefixBits_length, hn] at h
+    rw [happend, prefixBits_value]
+  rw [hn] at h
   exact h.symm
 
 section Game
-open _root_.Complexity.CircuitCode
+open Cslib.Circuits
 open GameTheory.Finite GameTheory.Finite.BimatrixAffineGate GameTheory.Finite.BimatrixGateProgram
 variable {k : ℕ} (H M : ℤ) (hk : 0 < k) (g : Fin k → Gate k)
   (c : BimatrixCertificate (k * 2) (k * 2))
@@ -112,40 +131,76 @@ variable {k : ℕ} (H M : ℤ) (hk : 0 < k) (g : Fin k → Gate k)
   (ε : ℚ) (hε : ε < 1 / 4)
   (hδ : (k : ℚ) * (((M + 2 * (k : ℤ) : ℤ) : ℚ) / H) ≤ ε)
 
+private theorem pair_gate_valid (op : CircuitFormat.signature.Op) (x y : Fin k) :
+    Program.IsCodeFrom CircuitFormat.signature k 0 [(op, [x.val, y.val])] := by
+  simp [Program.IsCodeFrom]
+
 include hk hc hM hg hscale hε hδ in
 private theorem ripple_step (input carry : Fin k) (out : Fin 4 → Fin k)
     (h0 : g (out 0) = BimatrixRawGate.gate
-      ⟨.and, input.val, carry.val, false, true⟩ ⟨input.isLt, carry.isLt⟩)
+      ((true, false, true), [input.val, carry.val])
+        (pair_gate_valid _ input carry))
     (h1 : g (out 1) = BimatrixRawGate.gate
-      ⟨.and, input.val, carry.val, true, false⟩ ⟨input.isLt, carry.isLt⟩)
+      ((true, true, false), [input.val, carry.val])
+        (pair_gate_valid _ input carry))
     (h2 : g (out 2) = BimatrixRawGate.gate
-      ⟨.or, (out 0).val, (out 1).val, false, false⟩ ⟨(out 0).isLt, (out 1).isLt⟩)
+      ((false, false, false), [(out 0).val, (out 1).val])
+        (pair_gate_valid _ (out 0) (out 1)))
     (h3 : g (out 3) = BimatrixRawGate.gate
-      ⟨.and, input.val, carry.val, false, false⟩ ⟨input.isLt, carry.isLt⟩)
+      ((true, false, false), [input.val, carry.val])
+        (pair_gate_valid _ input carry))
     (bit cb : Bool)
     (hin : |(k : ℚ) * value c input - (if bit then 1 else 0)| ≤ ε)
     (hcarry : |(k : ℚ) * value c carry - (if cb then 1 else 0)| ≤ ε) :
     (|(k : ℚ) * value c (out 2) - (if bit.xor cb then 1 else 0)| ≤ ε) ∧
     (|(k : ℚ) * value c (out 3) - (if bit && cb then 1 else 0)| ≤ ε) := by
+  have hraw0 : (⟨[input.val, carry.val].getD 0 0,
+      BimatrixRawGate.reference_lt ((true, false, true), [input.val, carry.val])
+        (pair_gate_valid _ input carry) 0⟩ : Fin k) = input := Fin.ext (by rfl)
+  have hraw1 : (⟨[input.val, carry.val].getD 1 0,
+      BimatrixRawGate.reference_lt ((true, false, true), [input.val, carry.val])
+        (pair_gate_valid _ input carry) 1⟩ : Fin k) = carry := Fin.ext (by rfl)
+  have hin0 : |(k : ℚ) * value c ⟨[input.val, carry.val].getD 0 0,
+      BimatrixRawGate.reference_lt ((true, false, true), [input.val, carry.val])
+        (pair_gate_valid _ input carry) 0⟩ -
+        (if bit then 1 else 0)| ≤ ε := by simpa only [hraw0] using hin
+  have hin1 : |(k : ℚ) * value c ⟨[input.val, carry.val].getD 1 0,
+      BimatrixRawGate.reference_lt ((true, false, true), [input.val, carry.val])
+        (pair_gate_valid _ input carry) 1⟩ -
+        (if cb then 1 else 0)| ≤ ε := by simpa only [hraw1] using hcarry
   have ha := (BimatrixRawGate.gate_output_error H M
-    ⟨.and, input.val, carry.val, false, true⟩ ⟨input.isLt, carry.isLt⟩
-    hk g c hc hM hg hscale (out 0) h0 bit cb ε hin hcarry hε).trans hδ
+    ((true, false, true), [input.val, carry.val]) (pair_gate_valid _ input carry)
+    hk g c hc hM hg hscale (out 0) h0 bit cb ε hin0 hin1 hε).trans hδ
+  have ha' : |(k : ℚ) * value c (out 0) - (if bit && !cb then 1 else 0)| ≤ ε := by
+    simpa [CircuitFormat.opValue] using ha
   have hb := (BimatrixRawGate.gate_output_error H M
-    ⟨.and, input.val, carry.val, true, false⟩ ⟨input.isLt, carry.isLt⟩
-    hk g c hc hM hg hscale (out 1) h1 bit cb ε hin hcarry hε).trans hδ
+    ((true, true, false), [input.val, carry.val]) (pair_gate_valid _ input carry)
+    hk g c hc hM hg hscale (out 1) h1 bit cb ε hin0 hin1 hε).trans hδ
+  have hb' : |(k : ℚ) * value c (out 1) - (if !bit && cb then 1 else 0)| ≤ ε := by
+    simpa [CircuitFormat.opValue] using hb
+  have hraw20 : (⟨[(out 0).val, (out 1).val].getD 0 0,
+      BimatrixRawGate.reference_lt ((false, false, false), [(out 0).val, (out 1).val])
+        (pair_gate_valid _ (out 0) (out 1)) 0⟩ : Fin k) = out 0 := Fin.ext (by rfl)
+  have hraw21 : (⟨[(out 0).val, (out 1).val].getD 1 0,
+      BimatrixRawGate.reference_lt ((false, false, false), [(out 0).val, (out 1).val])
+        (pair_gate_valid _ (out 0) (out 1)) 1⟩ : Fin k) = out 1 := Fin.ext (by rfl)
   have hx := (BimatrixRawGate.gate_output_error H M
-    ⟨.or, (out 0).val, (out 1).val, false, false⟩ ⟨(out 0).isLt, (out 1).isLt⟩
+    ((false, false, false), [(out 0).val, (out 1).val]) (pair_gate_valid _ (out 0) (out 1))
     hk g c hc hM hg hscale (out 2) h2 (bit && !cb) (!bit && cb) ε
-    (by simpa only [RawGate.eval, Bool.false_xor, Bool.true_xor] using ha)
-    (by simpa only [RawGate.eval, Bool.false_xor, Bool.true_xor] using hb) hε).trans hδ
+    (by simpa only [hraw20, CircuitFormat.opValue] using ha')
+    (by simpa only [hraw21, CircuitFormat.opValue] using hb') hε).trans hδ
+  have hx' : |(k : ℚ) * value c (out 2) - (if bit.xor cb then 1 else 0)| ≤ ε := by
+    cases bit <;> cases cb <;> simpa [CircuitFormat.opValue] using hx
   have hcar := (BimatrixRawGate.gate_output_error H M
-    ⟨.and, input.val, carry.val, false, false⟩ ⟨input.isLt, carry.isLt⟩
-    hk g c hc hM hg hscale (out 3) h3 bit cb ε hin hcarry hε).trans hδ
+    ((true, false, false), [input.val, carry.val]) (pair_gate_valid _ input carry)
+    hk g c hc hM hg hscale (out 3) h3 bit cb ε hin0 hin1 hε).trans hδ
+  have hcar' : |(k : ℚ) * value c (out 3) - (if bit && cb then 1 else 0)| ≤ ε := by
+    simpa [CircuitFormat.opValue] using hcar
   constructor
-  · cases bit <;> cases cb <;> simpa only [RawGate.eval, Bool.false_xor, Bool.false_and,
+  · cases bit <;> cases cb <;> simpa only [Bool.false_xor, Bool.false_and,
       Bool.true_xor, Bool.true_and, Bool.not_false, Bool.not_true, Bool.false_or,
-      Bool.true_or, Bool.xor_false, Bool.xor_true] using hx
-  · simpa only [RawGate.eval, Bool.false_xor] using hcar
+      Bool.true_or, Bool.xor_false, Bool.xor_true] using hx'
+  · exact hcar'
 include hk hc hM hg hscale hε hδ in
 private theorem ripple_chain (bits : List Bool) (input : ℕ → Fin k)
     (out : ℕ → Fin 4 → Fin k) (one : Fin k)
@@ -153,16 +208,17 @@ private theorem ripple_chain (bits : List Bool) (input : ℕ → Fin k)
     (hin : ∀ j < bits.length,
       |(k : ℚ) * value c (input j) - (if bits[j]?.getD false then 1 else 0)| ≤ ε)
     (h0 : ∀ j < bits.length, g (out j 0) = BimatrixRawGate.gate
-      ⟨.and, (input j).val, (if j = 0 then one else out (j - 1) 3).val, false, true⟩
-        ⟨(input j).isLt, (if j = 0 then one else out (j - 1) 3).isLt⟩)
+      ((true, false, true), [(input j).val, (if j = 0 then one else out (j - 1) 3).val])
+        (pair_gate_valid _ (input j) (if j = 0 then one else out (j - 1) 3)))
     (h1 : ∀ j < bits.length, g (out j 1) = BimatrixRawGate.gate
-      ⟨.and, (input j).val, (if j = 0 then one else out (j - 1) 3).val, true, false⟩
-        ⟨(input j).isLt, (if j = 0 then one else out (j - 1) 3).isLt⟩)
+      ((true, true, false), [(input j).val, (if j = 0 then one else out (j - 1) 3).val])
+        (pair_gate_valid _ (input j) (if j = 0 then one else out (j - 1) 3)))
     (h2 : ∀ j < bits.length, g (out j 2) = BimatrixRawGate.gate
-      ⟨.or, (out j 0).val, (out j 1).val, false, false⟩ ⟨(out j 0).isLt, (out j 1).isLt⟩)
+      ((false, false, false), [(out j 0).val, (out j 1).val])
+        (pair_gate_valid _ (out j 0) (out j 1)))
     (h3 : ∀ j < bits.length, g (out j 3) = BimatrixRawGate.gate
-      ⟨.and, (input j).val, (if j = 0 then one else out (j - 1) 3).val, false, false⟩
-        ⟨(input j).isLt, (if j = 0 then one else out (j - 1) 3).isLt⟩) :
+      ((true, false, false), [(input j).val, (if j = 0 then one else out (j - 1) 3).val])
+        (pair_gate_valid _ (input j) (if j = 0 then one else out (j - 1) 3))) :
     (∀ j ≤ bits.length,
       |(k : ℚ) * value c (if j = 0 then one else out (j - 1) 3) -
         (if rippleCarry bits true j then 1 else 0)| ≤ ε) ∧
@@ -219,19 +275,20 @@ private theorem copy_error (input out : Fin k)
 end Game
 
 section Concrete
-open _root_.Complexity.CircuitCode
+open Cslib.Circuits
 open BrouwerNashLayout BrouwerNashProgram
-private theorem program_increment_raw (b : ℕ) (raw₀ raw₁ : RawCircuit) (t : Fin 41)
+private theorem program_increment_raw (b : ℕ)
+    (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) (t : Fin 41)
     (axis : Fin 2) (j : ℕ) (hj : j < b) (stage : Fin 4) :
     let input := sampleRef b raw₀.length raw₁.length t (primaryBit b axis j)
     let carry := if j = 0 then slot b raw₀.length raw₁.length one
       else sampleRef b raw₀.length raw₁.length t (increment b axis (j - 1) 3)
     let out := fun stage => sampleRef b raw₀.length raw₁.length t (increment b axis j stage)
     program b raw₀ raw₁ (out stage) = guardedRaw (match stage.val with
-      | 0 => ⟨.and, input.val, carry.val, false, true⟩
-      | 1 => ⟨.and, input.val, carry.val, true, false⟩
-      | 2 => ⟨.or, (out 0).val, (out 1).val, false, false⟩
-      | _ => ⟨.and, input.val, carry.val, false, false⟩) := by
+      | 0 => ((true, false, true), [input.val, carry.val])
+      | 1 => ((true, true, false), [input.val, carry.val])
+      | 2 => ((false, false, false), [(out 0).val, (out 1).val])
+      | _ => ((true, false, false), [input.val, carry.val])) := by
   dsimp only
   rw [program_sample _ _ _ _ _ (increment_lt_sampleWidth _ _ _ axis j hj stage),
     sampleGate_increment _ _ _ _ axis j hj stage]
@@ -245,7 +302,7 @@ private theorem program_increment_raw (b : ℕ) (raw₀ raw₁ : RawCircuit) (t 
   unfold incrementGate
   rw [hcarry]
   rfl
-variable (b : ℕ) (raw₀ raw₁ : RawCircuit)
+variable (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ))
 local notation "K" => dimension b raw₀.length raw₁.length
 local notation "programG" => program b raw₀ raw₁
 open GameTheory.Finite GameTheory.Finite.BimatrixAffineGate GameTheory.Finite.BimatrixGateProgram
@@ -266,20 +323,17 @@ theorem increment_error (H M : ℤ) (c : BimatrixCertificate (K * 2) (K * 2))
       if b = 0 then slot b raw₀.length raw₁.length one else
         sampleRef b raw₀.length raw₁.length t (increment b axis (b - 1) 3)
       else sampleRef b raw₀.length raw₁.length t (increment b axis j 2)) -
-      (if (Nat.toBitsLE (b + 1) (GameTheory.Math.binaryPrefix b q + 1))[j]?.getD false
+      (if (lowBits (b + 1) (GameTheory.Math.binaryPrefix b q + 1))[j]?.getD false
         then 1 else 0)| ≤ ε := by
   let input := fun j => sampleRef b raw₀.length raw₁.length t (primaryBit b axis j)
   let out := fun j stage => sampleRef b raw₀.length raw₁.length t (increment b axis j stage)
   let oneSlot := slot b raw₀.length raw₁.length one
   have hstep (j : ℕ) (hj : j < (prefixBits q b).length) (stage : Fin 4) :
       programG (out j stage) = guardedRaw (match stage.val with
-        | 0 => ⟨.and, (input j).val, (if j = 0 then oneSlot else out (j - 1) 3).val,
-            false, true⟩
-        | 1 => ⟨.and, (input j).val, (if j = 0 then oneSlot else out (j - 1) 3).val,
-            true, false⟩
-        | 2 => ⟨.or, (out j 0).val, (out j 1).val, false, false⟩
-        | _ => ⟨.and, (input j).val, (if j = 0 then oneSlot else out (j - 1) 3).val,
-            false, false⟩) :=
+        | 0 => ((true, false, true), [(input j).val, (if j = 0 then oneSlot else out (j - 1) 3).val])
+        | 1 => ((true, true, false), [(input j).val, (if j = 0 then oneSlot else out (j - 1) 3).val])
+        | 2 => ((false, false, false), [(out j 0).val, (out j 1).val])
+        | _ => ((true, false, false), [(input j).val, (if j = 0 then oneSlot else out (j - 1) 3).val])) :=
     program_increment_raw b raw₀ raw₁ t axis j (by rw [prefixBits_length] at hj; exact hj) stage
   have hin (j : ℕ) (hj : j < (prefixBits q b).length) :
       |(K : ℚ) * value c (input j) - (if (prefixBits q b)[j]?.getD false then 1 else 0)| ≤ ε := by
@@ -290,21 +344,21 @@ theorem increment_error (H M : ℤ) (c : BimatrixCertificate (K * 2) (K * 2))
     (prefixBits q b) input out oneSlot hone hin
     (fun j hj => by
       rw [hstep j hj 0]
-      exact guardedRaw_eq _ ⟨(input j).isLt,
-        (if j = 0 then oneSlot else out (j - 1) 3).isLt⟩)
+      exact guardedRaw_eq _ (pair_gate_valid _ (input j)
+        (if j = 0 then oneSlot else out (j - 1) 3)))
     (fun j hj => by
       rw [hstep j hj 1]
-      exact guardedRaw_eq _ ⟨(input j).isLt,
-        (if j = 0 then oneSlot else out (j - 1) 3).isLt⟩)
+      exact guardedRaw_eq _ (pair_gate_valid _ (input j)
+        (if j = 0 then oneSlot else out (j - 1) 3)))
     (fun j hj => by
       rw [hstep j hj 2]
-      exact guardedRaw_eq _ ⟨(out j 0).isLt, (out j 1).isLt⟩)
+      exact guardedRaw_eq _ (pair_gate_valid _ (out j 0) (out j 1)))
     (fun j hj => by
       rw [hstep j hj 3]
-      exact guardedRaw_eq _ ⟨(input j).isLt,
-        (if j = 0 then oneSlot else out (j - 1) 3).isLt⟩)
+      exact guardedRaw_eq _ (pair_gate_valid _ (input j)
+        (if j = 0 then oneSlot else out (j - 1) 3)))
   have he : rippleBits (prefixBits q b) true =
-      Nat.toBitsLE (b + 1) (GameTheory.Math.binaryPrefix b q + 1) := by
+      lowBits (b + 1) (GameTheory.Math.binaryPrefix b q + 1) := by
     rw [rippleBits_eq, prefixBits_length, prefixBits_value]
     rfl
   rw [← he]
@@ -335,7 +389,7 @@ theorem cornerBit_error (H M : ℤ) (c : BimatrixCertificate (K * 2) (K * 2))
     let upper := if axis.val = 0 then corner.val = 1 ∨ corner.val = 2
       else corner.val = 1 ∨ corner.val = 3
     |(K : ℚ) * value c (cornerBit b raw₀.length raw₁.length t corner axis j) -
-      (if (Nat.toBitsLE (b + 1)
+      (if (lowBits (b + 1)
         (GameTheory.Math.binaryPrefix b q + if upper then 1 else 0))[j]?.getD false
         then 1 else 0)| ≤ ε := by
   dsimp only
@@ -411,14 +465,14 @@ private theorem program_copy (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
 
 /-- Canonical extended coordinate fields for origin, diagonal, horizontal and vertical corners. -/
 def cornerVertex (b : ℕ) (qx qy : ℚ) (corner : Fin 4) : List Bool :=
-  Nat.toBitsLE (b + 1) (GameTheory.Math.binaryPrefix b qx +
+  lowBits (b + 1) (GameTheory.Math.binaryPrefix b qx +
     if corner.val = 1 ∨ corner.val = 2 then 1 else 0) ++
-  Nat.toBitsLE (b + 1) (GameTheory.Math.binaryPrefix b qy +
+  lowBits (b + 1) (GameTheory.Math.binaryPrefix b qy +
     if corner.val = 1 ∨ corner.val = 3 then 1 else 0)
 
 private theorem cornerVertex_length (qx qy : ℚ) (corner : Fin 4) :
     (cornerVertex b qx qy corner).length = arity b := by
-  simp only [cornerVertex, List.length_append, Nat.length_toBitsLE, arity]
+  simp only [cornerVertex, List.length_append, Cslib.BitString.length_lowBits, arity]
   omega
 
 private theorem corner_input_error (c : GameTheory.Finite.BimatrixCertificate (K * 2) (K * 2))
@@ -426,7 +480,7 @@ private theorem corner_input_error (c : GameTheory.Finite.BimatrixCertificate (K
     (hcorner : ∀ axis : Fin 2, ∀ j ≤ b,
       |(K : ℚ) * GameTheory.Finite.BimatrixAffineGate.value c
         (cornerBit b raw₀.length raw₁.length t corner axis j) -
-        (if (Nat.toBitsLE (b + 1) (GameTheory.Math.binaryPrefix b
+        (if (lowBits (b + 1) (GameTheory.Math.binaryPrefix b
           (if axis.val = 0 then qx else qy) +
           if (if axis.val = 0 then corner.val = 1 ∨ corner.val = 2
             else corner.val = 1 ∨ corner.val = 3) then 1 else 0))[j]?.getD false
@@ -444,7 +498,7 @@ private theorem corner_input_error (c : GameTheory.Finite.BimatrixCertificate (K
     have h := hcorner 0 j (by omega)
     simp only [Fin.val_zero, ite_true] at h
     unfold cornerVertex
-    rw [List.getElem?_append_left (by rw [Nat.length_toBitsLE]; exact hlow)]
+    rw [List.getElem?_append_left (by rw [Cslib.BitString.length_lowBits]; exact hlow)]
     exact h
   · have hjhigh : j - (b + 1) < b + 1 := by simp only [arity] at hj; omega
     have hjform : j = (b + 1) * 1 + (j - (b + 1)) := by omega
@@ -461,17 +515,20 @@ private theorem corner_input_error (c : GameTheory.Finite.BimatrixCertificate (K
     have h := hcorner 1 (j - (b + 1)) (by omega)
     simp only [Fin.val_one, Nat.one_ne_zero, ite_false] at h
     unfold cornerVertex
-    rw [List.getElem?_append_right (by rw [Nat.length_toBitsLE]; omega), Nat.length_toBitsLE]
+    rw [List.getElem?_append_right (by rw [Cslib.BitString.length_lowBits]; omega),
+      Cslib.BitString.length_lowBits]
     exact h
 
 private theorem program_raw₀ (t : Fin 41) (corner : Fin 4) (j : Fin raw₀.length)
-    (href : RawGate.WellFormedAt
-      ((raw₀.get j).shift (sampleBase b raw₀.length raw₁.length t +
-        colorInput b raw₀.length raw₁.length corner 0)) K) :
+    (href : Program.IsCodeFrom CircuitFormat.signature K 0
+      [((raw₀.get j).1, (raw₀.get j).2.map
+        (sampleBase b raw₀.length raw₁.length t +
+          colorInput b raw₀.length raw₁.length corner 0 + ·))]) :
     programG (sampleRef b raw₀.length raw₁.length t
       (colorInput b raw₀.length raw₁.length corner 0 + arity b + j.val)) =
-      BimatrixRawGate.gate ((raw₀.get j).shift
-        (sampleBase b raw₀.length raw₁.length t + colorInput b raw₀.length raw₁.length corner 0))
+      BimatrixRawGate.gate ((raw₀.get j).1, (raw₀.get j).2.map
+        (sampleBase b raw₀.length raw₁.length t +
+          colorInput b raw₀.length raw₁.length corner 0 + ·))
         href := by
   have ho : arity b + j.val < cornerWidth b raw₀.length raw₁.length := by
     have hj := j.isLt
@@ -484,13 +541,15 @@ private theorem program_raw₀ (t : Fin 41) (corner : Fin 4) (j : Fin raw₀.len
   simpa only [Nat.add_assoc] using he
 
 private theorem program_raw₁ (t : Fin 41) (corner : Fin 4) (j : Fin raw₁.length)
-    (href : RawGate.WellFormedAt
-      ((raw₁.get j).shift (sampleBase b raw₀.length raw₁.length t +
-        colorInput b raw₀.length raw₁.length corner 1)) K) :
+    (href : Program.IsCodeFrom CircuitFormat.signature K 0
+      [((raw₁.get j).1, (raw₁.get j).2.map
+        (sampleBase b raw₀.length raw₁.length t +
+          colorInput b raw₀.length raw₁.length corner 1 + ·))]) :
     programG (sampleRef b raw₀.length raw₁.length t
       (colorInput b raw₀.length raw₁.length corner 1 + arity b + j.val)) =
-      BimatrixRawGate.gate ((raw₁.get j).shift
-        (sampleBase b raw₀.length raw₁.length t + colorInput b raw₀.length raw₁.length corner 1))
+      BimatrixRawGate.gate ((raw₁.get j).1, (raw₁.get j).2.map
+        (sampleBase b raw₀.length raw₁.length t +
+          colorInput b raw₀.length raw₁.length corner 1 + ·))
         href := by
   have ho : (arity b + raw₀.length) + (arity b + j.val) <
       cornerWidth b raw₀.length raw₁.length := by
@@ -514,15 +573,18 @@ theorem colorOutput_error (H M : ℤ) (c : BimatrixCertificate (K * 2) (K * 2))
     (t : Fin 41) (corner : Fin 4) (qx qy : ℚ)
     (hcorner : ∀ axis : Fin 2, ∀ j ≤ b,
       |(K : ℚ) * value c (cornerBit b raw₀.length raw₁.length t corner axis j) -
-        (if (Nat.toBitsLE (b + 1) (GameTheory.Math.binaryPrefix b
+        (if (lowBits (b + 1) (GameTheory.Math.binaryPrefix b
           (if axis.val = 0 then qx else qy) +
           if (if axis.val = 0 then corner.val = 1 ∨ corner.val = 2
             else corner.val = 1 ∨ corner.val = 3) then 1 else 0))[j]?.getD false
           then 1 else 0)| ≤ ε)
     (flag : Fin 2) (bit : Bool)
-    (hraw : (if flag.val = 0 then raw₀ else raw₁).WellFormed (arity b))
-    (hquery : (if flag.val = 0 then raw₀ else raw₁).eval? (cornerVertex b qx qy corner) =
-      some bit) :
+    (hraw : Program.IsCodeFrom CircuitFormat.signature (arity b) 0
+      (if flag.val = 0 then raw₀ else raw₁))
+    (hne : (if flag.val = 0 then raw₀ else raw₁) ≠ [])
+    (hquery : CircuitFormat.evalOutput (cornerVertex b qx qy corner)
+      (if flag.val = 0 then raw₀ else raw₁)
+      (arity b + (if flag.val = 0 then raw₀ else raw₁).length - 1) = bit) :
     |(K : ℚ) * value c (sampleRef b raw₀.length raw₁.length t
       (colorGate b raw₀.length raw₁.length corner flag +
         ((if flag.val = 0 then raw₀ else raw₁).length - 1))) -
@@ -536,13 +598,38 @@ theorem colorOutput_error (H M : ℤ) (c : BimatrixCertificate (K * 2) (K * 2))
     rw [cornerVertex_length]
     dsimp only [offset, raw]
     omega
+  have hlen : 0 < raw.length := List.length_pos_iff.mpr hne
   have he0 : 0 ≤ ε := by
     have hh := hcorner 0 0 (Nat.zero_le b)
     exact (abs_nonneg _).trans hh
-  have hplace : ∀ j : Fin raw.length, ∀ href : ((raw.get j).shift offset).WellFormedAt K,
+  have hplace : ∀ j : Fin raw.length, ∀ href : Program.IsCodeFrom CircuitFormat.signature K 0
+      [((raw.get j).1, (raw.get j).2.map (offset + ·))],
       programG ⟨offset + (cornerVertex b qx qy corner).length + j.val, by omega⟩ =
-        BimatrixRawGate.gate ((raw.get j).shift offset) href := by
+        BimatrixRawGate.gate ((raw.get j).1, (raw.get j).2.map (offset + ·)) href := by
     intro j href
+    have hshift : Program.IsCodeFrom CircuitFormat.signature K 0
+        [((raw.get j).1, (raw.get j).2.map (offset + ·))] := by
+      change ((((raw.get j).2.map (offset + ·)).length =
+          CircuitFormat.signature.Arity (raw.get j).1 ∧
+        ∀ q ∈ (raw.get j).2.map (offset + ·), q < K) ∧
+        Program.IsCodeFrom CircuitFormat.signature K 1 [])
+      have hrawList : Program.IsCodeFrom CircuitFormat.signature (arity b) 0 raw := hraw
+      have hentry : ((raw.get j).2.length = 2 ∧
+          ∀ r ∈ (raw.get j).2, r < arity b + j.val) := by
+        simpa only [List.get_eq_getElem, Fin.getElem_fin, Nat.add_zero] using
+          hrawList.getElem j.val j.isLt
+      constructor
+      · constructor
+        · simpa only [List.length_map] using hentry.1
+        · intro q hq
+          obtain ⟨r, hr, rfl⟩ := List.mem_map.mp hq
+          have href := hentry.2 r hr
+          have hlast : offset + arity b + j.val < K := by
+            rw [cornerVertex_length] at hsize
+            have hj := j.isLt
+            omega
+          omega
+      · trivial
     have hlocal : colorInput b raw₀.length raw₁.length corner flag + arity b + j.val <
         sampleWidth b raw₀.length raw₁.length := by have hj := j.isLt; dsimp [raw] at hj; omega
     have ha := sample_lt_dimension b raw₀.length raw₁.length t _ hlocal
@@ -555,12 +642,12 @@ theorem colorOutput_error (H M : ℤ) (c : BimatrixCertificate (K * 2) (K * 2))
       omega
     rw [heq]
     fin_cases flag
-    · exact program_raw₀ b raw₀ raw₁ t corner j href
-    · exact program_raw₁ b raw₀ raw₁ t corner j href
+    · exact program_raw₀ b raw₀ raw₁ t corner j hshift
+    · exact program_raw₁ b raw₀ raw₁ t corner j hshift
   have hinput : ∀ j : Fin K, ∀ hj0 : offset ≤ j.val,
       ∀ hj : j.val < offset + (cornerVertex b qx qy corner).length,
       |(K : ℚ) * value c j -
-        (if (cornerVertex b qx qy corner)[j.val - offset] then 1 else 0)| ≤ 2 * ε := by
+        (if (cornerVertex b qx qy corner).getD (j.val - offset) false then 1 else 0)| ≤ 2 * ε := by
     intro j hj0 hj
     have hjlocal : j.val - offset < arity b := by rw [cornerVertex_length] at hj; omega
     have hbit := corner_input_error b raw₀ raw₁ c t corner qx qy ε hcorner
@@ -589,26 +676,61 @@ theorem colorOutput_error (H M : ℤ) (c : BimatrixCertificate (K * 2) (K * 2))
     have hiList : j.val - offset < (cornerVertex b qx qy corner).length := by
       rw [cornerVertex_length]
       exact hjlocal
-    rw [List.getElem?_eq_getElem hiList, Option.getD_some] at hcopy
-    exact hcopy
-  obtain ⟨outbit, heval, hlast, herr⟩ := BimatrixRawCircuit.eval_correct_at H M
+    simpa only [← List.getD_eq_getElem?_getD] using hcopy
+  let output : Fin ((cornerVertex b qx qy corner).length + raw.length) :=
+    ⟨arity b + raw.length - 1, by rw [cornerVertex_length]; omega⟩
+  have htopo : Program.IsCodeFrom CircuitFormat.signature
+      (cornerVertex b qx qy corner).length 0 raw := by
+    rw [cornerVertex_length]
+    exact hraw
+  have herr := BimatrixRawCircuit.evalOutput_correct_at H M
     (dimension_pos _ _ _) programG c hc hM hg hscale (2 * ε) hε (by linarith) offset raw
-    (cornerVertex b qx qy corner) (by rwa [cornerVertex_length]) hsize hplace hinput
-  have hbit : outbit = bit := Option.some.inj (heval.symm.trans hquery)
-  subst outbit
-  have hlen : 0 < raw.length := List.length_pos_iff.mpr hraw.1
+    (cornerVertex b qx qy corner) htopo (by simpa only [cornerVertex_length] using hsize)
+    hplace hinput output
+  have hbit : CircuitFormat.evalOutput (cornerVertex b qx qy corner) raw output.val = bit := by
+    simpa only [output, cornerVertex_length] using hquery
+  rw [hbit] at herr
   have hlocal : colorGate b raw₀.length raw₁.length corner flag + (raw.length - 1) <
       sampleWidth b raw₀.length raw₁.length := by dsimp only [colorGate, raw] at *; omega
   have ha := sample_lt_dimension b raw₀.length raw₁.length t _ hlocal
-  have heq : (⟨offset + ((cornerVertex b qx qy corner).length + raw.length - 1), hlast⟩ :
+  have heq : (⟨offset + output.val, by omega⟩ :
       Fin K) = sampleRef b raw₀.length raw₁.length t
         (colorGate b raw₀.length raw₁.length corner flag + (raw.length - 1)) := by
     apply Fin.ext
-    simp only [sampleRef, slot_val _ _ _ _ ha, cornerVertex_length]
+    simp only [sampleRef, slot_val _ _ _ _ ha, output]
     dsimp only [offset, colorGate]
     omega
   rw [heq] at herr
   exact herr
+
+open GameTheory.Math BrouwerNashLayout in
+/-- A native color query remains exact at each extended corner of the selected binary cell. -/
+theorem cornerVertex_eval (color : ℕ → ℕ → Fin 3) (b : ℕ)
+    (gates : List (CircuitFormat.signature.Op × List ℕ)) (flag : Fin 2)
+    (_hraw : Program.IsCodeFrom CircuitFormat.signature (arity b) 0 gates)
+    (_hne : gates ≠ [])
+    (hquery : ∀ x y, x ≤ 2 ^ b → y ≤ 2 ^ b →
+      CircuitFormat.evalOutput (lowBits (b + 1) x ++ lowBits (b + 1) y) gates
+        (arity b + gates.length - 1) = (encodeGridColor (color x y)).getD flag.val false)
+    (qx qy : ℚ) (corner : Fin 4) :
+    CircuitFormat.evalOutput (cornerVertex b qx qy corner) gates
+        (arity b + gates.length - 1) =
+      (encodeGridColor (color
+        (binaryPrefix b qx + if corner.val = 1 ∨ corner.val = 2 then 1 else 0)
+        (binaryPrefix b qy + if corner.val = 1 ∨ corner.val = 3 then 1 else 0))).getD flag.val false := by
+  let x := binaryPrefix b qx + if corner.val = 1 ∨ corner.val = 2 then 1 else 0
+  let y := binaryPrefix b qy + if corner.val = 1 ∨ corner.val = 3 then 1 else 0
+  have hx : x ≤ 2 ^ b := by
+    dsimp only [x]
+    have hp := binaryPrefix_lt b qx
+    split_ifs <;> omega
+  have hy : y ≤ 2 ^ b := by
+    dsimp only [y]
+    have hp := binaryPrefix_lt b qy
+    split_ifs <;> omega
+  have he := hquery x y hx hy
+  simpa only [cornerVertex, x, y] using he
+
 
 /-- Exact extracted digits discharge every input premise of concrete corner color evaluation. -/
 theorem colorOutput_error_of_digits (H M : ℤ) (c : BimatrixCertificate (K * 2) (K * 2))
@@ -616,57 +738,49 @@ theorem colorOutput_error_of_digits (H M : ℤ) (c : BimatrixCertificate (K * 2)
     (hM : 0 ≤ M) (hg : ∀ i r, |(programG i).coefficients r| ≤ M)
     (hscale : (K : ℤ) * (M + 2 * (K : ℤ)) < H) (ε : ℚ) (hε : 2 * ε < 1 / 4)
     (hδ : (K : ℚ) * (((M + 2 * (K : ℤ) : ℤ) : ℚ) / H) ≤ ε)
-    (t : Fin 41) (corner : Fin 4) (qx qy : ℚ)
+    (color : ℕ → ℕ → Fin 3) (t : Fin 41) (corner : Fin 4) (qx qy : ℚ)
     (hone : |(K : ℚ) * value c (slot b raw₀.length raw₁.length one) - 1| ≤ ε)
     (hzero : |(K : ℚ) * value c (slot b raw₀.length raw₁.length zero)| ≤ ε)
     (hdigit : ∀ axis : Fin 2, ∀ j < b,
       |(K : ℚ) * value c (sampleRef b raw₀.length raw₁.length t (digit b axis j)) -
         (if GameTheory.Math.binaryThreshold (GameTheory.Math.binaryRemainder j
           (if axis.val = 0 then qx else qy)) then 1 else 0)| ≤ ε)
-    (flag : Fin 2) (bit : Bool)
-    (hraw : (if flag.val = 0 then raw₀ else raw₁).WellFormed (arity b))
-    (hquery : (if flag.val = 0 then raw₀ else raw₁).eval? (cornerVertex b qx qy corner) =
-      some bit) :
+    (flag : Fin 2)
+    (hraw : ∀ flag : Fin 2, Program.IsCodeFrom CircuitFormat.signature (arity b) 0
+      (if flag.val = 0 then raw₀ else raw₁))
+    (hne : ∀ flag : Fin 2, (if flag.val = 0 then raw₀ else raw₁) ≠ [])
+    (hquery : ∀ flag : Fin 2, ∀ x y, x ≤ 2 ^ b → y ≤ 2 ^ b →
+      CircuitFormat.evalOutput (lowBits (b + 1) x ++ lowBits (b + 1) y)
+        (if flag.val = 0 then raw₀ else raw₁)
+        (arity b + (if flag.val = 0 then raw₀ else raw₁).length - 1) =
+          (encodeGridColor (color x y)).getD flag.val false) :
+    let x := GameTheory.Math.binaryPrefix b qx +
+      if corner.val = 1 ∨ corner.val = 2 then 1 else 0
+    let y := GameTheory.Math.binaryPrefix b qy +
+      if corner.val = 1 ∨ corner.val = 3 then 1 else 0
     |(K : ℚ) * value c (sampleRef b raw₀.length raw₁.length t
       (colorGate b raw₀.length raw₁.length corner flag +
         ((if flag.val = 0 then raw₀ else raw₁).length - 1))) -
-      (if bit then 1 else 0)| ≤ 2 * ε := by
-  apply colorOutput_error b raw₀ raw₁ H M c hc hM hg hscale ε hε hδ
-    t corner qx qy _ flag bit hraw hquery
+      (if (encodeGridColor (color x y)).getD flag.val false then 1 else 0)| ≤ 2 * ε := by
+  have hcornerQuery := cornerVertex_eval color b
+    (if flag.val = 0 then raw₀ else raw₁) flag
+    (hraw flag) (hne flag) (hquery flag) qx qy corner
+  let queryBit := (encodeGridColor (color
+    (GameTheory.Math.binaryPrefix b qx + if corner.val = 1 ∨ corner.val = 2 then 1 else 0)
+    (GameTheory.Math.binaryPrefix b qy + if corner.val = 1 ∨ corner.val = 3 then 1 else 0))).getD
+      flag.val false
+  have hbit : CircuitFormat.evalOutput (cornerVertex b qx qy corner)
+      (if flag.val = 0 then raw₀ else raw₁)
+      (arity b + (if flag.val = 0 then raw₀ else raw₁).length - 1) =
+      queryBit := by
+    simpa only [queryBit] using hcornerQuery
+  refine colorOutput_error b raw₀ raw₁ H M c hc hM hg hscale ε hε hδ
+    t corner qx qy ?_ flag queryBit (hraw flag) (hne flag) hbit
   intro axis j hj
   exact cornerBit_error b raw₀ raw₁ H M c hc hM hg hscale ε (by linarith) hδ
     t axis (if axis.val = 0 then qx else qy) hone hzero (hdigit axis) corner j hj
 
 end Concrete
 
-open _root_.Complexity GameTheory.Math GameTheory.Math.Sperner in
-/-- Compiled grid-color queries evaluate all four corners of the exact binary-selected cell. -/
-theorem cornerVertex_eval (source : List Bool) (raw : _root_.Complexity.CircuitCode.RawCircuit)
-    (flag : Fin 2)
-    (hquery : ∀ x y, x ≤ 2 ^ (pairFst source).length → y ≤ 2 ^ (pairFst source).length →
-      raw.eval? (Nat.toBitsLE ((pairFst source).length + 1) x ++
-        Nat.toBitsLE ((pairFst source).length + 1) y) =
-        some (bitOf (encodeGridColor (spernerColor source x y)) flag))
-    (qx qy : ℚ) (corner : Fin 4) :
-    raw.eval? (cornerVertex (pairFst source).length qx qy corner) =
-      some (bitOf (encodeGridColor ((![
-        spernerColor source (binaryPrefix (pairFst source).length qx)
-          (binaryPrefix (pairFst source).length qy),
-        spernerColor source (binaryPrefix (pairFst source).length qx + 1)
-          (binaryPrefix (pairFst source).length qy + 1),
-        spernerColor source (binaryPrefix (pairFst source).length qx + 1)
-          (binaryPrefix (pairFst source).length qy),
-        spernerColor source (binaryPrefix (pairFst source).length qx)
-          (binaryPrefix (pairFst source).length qy + 1)] : Fin 4 → Fin 3) corner)) flag) := by
-  have hx := binaryPrefix_lt (pairFst source).length qx
-  have hy := binaryPrefix_lt (pairFst source).length qy
-  have hcx : binaryPrefix (pairFst source).length qx +
-      (if corner.val = 1 ∨ corner.val = 2 then 1 else 0) ≤ 2 ^ (pairFst source).length := by
-    split_ifs <;> omega
-  have hcy : binaryPrefix (pairFst source).length qy +
-      (if corner.val = 1 ∨ corner.val = 3 then 1 else 0) ≤ 2 ^ (pairFst source).length := by
-    split_ifs <;> omega
-  rw [cornerVertex, hquery _ _ hcx hcy]
-  fin_cases corner <;> rfl
 
 end GameTheory.Complexity.Backend.BrouwerNashColor

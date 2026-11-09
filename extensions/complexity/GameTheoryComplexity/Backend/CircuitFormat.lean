@@ -828,4 +828,89 @@ theorem computableInPolyTime_evalTagged :
   rw [heq]
   simpa only [Function.comp_def, decide_eq_true_eq] using hwhole
 
+private theorem decodeGatePrefix?_sound {bits rest : List Bool}
+    {gate : signature.Op × List ℕ}
+    (h : decodeGatePrefix? bits = some (gate, rest)) :
+    gate.2.length = 2 ∧
+      bits = encodeGate gate.1 (gate.2.getD 0 0) (gate.2.getD 1 0) ++ rest := by
+  cases bits with
+  | nil => simp [decodeGatePrefix?] at h
+  | cons op bits =>
+    cases bits with
+    | nil => simp [decodeGatePrefix?] at h
+    | cons leftNeg bits =>
+      cases bits with
+      | nil => simp [decodeGatePrefix?] at h
+      | cons rightNeg bits =>
+        cases hl : decodeUnaryPrefix? bits with
+        | none => simp [decodeGatePrefix?, hl] at h
+        | some p =>
+          rcases p with ⟨left, middle⟩
+          cases hr : decodeUnaryPrefix? middle with
+          | none => simp [decodeGatePrefix?, hl, hr] at h
+          | some p =>
+            rcases p with ⟨right, suffix⟩
+            simp [decodeGatePrefix?, hl, hr] at h
+            rcases h with ⟨rfl, rfl⟩
+            refine ⟨rfl, ?_⟩
+            rw [decodeUnaryPrefix?_sound hl, decodeUnaryPrefix?_sound hr]
+            simp [encodeGate, List.append_assoc]
+
+private theorem decodeGates?_sound {count : ℕ} {bits rest : List Bool}
+    {gates : List (signature.Op × List ℕ)}
+    (h : decodeGates? count bits = some (gates, rest)) :
+    gates.length = count ∧ (∀ gate ∈ gates, gate.2.length = 2) ∧
+      bits = (gates.flatMap fun gate =>
+        encodeGate gate.1 (gate.2.getD 0 0) (gate.2.getD 1 0)) ++ rest := by
+  induction count generalizing bits gates rest with
+  | zero =>
+    simp only [decodeGates?, Option.some.injEq] at h
+    cases h
+    exact ⟨rfl, by simp, rfl⟩
+  | succ count ih =>
+    cases hg : decodeGatePrefix? bits with
+    | none => simp [decodeGates?, hg] at h
+    | some p =>
+      rcases p with ⟨gate, middle⟩
+      cases hs : decodeGates? count middle with
+      | none => simp [decodeGates?, hg, hs] at h
+      | some p =>
+        rcases p with ⟨tail, suffix⟩
+        simp [decodeGates?, hg, hs] at h
+        rcases h with ⟨rfl, rfl⟩
+        obtain ⟨hgate, hbits⟩ := decodeGatePrefix?_sound hg
+        obtain ⟨hlen, hargs, hmiddle⟩ := ih hs
+        refine ⟨by simp [hlen], ?_, ?_⟩
+        · intro current hcurrent
+          rcases List.mem_cons.mp hcurrent with rfl | hcurrent
+          · exact hgate
+          · exact hargs current hcurrent
+        · rw [hbits, hmiddle]
+          simp only [List.flatMap_cons, List.append_assoc]
+
+/-- Successful strict decoding recovers exactly the original serialized bytes. -/
+theorem encode_of_decode {bits : List Bool}
+    {gates : List (signature.Op × List ℕ)} (h : decode? bits = some gates) :
+    bits = encode gates := by
+  cases hp : decodeUnaryPrefix? bits with
+  | none => simp [decode?, hp] at h
+  | some p =>
+    rcases p with ⟨count, body⟩
+    cases hg : decodeGates? count body with
+    | none => simp [decode?, hp, hg] at h
+    | some p =>
+      rcases p with ⟨parsed, suffix⟩
+      cases suffix with
+      | cons bit suffix => simp [decode?, hp, hg] at h
+      | nil =>
+        simp only [decode?, hp, hg, Option.some.injEq] at h
+        cases h
+        obtain ⟨hlen, hargs, hbody⟩ := decodeGates?_sound hg
+        have hall : gates.all (fun gate => gate.2.length == 2) = true := by
+          apply List.all_eq_true.mpr
+          intro gate hgate
+          simp [hargs gate hgate]
+        rw [encode, ite_eq_left hall, hlen]
+        rw [decodeUnaryPrefix?_sound hp, hbody, List.append_nil]
+
 end GameTheory.Complexity.Backend.CircuitFormat

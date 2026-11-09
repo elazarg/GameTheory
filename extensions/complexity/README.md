@@ -243,8 +243,11 @@ exact source/code/header bytes, reward bounds and affine coefficient semantics.
 compose ordinary source, code, output and action words with native certificates.
 Generic signed sums and indexed lookups charge arbitrary typed context and
 preserve the original addition order and suffix bits. The native `Backend.BrouwerNashAnswerMachine` retains exact ratio-prefix
-extraction, triangle selection and accepted-answer soundness. The remaining
-coefficient/kind queries and aggregate reduction are still being ported.
+extraction, triangle selection and accepted-answer soundness. All increment, color, interpolation, minimum, average and shared feedback
+coefficient families now have native certificates and preserve their original
+bytes for arbitrary query words. Their canonical scalar and color-error laws
+also pass. Combined selector correctness, sampled residual correctness and the
+aggregate every-answer reduction are being integrated.
 
 The native general verifier and totality leaves are
 `Backend.GeneralBimatrixFNP` and `Backend.GeneralBimatrixTotality`. They prove
