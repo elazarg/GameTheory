@@ -13,7 +13,7 @@ node words remain isolated. Color queries may depend on a serialized input seed.
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity _root_.Complexity.Cobham EndOfLineMachineOps
+open Turing.MultiTapeTM ComputableInPolyTime WordOperations Cslib.BitString
 open GameTheory.Math.Sperner
 
 /-- Select a local triangle neighbor from three boundary-aware corner colors. -/
@@ -27,51 +27,52 @@ def gridTrianglePointer (ruler : List Bool) (query : List Bool → List Bool)
 /-- Compute a graph pointer, with one canonical source and malformed-word isolation. -/
 def gridPointerMachine (ruler : List Bool) (query : List Bool → List Bool)
     (incoming : Bool) (word : List Bool) : List Bool :=
-  caseBit₀ (gridNodeAcceptFlag ruler word)
-    (caseBit₀ (bitAt [] word) (gridTrianglePointer ruler query incoming word)
+  select (gridNodeAcceptFlag ruler word)
+    (select ([word.headD false]) (gridTrianglePointer ruler query incoming word)
       (if incoming then gridWidthWord ruler
         else [true, false] ++ (gridWidthWord ruler).tail.tail)) word
 
-/-- Triangle pointers compose FP word producers with a uniform FP color query. -/
-theorem gridTrianglePointerUniformFn_mem_FP (incoming : Bool)
-    {ruler seed word : List Bool → List Bool}
-    {query : List Bool → List Bool → List Bool}
-    (hr : ruler ∈ FP) (hs : seed ∈ FP) (hw : word ∈ FP)
-    (hq : (fun z => query (pairFst z) (pairSnd z)) ∈ FP) :
-    (fun z => gridTrianglePointer (ruler z) (query (seed z)) incoming (word z)) ∈ FP :=
-  gridChooseDoorFn_mem_FP incoming
-    (gridCornerColorUniformFn_mem_FP 0 hr hs hw query hq)
-    (gridCornerColorUniformFn_mem_FP 1 hr hs hw query hq)
-    (gridCornerColorUniformFn_mem_FP 2 hr hs hw query hq)
-    (gridCrossWordFn_mem_FP incoming 0 hr hw)
-    (gridCrossWordFn_mem_FP incoming 1 hr hw)
-    (gridCrossWordFn_mem_FP incoming 2 hr hw) hw
+/-- Triangle pointers charge three colors and all selected neighbor computations. -/
+@[fun_prop] theorem gridTrianglePointer_polyTime (incoming : Bool)
+    {α : Type} {enc : α ↪ List Bool} {ruler word : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits) (hw : ComputableInPolyTime word enc encBits)
+    (query : α → List Bool → List Bool)
+    (hq : ComputableInPolyTime (fun p : α × List Bool => query p.1 p.2)
+      (encPair enc encBits) encBits) :
+    ComputableInPolyTime
+      (fun a => gridTrianglePointer (ruler a) (query a) incoming (word a)) enc encBits :=
+  gridChooseDoor_polyTime incoming
+    (gridCornerColor_polyTime hr hw query hq 0)
+    (gridCornerColor_polyTime hr hw query hq 1)
+    (gridCornerColor_polyTime hr hw query hq 2)
+    (gridCrossWord_polyTime incoming 0 hr hw)
+    (gridCrossWord_polyTime incoming 1 hr hw)
+    (gridCrossWord_polyTime incoming 2 hr hw) hw
 
-/-- The whole pointer is computed in polynomial time, uniformly in its color seed. -/
-theorem gridPointerMachineUniformFn_mem_FP (incoming : Bool)
-    {ruler seed word : List Bool → List Bool}
-    {query : List Bool → List Bool → List Bool}
-    (hr : ruler ∈ FP) (hs : seed ∈ FP) (hw : word ∈ FP)
-    (hq : (fun z => query (pairFst z) (pairSnd z)) ∈ FP) :
-    (fun z => gridPointerMachine (ruler z) (query (seed z)) incoming (word z)) ∈ FP := by
-  have hwidth := gridWidthWordFn_mem_FP hr
-  have hsource : (fun z => if incoming then gridWidthWord (ruler z)
-      else [true, false] ++ (gridWidthWord (ruler z)).tail.tail) ∈ FP := by
+/-- Canonical-source dispatch and malformed-word isolation have native certificates. -/
+@[fun_prop] theorem gridPointerMachine_polyTime (incoming : Bool)
+    {α : Type} {enc : α ↪ List Bool} {ruler word : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits) (hw : ComputableInPolyTime word enc encBits)
+    (query : α → List Bool → List Bool)
+    (hq : ComputableInPolyTime (fun p : α × List Bool => query p.1 p.2)
+      (encPair enc encBits) encBits) :
+    ComputableInPolyTime
+      (fun a => gridPointerMachine (ruler a) (query a) incoming (word a)) enc encBits := by
+  have hwidth := gridWidthWord_polyTime hr
+  have hsource : ComputableInPolyTime (fun a => if incoming then gridWidthWord (ruler a)
+      else [true, false] ++ (gridWidthWord (ruler a)).tail.tail) enc encBits := by
     cases incoming with
-    | false =>
-      exact appendFn_mem_FP (constFn_mem_FP _)
-        (CobhamFP_subset_FP (tailFn (tailFn (FP_subset_CobhamFP hwidth))))
+    | false => exact bitsAppend (const [true, false]) (bitsTail.comp (bitsTail.comp hwidth))
     | true => exact hwidth
-  exact selectFn_mem_FP (gridNodeAcceptFlagFn_mem_FP hr hw)
-    (selectFn_mem_FP (CobhamFP_subset_FP (headFlagFn (FP_subset_CobhamFP hw)))
-      (gridTrianglePointerUniformFn_mem_FP incoming hr hs hw hq) hsource) hw
+  have hhead : ComputableInPolyTime (fun a => [(word a).headD false]) enc encBits :=
+    bitsCons ((ComputableInPolyTime.headD (encA := encBool) false).comp hw) (const [])
+  exact select_polyTime.comp ((gridNodeAcceptFlag_polyTime hr hw).prod
+    ((select_polyTime.comp (hhead.prod
+      ((gridTrianglePointer_polyTime incoming hr hw query hq).prod hsource))).prod hw))
 
-private theorem zero_bits (b : ℕ) : Nat.toBitsLE b 0 = List.replicate b false := by
-  have h : Nat.toBits b 0 = List.replicate b false := by
-    induction b with
-    | zero => rfl
-    | succ b ih => simp [Nat.toBits, ih, List.replicate_succ]
-  simpa [Nat.toBitsLE] using congrArg List.reverse h
+private theorem zero_bits (b : ℕ) : lowBits b 0 = List.replicate b false := by
+  simpa only [List.length_replicate, lsbValue_replicate_false] using
+    lowBits_lsbValue (List.replicate b false)
 
 /-- Local triangle execution agrees with the mathematical selected-edge pointer. -/
 theorem gridTrianglePointer_encode (ruler : List Bool) (query : List Bool → List Bool)
@@ -116,19 +117,19 @@ theorem gridPointerMachine_encode (ruler : List Bool) (query : List Bool → Lis
   rw [gridPointerMachine, ha]
   cases node with
   | some t =>
-    simpa only [encodeGridNode, List.cons_append, List.nil_append, bitAt_nil_left,
-      caseBit₀_cons, Bool.cond_true] using
+    simpa only [encodeGridNode, List.cons_append, List.nil_append, List.headD_cons,
+      select_cons, ite_true] using
       gridTrianglePointer_encode ruler query incoming t (hv t rfl)
   | none =>
     have hz : gridWidthWord ruler =
         false :: false :: List.replicate (2 * ruler.length) false := by
       simp [gridWidthWord, gridNodeWidth, Nat.add_comm (2 * ruler.length) 2,
         List.replicate_add, List.replicate_succ]
-    change caseBit₀ [true]
-      (caseBit₀ (bitAt [] (gridWidthWord ruler)) _ _) (gridWidthWord ruler) = _
+    change select [true]
+      (select [(gridWidthWord ruler).headD false] _ _) (gridWidthWord ruler) = _
     rw [hz]
     cases incoming <;>
-      simp only [bitAt_nil_left, caseBit₀_cons, Bool.cond_false, Bool.cond_true,
+      simp only [List.headD_cons, select_cons,
         gridPointer, encodeGridNode, entranceTriangle, zero_bits, List.tail_cons,
         Bool.false_eq_true, ↓reduceIte]
     · rw [two_mul, List.replicate_add, List.append_assoc]
@@ -139,8 +140,10 @@ theorem gridPointerMachine_encode (ruler : List Bool) (query : List Bool → Lis
 theorem gridPointerMachine_reject (ruler : List Bool) (query : List Bool → List Bool)
     (incoming : Bool) (word : List Bool) (hd : decodeGridNode ruler.length word = none) :
     gridPointerMachine ruler query incoming word = word := by
+  have singleton_flag (b : Bool) : [b] = [true] ∨ [b] = [false] := by
+    cases b <;> simp
   have hf : gridNodeAcceptFlag ruler word = [true] ∨
-      gridNodeAcceptFlag ruler word = [false] := andBit_flag _ _
+      gridNodeAcceptFlag ruler word = [false] := singleton_flag _
   rcases hf with hf | hf
   · obtain ⟨node, hn⟩ := (gridNodeAcceptFlag_accept ruler word).mp hf
     rw [hd] at hn
@@ -170,49 +173,54 @@ theorem gridPointerMachine_eq_wordGridPointer (ruler : List Bool)
 
 /-- A succinct input pairs the coordinate-width ruler with serialized color circuits. -/
 def spernerPointer (input : List Bool) (incoming : Bool) (word : List Bool) : List Bool :=
-  gridPointerMachine (pairFst input) (evaluateCircuitVector (pairSnd input)) incoming word
+  gridPointerMachine (CircuitWords.first input) (evaluateCircuitVector (CircuitWords.rest input)) incoming word
 
-/-- One actual FP computation evaluates the pointer uniformly in the circuit instance. -/
-theorem spernerPointer_pair_mem_FP (incoming : Bool) :
-    (fun z => spernerPointer (pairFst z) incoming (pairSnd z)) ∈ FP :=
-  gridPointerMachineUniformFn_mem_FP incoming
-    (mem_FP_comp pairFst_mem_FP pairFst_mem_FP)
-    (mem_FP_comp pairFst_mem_FP pairSnd_mem_FP) pairSnd_mem_FP
-    evaluateCircuitVector_pair_mem_FP
+/-- Serialized circuit pointers charge the complete instance and vertex producers. -/
+@[fun_prop] theorem spernerPointer_polyTime (incoming : Bool)
+    {α : Type} {enc : α ↪ List Bool} {input word : α → List Bool}
+    (hi : ComputableInPolyTime input enc encBits) (hw : ComputableInPolyTime word enc encBits) :
+    ComputableInPolyTime (fun a => spernerPointer (input a) incoming (word a)) enc encBits := by
+  have hquery : ComputableInPolyTime
+      (fun p : α × List Bool => evaluateCircuitVector (CircuitWords.rest (input p.1)) p.2)
+      (encPair enc encBits) encBits :=
+    evaluateCircuitVector_polyTime
+      (CircuitWords.rest_polyTime.comp (hi.comp (fst enc encBits))) (snd enc encBits)
+  exact gridPointerMachine_polyTime incoming (CircuitWords.first_polyTime.comp hi) hw
+    (fun a => evaluateCircuitVector (CircuitWords.rest (input a))) hquery
 
 /-- Serialized-circuit pointer execution has the same known source at every width. -/
 theorem spernerPointer_source (input : List Bool) :
-    let origin := encodeGridNode (pairFst input).length none
+    let origin := encodeGridNode (CircuitWords.first input).length none
     spernerPointer input true origin = origin ∧
       spernerPointer input false origin ≠ origin ∧
       spernerPointer input true (spernerPointer input false origin) = origin := by
   simpa only [spernerPointer, gridPointerMachine_eq_wordGridPointer] using
-    word_grid_source (pairFst input).length
-      (gridInteriorColor (pairFst input).length (evaluateCircuitVector (pairSnd input)))
+    word_grid_source (CircuitWords.first input).length
+      (gridInteriorColor (CircuitWords.first input).length (evaluateCircuitVector (CircuitWords.rest input)))
 
 /-- Every non-source endpoint of the certified machine denotes a trichromatic cell. -/
 theorem spernerPointer_endpoint_decodes (input word : List Bool)
-    (hne : word ≠ encodeGridNode (pairFst input).length none)
+    (hne : word ≠ encodeGridNode (CircuitWords.first input).length none)
     (he : GameTheory.Math.EndOfLine.IsEndpoint
       (spernerPointer input true) (spernerPointer input false) word) :
-    ∃ t, decodeGridNode (pairFst input).length word = some (some t) ∧
-      ValidTriangle (2 ^ (pairFst input).length) t ∧
+    ∃ t, decodeGridNode (CircuitWords.first input).length word = some (some t) ∧
+      ValidTriangle (2 ^ (CircuitWords.first input).length) t ∧
       Trichromatic
-        (standardGridColor (2 ^ (pairFst input).length)
-          (gridInteriorColor (pairFst input).length (evaluateCircuitVector (pairSnd input)))
+        (standardGridColor (2 ^ (CircuitWords.first input).length)
+          (gridInteriorColor (CircuitWords.first input).length (evaluateCircuitVector (CircuitWords.rest input)))
           (corner t 0).1 (corner t 0).2)
-        (standardGridColor (2 ^ (pairFst input).length)
-          (gridInteriorColor (pairFst input).length (evaluateCircuitVector (pairSnd input)))
+        (standardGridColor (2 ^ (CircuitWords.first input).length)
+          (gridInteriorColor (CircuitWords.first input).length (evaluateCircuitVector (CircuitWords.rest input)))
           (corner t 1).1 (corner t 1).2)
-        (standardGridColor (2 ^ (pairFst input).length)
-          (gridInteriorColor (pairFst input).length (evaluateCircuitVector (pairSnd input)))
+        (standardGridColor (2 ^ (CircuitWords.first input).length)
+          (gridInteriorColor (CircuitWords.first input).length (evaluateCircuitVector (CircuitWords.rest input)))
           (corner t 2).1 (corner t 2).2) := by
   apply word_grid_endpoint_decodes _ hne
-  have hp : spernerPointer input true = wordGridPointer (pairFst input).length
-      (gridInteriorColor (pairFst input).length (evaluateCircuitVector (pairSnd input)))
+  have hp : spernerPointer input true = wordGridPointer (CircuitWords.first input).length
+      (gridInteriorColor (CircuitWords.first input).length (evaluateCircuitVector (CircuitWords.rest input)))
       true := funext fun _ => gridPointerMachine_eq_wordGridPointer _ _ _ _
-  have hs : spernerPointer input false = wordGridPointer (pairFst input).length
-      (gridInteriorColor (pairFst input).length (evaluateCircuitVector (pairSnd input)))
+  have hs : spernerPointer input false = wordGridPointer (CircuitWords.first input).length
+      (gridInteriorColor (CircuitWords.first input).length (evaluateCircuitVector (CircuitWords.rest input)))
       false := funext fun _ => gridPointerMachine_eq_wordGridPointer _ _ _ _
   rwa [hp, hs] at he
 
