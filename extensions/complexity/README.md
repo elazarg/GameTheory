@@ -242,7 +242,8 @@ exact source/code/header bytes, reward bounds and affine coefficient semantics.
 `Backend.BrouwerNashJitterQuery` and `Backend.BrouwerNashExtractionQuery`
 compose ordinary source, code, output and action words with native certificates.
 Generic signed sums and indexed lookups charge arbitrary typed context and
-preserve the original addition order and suffix bits. The remaining
+preserve the original addition order and suffix bits. The native `Backend.BrouwerNashAnswerMachine` retains exact ratio-prefix
+extraction, triangle selection and accepted-answer soundness. The remaining
 coefficient/kind queries and aggregate reduction are still being ported.
 
 The native general verifier and totality leaves are
@@ -252,16 +253,16 @@ using the actual typed Boolean verifier and finite complementary-path existence.
 Native node validation, exchange, orientation and total pointer machines now feed
 `Backend.GeneralBimatrixCircuitMachine`, which certifies the actual uniform
 predecessor/successor circuit instance and agrees at every fixed-width vertex.
-Endpoint emission and the full public Nash classifier port remain in progress.
+`Backend.GeneralBimatrixEndpointMachine` and `Backend.GeneralBimatrixEndpointCapacity`
+now certify reconstruction of the supplied endpoint's certificate. Native
+`Backend.GeneralBimatrixReduction` preserves every raw End-of-Line answer,
+including the malformed-input fallback. The full public Nash classifier port
+remains in progress.
 
-Import `GameTheoryComplexity.BimatrixNash` for exact signed rectangular Nash
-search PPAD-completeness (`bimatrixNashRelation_PPADComplete`). The existing binary relation
-has an actual FP instance map to End-of-Line and an FPn decoder preserving
-every target answer. Full lexicographic perturbations handle degenerate games;
-malformed inputs retain the empty answer. The decoder computes the supplied
-endpoint's certificate and undoes payoff shifts. Hardness uses an actual FP
-Brouwer-to-game instance map and FPn decoder. The canonical sampled program's
-coefficient/kind machines agree at every output, and its emitted reward proves
-that every accepted Nash certificate yields an accepted Brouwer answer.
-`bimatrixNashRelation_PPADHard` and the existing membership theorem classify the
-same binary relation. Ordinary base clients continue to require no ComplexityLib.
+The public `GameTheoryComplexity.BimatrixNash` facade is being integrated with
+native hardness and completeness proofs for the same exact signed rectangular
+relation. Native verification, totality, actual endpoint instance/answer
+machines and an independent PPAD membership control already pass. The remaining
+Brouwer-to-game reduction uses the canonical sampled program's coefficient/kind
+machines and reward bounds to decode every accepted Nash certificate to a
+Brouwer answer. Ordinary base clients require no ComplexityLib.

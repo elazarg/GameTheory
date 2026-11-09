@@ -2,8 +2,12 @@ module
 
 public import GameTheoryComplexity.Backend.GeneralBimatrixMatrixWord
 public import GameTheoryComplexity.Backend.GeneralBimatrixVerifier
-
-import Complexitylib.Classes.P.Cobham.Internal.Extract
+public import GameTheoryComplexity.Backend.GeneralBimatrixVerifierMachine
+public import GameTheoryComplexity.Backend.GeneralBimatrixSignedInput
+public import GameTheoryComplexity.Backend.GeneralBimatrixDictionary
+public import GameTheoryComplexity.Backend.WordOperations
+public import GameTheoryComplexity.Backend.WordFold
+public import GameTheoryComplexity.Backend.BinarySignedFixedWidth
 
 @[expose] public section
 
@@ -11,26 +15,29 @@ import Complexitylib.Classes.P.Cobham.Internal.Extract
 The input contains the already computed determinant and packed dictionary.
 All loops use explicitly represented dimension and field-width rulers. -/
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
+open GameTheory.Complexity.Backend.WordOperations
 open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
 open scoped BigOperators
 
 /-- Clamp a signed word to its nonnegative part, retaining a signed header. -/
 def endpointPositiveWord (x : List Bool) : List Bool :=
-  caseBit₀ (bitAt [] x) [false] ([false] ++ x.tail)
+  if x.headD false then [false] else [false] ++ x.tail
 
 theorem endpointPositiveWord_value (x : List Bool) :
     binarySignedValue (endpointPositiveWord x) = (binarySignedValue x).toNat := by
   cases x with
   | nil => rfl
-  | cons b x => cases b <;> simp [endpointPositiveWord, bitAt, caseBit₀,
-      binarySignedValue, Nat.fromBitsLE, Nat.fromBits]
+  | cons b x => cases b <;> simp [endpointPositiveWord, binarySignedValue, ofBits]
 
-theorem endpointPositiveWord_cobham :
-    Cobham fun v : Fin 1 → List Bool => endpointPositiveWord (v 0) :=
-  (Cobham.iteFn (Cobham.comp₂ Cobham.bitAtFn (Cobham.const []) (.proj 0))
-    (Cobham.const [false]) (Cobham.appendFn (Cobham.const [false])
-      (Cobham.tailFn (.proj 0)))).of_eq fun _ => rfl
+@[fun_prop] theorem endpointPositiveWord_polyTime :
+    ComputableInPolyTime endpointPositiveWord encBits encBits := by
+  have hhead : ComputableInPolyTime (fun x : List Bool => x.headD false) encBits encBool :=
+    .headD false
+  have htail : ComputableInPolyTime (fun x : List Bool => x.tail) encBits encBits :=
+    ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail
+  exact ComputableInPolyTime.ite_decide hhead (.const [false])
+    (ComputableInPolyTime.bitsCons (ComputableInPolyTime.const false) htail)
 
 /-- A payoff coordinate from the supplied packed dictionary. Arguments are
 ambient label ruler, instance, raw membership, determinant, coefficients, width. -/
@@ -38,25 +45,56 @@ def generalBimatrixEndpointWeightWord (v : Fin 6 → List Bool) : List Bool :=
   let position := v 0 ++ v 0 ++ [false]
   let ordinal := binarySubsetTally ((v 2).take position.length)
   let stride := generalBimatrixDimensionWord (v 1) ++ [false]
-  caseBit₀ (bitAt position (v 2))
-    (endpointPositiveWord (binarySignedRowField ![smash ordinal stride, v 5, v 4])) [false]
+  if (v 2)[position.length]?.getD false then
+    endpointPositiveWord (binarySignedRowField
+      ![List.replicate (ordinal.length * stride.length) true, v 5, v 4])
+  else [false]
 
-theorem generalBimatrixEndpointWeightWord_cobham :
-    Cobham generalBimatrixEndpointWeightWord := by
-  have hp : Cobham fun v : Fin 6 → List Bool => v 0 ++ v 0 ++ [false] :=
-    Cobham.appendFn (Cobham.appendFn (.proj 0) (.proj 0)) (Cobham.const [false])
-  have ho : Cobham fun v : Fin 6 → List Bool =>
-      binarySubsetTally ((v 2).take (v 0 ++ v 0 ++ [false]).length) :=
-    Cobham.comp binarySubsetTally_cobham fun _ => Cobham.takeFn hp (.proj 2)
-  have hk : Cobham fun v : Fin 6 → List Bool =>
-      generalBimatrixDimensionWord (v 1) ++ [false] :=
-    Cobham.appendFn (Cobham.comp generalBimatrixDimensionWord_cobham fun _ => .proj 1)
-      (Cobham.const [false])
-  have hf := Cobham.comp₃ binarySignedRowField_cobham
-    (Cobham.comp₂ Cobham.smash ho hk) (.proj 5) (.proj 4)
-  exact (Cobham.iteFn (Cobham.comp₂ Cobham.bitAtFn hp (.proj 2))
-    (Cobham.comp endpointPositiveWord_cobham fun _ => hf) (Cobham.const [false])).of_eq
-      fun _ => rfl
+@[fun_prop] theorem generalBimatrixEndpointWeightWord_polyTime :
+    ComputableInPolyTime generalBimatrixEndpointWeightWord (encPi encBits) encBits := by
+  have hr := ComputableInPolyTime.pi_apply encBits (0 : Fin 6)
+  have hi := ComputableInPolyTime.pi_apply encBits (1 : Fin 6)
+  have hm := ComputableInPolyTime.pi_apply encBits (2 : Fin 6)
+  have hcoeff := ComputableInPolyTime.pi_apply encBits (4 : Fin 6)
+  have hwidth := ComputableInPolyTime.pi_apply encBits (5 : Fin 6)
+  have hposition : ComputableInPolyTime
+      (fun v : Fin 6 → List Bool => v 0 ++ v 0 ++ [false])
+      (encPi encBits) encBits :=
+    ComputableInPolyTime.bitsAppend
+      (ComputableInPolyTime.bitsAppend hr hr) (.const [false])
+  have hpositionLen := ComputableInPolyTime.length_bits_comp hposition
+  have hprefix := hm.bitsTakeWithInput hpositionLen
+  have hord := binarySubsetTally_polyTime hprefix
+  have hordLen := ComputableInPolyTime.length_bits_comp hord
+  have hdimensionArgs : ComputableInPolyTime (fun v : Fin 6 → List Bool => ![v 1])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    exact hi
+  have hdimension := generalBimatrixDimensionWord_polyTime.comp hdimensionArgs
+  have hstride := ComputableInPolyTime.bitsAppend hdimension (.const [false])
+  have hstrideLen := ComputableInPolyTime.length_bits_comp hstride
+  have hsmashLen := ComputableInPolyTime.unary_mul' hordLen hstrideLen
+  have hsmash := ComputableInPolyTime.bitsReplicate true |>.comp hsmashLen
+  have hrowArgs : ComputableInPolyTime
+      (fun v : Fin 6 → List Bool =>
+        ![List.replicate ((binarySubsetTally ((v 2).take (v 0 ++ v 0 ++ [false]).length)).length *
+          (generalBimatrixDimensionWord (v 1) ++ [false]).length) true, v 5, v 4])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hsmash
+    · exact hwidth
+    · exact hcoeff
+  have hrow := binarySignedRowField_polyTime.comp hrowArgs
+  have hpositive := endpointPositiveWord_polyTime.comp hrow
+  have hflagWord := indexedFlag_polyTime.comp (hpositionLen.prod hm)
+  have hflag : ComputableInPolyTime
+      (fun v : Fin 6 → List Bool => ((v 2)[(v 0 ++ v 0 ++ [false]).length]?.getD false))
+      (encPi encBits) encBool := (ComputableInPolyTime.headD false).comp hflagWord
+  exact ComputableInPolyTime.ite_decide hflag hpositive (.const [false])
 
 theorem generalBimatrixEndpointWeightWord_value (v : Fin 6 → List Bool) :
     binarySignedValue (generalBimatrixEndpointWeightWord v) =
@@ -65,26 +103,27 @@ theorem generalBimatrixEndpointWeightWord_value (v : Fin 6 → List Bool) :
           (((v 2).take (2 * (v 0).length + 1)).count true *
             (generalRowCount (v 1) + generalColCount (v 1) + 1))).toNat
       else 0 := by
-  have hget (word : List Bool) (n : ℕ) :
-      (word.drop n).headD false = (word[n]?).getD false := by
-    induction n generalizing word with
-    | zero => cases word <;> rfl
-    | succ n ih => cases word with
-      | nil => rfl
-      | cons a word => exact ih word
-  rw [generalBimatrixEndpointWeightWord, bitAt_eq]
-  simp only [List.length_append, List.length_singleton, bitOf,
-    show (v 0).length + (v 0).length + 1 = 2 * (v 0).length + 1 by omega, hget]
-  generalize ((v 2)[2 * (v 0).length + 1]?).getD false = b
-  cases b
-  · rfl
-  · simp only [caseBit₀, Bool.cond_true]
+  change binarySignedValue
+      (if (v 2)[(v 0 ++ v 0 ++ [false]).length]?.getD false then
+        endpointPositiveWord
+          (binarySignedRowField
+            ![List.replicate
+                ((binarySubsetTally ((v 2).take (v 0 ++ v 0 ++ [false]).length)).length *
+                  (generalBimatrixDimensionWord (v 1) ++ [false]).length) true,
+              v 5, v 4])
+        else [false]) = _
+  simp only [List.length_append, List.length_singleton]
+  have hpos : (v 0).length + (v 0).length + 1 = 2 * (v 0).length + 1 := by omega
+  rw [hpos]
+  by_cases hbit : (v 2)[2 * (v 0).length + 1]?.getD false = true
+  · simp only [hbit, ite_true]
     rw [endpointPositiveWord_value]
-    simp only [↓reduceIte, binarySignedRowField,
-      Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two, smash_length,
-      binarySubsetTally_length, generalBimatrixDimensionWord_length, List.length_append,
-      List.length_singleton, binarySignedRowValue]
+    simp only [binarySignedRowField, Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.cons_val_two, List.length_replicate, binarySubsetTally_length,
+      generalBimatrixDimensionWord_length,
+      binarySignedRowValue]
     rfl
+  · simp [hbit, binarySignedValue, ofBits]
 
 /-- Recover one player's indexed probability weight for the mass summation loop. -/
 def generalBimatrixEndpointMassTermWord (columnPlayer : Bool) (v : Fin 6 → List Bool) : List Bool :=
@@ -92,18 +131,43 @@ def generalBimatrixEndpointMassTermWord (columnPlayer : Bool) (v : Fin 6 → Lis
     (bif columnPlayer then generalRowRuler (v 1) ++ v 0 else v 0),
     v 1, v 2, v 3, v 4, v 5]
 
-private theorem massTerm_cobham (columnPlayer : Bool) : Cobham (generalBimatrixEndpointMassTermWord columnPlayer) := by
-  apply Cobham.comp generalBimatrixEndpointWeightWord_cobham
-  intro i
-  fin_cases i
-  · cases columnPlayer
-    · exact .proj 0
-    · exact Cobham.appendFn (Cobham.comp generalRowRuler_cobham fun _ => .proj 1) (.proj 0)
-  · exact .proj 1
-  · exact .proj 2
-  · exact .proj 3
-  · exact .proj 4
-  · exact .proj 5
+private theorem massTerm_polyTime (columnPlayer : Bool) :
+    ComputableInPolyTime (generalBimatrixEndpointMassTermWord columnPlayer)
+      (encPi encBits) encBits := by
+  have h0 := ComputableInPolyTime.pi_apply encBits (0 : Fin 6)
+  have h1 := ComputableInPolyTime.pi_apply encBits (1 : Fin 6)
+  have h2 := ComputableInPolyTime.pi_apply encBits (2 : Fin 6)
+  have h3 := ComputableInPolyTime.pi_apply encBits (3 : Fin 6)
+  have h4 := ComputableInPolyTime.pi_apply encBits (4 : Fin 6)
+  have h5 := ComputableInPolyTime.pi_apply encBits (5 : Fin 6)
+  have hfirst : ComputableInPolyTime
+      (fun v : Fin 6 → List Bool => bif columnPlayer then
+        generalRowRuler (v 1) ++ v 0 else v 0) (encPi encBits) encBits := by
+    cases columnPlayer
+    · exact h0
+    · have hargs : ComputableInPolyTime (fun v : Fin 6 → List Bool => ![v 1])
+          (encPi encBits) (encPi encBits) := by
+        apply ComputableInPolyTime.pi
+        intro i
+        fin_cases i
+        exact h1
+      have hrow := generalRowRuler_polyTime.comp hargs
+      exact ComputableInPolyTime.bitsAppend hrow h0
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 6 → List Bool =>
+        ![bif columnPlayer then generalRowRuler (v 1) ++ v 0 else v 0,
+          v 1, v 2, v 3, v 4, v 5])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hfirst
+    · exact h1
+    · exact h2
+    · exact h3
+    · exact h4
+    · exact h5
+  exact generalBimatrixEndpointWeightWord_polyTime.comp hargs
 
 /-- Sum one player's Cramer weights at the supplied arithmetic width.
 Arguments are instance, membership, determinant, coefficients and width. -/
@@ -111,24 +175,43 @@ def generalBimatrixEndpointMassWord (columnPlayer : Bool) (v : Fin 5 → List Bo
   binarySignedSum (generalBimatrixEndpointMassTermWord columnPlayer)
     (generalActionRuler columnPlayer (v 0)) (v 4) v
 
-theorem generalBimatrixEndpointMassWord_cobham (columnPlayer : Bool) :
-    Cobham (generalBimatrixEndpointMassWord columnPlayer) := by
-  let gs : Fin 7 → (Fin 5 → List Bool) → List Bool := fun i v =>
-    ![generalActionRuler columnPlayer (v 0), v 4, v 0, v 1, v 2, v 3, v 4] i
-  have hg : ∀ i, Cobham (gs i) := by
+@[fun_prop] theorem generalBimatrixEndpointMassWord_polyTime (columnPlayer : Bool) :
+    ComputableInPolyTime (generalBimatrixEndpointMassWord columnPlayer)
+      (encPi encBits) encBits := by
+  have hinput := ComputableInPolyTime.pi_apply encBits (0 : Fin 5)
+  have hclockArgs : ComputableInPolyTime (fun v : Fin 5 → List Bool => ![v 0])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
     intro i
     fin_cases i
-    · cases columnPlayer
-      · exact Cobham.comp generalRowRuler_cobham fun _ => .proj 0
-      · exact Cobham.comp generalColRuler_cobham fun _ => .proj 0
-    · exact .proj 4
-    · exact .proj 0
-    · exact .proj 1
-    · exact .proj 2
-    · exact .proj 3
-    · exact .proj 4
-  exact (Cobham.comp (gs := gs) (binarySignedSum_cobham (massTerm_cobham columnPlayer)) hg).of_eq
-    fun v => by congr 1; ext i; fin_cases i <;> rfl
+    exact hinput
+  have hclock := (generalActionRuler_polyTime columnPlayer).comp hclockArgs
+  have hwidth := ComputableInPolyTime.pi_apply encBits (4 : Fin 5)
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 5 → List Bool =>
+        ![generalActionRuler columnPlayer (v 0), v 4,
+          v 0, v 1, v 2, v 3, v 4])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hclock
+    · exact hwidth
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 2
+    · exact .pi_apply encBits 3
+    · exact .pi_apply encBits 4
+  have hsum : ComputableInPolyTime
+      (fun u : Fin 7 → List Bool =>
+        binarySignedSum (generalBimatrixEndpointMassTermWord columnPlayer)
+          (u 0) (u 1) (Fin.tail (Fin.tail u)))
+      (encPi encBits) encBits :=
+    binarySignedSum_polyTime (p := 5)
+      (term := generalBimatrixEndpointMassTermWord columnPlayer)
+      (massTerm_polyTime columnPlayer)
+  have hcert := hsum.comp hargs
+  exact hcert.of_enc_eq (fun _ => rfl)
 
 /-- Undo the payoff shift using the opposite player's mass. -/
 def generalBimatrixEndpointUtilityWord (columnPlayer : Bool) (v : Fin 5 → List Bool) : List Bool :=
@@ -136,15 +219,28 @@ def generalBimatrixEndpointUtilityWord (columnPlayer : Bool) (v : Fin 5 → List
     (binarySignedMul (generalPositiveShiftWord (v 0))
       (generalBimatrixEndpointMassWord (!columnPlayer) v))
 
-theorem generalBimatrixEndpointUtilityWord_cobham (columnPlayer : Bool) :
-    Cobham (generalBimatrixEndpointUtilityWord columnPlayer) :=
-  (Cobham.comp₃ binarySignedFixedSub_cobham (.proj 4)
-    (Cobham.appendFn (Cobham.const [false]) (Cobham.tailFn (.proj 2)))
-    (Cobham.comp₂ binarySignedMul_cobham
-      (Cobham.comp generalPositiveShiftWord_cobham fun _ => .proj 0)
-      (generalBimatrixEndpointMassWord_cobham (!columnPlayer)))).of_eq fun _ => rfl
+@[fun_prop] theorem generalBimatrixEndpointUtilityWord_polyTime (columnPlayer : Bool) :
+    ComputableInPolyTime (generalBimatrixEndpointUtilityWord columnPlayer)
+      (encPi encBits) encBits := by
+  have h0 := ComputableInPolyTime.pi_apply encBits (0 : Fin 5)
+  have h2 := ComputableInPolyTime.pi_apply encBits (2 : Fin 5)
+  have h4 := ComputableInPolyTime.pi_apply encBits (4 : Fin 5)
+  have hshiftArgs : ComputableInPolyTime (fun v : Fin 5 → List Bool => ![v 0])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    exact h0
+  have hshift := (generalPositiveShiftWord_polyTime).comp hshiftArgs
+  have hmass := generalBimatrixEndpointMassWord_polyTime (!columnPlayer)
+  have hproduct := binarySignedMul_polyTime hshift hmass
+  have hraw : ComputableInPolyTime (fun v : Fin 5 → List Bool => [false] ++ (v 2).tail)
+      (encPi encBits) encBits :=
+    ComputableInPolyTime.bitsAppend (.const [false])
+      ((ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp h2)
+  exact binarySignedFixedSub_polyTime h4 hraw hproduct
 
-private def scalarWord : ℕ → (Fin 5 → List Bool) → List Bool
+def scalarWord : ℕ → (Fin 5 → List Bool) → List Bool
   | 0, v => generalBimatrixEndpointMassWord false v
   | 1, v => generalBimatrixEndpointMassWord true v
   | 2, v => generalBimatrixEndpointUtilityWord false v
@@ -153,68 +249,149 @@ private def scalarWord : ℕ → (Fin 5 → List Bool) → List Bool
   | 5, v => binarySignedNeg (generalBimatrixEndpointUtilityWord true v)
   | _, _ => [false]
 
-private theorem scalarWord_cobham (n : ℕ) : Cobham (scalarWord n) := by
+private theorem scalarWord_polyTime (n : ℕ) :
+    ComputableInPolyTime (scalarWord n) (encPi encBits) encBits := by
   rcases n with _ | n
-  · exact generalBimatrixEndpointMassWord_cobham false
+  · exact generalBimatrixEndpointMassWord_polyTime false
   rcases n with _ | n
-  · exact generalBimatrixEndpointMassWord_cobham true
+  · exact generalBimatrixEndpointMassWord_polyTime true
   rcases n with _ | n
-  · exact generalBimatrixEndpointUtilityWord_cobham false
+  · exact generalBimatrixEndpointUtilityWord_polyTime false
   rcases n with _ | n
-  · exact (Cobham.comp binarySignedNeg_cobham fun _ =>
-      generalBimatrixEndpointUtilityWord_cobham false).of_eq fun _ => rfl
+  · exact binarySignedNeg_polyTime (generalBimatrixEndpointUtilityWord_polyTime false)
   rcases n with _ | n
-  · exact generalBimatrixEndpointUtilityWord_cobham true
+  · exact generalBimatrixEndpointUtilityWord_polyTime true
   rcases n with _ | n
-  · exact (Cobham.comp binarySignedNeg_cobham fun _ =>
-      generalBimatrixEndpointUtilityWord_cobham true).of_eq fun _ => rfl
-  exact Cobham.const [false]
+  · exact binarySignedNeg_polyTime (generalBimatrixEndpointUtilityWord_polyTime true)
+  exact .const [false]
 
-private def fieldSignedWord : ℕ → (Fin 6 → List Bool) → List Bool
+def fieldSignedWord : ℕ → (Fin 6 → List Bool) → List Bool
   | 0, v => generalBimatrixEndpointWeightWord
       ![(v 0).drop 6, v 1, v 2, v 3, v 4, v 5]
-  | n + 1, v => caseBit₀ (lenEqFlag (v 0) (List.replicate n false))
-      (scalarWord n (Fin.tail v)) (fieldSignedWord n v)
+  | n + 1, v => if (v 0).length = n then scalarWord n (Fin.tail v) else fieldSignedWord n v
 
-private theorem fieldSignedWord_cobham (n : ℕ) : Cobham (fieldSignedWord n) := by
+private theorem fieldSignedWord_polyTime (n : ℕ) :
+    ComputableInPolyTime (fieldSignedWord n) (encPi encBits) encBits := by
   induction n with
   | zero =>
-    exact (Cobham.comp generalBimatrixEndpointWeightWord_cobham fun i => by
+    have hargs : ComputableInPolyTime
+        (fun v : Fin 6 → List Bool =>
+          ![(v 0).drop 6, v 1, v 2, v 3, v 4, v 5])
+        (encPi encBits) (encPi encBits) := by
+      apply ComputableInPolyTime.pi
+      intro i
       fin_cases i
-      · exact Cobham.dropFn (Cobham.const (List.replicate 6 false)) (.proj 0)
-      · exact .proj 1
-      · exact .proj 2
-      · exact .proj 3
-      · exact .proj 4
-      · exact .proj 5).of_eq fun _ => rfl
+      · exact (ComputableInPolyTime.pi_apply encBits (0 : Fin 6)).bitsDropWithInput (.const 6)
+      · exact .pi_apply encBits 1
+      · exact .pi_apply encBits 2
+      · exact .pi_apply encBits 3
+      · exact .pi_apply encBits 4
+      · exact .pi_apply encBits 5
+    exact generalBimatrixEndpointWeightWord_polyTime.comp hargs
   | succ n ih =>
-    exact (Cobham.iteFn (lenEqFlag_mem (.proj 0) (Cobham.const (List.replicate n false)))
-      (Cobham.comp (scalarWord_cobham n) fun i => .proj i.succ) ih).of_eq fun _ => rfl
+    have hruler := ComputableInPolyTime.pi_apply encBits (0 : Fin 6)
+    have hlen := ComputableInPolyTime.length_bits_comp hruler
+    have hcondition := ComputableInPolyTime.of_tidy
+      ((ComputableTidilyInPolyTime.decide_eq encUnary).comp
+        (hlen.tidy.prod (.const n)))
+    have htail : ComputableInPolyTime (fun v : Fin 6 → List Bool => Fin.tail v)
+        (encPi encBits) (encPi encBits) := by
+      apply ComputableInPolyTime.pi
+      intro i
+      exact .pi_apply encBits i.succ
+    have hscalar := (scalarWord_polyTime n).comp htail
+    exact ComputableInPolyTime.of_tidy
+      (.ite_decide hcondition.tidy hscalar.tidy ih.tidy)
 
-private def fieldWord (v : Fin 6 → List Bool) : List Bool :=
-  padTo (generalWidthRuler (v 1)) (endpointPositiveWord (fieldSignedWord 6 v)).tail
+def fieldWord (v : Fin 6 → List Bool) : List Bool :=
+  lowBits (generalWidthRuler (v 1)).length
+    (ofBits (endpointPositiveWord (fieldSignedWord 6 v)).tail)
 
-private theorem fieldWord_cobham : Cobham fieldWord :=
-  (Cobham.padFn
-    (Cobham.comp generalWidthRuler_cobham fun _ => .proj 1)
-    (Cobham.tailFn (Cobham.comp endpointPositiveWord_cobham
-      fun _ => fieldSignedWord_cobham 6))).of_eq fun _ => rfl
+@[simp] private theorem fieldWord_length (v : Fin 6 → List Bool) :
+    (fieldWord v).length = (generalWidthRuler (v 1)).length := by
+  simp [fieldWord]
 
-private def emitStep (v : Fin 7 → List Bool) : List Bool :=
-  v 1 ++ fieldWord (Fin.cons (v 0) (Fin.tail (Fin.tail v)))
+private theorem fieldWord_polyTime :
+    ComputableInPolyTime fieldWord (encPi encBits) encBits := by
+  have hinstance := ComputableInPolyTime.pi_apply encBits (1 : Fin 6)
+  have hwidth := generalWidthRuler_polyTime.comp hinstance
+  have hwidthLen := ComputableInPolyTime.length_bits_comp hwidth
+  have hsigned := fieldSignedWord_polyTime 6
+  have hpositive := endpointPositiveWord_polyTime.comp hsigned
+  have htail := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hpositive
+  have hvalue := ComputableInPolyTime.bitsToNat.comp htail
+  exact ComputableInPolyTime.bitsLow hwidthLen hvalue
 
-private def emitFields (clock : List Bool) (v : Fin 5 → List Bool) : List Bool :=
-  recNotation (fun _ : Fin 5 → List Bool => []) emitStep emitStep clock v
+private def emitFieldsStep (context : Fin 5 → List Bool) (suffix state : List Bool)
+    (_bit : Bool) : List Bool :=
+  state ++ fieldWord (Fin.cons suffix context)
+
+def emitFields (clock : List Bool) (v : Fin 5 → List Bool) : List Bool :=
+  WordFold.suffixFold
+    (fun (context : Fin 5 → List Bool) (suffix state : List Bool) (_bit : Bool) =>
+      state ++ fieldWord (Fin.cons suffix context)) v [] clock
 
 private theorem emitFields_length (clock : List Bool) (v : Fin 5 → List Bool) :
     (emitFields clock v).length = clock.length * (generalWidthRuler (v 0)).length := by
   induction clock with
-  | nil => simp [emitFields, recNotation]
+  | nil => simp [emitFields]
   | cons b r ih =>
-    simp only [emitFields, recNotation_cons, Bool.cond_self]
+    rw [emitFields, WordFold.suffixFold_cons]
     change (emitFields r v ++ fieldWord (Fin.cons r v)).length = _
-    rw [List.length_append, ih]
-    simp [fieldWord, padTo_length, Nat.add_mul, Nat.add_comm]
+    rw [List.length_append, ih, fieldWord_length]
+    simp only [List.length_cons]
+    have hfield : (Fin.cons r v : Fin 6 → List Bool) 1 = v 0 := rfl
+    rw [hfield]
+    rw [Nat.succ_mul]
+
+private theorem emitFieldsStep_polyTime :
+    ComputableInPolyTime
+      (fun p : ((Fin 5 → List Bool) × (List Bool × List Bool)) × Bool =>
+        emitFieldsStep p.1.1 p.1.2.1 p.1.2.2 p.2)
+      (encPair (encPair (encPi encBits) (encPair encBits encBits)) encBool) encBits := by
+  let outerEncoding : ((Fin 5 → List Bool) × (List Bool × List Bool)) ↪ List Bool :=
+    encPair (encPi encBits) (encPair encBits encBits)
+  have houter : ComputableInPolyTime
+      (fun p : (((Fin 5 → List Bool) × (List Bool × List Bool)) × Bool) => p.1)
+      (encPair outerEncoding encBool) outerEncoding :=
+    .fst outerEncoding encBool
+  have hcontext :=
+    (ComputableInPolyTime.fst (encPi encBits) (encPair encBits encBits)).comp houter
+  have hstatePair :=
+    (ComputableInPolyTime.snd (encPi encBits) (encPair encBits encBits)).comp houter
+  have hsuffix := (ComputableInPolyTime.fst encBits encBits).comp hstatePair
+  have hacc := (ComputableInPolyTime.snd encBits encBits).comp hstatePair
+  have hfieldArgs : ComputableInPolyTime
+      (fun p : ((Fin 5 → List Bool) × (List Bool × List Bool)) × Bool =>
+        Fin.cons p.1.2.1 p.1.1)
+      (encPair outerEncoding encBool) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    refine Fin.cases ?_ (fun j => ?_) i
+    · exact hsuffix
+    · exact (ComputableInPolyTime.pi_apply encBits j).comp hcontext
+  exact ComputableInPolyTime.bitsAppend hacc (fieldWord_polyTime.comp hfieldArgs)
+
+private theorem emitFields_polyTime :
+    ComputableInPolyTime
+      (fun v : Fin 6 → List Bool => emitFields (v 0) (Fin.tail v))
+      (encPi encBits) encBits := by
+  have hcontext : ComputableInPolyTime
+      (fun v : Fin 6 → List Bool => Fin.tail v) (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    exact .pi_apply encBits i.succ
+  have hclock : ComputableInPolyTime
+      (fun v : Fin 6 → List Bool => v 0) (encPi encBits) encBits :=
+    .pi_apply encBits 0
+  have hwidth := generalWidthRuler_polyTime.comp (.pi_apply encBits (1 : Fin 6))
+  have hbound := hclock.polyBounded_length.mul hwidth.polyBounded_length
+  exact WordFold.suffixFold_polyTime hcontext hclock (.const []) emitFieldsStep_polyTime hbound
+    (fun v suffix hsuffix => by
+      change (emitFields suffix (Fin.tail v)).length ≤
+        (v 0).length * (generalWidthRuler ((Fin.tail v) 0)).length
+      rw [emitFields_length]
+      exact Nat.mul_le_mul_right _ hsuffix.length_le)
 
 /-- Emit the existing certificate layout. Arguments are instance, raw membership,
 determinant, row-major dictionary coefficients, and arithmetic field width. -/
@@ -231,41 +408,40 @@ def generalBimatrixEndpointMachineWord (v : Fin 5 → List Bool) : List Bool :=
   congr 1
   omega
 
-theorem generalBimatrixEndpointMachineWord_cobham : Cobham generalBimatrixEndpointMachineWord := by
-  have hs : Cobham emitStep := Cobham.appendFn (.proj 1)
-    (Cobham.comp fieldWord_cobham fun i =>
-      Fin.cases (.proj 0) (fun j => .proj j.succ.succ) i)
-  have hb : Cobham fun v : Fin 6 → List Bool => smash (v 0) (generalWidthRuler (v 1)) :=
-    Cobham.comp₂ Cobham.smash (.proj 0)
-      (Cobham.comp generalWidthRuler_cobham fun _ => .proj 1)
-  have he : Cobham fun v : Fin 6 → List Bool => emitFields (v 0) (Fin.tail v) :=
-    (Cobham.boundedRec Cobham.empty hs hs hb (fun r v => by
-      change (emitFields r v).length ≤ (smash r (generalWidthRuler (v 0))).length
-      rw [emitFields_length, smash_length])).of_eq fun _ => rfl
-  have hc : Cobham fun v : Fin 5 → List Bool =>
-      List.replicate 6 false ++ generalBimatrixDimensionWord (v 0) :=
-    Cobham.appendFn (Cobham.const (List.replicate 6 false))
-      (Cobham.comp generalBimatrixDimensionWord_cobham fun _ => .proj 0)
-  let gs : Fin 6 → (Fin 5 → List Bool) → List Bool := fun i v =>
-    ![List.replicate 6 false ++ generalBimatrixDimensionWord (v 0), v 0, v 1, v 2, v 3, v 4] i
-  have hg : ∀ i, Cobham (gs i) := by
+@[fun_prop] theorem generalBimatrixEndpointMachineWord_polyTime :
+    ComputableInPolyTime generalBimatrixEndpointMachineWord (encPi encBits) encBits := by
+  have hclock : ComputableInPolyTime
+      (fun v : Fin 5 → List Bool =>
+        List.replicate 6 false ++ generalBimatrixDimensionWord (v 0))
+      (encPi encBits) encBits := by
+    have hargs : ComputableInPolyTime (fun v : Fin 5 → List Bool => ![v 0])
+        (encPi encBits) (encPi encBits) := by
+      apply ComputableInPolyTime.pi
+      intro i
+      fin_cases i
+      exact .pi_apply encBits (0 : Fin 5)
+    exact ComputableInPolyTime.bitsAppend (.const (List.replicate 6 false))
+      (generalBimatrixDimensionWord_polyTime.comp hargs)
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 5 → List Bool =>
+        ![List.replicate 6 false ++ generalBimatrixDimensionWord (v 0),
+          v 0, v 1, v 2, v 3, v 4])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
     intro i
     fin_cases i
-    · exact hc
-    · exact .proj 0
-    · exact .proj 1
-    · exact .proj 2
-    · exact .proj 3
-    · exact .proj 4
-  exact (Cobham.comp (gs := gs) he hg).of_eq fun v => by congr 1; ext i; fin_cases i <;> rfl
-
-theorem generalBimatrixEndpointMachineWord_mem_FPn : FPn generalBimatrixEndpointMachineWord :=
-  cobham_iff_FPn.mp generalBimatrixEndpointMachineWord_cobham
+    · exact hclock
+    · exact .pi_apply encBits (0 : Fin 5)
+    · exact .pi_apply encBits (1 : Fin 5)
+    · exact .pi_apply encBits (2 : Fin 5)
+    · exact .pi_apply encBits (3 : Fin 5)
+    · exact .pi_apply encBits (4 : Fin 5)
+  have hcert := emitFields_polyTime.comp hargs
+  exact hcert.of_enc_eq (fun _ => rfl)
 
 end GameTheory.Complexity.Backend
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
 open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec GameTheory.Math
 
 theorem generalBimatrixEndpointWeightWord_integer (input : List Bool) (basis : GeneralBimatrixShiftedBasis input)
@@ -303,36 +479,34 @@ theorem generalBimatrixEndpointWeightWord_integer (input : List Bool) (basis : G
     simp [BimatrixBasis.cramerWeight, hv]
 end GameTheory.Complexity.Backend
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham GameTheory.Finite
+open Cslib.BitString Turing.MultiTapeTM
+open GameTheory.Finite
 
 /-- Emit one of the six scalar certificate fields at its indexed position. -/
 def generalBimatrixEndpointCertificateFieldWord (v : Fin 6 → List Bool) : List Bool :=
   fieldSignedWord 6 v
 
 private theorem positive_magnitude (x : List Bool) :
-    Nat.fromBitsLE (endpointPositiveWord x).tail = (binarySignedValue x).toNat := by
-  cases x with
-  | nil => rfl
-  | cons b x => cases b <;> simp [endpointPositiveWord, bitAt, caseBit₀,
-      binarySignedValue, Nat.fromBitsLE, Nat.fromBits]
+    ofBits (endpointPositiveWord x).tail = (binarySignedValue x).toNat := by
+  rw [← binarySignedValue_natAbs, endpointPositiveWord_value]
+  apply Int.ofNat_inj.mp
+  simp
 
 private theorem fieldWord_eq_bits (v : Fin 6 → List Bool) (n : ℕ)
     (h : (binarySignedValue (generalBimatrixEndpointCertificateFieldWord v)).toNat = n) :
-    fieldWord v = Nat.toBitsLE (generalCertificateWidth (v 1).length) n := by
-  apply Nat.fromBitsLE_inj_of_length_eq
-  · simp [fieldWord, padTo_length, generalWidthRuler_length]
-  · rw [fieldWord, padTo_fromBitsLE, positive_magnitude, ← h,
-      Nat.fromBitsLE_toBitsLE_mod, generalWidthRuler_length]
-    rfl
+    fieldWord v = lowBits (generalCertificateWidth (v 1).length) n := by
+  rw [fieldWord, positive_magnitude]
+  rw [generalBimatrixEndpointCertificateFieldWord] at h
+  rw [← h, generalWidthRuler_length]
 
 private theorem encodeGeneralFields_snoc (W k : ℕ) (f : ℕ → ℕ) :
     encodeGeneralFields W (k + 1) f =
-      encodeGeneralFields W k f ++ Nat.toBitsLE W (f k) := by
+      encodeGeneralFields W k f ++ lowBits W (f k) := by
   induction k generalizing f with
   | zero => simp [encodeGeneralFields]
   | succ k ih =>
-    change Nat.toBitsLE W (f 0) ++ encodeGeneralFields W (k + 1) (fun i => f (i + 1)) = _
-    rw [ih, encodeGeneralFields]
+    change lowBits W (f 0) ++ encodeGeneralFields W (k + 1) (fun i => f (i + 1)) = _
+    rw [ih (fun i => f (i + 1)), encodeGeneralFields]
     simp only [List.append_assoc]
 
 private theorem emitFields_encode (clock : List Bool) (v : Fin 5 → List Bool)
@@ -344,7 +518,7 @@ private theorem emitFields_encode (clock : List Bool) (v : Fin 5 → List Bool)
   induction clock with
   | nil => rfl
   | cons b r ih =>
-    simp only [emitFields, recNotation_cons, Bool.cond_self]
+    rw [emitFields, WordFold.suffixFold_cons]
     change emitFields r v ++ fieldWord (Fin.cons r v) = _
     rw [ih (fun x hx => hf x (by simp; omega)), fieldWord_eq_bits _ _ (hf r (by simp))]
     exact (encodeGeneralFields_snoc _ _ _).symm
@@ -365,7 +539,6 @@ theorem generalBimatrixEndpointMachineWord_eq_encode (v : Fin 5 → List Bool)
       Nat.add_assoc] using hr
 end GameTheory.Complexity.Backend
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
 open scoped BigOperators
 
 theorem generalBimatrixEndpointMassWord_value (columnPlayer : Bool) (v : Fin 5 → List Bool)
@@ -419,7 +592,8 @@ theorem generalBimatrixEndpointUtilityWord_value (columnPlayer : Bool) (v : Fin 
 end GameTheory.Complexity.Backend
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham GameTheory.Finite GameTheory.Math
+open Cslib.BitString Turing.MultiTapeTM
+open GameTheory.Finite GameTheory.Math
 open scoped BigOperators
 
 theorem generalBimatrixEndpointMassWord_integer (input : List Bool) (basis : GeneralBimatrixShiftedBasis input)
@@ -461,18 +635,6 @@ theorem generalBimatrixEndpointMassWord_integer (input : List Bool) (basis : Gen
       (by rw [List.length_append, List.length_replicate]; rfl) hf
 end GameTheory.Complexity.Backend
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
-
-private theorem lenEqWord (x y : List Bool) :
-    lenEqFlag x y = [decide (x.length = y.length)] := by
-  rcases lenEqFlag_flag x y with h | h
-  · have hh := (lenEqFlag_eq_true_iff x y).mp h
-    simp [h, hh]
-  · have hh : x.length ≠ y.length := by
-      intro hn
-      have ht := (lenEqFlag_eq_true_iff x y).mpr hn
-      simp [h] at ht
-    simp [h, hh]
 
 theorem generalBimatrixEndpointCertificateFieldWord_eq (r : List Bool) (v : Fin 5 → List Bool) :
     generalBimatrixEndpointCertificateFieldWord (Fin.cons r v) =
@@ -483,9 +645,6 @@ theorem generalBimatrixEndpointCertificateFieldWord_eq (r : List Bool) (v : Fin 
       if r.length = 1 then generalBimatrixEndpointMassWord true v else
       if r.length = 0 then generalBimatrixEndpointMassWord false v else
       generalBimatrixEndpointWeightWord ![r.drop 6, v 0, v 1, v 2, v 3, v 4] := by
-  simp only [generalBimatrixEndpointCertificateFieldWord, fieldSignedWord, Fin.cons_zero,
-    lenEqWord, List.length_replicate, Fin.tail_cons, scalarWord]
-  split_ifs <;> simp_all [caseBit₀]
   rfl
 end GameTheory.Complexity.Backend
 namespace GameTheory.Complexity.Backend
@@ -530,7 +689,7 @@ private theorem cramer_field_weight {m n : ℕ} {A B : Fin m → Fin n → ℤ}
       omega
 end GameTheory.Complexity.Backend
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham GameTheory.Finite GameTheory.Math
+open GameTheory.Finite GameTheory.Math
 open scoped BigOperators
 
 set_option backward.isDefEq.respectTransparency false in

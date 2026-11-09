@@ -7,7 +7,7 @@ public import GameTheoryComplexity.Backend.GeneralBimatrixEndpointCapacity
 /-! Signed rectangular controller emission requires no client arithmetic bounds. -/
 namespace GameTheory.Complexity.Tests.GeneralBimatrixEndpointCapacity
 open Backend GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec GameTheory.Math
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM
 
 private def input : List Bool := encodeGeneralInstance 1 2 2
   (fun _ j => if j = 0 then -1 else 2)
@@ -33,6 +33,7 @@ example (basis : GeneralBimatrixShiftedBasis input) (entering : List Bool)
 
 -- Empty or malformed input remains computable, while acceptance requires valid dimensions.
 example : ¬GeneralInstanceValid [] := by decide +kernel
-example : FPn generalBimatrixDictionaryEndpointWord := generalBimatrixDictionaryEndpointWord_mem_FPn
+example : ComputableInPolyTime generalBimatrixDictionaryEndpointWord (encPi encBits) encBits :=
+  generalBimatrixDictionaryEndpointWord_polyTime
 
 end GameTheory.Complexity.Tests.GeneralBimatrixEndpointCapacity
