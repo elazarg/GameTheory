@@ -1,6 +1,6 @@
 module
 
-public import Complexitylib.Mathlib.NatBits
+public import Complexity.Foundations.Data.BitString.Binary
 public import Mathlib.Data.List.Basic
 
 @[expose] public section
@@ -11,6 +11,8 @@ no tag or orientation field is reserved. -/
 
 namespace GameTheory.Complexity.Backend
 
+open Cslib.BitString
+
 /-- Coordinate width for routing a graph with `b` bits per original vertex. -/
 def routingCoordinateWidth (b : ℕ) : ℕ := 2 * b + 3
 
@@ -19,14 +21,14 @@ def routingPointWidth (b : ℕ) : ℕ := 2 * routingCoordinateWidth b
 
 /-- Serialize a grid point in two fixed-width little-endian blocks. -/
 def encodeRoutingPoint (b : ℕ) (point : ℕ × ℕ) : List Bool :=
-  Nat.toBitsLE (routingCoordinateWidth b) point.1 ++
-    Nat.toBitsLE (routingCoordinateWidth b) point.2
+  lowBits (routingCoordinateWidth b) point.1 ++
+    lowBits (routingCoordinateWidth b) point.2
 
 /-- Decode an exact-width word, rejecting every malformed length. -/
 def decodeRoutingPoint (b : ℕ) (word : List Bool) : Option (ℕ × ℕ) :=
   if word.length = routingPointWidth b then
-    some (Nat.fromBitsLE (word.take (routingCoordinateWidth b)),
-      Nat.fromBitsLE (word.drop (routingCoordinateWidth b)))
+    some (lsbValue (word.take (routingCoordinateWidth b)),
+      lsbValue (word.drop (routingCoordinateWidth b)))
   else none
 
 /-- Every encoded point occupies exactly two coordinate blocks. -/
@@ -40,7 +42,7 @@ theorem decodeRoutingPoint_encode (b : ℕ) (point : ℕ × ℕ)
     (hy : point.2 < 2 ^ routingCoordinateWidth b) :
     decodeRoutingPoint b (encodeRoutingPoint b point) = some point := by
   simp only [decodeRoutingPoint, encodeRoutingPoint_length, ↓reduceIte]
-  simp [encodeRoutingPoint, Nat.fromBitsLE_toBitsLE hx, Nat.fromBitsLE_toBitsLE hy]
+  simp [encodeRoutingPoint, lsbValue_lowBits hx, lsbValue_lowBits hy]
 
 /-- A successful decoder result certifies the exact serialized length. -/
 theorem decodeRoutingPoint_length {b : ℕ} {word : List Bool} {point : ℕ × ℕ}
@@ -65,16 +67,16 @@ theorem decodeRoutingPoint_bound {b : ℕ} {word : List Bool} {point : ℕ × �
   rw [ite_eq_left hw] at hd
   cases hd
   constructor
-  · simpa only [hxlen] using Nat.fromBitsLE_lt_pow_length (word.take (routingCoordinateWidth b))
-  · simpa only [hylen] using Nat.fromBitsLE_lt_pow_length (word.drop (routingCoordinateWidth b))
+  · simpa only [hxlen] using lsbValue_lt (word.take (routingCoordinateWidth b))
+  · simpa only [hylen] using lsbValue_lt (word.drop (routingCoordinateWidth b))
 
 /-- Every accepted word is exactly the encoding of its decoded point. -/
 theorem encodeRoutingPoint_decode {b : ℕ} {word : List Bool} {point : ℕ × ℕ}
     (hd : decodeRoutingPoint b word = some point) : encodeRoutingPoint b point = word := by
   have hw := decodeRoutingPoint_length hd
   obtain ⟨hxlen, hylen⟩ := coordinate_lengths hw
-  have hx := Nat.toBitsLE_fromBitsLE (word.take (routingCoordinateWidth b))
-  have hy := Nat.toBitsLE_fromBitsLE (word.drop (routingCoordinateWidth b))
+  have hx := lowBits_lsbValue (word.take (routingCoordinateWidth b))
+  have hy := lowBits_lsbValue (word.drop (routingCoordinateWidth b))
   rw [hxlen] at hx
   rw [hylen] at hy
   unfold decodeRoutingPoint at hd
@@ -91,13 +93,9 @@ theorem encodeRoutingPoint_injective {b : ℕ} {p q : ℕ × ℕ}
   rw [decodeRoutingPoint_encode b p hx hy, decodeRoutingPoint_encode b q hqx hqy] at hd
   exact Option.some.inj hd
 
-private theorem zero_bits (width : ℕ) : Nat.toBitsLE width 0 = List.replicate width false := by
-  have hz : ∀ m, Nat.toBits m 0 = List.replicate m false := by
-    intro m
-    induction m with
-    | zero => rfl
-    | succ m ih => simp [Nat.toBits, ih, List.replicate_succ]
-  simp [Nat.toBitsLE, hz]
+private theorem zero_bits (width : ℕ) : lowBits width 0 = List.replicate width false := by
+  simpa only [List.length_replicate, lsbValue_replicate_false] using
+    lowBits_lsbValue (List.replicate width false)
 
 /-- The grid origin has the all-zero routing word. -/
 @[simp] theorem encodeRoutingPoint_origin (b : ℕ) :

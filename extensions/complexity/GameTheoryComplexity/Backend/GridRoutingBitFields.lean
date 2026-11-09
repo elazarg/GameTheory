@@ -1,8 +1,8 @@
 module
 
-public import GameTheoryComplexity.Backend.EndOfLineMachineOps
-public import Complexitylib.Mathlib.NatBits
-public import Complexitylib.Classes.P.Cobham.Internal.Extract
+public import Complexity.Foundations.Data.BitString.Binary
+public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.BitString
+public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Plain
 public import Mathlib.Tactic.Ring
 
 @[expose] public section
@@ -12,59 +12,43 @@ and shifts. Their arithmetic meaning follows the little-endian bit convention. -
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity _root_.Complexity.Cobham EndOfLineMachineOps
-
-/-- Appending a high field shifts it by the low field's width. -/
-theorem routing_fromBitsLE_append (low high : List Bool) :
-    Nat.fromBitsLE (low ++ high) =
-      Nat.fromBitsLE low + 2 ^ low.length * Nat.fromBitsLE high := by
-  induction low with
-  | nil => simp [Nat.fromBitsLE, Nat.fromBits]
-  | cons bit low ih =>
-    simp only [List.cons_append, Nat.fromBitsLE_cons, List.length_cons, pow_succ, ih]
-    ring
+open Turing.MultiTapeTM ComputableInPolyTime Cslib.BitString
 
 /-- Dropping low bits divides the represented value by their binary place value. -/
-theorem routing_fromBitsLE_drop (width : ℕ) (bits : List Bool) :
-    Nat.fromBitsLE (bits.drop width) = Nat.fromBitsLE bits / 2 ^ width := by
+theorem routing_lsbValue_drop (width : ℕ) (bits : List Bool) :
+    lsbValue (bits.drop width) = lsbValue bits / 2 ^ width := by
   induction width generalizing bits with
   | zero => simp
   | succ width ih =>
     cases bits with
-    | nil => simp [Nat.fromBitsLE, Nat.fromBits]
+    | nil => simp [lsbValue]
     | cons bit bits =>
-      have hhalf : Nat.fromBitsLE (bit :: bits) / 2 = Nat.fromBitsLE bits := by
-        rw [Nat.fromBitsLE_cons]
+      have hhalf : lsbValue (bit :: bits) / 2 = lsbValue bits := by
+        rw [lsbValue]
         cases bit with
         | false => simp
-        | true => simp only [ite_true]; omega
+        | true => simp only [Bool.toNat_true]; omega
       rw [List.drop_succ_cons, ih, pow_succ, Nat.mul_comm (2 ^ width) 2,
         ← Nat.div_div_eq_div_mul, hhalf]
 
 /-- Taking low bits reduces the represented value modulo their binary capacity. -/
-theorem routing_fromBitsLE_take (width : ℕ) (bits : List Bool) :
-    Nat.fromBitsLE (bits.take width) = Nat.fromBitsLE bits % 2 ^ width := by
+theorem routing_lsbValue_take (width : ℕ) (bits : List Bool) :
+    lsbValue (bits.take width) = lsbValue bits % 2 ^ width := by
   by_cases hw : width ≤ bits.length
   · have hl : (bits.take width).length = width := by simp [List.length_take, hw]
-    have hb : Nat.fromBitsLE (bits.take width) < 2 ^ width := by
-      simpa only [hl] using Nat.fromBitsLE_lt_pow_length (bits.take width)
-    have he : Nat.fromBitsLE bits = Nat.fromBitsLE (bits.take width) +
-        2 ^ width * Nat.fromBitsLE (bits.drop width) := by
+    have hb : lsbValue (bits.take width) < 2 ^ width := by
+      simpa only [hl] using lsbValue_lt (bits.take width)
+    have he : lsbValue bits = lsbValue (bits.take width) +
+        2 ^ width * lsbValue (bits.drop width) := by
       simpa only [hl, List.take_append_drop] using
-        routing_fromBitsLE_append (bits.take width) (bits.drop width)
+        lsbValue_append (bits.take width) (bits.drop width)
     rw [he]
     simp [Nat.add_mod, Nat.mod_eq_of_lt hb]
   · have hlen : bits.length ≤ width := by omega
-    have hb : Nat.fromBitsLE bits < 2 ^ width :=
-      lt_of_lt_of_le (Nat.fromBitsLE_lt_pow_length bits)
+    have hb : lsbValue bits < 2 ^ width :=
+      lt_of_lt_of_le (lsbValue_lt bits)
         (Nat.pow_le_pow_right (by decide) hlen)
     simp [List.take_of_length_le hlen, Nat.mod_eq_of_lt hb]
-
-private theorem fromBitsLE_zero (width : ℕ) :
-    Nat.fromBitsLE (List.replicate width false) = 0 := by
-  induction width with
-  | zero => rfl
-  | succ width ih => simp [List.replicate_succ, Nat.fromBitsLE_cons, ih]
 
 /-- Pad with high zero bits and truncate to the word ruler's width. -/
 def routingPadBits (ruler bits : List Bool) : List Bool :=
@@ -81,16 +65,23 @@ def routingShiftBits (ruler bits : List Bool) : List Bool :=
 
 /-- Padding preserves precisely the low bits within the requested capacity. -/
 theorem routingPadBits_value (ruler bits : List Bool) :
-    Nat.fromBitsLE (routingPadBits ruler bits) = Nat.fromBitsLE bits % 2 ^ ruler.length := by
-  rw [routingPadBits, routing_fromBitsLE_take, routing_fromBitsLE_append, fromBitsLE_zero]
+    lsbValue (routingPadBits ruler bits) = lsbValue bits % 2 ^ ruler.length := by
+  rw [routingPadBits, routing_lsbValue_take, lsbValue_append, lsbValue_replicate_false]
   simp
 
 /-- Padding is the canonical fixed-width encoding of the original word's value. -/
-theorem routingPadBits_eq_toBitsLE (ruler bits : List Bool) :
-    routingPadBits ruler bits = Nat.toBitsLE ruler.length (Nat.fromBitsLE bits) := by
-  apply Nat.fromBitsLE_inj_of_length_eq
-  · simp
-  · rw [routingPadBits_value, Nat.fromBitsLE_toBitsLE_mod]
+theorem routingPadBits_eq_lowBits (ruler bits : List Bool) :
+    routingPadBits ruler bits = lowBits ruler.length (lsbValue bits) := by
+  apply lsbValue_injective (by simp)
+  rw [routingPadBits_value]
+  have h := lsbValue_lowBits (Nat.mod_lt (lsbValue bits) (by positivity : 0 < 2 ^ ruler.length))
+  rw [show lowBits ruler.length (lsbValue bits % 2 ^ ruler.length) =
+      lowBits ruler.length (lsbValue bits) by
+        unfold lowBits
+        apply List.map_congr_left
+        intro i hi
+        simp [Nat.testBit_mod_two_pow, List.mem_range.mp hi]] at h
+  exact h.symm
 
 /-- A shift adds the ruler's width to the existing word length. -/
 @[simp] theorem routingShiftBits_length (ruler bits : List Bool) :
@@ -99,26 +90,25 @@ theorem routingPadBits_eq_toBitsLE (ruler bits : List Bool) :
 
 /-- A binary shift multiplies the represented value by the ruler's power of two. -/
 theorem routingShiftBits_value (ruler bits : List Bool) :
-    Nat.fromBitsLE (routingShiftBits ruler bits) = 2 ^ ruler.length * Nat.fromBitsLE bits := by
-  simp [routingShiftBits, routing_fromBitsLE_append, fromBitsLE_zero]
+    lsbValue (routingShiftBits ruler bits) = 2 ^ ruler.length * lsbValue bits := by
+  simp [routingShiftBits, lsbValue_append, lsbValue_replicate_false]
 
-/-- Padding composes arbitrary polynomial-time ruler and bit producers. -/
-theorem routingPadBitsFn_mem_FP {ruler bits : List Bool → List Bool}
-    (hr : ruler ∈ FP) (hb : bits ∈ FP) :
-    (fun z => routingPadBits (ruler z) (bits z)) ∈ FP := by
-  have hz : (fun z => List.replicate (ruler z).length false) ∈ FP := by
-    simpa only [List.length_singleton, Nat.one_mul] using
-      mulLenFn_mem_FP (constFn_mem_FP [false]) hr
-  apply CobhamFP_subset_FP
-  exact takeFn (FP_subset_CobhamFP hr) (FP_subset_CobhamFP (appendFn_mem_FP hb hz))
+/-- Padding charges the complete ruler and both materialized word producers. -/
+@[fun_prop] theorem routingPadBits_polyTime
+    {α : Type} {enc : α ↪ List Bool} {ruler bits : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits)
+    (hb : ComputableInPolyTime bits enc encBits) :
+    ComputableInPolyTime (fun z => routingPadBits (ruler z) (bits z)) enc encBits := by
+  have hz : ComputableInPolyTime (fun z => List.replicate (ruler z).length false)
+      enc encBits := (bitsReplicate false).comp (length_bits.comp hr)
+  exact bitsTakeWithInput (bitsAppend hb hz) (length_bits.comp hr)
 
-/-- A binary shift composes arbitrary polynomial-time ruler and bit producers. -/
-theorem routingShiftBitsFn_mem_FP {ruler bits : List Bool → List Bool}
-    (hr : ruler ∈ FP) (hb : bits ∈ FP) :
-    (fun z => routingShiftBits (ruler z) (bits z)) ∈ FP := by
-  have hz : (fun z => List.replicate (ruler z).length false) ∈ FP := by
-    simpa only [List.length_singleton, Nat.one_mul] using
-      mulLenFn_mem_FP (constFn_mem_FP [false]) hr
-  exact appendFn_mem_FP hz hb
+/-- A binary shift charges the low zero field and the complete input word. -/
+@[fun_prop] theorem routingShiftBits_polyTime
+    {α : Type} {enc : α ↪ List Bool} {ruler bits : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits)
+    (hb : ComputableInPolyTime bits enc encBits) :
+    ComputableInPolyTime (fun z => routingShiftBits (ruler z) (bits z)) enc encBits := by
+  exact bitsAppend ((bitsReplicate false).comp (length_bits.comp hr)) hb
 
 end GameTheory.Complexity.Backend

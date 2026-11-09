@@ -1,6 +1,8 @@
 module
 
 public import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
+public import GameTheoryComplexity.Backend.WordOperations
+public import Complexity.Foundations.Data.BitString.Binary
 
 @[expose] public section
 
@@ -9,7 +11,7 @@ The constant factors three and six use shifts and addition, with no numeric loop
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM ComputableInPolyTime WordOperations Cslib.BitString
 
 /-- Add two little-endian words, retaining the full carry. -/
 def routingAddBits (x y : List Bool) : List Bool := binaryCertificateAdd ![x, y]
@@ -18,11 +20,11 @@ def routingAddBits (x y : List Bool) : List Bool := binaryCertificateAdd ![x, y]
 def routingLEFlag (x y : List Bool) : List Bool := binaryCertificateLE ![x, y]
 
 /-- Strict unsigned comparison is the negation of the reversed non-strict comparison. -/
-def routingLTFlag (x y : List Bool) : List Bool := notBit (routingLEFlag y x)
+def routingLTFlag (x y : List Bool) : List Bool := notFlag (routingLEFlag y x)
 
 /-- Numeric equality permits unequal word widths and arbitrary high zero padding. -/
 def routingEQFlag (x y : List Bool) : List Bool :=
-  andBit (routingLEFlag x y) (routingLEFlag y x)
+  andFlag (routingLEFlag x y) (routingLEFlag y x)
 
 /-- Multiply a binary word by three using one shift and one addition. -/
 def routingTripleBits (bits : List Bool) : List Bool := routingAddBits bits (false :: bits)
@@ -37,8 +39,8 @@ def routingSixBits (bits : List Bool) : List Bool := false :: routingTripleBits 
 
 /-- Addition has exact natural-number semantics, including on padded inputs. -/
 theorem routingAddBits_value (x y : List Bool) :
-    Nat.fromBitsLE (routingAddBits x y) = Nat.fromBitsLE x + Nat.fromBitsLE y :=
-  binaryCertificateAdd_value x y
+    lsbValue (routingAddBits x y) = lsbValue x + lsbValue y := by
+  simpa only [routingAddBits, lsbValue_eq_foldr_bit, ofBits] using binaryCertificateAdd_value x y
 
 /-- Non-strict comparison always emits one Boolean flag. -/
 @[simp] theorem routingLEFlag_length (x y : List Bool) : (routingLEFlag x y).length = 1 :=
@@ -46,27 +48,33 @@ theorem routingAddBits_value (x y : List Bool) :
 
 /-- Non-strict comparison accepts exactly the unsigned order relation. -/
 theorem routingLEFlag_value (x y : List Bool) :
-    routingLEFlag x y = [decide (Nat.fromBitsLE x ≤ Nat.fromBitsLE y)] :=
-  binaryCertificateLE_value x y
+    routingLEFlag x y = [decide (lsbValue x ≤ lsbValue y)] := by
+  by_cases h : ofBits x ≤ ofBits y
+  · have hl : lsbValue x ≤ lsbValue y := by
+      simpa only [lsbValue_eq_foldr_bit, ofBits] using h
+    simp [routingLEFlag, binaryCertificateLE, h, hl]
+  · have hl : ¬lsbValue x ≤ lsbValue y := by
+      simpa only [lsbValue_eq_foldr_bit, ofBits] using h
+    simp [routingLEFlag, binaryCertificateLE, h, hl]
 
 /-- Strict comparison accepts exactly strict unsigned order. -/
 theorem routingLTFlag_value (x y : List Bool) :
-    routingLTFlag x y = [decide (Nat.fromBitsLE x < Nat.fromBitsLE y)] := by
-  by_cases h : Nat.fromBitsLE y ≤ Nat.fromBitsLE x
-  · have hn : ¬ Nat.fromBitsLE x < Nat.fromBitsLE y := by omega
-    simp [routingLTFlag, routingLEFlag_value, h, hn, notBit, caseBit₀]
-  · have hl : Nat.fromBitsLE x < Nat.fromBitsLE y := by omega
-    simp [routingLTFlag, routingLEFlag_value, h, hl, notBit, caseBit₀]
+    routingLTFlag x y = [decide (lsbValue x < lsbValue y)] := by
+  by_cases h : lsbValue y ≤ lsbValue x
+  · have hn : ¬ lsbValue x < lsbValue y := by omega
+    simp [routingLTFlag, routingLEFlag_value, h, hn, notFlag]
+  · have hl : lsbValue x < lsbValue y := by omega
+    simp [routingLTFlag, routingLEFlag_value, h, hl, notFlag]
 
 /-- Numeric equality accepts exactly equal decoded values, independently of padding. -/
 theorem routingEQFlag_value (x y : List Bool) :
-    routingEQFlag x y = [decide (Nat.fromBitsLE x = Nat.fromBitsLE y)] := by
-  by_cases he : Nat.fromBitsLE x = Nat.fromBitsLE y
-  · simp [routingEQFlag, routingLEFlag_value, he, andBit, caseBit₀]
-  · by_cases hxy : Nat.fromBitsLE x ≤ Nat.fromBitsLE y
-    · have hyx : ¬ Nat.fromBitsLE y ≤ Nat.fromBitsLE x := by omega
-      simp [routingEQFlag, routingLEFlag_value, hxy, hyx, he, andBit, caseBit₀]
-    · simp [routingEQFlag, routingLEFlag_value, hxy, he, andBit, caseBit₀]
+    routingEQFlag x y = [decide (lsbValue x = lsbValue y)] := by
+  by_cases he : lsbValue x = lsbValue y
+  · simp [routingEQFlag, routingLEFlag_value, he, andFlag]
+  · by_cases hxy : lsbValue x ≤ lsbValue y
+    · have hyx : ¬ lsbValue y ≤ lsbValue x := by omega
+      simp [routingEQFlag, routingLEFlag_value, hxy, hyx, he, andFlag]
+    · simp [routingEQFlag, routingLEFlag_value, hxy, he, andFlag]
 
 /-- Numeric equality always emits one Boolean flag. -/
 @[simp] theorem routingEQFlag_length (x y : List Bool) : (routingEQFlag x y).length = 1 := by
@@ -85,9 +93,9 @@ theorem routingEQFlag_value (x y : List Bool) :
 
 /-- Tripling decodes to exact multiplication by three. -/
 theorem routingTripleBits_value (bits : List Bool) :
-    Nat.fromBitsLE (routingTripleBits bits) = 3 * Nat.fromBitsLE bits := by
-  rw [routingTripleBits, routingAddBits_value, Nat.fromBitsLE_cons]
-  simp only [Bool.false_eq_true, ite_false]
+    lsbValue (routingTripleBits bits) = 3 * lsbValue bits := by
+  rw [routingTripleBits, routingAddBits_value]
+  simp only [lsbValue, Bool.toNat_false]
   omega
 
 /-- Multiplication by six reserves three extra bits. -/
@@ -96,51 +104,55 @@ theorem routingTripleBits_value (bits : List Bool) :
 
 /-- Multiplication by six has exact natural-number semantics. -/
 theorem routingSixBits_value (bits : List Bool) :
-    Nat.fromBitsLE (routingSixBits bits) = 6 * Nat.fromBitsLE bits := by
-  rw [routingSixBits, Nat.fromBitsLE_cons, routingTripleBits_value]
-  simp only [Bool.false_eq_true, ite_false]
+    lsbValue (routingSixBits bits) = 6 * lsbValue bits := by
+  simp only [routingSixBits, lsbValue, Bool.toNat_false, routingTripleBits_value]
   omega
 
-/-- Addition composes arbitrary polynomial-time word producers. -/
-theorem routingAddBitsFn_mem_FP {x y : List Bool → List Bool} (hx : x ∈ FP) (hy : y ∈ FP) :
-    (fun z => routingAddBits (x z) (y z)) ∈ FP := by
-  apply CobhamFP_subset_FP
-  exact Cobham.comp₂ (cobham_iff_FPn.mpr binaryCertificateAdd_mem_FPn)
-    (FP_subset_CobhamFP hx) (FP_subset_CobhamFP hy)
+private theorem wordPair_polyTime {α : Type} {enc : α ↪ List Bool} {x y : α → List Bool}
+    (hx : ComputableInPolyTime x enc encBits) (hy : ComputableInPolyTime y enc encBits) :
+    ComputableInPolyTime (fun a => ![x a, y a]) enc (encPi encBits) := by
+  apply ComputableInPolyTime.pi
+  intro i
+  fin_cases i
+  · exact hx
+  · exact hy
 
-/-- Unsigned comparison composes arbitrary polynomial-time word producers. -/
-theorem routingLEFlagFn_mem_FP {x y : List Bool → List Bool} (hx : x ∈ FP) (hy : y ∈ FP) :
-    (fun z => routingLEFlag (x z) (y z)) ∈ FP := by
-  apply CobhamFP_subset_FP
-  exact Cobham.comp₂ (cobham_iff_FPn.mpr binaryCertificateLE_mem_FPn)
-    (FP_subset_CobhamFP hx) (FP_subset_CobhamFP hy)
+/-- Addition charges both word producers and its padded full-carry result. -/
+@[fun_prop] theorem routingAddBits_polyTime
+    {α : Type} {enc : α ↪ List Bool} {x y : α → List Bool}
+    (hx : ComputableInPolyTime x enc encBits) (hy : ComputableInPolyTime y enc encBits) :
+    ComputableInPolyTime (fun a => routingAddBits (x a) (y a)) enc encBits :=
+  binaryCertificateAdd_polyTime.comp (wordPair_polyTime hx hy)
 
-/-- Strict comparison composes the comparator machine with Boolean negation. -/
-theorem routingLTFlagFn_mem_FP {x y : List Bool → List Bool} (hx : x ∈ FP) (hy : y ∈ FP) :
-    (fun z => routingLTFlag (x z) (y z)) ∈ FP := by
-  apply CobhamFP_subset_FP
-  exact Cobham.notFn (FP_subset_CobhamFP (routingLEFlagFn_mem_FP hy hx))
+/-- Unsigned comparison charges both word producers. -/
+@[fun_prop] theorem routingLEFlag_polyTime
+    {α : Type} {enc : α ↪ List Bool} {x y : α → List Bool}
+    (hx : ComputableInPolyTime x enc encBits) (hy : ComputableInPolyTime y enc encBits) :
+    ComputableInPolyTime (fun a => routingLEFlag (x a) (y a)) enc encBits :=
+  binaryCertificateLE_polyTime.comp (wordPair_polyTime hx hy)
 
-/-- Numeric equality composes two unsigned comparison machines and conjunction. -/
-theorem routingEQFlagFn_mem_FP {x y : List Bool → List Bool} (hx : x ∈ FP) (hy : y ∈ FP) :
-    (fun z => routingEQFlag (x z) (y z)) ∈ FP := by
-  apply CobhamFP_subset_FP
-  exact Cobham.andFn (FP_subset_CobhamFP (routingLEFlagFn_mem_FP hx hy))
-    (FP_subset_CobhamFP (routingLEFlagFn_mem_FP hy hx))
+@[fun_prop] theorem routingLTFlag_polyTime
+    {α : Type} {enc : α ↪ List Bool} {x y : α → List Bool}
+    (hx : ComputableInPolyTime x enc encBits) (hy : ComputableInPolyTime y enc encBits) :
+    ComputableInPolyTime (fun a => routingLTFlag (x a) (y a)) enc encBits :=
+  notFlag_polyTime.comp (routingLEFlag_polyTime hy hx)
 
-private theorem shiftFn_mem_FP {bits : List Bool → List Bool} (hb : bits ∈ FP) :
-    (fun z => false :: bits z) ∈ FP := by
-  apply CobhamFP_subset_FP
-  exact Cobham.comp (.bit false) (fun _ => FP_subset_CobhamFP hb)
+@[fun_prop] theorem routingEQFlag_polyTime
+    {α : Type} {enc : α ↪ List Bool} {x y : α → List Bool}
+    (hx : ComputableInPolyTime x enc encBits) (hy : ComputableInPolyTime y enc encBits) :
+    ComputableInPolyTime (fun a => routingEQFlag (x a) (y a)) enc encBits :=
+  andFlag_polyTime.comp ((routingLEFlag_polyTime hx hy).prod (routingLEFlag_polyTime hy hx))
 
-/-- Tripling is uniformly polynomial-time in its binary word producer. -/
-theorem routingTripleBitsFn_mem_FP {bits : List Bool → List Bool} (hb : bits ∈ FP) :
-    (fun z => routingTripleBits (bits z)) ∈ FP :=
-  routingAddBitsFn_mem_FP hb (shiftFn_mem_FP hb)
+@[fun_prop] theorem routingTripleBits_polyTime
+    {α : Type} {enc : α ↪ List Bool} {bits : α → List Bool}
+    (hb : ComputableInPolyTime bits enc encBits) :
+    ComputableInPolyTime (fun a => routingTripleBits (bits a)) enc encBits :=
+  routingAddBits_polyTime hb (bitsCons (const false) hb)
 
-/-- Multiplication by six is uniformly polynomial-time in its binary word producer. -/
-theorem routingSixBitsFn_mem_FP {bits : List Bool → List Bool} (hb : bits ∈ FP) :
-    (fun z => routingSixBits (bits z)) ∈ FP :=
-  shiftFn_mem_FP (routingTripleBitsFn_mem_FP hb)
+@[fun_prop] theorem routingSixBits_polyTime
+    {α : Type} {enc : α ↪ List Bool} {bits : α → List Bool}
+    (hb : ComputableInPolyTime bits enc encBits) :
+    ComputableInPolyTime (fun a => routingSixBits (bits a)) enc encBits :=
+  bitsCons (const false) (routingTripleBits_polyTime hb)
 
 end GameTheory.Complexity.Backend
