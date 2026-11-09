@@ -12,46 +12,47 @@ the remaining ordinary tile ports in polynomial time. -/
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity _root_.Complexity.Cobham EndOfLineMachineOps
+open Turing.MultiTapeTM ComputableInPolyTime Cslib.BitString WordOperations
 open GameTheory.Math.Sperner GameTheory.Math.GridWire
 
-@[simp] private theorem coloring_nil_value : Nat.fromBitsLE [] = 0 := rfl
-@[simp] private theorem coloring_one_value : Nat.fromBitsLE [true] = 1 := rfl
+@[simp] private theorem coloring_nil_value : lsbValue [] = 0 := rfl
+@[simp] private theorem coloring_one_value : lsbValue [true] = 1 := rfl
 
-private def coloringModSixBits (bits : List Bool) : List Bool :=
-  bitAt [] bits ++ routingModThreeBits bits.tail
+/-- Retain the low bit and divide its tail to compute a three-bit residue modulo six. -/
+def coloringModSixBits (bits : List Bool) : List Bool :=
+  [bits.headD false] ++ routingModThreeBits bits.tail
 
 private theorem coloringModSixBits_value (bits : List Bool) :
-    Nat.fromBitsLE (coloringModSixBits bits) = Nat.fromBitsLE bits % 6 := by
+    lsbValue (coloringModSixBits bits) = lsbValue bits % 6 := by
   cases bits with
   | nil => rfl
   | cons bit bits =>
     cases bit <;>
-      simp [coloringModSixBits, bitAt_eq, bitOf,
-        routingModThreeBits_value, Nat.fromBitsLE_cons] <;> omega
+      simp [coloringModSixBits, routingModThreeBits_value, lsbValue] <;> omega
 
-private theorem coloringModSixBitsFn_mem_FP {bits : List Bool → List Bool} (hb : bits ∈ FP) :
-    (fun z => coloringModSixBits (bits z)) ∈ FP := by
-  have hh : (fun z => bitAt [] (bits z)) ∈ FP :=
-    CobhamFP_subset_FP (headFlagFn (FP_subset_CobhamFP hb))
-  have ht : (fun z => (bits z).tail) ∈ FP :=
-    CobhamFP_subset_FP (Cobham.tailFn (FP_subset_CobhamFP hb))
-  exact appendFn_mem_FP hh (mem_FP_comp (f := fun z => (bits z).tail)
-    (g := routingModThreeBits) ht routingModThreeBits_mem_FP)
+@[fun_prop] theorem coloringModSixBits_polyTime
+    {α : Type} {enc : α ↪ List Bool} {bits : α → List Bool}
+    (hb : ComputableInPolyTime bits enc encBits) :
+    ComputableInPolyTime (fun z => coloringModSixBits (bits z)) enc encBits := by
+  have hhead : ComputableInPolyTime (fun word : List Bool => word.headD false)
+      encBits encBool := .headD false
+  exact bitsAppend (bitsCons (hhead.comp hb) (const []))
+    (routingModThreeBits_polyTime (bitsTail.comp hb))
 
-private def coloringMixedTileBits (ruler : List Bool) (P S : List Bool → List Bool)
+/-- Select the finite source collar or ordinary routed tile at raw binary tile indices. -/
+def coloringMixedTileBits (ruler : List Bool) (P S : List Bool → List Bool)
     (i j x y : List Bool) : List Bool :=
   let ordinary := coloringTileBits
     (coloringRoutedPortBits ruler P S true (gridPredBits i) (gridPredBits j))
     (coloringRoutedPortBits ruler P S false (gridPredBits i) (gridPredBits j)) x y
   let origin := coloringTileBits (encodeColoringPort (some 3))
     (encodeColoringPort (some 1)) x y
-  caseBit₀ (routingEQFlag i [])
-    (caseBit₀ (routingEQFlag j []) (sourceColoringTileBits 0 x y)
-      (caseBit₀ (routingEQFlag j [true]) (sourceColoringTileBits 1 x y)
+  select (routingEQFlag i [])
+    (select (routingEQFlag j []) (sourceColoringTileBits 0 x y)
+      (select (routingEQFlag j [true]) (sourceColoringTileBits 1 x y)
         (sourceColoringTileBits 3 x y)))
-    (caseBit₀ (routingEQFlag j []) (sourceColoringTileBits 2 x y)
-      (caseBit₀ (andBit (routingEQFlag i [true]) (routingEQFlag j [true])) origin ordinary))
+    (select (routingEQFlag j []) (sourceColoringTileBits 2 x y)
+      (select (andFlag (routingEQFlag i [true]) (routingEQFlag j [true])) origin ordinary))
 
 /-- An unbounded interior color query evaluates the exact local source or routing tile. -/
 def routingSpernerInteriorBits (ruler : List Bool) (P S : List Bool → List Bool)
@@ -67,10 +68,10 @@ def routingSpernerColorQuery (ruler : List Bool) (P S : List Bool → List Bool)
 
 private theorem coloringMixedTileBits_length (ruler : List Bool) (P S : List Bool → List Bool)
     (i j x y : List Bool) : (coloringMixedTileBits ruler P S i j x y).length = 2 := by
-  by_cases hi0 : Nat.fromBitsLE i = 0 <;> by_cases hj0 : Nat.fromBitsLE j = 0 <;>
-    by_cases hi1 : Nat.fromBitsLE i = 1 <;> by_cases hj1 : Nat.fromBitsLE j = 1 <;>
+  by_cases hi0 : lsbValue i = 0 <;> by_cases hj0 : lsbValue j = 0 <;>
+    by_cases hi1 : lsbValue i = 1 <;> by_cases hj1 : lsbValue j = 1 <;>
     simp [coloringMixedTileBits, routingEQFlag_value, hi0, hj0, hi1, hj1,
-      andBit, caseBit₀, sourceColoringTileBits]
+      andFlag, select, sourceColoringTileBits]
 
 /-- Every interior query returns exactly two canonical color flags. -/
 @[simp] theorem routingSpernerInteriorBits_length (ruler : List Bool)
@@ -85,21 +86,21 @@ private theorem coloringMixedTileBits_length (ruler : List Bool) (P S : List Boo
   routingSpernerInteriorBits_length _ _ _ _ _
 
 private theorem coloringMixedTileBits_value (ruler : List Bool) (P S : List Bool → List Bool)
-    (i j x y : List Bool) (hx : Nat.fromBitsLE x ≤ 6) (hy : Nat.fromBitsLE y ≤ 6) :
+    (i j x y : List Bool) (hx : lsbValue x ≤ 6) (hy : lsbValue y ≤ 6) :
     coloringMixedTileBits ruler P S i j x y = encodeGridColor
       (gridSpernerRoutingTileColor (2 ^ ruler.length)
         (routingOriginalPointer ruler P) (routingOriginalPointer ruler S)
-        (Nat.fromBitsLE i) (Nat.fromBitsLE j) (Nat.fromBitsLE x) (Nat.fromBitsLE y)) := by
+        (lsbValue i) (lsbValue j) (lsbValue x) (lsbValue y)) := by
   have hsource (kind : Fin 4) := sourceColoringTileBits_value kind x y hx hy
   have horigin := coloringTileBits_value (encodeColoringPort (some 3))
     (encodeColoringPort (some 1)) x y hx hy
   simp only [decodeColoringPort_encode] at horigin
-  by_cases hi0 : Nat.fromBitsLE i = 0
-  · by_cases hj0 : Nat.fromBitsLE j = 0 <;> by_cases hj1 : Nat.fromBitsLE j = 1 <;>
-      simp [coloringMixedTileBits, routingEQFlag_value, hi0, hj0, hj1, caseBit₀,
+  by_cases hi0 : lsbValue i = 0
+  · by_cases hj0 : lsbValue j = 0 <;> by_cases hj1 : lsbValue j = 1 <;>
+      simp [coloringMixedTileBits, routingEQFlag_value, hi0, hj0, hj1, select,
         gridSpernerRoutingTileColor, hsource]
-  · by_cases hj0 : Nat.fromBitsLE j = 0
-    · simp [coloringMixedTileBits, routingEQFlag_value, hi0, hj0, caseBit₀,
+  · by_cases hj0 : lsbValue j = 0
+    · simp [coloringMixedTileBits, routingEQFlag_value, hi0, hj0, select,
         gridSpernerRoutingTileColor, hsource]
     · have hord := coloringTileBits_value
         (coloringRoutedPortBits ruler P S true (gridPredBits i) (gridPredBits j))
@@ -108,16 +109,16 @@ private theorem coloringMixedTileBits_value (ruler : List Bool) (P S : List Bool
         decodeColoringPort_encode, decodeColoringPort_encode,
         gridPredBits_value_of_pos i (by omega), gridPredBits_value_of_pos j (by omega)]
       simp only [Bool.false_eq_true, ↓reduceIte] at hord
-      by_cases hi1 : Nat.fromBitsLE i = 1 <;> by_cases hj1 : Nat.fromBitsLE j = 1 <;>
-        simp [coloringMixedTileBits, routingEQFlag_value, hi0, hj0, hi1, hj1, caseBit₀,
-          andBit, gridSpernerRoutingTileColor, horigin, hord]
+      by_cases hi1 : lsbValue i = 1 <;> by_cases hj1 : lsbValue j = 1 <;>
+        simp [coloringMixedTileBits, routingEQFlag_value, hi0, hj0, hi1, hj1, select,
+          andFlag, gridSpernerRoutingTileColor, horigin, hord]
 
 /-- Every binary coordinate word gives the exact unbounded routing interior color. -/
 theorem routingSpernerInteriorBits_value (ruler : List Bool) (P S : List Bool → List Bool)
     (x y : List Bool) : routingSpernerInteriorBits ruler P S x y = encodeGridColor
       (gridSpernerRoutingInterior (2 ^ ruler.length)
         (routingOriginalPointer ruler P) (routingOriginalPointer ruler S)
-        (Nat.fromBitsLE x) (Nat.fromBitsLE y)) := by
+        (lsbValue x) (lsbValue y)) := by
   rw [routingSpernerInteriorBits, coloringMixedTileBits_value]
   · rw [routingDivSixBits_value, routingDivSixBits_value,
       coloringModSixBits_value, coloringModSixBits_value]
@@ -130,8 +131,8 @@ theorem routingSpernerColorQuery_value (ruler : List Bool) (P S : List Bool → 
     (word : List Bool) : routingSpernerColorQuery ruler P S word = encodeGridColor
       (gridSpernerRoutingInterior (2 ^ ruler.length)
         (routingOriginalPointer ruler P) (routingOriginalPointer ruler S)
-        (Nat.fromBitsLE (word.take ((routingSpernerRuler ruler).length + 1)))
-        (Nat.fromBitsLE (word.drop ((routingSpernerRuler ruler).length + 1)))) :=
+        (lsbValue (word.take ((routingSpernerRuler ruler).length + 1)))
+        (lsbValue (word.drop ((routingSpernerRuler ruler).length + 1)))) :=
   routingSpernerInteriorBits_value _ _ _ _ _
 
 /-- Encoded coordinates within the extended capacity retain their exact interior color. -/
@@ -139,12 +140,12 @@ theorem routingSpernerColorQuery_encode (ruler : List Bool) (P S : List Bool →
     {x y : ℕ} (hx : x < 2 ^ ((routingSpernerRuler ruler).length + 1))
     (hy : y < 2 ^ ((routingSpernerRuler ruler).length + 1)) :
     routingSpernerColorQuery ruler P S
-      (Nat.toBitsLE ((routingSpernerRuler ruler).length + 1) x ++
-        Nat.toBitsLE ((routingSpernerRuler ruler).length + 1) y) = encodeGridColor
+      (lowBits ((routingSpernerRuler ruler).length + 1) x ++
+        lowBits ((routingSpernerRuler ruler).length + 1) y) = encodeGridColor
       (gridSpernerRoutingInterior (2 ^ ruler.length)
         (routingOriginalPointer ruler P) (routingOriginalPointer ruler S) x y) := by
   rw [routingSpernerColorQuery_value]
-  simp [-routingSpernerRuler_length, Nat.fromBitsLE_toBitsLE hx, Nat.fromBitsLE_toBitsLE hy]
+  simp [-routingSpernerRuler_length, lsbValue_lowBits hx, lsbValue_lowBits hy]
 
 /-- The standard interior-query interface agrees throughout the finite routing square. -/
 theorem gridInteriorColor_routingSpernerColorQuery (ruler : List Bool)
@@ -174,65 +175,74 @@ theorem routingSpernerColorQuery_color (ruler : List Bool) (P S : List Bool → 
   have h := gridInteriorColor_routingSpernerColorQuery ruler P S hx hy
   simp only [gridSpernerRoutingColor, standardGridColor, h]
 
-private theorem coloringMixedTileBitsUniformFn_mem_FP
+/-- Mixed-tile selection charges native seeded ports and finite table lookup. -/
+@[fun_prop] theorem coloringMixedTileBitsUniform_polyTime
     (P S : List Bool → List Bool → List Bool)
-    {ruler seed i j x y : List Bool → List Bool}
-    (hr : ruler ∈ FP) (hs : seed ∈ FP) (hi : i ∈ FP) (hj : j ∈ FP)
-    (hx : x ∈ FP) (hy : y ∈ FP)
-    (hP : (fun z => P (pairFst z) (pairSnd z)) ∈ FP)
-    (hS : (fun z => S (pairFst z) (pairSnd z)) ∈ FP) :
-    (fun z => coloringMixedTileBits (ruler z) (P (seed z)) (S (seed z))
-      (i z) (j z) (x z) (y z)) ∈ FP := by
-  have hip : (fun z => gridPredBits (i z)) ∈ FP := mem_FP_comp hi gridPredBits_mem_FP
-  have hjp : (fun z => gridPredBits (j z)) ∈ FP := mem_FP_comp hj gridPredBits_mem_FP
-  have hpred := coloringRoutedPortBitsUniformFn_mem_FP true P S hr hs hip hjp hP hS
-  have hsucc := coloringRoutedPortBitsUniformFn_mem_FP false P S hr hs hip hjp hP hS
-  have hord := coloringTileBitsFn_mem_FP hpred hsucc hx hy
-  have horigin := coloringTileBitsFn_mem_FP
-    (constFn_mem_FP (encodeColoringPort (some 3)))
-    (constFn_mem_FP (encodeColoringPort (some 1))) hx hy
-  have hi0 := routingEQFlagFn_mem_FP hi (constFn_mem_FP [])
-  have hj0 := routingEQFlagFn_mem_FP hj (constFn_mem_FP [])
-  have hi1 := routingEQFlagFn_mem_FP hi (constFn_mem_FP [true])
-  have hj1 := routingEQFlagFn_mem_FP hj (constFn_mem_FP [true])
-  have h11 : (fun z => andBit (routingEQFlag (i z) [true])
-      (routingEQFlag (j z) [true])) ∈ FP :=
-    CobhamFP_subset_FP (Cobham.andFn (FP_subset_CobhamFP hi1) (FP_subset_CobhamFP hj1))
-  exact selectFn_mem_FP hi0
-    (selectFn_mem_FP hj0 (sourceColoringTileBitsFn_mem_FP 0 hx hy)
-      (selectFn_mem_FP hj1 (sourceColoringTileBitsFn_mem_FP 1 hx hy)
-        (sourceColoringTileBitsFn_mem_FP 3 hx hy)))
-    (selectFn_mem_FP hj0 (sourceColoringTileBitsFn_mem_FP 2 hx hy)
-      (selectFn_mem_FP h11 horigin hord))
+    {α : Type} {enc : α ↪ List Bool} {ruler seed i j x y : α → List Bool}
+    (hruler : ComputableInPolyTime ruler enc encBits)
+    (hseed : ComputableInPolyTime seed enc encBits)
+    (hi : ComputableInPolyTime i enc encBits)
+    (hj : ComputableInPolyTime j enc encBits)
+    (hx : ComputableInPolyTime x enc encBits)
+    (hy : ComputableInPolyTime y enc encBits)
+    (hP : ComputableInPolyTime (fun p : List Bool × List Bool => P p.1 p.2)
+      (encPair encBits encBits) encBits)
+    (hS : ComputableInPolyTime (fun p : List Bool × List Bool => S p.1 p.2)
+      (encPair encBits encBits) encBits) :
+    ComputableInPolyTime (fun z => coloringMixedTileBits (ruler z) (P (seed z)) (S (seed z)) (i z) (j z) (x z) (y z)) enc encBits := by
+  have hip := gridPredBits_polyTime.comp hi
+  have hjp := gridPredBits_polyTime.comp hj
+  have hpred := coloringRoutedPortBitsUniform_polyTime true P S hruler hseed hip hjp hP hS
+  have hsucc := coloringRoutedPortBitsUniform_polyTime false P S hruler hseed hip hjp hP hS
+  have hord := coloringTileBits_polyTime hpred hsucc hx hy
+  have horigin := coloringTileBits_polyTime (const (encodeColoringPort (some 3)))
+    (const (encodeColoringPort (some 1))) hx hy
+  have hi0 := routingEQFlag_polyTime hi (const [])
+  have hj0 := routingEQFlag_polyTime hj (const [])
+  have hi1 := routingEQFlag_polyTime hi (const [true])
+  have hj1 := routingEQFlag_polyTime hj (const [true])
+  have h11 := andFlag_polyTime.comp (hi1.prod hj1)
+  have hleft := select_polyTime.comp (hj0.prod ((sourceColoringTileBits_polyTime 0 hx hy).prod
+    (select_polyTime.comp (hj1.prod ((sourceColoringTileBits_polyTime 1 hx hy).prod
+      (sourceColoringTileBits_polyTime 3 hx hy))))))
+  have hright := select_polyTime.comp (hj0.prod ((sourceColoringTileBits_polyTime 2 hx hy).prod
+    (select_polyTime.comp (h11.prod (horigin.prod hord)))))
+  exact select_polyTime.comp (hi0.prod (hleft.prod hright))
 
-/-- The binary interior query is uniformly polynomial time in coordinate and pointer seeds. -/
-theorem routingSpernerInteriorBitsUniformFn_mem_FP
-    (P S : List Bool → List Bool → List Bool) {ruler seed x y : List Bool → List Bool}
-    (hr : ruler ∈ FP) (hs : seed ∈ FP) (hx : x ∈ FP) (hy : y ∈ FP)
-    (hP : (fun z => P (pairFst z) (pairSnd z)) ∈ FP)
-    (hS : (fun z => S (pairFst z) (pairSnd z)) ∈ FP) :
-    (fun z => routingSpernerInteriorBits (ruler z) (P (seed z)) (S (seed z))
-      (x z) (y z)) ∈ FP :=
-  coloringMixedTileBitsUniformFn_mem_FP P S hr hs
-    (mem_FP_comp (f := x) (g := routingDivSixBits) hx routingDivSixBits_mem_FP)
-    (mem_FP_comp (f := y) (g := routingDivSixBits) hy routingDivSixBits_mem_FP)
-    (coloringModSixBitsFn_mem_FP hx) (coloringModSixBitsFn_mem_FP hy) hP hS
+/-- Interior color queries charge binary division, local residues and native seeded tile ports. -/
+@[fun_prop] theorem routingSpernerInteriorBitsUniform_polyTime
+    (P S : List Bool → List Bool → List Bool)
+    {α : Type} {enc : α ↪ List Bool} {ruler seed x y : α → List Bool}
+    (hruler : ComputableInPolyTime ruler enc encBits)
+    (hseed : ComputableInPolyTime seed enc encBits)
+    (hx : ComputableInPolyTime x enc encBits)
+    (hy : ComputableInPolyTime y enc encBits)
+    (hP : ComputableInPolyTime (fun p : List Bool × List Bool => P p.1 p.2)
+      (encPair encBits encBits) encBits)
+    (hS : ComputableInPolyTime (fun p : List Bool × List Bool => S p.1 p.2)
+      (encPair encBits encBits) encBits) :
+    ComputableInPolyTime (fun z => routingSpernerInteriorBits (ruler z) (P (seed z)) (S (seed z)) (x z) (y z)) enc encBits := by
+  exact coloringMixedTileBitsUniform_polyTime P S hruler hseed
+    (routingDivSixBits_polyTime hx) (routingDivSixBits_polyTime hy)
+    (coloringModSixBits_polyTime hx) (coloringModSixBits_polyTime hy) hP hS
 
-/-- Serialized color queries retain a uniform polynomial-time certificate for varying seeds. -/
-theorem routingSpernerColorQueryUniformFn_mem_FP
-    (P S : List Bool → List Bool → List Bool) {ruler seed word : List Bool → List Bool}
-    (hr : ruler ∈ FP) (hs : seed ∈ FP) (hw : word ∈ FP)
-    (hP : (fun z => P (pairFst z) (pairSnd z)) ∈ FP)
-    (hS : (fun z => S (pairFst z) (pairSnd z)) ∈ FP) :
-    (fun z => routingSpernerColorQuery (ruler z) (P (seed z)) (S (seed z)) (word z)) ∈ FP := by
-  have hwidth : (fun z => routingSpernerRuler (ruler z) ++ [false]) ∈ FP :=
-    appendFn_mem_FP (routingSpernerRulerFn_mem_FP hr) (constFn_mem_FP [false])
-  have hx : (fun z => (word z).take ((routingSpernerRuler (ruler z)).length + 1)) ∈ FP := by
-    have h := Cobham.takeFn (FP_subset_CobhamFP hwidth) (FP_subset_CobhamFP hw)
-    exact CobhamFP_subset_FP (h.of_eq fun v => by simp)
-  have hy : (fun z => (word z).drop ((routingSpernerRuler (ruler z)).length + 1)) ∈ FP := by
-    have h := Cobham.dropFn (FP_subset_CobhamFP hwidth) (FP_subset_CobhamFP hw)
-    exact CobhamFP_subset_FP (h.of_eq fun v => by simp)
-  exact routingSpernerInteriorBitsUniformFn_mem_FP P S hr hs hx hy hP hS
+/-- Serialized color queries charge the exact unary field width and all native seeded arithmetic. -/
+@[fun_prop] theorem routingSpernerColorQueryUniform_polyTime
+    (P S : List Bool → List Bool → List Bool)
+    {α : Type} {enc : α ↪ List Bool} {ruler seed word : α → List Bool}
+    (hruler : ComputableInPolyTime ruler enc encBits)
+    (hseed : ComputableInPolyTime seed enc encBits)
+    (hword : ComputableInPolyTime word enc encBits)
+    (hP : ComputableInPolyTime (fun p : List Bool × List Bool => P p.1 p.2)
+      (encPair encBits encBits) encBits)
+    (hS : ComputableInPolyTime (fun p : List Bool × List Bool => S p.1 p.2)
+      (encPair encBits encBits) encBits) :
+    ComputableInPolyTime (fun z => routingSpernerColorQuery (ruler z) (P (seed z)) (S (seed z)) (word z)) enc encBits := by
+  have hwidth : ComputableInPolyTime
+      (fun z => (routingSpernerRuler (ruler z)).length + 1) enc encUnary := by
+    simpa only [Function.comp_def, List.length_append, List.length_singleton] using
+      length_bits.comp (bitsAppend (routingSpernerRuler_polyTime hruler) (const [false]))
+  exact routingSpernerInteriorBitsUniform_polyTime P S hruler hseed
+    (bitsTakeWithInput hword hwidth) (bitsDropWithInput hword hwidth) hP hS
 
 end GameTheory.Complexity.Backend

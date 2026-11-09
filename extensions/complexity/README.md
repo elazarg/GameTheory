@@ -105,15 +105,13 @@ coordinate encoding into complete uniform FP predecessor/successor machines.
 Their agreement with the mathematical word pointers holds on every input word,
 including malformed and background inputs.
 
-Import `GameTheoryComplexity.Sperner` for
-`spernerRelation_PPADComplete`: succinct canonical square-grid Sperner search is
-complete for standard PPAD. The reverse reduction uses an actual uniform FP
-coloring machine and circuit instance generator; its FPn decoder divides the
-triangle row by 36 and recovers every non-source original endpoint, including
-endpoints on disconnected components. Source entrance tiles and inactive
-two-color padding exclude the known source and spurious outer-boundary answers.
-Invalid source promises decode to the required empty witness. Continuous Brouwer
-search completeness is described below; signed rectangular Nash search completeness is described below.
+Import `GameTheoryComplexity.Sperner` for native
+`SearchComplete @Cslib.Complexity.PPAD encBits` of the canonical succinct
+square-grid relation. Its independent FNP verifier and both every-answer
+reductions use native polynomial-time certificates. The reverse map compiles
+exact routed color queries; binary division recovers every non-source endpoint,
+including components disconnected from the known source. Invalid source
+promises retain their prescribed empty answer.
 
 ## Use as a dependency
 

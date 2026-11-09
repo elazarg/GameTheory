@@ -1,8 +1,6 @@
 module
 
-public import GameTheoryComplexity.Backend.SpernerVerifier
-public import GameTheoryComplexity.Backend.SpernerReduction
-public import GameTheoryComplexity.Backend.EndOfLineMembership
+public import GameTheoryComplexity.Sperner
 
 @[expose] public section
 
@@ -50,8 +48,7 @@ example : ComputableInPolyTime (fun p : List Bool × List Bool => spernerVerdict
     (ComputableInPolyTime.snd encBits encBits)
 
 private theorem nativeMembership : spernerRelation ∈ Cslib.Complexity.PPAD encBits :=
-  exists_spernerToEndOfLineReduction.mem_PPAD spernerRelation_mem_FNP
-    endOfLineRelation_mem_PPAD
+  GameTheory.Complexity.spernerRelation_mem_PPAD
 
 example : spernerRelation ∈ Cslib.Complexity.TFNP encBits :=
   PPAD_subset_TFNP nativeMembership
@@ -68,5 +65,11 @@ example : ∃ f : List Bool → List Bool, ComputableInPolyTime f encBits encBit
   refine ⟨f, hf, ?_⟩
   simpa only [CircuitWords.first_encodePair, List.length_singleton, gridNodeWidth] using
     (heval (CircuitWords.encodePair [true] [false, true])).1
+
+example : SearchComplete @PPAD encBits spernerRelation :=
+  GameTheory.Complexity.spernerRelation_PPADComplete
+
+example : SearchReducible encBits encBits endOfLineRelation spernerRelation :=
+  exists_endOfLineToSpernerReduction
 
 end GameTheory.Complexity.Tests.Sperner
