@@ -5,91 +5,74 @@ public import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 
 @[expose] public section
 
-/-! Signed summation over a fixed, compile-time number of indexed queries. -/
+/-! Signed query sums retain arbitrary typed context. Indexed sums visit a fixed
+number of false-bit ordinal rulers in ascending order; query lists use a right fold.
+Their native certificates charge the supplied context producer. -/
 namespace GameTheory.Complexity.Backend
-open Cslib.BitString Turing.MultiTapeTM
+open Turing.MultiTapeTM
 open scoped BigOperators
 
-/-- Sum a fixed number of signed queries; indexed rulers have canonical false contents. -/
-def binarySignedFiniteSum {p : ℕ} (term : (Fin (p + 1) → List Bool) → List Bool) :
-    ℕ → (Fin p → List Bool) → List Bool
+/-- Add indexed queries from zero upward, using canonical false-bit ordinal rulers. -/
+def binarySignedFiniteSum {Context : Type} (term : List Bool → Context → List Bool) :
+    ℕ → Context → List Bool
   | 0, _ => []
-  | n + 1, params => binarySignedAdd (binarySignedFiniteSum term n params)
-      (term (Fin.cons (List.replicate n false) params))
+  | n + 1, context => binarySignedAdd (binarySignedFiniteSum term n context)
+      (term (List.replicate n false) context)
 
-private theorem binarySignedFiniteSum_step_polyTime {p : ℕ}
-    {term : (Fin (p + 1) → List Bool) → List Bool}
-    (ht : ComputableInPolyTime term (encPi encBits) encBits) (n : ℕ)
-    (hparams : ComputableInPolyTime (binarySignedFiniteSum term n)
-      (encPi encBits) encBits) :
-    ComputableInPolyTime
-      (fun v : Fin p → List Bool =>
-        binarySignedAdd (binarySignedFiniteSum term n v)
-          (term (Fin.cons (List.replicate n false) v)))
-      (encPi encBits) encBits := by
-  have hcons : ComputableInPolyTime
-      (fun v : Fin p → List Bool => Fin.cons (List.replicate n false) v)
-      (encPi encBits) (encPi encBits) := by
-    apply ComputableInPolyTime.pi
-    intro i
-    refine Fin.cases ?_ (fun j => ?_) i
-    · exact .const (List.replicate n false)
-    · exact ComputableInPolyTime.pi_apply encBits j
-  exact binarySignedAdd_polyTime hparams (ht.comp hcons)
-
-/-- The count is fixed in this polynomial-time certificate. -/
-@[fun_prop] theorem binarySignedFiniteSum_polyTime {p : ℕ}
-    {term : (Fin (p + 1) → List Bool) → List Bool}
-    (ht : ComputableInPolyTime term (encPi encBits) encBits) (n : ℕ) :
-    ComputableInPolyTime (binarySignedFiniteSum term n) (encPi encBits) encBits := by
+/-- The count is fixed; each indexed query reads the same certified context producer. -/
+@[fun_prop] theorem binarySignedFiniteSum_polyTime {Context Input : Type}
+    {contextEncoding : Context ↪ List Bool} {input : Input ↪ List Bool}
+    {term : List Bool → Context → List Bool}
+    (ht : ComputableInPolyTime (fun p : Context × List Bool => term p.2 p.1)
+      (encPair contextEncoding encBits) encBits) (n : ℕ)
+    {context : Input → Context} (hc : ComputableInPolyTime context input contextEncoding) :
+    ComputableInPolyTime (fun a => binarySignedFiniteSum term n (context a)) input encBits := by
   induction n with
-  | zero => exact .const []
+  | zero => exact ComputableInPolyTime.const []
   | succ n ih =>
-    change ComputableInPolyTime
-      (fun v : Fin p → List Bool =>
-        binarySignedAdd (binarySignedFiniteSum term n v)
-          (term (Fin.cons (List.replicate n false) v)))
-      (encPi encBits) encBits
-    exact binarySignedFiniteSum_step_polyTime ht n ih
+    exact binarySignedAdd_polyTime ih
+      (ht.comp (hc.prod (ComputableInPolyTime.const (List.replicate n false))))
 
-/-- Signed values add exactly, without field-width or sign assumptions. -/
-theorem binarySignedFiniteSum_value {p : ℕ}
-    (term : (Fin (p + 1) → List Bool) → List Bool) (n : ℕ) (params : Fin p → List Bool) :
-    binarySignedValue (binarySignedFiniteSum term n params) =
-      ∑ i ∈ Finset.range n,
-        binarySignedValue (term (Fin.cons (List.replicate i false) params)) := by
+/-- Signed values add exactly without field-width or sign assumptions. -/
+theorem binarySignedFiniteSum_value {Context : Type}
+    (term : List Bool → Context → List Bool) (n : ℕ) (context : Context) :
+    binarySignedValue (binarySignedFiniteSum term n context) =
+      ∑ i ∈ Finset.range n, binarySignedValue (term (List.replicate i false) context) := by
   induction n with
   | zero => rfl
   | succ n ih =>
     rw [binarySignedFiniteSum, binarySignedAdd_value, ih, Finset.sum_range_succ]
 
-/-- Add a fixed list of signed query machines; the list is fixed in its FP certificate. -/
-def binarySignedQuerySum {p : ℕ}
-    (queries : List ((Fin p → List Bool) → List Bool)) (v : Fin p → List Bool) : List Bool :=
-  queries.foldr (fun query rest => binarySignedAdd (query v) rest) []
+/-- Add a fixed list of signed query machines in their existing right-fold order. -/
+def binarySignedQuerySum {Context : Type}
+    (queries : List (Context → List Bool)) (context : Context) : List Bool :=
+  queries.foldr (fun query rest => binarySignedAdd (query context) rest) []
 
-/-- A fixed finite collection of polynomial-time queries has a polynomial-time signed sum. -/
-@[fun_prop] theorem binarySignedQuerySum_polyTime {p : ℕ}
-    (queries : List ((Fin p → List Bool) → List Bool))
-    (hq : ∀ query ∈ queries,
-      ComputableInPolyTime query (encPi encBits) encBits) :
-    ComputableInPolyTime (binarySignedQuerySum queries) (encPi encBits) encBits := by
+/-- A fixed list of native query machines composes with a certified context producer. -/
+@[fun_prop] theorem binarySignedQuerySum_polyTime {Context Input : Type}
+    {contextEncoding : Context ↪ List Bool} {input : Input ↪ List Bool}
+    (queries : List (Context → List Bool))
+    (hq : ∀ query ∈ queries, ComputableInPolyTime query contextEncoding encBits)
+    {context : Input → Context} (hc : ComputableInPolyTime context input contextEncoding) :
+    ComputableInPolyTime (fun a => binarySignedQuerySum queries (context a)) input encBits := by
   induction queries with
-  | nil => exact .const []
+  | nil => exact ComputableInPolyTime.const []
   | cons query queries ih =>
-    have ht : ComputableInPolyTime (binarySignedQuerySum queries) (encPi encBits) encBits :=
+    have ht : ComputableInPolyTime
+        (fun a => binarySignedQuerySum queries (context a)) input encBits :=
       ih (fun q h => hq q (List.mem_cons_of_mem _ h))
-    exact binarySignedAdd_polyTime (hq query List.mem_cons_self) ht
+    exact binarySignedAdd_polyTime ((hq query List.mem_cons_self).comp hc) ht
 
 /-- Signed values add without overflow or representation assumptions. -/
-theorem binarySignedQuerySum_value {p : ℕ}
-    (queries : List ((Fin p → List Bool) → List Bool)) (v : Fin p → List Bool) :
-    binarySignedValue (binarySignedQuerySum queries v) =
-      (queries.map fun query => binarySignedValue (query v)).sum := by
+theorem binarySignedQuerySum_value {Context : Type}
+    (queries : List (Context → List Bool)) (context : Context) :
+    binarySignedValue (binarySignedQuerySum queries context) =
+      (queries.map fun query => binarySignedValue (query context)).sum := by
   induction queries with
   | nil => rfl
   | cons query queries ih =>
-    change binarySignedValue (binarySignedAdd (query v) (binarySignedQuerySum queries v)) = _
+    change binarySignedValue (binarySignedAdd (query context)
+      (binarySignedQuerySum queries context)) = _
     rw [binarySignedAdd_value, ih]
     rfl
 
