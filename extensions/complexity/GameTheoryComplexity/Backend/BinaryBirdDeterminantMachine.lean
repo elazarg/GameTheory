@@ -1,6 +1,9 @@
 module
 
 public import GameTheoryComplexity.Backend.BinarySignedMatrixMachine
+public import GameTheoryComplexity.Backend.BinaryBirdWidth
+public import GameTheoryComplexity.Backend.WordOperations
+public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
 
 @[expose] public section
 
@@ -12,73 +15,161 @@ as packed fixed-width tables.
 -/
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
+open GameTheory.Complexity.Backend.WordOperations
 open scoped BigOperators
-
-private theorem reindexFn {m n : ℕ} {f : (Fin m → List Bool) → List Bool}
-    (hf : Cobham f) (index : Fin m → Fin n) :
-    Cobham fun v : Fin n → List Bool => f (fun i => v (index i)) :=
-  Cobham.comp hf fun i => Cobham.proj (index i)
 
 /-- Arguments: row-index ruler, column-index ruler, dimension ruler, width ruler, packed matrix. -/
 def binaryBirdField (v : Fin 5 → List Bool) : List Bool :=
-  binarySignedRowField ![smash (v 0) (v 2) ++ v 1, v 3, v 4]
+  binarySignedRowField ![List.replicate ((v 0).length * (v 2).length) true ++ v 1, v 3, v 4]
 
-theorem binaryBirdField_cobham : Cobham binaryBirdField :=
-  (Cobham.comp₃ binarySignedRowField_cobham
-    (Cobham.appendFn (Cobham.comp₂ Cobham.smash (.proj 0) (.proj 2)) (.proj 1))
-    (.proj 3) (.proj 4)).of_eq fun _ => rfl
+@[fun_prop] theorem binaryBirdField_polyTime :
+    ComputableInPolyTime binaryBirdField (encPi encBits) encBits := by
+  have hrow : ComputableInPolyTime (fun v : Fin 5 → List Bool => v 0)
+      (encPi encBits) encBits := .pi_apply encBits 0
+  have hcol : ComputableInPolyTime (fun v : Fin 5 → List Bool => v 2)
+      (encPi encBits) encBits := .pi_apply encBits 2
+  have hrowLength := ComputableInPolyTime.length_bits_comp hrow
+  have hcolLength := ComputableInPolyTime.length_bits_comp hcol
+  have hspacer := (ComputableInPolyTime.bitsReplicate true).comp
+    (ComputableInPolyTime.unary_mul' hrowLength hcolLength)
+  have hfirst := ComputableInPolyTime.bitsAppend hspacer
+    (ComputableInPolyTime.pi_apply encBits 1)
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 5 → List Bool =>
+        ![List.replicate ((v 0).length * (v 2).length) true ++ v 1, v 3, v 4])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hfirst
+    · exact ComputableInPolyTime.pi_apply encBits 3
+    · exact ComputableInPolyTime.pi_apply encBits 4
+  exact binarySignedRowField_polyTime.comp hargs
 
 private def binaryBirdDiagTerm (v : Fin 5 → List Bool) : List Bool :=
-  caseBit₀ (lenLeFlag (v 4) (v 0)) []
-    (binaryBirdField ![v 0, v 0, v 2, v 1, v 3])
+  if (v 0).length ≤ (v 4).length then []
+  else binaryBirdField ![v 0, v 0, v 2, v 1, v 3]
 
-private theorem binaryBirdDiagTerm_cobham : Cobham binaryBirdDiagTerm := by
-  have hf := reindexFn binaryBirdField_cobham (![0, 0, 2, 1, 3] : Fin 5 → Fin 5)
-  have hf' : Cobham fun v : Fin 5 → List Bool => binaryBirdField ![v 0, v 0, v 2, v 1, v 3] :=
-    hf.of_eq fun v => by congr 1; ext i; fin_cases i <;> rfl
-  exact Cobham.iteFn (lenLeFlag_mem (.proj 4) (.proj 0)) Cobham.empty hf'
+private theorem binaryBirdDiagTerm_polyTime :
+    ComputableInPolyTime binaryBirdDiagTerm (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 5 → List Bool => ![v 0, v 0, v 2, v 1, v 3])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 2
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 3
+  have hfield := binaryBirdField_polyTime.comp hargs
+  have hleftWord : ComputableInPolyTime (fun v : Fin 5 → List Bool => v 0)
+      (encPi encBits) encBits := .pi_apply encBits 0
+  have hrightWord : ComputableInPolyTime (fun v : Fin 5 → List Bool => v 4)
+      (encPi encBits) encBits := .pi_apply encBits 4
+  have hleft := ComputableInPolyTime.length_bits_comp hleftWord
+  have hright := ComputableInPolyTime.length_bits_comp hrightWord
+  have hcondition := ComputableInPolyTime.of_tidy
+    (ComputableTidilyInPolyTime.unary_le' hleft.tidy hright.tidy)
+  exact .of_tidy (.ite_decide hcondition.tidy (.const []) hfield.tidy)
 
 /-- Arguments: dimension, width, previous matrix, row-index ruler. -/
 def binaryBirdDiagSum (v : Fin 4 → List Bool) : List Bool :=
   binarySignedSum binaryBirdDiagTerm (v 0) (v 1) ![v 1, v 0, v 2, v 3]
 
-theorem binaryBirdDiagSum_cobham : Cobham binaryBirdDiagSum := by
-  have hf := reindexFn (binarySignedSum_cobham binaryBirdDiagTerm_cobham)
-    (![0, 1, 1, 0, 2, 3] : Fin 6 → Fin 4)
-  exact hf.of_eq fun v => by
-    change binarySignedSum binaryBirdDiagTerm (v 0) (v 1) _ = _
-    congr 1
-    ext i
-    fin_cases i <;> rfl
+@[fun_prop] theorem binaryBirdDiagSum_polyTime :
+    ComputableInPolyTime binaryBirdDiagSum (encPi encBits) encBits := by
+  have hsum := binarySignedSum_polyTime (p := 4) (term := binaryBirdDiagTerm) binaryBirdDiagTerm_polyTime
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 4 → List Bool => ![v 0, v 1, v 1, v 0, v 2, v 3])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 2
+    · exact .pi_apply encBits 3
+  have hsum' := hsum.comp hargs
+  apply ComputableInPolyTime.of_tidy
+  apply hsum'.tidy.of_enc_eq
+  intro v
+  change binaryBirdDiagSum v = binarySignedSum binaryBirdDiagTerm (v 0) (v 1)
+    (Fin.tail (Fin.tail (![v 0, v 1, v 1, v 0, v 2, v 3] : Fin 6 → List Bool)))
+  unfold binaryBirdDiagSum
+  apply congrArg (binarySignedSum binaryBirdDiagTerm (v 0) (v 1))
+  funext i
+  fin_cases i <;> rfl
 
 private def binaryBirdCrossTerm (v : Fin 7 → List Bool) : List Bool :=
-  caseBit₀ (lenLeFlag (v 5) (v 0)) []
-    (binarySignedMul (binaryBirdField ![v 5, v 0, v 2, v 1, v 4])
-      (binaryBirdField ![v 0, v 6, v 2, v 1, v 3]))
+  if (v 0).length ≤ (v 5).length then []
+  else binarySignedMul (binaryBirdField ![v 5, v 0, v 2, v 1, v 4])
+      (binaryBirdField ![v 0, v 6, v 2, v 1, v 3])
 
-private theorem binaryBirdCrossTerm_cobham : Cobham binaryBirdCrossTerm := by
-  have hF := reindexFn binaryBirdField_cobham (![5, 0, 2, 1, 4] : Fin 5 → Fin 7)
-  have hF' : Cobham fun v : Fin 7 → List Bool => binaryBirdField ![v 5, v 0, v 2, v 1, v 4] :=
-    hF.of_eq fun v => by congr 1; ext i; fin_cases i <;> rfl
-  have hA := reindexFn binaryBirdField_cobham (![0, 6, 2, 1, 3] : Fin 5 → Fin 7)
-  have hA' : Cobham fun v : Fin 7 → List Bool => binaryBirdField ![v 0, v 6, v 2, v 1, v 3] :=
-    hA.of_eq fun v => by congr 1; ext i; fin_cases i <;> rfl
-  exact Cobham.iteFn (lenLeFlag_mem (.proj 5) (.proj 0)) Cobham.empty
-    ((Cobham.comp₂ binarySignedMul_cobham hF' hA').of_eq fun _ => rfl)
+private theorem binaryBirdCrossTerm_polyTime :
+    ComputableInPolyTime binaryBirdCrossTerm (encPi encBits) encBits := by
+  have hargs₁ : ComputableInPolyTime
+      (fun v : Fin 7 → List Bool => ![v 5, v 0, v 2, v 1, v 4])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i <;> first | exact .pi_apply encBits 5 | exact .pi_apply encBits 0 |
+      exact .pi_apply encBits 2 | exact .pi_apply encBits 1 | exact .pi_apply encBits 4
+  have hargs₂ : ComputableInPolyTime
+      (fun v : Fin 7 → List Bool => ![v 0, v 6, v 2, v 1, v 3])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i <;> first | exact .pi_apply encBits 0 | exact .pi_apply encBits 6 |
+      exact .pi_apply encBits 2 | exact .pi_apply encBits 1 | exact .pi_apply encBits 3
+  have hleft := binaryBirdField_polyTime.comp hargs₁
+  have hright := binaryBirdField_polyTime.comp hargs₂
+  have hmul := binarySignedMul_polyTime hleft hright
+  have hword₀ : ComputableInPolyTime (fun v : Fin 7 → List Bool => v 0)
+      (encPi encBits) encBits := .pi_apply encBits 0
+  have hword₅ : ComputableInPolyTime (fun v : Fin 7 → List Bool => v 5)
+      (encPi encBits) encBits := .pi_apply encBits 5
+  have hlength₀ := ComputableInPolyTime.length_bits_comp hword₀
+  have hlength₅ := ComputableInPolyTime.length_bits_comp hword₅
+  have hcondition := ComputableInPolyTime.of_tidy
+    (ComputableTidilyInPolyTime.unary_le' hlength₀.tidy hlength₅.tidy)
+  exact .of_tidy (.ite_decide hcondition.tidy (.const []) hmul.tidy)
 
 /-- Arguments: dimension, width, original matrix, previous matrix, row and column rulers. -/
 def binaryBirdCrossSum (v : Fin 6 → List Bool) : List Bool :=
   binarySignedSum binaryBirdCrossTerm (v 0) (v 1) ![v 1, v 0, v 2, v 3, v 4, v 5]
 
-theorem binaryBirdCrossSum_cobham : Cobham binaryBirdCrossSum := by
-  have hf := reindexFn (binarySignedSum_cobham binaryBirdCrossTerm_cobham)
-    (![0, 1, 1, 0, 2, 3, 4, 5] : Fin 8 → Fin 6)
-  exact hf.of_eq fun v => by
-    change binarySignedSum binaryBirdCrossTerm (v 0) (v 1) _ = _
-    congr 1
-    ext i
-    fin_cases i <;> rfl
+@[fun_prop] theorem binaryBirdCrossSum_polyTime :
+    ComputableInPolyTime binaryBirdCrossSum (encPi encBits) encBits := by
+  have hsum := binarySignedSum_polyTime (p := 6) (term := binaryBirdCrossTerm) binaryBirdCrossTerm_polyTime
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 6 → List Bool => ![v 0, v 1, v 1, v 0, v 2, v 3, v 4, v 5])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 2
+    · exact .pi_apply encBits 3
+    · exact .pi_apply encBits 4
+    · exact .pi_apply encBits 5
+  have hsum' := hsum.comp hargs
+  apply ComputableInPolyTime.of_tidy
+  apply hsum'.tidy.of_enc_eq
+  intro v
+  change binaryBirdCrossSum v = binarySignedSum binaryBirdCrossTerm (v 0) (v 1)
+    (Fin.tail (Fin.tail (![v 0, v 1, v 1, v 0, v 2, v 3, v 4, v 5] : Fin 8 → List Bool)))
+  unfold binaryBirdCrossSum
+  apply congrArg (binarySignedSum binaryBirdCrossTerm (v 0) (v 1))
+  funext i
+  fin_cases i <;> rfl
 
 /-- One fixed-width division-free Bird entry. -/
 def binaryBirdEntry (v : Fin 6 → List Bool) : List Bool :=
@@ -91,26 +182,55 @@ def binaryBirdEntry (v : Fin 6 → List Bool) : List Bool :=
 @[simp] theorem binaryBirdEntry_length (v : Fin 6 → List Bool) :
     (binaryBirdEntry v).length = (v 1).length := binarySignedFixedAdd_length _ _ _
 
-theorem binaryBirdEntry_cobham : Cobham binaryBirdEntry := by
-  have hD := reindexFn binaryBirdDiagSum_cobham (![0, 1, 3, 4] : Fin 4 → Fin 6)
-  have hD' : Cobham fun v : Fin 6 → List Bool => binaryBirdDiagSum ![v 0, v 1, v 3, v 4] :=
-    hD.of_eq fun v => by congr 1; ext i; fin_cases i <;> rfl
-  have hA := reindexFn binaryBirdField_cobham (![4, 5, 0, 1, 2] : Fin 5 → Fin 6)
-  have hA' : Cobham fun v : Fin 6 → List Bool => binaryBirdField ![v 4, v 5, v 0, v 1, v 2] :=
-    hA.of_eq fun v => by congr 1; ext i; fin_cases i <;> rfl
-  have hN := Cobham.comp binarySignedNeg_cobham fun _ : Fin 1 => hD'
-  exact (Cobham.comp₃ binarySignedFixedAdd_cobham (.proj 1)
-    (Cobham.comp₃ binarySignedFixedMul_cobham (.proj 1) hN hA') binaryBirdCrossSum_cobham).of_eq
-    fun _ => rfl
+@[fun_prop] theorem binaryBirdEntry_polyTime :
+    ComputableInPolyTime binaryBirdEntry (encPi encBits) encBits := by
+  have hdiagArgs : ComputableInPolyTime
+      (fun v : Fin 6 → List Bool => ![v 0, v 1, v 3, v 4])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 3
+    · exact .pi_apply encBits 4
+  have hfieldArgs : ComputableInPolyTime
+      (fun v : Fin 6 → List Bool => ![v 4, v 5, v 0, v 1, v 2])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 4
+    · exact .pi_apply encBits 5
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 2
+  have hwidth : ComputableInPolyTime (fun v : Fin 6 → List Bool => v 1)
+      (encPi encBits) encBits := .pi_apply encBits 1
+  have hdiag := binaryBirdDiagSum_polyTime.comp hdiagArgs
+  have hfield := binaryBirdField_polyTime.comp hfieldArgs
+  have hneg := binarySignedNeg_polyTime hdiag
+  have hmul := binarySignedFixedMul_polyTime hwidth hneg hfield
+  exact binarySignedFixedAdd_polyTime hwidth hmul binaryBirdCrossSum_polyTime
 
 private def binaryBirdRowTerm (v : Fin 6 → List Bool) : List Bool :=
   binaryBirdEntry ![v 1, v 2, v 3, v 4, v 5, v 0]
 
-private theorem binaryBirdRowTerm_cobham : Cobham binaryBirdRowTerm :=
-  (reindexFn binaryBirdEntry_cobham (![1, 2, 3, 4, 5, 0] : Fin 6 → Fin 6)).of_eq fun v => by
-    congr 1
-    ext i
-    fin_cases i <;> rfl
+private theorem binaryBirdRowTerm_polyTime :
+    ComputableInPolyTime binaryBirdRowTerm (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 6 → List Bool => ![v 1, v 2, v 3, v 4, v 5, v 0])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 2
+    · exact .pi_apply encBits 3
+    · exact .pi_apply encBits 4
+    · exact .pi_apply encBits 5
+    · exact .pi_apply encBits 0
+  exact binaryBirdEntry_polyTime.comp hargs
 
 /-- Materialize one row; arguments are dimension, width, original and previous matrices, row ruler. -/
 def binaryBirdRow (v : Fin 5 → List Bool) : List Bool :=
@@ -119,156 +239,263 @@ def binaryBirdRow (v : Fin 5 → List Bool) : List Bool :=
 @[simp] theorem binaryBirdRow_length (v : Fin 5 → List Bool) :
     (binaryBirdRow v).length = (v 0).length * (v 1).length := binarySignedTable_length _ _ _ _
 
-theorem binaryBirdRow_cobham : Cobham binaryBirdRow := by
-  have hf := reindexFn (binarySignedTable_cobham binaryBirdRowTerm_cobham)
-    (![0, 1, 0, 1, 2, 3, 4] : Fin 7 → Fin 5)
-  exact hf.of_eq fun v => by
-    change binarySignedTable binaryBirdRowTerm (v 0) (v 1) _ = _
-    congr 1
-    ext i
-    fin_cases i <;> rfl
+@[fun_prop] theorem binaryBirdRow_polyTime :
+    ComputableInPolyTime binaryBirdRow (encPi encBits) encBits := by
+  have htable := binarySignedTable_polyTime (p := 5) (term := binaryBirdRowTerm) binaryBirdRowTerm_polyTime
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 5 → List Bool => ![v 0, v 1, v 0, v 1, v 2, v 3, v 4])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 2
+    · exact .pi_apply encBits 3
+    · exact .pi_apply encBits 4
+  have htable' := htable.comp hargs
+  apply ComputableInPolyTime.of_tidy
+  apply htable'.tidy.of_enc_eq
+  intro v
+  change binaryBirdRow v = binarySignedTable binaryBirdRowTerm (v 0) (v 1)
+    (Fin.tail (Fin.tail (![v 0, v 1, v 0, v 1, v 2, v 3, v 4] : Fin 7 → List Bool)))
+  unfold binaryBirdRow
+  apply congrArg (binarySignedTable binaryBirdRowTerm (v 0) (v 1))
+  funext i
+  fin_cases i <;> rfl
 
 private def binaryBirdStageTerm (v : Fin 5 → List Bool) : List Bool :=
   binaryBirdRow ![v 1, v 2, v 3, v 4, v 0]
 
-private theorem binaryBirdStageTerm_cobham : Cobham binaryBirdStageTerm :=
-  (reindexFn binaryBirdRow_cobham (![1, 2, 3, 4, 0] : Fin 5 → Fin 5)).of_eq fun v => by
-    congr 1
-    ext i
-    fin_cases i <;> rfl
+private theorem binaryBirdStageTerm_polyTime :
+    ComputableInPolyTime binaryBirdStageTerm (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 5 → List Bool => ![v 1, v 2, v 3, v 4, v 0])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 2
+    · exact .pi_apply encBits 3
+    · exact .pi_apply encBits 4
+    · exact .pi_apply encBits 0
+  exact binaryBirdRow_polyTime.comp hargs
 
 /-- Materialize a complete Bird stage; arguments are dimension, width, original and previous matrices. -/
 def binaryBirdStage (v : Fin 4 → List Bool) : List Bool :=
-  binarySignedTable binaryBirdStageTerm (v 0) (smash (v 0) (v 1)) ![v 0, v 1, v 2, v 3]
+  binarySignedTable binaryBirdStageTerm (v 0)
+    (List.replicate ((v 0).length * (v 1).length) true) ![v 0, v 1, v 2, v 3]
 
 @[simp] theorem binaryBirdStage_length (v : Fin 4 → List Bool) :
     (binaryBirdStage v).length = (v 0).length * (v 0).length * (v 1).length := by
-  rw [binaryBirdStage, binarySignedTable_length, smash_length, Nat.mul_assoc]
+  rw [binaryBirdStage, binarySignedTable_length]
+  simp [Nat.mul_assoc]
 
-theorem binaryBirdStage_cobham : Cobham binaryBirdStage := by
-  have inputs : ∀ i : Fin 6, Cobham fun v : Fin 4 → List Bool =>
-      (![v 0, smash (v 0) (v 1), v 0, v 1, v 2, v 3] : Fin 6 → List Bool) i := by
+@[fun_prop] theorem binaryBirdStage_polyTime :
+    ComputableInPolyTime binaryBirdStage (encPi encBits) encBits := by
+  have htable := binarySignedTable_polyTime (p := 4) (term := binaryBirdStageTerm) binaryBirdStageTerm_polyTime
+  have hdim : ComputableInPolyTime (fun v : Fin 4 → List Bool => v 0)
+      (encPi encBits) encBits := .pi_apply encBits 0
+  have hwidth : ComputableInPolyTime (fun v : Fin 4 → List Bool => v 1)
+      (encPi encBits) encBits := .pi_apply encBits 1
+  have hspacer := (ComputableInPolyTime.bitsReplicate true).comp
+    (ComputableInPolyTime.unary_mul'
+      (ComputableInPolyTime.length_bits_comp hdim)
+      (ComputableInPolyTime.length_bits_comp hwidth))
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 4 → List Bool =>
+        ![v 0, List.replicate ((v 0).length * (v 1).length) true, v 0, v 1, v 2, v 3])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
     intro i
     fin_cases i
-    · exact .proj 0
-    · exact Cobham.comp₂ Cobham.smash (.proj 0) (.proj 1)
-    · exact .proj 0
-    · exact .proj 1
-    · exact .proj 2
-    · exact .proj 3
-  exact (Cobham.comp (binarySignedTable_cobham binaryBirdStageTerm_cobham) inputs).of_eq fun v => by
-    change binarySignedTable binaryBirdStageTerm (v 0) (smash (v 0) (v 1)) _ = _
-    rfl
-
-private def binaryBirdStagesStep (v : Fin 5 → List Bool) : List Bool :=
-  binaryBirdStage ![v 2, v 3, v 4, v 1]
-
-private def binaryBirdStagesInit (v : Fin 3 → List Bool) : List Bool :=
-  padTo (smash (smash (v 0) (v 0)) (v 1)) (v 2)
+    · exact hdim
+    · exact hspacer
+    · exact hdim
+    · exact hwidth
+    · exact .pi_apply encBits 2
+    · exact .pi_apply encBits 3
+  have htable' := htable.comp hargs
+  apply ComputableInPolyTime.of_tidy
+  apply htable'.tidy.of_enc_eq
+  intro v
+  change binaryBirdStage v = binarySignedTable binaryBirdStageTerm (v 0)
+    (List.replicate ((v 0).length * (v 1).length) true)
+    (Fin.tail (Fin.tail (![v 0, List.replicate ((v 0).length * (v 1).length) true,
+      v 0, v 1, v 2, v 3] : Fin 6 → List Bool)))
+  unfold binaryBirdStage
+  apply congrArg (binarySignedTable binaryBirdStageTerm (v 0)
+    (List.replicate ((v 0).length * (v 1).length) true))
+  funext i
+  fin_cases i <;> rfl
 
 /-- Iterate materialized stages; the stored matrix size depends only on dimension and width. -/
 def binaryBirdStages (clock dim width A : List Bool) : List Bool :=
-  recNotation binaryBirdStagesInit binaryBirdStagesStep binaryBirdStagesStep clock ![dim, width, A]
+  let context : Fin 3 → List Bool := ![dim, width, A]
+  let initial := (A ++ List.replicate (dim.length * dim.length * width.length) false).take
+    (dim.length * dim.length * width.length)
+  WordFold.suffixFold
+    (fun (context : Fin 3 → List Bool) (_suffix state : List Bool) (_bit : Bool) =>
+      binaryBirdStage ![context 0, context 1, context 2, state])
+    context initial clock
 
 @[simp] theorem binaryBirdStages_length (clock dim width A : List Bool) :
     (binaryBirdStages clock dim width A).length = dim.length * dim.length * width.length := by
   cases clock with
-  | nil => simp [binaryBirdStages, binaryBirdStagesInit, smash_length]
+  | nil => simp [binaryBirdStages]
   | cons b r =>
-    simp only [binaryBirdStages, recNotation_cons, Bool.cond_self, binaryBirdStagesStep,
-      binaryBirdStage_length]
-    rfl
+    simp only [binaryBirdStages, WordFold.suffixFold_cons, binaryBirdStage_length]
+    simp [Nat.mul_assoc]
 
-theorem binaryBirdStages_cobham : Cobham fun v : Fin 4 → List Bool =>
-    binaryBirdStages (v 0) (v 1) (v 2) (v 3) := by
-  have hg : Cobham binaryBirdStagesInit :=
-    Cobham.padFn (Cobham.comp₂ Cobham.smash
-      (Cobham.comp₂ Cobham.smash (.proj 0) (.proj 0)) (.proj 1)) (.proj 2)
-  have hs : Cobham binaryBirdStagesStep :=
-    (reindexFn binaryBirdStage_cobham (![2, 3, 4, 1] : Fin 4 → Fin 5)).of_eq fun v => by
-      congr 1
-      ext i
-      fin_cases i <;> rfl
-  have hj : Cobham fun v : Fin 4 → List Bool => smash (smash (v 1) (v 1)) (v 2) :=
-    Cobham.comp₂ Cobham.smash (Cobham.comp₂ Cobham.smash (.proj 1) (.proj 1)) (.proj 2)
-  exact (Cobham.boundedRec hg hs hs hj (fun r v => by
-    have hv : v = ![v 0, v 1, v 2] := by ext i; fin_cases i <;> rfl
-    rw [hv]
-    change (binaryBirdStages r (v 0) (v 1) (v 2)).length ≤ _
-    rw [binaryBirdStages_length, smash_length, smash_length]
-    exact le_rfl)).of_eq fun v => by
-      congr 1
-      ext i
-      fin_cases i <;> rfl
+private theorem binaryBirdStages_step_polyTime :
+    ComputableInPolyTime
+      (fun p : ((Fin 3 → List Bool) × (List Bool × List Bool)) × Bool =>
+        binaryBirdStage ![p.1.1 0, p.1.1 1, p.1.1 2, p.1.2.2])
+      (encPair (encPair (encPi encBits) (encPair encBits encBits)) encBool) encBits := by
+  have houter : ComputableInPolyTime
+      (fun p : ((Fin 3 → List Bool) × (List Bool × List Bool)) × Bool => p.1)
+      (encPair (encPair (encPi encBits) (encPair encBits encBits)) encBool)
+      (encPair (encPi encBits) (encPair encBits encBits)) :=
+    .fst (encPair (encPi encBits) (encPair encBits encBits)) encBool
+  have hcontext : ComputableInPolyTime
+      (fun p : ((Fin 3 → List Bool) × (List Bool × List Bool)) × Bool => p.1.1)
+      (encPair (encPair (encPi encBits) (encPair encBits encBits)) encBool)
+      (encPi encBits) :=
+    (ComputableInPolyTime.fst (encPi encBits) (encPair encBits encBits)).comp houter
+  have hstate : ComputableInPolyTime
+      (fun p : ((Fin 3 → List Bool) × (List Bool × List Bool)) × Bool => p.1.2.2)
+      (encPair (encPair (encPi encBits) (encPair encBits encBits)) encBool) encBits :=
+    (ComputableInPolyTime.snd encBits encBits).comp
+      ((ComputableInPolyTime.snd (encPi encBits) (encPair encBits encBits)).comp houter)
+  have hargs : ComputableInPolyTime
+      (fun p : ((Fin 3 → List Bool) × (List Bool × List Bool)) × Bool =>
+        ![p.1.1 0, p.1.1 1, p.1.1 2, p.1.2.2])
+      (encPair (encPair (encPi encBits) (encPair encBits encBits)) encBool)
+      (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact (ComputableInPolyTime.pi_apply encBits (0 : Fin 3)).comp hcontext
+    · exact (ComputableInPolyTime.pi_apply encBits (1 : Fin 3)).comp hcontext
+    · exact (ComputableInPolyTime.pi_apply encBits (2 : Fin 3)).comp hcontext
+    · exact hstate
+  exact binaryBirdStage_polyTime.comp hargs
 
-theorem binaryBirdStages_mem_FPn :
-    FPn (fun v : Fin 4 → List Bool => binaryBirdStages (v 0) (v 1) (v 2) (v 3)) :=
-  cobham_iff_FPn.mp binaryBirdStages_cobham
-
-private def binaryBirdSignStep (v : Fin 2 → List Bool) : List Bool :=
-  notBit (bitAt [] (v 1)) ++ [true]
+@[fun_prop] theorem binaryBirdStages_polyTime :
+    ComputableInPolyTime
+      (fun v : Fin 4 → List Bool => binaryBirdStages (v 0) (v 1) (v 2) (v 3))
+      (encPi encBits) encBits := by
+  let context : (Fin 4 → List Bool) → Fin 3 → List Bool := fun v => ![v 1, v 2, v 3]
+  let word : (Fin 4 → List Bool) → List Bool := fun v => v 0
+  let initial : (Fin 4 → List Bool) → List Bool := fun v =>
+    (v 3 ++ List.replicate ((v 1).length * (v 1).length * (v 2).length) false).take
+      ((v 1).length * (v 1).length * (v 2).length)
+  let step : (Fin 3 → List Bool) → List Bool → List Bool → Bool → List Bool :=
+    fun c _suffix state _bit => binaryBirdStage ![c 0, c 1, c 2, state]
+  have hcontext : ComputableInPolyTime context (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 2
+    · exact .pi_apply encBits 3
+  have hword : ComputableInPolyTime word (encPi encBits) encBits := .pi_apply encBits 0
+  have hdim : ComputableInPolyTime (fun v : Fin 4 → List Bool => v 1)
+      (encPi encBits) encBits := .pi_apply encBits 1
+  have hwidth : ComputableInPolyTime (fun v : Fin 4 → List Bool => v 2)
+      (encPi encBits) encBits := .pi_apply encBits 2
+  have hinitial : ComputableInPolyTime initial (encPi encBits) encBits := by
+    have hdimLength := ComputableInPolyTime.length_bits_comp hdim
+    have hwidthLength := ComputableInPolyTime.length_bits_comp hwidth
+    have hsize := ComputableInPolyTime.unary_mul'
+      (ComputableInPolyTime.unary_mul' hdimLength hdimLength) hwidthLength
+    have hpad := ComputableInPolyTime.bitsAppend (ComputableInPolyTime.pi_apply encBits (3 : Fin 4))
+      ((ComputableInPolyTime.bitsReplicate false).comp hsize)
+    simpa only [initial, Function.comp_def] using hpad.bitsTakeWithInput hsize
+  have hstep : ComputableInPolyTime
+      (fun p : ((Fin 3 → List Bool) × (List Bool × List Bool)) × Bool =>
+        step p.1.1 p.1.2.1 p.1.2.2 p.2)
+      (encPair (encPair (encPi encBits) (encPair encBits encBits)) encBool) encBits :=
+    binaryBirdStages_step_polyTime
+  have hbound : PolyBounded (fun v : Fin 4 → List Bool => (encPi encBits v).length)
+      (fun v => (v 1).length * (v 1).length * (v 2).length) :=
+    (hdim.polyBounded_length.mul hdim.polyBounded_length).mul hwidth.polyBounded_length
+  have hstates : ∀ v suffix, suffix <:+ word v →
+      (WordFold.suffixFold step (context v) (initial v) suffix).length ≤
+        (v 1).length * (v 1).length * (v 2).length := by
+    intro v suffix _
+    have hlen := binaryBirdStages_length suffix (v 1) (v 2) (v 3)
+    simpa [binaryBirdStages, context, initial, step] using hlen.le
+  exact WordFold.suffixFold_polyTime hcontext hword hinitial hstep hbound hstates
 
 /-- A two-bit signed word for `(-1)` raised to the clock length. -/
 def binaryBirdSign (clock : List Bool) : List Bool :=
-  recNotation (fun _ : Fin 0 → List Bool => [false, true])
-    binaryBirdSignStep binaryBirdSignStep clock ![]
-
-private theorem sign_headFlag (x : List Bool) : bitAt [] x = [x.headD false] := by
-  cases x with
-  | nil => rfl
-  | cons b x => cases b <;> rfl
+  WordFold.suffixFold
+    (fun (_ : Fin 0 → List Bool) (_suffix state : List Bool) (_bit : Bool) =>
+      notFlag state ++ [true])
+    ![] [false, true] clock
 
 @[simp] theorem binaryBirdSign_length (clock : List Bool) : (binaryBirdSign clock).length = 2 := by
   cases clock with
   | nil => rfl
   | cons b r =>
-    simp only [binaryBirdSign, recNotation_cons, Bool.cond_self, binaryBirdSignStep]
-    change (notBit (bitAt [] (binaryBirdSign r)) ++ [true]).length = 2
-    rw [sign_headFlag]
-    generalize (binaryBirdSign r).headD false = a
-    cases a <;> rfl
+    simp [binaryBirdSign, WordFold.suffixFold_cons, notFlag]
 
 private theorem binaryBirdSign_tail (clock : List Bool) : (binaryBirdSign clock).tail = [true] := by
   cases clock with
   | nil => rfl
   | cons b r =>
-    simp only [binaryBirdSign, recNotation_cons, Bool.cond_self, binaryBirdSignStep]
-    change (notBit (bitAt [] (binaryBirdSign r)) ++ [true]).tail = [true]
-    rw [sign_headFlag]
-    generalize (binaryBirdSign r).headD false = a
-    cases a <;> rfl
+    simp [binaryBirdSign, WordFold.suffixFold_cons, notFlag]
 
 theorem binaryBirdSign_value (clock : List Bool) :
     binarySignedValue (binaryBirdSign clock) = (-1 : ℤ) ^ clock.length := by
   induction clock with
   | nil => rfl
   | cons b r ih =>
-    simp only [binaryBirdSign, recNotation_cons, Bool.cond_self, binaryBirdSignStep]
-    change binarySignedValue (notBit (bitAt [] (binaryBirdSign r)) ++ [true]) = _
-    have he : notBit (bitAt [] (binaryBirdSign r)) ++ [true] = binarySignedNeg (binaryBirdSign r) := by
+    simp only [binaryBirdSign, WordFold.suffixFold_cons]
+    change binarySignedValue (notFlag (binaryBirdSign r) ++ [true]) = (-1 : ℤ) ^ (b :: r).length
+    have he : notFlag (binaryBirdSign r) ++ [true] = binarySignedNeg (binaryBirdSign r) := by
       rw [binarySignedNeg, binaryBirdSign_tail]
+      simp [WordOperations.notFlag]
     rw [he, binarySignedNeg_value, ih, List.length_cons, pow_succ]
     ring
 
-theorem binaryBirdSign_cobham : Cobham fun v : Fin 1 → List Bool => binaryBirdSign (v 0) := by
-  have hs : Cobham binaryBirdSignStep := Cobham.appendFn
-    (Cobham.notFn (Cobham.comp₂ Cobham.bitAtFn (Cobham.const []) (.proj 1))) (Cobham.const [true])
-  exact (Cobham.boundedRec (Cobham.const [false, true]) hs hs
-    (Cobham.const [false, false]) (fun r v => by
-      have hv : v = (![] : Fin 0 → List Bool) := by ext i; exact Fin.elim0 i
-      rw [hv]
-      exact (binaryBirdSign_length r).le)).of_eq fun v => by
-        change recNotation _ _ _ (v 0) (Fin.tail v) = recNotation _ _ _ (v 0) ![]
-        congr 1
-        ext i
-        exact Fin.elim0 i
+@[fun_prop] theorem binaryBirdSign_polyTime :
+    ComputableInPolyTime binaryBirdSign encBits encBits := by
+  let context : List Bool → Fin 0 → List Bool := fun _ => ![]
+  let initial : List Bool → List Bool := fun _ => [false, true]
+  let step : (Fin 0 → List Bool) → List Bool → List Bool → Bool → List Bool :=
+    fun _ _ state _ => notFlag state ++ [true]
+  have hcontext : ComputableInPolyTime context encBits (encPi encBits) := .const ![]
+  have hinitial : ComputableInPolyTime initial encBits encBits := .const [false, true]
+  have houter : ComputableInPolyTime
+      (fun p : ((Fin 0 → List Bool) × (List Bool × List Bool)) × Bool => p.1)
+      (encPair (encPair (encPi encBits) (encPair encBits encBits)) encBool)
+      (encPair (encPi encBits) (encPair encBits encBits)) :=
+    .fst (encPair (encPi encBits) (encPair encBits encBits)) encBool
+  have hstate : ComputableInPolyTime
+      (fun p : ((Fin 0 → List Bool) × (List Bool × List Bool)) × Bool => p.1.2.2)
+      (encPair (encPair (encPi encBits) (encPair encBits encBits)) encBool) encBits :=
+    (ComputableInPolyTime.snd encBits encBits).comp
+      ((ComputableInPolyTime.snd (encPi encBits) (encPair encBits encBits)).comp houter)
+  have hstep : ComputableInPolyTime
+      (fun p : ((Fin 0 → List Bool) × (List Bool × List Bool)) × Bool =>
+        step p.1.1 p.1.2.1 p.1.2.2 p.2)
+      (encPair (encPair (encPi encBits) (encPair encBits encBits)) encBool) encBits :=
+    (notFlag_polyTime.comp hstate).bitsAppend (ComputableInPolyTime.const [true])
+  exact WordFold.suffixFold_polyTime hcontext (ComputableInPolyTime.id' (encIn := encBits))
+    hinitial hstep (PolyBounded.const 2)
+    (fun _clock suffix _ => by
+      simpa only [context, initial, step, binaryBirdSign] using (binaryBirdSign_length suffix).le)
 
 /-- Fixed-width division-free determinant computation; arguments are dimension, width, packed matrix. -/
 def binaryBirdDeterminant (v : Fin 3 → List Bool) : List Bool :=
-  caseBit₀ (nonemptyFlag (v 0))
-    (binarySignedFixedMul (v 1) (binaryBirdSign (v 0).tail)
-      (binaryBirdField ![[], [], v 0, v 1, binaryBirdStages (v 0).tail (v 0) (v 1) (v 2)]))
-    (binarySignedFixed (v 1) [false, true])
+  if (v 0).isEmpty then binarySignedFixed (v 1) [false, true]
+  else binarySignedFixedMul (v 1) (binaryBirdSign (v 0).tail)
+      (binaryBirdField ![[], [], v 0, v 1, binaryBirdStages (v 0).tail (v 0) (v 1) (v 2)])
 
 @[simp] theorem binaryBirdDeterminant_length (v : Fin 3 → List Bool) :
     (binaryBirdDeterminant v).length = (v 1).length := by
@@ -277,56 +504,63 @@ def binaryBirdDeterminant (v : Fin 3 → List Bool) : List Bool :=
   | nil => simp
   | cons b r => simp
 
-theorem binaryBirdDeterminant_cobham : Cobham binaryBirdDeterminant := by
-  have hs : Cobham fun v : Fin 3 → List Bool => binaryBirdStages (v 0).tail (v 0) (v 1) (v 2) := by
-    have inputs : ∀ i : Fin 4, Cobham fun v : Fin 3 → List Bool =>
-        (![ (v 0).tail, v 0, v 1, v 2] : Fin 4 → List Bool) i := by
-      intro i
-      fin_cases i
-      · exact Cobham.tailFn (.proj 0)
-      · exact .proj 0
-      · exact .proj 1
-      · exact .proj 2
-    exact (Cobham.comp binaryBirdStages_cobham inputs).of_eq fun _ => rfl
-  have hfield : Cobham fun v : Fin 3 → List Bool =>
-      binaryBirdField ![[], [], v 0, v 1, binaryBirdStages (v 0).tail (v 0) (v 1) (v 2)] := by
-    apply Cobham.comp binaryBirdField_cobham
+@[fun_prop] theorem binaryBirdDeterminant_polyTime :
+    ComputableInPolyTime binaryBirdDeterminant (encPi encBits) encBits := by
+  have hdim : ComputableInPolyTime (fun v : Fin 3 → List Bool => v 0)
+      (encPi encBits) encBits := .pi_apply encBits 0
+  have hwidth : ComputableInPolyTime (fun v : Fin 3 → List Bool => v 1)
+      (encPi encBits) encBits := .pi_apply encBits 1
+  have hmatrix : ComputableInPolyTime (fun v : Fin 3 → List Bool => v 2)
+      (encPi encBits) encBits := .pi_apply encBits 2
+  have htail := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hdim
+  have hstageArgs : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool => ![(v 0).tail, v 0, v 1, v 2])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
     intro i
     fin_cases i
-    · exact Cobham.empty
-    · exact Cobham.empty
-    · exact .proj 0
-    · exact .proj 1
-    · exact hs
-  have hsign : Cobham fun v : Fin 3 → List Bool => binaryBirdSign (v 0).tail :=
-    (Cobham.comp binaryBirdSign_cobham fun _ : Fin 1 => Cobham.tailFn (.proj 0)).of_eq fun _ => rfl
-  exact Cobham.iteFn (Cobham.nonemptyFn (.proj 0))
-    ((Cobham.comp₃ binarySignedFixedMul_cobham (.proj 1) hsign hfield).of_eq fun _ => rfl)
-    ((Cobham.comp₂ binarySignedFixed_cobham (.proj 1) (Cobham.const [false, true])).of_eq fun _ => rfl)
-
-theorem binaryBirdDeterminant_mem_FPn : FPn binaryBirdDeterminant :=
-  cobham_iff_FPn.mp binaryBirdDeterminant_cobham
+    · exact htail
+    · exact hdim
+    · exact hwidth
+    · exact hmatrix
+  have hstages := binaryBirdStages_polyTime.comp hstageArgs
+  have hfieldArgs : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool =>
+        ![[], [], v 0, v 1, binaryBirdStages (v 0).tail (v 0) (v 1) (v 2)])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .const []
+    · exact .const []
+    · exact hdim
+    · exact hwidth
+    · exact hstages
+  have hfield := binaryBirdField_polyTime.comp hfieldArgs
+  have hsign := binaryBirdSign_polyTime.comp htail
+  have hmul := binarySignedFixedMul_polyTime hwidth hsign hfield
+  have hunit := binarySignedFixed_polyTime hwidth (ComputableInPolyTime.const [false, true])
+  have hempty := ComputableInPolyTime.of_tidy
+    (ComputableTidilyInPolyTime.bitsIsEmpty.comp hdim.tidy)
+  exact hempty.ite hunit hmul
 
 theorem binaryBirdField_value (v : Fin 5 → List Bool) :
     binarySignedValue (binaryBirdField v) =
       binarySignedRowValue (v 3) (v 4) ((v 0).length * (v 2).length + (v 1).length) := by
-  change binarySignedValue (((v 4).drop ((smash (v 0) (v 2) ++ v 1).length * (v 3).length)).take (v 3).length) = _
-  rw [List.length_append, smash_length]
+  change binarySignedValue (((v 4).drop
+    ((List.replicate ((v 0).length * (v 2).length) true ++ v 1).length * (v 3).length)).take
+      (v 3).length) = _
+  simp only [List.length_append, List.length_replicate]
   rfl
 
 private theorem binaryBirdDiagTerm_value (v : Fin 5 → List Bool) :
     binarySignedValue (binaryBirdDiagTerm v) =
       if (v 4).length < (v 0).length then
         binarySignedRowValue (v 1) (v 3) ((v 0).length * (v 2).length + (v 0).length) else 0 := by
-  rcases lenLeFlag_flag (v 4) (v 0) with h | h
-  · have hk : ¬(v 4).length < (v 0).length := not_lt_of_ge ((lenLeFlag_eq_true_iff _ _).mp h)
-    simp [binaryBirdDiagTerm, h, caseBit₀, hk, binarySignedValue, Nat.fromBitsLE, Nat.fromBits]
-  · have hk : (v 4).length < (v 0).length := by
-      by_contra hn
-      have ht := (lenLeFlag_eq_true_iff (v 4) (v 0)).mpr (by omega)
-      simp [h] at ht
-    simp only [binaryBirdDiagTerm, h, caseBit₀, hk, ↓reduceIte]
-    exact binaryBirdField_value _
+  by_cases hk : (v 4).length < (v 0).length
+  · simp [binaryBirdDiagTerm, not_le_of_gt hk, binaryBirdField_value]
+  · have hle : (v 0).length ≤ (v 4).length := by omega
+    simp [binaryBirdDiagTerm, hle, binarySignedValue, hk, Turing.MultiTapeTM.ofBits]
 
 theorem binaryBirdDiagSum_value (v : Fin 4 → List Bool) (hr : 0 < (v 1).length)
     (hbound : ∀ t ≤ (v 0).length,
@@ -344,16 +578,12 @@ private theorem binaryBirdCrossTerm_value (v : Fin 7 → List Bool) :
       if (v 5).length < (v 0).length then
         binarySignedRowValue (v 1) (v 4) ((v 5).length * (v 2).length + (v 0).length) *
         binarySignedRowValue (v 1) (v 3) ((v 0).length * (v 2).length + (v 6).length) else 0 := by
-  rcases lenLeFlag_flag (v 5) (v 0) with h | h
-  · have hk : ¬(v 5).length < (v 0).length := not_lt_of_ge ((lenLeFlag_eq_true_iff _ _).mp h)
-    simp [binaryBirdCrossTerm, h, caseBit₀, hk, binarySignedValue, Nat.fromBitsLE, Nat.fromBits]
-  · have hk : (v 5).length < (v 0).length := by
-      by_contra hn
-      have ht := (lenLeFlag_eq_true_iff (v 5) (v 0)).mpr (by omega)
-      simp [h] at ht
-    simp only [binaryBirdCrossTerm, h, caseBit₀, hk, ↓reduceIte, Bool.cond_false, binarySignedMul_value,
-      binaryBirdField_value]
+  by_cases hk : (v 5).length < (v 0).length
+  · simp only [binaryBirdCrossTerm, not_le_of_gt hk, ↓reduceIte,
+      binarySignedMul_value, binaryBirdField_value, hk]
     rfl
+  · have hle : (v 0).length ≤ (v 5).length := by omega
+    simp [binaryBirdCrossTerm, hle, binarySignedValue, hk, Turing.MultiTapeTM.ofBits]
 
 theorem binaryBirdCrossSum_value (v : Fin 6 → List Bool) (hr : 0 < (v 1).length)
     (hbound : ∀ t ≤ (v 0).length,
@@ -405,13 +635,21 @@ theorem binaryBirdStage_row (v : Fin 4 → List Bool) (i : ℕ) (hi : i < (v 0).
     ((binaryBirdStage v).drop (i * ((v 0).length * (v 1).length))).take
       ((v 0).length * (v 1).length) =
       binaryBirdRow ![v 0, v 1, v 2, v 3, (v 0).drop ((v 0).length - i)] := by
-  have h := binarySignedTable_field binaryBirdStageTerm (v 0) (smash (v 0) (v 1))
+  have h := binarySignedTable_field binaryBirdStageTerm (v 0)
+    (List.replicate ((v 0).length * (v 1).length) true)
     ![v 0, v 1, v 2, v 3] i hi
-  rw [smash_length] at h
-  change _ = binarySignedFixed (smash (v 0) (v 1)) (binaryBirdRow _) at h
+  change _ = binarySignedFixed (List.replicate ((v 0).length * (v 1).length) true)
+    (binaryBirdRow _) at h
   rw [binarySignedFixed_eq_of_length] at h
-  · exact h
-  · rw [binaryBirdRow_length, smash_length]
+  · let packed : Fin 5 → List Bool :=
+      Fin.cons ((v 0).drop ((v 0).length - i)) ![v 0, v 1, v 2, v 3]
+    have hrow : binaryBirdRow ![packed 1, packed 2, packed 3, packed 4, packed 0] =
+        binaryBirdRow ![v 0, v 1, v 2, v 3, (v 0).drop ((v 0).length - i)] := by
+      apply congrArg binaryBirdRow
+      funext j
+      fin_cases j <;> rfl
+    simpa only [binaryBirdStage, List.length_replicate] using h.trans hrow
+  · rw [binaryBirdRow_length, List.length_replicate]
     rfl
 
 theorem binaryBirdStage_field (v : Fin 4 → List Bool) (i j : ℕ)
@@ -429,11 +667,13 @@ theorem binaryBirdStage_field (v : Fin 4 → List Bool) (i j : ℕ)
   rw [Nat.min_eq_left hm, ← Nat.mul_assoc, ← Nat.add_mul] at h
   exact h.trans (binaryBirdRow_field ![v 0, v 1, v 2, v 3, (v 0).drop ((v 0).length - i)] j hj)
 @[simp] theorem binaryBirdStages_nil (dim width A : List Bool) :
-    binaryBirdStages [] dim width A = padTo (smash (smash dim dim) width) A := rfl
+    binaryBirdStages [] dim width A =
+      (A ++ List.replicate (dim.length * dim.length * width.length) false).take
+        (dim.length * dim.length * width.length) := rfl
 
 @[simp] theorem binaryBirdStages_cons (b : Bool) (r dim width A : List Bool) :
     binaryBirdStages (b :: r) dim width A =
       binaryBirdStage ![dim, width, A, binaryBirdStages r dim width A] := by
-  simp only [binaryBirdStages, recNotation_cons, Bool.cond_self, binaryBirdStagesStep]
+  simp only [binaryBirdStages, WordFold.suffixFold_cons]
   rfl
 end GameTheory.Complexity.Backend
