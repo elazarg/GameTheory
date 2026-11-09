@@ -118,6 +118,12 @@ These results include polynomial-time verifier and reduction machines. Search
 reductions decode every accepted target answer; exact rational Nash certificates
 are connected to the library's mixed-equilibrium semantics.
 
+The native source port and full upstream-matching validation are complete. The
+optional package's stable merge gate is blocked: its unmodified upstream
+probability dependency needs Mathlib APIs unavailable on the tracked 4.35
+toolchain. Final 4.36 release maintenance and full local/published-base consumer
+audits remain required; the package README records the completed checks and limits.
+
 Add the optional package to your `lakefile.lean`, pinning a commit containing it:
 
 ```lean
