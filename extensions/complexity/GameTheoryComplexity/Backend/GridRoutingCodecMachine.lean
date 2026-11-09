@@ -2,7 +2,6 @@ module
 
 public import GameTheoryComplexity.Backend.GridRoutingCodec
 public import GameTheoryComplexity.Backend.EndOfLineMachineOps
-public import Complexitylib.Classes.P.Cobham.Internal.Extract
 
 @[expose] public section
 
@@ -12,7 +11,7 @@ word length, since every correctly sized word denotes a point. -/
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity _root_.Complexity.Cobham EndOfLineMachineOps
+open Turing.MultiTapeTM ComputableInPolyTime Cslib.BitString
 
 /-- An all-zero ruler for one routing coordinate block. -/
 def routingCoordinateRuler (ruler : List Bool) : List Bool :=
@@ -32,7 +31,7 @@ def routingPointYBits (ruler word : List Bool) : List Bool :=
 
 /-- Accept exactly words with two full coordinate blocks. -/
 def routingPointAcceptFlag (ruler word : List Bool) : List Bool :=
-  eqFlag (List.replicate word.length false) (routingPointZeroWord ruler)
+  [decide (word.length = routingPointWidth ruler.length)]
 
 /-- The coordinate ruler has exactly the codec's coordinate width. -/
 @[simp] theorem routingCoordinateRuler_length (ruler : List Bool) :
@@ -52,19 +51,19 @@ theorem routingPointZeroWord_eq_encode (ruler : List Bool) :
 /-- The first field extractor returns exactly the encoded first coordinate bits. -/
 theorem routingPointXBits_encode (ruler : List Bool) (point : ℕ × ℕ) :
     routingPointXBits ruler (encodeRoutingPoint ruler.length point) =
-      Nat.toBitsLE (routingCoordinateWidth ruler.length) point.1 := by
+      lowBits (routingCoordinateWidth ruler.length) point.1 := by
   simp [routingPointXBits, encodeRoutingPoint]
 
 /-- The second field extractor returns exactly the encoded second coordinate bits. -/
 theorem routingPointYBits_encode (ruler : List Bool) (point : ℕ × ℕ) :
     routingPointYBits ruler (encodeRoutingPoint ruler.length point) =
-      Nat.toBitsLE (routingCoordinateWidth ruler.length) point.2 := by
+      lowBits (routingCoordinateWidth ruler.length) point.2 := by
   simp [routingPointYBits, encodeRoutingPoint]
 
 /-- The acceptance control tests exactly the advertised routing word width. -/
 theorem routingPointAcceptFlag_width (ruler word : List Bool) :
     routingPointAcceptFlag ruler word = [true] ↔ word.length = routingPointWidth ruler.length := by
-  simp [routingPointAcceptFlag, eqFlag_eq_true_iff, routingPointZeroWord]
+  simp [routingPointAcceptFlag]
 
 /-- The acceptance control agrees exactly with successful point decoding. -/
 theorem routingPointAcceptFlag_accept (ruler word : List Bool) :
@@ -73,54 +72,53 @@ theorem routingPointAcceptFlag_accept (ruler word : List Bool) :
   rw [routingPointAcceptFlag_width]
   constructor
   · intro hw
-    exact ⟨(Nat.fromBitsLE (word.take (routingCoordinateWidth ruler.length)),
-      Nat.fromBitsLE (word.drop (routingCoordinateWidth ruler.length))),
+    exact ⟨(lsbValue (word.take (routingCoordinateWidth ruler.length)),
+      lsbValue (word.drop (routingCoordinateWidth ruler.length))),
       by simp [decodeRoutingPoint, hw]⟩
   · rintro ⟨point, hd⟩
     exact decodeRoutingPoint_length hd
 
-/-- Constructing a coordinate ruler composes actual polynomial-time machines. -/
-theorem routingCoordinateRulerFn_mem_FP {ruler : List Bool → List Bool} (hr : ruler ∈ FP) :
-    (fun z => routingCoordinateRuler (ruler z)) ∈ FP := by
-  have h := appendFn_mem_FP
-    (mulLenFn_mem_FP (constFn_mem_FP [false, false]) hr)
-    (constFn_mem_FP [false, false, false])
-  simp only [routingCoordinateRuler, routingCoordinateWidth, List.replicate_add]
-  exact h
+private theorem coordinateWidth_polyTime
+    {α : Type} {enc : α ↪ List Bool} {ruler : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits) :
+    ComputableInPolyTime (fun a => routingCoordinateWidth (ruler a).length) enc encUnary :=
+  unary_add' (unary_mul' (const 2) (length_bits.comp hr)) (const 3)
 
-/-- Constructing the origin word composes actual polynomial-time machines. -/
-theorem routingPointZeroWordFn_mem_FP {ruler : List Bool → List Bool} (hr : ruler ∈ FP) :
-    (fun z => routingPointZeroWord (ruler z)) ∈ FP := by
-  have h := routingCoordinateRulerFn_mem_FP hr
-  have hh := appendFn_mem_FP h h
-  simp only [routingPointZeroWord, routingPointWidth, two_mul, List.replicate_add]
-  exact hh
+private theorem pointWidth_polyTime
+    {α : Type} {enc : α ↪ List Bool} {ruler : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits) :
+    ComputableInPolyTime (fun a => routingPointWidth (ruler a).length) enc encUnary :=
+  unary_mul' (const 2) (coordinateWidth_polyTime hr)
 
-/-- First-coordinate extraction composes polynomial-time word producers. -/
-theorem routingPointXBitsFn_mem_FP {ruler word : List Bool → List Bool}
-    (hr : ruler ∈ FP) (hw : word ∈ FP) :
-    (fun z => routingPointXBits (ruler z) (word z)) ∈ FP := by
-  apply CobhamFP_subset_FP
-  have h : (fun z => (word z).take (routingCoordinateRuler (ruler z)).length) ∈ CobhamFP :=
-    takeFn (FP_subset_CobhamFP (routingCoordinateRulerFn_mem_FP hr)) (FP_subset_CobhamFP hw)
-  simpa only [routingCoordinateRuler_length, routingPointXBits] using h
+/-- Coordinate-ruler construction charges its entire unary output. -/
+@[fun_prop] theorem routingCoordinateRuler_polyTime
+    {α : Type} {enc : α ↪ List Bool} {ruler : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits) :
+    ComputableInPolyTime (fun a => routingCoordinateRuler (ruler a)) enc encBits :=
+  (bitsReplicate false).comp (coordinateWidth_polyTime hr)
 
-/-- Second-coordinate extraction composes polynomial-time word producers. -/
-theorem routingPointYBitsFn_mem_FP {ruler word : List Bool → List Bool}
-    (hr : ruler ∈ FP) (hw : word ∈ FP) :
-    (fun z => routingPointYBits (ruler z) (word z)) ∈ FP := by
-  apply CobhamFP_subset_FP
-  have h : (fun z => (word z).drop (routingCoordinateRuler (ruler z)).length) ∈ CobhamFP :=
-    dropFn (FP_subset_CobhamFP (routingCoordinateRulerFn_mem_FP hr)) (FP_subset_CobhamFP hw)
-  simpa only [routingCoordinateRuler_length, routingPointYBits] using h
+@[fun_prop] theorem routingPointZeroWord_polyTime
+    {α : Type} {enc : α ↪ List Bool} {ruler : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits) :
+    ComputableInPolyTime (fun a => routingPointZeroWord (ruler a)) enc encBits :=
+  (bitsReplicate false).comp (pointWidth_polyTime hr)
 
-/-- Exact-width acceptance has an actual polynomial-time word-machine certificate. -/
-theorem routingPointAcceptFlagFn_mem_FP {ruler word : List Bool → List Bool}
-    (hr : ruler ∈ FP) (hw : word ∈ FP) :
-    (fun z => routingPointAcceptFlag (ruler z) (word z)) ∈ FP := by
-  have hzero : (fun z => List.replicate (word z).length false) ∈ FP := by
-    simpa only [List.length_singleton, Nat.one_mul] using
-      mulLenFn_mem_FP (constFn_mem_FP [false]) hw
-  exact eqFlagFn_mem_FP hzero (routingPointZeroWordFn_mem_FP hr)
+@[fun_prop] theorem routingPointXBits_polyTime
+    {α : Type} {enc : α ↪ List Bool} {ruler word : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits) (hw : ComputableInPolyTime word enc encBits) :
+    ComputableInPolyTime (fun a => routingPointXBits (ruler a) (word a)) enc encBits :=
+  hw.bitsTakeWithInput (coordinateWidth_polyTime hr)
+
+@[fun_prop] theorem routingPointYBits_polyTime
+    {α : Type} {enc : α ↪ List Bool} {ruler word : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits) (hw : ComputableInPolyTime word enc encBits) :
+    ComputableInPolyTime (fun a => routingPointYBits (ruler a) (word a)) enc encBits :=
+  hw.bitsDropWithInput (coordinateWidth_polyTime hr)
+
+@[fun_prop] theorem routingPointAcceptFlag_polyTime
+    {α : Type} {enc : α ↪ List Bool} {ruler word : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits) (hw : ComputableInPolyTime word enc encBits) :
+    ComputableInPolyTime (fun a => routingPointAcceptFlag (ruler a) (word a)) enc encBits :=
+  bitsCons (decide_eq' (length_bits.comp hw) (pointWidth_polyTime hr)) (const [])
 
 end GameTheory.Complexity.Backend
