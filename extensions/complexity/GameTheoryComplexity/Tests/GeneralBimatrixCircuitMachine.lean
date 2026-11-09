@@ -6,21 +6,23 @@ public import GameTheoryComplexity.Backend.GeneralBimatrixCircuitMachine
 
 /-! Circuit emission preserves all vertices at the serialized node width. -/
 namespace GameTheory.Complexity.Tests.GeneralBimatrixCircuitMachine
-open Backend _root_.Complexity _root_.Complexity.Cobham
+open Backend Turing.MultiTapeTM
 
 private def input : List Bool := encodeGeneralInstance 1 1 1 (fun _ _ => 0) (fun _ _ => 0)
 
 private theorem input_valid : GeneralInstanceValid input :=
   encodeGeneralInstance_valid 1 1 1 _ _ (by decide) (by decide) (by decide)
 
--- FP certificates apply to the actual paired pointer computations.
-example : (fun z => generalBimatrixPredecessorWord ![pairFst z, pairSnd z]) ∈ FP :=
-  generalBimatrixPredecessor_pair_mem_FP
-example : (fun z => generalBimatrixSuccessorWord ![pairFst z, pairSnd z]) ∈ FP :=
-  generalBimatrixSuccessor_pair_mem_FP
+-- Native certificates charge the complete instance and candidate node.
+example : ComputableInPolyTime
+    (fun p : List Bool × List Bool => generalBimatrixPredecessorWord ![p.1, p.2])
+    (encPair encBits encBits) encBits := generalBimatrixPredecessor_joint_polyTime
+example : ComputableInPolyTime
+    (fun p : List Bool × List Bool => generalBimatrixSuccessorWord ![p.1, p.2])
+    (encPair encBits encBits) encBits := generalBimatrixSuccessor_joint_polyTime
 
 -- Compilation agrees on every eight-bit word, without assuming it decodes to a port.
-example : ∃ f : List Bool → List Bool, f ∈ FP ∧ endOfLineWidth (f input) = 8 ∧
+example : ∃ f : List Bool → List Bool, ComputableInPolyTime f encBits encBits ∧ endOfLineWidth (f input) = 8 ∧
     ∀ vertex, vertex.length = 8 →
       endOfLinePredecessor (f input) vertex = generalBimatrixPredecessorWord ![input, vertex] ∧
       endOfLineSuccessor (f input) vertex = generalBimatrixSuccessorWord ![input, vertex] := by
@@ -31,7 +33,7 @@ example : ∃ f : List Bool → List Bool, f ∈ FP ∧ endOfLineWidth (f input)
   exact ⟨f, hf, by simpa only [hw] using heval input⟩
 
 -- An invalid instance still compiles at the positive fallback width.
-example : ∃ f : List Bool → List Bool, f ∈ FP ∧ endOfLineWidth (f []) = 1 ∧
+example : ∃ f : List Bool → List Bool, ComputableInPolyTime f encBits encBits ∧ endOfLineWidth (f []) = 1 ∧
     ∀ vertex, vertex.length = 1 →
       endOfLinePredecessor (f []) vertex = generalBimatrixPredecessorWord ![[], vertex] ∧
       endOfLineSuccessor (f []) vertex = generalBimatrixSuccessorWord ![[], vertex] := by

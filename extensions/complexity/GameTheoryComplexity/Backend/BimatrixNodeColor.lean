@@ -12,71 +12,99 @@ Source calibration compares two decoded integer scores and needs no special
 source-sign formula or rational inverse computation.
 -/
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
+open GameTheory.Complexity.Backend.WordOperations
 
 
-private theorem lenLe_value (a b : List Bool) : lenLeFlag a b = [decide (b.length ≤ a.length)] := by
-  rcases lenLeFlag_flag a b with h | h
-  · rw [h]; simp [(lenLeFlag_eq_true_iff a b).mp h]
-  · rw [h]
-    have hn : ¬ b.length ≤ a.length := by
-      intro he
-      have := (lenLeFlag_eq_true_iff a b).mpr he
-      simp [h] at this
-    simp [hn]
+def payoffBit (v : Fin 3 → List Bool) : List Bool :=
+  andFlag (binaryLengthParity (v 0))
+    (andFlag [decide (3 ≤ (v 0).length)]
+      (orFlag (indexedFlag (v 0).length (v 1))
+        [decide ((v 0).length = (v 2).length)]))
 
-private theorem lenEq_value (a b : List Bool) : lenEqFlag a b = [decide (a.length = b.length)] := by
-  rcases lenEqFlag_flag a b with h | h
-  · rw [h]; simp [(lenEqFlag_eq_true_iff a b).mp h]
-  · rw [h]
-    have hn : a.length ≠ b.length := by
-      intro he
-      have := (lenEqFlag_eq_true_iff a b).mpr he
-      simp [h] at this
-    simp [hn]
-private def payoffBit (v : Fin 3 → List Bool) : List Bool :=
-  andBit (binaryLengthParity (v 0))
-    (andBit (lenLeFlag (v 0) [true, true, true])
-      (orBit (bitAt (v 0) (v 1)) (lenEqFlag (v 0) (v 2))))
-
-private theorem payoffBit_cobham : Cobham payoffBit :=
-  Cobham.andFn (Cobham.comp binaryLengthParity_cobham fun _ => .proj 0)
-    (Cobham.andFn (lenLeFlag_mem (.proj 0) (Cobham.const [true, true, true]))
-      (Cobham.orFn (Cobham.comp₂ Cobham.bitAtFn (.proj 0) (.proj 1))
-        (lenEqFlag_mem (.proj 0) (.proj 2))))
+private theorem payoffBit_polyTime :
+    ComputableInPolyTime payoffBit (encPi encBits) encBits := by
+  have hr := ComputableInPolyTime.pi_apply encBits (0 : Fin 3)
+  have hb := ComputableInPolyTime.pi_apply encBits (1 : Fin 3)
+  have he := ComputableInPolyTime.pi_apply encBits (2 : Fin 3)
+  have hlen := ComputableInPolyTime.length_bits_comp hr
+  have hparity := binaryLengthParity_polyTime.comp hr
+  have hthree : ComputableInPolyTime (fun _ : Fin 3 → List Bool => 3)
+      (encPi encBits) encUnary := .const 3
+  have hge := ComputableInPolyTime.bitsCons
+    (ComputableInPolyTime.of_tidy
+      ((ComputableTidilyInPolyTime.unary_le).comp (hthree.tidy.prod hlen.tidy)))
+    (.const [])
+  have hbit := indexedFlag_polyTime.comp (hlen.prod hb)
+  have helen := ComputableInPolyTime.length_bits_comp he
+  have heq := ComputableInPolyTime.bitsCons
+    (ComputableInPolyTime.of_tidy
+      ((ComputableTidilyInPolyTime.decide_eq encUnary).comp (hlen.tidy.prod helen.tidy)))
+    (.const [])
+  have hor := orFlag_polyTime.comp (hbit.prod heq)
+  have hsecond := andFlag_polyTime.comp (hge.prod hor)
+  exact andFlag_polyTime.comp (hparity.prod hsecond)
 
 private theorem payoffBit_value (r basic entering : List Bool) :
     payoffBit ![r, basic, entering] =
       [decide (r.length % 2 = 1 ∧ 3 ≤ r.length ∧
         (basic[r.length]?.getD false = true ∨ r.length = entering.length))] := by
-  change andBit (binaryLengthParity r)
-    (andBit (lenLeFlag r [true, true, true]) (orBit (bitAt r basic) (lenEqFlag r entering))) = _
-  rw [binaryLengthParity_value, lenLe_value, bitAt_getElem?, lenEq_value]
-  simp only [List.length_cons, List.length_nil]
+  change andFlag (binaryLengthParity r)
+    (andFlag [decide (3 ≤ r.length)]
+      (orFlag (indexedFlag r.length basic) [decide (r.length = entering.length)])) = _
+  rw [binaryLengthParity_value, indexedFlag_eq_getElem?]
   have ha (P Q : Prop) [Decidable P] [Decidable Q] :
-      andBit [decide P] [decide Q] = [decide (P ∧ Q)] := by
-    by_cases hp : P <;> by_cases hq : Q <;> simp [hp, hq, andBit, caseBit₀]
+      andFlag [decide P] [decide Q] = [decide (P ∧ Q)] := by
+    by_cases hp : P <;> by_cases hq : Q <;> simp [hp, hq, andFlag]
   have ho (P Q : Prop) [Decidable P] [Decidable Q] :
-      orBit [decide P] [decide Q] = [decide (P ∨ Q)] := by
-    by_cases hp : P <;> by_cases hq : Q <;> simp [hp, hq, orBit, caseBit₀]
+      orFlag [decide P] [decide Q] = [decide (P ∨ Q)] := by
+    by_cases hp : P <;> by_cases hq : Q <;> simp [hp, hq, orFlag]
   have hb : [basic[r.length]?.getD false] = [decide (basic[r.length]?.getD false = true)] := by
     cases basic[r.length]?.getD false <;> rfl
   rw [hb, ho, ha, ha]
-private def payoffWord (v : Fin 3 → List Bool) : List Bool :=
+def payoffWord (v : Fin 3 → List Bool) : List Bool :=
   binarySignedTable payoffBit (v 0 ++ v 0) [false]
     ![bimatrixNodeBasicWord ![v 0, v 1], v 2]
 
-private theorem payoffWord_cobham : Cobham payoffWord := by
-  have h := Cobham.comp (binarySignedTable_cobham payoffBit_cobham)
-    (gs := fun i => fun v : Fin 3 → List Bool =>
-      ![v 0 ++ v 0, [false], bimatrixNodeBasicWord ![v 0, v 1], v 2] i)
-    (fun i => by
-      fin_cases i
-      · exact Cobham.appendFn (.proj 0) (.proj 0)
-      · exact Cobham.const [false]
-      · exact Cobham.comp₂ bimatrixNodeBasicWord_cobham (.proj 0) (.proj 1)
-      · exact .proj 2)
-  exact h.of_eq fun _ => rfl
+private theorem payoffWord_polyTime :
+    ComputableInPolyTime payoffWord (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool =>
+        ![v 0 ++ v 0, [false], bimatrixNodeBasicWord ![v 0, v 1], v 2])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact ComputableInPolyTime.bitsAppend (.pi_apply encBits (0 : Fin 3))
+        (.pi_apply encBits (0 : Fin 3))
+    · exact .const [false]
+    · apply bimatrixNodeBasicWord_polyTime.comp
+      apply ComputableInPolyTime.pi
+      intro j
+      fin_cases j
+      · exact .pi_apply encBits (0 : Fin 3)
+      · exact .pi_apply encBits (1 : Fin 3)
+    · exact .pi_apply encBits (2 : Fin 3)
+  have htable : ComputableInPolyTime
+      (fun v : Fin 4 → List Bool =>
+        binarySignedTable payoffBit (v 0) (v 1) (Fin.tail (Fin.tail v)))
+      (encPi encBits) encBits :=
+    binarySignedTable_polyTime (p := 2) payoffBit_polyTime
+  have hcert := htable.comp hargs
+  apply ComputableInPolyTime.of_tidy
+  apply hcert.tidy.of_enc_eq
+  intro v
+  change binarySignedTable payoffBit (v 0 ++ v 0) [false]
+      ![bimatrixNodeBasicWord ![v 0, v 1], v 2] =
+    binarySignedTable payoffBit (v 0 ++ v 0) [false]
+      (Fin.tail (Fin.tail (![v 0 ++ v 0, [false],
+        bimatrixNodeBasicWord ![v 0, v 1], v 2] : Fin 4 → List Bool)))
+  have hparams : ![bimatrixNodeBasicWord ![v 0, v 1], v 2] =
+      Fin.tail (Fin.tail (![v 0 ++ v 0, [false],
+        bimatrixNodeBasicWord ![v 0, v 1], v 2] : Fin 4 → List Bool)) := by
+    funext i
+    fin_cases i <;> rfl
+  exact congrArg (binarySignedTable payoffBit (v 0 ++ v 0) [false]) hparams
 
 /-- Integer orientation from dimension, node bits, entering position, and basis determinant. -/
 def bimatrixNodeOrientationWord (v : Fin 4 → List Bool) : List Bool :=
@@ -86,30 +114,47 @@ def bimatrixNodeOrientationWord (v : Fin 4 → List Bool) : List Bool :=
       (v 3))
     (binaryBirdSign (binarySubsetTally (payoffWord ![v 0, v 1, v 2])))
 
-theorem bimatrixNodeOrientationWord_cobham : Cobham bimatrixNodeOrientationWord := by
-  have hb : Cobham fun v : Fin 4 → List Bool => bimatrixNodeBasicWord ![v 0, v 1] :=
-    Cobham.comp₂ bimatrixNodeBasicWord_cobham (.proj 0) (.proj 1)
-  have hp : Cobham fun v : Fin 4 → List Bool => payoffWord ![v 0, v 1, v 2] :=
-    Cobham.comp₃ payoffWord_cobham (.proj 0) (.proj 1) (.proj 2)
-  exact Cobham.comp₂ binarySignedMul_cobham
-    (Cobham.comp₂ binarySignedMul_cobham
-      (Cobham.comp binaryBirdSign_cobham fun _ =>
-        Cobham.comp binarySubsetTally_cobham fun _ => Cobham.takeFn (.proj 2) hb) (.proj 3))
-    (Cobham.comp binaryBirdSign_cobham fun _ =>
-      Cobham.comp binarySubsetTally_cobham fun _ => hp)
-
-theorem bimatrixNodeOrientationWord_mem_FPn : FPn bimatrixNodeOrientationWord :=
-  cobham_iff_FPn.mp bimatrixNodeOrientationWord_cobham
+@[fun_prop] theorem bimatrixNodeOrientationWord_polyTime :
+    ComputableInPolyTime bimatrixNodeOrientationWord (encPi encBits) encBits := by
+  have hbasicArgs : ComputableInPolyTime
+      (fun v : Fin 4 → List Bool => ![v 0, v 1])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits (0 : Fin 4)
+    · exact .pi_apply encBits (1 : Fin 4)
+  have hbasic := bimatrixNodeBasicWord_polyTime.comp hbasicArgs
+  have hprefix := hbasic.bitsTakeWithInput
+    (ComputableInPolyTime.length_bits_comp (.pi_apply encBits (2 : Fin 4)))
+  have htally := binarySubsetTally_polyTime hprefix
+  have hleft := binaryBirdSign_polyTime.comp htally
+  have hpayoffArgs : ComputableInPolyTime
+      (fun v : Fin 4 → List Bool => ![v 0, v 1, v 2])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits (0 : Fin 4)
+    · exact .pi_apply encBits (1 : Fin 4)
+    · exact .pi_apply encBits (2 : Fin 4)
+  have hpayoff := payoffWord_polyTime.comp hpayoffArgs
+  have hdet := binaryBirdSign_polyTime.comp (binarySubsetTally_polyTime hpayoff)
+  have hright : ComputableInPolyTime
+      (fun v : Fin 4 → List Bool => v 3) (encPi encBits) encBits :=
+    .pi_apply encBits (3 : Fin 4)
+  have hcert := binarySignedMul_polyTime (binarySignedMul_polyTime hleft hright) hdet
+  exact hcert.of_enc_eq (fun _ => rfl)
 
 /-- Compare the sign of the product of a score and its calibration score. -/
 def binaryScoreColor (v : Fin 2 → List Bool) : List Bool :=
   binarySignedLTFlag [] (binarySignedMul (v 0) (v 1))
 
-theorem binaryScoreColor_cobham : Cobham binaryScoreColor :=
-  Cobham.comp₂ binarySignedLTFlag_cobham (Cobham.const [])
-    (Cobham.comp₂ binarySignedMul_cobham (.proj 0) (.proj 1))
-
-theorem binaryScoreColor_mem_FPn : FPn binaryScoreColor := cobham_iff_FPn.mp binaryScoreColor_cobham
+@[fun_prop] theorem binaryScoreColor_polyTime :
+    ComputableInPolyTime binaryScoreColor (encPi encBits) encBits := by
+  exact binarySignedLTFlag_polyTime (.const [])
+    (binarySignedMul_polyTime (.pi_apply encBits (0 : Fin 2))
+      (.pi_apply encBits (1 : Fin 2)))
 
 theorem binaryScoreColor_value (v : Fin 2 → List Bool) :
     binaryScoreColor v = [decide (0 < binarySignedValue (v 0) * binarySignedValue (v 1))] := by

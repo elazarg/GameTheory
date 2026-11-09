@@ -5,10 +5,11 @@ public import GameTheoryComplexity.Backend.GeneralBimatrixNodeValidation
 @[expose] public section
 namespace GameTheory.Complexity.Tests.GeneralBimatrixNodeValidation
 open Backend GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 private def input : List Bool := encodeGeneralInstance 1 1 2 (fun _ _ => -1) (fun _ _ => 2)
 example : GeneralInstanceValid input := by decide +kernel
-example : FPn generalBimatrixNodeValidFlag := generalBimatrixNodeValidFlag_mem_FPn
+example : ComputableInPolyTime generalBimatrixNodeValidFlag (encPi encBits) encBits :=
+  generalBimatrixNodeValidFlag_polyTime
 -- The all-zero source mask is valid for signed original payoffs after the positive shift.
 example : generalBimatrixNodeValidFlag ![input, List.replicate 8 false] = [true] := by
   decide +kernel

@@ -15,17 +15,48 @@ operations, without computing rational inverses or choosing an order instance.
 -/
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
+open GameTheory.Complexity.Backend.WordOperations
 
 /-- Assemble unmasked membership fields using the canonical source masks. -/
 def bimatrixNodeAssemble (v : Fin 3 → List Bool) : List Bool :=
   bimatrixNodeBasicWord ![v 0, v 1] ++
     bimatrixNodeEnteringWord ![v 0, ((v 0) ++ (v 0)) ++ v 2]
 
-theorem bimatrixNodeAssemble_cobham : Cobham bimatrixNodeAssemble :=
-  Cobham.appendFn (Cobham.comp₂ bimatrixNodeBasicWord_cobham (.proj 0) (.proj 1))
-    (Cobham.comp₂ bimatrixNodeEnteringWord_cobham (.proj 0)
-      (Cobham.appendFn (Cobham.appendFn (.proj 0) (.proj 0)) (.proj 2)))
+@[fun_prop] theorem bimatrixNodeAssemble_polyTime :
+    ComputableInPolyTime bimatrixNodeAssemble (encPi encBits) encBits := by
+  have hbasic : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool => bimatrixNodeBasicWord ![v 0, v 1])
+      (encPi encBits) encBits := by
+    have hargs : ComputableInPolyTime
+        (fun v : Fin 3 → List Bool => ![v 0, v 1])
+        (encPi encBits) (encPi encBits) := by
+      apply ComputableInPolyTime.pi
+      intro i
+      fin_cases i
+      · exact .pi_apply encBits 0
+      · exact .pi_apply encBits 1
+    exact bimatrixNodeBasicWord_polyTime.comp hargs
+  have henter : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool =>
+        bimatrixNodeEnteringWord ![v 0, (v 0 ++ v 0) ++ v 2])
+      (encPi encBits) encBits := by
+    have hclock : ComputableInPolyTime (fun v : Fin 3 → List Bool => v 0 ++ v 0)
+        (encPi encBits) encBits :=
+      ComputableInPolyTime.bitsAppend (.pi_apply encBits 0) (.pi_apply encBits 0)
+    have hclock2 : ComputableInPolyTime (fun v : Fin 3 → List Bool =>
+        (v 0 ++ v 0) ++ v 2) (encPi encBits) encBits :=
+      ComputableInPolyTime.bitsAppend hclock (.pi_apply encBits 2)
+    have hargs : ComputableInPolyTime
+        (fun v : Fin 3 → List Bool => ![v 0, (v 0 ++ v 0) ++ v 2])
+        (encPi encBits) (encPi encBits) := by
+      apply ComputableInPolyTime.pi
+      intro i
+      fin_cases i
+      · exact .pi_apply encBits 0
+      · exact hclock2
+    exact bimatrixNodeEnteringWord_polyTime.comp hargs
+  exact ComputableInPolyTime.bitsAppend hbasic henter
 
 @[simp] theorem bimatrixNodeAssemble_length (v : Fin 3 → List Bool) :
     (bimatrixNodeAssemble v).length = 4 * (v 0).length := by
@@ -119,125 +150,180 @@ private theorem flagTable_bit {p : ℕ} (term : (Fin (p + 1) → List Bool) → 
   rw [binarySignedTable_flags term params f ht clock]
   simp [hi]
 
-private def exchangeBit (v : Fin 4 → List Bool) : List Bool :=
-  caseBit₀ (lenEqFlag (v 0) (v 2)) [false]
-    (orBit (lenEqFlag (v 0) (v 3)) (bitAt (v 0) (v 1)))
+/-- Clear the leaving bit and set the entering bit in one unmasked basis position. -/
+def bimatrixNodeExchangeBit (v : Fin 4 → List Bool) : List Bool :=
+  [if (v 0).length = (v 2).length then false
+    else decide ((v 0).length = (v 3).length) || (v 1)[(v 0).length]?.getD false]
 
-private def oneHotBit (v : Fin 2 → List Bool) : List Bool := lenEqFlag (v 0) (v 1)
+/-- One-hot membership at the ordinal named by the target ruler. -/
+def bimatrixNodeOneHotBit (v : Fin 2 → List Bool) : List Bool :=
+  [decide ((v 0).length = (v 1).length)]
 
-private theorem exchangeBit_cobham : Cobham exchangeBit :=
-  Cobham.iteFn (lenEqFlag_mem (.proj 0) (.proj 2)) (Cobham.const [false])
-    (Cobham.orFn (lenEqFlag_mem (.proj 0) (.proj 3))
-      (Cobham.comp₂ Cobham.bitAtFn (.proj 0) (.proj 1)))
+private theorem exchangeBit_polyTime :
+    ComputableInPolyTime bimatrixNodeExchangeBit (encPi encBits) encBits := by
+  have hposition := ComputableInPolyTime.pi_apply encBits (0 : Fin 4)
+  have hbasic := ComputableInPolyTime.pi_apply encBits (1 : Fin 4)
+  have hleaving := ComputableInPolyTime.pi_apply encBits (2 : Fin 4)
+  have hentering := ComputableInPolyTime.pi_apply encBits (3 : Fin 4)
+  have hpositionLen := ComputableInPolyTime.length_bits_comp hposition
+  have hleave := ComputableInPolyTime.decide_eq' hpositionLen
+    (ComputableInPolyTime.length_bits_comp hleaving)
+  have henter := ComputableInPolyTime.decide_eq' hpositionLen
+    (ComputableInPolyTime.length_bits_comp hentering)
+  have hbit := ComputableInPolyTime.bitsGetDWithInput hbasic hpositionLen false
+  have hresult := hleave.ite_decide (ComputableInPolyTime.const false)
+    (ComputableInPolyTime.bool_or.comp (henter.prod hbit))
+  exact ComputableInPolyTime.bitsCons hresult (.const [])
 
-private theorem oneHotBit_cobham : Cobham oneHotBit := lenEqFlag_mem (.proj 0) (.proj 1)
+private theorem oneHotBit_polyTime :
+    ComputableInPolyTime bimatrixNodeOneHotBit (encPi encBits) encBits := by
+  have h0 := ComputableInPolyTime.pi_apply encBits (0 : Fin 2)
+  have h1 := ComputableInPolyTime.pi_apply encBits (1 : Fin 2)
+  have h0len := ComputableInPolyTime.length_bits_comp h0
+  have h1len := ComputableInPolyTime.length_bits_comp h1
+  exact ComputableInPolyTime.bitsCons
+    (ComputableInPolyTime.of_tidy ((ComputableTidilyInPolyTime.decide_eq encUnary).comp
+      (h0len.tidy.prod h1len.tidy))) (.const [])
 
-private def exchangeBasic (v : Fin 4 → List Bool) : List Bool :=
-  binarySignedTable exchangeBit ((v 0) ++ (v 0)) [false]
+/-- Rebuild every unmasked basis bit after the requested exchange. -/
+def bimatrixNodeExchangeBasicWord (v : Fin 4 → List Bool) : List Bool :=
+  binarySignedTable bimatrixNodeExchangeBit ((v 0) ++ (v 0)) [false]
     ![bimatrixNodeBasicWord ![v 0, v 1], v 2, v 3]
 
-private def exchangeEntering (v : Fin 4 → List Bool) : List Bool :=
-  binarySignedTable oneHotBit ((v 0) ++ (v 0)) [false] ![v 2]
+/-- The opposite port enters exactly the leaving ordinal. -/
+def bimatrixNodeExchangeEnteringWord (v : Fin 4 → List Bool) : List Bool :=
+  binarySignedTable bimatrixNodeOneHotBit ((v 0) ++ (v 0)) [false] ![v 2]
 
-private theorem exchangeBasic_cobham : Cobham exchangeBasic := by
-  have h := Cobham.comp (binarySignedTable_cobham exchangeBit_cobham)
-    (gs := fun i => fun v : Fin 4 → List Bool =>
-      ![(v 0) ++ (v 0), [false], bimatrixNodeBasicWord ![v 0, v 1], v 2, v 3] i)
-    (fun i => by
-      fin_cases i
-      · exact Cobham.appendFn (.proj 0) (.proj 0)
-      · exact Cobham.const [false]
-      · exact Cobham.comp₂ bimatrixNodeBasicWord_cobham (.proj 0) (.proj 1)
-      · exact .proj 2
-      · exact .proj 3)
-  exact h.of_eq fun _ => rfl
+private theorem exchangeBasic_polyTime :
+    ComputableInPolyTime bimatrixNodeExchangeBasicWord (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 4 → List Bool =>
+        ![(v 0) ++ (v 0), [false], bimatrixNodeBasicWord ![v 0, v 1], v 2, v 3])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact ComputableInPolyTime.bitsAppend (.pi_apply encBits (0 : Fin 4))
+        (.pi_apply encBits (0 : Fin 4))
+    · exact .const [false]
+    · apply bimatrixNodeBasicWord_polyTime.comp
+      apply ComputableInPolyTime.pi
+      intro j
+      fin_cases j
+      · exact .pi_apply encBits (0 : Fin 4)
+      · exact .pi_apply encBits (1 : Fin 4)
+    · exact .pi_apply encBits (2 : Fin 4)
+    · exact .pi_apply encBits (3 : Fin 4)
+  have htable : ComputableInPolyTime
+      (fun v : Fin 5 → List Bool => binarySignedTable bimatrixNodeExchangeBit
+        (v 0) (v 1) (Fin.tail (Fin.tail v))) (encPi encBits) encBits :=
+    binarySignedTable_polyTime (p := 3) exchangeBit_polyTime
+  have hcert := htable.comp hargs
+  apply ComputableInPolyTime.of_tidy
+  apply hcert.tidy.of_enc_eq (g := bimatrixNodeExchangeBasicWord)
+  intro v
+  change binarySignedTable bimatrixNodeExchangeBit (v 0 ++ v 0) [false]
+      ![bimatrixNodeBasicWord ![v 0, v 1], v 2, v 3] =
+    binarySignedTable bimatrixNodeExchangeBit (v 0 ++ v 0) [false]
+      (Fin.tail (Fin.tail (![v 0 ++ v 0, [false], bimatrixNodeBasicWord ![v 0, v 1], v 2, v 3] :
+        Fin 5 → List Bool)))
+  apply congrArg (binarySignedTable bimatrixNodeExchangeBit (v 0 ++ v 0) [false])
+  funext i
+  fin_cases i <;> rfl
 
-private theorem exchangeEntering_cobham : Cobham exchangeEntering :=
-  Cobham.comp₃ (binarySignedTable_cobham oneHotBit_cobham)
-    (Cobham.appendFn (.proj 0) (.proj 0)) (Cobham.const [false]) (.proj 2)
+private theorem exchangeEntering_polyTime :
+    ComputableInPolyTime bimatrixNodeExchangeEnteringWord (encPi encBits) encBits := by
+  have hclock := ComputableInPolyTime.bitsAppend
+    (.pi_apply encBits (0 : Fin 4)) (.pi_apply encBits (0 : Fin 4))
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 4 → List Bool => ![(v 0) ++ (v 0), [false], v 2])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hclock
+    · exact .const [false]
+    · exact .pi_apply encBits (2 : Fin 4)
+  have htable : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool => binarySignedTable bimatrixNodeOneHotBit
+        (v 0) (v 1) (Fin.tail (Fin.tail v))) (encPi encBits) encBits :=
+    binarySignedTable_polyTime (p := 1) oneHotBit_polyTime
+  have hcert := htable.comp hargs
+  apply ComputableInPolyTime.of_tidy
+  apply hcert.tidy.of_enc_eq (g := bimatrixNodeExchangeEnteringWord)
+  intro v
+  change binarySignedTable bimatrixNodeOneHotBit (v 0 ++ v 0) [false] ![v 2] =
+    binarySignedTable bimatrixNodeOneHotBit (v 0 ++ v 0) [false]
+      (Fin.tail (Fin.tail (![v 0 ++ v 0, [false], v 2] : Fin 3 → List Bool)))
+  apply congrArg (binarySignedTable bimatrixNodeOneHotBit (v 0 ++ v 0) [false])
+  funext i
+  fin_cases i; rfl
 
 /-- Replace the leaving basis position by the entering position and reverse the port.
 Inputs are dimension, node, leaving-position ruler, and entering-position ruler.
 Malformed lengths are preserved. -/
 def bimatrixNodeExchangeWord (v : Fin 4 → List Bool) : List Bool :=
-  caseBit₀ (lenEqFlag (v 1) (((v 0) ++ (v 0)) ++ ((v 0) ++ (v 0))))
-    (bimatrixNodeAssemble ![v 0, exchangeBasic v, exchangeEntering v]) (v 1)
+  if (v 1).length = 4 * (v 0).length then
+    bimatrixNodeAssemble ![v 0, bimatrixNodeExchangeBasicWord v, bimatrixNodeExchangeEnteringWord v]
+  else v 1
 
-theorem bimatrixNodeExchangeWord_cobham : Cobham bimatrixNodeExchangeWord :=
-  Cobham.iteFn
-    (lenEqFlag_mem (.proj 1) (Cobham.appendFn (Cobham.appendFn (.proj 0) (.proj 0))
-      (Cobham.appendFn (.proj 0) (.proj 0))))
-    (Cobham.comp₃ bimatrixNodeAssemble_cobham (.proj 0) exchangeBasic_cobham exchangeEntering_cobham)
-    (.proj 1)
-
-theorem bimatrixNodeExchangeWord_mem_FPn : FPn bimatrixNodeExchangeWord :=
-  cobham_iff_FPn.mp bimatrixNodeExchangeWord_cobham
-
-private theorem case_head (x a b : List Bool) : caseBit₀ x a b = if x.headD false then a else b := by
-  cases x with
-  | nil => rfl
-  | cons c x => cases c <;> rfl
-
-private theorem lenEq_word (a b : List Bool) : lenEqFlag a b = [decide (a.length = b.length)] := by
-  rcases lenEqFlag_flag a b with h | h
-  · rw [h]; simp [(lenEqFlag_eq_true_iff a b).mp h]
-  · rw [h]
-    have hn : a.length ≠ b.length := by
-      intro he
-      have := (lenEqFlag_eq_true_iff a b).mpr he
-      simp [h] at this
-    simp [hn]
-
-
+/-- Exchange charges every field, both fixed-width tables and the source-mask assembly. -/
+@[fun_prop] theorem bimatrixNodeExchangeWord_polyTime :
+    ComputableInPolyTime bimatrixNodeExchangeWord (encPi encBits) encBits := by
+  have hdimension : ComputableInPolyTime (fun v : Fin 4 → List Bool => v 0)
+      (encPi encBits) encBits := .pi_apply encBits 0
+  have hnode : ComputableInPolyTime (fun v : Fin 4 → List Bool => v 1)
+      (encPi encBits) encBits := .pi_apply encBits 1
+  have hguard := ComputableInPolyTime.decide_eq'
+    (ComputableInPolyTime.length_bits_comp hnode)
+    (ComputableInPolyTime.unary_mul' (.const 4)
+      (ComputableInPolyTime.length_bits_comp hdimension))
+  have hargs : ComputableInPolyTime (fun v : Fin 4 → List Bool =>
+      ![v 0, bimatrixNodeExchangeBasicWord v, bimatrixNodeExchangeEnteringWord v])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hdimension
+    · exact exchangeBasic_polyTime
+    · exact exchangeEntering_polyTime
+  exact hguard.ite_decide (bimatrixNodeAssemble_polyTime.comp hargs) hnode
 
 private theorem exchangeBit_value (r basic leaving entering : List Bool) :
-    exchangeBit ![r, basic, leaving, entering] =
+    bimatrixNodeExchangeBit ![r, basic, leaving, entering] =
       [if r.length = leaving.length then false else
-        decide (r.length = entering.length) || basic[r.length]?.getD false] := by
-  change caseBit₀ (lenEqFlag r leaving) [false]
-    (orBit (lenEqFlag r entering) (bitAt r basic)) = _
-  rw [lenEq_word, lenEq_word, bitAt_getElem?]
-  by_cases hl : r.length = leaving.length
-  · rw [decide_eq_true hl, ite_eq_left hl]
-    rfl
-  · rw [decide_eq_false hl, ite_eq_right hl]
-    cases decide (r.length = entering.length) <;> cases basic[r.length]?.getD false <;> rfl
+        decide (r.length = entering.length) || basic[r.length]?.getD false] := rfl
 
 private theorem exchangeBasic_bit (v : Fin 4 → List Bool) (i : ℕ) (hi : i < 2 * (v 0).length) :
-    (exchangeBasic v)[i]?.getD false = if i = (v 2).length then false else
+    (bimatrixNodeExchangeBasicWord v)[i]?.getD false = if i = (v 2).length then false else
       decide (i = (v 3).length) || (bimatrixNodeBasicWord ![v 0, v 1])[i]?.getD false := by
-  exact flagTable_bit exchangeBit ![bimatrixNodeBasicWord ![v 0, v 1], v 2, v 3]
+  exact flagTable_bit bimatrixNodeExchangeBit ![bimatrixNodeBasicWord ![v 0, v 1], v 2, v 3]
     (fun i => if i = (v 2).length then false else
       decide (i = (v 3).length) || (bimatrixNodeBasicWord ![v 0, v 1])[i]?.getD false)
     (fun r => exchangeBit_value r _ _ _) ((v 0) ++ (v 0)) i (by simpa only [List.length_append, ← two_mul] using hi)
 
 private theorem oneHotBit_value (r target : List Bool) :
-    oneHotBit ![r, target] = [decide (r.length = target.length)] := lenEq_word r target
+    bimatrixNodeOneHotBit ![r, target] = [decide (r.length = target.length)] := rfl
 
 private theorem exchangeEntering_bit (v : Fin 4 → List Bool) (i : ℕ) (hi : i < 2 * (v 0).length) :
-    (exchangeEntering v)[i]?.getD false = decide (i = (v 2).length) := by
-  exact flagTable_bit oneHotBit ![v 2] (fun i => decide (i = (v 2).length))
+    (bimatrixNodeExchangeEnteringWord v)[i]?.getD false = decide (i = (v 2).length) := by
+  exact flagTable_bit bimatrixNodeOneHotBit ![v 2] (fun i => decide (i = (v 2).length))
     (fun r => oneHotBit_value r _) ((v 0) ++ (v 0)) i
     (by simpa only [List.length_append, ← two_mul] using hi)
 
 theorem bimatrixNodeExchangeWord_length (v : Fin 4 → List Bool) :
     (bimatrixNodeExchangeWord v).length = (v 1).length := by
-  rw [bimatrixNodeExchangeWord, lenEq_word, case_head]
-  simp only [List.headD_cons, decide_eq_true_eq]
-  split
+  rw [bimatrixNodeExchangeWord]
+  split_ifs with h
   · rw [bimatrixNodeAssemble_length]
-    simp only [Matrix.cons_val_zero, List.length_append] at *
-    omega
+    exact h.symm
   · rfl
 
-private theorem exchangeWord_valid (v : Fin 4 → List Bool) (hv : (v 1).length = 4 * (v 0).length) :
-    bimatrixNodeExchangeWord v = bimatrixNodeAssemble ![v 0, exchangeBasic v, exchangeEntering v] := by
-  rw [bimatrixNodeExchangeWord, lenEq_word, case_head]
-  simp only [List.headD_cons, decide_eq_true_eq]
-  have h : (v 1).length = (((v 0) ++ (v 0)) ++ ((v 0) ++ (v 0))).length := by
-    simp only [List.length_append]
-    omega
-  exact ite_eq_left h
+private theorem exchangeWord_valid (v : Fin 4 → List Bool)
+    (hv : (v 1).length = 4 * (v 0).length) :
+    bimatrixNodeExchangeWord v = bimatrixNodeAssemble
+      ![v 0, bimatrixNodeExchangeBasicWord v, bimatrixNodeExchangeEnteringWord v] := by
+  exact ite_eq_left hv
 
 private theorem index_val_eq {m n : ℕ} (u v : GameTheory.Finite.BimatrixVariable m n) :
     (GameTheory.Finite.BimatrixPathBinaryCodec.index u).val =
@@ -267,9 +353,9 @@ theorem bimatrixNodeExchangeWord_basic {m n : ℕ} (dimension node leaving enter
   have hi : (GameTheory.Finite.BimatrixPathBinaryCodec.index u).val < 2 * dimension.length := by
     simpa only [hk] using (GameTheory.Finite.BimatrixPathBinaryCodec.index u).isLt
   refine (assemble_basic_bit
-    ![dimension, exchangeBasic ![dimension, node, leaving, entering],
-      exchangeEntering ![dimension, node, leaving, entering]] _ hi).trans ?_
-  change (exchangeBasic ![dimension, node, leaving, entering])[
+    ![dimension, bimatrixNodeExchangeBasicWord ![dimension, node, leaving, entering],
+      bimatrixNodeExchangeEnteringWord ![dimension, node, leaving, entering]] _ hi).trans ?_
+  change (bimatrixNodeExchangeBasicWord ![dimension, node, leaving, entering])[
     (GameTheory.Finite.BimatrixPathBinaryCodec.index u).val]?.getD false = _
   rw [exchangeBasic_bit _ _ hi]
   simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
@@ -299,93 +385,153 @@ theorem bimatrixNodeExchangeWord_entering {m n : ℕ} (dimension node leaving en
   have hi : (GameTheory.Finite.BimatrixPathBinaryCodec.index u).val < 2 * dimension.length := by
     simpa only [hk] using (GameTheory.Finite.BimatrixPathBinaryCodec.index u).isLt
   refine (assemble_entering_bit
-    ![dimension, exchangeBasic ![dimension, node, leaving, entering],
-      exchangeEntering ![dimension, node, leaving, entering]] _ hi).trans ?_
-  change (exchangeEntering ![dimension, node, leaving, entering])[
+    ![dimension, bimatrixNodeExchangeBasicWord ![dimension, node, leaving, entering],
+      bimatrixNodeExchangeEnteringWord ![dimension, node, leaving, entering]] _ hi).trans ?_
+  change (bimatrixNodeExchangeEnteringWord ![dimension, node, leaving, entering])[
     (GameTheory.Finite.BimatrixPathBinaryCodec.index u).val]?.getD false = _
   rw [exchangeEntering_bit _ _ hi]
   change decide ((GameTheory.Finite.BimatrixPathBinaryCodec.index u).val = leaving.length) = decide (u ∈ ({l} : Finset _))
   simp only [hl, index_val_eq, Finset.mem_singleton]
 
-private def switchPosition (v : Fin 3 → List Bool) : List Bool :=
-  let label := binaryHalfRuler (v 2)
+/-- Toggle the entering kind only at a duplicated nonzero label. -/
+def bimatrixNodeSwitchPositionWord (v : Fin 3 → List Bool) : List Bool :=
+  let label := (v 2).length / 2
   let basic := bimatrixNodeBasicWord ![v 0, v 1]
-  caseBit₀ (andBit (notBit (lenEqFlag label []))
-    (notBit (orBit (bitAt (label ++ label) basic) (bitAt (true :: (label ++ label)) basic))))
-    (caseBit₀ (binaryLengthParity (v 2)) (v 2).tail (true :: v 2)) (v 2)
+  if label ≠ 0 ∧ basic[2 * label]?.getD false = false ∧
+      basic[2 * label + 1]?.getD false = false then
+    if (v 2).length % 2 = 1 then (v 2).tail else true :: v 2
+  else v 2
 
-private theorem switchPosition_cobham : Cobham switchPosition := by
-  have hl : Cobham fun v : Fin 3 → List Bool => binaryHalfRuler (v 2) :=
-    Cobham.comp binaryHalfRuler_cobham fun _ => .proj 2
-  have hb : Cobham fun v : Fin 3 → List Bool => bimatrixNodeBasicWord ![v 0, v 1] :=
-    Cobham.comp₂ bimatrixNodeBasicWord_cobham (.proj 0) (.proj 1)
-  exact Cobham.iteFn
-    (Cobham.andFn (Cobham.notFn (lenEqFlag_mem hl (Cobham.const [])))
-      (Cobham.notFn (Cobham.orFn
-        (Cobham.comp₂ Cobham.bitAtFn (Cobham.appendFn hl hl) hb)
-        (Cobham.comp₂ Cobham.bitAtFn
-          (Cobham.appendFn (Cobham.const [true]) (Cobham.appendFn hl hl)) hb))))
-    (Cobham.iteFn (Cobham.comp binaryLengthParity_cobham fun _ => .proj 2)
-      (Cobham.tailFn (.proj 2)) (Cobham.appendFn (Cobham.const [true]) (.proj 2))) (.proj 2)
+private theorem switchPosition_polyTime :
+    ComputableInPolyTime bimatrixNodeSwitchPositionWord (encPi encBits) encBits := by
+  have hpointer : ComputableInPolyTime (fun v : Fin 3 → List Bool => v 2)
+      (encPi encBits) encBits := .pi_apply encBits 2
+  have hlength := ComputableInPolyTime.length_bits_comp hpointer
+  have hlabel := (ComputableInPolyTime.unary_div_const 2).comp hlength
+  have hnonzero := ComputableInPolyTime.of_tidy
+    (ComputableTidilyInPolyTime.decide_ne hlabel.tidy (ComputableTidilyInPolyTime.const 0))
+  have hargs : ComputableInPolyTime (fun v : Fin 3 → List Bool => ![v 0, v 1])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits (0 : Fin 3)
+    · exact .pi_apply encBits (1 : Fin 3)
+  have hbasic := bimatrixNodeBasicWord_polyTime.comp hargs
+  have hindex0 := ComputableInPolyTime.unary_mul' (ComputableInPolyTime.const 2) hlabel
+  have hindex1 := ComputableInPolyTime.unary_add' hindex0 (ComputableInPolyTime.const 1)
+  have habsent0 := ComputableInPolyTime.decide_eq'
+    (ComputableInPolyTime.bitsGetDWithInput hbasic hindex0 false)
+    (ComputableInPolyTime.const false)
+  have habsent1 := ComputableInPolyTime.decide_eq'
+    (ComputableInPolyTime.bitsGetDWithInput hbasic hindex1 false)
+    (ComputableInPolyTime.const false)
+  have hguard := ComputableInPolyTime.of_tidy
+    (ComputableTidilyInPolyTime.decide_and hnonzero.tidy
+      (ComputableTidilyInPolyTime.decide_and habsent0.tidy habsent1.tidy))
+  have hmod := ComputableInPolyTime.unary_mod.comp
+    (hlength.prod (ComputableInPolyTime.const 2))
+  have hodd := ComputableInPolyTime.decide_eq' hmod (ComputableInPolyTime.const 1)
+  exact hguard.ite_decide (hodd.ite_decide
+    (ComputableInPolyTime.bitsTail.comp hpointer)
+    (ComputableInPolyTime.bitsCons (ComputableInPolyTime.const true) hpointer)) hpointer
 
-private def switchEntering (v : Fin 3 → List Bool) : List Bool :=
-  binarySignedTable oneHotBit ((v 0) ++ (v 0)) [false] ![switchPosition v]
+/-- Rebuild the one-hot entering field at the selected switch position. -/
+def bimatrixNodeSwitchEnteringWord (v : Fin 3 → List Bool) : List Bool :=
+  binarySignedTable bimatrixNodeOneHotBit ((v 0) ++ (v 0)) [false] ![bimatrixNodeSwitchPositionWord v]
 
-private theorem switchEntering_cobham : Cobham switchEntering :=
-  Cobham.comp₃ (binarySignedTable_cobham oneHotBit_cobham)
-    (Cobham.appendFn (.proj 0) (.proj 0)) (Cobham.const [false]) switchPosition_cobham
+private theorem switchEntering_polyTime :
+    ComputableInPolyTime bimatrixNodeSwitchEnteringWord (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime (fun v : Fin 3 → List Bool =>
+      ![v 0 ++ v 0, [false], bimatrixNodeSwitchPositionWord v])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact ComputableInPolyTime.bitsAppend (.pi_apply encBits (0 : Fin 3))
+        (.pi_apply encBits (0 : Fin 3))
+    · exact .const [false]
+    · exact switchPosition_polyTime
+  have htable : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool => binarySignedTable bimatrixNodeOneHotBit
+        (v 0) (v 1) (Fin.tail (Fin.tail v))) (encPi encBits) encBits :=
+    binarySignedTable_polyTime (p := 1) oneHotBit_polyTime
+  have hcert := htable.comp hargs
+  apply ComputableInPolyTime.of_tidy
+  apply hcert.tidy.of_enc_eq (g := bimatrixNodeSwitchEnteringWord)
+  intro v
+  change binarySignedTable bimatrixNodeOneHotBit (v 0 ++ v 0) [false]
+      ![bimatrixNodeSwitchPositionWord v] =
+    binarySignedTable bimatrixNodeOneHotBit (v 0 ++ v 0) [false]
+      (Fin.tail (Fin.tail (![v 0 ++ v 0, [false], bimatrixNodeSwitchPositionWord v] :
+        Fin 3 → List Bool)))
+  apply congrArg (binarySignedTable bimatrixNodeOneHotBit (v 0 ++ v 0) [false])
+  funext i
+  fin_cases i; rfl
 
 /-- Switch a duplicated-label port's kind, retaining dropped-label endpoints.
 Inputs are dimension, node, and entering-position ruler. Malformed lengths are preserved. -/
 def bimatrixNodeSwitchWord (v : Fin 3 → List Bool) : List Bool :=
-  caseBit₀ (lenEqFlag (v 1) (((v 0) ++ (v 0)) ++ ((v 0) ++ (v 0))))
-    (bimatrixNodeAssemble ![v 0, bimatrixNodeBasicWord ![v 0, v 1], switchEntering v]) (v 1)
+  if (v 1).length = 4 * (v 0).length then
+    bimatrixNodeAssemble
+      ![v 0, bimatrixNodeBasicWord ![v 0, v 1], bimatrixNodeSwitchEnteringWord v]
+  else v 1
 
-theorem bimatrixNodeSwitchWord_cobham : Cobham bimatrixNodeSwitchWord :=
-  Cobham.iteFn
-    (lenEqFlag_mem (.proj 1) (Cobham.appendFn (Cobham.appendFn (.proj 0) (.proj 0))
-      (Cobham.appendFn (.proj 0) (.proj 0))))
-    (Cobham.comp₃ bimatrixNodeAssemble_cobham (.proj 0)
-      (Cobham.comp₂ bimatrixNodeBasicWord_cobham (.proj 0) (.proj 1)) switchEntering_cobham)
-    (.proj 1)
-
-theorem bimatrixNodeSwitchWord_mem_FPn : FPn bimatrixNodeSwitchWord :=
-  cobham_iff_FPn.mp bimatrixNodeSwitchWord_cobham
+/-- Switching charges basis unmasking, position selection and one-hot output assembly. -/
+@[fun_prop] theorem bimatrixNodeSwitchWord_polyTime :
+    ComputableInPolyTime bimatrixNodeSwitchWord (encPi encBits) encBits := by
+  have hdimension : ComputableInPolyTime (fun v : Fin 3 → List Bool => v 0)
+      (encPi encBits) encBits := .pi_apply encBits 0
+  have hnode : ComputableInPolyTime (fun v : Fin 3 → List Bool => v 1)
+      (encPi encBits) encBits := .pi_apply encBits 1
+  have hguard := ComputableInPolyTime.decide_eq'
+    (ComputableInPolyTime.length_bits_comp hnode)
+    (ComputableInPolyTime.unary_mul' (.const 4)
+      (ComputableInPolyTime.length_bits_comp hdimension))
+  have hbasicArgs : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool => ![v 0, v 1]) (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hdimension
+    · exact hnode
+  have hbasic := bimatrixNodeBasicWord_polyTime.comp hbasicArgs
+  have hargs : ComputableInPolyTime (fun v : Fin 3 → List Bool =>
+      ![v 0, bimatrixNodeBasicWord ![v 0, v 1], bimatrixNodeSwitchEnteringWord v])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hdimension
+    · exact hbasic
+    · exact switchEntering_polyTime
+  exact hguard.ite_decide (bimatrixNodeAssemble_polyTime.comp hargs) hnode
 
 theorem bimatrixNodeSwitchWord_length (v : Fin 3 → List Bool) :
     (bimatrixNodeSwitchWord v).length = (v 1).length := by
-  rw [bimatrixNodeSwitchWord, lenEq_word, case_head]
-  simp only [List.headD_cons, decide_eq_true_eq]
-  split
+  rw [bimatrixNodeSwitchWord]
+  split_ifs with h
   · rw [bimatrixNodeAssemble_length]
-    simp only [Matrix.cons_val_zero, List.length_append] at *
-    omega
+    exact h.symm
   · rfl
 
 private theorem switchPosition_length (v : Fin 3 → List Bool) :
-    (switchPosition v).length =
+    (bimatrixNodeSwitchPositionWord v).length =
       if (v 2).length / 2 ≠ 0 ∧
           (bimatrixNodeBasicWord ![v 0, v 1])[2 * ((v 2).length / 2)]?.getD false = false ∧
           (bimatrixNodeBasicWord ![v 0, v 1])[2 * ((v 2).length / 2) + 1]?.getD false = false then
         if (v 2).length % 2 = 1 then (v 2).length - 1 else (v 2).length + 1
       else (v 2).length := by
-  rw [switchPosition, lenEq_word, bitAt_getElem?, bitAt_getElem?, binaryLengthParity_value]
-  simp only [binaryHalfRuler_length, List.length_append, List.length_cons, List.length_nil]
-  rw [case_head, case_head]
-  simp only [andBit, notBit, orBit, List.headD_cons,
-    ]
-  cases h₀ : (bimatrixNodeBasicWord ![v 0, v 1])[(v 2).length / 2 + (v 2).length / 2]?.getD false <;>
-    cases h₁ : (bimatrixNodeBasicWord ![v 0, v 1])[(v 2).length / 2 + (v 2).length / 2 + 1]?.getD false <;>
-    by_cases hz : (v 2).length / 2 = 0 <;>
-    by_cases hp : (v 2).length % 2 = 1 <;>
-    simp [hz, hp, show 2 * ((v 2).length / 2) = (v 2).length / 2 + (v 2).length / 2 by omega, h₀, h₁]
+  simp only [bimatrixNodeSwitchPositionWord]
+  split_ifs <;> simp only [List.length_tail, List.length_cons]
+
 private theorem switchPosition_port {m n : ℕ} {A B : Fin m → Fin n → ℤ}
     {d : Fin (m + n)} (dimension node pointer : List Bool)
     (hk : dimension.length = m + n) (hd : d.val = 0)
     (port : GameTheory.Finite.BimatrixPathPort A B d)
     (hb : GameTheory.Finite.BimatrixPathBinaryCodec.basic node = port.node.basis.basic)
     (hp : pointer.length = (GameTheory.Finite.BimatrixPathBinaryCodec.index port.entering).val) :
-    (switchPosition ![dimension, node, pointer]).length =
+    (bimatrixNodeSwitchPositionWord ![dimension, node, pointer]).length =
       (GameTheory.Finite.BimatrixPathBinaryCodec.index port.switch.entering).val := by
   rw [switchPosition_length]
   have hl : pointer.length / 2 = (ofLex port.entering).1.val := by
@@ -436,11 +582,8 @@ private theorem switchPosition_port {m n : ℕ} {A B : Fin m → Fin n → ℤ}
 private theorem switchWord_valid (v : Fin 3 → List Bool)
     (hw : (v 1).length = 4 * (v 0).length) :
     bimatrixNodeSwitchWord v = bimatrixNodeAssemble
-      ![v 0, bimatrixNodeBasicWord ![v 0, v 1], switchEntering v] := by
-  rw [bimatrixNodeSwitchWord, lenEq_word, case_head]
-  simp only [List.length_append, List.headD_cons, hw]
-  have heq : 4 * (v 0).length = (v 0).length + (v 0).length + ((v 0).length + (v 0).length) := by omega
-  simp only [heq, decide_true, ↓reduceIte]
+      ![v 0, bimatrixNodeBasicWord ![v 0, v 1], bimatrixNodeSwitchEnteringWord v] := by
+  exact ite_eq_left hw
 
 /-- Switching retains the entire unmasked basis field. -/
 theorem bimatrixNodeSwitchWord_basic {m n : ℕ} (dimension node pointer : List Bool)
@@ -455,7 +598,7 @@ theorem bimatrixNodeSwitchWord_basic {m n : ℕ} (dimension node pointer : List 
   have hi : (GameTheory.Finite.BimatrixPathBinaryCodec.index u).val < 2 * dimension.length := by
     simpa only [hk] using (GameTheory.Finite.BimatrixPathBinaryCodec.index u).isLt
   exact (assemble_basic_bit
-    ![dimension, bimatrixNodeBasicWord ![dimension, node], switchEntering ![dimension, node, pointer]]
+    ![dimension, bimatrixNodeBasicWord ![dimension, node], bimatrixNodeSwitchEnteringWord ![dimension, node, pointer]]
     _ hi).trans (bimatrixNodeBasicWord_bit dimension node hk u)
 
 /-- A permitted port switches to the canonical twin variable, fixing dropped-label endpoints. -/
@@ -474,12 +617,12 @@ theorem bimatrixNodeSwitchWord_entering {m n : ℕ} {A B : Fin m → Fin n → �
   have hi : (GameTheory.Finite.BimatrixPathBinaryCodec.index u).val < 2 * dimension.length := by
     simpa only [hk] using (GameTheory.Finite.BimatrixPathBinaryCodec.index u).isLt
   refine (assemble_entering_bit
-    ![dimension, bimatrixNodeBasicWord ![dimension, node], switchEntering ![dimension, node, pointer]]
+    ![dimension, bimatrixNodeBasicWord ![dimension, node], bimatrixNodeSwitchEnteringWord ![dimension, node, pointer]]
     _ hi).trans ?_
-  change (switchEntering ![dimension, node, pointer])[
+  change (bimatrixNodeSwitchEnteringWord ![dimension, node, pointer])[
     (GameTheory.Finite.BimatrixPathBinaryCodec.index u).val]?.getD false = _
-  rw [switchEntering]
-  refine (flagTable_bit oneHotBit _ (fun i => decide (i = (switchPosition ![dimension, node, pointer]).length))
+  rw [bimatrixNodeSwitchEnteringWord]
+  refine (flagTable_bit bimatrixNodeOneHotBit _ (fun i => decide (i = (bimatrixNodeSwitchPositionWord ![dimension, node, pointer]).length))
     (fun r => oneHotBit_value r _) _ _ (by simpa only [Matrix.cons_val_zero, List.length_append, two_mul] using hi)).trans ?_
   rw [switchPosition_port dimension node pointer hk hd port hb hp]
   simp only [index_val_eq, Finset.mem_singleton]

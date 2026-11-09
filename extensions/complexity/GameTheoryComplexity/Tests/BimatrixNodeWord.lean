@@ -6,6 +6,7 @@ public import GameTheoryComplexity.Backend.BimatrixNodeWord
 
 namespace GameTheory.Complexity.Tests.BimatrixNodeWord
 open GameTheory.Complexity.Backend
+open Cslib.BitString Turing.MultiTapeTM
 
 -- The masked source is all false; its unmasked basis consists of the slack variables.
 example : bimatrixNodeBasicWord ![[false, false], List.replicate 8 false] =
@@ -43,7 +44,11 @@ example : bimatrixNodeBasicWord ![[true], []] = [true, false] := by decide +kern
 example : bimatrixNodeSyntaxFlag ![[true], []] = [false] := by decide +kernel
 example : bimatrixNodeSyntaxFlag ![[], []] = [false] := by decide +kernel
 
-example : _root_.Complexity.Cobham bimatrixNodeSyntaxFlag := bimatrixNodeSyntaxFlag_cobham
-example : _root_.Complexity.Cobham.FPn bimatrixNodeSyntaxFlag := bimatrixNodeSyntaxFlag_mem_FPn
+example : ComputableInPolyTime bimatrixNodeBasicWord (encPi encBits) encBits :=
+  bimatrixNodeBasicWord_polyTime
+example : ComputableInPolyTime bimatrixNodeEnteringWord (encPi encBits) encBits :=
+  bimatrixNodeEnteringWord_polyTime
+example : ComputableInPolyTime bimatrixNodeSyntaxFlag (encPi encBits) encBits :=
+  bimatrixNodeSyntaxFlag_polyTime
 
 end GameTheory.Complexity.Tests.BimatrixNodeWord

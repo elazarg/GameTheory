@@ -5,47 +5,47 @@ public import GameTheoryComplexity.Backend.GeneralBimatrixPointerMachine
 
 @[expose] public section
 
-/-! Uniform circuit emission for serialized bimatrix path pointers.
-The actual polynomial-time pointer machines are specialized to each instance
-and each output bit. The emitted End-of-Line circuits agree on every vertex
-at the explicit positive node width, including malformed node encodings.
--/
+/-! Native uniform circuit emission specializes the serialized bimatrix path
+pointers on every vertex of the prescribed node width. Malformed node words
+retain the pointers' identity behavior. -/
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM
 
-/-- The predecessor machine remains polynomial-time on paired instance/node words. -/
-theorem generalBimatrixPredecessor_pair_mem_FP :
-    (fun z => generalBimatrixPredecessorWord ![pairFst z, pairSnd z]) ∈ FP := by
-  apply CobhamFP_subset_FP
-  exact (Cobham.comp generalBimatrixPredecessorWord_cobham (fun i => by
-    fin_cases i
-    · exact FP_subset_CobhamFP pairFst_mem_FP
-    · exact FP_subset_CobhamFP pairSnd_mem_FP)).of_eq fun _ => rfl
+private theorem pointerArguments_polyTime :
+    ComputableInPolyTime (fun p : List Bool × List Bool => ![p.1, p.2])
+      (encPair encBits encBits) (encPi encBits) := by
+  apply ComputableInPolyTime.pi
+  intro i
+  fin_cases i
+  · exact .fst encBits encBits
+  · exact .snd encBits encBits
 
-/-- The successor machine remains polynomial-time on paired instance/node words. -/
-theorem generalBimatrixSuccessor_pair_mem_FP :
-    (fun z => generalBimatrixSuccessorWord ![pairFst z, pairSnd z]) ∈ FP := by
-  apply CobhamFP_subset_FP
-  exact (Cobham.comp generalBimatrixSuccessorWord_cobham (fun i => by
-    fin_cases i
-    · exact FP_subset_CobhamFP pairFst_mem_FP
-    · exact FP_subset_CobhamFP pairSnd_mem_FP)).of_eq fun _ => rfl
+/-- Native predecessor execution charges the complete instance and node. -/
+theorem generalBimatrixPredecessor_joint_polyTime :
+    ComputableInPolyTime
+      (fun p : List Bool × List Bool => generalBimatrixPredecessorWord ![p.1, p.2])
+      (encPair encBits encBits) encBits :=
+  generalBimatrixPredecessorWord_polyTime.comp pointerArguments_polyTime
 
-/-- There is an actual polynomial-time End-of-Line instance mapper whose circuits
-compute the two bimatrix pointers at every vertex of the supplied node width. -/
+/-- Native successor execution charges the complete instance and node. -/
+theorem generalBimatrixSuccessor_joint_polyTime :
+    ComputableInPolyTime
+      (fun p : List Bool × List Bool => generalBimatrixSuccessorWord ![p.1, p.2])
+      (encPair encBits encBits) encBits :=
+  generalBimatrixSuccessorWord_polyTime.comp pointerArguments_polyTime
+
+/-- Compile the actual total pointers at the computed width, preserving every vertex. -/
 theorem exists_generalBimatrixEndOfLineInstance :
-    ∃ f : List Bool → List Bool, f ∈ FP ∧ ∀ input,
+    ∃ f : List Bool → List Bool, ComputableInPolyTime f encBits encBits ∧ ∀ input,
       endOfLineWidth (f input) = (generalBimatrixNodeRuler input).length ∧
         ∀ vertex, vertex.length = (generalBimatrixNodeRuler input).length →
           endOfLinePredecessor (f input) vertex = generalBimatrixPredecessorWord ![input, vertex] ∧
           endOfLineSuccessor (f input) vertex = generalBimatrixSuccessorWord ![input, vertex] := by
-  obtain ⟨f, hf, heval⟩ := exists_pointerCircuitInstance generalBimatrixNodeRuler
-    (fun input vertex => generalBimatrixPredecessorWord ![input, vertex])
-    (fun input vertex => generalBimatrixSuccessorWord ![input, vertex])
-    (CobhamFP_subset_FP generalBimatrixNodeRuler_cobham)
-    generalBimatrixPredecessor_pair_mem_FP generalBimatrixSuccessor_pair_mem_FP
-    (fun _ _ => generalBimatrixPredecessorWord_length _)
-    (fun _ _ => generalBimatrixSuccessorWord_length _)
-  exact ⟨f, hf, fun input => heval input (generalBimatrixNodeRuler_pos input)⟩
+  obtain ⟨f, hf, hwidth, heval⟩ := exists_pointerCircuitInstance
+    (ComputableInPolyTime.length_bits_comp generalBimatrixNodeRuler_polyTime)
+    generalBimatrixPredecessor_joint_polyTime generalBimatrixSuccessor_joint_polyTime
+    (fun _ _ hu => (generalBimatrixPredecessorWord_length _).trans hu)
+    (fun _ _ hu => (generalBimatrixSuccessorWord_length _).trans hu)
+  exact ⟨f, hf, fun input => ⟨hwidth input, heval input⟩⟩
 
 end GameTheory.Complexity.Backend
