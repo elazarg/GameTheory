@@ -317,33 +317,26 @@ loops depend on field widths and table dimensions, with no loop over a binary
 field's numeric value. `binaryCertificateVerifier_eq_true_iff` proves exact
 agreement with the base certificate constraints.
 
-`Backend.NashNP` also validates canonical pair encodings and certifies one
-deterministic polynomial-time machine for the full paired verifier. Its
-polynomially balanced FNP witness relation characterizes the canonical target,
-and the upstream guess-and-verify construction gives NP membership. The
+`Backend.NashNP` certifies `nashCertificateVerdict`, a native typed Boolean
+verifier of the complete table input and candidate certificate. The native
+framed-pair encoding charges both arguments. Its polynomially balanced
+`FNP encBits` relation characterizes the canonical target, and native domains
+of FNP relations give `NP encBits` membership. The
 membership leaf does not import the SAT reduction; only the NP-completeness
 leaf combines them. Ordinary game and certificate clients need no ComplexityLib.
 
-PPAD search completeness is separate from this decision theorem. The selected
-upstream provides FNP and TFNP; the following slice supplies the missing
-End-of-Line totality and solution-preserving search-reduction interface.
+PPAD search completeness uses a separate search relation and reduction family.
+The current decision proof combines native `NP encBits` membership and native
+Cook–Levin hardness under `NPComplete encBits`; it defines no local complexity
+class or paired-language compatibility interface.
 
-The expanded base library and lint driver pass 4,364 jobs; the companion library,
-fixtures, lint driver and axiom audit pass 3,294 jobs. All 759 extension-owned
-declarations have only standard transitive axioms. Both linters, architecture
-checks, optional dependency isolation and all 19 boundary mutation regressions
-pass. Tests exercise binary carry and padding, exact roundtrips, actual decoded
-game acceptance, incorrect support payoffs, certificate length rejection, empty
-dimensions and malformed paired inputs. No unsafe evaluator or placeholder is
-used to certify the new fixture results.
-
-The released-mode consumer resolves `GameTheory` as a public git dependency at
-`15b05259fabcc79f5b8b33630fd223a9a799e0f3`, with no local-path override, and builds
-the facade, composed sample test and NP-completeness endpoint in 3,281 jobs.
-The same command-scoped local Git object mirror supplies the published objects;
-the manifest retains the public URL and exact revision. Lean 4.34.1 and the
-successful Mathlib cache hook are confirmed. Hosted CI checks direct HTTPS
-resolution and now includes the NP-completeness endpoint in its release smoke.
+The matching-toolchain NP/Cramer checkpoint passes 6,768 jobs, and its public
+Nash and program controls pass 6,802 jobs. The expanded transitive audit accepts
+2,402 authored declarations with standard axioms. Controls cover binary carry,
+padding, exact codecs, actual decoded-game acceptance, incorrect support payoffs,
+extra/missing certificate bits and empty dimensions. Shared stable-release,
+full-companion and local/published-consumer verification remain open in the
+cross-cutting delivery gate.
 
 ## Succinct End-of-Line and search reductions
 

@@ -11,17 +11,29 @@ Signed payoffs are evaluated as separate positive and negative binary sums.
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 open GameTheory.Finite GameTheory.Finite.BimatrixTable
+open GameTheory.Complexity.Backend.WordOperations
 open scoped BigOperators
 
-private theorem andBit_singleton (a b : Bool) :
-    andBit [a] [b] = [a && b] := by cases a <;> cases b <;> rfl
+private theorem andFlag_singleton (a b : Bool) :
+    andFlag [a] [b] = [a && b] := by cases a <;> cases b <;> rfl
 
-private theorem orBit_singleton (a b : Bool) :
-    orBit [a] [b] = [a || b] := by cases a <;> cases b <;> rfl
+private theorem orFlag_singleton (a b : Bool) :
+    orFlag [a] [b] = [a || b] := by cases a <;> cases b <;> rfl
 
-private theorem notBit_singleton (a : Bool) : notBit [a] = [!a] := by cases a <;> rfl
+private theorem notFlag_singleton (a : Bool) : notFlag [a] = [!a] := by cases a <;> rfl
+
+private theorem andFlag_flag (x y : List Bool) :
+    andFlag x y = [true] ∨ andFlag x y = [false] := by
+  cases hx : x.headD false <;> cases hy : y.headD false <;>
+    simp [andFlag]
+
+private theorem andFlag_eq_true_of_flags (x y : List Bool)
+    (hx : x = [true] ∨ x = [false]) (hy : y = [true] ∨ y = [false]) :
+    andFlag x y = [true] ↔ x = [true] ∧ y = [true] := by
+  rcases hx with hx | hx <;> rcases hy with hy | hy <;>
+    simp [hx, hy, andFlag]
 
 /-- A dimension ruler consists only of true bits. -/
 theorem certificateDimensionWord_eq (input : List Bool) :
@@ -51,15 +63,15 @@ theorem certificateWeightWord_eq (rowWeights : Bool) (k : ℕ) (input cert : Lis
 
 /-- Binary equality compares values rather than bit padding. -/
 theorem certificateEqualWord_value (x y : List Bool) :
-    certificateEqualWord x y = [decide (Nat.fromBitsLE x = Nat.fromBitsLE y)] := by
+    certificateEqualWord x y = [decide (ofBits x = ofBits y)] := by
   rw [certificateEqualWord, binaryCertificateLE_value, binaryCertificateLE_value,
-    andBit_singleton]
-  by_cases hxy : Nat.fromBitsLE x ≤ Nat.fromBitsLE y
-  · by_cases hyx : Nat.fromBitsLE y ≤ Nat.fromBitsLE x
+    andFlag_singleton]
+  by_cases hxy : ofBits x ≤ ofBits y
+  · by_cases hyx : ofBits y ≤ ofBits x
     · simp [Nat.le_antisymm hxy hyx]
-    · have hne : Nat.fromBitsLE x ≠ Nat.fromBitsLE y := by omega
+    · have hne : ofBits x ≠ ofBits y := by omega
       simp [hxy, hyx, hne]
-  · have hne : Nat.fromBitsLE x ≠ Nat.fromBitsLE y := by omega
+  · have hne : ofBits x ≠ ofBits y := by omega
     simp [hxy, hne]
 
 /-- The two tally scans reconstruct the total decoder's signed payoff. -/
@@ -69,29 +81,41 @@ theorem matrixTallyWord_payoff (input : List Bool) (i j : ℕ) :
         true : ℤ) -
       ((matrixTallyWord false ![List.replicate i true, List.replicate j true, input]).count
         true : ℤ) := by
-  simp [matrixTallyWord, decodedPayoff, smash_length,
-    certificateDimensionWord_length, List.take_take, List.drop_take, List.drop_drop]
-  congr 3 <;> congr 1
-  all_goals first | omega | (congr 1; ring)
+  let n := decodeDimension input
+  let payload := input.drop (n + 1)
+  let off := (i * n + j) * (2 * (n + 2))
+  have hpos : matrixTallyWord true ![List.replicate i true, List.replicate j true, input] =
+      (payload.drop off).take (n + 2) := by
+    simp [matrixTallyWord, payload, off, n, List.length_replicate, List.length_append,
+      certificateDimensionWord_length, Nat.add_assoc, Nat.add_comm]
+  have hneg : matrixTallyWord false ![List.replicate i true, List.replicate j true, input] =
+      ((payload.drop off).take (2 * (n + 2))).drop (n + 2) := by
+    simp [matrixTallyWord, payload, off, n, List.length_replicate, List.length_append,
+      certificateDimensionWord_length, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm,
+      List.drop_take, List.drop_drop]
+    omega
+  rw [hpos, hneg]
+  simp [decodedPayoff, payload, off, n, List.take_take, List.drop_take,
+    List.drop_drop, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
 
 /-- A score scan gives the usual finite sum of weighted tally counts. -/
 theorem matrixScoreWord_value (rowWeights positive : Bool) (i : ℕ)
     (input cert : List Bool) :
-    Nat.fromBitsLE (matrixScoreWord rowWeights positive
+    ofBits (matrixScoreWord rowWeights positive
       ![List.replicate i true, input, cert]) =
       ∑ j : Fin (decodeDimension input),
         (matrixTallyWord positive
           ![List.replicate i true, List.replicate j.val true, input]).count true *
-        Nat.fromBitsLE (certificateWeightWord rowWeights
+        ofBits (certificateWeightWord rowWeights
           ![List.replicate j.val true, input, cert]) := by
   unfold matrixScoreWord
   rw [certificateDimensionWord_eq, binaryIndexedSum_value]
-  change (∑ j ∈ Finset.range (decodeDimension input), Nat.fromBitsLE
+  change (∑ j ∈ Finset.range (decodeDimension input), ofBits
     (matrixWeightedTerm rowWeights positive
       ![List.replicate j true, List.replicate i true, input, cert])) = _
   rw [Fin.sum_univ_eq_sum_range (fun j : ℕ =>
     (matrixTallyWord positive ![List.replicate i true, List.replicate j true, input]).count
-      true * Nat.fromBitsLE
+      true * ofBits
         (certificateWeightWord rowWeights ![List.replicate j true, input, cert]))]
   apply Finset.sum_congr rfl
   intro j hj
@@ -99,25 +123,25 @@ theorem matrixScoreWord_value (rowWeights positive : Bool) (i : ℕ)
 
 /-- The normalization scan sums exactly the fields of the selected distribution. -/
 theorem certificateWeightSumWord_value (rowWeights : Bool) (input cert : List Bool) :
-    Nat.fromBitsLE (certificateWeightSumWord rowWeights ![input, cert]) =
-      ∑ j : Fin (decodeDimension input), Nat.fromBitsLE (certificateWeightWord rowWeights
+    ofBits (certificateWeightSumWord rowWeights ![input, cert]) =
+      ∑ j : Fin (decodeDimension input), ofBits (certificateWeightWord rowWeights
         ![List.replicate j.val true, input, cert]) := by
   unfold certificateWeightSumWord
   rw [certificateDimensionWord_eq, binaryIndexedSum_value]
-  change (∑ j ∈ Finset.range (decodeDimension input), Nat.fromBitsLE
+  change (∑ j ∈ Finset.range (decodeDimension input), ofBits
     (certificateWeightWord rowWeights ![List.replicate j true, input, cert])) = _
-  exact (Fin.sum_univ_eq_sum_range (fun j : ℕ => Nat.fromBitsLE
+  exact (Fin.sum_univ_eq_sum_range (fun j : ℕ => ofBits
     (certificateWeightWord rowWeights ![List.replicate j true, input, cert])) _).symm
 
 /-- Subtracting the negative score from the positive score gives the decoded integer score. -/
 theorem matrixScoreWord_difference (rowWeights : Bool) (i : ℕ)
     (input cert : List Bool) :
-    (Nat.fromBitsLE (matrixScoreWord rowWeights true
+    (ofBits (matrixScoreWord rowWeights true
       ![List.replicate i true, input, cert]) : ℤ) -
-      (Nat.fromBitsLE (matrixScoreWord rowWeights false
+      (ofBits (matrixScoreWord rowWeights false
         ![List.replicate i true, input, cert]) : ℤ) =
       ∑ j : Fin (decodeDimension input), decodedPayoff input i j.val *
-        (Nat.fromBitsLE (certificateWeightWord rowWeights
+        (ofBits (certificateWeightWord rowWeights
           ![List.replicate j.val true, input, cert]) : ℤ) := by
   rw [matrixScoreWord_value, matrixScoreWord_value]
   simp only [Nat.cast_sum, Nat.cast_mul, ← Finset.sum_sub_distrib]
@@ -134,8 +158,8 @@ private theorem certificateAll_flag {p : ℕ}
   cases clock with
   | nil => exact Or.inl rfl
   | cons b clock =>
-    simp only [certificateAll, recNotation_cons, Bool.cond_self, certificateAllStep]
-    exact andBit_flag _ _
+    rw [certificateAll, WordFold.suffixFold_cons]
+    exact andFlag_flag _ _
 
 private theorem certificateAll_eq_true_iff {p : ℕ}
     (term : (Fin (p + 1) → List Bool) → List Bool)
@@ -147,9 +171,10 @@ private theorem certificateAll_eq_true_iff {p : ℕ}
   induction n with
   | zero => simp [certificateAll]
   | succ n ih =>
-    change andBit (certificateAll term (List.replicate n true) params)
+    rw [certificateAll, List.replicate_succ, WordFold.suffixFold_cons]
+    change andFlag (certificateAll term (List.replicate n true) params)
       (term (Fin.cons (List.replicate n true) params)) = [true] ↔ _
-    rw [andBit_eq_true_iff (certificateAll_flag _ _ _) (hterm n), ih]
+    rw [andFlag_eq_true_of_flags _ _ (certificateAll_flag _ _ _) (hterm n), ih]
     constructor
     · rintro ⟨hall, hn⟩ i hi
       by_cases hin : i < n
@@ -162,21 +187,21 @@ private theorem certificateAll_eq_true_iff {p : ℕ}
 private theorem matrixActionCheck_raw_iff (columnPlayer : Bool) (i : ℕ)
     (input cert : List Bool) :
     let v := ![List.replicate i true, input, cert]
-    let pos := Nat.fromBitsLE (matrixScoreWord columnPlayer true v)
-    let neg := Nat.fromBitsLE (matrixScoreWord columnPlayer false v)
-    let utility := Nat.fromBitsLE (certificateFieldWord
+    let pos := ofBits (matrixScoreWord columnPlayer true v)
+    let neg := ofBits (matrixScoreWord columnPlayer false v)
+    let utility := ofBits (certificateFieldWord
       ![List.replicate (if columnPlayer then 3 else 2) true, input, cert])
-    let support := Nat.fromBitsLE (certificateWeightWord (!columnPlayer) v)
+    let support := ofBits (certificateWeightWord (!columnPlayer) v)
     matrixActionCheck columnPlayer v = [true] ↔
       pos ≤ neg + utility ∧ (0 < support → pos = neg + utility) := by
   dsimp only
   unfold matrixActionCheck
   dsimp only
   rw [binaryCertificateLE_value, certificateEqualWord_value, certificateEqualWord_value,
-    orBit_singleton, andBit_singleton, binaryCertificateAdd_value]
+    orFlag_singleton, andFlag_singleton, binaryCertificateAdd_value]
   simp only [List.cons.injEq, and_true, Bool.and_eq_true, Bool.or_eq_true,
     decide_eq_true_eq]
-  have hz : Nat.fromBitsLE [] = 0 := rfl
+  have hz : ofBits [] = 0 := rfl
   rw [hz]
   cases columnPlayer <;> simp
   all_goals omega
@@ -224,7 +249,7 @@ theorem matrixAllChecks_eq_true_iff (columnPlayer : Bool) (input cert : List Boo
       matrixActionCheck columnPlayer (Fin.cons (List.replicate i true) ![input, cert]) =
           [true] ∨
         matrixActionCheck columnPlayer (Fin.cons (List.replicate i true) ![input, cert]) =
-          [false] := andBit_flag _ _
+          [false] := andFlag_flag _ _
   rw [certificateAll_eq_true_iff _ _ _ hflag]
   constructor
   · intro h i
@@ -240,10 +265,6 @@ private theorem flag_eq_decide (x : List Bool) (P : Prop) [Decidable P]
   · rcases hflag with hx | hx
     · exact False.elim (hp (hiff.mp hx))
     · simpa only [hp, decide_false] using hx
-
-private theorem lenEqFlag_value (x y : List Bool) :
-    lenEqFlag x y = [decide (x.length = y.length)] :=
-  flag_eq_decide _ _ (lenEqFlag_flag _ _) (lenEqFlag_eq_true_iff _ _)
 
 private theorem matrixAllChecks_value (columnPlayer : Bool) (input cert : List Bool) :
     let c := decodeNashCertificate (decodeDimension input)
@@ -277,15 +298,14 @@ theorem binaryCertificateVerifier_eq_true_iff (input cert : List Bool) :
   dsimp only at hr hc
   unfold binaryCertificateVerifier
   dsimp only
-  rw [hr, hc, lenEqFlag_value]
+  rw [hr, hc]
   simp only [certificateEqualWord_value, binaryCertificateLE_value,
     certificateWeightSumWord_value, certificateWeightWord_eq, certificateFieldWord_eq,
-    andBit_singleton, notBit_singleton, List.cons.injEq, and_true, Bool.and_eq_true,
+    andFlag_singleton, notFlag_singleton, List.cons.injEq, and_true, Bool.and_eq_true,
     decide_eq_true_eq,
     decodeNashCertificate, NumeratorCertificate.Valid]
-  have hz : Nat.fromBitsLE [] = 0 := rfl
-  simp only [hz, smash_length, List.length_append, List.length_replicate,
-    certificateDimensionWord_length]
+  have hz : ofBits [] = 0 := rfl
+  simp only [hz, certificateDimensionWord_length]
   constructor <;> intro h <;>
     simpa [Nat.pos_iff_ne_zero, Nat.add_comm, Nat.mul_comm, two_mul] using h
 

@@ -38,12 +38,12 @@ primitives still need their own efficient encodings and implementation
 certificates. A bound on an encoder's output length does not certify its runtime.
 
 The payoff-constrained Nash slice certifies SAT reduction to explicit symmetric
-integer payoff tables and proves NP-completeness of mixed Nash existence with both
-payoffs at least one. The writer has an actual fixed polynomial-time machine
+integer payoff tables and proves native `NPComplete encBits` for mixed Nash
+existence with both payoffs at least one. The writer has an actual fixed polynomial-time machine
 certificate and exact agreement with the table decoder. Base game semantics,
 the satisfiability characterization and serialization remain dependency-free.
-Membership uses bounded rational witnesses and a polynomial-time binary verifier
-for the same total decoder and canonical Nash predicate. Import
+Membership uses bounded rational witnesses and a native typed Boolean verifier
+with exact correctness for the same total decoder and canonical Nash predicate. Import
 `GameTheoryComplexity.Backend.NashNPComplete` for the headline theorem,
 `Backend.NashNP` for membership alone, or `Backend.SATReduction` for hardness
 alone. General Nash search and fixed-point results use separate relations and
