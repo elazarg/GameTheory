@@ -9,7 +9,7 @@ public import GameTheory.Math.IntegerDictionaryComputation
 /-! Signed packed dictionary fields agree with the canonical integer Cramer dictionary. -/
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 
 private theorem unitVector_value (dim width column : List Bool) (i : ℕ) (hi : i < dim.length)
     (hr : 0 < width.length) (hc : 1 < 2 ^ (width.length - 1)) :
@@ -18,15 +18,8 @@ private theorem unitVector_value (dim width column : List Bool) (i : ℕ) (hi : 
   unfold binaryUnitVector
   apply binarySignedTable_value _ _ _ (fun t => if t = column.length then 1 else 0) _ hr _ _ i hi
   · intro r
-    change binarySignedValue (caseBit₀ (lenEqFlag r column) [false, true] [false]) = _
-    rcases lenEqFlag_flag r column with hf | hf
-    · have he := (lenEqFlag_eq_true_iff _ _).mp hf
-      simp [hf, he, caseBit₀, binarySignedValue, Nat.fromBitsLE, Nat.fromBits]
-    · have he : r.length ≠ column.length := by
-        intro he
-        have ht := (lenEqFlag_eq_true_iff r column).mpr he
-        simp [hf] at ht
-      simp [hf, he, caseBit₀, binarySignedValue, Nat.fromBitsLE, Nat.fromBits]
+    change binarySignedValue (if r.length = column.length then [false, true] else [false]) = _
+    split_ifs <;> rfl
   · intro t ht
     split_ifs
     · exact hc
@@ -58,16 +51,13 @@ theorem binaryDictionaryVector_value (dim width column : List Bool)
     | cons b r =>
       have he : r.length = j.val := by simp only [List.length_cons, Fin.val_succ] at hk; omega
       unfold binaryDictionaryVector
-      change binarySignedRowValue width (caseBit₀ (nonemptyFlag (b :: r))
-        (binaryUnitVector ![dim, width, r]) (binaryOnesVector ![dim, width])) i.val = _
-      rw [nonemptyFlag_cons]
-      simp only [caseBit₀, Bool.cond_true]
+      change binarySignedRowValue width (binaryUnitVector ![dim, width, r]) i.val = _
       rw [unitVector_value dim width r i.val i.isLt hr hc, he]
       simp [Pi.single_apply, Fin.ext_iff]
 end GameTheory.Complexity.Backend
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 
 theorem binaryDictionaryCoefficient_value (dim width A row column : List Bool) (h : ℕ)
     (i : Fin dim.length) (k : Fin (dim.length + 1))
@@ -107,7 +97,7 @@ theorem binaryDictionaryCoefficient_value (dim width A row column : List Bool) (
   cases k using Fin.cases <;> exact hc.trans he.symm
 end GameTheory.Complexity.Backend
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 
 theorem binaryDictionaryRow_value (dim width A row : List Bool) (h : ℕ)
     (i : Fin dim.length) (hi : row.length = i.val)

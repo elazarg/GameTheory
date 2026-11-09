@@ -10,7 +10,7 @@ open Backend
 
 private def dim : List Bool := [false, true]
 private def width : List Bool := List.replicate (GameTheory.Math.BirdIterationBounds.workWidth 2 3) false
-private def field (z : ℤ) : List Bool := decide (z < 0) :: Nat.toBitsLE (width.length - 1) z.natAbs
+private def field (z : ℤ) : List Bool := decide (z < 0) :: Cslib.BitString.lowBits (width.length - 1) z.natAbs
 private def matrix : List Bool := field 0 ++ field 6 ++ field 4 ++ field 0
 
 -- Apply the mathematical correctness theorem to a matrix with zero leading pivot.

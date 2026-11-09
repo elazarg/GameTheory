@@ -930,44 +930,38 @@ run does not validate the current dependency selection.
 
 ## General rectangular binary Nash certificates
 
-`GameTheoryComplexity.BimatrixNash` supplies FNP membership for exact mixed Nash
-certificates of independent signed integer payoff matrices. Unlike the earlier
-payoff-constrained symmetric decision language, this relation has no utility
-threshold. The input has unary row, column and coefficient-width headers and
-two row-major matrices whose entries use positive and negative binary fields.
+`Backend.GeneralBimatrixFNP.generalBimatrixRelation_mem_FNP` proves native
+`FNP encBits` membership for exact mixed Nash certificates of independent signed
+integer payoff matrices. The input has unary row, column and coefficient-width
+headers and two row-major matrices with positive and negative binary fields.
 The answer contains two denominators, two signed utility numerators and both
 probability-numerator vectors. For input length `L`, each unsigned field has
-width `(2*L+2)*(8*L+6)+1`; the total answer length is cubic in `L`.
+width `(2*L+2)*(8*L+6)+1`; total witness length is cubic in `L`.
 
-The verifier checks exact lengths, positive denominators, simplex equations,
-every pure deviation inequality and equality on positive support. Signed
-comparisons work directly on positive and negative sums. Generic bit-recursive
-multiplication avoids iterating over payoff magnitudes. Cobham composition
-certifies the whole paired-input machine, including outer-pair validation.
-Malformed game instances accept precisely the empty answer; malformed outer
-pairs are rejected. Decoding and verifier correctness are total, including
-short words and noncanonical simultaneous positive/negative fields.
+The actual verifier checks exact lengths, positive denominators, simplex
+equations, every pure deviation inequality and equality on positive support.
+Signed comparisons combine positive and negative scores with both utility
+fields. Native machine composition charges every width, scan, arithmetic
+operation and complete input/witness encoding. `generalBimatrixAccepts` returns
+a Boolean under `encPair encBits encBits`; the unused outer-pair verifier
+adapter is retired. Malformed game instances accept precisely the empty answer.
+Short and simultaneously positive/negative fields retain their total decoding.
 
-Accepted valid answers yield the base's ordinary PMF mixed Nash equilibria.
-Conversely, a supplied canonical equilibrium yields an exactly serialized
-bounded certificate. The mathematical existence theorem for every nonempty
-integer game remains inside `GameTheory.Analysis`; the companion imports no
-analytic existence result. Consequently this slice establishes FNP, while
-unconditional serialized totality, TFNP and PPAD membership remain the next
-reduction. Ordinary game clients acquire no new dependency.
+Accepted valid answers yield canonical PMF mixed Nash equilibria. A supplied
+canonical equilibrium yields an exactly serialized bounded certificate.
+`Backend.GeneralBimatrixTotality` additionally uses finite complementary-path
+existence to prove native `TFNP encBits` membership for every input, without an
+Analysis import. The native node/pointer and PPAD reduction port remains in
+progress; verification and totality alone do not supply a polynomial-time solver.
 
-`Backend.BinaryWordMultiplication` and `Backend.PairedVerifier` have no game
-imports. The latter is shared with the older constrained Nash verifier, so
-canonical pairing has one implementation and correctness proof.
-
-Validation passes the full 4,218-job companion/lint/axiom build against both
-the local checkout and published base commit
-`e4b2d03957c70e27217d01e35d7076e9ada763be`. The final audit checks 2,615
-extension declarations transitively, admitting only `propext`,
-`Classical.choice` and `Quot.sound`. Companion lint, architecture and
-optional-dependency audits, and all 30 boundary regression tests pass.
-`lake -R update GameTheory`, `lake env lean --version` and `lake exe cache get`
-confirm the published pin, Lean 4.34.1 and successful cache resolution.
+The matching-toolchain verifier, totality, determinant and dictionary checkpoint
+passes 6,756 jobs. Its expanded transitive audit checks 2,943 authored declarations
+using only `propext`, `Classical.choice` and `Quot.sound`. Signed, singular,
+zero-width, malformed-length and support controls compile. Source isolation and
+coverage pass, along with all 44 script regressions. Shared stable-toolchain,
+full optional lint/axiom and local/published-base consumer gates remain open.
+The earlier 4,218-job full companion run at base `e4b2d039` predates the native
+API migration and does not validate the current dependency selection.
 
 ## Complementary decoding prerequisite
 

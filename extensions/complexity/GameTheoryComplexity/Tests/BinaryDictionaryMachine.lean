@@ -28,4 +28,8 @@ example : coefficients.length = 72 := by decide +kernel
 example : binaryDictionaryCoefficients ![[], width, []] = [] := by decide +kernel
 example : binaryDictionaryCoefficients ![[false, true], [], matrix] = [] := by decide +kernel
 
+example : Turing.MultiTapeTM.ComputableInPolyTime binaryDictionaryCoefficients
+    (Turing.MultiTapeTM.encPi Turing.MultiTapeTM.encBits) Turing.MultiTapeTM.encBits :=
+  binaryDictionaryCoefficients_polyTime
+
 end GameTheory.Complexity.Tests.BinaryDictionaryMachine

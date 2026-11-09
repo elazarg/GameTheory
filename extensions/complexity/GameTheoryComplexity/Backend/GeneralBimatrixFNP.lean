@@ -3,15 +3,15 @@ module
 public import GameTheoryComplexity.Backend.GeneralBimatrixProblem
 public import GameTheoryComplexity.Backend.GeneralBimatrixVerifierMachine
 public import GameTheoryComplexity.Backend.GeneralBimatrixVerifierCorrectness
-public import GameTheoryComplexity.Backend.PairedVerifier
-
-import Complexitylib.Classes.P.DecisionFn
+public import Complexity.Computability.Complexity.Classes.TFNP
 
 @[expose] public section
 
-/-! An actual polynomial-time paired-input decider for exact bimatrix certificates. -/
+/-! Native polynomial verification of exact signed rectangular bimatrix Nash
+certificates. Both the complete input and witness are machine arguments. -/
+
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM Cslib.Complexity WordOperations
 
 /-- The executable verifier agrees with the canonical certificate relation. -/
 theorem generalBimatrixVerdict_accept_iff_relation (input certificate : List Bool) :
@@ -19,43 +19,41 @@ theorem generalBimatrixVerdict_accept_iff_relation (input certificate : List Boo
       generalBimatrixRelation input certificate :=
   generalBimatrixVerdict_eq_true_iff input certificate
 
-/-- Validate the outer pair encoding and check the binary Nash certificate. -/
-def generalBimatrixPairedVerdict : List Bool → List Bool :=
-  canonicalPairedVerifier generalBimatrixVerdict
+/-- Boolean acceptance by the exact binary verifier, including malformed games. -/
+def generalBimatrixAccepts (input certificate : List Bool) : Bool :=
+  (generalBimatrixVerdict ![input, certificate]).headD false
 
-/-- The whole paired verifier has polynomial running time. -/
-theorem generalBimatrixPairedVerdict_mem_FP : generalBimatrixPairedVerdict ∈ FP :=
-  canonicalPairedVerifier_mem_FP _ generalBimatrixVerdict_mem_FPn
+/-- Native argument framing charges the complete input and certificate. -/
+@[fun_prop] theorem generalBimatrixAccepts_polyTime
+    {α : Type} {enc : α ↪ List Bool} {input certificate : α → List Bool}
+    (hi : ComputableInPolyTime input enc encBits)
+    (hc : ComputableInPolyTime certificate enc encBits) :
+    ComputableInPolyTime (fun a => generalBimatrixAccepts (input a) (certificate a))
+      enc encBool := by
+  have hargs : ComputableInPolyTime (fun a => ![input a, certificate a])
+      enc (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hi
+    · exact hc
+  have hhead : ComputableInPolyTime (fun word : List Bool => word.headD false)
+      encBits encBool := .headD false
+  exact hhead.comp (generalBimatrixVerdict_polyTime.comp hargs)
 
-/-- A single deterministic machine checks every input/certificate pair. -/
-theorem exists_generalBimatrixPairedVerdict_machine :
-    ∃ (k : ℕ) (machine : TM k) (bound : Polynomial ℕ),
-      machine.ComputesInTime generalBimatrixPairedVerdict bound.eval :=
-  mem_FP_iff_computesInTime_polynomial.mp generalBimatrixPairedVerdict_mem_FP
+/-- The native Boolean verdict decides the same canonical Nash relation. -/
+theorem generalBimatrixAccepts_accept (input certificate : List Bool) :
+    generalBimatrixAccepts input certificate = true ↔
+      generalBimatrixRelation input certificate := by
+  rw [← generalBimatrixVerdict_accept_iff_relation]
+  simp only [generalBimatrixAccepts, generalBimatrixVerdict, WordOperations.orFlag,
+    List.headD_cons, List.cons.injEq, and_true]
 
-/-- Pair validation and exact arithmetic decide precisely the paired relation. -/
-theorem generalBimatrixPairedVerdict_eq_true_iff_mem_pairLang (z : List Bool) :
-    generalBimatrixPairedVerdict z = [true] ↔ z ∈ pairLang generalBimatrixRelation := by
-  rw [generalBimatrixPairedVerdict,
-    canonicalPairedVerifier_eq_true_iff _ generalBimatrixVerdict_flag]
-  constructor
-  · rintro ⟨hz, hc⟩
-    exact ⟨pairFst z, pairSnd z, hz,
-      (generalBimatrixVerdict_accept_iff_relation _ _).mp hc⟩
-  · rintro ⟨input, certificate, rfl, hc⟩
-    simp only [pairFst_pair, pairSnd_pair]
-    exact ⟨trivial, (generalBimatrixVerdict_accept_iff_relation _ _).mpr hc⟩
-
-/-- Exact certificate verification belongs to deterministic polynomial time. -/
-theorem generalBimatrixRelation_pairLang_mem_P : pairLang generalBimatrixRelation ∈ P := by
-  apply mem_P_of_decisionFn generalBimatrixPairedVerdict_mem_FP
-  intro z
-  rw [← generalBimatrixPairedVerdict_eq_true_iff_mem_pairLang]
-  rcases canonicalPairedVerifier_flag generalBimatrixVerdict z with h | h <;>
-    simp [generalBimatrixPairedVerdict, h]
-
-/-- General signed rectangular bimatrix Nash certificates are in FNP. -/
-theorem generalBimatrixRelation_mem_FNP : generalBimatrixRelation ∈ FNP :=
-  ⟨generalBimatrixRelation_polyBalanced, generalBimatrixRelation_pairLang_mem_P⟩
+/-- Exact signed rectangular Nash search has native bounded verification. -/
+theorem generalBimatrixRelation_mem_FNP : generalBimatrixRelation ∈ FNP encBits := by
+  refine ⟨generalBimatrixRelation_polyBalanced, fun p => generalBimatrixAccepts p.1 p.2,
+    generalBimatrixAccepts_polyTime (ComputableInPolyTime.fst encBits encBits)
+      (ComputableInPolyTime.snd encBits encBits), fun input certificate => ?_⟩
+  exact (generalBimatrixAccepts_accept input certificate).symm
 
 end GameTheory.Complexity.Backend

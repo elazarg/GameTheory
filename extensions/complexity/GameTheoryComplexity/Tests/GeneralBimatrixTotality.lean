@@ -1,15 +1,15 @@
 module
 
-public import GameTheoryComplexity.BimatrixNash
+public import GameTheoryComplexity.Backend.GeneralBimatrixTotality
 
 @[expose] public section
 
 /-! Total search controls for honest signed games and malformed encodings. -/
 namespace GameTheory.Complexity.Tests.GeneralBimatrixTotality
-open _root_.Complexity Backend
+open Turing.MultiTapeTM Cslib.Complexity Backend
 
 -- Exercise the upstream class, rather than a library-local totality predicate.
-example : generalBimatrixRelation ∈ TFNP := bimatrixNashRelation_mem_TFNP
+example : generalBimatrixRelation ∈ TFNP encBits := generalBimatrixRelation_mem_TFNP
 
 -- Negative, independent rectangular payoffs require no analytic existence input.
 private def input : List Bool :=
@@ -20,11 +20,11 @@ example : GeneralInstanceValid input :=
   encodeGeneralInstance_valid 1 2 3 _ _ (by decide) (by decide) (by decide)
 
 example : ∃ certificate, generalBimatrixRelation input certificate :=
-  exists_bimatrixNashCertificate input
+  generalBimatrixRelation_total input
 
 -- Empty and zero-dimension headers are included in totality.
 example : ∃ certificate, generalBimatrixRelation [] certificate :=
-  exists_bimatrixNashCertificate []
+  generalBimatrixRelation_total []
 
 example : generalBimatrixRelation [] [] := Or.inr ⟨by decide, rfl⟩
 

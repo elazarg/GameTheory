@@ -12,7 +12,7 @@ import all Mathlib.LinearAlgebra.Matrix.Determinant.Bird.Defs
 /-! Correctness of the fixed-width Bird machine under explicit storage and magnitude bounds. -/
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 open scoped BigOperators
 
 /-- Interpret a packed table using its dimension and signed field width. -/
@@ -37,7 +37,7 @@ private theorem tail_product_eq (dim width A F : List Bool) (i j : Fin dim.lengt
 
 end GameTheory.Complexity.Backend
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 open scoped BigOperators
 
 theorem binaryBirdEntry_eq_step (dim width A F : List Bool) (B T : ℕ)
@@ -108,7 +108,7 @@ theorem binaryBirdEntry_eq_step (dim width A F : List Bool) (B T : ℕ)
 end GameTheory.Complexity.Backend
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 open scoped BigOperators
 
 theorem binaryBirdStage_eq_step (dim width A F : List Bool) (B T : ℕ)
@@ -132,13 +132,10 @@ theorem binaryBirdStages_eq_spec (clock dim width A : List Bool) (h : ℕ)
         (binaryBirdMatrix dim width A) := by
   induction clock with
   | nil =>
-    have hl : (smash (smash dim dim) width).length = A.length := by
-      rw [smash_length, smash_length, hlen]
-    have hp : padTo (smash (smash dim dim) width) A = A := by
-      rw [padTo_eq_append _ _ hl.ge, hl, Nat.sub_self]
-      simp
-    change binaryBirdMatrix dim width (padTo (smash (smash dim dim) width) A) = binaryBirdMatrix dim width A
-    rw [hp]
+    change binaryBirdMatrix dim width
+      ((A ++ List.replicate (dim.length * dim.length * width.length) false).take
+        (dim.length * dim.length * width.length)) = binaryBirdMatrix dim width A
+    rw [← hlen, List.take_left]
   | cons b r ih =>
     have hrt : r.length ≤ dim.length := by simp only [List.length_cons] at ht; omega
     have hi := ih hrt
@@ -159,11 +156,8 @@ theorem binaryBirdStages_eq_spec (clock dim width A : List Bool) (h : ℕ)
     rw [hs, hi, List.length_cons, Function.iterate_succ_apply']
 end GameTheory.Complexity.Backend
 
-
-
-
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 open scoped BigOperators
 
 theorem binaryBirdDeterminant_value (dim width A : List Bool) (h : ℕ)
@@ -180,7 +174,7 @@ theorem binaryBirdDeterminant_value (dim width A : List Bool) (h : ℕ)
       exact Nat.one_lt_two_pow (by omega)
     change binarySignedValue (binarySignedFixed width [false, true]) = _
     rw [binarySignedFixed_value _ _ hr (by exact hc)]
-    simp [binarySignedValue, Nat.fromBitsLE, Nat.fromBits]
+    simp [binarySignedValue, Turing.MultiTapeTM.ofBits]
   | cons b r =>
     let M := binaryBirdMatrix (b :: r) width A
     let z : Fin (b :: r).length := ⟨0, by simp⟩
@@ -208,9 +202,8 @@ theorem binaryBirdDeterminant_value (dim width A : List Bool) (h : ℕ)
       rw [binaryBirdSign_value, hf, Int.natAbs_mul, Int.natAbs_pow]
       simpa using hz
     unfold binaryBirdDeterminant
-    change binarySignedValue (caseBit₀ (nonemptyFlag (b :: r)) (binarySignedFixedMul width (binaryBirdSign r) (binaryBirdField ![[], [], b :: r, width, binaryBirdStages r (b :: r) width A])) (binarySignedFixed width [false, true])) = _
-    rw [nonemptyFlag_cons]
-    simp only [caseBit₀, Bool.cond_true]
+    change binarySignedValue (binarySignedFixedMul width (binaryBirdSign r)
+      (binaryBirdField ![[], [], b :: r, width, binaryBirdStages r (b :: r) width A])) = _
     rw [binarySignedFixedMul_value _ _ _ hr hm, binaryBirdSign_value, hf]
     exact (GameTheory.Math.TabulatedBirdDeterminant.det_eq_last_stage M (by simp)).symm
 end GameTheory.Complexity.Backend
