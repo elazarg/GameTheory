@@ -1,26 +1,21 @@
 module
 
-public import GameTheoryComplexity.Backend.PairedVerifier
-public import GameTheoryComplexity.Backend.BinaryCertificateFold
 public import GameTheoryComplexity.Backend.NashCertificateEncoding
 public import GameTheoryComplexity.Backend.NashWitnessCompleteness
 public import GameTheoryComplexity.Backend.BimatrixCertificateVerifier
 public import GameTheoryComplexity.Backend.BimatrixCertificateVerifierCorrectness
-public import Complexitylib.Classes.Containments.Internal.FPBridge
-public import Complexitylib.Classes.NP.WitnessConstruction
-public import Complexitylib.Classes.P.NormalForm
-
-import Complexitylib.Classes.P.DecisionFn
+public import Complexity.Computability.Complexity.Classes.TFNP
 
 @[expose] public section
 
-/-! Canonical paired inputs for the polynomial-time equilibrium certificate
-verifier. Re-encoding rejects malformed pairs before consulting the verifier. -/
+/-! Native polynomial verification of bounded rational Nash certificates against
+canonical decoded table games. Typed machine arguments include the full input
+and witness; the Boolean verdict is the actual fixed-format binary verifier. -/
 
 namespace GameTheory.Complexity.Backend
 open GameTheory.Math (constrainedNashCertificateWidth)
 
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM Cslib.Complexity
 open GameTheory.Finite GameTheory.Finite.BimatrixTable
 
 /-- Exact-length binary witnesses checked against the actual total table decoder. -/
@@ -32,7 +27,9 @@ def nashCertificateRelation (input certificate : List Bool) : Prop :=
       (fun i j => decodedPayoff input i j)
 
 /-- Every accepted certificate is bounded by a cubic polynomial of input length. -/
-theorem nashCertificateRelation_polyBalanced : PolyBalanced nashCertificateRelation := by
+theorem nashCertificateRelation_polyBalanced :
+    ∃ p : Polynomial ℕ, ∀ input certificate, nashCertificateRelation input certificate →
+      certificate.length ≤ p.eval input.length := by
   refine ⟨(2 * Polynomial.X + 4) * (14 * Polynomial.X ^ 2 + 36 * Polynomial.X + 23),
     fun input certificate h => ?_⟩
   rw [h.1]
@@ -56,24 +53,26 @@ theorem unitPayoffLanguage_iff_exists_nashCertificate (input : List Bool) :
   · rintro ⟨certificate, _, hc⟩
     exact NumeratorCertificate.hasNash_of_valid _ _ hc
 
-/-- A deterministic paired-input verifier rejects malformed pair encodings and
-then checks the exact binary equilibrium certificate. -/
-def nashPairedVerdict : List Bool → List Bool :=
-  canonicalPairedVerifier binaryCertificateVerifier
+/-- Boolean verification of the complete input and exact binary certificate. -/
+def nashCertificateVerdict (input certificate : List Bool) : Bool :=
+  (binaryCertificateVerifier ![input, certificate]).headD false
 
-/-- The complete paired verifier, including pair validation, is polynomial time. -/
-theorem nashPairedVerdict_mem_FP : nashPairedVerdict ∈ FP :=
-  canonicalPairedVerifier_mem_FP _ binaryCertificateVerifier_mem_FPn
-
-/-- One deterministic machine verifies every paired input with polynomial work. -/
-theorem exists_nashPairedVerdict_machine :
-    ∃ (k : ℕ) (machine : TM k) (bound : Polynomial ℕ),
-      machine.ComputesInTime nashPairedVerdict bound.eval :=
-  mem_FP_iff_computesInTime_polynomial.mp nashPairedVerdict_mem_FP
-
-theorem nashPairedVerdict_flag (z : List Bool) :
-    nashPairedVerdict z = [true] ∨ nashPairedVerdict z = [false] :=
-  andBit_flag _ _
+/-- Native argument framing and every bit of the verifier's computation are charged. -/
+@[fun_prop] theorem nashCertificateVerdict_polyTime
+    {α : Type} {enc : α ↪ List Bool} {input certificate : α → List Bool}
+    (hi : ComputableInPolyTime input enc encBits)
+    (hc : ComputableInPolyTime certificate enc encBits) :
+    ComputableInPolyTime (fun a => nashCertificateVerdict (input a) (certificate a))
+      enc encBool := by
+  have hargs : ComputableInPolyTime (fun a => ![input a, certificate a]) enc (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hi
+    · exact hc
+  have hhead : ComputableInPolyTime (fun word : List Bool => word.headD false)
+      encBits encBool := .headD false
+  exact hhead.comp (binaryCertificateVerifier_polyTime.comp hargs)
 
 /-- The actual verifier agrees with the canonical finite witness relation. -/
 theorem binaryCertificateVerifier_accept_iff_relation (input certificate : List Bool) :
@@ -82,34 +81,25 @@ theorem binaryCertificateVerifier_accept_iff_relation (input certificate : List 
   simpa only [nashCertificateRelation, certificateWidthWord_length, Nat.add_comm] using
     binaryCertificateVerifier_eq_true_iff input certificate
 
-/-- Pair validation and certificate verification decide the exact paired language. -/
-theorem nashPairedVerdict_eq_true_iff_mem_pairLang (z : List Bool) :
-    nashPairedVerdict z = [true] ↔ z ∈ pairLang nashCertificateRelation := by
-  rw [nashPairedVerdict,
-    canonicalPairedVerifier_eq_true_iff _ binaryCertificateVerifier_flag]
-  constructor
-  · rintro ⟨hz, hcert⟩
-    exact ⟨pairFst z, pairSnd z, hz,
-      (binaryCertificateVerifier_accept_iff_relation _ _).mp hcert⟩
-  · rintro ⟨input, certificate, rfl, hcert⟩
-    simp only [pairFst_pair, pairSnd_pair]
-    exact ⟨trivial, (binaryCertificateVerifier_accept_iff_relation _ _).mpr hcert⟩
+/-- The native Boolean verdict decides exactly the canonical finite witness relation. -/
+theorem nashCertificateVerdict_accept (input certificate : List Bool) :
+    nashCertificateVerdict input certificate = true ↔ nashCertificateRelation input certificate := by
+  rw [← binaryCertificateVerifier_accept_iff_relation]
+  rcases binaryCertificateVerifier_flag ![input, certificate] with h | h <;>
+    simp [nashCertificateVerdict, h]
 
-/-- The paired certificate language has an actual polynomial-time decider. -/
-theorem nashCertificateRelation_pairLang_mem_P : pairLang nashCertificateRelation ∈ P := by
-  apply mem_P_of_decisionFn nashPairedVerdict_mem_FP
-  intro z
-  rw [← nashPairedVerdict_eq_true_iff_mem_pairLang]
-  rcases nashPairedVerdict_flag z with h | h <;> simp [h]
+/-- Canonical equilibrium certificates have native bounded search and verification evidence. -/
+theorem nashCertificateRelation_mem_FNP : nashCertificateRelation ∈ FNP encBits := by
+  refine ⟨nashCertificateRelation_polyBalanced, fun p => nashCertificateVerdict p.1 p.2,
+    nashCertificateVerdict_polyTime (ComputableInPolyTime.fst encBits encBits)
+      (ComputableInPolyTime.snd encBits encBits), fun input certificate => ?_⟩
+  exact (nashCertificateVerdict_accept input certificate).symm
 
-/-- Equilibrium certificates are polynomially balanced and polynomially verifiable. -/
-theorem nashCertificateRelation_mem_FNP : nashCertificateRelation ∈ FNP :=
-  ⟨nashCertificateRelation_polyBalanced, nashCertificateRelation_pairLang_mem_P⟩
-
-/-- Canonical payoff-one mixed Nash existence for explicit symmetric integer
-tables belongs to NP through a certified binary guess-and-verify machine. -/
-theorem unitPayoffLanguage_mem_NP : unitPayoffLanguage ∈ NP :=
-  NP.mem_NP_of_FNP nashCertificateRelation_mem_FNP
-    unitPayoffLanguage_iff_exists_nashCertificate
+/-- Payoff-one mixed Nash existence in canonical explicit table games belongs to native NP. -/
+theorem unitPayoffLanguage_mem_NP : unitPayoffLanguage ∈ NP encBits := by
+  apply mem_NP_iff_exists_FNP.mpr
+  refine ⟨nashCertificateRelation, nashCertificateRelation_mem_FNP, ?_⟩
+  ext input
+  exact (unitPayoffLanguage_iff_exists_nashCertificate input).symm
 
 end GameTheory.Complexity.Backend

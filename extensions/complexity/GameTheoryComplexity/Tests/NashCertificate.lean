@@ -4,7 +4,7 @@ public import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
 public import GameTheoryComplexity.Backend.BimatrixCertificateVerifier
 public import GameTheoryComplexity.Backend.BimatrixCertificateVerifierCorrectness
 public import GameTheoryComplexity.Backend.NashCertificateEncoding
-public import GameTheoryComplexity.Backend.NashNP
+public import GameTheoryComplexity.Backend.NashNPComplete
 public import GameTheory.Finite.BimatrixNashCertificateCorrectness
 
 @[expose] public section
@@ -14,6 +14,7 @@ controls for the payoff-constrained mixed-equilibrium certificate. -/
 
 namespace GameTheory.Complexity.Tests.NashCertificate
 
+open Turing.MultiTapeTM
 open GameTheory.Complexity.Backend
 open GameTheory.Finite GameTheory.Finite.BimatrixTable
 
@@ -33,7 +34,7 @@ example : binaryCertificateVerifier ![[], List.replicate 93 false] = [false] := 
 
 example : binaryCertificateVerifier ![[], List.replicate 92 false] = [false] := by decide
 
-example : nashPairedVerdict [] = [false] := by decide
+example : nashCertificateVerdict [] [] = false := by decide
 
 def oneCertificate : NumeratorCertificate 1 :=
   ⟨fun _ => 1, fun _ => 1, 1, 1, 1, 1⟩
@@ -158,5 +159,17 @@ theorem zero_dimension_rejects (A : Fin 0 → Fin 0 → ℤ) (c : NumeratorCerti
   rcases (verifyNashNumerators_eq_true_iff A c).mp h with ⟨hpos, _, hsum, _⟩
   simp at hsum
   omega
+
+example : nashCertificateVerdict positiveTable positiveWord = true := by
+  simp only [nashCertificateVerdict, positive_machine_accepts, List.headD_cons]
+
+example : nashCertificateRelation ∈ Cslib.Complexity.FNP encBits :=
+  nashCertificateRelation_mem_FNP
+
+example : unitPayoffLanguage ∈ Cslib.Complexity.NP encBits :=
+  unitPayoffLanguage_mem_NP
+
+example : Cslib.Complexity.NPComplete encBits unitPayoffLanguage :=
+  unitPayoffLanguage_NPComplete
 
 end GameTheory.Complexity.Tests.NashCertificate
