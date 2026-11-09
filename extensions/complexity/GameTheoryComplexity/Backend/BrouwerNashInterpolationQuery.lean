@@ -8,215 +8,470 @@ public import GameTheoryComplexity.Backend.BrouwerNashQueryRegions
 
 @[expose] public section
 
-/-! Fixed interpolation and weighted-minimum families query the actual paired-action
-coefficients using unary references and signed indicator addition. Forty-one-sample scans
-retain both input contributions, including aliased references and truncated circuit headers. -/
-
+/-! Interpolation and weighted-minimum queries retain both signed input contributions.
+Fixed sample scans use false ordinal rulers, and query families retain their original
+right-fold addition order, including aliases and truncated circuit headers. -/
 namespace GameTheory.Complexity.Backend.BrouwerNashInterpolationQuery
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM
 open BrouwerNashCoefficientQuery
 open scoped BigOperators
 
-private def header (f : (Fin 3 → List Bool) → List Bool)
-    (v : Fin 6 → List Bool) : List Bool := f ![v 3, v 4, v 5]
-private theorem header_cobham {f : (Fin 3 → List Bool) → List Bool} (hf : Cobham f) :
-    Cobham (header f) := (Cobham.comp₃ hf (.proj 3) (.proj 4) (.proj 5)).of_eq fun _ => rfl
+local notation "QueryContext" =>
+  ((List Bool × (List Bool × List Bool)) × (List Bool × (List Bool × List Bool)))
+local notation "queryEncoding" =>
+  encPair (encPair encBits (encPair encBits encBits))
+    (encPair encBits (encPair encBits encBits))
+local notation "SumContext" =>
+  ((List Bool × (List Bool × List Bool)) × (List Bool × List Bool))
+local notation "sumEncoding" =>
+  encPair (encPair encBits (encPair encBits encBits)) (encPair encBits encBits)
 
-private def depthR : (Fin 6 → List Bool) → List Bool :=
-  header BrouwerNashHeaders.sourceDepthRuler
-private theorem depthR_cobham : Cobham depthR :=
-  header_cobham BrouwerNashHeaders.sourceDepthRuler_cobham
-private def dimR : (Fin 6 → List Bool) → List Bool := header BrouwerNashHeaders.dimensionRuler
-private theorem dimR_cobham : Cobham dimR := header_cobham BrouwerNashHeaders.dimensionRuler_cobham
-private def cornerR : (Fin 6 → List Bool) → List Bool := header BrouwerNashHeaders.cornerRuler
-private theorem cornerR_cobham : Cobham cornerR :=
-  header_cobham BrouwerNashHeaders.cornerRuler_cobham
-private def arityR : (Fin 6 → List Bool) → List Bool := header BrouwerNashHeaders.arityRuler
-private theorem arityR_cobham : Cobham arityR := header_cobham BrouwerNashHeaders.arityRuler_cobham
-private def startR (v : Fin 6 → List Bool) : List Bool :=
-  header BrouwerNashHeaders.globalRuler v ++ smash (v 0) (header BrouwerNashHeaders.sampleRuler v)
-private theorem startR_cobham : Cobham startR :=
-  appendFn (header_cobham BrouwerNashHeaders.globalRuler_cobham)
-    (Cobham.comp₂ Cobham.smash (.proj 0) (header_cobham BrouwerNashHeaders.sampleRuler_cobham))
-private def weightR (v : Fin 6 → List Bool) : List Bool :=
-  [false, false] ++ smash (depthR v) (List.replicate 12 true)
-private theorem weightR_cobham : Cobham weightR :=
-  appendFn (Cobham.const [false, false])
-    (Cobham.comp₂ Cobham.smash depthR_cobham (Cobham.const (List.replicate 12 true)))
-private def remainderR (axis : Fin 2) (v : Fin 6 → List Bool) : List Bool :=
-  caseBit₀ (lenEqFlag (depthR v) []) (List.replicate axis.val false)
-    ([false] ++ smash (depthR v) (List.replicate (2 + 2 * axis.val) true))
-private theorem remainderR_cobham (axis : Fin 2) : Cobham (remainderR axis) :=
-  Cobham.iteFn (lenEqFlag_mem depthR_cobham Cobham.empty)
-    (Cobham.const (List.replicate axis.val false))
-    (appendFn (Cobham.const [false]) (Cobham.comp₂ Cobham.smash depthR_cobham
-      (Cobham.const (List.replicate (2 + 2 * axis.val) true))))
-private def weightOffset (n : ℕ) (v : Fin 6 → List Bool) : List Bool :=
+private def depthR (v : QueryContext) : List Bool := BrouwerNashHeaders.sourceDepthRuler v.1.1
+private def dimR (v : QueryContext) : List Bool :=
+  BrouwerNashHeaders.dimensionRuler v.1.1 v.1.2.1 v.1.2.2
+private def cornerR (v : QueryContext) : List Bool :=
+  BrouwerNashHeaders.cornerRuler v.1.1 v.1.2.1 v.1.2.2
+private def arityR (v : QueryContext) : List Bool := BrouwerNashHeaders.arityRuler v.1.1
+private def startR (v : QueryContext) : List Bool :=
+  BrouwerNashHeaders.globalRuler v.1.1 ++ List.replicate
+    (v.2.1.length * (BrouwerNashHeaders.sampleRuler v.1.1 v.1.2.1 v.1.2.2).length) true
+private def weightR (v : QueryContext) : List Bool :=
+  [false, false] ++ List.replicate ((depthR v).length * 12) true
+private def remainderR (axis : Fin 2) (v : QueryContext) : List Bool :=
+  if (depthR v).length = 0 then List.replicate axis.val false
+  else [false] ++ List.replicate ((depthR v).length * (2 + 2 * axis.val)) true
+private def weightOffset (n : ℕ) (v : QueryContext) : List Bool :=
   weightR v ++ List.replicate n false
-private theorem weightOffset_cobham (n : ℕ) : Cobham (weightOffset n) :=
-  appendFn weightR_cobham (Cobham.const (List.replicate n false))
-
-private def firstR (stage : Fin 8) : (Fin 6 → List Bool) → List Bool :=
+private def firstR (stage : Fin 8) : QueryContext → List Bool :=
   match stage.val with
   | 1 | 7 => remainderR 1
   | 2 | 3 => weightOffset 0
   | _ => remainderR 0
-private def secondR (stage : Fin 8) : (Fin 6 → List Bool) → List Bool :=
+private def secondR (stage : Fin 8) : QueryContext → List Bool :=
   match stage.val with
   | 2 => weightOffset 1
   | 3 => weightOffset 2
   | 5 => weightOffset 4
   | 7 => remainderR 0
   | _ => remainderR 1
-private theorem firstR_cobham (stage : Fin 8) : Cobham (firstR stage) := by
-  fin_cases stage <;> first | exact remainderR_cobham _ | exact weightOffset_cobham _
-private theorem secondR_cobham (stage : Fin 8) : Cobham (secondR stage) := by
-  fin_cases stage <;> first | exact remainderR_cobham _ | exact weightOffset_cobham _
-
-private def capacity (negative : Bool) (v : Fin 6 → List Bool) : List Bool :=
+private def capacity (negative : Bool) (v : QueryContext) : List Bool :=
   negative :: false :: binaryLengthWord (dimR v)
-private theorem capacity_cobham (negative : Bool) : Cobham (capacity negative) :=
-  (Cobham.comp (.bit negative) fun _ : Fin 1 => Cobham.comp (.bit false) fun _ : Fin 1 =>
-    Cobham.comp binaryLengthWord_cobham fun _ : Fin 1 => dimR_cobham).of_eq fun _ => rfl
-private def point (input : (Fin 6 → List Bool) → List Bool) (negative : Bool)
-    (v : Fin 6 → List Bool) : List Bool :=
-  binarySignedIndicator ![v 2, startR v ++ input v, capacity negative v]
-private theorem point_cobham {input : (Fin 6 → List Bool) → List Bool}
-    (hi : Cobham input) (negative : Bool) : Cobham (point input negative) :=
-  (Cobham.comp₃ binarySignedIndicator_cobham (.proj 2)
-    (appendFn startR_cobham hi) (capacity_cobham negative)).of_eq fun _ => rfl
-
-private def interpolationTerm (stage : Fin 8) (v : Fin 6 → List Bool) : List Bool :=
+private def point (input : QueryContext → List Bool) (negative : Bool)
+    (v : QueryContext) : List Bool :=
+  binarySignedIndicator ![v.2.2.2, startR v ++ input v, capacity negative v]
+private def interpolationTerm (stage : Fin 8) (v : QueryContext) : List Bool :=
   let coefficient := if stage.val < 2 then
     binarySignedAdd [false, false, true] (point (firstR stage) true v)
     else binarySignedAdd (point (firstR stage) false v) (point (secondR stage) true v)
-  caseBit₀ (lenEqFlag (v 1) (startR v ++ weightOffset stage.val v)) coefficient []
-private theorem interpolationTerm_cobham (stage : Fin 8) : Cobham (interpolationTerm stage) := by
-  have hv : Cobham fun v : Fin 6 → List Bool => if stage.val < 2 then
-      binarySignedAdd [false, false, true] (point (firstR stage) true v)
-      else binarySignedAdd (point (firstR stage) false v) (point (secondR stage) true v) := by
-    split_ifs
-    · exact Cobham.comp₂ binarySignedAdd_cobham (Cobham.const [false, false, true])
-        (point_cobham (firstR_cobham stage) true)
-    · exact Cobham.comp₂ binarySignedAdd_cobham
-        (point_cobham (firstR_cobham stage) false) (point_cobham (secondR_cobham stage) true)
-  exact (Cobham.iteFn (lenEqFlag_mem (.proj 1)
-    (appendFn startR_cobham (weightOffset_cobham stage.val))) hv Cobham.empty).of_eq fun _ => rfl
+  if v.2.2.1.length = (startR v ++ weightOffset stage.val v).length then coefficient else []
+
+/-- One sample's fixed interpolation stage, with both input references retained. -/
+def indexedInterpolationWord (stage : Fin 8) (ordinal : List Bool) (context : SumContext) : List Bool :=
+  let source := context.1.1
+  let code₀ := context.1.2.1
+  let code₁ := context.1.2.2
+  let depth := BrouwerNashHeaders.sourceDepthRuler source
+  let dim := BrouwerNashHeaders.dimensionRuler source code₀ code₁
+  let start := BrouwerNashHeaders.globalRuler source ++ List.replicate
+    (ordinal.length * (BrouwerNashHeaders.sampleRuler source code₀ code₁).length) true
+  let weight := [false, false] ++ List.replicate (depth.length * 12) true
+  let remainder (axis : Fin 2) := if depth.length = 0 then List.replicate axis.val false
+    else [false] ++ List.replicate (depth.length * (2 + 2 * axis.val)) true
+  let first := match stage.val with
+    | 1 | 7 => remainder 1
+    | 2 | 3 => weight ++ List.replicate 0 false
+    | _ => remainder 0
+  let second := match stage.val with
+    | 2 => weight ++ List.replicate 1 false
+    | 3 => weight ++ List.replicate 2 false
+    | 5 => weight ++ List.replicate 4 false
+    | 7 => remainder 0
+    | _ => remainder 1
+  let point (ruler : List Bool) (negative : Bool) := binarySignedIndicator
+    ![context.2.2, start ++ ruler, negative :: false :: binaryLengthWord dim]
+  let coefficient := if stage.val < 2 then binarySignedAdd [false, false, true] (point first true)
+    else binarySignedAdd (point first false) (point second true)
+  if context.2.1.length = (start ++ (weight ++ List.replicate stage.val false)).length then coefficient else []
+
+private theorem indexedInterpolationWord_eq (stage : Fin 8) (ordinal : List Bool) (context : SumContext) :
+    indexedInterpolationWord stage ordinal context =
+      interpolationTerm stage (context.1, (ordinal, context.2)) := by
+  fin_cases stage <;> rfl
 
 /-- A fixed interpolation stage scans all forty-one sample placements. -/
-def interpolationWord (stage : Fin 8) : (Fin 5 → List Bool) → List Bool :=
-  binarySignedFiniteSum (interpolationTerm stage) 41
-theorem interpolationWord_cobham (stage : Fin 8) : Cobham (interpolationWord stage) :=
-  binarySignedFiniteSum_cobham (interpolationTerm_cobham stage) 41
-theorem interpolationWord_mem_FPn (stage : Fin 8) : FPn (interpolationWord stage) :=
-  cobham_iff_FPn.mp (interpolationWord_cobham stage)
+def interpolationWord (stage : Fin 8) (source code₀ code₁ out action : List Bool) : List Bool :=
+  binarySignedFiniteSum (indexedInterpolationWord stage) 41 ((source, (code₀, code₁)), (out, action))
 
-private def minimumR (v : Fin 6 → List Bool) : List Bool :=
-  weightOffset 8 v ++ smash (cornerR v) (List.replicate 4 true)
-private theorem minimumR_cobham : Cobham minimumR :=
-  appendFn (weightOffset_cobham 8)
-    (Cobham.comp₂ Cobham.smash cornerR_cobham (Cobham.const (List.replicate 4 true)))
-private def minimumOffset (corner : Fin 4) (flag : Fin 2) (n : ℕ)
-    (v : Fin 6 → List Bool) : List Bool :=
+private def minimumR (v : QueryContext) : List Bool :=
+  weightOffset 8 v ++ List.replicate ((cornerR v).length * 4) true
+private def minimumOffset (corner : Fin 4) (flag : Fin 2) (n : ℕ) (v : QueryContext) : List Bool :=
   minimumR v ++ List.replicate (4 * corner.val + 2 * flag.val + n) false
-private theorem minimumOffset_cobham (corner : Fin 4) (flag : Fin 2) (n : ℕ) :
-    Cobham (minimumOffset corner flag n) :=
-  appendFn minimumR_cobham (Cobham.const _)
-private def colorR (corner : Fin 4) (flag : Fin 2) (v : Fin 6 → List Bool) : List Bool :=
-  weightOffset 8 v ++ smash (cornerR v) (List.replicate corner.val true) ++
-    (if flag.val = 0 then arityR v else
-      arityR v ++ arityR v ++ circuitUnaryPrefix (v 4))
-private theorem colorR_cobham (corner : Fin 4) (flag : Fin 2) : Cobham (colorR corner flag) := by
-  have hb : Cobham fun v : Fin 6 → List Bool => if flag.val = 0 then arityR v else
-      arityR v ++ arityR v ++ circuitUnaryPrefix (v 4) := by
-    split_ifs
-    · exact arityR_cobham
-    · exact appendFn (appendFn arityR_cobham arityR_cobham)
-        (Cobham.comp (FP_subset_CobhamFP circuitUnaryPrefix_mem_FP) fun _ : Fin 1 => .proj 4)
-  exact appendFn (appendFn (weightOffset_cobham 8)
-    (Cobham.comp₂ Cobham.smash cornerR_cobham (Cobham.const _))) hb
-private def lastColorR (corner : Fin 4) (flag : Fin 2) (v : Fin 6 → List Bool) : List Bool :=
-  colorR corner flag v ++ (circuitUnaryPrefix (if flag.val = 0 then v 4 else v 5)).tail
-private theorem lastColorR_cobham (corner : Fin 4) (flag : Fin 2) :
-    Cobham (lastColorR corner flag) := by
-  have hi : Cobham fun v : Fin 6 → List Bool => if flag.val = 0 then v 4 else v 5 := by
-    split_ifs <;> exact Cobham.proj _
-  exact appendFn (colorR_cobham corner flag)
-    (Cobham.tailFn (Cobham.comp (FP_subset_CobhamFP circuitUnaryPrefix_mem_FP)
-      fun _ : Fin 1 => hi))
-private def minimumSecondR (corner : Fin 4) (flag : Fin 2) (temporary : Bool) :
-    (Fin 6 → List Bool) → List Bool :=
+private def colorR (corner : Fin 4) (flag : Fin 2) (v : QueryContext) : List Bool :=
+  weightOffset 8 v ++ List.replicate ((cornerR v).length * corner.val) true ++
+    (if flag.val = 0 then arityR v else arityR v ++ arityR v ++ circuitUnaryPrefix v.1.2.1)
+private def lastColorR (corner : Fin 4) (flag : Fin 2) (v : QueryContext) : List Bool :=
+  colorR corner flag v ++ (circuitUnaryPrefix (if flag.val = 0 then v.1.2.1 else v.1.2.2)).tail
+private def minimumSecondR (corner : Fin 4) (flag : Fin 2) (temporary : Bool) : QueryContext → List Bool :=
   if temporary then lastColorR corner flag else minimumOffset corner flag 0
-private theorem minimumSecondR_cobham (corner : Fin 4) (flag : Fin 2) (temporary : Bool) :
-    Cobham (minimumSecondR corner flag temporary) := by
-  cases temporary
-  · exact minimumOffset_cobham corner flag 0
-  · exact lastColorR_cobham corner flag
-private def minimumTerm (corner : Fin 4) (flag : Fin 2) (temporary : Bool)
-    (v : Fin 6 → List Bool) : List Bool :=
-  caseBit₀ (lenEqFlag (v 1)
-    (startR v ++ minimumOffset corner flag (if temporary then 0 else 1) v))
-    (binarySignedAdd (point (weightOffset ((![3, 5, 6, 7] : Fin 4 → ℕ) corner)) false v)
-      (point (minimumSecondR corner flag temporary) true v)) []
-private theorem minimumTerm_cobham (corner : Fin 4) (flag : Fin 2) (temporary : Bool) :
-    Cobham (minimumTerm corner flag temporary) :=
-  (Cobham.iteFn (lenEqFlag_mem (.proj 1)
-    (appendFn startR_cobham (minimumOffset_cobham corner flag _)))
-    (Cobham.comp₂ binarySignedAdd_cobham (point_cobham (weightOffset_cobham _) false)
-      (point_cobham (minimumSecondR_cobham corner flag temporary) true)) Cobham.empty).of_eq
-    fun _ => rfl
+private def minimumTerm (corner : Fin 4) (flag : Fin 2) (temporary : Bool) (v : QueryContext) : List Bool :=
+  if v.2.2.1.length = (startR v ++ minimumOffset corner flag (if temporary then 0 else 1) v).length then
+    binarySignedAdd (point (weightOffset ((![3, 5, 6, 7] : Fin 4 → ℕ) corner)) false v)
+      (point (minimumSecondR corner flag temporary) true v) else []
+
+/-- One sample's weighted-minimum subtraction, including a possibly aliased input. -/
+def indexedMinimumWord (corner : Fin 4) (flag : Fin 2) (temporary : Bool)
+    (ordinal : List Bool) (context : SumContext) : List Bool :=
+  let source := context.1.1
+  let code₀ := context.1.2.1
+  let code₁ := context.1.2.2
+  let depth := BrouwerNashHeaders.sourceDepthRuler source
+  let dim := BrouwerNashHeaders.dimensionRuler source code₀ code₁
+  let start := BrouwerNashHeaders.globalRuler source ++ List.replicate
+    (ordinal.length * (BrouwerNashHeaders.sampleRuler source code₀ code₁).length) true
+  let weight := [false, false] ++ List.replicate (depth.length * 12) true
+  let weightOffset (n : ℕ) := weight ++ List.replicate n false
+  let minimum := weightOffset 8 ++ List.replicate
+    ((BrouwerNashHeaders.cornerRuler source code₀ code₁).length * 4) true
+  let minimumOffset (n : ℕ) := minimum ++ List.replicate (4 * corner.val + 2 * flag.val + n) false
+  let color := weightOffset 8 ++ List.replicate
+    ((BrouwerNashHeaders.cornerRuler source code₀ code₁).length * corner.val) true ++
+    (if flag.val = 0 then BrouwerNashHeaders.arityRuler source else
+      BrouwerNashHeaders.arityRuler source ++ BrouwerNashHeaders.arityRuler source ++ circuitUnaryPrefix code₀)
+  let lastColor := color ++ (circuitUnaryPrefix (if flag.val = 0 then code₀ else code₁)).tail
+  let second := if temporary then lastColor else minimumOffset 0
+  let point (ruler : List Bool) (negative : Bool) := binarySignedIndicator
+    ![context.2.2, start ++ ruler, negative :: false :: binaryLengthWord dim]
+  let coefficient := binarySignedAdd (point (weightOffset ((![3, 5, 6, 7] : Fin 4 → ℕ) corner)) false)
+    (point second true)
+  if context.2.1.length = (start ++ minimumOffset (if temporary then 0 else 1)).length then coefficient else []
+
+private theorem indexedMinimumWord_eq (corner : Fin 4) (flag : Fin 2) (temporary : Bool)
+    (ordinal : List Bool) (context : SumContext) :
+    indexedMinimumWord corner flag temporary ordinal context =
+      minimumTerm corner flag temporary (context.1, (ordinal, context.2)) := by
+  cases temporary <;> rfl
 
 /-- A weighted-minimum stage scans its concrete placements in all forty-one samples. -/
-def minimumWord (corner : Fin 4) (flag : Fin 2) (temporary : Bool) :
-    (Fin 5 → List Bool) → List Bool := binarySignedFiniteSum (minimumTerm corner flag temporary) 41
-theorem minimumWord_cobham (corner : Fin 4) (flag : Fin 2) (temporary : Bool) :
-    Cobham (minimumWord corner flag temporary) :=
-  binarySignedFiniteSum_cobham (minimumTerm_cobham corner flag temporary) 41
-theorem minimumWord_mem_FPn (corner : Fin 4) (flag : Fin 2) (temporary : Bool) :
-    FPn (minimumWord corner flag temporary) :=
-  cobham_iff_FPn.mp (minimumWord_cobham corner flag temporary)
-private theorem capacity_value (negative : Bool) (v : Fin 6 → List Bool) :
+def minimumWord (corner : Fin 4) (flag : Fin 2) (temporary : Bool)
+    (source code₀ code₁ out action : List Bool) : List Bool :=
+  binarySignedFiniteSum (indexedMinimumWord corner flag temporary) 41
+    ((source, (code₀, code₁)), (out, action))
+
+private theorem depthR_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {context : Input → QueryContext} (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => depthR (context a)) input encBits :=
+  BrouwerNashHeaders.sourceDepthRuler_polyTime hc.fst'.fst'
+
+private theorem dimR_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {context : Input → QueryContext} (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => dimR (context a)) input encBits :=
+  BrouwerNashHeaders.dimensionRuler_polyTime hc.fst'.fst' hc.fst'.snd'.fst' hc.fst'.snd'.snd'
+
+private theorem cornerR_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {context : Input → QueryContext} (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => cornerR (context a)) input encBits :=
+  BrouwerNashHeaders.cornerRuler_polyTime hc.fst'.fst' hc.fst'.snd'.fst' hc.fst'.snd'.snd'
+
+private theorem arityR_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {context : Input → QueryContext} (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => arityR (context a)) input encBits :=
+  BrouwerNashHeaders.arityRuler_polyTime hc.fst'.fst'
+
+private theorem startR_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {context : Input → QueryContext} (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => startR (context a)) input encBits := by
+  exact ComputableInPolyTime.bitsAppend (BrouwerNashHeaders.globalRuler_polyTime hc.fst'.fst')
+    ((ComputableInPolyTime.bitsReplicate true).comp
+      (ComputableInPolyTime.unary_mul' (ComputableInPolyTime.length_bits_comp hc.snd'.fst')
+        (ComputableInPolyTime.length_bits_comp (BrouwerNashHeaders.sampleRuler_polyTime
+          hc.fst'.fst' hc.fst'.snd'.fst' hc.fst'.snd'.snd'))))
+
+private theorem weightR_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {context : Input → QueryContext} (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => weightR (context a)) input encBits := by
+  exact ComputableInPolyTime.bitsAppend (ComputableInPolyTime.const [false, false])
+    ((ComputableInPolyTime.bitsReplicate true).comp
+      (ComputableInPolyTime.unary_mul' (ComputableInPolyTime.length_bits_comp (depthR_polyTime hc))
+        (ComputableInPolyTime.const 12)))
+
+private theorem remainderR_polyTime (axis : Fin 2) {Input : Type} {input : Input ↪ List Bool}
+    {context : Input → QueryContext} (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => remainderR axis (context a)) input encBits := by
+  have hlength := ComputableInPolyTime.length_bits_comp (depthR_polyTime hc)
+  have heq := hlength.decide_eq' (ComputableInPolyTime.const 0)
+  have hno := ComputableInPolyTime.bitsAppend (ComputableInPolyTime.const [false])
+    ((ComputableInPolyTime.bitsReplicate true).comp
+      (ComputableInPolyTime.unary_mul' hlength (ComputableInPolyTime.const (2 + 2 * axis.val))))
+  exact (heq.ite (ComputableInPolyTime.const (List.replicate axis.val false)) hno).of_enc_eq
+    (fun a => by simp only [remainderR, Function.comp_apply, decide_eq_true_eq])
+
+private theorem weightOffset_polyTime (n : ℕ) {Input : Type} {input : Input ↪ List Bool}
+    {context : Input → QueryContext} (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => weightOffset n (context a)) input encBits :=
+  ComputableInPolyTime.bitsAppend (weightR_polyTime hc) (ComputableInPolyTime.const (List.replicate n false))
+
+private theorem firstR_polyTime (stage : Fin 8) {Input : Type} {input : Input ↪ List Bool}
+    {context : Input → QueryContext} (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => firstR stage (context a)) input encBits := by
+  fin_cases stage <;> first | exact remainderR_polyTime _ hc | exact weightOffset_polyTime _ hc
+
+private theorem secondR_polyTime (stage : Fin 8) {Input : Type} {input : Input ↪ List Bool}
+    {context : Input → QueryContext} (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => secondR stage (context a)) input encBits := by
+  fin_cases stage <;> first | exact remainderR_polyTime _ hc | exact weightOffset_polyTime _ hc
+
+private theorem capacity_polyTime (negative : Bool) {Input : Type} {input : Input ↪ List Bool}
+    {context : Input → QueryContext} (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => capacity negative (context a)) input encBits := by
+  have h := ComputableInPolyTime.bitsCons (ComputableInPolyTime.const negative)
+    (ComputableInPolyTime.bitsCons (ComputableInPolyTime.const false)
+      (binaryLengthWord_polyTime.comp (dimR_polyTime hc)))
+  exact h.of_enc_eq (fun a => by dsimp only [capacity, Function.comp_apply])
+
+private theorem point_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {context : Input → QueryContext} {ruler : QueryContext → List Bool}
+    (hc : ComputableInPolyTime context input queryEncoding)
+    (hr : ComputableInPolyTime (fun a => ruler (context a)) input encBits) (negative : Bool) :
+    ComputableInPolyTime (fun a => point ruler negative (context a)) input encBits := by
+  have hposition := ComputableInPolyTime.bitsAppend (startR_polyTime hc) hr
+  have hcapacity := capacity_polyTime negative hc
+  have hargs : ComputableInPolyTime
+      (fun a : Input => ![(context a).2.2.2, startR (context a) ++ ruler (context a), capacity negative (context a)])
+      input (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hc.snd'.snd'.snd'
+    · exact hposition
+    · simpa only [Matrix.cons_val_succ', Matrix.cons_val_zero', Function.comp_apply] using hcapacity
+  exact binarySignedIndicator_polyTime.comp hargs
+
+private theorem interpolationTerm_polyTime (stage : Fin 8) {Input : Type} {input : Input ↪ List Bool}
+    {context : Input → QueryContext} (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => interpolationTerm stage (context a)) input encBits := by
+  have hvalue : ComputableInPolyTime (fun a : Input => if stage.val < 2 then
+      binarySignedAdd [false, false, true] (point (firstR stage) true (context a))
+      else binarySignedAdd (point (firstR stage) false (context a))
+        (point (secondR stage) true (context a))) input encBits := by
+    by_cases hs : stage.val < 2
+    · simpa only [hs, ↓reduceIte] using binarySignedAdd_polyTime (ComputableInPolyTime.const [false, false, true])
+        (point_polyTime hc (firstR_polyTime stage hc) true)
+    · simpa only [hs, ↓reduceIte] using binarySignedAdd_polyTime
+        (point_polyTime hc (firstR_polyTime stage hc) false)
+        (point_polyTime hc (secondR_polyTime stage hc) true)
+  have houtput := ComputableInPolyTime.bitsAppend (startR_polyTime hc) (weightOffset_polyTime stage.val hc)
+  have heq := (ComputableInPolyTime.length_bits_comp hc.snd'.snd'.fst').decide_eq'
+    (ComputableInPolyTime.length_bits_comp houtput)
+  exact (heq.ite hvalue (ComputableInPolyTime.const [])).of_enc_eq
+    (fun a => by simp only [interpolationTerm, decide_eq_true_eq])
+
+/-- The indexed stage charges the ordinal and every captured query word. -/
+@[fun_prop] theorem indexedInterpolationWord_polyTime (stage : Fin 8)
+    {Input : Type} {input : Input ↪ List Bool}
+    {ordinal : Input → List Bool} {context : Input → SumContext}
+    (hi : ComputableInPolyTime ordinal input encBits)
+    (hc : ComputableInPolyTime context input sumEncoding) :
+    ComputableInPolyTime (fun a => indexedInterpolationWord stage (ordinal a) (context a)) input encBits := by
+  have hquery := hc.fst'.prod (hi.prod hc.snd')
+  exact (interpolationTerm_polyTime stage hquery).of_enc_eq (fun a => by
+    rw [indexedInterpolationWord_eq])
+
+private theorem interpolationCallback_polyTime (stage : Fin 8) :
+    ComputableInPolyTime (fun p : SumContext × List Bool => indexedInterpolationWord stage p.2 p.1)
+      (encPair sumEncoding encBits) encBits :=
+  indexedInterpolationWord_polyTime stage (ComputableInPolyTime.snd sumEncoding encBits)
+    (ComputableInPolyTime.fst sumEncoding encBits)
+
+/-- Sample scans charge all five original query-word producers. -/
+@[fun_prop] theorem interpolationWord_polyTime (stage : Fin 8)
+    {Input : Type} {input : Input ↪ List Bool} {source code₀ code₁ out action : Input → List Bool}
+    (hs : ComputableInPolyTime source input encBits) (hc₀ : ComputableInPolyTime code₀ input encBits)
+    (hc₁ : ComputableInPolyTime code₁ input encBits) (ho : ComputableInPolyTime out input encBits)
+    (ha : ComputableInPolyTime action input encBits) :
+    ComputableInPolyTime (fun a => interpolationWord stage (source a) (code₀ a) (code₁ a) (out a) (action a))
+      input encBits := by
+  have hcontext := (hs.prod (hc₀.prod hc₁)).prod (ho.prod ha)
+  exact binarySignedFiniteSum_polyTime (interpolationCallback_polyTime stage) 41 hcontext
+
+private theorem minimumR_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {context : Input → QueryContext} (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => minimumR (context a)) input encBits := by
+  exact ComputableInPolyTime.bitsAppend (weightOffset_polyTime 8 hc)
+    ((ComputableInPolyTime.bitsReplicate true).comp
+      (ComputableInPolyTime.unary_mul' (ComputableInPolyTime.length_bits_comp (cornerR_polyTime hc))
+        (ComputableInPolyTime.const 4)))
+
+private theorem minimumOffset_polyTime (corner : Fin 4) (flag : Fin 2) (n : ℕ)
+    {Input : Type} {input : Input ↪ List Bool} {context : Input → QueryContext}
+    (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => minimumOffset corner flag n (context a)) input encBits :=
+  ComputableInPolyTime.bitsAppend (minimumR_polyTime hc)
+    (ComputableInPolyTime.const (List.replicate (4 * corner.val + 2 * flag.val + n) false))
+
+private theorem colorR_polyTime (corner : Fin 4) (flag : Fin 2)
+    {Input : Type} {input : Input ↪ List Bool} {context : Input → QueryContext}
+    (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => colorR corner flag (context a)) input encBits := by
+  have hbase := ComputableInPolyTime.bitsAppend (weightOffset_polyTime 8 hc)
+    ((ComputableInPolyTime.bitsReplicate true).comp
+      (ComputableInPolyTime.unary_mul' (ComputableInPolyTime.length_bits_comp (cornerR_polyTime hc))
+        (ComputableInPolyTime.const corner.val)))
+  have harity := arityR_polyTime hc
+  have htail : ComputableInPolyTime (fun a : Input => if flag.val = 0 then arityR (context a)
+      else arityR (context a) ++ arityR (context a) ++ circuitUnaryPrefix (context a).1.2.1)
+      input encBits := by
+    by_cases hf : flag.val = 0
+    · simpa only [hf, ↓reduceIte] using harity
+    · simpa only [hf, ↓reduceIte] using ComputableInPolyTime.bitsAppend
+        (ComputableInPolyTime.bitsAppend harity harity) (circuitUnaryPrefix_polyTime hc.fst'.snd'.fst')
+  have h := ComputableInPolyTime.bitsAppend hbase htail
+  exact h.of_enc_eq (fun a => by dsimp only [colorR, Function.comp_apply])
+
+private theorem lastColorR_polyTime (corner : Fin 4) (flag : Fin 2)
+    {Input : Type} {input : Input ↪ List Bool} {context : Input → QueryContext}
+    (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => lastColorR corner flag (context a)) input encBits := by
+  have hcode : ComputableInPolyTime (fun a : Input => if flag.val = 0 then (context a).1.2.1
+      else (context a).1.2.2) input encBits := by
+    by_cases hf : flag.val = 0
+    · simpa only [hf, ↓reduceIte] using hc.fst'.snd'.fst'
+    · simpa only [hf, ↓reduceIte] using hc.fst'.snd'.snd'
+  have hprefix := circuitUnaryPrefix_polyTime hcode
+  have htail := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hprefix
+  have h := ComputableInPolyTime.bitsAppend (colorR_polyTime corner flag hc) htail
+  exact h.of_enc_eq (fun a => by dsimp only [lastColorR, Function.comp_apply])
+
+private theorem minimumSecondR_polyTime (corner : Fin 4) (flag : Fin 2) (temporary : Bool)
+    {Input : Type} {input : Input ↪ List Bool} {context : Input → QueryContext}
+    (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => minimumSecondR corner flag temporary (context a)) input encBits := by
+  cases temporary
+  · exact minimumOffset_polyTime corner flag 0 hc
+  · exact lastColorR_polyTime corner flag hc
+
+private theorem minimumTerm_polyTime (corner : Fin 4) (flag : Fin 2) (temporary : Bool)
+    {Input : Type} {input : Input ↪ List Bool} {context : Input → QueryContext}
+    (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => minimumTerm corner flag temporary (context a)) input encBits := by
+  have hvalue := binarySignedAdd_polyTime
+    (point_polyTime hc (weightOffset_polyTime ((![3, 5, 6, 7] : Fin 4 → ℕ) corner) hc) false)
+    (point_polyTime hc (minimumSecondR_polyTime corner flag temporary hc) true)
+  have houtput := ComputableInPolyTime.bitsAppend (startR_polyTime hc)
+    (minimumOffset_polyTime corner flag (if temporary then 0 else 1) hc)
+  have heq := (ComputableInPolyTime.length_bits_comp hc.snd'.snd'.fst').decide_eq'
+    (ComputableInPolyTime.length_bits_comp houtput)
+  exact (heq.ite hvalue (ComputableInPolyTime.const [])).of_enc_eq
+    (fun a => by simp only [minimumTerm, decide_eq_true_eq])
+
+/-- The indexed minimum charges its ordinal and all captured query words. -/
+@[fun_prop] theorem indexedMinimumWord_polyTime (corner : Fin 4) (flag : Fin 2) (temporary : Bool)
+    {Input : Type} {input : Input ↪ List Bool}
+    {ordinal : Input → List Bool} {context : Input → SumContext}
+    (hi : ComputableInPolyTime ordinal input encBits)
+    (hc : ComputableInPolyTime context input sumEncoding) :
+    ComputableInPolyTime (fun a => indexedMinimumWord corner flag temporary (ordinal a) (context a))
+      input encBits := by
+  have hquery := hc.fst'.prod (hi.prod hc.snd')
+  exact (minimumTerm_polyTime corner flag temporary hquery).of_enc_eq
+    (fun a => by rw [indexedMinimumWord_eq])
+
+private theorem minimumCallback_polyTime (corner : Fin 4) (flag : Fin 2) (temporary : Bool) :
+    ComputableInPolyTime
+      (fun p : SumContext × List Bool => indexedMinimumWord corner flag temporary p.2 p.1)
+      (encPair sumEncoding encBits) encBits :=
+  indexedMinimumWord_polyTime corner flag temporary (ComputableInPolyTime.snd sumEncoding encBits)
+    (ComputableInPolyTime.fst sumEncoding encBits)
+
+/-- Weighted-minimum scans charge source, both code words and both query rulers. -/
+@[fun_prop] theorem minimumWord_polyTime (corner : Fin 4) (flag : Fin 2) (temporary : Bool)
+    {Input : Type} {input : Input ↪ List Bool} {source code₀ code₁ out action : Input → List Bool}
+    (hs : ComputableInPolyTime source input encBits) (hc₀ : ComputableInPolyTime code₀ input encBits)
+    (hc₁ : ComputableInPolyTime code₁ input encBits) (ho : ComputableInPolyTime out input encBits)
+    (ha : ComputableInPolyTime action input encBits) :
+    ComputableInPolyTime (fun a => minimumWord corner flag temporary
+      (source a) (code₀ a) (code₁ a) (out a) (action a)) input encBits := by
+  have hcontext := (hs.prod (hc₀.prod hc₁)).prod (ho.prod ha)
+  exact binarySignedFiniteSum_polyTime (minimumCallback_polyTime corner flag temporary) 41 hcontext
+
+/-- Enumerate the sixteen minimum gates in corner, flag, and temporary-output order. -/
+def minimumQuery (index : Fin 16) (context : SumContext) : List Bool :=
+  minimumWord ⟨index.val / 4, by omega⟩
+    ⟨(index.val / 2) % 2, Nat.mod_lt _ (by decide)⟩ (decide (index.val % 2 = 0))
+    context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2
+
+private def queries : List (SumContext → List Bool) :=
+  List.ofFn (fun stage : Fin 8 => fun context : SumContext => interpolationWord stage
+    context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) ++ List.ofFn minimumQuery
+
+/-- All fixed families retain their exact forty-one-sample scans and right-fold addition order. -/
+def coefficientWord (source code₀ code₁ out action : List Bool) : List Bool :=
+  let queries : List (SumContext → List Bool) :=
+    List.ofFn (fun stage : Fin 8 => fun context : SumContext => interpolationWord stage
+      context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) ++
+    List.ofFn (fun index : Fin 16 => fun context : SumContext =>
+      minimumWord ⟨index.val / 4, by omega⟩
+        ⟨(index.val / 2) % 2, Nat.mod_lt _ (by decide)⟩ (decide (index.val % 2 = 0))
+        context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2)
+  binarySignedQuerySum queries ((source, (code₀, code₁)), (out, action))
+
+private theorem coefficientWord_eq (source code₀ code₁ out action : List Bool) :
+    coefficientWord source code₀ code₁ out action =
+      binarySignedQuerySum queries ((source, (code₀, code₁)), (out, action)) := rfl
+
+/-- The complete query certificate charges source, both code words, output and action. -/
+@[fun_prop] theorem coefficientWord_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {source code₀ code₁ out action : Input → List Bool}
+    (hs : ComputableInPolyTime source input encBits) (hc₀ : ComputableInPolyTime code₀ input encBits)
+    (hc₁ : ComputableInPolyTime code₁ input encBits) (ho : ComputableInPolyTime out input encBits)
+    (ha : ComputableInPolyTime action input encBits) :
+    ComputableInPolyTime (fun a => coefficientWord (source a) (code₀ a) (code₁ a) (out a) (action a))
+      input encBits := by
+  have hroot : ComputableInPolyTime (fun context : SumContext => context) sumEncoding sumEncoding := .id'
+  have hq : ∀ query ∈ queries, ComputableInPolyTime query sumEncoding encBits := by
+    intro query hquery
+    simp only [queries, List.mem_append, List.mem_ofFn] at hquery
+    rcases hquery with ⟨stage, rfl⟩ | ⟨index, rfl⟩
+    · exact interpolationWord_polyTime stage hroot.fst'.fst' hroot.fst'.snd'.fst'
+        hroot.fst'.snd'.snd' hroot.snd'.fst' hroot.snd'.snd'
+    · exact minimumWord_polyTime _ _ _ hroot.fst'.fst' hroot.fst'.snd'.fst'
+        hroot.fst'.snd'.snd' hroot.snd'.fst' hroot.snd'.snd'
+  have hcontext := (hs.prod (hc₀.prod hc₁)).prod (ho.prod ha)
+  exact (binarySignedQuerySum_polyTime queries hq hcontext).of_enc_eq
+    (fun a => by rw [coefficientWord_eq])
+
+private theorem capacity_value (negative : Bool) (v : QueryContext) :
     binarySignedValue (capacity negative v) =
       if negative then -2 * ((dimR v).length : ℤ) else 2 * ((dimR v).length : ℤ) := by
-  cases negative <;>
-    simp only [capacity, binarySignedValue, List.headD_cons, Bool.false_eq_true, ite_false,
-      ite_true, List.tail_cons, Nat.fromBitsLE_cons, zero_add, binaryLengthWord_value,
-      Nat.cast_mul, Nat.cast_ofNat]; ring
+  cases negative
+  · change ((2 * ofBits (binaryLengthWord (dimR v)) : ℕ) : ℤ) = 2 * ((dimR v).length : ℤ)
+    rw [binaryLengthWord_value, Nat.cast_mul, Nat.cast_ofNat]
+  · change -((2 * ofBits (binaryLengthWord (dimR v)) : ℕ) : ℤ) = -2 * ((dimR v).length : ℤ)
+    rw [binaryLengthWord_value, Nat.cast_mul, Nat.cast_ofNat]
+    ring
 
-private theorem startR_length (v : Fin 6 → List Bool) :
-    (startR v).length = BrouwerNashLayout.globalCount (pairFst (v 3)).length +
-      (v 0).length * BrouwerNashLayout.sampleWidth (pairFst (v 3)).length
-        (circuitUnaryPrefix (v 4)).length (circuitUnaryPrefix (v 5)).length := by
-  simp only [startR, List.length_append, smash_length, header,
-    BrouwerNashHeaders.globalRuler_length, BrouwerNashHeaders.sampleRuler_length,
-    Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two]
-  rfl
+private theorem startR_length (v : QueryContext) :
+    (startR v).length = BrouwerNashLayout.globalCount (CircuitWords.first v.1.1).length +
+      v.2.1.length * BrouwerNashLayout.sampleWidth (CircuitWords.first v.1.1).length
+        (circuitUnaryPrefix v.1.2.1).length (circuitUnaryPrefix v.1.2.2).length := by
+  simp only [startR, List.length_append, List.length_replicate,
+    BrouwerNashHeaders.globalRuler_length, BrouwerNashHeaders.sampleRuler_length]
 
-private theorem weightR_length (v : Fin 6 → List Bool) :
-    (weightR v).length = BrouwerNashLayout.weightBase (pairFst (v 3)).length := by
-  simp only [weightR, List.length_append, List.length_cons, List.length_nil, smash_length,
-    List.length_replicate, depthR, header, BrouwerNashHeaders.sourceDepthRuler,
-    Matrix.cons_val_zero, BrouwerNashLayout.weightBase]
+private theorem weightR_length (v : QueryContext) :
+    (weightR v).length = BrouwerNashLayout.weightBase (CircuitWords.first v.1.1).length := by
+  simp only [weightR, List.length_append, List.length_cons, List.length_nil,
+    List.length_replicate, depthR, BrouwerNashHeaders.sourceDepthRuler, BrouwerNashLayout.weightBase]
   omega
 
-private theorem remainderR_length (axis : Fin 2) (v : Fin 6 → List Bool) :
-    (remainderR axis v).length =
-      BrouwerNashLayout.remainder (pairFst (v 3)).length axis (pairFst (v 3)).length := by
-  have hd : (depthR v).length = (pairFst (v 3)).length := rfl
-  rcases lenEqFlag_flag (depthR v) [] with he | he
-  · have hz := (lenEqFlag_eq_true_iff _ _).mp he
-    simp only [List.length_nil, hd] at hz
-    simp only [remainderR, he, caseBit₀, Bool.cond_true, List.length_replicate,
-      BrouwerNashLayout.remainder, hz, ite_true, BrouwerNashLayout.jitter]
-  · have hz : (pairFst (v 3)).length ≠ 0 := by
-      intro hz
-      have ht := (lenEqFlag_eq_true_iff (depthR v) []).mpr (by simp [hd, hz])
-      rw [he] at ht
-      contradiction
-    simp only [remainderR, he, caseBit₀, Bool.cond_false, List.length_append,
-      List.length_cons, List.length_nil,
-      smash_length, List.length_replicate, hd, BrouwerNashLayout.remainder, hz, ite_false]
-    have hb : 1 ≤ (pairFst (v 3)).length := by omega
+private theorem remainderR_length (axis : Fin 2) (v : QueryContext) :
+    (remainderR axis v).length = BrouwerNashLayout.remainder (CircuitWords.first v.1.1).length axis
+      (CircuitWords.first v.1.1).length := by
+  have hd : (depthR v).length = (CircuitWords.first v.1.1).length := rfl
+  by_cases hz : (CircuitWords.first v.1.1).length = 0
+  · simp only [remainderR, hd, hz, ↓reduceIte, List.length_replicate,
+      BrouwerNashLayout.remainder, BrouwerNashLayout.jitter]
+  · simp only [remainderR, hd, hz, ↓reduceIte, List.length_append,
+      List.length_cons, List.length_nil, List.length_replicate, BrouwerNashLayout.remainder]
+    have hb : 1 ≤ (CircuitWords.first v.1.1).length := by omega
     fin_cases axis <;> norm_num <;> omega
 
 private theorem subtraction_coefficients {k : ℕ} (a z : Fin k) (C : ℤ) (r : Fin (k * 2)) :
@@ -238,25 +493,24 @@ private theorem complement_coefficients {k : ℕ} (a : Fin k) (r : Fin (k * 2)) 
     GameTheory.Finite.BimatrixInterpolationGate.complementCoefficients,
     GameTheory.Finite.BimatrixArithmeticGate.gate,
     GameTheory.Finite.BimatrixArithmeticGate.coefficients, add_comm]
-section Correctness
 variable (source code₀ code₁ out action : List Bool)
-local notation "b" => List.length (pairFst source)
+local notation "b" => List.length (CircuitWords.first source)
 local notation "ell₀" => List.length (circuitUnaryPrefix code₀)
 local notation "ell₁" => List.length (circuitUnaryPrefix code₁)
 local notation "k" => BrouwerNashLayout.dimension b ell₀ ell₁
 
-private theorem point_index (input : (Fin 6 → List Bool) → List Bool) (negative : Bool)
+private theorem point_index (input : QueryContext → List Bool) (negative : Bool)
     (t : Fin 41) (a : ℕ) (ha : a < BrouwerNashLayout.sampleWidth b ell₀ ell₁)
-    (hlen : (input ![List.replicate t.val false, out, action, source, code₀, code₁]).length = a)
+    (hlen : (input ((source, (code₀, code₁)), (List.replicate t.val false, (out, action)))).length = a)
     (r : Fin (k * 2)) (hr : action.length = r.val) :
     binarySignedValue (point input negative
-      ![List.replicate t.val false, out, action, source, code₀, code₁]) =
+      ((source, (code₀, code₁)), (List.replicate t.val false, (out, action)))) =
       if r = finProdFinEquiv (BrouwerNashProgram.sampleRef b ell₀ ell₁ t a, 1) then
         (if negative then -2 * (k : ℤ) else 2 * (k : ℤ)) else 0 := by
-  let v : Fin 6 → List Bool := ![List.replicate t.val false, out, action, source, code₀, code₁]
+  let v : QueryContext := ((source, (code₀, code₁)), (List.replicate t.val false, (out, action)))
   have hs : (startR v).length = BrouwerNashLayout.sampleBase b ell₀ ell₁ t := by
     rw [startR_length]
-    simp only [v, Matrix.cons_val_zero, List.length_replicate]
+    simp only [v, List.length_replicate]
     rfl
   have habs : (startR v ++ input v).length =
       (BrouwerNashProgram.sampleRef b ell₀ ell₁ t a).val := by
@@ -269,23 +523,21 @@ private theorem point_index (input : (Fin 6 → List Bool) → List Bool) (negat
     capacity negative v]) = _
   rw [he, capacity_value]
   have hd : (dimR v).length = k := by
-    rw [dimR, header, BrouwerNashHeaders.dimensionRuler_length]
-    simp only [v, Matrix.cons_val_zero]
-    rfl
+    rw [dimR, BrouwerNashHeaders.dimensionRuler_length]
   rw [hd]
 
 private theorem interpolationTerm_coefficients (t : Fin 41) (stage : Fin 8)
     (r : Fin (k * 2)) (hr : action.length = r.val) :
     binarySignedValue (interpolationTerm stage
-      ![List.replicate t.val false, out, action, source, code₀, code₁]) =
+      ((source, (code₀, code₁)), (List.replicate t.val false, (out, action)))) =
       if out.length = BrouwerNashLayout.sampleBase b ell₀ ell₁ t +
           BrouwerNashLayout.weightBase b + stage.val then
         (BrouwerNashProgram.interpolationGate b ell₀ ell₁ t stage.val).coefficients r
       else 0 := by
-  let v : Fin 6 → List Bool := ![List.replicate t.val false, out, action, source, code₀, code₁]
+  let v : QueryContext := ((source, (code₀, code₁)), (List.replicate t.val false, (out, action)))
   have hs : (startR v).length = BrouwerNashLayout.sampleBase b ell₀ ell₁ t := by
     rw [startR_length]
-    simp only [v, Matrix.cons_val_zero, List.length_replicate]
+    simp only [v, List.length_replicate]
     rfl
   have hw : (weightR v).length = BrouwerNashLayout.weightBase b := weightR_length v
   have hrem (axis : Fin 2) :
@@ -304,8 +556,7 @@ private theorem interpolationTerm_coefficients (t : Fin 41) (stage : Fin 8)
   have hwp (n : ℕ) (hn : n < 8) (negative : Bool) := point_index source code₀ code₁ out action
     (weightOffset n) negative t (BrouwerNashLayout.weightBase b + n) (hweight n hn)
     (by rw [weightOffset, List.length_append, hw, List.length_replicate]) r hr
-  change binarySignedValue (caseBit₀ (lenEqFlag out
-    (startR v ++ weightOffset stage.val v)) _ []) = _
+  change binarySignedValue (if out.length = (startR v ++ weightOffset stage.val v).length then _ else []) = _
   rw [select_value]
   have hguard : (startR v ++ weightOffset stage.val v).length =
       BrouwerNashLayout.sampleBase b ell₀ ell₁ t + BrouwerNashLayout.weightBase b + stage.val := by
@@ -326,61 +577,56 @@ private theorem interpolationTerm_coefficients (t : Fin 41) (stage : Fin 8)
   | rw [hp 0 false, hp 1 true]; rfl
   | rw [hp 0 false, hwp 4 (by omega) true]; rfl
   | rw [hp 1 false, hp 0 true]; rfl
+
 /-- Each fixed interpolation family selects precisely its allocated canonical coefficients. -/
 theorem interpolationWord_value (stage : Fin 8) (r : Fin (k * 2)) (hr : action.length = r.val) :
-    binarySignedValue (interpolationWord stage ![out, action, source, code₀, code₁]) =
+    binarySignedValue (interpolationWord stage source code₀ code₁ out action) =
       ∑ t : Fin 41, if out.length = BrouwerNashLayout.sampleBase b ell₀ ell₁ t +
           BrouwerNashLayout.weightBase b + stage.val then
         (BrouwerNashProgram.interpolationGate b ell₀ ell₁ t stage.val).coefficients r else 0 := by
   rw [interpolationWord, binarySignedFiniteSum_value, ← Fin.sum_univ_eq_sum_range]
+  simp only [indexedInterpolationWord_eq]
   apply Finset.sum_congr rfl
   intro t _
   exact interpolationTerm_coefficients source code₀ code₁ out action t stage r hr
 
-private theorem minimumR_length (v : Fin 6 → List Bool) :
-    (minimumR v).length = BrouwerNashLayout.minimumBase (pairFst (v 3)).length
-      (circuitUnaryPrefix (v 4)).length (circuitUnaryPrefix (v 5)).length := by
-  rw [minimumR, List.length_append, weightOffset, List.length_append, weightR_length,
-    List.length_replicate, smash_length, List.length_replicate, cornerR, header,
-    BrouwerNashHeaders.cornerRuler_length]
-  simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two]
-  simp only [Matrix.vecHead, Matrix.vecTail, Function.comp_apply,
-    Matrix.cons_val_succ, Matrix.cons_val_zero, BrouwerNashLayout.minimumBase,
-    BrouwerNashLayout.colorBase, Nat.mul_comm]
+private theorem minimumR_length (v : QueryContext) :
+    (minimumR v).length = BrouwerNashLayout.minimumBase (CircuitWords.first v.1.1).length
+      (circuitUnaryPrefix v.1.2.1).length (circuitUnaryPrefix v.1.2.2).length := by
+  simp only [minimumR, weightOffset, List.length_append, weightR_length, List.length_replicate,
+    cornerR, BrouwerNashHeaders.cornerRuler_length, BrouwerNashLayout.minimumBase,
+    BrouwerNashLayout.colorBase]
+  omega
 
-private theorem lastColorR_length (corner : Fin 4) (flag : Fin 2) (v : Fin 6 → List Bool) :
+private theorem lastColorR_length (corner : Fin 4) (flag : Fin 2) (v : QueryContext) :
     (lastColorR corner flag v).length =
-      BrouwerNashLayout.colorGate (pairFst (v 3)).length
-        (circuitUnaryPrefix (v 4)).length (circuitUnaryPrefix (v 5)).length corner flag +
-          ((if flag.val = 0 then circuitUnaryPrefix (v 4)
-            else circuitUnaryPrefix (v 5)).length - 1) := by
+      BrouwerNashLayout.colorGate (CircuitWords.first v.1.1).length
+        (circuitUnaryPrefix v.1.2.1).length (circuitUnaryPrefix v.1.2.2).length corner flag +
+          ((if flag.val = 0 then circuitUnaryPrefix v.1.2.1 else circuitUnaryPrefix v.1.2.2).length - 1) := by
   fin_cases flag <;>
     simp only [lastColorR, colorR, List.length_append, weightOffset, weightR_length,
-      List.length_replicate, smash_length, List.length_tail, ite_true, ite_false,
-      Nat.reduceEqDiff, cornerR, arityR, header, BrouwerNashHeaders.cornerRuler_length,
-      BrouwerNashHeaders.arityRuler_length, Matrix.cons_val_zero, Matrix.cons_val_one,
-      Matrix.cons_val_two, BrouwerNashLayout.colorGate, BrouwerNashLayout.colorInput,
+      List.length_replicate, List.length_tail, ite_true, ite_false, Nat.reduceEqDiff,
+      cornerR, arityR, BrouwerNashHeaders.cornerRuler_length, BrouwerNashHeaders.arityRuler_length,
+      BrouwerNashLayout.colorGate, BrouwerNashLayout.colorInput,
       BrouwerNashLayout.colorBase, BrouwerNashLayout.arity, BrouwerNashLayout.weightBase]
-  all_goals simp only [Matrix.vecHead, Matrix.vecTail, Function.comp_apply,
-    Matrix.cons_val_succ, Matrix.cons_val_zero]
   all_goals ring
 
 private theorem minimumTerm_coefficients (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
     (temporary : Bool) (r : Fin (k * 2)) (hr : action.length = r.val) :
     binarySignedValue (minimumTerm corner flag temporary
-      ![List.replicate t.val false, out, action, source, code₀, code₁]) =
+      ((source, (code₀, code₁)), (List.replicate t.val false, (out, action)))) =
       if out.length = BrouwerNashLayout.sampleBase b ell₀ ell₁ t +
           BrouwerNashLayout.minimumTemporary b ell₀ ell₁ corner flag +
             (if temporary then 0 else 1) then
         (BrouwerNashProgram.minimumGate b ell₀ ell₁ t corner flag temporary).coefficients r
       else 0 := by
-  let v : Fin 6 → List Bool := ![List.replicate t.val false, out, action, source, code₀, code₁]
+  let v : QueryContext := ((source, (code₀, code₁)), (List.replicate t.val false, (out, action)))
   let a := if temporary then BrouwerNashLayout.colorGate b ell₀ ell₁ corner flag +
     ((if flag.val = 0 then ell₀ else ell₁) - 1) else
       BrouwerNashLayout.minimumTemporary b ell₀ ell₁ corner flag
   have hs : (startR v).length = BrouwerNashLayout.sampleBase b ell₀ ell₁ t := by
     rw [startR_length]
-    simp only [v, Matrix.cons_val_zero, List.length_replicate]
+    simp only [v, List.length_replicate]
     rfl
   have hweight : BrouwerNashLayout.weight b corner <
       BrouwerNashLayout.sampleWidth b ell₀ ell₁ := by
@@ -415,8 +661,7 @@ private theorem minimumTerm_coefficients (t : Fin 41) (corner : Fin 4) (flag : F
     (BrouwerNashLayout.weight b corner) hweight hfirst r hr
   have hz := point_index source code₀ code₁ out action (minimumSecondR corner flag temporary)
     true t a ha hsecond r hr
-  change binarySignedValue (caseBit₀ (lenEqFlag out
-    (startR v ++ minimumOffset corner flag (if temporary then 0 else 1) v)) _ []) = _
+  change binarySignedValue (if out.length = (startR v ++ minimumOffset corner flag (if temporary then 0 else 1) v).length then _ else []) = _
   rw [select_value]
   have hguard : (startR v ++ minimumOffset corner flag (if temporary then 0 else 1) v).length =
       BrouwerNashLayout.sampleBase b ell₀ ell₁ t +
@@ -441,16 +686,18 @@ private theorem minimumTerm_coefficients (t : Fin 41) (corner : Fin 4) (flag : F
 /-- Each weighted-minimum family selects its exact canonical signed subtraction coefficients. -/
 theorem minimumWord_value (corner : Fin 4) (flag : Fin 2) (temporary : Bool)
     (r : Fin (k * 2)) (hr : action.length = r.val) :
-    binarySignedValue (minimumWord corner flag temporary ![out, action, source, code₀, code₁]) =
+    binarySignedValue (minimumWord corner flag temporary source code₀ code₁ out action) =
       ∑ t : Fin 41, if out.length = BrouwerNashLayout.sampleBase b ell₀ ell₁ t +
           BrouwerNashLayout.minimumTemporary b ell₀ ell₁ corner flag +
             (if temporary then 0 else 1) then
         (BrouwerNashProgram.minimumGate b ell₀ ell₁ t corner flag temporary).coefficients r
       else 0 := by
   rw [minimumWord, binarySignedFiniteSum_value, ← Fin.sum_univ_eq_sum_range]
+  simp only [indexedMinimumWord_eq]
   apply Finset.sum_congr rfl
   intro t _
   exact minimumTerm_coefficients source code₀ code₁ out action t corner flag temporary r hr
+
 private theorem sample_position_injective (offset : ℕ) :
     Function.Injective (fun t : Fin 41 => BrouwerNashLayout.sampleBase b ell₀ ell₁ t + offset) := by
   intro s t he
@@ -465,7 +712,7 @@ theorem interpolationWord_at (stage : Fin 8) (t : Fin 41) (r : Fin (k * 2))
     (hr : action.length = r.val)
     (hout : out.length = BrouwerNashLayout.sampleBase b ell₀ ell₁ t +
       BrouwerNashLayout.weightBase b + stage.val) :
-    binarySignedValue (interpolationWord stage ![out, action, source, code₀, code₁]) =
+    binarySignedValue (interpolationWord stage source code₀ code₁ out action) =
       (BrouwerNashProgram.interpolationGate b ell₀ ell₁ t stage.val).coefficients r := by
   rw [interpolationWord_value source code₀ code₁ out action stage r hr]
   have heq (s : Fin 41) : out.length = BrouwerNashLayout.sampleBase b ell₀ ell₁ s +
@@ -485,7 +732,7 @@ theorem interpolationWord_at (stage : Fin 8) (t : Fin 41) (r : Fin (k * 2))
 theorem interpolationWord_zero (stage : Fin 8) (r : Fin (k * 2)) (hr : action.length = r.val)
     (hout : ∀ t : Fin 41, out.length ≠ BrouwerNashLayout.sampleBase b ell₀ ell₁ t +
       BrouwerNashLayout.weightBase b + stage.val) :
-    binarySignedValue (interpolationWord stage ![out, action, source, code₀, code₁]) = 0 := by
+    binarySignedValue (interpolationWord stage source code₀ code₁ out action) = 0 := by
   rw [interpolationWord_value source code₀ code₁ out action stage r hr]
   apply Finset.sum_eq_zero
   intro t _
@@ -497,7 +744,7 @@ theorem minimumWord_at (corner : Fin 4) (flag : Fin 2) (temporary : Bool) (t : F
     (hout : out.length = BrouwerNashLayout.sampleBase b ell₀ ell₁ t +
       BrouwerNashLayout.minimumTemporary b ell₀ ell₁ corner flag +
         (if temporary then 0 else 1)) :
-    binarySignedValue (minimumWord corner flag temporary ![out, action, source, code₀, code₁]) =
+    binarySignedValue (minimumWord corner flag temporary source code₀ code₁ out action) =
       (BrouwerNashProgram.minimumGate b ell₀ ell₁ t corner flag temporary).coefficients r := by
   rw [minimumWord_value source code₀ code₁ out action corner flag temporary r hr]
   have heq (s : Fin 41) : out.length = BrouwerNashLayout.sampleBase b ell₀ ell₁ s +
@@ -521,35 +768,12 @@ theorem minimumWord_zero (corner : Fin 4) (flag : Fin 2) (temporary : Bool)
     (hout : ∀ t : Fin 41, out.length ≠ BrouwerNashLayout.sampleBase b ell₀ ell₁ t +
       BrouwerNashLayout.minimumTemporary b ell₀ ell₁ corner flag +
         (if temporary then 0 else 1)) :
-    binarySignedValue (minimumWord corner flag temporary ![out, action, source, code₀, code₁]) =
+    binarySignedValue (minimumWord corner flag temporary source code₀ code₁ out action) =
       0 := by
   rw [minimumWord_value source code₀ code₁ out action corner flag temporary r hr]
   apply Finset.sum_eq_zero
   intro t _
   exact ite_eq_right (hout t)
-end Correctness
-private def minimumQuery (index : Fin 16) : (Fin 5 → List Bool) → List Bool :=
-  minimumWord ⟨index.val / 4, by omega⟩
-    ⟨(index.val / 2) % 2, Nat.mod_lt _ (by decide)⟩ (decide (index.val % 2 = 0))
-
-private def queries : List ((Fin 5 → List Bool) → List Bool) :=
-  List.ofFn interpolationWord ++ List.ofFn minimumQuery
-
-/-- All fixed interpolation and weighted-minimum stages, each scanned over forty-one samples. -/
-def coefficientWord : (Fin 5 → List Bool) → List Bool := binarySignedQuerySum queries
-
-/-- Fixed query composition retains actual polynomial-time certificates. -/
-theorem coefficientWord_cobham : Cobham coefficientWord := by
-  apply binarySignedQuerySum_cobham
-  intro query hq
-  simp only [queries, List.mem_append, List.mem_ofFn] at hq
-  rcases hq with ⟨stage, rfl⟩ | ⟨index, rfl⟩
-  · exact interpolationWord_cobham stage
-  · exact minimumWord_cobham _ _ _
-
-theorem coefficientWord_mem_FPn : FPn coefficientWord := cobham_iff_FPn.mp coefficientWord_cobham
-
-
 
 private theorem minimumQuery_position (index : Fin 16) :
     2 * (2 * (index.val / 4) + (index.val / 2) % 2) +
@@ -560,25 +784,18 @@ private theorem minimumQuery_position (index : Fin 16) :
   · simp only [hp, decide_false, Bool.false_eq_true, ite_false]
     omega
 
-/-- The fixed family sum preserves every signed coefficient without normalization. -/
-theorem coefficientWord_value (v : Fin 5 → List Bool) :
-    binarySignedValue (coefficientWord v) =
-      (∑ stage : Fin 8, binarySignedValue (interpolationWord stage v)) +
-      ∑ index : Fin 16, binarySignedValue (minimumQuery index v) := by
-  rw [coefficientWord, binarySignedQuerySum_value]
+/-- The fixed right fold preserves every signed coefficient without normalizing its representation. -/
+theorem coefficientWord_value (source code₀ code₁ out action : List Bool) :
+    binarySignedValue (coefficientWord source code₀ code₁ out action) =
+      (∑ stage : Fin 8, binarySignedValue (interpolationWord stage source code₀ code₁ out action)) +
+      ∑ index : Fin 16, binarySignedValue (minimumQuery index ((source, (code₀, code₁)), (out, action))) := by
+  rw [coefficientWord_eq, binarySignedQuerySum_value]
   simp only [queries, List.map_append, List.sum_append, List.map_ofFn, List.sum_ofFn,
     Function.comp_apply]
 
-section CombinedCorrectness
-variable (source code₀ code₁ out action : List Bool)
-local notation "b" => List.length (pairFst source)
-local notation "ell₀" => List.length (circuitUnaryPrefix code₀)
-local notation "ell₁" => List.length (circuitUnaryPrefix code₁)
-local notation "k" => BrouwerNashLayout.dimension b ell₀ ell₁
-
 private theorem minimumQuery_value (index : Fin 16) (r : Fin (k * 2))
     (hr : action.length = r.val) :
-    binarySignedValue (minimumQuery index ![out, action, source, code₀, code₁]) =
+    binarySignedValue (minimumQuery index ((source, (code₀, code₁)), (out, action))) =
       ∑ t : Fin 41, if out.length = BrouwerNashLayout.sampleBase b ell₀ ell₁ t +
           BrouwerNashLayout.minimumBase b ell₀ ell₁ + index.val then
         (BrouwerNashProgram.minimumGate b ell₀ ell₁ t
@@ -625,11 +842,11 @@ theorem coefficientWord_interpolation_at (stage : Fin 8) (t : Fin 41) (r : Fin (
     (hr : action.length = r.val)
     (ho : out.length = BrouwerNashLayout.sampleBase b ell₀ ell₁ t +
       (BrouwerNashLayout.weightBase b + stage.val)) :
-    binarySignedValue (coefficientWord ![out, action, source, code₀, code₁]) =
+    binarySignedValue (coefficientWord source code₀ code₁ out action) =
       (BrouwerNashProgram.interpolationGate b ell₀ ell₁ t stage.val).coefficients r := by
   rw [coefficientWord_value]
   have hm (index : Fin 16) :
-      binarySignedValue (minimumQuery index ![out, action, source, code₀, code₁]) = 0 := by
+      binarySignedValue (minimumQuery index ((source, (code₀, code₁)), (out, action))) = 0 := by
     rw [minimumQuery_value source code₀ code₁ out action index r hr]
     apply Finset.sum_eq_zero
     intro t' _
@@ -653,11 +870,12 @@ theorem coefficientWord_interpolation_at (stage : Fin 8) (t : Fin 41) (r : Fin (
       (interpolation_local_lt source code₀ code₁ stage') ho (by omega)
     exact hne (Fin.ext (by omega))
   · simp
+
 private theorem minimumQuery_at (index : Fin 16) (t : Fin 41) (r : Fin (k * 2))
     (hr : action.length = r.val)
     (ho : out.length = BrouwerNashLayout.sampleBase b ell₀ ell₁ t +
       (BrouwerNashLayout.minimumBase b ell₀ ell₁ + index.val)) :
-    binarySignedValue (minimumQuery index ![out, action, source, code₀, code₁]) =
+    binarySignedValue (minimumQuery index ((source, (code₀, code₁)), (out, action))) =
       (BrouwerNashProgram.minimumGate b ell₀ ell₁ t
         ⟨index.val / 4, by omega⟩ ⟨(index.val / 2) % 2, Nat.mod_lt _ (by decide)⟩
           (decide (index.val % 2 = 0))).coefficients r := by
@@ -671,13 +889,13 @@ private theorem coefficientWord_minimumIndex_at (index : Fin 16) (t : Fin 41)
     (r : Fin (k * 2)) (hr : action.length = r.val)
     (ho : out.length = BrouwerNashLayout.sampleBase b ell₀ ell₁ t +
       (BrouwerNashLayout.minimumBase b ell₀ ell₁ + index.val)) :
-    binarySignedValue (coefficientWord ![out, action, source, code₀, code₁]) =
+    binarySignedValue (coefficientWord source code₀ code₁ out action) =
       (BrouwerNashProgram.minimumGate b ell₀ ell₁ t
         ⟨index.val / 4, by omega⟩ ⟨(index.val / 2) % 2, Nat.mod_lt _ (by decide)⟩
           (decide (index.val % 2 = 0))).coefficients r := by
   rw [coefficientWord_value]
   have hz (stage : Fin 8) :
-      binarySignedValue (interpolationWord stage ![out, action, source, code₀, code₁]) = 0 := by
+      binarySignedValue (interpolationWord stage source code₀ code₁ out action) = 0 := by
     apply interpolationWord_zero source code₀ code₁ out action stage r hr
     intro t' he
     have hx := same_local source code₀ code₁ out t t' _ _
@@ -707,7 +925,7 @@ theorem coefficientWord_minimum_at (corner : Fin 4) (flag : Fin 2) (temporary : 
     (ho : out.length = BrouwerNashLayout.sampleBase b ell₀ ell₁ t +
       (BrouwerNashLayout.minimumTemporary b ell₀ ell₁ corner flag +
         (if temporary then 0 else 1))) :
-    binarySignedValue (coefficientWord ![out, action, source, code₀, code₁]) =
+    binarySignedValue (coefficientWord source code₀ code₁ out action) =
       (BrouwerNashProgram.minimumGate b ell₀ ell₁ t corner flag temporary).coefficients r := by
   have hc := corner.isLt
   have hf := flag.isLt
@@ -748,10 +966,10 @@ theorem coefficientWord_eq_zero_of_outside (r : Fin (k * 2)) (hr : action.length
         BrouwerNashLayout.minimumBase b ell₀ ell₁ ≤ out.length ∧
         out.length < BrouwerNashLayout.sampleBase b ell₀ ell₁ t +
           BrouwerNashLayout.sampleWidth b ell₀ ell₁)) :
-    binarySignedValue (coefficientWord ![out, action, source, code₀, code₁]) = 0 := by
+    binarySignedValue (coefficientWord source code₀ code₁ out action) = 0 := by
   rw [coefficientWord_value]
   have hz (stage : Fin 8) :
-      binarySignedValue (interpolationWord stage ![out, action, source, code₀, code₁]) = 0 := by
+      binarySignedValue (interpolationWord stage source code₀ code₁ out action) = 0 := by
     apply interpolationWord_zero source code₀ code₁ out action stage r hr
     intro t he
     apply (hno t).1
@@ -759,7 +977,7 @@ theorem coefficientWord_eq_zero_of_outside (r : Fin (k * 2)) (hr : action.length
     dsimp only [BrouwerNashLayout.colorBase]
     omega
   have hm (index : Fin 16) :
-      binarySignedValue (minimumQuery index ![out, action, source, code₀, code₁]) = 0 := by
+      binarySignedValue (minimumQuery index ((source, (code₀, code₁)), (out, action))) = 0 := by
     rw [minimumQuery_value source code₀ code₁ out action index r hr]
     apply Finset.sum_eq_zero
     intro t _
@@ -769,5 +987,5 @@ theorem coefficientWord_eq_zero_of_outside (r : Fin (k * 2)) (hr : action.length
     have hx := minimum_local_lt source code₀ code₁ index
     omega
   simp only [hz, hm, Finset.sum_const_zero, add_zero]
-end CombinedCorrectness
+
 end GameTheory.Complexity.Backend.BrouwerNashInterpolationQuery

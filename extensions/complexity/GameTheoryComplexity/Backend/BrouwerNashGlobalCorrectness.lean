@@ -5,11 +5,9 @@ public import GameTheoryComplexity.Backend.BrouwerNashCoefficientQuery
 
 @[expose] public section
 
-
-
 /-! Exact coefficient and affine-kind agreement for every shared feedback-program output. -/
 namespace GameTheory.Complexity.Backend.BrouwerNashGlobalQuery
-open _root_.Complexity
+open Turing.MultiTapeTM Cslib.Circuits Cslib.BitString
 open GameTheory.Finite BrouwerNashLayout BrouwerNashProgram BrouwerNashCoefficientQuery
 
 private theorem shared_lt_dimension (b ell₀ ell₁ i : ℕ) (hi : i < globalCount b) :
@@ -24,16 +22,16 @@ private theorem affine₁_numeric {k : ℕ} (a : Fin k) (ca : ℤ) (r : Fin (k *
 
 /-- The complete shared query agrees at each alpha-chain output. -/
 theorem coefficientWord_alpha (out action source code₀ code₁ : List Bool)
-    (j : ℕ) (hj : j < precision (pairFst source).length)
+    (j : ℕ) (hj : j < precision (CircuitWords.first source).length)
     (ho : out.length = 4 + j)
-    (r : Fin (dimension (pairFst source).length
+    (r : Fin (dimension (CircuitWords.first source).length
       (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length * 2))
     (hr : action.length = r.val) :
-    binarySignedValue (coefficientWord ![out, action, source, code₀, code₁]) =
-      (BimatrixDyadicGate.halvingGate (slot (pairFst source).length
+    binarySignedValue (coefficientWord source code₀ code₁ out action) =
+      (BimatrixDyadicGate.halvingGate (slot (CircuitWords.first source).length
         (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length
         (alpha j))).coefficients r := by
-  have hT : 50 ≤ precision (pairFst source).length := by unfold precision; omega
+  have hT : 50 ≤ precision (CircuitWords.first source).length := by unfold precision; omega
   rw [coefficientWord_expansion, alphaWord_value, oneWord_value, positiveWord_value,
     doubleWord_value, doubleWord_value, negativeWord_value, negativeWord_value,
     halfWord_value, halfWord_value, subtractWord_value, subtractWord_value,
@@ -52,14 +50,14 @@ theorem coefficientWord_alpha (out action source code₀ code₁ : List Bool)
 
 /-- The positive shared block emits its exact integer scaling coefficient. -/
 theorem coefficientWord_positive (out action source code₀ code₁ : List Bool)
-    (ho : out.length = positive (pairFst source).length)
-    (r : Fin (dimension (pairFst source).length
+    (ho : out.length = positive (CircuitWords.first source).length)
+    (r : Fin (dimension (CircuitWords.first source).length
       (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length * 2))
     (hr : action.length = r.val) :
-    binarySignedValue (coefficientWord ![out, action, source, code₀, code₁]) =
-      (positiveGate (pairFst source).length
+    binarySignedValue (coefficientWord source code₀ code₁ out action) =
+      (positiveGate (CircuitWords.first source).length
         (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length).coefficients r := by
-  have hT : 50 ≤ precision (pairFst source).length := by unfold precision; omega
+  have hT : 50 ≤ precision (CircuitWords.first source).length := by unfold precision; omega
   rw [coefficientWord_expansion, alphaWord_value, oneWord_value, positiveWord_value,
     doubleWord_value, doubleWord_value, negativeWord_value, negativeWord_value,
     halfWord_value, halfWord_value, subtractWord_value, subtractWord_value,
@@ -78,11 +76,11 @@ theorem coefficientWord_positive (out action source code₀ code₁ : List Bool)
 /-- The constant-one output retains the normalized affine offset. -/
 theorem coefficientWord_one (out action source code₀ code₁ : List Bool)
     (ho : out.length = one)
-    (r : Fin (dimension (pairFst source).length
+    (r : Fin (dimension (CircuitWords.first source).length
       (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length * 2))
     (hr : action.length = r.val) :
-    binarySignedValue (coefficientWord ![out, action, source, code₀, code₁]) = 2 := by
-  have hT : 50 ≤ precision (pairFst source).length := by unfold precision; omega
+    binarySignedValue (coefficientWord source code₀ code₁ out action) = 2 := by
+  have hT : 50 ≤ precision (CircuitWords.first source).length := by unfold precision; omega
   rw [coefficientWord_expansion, alphaWord_value, oneWord_value, positiveWord_value,
     doubleWord_value, doubleWord_value, negativeWord_value, negativeWord_value,
     halfWord_value, halfWord_value, subtractWord_value, subtractWord_value,
@@ -94,13 +92,13 @@ theorem coefficientWord_one (out action source code₀ code₁ : List Bool)
 
 /-- The shared zero block and unallocated padding emit zero coefficients. -/
 theorem coefficientWord_zero (out action source code₀ code₁ : List Bool)
-    (ho : out.length = zero ∨ globalCount (pairFst source).length ≤ out.length)
-    (r : Fin (dimension (pairFst source).length
+    (ho : out.length = zero ∨ globalCount (CircuitWords.first source).length ≤ out.length)
+    (r : Fin (dimension (CircuitWords.first source).length
       (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length * 2))
     (hr : action.length = r.val) :
-    binarySignedValue (coefficientWord ![out, action, source, code₀, code₁]) = 0 := by
-  have hT : 50 ≤ precision (pairFst source).length := by unfold precision; omega
-  have hcases : out.length = 3 ∨ 3 * precision (pairFst source).length + 11 ≤ out.length := by
+    binarySignedValue (coefficientWord source code₀ code₁ out action) = 0 := by
+  have hT : 50 ≤ precision (CircuitWords.first source).length := by unfold precision; omega
+  have hcases : out.length = 3 ∨ 3 * precision (CircuitWords.first source).length + 11 ≤ out.length := by
     simpa only [zero, globalCount] using ho
   rw [coefficientWord_expansion, alphaWord_value, oneWord_value, positiveWord_value,
     doubleWord_value, doubleWord_value, negativeWord_value, negativeWord_value,
@@ -122,20 +120,20 @@ theorem coefficientWord_zero (out action source code₀ code₁ : List Bool)
 /-- Both coordinate outputs use their own final feedback doubling block. -/
 theorem coefficientWord_coordinate (out action source code₀ code₁ : List Bool)
     (axis : Fin 2) (ho : out.length = coordinate axis)
-    (r : Fin (dimension (pairFst source).length
+    (r : Fin (dimension (CircuitWords.first source).length
       (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length * 2))
     (hr : action.length = r.val) :
-    binarySignedValue (coefficientWord ![out, action, source, code₀, code₁]) =
-      (BimatrixFeedbackGate.doubleGate (slot (pairFst source).length
+    binarySignedValue (coefficientWord source code₀ code₁ out action) =
+      (BimatrixFeedbackGate.doubleGate (slot (CircuitWords.first source).length
         (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length
-        (feedbackSub (pairFst source).length axis))).coefficients r := by
-  have hT : 50 ≤ precision (pairFst source).length := by unfold precision; omega
+        (feedbackSub (CircuitWords.first source).length axis))).coefficients r := by
+  have hT : 50 ≤ precision (CircuitWords.first source).length := by unfold precision; omega
   rw [coefficientWord_expansion, alphaWord_value, oneWord_value, positiveWord_value,
     doubleWord_value, doubleWord_value, negativeWord_value, negativeWord_value,
     halfWord_value, halfWord_value, subtractWord_value, subtractWord_value,
     BrouwerNashAverageQuery.coefficientWord_value _ _ _ _ _ r hr]
   change _ = (BimatrixArithmeticGate.gate (fun z => if z = slot _ _ _
-    (feedbackSub (pairFst source).length axis) then 4 * (dimension _ _ _ : ℤ) else 0)
+    (feedbackSub (CircuitWords.first source).length axis) then 4 * (dimension _ _ _ : ℤ) else 0)
     0).coefficients r
   rw [affine₁_numeric, slot_val]
   · fin_cases axis <;>
@@ -151,15 +149,15 @@ theorem coefficientWord_coordinate (out action source code₀ code₁ : List Boo
 
 /-- The mean output selects exactly its canonical finite color-mean coefficient. -/
 theorem coefficientWord_average (out action source code₀ code₁ : List Bool)
-    (axis : Fin 2) (ho : out.length = average (pairFst source).length axis)
-    (r : Fin (dimension (pairFst source).length
+    (axis : Fin 2) (ho : out.length = average (CircuitWords.first source).length axis)
+    (r : Fin (dimension (CircuitWords.first source).length
       (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length * 2))
     (hr : action.length = r.val) :
-    binarySignedValue (coefficientWord ![out, action, source, code₀, code₁]) =
-      (averageGate (pairFst source).length
+    binarySignedValue (coefficientWord source code₀ code₁ out action) =
+      (averageGate (CircuitWords.first source).length
         (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length
         axis).coefficients r := by
-  have hT : 50 ≤ precision (pairFst source).length := by unfold precision; omega
+  have hT : 50 ≤ precision (CircuitWords.first source).length := by unfold precision; omega
   rw [coefficientWord_expansion, alphaWord_value, oneWord_value, positiveWord_value,
     doubleWord_value, doubleWord_value, negativeWord_value, negativeWord_value,
     halfWord_value, halfWord_value, subtractWord_value, subtractWord_value,
@@ -173,18 +171,18 @@ theorem coefficientWord_average (out action source code₀ code₁ : List Bool)
 
 /-- Every negative-mean halving output selects the exact predecessor in its coordinate chain. -/
 theorem coefficientWord_negative (out action source code₀ code₁ : List Bool)
-    (axis : Fin 2) (j : ℕ) (hj : j < precision (pairFst source).length)
-    (ho : out.length = negative (pairFst source).length axis (j + 1))
-    (r : Fin (dimension (pairFst source).length
+    (axis : Fin 2) (j : ℕ) (hj : j < precision (CircuitWords.first source).length)
+    (ho : out.length = negative (CircuitWords.first source).length axis (j + 1))
+    (r : Fin (dimension (CircuitWords.first source).length
       (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length * 2))
     (hr : action.length = r.val) :
-    binarySignedValue (coefficientWord ![out, action, source, code₀, code₁]) =
-      (BimatrixDyadicGate.halvingGate (slot (pairFst source).length
+    binarySignedValue (coefficientWord source code₀ code₁ out action) =
+      (BimatrixDyadicGate.halvingGate (slot (CircuitWords.first source).length
         (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length
-        (negative (pairFst source).length axis j))).coefficients r := by
-  have hT : 50 ≤ precision (pairFst source).length := by unfold precision; omega
-  have ho' : out.length = precision (pairFst source).length + 7 +
-      axis.val * precision (pairFst source).length + j := by
+        (negative (CircuitWords.first source).length axis j))).coefficients r := by
+  have hT : 50 ≤ precision (CircuitWords.first source).length := by unfold precision; omega
+  have ho' : out.length = precision (CircuitWords.first source).length + 7 +
+      axis.val * precision (CircuitWords.first source).length + j := by
     simpa only [negative, Nat.add_eq_zero_iff, Nat.one_ne_zero, and_false, ite_false,
       Nat.add_sub_cancel] using ho
   rw [coefficientWord_expansion, alphaWord_value, oneWord_value, positiveWord_value,
@@ -192,7 +190,7 @@ theorem coefficientWord_negative (out action source code₀ code₁ : List Bool)
     halfWord_value, halfWord_value, subtractWord_value, subtractWord_value,
     BrouwerNashAverageQuery.coefficientWord_value _ _ _ _ _ r hr]
   change _ = (BimatrixArithmeticGate.gate (fun z => if z = slot _ _ _
-    (negative (pairFst source).length axis j) then (dimension _ _ _ : ℤ) else 0)
+    (negative (CircuitWords.first source).length axis j) then (dimension _ _ _ : ℤ) else 0)
     0).coefficients r
   rw [affine₁_numeric, slot_val]
   · fin_cases axis <;>
@@ -230,34 +228,34 @@ private theorem subtractHalf_numeric {k : ℕ} (a z : Fin k) (r : Fin (k * 2)) :
 /-- Both auxiliary feedback stages reproduce their canonical affine factories. -/
 theorem coefficientWord_feedback (out action source code₀ code₁ : List Bool)
     (axis stage : Fin 2)
-    (ho : out.length = feedbackHalf (pairFst source).length axis + stage.val)
-    (r : Fin (dimension (pairFst source).length
+    (ho : out.length = feedbackHalf (CircuitWords.first source).length axis + stage.val)
+    (r : Fin (dimension (CircuitWords.first source).length
       (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length * 2))
     (hr : action.length = r.val) :
-    binarySignedValue (coefficientWord ![out, action, source, code₀, code₁]) =
-      (globalGate (pairFst source).length
+    binarySignedValue (coefficientWord source code₀ code₁ out action) =
+      (globalGate (CircuitWords.first source).length
         (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length
-        (feedbackHalf (pairFst source).length axis + stage.val)).coefficients r := by
-  have hT : 50 ≤ precision (pairFst source).length := by unfold precision; omega
-  have hq : coordinate axis < dimension (pairFst source).length
+        (feedbackHalf (CircuitWords.first source).length axis + stage.val)).coefficients r := by
+  have hT : 50 ≤ precision (CircuitWords.first source).length := by unfold precision; omega
+  have hq : coordinate axis < dimension (CircuitWords.first source).length
       (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length := by
     apply shared_lt_dimension
     have ha := axis.isLt
     unfold coordinate globalCount
     omega
-  have hp : positive (pairFst source).length < dimension (pairFst source).length
+  have hp : positive (CircuitWords.first source).length < dimension (CircuitWords.first source).length
       (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length := by
     apply shared_lt_dimension
     unfold positive globalCount
     omega
-  have hh : feedbackHalf (pairFst source).length axis < dimension (pairFst source).length
+  have hh : feedbackHalf (CircuitWords.first source).length axis < dimension (CircuitWords.first source).length
       (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length := by
     apply shared_lt_dimension
     have ha := axis.isLt
     unfold feedbackHalf globalCount
     omega
-  have hn : negative (pairFst source).length axis (precision (pairFst source).length) <
-      dimension (pairFst source).length
+  have hn : negative (CircuitWords.first source).length axis (precision (CircuitWords.first source).length) <
+      dimension (CircuitWords.first source).length
         (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length := by
     apply shared_lt_dimension
     fin_cases axis <;> simp only [negative, average, globalCount, zero_mul, one_mul] <;>
@@ -287,15 +285,15 @@ theorem coefficientWord_feedback (out action source code₀ code₁ : List Bool)
 
 /-- The actual polynomial-time shared selector agrees with every allocated global gate. -/
 theorem coefficientWord_value (out action source code₀ code₁ : List Bool)
-    (r : Fin (dimension (pairFst source).length
+    (r : Fin (dimension (CircuitWords.first source).length
       (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length * 2))
     (hr : action.length = r.val) :
-    binarySignedValue (coefficientWord ![out, action, source, code₀, code₁]) =
-      if out.length < globalCount (pairFst source).length then
-        (globalGate (pairFst source).length
+    binarySignedValue (coefficientWord source code₀ code₁ out action) =
+      if out.length < globalCount (CircuitWords.first source).length then
+        (globalGate (CircuitWords.first source).length
           (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length
           out.length).coefficients r else 0 := by
-  let b := (pairFst source).length
+  let b := (CircuitWords.first source).length
   let ell₀ := (circuitUnaryPrefix code₀).length
   let ell₁ := (circuitUnaryPrefix code₁).length
   change _ = if out.length < globalCount b then
