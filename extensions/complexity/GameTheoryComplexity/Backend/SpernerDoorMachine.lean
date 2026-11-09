@@ -1,6 +1,6 @@
 module
 
-public import GameTheoryComplexity.Backend.EndOfLineMachineOps
+public import GameTheoryComplexity.Backend.WordOperations
 public import GameTheory.Math.SpernerDoors
 
 @[expose] public section
@@ -10,37 +10,44 @@ order agrees with the mathematical door function; no triangle enumeration is nee
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity _root_.Complexity.Cobham EndOfLineMachineOps
+open Turing.MultiTapeTM
+open ComputableInPolyTime
+open WordOperations
 open GameTheory.Math.Sperner
 
 /-- Recognize the requested oriented zero/one edge on canonical color words. -/
 def gridEdgeDoorFlag (incoming : Bool) (a b : List Bool) : List Bool :=
-  andBit (eqFlag a (if incoming then [false, false] else [true, false]))
+  andFlag (eqFlag a (if incoming then [false, false] else [true, false]))
     (eqFlag b (if incoming then [true, false] else [false, false]))
 
 /-- Select the first present door, or retain the original vertex. -/
 def gridChooseDoor (incoming : Bool) (a b c r₀ r₁ r₂ stay : List Bool) : List Bool :=
-  caseBit₀ (gridEdgeDoorFlag incoming a b) r₀
-    (caseBit₀ (gridEdgeDoorFlag incoming b c) r₁
-      (caseBit₀ (gridEdgeDoorFlag incoming c a) r₂ stay))
+  select (gridEdgeDoorFlag incoming a b) r₀
+    (select (gridEdgeDoorFlag incoming b c) r₁
+      (select (gridEdgeDoorFlag incoming c a) r₂ stay))
 
-/-- Oriented edge recognition composes polynomial-time color producers. -/
-theorem gridEdgeDoorFlagFn_mem_FP (incoming : Bool) {a b : List Bool → List Bool}
-    (ha : a ∈ FP) (hb : b ∈ FP) :
-    (fun z => gridEdgeDoorFlag incoming (a z) (b z)) ∈ FP :=
-  andBitFn_mem_FP (eqFlagFn_mem_FP ha (constFn_mem_FP _))
-    (eqFlagFn_mem_FP hb (constFn_mem_FP _))
+/-- Oriented edge recognition charges both color producers. -/
+@[fun_prop] theorem gridEdgeDoorFlag_polyTime (incoming : Bool)
+    {α : Type} {enc : α ↪ List Bool} {a b : α → List Bool}
+    (ha : ComputableInPolyTime a enc encBits) (hb : ComputableInPolyTime b enc encBits) :
+    ComputableInPolyTime (fun x => gridEdgeDoorFlag incoming (a x) (b x)) enc encBits :=
+  andFlag_polyTime.comp
+    ((eqFlag_polyTime.comp (ha.prod (const _))).prod
+      (eqFlag_polyTime.comp (hb.prod (const _))))
 
-/-- Door selection composes polynomial-time controls and neighbor producers. -/
-theorem gridChooseDoorFn_mem_FP (incoming : Bool)
-    {a b c r₀ r₁ r₂ stay : List Bool → List Bool}
-    (ha : a ∈ FP) (hb : b ∈ FP) (hc : c ∈ FP)
-    (h₀ : r₀ ∈ FP) (h₁ : r₁ ∈ FP) (h₂ : r₂ ∈ FP) (hs : stay ∈ FP) :
-    (fun z => gridChooseDoor incoming (a z) (b z) (c z)
-      (r₀ z) (r₁ z) (r₂ z) (stay z)) ∈ FP :=
-  selectFn_mem_FP (gridEdgeDoorFlagFn_mem_FP incoming ha hb) h₀
-    (selectFn_mem_FP (gridEdgeDoorFlagFn_mem_FP incoming hb hc) h₁
-      (selectFn_mem_FP (gridEdgeDoorFlagFn_mem_FP incoming hc ha) h₂ hs))
+/-- Door selection charges every color and neighbor producer. -/
+@[fun_prop] theorem gridChooseDoor_polyTime (incoming : Bool)
+    {α : Type} {enc : α ↪ List Bool} {a b c r₀ r₁ r₂ stay : α → List Bool}
+    (ha : ComputableInPolyTime a enc encBits) (hb : ComputableInPolyTime b enc encBits)
+    (hc : ComputableInPolyTime c enc encBits) (h₀ : ComputableInPolyTime r₀ enc encBits)
+    (h₁ : ComputableInPolyTime r₁ enc encBits) (h₂ : ComputableInPolyTime r₂ enc encBits)
+    (hs : ComputableInPolyTime stay enc encBits) :
+    ComputableInPolyTime (fun x => gridChooseDoor incoming (a x) (b x) (c x)
+      (r₀ x) (r₁ x) (r₂ x) (stay x)) enc encBits :=
+  select_polyTime.comp ((gridEdgeDoorFlag_polyTime incoming ha hb).prod
+    (h₀.prod (select_polyTime.comp ((gridEdgeDoorFlag_polyTime incoming hb hc).prod
+      (h₁.prod (select_polyTime.comp ((gridEdgeDoorFlag_polyTime incoming hc ha).prod
+        (h₂.prod hs))))))))
 
 /-- Canonical color controls select exactly the mathematical door. -/
 theorem gridChooseDoor_colors (incoming : Bool) (a b c : Fin 3)
