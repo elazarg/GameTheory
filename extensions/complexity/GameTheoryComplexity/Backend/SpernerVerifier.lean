@@ -1,49 +1,45 @@
 module
 
 public import GameTheoryComplexity.Backend.SpernerProblem
-public import Complexitylib.Classes.P.NormalForm
+public import Complexity.Computability.Complexity.Classes.TFNP
 
 @[expose] public section
 
-/-! A polynomial-time Sperner verifier checks one triangle code and its three
-corner colors. The canonical paired verifier rejects malformed outer encodings;
-its machine certificate measures the complete serialized input. -/
+/-! A native Boolean verifier checks one canonical triangle word and its three
+corner colors. The runtime includes the width checks and every circuit query;
+witness bounds are supplied independently of the machine certificate. -/
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity _root_.Complexity.Cobham EndOfLineMachineOps
+open Turing.MultiTapeTM ComputableInPolyTime
 open GameTheory.Math.Sperner
 
-private theorem headFlag_flag (word : List Bool) :
-    bitAt [] word = [true] ∨ bitAt [] word = [false] := by
-  cases word with
-  | nil => exact Or.inr rfl
-  | cons first rest => cases first <;> simp [bitAt_nil_left]
-
-private theorem source_head (b : ℕ) : bitAt [] (encodeGridNode b none) = [false] := by
-  change bitAt [] (List.replicate (2 * b + 2) false) = _
+private theorem source_head (b : ℕ) :
+    (encodeGridNode b none).headD false = false := by
+  change (List.replicate (2 * b + 2) false).headD false = false
   rw [Nat.add_comm (2 * b) 2, List.replicate_add]
   rfl
 
-private def triangleFlag (input word : List Bool) : List Bool :=
-  andBit (gridNodeAcceptFlag (pairFst input) word) (bitAt [] word)
+private def triangleFlag (input word : List Bool) : Bool :=
+  (gridNodeAcceptFlag (CircuitWords.first input) word).headD false && word.headD false
 
 private theorem triangleFlag_accept (input word : List Bool) :
-    triangleFlag input word = [true] ↔
-      ∃ t, decodeGridNode (pairFst input).length word = some (some t) := by
-  have hn : gridNodeAcceptFlag (pairFst input) word = [true] ∨
-      gridNodeAcceptFlag (pairFst input) word = [false] := andBit_flag _ _
-  rw [triangleFlag, andBit_eq_true_iff hn (headFlag_flag _)]
+    triangleFlag input word = true ↔
+      ∃ t, decodeGridNode (CircuitWords.first input).length word = some (some t) := by
+  have ha : (gridNodeAcceptFlag (CircuitWords.first input) word).headD false = true ↔
+      ∃ node, decodeGridNode (CircuitWords.first input).length word = some node := by
+    simpa only [gridNodeAcceptFlag, List.headD_cons, List.cons.injEq, and_true] using
+      gridNodeAcceptFlag_accept (CircuitWords.first input) word
+  rw [triangleFlag, Bool.and_eq_true, ha]
   constructor
-  · rintro ⟨ha, hh⟩
-    obtain ⟨node, hd⟩ := (gridNodeAcceptFlag_accept _ _).mp ha
+  · rintro ⟨⟨node, hd⟩, hh⟩
     cases node with
     | none =>
       rw [← encodeGridNode_decode hd, source_head] at hh
       contradiction
     | some t => exact ⟨t, hd⟩
   · rintro ⟨t, hd⟩
-    refine ⟨(gridNodeAcceptFlag_accept _ _).mpr ⟨some t, hd⟩, ?_⟩
+    refine ⟨⟨some t, hd⟩, ?_⟩
     rw [← encodeGridNode_decode hd]
     rfl
 
@@ -55,16 +51,16 @@ private theorem encodedColors_eq_iff (a b : Fin 3) :
   · rintro rfl
     rfl
 
-private def colorFlag (input word : List Bool) : List Bool :=
-  let a := gridCornerColor (pairFst input) (evaluateCircuitVector (pairSnd input)) word 0
-  let b := gridCornerColor (pairFst input) (evaluateCircuitVector (pairSnd input)) word 1
-  let c := gridCornerColor (pairFst input) (evaluateCircuitVector (pairSnd input)) word 2
-  andBit (notBit (eqFlag a b))
-    (andBit (notBit (eqFlag b c)) (notBit (eqFlag c a)))
+private def colorFlag (input word : List Bool) : Bool :=
+  let query := evaluateCircuitVector (CircuitWords.rest input)
+  let a := gridCornerColor (CircuitWords.first input) query word 0
+  let b := gridCornerColor (CircuitWords.first input) query word 1
+  let c := gridCornerColor (CircuitWords.first input) query word 2
+  !decide (a = b) && (!decide (b = c) && !decide (c = a))
 
 private theorem colorFlag_accept {input word : List Bool} {t : GridTriangle}
-    (hd : decodeGridNode (pairFst input).length word = some (some t)) :
-    colorFlag input word = [true] ↔
+    (hd : decodeGridNode (CircuitWords.first input).length word = some (some t)) :
+    colorFlag input word = true ↔
       Trichromatic
         (spernerColor input (corner t 0).1 (corner t 0).2)
         (spernerColor input (corner t 1).1 (corner t 1).2)
@@ -73,85 +69,69 @@ private theorem colorFlag_accept {input word : List Bool} {t : GridTriangle}
   rw [colorFlag, ← encodeGridNode_decode hd,
     gridCornerColor_encode _ _ t 0 hv, gridCornerColor_encode _ _ t 1 hv,
     gridCornerColor_encode _ _ t 2 hv]
-  rw [andBit_eq_true_iff (negFlag_flag (eqFlag_flag _ _)) (andBit_flag _ _),
-    andBit_eq_true_iff (negFlag_flag (eqFlag_flag _ _)) (negFlag_flag (eqFlag_flag _ _)),
-    negFlag_accept (eqFlag_flag _ _), negFlag_accept (eqFlag_flag _ _),
-    negFlag_accept (eqFlag_flag _ _)]
-  simp only [eqFlag_eq_true_iff, encodedColors_eq_iff, Trichromatic, spernerColor]
+  simp [encodedColors_eq_iff, Trichromatic, spernerColor]
 
-/-- Check exact triangle encoding and the three distinct corner colors. -/
-def spernerVerdict (input word : List Bool) : List Bool :=
-  andBit (triangleFlag input word) (colorFlag input word)
-
-theorem spernerVerdict_flag (input word : List Bool) :
-    spernerVerdict input word = [true] ∨ spernerVerdict input word = [false] :=
-  andBit_flag _ _
+/-- Check the exact triangle encoding and three distinct corner colors. -/
+def spernerVerdict (input word : List Bool) : Bool :=
+  let query := evaluateCircuitVector (CircuitWords.rest input)
+  let a := gridCornerColor (CircuitWords.first input) query word 0
+  let b := gridCornerColor (CircuitWords.first input) query word 1
+  let c := gridCornerColor (CircuitWords.first input) query word 2
+  ((gridNodeAcceptFlag (CircuitWords.first input) word).headD false && word.headD false) &&
+    (!decide (a = b) && (!decide (b = c) && !decide (c = a)))
 
 theorem spernerVerdict_accept (input word : List Bool) :
-    spernerVerdict input word = [true] ↔ spernerRelation input word := by
-  have ht : triangleFlag input word = [true] ∨ triangleFlag input word = [false] :=
-    andBit_flag _ _
-  have hc : colorFlag input word = [true] ∨ colorFlag input word = [false] :=
-    andBit_flag _ _
-  rw [spernerVerdict, andBit_eq_true_iff ht hc, triangleFlag_accept]
+    spernerVerdict input word = true ↔ spernerRelation input word := by
+  change (triangleFlag input word && colorFlag input word) = true ↔ _
+  rw [Bool.and_eq_true, triangleFlag_accept]
   constructor
   · rintro ⟨⟨t, hd⟩, hc⟩
     exact ⟨t, hd, (colorFlag_accept hd).mp hc⟩
   · rintro ⟨t, hd, hc⟩
     exact ⟨⟨t, hd⟩, (colorFlag_accept hd).mpr hc⟩
 
-private theorem verdict_pair_mem_FP :
-    (fun z => spernerVerdict (pairFst z) (pairSnd z)) ∈ FP := by
-  have hr := mem_FP_comp pairFst_mem_FP pairFst_mem_FP
-  have hs := mem_FP_comp pairFst_mem_FP pairSnd_mem_FP
-  have hw := pairSnd_mem_FP
-  have hhead : (fun z => bitAt [] (pairSnd z)) ∈ FP :=
-    CobhamFP_subset_FP (headFlagFn (FP_subset_CobhamFP hw))
-  have htriangle := andBitFn_mem_FP (gridNodeAcceptFlagFn_mem_FP hr hw) hhead
-  have h₀ := gridCornerColorUniformFn_mem_FP 0 hr hs hw _ evaluateCircuitVector_pair_mem_FP
-  have h₁ := gridCornerColorUniformFn_mem_FP 1 hr hs hw _ evaluateCircuitVector_pair_mem_FP
-  have h₂ := gridCornerColorUniformFn_mem_FP 2 hr hs hw _ evaluateCircuitVector_pair_mem_FP
-  exact andBitFn_mem_FP htriangle
-    (andBitFn_mem_FP (notBitFn_mem_FP (eqFlagFn_mem_FP h₀ h₁))
-      (andBitFn_mem_FP (notBitFn_mem_FP (eqFlagFn_mem_FP h₁ h₂))
-        (notBitFn_mem_FP (eqFlagFn_mem_FP h₂ h₀))))
+private theorem triangleFlag_polyTime {α : Type} {enc : α ↪ List Bool}
+    {input word : α → List Bool} (hi : ComputableInPolyTime input enc encBits)
+    (hw : ComputableInPolyTime word enc encBits) :
+    ComputableInPolyTime (fun a => triangleFlag (input a) (word a)) enc encBool :=
+  bool_and'
+    ((ComputableInPolyTime.headD (encA := encBool) false).comp
+      (gridNodeAcceptFlag_polyTime (CircuitWords.first_polyTime.comp hi) hw))
+    ((ComputableInPolyTime.headD (encA := encBool) false).comp hw)
 
-/-- Reject noncanonical outer pairs before verifying a Sperner triangle. -/
-def spernerPairedVerdict (z : List Bool) : List Bool :=
-  andBit (eqFlag z (pair (pairFst z) (pairSnd z)))
-    (spernerVerdict (pairFst z) (pairSnd z))
+private theorem colorFlag_polyTime {α : Type} {enc : α ↪ List Bool}
+    {input word : α → List Bool} (hi : ComputableInPolyTime input enc encBits)
+    (hw : ComputableInPolyTime word enc encBits) :
+    ComputableInPolyTime (fun a => colorFlag (input a) (word a)) enc encBool := by
+  have hr := CircuitWords.first_polyTime.comp hi
+  have hquery : ComputableInPolyTime
+      (fun p : α × List Bool => evaluateCircuitVector (CircuitWords.rest (input p.1)) p.2)
+      (encPair enc encBits) encBits :=
+    evaluateCircuitVector_polyTime
+      (CircuitWords.rest_polyTime.comp (hi.comp (fst enc encBits))) (snd enc encBits)
+  have h₀ := gridCornerColor_polyTime hr hw
+    (fun a => evaluateCircuitVector (CircuitWords.rest (input a))) hquery 0
+  have h₁ := gridCornerColor_polyTime hr hw
+    (fun a => evaluateCircuitVector (CircuitWords.rest (input a))) hquery 1
+  have h₂ := gridCornerColor_polyTime hr hw
+    (fun a => evaluateCircuitVector (CircuitWords.rest (input a))) hquery 2
+  exact bool_and' (bool_not.comp (decide_eq' h₀ h₁))
+    (bool_and' (bool_not.comp (decide_eq' h₁ h₂)) (bool_not.comp (decide_eq' h₂ h₀)))
 
-/-- One polynomial-time string computation performs the complete verification. -/
-theorem spernerPairedVerdict_mem_FP : spernerPairedVerdict ∈ FP :=
-  andBitFn_mem_FP
-    (eqFlagFn_mem_FP id_mem_FP (pairFn_mem_FP pairFst_mem_FP pairSnd_mem_FP))
-    verdict_pair_mem_FP
+/-- Certified input and witness producers give a native polynomial-time verifier. -/
+@[fun_prop] theorem spernerVerdict_polyTime {α : Type} {enc : α ↪ List Bool}
+    {input word : α → List Bool} (hi : ComputableInPolyTime input enc encBits)
+    (hw : ComputableInPolyTime word enc encBits) :
+    ComputableInPolyTime (fun a => spernerVerdict (input a) (word a)) enc encBool := by
+  change ComputableInPolyTime
+    (fun a => triangleFlag (input a) (word a) && colorFlag (input a) (word a)) enc encBool
+  exact bool_and' (triangleFlag_polyTime hi hw) (colorFlag_polyTime hi hw)
 
-/-- The complete verifier has an actual deterministic machine with polynomial runtime. -/
-theorem exists_spernerPairedVerdict_machine :
-    ∃ (k : ℕ) (machine : TM k) (bound : Polynomial ℕ),
-      machine.ComputesInTime spernerPairedVerdict bound.eval :=
-  mem_FP_iff_computesInTime_polynomial.mp spernerPairedVerdict_mem_FP
-
-theorem spernerPairedVerdict_accept (z : List Bool) :
-    spernerPairedVerdict z = [true] ↔ z ∈ pairLang spernerRelation := by
-  rw [spernerPairedVerdict,
-    andBit_eq_true_iff (eqFlag_flag _ _) (spernerVerdict_flag _ _),
-    eqFlag_eq_true_iff, spernerVerdict_accept]
-  constructor
-  · rintro ⟨hz, h⟩
-    exact ⟨pairFst z, pairSnd z, hz, h⟩
-  · rintro ⟨input, word, rfl, h⟩
-    simp only [pairFst_pair, pairSnd_pair]
-    exact ⟨trivial, h⟩
-
-/-- Linear witness balance and the polynomial-time paired verifier give FNP membership. -/
-theorem spernerRelation_mem_FNP : spernerRelation ∈ FNP := by
-  refine ⟨spernerRelation_polyBalanced, mem_P_of_decisionFn spernerPairedVerdict_mem_FP ?_⟩
-  intro z
-  rw [← spernerPairedVerdict_accept]
-  rcases andBit_flag (eqFlag z (pair (pairFst z) (pairSnd z)))
-    (spernerVerdict (pairFst z) (pairSnd z)) with h | h <;>
-    simp [spernerPairedVerdict, h]
+/-- Linear witness balance and the actual Boolean verifier give native FNP membership. -/
+theorem spernerRelation_mem_FNP : spernerRelation ∈ Cslib.Complexity.FNP encBits := by
+  refine ⟨spernerRelation_polyBalanced, ?_⟩
+  exact ⟨(fun p : List Bool × List Bool => spernerVerdict p.1 p.2),
+    spernerVerdict_polyTime (fst encBits encBits) (snd encBits encBits),
+    fun input word => (spernerVerdict_accept input word).symm⟩
 
 end GameTheory.Complexity.Backend
