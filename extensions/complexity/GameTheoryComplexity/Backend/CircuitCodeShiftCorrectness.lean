@@ -85,4 +85,21 @@ theorem shiftCircuitCode_encode (ruler : List Bool)
   rw [hout]
   rfl
 
+/-- A relocated gate remains checked when its entire source memo interval fits
+inside the destination wire bound. -/
+theorem circuitRelocatedGate_valid {width offset bound : ℕ}
+    {gates : List (CircuitFormat.signature.Op × List ℕ)}
+    (hraw : Cslib.Circuits.Program.IsCodeFrom CircuitFormat.signature width 0 gates)
+    (hbound : offset + width + gates.length ≤ bound) (j : Fin gates.length) :
+    Cslib.Circuits.Program.IsCodeFrom CircuitFormat.signature bound 0
+      [(gates[j.val].1, gates[j.val].2.map (offset + ·))] := by
+  have hgate := hraw.getElem j.val j.isLt
+  refine ⟨⟨?_, ?_⟩, trivial⟩
+  · simpa only [List.length_map] using hgate.1
+  · intro reference hreference
+    obtain ⟨ref, href, rfl⟩ := List.mem_map.mp hreference
+    have hlt := hgate.2 ref href
+    have hj := j.isLt
+    omega
+
 end GameTheory.Complexity.Backend

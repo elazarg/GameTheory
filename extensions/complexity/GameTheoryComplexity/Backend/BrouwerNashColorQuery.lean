@@ -8,6 +8,7 @@ public import GameTheoryComplexity.Backend.BinaryUnaryEncoding
 public import GameTheoryComplexity.Backend.BinaryIndexedLookup
 public import GameTheoryComplexity.Backend.BinarySignedFiniteSum
 public import GameTheoryComplexity.Backend.BimatrixRawGateMachine
+public import GameTheoryComplexity.Backend.CircuitCodeShiftCorrectness
 
 @[expose] public section
 /-!
@@ -19,134 +20,140 @@ variable gate and digit ordinals use length-controlled indexed lookup.
 -/
 
 namespace GameTheory.Complexity.Backend.BrouwerNashColorQuery
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.Circuits Turing.MultiTapeTM
 open BrouwerNashLayout BrouwerNashProgram
-private def scale (n : ℕ) (r : List Bool) := smash r (List.replicate n true)
-private def headers (v : Fin 4 → List Bool) : Fin 3 → List Bool := ![v 1, v 2, v 3]
-private def depth (v : Fin 4 → List Bool) := BrouwerNashHeaders.sourceDepthRuler (headers v)
-private def base (t : Fin 41) (v : Fin 4 → List Bool) :=
-  BrouwerNashHeaders.globalRuler (headers v) ++
-    scale t.val (BrouwerNashHeaders.sampleRuler (headers v))
-/-- Absolute source wire for a copied corner digit; arguments are digit ordinal and headers. -/
+
+local notation "QueryContext" => ((List Bool × (List Bool × List Bool)) × (List Bool × List Bool))
+local notation "queryEncoding" => encPair (encPair encBits (encPair encBits encBits)) (encPair encBits encBits)
+
+private def scale (n : ℕ) (r : List Bool) : List Bool := List.replicate (r.length * n) true
+
+private def base (t : Fin 41) (source code₀ code₁ : List Bool) : List Bool :=
+  BrouwerNashHeaders.globalRuler source ++
+    scale t.val (BrouwerNashHeaders.sampleRuler source code₀ code₁)
+
+/-- Absolute source wire for one copied corner digit. -/
 def cornerBitRuler (t : Fin 41) (corner : Fin 4) (axis : Fin 2)
-    (v : Fin 4 → List Bool) : List Bool :=
-  let b := depth v
+    (ordinal source code₀ code₁ : List Bool) : List Bool :=
+  let b := BrouwerNashHeaders.sourceDepthRuler source
+  let scale (n : ℕ) (r : List Bool) := List.replicate (r.length * n) true
+  let start := BrouwerNashHeaders.globalRuler source ++
+    scale t.val (BrouwerNashHeaders.sampleRuler source code₀ code₁)
   let upper := if axis.val = 0 then corner.val = 1 ∨ corner.val = 2
     else corner.val = 1 ∨ corner.val = 3
   if upper then
-    caseBit₀ (lenEqFlag (v 0) b)
-      (caseBit₀ (lenEqFlag b []) (List.replicate 2 false)
-        (base t v ++ List.replicate 2 false ++ scale 4 b ++ scale (4 * axis.val) b ++
-          scale 4 b.tail ++ List.replicate 3 false))
-      (base t v ++ List.replicate 2 false ++ scale 4 b ++ scale (4 * axis.val) b ++
-        scale 4 (v 0) ++ List.replicate 2 false)
-  else
-    caseBit₀ (lenEqFlag (v 0) b) (List.replicate 3 false)
-      (base t v ++ List.replicate 2 false ++ scale (2 * axis.val) b ++
-        scale 2 ((b.drop (v 0).length).tail))
-private theorem scale_cobham {a : ℕ} (n : ℕ) {f : (Fin a → List Bool) → List Bool}
-    (hf : Cobham f) : Cobham fun v => scale n (f v) :=
-  (Cobham.comp₂ .smash hf (.const (List.replicate n true))).of_eq fun _ => rfl
-private theorem header_cobham {f : (Fin 3 → List Bool) → List Bool} (hf : Cobham f) :
-    Cobham fun v : Fin 4 → List Bool => f (headers v) :=
-  (Cobham.comp hf (fun i => .proj i.succ)).of_eq fun v => by
-    congr 1
-    ext i
-    fin_cases i <;> rfl
-private theorem depth_cobham : Cobham depth :=
-  header_cobham BrouwerNashHeaders.sourceDepthRuler_cobham
-private theorem base_cobham (t : Fin 41) : Cobham (base t) :=
-  .appendFn (header_cobham BrouwerNashHeaders.globalRuler_cobham)
-    (scale_cobham _ (header_cobham BrouwerNashHeaders.sampleRuler_cobham))
-theorem cornerBitRuler_cobham (t : Fin 41) (corner : Fin 4) (axis : Fin 2) :
-    Cobham (cornerBitRuler t corner axis) := by
+    if ordinal.length = b.length then
+      if b.length = 0 then [false, false]
+      else start ++ [false, false] ++ scale 4 b ++ scale (4 * axis.val) b ++
+        scale 4 b.tail ++ [false, false, false]
+    else start ++ [false, false] ++ scale 4 b ++ scale (4 * axis.val) b ++
+      scale 4 ordinal ++ [false, false]
+  else if ordinal.length = b.length then [false, false, false]
+    else start ++ [false, false] ++ scale (2 * axis.val) b ++
+      scale 2 ((b.drop ordinal.length).tail)
+
+private theorem scale_polyTime (n : ℕ) {Input : Type} {input : Input ↪ List Bool}
+    {ruler : Input → List Bool} (hr : ComputableInPolyTime ruler input encBits) :
+    ComputableInPolyTime (fun a => scale n (ruler a)) input encBits :=
+  (ComputableInPolyTime.bitsReplicate true).comp
+    (ComputableInPolyTime.unary_mul' (ComputableInPolyTime.length_bits_comp hr)
+      (ComputableInPolyTime.const n))
+
+private theorem base_polyTime (t : Fin 41) {Input : Type} {input : Input ↪ List Bool}
+    {source code₀ code₁ : Input → List Bool}
+    (hs : ComputableInPolyTime source input encBits)
+    (h₀ : ComputableInPolyTime code₀ input encBits)
+    (h₁ : ComputableInPolyTime code₁ input encBits) :
+    ComputableInPolyTime (fun a => base t (source a) (code₀ a) (code₁ a)) input encBits :=
+  ComputableInPolyTime.bitsAppend (BrouwerNashHeaders.globalRuler_polyTime hs)
+    (scale_polyTime t.val (BrouwerNashHeaders.sampleRuler_polyTime hs h₀ h₁))
+
+theorem cornerBitRuler_polyTime (t : Fin 41) (corner : Fin 4) (axis : Fin 2)
+    {Input : Type} {input : Input ↪ List Bool} {ordinal source code₀ code₁ : Input → List Bool}
+    (hi : ComputableInPolyTime ordinal input encBits)
+    (hs : ComputableInPolyTime source input encBits)
+    (h₀ : ComputableInPolyTime code₀ input encBits)
+    (h₁ : ComputableInPolyTime code₁ input encBits) :
+    ComputableInPolyTime (fun a => cornerBitRuler t corner axis (ordinal a) (source a)
+      (code₀ a) (code₁ a)) input encBits := by
+  have hb := BrouwerNashHeaders.sourceDepthRuler_polyTime hs
+  have hstart := base_polyTime t hs h₀ h₁
+  have heq := (ComputableInPolyTime.length_bits_comp hi).decide_eq'
+    (ComputableInPolyTime.length_bits_comp hb)
+  have hempty := (ComputableInPolyTime.length_bits_comp hb).decide_eq'
+    (ComputableInPolyTime.const 0)
+  have htail := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hb
+  have hdrop := ComputableInPolyTime.bitsDropWithInput hb (ComputableInPolyTime.length_bits_comp hi)
+  have hdropTail := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hdrop
+  have hupper := ComputableInPolyTime.bitsAppend
+    (ComputableInPolyTime.bitsAppend
+      (ComputableInPolyTime.bitsAppend hstart (ComputableInPolyTime.const [false,false]))
+      (scale_polyTime 4 hb)) (scale_polyTime (4 * axis.val) hb)
+  have hlast := ComputableInPolyTime.bitsAppend
+    (ComputableInPolyTime.bitsAppend hupper (scale_polyTime 4 htail))
+    (ComputableInPolyTime.const [false,false,false])
+  have hnext := ComputableInPolyTime.bitsAppend
+    (ComputableInPolyTime.bitsAppend hupper (scale_polyTime 4 hi))
+    (ComputableInPolyTime.const [false,false])
+  have hlower := ComputableInPolyTime.bitsAppend
+    (ComputableInPolyTime.bitsAppend
+      (ComputableInPolyTime.bitsAppend hstart (ComputableInPolyTime.const [false,false]))
+      (scale_polyTime (2 * axis.val) hb)) (scale_polyTime 2 hdropTail)
   unfold cornerBitRuler
   dsimp only
   by_cases hu : (if axis.val = 0 then corner.val = 1 ∨ corner.val = 2
     else corner.val = 1 ∨ corner.val = 3)
   · simp only [hu, ite_true]
-    exact .iteFn (lenEqFlag_mem (.proj 0) depth_cobham)
-      (.iteFn (lenEqFlag_mem depth_cobham (.const [])) (.const _)
-        (.appendFn (.appendFn (.appendFn (.appendFn (.appendFn (base_cobham t)
-          (.const _)) (scale_cobham _ depth_cobham)) (scale_cobham _ depth_cobham))
-          (scale_cobham _ (.tailFn depth_cobham))) (.const _)))
-      (.appendFn (.appendFn (.appendFn (.appendFn (.appendFn (base_cobham t)
-        (.const _)) (scale_cobham _ depth_cobham)) (scale_cobham _ depth_cobham))
-        (scale_cobham _ (.proj 0))) (.const _))
+    exact (heq.ite
+      (hempty.ite (ComputableInPolyTime.const [false, false]) hlast) hnext).of_enc_eq
+      (fun a => by simp only [decide_eq_true_eq, base, scale, Function.comp_apply])
   · simp only [hu, ite_false]
-    exact .iteFn (lenEqFlag_mem (.proj 0) depth_cobham) (.const _)
-      (.appendFn (.appendFn (.appendFn (base_cobham t) (.const _))
-        (scale_cobham _ depth_cobham))
-        (scale_cobham _ (.tailFn (.dropFn (.proj 0) depth_cobham))))
-private theorem depth_length (v : Fin 4 → List Bool) :
-    (depth v).length = (pairFst (v 1)).length := rfl
-private theorem base_length (t : Fin 41) (v : Fin 4 → List Bool) :
-    (base t v).length = sampleBase (pairFst (v 1)).length
-      (circuitUnaryPrefix (v 2)).length (circuitUnaryPrefix (v 3)).length t := by
-  simp only [base, List.length_append, scale, smash_length, List.length_replicate,
+    exact (heq.ite (ComputableInPolyTime.const [false, false, false]) hlower).of_enc_eq
+      (fun a => by simp only [decide_eq_true_eq, base, scale, Function.comp_apply])
+
+private theorem base_length (t : Fin 41) (source code₀ code₁ : List Bool) :
+    (base t source code₀ code₁).length = sampleBase (CircuitWords.first source).length
+      (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length t := by
+  simp only [base, List.length_append, scale, List.length_replicate,
     BrouwerNashHeaders.globalRuler_length, BrouwerNashHeaders.sampleRuler_length,
-    headers, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two,
-    sampleBase, Matrix.vecHead, Matrix.vecTail, Function.comp_apply, Fin.succ_zero_eq_one]
+    sampleBase]
   ring
-private theorem flagCase_length (x y a b : List Bool) :
-    (caseBit₀ (lenEqFlag x y) a b).length = if x.length = y.length then a.length else b.length := by
-  rcases lenEqFlag_flag x y with he | he
-  · rw [he]
-    simp only [caseBit₀, (lenEqFlag_eq_true_iff x y).mp he, ite_true, Bool.cond_true]
-  · have hn : x.length ≠ y.length := by
-      intro h
-      have ht := (lenEqFlag_eq_true_iff x y).mpr h
-      rw [he] at ht
-      contradiction
-    simp only [he, caseBit₀, hn, ite_false, Bool.cond_false]
+
 private theorem cornerBitRuler_length_formula (t : Fin 41) (corner : Fin 4) (axis : Fin 2)
-    (v : Fin 4 → List Bool) :
-    let b := (pairFst (v 1)).length
-    let ell₀ := (circuitUnaryPrefix (v 2)).length
-    let ell₁ := (circuitUnaryPrefix (v 3)).length
-    let j := (v 0).length
+    (ordinal source code₀ code₁ : List Bool) :
+    let b := (CircuitWords.first source).length
+    let ell₀ := (circuitUnaryPrefix code₀).length
+    let ell₁ := (circuitUnaryPrefix code₁).length
+    let j := ordinal.length
     let upper := if axis.val = 0 then corner.val = 1 ∨ corner.val = 2
       else corner.val = 1 ∨ corner.val = 3
-    (cornerBitRuler t corner axis v).length =
+    (cornerBitRuler t corner axis ordinal source code₀ code₁).length =
       if upper then
         if j = b then if b = 0 then one
           else sampleBase b ell₀ ell₁ t + increment b axis (b - 1) 3
         else sampleBase b ell₀ ell₁ t + increment b axis j 2
       else if j = b then zero
         else sampleBase b ell₀ ell₁ t + primaryBit b axis j := by
+  have hbase := base_length t source code₀ code₁
+  simp only [base, List.length_append, scale, List.length_replicate, Nat.mul_comm] at hbase
   dsimp only
   unfold cornerBitRuler
   dsimp only
-  by_cases hu : (if axis.val = 0 then corner.val = 1 ∨ corner.val = 2
-    else corner.val = 1 ∨ corner.val = 3)
-  · simp only [hu, ite_true, flagCase_length, depth_length]
-    by_cases hj : (v 0).length = (pairFst (v 1)).length
-    · simp only [hj, ite_true, List.length_nil]
-      by_cases hb : (pairFst (v 1)).length = 0
-      · simp only [hb, ite_true, List.length_replicate, one]
-      · simp only [hb, ite_false, List.length_append, List.length_replicate,
-          scale, smash_length, List.length_tail, depth_length, base_length,
-          increment, incrementBase, Nat.mul_comm, Nat.mul_assoc]
-        omega
-    · simp only [hj, ite_false, List.length_append, List.length_replicate,
-        scale, smash_length, depth_length, base_length, increment, incrementBase,
-        Nat.mul_comm, Nat.mul_assoc]
-      omega
-  · simp only [hu, ite_false, flagCase_length, depth_length,
-      List.length_append, List.length_replicate, scale, smash_length,
-      List.length_tail, List.length_drop, depth_length, base_length, primaryBit, digit, zero,
-      Nat.mul_comm, Nat.mul_assoc]
-    split <;> omega
+  simp only [List.length_tail, List.length_drop, BrouwerNashHeaders.sourceDepthRuler_length]
+  split_ifs <;>
+    simp only [List.length_append, List.length_replicate, List.length_cons, List.length_nil,
+      increment, incrementBase, primaryBit, digit, zero, one, Nat.mul_comm, Nat.mul_assoc] <;> omega
+
 /-- The copied source ruler is the exact canonical corner reference on allocated digits. -/
 theorem cornerBitRuler_length (t : Fin 41) (corner : Fin 4) (axis : Fin 2)
-    (v : Fin 4 → List Bool) (hj : (v 0).length ≤ (pairFst (v 1)).length) :
-    (cornerBitRuler t corner axis v).length =
-      (cornerBit (pairFst (v 1)).length (circuitUnaryPrefix (v 2)).length
-        (circuitUnaryPrefix (v 3)).length t corner axis (v 0).length).val := by
-  let b := (pairFst (v 1)).length
-  let e₀ := (circuitUnaryPrefix (v 2)).length
-  let e₁ := (circuitUnaryPrefix (v 3)).length
-  let j := (v 0).length
+    (ordinal source code₀ code₁ : List Bool) (hj : ordinal.length ≤ (CircuitWords.first source).length) :
+    (cornerBitRuler t corner axis ordinal source code₀ code₁).length =
+      (cornerBit (CircuitWords.first source).length (circuitUnaryPrefix code₀).length
+        (circuitUnaryPrefix code₁).length t corner axis ordinal.length).val := by
+  let b := (CircuitWords.first source).length
+  let e₀ := (circuitUnaryPrefix code₀).length
+  let e₁ := (circuitUnaryPrefix code₁).length
+  let j := ordinal.length
   have hjb : j ≤ b := hj
   rw [cornerBitRuler_length_formula]
   change (if (if axis.val = 0 then corner.val = 1 ∨ corner.val = 2
@@ -185,457 +192,579 @@ theorem cornerBitRuler_length (t : Fin 41) (corner : Fin 4) (axis : Fin 2)
           simpa using Nat.mul_le_mul_left (2 * b) (show axis.val ≤ 1 by omega)
         omega
       exact (slot_val _ _ _ _ (sample_lt_dimension _ _ _ t _ hl)).symm
-private def queryHeaders (v : Fin 5 → List Bool) : Fin 3 → List Bool := ![v 2, v 3, v 4]
-private theorem queryHeader_cobham {f : (Fin 3 → List Bool) → List Bool} (hf : Cobham f) :
-    Cobham fun v : Fin 5 → List Bool => f (queryHeaders v) :=
-  (Cobham.comp hf (fun i => .proj i.succ.succ)).of_eq fun v => by
-    congr 1
-    ext i
-    fin_cases i <;> rfl
-private theorem tail_cobham {a : ℕ} {f : (Fin a → List Bool) → List Bool}
-    (hf : Cobham f) : Cobham fun v : Fin (a + 1) → List Bool => f (Fin.tail v) :=
-  Cobham.comp hf fun i => .proj i.succ
+
 /-- Absolute copied-input offset for one compiled corner-color flag. -/
 def inputRuler (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
-    (v : Fin 3 → List Bool) : List Bool :=
-  BrouwerNashHeaders.globalRuler v ++ scale t.val (BrouwerNashHeaders.sampleRuler v) ++
-    List.replicate 10 false ++ scale 12 (BrouwerNashHeaders.sourceDepthRuler v) ++
-    scale corner.val (BrouwerNashHeaders.cornerRuler v) ++
-    (if flag.val = 0 then [] else BrouwerNashHeaders.arityRuler v ++ circuitUnaryPrefix (v 1))
-theorem inputRuler_cobham (t : Fin 41) (corner : Fin 4) (flag : Fin 2) :
-    Cobham (inputRuler t corner flag) := by
+    (source code₀ code₁ : List Bool) : List Bool :=
+  let scale (n : ℕ) (r : List Bool) := List.replicate (r.length * n) true
+  BrouwerNashHeaders.globalRuler source ++ scale t.val (BrouwerNashHeaders.sampleRuler source code₀ code₁) ++
+    List.replicate 10 false ++ scale 12 (BrouwerNashHeaders.sourceDepthRuler source) ++
+    scale corner.val (BrouwerNashHeaders.cornerRuler source code₀ code₁) ++
+    (if flag.val = 0 then [] else BrouwerNashHeaders.arityRuler source ++ circuitUnaryPrefix code₀)
+
+theorem inputRuler_polyTime (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
+    {Input : Type} {input : Input ↪ List Bool} {source code₀ code₁ : Input → List Bool}
+    (hs : ComputableInPolyTime source input encBits)
+    (h₀ : ComputableInPolyTime code₀ input encBits)
+    (h₁ : ComputableInPolyTime code₁ input encBits) :
+    ComputableInPolyTime (fun a => inputRuler t corner flag (source a) (code₀ a) (code₁ a))
+      input encBits := by
+  have hstart := base_polyTime t hs h₀ h₁
+  have hprefix := ComputableInPolyTime.bitsAppend
+    (ComputableInPolyTime.bitsAppend
+      (ComputableInPolyTime.bitsAppend hstart (ComputableInPolyTime.const (List.replicate 10 false)))
+      (scale_polyTime 12 (BrouwerNashHeaders.sourceDepthRuler_polyTime hs)))
+    (scale_polyTime corner.val (BrouwerNashHeaders.cornerRuler_polyTime hs h₀ h₁))
   unfold inputRuler
-  apply Cobham.appendFn
-  · exact .appendFn (.appendFn (.appendFn
-      (.appendFn BrouwerNashHeaders.globalRuler_cobham
-        (scale_cobham _ BrouwerNashHeaders.sampleRuler_cobham)) (.const _))
-      (scale_cobham _ BrouwerNashHeaders.sourceDepthRuler_cobham))
-      (scale_cobham _ BrouwerNashHeaders.cornerRuler_cobham)
-  · by_cases h : flag.val = 0
-    · simp only [h, ite_true]
-      exact .const []
-    · simp only [h, ite_false]
-      exact .appendFn BrouwerNashHeaders.arityRuler_cobham
-        (Cobham.comp (FP_subset_CobhamFP circuitUnaryPrefix_mem_FP) fun _ : Fin 1 => .proj 1)
+  dsimp only
+  by_cases h : flag.val = 0
+  · simp only [h, ite_true]
+    exact ComputableInPolyTime.bitsAppend hprefix (ComputableInPolyTime.const [])
+  · simp only [h, ite_false]
+    exact ComputableInPolyTime.bitsAppend hprefix (ComputableInPolyTime.bitsAppend
+      (BrouwerNashHeaders.arityRuler_polyTime hs) (circuitUnaryPrefix_polyTime h₀))
+
 @[simp] theorem inputRuler_length (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
-    (v : Fin 3 → List Bool) :
-    (inputRuler t corner flag v).length =
-      sampleBase (pairFst (v 0)).length (circuitUnaryPrefix (v 1)).length
-        (circuitUnaryPrefix (v 2)).length t +
-      colorInput (pairFst (v 0)).length (circuitUnaryPrefix (v 1)).length
-        (circuitUnaryPrefix (v 2)).length corner flag := by
-  simp only [inputRuler, List.length_append, scale, smash_length, List.length_replicate,
+    (source code₀ code₁ : List Bool) :
+    (inputRuler t corner flag source code₀ code₁).length =
+      sampleBase (CircuitWords.first source).length (circuitUnaryPrefix code₀).length
+        (circuitUnaryPrefix code₁).length t +
+      colorInput (CircuitWords.first source).length (circuitUnaryPrefix code₀).length
+        (circuitUnaryPrefix code₁).length corner flag := by
+  simp only [inputRuler, List.length_append, List.length_replicate,
     BrouwerNashHeaders.globalRuler_length, BrouwerNashHeaders.sampleRuler_length,
     BrouwerNashHeaders.cornerRuler_length, BrouwerNashHeaders.sourceDepthRuler_length,
     sampleBase, colorInput, colorBase, weightBase]
   split <;> simp only [List.length_nil, List.length_append,
     BrouwerNashHeaders.arityRuler_length] <;> ring
-private def rawCode (flag : Fin 2) (v : Fin 5 → List Bool) : List Bool :=
-  if flag.val = 0 then v 3 else v 4
-private theorem rawCode_cobham (flag : Fin 2) : Cobham (rawCode flag) := by
-  unfold rawCode
+
+private def rawCode (flag : Fin 2) (context : QueryContext) : List Bool :=
+  if flag.val = 0 then context.1.2.1 else context.1.2.2
+
+private theorem rawCode_polyTime (flag : Fin 2) {Input : Type} {input : Input ↪ List Bool}
+    {context : Input → QueryContext} (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => rawCode flag (context a)) input encBits := by
   by_cases h : flag.val = 0
-  · simp only [h, ite_true]
-    exact .proj 3
-  · simp only [h, ite_false]
-    exact .proj 4
+  · simpa only [rawCode, h, ite_true] using hc.fst'.snd'.fst'
+  · simpa only [rawCode, h, ite_false] using hc.fst'.snd'.snd'
+
 private def rawTest (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
-    (v : Fin 6 → List Bool) : List Bool :=
-  lenEqFlag (v 1) (inputRuler t corner flag (queryHeaders (Fin.tail v)) ++
-    BrouwerNashHeaders.arityRuler (queryHeaders (Fin.tail v)) ++ v 0)
-private def rawTerm (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
-    (v : Fin 6 → List Bool) : List Bool :=
+    (ordinal : List Bool) (context : QueryContext) : List Bool :=
+  [decide (context.2.1.length = (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2 ++
+    BrouwerNashHeaders.arityRuler context.1.1 ++ ordinal).length)]
+
+/-- Query one parsed raw gate after relocating its two actual references. -/
+def indexedRawCoefficientWord (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
+    (ordinal : List Bool) (context : QueryContext) : List Bool :=
   BimatrixRawGateMachine.selectedShiftedCoefficientWord
-    ![BrouwerNashHeaders.dimensionRuler (queryHeaders (Fin.tail v)),
-      rawCode flag (Fin.tail v), v 0, inputRuler t corner flag (queryHeaders (Fin.tail v)), v 2]
-private theorem rawTest_cobham (t : Fin 41) (corner : Fin 4) (flag : Fin 2) :
-    Cobham (rawTest t corner flag) :=
-  lenEqFlag_mem (.proj 1) (.appendFn
-    (.appendFn (tail_cobham (queryHeader_cobham (inputRuler_cobham t corner flag)))
-      (tail_cobham (queryHeader_cobham BrouwerNashHeaders.arityRuler_cobham))) (.proj 0))
-private theorem rawTerm_cobham (t : Fin 41) (corner : Fin 4) (flag : Fin 2) :
-    Cobham (rawTerm t corner flag) := by
-  let gs : Fin 5 → (Fin 6 → List Bool) → List Bool := Fin.cases
-    (fun v => BrouwerNashHeaders.dimensionRuler (queryHeaders (Fin.tail v)))
-    (Fin.cases (fun v => rawCode flag (Fin.tail v))
-      (Fin.cases (fun v => v 0)
-        (Fin.cases (fun v => inputRuler t corner flag (queryHeaders (Fin.tail v)))
-          (fun _ v => v 2))))
-  have hd : Cobham (fun v : Fin 6 → List Bool =>
-      BrouwerNashHeaders.dimensionRuler (queryHeaders (Fin.tail v))) :=
-    tail_cobham (queryHeader_cobham BrouwerNashHeaders.dimensionRuler_cobham)
-  have hr : Cobham (fun v : Fin 6 → List Bool => rawCode flag (Fin.tail v)) :=
-    tail_cobham (rawCode_cobham flag)
-  have hi : Cobham (fun v : Fin 6 → List Bool =>
-      inputRuler t corner flag (queryHeaders (Fin.tail v))) :=
-    tail_cobham (queryHeader_cobham (inputRuler_cobham t corner flag))
-  have h := Cobham.comp (gs := gs)
-    BimatrixRawGateMachine.selectedShiftedCoefficientWord_cobham (by
-      intro i
-      cases i using Fin.cases
-      · simpa only [gs, Fin.cases_zero] using hd
-      · rename_i i
-        cases i using Fin.cases
-        · simpa only [gs, Fin.cases_zero, Fin.cases_succ] using hr
-        · rename_i i
-          cases i using Fin.cases
-          · exact .proj 0
-          · rename_i i
-            cases i using Fin.cases
-            · simpa only [gs, Fin.cases_zero, Fin.cases_succ] using hi
-            · exact .proj 2)
-  unfold rawTerm
-  apply h.of_eq
-  intro v
-  congr 1
-  ext i
-  fin_cases i <;> rfl
-/-- Exact bounded lookup of a relocated compiled color-gate coefficient. -/
+    (BrouwerNashHeaders.dimensionRuler context.1.1 context.1.2.1 context.1.2.2)
+    (if flag.val = 0 then context.1.2.1 else context.1.2.2) ordinal
+    (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2) context.2.2
+
+private theorem rawTest_polyTime (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
+    {Input : Type} {input : Input ↪ List Bool} {ordinal : Input → List Bool}
+    {context : Input → QueryContext} (hi : ComputableInPolyTime ordinal input encBits)
+    (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => rawTest t corner flag (ordinal a) (context a)) input encBits :=
+  ComputableInPolyTime.bitsCons
+    ((ComputableInPolyTime.length_bits_comp hc.snd'.fst').decide_eq'
+      (ComputableInPolyTime.length_bits_comp (ComputableInPolyTime.bitsAppend
+        (ComputableInPolyTime.bitsAppend (inputRuler_polyTime t corner flag hc.fst'.fst'
+          hc.fst'.snd'.fst' hc.fst'.snd'.snd')
+          (BrouwerNashHeaders.arityRuler_polyTime hc.fst'.fst')) hi))) (ComputableInPolyTime.const [])
+
+theorem indexedRawCoefficientWord_polyTime (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
+    {Input : Type} {input : Input ↪ List Bool} {ordinal : Input → List Bool}
+    {context : Input → QueryContext} (hi : ComputableInPolyTime ordinal input encBits)
+    (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => indexedRawCoefficientWord t corner flag (ordinal a) (context a))
+      input encBits :=
+  BimatrixRawGateMachine.selectedShiftedCoefficientWord_polyTime
+    (BrouwerNashHeaders.dimensionRuler_polyTime hc.fst'.fst' hc.fst'.snd'.fst' hc.fst'.snd'.snd')
+    (rawCode_polyTime flag hc) hi
+    (inputRuler_polyTime t corner flag hc.fst'.fst' hc.fst'.snd'.fst' hc.fst'.snd'.snd') hc.snd'.snd'
+
+/-- Bounded lookup retains the serialized gate-count ruler, including malformed-code behavior. -/
 def rawCoefficientWord (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
-    (v : Fin 5 → List Bool) : List Bool :=
-  binaryIndexedLookup (rawTest t corner flag) (rawTerm t corner flag)
-    (circuitUnaryPrefix (rawCode flag v)) (BrouwerNashHeaders.widthRuler (queryHeaders v)) v
-theorem rawCoefficientWord_cobham (t : Fin 41) (corner : Fin 4) (flag : Fin 2) :
-    Cobham (rawCoefficientWord t corner flag) := by
-  let gs : Fin 7 → (Fin 5 → List Bool) → List Bool := Fin.cases
-    (fun v => circuitUnaryPrefix (rawCode flag v))
-    (Fin.cases (fun v => BrouwerNashHeaders.widthRuler (queryHeaders v)) (fun j v => v j))
-  have h := Cobham.comp (gs := gs)
-    (binaryIndexedLookup_cobham (rawTest_cobham t corner flag) (rawTerm_cobham t corner flag))
-    (by
-      intro i
-      cases i using Fin.cases
-      · change Cobham (fun v : Fin 5 → List Bool => circuitUnaryPrefix (rawCode flag v))
-        exact Cobham.comp (FP_subset_CobhamFP circuitUnaryPrefix_mem_FP)
-          (fun _ : Fin 1 => rawCode_cobham flag)
-      · rename_i i
-        cases i using Fin.cases
-        · change Cobham (fun v : Fin 5 → List Bool =>
-            BrouwerNashHeaders.widthRuler (queryHeaders v))
-          exact queryHeader_cobham BrouwerNashHeaders.widthRuler_cobham
-        · rename_i j
-          change Cobham (fun v : Fin 5 → List Bool => v j)
-          exact .proj j)
-  unfold rawCoefficientWord
-  exact h.of_eq fun _ => rfl
-private theorem lenEqFlag_value (x y : List Bool) :
-    lenEqFlag x y = [decide (x.length = y.length)] := by
-  rcases lenEqFlag_flag x y with h | h
-  · simp only [h, (lenEqFlag_eq_true_iff x y).mp h, decide_true]
-  · have hn : x.length ≠ y.length := by
-      intro he
-      rw [(lenEqFlag_eq_true_iff x y).mpr he] at h
-      contradiction
-    simp only [h, hn, decide_false]
+    (source code₀ code₁ out action : List Bool) : List Bool :=
+  let test (ordinal : List Bool) (context : QueryContext) : List Bool :=
+    [decide (context.2.1.length = (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2 ++
+      BrouwerNashHeaders.arityRuler context.1.1 ++ ordinal).length)]
+  binaryIndexedLookup test (indexedRawCoefficientWord t corner flag)
+    (circuitUnaryPrefix (if flag.val = 0 then code₀ else code₁))
+    (BrouwerNashHeaders.widthRuler source code₀ code₁) ((source, (code₀, code₁)), (out, action))
+
+private theorem rawCoefficientWord_eq (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
+    (context : QueryContext) :
+    rawCoefficientWord t corner flag context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2 =
+      binaryIndexedLookup (rawTest t corner flag) (indexedRawCoefficientWord t corner flag)
+        (circuitUnaryPrefix (rawCode flag context))
+        (BrouwerNashHeaders.widthRuler context.1.1 context.1.2.1 context.1.2.2) context := rfl
+
+theorem rawCoefficientWord_polyTime (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
+    {Input : Type} {input : Input ↪ List Bool} {source code₀ code₁ out action : Input → List Bool}
+    (hs : ComputableInPolyTime source input encBits)
+    (h₀ : ComputableInPolyTime code₀ input encBits)
+    (h₁ : ComputableInPolyTime code₁ input encBits)
+    (ho : ComputableInPolyTime out input encBits)
+    (ha : ComputableInPolyTime action input encBits) :
+    ComputableInPolyTime (fun a => rawCoefficientWord t corner flag (source a) (code₀ a) (code₁ a)
+      (out a) (action a)) input encBits := by
+  have hc := (hs.prod (h₀.prod h₁)).prod (ho.prod ha)
+  have htest := rawTest_polyTime t corner flag
+    (ComputableInPolyTime.snd queryEncoding encBits) (ComputableInPolyTime.fst queryEncoding encBits)
+  have hterm := indexedRawCoefficientWord_polyTime t corner flag
+    (ComputableInPolyTime.snd queryEncoding encBits) (ComputableInPolyTime.fst queryEncoding encBits)
+  exact (binaryIndexedLookup_polyTime htest hterm
+    (circuitUnaryPrefix_polyTime (rawCode_polyTime flag hc))
+    (BrouwerNashHeaders.widthRuler_polyTime hs h₀ h₁) hc).of_enc_eq
+    (fun a => congrArg encBits (rawCoefficientWord_eq t corner flag
+      ((source a, (code₀ a, code₁ a)), (out a, action a))))
+
 private theorem rawTest_value (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
-    (v : Fin 5 → List Bool) (r : List Bool) :
-    rawTest t corner flag (Fin.cons r v) = [decide ((v 0).length =
-      (inputRuler t corner flag (queryHeaders v)).length +
-        (BrouwerNashHeaders.arityRuler (queryHeaders v)).length + r.length)] := by
-  simp only [rawTest, Fin.tail_cons, lenEqFlag_value,
-    List.length_append, Fin.cons_zero]
-  rfl
+    (context : QueryContext) (ordinal : List Bool) :
+    rawTest t corner flag ordinal context = [decide (context.2.1.length =
+      (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+        (BrouwerNashHeaders.arityRuler context.1.1).length + ordinal.length)] := by
+  simp only [rawTest, List.length_append]
+
 /-- Every nonmatching output returns zero, including malformed serialized circuits. -/
 theorem rawCoefficientWord_value_zero (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
-    (v : Fin 5 → List Bool)
-    (hno : ∀ i < (circuitUnaryPrefix (rawCode flag v)).length,
-      (v 0).length ≠ (inputRuler t corner flag (queryHeaders v)).length +
-        (BrouwerNashHeaders.arityRuler (queryHeaders v)).length + i) :
-    binarySignedValue (rawCoefficientWord t corner flag v) = 0 := by
+    (context : QueryContext)
+    (hno : ∀ i < (circuitUnaryPrefix (if flag.val = 0 then context.1.2.1 else context.1.2.2)).length,
+      context.2.1.length ≠ (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+        (BrouwerNashHeaders.arityRuler context.1.1).length + i) :
+    binarySignedValue (rawCoefficientWord t corner flag context.1.1 context.1.2.1 context.1.2.2
+      context.2.1 context.2.2) = 0 := by
+  rw [rawCoefficientWord_eq]
   apply binaryIndexedLookup_value_zero
-    (rawTest t corner flag) (rawTerm t corner flag) _ _ v
-  intro ord hi
+    (rawTest t corner flag) (indexedRawCoefficientWord t corner flag) _ _ context
+  intro ordinal hi
   rw [rawTest_value]
-  simp only [hno ord.length hi, decide_false]
-/-- At an allocated serialized gate, the bounded query returns its canonical coefficient. -/
+  simp only [hno ordinal.length hi, decide_false]
+
+/-- At an allocated checked gate, the bounded query returns both relocated coefficients. -/
 theorem rawCoefficientWord_value_at (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
-    (v : Fin 5 → List Bool) (raw : _root_.Complexity.CircuitCode.RawCircuit)
-    (hcode : rawCode flag v = raw.encode) (j : Fin raw.length)
-    (ho : (v 0).length = (inputRuler t corner flag (queryHeaders v)).length +
-      (BrouwerNashHeaders.arityRuler (queryHeaders v)).length + j.val)
-    (href : (raw[j.val].shift (inputRuler t corner flag (queryHeaders v)).length).WellFormedAt
-      (BrouwerNashHeaders.dimensionRuler (queryHeaders v)).length)
-    (r : Fin ((BrouwerNashHeaders.dimensionRuler (queryHeaders v)).length * 2))
-    (hr : (v 1).length = r.val) :
-    binarySignedValue (rawCoefficientWord t corner flag v) =
-      BimatrixRawGate.coefficients
-        (raw[j.val].shift (inputRuler t corner flag (queryHeaders v)).length) href r := by
-  let z := BimatrixRawGate.coefficients
-    (raw[j.val].shift (inputRuler t corner flag (queryHeaders v)).length) href r
-  let hit := fun i => decide ((v 0).length =
-    (inputRuler t corner flag (queryHeaders v)).length +
-      (BrouwerNashHeaders.arityRuler (queryHeaders v)).length + i)
-  have hterm (ord : List Bool) (hh : hit ord.length = true) :
-      binarySignedValue (rawTerm t corner flag (Fin.cons ord v)) = z := by
-    have hi : ord.length = j.val := by have he := of_decide_eq_true hh; omega
-    change binarySignedValue (BimatrixRawGateMachine.selectedShiftedCoefficientWord
-      ![BrouwerNashHeaders.dimensionRuler (queryHeaders v), rawCode flag v, ord,
-        inputRuler t corner flag (queryHeaders v), v 1]) = z
+    (context : QueryContext) (gates : List (CircuitFormat.signature.Op × List ℕ))
+    (hraw : Program.IsCodeFrom CircuitFormat.signature
+      (BrouwerNashHeaders.arityRuler context.1.1).length 0 gates)
+    (hcode : (if flag.val = 0 then context.1.2.1 else context.1.2.2) = CircuitFormat.encode gates)
+    (j : Fin gates.length)
+    (ho : context.2.1.length = (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+      (BrouwerNashHeaders.arityRuler context.1.1).length + j.val)
+    (href : Program.IsCodeFrom CircuitFormat.signature
+      (BrouwerNashHeaders.dimensionRuler context.1.1 context.1.2.1 context.1.2.2).length 0
+      [(gates[j.val].1, gates[j.val].2.map ((inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length + ·))])
+    (r : Fin ((BrouwerNashHeaders.dimensionRuler context.1.1 context.1.2.1 context.1.2.2).length * 2))
+    (hr : context.2.2.length = r.val) :
+    binarySignedValue (rawCoefficientWord t corner flag context.1.1 context.1.2.1 context.1.2.2
+      context.2.1 context.2.2) = BimatrixRawGate.coefficients
+      (gates[j.val].1, gates[j.val].2.map ((inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length + ·)) href r := by
+  have harity : ∀ gate ∈ gates, gate.2.length = 2 := by
+    intro gate hg
+    obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem hg
+    exact (hraw.getElem i hi).1
+  let offset := inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2
+  let dimension := BrouwerNashHeaders.dimensionRuler context.1.1 context.1.2.1 context.1.2.2
+  let z := BimatrixRawGate.coefficients (gates[j.val].1, gates[j.val].2.map (offset.length + ·)) href r
+  let hit := fun i => decide (context.2.1.length = offset.length +
+    (BrouwerNashHeaders.arityRuler context.1.1).length + i)
+  have hterm (ordinal : List Bool) (hh : hit ordinal.length = true) :
+      binarySignedValue (indexedRawCoefficientWord t corner flag ordinal context) = z := by
+    have hi : ordinal.length = j.val := by
+      have he : context.2.1.length = offset.length +
+          (BrouwerNashHeaders.arityRuler context.1.1).length + ordinal.length := of_decide_eq_true hh
+      have ho' : context.2.1.length = offset.length +
+          (BrouwerNashHeaders.arityRuler context.1.1).length + j.val := ho
+      omega
+    unfold indexedRawCoefficientWord
     rw [hcode]
-    have hf : (raw[ord.length].shift (inputRuler t corner flag (queryHeaders
-      v)).length).WellFormedAt (BrouwerNashHeaders.dimensionRuler (queryHeaders v)).length := by
-      simpa only [hi] using href
-    have he := BimatrixRawGateMachine.selectedShiftedCoefficientWord_encode
-      (BrouwerNashHeaders.dimensionRuler (queryHeaders v)) (v 1) ord
-      (inputRuler t corner flag (queryHeaders v)) raw (by rw [hi]; exact j.isLt) hf r hr
-    simpa only [hi] using he
-  have hk := BrouwerNashHeaders.dimensionRuler_pos (queryHeaders v)
-  have hz : z.natAbs ≤ 100 * (BrouwerNashHeaders.dimensionRuler (queryHeaders v)).length := by
+    have hf : Program.IsCodeFrom CircuitFormat.signature dimension.length 0
+        [(gates[ordinal.length].1, gates[ordinal.length].2.map (offset.length + ·))] := by
+      simpa only [hi, offset, dimension] using href
+    have he := BimatrixRawGateMachine.selectedShiftedCoefficientWord_encode dimension context.2.2 ordinal
+      offset gates harity (by rw [hi]; exact j.isLt) hf r hr
+    simpa only [hi, offset, dimension, z] using he
+  have hk := BrouwerNashHeaders.dimensionRuler_pos context.1.1 context.1.2.1 context.1.2.2
+  have hz : z.natAbs ≤ 100 * dimension.length := by
     have ha := BimatrixRawGate.coefficients_bound
-      (raw[j.val].shift (inputRuler t corner flag (queryHeaders v)).length) href r
-    have he : |z| ≤ (100 : ℤ) * (BrouwerNashHeaders.dimensionRuler (queryHeaders v)).length := by
+      (gates[j.val].1, gates[j.val].2.map (offset.length + ·)) href r
+    have he : |z| ≤ (100 : ℤ) * dimension.length := by
       dsimp only [z]
-      have hkz : (1 : ℤ) ≤ (BrouwerNashHeaders.dimensionRuler (queryHeaders v)).length := by
-        exact_mod_cast hk
+      have hkz : (1 : ℤ) ≤ dimension.length := by exact_mod_cast hk
       linarith
     apply (Nat.cast_le (α := ℤ)).mp
     simpa only [Int.natCast_natAbs, Nat.cast_mul, Nat.cast_ofNat] using he
-  have he := binaryIndexedLookup_value (rawTest t corner flag) (rawTerm t corner flag)
-    (BrouwerNashHeaders.widthRuler (queryHeaders v)) v hit z
-    (fun ord => rawTest_value t corner flag v ord) hterm
+  rw [rawCoefficientWord_eq]
+  have he := binaryIndexedLookup_value (rawTest t corner flag) (indexedRawCoefficientWord t corner flag)
+    (BrouwerNashHeaders.widthRuler context.1.1 context.1.2.1 context.1.2.2) context hit z
+    (fun ordinal => rawTest_value t corner flag context ordinal) hterm
     (by rw [BrouwerNashHeaders.widthRuler_length]; omega)
-    (BrouwerNashHeaders.widthRuler_fits (queryHeaders v) z hz)
-    (circuitUnaryPrefix (rawCode flag v))
-  have hex : ∃ i < (circuitUnaryPrefix (rawCode flag v)).length, hit i = true := by
-    refine ⟨j.val, ?_, ?_⟩
-    · rw [hcode, circuitUnaryPrefix_rawEncode_length]
-      exact j.isLt
-    · exact decide_eq_true ho
+    (BrouwerNashHeaders.widthRuler_fits context.1.1 context.1.2.1 context.1.2.2 z hz)
+    (circuitUnaryPrefix (rawCode flag context))
+  have hex : ∃ i < (circuitUnaryPrefix (rawCode flag context)).length, hit i = true := by
+    refine ⟨j.val, ?_, decide_eq_true ho⟩
+    change j.val < (circuitUnaryPrefix (if flag.val = 0 then context.1.2.1 else context.1.2.2)).length
+    rw [hcode, circuitUnaryPrefix_encode_length gates harity]
+    exact j.isLt
   rw [ite_eq_left hex] at he
   exact he
-private def scalarWord (v : Fin 5 → List Bool) : List Bool :=
-  [false, false] ++ binaryLengthWord (BrouwerNashHeaders.dimensionRuler (queryHeaders v))
-private theorem scalarWord_cobham : Cobham scalarWord := by
-  unfold scalarWord
-  have hd : Cobham (fun v : Fin 5 → List Bool =>
-      BrouwerNashHeaders.dimensionRuler (queryHeaders v)) :=
-    queryHeader_cobham BrouwerNashHeaders.dimensionRuler_cobham
-  have hl : Cobham (fun v : Fin 5 → List Bool =>
-      binaryLengthWord (BrouwerNashHeaders.dimensionRuler (queryHeaders v))) :=
-    (Cobham.comp binaryLengthWord_cobham (fun _ : Fin 1 => hd)).of_eq fun _ => rfl
-  have hs : Cobham (fun v : Fin 5 → List Bool => [false, false] ++
-      binaryLengthWord (BrouwerNashHeaders.dimensionRuler (queryHeaders v))) :=
-    Cobham.appendFn (.const [false, false]) hl
-  exact hs
-private theorem scalarWord_value (v : Fin 5 → List Bool) :
-    binarySignedValue (scalarWord v) =
-      2 * ((BrouwerNashHeaders.dimensionRuler (queryHeaders v)).length : ℤ) := by
-  simp only [scalarWord, List.cons_append, List.nil_append, binarySignedValue, List.headD_cons,
-    Bool.false_eq_true,
-    ite_false, List.tail_cons, Nat.fromBitsLE_cons, zero_add,
-    binaryLengthWord_value, Nat.cast_mul, Nat.cast_ofNat]
+
+private def scalarWord (context : QueryContext) : List Bool :=
+  [false, false] ++ binaryLengthWord
+    (BrouwerNashHeaders.dimensionRuler context.1.1 context.1.2.1 context.1.2.2)
+
+private theorem scalarWord_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {context : Input → QueryContext} (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => scalarWord (context a)) input encBits := by
+  have hcert := ComputableInPolyTime.bitsAppend (ComputableInPolyTime.const [false,false])
+    (binaryLengthWord_polyTime.comp (BrouwerNashHeaders.dimensionRuler_polyTime
+      hc.fst'.fst' hc.fst'.snd'.fst' hc.fst'.snd'.snd'))
+  simpa only [scalarWord, Function.comp_apply] using hcert
+
+private theorem scalarWord_value (context : QueryContext) :
+    binarySignedValue (scalarWord context) =
+      2 * ((BrouwerNashHeaders.dimensionRuler context.1.1 context.1.2.1 context.1.2.2).length : ℤ) := by
+  simp only [scalarWord, List.cons_append, List.nil_append, binarySignedValue,
+    List.headD_cons, Bool.false_eq_true, ite_false, List.tail_cons]
+  have hbits (bits : List Bool) : ofBits (false :: bits) = 2 * ofBits bits := by
+    simp only [ofBits, List.foldr_cons, Nat.bit_val, Bool.toNat_false, add_zero]
+  rw [hbits, binaryLengthWord_value, Nat.cast_mul, Nat.cast_ofNat]
+
 private def copyTest (t : Fin 41) (corner : Fin 4) (flag : Fin 2) (axis : Fin 2)
-    (v : Fin 6 → List Bool) : List Bool :=
-  lenEqFlag (v 1) (inputRuler t corner flag (queryHeaders (Fin.tail v)) ++
-    scale axis.val (BrouwerNashHeaders.sourceDepthRuler (queryHeaders (Fin.tail v)) ++ [false]) ++
-    v 0)
-private def copyTerm (t : Fin 41) (corner : Fin 4) (axis : Fin 2)
-    (v : Fin 6 → List Bool) : List Bool :=
-  binarySignedIndicator ![v 2, cornerBitRuler t corner axis ![v 0, v 3, v 4, v 5],
-    scalarWord (Fin.tail v)]
-private theorem copyTest_cobham (t : Fin 41) (corner : Fin 4) (flag : Fin 2) (axis : Fin 2) :
-    Cobham (copyTest t corner flag axis) :=
-  lenEqFlag_mem (.proj 1) (.appendFn
-    (.appendFn (tail_cobham (queryHeader_cobham (inputRuler_cobham t corner flag)))
-      (scale_cobham _ (.appendFn
-        (tail_cobham (queryHeader_cobham BrouwerNashHeaders.sourceDepthRuler_cobham))
-        (.const [false])))) (.proj 0))
-private theorem copyTerm_cobham (t : Fin 41) (corner : Fin 4) (axis : Fin 2) :
-    Cobham (copyTerm t corner axis) := by
-  let gs : Fin 4 → (Fin 6 → List Bool) → List Bool :=
-    Fin.cases (fun v => v 0) (fun i v => v i.succ.succ.succ)
-  have hc := Cobham.comp (gs := gs) (cornerBitRuler_cobham t corner axis) (by
+    (ordinal : List Bool) (context : QueryContext) : List Bool :=
+  [decide (context.2.1.length = (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2 ++
+    scale axis.val (BrouwerNashHeaders.sourceDepthRuler context.1.1 ++ [false]) ++ ordinal).length)]
+
+/-- A copied input contributes its signed indicator at the exact corner source wire. -/
+def indexedCopyCoefficientWord (t : Fin 41) (corner : Fin 4) (axis : Fin 2)
+    (ordinal : List Bool) (context : QueryContext) : List Bool :=
+  binarySignedIndicator ![context.2.2,
+    cornerBitRuler t corner axis ordinal context.1.1 context.1.2.1 context.1.2.2,
+    [false,false] ++ binaryLengthWord
+      (BrouwerNashHeaders.dimensionRuler context.1.1 context.1.2.1 context.1.2.2)]
+
+private theorem copyTest_polyTime (t : Fin 41) (corner : Fin 4) (flag : Fin 2) (axis : Fin 2)
+    {Input : Type} {input : Input ↪ List Bool} {ordinal : Input → List Bool}
+    {context : Input → QueryContext} (hi : ComputableInPolyTime ordinal input encBits)
+    (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => copyTest t corner flag axis (ordinal a) (context a)) input encBits :=
+  ComputableInPolyTime.bitsCons
+    ((ComputableInPolyTime.length_bits_comp hc.snd'.fst').decide_eq'
+      (ComputableInPolyTime.length_bits_comp (ComputableInPolyTime.bitsAppend
+        (ComputableInPolyTime.bitsAppend (inputRuler_polyTime t corner flag hc.fst'.fst'
+          hc.fst'.snd'.fst' hc.fst'.snd'.snd')
+          (scale_polyTime axis.val (ComputableInPolyTime.bitsAppend
+            (BrouwerNashHeaders.sourceDepthRuler_polyTime hc.fst'.fst')
+            (ComputableInPolyTime.const [false])))) hi))) (ComputableInPolyTime.const [])
+
+theorem indexedCopyCoefficientWord_polyTime (t : Fin 41) (corner : Fin 4) (axis : Fin 2)
+    {Input : Type} {input : Input ↪ List Bool} {ordinal : Input → List Bool}
+    {context : Input → QueryContext} (hi : ComputableInPolyTime ordinal input encBits)
+    (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => indexedCopyCoefficientWord t corner axis (ordinal a) (context a))
+      input encBits := by
+  have hargs : ComputableInPolyTime (fun a : Input => ![(context a).2.2,
+      cornerBitRuler t corner axis (ordinal a) (context a).1.1 (context a).1.2.1 (context a).1.2.2,
+      scalarWord (context a)]) input (encPi encBits) := by
+    apply ComputableInPolyTime.pi
     intro i
-    cases i using Fin.cases
-    · exact .proj 0
-    · rename_i i
-      exact .proj i.succ.succ.succ)
-  have hs : Cobham (fun v : Fin 6 → List Bool => scalarWord (Fin.tail v)) :=
-    tail_cobham scalarWord_cobham
-  have h := Cobham.comp₃ binarySignedIndicator_cobham (.proj 2) hc hs
-  unfold copyTerm
-  exact h.of_eq fun _ => rfl
-/-- Bounded copy lookup over the extended coordinate field for one corner and axis. -/
+    fin_cases i
+    · exact hc.snd'.snd'
+    · exact cornerBitRuler_polyTime t corner axis hi hc.fst'.fst' hc.fst'.snd'.fst' hc.fst'.snd'.snd'
+    · simpa only [Matrix.cons_val_succ', Matrix.cons_val_zero'] using scalarWord_polyTime hc
+  exact binarySignedIndicator_polyTime.comp hargs
+
+/-- Scan the original extended coordinate ruler for a copied-input coefficient. -/
 def copyCoefficientWord (t : Fin 41) (corner : Fin 4) (flag : Fin 2) (axis : Fin 2)
-    (v : Fin 5 → List Bool) : List Bool :=
-  binaryIndexedLookup (copyTest t corner flag axis) (copyTerm t corner axis)
-    (BrouwerNashHeaders.sourceDepthRuler (queryHeaders v) ++ [false])
-    (BrouwerNashHeaders.widthRuler (queryHeaders v)) v
-theorem copyCoefficientWord_cobham (t : Fin 41) (corner : Fin 4) (flag : Fin 2) (axis : Fin 2) :
-    Cobham (copyCoefficientWord t corner flag axis) := by
-  let gs : Fin 7 → (Fin 5 → List Bool) → List Bool := Fin.cases
-    (fun v => BrouwerNashHeaders.sourceDepthRuler (queryHeaders v) ++ [false])
-    (Fin.cases (fun v => BrouwerNashHeaders.widthRuler (queryHeaders v)) (fun j v => v j))
-  have hc : Cobham (fun v : Fin 5 → List Bool =>
-      BrouwerNashHeaders.sourceDepthRuler (queryHeaders v) ++ [false]) :=
-    .appendFn (queryHeader_cobham BrouwerNashHeaders.sourceDepthRuler_cobham) (.const [false])
-  have hw : Cobham (fun v : Fin 5 → List Bool =>
-      BrouwerNashHeaders.widthRuler (queryHeaders v)) :=
-    queryHeader_cobham BrouwerNashHeaders.widthRuler_cobham
-  have h := Cobham.comp (gs := gs)
-    (binaryIndexedLookup_cobham (copyTest_cobham t corner flag axis) (copyTerm_cobham t corner
-      axis))
-    (by
-      intro i
-      cases i using Fin.cases
-      · simpa only [gs, Fin.cases_zero] using hc
-      · rename_i i
-        cases i using Fin.cases
-        · simpa only [gs, Fin.cases_zero, Fin.cases_succ] using hw
-        · rename_i j
-          exact .proj j)
-  unfold copyCoefficientWord
-  exact h.of_eq fun _ => rfl
+    (source code₀ code₁ out action : List Bool) : List Bool :=
+  let test (ordinal : List Bool) (context : QueryContext) : List Bool :=
+    [decide (context.2.1.length = (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2 ++
+      List.replicate ((BrouwerNashHeaders.sourceDepthRuler context.1.1 ++ [false]).length * axis.val) true ++
+      ordinal).length)]
+  binaryIndexedLookup test (indexedCopyCoefficientWord t corner axis)
+    (BrouwerNashHeaders.sourceDepthRuler source ++ [false])
+    (BrouwerNashHeaders.widthRuler source code₀ code₁) ((source,(code₀,code₁)),(out,action))
+
+private theorem copyCoefficientWord_eq (t : Fin 41) (corner : Fin 4) (flag : Fin 2) (axis : Fin 2)
+    (context : QueryContext) :
+    copyCoefficientWord t corner flag axis context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2 =
+      binaryIndexedLookup (copyTest t corner flag axis) (indexedCopyCoefficientWord t corner axis)
+        (BrouwerNashHeaders.sourceDepthRuler context.1.1 ++ [false])
+        (BrouwerNashHeaders.widthRuler context.1.1 context.1.2.1 context.1.2.2) context := rfl
+
+theorem copyCoefficientWord_polyTime (t : Fin 41) (corner : Fin 4) (flag : Fin 2) (axis : Fin 2)
+    {Input : Type} {input : Input ↪ List Bool} {source code₀ code₁ out action : Input → List Bool}
+    (hs : ComputableInPolyTime source input encBits)
+    (h₀ : ComputableInPolyTime code₀ input encBits)
+    (h₁ : ComputableInPolyTime code₁ input encBits)
+    (ho : ComputableInPolyTime out input encBits)
+    (ha : ComputableInPolyTime action input encBits) :
+    ComputableInPolyTime (fun a => copyCoefficientWord t corner flag axis (source a) (code₀ a) (code₁ a)
+      (out a) (action a)) input encBits := by
+  have hc := (hs.prod (h₀.prod h₁)).prod (ho.prod ha)
+  have htest := copyTest_polyTime t corner flag axis
+    (ComputableInPolyTime.snd queryEncoding encBits) (ComputableInPolyTime.fst queryEncoding encBits)
+  have hterm := indexedCopyCoefficientWord_polyTime t corner axis
+    (ComputableInPolyTime.snd queryEncoding encBits) (ComputableInPolyTime.fst queryEncoding encBits)
+  exact (binaryIndexedLookup_polyTime htest hterm
+    (ComputableInPolyTime.bitsAppend (BrouwerNashHeaders.sourceDepthRuler_polyTime hs)
+      (ComputableInPolyTime.const [false]))
+    (BrouwerNashHeaders.widthRuler_polyTime hs h₀ h₁) hc).of_enc_eq
+    (fun a => congrArg encBits (copyCoefficientWord_eq t corner flag axis
+      ((source a, (code₀ a, code₁ a)), (out a, action a))))
+
 private theorem copyTest_value (t : Fin 41) (corner : Fin 4) (flag : Fin 2) (axis : Fin 2)
-    (v : Fin 5 → List Bool) (ord : List Bool) :
-    copyTest t corner flag axis (Fin.cons ord v) = [decide ((v 0).length =
-      (inputRuler t corner flag (queryHeaders v)).length +
-        axis.val * ((pairFst (v 2)).length + 1) + ord.length)] := by
-  simp only [copyTest, Fin.tail_cons, lenEqFlag_value, List.length_append,
-    scale, smash_length, List.length_replicate, List.length_singleton,
+    (context : QueryContext) (ordinal : List Bool) :
+    copyTest t corner flag axis ordinal context = [decide (context.2.1.length =
+      (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+        axis.val * ((CircuitWords.first context.1.1).length + 1) + ordinal.length)] := by
+  simp only [copyTest, List.length_append, scale, List.length_replicate, List.length_singleton,
     BrouwerNashHeaders.sourceDepthRuler_length]
-  change [decide ((v 0).length = (inputRuler t corner flag (queryHeaders v)).length +
-    ((pairFst (v 2)).length + 1) * axis.val + ord.length)] = _
-  rw [Nat.mul_comm ((pairFst (v 2)).length + 1)]
+  rw [Nat.mul_comm ((CircuitWords.first context.1.1).length + 1)]
+
 /-- A copied corner-bit wire has exactly the canonical positive-action coefficient. -/
 theorem copyCoefficientWord_value_at (t : Fin 41) (corner : Fin 4) (flag : Fin 2) (axis : Fin 2)
-    (v : Fin 5 → List Bool) (j : ℕ) (hj : j ≤ (pairFst (v 2)).length)
-    (ho : (v 0).length = (inputRuler t corner flag (queryHeaders v)).length +
-      axis.val * ((pairFst (v 2)).length + 1) + j) :
-    binarySignedValue (copyCoefficientWord t corner flag axis v) =
-      if (v 1).length / 2 = (cornerBit (pairFst (v 2)).length
-          (circuitUnaryPrefix (v 3)).length (circuitUnaryPrefix (v 4)).length t corner axis j).val ∧
-        (v 1).length % 2 = 1
-      then 2 * ((BrouwerNashHeaders.dimensionRuler (queryHeaders v)).length : ℤ) else 0 := by
-  let input := cornerBit (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-    (circuitUnaryPrefix (v 4)).length t corner axis j
-  let z : ℤ := if (v 1).length / 2 = input.val ∧ (v 1).length % 2 = 1
-    then 2 * (BrouwerNashHeaders.dimensionRuler (queryHeaders v)).length else 0
-  let hit := fun i => decide ((v 0).length = (inputRuler t corner flag (queryHeaders v)).length +
-    axis.val * ((pairFst (v 2)).length + 1) + i)
+    (context : QueryContext) (j : ℕ) (hj : j ≤ (CircuitWords.first context.1.1).length)
+    (ho : context.2.1.length = (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+      axis.val * ((CircuitWords.first context.1.1).length + 1) + j) :
+    binarySignedValue (copyCoefficientWord t corner flag axis context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) =
+      if context.2.2.length / 2 = (cornerBit (CircuitWords.first context.1.1).length
+          (circuitUnaryPrefix context.1.2.1).length (circuitUnaryPrefix context.1.2.2).length t corner axis j).val ∧
+        context.2.2.length % 2 = 1
+      then 2 * ((BrouwerNashHeaders.dimensionRuler context.1.1 context.1.2.1 context.1.2.2).length : ℤ) else 0 := by
+  let input := cornerBit (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+    (circuitUnaryPrefix context.1.2.2).length t corner axis j
+  let z : ℤ := if context.2.2.length / 2 = input.val ∧ context.2.2.length % 2 = 1
+    then 2 * (BrouwerNashHeaders.dimensionRuler context.1.1 context.1.2.1 context.1.2.2).length else 0
+  let hit := fun i => decide (context.2.1.length = (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+    axis.val * ((CircuitWords.first context.1.1).length + 1) + i)
   have hterm (ord : List Bool) (hh : hit ord.length = true) :
-      binarySignedValue (copyTerm t corner axis (Fin.cons ord v)) = z := by
+      binarySignedValue (indexedCopyCoefficientWord t corner axis ord context) = z := by
     have hi : ord.length = j := by have he := of_decide_eq_true hh; omega
-    have hc := cornerBitRuler_length t corner axis ![ord, v 2, v 3, v 4]
-      (by simpa only [Matrix.cons_val_zero, Matrix.cons_val_one, hi] using hj)
-    change (cornerBitRuler t corner axis ![ord, v 2, v 3, v 4]).length =
-      (cornerBit (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-        (circuitUnaryPrefix (v 4)).length t corner axis ord.length).val at hc
+    have hc := cornerBitRuler_length t corner axis ord context.1.1 context.1.2.1 context.1.2.2
+      (by simpa only [hi] using hj)
+    change (cornerBitRuler t corner axis ord context.1.1 context.1.2.1 context.1.2.2).length =
+      (cornerBit (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+        (circuitUnaryPrefix context.1.2.2).length t corner axis ord.length).val at hc
     rw [hi] at hc
-    change binarySignedValue (binarySignedIndicator ![v 1,
-      cornerBitRuler t corner axis ![ord, v 2, v 3, v 4], scalarWord v]) = z
+    change binarySignedValue (binarySignedIndicator ![context.2.2,
+      cornerBitRuler t corner axis ord context.1.1 context.1.2.1 context.1.2.2, scalarWord context]) = z
     rw [binarySignedIndicator_value, scalarWord_value, hc]
-  have hz : z.natAbs ≤ 100 * (BrouwerNashHeaders.dimensionRuler (queryHeaders v)).length := by
+  have hz : z.natAbs ≤ 100 * (BrouwerNashHeaders.dimensionRuler context.1.1 context.1.2.1 context.1.2.2).length := by
     dsimp only [z]
     split
     · simp only [Int.natAbs_mul, Int.natAbs_natCast]
-      change 2 * (BrouwerNashHeaders.dimensionRuler (queryHeaders v)).length ≤ _
+      change 2 * (BrouwerNashHeaders.dimensionRuler context.1.1 context.1.2.1 context.1.2.2).length ≤ _
       omega
     · simp only [Int.natAbs_zero]
       omega
-  have he := binaryIndexedLookup_value (copyTest t corner flag axis) (copyTerm t corner axis)
-    (BrouwerNashHeaders.widthRuler (queryHeaders v)) v hit z
-    (fun ord => copyTest_value t corner flag axis v ord) hterm
+  have he := binaryIndexedLookup_value (copyTest t corner flag axis) (indexedCopyCoefficientWord t corner axis)
+    (BrouwerNashHeaders.widthRuler context.1.1 context.1.2.1 context.1.2.2) context hit z
+    (fun ord => copyTest_value t corner flag axis context ord) hterm
     (by rw [BrouwerNashHeaders.widthRuler_length]; omega)
-    (BrouwerNashHeaders.widthRuler_fits (queryHeaders v) z hz)
-    (BrouwerNashHeaders.sourceDepthRuler (queryHeaders v) ++ [false])
-  have hex : ∃ i < (BrouwerNashHeaders.sourceDepthRuler (queryHeaders v) ++ [false]).length,
+    (BrouwerNashHeaders.widthRuler_fits context.1.1 context.1.2.1 context.1.2.2 z hz)
+    (BrouwerNashHeaders.sourceDepthRuler context.1.1 ++ [false])
+  have hex : ∃ i < (BrouwerNashHeaders.sourceDepthRuler context.1.1 ++ [false]).length,
       hit i = true := by
     refine ⟨j, ?_, decide_eq_true ho⟩
     simp only [List.length_append, List.length_singleton,
       BrouwerNashHeaders.sourceDepthRuler_length]
-    change j < (pairFst (v 2)).length + 1
     omega
   rw [ite_eq_left hex] at he
+  rw [copyCoefficientWord_eq]
   exact he
+
 /-- Copy queries return zero outside their allocated extended coordinate field. -/
 theorem copyCoefficientWord_value_zero (t : Fin 41) (corner : Fin 4) (flag : Fin 2) (axis : Fin 2)
-    (v : Fin 5 → List Bool)
-    (hno : ∀ j ≤ (pairFst (v 2)).length, (v 0).length ≠
-      (inputRuler t corner flag (queryHeaders v)).length +
-        axis.val * ((pairFst (v 2)).length + 1) + j) :
-    binarySignedValue (copyCoefficientWord t corner flag axis v) = 0 := by
+    (context : QueryContext)
+    (hno : ∀ j ≤ (CircuitWords.first context.1.1).length, context.2.1.length ≠
+      (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+        axis.val * ((CircuitWords.first context.1.1).length + 1) + j) :
+    binarySignedValue (copyCoefficientWord t corner flag axis context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) = 0 := by
+  rw [copyCoefficientWord_eq]
   apply binaryIndexedLookup_value_zero
-    (copyTest t corner flag axis) (copyTerm t corner axis) _ _ v
+    (copyTest t corner flag axis) (indexedCopyCoefficientWord t corner axis) _ _ context
   intro ord hi
   rw [copyTest_value]
-  have hb : ord.length ≤ (pairFst (v 2)).length := by
+  have hb : ord.length ≤ (CircuitWords.first context.1.1).length := by
     simp only [List.length_append, List.length_singleton,
       BrouwerNashHeaders.sourceDepthRuler_length] at hi
-    change ord.length < (pairFst (v 2)).length + 1 at hi
+    change ord.length < (CircuitWords.first context.1.1).length + 1 at hi
     omega
   simp only [hno ord.length hb, decide_false]
-private theorem querySum_ofFn_cobham {p n : ℕ}
-    (fs : Fin n → (Fin p → List Bool) → List Bool) (hs : ∀ i, Cobham (fs i)) :
-    Cobham (binarySignedQuerySum (List.ofFn fs)) := by
-  apply binarySignedQuerySum_cobham
-  intro f hf
-  obtain ⟨i, rfl⟩ := List.mem_ofFn.mp hf
-  exact hs i
+
 private def cornerCoefficientWord (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
-    (v : Fin 5 → List Bool) : List Bool :=
-  binarySignedAdd (copyCoefficientWord t corner flag 0 v)
-    (binarySignedAdd (copyCoefficientWord t corner flag 1 v) (rawCoefficientWord t corner flag v))
-private theorem cornerCoefficientWord_cobham (t : Fin 41) (corner : Fin 4) (flag : Fin 2) :
-    Cobham (cornerCoefficientWord t corner flag) :=
-  Cobham.comp₂ binarySignedAdd_cobham (copyCoefficientWord_cobham t corner flag 0)
-    (Cobham.comp₂ binarySignedAdd_cobham (copyCoefficientWord_cobham t corner flag 1)
-      (rawCoefficientWord_cobham t corner flag))
-/-- Sum the disjoint color-copy and raw-circuit coefficient families of all forty-one samples. -/
-def coefficientWord : (Fin 5 → List Bool) → List Bool :=
-  binarySignedQuerySum (List.ofFn (fun t : Fin 41 =>
-    binarySignedQuerySum (List.ofFn (fun corner : Fin 4 =>
-      binarySignedQuerySum (List.ofFn (fun flag : Fin 2 => cornerCoefficientWord t corner flag))))))
-theorem coefficientWord_cobham : Cobham coefficientWord :=
-  querySum_ofFn_cobham _ (fun t => querySum_ofFn_cobham _
-    (fun corner => querySum_ofFn_cobham _ (fun flag => cornerCoefficientWord_cobham t corner
-      flag)))
-theorem coefficientWord_mem_FPn : FPn coefficientWord := cobham_iff_FPn.mp coefficientWord_cobham
+    (context : QueryContext) : List Bool :=
+  binarySignedAdd
+    (copyCoefficientWord t corner flag 0 context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2)
+    (binarySignedAdd
+      (copyCoefficientWord t corner flag 1 context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2)
+      (rawCoefficientWord t corner flag context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2))
+
+private theorem cornerCoefficientWord_polyTime (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
+    {Input : Type} {input : Input ↪ List Bool} {context : Input → QueryContext}
+    (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => cornerCoefficientWord t corner flag (context a)) input encBits := by
+  have hcert := binarySignedAdd_polyTime
+    (copyCoefficientWord_polyTime t corner flag 0 hc.fst'.fst' hc.fst'.snd'.fst' hc.fst'.snd'.snd'
+      hc.snd'.fst' hc.snd'.snd')
+    (binarySignedAdd_polyTime
+      (copyCoefficientWord_polyTime t corner flag 1 hc.fst'.fst' hc.fst'.snd'.fst' hc.fst'.snd'.snd'
+        hc.snd'.fst' hc.snd'.snd')
+      (rawCoefficientWord_polyTime t corner flag hc.fst'.fst' hc.fst'.snd'.fst' hc.fst'.snd'.snd'
+        hc.snd'.fst' hc.snd'.snd'))
+  simpa only [cornerCoefficientWord, Function.comp_apply] using hcert
+
+/-- Sum all sample, corner and color-flag families in their original nested right-fold order. -/
+def coefficientWord (source code₀ code₁ out action : List Bool) : List Bool :=
+  binarySignedQuerySum (List.ofFn (fun t : Fin 41 => fun context : QueryContext =>
+    binarySignedQuerySum (List.ofFn (fun corner : Fin 4 => fun context : QueryContext =>
+      binarySignedQuerySum (List.ofFn (fun flag : Fin 2 => fun context : QueryContext =>
+        binarySignedAdd
+          (copyCoefficientWord t corner flag 0 context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2)
+          (binarySignedAdd
+            (copyCoefficientWord t corner flag 1 context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2)
+            (rawCoefficientWord t corner flag context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2))))
+        context)) context)) ((source,(code₀,code₁)),(out,action))
+
+private theorem coefficientWord_eq (context : QueryContext) :
+    coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2 =
+      binarySignedQuerySum (List.ofFn (fun t : Fin 41 => fun context : QueryContext =>
+        binarySignedQuerySum (List.ofFn (fun corner : Fin 4 => fun context : QueryContext =>
+          binarySignedQuerySum (List.ofFn (fun flag : Fin 2 => cornerCoefficientWord t corner flag))
+            context)) context)) context := rfl
+
+private theorem querySum_ofFn_polyTime {Context Input : Type} {n : ℕ}
+    {contextEncoding : Context ↪ List Bool} {input : Input ↪ List Bool}
+    (queries : Fin n → Context → List Bool)
+    (hq : ∀ i, ComputableInPolyTime (queries i) contextEncoding encBits)
+    {context : Input → Context} (hc : ComputableInPolyTime context input contextEncoding) :
+    ComputableInPolyTime (fun a => binarySignedQuerySum (List.ofFn queries) (context a)) input encBits := by
+  apply binarySignedQuerySum_polyTime _ _ hc
+  intro query h
+  obtain ⟨i, rfl⟩ := List.mem_ofFn.mp h
+  exact hq i
+
+theorem coefficientWord_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {source code₀ code₁ out action : Input → List Bool}
+    (hs : ComputableInPolyTime source input encBits)
+    (h₀ : ComputableInPolyTime code₀ input encBits)
+    (h₁ : ComputableInPolyTime code₁ input encBits)
+    (ho : ComputableInPolyTime out input encBits)
+    (ha : ComputableInPolyTime action input encBits) :
+    ComputableInPolyTime (fun a => coefficientWord (source a) (code₀ a) (code₁ a) (out a) (action a))
+      input encBits := by
+  have hcert := querySum_ofFn_polyTime
+    (fun t : Fin 41 => fun context : QueryContext =>
+      binarySignedQuerySum (List.ofFn (fun corner : Fin 4 => fun context : QueryContext =>
+        binarySignedQuerySum (List.ofFn (fun flag : Fin 2 => cornerCoefficientWord t corner flag))
+          context)) context)
+    (fun t => querySum_ofFn_polyTime _
+      (fun corner => querySum_ofFn_polyTime _
+        (fun flag => cornerCoefficientWord_polyTime t corner flag ComputableInPolyTime.id')
+        ComputableInPolyTime.id') ComputableInPolyTime.id')
+    ((hs.prod (h₀.prod h₁)).prod (ho.prod ha))
+  exact hcert.of_enc_eq (fun a => congrArg encBits
+    (coefficientWord_eq ((source a,(code₀ a,code₁ a)),(out a,action a))))
+
 private def rawKindWord (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
-    (v : Fin 5 → List Bool) : List Bool :=
-  let start := inputRuler t corner flag (queryHeaders v) ++
-    BrouwerNashHeaders.arityRuler (queryHeaders v)
-  andBit (lenLeFlag (v 0) start)
-    (notBit (lenLeFlag (v 0) (start ++ circuitUnaryPrefix (rawCode flag v))))
-private theorem rawKindWord_cobham (t : Fin 41) (corner : Fin 4) (flag : Fin 2) :
-    Cobham (rawKindWord t corner flag) := by
-  have hs : Cobham (fun v : Fin 5 → List Bool => inputRuler t corner flag (queryHeaders v) ++
-      BrouwerNashHeaders.arityRuler (queryHeaders v)) :=
-    .appendFn (queryHeader_cobham (inputRuler_cobham t corner flag))
-      (queryHeader_cobham BrouwerNashHeaders.arityRuler_cobham)
-  have hc : Cobham (fun v : Fin 5 → List Bool => circuitUnaryPrefix (rawCode flag v)) :=
-    Cobham.comp (FP_subset_CobhamFP circuitUnaryPrefix_mem_FP)
-      (fun _ : Fin 1 => rawCode_cobham flag)
-  exact .andFn (lenLeFlag_mem (.proj 0) hs)
-    (.notFn (lenLeFlag_mem (.proj 0) (.appendFn hs hc)))
-private def orFunctions {p : ℕ} :
-    List ((Fin p → List Bool) → List Bool) → (Fin p → List Bool) → List Bool
-  | [], _ => [false]
-  | f :: fs, v => orBit (f v) (orFunctions fs v)
-private theorem orFunctions_cobham {p : ℕ} (fs : List ((Fin p → List Bool) → List Bool))
-    (hs : ∀ f ∈ fs, Cobham f) : Cobham (orFunctions fs) := by
-  induction fs with
-  | nil => exact .const [false]
-  | cons f fs ih =>
-    exact Cobham.orFn (hs f (by simp))
-      (ih (fun g hg => hs g (by simp only [List.mem_cons]; exact Or.inr hg)))
-private theorem orFunctions_ofFn_cobham {p n : ℕ}
-    (fs : Fin n → (Fin p → List Bool) → List Bool) (hs : ∀ i, Cobham (fs i)) :
-    Cobham (orFunctions (List.ofFn fs)) := by
-  apply orFunctions_cobham
-  intro f hf
-  obtain ⟨i, rfl⟩ := List.mem_ofFn.mp hf
-  exact hs i
-/-- Comparator flags hold exactly in allocated raw color-gate regions; copied inputs are affine. -/
-def kindWord : (Fin 5 → List Bool) → List Bool :=
-  orFunctions (List.ofFn (fun t : Fin 41 =>
-    orFunctions (List.ofFn (fun corner : Fin 4 =>
-      orFunctions (List.ofFn (fun flag : Fin 2 => rawKindWord t corner flag))))))
-theorem kindWord_cobham : Cobham kindWord :=
-  orFunctions_ofFn_cobham _ (fun t => orFunctions_ofFn_cobham _
-    (fun corner => orFunctions_ofFn_cobham _ (fun flag => rawKindWord_cobham t corner flag)))
-theorem kindWord_mem_FPn : FPn kindWord := cobham_iff_FPn.mp kindWord_cobham
-open scoped BigOperators
+    (context : QueryContext) : List Bool :=
+  let start := inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2 ++
+    BrouwerNashHeaders.arityRuler context.1.1
+  [decide (start.length ≤ context.2.1.length ∧
+    context.2.1.length < (start ++ circuitUnaryPrefix (rawCode flag context)).length)]
+
+private theorem rawKindWord_polyTime (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
+    {Input : Type} {input : Input ↪ List Bool} {context : Input → QueryContext}
+    (hc : ComputableInPolyTime context input queryEncoding) :
+    ComputableInPolyTime (fun a => rawKindWord t corner flag (context a)) input encBits := by
+  have hstart := ComputableInPolyTime.bitsAppend (inputRuler_polyTime t corner flag
+    hc.fst'.fst' hc.fst'.snd'.fst' hc.fst'.snd'.snd') (BrouwerNashHeaders.arityRuler_polyTime hc.fst'.fst')
+  have hout := ComputableInPolyTime.length_bits_comp hc.snd'.fst'
+  have hle := ComputableInPolyTime.of_tidy (ComputableTidilyInPolyTime.unary_le'
+    (ComputableInPolyTime.length_bits_comp hstart).tidy hout.tidy)
+  have hlt := ComputableInPolyTime.of_tidy (ComputableTidilyInPolyTime.unary_lt' hout.tidy
+    (ComputableInPolyTime.length_bits_comp (ComputableInPolyTime.bitsAppend hstart
+      (circuitUnaryPrefix_polyTime (rawCode_polyTime flag hc)))).tidy)
+  have hcert := ComputableInPolyTime.bitsCons (ComputableInPolyTime.decide_and hle hlt)
+    (ComputableInPolyTime.const [])
+  simpa only [rawKindWord, Function.comp_apply] using hcert
+
+private def orFunctions {Context : Type} (queries : List (Context → List Bool))
+    (context : Context) : List Bool :=
+  queries.foldr (fun query rest => WordOperations.orFlag (query context) rest) [false]
+
+private theorem orFunctions_polyTime {Context Input : Type}
+    {contextEncoding : Context ↪ List Bool} {input : Input ↪ List Bool}
+    (queries : List (Context → List Bool))
+    (hq : ∀ query ∈ queries, ComputableInPolyTime query contextEncoding encBits)
+    {context : Input → Context} (hc : ComputableInPolyTime context input contextEncoding) :
+    ComputableInPolyTime (fun a => orFunctions queries (context a)) input encBits := by
+  induction queries with
+  | nil => exact ComputableInPolyTime.const [false]
+  | cons query queries ih =>
+    exact WordOperations.orFlag_polyTime.comp
+      (((hq query List.mem_cons_self).comp hc).prod
+        (ih (fun q h => hq q (List.mem_cons_of_mem _ h))))
+
+private theorem orFunctions_ofFn_polyTime {Context Input : Type} {n : ℕ}
+    {contextEncoding : Context ↪ List Bool} {input : Input ↪ List Bool}
+    (queries : Fin n → Context → List Bool)
+    (hq : ∀ i, ComputableInPolyTime (queries i) contextEncoding encBits)
+    {context : Input → Context} (hc : ComputableInPolyTime context input contextEncoding) :
+    ComputableInPolyTime (fun a => orFunctions (List.ofFn queries) (context a)) input encBits := by
+  apply orFunctions_polyTime _ _ hc
+  intro query h
+  obtain ⟨i, rfl⟩ := List.mem_ofFn.mp h
+  exact hq i
+
+/-- Comparator kinds cover the raw-circuit intervals; copied input gates are affine. -/
+def kindWord (source code₀ code₁ out : List Bool) : List Bool :=
+  let combine (queries : List (QueryContext → List Bool)) (context : QueryContext) :=
+    queries.foldr (fun query rest => WordOperations.orFlag (query context) rest) [false]
+  combine (List.ofFn (fun t : Fin 41 => fun context : QueryContext =>
+    combine (List.ofFn (fun corner : Fin 4 => fun context : QueryContext =>
+      combine (List.ofFn (fun flag : Fin 2 => fun context : QueryContext =>
+        let start := inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2 ++
+          BrouwerNashHeaders.arityRuler context.1.1
+        [decide (start.length ≤ context.2.1.length ∧ context.2.1.length <
+          (start ++ circuitUnaryPrefix (if flag.val = 0 then context.1.2.1 else context.1.2.2)).length)]))
+        context)) context)) ((source,(code₀,code₁)),(out,[]))
+
+private theorem kindWord_eq (source code₀ code₁ out : List Bool) :
+    kindWord source code₀ code₁ out =
+      orFunctions (List.ofFn (fun t : Fin 41 => fun context : QueryContext =>
+        orFunctions (List.ofFn (fun corner : Fin 4 => fun context : QueryContext =>
+          orFunctions (List.ofFn (fun flag : Fin 2 => rawKindWord t corner flag)) context)) context))
+        ((source,(code₀,code₁)),(out,[])) := rfl
+
+theorem kindWord_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {source code₀ code₁ out : Input → List Bool}
+    (hs : ComputableInPolyTime source input encBits)
+    (h₀ : ComputableInPolyTime code₀ input encBits)
+    (h₁ : ComputableInPolyTime code₁ input encBits)
+    (ho : ComputableInPolyTime out input encBits) :
+    ComputableInPolyTime (fun a => kindWord (source a) (code₀ a) (code₁ a) (out a)) input encBits := by
+  have hcert := orFunctions_ofFn_polyTime
+    (fun t : Fin 41 => fun context : QueryContext =>
+      orFunctions (List.ofFn (fun corner : Fin 4 => fun context : QueryContext =>
+        orFunctions (List.ofFn (fun flag : Fin 2 => rawKindWord t corner flag)) context)) context)
+    (fun t => orFunctions_ofFn_polyTime _
+      (fun corner => orFunctions_ofFn_polyTime _
+        (fun flag => rawKindWord_polyTime t corner flag ComputableInPolyTime.id')
+        ComputableInPolyTime.id') ComputableInPolyTime.id')
+    ((hs.prod (h₀.prod h₁)).prod (ho.prod (ComputableInPolyTime.const [])))
+  exact hcert.of_enc_eq (fun a => congrArg encBits (kindWord_eq (source a) (code₀ a) (code₁ a) (out a)))
+
+private theorem checked_arity {width position : ℕ}
+    {gates : List (CircuitFormat.signature.Op × List ℕ)}
+    (hraw : Program.IsCodeFrom CircuitFormat.signature width position gates) :
+    ∀ gate ∈ gates, gate.2.length = 2 := by
+  intro gate hg
+  obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem hg
+  exact (hraw.getElem i hi).1
+
 private theorem sparse_sum {n : ℕ} (out start : ℕ) (z : ℤ) (f : Fin n → ℤ)
     (hat : ∀ i, out = start + i.val → z = f i)
     (hzero : (∀ i : Fin n, out ≠ start + i.val) → z = 0) :
@@ -659,109 +788,116 @@ private theorem sparse_sum {n : ℕ} (out start : ℕ) (z : ℤ) (f : Fin n → 
     apply Finset.sum_eq_zero
     intro i hi
     exact ite_eq_right (hn i)
+
 private theorem copyCoefficientWord_value_gate (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
-    (axis : Fin 2) (v : Fin 5 → List Bool) (j : ℕ) (hj : j ≤ (pairFst (v 2)).length)
-    (ho : (v 0).length = (inputRuler t corner flag (queryHeaders v)).length +
-      axis.val * ((pairFst (v 2)).length + 1) + j)
-    (r : Fin (dimension (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-      (circuitUnaryPrefix (v 4)).length * 2)) (hr : (v 1).length = r.val) :
-    binarySignedValue (copyCoefficientWord t corner flag axis v) =
-      (affine₂ (cornerBit (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-        (circuitUnaryPrefix (v 4)).length t corner axis j)
-        (slot (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-          (circuitUnaryPrefix (v 4)).length zero)
-        (2 * (dimension (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-          (circuitUnaryPrefix (v 4)).length : ℤ)) 0 0).coefficients r := by
-  rw [copyCoefficientWord_value_at t corner flag axis v j hj ho,
+    (axis : Fin 2) (context : QueryContext) (j : ℕ) (hj : j ≤ (CircuitWords.first context.1.1).length)
+    (ho : context.2.1.length = (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+      axis.val * ((CircuitWords.first context.1.1).length + 1) + j)
+    (r : Fin (dimension (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+      (circuitUnaryPrefix context.1.2.2).length * 2)) (hr : context.2.2.length = r.val) :
+    binarySignedValue (copyCoefficientWord t corner flag axis context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) =
+      (affine₂ (cornerBit (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+        (circuitUnaryPrefix context.1.2.2).length t corner axis j)
+        (slot (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+          (circuitUnaryPrefix context.1.2.2).length zero)
+        (2 * (dimension (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+          (circuitUnaryPrefix context.1.2.2).length : ℤ)) 0 0).coefficients r := by
+  rw [copyCoefficientWord_value_at t corner flag axis context j hj ho,
     BrouwerNashCoefficientQuery.affine₂_coefficients]
   simp only [hr, BrouwerNashCoefficientQuery.pairedAction_iff, ite_self, add_zero,
     BrouwerNashHeaders.dimensionRuler_length]
-  rfl
+
 private theorem copyCoefficientWord_value_sum (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
-    (axis : Fin 2) (v : Fin 5 → List Bool)
-    (r : Fin (dimension (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-      (circuitUnaryPrefix (v 4)).length * 2)) (hr : (v 1).length = r.val) :
-    binarySignedValue (copyCoefficientWord t corner flag axis v) =
-      ∑ j : Fin ((pairFst (v 2)).length + 1),
-        if (v 0).length = (inputRuler t corner flag (queryHeaders v)).length +
-            axis.val * ((pairFst (v 2)).length + 1) + j.val
-        then (affine₂ (cornerBit (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-          (circuitUnaryPrefix (v 4)).length t corner axis j.val)
-          (slot (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-            (circuitUnaryPrefix (v 4)).length zero)
-          (2 * (dimension (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-            (circuitUnaryPrefix (v 4)).length : ℤ)) 0 0).coefficients r else 0 := by
+    (axis : Fin 2) (context : QueryContext)
+    (r : Fin (dimension (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+      (circuitUnaryPrefix context.1.2.2).length * 2)) (hr : context.2.2.length = r.val) :
+    binarySignedValue (copyCoefficientWord t corner flag axis context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) =
+      ∑ j : Fin ((CircuitWords.first context.1.1).length + 1),
+        if context.2.1.length = (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+            axis.val * ((CircuitWords.first context.1.1).length + 1) + j.val
+        then (affine₂ (cornerBit (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+          (circuitUnaryPrefix context.1.2.2).length t corner axis j.val)
+          (slot (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+            (circuitUnaryPrefix context.1.2.2).length zero)
+          (2 * (dimension (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+            (circuitUnaryPrefix context.1.2.2).length : ℤ)) 0 0).coefficients r else 0 := by
   apply sparse_sum
   · intro j hj
-    exact copyCoefficientWord_value_gate t corner flag axis v j.val
+    exact copyCoefficientWord_value_gate t corner flag axis context j.val
       (by have hh := j.isLt; omega) hj r hr
   · intro hn
     apply copyCoefficientWord_value_zero
     intro j hj
     exact hn ⟨j, by omega⟩
+
 private theorem rawCoefficientWord_value_dimension (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
-    (v : Fin 5 → List Bool) (raw : _root_.Complexity.CircuitCode.RawCircuit)
-    (hcode : rawCode flag v = raw.encode) (j : Fin raw.length)
-    (ho : (v 0).length = (inputRuler t corner flag (queryHeaders v)).length +
-      (BrouwerNashHeaders.arityRuler (queryHeaders v)).length + j.val)
-    (k : ℕ) (hk : (BrouwerNashHeaders.dimensionRuler (queryHeaders v)).length = k)
-    (href : (raw[j.val].shift (inputRuler t corner flag (queryHeaders v)).length).WellFormedAt k)
-    (r : Fin (k * 2)) (hr : (v 1).length = r.val) :
-    binarySignedValue (rawCoefficientWord t corner flag v) =
+    (context : QueryContext) (raw : List (CircuitFormat.signature.Op × List ℕ))
+    (hraw : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw)
+    (hcode : rawCode flag context = (CircuitFormat.encode raw)) (j : Fin raw.length)
+    (ho : context.2.1.length = (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+      (BrouwerNashHeaders.arityRuler context.1.1).length + j.val)
+    (k : ℕ) (hk : (BrouwerNashHeaders.dimensionRuler context.1.1 context.1.2.1 context.1.2.2).length = k)
+    (href : Program.IsCodeFrom CircuitFormat.signature k 0 [((raw[j.val].1, raw[j.val].2.map ((inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length + ·)))])
+    (r : Fin (k * 2)) (hr : context.2.2.length = r.val) :
+    binarySignedValue (rawCoefficientWord t corner flag context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) =
       BimatrixRawGate.coefficients
-        (raw[j.val].shift (inputRuler t corner flag (queryHeaders v)).length) href r := by
+        ((raw[j.val].1, raw[j.val].2.map ((inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length + ·))) href r := by
   subst k
-  exact rawCoefficientWord_value_at t corner flag v raw hcode j ho href r hr
+  exact rawCoefficientWord_value_at t corner flag context raw
+    (by simpa only [BrouwerNashHeaders.arityRuler_length] using hraw) hcode j ho href r hr
+
 private theorem rawCoefficientWord_value_gate (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
-    (v : Fin 5 → List Bool) (raw : _root_.Complexity.CircuitCode.RawCircuit)
-    (hcode : rawCode flag v = raw.encode) (j : Fin raw.length)
-    (ho : (v 0).length = (inputRuler t corner flag (queryHeaders v)).length +
-      (BrouwerNashHeaders.arityRuler (queryHeaders v)).length + j.val)
-    (href : (raw[j.val].shift (inputRuler t corner flag (queryHeaders v)).length).WellFormedAt
-      (dimension (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-        (circuitUnaryPrefix (v 4)).length))
-    (r : Fin (dimension (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-      (circuitUnaryPrefix (v 4)).length * 2)) (hr : (v 1).length = r.val) :
-    binarySignedValue (rawCoefficientWord t corner flag v) =
-      (guardedRaw (raw[j.val].shift (inputRuler t corner flag (queryHeaders
-        v)).length)).coefficients r := by
+    (context : QueryContext) (raw : List (CircuitFormat.signature.Op × List ℕ))
+    (hraw : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw)
+    (hcode : rawCode flag context = (CircuitFormat.encode raw)) (j : Fin raw.length)
+    (ho : context.2.1.length = (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+      (BrouwerNashHeaders.arityRuler context.1.1).length + j.val)
+    (href : Program.IsCodeFrom CircuitFormat.signature (dimension (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+        (circuitUnaryPrefix context.1.2.2).length) 0 [((raw[j.val].1, raw[j.val].2.map ((inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length + ·)))])
+    (r : Fin (dimension (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+      (circuitUnaryPrefix context.1.2.2).length * 2)) (hr : context.2.2.length = r.val) :
+    binarySignedValue (rawCoefficientWord t corner flag context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) =
+      (guardedRaw ((raw[j.val].1, raw[j.val].2.map ((inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length + ·)))).coefficients r := by
   rw [guardedRaw_eq _ href]
   dsimp only [BimatrixRawGate.gate]
-  exact rawCoefficientWord_value_dimension t corner flag v raw hcode j ho _
-    (BrouwerNashHeaders.dimensionRuler_length (queryHeaders v)) href r hr
+  exact rawCoefficientWord_value_dimension t corner flag context raw hraw hcode j ho _
+    (BrouwerNashHeaders.dimensionRuler_length context.1.1 context.1.2.1 context.1.2.2) href r hr
+
 private theorem rawCoefficientWord_value_sum (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
-    (v : Fin 5 → List Bool) (raw : _root_.Complexity.CircuitCode.RawCircuit)
-    (hcode : rawCode flag v = raw.encode)
+    (context : QueryContext) (raw : List (CircuitFormat.signature.Op × List ℕ))
+    (hraw : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw)
+    (hcode : rawCode flag context = (CircuitFormat.encode raw))
     (hwf : ∀ j : Fin raw.length,
-      (raw[j.val].shift (inputRuler t corner flag (queryHeaders v)).length).WellFormedAt
-        (dimension (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-          (circuitUnaryPrefix (v 4)).length))
-    (r : Fin (dimension (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-      (circuitUnaryPrefix (v 4)).length * 2)) (hr : (v 1).length = r.val) :
-    binarySignedValue (rawCoefficientWord t corner flag v) =
-      ∑ j : Fin raw.length, if (v 0).length =
-          (inputRuler t corner flag (queryHeaders v)).length +
-            (BrouwerNashHeaders.arityRuler (queryHeaders v)).length + j.val
-        then (guardedRaw (raw[j.val].shift
-          (inputRuler t corner flag (queryHeaders v)).length)).coefficients r else 0 := by
+      Program.IsCodeFrom CircuitFormat.signature (dimension (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+          (circuitUnaryPrefix context.1.2.2).length) 0 [((raw[j.val].1, raw[j.val].2.map ((inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length + ·)))])
+    (r : Fin (dimension (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+      (circuitUnaryPrefix context.1.2.2).length * 2)) (hr : context.2.2.length = r.val) :
+    binarySignedValue (rawCoefficientWord t corner flag context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) =
+      ∑ j : Fin raw.length, if context.2.1.length =
+          (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+            (BrouwerNashHeaders.arityRuler context.1.1).length + j.val
+        then (guardedRaw ((raw[j.val].1, raw[j.val].2.map ((inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length + ·)))).coefficients r else 0 := by
   apply sparse_sum
   · intro j hj
-    exact rawCoefficientWord_value_gate t corner flag v raw hcode j hj (hwf j) r hr
+    exact rawCoefficientWord_value_gate t corner flag context raw hraw hcode j hj (hwf j) r hr
   · intro hn
     apply rawCoefficientWord_value_zero
     intro j hj
-    rw [hcode, circuitUnaryPrefix_rawEncode_length] at hj
+    have hcode' : (if flag.val = 0 then context.1.2.1 else context.1.2.2) =
+        CircuitFormat.encode raw := hcode
+    rw [hcode', circuitUnaryPrefix_encode_length raw (checked_arity hraw)] at hj
     exact hn ⟨j, hj⟩
+
 private theorem rawEnd_le_dimension (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
-    (v : Fin 5 → List Bool) :
-    (inputRuler t corner flag (queryHeaders v)).length +
-      (BrouwerNashHeaders.arityRuler (queryHeaders v)).length +
-      (circuitUnaryPrefix (rawCode flag v)).length ≤
-      dimension (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-        (circuitUnaryPrefix (v 4)).length := by
-  let b := (pairFst (v 2)).length
-  let e₀ := (circuitUnaryPrefix (v 3)).length
-  let e₁ := (circuitUnaryPrefix (v 4)).length
+    (context : QueryContext) :
+    (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+      (BrouwerNashHeaders.arityRuler context.1.1).length +
+      (circuitUnaryPrefix (rawCode flag context)).length ≤
+      dimension (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+        (circuitUnaryPrefix context.1.2.2).length := by
+  let b := (CircuitWords.first context.1.1).length
+  let e₀ := (circuitUnaryPrefix context.1.2.1).length
+  let e₁ := (circuitUnaryPrefix context.1.2.2).length
   have hc : corner.val * cornerWidth b e₀ e₁ + cornerWidth b e₀ e₁ ≤
       4 * cornerWidth b e₀ e₁ := by
     calc
@@ -772,7 +908,7 @@ private theorem rawEnd_le_dimension (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
   have hw : cornerWidth b e₀ e₁ = 2 * arity b + e₀ + e₁ := rfl
   rw [inputRuler_length, BrouwerNashHeaders.arityRuler_length]
   change sampleBase b e₀ e₁ t + colorInput b e₀ e₁ corner flag + arity b +
-    (circuitUnaryPrefix (rawCode flag v)).length ≤ dimension b e₀ e₁
+    (circuitUnaryPrefix (rawCode flag context)).length ≤ dimension b e₀ e₁
   unfold colorInput rawCode
   by_cases hf : flag.val = 0
   · simp only [hf, ite_true, add_zero]
@@ -783,135 +919,98 @@ private theorem rawEnd_le_dimension (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
     change sampleBase b e₀ e₁ t + (colorBase b + corner.val * cornerWidth b e₀ e₁ +
       (arity b + e₀)) + arity b + e₁ ≤ dimension b e₀ e₁
     omega
+
 private theorem rawShift_wellFormed (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
-    (v : Fin 5 → List Bool) (raw : _root_.Complexity.CircuitCode.RawCircuit)
-    (hcode : rawCode flag v = raw.encode)
-    (hraw : raw.WellFormed (arity (pairFst (v 2)).length)) (j : Fin raw.length) :
-    (raw[j.val].shift (inputRuler t corner flag (queryHeaders v)).length).WellFormedAt
-      (dimension (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-        (circuitUnaryPrefix (v 4)).length) := by
-  have he := rawEnd_le_dimension t corner flag v
-  rw [hcode, circuitUnaryPrefix_rawEncode_length, BrouwerNashHeaders.arityRuler_length] at he
-  change (inputRuler t corner flag (queryHeaders v)).length + arity (pairFst (v 2)).length +
-    raw.length ≤ dimension (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-      (circuitUnaryPrefix (v 4)).length at he
-  have hj := j.isLt
-  have hf := hraw.2 j
-  change raw[j.val].input₀ < arity (pairFst (v 2)).length + j.val ∧
-    raw[j.val].input₁ < arity (pairFst (v 2)).length + j.val at hf
-  dsimp only [_root_.Complexity.CircuitCode.RawGate.WellFormedAt,
-    _root_.Complexity.CircuitCode.RawGate.shift]
-  constructor <;> omega
-private theorem lenLeFlag_value (x y : List Bool) :
-    lenLeFlag x y = [decide (y.length ≤ x.length)] := by
-  rcases lenLeFlag_flag x y with h | h
-  · simp only [h, (lenLeFlag_eq_true_iff x y).mp h, decide_true]
-  · have hn : ¬y.length ≤ x.length := by
-      intro he
-      rw [(lenLeFlag_eq_true_iff x y).mpr he] at h
-      contradiction
-    simp only [h, hn, decide_false]
+    (context : QueryContext) (raw : List (CircuitFormat.signature.Op × List ℕ))
+    (hcode : rawCode flag context = (CircuitFormat.encode raw))
+    (hraw : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw) (j : Fin raw.length) :
+    Program.IsCodeFrom CircuitFormat.signature (dimension (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+        (circuitUnaryPrefix context.1.2.2).length) 0 [((raw[j.val].1, raw[j.val].2.map ((inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length + ·)))] := by
+  have he := rawEnd_le_dimension t corner flag context
+  rw [hcode, circuitUnaryPrefix_encode_length raw (checked_arity hraw),
+    BrouwerNashHeaders.arityRuler_length] at he
+  exact circuitRelocatedGate_valid hraw he j
+
 private theorem rawKindWord_value (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
-    (v : Fin 5 → List Bool) :
-    rawKindWord t corner flag v = [decide (
-      (inputRuler t corner flag (queryHeaders v)).length +
-        (BrouwerNashHeaders.arityRuler (queryHeaders v)).length ≤ (v 0).length ∧
-      (v 0).length < (inputRuler t corner flag (queryHeaders v)).length +
-        (BrouwerNashHeaders.arityRuler (queryHeaders v)).length +
-          (circuitUnaryPrefix (rawCode flag v)).length)] := by
-  unfold rawKindWord
-  dsimp only
-  rw [lenLeFlag_value, lenLeFlag_value]
-  simp only [List.length_append]
-  by_cases hs : (inputRuler t corner flag (queryHeaders v)).length +
-      (BrouwerNashHeaders.arityRuler (queryHeaders v)).length ≤ (v 0).length
-  · simp only [hs, true_and, decide_true]
-    by_cases he : (inputRuler t corner flag (queryHeaders v)).length +
-        (BrouwerNashHeaders.arityRuler (queryHeaders v)).length +
-          (circuitUnaryPrefix (rawCode flag v)).length ≤ (v 0).length
-    · have hn : ¬(v 0).length < (inputRuler t corner flag (queryHeaders v)).length +
-        (BrouwerNashHeaders.arityRuler (queryHeaders v)).length +
-          (circuitUnaryPrefix (rawCode flag v)).length := by omega
-      simp only [he, hn, decide_true, decide_false, andBit, notBit, caseBit₀, Bool.cond_true,
-        Bool.cond_false]
-    · have hl : (v 0).length < (inputRuler t corner flag (queryHeaders v)).length +
-        (BrouwerNashHeaders.arityRuler (queryHeaders v)).length +
-          (circuitUnaryPrefix (rawCode flag v)).length := by omega
-      simp only [he, hl, decide_true, decide_false, andBit, notBit, caseBit₀, Bool.cond_true,
-        Bool.cond_false]
-  · simp only [hs, false_and, decide_false, andBit, caseBit₀, Bool.cond_false]
-private theorem orFunctions_value {p : ℕ}
-    (fs : List ((Fin p → List Bool) → List Bool)) (v : Fin p → List Bool) :
-    orFunctions fs v = [fs.any (fun f => (f v).headD false)] := by
-  induction fs with
+    (context : QueryContext) :
+    rawKindWord t corner flag context = [decide (
+      (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+        (BrouwerNashHeaders.arityRuler context.1.1).length ≤ context.2.1.length ∧
+      context.2.1.length < (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+        (BrouwerNashHeaders.arityRuler context.1.1).length +
+          (circuitUnaryPrefix (rawCode flag context)).length)] := by
+  simp only [rawKindWord, List.length_append]
+
+private theorem orFunctions_value {Context : Type}
+    (queries : List (Context → List Bool)) (context : Context) :
+    orFunctions queries context = [queries.any (fun query => (query context).headD false)] := by
+  induction queries with
   | nil => rfl
-  | cons f fs ih =>
-    rw [orFunctions, ih]
-    cases hf : f v with
-    | nil =>
-      simp only [orBit, caseBit₀, List.any_cons, hf, List.headD_nil, Bool.false_or]
-      cases fs.any (fun f => (f v).headD false) <;> rfl
-    | cons b tail =>
-      cases b <;> simp only [orBit, caseBit₀, List.any_cons, hf, List.headD_cons,
-        Bool.cond_true, Bool.cond_false, Bool.false_or, Bool.true_or]
-      cases fs.any (fun f => (f v).headD false) <;> rfl
-private theorem orFunctions_ofFn_value {p n : ℕ}
-    (fs : Fin n → (Fin p → List Bool) → List Bool) (v : Fin p → List Bool) :
-    orFunctions (List.ofFn fs) v = [decide (∃ i, (fs i v).headD false = true)] := by
+  | cons query queries ih =>
+    change [(query context).headD false || (orFunctions queries context).headD false] = _
+    rw [ih]
+    rfl
+
+private theorem orFunctions_ofFn_value {Context : Type} {n : ℕ}
+    (queries : Fin n → Context → List Bool) (context : Context) :
+    orFunctions (List.ofFn queries) context =
+      [decide (∃ i, (queries i context).headD false = true)] := by
   rw [orFunctions_value]
   apply congrArg List.singleton
   apply Bool.eq_iff_iff.mpr
   rw [List.any_eq_true]
   constructor
-  · rintro ⟨f, hf, hh⟩
-    obtain ⟨i, rfl⟩ := List.mem_ofFn.mp hf
-    exact decide_eq_true ⟨i, hh⟩
+  · rintro ⟨query, hquery, h⟩
+    obtain ⟨i, rfl⟩ := List.mem_ofFn.mp hquery
+    exact decide_eq_true ⟨i, h⟩
   · intro h
-    obtain ⟨i, hh⟩ := of_decide_eq_true h
-    exact ⟨fs i, List.mem_ofFn.mpr ⟨i, rfl⟩, hh⟩
+    obtain ⟨i, hi⟩ := of_decide_eq_true h
+    exact ⟨queries i, List.mem_ofFn.mpr ⟨i, rfl⟩, hi⟩
+
 /-- The computed kind flag is exactly the union of the allocated raw-circuit intervals. -/
-theorem kindWord_value (v : Fin 5 → List Bool) :
-    kindWord v = [decide (∃ t : Fin 41, ∃ corner : Fin 4, ∃ flag : Fin 2,
-      (inputRuler t corner flag (queryHeaders v)).length +
-        (BrouwerNashHeaders.arityRuler (queryHeaders v)).length ≤ (v 0).length ∧
-      (v 0).length < (inputRuler t corner flag (queryHeaders v)).length +
-        (BrouwerNashHeaders.arityRuler (queryHeaders v)).length +
-          (circuitUnaryPrefix (rawCode flag v)).length)] := by
-  unfold kindWord
-  simp only [orFunctions_ofFn_value, List.headD_cons, decide_eq_true_eq, rawKindWord_value]
-private theorem querySum_ofFn_value {p n : ℕ}
-    (fs : Fin n → (Fin p → List Bool) → List Bool) (v : Fin p → List Bool) :
-    binarySignedValue (binarySignedQuerySum (List.ofFn fs) v) =
-      ∑ i : Fin n, binarySignedValue (fs i v) :=
+theorem kindWord_value (context : QueryContext) :
+    kindWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 = [decide (∃ t : Fin 41, ∃ corner : Fin 4, ∃ flag : Fin 2,
+      (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+        (BrouwerNashHeaders.arityRuler context.1.1).length ≤ context.2.1.length ∧
+      context.2.1.length < (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+        (BrouwerNashHeaders.arityRuler context.1.1).length +
+          (circuitUnaryPrefix (if flag.val = 0 then context.1.2.1 else context.1.2.2)).length)] := by
+  rw [kindWord_eq]
+  simp only [orFunctions_ofFn_value, List.headD_cons, decide_eq_true_eq, rawKindWord_value, rawCode]
+
+private theorem querySum_ofFn_value {Context : Type} {n : ℕ}
+    (fs : Fin n → Context → List Bool) (context : Context) :
+    binarySignedValue (binarySignedQuerySum (List.ofFn fs) context) =
+      ∑ i : Fin n, binarySignedValue (fs i context) :=
       by
   rw [binarySignedQuerySum_value, List.map_ofFn, List.sum_ofFn]
   rfl
+
 /-- The full coefficient query is the guarded sum of its canonical copy and raw gate factories. -/
-theorem coefficientWord_value (v : Fin 5 → List Bool)
-    (raw₀ raw₁ : _root_.Complexity.CircuitCode.RawCircuit)
-    (hc₀ : v 3 = raw₀.encode) (hc₁ : v 4 = raw₁.encode)
-    (hw₀ : raw₀.WellFormed (arity (pairFst (v 2)).length))
-    (hw₁ : raw₁.WellFormed (arity (pairFst (v 2)).length))
-    (r : Fin (dimension (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-      (circuitUnaryPrefix (v 4)).length * 2)) (hr : (v 1).length = r.val) :
-    binarySignedValue (coefficientWord v) =
+theorem coefficientWord_value (context : QueryContext)
+    (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ))
+    (hc₀ : context.1.2.1 = (CircuitFormat.encode raw₀)) (hc₁ : context.1.2.2 = (CircuitFormat.encode raw₁))
+    (hw₀ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw₀)
+    (hw₁ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw₁)
+    (r : Fin (dimension (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+      (circuitUnaryPrefix context.1.2.2).length * 2)) (hr : context.2.2.length = r.val) :
+    binarySignedValue (coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) =
       ∑ t : Fin 41, ∑ corner : Fin 4, ∑ flag : Fin 2,
-        ((∑ axis : Fin 2, ∑ j : Fin ((pairFst (v 2)).length + 1),
-          if (v 0).length = (inputRuler t corner flag (queryHeaders v)).length +
-              axis.val * ((pairFst (v 2)).length + 1) + j.val
-          then (affine₂ (cornerBit (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-            (circuitUnaryPrefix (v 4)).length t corner axis j.val)
-            (slot (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-              (circuitUnaryPrefix (v 4)).length zero)
-            (2 * (dimension (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-              (circuitUnaryPrefix (v 4)).length : ℤ)) 0 0).coefficients r else 0) +
+        ((∑ axis : Fin 2, ∑ j : Fin ((CircuitWords.first context.1.1).length + 1),
+          if context.2.1.length = (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+              axis.val * ((CircuitWords.first context.1.1).length + 1) + j.val
+          then (affine₂ (cornerBit (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+            (circuitUnaryPrefix context.1.2.2).length t corner axis j.val)
+            (slot (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+              (circuitUnaryPrefix context.1.2.2).length zero)
+            (2 * (dimension (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+              (circuitUnaryPrefix context.1.2.2).length : ℤ)) 0 0).coefficients r else 0) +
         (let raw := if flag.val = 0 then raw₀ else raw₁
-          ∑ j : Fin raw.length, if (v 0).length =
-              (inputRuler t corner flag (queryHeaders v)).length +
-                (BrouwerNashHeaders.arityRuler (queryHeaders v)).length + j.val
-            then (guardedRaw (raw[j.val].shift
-              (inputRuler t corner flag (queryHeaders v)).length)).coefficients r else 0)) := by
-  unfold coefficientWord
+          ∑ j : Fin raw.length, if context.2.1.length =
+              (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+                (BrouwerNashHeaders.arityRuler context.1.1).length + j.val
+            then (guardedRaw ((raw[j.val].1, raw[j.val].2.map ((inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length + ·)))).coefficients r else 0)) := by
+  rw [coefficientWord_eq]
   rw [querySum_ofFn_value]
   apply Finset.sum_congr rfl
   intro t ht
@@ -922,19 +1021,20 @@ theorem coefficientWord_value (v : Fin 5 → List Bool)
   apply Finset.sum_congr rfl
   intro flag hf
   rw [cornerCoefficientWord, binarySignedAdd_value, binarySignedAdd_value,
-    copyCoefficientWord_value_sum t corner flag 0 v r hr,
-    copyCoefficientWord_value_sum t corner flag 1 v r hr]
+    copyCoefficientWord_value_sum t corner flag 0 context r hr,
+    copyCoefficientWord_value_sum t corner flag 1 context r hr]
   let raw := if flag.val = 0 then raw₀ else raw₁
-  have he : rawCode flag v = raw.encode := by
+  have he : rawCode flag context = (CircuitFormat.encode raw) := by
     unfold rawCode raw
     split <;> assumption
-  have hw : raw.WellFormed (arity (pairFst (v 2)).length) := by
+  have hw : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw := by
     unfold raw
     split <;> assumption
-  rw [rawCoefficientWord_value_sum t corner flag v raw he
-    (fun j => rawShift_wellFormed t corner flag v raw he hw j) r hr]
+  rw [rawCoefficientWord_value_sum t corner flag context raw hw he
+    (fun j => rawShift_wellFormed t corner flag context raw he hw j) r hr]
   rw [Fin.sum_univ_two]
   ring
+
 private theorem block_unique (width i j r s : ℕ) (hr : r < width) (hs : s < width)
     (he : width * i + r = width * j + s) : i = j ∧ r = s := by
   have hw : 0 < width := by omega
@@ -943,6 +1043,7 @@ private theorem block_unique (width i j r s : ℕ) (hr : r < width) (hs : s < wi
   have hj : (width * i + r) / width = j ∧ (width * i + r) % width = s :=
     (Nat.div_mod_unique hw).mpr ⟨by omega, hs⟩
   exact ⟨hi.1.symm.trans hj.1, hi.2.symm.trans hj.2⟩
+
 private theorem colorLocal_lt (b e₀ e₁ : ℕ) (corner : Fin 4) (offset : ℕ)
     (ho : offset < cornerWidth b e₀ e₁) :
     colorBase b + corner.val * cornerWidth b e₀ e₁ + offset < sampleWidth b e₀ e₁ := by
@@ -955,6 +1056,7 @@ private theorem colorLocal_lt (b e₀ e₁ : ℕ) (corner : Fin 4) (offset : ℕ
     dsimp [colorBase, weightBase, sampleWidth]
     omega
   omega
+
 private theorem colorPosition_injective (b e₀ e₁ : ℕ) (t t' : Fin 41)
     (corner corner' : Fin 4) (offset offset' : ℕ)
     (ho : offset < cornerWidth b e₀ e₁) (ho' : offset' < cornerWidth b e₀ e₁)
@@ -980,6 +1082,7 @@ private theorem colorPosition_injective (b e₀ e₁ : ℕ) (t t' : Fin 41)
     omega
   have hc := block_unique _ _ _ _ _ ho ho' hec
   exact ⟨ht, Fin.ext hc.1, hc.2⟩
+
 private theorem rawIntervals_iff (b e₀ e₁ out : ℕ) (t : Fin 41) (corner : Fin 4) (offset : ℕ)
     (ho : offset < cornerWidth b e₀ e₁)
     (he : out = sampleBase b e₀ e₁ t + colorBase b + corner.val * cornerWidth b e₀ e₁ + offset) :
@@ -1026,14 +1129,14 @@ private theorem rawIntervals_iff (b e₀ e₁ out : ℕ) (t : Fin 41) (corner : 
       simp only [colorInput, Fin.val_one, Nat.one_ne_zero, ite_false]
       have hw : cornerWidth b e₀ e₁ = 2 * arity b + e₀ + e₁ := rfl
       constructor <;> omega
+
 private theorem colorRawShift_wellFormed (b : ℕ)
-    (raw₀ raw₁ : _root_.Complexity.CircuitCode.RawCircuit)
-    (hw₀ : raw₀.WellFormed (arity b)) (hw₁ : raw₁.WellFormed (arity b))
+    (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ))
+    (hw₀ : Program.IsCodeFrom CircuitFormat.signature (arity b) 0 raw₀) (hw₁ : Program.IsCodeFrom CircuitFormat.signature (arity b) 0 raw₁)
     (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
     (j : Fin (if flag.val = 0 then raw₀ else raw₁).length) :
-    (((if flag.val = 0 then raw₀ else raw₁)[j.val]).shift
-      (sampleBase b raw₀.length raw₁.length t + colorInput b raw₀.length raw₁.length corner
-        flag)).WellFormedAt (dimension b raw₀.length raw₁.length) := by
+    Program.IsCodeFrom CircuitFormat.signature (dimension b raw₀.length raw₁.length) 0 [((((if flag.val = 0 then raw₀ else raw₁)[j.val]).1, ((if flag.val = 0 then raw₀ else raw₁)[j.val]).2.map ((sampleBase b raw₀.length raw₁.length t + colorInput b raw₀.length raw₁.length corner
+        flag) + ·)))] := by
   have hs := sample_lt_dimension b raw₀.length raw₁.length t
     (colorBase b + 4 * cornerWidth b raw₀.length raw₁.length)
     (by dsimp [colorBase, weightBase, sampleWidth]; omega)
@@ -1044,32 +1147,20 @@ private theorem colorRawShift_wellFormed (b : ℕ)
       _ ≤ _ := Nat.mul_le_mul_right _ (by have hh := corner.isLt; omega)
   have hl : cornerWidth b raw₀.length raw₁.length =
       2 * arity b + raw₀.length + raw₁.length := rfl
-  fin_cases flag
-  · have hg := hw₀.2 j
-    change raw₀[j.val].input₀ < arity b + j.val ∧ raw₀[j.val].input₁ < arity b + j.val at hg
-    have hj : j.val < raw₀.length := j.isLt
-    change (sampleBase b raw₀.length raw₁.length t +
-        (colorBase b + corner.val * cornerWidth b raw₀.length raw₁.length + 0)) +
-          raw₀[j.val].input₀ <
-        dimension b raw₀.length raw₁.length ∧
-      (sampleBase b raw₀.length raw₁.length t +
-        (colorBase b + corner.val * cornerWidth b raw₀.length raw₁.length + 0)) +
-          raw₀[j.val].input₁ <
-        dimension b raw₀.length raw₁.length
-    constructor <;> omega
-  · have hg := hw₁.2 j
-    change raw₁[j.val].input₀ < arity b + j.val ∧ raw₁[j.val].input₁ < arity b + j.val at hg
-    have hj : j.val < raw₁.length := j.isLt
-    change (sampleBase b raw₀.length raw₁.length t +
-        (colorBase b + corner.val * cornerWidth b raw₀.length raw₁.length +
-           (arity b + raw₀.length))) + raw₁[j.val].input₀ < dimension b raw₀.length raw₁.length ∧
-      (sampleBase b raw₀.length raw₁.length t +
-        (colorBase b + corner.val * cornerWidth b raw₀.length raw₁.length +
-           (arity b + raw₀.length))) + raw₁[j.val].input₁ < dimension b raw₀.length raw₁.length
-    constructor <;> omega
+  let raw := if flag.val = 0 then raw₀ else raw₁
+  have hraw : Program.IsCodeFrom CircuitFormat.signature (arity b) 0 raw := by
+    unfold raw
+    split <;> assumption
+  have hbound : (sampleBase b raw₀.length raw₁.length t +
+      colorInput b raw₀.length raw₁.length corner flag) + arity b + raw.length ≤
+        dimension b raw₀.length raw₁.length := by
+    unfold colorInput raw
+    by_cases hf : flag.val = 0 <;> simp only [hf, ite_true, ite_false] <;> omega
+  exact circuitRelocatedGate_valid hraw hbound j
+
 private theorem colorRegionGate_comparator_iff (b : ℕ)
-    (raw₀ raw₁ : _root_.Complexity.CircuitCode.RawCircuit)
-    (hw₀ : raw₀.WellFormed (arity b)) (hw₁ : raw₁.WellFormed (arity b))
+    (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ))
+    (hw₀ : Program.IsCodeFrom CircuitFormat.signature (arity b) 0 raw₀) (hw₁ : Program.IsCodeFrom CircuitFormat.signature (arity b) 0 raw₁)
     (t : Fin 41) (corner : Fin 4) (offset : ℕ)
     (ho : offset < cornerWidth b raw₀.length raw₁.length) :
     (colorRegionGate b raw₀ raw₁ t corner offset).kind =
@@ -1090,8 +1181,8 @@ private theorem colorRegionGate_comparator_iff (b : ℕ)
       rw [hj] at he
       have hf := colorRawShift_wellFormed b raw₀ raw₁ hw₀ hw₁ t corner 0 j
       simp only [Fin.val_zero, ite_true] at hf
-      change ((raw₀.get j).shift (sampleBase b raw₀.length raw₁.length t +
-        colorInput b raw₀.length raw₁.length corner 0)).WellFormedAt _ at hf
+      change Program.IsCodeFrom CircuitFormat.signature _ 0 [(((raw₀.get j).1, (raw₀.get j).2.map ((sampleBase b raw₀.length raw₁.length t +
+        colorInput b raw₀.length raw₁.length corner 0) + ·)))] at hf
       rw [he, guardedRaw_eq _ hf]
       simp only [BimatrixRawGate.gate, true_iff]
       exact Or.inl ⟨by omega, h₁⟩
@@ -1115,69 +1206,61 @@ private theorem colorRegionGate_comparator_iff (b : ℕ)
         rw [hj] at he
         have hf := colorRawShift_wellFormed b raw₀ raw₁ hw₀ hw₁ t corner 1 j
         simp only [Fin.val_one, Nat.one_ne_zero, ite_false] at hf
-        change ((raw₁.get j).shift (sampleBase b raw₀.length raw₁.length t +
-          colorInput b raw₀.length raw₁.length corner 1)).WellFormedAt _ at hf
+        change Program.IsCodeFrom CircuitFormat.signature _ 0 [(((raw₁.get j).1, (raw₁.get j).2.map ((sampleBase b raw₀.length raw₁.length t +
+          colorInput b raw₀.length raw₁.length corner 1) + ·)))] at hf
         rw [he, guardedRaw_eq _ hf]
         simp only [BimatrixRawGate.gate, true_iff]
         exact Or.inr ⟨by omega, ho⟩
+
 /-- At an allocated color output, the computed flag is the canonical program gate kind. -/
-theorem kindWord_eq_colorRegion (out action source : List Bool)
-    (raw₀ raw₁ : _root_.Complexity.CircuitCode.RawCircuit)
-    (hw₀ : raw₀.WellFormed (arity (pairFst source).length))
-    (hw₁ : raw₁.WellFormed (arity (pairFst source).length))
+theorem kindWord_eq_colorRegion (source out : List Bool)
+    (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ))
+    (hw₀ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first source).length) 0 raw₀)
+    (hw₁ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first source).length) 0 raw₁)
     (t : Fin 41) (corner : Fin 4) (offset : ℕ)
-    (ho : offset < cornerWidth (pairFst source).length raw₀.length raw₁.length)
-    (hout : out.length = sampleBase (pairFst source).length raw₀.length raw₁.length t +
-      colorBase (pairFst source).length +
-        corner.val * cornerWidth (pairFst source).length raw₀.length raw₁.length + offset) :
-    kindWord ![out, action, source, raw₀.encode, raw₁.encode] =
-      [decide ((colorRegionGate (pairFst source).length raw₀ raw₁ t corner offset).kind =
+    (ho : offset < cornerWidth (CircuitWords.first source).length raw₀.length raw₁.length)
+    (hout : out.length = sampleBase (CircuitWords.first source).length raw₀.length raw₁.length t +
+      colorBase (CircuitWords.first source).length +
+        corner.val * cornerWidth (CircuitWords.first source).length raw₀.length raw₁.length + offset) :
+    kindWord source (CircuitFormat.encode raw₀) (CircuitFormat.encode raw₁) out =
+      [decide ((colorRegionGate (CircuitWords.first source).length raw₀ raw₁ t corner offset).kind =
         GameTheory.Finite.BimatrixGateProgram.GateKind.comparator)] := by
-  have hp₀ : (circuitUnaryPrefix raw₀.encode).length = raw₀.length := by
-    exact circuitUnaryPrefix_rawEncode_length _
-  have hp₁ : (circuitUnaryPrefix raw₁.encode).length = raw₁.length := by
-    exact circuitUnaryPrefix_rawEncode_length _
-  rw [kindWord_value]
-  have h3 : (![out, action, source, raw₀.encode, raw₁.encode] : Fin 5 → List Bool) 3 = raw₀.encode
-    := rfl
-  have h4 : (![out, action, source, raw₀.encode, raw₁.encode] : Fin 5 → List Bool) 4 = raw₁.encode
-    := rfl
-  simp only [inputRuler_length, BrouwerNashHeaders.arityRuler_length, queryHeaders,
-    Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two, Matrix.vecHead,
-    Matrix.vecTail, Function.comp_apply, Fin.succ_zero_eq_one, rawCode, h3, h4,
+  have hp₀ := circuitUnaryPrefix_encode_length raw₀ (checked_arity hw₀)
+  have hp₁ := circuitUnaryPrefix_encode_length raw₁ (checked_arity hw₁)
+  rw [kindWord_value ((source,(CircuitFormat.encode raw₀,CircuitFormat.encode raw₁)),(out,[]))]
+  simp only [inputRuler_length, BrouwerNashHeaders.arityRuler_length,
     apply_ite, hp₀, hp₁]
   apply congrArg List.singleton
   apply Bool.eq_iff_iff.mpr
   simp only [decide_eq_true_eq]
-  refine Iff.trans ?_ ((rawIntervals_iff (pairFst source).length raw₀.length raw₁.length out.length
+  refine Iff.trans ?_ ((rawIntervals_iff (CircuitWords.first source).length raw₀.length raw₁.length out.length
     t corner offset ho hout).trans
-      (colorRegionGate_comparator_iff (pairFst source).length raw₀ raw₁ hw₀ hw₁ t corner offset
+      (colorRegionGate_comparator_iff (CircuitWords.first source).length raw₀ raw₁ hw₀ hw₁ t corner offset
         ho).symm)
   apply exists_congr; intro sample
   apply exists_congr; intro vertex
   apply exists_congr; intro flag
   by_cases hf : flag.val = 0 <;> simp only [hf, ite_true, ite_false]
+
 /-- No allocated color gate contributes outside the color regions. -/
-theorem coefficientWord_zero_outside (v : Fin 5 → List Bool)
+theorem coefficientWord_zero_outside (context : QueryContext)
     (hno : ∀ (t : Fin 41) (corner : Fin 4) offset,
-      offset < cornerWidth (pairFst (v 2)).length
-        (circuitUnaryPrefix (v 3)).length (circuitUnaryPrefix (v 4)).length →
-      (v 0).length ≠ sampleBase (pairFst (v 2)).length
-        (circuitUnaryPrefix (v 3)).length (circuitUnaryPrefix (v 4)).length t +
-          colorBase (pairFst (v 2)).length + corner.val * cornerWidth
-            (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-              (circuitUnaryPrefix (v 4)).length + offset) :
-    binarySignedValue (coefficientWord v) = 0 := by
-  let b := (pairFst (v 2)).length
-  let e₀ := (circuitUnaryPrefix (v 3)).length
-  let e₁ := (circuitUnaryPrefix (v 4)).length
+      offset < cornerWidth (CircuitWords.first context.1.1).length
+        (circuitUnaryPrefix context.1.2.1).length (circuitUnaryPrefix context.1.2.2).length →
+      context.2.1.length ≠ sampleBase (CircuitWords.first context.1.1).length
+        (circuitUnaryPrefix context.1.2.1).length (circuitUnaryPrefix context.1.2.2).length t +
+          colorBase (CircuitWords.first context.1.1).length + corner.val * cornerWidth
+            (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+              (circuitUnaryPrefix context.1.2.2).length + offset) :
+    binarySignedValue (coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) = 0 := by
+  let b := (CircuitWords.first context.1.1).length
+  let e₀ := (circuitUnaryPrefix context.1.2.1).length
+  let e₁ := (circuitUnaryPrefix context.1.2.2).length
   have hin (t : Fin 41) (corner : Fin 4) (flag : Fin 2) :
-      (inputRuler t corner flag (queryHeaders v)).length =
+      (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length =
         sampleBase b e₀ e₁ t + colorInput b e₀ e₁ corner flag := by
-    simpa only [queryHeaders, Matrix.cons_val_zero, Matrix.cons_val_one,
-      Matrix.cons_val_two, Matrix.vecHead, Matrix.vecTail, Function.comp_apply,
-      Fin.succ_zero_eq_one, b, e₀, e₁] using inputRuler_length t corner flag (queryHeaders v)
-  unfold coefficientWord
+    simpa only [ b, e₀, e₁] using inputRuler_length t corner flag context.1.1 context.1.2.1 context.1.2.2
+  rw [coefficientWord_eq]
   rw [querySum_ofFn_value]
   apply Finset.sum_eq_zero; intro t ht
   rw [querySum_ofFn_value]
@@ -1185,7 +1268,7 @@ theorem coefficientWord_zero_outside (v : Fin 5 → List Bool)
   rw [querySum_ofFn_value]
   apply Finset.sum_eq_zero; intro flag hf
   have hcopy (axis : Fin 2) :
-      binarySignedValue (copyCoefficientWord t corner flag axis v) = 0 := by
+      binarySignedValue (copyCoefficientWord t corner flag axis context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) = 0 := by
     apply copyCoefficientWord_value_zero
     intro j hj he
     let off := (if flag.val = 0 then 0 else arity b + e₀) + axis.val * (b + 1) + j
@@ -1201,21 +1284,20 @@ theorem coefficientWord_zero_outside (v : Fin 5 → List Bool)
     have hoff : off < cornerWidth b e₀ e₁ := by
       dsimp only [off, cornerWidth]
       split_ifs <;> omega
-    apply (show (v 0).length ≠ sampleBase b e₀ e₁ t + colorBase b +
+    apply (show context.2.1.length ≠ sampleBase b e₀ e₁ t + colorBase b +
       corner.val * cornerWidth b e₀ e₁ + off from hno t corner off hoff)
     rw [hin, colorInput] at he
-    change (v 0).length = sampleBase b e₀ e₁ t +
+    change context.2.1.length = sampleBase b e₀ e₁ t +
       (colorBase b + corner.val * cornerWidth b e₀ e₁ +
         (if flag.val = 0 then 0 else arity b + e₀)) + axis.val * (b + 1) + j at he
     dsimp only [off]
     omega
-  have hraw : binarySignedValue (rawCoefficientWord t corner flag v) = 0 := by
+  have hraw : binarySignedValue (rawCoefficientWord t corner flag context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) = 0 := by
     apply rawCoefficientWord_value_zero
     intro j hj he
     let off := (if flag.val = 0 then 0 else arity b + e₀) + arity b + j
     have hoff : off < cornerWidth b e₀ e₁ := by
       dsimp only [off, cornerWidth]
-      dsimp only [rawCode] at hj
       by_cases hflag : flag.val = 0
       · simp only [hflag, ite_true] at hj ⊢
         change j < e₀ at hj
@@ -1223,64 +1305,63 @@ theorem coefficientWord_zero_outside (v : Fin 5 → List Bool)
       · simp only [hflag, ite_false] at hj ⊢
         change j < e₁ at hj
         omega
-    apply (show (v 0).length ≠ sampleBase b e₀ e₁ t + colorBase b +
+    apply (show context.2.1.length ≠ sampleBase b e₀ e₁ t + colorBase b +
       corner.val * cornerWidth b e₀ e₁ + off from hno t corner off hoff)
-    have harity : (BrouwerNashHeaders.arityRuler (queryHeaders v)).length = arity b := by
-      simpa only [queryHeaders, Matrix.cons_val_zero, b] using
-        BrouwerNashHeaders.arityRuler_length (queryHeaders v)
+    have harity : (BrouwerNashHeaders.arityRuler context.1.1).length = arity b := by
+      simpa only [ b] using
+        BrouwerNashHeaders.arityRuler_length context.1.1
     rw [hin, colorInput, harity] at he
     dsimp only [off]
     omega
   rw [cornerCoefficientWord, binarySignedAdd_value, binarySignedAdd_value,
     hcopy 0, hcopy 1, hraw]
   rfl
+
 /-- The color kind query is false outside the allocated color portion of every sample. -/
-theorem kindWord_zero_of_outside (v : Fin 5 → List Bool)
-    (hno : ∀ t : Fin 41, ¬(sampleBase (pairFst (v 2)).length
-      (circuitUnaryPrefix (v 3)).length (circuitUnaryPrefix (v 4)).length t +
-        colorBase (pairFst (v 2)).length ≤ (v 0).length ∧
-      (v 0).length < sampleBase (pairFst (v 2)).length
-        (circuitUnaryPrefix (v 3)).length (circuitUnaryPrefix (v 4)).length t +
-          minimumBase (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-            (circuitUnaryPrefix (v 4)).length)) : kindWord v = [false] := by
-  rw [kindWord_value]
+theorem kindWord_zero_of_outside (context : QueryContext)
+    (hno : ∀ t : Fin 41, ¬(sampleBase (CircuitWords.first context.1.1).length
+      (circuitUnaryPrefix context.1.2.1).length (circuitUnaryPrefix context.1.2.2).length t +
+        colorBase (CircuitWords.first context.1.1).length ≤ context.2.1.length ∧
+      context.2.1.length < sampleBase (CircuitWords.first context.1.1).length
+        (circuitUnaryPrefix context.1.2.1).length (circuitUnaryPrefix context.1.2.2).length t +
+          minimumBase (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+            (circuitUnaryPrefix context.1.2.2).length)) : kindWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 = [false] := by
+  rw [kindWord_value context]
   congr 1
   apply decide_eq_false_iff_not.mpr
   rintro ⟨t, corner, flag, hlo, hhi⟩
   apply hno t
-  let b := (pairFst (v 2)).length
-  let e₀ := (circuitUnaryPrefix (v 3)).length
-  let e₁ := (circuitUnaryPrefix (v 4)).length
-  have hin : (inputRuler t corner flag (queryHeaders v)).length =
+  let b := (CircuitWords.first context.1.1).length
+  let e₀ := (circuitUnaryPrefix context.1.2.1).length
+  let e₁ := (circuitUnaryPrefix context.1.2.2).length
+  have hin : (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length =
       sampleBase b e₀ e₁ t + colorInput b e₀ e₁ corner flag := by
-    simpa only [queryHeaders, Matrix.cons_val_zero, Matrix.cons_val_one,
-      Matrix.cons_val_two, Matrix.vecHead, Matrix.vecTail, Function.comp_apply,
-      Fin.succ_zero_eq_one, b, e₀, e₁] using
-        inputRuler_length t corner flag (queryHeaders v)
-  have harity : (BrouwerNashHeaders.arityRuler (queryHeaders v)).length = arity b := by
-    simpa only [queryHeaders, Matrix.cons_val_zero, b] using
-      BrouwerNashHeaders.arityRuler_length (queryHeaders v)
+    simpa only [ b, e₀, e₁] using
+        inputRuler_length t corner flag context.1.1 context.1.2.1 context.1.2.2
+  have harity : (BrouwerNashHeaders.arityRuler context.1.1).length = arity b := by
+    simpa only [ b] using
+      BrouwerNashHeaders.arityRuler_length context.1.1
   rw [hin, harity, colorInput] at hlo hhi
   have hc : corner.val * cornerWidth b e₀ e₁ + cornerWidth b e₀ e₁ ≤
       4 * cornerWidth b e₀ e₁ := by
     calc
       _ = (corner.val + 1) * cornerWidth b e₀ e₁ := by ring
       _ ≤ _ := Nat.mul_le_mul_right _ (by have hh := corner.isLt; omega)
-  change sampleBase b e₀ e₁ t + colorBase b ≤ (v 0).length ∧
-    (v 0).length < sampleBase b e₀ e₁ t + minimumBase b e₀ e₁
+  change sampleBase b e₀ e₁ t + colorBase b ≤ context.2.1.length ∧
+    context.2.1.length < sampleBase b e₀ e₁ t + minimumBase b e₀ e₁
   have hl : cornerWidth b e₀ e₁ = 2 * arity b + e₀ + e₁ := rfl
-  dsimp only [rawCode] at hhi
   by_cases hf : flag.val = 0
   · simp only [hf, ite_true] at hlo hhi
-    change (v 0).length < sampleBase b e₀ e₁ t + (colorBase b +
+    change context.2.1.length < sampleBase b e₀ e₁ t + (colorBase b +
       corner.val * cornerWidth b e₀ e₁ + 0) + arity b + e₀ at hhi
     dsimp only [minimumBase]
     constructor <;> omega
   · simp only [hf, ite_false] at hlo hhi
-    change (v 0).length < sampleBase b e₀ e₁ t + (colorBase b +
+    change context.2.1.length < sampleBase b e₀ e₁ t + (colorBase b +
       corner.val * cornerWidth b e₀ e₁ + (arity b + e₀)) + arity b + e₁ at hhi
     dsimp only [minimumBase]
     constructor <;> omega
+
 private theorem copyOffset_lt (b e₀ e₁ : ℕ) (flag axis : Fin 2)
     (j : Fin (b + 1)) :
     (if flag.val = 0 then 0 else arity b + e₀) + axis.val * (b + 1) + j.val <
@@ -1288,6 +1369,7 @@ private theorem copyOffset_lt (b e₀ e₁ : ℕ) (flag axis : Fin 2)
   have hj := j.isLt
   fin_cases flag <;> fin_cases axis <;> norm_num only [arity, cornerWidth] <;>
     simp only [ite_true, ite_false, zero_mul, one_mul, zero_add] <;> omega
+
 private theorem copyOffset_injective (b e₀ : ℕ) (f f' a a' : Fin 2)
     (j j' : Fin (b + 1))
     (he : (if f.val = 0 then 0 else arity b + e₀) + a.val * (b + 1) + j.val =
@@ -1299,6 +1381,7 @@ private theorem copyOffset_injective (b e₀ : ℕ) (f f' a a' : Fin 2)
     norm_num only [arity] at he ⊢ <;>
     simp only [ite_true, ite_false, zero_mul, one_mul, zero_add] at he ⊢ <;>
       (try simp only [true_and]) <;> omega
+
 private theorem copyOffset_ne_rawOffset (b e₀ e₁ : ℕ) (f f' a : Fin 2)
     (j : Fin (b + 1)) (l : ℕ) (hl : l < if f'.val = 0 then e₀ else e₁) :
     (if f.val = 0 then 0 else arity b + e₀) + a.val * (b + 1) + j.val ≠
@@ -1308,6 +1391,7 @@ private theorem copyOffset_ne_rawOffset (b e₀ e₁ : ℕ) (f f' a : Fin 2)
   fin_cases f <;> fin_cases f' <;> fin_cases a <;>
     norm_num only [arity] at he hl <;>
     simp only [ite_true, ite_false, zero_mul, one_mul, zero_add] at he hl <;> omega
+
 private theorem copyPosition_eq_iff (b e₀ e₁ : ℕ)
     (t t' : Fin 41) (c c' : Fin 4) (f f' a a' : Fin 2) (j j' : Fin (b + 1)) :
     sampleBase b e₀ e₁ t + colorInput b e₀ e₁ c f + a.val * (b + 1) + j.val =
@@ -1327,59 +1411,59 @@ private theorem copyPosition_eq_iff (b e₀ e₁ : ℕ)
     exact ⟨hx.1, hx.2.1, Fin.ext hs.1, Fin.ext hs.2.1, Fin.ext hs.2.2⟩
   · rintro ⟨rfl, rfl, rfl, rfl, rfl⟩
     rfl
+
 private theorem rawOffset_lt (b e₀ e₁ : ℕ) (flag : Fin 2) (j : ℕ)
     (hj : j < if flag.val = 0 then e₀ else e₁) :
     (if flag.val = 0 then 0 else arity b + e₀) + arity b + j < cornerWidth b e₀ e₁ := by
   dsimp only [cornerWidth]
   by_cases hf : flag.val = 0 <;> simp only [hf, ite_true, ite_false] at hj ⊢ <;> omega
+
 /-- The selected copied coordinate contributes exactly its canonical affine coefficient. -/
-theorem coefficientWord_eq_copy (v : Fin 5 → List Bool)
-    (raw₀ raw₁ : _root_.Complexity.CircuitCode.RawCircuit)
-    (hc₀ : v 3 = raw₀.encode) (hc₁ : v 4 = raw₁.encode)
-    (hw₀ : raw₀.WellFormed (arity (pairFst (v 2)).length))
-    (hw₁ : raw₁.WellFormed (arity (pairFst (v 2)).length))
-    (r : Fin (dimension (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-      (circuitUnaryPrefix (v 4)).length * 2)) (hr : (v 1).length = r.val)
+theorem coefficientWord_eq_copy (context : QueryContext)
+    (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ))
+    (hc₀ : context.1.2.1 = (CircuitFormat.encode raw₀)) (hc₁ : context.1.2.2 = (CircuitFormat.encode raw₁))
+    (hw₀ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw₀)
+    (hw₁ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw₁)
+    (r : Fin (dimension (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+      (circuitUnaryPrefix context.1.2.2).length * 2)) (hr : context.2.2.length = r.val)
     (t : Fin 41) (corner : Fin 4) (flag axis : Fin 2)
-    (j : Fin ((pairFst (v 2)).length + 1))
-    (hout : (v 0).length = (inputRuler t corner flag (queryHeaders v)).length +
-      axis.val * ((pairFst (v 2)).length + 1) + j.val) :
-    binarySignedValue (coefficientWord v) =
-      (affine₂ (cornerBit (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-        (circuitUnaryPrefix (v 4)).length t corner axis j.val)
-        (slot (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-          (circuitUnaryPrefix (v 4)).length zero)
-        (2 * (dimension (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-          (circuitUnaryPrefix (v 4)).length : ℤ)) 0 0).coefficients r := by
-  let b := (pairFst (v 2)).length
-  let e₀ := (circuitUnaryPrefix (v 3)).length
-  let e₁ := (circuitUnaryPrefix (v 4)).length
+    (j : Fin ((CircuitWords.first context.1.1).length + 1))
+    (hout : context.2.1.length = (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+      axis.val * ((CircuitWords.first context.1.1).length + 1) + j.val) :
+    binarySignedValue (coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) =
+      (affine₂ (cornerBit (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+        (circuitUnaryPrefix context.1.2.2).length t corner axis j.val)
+        (slot (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+          (circuitUnaryPrefix context.1.2.2).length zero)
+        (2 * (dimension (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+          (circuitUnaryPrefix context.1.2.2).length : ℤ)) 0 0).coefficients r := by
+  let b := (CircuitWords.first context.1.1).length
+  let e₀ := (circuitUnaryPrefix context.1.2.1).length
+  let e₁ := (circuitUnaryPrefix context.1.2.2).length
   have hp₀ : e₀ = raw₀.length := by
     dsimp [e₀]; rw [hc₀]
-    exact circuitUnaryPrefix_rawEncode_length _
+    exact circuitUnaryPrefix_encode_length raw₀ (checked_arity hw₀)
   have hp₁ : e₁ = raw₁.length := by
     dsimp [e₁]; rw [hc₁]
-    exact circuitUnaryPrefix_rawEncode_length _
+    exact circuitUnaryPrefix_encode_length raw₁ (checked_arity hw₁)
   have hin (t : Fin 41) (corner : Fin 4) (flag : Fin 2) :
-      (inputRuler t corner flag (queryHeaders v)).length =
+      (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length =
         sampleBase b e₀ e₁ t + colorInput b e₀ e₁ corner flag := by
-    simpa only [queryHeaders, Matrix.cons_val_zero, Matrix.cons_val_one,
-      Matrix.cons_val_two, Matrix.vecHead, Matrix.vecTail, Function.comp_apply,
-      Fin.succ_zero_eq_one, b, e₀, e₁] using
-        inputRuler_length t corner flag (queryHeaders v)
-  have harity : (BrouwerNashHeaders.arityRuler (queryHeaders v)).length = arity b := by
-    simpa only [queryHeaders, Matrix.cons_val_zero, b] using
-      BrouwerNashHeaders.arityRuler_length (queryHeaders v)
+    simpa only [ b, e₀, e₁] using
+        inputRuler_length t corner flag context.1.1 context.1.2.1 context.1.2.2
+  have harity : (BrouwerNashHeaders.arityRuler context.1.1).length = arity b := by
+    simpa only [ b] using
+      BrouwerNashHeaders.arityRuler_length context.1.1
   have hcopy (t' : Fin 41) (c' : Fin 4) (f' a' : Fin 2) (j' : Fin (b + 1)) :
-      (v 0).length = (inputRuler t' c' f' (queryHeaders v)).length +
+      context.2.1.length = (inputRuler t' c' f' context.1.1 context.1.2.1 context.1.2.2).length +
         a'.val * (b + 1) + j'.val ↔
       t' = t ∧ c' = corner ∧ f' = flag ∧ a' = axis ∧ j' = j := by
     rw [hout, hin, hin, eq_comm]
     exact copyPosition_eq_iff b e₀ e₁ t' t c' corner f' flag a' axis j' j
   have hraw (t' : Fin 41) (c' : Fin 4) (f' : Fin 2)
       (j' : Fin (if f'.val = 0 then raw₀ else raw₁).length) :
-      (v 0).length ≠ (inputRuler t' c' f' (queryHeaders v)).length +
-        (BrouwerNashHeaders.arityRuler (queryHeaders v)).length + j'.val := by
+      context.2.1.length ≠ (inputRuler t' c' f' context.1.1 context.1.2.1 context.1.2.2).length +
+        (BrouwerNashHeaders.arityRuler context.1.1).length + j'.val := by
     intro he
     have hl : j'.val < if f'.val = 0 then e₀ else e₁ := by
       rw [hp₀, hp₁]
@@ -1399,10 +1483,11 @@ theorem coefficientWord_eq_copy (v : Fin 5 → List Bool)
     have hx := colorPosition_injective b e₀ e₁ t t' corner c' o o'
       (copyOffset_lt b e₀ e₁ flag axis j) (rawOffset_lt b e₀ e₁ f' j'.val hl) hpos
     exact copyOffset_ne_rawOffset b e₀ e₁ flag f' axis j j'.val hl hx.2.2
-  rw [coefficientWord_value v raw₀ raw₁ hc₀ hc₁ hw₀ hw₁ r hr]
+  rw [coefficientWord_value context raw₀ raw₁ hc₀ hc₁ hw₀ hw₁ r hr]
   dsimp only [b] at hcopy
   simp only [hcopy, hraw, ite_false, Finset.sum_const_zero, add_zero, ite_and,
     Finset.sum_ite_irrel, Finset.sum_ite_eq', Finset.mem_univ, ite_true]
+
 private theorem rawOffset_injective (b e₀ e₁ : ℕ) (f f' : Fin 2) (j j' : ℕ)
     (hj : j < if f.val = 0 then e₀ else e₁)
     (hj' : j' < if f'.val = 0 then e₀ else e₁)
@@ -1412,6 +1497,7 @@ private theorem rawOffset_injective (b e₀ e₁ : ℕ) (f f' : Fin 2) (j j' : �
   fin_cases f <;> fin_cases f' <;> norm_num only [arity] at he hj hj' ⊢ <;>
     simp only [ite_true, ite_false, zero_add] at he hj hj' ⊢ <;>
       (try simp only [true_and]) <;> omega
+
 private theorem rawPosition_eq_iff (b e₀ e₁ : ℕ)
     (t t' : Fin 41) (c c' : Fin 4) (f f' : Fin 2) (j j' : ℕ)
     (hj : j < if f.val = 0 then e₀ else e₁)
@@ -1433,46 +1519,44 @@ private theorem rawPosition_eq_iff (b e₀ e₁ : ℕ)
     exact ⟨hx.1, hx.2.1, Fin.ext hs.1, hs.2⟩
   · rintro ⟨rfl, rfl, rfl, rfl⟩
     rfl
+
 /-- A selected relocated raw gate contributes exactly its canonical coefficient. -/
-theorem coefficientWord_eq_raw (v : Fin 5 → List Bool)
-    (raw₀ raw₁ : _root_.Complexity.CircuitCode.RawCircuit)
-    (hc₀ : v 3 = raw₀.encode) (hc₁ : v 4 = raw₁.encode)
-    (hw₀ : raw₀.WellFormed (arity (pairFst (v 2)).length))
-    (hw₁ : raw₁.WellFormed (arity (pairFst (v 2)).length))
-    (r : Fin (dimension (pairFst (v 2)).length (circuitUnaryPrefix (v 3)).length
-      (circuitUnaryPrefix (v 4)).length * 2)) (hr : (v 1).length = r.val)
+theorem coefficientWord_eq_raw (context : QueryContext)
+    (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ))
+    (hc₀ : context.1.2.1 = (CircuitFormat.encode raw₀)) (hc₁ : context.1.2.2 = (CircuitFormat.encode raw₁))
+    (hw₀ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw₀)
+    (hw₁ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw₁)
+    (r : Fin (dimension (CircuitWords.first context.1.1).length (circuitUnaryPrefix context.1.2.1).length
+      (circuitUnaryPrefix context.1.2.2).length * 2)) (hr : context.2.2.length = r.val)
     (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
     (j : Fin (if flag.val = 0 then raw₀ else raw₁).length)
-    (hout : (v 0).length = (inputRuler t corner flag (queryHeaders v)).length +
-      (BrouwerNashHeaders.arityRuler (queryHeaders v)).length + j.val) :
-    binarySignedValue (coefficientWord v) =
-      (guardedRaw (((if flag.val = 0 then raw₀ else raw₁)[j.val]).shift
-        (inputRuler t corner flag (queryHeaders v)).length)).coefficients r := by
-  let b := (pairFst (v 2)).length
-  let e₀ := (circuitUnaryPrefix (v 3)).length
-  let e₁ := (circuitUnaryPrefix (v 4)).length
+    (hout : context.2.1.length = (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+      (BrouwerNashHeaders.arityRuler context.1.1).length + j.val) :
+    binarySignedValue (coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) =
+      (guardedRaw ((((if flag.val = 0 then raw₀ else raw₁)[j.val]).1, ((if flag.val = 0 then raw₀ else raw₁)[j.val]).2.map ((inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length + ·)))).coefficients r := by
+  let b := (CircuitWords.first context.1.1).length
+  let e₀ := (circuitUnaryPrefix context.1.2.1).length
+  let e₁ := (circuitUnaryPrefix context.1.2.2).length
   have hp₀ : e₀ = raw₀.length := by
     dsimp [e₀]; rw [hc₀]
-    exact circuitUnaryPrefix_rawEncode_length _
+    exact circuitUnaryPrefix_encode_length raw₀ (checked_arity hw₀)
   have hp₁ : e₁ = raw₁.length := by
     dsimp [e₁]; rw [hc₁]
-    exact circuitUnaryPrefix_rawEncode_length _
+    exact circuitUnaryPrefix_encode_length raw₁ (checked_arity hw₁)
   have hin (t : Fin 41) (corner : Fin 4) (flag : Fin 2) :
-      (inputRuler t corner flag (queryHeaders v)).length =
+      (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length =
         sampleBase b e₀ e₁ t + colorInput b e₀ e₁ corner flag := by
-    simpa only [queryHeaders, Matrix.cons_val_zero, Matrix.cons_val_one,
-      Matrix.cons_val_two, Matrix.vecHead, Matrix.vecTail, Function.comp_apply,
-      Fin.succ_zero_eq_one, b, e₀, e₁] using
-        inputRuler_length t corner flag (queryHeaders v)
-  have harity : (BrouwerNashHeaders.arityRuler (queryHeaders v)).length = arity b := by
-    simpa only [queryHeaders, Matrix.cons_val_zero, b] using
-      BrouwerNashHeaders.arityRuler_length (queryHeaders v)
+    simpa only [ b, e₀, e₁] using
+        inputRuler_length t corner flag context.1.1 context.1.2.1 context.1.2.2
+  have harity : (BrouwerNashHeaders.arityRuler context.1.1).length = arity b := by
+    simpa only [ b] using
+      BrouwerNashHeaders.arityRuler_length context.1.1
   have hlen (f : Fin 2) (l : Fin (if f.val = 0 then raw₀ else raw₁).length) :
       l.val < if f.val = 0 then e₀ else e₁ := by
     rw [hp₀, hp₁]
     by_cases hf : f.val = 0 <;> simpa only [hf, ite_true, ite_false] using l.isLt
   have hcopy (t' : Fin 41) (c' : Fin 4) (f' a' : Fin 2) (j' : Fin (b + 1)) :
-      (v 0).length ≠ (inputRuler t' c' f' (queryHeaders v)).length +
+      context.2.1.length ≠ (inputRuler t' c' f' context.1.1 context.1.2.1 context.1.2.2).length +
         a'.val * (b + 1) + j'.val := by
     intro he
     let o := (if f'.val = 0 then 0 else arity b + e₀) + a'.val * (b + 1) + j'.val
@@ -1491,115 +1575,116 @@ theorem coefficientWord_eq_raw (v : Fin 5 → List Bool)
     exact copyOffset_ne_rawOffset b e₀ e₁ f' flag a' j' j.val (hlen flag j) hx.2.2
   have hraw (t' : Fin 41) (c' : Fin 4) (f' : Fin 2)
       (j' : Fin (if f'.val = 0 then raw₀ else raw₁).length) :
-      (v 0).length = (inputRuler t' c' f' (queryHeaders v)).length +
-        (BrouwerNashHeaders.arityRuler (queryHeaders v)).length + j'.val ↔
+      context.2.1.length = (inputRuler t' c' f' context.1.1 context.1.2.1 context.1.2.2).length +
+        (BrouwerNashHeaders.arityRuler context.1.1).length + j'.val ↔
       t' = t ∧ c' = corner ∧ f' = flag ∧ j'.val = j.val := by
     rw [hout, hin, hin, harity, eq_comm]
     exact rawPosition_eq_iff b e₀ e₁ t' t c' corner f' flag j'.val j.val
       (hlen f' j') (hlen flag j)
-  rw [coefficientWord_value v raw₀ raw₁ hc₀ hc₁ hw₀ hw₁ r hr]
+  rw [coefficientWord_value context raw₀ raw₁ hc₀ hc₁ hw₀ hw₁ r hr]
   dsimp only [b] at hcopy
   simp only [hcopy, hraw, ite_false, Finset.sum_const_zero, zero_add, ite_and,
     Finset.sum_ite_irrel, Finset.sum_ite_eq', Finset.mem_univ, ite_true, Fin.val_inj]
-private theorem coefficientWord_eq_copy_lengths (v : Fin 5 → List Bool)
-    (raw₀ raw₁ : _root_.Complexity.CircuitCode.RawCircuit)
-    (hc₀ : v 3 = raw₀.encode) (hc₁ : v 4 = raw₁.encode)
-    (hw₀ : raw₀.WellFormed (arity (pairFst (v 2)).length))
-    (hw₁ : raw₁.WellFormed (arity (pairFst (v 2)).length))
+
+private theorem coefficientWord_eq_copy_lengths (context : QueryContext)
+    (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ))
+    (hc₀ : context.1.2.1 = (CircuitFormat.encode raw₀)) (hc₁ : context.1.2.2 = (CircuitFormat.encode raw₁))
+    (hw₀ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw₀)
+    (hw₁ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw₁)
     (e₀ e₁ : ℕ)
-    (he₀ : (circuitUnaryPrefix (v 3)).length = e₀)
-    (he₁ : (circuitUnaryPrefix (v 4)).length = e₁)
-    (r : Fin (dimension (pairFst (v 2)).length e₀
-      e₁ * 2)) (hr : (v 1).length = r.val)
+    (he₀ : (circuitUnaryPrefix context.1.2.1).length = e₀)
+    (he₁ : (circuitUnaryPrefix context.1.2.2).length = e₁)
+    (r : Fin (dimension (CircuitWords.first context.1.1).length e₀
+      e₁ * 2)) (hr : context.2.2.length = r.val)
     (t : Fin 41) (corner : Fin 4) (flag axis : Fin 2)
-    (j : Fin ((pairFst (v 2)).length + 1))
-    (hout : (v 0).length = (inputRuler t corner flag (queryHeaders v)).length +
-      axis.val * ((pairFst (v 2)).length + 1) + j.val) :
-    binarySignedValue (coefficientWord v) =
-      (affine₂ (cornerBit (pairFst (v 2)).length e₀
+    (j : Fin ((CircuitWords.first context.1.1).length + 1))
+    (hout : context.2.1.length = (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+      axis.val * ((CircuitWords.first context.1.1).length + 1) + j.val) :
+    binarySignedValue (coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) =
+      (affine₂ (cornerBit (CircuitWords.first context.1.1).length e₀
         e₁ t corner axis j.val)
-        (slot (pairFst (v 2)).length e₀
+        (slot (CircuitWords.first context.1.1).length e₀
           e₁ zero)
-        (2 * (dimension (pairFst (v 2)).length e₀
+        (2 * (dimension (CircuitWords.first context.1.1).length e₀
           e₁ : ℤ)) 0 0).coefficients r := by
   subst e₀ e₁
-  exact coefficientWord_eq_copy v raw₀ raw₁ hc₀ hc₁ hw₀ hw₁ r hr t corner flag axis j hout
-private theorem coefficientWord_eq_raw_lengths (v : Fin 5 → List Bool)
-    (raw₀ raw₁ : _root_.Complexity.CircuitCode.RawCircuit)
-    (hc₀ : v 3 = raw₀.encode) (hc₁ : v 4 = raw₁.encode)
-    (hw₀ : raw₀.WellFormed (arity (pairFst (v 2)).length))
-    (hw₁ : raw₁.WellFormed (arity (pairFst (v 2)).length))
+  exact coefficientWord_eq_copy context raw₀ raw₁ hc₀ hc₁ hw₀ hw₁ r hr t corner flag axis j hout
+
+private theorem coefficientWord_eq_raw_lengths (context : QueryContext)
+    (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ))
+    (hc₀ : context.1.2.1 = (CircuitFormat.encode raw₀)) (hc₁ : context.1.2.2 = (CircuitFormat.encode raw₁))
+    (hw₀ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw₀)
+    (hw₁ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw₁)
     (e₀ e₁ : ℕ)
-    (he₀ : (circuitUnaryPrefix (v 3)).length = e₀)
-    (he₁ : (circuitUnaryPrefix (v 4)).length = e₁)
-    (r : Fin (dimension (pairFst (v 2)).length e₀
-      e₁ * 2)) (hr : (v 1).length = r.val)
+    (he₀ : (circuitUnaryPrefix context.1.2.1).length = e₀)
+    (he₁ : (circuitUnaryPrefix context.1.2.2).length = e₁)
+    (r : Fin (dimension (CircuitWords.first context.1.1).length e₀
+      e₁ * 2)) (hr : context.2.2.length = r.val)
     (t : Fin 41) (corner : Fin 4) (flag : Fin 2)
     (j : Fin (if flag.val = 0 then raw₀ else raw₁).length)
-    (hout : (v 0).length = (inputRuler t corner flag (queryHeaders v)).length +
-      (BrouwerNashHeaders.arityRuler (queryHeaders v)).length + j.val) :
-    binarySignedValue (coefficientWord v) =
-      (guardedRaw (((if flag.val = 0 then raw₀ else raw₁)[j.val]).shift
-        (inputRuler t corner flag (queryHeaders v)).length)).coefficients r := by
+    (hout : context.2.1.length = (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
+      (BrouwerNashHeaders.arityRuler context.1.1).length + j.val) :
+    binarySignedValue (coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) =
+      (guardedRaw ((((if flag.val = 0 then raw₀ else raw₁)[j.val]).1, ((if flag.val = 0 then raw₀ else raw₁)[j.val]).2.map ((inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length + ·)))).coefficients r := by
   subst e₀ e₁
-  exact coefficientWord_eq_raw v raw₀ raw₁ hc₀ hc₁ hw₀ hw₁ r hr t corner flag j hout
+  exact coefficientWord_eq_raw context raw₀ raw₁ hc₀ hc₁ hw₀ hw₁ r hr t corner flag j hout
+
 /-- The canonical color kind depends only on the parsed raw circuit lengths. -/
-theorem kindWord_eq_colorRegion_of_lengths (v : Fin 5 → List Bool)
-    (raw₀ raw₁ : _root_.Complexity.CircuitCode.RawCircuit)
-    (he₀ : (circuitUnaryPrefix (v 3)).length = raw₀.length)
-    (he₁ : (circuitUnaryPrefix (v 4)).length = raw₁.length)
-    (hw₀ : raw₀.WellFormed (arity (pairFst (v 2)).length))
-    (hw₁ : raw₁.WellFormed (arity (pairFst (v 2)).length))
+theorem kindWord_eq_colorRegion_of_lengths (context : QueryContext)
+    (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ))
+    (he₀ : (circuitUnaryPrefix context.1.2.1).length = raw₀.length)
+    (he₁ : (circuitUnaryPrefix context.1.2.2).length = raw₁.length)
+    (hw₀ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw₀)
+    (hw₁ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw₁)
     (t : Fin 41) (corner : Fin 4) (offset : ℕ)
-    (ho : offset < cornerWidth (pairFst (v 2)).length raw₀.length raw₁.length)
-    (hout : (v 0).length = sampleBase (pairFst (v 2)).length raw₀.length raw₁.length t +
-      colorBase (pairFst (v 2)).length +
-        corner.val * cornerWidth (pairFst (v 2)).length raw₀.length raw₁.length + offset) :
-    kindWord v = [decide ((colorRegionGate (pairFst (v 2)).length
+    (ho : offset < cornerWidth (CircuitWords.first context.1.1).length raw₀.length raw₁.length)
+    (hout : context.2.1.length = sampleBase (CircuitWords.first context.1.1).length raw₀.length raw₁.length t +
+      colorBase (CircuitWords.first context.1.1).length +
+        corner.val * cornerWidth (CircuitWords.first context.1.1).length raw₀.length raw₁.length + offset) :
+    kindWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 = [decide ((colorRegionGate (CircuitWords.first context.1.1).length
       raw₀ raw₁ t corner offset).kind =
         GameTheory.Finite.BimatrixGateProgram.GateKind.comparator)] := by
   have hin (t : Fin 41) (c : Fin 4) (f : Fin 2) :
-      (inputRuler t c f (queryHeaders v)).length =
-        sampleBase (pairFst (v 2)).length raw₀.length raw₁.length t +
-          colorInput (pairFst (v 2)).length raw₀.length raw₁.length c f := by
-    simpa only [queryHeaders, Matrix.cons_val_zero, Matrix.cons_val_one,
-      Matrix.cons_val_two, Matrix.vecHead, Matrix.vecTail, Function.comp_apply,
-      Fin.succ_zero_eq_one, he₀, he₁] using inputRuler_length t c f (queryHeaders v)
-  have ha : (BrouwerNashHeaders.arityRuler (queryHeaders v)).length =
-      arity (pairFst (v 2)).length := by
-    simpa only [queryHeaders, Matrix.cons_val_zero] using
-      BrouwerNashHeaders.arityRuler_length (queryHeaders v)
-  rw [kindWord_value]
-  simp only [hin, ha, rawCode, apply_ite, he₀, he₁]
+      (inputRuler t c f context.1.1 context.1.2.1 context.1.2.2).length =
+        sampleBase (CircuitWords.first context.1.1).length raw₀.length raw₁.length t +
+          colorInput (CircuitWords.first context.1.1).length raw₀.length raw₁.length c f := by
+    simpa only [ he₀, he₁] using inputRuler_length t c f context.1.1 context.1.2.1 context.1.2.2
+  have ha : (BrouwerNashHeaders.arityRuler context.1.1).length =
+      arity (CircuitWords.first context.1.1).length := by
+    simpa only [ Matrix.cons_val_zero] using
+      BrouwerNashHeaders.arityRuler_length context.1.1
+  rw [kindWord_value context]
+  simp only [hin, ha, apply_ite, he₀, he₁]
   apply congrArg List.singleton
   apply Bool.eq_iff_iff.mpr
   simp only [decide_eq_true_eq]
-  refine Iff.trans ?_ ((rawIntervals_iff (pairFst (v 2)).length raw₀.length raw₁.length
-    (v 0).length t corner offset ho hout).trans
-      (colorRegionGate_comparator_iff (pairFst (v 2)).length raw₀ raw₁ hw₀ hw₁
+  refine Iff.trans ?_ ((rawIntervals_iff (CircuitWords.first context.1.1).length raw₀.length raw₁.length
+    context.2.1.length t corner offset ho hout).trans
+      (colorRegionGate_comparator_iff (CircuitWords.first context.1.1).length raw₀ raw₁ hw₀ hw₁
         t corner offset ho).symm)
   apply exists_congr; intro sample
   apply exists_congr; intro vertex
   apply exists_congr; intro flag
   by_cases hf : flag.val = 0 <;> simp only [hf, ite_true, ite_false]
-private theorem coefficientWord_eq_copyOffset (v : Fin 5 → List Bool)
-    (raw₀ raw₁ : _root_.Complexity.CircuitCode.RawCircuit)
-    (hc₀ : v 3 = raw₀.encode) (hc₁ : v 4 = raw₁.encode)
-    (hw₀ : raw₀.WellFormed (arity (pairFst (v 2)).length))
-    (hw₁ : raw₁.WellFormed (arity (pairFst (v 2)).length))
-    (r : Fin (dimension (pairFst (v 2)).length raw₀.length raw₁.length * 2))
-    (hr : (v 1).length = r.val)
+
+private theorem coefficientWord_eq_copyOffset (context : QueryContext)
+    (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ))
+    (hc₀ : context.1.2.1 = (CircuitFormat.encode raw₀)) (hc₁ : context.1.2.2 = (CircuitFormat.encode raw₁))
+    (hw₀ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw₀)
+    (hw₁ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw₁)
+    (r : Fin (dimension (CircuitWords.first context.1.1).length raw₀.length raw₁.length * 2))
+    (hr : context.2.2.length = r.val)
     (t : Fin 41) (corner : Fin 4) (flag : Fin 2) (offset : ℕ)
-    (ho : offset < arity (pairFst (v 2)).length)
-    (hout : (v 0).length = (inputRuler t corner flag (queryHeaders v)).length + offset) :
-    binarySignedValue (coefficientWord v) =
-      (affine₂ (cornerBit (pairFst (v 2)).length raw₀.length raw₁.length t corner
-        ⟨(offset / ((pairFst (v 2)).length + 1)) % 2, Nat.mod_lt _ (by decide)⟩
-        (offset % ((pairFst (v 2)).length + 1)))
-        (slot (pairFst (v 2)).length raw₀.length raw₁.length zero)
-        (2 * (dimension (pairFst (v 2)).length raw₀.length raw₁.length : ℤ)) 0 0).coefficients r
+    (ho : offset < arity (CircuitWords.first context.1.1).length)
+    (hout : context.2.1.length = (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length + offset) :
+    binarySignedValue (coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) =
+      (affine₂ (cornerBit (CircuitWords.first context.1.1).length raw₀.length raw₁.length t corner
+        ⟨(offset / ((CircuitWords.first context.1.1).length + 1)) % 2, Nat.mod_lt _ (by decide)⟩
+        (offset % ((CircuitWords.first context.1.1).length + 1)))
+        (slot (CircuitWords.first context.1.1).length raw₀.length raw₁.length zero)
+        (2 * (dimension (CircuitWords.first context.1.1).length raw₀.length raw₁.length : ℤ)) 0 0).coefficients r
           := by
-  let b := (pairFst (v 2)).length
+  let b := (CircuitWords.first context.1.1).length
   let axis : Fin 2 := ⟨(offset / (b + 1)) % 2, Nat.mod_lt _ (by decide)⟩
   let j : Fin (b + 1) := ⟨offset % (b + 1), Nat.mod_lt _ (by omega)⟩
   have hq : offset / (b + 1) < 2 := by
@@ -1610,58 +1695,57 @@ private theorem coefficientWord_eq_copyOffset (v : Fin 5 → List Bool)
     dsimp only [axis, j]
     rw [Nat.mod_eq_of_lt hq, Nat.mul_comm]
     exact Nat.div_add_mod _ _
-  have hp₀ : (circuitUnaryPrefix (v 3)).length = raw₀.length := by
+  have hp₀ : (circuitUnaryPrefix context.1.2.1).length = raw₀.length := by
     rw [hc₀]
-    exact circuitUnaryPrefix_rawEncode_length _
-  have hp₁ : (circuitUnaryPrefix (v 4)).length = raw₁.length := by
+    exact circuitUnaryPrefix_encode_length raw₀ (checked_arity hw₀)
+  have hp₁ : (circuitUnaryPrefix context.1.2.2).length = raw₁.length := by
     rw [hc₁]
-    exact circuitUnaryPrefix_rawEncode_length _
-  apply coefficientWord_eq_copy_lengths v raw₀ raw₁ hc₀ hc₁ hw₀ hw₁
+    exact circuitUnaryPrefix_encode_length raw₁ (checked_arity hw₁)
+  apply coefficientWord_eq_copy_lengths context raw₀ raw₁ hc₀ hc₁ hw₀ hw₁
     raw₀.length raw₁.length hp₀ hp₁ r hr t corner flag axis j
-  change (v 0).length = (inputRuler t corner flag (queryHeaders v)).length +
+  change context.2.1.length = (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length +
     axis.val * (b + 1) + j.val
   rw [add_assoc, hqr]
   exact hout
+
 /-- At an allocated color output, the scalar query equals the canonical gate coefficient. -/
-theorem coefficientWord_eq_colorRegion (v : Fin 5 → List Bool)
-    (raw₀ raw₁ : _root_.Complexity.CircuitCode.RawCircuit)
-    (hc₀ : v 3 = raw₀.encode) (hc₁ : v 4 = raw₁.encode)
-    (hw₀ : raw₀.WellFormed (arity (pairFst (v 2)).length))
-    (hw₁ : raw₁.WellFormed (arity (pairFst (v 2)).length))
-    (r : Fin (dimension (pairFst (v 2)).length raw₀.length raw₁.length * 2))
-    (hr : (v 1).length = r.val)
+theorem coefficientWord_eq_colorRegion (context : QueryContext)
+    (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ))
+    (hc₀ : context.1.2.1 = (CircuitFormat.encode raw₀)) (hc₁ : context.1.2.2 = (CircuitFormat.encode raw₁))
+    (hw₀ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw₀)
+    (hw₁ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw₁)
+    (r : Fin (dimension (CircuitWords.first context.1.1).length raw₀.length raw₁.length * 2))
+    (hr : context.2.2.length = r.val)
     (t : Fin 41) (corner : Fin 4) (offset : ℕ)
-    (ho : offset < cornerWidth (pairFst (v 2)).length raw₀.length raw₁.length)
-    (hout : (v 0).length = sampleBase (pairFst (v 2)).length raw₀.length raw₁.length t +
-      colorBase (pairFst (v 2)).length + corner.val *
-        cornerWidth (pairFst (v 2)).length raw₀.length raw₁.length + offset) :
-    binarySignedValue (coefficientWord v) =
-      (colorRegionGate (pairFst (v 2)).length raw₀ raw₁ t corner offset).coefficients r := by
-  let b := (pairFst (v 2)).length
-  have hp₀ : (circuitUnaryPrefix (v 3)).length = raw₀.length := by
+    (ho : offset < cornerWidth (CircuitWords.first context.1.1).length raw₀.length raw₁.length)
+    (hout : context.2.1.length = sampleBase (CircuitWords.first context.1.1).length raw₀.length raw₁.length t +
+      colorBase (CircuitWords.first context.1.1).length + corner.val *
+        cornerWidth (CircuitWords.first context.1.1).length raw₀.length raw₁.length + offset) :
+    binarySignedValue (coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) =
+      (colorRegionGate (CircuitWords.first context.1.1).length raw₀ raw₁ t corner offset).coefficients r := by
+  let b := (CircuitWords.first context.1.1).length
+  have hp₀ : (circuitUnaryPrefix context.1.2.1).length = raw₀.length := by
     rw [hc₀]
-    exact circuitUnaryPrefix_rawEncode_length _
-  have hp₁ : (circuitUnaryPrefix (v 4)).length = raw₁.length := by
+    exact circuitUnaryPrefix_encode_length raw₀ (checked_arity hw₀)
+  have hp₁ : (circuitUnaryPrefix context.1.2.2).length = raw₁.length := by
     rw [hc₁]
-    exact circuitUnaryPrefix_rawEncode_length _
-  have hin (flag : Fin 2) : (inputRuler t corner flag (queryHeaders v)).length =
+    exact circuitUnaryPrefix_encode_length raw₁ (checked_arity hw₁)
+  have hin (flag : Fin 2) : (inputRuler t corner flag context.1.1 context.1.2.1 context.1.2.2).length =
       sampleBase b raw₀.length raw₁.length t + colorInput b raw₀.length raw₁.length corner flag :=
         by
-    simpa only [queryHeaders, Matrix.cons_val_zero, Matrix.cons_val_one,
-      Matrix.cons_val_two, Matrix.vecHead, Matrix.vecTail, Function.comp_apply,
-      Fin.succ_zero_eq_one, b, hp₀, hp₁] using
-        inputRuler_length t corner flag (queryHeaders v)
-  have ha : (BrouwerNashHeaders.arityRuler (queryHeaders v)).length = arity b := by
-    simpa only [queryHeaders, Matrix.cons_val_zero, b] using
-      BrouwerNashHeaders.arityRuler_length (queryHeaders v)
+    simpa only [ b, hp₀, hp₁] using
+        inputRuler_length t corner flag context.1.1 context.1.2.1 context.1.2.2
+  have ha : (BrouwerNashHeaders.arityRuler context.1.1).length = arity b := by
+    simpa only [ b] using
+      BrouwerNashHeaders.arityRuler_length context.1.1
   by_cases h₀ : offset < arity b
   · have he := colorRegionGate_copy b raw₀ raw₁ t corner 0 offset h₀
     simp only [Fin.val_zero, ite_true, zero_add] at he
     rw [he]
-    apply coefficientWord_eq_copyOffset v raw₀ raw₁ hc₀ hc₁ hw₀ hw₁ r hr t corner 0 offset h₀
+    apply coefficientWord_eq_copyOffset context raw₀ raw₁ hc₀ hc₁ hw₀ hw₁ r hr t corner 0 offset h₀
     rw [hin, colorInput]
     simp only [Fin.val_zero, ite_true]
-    change (v 0).length = sampleBase b raw₀.length raw₁.length t + colorBase b +
+    change context.2.1.length = sampleBase b raw₀.length raw₁.length t + colorBase b +
       corner.val * cornerWidth b raw₀.length raw₁.length + offset at hout
     omega
   · by_cases h₁ : offset < arity b + raw₀.length
@@ -1670,14 +1754,14 @@ theorem coefficientWord_eq_colorRegion (v : Fin 5 → List Bool)
       have hj : arity b + j.val = offset := by dsimp only [j]; omega
       rw [hj] at he
       rw [he]
-      have hh := coefficientWord_eq_raw_lengths v raw₀ raw₁ hc₀ hc₁ hw₀ hw₁
+      have hh := coefficientWord_eq_raw_lengths context raw₀ raw₁ hc₀ hc₁ hw₀ hw₁
         raw₀.length raw₁.length hp₀ hp₁ r hr t corner 0 j
-      have houtput : (v 0).length = (inputRuler t corner 0 (queryHeaders v)).length +
-          (BrouwerNashHeaders.arityRuler (queryHeaders v)).length + j.val := by
+      have houtput : context.2.1.length = (inputRuler t corner 0 context.1.1 context.1.2.1 context.1.2.2).length +
+          (BrouwerNashHeaders.arityRuler context.1.1).length + j.val := by
         rw [hin, ha, colorInput]
         simp only [Fin.val_zero, ite_true]
         dsimp only [j]
-        change (v 0).length = sampleBase b raw₀.length raw₁.length t + colorBase b +
+        change context.2.1.length = sampleBase b raw₀.length raw₁.length t + colorBase b +
           corner.val * cornerWidth b raw₀.length raw₁.length + offset at hout
         omega
 
@@ -1692,11 +1776,11 @@ theorem coefficientWord_eq_colorRegion (v : Fin 5 → List Bool)
         have heq : arity b + raw₀.length + j = offset := by dsimp only [j]; omega
         rw [heq] at he
         rw [he]
-        apply coefficientWord_eq_copyOffset v raw₀ raw₁ hc₀ hc₁ hw₀ hw₁ r hr t corner 1 j hj
+        apply coefficientWord_eq_copyOffset context raw₀ raw₁ hc₀ hc₁ hw₀ hw₁ r hr t corner 1 j hj
         rw [hin, colorInput]
         simp only [Fin.val_one, Nat.one_ne_zero, ite_false]
         dsimp only [j]
-        change (v 0).length = sampleBase b raw₀.length raw₁.length t + colorBase b +
+        change context.2.1.length = sampleBase b raw₀.length raw₁.length t + colorBase b +
           corner.val * cornerWidth b raw₀.length raw₁.length + offset at hout
         omega
       · let j : Fin raw₁.length := ⟨offset - (2 * arity b + raw₀.length), by
@@ -1706,34 +1790,35 @@ theorem coefficientWord_eq_colorRegion (v : Fin 5 → List Bool)
         have hj : 2 * arity b + raw₀.length + j.val = offset := by dsimp only [j]; omega
         rw [hj] at he
         rw [he]
-        have hh := coefficientWord_eq_raw_lengths v raw₀ raw₁ hc₀ hc₁ hw₀ hw₁
+        have hh := coefficientWord_eq_raw_lengths context raw₀ raw₁ hc₀ hc₁ hw₀ hw₁
           raw₀.length raw₁.length hp₀ hp₁ r hr t corner 1 j
-        have houtput : (v 0).length = (inputRuler t corner 1 (queryHeaders v)).length +
-            (BrouwerNashHeaders.arityRuler (queryHeaders v)).length + j.val := by
+        have houtput : context.2.1.length = (inputRuler t corner 1 context.1.1 context.1.2.1 context.1.2.2).length +
+            (BrouwerNashHeaders.arityRuler context.1.1).length + j.val := by
           rw [hin, ha, colorInput]
           simp only [Fin.val_one, Nat.one_ne_zero, ite_false]
           dsimp only [j]
-          change (v 0).length = sampleBase b raw₀.length raw₁.length t + colorBase b +
+          change context.2.1.length = sampleBase b raw₀.length raw₁.length t + colorBase b +
             corner.val * cornerWidth b raw₀.length raw₁.length + offset at hout
           omega
 
         rw [hin] at houtput
         simp only [hin, Fin.val_one, Nat.one_ne_zero, ite_false] at hh
         exact hh houtput
+
 /-- The scalar color query agrees with any allocated color gate of the sample program. -/
-theorem coefficientWord_eq_sampleGate (v : Fin 5 → List Bool)
-    (raw₀ raw₁ : _root_.Complexity.CircuitCode.RawCircuit)
-    (hc₀ : v 3 = raw₀.encode) (hc₁ : v 4 = raw₁.encode)
-    (hw₀ : raw₀.WellFormed (arity (pairFst (v 2)).length))
-    (hw₁ : raw₁.WellFormed (arity (pairFst (v 2)).length))
-    (r : Fin (dimension (pairFst (v 2)).length raw₀.length raw₁.length * 2))
-    (hr : (v 1).length = r.val) (t : Fin 41) (offset : ℕ)
-    (hlo : colorBase (pairFst (v 2)).length ≤ offset)
-    (hhi : offset < minimumBase (pairFst (v 2)).length raw₀.length raw₁.length)
-    (hout : (v 0).length = sampleBase (pairFst (v 2)).length raw₀.length raw₁.length t + offset) :
-    binarySignedValue (coefficientWord v) =
-      (sampleGate (pairFst (v 2)).length raw₀ raw₁ t offset).coefficients r := by
-  let b := (pairFst (v 2)).length
+theorem coefficientWord_eq_sampleGate (context : QueryContext)
+    (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ))
+    (hc₀ : context.1.2.1 = (CircuitFormat.encode raw₀)) (hc₁ : context.1.2.2 = (CircuitFormat.encode raw₁))
+    (hw₀ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw₀)
+    (hw₁ : Program.IsCodeFrom CircuitFormat.signature (arity (CircuitWords.first context.1.1).length) 0 raw₁)
+    (r : Fin (dimension (CircuitWords.first context.1.1).length raw₀.length raw₁.length * 2))
+    (hr : context.2.2.length = r.val) (t : Fin 41) (offset : ℕ)
+    (hlo : colorBase (CircuitWords.first context.1.1).length ≤ offset)
+    (hhi : offset < minimumBase (CircuitWords.first context.1.1).length raw₀.length raw₁.length)
+    (hout : context.2.1.length = sampleBase (CircuitWords.first context.1.1).length raw₀.length raw₁.length t + offset) :
+    binarySignedValue (coefficientWord context.1.1 context.1.2.1 context.1.2.2 context.2.1 context.2.2) =
+      (sampleGate (CircuitWords.first context.1.1).length raw₀ raw₁ t offset).coefficients r := by
+  let b := (CircuitWords.first context.1.1).length
   let w := cornerWidth b raw₀.length raw₁.length
   have hw : 0 < w := by dsimp only [w, cornerWidth, arity]; omega
   have hb : (offset - colorBase b) / w < 4 := by
@@ -1753,9 +1838,10 @@ theorem coefficientWord_eq_sampleGate (v : Fin 5 → List Bool)
   have hg := sampleGate_colorRegion b raw₀ raw₁ t corner localOffset hl
   rw [he] at hg
   rw [hg]
-  apply coefficientWord_eq_colorRegion v raw₀ raw₁ hc₀ hc₁ hw₀ hw₁ r hr t corner localOffset hl
-  change (v 0).length = sampleBase b raw₀.length raw₁.length t + offset at hout
-  change (v 0).length = sampleBase b raw₀.length raw₁.length t + colorBase b +
+  apply coefficientWord_eq_colorRegion context raw₀ raw₁ hc₀ hc₁ hw₀ hw₁ r hr t corner localOffset hl
+  change context.2.1.length = sampleBase b raw₀.length raw₁.length t + offset at hout
+  change context.2.1.length = sampleBase b raw₀.length raw₁.length t + colorBase b +
     corner.val * cornerWidth b raw₀.length raw₁.length + localOffset
   omega
+
 end GameTheory.Complexity.Backend.BrouwerNashColorQuery
