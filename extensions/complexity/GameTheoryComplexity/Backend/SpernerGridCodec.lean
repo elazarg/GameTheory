@@ -1,6 +1,6 @@
 module
 
-public import Complexitylib.Mathlib.NatBits
+public import Complexity.Foundations.Data.BitString.Binary
 public import GameTheory.Math.SpernerGridGeometry
 
 @[expose] public section
@@ -11,7 +11,7 @@ coordinates. Other source-tagged words and incorrect lengths are rejected. -/
 
 namespace GameTheory.Complexity.Backend
 
-open GameTheory.Math.Sperner
+open GameTheory.Math.Sperner Cslib.BitString
 
 /-- Two coordinate blocks, an orientation bit, and a source tag. -/
 def gridNodeWidth (b : ℕ) : ℕ := 2 * b + 2
@@ -19,14 +19,14 @@ def gridNodeWidth (b : ℕ) : ℕ := 2 * b + 2
 /-- Serialize the boundary source or one grid triangle at fixed coordinate width. -/
 def encodeGridNode (b : ℕ) : Option GridTriangle → List Bool
   | none => List.replicate (gridNodeWidth b) false
-  | some t => [true, t.upper] ++ Nat.toBitsLE b t.x ++ Nat.toBitsLE b t.y
+  | some t => [true, t.upper] ++ lowBits b t.x ++ lowBits b t.y
 
 /-- Parse a node word, requiring the source representation to be exactly all zero. -/
 def decodeGridNode (b : ℕ) (word : List Bool) : Option (Option GridTriangle) :=
   if word.length = gridNodeWidth b then
     if word.headD false then
-      some (some ⟨Nat.fromBitsLE (word.tail.tail.take b),
-        Nat.fromBitsLE (word.tail.tail.drop b), word.tail.headD false⟩)
+      some (some ⟨lsbValue (word.tail.tail.take b),
+        lsbValue (word.tail.tail.drop b), word.tail.headD false⟩)
     else if word = List.replicate (gridNodeWidth b) false then some none else none
   else none
 
@@ -55,7 +55,7 @@ theorem decodeGridNode_encode (b : ℕ) (node : Option GridTriangle)
   | some t =>
     obtain ⟨hx, hy⟩ := hv t rfl
     simp only [decodeGridNode, encodeGridNode_length, ↓reduceIte]
-    simp [encodeGridNode, Nat.fromBitsLE_toBitsLE hx, Nat.fromBitsLE_toBitsLE hy]
+    simp [encodeGridNode, lsbValue_lowBits hx, lsbValue_lowBits hy]
 
 /-- A successful parse always has the exact node width. -/
 theorem decodeGridNode_length {b : ℕ} {word : List Bool} {node : Option GridTriangle}
@@ -85,8 +85,8 @@ theorem decodeGridNode_valid {b : ℕ} {word : List Bool} {node : Option GridTri
     intro t he
     cases he
     constructor
-    · simpa only [hxlen] using Nat.fromBitsLE_lt_pow_length (word.tail.tail.take b)
-    · simpa only [hylen] using Nat.fromBitsLE_lt_pow_length (word.tail.tail.drop b)
+    · simpa only [hxlen] using lsbValue_lt (word.tail.tail.take b)
+    · simpa only [hylen] using lsbValue_lt (word.tail.tail.drop b)
   · split at hd
     · cases hd
       intro t he
@@ -98,8 +98,8 @@ theorem encodeGridNode_decode {b : ℕ} {word : List Bool} {node : Option GridTr
     (hd : decodeGridNode b word = some node) : encodeGridNode b node = word := by
   have hw := decodeGridNode_length hd
   obtain ⟨hxlen, hylen⟩ := coordinate_lengths hw
-  have hx := Nat.toBitsLE_fromBitsLE (word.tail.tail.take b)
-  have hy := Nat.toBitsLE_fromBitsLE (word.tail.tail.drop b)
+  have hx := lowBits_lsbValue (word.tail.tail.take b)
+  have hy := lowBits_lsbValue (word.tail.tail.drop b)
   rw [hxlen] at hx
   rw [hylen] at hy
   have hsplit : word = [word.headD false, word.tail.headD false] ++
