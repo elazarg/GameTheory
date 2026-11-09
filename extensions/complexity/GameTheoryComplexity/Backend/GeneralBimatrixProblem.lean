@@ -2,7 +2,7 @@ module
 
 public import GameTheoryComplexity.Backend.GeneralBimatrixCertificateCodec
 public import GameTheory.Finite.BimatrixCertificateCompleteness
-public import Complexitylib.Classes.NP.Witness
+public import Mathlib.Algebra.Polynomial.Eval.Defs
 
 @[expose] public section
 
@@ -10,7 +10,6 @@ public import Complexitylib.Classes.NP.Witness
 Malformed instances have exactly the empty answer. Honest answers decode to
 the library's ordinary mixed Nash equilibria. -/
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity
 
 /-- Exact binary certificate validity, with an explicit malformed-input fallback. -/
 def generalBimatrixRelation (input certificate : List Bool) : Prop :=
@@ -24,7 +23,9 @@ def generalBimatrixRelation (input certificate : List Bool) : Prop :=
   (¬GeneralInstanceValid input ∧ certificate = [])
 
 /-- The exact output length is bounded by a cubic polynomial of input length. -/
-theorem generalBimatrixRelation_polyBalanced : PolyBalanced generalBimatrixRelation := by
+theorem generalBimatrixRelation_polyBalanced :
+    ∃ p : Polynomial ℕ, ∀ input certificate, generalBimatrixRelation input certificate →
+      certificate.length ≤ p.eval input.length := by
   refine ⟨(2 * Polynomial.X + 6) *
     ((2 * Polynomial.X + 2) * (8 * Polynomial.X + 6) + 1), ?_⟩
   intro input certificate hc
