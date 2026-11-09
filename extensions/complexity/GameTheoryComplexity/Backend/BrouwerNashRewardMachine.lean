@@ -2,117 +2,142 @@ module
 
 public import GameTheoryComplexity.Backend.BinaryUnaryEncoding
 public import GameTheoryComplexity.Backend.BinarySignedArithmetic
+public import Complexity.Foundations.Data.BitString.Counter
 public import GameTheory.Math.GridBrouwerErrorBudget
 
 @[expose] public section
 
-/-! Integer reward words with polynomial bit length for robust grid gate computations.
-The precision clock controls padding; multiplication operates on binary words. -/
+/-! Integer reward words have polynomial bit length in their precision and
+dimension rulers. The reward's dyadic exponent is written as explicit zero
+padding, while its quadratic factor is computed by binary word arithmetic. -/
+
 namespace GameTheory.Complexity.Backend.BrouwerNashRewardMachine
-open _root_.Complexity _root_.Complexity.Cobham
 
-/-- Exponent clock for the dyadic error budget, from precision and dimension rulers. -/
-def clock (v : Fin 2 → List Bool) : List Bool :=
-  smash (v 0 ++ v 1 ++ List.replicate 10 false) (List.replicate 100 true)
+open Cslib.BitString Turing.MultiTapeTM
 
-private def factor (k : List Bool) : List Bool :=
-  binaryCertificateAdd ![binaryWordMul (binaryLengthWord k)
-    (binaryWordMul (binaryLengthWord k) [false, true, true, false, false, true, true]), [true]]
+/-- The dyadic exponent clock contains one true bit for each padding position. -/
+def clock (precision dimension : List Bool) : List Bool :=
+  List.replicate (100 * (precision.length + dimension.length + 10)) true
 
-/-- Positive signed reward `(102 k² + 1) 2^Q`. -/
-def reward (v : Fin 2 → List Bool) : List Bool :=
-  false :: (List.replicate (clock v).length false ++ factor (v 1))
+private def factor (dimension : List Bool) : List Bool :=
+  binaryCertificateAdd ![binaryWordMul (binaryLengthWord dimension)
+    (binaryWordMul (binaryLengthWord dimension) [false, true, true, false, false, true, true]),
+      [true]]
 
-@[simp] theorem clock_length (v : Fin 2 → List Bool) :
-    (clock v).length = 100 * ((v 0).length + (v 1).length + 10) := by
-  simp only [clock, smash_length, List.length_append, List.length_replicate]
-  omega
+/-- Positive signed reward (102 k² + 1) 2^Q retains its full magnitude padding. -/
+def reward (precision dimension : List Bool) : List Bool :=
+  false :: (List.replicate (clock precision dimension).length false ++
+    binaryCertificateAdd ![binaryWordMul (binaryLengthWord dimension)
+      (binaryWordMul (binaryLengthWord dimension) [false, true, true, false, false, true, true]),
+        [true]])
 
-private theorem factor_value (k : List Bool) :
-    Nat.fromBitsLE (factor k) = k.length * (100 * k.length + 2 * k.length) + 1 := by
+@[simp] theorem clock_length (precision dimension : List Bool) :
+    (clock precision dimension).length = 100 * (precision.length + dimension.length + 10) := by
+  simp [clock]
+
+private theorem factor_value (dimension : List Bool) :
+    ofBits (factor dimension) = dimension.length * (100 * dimension.length + 2 * dimension.length) + 1 := by
   rw [factor, binaryCertificateAdd_value, binaryWordMul_value, binaryWordMul_value,
     binaryLengthWord_value]
-  change k.length * (k.length * 102) + 1 = _
+  change dimension.length * (dimension.length * 102) + 1 = _
   ring
 
-private theorem zero_value (n : ℕ) : Nat.fromBitsLE (List.replicate n false) = 0 := by
-  induction n with
-  | zero => rfl
-  | succ n ih => simp [List.replicate_succ, Nat.fromBitsLE_cons, ih]
-
-/-- The emitted word denotes exactly the integer reward schedule. -/
-theorem reward_value (v : Fin 2 → List Bool) :
-    binarySignedValue (reward v) =
-      ((v 1).length * (100 * (v 1).length + 2 * (v 1).length) + 1 : ℤ) *
-        2 ^ (100 * ((v 0).length + (v 1).length + 10)) := by
-  simp only [reward, binarySignedValue, List.headD_cons, List.tail_cons,
-    Bool.false_eq_true, ite_false, fromBitsLE_append, zero_value,
-    List.length_replicate, zero_add, factor_value, clock_length,
-    Nat.cast_mul, Nat.cast_add, Nat.cast_pow, Nat.cast_ofNat]
+/-- The emitted signed word denotes the exact integer reward schedule. -/
+theorem reward_value (precision dimension : List Bool) :
+    binarySignedValue (reward precision dimension) =
+      (dimension.length * (100 * dimension.length + 2 * dimension.length) + 1 : ℤ) *
+        2 ^ (100 * (precision.length + dimension.length + 10)) := by
+  change (ofBits (List.replicate (clock precision dimension).length false ++ factor dimension) : ℤ) = _
+  have hvalue : ofBits (List.replicate (clock precision dimension).length false ++ factor dimension) =
+      2 ^ (clock precision dimension).length * ofBits (factor dimension) := by
+    unfold ofBits
+    rw [← lsbValue_eq_foldr_bit, lsbValue_append, lsbValue_replicate_false,
+      List.length_replicate, zero_add, lsbValue_eq_foldr_bit]
+  rw [hvalue, factor_value, clock_length]
+  push_cast
   exact mul_comm _ _
 
-/-- Matching rewards strictly dominate the perturbation scale, including empty rulers. -/
-theorem reward_dominates (v : Fin 2 → List Bool) :
-    ((v 1).length : ℤ) * (100 * (v 1).length + 2 * (v 1).length) <
-      binarySignedValue (reward v) := by
+/-- Matching rewards strictly dominate perturbations, including empty rulers. -/
+theorem reward_dominates (precision dimension : List Bool) :
+    (dimension.length : ℤ) * (100 * dimension.length + 2 * dimension.length) <
+      binarySignedValue (reward precision dimension) := by
   rw [reward_value]
-  have hk : (0 : ℤ) ≤ (v 1).length := Nat.cast_nonneg _
-  have hs : 0 ≤ ((v 1).length : ℤ) * (100 * (v 1).length + 2 * (v 1).length) := by
+  have hk : (0 : ℤ) ≤ dimension.length := Nat.cast_nonneg _
+  have hs : 0 ≤ (dimension.length : ℤ) * (100 * dimension.length + 2 * dimension.length) := by
     nlinarith only [hk]
-  have hp : (1 : ℤ) ≤ 2 ^ (100 * ((v 0).length + (v 1).length + 10)) :=
+  have hp : (1 : ℤ) ≤ 2 ^ (100 * (precision.length + dimension.length + 10)) :=
     one_le_pow₀ (by norm_num)
   have hh := mul_le_mul_of_nonneg_left hp (show 0 ≤
-    ((v 1).length : ℤ) * (100 * (v 1).length + 2 * (v 1).length) + 1 by omega)
+    (dimension.length : ℤ) * (100 * dimension.length + 2 * dimension.length) + 1 by omega)
   rw [mul_one] at hh
   omega
 
-/-- The reward has linear bit length in the supplied rulers. -/
-theorem reward_length (v : Fin 2 → List Bool) :
-    (reward v).length ≤ 100 * ((v 0).length + (v 1).length + 10) +
-      4 * (v 1).length + 13 := by
-  have hn := binaryLengthWord_length (v 1)
-  have hs := binaryWordMul_length (binaryLengthWord (v 1))
+/-- Reward words have linear bit length in the two supplied rulers. -/
+theorem reward_length (precision dimension : List Bool) :
+    (reward precision dimension).length ≤ 100 * (precision.length + dimension.length + 10) +
+      4 * dimension.length + 13 := by
+  have hn := binaryLengthWord_length dimension
+  have hs := binaryWordMul_length (binaryLengthWord dimension)
     [false, true, true, false, false, true, true]
-  have hm := binaryWordMul_length (binaryLengthWord (v 1))
-    (binaryWordMul (binaryLengthWord (v 1)) [false, true, true, false, false, true, true])
+  have hm := binaryWordMul_length (binaryLengthWord dimension)
+    (binaryWordMul (binaryLengthWord dimension) [false, true, true, false, false, true, true])
   simp only [List.length_cons, List.length_nil] at hs
-  simp only [reward, List.length_cons, List.length_append, List.length_replicate,
+  change (false :: (List.replicate (clock precision dimension).length false ++ factor dimension)).length ≤ _
+  simp only [ List.length_cons, List.length_append, List.length_replicate,
     clock_length, factor, binaryCertificateAdd_length, List.length_nil]
   omega
 
-/-- The emitted schedule bounds the actual normalized gate error. -/
-theorem reward_error_bound (v : Fin 2 → List Bool) (hk : 1 ≤ (v 1).length) :
-    0 ≤ ((v 1).length : ℚ) * (102 * (v 1).length) /
-      (binarySignedValue (reward v) : ℚ) ∧
-    ((v 1).length : ℚ) * (102 * (v 1).length) /
-      (binarySignedValue (reward v) : ℚ) ≤
-        1 / (2 : ℚ) ^ (100 * ((v 0).length + (v 1).length + 10)) := by
+/-- The emitted reward schedule bounds the normalized gate error. -/
+theorem reward_error_bound (precision dimension : List Bool) (hk : 1 ≤ dimension.length) :
+    0 ≤ (dimension.length : ℚ) * (102 * dimension.length) /
+      (binarySignedValue (reward precision dimension) : ℚ) ∧
+    (dimension.length : ℚ) * (102 * dimension.length) /
+      (binarySignedValue (reward precision dimension) : ℚ) ≤
+        1 / (2 : ℚ) ^ (100 * (precision.length + dimension.length + 10)) := by
   rw [reward_value]
-  exact GameTheory.Math.bimatrix_integer_reward_error_bound (v 1).length
-    (100 * ((v 0).length + (v 1).length + 10)) hk
+  exact GameTheory.Math.bimatrix_integer_reward_error_bound dimension.length
+    (100 * (precision.length + dimension.length + 10)) hk
 
-/-- The exponent clock is a fixed composition of certified length operations. -/
-theorem clock_cobham : Cobham clock :=
-  (Cobham.comp₂ Cobham.smash
-    (appendFn (appendFn (.proj 0) (.proj 1)) (Cobham.const (List.replicate 10 false)))
-    (Cobham.const (List.replicate 100 true))).of_eq fun _ => rfl
+/-- Exponent clocks retain the actual encoding of both ruler producers. -/
+@[fun_prop] theorem clock_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {precision dimension : Input → List Bool}
+    (hp : ComputableInPolyTime precision input encBits)
+    (hd : ComputableInPolyTime dimension input encBits) :
+    ComputableInPolyTime (fun a => clock (precision a) (dimension a)) input encBits := by
+  have hsum := ComputableInPolyTime.unary_add'
+    (ComputableInPolyTime.length_bits_comp hp) (ComputableInPolyTime.length_bits_comp hd)
+  have hwidth := ComputableInPolyTime.unary_mul' (ComputableInPolyTime.const 100)
+    (ComputableInPolyTime.unary_add' hsum (ComputableInPolyTime.const 10))
+  exact (ComputableInPolyTime.bitsReplicate true).comp hwidth
 
-private theorem factor_cobham : Cobham fun v : Fin 1 → List Bool => factor (v 0) := by
-  have hn : Cobham fun v : Fin 1 → List Bool => binaryLengthWord (v 0) :=
-    binaryLengthWord_cobham
-  have hs := Cobham.comp₂ binaryWordMul_cobham hn
-    (Cobham.const [false, true, true, false, false, true, true])
-  have hm := Cobham.comp₂ binaryWordMul_cobham hn hs
-  exact (Cobham.comp₂ binaryCertificateAdd_cobham hm (Cobham.const [true])).of_eq
-    fun _ => rfl
+private theorem factor_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {dimension : Input → List Bool} (hd : ComputableInPolyTime dimension input encBits) :
+    ComputableInPolyTime (fun a => factor (dimension a)) input encBits := by
+  have hn := binaryLengthWord_polyTime.comp hd
+  have hs := binaryWordMul_polyTime hn
+    (ComputableInPolyTime.const [false, true, true, false, false, true, true])
+  have hm := binaryWordMul_polyTime hn hs
+  have hargs : ComputableInPolyTime (fun a : Input =>
+      ![binaryWordMul (binaryLengthWord (dimension a))
+        (binaryWordMul (binaryLengthWord (dimension a))
+          [false, true, true, false, false, true, true]), [true]])
+      input (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hm
+    · exact ComputableInPolyTime.const [true]
+  exact binaryCertificateAdd_polyTime.comp hargs
 
-/-- The baseline producer is polynomial time at arity two. -/
-theorem reward_cobham : Cobham reward := by
-  have hf := Cobham.comp factor_cobham (fun _ : Fin 1 => (Cobham.proj 1 :
-    Cobham fun v : Fin 2 → List Bool => v 1))
-  exact (Cobham.comp (.bit false) fun _ : Fin 1 =>
-    appendFn (Cobham.zeroBlockFn clock_cobham) hf).of_eq fun _ => rfl
-
-theorem reward_mem_FPn : FPn reward := cobham_iff_FPn.mp reward_cobham
+/-- Binary factor arithmetic and explicit dyadic padding have a direct native certificate. -/
+@[fun_prop] theorem reward_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {precision dimension : Input → List Bool}
+    (hp : ComputableInPolyTime precision input encBits)
+    (hd : ComputableInPolyTime dimension input encBits) :
+    ComputableInPolyTime (fun a => reward (precision a) (dimension a)) input encBits := by
+  have hzero := (ComputableInPolyTime.bitsReplicate false).comp
+    (ComputableInPolyTime.length_bits_comp (clock_polyTime hp hd))
+  exact ComputableInPolyTime.bitsCons (ComputableInPolyTime.const false)
+    (ComputableInPolyTime.bitsAppend hzero (factor_polyTime hd))
 
 end GameTheory.Complexity.Backend.BrouwerNashRewardMachine

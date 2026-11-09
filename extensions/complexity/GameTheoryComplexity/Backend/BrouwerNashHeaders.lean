@@ -3,107 +3,109 @@ module
 public import GameTheoryComplexity.Backend.BrouwerNashLayout
 public import GameTheoryComplexity.Backend.BrouwerNashRewardMachine
 public import GameTheoryComplexity.Backend.CircuitCodeShift
+public import GameTheoryComplexity.Backend.CircuitWords
 
 @[expose] public section
 
-/-! Polynomial header producers for a source and its two compiled coordinate-color circuits.
-Only encoded circuit header lengths determine the gate layout. -/
+/-! Header words allocate the source's precision and the two compiled coordinate-color
+circuits. Their bits, including copied malformed circuit prefixes, remain available to
+coefficient queries; the layout depends only on their lengths. -/
 namespace GameTheory.Complexity.Backend.BrouwerNashHeaders
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM
 
-private def scale (n : ℕ) (r : List Bool) : List Bool := smash r (List.replicate n true)
-/-- Source grid precision, supplied by the canonical outer pair. -/
-def sourceDepthRuler (v : Fin 3 → List Bool) : List Bool := pairFst (v 0)
+/-- Source grid precision is supplied by the canonical outer pair. -/
+def sourceDepthRuler (source : List Bool) : List Bool := CircuitWords.first source
+
 /-- Dyadic halving-chain length. -/
-def precisionRuler (v : Fin 3 → List Bool) : List Bool :=
-  scale 5 (sourceDepthRuler v ++ List.replicate 10 false)
+def precisionRuler (source : List Bool) : List Bool :=
+  List.replicate (5 * ((sourceDepthRuler source).length + 10)) true
+
 /-- Two extended coordinate fields for a compiled color circuit. -/
-def arityRuler (v : Fin 3 → List Bool) : List Bool := scale 2 (sourceDepthRuler v ++ [false])
+def arityRuler (source : List Bool) : List Bool :=
+  List.replicate (2 * ((sourceDepthRuler source).length + 1)) true
+
 /-- Shared constant, mean, scaling and feedback region. -/
-def globalRuler (v : Fin 3 → List Bool) : List Bool :=
-  scale 3 (precisionRuler v) ++ List.replicate 11 false
-/-- Coordinate copies and the two compiled circuits for one corner. -/
-def cornerRuler (v : Fin 3 → List Bool) : List Bool :=
-  scale 2 (arityRuler v) ++ circuitUnaryPrefix (v 1) ++ circuitUnaryPrefix (v 2)
+def globalRuler (source : List Bool) : List Bool :=
+  List.replicate (3 * (precisionRuler source).length) true ++ List.replicate 11 false
+
+/-- Coordinate copies and both unmodified circuit-count prefixes for one corner. -/
+def cornerRuler (source code₀ code₁ : List Bool) : List Bool :=
+  List.replicate (2 * (arityRuler source).length) true ++
+    circuitUnaryPrefix code₀ ++ circuitUnaryPrefix code₁
+
 /-- Extraction, increment, interpolation and color work for one jitter sample. -/
-def sampleRuler (v : Fin 3 → List Bool) : List Bool :=
-  List.replicate 26 false ++ scale 12 (sourceDepthRuler v) ++ scale 4 (cornerRuler v)
+def sampleRuler (source code₀ code₁ : List Bool) : List Bool :=
+  List.replicate 26 false ++ List.replicate (12 * (sourceDepthRuler source).length) true ++
+    List.replicate (4 * (cornerRuler source code₀ code₁).length) true
 
-/-- Allocated shared and sample wires, with one spare unit before dimension scaling. -/
-def unitsRuler (v : Fin 3 → List Bool) : List Bool :=
-  globalRuler v ++ scale 41 (sampleRuler v) ++ [false]
+/-- Shared and sample wires leave one spare unit before dimension scaling. -/
+def unitsRuler (source code₀ code₁ : List Bool) : List Bool :=
+  globalRuler source ++ List.replicate (41 * (sampleRuler source code₀ code₁).length) true ++ [false]
 
-/-- The allocated game dimension is one hundred twenty-three times the unit ruler. -/
-def dimensionRuler (v : Fin 3 → List Bool) : List Bool := scale 123 (unitsRuler v)
+/-- The game dimension is one hundred twenty-three times the unit ruler. -/
+def dimensionRuler (source code₀ code₁ : List Bool) : List Bool :=
+  List.replicate (123 * (unitsRuler source code₀ code₁).length) true
+
 /-- This width fits every coefficient bounded by one hundred times the dimension. -/
-def widthRuler (v : Fin 3 → List Bool) : List Bool :=
-  dimensionRuler v ++ List.replicate 10 false
-/-- The signed reward uses the same dimension and source precisionRuler. -/
-def baselineWord (v : Fin 3 → List Bool) : List Bool :=
-  BrouwerNashRewardMachine.reward ![sourceDepthRuler v, dimensionRuler v]
+def widthRuler (source code₀ code₁ : List Bool) : List Bool :=
+  dimensionRuler source code₀ code₁ ++ List.replicate 10 false
 
-@[simp] theorem sourceDepthRuler_length (v : Fin 3 → List Bool) :
-    (sourceDepthRuler v).length = (pairFst (v 0)).length := rfl
+/-- The signed reward uses the same dimension and source precision. -/
+def baselineWord (source code₀ code₁ : List Bool) : List Bool :=
+  BrouwerNashRewardMachine.reward (sourceDepthRuler source) (dimensionRuler source code₀ code₁)
 
-@[simp] theorem precisionRuler_length (v : Fin 3 → List Bool) :
-    (precisionRuler v).length = BrouwerNashLayout.precision (pairFst (v 0)).length := by
-  simp only [precisionRuler, scale, sourceDepthRuler, smash_length,
-    List.length_append, List.length_replicate, BrouwerNashLayout.precision]
-  omega
+@[simp] theorem sourceDepthRuler_length (source : List Bool) :
+    (sourceDepthRuler source).length = (CircuitWords.first source).length := rfl
 
-@[simp] theorem arityRuler_length (v : Fin 3 → List Bool) :
-    (arityRuler v).length = BrouwerNashLayout.arity (pairFst (v 0)).length := by
-  simp only [arityRuler, scale, sourceDepthRuler, smash_length,
-    List.length_append, List.length_singleton, List.length_replicate, BrouwerNashLayout.arity]
-  omega
+@[simp] theorem precisionRuler_length (source : List Bool) :
+    (precisionRuler source).length = BrouwerNashLayout.precision (CircuitWords.first source).length := by
+  simp only [precisionRuler, List.length_replicate, sourceDepthRuler, BrouwerNashLayout.precision]
 
-@[simp] theorem globalRuler_length (v : Fin 3 → List Bool) :
-    (globalRuler v).length = BrouwerNashLayout.globalCount (pairFst (v 0)).length := by
-  simp only [globalRuler, scale, smash_length, List.length_append, List.length_replicate,
+@[simp] theorem arityRuler_length (source : List Bool) :
+    (arityRuler source).length = BrouwerNashLayout.arity (CircuitWords.first source).length := by
+  simp only [arityRuler, List.length_replicate, sourceDepthRuler, BrouwerNashLayout.arity]
+
+@[simp] theorem globalRuler_length (source : List Bool) :
+    (globalRuler source).length = BrouwerNashLayout.globalCount (CircuitWords.first source).length := by
+  simp only [globalRuler, List.length_append, List.length_replicate,
     precisionRuler_length, BrouwerNashLayout.globalCount]
-  omega
 
-@[simp] theorem cornerRuler_length (v : Fin 3 → List Bool) :
-    (cornerRuler v).length = BrouwerNashLayout.cornerWidth (pairFst (v 0)).length
-      (circuitUnaryPrefix (v 1)).length (circuitUnaryPrefix (v 2)).length := by
-  simp only [cornerRuler, scale, smash_length, List.length_append, List.length_replicate,
+@[simp] theorem cornerRuler_length (source code₀ code₁ : List Bool) :
+    (cornerRuler source code₀ code₁).length = BrouwerNashLayout.cornerWidth
+      (CircuitWords.first source).length (circuitUnaryPrefix code₀).length
+      (circuitUnaryPrefix code₁).length := by
+  simp only [cornerRuler, List.length_append, List.length_replicate,
     arityRuler_length, BrouwerNashLayout.cornerWidth]
-  omega
 
-@[simp] theorem sampleRuler_length (v : Fin 3 → List Bool) :
-    (sampleRuler v).length = BrouwerNashLayout.sampleWidth (pairFst (v 0)).length
-      (circuitUnaryPrefix (v 1)).length (circuitUnaryPrefix (v 2)).length := by
-  simp only [sampleRuler, scale, sourceDepthRuler, smash_length, List.length_append,
-    List.length_replicate, cornerRuler_length, BrouwerNashLayout.sampleWidth]
-  omega
+@[simp] theorem sampleRuler_length (source code₀ code₁ : List Bool) :
+    (sampleRuler source code₀ code₁).length = BrouwerNashLayout.sampleWidth
+      (CircuitWords.first source).length (circuitUnaryPrefix code₀).length
+      (circuitUnaryPrefix code₁).length := by
+  simp only [sampleRuler, List.length_append, List.length_replicate,
+    sourceDepthRuler, cornerRuler_length, BrouwerNashLayout.sampleWidth]
 
-@[simp] theorem unitsRuler_length (v : Fin 3 → List Bool) :
-    (unitsRuler v).length = BrouwerNashLayout.units (pairFst (v 0)).length
-      (circuitUnaryPrefix (v 1)).length (circuitUnaryPrefix (v 2)).length := by
-  simp only [unitsRuler, scale, smash_length, List.length_append,
-    List.length_replicate, List.length_singleton, globalRuler_length, sampleRuler_length,
-    BrouwerNashLayout.units]
-  omega
+@[simp] theorem unitsRuler_length (source code₀ code₁ : List Bool) :
+    (unitsRuler source code₀ code₁).length = BrouwerNashLayout.units
+      (CircuitWords.first source).length (circuitUnaryPrefix code₀).length
+      (circuitUnaryPrefix code₁).length := by
+  simp only [unitsRuler, List.length_append, List.length_replicate, List.length_singleton,
+    globalRuler_length, sampleRuler_length, BrouwerNashLayout.units]
 
-/-- The ruler length agrees with the single canonical wire allocation. -/
-theorem dimensionRuler_length (v : Fin 3 → List Bool) :
-    (dimensionRuler v).length = BrouwerNashLayout.dimension (pairFst (v 0)).length
-      (circuitUnaryPrefix (v 1)).length (circuitUnaryPrefix (v 2)).length := by
-  simp only [dimensionRuler, unitsRuler, scale, globalRuler, precisionRuler, sampleRuler,
-    cornerRuler, arityRuler, sourceDepthRuler,
-    smash_length, List.length_replicate, List.length_append, List.length_singleton,
-    BrouwerNashLayout.dimension, BrouwerNashLayout.units, BrouwerNashLayout.globalCount,
-    BrouwerNashLayout.precision, BrouwerNashLayout.sampleWidth, BrouwerNashLayout.cornerWidth,
-    BrouwerNashLayout.arity]
-  ring
+/-- The ruler length agrees with the canonical wire allocation. -/
+theorem dimensionRuler_length (source code₀ code₁ : List Bool) :
+    (dimensionRuler source code₀ code₁).length = BrouwerNashLayout.dimension
+      (CircuitWords.first source).length (circuitUnaryPrefix code₀).length
+      (circuitUnaryPrefix code₁).length := by
+  simp only [dimensionRuler, List.length_replicate, unitsRuler_length, BrouwerNashLayout.dimension]
 
-/-- Positive game dimensions are guaranteed even for malformed circuit words. -/
-theorem dimensionRuler_pos (v : Fin 3 → List Bool) : 0 < (dimensionRuler v).length := by
+/-- Game dimensions are positive even for malformed circuit words. -/
+theorem dimensionRuler_pos (source code₀ code₁ : List Bool) :
+    0 < (dimensionRuler source code₀ code₁).length := by
   rw [dimensionRuler_length]
   exact BrouwerNashLayout.dimension_pos _ _ _
 
-@[simp] theorem widthRuler_length (v : Fin 3 → List Bool) :
-    (widthRuler v).length = (dimensionRuler v).length + 10 := by
+@[simp] theorem widthRuler_length (source code₀ code₁ : List Bool) :
+    (widthRuler source code₀ code₁).length = (dimensionRuler source code₀ code₁).length + 10 := by
   simp only [widthRuler, List.length_append, List.length_replicate]
 
 private theorem coefficient_capacity (k : ℕ) : 100 * k < 2 ^ (k + 9) := by
@@ -116,86 +118,156 @@ private theorem coefficient_capacity (k : ℕ) : 100 * k < 2 ^ (k + 9) := by
     rw [show k + 1 + 9 = (k + 9) + 1 by omega, pow_succ]
     omega
 
-/-- Fixed signed coefficient fields fit the program's uniform hundred-dimension bound. -/
-theorem widthRuler_fits (v : Fin 3 → List Bool) (q : ℤ)
-    (hq : q.natAbs ≤ 100 * (dimensionRuler v).length) :
-    q.natAbs < 2 ^ ((widthRuler v).length - 1) := by
-  rw [widthRuler_length, show (dimensionRuler v).length + 10 - 1 =
-    (dimensionRuler v).length + 9 by omega]
+/-- Signed coefficient fields fit the program's uniform hundred-dimension bound. -/
+theorem widthRuler_fits (source code₀ code₁ : List Bool) (q : ℤ)
+    (hq : q.natAbs ≤ 100 * (dimensionRuler source code₀ code₁).length) :
+    q.natAbs < 2 ^ ((widthRuler source code₀ code₁).length - 1) := by
+  rw [widthRuler_length, show (dimensionRuler source code₀ code₁).length + 10 - 1 =
+    (dimensionRuler source code₀ code₁).length + 9 by omega]
   exact hq.trans_lt (coefficient_capacity _)
 
-/-- The baseline matches the exact integer reward for the emitted dimension. -/
-theorem baselineWord_value (v : Fin 3 → List Bool) :
-    binarySignedValue (baselineWord v) =
-      ((dimensionRuler v).length *
-        (100 * (dimensionRuler v).length + 2 * (dimensionRuler v).length) + 1 : ℤ) *
-      2 ^ (100 * ((pairFst (v 0)).length + (dimensionRuler v).length + 10)) := by
-  simpa only [baselineWord, sourceDepthRuler, Matrix.cons_val_zero, Matrix.cons_val_one]
-    using BrouwerNashRewardMachine.reward_value ![pairFst (v 0), dimensionRuler v]
+/-- The baseline denotes the exact integer reward for the emitted dimension. -/
+theorem baselineWord_value (source code₀ code₁ : List Bool) :
+    binarySignedValue (baselineWord source code₀ code₁) =
+      ((dimensionRuler source code₀ code₁).length *
+        (100 * (dimensionRuler source code₀ code₁).length +
+          2 * (dimensionRuler source code₀ code₁).length) + 1 : ℤ) *
+      2 ^ (100 * ((CircuitWords.first source).length +
+        (dimensionRuler source code₀ code₁).length + 10)) := by
+  exact BrouwerNashRewardMachine.reward_value (sourceDepthRuler source)
+    (dimensionRuler source code₀ code₁)
 
-private theorem scale_cobham {n a : ℕ} {f : (Fin a → List Bool) → List Bool}
-    (hf : Cobham f) : Cobham fun v => scale n (f v) :=
-  (Cobham.comp₂ Cobham.smash hf (Cobham.const (List.replicate n true))).of_eq fun _ => rfl
-
-theorem sourceDepthRuler_cobham : Cobham sourceDepthRuler :=
-  (Cobham.comp (FP_subset_CobhamFP pairFst_mem_FP) fun _ : Fin 1 =>
-    (Cobham.proj 0 : Cobham fun v : Fin 3 → List Bool => v 0)).of_eq fun _ => rfl
-theorem precisionRuler_cobham : Cobham precisionRuler :=
-  scale_cobham (appendFn sourceDepthRuler_cobham (Cobham.const (List.replicate 10 false)))
-theorem arityRuler_cobham : Cobham arityRuler :=
-  scale_cobham (appendFn sourceDepthRuler_cobham (Cobham.const [false]))
-theorem globalRuler_cobham : Cobham globalRuler :=
-  appendFn (scale_cobham precisionRuler_cobham) (Cobham.const (List.replicate 11 false))
-theorem cornerRuler_cobham : Cobham cornerRuler :=
-  appendFn (appendFn (scale_cobham arityRuler_cobham)
-    (Cobham.comp (FP_subset_CobhamFP circuitUnaryPrefix_mem_FP) fun _ : Fin 1 => (.proj 1)))
-    (Cobham.comp (FP_subset_CobhamFP circuitUnaryPrefix_mem_FP) fun _ : Fin 1 => (.proj 2))
-theorem sampleRuler_cobham : Cobham sampleRuler :=
-  appendFn (appendFn (Cobham.const (List.replicate 26 false))
-    (scale_cobham sourceDepthRuler_cobham))
-    (scale_cobham cornerRuler_cobham)
-
-/-- The allocated-prefix ruler is produced by polynomial length operations. -/
-theorem unitsRuler_cobham : Cobham unitsRuler :=
-  appendFn (appendFn globalRuler_cobham (scale_cobham sampleRuler_cobham))
-    (Cobham.const [false])
-
-theorem dimensionRuler_cobham : Cobham dimensionRuler := scale_cobham unitsRuler_cobham
-theorem widthRuler_cobham : Cobham widthRuler :=
-  appendFn dimensionRuler_cobham (Cobham.const (List.replicate 10 false))
-theorem baselineWord_cobham : Cobham baselineWord :=
-  (Cobham.comp₂ BrouwerNashRewardMachine.reward_cobham sourceDepthRuler_cobham
-    dimensionRuler_cobham).of_eq fun _ => rfl
-
-theorem dimensionRuler_mem_FPn : FPn dimensionRuler := cobham_iff_FPn.mp dimensionRuler_cobham
-theorem widthRuler_mem_FPn : FPn widthRuler := cobham_iff_FPn.mp widthRuler_cobham
-theorem baselineWord_mem_FPn : FPn baselineWord := cobham_iff_FPn.mp baselineWord_cobham
-
-/-- Specialize a header producer to the source and its two compiled color circuits. -/
-def sourceFn (producer : (Fin 3 → List Bool) → List Bool)
+/-- Specialize a three-word producer to a source and its two compiled color circuits. -/
+def sourceFn (producer : List Bool → List Bool → List Bool → List Bool)
     (codes : Fin 2 → List Bool → List Bool) (source : List Bool) : List Bool :=
-  producer ![source, codes 0 source, codes 1 source]
+  producer source (codes 0 source) (codes 1 source)
 
-/-- Decoded circuit counts recover the canonical source-dependent program dimension. -/
+/-- Successful circuit decodes recover the source-dependent program dimension. -/
 theorem sourceDimension_length_of_decode (codes : Fin 2 → List Bool → List Bool)
-    (source : List Bool) (raw₀ raw₁ : CircuitCode.RawCircuit)
-    (hd₀ : CircuitCode.RawCircuit.decode? (codes 0 source) = some raw₀)
-    (hd₁ : CircuitCode.RawCircuit.decode? (codes 1 source) = some raw₁) :
+    (source : List Bool) (gates₀ gates₁ : List (CircuitFormat.signature.Op × List ℕ))
+    (hd₀ : CircuitFormat.decode? (codes 0 source) = some gates₀)
+    (hd₁ : CircuitFormat.decode? (codes 1 source) = some gates₁) :
     (sourceFn dimensionRuler codes source).length =
-      BrouwerNashLayout.dimension (pairFst source).length raw₀.length raw₁.length := by
-  have h := dimensionRuler_length ![source, codes 0 source, codes 1 source]
+      BrouwerNashLayout.dimension (CircuitWords.first source).length gates₀.length gates₁.length := by
+  have h := dimensionRuler_length source (codes 0 source) (codes 1 source)
   change (sourceFn dimensionRuler codes source).length = BrouwerNashLayout.dimension
-    (pairFst source).length (circuitUnaryPrefix (codes 0 source)).length
+    (CircuitWords.first source).length (circuitUnaryPrefix (codes 0 source)).length
       (circuitUnaryPrefix (codes 1 source)).length at h
   rwa [circuitUnaryPrefix_length_of_decode _ _ hd₀,
     circuitUnaryPrefix_length_of_decode _ _ hd₁] at h
 
-/-- Actual compiled-circuit producers compose with the uniform header machines. -/
-theorem sourceFn_mem_FP {producer : (Fin 3 → List Bool) → List Bool}
-    (hp : Cobham producer) (codes : Fin 2 → List Bool → List Bool)
-    (hc : ∀ i, codes i ∈ FP) : sourceFn producer codes ∈ FP := by
-  apply CobhamFP_subset_FP
-  exact (Cobham.comp₃ hp (.proj 0) (FP_subset_CobhamFP (hc 0))
-    (FP_subset_CobhamFP (hc 1))).of_eq fun _ => rfl
+@[fun_prop] theorem sourceDepthRuler_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {source : Input → List Bool} (hs : ComputableInPolyTime source input encBits) :
+    ComputableInPolyTime (fun a => sourceDepthRuler (source a)) input encBits :=
+  CircuitWords.first_polyTime.comp hs
+
+@[fun_prop] theorem precisionRuler_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {source : Input → List Bool} (hs : ComputableInPolyTime source input encBits) :
+    ComputableInPolyTime (fun a => precisionRuler (source a)) input encBits := by
+  exact (ComputableInPolyTime.bitsReplicate true).comp
+    (ComputableInPolyTime.unary_mul' (ComputableInPolyTime.const 5)
+      (ComputableInPolyTime.unary_add'
+        (ComputableInPolyTime.length_bits_comp (sourceDepthRuler_polyTime hs))
+        (ComputableInPolyTime.const 10)))
+
+@[fun_prop] theorem arityRuler_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {source : Input → List Bool} (hs : ComputableInPolyTime source input encBits) :
+    ComputableInPolyTime (fun a => arityRuler (source a)) input encBits := by
+  exact (ComputableInPolyTime.bitsReplicate true).comp
+    (ComputableInPolyTime.unary_mul' (ComputableInPolyTime.const 2)
+      (ComputableInPolyTime.unary_add'
+        (ComputableInPolyTime.length_bits_comp (sourceDepthRuler_polyTime hs))
+        (ComputableInPolyTime.const 1)))
+
+@[fun_prop] theorem globalRuler_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {source : Input → List Bool} (hs : ComputableInPolyTime source input encBits) :
+    ComputableInPolyTime (fun a => globalRuler (source a)) input encBits := by
+  exact ComputableInPolyTime.bitsAppend
+    ((ComputableInPolyTime.bitsReplicate true).comp
+      (ComputableInPolyTime.unary_mul' (ComputableInPolyTime.const 3)
+        (ComputableInPolyTime.length_bits_comp (precisionRuler_polyTime hs))))
+    (ComputableInPolyTime.const (List.replicate 11 false))
+
+@[fun_prop] theorem cornerRuler_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {source code₀ code₁ : Input → List Bool}
+    (hs : ComputableInPolyTime source input encBits)
+    (hc₀ : ComputableInPolyTime code₀ input encBits)
+    (hc₁ : ComputableInPolyTime code₁ input encBits) :
+    ComputableInPolyTime (fun a => cornerRuler (source a) (code₀ a) (code₁ a)) input encBits := by
+  exact ComputableInPolyTime.bitsAppend
+    (ComputableInPolyTime.bitsAppend
+      ((ComputableInPolyTime.bitsReplicate true).comp
+        (ComputableInPolyTime.unary_mul' (ComputableInPolyTime.const 2)
+          (ComputableInPolyTime.length_bits_comp (arityRuler_polyTime hs))))
+      (circuitUnaryPrefix_polyTime hc₀))
+    (circuitUnaryPrefix_polyTime hc₁)
+
+@[fun_prop] theorem sampleRuler_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {source code₀ code₁ : Input → List Bool}
+    (hs : ComputableInPolyTime source input encBits)
+    (hc₀ : ComputableInPolyTime code₀ input encBits)
+    (hc₁ : ComputableInPolyTime code₁ input encBits) :
+    ComputableInPolyTime (fun a => sampleRuler (source a) (code₀ a) (code₁ a)) input encBits := by
+  exact ComputableInPolyTime.bitsAppend
+    (ComputableInPolyTime.bitsAppend (ComputableInPolyTime.const (List.replicate 26 false))
+      ((ComputableInPolyTime.bitsReplicate true).comp
+        (ComputableInPolyTime.unary_mul' (ComputableInPolyTime.const 12)
+          (ComputableInPolyTime.length_bits_comp (sourceDepthRuler_polyTime hs)))))
+    ((ComputableInPolyTime.bitsReplicate true).comp
+      (ComputableInPolyTime.unary_mul' (ComputableInPolyTime.const 4)
+        (ComputableInPolyTime.length_bits_comp (cornerRuler_polyTime hs hc₀ hc₁))))
+
+@[fun_prop] theorem unitsRuler_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {source code₀ code₁ : Input → List Bool}
+    (hs : ComputableInPolyTime source input encBits)
+    (hc₀ : ComputableInPolyTime code₀ input encBits)
+    (hc₁ : ComputableInPolyTime code₁ input encBits) :
+    ComputableInPolyTime (fun a => unitsRuler (source a) (code₀ a) (code₁ a)) input encBits := by
+  exact ComputableInPolyTime.bitsAppend
+    (ComputableInPolyTime.bitsAppend (globalRuler_polyTime hs)
+      ((ComputableInPolyTime.bitsReplicate true).comp
+        (ComputableInPolyTime.unary_mul' (ComputableInPolyTime.const 41)
+          (ComputableInPolyTime.length_bits_comp (sampleRuler_polyTime hs hc₀ hc₁)))))
+    (ComputableInPolyTime.const [false])
+
+@[fun_prop] theorem dimensionRuler_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {source code₀ code₁ : Input → List Bool}
+    (hs : ComputableInPolyTime source input encBits)
+    (hc₀ : ComputableInPolyTime code₀ input encBits)
+    (hc₁ : ComputableInPolyTime code₁ input encBits) :
+    ComputableInPolyTime (fun a => dimensionRuler (source a) (code₀ a) (code₁ a)) input encBits := by
+  exact (ComputableInPolyTime.bitsReplicate true).comp
+    (ComputableInPolyTime.unary_mul' (ComputableInPolyTime.const 123)
+      (ComputableInPolyTime.length_bits_comp (unitsRuler_polyTime hs hc₀ hc₁)))
+
+@[fun_prop] theorem widthRuler_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {source code₀ code₁ : Input → List Bool}
+    (hs : ComputableInPolyTime source input encBits)
+    (hc₀ : ComputableInPolyTime code₀ input encBits)
+    (hc₁ : ComputableInPolyTime code₁ input encBits) :
+    ComputableInPolyTime (fun a => widthRuler (source a) (code₀ a) (code₁ a)) input encBits := by
+  exact ComputableInPolyTime.bitsAppend (dimensionRuler_polyTime hs hc₀ hc₁)
+    (ComputableInPolyTime.const (List.replicate 10 false))
+
+@[fun_prop] theorem baselineWord_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {source code₀ code₁ : Input → List Bool}
+    (hs : ComputableInPolyTime source input encBits)
+    (hc₀ : ComputableInPolyTime code₀ input encBits)
+    (hc₁ : ComputableInPolyTime code₁ input encBits) :
+    ComputableInPolyTime (fun a => baselineWord (source a) (code₀ a) (code₁ a)) input encBits := by
+  exact BrouwerNashRewardMachine.reward_polyTime (sourceDepthRuler_polyTime hs)
+    (dimensionRuler_polyTime hs hc₀ hc₁)
+
+/-- Actual circuit producers compose through their ordinary native computation context. -/
+@[fun_prop] theorem sourceFn_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {source : Input → List Bool}
+    {producer : List Bool → List Bool → List Bool → List Bool}
+    (hp : ComputableInPolyTime (fun p : List Bool × (List Bool × List Bool) =>
+      producer p.1 p.2.1 p.2.2) (encPair encBits (encPair encBits encBits)) encBits)
+    (codes : Fin 2 → List Bool → List Bool)
+    (hc : ∀ i, ComputableInPolyTime (codes i) encBits encBits)
+    (hs : ComputableInPolyTime source input encBits) :
+    ComputableInPolyTime (fun a => sourceFn producer codes (source a)) input encBits := by
+  exact hp.comp (hs.prod (((hc 0).comp hs).prod ((hc 1).comp hs)))
 
 end GameTheory.Complexity.Backend.BrouwerNashHeaders

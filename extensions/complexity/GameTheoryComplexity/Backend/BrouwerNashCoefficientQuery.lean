@@ -7,7 +7,6 @@ public import GameTheoryComplexity.Backend.BrouwerNashProgram
 
 /-! Coefficient equations connecting unary scalar queries with the canonical gate factories. -/
 namespace GameTheory.Complexity.Backend.BrouwerNashCoefficientQuery
-open _root_.Complexity _root_.Complexity.Cobham
 open GameTheory.Finite
 
 /-- Both input contributions are retained when the two references coincide. -/
@@ -29,22 +28,12 @@ theorem affine₂_coefficients {k : ℕ} (a z : Fin k) (ca cz : ℤ)
     subst bit
     simp [BrouwerNashProgram.affine₂, GameTheory.Finite.BimatrixArithmeticGate.gate,
       GameTheory.Finite.BimatrixArithmeticGate.coefficients]
+
 /-- A ruler equality guard preserves the selected signed value exactly. -/
 theorem select_value (out ruler word : List Bool) :
-    binarySignedValue (caseBit₀ (lenEqFlag out ruler) word []) =
+    binarySignedValue (if out.length = ruler.length then word else []) =
       if out.length = ruler.length then binarySignedValue word else 0 := by
-  rcases lenEqFlag_flag out ruler with h | h
-  · rw [h]
-    simp only [(lenEqFlag_eq_true_iff _ _).mp h, ite_true, caseBit₀]
-    rfl
-  · have he : out.length ≠ ruler.length := by
-      intro he
-      have ht := (lenEqFlag_eq_true_iff out ruler).mpr he
-      rw [h] at ht
-      contradiction
-    rw [h]
-    simp only [he, ite_false, caseBit₀]
-    rfl
+  split_ifs <;> rfl
 
 /-- Two signed indicator queries implement an affine gate without imposing distinct references. -/
 theorem affine₂_indicator_value {k : ℕ} (row input₀ input₁ scalar₀ scalar₁ : List Bool)
