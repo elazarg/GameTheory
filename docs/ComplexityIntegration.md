@@ -951,8 +951,9 @@ Accepted valid answers yield canonical PMF mixed Nash equilibria. A supplied
 canonical equilibrium yields an exactly serialized bounded certificate.
 `Backend.GeneralBimatrixTotality` additionally uses finite complementary-path
 existence to prove native `TFNP encBits` membership for every input, without an
-Analysis import. The native node/pointer and PPAD reduction port remains in
-progress; verification and totality alone do not supply a polynomial-time solver.
+Analysis import. Native node, pointer, endpoint and every-answer PPAD reduction leaves are now
+validated against the matching toolchain. The public hardness facade and full
+release gates remain open; verification and totality do not supply a polynomial-time solver.
 
 The matching-toolchain verifier, totality, determinant and dictionary checkpoint
 passes 6,756 jobs. Its expanded transitive audit checks 2,943 authored declarations

@@ -1,6 +1,7 @@
 module
 
 public import GameTheory.Math.IntegerSumBounds
+public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
 public import GameTheoryComplexity.Backend.GeneralBimatrixEndpointMachine
 public import GameTheoryComplexity.Backend.GeneralBimatrixDictionary
 
@@ -10,8 +11,8 @@ public import GameTheoryComplexity.Backend.GeneralBimatrixDictionary
 The controller's working width covers all Cramer weights, probability masses and
 payoff-unshift arithmetic. Clients supply the basis, without intermediate bounds. -/
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
 open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec GameTheory.Math
+open Turing.MultiTapeTM
 open scoped BigOperators
 
 private theorem cramerWidth_le_bird (k h : ℕ) :
@@ -158,22 +159,22 @@ def generalBimatrixDictionaryEndpointWord (v : Fin 3 → List Bool) : List Bool 
   generalBimatrixEndpointMachineWord ![v 0, v 1, generalBimatrixDictionaryDeterminant v,
     generalBimatrixDictionaryCoefficients v, generalBimatrixDictionaryWidth v]
 
-theorem generalBimatrixDictionaryEndpointWord_cobham : Cobham generalBimatrixDictionaryEndpointWord := by
-  let gs : Fin 5 → (Fin 3 → List Bool) → List Bool := fun i v =>
-    ![v 0, v 1, generalBimatrixDictionaryDeterminant v,
-      generalBimatrixDictionaryCoefficients v, generalBimatrixDictionaryWidth v] i
-  have hg : ∀ i, Cobham (gs i) := by
+@[fun_prop] theorem generalBimatrixDictionaryEndpointWord_polyTime :
+    ComputableInPolyTime generalBimatrixDictionaryEndpointWord (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool =>
+        ![v 0, v 1, generalBimatrixDictionaryDeterminant v,
+          generalBimatrixDictionaryCoefficients v, generalBimatrixDictionaryWidth v])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
     intro i
     fin_cases i
-    · exact .proj 0
-    · exact .proj 1
-    · exact generalBimatrixDictionaryDeterminant_cobham
-    · exact generalBimatrixDictionaryCoefficients_cobham
-    · exact generalBimatrixDictionaryWidth_cobham
-  exact (Cobham.comp (gs := gs) generalBimatrixEndpointMachineWord_cobham hg).of_eq fun _ => rfl
-
-theorem generalBimatrixDictionaryEndpointWord_mem_FPn : FPn generalBimatrixDictionaryEndpointWord :=
-  cobham_iff_FPn.mp generalBimatrixDictionaryEndpointWord_cobham
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 1
+    · exact generalBimatrixDictionaryDeterminant_polyTime
+    · exact generalBimatrixDictionaryCoefficients_polyTime
+    · exact generalBimatrixDictionaryWidth_polyTime
+  exact generalBimatrixEndpointMachineWord_polyTime.comp hargs
 
 /-- Computing and emitting the dictionary preserves the supplied basis exactly.
 No caller-supplied arithmetic width or intermediate bounds are required. -/
