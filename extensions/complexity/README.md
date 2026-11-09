@@ -136,17 +136,20 @@ import GameTheoryComplexity.Backend.NashNPComplete
 
 The default dependency configuration fetches the base GameTheory commit
 `c7cd6bed7498b9a16edb22262e9522ceff90648c`; it does not assume a sibling checkout.
-The resolved packages share Lean/Mathlib 4.35.0. ComplexityLib is pinned directly
-to upstream `SamuelSchlesinger/complexitylib@257ad90ec5f547894cc20f27bd828839b1bf7bbf`,
-and CSLib to `94ea80f41a5678fce997a004f0d8d12dbe47cc4b`. Their declared upstream
-toolchains are 4.35.0 release candidates. Compatibility claims cover only the
-dependency closure of this extension's selected imports. They do not cover
-upstream umbrella modules,
-unrelated theorem families, or CSLib interoperability.
-The earlier fork's Cook–Levin proof repair is unnecessary on Lean 4.35.0;
-the upstream proof compiles unchanged. The original integration is recorded in
-EXP-159 in the repository's experiment log. Third-party diagnostics are allowed;
-first-party diagnostics and transitive nonstandard axioms remain audit failures.
+The migration selects CSLib-based Complexitylib v0.2.0 at
+`cslib-community/complexitylib@054834a4a4e6ac3ec50ed770bacea7fc42eccc7d`
+and CSLib `254e30e6d4299c51323aaeaf5f51a4763b375d4a`. Tracked toolchains stay
+on stable Lean/Mathlib 4.35 until final 4.36 is published; the larger native
+probability closure needs that shared upgrade. Matching upstream-toolchain
+snapshots validate the port meanwhile. Full companion and released-base
+consumer validation remain open. Native computation, sampling, concrete
+End-of-Line PPAD classification and payoff-language SAT hardness have compiled
+evidence; downstream Nash, inverse Sperner and Brouwer ports remain in progress.
+
+Validation covers the dependency closure of selected imports. Third-party
+diagnostics are allowed; first-party diagnostics and transitive nonstandard
+axioms remain audit failures. The original integration is recorded in EXP-159;
+the native computation decision and validation are recorded in EXP-172/D77.
 
 Import modules use the disjoint prefix `GameTheoryComplexity` because the base
 package owns every `GameTheory.*` module through its default Lake globs.
