@@ -91,4 +91,25 @@ theorem routingModThreeBits_value (bits : List Bool) :
       ((ComputableInPolyTime.bitsToNat.comp hb).tidy.prod (.const 3)))
   exact bitsLow (const 2) hrem
 
+/-- The canonical three-bit residue modulo six. -/
+def routingModSixBits (bits : List Bool) : List Bool := lowBits 3 (ofBits bits % 6)
+
+@[simp] theorem routingModSixBits_length (bits : List Bool) :
+    (routingModSixBits bits).length = 3 := by simp [routingModSixBits]
+
+theorem routingModSixBits_value (bits : List Bool) :
+    lsbValue (routingModSixBits bits) = lsbValue bits % 6 := by
+  have h : ofBits bits % 6 < 2 ^ 3 := (Nat.mod_lt _ (by decide : 0 < 6)).trans_le (by decide)
+  rw [routingModSixBits, lsbValue_lowBits h, ofBits_eq_lsbValue]
+
+/-- Modulo six charges native binary arithmetic and its complete constant-width result. -/
+@[fun_prop] theorem routingModSixBits_polyTime
+    {α : Type} {enc : α ↪ List Bool} {bits : α → List Bool}
+    (hb : ComputableInPolyTime bits enc encBits) :
+    ComputableInPolyTime (fun z => routingModSixBits (bits z)) enc encBits := by
+  have hrem : ComputableInPolyTime (fun z => ofBits (bits z) % 6) enc encNat :=
+    .of_tidy (ComputableTidilyInPolyTime.binary_mod.comp
+      ((ComputableInPolyTime.bitsToNat.comp hb).tidy.prod (.const 6)))
+  exact bitsLow (const 3) hrem
+
 end GameTheory.Complexity.Backend

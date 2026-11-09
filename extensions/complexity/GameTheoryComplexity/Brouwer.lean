@@ -13,40 +13,39 @@ point. Color circuits determine the locally evaluable continuous interpolation. 
 
 namespace GameTheory.Complexity
 
-open _root_.Complexity Backend GameTheory.Math.Brouwer
+open Turing.MultiTapeTM Cslib.Complexity Backend GameTheory.Math.Brouwer
 
 /-- Every serialized instance represents a globally continuous map. -/
 theorem brouwerInstance_continuous (input : List Bool) :
-    Continuous (normalizedGridMap (spernerColor input) (2 ^ (pairFst input).length)) :=
+    Continuous (normalizedGridMap (spernerColor input) (2 ^ (CircuitWords.first input).length)) :=
   continuous_normalizedGridMap _ _
 
 /-- Canonical boundary colors make every represented map preserve the unit square. -/
 theorem brouwerInstance_mem_unitSquare (input : List Bool) {p : ℝ × ℝ}
     (hp : InRealGridSquare 1 p) :
     InRealGridSquare 1
-      (normalizedGridMap (spernerColor input) (2 ^ (pairFst input).length) p) :=
+      (normalizedGridMap (spernerColor input) (2 ^ (CircuitWords.first input).length) p) :=
   normalizedGridMap_mem_unitSquare
     (GameTheory.Math.Sperner.standardGridColor_boundary _ _ (Nat.two_pow_pos _))
     (Nat.two_pow_pos _) hp
 
 /-- Polynomially verified continuous residual search reduces to standard End-of-Line. -/
-theorem brouwerRelation_mem_PPAD : brouwerRelation ∈ PPAD :=
-  PPAD.of_reduction brouwerToSpernerReduction brouwerRelation_mem_FNP
+theorem brouwerRelation_mem_PPAD : brouwerRelation ∈ PPAD encBits :=
+  brouwerToSpernerReduction.mem_PPAD brouwerRelation_mem_FNP
     spernerRelation_mem_PPAD
 
 /-- Every PPAD search problem reduces to continuous residual search. -/
-theorem brouwerRelation_PPADHard : PPADHard brouwerRelation := by
-  intro T hT
-  obtain ⟨a⟩ := spernerRelation_PPADHard T hT
-  exact ⟨a.trans spernerToBrouwerReduction⟩
+theorem brouwerRelation_PPADHard : SearchHard @PPAD encBits brouwerRelation := by
+  intro α enc R hR
+  exact (spernerRelation_PPADHard enc R hR).trans spernerToBrouwerReduction
 
 /-- Approximate fixed-point search for the succinct continuous square maps is PPAD-complete. -/
-theorem brouwerRelation_PPADComplete : PPADComplete brouwerRelation :=
+theorem brouwerRelation_PPADComplete : SearchComplete @PPAD encBits brouwerRelation :=
   ⟨brouwerRelation_mem_PPAD, brouwerRelation_PPADHard⟩
 
 /-- All instances have short, efficiently verified rational-point answers. -/
-theorem brouwerRelation_mem_TFNP : brouwerRelation ∈ TFNP :=
-  PPAD.mem_TFNP brouwerRelation_mem_PPAD
+theorem brouwerRelation_mem_TFNP : brouwerRelation ∈ TFNP encBits :=
+  PPAD_subset_TFNP brouwerRelation_mem_PPAD
 
 /-- Canonical boundary enforcement gives a point answer for every serialized input. -/
 theorem brouwerRelation_total (input : List Bool) : ∃ word, brouwerRelation input word :=

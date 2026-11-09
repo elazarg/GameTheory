@@ -12,7 +12,7 @@ coordinate ruler and the serialized circuit seed to vary with the input. -/
 namespace GameTheory.Complexity.Tests.SpernerPointerMachine
 
 open GameTheory.Complexity.Backend GameTheory.Math.Sperner GameTheory.Math.EndOfLine
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM Cslib.BitString
 
 /-- At zero coordinate width, the lower triangle is a sink and the upper is isolated. -/
 theorem smallest_grid_all_words :
@@ -75,7 +75,7 @@ theorem rejected_words_are_isolated (incoming : Bool) :
         [false, false, true, false] := by cases incoming <;> decide
 
 private def cycleQuery (word : List Bool) : List Bool :=
-  [decide (Nat.fromBitsLE (word.take 3) = 2 ∧ Nat.fromBitsLE (word.drop 3) = 2), false]
+  [decide (lsbValue (word.take 3) = 2 ∧ lsbValue (word.drop 3) = 2), false]
 
 /-- The source component is not the whole graph: a six-triangle cycle remains present. -/
 theorem disconnected_cycle :
@@ -103,12 +103,19 @@ theorem cycle_vertex_is_not_endpoint :
       (gridPointerMachine [false, false] cycleQuery false)
       (encodeGridNode 2 (some ⟨1, 1, false⟩)) := by decide
 
-/-- Certified circuit queries remain polynomial when the ruler, seed and vertex all vary. -/
-theorem uniform_circuit_pointer_mem_FP (incoming : Bool) :
-    (fun z => gridPointerMachine (pairFst z)
-      (evaluateCircuitVector (pairFst (pairSnd z))) incoming (pairSnd (pairSnd z))) ∈ FP :=
-  gridPointerMachineUniformFn_mem_FP incoming pairFst_mem_FP
-    (mem_FP_comp pairSnd_mem_FP pairFst_mem_FP)
-    (mem_FP_comp pairSnd_mem_FP pairSnd_mem_FP) evaluateCircuitVector_pair_mem_FP
+/-- Certified queries charge the varying ruler, circuit seed and vertex together. -/
+theorem uniform_circuit_pointer_polyTime (incoming : Bool) :
+    ComputableInPolyTime (fun p : List Bool × (List Bool × List Bool) =>
+      gridPointerMachine p.1 (evaluateCircuitVector p.2.1) incoming p.2.2)
+      (encPair encBits (encPair encBits encBits)) encBits := by
+  have hrest := ComputableInPolyTime.snd encBits (encPair encBits encBits)
+  have hr := ComputableInPolyTime.fst encBits (encPair encBits encBits)
+  have hv := (ComputableInPolyTime.snd encBits encBits).comp hrest
+  have hseed := (ComputableInPolyTime.fst encBits encBits).comp hrest
+  have hquery := evaluateCircuitVector_polyTime
+    (hseed.comp (ComputableInPolyTime.fst (encPair encBits (encPair encBits encBits)) encBits))
+    (ComputableInPolyTime.snd (encPair encBits (encPair encBits encBits)) encBits)
+  exact gridPointerMachine_polyTime incoming hr hv
+    (fun p => evaluateCircuitVector p.2.1) hquery
 
 end GameTheory.Complexity.Tests.SpernerPointerMachine

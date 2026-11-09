@@ -15,20 +15,20 @@ map residual, rather than distance to an exact fixed point. -/
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity GameTheory.Math.Brouwer
+open GameTheory.Math.Brouwer
 
 /-- Rational-point approximate fixed points of the represented continuous map. -/
 def brouwerRelation (input word : List Bool) : Prop :=
-  ∃ p, decodeBrouwerPoint (pairFst input).length word = some p ∧
-    SixthPointSmallResidual (spernerColor input) (2 ^ (pairFst input).length) p.1 p.2
+  ∃ p, decodeBrouwerPoint (CircuitWords.first input).length word = some p ∧
+    SixthPointSmallResidual (spernerColor input) (2 ^ (CircuitWords.first input).length) p.1 p.2
 
 /-- Exact local arithmetic evaluates the global normalized real-map residual. -/
 theorem brouwerRelation_local_iff (input word : List Bool) :
     brouwerRelation input word ↔
-      ∃ p, decodeBrouwerPoint (pairFst input).length word = some p ∧
-        |(sixthDisplacement (spernerColor input) (2 ^ (pairFst input).length) p.1 p.2).1|
+      ∃ p, decodeBrouwerPoint (CircuitWords.first input).length word = some p ∧
+        |(sixthDisplacement (spernerColor input) (2 ^ (CircuitWords.first input).length) p.1 p.2).1|
           ≤ 1 / 6 ∧
-        |(sixthDisplacement (spernerColor input) (2 ^ (pairFst input).length) p.1 p.2).2|
+        |(sixthDisplacement (spernerColor input) (2 ^ (CircuitWords.first input).length) p.1 p.2).2|
           ≤ 1 / 6 := by
   constructor
   · rintro ⟨p, hd, hr⟩
@@ -41,12 +41,14 @@ theorem brouwerRelation_local_iff (input word : List Bool) :
       (Nat.two_pow_pos _) hp.2.1 hp.2.2.1).mpr hr⟩
 
 /-- Two numerator blocks have linear length in the serialized instance. -/
-theorem brouwerRelation_polyBalanced : PolyBalanced brouwerRelation := by
+theorem brouwerRelation_polyBalanced :
+    ∃ p : Polynomial ℕ, ∀ input word, brouwerRelation input word →
+      word.length ≤ p.eval input.length := by
   refine ⟨Polynomial.X + Polynomial.X + 6, fun input word h => ?_⟩
   obtain ⟨p, hd, _⟩ := h
   have hw := (decodeBrouwerPoint_properties hd).1
-  have hb := endOfLineWidth_le_length input
-  change (pairFst input).length ≤ input.length at hb
+  have hb := CircuitWords.first_length_le input
+  change (CircuitWords.first input).length ≤ input.length at hb
   simp only [Polynomial.eval_add, Polynomial.eval_X, Polynomial.eval_ofNat]
   rw [hw, pointWordWidth, pointCoordinateWidth]
   omega

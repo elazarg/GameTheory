@@ -3,72 +3,59 @@ module
 public import GameTheoryComplexity.Backend.BrouwerProblem
 public import GameTheoryComplexity.Backend.BrouwerPointMachine
 public import GameTheoryComplexity.Backend.BrouwerResidualMachine
-public import Complexitylib.Classes.P.NormalForm
+public import Complexity.Computability.Complexity.Classes.TFNP
 
 @[expose] public section
 
 /-! A polynomial-time verifier locates a rational point, queries the three
 corner colors, and checks its exact affine residual. It validates both the
-point fields and the outer input pair before accepting the continuous-map
+complete point fields before accepting the continuous-map
 approximate fixed-point relation. -/
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity _root_.Complexity.Cobham EndOfLineMachineOps
+open Turing.MultiTapeTM ComputableInPolyTime Cslib.BitString WordOperations
 open GameTheory.Math.Sperner GameTheory.Math.Brouwer
 
-private theorem routingLEFlag_flag (x y : List Bool) :
-    routingLEFlag x y = [true] ∨ routingLEFlag x y = [false] := by
-  rw [routingLEFlag_value]
-  by_cases h : Nat.fromBitsLE x ≤ Nat.fromBitsLE y <;> simp [h]
-
-/-- Validate the two fixed-width numerators against the closed-square bound. -/
-def brouwerPointAcceptFlag (ruler word : List Bool) : List Bool :=
-  andBit (lenEqFlag word (brouwerPointRuler ruler ++ brouwerPointRuler ruler))
-    (andBit (routingLEFlag (brouwerPointXBits ruler word) (brouwerPointBoundBits ruler))
-      (routingLEFlag (brouwerPointYBits ruler word) (brouwerPointBoundBits ruler)))
-
-theorem brouwerPointAcceptFlag_flag (ruler word : List Bool) :
-    brouwerPointAcceptFlag ruler word = [true] ∨
-      brouwerPointAcceptFlag ruler word = [false] := andBit_flag _ _
+/-- Validate complete fixed-width point fields against the closed-square bound. -/
+def brouwerPointAcceptFlag (ruler word : List Bool) : Bool :=
+  decide (word.length = pointWordWidth ruler.length) &&
+    ((routingLEFlag (brouwerPointXBits ruler word) (brouwerPointBoundBits ruler)).headD false &&
+      (routingLEFlag (brouwerPointYBits ruler word) (brouwerPointBoundBits ruler)).headD false)
 
 theorem brouwerPointAcceptFlag_accept (ruler word : List Bool) :
-    brouwerPointAcceptFlag ruler word = [true] ↔
+    brouwerPointAcceptFlag ruler word = true ↔
       ∃ p, decodeBrouwerPoint ruler.length word = some p := by
-  rw [brouwerPointAcceptFlag,
-    andBit_eq_true_iff (lenEqFlag_flag _ _) (andBit_flag _ _),
-    andBit_eq_true_iff (routingLEFlag_flag _ _) (routingLEFlag_flag _ _),
-    lenEqFlag_eq_true_iff, routingLEFlag_value, routingLEFlag_value]
-  simp only [List.cons.injEq, and_true, decide_eq_true_eq, brouwerPointBoundBits_value,
-    List.length_append, brouwerPointRuler_length, brouwerPointXBits, brouwerPointYBits]
-  have hwidth : pointCoordinateWidth ruler.length + pointCoordinateWidth ruler.length =
-      pointWordWidth ruler.length := by simp [pointWordWidth, two_mul]
-  rw [hwidth]
+  simp only [brouwerPointAcceptFlag, Bool.and_eq_true, decide_eq_true_eq, routingLEFlag_value,
+    List.headD_cons, brouwerPointBoundBits_value, brouwerPointXBits, brouwerPointYBits,
+    brouwerPointRuler_length]
   unfold decodeBrouwerPoint
   dsimp only
-  split_ifs with h
-  · simp [h]
-  · simp [h]
+  split_ifs with h <;> simp [h]
 
-theorem brouwerPointAcceptFlagFn_mem_FP {ruler word : List Bool → List Bool}
-    (hr : ruler ∈ FP) (hw : word ∈ FP) :
-    (fun z => brouwerPointAcceptFlag (ruler z) (word z)) ∈ FP := by
-  have hpr := brouwerPointRulerFn_mem_FP hr
-  have hwidth := appendFn_mem_FP hpr hpr
-  have hlen : (fun z => lenEqFlag (word z)
-      (brouwerPointRuler (ruler z) ++ brouwerPointRuler (ruler z))) ∈ FP :=
-    andBitFn_mem_FP (lenLeFlagFn_mem_FP hw hwidth) (lenLeFlagFn_mem_FP hwidth hw)
-  exact andBitFn_mem_FP hlen
-    (andBitFn_mem_FP
-      (routingLEFlagFn_mem_FP (brouwerPointXBitsFn_mem_FP hr hw)
-        (brouwerPointBoundBitsFn_mem_FP hr))
-      (routingLEFlagFn_mem_FP (brouwerPointYBitsFn_mem_FP hr hw)
-        (brouwerPointBoundBitsFn_mem_FP hr)))
+/-- Complete point validation charges native unary lengths and binary comparisons. -/
+@[fun_prop] theorem brouwerPointAcceptFlag_polyTime
+    {α : Type} {enc : α ↪ List Bool} {ruler word : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits)
+    (hw : ComputableInPolyTime word enc encBits) :
+    ComputableInPolyTime (fun a => brouwerPointAcceptFlag (ruler a) (word a)) enc encBool := by
+  have hpr := brouwerPointRuler_polyTime hr
+  have hwidth : ComputableInPolyTime (fun a => pointWordWidth (ruler a).length) enc encUnary := by
+    simpa only [Function.comp_def, List.length_append, brouwerPointRuler_length,
+      pointWordWidth, two_mul] using length_bits.comp (bitsAppend hpr hpr)
+  have hlen := decide_eq' (length_bits.comp hw) hwidth
+  have hbound := brouwerPointBoundBits_polyTime hr
+  have hhead : ComputableInPolyTime (fun bits : List Bool => bits.headD false)
+      encBits encBool := .headD false
+  exact bool_and' hlen (bool_and'
+    (hhead.comp (routingLEFlag_polyTime (brouwerPointXBits_polyTime hr hw) hbound))
+    (hhead.comp (routingLEFlag_polyTime (brouwerPointYBits_polyTime hr hw) hbound)))
 
-private def brouwerResidualFlag (input word : List Bool) : List Bool :=
-  let ruler := pairFst input
+/-- Query all three corner colors and check the exact local affine residual. -/
+def brouwerResidualFlag (input word : List Bool) : List Bool :=
+  let ruler := CircuitWords.first input
   let triangle := brouwerLocateWord ruler word
-  let query := evaluateCircuitVector (pairSnd input)
+  let query := evaluateCircuitVector (CircuitWords.rest input)
   residualVerdict
     (brouwerOffsetBits ruler (brouwerPointXBits ruler word))
     (brouwerOffsetBits ruler (brouwerPointYBits ruler word))
@@ -81,27 +68,27 @@ private theorem brouwerResidualFlag_flag (input word : List Bool) :
       brouwerResidualFlag input word = [false] := residualVerdict_flag _ _ _ _ _
 
 private theorem brouwerResidualFlag_accept {input word : List Bool} {p : ℕ × ℕ}
-    (hd : decodeBrouwerPoint (pairFst input).length word = some p) :
+    (hd : decodeBrouwerPoint (CircuitWords.first input).length word = some p) :
     brouwerResidualFlag input word = [true] ↔
-      |(sixthDisplacement (spernerColor input) (2 ^ (pairFst input).length) p.1 p.2).1|
+      |(sixthDisplacement (spernerColor input) (2 ^ (CircuitWords.first input).length) p.1 p.2).1|
         ≤ 1 / 6 ∧
-      |(sixthDisplacement (spernerColor input) (2 ^ (pairFst input).length) p.1 p.2).2|
+      |(sixthDisplacement (spernerColor input) (2 ^ (CircuitWords.first input).length) p.1 p.2).2|
         ≤ 1 / 6 := by
   obtain ⟨_, hx, hy, hxx, hyy⟩ := decodeBrouwerPoint_properties hd
   have hv := sixthTriangle_valid (Nat.two_pow_pos _) hx hy
-  have hxx' : Nat.fromBitsLE (brouwerPointXBits (pairFst input) word) = p.1 := by
+  have hxx' : lsbValue (brouwerPointXBits (CircuitWords.first input) word) = p.1 := by
     simpa only [brouwerPointXBits, brouwerPointRuler_length] using hxx
-  have hyy' : Nat.fromBitsLE (brouwerPointYBits (pairFst input) word) = p.2 := by
+  have hyy' : lsbValue (brouwerPointYBits (CircuitWords.first input) word) = p.2 := by
     simpa only [brouwerPointYBits, brouwerPointRuler_length] using hyy
-  let rx : Fin 7 := ⟨sixthOffset (2 ^ (pairFst input).length) p.1,
+  let rx : Fin 7 := ⟨sixthOffset (2 ^ (CircuitWords.first input).length) p.1,
     by have h := (sixthCellIndex_bounds (Nat.two_pow_pos _) hx).2.1; omega⟩
-  let ry : Fin 7 := ⟨sixthOffset (2 ^ (pairFst input).length) p.2,
+  let ry : Fin 7 := ⟨sixthOffset (2 ^ (CircuitWords.first input).length) p.2,
     by have h := (sixthCellIndex_bounds (Nat.two_pow_pos _) hy).2.1; omega⟩
-  have hex : brouwerOffsetBits (pairFst input) (brouwerPointXBits (pairFst input) word) =
+  have hex : brouwerOffsetBits (CircuitWords.first input) (brouwerPointXBits (CircuitWords.first input) word) =
       encodeResidualOffset rx := by
     rw [brouwerOffsetBits_eq _ _ (by simpa [hxx'] using hx), hxx']
     rfl
-  have hey : brouwerOffsetBits (pairFst input) (brouwerPointYBits (pairFst input) word) =
+  have hey : brouwerOffsetBits (CircuitWords.first input) (brouwerPointYBits (CircuitWords.first input) word) =
       encodeResidualOffset ry := by
     rw [brouwerOffsetBits_eq _ _ (by simpa [hyy'] using hy), hyy']
     rfl
@@ -115,75 +102,62 @@ private theorem brouwerResidualFlag_accept {input word : List Bool} {p : ℕ × 
   dsimp only [rx, ry]
   split_ifs <;> rfl
 
-/-- Validate point fields and their exact map residual. -/
-def brouwerVerdict (input word : List Bool) : List Bool :=
-  andBit (brouwerPointAcceptFlag (pairFst input) word) (brouwerResidualFlag input word)
-
-theorem brouwerVerdict_flag (input word : List Bool) :
-    brouwerVerdict input word = [true] ∨ brouwerVerdict input word = [false] :=
-  andBit_flag _ _
+/-- The complete verifier validates the rational point and its actual map residual. -/
+def brouwerVerdict (input word : List Bool) : Bool :=
+  brouwerPointAcceptFlag (CircuitWords.first input) word &&
+    (brouwerResidualFlag input word).headD false
 
 theorem brouwerVerdict_accept (input word : List Bool) :
-    brouwerVerdict input word = [true] ↔ brouwerRelation input word := by
-  rw [brouwerVerdict,
-    andBit_eq_true_iff (brouwerPointAcceptFlag_flag _ _)
-      (brouwerResidualFlag_flag _ _),
-    brouwerPointAcceptFlag_accept, brouwerRelation_local_iff]
+    brouwerVerdict input word = true ↔ brouwerRelation input word := by
+  have hres : (brouwerResidualFlag input word).headD false = true ↔
+      brouwerResidualFlag input word = [true] := by
+    rcases brouwerResidualFlag_flag input word with h | h <;> simp [h]
+  rw [brouwerVerdict, Bool.and_eq_true, brouwerPointAcceptFlag_accept, hres,
+    brouwerRelation_local_iff]
   constructor
   · rintro ⟨⟨p, hd⟩, hr⟩
     exact ⟨p, hd, (brouwerResidualFlag_accept hd).mp hr⟩
   · rintro ⟨p, hd, hr⟩
     exact ⟨⟨p, hd⟩, (brouwerResidualFlag_accept hd).mpr hr⟩
 
-private theorem verdict_pair_mem_FP :
-    (fun z => brouwerVerdict (pairFst z) (pairSnd z)) ∈ FP := by
-  have hr := mem_FP_comp pairFst_mem_FP pairFst_mem_FP
-  have hs := mem_FP_comp pairFst_mem_FP pairSnd_mem_FP
-  have hw := pairSnd_mem_FP
-  have ht := brouwerLocateWordFn_mem_FP hr hw
-  have h₀ := gridCornerColorUniformFn_mem_FP 0 hr hs ht _ evaluateCircuitVector_pair_mem_FP
-  have h₁ := gridCornerColorUniformFn_mem_FP 1 hr hs ht _ evaluateCircuitVector_pair_mem_FP
-  have h₂ := gridCornerColorUniformFn_mem_FP 2 hr hs ht _ evaluateCircuitVector_pair_mem_FP
-  exact andBitFn_mem_FP (brouwerPointAcceptFlagFn_mem_FP hr hw)
-    (residualVerdictFn_mem_FP
-      (brouwerOffsetBitsFn_mem_FP hr (brouwerPointXBitsFn_mem_FP hr hw))
-      (brouwerOffsetBitsFn_mem_FP hr (brouwerPointYBitsFn_mem_FP hr hw)) h₀ h₁ h₂)
+/-- Native source and witness producers charge all three joint circuit queries. -/
+@[fun_prop] theorem brouwerResidualFlag_polyTime
+    {α : Type} {enc : α ↪ List Bool} {input word : α → List Bool}
+    (hi : ComputableInPolyTime input enc encBits)
+    (hw : ComputableInPolyTime word enc encBits) :
+    ComputableInPolyTime (fun a => brouwerResidualFlag (input a) (word a)) enc encBits := by
+  have hr := CircuitWords.first_polyTime.comp hi
+  have ht := brouwerLocateWord_polyTime hr hw
+  have hquery : ComputableInPolyTime
+      (fun p : α × List Bool => evaluateCircuitVector (CircuitWords.rest (input p.1)) p.2)
+      (encPair enc encBits) encBits :=
+    evaluateCircuitVector_polyTime
+      (CircuitWords.rest_polyTime.comp (hi.comp (fst enc encBits))) (snd enc encBits)
+  have h₀ := gridCornerColor_polyTime hr ht
+    (fun a => evaluateCircuitVector (CircuitWords.rest (input a))) hquery 0
+  have h₁ := gridCornerColor_polyTime hr ht
+    (fun a => evaluateCircuitVector (CircuitWords.rest (input a))) hquery 1
+  have h₂ := gridCornerColor_polyTime hr ht
+    (fun a => evaluateCircuitVector (CircuitWords.rest (input a))) hquery 2
+  exact residualVerdict_polyTime
+    (brouwerOffsetBits_polyTime hr (brouwerPointXBits_polyTime hr hw))
+    (brouwerOffsetBits_polyTime hr (brouwerPointYBits_polyTime hr hw)) h₀ h₁ h₂
 
-/-- Reject malformed outer pairs before checking their approximate fixed point. -/
-def brouwerPairedVerdict (z : List Bool) : List Bool :=
-  andBit (eqFlag z (pair (pairFst z) (pairSnd z)))
-    (brouwerVerdict (pairFst z) (pairSnd z))
+/-- The complete Boolean verifier has one native polynomial-time machine certificate. -/
+@[fun_prop] theorem brouwerVerdict_polyTime
+    {α : Type} {enc : α ↪ List Bool} {input word : α → List Bool}
+    (hi : ComputableInPolyTime input enc encBits)
+    (hw : ComputableInPolyTime word enc encBits) :
+    ComputableInPolyTime (fun a => brouwerVerdict (input a) (word a)) enc encBool := by
+  have hhead : ComputableInPolyTime (fun bits : List Bool => bits.headD false)
+      encBits encBool := .headD false
+  exact bool_and' (brouwerPointAcceptFlag_polyTime (CircuitWords.first_polyTime.comp hi) hw)
+    (hhead.comp (brouwerResidualFlag_polyTime hi hw))
 
-theorem brouwerPairedVerdict_mem_FP : brouwerPairedVerdict ∈ FP :=
-  andBitFn_mem_FP
-    (eqFlagFn_mem_FP id_mem_FP (pairFn_mem_FP pairFst_mem_FP pairSnd_mem_FP))
-    verdict_pair_mem_FP
-
-theorem exists_brouwerPairedVerdict_machine :
-    ∃ (k : ℕ) (machine : TM k) (bound : Polynomial ℕ),
-      machine.ComputesInTime brouwerPairedVerdict bound.eval :=
-  mem_FP_iff_computesInTime_polynomial.mp brouwerPairedVerdict_mem_FP
-
-theorem brouwerPairedVerdict_accept (z : List Bool) :
-    brouwerPairedVerdict z = [true] ↔ z ∈ pairLang brouwerRelation := by
-  rw [brouwerPairedVerdict,
-    andBit_eq_true_iff (eqFlag_flag _ _) (brouwerVerdict_flag _ _),
-    eqFlag_eq_true_iff, brouwerVerdict_accept]
-  constructor
-  · rintro ⟨hz, h⟩
-    exact ⟨pairFst z, pairSnd z, hz, h⟩
-  · rintro ⟨input, word, rfl, h⟩
-    simp only [pairFst_pair, pairSnd_pair]
-    exact ⟨trivial, h⟩
-
-/-- Linear witness balance and the polynomial-time verifier give FNP membership. -/
-theorem brouwerRelation_mem_FNP : brouwerRelation ∈ FNP := by
-  refine ⟨brouwerRelation_polyBalanced,
-    mem_P_of_decisionFn brouwerPairedVerdict_mem_FP ?_⟩
-  intro z
-  rw [← brouwerPairedVerdict_accept]
-  rcases andBit_flag (eqFlag z (pair (pairFst z) (pairSnd z)))
-    (brouwerVerdict (pairFst z) (pairSnd z)) with h | h <;>
-    simp [brouwerPairedVerdict, h]
+/-- Linear witness balance and exact native verification give FNP membership. -/
+theorem brouwerRelation_mem_FNP : brouwerRelation ∈ Cslib.Complexity.FNP encBits := by
+  refine ⟨brouwerRelation_polyBalanced, fun p => brouwerVerdict p.1 p.2,
+    brouwerVerdict_polyTime (fst encBits encBits) (snd encBits encBits), fun input word => ?_⟩
+  exact (brouwerVerdict_accept input word).symm
 
 end GameTheory.Complexity.Backend

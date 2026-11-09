@@ -874,8 +874,9 @@ The two search reductions retain the instance unchanged. To solve Sperner
 using a Brouwer answer, binary division by six and boundary clamping locate
 the containing triangle; the small residual forces its three colors to be
 distinct. Conversely, every trichromatic triangle yields its rational
-barycenter, which has zero displacement. Both answer maps have actual FPn
-certificates and preserve every target answer. The existing Sperner
+barycenter, which has zero displacement. Both answer maps have native
+`ComputableInPolyTime` certificates under the complete instance/answer
+encoding; both `Cslib.Complexity.SearchReducible` proofs preserve every target answer. The existing Sperner
 PPAD-completeness theorem therefore supplies both directions of classification.
 
 Membership also has an independent verifier. It checks the exact answer length
@@ -883,8 +884,10 @@ and numerator bounds, computes the triangle and two local offsets, evaluates
 three corner color circuits, and checks the exact weighted residual. The latter
 uses a fixed table over seven possible offsets in each coordinate and three
 colors at each corner (1,323 cases), independent of the grid size. Binary
-arithmetic and circuit evaluation have composed FP certificates, yielding an
-actual polynomial-time machine, linear witness balance and FNP membership.
+arithmetic and joint circuit evaluation have composed native machine certificates.
+The typed Boolean verdict and linear witness balance prove `FNP encBits`
+membership; `SearchComplete @PPAD encBits` and native TFNP use the same relation.
+Residual lookup compares exact words, retaining rejection of noncanonical fields.
 Totality holds for every serialized input under canonical boundary correction.
 
 The smallest-grid controls accept `(4/6, 1/6)`, whose residual is
@@ -900,7 +903,8 @@ unrestricted rational denominators, distance to an exact fixed point, or FIXP.
 Ordinary clients still require no complexity dependency; the public theorem
 lives in the optional companion package.
 
-Validation commands for the continuous slice (companion Lake commands run
+Final shared-toolchain validation commands for the continuous slice
+(companion Lake commands run
 from `extensions/complexity`; the others run from the repository root):
 
 ```text
@@ -913,18 +917,16 @@ python scripts/audit.py --source-only
 python -m unittest discover -s scripts/tests
 ```
 
-The base build passes 4,416 jobs; its Brouwer axiom audit checks 119 owned
-mathematical declarations. The companion build passes 4,198 jobs and audits
-2,351 owned extension declarations transitively. Both linters and both
-structural audits pass, as do all 30 boundary regressions. Only `propext`,
-`Classical.choice` and `Quot.sound` are admitted by the axiom audits.
+The native matching-toolchain checkpoint passes 5,328 jobs, including public
+continuous and simplicial Brouwer leaves, coordinate-circuit generators and the
+rational-point controls. Its transitive audit checks 2,801 authored declarations
+using only `propext`, `Classical.choice` and `Quot.sound`. Source isolation and
+coverage pass. The tracked stable toolchain, full optional lint/axiom targets and
+local/published-base consumer checks remain open in the native migration gate.
 
-Published-pin validation also passes the full 4,198-job companion/lint/axiom
-build against base commit `b2a5e0982ce6755197bde4e86ed4a295a37fa30c`.
-`lake -R update GameTheory` resolves that git pin and completes the Mathlib
-cache hook; `lake env lean --version` confirms Lean 4.34.1. The build then uses
-`lake build GameTheoryComplexity GameTheoryComplexity.LintAll
-GameTheoryComplexity.AxiomAudit` without a local-path override.
+Before the native API migration, the full continuous slice passed 4,198 companion
+jobs in local and published-base-pin configurations at `b2a5e098`; that historical
+run does not validate the current dependency selection.
 
 ## General rectangular binary Nash certificates
 
