@@ -11,7 +11,7 @@ to the last cell, so the locator works on the closed square. -/
 
 namespace GameTheory.Complexity.Backend
 
-open GameTheory.Math.Sperner GameTheory.Math.Brouwer
+open Cslib.BitString GameTheory.Math.Sperner GameTheory.Math.Brouwer
 
 /-- Numerator fields leave three bits beyond the grid coordinate width. -/
 def pointCoordinateWidth (b : ℕ) : ℕ := b + 3
@@ -21,12 +21,12 @@ def pointWordWidth (b : ℕ) : ℕ := 2 * pointCoordinateWidth b
 
 /-- Serialize the integer numerators of a normalized rational square point. -/
 def encodeBrouwerPoint (b : ℕ) (p : ℕ × ℕ) : List Bool :=
-  Nat.toBitsLE (pointCoordinateWidth b) p.1 ++ Nat.toBitsLE (pointCoordinateWidth b) p.2
+  lowBits (pointCoordinateWidth b) p.1 ++ lowBits (pointCoordinateWidth b) p.2
 
 /-- Reject wrong lengths and numerators outside the closed square. -/
 def decodeBrouwerPoint (b : ℕ) (word : List Bool) : Option (ℕ × ℕ) :=
-  let X := Nat.fromBitsLE (word.take (pointCoordinateWidth b))
-  let Y := Nat.fromBitsLE (word.drop (pointCoordinateWidth b))
+  let X := lsbValue (word.take (pointCoordinateWidth b))
+  let Y := lsbValue (word.drop (pointCoordinateWidth b))
   if word.length = pointWordWidth b ∧ X ≤ 6 * 2 ^ b ∧ Y ≤ 6 * 2 ^ b
     then some (X, Y) else none
 
@@ -51,14 +51,14 @@ theorem brouwer_numerator_lt (b X : ℕ) (h : X ≤ 6 * 2 ^ b) :
     (hx : p.1 ≤ 6 * 2 ^ b) (hy : p.2 ≤ 6 * 2 ^ b) :
     decodeBrouwerPoint b (encodeBrouwerPoint b p) = some p := by
   simp [decodeBrouwerPoint, encodeBrouwerPoint, pointWordWidth, two_mul,
-    Nat.fromBitsLE_toBitsLE (brouwer_numerator_lt b p.1 hx),
-    Nat.fromBitsLE_toBitsLE (brouwer_numerator_lt b p.2 hy), hx, hy]
+    lsbValue_lowBits (brouwer_numerator_lt b p.1 hx),
+    lsbValue_lowBits (brouwer_numerator_lt b p.2 hy), hx, hy]
 
 theorem decodeBrouwerPoint_properties {b : ℕ} {word : List Bool} {p : ℕ × ℕ}
     (h : decodeBrouwerPoint b word = some p) :
     word.length = pointWordWidth b ∧ p.1 ≤ 6 * 2 ^ b ∧ p.2 ≤ 6 * 2 ^ b ∧
-      Nat.fromBitsLE (word.take (pointCoordinateWidth b)) = p.1 ∧
-      Nat.fromBitsLE (word.drop (pointCoordinateWidth b)) = p.2 := by
+      lsbValue (word.take (pointCoordinateWidth b)) = p.1 ∧
+      lsbValue (word.drop (pointCoordinateWidth b)) = p.2 := by
   unfold decodeBrouwerPoint at h
   dsimp only at h
   split at h
@@ -74,8 +74,8 @@ theorem encodeBrouwerPoint_decode {b : ℕ} {word : List Bool} {p : ℕ × ℕ}
     simp only [List.length_take, hlen, pointWordWidth]; omega
   have hyl : (word.drop (pointCoordinateWidth b)).length = pointCoordinateWidth b := by
     simp only [List.length_drop, hlen, pointWordWidth]; omega
-  have hxw := Nat.toBitsLE_fromBitsLE (word.take (pointCoordinateWidth b))
-  have hyw := Nat.toBitsLE_fromBitsLE (word.drop (pointCoordinateWidth b))
+  have hxw := lowBits_lsbValue (word.take (pointCoordinateWidth b))
+  have hyw := lowBits_lsbValue (word.drop (pointCoordinateWidth b))
   rw [hxl, hx] at hxw
   rw [hyl, hy] at hyw
   simp [encodeBrouwerPoint, hxw, hyw]

@@ -12,7 +12,7 @@ coordinate order, arithmetic carries, a source path, and a disconnected cycle. -
 namespace GameTheory.Complexity.Tests.SpernerGridWords
 
 open GameTheory.Complexity.Backend GameTheory.Math.Sperner GameTheory.Math.EndOfLine
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM
 
 example : gridNodeWidth 0 = 2 ∧ encodeGridNode 0 none = [false, false] ∧
     encodeGridNode 0 (some ⟨0, 0, false⟩) = [true, false] ∧
@@ -76,13 +76,18 @@ example : gridNodeAcceptFlag [] [false, false] = [true] ∧
     gridNodeAcceptFlag [] [false, true] = [false] ∧
     gridNodeAcceptFlag [] [] = [false] := by decide
 
-example : (fun z => gridWidthWord (pairFst z)) ∈ FP :=
-  gridWidthWordFn_mem_FP pairFst_mem_FP
+example : ComputableInPolyTime
+    (fun p : List Bool × List Bool => gridWidthWord p.1) (encPair encBits encBits) encBits :=
+  gridWidthWord_polyTime (ComputableInPolyTime.fst encBits encBits)
 
-example : (fun z => gridNodeAcceptFlag (pairFst z) (pairSnd z)) ∈ FP :=
-  gridNodeAcceptFlagFn_mem_FP pairFst_mem_FP pairSnd_mem_FP
+example : ComputableInPolyTime
+    (fun p : List Bool × List Bool => gridNodeAcceptFlag p.1 p.2)
+    (encPair encBits encBits) encBits :=
+  gridNodeAcceptFlag_polyTime (ComputableInPolyTime.fst encBits encBits)
+    (ComputableInPolyTime.snd encBits encBits)
 
-example : gridSuccBits ∈ FP ∧ gridPredBits ∈ FP :=
-  ⟨gridSuccBits_mem_FP, gridPredBits_mem_FP⟩
+example : ComputableInPolyTime gridSuccBits encBits encBits ∧
+    ComputableInPolyTime gridPredBits encBits encBits :=
+  ⟨gridSuccBits_polyTime, gridPredBits_polyTime⟩
 
 end GameTheory.Complexity.Tests.SpernerGridWords

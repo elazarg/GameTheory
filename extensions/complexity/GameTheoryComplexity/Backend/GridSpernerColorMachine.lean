@@ -18,27 +18,6 @@ open GameTheory.Math.Sperner GameTheory.Math.GridWire
 @[simp] private theorem coloring_nil_value : lsbValue [] = 0 := rfl
 @[simp] private theorem coloring_one_value : lsbValue [true] = 1 := rfl
 
-/-- Retain the low bit and divide its tail to compute a three-bit residue modulo six. -/
-def coloringModSixBits (bits : List Bool) : List Bool :=
-  [bits.headD false] ++ routingModThreeBits bits.tail
-
-private theorem coloringModSixBits_value (bits : List Bool) :
-    lsbValue (coloringModSixBits bits) = lsbValue bits % 6 := by
-  cases bits with
-  | nil => rfl
-  | cons bit bits =>
-    cases bit <;>
-      simp [coloringModSixBits, routingModThreeBits_value, lsbValue] <;> omega
-
-@[fun_prop] theorem coloringModSixBits_polyTime
-    {α : Type} {enc : α ↪ List Bool} {bits : α → List Bool}
-    (hb : ComputableInPolyTime bits enc encBits) :
-    ComputableInPolyTime (fun z => coloringModSixBits (bits z)) enc encBits := by
-  have hhead : ComputableInPolyTime (fun word : List Bool => word.headD false)
-      encBits encBool := .headD false
-  exact bitsAppend (bitsCons (hhead.comp hb) (const []))
-    (routingModThreeBits_polyTime (bitsTail.comp hb))
-
 /-- Select the finite source collar or ordinary routed tile at raw binary tile indices. -/
 def coloringMixedTileBits (ruler : List Bool) (P S : List Bool → List Bool)
     (i j x y : List Bool) : List Bool :=
@@ -58,7 +37,7 @@ def coloringMixedTileBits (ruler : List Bool) (P S : List Bool → List Bool)
 def routingSpernerInteriorBits (ruler : List Bool) (P S : List Bool → List Bool)
     (x y : List Bool) : List Bool :=
   coloringMixedTileBits ruler P S (routingDivSixBits x) (routingDivSixBits y)
-    (coloringModSixBits x) (coloringModSixBits y)
+    (routingModSixBits x) (routingModSixBits y)
 
 /-- Serialized color queries use the extended coordinate blocks of the target Sperner grid. -/
 def routingSpernerColorQuery (ruler : List Bool) (P S : List Bool → List Bool)
@@ -121,10 +100,10 @@ theorem routingSpernerInteriorBits_value (ruler : List Bool) (P S : List Bool �
         (lsbValue x) (lsbValue y)) := by
   rw [routingSpernerInteriorBits, coloringMixedTileBits_value]
   · rw [routingDivSixBits_value, routingDivSixBits_value,
-      coloringModSixBits_value, coloringModSixBits_value]
+      routingModSixBits_value, routingModSixBits_value]
     rfl
-  · rw [coloringModSixBits_value]; omega
-  · rw [coloringModSixBits_value]; omega
+  · rw [routingModSixBits_value]; omega
+  · rw [routingModSixBits_value]; omega
 
 /-- Every serialized query has exact semantics on its parsed extended coordinate fields. -/
 theorem routingSpernerColorQuery_value (ruler : List Bool) (P S : List Bool → List Bool)
@@ -224,7 +203,7 @@ theorem routingSpernerColorQuery_color (ruler : List Bool) (P S : List Bool → 
     ComputableInPolyTime (fun z => routingSpernerInteriorBits (ruler z) (P (seed z)) (S (seed z)) (x z) (y z)) enc encBits := by
   exact coloringMixedTileBitsUniform_polyTime P S hruler hseed
     (routingDivSixBits_polyTime hx) (routingDivSixBits_polyTime hy)
-    (coloringModSixBits_polyTime hx) (coloringModSixBits_polyTime hy) hP hS
+    (routingModSixBits_polyTime hx) (routingModSixBits_polyTime hy) hP hS
 
 /-- Serialized color queries charge the exact unary field width and all native seeded arithmetic. -/
 @[fun_prop] theorem routingSpernerColorQueryUniform_polyTime

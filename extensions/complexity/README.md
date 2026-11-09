@@ -141,8 +141,8 @@ on stable Lean/Mathlib 4.35 until final 4.36 is published; the larger native
 probability closure needs that shared upgrade. Matching upstream-toolchain
 snapshots validate the port meanwhile. Full companion and released-base
 consumer validation remain open. Native computation, sampling, concrete
-End-of-Line PPAD classification and payoff-language SAT hardness have compiled
-evidence; downstream Nash, inverse Sperner and Brouwer ports remain in progress.
+End-of-Line, Sperner and Brouwer classification, and payoff-language NP-completeness
+have compiled evidence; the general Nash and circuit-to-game ports remain in progress.
 
 Validation covers the dependency closure of selected imports. Third-party
 diagnostics are allowed; first-party diagnostics and transitive nonstandard
@@ -226,9 +226,10 @@ search PPAD-completeness. A serialized color circuit specifies a piecewise
 affine continuous self-map of the real unit square. With grid side `n = 2^b`,
 an answer is any bounded point `(X/(6n), Y/(6n))` whose actual coordinate
 residuals are at most `1/(6n)`; answers need not be triangle barycenters.
-`Backend.BrouwerVerifier` provides independent FNP membership and an actual
-polynomial-time verifier. `Backend.BrouwerReduction` supplies the certified
-reductions to and from succinct Sperner. The map continuity, square
+`Backend.BrouwerVerifier` provides native `FNP encBits` membership and a typed
+Boolean polynomial-time verifier. `Backend.BrouwerReduction` supplies both native
+`SearchReducible` proofs to and from succinct Sperner, preserving every target
+answer. The public classifier has type `SearchComplete @PPAD encBits`. The map continuity, square
 preservation and exact rational residual semantics are base mathematics and
 require no ComplexityLib. The theorem concerns this circuit-induced map
 family and output precision, rather than arbitrary continuous-map encodings,
