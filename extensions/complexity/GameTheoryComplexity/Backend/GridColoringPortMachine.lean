@@ -11,12 +11,12 @@ allow arbitrary padding, and the routing rectangle guard prevents truncation. -/
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity _root_.Complexity.Cobham EndOfLineMachineOps
+open Turing.MultiTapeTM ComputableInPolyTime Cslib.BitString WordOperations
 open GameTheory.Math.Sperner GameTheory.Math.GridWire
 
 /-- A fixed three-bit code represents an absent or cardinal tile port. -/
 def encodeColoringPort (port : Option (Fin 4)) : List Bool :=
-  Nat.toBitsLE 3 (match port with | none => 0 | some d => d.val + 1)
+  lowBits 3 (match port with | none => 0 | some d => d.val + 1)
 
 @[simp] theorem decodeColoringPort_encode (port : Option (Fin 4)) :
     decodeColoringPort (encodeColoringPort port) = port := by
@@ -30,89 +30,78 @@ def coloringDirectionBits (x y u v : List Bool) : List Bool :=
   let yp := routingAddBits y [true]
   let up := routingAddBits u [true]
   let vp := routingAddBits v [true]
-  caseBit₀ (andBit (routingEQFlag x u) (routingEQFlag yp v)) (encodeColoringPort (some 0))
-    (caseBit₀ (andBit (routingEQFlag xp u) (routingEQFlag y v)) (encodeColoringPort (some 1))
-      (caseBit₀ (andBit (routingEQFlag x u) (routingEQFlag vp y)) (encodeColoringPort (some 2))
-        (caseBit₀ (andBit (routingEQFlag up x) (routingEQFlag y v))
+  select (andFlag (routingEQFlag x u) (routingEQFlag yp v)) (encodeColoringPort (some 0))
+    (select (andFlag (routingEQFlag xp u) (routingEQFlag y v)) (encodeColoringPort (some 1))
+      (select (andFlag (routingEQFlag x u) (routingEQFlag vp y)) (encodeColoringPort (some 2))
+        (select (andFlag (routingEQFlag up x) (routingEQFlag y v))
           (encodeColoringPort (some 3)) (encodeColoringPort none))))
 
 /-- Direction extraction agrees on all words with the natural-coordinate unit-step test. -/
 theorem coloringDirectionBits_value (x y u v : List Bool) :
     coloringDirectionBits x y u v = encodeColoringPort
-      (gridDirection (Nat.fromBitsLE x, Nat.fromBitsLE y)
-        (Nat.fromBitsLE u, Nat.fromBitsLE v)) := by
+      (gridDirection (lsbValue x, lsbValue y)
+        (lsbValue u, lsbValue v)) := by
   simp only [coloringDirectionBits, routingEQFlag_value, routingAddBits_value,
-    show Nat.fromBitsLE [true] = 1 from rfl, gridDirection]
-  split_ifs <;> simp_all [andBit, caseBit₀]
+    show lsbValue [true] = 1 from rfl, gridDirection]
+  split_ifs <;> simp_all [andFlag, select]
+  all_goals split_ifs <;> simp_all
 
-/-- Direction extraction composes four actual polynomial-time coordinate producers. -/
-theorem coloringDirectionBitsFn_mem_FP {x y u v : List Bool → List Bool}
-    (hx : x ∈ FP) (hy : y ∈ FP) (hu : u ∈ FP) (hv : v ∈ FP) :
-    (fun z => coloringDirectionBits (x z) (y z) (u z) (v z)) ∈ FP := by
-  have hx1 := routingAddBitsFn_mem_FP hx (constFn_mem_FP [true])
-  have hy1 := routingAddBitsFn_mem_FP hy (constFn_mem_FP [true])
-  have hu1 := routingAddBitsFn_mem_FP hu (constFn_mem_FP [true])
-  have hv1 := routingAddBitsFn_mem_FP hv (constFn_mem_FP [true])
-  have hand {a b : List Bool → List Bool} (ha : a ∈ FP) (hb : b ∈ FP) :
-      (fun z => andBit (a z) (b z)) ∈ FP :=
-    CobhamFP_subset_FP (Cobham.andFn (FP_subset_CobhamFP ha) (FP_subset_CobhamFP hb))
-  exact selectFn_mem_FP (hand (routingEQFlagFn_mem_FP hx hu)
-    (routingEQFlagFn_mem_FP hy1 hv)) (constFn_mem_FP (encodeColoringPort (some 0)))
-    (selectFn_mem_FP (hand (routingEQFlagFn_mem_FP hx1 hu)
-      (routingEQFlagFn_mem_FP hy hv)) (constFn_mem_FP (encodeColoringPort (some 1)))
-      (selectFn_mem_FP (hand (routingEQFlagFn_mem_FP hx hu)
-        (routingEQFlagFn_mem_FP hv1 hy)) (constFn_mem_FP (encodeColoringPort (some 2)))
-        (selectFn_mem_FP (hand (routingEQFlagFn_mem_FP hu1 hx)
-          (routingEQFlagFn_mem_FP hy hv)) (constFn_mem_FP (encodeColoringPort (some 3)))
-          (constFn_mem_FP (encodeColoringPort none)))))
+/-- Direction extraction charges four native coordinate producers and fixed selectors. -/
+@[fun_prop] theorem coloringDirectionBits_polyTime
+    {α : Type} {enc : α ↪ List Bool} {x y u v : α → List Bool}
+    (hx : ComputableInPolyTime x enc encBits) (hy : ComputableInPolyTime y enc encBits)
+    (hu : ComputableInPolyTime u enc encBits) (hv : ComputableInPolyTime v enc encBits) :
+    ComputableInPolyTime (fun z => coloringDirectionBits (x z) (y z) (u z) (v z)) enc encBits := by
+  unfold coloringDirectionBits
+  fun_prop
 
 /-- Normalize coincident incoming and outgoing steps before extracting a tile port. -/
 def coloringNormalizedPortBits (x y px py sx sy : List Bool) (incoming : Bool) : List Bool :=
-  caseBit₀ (andBit (routingEQFlag px sx) (routingEQFlag py sy)) (encodeColoringPort none)
+  select (andFlag (routingEQFlag px sx) (routingEQFlag py sy)) (encodeColoringPort none)
     (if incoming then coloringDirectionBits x y px py else coloringDirectionBits x y sx sy)
 
 /-- Two-cycle erasure is exactly a numeric equality test on the two neighboring points. -/
 theorem coloringNormalizedPortBits_value (x y px py sx sy : List Bool) (incoming : Bool) :
     coloringNormalizedPortBits x y px py sx sy incoming = encodeColoringPort
-      (gridDirection (Nat.fromBitsLE x, Nat.fromBitsLE y)
-        (if (Nat.fromBitsLE px, Nat.fromBitsLE py) = (Nat.fromBitsLE sx, Nat.fromBitsLE sy)
-          then (Nat.fromBitsLE x, Nat.fromBitsLE y)
-          else if incoming then (Nat.fromBitsLE px, Nat.fromBitsLE py)
-          else (Nat.fromBitsLE sx, Nat.fromBitsLE sy))) := by
+      (gridDirection (lsbValue x, lsbValue y)
+        (if (lsbValue px, lsbValue py) = (lsbValue sx, lsbValue sy)
+          then (lsbValue x, lsbValue y)
+          else if incoming then (lsbValue px, lsbValue py)
+          else (lsbValue sx, lsbValue sy))) := by
   simp only [coloringNormalizedPortBits, routingEQFlag_value, coloringDirectionBits_value]
-  by_cases hx : Nat.fromBitsLE px = Nat.fromBitsLE sx <;>
-    by_cases hy : Nat.fromBitsLE py = Nat.fromBitsLE sy <;>
-    cases incoming <;> simp [hx, hy, andBit, caseBit₀, gridDirection_self]
+  by_cases hx : lsbValue px = lsbValue sx <;>
+    by_cases hy : lsbValue py = lsbValue sy <;>
+    cases incoming <;> simp [hx, hy, andFlag, select, gridDirection_self]
 
-/-- Normalized port extraction composes actual polynomial-time coordinate producers. -/
-theorem coloringNormalizedPortBitsFn_mem_FP (incoming : Bool)
-    {x y px py sx sy : List Bool → List Bool}
-    (hx : x ∈ FP) (hy : y ∈ FP) (hpX : px ∈ FP) (hpY : py ∈ FP)
-    (hsX : sx ∈ FP) (hsY : sy ∈ FP) :
-    (fun z => coloringNormalizedPortBits (x z) (y z) (px z) (py z) (sx z) (sy z)
-      incoming) ∈ FP := by
-  have he : (fun z => andBit (routingEQFlag (px z) (sx z))
-      (routingEQFlag (py z) (sy z))) ∈ FP :=
-    CobhamFP_subset_FP (Cobham.andFn
-      (FP_subset_CobhamFP (routingEQFlagFn_mem_FP hpX hsX))
-      (FP_subset_CobhamFP (routingEQFlagFn_mem_FP hpY hsY)))
+/-- Normalized ports charge both raw neighboring points and the selected direction. -/
+@[fun_prop] theorem coloringNormalizedPortBits_polyTime (incoming : Bool)
+    {α : Type} {enc : α ↪ List Bool} {x y px py sx sy : α → List Bool}
+    (hx : ComputableInPolyTime x enc encBits) (hy : ComputableInPolyTime y enc encBits)
+    (hpX : ComputableInPolyTime px enc encBits) (hpY : ComputableInPolyTime py enc encBits)
+    (hsX : ComputableInPolyTime sx enc encBits) (hsY : ComputableInPolyTime sy enc encBits) :
+    ComputableInPolyTime (fun z => coloringNormalizedPortBits (x z) (y z) (px z) (py z)
+      (sx z) (sy z) incoming) enc encBits := by
+  have hguard := andFlag_polyTime.comp
+    ((routingEQFlag_polyTime hpX hsX).prod (routingEQFlag_polyTime hpY hsY))
   cases incoming
-  · exact selectFn_mem_FP he (constFn_mem_FP (encodeColoringPort none))
-      (coloringDirectionBitsFn_mem_FP hx hy hsX hsY)
-  · exact selectFn_mem_FP he (constFn_mem_FP (encodeColoringPort none))
-      (coloringDirectionBitsFn_mem_FP hx hy hpX hpY)
+  · exact select_polyTime.comp (hguard.prod ((const (encodeColoringPort none)).prod
+      (coloringDirectionBits_polyTime hx hy hsX hsY)))
+  · exact select_polyTime.comp (hguard.prod ((const (encodeColoringPort none)).prod
+      (coloringDirectionBits_polyTime hx hy hpX hpY)))
 
-private def coloringPointBits (ruler x y : List Bool) : List Bool :=
+/-- Canonical routing fields retain the low bits of both raw coordinates. -/
+def coloringPointBits (ruler x y : List Bool) : List Bool :=
   routingPadBits (routingCoordinateRuler ruler) x ++
     routingPadBits (routingCoordinateRuler ruler) y
 
 private theorem coloringPointBits_eq_encode (ruler x y : List Bool) :
     coloringPointBits ruler x y =
-      encodeRoutingPoint ruler.length (Nat.fromBitsLE x, Nat.fromBitsLE y) := by
-  simp only [coloringPointBits, routingPadBits_eq_toBitsLE,
+      encodeRoutingPoint ruler.length (lsbValue x, lsbValue y) := by
+  simp only [coloringPointBits, routingPadBits_eq_lowBits,
     routingCoordinateRuler_length, encodeRoutingPoint]
 
-private def coloringPointerBits (ruler : List Bool) (P S : List Bool → List Bool)
+/-- Follow a routed pointer after canonical fixed-width coordinate packing. -/
+def coloringPointerBits (ruler : List Bool) (P S : List Bool → List Bool)
     (incoming : Bool) (x y : List Bool) : List Bool :=
   routingPointerMachine ruler P S incoming (coloringPointBits ruler x y)
 
@@ -121,36 +110,36 @@ def coloringRoutedPortBits (ruler : List Bool) (P S : List Bool → List Bool)
     (incoming : Bool) (x y : List Bool) : List Bool :=
   let pred := coloringPointerBits ruler P S true x y
   let succ := coloringPointerBits ruler P S false x y
-  caseBit₀ (routingRectangleFlag ruler x y)
+  select (routingRectangleFlag ruler x y)
     (coloringNormalizedPortBits x y (routingPointXBits ruler pred)
       (routingPointYBits ruler pred) (routingPointXBits ruler succ)
       (routingPointYBits ruler succ) incoming) (encodeColoringPort none)
 
 private theorem coloringPointerBits_fields (ruler : List Bool) (P S : List Bool → List Bool)
     (incoming : Bool) (x y : List Bool) (ha : routingRectangleFlag ruler x y = [true]) :
-    (Nat.fromBitsLE (routingPointXBits ruler (coloringPointerBits ruler P S incoming x y)),
-      Nat.fromBitsLE (routingPointYBits ruler (coloringPointerBits ruler P S incoming x y))) =
+    (lsbValue (routingPointXBits ruler (coloringPointerBits ruler P S incoming x y)),
+      lsbValue (routingPointYBits ruler (coloringPointerBits ruler P S incoming x y))) =
       (if incoming then gridRoutedPredecessor (2 ^ ruler.length)
         (routingOriginalPointer ruler P) (routingOriginalPointer ruler S)
       else gridRoutedSuccessor (2 ^ ruler.length)
         (routingOriginalPointer ruler P) (routingOriginalPointer ruler S))
-          (Nat.fromBitsLE x, Nat.fromBitsLE y) := by
+          (lsbValue x, lsbValue y) := by
   have hr := (routingRectangleFlag_accept ruler x y).mp ha
   have hc := routingCoordinateCapacity ruler.length
-  have hb : Nat.fromBitsLE x < 2 ^ routingCoordinateWidth ruler.length ∧
-      Nat.fromBitsLE y < 2 ^ routingCoordinateWidth ruler.length := by
+  have hb : lsbValue x < 2 ^ routingCoordinateWidth ruler.length ∧
+      lsbValue y < 2 ^ routingCoordinateWidth ruler.length := by
     constructor <;> omega
   have hout := routingPointer_bounded (b := ruler.length)
-    (p := (Nat.fromBitsLE x, Nat.fromBitsLE y)) hb
+    (p := (lsbValue x, lsbValue y)) hb
     (P := routingOriginalPointer ruler P) (S := routingOriginalPointer ruler S)
   rw [coloringPointerBits, routingPointerMachine_eq_words, coloringPointBits_eq_encode,
     wordRoutingPointer_encode hb incoming]
   rw [routingPointXBits_encode, routingPointYBits_encode]
   cases incoming
   · simp only [Bool.false_eq_true, ↓reduceIte]
-    rw [Nat.fromBitsLE_toBitsLE hout.2.2.1, Nat.fromBitsLE_toBitsLE hout.2.2.2]
+    rw [lsbValue_lowBits hout.2.2.1, lsbValue_lowBits hout.2.2.2]
   · simp only [↓reduceIte]
-    rw [Nat.fromBitsLE_toBitsLE hout.1, Nat.fromBitsLE_toBitsLE hout.2.1]
+    rw [lsbValue_lowBits hout.1, lsbValue_lowBits hout.2.1]
 
 /-- All-word port extraction agrees with the globally routed, two-cycle-normalized graph. -/
 theorem coloringRoutedPortBits_value (ruler : List Bool) (P S : List Bool → List Bool)
@@ -161,10 +150,10 @@ theorem coloringRoutedPortBits_value (ruler : List Bool) (P S : List Bool → Li
           (routingOriginalPointer ruler P) (routingOriginalPointer ruler S))
         (gridRoutedSuccessor (2 ^ ruler.length)
           (routingOriginalPointer ruler P) (routingOriginalPointer ruler S))
-        (Nat.fromBitsLE x, Nat.fromBitsLE y)) := by
+        (lsbValue x, lsbValue y)) := by
   by_cases ha : routingRectangleFlag ruler x y = [true]
   · rw [coloringRoutedPortBits, ha]
-    simp only [caseBit₀, Bool.cond_true]
+    simp only [select_cons, ↓reduceIte]
     rw [coloringNormalizedPortBits_value, coloringPointerBits_fields ruler P S true x y ha,
       coloringPointerBits_fields ruler P S false x y ha]
     cases incoming <;>
@@ -175,46 +164,58 @@ theorem coloringRoutedPortBits_value (ruler : List Bool) (P S : List Bool → Li
       (routingOriginalPointer ruler P) (routingOriginalPointer ruler S) ha
     have hf : routingRectangleFlag ruler x y = [false] := by
       rw [routingRectangleFlag_value] at ha ⊢
-      cases h : decide (Nat.fromBitsLE x < 3 * 2 ^ ruler.length * 2 ^ ruler.length ∧
-        Nat.fromBitsLE y < 6 * 2 ^ ruler.length) <;> simp_all
+      cases h : decide (lsbValue x < 3 * 2 ^ ruler.length * 2 ^ ruler.length ∧
+        lsbValue y < 6 * 2 ^ ruler.length) <;> simp_all
     rw [coloringRoutedPortBits, hf]
-    simp only [caseBit₀, Bool.cond_false]
+    simp only [select_cons, Bool.false_eq_true, ↓reduceIte]
     cases incoming <;>
       simp [gridIncomingPort, gridOutgoingPort,
         GameTheory.Math.EndOfLine.eraseTwoCyclePredecessor,
         GameTheory.Math.EndOfLine.eraseTwoCycleSuccessor, hb.1, hb.2]
 
-private theorem coloringPointerBitsUniformFn_mem_FP (incoming : Bool)
-    (P S : List Bool → List Bool → List Bool) {ruler seed x y : List Bool → List Bool}
-    (hr : ruler ∈ FP) (hs : seed ∈ FP) (hx : x ∈ FP) (hy : y ∈ FP)
-    (hP : (fun z => P (pairFst z) (pairSnd z)) ∈ FP)
-    (hS : (fun z => S (pairFst z) (pairSnd z)) ∈ FP) :
-    (fun z => coloringPointerBits (ruler z) (P (seed z)) (S (seed z))
-      incoming (x z) (y z)) ∈ FP := by
-  have hw : (fun z => coloringPointBits (ruler z) (x z) (y z)) ∈ FP :=
-    appendFn_mem_FP
-      (routingPadBitsFn_mem_FP (routingCoordinateRulerFn_mem_FP hr) hx)
-      (routingPadBitsFn_mem_FP (routingCoordinateRulerFn_mem_FP hr) hy)
-  exact routingPointerMachineUniformFn_mem_FP incoming P S hr hs hw hP hS
+@[fun_prop] theorem coloringPointBits_polyTime
+    {α : Type} {enc : α ↪ List Bool} {ruler x y : α → List Bool}
+    (hr : ComputableInPolyTime ruler enc encBits)
+    (hx : ComputableInPolyTime x enc encBits) (hy : ComputableInPolyTime y enc encBits) :
+    ComputableInPolyTime (fun z => coloringPointBits (ruler z) (x z) (y z)) enc encBits :=
+  bitsAppend (routingPadBits_polyTime (routingCoordinateRuler_polyTime hr) hx)
+    (routingPadBits_polyTime (routingCoordinateRuler_polyTime hr) hy)
 
-/-- Routed port extraction has an actual uniform certificate with varying pointer-query seeds. -/
-theorem coloringRoutedPortBitsUniformFn_mem_FP (incoming : Bool)
-    (P S : List Bool → List Bool → List Bool) {ruler seed x y : List Bool → List Bool}
-    (hr : ruler ∈ FP) (hs : seed ∈ FP) (hx : x ∈ FP) (hy : y ∈ FP)
-    (hP : (fun z => P (pairFst z) (pairSnd z)) ∈ FP)
-    (hS : (fun z => S (pairFst z) (pairSnd z)) ∈ FP) :
-    (fun z => coloringRoutedPortBits (ruler z) (P (seed z)) (S (seed z))
-      incoming (x z) (y z)) ∈ FP := by
-  let pred : List Bool → List Bool := fun z =>
-    coloringPointerBits (ruler z) (P (seed z)) (S (seed z)) true (x z) (y z)
-  let succ : List Bool → List Bool := fun z =>
-    coloringPointerBits (ruler z) (P (seed z)) (S (seed z)) false (x z) (y z)
-  have hp : pred ∈ FP := coloringPointerBitsUniformFn_mem_FP true P S hr hs hx hy hP hS
-  have hsucc : succ ∈ FP := coloringPointerBitsUniformFn_mem_FP false P S hr hs hx hy hP hS
-  have hn := coloringNormalizedPortBitsFn_mem_FP incoming hx hy
-    (routingPointXBitsFn_mem_FP hr hp) (routingPointYBitsFn_mem_FP hr hp)
-    (routingPointXBitsFn_mem_FP hr hsucc) (routingPointYBitsFn_mem_FP hr hsucc)
-  exact selectFn_mem_FP (routingRectangleFlagFn_mem_FP hr hx hy) hn
-    (constFn_mem_FP (encodeColoringPort none))
+/-- Routed coordinate queries charge native pointer execution and complete field packing. -/
+@[fun_prop] theorem coloringPointerBitsUniform_polyTime (incoming : Bool)
+    (P S : List Bool → List Bool → List Bool)
+    {α : Type} {enc : α ↪ List Bool} {ruler seed x y : α → List Bool}
+    (hruler : ComputableInPolyTime ruler enc encBits)
+    (hseed : ComputableInPolyTime seed enc encBits)
+    (hx : ComputableInPolyTime x enc encBits)
+    (hy : ComputableInPolyTime y enc encBits)
+    (hP : ComputableInPolyTime (fun p : List Bool × List Bool => P p.1 p.2)
+      (encPair encBits encBits) encBits)
+    (hS : ComputableInPolyTime (fun p : List Bool × List Bool => S p.1 p.2)
+      (encPair encBits encBits) encBits) :
+    ComputableInPolyTime (fun z => coloringPointerBits (ruler z) (P (seed z)) (S (seed z)) incoming (x z) (y z)) enc encBits := by
+  exact routingPointerMachineUniform_polyTime incoming P S hruler hseed
+    (coloringPointBits_polyTime hruler hx hy) hP hS
+
+/-- Routed port extraction charges seeded pointer queries and exact rectangle guards. -/
+@[fun_prop] theorem coloringRoutedPortBitsUniform_polyTime (incoming : Bool)
+    (P S : List Bool → List Bool → List Bool)
+    {α : Type} {enc : α ↪ List Bool} {ruler seed x y : α → List Bool}
+    (hruler : ComputableInPolyTime ruler enc encBits)
+    (hseed : ComputableInPolyTime seed enc encBits)
+    (hx : ComputableInPolyTime x enc encBits)
+    (hy : ComputableInPolyTime y enc encBits)
+    (hP : ComputableInPolyTime (fun p : List Bool × List Bool => P p.1 p.2)
+      (encPair encBits encBits) encBits)
+    (hS : ComputableInPolyTime (fun p : List Bool × List Bool => S p.1 p.2)
+      (encPair encBits encBits) encBits) :
+    ComputableInPolyTime (fun z => coloringRoutedPortBits (ruler z) (P (seed z)) (S (seed z)) incoming (x z) (y z)) enc encBits := by
+  have hp := coloringPointerBitsUniform_polyTime true P S hruler hseed hx hy hP hS
+  have hsucc := coloringPointerBitsUniform_polyTime false P S hruler hseed hx hy hP hS
+  have hn := coloringNormalizedPortBits_polyTime incoming hx hy
+    (routingPointXBits_polyTime hruler hp) (routingPointYBits_polyTime hruler hp)
+    (routingPointXBits_polyTime hruler hsucc) (routingPointYBits_polyTime hruler hsucc)
+  exact select_polyTime.comp ((routingRectangleFlag_polyTime hruler hx hy).prod
+    (hn.prod (const (encodeColoringPort none))))
 
 end GameTheory.Complexity.Backend

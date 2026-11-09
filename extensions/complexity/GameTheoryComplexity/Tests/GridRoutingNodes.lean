@@ -17,11 +17,11 @@ namespace GameTheory.Complexity.Tests.GridRoutingNodes
 
 open GameTheory.Complexity.Backend GameTheory.Math.GridWire
 open GameTheory.Math.EndOfLine
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM ComputableInPolyTime Cslib.BitString
 
 private def ruler : List Bool := [false, false, false]
 
-private def field (value : ℕ) : List Bool := Nat.toBitsLE 8 value
+private def field (value : ℕ) : List Bool := lowBits 8 value
 
 private def originalS (i : ℕ) : ℕ :=
   if i = 0 then 4 else if i = 1 then 3 else if i = 2 then 0 else i
@@ -30,14 +30,14 @@ private def originalP (i : ℕ) : ℕ :=
   if i = 0 then 2 else if i = 3 then 1 else if i = 4 then 0 else i
 
 private def Squery (bits : List Bool) : List Bool :=
-  Nat.toBitsLE 3 (originalS (Nat.fromBitsLE bits))
+  lowBits 3 (originalS (lsbValue bits))
 
 private def Pquery (bits : List Bool) : List Bool :=
-  Nat.toBitsLE 3 (originalP (Nat.fromBitsLE bits))
+  lowBits 3 (originalP (lsbValue bits))
 
 example (owner x y : List Bool) :
     routingDecodeNodeBits (routingInteriorNodeBits owner x y) =
-      .inr (Nat.fromBitsLE owner, (Nat.fromBitsLE x, Nat.fromBitsLE y)) :=
+      .inr (lsbValue owner, (lsbValue x, lsbValue y)) :=
   routingDecodeNodeBits_interior owner x y
 
 example : routingDecodeNodeBits (routingVertexNodeBits [true, false, false, true]) =
@@ -51,7 +51,7 @@ example : routingDecodeNodeBits [] = .inl 0 ∧
     routingDecodeNodeBits [false] = .inl 0 ∧
     routingDecodeNodeBits [true] = .inr (0, (0, 0)) ∧
     routingNodeXBits (routingVertexNodeBits (field 9)) = [] ∧
-    Nat.fromBitsLE (routingNodeYBits (routingVertexNodeBits (field 9))) = 54 := by decide
+    lsbValue (routingNodeYBits (routingVertexNodeBits (field 9))) = 54 := by decide
 
 example : routingLiveVertexFlag ruler (field 7) = [true] ∧
     routingLiveVertexFlag ruler (field 9) = [false] ∧
@@ -66,66 +66,66 @@ example : routingLiveInteriorFlag ruler Pquery Squery [true] [] (field 6) = [fal
     routingLiveInteriorFlag ruler Pquery Squery [true, true] [true] (field 18) = [false] := by
   decide
 
-example : (fun z => routingInteriorNodeBits (pairFst z) (pairSnd z) (pairFst z)) ∈ FP :=
-  routingInteriorNodeBitsFn_mem_FP pairFst_mem_FP pairSnd_mem_FP pairFst_mem_FP
+example : ComputableInPolyTime (fun z : List Bool × List Bool => routingInteriorNodeBits (Prod.fst z) (Prod.snd z) (Prod.fst z)) (encPair encBits encBits) encBits :=
+  routingInteriorNodeBits_polyTime (fst encBits encBits) (snd encBits encBits) (fst encBits encBits)
 
-example : (fun z => routingVertexNodeBits (pairSnd z)) ∈ FP :=
-  routingVertexNodeBitsFn_mem_FP pairSnd_mem_FP
+example : ComputableInPolyTime (fun z : List Bool × List Bool => routingVertexNodeBits (Prod.snd z)) (encPair encBits encBits) encBits :=
+  routingVertexNodeBits_polyTime (snd encBits encBits)
 
-example : (fun z => routingNodeOwnerBits (pairSnd z)) ∈ FP :=
-  routingNodeOwnerBitsFn_mem_FP pairSnd_mem_FP
+example : ComputableInPolyTime (fun z : List Bool × List Bool => routingNodeOwnerBits (Prod.snd z)) (encPair encBits encBits) encBits :=
+  routingNodeOwnerBits_polyTime (snd encBits encBits)
 
-example : (fun z => routingLiveVertexFlag (pairFst z) (pairSnd z)) ∈ FP :=
-  routingLiveVertexFlagFn_mem_FP pairFst_mem_FP pairSnd_mem_FP
+example : ComputableInPolyTime (fun z : List Bool × List Bool => routingLiveVertexFlag (Prod.fst z) (Prod.snd z)) (encPair encBits encBits) encBits :=
+  routingLiveVertexFlag_polyTime (fst encBits encBits) (snd encBits encBits)
 
-example : (fun z => routingLiveInteriorFlag (pairFst z)
-    (fun vertex => pairSnd z ++ vertex) (fun vertex => vertex ++ pairSnd z)
-    (pairFst z) (pairSnd z) (pairFst z)) ∈ FP :=
-  routingLiveInteriorFlagUniformFn_mem_FP (fun seed vertex => seed ++ vertex)
-    (fun seed vertex => vertex ++ seed) pairFst_mem_FP pairSnd_mem_FP pairFst_mem_FP
-    pairSnd_mem_FP pairFst_mem_FP (appendFn_mem_FP pairFst_mem_FP pairSnd_mem_FP)
-    (appendFn_mem_FP pairSnd_mem_FP pairFst_mem_FP)
+example : ComputableInPolyTime (fun z : List Bool × List Bool => routingLiveInteriorFlag (Prod.fst z)
+    (fun vertex => Prod.snd z ++ vertex) (fun vertex => vertex ++ Prod.snd z)
+    (Prod.fst z) (Prod.snd z) (Prod.fst z)) (encPair encBits encBits) encBits :=
+  routingLiveInteriorFlagUniform_polyTime (fun seed vertex => seed ++ vertex)
+    (fun seed vertex => vertex ++ seed) (fst encBits encBits) (snd encBits encBits) (fst encBits encBits)
+    (snd encBits encBits) (fst encBits encBits) (bitsAppend (fst encBits encBits) (snd encBits encBits))
+    (bitsAppend (snd encBits encBits) (fst encBits encBits))
 
 private def imagePoint (P S : List Bool → List Bool) (owner : ℕ) (p : ℕ × ℕ) : ℕ × ℕ :=
-  (Nat.fromBitsLE (routingImageXBits ruler P S (field owner) (field p.1) (field p.2)),
-    Nat.fromBitsLE (routingImageYBits ruler P S (field owner) (field p.1) (field p.2)))
+  (lsbValue (routingImageXBits ruler P S (field owner) (field p.1) (field p.2)),
+    lsbValue (routingImageYBits ruler P S (field owner) (field p.1) (field p.2)))
 
 example : imagePoint Pquery Squery 1 (12, 6) = (11, 7) ∧
     imagePoint Pquery Squery 0 (12, 6) = (13, 5) ∧
-    Nat.fromBitsLE (routingSwitchOwnerBits ruler Pquery Squery (field 1) (field 12) (field 6)) =
+    lsbValue (routingSwitchOwnerBits ruler Pquery Squery (field 1) (field 12) (field 6)) =
       0 ∧
-    Nat.fromBitsLE (routingSwitchOwnerBits ruler Pquery Squery [] (field 12) (field 6)) =
+    lsbValue (routingSwitchOwnerBits ruler Pquery Squery [] (field 12) (field 6)) =
       1 := by decide
 
 example : imagePoint Pquery Squery 2 (12, 3) = (13, 4) ∧
     imagePoint Pquery Squery 0 (12, 3) = (11, 2) ∧
-    Nat.fromBitsLE (routingSwitchOwnerBits ruler Pquery Squery (field 2) (field 12) (field 3)) =
+    lsbValue (routingSwitchOwnerBits ruler Pquery Squery (field 2) (field 12) (field 3)) =
       0 ∧
-    Nat.fromBitsLE (routingSwitchOwnerBits ruler Pquery Squery [] (field 12) (field 3)) =
+    lsbValue (routingSwitchOwnerBits ruler Pquery Squery [] (field 12) (field 3)) =
       2 := by decide
 
 private def downSquery (bits : List Bool) : List Bool :=
-  let i := Nat.fromBitsLE bits
-  Nat.toBitsLE 3 (if i = 3 then 0 else if i = 4 then 2 else i)
+  let i := lsbValue bits
+  lowBits 3 (if i = 3 then 0 else if i = 4 then 2 else i)
 
 private def downPquery (bits : List Bool) : List Bool :=
-  let i := Nat.fromBitsLE bits
-  Nat.toBitsLE 3 (if i = 0 then 3 else if i = 2 then 4 else i)
+  let i := lsbValue bits
+  lowBits 3 (if i = 0 then 3 else if i = 2 then 4 else i)
 
 example : imagePoint downPquery downSquery 4 (72, 15) = (73, 14) ∧
     imagePoint downPquery downSquery 3 (72, 15) = (71, 16) ∧
-    Nat.fromBitsLE (routingSwitchOwnerBits ruler downPquery downSquery
+    lsbValue (routingSwitchOwnerBits ruler downPquery downSquery
       (field 4) (field 72) (field 15)) = 3 ∧
-    Nat.fromBitsLE (routingSwitchOwnerBits ruler downPquery downSquery
+    lsbValue (routingSwitchOwnerBits ruler downPquery downSquery
       (field 3) (field 72) (field 15)) = 4 := by decide
 
 private def phantomSquery (bits : List Bool) : List Bool :=
-  let i := Nat.fromBitsLE bits
-  Nat.toBitsLE 3 (if i = 1 then 4 else if i = 3 then 0 else i)
+  let i := lsbValue bits
+  lowBits 3 (if i = 1 then 4 else if i = 3 then 0 else i)
 
 private def phantomPquery (bits : List Bool) : List Bool :=
-  let i := Nat.fromBitsLE bits
-  Nat.toBitsLE 3 (if i = 0 then 3 else if i = 4 then 1 else i)
+  let i := lsbValue bits
+  lowBits 3 (if i = 0 then 3 else if i = 4 then 1 else i)
 
 -- The rightward strand stops at column 36 before reaching the downward strand's column 72.
 example : routingCrossingFlag ruler phantomPquery phantomSquery (field 72) (field 6) =
@@ -140,21 +140,21 @@ example : routingImageXBits ruler Pquery Squery (field 1) [true] (field 6) = [tr
     routingSwitchOwnerBits ruler Pquery Squery (field 9) (field 12) (field 6) = field 9 := by
   decide
 
-example : (fun z => routingImageXBits (pairFst z)
-    (fun vertex => pairSnd z ++ vertex) (fun vertex => vertex ++ pairSnd z)
-    (pairFst z) (pairSnd z) (pairFst z)) ∈ FP :=
-  routingImageXBitsUniformFn_mem_FP (fun seed vertex => seed ++ vertex)
-    (fun seed vertex => vertex ++ seed) pairFst_mem_FP pairSnd_mem_FP pairFst_mem_FP
-    pairSnd_mem_FP pairFst_mem_FP (appendFn_mem_FP pairFst_mem_FP pairSnd_mem_FP)
-    (appendFn_mem_FP pairSnd_mem_FP pairFst_mem_FP)
+example : ComputableInPolyTime (fun z : List Bool × List Bool => routingImageXBits (Prod.fst z)
+    (fun vertex => Prod.snd z ++ vertex) (fun vertex => vertex ++ Prod.snd z)
+    (Prod.fst z) (Prod.snd z) (Prod.fst z)) (encPair encBits encBits) encBits :=
+  routingImageXBitsUniform_polyTime (fun seed vertex => seed ++ vertex)
+    (fun seed vertex => vertex ++ seed) (fst encBits encBits) (snd encBits encBits) (fst encBits encBits)
+    (snd encBits encBits) (fst encBits encBits) (bitsAppend (fst encBits encBits) (snd encBits encBits))
+    (bitsAppend (snd encBits encBits) (fst encBits encBits))
 
-example : (fun z => routingSwitchOwnerBits (pairFst z)
-    (fun vertex => pairSnd z ++ vertex) (fun vertex => vertex ++ pairSnd z)
-    (pairFst z) (pairSnd z) (pairFst z)) ∈ FP :=
-  routingSwitchOwnerBitsUniformFn_mem_FP (fun seed vertex => seed ++ vertex)
-    (fun seed vertex => vertex ++ seed) pairFst_mem_FP pairSnd_mem_FP pairFst_mem_FP
-    pairSnd_mem_FP pairFst_mem_FP (appendFn_mem_FP pairFst_mem_FP pairSnd_mem_FP)
-    (appendFn_mem_FP pairSnd_mem_FP pairFst_mem_FP)
+example : ComputableInPolyTime (fun z : List Bool × List Bool => routingSwitchOwnerBits (Prod.fst z)
+    (fun vertex => Prod.snd z ++ vertex) (fun vertex => vertex ++ Prod.snd z)
+    (Prod.fst z) (Prod.snd z) (Prod.fst z)) (encPair encBits encBits) encBits :=
+  routingSwitchOwnerBitsUniform_polyTime (fun seed vertex => seed ++ vertex)
+    (fun seed vertex => vertex ++ seed) (fst encBits encBits) (snd encBits encBits) (fst encBits encBits)
+    (snd encBits encBits) (fst encBits encBits) (bitsAppend (fst encBits encBits) (snd encBits encBits))
+    (bitsAppend (snd encBits encBits) (fst encBits encBits))
 
 example : routingLiveNodeFlag ruler Pquery Squery [] = [true] ∧
     routingLiveNodeFlag ruler Pquery Squery [true] = [false] ∧
@@ -180,33 +180,33 @@ example (node : List Bool) : routingDecodeNodeBits
   rw [routingNodeSwitchBits_decode, routingNodeSwitchBits_decode]
   exact GameTheory.Math.GridWire.routedSwitch_involutive _ _ _ _
 
-example : Nat.fromBitsLE (routingNodeImageXBits ruler Pquery Squery
+example : lsbValue (routingNodeImageXBits ruler Pquery Squery
       (routingInteriorNodeBits (field 1) (field 12) (field 6))) = 11 ∧
-    Nat.fromBitsLE (routingNodeImageYBits ruler Pquery Squery
+    lsbValue (routingNodeImageYBits ruler Pquery Squery
       (routingInteriorNodeBits (field 1) (field 12) (field 6))) = 7 ∧
-    Nat.fromBitsLE (routingNodeImageYBits ruler Pquery Squery
+    lsbValue (routingNodeImageYBits ruler Pquery Squery
       (routingVertexNodeBits (field 9))) = 54 := by decide
 
-example : (fun z => routingLiveNodeFlag (pairFst z)
-    (fun vertex => pairSnd z ++ vertex) (fun vertex => vertex ++ pairSnd z) (pairSnd z)) ∈ FP :=
-  routingLiveNodeFlagUniformFn_mem_FP (fun seed vertex => seed ++ vertex)
-    (fun seed vertex => vertex ++ seed) pairFst_mem_FP pairSnd_mem_FP pairSnd_mem_FP
-    (appendFn_mem_FP pairFst_mem_FP pairSnd_mem_FP)
-    (appendFn_mem_FP pairSnd_mem_FP pairFst_mem_FP)
+example : ComputableInPolyTime (fun z : List Bool × List Bool => routingLiveNodeFlag (Prod.fst z)
+    (fun vertex => Prod.snd z ++ vertex) (fun vertex => vertex ++ Prod.snd z) (Prod.snd z)) (encPair encBits encBits) encBits :=
+  routingLiveNodeFlagUniform_polyTime (fun seed vertex => seed ++ vertex)
+    (fun seed vertex => vertex ++ seed) (fst encBits encBits) (snd encBits encBits) (snd encBits encBits)
+    (bitsAppend (fst encBits encBits) (snd encBits encBits))
+    (bitsAppend (snd encBits encBits) (fst encBits encBits))
 
-example : (fun z => routingNodeSwitchBits (pairFst z)
-    (fun vertex => pairSnd z ++ vertex) (fun vertex => vertex ++ pairSnd z) (pairSnd z)) ∈ FP :=
-  routingNodeSwitchBitsUniformFn_mem_FP (fun seed vertex => seed ++ vertex)
-    (fun seed vertex => vertex ++ seed) pairFst_mem_FP pairSnd_mem_FP pairSnd_mem_FP
-    (appendFn_mem_FP pairFst_mem_FP pairSnd_mem_FP)
-    (appendFn_mem_FP pairSnd_mem_FP pairFst_mem_FP)
+example : ComputableInPolyTime (fun z : List Bool × List Bool => routingNodeSwitchBits (Prod.fst z)
+    (fun vertex => Prod.snd z ++ vertex) (fun vertex => vertex ++ Prod.snd z) (Prod.snd z)) (encPair encBits encBits) encBits :=
+  routingNodeSwitchBitsUniform_polyTime (fun seed vertex => seed ++ vertex)
+    (fun seed vertex => vertex ++ seed) (fst encBits encBits) (snd encBits encBits) (snd encBits encBits)
+    (bitsAppend (fst encBits encBits) (snd encBits encBits))
+    (bitsAppend (snd encBits encBits) (fst encBits encBits))
 
-example : routingDecodeResultBits (pair [true] []) = some (.inl 0) ∧
-    routingDecodeResultBits (pair [false] []) = none ∧
+example : routingDecodeResultBits (CircuitWords.encodePair [true] []) = some (.inl 0) ∧
+    routingDecodeResultBits (CircuitWords.encodePair [false] []) = none ∧
     routingDecodeResultBits [] = none := by decide
 
-example : routingChooseNodeBits ruler Pquery Squery [] [] [] = pair [false] [] ∧
-    routingChooseNodeBits ruler Pquery Squery [] [] [[]] = pair [true] [] := by decide
+example : routingChooseNodeBits ruler Pquery Squery [] [] [] = CircuitWords.encodePair [false] [] ∧
+    routingChooseNodeBits ruler Pquery Squery [] [] [[]] = CircuitWords.encodePair [true] [] := by decide
 
 example : (routingCandidateNodes ruler Pquery (field 13) (field 3)).length = 6 := rfl
 
@@ -234,13 +234,13 @@ example : routingDecodeResultBits
   simp only [routingDecoderBits_decode]
   decide
 
-example : (fun z => routingDecoderBits (pairFst z)
-    (fun vertex => pairSnd z ++ vertex) (fun vertex => vertex ++ pairSnd z)
-    (pairFst z) (pairSnd z)) ∈ FP :=
-  routingDecoderBitsUniformFn_mem_FP (fun seed vertex => seed ++ vertex)
-    (fun seed vertex => vertex ++ seed) pairFst_mem_FP pairSnd_mem_FP pairFst_mem_FP
-    pairSnd_mem_FP (appendFn_mem_FP pairFst_mem_FP pairSnd_mem_FP)
-    (appendFn_mem_FP pairSnd_mem_FP pairFst_mem_FP)
+example : ComputableInPolyTime (fun z : List Bool × List Bool => routingDecoderBits (Prod.fst z)
+    (fun vertex => Prod.snd z ++ vertex) (fun vertex => vertex ++ Prod.snd z)
+    (Prod.fst z) (Prod.snd z)) (encPair encBits encBits) encBits :=
+  routingDecoderBitsUniform_polyTime (fun seed vertex => seed ++ vertex)
+    (fun seed vertex => vertex ++ seed) (fst encBits encBits) (snd encBits encBits) (fst encBits encBits)
+    (snd encBits encBits) (bitsAppend (fst encBits encBits) (snd encBits encBits))
+    (bitsAppend (snd encBits encBits) (fst encBits encBits))
 
 example : routingDecodeNodeBits (routingNodeStepBits ruler Pquery Squery
       (routingInteriorNodeBits [true] [true] (field 6)) true) = .inl 1 ∧
@@ -281,13 +281,13 @@ example : routingDecodeNodeBits (routingNodeStepBits ruler downPquery downSquery
   simp only [routingNodeStepBits_decode, routingDecodeNodeBits_interior]
   decide
 
-example (incoming : Bool) : (fun z => routingNodeStepBits (pairFst z)
-    (fun vertex => pairSnd z ++ vertex) (fun vertex => vertex ++ pairSnd z)
-    (pairSnd z) incoming) ∈ FP :=
-  routingNodeStepBitsUniformFn_mem_FP incoming (fun seed vertex => seed ++ vertex)
-    (fun seed vertex => vertex ++ seed) pairFst_mem_FP pairSnd_mem_FP pairSnd_mem_FP
-    (appendFn_mem_FP pairFst_mem_FP pairSnd_mem_FP)
-    (appendFn_mem_FP pairSnd_mem_FP pairFst_mem_FP)
+example (incoming : Bool) : ComputableInPolyTime (fun z : List Bool × List Bool => routingNodeStepBits (Prod.fst z)
+    (fun vertex => Prod.snd z ++ vertex) (fun vertex => vertex ++ Prod.snd z)
+    (Prod.snd z) incoming) (encPair encBits encBits) encBits :=
+  routingNodeStepBitsUniform_polyTime incoming (fun seed vertex => seed ++ vertex)
+    (fun seed vertex => vertex ++ seed) (fst encBits encBits) (snd encBits encBits) (snd encBits encBits)
+    (bitsAppend (fst encBits encBits) (snd encBits encBits))
+    (bitsAppend (snd encBits encBits) (fst encBits encBits))
 
 private theorem pointer_step (p q : ℕ × ℕ) (incoming : Bool)
     (hp : p.1 < 2 ^ routingCoordinateWidth 3 ∧ p.2 < 2 ^ routingCoordinateWidth 3)
@@ -346,12 +346,12 @@ example (incoming : Bool) : routingPointerMachine ruler Pquery Squery incoming [
   · cases incoming <;> exact pointer_step _ _ _ (by decide) (by decide)
 
 private def originPquery (bits : List Bool) : List Bool :=
-  let i := Nat.fromBitsLE bits
-  Nat.toBitsLE 3 (if i = 1 then 0 else i)
+  let i := lsbValue bits
+  lowBits 3 (if i = 1 then 0 else i)
 
 private def originSquery (bits : List Bool) : List Bool :=
-  let i := Nat.fromBitsLE bits
-  Nat.toBitsLE 3 (if i = 0 then 1 else i)
+  let i := lsbValue bits
+  lowBits 3 (if i = 0 then 1 else i)
 
 example : routingPointerMachine ruler originPquery originSquery true (encodeRoutingPoint 3 (0, 0)) =
       encodeRoutingPoint 3 (0, 0) ∧
@@ -378,12 +378,12 @@ example : IsEndpoint (routingPointerMachine ruler Pquery Squery true)
   simpa only [IsEndpoint, HasPredecessor, HasSuccessor, routingPointerMachine_eq_words,
     show ruler.length = 3 from rfl] using hw
 
-example (incoming : Bool) : (fun z => routingPointerMachine (pairFst z)
-    (fun vertex => pairSnd z ++ vertex) (fun vertex => vertex ++ pairSnd z)
-    incoming (pairSnd z)) ∈ FP :=
-  routingPointerMachineUniformFn_mem_FP incoming (fun seed vertex => seed ++ vertex)
-    (fun seed vertex => vertex ++ seed) pairFst_mem_FP pairSnd_mem_FP pairSnd_mem_FP
-    (appendFn_mem_FP pairFst_mem_FP pairSnd_mem_FP)
-    (appendFn_mem_FP pairSnd_mem_FP pairFst_mem_FP)
+example (incoming : Bool) : ComputableInPolyTime (fun z : List Bool × List Bool => routingPointerMachine (Prod.fst z)
+    (fun vertex => Prod.snd z ++ vertex) (fun vertex => vertex ++ Prod.snd z)
+    incoming (Prod.snd z)) (encPair encBits encBits) encBits :=
+  routingPointerMachineUniform_polyTime incoming (fun seed vertex => seed ++ vertex)
+    (fun seed vertex => vertex ++ seed) (fst encBits encBits) (snd encBits encBits) (snd encBits encBits)
+    (bitsAppend (fst encBits encBits) (snd encBits encBits))
+    (bitsAppend (snd encBits encBits) (fst encBits encBits))
 
 end GameTheory.Complexity.Tests.GridRoutingNodes
