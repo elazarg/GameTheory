@@ -61,9 +61,9 @@ theorem satTableReduction_length (input : List Bool) :
 
 /-- Encoded SAT membership is canonical payoff-constrained Nash existence in the gadget. -/
 theorem sat_mem_iff_gadget_hasNash (input : List Bool) :
-    input ∈ _root_.Complexity.SAT.language ↔
+    input ∈ satWordLanguage ↔
       (game (satIncidence input)).HasNashWithPayoffAtLeast (fun _ => 1) := by
-  rw [sat_language_iff_satisfies, satisfiable_iff_hasNash_threshold]
+  rw [satWordLanguage_iff_satisfies, satisfiable_iff_hasNash_threshold]
 
 /-- The indexed integer table is the gadget payoff renamed by its action enumeration. -/
 theorem satTablePayoff_eq_renamed (input : List Bool) :
@@ -79,7 +79,7 @@ theorem satTablePayoff_eq_renamed (input : List Bool) :
 
 /-- SAT reduces semantically to the actual language of decoded explicit payoff tables. -/
 theorem sat_mem_iff_reduction_mem (input : List Bool) :
-    input ∈ _root_.Complexity.SAT.language ↔
+    input ∈ satWordLanguage ↔
       satTableReduction input ∈ unitPayoffLanguage := by
   rw [sat_mem_iff_gadget_hasNash input]
   change (game (satIncidence input)).HasNashWithPayoffAtLeast (fun _ => 1) ↔

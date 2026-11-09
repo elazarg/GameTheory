@@ -105,16 +105,31 @@ tallies, each padded to `q + 2` bits. Its exact length is
 `q + 1 + 2q²(q + 2)`. Empty formulas are accepted, padded clauses are tautological,
 and malformed SAT encodings produce unsatisfiable gadgets.
 
-`SATTableMachine` implements the literal-incidence scanner with fixed-arity
-unary registers and bounded recursion. `SATSyntaxMachine` reuses the upstream
-syntax validator. `SATTablePayoff` computes the payoff cases and writes every
-cell through the bounded row-major emitter in `SATTableEmission`. Its Cobham
-certificate supplies an actual fixed deterministic polynomial-time machine;
+`SATTableMachine` implements the literal-incidence scan with typed native
+word loops. `SATSyntaxMachine` certifies a five-Boolean-state validator for the
+public byte format. `SATTablePayoff` computes each payoff case and writes every
+cell through the bounded row-major emitter in `SATTableEmission`. Native
+`ComputableInPolyTime` certificates charge the complete materialized output;
 the cubic output bound is a separate fact. `SATTablePayoffCorrectness` identifies
-its complete output with the semantic serializer, and `SATReductionSemantic`
-proves membership equivalence using exact decoding and bijective action renaming.
-`sat_reduces_unitPayoffLanguage` transfers the certified SAT reduction;
-`unitPayoffLanguage_NPHard` applies upstream Cook–Levin NP-hardness.
+the complete output with the semantic serializer on every raw source word, and
+`SATReductionSemantic` proves membership equivalence against canonical Nash
+semantics using exact decoding and bijective action renaming.
+
+Native SAT uses binary variable labels. `satWordOfCNF` first applies native CNF
+compaction, whose certificate produces unary labels, then serializes the
+concrete SAT word. This avoids expanding an arbitrary binary label into an
+exponentially long unary word. Native `CNF.satisfiable_compact` proves exact
+satisfiability preservation. `sat_reduces_unitPayoffLanguage` composes native
+`PolyTimeReducible` certificates through the concrete SAT-word language, and
+`unitPayoffLanguage_NPHard` transfers native Cook–Levin hardness. A decider for
+the payoff language yields `P inputEncoding = NP inputEncoding` for every
+native instance encoding.
+
+The matching-toolchain focused SAT hardness build passes 6,654 jobs, and its
+transitive audit accepts 887 authored declarations with standard axioms only.
+The full companion migration and stable-release consumer gates remain open;
+NP membership and later search classifications still await their native
+verifier and reduction ports.
 
 Import this backend leaf explicitly for hardness. The random-sample facade and
 umbrella keep their smaller dependency closure. Changing the machine library
