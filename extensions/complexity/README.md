@@ -206,13 +206,20 @@ axioms, rejecting placeholders and all axioms except `propext`,
 Import `GameTheoryComplexity.Backend.SpernerGridWords` for binary encoding of
 the local Sperner graph, source promises and every-endpoint decoding. Import
 `Backend.SpernerGridCodecMachine` and `Backend.SpernerBinarySteps` for actual
-FP certificates for codec fields, exact acceptance and fixed-width arithmetic.
+native `ComputableInPolyTime` certificates for codec fields, exact acceptance
+and fixed-width arithmetic.
 Import `Backend.SpernerPointerMachine` for the composed pointer, its actual
-uniform FP certificate, source promises and endpoint decoding. Import
+uniform native certificate, source promises and endpoint decoding. Import
 `GameTheoryComplexity.Sperner` for succinct Sperner PPAD-completeness, TFNP
 totality and the independently verified trichromatic-triangle relation.
 `Backend.SpernerReduction` and `Backend.EndOfLineSpernerReduction` supply both
-actual FP circuit-instance maps and FPn every-answer decoders.
+native polynomial-time circuit-instance maps and every-answer decoders.
+
+`Backend.SpernerCoordinateColor` supplies two native generators for checked raw
+coordinate-color circuits. `Backend.BimatrixCoordinateColor` uses their bounded
+output wires in the relocated game program. `Backend.BimatrixProgramEmission`
+certifies source/output/action queries jointly and preserves the original suffix
+rulers, including their bits.
 
 Import `GameTheoryComplexity.Brouwer` for continuous approximate fixed-point
 search PPAD-completeness. A serialized color circuit specifies a piecewise

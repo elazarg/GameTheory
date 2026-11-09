@@ -62,12 +62,6 @@ import all GameTheoryComplexity.Backend.RawEndOfLineReduction
 import all GameTheoryComplexity.PPAD
 import all GameTheoryComplexity.Backend.CircuitCodeShift
 import all GameTheoryComplexity.Backend.CircuitCodeShiftCorrectness
-import all GameTheoryComplexity.Backend.CircuitPrefixRestriction
-import all GameTheoryComplexity.Backend.CircuitPrefixEmitter
-import all GameTheoryComplexity.Backend.CircuitCodeRestriction
-import all GameTheoryComplexity.Backend.CircuitCodeValidation
-import all GameTheoryComplexity.Backend.CircuitPrefixCompiler
-import all GameTheoryComplexity.Backend.UniformCircuitSpecialization
 import all GameTheoryComplexity.Backend.CircuitVectorEmission
 import all GameTheoryComplexity.Backend.EndOfLineScalarQueries
 import all GameTheoryComplexity.Backend.NormalizedEndOfLineReduction
