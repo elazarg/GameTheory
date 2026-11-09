@@ -235,6 +235,12 @@ require no ComplexityLib. The theorem concerns this circuit-induced map
 family and output precision, rather than arbitrary continuous-map encodings,
 distance to an exact fixed point or FIXP.
 
+The native circuit-to-game foundations are `Backend.BrouwerNashProgram`,
+`Backend.BrouwerNashRewardMachine`, `Backend.BrouwerNashHeaders` and
+`Backend.BrouwerNashCoefficientQuery`. They preserve checked native gate tuples,
+exact source/code/header bytes, reward bounds and affine coefficient semantics.
+The remaining coefficient/kind queries and aggregate reduction are still being ported.
+
 The native general verifier and totality leaves are
 `Backend.GeneralBimatrixFNP` and `Backend.GeneralBimatrixTotality`. They prove
 `FNP encBits` and `TFNP encBits` for the canonical signed rectangular relation
