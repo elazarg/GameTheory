@@ -11,7 +11,7 @@ public import GameTheoryComplexity.Backend.BinarySignedRowSelection
 Inputs are the instance, raw basis membership, and entering-variable position ruler.
 Dimension and storage capacity are computed from the serialized instance itself. -/
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 
 /-- The complementary-system dimension, derived from the input. -/
 def generalBimatrixDictionaryDimension (v : Fin 3 → List Bool) := generalBimatrixDimensionWord (v 0)
@@ -32,11 +32,14 @@ def generalBimatrixDictionaryCoefficients (v : Fin 3 → List Bool) :=
   binaryDictionaryCoefficients ![generalBimatrixDictionaryDimension v, generalBimatrixDictionaryWidth v,
     generalBimatrixDictionaryMatrix v]
 
-private def dictionaryColumnTerm (v : Fin 4 → List Bool) :=
+private abbrev dictionaryColumnTerm (v : Fin 4 → List Bool) :=
   generalBimatrixColumnWord ![v 0, binaryHalfRuler (v 3), binaryLengthParity (v 3), v 1]
 /-- The entering system column, normalized to the working width. -/
 def generalBimatrixDictionaryColumn (v : Fin 3 → List Bool) :=
-  binarySignedTable dictionaryColumnTerm (generalBimatrixDictionaryDimension v)
+  binarySignedTable
+    (fun args : Fin 4 → List Bool => generalBimatrixColumnWord
+      ![args 0, binaryHalfRuler (args 3), binaryLengthParity (args 3), args 1])
+    (generalBimatrixDictionaryDimension v)
     (generalBimatrixDictionaryWidth v) v
 /-- Signed entering-direction numerators. -/
 def generalBimatrixDictionaryDirection (v : Fin 3 → List Bool) :=
@@ -48,91 +51,11 @@ def generalBimatrixDictionarySelectedRow (v : Fin 3 → List Bool) :=
     generalBimatrixDictionaryWidth v, generalBimatrixDictionaryCoefficients v,
     generalBimatrixDictionaryDirection v]
 
-theorem generalBimatrixDictionaryDimension_cobham : Cobham generalBimatrixDictionaryDimension :=
-  (Cobham.comp generalBimatrixDimensionWord_cobham fun _ => .proj 0).of_eq fun _ => rfl
-
-theorem generalBimatrixDictionaryInputWidth_cobham : Cobham generalBimatrixDictionaryInputWidth :=
-  Cobham.appendFn ((Cobham.comp generalBitsRuler_cobham fun _ => .proj 0).of_eq fun _ => rfl)
-    (Cobham.const [true, true])
-
-theorem generalBimatrixDictionaryWidth_cobham : Cobham generalBimatrixDictionaryWidth :=
-  Cobham.comp₂ binaryBirdWorkWidth_cobham generalBimatrixDictionaryDimension_cobham
-    generalBimatrixDictionaryInputWidth_cobham
-
-theorem generalBimatrixDictionaryMatrix_cobham : Cobham generalBimatrixDictionaryMatrix :=
-  Cobham.comp₃ generalBimatrixBasisMatrixWord_cobham generalBimatrixDictionaryWidth_cobham (.proj 1) (.proj 0)
-
-theorem generalBimatrixDictionaryDeterminant_cobham : Cobham generalBimatrixDictionaryDeterminant :=
-  Cobham.comp₃ binaryBirdDeterminant_cobham generalBimatrixDictionaryDimension_cobham
-    generalBimatrixDictionaryWidth_cobham generalBimatrixDictionaryMatrix_cobham
-
-theorem generalBimatrixDictionaryCoefficients_cobham : Cobham generalBimatrixDictionaryCoefficients :=
-  Cobham.comp₃ binaryDictionaryCoefficients_cobham generalBimatrixDictionaryDimension_cobham
-    generalBimatrixDictionaryWidth_cobham generalBimatrixDictionaryMatrix_cobham
-
-private theorem dictionaryColumnTerm_cobham : Cobham dictionaryColumnTerm := by
-  apply Cobham.comp generalBimatrixColumnWord_cobham
-  intro i
-  fin_cases i
-  · exact .proj 0
-  · exact (Cobham.comp binaryHalfRuler_cobham fun _ => .proj 3).of_eq fun _ => rfl
-  · exact (Cobham.comp binaryLengthParity_cobham fun _ => .proj 3).of_eq fun _ => rfl
-  · exact .proj 1
-
-theorem generalBimatrixDictionaryColumn_cobham : Cobham generalBimatrixDictionaryColumn := by
-  have hi : ∀ i : Fin 5, Cobham fun v : Fin 3 → List Bool =>
-      (Fin.cons (generalBimatrixDictionaryDimension v) (Fin.cons (generalBimatrixDictionaryWidth v) v) : Fin 5 → List Bool) i := by
-    intro i
-    fin_cases i
-    · exact generalBimatrixDictionaryDimension_cobham
-    · exact generalBimatrixDictionaryWidth_cobham
-    · exact .proj 0
-    · exact .proj 1
-    · exact .proj 2
-  exact (Cobham.comp (binarySignedTable_cobham dictionaryColumnTerm_cobham) hi).of_eq fun _ => rfl
-
-theorem generalBimatrixDictionaryDirection_cobham : Cobham generalBimatrixDictionaryDirection := by
-  apply Cobham.comp binaryDictionaryDirection_cobham
-  intro i
-  fin_cases i
-  · exact generalBimatrixDictionaryDimension_cobham
-  · exact generalBimatrixDictionaryWidth_cobham
-  · exact generalBimatrixDictionaryMatrix_cobham
-  · exact generalBimatrixDictionaryColumn_cobham
-
-theorem generalBimatrixDictionarySelectedRow_cobham : Cobham generalBimatrixDictionarySelectedRow := by
-  apply Cobham.comp binarySignedRowSelect_cobham
-  intro i
-  fin_cases i
-  · exact generalBimatrixDictionaryDimension_cobham
-  · exact Cobham.appendFn (Cobham.const [true]) generalBimatrixDictionaryDimension_cobham
-  · exact generalBimatrixDictionaryWidth_cobham
-  · exact generalBimatrixDictionaryCoefficients_cobham
-  · exact generalBimatrixDictionaryDirection_cobham
-
-theorem generalBimatrixDictionaryDimension_mem_FPn : FPn generalBimatrixDictionaryDimension :=
-  cobham_iff_FPn.mp generalBimatrixDictionaryDimension_cobham
-theorem generalBimatrixDictionaryInputWidth_mem_FPn : FPn generalBimatrixDictionaryInputWidth :=
-  cobham_iff_FPn.mp generalBimatrixDictionaryInputWidth_cobham
-theorem generalBimatrixDictionaryWidth_mem_FPn : FPn generalBimatrixDictionaryWidth :=
-  cobham_iff_FPn.mp generalBimatrixDictionaryWidth_cobham
-theorem generalBimatrixDictionaryMatrix_mem_FPn : FPn generalBimatrixDictionaryMatrix :=
-  cobham_iff_FPn.mp generalBimatrixDictionaryMatrix_cobham
-theorem generalBimatrixDictionaryDeterminant_mem_FPn : FPn generalBimatrixDictionaryDeterminant :=
-  cobham_iff_FPn.mp generalBimatrixDictionaryDeterminant_cobham
-theorem generalBimatrixDictionaryCoefficients_mem_FPn : FPn generalBimatrixDictionaryCoefficients :=
-  cobham_iff_FPn.mp generalBimatrixDictionaryCoefficients_cobham
-theorem generalBimatrixDictionaryColumn_mem_FPn : FPn generalBimatrixDictionaryColumn :=
-  cobham_iff_FPn.mp generalBimatrixDictionaryColumn_cobham
-theorem generalBimatrixDictionaryDirection_mem_FPn : FPn generalBimatrixDictionaryDirection :=
-  cobham_iff_FPn.mp generalBimatrixDictionaryDirection_cobham
-theorem generalBimatrixDictionarySelectedRow_mem_FPn : FPn generalBimatrixDictionarySelectedRow :=
-  cobham_iff_FPn.mp generalBimatrixDictionarySelectedRow_cobham
 end GameTheory.Complexity.Backend
 
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
 
 theorem generalBimatrixDictionaryWidth_length (v : Fin 3 → List Bool) :
@@ -186,7 +109,7 @@ end GameTheory.Complexity.Backend
 
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
 
 theorem generalBimatrixDictionaryCandidateMatrix_hypotheses (input : List Bool)
@@ -243,9 +166,8 @@ theorem generalBimatrixDictionaryCandidateDeterminant_value (input : List Bool)
   exact hd.trans he
 end GameTheory.Complexity.Backend
 
-
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
 
 theorem generalBimatrixDictionaryCandidateCoefficients_value (input : List Bool)
@@ -300,7 +222,7 @@ theorem generalBimatrixDictionaryCoefficients_value (input : List Bool)
 end GameTheory.Complexity.Backend
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
 
 private theorem dictionaryColumn_bound (v : Fin 4 → List Bool) :
@@ -348,7 +270,7 @@ theorem generalBimatrixDictionaryColumn_value (v : Fin 3 → List Bool) (i : ℕ
 end GameTheory.Complexity.Backend
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
 
 theorem generalBimatrixDictionaryColumn_integer (input membership entering : List Bool)
@@ -377,7 +299,7 @@ theorem generalBimatrixDictionaryColumn_integer (input membership entering : Lis
 end GameTheory.Complexity.Backend
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
 
 theorem generalBimatrixDictionaryDirection_value (input : List Bool)
@@ -434,7 +356,7 @@ end GameTheory.Complexity.Backend
 
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
 
 theorem generalBimatrixDictionarySelectedRow_integer_spec (input : List Bool)
@@ -484,7 +406,7 @@ end GameTheory.Complexity.Backend
 
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
 open GameTheory.Math
 
@@ -526,4 +448,166 @@ theorem generalBimatrixDictionarySelectedRow_spec (input : List Bool)
     exact (IntegerDictionaryComputation.direction_decode M c hdet i).symm
   rw [hcoeff, hdir]
   exact (isLeavingRow_div_iff _ _ _ hd l).mpr hh
+
+@[fun_prop] theorem generalBimatrixDictionaryDimension_polyTime :
+    ComputableInPolyTime generalBimatrixDictionaryDimension (encPi encBits) encBits := by
+  have hinput : ComputableInPolyTime (fun v : Fin 3 → List Bool => ![v 0])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    exact .pi_apply encBits (0 : Fin 3)
+  have h := generalBimatrixDimensionWord_polyTime.comp hinput
+  apply ComputableInPolyTime.of_tidy
+  apply h.tidy.of_enc_eq (g := generalBimatrixDictionaryDimension)
+  intro v
+  rfl
+
+@[fun_prop] theorem generalBimatrixDictionaryInputWidth_polyTime :
+    ComputableInPolyTime generalBimatrixDictionaryInputWidth (encPi encBits) encBits := by
+  have hinput : ComputableInPolyTime (fun v : Fin 3 → List Bool => ![v 0])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    exact .pi_apply encBits (0 : Fin 3)
+  have h := ComputableInPolyTime.bitsAppend (generalBitsRuler_polyTime.comp hinput)
+    (ComputableInPolyTime.const [true, true])
+  apply ComputableInPolyTime.of_tidy
+  apply h.tidy.of_enc_eq (g := generalBimatrixDictionaryInputWidth)
+  intro v
+  rfl
+
+@[fun_prop] theorem generalBimatrixDictionaryWidth_polyTime :
+    ComputableInPolyTime generalBimatrixDictionaryWidth (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool => ![generalBimatrixDictionaryDimension v, generalBimatrixDictionaryInputWidth v])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact generalBimatrixDictionaryDimension_polyTime
+    · exact generalBimatrixDictionaryInputWidth_polyTime
+  exact binaryBirdWorkWidth_polyTime.comp hargs
+
+@[fun_prop] theorem generalBimatrixDictionaryMatrix_polyTime :
+    ComputableInPolyTime generalBimatrixDictionaryMatrix (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool => ![generalBimatrixDictionaryWidth v, v 1, v 0])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact generalBimatrixDictionaryWidth_polyTime
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 0
+  exact generalBimatrixBasisMatrixWord_polyTime.comp hargs
+
+@[fun_prop] theorem generalBimatrixDictionaryDeterminant_polyTime :
+    ComputableInPolyTime generalBimatrixDictionaryDeterminant (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool => ![generalBimatrixDictionaryDimension v, generalBimatrixDictionaryWidth v, generalBimatrixDictionaryMatrix v])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact generalBimatrixDictionaryDimension_polyTime
+    · exact generalBimatrixDictionaryWidth_polyTime
+    · exact generalBimatrixDictionaryMatrix_polyTime
+  exact binaryBirdDeterminant_polyTime.comp hargs
+
+@[fun_prop] theorem generalBimatrixDictionaryCoefficients_polyTime :
+    ComputableInPolyTime generalBimatrixDictionaryCoefficients (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool => ![generalBimatrixDictionaryDimension v, generalBimatrixDictionaryWidth v, generalBimatrixDictionaryMatrix v])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact generalBimatrixDictionaryDimension_polyTime
+    · exact generalBimatrixDictionaryWidth_polyTime
+    · exact generalBimatrixDictionaryMatrix_polyTime
+  exact binaryDictionaryCoefficients_polyTime.comp hargs
+
+private theorem dictionaryColumnTerm_polyTime :
+    ComputableInPolyTime dictionaryColumnTerm (encPi encBits) encBits := by
+  have hentering : ComputableInPolyTime (fun v : Fin 4 → List Bool => v 3)
+      (encPi encBits) encBits := .pi_apply encBits 3
+  have hhalf := binaryHalfRuler_polyTime.comp hentering
+  have hparity := binaryLengthParity_polyTime.comp hentering
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 4 → List Bool => ![v 0, binaryHalfRuler (v 3), binaryLengthParity (v 3), v 1])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 0
+    · exact hhalf
+    · exact hparity
+    · exact .pi_apply encBits 1
+  exact generalBimatrixColumnWord_polyTime.comp hargs
+
+@[fun_prop] theorem generalBimatrixDictionaryColumn_polyTime :
+    ComputableInPolyTime generalBimatrixDictionaryColumn (encPi encBits) encBits := by
+  have htable := binarySignedTable_polyTime (p := 3)
+    (term := dictionaryColumnTerm) dictionaryColumnTerm_polyTime
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool =>
+        ![generalBimatrixDictionaryDimension v, generalBimatrixDictionaryWidth v, v 0, v 1, v 2])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact generalBimatrixDictionaryDimension_polyTime
+    · exact generalBimatrixDictionaryWidth_polyTime
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 2
+  have htable' := htable.comp hargs
+  apply ComputableInPolyTime.of_tidy
+  apply htable'.tidy.of_enc_eq
+  intro v
+  change generalBimatrixDictionaryColumn v = binarySignedTable dictionaryColumnTerm
+    (generalBimatrixDictionaryDimension v) (generalBimatrixDictionaryWidth v)
+    (Fin.tail (Fin.tail (![generalBimatrixDictionaryDimension v,
+      generalBimatrixDictionaryWidth v, v 0, v 1, v 2] : Fin 5 → List Bool)))
+  unfold generalBimatrixDictionaryColumn
+  apply congrArg (binarySignedTable dictionaryColumnTerm
+    (generalBimatrixDictionaryDimension v) (generalBimatrixDictionaryWidth v))
+  funext i
+  fin_cases i <;> rfl
+
+@[fun_prop] theorem generalBimatrixDictionaryDirection_polyTime :
+    ComputableInPolyTime generalBimatrixDictionaryDirection (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool => ![generalBimatrixDictionaryDimension v, generalBimatrixDictionaryWidth v, generalBimatrixDictionaryMatrix v, generalBimatrixDictionaryColumn v])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact generalBimatrixDictionaryDimension_polyTime
+    · exact generalBimatrixDictionaryWidth_polyTime
+    · exact generalBimatrixDictionaryMatrix_polyTime
+    · exact generalBimatrixDictionaryColumn_polyTime
+  exact binaryDictionaryDirection_polyTime.comp hargs
+
+@[fun_prop] theorem generalBimatrixDictionarySelectedRow_polyTime :
+    ComputableInPolyTime generalBimatrixDictionarySelectedRow (encPi encBits) encBits := by
+  have hcount := ComputableInPolyTime.bitsCons (ComputableInPolyTime.const true)
+    generalBimatrixDictionaryDimension_polyTime
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 3 → List Bool => ![generalBimatrixDictionaryDimension v,
+        true :: generalBimatrixDictionaryDimension v, generalBimatrixDictionaryWidth v,
+        generalBimatrixDictionaryCoefficients v, generalBimatrixDictionaryDirection v])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact generalBimatrixDictionaryDimension_polyTime
+    · exact hcount
+    · exact generalBimatrixDictionaryWidth_polyTime
+    · exact generalBimatrixDictionaryCoefficients_polyTime
+    · exact generalBimatrixDictionaryDirection_polyTime
+  exact binarySignedRowSelect_polyTime.comp hargs
+
 end GameTheory.Complexity.Backend

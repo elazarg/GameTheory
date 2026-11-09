@@ -10,44 +10,19 @@ Row and label indices are length rulers. Payoff columns use the two off-diagonal
 blocks; slack columns use the identity. No rational arithmetic is executed.
 -/
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 
 /-- One integer column entry, with arguments row, label, kind flag and instance. -/
 def generalBimatrixColumnWord (v : Fin 4 → List Bool) : List Bool :=
   let rows := generalRowRuler (v 3)
-  caseBit₀ (v 2)
-    (caseBit₀ (lenLeFlag (v 0) rows)
-      (caseBit₀ (lenLeFlag (v 1) rows) [false]
-        (generalShiftedPayoffWord true ![v 1, (v 0).drop rows.length, v 3]))
-      (caseBit₀ (lenLeFlag (v 1) rows)
-        (generalShiftedPayoffWord false ![v 0, (v 1).drop rows.length, v 3]) [false]))
-    (caseBit₀ (lenEqFlag (v 0) (v 1)) [false, true] [false])
-
-private theorem case_head (x a b : List Bool) :
-    caseBit₀ x a b = if x.headD false then a else b := by
-  cases x with
-  | nil => rfl
-  | cons c x => cases c <;> rfl
-
-private theorem lenLe_value (a b : List Bool) : lenLeFlag a b = [decide (b.length ≤ a.length)] := by
-  rcases lenLeFlag_flag a b with h | h
-  · have hv := (lenLeFlag_eq_true_iff a b).mp h
-    simp [h, hv]
-  · have hv : ¬b.length ≤ a.length := by
-      intro hn
-      have ht := (lenLeFlag_eq_true_iff a b).mpr hn
-      simp [h] at ht
-    simp [h, hv]
-
-private theorem lenEq_value (a b : List Bool) : lenEqFlag a b = [decide (a.length = b.length)] := by
-  rcases lenEqFlag_flag a b with h | h
-  · have hv := (lenEqFlag_eq_true_iff a b).mp h
-    simp [h, hv]
-  · have hv : a.length ≠ b.length := by
-      intro hn
-      have ht := (lenEqFlag_eq_true_iff a b).mpr hn
-      simp [h] at ht
-    simp [h, hv]
+  if (v 2).headD false then
+    if rows.length ≤ (v 0).length then
+      if rows.length ≤ (v 1).length then [false]
+      else generalShiftedPayoffWord true ![v 1, (v 0).drop rows.length, v 3]
+    else if rows.length ≤ (v 1).length then
+      generalShiftedPayoffWord false ![v 0, (v 1).drop rows.length, v 3]
+    else [false]
+  else if (v 0).length = (v 1).length then [false, true] else [false]
 
 /-- The word represents the two off-diagonal payoff blocks or an identity column. -/
 theorem generalBimatrixColumnWord_value (v : Fin 4 → List Bool) :
@@ -62,36 +37,13 @@ theorem generalBimatrixColumnWord_value (v : Fin 4 → List Bool) :
             ((2 : ℤ) ^ generalCoefficientBits (v 3) + 1)
         else 0
       else if (v 0).length = (v 1).length then 1 else 0 := by
-  rw [generalBimatrixColumnWord, case_head, lenLe_value, lenLe_value, lenEq_value]
-  simp only [case_head, List.headD_cons, decide_eq_true_eq, generalRowCount]
+  unfold generalBimatrixColumnWord
+  simp only [generalRowCount]
   split
   · split <;> split <;>
       simp_all only [↓reduceIte, generalShiftedPayoffWord_value, Matrix.cons_val_zero,
         Matrix.cons_val_one, Matrix.cons_val_two, List.length_drop] <;> rfl
   · split <;> rfl
-
-theorem generalBimatrixColumnWord_cobham : Cobham generalBimatrixColumnWord := by
-  have hm : Cobham fun v : Fin 4 → List Bool => generalRowRuler (v 3) :=
-    (Cobham.comp generalRowRuler_cobham fun _ => Cobham.proj 3).of_eq fun _ => rfl
-  have hx : Cobham fun v : Fin 4 → List Bool => (v 0).drop (generalRowRuler (v 3)).length :=
-    Cobham.dropFn hm (.proj 0)
-  have hy : Cobham fun v : Fin 4 → List Bool => (v 1).drop (generalRowRuler (v 3)).length :=
-    Cobham.dropFn hm (.proj 1)
-  have hb : Cobham fun v : Fin 4 → List Bool =>
-      generalShiftedPayoffWord true ![v 1, (v 0).drop (generalRowRuler (v 3)).length, v 3] :=
-    Cobham.comp₃ (generalShiftedPayoffWord_cobham true) (.proj 1) hx (.proj 3)
-  have ha : Cobham fun v : Fin 4 → List Bool =>
-      generalShiftedPayoffWord false ![v 0, (v 1).drop (generalRowRuler (v 3)).length, v 3] :=
-    Cobham.comp₃ (generalShiftedPayoffWord_cobham false) (.proj 0) hy (.proj 3)
-  exact (Cobham.iteFn (.proj 2)
-    (Cobham.iteFn (lenLeFlag_mem (.proj 0) hm)
-      (Cobham.iteFn (lenLeFlag_mem (.proj 1) hm) (Cobham.const [false]) hb)
-      (Cobham.iteFn (lenLeFlag_mem (.proj 1) hm) ha (Cobham.const [false])))
-    (Cobham.iteFn (lenEqFlag_mem (.proj 0) (.proj 1))
-      (Cobham.const [false, true]) (Cobham.const [false]))).of_eq fun _ => rfl
-
-theorem generalBimatrixColumnWord_mem_FPn : FPn generalBimatrixColumnWord :=
-  cobham_iff_FPn.mp generalBimatrixColumnWord_cobham
 
 /-- Canonical finite indices recover precisely the existing integer system columns. -/
 theorem generalBimatrixColumnWord_integer (input : List Bool)
@@ -123,5 +75,69 @@ theorem generalBimatrixColumnWord_integer (input : List Bool)
         GameTheory.Finite.bimatrixEnteringColumn, GameTheory.Finite.bimatrixComplementaryMatrix,
         finSumFinEquiv_apply_left, finSumFinEquiv_apply_right,
         Nat.not_le.mpr (Fin.isLt _), numShift]
+
+@[fun_prop] theorem generalBimatrixColumnWord_polyTime :
+    ComputableInPolyTime generalBimatrixColumnWord (encPi encBits) encBits := by
+  have hinput : ComputableInPolyTime (fun v : Fin 4 → List Bool => ![v 3])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    exact .pi_apply encBits (3 : Fin 4)
+  have hrows0 := generalRowRuler_polyTime.comp hinput
+  have hrows : ComputableInPolyTime (fun v : Fin 4 → List Bool => generalRowRuler (v 3))
+      (encPi encBits) encBits := by
+    apply ComputableInPolyTime.of_tidy
+    apply hrows0.tidy.of_enc_eq
+    intro v
+    rfl
+  have hrow : ComputableInPolyTime (fun v : Fin 4 → List Bool => v 0)
+      (encPi encBits) encBits := .pi_apply encBits 0
+  have hcolumn : ComputableInPolyTime (fun v : Fin 4 → List Bool => v 1)
+      (encPi encBits) encBits := .pi_apply encBits 1
+  have hkind : ComputableInPolyTime (fun v : Fin 4 → List Bool => (v 2).headD false)
+      (encPi encBits) encBool := (ComputableInPolyTime.headD false).comp (.pi_apply encBits 2)
+  have hrowsLength := ComputableInPolyTime.length_bits_comp hrows
+  have hrowLength := ComputableInPolyTime.length_bits_comp hrow
+  have hcolumnLength := ComputableInPolyTime.length_bits_comp hcolumn
+  have hrowOutside := ComputableTidilyInPolyTime.unary_le' hrowsLength.tidy hrowLength.tidy
+  have hcolumnOutside := ComputableTidilyInPolyTime.unary_le' hrowsLength.tidy hcolumnLength.tidy
+  have hequal := ComputableTidilyInPolyTime.decide_eq' hrowLength.tidy hcolumnLength.tidy
+  have hrowDrop := hrow.bitsDropWithInput hrowsLength
+  have hcolumnDrop := hcolumn.bitsDropWithInput hrowsLength
+  have hbargs : ComputableInPolyTime
+      (fun v : Fin 4 → List Bool => ![v 1, (v 0).drop (generalRowRuler (v 3)).length, v 3])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hcolumn
+    · exact hrowDrop
+    · exact .pi_apply encBits 3
+  have haargs : ComputableInPolyTime
+      (fun v : Fin 4 → List Bool => ![v 0, (v 1).drop (generalRowRuler (v 3)).length, v 3])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hrow
+    · exact hcolumnDrop
+    · exact .pi_apply encBits 3
+  have hb := (generalShiftedPayoffWord_polyTime true).comp hbargs
+  have ha := (generalShiftedPayoffWord_polyTime false).comp haargs
+  have hpayoff := ComputableInPolyTime.of_tidy
+    (ComputableTidilyInPolyTime.ite_decide hrowOutside
+      (.ite_decide hcolumnOutside (.const [false]) hb.tidy)
+      (.ite_decide hcolumnOutside ha.tidy (.const [false])))
+  have hidentity : ComputableInPolyTime
+      (fun v : Fin 4 → List Bool =>
+        if (v 0).length = (v 1).length then [false, true] else [false])
+      (encPi encBits) encBits := ComputableInPolyTime.of_tidy
+    (ComputableTidilyInPolyTime.ite_decide hequal (.const [false, true]) (.const [false]))
+  have h := hkind.ite hpayoff hidentity
+  apply ComputableInPolyTime.of_tidy
+  apply h.tidy.of_enc_eq (g := generalBimatrixColumnWord)
+  intro v
+  rfl
 
 end GameTheory.Complexity.Backend

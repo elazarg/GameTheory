@@ -9,7 +9,7 @@ import all Mathlib.LinearAlgebra.Matrix.Determinant.Bird.Defs
 /-! Serialized dictionary controls with signed input and unchecked candidate bases. -/
 namespace GameTheory.Complexity.Tests.GeneralBimatrixDictionary
 open Backend GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM
 
 private def input : List Bool := encodeGeneralInstance 1 1 2 (fun _ _ => -1) (fun _ _ => 2)
 private def selected : Finset (BimatrixVariable (generalRowCount input) (generalColCount input)) :=
@@ -38,12 +38,14 @@ example (i : Fin 2) (k : Fin 3) :
   have he := generalBimatrixDictionaryCandidateCoefficients_value input selected selected_card [] i k
   have hc := congrArg (fun M : Matrix (Fin 2) (Fin 2) ℤ => GameTheory.Math.IntegerDictionaryComputation.coefficients M (fun _ => 1) i k) matrix_eq
   refine (he.trans hc).trans ?_
+  rw [GameTheory.Math.IntegerDictionaryComputation.coefficients_eq]
   fin_cases i <;> fin_cases k <;> decide +kernel
 
 -- Empty membership assembles a zero matrix and remains a total computation.
 example : binarySignedRowValue (generalBimatrixDictionaryWidth ![input, [], []])
     (generalBimatrixDictionaryMatrix ![input, [], []]) 0 = 0 := by decide +kernel
 
-example : FPn generalBimatrixDictionarySelectedRow := generalBimatrixDictionarySelectedRow_mem_FPn
+example : ComputableInPolyTime generalBimatrixDictionarySelectedRow (encPi encBits) encBits :=
+  generalBimatrixDictionarySelectedRow_polyTime
 
 end GameTheory.Complexity.Tests.GeneralBimatrixDictionary
