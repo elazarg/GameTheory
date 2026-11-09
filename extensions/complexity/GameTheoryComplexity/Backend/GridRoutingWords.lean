@@ -192,7 +192,7 @@ theorem wordRouting_endpoint_label {ruler word : List Bool} {P S : ℕ → ℕ}
     (he : IsEndpoint (wordRoutingPointer ruler.length P S true)
       (wordRoutingPointer ruler.length P S false) word) :
     ∃ i, i < 2 ^ ruler.length ∧ IsEndpoint P S i ∧
-      routingEndpointLabelBits ruler word = Nat.toBitsLE ruler.length i := by
+      routingEndpointLabelBits ruler word = Cslib.BitString.lowBits ruler.length i := by
   obtain ⟨i, hi, hd, hend⟩ := wordRouting_endpoint_decodes hP hS he
   exact ⟨i, hi, hend, routingEndpointLabelBits_eq_bits hd hi⟩
 

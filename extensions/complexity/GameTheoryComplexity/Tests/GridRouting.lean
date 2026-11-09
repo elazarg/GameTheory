@@ -11,7 +11,7 @@ padded arithmetic, endpoint label extraction, and actual switched wire execution
 namespace GameTheory.Complexity.Tests.GridRouting
 
 open GameTheory.Complexity.Backend GameTheory.Math.GridWire GameTheory.Math.EndOfLine
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM ComputableInPolyTime Cslib.BitString
 
 example : routingCoordinateWidth 0 = 3 ∧ routingPointWidth 0 = 6 ∧
     encodeRoutingPoint 0 (0, 0) = List.replicate 6 false ∧
@@ -33,10 +33,10 @@ example : routingPointXBits [] (encodeRoutingPoint 0 (5, 2)) = [true, false, tru
 example : routingDivThreeBits [] = [] ∧ routingDivSixBits [] = [] ∧
     routingModThreeBits [] = [false, false] := by decide
 
-example : routingDivThreeBits (Nat.toBitsLE 8 17) = Nat.toBitsLE 8 5 ∧
-    routingDivSixBits (Nat.toBitsLE 8 17) = Nat.toBitsLE 7 2 ∧
-    routingModThreeBits (Nat.toBitsLE 8 17) = [false, true] ∧
-    routingDivSixBits (Nat.toBitsLE 8 36) = Nat.toBitsLE 7 6 := by decide
+example : routingDivThreeBits (lowBits 8 17) = lowBits 8 5 ∧
+    routingDivSixBits (lowBits 8 17) = lowBits 7 2 ∧
+    routingModThreeBits (lowBits 8 17) = [false, true] ∧
+    routingDivSixBits (lowBits 8 36) = lowBits 7 6 := by decide
 
 example : routingEndpointLabelBits [] (encodeRoutingPoint 0 (vertexPoint 0)) = [] ∧
     routingEndpointLabelBits [false, false, false]
@@ -44,14 +44,15 @@ example : routingEndpointLabelBits [] (encodeRoutingPoint 0 (vertexPoint 0)) = [
     routingEndpointLabelBits [false, false, false]
       (encodeRoutingPoint 3 (vertexPoint 8)) = [false, false, false] := by decide
 
-example : (fun z => routingEndpointLabelBits (pairFst z) (pairSnd z)) ∈ FP :=
-  routingEndpointLabelBitsFn_mem_FP pairFst_mem_FP pairSnd_mem_FP
+example : ComputableInPolyTime (fun z : List Bool × List Bool => routingEndpointLabelBits (Prod.fst z) (Prod.snd z)) (encPair encBits encBits) encBits :=
+  routingEndpointLabelBits_polyTime (fst encBits encBits) (snd encBits encBits)
 
-example : (fun z => routingPointAcceptFlag (pairFst z) (pairSnd z)) ∈ FP :=
-  routingPointAcceptFlagFn_mem_FP pairFst_mem_FP pairSnd_mem_FP
+example : ComputableInPolyTime (fun z : List Bool × List Bool => routingPointAcceptFlag (Prod.fst z) (Prod.snd z)) (encPair encBits encBits) encBits :=
+  routingPointAcceptFlag_polyTime (fst encBits encBits) (snd encBits encBits)
 
-example : routingDivThreeBits ∈ FP ∧ routingDivSixBits ∈ FP ∧ routingModThreeBits ∈ FP :=
-  ⟨routingDivThreeBits_mem_FP, routingDivSixBits_mem_FP, routingModThreeBits_mem_FP⟩
+example : ComputableInPolyTime routingDivThreeBits encBits encBits ∧ ComputableInPolyTime routingDivSixBits encBits encBits ∧
+    ComputableInPolyTime routingModThreeBits encBits encBits :=
+  ⟨routingDivThreeBits_polyTime (id' (encIn := encBits)), routingDivSixBits_polyTime (id' (encIn := encBits)), routingModThreeBits_polyTime (id' (encIn := encBits))⟩
 
 private def fixtureS : ℕ → ℕ
   | 0 => 4
@@ -111,13 +112,13 @@ example : wordRoutingPointer 1 sourceP sourceS true (encodeRoutingPoint 1 (0, 0)
   wordRouting_source (by decide) (by decide) (by decide) (by decide)
 
 example : routingEndpointLabelBits [false, false, false]
-    (encodeRoutingPoint 3 (vertexPoint 2)) = Nat.toBitsLE 3 2 := by decide
+    (encodeRoutingPoint 3 (vertexPoint 2)) = lowBits 3 2 := by decide
 
 example {b : ℕ} {P S : ℕ → ℕ} {word : List Bool}
     (hP : ∀ i, i < 2 ^ b → P i < 2 ^ b) (hS : ∀ i, i < 2 ^ b → S i < 2 ^ b)
     (he : IsEndpoint (wordRoutingPointer b P S true) (wordRoutingPointer b P S false) word) :
     ∃ i, i < 2 ^ b ∧ IsEndpoint P S i ∧
-      routingEndpointLabelBits (List.replicate b false) word = Nat.toBitsLE b i := by
+      routingEndpointLabelBits (List.replicate b false) word = lowBits b i := by
   obtain ⟨i, hi, hd, hend⟩ := wordRouting_endpoint_decodes hP hS he
   refine ⟨i, hi, hend, ?_⟩
   have h := routingEndpointLabelBits_eq_bits (ruler := List.replicate b false)
