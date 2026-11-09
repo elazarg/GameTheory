@@ -12,16 +12,16 @@ endpoint certificates for the routed Sperner construction. -/
 namespace GameTheory.Complexity.Backend
 
 open GameTheory.Math.EndOfLine
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString
 
 /-- Fixed-width serialization is injective on bounded labels. -/
 theorem routingOriginal_encode_eq_iff (b : ℕ) {i j : ℕ}
     (hi : i < 2 ^ b) (hj : j < 2 ^ b) :
-    Nat.toBitsLE b i = Nat.toBitsLE b j ↔ i = j := by
+    lowBits b i = lowBits b j ↔ i = j := by
   constructor
   · intro h
-    have hv := congrArg Nat.fromBitsLE h
-    simpa only [Nat.fromBitsLE_toBitsLE hi, Nat.fromBitsLE_toBitsLE hj] using hv
+    have hv := congrArg lsbValue h
+    simpa only [lsbValue_lowBits hi, lsbValue_lowBits hj] using hv
   · rintro rfl
     rfl
 
@@ -29,16 +29,16 @@ theorem routingOriginal_encode_eq_iff (b : ℕ) {i j : ℕ}
 theorem routingOriginalPointer_encode (ruler : List Bool) (query : List Bool → List Bool)
     (hlen : ∀ word, (query word).length = word.length) {i : ℕ}
     (hi : i < 2 ^ ruler.length) :
-    Nat.toBitsLE ruler.length (routingOriginalPointer ruler query i) =
-      query (Nat.toBitsLE ruler.length i) := by
-  have hp : routingPadBits ruler (query (Nat.toBitsLE ruler.length i)) =
-      query (Nat.toBitsLE ruler.length i) := by
-    rw [routingPadBits_eq_toBitsLE]
-    have h := Nat.toBitsLE_fromBitsLE (query (Nat.toBitsLE ruler.length i))
-    simpa only [hlen, Nat.length_toBitsLE] using h
+    lowBits ruler.length (routingOriginalPointer ruler query i) =
+      query (lowBits ruler.length i) := by
+  have hp : routingPadBits ruler (query (lowBits ruler.length i)) =
+      query (lowBits ruler.length i) := by
+    rw [routingPadBits_eq_lowBits]
+    have h := lowBits_lsbValue (query (lowBits ruler.length i))
+    simpa only [hlen, length_lowBits] using h
   simp only [routingOriginalPointer, ite_eq_left hi, hp]
-  have h := Nat.toBitsLE_fromBitsLE (query (Nat.toBitsLE ruler.length i))
-  simpa only [hlen, Nat.length_toBitsLE] using h
+  have h := lowBits_lsbValue (query (lowBits ruler.length i))
+  simpa only [hlen, length_lowBits] using h
 
 /-- Natural and binary outgoing edges coincide. -/
 theorem routingOriginal_hasSuccessor_iff (ruler : List Bool) (P S : List Bool → List Bool)
@@ -46,13 +46,13 @@ theorem routingOriginal_hasSuccessor_iff (ruler : List Bool) (P S : List Bool �
     (hS : ∀ word, (S word).length = word.length) {i : ℕ}
     (hi : i < 2 ^ ruler.length) :
     HasSuccessor (routingOriginalPointer ruler P) (routingOriginalPointer ruler S) i ↔
-      HasSuccessor P S (Nat.toBitsLE ruler.length i) := by
+      HasSuccessor P S (lowBits ruler.length i) := by
   have hs := routingOriginalPointer_encode ruler S hS hi
   have hsi := routingOriginalPointer_lt ruler S hi
   have hpsi := routingOriginalPointer_lt ruler P hsi
-  have hps : Nat.toBitsLE ruler.length
+  have hps : lowBits ruler.length
       (routingOriginalPointer ruler P (routingOriginalPointer ruler S i)) =
-      P (S (Nat.toBitsLE ruler.length i)) :=
+      P (S (lowBits ruler.length i)) :=
     (routingOriginalPointer_encode ruler P hP hsi).trans (congrArg P hs)
   simp only [HasSuccessor]
   rw [← hps, ← hs]
@@ -66,7 +66,7 @@ theorem routingOriginal_hasPredecessor_iff (ruler : List Bool) (P S : List Bool 
     (hS : ∀ word, (S word).length = word.length) {i : ℕ}
     (hi : i < 2 ^ ruler.length) :
     HasPredecessor (routingOriginalPointer ruler P) (routingOriginalPointer ruler S) i ↔
-      HasPredecessor P S (Nat.toBitsLE ruler.length i) :=
+      HasPredecessor P S (lowBits ruler.length i) :=
   routingOriginal_hasSuccessor_iff ruler S P hS hP hi
 
 /-- Every natural endpoint corresponds to its fixed-width binary endpoint. -/
@@ -75,18 +75,18 @@ theorem routingOriginal_endpoint_iff (ruler : List Bool) (P S : List Bool → Li
     (hS : ∀ word, (S word).length = word.length) {i : ℕ}
     (hi : i < 2 ^ ruler.length) :
     IsEndpoint (routingOriginalPointer ruler P) (routingOriginalPointer ruler S) i ↔
-      IsEndpoint P S (Nat.toBitsLE ruler.length i) := by
+      IsEndpoint P S (lowBits ruler.length i) := by
   simp only [IsEndpoint, routingOriginal_hasSuccessor_iff ruler P S hP hS hi,
     routingOriginal_hasPredecessor_iff ruler P S hP hS hi]
 
 /-- Normalized natural circuit pointers preserve original endpoint status. -/
 theorem routingNormalized_endpoint_iff (input : List Bool) {i : ℕ}
-    (hi : i < 2 ^ (pairFst input).length) :
-    IsEndpoint (routingOriginalPointer (pairFst input) (endOfLineNormalizedPredecessor input))
-        (routingOriginalPointer (pairFst input) (endOfLineNormalizedSuccessor input)) i ↔
+    (hi : i < 2 ^ (CircuitWords.first input).length) :
+    IsEndpoint (routingOriginalPointer (CircuitWords.first input) (endOfLineNormalizedPredecessor input))
+        (routingOriginalPointer (CircuitWords.first input) (endOfLineNormalizedSuccessor input)) i ↔
       IsEndpoint (endOfLinePredecessor input) (endOfLineSuccessor input)
-        (Nat.toBitsLE (pairFst input).length i) :=
-  (routingOriginal_endpoint_iff (pairFst input) _ _
+        (lowBits (CircuitWords.first input).length i) :=
+  (routingOriginal_endpoint_iff (CircuitWords.first input) _ _
     (endOfLineNormalizedPredecessor_length input)
     (endOfLineNormalizedSuccessor_length input) hi).trans
     (endOfLineNormalized_endpoint_iff input _)
@@ -95,9 +95,9 @@ theorem routingNormalized_endpoint_iff (input : List Bool) {i : ℕ}
 theorem routingOriginal_source (ruler : List Bool) (P S : List Bool → List Bool)
     (hP : ∀ word, (P word).length = word.length)
     (hS : ∀ word, (S word).length = word.length)
-    (hp : P (Nat.toBitsLE ruler.length 0) = Nat.toBitsLE ruler.length 0)
-    (hs : S (Nat.toBitsLE ruler.length 0) ≠ Nat.toBitsLE ruler.length 0)
-    (hlink : P (S (Nat.toBitsLE ruler.length 0)) = Nat.toBitsLE ruler.length 0) :
+    (hp : P (lowBits ruler.length 0) = lowBits ruler.length 0)
+    (hs : S (lowBits ruler.length 0) ≠ lowBits ruler.length 0)
+    (hlink : P (S (lowBits ruler.length 0)) = lowBits ruler.length 0) :
     routingOriginalPointer ruler P 0 = 0 ∧ routingOriginalPointer ruler S 0 ≠ 0 ∧
       routingOriginalPointer ruler P (routingOriginalPointer ruler S 0) = 0 := by
   have hz : 0 < 2 ^ ruler.length := Nat.two_pow_pos _
@@ -116,17 +116,14 @@ theorem routingOriginal_source (ruler : List Bool) (P S : List Bool → List Boo
 
 /-- The genuine-source promise survives circuit normalization and numeric extension. -/
 theorem routingNormalized_source {input : List Bool} (hsource : endOfLineSourceValid input) :
-    routingOriginalPointer (pairFst input) (endOfLineNormalizedPredecessor input) 0 = 0 ∧
-      routingOriginalPointer (pairFst input) (endOfLineNormalizedSuccessor input) 0 ≠ 0 ∧
-      routingOriginalPointer (pairFst input) (endOfLineNormalizedPredecessor input)
-        (routingOriginalPointer (pairFst input) (endOfLineNormalizedSuccessor input) 0) = 0 := by
-  have ho : Nat.toBitsLE (pairFst input).length 0 = endOfLineOrigin input := by
-    have hz : ∀ b, Nat.toBits b 0 = List.replicate b false := by
-      intro b
-      induction b with
-      | zero => rfl
-      | succ b ih => simp [Nat.toBits, ih, List.replicate_succ]
-    simp [endOfLineOrigin, endOfLineWidth, Nat.toBitsLE, hz]
+    routingOriginalPointer (CircuitWords.first input) (endOfLineNormalizedPredecessor input) 0 = 0 ∧
+      routingOriginalPointer (CircuitWords.first input) (endOfLineNormalizedSuccessor input) 0 ≠ 0 ∧
+      routingOriginalPointer (CircuitWords.first input) (endOfLineNormalizedPredecessor input)
+        (routingOriginalPointer (CircuitWords.first input) (endOfLineNormalizedSuccessor input) 0) = 0 := by
+  have ho : lowBits (CircuitWords.first input).length 0 = endOfLineOrigin input := by
+    have hz := lowBits_lsbValue (List.replicate (CircuitWords.first input).length false)
+    simpa only [List.length_replicate, lsbValue_replicate_false, endOfLineOrigin,
+      endOfLineWidth] using hz
   have hp : endOfLineNormalizedPredecessor input (endOfLineOrigin input) =
       endOfLineOrigin input := by
     rw [endOfLineNormalizedPredecessor_eq, normalizePredecessor]
@@ -141,7 +138,7 @@ theorem routingNormalized_source {input : List Bool} (hsource : endOfLineSourceV
       (endOfLineNormalizedSuccessor input (endOfLineOrigin input)) = endOfLineOrigin input := by
     simp only [endOfLineNormalizedPredecessor_eq, endOfLineNormalizedSuccessor_eq] at hs ⊢
     exact normalizePredecessor_successor _ _ hs
-  apply routingOriginal_source (pairFst input) _ _
+  apply routingOriginal_source (CircuitWords.first input) _ _
     (endOfLineNormalizedPredecessor_length input) (endOfLineNormalizedSuccessor_length input)
   · simpa only [ho] using hp
   · simpa only [ho] using hs
