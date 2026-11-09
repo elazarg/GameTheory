@@ -151,7 +151,6 @@ import all GameTheoryComplexity.Backend.GeneralBimatrixNodeColor
 import all GameTheoryComplexity.Backend.GeneralBimatrixPointerMachine
 import all GameTheoryComplexity.Backend.GeneralBimatrixCircuitMachine
 import all GameTheoryComplexity.Backend.GeneralBimatrixReduction
-import all GameTheoryComplexity.Backend.PairedVerifier
 import all GameTheoryComplexity.Backend.GeneralBimatrixCodec
 import all GameTheoryComplexity.Backend.GeneralBimatrixCertificateCodec
 import all GameTheoryComplexity.Backend.GeneralBimatrixCodecMachine

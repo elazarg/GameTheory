@@ -9,22 +9,16 @@ public import GameTheory.Math.IntegerCramerComputation
 /-! Packed Cramer computation agrees with integer column replacement and signed Cramer fields. -/
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 
 private theorem cramerEntry_value (v : Fin 7 → List Bool) :
     binarySignedValue (binaryCramerEntry v) =
       if (v 1).length = (v 6).length then binarySignedRowValue (v 3) (v 5) (v 0).length
       else binarySignedRowValue (v 3) (v 4) ((v 0).length * (v 2).length + (v 1).length) := by
-  rcases lenEqFlag_flag (v 1) (v 6) with hf | hf
-  · have he := (lenEqFlag_eq_true_iff _ _).mp hf
-    simp only [binaryCramerEntry, hf, caseBit₀, Bool.cond_true, he, ↓reduceIte]
-    rfl
-  · have he : (v 1).length ≠ (v 6).length := by
-      intro h
-      have ht := (lenEqFlag_eq_true_iff (v 1) (v 6)).mpr h
-      simp [hf] at ht
-    simp only [binaryCramerEntry, hf, caseBit₀, Bool.cond_false, he, ↓reduceIte]
-    exact binaryBirdField_value _
+  unfold binaryCramerEntry
+  split_ifs
+  · rfl
+  · exact binaryBirdField_value _
 
 theorem binaryCramerMatrix_value (dim width A b column : List Bool) (h : ℕ)
     (k : Fin dim.length) (hk : column.length = k.val)
@@ -71,7 +65,7 @@ theorem binaryCramerMatrix_value (dim width A b column : List Bool) (h : ℕ)
 end GameTheory.Complexity.Backend
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 
 theorem binaryCramerDeterminant_det (dim width A b column : List Bool) (h : ℕ)
     (k : Fin dim.length) (hk : column.length = k.val)

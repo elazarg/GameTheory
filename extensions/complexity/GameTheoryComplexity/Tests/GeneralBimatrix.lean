@@ -1,22 +1,22 @@
 module
 
-public import GameTheoryComplexity.BimatrixNash
+public import GameTheoryComplexity.Backend.GeneralBimatrixFNP
 
 @[expose] public section
 
-/-! Kernel-checked arithmetic, malformed-input and canonical-pair controls. -/
+/-! Kernel-checked arithmetic, malformed-input and native verifier controls. -/
 namespace GameTheory.Complexity.Tests.GeneralBimatrix
-open _root_.Complexity _root_.Complexity.Cobham Backend
+open Turing.MultiTapeTM Cslib.Complexity Backend
 
 -- A binary product, rather than an iteration over the represented magnitude.
-example : Nat.fromBitsLE (binaryWordMul [true, true, true] [true, true, true]) = 49 :=
+example : ofBits (binaryWordMul [true, true, true] [true, true, true]) = 49 :=
   by decide
 
 -- Unequal lengths and leading zero padding preserve numerical multiplication.
-example : Nat.fromBitsLE (binaryWordMul [true, false, false] [false, true]) = 2 :=
+example : ofBits (binaryWordMul [true, false, false] [false, true]) = 2 :=
   by decide
 
-example : Nat.fromBitsLE (binaryWordMul [] [true, true]) = 0 := by decide
+example : ofBits (binaryWordMul [] [true, true]) = 0 := by decide
 
 -- Empty and unterminated headers are malformed, with exactly one fallback answer.
 example : generalBimatrixRelation [] [] := Or.inr ⟨by decide, rfl⟩
@@ -32,16 +32,17 @@ example : generalBimatrixVerdict ![[], []] = [true] := by decide
 
 example : generalBimatrixVerdict ![[], [false]] = [false] := by decide
 
--- The outer serialization must be canonical even if decoded components accept.
-example : generalBimatrixPairedVerdict (pair [] []) = [true] := by
-  rw [generalBimatrixPairedVerdict, canonicalPairedVerifier_eq_true_iff
-    _ generalBimatrixVerdict_flag]
-  simp only [pairFst_pair, pairSnd_pair]
-  exact ⟨trivial, by decide⟩
+-- Boolean native verification retains precisely the same malformed-game fallback.
+example : generalBimatrixAccepts [] [] = true := by decide
+example : generalBimatrixAccepts [] [false] = false := by decide
 
-example : generalBimatrixPairedVerdict [true] = [false] := by decide
+example : ComputableInPolyTime
+    (fun p : List Bool × List Bool => generalBimatrixAccepts p.1 p.2)
+    (encPair encBits encBits) encBool :=
+  generalBimatrixAccepts_polyTime (ComputableInPolyTime.fst encBits encBits)
+    (ComputableInPolyTime.snd encBits encBits)
 
 -- The exported result certifies this exact serialized relation.
-example : generalBimatrixRelation ∈ FNP := bimatrixNashRelation_mem_FNP
+example : generalBimatrixRelation ∈ FNP encBits := generalBimatrixRelation_mem_FNP
 
 end GameTheory.Complexity.Tests.GeneralBimatrix

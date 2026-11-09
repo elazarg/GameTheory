@@ -235,6 +235,12 @@ require no ComplexityLib. The theorem concerns this circuit-induced map
 family and output precision, rather than arbitrary continuous-map encodings,
 distance to an exact fixed point or FIXP.
 
+The native general verifier and totality leaves are
+`Backend.GeneralBimatrixFNP` and `Backend.GeneralBimatrixTotality`. They prove
+`FNP encBits` and `TFNP encBits` for the canonical signed rectangular relation
+using the actual typed Boolean verifier and finite complementary-path existence.
+The node/pointer and full public Nash classifier port remains in progress.
+
 Import `GameTheoryComplexity.BimatrixNash` for exact signed rectangular Nash
 search PPAD-completeness (`bimatrixNashRelation_PPADComplete`). The existing binary relation
 has an actual FP instance map to End-of-Line and an FPn decoder preserving

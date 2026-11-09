@@ -8,40 +8,50 @@ public import GameTheoryComplexity.Backend.BinaryIndexedAll
 /-! Exact strict lexicographic positivity checks for packed symbolic rows. -/
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
+open GameTheory.Complexity.Backend.WordOperations
 
 /-- Reject effective zero regardless of sign or magnitude padding. -/
 def binarySignedNonzero (x : List Bool) : List Bool :=
-  orBit (binarySignedLTFlag x []) (binarySignedLTFlag [] x)
+  orFlag (binarySignedLTFlag x []) (binarySignedLTFlag [] x)
 
-theorem binarySignedNonzero_cobham : Cobham fun v : Fin 1 → List Bool =>
-    binarySignedNonzero (v 0) :=
-  Cobham.orFn (Cobham.comp₂ binarySignedLTFlag_cobham (.proj 0) Cobham.empty)
-    (Cobham.comp₂ binarySignedLTFlag_cobham Cobham.empty (.proj 0))
+@[fun_prop] theorem binarySignedNonzero_polyTime :
+    ComputableInPolyTime binarySignedNonzero encBits encBits := by
+  have hnegative := binarySignedLTFlag_polyTime (ComputableInPolyTime.id' (encIn := encBits))
+    (ComputableInPolyTime.const [])
+  have hpositive := binarySignedLTFlag_polyTime (ComputableInPolyTime.const [])
+    (ComputableInPolyTime.id' (encIn := encBits))
+  exact orFlag_polyTime.comp (hnegative.prod hpositive)
 
 theorem binarySignedNonzero_value (x : List Bool) :
     binarySignedNonzero x = [decide (binarySignedValue x ≠ 0)] := by
   rw [binarySignedNonzero, binarySignedLTFlag_value, binarySignedLTFlag_value]
-  change orBit [decide (binarySignedValue x < 0)] [decide (0 < binarySignedValue x)] = _
+  change orFlag [decide (binarySignedValue x < 0)] [decide (0 < binarySignedValue x)] = _
   rcases lt_trichotomy (binarySignedValue x) 0 with h | h | h
-  · simp [orBit, caseBit₀, h, h.ne]
-  · simp [orBit, caseBit₀, h]
-  · simp [orBit, caseBit₀, h, h.ne', not_lt_of_ge h.le]
+  · simp [orFlag, h, h.ne]
+  · simp [orFlag, h]
+  · simp [orFlag, h, h.ne', not_lt_of_ge h.le]
 
 /-- Arguments are row, coefficient count, field width and packed coefficients. -/
 def binaryDictionaryRowPositive (v : Fin 4 → List Bool) : List Bool :=
   binarySignedRowLT ![v 1, v 2, [], binarySignedRowBlock v, [false, true], [false, true]]
 
-theorem binaryDictionaryRowPositive_cobham : Cobham binaryDictionaryRowPositive := by
-  apply Cobham.comp binarySignedRowLT_cobham
-  intro i
-  fin_cases i
-  · exact .proj 1
-  · exact .proj 2
-  · exact Cobham.empty
-  · exact binarySignedRowBlock_cobham
-  · exact Cobham.const [false, true]
-  · exact Cobham.const [false, true]
+@[fun_prop] theorem binaryDictionaryRowPositive_polyTime :
+    ComputableInPolyTime binaryDictionaryRowPositive (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 4 → List Bool =>
+        ![v 1, v 2, [], binarySignedRowBlock v, [false, true], [false, true]])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 2
+    · exact .const []
+    · exact binarySignedRowBlock_polyTime
+    · exact .const [false, true]
+    · exact .const [false, true]
+  exact binarySignedRowLT_polyTime.comp hargs
 
 theorem binaryDictionaryRowPositive_value (v : Fin 4 → List Bool) :
     binaryDictionaryRowPositive v = [GameTheory.Math.FiniteLexicographicCompare.lexLT
@@ -51,7 +61,7 @@ theorem binaryDictionaryRowPositive_value (v : Fin 4 → List Bool) :
   congr 1
   unfold GameTheory.Math.IntegerRatioSelection.compare
   congr 1 <;> funext j
-  · simp [binarySignedRowValue, binarySignedValue, Nat.fromBitsLE, Nat.fromBits]
+  · simp [binarySignedRowValue, binarySignedValue, Turing.MultiTapeTM.ofBits]
   · change binarySignedRowValue (v 2) (binarySignedRowBlock v) j.val * 1 = _
     exact mul_one _
 
@@ -60,11 +70,9 @@ coefficient count, field width and packed coefficients. -/
 def binaryDictionaryPositive (v : Fin 4 → List Bool) : List Bool :=
   binaryIndexedAll binaryDictionaryRowPositive (v 0) (Fin.tail v)
 
-theorem binaryDictionaryPositive_cobham : Cobham binaryDictionaryPositive :=
-  binaryIndexedAll_cobham binaryDictionaryRowPositive_cobham
-
-theorem binaryDictionaryPositive_mem_FPn : FPn binaryDictionaryPositive :=
-  cobham_iff_FPn.mp binaryDictionaryPositive_cobham
+@[fun_prop] theorem binaryDictionaryPositive_polyTime :
+    ComputableInPolyTime binaryDictionaryPositive (encPi encBits) encBits :=
+  binaryIndexedAll_polyTime (p := 3) binaryDictionaryRowPositive_polyTime
 
 theorem binaryDictionaryPositive_value (v : Fin 4 → List Bool) :
     binaryDictionaryPositive v = [decide (∀ i < (v 0).length,
