@@ -471,7 +471,7 @@ theorem coordinated_mixed_isNash :
     IsNash (game.toGameForm 2).mixed (euPreference coordinationUtility)
       (fun who => (behavioralProfile true true who).toMixed) :=
   game.isNash_toMixed_of_isNash_behavioral perfectRecall
-    coordinationUtility (behavioralProfile true true) 2
+    (euPreference coordinationUtility) (behavioralProfile true true) 2
     coordinated_behavioral_isNash
 
 /-- The converse transfer consumes that mixed equilibrium and returns a
@@ -481,7 +481,7 @@ theorem coordinated_roundTrip_behavioral_isNash :
       (fun who => InformationModel.MixedPolicy.toBehavioral
         (M := information) (behavioralProfile true true who).toMixed) :=
   game.isNash_toBehavioral_of_isNash_mixed perfectRecall
-    coordinationUtility
+    (euPreference coordinationUtility)
     (fun who => (behavioralProfile true true who).toMixed) 2
     coordinated_mixed_isNash
 
@@ -529,5 +529,42 @@ theorem changing_nonDeviator_changes_law :
     simpa using hmem
   have hstate := congrArg ExecutionProtocol.History.state hhistory
   simp [terminalHistory] at hstate
+
+/-- Only the designated incumbent law is acceptable. Other laws need not even
+be comparable with themselves, so this relation has no expected-utility
+representation. -/
+def incumbentPreference : WeakPreference Player game.History :=
+  fun _ preferred _ =>
+    preferred = information.runBehavioral (behavioralProfile true true) 2
+
+theorem incumbent_behavioral_isNash :
+    IsNash (game.toBehavioralGameForm 2) incumbentPreference
+      (behavioralProfile true true) := by
+  rw [isNash_iff]
+  intro who replacement
+  exact game.toBehavioralGameForm_play 2 _
+
+/-- The unilateral realization laws transport a genuinely non-EU relation. -/
+theorem incumbent_mixed_isNash :
+    IsNash (game.toGameForm 2).mixed incumbentPreference
+      (fun who => (behavioralProfile true true who).toMixed) :=
+  game.isNash_toMixed_of_isNash_behavioral perfectRecall
+    incumbentPreference (behavioralProfile true true) 2 incumbent_behavioral_isNash
+
+theorem incumbentPreference_not_reflexive :
+    ¬ Preference.Reflexive incumbentPreference := by
+  intro h
+  exact changing_nonDeviator_changes_law
+    (h false (information.runBehavioral (behavioralProfile true false) 2))
+
+theorem incumbentPreference_not_expectedUtility :
+    ¬ ∃ utility : game.History → Player → ℝ,
+      incumbentPreference = euPreference utility := by
+  rintro ⟨utility, h⟩
+  apply incumbentPreference_not_reflexive
+  rw [h]
+  let : Fintype game.History := game.historyFintype
+  exact euPreference_reflexive utility (fun _ law =>
+    hasExpectation_of_payoffIntegrable (payoffIntegrable_of_finite law _))
 
 end GameTheory.Tests.EFGKuhnNash

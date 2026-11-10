@@ -229,24 +229,27 @@ theorem isNash_toMixed_of_isNash_behavioral
     [∀ i, Fintype (G.information.InfoState i)]
     [∀ i, DecidableEq (G.information.InfoState i)]
     (hrecall : G.information.PerfectRecall)
-    (utility : G.History → ι → ℝ)
+    (prefers : WeakPreference ι G.History)
     (behavioral : Profile G.behavioralSignature) (horizon : ℕ)
     (hnash : IsNash (G.toBehavioralGameForm horizon)
-      (euPreference utility) behavioral) :
-    IsNash (G.toGameForm horizon).mixed (euPreference utility)
+      prefers behavioral) :
+    IsNash (G.toGameForm horizon).mixed prefers
       (fun i => (behavioral i).toMixed) := by
-  rw [G.isNash_mixed_toGameForm_iff]
-  rw [G.isNash_toBehavioralGameForm_iff] at hnash
+  refine IsNash.of_coverage (source := G.toBehavioralGameForm horizon)
+    (sourcePrefers := prefers) (profile := behavioral) ?_ hnash
   intro who replacement
+  refine ⟨InformationModel.MixedPolicy.toBehavioral
+    (M := G.information) replacement, ?_⟩
+  intro hcomparison
+  rw [G.toBehavioralGameForm_play, G.toBehavioralGameForm_play] at hcomparison
+  rw [G.toGameForm_mixed_play, G.toGameForm_mixed_play]
   have hdevLaw := G.kuhn_behavioral_update_toMixed
     hrecall behavioral who replacement horizon
   have hbaseLaw := G.information.runMixed_toMixed
     (G.information.actsOnceWhereItMatters_of_perfectRecall hrecall)
     behavioral horizon
-  have hrelation := congrArg₂ (euPreference utility who) hbaseLaw.symm
-    hdevLaw.symm
-  exact hrelation.mp (hnash who (InformationModel.MixedPolicy.toBehavioral
-    (M := G.information) replacement))
+  rw [hbaseLaw, hdevLaw]
+  exact hcomparison
 
 /-- A mixed Nash equilibrium becomes a behavioral Nash equilibrium under the
 canonical conditional behavioral reading. Arbitrary behavioral deviations are
@@ -255,24 +258,28 @@ theorem isNash_toBehavioral_of_isNash_mixed
     [∀ i, Finite (G.information.InfoState i)]
     [∀ i, DecidableEq (G.information.InfoState i)]
     (hrecall : G.information.PerfectRecall)
-    (utility : G.History → ι → ℝ)
+    (prefers : WeakPreference ι G.History)
     (mixed : Profile G.strategicSignature.mixed) (horizon : ℕ)
     (hnash : IsNash (G.toGameForm horizon).mixed
-      (euPreference utility) mixed) :
-    IsNash (G.toBehavioralGameForm horizon) (euPreference utility)
+      prefers mixed) :
+    IsNash (G.toBehavioralGameForm horizon) prefers
       (fun i => InformationModel.MixedPolicy.toBehavioral
         (M := G.information) (mixed i)) := by
   let _ : ∀ i, Fintype (G.information.InfoState i) := fun _ => Fintype.ofFinite _
-  rw [G.isNash_toBehavioralGameForm_iff]
-  rw [G.isNash_mixed_toGameForm_iff] at hnash
+  refine IsNash.of_coverage (source := (G.toGameForm horizon).mixed)
+    (sourcePrefers := prefers) (profile := mixed) ?_ hnash
   intro who replacement
+  refine ⟨replacement.toMixed, ?_⟩
+  intro hcomparison
+  rw [G.toGameForm_mixed_play, G.toGameForm_mixed_play] at hcomparison
+  rw [G.toBehavioralGameForm_play, G.toBehavioralGameForm_play]
   have hdevLaw := G.kuhn_mixed_update_toBehavioral
     hrecall mixed who replacement horizon
   have hbaseLaw := G.information.runMixed_toBehavioral
     (InformationModel.constrainsAlike_of_perfectRecall hrecall)
     horizon mixed
-  have hrelation := congrArg₂ (euPreference utility who) hbaseLaw hdevLaw.symm
-  exact hrelation.mp (hnash who replacement.toMixed)
+  rw [← hbaseLaw, hdevLaw]
+  exact hcomparison
 
 end UnilateralTransfers
 
