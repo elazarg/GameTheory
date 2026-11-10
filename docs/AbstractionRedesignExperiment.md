@@ -1,6 +1,6 @@
 # Abstraction building-block experiment
 
-Status: item 01 comparison complete; final integration gate pending. No judgment hierarchy is adopted.
+Status: item 01 accepted after the full integration audit; later items remain gated. No judgment hierarchy is adopted.
 
 Item 01 selects direct preference-generic exact-law proofs after comparing the
 existing coverage API on the same statements. See [D78](decisions/D78-preference-generic-exact-law-bridges.md)

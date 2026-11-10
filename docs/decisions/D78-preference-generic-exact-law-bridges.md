@@ -60,3 +60,13 @@ here licenses CE/CCE transfer from Nash coverage, binary-to-countable mixture
 closure, changing weak to strict equilibrium under partial preferences, or a
 replacement of the local law-linear deviation scheme. Later experiment items
 remain gated in `AbstractionRedesignExperiment.md`.
+
+## Validation
+
+`python scripts/audit.py` passes: default strict build (3,872 jobs), full
+lint/axiom-driver build (4,762 jobs), public lint, authored diagnostic checks,
+and transitive standard-axiom checks. The focused bridge/control build passes
+3,177 jobs. The pre-code baseline is `b3a94b32`; the measured coverage candidate
+is `4ef12f5e`, and selected direct proofs are `1319eefd`. The integration branch
+collects only the successful generalized statements and chosen implementation;
+the item history and reproduction script preserve the alternative.

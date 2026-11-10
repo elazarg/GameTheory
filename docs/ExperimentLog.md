@@ -10766,7 +10766,7 @@ observations and outcome below are preserved as the record of that run.
 
 ## EXP-173: preference-independent building blocks for gradual redesign
 
-- **Date / status:** 2026-11-10–11; focused comparison complete, integration validation pending.
+- **Date / status:** 2026-11-10–11; complete; supports preference generalization with direct exact-law proofs.
 - **Question:** Do existing comparison-coverage theorems suffice to remove
   unnecessary expected utility from independent language bridges, without a
   new problem structure or transport certificate hierarchy?
@@ -10801,7 +10801,12 @@ observations and outcome below are preserved as the record of that run.
   and missing-total-coverage controls are reused from
   `Tests.ApproximateEquilibriumTransport` and `Tests.MixtureSimulation`.
 - **Validation:** focused strict build passes 3,177 jobs; source audit passes.
-  Final direct-proof integration/lint/axiom gate pending.
+  `python scripts/audit.py` passes the default strict build (3,872 jobs), the
+  complete lint/axiom driver build (4,762 jobs), public lint, cached authored
+  diagnostic checks and transitive standard-axiom checks. Full output is
+  `.codex/scratch/exp173/integration-audit.log`. Baseline before code changes:
+  `b3a94b32`; measured coverage checkpoint: `4ef12f5e`; selected direct proofs:
+  `1319eefd`.
 - **Outcome / next action:** prefer direct exact-law proofs; existing coverage
   is sufficient but larger. No new transport theorem, record, or hierarchy is
   justified by these clients. [D78](decisions/D78-preference-generic-exact-law-bridges.md)
