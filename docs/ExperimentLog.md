@@ -10763,3 +10763,28 @@ observations and outcome below are preserved as the record of that run.
   and is confirmed by the actual local audit and published-base targeted check.
   Final stable-release maintenance and full consumer audits are blocked delivery
   gates, recorded in the delivery ledger. No RC toolchain is adopted in tracked sources.
+
+## EXP-173: preference-independent building blocks for gradual redesign
+
+- **Date / status:** 2026-11-10; running.
+- **Question:** Do existing comparison-coverage theorems suffice to remove
+  unnecessary expected utility from independent language bridges, without a
+  new problem structure or transport certificate hierarchy?
+- **Competing designs:** reuse `IsNash.of_coverage`; add a direct theorem
+  over exact laws and deviation coverage; introduce a bundled certificate.
+  Start with the existing theorem and admit more infrastructure only if the
+  independent clients expose a concrete missing operation.
+- **Representative slice:** behavioral/mixed Kuhn transfer and the Bayesian
+  policy/plan bridge, including an arbitrary preference and a non-EU consumer.
+- **Kill conditions:** a transfer silently loses target deviations, requires
+  inverse policy conversions, changes actual laws or expectation guards,
+  duplicates equilibrium semantics, weakens locality or law-linearity, or
+  introduces unused infrastructure. Measure edited proof lines and focused
+  build duration; record failures before narrowing the candidate.
+- **Artifacts / commands:** integration branch
+  `codex/experiment-abstraction-building-blocks`; item branches start with
+  `codex/experiment-abstraction-item-01-`. Exact commands and outcomes follow
+  after validation. Existing design surveys are retained as the original
+  hypotheses rather than rewritten after the experiment.
+- **Outcome / next action:** pending; compile the existing-coverage candidate
+  before deciding whether any new building block is justified.
