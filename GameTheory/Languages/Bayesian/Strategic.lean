@@ -66,22 +66,17 @@ theorem isNash_toProtocolForm_iff_of_preference
         (planOfPolicyProfile B policies) := by
   constructor
   · intro hnash
-    refine IsNash.of_coverage (source := toProtocolForm B)
-      (sourcePrefers := prefers) (profile := policies) ?_ hnash
+    rw [isNash_iff] at hnash ⊢
     intro who replacement
-    refine ⟨Policy.ofPlan replacement, ?_⟩
-    intro hcomparison
+    have hcomparison := hnash who (Policy.ofPlan replacement)
     have hdev := toProtocolForm_play B
       (Profile.update policies who (Policy.ofPlan replacement))
     rw [planOfPolicyProfile_update, Policy.toPlan_ofPlan] at hdev
     exact (congrArg₂ (prefers who) (toProtocolForm_play B policies) hdev).mp hcomparison
   · intro hnash
-    refine IsNash.of_coverage (source := B.toForm)
-      (sourcePrefers := Preference.comapOutcome some prefers)
-      (profile := planOfPolicyProfile B policies) ?_ hnash
+    rw [isNash_iff] at hnash ⊢
     intro who replacement
-    refine ⟨Policy.toPlan replacement, ?_⟩
-    intro hcomparison
+    have hcomparison := hnash who (Policy.toPlan replacement)
     have hdev := toProtocolForm_play B (Profile.update policies who replacement)
     rw [planOfPolicyProfile_update] at hdev
     exact (congrArg₂ (prefers who) (toProtocolForm_play B policies) hdev).mpr hcomparison
