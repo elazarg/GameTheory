@@ -10766,7 +10766,7 @@ observations and outcome below are preserved as the record of that run.
 
 ## EXP-173: preference-independent building blocks for gradual redesign
 
-- **Date / status:** 2026-11-10; running.
+- **Date / status:** 2026-11-10–11; focused comparison complete, integration validation pending.
 - **Question:** Do existing comparison-coverage theorems suffice to remove
   unnecessary expected utility from independent language bridges, without a
   new problem structure or transport certificate hierarchy?
@@ -10786,5 +10786,23 @@ observations and outcome below are preserved as the record of that run.
   `codex/experiment-abstraction-item-01-`. Exact commands and outcomes follow
   after validation. Existing design surveys are retained as the original
   hypotheses rather than rewritten after the experiment.
-- **Outcome / next action:** pending; compile the existing-coverage candidate
-  before deciding whether any new building block is justified.
+- **Measurements / observation:** both direct and existing-coverage variants
+  compile the same generalized statements. Direct proofs save four nonblank
+  lines in Kuhn and five in Bayesian transfer. Three alternating serialized
+  whole-module runs give median direct/coverage seconds 19.125/17.617 (Kuhn)
+  and 11.632/11.575 (Bayesian); these include imports and unrelated declarations,
+  so do not establish theorem-level speed. Reproduce with
+  `python scripts/compare_abstraction_bridges.py`; raw artifacts are in ignored
+  `.codex/scratch/exp173/`. Lean 4.35.0 and Mathlib v4.35.0 are unchanged.
+- **Hostile evidence:** `Tests.EFGKuhnNash` transports an incumbent-law relation
+  and proves it has no expected-utility representation; genuine mixed
+  deviations and the nondeviator-sensitive law remain. `Tests.Bayesian`
+  preserves numerical two-player/private-type consumers. Missing-reflection
+  and missing-total-coverage controls are reused from
+  `Tests.ApproximateEquilibriumTransport` and `Tests.MixtureSimulation`.
+- **Validation:** focused strict build passes 3,177 jobs; source audit passes.
+  Final direct-proof integration/lint/axiom gate pending.
+- **Outcome / next action:** prefer direct exact-law proofs; existing coverage
+  is sufficient but larger. No new transport theorem, record, or hierarchy is
+  justified by these clients. [D78](decisions/D78-preference-generic-exact-law-bridges.md)
+  records the narrowed conclusion. Later items remain separately gated.

@@ -235,12 +235,10 @@ theorem isNash_toMixed_of_isNash_behavioral
       prefers behavioral) :
     IsNash (G.toGameForm horizon).mixed prefers
       (fun i => (behavioral i).toMixed) := by
-  refine IsNash.of_coverage (source := G.toBehavioralGameForm horizon)
-    (sourcePrefers := prefers) (profile := behavioral) ?_ hnash
+  rw [isNash_iff] at hnash ⊢
   intro who replacement
-  refine ⟨InformationModel.MixedPolicy.toBehavioral
-    (M := G.information) replacement, ?_⟩
-  intro hcomparison
+  have hcomparison := hnash who (InformationModel.MixedPolicy.toBehavioral
+    (M := G.information) replacement)
   rw [G.toBehavioralGameForm_play, G.toBehavioralGameForm_play] at hcomparison
   rw [G.toGameForm_mixed_play, G.toGameForm_mixed_play]
   have hdevLaw := G.kuhn_behavioral_update_toMixed
@@ -266,11 +264,9 @@ theorem isNash_toBehavioral_of_isNash_mixed
       (fun i => InformationModel.MixedPolicy.toBehavioral
         (M := G.information) (mixed i)) := by
   let _ : ∀ i, Fintype (G.information.InfoState i) := fun _ => Fintype.ofFinite _
-  refine IsNash.of_coverage (source := (G.toGameForm horizon).mixed)
-    (sourcePrefers := prefers) (profile := mixed) ?_ hnash
+  rw [isNash_iff] at hnash ⊢
   intro who replacement
-  refine ⟨replacement.toMixed, ?_⟩
-  intro hcomparison
+  have hcomparison := hnash who replacement.toMixed
   rw [G.toGameForm_mixed_play, G.toGameForm_mixed_play] at hcomparison
   rw [G.toBehavioralGameForm_play, G.toBehavioralGameForm_play]
   have hdevLaw := G.kuhn_mixed_update_toBehavioral

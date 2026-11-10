@@ -1,6 +1,10 @@
 # Abstraction building-block experiment
 
-Status: active design investigation; no judgment hierarchy is adopted.
+Status: item 01 comparison complete; final integration gate pending. No judgment hierarchy is adopted.
+
+Item 01 selects direct preference-generic exact-law proofs after comparing the
+existing coverage API on the same statements. See [D78](decisions/D78-preference-generic-exact-law-bridges.md)
+and EXP-173 for measurements and limits. Items 02–06 remain gated questions.
 
 The question is which small building blocks make independently useful
 generalizations cheap on the existing semantics. The starting evidence is
