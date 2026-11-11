@@ -1,6 +1,9 @@
 # Abstraction building-block experiment
 
-Status: the initial six-item investigation is complete. Every collected slice
+Status: the initial six-item investigation is complete; the cross-domain
+investigation continues with finite-menu choice and revealed preference.
+The goal is reusable building blocks for the library and economic theory,
+with later MathEconLib extraction in view. Every collected slice
 passes full integration audits. Selected theorem-level and guarded-comparison
 changes are adopted; the binary-only mixture proposal is refuted, and new
 context, coalition and arena structures are not admitted. This is a scoped
@@ -74,6 +77,38 @@ current representation. Adjacent theorem families and a complete matching
 compiler were not part of these accepted slices. The governing delivery order
 remains `PostArchitectureDeliveryPlan.md` and the status index remains
 `DeliveryLedger.md`.
+
+## Cross-domain continuation
+
+The first six items tested generalization within existing game semantics.
+The next stage tests both directions between economic primitives: preferences
+induce feasible choices, and observed menu choices may rationalize preferences.
+Extraction means independence from game forms, lotteries and utility scalars;
+it does not mean adding a new shared problem record or changing another library.
+
+**Item 07 / EXP-179: finite-menu choice.** Compare direct feasible greatest
+elements, maximal elements, and a correspondence of selected alternatives.
+Test whether feasibility, nonempty choice on every nonempty finite menu, and
+the weak axiom of revealed preference reconstruct a total transitive relation
+and exactly its greatest-element correspondence. Preserve ties and allow an
+infinite ambient alternative type. Search Mathlib first; use its maximal-element
+theorems rather than reprove general finite-order mathematics.
+
+Clients must include the canonical best-response comparison and an independent
+economic allocation or incentive client. Budget-menu and bundle examples may
+serve as experimental evidence, not claims of an existing demand API or a
+MathEconLib migration. Hostile controls must distinguish greatest from maximal
+under incomplete preferences, feasible choice from guarded comparison without
+candidate membership, and a correspondence of tied bundles from the union of
+their contents. A restricted family of budget menus must not be silently
+treated as all finite menus. Stop or narrow if representation requires a new
+numerical score, global finite carrier, arbitrary tie breaking, or changes to
+existing equilibrium/expectation guards.
+
+Later questions remain consumer-gated: endogenous feasible sets and fixed-point
+existence; welfare aggregation and interpersonal scale; information and dynamic
+choice consistency. These are possible investigations, not adopted interfaces
+or a breadth-first delivery queue.
 
 ## Constraints and alternatives
 
