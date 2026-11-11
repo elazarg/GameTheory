@@ -10898,3 +10898,54 @@ observations and outcome below are preserved as the record of that run.
   consumers select their exact closure and guard strength.
   [D80](decisions/D80-binary-and-countable-mixture-closure.md) records the
   narrowed conclusion; Protocol comparison remains the next gated item.
+
+## EXP-176: guarded Protocol comparison without numerical semantics changes
+
+- **Date / status:** 2026-11-11; complete, supporting direct guarded comparison.
+- **Question:** Can context-local optimality share a probability-independent
+  guarded comparison predicate, or does a relation-valued context record earn
+  its additional representation and construction costs?
+- **Alternatives:** direct admissibility and comparison arguments; a record
+  retaining outcome laws, their admissibility, and a law preference. Compare
+  identical numerical and nonnumeric local-optimality/coverage clients.
+- **Representative slice:** Context local optimality and outcome-law coverage;
+  a belief-dependent nonnumeric choice; an empty allowed set with undefined
+  incumbent expectation; a defined incumbent with an undefined alternative;
+  defined infinite continuation values. Keep terminal whole-policy rationality,
+  Bayes consistency and proper-subgame distinctions unchanged (D64/D72/D73).
+- **Kill conditions:** losing either expectation guard, admitting an undefined
+  incumbent through empty-set vacuity, confusing absence of strict gain with
+  weak optimality under partial preferences, adding assumptions to sequential
+  theorems, duplicating evaluators or equilibrium meanings, or adding an unused
+  context/certificate hierarchy.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-04-protocol-judgment`, baseline `13b85eb1`.
+  Initial probes live in ignored `.codex/scratch/exp176/`.
+- **Focused result:** both candidate shapes and identical numerical/belief
+  clients compile. Three alternating standalone runs give median direct/record
+  whole-process seconds 10.728/10.648, with 124/147 nonblank code lines including
+  shared fixtures. This is no speedup claim or record-budget failure. The
+  simpler guarded predicate is selected; the record adds no capability here.
+  A genuinely stochastic possibility optimum is rejected by numerical payoff;
+  signed geometric tails prove both empty-set and undefined-alternative guard
+  failures. Defined negative-infinite payoffs remain admissible.
+- **Artifacts / commands:** selected `Math.GuardedOptimality`, numerical
+  `Protocol.Context` specialization and production law-coverage client;
+  `Tests.ContextJudgment`, `Tests.ContextGuards`, and retained alternatives in
+  `Experimental/Exp176/Comparison.lean`. Reproduce size/timing comparisons with
+  `python scripts/compare_context_judgment.py`; raw artifacts remain in scratch.
+  Independent Math target passes 115 jobs; focused strict Protocol/control
+  build passes 3,182 jobs; source audit passes.
+- **Integration validation:** on implementation checkpoint `20adafa2`,
+  `python scripts/audit.py` passes the default strict build (3,873 jobs),
+  complete validation build (4,767 jobs), public lint, authored diagnostic
+  checks and transitive standard-axiom checks. Sequential existence, weak-PBE,
+  conditional-PBE and proper-subgame consumers pass. Raw output is
+  `.codex/scratch/exp176/integration-audit.log`; independent semantic review
+  accepts the guard and scope preservation.
+- **Outcome / next action:** adopt the probability-independent predicate and
+  exact numerical specialization, without replacing Context data or adding
+  a sequential-rationality meaning. The record alternative is viable but adds
+  no needed capability; no cost-budget failure or speed advantage is claimed.
+  [D81](decisions/D81-guarded-protocol-comparison.md) records the selected scope.
+  Coalition judgment and broader deviation arenas remain independent gates.
