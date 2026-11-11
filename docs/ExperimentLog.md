@@ -10921,5 +10921,22 @@ observations and outcome below are preserved as the record of that run.
 - **Artifacts / commands:** item branch
   `codex/experiment-abstraction-item-04-protocol-judgment`, baseline `13b85eb1`.
   Initial probes live in ignored `.codex/scratch/exp176/`.
-- **Outcome / next action:** pending; compile both shapes and hostile guards
-  before selecting or freezing a public building block.
+- **Focused result:** both candidate shapes and identical numerical/belief
+  clients compile. Three alternating standalone runs give median direct/record
+  whole-process seconds 10.728/10.648, with 124/147 nonblank code lines including
+  shared fixtures. This is no speedup claim or record-budget failure. The
+  simpler guarded predicate is selected; the record adds no capability here.
+  A genuinely stochastic possibility optimum is rejected by numerical payoff;
+  signed geometric tails prove both empty-set and undefined-alternative guard
+  failures. Defined negative-infinite payoffs remain admissible.
+- **Artifacts / commands:** selected `Math.GuardedOptimality`, numerical
+  `Protocol.Context` specialization and production law-coverage client;
+  `Tests.ContextJudgment`, `Tests.ContextGuards`, and retained alternatives in
+  `Experimental/Exp176/Comparison.lean`. Reproduce size/timing comparisons with
+  `python scripts/compare_context_judgment.py`; raw artifacts remain in scratch.
+  Independent Math target passes 115 jobs; focused strict Protocol/control
+  build passes 3,182 jobs; source audit passes.
+- **Outcome / next action:** focused slice supports the probability-independent
+  predicate without replacing the numerical Context data. Full integration,
+  public lint and transitive axiom gates are pending; no new sequential
+  rationality or equilibrium meaning is introduced.

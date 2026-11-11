@@ -11,6 +11,7 @@ payoff also has a real value, and between such choices the comparison is the
 real one.
 -/
 
+public import GameTheory.Math.GuardedOptimality
 public import GameTheory.Math.Probability.ExtendedExpectation
 
 @[expose] public section
@@ -72,9 +73,16 @@ payoffs, and no allowed alternative has a larger one. The incumbent must have an
 expectation even when `allowed` is empty. -/
 def IsLocallyOptimal (ctx : Context Choice Outcome) (allowed : Set Choice)
     (choice : Choice) : Prop :=
-  ctx.HasValueAt choice ∧
-    (∀ alternative ∈ allowed, ctx.HasValueAt alternative) ∧
-      ∀ alternative ∈ allowed, ctx.extendedValue alternative ≤ ctx.extendedValue choice
+  GameTheory.Math.IsOptimalOn ctx.HasValueAt
+    (fun preferred alternative => ctx.extendedValue alternative ≤ ctx.extendedValue preferred)
+    allowed choice
+
+/-- Every allowed alternative has continuation value at most the incumbent's. -/
+theorem IsLocallyOptimal.extendedValue_le {ctx : Context Choice Outcome}
+    {allowed : Set Choice} {choice alternative : Choice}
+    (optimal : ctx.IsLocallyOptimal allowed choice) (allowedAlternative : alternative ∈ allowed) :
+    ctx.extendedValue alternative ≤ ctx.extendedValue choice :=
+  optimal.2.2 alternative allowedAlternative
 
 /-- An admissible alternative whose expected continuation payoff is strictly
 larger. -/
@@ -92,10 +100,11 @@ theorem isLocallyOptimal_iff_of_integrable {ctx : Context Choice Outcome}
       ∀ alternative ∈ allowed, ctx.value alternative ≤ ctx.value choice := by
   refine ⟨fun h alternative hmem => ?_, fun h => ⟨hchoice.hasValueAt,
     fun alternative hmem => (hall alternative hmem).hasValueAt, fun alternative hmem => ?_⟩⟩
-  · have hle := h.2.2 alternative hmem
+  · have hle := h.extendedValue_le hmem
     rwa [extendedValue_eq (hall alternative hmem), extendedValue_eq hchoice,
       EReal.coe_le_coe_iff] at hle
-  · rw [extendedValue_eq (hall alternative hmem), extendedValue_eq hchoice,
+  · change ctx.extendedValue alternative ≤ ctx.extendedValue choice
+    rw [extendedValue_eq (hall alternative hmem), extendedValue_eq hchoice,
       EReal.coe_le_coe_iff]
     exact h alternative hmem
 
@@ -126,7 +135,7 @@ theorem isLocallyOptimal_congr {first second : Context Choice Outcome}
     (hvalue : ∀ option, first.extendedValue option = second.extendedValue option) :
     first.IsLocallyOptimal allowed choice ↔
       second.IsLocallyOptimal allowed choice := by
-  unfold IsLocallyOptimal
+  unfold IsLocallyOptimal GameTheory.Math.IsOptimalOn
   simp only [hexpectation, hvalue]
 
 end Context
