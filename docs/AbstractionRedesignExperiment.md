@@ -1,7 +1,7 @@
 # Abstraction building-block experiment
 
-Status: items 01 and 02 accepted after full integration audits; items 03–06
-remain gated. No judgment hierarchy is adopted.
+Status: items 01 and 02 accepted; item 03 collected as a refuting experiment.
+All three pass full integration audits. Items 04–06 remain gated. No judgment hierarchy is adopted.
 
 Item 01 selects direct preference-generic exact-law proofs after comparing the
 existing coverage API on the same statements. See [D78](decisions/D78-preference-generic-exact-law-bridges.md)
@@ -12,7 +12,13 @@ finite-range improvement-rank hypotheses. The partial-preference and
 singleton-strategy controls delimit the assumptions; numerical potential and
 congestion consumers remain supported. See
 [D79](decisions/D79-ordinal-response-and-improvement-ranks.md) and EXP-174.
-No new ordinal-potential structure is admitted. Items 03–06 remain questions.
+No new ordinal-potential structure is admitted.
+
+Item 03 refutes binary convexity as sufficient for arbitrary PMF mixture
+closure, even for a total preorder. Its direct client prototypes retain
+separate sources of expectation-definedness and remain experimental. See
+[D80](decisions/D80-binary-and-countable-mixture-closure.md) and EXP-175.
+Items 04–06 remain questions.
 
 The question is which small building blocks make independently useful
 generalizations cheap on the existing semantics. The starting evidence is
@@ -107,7 +113,7 @@ claims were narrowed or refuted.
 | Item | Question and target | Required evidence before admission |
 | --- | --- | --- |
 | 02: ordinal response (accepted, EXP-174/D79) | Can strict Nash, improvement paths, and an ordinal-potential existence theorem use `Ranking` and explicit order laws? | A nonnumeric preference consumer; expected-utility specialization with its definedness guard; partial-preference separation; finite maximization assumptions stated precisely. Generalize one dependency chain before adding adjacent concepts such as properness. |
-| 03: mixture closure | Which law is sufficient for mixed dominance and pure-deviation reduction? | Separate binary mixing, finite iteration, and closure under arbitrary PMF `bind`. Test infinite-support mixtures and retain actual compared-law expectation premises. Compare named hypotheses with a proposed reusable law; do not call binary convexity countable betweenness. |
+| 03: mixture closure (binary-only refuted, EXP-175/D80) | Which law is sufficient for mixed dominance and pure-deviation reduction? | Separate binary mixing, finite iteration, and closure under arbitrary PMF `bind`. Test infinite-support mixtures and retain actual compared-law expectation premises. Compare named hypotheses with a proposed reusable law; do not call binary convexity countable betweenness. |
 | 04: Protocol judgment | Can comparison of continuation laws be separated from numerical continuation evaluation? | Preserve candidate and alternative expectation-definedness in the numerical specialization; a nonnumeric local-optimality consumer; existing terminal rationality, Bayes consistency, and proper-subgame semantics preserved. Historywise one-shot results must retain their exact scope and the recorded SPE counterexamples. |
 | 05: coalition judgment | Does strict unanimity provide useful shared transport for strong Nash and matching? | Incomparability example distinguishing absence of strict gain from weak equilibrium; nonempty-coalition policy; per-member quantifiers; agreement under explicit totality. Any change of meaning requires a decision, not a silent restatement. |
 | 06: arena and deviations | Is a more general deviation carrier needed by a named client? | A client the current local scheme cannot express, plus explicit locality and law-linearity enforcement or a demonstrated boundary explaining why they do not apply. Re-run the recommendation-spying and nonmember-coordinate controls. Compare with a separate consumer-local interface before replacing the static core. |
