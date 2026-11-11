@@ -289,6 +289,22 @@ theorem IsTeamGame.expectedUtility_eq {utility : Outcome → ι → ℝ}
   expect_congr_on_support (fun outcome _ => hteam outcome first second)
 
 
+/-- Strict comparison includes definedness of both actual expectations, even
+when their values are infinite. -/
+theorem euPreference_strict_iff_hasExpectation
+    (utility : Outcome → ι → ℝ) (agent : ι)
+    (preferred alternative : PMF Outcome) :
+    Preference.strict (euPreference utility) agent preferred alternative ↔
+      UtilityHasExpectation utility agent preferred ∧
+      UtilityHasExpectation utility agent alternative ∧
+        extendedExpectedUtility utility agent alternative <
+          extendedExpectedUtility utility agent preferred := by
+  constructor
+  · rintro ⟨⟨hp, ha, hle⟩, hnot⟩
+    exact ⟨hp, ha, lt_of_le_not_ge hle (fun h => hnot ⟨ha, hp, h⟩)⟩
+  · rintro ⟨hp, ha, hlt⟩
+    exact ⟨⟨hp, ha, hlt.le⟩, fun h => (not_le_of_gt hlt) h.2.2⟩
+
 theorem euPreference_strict_iff (utility : Outcome → ι → ℝ) (agent : ι)
     (preferred alternative : PMF Outcome)
     (hpreferred : UtilityIntegrable utility agent preferred)

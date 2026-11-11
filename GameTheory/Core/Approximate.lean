@@ -140,19 +140,9 @@ theorem isεNash_iff_εBestResponse {ε : ℝ} {profile : Profile F.sig} :
   exact isNash_iff_isBestResponse (F := F) (weaklyPrefers := euPreferenceWithin ε utility) profile
 
 /-- Strict expected-utility Nash is `ε`-Nash for every nonnegative `ε`. -/
-theorem IsStrictNash.isεNash {profile : Profile F.sig} (h : IsStrictNash F utility profile)
-    {ε : ℝ} (hε : 0 ≤ ε) : IsεNash F utility ε profile := by
-  rw [isεNash_iff]
-  intro who replacement
-  have hslack : extendedExpectedUtility utility who (F.play profile) ≤
-      extendedExpectedUtility utility who (F.play profile) + ε :=
-    le_add_of_nonneg_right (EReal.coe_nonneg.2 hε)
-  obtain ⟨hbase, hstrict⟩ := h who
-  by_cases hsame : replacement = profile who
-  · subst replacement
-    rw [Profile.update_eq_self]
-    exact ⟨hbase, hbase, hslack⟩
-  · obtain ⟨hdev, hlt⟩ := hstrict replacement hsame
-    exact ⟨hbase, hdev, hlt.le.trans hslack⟩
+theorem IsStrictNash.isεNash {profile : Profile F.sig}
+    (h : IsStrictNash F (euPreference utility) profile)
+    {ε : ℝ} (hε : 0 ≤ ε) : IsεNash F utility ε profile :=
+  IsεNash.of_isNash F utility h.isNash hε
 
 end GameTheory
