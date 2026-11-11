@@ -195,6 +195,15 @@ fit a fixed-point interface.
 
 ## Constraints and alternatives
 
+**Item 10 / EXP-182: simultaneous feasible choice (in progress).** Compare
+ordinary Nash filtered by feasibility with local affordable optimization in
+a shared-capacity quantity game. Test a per-coordinate fixed-point theorem
+using the closed-argmax result, lower hemicontinuity and quasiconcavity on each
+actual menu. The old local-lottery theorem must remain an exact specialization;
+no aggregate social objective or generalized-game record is pre-approved.
+
+## Constraints and alternatives
+
 The accepted defaults remain [D5](decisions/D5-deviation-and-equilibrium.md),
 [D7](decisions/D7-certificate-stratification.md),
 [D8](decisions/D8-minimal-transformations.md), and
