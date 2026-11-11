@@ -14,6 +14,7 @@ nonempty and convex, and continuity of the scores gives a closed graph.
 -/
 
 public import GameTheory.Math.Probability.Simplex
+public import GameTheory.Math.ParametricOptimality
 public import Mathlib.Analysis.Normed.Module.FiniteDimension
 public import FixedPointTheorems.kakutani
 
@@ -78,30 +79,31 @@ theorem exists_localChoice_fixedPoint
     choose v hv hmax using coordinate_nonempty
     exact ⟨v, fun i _ => ⟨hv i, hmax i⟩⟩
   have replies_closedGraph : closedGraph replies := by
-    show IsClosed _
-    have hset : {z : domain × (∀ i, A i → ℝ) | z.2 ∈ replies z.1} =
-        (⋂ i : ι, {z : domain × (∀ i, A i → ℝ) |
-          z.2 i ∈ simplexWeights (A i)}) ∩
-        ⋂ i : ι, ⋂ w ∈ simplexWeights (A i),
-          {z : domain × (∀ i, A i → ℝ) |
-            (∑ a, w a * score z.1 i a) ≤ ∑ a, z.2 i a * score z.1 i a} := by
-      ext z
-      simp only [Set.mem_ofPred_eq, Set.mem_inter_iff, Set.mem_iInter, replies,
-        Set.mem_pi, Set.mem_univ, forall_const]
-      exact forall_and
-    rw [hset]
-    refine IsClosed.inter (isClosed_iInter fun i => ?_)
-      (isClosed_iInter fun i => isClosed_iInter fun w => isClosed_iInter fun _ => ?_)
-    · exact (isClosed_simplexWeights _).preimage ((continuous_apply i).comp continuous_snd)
-    · apply isClosed_le
-      · exact continuous_finsetSum Finset.univ fun a _ =>
-          ((continuous_score i a).comp continuous_fst).const_mul (w a)
+    have coordinate_closed (i : ι) : IsClosed
+        {p : domain × (A i → ℝ) | p.2 ∈ simplexWeights (A i) ∧
+          ∀ w ∈ simplexWeights (A i),
+            (∑ a, w a * score p.1 i a) ≤ ∑ a, p.2 a * score p.1 i a} := by
+      apply Math.isClosed_feasibleMaximizers
+        (fun _ : domain => simplexWeights (A i))
+        (fun p => ∑ a, p.2 a * score p.1 i a)
+      · exact (isClosed_simplexWeights _).preimage continuous_snd
+      · exact LowerHemicontinuous.const
       · apply continuous_finsetSum
         intro a _
-        have coordinate_continuous : Continuous
-            (fun z : domain × (∀ i, A i → ℝ) => z.2 i a) :=
-          (continuous_apply a).comp ((continuous_apply i).comp continuous_snd)
-        exact coordinate_continuous.mul ((continuous_score i a).comp continuous_fst)
+        exact ((continuous_apply a).comp continuous_snd).mul
+          ((continuous_score i a).comp continuous_fst)
+    show IsClosed _
+    have hset : {z : domain × (∀ i, A i → ℝ) | z.2 ∈ replies z.1} =
+        ⋂ i : ι, {z : domain × (∀ i, A i → ℝ) |
+          z.2 i ∈ simplexWeights (A i) ∧
+            ∀ w ∈ simplexWeights (A i),
+              (∑ a, w a * score z.1 i a) ≤ ∑ a, z.2 i a * score z.1 i a} := by
+      ext z
+      simp [replies]
+    rw [hset]
+    exact isClosed_iInter fun i => IsClosed.preimage
+      (f := fun z : domain × (∀ j, A j → ℝ) => (z.1, z.2 i))
+      (continuous_fst.prodMk ((continuous_apply i).comp continuous_snd)) (coordinate_closed i)
   have domain_nonempty : domain.Nonempty :=
     ⟨(fun i action =>
       (((PMF.pure (Classical.arbitrary (A i)) : PMF (A i)) action).toReal)),
