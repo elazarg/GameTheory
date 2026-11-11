@@ -9,6 +9,8 @@ import all GameTheory.Experimental.Exp175.MixtureClosure
 import all GameTheory.Experimental.Exp176.Comparison
 import all GameTheory.Experimental.Exp177.CoalitionJudgment
 import all GameTheory.Experimental.Exp177.MatchingConsent
+import all GameTheory.Experimental.Exp178.LocalRealization
+import all GameTheory.Experimental.Exp178.LawTransformerBoundary
 import all GameTheory.Tests.CoalitionComparison
 import all GameTheory.Tests.ContextJudgment
 import all GameTheory.Tests.ContextGuards
