@@ -1,7 +1,8 @@
 # Abstraction building-block experiment
 
-Status: the initial six-item investigation and the finite-menu continuation
-are complete; the cross-domain investigation continues.
+Status: eight investigation items are complete; the cross-domain investigation
+continues. Finite-menu representation and local scalarization join the initial
+six-item results below.
 The goal is reusable building blocks for the library and economic theory,
 with later MathEconLib extraction in view. Every collected slice
 passes full integration audits. Selected theorem-level and guarded-comparison
@@ -120,6 +121,48 @@ Later questions remain consumer-gated: endogenous feasible sets and fixed-point
 existence; welfare aggregation and interpersonal scale; information and dynamic
 choice consistency. These are possible investigations, not adopted interfaces
 or a breadth-first delivery queue.
+
+**Item 08 / EXP-180: scalarization (complete, D85).** Test whether a feasible
+maximizer is Pareto maximal when each strict improvement of that incumbent
+raises the scalar objective. Compare with Mathlib's global monotone transport.
+Use existing Groves sums and bargaining products, keeping weights, disagreement
+and feasibility with their owners. Positive gains at the bargaining incumbent
+must suffice without global positivity. Keep zero/negative weights, objective
+biases, infeasible incumbents and zero-product dominated ties as rejection
+controls. Ordinal efficiency and the choice of a cardinal social objective
+must remain distinct.
+
+The result selects one small `Math.Scalarization` theorem over preorders.
+Groves reported-welfare maximization implies maximality of attainable reported
+valuation vectors before transfers. A canonical Nash-product solution with
+positive incumbent gains is fully Pareto efficient, even on a feasible domain
+where the product is not globally strictly monotone. The original weak-Pareto
+theorem remains unconditional; an IR zero-product dominated solution refutes
+using participation alone for the stronger conclusion. Actual biased canonical
+choices, zero/negative weights, positive rescaling and infeasible-incumbent
+controls delimit the statement. Full audit passes 3,875 default and 4,779
+validation jobs, public lint and transitive standard-axiom checks. See
+[D85](decisions/D85-local-scalarization-and-pareto-maximality.md).
+
+### Consequence for field-wide building blocks
+
+The evidence now supports separate operations for domain-guarded comparison,
+feasible menu choice and preference reconstruction, and maximality from a
+selected objective. Their mathematical owners import only Mathlib. Strategic
+coverage, expectations, institutional feasibility, reported valuations and
+bargaining disagreement remain with their domain owners. This makes later
+shared mathematical-economics extraction possible without assuming that a
+single record can represent all those meanings.
+
+The next open constraint boundary is an endogenous feasible correspondence:
+the allowed menu may depend on prices, the incumbent profile or other agents.
+A concrete client must first require its feasibility and existence laws. The
+all-finite-menu representation must not be applied to restricted budget data
+without its missing domain hypotheses, nor may fixed-simplex existence be
+advertised as general-equilibrium existence. Information-dependent choice and
+stronger representation theorems remain independent later questions. These
+gates continue the investigation; the eight successful scopes do not claim
+an architecture for the entire field is settled.
 
 ## Constraints and alternatives
 

@@ -11103,3 +11103,53 @@ observations and outcome below are preserved as the record of that run.
   than expected utility and does not identify latent incompleteness. Next test
   explicit scalar maximization against ordinal Pareto maximality, rather than
   treating welfare sums as the only notion of efficiency.
+
+## EXP-180: scalar objectives and ordinal Pareto maximality
+
+- **Date / status:** 2026-11-11; complete, supporting incumbent-local scalarization and separate welfare objectives.
+- **Question:** Does an incumbent-local strict-increase theorem connect
+  canonical welfare and bargaining maximizers to ordinal Pareto maximality,
+  without a common-scale axiom or a new welfare/problem representation?
+- **Alternatives:** direct arithmetic proofs; Mathlib's global strictly
+  monotone maximality transport; a theorem requiring strict objective increase
+  only at improvements of the selected feasible point. Mathlib retains
+  `IsMaxOn`, `Maximal`, product orders and aggregate inequalities.
+- **Representative slice:** Groves reported-welfare maximization and Nash
+  bargaining with positive incumbent gains. Preserve the existing unconditional
+  weak-Pareto bargaining theorem. Reject zero/negative welfare weights,
+  alternative-specific biases, and zero-boundary Nash-product ties as sufficient
+  assumptions for full Pareto efficiency.
+- **Kill conditions:** identify ordinal Pareto with utilitarian selection;
+  hide interpersonal weights/biases; require positivity at unrelated feasible
+  points; infer maximality for an infeasible candidate; add a new order,
+  equilibrium or welfare engine; or reprove Mathlib's global monotone transport.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-08-scalarization`, baseline `1c6112a9`;
+  scratch and raw logs under ignored `.codex/scratch/exp180/`.
+- **Focused observations:** one preorder-valued objective theorem serves both
+  reported-welfare Pareto maximality and full bargaining Pareto efficiency with
+  positive incumbent gains. The latter's actual domain contains zero-product
+  boundary improvements, so global strict monotonicity is false there. An IR
+  zero-gain maximizer is weakly Pareto optimal but not Pareto optimal. Zero and
+  negative weights select dominated points; an actual canonical affine
+  maximizer with positive weights does so through its alternative bias.
+  Independent positive rescaling preserves every Pareto comparison but reverses
+  the fixed-weight sum choice. Empty-set maximization does not imply feasible
+  maximality. Empty-player full Pareto evidence needs no nonempty-player premise.
+- **Artifacts / focused validation:** `Math.Scalarization`, existing Groves and
+  bargaining owners, `Tests.Groves`, `Tests.BargainingScalarization`, and retained
+  rejection controls under `Experimental/Exp180/`; [D85](decisions/D85-local-scalarization-and-pareto-maximality.md).
+  Independent Math build passes 716 jobs; focused strict
+  `lake --iofail build GameTheory.Tests.Groves GameTheory.Tests.BargainingScalarization GameTheory.Experimental.Exp180.ScalarizationBoundary`
+  passes 3,158 jobs, and source checks pass. Independent read-only semantic
+  review accepts the scope.
+- **Integration validation:** on checkpoint `eb6a27ad`,
+  `python scripts/audit.py` passes 3,875 default and 4,779 complete validation
+  jobs, public lint, authored diagnostics and transitive standard-axiom checks.
+  Raw output is `.codex/scratch/exp180/integration-audit.log`.
+- **Outcome / next action:** adopt the independent mathematical theorem and
+  the Groves/bargaining consequences. Keep Pareto comparisons separate from
+  the chosen cardinal objective and preserve the zero-boundary failure.
+  No common-scale axiom, social-planner structure, new order or welfare engine
+  is admitted. Endogenous feasible sets and their existence/continuity laws
+  need a concrete requiring consumer before becoming another interface.

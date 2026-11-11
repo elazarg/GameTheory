@@ -47,6 +47,19 @@ theorem publicChoice_isEfficient : publicChoice.IsEfficient := by
     dsimp only [publicChoice, reportedValue, playerWeight]
     norm_num [hfalse, htrue]
 
+/-- The public decision admits no reported-value Pareto improvement, before
+payments. The shared maximality theorem applies to every report profile. -/
+theorem publicChoice_no_reported_pareto_improvement (report : publicChoice.ReportProfile) :
+    ¬ ∃ alternative,
+      (∀ who, publicChoice.val who (report who) (publicChoice.alloc report) ≤
+        publicChoice.val who (report who) alternative) ∧
+      ∃ who, publicChoice.val who (report who) (publicChoice.alloc report) <
+        publicChoice.val who (report who) alternative := by
+  rintro ⟨alternative, weak, who, strict⟩
+  have maximal := publicChoice_isEfficient.reportedValues_maximal report
+  have reverse := maximal.2 ⟨alternative, rfl⟩ weak
+  exact (not_lt_of_ge (reverse who)) strict
+
 set_option backward.isDefEq.respectTransparency false in
 theorem publicChoice_offset_independent :
     ∀ (who : Bool) (reports : publicChoice.ReportProfile)
