@@ -10898,3 +10898,28 @@ observations and outcome below are preserved as the record of that run.
   consumers select their exact closure and guard strength.
   [D80](decisions/D80-binary-and-countable-mixture-closure.md) records the
   narrowed conclusion; Protocol comparison remains the next gated item.
+
+## EXP-176: guarded Protocol comparison without numerical semantics changes
+
+- **Date / status:** 2026-11-11; running.
+- **Question:** Can context-local optimality share a probability-independent
+  guarded comparison predicate, or does a relation-valued context record earn
+  its additional representation and construction costs?
+- **Alternatives:** direct admissibility and comparison arguments; a record
+  retaining outcome laws, their admissibility, and a law preference. Compare
+  identical numerical and nonnumeric local-optimality/coverage clients.
+- **Representative slice:** Context local optimality and outcome-law coverage;
+  a belief-dependent nonnumeric choice; an empty allowed set with undefined
+  incumbent expectation; a defined incumbent with an undefined alternative;
+  defined infinite continuation values. Keep terminal whole-policy rationality,
+  Bayes consistency and proper-subgame distinctions unchanged (D64/D72/D73).
+- **Kill conditions:** losing either expectation guard, admitting an undefined
+  incumbent through empty-set vacuity, confusing absence of strict gain with
+  weak optimality under partial preferences, adding assumptions to sequential
+  theorems, duplicating evaluators or equilibrium meanings, or adding an unused
+  context/certificate hierarchy.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-04-protocol-judgment`, baseline `13b85eb1`.
+  Initial probes live in ignored `.codex/scratch/exp176/`.
+- **Outcome / next action:** pending; compile both shapes and hostile guards
+  before selecting or freezing a public building block.
