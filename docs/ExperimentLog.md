@@ -11002,3 +11002,28 @@ observations and outcome below are preserved as the record of that run.
   scoped consent/affected-coordinate separation. The arena gate must test the
   existing scheme with distinct judge labels and affected coordinates before
   inferring a need for unrestricted law transformers.
+
+## EXP-178: affected coordinates, consent labels and law-linearity
+
+- **Date / status:** 2026-11-11; running.
+- **Question:** Does the validated matching displacement force a broader arena
+  or arbitrary law-transformer interface, or does the existing scheme suffice
+  when consenting judges are distinguished from affected coordinates?
+- **Alternatives:** preserve the existing local kernel and arbitrary deviator
+  label; broaden a deviation to an unrestricted transformer of the status-quo
+  law. No new stable interface is admitted before a concrete client requires it.
+- **Representative slice:** extend the actual EXP-177 assignment replacement
+  with an unchanged spectator coordinate: two consenters, three affected
+  coordinates, four total. Realize both spectator-bit endpoint laws and their
+  genuine mixture while preserving the spectator. Contrast a law-aware Boolean
+  transformer that violates binary-mixture linearity and has no fixed kernel.
+- **Kill conditions:** identify consent and affected coordinates; claim
+  nonmember preservation only vacuously with an all-coordinate rewrite; weaken
+  the enforced locality/bind invariant; claim a full matching compilation or
+  global expressivity theorem from a fixed displacement; or admit a new arena,
+  probability carrier, engine or certificate hierarchy without a requiring client.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-06-arena-boundary`, baseline `18559255`.
+  Initial candidates live in ignored `.codex/scratch/exp178/`.
+- **Outcome / next action:** pending; test the existing scheme with a proper
+  affected subset before inferring any need for unrestricted law transformers.
