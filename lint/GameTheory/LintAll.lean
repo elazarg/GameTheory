@@ -43,6 +43,7 @@ import all GameTheory.Analysis.IncentiveHierarchy
 import all GameTheory.Analysis.IncentiveSimulation
 import all GameTheory.Analysis.Learning
 import all GameTheory.Analysis.LocalChoiceFixedPoint
+import all GameTheory.Analysis.FeasibleChoiceFixedPoint
 import all GameTheory.Analysis.MatrixValue
 import all GameTheory.Analysis.Minimax
 import all GameTheory.Analysis.Nash

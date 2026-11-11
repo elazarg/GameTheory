@@ -15,6 +15,8 @@ import all GameTheory.Experimental.Exp179.ChoiceBoundary
 import all GameTheory.Experimental.Exp180.ScalarizationBoundary
 import all GameTheory.Experimental.Exp181.DivisibleBudget
 import all GameTheory.Experimental.Exp181.BudgetBoundary
+import all GameTheory.Experimental.Exp182.SharedCapacity
+import all GameTheory.Analysis.FeasibleChoiceFixedPointTest
 import all GameTheory.Tests.CoalitionComparison
 import all GameTheory.Tests.ContextJudgment
 import all GameTheory.Tests.ContextGuards
