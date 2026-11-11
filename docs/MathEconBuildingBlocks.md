@@ -54,6 +54,10 @@ Work in this order, revisiting it when a counterexample changes the question:
 3. **Restricted observations.** Test identification from a genuinely restricted
    menu family before extending the all-finite-menu representation theorem.
    Observational ambiguity is a possible answer, not a missing record to hide.
+   EXP-185 / D90 proves ambiguity at a fixed positive price vector for every
+   real wealth, despite two globally consistent rationalizations. A changed
+   price budget distinguishes them. Existing menus suffice; general restricted
+   rationalization existence is a separate theorem question.
 4. **Institutional composition.** Test simultaneous bundle acceptance and the
    separation of consent from affected participants against existing matching
    and deviation operations. Require an operation the current APIs cannot

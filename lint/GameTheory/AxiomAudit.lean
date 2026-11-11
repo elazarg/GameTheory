@@ -22,6 +22,7 @@ import all GameTheory.Experimental.Exp183.ExchangeControls
 import all GameTheory.Experimental.Exp184.Composition
 import all GameTheory.Experimental.Exp184.Controls
 import all GameTheory.Experimental.Exp184.Consumers
+import all GameTheory.Experimental.Exp185.RestrictedBudget
 import all GameTheory.Analysis.FeasibleChoiceFixedPointTest
 import all GameTheory.Analysis.ExchangeEconomyTest
 import all GameTheory.Tests.CoalitionComparison

@@ -1,6 +1,6 @@
 # Abstraction building-block experiment
 
-Status: thirteen items are complete, including twelve investigations and one
+Status: fourteen items are complete, including thirteen investigations and one
 ownership consolidation; the cross-domain investigation
 continues. Finite-menu representation, local scalarization, parametric
 optimality, simultaneous feasible choice and a complete scoped exchange slice
@@ -25,6 +25,12 @@ choices before observation; non-EU possibility comparisons supply the positive
 arbitrary-PMF clients but fail strict cancellation. The prototypes remain
 experimental and establish chooser-level rather than imperfect-information
 policy composition. See [D89](decisions/D89-conditional-and-dynamic-comparison.md).
+
+Item 14 / EXP-185 proves observational nonidentification from a full
+fixed-positive-price budget family, with a second genuine budget distinguishing
+the two globally WARP-consistent score rankings. Existing filtered menus and
+`FiniteChoice.best` express the complete evidence; no restricted-demand record
+is introduced. See [D90](decisions/D90-restricted-budget-observations.md).
 
 Item 01 selects direct preference-generic exact-law proofs after comparing the
 existing coverage API on the same statements. See [D78](decisions/D78-preference-generic-exact-law-bridges.md)

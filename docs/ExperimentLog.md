@@ -11377,3 +11377,42 @@ observations and outcome below are preserved as the record of that run.
   changes. Dynamic comparison and actual-mixture admissibility are separate
   obligations. Next test restricted budget observations, where all-finite-menu
   identification cannot be assumed.
+
+## EXP-185: restricted budgets and preference identification
+
+- **Date / status:** 2026-11-11; complete, proving restricted-observation nonidentification.
+- **Question:** Can an entire fixed-positive-price budget family identify the
+  preference represented by all-finite-menu choice? Does adding another actual
+  budget distinguish observational ambiguity without a new choice record?
+- **Alternatives:** ordinary filtered finite menus and `FiniteChoice.best`;
+  a restricted-demand abstraction claiming recovery of a complete ranking.
+- **Representative slice:** six indivisible nonnegative bundles of total
+  quantity at most two. Compare monotone scores `5x + 2y` and `5x + 2y²` at
+  prices `(1,1)` for every wealth, then at `(2,1)` and wealth three.
+- **Kill conditions:** retain all ties and actual affordability. Do not infer
+  preference identification from agreement on restricted observations; do not
+  confuse nonidentification with failure of existence of a rationalization.
+  A new representation must do more than package existing filtered menus.
+- **Artifacts / commands:** branch
+  `codex/experiment-abstraction-item-14-restricted-budgets`, baseline `8770f201`;
+  evidence under `Experimental/Exp185`, scratch in `.codex/scratch/exp185/`.
+- **Observations:** for every real wealth the full choice correspondences
+  agree at `(1,1)`, including empty and threshold budgets, but the rankings
+  strictly reverse `(1,1)` versus `(0,2)`. Prices `(2,1)`, wealth three,
+  distinguish them through different singleton demands. Both global choice
+  correspondences satisfy WARP and both scores strictly value each unit
+  commodity increment. The failure is identification from a restricted domain,
+  not existence of a consistent rationalization.
+- **Focused validation:** `lake --iofail build
+  GameTheory.Experimental.Exp185.RestrictedBudget` passes 958 jobs;
+  source boundaries and driver coverage pass. See
+  [D90](decisions/D90-restricted-budget-observations.md).
+- **Integration validation:** on checkpoint `8fcbb6eb`, full audit passes
+  3,877 default and 4,796 validation jobs, public lint, authored diagnostics and
+  transitive standard-axiom checks. Raw output is
+  `.codex/scratch/exp185/integration-audit.log`. Independent semantic review
+  accepts the finite indivisible and identification-only scope.
+- **Outcome / next action:** keep the native observation probe experimental;
+  reuse canonical finite menus rather than introducing a demand wrapper.
+  Next test joint contract acceptance and its substitution assumptions against
+  the existing MathEconLib consumer.
