@@ -10814,7 +10814,7 @@ observations and outcome below are preserved as the record of that run.
 
 ## EXP-174: ordinal response and improvement ranks
 
-- **Date / status:** 2026-11-11; running.
+- **Date / status:** 2026-11-11; complete, supporting guarded ordinal response and direct rank hypotheses.
 - **Question:** Can strict Nash and improvement dynamics use bare outcome-law
   preferences while preserving the actual-law guards of expected utility?
   Is a direct finite-range improvement-rank theorem sufficient for ordinal
@@ -10833,5 +10833,26 @@ observations and outcome below are preserved as the record of that run.
 - **Artifacts / commands:** item branch
   `codex/experiment-abstraction-item-02-ordinal-response`, based on `4d2bb891`.
   Commands and outcomes follow after the compiled comparison.
-- **Outcome / next action:** pending; establish the guarded relation API,
-  compile its expected-utility characterization, then test rank termination.
+- **Observations:** distinct-deviation strictness alone is vacuous on a
+  singleton strategy carrier even when every law is rejected; retaining the
+  incumbent self-comparison exactly preserves the numerical expectation guard.
+  Equality of laws gives failure of weak Nash with no strict improving step,
+  refuting deletion of the local comparability premise. A finite-range rank
+  needs only a preorder, not a linear order or finitely many profiles. The
+  existing countable strategy consumer traverses the generic existence proof.
+  A possibility preference distinguishes the new API from expected utility:
+  its fair-lottery comparisons provably admit no real utility representation.
+- **Measurements / validation:** zero new structures or equilibrium engines;
+  direct rank hypotheses serve numerical termination/existence and nonnumeric
+  response consumers. No bundled candidate was implemented or timed. Focused
+  strict owner/consumer builds and source audit pass. On implementation
+  checkpoint `3678492f`, `python scripts/audit.py` passes the default strict
+  build (3,872 jobs), full validation build (4,762 jobs), public lint, authored
+  diagnostic checks and transitive standard-axiom checks. Raw output is
+  `.codex/scratch/exp174/integration-audit.log`.
+- **Outcome / next action:** accept relation-based response with self-comparison,
+  local comparability and finite-range improvement ranks; retain the numerical
+  potential certificates as specializations. No new ordinal certificate is
+  justified by this slice. [D79](decisions/D79-ordinal-response-and-improvement-ranks.md)
+  records the scope. Investigate binary versus arbitrary PMF mixture closure
+  separately before admitting the proposed Mixable level.
