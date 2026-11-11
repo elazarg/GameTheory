@@ -11290,3 +11290,30 @@ observations and outcome below are preserved as the record of that run.
 - **Artifacts / commands:** item branch
   `codex/experiment-abstraction-item-11-exchange-economy`, baseline `c1431a88`;
   scratch and raw logs under ignored `.codex/scratch/exp183/`.
+- **Focused observations:** the existing per-coordinate fixed point reaches
+  a complete two-by-two exchange result on full budgets. Normalized prices
+  permit zero coordinates while unit endowments keep income one. A standalone
+  radial-recovery lemma proves positive linear budget lower hemicontinuity
+  from fixed-bundle cost section continuity alone. Aggregate affordability and
+  the price response bound resources; a lower-expenditure residual top-up
+  proves exact clearing without a prior budget-exhaustion premise. The cap
+  is then inactive, and Mathlib concavity upgrades full-budget local to global
+  optimality. Conflicting positive linear utility weights instantiate the
+  complete existence theorem.
+- **Rejection observations:** tied individually optimal demands can fail
+  clearing and price response. A cap-one endowment allocation clears and
+  satisfies price response and capped optimality, but is not optimal on the
+  full budget. Continuous concave constant-zero utilities permit a
+  nonclearing price-response point under weak monotonicity. The latter is a
+  failure of that implication, not nonexistence of every clearing equilibrium.
+- **Artifacts / focused validation:** `Math.LinearBudget`, native proofs and
+  controls under `Experimental/Exp183`, `Analysis.ExchangeEconomyTest`, and
+  [D88](decisions/D88-exchange-budgets-and-market-clearing.md). Independent
+  Math target passes 1,606 strict jobs; native clearing/uncapping passes 1,700;
+  complete consumer and controls pass 3,202, and source checks pass. Whole-file
+  comment-masked nonblank counts are 56 shared mathematical, 103 native
+  definitions/geometry, 152 clearing/uncapping, 135 analytic construction and
+  153 controls. No performance or compression claim is made. Independent
+  semantic reviews accept the exact two-by-two/unit-endowment scope and the
+  distinction between ambient continuity and cone-restricted utility laws.
+  Complete integration remains pending.
