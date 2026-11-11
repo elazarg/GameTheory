@@ -10811,3 +10811,27 @@ observations and outcome below are preserved as the record of that run.
   is sufficient but larger. No new transport theorem, record, or hierarchy is
   justified by these clients. [D78](decisions/D78-preference-generic-exact-law-bridges.md)
   records the narrowed conclusion. Later items remain separately gated.
+
+## EXP-174: ordinal response and improvement ranks
+
+- **Date / status:** 2026-11-11; running.
+- **Question:** Can strict Nash and improvement dynamics use bare outcome-law
+  preferences while preserving the actual-law guards of expected utility?
+  Is a direct finite-range improvement-rank theorem sufficient for ordinal
+  existence, before generalizing or adding a potential certificate structure?
+- **Alternatives:** relation-based response definitions with an explicit
+  incumbent self-comparison versus vacuous distinct-deviation strictness;
+  direct improvement-rank hypotheses versus a new ordinal certificate.
+- **Representative slice:** strict Nash to approximate Nash; improvement
+  steps through well-founded termination and finite-range rank existence;
+  existing exact/ordinal potential and congestion consumers; a nonnumeric
+  relation, an incomparable deviation, and a singleton-action guard control.
+- **Kill conditions:** singleton strict Nash loses expectation-definedness;
+  absence of strict gain is mistaken for weak Nash under partial preferences;
+  finite rank range is replaced by finite profiles; a second equilibrium
+  engine, duplicate response semantics, unused structure, or new axioms appear.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-02-ordinal-response`, based on `4d2bb891`.
+  Commands and outcomes follow after the compiled comparison.
+- **Outcome / next action:** pending; establish the guarded relation API,
+  compile its expected-utility characterization, then test rank termination.
