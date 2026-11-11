@@ -11377,3 +11377,22 @@ observations and outcome below are preserved as the record of that run.
   changes. Dynamic comparison and actual-mixture admissibility are separate
   obligations. Next test restricted budget observations, where all-finite-menu
   identification cannot be assumed.
+
+## EXP-185: restricted budgets and preference identification
+
+- **Date / status:** 2026-11-11; reserved, in progress.
+- **Question:** Can an entire fixed-positive-price budget family identify the
+  preference represented by all-finite-menu choice? Does adding another actual
+  budget distinguish observational ambiguity without a new choice record?
+- **Alternatives:** ordinary filtered finite menus and `FiniteChoice.best`;
+  a restricted-demand abstraction claiming recovery of a complete ranking.
+- **Representative slice:** six indivisible nonnegative bundles of total
+  quantity at most two. Compare monotone scores `5x + 2y` and `5x + 2y²` at
+  prices `(1,1)` for every wealth, then at `(2,1)` and wealth three.
+- **Kill conditions:** retain all ties and actual affordability. Do not infer
+  preference identification from agreement on restricted observations; do not
+  confuse nonidentification with failure of existence of a rationalization.
+  A new representation must do more than package existing filtered menus.
+- **Artifacts / commands:** branch
+  `codex/experiment-abstraction-item-14-restricted-budgets`, baseline `8770f201`;
+  evidence under `Experimental/Exp185`, scratch in `.codex/scratch/exp185/`.
