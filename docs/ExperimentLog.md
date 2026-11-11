@@ -11204,3 +11204,29 @@ observations and outcome below are preserved as the record of that run.
   Lower and upper feasibility continuity are distinct obligations. The next
   dependency gate is simultaneous optimality with endogenous feasible choices,
   where filtering ordinary Nash by a feasible-profile condition is not enough.
+
+## EXP-182: simultaneous feasible choice and shared-resource incentives
+
+- **Date / status:** 2026-11-11; in progress.
+- **Question:** Can simultaneous optimization with changing feasible menus
+  reuse the existing guarded choice and fixed-point tools without a new
+  generalized-game record or a summed interpersonal objective?
+- **Alternatives:** ordinary Nash plus feasible-profile filtering; native local
+  affordable judgments; and a theorem for per-coordinate feasible maximizers
+  on a compact convex product envelope, with lower hemicontinuity and
+  quasiconcavity explicit. Compare the existing local-lottery fixed-point
+  proof as a production specialization before admitting another interface.
+- **Representative slice:** two quantities in `[0,1]` sharing unit capacity,
+  own-quantity utility and opponent-dependent affordable alternatives. Local
+  optima fill capacity while every ordinary Nash profile violates it. Test a
+  shared fixed-point theorem against this consumer and unchanged finite-simplex
+  local lotteries. Keep each objective separate and freeze the parameter
+  during every local comparison.
+- **Kill conditions:** silently change canonical Nash or recommendation
+  locality; identify feasibility filtering with endogenous available moves;
+  hide nonempty/continuous menu assumptions or loss of convex maximizers;
+  sum different judges' scores merely to fit a theorem; duplicate Mathlib or
+  the external fixed-point engine; or introduce an unconsumed problem record.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-10-feasible-fixed-points`, baseline
+  `bbd5add1`; scratch and logs under ignored `.codex/scratch/exp182/`.
