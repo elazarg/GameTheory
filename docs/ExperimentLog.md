@@ -11416,3 +11416,26 @@ observations and outcome below are preserved as the record of that run.
   reuse canonical finite menus rather than introducing a demand wrapper.
   Next test joint contract acceptance and its substitution assumptions against
   the existing MathEconLib consumer.
+
+## EXP-186: joint contract acceptance versus alternative choice
+
+- **Date / status:** 2026-11-11; reserved, in progress.
+- **Question:** Can item-level WARP or rationalization over bundles replace
+  the substitution assumptions used to reduce joint blocking to singleton
+  blocking? Does expressing this distinction require another game arena?
+- **Alternatives:** plain set maps with separate contraction/consistency
+  hypotheses and existing finite choice on bundle alternatives; conflating
+  accepted contracts with tied alternative bundles or their item-level WARP.
+- **Representative slice:** quota two on three ranked contracts, matching the
+  MathEconLib reference's exact substitutes/IRC/path-independence formulas;
+  complementary two-contract acceptance as a rationalized countercontrol.
+  Test the actual joint-to-singleton acceptance implication.
+- **Kill conditions:** do not identify item WARP with substitutes, infer
+  substitutes from bundle rationality, flatten ties, or confuse an accepted
+  empty bundle with an empty correspondence. A broader arena must supply a
+  missing operation rather than another name for the same maps.
+- **Artifacts / commands:** branch
+  `codex/experiment-abstraction-item-15-contract-choice`, baseline `74b60c4c`;
+  evidence under `Experimental/Exp186`, scratch `.codex/scratch/exp186/`.
+  Reference checkout is read-only at
+  `58f602847d7f131994d32ca7a8cc1af35b7e2dbe`.
