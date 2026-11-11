@@ -1,6 +1,6 @@
 # D85: local scalarization and Pareto maximality
 
-- **Status:** selected after focused validation; integration validation pending.
+- **Status:** adopted for the local mathematical bridge and the two domain consequences.
 - **Date:** 2026-11-11
 - **Experiment:** EXP-180
 
@@ -80,3 +80,8 @@ Independent semantic review accepts the local hypothesis, domain meanings,
 empty-player behavior and actual biased canonical choice. Integration evidence
 is recorded in EXP-180 before collection. No performance claim follows from
 these build counts.
+
+On checkpoint `eb6a27ad`, `python scripts/audit.py` passes 3,875 default and
+4,779 complete validation jobs, public lint, authored diagnostic checks and
+transitive standard-axiom checks. Raw output is ignored
+`.codex/scratch/exp180/integration-audit.log`.

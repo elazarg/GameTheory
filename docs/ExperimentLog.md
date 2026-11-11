@@ -11106,7 +11106,7 @@ observations and outcome below are preserved as the record of that run.
 
 ## EXP-180: scalar objectives and ordinal Pareto maximality
 
-- **Date / status:** 2026-11-11; in progress.
+- **Date / status:** 2026-11-11; complete, supporting incumbent-local scalarization and separate welfare objectives.
 - **Question:** Does an incumbent-local strict-increase theorem connect
   canonical welfare and bargaining maximizers to ordinal Pareto maximality,
   without a common-scale axiom or a new welfare/problem representation?
@@ -11142,4 +11142,14 @@ observations and outcome below are preserved as the record of that run.
   Independent Math build passes 716 jobs; focused strict
   `lake --iofail build GameTheory.Tests.Groves GameTheory.Tests.BargainingScalarization GameTheory.Experimental.Exp180.ScalarizationBoundary`
   passes 3,158 jobs, and source checks pass. Independent read-only semantic
-  review accepts the scope. Full integration remains pending.
+  review accepts the scope.
+- **Integration validation:** on checkpoint `eb6a27ad`,
+  `python scripts/audit.py` passes 3,875 default and 4,779 complete validation
+  jobs, public lint, authored diagnostics and transitive standard-axiom checks.
+  Raw output is `.codex/scratch/exp180/integration-audit.log`.
+- **Outcome / next action:** adopt the independent mathematical theorem and
+  the Groves/bargaining consequences. Keep Pareto comparisons separate from
+  the chosen cardinal objective and preserve the zero-boundary failure.
+  No common-scale axiom, social-planner structure, new order or welfare engine
+  is admitted. Endogenous feasible sets and their existence/continuity laws
+  need a concrete requiring consumer before becoming another interface.
