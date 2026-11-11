@@ -11419,7 +11419,7 @@ observations and outcome below are preserved as the record of that run.
 
 ## EXP-186: joint contract acceptance versus alternative choice
 
-- **Date / status:** 2026-11-11; reserved, in progress.
+- **Date / status:** 2026-11-11; complete, separating institutional substitution from bundle rationality.
 - **Question:** Can item-level WARP or rationalization over bundles replace
   the substitution assumptions used to reduce joint blocking to singleton
   blocking? Does expressing this distinction require another game arena?
@@ -11452,3 +11452,13 @@ observations and outcome below are preserved as the record of that run.
   [D91](decisions/D91-contract-acceptance-and-bundle-choice.md). No new stable
   record or arena is required, and the reference already owns the general
   institutional composition theorem.
+- **Integration validation:** on checkpoint `9443dd7e`, full audit passes
+  3,877 default and 4,799 validation jobs, public lint, authored diagnostics and
+  transitive standard-axiom checks. Raw output is
+  `.codex/scratch/exp186/integration-audit.log`. Independent review accepts the
+  item/bundle, empty-bundle and acceptance/full-stability boundaries.
+- **Outcome / next action:** keep the probes experimental and reuse the
+  MathEconLib-owned institutional operations. No broader arena or parallel
+  stable choice record is justified. Finish with a carrier-independent guarded
+  comparison consumer check and the concrete extraction contract; do not expand
+  into adjacent matching or demand theorem families.
