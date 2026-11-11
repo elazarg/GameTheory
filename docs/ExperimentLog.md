@@ -11396,3 +11396,14 @@ observations and outcome below are preserved as the record of that run.
 - **Artifacts / commands:** branch
   `codex/experiment-abstraction-item-14-restricted-budgets`, baseline `8770f201`;
   evidence under `Experimental/Exp185`, scratch in `.codex/scratch/exp185/`.
+- **Observations:** for every real wealth the full choice correspondences
+  agree at `(1,1)`, including empty and threshold budgets, but the rankings
+  strictly reverse `(1,1)` versus `(0,2)`. Prices `(2,1)`, wealth three,
+  distinguish them through different singleton demands. Both global choice
+  correspondences satisfy WARP and both scores strictly value each unit
+  commodity increment. The failure is identification from a restricted domain,
+  not existence of a consistent rationalization.
+- **Focused validation:** `lake --iofail build
+  GameTheory.Experimental.Exp185.RestrictedBudget` passes 958 jobs;
+  source boundaries and driver coverage pass. See
+  [D90](decisions/D90-restricted-budget-observations.md).
