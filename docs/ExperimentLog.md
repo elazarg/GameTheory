@@ -11126,3 +11126,20 @@ observations and outcome below are preserved as the record of that run.
 - **Artifacts / commands:** item branch
   `codex/experiment-abstraction-item-08-scalarization`, baseline `1c6112a9`;
   scratch and raw logs under ignored `.codex/scratch/exp180/`.
+- **Focused observations:** one preorder-valued objective theorem serves both
+  reported-welfare Pareto maximality and full bargaining Pareto efficiency with
+  positive incumbent gains. The latter's actual domain contains zero-product
+  boundary improvements, so global strict monotonicity is false there. An IR
+  zero-gain maximizer is weakly Pareto optimal but not Pareto optimal. Zero and
+  negative weights select dominated points; an actual canonical affine
+  maximizer with positive weights does so through its alternative bias.
+  Independent positive rescaling preserves every Pareto comparison but reverses
+  the fixed-weight sum choice. Empty-set maximization does not imply feasible
+  maximality. Empty-player full Pareto evidence needs no nonempty-player premise.
+- **Artifacts / focused validation:** `Math.Scalarization`, existing Groves and
+  bargaining owners, `Tests.Groves`, `Tests.BargainingScalarization`, and retained
+  rejection controls under `Experimental/Exp180/`; [D85](decisions/D85-local-scalarization-and-pareto-maximality.md).
+  Independent Math build passes 716 jobs; focused strict
+  `lake --iofail build GameTheory.Tests.Groves GameTheory.Tests.BargainingScalarization GameTheory.Experimental.Exp180.ScalarizationBoundary`
+  passes 3,158 jobs, and source checks pass. Independent read-only semantic
+  review accepts the scope. Full integration remains pending.

@@ -19,6 +19,7 @@ public import Mathlib.Data.Fintype.BigOperators
 public import Mathlib.Basic.Real.Basic
 public import Mathlib.Tactic.Linarith
 public import Mathlib.Tactic.Ring
+public import GameTheory.Math.Scalarization
 
 @[expose] public section
 
@@ -82,6 +83,32 @@ theorem IsNashSolution.isIndividuallyRational
     (solution : problem.IsNashSolution utility) :
     problem.IsIndividuallyRational utility :=
   solution.2.1
+
+/-- A Nash-product maximizer with positive gains for every player is Pareto
+optimal. Other feasible points may have zero gains; only the incumbent needs
+strict positivity. -/
+theorem IsNashSolution.isPareto_of_positive_gains
+    {problem : BargainingProblem Player} [Fintype Player] {utility : Player → ℝ}
+    (solution : problem.IsNashSolution utility)
+    (positive : ∀ player, problem.disagreement player < utility player) :
+    problem.IsPareto utility := by
+  have maximal : Maximal
+      (fun values => problem.feasible values ∧ problem.IsIndividuallyRational values)
+      utility := by
+    apply GameTheory.Math.maximal_of_isMaxOn
+      (objective := fun values => ∏ player, (values player - problem.disagreement player))
+    · exact fun alternative offered => solution.2.2 alternative offered.1 offered.2
+    · exact ⟨solution.1, solution.2.1⟩
+    · intro alternative _ improved
+      obtain ⟨weak, who, strict⟩ := Pi.lt_def.mp improved
+      exact Finset.prod_lt_prod₀ (fun player _ => sub_pos.mpr (positive player))
+        (fun player _ => sub_le_sub_right (weak player) _)
+        ⟨who, Finset.mem_univ who, sub_lt_sub_right strict _⟩
+  refine ⟨solution.1, ?_⟩
+  rintro ⟨alternative, feasible, weak, who, strict⟩
+  have rational : problem.IsIndividuallyRational alternative :=
+    fun player => (solution.2.1 player).trans (weak player)
+  exact (not_lt_of_ge ((maximal.2 ⟨feasible, rational⟩ weak) who)) strict
 
 /-- A Nash-product maximizer is weakly Pareto optimal. -/
 theorem IsNashSolution.isWeaklyPareto
