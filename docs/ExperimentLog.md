@@ -10972,5 +10972,23 @@ observations and outcome below are preserved as the record of that run.
 - **Artifacts / commands:** item branch
   `codex/experiment-abstraction-item-05-coalition-judgment`, baseline `ab6c61b9`.
   Initial candidates live in ignored `.codex/scratch/exp177/`.
-- **Outcome / next action:** pending; compile the discriminating coalition and
-  matching controls, then decide which shared building block is justified.
+- **Focused observations:** strict unanimity is irreflexive and transitive
+  for a fixed nonempty coalition, but its no-gain comparison is not transitive
+  even with total individual rankings. Equality preferences separate the
+  no-strict-gain equilibrium specialization from canonical weak strong Nash.
+  Local member comparisons suffice for their agreement; a two-player game
+  proves all-false unilateral Nash but not strong Nash under joint improvement,
+  and all-true strong Nash despite global incomparability of other laws.
+  Responsive matching can make both consenting members gain while harming an
+  outside incumbent. A kernel-local rewrite of only the consenting assignment
+  coordinates provably cannot realize that replacement in the tested direct
+  representation; this is not an impossibility claim for all game encodings.
+- **Artifacts / focused validation:** local-comparison theorems in `Core.Rank`
+  and `Core.Equilibrium`, with existing totality signatures preserved;
+  `Tests.CoalitionComparison` and retained candidates under
+  `Experimental/Exp177/`. The focused strict owner/control build passes 3,056
+  jobs; source audit passes. Zero new stable definitions, structures or
+  equilibrium engines. No new coalition problem record was implemented or timed.
+- **Outcome / next action:** theorem-level local comparison is the supported
+  candidate; a shared strict-coalition representation is not justified by these
+  clients. Full build, lint and transitive-axiom integration gates remain pending.
