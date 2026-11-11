@@ -3,13 +3,13 @@ module
 /-
 # Potential games
 
-A potential is a single real function on profiles that every player's incentives
-follow. It buys the one thing a general game does not have: a reason for a pure
-equilibrium to exist at all, with no fixed-point theorem and no topology —
-maximize the potential and nobody can gain by moving alone.
+A finite-range improvement rank takes values in a preorder and strictly rises
+along every improving move. Local comparability then makes improvement paths
+reach a Nash profile, without fixed-point theorems, topology, or numerical
+preferences. The profile carrier itself may be infinite.
 
-Two strengths are recorded, because the existence argument needs only the weaker
-one. An *exact* potential moves by exactly as much as the deviator's expected
+For expected utility, two numerical potential certificates are recorded. An
+*exact* potential moves by exactly as much as the deviator's expected
 utility; an *ordinal* potential only has to move in the same direction. The
 first implies the second, and the equilibrium-existence family is proved at
 the ordinal level.
@@ -32,6 +32,52 @@ universe uι us uo
 
 variable {ι : Type uι} [DecidableEq ι] {F : GameForm ι}
 variable {utility : F.sig.Outcome → ι → ℝ} {potential : Profile F.sig → ℝ}
+
+/-- A rank with finite range makes strict improvement well-founded. Only a
+preorder on rank values is needed; profiles may form an infinite type. -/
+theorem improvement_wellFounded_of_improvement_rank
+    {prefers : WeakPreference ι F.sig.Outcome} {V : Type*} [Preorder V]
+    (rank : Profile F.sig → V) (hrange : (Set.range rank).Finite)
+    (hincrease : ∀ {source target}, ImprovingStep F prefers source target →
+      rank source < rank target) :
+    WellFounded (fun target source : Profile F.sig => ImprovingStep F prefers source target) := by
+  have := hrange.to_subtype
+  have hvalues : WellFounded (fun later earlier : Set.range rank => earlier.1 < later.1) :=
+    Finite.wellFounded_of_trans_of_irrefl _
+  have hsubrelation : Subrelation
+      (fun target source : Profile F.sig => ImprovingStep F prefers source target)
+      (InvImage (fun later earlier : Set.range rank => earlier.1 < later.1)
+        fun profile => ⟨rank profile, profile, rfl⟩) := by
+    intro target source hstep
+    exact hincrease hstep
+  exact hsubrelation.wf (InvImage.wf _ hvalues)
+
+/-- Local comparability and a finite-range improvement rank suffice for weak
+acyclicity, without numerical preferences or a finite profile carrier. -/
+theorem weaklyAcyclic_of_improvement_rank
+    {prefers : WeakPreference ι F.sig.Outcome} {V : Type*} [Preorder V]
+    (hcompare : ∀ (profile : Profile F.sig) who replacement,
+      prefers who (F.play profile) (F.play (Profile.update profile who replacement)) ∨
+        prefers who (F.play (Profile.update profile who replacement)) (F.play profile))
+    (rank : Profile F.sig → V) (hrange : (Set.range rank).Finite)
+    (hincrease : ∀ {source target}, ImprovingStep F prefers source target →
+      rank source < rank target) : WeaklyAcyclic F prefers :=
+  weaklyAcyclic_of_wellFounded hcompare
+    (improvement_wellFounded_of_improvement_rank rank hrange hincrease)
+
+/-- A nonempty game with locally comparable preferences has a Nash profile
+when strict improvement raises a finite-range rank. -/
+theorem exists_isNash_of_improvement_rank [Nonempty (Profile F.sig)]
+    {prefers : WeakPreference ι F.sig.Outcome} {V : Type*} [Preorder V]
+    (hcompare : ∀ (profile : Profile F.sig) who replacement,
+      prefers who (F.play profile) (F.play (Profile.update profile who replacement)) ∨
+        prefers who (F.play (Profile.update profile who replacement)) (F.play profile))
+    (rank : Profile F.sig → V) (hrange : (Set.range rank).Finite)
+    (hincrease : ∀ {source target}, ImprovingStep F prefers source target →
+      rank source < rank target) : ∃ profile, IsNash F prefers profile := by
+  obtain ⟨profile, _, hnash⟩ := weaklyAcyclic_of_improvement_rank hcompare rank hrange hincrease
+    (Classical.choice ‹Nonempty (Profile F.sig)›)
+  exact ⟨profile, hnash⟩
 
 variable (F utility potential) in
 /-- Every unilateral change moves the deviator's expected utility by exactly as
@@ -66,6 +112,25 @@ theorem IsExactPotential.isOrdinalPotential (hpotential : IsExactPotential F uti
   have hdiff := hpotential.difference who profile replacement
   constructor <;> intro hlt <;> linarith
 
+/-- Integrability in an ordinal-potential certificate supplies both directions
+of every local expected-utility comparison. -/
+theorem IsOrdinalPotential.deviation_comparable
+    (hpotential : IsOrdinalPotential F utility potential)
+    (profile : Profile F.sig) (who : ι) (replacement : F.sig.Strategy who) :
+    euPreference utility who (F.play profile)
+        (F.play (Profile.update profile who replacement)) ∨
+      euPreference utility who (F.play (Profile.update profile who replacement))
+        (F.play profile) := by
+  rcases le_total
+      (expectedUtility utility who (F.play (Profile.update profile who replacement)))
+      (expectedUtility utility who (F.play profile)) with hle | hle
+  · exact Or.inl ((euPreference_iff utility who _ _
+      (hpotential.integrable profile who)
+      (hpotential.integrable (Profile.update profile who replacement) who)).2 hle)
+  · exact Or.inr ((euPreference_iff utility who _ _
+      (hpotential.integrable (Profile.update profile who replacement) who)
+      (hpotential.integrable profile who)).2 hle)
+
 /-- **A maximizer of the potential is a pure equilibrium.** No player can gain
 alone, because gaining alone would raise the potential. -/
 theorem IsOrdinalPotential.isNash_of_maximal
@@ -95,9 +160,13 @@ theorem IsOrdinalPotential.exists_isNash_of_finite_range [Nonempty (Profile F.si
     (hpotential : IsOrdinalPotential F utility potential)
     (hrange : (Set.range potential).Finite) :
     ∃ profile : Profile F.sig, IsNash F (euPreference utility) profile := by
-  obtain ⟨_, ⟨best, rfl⟩, hmax⟩ :=
-    Set.exists_max_image _ id hrange (Set.range_nonempty potential)
-  exact ⟨best, hpotential.isNash_of_maximal fun other => hmax _ ⟨other, rfl⟩⟩
+  apply exists_isNash_of_improvement_rank hpotential.deviation_comparable potential hrange
+  rintro source target ⟨who, replacement, htarget, hstrict⟩
+  subst target
+  exact (hpotential.comparison who source replacement).1
+    ((euPreference_strict_iff utility who _ _
+      (hpotential.integrable (Profile.update source who replacement) who)
+      (hpotential.integrable source who)).1 hstrict)
 
 /-- **A finite potential game has a pure equilibrium.** -/
 theorem IsOrdinalPotential.exists_isNash [Finite (Profile F.sig)] [Nonempty (Profile F.sig)]
@@ -222,9 +291,10 @@ theorem IsExactPotential.no_improving_at_maximal
 theorem IsExactPotential.isStrictNash_of_strict_maximal
     (hpotential : IsExactPotential F utility potential) {profile : Profile F.sig}
     (hmax : ∀ other : Profile F.sig, other ≠ profile → potential other < potential profile) :
-    IsStrictNash F utility profile := by
+    IsStrictNash F (euPreference utility) profile := by
   intro who
-  refine ⟨(hpotential.integrable profile who).hasExpectation, ?_⟩
+  refine ⟨⟨(hpotential.integrable profile who).hasExpectation,
+    (hpotential.integrable profile who).hasExpectation, le_rfl⟩, ?_⟩
   intro replacement hreplacement
   have hupdate_ne : Profile.update profile who replacement ≠ profile := by
     intro hupdate
@@ -233,19 +303,20 @@ theorem IsExactPotential.isStrictNash_of_strict_maximal
     simpa using hcoordinate
   have hlt := hmax (Profile.update profile who replacement) hupdate_ne
   have hdiff := hpotential.difference who profile replacement
-  refine ⟨(hpotential.integrable (Profile.update profile who replacement) who).hasExpectation,
-    (extendedExpectedUtility_lt_iff (hpotential.integrable _ who)
-      (hpotential.integrable profile who)).2 ?_⟩
+  apply (euPreference_strict_iff utility who _ _
+    (hpotential.integrable profile who)
+    (hpotential.integrable (Profile.update profile who replacement) who)).2
   linarith
 
 /-- Every improving step strictly raises an exact potential. -/
 theorem IsExactPotential.improvingStep_increases_potential
     (hpotential : IsExactPotential F utility potential) {source target : Profile F.sig}
-    (hstep : ImprovingStep F utility source target) : potential source < potential target := by
-  obtain ⟨who, replacement, htarget, -, -, himprove⟩ := hstep
+    (hstep : ImprovingStep F (euPreference utility) source target) :
+    potential source < potential target := by
+  obtain ⟨who, replacement, htarget, himprove⟩ := hstep
   subst target
   exact hpotential.improving_deviation_increases_potential
-    ((extendedExpectedUtility_lt_iff (hpotential.integrable _ who)
+    ((euPreference_strict_iff utility who _ _ (hpotential.integrable _ who)
       (hpotential.integrable _ who)).1 himprove)
 
 /-- A finite exact-potential game admits no infinite path of strict unilateral
@@ -253,7 +324,7 @@ expected-utility improvements. -/
 theorem IsExactPotential.no_infinite_improving_path [Finite (Profile F.sig)]
     (hpotential : IsExactPotential F utility potential) :
     ¬ ∃ path : ℕ → Profile F.sig,
-        ∀ n, ImprovingStep F utility (path n) (path (n + 1)) := by
+        ∀ n, ImprovingStep F (euPreference utility) (path n) (path (n + 1)) := by
   rintro ⟨path, hstep⟩
   have hincrease : ∀ n, potential (path n) < potential (path (n + 1)) :=
     fun n => hpotential.improvingStep_increases_potential (hstep n)
@@ -267,18 +338,19 @@ theorem IsExactPotential.no_infinite_improving_path [Finite (Profile F.sig)]
 /-- Every improving step strictly raises an ordinal potential. -/
 theorem IsOrdinalPotential.improvingStep_increases_potential
     (hpotential : IsOrdinalPotential F utility potential) {source target : Profile F.sig}
-    (hstep : ImprovingStep F utility source target) : potential source < potential target := by
-  obtain ⟨who, replacement, htarget, -, -, himprove⟩ := hstep
+    (hstep : ImprovingStep F (euPreference utility) source target) :
+    potential source < potential target := by
+  obtain ⟨who, replacement, htarget, himprove⟩ := hstep
   subst target
   exact (hpotential.comparison who source replacement).1
-    ((extendedExpectedUtility_lt_iff (hpotential.integrable _ who)
+    ((euPreference_strict_iff utility who _ _ (hpotential.integrable _ who)
       (hpotential.integrable _ who)).1 himprove)
 
 /-- An ordinal-potential improving step strictly reduces the number of profiles
 whose potential is higher. -/
 theorem IsOrdinalPotential.improvingStep_filter_card_lt [Fintype (Profile F.sig)]
     (hpotential : IsOrdinalPotential F utility potential) {source target : Profile F.sig}
-    (hstep : ImprovingStep F utility source target) :
+    (hstep : ImprovingStep F (euPreference utility) source target) :
     (Finset.univ.filter (fun profile => potential target < potential profile)).card <
       (Finset.univ.filter (fun profile => potential source < potential profile)).card := by
   have hpotentialIncrease := hpotential.improvingStep_increases_potential hstep
@@ -291,66 +363,40 @@ theorem IsOrdinalPotential.improvingStep_filter_card_lt [Fintype (Profile F.sig)
   rw [Finset.ssubset_iff_of_subset hsubset]
   exact ⟨target, by simp [hpotentialIncrease], by simp⟩
 
-/-- Well-founded strict improvement is sufficient for weak acyclicity. -/
-theorem weaklyAcyclic_of_wellFounded
-    (hexpectation : ∀ profile : Profile F.sig, ∀ who,
-      UtilityHasExpectation utility who (F.play profile))
-    (hwellFounded : WellFounded (fun target source : Profile F.sig =>
-      ImprovingStep F utility source target)) :
-    WeaklyAcyclic F utility := by
-  intro source
-  induction source using hwellFounded.induction with
-  | h source ih =>
-    by_cases hnash : IsNash F (euPreference utility) source
-    · exact ⟨source, Relation.ReflTransGen.refl, hnash⟩
-    · obtain ⟨next, hstep⟩ :=
-        (not_isNash_iff_exists_improvingStep
-          (fun who => hexpectation source who)
-          (fun who replacement => hexpectation (Profile.update source who replacement) who)).mp
-          hnash
-      obtain ⟨target, hreach, htarget⟩ := ih next hstep
-      exact ⟨target, Relation.ReflTransGen.head hstep hreach, htarget⟩
-
 /-- Strict improvement is well-founded when an ordinal potential takes finitely
 many values: each step raises the potential. -/
 theorem IsOrdinalPotential.improvement_wellFounded_of_finite_range
     (hpotential : IsOrdinalPotential F utility potential)
     (hrange : (Set.range potential).Finite) :
-    WellFounded (fun target source : Profile F.sig => ImprovingStep F utility source target) := by
-  have := hrange.to_subtype
-  have hvalues : WellFounded (fun later earlier : Set.range potential => earlier.1 < later.1) :=
-    Finite.wellFounded_of_trans_of_irrefl _
-  have hsubrelation : Subrelation
-      (fun target source : Profile F.sig => ImprovingStep F utility source target)
-      (InvImage (fun later earlier : Set.range potential => earlier.1 < later.1)
-        fun profile => ⟨potential profile, profile, rfl⟩) := by
-    intro target source hstep
-    exact hpotential.improvingStep_increases_potential hstep
-  exact hsubrelation.wf (InvImage.wf _ hvalues)
+    WellFounded (fun target source : Profile F.sig =>
+      ImprovingStep F (euPreference utility) source target) :=
+  improvement_wellFounded_of_improvement_rank potential hrange
+    hpotential.improvingStep_increases_potential
 
 /-- In a finite ordinal-potential game, strict improvement is well-founded. -/
 theorem IsOrdinalPotential.improvement_wellFounded [Finite (Profile F.sig)]
     (hpotential : IsOrdinalPotential F utility potential) :
-    WellFounded (fun target source : Profile F.sig => ImprovingStep F utility source target) :=
+    WellFounded (fun target source : Profile F.sig =>
+      ImprovingStep F (euPreference utility) source target) :=
   hpotential.improvement_wellFounded_of_finite_range (Set.finite_range potential)
 
 /-- An ordinal-potential game whose potential takes finitely many values is
 weakly acyclic. -/
 theorem IsOrdinalPotential.weaklyAcyclic_of_finite_range
     (hpotential : IsOrdinalPotential F utility potential)
-    (hrange : (Set.range potential).Finite) : WeaklyAcyclic F utility :=
-  weaklyAcyclic_of_wellFounded
-    (fun profile who => (hpotential.integrable profile who).hasExpectation)
-    (hpotential.improvement_wellFounded_of_finite_range hrange)
+    (hrange : (Set.range potential).Finite) : WeaklyAcyclic F (euPreference utility) :=
+  weaklyAcyclic_of_improvement_rank hpotential.deviation_comparable potential hrange
+    hpotential.improvingStep_increases_potential
 
 /-- Every finite ordinal-potential game is weakly acyclic. -/
 theorem IsOrdinalPotential.weaklyAcyclic [Finite (Profile F.sig)]
-    (hpotential : IsOrdinalPotential F utility potential) : WeaklyAcyclic F utility :=
+    (hpotential : IsOrdinalPotential F utility potential) :
+    WeaklyAcyclic F (euPreference utility) :=
   hpotential.weaklyAcyclic_of_finite_range (Set.finite_range potential)
 
 /-- The exact-potential special case of ordinal-potential weak acyclicity. -/
 theorem IsExactPotential.weaklyAcyclic [Finite (Profile F.sig)]
-    (hpotential : IsExactPotential F utility potential) : WeaklyAcyclic F utility :=
+    (hpotential : IsExactPotential F utility potential) : WeaklyAcyclic F (euPreference utility) :=
   hpotential.isOrdinalPotential.weaklyAcyclic
 
 /-! ## Team games

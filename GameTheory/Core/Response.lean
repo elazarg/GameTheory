@@ -133,34 +133,31 @@ def SurvivesAllPureEliminationRounds (who : ι)
     (s : F.sig.Strategy who) : Prop :=
   ∀ round, s ∈ pureSurvivors F weaklyPrefers round who
 
-/-- A strict expected-utility Nash equilibrium: every genuine unilateral
-replacement strictly lowers the deviator's expected utility. -/
-def IsStrictNash (F : GameForm ι) (utility : F.sig.Outcome → ι → ℝ)
+/-- Every player accepts the incumbent law and strictly prefers it to every
+genuine unilateral replacement. The self-comparison also applies when a
+player has no alternative strategy. -/
+def IsStrictNash (F : GameForm ι) (weaklyPrefers : WeakPreference ι F.sig.Outcome)
     (profile : Profile F.sig) : Prop :=
-  ∀ who, UtilityHasExpectation utility who (F.play profile) ∧
+  ∀ who, weaklyPrefers who (F.play profile) (F.play profile) ∧
     ∀ replacement, replacement ≠ profile who →
-      UtilityHasExpectation utility who (F.play (Profile.update profile who replacement)) ∧
-        extendedExpectedUtility utility who (F.play (Profile.update profile who replacement)) <
-          extendedExpectedUtility utility who (F.play profile)
+      Preference.strict weaklyPrefers who (F.play profile)
+        (F.play (Profile.update profile who replacement))
 
-/-- A strict unilateral expected-utility improvement from `source` to `target`.
+/-- A strict unilateral preference improvement from `source` to `target`.
 The target equation keeps the relation tied to the canonical profile operation. -/
-def ImprovingStep (F : GameForm ι) (utility : F.sig.Outcome → ι → ℝ)
+def ImprovingStep (F : GameForm ι) (weaklyPrefers : WeakPreference ι F.sig.Outcome)
     (source target : Profile F.sig) : Prop :=
   ∃ who replacement,
     target = Profile.update source who replacement ∧
-      UtilityHasExpectation utility who (F.play source) ∧
-        UtilityHasExpectation utility who (F.play target) ∧
-          extendedExpectedUtility utility who (F.play source) <
-            extendedExpectedUtility utility who (F.play target)
+      Preference.strict weaklyPrefers who (F.play target) (F.play source)
 
 /-- From every profile, some finite path of strict unilateral improvements
 reaches a Nash profile. This is a response-graph property; potential functions
 are one sufficient certificate, not its semantic owner. -/
-def WeaklyAcyclic (F : GameForm ι) (utility : F.sig.Outcome → ι → ℝ) : Prop :=
+def WeaklyAcyclic (F : GameForm ι) (weaklyPrefers : WeakPreference ι F.sig.Outcome) : Prop :=
   ∀ source, ∃ target,
-    Relation.ReflTransGen (ImprovingStep F utility) source target ∧
-      IsNash F (euPreference utility) target
+    Relation.ReflTransGen (ImprovingStep F weaklyPrefers) source target ∧
+      IsNash F weaklyPrefers target
 
 end Definitions
 
@@ -194,26 +191,96 @@ theorem mem_pureSurvivors_of_le {earlier later : ℕ} (hround : earlier ≤ late
   | refl => exact h
   | step _ ih => exact ih h.1
 
-/-- Failure of expected-utility Nash exhibits an improving step, when every
-compared law has an expectation. -/
-theorem not_isNash_iff_exists_improvingStep {F : GameForm ι}
-    {utility : F.sig.Outcome → ι → ℝ} {profile : Profile F.sig}
-    (hbase : ∀ who, UtilityHasExpectation utility who (F.play profile))
-    (hdeviation : ∀ who replacement, UtilityHasExpectation utility who
-      (F.play (Profile.update profile who replacement))) :
-    ¬ IsNash F (euPreference utility) profile ↔
-      ∃ target, ImprovingStep F utility profile target := by
+/-- Strict Nash implies weak Nash for arbitrary preferences, including
+players whose strategy carrier is a singleton. -/
+theorem IsStrictNash.isNash {profile : Profile F.sig}
+    (h : IsStrictNash F weaklyPrefers profile) :
+    IsNash F weaklyPrefers profile := by
+  rw [isNash_iff]
+  intro who replacement
+  by_cases heq : replacement = profile who
+  · subst replacement
+    rw [Profile.update_eq_self]
+    exact (h who).1
+  · exact ((h who).2 replacement heq).1
+
+/-- The numerical specialization retains the incumbent and every genuine
+replacement's expectation-definedness. -/
+theorem isStrictNash_euPreference_iff {utility : F.sig.Outcome → ι → ℝ}
+    {profile : Profile F.sig} :
+    IsStrictNash F (euPreference utility) profile ↔
+      ∀ who, UtilityHasExpectation utility who (F.play profile) ∧
+        ∀ replacement, replacement ≠ profile who →
+          UtilityHasExpectation utility who (F.play (Profile.update profile who replacement)) ∧
+            extendedExpectedUtility utility who
+                (F.play (Profile.update profile who replacement)) <
+              extendedExpectedUtility utility who (F.play profile) := by
+  constructor
+  · intro h who
+    refine ⟨(h who).1.1, ?_⟩
+    intro replacement hne
+    exact ((euPreference_strict_iff_hasExpectation utility who _ _).1
+      ((h who).2 replacement hne)).2
+  · intro h who
+    refine ⟨⟨(h who).1, (h who).1, le_rfl⟩, ?_⟩
+    intro replacement hne
+    exact (euPreference_strict_iff_hasExpectation utility who _ _).2
+      ⟨(h who).1, (h who).2 replacement hne⟩
+
+/-- A numerical improvement is exactly a strict increase between two defined
+extended expectations. No finite-value assumption is needed. -/
+theorem improvingStep_euPreference_iff {utility : F.sig.Outcome → ι → ℝ}
+    {source target : Profile F.sig} :
+    ImprovingStep F (euPreference utility) source target ↔
+      ∃ who replacement, target = Profile.update source who replacement ∧
+        UtilityHasExpectation utility who (F.play source) ∧
+          UtilityHasExpectation utility who (F.play target) ∧
+            extendedExpectedUtility utility who (F.play source) <
+              extendedExpectedUtility utility who (F.play target) := by
+  simp only [ImprovingStep, euPreference_strict_iff_hasExpectation]
+  constructor <;> rintro ⟨who, replacement, heq, hfirst, hsecond, hlt⟩
+  · exact ⟨who, replacement, heq, hsecond, hfirst, hlt⟩
+  · exact ⟨who, replacement, heq, hsecond, hfirst, hlt⟩
+
+/-- Failure of Nash exhibits a strict improvement when each incumbent and its
+unilateral alternative are comparable. This hypothesis cannot be omitted for
+partial preferences. -/
+theorem not_isNash_iff_exists_improvingStep {profile : Profile F.sig}
+    (hcompare : ∀ who replacement,
+      weaklyPrefers who (F.play profile) (F.play (Profile.update profile who replacement)) ∨
+        weaklyPrefers who (F.play (Profile.update profile who replacement)) (F.play profile)) :
+    ¬ IsNash F weaklyPrefers profile ↔
+      ∃ target, ImprovingStep F weaklyPrefers profile target := by
   constructor
   · intro hnash
     rw [isNash_iff] at hnash
     push Not at hnash
     obtain ⟨who, replacement, hnot⟩ := hnash
-    refine ⟨Profile.update profile who replacement, who, replacement, rfl,
-      hbase who, hdeviation who replacement, lt_of_not_ge fun hle => hnot ?_⟩
-    exact ⟨hbase who, hdeviation who replacement, hle⟩
-  · rintro ⟨target, who, replacement, htarget, -, -, himprove⟩ hnash
+    exact ⟨Profile.update profile who replacement, who, replacement, rfl,
+      (hcompare who replacement).resolve_left hnot, hnot⟩
+  · rintro ⟨target, who, replacement, htarget, hstrict⟩ hnash
     subst target
-    exact (not_lt_of_ge ((isNash_iff profile).1 hnash who replacement).2.2) himprove
+    exact hstrict.2 ((isNash_iff profile).1 hnash who replacement)
+
+/-- Well-founded strict improvement reaches Nash whenever every local
+comparison is decided in one direction or the other. -/
+theorem weaklyAcyclic_of_wellFounded
+    {prefers : WeakPreference ι F.sig.Outcome}
+    (hcompare : ∀ (profile : Profile F.sig) who replacement,
+      prefers who (F.play profile) (F.play (Profile.update profile who replacement)) ∨
+        prefers who (F.play (Profile.update profile who replacement)) (F.play profile))
+    (hwellFounded : WellFounded (fun target source : Profile F.sig =>
+      ImprovingStep F prefers source target)) :
+    WeaklyAcyclic F prefers := by
+  intro source
+  induction source using hwellFounded.induction with
+  | h source ih =>
+    by_cases hnash : IsNash F prefers source
+    · exact ⟨source, Relation.ReflTransGen.refl, hnash⟩
+    · obtain ⟨next, hstep⟩ :=
+        (not_isNash_iff_exists_improvingStep (hcompare source)).mp hnash
+      obtain ⟨target, hreach, htarget⟩ := ih next hstep
+      exact ⟨target, Relation.ReflTransGen.head hstep hreach, htarget⟩
 
 /-- A Nash equilibrium is exactly a profile of mutual best responses. -/
 theorem isNash_iff_isBestResponse (profile : Profile F.sig) :

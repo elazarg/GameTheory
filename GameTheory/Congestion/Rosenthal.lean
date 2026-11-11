@@ -113,7 +113,7 @@ unilateral utility improvements. -/
 theorem no_infinite_improving_path [Fintype ι] [DecidableEq ι]
     (C : CongestionGame ι) [Finite C.Profile] :
     ¬ ∃ path : ℕ → C.Profile,
-        ∀ n, ImprovingStep C.toGameForm C.utility (path n) (path (n + 1)) := by
+        ∀ n, ImprovingStep C.toGameForm (euPreference C.utility) (path n) (path (n + 1)) := by
   let : Finite (GameTheory.Profile C.toGameForm.sig) := ‹Finite C.Profile›
   exact C.isExactPotential.no_infinite_improving_path
 
@@ -121,7 +121,7 @@ theorem no_infinite_improving_path [Fintype ι] [DecidableEq ι]
 expected-utility improvements. -/
 theorem weaklyAcyclic [Fintype ι] [DecidableEq ι]
     (C : CongestionGame ι) [Finite C.Profile] :
-    WeaklyAcyclic C.toGameForm C.utility := by
+    WeaklyAcyclic C.toGameForm (euPreference C.utility) := by
   let : Finite (GameTheory.Profile C.toGameForm.sig) := ‹Finite C.Profile›
   exact C.isExactPotential.weaklyAcyclic
 
