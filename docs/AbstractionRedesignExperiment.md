@@ -166,6 +166,17 @@ an architecture for the entire field is settled.
 
 ## Constraints and alternatives
 
+**Item 09 / EXP-181: parametric feasible choice (in progress).** Separate closed
+feasibility from the ability to approximate feasible alternatives as parameters
+change. Test a closed feasible-argmax graph theorem with lower hemicontinuity
+and a jointly continuous objective, independently of compactness and convexity.
+Use an actual varying consumption budget and one existing fixed-simplex
+consumer. Preserve a concrete economic failure of the closed-graph-only
+proposal. This is not full Berge or endogenous-game equilibrium existence;
+`Core.ConstrainedNash` continues to mean payoff-threshold filtering.
+
+## Constraints and alternatives
+
 The accepted defaults remain [D5](decisions/D5-deviation-and-equilibrium.md),
 [D7](decisions/D7-certificate-stratification.md),
 [D8](decisions/D8-minimal-transformations.md), and
