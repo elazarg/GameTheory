@@ -225,6 +225,15 @@ economics without making all native domains instances of one stored object.
 Broader native constraints, price formation/market clearing and stronger
 preference representations remain independently requiring later clients.
 
+**Item 11 / EXP-183: exchange economy (in progress).** Connect price-dependent
+budgets, individual choice, excess-demand price response and market clearing
+for two goods and two consumers with unit endowments of each good. Permit zero
+price coordinates, preserve tied demands, and distinguish capped from full
+budget optimality. Test continuous concave strictly monotone utilities; retain
+zero-income, satiation and cap-binding rejection controls. A complete slice
+must remove the auxiliary consumption cap after proving clearing. No generic
+market record or interpersonal consumer objective is pre-approved.
+
 ## Constraints and alternatives
 
 The accepted defaults remain [D5](decisions/D5-deviation-and-equilibrium.md),

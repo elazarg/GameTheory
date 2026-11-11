@@ -11262,3 +11262,31 @@ observations and outcome below are preserved as the record of that run.
   alternatives, their continuity and objective geometry remain separate
   operations. Market clearing, broader native constraints and preference
   representation need named consumers before further interfaces are admitted.
+
+## EXP-183: exchange budgets, price response and market clearing
+
+- **Date / status:** 2026-11-11; in progress.
+- **Question:** Do the independent feasible-choice building blocks connect
+  individual budget optimization to competitive market clearing, without a
+  new economic-problem record or a summed consumer objective?
+- **Alternatives:** capped demand plus an aggregate price-response condition;
+  separate budget regularity, clearing and removal of artificial caps. Reuse
+  simultaneous feasible maximization, Mathlib concavity/local-to-global
+  optimality, and positive-income feasible recovery before adding mathematics.
+- **Representative slice:** two goods and two consumers, each endowed with
+  one unit of each good; normalized nonnegative prices including zero
+  coordinates; arbitrary continuous concave strictly monotone utilities on
+  nonnegative consumption. Use the compact consumption box `[0,3]²` as an
+  envelope, derive exact clearing of aggregate `(2,2)`, then prove individual
+  optimality on the full uncapped budget. Quasiconcavity supplies capped
+  existence; the stronger concavity hypothesis is explicit for uncapping.
+- **Hostile controls / kill conditions:** zero-income/free-good continuity
+  failure; tied demands; weakly monotone satiation permitting uncleared price
+  responses; and a cap-binding apparent equilibrium whose choices are not
+  optimal on the full budget. Reject any argument that assumes positive price
+  coordinates, identifies price response with clearing without a proof,
+  suppresses consumer feasibility, sums interpersonal utilities, or claims an
+  uncapped/general exchange theorem from capped fixed-point existence alone.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-11-exchange-economy`, baseline `c1431a88`;
+  scratch and raw logs under ignored `.codex/scratch/exp183/`.
