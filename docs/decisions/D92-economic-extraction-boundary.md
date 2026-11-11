@@ -1,6 +1,6 @@
 # D92: extract mathematical operations, preserve domain semantics
 
-- **Status:** selected boundary; final consumer integration recorded below.
+- **Status:** adopted extraction boundary; investigation closed at diminishing architectural returns.
 - **Date:** 2026-11-11
 - **Evidence:** EXP-173 through EXP-186, decisions D78 through D91; the
   dependency consolidation and ordinary measure-valued consumer check in
@@ -55,8 +55,8 @@ GameTheory's ordinary PMF semantics or importing a universal economic hub.
 
 - **Dynamic comparison:** a total transitive law ranking can strictly favor
   both conditional actions yet reject their composition. Non-EU possibility
-  comparisons preserve arbitrary supported weak mixtures but fail strict
-  cancellation. Actual-prior comparison closure and whole-law admissibility
+  comparisons preserve arbitrary supported weak mixtures but need not preserve
+  strict comparisons or independence cancellation. Actual-prior comparison closure and whole-law admissibility
   remain separate. Chooser composition does not imply information-local
   policy realizability (EXP-184).
 - **Observational representation:** an entire fixed-positive-price budget
@@ -84,7 +84,7 @@ assumption about future upstream APIs:
 
 | Consumer | Shared operation | Obligation retained by the consumer |
 | --- | --- | --- |
-| `ChoiceFunction.ofBundleOrder` | finite greatest choice / existing `IsGreatest` | Represented feasible bundles, enumeration where needed, unique optimum or checked tie rule; substitutes and IRC independently. |
+| `ChoiceFunction.ofBundleOrder` | finite greatest choice / existing `IsGreatest` | Represented feasible bundles, enumeration where needed, unique optimum or checked tie rule; substitutes separately, IRC through the owner's stated hypotheses (including its finite-scope consistency theorem). |
 | `PairwiseStable.stable_of_substitutable` | contraction of joint acceptance | Contracts, involvement, blocking and stability; reuse the existing MathEconLib owner. |
 | `StrategicGame.isMixedNash_iff` | guarded comparison with filtered deviations | Measurable strategies, product probability laws, integrable incumbent and each offered integrable deviation. |
 | Equilibrium/demand existence | parametric maximizers and simultaneous feasible choice | Correct native menus, nonempty feasible fibers, objective geometry, and market clearing/uncapping. |
@@ -120,3 +120,9 @@ Every collected experiment passes its full audit. The final ordinary consumer
 build passes 3,144 strict jobs and source checks. Final complete validation is
 recorded with the extraction checkpoint in `MathEconBuildingBlocks.md` before
 collection. No timing comparison or universal minimality theorem is claimed.
+On checkpoint `ba311457`, `python scripts/audit.py` passes 3,877 default and
+4,800 validation jobs, public lint, authored diagnostics and transitive
+standard-axiom checks. Raw output is
+`.codex/scratch/abstraction-extraction/integration-audit.log`. Independent
+semantic reviews accept the stopping scope, pinned consumer contract and
+discrete/diffuse distinction. The collected closing edits are documentation only.

@@ -107,3 +107,18 @@ contract-stability and measurable mixed-equilibrium APIs inspected there.
 Dependency ownership and namespace selection remain part of the extraction
 build; no fresh probability carrier or universal economic record is needed
 merely because the consumer uses probability measures rather than PMFs.
+
+## Final verification
+
+The final ordinary consumer builds strictly in 3,144 jobs. On checkpoint
+`ba311457`, `python scripts/audit.py` passes 3,877 default and 4,800 complete
+validation jobs, public lint, authored diagnostics and transitive standard-axiom
+checks. The final source audit also covers all experimental and test imports.
+Raw output is ignored at
+`.codex/scratch/abstraction-extraction/integration-audit.log`.
+
+The measure-control fixture uses countably supported probability measures;
+its generic reformulation quantifies over arbitrary measures. External diffuse
+controls and MathEconLib source APIs were inspected at the pinned revision,
+not compiled as part of this audit. The current stopping conclusion concerns
+the named consumers and operations, with no field-wide minimality claim.

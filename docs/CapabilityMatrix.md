@@ -31,10 +31,18 @@ Verdicts mean:
 - **opt-in**: supported outside the light default root; and
 - **frontier**: intentionally absent from the stable library.
 
+The building-block investigation closes at diminishing architectural returns;
+[the extraction contract](decisions/D92-economic-extraction-boundary.md) names
+shared mathematical operations and the pinned MathEconLib consumers. Dynamic
+comparison, restricted budgets and joint contract acceptance have checked
+experimental controls; no generic dynamic Context or institutional arena is
+promoted by those controls.
+
 ## Static and analytic game theory
 
 | Workflow | Public evidence | Verdict | Limit or next seam |
 |---|---|---|---|
+| Compare integrable deviations while retaining an admissible incumbent | [`guarded predicate`](../GameTheory/Math/GuardedOptimality.lean), [`measure-valued consumer and controls`](../GameTheory/Tests/MeasureGuardedOptimality.lean) | supported guarded operation; consumer check | The allowed menu may filter deviations by integrability while the incumbent guard remains explicit. Requiring all originally offered deviations to be integrable is stronger. Totalized Bochner values alone do not enforce admissibility. The generic reformulation permits arbitrary measures; the concrete probability-measure controls have countable support. No MathEconLib integration or probability-carrier replacement is claimed. |
 | Validate budgets and clearing in a two-good exchange economy | [`positive budget recovery`](../GameTheory/Math/LinearBudget.lean), [`full-budget existence consumer`](../GameTheory/Analysis/ExchangeEconomyTest.lean), [`clearing and uncapping`](../GameTheory/Experimental/Exp183/ExchangeClearing.lean), [`controls`](../GameTheory/Experimental/Exp183/ExchangeControls.lean) | supported mathematical budget theorem; economic slice experimental | Two consumers with unit endowments of both goods; ambient-continuous, cone-concave strictly monotone utilities. The proof permits zero price coordinates in its domain and removes the artificial cap before asserting consumer optimality. Native market data, arbitrary endowments and general exchange existence are not promoted. |
 | Find simultaneous optima with changing feasible menus | [`analytic theorem`](../GameTheory/Analysis/FeasibleChoiceFixedPoint.lean), [`finite-lottery specialization`](../GameTheory/Analysis/LocalChoiceFixedPoint.lean), [`shared-capacity consumer`](../GameTheory/Analysis/FeasibleChoiceFixedPointTest.lean) | supported; opt-in analysis; native constrained-game representation experimental | Finite-dimensional compact convex product envelope, nonempty closed-graph lower-hemicontinuous menus and continuous quasiconcave per-coordinate real objectives. No interpersonal sum is used. The resource control proves that ordinary Nash filtered by feasible profiles can miss every affordable local optimum. |
 | Pass optimality through changing feasible menus | [`closed graph theorem`](../GameTheory/Math/ParametricOptimality.lean), [`production local-lottery specialization`](../GameTheory/Analysis/LocalChoiceFixedPoint.lean), [economic scope](decisions/D86-parametric-feasible-optimality.md) | supported mathematical theorem; economic probes experimental | Closed feasibility, lower hemicontinuity and joint objective continuity give a closed feasible-maximizer graph. Compactness supplies existence separately. A zero-income free-good budget refutes closed-feasibility-only sufficiency even with compact convex bounded values and upper hemicontinuity; no general demand or endogenous-game equilibrium API is claimed. |
