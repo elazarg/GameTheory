@@ -47,3 +47,5 @@ Native budgets and the counterexample stay experimental.
 `python scripts/audit.py --source-only` passes. The full integration result
 is recorded in EXP-185. No alternative record implementation was timed and no
 performance advantage is claimed.
+On checkpoint `8fcbb6eb`, full integration passes 3,877 default and 4,796
+validation jobs, public lint, authored diagnostics and standard-axiom checks.
