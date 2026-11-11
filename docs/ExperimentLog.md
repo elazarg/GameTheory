@@ -10856,3 +10856,23 @@ observations and outcome below are preserved as the record of that run.
   justified by this slice. [D79](decisions/D79-ordinal-response-and-improvement-ranks.md)
   records the scope. Investigate binary versus arbitrary PMF mixture closure
   separately before admitting the proposed Mixable level.
+
+## EXP-175: binary mixing versus arbitrary PMF mixture closure
+
+- **Date / status:** 2026-11-11; running.
+- **Question:** Does binary convexity of a total transitive law preference
+  suffice for the arbitrary-PMF mixture step used in pure-deviation reduction?
+  Compare binary mixing compatibility with explicit bind-closure hypotheses,
+  retaining actual-law expectation-definedness in numerical instances.
+- **Representative slice:** a preference distinguishing finite from infinite
+  support, a genuine infinite-support discrete law, and mixtures of pure laws.
+  Try the counterexample before naming a stable Mixable interface.
+- **Kill conditions:** reject a binary-only interface if every pure component
+  is weakly below a base but their countable mixture is not; reject an ungated
+  expected-utility instance if the actual mixed expectation may be undefined.
+  No new probability carrier, equilibrium predicate, or universal certificate.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-03-mixture-closure`, baseline `03e34edb`.
+  Probes belong in ignored `.codex/scratch/exp175/` until their result is known.
+- **Outcome / next action:** pending; test the binary-only claim on a total
+  preorder of ordinary PMF laws, then choose the narrowest supported boundary.
