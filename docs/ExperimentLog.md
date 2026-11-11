@@ -10901,7 +10901,7 @@ observations and outcome below are preserved as the record of that run.
 
 ## EXP-176: guarded Protocol comparison without numerical semantics changes
 
-- **Date / status:** 2026-11-11; running.
+- **Date / status:** 2026-11-11; complete, supporting direct guarded comparison.
 - **Question:** Can context-local optimality share a probability-independent
   guarded comparison predicate, or does a relation-valued context record earn
   its additional representation and construction costs?
@@ -10936,7 +10936,16 @@ observations and outcome below are preserved as the record of that run.
   `python scripts/compare_context_judgment.py`; raw artifacts remain in scratch.
   Independent Math target passes 115 jobs; focused strict Protocol/control
   build passes 3,182 jobs; source audit passes.
-- **Outcome / next action:** focused slice supports the probability-independent
-  predicate without replacing the numerical Context data. Full integration,
-  public lint and transitive axiom gates are pending; no new sequential
-  rationality or equilibrium meaning is introduced.
+- **Integration validation:** on implementation checkpoint `20adafa2`,
+  `python scripts/audit.py` passes the default strict build (3,873 jobs),
+  complete validation build (4,767 jobs), public lint, authored diagnostic
+  checks and transitive standard-axiom checks. Sequential existence, weak-PBE,
+  conditional-PBE and proper-subgame consumers pass. Raw output is
+  `.codex/scratch/exp176/integration-audit.log`; independent semantic review
+  accepts the guard and scope preservation.
+- **Outcome / next action:** adopt the probability-independent predicate and
+  exact numerical specialization, without replacing Context data or adding
+  a sequential-rationality meaning. The record alternative is viable but adds
+  no needed capability; no cost-budget failure or speed advantage is claimed.
+  [D81](decisions/D81-guarded-protocol-comparison.md) records the selected scope.
+  Coalition judgment and broader deviation arenas remain independent gates.
