@@ -11002,3 +11002,54 @@ observations and outcome below are preserved as the record of that run.
   scoped consent/affected-coordinate separation. The arena gate must test the
   existing scheme with distinct judge labels and affected coordinates before
   inferring a need for unrestricted law transformers.
+
+## EXP-178: affected coordinates, consent labels and law-linearity
+
+- **Date / status:** 2026-11-11; complete, retaining the existing local-kernel interface for this slice.
+- **Question:** Does the validated matching displacement force a broader arena
+  or arbitrary law-transformer interface, or does the existing scheme suffice
+  when consenting judges are distinguished from affected coordinates?
+- **Alternatives:** preserve the existing local kernel and arbitrary deviator
+  label; broaden a deviation to an unrestricted transformer of the status-quo
+  law. No new stable interface is admitted before a concrete client requires it.
+- **Representative slice:** extend the actual EXP-177 assignment replacement
+  with an unchanged spectator coordinate: two consenters, three affected
+  coordinates, four total. Realize both spectator-bit endpoint laws and their
+  genuine mixture while preserving the spectator. Contrast a law-aware Boolean
+  transformer that violates binary-mixture linearity and has no fixed kernel.
+- **Kill conditions:** identify consent and affected coordinates; claim
+  nonmember preservation only vacuously with an all-coordinate rewrite; weaken
+  the enforced locality/bind invariant; claim a full matching compilation or
+  global expressivity theorem from a fixed displacement; or admit a new arena,
+  probability carrier, engine or certificate hierarchy without a requiring client.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-06-arena-boundary`, baseline `18559255`.
+  Initial candidates live in ignored `.codex/scratch/exp178/`.
+- **Focused observations:** the existing Unit-labeled scheme realizes both
+  spectator endpoints of the valid replacement, preserving the spectator while
+  rewriting three active coordinates for two consenters. The affected subset
+  is proper; every kernel on the permitted local-input type is insensitive to
+  the spectator, and the exact fair output spectator distribution is retained.
+  The consent-only impossibility control still holds in this same enlarged
+  encoding. A whole-law Boolean operator fails a binary-mixture equation and
+  cannot equal bind by one fixed kernel for every input law. No claim is made
+  against a separate kernel selected for each law.
+- **Artifacts / focused validation:** retained probes are
+  `Experimental/Exp178/LocalRealization.lean` and `LawTransformerBoundary.lean`.
+  The strict probe/locality build passes 3,771 jobs, including the existing
+  recommendation-spying and frame controls in `Tests.Locality`; source audit
+  passes. Zero new stable definitions, structures, carriers or interfaces.
+- **Integration validation:** on checkpoint `51e5e60a`,
+  `python scripts/audit.py` passes the default strict build (3,873 jobs), full
+  validation build (4,772 jobs), public lint, authored diagnostic checks and
+  transitive standard-axiom checks. Raw output is
+  `.codex/scratch/exp178/integration-audit.log`. Independent semantic review
+  accepts the proper-subset, fixed-family and uniform-kernel qualifications.
+- **Outcome / next action:** retain the local kernel and bind lift; the fixed
+  displacement does not require a broader law-transformer interface. Genuine
+  randomness is in the preserved spectator law, not the deterministic local
+  replacement. This is not a full matching compilation or universal
+  expressivity theorem. No broad arena was implemented or timed.
+  [D83](decisions/D83-local-kernels-and-affected-coordinates.md) closes the initial
+  six-question investigation with no new stable interface; any future extension
+  needs an independently requiring client and explicit preservation obligations.
