@@ -11156,7 +11156,7 @@ observations and outcome below are preserved as the record of that run.
 
 ## EXP-181: changing feasible sets and closed optimizer graphs
 
-- **Date / status:** 2026-11-11; in progress.
+- **Date / status:** 2026-11-11; complete, supporting a graph theorem and refuting closed-feasibility-only sufficiency.
 - **Question:** Which feasibility continuity law makes a continuous objective's
   feasible maximizers have a closed graph, and can the same theorem serve a
   genuine changing consumption budget and an existing fixed-simplex proof?
@@ -11193,4 +11193,14 @@ observations and outcome below are preserved as the record of that run.
   complete controls pass 3,633 jobs. Comment-masked nonblank production graph
   lines are 25 before and 26 after, plus 31 shared theorem lines: this is new
   generality, not proof compression or a performance claim. Independent
-  semantic review accepts the scope; full integration remains pending.
+  semantic review accepts the scope.
+- **Integration validation:** on checkpoint `ec2977ff`,
+  `python scripts/audit.py` passes 3,876 default and 4,782 complete validation
+  jobs, public lint, authored diagnostics and transitive standard-axiom checks.
+  Raw output is `.codex/scratch/exp181/integration-audit.log`.
+- **Outcome / next action:** adopt the independent graph theorem and its
+  production constant-simplex specialization. Retain economic probes as
+  experiment evidence; no demand or generalized-game representation is admitted.
+  Lower and upper feasibility continuity are distinct obligations. The next
+  dependency gate is simultaneous optimality with endogenous feasible choices,
+  where filtering ordinary Nash by a feasible-profile condition is not enough.
