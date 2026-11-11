@@ -1,8 +1,9 @@
 # Abstraction building-block experiment
 
-Status: fifteen items are complete, including fourteen investigations and one
-ownership consolidation; the cross-domain investigation
-continues. Finite-menu representation, local scalarization, parametric
+Status: sixteen items are complete: fourteen investigations, an ownership
+consolidation and a final extraction-consumer check. This investigation closes
+at diminishing architectural returns; concrete extraction and theorem delivery
+remain separate work. Finite-menu representation, local scalarization, parametric
 optimality, simultaneous feasible choice and a complete scoped exchange slice
 extend the initial six-item results below.
 The goal is reusable building blocks for the library and economic theory,
@@ -39,6 +40,13 @@ complementary contracts are bundle-rationalized but fail substitutes and
 joint-to-singleton acceptance. The same set and finite maps are proved identical.
 No new arena or stable choice record is admitted. See
 [D91](decisions/D91-contract-acceptance-and-bundle-choice.md).
+
+Item 16 validates the existing guarded predicate on arbitrary measure-valued
+choices and the actual integrable-deviation contract from the pinned MathEconLib
+consumer. Concrete probability measures separate filtered deviations, incumbent
+admissibility and totalized Bochner scores. This is ordinary consumer validation,
+not another architecture experiment. The extraction contract and stopping
+decision are [D92](decisions/D92-economic-extraction-boundary.md).
 
 Item 01 selects direct preference-generic exact-law proofs after comparing the
 existing coverage API on the same statements. See [D78](decisions/D78-preference-generic-exact-law-bridges.md)
@@ -193,7 +201,7 @@ all-finite-menu representation must not be applied to restricted budget data
 without its missing domain hypotheses, nor may fixed-simplex existence be
 advertised as general-equilibrium existence. Information-dependent choice and
 stronger representation theorems remain independent later questions. These
-gates continue the investigation; the eleven completed investigations do not claim
+gates guided the continuation; the completed investigations do not claim
 an architecture for the entire field is settled.
 
 **Item 09 / EXP-181: parametric feasible choice (complete, D86).** Separate closed
