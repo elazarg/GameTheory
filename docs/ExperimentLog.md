@@ -11053,3 +11053,53 @@ observations and outcome below are preserved as the record of that run.
   [D83](decisions/D83-local-kernels-and-affected-coordinates.md) closes the initial
   six-question investigation with no new stable interface; any future extension
   needs an independently requiring client and explicit preservation obligations.
+
+## EXP-179: finite-menu choice and preference rationalization
+
+- **Date / status:** 2026-11-11; complete, supporting finite-menu representation with explicit boundaries.
+- **Question:** Can one probability-free feasible-choice correspondence connect
+  best response and economic allocation, with a converse reconstruction of
+  preferences from choices, without scores or a new problem hierarchy?
+- **Alternatives:** direct greatest-element comparisons; maximal choices under
+  incomplete relations; finite-menu choice with explicit feasibility,
+  nonemptiness and weak revealed-preference consistency. Existing Mathlib
+  maximal-element APIs are the baseline for finite existence.
+- **Representative slice:** a total/transitive binary revealed relation and
+  exact rationalization on every finite menu, canonical best response and an
+  independent allocation/incentive consumer; partial preferences, genuine ties,
+  an infinite ambient carrier and a represented-bundle union rejection.
+- **Kill conditions:** erase feasibility or candidate admissibility; identify
+  maximal with greatest without comparability; collapse tied bundle witnesses
+  into an infeasible union; assume all menus are observed from a budget-only
+  domain; store unnecessary finite/scalar data; or add duplicate equilibrium
+  semantics or an unconsumed problem/certificate hierarchy.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-07-menu-choice`, baseline `bb9f3345`;
+  local probes and logs under ignored `.codex/scratch/exp179/`.
+- **Focused observations:** feasibility, nonempty choice and the correspondence
+  weak axiom are equivalent to complete-preorder greatest choice on all finite
+  menus, without a finite ambient carrier or score. Equality-maximal choice and
+  complete indifference are observationally identical, so the representation
+  cannot identify latent incomparability. Cyclic binary choices refute dropping
+  the weak axiom. Greatest choice, domain-guarded comparison and bundle union
+  have different meanings; tied capacity-one allocations give an actual
+  infeasible-union control. Three actual lottery actions admit the relation
+  representation but no expected-utility representation of observed choices.
+- **Focused artifacts / validation:** `Math.FiniteChoice`, canonical Rank
+  finite existence and Response/Knapsack adapters; `Tests.FiniteChoice`,
+  `Tests.LotteryChoice`, `Experimental.Exp179.ChoiceBoundary`; [D84](decisions/D84-finite-menu-choice-and-revealed-preference.md).
+  `lake --iofail build GameTheory.Math.FiniteChoice` passes 677 jobs;
+  `lake --iofail build GameTheory.Tests.FiniteChoice GameTheory.Tests.LotteryChoice GameTheory.Experimental.Exp179.ChoiceBoundary`
+  passes 3,070 jobs, and source checks pass. Independent read-only semantic
+  reviews accept the scope.
+- **Integration validation:** on checkpoint `5be0b4f6`,
+  `python scripts/audit.py` passes 3,874 default and 4,776 complete validation
+  jobs, public lint, authored diagnostics and transitive standard-axiom checks.
+  Raw output is `.codex/scratch/exp179/integration-audit.log`.
+- **Outcome / next action:** adopt finite-menu rationalization and existing
+  best-response/allocation adapters, retaining Mathlib ownership of finite
+  maximal existence. No universal choice structure, demand API or MathEconLib
+  migration is admitted. Observed complete-preorder representation is weaker
+  than expected utility and does not identify latent incompleteness. Next test
+  explicit scalar maximization against ordinal Pareto maximality, rather than
+  treating welfare sums as the only notion of efficiency.

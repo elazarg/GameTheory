@@ -11,9 +11,12 @@ import all GameTheory.Experimental.Exp177.CoalitionJudgment
 import all GameTheory.Experimental.Exp177.MatchingConsent
 import all GameTheory.Experimental.Exp178.LocalRealization
 import all GameTheory.Experimental.Exp178.LawTransformerBoundary
+import all GameTheory.Experimental.Exp179.ChoiceBoundary
 import all GameTheory.Tests.CoalitionComparison
 import all GameTheory.Tests.ContextJudgment
 import all GameTheory.Tests.ContextGuards
+import all GameTheory.Tests.FiniteChoice
+import all GameTheory.Tests.LotteryChoice
 import all GameTheory.Analysis.ApproachabilityTest
 import all GameTheory.Analysis.SingleParameterTest
 import all GameTheory.Analysis.RevenueEquivalenceTest
