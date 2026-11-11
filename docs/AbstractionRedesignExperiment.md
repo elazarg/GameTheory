@@ -1,6 +1,6 @@
 # Abstraction building-block experiment
 
-Status: eight investigation items are complete; the cross-domain investigation
+Status: nine investigation items are complete; the cross-domain investigation
 continues. Finite-menu representation and local scalarization join the initial
 six-item results below.
 The goal is reusable building blocks for the library and economic theory,
@@ -164,7 +164,7 @@ stronger representation theorems remain independent later questions. These
 gates continue the investigation; the eight completed investigations do not claim
 an architecture for the entire field is settled.
 
-**Item 09 / EXP-181: parametric feasible choice (in progress).** Separate closed
+**Item 09 / EXP-181: parametric feasible choice (complete, D86).** Separate closed
 feasibility from the ability to approximate feasible alternatives as parameters
 change. Test a closed feasible-argmax graph theorem with lower hemicontinuity
 and a jointly continuous objective, independently of compactness and convexity.
@@ -172,6 +172,26 @@ Use an actual varying consumption budget and one existing fixed-simplex
 consumer. Preserve a concrete economic failure of the closed-graph-only
 proposal. This is not full Berge or endogenous-game equilibrium existence;
 `Core.ConstrainedNash` continues to mean payoff-threshold filtering.
+
+The selected `Math.ParametricOptimality` theorem needs neither compactness,
+convexity, nonempty values nor first countability for closedness of maximizers.
+Its score codomain is an arbitrary linearly ordered topological space with
+closed order. The production local-lottery proof consumes its constant-menu
+specialization. A changing divisible budget supplies continuous feasible
+recovery and separate compact existence, even for a satiation utility.
+The zero-income/free-good budget has a closed graph, upper hemicontinuity and
+nonempty compact convex uniformly bounded values, but its optimizer graph
+fails closedness and lower hemicontinuity fails. The extra graph law therefore
+has independent content. Full audit passes 3,876 default and 4,782 validation
+jobs, public lint and transitive standard-axiom checks. See
+[D86](decisions/D86-parametric-feasible-optimality.md).
+
+The next dependency gate concerns simultaneous optimality with endogenous
+menus, such as two consumers sharing one unit of capacity. Compare local
+affordable optimization with ordinary Nash filtered by a feasible-profile
+predicate before admitting any generalized-game representation. Retain
+per-agent objectives rather than introducing a summed social objective to
+fit a fixed-point interface.
 
 ## Constraints and alternatives
 

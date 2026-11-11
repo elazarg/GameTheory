@@ -1,6 +1,6 @@
 # D86: parametric feasible optimality
 
-- **Status:** selected after focused validation; integration validation pending.
+- **Status:** adopted for the mathematical graph theorem and production specialization; economic probes remain experimental.
 - **Date:** 2026-11-11
 - **Experiment:** EXP-181
 
@@ -103,3 +103,8 @@ review accepts the general topological hypotheses, unchanged local-lottery
 meaning, nonlinear budget consumer and the closed-graph-only refutation.
 Integration evidence is recorded in EXP-181 before collection. Build counts
 do not imply a performance advantage.
+
+On checkpoint `ec2977ff`, `python scripts/audit.py` passes 3,876 default and
+4,782 complete validation jobs, public lint, authored diagnostic checks and
+transitive standard-axiom checks. Raw output is ignored
+`.codex/scratch/exp181/integration-audit.log`.
