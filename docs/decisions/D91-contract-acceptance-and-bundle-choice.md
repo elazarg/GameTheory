@@ -60,7 +60,10 @@ responsive-capacity scope, but this is not a translation theorem for arbitrary
 indices, so antisymmetry makes all maximizing witnesses the same bundle.
 Finite-choice extraction must supply actual feasible-index enumeration and a
 unique optimum or a separately validated tie rule. It does not replace the
-consumer's choice record, imply substitutes/IRC, or license flattening ties.
+consumer's choice record, imply substitutes, or license flattening ties. IRC
+comes from the represented-bundle owner's stated hypotheses; the reference
+already proves finite-scope consistency of `ofBundleOrder`. It is not a
+consequence of applying item-level WARP to accepted contracts.
 
 ## Validation
 

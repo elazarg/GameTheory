@@ -26,6 +26,7 @@ import all GameTheory.Experimental.Exp185.RestrictedBudget
 import all GameTheory.Experimental.Exp186.ContractAcceptance
 import all GameTheory.Experimental.Exp186.BundleChoice
 import all GameTheory.Experimental.Exp186.Institution
+import all GameTheory.Tests.MeasureGuardedOptimality
 import all GameTheory.Analysis.FeasibleChoiceFixedPointTest
 import all GameTheory.Analysis.ExchangeEconomyTest
 import all GameTheory.Tests.CoalitionComparison

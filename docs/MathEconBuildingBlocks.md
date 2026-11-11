@@ -1,9 +1,17 @@
 # Mathematical economics building blocks
 
-This is a consolidation and extraction map, not a new architecture or a claim
-that the field has a universal data model. The accepted evidence is EXP-173
-through EXP-183 and decisions D78 through D88. The collecting branch is
+This is a consolidation and extraction map, not a claim that the field has a
+universal data model. The accepted evidence is EXP-173 through EXP-186 and
+decisions D78 through D92. The collecting branch is
 `codex/experiment-abstraction-building-blocks`.
+
+The named continuation gates are complete. The last three experiments refine
+assumptions and semantic boundaries without requiring another stable owner.
+The ordinary measure-valued consumer also reuses existing guarded comparison.
+Architecture expansion has reached diminishing returns for this investigation;
+the next concrete task is a scoped extraction build, not another hierarchy.
+See [D92](decisions/D92-economic-extraction-boundary.md) for the decision,
+specific MathEconLib consumers and conditions for reopening a gate.
 
 ## Accepted operations and ownership
 
@@ -31,9 +39,9 @@ semantics. No parallel definition is needed simply to give economics familiar
 names. Search Mathlib again before moving any independently reusable theorem
 upstream.
 
-## Remaining discriminating questions
+## Continuation gates and outcomes
 
-Work in this order, revisiting it when a counterexample changes the question:
+The continuation followed this dependency order:
 
 1. **Information and dynamic choice.** Test whether conditional optimality
    composes before information is observed. Separate evaluation-domain closure
@@ -71,6 +79,13 @@ Work in this order, revisiting it when a counterexample changes the question:
    named consumers, dependency roots and remaining domain obligations. General
    populations, endowments and weaker preferences warrant another experiment
    only if they expose a new semantic or compositional question.
+   Item 16 checks the actual per-player integrable-deviation contract in the
+   pinned MathEconLib source using `Tests.MeasureGuardedOptimality`. Arbitrary
+   measure-valued choices fit the existing guarded predicate; the concrete
+   countably supported probability-measure control distinguishes filtered
+   deviations, inadmissible incumbents and raw totalized integrals. A defined
+   negative-infinite expectation remains distinct from finite integrability.
+   This is ordinary consumer validation, not another architecture experiment.
 
 ## Stopping rule
 
@@ -85,3 +100,25 @@ Before calling extraction ready, identify a real MathEconLib consumer and its
 namespace/dependency requirements. No external repository has been changed or
 validated by the present experiment. The shared mathematical layer is a
 candidate extraction boundary, not evidence of external integration.
+
+The pinned consumer revision is
+`58f602847d7f131994d32ca7a8cc1af35b7e2dbe`. D92 names the actual bundle-choice,
+contract-stability and measurable mixed-equilibrium APIs inspected there.
+Dependency ownership and namespace selection remain part of the extraction
+build; no fresh probability carrier or universal economic record is needed
+merely because the consumer uses probability measures rather than PMFs.
+
+## Final verification
+
+The final ordinary consumer builds strictly in 3,144 jobs. On checkpoint
+`ba311457`, `python scripts/audit.py` passes 3,877 default and 4,800 complete
+validation jobs, public lint, authored diagnostics and transitive standard-axiom
+checks. The final source audit also covers all experimental and test imports.
+Raw output is ignored at
+`.codex/scratch/abstraction-extraction/integration-audit.log`.
+
+The measure-control fixture uses countably supported probability measures;
+its generic reformulation quantifies over arbitrary measures. External diffuse
+controls and MathEconLib source APIs were inspected at the pinned revision,
+not compiled as part of this audit. The current stopping conclusion concerns
+the named consumers and operations, with no field-wide minimality claim.
