@@ -11153,3 +11153,54 @@ observations and outcome below are preserved as the record of that run.
   No common-scale axiom, social-planner structure, new order or welfare engine
   is admitted. Endogenous feasible sets and their existence/continuity laws
   need a concrete requiring consumer before becoming another interface.
+
+## EXP-181: changing feasible sets and closed optimizer graphs
+
+- **Date / status:** 2026-11-11; complete, supporting a graph theorem and refuting closed-feasibility-only sufficiency.
+- **Question:** Which feasibility continuity law makes a continuous objective's
+  feasible maximizers have a closed graph, and can the same theorem serve a
+  genuine changing consumption budget and an existing fixed-simplex proof?
+- **Alternatives:** the existing fixed-menu intersection proof; continuous
+  objective plus closed feasible graph alone; or closed feasible graph plus
+  lower hemicontinuity, using Mathlib's correspondence APIs. Compactness and
+  nonemptiness supply existence separately rather than becoming stored data.
+- **Representative slice:** a reusable nonsequential closed-argmax theorem;
+  divisible consumption with a varying budget; a production local-lottery or
+  best-reply graph proof; and a zero-income free-good or discrete-capacity
+  boundary where feasible graphs remain closed but optimizer graphs do not.
+- **Kill conditions:** apply a fixed-menu proof to disappearing alternatives;
+  infer closed optimizer graph from closed feasible graph alone; silently
+  identify payoff-threshold Nash with endogenous feasible deviations; demand
+  compactness/convexity for graph closedness itself; introduce a correspondence
+  or equilibrium record without need; or claim full Berge, utility-representation
+  or generalized-equilibrium existence from this slice.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-09-parametric-choice`, baseline `80741987`;
+  ignored scratch and logs under `.codex/scratch/exp181/`.
+- **Focused observations:** closed feasibility and lower hemicontinuity supply
+  different obligations. The shared closed-maximizer-graph theorem uses a
+  continuous objective in an ordered topological codomain without sequential,
+  compactness, convexity or nonempty-value assumptions. A changing divisible
+  budget proves lower hemicontinuity by continuous feasible recovery and
+  obtains existence separately; nonlinear satiation need not exhaust income.
+  The actual zero-income/free-good budget has closed graph, nonempty compact
+  convex uniformly bounded values and upper hemicontinuity, but its optimizer
+  graph is not closed. Lower hemicontinuity fails at that limit.
+- **Artifacts / focused validation:** `Math.ParametricOptimality`, production
+  `Analysis.LocalChoiceFixedPoint`, and the two economic probes in
+  `Experimental/Exp181/`; [D86](decisions/D86-parametric-feasible-optimality.md).
+  Independent Math build passes 1,006 jobs; focused strict production and
+  complete controls pass 3,633 jobs. Comment-masked nonblank production graph
+  lines are 25 before and 26 after, plus 31 shared theorem lines: this is new
+  generality, not proof compression or a performance claim. Independent
+  semantic review accepts the scope.
+- **Integration validation:** on checkpoint `ec2977ff`,
+  `python scripts/audit.py` passes 3,876 default and 4,782 complete validation
+  jobs, public lint, authored diagnostics and transitive standard-axiom checks.
+  Raw output is `.codex/scratch/exp181/integration-audit.log`.
+- **Outcome / next action:** adopt the independent graph theorem and its
+  production constant-simplex specialization. Retain economic probes as
+  experiment evidence; no demand or generalized-game representation is admitted.
+  Lower and upper feasibility continuity are distinct obligations. The next
+  dependency gate is simultaneous optimality with endogenous feasible choices,
+  where filtering ordinary Nash by a feasible-profile condition is not enough.
