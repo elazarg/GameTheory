@@ -11153,3 +11153,27 @@ observations and outcome below are preserved as the record of that run.
   No common-scale axiom, social-planner structure, new order or welfare engine
   is admitted. Endogenous feasible sets and their existence/continuity laws
   need a concrete requiring consumer before becoming another interface.
+
+## EXP-181: changing feasible sets and closed optimizer graphs
+
+- **Date / status:** 2026-11-11; in progress.
+- **Question:** Which feasibility continuity law makes a continuous objective's
+  feasible maximizers have a closed graph, and can the same theorem serve a
+  genuine changing consumption budget and an existing fixed-simplex proof?
+- **Alternatives:** the existing fixed-menu intersection proof; continuous
+  objective plus closed feasible graph alone; or closed feasible graph plus
+  lower hemicontinuity, using Mathlib's correspondence APIs. Compactness and
+  nonemptiness supply existence separately rather than becoming stored data.
+- **Representative slice:** a reusable nonsequential closed-argmax theorem;
+  divisible consumption with a varying budget; a production local-lottery or
+  best-reply graph proof; and a zero-income free-good or discrete-capacity
+  boundary where feasible graphs remain closed but optimizer graphs do not.
+- **Kill conditions:** apply a fixed-menu proof to disappearing alternatives;
+  infer closed optimizer graph from closed feasible graph alone; silently
+  identify payoff-threshold Nash with endogenous feasible deviations; demand
+  compactness/convexity for graph closedness itself; introduce a correspondence
+  or equilibrium record without need; or claim full Berge, utility-representation
+  or generalized-equilibrium existence from this slice.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-09-parametric-choice`, baseline `80741987`;
+  ignored scratch and logs under `.codex/scratch/exp181/`.
