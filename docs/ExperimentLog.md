@@ -11207,7 +11207,7 @@ observations and outcome below are preserved as the record of that run.
 
 ## EXP-182: simultaneous feasible choice and shared-resource incentives
 
-- **Date / status:** 2026-11-11; in progress.
+- **Date / status:** 2026-11-11; complete, supporting simultaneous feasible choice and refuting ordinary-Nash feasibility filtering.
 - **Question:** Can simultaneous optimization with changing feasible menus
   reuse the existing guarded choice and fixed-point tools without a new
   generalized-game record or a summed interpersonal objective?
@@ -11249,4 +11249,16 @@ observations and outcome below are preserved as the record of that run.
   body source count falls from 92 to 39 nonblank lines, with 72 shared theorem
   lines and 91 separately charged quantity construction lines. Cold source
   cost is larger for one consumer; no performance advantage is claimed.
-  Independent semantic review accepts the scope; full integration is pending.
+  Independent semantic review accepts the scope.
+- **Integration validation:** on checkpoint `4b089fe9`,
+  `python scripts/audit.py` passes 3,876 default and 4,786 complete validation
+  jobs, public lint, authored diagnostics and transitive standard-axiom checks.
+  Existing terminal/belief and sequential-existence clients pass through the
+  exact local-lottery specialization. Raw output is
+  `.codex/scratch/exp182/integration-audit.log`.
+- **Outcome / next action:** adopt the per-coordinate analytic operation and
+  production specialization, with native constrained-game semantics retained
+  as checked evidence rather than a new problem record. Feasibility, available
+  alternatives, their continuity and objective geometry remain separate
+  operations. Market clearing, broader native constraints and preference
+  representation need named consumers before further interfaces are admitted.
