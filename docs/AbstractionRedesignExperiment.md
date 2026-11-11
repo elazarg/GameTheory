@@ -32,6 +32,14 @@ the two globally WARP-consistent score rankings. Existing filtered menus and
 `FiniteChoice.best` express the complete evidence; no restricted-demand record
 is introduced. See [D90](decisions/D90-restricted-budget-observations.md).
 
+Item 15 / EXP-186 separates simultaneous contract acceptance from alternative
+bundle choice using the existing MathEconLib consumer's exact conditions. Quota
+choice satisfies substitutes/IRC/path independence but fails item WARP;
+complementary contracts are bundle-rationalized but fail substitutes and
+joint-to-singleton acceptance. The same set and finite maps are proved identical.
+No new arena or stable choice record is admitted. See
+[D91](decisions/D91-contract-acceptance-and-bundle-choice.md).
+
 Item 01 selects direct preference-generic exact-law proofs after comparing the
 existing coverage API on the same statements. See [D78](decisions/D78-preference-generic-exact-law-bridges.md)
 and EXP-173 for measurements and limits.

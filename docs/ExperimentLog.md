@@ -11439,3 +11439,16 @@ observations and outcome below are preserved as the record of that run.
   evidence under `Experimental/Exp186`, scratch `.codex/scratch/exp186/`.
   Reference checkout is read-only at
   `58f602847d7f131994d32ca7a8cc1af35b7e2dbe`.
+- **Observations:** the quota-two map satisfies the reference's exact
+  substitutes/IRC/path-independence formulas but fails item WARP and expansion.
+  Canonical greatest choice over quota-feasible bundles uniquely rationalizes
+  the same map, with set/finite identity proved. Complementary contracts are
+  likewise uniquely bundle-rationalized and WARP-consistent but refute
+  substitutes and the joint-to-singleton acceptance step. Empty offers select
+  the empty bundle rather than an empty correspondence.
+- **Focused validation:** `lake --iofail build
+  GameTheory.Experimental.Exp186.Institution` passes 782 jobs; its dependency
+  build validates the two set and finite owners. See
+  [D91](decisions/D91-contract-acceptance-and-bundle-choice.md). No new stable
+  record or arena is required, and the reference already owns the general
+  institutional composition theorem.

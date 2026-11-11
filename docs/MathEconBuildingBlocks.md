@@ -62,6 +62,11 @@ Work in this order, revisiting it when a counterexample changes the question:
    separation of consent from affected participants against existing matching
    and deviation operations. Require an operation the current APIs cannot
    express before admitting another arena.
+   EXP-186 / D91 completes the quota/complement test against the pinned
+   MathEconLib consumer: item WARP, bundle WARP and substitutes differ. Existing
+   set maps express the examples and contraction supplies joint-to-singleton
+   acceptance. Reuse MathEconLib's institutional owner rather than add a parallel
+   GameTheory record.
 5. **Economics extraction contract.** Consolidate the measured conclusions,
    named consumers, dependency roots and remaining domain obligations. General
    populations, endowments and weaker preferences warrant another experiment
