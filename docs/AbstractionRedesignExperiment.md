@@ -161,7 +161,7 @@ all-finite-menu representation must not be applied to restricted budget data
 without its missing domain hypotheses, nor may fixed-simplex existence be
 advertised as general-equilibrium existence. Information-dependent choice and
 stronger representation theorems remain independent later questions. These
-gates continue the investigation; the eight successful scopes do not claim
+gates continue the investigation; the eight completed investigations do not claim
 an architecture for the entire field is settled.
 
 ## Constraints and alternatives
