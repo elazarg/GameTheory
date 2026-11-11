@@ -11380,7 +11380,7 @@ observations and outcome below are preserved as the record of that run.
 
 ## EXP-185: restricted budgets and preference identification
 
-- **Date / status:** 2026-11-11; reserved, in progress.
+- **Date / status:** 2026-11-11; complete, proving restricted-observation nonidentification.
 - **Question:** Can an entire fixed-positive-price budget family identify the
   preference represented by all-finite-menu choice? Does adding another actual
   budget distinguish observational ambiguity without a new choice record?
@@ -11407,3 +11407,12 @@ observations and outcome below are preserved as the record of that run.
   GameTheory.Experimental.Exp185.RestrictedBudget` passes 958 jobs;
   source boundaries and driver coverage pass. See
   [D90](decisions/D90-restricted-budget-observations.md).
+- **Integration validation:** on checkpoint `8fcbb6eb`, full audit passes
+  3,877 default and 4,796 validation jobs, public lint, authored diagnostics and
+  transitive standard-axiom checks. Raw output is
+  `.codex/scratch/exp185/integration-audit.log`. Independent semantic review
+  accepts the finite indivisible and identification-only scope.
+- **Outcome / next action:** keep the native observation probe experimental;
+  reuse canonical finite menus rather than introducing a demand wrapper.
+  Next test joint contract acceptance and its substitution assumptions against
+  the existing MathEconLib consumer.
