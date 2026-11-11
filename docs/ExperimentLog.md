@@ -11331,7 +11331,7 @@ observations and outcome below are preserved as the record of that run.
 
 ## EXP-184: conditional comparison and dynamic choice
 
-- **Date / status:** 2026-11-11; reserved, in progress.
+- **Date / status:** 2026-11-11; complete, refuting order-only dynamic composition and supporting direct sufficient hypotheses.
 - **Question:** Does a total transitive ranking of terminal laws suffice to
   compose conditional optimal choices into ex-ante or sequential optimality?
   If not, does an explicit support-local comparison-preservation hypothesis
@@ -11368,3 +11368,12 @@ observations and outcome below are preserved as the record of that run.
   `Experimental/Exp184/{Composition,Controls,Consumers}.lean` and
   [D89](decisions/D89-conditional-and-dynamic-comparison.md). Independent
   semantic review accepts the comparison/domain and chooser/policy boundaries.
+- **Integration validation:** on checkpoint `768f22f5`,
+  `python scripts/audit.py` passes 3,877 default and 4,795 validation jobs,
+  public lint, authored diagnostics and transitive standard-axiom checks.
+  Raw output is `.codex/scratch/exp184/integration-audit.log`.
+- **Outcome / next action:** retain direct prototypes and controls as
+  experimental evidence; no numerical Context or generic mixture hierarchy
+  changes. Dynamic comparison and actual-mixture admissibility are separate
+  obligations. Next test restricted budget observations, where all-finite-menu
+  identification cannot be assumed.

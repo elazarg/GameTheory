@@ -1,6 +1,7 @@
 # Abstraction building-block experiment
 
-Status: eleven investigation items are complete; the cross-domain investigation
+Status: thirteen items are complete, including twelve investigations and one
+ownership consolidation; the cross-domain investigation
 continues. Finite-menu representation, local scalarization, parametric
 optimality, simultaneous feasible choice and a complete scoped exchange slice
 extend the initial six-item results below.
