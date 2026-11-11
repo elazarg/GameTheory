@@ -1,10 +1,10 @@
 # Abstraction building-block experiment
 
-Status: items 01 and 02 accepted; item 03 collected as a refuting experiment.
-Item 04 factors guarded local judgment without replacing numerical contexts.
-Item 05 localizes coalition comparisons and separates consent from affected
-coordinates. All five pass full integration audits. Item 06 remains gated.
-No judgment hierarchy is adopted.
+Status: the initial six-item investigation is complete. Every collected slice
+passes full integration audits. Selected theorem-level and guarded-comparison
+changes are adopted; the binary-only mixture proposal is refuted, and new
+context, coalition and arena structures are not admitted. This is a scoped
+building-block result, not completion of every future abstraction theorem.
 
 Item 01 selects direct preference-generic exact-law proofs after comparing the
 existing coverage API on the same statements. See [D78](decisions/D78-preference-generic-exact-law-bridges.md)
@@ -32,7 +32,15 @@ the existing strong-Nash and matching meanings. Fixed strict unanimity does
 not turn its no-gain relation into a preorder; a valid responsive blocker can
 harm a nonconsenting incumbent. See
 [D82](decisions/D82-local-coalition-comparison-and-consent.md) and EXP-177.
-No first-class coalition problem is admitted. Item 06 remains a question.
+No first-class coalition problem is admitted.
+
+Item 06 retains the existing local-kernel interface. The fixed matching
+replacement is realized with two consenters, three affected coordinates and
+four total coordinates, preserving a genuine spectator law. A law-aware
+operation failing mixture linearity is a rejection control, not a requiring
+game client. See [D83](decisions/D83-local-kernels-and-affected-coordinates.md)
+and EXP-178. No general matching compilation or global expressivity result is
+claimed.
 
 The question is which small building blocks make independently useful
 generalizations cheap on the existing semantics. The starting evidence is
@@ -40,6 +48,32 @@ generalizations cheap on the existing semantics. The starting evidence is
 [Survey evidence](SurveyEvidence.md). Their classifications are hypotheses to
 test, not a target architecture to implement rung by rung. EXP-173 owns the
 first comparison and its observations in [ExperimentLog.md](ExperimentLog.md).
+
+## Result of the initial investigation
+
+| Selected building block or boundary | Evidence |
+| --- | --- |
+| Exact laws and explicit deviation coverage support preference-generic bridges without a new transport wrapper. | EXP-173 / D78; Kuhn and Bayesian consumers. |
+| Bare law preferences support strict response and improvement dynamics; local comparability and finite-range preorder ranks supply the existence path. | EXP-174 / D79; non-EU, partial-preference, singleton and infinite-profile controls. |
+| Binary mixing is weaker than arbitrary PMF comparison closure; full weak comparison and exclusion of strict gain spend different guards. | EXP-175 / D80; total-preorder counterexample and scoped client prototypes. |
+| Probability-independent guarded optimality separates admissibility from comparison, while numerical Context remains its exact specialization. | EXP-176 / D81; production coverage, stochastic belief and undefined/infinite-value controls. |
+| Actual-member comparability is sufficient for strong-Nash agreement; weak rejection and strict blocking retain distinct meanings under partial preferences. | EXP-177 / D82; joint deviation, fixed-coalition and responsive-matching controls. |
+| Consenting judges and affected coordinates must be distinguished; the existing kernel interface handles the tested displacement without weakening locality or bind linearity. | EXP-178 / D83; proper affected subset, spectator law and whole-law rejection control. |
+
+No universal judgment ladder, Mixable record, coalition problem, broader arena,
+probability abstraction or certificate hierarchy is adopted. The original
+surveys remain hypotheses and motivation; these experiments narrow what has
+actually been validated. The final full audit passes 3,873 default and 4,772
+validation jobs, public lint and transitive standard-axiom checks.
+
+Further promotion requires a concrete consumer: a stable non-EU mixture client
+must select the exact closure/guard law; a higher sequential generalization
+must identify a useful theorem while preserving terminal and belief semantics;
+and a broader arena must show an unmet operation or measured failure of the
+current representation. Adjacent theorem families and a complete matching
+compiler were not part of these accepted slices. The governing delivery order
+remains `PostArchitectureDeliveryPlan.md` and the status index remains
+`DeliveryLedger.md`.
 
 ## Constraints and alternatives
 
@@ -130,7 +164,7 @@ claims were narrowed or refuted.
 | 03: mixture closure (binary-only refuted, EXP-175/D80) | Which law is sufficient for mixed dominance and pure-deviation reduction? | Separate binary mixing, finite iteration, and closure under arbitrary PMF `bind`. Test infinite-support mixtures and retain actual compared-law expectation premises. Compare named hypotheses with a proposed reusable law; do not call binary convexity countable betweenness. |
 | 04: Protocol judgment (local comparison accepted, EXP-176/D81) | Can comparison of continuation laws be separated from numerical continuation evaluation? | Preserve candidate and alternative expectation-definedness in the numerical specialization; a nonnumeric local-optimality consumer; existing terminal rationality, Bayes consistency, and proper-subgame semantics preserved. Historywise one-shot results must retain their exact scope and the recorded SPE counterexamples. |
 | 05: coalition judgment (local agreement accepted, EXP-177/D82) | Does strict unanimity provide useful shared transport for strong Nash and matching? | Incomparability example distinguishing absence of strict gain from weak equilibrium; nonempty-coalition policy; per-member quantifiers; agreement under explicit totality. Any change of meaning requires a decision, not a silent restatement. |
-| 06: arena and deviations | Is a more general deviation carrier needed by a named client? | A client the current local scheme cannot express, plus explicit locality and law-linearity enforcement or a demonstrated boundary explaining why they do not apply. Re-run the recommendation-spying and nonmember-coordinate controls. Compare with a separate consumer-local interface before replacing the static core. |
+| 06: arena and deviations (existing interface retained, EXP-178/D83) | Is a more general deviation carrier needed by a named client? | A client the current local scheme cannot express, plus explicit locality and law-linearity enforcement or a demonstrated boundary explaining why they do not apply. Re-run the recommendation-spying and nonmember-coordinate controls. Compare with a separate consumer-local interface before replacing the static core. |
 
 These are investigation gates, not a promise to add six interfaces. Reorder or
 stop after an item when its evidence changes the useful next question. Items
