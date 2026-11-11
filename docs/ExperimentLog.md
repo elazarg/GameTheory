@@ -11328,3 +11328,29 @@ observations and outcome below are preserved as the record of that run.
   obligations; the existing mathematical building blocks compose without a
   new economic record or consumer-utility sum. Arbitrary endowments, broader
   preferences and stable market data remain independently requiring gates.
+
+## EXP-184: conditional comparison and dynamic choice
+
+- **Date / status:** 2026-11-11; reserved, in progress.
+- **Question:** Does a total transitive ranking of terminal laws suffice to
+  compose conditional optimal choices into ex-ante or sequential optimality?
+  If not, does an explicit support-local comparison-preservation hypothesis
+  suffice without changing numerical contexts or adding a preference hierarchy?
+- **Alternatives:** direct guarded optimality plus actual-prior comparison
+  hypotheses; a generic dynamic-context record. Keep domain admissibility
+  separate from comparison closure, and compare with existing exact-law
+  observation transport rather than conflating the two operations.
+- **Representative slice:** a fair observed branch, one branch with a genuine
+  action and one fixed continuation. Test a real-score total preorder whose
+  conditional strict preference reverses before observation, then a genuinely
+  non-EU possibility ranking that composes under arbitrary supported mixtures.
+  Exercise well-founded protocol backward laws as a second composition client.
+- **Kill conditions:** reject deriving dynamic consistency from transitivity,
+  totality or exact-law transport alone; reject treating componentwise
+  evaluation-domain membership as actual-mixture definedness. A new context
+  record must enable a needed operation unavailable through direct hypotheses.
+- **Artifacts / commands:** branch
+  `codex/experiment-abstraction-item-13-dynamic-choice`, baseline `1aad00fa`;
+  evidence under `Experimental/Exp184`, scratch logs in
+  `.codex/scratch/exp184/`; focused strict builds and integration audit before
+  collecting a completed result.
