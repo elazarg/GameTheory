@@ -15,6 +15,7 @@ public import GameTheory.Math.FinRotation
 public import GameTheory.Math.HarmonicSequence
 public import GameTheory.Math.GuardedOptimality
 public import GameTheory.Math.FiniteChoice
+public import GameTheory.Math.Scalarization
 public import GameTheory.Math.OnlineLearning
 public import GameTheory.Math.Probability.Bounds
 public import GameTheory.Math.Probability.Convergence

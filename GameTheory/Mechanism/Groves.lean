@@ -15,6 +15,7 @@ Primary references: E. H. Clarke, “Multipart Pricing of Public Goods,”
 
 public import GameTheory.Mechanism.Auction
 public import GameTheory.Mechanism.QuasiLinear
+public import GameTheory.Math.Scalarization
 
 @[expose] public section
 
@@ -61,6 +62,23 @@ def IsEfficient [Fintype ι] : Prop :=
   ∀ (report : V.ReportProfile) (outcome : V.Outcome),
     ∑ i, V.val i (report i) outcome ≤
       ∑ i, V.val i (report i) (V.alloc report)
+
+/-- Reported-welfare maximization gives a Pareto-maximal attainable valuation
+vector. This concerns allocation values, before transfers, at the fixed report. -/
+theorem IsEfficient.reportedValues_maximal {V : GrovesSetup ι} [Fintype ι]
+    (efficient : V.IsEfficient) (report : V.ReportProfile) :
+    Maximal (fun values : ι → ℝ =>
+      values ∈ Set.range (fun outcome i => V.val i (report i) outcome))
+      (fun i => V.val i (report i) (V.alloc report)) := by
+  apply GameTheory.Math.maximal_of_isMaxOn
+    (objective := fun values : ι → ℝ => ∑ i, values i)
+  · rw [isMaxOn_iff]
+    rintro values ⟨outcome, rfl⟩
+    exact efficient report outcome
+  · exact ⟨V.alloc report, rfl⟩
+  · intro alternative _ improved
+    obtain ⟨weak, who, strict⟩ := Pi.lt_def.mp improved
+    exact Finset.sum_lt_sum (fun i _ => weak i) ⟨who, Finset.mem_univ who, strict⟩
 
 /-- Groves payment: the report-independent offset less other players' reported welfare. -/
 def grovesPayment [Fintype ι] [DecidableEq ι]
