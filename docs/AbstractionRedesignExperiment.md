@@ -121,6 +121,16 @@ existence; welfare aggregation and interpersonal scale; information and dynamic
 choice consistency. These are possible investigations, not adopted interfaces
 or a breadth-first delivery queue.
 
+**Item 08 / EXP-180: scalarization (in progress).** Test whether a feasible
+maximizer is Pareto maximal when each strict improvement of that incumbent
+raises the scalar objective. Compare with Mathlib's global monotone transport.
+Use existing Groves sums and bargaining products, keeping weights, disagreement
+and feasibility with their owners. Positive gains at the bargaining incumbent
+must suffice without global positivity. Keep zero/negative weights, objective
+biases, infeasible incumbents and zero-product dominated ties as rejection
+controls. Ordinal efficiency and the choice of a cardinal social objective
+must remain distinct.
+
 ## Constraints and alternatives
 
 The accepted defaults remain [D5](decisions/D5-deviation-and-equilibrium.md),
