@@ -10949,3 +10949,56 @@ observations and outcome below are preserved as the record of that run.
   no needed capability; no cost-budget failure or speed advantage is claimed.
   [D81](decisions/D81-guarded-protocol-comparison.md) records the selected scope.
   Coalition judgment and broader deviation arenas remain independent gates.
+
+## EXP-177: coalition consent, strict unanimity and weak rejection
+
+- **Date / status:** 2026-11-11; complete, supporting local comparison and rejecting silent coalition conflations.
+- **Question:** Does a shared strict-coalition judgment or problem structure
+  improve strong-Nash and responsive-matching clients without changing their
+  partial-preference meaning or conflating consent with affected coordinates?
+- **Alternatives:** direct individual strict comparisons and the existing weak
+  coalition lift; a strict-unanimity relation over a fixed nonempty coalition;
+  a first-class coalition problem with local moves. Compare actual clients
+  before admitting a new shared representation or changing an existing name.
+- **Representative slice:** nonempty coalition strong-Nash specialization,
+  partial-order separation and total-comparison agreement; responsive blocking
+  pairs with heterogeneous partner carriers, vacancies and displacement of an
+  incumbent who is not a consenting member of the blocking pair.
+- **Kill conditions:** silently equating weak rejection with absence of strict
+  unanimity under partial preferences; empty-coalition vacuity treated as a
+  genuine blocker; changing responsive acceptance or feasibility; assuming that
+  every changed coordinate belongs to the consenting coalition; or introducing
+  duplicate equilibrium semantics or an unused coalition/certificate hierarchy.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-05-coalition-judgment`, baseline `ab6c61b9`.
+  Initial candidates live in ignored `.codex/scratch/exp177/`.
+- **Focused observations:** strict unanimity is irreflexive and transitive
+  for a fixed nonempty coalition, but its no-gain comparison is not transitive
+  even with total individual rankings. Equality preferences separate the
+  no-strict-gain equilibrium specialization from canonical weak strong Nash.
+  Local member comparisons suffice for their agreement; a two-player game
+  proves all-false unilateral Nash but not strong Nash under joint improvement,
+  and all-true strong Nash despite global incomparability of other laws.
+  Responsive matching can make both consenting members gain while harming an
+  outside incumbent. A kernel-local rewrite of only the consenting assignment
+  coordinates provably cannot realize that replacement in the tested direct
+  representation; this is not an impossibility claim for all game encodings.
+- **Artifacts / focused validation:** local-comparison theorems in `Core.Rank`
+  and `Core.Equilibrium`, with existing totality signatures preserved;
+  `Tests.CoalitionComparison` and retained candidates under
+  `Experimental/Exp177/`. The focused strict owner/control build passes 3,056
+  jobs; source audit passes. Zero new stable definitions, structures or
+  equilibrium engines. No new coalition problem record was implemented or timed.
+- **Integration validation:** on checkpoint `f03c9d65`,
+  `python scripts/audit.py` passes the default strict build (3,873 jobs), complete
+  validation build (4,770 jobs), public lint, authored diagnostic checks and
+  transitive standard-axiom checks. Native matching, coalition simulation and
+  locality controls pass. Raw output `.codex/scratch/exp177/integration-audit.log`;
+  independent semantic review accepts the scope and unchanged definitions.
+- **Outcome / next action:** adopt theorem-level local comparison; no shared
+  strict-coalition representation or changed strong-Nash meaning is justified.
+  Comparability is sufficient, not asserted necessary in each instance.
+  [D82](decisions/D82-local-coalition-comparison-and-consent.md) records the
+  scoped consent/affected-coordinate separation. The arena gate must test the
+  existing scheme with distinct judge labels and affected coordinates before
+  inferring a need for unrestricted law transformers.
