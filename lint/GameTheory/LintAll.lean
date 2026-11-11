@@ -247,6 +247,7 @@ import all GameTheory.Math.GuardedOptimality
 import all GameTheory.Math.FiniteChoice
 import all GameTheory.Math.Scalarization
 import all GameTheory.Math.ParametricOptimality
+import all GameTheory.Math.LinearBudget
 import all GameTheory.Math.Negligible
 import all GameTheory.Math.OnlineLearning
 import all GameTheory.Math.OrthantProjection
