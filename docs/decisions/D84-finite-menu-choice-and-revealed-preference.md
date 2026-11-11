@@ -1,6 +1,6 @@
 # D84: finite-menu choice and revealed preference
 
-- **Status:** selected after focused validation; integration validation pending.
+- **Status:** adopted for finite-menu representation and the two domain adapters.
 - **Date:** 2026-11-11
 - **Experiment:** EXP-179
 
@@ -99,3 +99,8 @@ consumer/control build passes 3,070 jobs. Source checks pass. Independent
 semantic review accepts the representation, extraction boundaries and
 lottery-choice separation. Full integration evidence is recorded in EXP-179
 before collection. No performance advantage is claimed from job counts.
+
+On implementation checkpoint `5be0b4f6`, `python scripts/audit.py` passes
+3,874 default and 4,776 validation jobs, public lint, authored diagnostic
+checks and transitive standard-axiom checks. Raw output is ignored
+`.codex/scratch/exp179/integration-audit.log`.

@@ -1,7 +1,7 @@
 # Abstraction building-block experiment
 
-Status: the initial six-item investigation is complete; the cross-domain
-investigation continues with finite-menu choice and revealed preference.
+Status: the initial six-item investigation and the finite-menu continuation
+are complete; the cross-domain investigation continues.
 The goal is reusable building blocks for the library and economic theory,
 with later MathEconLib extraction in view. Every collected slice
 passes full integration audits. Selected theorem-level and guarded-comparison
@@ -86,7 +86,7 @@ induce feasible choices, and observed menu choices may rationalize preferences.
 Extraction means independence from game forms, lotteries and utility scalars;
 it does not mean adding a new shared problem record or changing another library.
 
-**Item 07 / EXP-179: finite-menu choice.** Compare direct feasible greatest
+**Item 07 / EXP-179: finite-menu choice (complete, D84).** Compare direct feasible greatest
 elements, maximal elements, and a correspondence of selected alternatives.
 Test whether feasibility, nonempty choice on every nonempty finite menu, and
 the weak axiom of revealed preference reconstruct a total transitive relation
@@ -104,6 +104,17 @@ their contents. A restricted family of budget menus must not be silently
 treated as all finite menus. Stop or narrow if representation requires a new
 numerical score, global finite carrier, arbitrary tie breaking, or changes to
 existing equilibrium/expectation guards.
+
+The result selects the probability-free `Math.FiniteChoice` theorem layer.
+Feasible, nonempty choice with the correspondence weak axiom is exactly
+greatest choice under a complete preorder, on all finite menus of an arbitrary
+ambient type. Rank finite existence now reuses this owner and Mathlib's maximal
+theorem; canonical best-response and knapsack allocation adapters pass.
+Three genuine lottery choices prove that this representation need not be
+expected utility. Partial-preference and tied-bundle controls delimit latent
+identification and bundle flattening. Full audit passes 3,874 default and
+4,776 validation jobs, lint and transitive standard-axiom checks. See
+[D84](decisions/D84-finite-menu-choice-and-revealed-preference.md).
 
 Later questions remain consumer-gated: endogenous feasible sets and fixed-point
 existence; welfare aggregation and interpersonal scale; information and dynamic
