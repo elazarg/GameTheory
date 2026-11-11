@@ -164,8 +164,8 @@ open GameTheory.Math.Probability
 
 universe uι us uo uα uΩ
 
-/-- Pure tests suffice when the actual family of pure deviation laws has an
-upper contour closed under its supported mixtures. -/
+/-- Pure tests suffice when their comparison bound is preserved under
+supported mixtures of the actual pure deviation laws. -/
 theorem isNash_mixed_iff_of_bind_comparisons
     {ι : Type uι} [Fintype ι] [DecidableEq ι]
     (F : GameForm.{uι, us, uo} ι)
