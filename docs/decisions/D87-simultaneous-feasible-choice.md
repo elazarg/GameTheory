@@ -1,6 +1,6 @@
 # D87: simultaneous feasible choice without a generalized-game record
 
-- **Status:** selected after complete focused validation; integration validation pending.
+- **Status:** adopted for the analytic theorem and local-lottery specialization; native constrained-game representation remains experimental.
 - **Date:** 2026-11-11
 - **Experiment:** EXP-182
 
@@ -122,3 +122,9 @@ dependency boundary. Independent read-only semantic review accepts the
 frozen-parameter semantics, derived compactness, per-coordinate objectives,
 native game bridge and convexity rejection scope. Integration evidence is
 recorded in EXP-182 before collection.
+
+On checkpoint `4b089fe9`, `python scripts/audit.py` passes 3,876 default and
+4,786 complete validation jobs, public lint, authored diagnostic checks and
+transitive standard-axiom checks. Existing terminal, belief and sequential
+existence consumers pass through the unchanged local-lottery statement. Raw
+output is ignored `.codex/scratch/exp182/integration-audit.log`.
