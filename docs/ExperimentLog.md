@@ -11005,7 +11005,7 @@ observations and outcome below are preserved as the record of that run.
 
 ## EXP-178: affected coordinates, consent labels and law-linearity
 
-- **Date / status:** 2026-11-11; running.
+- **Date / status:** 2026-11-11; complete, retaining the existing local-kernel interface for this slice.
 - **Question:** Does the validated matching displacement force a broader arena
   or arbitrary law-transformer interface, or does the existing scheme suffice
   when consenting judges are distinguished from affected coordinates?
@@ -11039,6 +11039,17 @@ observations and outcome below are preserved as the record of that run.
   The strict probe/locality build passes 3,771 jobs, including the existing
   recommendation-spying and frame controls in `Tests.Locality`; source audit
   passes. Zero new stable definitions, structures, carriers or interfaces.
-- **Outcome / next action:** the fixed displacement does not require a broader
-  law-transformer interface. The conclusion is not a full matching compilation
-  or universal expressivity theorem. Full audit/lint/axiom gates remain pending.
+- **Integration validation:** on checkpoint `51e5e60a`,
+  `python scripts/audit.py` passes the default strict build (3,873 jobs), full
+  validation build (4,772 jobs), public lint, authored diagnostic checks and
+  transitive standard-axiom checks. Raw output is
+  `.codex/scratch/exp178/integration-audit.log`. Independent semantic review
+  accepts the proper-subset, fixed-family and uniform-kernel qualifications.
+- **Outcome / next action:** retain the local kernel and bind lift; the fixed
+  displacement does not require a broader law-transformer interface. Genuine
+  randomness is in the preserved spectator law, not the deterministic local
+  replacement. This is not a full matching compilation or universal
+  expressivity theorem. No broad arena was implemented or timed.
+  [D83](decisions/D83-local-kernels-and-affected-coordinates.md) closes the initial
+  six-question investigation with no new stable interface; any future extension
+  needs an independently requiring client and explicit preservation obligations.
