@@ -17,6 +17,14 @@ dependency/ownership consolidation, not a new architecture experiment: five
 accepted mathematical owners depend only on Mathlib, and the simultaneous
 feasible-choice owner adds the explicit analytic fixed-point dependency.
 
+Item 13 / EXP-184 validates direct conditional and backward composition under
+explicit actual-prior comparison laws, with whole-policy admissibility kept
+separate. A total transitive law ranking strictly reverses two strict conditional
+choices before observation; non-EU possibility comparisons supply the positive
+arbitrary-PMF clients but fail strict cancellation. The prototypes remain
+experimental and establish chooser-level rather than imperfect-information
+policy composition. See [D89](decisions/D89-conditional-and-dynamic-comparison.md).
+
 Item 01 selects direct preference-generic exact-law proofs after comparing the
 existing coverage API on the same statements. See [D78](decisions/D78-preference-generic-exact-law-bridges.md)
 and EXP-173 for measurements and limits.

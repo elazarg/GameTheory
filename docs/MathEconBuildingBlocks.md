@@ -40,10 +40,17 @@ Work in this order, revisiting it when a counterexample changes the question:
    from preservation of comparisons under the actual prior and continuation
    kernels. Include a total transitive non-EU preference that reverses a
    conditional comparison after mixing, and a non-EU positive consumer.
+   EXP-184 / D89 completes this test: both strict conditional comparisons can
+   reverse ex ante, while arbitrary-PMF possibility comparisons support two
+   direct composition clients. Keep the prototypes experimental; no new Context
+   record is justified. Information-local policy realization remains separate.
 2. **Mixture requirements.** Use that consumer to distinguish full comparison
    preservation from weaker bound or no-strict-gain closure. EXP-175 already
    refutes binary closure as a substitute for arbitrary PMF closure. Do not
    repeat that failed competition under another name.
+   EXP-184 also supplies the non-EU paired-comparison and bound-closure evidence:
+   weak closure need not preserve strict comparisons or independence cancellation.
+   This narrows required laws without admitting a universal mixture hierarchy.
 3. **Restricted observations.** Test identification from a genuinely restricted
    menu family before extending the all-finite-menu representation theorem.
    Observational ambiguity is a possible answer, not a missing record to hide.

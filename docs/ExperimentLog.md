@@ -11354,3 +11354,17 @@ observations and outcome below are preserved as the record of that run.
   evidence under `Experimental/Exp184`, scratch logs in
   `.codex/scratch/exp184/`; focused strict builds and integration audit before
   collecting a completed result.
+- **Observations:** a total transitive quadratic law ranking strictly prefers
+  both prescribed conditional actions, but strictly rejects their fair-prior
+  composition. Actual laws are defined and both menus have genuine alternatives.
+  Existing non-EU possibility comparisons preserve arbitrary supported paired
+  mixtures and fixed-base bounds; a common continuation can erase strictness.
+  Direct guarded conditional composition and well-founded chooser composition
+  both instantiate without a new context record. Whole-law admissibility stays
+  explicit; the backward argument uses the competing transition prior.
+- **Focused validation:** `lake --iofail build
+  GameTheory.Experimental.Exp184.Consumers` passes 3,072 jobs, and
+  `python scripts/audit.py --source-only` passes. Evidence is under
+  `Experimental/Exp184/{Composition,Controls,Consumers}.lean` and
+  [D89](decisions/D89-conditional-and-dynamic-comparison.md). Independent
+  semantic review accepts the comparison/domain and chooser/policy boundaries.
