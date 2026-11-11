@@ -11,6 +11,12 @@ changes are adopted; the binary-only mixture proposal is refuted, and new
 context, coalition and arena structures are not admitted. This is a scoped
 building-block result, not completion of every future abstraction theorem.
 
+The post-slice consolidation and remaining discriminating questions are in
+[MathEconBuildingBlocks.md](MathEconBuildingBlocks.md). Item 12 is a read-only
+dependency/ownership consolidation, not a new architecture experiment: five
+accepted mathematical owners depend only on Mathlib, and the simultaneous
+feasible-choice owner adds the explicit analytic fixed-point dependency.
+
 Item 01 selects direct preference-generic exact-law proofs after comparing the
 existing coverage API on the same statements. See [D78](decisions/D78-preference-generic-exact-law-bridges.md)
 and EXP-173 for measurements and limits.
