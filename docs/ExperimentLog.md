@@ -11204,3 +11204,61 @@ observations and outcome below are preserved as the record of that run.
   Lower and upper feasibility continuity are distinct obligations. The next
   dependency gate is simultaneous optimality with endogenous feasible choices,
   where filtering ordinary Nash by a feasible-profile condition is not enough.
+
+## EXP-182: simultaneous feasible choice and shared-resource incentives
+
+- **Date / status:** 2026-11-11; complete, supporting simultaneous feasible choice and refuting ordinary-Nash feasibility filtering.
+- **Question:** Can simultaneous optimization with changing feasible menus
+  reuse the existing guarded choice and fixed-point tools without a new
+  generalized-game record or a summed interpersonal objective?
+- **Alternatives:** ordinary Nash plus feasible-profile filtering; native local
+  affordable judgments; and a theorem for per-coordinate feasible maximizers
+  on a compact convex product envelope, with lower hemicontinuity and
+  quasiconcavity explicit. Compare the existing local-lottery fixed-point
+  proof as a production specialization before admitting another interface.
+- **Representative slice:** two quantities in `[0,1]` sharing unit capacity,
+  own-quantity utility and opponent-dependent affordable alternatives. Local
+  optima fill capacity while every ordinary Nash profile violates it. Test a
+  shared fixed-point theorem against this consumer and unchanged finite-simplex
+  local lotteries. Keep each objective separate and freeze the parameter
+  during every local comparison.
+- **Kill conditions:** silently change canonical Nash or recommendation
+  locality; identify feasibility filtering with endogenous available moves;
+  hide nonempty/continuous menu assumptions or loss of convex maximizers;
+  sum different judges' scores merely to fit a theorem; duplicate Mathlib or
+  the external fixed-point engine; or introduce an unconsumed problem record.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-10-feasible-fixed-points`, baseline
+  `bbd5add1`; scratch and logs under ignored `.codex/scratch/exp182/`.
+- **Focused observations:** guarded affordability reuses `Math.IsOptimalOn`
+  and is exactly capacity saturation in the canonical interval-strategy game.
+  Every ordinary Nash profile buys two units, so feasible-profile filtering
+  loses all coupled optima. One per-coordinate fixed-point theorem serves both
+  the changing-menu constraint family and the unchanged finite-lottery theorem,
+  without summed utilities or a new game record. Closed fibers in the compact
+  envelope derive menu compactness; quasiconcavity derives convex maximizers.
+  The square-score control has continuous utility and nonconvex maximizers,
+  delimiting what continuity alone supplies. Nonempty menus at every envelope
+  point remain an actual assumption, not a claim about all resource games.
+- **Artifacts / focused validation:** `Analysis.FeasibleChoiceFixedPoint`,
+  exact specialization in `Analysis.LocalChoiceFixedPoint`, canonical native
+  control `Experimental.Exp182.SharedCapacity`, and the analytic consumer in
+  `Analysis.FeasibleChoiceFixedPointTest`; [D87](decisions/D87-simultaneous-feasible-choice.md).
+  Standalone analytic target passes 3,194 jobs; complete focused strict
+  production and controls pass 3,655 jobs, and source checks pass. Production
+  body source count falls from 92 to 39 nonblank lines, with 72 shared theorem
+  lines and 91 separately charged quantity construction lines. Cold source
+  cost is larger for one consumer; no performance advantage is claimed.
+  Independent semantic review accepts the scope.
+- **Integration validation:** on checkpoint `4b089fe9`,
+  `python scripts/audit.py` passes 3,876 default and 4,786 complete validation
+  jobs, public lint, authored diagnostics and transitive standard-axiom checks.
+  Existing terminal/belief and sequential-existence clients pass through the
+  exact local-lottery specialization. Raw output is
+  `.codex/scratch/exp182/integration-audit.log`.
+- **Outcome / next action:** adopt the per-coordinate analytic operation and
+  production specialization, with native constrained-game semantics retained
+  as checked evidence rather than a new problem record. Feasibility, available
+  alternatives, their continuity and objective geometry remain separate
+  operations. Market clearing, broader native constraints and preference
+  representation need named consumers before further interfaces are admitted.

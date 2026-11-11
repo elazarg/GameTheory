@@ -14,9 +14,7 @@ nonempty and convex, and continuity of the scores gives a closed graph.
 -/
 
 public import GameTheory.Math.Probability.Simplex
-public import GameTheory.Math.ParametricOptimality
-public import Mathlib.Analysis.Normed.Module.FiniteDimension
-public import FixedPointTheorems.kakutani
+public import GameTheory.Analysis.FeasibleChoiceFixedPoint
 
 @[expose] public section
 
@@ -41,83 +39,30 @@ theorem exists_localChoice_fixedPoint
   classical
   let domain : Set (∀ i, A i → ℝ) :=
     Set.pi Set.univ fun i => simplexWeights (A i)
-  let replies (x : domain) : Set (∀ i, A i → ℝ) :=
-    Set.pi Set.univ fun i =>
-      {v | v ∈ simplexWeights (A i) ∧
-        ∀ w ∈ simplexWeights (A i),
-          (∑ a, w a * score x i a) ≤ ∑ a, v a * score x i a}
-  have replies_subset (x : domain) : replies x ⊆ domain := by
-    intro y hy i hi
-    exact (hy i hi).1
-  have replies_convex (x : domain) : Convex ℝ (replies x) := by
-    apply convex_pi
-    intro i _
-    rintro v ⟨hv, hvmax⟩ w ⟨hw, hwmax⟩ a b ha hb hab
-    refine ⟨convex_simplexWeights _ hv hw ha hb hab, fun u hu => ?_⟩
+  have continuous_objective (i : ι) : Continuous
+      (fun p : domain × (A i → ℝ) => ∑ a, p.2 a * score p.1 i a) := by
+    apply continuous_finsetSum
+    intro a _
+    exact ((continuous_apply a).comp continuous_snd).mul
+      ((continuous_score i a).comp continuous_fst)
+  have quasiconcave_objective (i : ι) (x : domain) :
+      QuasiconcaveOn ℝ (simplexWeights (A i))
+        (fun weights => ∑ a, weights a * score x i a) := by
+    apply ConcaveOn.quasiconcaveOn
+    refine ⟨convex_simplexWeights _, ?_⟩
+    intro v _ w _ a b _ _ _
     simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul, add_mul, mul_assoc,
-      Finset.sum_add_distrib, ← Finset.mul_sum]
-    calc
-      (∑ c, u c * score x i c) =
-          a * (∑ c, u c * score x i c) + b * (∑ c, u c * score x i c) := by
-        rw [← add_mul, hab, one_mul]
-      _ ≤ a * (∑ c, v c * score x i c) + b * (∑ c, w c * score x i c) :=
-        add_le_add (mul_le_mul_of_nonneg_left (hvmax u hu) ha)
-          (mul_le_mul_of_nonneg_left (hwmax u hu) hb)
-  have replies_nonempty (x : domain) : (replies x).Nonempty := by
-    have coordinate_nonempty (i : ι) : ∃ v ∈ simplexWeights (A i),
-        ∀ w ∈ simplexWeights (A i),
-          (∑ a, w a * score x i a) ≤ ∑ a, v a * score x i a := by
-      have score_sum_continuous :
-          Continuous (fun v : A i → ℝ => ∑ a, v a * score x i a) := by
-        apply continuous_finsetSum
-        intro a _
-        exact (continuous_apply a).mul continuous_const
-      obtain ⟨v, hv, hmax⟩ := (isCompact_simplexWeights (A i)).exists_isMaxOn
-        (f := fun v => ∑ a, v a * score x i a)
-        PMF.simplexWeights_nonempty score_sum_continuous.continuousOn
-      exact ⟨v, hv, fun w hw => hmax hw⟩
-    choose v hv hmax using coordinate_nonempty
-    exact ⟨v, fun i _ => ⟨hv i, hmax i⟩⟩
-  have replies_closedGraph : closedGraph replies := by
-    have coordinate_closed (i : ι) : IsClosed
-        {p : domain × (A i → ℝ) | p.2 ∈ simplexWeights (A i) ∧
-          ∀ w ∈ simplexWeights (A i),
-            (∑ a, w a * score p.1 i a) ≤ ∑ a, p.2 a * score p.1 i a} := by
-      apply Math.isClosed_feasibleMaximizers
-        (fun _ : domain => simplexWeights (A i))
-        (fun p => ∑ a, p.2 a * score p.1 i a)
-      · exact (isClosed_simplexWeights _).preimage continuous_snd
-      · exact LowerHemicontinuous.const
-      · apply continuous_finsetSum
-        intro a _
-        exact ((continuous_apply a).comp continuous_snd).mul
-          ((continuous_score i a).comp continuous_fst)
-    show IsClosed _
-    have hset : {z : domain × (∀ i, A i → ℝ) | z.2 ∈ replies z.1} =
-        ⋂ i : ι, {z : domain × (∀ i, A i → ℝ) |
-          z.2 i ∈ simplexWeights (A i) ∧
-            ∀ w ∈ simplexWeights (A i),
-              (∑ a, w a * score z.1 i a) ≤ ∑ a, z.2 i a * score z.1 i a} := by
-      ext z
-      simp [replies]
-    rw [hset]
-    exact isClosed_iInter fun i => IsClosed.preimage
-      (f := fun z : domain × (∀ j, A j → ℝ) => (z.1, z.2 i))
-      (continuous_fst.prodMk ((continuous_apply i).comp continuous_snd)) (coordinate_closed i)
-  have domain_nonempty : domain.Nonempty :=
-    ⟨(fun i action =>
-      (((PMF.pure (Classical.arbitrary (A i)) : PMF (A i)) action).toReal)),
-      fun i _ => PMF.toReal_mem_simplexWeights
-        (PMF.pure (Classical.arbitrary (A i)))⟩
-  obtain ⟨x, hx⟩ := kakutani_fixed_point domain
-    (convex_pi fun i _ => convex_simplexWeights (A i))
-    (isCompact_univ_pi fun i => isCompact_simplexWeights (A i)) domain_nonempty
-    replies replies_closedGraph
-    (fun x => ⟨replies_subset x, replies_convex x, replies_nonempty x⟩)
+      Finset.sum_add_distrib, ← Finset.mul_sum, le_refl]
+  obtain ⟨x, optimal⟩ := exists_feasibleChoice_fixedPoint
+    (fun i => simplexWeights (A i)) (fun i => convex_simplexWeights (A i))
+    (fun i => isCompact_simplexWeights (A i)) (fun i => PMF.simplexWeights_nonempty)
+    (fun i _ => simplexWeights (A i)) (fun _ _ => Set.Subset.refl _)
+    (fun i => (isClosed_simplexWeights (A i)).preimage continuous_snd)
+    (fun _ => LowerHemicontinuous.const) (fun _ _ => PMF.simplexWeights_nonempty)
+    (fun i p => ∑ a, p.2 a * score p.1 i a)
+    continuous_objective quasiconcave_objective
   refine ⟨x, fun i alternative => ?_⟩
-  have hoptimal := (hx i (Set.mem_univ i)).2
-    (fun action => (alternative action).toReal)
-    (PMF.toReal_mem_simplexWeights alternative)
+  have hoptimal := (optimal i).2 (PMF.toReal_mem_simplexWeights alternative)
   rw [expect_eq_sum, expect_eq_sum]
   calc
     (∑ action, (alternative action).toReal * score x i action) ≤

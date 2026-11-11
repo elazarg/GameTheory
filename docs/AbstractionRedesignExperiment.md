@@ -1,8 +1,9 @@
 # Abstraction building-block experiment
 
-Status: nine investigation items are complete; the cross-domain investigation
-continues. Finite-menu representation and local scalarization join the initial
-six-item results below.
+Status: ten investigation items are complete; the cross-domain investigation
+continues. Finite-menu representation, local scalarization, parametric
+optimality and simultaneous feasible choice extend the initial six-item
+results below.
 The goal is reusable building blocks for the library and economic theory,
 with later MathEconLib extraction in view. Every collected slice
 passes full integration audits. Selected theorem-level and guarded-comparison
@@ -154,14 +155,16 @@ bargaining disagreement remain with their domain owners. This makes later
 shared mathematical-economics extraction possible without assuming that a
 single record can represent all those meanings.
 
-The next open constraint boundary is an endogenous feasible correspondence:
+Items 09 and 10 validate an endogenous feasible correspondence boundary:
 the allowed menu may depend on prices, the incumbent profile or other agents.
-A concrete client must first require its feasibility and existence laws. The
+Their concrete clients separate feasibility, approximation of alternatives
+and simultaneous existence. These results do not identify a field-wide
+native constraint or market-clearing representation. The
 all-finite-menu representation must not be applied to restricted budget data
 without its missing domain hypotheses, nor may fixed-simplex existence be
 advertised as general-equilibrium existence. Information-dependent choice and
 stronger representation theorems remain independent later questions. These
-gates continue the investigation; the eight completed investigations do not claim
+gates continue the investigation; the ten completed investigations do not claim
 an architecture for the entire field is settled.
 
 **Item 09 / EXP-181: parametric feasible choice (complete, D86).** Separate closed
@@ -192,6 +195,35 @@ affordable optimization with ordinary Nash filtered by a feasible-profile
 predicate before admitting any generalized-game representation. Retain
 per-agent objectives rather than introducing a summed social objective to
 fit a fixed-point interface.
+
+**Item 10 / EXP-182: simultaneous feasible choice (complete, D87).** Compare
+ordinary Nash filtered by feasibility with local affordable optimization in
+a shared-capacity quantity game. Test a per-coordinate fixed-point theorem
+using the closed-argmax result, lower hemicontinuity and quasiconcavity on each
+actual menu. The old local-lottery theorem must remain an exact specialization;
+no aggregate social objective or generalized-game record is pre-approved.
+
+The selected analytic theorem works on a compact convex product envelope,
+with each menu nonempty, closed-graph and lower hemicontinuous and each real
+objective jointly continuous and quasiconcave on its own menu. Menu compactness
+and convex maximizers are derived. The finite-simplex local-lottery theorem
+is an exact specialization; no second bespoke construction is retained there.
+The independent changing-menu family admits arbitrary continuous quasiconcave
+objectives. Its own-quantity instance reaches the canonical deterministic
+interval-strategy game through explicit affordable-menu and comparison bridges.
+Every affordable local optimum fills capacity; every ordinary Nash profile
+violates it. Continuous square scores separately refute convexity of
+maximizers without the objective-geometry premise. Full audit passes 3,876
+default and 4,786 validation jobs, public lint and transitive standard-axiom
+checks. See [D87](decisions/D87-simultaneous-feasible-choice.md).
+
+This admits a mathematical existence operation, not a new universal game or
+economic-problem structure. Chosen admissibility, available alternatives,
+regularity of available sets and per-coordinate objective geometry remain
+separate. Their owners can later be extracted into shared mathematical
+economics without making all native domains instances of one stored object.
+Broader native constraints, price formation/market clearing and stronger
+preference representations remain independently requiring later clients.
 
 ## Constraints and alternatives
 
