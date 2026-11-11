@@ -8,6 +8,7 @@ mechanism needs the full player universe.
 -/
 
 public import GameTheory.Mechanism.Knapsack.Aggregate
+public import GameTheory.Math.FiniteChoice
 public import Mathlib.Data.Finset.Max
 public import Mathlib.Data.Finset.Powerset
 public import Mathlib.Basic.Real.Basic
@@ -83,6 +84,17 @@ theorem welfareMaximizer_ge (A : Data Agent) (bids : Agent → ℝ)
     welfare bids alternative ≤ welfare bids (welfareMaximizer A bids items hcap) :=
   (Classical.choose_spec (exists_welfareMaximizer A bids items hcap)).2
     alternative halternative
+
+omit [DecidableEq Agent] in
+/-- The canonical selection is one of all welfare-maximizing feasible
+allocations. Equal maximizers remain distinct alternatives in this set. -/
+theorem welfareMaximizer_mem_best (A : Data Agent) (bids : Agent → ℝ)
+    (items : Finset Agent) (hcap : 0 ≤ A.capacity) :
+    welfareMaximizer A bids items hcap ∈ GameTheory.Math.FiniteChoice.best
+      (fun chosen alternative => welfare bids alternative ≤ welfare bids chosen)
+      (feasibleAllocations A items) :=
+  ⟨welfareMaximizer_mem A bids items hcap,
+    fun _ offered => welfareMaximizer_ge A bids items hcap offered⟩
 
 omit [DecidableEq Agent] in
 /-- The chosen welfare maximizer respects capacity. -/

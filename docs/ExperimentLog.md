@@ -11076,3 +11076,19 @@ observations and outcome below are preserved as the record of that run.
 - **Artifacts / commands:** item branch
   `codex/experiment-abstraction-item-07-menu-choice`, baseline `bb9f3345`;
   local probes and logs under ignored `.codex/scratch/exp179/`.
+- **Focused observations:** feasibility, nonempty choice and the correspondence
+  weak axiom are equivalent to complete-preorder greatest choice on all finite
+  menus, without a finite ambient carrier or score. Equality-maximal choice and
+  complete indifference are observationally identical, so the representation
+  cannot identify latent incomparability. Cyclic binary choices refute dropping
+  the weak axiom. Greatest choice, domain-guarded comparison and bundle union
+  have different meanings; tied capacity-one allocations give an actual
+  infeasible-union control. Three actual lottery actions admit the relation
+  representation but no expected-utility representation of observed choices.
+- **Focused artifacts / validation:** `Math.FiniteChoice`, canonical Rank
+  finite existence and Response/Knapsack adapters; `Tests.FiniteChoice`,
+  `Tests.LotteryChoice`, `Experimental.Exp179.ChoiceBoundary`; [D84](decisions/D84-finite-menu-choice-and-revealed-preference.md).
+  `lake --iofail build GameTheory.Math.FiniteChoice` passes 677 jobs;
+  `lake --iofail build GameTheory.Tests.FiniteChoice GameTheory.Tests.LotteryChoice GameTheory.Experimental.Exp179.ChoiceBoundary`
+  passes 3,070 jobs, and source checks pass. Independent read-only semantic
+  reviews accept the scope. Full integration remains pending.

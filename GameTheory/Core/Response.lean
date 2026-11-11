@@ -43,6 +43,19 @@ def IsBestResponse (who : ι) (opponents : Profile F.sig)
     weaklyPrefers who (F.play (Profile.update opponents who candidate))
       (F.play (Profile.update opponents who alternative))
 
+/-- On a finite strategy carrier, best responses are exactly the greatest
+choices from the full menu. No completeness or transitivity is required for
+this characterization. -/
+theorem isBestResponse_iff_mem_best (who : ι) [Fintype (F.sig.Strategy who)]
+    (opponents : Profile F.sig) (candidate : F.sig.Strategy who) :
+    IsBestResponse F weaklyPrefers who opponents candidate ↔
+      candidate ∈ Math.FiniteChoice.best
+        (fun chosen alternative => weaklyPrefers who
+          (F.play (Profile.update opponents who chosen))
+          (F.play (Profile.update opponents who alternative))) Finset.univ := by
+  simp only [Math.FiniteChoice.best, Set.mem_ofPred_eq, Finset.mem_univ, true_and,
+    forall_const, IsBestResponse]
+
 /-- `preferred` very weakly dominates `alternative` for `who`: it is at least
 as good at every profile. This reflexive comparison is the one used to define
 a dominant strategy. -/
