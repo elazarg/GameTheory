@@ -1,6 +1,6 @@
 # D88: exchange budgets and market clearing
 
-- **Status:** selected after complete focused validation; integration validation pending.
+- **Status:** independent mathematical budget theorem adopted; complete exchange slice retained as experimental/test evidence.
 - **Date:** 2026-11-11
 - **Experiment:** EXP-183
 
@@ -135,3 +135,8 @@ and uncapping pass 1,700; the complete consumer and controls pass 3,202. Source
 checks and independent read-only semantic reviews pass. Analytic use stays
 under `Analysis`, preserving D12. Complete integration evidence is recorded
 in EXP-183 before collection.
+
+On checkpoint `acfcf5cd`, `python scripts/audit.py` passes 3,877 default and
+4,792 complete validation jobs, public lint, authored diagnostic checks and
+transitive standard-axiom checks. Raw output is ignored
+`.codex/scratch/exp183/integration-audit.log`.

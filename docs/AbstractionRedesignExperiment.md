@@ -1,9 +1,9 @@
 # Abstraction building-block experiment
 
-Status: ten investigation items are complete; the cross-domain investigation
+Status: eleven investigation items are complete; the cross-domain investigation
 continues. Finite-menu representation, local scalarization, parametric
-optimality and simultaneous feasible choice extend the initial six-item
-results below.
+optimality, simultaneous feasible choice and a complete scoped exchange slice
+extend the initial six-item results below.
 The goal is reusable building blocks for the library and economic theory,
 with later MathEconLib extraction in view. Every collected slice
 passes full integration audits. Selected theorem-level and guarded-comparison
@@ -164,7 +164,7 @@ all-finite-menu representation must not be applied to restricted budget data
 without its missing domain hypotheses, nor may fixed-simplex existence be
 advertised as general-equilibrium existence. Information-dependent choice and
 stronger representation theorems remain independent later questions. These
-gates continue the investigation; the ten completed investigations do not claim
+gates continue the investigation; the eleven completed investigations do not claim
 an architecture for the entire field is settled.
 
 **Item 09 / EXP-181: parametric feasible choice (complete, D86).** Separate closed
@@ -222,10 +222,11 @@ economic-problem structure. Chosen admissibility, available alternatives,
 regularity of available sets and per-coordinate objective geometry remain
 separate. Their owners can later be extracted into shared mathematical
 economics without making all native domains instances of one stored object.
-Broader native constraints, price formation/market clearing and stronger
-preference representations remain independently requiring later clients.
+Broader native constraints and stronger preference representations remain
+independently requiring later clients. Item 11 tests price formation and
+market clearing on one complete bounded-to-unbounded exchange slice.
 
-**Item 11 / EXP-183: exchange economy (in progress).** Connect price-dependent
+**Item 11 / EXP-183: exchange economy (complete, D88).** Connect price-dependent
 budgets, individual choice, excess-demand price response and market clearing
 for two goods and two consumers with unit endowments of each good. Permit zero
 price coordinates, preserve tied demands, and distinguish capped from full
@@ -233,6 +234,35 @@ budget optimality. Test continuous concave strictly monotone utilities; retain
 zero-income, satiation and cap-binding rejection controls. A complete slice
 must remove the auxiliary consumption cap after proving clearing. No generic
 market record or interpersonal consumer objective is pre-approved.
+
+The scoped existence theorem supplies normalized prices and full-budget
+competitive equilibrium for two consumers and two goods with unit endowments
+of each good. Utilities are continuous on the ambient `ℝ²` and concave and
+strictly monotone on the nonnegative cone; a conflicting linear-preference
+instance proves the assumptions are inhabited concretely. Prices may have
+zero coordinates in the fixed-point domain, while wealth remains one.
+
+The selected stable addition is `Math.LinearBudget`: positive continuous
+wealth and fixed-bundle continuity of linear costs give lower hemicontinuity
+by radial feasible recovery, without compactness or positive-price assumptions.
+Existing simultaneous feasible choice supplies capped demand and a physical
+excess-demand price response. Separate residual top-up accounting proves
+clearing; proved resource bounds then make the cap inactive, and Mathlib's
+concave local-to-global theorem supplies full-budget optimality.
+
+Controls prove that tied individual demands need not clear, that a cap-binding
+clearing price-response point can fail full-budget optimality, and that
+satiation can leave an uncleared fixed point. Native market definitions and
+the exchange existence theorem remain experimental/test evidence, with no
+generic market record admitted. Full audit passes 3,877 default and 4,792
+validation jobs, public lint and transitive standard-axiom checks. See
+[D88](decisions/D88-exchange-budgets-and-market-clearing.md).
+
+This validates composition of the small mathematical operations across game
+and exchange consumers. It does not settle a field-wide economic data model.
+General endowments need new accounting; weaker preference hypotheses need
+their own preservation proof; stable market interfaces and MathEconLib
+extraction remain future consumer-gated decisions.
 
 ## Constraints and alternatives
 
