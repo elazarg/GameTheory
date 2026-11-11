@@ -11328,3 +11328,52 @@ observations and outcome below are preserved as the record of that run.
   obligations; the existing mathematical building blocks compose without a
   new economic record or consumer-utility sum. Arbitrary endowments, broader
   preferences and stable market data remain independently requiring gates.
+
+## EXP-184: conditional comparison and dynamic choice
+
+- **Date / status:** 2026-11-11; complete, refuting order-only dynamic composition and supporting direct sufficient hypotheses.
+- **Question:** Does a total transitive ranking of terminal laws suffice to
+  compose conditional optimal choices into ex-ante or sequential optimality?
+  If not, does an explicit support-local comparison-preservation hypothesis
+  suffice without changing numerical contexts or adding a preference hierarchy?
+- **Alternatives:** direct guarded optimality plus actual-prior comparison
+  hypotheses; a generic dynamic-context record. Keep domain admissibility
+  separate from comparison closure, and compare with existing exact-law
+  observation transport rather than conflating the two operations.
+- **Representative slice:** a fair observed branch, one branch with a genuine
+  action and one fixed continuation. Test a real-score total preorder whose
+  conditional strict preference reverses before observation, then a genuinely
+  non-EU possibility ranking that composes under arbitrary supported mixtures.
+  Exercise well-founded protocol backward laws as a second composition client.
+- **Kill conditions:** reject deriving dynamic consistency from transitivity,
+  totality or exact-law transport alone; reject treating componentwise
+  evaluation-domain membership as actual-mixture definedness. A new context
+  record must enable a needed operation unavailable through direct hypotheses.
+- **Artifacts / commands:** branch
+  `codex/experiment-abstraction-item-13-dynamic-choice`, baseline `1aad00fa`;
+  evidence under `Experimental/Exp184`, scratch logs in
+  `.codex/scratch/exp184/`; focused strict builds and integration audit before
+  collecting a completed result.
+- **Observations:** a total transitive quadratic law ranking strictly prefers
+  both prescribed conditional actions, but strictly rejects their fair-prior
+  composition. Actual laws are defined and both menus have genuine alternatives.
+  Existing non-EU possibility comparisons preserve arbitrary supported paired
+  mixtures and fixed-base bounds; a common continuation can erase strictness.
+  Direct guarded conditional composition and well-founded chooser composition
+  both instantiate without a new context record. Whole-law admissibility stays
+  explicit; the backward argument uses the competing transition prior.
+- **Focused validation:** `lake --iofail build
+  GameTheory.Experimental.Exp184.Consumers` passes 3,072 jobs, and
+  `python scripts/audit.py --source-only` passes. Evidence is under
+  `Experimental/Exp184/{Composition,Controls,Consumers}.lean` and
+  [D89](decisions/D89-conditional-and-dynamic-comparison.md). Independent
+  semantic review accepts the comparison/domain and chooser/policy boundaries.
+- **Integration validation:** on checkpoint `768f22f5`,
+  `python scripts/audit.py` passes 3,877 default and 4,795 validation jobs,
+  public lint, authored diagnostics and transitive standard-axiom checks.
+  Raw output is `.codex/scratch/exp184/integration-audit.log`.
+- **Outcome / next action:** retain direct prototypes and controls as
+  experimental evidence; no numerical Context or generic mixture hierarchy
+  changes. Dynamic comparison and actual-mixture admissibility are separate
+  obligations. Next test restricted budget observations, where all-finite-menu
+  identification cannot be assumed.
