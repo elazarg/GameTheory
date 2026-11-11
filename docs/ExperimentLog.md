@@ -11053,3 +11053,26 @@ observations and outcome below are preserved as the record of that run.
   [D83](decisions/D83-local-kernels-and-affected-coordinates.md) closes the initial
   six-question investigation with no new stable interface; any future extension
   needs an independently requiring client and explicit preservation obligations.
+
+## EXP-179: finite-menu choice and preference rationalization
+
+- **Date / status:** 2026-11-11; in progress.
+- **Question:** Can one probability-free feasible-choice correspondence connect
+  best response and economic allocation, with a converse reconstruction of
+  preferences from choices, without scores or a new problem hierarchy?
+- **Alternatives:** direct greatest-element comparisons; maximal choices under
+  incomplete relations; finite-menu choice with explicit feasibility,
+  nonemptiness and weak revealed-preference consistency. Existing Mathlib
+  maximal-element APIs are the baseline for finite existence.
+- **Representative slice:** a total/transitive binary revealed relation and
+  exact rationalization on every finite menu, canonical best response and an
+  independent allocation/incentive consumer; partial preferences, genuine ties,
+  an infinite ambient carrier and a represented-bundle union rejection.
+- **Kill conditions:** erase feasibility or candidate admissibility; identify
+  maximal with greatest without comparability; collapse tied bundle witnesses
+  into an infeasible union; assume all menus are observed from a budget-only
+  domain; store unnecessary finite/scalar data; or add duplicate equilibrium
+  semantics or an unconsumed problem/certificate hierarchy.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-07-menu-choice`, baseline `bb9f3345`;
+  local probes and logs under ignored `.codex/scratch/exp179/`.
