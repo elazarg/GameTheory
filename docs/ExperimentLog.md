@@ -11025,5 +11025,20 @@ observations and outcome below are preserved as the record of that run.
 - **Artifacts / commands:** item branch
   `codex/experiment-abstraction-item-06-arena-boundary`, baseline `18559255`.
   Initial candidates live in ignored `.codex/scratch/exp178/`.
-- **Outcome / next action:** pending; test the existing scheme with a proper
-  affected subset before inferring any need for unrestricted law transformers.
+- **Focused observations:** the existing Unit-labeled scheme realizes both
+  spectator endpoints of the valid replacement, preserving the spectator while
+  rewriting three active coordinates for two consenters. The affected subset
+  is proper; every kernel on the permitted local-input type is insensitive to
+  the spectator, and the exact fair output spectator distribution is retained.
+  The consent-only impossibility control still holds in this same enlarged
+  encoding. A whole-law Boolean operator fails a binary-mixture equation and
+  cannot equal bind by one fixed kernel for every input law. No claim is made
+  against a separate kernel selected for each law.
+- **Artifacts / focused validation:** retained probes are
+  `Experimental/Exp178/LocalRealization.lean` and `LawTransformerBoundary.lean`.
+  The strict probe/locality build passes 3,771 jobs, including the existing
+  recommendation-spying and frame controls in `Tests.Locality`; source audit
+  passes. Zero new stable definitions, structures, carriers or interfaces.
+- **Outcome / next action:** the fixed displacement does not require a broader
+  law-transformer interface. The conclusion is not a full matching compilation
+  or universal expressivity theorem. Full audit/lint/axiom gates remain pending.
