@@ -257,13 +257,15 @@ theorem not_forall_strict_of_coalition
   obtain ⟨member, hmember, hpref⟩ := h
   exact fun hall => (hall member hmember).2 hpref
 
-/-- Under totality, the coalition lift is equivalent to saying that not every
-member strictly gains. -/
-theorem coalition_iff_not_forall_strict
+/-- The coalition lift means that not every member strictly gains whenever
+each member compares these two outcomes. No unrelated comparison is needed. -/
+theorem coalition_iff_not_forall_strict_of_comparable
     (weaklyPrefers : Ranking Agent α)
-    (htotal : Total weaklyPrefers)
     (coalition' : { members : Finset Agent // members.Nonempty })
-    (preferred alternative : α) :
+    (preferred alternative : α)
+    (hcompare : ∀ member ∈ coalition'.1,
+      weaklyPrefers member preferred alternative ∨
+        weaklyPrefers member alternative preferred) :
     coalition weaklyPrefers coalition' preferred alternative ↔
       ¬ ∀ member ∈ coalition'.1,
         strict weaklyPrefers member alternative preferred := by
@@ -273,7 +275,20 @@ theorem coalition_iff_not_forall_strict
   have hno : ¬ weaklyPrefers member preferred alternative :=
     fun hpref => hnone ⟨member, hmember, hpref⟩
   exact
-    ⟨(htotal member alternative preferred).resolve_right hno, hno⟩
+    ⟨(hcompare member hmember).resolve_left hno, hno⟩
+
+/-- Under totality, the coalition lift is equivalent to saying that not every
+member strictly gains. -/
+theorem coalition_iff_not_forall_strict
+    (weaklyPrefers : Ranking Agent α)
+    (htotal : Total weaklyPrefers)
+    (coalition' : { members : Finset Agent // members.Nonempty })
+    (preferred alternative : α) :
+    coalition weaklyPrefers coalition' preferred alternative ↔
+      ¬ ∀ member ∈ coalition'.1,
+        strict weaklyPrefers member alternative preferred :=
+  coalition_iff_not_forall_strict_of_comparable weaklyPrefers coalition' preferred alternative
+    (fun member _ => htotal member preferred alternative)
 
 end Preference
 
