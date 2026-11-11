@@ -11103,3 +11103,26 @@ observations and outcome below are preserved as the record of that run.
   than expected utility and does not identify latent incompleteness. Next test
   explicit scalar maximization against ordinal Pareto maximality, rather than
   treating welfare sums as the only notion of efficiency.
+
+## EXP-180: scalar objectives and ordinal Pareto maximality
+
+- **Date / status:** 2026-11-11; in progress.
+- **Question:** Does an incumbent-local strict-increase theorem connect
+  canonical welfare and bargaining maximizers to ordinal Pareto maximality,
+  without a common-scale axiom or a new welfare/problem representation?
+- **Alternatives:** direct arithmetic proofs; Mathlib's global strictly
+  monotone maximality transport; a theorem requiring strict objective increase
+  only at improvements of the selected feasible point. Mathlib retains
+  `IsMaxOn`, `Maximal`, product orders and aggregate inequalities.
+- **Representative slice:** Groves reported-welfare maximization and Nash
+  bargaining with positive incumbent gains. Preserve the existing unconditional
+  weak-Pareto bargaining theorem. Reject zero/negative welfare weights,
+  alternative-specific biases, and zero-boundary Nash-product ties as sufficient
+  assumptions for full Pareto efficiency.
+- **Kill conditions:** identify ordinal Pareto with utilitarian selection;
+  hide interpersonal weights/biases; require positivity at unrelated feasible
+  points; infer maximality for an infeasible candidate; add a new order,
+  equilibrium or welfare engine; or reprove Mathlib's global monotone transport.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-08-scalarization`, baseline `1c6112a9`;
+  scratch and raw logs under ignored `.codex/scratch/exp180/`.
