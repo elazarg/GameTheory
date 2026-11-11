@@ -10949,3 +10949,28 @@ observations and outcome below are preserved as the record of that run.
   no needed capability; no cost-budget failure or speed advantage is claimed.
   [D81](decisions/D81-guarded-protocol-comparison.md) records the selected scope.
   Coalition judgment and broader deviation arenas remain independent gates.
+
+## EXP-177: coalition consent, strict unanimity and weak rejection
+
+- **Date / status:** 2026-11-11; running.
+- **Question:** Does a shared strict-coalition judgment or problem structure
+  improve strong-Nash and responsive-matching clients without changing their
+  partial-preference meaning or conflating consent with affected coordinates?
+- **Alternatives:** direct individual strict comparisons and the existing weak
+  coalition lift; a strict-unanimity relation over a fixed nonempty coalition;
+  a first-class coalition problem with local moves. Compare actual clients
+  before admitting a new shared representation or changing an existing name.
+- **Representative slice:** nonempty coalition strong-Nash specialization,
+  partial-order separation and total-comparison agreement; responsive blocking
+  pairs with heterogeneous partner carriers, vacancies and displacement of an
+  incumbent who is not a consenting member of the blocking pair.
+- **Kill conditions:** silently equating weak rejection with absence of strict
+  unanimity under partial preferences; empty-coalition vacuity treated as a
+  genuine blocker; changing responsive acceptance or feasibility; assuming that
+  every changed coordinate belongs to the consenting coalition; or introducing
+  duplicate equilibrium semantics or an unused coalition/certificate hierarchy.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-05-coalition-judgment`, baseline `ab6c61b9`.
+  Initial candidates live in ignored `.codex/scratch/exp177/`.
+- **Outcome / next action:** pending; compile the discriminating coalition and
+  matching controls, then decide which shared building block is justified.
