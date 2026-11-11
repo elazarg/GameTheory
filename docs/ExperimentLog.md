@@ -10856,3 +10856,45 @@ observations and outcome below are preserved as the record of that run.
   justified by this slice. [D79](decisions/D79-ordinal-response-and-improvement-ranks.md)
   records the scope. Investigate binary versus arbitrary PMF mixture closure
   separately before admitting the proposed Mixable level.
+
+## EXP-175: binary mixing versus arbitrary PMF mixture closure
+
+- **Date / status:** 2026-11-11; complete, refuting the binary-only proposal.
+- **Question:** Does binary convexity of a total transitive law preference
+  suffice for the arbitrary-PMF mixture step used in pure-deviation reduction?
+  Compare binary mixing compatibility with explicit bind-closure hypotheses,
+  retaining actual-law expectation-definedness in numerical instances.
+- **Representative slice:** a preference distinguishing finite from infinite
+  support, a genuine infinite-support discrete law, and mixtures of pure laws.
+  Try the counterexample before naming a stable Mixable interface.
+- **Kill conditions:** reject a binary-only interface if every pure component
+  is weakly below a base but their countable mixture is not; reject an ungated
+  expected-utility instance if the actual mixed expectation may be undefined.
+  No new probability carrier, equilibrium predicate, or universal certificate.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-03-mixture-closure`, baseline `03e34edb`.
+  Probes belong in ignored `.codex/scratch/exp175/` until their result is known.
+- **Artifacts:** `Experimental/Exp175/MixtureClosure.lean` retains the
+  counterexample and direct client prototypes. Its axiom-driver import keeps
+  all authored experimental declarations within transitive checking.
+- **Observations:** infinite-support laws can form the preferred class of a
+  total preorder respecting all binary mixtures. Every point mass is below a
+  finite-support base, but their geometric mixture is strictly above it. Thus
+  binary convexity does not suffice for the arbitrary-PMF comparison bound.
+  This does not refute finite-support or continuity-based variants. Direct
+  prototypes also discriminate the clients: full weak Nash comparison needs
+  closure with its actual-mixture guard, while an alleged strict gain already
+  supplies that guard for strict-gain exclusion. No new numerical undefined-law
+  counterexample is claimed here.
+- **Validation / measurements:** focused strict build passes 3,062 jobs.
+  `python scripts/audit.py` passes the default build (3,872 jobs), complete
+  validation build (4,763 jobs), public lint, authored diagnostic checks and
+  transitive standard-axiom checks. Baseline `03e34edb`; implementation
+  `1d908f6b`; raw output `.codex/scratch/exp175/integration-audit-final.log`.
+  Independent semantic review accepts the counterexample and scoped guards.
+  Zero stable definitions or structures are added; no performance claim.
+- **Outcome / next action:** reject binary-only Mixable as sufficient for
+  general PMFs. Keep direct client prototypes experimental until stable
+  consumers select their exact closure and guard strength.
+  [D80](decisions/D80-binary-and-countable-mixture-closure.md) records the
+  narrowed conclusion; Protocol comparison remains the next gated item.
