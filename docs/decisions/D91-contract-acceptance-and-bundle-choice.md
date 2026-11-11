@@ -69,6 +69,8 @@ The finite membership checks use kernel `decide`, not `native_decide`; public
 lint boundaries are unchanged and every evidence module is in the axiom driver.
 Source checks and full integration are recorded in EXP-186. No competing record
 was implemented or timed; there is no elaboration-performance claim.
+On checkpoint `9443dd7e`, full audit passes 3,877 default and 4,799 validation
+jobs, public lint, authored diagnostics and transitive standard-axiom checks.
 
 Reference files: [choice conditions](https://github.com/matheconlib/matheconlib/blob/58f602847d7f131994d32ca7a8cc1af35b7e2dbe/MathEconLib/Choice/Conditions.lean),
 [represented bundles](https://github.com/matheconlib/matheconlib/blob/58f602847d7f131994d32ca7a8cc1af35b7e2dbe/MathEconLib/Choice/Induced.lean),
