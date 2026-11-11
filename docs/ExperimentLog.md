@@ -11265,7 +11265,7 @@ observations and outcome below are preserved as the record of that run.
 
 ## EXP-183: exchange budgets, price response and market clearing
 
-- **Date / status:** 2026-11-11; in progress.
+- **Date / status:** 2026-11-11; complete, supporting independent budget recovery and the full scoped exchange slice.
 - **Question:** Do the independent feasible-choice building blocks connect
   individual budget optimization to competitive market clearing, without a
   new economic-problem record or a summed consumer objective?
@@ -11316,4 +11316,15 @@ observations and outcome below are preserved as the record of that run.
   153 controls. No performance or compression claim is made. Independent
   semantic reviews accept the exact two-by-two/unit-endowment scope and the
   distinction between ambient continuity and cone-restricted utility laws.
-  Complete integration remains pending.
+  Complete integration follows below.
+- **Integration validation:** on checkpoint `acfcf5cd`,
+  `python scripts/audit.py` passes 3,877 default and 4,792 complete validation
+  jobs, public lint, authored diagnostics and transitive standard-axiom checks.
+  Raw output is `.codex/scratch/exp183/integration-audit.log`.
+- **Outcome / next action:** adopt only the independent positive linear-budget
+  lower-hemicontinuity theorem. Retain the full exchange result and controls
+  as checked experimental/test evidence. Individual optimization, physical
+  price response, clearing and removal of artificial bounds are separate
+  obligations; the existing mathematical building blocks compose without a
+  new economic record or consumer-utility sum. Arbitrary endowments, broader
+  preferences and stable market data remain independently requiring gates.
