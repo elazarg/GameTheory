@@ -6,6 +6,9 @@ import all GameTheory.Experimental.Exp168.BlockingComparison
 import all GameTheory.Experimental.Exp168.Controls
 import all GameTheory.Experimental.Exp168.Slots
 import all GameTheory.Experimental.Exp175.MixtureClosure
+import all GameTheory.Experimental.Exp176.Comparison
+import all GameTheory.Tests.ContextJudgment
+import all GameTheory.Tests.ContextGuards
 import all GameTheory.Analysis.ApproachabilityTest
 import all GameTheory.Analysis.SingleParameterTest
 import all GameTheory.Analysis.RevenueEquivalenceTest

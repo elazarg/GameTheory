@@ -242,6 +242,7 @@ import all GameTheory.Math.Eventually
 import all GameTheory.Math.Envelope
 import all GameTheory.Math.FinRotation
 import all GameTheory.Math.HarmonicSequence
+import all GameTheory.Math.GuardedOptimality
 import all GameTheory.Math.Negligible
 import all GameTheory.Math.OnlineLearning
 import all GameTheory.Math.OrthantProjection
