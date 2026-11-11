@@ -11230,3 +11230,23 @@ observations and outcome below are preserved as the record of that run.
 - **Artifacts / commands:** item branch
   `codex/experiment-abstraction-item-10-feasible-fixed-points`, baseline
   `bbd5add1`; scratch and logs under ignored `.codex/scratch/exp182/`.
+- **Focused observations:** guarded affordability reuses `Math.IsOptimalOn`
+  and is exactly capacity saturation in the canonical interval-strategy game.
+  Every ordinary Nash profile buys two units, so feasible-profile filtering
+  loses all coupled optima. One per-coordinate fixed-point theorem serves both
+  the changing-menu constraint family and the unchanged finite-lottery theorem,
+  without summed utilities or a new game record. Closed fibers in the compact
+  envelope derive menu compactness; quasiconcavity derives convex maximizers.
+  The square-score control has continuous utility and nonconvex maximizers,
+  delimiting what continuity alone supplies. Nonempty menus at every envelope
+  point remain an actual assumption, not a claim about all resource games.
+- **Artifacts / focused validation:** `Analysis.FeasibleChoiceFixedPoint`,
+  exact specialization in `Analysis.LocalChoiceFixedPoint`, canonical native
+  control `Experimental.Exp182.SharedCapacity`, and the analytic consumer in
+  `Analysis.FeasibleChoiceFixedPointTest`; [D87](decisions/D87-simultaneous-feasible-choice.md).
+  Standalone analytic target passes 3,194 jobs; complete focused strict
+  production and controls pass 3,655 jobs, and source checks pass. Production
+  body source count falls from 92 to 39 nonblank lines, with 72 shared theorem
+  lines and 91 separately charged quantity construction lines. Cold source
+  cost is larger for one consumer; no performance advantage is claimed.
+  Independent semantic review accepts the scope; full integration is pending.

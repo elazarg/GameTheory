@@ -193,8 +193,6 @@ predicate before admitting any generalized-game representation. Retain
 per-agent objectives rather than introducing a summed social objective to
 fit a fixed-point interface.
 
-## Constraints and alternatives
-
 **Item 10 / EXP-182: simultaneous feasible choice (in progress).** Compare
 ordinary Nash filtered by feasibility with local affordable optimization in
 a shared-capacity quantity game. Test a per-coordinate fixed-point theorem
