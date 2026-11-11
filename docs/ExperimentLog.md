@@ -11056,7 +11056,7 @@ observations and outcome below are preserved as the record of that run.
 
 ## EXP-179: finite-menu choice and preference rationalization
 
-- **Date / status:** 2026-11-11; in progress.
+- **Date / status:** 2026-11-11; complete, supporting finite-menu representation with explicit boundaries.
 - **Question:** Can one probability-free feasible-choice correspondence connect
   best response and economic allocation, with a converse reconstruction of
   preferences from choices, without scores or a new problem hierarchy?
@@ -11091,4 +11091,15 @@ observations and outcome below are preserved as the record of that run.
   `lake --iofail build GameTheory.Math.FiniteChoice` passes 677 jobs;
   `lake --iofail build GameTheory.Tests.FiniteChoice GameTheory.Tests.LotteryChoice GameTheory.Experimental.Exp179.ChoiceBoundary`
   passes 3,070 jobs, and source checks pass. Independent read-only semantic
-  reviews accept the scope. Full integration remains pending.
+  reviews accept the scope.
+- **Integration validation:** on checkpoint `5be0b4f6`,
+  `python scripts/audit.py` passes 3,874 default and 4,776 complete validation
+  jobs, public lint, authored diagnostics and transitive standard-axiom checks.
+  Raw output is `.codex/scratch/exp179/integration-audit.log`.
+- **Outcome / next action:** adopt finite-menu rationalization and existing
+  best-response/allocation adapters, retaining Mathlib ownership of finite
+  maximal existence. No universal choice structure, demand API or MathEconLib
+  migration is admitted. Observed complete-preorder representation is weaker
+  than expected utility and does not identify latent incompleteness. Next test
+  explicit scalar maximization against ordinal Pareto maximality, rather than
+  treating welfare sums as the only notion of efficiency.
