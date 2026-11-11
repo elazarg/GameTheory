@@ -11262,3 +11262,69 @@ observations and outcome below are preserved as the record of that run.
   alternatives, their continuity and objective geometry remain separate
   operations. Market clearing, broader native constraints and preference
   representation need named consumers before further interfaces are admitted.
+
+## EXP-183: exchange budgets, price response and market clearing
+
+- **Date / status:** 2026-11-11; complete, supporting independent budget recovery and the full scoped exchange slice.
+- **Question:** Do the independent feasible-choice building blocks connect
+  individual budget optimization to competitive market clearing, without a
+  new economic-problem record or a summed consumer objective?
+- **Alternatives:** capped demand plus an aggregate price-response condition;
+  separate budget regularity, clearing and removal of artificial caps. Reuse
+  simultaneous feasible maximization, Mathlib concavity/local-to-global
+  optimality, and positive-income feasible recovery before adding mathematics.
+- **Representative slice:** two goods and two consumers, each endowed with
+  one unit of each good; normalized nonnegative prices including zero
+  coordinates; arbitrary continuous concave strictly monotone utilities on
+  nonnegative consumption. Use the compact consumption box `[0,3]²` as an
+  envelope, derive exact clearing of aggregate `(2,2)`, then prove individual
+  optimality on the full uncapped budget. Quasiconcavity supplies capped
+  existence; the stronger concavity hypothesis is explicit for uncapping.
+- **Hostile controls / kill conditions:** zero-income/free-good continuity
+  failure; tied demands; weakly monotone satiation permitting uncleared price
+  responses; and a cap-binding apparent equilibrium whose choices are not
+  optimal on the full budget. Reject any argument that assumes positive price
+  coordinates, identifies price response with clearing without a proof,
+  suppresses consumer feasibility, sums interpersonal utilities, or claims an
+  uncapped/general exchange theorem from capped fixed-point existence alone.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-11-exchange-economy`, baseline `c1431a88`;
+  scratch and raw logs under ignored `.codex/scratch/exp183/`.
+- **Focused observations:** the existing per-coordinate fixed point reaches
+  a complete two-by-two exchange result on full budgets. Normalized prices
+  permit zero coordinates while unit endowments keep income one. A standalone
+  radial-recovery lemma proves positive linear budget lower hemicontinuity
+  from fixed-bundle cost section continuity alone. Aggregate affordability and
+  the price response bound resources; a lower-expenditure residual top-up
+  proves exact clearing without a prior budget-exhaustion premise. The cap
+  is then inactive, and Mathlib concavity upgrades full-budget local to global
+  optimality. Conflicting positive linear utility weights instantiate the
+  complete existence theorem.
+- **Rejection observations:** tied individually optimal demands can fail
+  clearing and price response. A cap-one endowment allocation clears and
+  satisfies price response and capped optimality, but is not optimal on the
+  full budget. Continuous concave constant-zero utilities permit a
+  nonclearing price-response point under weak monotonicity. The latter is a
+  failure of that implication, not nonexistence of every clearing equilibrium.
+- **Artifacts / focused validation:** `Math.LinearBudget`, native proofs and
+  controls under `Experimental/Exp183`, `Analysis.ExchangeEconomyTest`, and
+  [D88](decisions/D88-exchange-budgets-and-market-clearing.md). Independent
+  Math target passes 1,606 strict jobs; native clearing/uncapping passes 1,700;
+  complete consumer and controls pass 3,202, and source checks pass. Whole-file
+  comment-masked nonblank counts are 56 shared mathematical, 103 native
+  definitions/geometry, 152 clearing/uncapping, 135 analytic construction and
+  153 controls. No performance or compression claim is made. Independent
+  semantic reviews accept the exact two-by-two/unit-endowment scope and the
+  distinction between ambient continuity and cone-restricted utility laws.
+  Complete integration follows below.
+- **Integration validation:** on checkpoint `acfcf5cd`,
+  `python scripts/audit.py` passes 3,877 default and 4,792 complete validation
+  jobs, public lint, authored diagnostics and transitive standard-axiom checks.
+  Raw output is `.codex/scratch/exp183/integration-audit.log`.
+- **Outcome / next action:** adopt only the independent positive linear-budget
+  lower-hemicontinuity theorem. Retain the full exchange result and controls
+  as checked experimental/test evidence. Individual optimization, physical
+  price response, clearing and removal of artificial bounds are separate
+  obligations; the existing mathematical building blocks compose without a
+  new economic record or consumer-utility sum. Arbitrary endowments, broader
+  preferences and stable market data remain independently requiring gates.
