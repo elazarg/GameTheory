@@ -10952,7 +10952,7 @@ observations and outcome below are preserved as the record of that run.
 
 ## EXP-177: coalition consent, strict unanimity and weak rejection
 
-- **Date / status:** 2026-11-11; running.
+- **Date / status:** 2026-11-11; complete, supporting local comparison and rejecting silent coalition conflations.
 - **Question:** Does a shared strict-coalition judgment or problem structure
   improve strong-Nash and responsive-matching clients without changing their
   partial-preference meaning or conflating consent with affected coordinates?
@@ -10989,6 +10989,16 @@ observations and outcome below are preserved as the record of that run.
   `Experimental/Exp177/`. The focused strict owner/control build passes 3,056
   jobs; source audit passes. Zero new stable definitions, structures or
   equilibrium engines. No new coalition problem record was implemented or timed.
-- **Outcome / next action:** theorem-level local comparison is the supported
-  candidate; a shared strict-coalition representation is not justified by these
-  clients. Full build, lint and transitive-axiom integration gates remain pending.
+- **Integration validation:** on checkpoint `f03c9d65`,
+  `python scripts/audit.py` passes the default strict build (3,873 jobs), complete
+  validation build (4,770 jobs), public lint, authored diagnostic checks and
+  transitive standard-axiom checks. Native matching, coalition simulation and
+  locality controls pass. Raw output `.codex/scratch/exp177/integration-audit.log`;
+  independent semantic review accepts the scope and unchanged definitions.
+- **Outcome / next action:** adopt theorem-level local comparison; no shared
+  strict-coalition representation or changed strong-Nash meaning is justified.
+  Comparability is sufficient, not asserted necessary in each instance.
+  [D82](decisions/D82-local-coalition-comparison-and-consent.md) records the
+  scoped consent/affected-coordinate separation. The arena gate must test the
+  existing scheme with distinct judge labels and affected coordinates before
+  inferring a need for unrestricted law transformers.
