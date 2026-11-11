@@ -11177,3 +11177,20 @@ observations and outcome below are preserved as the record of that run.
 - **Artifacts / commands:** item branch
   `codex/experiment-abstraction-item-09-parametric-choice`, baseline `80741987`;
   ignored scratch and logs under `.codex/scratch/exp181/`.
+- **Focused observations:** closed feasibility and lower hemicontinuity supply
+  different obligations. The shared closed-maximizer-graph theorem uses a
+  continuous objective in an ordered topological codomain without sequential,
+  compactness, convexity or nonempty-value assumptions. A changing divisible
+  budget proves lower hemicontinuity by continuous feasible recovery and
+  obtains existence separately; nonlinear satiation need not exhaust income.
+  The actual zero-income/free-good budget has closed graph, nonempty compact
+  convex uniformly bounded values and upper hemicontinuity, but its optimizer
+  graph is not closed. Lower hemicontinuity fails at that limit.
+- **Artifacts / focused validation:** `Math.ParametricOptimality`, production
+  `Analysis.LocalChoiceFixedPoint`, and the two economic probes in
+  `Experimental/Exp181/`; [D86](decisions/D86-parametric-feasible-optimality.md).
+  Independent Math build passes 1,006 jobs; focused strict production and
+  complete controls pass 3,633 jobs. Comment-masked nonblank production graph
+  lines are 25 before and 26 after, plus 31 shared theorem lines: this is new
+  generality, not proof compression or a performance claim. Independent
+  semantic review accepts the scope; full integration remains pending.

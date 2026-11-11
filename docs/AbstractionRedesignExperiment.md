@@ -164,8 +164,6 @@ stronger representation theorems remain independent later questions. These
 gates continue the investigation; the eight completed investigations do not claim
 an architecture for the entire field is settled.
 
-## Constraints and alternatives
-
 **Item 09 / EXP-181: parametric feasible choice (in progress).** Separate closed
 feasibility from the ability to approximate feasible alternatives as parameters
 change. Test a closed feasible-argmax graph theorem with lower hemicontinuity
