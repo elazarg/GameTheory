@@ -64,7 +64,7 @@ theorem iidLaw_succ (μ : PMF α) (n : ℕ) :
   · intro z hz
     have hzero : (μ.map fun x => (Fin.cons x z : Fin (n + 1) → α)) t = 0 := by
       rw [PMF.map_apply]
-      refine ENNReal.tsum_eq_zero.mpr fun x => ?_
+      refine tsum_eq_zero_iff.mpr fun x => ?_
       split_ifs with ht
       · exact absurd (by rw [ht, Fin.tail_cons]) hz
       · rfl

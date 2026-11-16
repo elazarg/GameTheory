@@ -51,7 +51,7 @@ theorem diracNat_no_pointwise_convergent_subsequence
     exact tendsto_nhds_unique (hconverges value)
       ((diracNat_mass_tendsto_zero value).comp hsubseq.tendsto_atTop)
   have htotal : (∑' value : ℕ, target value) = 0 :=
-    ENNReal.tsum_eq_zero.mpr hzero
+    tsum_eq_zero_iff.mpr hzero
   have hmass := target.tsum_coe
   rw [htotal] at hmass
   norm_num at hmass

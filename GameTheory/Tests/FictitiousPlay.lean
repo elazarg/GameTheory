@@ -71,7 +71,7 @@ theorem alternating_successor_identity :
         (1 / (1 + 2 : ℝ)) * trueValue (alternatingHistory 2 0) :=
   by
     convert game.form.empiricalMarginal_succ_expect alternatingHistory 0 1 trueValue using 1
-    all_goals norm_num
+    norm_num
 
 /-- Coordinating on `false` is a pure Nash profile. -/
 theorem coordinated_isNash :

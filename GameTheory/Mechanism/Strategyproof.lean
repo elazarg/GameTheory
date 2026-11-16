@@ -96,13 +96,13 @@ theorem vickrey_isStrategyproof (value : Fin 2 → ℝ) :
     rw [Profile.update_same, Profile.update_of_ne _ _ (by decide),
       Profile.update_same, Profile.update_of_ne _ _ (by decide)]
     unfold surplus
-    split_ifs <;> (simp_all; try linarith)
+    split_ifs <;> first | (simp_all; linarith) | simp_all
   · show surplus value (if _ < _ then _ else _) 1 ≤
       surplus value (if _ < _ then _ else _) 1
     rw [Profile.update_same, Profile.update_of_ne _ _ (by decide),
       Profile.update_same, Profile.update_of_ne _ _ (by decide)]
     unfold surplus
-    split_ifs <;> (simp_all; try linarith)
+    split_ifs <;> first | (simp_all; linarith) | simp_all
 
 /-- What bidder zero receives after replacing only their own first-price bid. -/
 theorem firstPrice_choose_zero (reports : Profile firstPrice.toForm.sig)

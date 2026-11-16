@@ -29,7 +29,7 @@ def geometric : PMF ℕ :=
   ⟨fun n => ENNReal.ofReal ((1 : ℝ) / 2 / 2 ^ n), by
     have hsum : HasSum (fun n : ℕ => (1 : ℝ) / 2 / 2 ^ n) 1 := by
       simpa only [one_div] using hasSum_geometric_two' (1 : ℝ)
-    apply ENNReal.summable.hasSum_iff.mpr
+    apply CompleteLattice.summable.hasSum_iff.mpr
     rw [← ENNReal.ofReal_tsum_of_nonneg (fun n => by positivity) hsum.summable,
       hsum.tsum_eq, ENNReal.ofReal_one]⟩
 
@@ -76,7 +76,7 @@ theorem bounded_joint_summable {α β : Type*}
     {bound : ℝ} (hbound : ∀ b, |f b| ≤ bound) :
     Summable (fun ab : α × β => (p ab.1).toReal * (q ab.1 ab.2).toReal * f ab.2) := by
   have hmass : ∑' ab : α × β, p ab.1 * q ab.1 ab.2 = 1 := by
-    rw [ENNReal.tsum_prod']
+    rw [tsum_prod']
     simp_rw [ENNReal.tsum_mul_left, PMF.tsum_coe, mul_one]
     exact PMF.tsum_coe p
   have hprob : Summable (fun ab : α × β =>
@@ -162,7 +162,7 @@ theorem exploding_positiveExpect : positiveExpect geometric exploding = ∞ := b
 /-- The exploding reward has no expected losses. -/
 theorem exploding_negativeExpect : negativeExpect geometric exploding = 0 := by
   unfold negativeExpect
-  refine ENNReal.tsum_eq_zero.2 fun n => ?_
+  refine tsum_eq_zero_iff.2 fun n => ?_
   have hpos : 0 ≤ exploding n := by
     rw [exploding]
     positivity

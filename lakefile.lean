@@ -18,7 +18,7 @@ abbrev gameTheoryLeanOptions : Array LeanOption := #[
 ]
 
 package GameTheory where
-  version := v!"4.35.0"
+  version := v!"4.36.0"
   description :=
     "Formalized game theory: static forms, sequential execution protocols, \
     information models, mechanisms, and the standard equilibrium concepts."
@@ -36,10 +36,10 @@ Only the analytic root may import from it; the semantic core and the sequential
 layer are kept free of it, and that separation is checked rather than trusted. -/
 require «fixed-point-theorems» from git
   "https://github.com/elazarg/fixed-point-theorems-lean4" @
-    "f06449c5fb1ca49f14ea2b5331ddf71bd2dcd232"
+    "29c7c8a0494b297561150c04e7263376351ce609"
 
 -- Keep Mathlib last so its transitive pins override older dependency manifests.
-require "leanprover-community" / "mathlib" @ git "v4.35.0"
+require "leanprover-community" / "mathlib" @ git "v4.36.0"
 
 /-- Build the public umbrella and its imports. Other modules remain available
 by explicit import; the lint and axiom targets build the complete library and

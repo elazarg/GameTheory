@@ -30,7 +30,7 @@ private theorem eventMass_le_one {α : Type*} (μ : PMF α)
   rw [eventMass_eq_indicator_tsum]
   calc
     (∑' a, event.indicator μ a) ≤ ∑' a, μ a :=
-      ENNReal.tsum_le_tsum fun a => Set.indicator_le_self' (fun _ _ => bot_le) a
+      tsum_le_tsum fun a => Set.indicator_le_self' (fun _ _ => bot_le) a
     _ = 1 := μ.tsum_coe
 
 private theorem eventMass_ne_zero {α : Type*} (μ : PMF α)

@@ -56,8 +56,8 @@ def product (μ : Law α) (ν : Law β) : Law (α × β) :=
 /-- Convexly mix two finite-support laws, with weight `t` on the first law. -/
 def mix (t : ℝ≥0) (ht : t ≤ 1) (μ ν : Law α) : Law α :=
   ⟨⟨fun a => t * μ.toPMF a + (1 - t) * ν.toPMF a,
-      ENNReal.summable.hasSum_iff.2 (by
-        rw [ENNReal.tsum_add, ENNReal.tsum_mul_left, ENNReal.tsum_mul_left,
+      CompleteLattice.summable.hasSum_iff.2 (by
+        rw [tsum_add, ENNReal.tsum_mul_left, ENNReal.tsum_mul_left,
           PMF.tsum_coe, PMF.tsum_coe]
         rw [add_comm]
         simpa using tsub_add_cancel_of_le (ENNReal.coe_le_coe.2 ht))⟩,
@@ -254,7 +254,7 @@ theorem ennreal_tsum_pi_fin {n : ℕ} {A : Fin n → Type*}
     simp [Finset.prod_eq_one (fun (i : Fin 0) _ => Fin.elim0 i)]
   | succ n ih =>
     let e : A 0 × ((i : Fin n) → A i.succ) ≃ ((i : Fin (n + 1)) → A i) := Fin.consEquiv A
-    rw [← e.tsum_eq (f := fun s => ∏ i, g i (s i)), ENNReal.tsum_prod']
+    rw [← e.tsum_eq (f := fun s => ∏ i, g i (s i)), tsum_prod']
     have hsplit (a₀ : A 0) (s' : (i : Fin n) → A i.succ) :
         (∏ i, g i (e (a₀, s') i)) = g 0 a₀ * ∏ i, g i.succ (s' i) := by
       rw [Fin.prod_univ_succ]
@@ -286,7 +286,7 @@ variable {ι : Type*} [Fintype ι] {A : ι → Type*}
 
 def pmfPi (μ : ∀ i, PMF (A i)) : PMF (∀ i, A i) :=
   ⟨fun s => ∏ i, μ i (s i),
-    ENNReal.summable.hasSum_iff.2 (by
+    CompleteLattice.summable.hasSum_iff.2 (by
       rw [ennreal_tsum_pi (g := fun i a => μ i a)]
       simp [PMF.tsum_coe])⟩
 

@@ -134,11 +134,10 @@ theorem decodePlacedCoordinate_isSome_iff_neighborhood {center point : ℕ × �
     | none =>
       unfold decodePlacedCoordinate at h
       split_ifs at h
-      all_goals
-        simp only [placedCoordinate, crossingCoordinate, Prod.ext_iff,
-          GridWire.crossingNeighborhood] at *
-        simp_all
-        omega
+      simp only [placedCoordinate, crossingCoordinate, Prod.ext_iff,
+        GridWire.crossingNeighborhood] at *
+      simp_all
+      omega
 
 /-- The two used bends are distinct for every pair of strand orientations. -/
 theorem horizontalBend_ne_verticalBend (rightward upward : Bool) :

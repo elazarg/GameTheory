@@ -19,8 +19,9 @@ private theorem welfare_le_two {n m : ℕ} (C : Clauses n m) (a b : Action n m) 
   rcases a with ⟨v, d⟩ | (v | (c | ⟨⟩)) <;>
     rcases b with ⟨w, e⟩ | (w | (c' | ⟨⟩)) <;>
     simp only [payoff, payoffInt] <;> try split_ifs
-  all_goals
-    norm_num; all_goals linarith [show (0 : ℝ) ≤ n from Nat.cast_nonneg n]
+  all_goals first
+    | (norm_num; linarith [show (0 : ℝ) ≤ n from Nat.cast_nonneg n])
+    | norm_num
 
 private theorem literals_of_welfare_eq_two {n m : ℕ} (C : Clauses n m)
     (a b : Action n m) (h : payoff C a b + payoff C b a = 2) :
@@ -36,7 +37,9 @@ private theorem literals_of_welfare_eq_two {n m : ℕ} (C : Clauses n m)
   all_goals
     simp only [payoff, payoffInt] at h
     try split_ifs at h
-    all_goals norm_num at h; all_goals linarith [show (0 : ℝ) ≤ n from Nat.cast_nonneg n]
+    all_goals first
+      | (norm_num at h; linarith [show (0 : ℝ) ≤ n from Nat.cast_nonneg n])
+      | norm_num at h
 
 private theorem welfare_saturates {n m : ℕ} (C : Clauses n m)
     (p q : PMF (Action n m)) (hp : 1 ≤ value C p q) (hq : 1 ≤ value C q p) :

@@ -236,12 +236,12 @@ theorem sampled_failure_probability_pos :
     rw [PMF.toOuterMeasure_apply]
     have hterm : 0 < event.indicator sampledMixedProfile exploitableMixed := by
       simpa [Set.indicator_of_mem hevent] using hmass
-    exact lt_of_lt_of_le hterm (ENNReal.le_tsum exploitableMixed)
+    exact lt_of_lt_of_le hterm (le_tsum _ exploitableMixed)
   have hfinite : sampledMixedProfile.toOuterMeasure event ≠ ⊤ := by
     rw [PMF.toOuterMeasure_apply]
     have hle : (∑' profile, event.indicator sampledMixedProfile profile) ≤
         ∑' profile, sampledMixedProfile profile := by
-      apply ENNReal.tsum_le_tsum
+      apply tsum_le_tsum
       intro profile
       by_cases h : profile ∈ event <;> simp [Set.indicator, h]
     rw [PMF.tsum_coe] at hle

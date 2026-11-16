@@ -74,7 +74,7 @@ private theorem map_apply_add_mul (μ ν : PMF (∀ i, B.Ty i)) (first second :
       ∑' types, ((if outcome = first types then μ types else 0) +
         if outcome = second types then weight * ν types else 0) := by
   classical
-  rw [PMF.map_apply, PMF.map_apply, ← ENNReal.tsum_mul_left, ← ENNReal.tsum_add]
+  rw [PMF.map_apply, PMF.map_apply, ← ENNReal.tsum_mul_left, ← tsum_add]
   refine tsum_congr fun types => ?_
   split_ifs <;> simp
 

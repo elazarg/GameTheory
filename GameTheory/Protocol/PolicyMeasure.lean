@@ -369,7 +369,7 @@ theorem ae_run_support_subset_runBehavioral
           s.indicator (fun history => M.run pure horizon history) history := by
         exact tsum_subtype s _
       _ ≤ ∑' history : E.History, M.run pure horizon history := by
-        apply ENNReal.tsum_le_tsum
+        apply tsum_le_tsum
         intro history
         by_cases hmem : history ∈ s <;> simp [hmem]
       _ = 1 := (M.run pure horizon).tsum_coe
@@ -1196,7 +1196,7 @@ theorem ae_runPolicy_support_subset_of_lintegral_mass
           s.indicator (fun history => M.run pure horizon history) history := by
         exact tsum_subtype s _
       _ ≤ ∑' history : E.History, M.run pure horizon history := by
-        apply ENNReal.tsum_le_tsum
+        apply tsum_le_tsum
         intro history
         by_cases hmem : history ∈ s <;> simp [hmem]
       _ = 1 := (M.run pure horizon).tsum_coe

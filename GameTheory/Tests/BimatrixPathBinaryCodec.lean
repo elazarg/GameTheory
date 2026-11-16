@@ -1,6 +1,7 @@
 module
 
 public import GameTheory.Finite.BimatrixPathBinaryCodec
+import all Mathlib.LinearAlgebra.Matrix.Array
 import all Mathlib.LinearAlgebra.Matrix.Determinant.Bird.Defs
 
 @[expose] public section

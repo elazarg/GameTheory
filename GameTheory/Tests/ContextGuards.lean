@@ -57,7 +57,7 @@ theorem undefinedLaw_gains : positiveExpect undefinedLaw signedPayoff = ⊤ := b
       rw [positive_branch_gains]
       exact (ENNReal.mul_top (by norm_num [coin, mix_apply] : coin true ≠ 0)).symm
     _ ≤ ∑' sign, coin sign * positiveExpect (branch sign) signedPayoff :=
-      ENNReal.le_tsum (f := fun sign => coin sign * positiveExpect (branch sign) signedPayoff)
+      le_tsum (f := fun sign => coin sign * positiveExpect (branch sign) signedPayoff)
         true
 
 theorem undefinedLaw_losses : negativeExpect undefinedLaw signedPayoff = ⊤ := by
@@ -68,7 +68,7 @@ theorem undefinedLaw_losses : negativeExpect undefinedLaw signedPayoff = ⊤ := 
       rw [negative_branch_losses]
       exact (ENNReal.mul_top (by norm_num [coin, mix_apply] : coin false ≠ 0)).symm
     _ ≤ ∑' sign, coin sign * negativeExpect (branch sign) signedPayoff :=
-      ENNReal.le_tsum (f := fun sign => coin sign * negativeExpect (branch sign) signedPayoff)
+      le_tsum (f := fun sign => coin sign * negativeExpect (branch sign) signedPayoff)
         false
 
 theorem undefinedLaw_hasNoExpectation : ¬ HasExpectation undefinedLaw signedPayoff := by
@@ -118,7 +118,7 @@ theorem negative_branch_hasExpectation : HasExpectation (branch false) signedPay
   have hzero : positiveExpect (branch false) signedPayoff = 0 := by
     unfold positiveExpect branch
     rw [tsum_map_mul]
-    apply ENNReal.tsum_eq_zero.2
+    apply tsum_eq_zero_iff.2
     intro n
     change halving n * ENNReal.ofReal (-loss n) = 0
     rw [ENNReal.ofReal_eq_zero.2 (neg_nonpos.2 (loss_nonneg n)), mul_zero]

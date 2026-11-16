@@ -32,7 +32,7 @@ require cslib from git "https://github.com/leanprover/cslib.git"
 
 -- Explicitly select the same Mathlib version as the base package, overriding
 -- the older inherited snapshot in ComplexityLib.
-require "leanprover-community" / "mathlib" @ git "v4.35.0"
+require "leanprover-community" / "mathlib" @ git "v4.36.0"
 
 @[default_target]
 lean_lib GameTheoryComplexity where

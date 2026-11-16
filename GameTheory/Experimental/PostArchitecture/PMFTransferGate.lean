@@ -188,7 +188,7 @@ theorem exploding_none_hasExpectation :
   have hgain : positiveExpect geometric ((fun outcome => explodingLoss outcome ()) ∘ Nat.succ) =
       0 := by
     unfold positiveExpect
-    refine ENNReal.tsum_eq_zero.2 fun n => ?_
+    refine tsum_eq_zero_iff.2 fun n => ?_
     have hpos : 0 ≤ exploding n := by
       rw [exploding]
       positivity

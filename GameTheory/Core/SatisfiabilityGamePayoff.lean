@@ -45,8 +45,8 @@ theorem payoffInt_actionAt {n m : ℕ} (C : Clauses n m) (i j : ℕ)
   all_goals
     dsimp only [literal, variableAction, clause, fallback, payoffInt, indexedPayoff]
     try simp only [Fin.ext_iff]
-    try split_ifs
+    split_ifs
     all_goals try omega
-  all_goals simp_all [clauseAt]; all_goals omega
+  all_goals first | (simp_all [clauseAt]; omega) | simp_all [clauseAt]
 
 end GameTheory.SatisfiabilityGame

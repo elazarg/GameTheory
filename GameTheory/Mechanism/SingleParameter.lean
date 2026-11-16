@@ -84,7 +84,7 @@ theorem isDSIC_iff [DecidableEq Player] :
     simp only [QuasiLinearMechanism.toBayesianMechanism,
       toQuasiLinearMechanism, utility, Profile.update_eq_self] at hic ⊢
     convert hic using 1
-    all_goals congr 1
+    congr 1
   · intro h who types reports alternative
     have hic := h who (Profile.update reports who (types who)) alternative
     simp only [QuasiLinearMechanism.toBayesianMechanism,

@@ -151,7 +151,7 @@ theorem payoff_nonpos (history : arena.History) : payoff () history ≤ 0 := by
 
 theorem payoff_bound (history : arena.History) : |payoff () history| ≤ 2 := by
   rcases history with ⟨state, trace⟩
-  cases state <;> try norm_num [payoff]
+  cases state <;> norm_num [payoff]
   case done latent chosen => cases latent <;> cases chosen <;> norm_num [payoff]
 
 def State.depth : State → ℕ
@@ -447,7 +447,7 @@ theorem root_informationMass (site : model.InformationSite ()) (atRoot : site.1 
 theorem guess_informationMass (site : model.InformationSite ()) (atGuess : site.1 = .guess) :
     model.informationMass behavioralProfile () site = 0 := by
   unfold InformationModel.informationMass
-  apply ENNReal.tsum_eq_zero.mpr
+  apply tsum_eq_zero_iff.mpr
   intro history
   apply guess_reachWeight_zero
   exact (infoOf_stage history.1.trace).symm.trans (history.2.trans atGuess)

@@ -358,7 +358,7 @@ theorem encode_of_decode_eq_some {d : Fin (m + n)} {word : List Bool}
     {port : BimatrixPathPort A B d} (h : decode A B d word = some port) :
     encode port = word := by
   unfold decode at h
-  try dsimp only at h
+  dsimp only at h
   split at h <;> try contradiction
   split at h <;> try contradiction
   split at h <;> try contradiction

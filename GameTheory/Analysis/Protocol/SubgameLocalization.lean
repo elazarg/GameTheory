@@ -106,7 +106,7 @@ theorem subtreeMass_le_one (certificate : E.WellFoundedHistories) (chooser : E.H
   rw [subtreeMass, PMF.toOuterMeasure_apply]
   calc
     _ ≤ ∑' final, E.historyBackwardLaw certificate chooser start final :=
-      ENNReal.tsum_le_tsum fun final => Set.indicator_le_self _ _ final
+      tsum_le_tsum fun final => Set.indicator_le_self _ _ final
     _ = 1 := PMF.tsum_coe _
 
 /-- **Mass decomposition.** Let a combined chooser follow a local chooser at
@@ -158,8 +158,8 @@ theorem historyBackwardLaw_add_subtreeMass (certificate : E.WellFoundedHistories
           rw [subtreeMass, hbase, PMF.toOuterMeasure_bindOnSupport_apply]
           rfl
         rw [hmass, hcombined, hbase, PMF.bindOnSupport_apply, PMF.bindOnSupport_apply,
-          ← ENNReal.tsum_mul_right, ← ENNReal.tsum_mul_right, ← ENNReal.tsum_add,
-          ← ENNReal.tsum_add]
+          ← ENNReal.tsum_mul_right, ← ENNReal.tsum_mul_right, ← tsum_add,
+          ← tsum_add]
         refine tsum_congr fun reached => ?_
         by_cases hzero : E.step current.state chosen reached = 0
         · simp [hzero]
@@ -304,7 +304,7 @@ private theorem map_add_mul {μ ν : PMF E.History} (observe : E.History → Obs
     (weight : ℝ≥0∞) (outcome : Observation) :
     μ.map observe outcome + weight * ν.map observe outcome =
       ∑' final, if outcome = observe final then μ final + weight * ν final else 0 := by
-  rw [PMF.map_apply, PMF.map_apply, ← ENNReal.tsum_mul_left, ← ENNReal.tsum_add]
+  rw [PMF.map_apply, PMF.map_apply, ← ENNReal.tsum_mul_left, ← tsum_add]
   refine tsum_congr fun final => ?_
   split_ifs <;> simp
 

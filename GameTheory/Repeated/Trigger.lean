@@ -174,7 +174,7 @@ theorem repeatedPlay_triggerRepeatedProfile_eq_path
     G.repeatedPlay (G.triggerRepeatedProfile path punishment) t =
       path t := by
   induction t using Nat.strong_induction_on with
-  | h t ih =>
+  | ind t ih =>
       rw [repeatedPlay]
       funext i
       have hstatus := G.triggerStatus_ofFn_eq_none path

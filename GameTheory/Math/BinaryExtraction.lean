@@ -151,7 +151,7 @@ theorem binaryThreshold_trajectory_stable (x : ℚ) (y : ℕ → ℚ) (ε η : �
     ∀ j < n, binaryThreshold (y j) = binaryThreshold (binaryRemainder j x) := by
   intro j hj
   induction j using Nat.strong_induction_on with
-  | h j ih =>
+  | ind j ih =>
     have he := binaryRemainder_trajectory_error x y (fun k => binaryThreshold (y k))
       ε η j hinit (fun k hk => hstep k (by omega))
       (fun k hk => ih k hk (by omega)) j le_rfl
@@ -230,7 +230,7 @@ theorem binaryThreshold_clipped_trajectory_stable (x : ℚ) (y : ℕ → ℚ)
     ∀ j < n, binaryThreshold (y j) = binaryThreshold (binaryRemainder j x) := by
   intro j hj
   induction j using Nat.strong_induction_on with
-  | h j ih =>
+  | ind j ih =>
     have he := binaryRemainder_clipped_trajectory_error x y (fun k => binaryThreshold (y k))
       ε η j hx hx1 hinit (fun k hk => hstep k (by omega))
       (fun k hk => ih k hk (by omega)) j le_rfl

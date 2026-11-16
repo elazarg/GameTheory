@@ -546,7 +546,7 @@ theorem fiberPosterior_bind_of_observation {Source Native Info : Type*} (prior :
       simp [Set.indicator, zero]
   · rw [Set.indicator_of_notMem (show value ∉ {a | after a = observed} from matched), zero_mul]
     symm
-    apply ENNReal.tsum_eq_zero.mpr
+    apply tsum_eq_zero_iff.mpr
     intro s
     rw [PMF.filter_apply]
     by_cases view : s ∈ {s | before s = observed}

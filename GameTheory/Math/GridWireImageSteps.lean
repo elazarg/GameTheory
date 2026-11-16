@@ -18,7 +18,7 @@ private theorem horizontal_successor {n i j : ℕ} {c : ℕ × ℕ}
   dsimp only [wireSuccessor]
   split_ifs
   all_goals simp_all [horizontalInterior]
-  all_goals omega
+  omega
 
 private theorem horizontal_predecessor {n i j : ℕ} {c : ℕ × ℕ}
     (hh : horizontalInterior n i j c) :

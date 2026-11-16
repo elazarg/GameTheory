@@ -69,7 +69,7 @@ private def halfNatLaw : PMF ℕ :=
       rw [hasSum_halfMass.tsum_eq]
       norm_num
     rw [← hsum]
-    exact ENNReal.summable.hasSum⟩
+    exact CompleteLattice.summable.hasSum⟩
 
 /-- The first-stop law for a hazard equal to one half at every date. -/
 def halfStoppingLaw : PMF (Option ℕ) := halfNatLaw.map some

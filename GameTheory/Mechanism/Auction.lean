@@ -227,7 +227,7 @@ theorem eq_winner_of_bid_gt (bids : BidProfile ι) (bidder : ι)
     (hhighest : ∀ other, other ≠ bidder → bids other < bids bidder) :
     bidder = winner bids := by
   contrapose! hhighest
-  exact ⟨winner bids, hhighest.symm, not_lt.mpr (bid_le_bid_winner bids bidder)⟩
+  exact ⟨winner bids, hhighest.symm, bid_le_bid_winner bids bidder⟩
 
 /-- First-price payoff with an arbitrary highest-bid tie breaker: the winner
 pays their own bid and every other bidder receives zero. -/

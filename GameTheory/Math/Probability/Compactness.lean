@@ -108,7 +108,7 @@ theorem exists_subseq_pmfConvergesPointwise_pi_of_uniformlyTight
         (fun _ _ => hmass_nonneg i _)
       linarith
   let target (i : ι) : PMF (A i) :=
-    ⟨fun a => ENNReal.ofReal (mass i a), ENNReal.summable.hasSum_iff.2 (by
+    ⟨fun a => ENNReal.ofReal (mass i a), CompleteLattice.summable.hasSum_iff.2 (by
       rw [← ENNReal.ofReal_tsum_of_nonneg (hmass_nonneg i) (hsummable i), htotal i]
       norm_num)⟩
   refine ⟨target, subseq, hsubseq, ?_⟩

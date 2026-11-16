@@ -136,7 +136,7 @@ private theorem weighted_zero_of_null
   have hsum := P.signal.messageMarginal_apply P.prior message
   rw [hsum] at hnull
   have hterm : P.prior state * P.signal.kernel state message = 0 :=
-    (ENNReal.tsum_eq_zero.mp hnull) state
+    (tsum_eq_zero_iff.mp hnull) state
   have hprior : P.prior state ≠ 0 := (P.prior.mem_support_iff state).mp hs
   have hkernel : P.signal.kernel state message = 0 :=
     (mul_eq_zero.mp hterm).resolve_left hprior

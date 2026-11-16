@@ -253,11 +253,12 @@ decision or vertical slice, and report the exact validation performed.
 
 ## Current toolchain-bump reference
 
-The completed Lean 4.35 / Mathlib v4.35.0 bump and its client migration lessons
-are in [docs/Lean435BumpLessons.md](docs/Lean435BumpLessons.md): dependency pins,
-finite uniform PMF construction, parser and tactic changes, and final validation.
-The preceding bump remains recorded in
-[docs/Lean434BumpLessons.md](docs/Lean434BumpLessons.md).
+The completed Lean 4.36 / Mathlib v4.36.0 bump and its client migration lessons
+are in [docs/Lean436BumpLessons.md](docs/Lean436BumpLessons.md): dependency pins,
+the generalized infinite-sum lemmas, the unused tactic linter's treatment of
+fallback branches, and kernel evaluation through matrix arrays. The preceding
+bumps remain recorded in [docs/Lean435BumpLessons.md](docs/Lean435BumpLessons.md)
+and [docs/Lean434BumpLessons.md](docs/Lean434BumpLessons.md).
 Keep bump plans and raw diagnostics local.
 
 ## Toolchain-bump lessons (Lean 4.33 / mathlib v4.33.1)

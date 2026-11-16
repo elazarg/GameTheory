@@ -169,7 +169,7 @@ theorem factorScopes_split :
     cases node
     all_goals
       simp [leftFactors, leftCoordinates, factorScope, parents] at hnode hcoordinate ⊢
-    all_goals tauto
+    tauto
   · intro node hnode coordinate hcoordinate
     cases node
     all_goals

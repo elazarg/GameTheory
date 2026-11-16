@@ -328,7 +328,7 @@ private theorem event_mass_split (law : PMF α) (whole good : Set α) (subset : 
       (law.toOuterMeasure good).toReal + (law.toOuterMeasure (whole \ good)).toReal := by
   rw [← ENNReal.toReal_add (outerMeasure_ne_top law good) (outerMeasure_ne_top law _),
     PMF.toOuterMeasure_apply, PMF.toOuterMeasure_apply, PMF.toOuterMeasure_apply,
-    ← ENNReal.tsum_add]
+    ← tsum_add]
   congr 1
   apply tsum_congr
   intro value

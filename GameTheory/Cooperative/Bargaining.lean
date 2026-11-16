@@ -96,6 +96,7 @@ theorem IsNashSolution.isPareto_of_positive_gains
       (fun values => problem.feasible values ∧ problem.IsIndividuallyRational values)
       utility := by
     apply GameTheory.Math.maximal_of_isMaxOn
+      (feasible := {values | problem.feasible values ∧ problem.IsIndividuallyRational values})
       (objective := fun values => ∏ player, (values player - problem.disagreement player))
     · exact fun alternative offered => solution.2.2 alternative offered.1 offered.2
     · exact ⟨solution.1, solution.2.1⟩
