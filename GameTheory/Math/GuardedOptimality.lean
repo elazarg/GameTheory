@@ -24,6 +24,30 @@ def IsOptimalOn {α : Type uα} (admissible : α → Prop) (prefers : α → α 
   admissible chosen ∧ (∀ alternative ∈ allowed, admissible alternative) ∧
     ∀ alternative ∈ allowed, prefers chosen alternative
 
+section Accessors
+
+variable {α : Type uα} {admissible : α → Prop} {prefers : α → α → Prop}
+  {allowed : Set α} {chosen alternative : α}
+
+/-- The chosen element lies in the domain of evaluation. -/
+theorem IsOptimalOn.chosen_admissible
+    (optimal : IsOptimalOn admissible prefers allowed chosen) : admissible chosen :=
+  optimal.1
+
+/-- Every allowed alternative lies in the domain of evaluation. -/
+theorem IsOptimalOn.alternative_admissible
+    (optimal : IsOptimalOn admissible prefers allowed chosen)
+    (offered : alternative ∈ allowed) : admissible alternative :=
+  optimal.2.1 alternative offered
+
+/-- The chosen element is weakly preferred to every allowed alternative. -/
+theorem IsOptimalOn.chosen_prefers
+    (optimal : IsOptimalOn admissible prefers allowed chosen)
+    (offered : alternative ∈ allowed) : prefers chosen alternative :=
+  optimal.2.2 alternative offered
+
+end Accessors
+
 /-- Optimality transfers when admissibility of the chosen element transfers
 and every target alternative is covered in both domain and comparison. -/
 theorem IsOptimalOn.of_coverage
@@ -38,10 +62,10 @@ theorem IsOptimalOn.of_coverage
       (sourceAdmissible original → targetAdmissible alternative) ∧
         (sourcePrefers chosen original → targetPrefers compiled alternative)) :
     IsOptimalOn targetAdmissible targetPrefers targetAllowed compiled :=
-  ⟨base optimal.1,
-    fun alternative allowed => (coverage alternative allowed).elim fun original covered =>
-      covered.2.1 (optimal.2.1 original covered.1),
-    fun alternative allowed => (coverage alternative allowed).elim fun original covered =>
-      covered.2.2 (optimal.2.2 original covered.1)⟩
+  ⟨base optimal.chosen_admissible,
+    fun alternative allowed => (coverage alternative allowed).elim fun _ covered =>
+      covered.2.1 (optimal.alternative_admissible covered.1),
+    fun alternative allowed => (coverage alternative allowed).elim fun _ covered =>
+      covered.2.2 (optimal.chosen_prefers covered.1)⟩
 
 end GameTheory.Math

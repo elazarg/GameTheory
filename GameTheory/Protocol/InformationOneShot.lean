@@ -206,7 +206,7 @@ theorem runFrom_hasExpectation_of_isOneShotOptimalWithin
         exact hasExpectation_of_payoffIntegrable (payoffIntegrable_pure h payoff)
       · have hlocal := hopt fuel h (by omega) hterm
         rw [← M.oneShotLaw_self profile fuel h hterm who]
-        exact hlocal.1
+        exact hlocal.hasValueAt
 
 /-- **Finite-horizon information-local one-shot principle, forward
 direction.** If no current information-local choice improves play at any

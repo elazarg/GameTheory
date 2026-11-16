@@ -38,9 +38,10 @@ and Lean options, gave these median seconds:
 These import-inclusive measurements do not isolate theorem elaboration and do
 not establish a general performance ranking. No new record is admitted, and
 there is no cold construction cost to amortize. Exact reproduction is
-`python scripts/compare_abstraction_bridges.py`; its sources, per-run logs and
-`timings.json` live under ignored `.codex/scratch/exp173/`. The script reconstructs
-both variants from the final sources. Toolchain: Lean 4.35.0, Mathlib v4.35.0.
+`python scripts/compare_abstraction_bridges.py` at commit `f0c852a9`; its
+sources, per-run logs and `timings.json` live under ignored
+`.codex/scratch/exp173/`. The script reconstructs both variants by rewriting
+the exact proof text of that commit, so it is kept in history, not in the tree. Toolchain: Lean 4.35.0, Mathlib v4.35.0.
 
 ## Admission and limits
 

@@ -36,7 +36,7 @@ def Feasible (choose : Finset α → Set α) : Prop :=
   ∀ menu, choose menu ⊆ (menu : Set α)
 
 /-- A nonempty finite menu has at least one selected alternative. -/
-def Nonempty (choose : Finset α → Set α) : Prop :=
+def NonemptyValued (choose : Finset α → Set α) : Prop :=
   ∀ menu, menu.Nonempty → (choose menu).Nonempty
 
 /-- The weak axiom of revealed preference, retaining all ties: if `chosen`
@@ -47,10 +47,16 @@ def WeakAxiom (choose : Finset α → Set α) : Prop :=
     chosen ∈ choose first → other ∈ first → other ∈ choose second →
       chosen ∈ second → chosen ∈ choose second
 
+open Classical in
 /-- Choice of an alternative from its binary menu reveals a weak preference. -/
-noncomputable def revealed (choose : Finset α → Set α) (chosen other : α) : Prop := by
-  classical
-  exact chosen ∈ choose {chosen, other}
+def revealed (choose : Finset α → Set α) (chosen other : α) : Prop :=
+  chosen ∈ choose {chosen, other}
+
+/-- The binary menu may be built with any decidable equality. -/
+theorem revealed_iff [DecidableEq α] (choose : Finset α → Set α) (chosen other : α) :
+    revealed choose chosen other ↔ chosen ∈ choose {chosen, other} := by
+  unfold revealed
+  congr!
 
 theorem best_feasible (prefers : α → α → Prop) : Feasible (best prefers) :=
   fun _ _ chosen => chosen.1
@@ -67,7 +73,7 @@ theorem best_of_subset {prefers : α → α → Prop} {small large : Finset α}
 the resulting maximal alternative into a greatest one. -/
 theorem best_nonempty {prefers : α → α → Prop}
     (transitive : ∀ a b c, prefers a b → prefers b c → prefers a c)
-    (total : ∀ a b, prefers a b ∨ prefers b a) : Nonempty (best prefers) := by
+    (total : ∀ a b, prefers a b ∨ prefers b a) : NonemptyValued (best prefers) := by
   let : LE α := ⟨fun a b => prefers b a⟩
   let : IsTrans α (· ≤ ·) := ⟨fun a b c hab hbc => transitive c b a hbc hab⟩
   intro menu nonempty
@@ -97,7 +103,8 @@ theorem Feasible.empty {choose : Finset α → Set α} (feasible : Feasible choo
 
 /-- A selected alternative remains selected on its binary submenus. -/
 theorem WeakAxiom.revealed_of_selected {choose : Finset α → Set α}
-    (feasible : Feasible choose) (nonempty : Nonempty choose) (consistent : WeakAxiom choose)
+    (feasible : Feasible choose) (nonempty : NonemptyValued choose)
+    (consistent : WeakAxiom choose)
     {menu : Finset α} {chosen other : α}
     (selected : chosen ∈ choose menu) (offered : other ∈ menu) :
     revealed choose chosen other := by
@@ -112,7 +119,8 @@ theorem WeakAxiom.revealed_of_selected {choose : Finset α → Set α}
 /-- Binary choices rationalize the entire correspondence; no order laws need
 be assumed in addition to feasibility, nonemptiness and the weak axiom. -/
 theorem eq_best_revealed {choose : Finset α → Set α}
-    (feasible : Feasible choose) (nonempty : Nonempty choose) (consistent : WeakAxiom choose)
+    (feasible : Feasible choose) (nonempty : NonemptyValued choose)
+    (consistent : WeakAxiom choose)
     (menu : Finset α) : choose menu = best (revealed choose) menu := by
   classical
   ext chosen
@@ -126,7 +134,7 @@ theorem eq_best_revealed {choose : Finset α → Set α}
       (by simp) selected member
 
 theorem revealed_total {choose : Finset α → Set α}
-    (feasible : Feasible choose) (nonempty : Nonempty choose) :
+    (feasible : Feasible choose) (nonempty : NonemptyValued choose) :
     ∀ chosen other, revealed choose chosen other ∨ revealed choose other chosen := by
   classical
   intro chosen other
@@ -137,7 +145,8 @@ theorem revealed_total {choose : Finset α → Set α}
     exact Or.inr (by simpa [revealed, Finset.pair_comm, ← equal] using selected)
 
 theorem revealed_transitive {choose : Finset α → Set α}
-    (feasible : Feasible choose) (nonempty : Nonempty choose) (consistent : WeakAxiom choose) :
+    (feasible : Feasible choose) (nonempty : NonemptyValued choose)
+    (consistent : WeakAxiom choose) :
     ∀ a b c, revealed choose a b → revealed choose b c → revealed choose a c := by
   classical
   intro a b c hab hbc
@@ -154,14 +163,15 @@ theorem revealed_transitive {choose : Finset α → Set α}
       exact consistent {a, b} {a, b, c} a b hab (by simp) b_selected (by simp)
   exact consistent.revealed_of_selected feasible nonempty a_selected (by simp)
 
-/-- Finite-menu choice is rationalizable by a complete preorder exactly when
-it is feasible, nonempty on nonempty menus, and satisfies the weak axiom. -/
+/-- Finite-menu choice is rationalizable by a total transitive relation — a
+complete preorder, since totality gives reflexivity — exactly when it is
+feasible, nonempty on nonempty menus, and satisfies the weak axiom. -/
 theorem rationalizable_iff (choose : Finset α → Set α) :
     (∃ prefers : α → α → Prop,
       (∀ a b, prefers a b ∨ prefers b a) ∧
       (∀ a b c, prefers a b → prefers b c → prefers a c) ∧
       ∀ menu, choose menu = best prefers menu) ↔
-    Feasible choose ∧ Nonempty choose ∧ WeakAxiom choose := by
+    Feasible choose ∧ NonemptyValued choose ∧ WeakAxiom choose := by
   constructor
   · rintro ⟨prefers, total, transitive, represents⟩
     have equal : choose = best prefers := funext represents

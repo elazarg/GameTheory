@@ -363,7 +363,7 @@ theorem backwardExtendedValue_le_of_isOneShotOptimal
         have hright :
             (E.oneShotContext certificate optimal payoff source hterm).HasValueAt
               (other source hterm) :=
-          hlocal.2.1 _ (Set.mem_univ _)
+          hlocal.hasValueAt_of_mem (Set.mem_univ _)
         have hbound := hlocal.extendedValue_le (Set.mem_univ (other source hterm))
         unfold backwardExtendedValue
         calc

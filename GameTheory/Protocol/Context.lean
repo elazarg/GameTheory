@@ -77,12 +77,28 @@ def IsLocallyOptimal (ctx : Context Choice Outcome) (allowed : Set Choice)
     (fun preferred alternative => ctx.extendedValue alternative ≤ ctx.extendedValue preferred)
     allowed choice
 
+/-- The incumbent's continuation payoff has an expectation. -/
+theorem IsLocallyOptimal.hasValueAt {ctx : Context Choice Outcome}
+    {allowed : Set Choice} {choice : Choice}
+    (optimal : ctx.IsLocallyOptimal allowed choice) : ctx.HasValueAt choice :=
+  GameTheory.Math.IsOptimalOn.chosen_admissible optimal
+
+/-- Every allowed alternative's continuation payoff has an expectation. -/
+theorem IsLocallyOptimal.hasValueAt_of_mem {ctx : Context Choice Outcome}
+    {allowed : Set Choice} {choice alternative : Choice}
+    (optimal : ctx.IsLocallyOptimal allowed choice) (allowedAlternative : alternative ∈ allowed) :
+    ctx.HasValueAt alternative :=
+  GameTheory.Math.IsOptimalOn.alternative_admissible optimal allowedAlternative
+
 /-- Every allowed alternative has continuation value at most the incumbent's. -/
 theorem IsLocallyOptimal.extendedValue_le {ctx : Context Choice Outcome}
     {allowed : Set Choice} {choice alternative : Choice}
     (optimal : ctx.IsLocallyOptimal allowed choice) (allowedAlternative : alternative ∈ allowed) :
     ctx.extendedValue alternative ≤ ctx.extendedValue choice :=
-  optimal.2.2 alternative allowedAlternative
+  GameTheory.Math.IsOptimalOn.chosen_prefers
+    (prefers := fun preferred alternative =>
+      ctx.extendedValue alternative ≤ ctx.extendedValue preferred)
+    optimal allowedAlternative
 
 /-- An admissible alternative whose expected continuation payoff is strictly
 larger. -/

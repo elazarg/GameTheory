@@ -3,16 +3,15 @@ module
 /-
 # Potential games
 
-A finite-range improvement rank takes values in a preorder and strictly rises
-along every improving move. Local comparability then makes improvement paths
-reach a Nash profile, without fixed-point theorems, topology, or numerical
-preferences. The profile carrier itself may be infinite.
+A potential is a single real function on profiles that every player's
+expected-utility incentives follow. An *exact* potential moves by exactly as
+much as the deviator's expected utility; an *ordinal* potential only has to
+move in the same direction. The first implies the second, and the
+equilibrium-existence family is proved at the ordinal level.
 
-For expected utility, two numerical potential certificates are recorded. An
-*exact* potential moves by exactly as much as the deviator's expected
-utility; an *ordinal* potential only has to move in the same direction. The
-first implies the second, and the equilibrium-existence family is proved at
-the ordinal level.
+Existence needs no fixed-point theorem and no topology: an ordinal potential
+with finite range is an improvement rank for expected utility, so improvement
+paths reach a Nash profile even when the profile carrier is infinite.
 
 Primary reference: D. Monderer and L. S. Shapley, “Potential Games,” *Games
 and Economic Behavior* 14 (1996).
@@ -32,52 +31,6 @@ universe uι us uo
 
 variable {ι : Type uι} [DecidableEq ι] {F : GameForm ι}
 variable {utility : F.sig.Outcome → ι → ℝ} {potential : Profile F.sig → ℝ}
-
-/-- A rank with finite range makes strict improvement well-founded. Only a
-preorder on rank values is needed; profiles may form an infinite type. -/
-theorem improvement_wellFounded_of_improvement_rank
-    {prefers : WeakPreference ι F.sig.Outcome} {V : Type*} [Preorder V]
-    (rank : Profile F.sig → V) (hrange : (Set.range rank).Finite)
-    (hincrease : ∀ {source target}, ImprovingStep F prefers source target →
-      rank source < rank target) :
-    WellFounded (fun target source : Profile F.sig => ImprovingStep F prefers source target) := by
-  have := hrange.to_subtype
-  have hvalues : WellFounded (fun later earlier : Set.range rank => earlier.1 < later.1) :=
-    Finite.wellFounded_of_trans_of_irrefl _
-  have hsubrelation : Subrelation
-      (fun target source : Profile F.sig => ImprovingStep F prefers source target)
-      (InvImage (fun later earlier : Set.range rank => earlier.1 < later.1)
-        fun profile => ⟨rank profile, profile, rfl⟩) := by
-    intro target source hstep
-    exact hincrease hstep
-  exact hsubrelation.wf (InvImage.wf _ hvalues)
-
-/-- Local comparability and a finite-range improvement rank suffice for weak
-acyclicity, without numerical preferences or a finite profile carrier. -/
-theorem weaklyAcyclic_of_improvement_rank
-    {prefers : WeakPreference ι F.sig.Outcome} {V : Type*} [Preorder V]
-    (hcompare : ∀ (profile : Profile F.sig) who replacement,
-      prefers who (F.play profile) (F.play (Profile.update profile who replacement)) ∨
-        prefers who (F.play (Profile.update profile who replacement)) (F.play profile))
-    (rank : Profile F.sig → V) (hrange : (Set.range rank).Finite)
-    (hincrease : ∀ {source target}, ImprovingStep F prefers source target →
-      rank source < rank target) : WeaklyAcyclic F prefers :=
-  weaklyAcyclic_of_wellFounded hcompare
-    (improvement_wellFounded_of_improvement_rank rank hrange hincrease)
-
-/-- A nonempty game with locally comparable preferences has a Nash profile
-when strict improvement raises a finite-range rank. -/
-theorem exists_isNash_of_improvement_rank [Nonempty (Profile F.sig)]
-    {prefers : WeakPreference ι F.sig.Outcome} {V : Type*} [Preorder V]
-    (hcompare : ∀ (profile : Profile F.sig) who replacement,
-      prefers who (F.play profile) (F.play (Profile.update profile who replacement)) ∨
-        prefers who (F.play (Profile.update profile who replacement)) (F.play profile))
-    (rank : Profile F.sig → V) (hrange : (Set.range rank).Finite)
-    (hincrease : ∀ {source target}, ImprovingStep F prefers source target →
-      rank source < rank target) : ∃ profile, IsNash F prefers profile := by
-  obtain ⟨profile, _, hnash⟩ := weaklyAcyclic_of_improvement_rank hcompare rank hrange hincrease
-    (Classical.choice ‹Nonempty (Profile F.sig)›)
-  exact ⟨profile, hnash⟩
 
 variable (F utility potential) in
 /-- Every unilateral change moves the deviator's expected utility by exactly as

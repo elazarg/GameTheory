@@ -136,7 +136,7 @@ theorem cyclicChoice_feasible : FiniteChoice.Feasible cyclicChoice := by
     exact h02.2.1
   · exact selected
 
-theorem cyclicChoice_nonempty : FiniteChoice.Nonempty cyclicChoice := by
+theorem cyclicChoice_nonempty : FiniteChoice.NonemptyValued cyclicChoice := by
   intro menu nonempty
   unfold cyclicChoice
   split_ifs

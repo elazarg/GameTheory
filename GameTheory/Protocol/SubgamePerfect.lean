@@ -353,8 +353,8 @@ theorem historyBackwardExtendedValue_update_le_of_hasNoProfitableOneShotDeviatio
                 (current.extend chosen.2 realized))
             (fun outcome => utility outcome who) := by
           rw [← hrightLaw]
-          exact hlocal.2.1 choice (Set.mem_univ _)
-        have hbound := hlocal.2.2 choice (Set.mem_univ _)
+          exact hlocal.hasValueAt_of_mem (Set.mem_univ choice)
+        have hbound := hlocal.extendedValue_le (Set.mem_univ choice)
         unfold ExecutionProtocol.historyBackwardExtendedValue
         calc
           extendedExpect (E.historyBackwardLaw certificate

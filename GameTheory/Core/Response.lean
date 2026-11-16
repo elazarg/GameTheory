@@ -295,6 +295,52 @@ theorem weaklyAcyclic_of_wellFounded
       obtain ⟨target, hreach, htarget⟩ := ih next hstep
       exact ⟨target, Relation.ReflTransGen.head hstep hreach, htarget⟩
 
+/-- A rank with finite range makes strict improvement well-founded. Only a
+preorder on rank values is needed; profiles may form an infinite type. -/
+theorem improvement_wellFounded_of_improvement_rank
+    {prefers : WeakPreference ι F.sig.Outcome} {V : Type*} [Preorder V]
+    (rank : Profile F.sig → V) (hrange : (Set.range rank).Finite)
+    (hincrease : ∀ {source target}, ImprovingStep F prefers source target →
+      rank source < rank target) :
+    WellFounded (fun target source : Profile F.sig => ImprovingStep F prefers source target) := by
+  have := hrange.to_subtype
+  have hvalues : WellFounded (fun later earlier : Set.range rank => earlier.1 < later.1) :=
+    Finite.wellFounded_of_trans_of_irrefl _
+  have hsubrelation : Subrelation
+      (fun target source : Profile F.sig => ImprovingStep F prefers source target)
+      (InvImage (fun later earlier : Set.range rank => earlier.1 < later.1)
+        fun profile => ⟨rank profile, profile, rfl⟩) := by
+    intro target source hstep
+    exact hincrease hstep
+  exact hsubrelation.wf (InvImage.wf _ hvalues)
+
+/-- Local comparability and a finite-range improvement rank suffice for weak
+acyclicity, without numerical preferences or a finite profile carrier. -/
+theorem weaklyAcyclic_of_improvement_rank
+    {prefers : WeakPreference ι F.sig.Outcome} {V : Type*} [Preorder V]
+    (hcompare : ∀ (profile : Profile F.sig) who replacement,
+      prefers who (F.play profile) (F.play (Profile.update profile who replacement)) ∨
+        prefers who (F.play (Profile.update profile who replacement)) (F.play profile))
+    (rank : Profile F.sig → V) (hrange : (Set.range rank).Finite)
+    (hincrease : ∀ {source target}, ImprovingStep F prefers source target →
+      rank source < rank target) : WeaklyAcyclic F prefers :=
+  weaklyAcyclic_of_wellFounded hcompare
+    (improvement_wellFounded_of_improvement_rank rank hrange hincrease)
+
+/-- A nonempty game with locally comparable preferences has a Nash profile
+when strict improvement raises a finite-range rank. -/
+theorem exists_isNash_of_improvement_rank [Nonempty (Profile F.sig)]
+    {prefers : WeakPreference ι F.sig.Outcome} {V : Type*} [Preorder V]
+    (hcompare : ∀ (profile : Profile F.sig) who replacement,
+      prefers who (F.play profile) (F.play (Profile.update profile who replacement)) ∨
+        prefers who (F.play (Profile.update profile who replacement)) (F.play profile))
+    (rank : Profile F.sig → V) (hrange : (Set.range rank).Finite)
+    (hincrease : ∀ {source target}, ImprovingStep F prefers source target →
+      rank source < rank target) : ∃ profile, IsNash F prefers profile := by
+  obtain ⟨profile, _, hnash⟩ := weaklyAcyclic_of_improvement_rank hcompare rank hrange hincrease
+    (Classical.choice ‹Nonempty (Profile F.sig)›)
+  exact ⟨profile, hnash⟩
+
 /-- A Nash equilibrium is exactly a profile of mutual best responses. -/
 theorem isNash_iff_isBestResponse (profile : Profile F.sig) :
     IsNash F weaklyPrefers profile ↔

@@ -33,7 +33,7 @@ theorem responseRank_iff (chosen alternative : Bool) :
 def responseChoice : Finset Bool → Set Bool := FiniteChoice.best responseRank
 
 theorem responseChoice_consistent :
-    FiniteChoice.Feasible responseChoice ∧ FiniteChoice.Nonempty responseChoice ∧
+    FiniteChoice.Feasible responseChoice ∧ FiniteChoice.NonemptyValued responseChoice ∧
       FiniteChoice.WeakAxiom responseChoice := by
   apply (FiniteChoice.rationalizable_iff responseChoice).1
   refine ⟨responseRank, ?_, ?_, fun _ => rfl⟩
@@ -83,7 +83,7 @@ def choices : Finset (Finset Bool) → Set (Finset Bool) := FiniteChoice.best ra
 /-- The complete choice family is consistent. A budget supplies one of its
 menus, rather than an assumption that every finite menu is a budget menu. -/
 theorem choices_consistent :
-    FiniteChoice.Feasible choices ∧ FiniteChoice.Nonempty choices ∧
+    FiniteChoice.Feasible choices ∧ FiniteChoice.NonemptyValued choices ∧
       FiniteChoice.WeakAxiom choices :=
   (FiniteChoice.rationalizable_iff choices).1
     ⟨rank, fun _ _ => le_total _ _, fun _ _ _ hab hbc => hbc.trans hab, fun _ => rfl⟩
@@ -117,7 +117,8 @@ end Allocation
 /-- Choice on natural-number menus needs no finite ambient alternative type. -/
 theorem natural_number_choices_consistent :
     FiniteChoice.Feasible (FiniteChoice.best (fun chosen alternative : ℕ => alternative ≤ chosen)) ∧
-    FiniteChoice.Nonempty (FiniteChoice.best (fun chosen alternative : ℕ => alternative ≤ chosen)) ∧
+    FiniteChoice.NonemptyValued
+      (FiniteChoice.best (fun chosen alternative : ℕ => alternative ≤ chosen)) ∧
     FiniteChoice.WeakAxiom
       (FiniteChoice.best (fun chosen alternative : ℕ => alternative ≤ chosen)) :=
   (FiniteChoice.rationalizable_iff _).1

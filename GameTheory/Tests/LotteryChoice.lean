@@ -48,7 +48,7 @@ theorem rank_transitive (a b c : Fin 3) (hab : rank a b) (hbc : rank b c) : rank
 def choices : Finset (Fin 3) → Set (Fin 3) := FiniteChoice.best rank
 
 theorem choices_consistent :
-    FiniteChoice.Feasible choices ∧ FiniteChoice.Nonempty choices ∧
+    FiniteChoice.Feasible choices ∧ FiniteChoice.NonemptyValued choices ∧
       FiniteChoice.WeakAxiom choices :=
   (FiniteChoice.rationalizable_iff choices).1
     ⟨rank, rank_total, rank_transitive, fun _ => rfl⟩

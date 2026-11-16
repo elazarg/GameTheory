@@ -18,37 +18,9 @@ noncomputable section
 namespace GameTheory.Experimental.ContextJudgment
 
 open GameTheory.Math.Probability
+open GameTheory.Math
 
 universe ua us ut uo
-
-/-- Optimality separates the domain of evaluation from the comparison.
-The chosen value remains admissible even when the allowed set is empty. -/
-def IsOptimalOn {α : Type ua} (admissible : α → Prop) (prefers : α → α → Prop)
-    (allowed : Set α) (chosen : α) : Prop :=
-  admissible chosen ∧ (∀ alternative ∈ allowed, admissible alternative) ∧
-    ∀ alternative ∈ allowed, prefers chosen alternative
-
-/-- Every target alternative is covered by a source alternative whose domain
-membership and chosen comparison imply the target obligations. -/
-theorem IsOptimalOn.of_coverage
-    {Source : Type us} {Target : Type ut}
-    {sourceAdmissible : Source → Prop} {targetAdmissible : Target → Prop}
-    {sourcePrefers : Source → Source → Prop} {targetPrefers : Target → Target → Prop}
-    {sourceAllowed : Set Source} {targetAllowed : Set Target}
-    {chosen : Source} {compiled : Target}
-    (optimal : IsOptimalOn sourceAdmissible sourcePrefers sourceAllowed chosen)
-    (base : sourceAdmissible chosen → targetAdmissible compiled)
-    (coverage : ∀ alternative ∈ targetAllowed, ∃ original ∈ sourceAllowed,
-      (sourceAdmissible original → targetAdmissible alternative) ∧
-        (sourcePrefers chosen original → targetPrefers compiled alternative)) :
-    IsOptimalOn targetAdmissible targetPrefers targetAllowed compiled := by
-  refine ⟨base optimal.1, ?_, ?_⟩
-  · intro alternative allowed
-    obtain ⟨original, used, domain, _⟩ := coverage alternative allowed
-    exact domain (optimal.2.1 original used)
-  · intro alternative allowed
-    obtain ⟨original, used, _, comparison⟩ := coverage alternative allowed
-    exact comparison (optimal.2.2 original used)
 
 /-- Numerical context optimality has exactly the direct predicate's guarded
 shape, including chosen admissibility for an empty set of alternatives. -/

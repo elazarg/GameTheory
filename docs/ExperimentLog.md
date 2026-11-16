@@ -10698,8 +10698,9 @@ observations and outcome below are preserved as the record of that run.
   lines in Kuhn and five in Bayesian transfer. Three alternating serialized
   whole-module runs give median direct/coverage seconds 19.125/17.617 (Kuhn)
   and 11.632/11.575 (Bayesian); these include imports and unrelated declarations,
-  so do not establish theorem-level speed. Reproduce with
-  `python scripts/compare_abstraction_bridges.py`; raw artifacts are in ignored
+  so do not establish theorem-level speed. Reproduce at commit `f0c852a9` with
+  `python scripts/compare_abstraction_bridges.py`; the script rewrites exact
+  proof text and is kept only in history. Raw artifacts are in ignored
   `.codex/scratch/exp173/`. Lean 4.35.0 and Mathlib v4.35.0 are unchanged.
 - **Hostile evidence:** `Tests.EFGKuhnNash` transports an incumbent-law relation
   and proves it has no expected-utility representation; genuine mixed
