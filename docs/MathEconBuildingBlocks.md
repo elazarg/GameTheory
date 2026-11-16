@@ -111,7 +111,7 @@ merely because the consumer uses probability measures rather than PMFs.
 ## Final verification
 
 The final ordinary consumer builds strictly in 3,144 jobs. On checkpoint
-`ba311457`, `python scripts/audit.py` passes 3,877 default and 4,800 complete
+`1acb10d8`, `python scripts/audit.py` passes 3,877 default and 4,800 complete
 validation jobs, public lint, authored diagnostics and transitive standard-axiom
 checks. The final source audit also covers all experimental and test imports.
 Raw output is ignored at

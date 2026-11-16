@@ -60,7 +60,7 @@ interface, find a stable non-EU client and determine whether it needs full
 weak comparison, conditional comparison reversal, finite mixing, or arbitrary
 PMF mixing. Direct profile-local hypotheses remain a valid baseline.
 
-Baseline: `03e34edb`; implementation checkpoint: `1d908f6b`. Exact commands:
+Baseline: `03e34edb`; implementation checkpoint: `c0f49743`. Exact commands:
 
 ```text
 lake --iofail build GameTheory.Experimental.Exp175.MixtureClosure

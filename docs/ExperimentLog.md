@@ -10713,8 +10713,8 @@ observations and outcome below are preserved as the record of that run.
   complete lint/axiom driver build (4,762 jobs), public lint, cached authored
   diagnostic checks and transitive standard-axiom checks. Full output is
   `.codex/scratch/exp173/integration-audit.log`. Baseline before code changes:
-  `b3a94b32`; measured coverage checkpoint: `4ef12f5e`; selected direct proofs:
-  `1319eefd`.
+  `db051fce`; measured coverage checkpoint: `32e46b4c`; selected direct proofs:
+  `f0c852a9`.
 - **Outcome / next action:** prefer direct exact-law proofs; existing coverage
   is sufficient but larger. No new transport theorem, record, or hierarchy is
   justified by these clients. [D78](decisions/D78-preference-generic-exact-law-bridges.md)
@@ -10754,7 +10754,7 @@ observations and outcome below are preserved as the record of that run.
   direct rank hypotheses serve numerical termination/existence and nonnumeric
   response consumers. No bundled candidate was implemented or timed. Focused
   strict owner/consumer builds and source audit pass. On implementation
-  checkpoint `3678492f`, `python scripts/audit.py` passes the default strict
+  checkpoint `b570f83c`, `python scripts/audit.py` passes the default strict
   build (3,872 jobs), full validation build (4,762 jobs), public lint, authored
   diagnostic checks and transitive standard-axiom checks. Raw output is
   `.codex/scratch/exp174/integration-audit.log`.
@@ -10798,7 +10798,7 @@ observations and outcome below are preserved as the record of that run.
   `python scripts/audit.py` passes the default build (3,872 jobs), complete
   validation build (4,763 jobs), public lint, authored diagnostic checks and
   transitive standard-axiom checks. Baseline `03e34edb`; implementation
-  `1d908f6b`; raw output `.codex/scratch/exp175/integration-audit-final.log`.
+  `c0f49743`; raw output `.codex/scratch/exp175/integration-audit-final.log`.
   Independent semantic review accepts the counterexample and scoped guards.
   Zero stable definitions or structures are added; no performance claim.
 - **Outcome / next action:** reject binary-only Mixable as sufficient for
@@ -10844,7 +10844,7 @@ observations and outcome below are preserved as the record of that run.
   `python scripts/compare_context_judgment.py`; raw artifacts remain in scratch.
   Independent Math target passes 115 jobs; focused strict Protocol/control
   build passes 3,182 jobs; source audit passes.
-- **Integration validation:** on implementation checkpoint `20adafa2`,
+- **Integration validation:** on implementation checkpoint `23e525ef`,
   `python scripts/audit.py` passes the default strict build (3,873 jobs),
   complete validation build (4,767 jobs), public lint, authored diagnostic
   checks and transitive standard-axiom checks. Sequential existence, weak-PBE,
@@ -10897,7 +10897,7 @@ observations and outcome below are preserved as the record of that run.
   `Experimental/Exp177/`. The focused strict owner/control build passes 3,056
   jobs; source audit passes. Zero new stable definitions, structures or
   equilibrium engines. No new coalition problem record was implemented or timed.
-- **Integration validation:** on checkpoint `f03c9d65`,
+- **Integration validation:** on checkpoint `45d8d091`,
   `python scripts/audit.py` passes the default strict build (3,873 jobs), complete
   validation build (4,770 jobs), public lint, authored diagnostic checks and
   transitive standard-axiom checks. Native matching, coalition simulation and
@@ -10947,7 +10947,7 @@ observations and outcome below are preserved as the record of that run.
   The strict probe/locality build passes 3,771 jobs, including the existing
   recommendation-spying and frame controls in `Tests.Locality`; source audit
   passes. Zero new stable definitions, structures, carriers or interfaces.
-- **Integration validation:** on checkpoint `51e5e60a`,
+- **Integration validation:** on checkpoint `d99de826`,
   `python scripts/audit.py` passes the default strict build (3,873 jobs), full
   validation build (4,772 jobs), public lint, authored diagnostic checks and
   transitive standard-axiom checks. Raw output is
@@ -11000,7 +11000,7 @@ observations and outcome below are preserved as the record of that run.
   `lake --iofail build GameTheory.Tests.FiniteChoice GameTheory.Tests.LotteryChoice GameTheory.Experimental.Exp179.ChoiceBoundary`
   passes 3,070 jobs, and source checks pass. Independent read-only semantic
   reviews accept the scope.
-- **Integration validation:** on checkpoint `5be0b4f6`,
+- **Integration validation:** on checkpoint `45d9cb13`,
   `python scripts/audit.py` passes 3,874 default and 4,776 complete validation
   jobs, public lint, authored diagnostics and transitive standard-axiom checks.
   Raw output is `.codex/scratch/exp179/integration-audit.log`.
@@ -11051,7 +11051,7 @@ observations and outcome below are preserved as the record of that run.
   `lake --iofail build GameTheory.Tests.Groves GameTheory.Tests.BargainingScalarization GameTheory.Experimental.Exp180.ScalarizationBoundary`
   passes 3,158 jobs, and source checks pass. Independent read-only semantic
   review accepts the scope.
-- **Integration validation:** on checkpoint `eb6a27ad`,
+- **Integration validation:** on checkpoint `1a0b9b46`,
   `python scripts/audit.py` passes 3,875 default and 4,779 complete validation
   jobs, public lint, authored diagnostics and transitive standard-axiom checks.
   Raw output is `.codex/scratch/exp180/integration-audit.log`.
@@ -11083,7 +11083,7 @@ observations and outcome below are preserved as the record of that run.
   or equilibrium record without need; or claim full Berge, utility-representation
   or generalized-equilibrium existence from this slice.
 - **Artifacts / commands:** item branch
-  `codex/experiment-abstraction-item-09-parametric-choice`, baseline `80741987`;
+  `codex/experiment-abstraction-item-09-parametric-choice`, baseline `f0557b0b`;
   ignored scratch and logs under `.codex/scratch/exp181/`.
 - **Focused observations:** closed feasibility and lower hemicontinuity supply
   different obligations. The shared closed-maximizer-graph theorem uses a
@@ -11102,7 +11102,7 @@ observations and outcome below are preserved as the record of that run.
   lines are 25 before and 26 after, plus 31 shared theorem lines: this is new
   generality, not proof compression or a performance claim. Independent
   semantic review accepts the scope.
-- **Integration validation:** on checkpoint `ec2977ff`,
+- **Integration validation:** on checkpoint `647938a6`,
   `python scripts/audit.py` passes 3,876 default and 4,782 complete validation
   jobs, public lint, authored diagnostics and transitive standard-axiom checks.
   Raw output is `.codex/scratch/exp181/integration-audit.log`.
@@ -11158,7 +11158,7 @@ observations and outcome below are preserved as the record of that run.
   lines and 91 separately charged quantity construction lines. Cold source
   cost is larger for one consumer; no performance advantage is claimed.
   Independent semantic review accepts the scope.
-- **Integration validation:** on checkpoint `4b089fe9`,
+- **Integration validation:** on checkpoint `617d8847`,
   `python scripts/audit.py` passes 3,876 default and 4,786 complete validation
   jobs, public lint, authored diagnostics and transitive standard-axiom checks.
   Existing terminal/belief and sequential-existence clients pass through the
@@ -11225,7 +11225,7 @@ observations and outcome below are preserved as the record of that run.
   semantic reviews accept the exact two-by-two/unit-endowment scope and the
   distinction between ambient continuity and cone-restricted utility laws.
   Complete integration follows below.
-- **Integration validation:** on checkpoint `acfcf5cd`,
+- **Integration validation:** on checkpoint `759fd54b`,
   `python scripts/audit.py` passes 3,877 default and 4,792 complete validation
   jobs, public lint, authored diagnostics and transitive standard-axiom checks.
   Raw output is `.codex/scratch/exp183/integration-audit.log`.
@@ -11273,10 +11273,10 @@ observations and outcome below are preserved as the record of that run.
 - **Focused validation:** `lake --iofail build
   GameTheory.Tests.DynamicChoice` passes 3,072 jobs, and
   `python scripts/audit.py --source-only` passes. Evidence is under
-  `Experimental/Exp184/{Composition,Controls,Consumers}.lean` and
+  `Experimental/Exp184/{Composition,Controls}.lean`, `Tests/DynamicChoice.lean` and
   [D89](decisions/D89-conditional-and-dynamic-comparison.md). Independent
   semantic review accepts the comparison/domain and chooser/policy boundaries.
-- **Integration validation:** on checkpoint `768f22f5`,
+- **Integration validation:** on checkpoint `6dec70a5`,
   `python scripts/audit.py` passes 3,877 default and 4,795 validation jobs,
   public lint, authored diagnostics and transitive standard-axiom checks.
   Raw output is `.codex/scratch/exp184/integration-audit.log`.
@@ -11315,7 +11315,7 @@ observations and outcome below are preserved as the record of that run.
   GameTheory.Experimental.Exp185.RestrictedBudget` passes 958 jobs;
   source boundaries and driver coverage pass. See
   [D90](decisions/D90-restricted-budget-observations.md).
-- **Integration validation:** on checkpoint `8fcbb6eb`, full audit passes
+- **Integration validation:** on checkpoint `7c6734ae`, full audit passes
   3,877 default and 4,796 validation jobs, public lint, authored diagnostics and
   transitive standard-axiom checks. Raw output is
   `.codex/scratch/exp185/integration-audit.log`. Independent semantic review
@@ -11360,7 +11360,7 @@ observations and outcome below are preserved as the record of that run.
   [D91](decisions/D91-contract-acceptance-and-bundle-choice.md). No new stable
   record or arena is required, and the reference already owns the general
   institutional composition theorem.
-- **Integration validation:** on checkpoint `9443dd7e`, full audit passes
+- **Integration validation:** on checkpoint `7c33ac60`, full audit passes
   3,877 default and 4,799 validation jobs, public lint, authored diagnostics and
   transitive standard-axiom checks. Raw output is
   `.codex/scratch/exp186/integration-audit.log`. Independent review accepts the

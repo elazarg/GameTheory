@@ -52,8 +52,8 @@ edge, and natural-number rank consume the generalized API.
 ## Ownership and cost
 
 Response owns strict Nash, improving steps, weak acyclicity, their guarded
-numerical characterizations, and well-foundedness-to-weak-acyclicity.
-Potential owns the finite-range rank consequences and the existing numerical
+numerical characterizations, well-foundedness-to-weak-acyclicity, and the
+finite-range rank consequences. Potential owns the existing numerical
 exact/ordinal certificates. The latter retain their integrability assumptions
 and specialize the generic existence and termination arguments.
 
@@ -68,7 +68,7 @@ and no bundled abstraction is admitted on amortized client-size arguments.
 
 ## Validation and limits
 
-Baseline: `4d2bb891`; implementation checkpoint: `3678492f`.
+Baseline: `4d2bb891`; implementation checkpoint: `b570f83c`.
 Focused strict builds cover ExpectedUtility, Response, Approximate, Potential,
 Tests.Potential, and Congestion.Rosenthal. The source audit passes. The full
 integration result is recorded in EXP-174 and the delivery ledger; raw output

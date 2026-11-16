@@ -73,7 +73,7 @@ Existing singleton recommendation-spying and nonmember controls remain in
 `Tests.Locality`. The two probes are retained under `Experimental/Exp178/`
 and included in the complete axiom audit.
 
-Baseline: `18559255`; implementation checkpoint: `51e5e60a`. Exact commands:
+Baseline: `18559255`; implementation checkpoint: `d99de826`. Exact commands:
 
 ```text
 lake --iofail build GameTheory.Experimental.Exp178.LocalRealization GameTheory.Experimental.Exp178.LawTransformerBoundary GameTheory.Tests.Locality

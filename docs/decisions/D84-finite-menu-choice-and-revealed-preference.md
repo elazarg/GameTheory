@@ -100,7 +100,7 @@ semantic review accepts the representation, extraction boundaries and
 lottery-choice separation. Full integration evidence is recorded in EXP-179
 before collection. No performance advantage is claimed from job counts.
 
-On implementation checkpoint `5be0b4f6`, `python scripts/audit.py` passes
+On implementation checkpoint `45d9cb13`, `python scripts/audit.py` passes
 3,874 default and 4,776 validation jobs, public lint, authored diagnostic
 checks and transitive standard-axiom checks. Raw output is ignored
 `.codex/scratch/exp179/integration-audit.log`.

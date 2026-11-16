@@ -81,7 +81,7 @@ empty-player behavior and actual biased canonical choice. Integration evidence
 is recorded in EXP-180 before collection. No performance claim follows from
 these build counts.
 
-On checkpoint `eb6a27ad`, `python scripts/audit.py` passes 3,875 default and
+On checkpoint `1a0b9b46`, `python scripts/audit.py` passes 3,875 default and
 4,779 complete validation jobs, public lint, authored diagnostic checks and
 transitive standard-axiom checks. Raw output is ignored
 `.codex/scratch/exp180/integration-audit.log`.

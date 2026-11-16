@@ -63,7 +63,7 @@ source boundaries and audit-driver coverage pass. No public definitions,
 Context representation, numerical theorem statements or package imports change.
 Existing undefined-expectation and countable-mixture rejection controls remain
 in the full validation scope. Full integration is recorded in EXP-184.
-On checkpoint `768f22f5`, the full audit passes 3,877 default and 4,795
+On checkpoint `6dec70a5`, the full audit passes 3,877 default and 4,795
 validation jobs, public lint, authored diagnostics and transitive standard-axiom
 checks.
 

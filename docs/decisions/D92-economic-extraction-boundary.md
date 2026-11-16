@@ -120,7 +120,7 @@ Every collected experiment passes its full audit. The final ordinary consumer
 build passes 3,144 strict jobs and source checks. Final complete validation is
 recorded with the extraction checkpoint in `MathEconBuildingBlocks.md` before
 collection. No timing comparison or universal minimality theorem is claimed.
-On checkpoint `ba311457`, `python scripts/audit.py` passes 3,877 default and
+On checkpoint `1acb10d8`, `python scripts/audit.py` passes 3,877 default and
 4,800 validation jobs, public lint, authored diagnostics and transitive
 standard-axiom checks. Raw output is
 `.codex/scratch/abstraction-extraction/integration-audit.log`. Independent

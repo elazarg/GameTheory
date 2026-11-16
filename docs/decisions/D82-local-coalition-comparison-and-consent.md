@@ -75,7 +75,7 @@ strong-Nash definitions are unchanged. Direct member comparisons and
 problem record was not implemented or timed; no cold-cost or speed claim is
 made for an unimplemented candidate.
 
-Baseline: `ab6c61b9`; implementation checkpoint: `f03c9d65`. The focused
+Baseline: `ab6c61b9`; implementation checkpoint: `45d8d091`. The focused
 strict owner/control build passes 3,056 jobs, and source checks pass. Stable
 controls are in `Tests.CoalitionComparison`; representation candidates and
 rejections are retained under `Experimental/Exp177/`.

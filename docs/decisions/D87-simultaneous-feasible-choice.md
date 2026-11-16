@@ -123,7 +123,7 @@ frozen-parameter semantics, derived compactness, per-coordinate objectives,
 native game bridge and convexity rejection scope. Integration evidence is
 recorded in EXP-182 before collection.
 
-On checkpoint `4b089fe9`, `python scripts/audit.py` passes 3,876 default and
+On checkpoint `617d8847`, `python scripts/audit.py` passes 3,876 default and
 4,786 complete validation jobs, public lint, authored diagnostic checks and
 transitive standard-axiom checks. Existing terminal, belief and sequential
 existence consumers pass through the unchanged local-lottery statement. Raw

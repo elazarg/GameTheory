@@ -136,7 +136,7 @@ checks and independent read-only semantic reviews pass. Analytic use stays
 under `Analysis`, preserving D12. Complete integration evidence is recorded
 in EXP-183 before collection.
 
-On checkpoint `acfcf5cd`, `python scripts/audit.py` passes 3,877 default and
+On checkpoint `759fd54b`, `python scripts/audit.py` passes 3,877 default and
 4,792 complete validation jobs, public lint, authored diagnostic checks and
 transitive standard-axiom checks. Raw output is ignored
 `.codex/scratch/exp183/integration-audit.log`.

@@ -75,7 +75,7 @@ consumer retains its actual score and expectation semantics.
 
 ## Cost and validation
 
-The baseline is `80741987`, Lean 4.35.0 / Mathlib v4.35.0. The production proof
+The baseline is `f0557b0b`, Lean 4.35.0 / Mathlib v4.35.0. The production proof
 previously intersected inequalities for a fixed family of alternatives; the
 new theorem makes the missing assumption explicit for changing menus and
 reuses Mathlib's existing correspondence calculus. No record candidate or
@@ -104,7 +104,7 @@ meaning, nonlinear budget consumer and the closed-graph-only refutation.
 Integration evidence is recorded in EXP-181 before collection. Build counts
 do not imply a performance advantage.
 
-On checkpoint `ec2977ff`, `python scripts/audit.py` passes 3,876 default and
+On checkpoint `647938a6`, `python scripts/audit.py` passes 3,876 default and
 4,782 complete validation jobs, public lint, authored diagnostic checks and
 transitive standard-axiom checks. Raw output is ignored
 `.codex/scratch/exp181/integration-audit.log`.

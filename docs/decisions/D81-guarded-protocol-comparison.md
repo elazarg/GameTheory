@@ -77,7 +77,7 @@ of reducing existing numerical client length or accelerating elaboration.
 Reproduce with `python scripts/compare_context_judgment.py`. Raw generated
 sources, source counts, per-run diagnostics and timings live in ignored
 `.codex/scratch/exp176/`. The initial baseline is `13b85eb1`; the selected
-implementation checkpoint is `20adafa2`.
+implementation checkpoint is `23e525ef`.
 
 ## Validation and next boundary
 
