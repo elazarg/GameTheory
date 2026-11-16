@@ -10671,6 +10671,99 @@ observations and outcome below are preserved as the record of that run.
   proves that premise necessary. Native ownership remains adopted; the
   original independence argument remains historical evidence, not causality.
 
+## EXP-172: native CSLib computation certificates and search classes
+
+- **Date / status:** 2026-11-08–2026-11-09; complete, supporting the native API choice.
+- **Question / competing designs:** Can the optional companion use the
+  CSLib-based successor's encoded polynomial-time certificates and native
+  search classes directly, replacing its custom reduction and PPAD calculus,
+  while retaining the canonical game relations and probability laws?
+- **Representative slice:** binary certificate arithmetic, an independently
+  certified End-of-Line verifier, every-answer search reductions, and a Boolean
+  sample test with its exact verdict law. Compare the native active-edge
+  End-of-Line condition with the existing asymmetric pointer condition.
+- **Kill conditions:** a reduction preserves only some target answers; an
+  encoding change silently changes the game relation; a runtime claim follows
+  only from output length; a native witness changes the test's PMF law; or the
+  base resolves/imports the optional backend. Shared Lean release upgrades are
+  independent maintenance; this experiment does not adopt a release candidate.
+- **Artifacts / commands:** successor checkout
+  `cslib-community/complexitylib@054834a4a4e6ac3ec50ed770bacea7fc42eccc7d`;
+  local probes and transcripts under `.codex/scratch/cslib-port/`.
+- **Initial observation:** the successor's finite-tuple framing differs from
+  the historical format. Internal machine arguments can use native encodings;
+  concrete problem codecs require explicit semantic proofs. Native PPAD
+  membership can use the existing pointer family without serializing it into
+  a second circuit format. Outcome and decision remain pending validation.
+- **First measured result:** the stable-toolchain probe `lake build PortProbe`
+  passes 1,901 jobs against the selected successor and CSLib sources, using
+  the existing Mathlib 4.35.0 pin. The direct check of `Backend.WordOperations`
+  with `-DwarningAsError=true` has no diagnostics. These validate the native
+  certificate operations, not the still-pending search and game classifications.
+- **Arithmetic slice:** the word operations and exact binary addition/comparison
+  build passes 1,979 jobs with no stored first-party diagnostics. All 43 owned
+  declarations pass transitive standard-axiom checking. The audit now caches the
+  imported module-name array before traversing declarations; its allowed axioms
+  and private-declaration coverage are unchanged, and all four diagnostic and
+  private-axiom regression controls pass.
+- **Convention result:** `Backend.NativeEndOfLineSemantics` passes its focused
+  build (1,994 jobs) without diagnostics. For arbitrary pointer functions whose
+  predecessor fixes zero, native active-edge predicates agree with the base
+  consistent-edge predicates. With a genuine source, native witnesses are
+  exactly fixed-width non-source endpoints. Connecting the serialized problems
+  and their efficient reductions remains pending.
+- **Representation check:** multiplication's output width follows a
+  bit-dependent recurrence; replacing it by the usual sum of operand widths
+  would change serialized outputs. The native implementation retains that
+  recurrence and proves the original byte equations. Unsigned subtraction
+  retains an empty strict-underflow result and padded non-underflow zeros.
+  Native multiplication, subtraction and signed multiplication/order/negation
+  pass their focused builds (1,980 and 1,981 jobs), with no first-party
+  diagnostics; all 110 owned declarations in the expanded arithmetic and
+  convention slice have only standard transitive axioms.
+- **Closure limit:** the first stable-4.35 build of the probabilistic closure
+  reaches `Complexity.Probability.PMF.Bind`, whose proofs use generalized
+  infinite-sum APIs introduced after the selected stable Mathlib. The earlier
+  successful arithmetic/circuit checks therefore do not establish compatibility
+  of that larger closure. Continue validation in a separate scratch environment
+  matching the pinned upstream toolchain; keep the repository on stable releases
+  and complete the shared 4.36 bump when its final release is available. No
+  dependency source or tracked toolchain is patched to hide this observation.
+- **Native API result (2026-11-09):** the direct interface supports both
+  concrete endpoint and asymmetric raw completeness for native PPAD, across
+  arbitrary encoded instance types. Uniform circuit generation has an actual
+  polynomial-time serializer, including zero width. Origin masking requires
+  filtering inactive pointers; a source-aware decoder preserves every target
+  answer and returns the native zero witness when the source promise fails.
+  This supports replacing the local class calculus, rather than equating the
+  two pointer conventions. The focused matching-toolchain endpoint build
+  passes 4,472 jobs; all 598 owned declarations in the expanded arithmetic,
+  compiler and native classification closure have only standard transitive
+  axioms (`NativeFoundationAudit.lean`, `native-ppad-foundation-axioms.log`). The
+  4,488-job public-classification/control build also passes: broken initial
+  links, isolated inconsistent vertices, malformed circuits and width-zero
+  instances retain their prescribed answers.
+- **Probability result:** native preprocessing and intrinsic-halting compilation
+  preserve the full program PMF law, with one machine chosen before the sample
+  degree. The sample/serializer/composition/facade build passes 6,714 jobs; the
+  uniform-projection closure passes 6,112 jobs. All 58 owned declarations in
+  that closure have standard transitive axioms (`RandomizedAudit.lean`,
+  `randomized-axioms.log`). The base import/configuration/manifest source audit
+  passes. These matching-toolchain probes do not claim stable-4.35 compatibility
+  of the larger probability closure.
+- **Final design check:** the full matching-toolchain library/fixture build
+  passes 7,838 jobs; final lint/axiom-driver rebuilding passes 7,840 jobs. Public
+  lint, transitive axiom checks, 251 authored cached-diagnostic checks and 44
+  regressions pass. This extends the representative evidence to the complete
+  optional closure without weakening the semantic or execution kill conditions.
+- **Outcome:** complete; supports the native API choice in
+  [D77](decisions/D77-native-computation-certificates.md). The canonical relations,
+  PMF laws and every-answer reductions survive native certificates with actual
+  computation costs. The stable-4.35 probability failure remains preserved above
+  and is confirmed by the actual local audit and published-base targeted check.
+  Final stable-release maintenance and full consumer audits are blocked delivery
+  gates, recorded in the delivery ledger. No RC toolchain is adopted in tracked sources.
+
 ## EXP-173: preference-independent building blocks for gradual redesign
 
 Provenance for EXP-173 through EXP-186 and D78 through D92: job counts, timings
@@ -11377,96 +11470,3 @@ the measured ones by that workstream only.
   stable choice record is justified. Finish with a carrier-independent guarded
   comparison consumer check and the concrete extraction contract; do not expand
   into adjacent matching or demand theorem families.
-
-## EXP-172: native CSLib computation certificates and search classes
-
-- **Date / status:** 2026-11-08–2026-11-09; complete, supporting the native API choice.
-- **Question / competing designs:** Can the optional companion use the
-  CSLib-based successor's encoded polynomial-time certificates and native
-  search classes directly, replacing its custom reduction and PPAD calculus,
-  while retaining the canonical game relations and probability laws?
-- **Representative slice:** binary certificate arithmetic, an independently
-  certified End-of-Line verifier, every-answer search reductions, and a Boolean
-  sample test with its exact verdict law. Compare the native active-edge
-  End-of-Line condition with the existing asymmetric pointer condition.
-- **Kill conditions:** a reduction preserves only some target answers; an
-  encoding change silently changes the game relation; a runtime claim follows
-  only from output length; a native witness changes the test's PMF law; or the
-  base resolves/imports the optional backend. Shared Lean release upgrades are
-  independent maintenance; this experiment does not adopt a release candidate.
-- **Artifacts / commands:** successor checkout
-  `cslib-community/complexitylib@054834a4a4e6ac3ec50ed770bacea7fc42eccc7d`;
-  local probes and transcripts under `.codex/scratch/cslib-port/`.
-- **Initial observation:** the successor's finite-tuple framing differs from
-  the historical format. Internal machine arguments can use native encodings;
-  concrete problem codecs require explicit semantic proofs. Native PPAD
-  membership can use the existing pointer family without serializing it into
-  a second circuit format. Outcome and decision remain pending validation.
-- **First measured result:** the stable-toolchain probe `lake build PortProbe`
-  passes 1,901 jobs against the selected successor and CSLib sources, using
-  the existing Mathlib 4.35.0 pin. The direct check of `Backend.WordOperations`
-  with `-DwarningAsError=true` has no diagnostics. These validate the native
-  certificate operations, not the still-pending search and game classifications.
-- **Arithmetic slice:** the word operations and exact binary addition/comparison
-  build passes 1,979 jobs with no stored first-party diagnostics. All 43 owned
-  declarations pass transitive standard-axiom checking. The audit now caches the
-  imported module-name array before traversing declarations; its allowed axioms
-  and private-declaration coverage are unchanged, and all four diagnostic and
-  private-axiom regression controls pass.
-- **Convention result:** `Backend.NativeEndOfLineSemantics` passes its focused
-  build (1,994 jobs) without diagnostics. For arbitrary pointer functions whose
-  predecessor fixes zero, native active-edge predicates agree with the base
-  consistent-edge predicates. With a genuine source, native witnesses are
-  exactly fixed-width non-source endpoints. Connecting the serialized problems
-  and their efficient reductions remains pending.
-- **Representation check:** multiplication's output width follows a
-  bit-dependent recurrence; replacing it by the usual sum of operand widths
-  would change serialized outputs. The native implementation retains that
-  recurrence and proves the original byte equations. Unsigned subtraction
-  retains an empty strict-underflow result and padded non-underflow zeros.
-  Native multiplication, subtraction and signed multiplication/order/negation
-  pass their focused builds (1,980 and 1,981 jobs), with no first-party
-  diagnostics; all 110 owned declarations in the expanded arithmetic and
-  convention slice have only standard transitive axioms.
-- **Closure limit:** the first stable-4.35 build of the probabilistic closure
-  reaches `Complexity.Probability.PMF.Bind`, whose proofs use generalized
-  infinite-sum APIs introduced after the selected stable Mathlib. The earlier
-  successful arithmetic/circuit checks therefore do not establish compatibility
-  of that larger closure. Continue validation in a separate scratch environment
-  matching the pinned upstream toolchain; keep the repository on stable releases
-  and complete the shared 4.36 bump when its final release is available. No
-  dependency source or tracked toolchain is patched to hide this observation.
-- **Native API result (2026-11-09):** the direct interface supports both
-  concrete endpoint and asymmetric raw completeness for native PPAD, across
-  arbitrary encoded instance types. Uniform circuit generation has an actual
-  polynomial-time serializer, including zero width. Origin masking requires
-  filtering inactive pointers; a source-aware decoder preserves every target
-  answer and returns the native zero witness when the source promise fails.
-  This supports replacing the local class calculus, rather than equating the
-  two pointer conventions. The focused matching-toolchain endpoint build
-  passes 4,472 jobs; all 598 owned declarations in the expanded arithmetic,
-  compiler and native classification closure have only standard transitive
-  axioms (`NativeFoundationAudit.lean`, `native-ppad-foundation-axioms.log`). The
-  4,488-job public-classification/control build also passes: broken initial
-  links, isolated inconsistent vertices, malformed circuits and width-zero
-  instances retain their prescribed answers.
-- **Probability result:** native preprocessing and intrinsic-halting compilation
-  preserve the full program PMF law, with one machine chosen before the sample
-  degree. The sample/serializer/composition/facade build passes 6,714 jobs; the
-  uniform-projection closure passes 6,112 jobs. All 58 owned declarations in
-  that closure have standard transitive axioms (`RandomizedAudit.lean`,
-  `randomized-axioms.log`). The base import/configuration/manifest source audit
-  passes. These matching-toolchain probes do not claim stable-4.35 compatibility
-  of the larger probability closure.
-- **Final design check:** the full matching-toolchain library/fixture build
-  passes 7,838 jobs; final lint/axiom-driver rebuilding passes 7,840 jobs. Public
-  lint, transitive axiom checks, 251 authored cached-diagnostic checks and 44
-  regressions pass. This extends the representative evidence to the complete
-  optional closure without weakening the semantic or execution kill conditions.
-- **Outcome:** complete; supports the native API choice in
-  [D77](decisions/D77-native-computation-certificates.md). The canonical relations,
-  PMF laws and every-answer reductions survive native certificates with actual
-  computation costs. The stable-4.35 probability failure remains preserved above
-  and is confirmed by the actual local audit and published-base targeted check.
-  Final stable-release maintenance and full consumer audits are blocked delivery
-  gates, recorded in the delivery ledger. No RC toolchain is adopted in tracked sources.
