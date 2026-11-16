@@ -68,7 +68,8 @@ and affine finite expected scores. Its public statement and existing terminal
 and belief consumers must stay unchanged; its original bespoke fixed-point
 construction is replaced rather than retained as another engine.
 
-The quantity consumer proves each changing menu is `[0,1-opponentQuantity]`,
+The quantity consumer proves that membership in each changing menu
+`[0,1-opponentQuantity]` is exactly native affordability,
 with continuous clipping recovering feasible alternatives. The shared theorem
 constructs an analytic point, and explicit menu and score bridges recover
 the canonical interval-strategy profile's guarded affordable judgments.

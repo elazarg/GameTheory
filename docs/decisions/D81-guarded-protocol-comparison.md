@@ -74,7 +74,9 @@ bespoke transport was not a separate timed candidate. The selected factor is
 justified by useful nonnumeric judgment and independent guards, not by a claim
 of reducing existing numerical client length or accelerating elaboration.
 
-Reproduce with `python scripts/compare_context_judgment.py`. Raw generated
+Reproduce at commit `23e525ef` with `python scripts/compare_context_judgment.py`;
+the retained file has since adopted the shared `Math.IsOptimalOn`, so the line
+counts are those of that commit. Raw generated
 sources, source counts, per-run diagnostics and timings live in ignored
 `.codex/scratch/exp176/`. The initial baseline is `13b85eb1`; the selected
 implementation checkpoint is `23e525ef`.

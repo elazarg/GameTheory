@@ -37,7 +37,8 @@ remains individually rational. Mathlib's product inequality needs positive
 incumbent factors, weak gains everywhere and one strict gain. Other feasible
 points may lie on zero-gain boundaries, so global strict monotonicity of the
 product on the entire feasible set is stronger than needed. The existing
-unconditional weak-Pareto theorem remains unchanged. Empty-player evidence
+weak-Pareto theorem, which needs no positivity but assumes a nonempty player
+type, remains unchanged. Empty-player evidence
 must continue to compile without a nonemptiness assumption.
 
 ## Rejection controls and extraction

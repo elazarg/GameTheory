@@ -63,7 +63,7 @@ In the capacity-one allocation consumer, two singleton allocations are tied
 maximizers but their union is infeasible. The correspondence returns alternative
 **allocations**, not a bundle of simultaneously accepted agents. The independent
 represented-bundle control proves that flattening tied singleton-bundle indices
-into a union need not yield any represented feasible bundle.
+into a union need not yield any represented bundle.
 
 The local MathEconLib reference checkout at `58f602847d7f131994d32ca7a8cc1af35b7e2dbe`
 distinguishes these operations: `ChoiceFunction.ofBundleOrder` maximizes over

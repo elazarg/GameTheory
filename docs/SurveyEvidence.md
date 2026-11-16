@@ -1,5 +1,13 @@
 # Equilibrium information levels: GameTheory survey
 
+> **Status: pre-redesign survey (2026-11-10).** Statements about GameTheory describe
+> the library before EXP-173 through EXP-186. Several gaps recorded here are since
+> closed: the EFG Kuhn and Bayesian Nash bridges, strict Nash, improving steps and
+> weak acyclicity take arbitrary preferences; ordinal existence needs only a
+> finite-range rank in a preorder; strong Nash needs comparability of the compared
+> laws only; and `Math.FiniteChoice.rationalizable_iff` is a revealed-preference
+> theorem. D78 through D92 and the capability matrix record the current state.
+
 Nov 10, 2026 · @Elazar Gershuni
 
 Most GameTheory solution concepts only need a per-player comparison of the status quo against one deviation, yet many are stated with real-valued expected utility. The gap is largest in the language bridges and the Protocol/EFG family, where theorems that hold for every preference on outcome laws are proved only for expected utility.

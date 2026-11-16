@@ -114,6 +114,10 @@ theorem joint_acceptance_singleton {Contract : Type*}
     (Set.insert_subset (Or.inr member) Set.subset_union_left)
   exact ⟨accepted member, Set.mem_insert _ _⟩
 
+/-- Neither complementary contract is accepted when it is offered alone. -/
+theorem complements_singleton (contract : Bool) : contract ∉ complements {contract} := by
+  cases contract <;> simp [complements]
+
 /-- Rational choice over whole bundles cannot replace the contraction premise:
 the complementary pair is accepted jointly, but no singleton is accepted. -/
 theorem complements_joint_without_singletons :

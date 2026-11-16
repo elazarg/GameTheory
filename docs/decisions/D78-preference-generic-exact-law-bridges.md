@@ -24,8 +24,9 @@ Choose direct proofs: the two Kuhn proofs save four nonblank source lines and
 the Bayesian equivalence saves five against the coverage implementation, with
 zero new shared infrastructure in either case. The expected Bayesian theorem
 is derived from the generic theorem using `euPreference_map`, retaining both
-expectation-definedness guards. Kuhn's existing transfer theorem names now take
+expectation-definedness guards. Kuhn's existing EFG transfer theorem names now take
 a `WeakPreference` instead of utility; numerical callers pass `euPreference u`.
+The stochastic-game Kuhn transfers keep their expected-utility statements.
 
 Three alternating serialized whole-module process runs, with identical imports
 and Lean options, gave these median seconds:

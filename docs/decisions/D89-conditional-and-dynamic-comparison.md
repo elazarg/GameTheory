@@ -26,7 +26,7 @@ ties or an unavailable alternative.
 
 ## Positive clients and exact scope
 
-`Experimental.Exp184.Composition.conditional_optimal` reuses `Math.IsOptimalOn`.
+`conditional_optimal` in `Experimental.Exp184.Composition` reuses `Math.IsOptimalOn`.
 It needs conditional comparison only on the prior support, plus admissibility
 of the actual chosen and alternative whole laws and preservation of the actual
 conditional comparisons. It does not infer whole-law admissibility from
@@ -41,8 +41,9 @@ It does not establish imperfect-information policy realizability, generic SPE,
 PBE or sequential equilibrium. The existing information bridges retain their
 separate recall, measurability and terminal-rationality obligations.
 
-The existing possibility preference supplies arbitrary-PMF paired comparison
-preservation and fixed-base upper/lower mixture bounds. Its absence of real
+Lemmas proved for this experiment show that the possibility preference on
+Boolean outcomes preserves paired comparisons under an arbitrary mixing law and
+satisfies fixed-base upper/lower mixture bounds. Its absence of real
 expected-utility representation is already proved in `Tests.Potential`.
 `Tests.DynamicChoice` instantiates conditional composition with a
 stochastic continuation and backward composition with the existing fair-chance,

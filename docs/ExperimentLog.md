@@ -10673,6 +10673,12 @@ observations and outcome below are preserved as the record of that run.
 
 ## EXP-173: preference-independent building blocks for gradual redesign
 
+Provenance for EXP-173 through EXP-186 and D78 through D92: job counts, timings
+and merge-commit baselines were recorded on the original integration branch,
+whose tree also carried the EXP-172/D77 workstream. Implementation checkpoint
+hashes name the corresponding commits of this history, whose trees differ from
+the measured ones by that workstream only.
+
 - **Date / status:** 2026-11-10–11; complete; supports preference generalization with direct exact-law proofs.
 - **Question:** Do existing comparison-coverage theorems suffice to remove
   unnecessary expected utility from independent language bridges, without a
@@ -10840,8 +10846,8 @@ observations and outcome below are preserved as the record of that run.
 - **Artifacts / commands:** selected `Math.GuardedOptimality`, numerical
   `Protocol.Context` specialization and production law-coverage client;
   `Tests.ContextJudgment`, `Tests.ContextGuards`, and retained alternatives in
-  `Experimental/Exp176/Comparison.lean`. Reproduce size/timing comparisons with
-  `python scripts/compare_context_judgment.py`; raw artifacts remain in scratch.
+  `Experimental/Exp176/Comparison.lean`. Reproduce size/timing comparisons at
+  commit `23e525ef` with `python scripts/compare_context_judgment.py`; raw artifacts remain in scratch.
   Independent Math target passes 115 jobs; focused strict Protocol/control
   build passes 3,182 jobs; source audit passes.
 - **Integration validation:** on implementation checkpoint `23e525ef`,
@@ -11265,13 +11271,14 @@ observations and outcome below are preserved as the record of that run.
 - **Observations:** a total transitive quadratic law ranking strictly prefers
   both prescribed conditional actions, but strictly rejects their fair-prior
   composition. Actual laws are defined and both menus have genuine alternatives.
-  Existing non-EU possibility comparisons preserve arbitrary supported paired
-  mixtures and fixed-base bounds; a common continuation can erase strictness.
+  The non-EU possibility comparison on Boolean outcomes preserves arbitrary
+  supported paired mixtures and fixed-base bounds; a common continuation can erase strictness.
   Direct guarded conditional composition and well-founded chooser composition
   both instantiate without a new context record. Whole-law admissibility stays
   explicit; the backward argument uses the competing transition prior.
 - **Focused validation:** `lake --iofail build
-  GameTheory.Tests.DynamicChoice` passes 3,072 jobs, and
+  GameTheory.Tests.DynamicChoice` passes 3,072 jobs (measured while that module
+  was `Experimental.Exp184.Consumers`), and
   `python scripts/audit.py --source-only` passes. Evidence is under
   `Experimental/Exp184/{Composition,Controls}.lean`, `Tests/DynamicChoice.lean` and
   [D89](decisions/D89-conditional-and-dynamic-comparison.md). Independent
@@ -11351,8 +11358,8 @@ observations and outcome below are preserved as the record of that run.
   substitutes/IRC/path-independence formulas but fails item WARP and expansion.
   Canonical greatest choice over quota-feasible bundles uniquely rationalizes
   the same map, with set/finite identity proved. Complementary contracts are
-  likewise uniquely bundle-rationalized and WARP-consistent but refute
-  substitutes and the joint-to-singleton acceptance step. Empty offers select
+  likewise uniquely bundle-rationalized and WARP-consistent but refute the
+  contraction form of substitutes and the joint-to-singleton acceptance step. Empty offers select
   the empty bundle rather than an empty correspondence.
 - **Focused validation:** `lake --iofail build
   GameTheory.Experimental.Exp186.Institution` passes 782 jobs; its dependency

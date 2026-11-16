@@ -27,7 +27,7 @@ and Sen's expansion formula `C(S) ∩ C(T) ⊆ C(S ∪ T)`. Contract 2 is accept
 alongside either higher-priority contract and rejected when both are offered.
 
 The *same* acceptance map is the uniquely maximizing quota-feasible bundle
-under weights `4,2,1`. `Institution.quota_coe` proves identity between the
+under weights `4,2,1`. `quota_coe` in `Experimental.Exp186.Institution` proves identity between the
 set-based map and finite bundle representation. Canonical `FiniteChoice.best`
 on bundle alternatives satisfies WARP. Thus item WARP and bundle WARP have
 different domains even for ordinary responsive quota behavior.
@@ -35,8 +35,8 @@ different domains even for ordinary responsive quota behavior.
 Complementary Boolean contracts provide the converse control: accept both
 together and reject either alone. Scores pair=2, empty=1, singleton=0 uniquely
 rationalize this whole-bundle choice, with global bundle-menu WARP. The set and
-finite maps are again proved identical. It fails substitutes and the actual
-joint-to-singleton implication: the pair is accepted together while no proposed
+finite maps are again proved identical. It fails the contraction form of substitutes and the
+actual joint-to-singleton implication: the pair is accepted together while no proposed
 contract is accepted alone. Rational bundle choice is insufficient for that
 institutional composition step.
 

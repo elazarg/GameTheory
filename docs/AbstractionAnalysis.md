@@ -1,6 +1,14 @@
 # Abstraction analysis
 
-A solution concept is a verdict on candidates, and everything a library stores beyond that verdict buys either more questions or more consistency. This tab gives the library-neutral analysis; the Survey evidence tab holds the GameTheory item tables it draws on.
+> **Status: pre-redesign survey (2026-11-10).** Statements about GameTheory describe
+> the library before EXP-173 through EXP-186. Several gaps recorded here are since
+> closed: the EFG Kuhn and Bayesian Nash bridges, strict Nash, improving steps and
+> weak acyclicity take arbitrary preferences; ordinal existence needs only a
+> finite-range rank in a preorder; strong Nash needs comparability of the compared
+> laws only; and `Math.FiniteChoice.rationalizable_iff` is a revealed-preference
+> theorem. D78 through D92 and the capability matrix record the current state.
+
+A solution concept is a verdict on candidates, and everything a library stores beyond that verdict buys either more questions or more consistency. This document gives the library-neutral analysis; [SurveyEvidence.md](SurveyEvidence.md) holds the GameTheory item tables it draws on.
 
 ## The invariance test
 
@@ -77,8 +85,6 @@ Order and Mixable add laws as hypotheses on `weakly`; Slack and Cardinal add ins
 ## Forgetful maps and representation theorems
 
 Moving down the ladder always works and loses information; moving up needs a representation theorem with hypotheses, and that is where much of economic theory lives.
-
-&#91;embedded content: judgment ladder · forgetful maps and representation theorems\]
 
 Every forgetful map must preserve the verdict, so a theorem proved at a lower level applies after forgetting. Each upward arrow carries its own hypotheses.
 
@@ -224,7 +230,7 @@ Its one place matching the relation-based design is the tree layer: `GameTree.to
 
 ## Design principles
 
-Nine principles follow from the evidence; each names the finding it rests on. GameTheory-specific options are on the Survey evidence tab, under Design options.
+Nine principles follow from the evidence; each names the finding it rests on. GameTheory-specific options are in [SurveyEvidence.md](SurveyEvidence.md), under Design options.
 
 1. **State a result at the lowest level that passes the invariance test.** If the proof never inspects the preference, the statement should not fix one. The Kuhn transfer's `congrArg₂` proof is the clearest case.
 2. **Give a level its own structure only when it has its own notion of map and a client.** MathEconLib's `ComparisonMixture` is a level-specific structure with no library client yet.
