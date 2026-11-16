@@ -111,7 +111,7 @@ theorem routingWireStepBits_eq_encode (ruler i j x y : List Bool) (incoming : Bo
   all_goals split_ifs <;>
     simp_all only [coordinateFields_eq_encode, routingAddBits_value,
       routingSaturatingPredBits_value, bitsOne] <;> simp_all
-  all_goals split_ifs <;> rfl
+  split_ifs <;> rfl
 
 /-- Each wire step emits two complete canonical routing coordinate fields. -/
 @[simp] theorem routingWireStepBits_length (ruler i j x y : List Bool) (incoming : Bool) :

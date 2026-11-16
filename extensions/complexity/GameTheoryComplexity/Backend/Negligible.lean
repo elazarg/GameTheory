@@ -16,7 +16,7 @@ two-sided negligible decay of a real advantage. -/
 theorem negligible_iff (f : ℕ → ℝ) :
     Cslib.Crypto.Negligible (fun κ => ‖f κ‖₊) ↔ GameTheory.Math.Negligible f := by
   rw [Cslib.Crypto.negligible_iff_coe]
-  simpa only [coe_nnnorm, Real.norm_eq_abs, Nat.abs_cast] using
+  simpa only [coe_nnNorm, Real.norm_eq_abs, Nat.abs_cast] using
     (Asymptotics.superpolynomialDecay_iff_superpolynomialDecay_abs
       Filter.atTop (fun κ : ℕ => (κ : ℝ)) f).symm
 

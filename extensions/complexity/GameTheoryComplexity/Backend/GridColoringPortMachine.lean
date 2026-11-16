@@ -44,7 +44,7 @@ theorem coloringDirectionBits_value (x y u v : List Bool) :
   simp only [coloringDirectionBits, routingEQFlag_value, routingAddBits_value,
     show lsbValue [true] = 1 from rfl, gridDirection]
   split_ifs <;> simp_all [andFlag, select]
-  all_goals split_ifs <;> simp_all
+  split_ifs <;> simp_all
 
 /-- Direction extraction charges four native coordinate producers and fixed selectors. -/
 @[fun_prop] theorem coloringDirectionBits_polyTime

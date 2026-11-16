@@ -121,7 +121,7 @@ theorem binaryWordMul_length (x y : List Bool) :
     (fun a count bit _ => by
       simp only [encUnary_apply, List.length_replicate]
       cases bit <;> simp [mulWidthStep]
-      all_goals omega)
+      omega)
   have hwidth : ComputableInPolyTime (fun a => binaryWordMulWidth (x a) (y a).length)
       input encUnary := by
     simpa only [Function.comp_def, List.foldl_reverse, binaryWordMulWidth, mulWidthStep] using hfold

@@ -503,7 +503,7 @@ private theorem negativeBase_length (axis : Fin 2) (source : List Bool) :
       BrouwerNashLayout.precision (CircuitWords.first source).length + 7 +
         axis.val * BrouwerNashLayout.precision (CircuitWords.first source).length := by
   fin_cases axis <;> simp [negativeBase, BrouwerNashHeaders.precisionRuler_length]
-  all_goals omega
+  omega
 
 private theorem negativePredecessor_length (axis : Fin 2) (ordinal source : List Bool) :
     (negativePredecessor axis source ordinal).length =
