@@ -44,7 +44,7 @@ separate recall, measurability and terminal-rationality obligations.
 The existing possibility preference supplies arbitrary-PMF paired comparison
 preservation and fixed-base upper/lower mixture bounds. Its absence of real
 expected-utility representation is already proved in `Tests.Potential`.
-`Experimental.Exp184.Consumers` instantiates conditional composition with a
+`Tests.DynamicChoice` instantiates conditional composition with a
 stochastic continuation and backward composition with the existing fair-chance,
 consequential-decision protocol, against every state-aware competing chooser.
 Adding a common sure-success continuation destroys a strict possibility

@@ -108,7 +108,7 @@ entries below, following the initial feasibility survey.
 | EXP-092 | 2026-08-14 | post-review client gate / stochastic games | Can a client prove a nonstationary stochastic result through public proof views? | Narrows; public policy/profile layer passes | `GameTheory/Experimental/PostArchitecture/StochasticClientAdequacy.lean` |
 | EXP-093 | 2026-08-14 | post-review client gate / transformations | Can executable trace payoffs survive heterogeneous relabeling and canonical Nash transport? | Supports existing transformation surface | `GameTheory/Experimental/PostArchitecture/ExecutableClientAdequacy.lean` |
 | EXP-094 | 2026-08-14 | post-review client gate / probability | Can finite-law Markov bounds feed canonical approximate equilibrium and posterior arguments? | Supports; promotes bounds facade | `GameTheory/Math/Probability/Bounds.lean`; `GameTheory/Experimental/PostArchitecture/ProbabilityTailAdequacy.lean` |
-| EXP-095 | 2026-08-14 | post-review client gate / sequential games | Can EFG clients prove history-dependent SPE without support-proof transport? | Supports after one helper | `GameTheory/Protocol/SubgamePerfect.lean`; `GameTheory/Experimental/PostArchitecture/SequentialClientAdequacy.lean` |
+| EXP-095 | 2026-08-14 | post-review client gate / sequential games | Can EFG clients prove history-dependent SPE without support-proof transport? | Supports after one helper | `GameTheory/Protocol/SubgamePerfect.lean`; `GameTheory/Tests/SequentialClientAdequacy.lean` |
 | EXP-096 | 2026-08-14 | D12 / hosted reachability maintenance | Does `Polynomial` still identify an Analysis leak from stable Repeated? | Refutes proxy; boundary narrowed to direct probes | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
 | EXP-097 | 2026-08-14 | post-review client gate / implementation theory | Can profile-observed transfers induce target sets through canonical dominance semantics? | Supports; decides D54 | [`decisions/D54-profile-transfer-implementation.md`](decisions/D54-profile-transfer-implementation.md); `GameTheory/Mechanism/Implementation.lean`; `GameTheory/Tests/Implementation.lean` |
 | EXP-098 | 2026-08-14 | hosted reachability maintenance | Did review-time namespace and import cleanup leave positive probes stale? | Four stale expectations and probe exit state repaired; hosted gate passes | [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
@@ -119,7 +119,7 @@ entries below, following the initial feasibility survey.
 | EXP-108 | 2026-08-16 | future stochastic asymptotic gate | Can an opt-in infinite-path layer expose `E[liminf Aₙ]`, `E[limsup Aₙ]`, and `limₙ E[Aₙ]` as distinct notions, then support a cyclic subgame-perfect uniform-equilibrium interface without a second runner or coercions among terminal, limiting-average, and uniform concepts? | In progress; EXP-113 closes the canonical nonconstant game-path consumer, while EXP-114's hostile cyclic-uniform test remains blocked at public event/transition congruence; current verdicts are unchanged | [`AsymptoticPayoffSeparation.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticPayoffSeparation.lean); [`AsymptoticOscillatingSequence.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticOscillatingSequence.lean); [`StochasticInfinitePlayMeasure.lean`](../GameTheory/Experimental/PostArchitecture/StochasticInfinitePlayMeasure.lean); [`StochasticAsymptoticPayoffs.lean`](../GameTheory/Experimental/PostArchitecture/StochasticAsymptoticPayoffs.lean); no API adoption |
 | EXP-109 | 2026-08-16 | D56 / executable MAID pruning check | Can explicit finite graph search decide the experiment-only restore-all edge-addition fixpoint predicate without stored finiteness, classical execution, or an unproved minimality/confluence claim? | Complete checker-only result; executable stable-at/fixpoint checks are exact, while construction, minimality, and confluence remain unclaimed | [`MAIDPruningFixpointChecker.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointChecker.lean); [`MAIDPruningFixpointCheckerTest.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointCheckerTest.lean) |
 | EXP-110 | 2026-08-16 | D2 / countable discrete probability | Can an opt-in direct-`PMF` layer recover a genuinely infinite-support stopping law without weakening the finite-support `FinDist` core or introducing another probability abstraction? | Complete; direct PMF stopping law validates the separate countable layer, and EXP-112 subsequently validates bounded expectation | [`CountableDiscreteStopping.lean`](../GameTheory/Experimental/PostArchitecture/CountableDiscreteStopping.lean) |
-| EXP-111 | 2026-08-16 | stochastic public-history coherence | Can canonical protocol traces expose exactly which proof-free public histories are realizable, so profile agreement there implies runner and finite-average-payoff congruence? | Complete hostile result; forged-history agreement preserves laws/payoffs and a realizable-history change alters both, with promotion still consumer-gated | [`StochasticPublicHistoryCoherence.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherence.lean); [`StochasticPublicHistoryCoherenceTest.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherenceTest.lean) |
+| EXP-111 | 2026-08-16 | stochastic public-history coherence | Can canonical protocol traces expose exactly which proof-free public histories are realizable, so profile agreement there implies runner and finite-average-payoff congruence? | Complete hostile result; forged-history agreement preserves laws/payoffs and a realizable-history change alters both, with promotion still consumer-gated | [`StochasticPublicHistoryCoherence.lean`](../GameTheory/Tests/StochasticPublicHistoryCoherence.lean); [`StochasticPublicHistoryCoherenceTest.lean`](../GameTheory/Tests/StochasticPublicHistoryCoherenceTest.lean) |
 | EXP-112 | 2026-08-16 | D2 / countable PMF expectation | Can the countable layer expose bounded real expectations and preserve finite-law expectations without duplicating `FinDist.expect` or hiding summability? | Complete experiment-only result; bounded Bochner integration preserves `FinDist.expect` and computes the geometric consumer | [`CountablePMFExpectation.lean`](../GameTheory/Experimental/PostArchitecture/CountablePMFExpectation.lean) |
 | EXP-113 | 2026-08-17 | future stochastic asymptotic gate | Can a genuinely nonconstant canonical stochastic game path consume the EXP-108 infinite-play and asymptotic-payoff interfaces without a second runner or expectation/limit interchange? | Complete experiment-only result; canonical fair absorbing game validates all three distinct asymptotic payoff orders | [`StochasticGamePathPayoff.lean`](../GameTheory/Experimental/PostArchitecture/StochasticGamePathPayoff.lean) |
 | EXP-114 | 2026-08-17 | cyclic stochastic uniformity | Can uniform equilibrium be required at every canonical restart phase without identifying it with terminal SPE or limiting-average payoff? | In progress; canonical all-phase predicate and positive cyclic control compile, hostile off-phase rejection pending | [`CyclicUniformInterface.lean`](../GameTheory/Experimental/PostArchitecture/CyclicUniformInterface.lean) |
@@ -3837,9 +3837,9 @@ memory.
   counterfactual-reach/CFR and continuation-coefficient spines.
 - **Artifacts / commands:**
   `GameTheory/Languages/FOSG/Kuhn.lean`;
-  `GameTheory/Experimental/PostArchitecture/FOSGKuhn.lean`;
+  `GameTheory/Tests/FOSGKuhn.lean`;
   `GameTheory/Tests/Randomized.lean`;
-  `lake build GameTheory.Experimental.PostArchitecture.FOSGKuhn` (1,724
+  `lake build GameTheory.Tests.FOSGKuhn` (1,724
   jobs); `lake build` (3,415 jobs); Phase 2 static, Phase 3 full reachability,
   and coverage audits in expected verification mode.
 - **Observations / measurements:** the 39 pinned native history/marginal rows
@@ -3901,8 +3901,8 @@ memory.
   the law file consumes its posterior-locality and lift machinery for the
   native mixed/behavioral and equilibrium-transfer spine.
 - **Artifacts / commands:**
-  `GameTheory/Experimental/PostArchitecture/FOSGObservationFacts.lean`;
-  `lake build GameTheory.Experimental.PostArchitecture.FOSGObservationFacts`
+  `GameTheory/Tests/FOSGObservationFacts.lean`;
+  `lake build GameTheory.Tests.FOSGObservationFacts`
   (1,724 jobs); `lake build` (3,416 jobs); Phase 2 static and exact ledger /
   coverage audits in expected verification mode.
 - **Kill conditions:** retain no survivor that mentions `ObsModelCore`, a
@@ -6015,7 +6015,7 @@ observations and outcome below are preserved as the record of that run.
   experimental leaf and any promoted narrow owner; run fast source audits and
   `git diff --check`; do not run deep reachability locally.
 - **Artifacts / observations:**
-  `Experimental.PostArchitecture.SequentialClientAdequacy` reuses the existing
+  `Tests.SequentialClientAdequacy` reuses the existing
   two-decision perfect-recall EFG and defines only client plans and payoff. The
   incumbent starts with `up` and at its second information state returns the
   remembered first vote; its two second-stage actions are proved distinct, so
@@ -7157,7 +7157,7 @@ observations and outcome below are preserved as the record of that run.
   survive same-player updates, or a payoff congruence proved from duplicated
   semantics instead of the canonical run law.
 - **Observations:**
-  [`StochasticPublicHistoryCoherence.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherence.lean)
+  [`StochasticPublicHistoryCoherence.lean`](../GameTheory/Tests/StochasticPublicHistoryCoherence.lean)
   is a 262-line specialization of the canonical protocol runner. It defines
   realizability as an exact trace image and agreement on that image, proves
   reflexivity/symmetry/transitivity and same-replacement preservation, then
@@ -7166,12 +7166,12 @@ observations and outcome below are preserved as the record of that run.
   record with the correct source/action but a zero-support target is formally
   unrealizable; changing policy only there preserves every finite-horizon law
   and payoff.
-  [`StochasticPublicHistoryCoherenceTest.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherenceTest.lean)
+  [`StochasticPublicHistoryCoherenceTest.lean`](../GameTheory/Tests/StochasticPublicHistoryCoherenceTest.lean)
   closes the nearby rejection in 114 lines: the empty history is canonically
   realizable, the live policy fails agreement there, its one-step public law
   differs from the canonical law, and player `false`'s one-step finite-average
   payoff changes from `0` to `1`.
-  `lake build GameTheory.Experimental.PostArchitecture.StochasticPublicHistoryCoherence`
+  `lake build GameTheory.Tests.StochasticPublicHistoryCoherence`
   passed 1,736 jobs warning-free; the focused hostile-test build passed 1,737
   jobs warning-free. Source audits found no second runner, duplicated execution
   induction, transport, placeholder, option, or lint-suppression token.
@@ -7360,7 +7360,7 @@ observations and outcome below are preserved as the record of that run.
   GameTheory.Languages.FOSG.Kuhn
   GameTheory.Experimental.PostArchitecture.KuhnFiniteSupport
   GameTheory.Tests.EFGKuhn GameTheory.Tests.EFGKuhnNash
-  GameTheory.Experimental.PostArchitecture.FOSGKuhn` (1,735 jobs).
+  GameTheory.Tests.FOSGKuhn` (1,735 jobs).
 - **Observations / measurements:** `Nat` is the hostile information carrier,
   and the two-round behavioral support reaches both decision states `0` and
   `1`. A finite dependent product over the support sites realizes its complete
@@ -11271,7 +11271,7 @@ observations and outcome below are preserved as the record of that run.
   both instantiate without a new context record. Whole-law admissibility stays
   explicit; the backward argument uses the competing transition prior.
 - **Focused validation:** `lake --iofail build
-  GameTheory.Experimental.Exp184.Consumers` passes 3,072 jobs, and
+  GameTheory.Tests.DynamicChoice` passes 3,072 jobs, and
   `python scripts/audit.py --source-only` passes. Evidence is under
   `Experimental/Exp184/{Composition,Controls,Consumers}.lean` and
   [D89](decisions/D89-conditional-and-dynamic-comparison.md). Independent

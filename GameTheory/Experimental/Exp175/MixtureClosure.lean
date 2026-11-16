@@ -11,7 +11,7 @@ client's source of actual-law expectation-definedness.
 -/
 
 public import GameTheory.Core.Utility
-public import GameTheory.Tests.InfiniteExpectation
+public import GameTheory.Examples.Lotteries
 
 @[expose] public section
 
@@ -118,7 +118,7 @@ theorem supportPreference_strict_pure (law : PMF ℕ) (hinfinite : law.support.I
     simpa only [PMF.support_pure] using Set.finite_singleton n
   · exact hinfinite hlaw
 
-open GameTheory.Tests.InfiniteExpectation in
+open GameTheory.Examples.Lotteries (halving) in
 /-- Every natural has positive mass in this countably supported law. -/
 theorem halving_support : halving.support = Set.univ := by
   apply Set.eq_univ_of_forall
@@ -127,7 +127,7 @@ theorem halving_support : halving.support = Set.univ := by
   show ENNReal.ofReal ((1 : ℝ) / 2 / 2 ^ n) ≠ 0
   exact (ENNReal.ofReal_pos.mpr (by positivity)).ne'
 
-open GameTheory.Tests.InfiniteExpectation in
+open GameTheory.Examples.Lotteries (halving) in
 theorem halving_support_infinite : halving.support.Infinite := by
   rw [halving_support]
   exact Set.infinite_univ
@@ -138,7 +138,7 @@ theorem every_pure_below_base (n : ℕ) :
   right
   simpa only [PMF.support_pure] using Set.finite_singleton n
 
-open GameTheory.Tests.InfiniteExpectation in
+open GameTheory.Examples.Lotteries (halving) in
 /-- Binary convexity, even with a total preorder, does not preserve this upper
 bound when countably many pure laws are mixed. -/
 theorem countable_mixture_escapes_bound :
@@ -146,7 +146,7 @@ theorem countable_mixture_escapes_bound :
   rw [PMF.bind_pure]
   exact (supportPreference_strict_pure halving halving_support_infinite 0).2
 
-open GameTheory.Tests.InfiniteExpectation in
+open GameTheory.Examples.Lotteries (halving) in
 theorem binary_convex_not_countably_closed :
     Preference.Reflexive supportPreference ∧
     Preference.Transitive supportPreference ∧

@@ -8,30 +8,31 @@ public import GameTheory.Tests.Backward
 
 noncomputable section
 
-namespace GameTheory.Experimental.DynamicChoice
+namespace GameTheory.Tests.DynamicChoice
 
 open GameTheory.Math GameTheory.Math.Probability GameTheory.Tests
+open GameTheory.Experimental.DynamicChoice
 open GameTheory.Protocol ExecutionProtocol
 
 /-- Every prescribed conditional law makes success possible, including the
 genuinely stochastic continuation at the false signal. -/
 theorem possibility_conditionally_optimal (signal : Bool) :
     IsOptimalOn (fun _ : Bool => True)
-      (fun first second => Potential.supportPreference ()
+      (fun first second => Examples.Lotteries.supportPreference ()
         (branch signal first) (branch signal second)) (menu signal) signal := by
   refine ⟨trivial, fun _ _ => trivial, fun _ _ => Or.inl ?_⟩
   cases signal
-  · exact Potential.true_mem_supportFairLaw
+  · exact Examples.Lotteries.true_mem_supportFairLaw
   · simp [branch]
 
 /-- The direct conditional theorem supplies whole-policy optimality for a
 preference already proved not to have a real expected-utility representation. -/
 theorem possibility_whole_optimal :
     IsOptimalOn (fun _ : Bool → Bool => True)
-      (fun first second => Potential.supportPreference () (play first) (play second))
+      (fun first second => Examples.Lotteries.supportPreference () (play first) (play second))
       {policy | ∀ signal ∈ prior.support, policy signal ∈ menu signal} id := by
   apply conditional_optimal prior branch (fun _ => True)
-    (Potential.supportPreference ()) menu id
+    (Examples.Lotteries.supportPreference ()) menu id
   · exact fun signal _ => possibility_conditionally_optimal signal
   · trivial
   · exact fun _ _ => trivial
@@ -41,12 +42,12 @@ theorem possibility_whole_optimal :
 /-- Weak mixture preservation does not imply preservation of a strict
 comparison when a common continuation is added with positive probability. -/
 theorem possibility_strict_cancellation_fails :
-    Rank.strict (Potential.supportPreference ()) (PMF.pure true) (PMF.pure false) ∧
-    ¬ Rank.strict (Potential.supportPreference ())
+    Rank.strict (Examples.Lotteries.supportPreference ()) (PMF.pure true) (PMF.pure false) ∧
+    ¬ Rank.strict (Examples.Lotteries.supportPreference ())
       (mix (1 / 2) (by norm_num) (by norm_num) (PMF.pure true) (PMF.pure true))
       (mix (1 / 2) (by norm_num) (by norm_num) (PMF.pure false) (PMF.pure true)) := by
   constructor
-  · simp [Rank.strict, Potential.supportPreference]
+  · simp [Rank.strict, Examples.Lotteries.supportPreference]
   · intro strict
     apply strict.2
     exact Or.inl (mem_support_mix_right _ _ _ (by norm_num) (by simp))
@@ -60,7 +61,7 @@ def success : Spot → Bool
   | _ => false
 
 def prefers (first second : PMF Spot) : Prop :=
-  Potential.supportPreference () (first.map success) (second.map success)
+  Examples.Lotteries.supportPreference () (first.map success) (second.map success)
 
 theorem prefers_reflexive (law : PMF Spot) : prefers law law := by
   exact Classical.em (true ∈ (law.map success).support)
@@ -76,7 +77,7 @@ theorem prefers_transitive (first middle last : PMF Spot)
 theorem prefers_bind (law : PMF Spot) (first second : Spot → PMF Spot)
     (comparisons : ∀ state ∈ law.support, prefers (first state) (second state)) :
     prefers (law.bind first) (law.bind second) := by
-  change Potential.supportPreference () ((law.bind first).map success)
+  change Examples.Lotteries.supportPreference () ((law.bind first).map success)
     ((law.bind second).map success)
   simp only [PMF.map_bind]
   exact supportPreference_bind law _ _ comparisons
@@ -117,4 +118,4 @@ theorem grab_whole_optimal (state : Spot) :
 
 end Sequential
 
-end GameTheory.Experimental.DynamicChoice
+end GameTheory.Tests.DynamicChoice

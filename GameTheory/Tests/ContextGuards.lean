@@ -19,7 +19,8 @@ noncomputable section
 namespace GameTheory.Tests.ContextGuards
 
 open GameTheory.Math.Probability GameTheory.Protocol
-open GameTheory.Tests.InfiniteExpectation (halving loss loss_nonneg weighted_loss)
+open GameTheory.Tests.InfiniteExpectation (loss loss_nonneg weighted_loss)
+open GameTheory.Examples.Lotteries (halving)
 open scoped ENNReal
 
 /-- The sign is retained in the realized outcome. -/

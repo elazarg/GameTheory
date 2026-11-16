@@ -21,14 +21,14 @@ namespace GameTheory.Tests.ChoiceConsumers
 open GameTheory.Math
 
 def responseRank (chosen alternative : Bool) : Prop :=
-  Potential.supportPreference ()
+  Examples.Lotteries.supportPreference ()
     (Potential.form.play (Profile.update Potential.falseProfile () chosen))
     (Potential.form.play (Profile.update Potential.falseProfile () alternative))
 
 theorem responseRank_iff (chosen alternative : Bool) :
     responseRank chosen alternative ↔ chosen = true ∨ alternative = false := by
   cases chosen <;> cases alternative <;>
-    simp [responseRank, Potential.supportPreference, Potential.form, Profile.update_same]
+    simp [responseRank, Examples.Lotteries.supportPreference, Potential.form, Profile.update_same]
 
 def responseChoice : Finset Bool → Set Bool := FiniteChoice.best responseRank
 
@@ -51,9 +51,9 @@ theorem responseChoice_consistent :
 predicate, with the previously proved non-EU preference. -/
 theorem selected_iff_bestResponse (candidate : Bool) :
     candidate ∈ responseChoice Finset.univ ↔
-      IsBestResponse Potential.form Potential.supportPreference ()
+      IsBestResponse Potential.form Examples.Lotteries.supportPreference ()
         Potential.falseProfile candidate :=
-  (isBestResponse_iff_mem_best Potential.form Potential.supportPreference ()
+  (isBestResponse_iff_mem_best Potential.form Examples.Lotteries.supportPreference ()
     Potential.falseProfile candidate).symm
 
 theorem revealed_response_recovers_comparisons (chosen alternative : Bool) :
@@ -64,7 +64,7 @@ theorem revealed_response_recovers_comparisons (chosen alternative : Bool) :
 actions alone do not identify that global preference from observed choice. -/
 theorem response_preference_not_expectedUtility :
     ¬ ∃ utility : Bool → Unit → ℝ,
-      Potential.supportPreference = euPreference utility :=
+      Examples.Lotteries.supportPreference = euPreference utility :=
   Potential.supportPreference_not_expectedUtility
 
 namespace Allocation

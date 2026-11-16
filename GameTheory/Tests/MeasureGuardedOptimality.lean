@@ -46,7 +46,7 @@ local instance : MeasurableSpace (Option ℕ) := ⊤
 
 def laws (action : Bool) : Measure (Option ℕ) :=
   if action then (PMF.pure none).toMeasure
-  else (InfiniteExpectation.halving.map some).toMeasure
+  else (Examples.Lotteries.halving.map some).toMeasure
 
 instance laws_isProbabilityMeasure (action : Bool) : IsProbabilityMeasure (laws action) := by
   cases action <;> dsimp [laws] <;> infer_instance
@@ -64,7 +64,7 @@ theorem home_admissible : admissible true := by
 theorem gamble_not_admissible : ¬ admissible false := by
   intro defined
   apply InfiniteExpectation.gamble_not_integrable
-  exact (payoffIntegrable_iff_integrable (InfiniteExpectation.halving.map some) payoff).mpr
+  exact (payoffIntegrable_iff_integrable (Examples.Lotteries.halving.map some) payoff).mpr
     defined
 
 theorem home_score : score true = 0 := by

@@ -22,10 +22,10 @@ open GameTheory.Math GameTheory.Math.Probability
 /-- Three genuinely different lotteries, including the fair mixture. -/
 def law (action : Fin 3) : PMF Bool :=
   if action = 0 then PMF.pure false else
-    if action = 1 then PMF.pure true else Potential.supportFairLaw
+    if action = 1 then PMF.pure true else Examples.Lotteries.supportFairLaw
 
 def rank (chosen alternative : Fin 3) : Prop :=
-  Potential.supportPreference () (law chosen) (law alternative)
+  Examples.Lotteries.supportPreference () (law chosen) (law alternative)
 
 theorem rank_reflexive (action : Fin 3) : rank action action := by
   classical
@@ -69,8 +69,8 @@ def profile : Profile signature := fun _ => 0
 which the possibility preference happens to agree with a binary utility. -/
 theorem selected_iff_bestResponse (candidate : Fin 3) :
     candidate ∈ choices Finset.univ ↔
-      IsBestResponse form Potential.supportPreference () profile candidate :=
-  (isBestResponse_iff_mem_best form Potential.supportPreference () profile candidate).symm
+      IsBestResponse form Examples.Lotteries.supportPreference () profile candidate :=
+  (isBestResponse_iff_mem_best form Examples.Lotteries.supportPreference () profile candidate).symm
 
 /-- No real expected utility even reproduces the comparisons among these
 three observed action laws. -/
@@ -81,22 +81,23 @@ theorem comparisons_not_expectedUtility :
   have hnot : ¬ euPreference candidate () (PMF.pure false) (PMF.pure true) := by
     intro hcomparison
     have hbad := (represents 0 1).mpr (by simpa [law] using hcomparison)
-    simp [rank, law, Potential.supportPreference] at hbad
+    simp [rank, law, Examples.Lotteries.supportPreference] at hbad
   have hnotBound := (euPreference_iff candidate () (PMF.pure false) (PMF.pure true)
     (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)).not.mp hnot
   have hpossibility : rank 2 1 := by
     simpa [rank, law] using
-      (show Potential.supportPreference () Potential.supportFairLaw (PMF.pure true) from
-        Or.inl Potential.true_mem_supportFairLaw)
-  have hfair : euPreference candidate () Potential.supportFairLaw (PMF.pure true) := by
+      (show Examples.Lotteries.supportPreference () Examples.Lotteries.supportFairLaw
+          (PMF.pure true) from
+        Or.inl Examples.Lotteries.true_mem_supportFairLaw)
+  have hfair : euPreference candidate () Examples.Lotteries.supportFairLaw (PMF.pure true) := by
     simpa [law] using (represents 2 1).mp hpossibility
   have hfairBound :=
-    (euPreference_iff candidate () Potential.supportFairLaw (PMF.pure true)
+    (euPreference_iff candidate () Examples.Lotteries.supportFairLaw (PMF.pure true)
       (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)).mp hfair
   have hmix := expectedUtility_mix candidate () (1 / 2) (by norm_num) (by norm_num)
     (PMF.pure true) (PMF.pure false)
     (payoffIntegrable_of_finite _ _) (payoffIntegrable_of_finite _ _)
-  dsimp only [Potential.supportFairLaw] at hfairBound
+  dsimp only [Examples.Lotteries.supportFairLaw] at hfairBound
   rw [hmix] at hfairBound
   simp only [expectedUtility_pure] at hnotBound hfairBound
   linarith

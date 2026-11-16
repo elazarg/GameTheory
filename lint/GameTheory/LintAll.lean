@@ -197,6 +197,7 @@ import all GameTheory.Examples.Economic
 import all GameTheory.Examples.ElectronicMail
 import all GameTheory.Examples.FOSG
 import all GameTheory.Examples.Intrinsic
+import all GameTheory.Examples.Lotteries
 import all GameTheory.Examples.NFG
 import all GameTheory.Examples.PseudoEquilibria
 import all GameTheory.Examples.Stackelberg

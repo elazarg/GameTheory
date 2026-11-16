@@ -15,7 +15,7 @@ public import Mathlib.Tactic.NormNum
 
 noncomputable section
 
-namespace GameTheory.Experimental.PostArchitecture.StochasticPublicHistoryCoherence
+namespace GameTheory.Tests.StochasticPublicHistoryCoherence
 
 open GameTheory.Math.Probability GameTheory.Stochastic
 open GameTheory.Stochastic.Game GameTheory.Protocol
@@ -260,4 +260,4 @@ theorem live_first_action_differs :
 
 end HostileFixture
 
-end GameTheory.Experimental.PostArchitecture.StochasticPublicHistoryCoherence
+end GameTheory.Tests.StochasticPublicHistoryCoherence

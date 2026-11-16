@@ -21,7 +21,7 @@ import all GameTheory.Experimental.Exp183.ExchangeClearing
 import all GameTheory.Experimental.Exp183.ExchangeControls
 import all GameTheory.Experimental.Exp184.Composition
 import all GameTheory.Experimental.Exp184.Controls
-import all GameTheory.Experimental.Exp184.Consumers
+import all GameTheory.Tests.DynamicChoice
 import all GameTheory.Experimental.Exp185.RestrictedBudget
 import all GameTheory.Experimental.Exp186.ContractAcceptance
 import all GameTheory.Experimental.Exp186.BundleChoice
@@ -139,8 +139,8 @@ import all GameTheory.Experimental.PostArchitecture.FiniteBNScoreCylinderBridge
 import all GameTheory.Experimental.PostArchitecture.FiniteConditionalContinuation
 import all GameTheory.Experimental.PostArchitecture.FiniteConditionalIndependence
 import all GameTheory.Experimental.PostArchitecture.FiniteDirectedReachability
-import all GameTheory.Experimental.PostArchitecture.FOSGKuhn
-import all GameTheory.Experimental.PostArchitecture.FOSGObservationFacts
+import all GameTheory.Tests.FOSGKuhn
+import all GameTheory.Tests.FOSGObservationFacts
 import all GameTheory.Experimental.PostArchitecture.FOSGToEFG
 import all GameTheory.Experimental.PostArchitecture.FOSGToEFGGenericWitnesses
 import all GameTheory.Experimental.PostArchitecture.FOSGToEFGTwoRound
@@ -225,7 +225,7 @@ import all GameTheory.Experimental.PostArchitecture.ProtocolKnowledgeBridge
 import all GameTheory.Experimental.PostArchitecture.QuasiLinearMechanismOwnership
 import all GameTheory.Experimental.PostArchitecture.RoundsWitness
 import all GameTheory.Experimental.PostArchitecture.RuntimeTransformAdequacy
-import all GameTheory.Experimental.PostArchitecture.SequentialClientAdequacy
+import all GameTheory.Tests.SequentialClientAdequacy
 import all GameTheory.Experimental.PostArchitecture.StochasticAsymptoticPayoffs
 import all GameTheory.Experimental.PostArchitecture.StochasticGamePathPayoff
 import all GameTheory.Experimental.PostArchitecture.StochasticHybridInfiniteKuhn
@@ -236,8 +236,8 @@ import all GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayPayoff
 import all GameTheory.Experimental.PostArchitecture.StochasticInfinitePlayPayoffConsistency
 import all GameTheory.Experimental.PostArchitecture.StochasticKuhn
 import all GameTheory.Experimental.PostArchitecture.StochasticProofViewTest
-import all GameTheory.Experimental.PostArchitecture.StochasticPublicHistoryCoherence
-import all GameTheory.Experimental.PostArchitecture.StochasticPublicHistoryCoherenceTest
+import all GameTheory.Tests.StochasticPublicHistoryCoherence
+import all GameTheory.Tests.StochasticPublicHistoryCoherenceTest
 import all GameTheory.Experimental.PostArchitecture.StochasticReverseInfiniteKuhn
 import all GameTheory.Experimental.PostArchitecture.TypedMAIDTest
 import all GameTheory.Experimental.PostArchitecture.TypedMAIDToEFGTest

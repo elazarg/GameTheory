@@ -52,7 +52,7 @@ theorem beliefOutcome_true_supported : true ∈ (beliefOutcome true).support := 
                                                            
 theorem belief_direct_optimal :
     IsOptimalOn (fun _ : Bool => True)
-      (fun preferred alternative => GameTheory.Tests.Potential.supportPreference ()
+      (fun preferred alternative => GameTheory.Examples.Lotteries.supportPreference ()
         (beliefOutcome preferred) (beliefOutcome alternative)) Set.univ true := by
   refine ⟨trivial, fun _ _ => trivial, ?_⟩
   intro alternative _
@@ -93,7 +93,7 @@ theorem belief_law_coverage : ∀ alternative ∈ (Set.univ : Set (Fin 3)),
                                         
 theorem target_belief_direct_optimal :
     IsOptimalOn (fun _ : Fin 3 => True)
-      (fun preferred alternative => GameTheory.Tests.Potential.supportPreference ()
+      (fun preferred alternative => GameTheory.Examples.Lotteries.supportPreference ()
         (targetBeliefOutcome preferred) (targetBeliefOutcome alternative)) Set.univ 1 := by
   refine IsOptimalOn.of_coverage (chosen := true) (compiled := (1 : Fin 3))
     belief_direct_optimal (fun _ => trivial) ?_

@@ -188,6 +188,8 @@ def boundary_violation(module, dep, base=True):
         if module[:2] != ("GameTheory", "Analysis"):
             return "Analysis/fixed-point dependency outside Analysis"
     if "Experimental" in module:
+        if dep[:2] == ("GameTheory", "Tests"):
+            return "experiment imports a test fixture"
         return None
     if reason := trust_violation(module, dep):
         return reason

@@ -1,6 +1,6 @@
 module
 
-public import GameTheory.Tests.Potential
+public import GameTheory.Examples.Lotteries
 public import GameTheory.Math.GuardedOptimality
 
 @[expose] public section
@@ -9,7 +9,7 @@ noncomputable section
 
 namespace GameTheory.Experimental.DynamicChoice
 
-open GameTheory.Math GameTheory.Math.Probability GameTheory.Tests
+open GameTheory.Math GameTheory.Math.Probability
 
 /-- This total ranking evaluates the whole law nonlinearly. -/
 def score (law : PMF Bool) : ℝ := ((law true).toReal - 2 / 5) ^ 2
@@ -23,7 +23,7 @@ theorem lawPreference_transitive : Rank.Transitive lawPreference :=
 
 theorem lawPreference_total : Rank.Total lawPreference := fun _ _ => le_total _ _
 
-def prior : PMF Bool := Potential.supportFairLaw
+def prior : PMF Bool := Examples.Lotteries.supportFairLaw
 
 /-- Both branches have a genuine strict choice. The alternative at the false
 signal is itself a lottery, rather than a forced or tied action. -/
@@ -61,11 +61,11 @@ theorem play_chosen : play chosenPolicy = prior := by
 
 theorem play_alternative : play alternativePolicy =
     mix (1 / 2) (by norm_num) (by norm_num) (PMF.pure false) prior := by
-  simp [play, prior, Potential.supportFairLaw, mix_bind, branch, alternativePolicy]
+  simp [play, prior, Examples.Lotteries.supportFairLaw, mix_bind, branch, alternativePolicy]
 
 theorem alternative_true_mass : ((play alternativePolicy) true).toReal = 1 / 4 := by
   rw [play_alternative]
-  norm_num [prior, Potential.supportFairLaw, mix_apply]
+  norm_num [prior, Examples.Lotteries.supportFairLaw, mix_apply]
 
 /-- Conditioning on the true branch strictly favors the prescribed action. -/
 theorem conditional_true_strict :
@@ -76,7 +76,7 @@ theorem conditional_true_strict :
 theorem conditional_false_strict :
     Rank.strict lawPreference (branch false true) (branch false false) := by
   norm_num [Rank.strict, lawPreference, score, branch, prior,
-    Potential.supportFairLaw, mix_apply]
+    Examples.Lotteries.supportFairLaw, mix_apply]
 
 /-- Every conditional menu is optimized under the same total law ranking. -/
 theorem chosen_conditionally_optimal (hidden : Bool) :
@@ -87,7 +87,7 @@ theorem chosen_conditionally_optimal (hidden : Bool) :
   intro alternative _
   cases hidden <;> cases alternative <;>
     norm_num [lawPreference, score, branch, chosenPolicy, prior,
-      Potential.supportFairLaw, mix_apply]
+      Examples.Lotteries.supportFairLaw, mix_apply]
 
 /-- Before conditioning, the fair prescribed law loses to the alternative
 whose true-outcome probability is one quarter. Each branch strictly favors the
@@ -95,7 +95,7 @@ prescribed action, but totality and transitivity do not supply bind monotonicity
 theorem whole_policy_strict_reversal :
     Rank.strict lawPreference (play alternativePolicy) (play chosenPolicy) := by
   rw [play_chosen, play_alternative]
-  norm_num [Rank.strict, lawPreference, score, prior, Potential.supportFairLaw, mix_apply]
+  norm_num [Rank.strict, lawPreference, score, prior, Examples.Lotteries.supportFairLaw, mix_apply]
 
 theorem chosen_not_whole_policy_optimal :
     ¬ IsOptimalOn policyFeasible
@@ -110,8 +110,8 @@ kernels and without an expected-utility representation. -/
 theorem supportPreference_bind {α : Type*} (law : PMF α)
     (preferred alternative : α → PMF Bool)
     (comparisons : ∀ a ∈ law.support,
-      Potential.supportPreference () (preferred a) (alternative a)) :
-    Potential.supportPreference () (law.bind preferred) (law.bind alternative) := by
+      Examples.Lotteries.supportPreference () (preferred a) (alternative a)) :
+    Examples.Lotteries.supportPreference () (law.bind preferred) (law.bind alternative) := by
   classical
   by_cases supported : true ∈ (law.bind preferred).support
   · exact Or.inl supported
@@ -126,15 +126,15 @@ theorem supportPreference_bind {α : Type*} (law : PMF α)
 
 theorem supportPreference_upper_bind {α : Type*} (law : PMF α)
     (kernel : α → PMF Bool) (base : PMF Bool)
-    (comparisons : ∀ a ∈ law.support, Potential.supportPreference () base (kernel a)) :
-    Potential.supportPreference () base (law.bind kernel) := by
+    (comparisons : ∀ a ∈ law.support, Examples.Lotteries.supportPreference () base (kernel a)) :
+    Examples.Lotteries.supportPreference () base (law.bind kernel) := by
   simpa only [PMF.bind_const] using
     supportPreference_bind law (fun _ => base) kernel comparisons
 
 theorem supportPreference_lower_bind {α : Type*} (law : PMF α)
     (kernel : α → PMF Bool) (base : PMF Bool)
-    (comparisons : ∀ a ∈ law.support, Potential.supportPreference () (kernel a) base) :
-    Potential.supportPreference () (law.bind kernel) base := by
+    (comparisons : ∀ a ∈ law.support, Examples.Lotteries.supportPreference () (kernel a) base) :
+    Examples.Lotteries.supportPreference () (law.bind kernel) base := by
   simpa only [PMF.bind_const] using
     supportPreference_bind law kernel (fun _ => base) comparisons
 

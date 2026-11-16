@@ -11,6 +11,7 @@ a potential with finitely many values on infinitely many profiles.
 -/
 
 public import GameTheory.Core.Potential
+public import GameTheory.Examples.Lotteries
 
 @[expose] public section
 
@@ -19,6 +20,7 @@ noncomputable section
 namespace GameTheory.Tests.Potential
 
 open GameTheory.Math.Probability
+open GameTheory.Examples.Lotteries
 
 @[reducible]
 def signature : GameSignature Unit where
@@ -103,19 +105,6 @@ theorem countable_exists_isNash :
 
 
 /-! ## Preferences on laws without utility representations -/
-
-/-- Only the possibility of outcome `true` matters. This preference compares
-support membership directly and contains no utility or expectation operation. -/
-def supportPreference : WeakPreference Unit Bool :=
-  fun _ preferred alternative => true ∈ preferred.support ∨ true ∉ alternative.support
-
-/-- A fair lottery still makes `true` possible. -/
-def supportFairLaw : PMF Bool :=
-  mix (1 / 2) (by norm_num) (by norm_num) (PMF.pure true) (PMF.pure false)
-
-theorem true_mem_supportFairLaw : true ∈ supportFairLaw.support :=
-  mem_support_mix_left (1 / 2) (by norm_num) (by norm_num) (by norm_num)
-    (by simp)
 
 /-- Possibility alone cannot be represented by real expected utility: the fair
 lottery is as good as sure `true`, but sure `false` is strictly worse. -/
