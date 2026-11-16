@@ -24,8 +24,12 @@ checkout with `-KgameTheoryPath=../..`. The base package never requires this one
         (some "c7cd6bed7498b9a16edb22262e9522ceff90648c") none
 }
 
-require complexitylib from git "https://github.com/cslib-community/complexitylib"
-  @ "054834a4a4e6ac3ec50ed770bacea7fc42eccc7d"
+/- TEMPORARY fork: upstream `054834a4` plus one line adapting
+`Nat.pow_pred_clog_lt_self` to Mathlib v4.36.0, which upstream (still on
+v4.36.0-rc2) has not adopted. Return to `cslib-community/complexitylib` as soon
+as upstream builds against released Mathlib v4.36.0; do not extend the fork. -/
+require complexitylib from git "https://github.com/elazarg/complexitylib-community"
+  @ "481355bbf30f161a600c5761053f42da888e7b0f"
 
 require cslib from git "https://github.com/leanprover/cslib.git"
   @ "254e30e6d4299c51323aaeaf5f51a4763b375d4a"
