@@ -15,7 +15,7 @@ public import GameTheory.Tests.EFGSubgamePerfect
 
 noncomputable section
 
-namespace GameTheory.Experimental.PostArchitecture.SequentialClientAdequacy
+namespace GameTheory.Tests.SequentialClientAdequacy
 
 open GameTheory Languages Protocol GameTheory.Math.Probability
 open Protocol.ExecutionProtocol
@@ -317,4 +317,4 @@ theorem mismatching_not_isHistorywiseOptimal :
   rw [hmatching, hmismatching] at hcomparison'
   norm_num at hcomparison'
 
-end GameTheory.Experimental.PostArchitecture.SequentialClientAdequacy
+end GameTheory.Tests.SequentialClientAdequacy

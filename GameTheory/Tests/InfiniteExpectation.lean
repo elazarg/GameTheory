@@ -12,6 +12,7 @@ compares only integrable payoffs rejects that equilibrium.
 
 public import GameTheory.Core.Equilibrium
 public import GameTheory.Core.ExpectedUtility
+public import GameTheory.Examples.Lotteries
 public import Mathlib.Analysis.SpecificLimits.Basic
 
 @[expose] public section
@@ -21,16 +22,8 @@ noncomputable section
 namespace GameTheory.Tests.InfiniteExpectation
 
 open GameTheory GameTheory.Math.Probability
+open GameTheory.Examples.Lotteries (halving)
 open scoped ENNReal
-
-/-- Probability `2^-(n+1)` at `n`. -/
-def halving : PMF ℕ :=
-  ⟨fun n => ENNReal.ofReal ((1 : ℝ) / 2 / 2 ^ n), by
-    have hsum : HasSum (fun n : ℕ => (1 : ℝ) / 2 / 2 ^ n) 1 := by
-      simpa only [one_div] using hasSum_geometric_two' (1 : ℝ)
-    apply ENNReal.summable.hasSum_iff.mpr
-    rw [← ENNReal.ofReal_tsum_of_nonneg (fun n => by positivity) hsum.summable,
-      hsum.tsum_eq, ENNReal.ofReal_one]⟩
 
 /-- The loss at `n`, which exactly offsets its probability. -/
 def loss (n : ℕ) : ℝ := 2 ^ (n + 1)

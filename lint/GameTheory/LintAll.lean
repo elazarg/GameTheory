@@ -43,6 +43,7 @@ import all GameTheory.Analysis.IncentiveHierarchy
 import all GameTheory.Analysis.IncentiveSimulation
 import all GameTheory.Analysis.Learning
 import all GameTheory.Analysis.LocalChoiceFixedPoint
+import all GameTheory.Analysis.FeasibleChoiceFixedPoint
 import all GameTheory.Analysis.MatrixValue
 import all GameTheory.Analysis.Minimax
 import all GameTheory.Analysis.Nash
@@ -196,6 +197,7 @@ import all GameTheory.Examples.Economic
 import all GameTheory.Examples.ElectronicMail
 import all GameTheory.Examples.FOSG
 import all GameTheory.Examples.Intrinsic
+import all GameTheory.Examples.Lotteries
 import all GameTheory.Examples.NFG
 import all GameTheory.Examples.PseudoEquilibria
 import all GameTheory.Examples.Stackelberg
@@ -242,6 +244,11 @@ import all GameTheory.Math.Eventually
 import all GameTheory.Math.Envelope
 import all GameTheory.Math.FinRotation
 import all GameTheory.Math.HarmonicSequence
+import all GameTheory.Math.GuardedOptimality
+import all GameTheory.Math.FiniteChoice
+import all GameTheory.Math.Scalarization
+import all GameTheory.Math.ParametricOptimality
+import all GameTheory.Math.LinearBudget
 import all GameTheory.Math.Negligible
 import all GameTheory.Math.OnlineLearning
 import all GameTheory.Math.OrthantProjection

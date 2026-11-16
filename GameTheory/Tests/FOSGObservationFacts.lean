@@ -21,7 +21,7 @@ public import GameTheory.Tests.Randomized
 
 noncomputable section
 
-namespace GameTheory.Experimental.FOSGObservationFacts
+namespace GameTheory.Tests.FOSGObservationFacts
 
 open GameTheory.Protocol GameTheory.Tests
 
@@ -96,4 +96,4 @@ example : ¬Randomized.singleSignals.PerfectRecall :=
   Randomized.single_not_perfectRecall
 
 
-end GameTheory.Experimental.FOSGObservationFacts
+end GameTheory.Tests.FOSGObservationFacts

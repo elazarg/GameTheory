@@ -265,13 +265,16 @@ theorem isStrongNash_iff (profile : Profile F.sig) :
     simp only [DeviationScheme.coalitionConstant_Dev] at replacement
     simpa [GameForm.outcomeLaw] using h coalition hne replacement
 
-/-- Aumann's reading of strong Nash — "no nonempty coalition has a joint
-replacement that *every* member strictly prefers" — is equivalent to
-`IsStrongNash` exactly when the preference is total. `Preference.coalition`
-documents why the two readings come apart for a partial preference; expected
-utility (`euPreference_total`) is total, so the two agree there. -/
-theorem isStrongNash_iff_not_all_gain (htotal : Preference.Total weaklyPrefers)
-    (profile : Profile F.sig) :
+/-- Strong Nash means that no coalition has a joint replacement every member
+strictly prefers, provided members compare the actual incumbent and deviated
+laws. Preferences on other laws may remain partial. -/
+theorem isStrongNash_iff_not_all_gain_of_comparable (profile : Profile F.sig)
+    (hcompare : ∀ coalition : Finset ι, coalition.Nonempty →
+      ∀ replacement : Subprofile F.sig coalition, ∀ member ∈ coalition,
+        weaklyPrefers member (F.play profile)
+            (F.play (Profile.override coalition replacement profile)) ∨
+          weaklyPrefers member (F.play (Profile.override coalition replacement profile))
+            (F.play profile)) :
     IsStrongNash F weaklyPrefers profile ↔
       ∀ coalition : Finset ι, coalition.Nonempty →
         ∀ replacement : Subprofile F.sig coalition,
@@ -280,8 +283,25 @@ theorem isStrongNash_iff_not_all_gain (htotal : Preference.Total weaklyPrefers)
               (F.play (Profile.override coalition replacement profile))
               (F.play profile) := by
   rw [isStrongNash_iff]
-  refine forall_congr' fun coalition => forall_congr' fun hne => forall_congr' fun replacement => ?_
-  exact Preference.coalition_iff_not_forall_strict weaklyPrefers htotal ⟨coalition, hne⟩ _ _
+  refine forall_congr' fun coalition => forall_congr' fun hne =>
+    forall_congr' fun replacement => ?_
+  exact Preference.coalition_iff_not_forall_strict_of_comparable weaklyPrefers
+    ⟨coalition, hne⟩ _ _ (hcompare coalition hne replacement)
+
+/-- Total preferences supply the local comparisons needed for the
+no-unanimous-strict-gain characterization of strong Nash. Expected utility
+supplies such comparisons when the actual compared laws have expectations. -/
+theorem isStrongNash_iff_not_all_gain (htotal : Preference.Total weaklyPrefers)
+    (profile : Profile F.sig) :
+    IsStrongNash F weaklyPrefers profile ↔
+      ∀ coalition : Finset ι, coalition.Nonempty →
+        ∀ replacement : Subprofile F.sig coalition,
+          ¬ ∀ member ∈ coalition,
+            Preference.strict weaklyPrefers member
+              (F.play (Profile.override coalition replacement profile))
+              (F.play profile) :=
+  isStrongNash_iff_not_all_gain_of_comparable profile
+    (fun _ _ _ member _ => htotal member _ _)
 
 end Characterizations
 

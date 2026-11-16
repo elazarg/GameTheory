@@ -7,18 +7,18 @@ The empty public history is in the canonical image, so changing a policy
 there changes both the canonical public-history law and the payoff.
 -/
 
-public import GameTheory.Experimental.PostArchitecture.StochasticPublicHistoryCoherence
+public import GameTheory.Tests.StochasticPublicHistoryCoherence
 
 @[expose] public section
 
 noncomputable section
 
-namespace GameTheory.Experimental.PostArchitecture.StochasticPublicHistoryCoherenceTest
+namespace GameTheory.Tests.StochasticPublicHistoryCoherenceTest
 
 open GameTheory.Math.Probability GameTheory.Stochastic
 open GameTheory.Stochastic.Game GameTheory.Protocol
 open GameTheory.Protocol.ExecutionProtocol
-open GameTheory.Experimental.PostArchitecture.StochasticPublicHistoryCoherence
+open GameTheory.Tests.StochasticPublicHistoryCoherence
 open GameTheory.Tests.StochasticContinuation
 
 local instance actionNonempty : ∀ i, Nonempty (actionGame.Action i) :=
@@ -150,4 +150,4 @@ theorem finiteAveragePayoff_one_differs :
   rw [canonical_finiteAveragePayoff_one, live_finiteAveragePayoff_one]
   norm_num
 
-end GameTheory.Experimental.PostArchitecture.StochasticPublicHistoryCoherenceTest
+end GameTheory.Tests.StochasticPublicHistoryCoherenceTest

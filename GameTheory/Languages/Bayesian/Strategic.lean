@@ -4,7 +4,8 @@ module
 # Bayesian strategic-form transfer
 
 The solution-concept-free compiler identifies local policies with contingent
-plans. This leaf transports expected utility and Nash equilibrium.
+plans. This leaf transports Nash equilibrium for arbitrary preferences on
+outcome laws; expected utility is a specialization preserving definedness.
 -/
 
 public import GameTheory.Languages.Bayesian
@@ -54,59 +55,46 @@ theorem expectedUtility_toProtocolForm (B : BayesianGame ι)
 
 variable [DecidableEq ι]
 
-/-- The protocol and direct game compare the same two actual laws. -/
+/-- The compiler transports every preference on protocol outcome laws. The
+source preference is its pullback along the completed-outcome embedding. -/
+theorem isNash_toProtocolForm_iff_of_preference
+    (B : BayesianGame ι) [∀ i, Nonempty (B.Act i)]
+    (prefers : WeakPreference ι (toProtocolForm B).sig.Outcome)
+    (policies : Profile (informationModel B).strategicSignature) :
+    IsNash (toProtocolForm B) prefers policies ↔
+      IsNash B.toForm (Preference.comapOutcome some prefers)
+        (planOfPolicyProfile B policies) := by
+  constructor
+  · intro hnash
+    rw [isNash_iff] at hnash ⊢
+    intro who replacement
+    have hcomparison := hnash who (Policy.ofPlan replacement)
+    have hdev := toProtocolForm_play B
+      (Profile.update policies who (Policy.ofPlan replacement))
+    rw [planOfPolicyProfile_update, Policy.toPlan_ofPlan] at hdev
+    exact (congrArg₂ (prefers who) (toProtocolForm_play B policies) hdev).mp hcomparison
+  · intro hnash
+    rw [isNash_iff] at hnash ⊢
+    intro who replacement
+    have hcomparison := hnash who (Policy.toPlan replacement)
+    have hdev := toProtocolForm_play B (Profile.update policies who replacement)
+    rw [planOfPolicyProfile_update] at hdev
+    exact (congrArg₂ (prefers who) (toProtocolForm_play B policies) hdev).mpr hcomparison
+
+/-- Expected utility specializes preference-generic compiler transport,
+including existence of both compared expectations. -/
 theorem isNash_toProtocolForm_iff_planOfPolicyProfile
     (B : BayesianGame ι) [∀ i, Nonempty (B.Act i)]
     (policies : Profile (informationModel B).strategicSignature) :
     IsNash (toProtocolForm B) (euPreference (protocolUtility B)) policies ↔
       IsNash B.toForm (euPreference B.utility)
         (planOfPolicyProfile B policies) := by
-  rw [isNash_iff, isNash_iff]
-  constructor
-  · intro hnash who replacement
-    have h := hnash who (Policy.ofPlan replacement)
-    have hmap :
-        euPreference (protocolUtility B) who
-          ((B.toForm.play (planOfPolicyProfile B policies)).map some)
-          ((B.toForm.play
-            (planOfPolicyProfile B
-              (Profile.update policies who (Policy.ofPlan replacement)))).map some) := by
-      rw [← toProtocolForm_play B policies,
-        ← toProtocolForm_play B
-          (Profile.update policies who (Policy.ofPlan replacement))]
-      exact h
-    have hdirect := (euPreference_map (protocolUtility B) who some _ _).mp hmap
-    have hutil :
-        (fun outcome => protocolUtility B (some outcome)) = B.utility := by
-      funext outcome who
-      rfl
-    rw [hutil] at hdirect
-    simpa only [planOfPolicyProfile_update, Policy.toPlan_ofPlan] using hdirect
-  · intro hnash who replacement
-    have h := hnash who (Policy.toPlan replacement)
-    have hdirect :
-        euPreference B.utility who
-          (B.toForm.play (planOfPolicyProfile B policies))
-          (B.toForm.play
-            (planOfPolicyProfile B (Profile.update policies who replacement))) := by
-      simpa only [planOfPolicyProfile_update] using h
-    have hmap :
-        euPreference (protocolUtility B) who
-          ((B.toForm.play (planOfPolicyProfile B policies)).map some)
-          ((B.toForm.play
-            (planOfPolicyProfile B
-              (Profile.update policies who replacement))).map some) :=
-      (euPreference_map (protocolUtility B) who some _ _).mpr (by
-        have hutil :
-            (fun outcome => protocolUtility B (some outcome)) = B.utility := by
-          funext outcome who
-          rfl
-        rw [hutil]
-        exact hdirect)
-    have hcong := congrArg₂ (euPreference (protocolUtility B) who)
-      (toProtocolForm_play B policies)
-      (toProtocolForm_play B (Profile.update policies who replacement))
-    exact hcong.mpr hmap
+  have hpref : Preference.comapOutcome some (euPreference (protocolUtility B)) =
+      euPreference B.utility := by
+    funext who preferred alternative
+    exact propext (euPreference_map (protocolUtility B) who some preferred alternative)
+  rw [← hpref]
+  exact isNash_toProtocolForm_iff_of_preference B (euPreference (protocolUtility B)) policies
 
 theorem isNash_toProtocolForm_iff (B : BayesianGame ι)
     [∀ i, Nonempty (B.Act i)] (plan : Profile B.signature) :

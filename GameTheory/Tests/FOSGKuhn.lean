@@ -17,7 +17,7 @@ public import GameTheory.Tests.Randomized
 
 noncomputable section
 
-namespace GameTheory.Experimental.FOSGKuhn
+namespace GameTheory.Tests.FOSGKuhn
 
 open GameTheory.Languages GameTheory.Protocol GameTheory.Tests
 
@@ -143,4 +143,4 @@ theorem recalling_outcomeLaw
     recallingActsOnce behavioral horizon (fun _ => Set.toFinite _) outcome
 
 
-end GameTheory.Experimental.FOSGKuhn
+end GameTheory.Tests.FOSGKuhn

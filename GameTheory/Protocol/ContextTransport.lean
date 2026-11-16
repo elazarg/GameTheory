@@ -29,20 +29,22 @@ theorem IsLocallyOptimal.of_outcome_coverage {Source Target Outcome : Type*}
     (coverage : ∀ alternative ∈ targetAllowed, ∃ original ∈ sourceAllowed,
       target.outcome alternative = source.outcome original) :
     target.IsLocallyOptimal targetAllowed compiled := by
-  refine ⟨?_, ?_, ?_⟩
-  · change HasExpectation (target.outcome compiled) target.continuation
+  refine GameTheory.Math.IsOptimalOn.of_coverage optimal ?_ ?_
+  · intro hbase
+    change HasExpectation (target.outcome compiled) target.continuation
     rw [payoff, honest]
-    exact optimal.1
+    exact hbase
   · intro alternative allowed
     obtain ⟨original, used, same⟩ := coverage alternative allowed
-    change HasExpectation (target.outcome alternative) target.continuation
-    rw [payoff, same]
-    exact optimal.2.1 original used
-  · intro alternative allowed
-    obtain ⟨original, used, same⟩ := coverage alternative allowed
-    change extendedExpect (target.outcome alternative) target.continuation ≤
-      extendedExpect (target.outcome compiled) target.continuation
-    rw [payoff, same, honest]
-    exact optimal.2.2 original used
+    refine ⟨original, used, ?_, ?_⟩
+    · intro hadmissible
+      change HasExpectation (target.outcome alternative) target.continuation
+      rw [payoff, same]
+      exact hadmissible
+    · intro hcomparison
+      change extendedExpect (target.outcome alternative) target.continuation ≤
+        extendedExpect (target.outcome compiled) target.continuation
+      rw [payoff, honest, same]
+      exact hcomparison
 
 end GameTheory.Protocol.Context

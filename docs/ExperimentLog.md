@@ -108,7 +108,7 @@ entries below, following the initial feasibility survey.
 | EXP-092 | 2026-08-14 | post-review client gate / stochastic games | Can a client prove a nonstationary stochastic result through public proof views? | Narrows; public policy/profile layer passes | `GameTheory/Experimental/PostArchitecture/StochasticClientAdequacy.lean` |
 | EXP-093 | 2026-08-14 | post-review client gate / transformations | Can executable trace payoffs survive heterogeneous relabeling and canonical Nash transport? | Supports existing transformation surface | `GameTheory/Experimental/PostArchitecture/ExecutableClientAdequacy.lean` |
 | EXP-094 | 2026-08-14 | post-review client gate / probability | Can finite-law Markov bounds feed canonical approximate equilibrium and posterior arguments? | Supports; promotes bounds facade | `GameTheory/Math/Probability/Bounds.lean`; `GameTheory/Experimental/PostArchitecture/ProbabilityTailAdequacy.lean` |
-| EXP-095 | 2026-08-14 | post-review client gate / sequential games | Can EFG clients prove history-dependent SPE without support-proof transport? | Supports after one helper | `GameTheory/Protocol/SubgamePerfect.lean`; `GameTheory/Experimental/PostArchitecture/SequentialClientAdequacy.lean` |
+| EXP-095 | 2026-08-14 | post-review client gate / sequential games | Can EFG clients prove history-dependent SPE without support-proof transport? | Supports after one helper | `GameTheory/Protocol/SubgamePerfect.lean`; `GameTheory/Tests/SequentialClientAdequacy.lean` |
 | EXP-096 | 2026-08-14 | D12 / hosted reachability maintenance | Does `Polynomial` still identify an Analysis leak from stable Repeated? | Refutes proxy; boundary narrowed to direct probes | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
 | EXP-097 | 2026-08-14 | post-review client gate / implementation theory | Can profile-observed transfers induce target sets through canonical dominance semantics? | Supports; decides D54 | [`decisions/D54-profile-transfer-implementation.md`](decisions/D54-profile-transfer-implementation.md); `GameTheory/Mechanism/Implementation.lean`; `GameTheory/Tests/Implementation.lean` |
 | EXP-098 | 2026-08-14 | hosted reachability maintenance | Did review-time namespace and import cleanup leave positive probes stale? | Four stale expectations and probe exit state repaired; hosted gate passes | [`phase2-audit.ps1`](../scripts/phase2-audit.ps1) |
@@ -119,7 +119,7 @@ entries below, following the initial feasibility survey.
 | EXP-108 | 2026-08-16 | future stochastic asymptotic gate | Can an opt-in infinite-path layer expose `E[liminf Aₙ]`, `E[limsup Aₙ]`, and `limₙ E[Aₙ]` as distinct notions, then support a cyclic subgame-perfect uniform-equilibrium interface without a second runner or coercions among terminal, limiting-average, and uniform concepts? | In progress; EXP-113 closes the canonical nonconstant game-path consumer, while EXP-114's hostile cyclic-uniform test remains blocked at public event/transition congruence; current verdicts are unchanged | [`AsymptoticPayoffSeparation.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticPayoffSeparation.lean); [`AsymptoticOscillatingSequence.lean`](../GameTheory/Experimental/PostArchitecture/AsymptoticOscillatingSequence.lean); [`StochasticInfinitePlayMeasure.lean`](../GameTheory/Experimental/PostArchitecture/StochasticInfinitePlayMeasure.lean); [`StochasticAsymptoticPayoffs.lean`](../GameTheory/Experimental/PostArchitecture/StochasticAsymptoticPayoffs.lean); no API adoption |
 | EXP-109 | 2026-08-16 | D56 / executable MAID pruning check | Can explicit finite graph search decide the experiment-only restore-all edge-addition fixpoint predicate without stored finiteness, classical execution, or an unproved minimality/confluence claim? | Complete checker-only result; executable stable-at/fixpoint checks are exact, while construction, minimality, and confluence remain unclaimed | [`MAIDPruningFixpointChecker.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointChecker.lean); [`MAIDPruningFixpointCheckerTest.lean`](../GameTheory/Experimental/PostArchitecture/MAIDPruningFixpointCheckerTest.lean) |
 | EXP-110 | 2026-08-16 | D2 / countable discrete probability | Can an opt-in direct-`PMF` layer recover a genuinely infinite-support stopping law without weakening the finite-support `FinDist` core or introducing another probability abstraction? | Complete; direct PMF stopping law validates the separate countable layer, and EXP-112 subsequently validates bounded expectation | [`CountableDiscreteStopping.lean`](../GameTheory/Experimental/PostArchitecture/CountableDiscreteStopping.lean) |
-| EXP-111 | 2026-08-16 | stochastic public-history coherence | Can canonical protocol traces expose exactly which proof-free public histories are realizable, so profile agreement there implies runner and finite-average-payoff congruence? | Complete hostile result; forged-history agreement preserves laws/payoffs and a realizable-history change alters both, with promotion still consumer-gated | [`StochasticPublicHistoryCoherence.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherence.lean); [`StochasticPublicHistoryCoherenceTest.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherenceTest.lean) |
+| EXP-111 | 2026-08-16 | stochastic public-history coherence | Can canonical protocol traces expose exactly which proof-free public histories are realizable, so profile agreement there implies runner and finite-average-payoff congruence? | Complete hostile result; forged-history agreement preserves laws/payoffs and a realizable-history change alters both, with promotion still consumer-gated | [`StochasticPublicHistoryCoherence.lean`](../GameTheory/Tests/StochasticPublicHistoryCoherence.lean); [`StochasticPublicHistoryCoherenceTest.lean`](../GameTheory/Tests/StochasticPublicHistoryCoherenceTest.lean) |
 | EXP-112 | 2026-08-16 | D2 / countable PMF expectation | Can the countable layer expose bounded real expectations and preserve finite-law expectations without duplicating `FinDist.expect` or hiding summability? | Complete experiment-only result; bounded Bochner integration preserves `FinDist.expect` and computes the geometric consumer | [`CountablePMFExpectation.lean`](../GameTheory/Experimental/PostArchitecture/CountablePMFExpectation.lean) |
 | EXP-113 | 2026-08-17 | future stochastic asymptotic gate | Can a genuinely nonconstant canonical stochastic game path consume the EXP-108 infinite-play and asymptotic-payoff interfaces without a second runner or expectation/limit interchange? | Complete experiment-only result; canonical fair absorbing game validates all three distinct asymptotic payoff orders | [`StochasticGamePathPayoff.lean`](../GameTheory/Experimental/PostArchitecture/StochasticGamePathPayoff.lean) |
 | EXP-114 | 2026-08-17 | cyclic stochastic uniformity | Can uniform equilibrium be required at every canonical restart phase without identifying it with terminal SPE or limiting-average payoff? | In progress; canonical all-phase predicate and positive cyclic control compile, hostile off-phase rejection pending | [`CyclicUniformInterface.lean`](../GameTheory/Experimental/PostArchitecture/CyclicUniformInterface.lean) |
@@ -3837,9 +3837,9 @@ memory.
   counterfactual-reach/CFR and continuation-coefficient spines.
 - **Artifacts / commands:**
   `GameTheory/Languages/FOSG/Kuhn.lean`;
-  `GameTheory/Experimental/PostArchitecture/FOSGKuhn.lean`;
+  `GameTheory/Tests/FOSGKuhn.lean`;
   `GameTheory/Tests/Randomized.lean`;
-  `lake build GameTheory.Experimental.PostArchitecture.FOSGKuhn` (1,724
+  `lake build GameTheory.Tests.FOSGKuhn` (1,724
   jobs); `lake build` (3,415 jobs); Phase 2 static, Phase 3 full reachability,
   and coverage audits in expected verification mode.
 - **Observations / measurements:** the 39 pinned native history/marginal rows
@@ -3901,8 +3901,8 @@ memory.
   the law file consumes its posterior-locality and lift machinery for the
   native mixed/behavioral and equilibrium-transfer spine.
 - **Artifacts / commands:**
-  `GameTheory/Experimental/PostArchitecture/FOSGObservationFacts.lean`;
-  `lake build GameTheory.Experimental.PostArchitecture.FOSGObservationFacts`
+  `GameTheory/Tests/FOSGObservationFacts.lean`;
+  `lake build GameTheory.Tests.FOSGObservationFacts`
   (1,724 jobs); `lake build` (3,416 jobs); Phase 2 static and exact ledger /
   coverage audits in expected verification mode.
 - **Kill conditions:** retain no survivor that mentions `ObsModelCore`, a
@@ -6015,7 +6015,7 @@ observations and outcome below are preserved as the record of that run.
   experimental leaf and any promoted narrow owner; run fast source audits and
   `git diff --check`; do not run deep reachability locally.
 - **Artifacts / observations:**
-  `Experimental.PostArchitecture.SequentialClientAdequacy` reuses the existing
+  `Tests.SequentialClientAdequacy` reuses the existing
   two-decision perfect-recall EFG and defines only client plans and payoff. The
   incumbent starts with `up` and at its second information state returns the
   remembered first vote; its two second-stage actions are proved distinct, so
@@ -7157,7 +7157,7 @@ observations and outcome below are preserved as the record of that run.
   survive same-player updates, or a payoff congruence proved from duplicated
   semantics instead of the canonical run law.
 - **Observations:**
-  [`StochasticPublicHistoryCoherence.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherence.lean)
+  [`StochasticPublicHistoryCoherence.lean`](../GameTheory/Tests/StochasticPublicHistoryCoherence.lean)
   is a 262-line specialization of the canonical protocol runner. It defines
   realizability as an exact trace image and agreement on that image, proves
   reflexivity/symmetry/transitivity and same-replacement preservation, then
@@ -7166,12 +7166,12 @@ observations and outcome below are preserved as the record of that run.
   record with the correct source/action but a zero-support target is formally
   unrealizable; changing policy only there preserves every finite-horizon law
   and payoff.
-  [`StochasticPublicHistoryCoherenceTest.lean`](../GameTheory/Experimental/PostArchitecture/StochasticPublicHistoryCoherenceTest.lean)
+  [`StochasticPublicHistoryCoherenceTest.lean`](../GameTheory/Tests/StochasticPublicHistoryCoherenceTest.lean)
   closes the nearby rejection in 114 lines: the empty history is canonically
   realizable, the live policy fails agreement there, its one-step public law
   differs from the canonical law, and player `false`'s one-step finite-average
   payoff changes from `0` to `1`.
-  `lake build GameTheory.Experimental.PostArchitecture.StochasticPublicHistoryCoherence`
+  `lake build GameTheory.Tests.StochasticPublicHistoryCoherence`
   passed 1,736 jobs warning-free; the focused hostile-test build passed 1,737
   jobs warning-free. Source audits found no second runner, duplicated execution
   induction, transport, placeholder, option, or lint-suppression token.
@@ -7360,7 +7360,7 @@ observations and outcome below are preserved as the record of that run.
   GameTheory.Languages.FOSG.Kuhn
   GameTheory.Experimental.PostArchitecture.KuhnFiniteSupport
   GameTheory.Tests.EFGKuhn GameTheory.Tests.EFGKuhnNash
-  GameTheory.Experimental.PostArchitecture.FOSGKuhn` (1,735 jobs).
+  GameTheory.Tests.FOSGKuhn` (1,735 jobs).
 - **Observations / measurements:** `Nat` is the hostile information carrier,
   and the two-round behavioral support reaches both decision states `0` and
   `1`. A finite dependent product over the support sites realizes its complete
@@ -10670,3 +10670,710 @@ observations and outcome below are preserved as the record of that run.
   unique solvability with nonempty decisions; an empty-decision counterexample
   proves that premise necessary. Native ownership remains adopted; the
   original independence argument remains historical evidence, not causality.
+
+## EXP-173: preference-independent building blocks for gradual redesign
+
+Provenance for EXP-173 through EXP-186 and D78 through D92: job counts, timings
+and merge-commit baselines were recorded on the original integration branch,
+whose tree also carried the EXP-172/D77 workstream. Implementation checkpoint
+hashes name the corresponding commits of this history, whose trees differ from
+the measured ones by that workstream only.
+
+- **Date / status:** 2026-11-10–11; complete; supports preference generalization with direct exact-law proofs.
+- **Question:** Do existing comparison-coverage theorems suffice to remove
+  unnecessary expected utility from independent language bridges, without a
+  new problem structure or transport certificate hierarchy?
+- **Competing designs:** reuse `IsNash.of_coverage`; add a direct theorem
+  over exact laws and deviation coverage; introduce a bundled certificate.
+  Start with the existing theorem and admit more infrastructure only if the
+  independent clients expose a concrete missing operation.
+- **Representative slice:** behavioral/mixed Kuhn transfer and the Bayesian
+  policy/plan bridge, including an arbitrary preference and a non-EU consumer.
+- **Kill conditions:** a transfer silently loses target deviations, requires
+  inverse policy conversions, changes actual laws or expectation guards,
+  duplicates equilibrium semantics, weakens locality or law-linearity, or
+  introduces unused infrastructure. Measure edited proof lines and focused
+  build duration; record failures before narrowing the candidate.
+- **Artifacts / commands:** integration branch
+  `codex/experiment-abstraction-building-blocks`; item branches start with
+  `codex/experiment-abstraction-item-01-`. Exact commands and outcomes follow
+  after validation. Existing design surveys are retained as the original
+  hypotheses rather than rewritten after the experiment.
+- **Measurements / observation:** both direct and existing-coverage variants
+  compile the same generalized statements. Direct proofs save four nonblank
+  lines in Kuhn and five in Bayesian transfer. Three alternating serialized
+  whole-module runs give median direct/coverage seconds 19.125/17.617 (Kuhn)
+  and 11.632/11.575 (Bayesian); these include imports and unrelated declarations,
+  so do not establish theorem-level speed. Reproduce at commit `f0c852a9` with
+  `python scripts/compare_abstraction_bridges.py`; the script rewrites exact
+  proof text and is kept only in history. Raw artifacts are in ignored
+  `.codex/scratch/exp173/`. Lean 4.35.0 and Mathlib v4.35.0 are unchanged.
+- **Hostile evidence:** `Tests.EFGKuhnNash` transports an incumbent-law relation
+  and proves it has no expected-utility representation; genuine mixed
+  deviations and the nondeviator-sensitive law remain. `Tests.Bayesian`
+  preserves numerical two-player/private-type consumers. Missing-reflection
+  and missing-total-coverage controls are reused from
+  `Tests.ApproximateEquilibriumTransport` and `Tests.MixtureSimulation`.
+- **Validation:** focused strict build passes 3,177 jobs; source audit passes.
+  `python scripts/audit.py` passes the default strict build (3,872 jobs), the
+  complete lint/axiom driver build (4,762 jobs), public lint, cached authored
+  diagnostic checks and transitive standard-axiom checks. Full output is
+  `.codex/scratch/exp173/integration-audit.log`. Baseline before code changes:
+  `db051fce`; measured coverage checkpoint: `32e46b4c`; selected direct proofs:
+  `f0c852a9`.
+- **Outcome / next action:** prefer direct exact-law proofs; existing coverage
+  is sufficient but larger. No new transport theorem, record, or hierarchy is
+  justified by these clients. [D78](decisions/D78-preference-generic-exact-law-bridges.md)
+  records the narrowed conclusion. Later items remain separately gated.
+
+## EXP-174: ordinal response and improvement ranks
+
+- **Date / status:** 2026-11-11; complete, supporting guarded ordinal response and direct rank hypotheses.
+- **Question:** Can strict Nash and improvement dynamics use bare outcome-law
+  preferences while preserving the actual-law guards of expected utility?
+  Is a direct finite-range improvement-rank theorem sufficient for ordinal
+  existence, before generalizing or adding a potential certificate structure?
+- **Alternatives:** relation-based response definitions with an explicit
+  incumbent self-comparison versus vacuous distinct-deviation strictness;
+  direct improvement-rank hypotheses versus a new ordinal certificate.
+- **Representative slice:** strict Nash to approximate Nash; improvement
+  steps through well-founded termination and finite-range rank existence;
+  existing exact/ordinal potential and congestion consumers; a nonnumeric
+  relation, an incomparable deviation, and a singleton-action guard control.
+- **Kill conditions:** singleton strict Nash loses expectation-definedness;
+  absence of strict gain is mistaken for weak Nash under partial preferences;
+  finite rank range is replaced by finite profiles; a second equilibrium
+  engine, duplicate response semantics, unused structure, or new axioms appear.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-02-ordinal-response`, based on `4d2bb891`.
+  Commands and outcomes follow after the compiled comparison.
+- **Observations:** distinct-deviation strictness alone is vacuous on a
+  singleton strategy carrier even when every law is rejected; retaining the
+  incumbent self-comparison exactly preserves the numerical expectation guard.
+  Equality of laws gives failure of weak Nash with no strict improving step,
+  refuting deletion of the local comparability premise. A finite-range rank
+  needs only a preorder, not a linear order or finitely many profiles. The
+  existing countable strategy consumer traverses the generic existence proof.
+  A possibility preference distinguishes the new API from expected utility:
+  its fair-lottery comparisons provably admit no real utility representation.
+- **Measurements / validation:** zero new structures or equilibrium engines;
+  direct rank hypotheses serve numerical termination/existence and nonnumeric
+  response consumers. No bundled candidate was implemented or timed. Focused
+  strict owner/consumer builds and source audit pass. On implementation
+  checkpoint `b570f83c`, `python scripts/audit.py` passes the default strict
+  build (3,872 jobs), full validation build (4,762 jobs), public lint, authored
+  diagnostic checks and transitive standard-axiom checks. Raw output is
+  `.codex/scratch/exp174/integration-audit.log`.
+- **Outcome / next action:** accept relation-based response with self-comparison,
+  local comparability and finite-range improvement ranks; retain the numerical
+  potential certificates as specializations. No new ordinal certificate is
+  justified by this slice. [D79](decisions/D79-ordinal-response-and-improvement-ranks.md)
+  records the scope. Investigate binary versus arbitrary PMF mixture closure
+  separately before admitting the proposed Mixable level.
+
+## EXP-175: binary mixing versus arbitrary PMF mixture closure
+
+- **Date / status:** 2026-11-11; complete, refuting the binary-only proposal.
+- **Question:** Does binary convexity of a total transitive law preference
+  suffice for the arbitrary-PMF mixture step used in pure-deviation reduction?
+  Compare binary mixing compatibility with explicit bind-closure hypotheses,
+  retaining actual-law expectation-definedness in numerical instances.
+- **Representative slice:** a preference distinguishing finite from infinite
+  support, a genuine infinite-support discrete law, and mixtures of pure laws.
+  Try the counterexample before naming a stable Mixable interface.
+- **Kill conditions:** reject a binary-only interface if every pure component
+  is weakly below a base but their countable mixture is not; reject an ungated
+  expected-utility instance if the actual mixed expectation may be undefined.
+  No new probability carrier, equilibrium predicate, or universal certificate.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-03-mixture-closure`, baseline `03e34edb`.
+  Probes belong in ignored `.codex/scratch/exp175/` until their result is known.
+- **Artifacts:** `Experimental/Exp175/MixtureClosure.lean` retains the
+  counterexample and direct client prototypes. Its axiom-driver import keeps
+  all authored experimental declarations within transitive checking.
+- **Observations:** infinite-support laws can form the preferred class of a
+  total preorder respecting all binary mixtures. Every point mass is below a
+  finite-support base, but their geometric mixture is strictly above it. Thus
+  binary convexity does not suffice for the arbitrary-PMF comparison bound.
+  This does not refute finite-support or continuity-based variants. Direct
+  prototypes also discriminate the clients: full weak Nash comparison needs
+  closure with its actual-mixture guard, while an alleged strict gain already
+  supplies that guard for strict-gain exclusion. No new numerical undefined-law
+  counterexample is claimed here.
+- **Validation / measurements:** focused strict build passes 3,062 jobs.
+  `python scripts/audit.py` passes the default build (3,872 jobs), complete
+  validation build (4,763 jobs), public lint, authored diagnostic checks and
+  transitive standard-axiom checks. Baseline `03e34edb`; implementation
+  `c0f49743`; raw output `.codex/scratch/exp175/integration-audit-final.log`.
+  Independent semantic review accepts the counterexample and scoped guards.
+  Zero stable definitions or structures are added; no performance claim.
+- **Outcome / next action:** reject binary-only Mixable as sufficient for
+  general PMFs. Keep direct client prototypes experimental until stable
+  consumers select their exact closure and guard strength.
+  [D80](decisions/D80-binary-and-countable-mixture-closure.md) records the
+  narrowed conclusion; Protocol comparison remains the next gated item.
+
+## EXP-176: guarded Protocol comparison without numerical semantics changes
+
+- **Date / status:** 2026-11-11; complete, supporting direct guarded comparison.
+- **Question:** Can context-local optimality share a probability-independent
+  guarded comparison predicate, or does a relation-valued context record earn
+  its additional representation and construction costs?
+- **Alternatives:** direct admissibility and comparison arguments; a record
+  retaining outcome laws, their admissibility, and a law preference. Compare
+  identical numerical and nonnumeric local-optimality/coverage clients.
+- **Representative slice:** Context local optimality and outcome-law coverage;
+  a belief-dependent nonnumeric choice; an empty allowed set with undefined
+  incumbent expectation; a defined incumbent with an undefined alternative;
+  defined infinite continuation values. Keep terminal whole-policy rationality,
+  Bayes consistency and proper-subgame distinctions unchanged (D64/D72/D73).
+- **Kill conditions:** losing either expectation guard, admitting an undefined
+  incumbent through empty-set vacuity, confusing absence of strict gain with
+  weak optimality under partial preferences, adding assumptions to sequential
+  theorems, duplicating evaluators or equilibrium meanings, or adding an unused
+  context/certificate hierarchy.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-04-protocol-judgment`, baseline `13b85eb1`.
+  Initial probes live in ignored `.codex/scratch/exp176/`.
+- **Focused result:** both candidate shapes and identical numerical/belief
+  clients compile. Three alternating standalone runs give median direct/record
+  whole-process seconds 10.728/10.648, with 124/147 nonblank code lines including
+  shared fixtures. This is no speedup claim or record-budget failure. The
+  simpler guarded predicate is selected; the record adds no capability here.
+  A genuinely stochastic possibility optimum is rejected by numerical payoff;
+  signed geometric tails prove both empty-set and undefined-alternative guard
+  failures. Defined negative-infinite payoffs remain admissible.
+- **Artifacts / commands:** selected `Math.GuardedOptimality`, numerical
+  `Protocol.Context` specialization and production law-coverage client;
+  `Tests.ContextJudgment`, `Tests.ContextGuards`, and retained alternatives in
+  `Experimental/Exp176/Comparison.lean`. Reproduce size/timing comparisons at
+  commit `23e525ef` with `python scripts/compare_context_judgment.py`; raw artifacts remain in scratch.
+  Independent Math target passes 115 jobs; focused strict Protocol/control
+  build passes 3,182 jobs; source audit passes.
+- **Integration validation:** on implementation checkpoint `23e525ef`,
+  `python scripts/audit.py` passes the default strict build (3,873 jobs),
+  complete validation build (4,767 jobs), public lint, authored diagnostic
+  checks and transitive standard-axiom checks. Sequential existence, weak-PBE,
+  conditional-PBE and proper-subgame consumers pass. Raw output is
+  `.codex/scratch/exp176/integration-audit.log`; independent semantic review
+  accepts the guard and scope preservation.
+- **Outcome / next action:** adopt the probability-independent predicate and
+  exact numerical specialization, without replacing Context data or adding
+  a sequential-rationality meaning. The record alternative is viable but adds
+  no needed capability; no cost-budget failure or speed advantage is claimed.
+  [D81](decisions/D81-guarded-protocol-comparison.md) records the selected scope.
+  Coalition judgment and broader deviation arenas remain independent gates.
+
+## EXP-177: coalition consent, strict unanimity and weak rejection
+
+- **Date / status:** 2026-11-11; complete, supporting local comparison and rejecting silent coalition conflations.
+- **Question:** Does a shared strict-coalition judgment or problem structure
+  improve strong-Nash and responsive-matching clients without changing their
+  partial-preference meaning or conflating consent with affected coordinates?
+- **Alternatives:** direct individual strict comparisons and the existing weak
+  coalition lift; a strict-unanimity relation over a fixed nonempty coalition;
+  a first-class coalition problem with local moves. Compare actual clients
+  before admitting a new shared representation or changing an existing name.
+- **Representative slice:** nonempty coalition strong-Nash specialization,
+  partial-order separation and total-comparison agreement; responsive blocking
+  pairs with heterogeneous partner carriers, vacancies and displacement of an
+  incumbent who is not a consenting member of the blocking pair.
+- **Kill conditions:** silently equating weak rejection with absence of strict
+  unanimity under partial preferences; empty-coalition vacuity treated as a
+  genuine blocker; changing responsive acceptance or feasibility; assuming that
+  every changed coordinate belongs to the consenting coalition; or introducing
+  duplicate equilibrium semantics or an unused coalition/certificate hierarchy.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-05-coalition-judgment`, baseline `ab6c61b9`.
+  Initial candidates live in ignored `.codex/scratch/exp177/`.
+- **Focused observations:** strict unanimity is irreflexive and transitive
+  for a fixed nonempty coalition, but its no-gain comparison is not transitive
+  even with total individual rankings. Equality preferences separate the
+  no-strict-gain equilibrium specialization from canonical weak strong Nash.
+  Local member comparisons suffice for their agreement; a two-player game
+  proves all-false unilateral Nash but not strong Nash under joint improvement,
+  and all-true strong Nash despite global incomparability of other laws.
+  Responsive matching can make both consenting members gain while harming an
+  outside incumbent. A kernel-local rewrite of only the consenting assignment
+  coordinates provably cannot realize that replacement in the tested direct
+  representation; this is not an impossibility claim for all game encodings.
+- **Artifacts / focused validation:** local-comparison theorems in `Core.Rank`
+  and `Core.Equilibrium`, with existing totality signatures preserved;
+  `Tests.CoalitionComparison` and retained candidates under
+  `Experimental/Exp177/`. The focused strict owner/control build passes 3,056
+  jobs; source audit passes. Zero new stable definitions, structures or
+  equilibrium engines. No new coalition problem record was implemented or timed.
+- **Integration validation:** on checkpoint `45d8d091`,
+  `python scripts/audit.py` passes the default strict build (3,873 jobs), complete
+  validation build (4,770 jobs), public lint, authored diagnostic checks and
+  transitive standard-axiom checks. Native matching, coalition simulation and
+  locality controls pass. Raw output `.codex/scratch/exp177/integration-audit.log`;
+  independent semantic review accepts the scope and unchanged definitions.
+- **Outcome / next action:** adopt theorem-level local comparison; no shared
+  strict-coalition representation or changed strong-Nash meaning is justified.
+  Comparability is sufficient, not asserted necessary in each instance.
+  [D82](decisions/D82-local-coalition-comparison-and-consent.md) records the
+  scoped consent/affected-coordinate separation. The arena gate must test the
+  existing scheme with distinct judge labels and affected coordinates before
+  inferring a need for unrestricted law transformers.
+
+## EXP-178: affected coordinates, consent labels and law-linearity
+
+- **Date / status:** 2026-11-11; complete, retaining the existing local-kernel interface for this slice.
+- **Question:** Does the validated matching displacement force a broader arena
+  or arbitrary law-transformer interface, or does the existing scheme suffice
+  when consenting judges are distinguished from affected coordinates?
+- **Alternatives:** preserve the existing local kernel and arbitrary deviator
+  label; broaden a deviation to an unrestricted transformer of the status-quo
+  law. No new stable interface is admitted before a concrete client requires it.
+- **Representative slice:** extend the actual EXP-177 assignment replacement
+  with an unchanged spectator coordinate: two consenters, three affected
+  coordinates, four total. Realize both spectator-bit endpoint laws and their
+  genuine mixture while preserving the spectator. Contrast a law-aware Boolean
+  transformer that violates binary-mixture linearity and has no fixed kernel.
+- **Kill conditions:** identify consent and affected coordinates; claim
+  nonmember preservation only vacuously with an all-coordinate rewrite; weaken
+  the enforced locality/bind invariant; claim a full matching compilation or
+  global expressivity theorem from a fixed displacement; or admit a new arena,
+  probability carrier, engine or certificate hierarchy without a requiring client.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-06-arena-boundary`, baseline `18559255`.
+  Initial candidates live in ignored `.codex/scratch/exp178/`.
+- **Focused observations:** the existing Unit-labeled scheme realizes both
+  spectator endpoints of the valid replacement, preserving the spectator while
+  rewriting three active coordinates for two consenters. The affected subset
+  is proper; every kernel on the permitted local-input type is insensitive to
+  the spectator, and the exact fair output spectator distribution is retained.
+  The consent-only impossibility control still holds in this same enlarged
+  encoding. A whole-law Boolean operator fails a binary-mixture equation and
+  cannot equal bind by one fixed kernel for every input law. No claim is made
+  against a separate kernel selected for each law.
+- **Artifacts / focused validation:** retained probes are
+  `Experimental/Exp178/LocalRealization.lean` and `LawTransformerBoundary.lean`.
+  The strict probe/locality build passes 3,771 jobs, including the existing
+  recommendation-spying and frame controls in `Tests.Locality`; source audit
+  passes. Zero new stable definitions, structures, carriers or interfaces.
+- **Integration validation:** on checkpoint `d99de826`,
+  `python scripts/audit.py` passes the default strict build (3,873 jobs), full
+  validation build (4,772 jobs), public lint, authored diagnostic checks and
+  transitive standard-axiom checks. Raw output is
+  `.codex/scratch/exp178/integration-audit.log`. Independent semantic review
+  accepts the proper-subset, fixed-family and uniform-kernel qualifications.
+- **Outcome / next action:** retain the local kernel and bind lift; the fixed
+  displacement does not require a broader law-transformer interface. Genuine
+  randomness is in the preserved spectator law, not the deterministic local
+  replacement. This is not a full matching compilation or universal
+  expressivity theorem. No broad arena was implemented or timed.
+  [D83](decisions/D83-local-kernels-and-affected-coordinates.md) closes the initial
+  six-question investigation with no new stable interface; any future extension
+  needs an independently requiring client and explicit preservation obligations.
+
+## EXP-179: finite-menu choice and preference rationalization
+
+- **Date / status:** 2026-11-11; complete, supporting finite-menu representation with explicit boundaries.
+- **Question:** Can one probability-free feasible-choice correspondence connect
+  best response and economic allocation, with a converse reconstruction of
+  preferences from choices, without scores or a new problem hierarchy?
+- **Alternatives:** direct greatest-element comparisons; maximal choices under
+  incomplete relations; finite-menu choice with explicit feasibility,
+  nonemptiness and weak revealed-preference consistency. Existing Mathlib
+  maximal-element APIs are the baseline for finite existence.
+- **Representative slice:** a total/transitive binary revealed relation and
+  exact rationalization on every finite menu, canonical best response and an
+  independent allocation/incentive consumer; partial preferences, genuine ties,
+  an infinite ambient carrier and a represented-bundle union rejection.
+- **Kill conditions:** erase feasibility or candidate admissibility; identify
+  maximal with greatest without comparability; collapse tied bundle witnesses
+  into an infeasible union; assume all menus are observed from a budget-only
+  domain; store unnecessary finite/scalar data; or add duplicate equilibrium
+  semantics or an unconsumed problem/certificate hierarchy.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-07-menu-choice`, baseline `bb9f3345`;
+  local probes and logs under ignored `.codex/scratch/exp179/`.
+- **Focused observations:** feasibility, nonempty choice and the correspondence
+  weak axiom are equivalent to complete-preorder greatest choice on all finite
+  menus, without a finite ambient carrier or score. Equality-maximal choice and
+  complete indifference are observationally identical, so the representation
+  cannot identify latent incomparability. Cyclic binary choices refute dropping
+  the weak axiom. Greatest choice, domain-guarded comparison and bundle union
+  have different meanings; tied capacity-one allocations give an actual
+  infeasible-union control. Three actual lottery actions admit the relation
+  representation but no expected-utility representation of observed choices.
+- **Focused artifacts / validation:** `Math.FiniteChoice`, canonical Rank
+  finite existence and Response/Knapsack adapters; `Tests.FiniteChoice`,
+  `Tests.LotteryChoice`, `Experimental.Exp179.ChoiceBoundary`; [D84](decisions/D84-finite-menu-choice-and-revealed-preference.md).
+  `lake --iofail build GameTheory.Math.FiniteChoice` passes 677 jobs;
+  `lake --iofail build GameTheory.Tests.FiniteChoice GameTheory.Tests.LotteryChoice GameTheory.Experimental.Exp179.ChoiceBoundary`
+  passes 3,070 jobs, and source checks pass. Independent read-only semantic
+  reviews accept the scope.
+- **Integration validation:** on checkpoint `45d9cb13`,
+  `python scripts/audit.py` passes 3,874 default and 4,776 complete validation
+  jobs, public lint, authored diagnostics and transitive standard-axiom checks.
+  Raw output is `.codex/scratch/exp179/integration-audit.log`.
+- **Outcome / next action:** adopt finite-menu rationalization and existing
+  best-response/allocation adapters, retaining Mathlib ownership of finite
+  maximal existence. No universal choice structure, demand API or MathEconLib
+  migration is admitted. Observed complete-preorder representation is weaker
+  than expected utility and does not identify latent incompleteness. Next test
+  explicit scalar maximization against ordinal Pareto maximality, rather than
+  treating welfare sums as the only notion of efficiency.
+
+## EXP-180: scalar objectives and ordinal Pareto maximality
+
+- **Date / status:** 2026-11-11; complete, supporting incumbent-local scalarization and separate welfare objectives.
+- **Question:** Does an incumbent-local strict-increase theorem connect
+  canonical welfare and bargaining maximizers to ordinal Pareto maximality,
+  without a common-scale axiom or a new welfare/problem representation?
+- **Alternatives:** direct arithmetic proofs; Mathlib's global strictly
+  monotone maximality transport; a theorem requiring strict objective increase
+  only at improvements of the selected feasible point. Mathlib retains
+  `IsMaxOn`, `Maximal`, product orders and aggregate inequalities.
+- **Representative slice:** Groves reported-welfare maximization and Nash
+  bargaining with positive incumbent gains. Preserve the existing unconditional
+  weak-Pareto bargaining theorem. Reject zero/negative welfare weights,
+  alternative-specific biases, and zero-boundary Nash-product ties as sufficient
+  assumptions for full Pareto efficiency.
+- **Kill conditions:** identify ordinal Pareto with utilitarian selection;
+  hide interpersonal weights/biases; require positivity at unrelated feasible
+  points; infer maximality for an infeasible candidate; add a new order,
+  equilibrium or welfare engine; or reprove Mathlib's global monotone transport.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-08-scalarization`, baseline `1c6112a9`;
+  scratch and raw logs under ignored `.codex/scratch/exp180/`.
+- **Focused observations:** one preorder-valued objective theorem serves both
+  reported-welfare Pareto maximality and full bargaining Pareto efficiency with
+  positive incumbent gains. The latter's actual domain contains zero-product
+  boundary improvements, so global strict monotonicity is false there. An IR
+  zero-gain maximizer is weakly Pareto optimal but not Pareto optimal. Zero and
+  negative weights select dominated points; an actual canonical affine
+  maximizer with positive weights does so through its alternative bias.
+  Independent positive rescaling preserves every Pareto comparison but reverses
+  the fixed-weight sum choice. Empty-set maximization does not imply feasible
+  maximality. Empty-player full Pareto evidence needs no nonempty-player premise.
+- **Artifacts / focused validation:** `Math.Scalarization`, existing Groves and
+  bargaining owners, `Tests.Groves`, `Tests.BargainingScalarization`, and retained
+  rejection controls under `Experimental/Exp180/`; [D85](decisions/D85-local-scalarization-and-pareto-maximality.md).
+  Independent Math build passes 716 jobs; focused strict
+  `lake --iofail build GameTheory.Tests.Groves GameTheory.Tests.BargainingScalarization GameTheory.Experimental.Exp180.ScalarizationBoundary`
+  passes 3,158 jobs, and source checks pass. Independent read-only semantic
+  review accepts the scope.
+- **Integration validation:** on checkpoint `1a0b9b46`,
+  `python scripts/audit.py` passes 3,875 default and 4,779 complete validation
+  jobs, public lint, authored diagnostics and transitive standard-axiom checks.
+  Raw output is `.codex/scratch/exp180/integration-audit.log`.
+- **Outcome / next action:** adopt the independent mathematical theorem and
+  the Groves/bargaining consequences. Keep Pareto comparisons separate from
+  the chosen cardinal objective and preserve the zero-boundary failure.
+  No common-scale axiom, social-planner structure, new order or welfare engine
+  is admitted. Endogenous feasible sets and their existence/continuity laws
+  need a concrete requiring consumer before becoming another interface.
+
+## EXP-181: changing feasible sets and closed optimizer graphs
+
+- **Date / status:** 2026-11-11; complete, supporting a graph theorem and refuting closed-feasibility-only sufficiency.
+- **Question:** Which feasibility continuity law makes a continuous objective's
+  feasible maximizers have a closed graph, and can the same theorem serve a
+  genuine changing consumption budget and an existing fixed-simplex proof?
+- **Alternatives:** the existing fixed-menu intersection proof; continuous
+  objective plus closed feasible graph alone; or closed feasible graph plus
+  lower hemicontinuity, using Mathlib's correspondence APIs. Compactness and
+  nonemptiness supply existence separately rather than becoming stored data.
+- **Representative slice:** a reusable nonsequential closed-argmax theorem;
+  divisible consumption with a varying budget; a production local-lottery or
+  best-reply graph proof; and a zero-income free-good or discrete-capacity
+  boundary where feasible graphs remain closed but optimizer graphs do not.
+- **Kill conditions:** apply a fixed-menu proof to disappearing alternatives;
+  infer closed optimizer graph from closed feasible graph alone; silently
+  identify payoff-threshold Nash with endogenous feasible deviations; demand
+  compactness/convexity for graph closedness itself; introduce a correspondence
+  or equilibrium record without need; or claim full Berge, utility-representation
+  or generalized-equilibrium existence from this slice.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-09-parametric-choice`, baseline `f0557b0b`;
+  ignored scratch and logs under `.codex/scratch/exp181/`.
+- **Focused observations:** closed feasibility and lower hemicontinuity supply
+  different obligations. The shared closed-maximizer-graph theorem uses a
+  continuous objective in an ordered topological codomain without sequential,
+  compactness, convexity or nonempty-value assumptions. A changing divisible
+  budget proves lower hemicontinuity by continuous feasible recovery and
+  obtains existence separately; nonlinear satiation need not exhaust income.
+  The actual zero-income/free-good budget has closed graph, nonempty compact
+  convex uniformly bounded values and upper hemicontinuity, but its optimizer
+  graph is not closed. Lower hemicontinuity fails at that limit.
+- **Artifacts / focused validation:** `Math.ParametricOptimality`, production
+  `Analysis.LocalChoiceFixedPoint`, and the two economic probes in
+  `Experimental/Exp181/`; [D86](decisions/D86-parametric-feasible-optimality.md).
+  Independent Math build passes 1,006 jobs; focused strict production and
+  complete controls pass 3,633 jobs. Comment-masked nonblank production graph
+  lines are 25 before and 26 after, plus 31 shared theorem lines: this is new
+  generality, not proof compression or a performance claim. Independent
+  semantic review accepts the scope.
+- **Integration validation:** on checkpoint `647938a6`,
+  `python scripts/audit.py` passes 3,876 default and 4,782 complete validation
+  jobs, public lint, authored diagnostics and transitive standard-axiom checks.
+  Raw output is `.codex/scratch/exp181/integration-audit.log`.
+- **Outcome / next action:** adopt the independent graph theorem and its
+  production constant-simplex specialization. Retain economic probes as
+  experiment evidence; no demand or generalized-game representation is admitted.
+  Lower and upper feasibility continuity are distinct obligations. The next
+  dependency gate is simultaneous optimality with endogenous feasible choices,
+  where filtering ordinary Nash by a feasible-profile condition is not enough.
+
+## EXP-182: simultaneous feasible choice and shared-resource incentives
+
+- **Date / status:** 2026-11-11; complete, supporting simultaneous feasible choice and refuting ordinary-Nash feasibility filtering.
+- **Question:** Can simultaneous optimization with changing feasible menus
+  reuse the existing guarded choice and fixed-point tools without a new
+  generalized-game record or a summed interpersonal objective?
+- **Alternatives:** ordinary Nash plus feasible-profile filtering; native local
+  affordable judgments; and a theorem for per-coordinate feasible maximizers
+  on a compact convex product envelope, with lower hemicontinuity and
+  quasiconcavity explicit. Compare the existing local-lottery fixed-point
+  proof as a production specialization before admitting another interface.
+- **Representative slice:** two quantities in `[0,1]` sharing unit capacity,
+  own-quantity utility and opponent-dependent affordable alternatives. Local
+  optima fill capacity while every ordinary Nash profile violates it. Test a
+  shared fixed-point theorem against this consumer and unchanged finite-simplex
+  local lotteries. Keep each objective separate and freeze the parameter
+  during every local comparison.
+- **Kill conditions:** silently change canonical Nash or recommendation
+  locality; identify feasibility filtering with endogenous available moves;
+  hide nonempty/continuous menu assumptions or loss of convex maximizers;
+  sum different judges' scores merely to fit a theorem; duplicate Mathlib or
+  the external fixed-point engine; or introduce an unconsumed problem record.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-10-feasible-fixed-points`, baseline
+  `bbd5add1`; scratch and logs under ignored `.codex/scratch/exp182/`.
+- **Focused observations:** guarded affordability reuses `Math.IsOptimalOn`
+  and is exactly capacity saturation in the canonical interval-strategy game.
+  Every ordinary Nash profile buys two units, so feasible-profile filtering
+  loses all coupled optima. One per-coordinate fixed-point theorem serves both
+  the changing-menu constraint family and the unchanged finite-lottery theorem,
+  without summed utilities or a new game record. Closed fibers in the compact
+  envelope derive menu compactness; quasiconcavity derives convex maximizers.
+  The square-score control has continuous utility and nonconvex maximizers,
+  delimiting what continuity alone supplies. Nonempty menus at every envelope
+  point remain an actual assumption, not a claim about all resource games.
+- **Artifacts / focused validation:** `Analysis.FeasibleChoiceFixedPoint`,
+  exact specialization in `Analysis.LocalChoiceFixedPoint`, canonical native
+  control `Experimental.Exp182.SharedCapacity`, and the analytic consumer in
+  `Analysis.FeasibleChoiceFixedPointTest`; [D87](decisions/D87-simultaneous-feasible-choice.md).
+  Standalone analytic target passes 3,194 jobs; complete focused strict
+  production and controls pass 3,655 jobs, and source checks pass. Production
+  body source count falls from 92 to 39 nonblank lines, with 72 shared theorem
+  lines and 91 separately charged quantity construction lines. Cold source
+  cost is larger for one consumer; no performance advantage is claimed.
+  Independent semantic review accepts the scope.
+- **Integration validation:** on checkpoint `617d8847`,
+  `python scripts/audit.py` passes 3,876 default and 4,786 complete validation
+  jobs, public lint, authored diagnostics and transitive standard-axiom checks.
+  Existing terminal/belief and sequential-existence clients pass through the
+  exact local-lottery specialization. Raw output is
+  `.codex/scratch/exp182/integration-audit.log`.
+- **Outcome / next action:** adopt the per-coordinate analytic operation and
+  production specialization, with native constrained-game semantics retained
+  as checked evidence rather than a new problem record. Feasibility, available
+  alternatives, their continuity and objective geometry remain separate
+  operations. Market clearing, broader native constraints and preference
+  representation need named consumers before further interfaces are admitted.
+
+## EXP-183: exchange budgets, price response and market clearing
+
+- **Date / status:** 2026-11-11; complete, supporting independent budget recovery and the full scoped exchange slice.
+- **Question:** Do the independent feasible-choice building blocks connect
+  individual budget optimization to competitive market clearing, without a
+  new economic-problem record or a summed consumer objective?
+- **Alternatives:** capped demand plus an aggregate price-response condition;
+  separate budget regularity, clearing and removal of artificial caps. Reuse
+  simultaneous feasible maximization, Mathlib concavity/local-to-global
+  optimality, and positive-income feasible recovery before adding mathematics.
+- **Representative slice:** two goods and two consumers, each endowed with
+  one unit of each good; normalized nonnegative prices including zero
+  coordinates; arbitrary continuous concave strictly monotone utilities on
+  nonnegative consumption. Use the compact consumption box `[0,3]²` as an
+  envelope, derive exact clearing of aggregate `(2,2)`, then prove individual
+  optimality on the full uncapped budget. Quasiconcavity supplies capped
+  existence; the stronger concavity hypothesis is explicit for uncapping.
+- **Hostile controls / kill conditions:** zero-income/free-good continuity
+  failure; tied demands; weakly monotone satiation permitting uncleared price
+  responses; and a cap-binding apparent equilibrium whose choices are not
+  optimal on the full budget. Reject any argument that assumes positive price
+  coordinates, identifies price response with clearing without a proof,
+  suppresses consumer feasibility, sums interpersonal utilities, or claims an
+  uncapped/general exchange theorem from capped fixed-point existence alone.
+- **Artifacts / commands:** item branch
+  `codex/experiment-abstraction-item-11-exchange-economy`, baseline `c1431a88`;
+  scratch and raw logs under ignored `.codex/scratch/exp183/`.
+- **Focused observations:** the existing per-coordinate fixed point reaches
+  a complete two-by-two exchange result on full budgets. Normalized prices
+  permit zero coordinates while unit endowments keep income one. A standalone
+  radial-recovery lemma proves positive linear budget lower hemicontinuity
+  from fixed-bundle cost section continuity alone. Aggregate affordability and
+  the price response bound resources; a lower-expenditure residual top-up
+  proves exact clearing without a prior budget-exhaustion premise. The cap
+  is then inactive, and Mathlib concavity upgrades full-budget local to global
+  optimality. Conflicting positive linear utility weights instantiate the
+  complete existence theorem.
+- **Rejection observations:** tied individually optimal demands can fail
+  clearing and price response. A cap-one endowment allocation clears and
+  satisfies price response and capped optimality, but is not optimal on the
+  full budget. Continuous concave constant-zero utilities permit a
+  nonclearing price-response point under weak monotonicity. The latter is a
+  failure of that implication, not nonexistence of every clearing equilibrium.
+- **Artifacts / focused validation:** `Math.LinearBudget`, native proofs and
+  controls under `Experimental/Exp183`, `Analysis.ExchangeEconomyTest`, and
+  [D88](decisions/D88-exchange-budgets-and-market-clearing.md). Independent
+  Math target passes 1,606 strict jobs; native clearing/uncapping passes 1,700;
+  complete consumer and controls pass 3,202, and source checks pass. Whole-file
+  comment-masked nonblank counts are 56 shared mathematical, 103 native
+  definitions/geometry, 152 clearing/uncapping, 135 analytic construction and
+  153 controls. No performance or compression claim is made. Independent
+  semantic reviews accept the exact two-by-two/unit-endowment scope and the
+  distinction between ambient continuity and cone-restricted utility laws.
+  Complete integration follows below.
+- **Integration validation:** on checkpoint `759fd54b`,
+  `python scripts/audit.py` passes 3,877 default and 4,792 complete validation
+  jobs, public lint, authored diagnostics and transitive standard-axiom checks.
+  Raw output is `.codex/scratch/exp183/integration-audit.log`.
+- **Outcome / next action:** adopt only the independent positive linear-budget
+  lower-hemicontinuity theorem. Retain the full exchange result and controls
+  as checked experimental/test evidence. Individual optimization, physical
+  price response, clearing and removal of artificial bounds are separate
+  obligations; the existing mathematical building blocks compose without a
+  new economic record or consumer-utility sum. Arbitrary endowments, broader
+  preferences and stable market data remain independently requiring gates.
+
+## EXP-184: conditional comparison and dynamic choice
+
+- **Date / status:** 2026-11-11; complete, refuting order-only dynamic composition and supporting direct sufficient hypotheses.
+- **Question:** Does a total transitive ranking of terminal laws suffice to
+  compose conditional optimal choices into ex-ante or sequential optimality?
+  If not, does an explicit support-local comparison-preservation hypothesis
+  suffice without changing numerical contexts or adding a preference hierarchy?
+- **Alternatives:** direct guarded optimality plus actual-prior comparison
+  hypotheses; a generic dynamic-context record. Keep domain admissibility
+  separate from comparison closure, and compare with existing exact-law
+  observation transport rather than conflating the two operations.
+- **Representative slice:** a fair observed branch, one branch with a genuine
+  action and one fixed continuation. Test a real-score total preorder whose
+  conditional strict preference reverses before observation, then a genuinely
+  non-EU possibility ranking that composes under arbitrary supported mixtures.
+  Exercise well-founded protocol backward laws as a second composition client.
+- **Kill conditions:** reject deriving dynamic consistency from transitivity,
+  totality or exact-law transport alone; reject treating componentwise
+  evaluation-domain membership as actual-mixture definedness. A new context
+  record must enable a needed operation unavailable through direct hypotheses.
+- **Artifacts / commands:** branch
+  `codex/experiment-abstraction-item-13-dynamic-choice`, baseline `1aad00fa`;
+  evidence under `Experimental/Exp184`, scratch logs in
+  `.codex/scratch/exp184/`; focused strict builds and integration audit before
+  collecting a completed result.
+- **Observations:** a total transitive quadratic law ranking strictly prefers
+  both prescribed conditional actions, but strictly rejects their fair-prior
+  composition. Actual laws are defined and both menus have genuine alternatives.
+  The non-EU possibility comparison on Boolean outcomes preserves arbitrary
+  supported paired mixtures and fixed-base bounds; a common continuation can erase strictness.
+  Direct guarded conditional composition and well-founded chooser composition
+  both instantiate without a new context record. Whole-law admissibility stays
+  explicit; the backward argument uses the competing transition prior.
+- **Focused validation:** `lake --iofail build
+  GameTheory.Tests.DynamicChoice` passes 3,072 jobs (measured while that module
+  was `Experimental.Exp184.Consumers`), and
+  `python scripts/audit.py --source-only` passes. Evidence is under
+  `Experimental/Exp184/{Composition,Controls}.lean`, `Tests/DynamicChoice.lean` and
+  [D89](decisions/D89-conditional-and-dynamic-comparison.md). Independent
+  semantic review accepts the comparison/domain and chooser/policy boundaries.
+- **Integration validation:** on checkpoint `6dec70a5`,
+  `python scripts/audit.py` passes 3,877 default and 4,795 validation jobs,
+  public lint, authored diagnostics and transitive standard-axiom checks.
+  Raw output is `.codex/scratch/exp184/integration-audit.log`.
+- **Outcome / next action:** retain direct prototypes and controls as
+  experimental evidence; no numerical Context or generic mixture hierarchy
+  changes. Dynamic comparison and actual-mixture admissibility are separate
+  obligations. Next test restricted budget observations, where all-finite-menu
+  identification cannot be assumed.
+
+## EXP-185: restricted budgets and preference identification
+
+- **Date / status:** 2026-11-11; complete, proving restricted-observation nonidentification.
+- **Question:** Can an entire fixed-positive-price budget family identify the
+  preference represented by all-finite-menu choice? Does adding another actual
+  budget distinguish observational ambiguity without a new choice record?
+- **Alternatives:** ordinary filtered finite menus and `FiniteChoice.best`;
+  a restricted-demand abstraction claiming recovery of a complete ranking.
+- **Representative slice:** six indivisible nonnegative bundles of total
+  quantity at most two. Compare monotone scores `5x + 2y` and `5x + 2y²` at
+  prices `(1,1)` for every wealth, then at `(2,1)` and wealth three.
+- **Kill conditions:** retain all ties and actual affordability. Do not infer
+  preference identification from agreement on restricted observations; do not
+  confuse nonidentification with failure of existence of a rationalization.
+  A new representation must do more than package existing filtered menus.
+- **Artifacts / commands:** branch
+  `codex/experiment-abstraction-item-14-restricted-budgets`, baseline `8770f201`;
+  evidence under `Experimental/Exp185`, scratch in `.codex/scratch/exp185/`.
+- **Observations:** for every real wealth the full choice correspondences
+  agree at `(1,1)`, including empty and threshold budgets, but the rankings
+  strictly reverse `(1,1)` versus `(0,2)`. Prices `(2,1)`, wealth three,
+  distinguish them through different singleton demands. Both global choice
+  correspondences satisfy WARP and both scores strictly value each unit
+  commodity increment. The failure is identification from a restricted domain,
+  not existence of a consistent rationalization.
+- **Focused validation:** `lake --iofail build
+  GameTheory.Experimental.Exp185.RestrictedBudget` passes 958 jobs;
+  source boundaries and driver coverage pass. See
+  [D90](decisions/D90-restricted-budget-observations.md).
+- **Integration validation:** on checkpoint `7c6734ae`, full audit passes
+  3,877 default and 4,796 validation jobs, public lint, authored diagnostics and
+  transitive standard-axiom checks. Raw output is
+  `.codex/scratch/exp185/integration-audit.log`. Independent semantic review
+  accepts the finite indivisible and identification-only scope.
+- **Outcome / next action:** keep the native observation probe experimental;
+  reuse canonical finite menus rather than introducing a demand wrapper.
+  Next test joint contract acceptance and its substitution assumptions against
+  the existing MathEconLib consumer.
+
+## EXP-186: joint contract acceptance versus alternative choice
+
+- **Date / status:** 2026-11-11; complete, separating institutional substitution from bundle rationality.
+- **Question:** Can item-level WARP or rationalization over bundles replace
+  the substitution assumptions used to reduce joint blocking to singleton
+  blocking? Does expressing this distinction require another game arena?
+- **Alternatives:** plain set maps with separate contraction/consistency
+  hypotheses and existing finite choice on bundle alternatives; conflating
+  accepted contracts with tied alternative bundles or their item-level WARP.
+- **Representative slice:** quota two on three ranked contracts, matching the
+  MathEconLib reference's exact substitutes/IRC/path-independence formulas;
+  complementary two-contract acceptance as a rationalized countercontrol.
+  Test the actual joint-to-singleton acceptance implication.
+- **Kill conditions:** do not identify item WARP with substitutes, infer
+  substitutes from bundle rationality, flatten ties, or confuse an accepted
+  empty bundle with an empty correspondence. A broader arena must supply a
+  missing operation rather than another name for the same maps.
+- **Artifacts / commands:** branch
+  `codex/experiment-abstraction-item-15-contract-choice`, baseline `74b60c4c`;
+  evidence under `Experimental/Exp186`, scratch `.codex/scratch/exp186/`.
+  Reference checkout is read-only at
+  `58f602847d7f131994d32ca7a8cc1af35b7e2dbe`.
+- **Observations:** the quota-two map satisfies the reference's exact
+  substitutes/IRC/path-independence formulas but fails item WARP and expansion.
+  Canonical greatest choice over quota-feasible bundles uniquely rationalizes
+  the same map, with set/finite identity proved. Complementary contracts are
+  likewise uniquely bundle-rationalized and WARP-consistent but refute the
+  contraction form of substitutes and the joint-to-singleton acceptance step. Empty offers select
+  the empty bundle rather than an empty correspondence.
+- **Focused validation:** `lake --iofail build
+  GameTheory.Experimental.Exp186.Institution` passes 782 jobs; its dependency
+  build validates the two set and finite owners. See
+  [D91](decisions/D91-contract-acceptance-and-bundle-choice.md). No new stable
+  record or arena is required, and the reference already owns the general
+  institutional composition theorem.
+- **Integration validation:** on checkpoint `7c33ac60`, full audit passes
+  3,877 default and 4,799 validation jobs, public lint, authored diagnostics and
+  transitive standard-axiom checks. Raw output is
+  `.codex/scratch/exp186/integration-audit.log`. Independent review accepts the
+  item/bundle, empty-bundle and acceptance/full-stability boundaries.
+- **Outcome / next action:** keep the probes experimental and reuse the
+  MathEconLib-owned institutional operations. No broader arena or parallel
+  stable choice record is justified. Finish with a carrier-independent guarded
+  comparison consumer check and the concrete extraction contract; do not expand
+  into adjacent matching or demand theorem families.

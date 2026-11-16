@@ -128,6 +128,11 @@ private axiom bad : False
         self.write("GameTheory/Core/Fixture.lean", "import GameTheory.Tests.Control\n")
         self.assert_rejects("library module imports a fixture")
 
+    def test_experiment_cannot_import_test_fixture(self):
+        self.write("GameTheory/Experimental/Probe/Fixture.lean",
+                   "public import GameTheory.Tests.Control\n")
+        self.assert_rejects("experiment imports a test fixture")
+
     def test_new_integer_execution_leaf_has_computability_checks(self):
         self.write("GameTheory/Finite/BimatrixCertificate.lean", "noncomputable def bad := x\n")
         self.assert_rejects("executable leaf uses noncomputable")

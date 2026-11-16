@@ -13,7 +13,7 @@ direction keeps social choice independent of probability as well as
 mathematically unrelated to it.
 -/
 
-public import Mathlib.Data.Finset.Basic
+public import GameTheory.Math.FiniteChoice
 
 @[expose] public section
 
@@ -101,30 +101,8 @@ theorem exists_best_finset
     {ranks : α → α → Prop}
     (htrans : Transitive ranks) (htotal : Total ranks)
     {items : Finset α} (hne : items.Nonempty) :
-    ∃ best ∈ items, ∀ alternative ∈ items, ranks best alternative := by
-  classical
-  induction items using Finset.induction_on with
-  | empty => simp at hne
-  | @insert item items hnotmem ih =>
-      by_cases hempty : items.Nonempty
-      · obtain ⟨best, hbest, hmax⟩ := ih hempty
-        rcases htotal item best with hib | hbi
-        · exact ⟨item, Finset.mem_insert_self item items, fun alternative halt => by
-            rcases Finset.mem_insert.mp halt with heq | halt
-            · subst alternative
-              exact (htotal item item).elim id id
-            · exact htrans item best alternative hib (hmax alternative halt)⟩
-        · exact ⟨best, Finset.mem_insert_of_mem hbest, fun alternative halt => by
-            rcases Finset.mem_insert.mp halt with heq | halt
-            · subst alternative
-              exact hbi
-            · exact hmax alternative halt⟩
-      · have hitems : items = ∅ := Finset.not_nonempty_iff_eq_empty.mp hempty
-        exact ⟨item, Finset.mem_insert_self item items, fun alternative halt => by
-          rw [hitems] at halt
-          have heq : alternative = item := by simpa using halt
-          subst alternative
-          exact (htotal item item).elim id id⟩
+    ∃ best ∈ items, ∀ alternative ∈ items, ranks best alternative :=
+  Math.FiniteChoice.best_nonempty htrans htotal items hne
 
 /-- Under antisymmetry, a weak comparison between distinct alternatives is
 strict. -/
@@ -257,13 +235,15 @@ theorem not_forall_strict_of_coalition
   obtain ⟨member, hmember, hpref⟩ := h
   exact fun hall => (hall member hmember).2 hpref
 
-/-- Under totality, the coalition lift is equivalent to saying that not every
-member strictly gains. -/
-theorem coalition_iff_not_forall_strict
+/-- The coalition lift means that not every member strictly gains whenever
+each member compares these two outcomes. No unrelated comparison is needed. -/
+theorem coalition_iff_not_forall_strict_of_comparable
     (weaklyPrefers : Ranking Agent α)
-    (htotal : Total weaklyPrefers)
     (coalition' : { members : Finset Agent // members.Nonempty })
-    (preferred alternative : α) :
+    (preferred alternative : α)
+    (hcompare : ∀ member ∈ coalition'.1,
+      weaklyPrefers member preferred alternative ∨
+        weaklyPrefers member alternative preferred) :
     coalition weaklyPrefers coalition' preferred alternative ↔
       ¬ ∀ member ∈ coalition'.1,
         strict weaklyPrefers member alternative preferred := by
@@ -273,7 +253,20 @@ theorem coalition_iff_not_forall_strict
   have hno : ¬ weaklyPrefers member preferred alternative :=
     fun hpref => hnone ⟨member, hmember, hpref⟩
   exact
-    ⟨(htotal member alternative preferred).resolve_right hno, hno⟩
+    ⟨(hcompare member hmember).resolve_left hno, hno⟩
+
+/-- Under totality, the coalition lift is equivalent to saying that not every
+member strictly gains. -/
+theorem coalition_iff_not_forall_strict
+    (weaklyPrefers : Ranking Agent α)
+    (htotal : Total weaklyPrefers)
+    (coalition' : { members : Finset Agent // members.Nonempty })
+    (preferred alternative : α) :
+    coalition weaklyPrefers coalition' preferred alternative ↔
+      ¬ ∀ member ∈ coalition'.1,
+        strict weaklyPrefers member alternative preferred :=
+  coalition_iff_not_forall_strict_of_comparable weaklyPrefers coalition' preferred alternative
+    (fun member _ => htotal member preferred alternative)
 
 end Preference
 
