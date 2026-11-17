@@ -92,7 +92,7 @@ theorem unequal_depth_equilibrium_from_components :
   apply unequal_depth_equilibrium_from_components_of_terminal_range
   intro who final _
   cases stateEq : final.state <;> simp [GameTheory.Tests.SequentialExistence.payoff, stateEq]
-  all_goals split <;> norm_num
+  split <;> norm_num
 
 /-- Strictly reward the action `true`, independently of nature's hidden bit. -/
 def actionPayoff (_ : Unit) (history : execution.History) : ℝ :=
@@ -120,7 +120,7 @@ theorem strict_action_equilibrium_from_components :
   have existsLimit := unequal_depth_equilibrium_from_components_of_terminal_range actionPayoff
     (fun who final _ => by
       cases stateEq : final.state <;> simp [actionPayoff, stateEq]
-      all_goals split <;> norm_num)
+      split <;> norm_num)
   exact ⟨by simp [actionPayoff, actionTerminal], by simp [actionPayoff, actionTerminal],
     existsLimit.2⟩
 

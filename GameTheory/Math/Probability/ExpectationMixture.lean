@@ -108,7 +108,7 @@ theorem bind_mix_expect {α β : Type*} (μ : PMF α)
         ENNReal.ofReal (1 - weight a) * ξ b)) =
         (∑' a, μ a * ENNReal.ofReal (weight a) * ν b) +
           ∑' a, μ a * ENNReal.ofReal (1 - weight a) * ξ b := by
-      rw [← ENNReal.tsum_add]
+      rw [← tsum_add]
       apply tsum_congr
       intro a
       rw [mul_add]

@@ -184,7 +184,7 @@ theorem isPerfect_of_balanced (gain : Fin 3 → ℝ) (first second : ℝ) (hfirs
       · rw [hrow]
         fin_cases action
         all_goals simp
-        all_goals linarith [tremble_le n]
+        linarith [tremble_le n]
       · rw [hcolumn]
         fin_cases action <;> simp <;> nlinarith [tremble_le n, tremble_pos n]
     · rw [prefers_iff]

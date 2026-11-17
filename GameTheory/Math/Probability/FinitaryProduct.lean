@@ -102,7 +102,7 @@ theorem finitaryProduct_apply (laws : ∀ i, PMF (A i)) (moving : Finset ι)
       funext i
       show other i = assignment i
       rw [heq, extendFrom_of_mem _ _ i.2]
-  · rw [ENNReal.tsum_eq_zero]
+  · rw [tsum_eq_zero_iff]
     intro draw
     refine ite_eq_right_iff.mpr fun heq => absurd ?_ hfixed
     intro i hi

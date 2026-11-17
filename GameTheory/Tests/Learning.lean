@@ -60,7 +60,7 @@ private theorem utilityIntegrable (who : Fin 2) (law : PMF (Bool × Bool)) :
     (C := 1)
   rintro ⟨left, right⟩
   cases who
-  all_goals by_cases h : left = right <;> simp [utility, h]
+  by_cases h : left = right <;> simp [utility, h]
 
 /-- The finite base outcome laws integrate each player's utility. -/
 theorem baseIntegrable (who : Fin 2)
@@ -80,7 +80,7 @@ theorem deviationIntegrable (who : Fin 2)
     (fun outcome => utility outcome who) (C := 1)
   rintro ⟨left, right⟩
   cases who
-  all_goals by_cases h : left = right <;> simp [utility, h]
+  by_cases h : left = right <;> simp [utility, h]
 
 /-- The trace has genuinely positive external regret: after the mismatched
 round, player zero would have gained one by committing to `false`. -/
@@ -157,7 +157,7 @@ theorem coordinated_independentSelfPlay_isCoarseCorrelatedEq :
     (hband := by
       intro who ⟨left, right⟩
       cases who
-      all_goals by_cases h : left = right <;> norm_num [utility, h])
+      by_cases h : left = right <;> norm_num [utility, h])
     (mixedProfile := fun _ : Fin 1 => fun _ => PMF.pure false)
     (bound := 0) (by
       intro who action

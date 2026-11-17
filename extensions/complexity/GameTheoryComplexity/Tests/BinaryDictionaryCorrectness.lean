@@ -12,7 +12,7 @@ open Backend
 
 private def dim : List Bool := [true, false]
 private def width : List Bool := List.replicate (GameTheory.Math.BirdIterationBounds.workWidth 2 3) false
-private def field (z : ℤ) : List Bool := decide (z < 0) :: Nat.toBitsLE (width.length - 1) z.natAbs
+private def field (z : ℤ) : List Bool := decide (z < 0) :: Cslib.BitString.lowBits (width.length - 1) z.natAbs
 private def matrix : List Bool := field 0 ++ field 6 ++ field 4 ++ field 0
 private def entering : List Bool := field (-3) ++ field 5
 
@@ -23,6 +23,7 @@ example (i : Fin 2) (k : Fin 3) :
   have he := binaryDictionaryCoefficients_value dim width matrix 3 rfl
     (by decide +kernel) (by decide +kernel) i k
   refine he.trans ?_
+  rw [GameTheory.Math.IntegerDictionaryComputation.coefficients_eq]
   fin_cases i <;> fin_cases k <;> decide +kernel
 
 -- Entering directions retain negative coordinates rather than converting them to naturals.
@@ -42,6 +43,7 @@ example (i : Fin 2) (k : Fin 3) :
     (field 0 ++ field 0 ++ field 0 ++ field 0) 3 rfl
     (by decide +kernel) (by decide +kernel) i k
   refine he.trans ?_
+  rw [GameTheory.Math.IntegerDictionaryComputation.coefficients_eq]
   fin_cases i <;> fin_cases k <;> decide +kernel
 
 example : binaryDictionaryCoefficients

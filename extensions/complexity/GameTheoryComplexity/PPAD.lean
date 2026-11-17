@@ -1,63 +1,59 @@
 module
 
 public import GameTheoryComplexity.Backend.RawEndOfLineReduction
-public import GameTheoryComplexity.Backend.NormalizedEndOfLineReduction
-public import GameTheoryComplexity.Backend.EndOfLineCircuitGeneration
+public import GameTheoryComplexity.Backend.EndOfLineMembership
+public import GameTheoryComplexity.Backend.NativeEndOfLineReduction
 
 @[expose] public section
 
-/-! Polynomial search classification through the standard asymmetric End-of-Line
-relation. Verifiability and balance are independent of solution-preserving
-reductions, so membership includes the source's FNP certificate. -/
+/-! Native directed-parity classification of concrete End-of-Line problems.
+Uniform circuit generation realizes every encoded polynomial-time pointer
+family, and each decoder preserves every target answer, including failed source
+promises. Verification and witness bounds are supplied independently.
+-/
 
 namespace GameTheory.Complexity
 
-open _root_.Complexity
+open Turing.MultiTapeTM
 open Backend
 
-/-- Polynomially verified search problems reducing to standard End-of-Line. -/
-def PPAD : Set (List Bool → List Bool → Prop) :=
-  {R | R ∈ FNP ∧ Nonempty (SearchReduction R rawEndOfLineRelation)}
+/-- Asymmetric pointer search belongs to the native directed-parity class. -/
+theorem rawEndOfLineRelation_mem_PPAD :
+    rawEndOfLineRelation ∈ Cslib.Complexity.PPAD encBits :=
+  rawToEndpointReduction.mem_PPAD rawEndOfLineRelation_mem_FNP
+    Backend.endOfLineRelation_mem_PPAD
 
-/-- Every PPAD problem has short, efficiently verified witnesses and is total. -/
-theorem PPAD.mem_TFNP {R : List Bool → List Bool → Prop} (h : R ∈ PPAD) : R ∈ TFNP := by
-  obtain ⟨a⟩ := h.2
-  exact a.mem_TFNP h.1 rawEndOfLineRelation_mem_TFNP
+/-- Every native directed-parity problem reduces to concrete endpoint search,
+for arbitrary encoded instance types. -/
+theorem endOfLineRelation_PPADHard :
+    Cslib.Complexity.SearchHard @Cslib.Complexity.PPAD encBits endOfLineRelation := by
+  intro α enc R hR
+  obtain ⟨_, n, P, S, hn, hP, hS, hP_length, hS_length, hred⟩ :=
+    Cslib.Complexity.mem_PPAD.mp hR
+  exact hred.trans (nativeEndOfLine_searchReducible hn hP hS hP_length hS_length)
 
-/-- A certified reduction transports membership when source FNP is supplied. -/
-theorem PPAD.of_reduction {R T : List Bool → List Bool → Prop}
-    (a : SearchReduction R T) (hR : R ∈ FNP) (hT : T ∈ PPAD) : R ∈ PPAD := by
-  obtain ⟨b⟩ := hT.2
-  exact ⟨hR, ⟨a.trans b⟩⟩
+/-- Concrete endpoint search belongs to native PPAD. -/
+theorem endOfLineRelation_mem_PPAD :
+    endOfLineRelation ∈ Cslib.Complexity.PPAD encBits :=
+  Backend.endOfLineRelation_mem_PPAD
 
-/-- Every PPAD problem reduces to a hard relation. -/
-def PPADHard (R : List Bool → List Bool → Prop) : Prop :=
-  ∀ T, T ∈ PPAD → Nonempty (SearchReduction T R)
-
-/-- A complete relation belongs to PPAD and receives all of its search reductions. -/
-def PPADComplete (R : List Bool → List Bool → Prop) : Prop :=
-  R ∈ PPAD ∧ PPADHard R
-
-/-- Standard End-of-Line is complete for the class it defines. -/
-theorem rawEndOfLineRelation_PPADComplete : PPADComplete rawEndOfLineRelation :=
-  ⟨⟨rawEndOfLineRelation_mem_FNP, ⟨SearchReduction.refl _⟩⟩, fun _ h => h.2⟩
-
-/-- Consistent-edge endpoint search is PPAD-hard through a certified identity
-instance map and source-aware solution decoder. -/
-theorem endOfLineRelation_PPADHard : PPADHard endOfLineRelation := by
-  intro T hT
-  obtain ⟨a⟩ := hT.2
-  exact ⟨a.trans rawToEndpointReduction⟩
-
-/-- Uniformly generated normalized circuits give an actual polynomial instance
-map to standard raw End-of-Line; every target answer is retained. -/
-theorem endOfLineRelation_mem_PPAD : endOfLineRelation ∈ PPAD := by
-  obtain ⟨f, hf, hvalid, hinvalid⟩ := exists_normalizedEndOfLineInstance
-  exact ⟨endOfLineRelation_mem_FNP,
-    ⟨endpointToRawReductionOfNormalization f hf hvalid hinvalid⟩⟩
-
-/-- Consistent-edge endpoint search is complete for standard PPAD. -/
-theorem endOfLineRelation_PPADComplete : PPADComplete endOfLineRelation :=
+/-- Consistent-edge endpoint search is complete for native directed parity. -/
+theorem endOfLineRelation_PPADComplete :
+    Cslib.Complexity.SearchComplete @Cslib.Complexity.PPAD encBits endOfLineRelation :=
   ⟨endOfLineRelation_mem_PPAD, endOfLineRelation_PPADHard⟩
+
+/-- Every native directed-parity problem reduces to asymmetric pointer search,
+with every raw inconsistency decoded. -/
+theorem rawEndOfLineRelation_PPADHard :
+    Cslib.Complexity.SearchHard @Cslib.Complexity.PPAD encBits rawEndOfLineRelation := by
+  intro α enc R hR
+  obtain ⟨_, n, P, S, hn, hP, hS, hP_length, hS_length, hred⟩ :=
+    Cslib.Complexity.mem_PPAD.mp hR
+  exact hred.trans (nativeEndOfLine_raw_searchReducible hn hP hS hP_length hS_length)
+
+/-- Asymmetric pointer search is complete for native directed parity. -/
+theorem rawEndOfLineRelation_PPADComplete :
+    Cslib.Complexity.SearchComplete @Cslib.Complexity.PPAD encBits rawEndOfLineRelation :=
+  ⟨rawEndOfLineRelation_mem_PPAD, rawEndOfLineRelation_PPADHard⟩
 
 end GameTheory.Complexity

@@ -14,15 +14,15 @@ open GameTheory.Complexity.Backend
 open GameTheory.Complexity.Tests.EndOfLine
 open GameTheory.Complexity.Tests.RawEndOfLine
 
-example : rawToEndpointDecode ![brokenInitialLink, []] = [false] := by decide
+example : rawToEndpointDecode (brokenInitialLink, []) = [false] := by decide
 
-example : rawToEndpointDecode ![oneBitPath, [true]] = [true] := by decide
+example : rawToEndpointDecode (oneBitPath, [true]) = [true] := by decide
 
-example : rawToEndpointDecode ![missingCircuits, []] = [] := by decide
+example : rawToEndpointDecode (missingCircuits, []) = [] := by decide
 
 example : rawEndOfLineRelation brokenInitialLink
-    (rawToEndpointDecode ![brokenInitialLink, []]) :=
-  rawToEndpointReduction.sound _ _ (Or.inr ⟨brokenInitialLink_not_strong_source, rfl⟩)
+    (rawToEndpointDecode (brokenInitialLink, [])) :=
+  rawToEndpointDecode_sound _ _ (Or.inr ⟨brokenInitialLink_not_strong_source, rfl⟩)
 
 example : rawEndOfLineRelation brokenInitialLink [false] := by
   exact (rawEndOfLineVerdict_accept _ _).mp brokenInitialLink_accepts_origin

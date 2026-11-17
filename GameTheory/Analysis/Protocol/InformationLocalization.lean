@@ -52,8 +52,8 @@ private theorem mixture_add_tsum {γ ρ : Type*} (weight : γ → ℝ≥0∞)
       ∑' r, (∑' c, weight c * mass c r) * value r =
         ∑' c, weight c * ∑' r, mass c r * value r := by
     simp_rw [← ENNReal.tsum_mul_right, ← ENNReal.tsum_mul_left, mul_assoc]
-    exact ENNReal.tsum_comm
-  rw [hswap, hswap, ← ENNReal.tsum_add, ← ENNReal.tsum_add]
+    exact tsum_comm
+  rw [hswap, hswap, ← tsum_add, ← tsum_add]
   refine tsum_congr fun c => ?_
   by_cases hzero : weight c = 0
   · simp [hzero]
@@ -384,7 +384,7 @@ private theorem map_add_mul {μ ν : PMF E.History} (observe : E.History → Obs
     (weight : ℝ≥0∞) (outcome : Observation) :
     μ.map observe outcome + weight * ν.map observe outcome =
       ∑' final, if outcome = observe final then μ final + weight * ν final else 0 := by
-  rw [PMF.map_apply, PMF.map_apply, ← ENNReal.tsum_mul_left, ← ENNReal.tsum_add]
+  rw [PMF.map_apply, PMF.map_apply, ← ENNReal.tsum_mul_left, ← tsum_add]
   refine tsum_congr fun final => ?_
   split_ifs <;> simp
 
@@ -714,7 +714,7 @@ theorem tsum_coneMass_eq (certificate : E.WellFoundedHistories) (chooser : E.Ran
         {final | ∃ root, IsRoot root ∧ E.HistoryReaches root final} := by
   classical
   simp only [ExecutionProtocol.coneMass, PMF.toOuterMeasure_apply]
-  rw [ENNReal.tsum_comm]
+  rw [tsum_comm]
   refine tsum_congr fun final => ?_
   by_cases hsome : ∃ root : {root // IsRoot root}, E.HistoryReaches root final
   · obtain ⟨root, hroot⟩ := hsome
@@ -786,11 +786,12 @@ theorem tsum_initialDecision_eq (who : ι) (value : E.History → ℝ≥0∞) :
     tsum_subtype {history : E.History | M.infoOf who history.trace = site.1}
       (fun history => if M.IsInitialDecision who history then value history else 0)
   simp only [hsite]
-  rw [ENNReal.tsum_comm]
+  rw [tsum_comm]
   refine tsum_congr fun history => ?_
   by_cases hroot : M.IsInitialDecision who history
   · obtain ⟨_, _, rootSite, hrootSite⟩ := id hroot
-    rw [tsum_eq_single rootSite fun other hother => Set.indicator_of_notMem (fun hinfo =>
+    rw [tsum_eq_single rootSite fun other hother => Set.indicator_of_notMem
+      (fun (hinfo : M.infoOf who history.trace = other.1) =>
       hother (Subtype.ext (hinfo.symm.trans hrootSite.symm))) _]
     simp [Set.indicator, hrootSite, hroot]
   · simp [Set.indicator, hroot]
@@ -800,7 +801,7 @@ omit [DecidableEq ι] in
 theorem historyReachWeight_le_informationMass (A : M.BehavioralAssessment) {who : ι}
     (site : M.InformationSite who) (history : M.InformationHistory who site.1) :
     M.historyReachWeight A.strategy history.1 ≤ M.informationMass A.strategy who site :=
-  ENNReal.le_tsum (f := fun history : M.InformationHistory who site.1 =>
+  le_tsum (f := fun history : M.InformationHistory who site.1 =>
     M.historyReachWeight A.strategy history.1) history
 
 omit [E.FiniteMovers] [DecidableEq ι] in
@@ -810,7 +811,7 @@ private theorem sum_map_mul [Fintype Observation] (law : PMF E.History)
       ∑' final, law final * weight (observe final) := by
   classical
   simp only [PMF.map_apply, ← ENNReal.tsum_mul_right]
-  rw [← tsum_fintype (L := SummationFilter.unconditional _), ENNReal.tsum_comm]
+  rw [← tsum_fintype (L := SummationFilter.unconditional _), tsum_comm]
   refine tsum_congr fun final => ?_
   rw [tsum_eq_single (observe final) fun outcome hne => by simp [hne]]
   simp
@@ -864,9 +865,9 @@ theorem holds_root_of_assessment [Fintype Observation] (certificate : E.WellFoun
           ∑' final, (∑' root : {root // M.IsInitialDecision who root},
             mass root * law root final) * weight final := by
       simp only [value, ← ENNReal.tsum_mul_left, ← ENNReal.tsum_mul_right, mul_assoc]
-      exact ENNReal.tsum_comm
+      exact tsum_comm
     rw [hswap, hswap]
-    simp only [value, ← ENNReal.tsum_add, ← add_mul]
+    simp only [value, ← tsum_add, ← add_mul]
     exact tsum_congr fun final => by
       rw [M.runBehavioralTerminalFrom_update_add certificate A.strategy who deviation final]
   -- each site's aggregated deviation value is at most its incumbent value
@@ -916,7 +917,7 @@ theorem holds_root_of_assessment [Fintype Observation] (certificate : E.WellFoun
                 value (M.assessmentLaw certificate A site policy) := by
           simp only [value, ← ENNReal.tsum_mul_left]
           simp only [← mul_assoc]
-          rw [ENNReal.tsum_comm]
+          rw [tsum_comm]
           refine tsum_congr fun final => ?_
           rw [ENNReal.tsum_mul_right, M.informationMass_mul_assessmentLaw certificate A
             site hanti hpositive hbayesSite policy final]
@@ -939,7 +940,7 @@ theorem holds_root_of_assessment [Fintype Observation] (certificate : E.WellFoun
         (fun root => mass root * value (M.runBehavioralTerminalFrom certificate deviated root)),
       M.tsum_initialDecision_eq who
         (fun root => mass root * value (M.runBehavioralTerminalFrom certificate A.strategy root))]
-    exact ENNReal.tsum_le_tsum hsite
+    exact tsum_le_tsum hsite
   -- the incumbent aggregate is finite
   let top : ℝ≥0∞ := ENNReal.ofReal (∑ outcome, shifted outcome)
   have hweight (final : E.History) : weight final ≤ top :=
@@ -948,14 +949,14 @@ theorem holds_root_of_assessment [Fintype Observation] (certificate : E.WellFoun
   have hvalueTop (law : PMF E.History) : value law ≤ top :=
     calc
       value law ≤ ∑' final, law final * top :=
-        ENNReal.tsum_le_tsum fun final => mul_le_mul' le_rfl (hweight final)
+        tsum_le_tsum fun final => mul_le_mul' le_rfl (hweight final)
       _ = top := by rw [ENNReal.tsum_mul_right, PMF.tsum_coe, one_mul]
   have hfinite : ∑' root : {root // M.IsInitialDecision who root},
       mass root * value (M.runBehavioralTerminalFrom certificate A.strategy root) ≠ ⊤ := by
     refine ne_top_of_le_ne_top (ENNReal.ofReal_ne_top (r := ∑ outcome, shifted outcome)) ?_
     calc
       _ ≤ ∑' root : {root // M.IsInitialDecision who root}, mass root * top :=
-        ENNReal.tsum_le_tsum fun root => mul_le_mul' le_rfl (hvalueTop _)
+        tsum_le_tsum fun root => mul_le_mul' le_rfl (hvalueTop _)
       _ = (∑' root : {root // M.IsInitialDecision who root}, mass root) * top :=
         ENNReal.tsum_mul_right
       _ ≤ 1 * top := mul_le_mul' (tsum_coneMass_le_one certificate

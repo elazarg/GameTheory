@@ -32,7 +32,7 @@ private theorem toMeasure_eq_sum_support {α : Type u}
   let : Countable μ.support := μ.support_countable.to_subtype
   ext event hevent
   rw [Measure.sum_apply _ hevent, μ.toMeasure_apply_eq_tsum event]
-  simp only [Measure.smul_apply, Measure.dirac_apply' _ hevent, smul_eq_mul]
+  simp only [smul_apply, Measure.dirac_apply' _ hevent, smul_eq_mul]
   calc
     (∑' a, event.indicator μ a) =
         ∑' a, μ.support.indicator (event.indicator μ) a := by
@@ -154,7 +154,7 @@ private theorem toMeasure_eq_sum_of_support_subset {β : Type v}
     p.toMeasure = Measure.sum (fun b : s => p b.1 • Measure.dirac b.1) := by
   ext event hevent
   rw [Measure.sum_apply _ hevent, p.toMeasure_apply hevent]
-  simp only [Measure.smul_apply, Measure.dirac_apply' _ hevent, smul_eq_mul]
+  simp only [smul_apply, Measure.dirac_apply' _ hevent, smul_eq_mul]
   calc
     (∑' b, event.indicator p b) =
         ∑' b, s.indicator (event.indicator p) b := by
@@ -196,7 +196,7 @@ theorem aemeasurable_toMeasure_of_countable_support {α : Type u} {β : Type v}
     have hsum : ∀ a, kernel a event =
         ∑' b : s, mass b a * (Measure.dirac b.1) event := by
       intro a
-      simp only [kernel, Measure.sum_apply _ hevent, Measure.smul_apply,
+      simp only [kernel, Measure.sum_apply _ hevent, smul_apply,
         smul_eq_mul]
     simp_rw [hsum]
     exact Measurable.tsum fun b => (hmass b).mul measurable_const

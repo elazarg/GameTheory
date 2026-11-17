@@ -36,7 +36,7 @@ theorem no_pmf_of_marginal_bound_tendsto_zero {A : ℕ → Type*}
     calc
       μ policy ≤ (μ.map (fun table => table n)) (policy n) := by
         rw [PMF.map_apply]
-        convert (ENNReal.le_tsum
+        convert (le_tsum
           (f := fun q => if policy n = q n then μ q else 0) policy) using 1
         · simp
       _ ≤ bound n := hmarginal n (policy n)

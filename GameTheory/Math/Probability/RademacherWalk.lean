@@ -81,7 +81,7 @@ private theorem headCount_succ_apply (m k : ℕ) :
       (∑' j, headCount m j * if k = j + 1 then 2⁻¹ else 0) + headCount m k * 2⁻¹ := by
   rw [headCount, PMF.bind_apply]
   simp only [coinStep_apply, mul_add]
-  rw [ENNReal.tsum_add]
+  rw [tsum_add]
   congr 1
   simp [mul_ite]
 

@@ -12,20 +12,20 @@ entrance, disconnected endpoint components, and unconditional decoder fallback. 
 namespace GameTheory.Complexity.Tests.SpernerHardness
 
 open GameTheory.Complexity.Backend GameTheory.Math.GridWire GameTheory.Math.Sperner
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM ComputableInPolyTime Cslib.BitString
 
 private def ruler : List Bool := [false,false,false]
 
 private def fixtureS (i : ℕ) : ℕ := if i=0 then 1 else if i=2 then 3 else i
 private def fixtureP (i : ℕ) : ℕ := if i=1 then 0 else if i=3 then 2 else i
 private def Pquery (word : List Bool) : List Bool :=
-  Nat.toBitsLE 3 (fixtureP (Nat.fromBitsLE word))
+  lowBits 3 (fixtureP (lsbValue word))
 private def Squery (word : List Bool) : List Bool :=
-  Nat.toBitsLE 3 (fixtureS (Nat.fromBitsLE word))
+  lowBits 3 (fixtureS (lsbValue word))
 
 private def query (x y : ℕ) : List Bool :=
-  Nat.toBitsLE ((routingSpernerRuler ruler).length+1) x ++
-    Nat.toBitsLE ((routingSpernerRuler ruler).length+1) y
+  lowBits ((routingSpernerRuler ruler).length+1) x ++
+    lowBits ((routingSpernerRuler ruler).length+1) y
 
 private def color (x y : ℕ) : Fin 3 :=
   decodeGridColor (routingSpernerColorQuery ruler Pquery Squery (query x y))
@@ -59,19 +59,19 @@ example : routingSpernerColorQuery [] (fun _ => []) (fun _ => []) []=encodeGridC
   rw [routingSpernerColorQuery_value]
   rfl
 
-example : (fun z => routingSpernerColorQuery z (fun v => z ++ v)
-    (fun v => v ++ z) z) ∈ FP :=
-  routingSpernerColorQueryUniformFn_mem_FP (fun seed v => seed ++ v)
-    (fun seed v => v ++ seed) id_mem_FP id_mem_FP id_mem_FP
-    (appendFn_mem_FP pairFst_mem_FP pairSnd_mem_FP)
-    (appendFn_mem_FP pairSnd_mem_FP pairFst_mem_FP)
+example : ComputableInPolyTime (fun z => routingSpernerColorQuery z (fun v => z ++ v)
+    (fun v => v ++ z) z) encBits encBits :=
+  routingSpernerColorQueryUniform_polyTime (fun seed v => seed ++ v)
+    (fun seed v => v ++ seed) (id' (encIn := encBits)) (id' (encIn := encBits)) (id' (encIn := encBits))
+    (bitsAppend (fst encBits encBits) (snd encBits encBits))
+    (bitsAppend (snd encBits encBits) (fst encBits encBits))
 
 example (word : List Bool) : routingSpernerDecode [] word=[] := by
   exact routingSpernerDecode_invalid (by intro h; exact h.2.1 rfl) word
 
 example : routingSpernerLabelBits ruler
     (encodeGridNode (routingSpernerRuler ruler).length (some ⟨8,116,false⟩))=
-      Nat.toBitsLE 3 3 := by
+      lowBits 3 3 := by
   apply routingSpernerLabelBits_eq_bits
   · apply decodeGridNode_encode
     intro t ht
@@ -80,5 +80,3 @@ example : routingSpernerLabelBits ruler
   · rfl
 
 end GameTheory.Complexity.Tests.SpernerHardness
-
-

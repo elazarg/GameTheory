@@ -8,59 +8,96 @@ public import GameTheoryComplexity.Backend.BinaryBirdDeterminantMachine
 All scalar and matrix buffers retain their supplied field width. -/
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
-
-private theorem reindex {m n : ℕ} {f : (Fin m → List Bool) → List Bool}
-    (hf : Cobham f) (idx : Fin m → Fin n) :
-    Cobham fun v : Fin n → List Bool => f (fun i => v (idx i)) :=
-  Cobham.comp hf fun i => Cobham.proj (idx i)
+open Cslib.BitString Turing.MultiTapeTM
+open GameTheory.Complexity.Backend.WordOperations
 
 /-- Sign of an arbitrary signed word, including padded positive or negative zero. -/
 def binarySignedSign (x : List Bool) : List Bool :=
-  caseBit₀ (binarySignedLTFlag x []) [true, true]
-    (caseBit₀ (binarySignedLTFlag [] x) [false, true] [false])
+  select (binarySignedLTFlag x []) [true, true]
+    (select (binarySignedLTFlag [] x) [false, true] [false])
 
 theorem binarySignedSign_value (x : List Bool) :
     binarySignedValue (binarySignedSign x) = Int.sign (binarySignedValue x) := by
   rw [binarySignedSign, binarySignedLTFlag_value, binarySignedLTFlag_value]
-  change binarySignedValue (caseBit₀ [decide (binarySignedValue x < 0)] [true, true]
-    (caseBit₀ [decide (0 < binarySignedValue x)] [false, true] [false])) = _
+  have hz : binarySignedValue [] = 0 := rfl
+  rw [hz]
+  simp only [select, List.headD_cons, decide_eq_true_eq]
   rcases lt_trichotomy (binarySignedValue x) 0 with h | h | h
-  · simp only [caseBit₀, Bool.cond_decide, ite_eq_left h,
-      Int.sign_eq_neg_one_of_neg h]
+  · rw [ite_eq_left h, Int.sign_eq_neg_one_of_neg h]
     rfl
-  · simp only [h, caseBit₀, Bool.cond_decide, lt_self_iff_false,
-      ↓reduceIte, Int.sign_zero]
+  · simp only [h, lt_self_iff_false, ↓reduceIte, Int.sign_zero]
     rfl
-  · simp only [caseBit₀, Bool.cond_decide, ite_eq_right (not_lt_of_ge h.le),
-      ite_eq_left h, Int.sign_eq_one_of_pos h]
+  · rw [ite_eq_right (not_lt_of_ge h.le), ite_eq_left h, Int.sign_eq_one_of_pos h]
     rfl
 
-theorem binarySignedSign_cobham : Cobham fun v : Fin 1 → List Bool => binarySignedSign (v 0) :=
-  Cobham.iteFn (Cobham.comp₂ binarySignedLTFlag_cobham (.proj 0) Cobham.empty)
-    (Cobham.const [true, true])
-    (Cobham.iteFn (Cobham.comp₂ binarySignedLTFlag_cobham Cobham.empty (.proj 0))
-      (Cobham.const [false, true]) (Cobham.const [false]))
+@[fun_prop] theorem binarySignedSign_polyTime :
+    ComputableInPolyTime binarySignedSign encBits encBits := by
+  have hid : ComputableInPolyTime (fun x : List Bool => x) encBits encBits := .id'
+  have hnegative := binarySignedLTFlag_polyTime hid (ComputableInPolyTime.const [])
+  have hpositive := binarySignedLTFlag_polyTime (ComputableInPolyTime.const []) hid
+  have hnonnegative := select_polyTime.comp
+    (hpositive.prod ((ComputableInPolyTime.const [false, true]).prod
+      (ComputableInPolyTime.const [false])))
+  exact select_polyTime.comp
+    (hnegative.prod ((ComputableInPolyTime.const [true, true]).prod hnonnegative))
 
 /-- Arguments: row, column, dimension, field width, matrix, replacement vector, replaced column. -/
 def binaryCramerEntry (v : Fin 7 → List Bool) : List Bool :=
-  caseBit₀ (lenEqFlag (v 1) (v 6))
-    (binarySignedRowField ![v 0, v 3, v 5])
-    (binaryBirdField ![v 0, v 1, v 2, v 3, v 4])
+  if (v 1).length = (v 6).length then
+    binarySignedRowField ![v 0, v 3, v 5]
+  else binaryBirdField ![v 0, v 1, v 2, v 3, v 4]
 
-theorem binaryCramerEntry_cobham : Cobham binaryCramerEntry := by
-  have hf : Cobham fun v : Fin 7 → List Bool => binaryBirdField ![v 0, v 1, v 2, v 3, v 4] :=
-    (reindex binaryBirdField_cobham (![0, 1, 2, 3, 4] : Fin 5 → Fin 7)).of_eq fun v => by
-      congr 1; ext i; fin_cases i <;> rfl
-  exact Cobham.iteFn (lenEqFlag_mem (.proj 1) (.proj 6))
-    (Cobham.comp₃ binarySignedRowField_cobham (.proj 0) (.proj 3) (.proj 5)) hf
+@[fun_prop] theorem binaryCramerEntry_polyTime :
+    ComputableInPolyTime binaryCramerEntry (encPi encBits) encBits := by
+  have hrowArgs : ComputableInPolyTime
+      (fun v : Fin 7 → List Bool => ![v 0, v 3, v 5])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 3
+    · exact .pi_apply encBits 5
+  have hfieldArgs : ComputableInPolyTime
+      (fun v : Fin 7 → List Bool => ![v 0, v 1, v 2, v 3, v 4])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 2
+    · exact .pi_apply encBits 3
+    · exact .pi_apply encBits 4
+  have hcol : ComputableInPolyTime (fun v : Fin 7 → List Bool => v 1)
+      (encPi encBits) encBits := .pi_apply encBits 1
+  have hreplaced : ComputableInPolyTime (fun v : Fin 7 → List Bool => v 6)
+      (encPi encBits) encBits := .pi_apply encBits 6
+  have hcondition := ComputableTidilyInPolyTime.decide_eq'
+    (ComputableInPolyTime.length_bits_comp hcol).tidy
+    (ComputableInPolyTime.length_bits_comp hreplaced).tidy
+  exact .of_tidy (.ite_decide hcondition (binarySignedRowField_polyTime.comp hrowArgs).tidy
+    (binaryBirdField_polyTime.comp hfieldArgs).tidy)
 
 private def cramerRowTerm (v : Fin 7 → List Bool) : List Bool :=
   binaryCramerEntry ![v 6, v 0, v 1, v 2, v 3, v 4, v 5]
 
-private theorem cramerRowTerm_cobham : Cobham cramerRowTerm :=
-  (reindex binaryCramerEntry_cobham (![6, 0, 1, 2, 3, 4, 5] : Fin 7 → Fin 7)).of_eq fun v => by
-    congr 1; ext i; fin_cases i <;> rfl
+private theorem cramerRowTerm_polyTime :
+    ComputableInPolyTime cramerRowTerm (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 7 → List Bool => ![v 6, v 0, v 1, v 2, v 3, v 4, v 5])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 6
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 2
+    · exact .pi_apply encBits 3
+    · exact .pi_apply encBits 4
+    · exact .pi_apply encBits 5
+  exact binaryCramerEntry_polyTime.comp hargs
 
 /-- Arguments: dimension, field width, matrix, replacement vector, replaced column, row. -/
 def binaryCramerRow (v : Fin 6 → List Bool) : List Bool :=
@@ -70,43 +107,117 @@ def binaryCramerRow (v : Fin 6 → List Bool) : List Bool :=
     (binaryCramerRow v).length = (v 0).length * (v 1).length :=
   binarySignedTable_length _ _ _ _
 
-theorem binaryCramerRow_cobham : Cobham binaryCramerRow := by
-  exact (reindex (binarySignedTable_cobham cramerRowTerm_cobham)
-    (![0, 1, 0, 1, 2, 3, 4, 5] : Fin 8 → Fin 6)).of_eq fun v => by
-      change binarySignedTable cramerRowTerm (v 0) (v 1) _ = _
-      congr 1; ext i; fin_cases i <;> rfl
+@[fun_prop] theorem binaryCramerRow_polyTime :
+    ComputableInPolyTime binaryCramerRow (encPi encBits) encBits := by
+  have htable := binarySignedTable_polyTime (p := 6) (term := cramerRowTerm) cramerRowTerm_polyTime
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 6 → List Bool => ![v 0, v 1, v 0, v 1, v 2, v 3, v 4, v 5])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 2
+    · exact .pi_apply encBits 3
+    · exact .pi_apply encBits 4
+    · exact .pi_apply encBits 5
+  have htable' := htable.comp hargs
+  apply ComputableInPolyTime.of_tidy
+  apply htable'.tidy.of_enc_eq
+  intro v
+  change binaryCramerRow v = binarySignedTable cramerRowTerm (v 0) (v 1)
+    (Fin.tail (Fin.tail (![v 0, v 1, v 0, v 1, v 2, v 3, v 4, v 5] : Fin 8 → List Bool)))
+  unfold binaryCramerRow
+  apply congrArg (binarySignedTable cramerRowTerm (v 0) (v 1))
+  funext i
+  fin_cases i <;> rfl
 
 private def cramerMatrixTerm (v : Fin 6 → List Bool) : List Bool :=
   binaryCramerRow ![v 1, v 2, v 3, v 4, v 5, v 0]
 
-private theorem cramerMatrixTerm_cobham : Cobham cramerMatrixTerm :=
-  (reindex binaryCramerRow_cobham (![1, 2, 3, 4, 5, 0] : Fin 6 → Fin 6)).of_eq fun v => by
-    congr 1; ext i; fin_cases i <;> rfl
+private theorem cramerMatrixTerm_polyTime :
+    ComputableInPolyTime cramerMatrixTerm (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 6 → List Bool => ![v 1, v 2, v 3, v 4, v 5, v 0])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 2
+    · exact .pi_apply encBits 3
+    · exact .pi_apply encBits 4
+    · exact .pi_apply encBits 5
+    · exact .pi_apply encBits 0
+  exact binaryCramerRow_polyTime.comp hargs
 
 /-- Arguments: dimension, field width, matrix, replacement vector, replaced column. -/
 def binaryCramerMatrix (v : Fin 5 → List Bool) : List Bool :=
-  binarySignedTable cramerMatrixTerm (v 0) (smash (v 0) (v 1)) v
+  binarySignedTable cramerMatrixTerm (v 0)
+    (List.replicate ((v 0).length * (v 1).length) true) v
 
 @[simp] theorem binaryCramerMatrix_length (v : Fin 5 → List Bool) :
     (binaryCramerMatrix v).length = (v 0).length * ((v 0).length * (v 1).length) := by
-  rw [binaryCramerMatrix, binarySignedTable_length, smash_length]
+  rw [binaryCramerMatrix, binarySignedTable_length, List.length_replicate]
 
-theorem binaryCramerMatrix_cobham : Cobham binaryCramerMatrix := by
-  have args : ∀ i : Fin 7, Cobham fun v : Fin 5 → List Bool =>
-      (Fin.cons (v 0) (Fin.cons (smash (v 0) (v 1)) v) : Fin 7 → List Bool) i := by
+@[fun_prop] theorem binaryCramerMatrix_polyTime :
+    ComputableInPolyTime binaryCramerMatrix (encPi encBits) encBits := by
+  have htable := binarySignedTable_polyTime (p := 5) (term := cramerMatrixTerm) cramerMatrixTerm_polyTime
+  have hdim : ComputableInPolyTime (fun v : Fin 5 → List Bool => v 0)
+      (encPi encBits) encBits := .pi_apply encBits 0
+  have hwidth : ComputableInPolyTime (fun v : Fin 5 → List Bool => v 1)
+      (encPi encBits) encBits := .pi_apply encBits 1
+  have hruler := (ComputableInPolyTime.bitsReplicate true).comp
+    (ComputableInPolyTime.unary_mul'
+      (ComputableInPolyTime.length_bits_comp hdim)
+      (ComputableInPolyTime.length_bits_comp hwidth))
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 5 → List Bool =>
+        ![v 0, List.replicate ((v 0).length * (v 1).length) true, v 0, v 1, v 2, v 3, v 4])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
     intro i
     fin_cases i
-    · exact .proj 0
-    · exact Cobham.comp₂ Cobham.smash (.proj 0) (.proj 1)
-    all_goals exact .proj _
-  exact (Cobham.comp (binarySignedTable_cobham cramerMatrixTerm_cobham) args).of_eq fun _ => rfl
+    · exact hdim
+    · exact hruler
+    · exact hdim
+    · exact hwidth
+    · exact .pi_apply encBits 2
+    · exact .pi_apply encBits 3
+    · exact .pi_apply encBits 4
+  have htable' := htable.comp hargs
+  apply ComputableInPolyTime.of_tidy
+  apply htable'.tidy.of_enc_eq
+  intro v
+  change binaryCramerMatrix v = binarySignedTable cramerMatrixTerm (v 0)
+    (List.replicate ((v 0).length * (v 1).length) true)
+    (Fin.tail (Fin.tail (![v 0, List.replicate ((v 0).length * (v 1).length) true,
+      v 0, v 1, v 2, v 3, v 4] : Fin 7 → List Bool)))
+  unfold binaryCramerMatrix
+  apply congrArg (binarySignedTable cramerMatrixTerm (v 0)
+    (List.replicate ((v 0).length * (v 1).length) true))
+  funext i
+  fin_cases i <;> rfl
 
 /-- The determinant of the supplied matrix with one column replaced. -/
 def binaryCramerDeterminant (v : Fin 5 → List Bool) : List Bool :=
   binaryBirdDeterminant ![v 0, v 1, binaryCramerMatrix v]
 
-theorem binaryCramerDeterminant_cobham : Cobham binaryCramerDeterminant :=
-  Cobham.comp₃ binaryBirdDeterminant_cobham (.proj 0) (.proj 1) binaryCramerMatrix_cobham
+@[fun_prop] theorem binaryCramerDeterminant_polyTime :
+    ComputableInPolyTime binaryCramerDeterminant (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 5 → List Bool => ![v 0, v 1, binaryCramerMatrix v])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 1
+    · exact binaryCramerMatrix_polyTime
+  exact binaryBirdDeterminant_polyTime.comp hargs
 
 /-- Sign-adjusted Cramer numerator; the determinant sign is computed by the same machine. -/
 def binaryCramerNumerator (v : Fin 5 → List Bool) : List Bool :=
@@ -114,36 +225,45 @@ def binaryCramerNumerator (v : Fin 5 → List Bool) : List Bool :=
     (binarySignedSign (binaryBirdDeterminant ![v 0, v 1, v 2]))
     (binaryCramerDeterminant v)
 
-theorem binaryCramerNumerator_cobham : Cobham binaryCramerNumerator := by
-  have hd : Cobham fun v : Fin 5 → List Bool => binaryBirdDeterminant ![v 0, v 1, v 2] :=
-    Cobham.comp₃ binaryBirdDeterminant_cobham (.proj 0) (.proj 1) (.proj 2)
-  have hs := Cobham.comp binarySignedSign_cobham fun _ : Fin 1 => hd
-  exact (Cobham.comp₃ binarySignedFixedMul_cobham (.proj 1) hs
-    binaryCramerDeterminant_cobham).of_eq fun _ => rfl
+@[fun_prop] theorem binaryCramerNumerator_polyTime :
+    ComputableInPolyTime binaryCramerNumerator (encPi encBits) encBits := by
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 5 → List Bool => ![v 0, v 1, v 2])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 0
+    · exact .pi_apply encBits 1
+    · exact .pi_apply encBits 2
+  have hdet := binaryBirdDeterminant_polyTime.comp hargs
+  have hsign := binarySignedSign_polyTime.comp hdet
+  have hwidth : ComputableInPolyTime (fun v : Fin 5 → List Bool => v 1)
+      (encPi encBits) encBits := .pi_apply encBits 1
+  exact binarySignedFixedMul_polyTime hwidth hsign binaryCramerDeterminant_polyTime
 
 @[simp] theorem binaryCramerNumerator_length (v : Fin 5 → List Bool) :
     (binaryCramerNumerator v).length = (v 1).length := binarySignedFixedMul_length _ _ _
-
-theorem binaryCramerMatrix_mem_FPn : FPn binaryCramerMatrix :=
-  cobham_iff_FPn.mp binaryCramerMatrix_cobham
-
-theorem binaryCramerDeterminant_mem_FPn : FPn binaryCramerDeterminant :=
-  cobham_iff_FPn.mp binaryCramerDeterminant_cobham
-
-theorem binaryCramerNumerator_mem_FPn : FPn binaryCramerNumerator :=
-  cobham_iff_FPn.mp binaryCramerNumerator_cobham
 
 /-- Extracting a stored row recovers its byte representation exactly. -/
 theorem binaryCramerMatrix_row (v : Fin 5 → List Bool) (i : ℕ) (hi : i < (v 0).length) :
     ((binaryCramerMatrix v).drop (i * ((v 0).length * (v 1).length))).take
       ((v 0).length * (v 1).length) =
       binaryCramerRow ![v 0, v 1, v 2, v 3, v 4, (v 0).drop ((v 0).length - i)] := by
-  have h := binarySignedTable_field cramerMatrixTerm (v 0) (smash (v 0) (v 1)) v i hi
-  rw [smash_length] at h
-  change _ = binarySignedFixed (smash (v 0) (v 1)) (binaryCramerRow _) at h
+  have h := binarySignedTable_field cramerMatrixTerm (v 0)
+    (List.replicate ((v 0).length * (v 1).length) true) v i hi
+  rw [List.length_replicate] at h
+  change _ = binarySignedFixed (List.replicate ((v 0).length * (v 1).length) true)
+    (binaryCramerRow _) at h
   rw [binarySignedFixed_eq_of_length] at h
-  · exact h
-  · rw [binaryCramerRow_length, smash_length]
+  · let packed : Fin 6 → List Bool := Fin.cons ((v 0).drop ((v 0).length - i)) v
+    have hrow : binaryCramerRow ![packed 1, packed 2, packed 3, packed 4, packed 5, packed 0] =
+        binaryCramerRow ![v 0, v 1, v 2, v 3, v 4, (v 0).drop ((v 0).length - i)] := by
+      apply congrArg binaryCramerRow
+      funext j
+      fin_cases j <;> rfl
+    simpa only [binaryCramerMatrix] using h.trans hrow
+  · rw [binaryCramerRow_length, List.length_replicate]
     rfl
 
 /-- A column field in a materialized Cramer row is normalized once. -/

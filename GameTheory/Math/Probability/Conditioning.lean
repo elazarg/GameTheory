@@ -62,7 +62,7 @@ theorem exists_mix_pure_filter {α : Type*}
   classical
   let q : ENNReal := ∑' b, ({a}ᶜ : Set α).indicator μ b
   have hsum : μ a + q = 1 := by
-    rw [← μ.tsum_coe, ENNReal.tsum_eq_add_tsum_ite a]
+    rw [← μ.tsum_coe, tsum_eq_add_tsum_ite a]
     congr 1
     apply tsum_congr
     intro b
@@ -75,7 +75,7 @@ theorem exists_mix_pure_filter {α : Type*}
     obtain ⟨b, hb, hbs⟩ := hrest
     have hbpos : 0 < ({a}ᶜ : Set α).indicator μ b := by
       simpa [Set.indicator, hb] using (μ.apply_pos_iff b).mpr hbs
-    exact lt_of_lt_of_le hbpos (ENNReal.le_tsum b)
+    exact lt_of_lt_of_le hbpos (le_tsum _ b)
   let t := (μ a).toReal
   have ht0 : 0 < t :=
     ENNReal.toReal_pos ((μ.mem_support_iff a).mp ha) hμfin
@@ -282,7 +282,7 @@ theorem fiberPosterior_reconstruct {α β : Type*} (μ : PMF α) (f : α → β)
   rw [PMF.bind_apply, tsum_eq_single (f a)]
   · by_cases hz : (PMF.map f μ) (f a) = 0
     · have hzero : μ a = 0 := by
-        have hsum := ENNReal.tsum_eq_zero.mp (show (∑' x, if f a = f x then μ x else 0) = 0 by
+        have hsum := tsum_eq_zero_iff.mp (show (∑' x, if f a = f x then μ x else 0) = 0 by
           simpa only [PMF.map_apply] using hz) a
         simpa using hsum
       rw [hz, zero_mul, hzero]

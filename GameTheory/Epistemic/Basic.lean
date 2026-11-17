@@ -129,7 +129,7 @@ theorem posterior_eq_one_of_selfEvident_of_cell_mass_pos
     calc
       ∑' other : Ω, (cell partition state).indicator prior other ≤
           ∑' other : Ω, prior other := by
-        apply ENNReal.tsum_le_tsum
+        apply tsum_le_tsum
         intro other
         by_cases hmem : other ∈ cell partition state <;>
           simp [Set.indicator, hmem]
@@ -170,7 +170,7 @@ theorem posterior_eq_one_of_cell_subset_of_cell_mass_pos
     calc
       ∑' other : Ω, (cell partition state).indicator prior other ≤
           ∑' other : Ω, prior other := by
-        apply ENNReal.tsum_le_tsum
+        apply tsum_le_tsum
         intro other
         by_cases hmem : other ∈ cell partition state <;>
           simp [Set.indicator, hmem]

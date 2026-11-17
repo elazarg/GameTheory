@@ -40,8 +40,7 @@ def leftFirst :
     intro index parent hparent
     fin_cases index <;> cases parent <;>
       simp_all [parents]
-    all_goals
-      exact ⟨⟨2, by decide⟩, by decide, rfl⟩
+    exact ⟨⟨2, by decide⟩, by decide, rfl⟩
 
 def rightFirst :
     GameTheory.Math.DAG.TopologicalOrder diagram.parents where
@@ -55,8 +54,7 @@ def rightFirst :
     intro index parent hparent
     fin_cases index <;> cases parent <;>
       simp_all [parents]
-    all_goals
-      exact ⟨⟨2, by decide⟩, by decide, rfl⟩
+    exact ⟨⟨2, by decide⟩, by decide, rfl⟩
 
 def leftInitial : Stage diagram leftFirst :=
   Stage.initial leftFirst

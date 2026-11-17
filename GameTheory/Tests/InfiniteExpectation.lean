@@ -55,7 +55,7 @@ theorem gamble_play : form.play (Profile.update stayHome () false) = halving.map
 
 theorem gamble_gains : positiveExpect halving (fun n => utility (some n) ()) = 0 := by
   unfold positiveExpect
-  refine ENNReal.tsum_eq_zero.2 fun n => ?_
+  refine tsum_eq_zero_iff.2 fun n => ?_
   show halving n * ENNReal.ofReal (-loss n) = 0
   rw [ENNReal.ofReal_eq_zero.2 (neg_nonpos.2 (loss_nonneg n)), mul_zero]
 

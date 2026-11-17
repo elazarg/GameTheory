@@ -42,12 +42,12 @@ theorem toOuterMeasure_le_of_injection (law : PMF α) (first second : Set α) (m
     _ = ∑' value : source, law value := by
       rw [PMF.toOuterMeasure_apply, ← tsum_subtype]
     _ ≤ ∑' value : source, law (move value) :=
-      ENNReal.tsum_le_tsum fun value => increases value.1 value.2.1 value.2.2
+      tsum_le_tsum fun value => increases value.1 value.2.1 value.2.2
     _ ≤ ∑' value : second, law value := by
       let embed : source → second := fun value => ⟨move value.1, toSecond value⟩
       have embedInjective : Function.Injective embed := fun left right same =>
         Subtype.ext (injective left.2 right.2 (congrArg Subtype.val same))
-      exact ENNReal.tsum_comp_le_tsum_of_injective embedInjective (fun value => law value)
+      exact tsum_comp_le_tsum_of_injective embedInjective (fun value => law value)
     _ = law.toOuterMeasure second := by
       rw [PMF.toOuterMeasure_apply, ← tsum_subtype]
 

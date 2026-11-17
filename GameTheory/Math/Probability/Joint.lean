@@ -34,7 +34,7 @@ theorem bindPairLaw_apply {α β : Type*} (p : PMF α)
   · intro x hxa
     have hzero : (PMF.map (fun y => (x, y)) (q x)) (a, b) = 0 := by
       rw [PMF.map_apply]
-      apply ENNReal.tsum_eq_zero.mpr
+      apply tsum_eq_zero_iff.mpr
       intro y
       by_cases h : (a, b) = (x, y)
       · exact False.elim (hxa (congrArg Prod.fst h).symm)

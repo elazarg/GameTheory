@@ -102,7 +102,7 @@ theorem decision_fails :
 
 /-- The decision site has mass zero: the incumbent exits first. -/
 theorem decisionSite_mass : model.informationMass assessment.strategy () decisionSite = 0 := by
-  refine ENNReal.tsum_eq_zero.2 fun history => ?_
+  refine tsum_eq_zero_iff.2 fun history => ?_
   rw [eq_decisionHistory_of_mem history, historyReachWeight]
   change model.runBehavioralFrom (fun who => (incumbentProfile who).toBehavioral) 1
     arena.initHistory decisionHistory = 0

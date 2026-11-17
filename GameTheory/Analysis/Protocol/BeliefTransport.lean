@@ -354,7 +354,7 @@ private theorem fiber_mass [DecidableEq T.History]
       ∑' history : N.InformationHistory who sourceSite.1, sourceWeight history.1 := by
   classical
   simp_rw [fiber]
-  rw [ENNReal.tsum_comm]
+  rw [tsum_comm]
   apply tsum_congr
   intro original
   let image : N.InformationHistory who sourceSite.1 :=
@@ -669,7 +669,7 @@ theorem tsum_readoutReach :
       M.informationMass strategy who site := by
   classical
   unfold readoutReach informationMass
-  rw [ENNReal.tsum_comm]
+  rw [tsum_comm]
   exact tsum_congr fun history => by simp only [tsum_ite_eq]
 
 /-- The Bayes posterior of a readout value is its reach share of the site. -/

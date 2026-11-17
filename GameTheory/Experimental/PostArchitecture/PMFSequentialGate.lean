@@ -429,7 +429,7 @@ theorem decisionSite_positiveMass (law : PMF ℕ) :
       ExecutionProtocol.initHistory] using hpos
   exact lt_of_lt_of_le hreach (by
     unfold InformationModel.informationMass
-    exact ENNReal.le_tsum
+    exact le_tsum
       (f := fun history : canonicalInformation.InformationHistory () decisionSite.1 =>
         canonicalInformation.historyReachWeight (behavioralProfile law) history.1)
       history)
@@ -1016,7 +1016,7 @@ theorem secondSite_zeroIncumbentMass :
       incumbentAssessment.strategy () secondSite = 0 := by
   unfold InformationModel.informationMass
   simp only [incumbentAssessment_strategy]
-  apply ENNReal.tsum_eq_zero.mpr
+  apply tsum_eq_zero_iff.mpr
   intro history
   unfold InformationModel.historyReachWeight InformationModel.runBehavioral
   rw [secondSite_historyDepth history]

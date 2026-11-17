@@ -18,13 +18,14 @@ averaging, and cyclic feedback gates; the emitted reward schedule supplies their
 
 namespace GameTheory.Complexity.Backend.BrouwerNashProgramCorrectness
 open GameTheory.Complexity.Backend
-open _root_.Complexity.CircuitCode
+open Cslib.Circuits Turing.MultiTapeTM
+open Cslib.BitString (lowBits)
 open GameTheory.Finite GameTheory.Finite.BimatrixGateProgram
 open BrouwerNashLayout BrouwerNashProgram
 open scoped BigOperators
 
-section
-variable (b : ℕ) (raw₀ raw₁ : RawCircuit)
+section Correctness
+variable (b : ℕ) (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ))
 local notation "k" => dimension b raw₀.length raw₁.length
 local notation "g" => program b raw₀ raw₁
 
@@ -582,13 +583,14 @@ theorem clear_sample_color_error (H : ℤ) (c : BimatrixCertificate (k * 2) (k *
     (hgrid : ∀ l : ℕ, 0 < l → l < 2 ^ b →
       β < |(samplePoint b raw₀ raw₁ c t).1 - (l : ℚ) / (2 : ℚ) ^ b| ∧
       β < |(samplePoint b raw₀ raw₁ c t).2 - (l : ℚ) / (2 : ℚ) ^ b|)
-    (hraw : ∀ flag : Fin 2, (if flag.val = 0 then raw₀ else raw₁).WellFormed (arity b))
-    (hquery : ∀ a : Fin 4, ∀ flag : Fin 2,
-      (if flag.val = 0 then raw₀ else raw₁).eval?
-        (BrouwerNashColor.cornerVertex b (samplePoint b raw₀ raw₁ c t).1
-          (samplePoint b raw₀ raw₁ c t).2 a) =
-      some (decide (cornerColors b color (samplePoint b raw₀ raw₁ c t).1
-        (samplePoint b raw₀ raw₁ c t).2 a = (![1, 2] : Fin 2 → Fin 3) flag))) :
+    (hraw : ∀ flag : Fin 2, Program.IsCodeFrom CircuitFormat.signature (arity b) 0
+      (if flag.val = 0 then raw₀ else raw₁))
+    (hne : ∀ flag : Fin 2, (if flag.val = 0 then raw₀ else raw₁) ≠ [])
+    (hquery : ∀ flag : Fin 2, ∀ x y : ℕ, x ≤ 2 ^ b → y ≤ 2 ^ b →
+      CircuitFormat.evalOutput (lowBits (b + 1) x ++ lowBits (b + 1) y)
+        (if flag.val = 0 then raw₀ else raw₁)
+        (arity b + (if flag.val = 0 then raw₀ else raw₁).length - 1) =
+          (encodeGridColor ((color) x y)).getD flag.val false) :
     ∀ a : Fin 4, ∀ flag : Fin 2,
       let colorLength := if flag.val = 0 then raw₀.length else raw₁.length
       |(k : ℚ) * BimatrixAffineGate.value c (sampleRef b raw₀.length raw₁.length t
@@ -617,11 +619,14 @@ theorem clear_sample_color_error (H : ℤ) (c : BimatrixCertificate (k * 2) (k *
     fin_cases axis <;> exact he
   intro a flag
   have he := BrouwerNashColor.colorOutput_error_of_digits b raw₀ raw₁ H (100 * (k : ℤ)) c hc
-    (by positivity) (coefficients_bound b raw₀ raw₁) hscale δ hsmall hδ t a
+    (by positivity) (coefficients_bound b raw₀ raw₁) hscale δ hsmall hδ color t a
     (samplePoint b raw₀ raw₁ c t).1 (samplePoint b raw₀ raw₁ c t).2 hone hzero hdigit
-    flag _ (hraw flag) (hquery a flag)
-  simp only [decide_eq_true_eq] at he
-  fin_cases flag <;> exact he
+    flag hraw hne hquery
+  fin_cases a <;> fin_cases flag
+  all_goals
+    simp [encodeGridColor] at he
+    simp only [cornerColors]
+    exact he
 
 /-- Every accepted actual program certificate has a small canonical source-map residual. -/
 theorem canonical_residual (H : ℤ) (c : BimatrixCertificate (k * 2) (k * 2))
@@ -632,10 +637,14 @@ theorem canonical_residual (H : ℤ) (c : BimatrixCertificate (k * 2) (k * 2))
     (hδ : (k : ℚ) * (((100 * (k : ℤ) + 2 * (k : ℤ) : ℤ) : ℚ) / H) ≤ δ)
     (hprecision : δ ≤ 1 / (2 : ℚ) ^ (100 * (b + k + 10)))
     (color : ℕ → ℕ → Fin 3) (hboundary : GameTheory.Math.Sperner.GridBoundary color (2 ^ b))
-    (hraw : ∀ flag : Fin 2, (if flag.val = 0 then raw₀ else raw₁).WellFormed (arity b))
-    (hquery : ∀ qx qy : ℚ, ∀ a : Fin 4, ∀ flag : Fin 2,
-      (if flag.val = 0 then raw₀ else raw₁).eval? (BrouwerNashColor.cornerVertex b qx qy a) =
-        some (decide (cornerColors b color qx qy a = (![1, 2] : Fin 2 → Fin 3) flag))) :
+    (hraw : ∀ flag : Fin 2, Program.IsCodeFrom CircuitFormat.signature (arity b) 0
+      (if flag.val = 0 then raw₀ else raw₁))
+    (hne : ∀ flag : Fin 2, (if flag.val = 0 then raw₀ else raw₁) ≠ [])
+    (hquery : ∀ flag : Fin 2, ∀ x y : ℕ, x ≤ 2 ^ b → y ≤ 2 ^ b →
+      CircuitFormat.evalOutput (lowBits (b + 1) x ++ lowBits (b + 1) y)
+        (if flag.val = 0 then raw₀ else raw₁)
+        (arity b + (if flag.val = 0 then raw₀ else raw₁).length - 1) =
+          (encodeGridColor ((color) x y)).getD flag.val false) :
     let x := coordinateValue b raw₀ raw₁ c 0
     let y := coordinateValue b raw₀ raw₁ c 1
     |(GameTheory.Math.Brouwer.globalGridMap color (2 ^ b)
@@ -680,7 +689,7 @@ theorem canonical_residual (H : ℤ) (c : BimatrixCertificate (k * 2) (k * 2))
       intro l hl hln
       exact_mod_cast hclear t ht l hl hln
     have hflags := clear_sample_color_error b raw₀ raw₁ H c hc hscale δ β hδ0 hsmall hδ
-      hbud.1 color t hgrid hraw (hquery _ _)
+      hbud.1 color t hgrid hraw hne hquery
     have hr (axis : Fin 2) : |(k : ℚ) * BimatrixAffineGate.value c
         (sampleRef b raw₀.length raw₁.length t (remainder b axis b)) -
           GameTheory.Math.binaryRemainder b
@@ -741,14 +750,9 @@ theorem canonical_residual (H : ℤ) (c : BimatrixCertificate (k * 2) (k * 2))
     hgood hbaderr _ (by linarith only [hε, hvariation]) hround
   exact ⟨(hfeed 0).trans hfeedbudget, (hfeed 1).trans hfeedbudget⟩
 
-private theorem encoded_color_bit (color : Fin 3) (flag : Fin 2) :
-    _root_.Complexity.bitOf (encodeGridColor color) flag =
-      decide (color = (![1, 2] : Fin 2 → Fin 3) flag) := by
-  fin_cases flag <;> rfl
-
 /-- Compiled source-color queries specialize the residual theorem to the source coloring. -/
 theorem source_residual (source : List Bool)
-    (hb : (_root_.Complexity.pairFst source).length = b)
+    (hb : (CircuitWords.first source).length = b)
     (H : ℤ) (c : BimatrixCertificate (k * 2) (k * 2))
     (hc : c.Valid (BimatrixAffineGate.rowPayoff H (2 * (k : ℤ)))
       (columnPayoff H (2 * (k : ℤ)) g))
@@ -756,11 +760,14 @@ theorem source_residual (source : List Bool)
     (δ : ℚ)
     (hδ : (k : ℚ) * (((100 * (k : ℤ) + 2 * (k : ℤ) : ℤ) : ℚ) / H) ≤ δ)
     (hprecision : δ ≤ 1 / (2 : ℚ) ^ (100 * (b + k + 10)))
-    (hraw : ∀ flag : Fin 2, (if flag.val = 0 then raw₀ else raw₁).WellFormed (arity b))
+    (hraw : ∀ flag : Fin 2, Program.IsCodeFrom CircuitFormat.signature (arity b) 0
+      (if flag.val = 0 then raw₀ else raw₁))
+    (hne : ∀ flag : Fin 2, (if flag.val = 0 then raw₀ else raw₁) ≠ [])
     (hquery : ∀ flag : Fin 2, ∀ x y : ℕ, x ≤ 2 ^ b → y ≤ 2 ^ b →
-      (if flag.val = 0 then raw₀ else raw₁).eval?
-        (Nat.toBitsLE (b + 1) x ++ Nat.toBitsLE (b + 1) y) =
-          some (_root_.Complexity.bitOf (encodeGridColor (spernerColor source x y)) flag)) :
+      CircuitFormat.evalOutput (lowBits (b + 1) x ++ lowBits (b + 1) y)
+        (if flag.val = 0 then raw₀ else raw₁)
+        (arity b + (if flag.val = 0 then raw₀ else raw₁).length - 1) =
+          (encodeGridColor ((spernerColor source) x y)).getD flag.val false) :
     let x := coordinateValue b raw₀ raw₁ c 0
     let y := coordinateValue b raw₀ raw₁ c 1
     |(GameTheory.Math.Brouwer.globalGridMap (spernerColor source) (2 ^ b)
@@ -770,51 +777,48 @@ theorem source_residual (source : List Bool)
   have hboundary : GameTheory.Math.Sperner.GridBoundary (spernerColor source) (2 ^ b) := by
     rw [← hb]
     exact GameTheory.Math.Sperner.standardGridColor_boundary _ _ (Nat.two_pow_pos _)
-  apply canonical_residual b raw₀ raw₁ H c hc hscale δ hδ hprecision
-    (spernerColor source) hboundary hraw
-  intro qx qy a flag
-  have he := BrouwerNashColor.cornerVertex_eval source
-    (if flag.val = 0 then raw₀ else raw₁) flag
-    (by simpa only [hb] using hquery flag) qx qy a
-  rw [hb, encoded_color_bit] at he
-  exact he
+  exact canonical_residual b raw₀ raw₁ H c hc hscale δ hδ hprecision
+    (spernerColor source) hboundary hraw hne hquery
 
 /-- The reward schedule makes every accepted source program answer a small-residual point. -/
 theorem reward_source_residual (source : List Bool)
-    (hb : (_root_.Complexity.pairFst source).length = b)
-    (rulers : Fin 2 → List Bool) (hdepth : (rulers 0).length = b)
-    (hsize : (rulers 1).length = k)
+    (hb : (CircuitWords.first source).length = b)
+    (precisionRuler dimensionRuler : List Bool) (hdepth : precisionRuler.length = b)
+    (hsize : dimensionRuler.length = k)
     (c : BimatrixCertificate (k * 2) (k * 2))
     (hc : c.Valid
-      (BimatrixAffineGate.rowPayoff (binarySignedValue (BrouwerNashRewardMachine.reward rulers))
+      (BimatrixAffineGate.rowPayoff (binarySignedValue (BrouwerNashRewardMachine.reward precisionRuler dimensionRuler))
         (2 * (k : ℤ)))
-      (columnPayoff (binarySignedValue (BrouwerNashRewardMachine.reward rulers))
+      (columnPayoff (binarySignedValue (BrouwerNashRewardMachine.reward precisionRuler dimensionRuler))
         (2 * (k : ℤ)) g))
-    (hraw : ∀ flag : Fin 2, (if flag.val = 0 then raw₀ else raw₁).WellFormed (arity b))
+    (hraw : ∀ flag : Fin 2, Program.IsCodeFrom CircuitFormat.signature (arity b) 0
+      (if flag.val = 0 then raw₀ else raw₁))
+    (hne : ∀ flag : Fin 2, (if flag.val = 0 then raw₀ else raw₁) ≠ [])
     (hquery : ∀ flag : Fin 2, ∀ x y : ℕ, x ≤ 2 ^ b → y ≤ 2 ^ b →
-      (if flag.val = 0 then raw₀ else raw₁).eval?
-        (Nat.toBitsLE (b + 1) x ++ Nat.toBitsLE (b + 1) y) =
-          some (_root_.Complexity.bitOf (encodeGridColor (spernerColor source x y)) flag)) :
+      CircuitFormat.evalOutput (lowBits (b + 1) x ++ lowBits (b + 1) y)
+        (if flag.val = 0 then raw₀ else raw₁)
+        (arity b + (if flag.val = 0 then raw₀ else raw₁).length - 1) =
+          (encodeGridColor ((spernerColor source) x y)).getD flag.val false) :
     let x := coordinateValue b raw₀ raw₁ c 0
     let y := coordinateValue b raw₀ raw₁ c 1
     |(GameTheory.Math.Brouwer.globalGridMap (spernerColor source) (2 ^ b)
       ((2 ^ b : ℕ) * (x : ℝ), (2 ^ b : ℕ) * (y : ℝ))).1 - (2 ^ b : ℕ) * (x : ℝ)| ≤ 1 / 6 ∧
     |(GameTheory.Math.Brouwer.globalGridMap (spernerColor source) (2 ^ b)
       ((2 ^ b : ℕ) * (x : ℝ), (2 ^ b : ℕ) * (y : ℝ))).2 - (2 ^ b : ℕ) * (y : ℝ)| ≤ 1 / 6 := by
-  let H := binarySignedValue (BrouwerNashRewardMachine.reward rulers)
+  let H := binarySignedValue (BrouwerNashRewardMachine.reward precisionRuler dimensionRuler)
   let δ : ℚ := (k : ℚ) * (102 * k) / (H : ℚ)
   have hscale : (k : ℤ) * (100 * (k : ℤ) + 2 * (k : ℤ)) < H := by
-    simpa only [hsize] using BrouwerNashRewardMachine.reward_dominates rulers
-  have hk : 1 ≤ (rulers 1).length := by
+    simpa only [hsize] using BrouwerNashRewardMachine.reward_dominates precisionRuler dimensionRuler
+  have hk : 1 ≤ dimensionRuler.length := by
     rw [hsize]
     exact dimension_pos b raw₀.length raw₁.length
-  have hbud := BrouwerNashRewardMachine.reward_error_bound rulers hk
+  have hbud := BrouwerNashRewardMachine.reward_error_bound precisionRuler dimensionRuler hk
   rw [hdepth, hsize] at hbud
-  apply source_residual b raw₀ raw₁ source hb H c hc hscale δ _ hbud.2 hraw hquery
+  apply source_residual b raw₀ raw₁ source hb H c hc hscale δ _ hbud.2 hraw hne hquery
   dsimp only [δ]
   push_cast
   ring_nf
   exact le_rfl
 
-end
+end Correctness
 end GameTheory.Complexity.Backend.BrouwerNashProgramCorrectness

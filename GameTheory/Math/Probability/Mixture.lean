@@ -29,8 +29,8 @@ private theorem tsum_cond_mul_left {α : Type u} (c : ENNReal) (f : α → ENNRe
 noncomputable def mix {α : Type u} (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1)
     (μ ν : PMF α) : PMF α :=
   ⟨fun a => ENNReal.ofReal t * μ a + ENNReal.ofReal (1 - t) * ν a,
-    ENNReal.summable.hasSum_iff.2 (by
-      rw [ENNReal.tsum_add, ENNReal.tsum_mul_left, ENNReal.tsum_mul_left,
+    CompleteLattice.summable.hasSum_iff.2 (by
+      rw [tsum_add, ENNReal.tsum_mul_left, ENNReal.tsum_mul_left,
         PMF.tsum_coe, PMF.tsum_coe, mul_one, mul_one,
         ← ENNReal.ofReal_add h0 (by linarith : 0 ≤ 1 - t)]
       norm_num)⟩
@@ -111,7 +111,7 @@ theorem mix_map {α : Type u} {β : Type v} (t : ℝ) (h0 : 0 ≤ t)
       ENNReal.ofReal t * μ a + ENNReal.ofReal (1 - t) * ν a else 0) =
       (∑' a, if b = f a then ENNReal.ofReal t * μ a else 0) +
         ∑' a, if b = f a then ENNReal.ofReal (1 - t) * ν a else 0 := by
-      rw [← ENNReal.tsum_add]
+      rw [← tsum_add]
       apply tsum_congr
       intro a
       by_cases h : b = f a <;> simp [h]
@@ -141,7 +141,7 @@ theorem mix_bind {α : Type u} {β : Type v} (t : ℝ) (h0 : 0 ≤ t)
       ring
     _ = ENNReal.ofReal t * (∑' a, μ a * (f a) b) +
         ENNReal.ofReal (1 - t) * (∑' a, ν a * (f a) b) := by
-      rw [ENNReal.tsum_add, ENNReal.tsum_mul_left, ENNReal.tsum_mul_left]
+      rw [tsum_add, ENNReal.tsum_mul_left, ENNReal.tsum_mul_left]
     _ = _ := by rw [mix_apply, PMF.bind_apply, PMF.bind_apply]
 
 theorem mem_support_mix_left {α : Type u} (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1)
@@ -192,13 +192,13 @@ theorem exists_mix_eq_of_le {α : Type*} (law reference : PMF α) (t : ℝ) (h0 
     exact ENNReal.ofReal_ne_top
   have split : ∑' a, (law a - ENNReal.ofReal t * reference a) +
       ∑' a, ENNReal.ofReal t * reference a = 1 := by
-    rw [← ENNReal.tsum_add]
+    rw [← tsum_add]
     simp only [tsub_add_cancel_of_le (below _), PMF.tsum_coe]
   have total : ∑' a, (law a - ENNReal.ofReal t * reference a) = ENNReal.ofReal (1 - t) := by
     rw [ENNReal.eq_sub_of_add_eq finite split, ENNReal.tsum_mul_left, PMF.tsum_coe, mul_one,
       ENNReal.ofReal_sub _ h0, ENNReal.ofReal_one]
   let residual : PMF α := ⟨fun a => (law a - ENNReal.ofReal t * reference a) *
-      (ENNReal.ofReal (1 - t))⁻¹, ENNReal.summable.hasSum_iff.mpr (by
+      (ENNReal.ofReal (1 - t))⁻¹, CompleteLattice.summable.hasSum_iff.mpr (by
     rw [ENNReal.tsum_mul_right, total, ENNReal.mul_inv_cancel scale ENNReal.ofReal_ne_top])⟩
   refine ⟨residual, PMF.ext fun a => ?_⟩
   change ENNReal.ofReal t * reference a + ENNReal.ofReal (1 - t) *
@@ -213,7 +213,7 @@ theorem bind_mix_pure {α : Type u} (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) (μ 
   ext a
   have pure : ∑' b, law b * (PMF.pure b) a = law a := by
     rw [← PMF.bind_apply, PMF.bind_pure]
-  simp only [PMF.bind_apply, mix_apply, mul_add, ENNReal.tsum_add, ENNReal.tsum_mul_right,
+  simp only [PMF.bind_apply, mix_apply, mul_add, tsum_add, ENNReal.tsum_mul_right,
     PMF.tsum_coe, one_mul, mul_left_comm _ (ENNReal.ofReal (1 - t)), ENNReal.tsum_mul_left, pure]
 
 end GameTheory.Math.Probability

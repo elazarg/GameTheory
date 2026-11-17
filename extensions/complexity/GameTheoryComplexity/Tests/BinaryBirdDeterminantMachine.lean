@@ -8,7 +8,7 @@ public import GameTheoryComplexity.Backend.BinaryBirdDeterminantMachine
 namespace GameTheory.Complexity.Tests.BinaryBirdDeterminantMachine
 open Backend
 
-private def field (z : ℤ) : List Bool := decide (z < 0) :: Nat.toBitsLE 7 z.natAbs
+private def field (z : ℤ) : List Bool := decide (z < 0) :: Cslib.BitString.lowBits 7 z.natAbs
 private def width : List Bool := List.replicate 8 false
 
 -- A zero leading pivot and a negative determinant need no division or pivot search.

@@ -6,6 +6,7 @@ public import GameTheoryComplexity.Backend.GeneralBimatrixCodec
 
 /-! Binary mixed-strategy certificates with unsigned probabilities and signed utilities. -/
 namespace GameTheory.Complexity.Backend
+open Cslib.BitString Turing.MultiTapeTM
 
 /-- Polynomial field width in serialized instance length. -/
 def generalCertificateWidth (L : ℕ) : ℕ := (2 * L + 2) * (8 * L + 6) + 1
@@ -70,7 +71,7 @@ theorem generalCertificateField_lt {m n W : ℕ}
 theorem generalCertificate_binaryField {m n : ℕ} (W : ℕ)
     (c : GameTheory.Finite.BimatrixCertificate m n) (index : ℕ) (hi : index < 6 + m + n) :
     generalBinaryField W index (encodeGeneralCertificate W c) =
-      Nat.toBitsLE W (generalCertificateField c index) :=
+      lowBits W (generalCertificateField c index) :=
   generalBinaryField_encode W (6 + m + n) _ index hi
 
 /-- Decode the canonical serialization of any certificate fitting the field width. -/

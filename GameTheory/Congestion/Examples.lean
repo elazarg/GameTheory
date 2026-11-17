@@ -77,12 +77,12 @@ theorem pigou_both_isNash :
     rw [update_zero s']
     fin_cases s'
     all_goals simp [playerCost, congestion_two, pigou]
-    all_goals norm_num
+    norm_num
   · dsimp [pigou, CongestionGame.signature] at s'
     rw [update_one s']
     fin_cases s'
     all_goals simp [playerCost, congestion_two, pigou]
-    all_goals norm_num
+    norm_num
 
 /-- The all-variable-edge equilibrium has social cost four. -/
 theorem pigou_socialCost_both : pigou.socialCost ![0, 0] = 4 := by
@@ -159,14 +159,14 @@ theorem braessRestricted_split_isNash :
     all_goals simp [playerCost, congestion_two, braessRestricted, braessDelay,
       Finset.sum_insert, Finset.sum_singleton, Finset.mem_insert,
       Finset.mem_singleton]
-    all_goals norm_num
+    norm_num
   · dsimp [braessRestricted, CongestionGame.signature] at s'
     rw [update_one s']
     fin_cases s'
     all_goals simp [playerCost, congestion_two, braessRestricted, braessDelay,
         Finset.sum_insert, Finset.sum_singleton, Finset.mem_insert,
         Finset.mem_singleton]
-    all_goals norm_num
+    norm_num
 
 /-- The restricted split profile has social cost seven. -/
 theorem braessRestricted_socialCost_split :

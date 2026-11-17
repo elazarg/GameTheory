@@ -135,7 +135,7 @@ theorem extendedExpect_mono {μ : PMF α} {f g : α → ℝ}
     (h : ∀ a ∈ μ.support, f a ≤ g a) : extendedExpect μ f ≤ extendedExpect μ g := by
   have hterm (u v : α → ℝ) (huv : ∀ a ∈ μ.support, u a ≤ v a) :
       ∑' a, μ a * ENNReal.ofReal (u a) ≤ ∑' a, μ a * ENNReal.ofReal (v a) := by
-    refine ENNReal.tsum_le_tsum fun a => ?_
+    refine tsum_le_tsum fun a => ?_
     by_cases ha : a ∈ μ.support
     · exact mul_le_mul' le_rfl (ENNReal.ofReal_le_ofReal (huv a ha))
     · rw [(PMF.apply_eq_zero_iff μ a).2 ha, zero_mul, zero_mul]
@@ -218,22 +218,22 @@ private theorem positiveExpect_affine_le {μ : PMF α} {f : α → ℝ} {c : ℝ
     ∑' a, μ a * ENNReal.ofReal (c * f a + b) ≤
         ∑' a, (ENNReal.ofReal c * (μ a * ENNReal.ofReal (f a)) +
           μ a * ENNReal.ofReal b) := by
-      refine ENNReal.tsum_le_tsum fun a => ?_
+      refine tsum_le_tsum fun a => ?_
       calc
         μ a * ENNReal.ofReal (c * f a + b) ≤
             μ a * (ENNReal.ofReal (c * f a) + ENNReal.ofReal b) :=
           mul_le_mul' le_rfl ENNReal.ofReal_add_le
         _ = _ := by rw [ENNReal.ofReal_mul hc]; ring
-    _ = _ := by rw [ENNReal.tsum_add, ENNReal.tsum_mul_left, tsum_weighted_const]
+    _ = _ := by rw [tsum_add, ENNReal.tsum_mul_left, tsum_weighted_const]
 
 private theorem positiveExpect_le_affine {μ : PMF α} {f : α → ℝ} {c : ℝ} (b : ℝ)
     (hc : 0 ≤ c) :
     ENNReal.ofReal c * positiveExpect μ f ≤
       positiveExpect μ (fun a => c * f a + b) + ENNReal.ofReal (-b) := by
   unfold positiveExpect
-  rw [← tsum_weighted_const μ (ENNReal.ofReal (-b)), ← ENNReal.tsum_add,
+  rw [← tsum_weighted_const μ (ENNReal.ofReal (-b)), ← tsum_add,
     ← ENNReal.tsum_mul_left]
-  refine ENNReal.tsum_le_tsum fun a => ?_
+  refine tsum_le_tsum fun a => ?_
   calc
     ENNReal.ofReal c * (μ a * ENNReal.ofReal (f a)) =
         μ a * ENNReal.ofReal (c * f a + b + -b) := by
@@ -376,7 +376,7 @@ private theorem tsum_scaled_weight_le {source target : PMF α} {scale : ℝ}
     (g : α → ℝ≥0∞) :
     ENNReal.ofReal scale * ∑' a, source a * g a ≤ ∑' a, target a * g a := by
   rw [← ENNReal.tsum_mul_left]
-  refine ENNReal.tsum_le_tsum fun a => ?_
+  refine tsum_le_tsum fun a => ?_
   rw [← mul_assoc]
   refine mul_le_mul' ?_ le_rfl
   calc
@@ -430,7 +430,7 @@ theorem extendedExpect_nonpos_iff (μ : PMF α) (f : α → ℝ) :
 expectation exists. -/
 theorem negativeExpect_eq_zero_of_nonneg {μ : PMF α} {f : α → ℝ}
     (h : ∀ a ∈ μ.support, 0 ≤ f a) : negativeExpect μ f = 0 := by
-  refine ENNReal.tsum_eq_zero.2 fun a => ?_
+  refine tsum_eq_zero_iff.2 fun a => ?_
   by_cases ha : a ∈ μ.support
   · rw [ENNReal.ofReal_of_nonpos (neg_nonpos.2 (h a ha)), mul_zero]
   · rw [(PMF.apply_eq_zero_iff μ a).2 ha, zero_mul]
@@ -471,7 +471,7 @@ private theorem extendedExpect_le_coe_iff (μ : PMF α) (f : α → ℝ) (r : �
 private theorem tsum_bind_mul (μ : PMF α) (q : α → PMF β) (g : β → ℝ≥0∞) :
     ∑' b, μ.bind q b * g b = ∑' a, μ a * ∑' b, q a b * g b := by
   simp_rw [PMF.bind_apply, ← ENNReal.tsum_mul_right, ← ENNReal.tsum_mul_left, mul_assoc]
-  exact ENNReal.tsum_comm
+  exact tsum_comm
 
 /-- The expected gains of a mixture are the mixture of the expected gains. -/
 theorem positiveExpect_bind (μ : PMF α) (q : α → PMF β) (f : β → ℝ) :
@@ -488,11 +488,11 @@ private theorem tsum_weighted_eq_top {μ : PMF α} {x : α → ℝ≥0∞} {a : 
   rw [← top_le_iff]
   calc
     (⊤ : ℝ≥0∞) = μ a * x a := by rw [hx, ENNReal.mul_top ha]
-    _ ≤ ∑' b, μ b * x b := ENNReal.le_tsum (f := fun b => μ b * x b) a
+    _ ≤ ∑' b, μ b * x b := le_tsum (f := fun b => μ b * x b) a
 
 private theorem tsum_weighted_le {μ : PMF α} {x y : α → ℝ≥0∞}
     (h : ∀ a ∈ μ.support, x a ≤ y a) : ∑' a, μ a * x a ≤ ∑' a, μ a * y a := by
-  refine ENNReal.tsum_le_tsum fun a => ?_
+  refine tsum_le_tsum fun a => ?_
   by_cases ha : a ∈ μ.support
   · exact mul_le_mul' le_rfl (h a ha)
   · rw [(PMF.apply_eq_zero_iff μ a).2 ha, zero_mul, zero_mul]
@@ -579,8 +579,8 @@ theorem payoffIntegrable_bind_of_extendedExpect_le {μ : PMF α} {p q : α → P
     fun htop => hp (extendedExpect_eq_bot_of_negativeExpect_eq_top htop)
   have hbound : positiveExpect (μ.bind p) f ≤
       positiveExpect (μ.bind q) f + negativeExpect (μ.bind p) f := by
-    rw [positiveExpect_bind, positiveExpect_bind, negativeExpect_bind, ← ENNReal.tsum_add]
-    refine ENNReal.tsum_le_tsum fun a => ?_
+    rw [positiveExpect_bind, positiveExpect_bind, negativeExpect_bind, ← tsum_add]
+    refine tsum_le_tsum fun a => ?_
     rw [← mul_add]
     by_cases ha : a ∈ μ.support
     · exact mul_le_mul' le_rfl (positiveExpect_le_of_extendedExpect_le (h a ha))
@@ -648,7 +648,7 @@ private theorem tsum_bindOnSupport_mul (μ : PMF α) (k : ∀ a ∈ μ.support, 
     ∑' b, μ.bindOnSupport k b * g b =
       ∑' a, μ a * (if h : μ a = 0 then 0 else ∑' b, k a h b * g b) := by
   simp_rw [PMF.bindOnSupport_apply, ← ENNReal.tsum_mul_right]
-  rw [ENNReal.tsum_comm]
+  rw [tsum_comm]
   refine tsum_congr fun a => ?_
   by_cases h : μ a = 0
   · simp [h]
@@ -675,8 +675,8 @@ theorem extendedExpect_bindOnSupport_mono {μ : PMF α} {p q : ∀ a ∈ μ.supp
     extendedExpect (μ.bindOnSupport p) f ≤ extendedExpect (μ.bindOnSupport q) f := by
   refine extendedExpect_le_of_cross ?_ hq
   rw [positiveExpect_bindOnSupport, positiveExpect_bindOnSupport, negativeExpect_bindOnSupport,
-    negativeExpect_bindOnSupport, ← ENNReal.tsum_add, ← ENNReal.tsum_add]
-  refine ENNReal.tsum_le_tsum fun a => ?_
+    negativeExpect_bindOnSupport, ← tsum_add, ← tsum_add]
+  refine tsum_le_tsum fun a => ?_
   rw [← mul_add, ← mul_add]
   by_cases ha : μ a = 0
   · simp [ha]

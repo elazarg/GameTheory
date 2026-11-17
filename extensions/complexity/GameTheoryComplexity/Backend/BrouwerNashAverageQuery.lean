@@ -9,184 +9,301 @@ public import GameTheoryComplexity.Backend.BinarySignedFiniteSum
 
 @[expose] public section
 
+/-! Mean queries visit both component flags, all four corners, and all forty-one
+samples in their original nested addition order. Captured source and circuit words
+are charged together with each query ruler. -/
 namespace GameTheory.Complexity.Backend.BrouwerNashAverageQuery
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM
 open scoped BigOperators
 
-private def flagTerm (axis : Bool) (v : Fin 7 → List Bool) : List Bool :=
-  let source := ![v 4, v 5, v 6]
-  let sample := BrouwerNashHeaders.sampleRuler source
-  let input := BrouwerNashHeaders.globalRuler source ++ smash (v 2) sample ++ sample.drop 16 ++
-    smash (v 1) [false, false, false, false] ++ smash (v 0) [false, false] ++ [false]
-  let units := binaryLengthWord (BrouwerNashHeaders.unitsRuler source)
-  let flag := binaryLengthParity (v 0)
-  let scalar := caseBit₀ (if axis then flag else notBit flag)
-    ([false, false, false] ++ units) ([false, false] ++ units)
-  binarySignedIndicator ![v 3, input, scalar]
+local notation "SourceContext" => (List Bool × (List Bool × List Bool))
+local notation "sourceEncoding" => encPair encBits (encPair encBits encBits)
+local notation "FlagContext" => (SourceContext × (List Bool × (List Bool × List Bool)))
+local notation "flagEncoding" =>
+  encPair sourceEncoding (encPair encBits (encPair encBits encBits))
+local notation "CornerContext" => (SourceContext × (List Bool × List Bool))
+local notation "cornerEncoding" => encPair sourceEncoding (encPair encBits encBits)
+local notation "SampleContext" => (SourceContext × List Bool)
+local notation "sampleEncoding" => encPair sourceEncoding encBits
 
-private theorem flagTerm_cobham (axis : Bool) : Cobham (flagTerm axis) := by
-  have hS : Cobham fun v : Fin 7 → List Bool =>
-      BrouwerNashHeaders.sampleRuler ![v 4, v 5, v 6] :=
-    Cobham.comp₃ BrouwerNashHeaders.sampleRuler_cobham (.proj 4) (.proj 5) (.proj 6)
-  have hG : Cobham fun v : Fin 7 → List Bool =>
-      BrouwerNashHeaders.globalRuler ![v 4, v 5, v 6] :=
-    Cobham.comp₃ BrouwerNashHeaders.globalRuler_cobham (.proj 4) (.proj 5) (.proj 6)
-  have hU : Cobham fun v : Fin 7 → List Bool =>
-      binaryLengthWord (BrouwerNashHeaders.unitsRuler ![v 4, v 5, v 6]) :=
-    Cobham.comp binaryLengthWord_cobham fun _ : Fin 1 =>
-      Cobham.comp₃ BrouwerNashHeaders.unitsRuler_cobham (.proj 4) (.proj 5) (.proj 6)
-  have hF : Cobham fun v : Fin 7 → List Bool =>
-      if axis then binaryLengthParity (v 0) else notBit (binaryLengthParity (v 0)) := by
-    cases axis
-    · exact Cobham.notFn (Cobham.comp binaryLengthParity_cobham fun _ : Fin 1 => .proj 0)
-    · exact Cobham.comp binaryLengthParity_cobham fun _ : Fin 1 => .proj 0
-  exact Cobham.comp₃ binarySignedIndicator_cobham (.proj 3)
-    (appendFn (appendFn (appendFn (appendFn (appendFn hG
-      (Cobham.comp₂ Cobham.smash (.proj 2) hS))
-      (dropFn (Cobham.const (List.replicate 16 false)) hS))
-      (Cobham.comp₂ Cobham.smash (.proj 1) (Cobham.const [false, false, false, false])))
-      (Cobham.comp₂ Cobham.smash (.proj 0) (Cobham.const [false, false])))
-      (Cobham.const [false]))
-    (Cobham.iteFn hF (appendFn (Cobham.const [false, false, false]) hU)
-      (appendFn (Cobham.const [false, false]) hU))
+/-- One component flag contributes a signed indicator with its original padded scalar. -/
+def flagWord (axis : Bool) (ordinal corner sample action source code₀ code₁ : List Bool) : List Bool :=
+  let sampleRuler := BrouwerNashHeaders.sampleRuler source code₀ code₁
+  let input := BrouwerNashHeaders.globalRuler source ++
+    List.replicate (sample.length * sampleRuler.length) true ++ sampleRuler.drop 16 ++
+    List.replicate (corner.length * 4) true ++ List.replicate (ordinal.length * 2) true ++ [false]
+  let units := binaryLengthWord (BrouwerNashHeaders.unitsRuler source code₀ code₁)
+  let flag := decide (ordinal.length % 2 = 1)
+  let scalar := if (if axis then flag else !flag) then
+    [false, false, false] ++ units else [false, false] ++ units
+  binarySignedIndicator ![action, input, scalar]
 
-private def flags (axis : Bool) (v : Fin 6 → List Bool) : List Bool :=
-  binarySignedFiniteSum (flagTerm axis) 2 v
+/-- Both component flags retain ascending false-bit ordinal rulers. -/
+def flagsWord (axis : Bool) (corner sample action source code₀ code₁ : List Bool) : List Bool :=
+  binarySignedFiniteSum (fun ordinal (context : FlagContext) =>
+    flagWord axis ordinal context.2.2.2 context.2.2.1 context.2.1
+      context.1.1 context.1.2.1 context.1.2.2) 2
+    ((source, (code₀, code₁)), (action, (sample, corner)))
 
-private theorem flags_cobham (axis : Bool) : Cobham (flags axis) :=
-  binarySignedFiniteSum_cobham (flagTerm_cobham axis) 2
+/-- The four corners retain the two-flag scan at each corner. -/
+def cornersWord (axis : Bool) (sample action source code₀ code₁ : List Bool) : List Bool :=
+  binarySignedFiniteSum (fun corner (context : CornerContext) =>
+    flagsWord axis corner context.2.2 context.2.1
+      context.1.1 context.1.2.1 context.1.2.2) 4
+    ((source, (code₀, code₁)), (action, sample))
 
-private def corners (axis : Bool) (v : Fin 5 → List Bool) : List Bool :=
-  binarySignedFiniteSum (flags axis) 4 v
+/-- All forty-one samples retain their complete corner and flag contributions. -/
+def samplesWord (axis : Bool) (action source code₀ code₁ : List Bool) : List Bool :=
+  binarySignedFiniteSum (fun sample (context : SampleContext) =>
+    cornersWord axis sample context.2 context.1.1 context.1.2.1 context.1.2.2) 41
+    ((source, (code₀, code₁)), action)
 
-private theorem corners_cobham (axis : Bool) : Cobham (corners axis) :=
-  binarySignedFiniteSum_cobham (flags_cobham axis) 4
-
-private def samples (axis : Bool) (v : Fin 4 → List Bool) : List Bool :=
-  binarySignedFiniteSum (corners axis) 41 v
-
-private theorem samples_cobham (axis : Bool) : Cobham (samples axis) :=
-  binarySignedFiniteSum_cobham (corners_cobham axis) 41
-/-- Query the two shared means from output, action, source and scalar circuit codes. -/
-def coefficientWord (v : Fin 5 → List Bool) : List Bool :=
-  let source := ![v 2, v 3, v 4]
+/-- Query both shared means from source, circuit codes, output, and action words. -/
+def coefficientWord (source code₀ code₁ out action : List Bool) : List Bool :=
   let precision := BrouwerNashHeaders.precisionRuler source
   binarySignedAdd
-    (caseBit₀ (lenEqFlag (v 0) (precision ++ List.replicate 5 false))
-      (samples false ![v 1, v 2, v 3, v 4]) [])
-    (caseBit₀ (lenEqFlag (v 0) (precision ++ List.replicate 6 false))
-      (samples true ![v 1, v 2, v 3, v 4]) [])
+    (if out.length = (precision ++ List.replicate 5 false).length then
+      samplesWord false action source code₀ code₁ else [])
+    (if out.length = (precision ++ List.replicate 6 false).length then
+      samplesWord true action source code₀ code₁ else [])
 
-/-- Every average coefficient is computed by bounded scans. -/
-theorem coefficientWord_cobham : Cobham coefficientWord := by
-  have hp : Cobham fun v : Fin 5 → List Bool =>
-      BrouwerNashHeaders.precisionRuler ![v 2, v 3, v 4] :=
-    Cobham.comp₃ BrouwerNashHeaders.precisionRuler_cobham (.proj 2) (.proj 3) (.proj 4)
-  have hs (axis : Bool) : Cobham fun v : Fin 5 → List Bool =>
-      samples axis ![v 1, v 2, v 3, v 4] :=
-    (Cobham.comp (samples_cobham axis) fun i : Fin 4 => .proj i.succ).of_eq fun v => by
-      congr 1
-      ext i
-      fin_cases i <;> rfl
-  exact Cobham.comp₂ binarySignedAdd_cobham
-    (Cobham.iteFn (lenEqFlag_mem (.proj 0)
-      (appendFn hp (Cobham.const (List.replicate 5 false)))) (hs false) Cobham.empty)
-    (Cobham.iteFn (lenEqFlag_mem (.proj 0)
-      (appendFn hp (Cobham.const (List.replicate 6 false)))) (hs true) Cobham.empty)
+@[fun_prop] theorem flagWord_polyTime (axis : Bool) {Input : Type} {input : Input ↪ List Bool}
+    {ordinal corner sample action source code₀ code₁ : Input → List Bool}
+    (hi : ComputableInPolyTime ordinal input encBits)
+    (hc : ComputableInPolyTime corner input encBits)
+    (ht : ComputableInPolyTime sample input encBits)
+    (ha : ComputableInPolyTime action input encBits)
+    (hs : ComputableInPolyTime source input encBits)
+    (hc₀ : ComputableInPolyTime code₀ input encBits)
+    (hc₁ : ComputableInPolyTime code₁ input encBits) :
+    ComputableInPolyTime (fun a => flagWord axis (ordinal a) (corner a) (sample a)
+      (action a) (source a) (code₀ a) (code₁ a)) input encBits := by
+  have hsample := BrouwerNashHeaders.sampleRuler_polyTime hs hc₀ hc₁
+  have hstart := ComputableInPolyTime.bitsAppend (BrouwerNashHeaders.globalRuler_polyTime hs)
+    ((ComputableInPolyTime.bitsReplicate true).comp
+      (ComputableInPolyTime.unary_mul' (ComputableInPolyTime.length_bits_comp ht)
+        (ComputableInPolyTime.length_bits_comp hsample)))
+  have hdrop := ComputableInPolyTime.bitsDropWithInput hsample (ComputableInPolyTime.const 16)
+  have hcorner := (ComputableInPolyTime.bitsReplicate true).comp
+    (ComputableInPolyTime.unary_mul' (ComputableInPolyTime.length_bits_comp hc)
+      (ComputableInPolyTime.const 4))
+  have hflag := (ComputableInPolyTime.bitsReplicate true).comp
+    (ComputableInPolyTime.unary_mul' (ComputableInPolyTime.length_bits_comp hi)
+      (ComputableInPolyTime.const 2))
+  have hindex := ComputableInPolyTime.bitsAppend
+    (ComputableInPolyTime.bitsAppend
+      (ComputableInPolyTime.bitsAppend (ComputableInPolyTime.bitsAppend hstart hdrop) hcorner)
+        hflag) (ComputableInPolyTime.const [false])
+  have hunits := binaryLengthWord_polyTime.comp
+    (BrouwerNashHeaders.unitsRuler_polyTime hs hc₀ hc₁)
+  have hmod := ComputableInPolyTime.unary_mod.comp
+    ((ComputableInPolyTime.length_bits_comp hi).prod (ComputableInPolyTime.const 2))
+  have hodd := ComputableInPolyTime.of_tidy
+    ((ComputableTidilyInPolyTime.decide_eq encUnary).comp (hmod.tidy.prod (.const 1)))
+  have hcondition : ComputableInPolyTime (fun a =>
+      if axis then decide ((ordinal a).length % 2 = 1)
+      else !(decide ((ordinal a).length % 2 = 1))) input encBool := by
+    cases axis
+    · exact (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bool_not).comp hodd
+    · exact hodd
+  have hscalar := hcondition.ite
+    (ComputableInPolyTime.bitsAppend (ComputableInPolyTime.const [false, false, false]) hunits)
+    (ComputableInPolyTime.bitsAppend (ComputableInPolyTime.const [false, false]) hunits)
+  have hargs : ComputableInPolyTime (fun a : Input =>
+      ![action a,
+        BrouwerNashHeaders.globalRuler (source a) ++
+          List.replicate ((sample a).length *
+            (BrouwerNashHeaders.sampleRuler (source a) (code₀ a) (code₁ a)).length) true ++
+          (BrouwerNashHeaders.sampleRuler (source a) (code₀ a) (code₁ a)).drop 16 ++
+          List.replicate ((corner a).length * 4) true ++
+          List.replicate ((ordinal a).length * 2) true ++ [false],
+        if (if axis then decide ((ordinal a).length % 2 = 1)
+          else !(decide ((ordinal a).length % 2 = 1))) then
+          [false, false, false] ++ binaryLengthWord
+            (BrouwerNashHeaders.unitsRuler (source a) (code₀ a) (code₁ a))
+        else [false, false] ++ binaryLengthWord
+          (BrouwerNashHeaders.unitsRuler (source a) (code₀ a) (code₁ a))])
+      input (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact ha
+    · simpa only [Matrix.cons_val_succ', Matrix.cons_val_zero', Function.comp_apply] using hindex
+    · simpa only [Matrix.cons_val_succ', Matrix.cons_val_zero', Function.comp_apply] using hscalar
+  exact binarySignedIndicator_polyTime.comp hargs
 
-theorem coefficientWord_mem_FPn : FPn coefficientWord :=
-  cobham_iff_FPn.mp coefficientWord_cobham
+private theorem flagCallback_polyTime (axis : Bool) :
+    ComputableInPolyTime (fun p : FlagContext × List Bool =>
+      flagWord axis p.2 p.1.2.2.2 p.1.2.2.1 p.1.2.1
+        p.1.1.1 p.1.1.2.1 p.1.1.2.2)
+      (encPair flagEncoding encBits) encBits := by
+  have hcontext := ComputableInPolyTime.fst flagEncoding encBits
+  have hi := ComputableInPolyTime.snd flagEncoding encBits
+  exact flagWord_polyTime axis hi hcontext.snd'.snd'.snd' hcontext.snd'.snd'.fst'
+    hcontext.snd'.fst' hcontext.fst'.fst' hcontext.fst'.snd'.fst' hcontext.fst'.snd'.snd'
+
+@[fun_prop] theorem flagsWord_polyTime (axis : Bool) {Input : Type} {input : Input ↪ List Bool}
+    {corner sample action source code₀ code₁ : Input → List Bool}
+    (hc : ComputableInPolyTime corner input encBits)
+    (ht : ComputableInPolyTime sample input encBits)
+    (ha : ComputableInPolyTime action input encBits)
+    (hs : ComputableInPolyTime source input encBits)
+    (hc₀ : ComputableInPolyTime code₀ input encBits)
+    (hc₁ : ComputableInPolyTime code₁ input encBits) :
+    ComputableInPolyTime (fun a => flagsWord axis (corner a) (sample a)
+      (action a) (source a) (code₀ a) (code₁ a)) input encBits :=
+  binarySignedFiniteSum_polyTime (flagCallback_polyTime axis) 2
+    ((hs.prod (hc₀.prod hc₁)).prod (ha.prod (ht.prod hc)))
+
+private theorem cornerCallback_polyTime (axis : Bool) :
+    ComputableInPolyTime (fun p : CornerContext × List Bool =>
+      flagsWord axis p.2 p.1.2.2 p.1.2.1 p.1.1.1 p.1.1.2.1 p.1.1.2.2)
+      (encPair cornerEncoding encBits) encBits := by
+  have hcontext := ComputableInPolyTime.fst cornerEncoding encBits
+  have hc := ComputableInPolyTime.snd cornerEncoding encBits
+  exact flagsWord_polyTime axis hc hcontext.snd'.snd' hcontext.snd'.fst'
+    hcontext.fst'.fst' hcontext.fst'.snd'.fst' hcontext.fst'.snd'.snd'
+
+@[fun_prop] theorem cornersWord_polyTime (axis : Bool) {Input : Type} {input : Input ↪ List Bool}
+    {sample action source code₀ code₁ : Input → List Bool}
+    (ht : ComputableInPolyTime sample input encBits)
+    (ha : ComputableInPolyTime action input encBits)
+    (hs : ComputableInPolyTime source input encBits)
+    (hc₀ : ComputableInPolyTime code₀ input encBits)
+    (hc₁ : ComputableInPolyTime code₁ input encBits) :
+    ComputableInPolyTime (fun a => cornersWord axis (sample a) (action a)
+      (source a) (code₀ a) (code₁ a)) input encBits :=
+  binarySignedFiniteSum_polyTime (cornerCallback_polyTime axis) 4
+    ((hs.prod (hc₀.prod hc₁)).prod (ha.prod ht))
+
+private theorem sampleCallback_polyTime (axis : Bool) :
+    ComputableInPolyTime (fun p : SampleContext × List Bool =>
+      cornersWord axis p.2 p.1.2 p.1.1.1 p.1.1.2.1 p.1.1.2.2)
+      (encPair sampleEncoding encBits) encBits := by
+  have hcontext := ComputableInPolyTime.fst sampleEncoding encBits
+  have ht := ComputableInPolyTime.snd sampleEncoding encBits
+  exact cornersWord_polyTime axis ht hcontext.snd'
+    hcontext.fst'.fst' hcontext.fst'.snd'.fst' hcontext.fst'.snd'.snd'
+
+@[fun_prop] theorem samplesWord_polyTime (axis : Bool) {Input : Type} {input : Input ↪ List Bool}
+    {action source code₀ code₁ : Input → List Bool}
+    (ha : ComputableInPolyTime action input encBits)
+    (hs : ComputableInPolyTime source input encBits)
+    (hc₀ : ComputableInPolyTime code₀ input encBits)
+    (hc₁ : ComputableInPolyTime code₁ input encBits) :
+    ComputableInPolyTime (fun a => samplesWord axis (action a) (source a) (code₀ a) (code₁ a))
+      input encBits :=
+  binarySignedFiniteSum_polyTime (sampleCallback_polyTime axis) 41
+    ((hs.prod (hc₀.prod hc₁)).prod ha)
+
+/-- Every source, circuit word, and query ruler contributes to the native running-time bound. -/
+@[fun_prop] theorem coefficientWord_polyTime {Input : Type} {input : Input ↪ List Bool}
+    {source code₀ code₁ out action : Input → List Bool}
+    (hs : ComputableInPolyTime source input encBits)
+    (hc₀ : ComputableInPolyTime code₀ input encBits)
+    (hc₁ : ComputableInPolyTime code₁ input encBits)
+    (ho : ComputableInPolyTime out input encBits)
+    (ha : ComputableInPolyTime action input encBits) :
+    ComputableInPolyTime (fun a => coefficientWord (source a) (code₀ a) (code₁ a)
+      (out a) (action a)) input encBits := by
+  have hp := BrouwerNashHeaders.precisionRuler_polyTime hs
+  have hguard (offset : ℕ) := ComputableInPolyTime.of_tidy
+    ((ComputableTidilyInPolyTime.decide_eq encUnary).comp
+      ((ComputableInPolyTime.length_bits_comp ho).tidy.prod
+        (ComputableInPolyTime.length_bits_comp (ComputableInPolyTime.bitsAppend hp
+          (ComputableInPolyTime.const (List.replicate offset false)))).tidy))
+  exact (binarySignedAdd_polyTime
+    ((hguard 5).ite (samplesWord_polyTime false ha hs hc₀ hc₁) (ComputableInPolyTime.const []))
+    ((hguard 6).ite (samplesWord_polyTime true ha hs hc₀ hc₁) (ComputableInPolyTime.const []))).of_enc_eq
+      (fun a => by simp only [coefficientWord, Function.comp_apply, decide_eq_true_eq])
 
 private theorem scalar_two (r : List Bool) :
     binarySignedValue (false :: false :: binaryLengthWord r) = 2 * (r.length : ℤ) := by
-  simp only [binarySignedValue, List.headD_cons,
-    Bool.false_eq_true, ite_false, List.tail_cons, Nat.fromBitsLE_cons, zero_add,
-    binaryLengthWord_value, Nat.cast_mul, Nat.cast_ofNat]
+  change ((2 * ofBits (binaryLengthWord r) : ℕ) : ℤ) = _
+  rw [binaryLengthWord_value, Nat.cast_mul, Nat.cast_ofNat]
 
 private theorem scalar_four (r : List Bool) :
     binarySignedValue (false :: false :: false :: binaryLengthWord r) =
       4 * (r.length : ℤ) := by
-  simp only [binarySignedValue, List.headD_cons,
-    Bool.false_eq_true, ite_false, List.tail_cons, Nat.fromBitsLE_cons, zero_add,
-    binaryLengthWord_value, Nat.cast_mul, Nat.cast_ofNat]
+  change ((2 * (2 * ofBits (binaryLengthWord r)) : ℕ) : ℤ) = _
+  rw [binaryLengthWord_value, Nat.cast_mul, Nat.cast_mul, Nat.cast_ofNat]
   ring
 
 private theorem flagTerm_value (axis : Bool) (action source code₀ code₁ : List Bool)
     (t : Fin 41) (corner : Fin 4) (flag : Fin 2) :
-    binarySignedValue (flagTerm axis ![List.replicate flag.val false,
-      List.replicate corner.val false, List.replicate t.val false, action, source, code₀, code₁]) =
-      if action.length / 2 = BrouwerNashLayout.sampleBase (pairFst source).length
+    binarySignedValue (flagWord axis (List.replicate flag.val false)
+      (List.replicate corner.val false) (List.replicate t.val false) action source code₀ code₁) =
+      if action.length / 2 = BrouwerNashLayout.sampleBase (CircuitWords.first source).length
           (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length t +
-          BrouwerNashLayout.minimum (pairFst source).length
+          BrouwerNashLayout.minimum (CircuitWords.first source).length
             (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length corner flag ∧
           action.length % 2 = 1
-      then 2 * (BrouwerNashLayout.units (pairFst source).length
+      then 2 * (BrouwerNashLayout.units (CircuitWords.first source).length
         (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length : ℤ) *
         BrouwerNashProgram.componentWeight (if axis then 1 else 0) flag else 0 := by
   change binarySignedValue (binarySignedIndicator ![action,
-    BrouwerNashHeaders.globalRuler ![source, code₀, code₁] ++
-      smash (List.replicate t.val false)
-        (BrouwerNashHeaders.sampleRuler ![source, code₀, code₁]) ++
-      (BrouwerNashHeaders.sampleRuler ![source, code₀, code₁]).drop 16 ++
-      smash (List.replicate corner.val false) [false, false, false, false] ++
-      smash (List.replicate flag.val false) [false, false] ++ [false],
-    caseBit₀ (if axis then binaryLengthParity (List.replicate flag.val false)
-      else notBit (binaryLengthParity (List.replicate flag.val false)))
-      ([false, false, false] ++
-        binaryLengthWord (BrouwerNashHeaders.unitsRuler ![source, code₀, code₁]))
-      ([false, false] ++
-        binaryLengthWord (BrouwerNashHeaders.unitsRuler ![source, code₀, code₁]))]) = _
+    BrouwerNashHeaders.globalRuler source ++
+      List.replicate ((List.replicate t.val false).length *
+        (BrouwerNashHeaders.sampleRuler source code₀ code₁).length) true ++
+      (BrouwerNashHeaders.sampleRuler source code₀ code₁).drop 16 ++
+      List.replicate ((List.replicate corner.val false).length * 4) true ++
+      List.replicate ((List.replicate flag.val false).length * 2) true ++ [false],
+    if (if axis then decide ((List.replicate flag.val false).length % 2 = 1)
+      else !(decide ((List.replicate flag.val false).length % 2 = 1))) then
+      [false, false, false] ++ binaryLengthWord
+        (BrouwerNashHeaders.unitsRuler source code₀ code₁)
+    else [false, false] ++ binaryLengthWord
+        (BrouwerNashHeaders.unitsRuler source code₀ code₁)]) = _
   rw [binarySignedIndicator_value]
-  simp only [List.length_append, List.length_replicate, smash_length, List.length_drop,
+  simp only [List.length_append, List.length_replicate, List.length_drop,
     List.length_cons, List.length_nil, BrouwerNashHeaders.globalRuler_length,
     BrouwerNashHeaders.sampleRuler_length]
   change (if action.length / 2 =
-      BrouwerNashLayout.globalCount (pairFst source).length +
-      t.val * BrouwerNashLayout.sampleWidth (pairFst source).length
+      BrouwerNashLayout.globalCount (CircuitWords.first source).length +
+      t.val * BrouwerNashLayout.sampleWidth (CircuitWords.first source).length
         (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length +
-      (BrouwerNashLayout.sampleWidth (pairFst source).length
+      (BrouwerNashLayout.sampleWidth (CircuitWords.first source).length
         (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length - 16) +
       corner.val * 4 + flag.val * 2 + 1 ∧ action.length % 2 = 1 then _ else 0) = _
-  have hlen : BrouwerNashLayout.sampleWidth (pairFst source).length
+  have hlen : BrouwerNashLayout.sampleWidth (CircuitWords.first source).length
       (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length - 16 =
-      BrouwerNashLayout.minimumBase (pairFst source).length
+      BrouwerNashLayout.minimumBase (CircuitWords.first source).length
         (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length := by
     simp only [BrouwerNashLayout.sampleWidth, BrouwerNashLayout.minimumBase,
       BrouwerNashLayout.colorBase, BrouwerNashLayout.weightBase]
     omega
   rw [hlen]
-  have hindex : BrouwerNashLayout.globalCount (pairFst source).length +
-      t.val * BrouwerNashLayout.sampleWidth (pairFst source).length
+  have hindex : BrouwerNashLayout.globalCount (CircuitWords.first source).length +
+      t.val * BrouwerNashLayout.sampleWidth (CircuitWords.first source).length
         (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length +
-      BrouwerNashLayout.minimumBase (pairFst source).length
+      BrouwerNashLayout.minimumBase (CircuitWords.first source).length
         (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length +
       corner.val * 4 + flag.val * 2 + 1 =
-      BrouwerNashLayout.sampleBase (pairFst source).length
+      BrouwerNashLayout.sampleBase (CircuitWords.first source).length
         (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length t +
-      BrouwerNashLayout.minimum (pairFst source).length
+      BrouwerNashLayout.minimum (CircuitWords.first source).length
         (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length corner flag := by
     simp only [BrouwerNashLayout.sampleBase, BrouwerNashLayout.minimum,
       BrouwerNashLayout.minimumTemporary]
     omega
   rw [hindex]
   cases axis <;> fin_cases flag <;>
-    simp only [binaryLengthParity_value, List.length_replicate, notBit, caseBit₀,
-      BrouwerNashProgram.componentWeight] <;> norm_num <;>
+    simp only [BrouwerNashProgram.componentWeight] <;> norm_num <;>
     simp only [scalar_two, scalar_four, BrouwerNashHeaders.unitsRuler_length] <;>
-    congr 1 <;> ring_nf <;> rfl
+    congr 1 <;> ring_nf
 
 private theorem samples_value (axis : Bool) (action source code₀ code₁ : List Bool) :
-    binarySignedValue (samples axis ![action, source, code₀, code₁]) =
+    binarySignedValue (samplesWord axis action source code₀ code₁) =
       ∑ t : Fin 41, ∑ corner : Fin 4, ∑ flag : Fin 2,
-        if action.length / 2 = BrouwerNashLayout.sampleBase (pairFst source).length
+        if action.length / 2 = BrouwerNashLayout.sampleBase (CircuitWords.first source).length
             (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length t +
-            BrouwerNashLayout.minimum (pairFst source).length
+            BrouwerNashLayout.minimum (CircuitWords.first source).length
               (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length corner flag ∧
             action.length % 2 = 1
-        then 2 * (BrouwerNashLayout.units (pairFst source).length
+        then 2 * (BrouwerNashLayout.units (CircuitWords.first source).length
           (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length : ℤ) *
           BrouwerNashProgram.componentWeight (if axis then 1 else 0) flag else 0 := by
-  simp only [samples, binarySignedFiniteSum_value, corners, flags]
+  simp only [samplesWord, binarySignedFiniteSum_value, cornersWord, flagsWord]
   simp only [← Fin.sum_univ_eq_sum_range]
   apply Finset.sum_congr rfl
   intro t _
@@ -195,12 +312,13 @@ private theorem samples_value (axis : Bool) (action source code₀ code₁ : Lis
   apply Finset.sum_congr rfl
   intro flag _
   exact flagTerm_value axis action source code₀ code₁ t corner flag
+
 private theorem samples_coefficients (axis : Bool) (action source code₀ code₁ : List Bool)
-    (r : Fin (BrouwerNashLayout.dimension (pairFst source).length
+    (r : Fin (BrouwerNashLayout.dimension (CircuitWords.first source).length
       (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length * 2))
     (hr : action.length = r.val) :
-    binarySignedValue (samples axis ![action, source, code₀, code₁]) =
-      (BrouwerNashProgram.averageGate (pairFst source).length
+    binarySignedValue (samplesWord axis action source code₀ code₁) =
+      (BrouwerNashProgram.averageGate (CircuitWords.first source).length
         (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length
         (if axis then 1 else 0)).coefficients r := by
   rw [samples_value, hr]
@@ -234,48 +352,48 @@ private theorem samples_coefficients (axis : Bool) (action source code₀ code�
     intro corner _
     apply Finset.sum_congr rfl
     intro flag _
-    have hb := BrouwerNashLayout.sample_lt_dimension (pairFst source).length
+    have hb := BrouwerNashLayout.sample_lt_dimension (CircuitWords.first source).length
       (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length t
-      (BrouwerNashLayout.minimum (pairFst source).length
+      (BrouwerNashLayout.minimum (CircuitWords.first source).length
         (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length corner flag)
       (BrouwerNashProgram.minimum_lt_sampleWidth _ _ _ corner flag false)
     have he : a.val =
-        BrouwerNashLayout.sampleBase (pairFst source).length
+        BrouwerNashLayout.sampleBase (CircuitWords.first source).length
           (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length t +
-        BrouwerNashLayout.minimum (pairFst source).length
+        BrouwerNashLayout.minimum (CircuitWords.first source).length
           (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length corner flag ↔
-        a = BrouwerNashProgram.slot (pairFst source).length
+        a = BrouwerNashProgram.slot (CircuitWords.first source).length
         (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length
-        (BrouwerNashLayout.sampleBase (pairFst source).length
+        (BrouwerNashLayout.sampleBase (CircuitWords.first source).length
           (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length t +
-        BrouwerNashLayout.minimum (pairFst source).length
+        BrouwerNashLayout.minimum (CircuitWords.first source).length
           (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length corner flag) := by
       rw [Fin.ext_iff, BrouwerNashProgram.slot_val _ _ _ _ hb]
     simp only [he]
-/-- The two mean slots agree with the canonical gate coefficients; other outputs give zero. -/
+
+/-- Both mean slots agree with the canonical gate coefficients; every other output gives zero. -/
 theorem coefficientWord_value (out action source code₀ code₁ : List Bool)
-    (r : Fin (BrouwerNashLayout.dimension (pairFst source).length
+    (r : Fin (BrouwerNashLayout.dimension (CircuitWords.first source).length
       (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length * 2))
     (hr : action.length = r.val) :
-    binarySignedValue (coefficientWord ![out, action, source, code₀, code₁]) =
-      (if out.length = BrouwerNashLayout.average (pairFst source).length 0 then
-        (BrouwerNashProgram.averageGate (pairFst source).length
+    binarySignedValue (coefficientWord source code₀ code₁ out action) =
+      (if out.length = BrouwerNashLayout.average (CircuitWords.first source).length 0 then
+        (BrouwerNashProgram.averageGate (CircuitWords.first source).length
           (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length 0).coefficients r
       else 0) +
-      (if out.length = BrouwerNashLayout.average (pairFst source).length 1 then
-        (BrouwerNashProgram.averageGate (pairFst source).length
+      (if out.length = BrouwerNashLayout.average (CircuitWords.first source).length 1 then
+        (BrouwerNashProgram.averageGate (CircuitWords.first source).length
           (circuitUnaryPrefix code₀).length (circuitUnaryPrefix code₁).length 1).coefficients r
       else 0) := by
   change binarySignedValue (binarySignedAdd
-    (caseBit₀ (lenEqFlag out
-      (BrouwerNashHeaders.precisionRuler ![source, code₀, code₁] ++ List.replicate 5 false))
-      (samples false ![action, source, code₀, code₁]) [])
-    (caseBit₀ (lenEqFlag out
-      (BrouwerNashHeaders.precisionRuler ![source, code₀, code₁] ++ List.replicate 6 false))
-      (samples true ![action, source, code₀, code₁]) [])) = _
+    (if out.length = (BrouwerNashHeaders.precisionRuler source ++ List.replicate 5 false).length then
+      samplesWord false action source code₀ code₁ else [])
+    (if out.length = (BrouwerNashHeaders.precisionRuler source ++ List.replicate 6 false).length then
+      samplesWord true action source code₀ code₁ else [])) = _
   rw [binarySignedAdd_value, BrouwerNashCoefficientQuery.select_value,
     BrouwerNashCoefficientQuery.select_value,
     samples_coefficients false _ _ _ _ r hr, samples_coefficients true _ _ _ _ r hr]
   simp only [List.length_append, List.length_replicate, BrouwerNashHeaders.precisionRuler_length]
   rfl
+
 end GameTheory.Complexity.Backend.BrouwerNashAverageQuery

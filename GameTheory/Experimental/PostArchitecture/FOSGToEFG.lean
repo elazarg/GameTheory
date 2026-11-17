@@ -643,15 +643,15 @@ theorem joint_eq_of_same_source_target (first : Bool)
   | root =>
       cases target <;>
         simp [execution] at firstRealized secondRealized ⊢
-      all_goals aesop
+      aesop
   | afterFirst storedFirst =>
       cases target <;>
         simp [execution] at firstRealized secondRealized ⊢
-      all_goals aesop
+      aesop
   | ready storedFirst storedSecond =>
       cases target <;>
         simp [execution] at firstRealized secondRealized ⊢
-      all_goals aesop
+      aesop
   | terminal storedFirst storedSecond storedResolution value =>
       exact False.elim (firstLegal.1 trivial)
 

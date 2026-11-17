@@ -84,6 +84,18 @@ def raw := r#"sorry \" import Cslib.Models"#
                 self.write("GameTheory/Core/Fixture.lean", source + "\n")
                 self.assert_rejects("base module imports optional complexity surface")
 
+    def test_cslib_complexity_import_root_stays_optional(self):
+        for source in [
+            "import CslibFrontier",
+            "public import CslibFrontier.Computability.Complexity.Classes.TFNP",
+            "meta import all CslibFrontier.Computability.Machines.Turing.MultiTape.PolyTime",
+            "public meta import all «CslibFrontier».Computability.Complexity.Classes.P",
+            "module\npublic\nimport\n«CslibFrontier».Crypto.Negligible",
+        ]:
+            with self.subTest(source=source):
+                self.write("GameTheory/Core/Fixture.lean", source + "\n")
+                self.assert_rejects("base module imports optional complexity surface")
+
     def test_wrapped_public_imports_keep_boundaries_and_coverage(self):
         self.write("GameTheory.lean", "module\npublic import\nGameTheory.Core.Fixture\n")
         self.write("lint/GameTheory/LintAll.lean",
@@ -205,6 +217,13 @@ private axiom bad : False
         self.manifest("lake-manifest.json", [self.mathlib(), {"name": "cslib"}])
         self.assert_rejects("base manifest requires optional dependency")
 
+    def test_frontier_backend_package_stays_optional(self):
+        self.write("lakefile.lean", 'require «cslib-frontier» from git "url"\n')
+        self.assert_rejects("base Lake configuration directly requires an optional dependency")
+        self.write("lakefile.lean", "")
+        self.manifest("lake-manifest.json", [self.mathlib(), {"name": "«cslib-frontier»"}])
+        self.assert_rejects("base manifest requires optional dependency")
+
     def test_lake_multiline_strings_do_not_create_dependencies(self):
         with (self.root / "lakefile.lean").open("a", encoding="utf-8") as stream:
             stream.write('def ignored := "\nrequire cslib from git \\\"url\\\"\n"\n')
@@ -244,6 +263,7 @@ private axiom bad : False
 
     def test_extension_keeps_its_backend_and_proof_dependency_budget(self):
         self.extension('''import Complexitylib.Classes.P.NormalForm
+public import Complexity.Computability.Complexity.Classes.TFNP
 import Cslib.Models
 import GameTheory.Core.Utility
 import GameTheoryComplexity.SampleTest

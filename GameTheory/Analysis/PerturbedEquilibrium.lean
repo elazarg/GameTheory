@@ -68,7 +68,7 @@ private theorem response_kernel_law (free : Finset ι)
     have pure : ∑' choice, (residual who) choice * (PMF.pure choice) action =
         (residual who) action := by
       rw [← PMF.bind_apply, PMF.bind_pure]
-    simp only [PMF.bind_apply, mix_apply, mul_add, ENNReal.tsum_add, ENNReal.tsum_mul_right,
+    simp only [PMF.bind_apply, mix_apply, mul_add, tsum_add, ENNReal.tsum_mul_right,
       PMF.tsum_coe, one_mul, mul_left_comm _ (ENNReal.ofReal (1 - epsilon)),
       ENNReal.tsum_mul_left, pure]
   · simp only [pinnedTremble, active, ↓reduceIte, PMF.bind_const]

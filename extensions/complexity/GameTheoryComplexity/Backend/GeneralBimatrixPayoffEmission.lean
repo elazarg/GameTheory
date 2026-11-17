@@ -5,45 +5,53 @@ public import GameTheoryComplexity.Backend.BinarySignedFixedWidth
 
 @[expose] public section
 
-/-! Polynomial emission of the unsigned positive and negative payoff fields used by
-rectangular game inputs. Arithmetic sign-header words remain internal to the writer. -/
-namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+/-! Rectangular game payoffs store separate fixed-width positive and negative
+magnitudes. The writer selects the signed word's appropriate tail and retains
+exact truncation and zero padding at every requested width. -/
 
-/-- Emit one fixed-width magnitude field, zeroing the field with the opposite sign. -/
+namespace GameTheory.Complexity.Backend
+
+open Cslib.BitString Turing.MultiTapeTM
+
+/-- Emit one fixed-width magnitude, zeroing the field with the opposite sign. -/
 def generalSignedMagnitude (positive : Bool) (ruler word : List Bool) : List Bool :=
-  padTo ruler (caseBit₀ word (if positive then [] else word.tail)
-    (if positive then word.tail else []))
+  lowBits ruler.length
+    (if word.headD false then (if positive then 0 else ofBits word.tail)
+     else if positive then ofBits word.tail else 0)
 
 @[simp] theorem generalSignedMagnitude_length (positive : Bool) (ruler word : List Bool) :
-    (generalSignedMagnitude positive ruler word).length = ruler.length := padTo_length _ _
+    (generalSignedMagnitude positive ruler word).length = ruler.length := by
+  simp [generalSignedMagnitude]
 
-/-- The two emitted magnitude fields preserve every representable signed value. -/
+/-- The two magnitude fields preserve every signed value fitting the advertised width. -/
 theorem generalSignedMagnitude_value (ruler word : List Bool)
     (hfit : (binarySignedValue word).natAbs < 2 ^ ruler.length) :
-    (Nat.fromBitsLE (generalSignedMagnitude true ruler word) : ℤ) -
-      (Nat.fromBitsLE (generalSignedMagnitude false ruler word) : ℤ) =
-        binarySignedValue word := by
-  have hm : Nat.fromBitsLE word.tail < 2 ^ ruler.length := by
+    (ofBits (generalSignedMagnitude true ruler word) : ℤ) -
+      (ofBits (generalSignedMagnitude false ruler word) : ℤ) = binarySignedValue word := by
+  have hm : ofBits word.tail < 2 ^ ruler.length := by
     simpa only [binarySignedValue_natAbs] using hfit
-  have hzero : Nat.fromBitsLE ([] : List Bool) = 0 := rfl
-  cases word with
-  | nil => simp [generalSignedMagnitude, binarySignedValue, padTo_fromBitsLE, hzero]
-  | cons b word =>
-    simp only [List.tail_cons] at hm
-    cases b <;> simp [generalSignedMagnitude, binarySignedValue, padTo_fromBitsLE,
-      Nat.mod_eq_of_lt hm, hzero]
+  have hvalue : ofBits (lowBits ruler.length (ofBits word.tail)) = ofBits word.tail :=
+    Nat.foldr_bit_testBit (Nat.size_le.mpr hm)
+  have hzero : ofBits (lowBits ruler.length 0) = 0 :=
+    Nat.foldr_bit_testBit (Nat.size_le.mpr (Nat.pow_pos (by decide)))
+  cases h : word.head?.getD false <;>
+    simp [generalSignedMagnitude, binarySignedValue, h, hvalue, hzero]
 
-/-- Magnitude selection and fixed-width padding have an actual polynomial-time certificate. -/
-theorem generalSignedMagnitude_cobham (positive : Bool) :
-    Cobham fun v : Fin 2 → List Bool => generalSignedMagnitude positive (v 0) (v 1) := by
+/-- Magnitude selection and fixed-width storage charge both actual word producers. -/
+@[fun_prop] theorem generalSignedMagnitude_polyTime (positive : Bool)
+    {Input : Type} {input : Input ↪ List Bool} {ruler word : Input → List Bool}
+    (hr : ComputableInPolyTime ruler input encBits)
+    (hw : ComputableInPolyTime word input encBits) :
+    ComputableInPolyTime (fun a => generalSignedMagnitude positive (ruler a) (word a))
+      input encBits := by
+  have hhead : ComputableInPolyTime (fun a : Input => (word a).headD false) input encBool :=
+    (ComputableInPolyTime.headD false).comp hw
+  have htail := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hw
+  have hmag := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsToNat).comp htail
   cases positive
-  · exact Cobham.padFn (.proj 0) (Cobham.iteFn (.proj 1)
-      (Cobham.tailFn (.proj 1)) Cobham.empty)
-  · exact Cobham.padFn (.proj 0) (Cobham.iteFn (.proj 1)
-      Cobham.empty (Cobham.tailFn (.proj 1)))
+  · exact ComputableInPolyTime.bitsLow (ComputableInPolyTime.length_bits_comp hr)
+      (hhead.ite hmag (ComputableInPolyTime.const 0))
+  · exact ComputableInPolyTime.bitsLow (ComputableInPolyTime.length_bits_comp hr)
+      (hhead.ite (ComputableInPolyTime.const 0) hmag)
 
-theorem generalSignedMagnitude_mem_FPn (positive : Bool) :
-    FPn (fun v : Fin 2 → List Bool => generalSignedMagnitude positive (v 0) (v 1)) :=
-  cobham_iff_FPn.mp (generalSignedMagnitude_cobham positive)
 end GameTheory.Complexity.Backend

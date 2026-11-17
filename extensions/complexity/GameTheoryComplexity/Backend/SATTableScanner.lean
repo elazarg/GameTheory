@@ -1,6 +1,6 @@
 module
 
-public import Complexitylib.SAT.Encoding
+public import GameTheoryComplexity.Backend.SATWords
 
 @[expose] public section
 
@@ -61,11 +61,16 @@ def IncidenceState.step (varIndex : ℕ) (sign : Bool) (clause : ℕ)
   else
     { s with waiting := true, saved := bit }
 
+/-- The semantic state reached by scanning every input bit from right to left. -/
+def incidenceScanState (varIndex clauseIndex : ℕ) (sign : Bool)
+    (input : List Bool) : IncidenceState :=
+  input.reverse.foldl (IncidenceState.step varIndex sign clauseIndex) {}
+
 /-- Literal occurrence in a reverse-numbered clause, with tautological padding.
 Malformed strings are handled by the enclosing reduction's syntax check. -/
 def scanIncidence (varIndex : ℕ) (sign : Bool) (clause : ℕ)
     (input : List Bool) : Bool :=
-  let s := input.reverse.foldl (IncidenceState.step varIndex sign clause) {}
+  let s := incidenceScanState varIndex clause sign input
   let result := s.finish varIndex sign clause
   result.hit || !s.seenClause || decide (s.clauseIndex < clause)
 

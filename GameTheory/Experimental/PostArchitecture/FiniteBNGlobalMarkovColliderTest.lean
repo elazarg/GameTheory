@@ -144,9 +144,12 @@ theorem factorizes : Factorizes diagram.Value law parents kernels := by
       simp_rw [law, fairMix, mix_apply_toReal, PMF.pure_apply]
   all_goals
     rw [factorProduct, allNodes]
-    simp [rawWorld_eq_world_iff, rawWorld, localFactor, parentConfiguration,
-      kernels, fairBool, fairMix, PMF.pure_apply]
-    all_goals norm_num [ENNReal.toReal_ofReal]
+    first
+      | (simp [rawWorld_eq_world_iff, rawWorld, localFactor, parentConfiguration,
+            kernels, fairBool, fairMix, PMF.pure_apply];
+          norm_num [ENNReal.toReal_ofReal])
+      | simp [rawWorld_eq_world_iff, rawWorld, localFactor, parentConfiguration,
+          kernels, fairBool, fairMix, PMF.pure_apply]
 
 def firstCoordinates : Finset ColliderNode := {.first}
 

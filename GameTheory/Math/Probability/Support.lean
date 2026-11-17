@@ -30,7 +30,7 @@ theorem outerMeasure_le_one {α : Type*} (μ : PMF α) (event : Set α) :
   rw [PMF.toOuterMeasure_apply]
   calc
     ∑' a : α, event.indicator μ a ≤ ∑' a : α, μ a := by
-      apply ENNReal.tsum_le_tsum
+      apply tsum_le_tsum
       intro a
       by_cases ha : a ∈ event <;> simp [Set.indicator, ha]
     _ = 1 := μ.tsum_coe
@@ -63,7 +63,7 @@ theorem outerMeasure_toReal_mono {α : Type*} (μ : PMF α)
     (μ.toOuterMeasure smaller).toReal ≤ (μ.toOuterMeasure larger).toReal := by
   apply ENNReal.toReal_mono (outerMeasure_ne_top μ larger)
   rw [PMF.toOuterMeasure_apply, PMF.toOuterMeasure_apply]
-  apply ENNReal.tsum_le_tsum
+  apply tsum_le_tsum
   intro a
   by_cases hsmall : a ∈ smaller
   · simp [Set.indicator, hsmall, hsubset hsmall]

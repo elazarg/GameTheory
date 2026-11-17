@@ -5,6 +5,7 @@ public import GameTheoryComplexity.Backend.BinaryDictionaryFeasibility
 public import GameTheoryComplexity.Backend.BimatrixNodeWord
 public import GameTheoryComplexity.Backend.GeneralBimatrixVerifierMachine
 public import GameTheoryComplexity.Backend.GeneralBimatrixVerifierCorrectness
+public import GameTheoryComplexity.Backend.WordOperations
 
 @[expose] public section
 
@@ -12,7 +13,17 @@ public import GameTheoryComplexity.Backend.GeneralBimatrixVerifierCorrectness
 The same reconstructed integer dictionary drives feasibility and later pivots. -/
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
+open GameTheory.Complexity.Backend.WordOperations
+
+private theorem andFlag_flag (left right : List Bool) :
+    andFlag left right = [true] ∨ andFlag left right = [false] := by
+  cases left.headD false <;> cases right.headD false <;> simp [andFlag]
+
+private theorem andFlag_eq_true_of_flags (left right : List Bool)
+    (hl : left = [true] ∨ left = [false]) (hr : right = [true] ∨ right = [false]) :
+    andFlag left right = [true] ↔ left = [true] ∧ right = [true] := by
+  rcases hl with rfl | rfl <;> rcases hr with rfl | rfl <;> decide
 
 /-- Decode the two masks and recover the entering variable's canonical position. -/
 def generalBimatrixNodeData (v : Fin 2 → List Bool) : Fin 3 → List Bool :=
@@ -20,62 +31,19 @@ def generalBimatrixNodeData (v : Fin 2 → List Bool) : Fin 3 → List Bool :=
   ![v 0, bimatrixNodeBasicWord ![dim, v 1],
     (binarySubsetNth ![bimatrixNodeEnteringWord ![dim, v 1], []]).tail]
 
-theorem generalBimatrixNodeData_cobham (i : Fin 3) :
-    Cobham fun v : Fin 2 → List Bool => generalBimatrixNodeData v i := by
-  have hd : Cobham fun v : Fin 2 → List Bool => generalBimatrixDimensionWord (v 0) :=
-    (Cobham.comp generalBimatrixDimensionWord_cobham fun _ : Fin 1 => .proj 0).of_eq fun _ => rfl
-  fin_cases i
-  · exact .proj 0
-  · exact (Cobham.comp₂ bimatrixNodeBasicWord_cobham hd (.proj 1)).of_eq fun _ => rfl
-  · have he : Cobham fun v : Fin 2 → List Bool =>
-        bimatrixNodeEnteringWord ![generalBimatrixDimensionWord (v 0), v 1] :=
-      Cobham.comp₂ bimatrixNodeEnteringWord_cobham hd (.proj 1)
-    exact (Cobham.tailFn (Cobham.comp₂ binarySubsetNth_cobham he Cobham.empty)).of_eq fun _ => rfl
-
 /-- Compute invertibility and strict lexicographic positivity from the stored integer fields. -/
 def generalBimatrixNodeFeasibleFlag (v : Fin 2 → List Bool) : List Bool :=
   let data := generalBimatrixNodeData v
-  andBit (binarySignedNonzero (generalBimatrixDictionaryDeterminant data))
+  andFlag (binarySignedNonzero (generalBimatrixDictionaryDeterminant data))
     (binaryDictionaryPositive ![generalBimatrixDictionaryDimension data,
       true :: generalBimatrixDictionaryDimension data, generalBimatrixDictionaryWidth data,
       generalBimatrixDictionaryCoefficients data])
 
-theorem generalBimatrixNodeFeasibleFlag_cobham : Cobham generalBimatrixNodeFeasibleFlag := by
-  have hd := Cobham.comp generalBimatrixDictionaryDimension_cobham generalBimatrixNodeData_cobham
-  have hw := Cobham.comp generalBimatrixDictionaryWidth_cobham generalBimatrixNodeData_cobham
-  have hc := Cobham.comp generalBimatrixDictionaryCoefficients_cobham generalBimatrixNodeData_cobham
-  have ht := Cobham.comp generalBimatrixDictionaryDeterminant_cobham generalBimatrixNodeData_cobham
-  have hp : Cobham fun v : Fin 2 → List Bool => binaryDictionaryPositive
-      ![generalBimatrixDictionaryDimension (generalBimatrixNodeData v),
-        true :: generalBimatrixDictionaryDimension (generalBimatrixNodeData v),
-        generalBimatrixDictionaryWidth (generalBimatrixNodeData v),
-        generalBimatrixDictionaryCoefficients (generalBimatrixNodeData v)] := by
-    apply Cobham.comp binaryDictionaryPositive_cobham
-    intro i
-    fin_cases i
-    · exact hd
-    · exact Cobham.comp (.bit true) fun _ : Fin 1 => hd
-    · exact hw
-    · exact hc
-  exact (Cobham.andFn (Cobham.comp binarySignedNonzero_cobham fun _ : Fin 1 => ht) hp).of_eq
-    fun _ => rfl
-
 /-- Only a well-formed game and a genuine feasible path port pass validation. -/
 def generalBimatrixNodeValidFlag (v : Fin 2 → List Bool) : List Bool :=
-  andBit (generalInstanceFlag (v 0))
-    (andBit (bimatrixNodeSyntaxFlag ![generalBimatrixDimensionWord (v 0), v 1])
+  andFlag (generalInstanceFlag (v 0))
+    (andFlag (bimatrixNodeSyntaxFlag ![generalBimatrixDimensionWord (v 0), v 1])
       (generalBimatrixNodeFeasibleFlag v))
-
-theorem generalBimatrixNodeValidFlag_cobham : Cobham generalBimatrixNodeValidFlag := by
-  have hi := Cobham.comp generalInstanceFlag_cobham fun _ : Fin 1 => (.proj 0 : Cobham
-    fun v : Fin 2 → List Bool => v 0)
-  have hd := Cobham.comp generalBimatrixDimensionWord_cobham fun _ : Fin 1 => (.proj 0 : Cobham
-    fun v : Fin 2 → List Bool => v 0)
-  exact Cobham.andFn hi (Cobham.andFn
-    (Cobham.comp₂ bimatrixNodeSyntaxFlag_cobham hd (.proj 1)) generalBimatrixNodeFeasibleFlag_cobham)
-
-theorem generalBimatrixNodeValidFlag_mem_FPn : FPn generalBimatrixNodeValidFlag :=
-  cobham_iff_FPn.mp generalBimatrixNodeValidFlag_cobham
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Exact decoded determinant and coefficient fields identify the integer feasibility check. -/
@@ -91,7 +59,7 @@ theorem generalBimatrixNodeFeasibleFlag_iff (v : Fin 2 → List Bool)
       GameTheory.Math.IntegerDictionaryComputation.coefficients M (fun _ => 1) i j) :
     generalBimatrixNodeFeasibleFlag v = [true] ↔
       GameTheory.Math.IntegerFeasible M := by
-  have andTrue (a b : Bool) : andBit [a] [b] = [true] ↔ a = true ∧ b = true := by
+  have andTrue (a b : Bool) : andFlag [a] [b] = [true] ↔ a = true ∧ b = true := by
     cases a <;> cases b <;> decide
   rw [generalBimatrixNodeFeasibleFlag, binarySignedNonzero_value, binaryDictionaryPositive_value,
     andTrue]
@@ -177,7 +145,8 @@ theorem generalBimatrixNodeData_entering {m n : ℕ} {A B : Fin m → Fin n → 
 end GameTheory.Complexity.Backend
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
+open GameTheory.Complexity.Backend.WordOperations
 open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
 
 private theorem nodeData_eq (input node : List Bool) :
@@ -235,7 +204,8 @@ theorem generalBimatrixNodeFeasibleFlag_candidate_iff (input node : List Bool)
 end GameTheory.Complexity.Backend
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
+open GameTheory.Complexity.Backend.WordOperations
 open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
 
 /-- Ports of the positive game obtained by shifting the serialized integer payoffs. -/
@@ -266,22 +236,23 @@ private theorem nodeValid_flags_iff (input node : List Bool) :
     simp only [List.cons.injEq, and_true]
     exact Bool.eq_false_or_eq_true _
   have hi : generalInstanceFlag input = [true] ∨ generalInstanceFlag input = [false] := by
-    exact andBit_flag _ _
+    exact andFlag_flag _ _
   have hf : generalBimatrixNodeFeasibleFlag ![input, node] = [true] ∨
       generalBimatrixNodeFeasibleFlag ![input, node] = [false] := by
-    exact andBit_flag _ _
+    exact andFlag_flag _ _
   unfold generalBimatrixNodeValidFlag
-  change andBit (generalInstanceFlag input)
-    (andBit (bimatrixNodeSyntaxFlag ![generalBimatrixDimensionWord input, node])
+  change andFlag (generalInstanceFlag input)
+    (andFlag (bimatrixNodeSyntaxFlag ![generalBimatrixDimensionWord input, node])
       (generalBimatrixNodeFeasibleFlag ![input, node])) = [true] ↔ _
-  rw [andBit_eq_true_iff hi (andBit_flag _ _),
-    andBit_eq_true_iff hs hf, generalInstanceFlag_eq_true_iff]
+  rw [andFlag_eq_true_of_flags _ _ hi (andFlag_flag _ _),
+    andFlag_eq_true_of_flags _ _ hs hf, generalInstanceFlag_eq_true_iff]
 end GameTheory.Complexity.Backend
 
 
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
+open GameTheory.Complexity.Backend.WordOperations
 open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
 
 theorem generalBimatrixNodeValidFlag_encode (input : List Bool)
@@ -334,13 +305,14 @@ end GameTheory.Complexity.Backend
 
 
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
+open GameTheory.Complexity.Backend.WordOperations
 open GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
 
 theorem generalBimatrixNodeValidFlag_flag (input node : List Bool) :
     generalBimatrixNodeValidFlag ![input, node] = [true] ∨
       generalBimatrixNodeValidFlag ![input, node] = [false] :=
-  andBit_flag _ _
+  andFlag_flag _ _
 
 /-- At the distinguished label, machine validation is precisely successful decoding. -/
 theorem generalBimatrixNodeValidFlag_iff_decode (input node : List Bool)
@@ -372,4 +344,122 @@ theorem generalBimatrixNodeValidFlag_eq_false_of_decode_none (input node : List 
     rw [hdecode] at hp
     contradiction
   · exact hv
+
+@[fun_prop] theorem generalBimatrixNodeData_polyTime :
+    ComputableInPolyTime generalBimatrixNodeData (encPi encBits) (encPi encBits) := by
+  have hinput : ComputableInPolyTime (fun v : Fin 2 → List Bool => ![v 0])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    exact .pi_apply encBits (0 : Fin 2)
+  have hdim0 := generalBimatrixDimensionWord_polyTime.comp hinput
+  have hdim : ComputableInPolyTime
+      (fun v : Fin 2 → List Bool => generalBimatrixDimensionWord (v 0))
+      (encPi encBits) encBits := by
+    apply ComputableInPolyTime.of_tidy
+    apply hdim0.tidy.of_enc_eq
+    intro v
+    rfl
+  have hnodeArgs : ComputableInPolyTime
+      (fun v : Fin 2 → List Bool => ![generalBimatrixDimensionWord (v 0), v 1])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hdim
+    · exact .pi_apply encBits 1
+  have hbasic := bimatrixNodeBasicWord_polyTime.comp hnodeArgs
+  have hentering := bimatrixNodeEnteringWord_polyTime.comp hnodeArgs
+  have hselectArgs : ComputableInPolyTime
+      (fun v : Fin 2 → List Bool =>
+        ![bimatrixNodeEnteringWord ![generalBimatrixDimensionWord (v 0), v 1], []])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hentering
+    · exact .const []
+  have hselected := binarySubsetNth_polyTime.comp hselectArgs
+  have htail := (ComputableInPolyTime.of_tidy ComputableTidilyInPolyTime.bitsTail).comp hselected
+  have hvalues : ComputableInPolyTime
+      (fun v : Fin 2 → List Bool => ![v 0,
+        bimatrixNodeBasicWord ![generalBimatrixDimensionWord (v 0), v 1],
+        (binarySubsetNth ![bimatrixNodeEnteringWord ![generalBimatrixDimensionWord (v 0), v 1], []]).tail])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact .pi_apply encBits 0
+    · exact hbasic
+    · exact htail
+  apply ComputableInPolyTime.of_tidy
+  apply hvalues.tidy.of_enc_eq (g := generalBimatrixNodeData)
+  intro v
+  rfl
+
+@[fun_prop] theorem generalBimatrixNodeFeasibleFlag_polyTime :
+    ComputableInPolyTime generalBimatrixNodeFeasibleFlag (encPi encBits) encBits := by
+  have hd := generalBimatrixDictionaryDimension_polyTime.comp generalBimatrixNodeData_polyTime
+  have hw := generalBimatrixDictionaryWidth_polyTime.comp generalBimatrixNodeData_polyTime
+  have hc := generalBimatrixDictionaryCoefficients_polyTime.comp generalBimatrixNodeData_polyTime
+  have ht := generalBimatrixDictionaryDeterminant_polyTime.comp generalBimatrixNodeData_polyTime
+  have hcount := ComputableInPolyTime.bitsCons (ComputableInPolyTime.const true) hd
+  have hargs : ComputableInPolyTime
+      (fun v : Fin 2 → List Bool =>
+        ![generalBimatrixDictionaryDimension (generalBimatrixNodeData v),
+          true :: generalBimatrixDictionaryDimension (generalBimatrixNodeData v),
+          generalBimatrixDictionaryWidth (generalBimatrixNodeData v),
+          generalBimatrixDictionaryCoefficients (generalBimatrixNodeData v)])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hd
+    · exact hcount
+    · exact hw
+    · exact hc
+  have hp := binaryDictionaryPositive_polyTime.comp hargs
+  have hnonzero := binarySignedNonzero_polyTime.comp ht
+  have h := andFlag_polyTime.comp (hnonzero.prod hp)
+  apply ComputableInPolyTime.of_tidy
+  apply h.tidy.of_enc_eq (g := generalBimatrixNodeFeasibleFlag)
+  intro v
+  rfl
+
+@[fun_prop] theorem generalBimatrixNodeValidFlag_polyTime :
+    ComputableInPolyTime generalBimatrixNodeValidFlag (encPi encBits) encBits := by
+  have hinput : ComputableInPolyTime (fun v : Fin 2 → List Bool => v 0)
+      (encPi encBits) encBits := .pi_apply encBits 0
+  have hi := generalInstanceFlag_polyTime.comp hinput
+  have hinputArgs : ComputableInPolyTime (fun v : Fin 2 → List Bool => ![v 0])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    exact hinput
+  have hdim0 := generalBimatrixDimensionWord_polyTime.comp hinputArgs
+  have hdim : ComputableInPolyTime
+      (fun v : Fin 2 → List Bool => generalBimatrixDimensionWord (v 0))
+      (encPi encBits) encBits := by
+    apply ComputableInPolyTime.of_tidy
+    apply hdim0.tidy.of_enc_eq
+    intro v
+    rfl
+  have hnodeArgs : ComputableInPolyTime
+      (fun v : Fin 2 → List Bool => ![generalBimatrixDimensionWord (v 0), v 1])
+      (encPi encBits) (encPi encBits) := by
+    apply ComputableInPolyTime.pi
+    intro i
+    fin_cases i
+    · exact hdim
+    · exact .pi_apply encBits 1
+  have hs := bimatrixNodeSyntaxFlag_polyTime.comp hnodeArgs
+  have hinner := andFlag_polyTime.comp (hs.prod generalBimatrixNodeFeasibleFlag_polyTime)
+  have h := andFlag_polyTime.comp (hi.prod hinner)
+  apply ComputableInPolyTime.of_tidy
+  apply h.tidy.of_enc_eq (g := generalBimatrixNodeValidFlag)
+  intro v
+  rfl
+
 end GameTheory.Complexity.Backend

@@ -37,7 +37,7 @@ def fairCoin : PMF State := mix (1 / 2) (by norm_num) (by norm_num)
 theorem fairCoin_support (s : State) : s ∈ fairCoin.support ↔
     s = .left ∨ s = .right := by
   cases s <;> simp [fairCoin, PMF.mem_support_iff, mix_apply, PMF.pure_apply]
-  all_goals norm_num
+  norm_num
 
 def next : State → Option Action → State
   | .left, none => .lnone

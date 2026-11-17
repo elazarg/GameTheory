@@ -27,8 +27,11 @@ private theorem last_leaves : IsLeavingRow
     · apply le_of_lt
       refine ⟨2, ?_, ?_⟩
       · intro j hj
-        fin_cases j <;>
-          (simp_all [dictionaryCoefficients, Matrix.one_apply, Fin.cons]; try rfl)
+        fin_cases j
+        · simp_all [dictionaryCoefficients, Matrix.one_apply, Fin.cons]
+        · simp_all [dictionaryCoefficients, Matrix.one_apply, Fin.cons]
+          rfl
+        all_goals simp_all
       · change dictionaryCoefficients (1 : Matrix (Fin 3) (Fin 3) ℚ)
             (fun _ => 1) 2 2 / 1 <
           dictionaryCoefficients (1 : Matrix (Fin 3) (Fin 3) ℚ) (fun _ => 1) 1 2 / 1

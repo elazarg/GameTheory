@@ -8,7 +8,7 @@ public import GameTheory.Finite.BimatrixPathCertificate
 /-! Total serialized bimatrix Nash search. A finite complementary path supplies
 bounded certificates on valid inputs; malformed words retain the empty answer. -/
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity
+open Turing.MultiTapeTM Cslib.Complexity
 
 /-- Every binary input has an accepted answer, using finite complementary paths
 for honest nonempty games and the designated fallback otherwise. -/
@@ -34,7 +34,7 @@ theorem generalBimatrixRelation_total (input : List Bool) :
 
 /-- Polynomial verification, polynomial balance, and path-based totality give
 membership in the upstream total search class. -/
-theorem generalBimatrixRelation_mem_TFNP : generalBimatrixRelation ∈ TFNP :=
+theorem generalBimatrixRelation_mem_TFNP : generalBimatrixRelation ∈ TFNP encBits :=
   ⟨generalBimatrixRelation_mem_FNP, generalBimatrixRelation_total⟩
 
 end GameTheory.Complexity.Backend

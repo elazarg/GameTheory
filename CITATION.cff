@@ -5,7 +5,7 @@ title: "GameTheory: formalized game theory in Lean 4"
 authors:
   - family-names: Gershuni
     given-names: Elazar
-version: "4.35.0"
+version: "4.36.0"
 repository-code: "https://github.com/elazarg/GameTheory"
 url: "https://github.com/elazarg/GameTheory"
 license: Apache-2.0

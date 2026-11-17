@@ -145,7 +145,7 @@ theorem dominanceComparison_isLocalizedIn (profile : Profile F.sig)
   have hsplit (value : ι × Profile F.sig → ENNReal) (extra : ENNReal) :
       ∑' selected, value selected + extra =
         ∑' selected, (value selected + if selected = (who, opponents) then extra else 0) := by
-    rw [ENNReal.tsum_add, tsum_ite_eq]
+    rw [tsum_add, tsum_ite_eq]
   simp only [dominanceComparison, equilibriumComparison, hstatus, GameForm.outcomeLaw,
     PMF.pure_bind]
   rw [revealing_play_map, revealing_play_map]

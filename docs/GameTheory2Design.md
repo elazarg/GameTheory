@@ -1505,7 +1505,11 @@ EXP-159 extends that boundary to explicit SAT hardness reductions. Canonical
 payoff-constrained Nash, numeric payoff evaluation and table decoding stay in
 the base; actual machine certificates and complexity-class transfer stay in
 backend leaves. The expanded Cook–Levin closure requires the public proof-only
-compatibility patch recorded in D67, without a base toolchain change.
+compatibility patch recorded in D67, without a base toolchain change. The successor-backend
+choice is governed by EXP-172/[D77](decisions/D77-native-computation-certificates.md):
+native encoded machine certificates and search classes replace the historical
+backend calculus. Concrete relations and full probability laws retain explicit
+semantic bridges; ordinary stable-release toolchain maintenance remains separate.
 
 EXP-031 fixes one instance of the last two rules. Continuation, periodic-path,
 and trigger-incentive theorems remain in `GameTheory.Repeated`; feasible-payoff

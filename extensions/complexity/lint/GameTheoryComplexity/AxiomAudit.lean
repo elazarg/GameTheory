@@ -19,10 +19,10 @@ import all GameTheoryComplexity.Tests.Composition
 import all GameTheoryComplexity.Tests.SATReduction
 import all GameTheoryComplexity.Tests.NashCertificate
 import all GameTheoryComplexity.Tests.SearchReduction
+import all GameTheoryComplexity.Tests.WordFold
 import all GameTheoryComplexity.Tests.EndOfLine
 import all GameTheoryComplexity.Tests.RawEndOfLine
 import all GameTheoryComplexity.Tests.PPAD
-import all GameTheoryComplexity.Tests.CircuitPrefixCompiler
 import all GameTheoryComplexity.Tests.NormalizedEndOfLine
 import all GameTheoryComplexity.Tests.SpernerGridWords
 import all GameTheoryComplexity.Tests.SpernerPointerMachine
@@ -70,11 +70,12 @@ declaration, including axioms reached through upstream dependencies. -/
 open Lean in
 run_cmd do
   let env ← getEnv
+  let moduleNames := env.header.moduleNames
   let allowed := #[``propext, ``Classical.choice, ``Quot.sound]
   let mut checked : ℕ := 0
   for (name, _) in env.constants.toList do
     let owned := match env.getModuleIdxFor? name with
-      | some idx => (`GameTheoryComplexity).isPrefixOf env.header.moduleNames[idx.toNat]!
+      | some idx => (`GameTheoryComplexity).isPrefixOf moduleNames[idx.toNat]!
       | none => false
     if owned then
       checked := checked + 1

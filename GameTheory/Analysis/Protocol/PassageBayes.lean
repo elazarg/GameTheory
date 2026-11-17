@@ -94,7 +94,7 @@ theorem InformationSite.terminal_ancestor_passage {who : Player}
         M.informationMass strategy who site := by
   classical
   rw [PMF.map_apply, ← (Equiv.optionEquivSumPUnit.{0} _).symm.tsum_eq,
-    Summable.tsum_sum ENNReal.summable ENNReal.summable]
+    Summable.tsum_sum CompleteLattice.summable CompleteLattice.summable]
   simp only [Equiv.optionEquivSumPUnit_symm_inl, Equiv.optionEquivSumPUnit_symm_inr]
   simp only [Option.isSome_none, Bool.true_eq_false, ↓reduceIte,
     Option.isSome_some, tsum_zero, add_zero]

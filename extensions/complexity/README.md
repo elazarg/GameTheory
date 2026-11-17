@@ -1,32 +1,49 @@
 # GameTheoryComplexity
 
-This separate Lake package connects selected ComplexityLib machine definitions
-to GameTheory probability and sample-test semantics. The base GameTheory package
-does not depend on this package, ComplexityLib, or CSLib. Clients needing only
-ordinary game theory do not resolve or download these dependencies.
+This separate Lake package connects the CSLib-based ComplexityLib's certified
+computation APIs to GameTheory probability and sample-test semantics. The base
+GameTheory package does not depend on this package, ComplexityLib, or CSLib.
+Clients needing only ordinary game theory do not resolve or download these
+dependencies.
 
-The first integration provides finite fair-coin random tapes, their exact
-counting interpretation, canonically encoded Boolean sample tests with certified
-polynomial input length and machine execution, and equivalence
-between the two libraries' negligibility predicates. It does not establish
-efficient sampling of arbitrary real-valued utilities, efficient game deviations,
-cryptographic primitives, or complexity bounds for arbitrary Lean definitions.
-The canonical serializer also has a deterministic polynomial-time machine
-certificate, with exact output correctness and tuple decoding included in the
-cost. Its encoded input length and runtime are polynomial in the unary security
-parameter. A composed probabilistic machine implements serialization plus
-testing with exactly the same verdict law, one fixed machine, and a polynomial
-clock independent of the samples. FP preprocessing is certified rather than
-inferred from output length. A user-supplied encoder is never
-classified as efficient merely because its result has polynomial length.
+The random-sample integration uses native `Cslib.Probability.IsPPTOn`
+certificates for programs `List Bool → Cslib.ProbComp Bool`. Each certificate
+identifies the full program law with one finite fair-coin machine and a strict
+polynomial clock in encoded input length. `booleanProgramTest program degree`
+runs the program on the canonical unary parameter, delimiter and Boolean
+samples. The public `booleanMachineTests` class requires the native certificate
+and retains GameTheory's existing sample-test and indistinguishability
+semantics.
+
+`exists_program_randomTapeLaw` gives one deterministic polynomial-time
+saved-coin evaluator with exactly the program's PMF law on a uniformly drawn
+finite tape. This recovers the finite counting interpretation and rules out
+exact acceptance probability `1/3` for every certified Boolean program.
+The serializer's `ComputableInPolyTime` certificate charges native framed-pair
+decoding and the complete output. A canonical pair at parameter `κ` and sample
+degree `s` has encoded length `2*κ + 1 + (κ+1)^s`, bounded by
+`4*(κ+1)^(s+1)`, including parameter zero.
+
+Native preprocessing closure composes serialization and testing. The native
+halting compiler produces one finite machine whose complete encoded verdict law
+agrees exactly with the sample test and whose parameter-polynomial clock is
+independent of the observed samples. The same machine has one raw-word polynomial
+clock and halts on every raw input, including malformed outer encodings; the
+program-law guarantee applies to encoded pairs. The negligible-advantage bridge
+applies the native nonnegative predicate to `fun κ => ‖advantage κ‖₊`, preserving the
+canonical two-sided real predicate.
+
+Arbitrary real-valued utility samplers, game deviations and cryptographic
+primitives still need their own efficient encodings and implementation
+certificates. A bound on an encoder's output length does not certify its runtime.
 
 The payoff-constrained Nash slice certifies SAT reduction to explicit symmetric
-integer payoff tables and proves NP-completeness of mixed Nash existence with both
-payoffs at least one. The writer has an actual fixed polynomial-time machine
+integer payoff tables and proves native `NPComplete encBits` for mixed Nash
+existence with both payoffs at least one. The writer has an actual fixed polynomial-time machine
 certificate and exact agreement with the table decoder. Base game semantics,
 the satisfiability characterization and serialization remain dependency-free.
-Membership uses bounded rational witnesses and a polynomial-time binary verifier
-for the same total decoder and canonical Nash predicate. Import
+Membership uses bounded rational witnesses and a native typed Boolean verifier
+with exact correctness for the same total decoder and canonical Nash predicate. Import
 `GameTheoryComplexity.Backend.NashNPComplete` for the headline theorem,
 `Backend.NashNP` for membership alone, or `Backend.SATReduction` for hardness
 alone. General Nash search and fixed-point results use separate relations and
@@ -45,26 +62,27 @@ Serialized totality, TFNP and general Nash PPAD membership are proved through
 finite complementary paths and actual polynomial-time pointer and answer
 machines. Analytic existence remains confined to the base `Analysis` root.
 
-Import `GameTheoryComplexity.Backend.EndOfLineVerifier` for a total circuit-encoded
-End-of-Line
-endpoint relation in TFNP and its actual polynomial-time verifier.
-`Backend.SearchReduction` provides certified instance maps and decoders preserving
-every target solution. The generic finite endpoint theorem lives independently in
-the base `GameTheory.Math.EndOfLine` module. This slice uses mutually consistent
-edges. Import `GameTheoryComplexity.PPAD` for the standard asymmetric raw
-End-of-Line relation, PPAD membership and closure, and a certified reduction
-showing consistent-edge endpoint search is PPAD-complete. Raw End-of-Line is complete
-by definition of the class. Uniformly generated normalized circuit instances
-give the reverse reduction with an actual FP instance map and every-answer decoder;
-Signed rectangular Nash PPAD-completeness is supplied by `GameTheoryComplexity.BimatrixNash`.
+Import `GameTheoryComplexity.Backend.EndOfLineVerifier` for the total
+circuit-encoded endpoint relation and its native Boolean verifier. The generic
+finite endpoint theorem lives in the dependency-free base mathematics.
+`Cslib.Complexity.SearchReducible` supplies efficient instance maps and decoders
+that preserve every target answer; source FNP verification remains independent.
 
-`Backend.CircuitPrefixCompiler` provides an actual polynomial-time serialized
-prefix restriction component. It preserves exact optional evaluation on all
-source codes at positive live width, rejects malformed syntax and guards empty
-outputs. `Backend.UniformCircuitSpecialization` joins this compiler to actual
-uniform generation; `Backend.CircuitVectorEmission` serializes the output coordinates
-in polynomial time. `Backend.EndOfLineCircuitGeneration` specializes normalized
-pointer computations and preserves the invalid-source fallback.
+Import `GameTheoryComplexity.PPAD` for native `PPAD encBits` membership and
+`SearchComplete @PPAD encBits` theorems for both concrete endpoint and asymmetric
+raw End-of-Line. Completeness covers arbitrary encoded instance types. Raw
+End-of-Line is proved complete for the upstream class. Broken initial links,
+source masking, disconnected inconsistent pointers and invalid-source fallbacks
+have explicit semantic proofs.
+
+`Backend.NativeCircuitFamilies` specializes native uniform circuit generation.
+`Backend.CircuitCompiler` certifies concrete scalar serialization and exact
+optional evaluation; `Backend.CircuitVectorEmission` emits uniformly efficient
+word-valued circuit vectors, including width zero. `Backend.PointerCircuitGeneration`
+realizes any efficient width-preserving pointer pair on its prescribed cube.
+`Backend.EndOfLineCircuitGeneration` realizes native active-edge filtering, and
+`Backend.NativeEndOfLineReduction` decodes every raw or endpoint answer back to
+the native family.
 
 `Backend.GridRoutingWords` encodes the endpoint-preserving planar routed graph
 using two coordinate fields, totaling `4*b+6` bits for `2^b` original vertices.
@@ -87,15 +105,13 @@ coordinate encoding into complete uniform FP predecessor/successor machines.
 Their agreement with the mathematical word pointers holds on every input word,
 including malformed and background inputs.
 
-Import `GameTheoryComplexity.Sperner` for
-`spernerRelation_PPADComplete`: succinct canonical square-grid Sperner search is
-complete for standard PPAD. The reverse reduction uses an actual uniform FP
-coloring machine and circuit instance generator; its FPn decoder divides the
-triangle row by 36 and recovers every non-source original endpoint, including
-endpoints on disconnected components. Source entrance tiles and inactive
-two-color padding exclude the known source and spurious outer-boundary answers.
-Invalid source promises decode to the required empty witness. Continuous Brouwer
-search completeness is described below; signed rectangular Nash search completeness is described below.
+Import `GameTheoryComplexity.Sperner` for native
+`SearchComplete @Cslib.Complexity.PPAD encBits` of the canonical succinct
+square-grid relation. Its independent FNP verifier and both every-answer
+reductions use native polynomial-time certificates. The reverse map compiles
+exact routed color queries; binary division recovers every non-source endpoint,
+including components disconnected from the known source. Invalid source
+promises retain their prescribed empty answer.
 
 ## Use as a dependency
 
@@ -117,30 +133,48 @@ import GameTheoryComplexity.Backend.NashNPComplete
 ```
 
 The default dependency configuration fetches the base GameTheory commit
-`c7cd6bed7498b9a16edb22262e9522ceff90648c`; it does not assume a sibling checkout.
-The resolved packages share Lean/Mathlib 4.35.0. ComplexityLib is pinned directly
-to upstream `SamuelSchlesinger/complexitylib@257ad90ec5f547894cc20f27bd828839b1bf7bbf`,
-and CSLib to `94ea80f41a5678fce997a004f0d8d12dbe47cc4b`. Their declared upstream
-toolchains are 4.35.0 release candidates. Compatibility claims cover only the
-dependency closure of this extension's selected imports. They do not cover
-upstream umbrella modules,
-unrelated theorem families, or CSLib interoperability.
-The earlier fork's Cook–Levin proof repair is unnecessary on Lean 4.35.0;
-the upstream proof compiles unchanged. The original integration is recorded in
-EXP-159 in the repository's experiment log. Third-party diagnostics are allowed;
-first-party diagnostics and transitive nonstandard axioms remain audit failures.
+`c33309b03feae395a9677b2d7156d876ca4fc61d`; it does not assume a sibling checkout.
+The migration selects a GameTheory-maintained subset of cslib-frontier at
+`elazarg/complexitylib-community@5c24f2573df209120770cfdd423a2ec9e11bee4c` (branch `gametheory`)
+and CSLib v4.36.0. The subset keeps only the 421 `CslibFrontier` modules this
+package imports, with upstream paths, namespaces and declarations, adapted to
+released Lean, Mathlib and CSLib v4.36.0: it follows one Mathlib signature
+change, removes local copies of declarations CSLib v4.36.0 now provides, and
+uses the space bound one CSLib lemma now returns. It does not track cslib-frontier and is replaced
+by CSLib itself as the definitions used here are upstreamed there.
+
+Against the local base checkout, the full library/fixture build passes 7,969
+jobs and the lint/axiom-driver build passes 7,974 jobs. Public lint, the
+transitive axiom driver and all authored cached-diagnostic checks pass, using
+only released Lean, Mathlib and CSLib.
+
+Validation covers the dependency closure of selected imports. Third-party
+diagnostics are allowed; first-party diagnostics and transitive nonstandard
+axioms remain audit failures. The original integration is recorded in EXP-159;
+the native computation decision and validation are recorded in EXP-172/D77.
 
 Import modules use the disjoint prefix `GameTheoryComplexity` because the base
 package owns every `GameTheory.*` module through its default Lake globs.
 Declarations keep the public namespace `GameTheory.Complexity`. Ordinary clients
-use the small `SampleTest` facade; machine-specific builders live under
-`GameTheoryComplexity.Backend.Complexitylib`, and the negligibility equivalence
-under `GameTheoryComplexity.Backend.Negligible`. The serializer machine
-certificate lives in `GameTheoryComplexity.Backend.Serializer`. Composition and
-its canonical sample-test specialization live in `Backend.Composition` and
-`Backend.CompiledSampleTest`, respectively. This separates backend details
-without introducing a general machine-interface framework. Swapping a backend
-still requires proofs that its implementation satisfies the facade contract.
+use the small `SampleTest` facade. Backend clients supply a native program and
+its certificate through `GameTheoryComplexity.Backend.Complexitylib`:
+
+```lean
+open Cslib Cslib.Probability Turing.MultiTapeTM
+open GameTheory.Complexity.Backend
+
+example (program : List Bool → ProbComp Bool)
+    (efficient : IsPPTOn encBits encBool program) (degree : ℕ) :
+    booleanProgramTest program degree ∈ GameTheory.Complexity.booleanMachineTests :=
+  ⟨program, efficient, degree, rfl⟩
+```
+
+The canonical framed-pair serializer and its deterministic certificate live in
+`Backend.Serializer`. `Backend.CompiledSampleTest` specializes native
+preprocessing closure and intrinsic halting to the canonical sample input.
+`Backend.Negligible` relates the native nonnegative norm bound to signed
+GameTheory advantages. These modules use the native computation APIs directly;
+they introduce no general machine-interface framework or backend registry.
 
 ## Work in this repository
 
@@ -159,10 +193,11 @@ the released base pin with a path. Run `lake -R update` after switching between
 local and released modes. Source dependencies remain explicitly pinned; never
 edit either package's manifest by hand.
 
-The audit rejects warnings and info in every extension module's stored build
-diagnostics, including cached results. Dependency warnings also fail; upstream
-proof suggestions are allowed. CI runs the same audit against both the local
-checkout and the released base pin.
+The audit rejects warnings and info in authored extension modules' stored build
+diagnostics, including cached results. Third-party diagnostics are permitted if
+the selected imports compile; every authored declaration's transitive axioms
+remain audited. CI runs the same audit against both the local checkout and the
+released base pin.
 
 The extension has its own CI workflow. Its default build targets only its own
 library and fixtures, together with their imported dependencies. It never builds
@@ -176,35 +211,69 @@ axioms, rejecting placeholders and all axioms except `propext`,
 Import `GameTheoryComplexity.Backend.SpernerGridWords` for binary encoding of
 the local Sperner graph, source promises and every-endpoint decoding. Import
 `Backend.SpernerGridCodecMachine` and `Backend.SpernerBinarySteps` for actual
-FP certificates for codec fields, exact acceptance and fixed-width arithmetic.
+native `ComputableInPolyTime` certificates for codec fields, exact acceptance
+and fixed-width arithmetic.
 Import `Backend.SpernerPointerMachine` for the composed pointer, its actual
-uniform FP certificate, source promises and endpoint decoding. Import
+uniform native certificate, source promises and endpoint decoding. Import
 `GameTheoryComplexity.Sperner` for succinct Sperner PPAD-completeness, TFNP
 totality and the independently verified trichromatic-triangle relation.
 `Backend.SpernerReduction` and `Backend.EndOfLineSpernerReduction` supply both
-actual FP circuit-instance maps and FPn every-answer decoders.
+native polynomial-time circuit-instance maps and every-answer decoders.
+
+`Backend.SpernerCoordinateColor` supplies two native generators for checked raw
+coordinate-color circuits. `Backend.BimatrixCoordinateColor` uses their bounded
+output wires in the relocated game program. `Backend.BimatrixProgramEmission`
+certifies source/output/action queries jointly and preserves the original suffix
+rulers, including their bits.
 
 Import `GameTheoryComplexity.Brouwer` for continuous approximate fixed-point
 search PPAD-completeness. A serialized color circuit specifies a piecewise
 affine continuous self-map of the real unit square. With grid side `n = 2^b`,
 an answer is any bounded point `(X/(6n), Y/(6n))` whose actual coordinate
 residuals are at most `1/(6n)`; answers need not be triangle barycenters.
-`Backend.BrouwerVerifier` provides independent FNP membership and an actual
-polynomial-time verifier. `Backend.BrouwerReduction` supplies the certified
-reductions to and from succinct Sperner. The map continuity, square
+`Backend.BrouwerVerifier` provides native `FNP encBits` membership and a typed
+Boolean polynomial-time verifier. `Backend.BrouwerReduction` supplies both native
+`SearchReducible` proofs to and from succinct Sperner, preserving every target
+answer. The public classifier has type `SearchComplete @PPAD encBits`. The map continuity, square
 preservation and exact rational residual semantics are base mathematics and
 require no ComplexityLib. The theorem concerns this circuit-induced map
 family and output precision, rather than arbitrary continuous-map encodings,
 distance to an exact fixed point or FIXP.
 
-Import `GameTheoryComplexity.BimatrixNash` for exact signed rectangular Nash
-search PPAD-completeness (`bimatrixNashRelation_PPADComplete`). The existing binary relation
-has an actual FP instance map to End-of-Line and an FPn decoder preserving
-every target answer. Full lexicographic perturbations handle degenerate games;
-malformed inputs retain the empty answer. The decoder computes the supplied
-endpoint's certificate and undoes payoff shifts. Hardness uses an actual FP
-Brouwer-to-game instance map and FPn decoder. The canonical sampled program's
-coefficient/kind machines agree at every output, and its emitted reward proves
-that every accepted Nash certificate yields an accepted Brouwer answer.
-`bimatrixNashRelation_PPADHard` and the existing membership theorem classify the
-same binary relation. Ordinary base clients continue to require no ComplexityLib.
+The native circuit-to-game foundations are `Backend.BrouwerNashProgram`,
+`Backend.BrouwerNashRewardMachine`, `Backend.BrouwerNashHeaders` and
+`Backend.BrouwerNashCoefficientQuery`. They preserve checked native gate tuples,
+exact source/code/header bytes, reward bounds and affine coefficient semantics.
+`Backend.BrouwerNashJitterQuery` and `Backend.BrouwerNashExtractionQuery`
+compose ordinary source, code, output and action words with native certificates.
+Generic signed sums and indexed lookups charge arbitrary typed context and
+preserve the original addition order and suffix bits. The native `Backend.BrouwerNashAnswerMachine` retains exact ratio-prefix
+extraction, triangle selection and accepted-answer soundness. All increment, color, interpolation, minimum, average and shared feedback
+coefficient families now have native certificates and preserve their original
+bytes for arbitrary query words. Their canonical scalar and color-error laws
+also pass. Combined selector correctness, sampled residual correctness and the
+native every-answer reduction now pass the full matching-toolchain checks.
+
+The native general verifier and totality leaves are
+`Backend.GeneralBimatrixFNP` and `Backend.GeneralBimatrixTotality`. They prove
+`FNP encBits` and `TFNP encBits` for the canonical signed rectangular relation
+using the actual typed Boolean verifier and finite complementary-path existence.
+Native node validation, exchange, orientation and total pointer machines now feed
+`Backend.GeneralBimatrixCircuitMachine`, which certifies the actual uniform
+predecessor/successor circuit instance and agrees at every fixed-width vertex.
+`Backend.GeneralBimatrixEndpointMachine` and `Backend.GeneralBimatrixEndpointCapacity`
+now certify reconstruction of the supplied endpoint's certificate. Native
+`Backend.GeneralBimatrixReduction` preserves every raw End-of-Line answer,
+including the malformed-input fallback. The public Nash classifier now has native membership, hardness and completeness
+proofs. Full matching-toolchain build/lint/axiom and authored-diagnostic checks
+pass. The final stable consumer merge gate is blocked as recorded above.
+
+Import `GameTheoryComplexity.BimatrixNash` for native exact signed rectangular
+Nash PPAD-completeness. Verification, totality, pointer-circuit generation and
+endpoint-preserving decoding classify the canonical binary relation. The
+Brouwer-to-game reduction uses the sampled program's exact coefficient/kind
+machines and reward bounds to decode every accepted Nash certificate to a
+Brouwer answer. All these proofs and controls pass the full upstream-matching
+toolchain checks. Tracked toolchains remain stable; the blocked final stable
+consumer gate is recorded separately in the delivery ledger. Ordinary
+base clients require no ComplexityLib.

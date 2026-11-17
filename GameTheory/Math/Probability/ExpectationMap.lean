@@ -15,7 +15,7 @@ theorem tsum_map_mul {α β : Type*} (f : α → β) (p : PMF α)
     (v : β → ENNReal) :
     ∑' b, (PMF.map f p) b * v b = ∑' a, p a * v (f a) := by
   simp_rw [PMF.map_apply, ← ENNReal.tsum_mul_right]
-  rw [ENNReal.tsum_comm]
+  rw [tsum_comm]
   refine tsum_congr fun a => ?_
   rw [tsum_eq_single (f a) (fun b hb => by simp [hb])]
   simp

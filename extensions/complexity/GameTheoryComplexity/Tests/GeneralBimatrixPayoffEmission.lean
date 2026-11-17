@@ -28,9 +28,9 @@ example : generalSignedMagnitude true [false, false, false] [false, true, false,
     [true, false, false] ∧ binarySignedValue [false, true, false, false, true] = 9 := by
   decide +kernel
 
-example : (Nat.fromBitsLE (generalSignedMagnitude true [false, false, false]
+example : (Turing.MultiTapeTM.ofBits (generalSignedMagnitude true [false, false, false]
       [true, true, false, true]) : ℤ) -
-    (Nat.fromBitsLE (generalSignedMagnitude false [false, false, false]
+    (Turing.MultiTapeTM.ofBits (generalSignedMagnitude false [false, false, false]
       [true, true, false, true]) : ℤ) = binarySignedValue [true, true, false, true] := by
   exact generalSignedMagnitude_value _ _ (by decide +kernel)
 end GameTheory.Complexity.Tests.GeneralBimatrixPayoffEmission

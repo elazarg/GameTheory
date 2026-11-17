@@ -48,7 +48,7 @@ theorem informationMass_pos_iff
       ∃ history : M.InformationHistory i site.1,
         0 < M.historyReachWeight strategy history.1 := by
   unfold informationMass
-  rw [pos_iff_ne_zero, ENNReal.summable.tsum_ne_zero_iff]
+  rw [pos_iff_ne_zero, CompleteLattice.summable.tsum_ne_zero_iff]
   simp only [ne_eq, pos_iff_ne_zero]
 
 /-- An antichain information site's reach weights form a subprobability law,
@@ -59,7 +59,7 @@ theorem informationMass_le_one
     (hanti : site.IsHistoryAntichain) :
     M.informationMass strategy i site ≤ 1 := by
   unfold informationMass historyReachWeight
-  exact ENNReal.summable.tsum_le_of_sum_le fun s =>
+  exact CompleteLattice.summable.tsum_le_of_sum_le fun s =>
     InformationSite.sum_reach_le_one M site hanti strategy s
 
 /-- A disjoint outside history leaves strictly less than total probability
@@ -72,7 +72,7 @@ theorem informationMass_add_outside_le_one
       Disjoint (historyCone history.1) (historyCone outside)) :
     M.informationMass strategy i site + M.historyReachWeight strategy outside ≤ 1 := by
   unfold informationMass historyReachWeight
-  rw [ENNReal.tsum_eq_iSup_sum, ENNReal.iSup_add]
+  rw [tsum_eq_iSup_sum, ENNReal.iSup_add]
   exact iSup_le fun s =>
     InformationSite.sum_reach_add_outside_le_one M site hanti strategy outside
       houtside s

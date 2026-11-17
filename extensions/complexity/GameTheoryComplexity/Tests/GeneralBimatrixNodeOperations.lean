@@ -7,12 +7,14 @@ public meta import GameTheoryComplexity.Backend.GeneralBimatrixNodeOperations
 
 namespace GameTheory.Complexity.Tests.GeneralBimatrixNodeOperations
 open Backend GameTheory.Finite GameTheory.Finite.BimatrixPathBinaryCodec
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 
 private def input : List Bool := encodeGeneralInstance 1 1 1 (fun _ _ => 0) (fun _ _ => 0)
 
-example : FPn generalBimatrixPivotWord := generalBimatrixPivotWord_mem_FPn
-example : FPn generalBimatrixSwitchWord := generalBimatrixSwitchWord_mem_FPn
+example : ComputableInPolyTime generalBimatrixPivotWord (encPi encBits) encBits :=
+  generalBimatrixPivotWord_polyTime
+example : ComputableInPolyTime generalBimatrixSwitchWord (encPi encBits) encBits :=
+  generalBimatrixSwitchWord_polyTime
 
 -- The source port is a switching endpoint for the decoded one-by-one game.
 example : generalBimatrixSwitchWord ![input, List.replicate 8 false] = List.replicate 8 false := by

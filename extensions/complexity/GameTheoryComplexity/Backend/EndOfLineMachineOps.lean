@@ -1,98 +1,81 @@
 module
 
 public import GameTheoryComplexity.Backend.EndOfLineProblem
-public import Complexitylib.Classes.Containments.Internal.FPBridge
 
 @[expose] public section
 
-/-! Polynomial-time pointer composition and one-bit controls shared by the
-End-of-Line verifiers. -/
+/-! Native polynomial-time pointer operations and Boolean consistency checks for
+serialized End-of-Line instances. Every computation retains the total byte semantics. -/
 
 namespace GameTheory.Complexity.Backend.EndOfLineMachineOps
 
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM
+open ComputableInPolyTime
 
-/-- Select between polynomial-time word producers using a computed flag. -/
-theorem selectFn_mem_FP {flag yes no : List Bool → List Bool}
-    (hf : flag ∈ FP) (hy : yes ∈ FP) (hn : no ∈ FP) :
-    (fun z => caseBit₀ (flag z) (yes z) (no z)) ∈ FP :=
-  CobhamFP_subset_FP (Cobham.iteFn (FP_subset_CobhamFP hf)
-    (FP_subset_CobhamFP hy) (FP_subset_CobhamFP hn))
+@[fun_prop] theorem width_polyTime
+    {α : Type} {encIn : α ↪ List Bool} {input : α → List Bool}
+    (hi : ComputableInPolyTime input encIn encBits) :
+    ComputableInPolyTime (fun a => endOfLineWidth (input a)) encIn encUnary :=
+  length_bits.comp (CircuitWords.first_polyTime.comp hi)
 
-theorem vectorFn_mem_FP {codes vertex : List Bool → List Bool}
-    (hc : codes ∈ FP) (hv : vertex ∈ FP) :
-    (fun z => evaluateCircuitVector (codes z) (vertex z)) ∈ FP := by
-  have h := mem_FP_comp (pairFn_mem_FP hc hv) evaluateCircuitVector_pair_mem_FP
-  simpa only [Function.comp_def, pairFst_pair, pairSnd_pair] using h
+@[fun_prop] theorem predecessor_polyTime
+    {α : Type} {encIn : α ↪ List Bool} {input vertex : α → List Bool}
+    (hi : ComputableInPolyTime input encIn encBits)
+    (hv : ComputableInPolyTime vertex encIn encBits) :
+    ComputableInPolyTime (fun a => endOfLinePredecessor (input a) (vertex a)) encIn encBits :=
+  evaluateCircuitVector_polyTime
+    (CircuitWords.first_polyTime.comp (CircuitWords.rest_polyTime.comp hi)) hv
 
-theorem predecessorFn_mem_FP {input vertex : List Bool → List Bool}
-    (hi : input ∈ FP) (hv : vertex ∈ FP) :
-    (fun z => endOfLinePredecessor (input z) (vertex z)) ∈ FP :=
-  vectorFn_mem_FP (mem_FP_comp (mem_FP_comp hi pairSnd_mem_FP) pairFst_mem_FP) hv
+@[fun_prop] theorem successor_polyTime
+    {α : Type} {encIn : α ↪ List Bool} {input vertex : α → List Bool}
+    (hi : ComputableInPolyTime input encIn encBits)
+    (hv : ComputableInPolyTime vertex encIn encBits) :
+    ComputableInPolyTime (fun a => endOfLineSuccessor (input a) (vertex a)) encIn encBits :=
+  evaluateCircuitVector_polyTime
+    (CircuitWords.rest_polyTime.comp (CircuitWords.rest_polyTime.comp hi)) hv
 
-theorem successorFn_mem_FP {input vertex : List Bool → List Bool}
-    (hi : input ∈ FP) (hv : vertex ∈ FP) :
-    (fun z => endOfLineSuccessor (input z) (vertex z)) ∈ FP :=
-  vectorFn_mem_FP (mem_FP_comp (mem_FP_comp hi pairSnd_mem_FP) pairSnd_mem_FP) hv
-
-theorem originFn_mem_FP {input : List Bool → List Bool} (hi : input ∈ FP) :
-    (fun z => endOfLineOrigin (input z)) ∈ FP := by
-  have h := mulLenFn_mem_FP (constFn_mem_FP [false]) (mem_FP_comp hi pairFst_mem_FP)
-  simpa only [List.length_cons, List.length_nil, Nat.zero_add, Nat.one_mul, Function.comp_def,
-    endOfLineOrigin, endOfLineWidth] using h
-
-theorem negFlag_accept {x : List Bool} (hx : x = [true] ∨ x = [false]) :
-    notBit x = [true] ↔ ¬x = [true] := by
-  rcases hx with rfl | rfl <;> decide
-
-theorem negFlag_flag {x : List Bool} (hx : x = [true] ∨ x = [false]) :
-    notBit x = [true] ∨ notBit x = [false] := by
-  rcases hx with rfl | rfl <;> decide
-
-theorem zeroWords_eq_iff (a b : ℕ) :
-    List.replicate a false = List.replicate b false ↔ a = b := by
-  constructor
-  · intro h
-    simpa only [List.length_replicate] using congrArg List.length h
-  · rintro rfl
-    rfl
+@[fun_prop] theorem origin_polyTime
+    {α : Type} {encIn : α ↪ List Bool} {input : α → List Bool}
+    (hi : ComputableInPolyTime input encIn encBits) :
+    ComputableInPolyTime (fun a => endOfLineOrigin (input a)) encIn encBits :=
+  (bitsReplicate false).comp (width_polyTime hi)
 
 /-- Check a nontrivial outgoing pointer and agreement of its inverse. -/
-def successorFlag (input vertex : List Bool) : List Bool :=
-  andBit (notBit (eqFlag (endOfLineSuccessor input vertex) vertex))
-    (eqFlag (endOfLinePredecessor input (endOfLineSuccessor input vertex)) vertex)
+def successorFlag (input vertex : List Bool) : Bool :=
+  !decide (endOfLineSuccessor input vertex = vertex) &&
+    decide (endOfLinePredecessor input (endOfLineSuccessor input vertex) = vertex)
 
 /-- Check a nontrivial incoming pointer and agreement of its inverse. -/
-def predecessorFlag (input vertex : List Bool) : List Bool :=
-  andBit (notBit (eqFlag (endOfLinePredecessor input vertex) vertex))
-    (eqFlag (endOfLineSuccessor input (endOfLinePredecessor input vertex)) vertex)
+def predecessorFlag (input vertex : List Bool) : Bool :=
+  !decide (endOfLinePredecessor input vertex = vertex) &&
+    decide (endOfLineSuccessor input (endOfLinePredecessor input vertex) = vertex)
 
 theorem successorFlag_accept (input vertex : List Bool) :
-    successorFlag input vertex = [true] ↔ GameTheory.Math.EndOfLine.HasSuccessor
+    successorFlag input vertex = true ↔ GameTheory.Math.EndOfLine.HasSuccessor
       (endOfLinePredecessor input) (endOfLineSuccessor input) vertex := by
-  rw [successorFlag, andBit_eq_true_iff (negFlag_flag (eqFlag_flag _ _))
-    (eqFlag_flag _ _), negFlag_accept (eqFlag_flag _ _)]
-  simp only [eqFlag_eq_true_iff, GameTheory.Math.EndOfLine.HasSuccessor]
+  simp [successorFlag, GameTheory.Math.EndOfLine.HasSuccessor]
 
 theorem predecessorFlag_accept (input vertex : List Bool) :
-    predecessorFlag input vertex = [true] ↔ GameTheory.Math.EndOfLine.HasPredecessor
+    predecessorFlag input vertex = true ↔ GameTheory.Math.EndOfLine.HasPredecessor
       (endOfLinePredecessor input) (endOfLineSuccessor input) vertex := by
-  rw [predecessorFlag, andBit_eq_true_iff (negFlag_flag (eqFlag_flag _ _))
-    (eqFlag_flag _ _), negFlag_accept (eqFlag_flag _ _)]
-  simp only [eqFlag_eq_true_iff, GameTheory.Math.EndOfLine.HasPredecessor]
+  simp [predecessorFlag, GameTheory.Math.EndOfLine.HasPredecessor]
 
-theorem successorFlagFn_mem_FP {input vertex : List Bool → List Bool}
-    (hi : input ∈ FP) (hv : vertex ∈ FP) :
-    (fun z => successorFlag (input z) (vertex z)) ∈ FP := by
-  have hs := successorFn_mem_FP hi hv
-  exact andBitFn_mem_FP (notBitFn_mem_FP (eqFlagFn_mem_FP hs hv))
-    (eqFlagFn_mem_FP (predecessorFn_mem_FP hi hs) hv)
+@[fun_prop] theorem successorFlag_polyTime
+    {α : Type} {encIn : α ↪ List Bool} {input vertex : α → List Bool}
+    (hi : ComputableInPolyTime input encIn encBits)
+    (hv : ComputableInPolyTime vertex encIn encBits) :
+    ComputableInPolyTime (fun a => successorFlag (input a) (vertex a)) encIn encBool := by
+  have hs := successor_polyTime hi hv
+  exact bool_and' (bool_not.comp (decide_eq' hs hv))
+    (decide_eq' (predecessor_polyTime hi hs) hv)
 
-theorem predecessorFlagFn_mem_FP {input vertex : List Bool → List Bool}
-    (hi : input ∈ FP) (hv : vertex ∈ FP) :
-    (fun z => predecessorFlag (input z) (vertex z)) ∈ FP := by
-  have hp := predecessorFn_mem_FP hi hv
-  exact andBitFn_mem_FP (notBitFn_mem_FP (eqFlagFn_mem_FP hp hv))
-    (eqFlagFn_mem_FP (successorFn_mem_FP hi hp) hv)
+@[fun_prop] theorem predecessorFlag_polyTime
+    {α : Type} {encIn : α ↪ List Bool} {input vertex : α → List Bool}
+    (hi : ComputableInPolyTime input encIn encBits)
+    (hv : ComputableInPolyTime vertex encIn encBits) :
+    ComputableInPolyTime (fun a => predecessorFlag (input a) (vertex a)) encIn encBool := by
+  have hp := predecessor_polyTime hi hv
+  exact bool_and' (bool_not.comp (decide_eq' hp hv))
+    (decide_eq' (successor_polyTime hi hp) hv)
 
 end GameTheory.Complexity.Backend.EndOfLineMachineOps

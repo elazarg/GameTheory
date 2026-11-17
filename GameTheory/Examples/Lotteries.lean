@@ -27,7 +27,7 @@ def halving : PMF ℕ :=
   ⟨fun n => ENNReal.ofReal ((1 : ℝ) / 2 / 2 ^ n), by
     have hsum : HasSum (fun n : ℕ => (1 : ℝ) / 2 / 2 ^ n) 1 := by
       simpa only [one_div] using hasSum_geometric_two' (1 : ℝ)
-    apply ENNReal.summable.hasSum_iff.mpr
+    apply CompleteLattice.summable.hasSum_iff.mpr
     rw [← ENNReal.ofReal_tsum_of_nonneg (fun n => by positivity) hsum.summable,
       hsum.tsum_eq, ENNReal.ofReal_one]⟩
 

@@ -6,7 +6,6 @@ public import GameTheoryComplexity.Backend.BrouwerNashProgram
 
 /-! Exact decompositions of the contiguous regions in the canonical gate allocation. -/
 namespace GameTheory.Complexity.Backend.BrouwerNashQueryRegions
-open _root_.Complexity.CircuitCode
 
 /-- The interpolation region contains precisely its eight affine stages. -/
 theorem exists_interpolationStage (b i : ℕ)
@@ -20,7 +19,7 @@ theorem exists_interpolationStage (b i : ℕ)
 
 /-- Every interpolation output retains the existing factory's exact gate. -/
 theorem sampleGate_interpolation_of_interval (b i : ℕ)
-    (raw₀ raw₁ : RawCircuit) (t : Fin 41)
+    (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) (t : Fin 41)
     (hlo : BrouwerNashLayout.weightBase b ≤ i) (hhi : i < BrouwerNashLayout.colorBase b) :
     ∃ stage : Fin 8, i = BrouwerNashLayout.weightBase b + stage.val ∧
       BrouwerNashProgram.sampleGate b raw₀ raw₁ t i =
@@ -55,7 +54,7 @@ theorem exists_minimumSlot (b ell₀ ell₁ i : ℕ)
 
 /-- Every minimum output retains the existing two-subtraction factory's exact gate. -/
 theorem sampleGate_minimum_of_interval (b i : ℕ)
-    (raw₀ raw₁ : RawCircuit) (t : Fin 41)
+    (raw₀ raw₁ : List (CircuitFormat.signature.Op × List ℕ)) (t : Fin 41)
     (hlo : BrouwerNashLayout.minimumBase b raw₀.length raw₁.length ≤ i)
     (hhi : i < BrouwerNashLayout.sampleWidth b raw₀.length raw₁.length) :
     ∃ (corner : Fin 4) (flag : Fin 2) (temporary : Bool),
@@ -102,6 +101,7 @@ theorem sampleOutput_interval_unique (b ell₀ ell₁ out i : ℕ) (t t' : Fin 4
   apply (sampleOutput_injective b ell₀ ell₁ t t' i
     (out - BrouwerNashLayout.sampleBase b ell₀ ell₁ t') hi hi' ?_).1
   omega
+
 /-- A bounded output outside a local subregion belongs to no sample's copy of that subregion. -/
 theorem sampleOutput_interval_excluded (b ell₀ ell₁ out offset lo hi : ℕ) (t : Fin 41)
     (hlocal : offset < BrouwerNashLayout.sampleWidth b ell₀ ell₁)

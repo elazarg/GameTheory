@@ -8,189 +8,153 @@ public import GameTheoryComplexity.Backend.SATSyntaxMachine
 
 /-! Polynomial-time explicit payoff-table generation. Scalar payoffs use fixed-width
 positive and negative tally blocks. The second player's payoff is the transpose.
+Every cell is evaluated during the native row-major traversal.
 -/
 
 namespace GameTheory.Complexity.Backend
 
-open _root_.Complexity _root_.Complexity.Cobham
+open Turing.MultiTapeTM
 
-/-- A unary ruler for the padded variable and clause counts. -/
-def satUnaryN (input : List Bool) : List Bool := Complexity.smash input [true] ++ [true]
+/-- Encode positive and negative magnitudes in two zero-padded tally blocks,
+truncating either magnitude when it exceeds the supplied width. -/
+def satTallyPair (width positive negative : ℕ) : List Bool :=
+  (List.replicate (min positive width) true ++ List.replicate (width - positive) false) ++
+    (List.replicate (min negative width) true ++ List.replicate (width - negative) false)
 
-/-- A unary ruler for all literal, variable, clause, and fallback actions. -/
-def satUnaryQ (input : List Bool) : List Bool := (List.replicate 4 (satUnaryN input)).flatten ++ [true]
-
-/-- Common width of each positive or negative payoff tally. -/
-def satTallyWidth (input : List Bool) : List Bool := satUnaryQ input ++ [true, true]
-
-/-- Encode a scalar payoff by its positive and negative unary magnitudes. -/
-def satTallyPair (width positive negative : List Bool) : List Bool :=
-  padTo width positive ++ padTo width negative
-
-@[simp] theorem satUnaryN_length (input : List Bool) : (satUnaryN input).length = input.length + 1 := by
-  simp [satUnaryN]
-
-@[simp] theorem satUnaryQ_length (input : List Bool) : (satUnaryQ input).length = 4 * (input.length + 1) + 1 := by
-  simp [satUnaryQ]
+@[simp] theorem satTallyPair_length (width positive negative : ℕ) :
+    (satTallyPair width positive negative).length = 2 * width := by
+  simp only [satTallyPair, List.length_append, List.length_replicate]
   omega
 
-@[simp] theorem satTallyWidth_length (input : List Bool) :
-    (satTallyWidth input).length = 4 * (input.length + 1) + 3 := by
-  simp [satTallyWidth]
+@[fun_prop] theorem satTallyPair_polyTime :
+    ComputableInPolyTime (fun pair : (ℕ × ℕ) × ℕ =>
+      satTallyPair pair.1.1 pair.1.2 pair.2)
+      (encPair (encPair encUnary encUnary) encUnary) encBits := by
+  unfold satTallyPair
+  fun_prop
 
-@[simp] theorem satTallyPair_length (width positive negative : List Bool) :
-    (satTallyPair width positive negative).length = 2 * width.length := by
-  simp [satTallyPair]
-  omega
+/-- Encode one row payoff from its unary row and column indices. The validity
+verdict gates clause incidence while the scanner remains total on every source word. -/
+def satPayoffCell (valid : List Bool → Bool) (input : List Bool) (row col : ℕ) : List Bool :=
+  let n := input.length + 1
+  let width := 4 * n + 3
+  let rowVar := if row < n then row else row - n
+  let colVar := if col < n then col else col - n
+  let z0 := satTallyPair width 0 0
+  let z1 := satTallyPair width 1 0
+  let z2 := satTallyPair width 2 0
+  let zm2 := satTallyPair width 0 2
+  let z2n := satTallyPair width (2 - n) (n - 2)
+  if row = 4 * n then
+    if col = 4 * n then z0 else z1
+  else if row < 2 * n then
+    if col < 2 * n then
+      if rowVar = colVar ∧ decide (row < n) ≠ decide (col < n) then zm2 else z1
+    else zm2
+  else if row < 3 * n then
+    if col < 2 * n then
+      if row - 2 * n = colVar then z2n else z2
+    else zm2
+  else if row < 4 * n then
+    if col < 2 * n then
+      if valid input && scanIncidence colVar (decide (col < n)) (row - 3 * n) input then z2n else z2
+    else zm2
+  else zm2
 
-theorem satUnaryN_cobham : Cobham fun v : Fin 1 → List Bool => satUnaryN (v 0) :=
-  Cobham.appendFn (Cobham.comp₂ Cobham.smash (Cobham.proj 0) (Cobham.const [true])) (Cobham.const [true])
+/-- Every cell contains exactly two tally blocks of the common width. -/
+theorem satPayoffCell_length (valid : List Bool → Bool) (input : List Bool) (row col : ℕ) :
+    (satPayoffCell valid input row col).length = 2 * (4 * (input.length + 1) + 3) := by
+  dsimp only [satPayoffCell]
+  split_ifs <;> exact satTallyPair_length _ _ _
 
-theorem satUnaryQ_cobham : Cobham fun v : Fin 1 → List Bool => satUnaryQ (v 0) :=
-  Cobham.appendFn (Cobham.repeatFn satUnaryN_cobham 4) (Cobham.const [true])
+/-- The cell machine charges both unary indices, the complete source word and
+its certified validity check, including every literal-incidence scan. -/
+theorem satPayoffCell_polyTime {valid : List Bool → Bool}
+    (hvalid : ComputableInPolyTime valid encBits encBool) :
+    ComputableInPolyTime
+      (fun pair : (List Bool × ℕ) × ℕ => satPayoffCell valid pair.1.1 pair.1.2 pair.2)
+      (encPair (encPair encBits encUnary) encUnary) encBits := by
+  have hsource : ComputableInPolyTime (fun pair : (List Bool × ℕ) × ℕ => pair.1.1)
+      (encPair (encPair encBits encUnary) encUnary) encBits := by fun_prop
+  have hrow : ComputableInPolyTime (fun pair : (List Bool × ℕ) × ℕ => pair.1.2)
+      (encPair (encPair encBits encUnary) encUnary) encUnary := by fun_prop
+  have hcol : ComputableInPolyTime (fun pair : (List Bool × ℕ) × ℕ => pair.2)
+      (encPair (encPair encBits encUnary) encUnary) encUnary := by fun_prop
+  have hn : ComputableInPolyTime
+      (fun pair : (List Bool × ℕ) × ℕ => pair.1.1.length + 1)
+      (encPair (encPair encBits encUnary) encUnary) encUnary := by fun_prop
+  have hsign : ComputableInPolyTime
+      (fun pair : (List Bool × ℕ) × ℕ => decide (pair.2 < pair.1.1.length + 1))
+      (encPair (encPair encBits encUnary) encUnary) encBool :=
+    .of_tidy (.unary_lt' hcol.tidy hn.tidy)
+  have hvar : ComputableInPolyTime
+      (fun pair : (List Bool × ℕ) × ℕ =>
+        if pair.2 < pair.1.1.length + 1 then pair.2 else pair.2 - (pair.1.1.length + 1))
+      (encPair (encPair encBits encUnary) encUnary) encUnary := by fun_prop
+  have hclause : ComputableInPolyTime
+      (fun pair : (List Bool × ℕ) × ℕ => pair.1.2 - 3 * (pair.1.1.length + 1))
+      (encPair (encPair encBits encUnary) encUnary) encUnary := by fun_prop
+  have hscan := scanIncidence_polyTime hvar hsign hclause hsource
+  have hsyntax := hvalid.comp hsource
+  have hn2 := ComputableTidilyInPolyTime.unary_mul.comp
+    ((ComputableTidilyInPolyTime.const 2).prod hn.tidy)
+  have hn3 := ComputableTidilyInPolyTime.unary_mul.comp
+    ((ComputableTidilyInPolyTime.const 3).prod hn.tidy)
+  have hn4 := ComputableTidilyInPolyTime.unary_mul.comp
+    ((ComputableTidilyInPolyTime.const 4).prod hn.tidy)
+  have hwidth := ComputableTidilyInPolyTime.unary_add.comp
+    (hn4.prod (ComputableTidilyInPolyTime.const 3))
+  have htally (positive negative : ((List Bool × ℕ) × ℕ) → ℕ)
+      (hp : ComputableTidilyInPolyTime positive
+        (encPair (encPair encBits encUnary) encUnary) encUnary)
+      (hneg : ComputableTidilyInPolyTime negative
+        (encPair (encPair encBits encUnary) encUnary) encUnary) :
+      ComputableTidilyInPolyTime
+        (fun pair => satTallyPair (4 * (pair.1.1.length + 1) + 3) (positive pair) (negative pair))
+        (encPair (encPair encBits encUnary) encUnary) encBits :=
+    satTallyPair_polyTime.tidy.comp ((hwidth.prod hp).prod hneg)
+  have hz0 := htally (fun _ => 0) (fun _ => 0) (.const 0) (.const 0)
+  have hz1 := htally (fun _ => 1) (fun _ => 0) (.const 1) (.const 0)
+  have hz2 := htally (fun _ => 2) (fun _ => 0) (.const 2) (.const 0)
+  have hzm2 := htally (fun _ => 0) (fun _ => 2) (.const 0) (.const 2)
+  have hz2n := htally (fun pair => 2 - (pair.1.1.length + 1))
+    (fun pair => pair.1.1.length + 1 - 2)
+    (ComputableTidilyInPolyTime.unary_sub.comp ((ComputableTidilyInPolyTime.const 2).prod hn.tidy))
+    (ComputableTidilyInPolyTime.unary_sub.comp (hn.tidy.prod (.const 2)))
+  have hrowPositive := ComputableTidilyInPolyTime.unary_lt' hrow.tidy hn.tidy
+  have hrowVar := ComputableTidilyInPolyTime.ite_decide hrowPositive hrow.tidy
+    (ComputableTidilyInPolyTime.unary_sub.comp (hrow.tidy.prod hn.tidy))
+  have hopposed := ComputableTidilyInPolyTime.decide_and
+    (.decide_eq' hrowVar hvar.tidy) (.decide_ne hrowPositive hsign.tidy)
+  have hrowSub2 := ComputableTidilyInPolyTime.unary_sub.comp (hrow.tidy.prod hn2)
+  have hincidence := ComputableTidilyInPolyTime.bool_and' hsyntax.tidy hscan.tidy
+  exact ComputableInPolyTime.of_tidy <|
+    ComputableTidilyInPolyTime.ite_decide (.decide_eq' hrow.tidy hn4)
+      (.ite_decide (.decide_eq' hcol.tidy hn4) hz0 hz1)
+      (.ite_decide (.unary_lt' hrow.tidy hn2)
+        (.ite_decide (.unary_lt' hcol.tidy hn2) (.ite_decide hopposed hzm2 hz1) hzm2)
+        (.ite_decide (.unary_lt' hrow.tidy hn3)
+          (.ite_decide (.unary_lt' hcol.tidy hn2)
+            (.ite_decide (.decide_eq' hrowSub2 hvar.tidy) hz2n hz2) hzm2)
+          (.ite_decide (.unary_lt' hrow.tidy hn4)
+            (.ite_decide (.unary_lt' hcol.tidy hn2) (.cond hincidence hz2n hz2) hzm2) hzm2)))
 
-theorem satTallyWidth_cobham : Cobham fun v : Fin 1 → List Bool => satTallyWidth (v 0) :=
-  Cobham.appendFn satUnaryQ_cobham (Cobham.const [true, true])
-
-private theorem satTallyPair_cobham {n : ℕ} {w p q : (Fin n → List Bool) → List Bool}
-    (hw : Cobham w) (hp : Cobham p) (hq : Cobham q) :
-    Cobham fun v => satTallyPair (w v) (p v) (q v) :=
-  Cobham.appendFn (Cobham.padFn hw hp) (Cobham.padFn hw hq)
-
-/-- Encode one row payoff, using a supplied certified syntax-validity verdict.
-Arguments are unary row index, unary column index, and the source SAT string. -/
-def satPayoffCell (valid : List Bool → List Bool) (v : Fin 3 → List Bool) : List Bool :=
-  let n := satUnaryN (v 2)
-  let n2 := n ++ n
-  let n3 := n2 ++ n
-  let n4 := n3 ++ n
-  let width := satTallyWidth (v 2)
-  let row := v 0
-  let col := v 1
-  let rowPositive := notBit (lenLeFlag row n)
-  let colPositive := notBit (lenLeFlag col n)
-  let rowVar := caseBit₀ rowPositive row (row.drop n.length)
-  let colVar := caseBit₀ colPositive col (col.drop n.length)
-  let rowLiteral := notBit (lenLeFlag row n2)
-  let colLiteral := notBit (lenLeFlag col n2)
-  let z0 := satTallyPair width [] []
-  let z1 := satTallyPair width [true] []
-  let z2 := satTallyPair width [true, true] []
-  let zm2 := satTallyPair width [] [true, true]
-  let z2n := satTallyPair width ([true, true].drop n.length) (n.drop 2)
-  let opposed := andBit (eqFlag rowVar colVar) (notBit (eqFlag rowPositive colPositive))
-  let incidence := andBit (valid (v 2))
-    (incidenceVerdictWord ![colVar, colPositive, row.drop n3.length, v 2])
-  caseBit₀ (eqFlag row n4)
-    (caseBit₀ (eqFlag col n4) z0 z1)
-    (caseBit₀ rowLiteral (caseBit₀ colLiteral (caseBit₀ opposed zm2 z1) zm2)
-      (caseBit₀ (notBit (lenLeFlag row n3))
-        (caseBit₀ colLiteral (caseBit₀ (eqFlag (row.drop n2.length) colVar) z2n z2) zm2)
-        (caseBit₀ (notBit (lenLeFlag row n4))
-          (caseBit₀ colLiteral (caseBit₀ incidence z2n z2) zm2) zm2)))
-
-/-- The explicit cell function has a genuine polynomial-time implementation. -/
-theorem satPayoffCell_cobham {valid : List Bool → List Bool}
-    (hv : Cobham fun v : Fin 1 → List Bool => valid (v 0)) : Cobham (satPayoffCell valid) := by
-  let n := fun v : Fin 3 → List Bool => satUnaryN (v 2)
-  let n2 := fun v => n v ++ n v
-  let n3 := fun v => n2 v ++ n v
-  let n4 := fun v => n3 v ++ n v
-  let width := fun v : Fin 3 → List Bool => satTallyWidth (v 2)
-  let rowPositive := fun v => notBit (lenLeFlag (v 0) (n v))
-  let colPositive := fun v => notBit (lenLeFlag (v 1) (n v))
-  let rowVar := fun v => caseBit₀ (rowPositive v) (v 0) ((v 0).drop (n v).length)
-  let colVar := fun v => caseBit₀ (colPositive v) (v 1) ((v 1).drop (n v).length)
-  let rowLiteral := fun v => notBit (lenLeFlag (v 0) (n2 v))
-  let colLiteral := fun v => notBit (lenLeFlag (v 1) (n2 v))
-  have hn : Cobham n := (Cobham.comp satUnaryN_cobham fun _ => Cobham.proj 2).of_eq fun _ => rfl
-  have hn2 : Cobham n2 := Cobham.appendFn hn hn
-  have hn3 : Cobham n3 := Cobham.appendFn hn2 hn
-  have hn4 : Cobham n4 := Cobham.appendFn hn3 hn
-  have hw : Cobham width := (Cobham.comp satTallyWidth_cobham fun _ => Cobham.proj 2).of_eq fun _ => rfl
-  have hrp : Cobham rowPositive := Cobham.notFn (lenLeFlag_mem (Cobham.proj 0) hn)
-  have hcp : Cobham colPositive := Cobham.notFn (lenLeFlag_mem (Cobham.proj 1) hn)
-  have hrv : Cobham rowVar := Cobham.iteFn hrp (Cobham.proj 0) (Cobham.dropFn hn (Cobham.proj 0))
-  have hcv : Cobham colVar := Cobham.iteFn hcp (Cobham.proj 1) (Cobham.dropFn hn (Cobham.proj 1))
-  have hrl : Cobham rowLiteral := Cobham.notFn (lenLeFlag_mem (Cobham.proj 0) hn2)
-  have hcl : Cobham colLiteral := Cobham.notFn (lenLeFlag_mem (Cobham.proj 1) hn2)
-  have hz0 := satTallyPair_cobham hw Cobham.empty Cobham.empty
-  have hz1 := satTallyPair_cobham hw (Cobham.const [true]) Cobham.empty
-  have hz2 := satTallyPair_cobham hw (Cobham.const [true, true]) Cobham.empty
-  have hzm2 := satTallyPair_cobham hw Cobham.empty (Cobham.const [true, true])
-  have hz2n := satTallyPair_cobham hw
-    (Cobham.dropFn hn (Cobham.const [true, true])) (Cobham.dropFn (Cobham.const [true, true]) hn)
-  have hopposed := Cobham.andFn (eqFlag_mem hrv hcv) (Cobham.notFn (eqFlag_mem hrp hcp))
-  have hquery := Cobham.comp incidenceVerdictWord_cobham
-    (gs := fun i => fun v : Fin 3 → List Bool =>
-      (![colVar v, colPositive v, (v 0).drop (n3 v).length, v 2] : Fin 4 → List Bool) i) (by
-        intro i
-        fin_cases i
-        · exact hcv
-        · exact hcp
-        · exact Cobham.dropFn hn3 (Cobham.proj 0)
-        · exact Cobham.proj 2)
-  have hvalid : Cobham fun v : Fin 3 → List Bool => valid (v 2) :=
-    (Cobham.comp hv fun _ => Cobham.proj 2).of_eq fun _ => rfl
-  have hi := Cobham.andFn hvalid hquery
-  exact Cobham.iteFn (eqFlag_mem (Cobham.proj 0) hn4)
-    (Cobham.iteFn (eqFlag_mem (Cobham.proj 1) hn4) hz0 hz1)
-    (Cobham.iteFn hrl (Cobham.iteFn hcl (Cobham.iteFn hopposed hzm2 hz1) hzm2)
-      (Cobham.iteFn (Cobham.notFn (lenLeFlag_mem (Cobham.proj 0) hn3))
-        (Cobham.iteFn hcl (Cobham.iteFn (eqFlag_mem (Cobham.dropFn hn2 (Cobham.proj 0)) hcv) hz2n hz2) hzm2)
-        (Cobham.iteFn (Cobham.notFn (lenLeFlag_mem (Cobham.proj 0) hn4))
-          (Cobham.iteFn hcl (Cobham.iteFn hi hz2n hz2) hzm2) hzm2)))
-
-private theorem caseBit_length_eq {s x y : List Bool} {k : ℕ}
-    (hx : x.length = k) (hy : y.length = k) : (caseBit₀ s x y).length = k := by
-  cases s with
-  | nil => exact hy
-  | cons bit s => cases bit <;> assumption
-
-/-- Each explicit payoff entry has exactly two common-width tally blocks. -/
-theorem satPayoffCell_length (valid : List Bool → List Bool) (v : Fin 3 → List Bool) :
-    (satPayoffCell valid v).length = 2 * (satTallyWidth (v 2)).length := by
-  unfold satPayoffCell
-  repeat (first | apply caseBit_length_eq | exact satTallyPair_length _ _ _)
-
-/-- Bound for the polynomial-time row-major emitter. -/
-def satCellWidth (input : List Bool) : List Bool := satTallyWidth input ++ satTallyWidth input
-
-/-- Write the unary dimension header and every row-major integer payoff entry. -/
+/-- Write the unary dimension header, its delimiter and every row-major payoff cell. -/
 def satTableEncode (input : List Bool) : List Bool :=
-  satUnaryQ input ++ [false] ++
-    payoffTable (satPayoffCell satSyntaxWord) ![satUnaryQ input, input]
+  let dimension := 4 * (input.length + 1) + 1
+  List.replicate dimension true ++ [false] ++
+    payoffTable (satPayoffCell SATWords.syntaxValid) input dimension
 
-/-- A fixed deterministic polynomial-time machine emits the whole explicit table. -/
-theorem satTableEncode_mem_FP : satTableEncode ∈ FP := by
-  have hc := satPayoffCell_cobham satSyntaxWord_cobham
-  have hw : Cobham fun v : Fin 1 → List Bool => satCellWidth (v 0) :=
-    Cobham.appendFn satTallyWidth_cobham satTallyWidth_cobham
-  have hbound (v : Fin 3 → List Bool) :
-      (satPayoffCell satSyntaxWord v).length ≤ (satCellWidth (v 2)).length := by
-    rw [satPayoffCell_length]
-    simp [satCellWidth]
-    omega
-  have ht := Cobham.comp (payoffTable_cobham hc hw hbound)
-    (gs := fun i => fun v : Fin 1 → List Bool =>
-      (![satUnaryQ (v 0), v 0] : Fin 2 → List Bool) i) (by
-        intro i
-        fin_cases i
-        · exact satUnaryQ_cobham
-        · exact Cobham.proj 0)
-  exact CobhamFP_subset_FP
-    (Cobham.appendFn (Cobham.appendFn satUnaryQ_cobham (Cobham.const [false])) ht)
-
-theorem satUnaryN_eq (input : List Bool) :
-    satUnaryN input = List.replicate (input.length + 1) true := by
-  simp only [satUnaryN, Complexity.smash, List.length_singleton, Nat.mul_one]
-  rw [List.replicate_add]
-  rfl
-
-theorem satUnaryQ_eq (input : List Bool) :
-    satUnaryQ input = List.replicate (4 * (input.length + 1) + 1) true := by
-  have h : 4 * (input.length + 1) =
-      (input.length + 1) + (input.length + 1) + (input.length + 1) + (input.length + 1) := by omega
-  simp [satUnaryQ, satUnaryN_eq, h, List.replicate_add]
+/-- One native polynomial-time machine emits the complete explicit table. -/
+@[fun_prop] theorem satTableEncode_polyTime :
+    ComputableInPolyTime satTableEncode encBits encBits := by
+  have hdimension : ComputableInPolyTime
+      (fun input : List Bool => 4 * (input.length + 1) + 1) encBits encUnary := by fun_prop
+  have hheader : ComputableInPolyTime
+      (fun input : List Bool => List.replicate (4 * (input.length + 1) + 1) true)
+      encBits encBits := (ComputableInPolyTime.bitsReplicate true).comp hdimension
+  have htable := payoffTable_polyTime (ComputableInPolyTime.id' (encIn := encBits))
+    hdimension (satPayoffCell_polyTime satSyntaxValid_polyTime)
+  exact (hheader.bitsAppend (ComputableInPolyTime.const [false])).bitsAppend htable
 
 end GameTheory.Complexity.Backend

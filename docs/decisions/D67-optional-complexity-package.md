@@ -52,13 +52,19 @@ fixed polynomial sample count. The input length and selected all-path execution
 clock are polynomial in that parameter. An arbitrary short-output encoder could
 hide an oracle, so no arbitrary-encoder class is designated efficient.
 
-The design is killed by any required base toolchain/dependency change, optional
-dependencies in the base manifest, companion imports in the base graph, a
+The design is killed by changing the base dependency surface or its stable-release
+toolchain policy solely for the optional backend, optional dependencies in the
+base manifest, companion imports in the base graph, a
 parallel probability/indistinguishability semantics, or a test interface claiming
 parameter-polynomial execution without controlling encoded input length.
 The boundary audit checks base imports/configuration/manifest and matching
 resolved Mathlib revisions; the companion has independent build, lint and
 transitive axiom checks. EXP-158 records exact commands and outcomes.
+
+Normal shared Lean/Mathlib stable-release maintenance is independent of this
+boundary. The successor-backend work in EXP-172 retains that policy: a new
+upstream release-candidate pin does not require adopting a release candidate in
+GameTheory, and does not by itself refute the companion packaging decision.
 
 ## Result and limitations
 

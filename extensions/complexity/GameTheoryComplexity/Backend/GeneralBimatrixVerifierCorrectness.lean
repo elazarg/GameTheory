@@ -1,22 +1,43 @@
 module
 
 public import GameTheoryComplexity.Backend.GeneralBimatrixVerifier
-public import GameTheoryComplexity.Backend.BimatrixCertificateVerifierCorrectness
 
 @[expose] public section
 
 /-! The binary rectangular-game verifier agrees with the canonical signed
 integer certificate predicates, including support-sensitive best responses. -/
 namespace GameTheory.Complexity.Backend
-open _root_.Complexity _root_.Complexity.Cobham
+open Cslib.BitString Turing.MultiTapeTM
 open GameTheory.Finite
+open GameTheory.Complexity.Backend.WordOperations
 open scoped BigOperators
 
-private theorem andBit_singleton (a b : Bool) :
-    andBit [a] [b] = [a && b] := by cases a <;> cases b <;> rfl
-private theorem orBit_singleton (a b : Bool) :
-    orBit [a] [b] = [a || b] := by cases a <;> cases b <;> rfl
-private theorem notBit_singleton (a : Bool) : notBit [a] = [!a] := by cases a <;> rfl
+private theorem andFlag_singleton (a b : Bool) :
+    andFlag [a] [b] = [a && b] := by cases a <;> cases b <;> rfl
+private theorem orFlag_singleton (a b : Bool) :
+    orFlag [a] [b] = [a || b] := by cases a <;> cases b <;> rfl
+private theorem notFlag_singleton (a : Bool) : notFlag [a] = [!a] := by cases a <;> rfl
+
+private theorem andFlag_flag (x y : List Bool) :
+    andFlag x y = [true] ∨ andFlag x y = [false] := by
+  cases x.headD false <;> cases y.headD false <;> simp [andFlag]
+
+private theorem andFlag_eq_true_of_flags (x y : List Bool)
+    (hx : x = [true] ∨ x = [false]) (hy : y = [true] ∨ y = [false]) :
+    andFlag x y = [true] ↔ x = [true] ∧ y = [true] := by
+  rcases hx with hx | hx <;> rcases hy with hy | hy <;> simp [hx, hy, andFlag]
+
+private theorem certificateEqualWord_value (x y : List Bool) :
+    certificateEqualWord x y = [decide (ofBits x = ofBits y)] := by
+  rw [certificateEqualWord, binaryCertificateLE_value, binaryCertificateLE_value,
+    andFlag_singleton]
+  by_cases hxy : ofBits x ≤ ofBits y
+  · by_cases hyx : ofBits y ≤ ofBits x
+    · simp [Nat.le_antisymm hxy hyx]
+    · have hne : ofBits x ≠ ofBits y := by omega
+      simp [hxy, hyx, hne]
+  · have hne : ofBits x ≠ ofBits y := by omega
+    simp [hxy, hne]
 
 private theorem certificateAll_flag {p : ℕ}
     (term : (Fin (p + 1) → List Bool) → List Bool)
@@ -26,8 +47,8 @@ private theorem certificateAll_flag {p : ℕ}
   cases clock with
   | nil => exact Or.inl rfl
   | cons b clock =>
-    simp only [certificateAll, recNotation_cons, Bool.cond_self, certificateAllStep]
-    exact andBit_flag _ _
+    rw [certificateAll, WordFold.suffixFold_cons]
+    exact andFlag_flag _ _
 
 private theorem certificateAll_eq_true_iff {p : ℕ}
     (term : (Fin (p + 1) → List Bool) → List Bool)
@@ -39,9 +60,10 @@ private theorem certificateAll_eq_true_iff {p : ℕ}
   induction n with
   | zero => simp [certificateAll]
   | succ n ih =>
-    change andBit (certificateAll term (List.replicate n true) params)
+    rw [certificateAll, List.replicate_succ, WordFold.suffixFold_cons]
+    change andFlag (certificateAll term (List.replicate n true) params)
       (term (Fin.cons (List.replicate n true) params)) = [true] ↔ _
-    rw [andBit_eq_true_iff (certificateAll_flag _ _ _) (hterm n), ih]
+    rw [andFlag_eq_true_of_flags _ _ (certificateAll_flag _ _ _) (hterm n), ih]
     constructor
     · rintro ⟨hall, hn⟩ i hi
       by_cases hin : i < n
@@ -71,17 +93,18 @@ theorem generalPayoffWord_eq (columnPlayer positive : Bool) (i j : ℕ)
       generalPayoffField columnPlayer positive input i j := by
   cases columnPlayer <;> cases positive <;>
     simp [generalPayoffWord, generalPayoffField, generalBinaryField,
-      generalRowCount, generalColCount, generalCoefficientBits, smash_length]
+      generalRowCount, generalColCount, generalCoefficientBits, List.length_replicate,
+      List.length_append]
   all_goals (congr 2; ring)
 
 theorem generalScoreWord_value (columnPlayer positive : Bool) (i : ℕ)
     (input cert : List Bool) :
-    Nat.fromBitsLE (generalScoreWord columnPlayer positive
+    ofBits (generalScoreWord columnPlayer positive
       ![List.replicate i true, input, cert]) =
       ∑ j : Fin ((generalActionRuler (!columnPlayer) input).length),
-        Nat.fromBitsLE (generalPayoffField columnPlayer positive input
+        ofBits (generalPayoffField columnPlayer positive input
           (if columnPlayer then j.val else i) (if columnPlayer then i else j.val)) *
-        Nat.fromBitsLE (generalWeightWord (!columnPlayer)
+        ofBits (generalWeightWord (!columnPlayer)
           ![List.replicate j.val true, input, cert]) := by
   have hr : generalActionRuler (!columnPlayer) input =
       List.replicate (generalActionRuler (!columnPlayer) input).length true := by
@@ -89,17 +112,17 @@ theorem generalScoreWord_value (columnPlayer positive : Bool) (i : ℕ)
     · exact generalColRuler_eq input
     · exact generalRowRuler_eq input
   unfold generalScoreWord
-  change Nat.fromBitsLE (binaryIndexedSum (generalWeightedTerm columnPlayer positive)
+  change ofBits (binaryIndexedSum (generalWeightedTerm columnPlayer positive)
     (generalActionRuler (!columnPlayer) input) ![List.replicate i true, input, cert]) = _
   conv_lhs => rw [hr]
   rw [binaryIndexedSum_value]
   change (∑ j ∈ Finset.range (generalActionRuler (!columnPlayer) input).length,
-    Nat.fromBitsLE (generalWeightedTerm columnPlayer positive
+    ofBits (generalWeightedTerm columnPlayer positive
       ![List.replicate j true, List.replicate i true, input, cert])) = _
   rw [Fin.sum_univ_eq_sum_range (fun j : ℕ =>
-    Nat.fromBitsLE (generalPayoffField columnPlayer positive input
+    ofBits (generalPayoffField columnPlayer positive input
       (if columnPlayer then j else i) (if columnPlayer then i else j)) *
-      Nat.fromBitsLE (generalWeightWord (!columnPlayer)
+      ofBits (generalWeightWord (!columnPlayer)
         ![List.replicate j true, input, cert]))]
   apply Finset.sum_congr rfl
   intro j hj
@@ -107,9 +130,9 @@ theorem generalScoreWord_value (columnPlayer positive : Bool) (i : ℕ)
     generalPayoffWord_eq]
 
 theorem generalWeightSumWord_value (columnWeights : Bool) (input cert : List Bool) :
-    Nat.fromBitsLE (generalWeightSumWord columnWeights ![input, cert]) =
+    ofBits (generalWeightSumWord columnWeights ![input, cert]) =
       ∑ j : Fin ((generalActionRuler columnWeights input).length),
-        Nat.fromBitsLE (generalWeightWord columnWeights
+        ofBits (generalWeightWord columnWeights
           ![List.replicate j.val true, input, cert]) := by
   have hr : generalActionRuler columnWeights input =
       List.replicate (generalActionRuler columnWeights input).length true := by
@@ -117,24 +140,24 @@ theorem generalWeightSumWord_value (columnWeights : Bool) (input cert : List Boo
     · exact generalRowRuler_eq input
     · exact generalColRuler_eq input
   unfold generalWeightSumWord
-  change Nat.fromBitsLE (binaryIndexedSum (generalWeightWord columnWeights)
+  change ofBits (binaryIndexedSum (generalWeightWord columnWeights)
     (generalActionRuler columnWeights input) ![input, cert]) = _
   conv_lhs => rw [hr]
   rw [binaryIndexedSum_value]
   exact (Fin.sum_univ_eq_sum_range (fun j : ℕ =>
-    Nat.fromBitsLE (generalWeightWord columnWeights
+    ofBits (generalWeightWord columnWeights
       ![List.replicate j true, input, cert])) _).symm
 
 theorem generalScoreWord_difference (columnPlayer : Bool) (i : ℕ)
     (input cert : List Bool) :
-    (Nat.fromBitsLE (generalScoreWord columnPlayer true
+    (ofBits (generalScoreWord columnPlayer true
       ![List.replicate i true, input, cert]) : ℤ) -
-      (Nat.fromBitsLE (generalScoreWord columnPlayer false
+      (ofBits (generalScoreWord columnPlayer false
         ![List.replicate i true, input, cert]) : ℤ) =
       ∑ j : Fin ((generalActionRuler (!columnPlayer) input).length),
         decodeGeneralPayoff columnPlayer input
           (if columnPlayer then j.val else i) (if columnPlayer then i else j.val) *
-          (Nat.fromBitsLE (generalWeightWord (!columnPlayer)
+          (ofBits (generalWeightWord (!columnPlayer)
             ![List.replicate j.val true, input, cert]) : ℤ) := by
   rw [generalScoreWord_value, generalScoreWord_value]
   simp only [Nat.cast_sum, Nat.cast_mul, ← Finset.sum_sub_distrib]
@@ -146,13 +169,13 @@ theorem generalScoreWord_difference (columnPlayer : Bool) (i : ℕ)
 private theorem generalActionCheck_raw_iff (columnPlayer : Bool) (i : ℕ)
     (input cert : List Bool) :
     let v := ![List.replicate i true, input, cert]
-    let pos := Nat.fromBitsLE (generalScoreWord columnPlayer true v)
-    let neg := Nat.fromBitsLE (generalScoreWord columnPlayer false v)
+    let pos := ofBits (generalScoreWord columnPlayer true v)
+    let neg := ofBits (generalScoreWord columnPlayer false v)
     let utilityPos := generalNatField (generalCertificateWidth input.length)
       (if columnPlayer then 4 else 2) cert
     let utilityNeg := generalNatField (generalCertificateWidth input.length)
       (if columnPlayer then 5 else 3) cert
-    let support := Nat.fromBitsLE (generalWeightWord columnPlayer v)
+    let support := ofBits (generalWeightWord columnPlayer v)
     generalActionCheck columnPlayer v = [true] ↔
       pos + utilityNeg ≤ neg + utilityPos ∧
         (0 < support → pos + utilityNeg = neg + utilityPos) := by
@@ -160,11 +183,11 @@ private theorem generalActionCheck_raw_iff (columnPlayer : Bool) (i : ℕ)
   unfold generalActionCheck
   dsimp only
   rw [binaryCertificateLE_value, certificateEqualWord_value, certificateEqualWord_value,
-    orBit_singleton, andBit_singleton, binaryCertificateAdd_value,
+    orFlag_singleton, andFlag_singleton, binaryCertificateAdd_value,
     binaryCertificateAdd_value]
   simp only [List.cons.injEq, and_true, Bool.and_eq_true, Bool.or_eq_true,
     decide_eq_true_eq]
-  have hz : Nat.fromBitsLE [] = 0 := rfl
+  have hz : ofBits [] = 0 := rfl
   rw [hz]
   cases columnPlayer <;> simp [generalCertificateFieldWord, generalWidthRuler_length,
     generalBinaryField, generalNatField]
@@ -209,6 +232,11 @@ theorem generalColActionCheck_eq_true_iff (input cert : List Bool)
     ↓reduceIte, generalWeightWord_eq]
   rfl
 
+private theorem generalActionCheck_flag (columnPlayer : Bool) (v : Fin 3 → List Bool) :
+    generalActionCheck columnPlayer v = [true] ∨ generalActionCheck columnPlayer v = [false] := by
+  simp only [generalActionCheck, andFlag]
+  split <;> simp
+
 theorem generalAllChecks_eq_true_iff (columnPlayer : Bool) (input cert : List Bool) :
     generalAllChecks columnPlayer ![input, cert] = [true] ↔
       ∀ i : Fin (generalActionRuler columnPlayer input).length,
@@ -226,7 +254,7 @@ theorem generalAllChecks_eq_true_iff (columnPlayer : Bool) (input cert : List Bo
       generalActionCheck columnPlayer (Fin.cons (List.replicate i true) ![input, cert]) =
         [true] ∨
       generalActionCheck columnPlayer (Fin.cons (List.replicate i true) ![input, cert]) =
-        [false] := andBit_flag _ _
+      [false] := generalActionCheck_flag _ _
   rw [certificateAll_eq_true_iff _ _ _ hflag]
   constructor
   · intro h i
@@ -243,13 +271,9 @@ private theorem flag_eq_decide (x : List Bool) (P : Prop) [Decidable P]
     · exact False.elim (hp (hiff.mp hx))
     · simpa only [hp, decide_false] using hx
 
-private theorem lenEqFlag_value (x y : List Bool) :
-    lenEqFlag x y = [decide (x.length = y.length)] :=
-  flag_eq_decide _ _ (lenEqFlag_flag _ _) (lenEqFlag_eq_true_iff _ _)
-
 private theorem eqFlag_value (x y : List Bool) :
     eqFlag x y = [decide (x = y)] :=
-  flag_eq_decide _ _ (eqFlag_flag _ _) (eqFlag_eq_true_iff _ _)
+  rfl
 
 private theorem generalRowAllChecks_value (input cert : List Bool) :
     let c := decodeGeneralCertificate (generalRowCount input) (generalColCount input)
@@ -291,14 +315,14 @@ theorem generalValidCertificateVerdict_eq_true_iff (input cert : List Bool) :
   dsimp only at hr hc
   unfold generalValidCertificateVerdict
   dsimp only
-  rw [hr, hc, lenEqFlag_value]
+  rw [hr, hc]
   simp only [certificateEqualWord_value, generalWeightSumWord_value,
     generalWeightWord_eq, generalCertificateFieldWord, generalWidthRuler_length,
-    andBit_singleton, notBit_singleton, List.cons.injEq, and_true, Bool.and_eq_true,
+    andFlag_singleton, notFlag_singleton, List.cons.injEq, and_true, Bool.and_eq_true,
     decide_eq_true_eq, decodeGeneralCertificate, BimatrixCertificate.Valid]
-  have hz : Nat.fromBitsLE [] = 0 := rfl
-  simp only [hz, smash_length, List.length_append, List.length_replicate,
-    generalWidthRuler_length, generalActionRuler, Bool.false_eq_true,
+  have hz : ofBits [] = 0 := rfl
+  simp only [hz, List.length_append, List.length_replicate,
+    generalActionRuler, Bool.false_eq_true,
     ↓reduceIte, generalRowCount, generalColCount, generalNatField, generalBinaryField]
   constructor <;> intro h
   all_goals
@@ -308,17 +332,17 @@ theorem generalValidCertificateVerdict_eq_true_iff (input cert : List Bool) :
 theorem generalInstanceFlag_eq_true_iff (input : List Bool) :
     generalInstanceFlag input = [true] ↔ GeneralInstanceValid input := by
   unfold generalInstanceFlag
-  rw [eqFlag_value, eqFlag_value, eqFlag_value, lenEqFlag_value]
-  simp only [andBit_singleton, notBit_singleton, List.cons.injEq, and_true,
+  rw [eqFlag_value, eqFlag_value, eqFlag_value]
+  simp only [andFlag_singleton, notFlag_singleton, List.cons.injEq, and_true,
     Bool.and_eq_true, Bool.not_eq_true', decide_eq_false_iff_not, decide_eq_true_eq,
     generalInstanceLengthRuler, List.length_append, List.length_cons, List.length_nil,
-    List.length_replicate, smash_length, GeneralInstanceValid,
+    List.length_replicate, GeneralInstanceValid,
     generalRowCount, generalColCount, generalCoefficientBits]
   simp only [← List.length_eq_zero_iff, Nat.pos_iff_ne_zero, Nat.add_assoc, Nat.mul_assoc, Nat.zero_add, Nat.reduceAdd]
 
 private theorem generalInstanceFlag_value (input : List Bool) :
     generalInstanceFlag input = [decide (GeneralInstanceValid input)] :=
-  flag_eq_decide _ _ (andBit_flag _ _) (generalInstanceFlag_eq_true_iff input)
+  flag_eq_decide _ _ (andFlag_flag _ _) (generalInstanceFlag_eq_true_iff input)
 
 /-- Valid games use exact certificates; malformed games accept only the empty word. -/
 theorem generalBimatrixVerdict_eq_true_iff (input cert : List Bool) :
@@ -332,8 +356,8 @@ theorem generalBimatrixVerdict_eq_true_iff (input cert : List Bool) :
           (fun i j => decodeGeneralPayoff true input i.val j.val)) ∨
       (¬ GeneralInstanceValid input ∧ cert = []) := by
   unfold generalBimatrixVerdict
-  change orBit (andBit (generalInstanceFlag input) (generalValidCertificateVerdict ![input, cert]))
-    (andBit (notBit (generalInstanceFlag input)) (eqFlag cert [])) = [true] ↔ _
+  change orFlag (andFlag (generalInstanceFlag input) (generalValidCertificateVerdict ![input, cert]))
+    (andFlag (notFlag (generalInstanceFlag input)) (eqFlag cert [])) = [true] ↔ _
   let P := cert.length = (6 + generalRowCount input + generalColCount input) *
     generalCertificateWidth input.length ∧
     (decodeGeneralCertificate (generalRowCount input) (generalColCount input)
@@ -341,9 +365,9 @@ theorem generalBimatrixVerdict_eq_true_iff (input cert : List Bool) :
       (fun i j => decodeGeneralPayoff false input i.val j.val)
       (fun i j => decodeGeneralPayoff true input i.val j.val)
   have hv : generalValidCertificateVerdict ![input, cert] = [decide P] :=
-    flag_eq_decide _ _ (andBit_flag _ _) (generalValidCertificateVerdict_eq_true_iff input cert)
-  rw [generalInstanceFlag_value, hv, eqFlag_value, notBit_singleton,
-    andBit_singleton, andBit_singleton, orBit_singleton]
+    flag_eq_decide _ _ (andFlag_flag _ _) (generalValidCertificateVerdict_eq_true_iff input cert)
+  rw [generalInstanceFlag_value, hv, eqFlag_value, notFlag_singleton,
+    andFlag_singleton, andFlag_singleton, orFlag_singleton]
   simp only [List.cons.injEq, and_true, Bool.and_eq_true, Bool.or_eq_true,
     Bool.not_eq_true', decide_eq_false_iff_not, decide_eq_true_eq]
   rfl

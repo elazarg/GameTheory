@@ -139,7 +139,8 @@ theorem objective_quasiconcave (utility : Bool → Bundle → ℝ)
       exact ((expenditure (excess (allocation point))).concaveOn priceSet_convex).congr
         (fun _ _ => expenditure_comm _ _)
   | some consumer =>
-      exact ((concave consumer).subset (fun _ offered => box_nonnegative offered.1)
+      exact ((concave consumer).subset (s := budgetOn (box 3) (prices point) consumer)
+        (fun _ offered => box_nonnegative offered.1)
         (budgetOn_convex (box_convex 3) (prices point) consumer)).quasiconcaveOn
 
 /-- Price response and consumer optimality come from one fixed point while

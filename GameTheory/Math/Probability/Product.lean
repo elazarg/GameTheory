@@ -31,7 +31,7 @@ theorem ENNReal_tsum_pi_fin {n : ℕ} {A : Fin n → Type uA}
     let e : A 0 × ((i : Fin n) → A i.succ) ≃ ((i : Fin (n + 1)) → A i) :=
       Fin.consEquiv A
     rw [← e.tsum_eq (f := fun s => ∏ i, g i (s i))]
-    rw [ENNReal.tsum_prod']
+    rw [tsum_prod']
     have h_split : ∀ (a₀ : A 0) (s' : (i : Fin n) → A i.succ),
         (∏ i, g i (e (a₀, s') i)) =
           g 0 a₀ * ∏ i, g i.succ (s' i) := by
@@ -74,7 +74,7 @@ theorem ENNReal_tsum_pi {ι : Type uι} [Fintype ι] {A : ι → Type uA}
 noncomputable def independentProduct {ι : Type uι} [Fintype ι]
     {A : ι → Type uA} (μ : ∀ i, PMF (A i)) : PMF (∀ i, A i) :=
   ⟨fun s => ∏ i, μ i (s i), by
-    apply ENNReal.summable.hasSum_iff.mpr
+    apply CompleteLattice.summable.hasSum_iff.mpr
     rw [ENNReal_tsum_pi]
     simp [PMF.tsum_coe]⟩
 
@@ -205,7 +205,7 @@ theorem independentProduct_splitAt {ι : Type uι} [Fintype ι] [DecidableEq ι]
   simp_rw [PMF.map_apply, independentProduct_apply]
   simp_rw [← ENNReal.tsum_mul_left]
   simp_rw [mul_ite, mul_zero]
-  rw [← ENNReal.tsum_prod' (f := fun p : A j ×
+  rw [← tsum_prod' (f := fun p : A j ×
     ((i : {i // i ≠ j}) → A i) =>
       if s = e.symm p then μ j p.1 *
         ∏ i : {i // i ≠ j}, μ i (p.2 i) else 0)]
@@ -340,7 +340,7 @@ theorem filter_independentProduct {ι : Type uι} [Fintype ι]
       (∑' a, (s i).indicator (μ i) a) ≠ 0 := by
     obtain ⟨a, ha, hsupport⟩ := hcoord i
     intro hzero
-    have hvalue := (ENNReal.tsum_eq_zero.mp hzero) a
+    have hvalue := (tsum_eq_zero_iff.mp hzero) a
     simp [ha] at hvalue
     exact hsupport hvalue
   rw [ENNReal.prod_inv_distrib (by
@@ -397,7 +397,7 @@ theorem independentProduct_map_eval {ι : Type uι} [Fintype ι]
         if b = e.symm c j then
           ∏ i : ι, μ i (e.symm c i) else 0) =
         ∑' a, ∑' r, if b = e.symm (a, r) j then
-          ∏ i : ι, μ i (e.symm (a, r) i) else 0 := ENNReal.tsum_prod'
+          ∏ i : ι, μ i (e.symm (a, r) i) else 0 := tsum_prod'
     _ = ∑' a, if b = a then μ j a else 0 := tsum_congr hinner
     _ = μ j b := by
       rw [tsum_eq_single b]
