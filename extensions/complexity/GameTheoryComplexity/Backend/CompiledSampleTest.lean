@@ -1,7 +1,7 @@
 module
 
 public import GameTheoryComplexity.Backend.Serializer
-public import Complexity.Computability.Probabilistic.PPT.Composition
+public import CslibFrontier.Computability.Probabilistic.PPT.Composition
 
 @[expose] public section
 

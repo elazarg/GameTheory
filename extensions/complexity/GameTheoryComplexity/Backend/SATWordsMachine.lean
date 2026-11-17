@@ -1,11 +1,11 @@
 module
 
 public import GameTheoryComplexity.Backend.SATWords
-public import Complexity.Logics.Propositional.CNF.Encoding
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Basic
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.BitString
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Plain
+public import CslibFrontier.Logics.Propositional.CNF.Encoding
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Basic
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.BitString
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Plain
 
 @[expose] public section
 

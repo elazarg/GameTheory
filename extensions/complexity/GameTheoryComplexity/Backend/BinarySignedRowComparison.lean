@@ -3,8 +3,8 @@ module
 public import GameTheoryComplexity.Backend.BinarySignedCrossComparison
 public import GameTheoryComplexity.Backend.BinaryIndexedLexicographic
 public import GameTheoryComplexity.Backend.WordOperations
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
 public import GameTheory.Math.IntegerRatioSelection
 
 @[expose] public section

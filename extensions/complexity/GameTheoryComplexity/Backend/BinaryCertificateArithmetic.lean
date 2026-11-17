@@ -1,10 +1,10 @@
 module
 
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.BitString
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat.Binary
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Pi
-public import Complexity.Foundations.Data.Nat.Bits
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.BitString
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat.Binary
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Pi
+public import CslibFrontier.Foundations.Data.Nat.Bits
 public import Mathlib.Data.Fin.VecNotation
 
 @[expose] public section

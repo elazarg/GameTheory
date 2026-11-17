@@ -2,8 +2,8 @@ module
 
 public import GameTheoryComplexity.RandomTape
 public import GameTheory.Math.Probability.Indistinguishability
-public import Complexity.Computability.Probabilistic.CoinTape
-public import Complexity.Computability.Probabilistic.PPT.Clock
+public import CslibFrontier.Computability.Probabilistic.CoinTape
+public import CslibFrontier.Computability.Probabilistic.PPT.Clock
 
 @[expose] public section
 

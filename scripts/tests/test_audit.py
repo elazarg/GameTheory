@@ -86,11 +86,11 @@ def raw := r#"sorry \" import Cslib.Models"#
 
     def test_cslib_complexity_import_root_stays_optional(self):
         for source in [
-            "import Complexity",
-            "public import Complexity.Computability.Complexity.Classes.TFNP",
-            "meta import all Complexity.Computability.Machines.Turing.MultiTape.PolyTime",
-            "public meta import all «Complexity».Computability.Complexity.Classes.P",
-            "module\npublic\nimport\n«Complexity».Crypto.Negligible",
+            "import CslibFrontier",
+            "public import CslibFrontier.Computability.Complexity.Classes.TFNP",
+            "meta import all CslibFrontier.Computability.Machines.Turing.MultiTape.PolyTime",
+            "public meta import all «CslibFrontier».Computability.Complexity.Classes.P",
+            "module\npublic\nimport\n«CslibFrontier».Crypto.Negligible",
         ]:
             with self.subTest(source=source):
                 self.write("GameTheory/Core/Fixture.lean", source + "\n")
@@ -215,6 +215,13 @@ private axiom bad : False
         self.write("lakefile.lean", 'require "owner" / "complexitylib" from git "url"\n')
         self.assert_rejects("base Lake configuration directly requires an optional dependency")
         self.manifest("lake-manifest.json", [self.mathlib(), {"name": "cslib"}])
+        self.assert_rejects("base manifest requires optional dependency")
+
+    def test_frontier_backend_package_stays_optional(self):
+        self.write("lakefile.lean", 'require «cslib-frontier» from git "url"\n')
+        self.assert_rejects("base Lake configuration directly requires an optional dependency")
+        self.write("lakefile.lean", "")
+        self.manifest("lake-manifest.json", [self.mathlib(), {"name": "«cslib-frontier»"}])
         self.assert_rejects("base manifest requires optional dependency")
 
     def test_lake_multiline_strings_do_not_create_dependencies(self):

@@ -3,7 +3,7 @@ module
 public import GameTheoryComplexity.Backend.BinarySignedMatrixMachine
 public import GameTheoryComplexity.Backend.BinaryBirdWidth
 public import GameTheoryComplexity.Backend.WordOperations
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
 
 @[expose] public section
 

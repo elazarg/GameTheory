@@ -4,7 +4,7 @@ public import GameTheoryComplexity.Backend.NashCertificateEncoding
 public import GameTheoryComplexity.Backend.NashWitnessCompleteness
 public import GameTheoryComplexity.Backend.BimatrixCertificateVerifier
 public import GameTheoryComplexity.Backend.BimatrixCertificateVerifierCorrectness
-public import Complexity.Computability.Complexity.Classes.TFNP
+public import CslibFrontier.Computability.Complexity.Classes.TFNP
 
 @[expose] public section
 

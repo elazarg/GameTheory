@@ -1,7 +1,7 @@
 module
 
 public import GameTheory.Math.IntegerSumBounds
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
 public import GameTheoryComplexity.Backend.GeneralBimatrixEndpointMachine
 public import GameTheoryComplexity.Backend.GeneralBimatrixDictionary
 

@@ -1,8 +1,8 @@
 module
 
 public import GameTheoryComplexity.Backend.CircuitFormat
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Iteration
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Iteration
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
 
 @[expose] public section
 

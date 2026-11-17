@@ -2,7 +2,7 @@ module
 
 public import GameTheory.Math.EndOfLineNormalization
 public import GameTheoryComplexity.Backend.EndOfLineMachineOps
-public import Complexity.Computability.Complexity.Classes.TFNP
+public import CslibFrontier.Computability.Complexity.Classes.TFNP
 
 @[expose] public section
 

@@ -1,7 +1,7 @@
 module
 
-public import Complexity.Computability.Complexity.Classes.TFNP.Subclasses
-public import Complexity.Computability.Complexity.Classes.TFNP.Subclasses.Principles
+public import CslibFrontier.Computability.Complexity.Classes.TFNP.Subclasses
+public import CslibFrontier.Computability.Complexity.Classes.TFNP.Subclasses.Principles
 public import GameTheory.Math.EndOfLine
 public import GameTheory.Math.EndOfLineNormalization
 

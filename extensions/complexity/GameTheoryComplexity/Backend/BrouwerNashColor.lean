@@ -3,7 +3,7 @@ module
 public import GameTheoryComplexity.Backend.BrouwerNashProgram
 public import GameTheoryComplexity.Backend.BimatrixCoordinateColor
 public import GameTheoryComplexity.Backend.BimatrixRawCircuit
-public import Complexity.Foundations.Data.BitString.Binary
+public import CslibFrontier.Foundations.Data.BitString.Binary
 public import GameTheory.Math.BinaryExtraction
 public import GameTheoryComplexity.Backend.BimatrixRawGate
 public import GameTheory.Math.ClippedArithmetic

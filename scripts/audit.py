@@ -18,7 +18,9 @@ NAME = re.compile(r"(?:«[^»\n]*»|[^\W\d][\w']*)(?:\.(?:«[^»\n]*»|[^\W\d][\
 RAW_STRING = re.compile(r'r(#+)"')
 CHARACTER = re.compile(r"'(?:\\[^\n]|[^'\\\n])'")
 IMPORT = re.compile(r"(?m)^\s*(?:public\s+)?(?:meta\s+)?import\s+(?:all\s+)?([^\r\n]+)")
-OPTIONAL = {"GameTheoryComplexity", "Complexitylib", "Complexity", "Cslib"}
+OPTIONAL = {"GameTheoryComplexity", "Complexitylib", "CslibFrontier", "Cslib"}
+# Lake package names of the optional package and its backends.
+OPTIONAL_PACKAGES = {"GameTheoryComplexity", "complexitylib", "cslib-frontier", "cslib"}
 # Execution leaves, rather than correctness/proof modules in the same directory.
 EXECUTABLE = {
     "GameTheory.Finite.Algorithm", "GameTheory.Finite.BimatrixCertificate",
@@ -247,11 +249,12 @@ def check_scope(root, namespace, sources, errors):
 def check_optional(root, errors):
     manifest = json.loads((root / "lake-manifest.json").read_text(encoding="utf-8"))
     for dep in manifest["packages"]:
-        if dep["name"].lower() in {n.lower() for n in OPTIONAL}:
+        if dep["name"].strip("«»").lower() in {n.lower() for n in OPTIONAL_PACKAGES}:
             errors.append(f"base manifest requires optional dependency: {dep['name']}")
     config = source_code((root / "lakefile.lean").read_text(encoding="utf-8"), keep_strings=True)
     if re.search(r'(?m)^\s*require\s+(?:(?:"[^"\n]+"|[\w-]+)\s*/\s*)?["«]?'
-                 r'(?:complexitylib|cslib|GameTheoryComplexity)(?:["»\s]|$)', config):
+                 r'(?:complexitylib|cslib-frontier|cslib|GameTheoryComplexity)(?:["»\s]|$)',
+                 config):
         errors.append("base Lake configuration directly requires an optional dependency")
     extension = root / "extensions/complexity"
     if not extension.exists():

@@ -1,9 +1,9 @@
 module
 
 public import GameTheoryComplexity.Backend.CircuitFormat
-public import Complexity.Computability.Circuit.Boolean.EvaluationTime
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat.Binary
+public import CslibFrontier.Computability.Circuit.Boolean.EvaluationTime
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat.Binary
 public import Mathlib.Data.List.GetD
 
 @[expose] public section
@@ -105,24 +105,24 @@ theorem translateGate_eval (bound : ℕ) (gate : Boolean.Op × List ℕ)
   rcases gate with ⟨op, args⟩
   cases op with
   | const b =>
-    cases b <;> simp [evalCode, translateGate, CircuitFormat.interpretation,
+    cases b <;> simp [evalCode, evalCodeStep, translateGate, CircuitFormat.interpretation,
       CircuitFormat.opValue, Boolean.interpretation]
   | not =>
     obtain ⟨a, rfl⟩ := List.length_eq_one_iff.mp harity
     have ha := capRef_eq (href a (by simp))
-    simp [evalCode, translateGate, ha, CircuitFormat.interpretation,
+    simp [evalCode, evalCodeStep, translateGate, ha, CircuitFormat.interpretation,
       CircuitFormat.opValue, Boolean.interpretation]
   | and =>
     obtain ⟨a, b, rfl⟩ := List.length_eq_two.mp harity
     have ha := capRef_eq (href a (by simp))
     have hb := capRef_eq (href b (by simp))
-    simp [evalCode, translateGate, ha, hb, CircuitFormat.interpretation,
+    simp [evalCode, evalCodeStep, translateGate, ha, hb, CircuitFormat.interpretation,
       CircuitFormat.opValue, Boolean.interpretation]
   | or =>
     obtain ⟨a, b, rfl⟩ := List.length_eq_two.mp harity
     have ha := capRef_eq (href a (by simp))
     have hb := capRef_eq (href b (by simp))
-    simp [evalCode, translateGate, ha, hb, CircuitFormat.interpretation,
+    simp [evalCode, evalCodeStep, translateGate, ha, hb, CircuitFormat.interpretation,
       CircuitFormat.opValue, Boolean.interpretation]
 
 /-- Translation preserves the complete native wire trace, including its input prefix. -/

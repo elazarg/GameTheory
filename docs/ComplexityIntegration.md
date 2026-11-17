@@ -2,40 +2,23 @@
 
 The `GameTheoryComplexity` companion package lives in `extensions/complexity`.
 It owns `GameTheoryComplexity` import modules, declares its API under
-`GameTheory.Complexity`, and depends on GameTheory and selected
-ComplexityLib modules. The main package has no dependency on this companion or
-ComplexityLib. See the companion README for local and consumer commands.
+`GameTheory.Complexity`, and depends on GameTheory, CSLib and selected
+cslib-frontier modules. The main package has no dependency on this companion or
+its backends. See the companion README for local and consumer commands.
 
-The native source port is complete. Full upstream-matching library/fixture
-validation passes 7,838 jobs; final lint/axiom-driver rebuilding passes 7,840
-jobs. Public lint, the transitive axiom driver, all 251 authored cached-diagnostic
-checks and 44 audit regressions pass. These checks use isolated 4.36-RC source
-copies; tracked Lean/Mathlib remain stable 4.35.
+The native source port is complete.
+The backend is a GameTheory-maintained subset of cslib-frontier at
+`elazarg/complexitylib-community@5c24f2573df209120770cfdd423a2ec9e11bee4c` (branch `gametheory`)
+and CSLib v4.36.0. The subset keeps only the 421 `CslibFrontier` modules this
+package imports, with upstream paths, namespaces and declarations, adapted to
+released Lean, Mathlib and CSLib v4.36.0: it follows one Mathlib signature
+change, removes local copies of declarations CSLib v4.36.0 now provides, and
+uses the space bound one CSLib lemma now returns. It does not track cslib-frontier and is replaced
+by CSLib itself as the definitions used here are upstreamed there.
 
-A separate stable 4.35 selected-closure probe passes
-`lake --iofail build GameTheoryComplexity.BimatrixNash` in 3,694 jobs
-(`stable-probe-native-nash-build.log`). This verifies the Nash facade's imported
-closure and does not validate the full stable optional package or its audit.
-
-The stable merge gate is blocked by unmodified upstream
-`Complexity.Probability.PMF.Bind`, which uses unavailable `tsum_sigma`,
-`tsum_le_tsum` and `tsum_add` APIs. Actual stable local update/version/cache
-checks pass, including 9,031 already-decompressed cache files, but the full
-local audit fails during its build; later audit stages did not complete.
-Actual published-base resolution verifies the sole GameTheory git dependency
-at `c7cd6bed7498b9a16edb22262e9522ceff90648c` and Lean 4.35.0. Its pivot client
-passes 3,125 jobs; the targeted probability check fails in a 3,049-job target
-with the same missing APIs. The full published optional audit remains unrun
-and blocked; no published cache gate is claimed. Local transcripts are under
-`.codex/scratch/cslib-port/`: `stable-local-update.log`,
-`stable-local-cache.log`, `stable-local-full-audit.log`,
-`stable-published-update.log`, `stable-published-pivot-client.log` and
-`stable-published-probability-gate.log`.
-
-Final Lean and Mathlib 4.36 release endpoints return 404 as of 2026-11-09.
-Normal final-release maintenance must precede full local-path and published-base
-audits and a fresh published pivot-client check. Neither tracked RC toolchains
-nor dependency-source patches are used to bypass this gate.
+Against the local base checkout, the full library/fixture build passes 7,969
+jobs and the lint/axiom-driver build passes 7,974 jobs. Public lint, the
+transitive axiom driver and all authored cached-diagnostic checks pass.
 
 ## Delivered interfaces
 

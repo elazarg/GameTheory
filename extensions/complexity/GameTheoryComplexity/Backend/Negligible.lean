@@ -1,7 +1,7 @@
 module
 
 public import GameTheory.Math.Negligible
-public import Complexity.Crypto.Negligible.Basic
+public import CslibFrontier.Crypto.Negligible.Basic
 
 @[expose] public section
 

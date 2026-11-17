@@ -133,29 +133,20 @@ import GameTheoryComplexity.Backend.NashNPComplete
 ```
 
 The default dependency configuration fetches the base GameTheory commit
-`c7cd6bed7498b9a16edb22262e9522ceff90648c`; it does not assume a sibling checkout.
-The migration selects CSLib-based Complexitylib v0.2.0 at
-`cslib-community/complexitylib@054834a4a4e6ac3ec50ed770bacea7fc42eccc7d`
-and CSLib `254e30e6d4299c51323aaeaf5f51a4763b375d4a`. The native source port is
-complete. The full matching-toolchain library/fixture build passes 7,838 jobs,
-with final lint/axiom-driver rebuilding passing 7,840 jobs. Public lint, the
-transitive axiom driver, all 251 authored cached-diagnostic checks and 44 audit
-regressions pass. Matching 4.36-RC validation remains isolated in ignored scratch
-state; tracked Lean/Mathlib stay on stable 4.35.
+`c33309b03feae395a9677b2d7156d876ca4fc61d`; it does not assume a sibling checkout.
+The migration selects a GameTheory-maintained subset of cslib-frontier at
+`elazarg/complexitylib-community@5c24f2573df209120770cfdd423a2ec9e11bee4c` (branch `gametheory`)
+and CSLib v4.36.0. The subset keeps only the 421 `CslibFrontier` modules this
+package imports, with upstream paths, namespaces and declarations, adapted to
+released Lean, Mathlib and CSLib v4.36.0: it follows one Mathlib signature
+change, removes local copies of declarations CSLib v4.36.0 now provides, and
+uses the space bound one CSLib lemma now returns. It does not track cslib-frontier and is replaced
+by CSLib itself as the definitions used here are upstreamed there.
 
-A separate stable 4.35 selected-closure probe,
-`lake --iofail build GameTheoryComplexity.BimatrixNash`, passes 3,694 jobs.
-This validates the Nash facade's imported closure, not the full optional package.
-
-The stable merge gate is blocked. Actual local update, version and cache checks
-pass, but the full local audit fails during its build in unmodified upstream
-`Complexity.Probability.PMF.Bind`: `tsum_sigma`, `tsum_le_tsum` and `tsum_add`
-are unavailable. Later audit stages did not complete. Published-base resolution
-at the exact pin above, Lean 4.35 verification and the pivot client pass; the
-targeted probability check fails identically, so the full published audit is
-blocked and unrun. Final Lean and Mathlib 4.36 release endpoints return 404 as
-of 2026-11-09. Complete normal final-release maintenance, both full consumer
-audits and a fresh published pivot-client check before merging.
+Against the local base checkout, the full library/fixture build passes 7,969
+jobs and the lint/axiom-driver build passes 7,974 jobs. Public lint, the
+transitive axiom driver and all authored cached-diagnostic checks pass, using
+only released Lean, Mathlib and CSLib.
 
 Validation covers the dependency closure of selected imports. Third-party
 diagnostics are allowed; first-party diagnostics and transitive nonstandard

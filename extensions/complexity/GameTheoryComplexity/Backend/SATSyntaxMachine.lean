@@ -1,9 +1,9 @@
 module
 
 public import GameTheoryComplexity.Backend.SATWords
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Basic
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Plain
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Basic
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Plain
 
 @[expose] public section
 

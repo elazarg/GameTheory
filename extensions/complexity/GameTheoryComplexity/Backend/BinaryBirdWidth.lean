@@ -1,8 +1,8 @@
 module
 
 public import GameTheoryComplexity.Backend.BinarySignedFixedWidth
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.BitString
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.BitString
 public import GameTheory.Math.BirdIterationBounds
 
 @[expose] public section

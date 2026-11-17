@@ -2,7 +2,7 @@ module
 
 public import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
 public import GameTheoryComplexity.Backend.WordOperations
-public import Complexity.Foundations.Data.BitString.Binary
+public import CslibFrontier.Foundations.Data.BitString.Binary
 
 @[expose] public section
 

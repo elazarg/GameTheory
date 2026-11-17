@@ -1,8 +1,8 @@
 module
 
 public import GameTheoryComplexity.Backend.BinaryCertificateArithmetic
-public import Complexity.Foundations.Data.BitString.Binary
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
+public import CslibFrontier.Foundations.Data.BitString.Binary
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
 
 @[expose] public section
 

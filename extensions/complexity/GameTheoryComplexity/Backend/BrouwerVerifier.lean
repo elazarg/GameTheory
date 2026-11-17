@@ -3,7 +3,7 @@ module
 public import GameTheoryComplexity.Backend.BrouwerProblem
 public import GameTheoryComplexity.Backend.BrouwerPointMachine
 public import GameTheoryComplexity.Backend.BrouwerResidualMachine
-public import Complexity.Computability.Complexity.Classes.TFNP
+public import CslibFrontier.Computability.Complexity.Classes.TFNP
 
 @[expose] public section
 

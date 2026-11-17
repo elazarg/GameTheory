@@ -3,7 +3,7 @@ module
 public import GameTheoryComplexity.Backend.GeneralBimatrixProblem
 public import GameTheoryComplexity.Backend.GeneralBimatrixVerifierMachine
 public import GameTheoryComplexity.Backend.GeneralBimatrixVerifierCorrectness
-public import Complexity.Computability.Complexity.Classes.TFNP
+public import CslibFrontier.Computability.Complexity.Classes.TFNP
 
 @[expose] public section
 

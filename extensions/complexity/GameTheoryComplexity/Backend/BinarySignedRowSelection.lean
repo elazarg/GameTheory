@@ -3,8 +3,8 @@ module
 public import GameTheoryComplexity.Backend.BinarySignedRowComparison
 public import GameTheoryComplexity.Backend.WordOperations
 public import GameTheoryComplexity.Backend.WordFold
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
 public import GameTheory.Math.FiniteMinimumScan
 
 @[expose] public section

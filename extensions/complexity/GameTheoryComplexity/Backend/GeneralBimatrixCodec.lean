@@ -1,8 +1,8 @@
 module
 
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.BitString
-public import Complexity.Foundations.Data.BitString.Binary
-public import Complexity.Foundations.Data.Nat.Bits
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.BitString
+public import CslibFrontier.Foundations.Data.BitString.Binary
+public import CslibFrontier.Foundations.Data.Nat.Bits
 public import GameTheory.Finite.BimatrixCertificate
 public import Mathlib.Tactic.Linarith
 

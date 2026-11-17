@@ -1,7 +1,7 @@
 module
 
-public import Complexity.Computability.Complexity.Classes.TFNP
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
+public import CslibFrontier.Computability.Complexity.Classes.TFNP
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
 
 @[expose] public section
 

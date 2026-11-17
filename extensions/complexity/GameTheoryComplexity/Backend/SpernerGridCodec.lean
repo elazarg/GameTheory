@@ -1,6 +1,6 @@
 module
 
-public import Complexity.Foundations.Data.BitString.Binary
+public import CslibFrontier.Foundations.Data.BitString.Binary
 public import GameTheory.Math.SpernerGridGeometry
 
 @[expose] public section

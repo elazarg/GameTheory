@@ -2,7 +2,7 @@ module
 
 public import GameTheoryComplexity.SampleTest
 public import GameTheoryComplexity.Backend.Complexitylib
-public import Complexity.Computability.Probabilistic.Sampling
+public import CslibFrontier.Computability.Probabilistic.Sampling
 
 @[expose] public section
 

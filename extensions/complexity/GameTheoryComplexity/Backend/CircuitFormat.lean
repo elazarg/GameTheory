@@ -1,11 +1,11 @@
 module
 
-public import Complexity.Computability.Circuit.Encoding.Check
-public import Complexity.Computability.Circuit.Encoding.Evaluation
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.BitString
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Fold
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
+public import CslibFrontier.Computability.Circuit.Encoding.Check
+public import CslibFrontier.Computability.Circuit.Encoding.Evaluation
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.BitString
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Fold
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Nat
 public import Mathlib.Data.List.Basic
 
 @[expose] public section
@@ -76,7 +76,8 @@ theorem computableInPolyTime_evalCode {α : Type} {encIn : α ↪ List Bool}
     (hgates : ComputableInPolyTime gates encIn encProgram) :
     ComputableInPolyTime (fun a => evalCode interpretation false (input a) (gates a))
       encIn encBits :=
-  foldl_of_bounded_growth hgates hinput computableInPolyTime_step (growth := 1) fun _ _ => by simp
+  foldl_of_bounded_growth hgates hinput computableInPolyTime_step (growth := 1) fun _ _ => by
+    simp [evalCodeStep]
 
 /-- Read an output wire after native evaluation; missing wires have value false. -/
 def evalOutput (input : List Bool) (gates : List (signature.Op × List ℕ)) (wire : ℕ) : Bool :=

@@ -1,6 +1,6 @@
 module
 
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.BitString
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.BitString
 public import GameTheory.Finite.BimatrixNashCertificate
 
 @[expose] public section

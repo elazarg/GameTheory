@@ -6,7 +6,7 @@ Authors: Samuel Schlesinger
 
 module
 
-public import Complexity.Logics.Propositional.CNF
+public import CslibFrontier.Logics.Propositional.CNF
 public import Mathlib.Data.List.Basic
 public import Mathlib.Data.List.Induction
 

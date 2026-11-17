@@ -1,7 +1,7 @@
 module
 
 public import GameTheoryComplexity.Backend.CircuitCompiler
-public import Complexity.Computability.Complexity.Problems.CircuitValue.Compilation
+public import CslibFrontier.Computability.Complexity.Problems.CircuitValue.Compilation
 
 @[expose] public section
 

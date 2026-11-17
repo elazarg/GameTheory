@@ -46,15 +46,9 @@ relation or PMF law, inferring runtime from output size, or resolving optional
 packages from the base invalidates the design. Its measured slice supports the
 native choice. All declarations remain subject to transitive axiom auditing.
 
-The optional package boundary of D67 is unchanged. Full matching-toolchain
-build/lint/axiom and authored-diagnostic gates pass. Actual stable 4.35 local
-setup succeeds, but its full audit fails during the build in unmodified upstream
-`Complexity.Probability.PMF.Bind`, which needs newer Mathlib infinite-sum APIs.
-The exact published-base resolver/version and pivot client pass; the targeted
-probability check fails identically, and the full published audit remains unrun.
-This blocks stable delivery rather than the completed native API decision.
-
-Validation in isolated matching-toolchain source copies does not adopt an RC in
-the repository. Final Lean and Mathlib 4.36 releases remain unavailable as of
-2026-11-09. Complete normal shared final-release maintenance, full local and
-published-base audits, and a fresh published pivot-client check before merging.
+The optional package boundary of D67 is unchanged. The backend is a
+GameTheory-maintained subset of cslib-frontier holding only the imported
+modules, adapted to released Lean, Mathlib and CSLib v4.36.0, rather than a
+tracked release-candidate dependency. The full local build, lint, transitive
+axiom and authored-diagnostic gates pass against it. Definitions move from the
+subset to CSLib as they are upstreamed there.

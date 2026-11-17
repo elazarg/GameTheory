@@ -3,8 +3,8 @@ module
 public import GameTheoryComplexity.Backend.SATWordsMachine
 public import GameTheoryComplexity.Backend.SATReductionSemantic
 public import GameTheoryComplexity.Backend.SATTablePayoffCorrectness
-public import Complexity.Logics.Propositional.CNF.PolyTime
-public import Complexity.Computability.Complexity.CookLevin.Completeness
+public import CslibFrontier.Logics.Propositional.CNF.PolyTime
+public import CslibFrontier.Computability.Complexity.CookLevin.Completeness
 
 @[expose] public section
 

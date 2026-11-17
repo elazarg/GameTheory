@@ -1,7 +1,7 @@
 module
 
 public import GameTheoryComplexity.Backend.SpernerProblem
-public import Complexity.Computability.Complexity.Classes.TFNP
+public import CslibFrontier.Computability.Complexity.Classes.TFNP
 
 @[expose] public section
 

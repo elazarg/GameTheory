@@ -1,7 +1,7 @@
 module
 
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Basic
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Basic
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.List
 
 @[expose] public section
 

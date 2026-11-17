@@ -2,7 +2,7 @@ module
 
 public import GameTheoryComplexity.Backend.CircuitFormat
 public import GameTheoryComplexity.Backend.CircuitWords
-public import Complexity.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Iteration
+public import CslibFrontier.Computability.Machines.Turing.MultiTape.Complexity.PolyTime.Iteration
 
 @[expose] public section
 

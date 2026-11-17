@@ -21,22 +21,21 @@ checkout with `-KgameTheoryPath=../..`. The base package never requires this one
   src? := some <| match get_config? gameTheoryPath with
     | some path => .path path
     | none => .git "https://github.com/elazarg/GameTheory.git"
-        (some "c7cd6bed7498b9a16edb22262e9522ceff90648c") none
+        (some "c33309b03feae395a9677b2d7156d876ca4fc61d") none
 }
 
-/- TEMPORARY fork: upstream `054834a4` plus one line adapting
-`Nat.pow_pred_clog_lt_self` to Mathlib v4.36.0, which upstream (still on
-v4.36.0-rc2) has not adopted. Return to `cslib-community/complexitylib` as soon
-as upstream builds against released Mathlib v4.36.0; do not extend the fork. -/
-require complexitylib from git "https://github.com/elazarg/complexitylib-community"
-  @ "481355bbf30f161a600c5761053f42da888e7b0f"
+/- TEMPORARY: a GameTheory-maintained subset of cslib-frontier holding only the
+modules this package imports, adapted to released Lean, Mathlib and CSLib
+v4.36.0. It does not track cslib-frontier. Replace it with CSLib itself as the
+definitions used here are upstreamed there; do not add unrelated modules. -/
+require «cslib-frontier» from git "https://github.com/elazarg/complexitylib-community"
+  @ "5c24f2573df209120770cfdd423a2ec9e11bee4c"
 
 require cslib from git "https://github.com/leanprover/cslib.git"
-  @ "254e30e6d4299c51323aaeaf5f51a4763b375d4a"
+  @ "v4.36.0"
 
--- Explicitly select the same Mathlib version as the base package, overriding
--- the inherited snapshot in the selected backend. Only the imported closure
--- is validated against this shared stable release.
+-- Explicitly select the same Mathlib release as the base package. Keep this
+-- requirement last so it overrides the pins inherited from dependencies.
 require "leanprover-community" / "mathlib" @ git "v4.36.0"
 
 @[default_target]

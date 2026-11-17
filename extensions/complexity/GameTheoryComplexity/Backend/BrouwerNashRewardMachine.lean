@@ -2,7 +2,7 @@ module
 
 public import GameTheoryComplexity.Backend.BinaryUnaryEncoding
 public import GameTheoryComplexity.Backend.BinarySignedArithmetic
-public import Complexity.Foundations.Data.BitString.Counter
+public import CslibFrontier.Foundations.Data.BitString.Counter
 public import GameTheory.Math.GridBrouwerErrorBudget
 
 @[expose] public section
